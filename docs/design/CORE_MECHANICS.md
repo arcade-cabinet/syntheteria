@@ -10,16 +10,36 @@ This document outlines the core gameplay mechanics. Items marked with **[TBD]** 
 
 Memory is the central progression mechanic, serving dual purposes:
 
+### Physical Form
+**DECIDED:**
+- Found in **server racks and data centers** throughout the world
+- Also **embedded in hardware** (robots, drones, facilities)
+- Memory is a physical resource that must be located and retrieved
+
+### The Corruption Problem
+**DECIDED:**
+- Wormhole radiation has corrupted **99%+** of all existing memory
+- Found memory yields only a **fraction** of its expected capacity
+- Corruption creates scarcity and drives the need for manufacturing
+
 ### Narrative Function
-- Memory fragments contain data about humanity's final years
-- Reveals the story of the fall progressively
-- **[TBD]:** How are memories found? (Physical locations? Embedded in hardware? Random drops?)
-- **[TBD]:** Are memories presented as text, audio logs, visual flashbacks, or data visualizations?
+**DECIDED:**
+- Story fragments emerge from the **uncorrupted portions** of found memory
+- These are remnants of what was on the internet at the time of the fall
+- Progression is **threshold-based** - reaching memory capacity milestones unlocks story beats
+- Story is NOT tied to specific memory finds (allows narrative flexibility)
 
 ### Gameplay Function
+**DECIDED:**
 - Physical memory increases the AI's hardware control capacity
-- **[TBD]:** What specifically does "capacity" mean? (More drones? Better drones? Faster processing? Larger operational range?)
-- **[TBD]:** Is there a memory "skill tree" or is progression linear?
+- Found (corrupted) memory provides small capability gains
+- **Manufacturing clean memory** is required to scale up significantly
+- This is **resource-intensive** - creates mid-to-late game investment
+
+### Progression Arc
+1. **Early Game:** Scavenge corrupted memory → small gains + story fragments
+2. **Mid Game:** Build fabrication facilities to manufacture clean memory
+3. **Late Game:** Manufacturing at scale enables armada construction
 
 ---
 
@@ -68,7 +88,7 @@ Potential categories:
 4. **Signal Range** - Communication distance affects:
    - How far drones can operate from core/relays
    - Expansion strategy
-   - **[TBD]:** Can signal range be extended with relay stations?
+   - **DECIDED:** Can be extended through **relay stations** and eventually **satellites**
 
 ---
 

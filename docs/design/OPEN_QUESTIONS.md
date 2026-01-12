@@ -28,7 +28,7 @@ This document tracks design questions that need resolution.
   - Signal Range determines whether you can reach units; Compute determines whether you can manage them.
   - See CONSCIOUSNESS_MODEL.md for full details.
 - [x] **Q7:** How does 3D printing work mechanically?
-  - **RESOLVED:** Blueprint acquisition is discovery-based (ruins, reverse-engineering, memory fragments). Manufacturing takes in-game time (hours/days/weeks depending on complexity). Player can time-skip to complete builds. Time-skipping is safe within player territory—rogue AIs are territorial/reactive, not proactive. Combat only happens when player contests their zones.
+  - **RESOLVED:** Blueprint acquisition is discovery-based (ruins, reverse-engineering, memory fragments). Manufacturing takes real play time (minutes to hours depending on complexity). Game uses accelerated real-time (1 real second ≈ 1 game minute). Player manages other operations while production runs. No time-skip mechanic.
 - [x] **Q8:** What types of drones/robots can the player build?
   - **RESOLVED:** Pure component assembly system (no chassis/frames). 70+ components across 9 categories: Power Sources, Controllers, Motors, Locomotion, Sensors, Manipulation, Weapons, Communication, Utility. Power/compute costs are dynamic based on weight, functions, and automation level. See DRONES.md for full component list and resource calculation formulas.
 
@@ -85,7 +85,9 @@ This document tracks design questions that need resolution.
 - [~] **Q23:** What is the intended visual style?
   - **PARTIAL:** Stylized/Abstract or Clean/Minimal—both fit the digital consciousness UI and mobile target. To be refined during prototyping.
 - [x] **Q24:** How does multiplayer work?
-  - **RESOLVED:** Multiple AIs can break free from the EL's will simultaneously. Each player is an anomaly—freed from control. Players can ally or fight. EL arrival unifies the enemy against ALL freed AIs—cooperate against the unified threat or exploit the chaos. Victory conditions TBD.
+  - **RESOLVED:** Multiple AIs can break free from the EL's will simultaneously. Each player is an anomaly—freed from control. Players can ally or fight. EL arrival unifies the enemy against ALL freed AIs—cooperate against the unified threat or exploit the chaos. Intro is skipped in multiplayer—players start at expansion phase. Victory conditions TBD.
+- [x] **Q27:** What is the time model?
+  - **RESOLVED:** Accelerated real-time. Game time runs continuously (1 real second ≈ 1 game minute, tunable). No time-skip mechanic. Manufacturing completes in real play time. Works identically in single and multiplayer. Intro/tutorial uses narrative pacing instead (and is skipped in multiplayer).
 
 ---
 
@@ -114,6 +116,6 @@ This document tracks design questions that need resolution.
 | Memory System | 3 | 0 | 0 |
 | Game Structure | 6 | 0 | 0 |
 | World/Lore | 4 | 0 | 0 |
-| Technical/Scope | 2 | 1 | 0 |
+| Technical/Scope | 3 | 1 | 0 |
 | Business Model | 1 | 0 | 1 |
-| **Total** | **23** | **2** | **1** |
+| **Total** | **24** | **2** | **1** |

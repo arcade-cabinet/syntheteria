@@ -40,6 +40,7 @@ syntheteria/
 | [Game Overview](docs/design/GAME_OVERVIEW.md) | High-level concept and structure |
 | [Drones](docs/design/DRONES.md) | Component assembly system |
 | [Core Formulas](docs/technical/CORE_FORMULAS.md) | Game mechanics math |
+| [Reference Builds](docs/technical/REFERENCE_BUILDS.md) | 10 drone archetypes with balance analysis |
 | [Implementation Options](docs/design/IMPLEMENTATION_OPTIONS.md) | Engine choices |
 
 ## Core Mechanics
@@ -47,7 +48,9 @@ syntheteria/
 - **Pure component assembly**: Drones are nothing but their parts. Capabilities emerge from what you build.
 - **Dynamic resources**: Power draw depends on weight, terrain, and activity. Compute cost scales with automation.
 - **Distributed consciousness**: Your mind spans your network. Lose infrastructure, lose capacity.
-- **Time pressure**: Radiation rises. The EL will return. You must be ready.
+- **Accelerated real-time**: Game runs continuously (1 second ≈ 1 minute). Manage operations while production runs.
+- **Escalating threat**: Radiation intensifies over play time. The EL will return. You must be ready.
+- **Multiplayer**: Multiple AIs can break free simultaneously — ally, compete, or betray.
 
 ## Data
 
@@ -61,4 +64,4 @@ This data can be imported directly into any game engine.
 
 ## License
 
-TBD
+All rights reserved. This is a proprietary project.

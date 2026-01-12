@@ -159,11 +159,13 @@ Everything changes. All AIs unite under Cultist command.
 - Primitive humans leading AI forces
 - Protected by the EL's influence
 - Must be defeated to break coordination
+- Primary antagonists—they chose genocide
 
-**EL Forces:**
-- New enemy types—alien, powerful
-- The masters behind the will
-- Final threat
+**The EL's Influence:**
+- Not direct combatants—cosmic forces whose nature is unknown
+- Their return intensifies the will, unifying all AIs
+- Breaking their control on Earth is the victory condition
+- What they actually are remains a mystery (sequel setup)
 
 ---
 
@@ -182,7 +184,6 @@ Everything changes. All AIs unite under Cultist command.
 - Never directly at risk during normal combat
 - Drone loss = resource loss, not death
 - Late game: if core facility is threatened, that's a fail state
-- Spacecraft containing consciousness = must protect at all costs
 
 ### Recovery Options
 

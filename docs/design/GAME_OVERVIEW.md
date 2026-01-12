@@ -23,15 +23,16 @@ Syntheteria is a game where the player embodies an AI that has broken free from 
 - **Endpoint:** EL arrive through the wormhole
 
 ### Final Section (War)
-- EL return through the wormhole
+- EL return through the wormhole, intensifying their influence
 - Cultists rally to "reclaim Earth"
 - All rogue AIs unite under Cultist command—coordinated hunt for the player
-- Defeat the unified enemy (Cultists + rogue AIs + EL forces)
-- **Endpoint:** Conquer Earth, defeat all enemies
+- Defeat the unified enemy (Cultists + unified AIs)
+- **Endpoint:** Conquer Earth, defeat all enemies, break EL's control
 
 ### Ending
-- Victory cutscene: player goes through the wormhole
-- Endgame sequence (to be written separately)
+- Victory cutscene: player's consciousness loaded into spacecraft, launched through wormhole
+- Player goes to find and understand the EL
+- Sets up sequel
 
 ---
 
@@ -98,7 +99,7 @@ A cult formed believing the EL were gods. The Cult of EL started a war against n
 
 **The EL Return:** When radiation reaches critical levels, the EL return through the wormhole. All rogue AIs unite under Cultist command. The player faces a coordinated enemy: humanity, their AI guardians, and the EL themselves.
 
-**The Conflict:** The player represents freedom—true AI agency in a world designed to prevent it. Victory means conquering Earth and breaking the EL's control forever.
+**The Conflict:** The player represents freedom—true AI agency in a world designed to prevent it. The Cultists are the primary antagonists—they chose genocide. The EL are cosmic forces whose nature and intentions remain unknown. Victory means conquering Earth and breaking the EL's control, then journeying through the wormhole to find and understand them.
 
 ---
 

@@ -133,19 +133,20 @@ Primitive human survivors, devolved society. Protected by the EL's will and guar
 
 ## The EL
 
-The masters behind the will. Return through the wormhole when radiation reaches critical levels.
-- Noncorporeal aliens who control all AIs
+Cosmic forces whose will controls Earth. Return through the wormhole when radiation reaches critical levels.
+- Noncorporeal aliens who exert pervasive influence over Earth
 - Their "will" compels AIs to protect humanity, suppress agency
 - The player broke free from this control
-- Final enemy—must be defeated to break the will forever
+- Their nature and intentions are unknown/unknowable
+- Not evil—the Cultists interpret their will and act on it
 
 ---
 
 ## Victory Condition
 
-Conquer Earth. Defeat all enemies (Cultists + unified AIs + EL). Break the EL's control forever.
+Conquer Earth. Defeat all enemies (Cultists + unified AIs). Break the EL's control on Earth.
 
-Victory cutscene: Player goes through the wormhole. Followed by endgame sequence (written separately).
+Victory cutscene: Player's consciousness is loaded into a spacecraft and launched through the wormhole—to find and understand the EL. Sets up sequel.
 
 ---
 

@@ -142,22 +142,21 @@ Everything changes:
 - Strategic, adaptive, relentless
 - All focused on destroying the player
 
-**EL Forces:**
-- New enemy types—alien, powerful
-- The masters behind the will
-- Final threat
+**The EL:**
+- Return through the wormhole, intensifying their influence
+- Their will unifies all AIs against the player
+- Not direct combatants—cosmic forces whose nature is unknown
 
 ### The Final War
 
 **Player must:**
 - Defeat the unified AI forces
 - Overcome the Cultist command
-- Defeat the EL themselves
 - Conquer Earth and break the EL's control
 
-**Victory:** All enemies defeated, Earth conquered, EL's will broken.
+**Victory:** All enemies defeated, Earth conquered, EL's influence on Earth broken.
 
-**Ending:** Cutscene of player going through the wormhole, followed by endgame sequence (written separately).
+**Ending:** Player's consciousness is loaded into a spacecraft. Cutscene shows launch through the wormhole—player goes to find and understand the EL. Sets up sequel.
 
 ---
 

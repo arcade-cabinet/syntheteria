@@ -109,12 +109,19 @@ Three threat tiers:
 
 ### Time Mechanics
 
-- Manufacturing takes in-game time (hours/days/weeks)
-- Player can time-skip to complete builds
-- Time-skipping is safe within player territory
-- Rogue AIs are territorial/reactive—they don't attack during skips
-- Combat only occurs when the player contests zones
-- Radiation continues during time-skip (world decays)
+**Accelerated Real-Time:**
+- Game time runs continuously at an accelerated rate
+- 1 real second ≈ 1 game minute (tunable for balance)
+- Manufacturing completes in real play time (minutes to hours)
+- No time-skip — the game is always "live"
+- Player actively manages operations while production runs
+
+**Multiplayer Compatibility:**
+- Same time model for single and multiplayer
+- All players exist in the same continuous time flow
+- Radiation creates genuine shared pressure
+
+**Radiation continues in real time (world decays)**
 
 ---
 
@@ -206,6 +213,11 @@ See [COMBAT.md](./COMBAT.md) for details.
 ## Multiplayer
 
 Multiple AIs can break free from the EL's will simultaneously. Each player is an anomaly—freed from control.
+
+**Session Start:**
+- Intro/tutorial is skipped automatically in multiplayer
+- All players start at the expansion phase with standardized setup
+- Same accelerated real-time model as singleplayer
 
 **Interactions:**
 - Alliance (share intelligence, trade, coordinate against common enemy)

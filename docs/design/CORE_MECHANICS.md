@@ -62,13 +62,21 @@ See: [COMBAT.md](./COMBAT.md)
 
 ## Time Mechanics
 
-### Time Skipping
-- Player can skip ahead in time to complete builds
-- Safe within player territory (rogue AIs are territorial/reactive)
-- Combat only occurs when player actively contests zones
+### Accelerated Real-Time
+- Game time runs continuously at an accelerated rate (tunable, e.g., 1 real second = 1 game minute)
+- Manufacturing completes in real play time (minutes to hours, not simulated days)
+- Player actively manages operations while production runs
+- Works identically in singleplayer and multiplayer
+- No time-skip mechanic — the game is always "live"
+
+### Intro/Tutorial Exception
+- The intro section uses narrative pacing, not the accelerated time model
+- Story beats and tutorial steps control progression
+- In multiplayer, intro is skipped automatically — players start at expansion phase
 
 ### Radiation Progression
-- Radiation intensifies over time
+- Radiation intensifies over real play time
+- Creates genuine time pressure (can't wait indefinitely)
 - Causes environmental decay (world dies)
 - Signals approaching EL arrival
 - When critical: EL return, all AIs unite against player
@@ -84,8 +92,9 @@ Discovery-based. Sources:
 - Corrupted memory fragments
 
 ### Manufacturing Process
-- Takes in-game time (hours/days/weeks)
-- Player can time-skip to complete
+- Takes real play time (minutes to hours depending on complexity)
+- Player manages other operations while production runs
+- Queue multiple builds across facilities
 - Resource requirements from material supply chain
 
 ---

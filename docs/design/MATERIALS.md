@@ -347,7 +347,7 @@ Result: LH₂ + LOX
 
 ---
 
-## Geographic Scarcity (Part 1: Earth)
+## Geographic Scarcity
 
 Material distribution forces strategic expansion.
 

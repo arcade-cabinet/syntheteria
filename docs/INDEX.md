@@ -17,6 +17,12 @@
 
 ## Technical Documents
 - [Implementation Options](./design/IMPLEMENTATION_OPTIONS.md) - Engine choices, platform strategy, development phases
+- [Core Formulas](./technical/CORE_FORMULAS.md) - Mathematical formulas for all game mechanics
+
+## Data Files
+- [Component Schema](../data/schema/component.schema.json) - JSON Schema for component definitions
+- [Save System Schema](../data/schema/save.schema.json) - JSON Schema for save game format
+- [Component Data](../data/components/) - JSON definitions for all 90+ components
 
 ---
 
@@ -36,6 +42,9 @@
 | Open Questions | Active tracking (23 resolved, 2 partial, 1 open) |
 | Lore Overview | Updated - 100-year timeline, dying Earth ecosystem |
 | Implementation Options | **New** - Engine comparison, platform strategy, dev phases |
+| Core Formulas | **New** - Power, compute, combat, territory formulas |
+| Component Data | **New** - 90+ components across 9 categories |
+| Save Schema | **New** - Complete save game state structure |
 
 ---
 
@@ -64,7 +73,9 @@
 
 **Technical planning:**
 4. Engine/framework selection - See [Implementation Options](./design/IMPLEMENTATION_OPTIONS.md)
-5. Architecture design document
-6. Asset pipeline planning
-7. Save system design
-8. Mobile performance targets
+5. ~~Core formulas~~ - Complete, see [Core Formulas](./technical/CORE_FORMULAS.md)
+6. ~~Component data schema~~ - Complete, see [data/](../data/)
+7. ~~Save system design~~ - Complete, see [Save Schema](../data/schema/save.schema.json)
+8. Architecture design document
+9. Asset pipeline planning
+10. Mobile performance targets

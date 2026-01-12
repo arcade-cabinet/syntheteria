@@ -1,0 +1,364 @@
+{
+  "$schema": "../schema/component.schema.json",
+  "components": [
+    {
+      "id": "wheels_micro",
+      "name": "Micro Wheels (4x)",
+      "category": "locomotion",
+      "tier": 1,
+      "weight": 0.05,
+      "description": "Tiny wheels for smooth surfaces only.",
+      "locomotion": {
+        "type": "wheels",
+        "base_power_rate": 0.1,
+        "terrain": ["smooth"],
+        "speed_class": "fast"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 0.25,
+        "inputs": [
+          { "material": "rubber", "quantity": 1 },
+          { "material": "aluminum", "quantity": 1 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "wheels_small",
+      "name": "Small Wheels (4x)",
+      "category": "locomotion",
+      "tier": 1,
+      "weight": 0.5,
+      "description": "Standard wheels for roads and light off-road.",
+      "locomotion": {
+        "type": "wheels",
+        "base_power_rate": 0.1,
+        "terrain": ["smooth", "rough"],
+        "speed_class": "fast"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 0.5,
+        "inputs": [
+          { "material": "rubber", "quantity": 2 },
+          { "material": "aluminum", "quantity": 2 },
+          { "material": "bearing_assembly", "quantity": 1 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "wheels_medium",
+      "name": "Medium Wheels (4x)",
+      "category": "locomotion",
+      "tier": 2,
+      "weight": 2,
+      "description": "Robust wheels for most ground terrain.",
+      "locomotion": {
+        "type": "wheels",
+        "base_power_rate": 0.1,
+        "terrain": ["smooth", "rough", "steep"],
+        "speed_class": "medium"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 1,
+        "inputs": [
+          { "material": "rubber", "quantity": 4 },
+          { "material": "steel", "quantity": 3 },
+          { "material": "bearing_assembly", "quantity": 2 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "wheels_large",
+      "name": "Large Wheels (4x)",
+      "category": "locomotion",
+      "tier": 3,
+      "weight": 8,
+      "description": "Heavy-duty wheels for rough terrain.",
+      "locomotion": {
+        "type": "wheels",
+        "base_power_rate": 0.1,
+        "terrain": ["smooth", "rough", "steep"],
+        "speed_class": "medium"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 2,
+        "inputs": [
+          { "material": "rubber", "quantity": 8 },
+          { "material": "steel", "quantity": 8 },
+          { "material": "bearing_assembly", "quantity": 4 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "treads_small",
+      "name": "Small Treads",
+      "category": "locomotion",
+      "tier": 2,
+      "weight": 3,
+      "description": "Tracked locomotion for all ground terrain.",
+      "locomotion": {
+        "type": "treads",
+        "base_power_rate": 0.2,
+        "terrain": ["smooth", "rough", "steep", "extreme"],
+        "speed_class": "slow"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 2,
+        "inputs": [
+          { "material": "rubber", "quantity": 6 },
+          { "material": "steel", "quantity": 8 },
+          { "material": "bearing_assembly", "quantity": 4 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "treads_large",
+      "name": "Large Treads",
+      "category": "locomotion",
+      "tier": 3,
+      "weight": 15,
+      "description": "Heavy tracked locomotion for extreme terrain.",
+      "locomotion": {
+        "type": "treads",
+        "base_power_rate": 0.2,
+        "terrain": ["smooth", "rough", "steep", "extreme"],
+        "speed_class": "slow"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 4,
+        "inputs": [
+          { "material": "rubber", "quantity": 15 },
+          { "material": "steel", "quantity": 20 },
+          { "material": "bearing_assembly", "quantity": 8 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "legs_bipedal",
+      "name": "Bipedal Legs (2x)",
+      "category": "locomotion",
+      "tier": 3,
+      "weight": 4,
+      "description": "Two-legged locomotion. All terrain including climbing.",
+      "locomotion": {
+        "type": "legs",
+        "base_power_rate": 0.25,
+        "terrain": ["smooth", "rough", "steep", "extreme"],
+        "speed_class": "medium"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 6,
+        "inputs": [
+          { "material": "aluminum_alloy", "quantity": 4 },
+          { "material": "servo_precision", "quantity": 8 },
+          { "material": "bearing_assembly", "quantity": 6 },
+          { "material": "actuator", "quantity": 4 }
+        ],
+        "blueprint_required": true
+      }
+    },
+    {
+      "id": "legs_quadruped",
+      "name": "Quadruped Legs (4x)",
+      "category": "locomotion",
+      "tier": 3,
+      "weight": 6,
+      "description": "Four-legged locomotion. Stable on all terrain.",
+      "locomotion": {
+        "type": "legs",
+        "base_power_rate": 0.25,
+        "terrain": ["smooth", "rough", "steep", "extreme"],
+        "speed_class": "medium"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 8,
+        "inputs": [
+          { "material": "aluminum_alloy", "quantity": 6 },
+          { "material": "servo_precision", "quantity": 16 },
+          { "material": "bearing_assembly", "quantity": 8 },
+          { "material": "actuator", "quantity": 8 }
+        ],
+        "blueprint_required": true
+      }
+    },
+    {
+      "id": "legs_hexapod",
+      "name": "Hexapod Legs (6x)",
+      "category": "locomotion",
+      "tier": 4,
+      "weight": 8,
+      "description": "Six-legged locomotion. Maximum stability on extreme terrain.",
+      "locomotion": {
+        "type": "legs",
+        "base_power_rate": 0.25,
+        "terrain": ["smooth", "rough", "steep", "extreme"],
+        "speed_class": "slow"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 12,
+        "inputs": [
+          { "material": "aluminum_alloy", "quantity": 8 },
+          { "material": "servo_precision", "quantity": 24 },
+          { "material": "bearing_assembly", "quantity": 12 },
+          { "material": "actuator", "quantity": 12 }
+        ],
+        "blueprint_required": true
+      }
+    },
+    {
+      "id": "rotors_micro",
+      "name": "Micro Rotors (4x)",
+      "category": "locomotion",
+      "tier": 2,
+      "weight": 0.1,
+      "description": "Tiny quadcopter rotors for smallest aerial drones.",
+      "locomotion": {
+        "type": "rotors",
+        "base_power_rate": 0.5,
+        "terrain": ["air"],
+        "speed_class": "fast"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 1,
+        "inputs": [
+          { "material": "carbon_fiber", "quantity": 1 },
+          { "material": "motor_micro", "quantity": 4 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "rotors_small",
+      "name": "Small Rotors (4x)",
+      "category": "locomotion",
+      "tier": 2,
+      "weight": 1,
+      "description": "Standard quadcopter rotors for light aerial drones.",
+      "locomotion": {
+        "type": "rotors",
+        "base_power_rate": 0.5,
+        "terrain": ["air"],
+        "speed_class": "fast"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 2,
+        "inputs": [
+          { "material": "carbon_fiber", "quantity": 2 },
+          { "material": "motor_small", "quantity": 4 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "rotors_large",
+      "name": "Large Rotors (4x)",
+      "category": "locomotion",
+      "tier": 3,
+      "weight": 5,
+      "description": "Heavy-lift rotors for cargo and combat aerial drones.",
+      "locomotion": {
+        "type": "rotors",
+        "base_power_rate": 0.5,
+        "terrain": ["air"],
+        "speed_class": "medium"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 4,
+        "inputs": [
+          { "material": "carbon_fiber", "quantity": 6 },
+          { "material": "motor_medium", "quantity": 4 }
+        ],
+        "blueprint_required": true
+      }
+    },
+    {
+      "id": "rotors_heavy",
+      "name": "Heavy Rotors (8x)",
+      "category": "locomotion",
+      "tier": 4,
+      "weight": 15,
+      "description": "Octocopter configuration for maximum lift capacity.",
+      "locomotion": {
+        "type": "rotors",
+        "base_power_rate": 0.5,
+        "terrain": ["air"],
+        "speed_class": "slow"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 8,
+        "inputs": [
+          { "material": "carbon_fiber", "quantity": 12 },
+          { "material": "motor_large", "quantity": 8 }
+        ],
+        "blueprint_required": true
+      }
+    },
+    {
+      "id": "propeller_aquatic",
+      "name": "Aquatic Propeller",
+      "category": "locomotion",
+      "tier": 2,
+      "weight": 1,
+      "description": "Underwater propulsion system.",
+      "locomotion": {
+        "type": "aquatic",
+        "base_power_rate": 0.15,
+        "terrain": ["water"],
+        "speed_class": "medium"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 2,
+        "inputs": [
+          { "material": "stainless_steel", "quantity": 2 },
+          { "material": "motor_medium", "quantity": 1 },
+          { "material": "waterproof_seal", "quantity": 2 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "hydrojet",
+      "name": "Hydrojet",
+      "category": "locomotion",
+      "tier": 3,
+      "weight": 3,
+      "description": "High-speed underwater jet propulsion.",
+      "locomotion": {
+        "type": "aquatic",
+        "base_power_rate": 0.2,
+        "terrain": ["water"],
+        "speed_class": "fast"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 4,
+        "inputs": [
+          { "material": "stainless_steel", "quantity": 4 },
+          { "material": "motor_large", "quantity": 1 },
+          { "material": "waterproof_seal", "quantity": 4 },
+          { "material": "pressure_vessel", "quantity": 1 }
+        ],
+        "blueprint_required": true
+      }
+    }
+  ]
+}

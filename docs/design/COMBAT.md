@@ -160,6 +160,7 @@ Everything changes. All AIs unite under Cultist command.
 - Protected by the EL's influence
 - Must be defeated to break coordination
 - Primary antagonists—they chose genocide
+- **Supernatural powers:** When EL return, Cultists can channel the EL's will directly—think Moses parting the sea. No longer just commanders, but direct threats to player hardware.
 
 **The EL's Influence:**
 - Not direct combatants—cosmic forces whose nature is unknown

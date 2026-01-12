@@ -73,17 +73,26 @@ Potential categories:
 1. **Memory** - Physical storage capacity affects:
    - Story progression (memory fragments)
    - Overall capability expansion
-   - **[TBD]:** Specific gameplay effects
+   - See: Memory System section above
 
 2. **Processing Power** - Computational capacity affects:
-   - Number of drones controllable simultaneously?
-   - Complexity of autonomous behaviors?
-   - **[TBD]:** Specific gameplay effects
+   - **DECIDED:** Multiple gameplay effects:
+     - Drone count ceiling (how many can be controlled simultaneously)
+     - Automation complexity ceiling (sophistication of autonomous behaviors)
+     - Simulation/planning speed
+     - Multi-tasking capability
+   - Scaling processing power is key to transitioning from micro to macro gameplay
 
 3. **Electrical Power** - Energy supply affects:
-   - Drone operation
-   - Facility operation
-   - **[TBD]:** Is this a moment-to-moment resource or a strategic one?
+   - **DECIDED:** Both strategic AND tactical layers:
+   - **Strategic (Generation):**
+     - Build power generation capacity (solar, nuclear, etc.)
+     - Everything draws from generation capacity
+     - Insufficient generation = systems shut down
+   - **Tactical (Distribution):**
+     - Drones have batteries, need charging
+     - Facilities need local power connections
+     - Managing power distribution is part of logistics
 
 4. **Signal Range** - Communication distance affects:
    - How far drones can operate from core/relays
@@ -114,19 +123,41 @@ Unlocked during Part 1, becomes central to Part 2.
 
 ## Resource Management
 
-### Resource Types **[TBD]**
-Potential resources to track:
-- **Raw Materials:** Metal, plastic, silicon, rare elements
-- **Energy:** Power generation and storage
-- **Memory/Processing:** AI's computational capacity
-- **Manufactured Components:** Intermediate products
-- **Fuel:** For rockets and possibly drones
+### Resource Categories
+**DECIDED:**
+
+**1. AI Constraints (see Limitations section)**
+- Memory
+- Processing Power
+- Electrical Power
+- Signal Range
+
+**2. Raw Materials**
+- **DECIDED:** Required for manufacturing
+- **[TBD]:** Specific material types (metals, silicon, rare earth elements, plastics, etc.)
+- **[TBD]:** How granular should material tracking be?
+
+**3. Electrical Power**
+- Generated through various means (solar, nuclear, wind, etc.)
+- Used for: drone operation, facility operation, manufacturing
+- Two-layer system: generation capacity + distribution/charging
+
+**4. Rocket Fuel**
+- **DECIDED:** Separate from electrical power
+- Required specifically for rocket launches
+- Must be produced/refined
+- **[TBD]:** Fuel type(s) - chemical propellant? What kind?
+
+**5. Manufactured Components** (likely)
+- Intermediate products created from raw materials
+- Used in construction of drones, facilities, rockets
+- **[TBD]:** Component types and supply chain complexity
 
 ### Gathering Methods **[TBD]**
 - Scavenging from ruins
 - Mining/extraction
 - Recycling destroyed equipment
-- Manufacturing from raw materials
+- Manufacturing/refining
 
 ---
 

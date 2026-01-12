@@ -17,11 +17,15 @@ This document tracks design questions that need resolution.
 
 ## Gameplay Mechanics Questions
 
-- [ ] **Q4:** What resources does the player need to manage? (Raw materials, energy, memory/processing power, manufactured components?)
+- [x] **Q4:** What resources does the player need to manage?
+  - **RESOLVED:** Five categories: (1) AI Constraints (memory, processing, power, signal), (2) Raw Materials for manufacturing, (3) Electrical Power (generation + distribution), (4) Rocket Fuel (separate from electrical), (5) Manufactured Components. Specific material types and supply chain granularity TBD.
 - [x] **Q5:** How does drone control work?
   - **RESOLVED:** Hybrid model - combination of direct control and autonomous directives.
 - [x] **Q6:** What are the limitations on the AI player?
-  - **RESOLVED:** Four constraints: Memory, Processing Power, Electrical Power, and Signal Range. Signal range is extendable through relay stations and satellites.
+  - **RESOLVED:** Four constraints: Memory, Processing Power, Electrical Power, and Signal Range.
+  - Processing Power affects: drone count ceiling, automation complexity, simulation speed, multi-tasking.
+  - Electrical Power has two layers: strategic (generation capacity) + tactical (distribution/charging).
+  - Signal Range extendable through relay stations and satellites.
 - [ ] **Q7:** How does 3D printing work mechanically? (Blueprints? Research tree? Material requirements?)
 - [ ] **Q8:** What types of drones/robots can the player build?
 

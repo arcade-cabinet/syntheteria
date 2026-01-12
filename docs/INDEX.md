@@ -3,16 +3,20 @@
 ## Design Documents
 - [Game Overview](./design/GAME_OVERVIEW.md) - High-level concept and structure
 - [Core Mechanics](./design/CORE_MECHANICS.md) - Gameplay systems and mechanics
+- [Consciousness Model](./design/CONSCIOUSNESS_MODEL.md) - AI resource system: energy, compute
+- [Drones](./design/DRONES.md) - Pure component assembly, emergent properties
+- [Combat](./design/COMBAT.md) - Emergent from components, automation-based scaling
+- [Materials](./design/MATERIALS.md) - Resources, processing tiers, supply chains
 - [UI Concept](./design/UI_CONCEPT.md) - Abstract digital consciousness interface
-- [Part 1: Earth Phase](./design/PART_1.md) - Complete Earth experience (intro + countdown)
-- [Part 2: Beyond the Wormhole](./design/PART_2.md) - Binary star system, alien tech, Cult of EL
+- [Earth Phase](./design/EARTH_PHASE.md) - Complete game structure (intro, expansion, final)
+- [Intro Sequence](./design/INTRO_SEQUENCE.md) - Tutorial, exploration, and revelation flow
 - [Open Questions](./design/OPEN_QUESTIONS.md) - Tracking unresolved design decisions
 
 ## Story Documents
 - [Lore Overview](./story/LORE_OVERVIEW.md) - World history and background
 
 ## Technical Documents
-- *(To be created once design is more complete)*
+- *(To be created once implementation begins)*
 
 ---
 
@@ -20,34 +24,46 @@
 
 | Document | Status |
 |----------|--------|
-| Game Overview | **Updated** - Two-part structure, rogue AI antagonists, business model considerations |
-| Core Mechanics | **Updated** - Manufacturing process, time mechanics, wormhole effects, challenge curve |
-| UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
-| Part 1: Earth Phase | **Updated** - Complete Earth experience (intro + countdown sections) |
-| Part 2: Beyond the Wormhole | **New** - Setting, alien tech, Cult of EL, multiplayer entry points |
-| Open Questions | Active tracking (23 resolved, 2 partial, 1 remaining) |
+| Game Overview | **Updated** - Single game structure, EL return as late-game threat |
+| Core Mechanics | Updated - Manufacturing process, time mechanics, radiation effects |
+| Consciousness Model | Complete - Energy/compute system, unit types, failure states |
+| Drones | Complete - Pure component assembly, 70+ components, emergent properties |
+| Combat | Complete - Emergent from components, automation scaling, rogue AI behaviors |
+| Materials | Complete - 5-tier supply chain, granular resources, geographic scarcity |
+| UI Concept | Partial - Layered mind space system defined, specifics TBD |
+| Earth Phase | **New** - Replaces Part 1/Part 2, complete game on Earth |
+| Intro Sequence | **Updated** - EL return revelation, not wormhole countdown |
+| Open Questions | Active tracking (23 resolved, 2 partial, 1 open) |
 | Lore Overview | Updated - 100-year timeline, dying Earth ecosystem |
 
 ---
 
 ## Recent Changes
 
-- **Game structure:** Simplified from 3 parts to 2 parts (Earth phase + Beyond wormhole)
-- **Antagonists:** Rogue AI threat hierarchy (feral units → regional networks → apex AI)
-- **Drone system:** Maximum modularity (chassis + modules, any combination)
-- **Blueprints:** Discovery-based acquisition
-- **Manufacturing:** In-game time with safe time-skip in player territory
-- **Wormhole effects:** Environmental decay + rogue AI decay (challenge shifts over 10 years)
-- **Victory/failure:** Reach wormhole to win; fail to escape by year 10 = wormhole explodes
-- **Part 1 length:** ~2-3 hours (30-40 min intro + 1-2 hour countdown)
-- **Part 2 setting:** Binary star system, extinct alien civilization, Cult of EL on tidally locked planet
-- **Business model:** Free-to-play Part 1 under consideration
+- **Scope reduction:** Single game on Earth, removed Part 2 (space travel)
+- **Victory condition:** Conquer Earth, defeat all enemies (rogue AIs + EL)
+- **EL return:** Radiation counts down to EL arrival, not wormhole explosion
+- **Multiplayer:** Multiple player AIs on same Earth, ally or fight
+- **Combat system:** Emergent from components, automation-based scaling
+- **Drone system:** Pure component assembly, dynamic resource calculation
+- **Materials system:** 5-tier supply chain, granular resources
+- **Consciousness model:** Energy (local) + Compute (global) resources
+- **Intro sequence:** Tutorial flow, story gates, EL revelation endpoint
 
 ---
 
-## Next Steps
+## Next Steps (Pre-Implementation)
 
-1. Define specific module and chassis details
-2. Finalize visual style (Q23) and business model (Q25) during prototyping
-3. Create technical planning documents
-4. Begin implementation
+**Design gaps to fill:**
+1. UI "growing consciousness" specifics (Q3): visual manifestations
+
+**Decisions requiring prototyping:**
+2. Visual style (Q23): Stylized/Abstract vs Clean/Minimal
+3. Business model (Q25): F2P, premium, or hybrid?
+
+**Technical planning:**
+4. Engine/framework selection (Godot recommended)
+5. Architecture design document
+6. Asset pipeline planning
+7. Save system design
+8. Mobile performance targets

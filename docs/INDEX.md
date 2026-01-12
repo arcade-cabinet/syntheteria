@@ -25,7 +25,7 @@
 | UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
 | Part 1: Earth Phase | **Updated** - Complete Earth experience (intro + countdown sections) |
 | Part 2: Beyond the Wormhole | **New** - Setting, alien tech, Cult of EL, multiplayer entry points |
-| Open Questions | Active tracking (23 resolved, 2 partial, 1 remaining) |
+| Open Questions | Active tracking (20 resolved, 5 partial, 1 open) |
 | Lore Overview | Updated - 100-year timeline, dying Earth ecosystem |
 
 ---
@@ -45,9 +45,22 @@
 
 ---
 
-## Next Steps
+## Next Steps (Pre-Implementation)
 
-1. Define specific module and chassis details
-2. Finalize visual style (Q23) and business model (Q25) during prototyping
-3. Create technical planning documents
-4. Begin implementation
+**Design gaps to fill:**
+1. Drone system specifics (Q8): slot counts, power budgets, module list, costs
+2. Resource system specifics (Q4): material types, supply chain, facility types
+3. Intro endpoint specifics (Q13): story gates, memory threshold, facility checklist
+4. UI "growing consciousness" specifics (Q3): visual manifestations
+
+**Decisions requiring prototyping:**
+5. Visual style (Q23): Stylized/Abstract vs Clean/Minimal
+6. Business model (Q25): F2P Part 1 with paid Part 2?
+
+**Technical planning:**
+7. Engine/framework selection
+8. Architecture design document
+9. Asset pipeline planning
+10. Save system design
+11. Mobile performance targets
+12. Networking approach (Part 2 multiplayer)

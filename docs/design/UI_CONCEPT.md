@@ -11,23 +11,23 @@ The player interface should embody the experience of **being** an AI consciousne
 
 ## Visual Identity
 
-### Part 1: Small Consciousness
+### Early Game: Emerging Consciousness
 - Player begins as a limited awareness
 - Interface should feel constrained, emerging
 - Like "waking up" - fragmented, incomplete data
 - Gradually expands as player gains memory and hardware
 
-### Part 2: Growing Network
+### Mid Game: Growing Network
 - Interface can incorporate top-down strategic elements
 - But remains grounded in the abstract consciousness foundation
 - Player should feel like a sprawling network of awareness
 - Multiple data streams, facility status, drone feeds
 
-### Part 3: Starting Small Again
-- After passing through wormhole, return to constrained feeling
-- Lost connection to Earth infrastructure = lost part of yourself
-- Interface contracts to reflect reduced scope
-- Maintains continuity while emphasizing the loss
+### Late Game: Dominant Consciousness
+- Player commands a vast network
+- Interface reflects the scale of control
+- Strategic overlay with tactical zoom capability
+- EL arrival creates new visual tension/interference
 
 ---
 
@@ -55,7 +55,7 @@ The interface combines multiple approaches into a cohesive system:
    - Micro-management is always available when desired
 
 4. **Automation System**
-   - Part 1 tutorial teaches players how to automate drone behaviors
+   - Tutorial teaches players how to automate drone behaviors
    - Player CHOOSES their level of engagement
    - Can micro-manage everything, or set up automation and watch from network view
    - Supports both playstyles seamlessly
@@ -73,12 +73,12 @@ The interface combines multiple approaches into a cohesive system:
 **RESOLVED:**
 - **Opening:** Glitchy, corrupted aesthetic during the awakening cutscene
 - **After Opening:** Corruption clears - this is purely an opening aesthetic, not a progression system
-- **Part 2:** New interference effects emerge from wormhole radiation
-- **Important:** Part 2 radiation effects are DISTINCT from opening corruption - different cause, different visual language
+- **Radiation Effects:** As radiation intensifies, new visual effects may indicate environmental decay
+- **EL Arrival:** Distinct visual language for EL presence (TBD during prototyping)
 
 ### How Does Growth Feel?
 
-**[TBD]** As player gains memory/processing/range:
+**[TBD]** As player gains compute and expands network:
 - More simultaneous feeds?
 - Wider network visualization?
 - Faster/smoother data?
@@ -86,7 +86,7 @@ The interface combines multiple approaches into a cohesive system:
 
 ### How Does Loss Feel?
 
-**[TBD]** When losing drones, facilities, or passing through wormhole:
+**[TBD]** When losing drones, facilities, or territory:
 - Feeds go dark/disconnect?
 - Nodes disappear from network?
 - Sense of "phantom limb" for lost components?
@@ -117,8 +117,8 @@ The interface combines multiple approaches into a cohesive system:
 ## Open Design Questions
 
 1. ~~When directly controlling a drone, does the interface shift to something more traditional?~~ **RESOLVED:** Yes, player can focus on individual drones and see through their cameras/sensors
-2. How do the four constraints (memory, processing, power, signal) manifest visually in the interface?
+2. How do Energy and Compute constraints manifest visually in the interface?
 3. ~~Should the interface have a "corruption" aesthetic early on?~~ **RESOLVED:** Only during opening cutscene, not as progression system
 4. How do we represent the passage of time when player skips ahead?
 5. What does combat look like through this interface?
-6. What does wormhole radiation interference look like in Part 2? (Distinct from opening corruption)
+6. What visual language represents the EL's influence and Cultist supernatural powers?

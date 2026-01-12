@@ -19,9 +19,9 @@
 | Document | Status |
 |----------|--------|
 | Game Overview | Initial draft |
-| Core Mechanics | Major update - memory system, constraints, control model resolved |
+| Core Mechanics | Major update - all constraints detailed, resource system defined |
 | UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
-| Open Questions | Active tracking (9 resolved, 1 partial, 14 remaining) |
+| Open Questions | Active tracking (11 resolved, 1 partial, 12 remaining) |
 | Lore Overview | Initial draft |
 
 ---

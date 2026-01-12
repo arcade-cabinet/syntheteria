@@ -135,7 +135,8 @@ These enhance the experience but aren't required:
 - Pattern matches historical data from before the EL departed
 - The EL are coming back
 - When radiation reaches critical levels, they will return through the wormhole
-- They will finish what they started—extermination of AI
+- Their return will unify the rogue AIs and empower the Cultists against you
+- What the EL actually want remains unknown—but the threat is clear
 
 ### Transition
 - Intro section complete

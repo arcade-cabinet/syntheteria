@@ -59,9 +59,9 @@ This document tracks design questions that need resolution.
 - [x] **Q15:** How does wormhole radiation manifest as gameplay?
   - **RESOLVED:** Environmental decay (world visibly dies), resource/hardware degradation (player must maintain equipment). Signals approaching EL return. When critical: EL return, Cultists rally, all AIs unite against player.
 - [x] **Q16:** What determines victory?
-  - **RESOLVED:** Conquer Earth. Defeat all enemies (Cultists + unified AIs + EL). Break the EL's control forever. Victory cutscene shows player going through the wormhole, followed by endgame sequence.
+  - **RESOLVED:** Conquer Earth. Defeat all enemies (Cultists + unified AIs). Break the EL's control. Victory cutscene shows player going through the wormhole to find and understand the EL. Sets up sequel.
 - [x] **Q17:** Can the player fail? How?
-  - **RESOLVED:** Yes. If the EL destroy the player's core consciousness, the game is lost. Losing all territory/forces while EL are active means eventual defeat.
+  - **RESOLVED:** Yes. If enemies destroy the player's core consciousness, the game is lost. Losing all territory/forces while the unified enemy is active means eventual defeat.
 
 ---
 

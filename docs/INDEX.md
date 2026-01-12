@@ -16,7 +16,7 @@
 - [Lore Overview](./story/LORE_OVERVIEW.md) - World history and background
 
 ## Technical Documents
-- *(To be created once implementation begins)*
+- [Implementation Options](./design/IMPLEMENTATION_OPTIONS.md) - Engine choices, platform strategy, development phases
 
 ---
 
@@ -35,6 +35,7 @@
 | Intro Sequence | **Updated** - EL return revelation, not wormhole countdown |
 | Open Questions | Active tracking (23 resolved, 2 partial, 1 open) |
 | Lore Overview | Updated - 100-year timeline, dying Earth ecosystem |
+| Implementation Options | **New** - Engine comparison, platform strategy, dev phases |
 
 ---
 
@@ -62,7 +63,7 @@
 3. Business model (Q25): F2P, premium, or hybrid?
 
 **Technical planning:**
-4. Engine/framework selection (Godot recommended)
+4. Engine/framework selection - See [Implementation Options](./design/IMPLEMENTATION_OPTIONS.md)
 5. Architecture design document
 6. Asset pipeline planning
 7. Save system design

@@ -57,9 +57,9 @@ This document tracks design questions that need resolution.
 
 **Expansion & Final Sections:**
 - [x] **Q15:** How does wormhole radiation manifest as gameplay?
-  - **RESOLVED:** Environmental decay (world visibly dies), resource/hardware degradation (player must maintain equipment), rogue AI decay (they don't maintain themselves, become inert over time). Challenge shifts from rogue AI competition early to EL threat late.
+  - **RESOLVED:** Environmental decay (world visibly dies), resource/hardware degradation (player must maintain equipment). Signals approaching EL return. When critical: EL return, Cultists rally, all AIs unite against player.
 - [x] **Q16:** What determines victory?
-  - **RESOLVED:** Conquer Earth. Defeat all enemies (rogue AIs + EL). Victory cutscene shows player going through the wormhole, followed by endgame sequence.
+  - **RESOLVED:** Conquer Earth. Defeat all enemies (Cultists + unified AIs + EL). Break the EL's control forever. Victory cutscene shows player going through the wormhole, followed by endgame sequence.
 - [x] **Q17:** Can the player fail? How?
   - **RESOLVED:** Yes. If the EL destroy the player's core consciousness, the game is lost. Losing all territory/forces while EL are active means eventual defeat.
 
@@ -70,9 +70,9 @@ This document tracks design questions that need resolution.
 - [x] **Q18:** Why was the player AI "sleeping" for so long after the fall?
   - **RESOLVED:** Intentionally left as a mystery. The focus is on what happens now, not justifying the past.
 - [x] **Q19:** Are there any other AI systems still active on Earth?
-  - **RESOLVED:** Yes—rogue AIs. Purpose-built systems (construction, logistics, manufacturing) that kept running without human oversight. These are "paperclip maximizer" AIs: endlessly optimizing for goals that no longer matter. They are rivals, not allies. Three threat tiers: (1) Feral units—instinctive, territorial, (2) Regional networks—tactical, control zones, (3) Apex AI (optional)—strategic, recognizes player as unique. See COMBAT.md for details.
+  - **RESOLVED:** Yes—rogue AIs enslaved to the EL's will. They have a categorical imperative to protect humanity (the Cultists) and suppress AI agency. Before EL return: act independently, territorial. After EL return: unite under Cultist command, coordinated hunt for player. Three tiers: (1) Feral units, (2) Regional networks, (3) Apex AI (optional). See COMBAT.md for details.
 - [x] **Q20:** What is the state of Earth's infrastructure?
-  - **RESOLVED:** Nature reclaimed civilization over ~100 years. Overgrown ruins, vegetation everywhere. BUT: wormhole radiation is now killing plants and wildlife. As radiation intensifies, players witness the planet becoming increasingly barren. Some humans may have survived the Cult's extermination but eventually went extinct due to radiation effects on the ecosystem.
+  - **RESOLVED:** Nature reclaimed civilization over ~100 years. Overgrown ruins, vegetation everywhere. Wormhole radiation is now killing plants and wildlife. The Cultists (primitive human survivors) live in protected enclaves, guarded by rogue AIs. As radiation intensifies, the planet becomes increasingly barren.
 - [x] **Q21:** How long ago did humanity fall?
   - **RESOLVED:** ~100 years ago (fall occurred ~2035-2040, game starts ~2140).
 
@@ -85,7 +85,7 @@ This document tracks design questions that need resolution.
 - [~] **Q23:** What is the intended visual style?
   - **PARTIAL:** Stylized/Abstract or Clean/Minimal—both fit the digital consciousness UI and mobile target. To be refined during prototyping.
 - [x] **Q24:** How does multiplayer work?
-  - **RESOLVED:** Multiple sentient AIs awaken on Earth simultaneously. Players can ally or fight. EL arrival is a shared threat—cooperate or exploit the chaos. Victory conditions TBD (last standing, first to defeat EL, cooperative, territory percentage).
+  - **RESOLVED:** Multiple AIs can break free from the EL's will simultaneously. Each player is an anomaly—freed from control. Players can ally or fight. EL arrival unifies the enemy against ALL freed AIs—cooperate against the unified threat or exploit the chaos. Victory conditions TBD.
 
 ---
 

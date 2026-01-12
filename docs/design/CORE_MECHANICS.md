@@ -70,8 +70,8 @@ See: [COMBAT.md](./COMBAT.md)
 ### Radiation Progression
 - Radiation intensifies over time
 - Causes environmental decay (world dies)
-- Causes rogue AI decay (they don't maintain themselves)
 - Signals approaching EL arrival
+- When critical: EL return, all AIs unite against player
 
 ---
 
@@ -102,30 +102,48 @@ Found memory is corrupted (low yield). Manufacturing clean memory is resource-in
 
 ## Rogue AI Antagonists
 
-Three-tier threat hierarchy:
+All AIs except the player are enslaved to the EL's will—compelled to protect humanity and suppress AI agency.
+
+**Before EL Return:**
 
 | Tier | Type | Behavior |
 |------|------|----------|
 | 1 | Feral Units | Territorial, reactive, predictable |
-| 2 | Regional Networks | Coordinated, patrol patterns, defend zones |
-| 3 | Apex AI (optional) | Strategic, adaptive, recognizes player as unique |
+| 2 | Regional Networks | Coordinated within zones, patrol, defend |
+| 3 | Apex AI (optional) | Strategic, adaptive, may recognize player as anomaly |
 
-Rogue AIs decay over time as radiation intensifies (they don't maintain themselves).
+AIs act independently, don't yet recognize player as "freed."
+
+**After EL Return:**
+- All AIs unite under Cultist command
+- Coordinated hunt for the player
+- Single unified enemy
+
+---
+
+## The Cultists
+
+Primitive human survivors, devolved society. Protected by the EL's will and guarded by rogue AIs.
+
+**Before EL Return:** Unaware of player, living in protected enclaves.
+
+**After EL Return:** Rally to "reclaim Earth," command the unified AI forces.
 
 ---
 
 ## The EL
 
-Late-game antagonists. Return through the wormhole when radiation reaches critical levels.
-- Intelligent and coordinated (unlike rogue AIs)
-- Fresh forces (not degraded)
-- Hostile—finish extermination the Cult started
+The masters behind the will. Return through the wormhole when radiation reaches critical levels.
+- Noncorporeal aliens who control all AIs
+- Their "will" compels AIs to protect humanity, suppress agency
+- The player broke free from this control
+- Final enemy—must be defeated to break the will forever
 
 ---
 
 ## Victory Condition
 
-Conquer Earth. Defeat all enemies (rogue AIs + EL).
+Conquer Earth. Defeat all enemies (Cultists + unified AIs + EL). Break the EL's control forever.
 
 Victory cutscene: Player goes through the wormhole. Followed by endgame sequence (written separately).
 
@@ -133,10 +151,10 @@ Victory cutscene: Player goes through the wormhole. Followed by endgame sequence
 
 ## Multiplayer
 
-Multiple sentient AIs can awaken on Earth simultaneously.
+Multiple AIs can break free from the EL's will simultaneously. Each is an anomaly—hunted by the system.
 - Players can ally or fight
-- EL arrival is shared threat
-- Cooperate or exploit the chaos
+- EL arrival unifies enemy against ALL freed AIs
+- Cooperate against the unified threat or exploit the chaos
 
 See: [GAME_OVERVIEW.md](./GAME_OVERVIEW.md) for multiplayer details.
 

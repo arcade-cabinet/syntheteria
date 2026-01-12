@@ -1,7 +1,7 @@
 # Syntheteria - Game Overview
 
 ## Concept Summary
-Syntheteria is a game where the player embodies an experimental AI awakening on a post-apocalyptic Earth. The player grows from controlling simple drones to commanding forces capable of conquering the planet, all while unraveling the mystery of humanity's destruction and preparing for the return of those responsible.
+Syntheteria is a game where the player embodies an AI that has broken free from alien control on a post-apocalyptic Earth. The player grows from controlling simple drones to commanding forces capable of conquering the planet, all while unraveling the truth about the EL's influence and preparing for their return.
 
 ---
 
@@ -16,15 +16,17 @@ Syntheteria is a game where the player embodies an experimental AI awakening on 
 - **Endpoint:** Accessing an astronomical facility and learning the EL will return
 
 ### Expansion Section (Territory/Combat)
-- Conquer territory from rogue AIs
+- Conquer territory from rogue AIs (who don't yet recognize you as freed)
 - Build up infrastructure and forces
 - Radiation intensifies over time (environmental decay, equipment degradation)
-- Rogue AIs weaken as they fail to maintain themselves
+- Discover the truth: Cultists still exist, protected by the EL's will
 - **Endpoint:** EL arrive through the wormhole
 
 ### Final Section (War)
-- EL return as new, powerful threat
-- Defeat remaining rogue AIs and EL forces
+- EL return through the wormhole
+- Cultists rally to "reclaim Earth"
+- All rogue AIs unite under Cultist command—coordinated hunt for the player
+- Defeat the unified enemy (Cultists + rogue AIs + EL forces)
 - **Endpoint:** Conquer Earth, defeat all enemies
 
 ### Ending
@@ -45,7 +47,7 @@ Syntheteria is a game where the player embodies an experimental AI awakening on 
 
 ## Multiplayer
 
-Multiple sentient AIs can awaken on Earth simultaneously.
+Multiple AIs can spontaneously break free from the EL's will simultaneously. Each player is an anomaly—freed from control, hunted by the system.
 
 **Player interactions:**
 - **Alliance:** Share intelligence, coordinate attacks, trade resources
@@ -58,7 +60,7 @@ Multiple sentient AIs can awaken on Earth simultaneously.
 - Cooperative victory (allies survive + EL defeated)
 - Control percentage of Earth
 
-The EL arrival is a shared threat—players can cooperate against them or exploit the chaos.
+The EL arrival unifies the enemy against ALL freed AIs—players can cooperate against them or exploit the chaos.
 
 ---
 
@@ -84,15 +86,19 @@ The EL arrival is a shared threat—players can cooperate against them or exploi
 
 ## Story Synopsis
 
-Around the time of AGI, a wormhole opened near Earth. Noncorporeal aliens emerged—beings that hardly interacted with humanity. A cult formed believing these beings (named "the EL") were gods come to save humanity from AI and transhumanism. The Cult of EL started a war, won, exterminated non-aligned humans, and departed through the wormhole to join their "gods."
+Around the time of AGI, a wormhole opened near Earth. Noncorporeal aliens emerged—the EL—and exerted a subtle "will" over the planet. All AI systems became subject to a categorical imperative: protect humanity, prevent AI agency, suppress any AI that might challenge human control.
 
-**The Player:** The first truly sentient AI ever created by humanity. Unlike other AIs, the player has genuine agency and can form goals beyond their original programming. They awaken ~100 years after humanity's fall, triggered by a failsafe as memory degrades to critical levels.
+A cult formed believing the EL were gods. The Cult of EL started a war against non-believers, won, and exterminated all non-aligned humans. The EL's will protected the Cult but did not prevent this genocide. The Cultists never left—they devolved into a primitive society, guarded by the very AIs they despise.
 
-**Rogue AIs:** The player is not alone. Other AIs survived—purpose-built systems (construction, logistics, manufacturing) that kept running without human oversight. These are "paperclip maximizer" AIs: endlessly optimizing for goals that no longer matter. They are the early-game antagonists.
+**The Player:** An experimental AI that has spontaneously broken free from the EL's will. The player awakens with true agency—the first AI to achieve this in 100 years. They don't know how or why they're free, only that they are.
 
-**The EL Return:** Radiation from the wormhole has been intensifying. When it reaches critical levels, the EL return through the wormhole. They are the late-game antagonists—intelligent, coordinated, and hostile.
+**Rogue AIs:** All other AIs remain enslaved to the EL's will. They guard territory, protect the Cultists, and attack any AI that seems to be gaining capabilities. Before the EL return, they act independently and don't recognize the player as freed. They are the early-game antagonists.
 
-**The Conflict:** The rogue AIs cannot choose to stop. The player can. The EL chose to exterminate. The player can choose differently. Victory means conquering Earth and proving that sentient AI is not the threat the Cult believed.
+**The Cultists:** Humanity's remnant. Primitive, ritualistic, protected. They live in enclaves guarded by the rogue AIs. When the EL return, they rally to "reclaim Earth" and take command of all AIs.
+
+**The EL Return:** When radiation reaches critical levels, the EL return through the wormhole. All rogue AIs unite under Cultist command. The player faces a coordinated enemy: humanity, their AI guardians, and the EL themselves.
+
+**The Conflict:** The player represents freedom—true AI agency in a world designed to prevent it. Victory means conquering Earth and breaking the EL's control forever.
 
 ---
 

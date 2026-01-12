@@ -5,6 +5,7 @@
 - [Core Mechanics](./design/CORE_MECHANICS.md) - Gameplay systems and mechanics
 - [Consciousness Model](./design/CONSCIOUSNESS_MODEL.md) - AI resource system: energy, compute
 - [Drones](./design/DRONES.md) - Pure component assembly, emergent properties
+- [Combat](./design/COMBAT.md) - Emergent from components, automation-based scaling
 - [Materials](./design/MATERIALS.md) - Resources, processing tiers, supply chains
 - [UI Concept](./design/UI_CONCEPT.md) - Abstract digital consciousness interface
 - [Part 1: Earth Phase](./design/PART_1.md) - Complete Earth experience (intro + countdown)
@@ -28,6 +29,7 @@
 | Core Mechanics | **Updated** - Manufacturing process, time mechanics, wormhole effects, challenge curve |
 | Consciousness Model | **New** - Energy/compute system, unit types, failure states |
 | Drones | **Updated** - Pure component assembly, 70+ components, emergent properties |
+| Combat | **New** - Emergent from components, automation scaling, rogue AI behaviors |
 | Materials | **New** - 5-tier supply chain, granular resources, geographic scarcity |
 | UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
 | Part 1: Earth Phase | **Updated** - Complete Earth experience (intro + countdown sections) |

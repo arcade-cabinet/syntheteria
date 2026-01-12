@@ -75,7 +75,7 @@
       },
       "utility": {
         "type": "cargo",
-        "capacity": 200
+        "capacity": 100
       },
       "crafting": {
         "facility": "fabrication_bay",

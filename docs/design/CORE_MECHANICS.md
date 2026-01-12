@@ -156,10 +156,22 @@ This rewards exploration and ties manufacturing progression to world discovery.
 - **Rocket parts** — for armada construction
 - **Memory units** — clean (uncorrupted) memory for scaling up
 
-### Manufacturing Process **[TBD]**
-- **Time:** How long do prints take? Instant vs. queue-based vs. assembly pipeline?
-- **Materials:** What raw materials are needed? How granular?
-- **Facilities:** Can printers be improved? Multiple printers for throughput?
+### Manufacturing Process
+**DECIDED: In-game time with safe time-skip**
+
+- **Build time:** Manufacturing takes in-game time (hours/days/weeks depending on complexity)
+- **Time-skip:** Player can skip ahead to complete builds
+- **Safe skipping:** Time-skip is safe within player territory—rogue AIs are territorial/reactive, not proactive
+- **Combat timing:** Conflict only occurs when player actively contests rogue AI zones
+
+**Strategic depth comes from:**
+- What to build (resource allocation)
+- When to build it (10-year time budget)
+- Balancing building vs. exploring vs. contesting territory
+
+**Still TBD:**
+- Specific material types and requirements
+- Facility improvements and throughput scaling
 
 ---
 
@@ -206,24 +218,45 @@ This rewards exploration and ties manufacturing progression to world discovery.
 ## Time Mechanics
 
 ### Time Skipping
+**DECIDED: Safe within player territory**
 - Player can skip ahead in time to complete builds
+- Rogue AIs are territorial/reactive—they don't attack during skips
+- Safe skipping encourages focus on strategic planning over constant vigilance
 - **[TBD]:** How is this presented in UI?
-- **[TBD]:** Are there risks to skipping time? (Events during skip? Resource consumption?)
 
-### The 10-Year Countdown (Part 2)
+### The 10-Year Countdown
+**DECIDED: Hard deadline with consequences**
 - Begins when player discovers wormhole's destructive emissions
-- Creates strategic pressure against unlimited time skipping
+- Creates strategic pressure—player must budget 10 in-game years
+- At year 10, the wormhole explodes and destroys everything
+- Only escape is through the wormhole before detonation
+- On the other side, the wormhole simply closes (no explosion)
 - **[TBD]:** Is the countdown visible at all times?
 - **[TBD]:** Can the player see projected completion times vs. remaining time?
 
-### Wormhole Energy Waves
-- Increase in intensity over the 10 years
-- Cause natural disasters and destruction
-- **[TBD]:** How do these manifest mechanically?
-  - Random destruction events?
-  - Predictable escalating zones?
-  - Resource degradation?
-  - Drone/facility damage?
+### Wormhole Effects
+**DECIDED: Environmental decay + rogue AI decay**
+
+The wormhole radiation affects everything on Earth:
+
+**Environmental Decay:**
+- World visibly dies over 10 years (plants, wildlife, structures)
+- Resources degrade—some zones become depleted or irradiated
+- Player hardware degrades—must maintain/replace equipment
+
+**Rogue AI Decay:**
+- Rogue AIs don't maintain themselves (not part of their optimization loop)
+- They degrade and become inert over time
+- Early game: rogue AIs are the primary threat
+- Late game: environmental decay is the primary threat
+
+**Challenge Curve:**
+
+| Phase | Years | Primary Challenge |
+|-------|-------|-------------------|
+| Early | 1-3 | Rogue AI competition |
+| Mid | 4-7 | Balanced (weakening AIs + growing environmental pressure) |
+| Late | 8-10 | Environmental decay, time pressure, hardware maintenance |
 
 ---
 

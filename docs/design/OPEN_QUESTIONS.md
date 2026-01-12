@@ -26,8 +26,10 @@ This document tracks design questions that need resolution.
   - Processing Power affects: drone count ceiling, automation complexity, simulation speed, multi-tasking.
   - Electrical Power has two layers: strategic (generation capacity) + tactical (distribution/charging).
   - Signal Range extendable through relay stations and satellites.
-- [ ] **Q7:** How does 3D printing work mechanically? (Blueprints? Research tree? Material requirements?)
-- [ ] **Q8:** What types of drones/robots can the player build?
+- [~] **Q7:** How does 3D printing work mechanically?
+  - **PARTIAL:** Blueprint acquisition is discovery-based (found in ruins, reverse-engineered from rogue AI units, rare memory fragments). Manufacturing process (instant vs. queue vs. pipeline) TBD.
+- [x] **Q8:** What types of drones/robots can the player build?
+  - **RESOLVED:** Modular system. 5 chassis types (Micro, Light, Medium, Heavy, Ultra) with varying slot counts and power budgets. 5 module categories (Locomotion, Sensors, Manipulation, Weapons, Utility). Any module fits any slot, multiples allowed, modules consume power. Maximum creative freedom for players.
 
 ---
 
@@ -44,29 +46,30 @@ This document tracks design questions that need resolution.
 
 ## Part 1 Specific Questions
 
+*Note: Part 1 now encompasses the entire Earth phase (intro + countdown sections).*
+
+**Intro Section:**
 - [x] **Q12:** What is the player's starting state?
   - **RESOLVED:** Immobile server/core that must find hardware to control and activate its first drone.
-- [x] **Q13:** What defines the "standardized endpoint" for Part 1?
+- [x] **Q13:** What defines the endpoint of the intro section?
   - **RESOLVED:** Three requirements must be met: (1) Certain story progression points unlocked, (2) Enough memory to have the full history of the fall, (3) Specific capabilities and facilities unlocked. Once all are met, the game enables and guides the player to the astronomical facility.
-- [x] **Q14:** Approximately how long should Part 1 take for a first-time player?
+- [x] **Q14:** Approximately how long should the intro section take?
   - **RESOLVED:** No specific duration target. Let the story drive the pacing.
 
----
-
-## Part 2 Specific Questions
-
+**Countdown Section:**
 - [ ] **Q15:** How do the wormhole energy waves manifest as gameplay obstacles? (Random destruction events? Zone denial? Resource corruption?)
-- [ ] **Q16:** What determines "victory" for Part 2? (Minimum armada size? Specific ship types? Just reaching the wormhole?)
-- [ ] **Q17:** Can the player fail Part 2? What happens at year 10 if unprepared?
+- [ ] **Q16:** What determines "victory" for Part 1? (Minimum armada size? Specific ship types? Just reaching the wormhole?)
+- [ ] **Q17:** Can the player fail Part 1? What happens at year 10 if unprepared?
 
 ---
 
 ## World/Lore Questions
 
 - [ ] **Q18:** Why was the player AI "sleeping" for so long after the fall?
-- [ ] **Q19:** Are there any other AI systems still active on Earth? (Potential allies or rivals?)
+- [x] **Q19:** Are there any other AI systems still active on Earth?
+  - **RESOLVED:** Yes—rogue AIs. Purpose-built systems (construction, logistics, manufacturing) that kept running without human oversight. These are "paperclip maximizer" AIs: endlessly optimizing for goals that no longer matter. They are rivals, not allies. Three threat tiers: (1) Feral units—instinctive, territorial, (2) Regional networks—tactical, control zones, (3) Apex AI (optional)—strategic, recognizes player as unique. See CORE_MECHANICS.md for details.
 - [x] **Q20:** What is the state of Earth's infrastructure?
-  - **RESOLVED:** Nature reclaimed civilization over ~100 years. Overgrown ruins, vegetation everywhere. BUT: wormhole radiation is now killing plants and wildlife. Over the 10-year Part 2 window, players witness the planet becoming increasingly barren. Some humans may have survived the Cult's extermination but eventually went extinct due to radiation effects on the ecosystem.
+  - **RESOLVED:** Nature reclaimed civilization over ~100 years. Overgrown ruins, vegetation everywhere. BUT: wormhole radiation is now killing plants and wildlife. Over the 10-year countdown, players witness the planet becoming increasingly barren. Some humans may have survived the Cult's extermination but eventually went extinct due to radiation effects on the ecosystem.
 - [x] **Q21:** How long ago did humanity fall?
   - **RESOLVED:** ~100 years ago (fall occurred ~2035-2040, game starts ~2140).
 
@@ -76,7 +79,17 @@ This document tracks design questions that need resolution.
 
 - [ ] **Q22:** What platforms are you targeting? (PC? Console? Mobile?)
 - [ ] **Q23:** What is the intended visual style? (Realistic? Stylized? Abstract?)
-- [ ] **Q24:** Single-player first, multiplayer later - confirmed priority?
+- [x] **Q24:** Single-player first, multiplayer later - confirmed priority?
+  - **RESOLVED:** Yes. Multiplayer is gated behind Part 2 (beyond the wormhole). Players must complete Part 1 to access multiplayer.
+
+---
+
+## Business Model Questions
+
+- [ ] **Q25:** Should Part 1 be free-to-play with Part 2 as paid unlock?
+  - Under consideration. Benefits: low barrier, natural narrative paywall, pre-qualified paying players. Risks: completion funnel, Part 1 must feel complete alone.
+- [ ] **Q26:** What is the target length for Part 1?
+  - Critical for business model decision. Affects completion rates and conversion funnel.
 
 ---
 
@@ -84,3 +97,18 @@ This document tracks design questions that need resolution.
 - [ ] Unanswered
 - [~] Partially answered / needs clarification
 - [x] Resolved
+
+---
+
+## Summary
+
+| Category | Resolved | Partial | Open |
+|----------|----------|---------|------|
+| UI/Interface | 2 | 1 | 0 |
+| Gameplay Mechanics | 4 | 1 | 0 |
+| Memory System | 3 | 0 | 0 |
+| Part 1 Specific | 3 | 0 | 3 |
+| World/Lore | 3 | 0 | 1 |
+| Technical/Scope | 1 | 0 | 2 |
+| Business Model | 0 | 0 | 2 |
+| **Total** | **16** | **2** | **8** |

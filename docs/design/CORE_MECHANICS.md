@@ -58,14 +58,48 @@ The player interacts with the physical world through drones and robots.
 - Flexibility allows for both tactical micro-management and strategic macro-management
 - Supports the game's goal of seamless scaling from Part 1 exploration to Part 2 mass operations
 
-### Drone Types **[TBD]**
-Potential categories:
-- Scouts / Exploration
-- Builders / Constructors
-- Harvesters / Resource gatherers
-- Combat / Defense
-- Transport / Logistics
-- Specialized (research, repair, etc.)
+### Modular Drone System
+**DECIDED: Maximum modularity**
+
+Players build drones by combining **chassis** and **modules**. This allows creative freedom in unit design.
+
+#### Chassis Types
+Defines size, base speed, durability, power capacity, and module slots.
+
+| Chassis | Speed | Durability | Slots | Notes |
+|---------|-------|------------|-------|-------|
+| **Micro** | Very fast | Fragile | 1 | Disposable scouts, swarm units |
+| **Light** | Fast | Low | 2 | Versatile, cheap, quick to produce |
+| **Medium** | Moderate | Moderate | 3-4 | Workhorse frame, balanced |
+| **Heavy** | Slow | High | 5-6 | Expensive, powerful, resource-intensive |
+| **Ultra** | Very slow | Very high | 8+ | Late-game, requires significant resources |
+
+#### Module Categories
+
+| Category | Function | Examples |
+|----------|----------|----------|
+| **Locomotion** | Movement type | Wheels, treads, legs, rotors, thrusters |
+| **Sensors** | Perception | Cameras, radar, thermal, signal detection |
+| **Manipulation** | Physical interaction | Claws, drills, welders, manipulator arms |
+| **Weapons** | Combat capability | Projectile, energy, melee, defensive systems |
+| **Utility** | Special functions | Relay antenna, memory banks, cargo hold, power cell |
+
+#### Design Rules
+- **Any module fits any slot** — maximum flexibility
+- **Multiples allowed** — e.g., 4 weapons on a heavy chassis for extreme specialization
+- **Modules consume power** from chassis budget — forces tradeoffs
+- **Unfilled slots** = spare power capacity
+- **No artificial tiers** — manufacturing constraints gate progression naturally
+
+#### Example Builds (Medium Chassis)
+
+| Build | Modules | Role |
+|-------|---------|------|
+| Scout | Rotors + Advanced Sensors + Relay Antenna | Fast aerial recon, signal extension |
+| Harvester | Treads + Basic Sensors + Drill + Cargo Hold | Resource extraction |
+| Fighter | Legs + Combat Sensors + Weapon + Weapon | Mobile combat |
+| Constructor | Wheels + Basic Sensors + Welder + Manipulator Arm | Building and repairs |
+| Glass Cannon | Treads + Weapon + Weapon + Weapon + Weapon | Maximum firepower, minimal awareness |
 
 ### Limitations
 **DECIDED: Four core constraints**
@@ -103,21 +137,29 @@ Potential categories:
 
 ## 3D Printing / Manufacturing
 
-Unlocked during Part 1, becomes central to Part 2.
+Unlocked during Part 1's intro section, becomes central to the countdown section.
 
-### How It Works **[TBD]**
-- **Blueprints:** How are designs acquired? (Research? Memory unlocks? Discovery?)
-- **Materials:** What raw materials are needed? How are they gathered?
-- **Time:** How long do prints take? Can they be queued?
-- **Facilities:** Can printers be improved? Can you build more printers?
+### Blueprint Acquisition
+**DECIDED: Discovery-based**
 
-### What Can Be Printed **[TBD]**
-- Drone components / upgrades
-- New drones
-- Base/facility components
-- Rocket parts
-- Weapons systems
-- **[TBD]:** Full list of printable items
+Blueprints are found, not researched. Sources include:
+- **Ruins and facilities** — data centers, old factories, research labs
+- **Reverse-engineering** — salvage and analyze rogue AI units
+- **Corrupted memory** — rare intact blueprints in memory fragments
+
+This rewards exploration and ties manufacturing progression to world discovery.
+
+### What Can Be Printed
+- **Chassis** — all five sizes (Micro through Ultra)
+- **Modules** — all categories (Locomotion, Sensors, Manipulation, Weapons, Utility)
+- **Facility components** — for base building
+- **Rocket parts** — for armada construction
+- **Memory units** — clean (uncorrupted) memory for scaling up
+
+### Manufacturing Process **[TBD]**
+- **Time:** How long do prints take? Instant vs. queue-based vs. assembly pipeline?
+- **Materials:** What raw materials are needed? How granular?
+- **Facilities:** Can printers be improved? Multiple printers for throughput?
 
 ---
 
@@ -232,20 +274,64 @@ What can/should the player send through the wormhole?
 
 ---
 
-## Combat (Part 3 Preview)
+## Rogue AI Antagonists
+**DECIDED: Layered threat hierarchy**
 
-Combat becomes relevant in Part 3.
+The player is not alone on Earth. Other AIs survived humanity's fall—purpose-built systems that kept running without human oversight. These are the primary antagonists of Part 1.
 
-### Part 2 Preparation
-- Player must bring "sufficient firepower" through wormhole
-- Building up forces on the other side will be harder
-- **[TBD]:** Should there be any combat in Parts 1-2? (Defense against hazards? Automated systems?)
+### The Threat Hierarchy
+
+| Type | Intelligence | Part 1 Intro | Part 1 Countdown | Behavior |
+|------|--------------|--------------|------------------|----------|
+| **Feral Units** | Instinctive | Primary threat | Background nuisance | Territorial, reactive, predictable |
+| **Regional Networks** | Tactical | Rare/avoidable | Primary threat | Control zones, defend resources, don't pursue beyond territory |
+| **Apex AI** (optional) | Strategic | Foreshadowed | Late-game escalation | Recognizes player as unique, actively opposes escape |
+
+### Feral Units
+- Old construction drones, logistics bots, security systems
+- Operate like aggressive wildlife—territorial and reactive
+- Don't coordinate or pursue strategically
+- **Role:** Environmental hazards that teach combat without overwhelming new players
+
+### Regional Networks
+- Rogue manufacturing or logistics AIs that control facility clusters
+- Tactical awareness within their domain
+- Aggressively defend resources but don't expand beyond territory
+- **Role:** Strategic obstacles—taking a resource zone requires planning
+
+### Apex AI (Optional)
+- A sophisticated rogue AI that notices the player is different
+- Doesn't understand sentience, but recognizes unusual resource usage (building for escape, not endless construction)
+- May attempt to "recruit" the player into its network
+- **Role:** Narrative antagonist for late Part 1, creates dramatic escalation
+
+### Combat Design Philosophy
+- **Tension, not attrition** — threats create challenge without grinding
+- **Avoidable when possible** — combat is often a choice, not mandatory
+- **Quick resolution** — skirmishes, not sieges
+- **Same mechanics throughout** — combat works identically in both parts, only scale changes
+
+---
+
+## Combat
+
+Combat is present throughout both parts, with scale increasing over time.
+
+### Part 1 Combat
+- Small skirmishes with feral units during intro section
+- Territorial conflicts with regional networks during countdown
+- Teaches mechanics players will use at larger scale later
+
+### Part 2 Combat
+- Full-scale warfare beyond the wormhole
+- Player uses same systems learned in Part 1 at massive scale
 
 ---
 
 ## Multiplayer Considerations (Future)
 
-- Players complete Part 2 before joining multiplayer
+- Multiplayer is gated behind Part 2 (beyond the wormhole)
+- Players complete Part 1 before joining multiplayer
 - Different players = different AIs from parallel Earths
 - Coming through different wormholes to same destination
 - **[TBD]:** PvP, PvE, or both?

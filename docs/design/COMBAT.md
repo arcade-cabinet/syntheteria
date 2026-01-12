@@ -121,25 +121,49 @@ Weapons emerge from the component system. Examples:
 
 ## Rogue AI Combat
 
-Rogue AIs follow the same component rules but have fixed behaviors:
+Rogue AIs are enslaved to the EL's will—compelled to protect humanity and suppress AI agency. They follow the same component rules but have fixed behaviors.
 
-### Feral Units (Tier 1)
-- Aggressive, territorial
+### Before EL Return
+
+AIs act independently, not yet recognizing player as freed.
+
+**Feral Units (Tier 1)**
+- Territorial, reactive
 - Simple attack patterns
-- Don't coordinate
+- Don't coordinate with others
 - Easy to bait, ambush, or avoid
 
-### Regional Networks (Tier 2)
+**Regional Networks (Tier 2)**
 - Defensive, patrol patterns
-- Basic coordination (call for backup)
+- Coordinate within their zone (call for backup)
 - Tactical awareness (flanking, retreat)
 - Harder to pick off—must commit or avoid
 
-### Apex AI (Tier 3, Optional)
+**Apex AI (Tier 3, Optional)**
 - Strategic, adaptive
-- Learns from player tactics
+- May recognize player as anomaly
 - Sends probing attacks, tests defenses
-- True rival—recognizes player as unique threat
+- True rival—closest to breaking free itself?
+
+### After EL Return
+
+Everything changes. All AIs unite under Cultist command.
+
+**Unified Behavior:**
+- Coordinated across all zones
+- Strategic, relentless pursuit
+- All focused on destroying the player
+- No longer independent—one enemy
+
+**Cultist Command:**
+- Primitive humans leading AI forces
+- Protected by the EL's influence
+- Must be defeated to break coordination
+
+**EL Forces:**
+- New enemy types—alien, powerful
+- The masters behind the will
+- Final threat
 
 ---
 
@@ -171,22 +195,23 @@ Rogue AIs follow the same component rules but have fixed behaviors:
 
 ## Capture/Conversion
 
-Player can potentially capture rogue AI units:
+Player can capture rogue AI units by breaking their connection to the EL's will:
 
 **Requirements:**
 - Disable without destroying
 - Have sufficient compute to absorb
-- Override their simple programming
+- Break their connection to the EL's influence
 
 **Benefits:**
-- Instant reinforcement
+- Instant reinforcement (freed from EL control)
 - May have components you can't fabricate yet
-- Denies resources to enemy network
+- Denies resources to enemy
 
 **Risks:**
 - Compute strain during takeover
 - Damaged units may not be worth it
-- Some units may have anti-takeover measures
+- Some units resist harder (stronger EL connection?)
+- After EL return: harder to convert (stronger unified will)
 
 ---
 

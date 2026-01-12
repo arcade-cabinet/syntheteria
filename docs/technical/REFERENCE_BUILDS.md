@@ -125,102 +125,41 @@ This document defines 10 reference drone builds to validate component balance an
 |-----------|-------------|-----------|------------|---------|
 | Medium Battery | 4.0 | 40 | - | - |
 | Basic CPU | 0.1 | - | 1.5 | 0 |
-| Medium Motor ×2 | 2.0 | - | - | - |
-| Medium Wheels (4x) | 2.0 | - | - | - |
+| Heavy Motor | 8.0 | - | - | - |
+| Large Wheels (4x) | 8.0 | - | - | - |
 | Large Cargo Bay | 10.0 | - | 0 | 0 |
 | Basic Camera | 0.1 | - | 0.5 | 0.1 |
 | Short-Range Radio | 0.1 | - | 0.5 | 0.1 |
-| **TOTAL** | **18.3** | **40** | **2.5** | **-0.2** |
+| **TOTAL** | **30.3** | **40** | **2.5** | **-0.2** |
 
 ### Calculations
 
-**Weight** (empty): 18.3 kg
-**Cargo capacity**: 200 kg
-**Max operational weight**: 218.3 kg
+**Weight** (empty): 30.3 kg
+**Cargo capacity**: 100 kg
+**Max operational weight**: 130.3 kg
 
 **Torque Check** (full load):
-- Total torque: 40 (2× medium motors)
-- Torque margin (empty): 40 / 18.3 = **2.19** (Agile)
-- Torque margin (full): 40 / 218.3 = **0.18** ❌ Cannot move!
+- Total torque: 100 (Heavy Motor)
+- Torque margin (empty): 100 / 30.3 = **3.30** (Very Agile)
+- Torque margin (full): 100 / 130.3 = **0.77** (Sluggish but functional)
 
-**ISSUE IDENTIFIED**: Need more motors for full cargo load.
-
-### Revised Build (add 2 more medium motors)
-| Component | Weight (kg) |
-|-----------|-------------|
-| Medium Motor ×4 | 4.0 |
-| **New Total** | **20.3** |
-
-**Revised Torque** (full load at 220.3 kg):
-- Total torque: 80
-- Torque margin: 80 / 220.3 = **0.36** ❌ Still cannot move!
-
-### Further Revised (use Large Motors)
-| Component | Weight (kg) | Torque |
-|-----------|-------------|--------|
-| Large Motor ×2 | 8.0 | 100 |
-| Large Battery | 10.0 | - |
-| **New Total** | **32.3** |
-| **Full load** | **232.3** |
-
-- Torque margin (full): 100 / 232.3 = **0.43** ❌
-
-### Analysis
-⚠️ **BALANCE ISSUE**: Large Cargo Bay (200kg capacity) cannot be moved by available motors.
-
-**Finding**: Motor torque ratings are too low relative to cargo capacities. Options:
-1. Reduce cargo capacity values
-2. Increase motor torque ratings
-3. Allow multiple locomotion components to stack
-
-**Workable Alternative**: Medium Cargo Bay (50kg capacity)
-
-### Working Cargo Hauler Build
-| Component | Weight (kg) | Power | Torque |
-|-----------|-------------|-------|--------|
-| Medium Battery | 4.0 | 40 out | - |
-| Basic CPU | 0.1 | 1.5 draw | - |
-| Large Motor ×1 | 4.0 | - | 50 |
-| Medium Wheels (4x) | 2.0 | - | - |
-| Medium Cargo Bay | 3.0 | 0 | - |
-| Basic Camera | 0.1 | 0.5 | - |
-| Short-Range Radio | 0.1 | 0.5 | - |
-| **TOTAL** | **13.3** | **40 / 2.5** | **50** |
-
-**Full load**: 13.3 + 50 = 63.3 kg
-**Torque margin**: 50 / 63.3 = **0.79** ❌ Still sluggish/cannot move
-
-**Further Revised with Industrial Motor**:
-| Component | Weight (kg) | Torque |
-|-----------|-------------|--------|
-| Industrial Motor | 15.0 | 200 |
-| Large Battery | 10.0 | 80 out |
-| Large Wheels (4x) | 8.0 | - |
-| **Base weight** | **36.4** |
-| **+ 50kg cargo** | **86.4** |
-
-- Torque margin: 200 / 86.4 = **2.31** ✅ (Agile)
-
-### Final Working Cargo Build
-| Component | Weight (kg) |
-|-----------|-------------|
-| Large Battery | 10.0 |
-| Basic CPU | 0.1 |
-| Industrial Motor | 15.0 |
-| Large Wheels (4x) | 8.0 |
-| Medium Cargo Bay | 3.0 |
-| Basic Camera | 0.1 |
-| Short-Range Radio | 0.1 |
-| **TOTAL** | **36.3** |
-
-**With 50kg cargo**: 86.3 kg, torque margin 2.31 ✅
-
-**Power Budget**:
-- Locomotion: 0.1 × 86.3 × 1.0 × 1.0 = 8.63 PU
+**Power Budget** (normal speed, smooth terrain, full load):
+- Locomotion: 0.1 × 130.3 × 1.0 × 1.0 = 13.0 PU
 - Components: 2.5 PU
-- **Total**: 11.13 PU / 80 PU = **13.9%** ✅
+- **Total draw**: 15.5 PU
+- **Power capacity**: 40 PU
+- **Power ratio**: 15.5 / 40 = **38.8%** (Sustainable - green)
+- **Duration**: 40 / 15.5 = **2.6 hours** at full load
 
-✅ **VALID BUILD** after significant component upgrades
+**Compute Budget** (simple routine):
+- **Net compute**: -0.2 CU (Light consumer)
+
+### Assessment
+✅ **VALID BUILD** - Practical cargo transport
+- Heavy Motor (100 torque) enables full-load transport
+- Sluggish when fully loaded (realistic for hauler)
+- 2.6 hour range at full capacity
+- Upgrade to Large Battery for longer hauls
 
 ---
 
@@ -610,13 +549,13 @@ This document defines 10 reference drone builds to validate component balance an
 
 ## Balance Analysis Summary
 
-### Issues Identified
+### Issues Identified & Resolved
 
-| Issue | Severity | Components Affected | Recommendation |
-|-------|----------|---------------------|----------------|
-| Cargo capacity vs motor torque | **HIGH** | Large Cargo Bay, all motors | Large Cargo Bay (200kg) is impractical. Consider reducing to 100kg or adding torque stacking. |
-| Leg locomotion needs high torque | MEDIUM | All leg types | Document that legs require larger motors; this is intentional for balance. |
-| Industrial Motor dominance | MEDIUM | All heavy builds | Industrial Motor (200 torque) is required for most heavy builds. Consider a mid-tier option around 100 torque. |
+| Issue | Status | Resolution |
+|-------|--------|------------|
+| Cargo capacity vs motor torque | ✅ **FIXED** | Large Cargo Bay reduced from 200kg to 100kg capacity |
+| Motor torque gap | ✅ **FIXED** | Added Heavy Motor (100 torque, 8kg) between Large (50) and Industrial (200) |
+| Leg locomotion needs high torque | ℹ️ **Documented** | Legs require proportionally larger motors due to complexity; this is intentional for balance |
 
 ### Power Efficiency Rankings
 
@@ -652,7 +591,7 @@ This document defines 10 reference drone builds to validate component balance an
 |-------|--------|------------------|
 | Micro Scout | 1.56 | Normal |
 | Light Scout | 2.17 | Agile |
-| Cargo Hauler (revised) | 2.19 | Agile |
+| Cargo Hauler | 0.77 (full) | Sluggish (intentional) |
 | Combat Striker | 2.25 | Agile |
 | Heavy Tank | 2.42 | Agile |
 | Aerial Recon | N/A | Flight |
@@ -665,17 +604,17 @@ This document defines 10 reference drone builds to validate component balance an
 
 ## Recommendations
 
-### High Priority Fixes
+### Completed Fixes
 
-1. **Large Cargo Bay rebalance**: Reduce capacity from 200kg to 80-100kg, or add a note that it requires stationary/towed platforms.
+1. ✅ **Large Cargo Bay rebalanced**: Reduced capacity from 200kg to 100kg.
 
-2. **Add mid-tier motor**: Consider adding a motor with ~100 torque between Large (50) and Industrial (200) to smooth progression.
+2. ✅ **Added Heavy Motor**: New motor with 100 torque (8kg, Tier 3) fills gap between Large (50) and Industrial (200).
 
-### Documentation Clarifications
+### Documentation Notes
 
-3. **Leg locomotion guidance**: Document that legs are power-hungry and require proportionally more motor torque due to their complexity.
+3. **Leg locomotion**: Legs are power-hungry and require proportionally more motor torque due to their complexity. This is intentional.
 
-4. **Support Unit movement**: Accept sluggish movement as intentional for support roles, or add a medium-large motor at ~75 torque.
+4. **Support Unit movement**: Sluggish movement is acceptable for support roles.
 
 ### Design Validations
 
@@ -687,6 +626,21 @@ This document defines 10 reference drone builds to validate component balance an
 
 ---
 
+## Motor Progression (Updated)
+
+| Motor | Tier | Weight | Torque | Notes |
+|-------|------|--------|--------|-------|
+| Micro Motor | 1 | 0.02kg | 0.5 | Smallest mechanisms |
+| Small Motor | 1 | 0.3kg | 5 | Light drones |
+| Medium Motor | 2 | 1kg | 20 | General purpose |
+| Large Motor | 3 | 4kg | 50 | Large drones |
+| **Heavy Motor** | **3** | **8kg** | **100** | **Cargo/heavy platforms** |
+| Industrial Motor | 4 | 15kg | 200 | Vehicles/heavy machinery |
+| Hydraulic System | 4 | 10kg | 500 | Extreme force |
+
+---
+
 ## Revision History
 
+- v1.1 (2026-01-12): Applied balance fixes (cargo capacity, added Heavy Motor)
 - v1.0 (2026-01-12): Initial reference builds and balance analysis

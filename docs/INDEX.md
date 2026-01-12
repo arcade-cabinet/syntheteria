@@ -4,7 +4,7 @@
 - [Game Overview](./design/GAME_OVERVIEW.md) - High-level concept and structure
 - [Core Mechanics](./design/CORE_MECHANICS.md) - Gameplay systems and mechanics
 - [UI Concept](./design/UI_CONCEPT.md) - Abstract digital consciousness interface
-- [Part 1: Awakening](./design/PART_1.md) - Tutorial and story introduction phase
+- [Part 1: Earth Phase](./design/PART_1.md) - Complete Earth experience (intro + countdown)
 - [Open Questions](./design/OPEN_QUESTIONS.md) - Tracking unresolved design decisions
 
 ## Story Documents
@@ -22,7 +22,7 @@
 | Game Overview | **Updated** - Two-part structure, rogue AI antagonists, business model considerations |
 | Core Mechanics | **Updated** - Manufacturing process, time mechanics, wormhole effects, challenge curve |
 | UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
-| Part 1: Awakening | Needs update - now encompasses full Earth phase (intro + countdown) |
+| Part 1: Earth Phase | **Updated** - Complete Earth experience (intro + countdown sections) |
 | Open Questions | Active tracking (23 resolved, 2 partial, 1 remaining) |
 | Lore Overview | Updated - 100-year timeline, dying Earth ecosystem |
 
@@ -44,7 +44,7 @@
 
 ## Next Steps
 
-1. Update Part 1 document to reflect combined structure
-2. Define specific module and chassis details
-3. Finalize visual style (Q23) and business model (Q25) during prototyping
-4. Create technical planning documents
+1. Define specific module and chassis details
+2. Finalize visual style (Q23) and business model (Q25) during prototyping
+3. Create technical planning documents
+4. Begin implementation

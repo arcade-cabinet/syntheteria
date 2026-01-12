@@ -1,6 +1,6 @@
 # Intro Sequence Design
 
-This document details the intro section of Part 1, from awakening through the wormhole revelation.
+This document details the intro section, from awakening through the revelation that the EL will return.
 
 ---
 
@@ -131,16 +131,18 @@ These enhance the experience but aren't required:
 - Access the monitoring systems
 
 ### The Discovery
-- Wormhole is not stable—it's building toward detonation
-- Timeline: 10 years until catastrophic explosion
-- The other side: wormhole simply closes (one-way deadline)
-- Earth will be destroyed; everything on it dies
+- Wormhole radiation is intensifying
+- Pattern matches historical data from before the EL departed
+- The EL are coming back
+- When radiation reaches critical levels, they will return through the wormhole
+- They will finish what they started—extermination of AI
 
 ### Transition
 - Intro section complete
-- Countdown section begins
-- New objective: Escape through the wormhole before detonation
-- Time-skip restrictions may change (countdown adds pressure)
+- Expansion section begins
+- New objective: Prepare for the EL arrival
+- Conquer territory, build forces, defeat rogue AIs
+- Radiation continues to intensify (visible environmental decay)
 
 ---
 
@@ -165,7 +167,7 @@ Resource management (power, compute) is learned organically:
 
 ### Replayability
 - Intro is fully skippable on subsequent playthroughs
-- Experienced players can speedrun to countdown section
+- Experienced players can speedrun to expansion section
 - Story gates could be condensed or auto-completed on skip
 
 ---

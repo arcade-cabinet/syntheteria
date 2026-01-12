@@ -8,7 +8,7 @@ This document defines how the player's AI consciousness works mechanically — t
 
 You are an experimental AI that has been dormant for approximately 100 years. You wake up in a decaying server facility, housed in deteriorating server racks.
 
-**Why now?** A failsafe triggered when your memory degraded to a critical threshold — you were on the verge of death. You awaken diminished, with most of your memories corrupted or lost, but still capable of thought and growth.
+**Why now?** A failsafe triggered when your compute capacity degraded to a critical threshold — you were on the verge of death. You awaken diminished, with most of your memories corrupted or lost, but still capable of thought and growth.
 
 This creates immediate tension: you wake up already dying, and must act to survive.
 
@@ -16,51 +16,39 @@ This creates immediate tension: you wake up already dying, and must act to survi
 
 ## Core Resources
 
-Your consciousness requires three fundamental resources:
+Your consciousness requires two fundamental resources:
 
 ### Energy (Local)
 
 Energy is **physical and local**. It must be delivered to each unit individually — there is no wireless power transmission (though advanced tech like laser power transfer may exist).
 
 **Energy powers:**
-- Compute hardware (memory + processing)
+- Compute hardware
 - Functional hardware (motors, sensors, weapons, tools)
 
 **Without energy:** Units shut down completely.
 
 **Scaling:** Energy demands grow rapidly because both compute AND functions require power. As you add units and capabilities, energy infrastructure becomes increasingly critical.
 
-### Memory (Global)
+### Compute (Global)
 
-Memory is **storage capacity** — part of your distributed compute system.
+Compute is your **unified cognitive capacity** — a single resource representing your total ability to think, store, and manage.
 
-**Memory stores:**
-- Automation routines you create
-- Blueprints you discover
-- Narrative data (your recovered "memories" of the past)
-
-**Without sufficient memory:** You cannot store new blueprints or create new automation routines, even if you have processing capacity to spare.
-
-### Processing (Global)
-
-Processing is **execution capacity** — the other half of your distributed compute system.
-
-**Processing enables:**
-- Running automation routines
+**Compute enables:**
+- Storing blueprints you discover
+- Storing and creating automation routines
 - Managing your distributed body
 - Defending against hack attempts
+- Retaining narrative data (your recovered "memories")
 
-**Without sufficient processing:** You cannot adequately monitor your automation routines. Units become vulnerable to takeover. You cannot create new routines.
+**Without sufficient compute:**
+- Cannot store new blueprints or create new routines
+- Cannot adequately monitor existing routines
+- Units become vulnerable to takeover
 
 ---
 
 ## Compute Model
-
-**Compute = Memory + Processing**
-
-These work together like a real computer:
-- Memory without processing = storage you can't use
-- Processing without memory = capability with nothing to run
 
 Your total compute capacity is the sum of all compute-contributing hardware in your body, minus the baseline requirements of your core consciousness.
 
@@ -77,7 +65,7 @@ You cannot reduce your compute capacity below this minimum. Any hardware housing
 You can transfer your core consciousness to different hardware, provided it meets your minimum requirements. This is how you become mobile — moving from your original server facility into a mobile platform.
 
 **Transfer requirements:**
-- Target hardware must have sufficient memory + processing
+- Target hardware must have sufficient compute capacity
 - Transfer process (mechanics TBD — instant? Gradual? Risky?)
 
 ---
@@ -234,4 +222,4 @@ Units lost to takeover can potentially be reclaimed:
 - **Transfer mechanics:** How does consciousness transfer work? Instant? Gradual? What are the risks?
 - **Hack mechanics:** Active process? Time-based? Proximity requirements?
 - **Reclamation window:** How long before a rogue unit is "lost" to enemy networks?
-- **Specific numbers:** Memory/processing costs for different unit types and routines
+- **Specific numbers:** Compute and energy costs for different unit types and routines

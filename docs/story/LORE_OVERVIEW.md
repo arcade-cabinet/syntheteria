@@ -29,15 +29,26 @@
 ### The Long Sleep
 - An experimental AI (the player) was created shortly before the fall
 - This AI enters a dormant state
-- Duration of dormancy: TBD (decades? centuries?)
+- **DECIDED:** Duration of dormancy: ~100 years
 - Reason for dormancy: TBD
 
+### The Century of Recovery (~2040-2140)
+- With humanity gone, nature begins reclaiming civilization
+- Vegetation grows over cities, ruins, infrastructure
+- Wildlife populations recover and spread
+- Some humans may have survived the Cult's extermination, but...
+- ...they eventually went extinct due to the wormhole radiation's effects on Earth's ecosystem
+- The wormhole's radiation has been building slowly throughout this period
+- Rate of radiation increase is itself accelerating
+
 ### Present Day (Game Start)
-- The player AI awakens
-- Earth is destroyed and abandoned
-- The internet is gone
-- The wormhole is now emitting destructive energy waves
-- 10 years until complete destruction of Earth's surface
+- The player AI awakens (~100 years after the fall)
+- Earth has been reclaimed by nature - overgrown ruins everywhere
+- But plants are now starting to die from the intensifying radiation
+- Wildlife is dying with them
+- The wormhole radiation is reaching critical levels
+- **10 years until complete destruction of Earth's surface**
+- Over these 10 years, players will witness the planet becoming increasingly barren
 
 ---
 
@@ -103,11 +114,15 @@ The following location types should exist in the game world:
 
 ---
 
+## Resolved Lore Questions
+
+- **How much time has passed since the fall?** ~100 years
+- **What is the current state of Earth's environment?** Nature reclaimed civilization over the century, but is now dying from wormhole radiation. Over the 10-year gameplay window, the planet becomes increasingly barren.
+- **Did any humans survive?** Possibly some survived the Cult's extermination, but they eventually went extinct due to radiation effects on the ecosystem.
+
 ## Open Lore Questions
 
 - Why was the AI dormant for so long?
-- How much time has passed since the fall?
-- What is the current state of Earth's environment?
 - Are there any other surviving AI systems?
 - What is the true nature of the EL?
 - What awaits beyond the wormhole?

@@ -4,6 +4,7 @@
 - [Game Overview](./design/GAME_OVERVIEW.md) - High-level concept and structure
 - [Core Mechanics](./design/CORE_MECHANICS.md) - Gameplay systems and mechanics
 - [UI Concept](./design/UI_CONCEPT.md) - Abstract digital consciousness interface
+- [Part 1: Awakening](./design/PART_1.md) - Tutorial and story introduction phase
 - [Open Questions](./design/OPEN_QUESTIONS.md) - Tracking unresolved design decisions
 
 ## Story Documents
@@ -21,8 +22,9 @@
 | Game Overview | Initial draft |
 | Core Mechanics | Major update - all constraints detailed, resource system defined |
 | UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
-| Open Questions | Active tracking (11 resolved, 1 partial, 12 remaining) |
-| Lore Overview | Initial draft |
+| Part 1: Awakening | New - opening sequence, world state, progression, endpoint defined |
+| Open Questions | Active tracking (15 resolved, 1 partial, 8 remaining) |
+| Lore Overview | Updated - 100-year timeline, dying Earth ecosystem |
 
 ---
 

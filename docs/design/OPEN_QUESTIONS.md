@@ -17,19 +17,20 @@ This document tracks design questions that need resolution.
 
 ## Gameplay Mechanics Questions
 
-- [~] **Q4:** What resources does the player need to manage?
-  - **PARTIAL:** Five categories identified: (1) AI Constraints (memory, processing, power, signal), (2) Raw Materials for manufacturing, (3) Electrical Power (generation + distribution), (4) Rocket Fuel (separate from electrical), (5) Manufactured Components. Still TBD: specific material types, supply chain granularity, facility types and upgrades.
+- [x] **Q4:** What resources does the player need to manage?
+  - **RESOLVED:** Two AI resources (Energy local, Compute global) plus 5-tier material supply chain. See CONSCIOUSNESS_MODEL.md for AI resources, MATERIALS.md for full material hierarchy from raw extraction through components to final assembly.
 - [x] **Q5:** How does drone control work?
   - **RESOLVED:** Hybrid model - combination of direct control and autonomous directives.
 - [x] **Q6:** What are the limitations on the AI player?
-  - **RESOLVED:** Four constraints: Memory, Processing Power, Electrical Power, and Signal Range.
-  - Processing Power affects: drone count ceiling, automation complexity, simulation speed, multi-tasking.
-  - Electrical Power has two layers: strategic (generation capacity) + tactical (distribution/charging).
-  - Signal Range extendable through relay stations and satellites.
+  - **RESOLVED:** Two core constraints: Energy (local, physical) and Compute (global, cognitive).
+  - Energy powers hardware; without it, units shut down.
+  - Compute manages the distributed body; without it, units become vulnerable to takeover.
+  - Signal Range determines whether you can reach units; Compute determines whether you can manage them.
+  - See CONSCIOUSNESS_MODEL.md for full details.
 - [x] **Q7:** How does 3D printing work mechanically?
   - **RESOLVED:** Blueprint acquisition is discovery-based (ruins, reverse-engineering, memory fragments). Manufacturing takes in-game time (hours/days/weeks depending on complexity). Player can time-skip to complete builds. Time-skipping is safe within player territory—rogue AIs are territorial/reactive, not proactive. Combat only happens when player contests their zones.
-- [~] **Q8:** What types of drones/robots can the player build?
-  - **PARTIAL:** Modular system concept defined. 5 chassis types (Micro, Light, Medium, Heavy, Ultra) with varying slot counts and power budgets. 5 module categories (Locomotion, Sensors, Manipulation, Weapons, Utility). Any module fits any slot, multiples allowed, modules consume power. Still TBD: specific slot counts per chassis, power budgets, specific modules in each category, module power costs.
+- [x] **Q8:** What types of drones/robots can the player build?
+  - **RESOLVED:** Pure component assembly system (no chassis/frames). 70+ components across 9 categories: Power Sources, Controllers, Motors, Locomotion, Sensors, Manipulation, Weapons, Communication, Utility. Power/compute costs are dynamic based on weight, functions, and automation level. Spacecraft follow KSP-style orbital mechanics. See DRONES.md for full component list and resource calculation formulas.
 
 ---
 
@@ -111,10 +112,10 @@ This document tracks design questions that need resolution.
 | Category | Resolved | Partial | Open |
 |----------|----------|---------|------|
 | UI/Interface | 2 | 1 | 0 |
-| Gameplay Mechanics | 3 | 2 | 0 |
+| Gameplay Mechanics | 5 | 0 | 0 |
 | Memory System | 3 | 0 | 0 |
 | Part 1 Specific | 5 | 1 | 0 |
 | World/Lore | 4 | 0 | 0 |
 | Technical/Scope | 2 | 1 | 0 |
 | Business Model | 1 | 0 | 1 |
-| **Total** | **20** | **5** | **1** |
+| **Total** | **22** | **3** | **1** |

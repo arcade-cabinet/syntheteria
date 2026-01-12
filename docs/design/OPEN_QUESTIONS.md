@@ -8,8 +8,10 @@ This document tracks design questions that need resolution.
 
 - [x] **Q1:** What is the player's primary view?
   - **RESOLVED:** Abstract digital consciousness view. Keep grounded in this as much as possible. Can blend in top-down strategy elements in Part 2 as scale grows, but maintain the abstract consciousness interface as the foundation. Important because Part 3 returns to exploration, need seamless transition back to "small in a big world" feeling.
-- [ ] **Q2:** How does the player select and control multiple drones simultaneously?
-- [ ] **Q3:** What does the "growing consciousness" feel like in UI terms? (More screen real estate? Split attention? Faster processing?)
+- [x] **Q2:** How does the player select and control multiple drones simultaneously?
+  - **RESOLVED:** Network view shows all connected hardware as nodes with multi-feed array. Player can focus on individual drones to see through their cameras/sensors. Tutorial teaches automation so player chooses their level of micro vs macro management.
+- [~] **Q3:** What does the "growing consciousness" feel like in UI terms?
+  - **PARTIAL:** General approach established (more feeds, wider network, automation options). Specific visual manifestations TBD.
 
 ---
 

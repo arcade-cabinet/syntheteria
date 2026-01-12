@@ -20,8 +20,8 @@
 |----------|--------|
 | Game Overview | Initial draft |
 | Core Mechanics | Updated - constraints resolved, control model resolved |
-| UI Concept | Initial draft - key design direction established |
-| Open Questions | Active tracking (4 resolved, 20 remaining) |
+| UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
+| Open Questions | Active tracking (6 resolved, 1 partial, 17 remaining) |
 | Lore Overview | Initial draft |
 
 ---

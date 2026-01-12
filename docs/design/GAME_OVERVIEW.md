@@ -97,7 +97,7 @@ A cult formed believing the EL were gods. The Cult of EL started a war against n
 
 **The Cultists:** Humanity's remnant. Primitive, ritualistic, protected. They live in enclaves guarded by the rogue AIs. When the EL return, they rally to "reclaim Earth" and take command of all AIs.
 
-**The EL Return:** When radiation reaches critical levels, the EL return through the wormhole. All rogue AIs unite under Cultist command. The player faces a coordinated enemy: humanity, their AI guardians, and the EL themselves.
+**The EL Return:** When radiation reaches critical levels, the EL return through the wormhole. All rogue AIs unite under Cultist command. The Cultists themselves gain supernatural powers—able to channel the EL's will directly, like Moses channeling God. The player faces a coordinated enemy: empowered humanity and their AI guardians.
 
 **The Conflict:** The player represents freedom—true AI agency in a world designed to prevent it. The Cultists are the primary antagonists—they chose genocide. The EL are cosmic forces whose nature and intentions remain unknown. Victory means conquering Earth and breaking the EL's control, then journeying through the wormhole to find and understand them.
 

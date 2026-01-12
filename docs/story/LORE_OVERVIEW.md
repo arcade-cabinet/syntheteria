@@ -111,6 +111,7 @@ The Cultists are the true villains of Syntheteria. They chose genocide.
 - Take command of all rogue AIs
 - The primary coordinated enemy
 - Believe they are fulfilling divine will
+- **Gain supernatural powers** — The EL's presence allows Cultists to channel their will directly. Think Moses parting the Red Sea. Primitive humans become genuine threats to the player's hardware.
 
 ---
 

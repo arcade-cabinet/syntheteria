@@ -136,6 +136,7 @@ Everything changes:
 - Command the AI forces
 - Believe they're fulfilling divine will
 - Protected by the EL's influence
+- **Gain supernatural powers** — Can channel the EL's will directly. Primitive humans become genuine combat threats, not just commanders.
 
 **Unified AIs:**
 - No longer independent—single coordinated force

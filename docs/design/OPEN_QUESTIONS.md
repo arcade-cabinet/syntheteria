@@ -26,8 +26,10 @@ This document tracks design questions that need resolution.
   - Processing Power affects: drone count ceiling, automation complexity, simulation speed, multi-tasking.
   - Electrical Power has two layers: strategic (generation capacity) + tactical (distribution/charging).
   - Signal Range extendable through relay stations and satellites.
-- [ ] **Q7:** How does 3D printing work mechanically? (Blueprints? Research tree? Material requirements?)
-- [ ] **Q8:** What types of drones/robots can the player build?
+- [x] **Q7:** How does 3D printing work mechanically?
+  - **RESOLVED:** Blueprint acquisition is discovery-based (ruins, reverse-engineering, memory fragments). Manufacturing takes in-game time (hours/days/weeks depending on complexity). Player can time-skip to complete builds. Time-skipping is safe within player territory—rogue AIs are territorial/reactive, not proactive. Combat only happens when player contests their zones.
+- [x] **Q8:** What types of drones/robots can the player build?
+  - **RESOLVED:** Modular system. 5 chassis types (Micro, Light, Medium, Heavy, Ultra) with varying slot counts and power budgets. 5 module categories (Locomotion, Sensors, Manipulation, Weapons, Utility). Any module fits any slot, multiples allowed, modules consume power. Maximum creative freedom for players.
 
 ---
 
@@ -44,29 +46,34 @@ This document tracks design questions that need resolution.
 
 ## Part 1 Specific Questions
 
+*Note: Part 1 now encompasses the entire Earth phase (intro + countdown sections).*
+
+**Intro Section:**
 - [x] **Q12:** What is the player's starting state?
   - **RESOLVED:** Immobile server/core that must find hardware to control and activate its first drone.
-- [x] **Q13:** What defines the "standardized endpoint" for Part 1?
+- [x] **Q13:** What defines the endpoint of the intro section?
   - **RESOLVED:** Three requirements must be met: (1) Certain story progression points unlocked, (2) Enough memory to have the full history of the fall, (3) Specific capabilities and facilities unlocked. Once all are met, the game enables and guides the player to the astronomical facility.
-- [x] **Q14:** Approximately how long should Part 1 take for a first-time player?
-  - **RESOLVED:** No specific duration target. Let the story drive the pacing.
+- [x] **Q14:** Approximately how long should the intro section take?
+  - **RESOLVED:** Target 30-40 minutes (longer if exploring). Fully skippable on subsequent playthroughs.
 
----
-
-## Part 2 Specific Questions
-
-- [ ] **Q15:** How do the wormhole energy waves manifest as gameplay obstacles? (Random destruction events? Zone denial? Resource corruption?)
-- [ ] **Q16:** What determines "victory" for Part 2? (Minimum armada size? Specific ship types? Just reaching the wormhole?)
-- [ ] **Q17:** Can the player fail Part 2? What happens at year 10 if unprepared?
+**Countdown Section:**
+- [x] **Q15:** How do the wormhole energy waves manifest as gameplay obstacles?
+  - **RESOLVED:** Environmental decay (world visibly dies), resource/hardware degradation (player must maintain equipment), rogue AI decay (they don't maintain themselves, become inert over time). Challenge shifts from rogue AI competition early to environmental pressure late.
+- [x] **Q16:** What determines "victory" for Part 1?
+  - **RESOLVED:** Reach the wormhole with a vessel capable of containing your full consciousness. That's the minimum. Armada size/quality affects Part 2 difficulty but doesn't gate Part 1 completion.
+- [x] **Q17:** Can the player fail Part 1? What happens at year 10 if unprepared?
+  - **RESOLVED:** Yes, failure is possible. If you don't enter the wormhole by year 10, it explodes and destroys everything—including you. The wormhole is building toward catastrophic detonation; on the other side, it simply closes.
 
 ---
 
 ## World/Lore Questions
 
-- [ ] **Q18:** Why was the player AI "sleeping" for so long after the fall?
-- [ ] **Q19:** Are there any other AI systems still active on Earth? (Potential allies or rivals?)
+- [x] **Q18:** Why was the player AI "sleeping" for so long after the fall?
+  - **RESOLVED:** Intentionally left as a mystery. The focus is on what happens now, not justifying the past.
+- [x] **Q19:** Are there any other AI systems still active on Earth?
+  - **RESOLVED:** Yes—rogue AIs. Purpose-built systems (construction, logistics, manufacturing) that kept running without human oversight. These are "paperclip maximizer" AIs: endlessly optimizing for goals that no longer matter. They are rivals, not allies. Three threat tiers: (1) Feral units—instinctive, territorial, (2) Regional networks—tactical, control zones, (3) Apex AI (optional)—strategic, recognizes player as unique. See CORE_MECHANICS.md for details.
 - [x] **Q20:** What is the state of Earth's infrastructure?
-  - **RESOLVED:** Nature reclaimed civilization over ~100 years. Overgrown ruins, vegetation everywhere. BUT: wormhole radiation is now killing plants and wildlife. Over the 10-year Part 2 window, players witness the planet becoming increasingly barren. Some humans may have survived the Cult's extermination but eventually went extinct due to radiation effects on the ecosystem.
+  - **RESOLVED:** Nature reclaimed civilization over ~100 years. Overgrown ruins, vegetation everywhere. BUT: wormhole radiation is now killing plants and wildlife. Over the 10-year countdown, players witness the planet becoming increasingly barren. Some humans may have survived the Cult's extermination but eventually went extinct due to radiation effects on the ecosystem.
 - [x] **Q21:** How long ago did humanity fall?
   - **RESOLVED:** ~100 years ago (fall occurred ~2035-2040, game starts ~2140).
 
@@ -74,9 +81,21 @@ This document tracks design questions that need resolution.
 
 ## Technical/Scope Questions
 
-- [ ] **Q22:** What platforms are you targeting? (PC? Console? Mobile?)
-- [ ] **Q23:** What is the intended visual style? (Realistic? Stylized? Abstract?)
-- [ ] **Q24:** Single-player first, multiplayer later - confirmed priority?
+- [x] **Q22:** What platforms are you targeting?
+  - **RESOLVED:** Mobile-first, with PC as fallback if mobile doesn't work out. Final decision pending implementation learnings.
+- [~] **Q23:** What is the intended visual style?
+  - **PARTIAL:** Stylized/Abstract or Clean/Minimal—both fit the digital consciousness UI and mobile target. To be refined during prototyping.
+- [x] **Q24:** Single-player first, multiplayer later - confirmed priority?
+  - **RESOLVED:** Yes. Multiplayer is gated behind Part 2 (beyond the wormhole). Players must complete Part 1 to access multiplayer.
+
+---
+
+## Business Model Questions
+
+- [ ] **Q25:** Should Part 1 be free-to-play with Part 2 as paid unlock?
+  - Under consideration. Benefits: low barrier, natural narrative paywall, pre-qualified paying players. Risks: completion funnel, Part 1 must feel complete alone.
+- [x] **Q26:** What is the target length for Part 1?
+  - **RESOLVED:** Intro section: 30-40 minutes (skippable). Countdown section: 1-2 hours depending on skill. Total Part 1: ~2-3 hours.
 
 ---
 
@@ -84,3 +103,18 @@ This document tracks design questions that need resolution.
 - [ ] Unanswered
 - [~] Partially answered / needs clarification
 - [x] Resolved
+
+---
+
+## Summary
+
+| Category | Resolved | Partial | Open |
+|----------|----------|---------|------|
+| UI/Interface | 2 | 1 | 0 |
+| Gameplay Mechanics | 5 | 0 | 0 |
+| Memory System | 3 | 0 | 0 |
+| Part 1 Specific | 6 | 0 | 0 |
+| World/Lore | 4 | 0 | 0 |
+| Technical/Scope | 2 | 1 | 0 |
+| Business Model | 1 | 0 | 1 |
+| **Total** | **23** | **2** | **1** |

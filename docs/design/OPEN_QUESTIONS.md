@@ -21,7 +21,7 @@ This document tracks design questions that need resolution.
 - [x] **Q5:** How does drone control work?
   - **RESOLVED:** Hybrid model - combination of direct control and autonomous directives.
 - [x] **Q6:** What are the limitations on the AI player?
-  - **RESOLVED:** Four constraints: Memory, Processing Power, Electrical Power, and Signal Range.
+  - **RESOLVED:** Four constraints: Memory, Processing Power, Electrical Power, and Signal Range. Signal range is extendable through relay stations and satellites.
 - [ ] **Q7:** How does 3D printing work mechanically? (Blueprints? Research tree? Material requirements?)
 - [ ] **Q8:** What types of drones/robots can the player build?
 
@@ -29,9 +29,12 @@ This document tracks design questions that need resolution.
 
 ## Memory System Questions
 
-- [ ] **Q9:** How is memory physically represented in the game world? (Storage drives? Server racks? Scattered data chips?)
-- [ ] **Q10:** How does memory provide both story AND gameplay benefits? (Fixed story fragments + random stat boosts? Skill unlocks tied to specific memories?)
-- [ ] **Q11:** Is memory a finite resource in the world, or can it be manufactured?
+- [x] **Q9:** How is memory physically represented in the game world?
+  - **RESOLVED:** Server racks, data centers, and embedded in hardware (robots, drones, facilities).
+- [x] **Q10:** How does memory provide both story AND gameplay benefits?
+  - **RESOLVED:** Wormhole radiation has corrupted 99%+ of existing memory. Found memory yields only a fraction of expected capacity. Story fragments emerge from uncorrupted portions (remnants of the internet at time of fall). Story progression is threshold-based - capacity milestones unlock story beats, not specific finds.
+- [x] **Q11:** Is memory a finite resource in the world, or can it be manufactured?
+  - **RESOLVED:** Hybrid. Found memory is finite and mostly corrupted/low-yield. Manufacturing clean memory in fabrication facilities is required to scale up, but is resource-intensive.
 
 ---
 

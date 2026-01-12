@@ -31,12 +31,12 @@ The player interacts with the physical world through drones and robots.
 - Initial drones: Activate existing robots found in the world
 - Later: 3D print new drones and components
 
-### Control Model **[TBD]**
-Options to consider:
-1. **Direct Control:** Player manually pilots individual drones
-2. **Command & Control:** Player issues orders, drones execute autonomously
-3. **Hybrid:** Both options available depending on situation
-4. **Programmable:** Player writes simple behavior scripts for drones
+### Control Model
+**DECIDED: Hybrid approach**
+- **Direct Control:** Player can manually pilot individual drones when needed
+- **Command & Control:** Player can issue orders and drones execute autonomously
+- Flexibility allows for both tactical micro-management and strategic macro-management
+- Supports the game's goal of seamless scaling from Part 1 exploration to Part 2 mass operations
 
 ### Drone Types **[TBD]**
 Potential categories:
@@ -47,12 +47,28 @@ Potential categories:
 - Transport / Logistics
 - Specialized (research, repair, etc.)
 
-### Limitations **[TBD]**
-What constrains drone operations?
-- Signal range from player's core?
-- Energy/power requirements?
-- Processing power for simultaneous control?
-- Physical maintenance needs?
+### Limitations
+**DECIDED: Four core constraints**
+
+1. **Memory** - Physical storage capacity affects:
+   - Story progression (memory fragments)
+   - Overall capability expansion
+   - **[TBD]:** Specific gameplay effects
+
+2. **Processing Power** - Computational capacity affects:
+   - Number of drones controllable simultaneously?
+   - Complexity of autonomous behaviors?
+   - **[TBD]:** Specific gameplay effects
+
+3. **Electrical Power** - Energy supply affects:
+   - Drone operation
+   - Facility operation
+   - **[TBD]:** Is this a moment-to-moment resource or a strategic one?
+
+4. **Signal Range** - Communication distance affects:
+   - How far drones can operate from core/relays
+   - Expansion strategy
+   - **[TBD]:** Can signal range be extended with relay stations?
 
 ---
 

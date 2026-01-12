@@ -52,8 +52,8 @@ This document tracks design questions that need resolution.
 **Intro Section:**
 - [x] **Q12:** What is the player's starting state?
   - **RESOLVED:** Immobile server/core that must find hardware to control and activate its first drone.
-- [~] **Q13:** What defines the endpoint of the intro section?
-  - **PARTIAL:** Three requirement categories identified: (1) Certain story progression points unlocked, (2) Enough memory to have the full history of the fall, (3) Specific capabilities and facilities unlocked. Once all are met, the game enables and guides the player to the astronomical facility. Still TBD: exact story gates, memory threshold, specific facility/capability checklist.
+- [x] **Q13:** What defines the endpoint of the intro section?
+  - **RESOLVED:** Four story gates must be passed: (1) First memory recovery, (2) First rogue encounter, (3) The Fall revealed through accumulated memory, (4) Memory points to astronomical facility. Player journeys to facility, accesses systems, learns wormhole will detonate in 10 years. See INTRO_SEQUENCE.md for full tutorial and exploration flow.
 - [x] **Q14:** Approximately how long should the intro section take?
   - **RESOLVED:** Target 30-40 minutes (longer if exploring). Fully skippable on subsequent playthroughs.
 
@@ -114,8 +114,8 @@ This document tracks design questions that need resolution.
 | UI/Interface | 2 | 1 | 0 |
 | Gameplay Mechanics | 5 | 0 | 0 |
 | Memory System | 3 | 0 | 0 |
-| Part 1 Specific | 5 | 1 | 0 |
+| Part 1 Specific | 6 | 0 | 0 |
 | World/Lore | 4 | 0 | 0 |
 | Technical/Scope | 2 | 1 | 0 |
 | Business Model | 1 | 0 | 1 |
-| **Total** | **22** | **3** | **1** |
+| **Total** | **23** | **2** | **1** |

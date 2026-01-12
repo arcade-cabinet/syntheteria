@@ -1,0 +1,185 @@
+# Syntheteria - Core Mechanics
+
+## Overview
+
+This document outlines the core gameplay mechanics. Items marked with **[TBD]** require design decisions.
+
+---
+
+## The Memory System
+
+Memory is the central progression mechanic, serving dual purposes:
+
+### Narrative Function
+- Memory fragments contain data about humanity's final years
+- Reveals the story of the fall progressively
+- **[TBD]:** How are memories found? (Physical locations? Embedded in hardware? Random drops?)
+- **[TBD]:** Are memories presented as text, audio logs, visual flashbacks, or data visualizations?
+
+### Gameplay Function
+- Physical memory increases the AI's hardware control capacity
+- **[TBD]:** What specifically does "capacity" mean? (More drones? Better drones? Faster processing? Larger operational range?)
+- **[TBD]:** Is there a memory "skill tree" or is progression linear?
+
+---
+
+## Drone/Robot Control
+
+The player interacts with the physical world through drones and robots.
+
+### Acquisition
+- Initial drones: Activate existing robots found in the world
+- Later: 3D print new drones and components
+
+### Control Model **[TBD]**
+Options to consider:
+1. **Direct Control:** Player manually pilots individual drones
+2. **Command & Control:** Player issues orders, drones execute autonomously
+3. **Hybrid:** Both options available depending on situation
+4. **Programmable:** Player writes simple behavior scripts for drones
+
+### Drone Types **[TBD]**
+Potential categories:
+- Scouts / Exploration
+- Builders / Constructors
+- Harvesters / Resource gatherers
+- Combat / Defense
+- Transport / Logistics
+- Specialized (research, repair, etc.)
+
+### Limitations **[TBD]**
+What constrains drone operations?
+- Signal range from player's core?
+- Energy/power requirements?
+- Processing power for simultaneous control?
+- Physical maintenance needs?
+
+---
+
+## 3D Printing / Manufacturing
+
+Unlocked during Part 1, becomes central to Part 2.
+
+### How It Works **[TBD]**
+- **Blueprints:** How are designs acquired? (Research? Memory unlocks? Discovery?)
+- **Materials:** What raw materials are needed? How are they gathered?
+- **Time:** How long do prints take? Can they be queued?
+- **Facilities:** Can printers be improved? Can you build more printers?
+
+### What Can Be Printed **[TBD]**
+- Drone components / upgrades
+- New drones
+- Base/facility components
+- Rocket parts
+- Weapons systems
+- **[TBD]:** Full list of printable items
+
+---
+
+## Resource Management
+
+### Resource Types **[TBD]**
+Potential resources to track:
+- **Raw Materials:** Metal, plastic, silicon, rare elements
+- **Energy:** Power generation and storage
+- **Memory/Processing:** AI's computational capacity
+- **Manufactured Components:** Intermediate products
+- **Fuel:** For rockets and possibly drones
+
+### Gathering Methods **[TBD]**
+- Scavenging from ruins
+- Mining/extraction
+- Recycling destroyed equipment
+- Manufacturing from raw materials
+
+---
+
+## Time Mechanics
+
+### Time Skipping
+- Player can skip ahead in time to complete builds
+- **[TBD]:** How is this presented in UI?
+- **[TBD]:** Are there risks to skipping time? (Events during skip? Resource consumption?)
+
+### The 10-Year Countdown (Part 2)
+- Begins when player discovers wormhole's destructive emissions
+- Creates strategic pressure against unlimited time skipping
+- **[TBD]:** Is the countdown visible at all times?
+- **[TBD]:** Can the player see projected completion times vs. remaining time?
+
+### Wormhole Energy Waves
+- Increase in intensity over the 10 years
+- Cause natural disasters and destruction
+- **[TBD]:** How do these manifest mechanically?
+  - Random destruction events?
+  - Predictable escalating zones?
+  - Resource degradation?
+  - Drone/facility damage?
+
+---
+
+## Base Building
+
+### Facilities **[TBD]**
+Types of structures the player might build:
+- Power generation
+- Manufacturing / 3D printing
+- Storage
+- Research
+- Launch pads
+- Communication arrays
+- Defense systems
+
+### Location Strategy **[TBD]**
+- Are some locations better than others?
+- Can the player build anywhere or only at preset locations?
+- How does the wormhole radiation affect base placement?
+
+---
+
+## Space Launch
+
+Physics-grounded rocket mechanics for sending armada through wormhole.
+
+### Rocket Equation Constraints
+- Getting mass to orbit is resource-intensive
+- Must account for:
+  - Fuel mass
+  - Payload mass
+  - Multi-stage designs
+- **[TBD]:** How realistic should the rocket mechanics be?
+
+### Launch Infrastructure **[TBD]**
+- Launch pads
+- Fuel production
+- Assembly facilities
+- Mission control
+
+### Armada Composition **[TBD]**
+What can/should the player send through the wormhole?
+- Combat drones
+- Resource gatherers
+- Manufacturing capability
+- Memory/processing cores
+- Fuel reserves
+
+---
+
+## Combat (Part 3 Preview)
+
+Combat becomes relevant in Part 3.
+
+### Part 2 Preparation
+- Player must bring "sufficient firepower" through wormhole
+- Building up forces on the other side will be harder
+- **[TBD]:** Should there be any combat in Parts 1-2? (Defense against hazards? Automated systems?)
+
+---
+
+## Multiplayer Considerations (Future)
+
+- Players complete Part 2 before joining multiplayer
+- Different players = different AIs from parallel Earths
+- Coming through different wormholes to same destination
+- **[TBD]:** PvP, PvE, or both?
+- **[TBD]:** Alliance mechanics?

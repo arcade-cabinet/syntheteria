@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://syntheteria.game/schema/save.schema.json",
+  "title": "SaveGame",
+  "description": "Complete game state for saving and loading",
+  "type": "object",
+  "required": ["version", "timestamp", "game_time", "player", "world"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Save format version for migration",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Real-world time when save was created"
+    },
+    "game_time": {
+      "type": "object",
+      "description": "In-game time state",
+      "properties": {
+        "elapsed_hours": {
+          "type": "number",
+          "description": "Total game-hours elapsed"
+        },
+        "radiation_level": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "el_arrival_progress": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": ["elapsed_hours", "radiation_level"]
+    },
+    "player": {
+      "type": "object",
+      "description": "Player state",
+      "properties": {
+        "consciousness": {
+          "type": "object",
+          "properties": {
+            "base_signal_range": { "type": "number" },
+            "global_compute_capacity": { "type": "number" },
+            "global_compute_used": { "type": "number" },
+            "memory_fragments_collected": { "type": "integer" }
+          }
+        },
+        "discovered_blueprints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Component IDs that can be manufactured"
+        },
+        "automation_routines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/automation_routine"
+          }
+        }
+      }
+    },
+    "world": {
+      "type": "object",
+      "properties": {
+        "seed": {
+          "type": "integer",
+          "description": "World generation seed"
+        },
+        "territories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/territory"
+          }
+        },
+        "facilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/facility"
+          }
+        },
+        "resource_deposits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resource_deposit"
+          }
+        }
+      }
+    },
+    "drones": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/drone"
+      }
+    },
+    "inventory": {
+      "type": "object",
+      "properties": {
+        "materials": {
+          "type": "object",
+          "additionalProperties": { "type": "number" },
+          "description": "Material ID -> quantity"
+        },
+        "components": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" },
+          "description": "Component ID -> quantity"
+        },
+        "ammunition": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" },
+          "description": "Ammo type -> quantity"
+        }
+      }
+    },
+    "manufacturing": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/manufacturing_job"
+      },
+      "description": "Active manufacturing queue"
+    },
+    "enemies": {
+      "type": "object",
+      "properties": {
+        "feral_creatures": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/enemy" }
+        },
+        "rogue_ais": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/rogue_ai" }
+        },
+        "cultist_enclaves": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/cultist_enclave" }
+        }
+      }
+    },
+    "story": {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["intro", "expansion", "finale"]
+        },
+        "flags": {
+          "type": "object",
+          "additionalProperties": { "type": "boolean" },
+          "description": "Story progression flags"
+        },
+        "memory_fragments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "discovered": { "type": "boolean" },
+              "read": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "position": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      },
+      "required": ["x", "y"]
+    },
+    "drone": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique drone instance ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "Player-assigned name"
+        },
+        "position": { "$ref": "#/$defs/position" },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "component_id": { "type": "string" },
+              "slot": { "type": "integer" },
+              "damage": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "state": {
+          "type": "object",
+          "properties": {
+            "power_level": { "type": "number", "minimum": 0, "maximum": 1 },
+            "fuel_level": { "type": "number", "minimum": 0, "maximum": 1 },
+            "is_connected": { "type": "boolean" },
+            "automation_level": {
+              "type": "string",
+              "enum": ["direct", "simple", "reactive", "adaptive", "full"]
+            },
+            "current_routine": { "type": "string" }
+          }
+        },
+        "cargo": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item_type": { "type": "string" },
+              "item_id": { "type": "string" },
+              "quantity": { "type": "number" }
+            }
+          }
+        }
+      },
+      "required": ["id", "position", "components", "state"]
+    },
+    "facility": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "position": { "$ref": "#/$defs/position" },
+        "health": { "type": "number", "minimum": 0, "maximum": 1 },
+        "efficiency": { "type": "number", "minimum": 0, "maximum": 2 },
+        "powered": { "type": "boolean" },
+        "production_queue": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["id", "type", "position"]
+    },
+    "territory": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "center": { "$ref": "#/$defs/position" },
+        "radius": { "type": "number" },
+        "control": {
+          "type": "string",
+          "enum": ["player", "enemy", "contested", "neutral"]
+        },
+        "control_strength": { "type": "number" }
+      }
+    },
+    "resource_deposit": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "material": { "type": "string" },
+        "position": { "$ref": "#/$defs/position" },
+        "total_quantity": { "type": "number" },
+        "remaining_quantity": { "type": "number" },
+        "discovered": { "type": "boolean" }
+      }
+    },
+    "manufacturing_job": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "output": { "type": "string" },
+        "quantity": { "type": "integer" },
+        "facility_id": { "type": "string" },
+        "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+        "time_remaining_hours": { "type": "number" }
+      }
+    },
+    "enemy": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "tier": { "type": "string", "enum": ["feral", "regional", "apex"] },
+        "position": { "$ref": "#/$defs/position" },
+        "health": { "type": "number", "minimum": 0, "maximum": 1 },
+        "state": { "type": "string" }
+      }
+    },
+    "rogue_ai": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "territory_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "hostility": { "type": "number", "minimum": 0, "maximum": 1 },
+        "strength": { "type": "number" },
+        "behavior": { "type": "string" }
+      }
+    },
+    "cultist_enclave": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "position": { "$ref": "#/$defs/position" },
+        "population": { "type": "integer" },
+        "defenses": { "type": "number" },
+        "el_blessing_level": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "automation_routine": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "level": {
+          "type": "string",
+          "enum": ["simple", "reactive", "adaptive", "full"]
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "condition": { "type": "string" },
+              "action": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

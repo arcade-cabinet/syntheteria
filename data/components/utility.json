@@ -1,0 +1,320 @@
+{
+  "$schema": "../schema/component.schema.json",
+  "components": [
+    {
+      "id": "cargo_bay_small",
+      "name": "Small Cargo Bay",
+      "category": "utility",
+      "tier": 1,
+      "weight": 1,
+      "description": "Basic cargo storage.",
+      "power": {
+        "draw_idle": 0,
+        "draw_active": 0,
+        "draw_max": 0
+      },
+      "compute": {
+        "base_cost": 0
+      },
+      "utility": {
+        "type": "cargo",
+        "capacity": 10
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 1,
+        "inputs": [
+          { "material": "aluminum", "quantity": 2 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "cargo_bay_medium",
+      "name": "Medium Cargo Bay",
+      "category": "utility",
+      "tier": 2,
+      "weight": 3,
+      "description": "Standard cargo capacity.",
+      "power": {
+        "draw_idle": 0,
+        "draw_active": 0,
+        "draw_max": 0
+      },
+      "compute": {
+        "base_cost": 0
+      },
+      "utility": {
+        "type": "cargo",
+        "capacity": 50
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 2,
+        "inputs": [
+          { "material": "aluminum", "quantity": 4 },
+          { "material": "steel", "quantity": 2 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "cargo_bay_large",
+      "name": "Large Cargo Bay",
+      "category": "utility",
+      "tier": 3,
+      "weight": 10,
+      "description": "Heavy cargo transport capacity.",
+      "power": {
+        "draw_idle": 0,
+        "draw_active": 0,
+        "draw_max": 0
+      },
+      "compute": {
+        "base_cost": 0
+      },
+      "utility": {
+        "type": "cargo",
+        "capacity": 200
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 4,
+        "inputs": [
+          { "material": "steel", "quantity": 10 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "fuel_tank_small",
+      "name": "Small Fuel Tank",
+      "category": "utility",
+      "tier": 2,
+      "weight": 1,
+      "description": "Fuel storage for generators.",
+      "power": {
+        "draw_idle": 0,
+        "draw_active": 0,
+        "draw_max": 0
+      },
+      "compute": {
+        "base_cost": 0
+      },
+      "utility": {
+        "type": "fuel_tank",
+        "capacity": 20
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 2,
+        "inputs": [
+          { "material": "steel", "quantity": 2 },
+          { "material": "rubber_seal", "quantity": 1 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "fuel_tank_large",
+      "name": "Large Fuel Tank",
+      "category": "utility",
+      "tier": 3,
+      "weight": 5,
+      "description": "Extended fuel storage for long operations.",
+      "power": {
+        "draw_idle": 0,
+        "draw_active": 0,
+        "draw_max": 0
+      },
+      "compute": {
+        "base_cost": 0
+      },
+      "utility": {
+        "type": "fuel_tank",
+        "capacity": 100
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 4,
+        "inputs": [
+          { "material": "steel", "quantity": 6 },
+          { "material": "rubber_seal", "quantity": 2 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "hydrogen_tank",
+      "name": "Hydrogen Tank",
+      "category": "utility",
+      "tier": 3,
+      "weight": 3,
+      "description": "Pressurized hydrogen storage for fuel cells.",
+      "power": {
+        "draw_idle": 0,
+        "draw_active": 0,
+        "draw_max": 0
+      },
+      "compute": {
+        "base_cost": 0
+      },
+      "utility": {
+        "type": "fuel_tank",
+        "capacity": 30
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 6,
+        "inputs": [
+          { "material": "carbon_fiber", "quantity": 4 },
+          { "material": "pressure_vessel", "quantity": 1 }
+        ],
+        "blueprint_required": true
+      }
+    },
+    {
+      "id": "noise_dampener",
+      "name": "Noise Dampener",
+      "category": "utility",
+      "tier": 2,
+      "weight": 1,
+      "description": "Reduces acoustic signature.",
+      "power": {
+        "draw_idle": 0,
+        "draw_active": 0,
+        "draw_max": 0
+      },
+      "compute": {
+        "base_cost": 0
+      },
+      "utility": {
+        "type": "stealth"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 2,
+        "inputs": [
+          { "material": "foam_composite", "quantity": 2 },
+          { "material": "rubber", "quantity": 2 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "heat_sink",
+      "name": "Heat Sink",
+      "category": "utility",
+      "tier": 2,
+      "weight": 2,
+      "description": "Reduces thermal signature. Harder to detect.",
+      "power": {
+        "draw_idle": 0,
+        "draw_active": 0,
+        "draw_max": 0
+      },
+      "compute": {
+        "base_cost": 0
+      },
+      "utility": {
+        "type": "stealth"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 3,
+        "inputs": [
+          { "material": "aluminum", "quantity": 4 },
+          { "material": "copper", "quantity": 2 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "repair_kit",
+      "name": "Repair Kit",
+      "category": "utility",
+      "tier": 2,
+      "weight": 2,
+      "description": "Field repair capability. Restore damaged components.",
+      "power": {
+        "draw_idle": 0,
+        "draw_active": 0.5,
+        "draw_max": 1
+      },
+      "compute": {
+        "base_cost": 0.1
+      },
+      "utility": {
+        "type": "repair"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 4,
+        "inputs": [
+          { "material": "steel", "quantity": 1 },
+          { "material": "copper_wire", "quantity": 2 },
+          { "material": "circuit_board", "quantity": 1 },
+          { "material": "adhesive", "quantity": 2 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
+      "id": "hacking_interface",
+      "name": "Hacking Interface",
+      "category": "utility",
+      "tier": 3,
+      "weight": 0.5,
+      "description": "Cyber attack capability. Attempt to subvert enemy systems.",
+      "power": {
+        "draw_idle": 0.2,
+        "draw_active": 2,
+        "draw_max": 5
+      },
+      "compute": {
+        "base_cost": 0.5
+      },
+      "utility": {
+        "type": "hacking"
+      },
+      "crafting": {
+        "facility": "electronics_fab",
+        "time_hours": 6,
+        "inputs": [
+          { "material": "circuit_board", "quantity": 2 },
+          { "material": "microprocessor", "quantity": 4 },
+          { "material": "antenna", "quantity": 1 }
+        ],
+        "blueprint_required": true
+      }
+    },
+    {
+      "id": "self_destruct",
+      "name": "Self-Destruct Charge",
+      "category": "utility",
+      "tier": 2,
+      "weight": 0.5,
+      "description": "Last resort. Destroys the drone and damages nearby enemies.",
+      "power": {
+        "draw_idle": 0,
+        "draw_active": 0,
+        "draw_max": 0
+      },
+      "compute": {
+        "base_cost": 0
+      },
+      "utility": {
+        "type": "self_destruct"
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 2,
+        "inputs": [
+          { "material": "explosive_compound", "quantity": 2 },
+          { "material": "detonator", "quantity": 1 }
+        ],
+        "blueprint_required": false
+      }
+    }
+  ]
+}

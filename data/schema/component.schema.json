@@ -1,0 +1,286 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://syntheteria.game/schema/component.schema.json",
+  "title": "Component",
+  "description": "A drone component that can be assembled into functional drones",
+  "type": "object",
+  "required": ["id", "name", "category", "weight"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier (snake_case)",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "power_source",
+        "controller",
+        "motor",
+        "locomotion",
+        "sensor",
+        "manipulation",
+        "weapon",
+        "communication",
+        "utility"
+      ]
+    },
+    "tier": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Technology tier (1=basic, 5=advanced)"
+    },
+    "weight": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Weight in kilograms"
+    },
+    "description": {
+      "type": "string"
+    },
+
+    "power": {
+      "type": "object",
+      "description": "Power generation/consumption characteristics",
+      "properties": {
+        "output": {
+          "type": "number",
+          "description": "Power output capacity (for power sources)"
+        },
+        "draw_idle": {
+          "type": "number",
+          "description": "Power draw when idle"
+        },
+        "draw_active": {
+          "type": "number",
+          "description": "Power draw when active"
+        },
+        "draw_max": {
+          "type": "number",
+          "description": "Maximum power draw"
+        },
+        "fuel_type": {
+          "type": "string",
+          "description": "Required fuel (if applicable)"
+        },
+        "fuel_rate": {
+          "type": "number",
+          "description": "Fuel consumption rate per hour"
+        }
+      }
+    },
+
+    "compute": {
+      "type": "object",
+      "description": "Compute contribution/cost characteristics",
+      "properties": {
+        "contribution": {
+          "type": "number",
+          "description": "Compute capacity added to global pool"
+        },
+        "base_cost": {
+          "type": "number",
+          "description": "Base compute cost to operate this component"
+        }
+      }
+    },
+
+    "locomotion": {
+      "type": "object",
+      "description": "Movement characteristics (for locomotion components)",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["wheels", "treads", "legs", "rotors", "aquatic"]
+        },
+        "base_power_rate": {
+          "type": "number",
+          "description": "Base rate for locomotion power formula"
+        },
+        "terrain": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["smooth", "rough", "steep", "extreme", "air", "water"]
+          },
+          "description": "Terrain types this locomotion can traverse"
+        },
+        "speed_class": {
+          "type": "string",
+          "enum": ["slow", "medium", "fast"]
+        }
+      }
+    },
+
+    "motor": {
+      "type": "object",
+      "description": "Motor characteristics",
+      "properties": {
+        "torque_rating": {
+          "type": "number",
+          "description": "Maximum weight this motor can move (kg)"
+        },
+        "precision": {
+          "type": "boolean",
+          "description": "Whether this is a precision servo"
+        }
+      }
+    },
+
+    "sensor": {
+      "type": "object",
+      "description": "Sensor characteristics",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "camera", "thermal", "night_vision", "radar", "lidar",
+            "sonar", "chemical", "radiation", "em", "seismic",
+            "magnetic", "audio"
+          ]
+        },
+        "range": {
+          "type": "number",
+          "description": "Detection range in meters"
+        },
+        "resolution": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "passive": {
+          "type": "boolean",
+          "description": "True if sensor doesn't emit detectable signals"
+        }
+      }
+    },
+
+    "manipulation": {
+      "type": "object",
+      "description": "Manipulation characteristics",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["gripper", "arm", "drill", "welder", "cutter"]
+        },
+        "reach": {
+          "type": "number",
+          "description": "Reach in meters (for arms)"
+        },
+        "payload": {
+          "type": "number",
+          "description": "Maximum payload in kg"
+        },
+        "material_class": {
+          "type": "string",
+          "enum": ["soft", "hard", "rock", "metal", "any"],
+          "description": "What materials this tool can work with"
+        }
+      }
+    },
+
+    "weapon": {
+      "type": "object",
+      "description": "Weapon characteristics",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "projectile", "laser", "emp", "melee", "explosive",
+            "railgun", "shield"
+          ]
+        },
+        "damage": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "very_high", "extreme"]
+        },
+        "range": {
+          "type": "number",
+          "description": "Effective range in meters"
+        },
+        "uses_ammo": {
+          "type": "boolean"
+        },
+        "ammo_type": {
+          "type": "string",
+          "description": "Required ammunition type (if applicable)"
+        },
+        "area_effect": {
+          "type": "boolean",
+          "description": "Whether damage affects an area"
+        }
+      }
+    },
+
+    "communication": {
+      "type": "object",
+      "description": "Communication characteristics",
+      "properties": {
+        "range": {
+          "type": "number",
+          "description": "Communication range in meters"
+        },
+        "extends_network": {
+          "type": "boolean",
+          "description": "Whether this component extends signal range"
+        },
+        "jamming_range": {
+          "type": "number",
+          "description": "ECM jamming range in meters"
+        }
+      }
+    },
+
+    "utility": {
+      "type": "object",
+      "description": "Utility characteristics",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "cargo", "fuel_tank", "stealth", "repair", "hacking",
+            "self_destruct"
+          ]
+        },
+        "capacity": {
+          "type": "number",
+          "description": "Storage capacity in kg (for cargo/tanks)"
+        }
+      }
+    },
+
+    "crafting": {
+      "type": "object",
+      "description": "Manufacturing requirements",
+      "properties": {
+        "facility": {
+          "type": "string",
+          "description": "Required facility type"
+        },
+        "time_hours": {
+          "type": "number",
+          "description": "Manufacturing time in game-hours"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "material": { "type": "string" },
+              "quantity": { "type": "number" }
+            },
+            "required": ["material", "quantity"]
+          }
+        },
+        "blueprint_required": {
+          "type": "boolean",
+          "description": "Whether this requires discovering a blueprint"
+        }
+      }
+    }
+  }
+}

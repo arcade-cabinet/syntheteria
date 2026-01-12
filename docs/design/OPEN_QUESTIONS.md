@@ -6,7 +6,8 @@ This document tracks design questions that need resolution.
 
 ## UI/Interface Questions
 
-- [ ] **Q1:** What is the player's primary view? (First-person through a drone? Top-down map view? Multiple camera options? A "digital consciousness" abstract view?)
+- [x] **Q1:** What is the player's primary view?
+  - **RESOLVED:** Abstract digital consciousness view. Keep grounded in this as much as possible. Can blend in top-down strategy elements in Part 2 as scale grows, but maintain the abstract consciousness interface as the foundation. Important because Part 3 returns to exploration, need seamless transition back to "small in a big world" feeling.
 - [ ] **Q2:** How does the player select and control multiple drones simultaneously?
 - [ ] **Q3:** What does the "growing consciousness" feel like in UI terms? (More screen real estate? Split attention? Faster processing?)
 
@@ -15,8 +16,10 @@ This document tracks design questions that need resolution.
 ## Gameplay Mechanics Questions
 
 - [ ] **Q4:** What resources does the player need to manage? (Raw materials, energy, memory/processing power, manufactured components?)
-- [ ] **Q5:** How does drone control work? (Direct control? AI autonomy with directives? Programmable behaviors?)
-- [ ] **Q6:** What are the limitations on the AI player? (Processing power? Signal range? Energy?)
+- [x] **Q5:** How does drone control work?
+  - **RESOLVED:** Hybrid model - combination of direct control and autonomous directives.
+- [x] **Q6:** What are the limitations on the AI player?
+  - **RESOLVED:** Four constraints: Memory, Processing Power, Electrical Power, and Signal Range.
 - [ ] **Q7:** How does 3D printing work mechanically? (Blueprints? Research tree? Material requirements?)
 - [ ] **Q8:** What types of drones/robots can the player build?
 
@@ -32,7 +35,8 @@ This document tracks design questions that need resolution.
 
 ## Part 1 Specific Questions
 
-- [ ] **Q12:** What is the player's starting state? (Single immobile server? One basic drone? A small facility?)
+- [x] **Q12:** What is the player's starting state?
+  - **RESOLVED:** Immobile server/core that must find hardware to control and activate its first drone.
 - [ ] **Q13:** What defines the "standardized endpoint" for Part 1? (Specific facilities controlled? Certain story beats completed? Resource thresholds?)
 - [ ] **Q14:** Approximately how long should Part 1 take for a first-time player?
 

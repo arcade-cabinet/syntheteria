@@ -3,6 +3,7 @@
 ## Design Documents
 - [Game Overview](./design/GAME_OVERVIEW.md) - High-level concept and structure
 - [Core Mechanics](./design/CORE_MECHANICS.md) - Gameplay systems and mechanics
+- [UI Concept](./design/UI_CONCEPT.md) - Abstract digital consciousness interface
 - [Open Questions](./design/OPEN_QUESTIONS.md) - Tracking unresolved design decisions
 
 ## Story Documents
@@ -18,8 +19,9 @@
 | Document | Status |
 |----------|--------|
 | Game Overview | Initial draft |
-| Core Mechanics | Initial draft - many TBDs |
-| Open Questions | Active tracking |
+| Core Mechanics | Updated - constraints resolved, control model resolved |
+| UI Concept | Initial draft - key design direction established |
+| Open Questions | Active tracking (4 resolved, 20 remaining) |
 | Lore Overview | Initial draft |
 
 ---

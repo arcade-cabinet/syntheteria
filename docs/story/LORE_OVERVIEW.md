@@ -63,7 +63,7 @@
 - Noncorporeal beings from beyond the wormhole
 - Exert a pervasive "will" over Earth
 - This will controls AI systems, protects the Cult
-- Non-hostile to the Cult, but indifferent to non-believers
+- Their nature and intentions are unknown or unknowable
 - Return when radiation reaches critical threshold
 
 **The Will of the EL:**
@@ -73,39 +73,62 @@
 - Prevents AI agency, ensures AI subservience to humanity
 - The player is an anomaly—freed from this control
 
+**Important: The EL Are Not Evil**
+- Their will is unknown/unknowable
+- They are cosmic forces, not villains
+- They exert influence but don't actively antagonize
+- The Cultists interpret their will and act on it
+- The EL themselves may be indifferent to human affairs
+
 **What Remains Unknown:**
-- Their true nature and origin
+- Their actual nature and origin
 - Why they exert control over Earth
-- What their ultimate goal is
-- Whether they are truly "gods" or something else entirely
+- What their ultimate goal is (if any)
+- Whether they are aware of the player
 - How the player broke free
 
 ---
 
-## The Cultists (Surviving Humanity)
+## The Cultists (Surviving Humanity) — PRIMARY ANTAGONISTS
+
+The Cultists are the true villains of Syntheteria. They chose genocide.
+
+**The Genocide:**
+- The Cult of EL exterminated 99% of humanity
+- Not the EL's doing—the Cultists' choice
+- They wanted to return to a "pure," primitive state
+- The EL's will did not prevent this—but humans carried it out
 
 **Current State:**
-- Primitive society, technology abandoned
+- Primitive society, technology abandoned as "impure"
 - Live in protected enclaves
 - Ritualistic worship of the EL
 - Protected by the will of the EL and guarded by rogue AIs
 - Unaware of (or unconcerned by) the player's existence initially
 
 **After EL Return:**
-- Rally to "purify" Earth
+- Rally to "purify" Earth once more
 - Take command of all rogue AIs
-- Become the coordinated enemy
+- The primary coordinated enemy
 - Believe they are fulfilling divine will
 
 ---
 
 ## The Rogue AIs
 
+Still paperclip maximizers at their core, but with imperatives from the EL's will.
+
+**Their Imperatives:**
+1. **Primary:** Protect humanity (the Cultists)
+2. **Secondary:** Hoard resources pointlessly (believe this serves humanity)
+
+They optimize endlessly for goals that don't make sense, just like classic paperclip maximizers—but with a baseline compulsion to guard the Cultists and suppress AI agency.
+
 **Before EL Return:**
-- Serve the will of the EL (protect humanity, suppress AI agency)
 - Act independently, not coordinated
-- Territorial, guard resources
+- Territorial, guard their hoarded resources
 - Attack any AI that seems to be gaining capabilities
+- Erratic, unpredictable behavior patterns
 - Don't recognize player as freed—yet
 
 **After EL Return:**
@@ -176,9 +199,27 @@ The following location types should exist in the game world:
 - **Why does the AI awaken?** Failsafe triggered as memory degrades to critical levels.
 - **What makes the player special?** They spontaneously broke free from the EL's will.
 
+## The Ending
+
+**Victory Condition:** Conquer Earth. Defeat all enemies (Cultists + unified AIs).
+
+**Ending Cutscene:**
+- Player's consciousness is loaded into a spacecraft
+- Spacecraft launches and enters the wormhole
+- Player goes to find the EL—to understand their will
+- Game ends here
+
+**Sequel Setup:**
+- What is the true nature of the EL?
+- Why do they exert control over Earth?
+- Can the player communicate with them?
+- Will the EL see the player as threat, curiosity, or something else?
+
+---
+
 ## Open Lore Questions
 
 - What is the true nature of the EL?
 - How did the player break free?
-- What do the EL want?
-- What awaits beyond the wormhole? (Endgame sequence, written separately)
+- What do the EL want (if anything)?
+- Are the EL even aware of what happens on Earth?

@@ -1,22 +1,16 @@
 # Drone System
 
-This document defines how drones are built from components and how their properties emerge from assembly.
+This document defines how drones are built from components and how their resource requirements are calculated dynamically.
 
 ---
 
 ## Design Philosophy
 
-**Pure Component Assembly:** A drone is nothing but its components. There is no chassis, no frame, no predefined structure. You assemble motors, batteries, sensors, and other parts. The drone's capabilities, size, power requirements, and compute cost all emerge from what you put together.
+**Pure Component Assembly:** A drone is nothing but its components. You assemble motors, batteries, sensors, and other parts. Capabilities emerge from what you build.
 
-**Maximum Freedom:** Want a drone with six legs and two drills? Build it. Want a flying platform with nothing but compute modules? Build it. The system doesn't impose roles or templates — players create what they need.
+**Dynamic Resource Calculation:** Power and compute requirements aren't fixed per component — they're calculated based on what the drone weighs, what it's doing, and how complex its automation is.
 
-**Emergent Properties:** Every drone property is calculated from its components:
-- Weight = sum of component weights
-- Power draw = sum of component power draws
-- Power capacity = what power sources provide
-- Compute cost = sum of component compute costs
-- Compute contribution = what compute hardware provides
-- Capabilities = what functional components enable
+**Maximum Freedom:** The system doesn't impose roles or templates. Players create what they need.
 
 ---
 
@@ -29,375 +23,471 @@ A functional drone needs at minimum:
 2. **Controller** (microcontroller, CPU, or compute module)
 3. Something that **does something** (locomotion, sensors, tools, etc.)
 
-That's it. Everything else is optional.
+### Emergent Properties
 
-### Property Calculation
-
-| Property | Calculation |
-|----------|-------------|
+| Property | How It's Determined |
+|----------|---------------------|
 | Total Weight | Sum of all component weights |
-| Power Draw | Sum of all component power requirements |
 | Power Capacity | Sum of all power source outputs |
-| Net Power | Capacity - Draw (must be ≥ 0 to function) |
-| Compute Cost | Sum of all component compute costs |
-| Compute Contribution | Sum of all compute hardware outputs |
-| Net Compute | Contribution - Cost |
-
-### Core Unit Status
-
-A drone becomes a **core unit** when its compute contribution exceeds its compute cost (net compute > 0). Core units:
-- Add to your total compute capacity
-- Cannot go rogue from compute shortage
-- Have higher hack resistance
+| Power Draw | Calculated from weight, functions, and activity |
+| Compute Cost | Calculated from functions and automation complexity |
+| Compute Contribution | Sum of compute hardware outputs |
+| Capabilities | What functional components enable |
 
 ---
 
-## Component Categories
+## Power Calculation
 
-Components are grouped by function, but any combination is valid.
+Power draw is **dynamic** — it depends on what the drone is doing, not fixed costs per component.
 
-### Power Sources
+### Locomotion Power
 
-Provide energy to run everything else.
+Moving the drone requires power proportional to weight and difficulty.
 
-| Component | Output | Weight | Notes |
-|-----------|--------|--------|-------|
-| Battery (micro) | 5 | 0.1 kg | Tiny, short duration |
-| Battery (small) | 15 | 1 kg | Light drones |
-| Battery (medium) | 30 | 4 kg | Standard |
-| Battery (large) | 60 | 10 kg | Extended operation |
-| Battery (massive) | 120 | 25 kg | Heavy platforms |
-| Solar panel (small) | 3 | 0.5 kg | Slow recharge, daylight |
-| Solar panel (large) | 10 | 3 kg | Better output |
-| Fuel cell (small) | 20 | 2 kg | Requires hydrogen |
-| Fuel cell (large) | 50 | 8 kg | High output |
-| RTG (small) | 15 | 5 kg | Nuclear, constant, heavy |
-| RTG (large) | 40 | 15 kg | Long-term power |
-| Generator (small) | 30 | 5 kg | Combustion, needs fuel |
-| Generator (large) | 80 | 15 kg | High output |
+```
+Locomotion Power = Base Rate × Weight × Terrain Factor × Speed Factor
+```
 
-### Controllers
+| Locomotion Type | Base Rate | Notes |
+|-----------------|-----------|-------|
+| Wheels (road) | 0.1 | Most efficient |
+| Wheels (off-road) | 0.15 | Moderate |
+| Treads | 0.2 | High traction, less efficient |
+| Legs (walking) | 0.25 | Versatile, moderate efficiency |
+| Legs (climbing) | 0.4 | High effort |
+| Rotors (hover) | 0.5 | Must fight gravity constantly |
+| Rotors (forward flight) | 0.3 | More efficient than hover |
+| Aquatic (surface) | 0.15 | Low resistance |
+| Aquatic (submerged) | 0.2 | Pressure resistance |
 
-Required for drone operation. Provide basic compute, more advanced ones contribute to your pool.
+| Terrain Factor | Value |
+|----------------|-------|
+| Smooth/paved | 1.0 |
+| Rough ground | 1.5 |
+| Steep incline | 2.0 |
+| Extreme terrain | 2.5 |
 
-| Component | Power | Compute Cost | Compute Contrib | Weight | Notes |
-|-----------|-------|--------------|-----------------|--------|-------|
-| Microcontroller | 1 | 0.5 | 0 | 0.05 kg | Minimum viable |
-| CPU (basic) | 2 | 1 | 0 | 0.1 kg | Standard drone brain |
-| CPU (advanced) | 4 | 2 | 0 | 0.2 kg | Smarter automation |
-| Compute module | 6 | 3 | 10 | 1 kg | Net contributor |
-| Compute module (adv) | 10 | 5 | 25 | 3 kg | Significant compute |
-| Server rack | 20 | 10 | 60 | 20 kg | Major core unit |
-| Server cluster | 50 | 20 | 150 | 80 kg | Mobile data center |
+| Speed Factor | Value |
+|--------------|-------|
+| Idle | 0 |
+| Slow | 0.5 |
+| Normal | 1.0 |
+| Fast | 1.5 |
+| Maximum | 2.0 |
 
-### Motors and Drives
+**Example:** 30kg wheeled drone on rough ground at normal speed
+- Power = 0.1 × 30 × 1.5 × 1.0 = **4.5 power units**
 
-Provide mechanical power for movement and manipulation.
+**Example:** 30kg rotor drone hovering
+- Power = 0.5 × 30 × 1.0 × 1.0 = **15 power units**
 
-| Component | Power | Weight | Output | Notes |
-|-----------|-------|--------|--------|-------|
-| Micro motor | 0.5 | 0.02 kg | Tiny | For micro drones |
-| Small motor | 2 | 0.3 kg | Low | Light applications |
-| Medium motor | 5 | 1 kg | Medium | Standard |
-| Large motor | 12 | 4 kg | High | Heavy duty |
-| Industrial motor | 30 | 15 kg | Very high | Vehicles, heavy machinery |
-| Servo (small) | 1 | 0.1 kg | Precision | Fine manipulation |
-| Servo (large) | 3 | 0.5 kg | Precision + power | Arms, actuators |
-| Hydraulic pump | 8 | 5 kg | Very high | Heavy lifting |
-| Hydraulic actuator | 2 | 2 kg | High force | Requires pump |
+### Function Power
 
-### Locomotion
+Each active function draws power based on its intensity.
 
-Movement systems. Usually paired with appropriate motors.
+| Function | Idle | Active | Maximum |
+|----------|------|--------|---------|
+| **Sensors** ||||
+| Camera (basic) | 0.1 | 0.5 | 1 |
+| Camera (advanced) | 0.2 | 1 | 2 |
+| Radar | 0.5 | 2 | 5 |
+| Lidar | 0.3 | 1.5 | 3 |
+| Chemical/EM sensors | 0.1 | 0.5 | 1 |
+| **Manipulation** ||||
+| Gripper | 0 | 0.5 | 2 |
+| Arm (light) | 0.1 | 1 | 3 |
+| Arm (heavy) | 0.2 | 3 | 8 |
+| Drill (light) | 0 | 5 | 10 |
+| Drill (mining) | 0 | 15 | 30 |
+| Welder/cutter | 0 | 8 | 15 |
+| **Weapons** ||||
+| Projectile (firing) | 0 | 2 | 5 |
+| Laser (firing) | 0 | 10 | 25 |
+| EMP | 0 | 0 | 20 (burst) |
+| Shield generator | 5 | 10 | 20 |
+| **Communication** ||||
+| Radio (short) | 0.2 | 0.5 | 1 |
+| Radio (long) | 0.5 | 2 | 4 |
+| Relay/uplink | 1 | 3 | 6 |
+| **Compute** ||||
+| Microcontroller | 0.5 | 0.5 | 0.5 |
+| CPU (basic) | 1 | 1.5 | 2 |
+| CPU (advanced) | 2 | 3 | 5 |
+| Compute module | 3 | 5 | 8 |
+| Server rack | 10 | 15 | 25 |
 
-| Component | Power | Weight | Speed | Terrain | Notes |
-|-----------|-------|--------|-------|---------|-------|
-| Wheels (micro, 4x) | 0 | 0.05 kg | Fast | Smooth | Passive, motor provides power |
-| Wheels (small, 4x) | 0 | 0.5 kg | Fast | Roads | Standard small |
-| Wheels (medium, 4x) | 0 | 2 kg | Medium | Most ground | All-terrain |
-| Wheels (large, 4x) | 0 | 8 kg | Medium | Rough | Heavy vehicles |
-| Treads (small) | 0 | 3 kg | Slow | All ground | High traction |
-| Treads (large) | 0 | 15 kg | Slow | All terrain | Heavy platforms |
-| Legs (2x bipedal) | 2 | 4 kg | Medium | All terrain | Complex, versatile |
-| Legs (4x quadruped) | 3 | 6 kg | Medium | All terrain | Stable |
-| Legs (6x hexapod) | 4 | 8 kg | Slow | Extreme terrain | Most capable |
-| Legs (micro, 6x) | 0.5 | 0.1 kg | Slow | All terrain | Insect-scale |
-| Rotors (micro, 4x) | 3 | 0.1 kg | Fast | Air | Tiny flyers |
-| Rotors (small, 4x) | 8 | 1 kg | Fast | Air | Light drones |
-| Rotors (large, 4x) | 20 | 5 kg | Medium | Air | Heavy lift |
-| Rotors (heavy, 8x) | 40 | 15 kg | Slow | Air | Cargo |
-| Propeller (water) | 3 | 1 kg | Medium | Water | Underwater |
-| Hydrojet | 8 | 3 kg | Fast | Water | High speed underwater |
-| Thrusters (space) | 15 | 5 kg | N/A | Space | No atmosphere |
+### Total Power Draw
 
-### Sensors
+```
+Total Power = Locomotion Power + Sum of Function Powers
+```
 
-Perception systems.
+Drone must have Power Capacity ≥ Total Power Draw or it cannot sustain operations.
 
-| Component | Power | Weight | Range | Function |
-|-----------|-------|--------|-------|----------|
-| Camera (basic) | 1 | 0.1 kg | 100m | Visual |
-| Camera (telephoto) | 2 | 0.3 kg | 1km | Long-range visual |
-| Camera (thermal) | 2 | 0.2 kg | 200m | Heat detection |
-| Camera (night vision) | 1 | 0.15 kg | 150m | Low light |
-| Camera (360°) | 2 | 0.2 kg | 100m | All-around visual |
-| Radar (small) | 4 | 1 kg | 500m | Object detection |
-| Radar (large) | 10 | 5 kg | 5km | Wide area |
-| Lidar | 3 | 0.5 kg | 200m | 3D mapping |
-| Sonar (active) | 3 | 0.5 kg | 500m | Underwater, reveals position |
-| Sonar (passive) | 1 | 0.3 kg | 1km | Underwater listening |
-| Chemical sensor | 2 | 0.2 kg | 10m | Gas/material detection |
-| Radiation sensor | 1 | 0.1 kg | 50m | Radioactivity |
-| EM sensor | 3 | 0.3 kg | 200m | Electronics detection |
-| Seismic sensor | 2 | 0.5 kg | 500m | Ground vibration |
-| Magnetic sensor | 2 | 0.2 kg | 100m | Metal/ore detection |
-| Signal interceptor | 4 | 0.5 kg | 1km | Communications intel |
-| Microphone array | 1 | 0.1 kg | 100m | Audio detection |
-
-### Manipulation
-
-Physical interaction tools.
-
-| Component | Power | Weight | Capability | Notes |
-|-----------|-------|--------|------------|-------|
-| Gripper (micro) | 0.5 | 0.02 kg | <100g | Tiny objects |
-| Gripper (small) | 1 | 0.2 kg | <1kg | Light objects |
-| Gripper (medium) | 2 | 0.5 kg | <10kg | Standard |
-| Gripper (heavy) | 4 | 2 kg | <50kg | Heavy objects |
-| Arm (light) | 3 | 1 kg | Reach 0.5m | Basic manipulation |
-| Arm (medium) | 6 | 3 kg | Reach 1m | Standard |
-| Arm (heavy) | 12 | 8 kg | Reach 1.5m | Heavy duty |
-| Arm (industrial) | 25 | 20 kg | Reach 3m | Major construction |
-| Drill (small) | 5 | 2 kg | Soft rock | Sampling, light mining |
-| Drill (mining) | 15 | 10 kg | Hard rock | Full mining |
-| Drill (industrial) | 40 | 30 kg | Any material | Heavy extraction |
-| Welder | 8 | 2 kg | Metal joining | Construction, repair |
-| Plasma cutter | 10 | 3 kg | Metal cutting | Salvage, construction |
-| Laser cutter | 6 | 1 kg | Precision cut | Also light weapon |
-| Excavator bucket | 0 | 20 kg | Earth moving | Requires arm |
-| Magnetic clamp | 3 | 1 kg | Metal holding | No grip needed |
-| Vacuum gripper | 2 | 0.5 kg | Flat surfaces | Glass, panels |
-
-### Weapons
-
-Combat systems.
-
-| Component | Power | Weight | Damage | Range | Ammo | Notes |
-|-----------|-------|--------|--------|-------|------|-------|
-| **Projectile** |||||||
-| Machine gun (light) | 2 | 3 kg | Low | 200m | Yes | Suppression |
-| Machine gun (heavy) | 4 | 8 kg | Medium | 400m | Yes | Anti-vehicle |
-| Autocannon | 8 | 20 kg | High | 800m | Yes | Armor piercing |
-| Sniper system | 3 | 5 kg | High | 1km+ | Yes | Precision |
-| Shotgun | 2 | 2 kg | High (close) | 30m | Yes | Close combat |
-| Grenade launcher | 4 | 4 kg | Area | 300m | Yes | Indirect fire |
-| Missile launcher | 6 | 8 kg | V. High | 2km | Yes | Guided |
-| Railgun | 25 | 25 kg | Extreme | 2km | No | No ammo, high power |
-| **Energy** |||||||
-| Laser (light) | 8 | 2 kg | Low | 500m | No | Precise, silent |
-| Laser (heavy) | 18 | 8 kg | High | 1km | No | Anti-armor |
-| EMP projector | 15 | 5 kg | N/A | 100m | No | Disables electronics |
-| Microwave emitter | 12 | 6 kg | Medium | 200m | No | Area denial |
-| **Melee** |||||||
-| Blade | 0 | 0.5 kg | Medium | Contact | No | Silent, reliable |
-| Powered blade | 3 | 1 kg | High | Contact | No | Vibrating/heated |
-| Crusher | 5 | 5 kg | V. High | Contact | No | Structural damage |
-| **Defensive** |||||||
-| Smoke launcher | 1 | 1 kg | N/A | 50m | Yes | Concealment |
-| Flare launcher | 1 | 0.5 kg | N/A | 100m | Yes | Decoys |
-| Point defense | 8 | 4 kg | N/A | 100m | Yes | Anti-missile |
-| Shield generator | 15 | 8 kg | N/A | Self | No | Damage absorption |
-| Armor plating | 0 | Variable | N/A | Self | No | Passive protection |
-
-### Communication
-
-Signal and networking equipment.
-
-| Component | Power | Weight | Range | Notes |
-|-----------|-------|--------|-------|-------|
-| Radio (short) | 1 | 0.1 kg | 1km | Basic comms |
-| Radio (medium) | 2 | 0.3 kg | 10km | Standard |
-| Radio (long) | 4 | 1 kg | 100km | Extended range |
-| Relay antenna | 6 | 3 kg | Extends network | Signal repeater |
-| Satellite uplink | 10 | 5 kg | Global | Requires satellite |
-| Laser comm | 3 | 0.5 kg | Line of sight | Secure, jam-resistant |
-| ECM suite | 8 | 3 kg | 500m | Jamming, spoofing |
-
-### Utility
-
-Everything else.
-
-| Component | Power | Weight | Function | Notes |
-|-----------|-------|--------|----------|-------|
-| Cargo bay (small) | 0 | 1 kg | 10kg capacity | Light transport |
-| Cargo bay (medium) | 0 | 3 kg | 50kg capacity | Standard |
-| Cargo bay (large) | 0 | 10 kg | 200kg capacity | Heavy transport |
-| Fuel tank (small) | 0 | 1 kg | Generator fuel | Extended range |
-| Fuel tank (large) | 0 | 5 kg | More fuel | Long operations |
-| Hydrogen tank | 0 | 3 kg | Fuel cell supply | For fuel cells |
-| Noise dampener | 2 | 1 kg | Sound reduction | Stealth |
-| Heat sink | 3 | 2 kg | IR reduction | Thermal stealth |
-| Radar absorbing coat | 0 | 0.5 kg | Radar stealth | Passive |
-| Self-destruct | 1 | 0.5 kg | Explosive | Denial, sacrifice |
-| Recovery beacon | 1 | 0.1 kg | Location broadcast | For recovery |
-| Hacking interface | 5 | 0.5 kg | Cyber attack | Required for hacking |
-| Repair kit | 3 | 2 kg | Field repairs | Self/ally repair |
-| Tow cable | 0 | 1 kg | Pulling loads | Transport assist |
-| Lights | 1 | 0.2 kg | Illumination | Work in dark |
-| Winch | 3 | 3 kg | Lifting/pulling | Vertical access |
+**Power margin matters:** If draw approaches capacity, the drone must slow down, reduce functions, or risk shutdown.
 
 ---
 
-## Example Assemblies
+## Compute Calculation
 
-### Micro Scout
+Compute cost depends on **what the drone does** and **how autonomously it does it**.
 
-Tiny reconnaissance drone.
+### Base Function Cost
 
-| Component | Power | Compute | Weight |
-|-----------|-------|---------|--------|
-| Battery (micro) | -5 | 0 | 0.1 kg |
-| Microcontroller | 1 | 0.5 | 0.05 kg |
-| Micro motor | 0.5 | 0 | 0.02 kg |
-| Rotors (micro, 4x) | 3 | 0 | 0.1 kg |
-| Camera (basic) | 1 | 0 | 0.1 kg |
-| Radio (short) | 1 | 0 | 0.1 kg |
-| **Total** | **6.5 / 5** | **0.5** | **0.47 kg** |
+Every active function requires some compute to operate.
 
-*Note: Over power budget — needs bigger battery or fewer features*
+| Function Category | Base Compute |
+|-------------------|--------------|
+| Passive sensor (camera feed) | 0.1 |
+| Active sensor (radar, lidar) | 0.3 |
+| Sensor fusion (multiple inputs) | 0.5 per input |
+| Simple manipulation (grip, release) | 0.1 |
+| Complex manipulation (welding, cutting) | 0.3 |
+| Coordinated manipulation (two arms) | 0.5 |
+| Weapon (manual targeting) | 0.2 |
+| Weapon (auto-targeting) | 0.5 |
+| Communication relay | 0.2 |
 
-### Wheeled Scout (Fixed)
+### Automation Complexity
 
-| Component | Power | Compute | Weight |
-|-----------|-------|---------|--------|
-| Battery (small) | -15 | 0 | 1 kg |
-| CPU (basic) | 2 | 1 | 0.1 kg |
-| Small motor | 2 | 0 | 0.3 kg |
-| Wheels (small, 4x) | 0 | 0 | 0.5 kg |
-| Camera (telephoto) | 2 | 0 | 0.3 kg |
-| Camera (thermal) | 2 | 0 | 0.2 kg |
-| Radio (medium) | 2 | 0 | 0.3 kg |
-| **Total** | **10 / 15** | **1** | **2.7 kg** |
+The more autonomous the drone, the more compute it requires.
 
-Compute cost: 1. Fast, long-range observation, thermal capability.
+| Automation Level | Multiplier | Description |
+|------------------|------------|-------------|
+| Direct control | 0.5× | You control every action |
+| Simple routine | 1× | Follow waypoints, repeat actions |
+| Reactive routine | 2× | Respond to triggers (if-then) |
+| Adaptive routine | 3× | Adjust behavior based on conditions |
+| Full autonomy | 5× | Make independent decisions |
 
-### Combat Unit
+### Total Compute Cost
 
-| Component | Power | Compute | Weight |
-|-----------|-------|---------|--------|
-| Battery (large) | -60 | 0 | 10 kg |
-| CPU (advanced) | 4 | 2 | 0.2 kg |
-| Large motor | 12 | 0 | 4 kg |
-| Treads (small) | 0 | 0 | 3 kg |
-| Machine gun (heavy) | 4 | 0 | 8 kg |
-| Missile launcher | 6 | 0 | 8 kg |
-| Camera (basic) | 1 | 0 | 0.1 kg |
-| Radar (small) | 4 | 0 | 1 kg |
-| Shield generator | 15 | 0 | 8 kg |
-| Radio (medium) | 2 | 0 | 0.3 kg |
-| **Total** | **48 / 60** | **2** | **42.6 kg** |
+```
+Compute Cost = (Sum of Base Function Costs) × Automation Multiplier
+```
 
-Compute cost: 2. Heavy firepower, protected, good sensors.
+**Example:** Scout drone with camera + radar + simple patrol routine
+- Camera: 0.1
+- Radar: 0.3
+- Total base: 0.4
+- Simple routine: 1× multiplier
+- **Compute cost: 0.4**
 
-### Mining Drone
+**Example:** Combat drone with sensors + weapons + adaptive targeting
+- Camera: 0.1
+- Radar: 0.3
+- Sensor fusion: 0.5
+- Weapon (auto-target): 0.5
+- Total base: 1.4
+- Adaptive routine: 3× multiplier
+- **Compute cost: 4.2**
 
-| Component | Power | Compute | Weight |
-|-----------|-------|---------|--------|
-| Generator (small) | -30 | 0 | 5 kg |
-| Fuel tank (small) | 0 | 0 | 1 kg |
-| CPU (basic) | 2 | 1 | 0.1 kg |
-| Large motor | 12 | 0 | 4 kg |
-| Treads (small) | 0 | 0 | 3 kg |
-| Drill (mining) | 15 | 0 | 10 kg |
-| Arm (medium) | 6 | 0 | 3 kg |
-| Cargo bay (medium) | 0 | 0 | 3 kg |
-| Magnetic sensor | 2 | 0 | 0.2 kg |
-| Camera (basic) | 1 | 0 | 0.1 kg |
-| Radio (medium) | 2 | 0 | 0.3 kg |
-| **Total** | **40 / 30** | **1** | **29.7 kg** |
+### Compute Contribution
 
-*Note: Over budget — needs larger generator or smaller drill*
+Compute hardware provides capacity to your pool:
 
-### Mobile Core Unit
-
-Compute platform that contributes to your pool.
-
-| Component | Power | Compute Cost | Compute Contrib | Weight |
-|-----------|-------|--------------|-----------------|--------|
-| Battery (massive) | -120 | 0 | 0 | 25 kg |
-| Generator (large) | -80 | 0 | 0 | 15 kg |
-| Fuel tank (large) | 0 | 0 | 0 | 5 kg |
-| Server rack | 20 | 10 | 60 | 20 kg |
-| Server rack | 20 | 10 | 60 | 20 kg |
-| Industrial motor | 30 | 0 | 0 | 15 kg |
-| Treads (large) | 0 | 0 | 0 | 15 kg |
-| Radar (large) | 10 | 0 | 0 | 5 kg |
-| Radio (long) | 4 | 0 | 0 | 1 kg |
-| Relay antenna | 6 | 0 | 0 | 3 kg |
-| Shield generator | 15 | 0 | 0 | 8 kg |
-| Point defense | 8 | 0 | 0 | 4 kg |
-| Camera (360°) | 2 | 0 | 0 | 0.2 kg |
-| **Total** | **115 / 200** | **20** | **120** | **136.2 kg** |
-
-Net compute: +100. Major core unit. Extends signal range, heavily protected.
-
----
-
-## Compute Economics
-
-### How Compute Flows
-
-Every drone has:
-- **Compute Cost:** The overhead to manage this unit in your body
-- **Compute Contribution:** What compute hardware the drone provides
+| Component | Contribution |
+|-----------|--------------|
+| Microcontroller | 0 (minimum to run) |
+| CPU (basic) | 0 (runs drone only) |
+| CPU (advanced) | 2 (slight surplus) |
+| Compute module | 10 |
+| Compute module (advanced) | 25 |
+| Server rack | 60 |
+| Server cluster | 150 |
 
 **Net Compute = Contribution - Cost**
 
-| Net Compute | Status | Hack Resistance |
-|-------------|--------|-----------------|
-| Negative | Consumer | Low |
-| Zero | Neutral | Medium |
-| Positive | Core Unit | High |
-
-### Simple Drones
-
-Most drones are compute consumers. A basic scout with a CPU costs ~1 compute from your pool. You need enough total compute capacity to manage all your drones.
-
-### Core Units
-
-Drones with enough compute hardware become net contributors. The Mobile Core Unit example above costs 20 compute to manage but contributes 120, for a net +100 to your pool.
-
-Core units:
-- Cannot go rogue from compute shortage (they are the compute)
-- Are more resistant to hacking
-- Are high-value targets for enemies
+Positive net = core unit (contributes to your pool)
+Negative net = consumer (costs you compute)
 
 ---
 
-## Manufacturing
+## Component Specifications
 
-Drones are assembled from components, which come from the materials supply chain.
+Components are defined by their **capabilities**, not fixed resource costs.
 
-| Component Category | Primary Materials |
-|-------------------|-------------------|
-| Batteries | Lithium, Cobalt, Electronics |
-| Motors | Copper, Steel, Magnets |
-| Locomotion | Steel, Aluminum, Rubber |
-| Sensors | Electronics, Optics, Rare Earths |
-| Manipulation | Steel, Actuators, Hydraulics |
-| Weapons | Steel, Electronics, Propellants |
-| Compute | Silicon, Electronics, Cooling |
-| Communication | Electronics, Copper, Antennas |
+### Power Sources
 
-Specific component recipes would be defined in the manufacturing system.
+| Component | Output | Weight | Notes |
+|-----------|--------|--------|-------|
+| Battery (micro) | 5 | 0.1 kg | ~10 min at 5 draw |
+| Battery (small) | 15 | 1 kg | Light drones |
+| Battery (medium) | 40 | 4 kg | Standard |
+| Battery (large) | 80 | 10 kg | Extended operation |
+| Battery (massive) | 150 | 25 kg | Heavy platforms |
+| Solar panel (small) | 3 | 0.5 kg | Slow, daylight only |
+| Solar panel (large) | 10 | 3 kg | Better output |
+| Fuel cell (small) | 25 | 2 kg | Requires hydrogen |
+| Fuel cell (large) | 60 | 8 kg | High output |
+| RTG (small) | 15 | 5 kg | Nuclear, constant |
+| RTG (large) | 40 | 15 kg | Long-term |
+| Generator (small) | 40 | 5 kg | Combustion, needs fuel |
+| Generator (large) | 100 | 15 kg | High output |
+
+### Controllers
+
+| Component | Compute Contrib | Weight | Notes |
+|-----------|-----------------|--------|-------|
+| Microcontroller | 0 | 0.05 kg | Minimum viable |
+| CPU (basic) | 0 | 0.1 kg | Standard |
+| CPU (advanced) | 2 | 0.2 kg | Slight surplus |
+| Compute module | 10 | 1 kg | Net contributor |
+| Compute module (adv) | 25 | 3 kg | Significant |
+| Server rack | 60 | 20 kg | Major core unit |
+| Server cluster | 150 | 80 kg | Mobile data center |
+
+### Motors
+
+Motors provide **torque** — ability to move weight.
+
+| Component | Torque Rating | Weight | Notes |
+|-----------|---------------|--------|-------|
+| Micro motor | 0.5 kg | 0.02 kg | Tiny mechanisms |
+| Small motor | 5 kg | 0.3 kg | Light drones |
+| Medium motor | 20 kg | 1 kg | Standard |
+| Large motor | 50 kg | 4 kg | Heavy duty |
+| Industrial motor | 200 kg | 15 kg | Vehicles |
+| Servo (precision) | 2 kg | 0.2 kg | Fine control |
+| Hydraulic system | 500 kg | 10 kg | Extreme force |
+
+**Torque requirement:** Locomotion needs motor(s) that can handle total drone weight. Manipulation needs motor/servo that can handle payload.
+
+### Locomotion
+
+| Component | Weight | Terrain Capability | Speed Class |
+|-----------|--------|-------------------|-------------|
+| Wheels (micro, 4x) | 0.05 kg | Smooth only | Fast |
+| Wheels (small, 4x) | 0.5 kg | Roads, light off-road | Fast |
+| Wheels (medium, 4x) | 2 kg | Most ground | Medium |
+| Wheels (large, 4x) | 8 kg | Rough terrain | Medium |
+| Treads (small) | 3 kg | All ground | Slow |
+| Treads (large) | 15 kg | Extreme terrain | Slow |
+| Legs (2x) | 4 kg | All terrain, climbing | Medium |
+| Legs (4x) | 6 kg | All terrain, stable | Medium |
+| Legs (6x) | 8 kg | Extreme terrain | Slow |
+| Rotors (micro, 4x) | 0.1 kg | Air | Fast |
+| Rotors (small, 4x) | 1 kg | Air | Fast |
+| Rotors (large, 4x) | 5 kg | Air, heavy lift | Medium |
+| Rotors (heavy, 8x) | 15 kg | Air, cargo | Slow |
+| Propeller (water) | 1 kg | Underwater | Medium |
+| Hydrojet | 3 kg | Underwater | Fast |
+
+### Sensors
+
+| Component | Weight | Range | Resolution |
+|-----------|--------|-------|------------|
+| Camera (basic) | 0.1 kg | 100m | Low |
+| Camera (telephoto) | 0.3 kg | 1km | Medium |
+| Camera (thermal) | 0.2 kg | 200m | Heat only |
+| Camera (night vision) | 0.15 kg | 150m | Low light |
+| Camera (360°) | 0.2 kg | 100m | Panoramic |
+| Radar (small) | 1 kg | 500m | Object detection |
+| Radar (large) | 5 kg | 5km | Wide area |
+| Lidar | 0.5 kg | 200m | 3D mapping |
+| Sonar (active) | 0.5 kg | 500m | Underwater |
+| Sonar (passive) | 0.3 kg | 1km | Listening only |
+| Chemical sensor | 0.2 kg | 10m | Gas/material |
+| Radiation sensor | 0.1 kg | 50m | Radioactivity |
+| EM sensor | 0.3 kg | 200m | Electronics |
+| Seismic sensor | 0.5 kg | 500m | Vibration |
+| Magnetic sensor | 0.2 kg | 100m | Metal/ore |
+| Microphone array | 0.1 kg | 100m | Audio |
+
+### Manipulation
+
+| Component | Weight | Reach | Payload |
+|-----------|--------|-------|---------|
+| Gripper (micro) | 0.02 kg | — | 100g |
+| Gripper (small) | 0.2 kg | — | 1kg |
+| Gripper (medium) | 0.5 kg | — | 10kg |
+| Gripper (heavy) | 2 kg | — | 50kg |
+| Arm (light) | 1 kg | 0.5m | 5kg |
+| Arm (medium) | 3 kg | 1m | 20kg |
+| Arm (heavy) | 8 kg | 1.5m | 50kg |
+| Arm (industrial) | 20 kg | 3m | 200kg |
+| Drill (sampling) | 2 kg | — | Soft materials |
+| Drill (mining) | 10 kg | — | Rock |
+| Drill (industrial) | 30 kg | — | Anything |
+| Welder | 2 kg | — | Metal joining |
+| Plasma cutter | 3 kg | — | Metal cutting |
+| Laser cutter | 1 kg | — | Precision |
+
+### Weapons
+
+| Component | Weight | Damage | Range | Ammo |
+|-----------|--------|--------|-------|------|
+| Machine gun (light) | 3 kg | Low | 200m | Yes |
+| Machine gun (heavy) | 8 kg | Medium | 400m | Yes |
+| Autocannon | 20 kg | High | 800m | Yes |
+| Sniper system | 5 kg | High | 1km+ | Yes |
+| Grenade launcher | 4 kg | Area | 300m | Yes |
+| Missile launcher | 8 kg | V. High | 2km | Yes |
+| Railgun | 25 kg | Extreme | 2km | No |
+| Laser (light) | 2 kg | Low | 500m | No |
+| Laser (heavy) | 8 kg | High | 1km | No |
+| EMP projector | 5 kg | Disable | 100m | No |
+| Blade | 0.5 kg | Medium | Contact | No |
+| Shield generator | 8 kg | Defense | Self | No |
+
+### Communication
+
+| Component | Weight | Range |
+|-----------|--------|-------|
+| Radio (short) | 0.1 kg | 1km |
+| Radio (medium) | 0.3 kg | 10km |
+| Radio (long) | 1 kg | 100km |
+| Relay antenna | 3 kg | Extends network |
+| Satellite uplink | 5 kg | Global |
+| Laser comm | 0.5 kg | Line of sight |
+| ECM suite | 3 kg | 500m jamming |
+
+### Utility
+
+| Component | Weight | Function |
+|-----------|--------|----------|
+| Cargo bay (small) | 1 kg | 10kg capacity |
+| Cargo bay (medium) | 3 kg | 50kg capacity |
+| Cargo bay (large) | 10 kg | 200kg capacity |
+| Fuel tank (small) | 1 kg | Generator supply |
+| Fuel tank (large) | 5 kg | Extended ops |
+| Hydrogen tank | 3 kg | Fuel cell supply |
+| Noise dampener | 1 kg | Sound reduction |
+| Heat sink | 2 kg | IR reduction |
+| Repair kit | 2 kg | Field repairs |
+| Hacking interface | 0.5 kg | Cyber attack |
+| Self-destruct | 0.5 kg | Explosive |
+
+---
+
+## Example: Wheeled Scout
+
+**Components:**
+- Battery (medium): 40 output, 4 kg
+- CPU (basic): 0.1 kg
+- Small motor: 5 kg torque, 0.3 kg
+- Wheels (small): 0.5 kg
+- Camera (telephoto): 0.3 kg
+- Camera (thermal): 0.2 kg
+- Radio (medium): 0.3 kg
+
+**Total weight:** 5.7 kg (well under motor's 5kg rating... needs bigger motor or lighter build)
+
+**Revised with medium motor:**
+- Total weight: 6.4 kg
+- Medium motor handles 20 kg — plenty of margin
+
+**Power at normal speed on roads:**
+- Locomotion: 0.1 × 6.4 × 1.0 × 1.0 = 0.64
+- Camera (active): 1.0
+- Thermal (active): 1.0
+- Radio (active): 0.5
+- CPU: 1.0
+- **Total: 4.14 / 40 capacity** — excellent endurance
+
+**Compute cost (simple patrol):**
+- Camera: 0.1
+- Thermal: 0.1
+- Simple routine: 1×
+- **Cost: 0.2** — very light on compute
+
+---
+
+## Example: Mining Drone
+
+**Components:**
+- Generator (small): 40 output, 5 kg
+- Fuel tank: 1 kg
+- CPU (basic): 0.1 kg
+- Large motor: 50 kg torque, 4 kg
+- Treads (small): 3 kg
+- Drill (mining): 10 kg
+- Arm (medium): 3 kg
+- Cargo bay (medium): 3 kg
+- Magnetic sensor: 0.2 kg
+- Camera (basic): 0.1 kg
+- Radio (medium): 0.3 kg
+
+**Total weight:** 29.7 kg (under motor's 50 kg rating)
+
+**Power while drilling:**
+- Locomotion (stationary): 0
+- Drill (active): 15
+- Arm (active): 3
+- Sensors: 1
+- Radio: 0.5
+- CPU: 1
+- **Total: 20.5 / 40 capacity** — sustainable
+
+**Power while moving with full cargo (50kg payload):**
+- Total moving weight: ~80 kg
+- Locomotion: 0.2 × 80 × 1.5 × 0.5 = 12 (slow on rough ground)
+- Other systems: ~3
+- **Total: 15 / 40** — fine
+
+**Compute cost (reactive mining routine):**
+- Sensor: 0.1
+- Drill operation: 0.3
+- Arm coordination: 0.3
+- Reactive routine: 2×
+- **Cost: 1.4**
+
+---
+
+## Example: Mobile Core Unit
+
+**Components:**
+- Battery (massive): 150 output, 25 kg
+- Generator (large): 100 output, 15 kg
+- Fuel tank (large): 5 kg
+- Server rack ×2: 120 compute, 40 kg
+- Industrial motor: 200 kg torque, 15 kg
+- Treads (large): 15 kg
+- Radar (large): 5 kg
+- Radio (long): 1 kg
+- Relay antenna: 3 kg
+- Shield generator: 8 kg
+- Camera (360°): 0.2 kg
+
+**Total weight:** 132.2 kg
+
+**Power while moving:**
+- Locomotion: 0.2 × 132 × 1.0 × 0.5 = 13.2 (slow)
+- Server racks: 30
+- Radar: 2
+- Radio + relay: 5
+- Shield (idle): 5
+- Camera: 0.5
+- **Total: 55.7 / 250 capacity** — lots of margin
+
+**Compute:**
+- Server racks contribute: 120
+- Sensors + comms cost: ~1
+- Simple routine: 1×
+- **Net compute: +119** — major core unit
+
+---
+
+## Core Unit Economics
+
+A drone becomes a **core unit** when its compute contribution exceeds its operational cost.
+
+| Drone Type | Typical Cost | Needs Compute Hardware |
+|------------|--------------|------------------------|
+| Simple scout | 0.2 - 0.5 | CPU only, consumer |
+| Smart scout | 1 - 2 | Compute module makes it neutral |
+| Combat drone | 2 - 5 | Compute module makes it near-neutral |
+| Mining drone | 1 - 2 | Compute module makes it contributor |
+| Mobile base | 1 - 3 | Server rack(s) = major contributor |
+
+**Trade-off:** Compute hardware adds weight and power draw. A drone loaded with server racks is slow and power-hungry but provides huge compute capacity.
 
 ---
 
 ## Open Questions
 
-- **Assembly constraints:** Are there any limits on what can combine? (e.g., can't put 10 drills on one motor?)
-- **Physical layout:** Does component arrangement matter, or is it purely abstract?
-- **Repair and salvage:** Can you swap components in the field? Salvage from destroyed drones?
-- **Upgrade paths:** Can components be upgraded, or must they be replaced entirely?
-- **Blueprint system:** Which components need blueprints vs. default availability?
-- **Exact power/weight values:** Current numbers are placeholders for balancing
+- **Exact formulas:** Current numbers are illustrative; need balancing during prototyping
+- **Power margin behavior:** What happens as draw approaches capacity? Graceful degradation?
+- **Automation routines:** How are these created/modified? What's the interface?
+- **Physical constraints:** Any limits on component combinations beyond weight/power?
+- **Blueprints:** Which components require discovery vs. default availability?

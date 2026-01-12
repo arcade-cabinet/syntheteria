@@ -4,7 +4,7 @@
 - [Game Overview](./design/GAME_OVERVIEW.md) - High-level concept and structure
 - [Core Mechanics](./design/CORE_MECHANICS.md) - Gameplay systems and mechanics
 - [Consciousness Model](./design/CONSCIOUSNESS_MODEL.md) - AI resource system: energy, compute
-- [Drones](./design/DRONES.md) - Chassis types, modules, compute economics
+- [Drones](./design/DRONES.md) - Pure component assembly, emergent properties
 - [Materials](./design/MATERIALS.md) - Resources, processing tiers, supply chains
 - [UI Concept](./design/UI_CONCEPT.md) - Abstract digital consciousness interface
 - [Part 1: Earth Phase](./design/PART_1.md) - Complete Earth experience (intro + countdown)
@@ -26,7 +26,7 @@
 | Game Overview | **Updated** - Two-part structure, rogue AI antagonists, business model considerations |
 | Core Mechanics | **Updated** - Manufacturing process, time mechanics, wormhole effects, challenge curve |
 | Consciousness Model | **New** - Energy/compute system, unit types, failure states |
-| Drones | **New** - 5 chassis, 5 module categories, compute economics, example configs |
+| Drones | **Updated** - Pure component assembly, 70+ components, emergent properties |
 | Materials | **New** - 5-tier supply chain, granular resources, geographic scarcity |
 | UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
 | Part 1: Earth Phase | **Updated** - Complete Earth experience (intro + countdown sections) |
@@ -38,7 +38,7 @@
 
 ## Recent Changes
 
-- **Drone system:** New document with 5 chassis types, 50+ modules, compute economics
+- **Drone system:** Pure component assembly (no chassis/frames), 70+ components, emergent properties
 - **Materials system:** 5-tier supply chain, granular resources, geographic scarcity
 - **Consciousness model:** Energy/compute system, unit types, failure cascades
 - **Awakening narrative:** Failsafe triggered by compute degradation explains why AI wakes up "now"

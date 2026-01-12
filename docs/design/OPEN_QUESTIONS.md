@@ -81,8 +81,10 @@ This document tracks design questions that need resolution.
 
 ## Technical/Scope Questions
 
-- [ ] **Q22:** What platforms are you targeting? (PC? Console? Mobile?)
-- [ ] **Q23:** What is the intended visual style? (Realistic? Stylized? Abstract?)
+- [x] **Q22:** What platforms are you targeting?
+  - **RESOLVED:** Mobile-first, with PC as fallback if mobile doesn't work out. Final decision pending implementation learnings.
+- [~] **Q23:** What is the intended visual style?
+  - **PARTIAL:** Stylized/Abstract or Clean/Minimal—both fit the digital consciousness UI and mobile target. To be refined during prototyping.
 - [x] **Q24:** Single-player first, multiplayer later - confirmed priority?
   - **RESOLVED:** Yes. Multiplayer is gated behind Part 2 (beyond the wormhole). Players must complete Part 1 to access multiplayer.
 
@@ -113,6 +115,6 @@ This document tracks design questions that need resolution.
 | Memory System | 3 | 0 | 0 |
 | Part 1 Specific | 6 | 0 | 0 |
 | World/Lore | 4 | 0 | 0 |
-| Technical/Scope | 1 | 0 | 2 |
+| Technical/Scope | 2 | 1 | 0 |
 | Business Model | 1 | 0 | 1 |
-| **Total** | **22** | **1** | **3** |
+| **Total** | **23** | **2** | **1** |

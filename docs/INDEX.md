@@ -5,6 +5,7 @@
 - [Core Mechanics](./design/CORE_MECHANICS.md) - Gameplay systems and mechanics
 - [UI Concept](./design/UI_CONCEPT.md) - Abstract digital consciousness interface
 - [Part 1: Earth Phase](./design/PART_1.md) - Complete Earth experience (intro + countdown)
+- [Part 2: Beyond the Wormhole](./design/PART_2.md) - Binary star system, alien tech, Cult of EL
 - [Open Questions](./design/OPEN_QUESTIONS.md) - Tracking unresolved design decisions
 
 ## Story Documents
@@ -23,6 +24,7 @@
 | Core Mechanics | **Updated** - Manufacturing process, time mechanics, wormhole effects, challenge curve |
 | UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
 | Part 1: Earth Phase | **Updated** - Complete Earth experience (intro + countdown sections) |
+| Part 2: Beyond the Wormhole | **New** - Setting, alien tech, Cult of EL, multiplayer entry points |
 | Open Questions | Active tracking (23 resolved, 2 partial, 1 remaining) |
 | Lore Overview | Updated - 100-year timeline, dying Earth ecosystem |
 
@@ -38,6 +40,7 @@
 - **Wormhole effects:** Environmental decay + rogue AI decay (challenge shifts over 10 years)
 - **Victory/failure:** Reach wormhole to win; fail to escape by year 10 = wormhole explodes
 - **Part 1 length:** ~2-3 hours (30-40 min intro + 1-2 hour countdown)
+- **Part 2 setting:** Binary star system, extinct alien civilization, Cult of EL on tidally locked planet
 - **Business model:** Free-to-play Part 1 under consideration
 
 ---

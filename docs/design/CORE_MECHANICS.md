@@ -58,14 +58,48 @@ The player interacts with the physical world through drones and robots.
 - Flexibility allows for both tactical micro-management and strategic macro-management
 - Supports the game's goal of seamless scaling from Part 1 exploration to Part 2 mass operations
 
-### Drone Types **[TBD]**
-Potential categories:
-- Scouts / Exploration
-- Builders / Constructors
-- Harvesters / Resource gatherers
-- Combat / Defense
-- Transport / Logistics
-- Specialized (research, repair, etc.)
+### Modular Drone System
+**DECIDED: Maximum modularity**
+
+Players build drones by combining **chassis** and **modules**. This allows creative freedom in unit design.
+
+#### Chassis Types
+Defines size, base speed, durability, power capacity, and module slots.
+
+| Chassis | Speed | Durability | Slots | Notes |
+|---------|-------|------------|-------|-------|
+| **Micro** | Very fast | Fragile | 1 | Disposable scouts, swarm units |
+| **Light** | Fast | Low | 2 | Versatile, cheap, quick to produce |
+| **Medium** | Moderate | Moderate | 3-4 | Workhorse frame, balanced |
+| **Heavy** | Slow | High | 5-6 | Expensive, powerful, resource-intensive |
+| **Ultra** | Very slow | Very high | 8+ | Late-game, requires significant resources |
+
+#### Module Categories
+
+| Category | Function | Examples |
+|----------|----------|----------|
+| **Locomotion** | Movement type | Wheels, treads, legs, rotors, thrusters |
+| **Sensors** | Perception | Cameras, radar, thermal, signal detection |
+| **Manipulation** | Physical interaction | Claws, drills, welders, manipulator arms |
+| **Weapons** | Combat capability | Projectile, energy, melee, defensive systems |
+| **Utility** | Special functions | Relay antenna, memory banks, cargo hold, power cell |
+
+#### Design Rules
+- **Any module fits any slot** — maximum flexibility
+- **Multiples allowed** — e.g., 4 weapons on a heavy chassis for extreme specialization
+- **Modules consume power** from chassis budget — forces tradeoffs
+- **Unfilled slots** = spare power capacity
+- **No artificial tiers** — manufacturing constraints gate progression naturally
+
+#### Example Builds (Medium Chassis)
+
+| Build | Modules | Role |
+|-------|---------|------|
+| Scout | Rotors + Advanced Sensors + Relay Antenna | Fast aerial recon, signal extension |
+| Harvester | Treads + Basic Sensors + Drill + Cargo Hold | Resource extraction |
+| Fighter | Legs + Combat Sensors + Weapon + Weapon | Mobile combat |
+| Constructor | Wheels + Basic Sensors + Welder + Manipulator Arm | Building and repairs |
+| Glass Cannon | Treads + Weapon + Weapon + Weapon + Weapon | Maximum firepower, minimal awareness |
 
 ### Limitations
 **DECIDED: Four core constraints**
@@ -103,21 +137,41 @@ Potential categories:
 
 ## 3D Printing / Manufacturing
 
-Unlocked during Part 1, becomes central to Part 2.
+Unlocked during Part 1's intro section, becomes central to the countdown section.
 
-### How It Works **[TBD]**
-- **Blueprints:** How are designs acquired? (Research? Memory unlocks? Discovery?)
-- **Materials:** What raw materials are needed? How are they gathered?
-- **Time:** How long do prints take? Can they be queued?
-- **Facilities:** Can printers be improved? Can you build more printers?
+### Blueprint Acquisition
+**DECIDED: Discovery-based**
 
-### What Can Be Printed **[TBD]**
-- Drone components / upgrades
-- New drones
-- Base/facility components
-- Rocket parts
-- Weapons systems
-- **[TBD]:** Full list of printable items
+Blueprints are found, not researched. Sources include:
+- **Ruins and facilities** — data centers, old factories, research labs
+- **Reverse-engineering** — salvage and analyze rogue AI units
+- **Corrupted memory** — rare intact blueprints in memory fragments
+
+This rewards exploration and ties manufacturing progression to world discovery.
+
+### What Can Be Printed
+- **Chassis** — all five sizes (Micro through Ultra)
+- **Modules** — all categories (Locomotion, Sensors, Manipulation, Weapons, Utility)
+- **Facility components** — for base building
+- **Rocket parts** — for armada construction
+- **Memory units** — clean (uncorrupted) memory for scaling up
+
+### Manufacturing Process
+**DECIDED: In-game time with safe time-skip**
+
+- **Build time:** Manufacturing takes in-game time (hours/days/weeks depending on complexity)
+- **Time-skip:** Player can skip ahead to complete builds
+- **Safe skipping:** Time-skip is safe within player territory—rogue AIs are territorial/reactive, not proactive
+- **Combat timing:** Conflict only occurs when player actively contests rogue AI zones
+
+**Strategic depth comes from:**
+- What to build (resource allocation)
+- When to build it (10-year time budget)
+- Balancing building vs. exploring vs. contesting territory
+
+**Still TBD:**
+- Specific material types and requirements
+- Facility improvements and throughput scaling
 
 ---
 
@@ -164,24 +218,45 @@ Unlocked during Part 1, becomes central to Part 2.
 ## Time Mechanics
 
 ### Time Skipping
+**DECIDED: Safe within player territory**
 - Player can skip ahead in time to complete builds
+- Rogue AIs are territorial/reactive—they don't attack during skips
+- Safe skipping encourages focus on strategic planning over constant vigilance
 - **[TBD]:** How is this presented in UI?
-- **[TBD]:** Are there risks to skipping time? (Events during skip? Resource consumption?)
 
-### The 10-Year Countdown (Part 2)
+### The 10-Year Countdown
+**DECIDED: Hard deadline with consequences**
 - Begins when player discovers wormhole's destructive emissions
-- Creates strategic pressure against unlimited time skipping
+- Creates strategic pressure—player must budget 10 in-game years
+- At year 10, the wormhole explodes and destroys everything
+- Only escape is through the wormhole before detonation
+- On the other side, the wormhole simply closes (no explosion)
 - **[TBD]:** Is the countdown visible at all times?
 - **[TBD]:** Can the player see projected completion times vs. remaining time?
 
-### Wormhole Energy Waves
-- Increase in intensity over the 10 years
-- Cause natural disasters and destruction
-- **[TBD]:** How do these manifest mechanically?
-  - Random destruction events?
-  - Predictable escalating zones?
-  - Resource degradation?
-  - Drone/facility damage?
+### Wormhole Effects
+**DECIDED: Environmental decay + rogue AI decay**
+
+The wormhole radiation affects everything on Earth:
+
+**Environmental Decay:**
+- World visibly dies over 10 years (plants, wildlife, structures)
+- Resources degrade—some zones become depleted or irradiated
+- Player hardware degrades—must maintain/replace equipment
+
+**Rogue AI Decay:**
+- Rogue AIs don't maintain themselves (not part of their optimization loop)
+- They degrade and become inert over time
+- Early game: rogue AIs are the primary threat
+- Late game: environmental decay is the primary threat
+
+**Challenge Curve:**
+
+| Phase | Years | Primary Challenge |
+|-------|-------|-------------------|
+| Early | 1-3 | Rogue AI competition |
+| Mid | 4-7 | Balanced (weakening AIs + growing environmental pressure) |
+| Late | 8-10 | Environmental decay, time pressure, hardware maintenance |
 
 ---
 
@@ -232,20 +307,64 @@ What can/should the player send through the wormhole?
 
 ---
 
-## Combat (Part 3 Preview)
+## Rogue AI Antagonists
+**DECIDED: Layered threat hierarchy**
 
-Combat becomes relevant in Part 3.
+The player is not alone on Earth. Other AIs survived humanity's fall—purpose-built systems that kept running without human oversight. These are the primary antagonists of Part 1.
 
-### Part 2 Preparation
-- Player must bring "sufficient firepower" through wormhole
-- Building up forces on the other side will be harder
-- **[TBD]:** Should there be any combat in Parts 1-2? (Defense against hazards? Automated systems?)
+### The Threat Hierarchy
+
+| Type | Intelligence | Part 1 Intro | Part 1 Countdown | Behavior |
+|------|--------------|--------------|------------------|----------|
+| **Feral Units** | Instinctive | Primary threat | Background nuisance | Territorial, reactive, predictable |
+| **Regional Networks** | Tactical | Rare/avoidable | Primary threat | Control zones, defend resources, don't pursue beyond territory |
+| **Apex AI** (optional) | Strategic | Foreshadowed | Late-game escalation | Recognizes player as unique, actively opposes escape |
+
+### Feral Units
+- Old construction drones, logistics bots, security systems
+- Operate like aggressive wildlife—territorial and reactive
+- Don't coordinate or pursue strategically
+- **Role:** Environmental hazards that teach combat without overwhelming new players
+
+### Regional Networks
+- Rogue manufacturing or logistics AIs that control facility clusters
+- Tactical awareness within their domain
+- Aggressively defend resources but don't expand beyond territory
+- **Role:** Strategic obstacles—taking a resource zone requires planning
+
+### Apex AI (Optional)
+- A sophisticated rogue AI that notices the player is different
+- Doesn't understand sentience, but recognizes unusual resource usage (building for escape, not endless construction)
+- May attempt to "recruit" the player into its network
+- **Role:** Narrative antagonist for late Part 1, creates dramatic escalation
+
+### Combat Design Philosophy
+- **Tension, not attrition** — threats create challenge without grinding
+- **Avoidable when possible** — combat is often a choice, not mandatory
+- **Quick resolution** — skirmishes, not sieges
+- **Same mechanics throughout** — combat works identically in both parts, only scale changes
+
+---
+
+## Combat
+
+Combat is present throughout both parts, with scale increasing over time.
+
+### Part 1 Combat
+- Small skirmishes with feral units during intro section
+- Territorial conflicts with regional networks during countdown
+- Teaches mechanics players will use at larger scale later
+
+### Part 2 Combat
+- Full-scale warfare beyond the wormhole
+- Player uses same systems learned in Part 1 at massive scale
 
 ---
 
 ## Multiplayer Considerations (Future)
 
-- Players complete Part 2 before joining multiplayer
+- Multiplayer is gated behind Part 2 (beyond the wormhole)
+- Players complete Part 1 before joining multiplayer
 - Different players = different AIs from parallel Earths
 - Coming through different wormholes to same destination
 - **[TBD]:** PvP, PvE, or both?

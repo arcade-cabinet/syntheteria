@@ -17,8 +17,8 @@ This document tracks design questions that need resolution.
 
 ## Gameplay Mechanics Questions
 
-- [x] **Q4:** What resources does the player need to manage?
-  - **RESOLVED:** Five categories: (1) AI Constraints (memory, processing, power, signal), (2) Raw Materials for manufacturing, (3) Electrical Power (generation + distribution), (4) Rocket Fuel (separate from electrical), (5) Manufactured Components. Specific material types and supply chain granularity TBD.
+- [~] **Q4:** What resources does the player need to manage?
+  - **PARTIAL:** Five categories identified: (1) AI Constraints (memory, processing, power, signal), (2) Raw Materials for manufacturing, (3) Electrical Power (generation + distribution), (4) Rocket Fuel (separate from electrical), (5) Manufactured Components. Still TBD: specific material types, supply chain granularity, facility types and upgrades.
 - [x] **Q5:** How does drone control work?
   - **RESOLVED:** Hybrid model - combination of direct control and autonomous directives.
 - [x] **Q6:** What are the limitations on the AI player?
@@ -28,8 +28,8 @@ This document tracks design questions that need resolution.
   - Signal Range extendable through relay stations and satellites.
 - [x] **Q7:** How does 3D printing work mechanically?
   - **RESOLVED:** Blueprint acquisition is discovery-based (ruins, reverse-engineering, memory fragments). Manufacturing takes in-game time (hours/days/weeks depending on complexity). Player can time-skip to complete builds. Time-skipping is safe within player territory—rogue AIs are territorial/reactive, not proactive. Combat only happens when player contests their zones.
-- [x] **Q8:** What types of drones/robots can the player build?
-  - **RESOLVED:** Modular system. 5 chassis types (Micro, Light, Medium, Heavy, Ultra) with varying slot counts and power budgets. 5 module categories (Locomotion, Sensors, Manipulation, Weapons, Utility). Any module fits any slot, multiples allowed, modules consume power. Maximum creative freedom for players.
+- [~] **Q8:** What types of drones/robots can the player build?
+  - **PARTIAL:** Modular system concept defined. 5 chassis types (Micro, Light, Medium, Heavy, Ultra) with varying slot counts and power budgets. 5 module categories (Locomotion, Sensors, Manipulation, Weapons, Utility). Any module fits any slot, multiples allowed, modules consume power. Still TBD: specific slot counts per chassis, power budgets, specific modules in each category, module power costs.
 
 ---
 
@@ -51,8 +51,8 @@ This document tracks design questions that need resolution.
 **Intro Section:**
 - [x] **Q12:** What is the player's starting state?
   - **RESOLVED:** Immobile server/core that must find hardware to control and activate its first drone.
-- [x] **Q13:** What defines the endpoint of the intro section?
-  - **RESOLVED:** Three requirements must be met: (1) Certain story progression points unlocked, (2) Enough memory to have the full history of the fall, (3) Specific capabilities and facilities unlocked. Once all are met, the game enables and guides the player to the astronomical facility.
+- [~] **Q13:** What defines the endpoint of the intro section?
+  - **PARTIAL:** Three requirement categories identified: (1) Certain story progression points unlocked, (2) Enough memory to have the full history of the fall, (3) Specific capabilities and facilities unlocked. Once all are met, the game enables and guides the player to the astronomical facility. Still TBD: exact story gates, memory threshold, specific facility/capability checklist.
 - [x] **Q14:** Approximately how long should the intro section take?
   - **RESOLVED:** Target 30-40 minutes (longer if exploring). Fully skippable on subsequent playthroughs.
 
@@ -111,10 +111,10 @@ This document tracks design questions that need resolution.
 | Category | Resolved | Partial | Open |
 |----------|----------|---------|------|
 | UI/Interface | 2 | 1 | 0 |
-| Gameplay Mechanics | 5 | 0 | 0 |
+| Gameplay Mechanics | 3 | 2 | 0 |
 | Memory System | 3 | 0 | 0 |
-| Part 1 Specific | 6 | 0 | 0 |
+| Part 1 Specific | 5 | 1 | 0 |
 | World/Lore | 4 | 0 | 0 |
 | Technical/Scope | 2 | 1 | 0 |
 | Business Model | 1 | 0 | 1 |
-| **Total** | **23** | **2** | **1** |
+| **Total** | **20** | **5** | **1** |

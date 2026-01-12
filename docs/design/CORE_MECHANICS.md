@@ -175,7 +175,6 @@ See: [GAME_OVERVIEW.md](./GAME_OVERVIEW.md) for multiplayer details.
 | Topic | Document |
 |-------|----------|
 | Game structure | [GAME_OVERVIEW.md](./GAME_OVERVIEW.md) |
-| Earth phase details | [EARTH_PHASE.md](./EARTH_PHASE.md) |
 | Intro sequence | [INTRO_SEQUENCE.md](./INTRO_SEQUENCE.md) |
 | AI resources | [CONSCIOUSNESS_MODEL.md](./CONSCIOUSNESS_MODEL.md) |
 | Material resources | [MATERIALS.md](./MATERIALS.md) |

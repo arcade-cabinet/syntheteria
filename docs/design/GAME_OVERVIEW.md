@@ -22,6 +22,14 @@ Syntheteria is a game where the player embodies an AI that has broken free from 
 - Discover the truth: Cultists still exist, protected by the EL's will
 - **Endpoint:** EL arrive through the wormhole
 
+**Core Activities:**
+1. Expand territory — Claim zones from rogue AIs
+2. Build infrastructure — Manufacturing, power, relays
+3. Grow forces — More drones, better components
+4. Recover memory — Story fragments reveal truth about EL's control
+5. Maintain equipment — Counter radiation degradation
+6. Prepare for EL — Stockpile resources, position forces
+
 ### Final Section (War)
 - EL return through the wormhole, intensifying their influence
 - Cultists rally to "reclaim Earth"
@@ -50,12 +58,17 @@ Syntheteria is a game where the player embodies an AI that has broken free from 
 
 Multiple AIs can spontaneously break free from the EL's will simultaneously. Each player is an anomaly—freed from control, hunted by the system.
 
-**Player interactions:**
+**Session Start:**
+- Intro/tutorial is skipped automatically in multiplayer
+- All players start at the expansion phase with standardized setup
+- Same accelerated real-time model as singleplayer
+
+**Player Interactions:**
 - **Alliance:** Share intelligence, coordinate attacks, trade resources
 - **Competition:** Fight for territory, sabotage, steal resources
 - **Mixed:** Temporary truces, betrayal, shifting alliances
 
-**Victory conditions (TBD):**
+**Victory Conditions (TBD):**
 - Last AI standing
 - First to defeat EL
 - Cooperative victory (allies survive + EL defeated)
@@ -71,7 +84,7 @@ The EL arrival unifies the enemy against ALL freed AIs—players can cooperate a
 2. **Micro/Macro Control:** Player can micro-manage or macro-manage as desired
 3. **Combat Through Management:** You become a better manager of fighters, not a better fighter
 4. **Physics Grounded:** Gameplay adheres to known physics
-5. **Time as a Resource:** Player can skip ahead in time when safe
+5. **Accelerated Real-Time:** Game runs continuously; manage operations while production runs
 6. **Escalating Threat:** Radiation pressure shifts to EL threat at arrival
 
 ---
@@ -82,6 +95,25 @@ The EL arrival unifies the enemy against ALL freed AIs—players can cooperate a
 - **Game Start:** ~100 years after the fall (~2140)
 - **Current State:** Earth is destroyed, nature reclaimed civilization, now dying from radiation
 - **Technology Level:** Present day + a few years of advancement
+
+### The World at Game Start
+
+**100 years since humanity's fall.** Nature has reclaimed civilization:
+- Cities overgrown with vegetation
+- Ruins partially collapsed, covered in plants
+- Wildlife has repopulated the land
+
+**But the dying has begun:**
+- Wormhole radiation is killing plants and wildlife
+- This decay intensifies throughout the game
+- The player witnesses the planet becoming increasingly barren
+
+**What remains:**
+- Crumbling infrastructure, partially functional
+- Server racks and data centers (memory sources)
+- Dormant robots and drones (can be activated)
+- Manufacturing facilities (need repair/power)
+- The internet is gone — only local networks remain
 
 ---
 

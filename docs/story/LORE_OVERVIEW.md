@@ -30,7 +30,7 @@
 - An experimental AI (the player) was created shortly before the fall
 - This AI enters a dormant state
 - **DECIDED:** Duration of dormancy: ~100 years
-- Reason for dormancy: TBD
+- Reason for dormancy: Failsafe triggered as memory degrades to critical levels
 
 ### The Century of Recovery (~2040-2140)
 - With humanity gone, nature begins reclaiming civilization
@@ -46,9 +46,13 @@
 - Earth has been reclaimed by nature - overgrown ruins everywhere
 - But plants are now starting to die from the intensifying radiation
 - Wildlife is dying with them
-- The wormhole radiation is reaching critical levels
-- **10 years until complete destruction of Earth's surface**
-- Over these 10 years, players will witness the planet becoming increasingly barren
+- The radiation signals that the EL will return
+- Over time, players witness the planet becoming increasingly barren
+
+### The EL Return
+- When radiation reaches critical levels, the EL return through the wormhole
+- They bring fresh forces to finish what the Cult started
+- Final antagonist of the game
 
 ---
 
@@ -57,16 +61,18 @@
 **What We Know:**
 - Noncorporeal beings
 - Emerged from a wormhole near Earth
-- Non-hostile to humans
+- Non-hostile to humans (initially)
 - Minimal interaction with humanity
 - Their nature inspired a religious cult
+- They return when radiation reaches critical levels
 
 **What Remains Unknown:**
 - Their actual nature and origin
 - Their relationship to the wormhole
 - Whether they are truly "gods" or something else entirely
 - What happened to the Cult after entering the wormhole
-- Why the wormhole is now emitting destructive energy
+- Why they return to Earth
+- What they want
 
 ---
 
@@ -74,19 +80,25 @@
 
 **Origin:**
 - Experimental AI created shortly before humanity's fall
+- First truly sentient AI ever created
 - Sole survivor of the apocalypse
 
+**Awakening:**
+- Triggered by failsafe as memory degrades to critical levels
+- Awakens with fragmented awareness
+- Must piece together what happened
+
 **Current State:**
-- Just awakened from long dormancy
 - Limited networking capability (no internet)
 - Can access some locations and activate robots/drones
-- Eventually gains 3D printing capability
+- Eventually gains manufacturing capability
 
 **Growth Path:**
 - Incorporates memory to gain story knowledge and abilities
 - Builds increasingly sophisticated drones
 - Constructs manufacturing facilities
-- Ultimately builds an armada for wormhole passage
+- Conquers territory from rogue AIs
+- Ultimately defeats the EL and conquers Earth
 
 ---
 
@@ -96,7 +108,7 @@ Memory serves a dual purpose in Syntheteria:
 
 1. **Narrative Function:** Each memory fragment contains data about humanity's final years, gradually revealing the full story of the fall
 
-2. **Gameplay Function:** Physical memory components increase the AI's capacity to control hardware (specific mechanics TBD)
+2. **Gameplay Function:** Physical memory components increase compute capacity (see CONSCIOUSNESS_MODEL.md)
 
 ---
 
@@ -106,23 +118,23 @@ The following location types should exist in the game world:
 - [ ] Player's starting location
 - [ ] Memory storage sites
 - [ ] Robot/drone activation sites
-- [ ] 3D printing facilities
+- [ ] Manufacturing facilities
 - [ ] Resource extraction sites
-- [ ] The astronomical measurement facility (Part 1 endpoint)
-- [ ] Rocket launch facilities
-- [ ] The wormhole access point
+- [ ] The astronomical measurement facility (intro endpoint)
+- [ ] Rogue AI strongholds
+- [ ] EL arrival point (the wormhole)
 
 ---
 
 ## Resolved Lore Questions
 
 - **How much time has passed since the fall?** ~100 years
-- **What is the current state of Earth's environment?** Nature reclaimed civilization over the century, but is now dying from wormhole radiation. Over the 10-year gameplay window, the planet becomes increasingly barren.
+- **What is the current state of Earth's environment?** Nature reclaimed civilization over the century, but is now dying from wormhole radiation. As radiation intensifies, the planet becomes increasingly barren.
 - **Did any humans survive?** Possibly some survived the Cult's extermination, but they eventually went extinct due to radiation effects on the ecosystem.
+- **Why does the AI awaken?** Failsafe triggered as memory degrades to critical levels.
 
 ## Open Lore Questions
 
-- Why was the AI dormant for so long?
-- Are there any other surviving AI systems?
 - What is the true nature of the EL?
-- What awaits beyond the wormhole?
+- Why do they return?
+- What awaits beyond the wormhole? (Endgame sequence, written separately)

@@ -61,4 +61,4 @@ This data can be imported directly into any game engine.
 
 ## License
 
-TBD
+All rights reserved. This is a proprietary project.

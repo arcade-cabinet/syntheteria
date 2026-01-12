@@ -8,6 +8,7 @@
 - [Materials](./design/MATERIALS.md) - Resources, processing tiers, supply chains
 - [UI Concept](./design/UI_CONCEPT.md) - Abstract digital consciousness interface
 - [Part 1: Earth Phase](./design/PART_1.md) - Complete Earth experience (intro + countdown)
+- [Intro Sequence](./design/INTRO_SEQUENCE.md) - Tutorial, exploration, and revelation flow
 - [Part 2: Beyond the Wormhole](./design/PART_2.md) - Binary star system, alien tech, Cult of EL
 - [Open Questions](./design/OPEN_QUESTIONS.md) - Tracking unresolved design decisions
 
@@ -30,8 +31,9 @@
 | Materials | **New** - 5-tier supply chain, granular resources, geographic scarcity |
 | UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
 | Part 1: Earth Phase | **Updated** - Complete Earth experience (intro + countdown sections) |
+| Intro Sequence | **New** - Tutorial flow, exploration gates, revelation endpoint |
 | Part 2: Beyond the Wormhole | **New** - Setting, alien tech, Cult of EL, multiplayer entry points |
-| Open Questions | Active tracking (20 resolved, 5 partial, 1 open) |
+| Open Questions | Active tracking (23 resolved, 2 partial, 1 open) |
 | Lore Overview | Updated - 100-year timeline, dying Earth ecosystem |
 
 ---
@@ -59,7 +61,7 @@
 **Design gaps to fill:**
 1. ~~Drone system specifics (Q8)~~ → **RESOLVED** in DRONES.md
 2. ~~Resource system specifics (Q4)~~ → **RESOLVED** in MATERIALS.md + CONSCIOUSNESS_MODEL.md
-3. Intro endpoint specifics (Q13): story gates, memory threshold, facility checklist
+3. ~~Intro endpoint specifics (Q13)~~ → **RESOLVED** in INTRO_SEQUENCE.md
 4. UI "growing consciousness" specifics (Q3): visual manifestations
 
 **Decisions requiring prototyping:**

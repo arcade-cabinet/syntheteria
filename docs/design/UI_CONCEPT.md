@@ -35,41 +35,60 @@ The player interface should embody the experience of **being** an AI consciousne
 
 ### What Does the Player "See"?
 
-**[TBD]** Options to consider:
+**RESOLVED: Layered Mind Space with Flexible Focus**
 
-1. **Data Visualization Approach**
-   - Abstract representations of space (node graphs, network maps)
-   - Drones appear as icons/nodes with status indicators
-   - Environment represented as data patterns rather than rendered 3D
+The interface combines multiple approaches into a cohesive system:
 
-2. **Multi-Feed Approach**
-   - Multiple drone camera feeds displayed simultaneously
-   - Player attention can shift between feeds
-   - More hardware = more simultaneous feeds
+1. **Foundation: Mind Space / Network View**
+   - The default view is an abstract "mind space" - a network visualization
+   - Shows connected hardware as nodes in a spatial arrangement
+   - This IS the player's consciousness - you are the network
 
-3. **Hybrid Abstract/Visual**
-   - Core interface is abstract/data-based
-   - Can "focus" on specific drones to see their visual feed
-   - Zooming in shifts from abstract to concrete
+2. **Layer: Multi-Feed Array**
+   - Connected drones/cameras appear as feeds within the network view
+   - Multiple feeds visible simultaneously
+   - More hardware = more feeds to observe
 
-4. **Simulated Consciousness Space**
-   - A virtual "mind space" where information is arranged spatially
-   - Physical world exists "outside" this space, accessed through nodes
+3. **Ability: Focus/Zoom**
+   - Player can shift focus to individual drones
+   - Can look through drone cameras and other sensors directly
+   - Micro-management is always available when desired
+
+4. **Automation System**
+   - Part 1 tutorial teaches players how to automate drone behaviors
+   - Player CHOOSES their level of engagement
+   - Can micro-manage everything, or set up automation and watch from network view
+   - Supports both playstyles seamlessly
+
+### The Opening Sequence
+
+**RESOLVED:**
+- **Cutscene:** Player transitions from abstract void → awareness of existing within a network
+- **Narration:** Text scrawl accompanies the awakening
+- **Player Control Begins:** When they discover hardware they can network with
+- **First Action:** Connecting to/activating that first piece of hardware
+
+### Visual Corruption / Interference
+
+**RESOLVED:**
+- **Opening:** Glitchy, corrupted aesthetic during the awakening cutscene
+- **After Opening:** Corruption clears - this is purely an opening aesthetic, not a progression system
+- **Part 2:** New interference effects emerge from wormhole radiation
+- **Important:** Part 2 radiation effects are DISTINCT from opening corruption - different cause, different visual language
 
 ### How Does Growth Feel?
 
 **[TBD]** As player gains memory/processing/range:
-- More screen real estate?
-- Faster data refresh?
-- More simultaneous awareness?
-- Cleaner/less corrupted data?
-- UI literally expands/evolves?
+- More simultaneous feeds?
+- Wider network visualization?
+- Faster/smoother data?
+- **[TBD]:** Specific visual manifestations
 
 ### How Does Loss Feel?
 
 **[TBD]** When losing drones, facilities, or passing through wormhole:
-- Parts of interface go dark?
-- Data streams cut off?
+- Feeds go dark/disconnect?
+- Nodes disappear from network?
 - Sense of "phantom limb" for lost components?
 
 ---
@@ -97,8 +116,9 @@ The player interface should embody the experience of **being** an AI consciousne
 
 ## Open Design Questions
 
-1. When directly controlling a drone, does the interface shift to something more traditional (first/third person)?
+1. ~~When directly controlling a drone, does the interface shift to something more traditional?~~ **RESOLVED:** Yes, player can focus on individual drones and see through their cameras/sensors
 2. How do the four constraints (memory, processing, power, signal) manifest visually in the interface?
-3. Should the interface have a "corruption" aesthetic early on that cleans up as player progresses?
+3. ~~Should the interface have a "corruption" aesthetic early on?~~ **RESOLVED:** Only during opening cutscene, not as progression system
 4. How do we represent the passage of time when player skips ahead?
 5. What does combat look like through this interface?
+6. What does wormhole radiation interference look like in Part 2? (Distinct from opening corruption)

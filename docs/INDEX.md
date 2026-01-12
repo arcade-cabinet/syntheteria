@@ -3,6 +3,7 @@
 ## Design Documents
 - [Game Overview](./design/GAME_OVERVIEW.md) - High-level concept and structure
 - [Core Mechanics](./design/CORE_MECHANICS.md) - Gameplay systems and mechanics
+- [Consciousness Model](./design/CONSCIOUSNESS_MODEL.md) - AI resource system: energy, memory, processing
 - [UI Concept](./design/UI_CONCEPT.md) - Abstract digital consciousness interface
 - [Part 1: Earth Phase](./design/PART_1.md) - Complete Earth experience (intro + countdown)
 - [Part 2: Beyond the Wormhole](./design/PART_2.md) - Binary star system, alien tech, Cult of EL
@@ -22,6 +23,7 @@
 |----------|--------|
 | Game Overview | **Updated** - Two-part structure, rogue AI antagonists, business model considerations |
 | Core Mechanics | **Updated** - Manufacturing process, time mechanics, wormhole effects, challenge curve |
+| Consciousness Model | **New** - Energy/memory/processing system, unit types, failure states |
 | UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
 | Part 1: Earth Phase | **Updated** - Complete Earth experience (intro + countdown sections) |
 | Part 2: Beyond the Wormhole | **New** - Setting, alien tech, Cult of EL, multiplayer entry points |
@@ -32,6 +34,8 @@
 
 ## Recent Changes
 
+- **Consciousness model:** New document defining energy/memory/processing, unit types, and failure cascades
+- **Awakening narrative:** Failsafe triggered by memory degradation explains why AI wakes up "now"
 - **Game structure:** Simplified from 3 parts to 2 parts (Earth phase + Beyond wormhole)
 - **Antagonists:** Rogue AI threat hierarchy (feral units → regional networks → apex AI)
 - **Drone system:** Maximum modularity (chassis + modules, any combination)

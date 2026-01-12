@@ -23,7 +23,7 @@
 | Core Mechanics | **Updated** - Manufacturing process, time mechanics, wormhole effects, challenge curve |
 | UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
 | Part 1: Awakening | Needs update - now encompasses full Earth phase (intro + countdown) |
-| Open Questions | Active tracking (22 resolved, 1 partial, 3 remaining) |
+| Open Questions | Active tracking (23 resolved, 2 partial, 1 remaining) |
 | Lore Overview | Updated - 100-year timeline, dying Earth ecosystem |
 
 ---
@@ -46,5 +46,5 @@
 
 1. Update Part 1 document to reflect combined structure
 2. Define specific module and chassis details
-3. Resolve remaining open questions (Q22-23 platforms/visual style, Q25 business model)
+3. Finalize visual style (Q23) and business model (Q25) during prototyping
 4. Create technical planning documents

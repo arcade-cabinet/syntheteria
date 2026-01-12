@@ -4,6 +4,7 @@
 - [Game Overview](./design/GAME_OVERVIEW.md) - High-level concept and structure
 - [Core Mechanics](./design/CORE_MECHANICS.md) - Gameplay systems and mechanics
 - [Consciousness Model](./design/CONSCIOUSNESS_MODEL.md) - AI resource system: energy, compute
+- [Drones](./design/DRONES.md) - Chassis types, modules, compute economics
 - [Materials](./design/MATERIALS.md) - Resources, processing tiers, supply chains
 - [UI Concept](./design/UI_CONCEPT.md) - Abstract digital consciousness interface
 - [Part 1: Earth Phase](./design/PART_1.md) - Complete Earth experience (intro + countdown)
@@ -25,6 +26,7 @@
 | Game Overview | **Updated** - Two-part structure, rogue AI antagonists, business model considerations |
 | Core Mechanics | **Updated** - Manufacturing process, time mechanics, wormhole effects, challenge curve |
 | Consciousness Model | **New** - Energy/compute system, unit types, failure states |
+| Drones | **New** - 5 chassis, 5 module categories, compute economics, example configs |
 | Materials | **New** - 5-tier supply chain, granular resources, geographic scarcity |
 | UI Concept | Major progress - layered mind space system defined, opening sequence resolved |
 | Part 1: Earth Phase | **Updated** - Complete Earth experience (intro + countdown sections) |
@@ -36,12 +38,12 @@
 
 ## Recent Changes
 
-- **Materials system:** New document with 5-tier supply chain, granular resources, geographic scarcity
+- **Drone system:** New document with 5 chassis types, 50+ modules, compute economics
+- **Materials system:** 5-tier supply chain, granular resources, geographic scarcity
 - **Consciousness model:** Energy/compute system, unit types, failure cascades
 - **Awakening narrative:** Failsafe triggered by compute degradation explains why AI wakes up "now"
 - **Game structure:** Simplified from 3 parts to 2 parts (Earth phase + Beyond wormhole)
 - **Antagonists:** Rogue AI threat hierarchy (feral units → regional networks → apex AI)
-- **Drone system:** Maximum modularity (chassis + modules, any combination)
 - **Blueprints:** Discovery-based acquisition
 - **Manufacturing:** In-game time with safe time-skip in player territory
 - **Wormhole effects:** Environmental decay + rogue AI decay (challenge shifts over 10 years)

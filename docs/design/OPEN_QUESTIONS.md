@@ -46,8 +46,10 @@ This document tracks design questions that need resolution.
 
 - [x] **Q12:** What is the player's starting state?
   - **RESOLVED:** Immobile server/core that must find hardware to control and activate its first drone.
-- [ ] **Q13:** What defines the "standardized endpoint" for Part 1? (Specific facilities controlled? Certain story beats completed? Resource thresholds?)
-- [ ] **Q14:** Approximately how long should Part 1 take for a first-time player?
+- [x] **Q13:** What defines the "standardized endpoint" for Part 1?
+  - **RESOLVED:** Three requirements must be met: (1) Certain story progression points unlocked, (2) Enough memory to have the full history of the fall, (3) Specific capabilities and facilities unlocked. Once all are met, the game enables and guides the player to the astronomical facility.
+- [x] **Q14:** Approximately how long should Part 1 take for a first-time player?
+  - **RESOLVED:** No specific duration target. Let the story drive the pacing.
 
 ---
 
@@ -63,8 +65,10 @@ This document tracks design questions that need resolution.
 
 - [ ] **Q18:** Why was the player AI "sleeping" for so long after the fall?
 - [ ] **Q19:** Are there any other AI systems still active on Earth? (Potential allies or rivals?)
-- [ ] **Q20:** What is the state of Earth's infrastructure? (Partially intact cities? Total ruins? Overgrown nature?)
-- [ ] **Q21:** How long ago did humanity fall? (Decades? Centuries? Millennia?)
+- [x] **Q20:** What is the state of Earth's infrastructure?
+  - **RESOLVED:** Nature reclaimed civilization over ~100 years. Overgrown ruins, vegetation everywhere. BUT: wormhole radiation is now killing plants and wildlife. Over the 10-year Part 2 window, players witness the planet becoming increasingly barren. Some humans may have survived the Cult's extermination but eventually went extinct due to radiation effects on the ecosystem.
+- [x] **Q21:** How long ago did humanity fall?
+  - **RESOLVED:** ~100 years ago (fall occurred ~2035-2040, game starts ~2140).
 
 ---
 

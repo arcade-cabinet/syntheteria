@@ -57,8 +57,8 @@
 ## Next Steps (Pre-Implementation)
 
 **Design gaps to fill:**
-1. Drone system specifics (Q8): slot counts, power budgets, module list, costs
-2. Resource system specifics (Q4): material types, supply chain, facility types
+1. ~~Drone system specifics (Q8)~~ → **RESOLVED** in DRONES.md
+2. ~~Resource system specifics (Q4)~~ → **RESOLVED** in MATERIALS.md + CONSCIOUSNESS_MODEL.md
 3. Intro endpoint specifics (Q13): story gates, memory threshold, facility checklist
 4. UI "growing consciousness" specifics (Q3): visual manifestations
 

@@ -54,7 +54,7 @@ Combat emerges from component assembly—any drone can become a combat drone by 
 
 **Enemies:**
 - Rogue AIs (three tiers: feral, regional, apex)
-- EL forces (late game, intelligent and coordinated)
+- Cultists (after EL return: gain supernatural powers, become direct combat threats)
 
 See: [COMBAT.md](./COMBAT.md)
 
@@ -127,7 +127,7 @@ Primitive human survivors, devolved society. Protected by the EL's will and guar
 
 **Before EL Return:** Unaware of player, living in protected enclaves.
 
-**After EL Return:** Rally to "reclaim Earth," command the unified AI forces.
+**After EL Return:** Rally to "reclaim Earth," command the unified AI forces. Gain supernatural powers—can channel the EL's will directly, becoming genuine combat threats.
 
 ---
 

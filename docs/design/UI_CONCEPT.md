@@ -121,4 +121,4 @@ The interface combines multiple approaches into a cohesive system:
 3. ~~Should the interface have a "corruption" aesthetic early on?~~ **RESOLVED:** Only during opening cutscene, not as progression system
 4. How do we represent the passage of time when player skips ahead?
 5. What does combat look like through this interface?
-6. What visual language distinguishes EL units from rogue AIs?
+6. What visual language represents the EL's influence and Cultist supernatural powers?

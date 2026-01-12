@@ -8,7 +8,6 @@
 - [Combat](./design/COMBAT.md) - Emergent from components, automation-based scaling
 - [Materials](./design/MATERIALS.md) - Resources, processing tiers, supply chains
 - [UI Concept](./design/UI_CONCEPT.md) - Abstract digital consciousness interface
-- [Earth Phase](./design/EARTH_PHASE.md) - Complete game structure (intro, expansion, final)
 - [Intro Sequence](./design/INTRO_SEQUENCE.md) - Tutorial, exploration, and revelation flow
 - [Open Questions](./design/OPEN_QUESTIONS.md) - Tracking unresolved design decisions
 
@@ -18,6 +17,7 @@
 ## Technical Documents
 - [Implementation Options](./design/IMPLEMENTATION_OPTIONS.md) - Engine choices, platform strategy, development phases
 - [Core Formulas](./technical/CORE_FORMULAS.md) - Mathematical formulas for all game mechanics
+- [Reference Builds](./technical/REFERENCE_BUILDS.md) - 10 drone archetypes with balance analysis
 
 ## Data Files
 - [Component Schema](../data/schema/component.schema.json) - JSON Schema for component definitions
@@ -37,12 +37,12 @@
 | Combat | Complete - Emergent from components, automation scaling, rogue AI behaviors |
 | Materials | Complete - 5-tier supply chain, granular resources, geographic scarcity |
 | UI Concept | Partial - Layered mind space system defined, specifics TBD |
-| Earth Phase | **New** - Replaces Part 1/Part 2, complete game on Earth |
 | Intro Sequence | **Updated** - EL return revelation, not wormhole countdown |
-| Open Questions | Active tracking (23 resolved, 2 partial, 1 open) |
+| Open Questions | Active tracking (24 resolved, 2 partial, 1 open) |
 | Lore Overview | Updated - 100-year timeline, dying Earth ecosystem |
 | Implementation Options | **New** - Engine comparison, platform strategy, dev phases |
 | Core Formulas | **New** - Power, compute, combat, territory formulas |
+| Reference Builds | **New** - 10 drone archetypes, balance analysis, motor progression |
 | Component Data | **New** - 90+ components across 9 categories |
 | Save Schema | **New** - Complete save game state structure |
 

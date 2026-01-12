@@ -9,6 +9,15 @@ This document details the intro section, from awakening through the revelation t
 **Duration:** 30-40 minutes (longer if exploring)
 **Structure:** Guided tutorial → Semi-open exploration → Revelation endpoint
 **Skippable:** Yes, on subsequent playthroughs
+**Multiplayer:** Skipped automatically — players start at expansion phase
+
+### Time Model Exception
+
+The intro section uses **narrative pacing** rather than the accelerated real-time model used in the main game:
+- Story beats and tutorial steps control progression
+- No continuous time pressure during learning
+- Manufacturing/actions complete at narrative-appropriate moments
+- Once intro ends, the accelerated real-time model begins
 
 ---
 

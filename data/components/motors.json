@@ -92,6 +92,30 @@
       }
     },
     {
+      "id": "motor_heavy",
+      "name": "Heavy Motor",
+      "category": "motor",
+      "tier": 3,
+      "weight": 8,
+      "description": "High-torque motor for cargo haulers and heavy platforms.",
+      "motor": {
+        "torque_rating": 100,
+        "precision": false
+      },
+      "crafting": {
+        "facility": "fabrication_bay",
+        "time_hours": 4,
+        "inputs": [
+          { "material": "copper_wire", "quantity": 12 },
+          { "material": "permanent_magnet", "quantity": 12 },
+          { "material": "steel", "quantity": 10 },
+          { "material": "bearing_assembly", "quantity": 3 },
+          { "material": "gearbox", "quantity": 2 }
+        ],
+        "blueprint_required": false
+      }
+    },
+    {
       "id": "motor_industrial",
       "name": "Industrial Motor",
       "category": "motor",

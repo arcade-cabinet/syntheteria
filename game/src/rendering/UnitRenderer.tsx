@@ -18,16 +18,16 @@ function UnitMesh({ entity }: { entity: Entity }) {
   useFrame(() => {
     if (meshRef.current) {
       meshRef.current.position.set(
-        entity.worldPosition.x + 0.5,
+        entity.worldPosition.x,
         entity.worldPosition.y + 0.6,
-        entity.worldPosition.z + 0.5
+        entity.worldPosition.z
       )
     }
     if (ringRef.current) {
       ringRef.current.position.set(
-        entity.worldPosition.x + 0.5,
-        0.05,
-        entity.worldPosition.z + 0.5
+        entity.worldPosition.x,
+        entity.worldPosition.y + 0.05,
+        entity.worldPosition.z
       )
       ringRef.current.visible = entity.unit.selected
     }

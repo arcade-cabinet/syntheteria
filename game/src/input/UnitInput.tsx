@@ -1,13 +1,12 @@
 /**
  * Handles unit selection (tap/click) and move commands (right-click / long-press).
- * Renders an invisible ground plane for raycasting.
+ * Uses navmesh pathfinding for free 3D movement.
  */
 import { useRef, useCallback } from "react"
 import { useThree } from "@react-three/fiber"
 import * as THREE from "three"
 import { units } from "../ecs/world"
 import { findPath } from "../systems/pathfinding"
-import { getFragment, worldToTile } from "../ecs/fragments"
 import type { Entity } from "../ecs/types"
 
 const GROUND_PLANE = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
@@ -34,8 +33,8 @@ function findUnitAtPoint(point: THREE.Vector3, threshold: number = 1.0): Entity 
   let closestDist = threshold
 
   for (const entity of units) {
-    const dx = entity.worldPosition.x + 0.5 - point.x
-    const dz = entity.worldPosition.z + 0.5 - point.z
+    const dx = entity.worldPosition.x - point.x
+    const dz = entity.worldPosition.z - point.z
     const dist = Math.sqrt(dx * dx + dz * dz)
     if (dist < closestDist) {
       closest = entity
@@ -46,20 +45,9 @@ function findUnitAtPoint(point: THREE.Vector3, threshold: number = 1.0): Entity 
 }
 
 function issueMoveTo(entity: Entity, worldX: number, worldZ: number) {
-  const fragment = getFragment(entity.mapFragment.fragmentId)
-  if (!fragment) return
-
-  const target = worldToTile(worldX, worldZ, fragment)
-  const goalChunkId = `${target.cx},${target.cy}`
-
-  const path = findPath(
-    fragment.id,
-    entity.position,
-    { chunkId: goalChunkId, x: target.tx, y: target.ty }
-  )
+  const path = findPath(entity.worldPosition, { x: worldX, y: 0, z: worldZ })
 
   if (path.length > 0) {
-    // Add or update navigation component
     ;(entity as any).navigation = {
       path,
       pathIndex: 0,
@@ -73,7 +61,6 @@ export function UnitInput() {
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const touchStart = useRef<{ x: number; y: number; time: number } | null>(null)
 
-  // Unified handler: select on tap/click, move on right-click/long-press
   const handleSelect = useCallback(
     (clientX: number, clientY: number) => {
       const point = getWorldPointFromEvent(clientX, clientY, camera, gl.domElement)
@@ -81,7 +68,6 @@ export function UnitInput() {
 
       const unit = findUnitAtPoint(point)
 
-      // Deselect all first
       for (const u of units) {
         u.unit.selected = false
       }
@@ -107,14 +93,11 @@ export function UnitInput() {
     [camera, gl]
   )
 
-  // Mouse events
   const onPointerDown = useCallback(
     (e: PointerEvent) => {
       if (e.button === 0) {
-        // Left click — select
         handleSelect(e.clientX, e.clientY)
       } else if (e.button === 2) {
-        // Right click — move
         handleMove(e.clientX, e.clientY)
       }
     },
@@ -125,7 +108,6 @@ export function UnitInput() {
     e.preventDefault()
   }, [])
 
-  // Touch events — tap to select, long-press to move
   const onTouchStartInput = useCallback(
     (e: TouchEvent) => {
       if (e.touches.length !== 1) return
@@ -161,7 +143,6 @@ export function UnitInput() {
     [handleSelect]
   )
 
-  // Attach events to canvas
   const attachedRef = useRef(false)
   if (!attachedRef.current) {
     attachedRef.current = true

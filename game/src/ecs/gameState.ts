@@ -4,7 +4,7 @@
  */
 import { explorationSystem } from "../systems/exploration"
 import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge"
-import { getAllFragments, type MapFragment } from "./fragments"
+import { getAllFragments, type MapFragment } from "./terrain"
 import { units } from "./world"
 
 export interface GameSnapshot {
@@ -62,11 +62,9 @@ export function simulationTick() {
 
   tick++
 
-  // Run systems in order
   explorationSystem()
   lastMergeEvents = fragmentMergeSystem()
 
-  // Invalidate snapshot and notify React
   snapshot = null
   notify()
 }
@@ -77,7 +75,6 @@ function notify() {
   }
 }
 
-// useSyncExternalStore interface
 export function subscribe(listener: () => void): () => void {
   listeners.add(listener)
   return () => listeners.delete(listener)

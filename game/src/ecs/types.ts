@@ -28,13 +28,13 @@ export interface Entity {
   faction: "player" | "cultist" | "rogue" | "feral"
 
   // Continuous 3D position (single source of truth)
-  worldPosition: Vec3
+  worldPosition?: Vec3
 
   // Which map fragment this entity belongs to (for fog-of-war grouping)
-  mapFragment: { fragmentId: string }
+  mapFragment?: { fragmentId: string }
 
   // Unit (mobile robot)
-  unit: {
+  unit?: {
     type: "maintenance_bot" | "utility_drone" | "fabrication_unit"
     displayName: string
     speed: number // world units per second at 1x game speed
@@ -43,14 +43,14 @@ export interface Entity {
   }
 
   // Navigation — navmesh path as world-space waypoints
-  navigation: {
+  navigation?: {
     path: Vec3[]
     pathIndex: number
     moving: boolean
   }
 
   // Building / facility
-  building: {
+  building?: {
     type: string
     powered: boolean
     operational: boolean
@@ -59,22 +59,31 @@ export interface Entity {
   }
 
   // Lightning rod specialization
-  lightningRod: {
+  lightningRod?: {
     rodCapacity: number
     currentOutput: number
     protectionRadius: number
   }
 }
 
+/** Entity with guaranteed unit components (matches units query) */
+export type UnitEntity = Entity & Required<Pick<Entity, "unit" | "worldPosition" | "mapFragment">>
+
+/** Entity with guaranteed building components (matches buildings query) */
+export type BuildingEntity = Entity & Required<Pick<Entity, "building" | "worldPosition">>
+
+/** Entity with guaranteed lightning rod components (matches lightningRods query) */
+export type LightningRodEntity = Entity & Required<Pick<Entity, "lightningRod" | "building" | "worldPosition">>
+
 // --- Component helpers ---
 
-export function hasCamera(entity: Entity): boolean {
+export function hasCamera(entity: UnitEntity): boolean {
   return entity.unit.components.some(
     (c) => c.name === "camera" && c.functional
   )
 }
 
-export function hasArms(entity: Entity): boolean {
+export function hasArms(entity: UnitEntity): boolean {
   return entity.unit.components.some(
     (c) => c.name === "arms" && c.functional
   )

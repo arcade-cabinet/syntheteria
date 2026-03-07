@@ -21,7 +21,7 @@ import {
   confirmPlacement,
   cancelPlacement,
 } from "../systems/buildingPlacement"
-import type { Entity } from "../ecs/types"
+import type { Entity, UnitEntity } from "../ecs/types"
 
 const GROUND_PLANE = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
 const raycaster = new THREE.Raycaster()
@@ -81,7 +81,7 @@ function findEntityAtPoint(point: THREE.Vector3, threshold: number = 1.5): Entit
 }
 
 /** Issue a move command. Converts display-space target to real-world position. */
-function issueMoveTo(entity: Entity, displayX: number, displayZ: number) {
+function issueMoveTo(entity: UnitEntity, displayX: number, displayZ: number) {
   const frag = getFragment(entity.mapFragment.fragmentId)
   const ox = frag?.displayOffset.x ?? 0
   const oz = frag?.displayOffset.z ?? 0
@@ -91,7 +91,7 @@ function issueMoveTo(entity: Entity, displayX: number, displayZ: number) {
 
   const path = findPath(entity.worldPosition, { x: realX, y: 0, z: realZ })
 
-  if (path.length > 0) {
+  if (path.length > 0 && entity.navigation) {
     entity.navigation.path = path
     entity.navigation.pathIndex = 0
     entity.navigation.moving = true
@@ -117,12 +117,12 @@ function deselectAll() {
   }
 }
 
-function isUnit(entity: Entity): boolean {
-  return "unit" in entity
+function isUnit(entity: Entity): entity is UnitEntity {
+  return !!entity.unit
 }
 
-function isBuilding(entity: Entity): boolean {
-  return "building" in entity
+function isBuilding(entity: Entity): entity is Entity & Required<Pick<Entity, "building">> {
+  return !!entity.building
 }
 
 export function UnitInput() {

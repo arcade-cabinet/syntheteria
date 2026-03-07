@@ -10,7 +10,7 @@ import { createFragment, getTerrainHeight } from "../ecs/terrain"
 import { isInsideBuilding } from "../ecs/cityLayout"
 import { isWalkable } from "../ecs/terrain"
 import { findPath } from "./pathfinding"
-import type { Entity, Vec3 } from "../ecs/types"
+import type { Entity, UnitEntity, Vec3 } from "../ecs/types"
 
 let nextEnemyId = 0
 
@@ -109,8 +109,8 @@ function getPatrolTarget(from: Vec3): Vec3 | null {
 /**
  * Find nearest player unit within aggro range.
  */
-function findNearestPlayerUnit(enemy: Entity): Entity | null {
-  let closest: Entity | null = null
+function findNearestPlayerUnit(enemy: UnitEntity): UnitEntity | null {
+  let closest: UnitEntity | null = null
   let closestDist = AGGRO_RANGE
 
   for (const unit of units) {
@@ -152,7 +152,7 @@ export function enemySystem() {
     if (target) {
       // Move toward player unit
       const path = findPath(unit.worldPosition, target.worldPosition)
-      if (path.length > 0) {
+      if (path.length > 0 && unit.navigation) {
         unit.navigation.path = path
         unit.navigation.pathIndex = 0
         unit.navigation.moving = true
@@ -165,7 +165,7 @@ export function enemySystem() {
       const patrolTarget = getPatrolTarget(unit.worldPosition)
       if (patrolTarget) {
         const path = findPath(unit.worldPosition, patrolTarget)
-        if (path.length > 0) {
+        if (path.length > 0 && unit.navigation) {
           unit.navigation.path = path
           unit.navigation.pathIndex = 0
           unit.navigation.moving = true

@@ -3,7 +3,7 @@
  * are close enough to merge, then combines their fog data.
  */
 import { units } from "../ecs/world"
-import type { Entity } from "../ecs/types"
+import type { UnitEntity } from "../ecs/types"
 import { getFragment, deleteFragment, FOG_RES } from "../ecs/terrain"
 
 const MERGE_DISTANCE = 6 // world units
@@ -38,7 +38,7 @@ export function fragmentMergeSystem(): MergeEvent[] {
   return events
 }
 
-function mergeFragments(unitA: Entity, unitB: Entity): MergeEvent | null {
+function mergeFragments(unitA: UnitEntity, unitB: UnitEntity): MergeEvent | null {
   const fragA = getFragment(unitA.mapFragment.fragmentId)
   const fragB = getFragment(unitB.mapFragment.fragmentId)
   if (!fragA || !fragB) return null

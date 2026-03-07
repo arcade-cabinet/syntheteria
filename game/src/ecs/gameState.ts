@@ -1,0 +1,91 @@
+/**
+ * Global game state and simulation tick manager.
+ * Bridges ECS mutable state to React via useSyncExternalStore.
+ */
+import { explorationSystem } from "../systems/exploration"
+import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge"
+import { getAllFragments, type MapFragment } from "./fragments"
+import { units } from "./world"
+
+export interface GameSnapshot {
+  tick: number
+  gameSpeed: number
+  paused: boolean
+  fragments: MapFragment[]
+  unitCount: number
+  mergeEvents: MergeEvent[]
+}
+
+let tick = 0
+let gameSpeed = 1.0
+let paused = false
+let lastMergeEvents: MergeEvent[] = []
+let listeners = new Set<() => void>()
+let snapshot: GameSnapshot | null = null
+
+function buildSnapshot(): GameSnapshot {
+  return {
+    tick,
+    gameSpeed,
+    paused,
+    fragments: getAllFragments(),
+    unitCount: Array.from(units).length,
+    mergeEvents: lastMergeEvents,
+  }
+}
+
+export function getGameSpeed(): number {
+  return paused ? 0 : gameSpeed
+}
+
+export function setGameSpeed(speed: number) {
+  gameSpeed = Math.max(0.5, Math.min(4, speed))
+  snapshot = null
+  notify()
+}
+
+export function togglePause() {
+  paused = !paused
+  snapshot = null
+  notify()
+}
+
+export function isPaused(): boolean {
+  return paused
+}
+
+/**
+ * Run one simulation tick. Called at fixed intervals adjusted by game speed.
+ */
+export function simulationTick() {
+  if (paused) return
+
+  tick++
+
+  // Run systems in order
+  explorationSystem()
+  lastMergeEvents = fragmentMergeSystem()
+
+  // Invalidate snapshot and notify React
+  snapshot = null
+  notify()
+}
+
+function notify() {
+  for (const listener of listeners) {
+    listener()
+  }
+}
+
+// useSyncExternalStore interface
+export function subscribe(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
+export function getSnapshot(): GameSnapshot {
+  if (!snapshot) {
+    snapshot = buildSnapshot()
+  }
+  return snapshot
+}

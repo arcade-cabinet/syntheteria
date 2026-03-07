@@ -1,10 +1,12 @@
 /**
- * Renders all units. Reads worldPosition directly in useFrame — never in React state.
+ * Renders all units at their displayed positions (worldPosition + fragment displayOffset).
+ * Reads worldPosition directly in useFrame — never in React state.
  */
 import { useRef } from "react"
 import { useFrame } from "@react-three/fiber"
 import * as THREE from "three"
 import { units } from "../ecs/world"
+import { getFragment } from "../ecs/terrain"
 import type { Entity } from "../ecs/types"
 
 const UNIT_COLOR = 0x44aaff
@@ -16,18 +18,22 @@ function UnitMesh({ entity }: { entity: Entity }) {
   const ringRef = useRef<THREE.Mesh>(null)
 
   useFrame(() => {
+    const frag = getFragment(entity.mapFragment.fragmentId)
+    const ox = frag?.displayOffset.x ?? 0
+    const oz = frag?.displayOffset.z ?? 0
+
     if (meshRef.current) {
       meshRef.current.position.set(
-        entity.worldPosition.x + 0.5,
+        entity.worldPosition.x + ox,
         entity.worldPosition.y + 0.6,
-        entity.worldPosition.z + 0.5
+        entity.worldPosition.z + oz
       )
     }
     if (ringRef.current) {
       ringRef.current.position.set(
-        entity.worldPosition.x + 0.5,
-        0.05,
-        entity.worldPosition.z + 0.5
+        entity.worldPosition.x + ox,
+        entity.worldPosition.y + 0.05,
+        entity.worldPosition.z + oz
       )
       ringRef.current.visible = entity.unit.selected
     }
@@ -41,7 +47,6 @@ function UnitMesh({ entity }: { entity: Entity }) {
           color={entity.unit.selected ? UNIT_SELECTED_COLOR : UNIT_COLOR}
         />
       </mesh>
-      {/* Selection ring */}
       <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
         <ringGeometry args={[0.4, 0.55, 16]} />
         <meshBasicMaterial color={UNIT_SELECTED_COLOR} side={THREE.DoubleSide} />

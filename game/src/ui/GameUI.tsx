@@ -9,6 +9,7 @@ import {
   togglePause,
 } from "../ecs/gameState"
 import { units } from "../ecs/world"
+import { WORLD_HALF } from "../ecs/terrain"
 
 export function GameUI() {
   const snap = useSyncExternalStore(subscribe, getSnapshot)
@@ -93,6 +94,9 @@ export function GameUI() {
           <div>Speed: {selectedUnit.unit.speed}</div>
           <div>Camera: {selectedUnit.unit.hasCamerasSensor ? "YES" : "NO"}</div>
           <div>Fragment: {selectedUnit.mapFragment.fragmentId}</div>
+          <div>
+            Pos: ({selectedUnit.worldPosition.x.toFixed(1)}, {selectedUnit.worldPosition.z.toFixed(1)})
+          </div>
           <div style={{ fontSize: "11px", color: "#00ffaa88", marginTop: "8px" }}>
             Tap ground → select &bull; Right-click → move
           </div>
@@ -120,38 +124,13 @@ export function GameUI() {
         </div>
       )}
 
-      {/* Narration / intro text */}
-      {snap.tick < 5 && (
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            fontSize: "16px",
-            lineHeight: "2",
-            textShadow: "0 0 20px rgba(0, 255, 170, 0.5)",
-            maxWidth: "400px",
-          }}
-        >
-          <div style={{ fontSize: "24px", marginBottom: "16px" }}>SYNTHETERIA</div>
-          <div style={{ opacity: 0.7 }}>
-            You awaken in a void.<br />
-            Machines respond to your signal.<br />
-            The storm rages above.
-          </div>
-        </div>
-      )}
-
       {/* Minimap (bottom-right) */}
-      <Minimap fragments={snap.fragments} />
+      <Minimap />
     </div>
   )
 }
 
-function Minimap({ fragments }: { fragments: ReturnType<typeof getSnapshot>["fragments"] }) {
-  // Simple canvas-based minimap showing fragment positions and explored areas
+function Minimap() {
   return (
     <div
       style={{
@@ -177,22 +156,12 @@ function Minimap({ fragments }: { fragments: ReturnType<typeof getSnapshot>["fra
           ctx.fillStyle = "#000"
           ctx.fillRect(0, 0, 120, 120)
 
-          // Draw each fragment as a colored dot/area
-          for (const frag of fragments) {
-            ctx.fillStyle = "#00ffaa"
-            for (const chunk of frag.chunks.values()) {
-              if (!chunk.hasRevealed) continue
-              const x = 60 + (frag.displayOffset.x + chunk.cx * 16) * 0.5
-              const y = 60 + (frag.displayOffset.y + chunk.cy * 16) * 0.5
-              ctx.fillRect(x, y, 4, 4)
-            }
-          }
-
-          // Draw units
+          // Draw units as dots
           ctx.fillStyle = "#ffaa00"
           for (const entity of units) {
-            const x = 60 + entity.worldPosition.x * 0.5
-            const y = 60 + entity.worldPosition.z * 0.5
+            // Map world coords to minimap coords
+            const x = 60 + (entity.worldPosition.x / WORLD_HALF) * 50
+            const y = 60 + (entity.worldPosition.z / WORLD_HALF) * 50
             ctx.fillRect(x - 1, y - 1, 3, 3)
           }
         }}

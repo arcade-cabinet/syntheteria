@@ -8,6 +8,7 @@
 
 import type { Vec3 } from "../ecs/types"
 import { isWalkable, getWalkCost, WORLD_HALF, WORLD_SIZE } from "../ecs/terrain"
+import { isInsideBuilding, nearBuildingEdge } from "../ecs/cityLayout"
 
 // Navigation graph resolution — one node every NAV_STEP world units
 export const NAV_STEP = 2
@@ -29,8 +30,19 @@ export function buildNavGraph() {
       const wx = gx * NAV_STEP - WORLD_HALF + NAV_STEP / 2
       const wz = gz * NAV_STEP - WORLD_HALF + NAV_STEP / 2
       const idx = gz * NAV_SIZE + gx
-      walkGrid[idx] = isWalkable(wx, wz)
-      costGrid[idx] = getWalkCost(wx, wz)
+
+      // Buildings block movement
+      if (isInsideBuilding(wx, wz)) {
+        walkGrid[idx] = false
+        costGrid[idx] = 0
+      } else {
+        walkGrid[idx] = isWalkable(wx, wz)
+        costGrid[idx] = getWalkCost(wx, wz)
+        // Slightly higher cost near building edges (units hug walls less)
+        if (nearBuildingEdge(wx, wz)) {
+          costGrid[idx] = Math.max(costGrid[idx], 1.3)
+        }
+      }
     }
   }
 }
@@ -255,7 +267,7 @@ function smoothPath(path: Vec3[]): Vec3[] {
   return result
 }
 
-/** Check if a straight line between two points is walkable. */
+/** Check if a straight line between two points is walkable (terrain + buildings). */
 function hasLineOfSight(a: Vec3, b: Vec3): boolean {
   const dx = b.x - a.x
   const dz = b.z - a.z
@@ -266,7 +278,7 @@ function hasLineOfSight(a: Vec3, b: Vec3): boolean {
     const t = i / steps
     const x = a.x + dx * t
     const z = a.z + dz * t
-    if (!isWalkable(x, z)) return false
+    if (!isWalkable(x, z) || isInsideBuilding(x, z)) return false
   }
   return true
 }

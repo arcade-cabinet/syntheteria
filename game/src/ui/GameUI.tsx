@@ -1,5 +1,5 @@
 /**
- * DOM overlay UI: resource bar, speed controls, unit info, minimap.
+ * DOM overlay UI: resource bar, power info, speed controls, unit info, minimap.
  */
 import { useSyncExternalStore } from "react"
 import {
@@ -59,19 +59,23 @@ export function GameUI() {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          padding: "12px 16px",
+          padding: "8px 12px",
           background:
             "linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%)",
           pointerEvents: "auto",
+          flexWrap: "wrap",
+          gap: "4px 0",
         }}
       >
-        <div style={{ display: "flex", gap: "20px", fontSize: "14px" }}>
+        {/* Row 1: Units and status */}
+        <div style={{ display: "flex", gap: "16px", fontSize: "13px", alignItems: "center" }}>
           <span>UNITS: {snap.unitCount}</span>
-          <span>BUILDINGS: {buildingCount}</span>
-          <span>FRAGMENTS: {fragmentCount}</span>
-          <span>TICK: {snap.tick}</span>
+          <span>BLDG: {buildingCount}</span>
+          <span>FRAG: {fragmentCount}</span>
         </div>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+
+        {/* Speed controls */}
+        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
           <button
             onClick={() => setGameSpeed(0.5)}
             style={speedButtonStyle(snap.gameSpeed === 0.5)}
@@ -97,6 +101,28 @@ export function GameUI() {
             {snap.paused ? "PLAY" : "PAUSE"}
           </button>
         </div>
+      </div>
+
+      {/* Resource bar (below top bar) */}
+      <div
+        style={{
+          display: "flex",
+          gap: "16px",
+          padding: "4px 12px 8px",
+          fontSize: "11px",
+          color: "#00ffaa99",
+          pointerEvents: "auto",
+        }}
+      >
+        <span title="Scrap Metal">SCRAP: {snap.resources.scrapMetal}</span>
+        <span title="Electronic Waste">E-WASTE: {snap.resources.eWaste}</span>
+        <span title="Intact Components">PARTS: {snap.resources.intactComponents}</span>
+        <span style={{ color: stormColor(snap.power.stormIntensity) }} title="Storm Intensity">
+          STORM: {(snap.power.stormIntensity * 100).toFixed(0)}%
+        </span>
+        <span title="Power Generation / Demand">
+          PWR: {snap.power.totalGeneration.toFixed(0)}/{snap.power.totalDemand.toFixed(0)}
+        </span>
       </div>
 
       {/* Selected unit info */}
@@ -158,7 +184,7 @@ export function GameUI() {
               marginTop: "8px",
             }}
           >
-            Click to select &bull; Right-click to move
+            Tap to select &bull; Tap ground to move &bull; Right-click (PC)
           </div>
         </div>
       )}
@@ -188,6 +214,12 @@ export function GameUI() {
       <Minimap />
     </div>
   )
+}
+
+function stormColor(intensity: number): string {
+  if (intensity > 1.1) return "#ffaa00" // surge
+  if (intensity > 0.8) return "#00ffaa" // normal
+  return "#00ffaa66" // weak
 }
 
 function Minimap() {

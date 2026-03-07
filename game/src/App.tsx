@@ -8,13 +8,16 @@ import { TerrainRenderer } from "./rendering/TerrainRenderer"
 import { UnitRenderer } from "./rendering/UnitRenderer"
 import { StormSky } from "./rendering/StormSky"
 import { LandscapeProps } from "./rendering/LandscapeProps"
+import { CityRenderer } from "./rendering/CityRenderer"
 import { TopDownCamera } from "./input/TopDownCamera"
 import { UnitInput } from "./input/UnitInput"
 import { GameUI } from "./ui/GameUI"
+import { TitleScreen } from "./ui/TitleScreen"
 import { simulationTick, getGameSpeed } from "./ecs/gameState"
 import { movementSystem } from "./systems/movement"
-import { spawnUnit, spawnFabricationUnit } from "./ecs/factory"
+import { spawnUnit, spawnFabricationUnit, spawnLightningRod } from "./ecs/factory"
 import { buildNavGraph } from "./systems/navmesh"
+import { getCityBuildings } from "./ecs/cityLayout"
 
 // --- Narration ---
 
@@ -101,13 +104,15 @@ function NarrationOverlay({ onComplete }: { onComplete: () => void }) {
 // --- World initialization ---
 
 function initializeWorld() {
+  // Initialize city layout (must happen before navmesh so buildings block paths)
+  getCityBuildings()
   buildNavGraph()
 
   // Bot 1: Has a working camera but broken arms.
-  // Can see and direct, but cannot physically repair.
+  // Spawns in a clear area within the city streets.
   const bot1 = spawnUnit({
-    x: 5,
-    z: 10,
+    x: 8,
+    z: 12,
     displayName: "Bot Alpha",
     components: [
       { name: "camera", functional: true, material: "electronic" },
@@ -118,10 +123,10 @@ function initializeWorld() {
   })
 
   // Bot 2: Has working arms but broken camera.
-  // Can manipulate objects, but navigates blind (abstract fog only).
+  // Nearby but separated by buildings — must navigate streets.
   spawnUnit({
-    x: 20,
-    z: 18,
+    x: 18,
+    z: 16,
     fragmentId: bot1.mapFragment.fragmentId,
     displayName: "Bot Beta",
     components: [
@@ -133,10 +138,9 @@ function initializeWorld() {
   })
 
   // Fabrication unit: Stationary building, no power.
-  // Both bots must reach it. The camera bot directs the arms bot to
-  // repair the power supply, then fabricate replacement parts.
+  // Located in a street between the two bots.
   spawnFabricationUnit({
-    x: 12,
+    x: 13,
     z: 14,
     fragmentId: bot1.mapFragment.fragmentId,
     powered: false,
@@ -145,6 +149,13 @@ function initializeWorld() {
       { name: "fabrication_arm", functional: true, material: "metal" },
       { name: "material_hopper", functional: true, material: "metal" },
     ],
+  })
+
+  // Lightning rod: Provides power and protection in the starting area.
+  spawnLightningRod({
+    x: 10,
+    z: 13,
+    fragmentId: bot1.mapFragment.fragmentId,
   })
 
   // Initial exploration tick so terrain is visible
@@ -178,7 +189,7 @@ function GameLoop() {
 let worldInitialized = false
 
 export default function App() {
-  const [phase, setPhase] = useState<"narration" | "playing">("narration")
+  const [phase, setPhase] = useState<"title" | "narration" | "playing">("title")
 
   useEffect(() => {
     if (phase === "playing" && !worldInitialized) {
@@ -186,6 +197,10 @@ export default function App() {
       initializeWorld()
     }
   }, [phase])
+
+  if (phase === "title") {
+    return <TitleScreen onNewGame={() => setPhase("narration")} />
+  }
 
   if (phase === "narration") {
     return <NarrationOverlay onComplete={() => setPhase("playing")} />
@@ -203,6 +218,7 @@ export default function App() {
 
         <TerrainRenderer />
         <LandscapeProps />
+        <CityRenderer />
         <UnitRenderer />
 
         <TopDownCamera />

@@ -58,6 +58,8 @@ function getTotalPowerDemand(): number {
     }
   }
   for (const unit of units) {
+    // Skip fabrication units — their demand is counted via building component
+    if (unit.unit.type === "fabrication_unit") continue
     demand += getUnitPowerDemand(unit)
   }
   return demand

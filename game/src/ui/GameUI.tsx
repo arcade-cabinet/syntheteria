@@ -195,6 +195,73 @@ function BuildingRepairPanel({ selectedBuilding }: { selectedBuilding: Entity })
   )
 }
 
+function InlineFabricationPanel({ fabricator }: { fabricator: Entity }) {
+  const snap = useSyncExternalStore(subscribe, getSnapshot)
+  const [expanded, setExpanded] = useState(false)
+  const isPowered = fabricator.building?.powered && fabricator.building?.operational
+
+  // Active jobs for this fabricator
+  const myJobs = snap.fabricationJobs.filter(j => j.fabricatorId === fabricator.id)
+
+  return (
+    <div style={{ marginTop: "8px", borderTop: "1px solid #aa884422", paddingTop: "6px" }}>
+      <div
+        onClick={() => setExpanded(!expanded)}
+        style={{ cursor: "pointer", color: "#aa8844", fontSize: "12px", fontWeight: "bold", marginBottom: "4px" }}
+      >
+        FABRICATION {expanded ? "[-]" : "[+]"}
+      </div>
+
+      {myJobs.length > 0 && (
+        <div style={{ color: "#00ffaa88", fontSize: "11px", marginBottom: "4px" }}>
+          {myJobs.map((job, i) => (
+            <div key={i}>
+              {job.recipe.name}: {job.ticksRemaining}t remaining
+            </div>
+          ))}
+        </div>
+      )}
+
+      {expanded && isPowered && (
+        <div style={{ marginTop: "4px" }}>
+          {RECIPES.map((recipe) => {
+            const canAfford = recipe.costs.every(c => snap.resources[c.type] >= c.amount)
+            return (
+              <button
+                key={recipe.name}
+                onClick={() => startFabrication(fabricator, recipe.name)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  textAlign: "left",
+                  background: canAfford ? "rgba(170,136,68,0.1)" : "transparent",
+                  color: canAfford ? "#aa8844" : "#aa884444",
+                  border: "1px solid #aa884433",
+                  borderRadius: "4px",
+                  padding: "4px 8px",
+                  fontSize: "11px",
+                  fontFamily: "'Courier New', monospace",
+                  cursor: canAfford ? "pointer" : "default",
+                  marginBottom: "3px",
+                }}
+                title={recipe.costs.map(c => `${c.amount} ${c.type}`).join(", ")}
+              >
+                {recipe.name} ({recipe.buildTime}t)
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {expanded && !isPowered && (
+        <div style={{ color: "#ff444488", fontSize: "11px" }}>
+          Requires power to fabricate
+        </div>
+      )}
+    </div>
+  )
+}
+
 function FabricationPanel() {
   const snap = useSyncExternalStore(subscribe, getSnapshot)
   const [expanded, setExpanded] = useState(false)
@@ -277,7 +344,10 @@ export function GameUI() {
   const snap = useSyncExternalStore(subscribe, getSnapshot)
 
   const selectedUnit = Array.from(units).find((u) => u.unit.selected)
-  const selectedBuilding = Array.from(buildings).find((b) => b.building.selected)
+  // Only show building panel for pure buildings (not fabrication units, which show in unit panel)
+  const selectedBuilding = Array.from(buildings).find(
+    (b) => b.building.selected && !("unit" in b)
+  )
   const fragmentCount = snap.fragments.length
   const buildingCount = Array.from(buildings).length
 
@@ -371,7 +441,16 @@ export function GameUI() {
               <span style={{ color: "#ff4444", marginLeft: "8px" }}>HOSTILE</span>
             )}
           </div>
-          <div>Speed: {selectedUnit.unit.speed.toFixed(1)}</div>
+          {selectedUnit.unit.speed > 0 && (
+            <div>Speed: {selectedUnit.unit.speed.toFixed(1)}</div>
+          )}
+          {"building" in selectedUnit && (
+            <div style={{ color: selectedUnit.building.powered ? "#00ff88" : "#ff4444" }}>
+              {selectedUnit.building.powered ? "POWERED" : "UNPOWERED"}
+              {" / "}
+              {selectedUnit.building.operational ? "OPERATIONAL" : "OFFLINE"}
+            </div>
+          )}
           <div>
             Pos: ({selectedUnit.worldPosition.x.toFixed(1)},{" "}
             {selectedUnit.worldPosition.z.toFixed(1)})
@@ -396,8 +475,14 @@ export function GameUI() {
             <RepairPanel selectedUnit={selectedUnit} />
           )}
 
+          {selectedUnit.unit.type === "fabrication_unit" && "building" in selectedUnit && (
+            <InlineFabricationPanel fabricator={selectedUnit} />
+          )}
+
           <div style={{ fontSize: "11px", color: "#00ffaa88", marginTop: "8px" }}>
-            Tap to select &bull; Tap ground to move
+            {selectedUnit.unit.speed > 0
+              ? "Tap to select \u2022 Tap ground to move"
+              : "Tap to select"}
           </div>
         </div>
       )}

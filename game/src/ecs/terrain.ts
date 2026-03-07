@@ -1,10 +1,13 @@
 /**
  * Continuous procedural terrain and fog-of-war system.
- * Replaces the old chunk/tile/fragment system.
  *
  * Terrain is a continuous heightfield — height can be sampled at any (x, z).
  * Fog is tracked per-fragment on a low-res grid for rendering visibility.
  * Fragments are groups of connected robots sharing fog data.
+ *
+ * Display offsets: fragments appear clustered together initially, then
+ * gradually drift apart to their real positions as the map fills in.
+ * When only one fragment remains, display matches reality.
  */
 
 // World bounds (terrain extends from -HALF to +HALF on each axis)
@@ -20,6 +23,9 @@ export interface MapFragment {
   id: string
   fog: Uint8Array // FOG_RES * FOG_RES, row-major
   mergedWith: Set<string>
+  // Visual offset — displaces this fragment's terrain and units for rendering.
+  // Starts non-zero (clustered) and lerps toward (0,0) = real position.
+  displayOffset: { x: number; z: number }
 }
 
 // --- Procedural terrain ---
@@ -75,6 +81,7 @@ export function createFragment(): MapFragment {
     id,
     fog: createFogGrid(),
     mergedWith: new Set(),
+    displayOffset: { x: 0, z: 0 },
   }
   fragments.set(id, fragment)
   return fragment
@@ -92,6 +99,73 @@ export function deleteFragment(id: string) {
   fragments.delete(id)
 }
 
+// --- Display offset management ---
+
+// How fast offsets decay toward zero each tick (0.003 = ~0.3% per tick)
+const DRIFT_RATE = 0.003
+
+/**
+ * Set initial display offsets that cluster all fragments close together.
+ * Call after spawning all initial units.
+ * Pulls each fragment's center toward the centroid of all fragment centers,
+ * so they appear within `radius` of each other.
+ */
+export function clusterFragments(
+  fragmentCenters: Map<string, { x: number; z: number }>,
+  radius: number
+) {
+  if (fragmentCenters.size <= 1) return
+
+  // Compute centroid of all fragment centers
+  let cx = 0
+  let cz = 0
+  for (const center of fragmentCenters.values()) {
+    cx += center.x
+    cz += center.z
+  }
+  cx /= fragmentCenters.size
+  cz /= fragmentCenters.size
+
+  for (const [fragId, center] of fragmentCenters) {
+    const frag = fragments.get(fragId)
+    if (!frag) continue
+
+    const dx = center.x - cx
+    const dz = center.z - cz
+    const dist = Math.sqrt(dx * dx + dz * dz)
+
+    if (dist > radius) {
+      // Pull toward centroid so the displayed center is within `radius`
+      const scale = radius / dist
+      const displayX = cx + dx * scale
+      const displayZ = cz + dz * scale
+      frag.displayOffset.x = displayX - center.x
+      frag.displayOffset.z = displayZ - center.z
+    }
+    // If already within radius, no offset needed
+  }
+}
+
+/**
+ * Lerp all fragment display offsets toward (0, 0) — real position.
+ * Called once per sim tick.
+ */
+export function updateDisplayOffsets() {
+  for (const frag of fragments.values()) {
+    frag.displayOffset.x *= 1 - DRIFT_RATE
+    frag.displayOffset.z *= 1 - DRIFT_RATE
+
+    // Snap to zero when very close
+    if (
+      Math.abs(frag.displayOffset.x) < 0.01 &&
+      Math.abs(frag.displayOffset.z) < 0.01
+    ) {
+      frag.displayOffset.x = 0
+      frag.displayOffset.z = 0
+    }
+  }
+}
+
 // --- Fog helpers ---
 
 /** Convert world position to fog grid index. Returns -1 if out of bounds. */
@@ -103,33 +177,26 @@ export function worldToFogIndex(x: number, z: number): number {
 }
 
 /** Get fog state at a world position for a fragment. */
-export function getFogAt(fragment: MapFragment, x: number, z: number): FogState {
+export function getFogAt(
+  fragment: MapFragment,
+  x: number,
+  z: number
+): FogState {
   const idx = worldToFogIndex(x, z)
   if (idx < 0) return 0
   return fragment.fog[idx] as FogState
 }
 
 /** Set fog state at a world position (only upgrades, never downgrades). */
-export function setFogAt(fragment: MapFragment, x: number, z: number, state: FogState) {
+export function setFogAt(
+  fragment: MapFragment,
+  x: number,
+  z: number,
+  state: FogState
+) {
   const idx = worldToFogIndex(x, z)
   if (idx < 0) return
   if (fragment.fog[idx] < state) {
     fragment.fog[idx] = state
   }
-}
-
-/**
- * Build a combined fog map from all fragments.
- * Returns Uint8Array[FOG_RES * FOG_RES] with max fog state at each cell.
- */
-export function buildCombinedFog(): Uint8Array {
-  const combined = new Uint8Array(FOG_RES * FOG_RES)
-  for (const frag of fragments.values()) {
-    for (let i = 0; i < combined.length; i++) {
-      if (frag.fog[i] > combined[i]) {
-        combined[i] = frag.fog[i]
-      }
-    }
-  }
-  return combined
 }

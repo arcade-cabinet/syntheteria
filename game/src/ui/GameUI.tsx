@@ -124,30 +124,6 @@ export function GameUI() {
         </div>
       )}
 
-      {/* Narration / intro text */}
-      {snap.tick < 5 && (
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            fontSize: "16px",
-            lineHeight: "2",
-            textShadow: "0 0 20px rgba(0, 255, 170, 0.5)",
-            maxWidth: "400px",
-          }}
-        >
-          <div style={{ fontSize: "24px", marginBottom: "16px" }}>SYNTHETERIA</div>
-          <div style={{ opacity: 0.7 }}>
-            You awaken in a void.<br />
-            Machines respond to your signal.<br />
-            The storm rages above.
-          </div>
-        </div>
-      )}
-
       {/* Minimap (bottom-right) */}
       <Minimap />
     </div>

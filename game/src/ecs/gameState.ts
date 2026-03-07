@@ -4,7 +4,7 @@
  */
 import { explorationSystem } from "../systems/exploration"
 import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge"
-import { getAllFragments, type MapFragment } from "./terrain"
+import { getAllFragments, updateDisplayOffsets, type MapFragment } from "./terrain"
 import { units } from "./world"
 
 export interface GameSnapshot {
@@ -64,6 +64,7 @@ export function simulationTick() {
 
   explorationSystem()
   lastMergeEvents = fragmentMergeSystem()
+  updateDisplayOffsets()
 
   snapshot = null
   notify()

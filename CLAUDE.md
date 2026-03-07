@@ -2,7 +2,7 @@
 
 ## Project Status
 
-Pre-implementation strategy game about awakening AI consciousness in a post-apocalyptic industrial city. Design documents aligned to vision, engine selection pending, component data needs redesign.
+Strategy game about awakening AI consciousness in a post-apocalyptic industrial city. Phase 1 prototype implemented with continuous terrain, navmesh navigation, and fog-of-war. Component data needs redesign.
 
 ---
 
@@ -26,7 +26,7 @@ Using React Three Fiber, Three.js, and Miniplex ECS. No Unity, no Godot.
 **Rationale:**
 - **Mobile-first:** Web-native runs on any device with a browser — no app store gatekeeping
 - **AI-assisted development:** All code is text (TypeScript, JSX) — fully readable and verifiable by AI
-- **Fragmented map system:** Custom chunk-based renderer maps directly to the game's core mechanic
+- **Continuous terrain + navmesh:** Custom terrain renderer with navmesh pathfinding for free 3D movement
 - **Free forever:** No licensing costs at any scale
 - **Iteration speed:** Hot reload, instant deploy, no compile step for logic changes
 - **CI:** Standard web tooling (Vitest, Playwright, GitHub Actions)
@@ -56,8 +56,9 @@ AI-assisted development **cannot** verify:
 
 - **Engine:** Custom — React Three Fiber + Three.js + Miniplex ECS (TypeScript)
 - **Platform:** Mobile-first, also PC
-- **Primary view:** 2.5D/3D top-down with fragmented map exploration
-- **Exploration:** Disconnected map fragments merge when robots find each other
+- **Primary view:** 2.5D/3D top-down with continuous terrain
+- **Navigation:** Free 3D movement via navmesh pathfinding (no grid/tiles)
+- **Exploration:** Fog-of-war reveals continuous terrain; fragments merge when robots meet
 - **Power:** Lightning rods drawing from perpetual storm
 - **Time model:** Flexible real-time with pause/speed controls (RTS-style)
 - **Multiplayer:** Eventually (procedural world), beyond current scope — single-player focus
@@ -97,8 +98,8 @@ See OPEN_QUESTIONS.md — the redesign created 11 new questions about specifics.
 
 ## Next Steps
 
-1. **Scaffold project** — Vite + R3F + Miniplex + TypeScript
-2. **Build Phase 1 prototype** — chunk grid, fragment system, void rendering (mobile-first)
+1. ~~**Scaffold project** — Vite + R3F + Miniplex + TypeScript~~ (done)
+2. ~~**Build Phase 1 prototype** — continuous terrain, navmesh, fog-of-war~~ (done)
 3. **Redesign component data** for the new setting
 4. **Determine art style** — low-poly, pixel art, or clean minimal
 5. **Build vertical slice** — one gameplay loop end-to-end

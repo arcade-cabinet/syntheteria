@@ -35,7 +35,7 @@ export interface Entity {
 
   // Unit (mobile robot)
   unit: {
-    type: "maintenance_bot" | "utility_drone"
+    type: "maintenance_bot" | "utility_drone" | "fabrication_unit"
     displayName: string
     speed: number // world units per second at 1x game speed
     selected: boolean
@@ -54,6 +54,7 @@ export interface Entity {
     type: string
     powered: boolean
     operational: boolean
+    selected: boolean
     components: UnitComponent[]
   }
 

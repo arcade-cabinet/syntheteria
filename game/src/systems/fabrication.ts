@@ -5,7 +5,7 @@
  * Each recipe consumes materials and takes several ticks to complete.
  * Completed components are added to the global resource pool as intact parts.
  */
-import { buildings } from "../ecs/world"
+import { buildings, units } from "../ecs/world"
 import { spendResource, addResource, getResources, type ResourcePool } from "./resources"
 import type { Entity } from "../ecs/types"
 

@@ -6,7 +6,7 @@
  *
  * Repair costs depend on the component's material type.
  */
-import { units } from "../ecs/world"
+import { units, buildings } from "../ecs/world"
 import { hasArms } from "../ecs/types"
 import { spendResource, type ResourcePool } from "./resources"
 import type { Entity, UnitComponent } from "../ecs/types"
@@ -53,8 +53,9 @@ export function startRepair(
   const dist = Math.sqrt(dx * dx + dz * dz)
   if (dist > REPAIR_RANGE) return false
 
-  // Find the broken component
-  const comp = target.unit.components.find(
+  // Find the broken component (on unit or building)
+  const components = "unit" in target ? target.unit.components : target.building.components
+  const comp = components.find(
     c => c.name === componentName && !c.functional
   )
   if (!comp) return false
@@ -90,16 +91,27 @@ export function repairSystem() {
     repair.ticksRemaining--
 
     if (repair.ticksRemaining <= 0) {
-      // Find target and fix the component
+      // Find target (unit or building) and fix the component
+      let found = false
       for (const unit of units) {
         if (unit.id === repair.targetId) {
           const comp = unit.unit.components.find(
             c => c.name === repair.componentName && !c.functional
           )
-          if (comp) {
-            comp.functional = true
-          }
+          if (comp) comp.functional = true
+          found = true
           break
+        }
+      }
+      if (!found) {
+        for (const bldg of buildings) {
+          if (bldg.id === repair.targetId) {
+            const comp = bldg.building.components.find(
+              c => c.name === repair.componentName && !c.functional
+            )
+            if (comp) comp.functional = true
+            break
+          }
         }
       }
       activeRepairs.splice(i, 1)

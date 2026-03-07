@@ -149,6 +149,52 @@ function RepairPanel({ selectedUnit }: { selectedUnit: Entity }) {
   )
 }
 
+function BuildingRepairPanel({ selectedBuilding }: { selectedBuilding: Entity }) {
+  const brokenComps = selectedBuilding.building.components.filter(c => !c.functional)
+  if (brokenComps.length === 0) return null
+
+  // Find a nearby player unit with arms to be the repairer
+  const allUnits = Array.from(units)
+  const repairer = allUnits.find(u => {
+    if (u.faction !== "player") return false
+    if (!u.unit.components.some(c => c.name === "arms" && c.functional)) return false
+    const dx = u.worldPosition.x - selectedBuilding.worldPosition.x
+    const dz = u.worldPosition.z - selectedBuilding.worldPosition.z
+    return Math.sqrt(dx * dx + dz * dz) < 3.0
+  })
+
+  return (
+    <div style={{ marginTop: "8px", borderTop: "1px solid #00ffaa22", paddingTop: "6px" }}>
+      <div style={{ fontSize: "11px", color: "#00ffaa88", marginBottom: "4px" }}>
+        REPAIR {repairer ? `(${repairer.unit.displayName} nearby)` : "(no unit with arms nearby)"}
+      </div>
+      {brokenComps.map((comp, i) => (
+        <button
+          key={i}
+          onClick={() => repairer && startRepair(repairer, selectedBuilding, comp.name)}
+          disabled={!repairer}
+          style={{
+            display: "block",
+            width: "100%",
+            textAlign: "left",
+            background: repairer ? "rgba(255,68,68,0.1)" : "transparent",
+            color: repairer ? "#ff8866" : "#ff886644",
+            border: "1px solid #ff444444",
+            borderRadius: "4px",
+            padding: "4px 8px",
+            fontSize: "11px",
+            fontFamily: "'Courier New', monospace",
+            cursor: repairer ? "pointer" : "default",
+            marginBottom: "3px",
+          }}
+        >
+          Fix {comp.name.replace(/_/g, " ")}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function FabricationPanel() {
   const snap = useSyncExternalStore(subscribe, getSnapshot)
   const [expanded, setExpanded] = useState(false)
@@ -231,6 +277,7 @@ export function GameUI() {
   const snap = useSyncExternalStore(subscribe, getSnapshot)
 
   const selectedUnit = Array.from(units).find((u) => u.unit.selected)
+  const selectedBuilding = Array.from(buildings).find((b) => b.building.selected)
   const fragmentCount = snap.fragments.length
   const buildingCount = Array.from(buildings).length
 
@@ -351,6 +398,68 @@ export function GameUI() {
 
           <div style={{ fontSize: "11px", color: "#00ffaa88", marginTop: "8px" }}>
             Tap to select &bull; Tap ground to move
+          </div>
+        </div>
+      )}
+
+      {/* Selected building info */}
+      {selectedBuilding && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: "16px",
+            left: "16px",
+            background: "rgba(0, 0, 0, 0.8)",
+            border: "1px solid #aa884444",
+            borderRadius: "8px",
+            padding: "12px 16px",
+            fontSize: "13px",
+            lineHeight: "1.6",
+            minWidth: "220px",
+            pointerEvents: "auto",
+          }}
+        >
+          <div style={{ fontSize: "15px", fontWeight: "bold", marginBottom: "4px", color: "#aa8844" }}>
+            {selectedBuilding.building.type.replace(/_/g, " ").toUpperCase()}
+          </div>
+          <div style={{ color: "#aa884488", fontSize: "11px", marginBottom: "6px" }}>
+            {selectedBuilding.building.powered ? "POWERED" : "UNPOWERED"}
+            {" / "}
+            {selectedBuilding.building.operational ? "OPERATIONAL" : "OFFLINE"}
+          </div>
+          <div>
+            Pos: ({selectedBuilding.worldPosition.x.toFixed(1)},{" "}
+            {selectedBuilding.worldPosition.z.toFixed(1)})
+          </div>
+
+          {selectedBuilding.building.components.length > 0 && (
+            <div
+              style={{
+                marginTop: "8px",
+                borderTop: "1px solid #aa884422",
+                paddingTop: "8px",
+              }}
+            >
+              <div style={{ fontSize: "12px", color: "#aa884488", marginBottom: "4px" }}>
+                COMPONENTS
+              </div>
+              {selectedBuilding.building.components.map((comp, i) => (
+                <ComponentStatus key={i} comp={comp} />
+              ))}
+            </div>
+          )}
+
+          {selectedBuilding.building.type === "lightning_rod" && selectedBuilding.lightningRod && (
+            <div style={{ marginTop: "8px", borderTop: "1px solid #aa884422", paddingTop: "8px" }}>
+              <div>Output: {selectedBuilding.lightningRod.currentOutput.toFixed(1)} / {selectedBuilding.lightningRod.rodCapacity}</div>
+              <div>Radius: {selectedBuilding.lightningRod.protectionRadius}</div>
+            </div>
+          )}
+
+          <BuildingRepairPanel selectedBuilding={selectedBuilding} />
+
+          <div style={{ fontSize: "11px", color: "#aa884488", marginTop: "8px" }}>
+            Tap to select
           </div>
         </div>
       )}

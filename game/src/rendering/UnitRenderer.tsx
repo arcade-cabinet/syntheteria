@@ -104,6 +104,7 @@ function UnitMesh({ entity }: { entity: Entity }) {
 
 function BuildingMesh({ entity }: { entity: Entity }) {
   const groupRef = useRef<THREE.Group>(null)
+  const ringRef = useRef<THREE.Mesh>(null)
 
   useFrame(() => {
     const frag = getFragment(entity.mapFragment.fragmentId)
@@ -116,6 +117,9 @@ function BuildingMesh({ entity }: { entity: Entity }) {
         entity.worldPosition.y,
         entity.worldPosition.z + oz
       )
+    }
+    if (ringRef.current) {
+      ringRef.current.visible = entity.building.selected
     }
   })
 
@@ -176,6 +180,12 @@ function BuildingMesh({ entity }: { entity: Entity }) {
           </mesh>
         </>
       )}
+
+      {/* Selection ring */}
+      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]} visible={false}>
+        <ringGeometry args={[1.0, 1.2, 16]} />
+        <meshBasicMaterial color={COLOR_SELECTED} side={THREE.DoubleSide} />
+      </mesh>
     </group>
   )
 }

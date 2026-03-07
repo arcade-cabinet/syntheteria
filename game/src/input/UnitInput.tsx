@@ -12,7 +12,7 @@
 import { useRef, useCallback, useEffect } from "react"
 import { useThree } from "@react-three/fiber"
 import * as THREE from "three"
-import { units } from "../ecs/world"
+import { units, buildings } from "../ecs/world"
 import { findPath } from "../systems/pathfinding"
 import { getFragment } from "../ecs/terrain"
 import {
@@ -42,11 +42,12 @@ function getWorldPointFromEvent(
   return hit ? intersection : null
 }
 
-/** Find unit closest to a display-space point (accounts for fragment offsets). */
-function findUnitAtPoint(point: THREE.Vector3, threshold: number = 1.5): Entity | null {
+/** Find unit or building closest to a display-space point (accounts for fragment offsets). */
+function findEntityAtPoint(point: THREE.Vector3, threshold: number = 1.5): Entity | null {
   let closest: Entity | null = null
   let closestDist = threshold
 
+  // Check mobile units
   for (const entity of units) {
     const frag = getFragment(entity.mapFragment.fragmentId)
     const ox = frag?.displayOffset.x ?? 0
@@ -60,6 +61,22 @@ function findUnitAtPoint(point: THREE.Vector3, threshold: number = 1.5): Entity 
       closestDist = dist
     }
   }
+
+  // Check buildings (larger click target)
+  for (const entity of buildings) {
+    const frag = entity.mapFragment ? getFragment(entity.mapFragment.fragmentId) : null
+    const ox = frag?.displayOffset.x ?? 0
+    const oz = frag?.displayOffset.z ?? 0
+
+    const dx = (entity.worldPosition.x + ox) - point.x
+    const dz = (entity.worldPosition.z + oz) - point.z
+    const dist = Math.sqrt(dx * dx + dz * dz)
+    if (dist < closestDist) {
+      closest = entity
+      closestDist = dist
+    }
+  }
+
   return closest
 }
 
@@ -81,11 +98,31 @@ function issueMoveTo(entity: Entity, displayX: number, displayZ: number) {
   }
 }
 
-function getSelectedUnit(): Entity | null {
+function getSelectedEntity(): Entity | null {
   for (const entity of units) {
     if (entity.unit.selected) return entity
   }
+  for (const entity of buildings) {
+    if (entity.building.selected) return entity
+  }
   return null
+}
+
+function deselectAll() {
+  for (const u of units) {
+    u.unit.selected = false
+  }
+  for (const b of buildings) {
+    b.building.selected = false
+  }
+}
+
+function isUnit(entity: Entity): boolean {
+  return "unit" in entity
+}
+
+function isBuilding(entity: Entity): boolean {
+  return "building" in entity
 }
 
 export function UnitInput() {
@@ -107,17 +144,19 @@ export function UnitInput() {
         return
       }
 
-      const unitAtPoint = findUnitAtPoint(point)
-      const currentlySelected = getSelectedUnit()
+      const entityAtPoint = findEntityAtPoint(point)
+      const currentlySelected = getSelectedEntity()
 
-      if (unitAtPoint) {
-        // Tapped on a unit — select it (deselect others)
-        for (const u of units) {
-          u.unit.selected = false
+      if (entityAtPoint) {
+        // Tapped on a unit or building — select it (deselect others)
+        deselectAll()
+        if (isUnit(entityAtPoint)) {
+          entityAtPoint.unit.selected = true
+        } else if (isBuilding(entityAtPoint)) {
+          entityAtPoint.building.selected = true
         }
-        unitAtPoint.unit.selected = true
-      } else if (currentlySelected) {
-        // Tapped empty ground with a unit selected — move there
+      } else if (currentlySelected && isUnit(currentlySelected)) {
+        // Tapped empty ground with a mobile unit selected — move there
         issueMoveTo(currentlySelected, point.x, point.z)
       }
     },

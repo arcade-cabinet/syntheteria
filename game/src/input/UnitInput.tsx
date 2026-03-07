@@ -1,12 +1,16 @@
 /**
  * Handles unit selection (tap/click) and move commands (right-click / long-press).
  * Uses navmesh pathfinding for free 3D movement.
+ *
+ * Selection works in display space (accounts for fragment offsets).
+ * Move commands convert display-space targets back to real-world positions.
  */
 import { useRef, useCallback } from "react"
 import { useThree } from "@react-three/fiber"
 import * as THREE from "three"
 import { units } from "../ecs/world"
 import { findPath } from "../systems/pathfinding"
+import { getFragment } from "../ecs/terrain"
 import type { Entity } from "../ecs/types"
 
 const GROUND_PLANE = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
@@ -28,13 +32,19 @@ function getWorldPointFromEvent(
   return hit ? intersection : null
 }
 
+/** Find unit closest to a display-space point (accounts for fragment offsets). */
 function findUnitAtPoint(point: THREE.Vector3, threshold: number = 1.0): Entity | null {
   let closest: Entity | null = null
   let closestDist = threshold
 
   for (const entity of units) {
-    const dx = entity.worldPosition.x - point.x
-    const dz = entity.worldPosition.z - point.z
+    const frag = getFragment(entity.mapFragment.fragmentId)
+    const ox = frag?.displayOffset.x ?? 0
+    const oz = frag?.displayOffset.z ?? 0
+
+    // Compare against displayed position
+    const dx = (entity.worldPosition.x + ox) - point.x
+    const dz = (entity.worldPosition.z + oz) - point.z
     const dist = Math.sqrt(dx * dx + dz * dz)
     if (dist < closestDist) {
       closest = entity
@@ -44,8 +54,17 @@ function findUnitAtPoint(point: THREE.Vector3, threshold: number = 1.0): Entity 
   return closest
 }
 
-function issueMoveTo(entity: Entity, worldX: number, worldZ: number) {
-  const path = findPath(entity.worldPosition, { x: worldX, y: 0, z: worldZ })
+/** Issue a move command. Converts display-space target to real-world position. */
+function issueMoveTo(entity: Entity, displayX: number, displayZ: number) {
+  const frag = getFragment(entity.mapFragment.fragmentId)
+  const ox = frag?.displayOffset.x ?? 0
+  const oz = frag?.displayOffset.z ?? 0
+
+  // Convert display-space click to real-world target
+  const realX = displayX - ox
+  const realZ = displayZ - oz
+
+  const path = findPath(entity.worldPosition, { x: realX, y: 0, z: realZ })
 
   if (path.length > 0) {
     ;(entity as any).navigation = {

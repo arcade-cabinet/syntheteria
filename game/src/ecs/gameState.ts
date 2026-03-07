@@ -4,6 +4,12 @@
  */
 import { explorationSystem } from "../systems/exploration"
 import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge"
+import { powerSystem, getPowerSnapshot, type PowerSnapshot } from "../systems/power"
+import { resourceSystem, getResources, type ResourcePool } from "../systems/resources"
+import { repairSystem } from "../systems/repair"
+import { fabricationSystem, getActiveJobs, type FabricationJob } from "../systems/fabrication"
+import { enemySystem } from "../systems/enemies"
+import { combatSystem, getLastCombatEvents, type CombatEvent } from "../systems/combat"
 import { getAllFragments, updateDisplayOffsets, type MapFragment } from "./terrain"
 import { units } from "./world"
 
@@ -13,7 +19,12 @@ export interface GameSnapshot {
   paused: boolean
   fragments: MapFragment[]
   unitCount: number
+  enemyCount: number
   mergeEvents: MergeEvent[]
+  combatEvents: CombatEvent[]
+  power: PowerSnapshot
+  resources: ResourcePool
+  fabricationJobs: FabricationJob[]
 }
 
 let tick = 0
@@ -24,13 +35,24 @@ let listeners = new Set<() => void>()
 let snapshot: GameSnapshot | null = null
 
 function buildSnapshot(): GameSnapshot {
+  let playerCount = 0
+  let enemyCount = 0
+  for (const u of units) {
+    if (u.faction === "player") playerCount++
+    else enemyCount++
+  }
   return {
     tick,
     gameSpeed,
     paused,
     fragments: getAllFragments(),
-    unitCount: Array.from(units).length,
+    unitCount: playerCount,
+    enemyCount,
     mergeEvents: lastMergeEvents,
+    combatEvents: getLastCombatEvents(),
+    power: getPowerSnapshot(),
+    resources: getResources(),
+    fabricationJobs: getActiveJobs(),
   }
 }
 
@@ -64,6 +86,12 @@ export function simulationTick() {
 
   explorationSystem()
   lastMergeEvents = fragmentMergeSystem()
+  powerSystem(tick)
+  resourceSystem()
+  repairSystem()
+  fabricationSystem()
+  enemySystem()
+  combatSystem()
   updateDisplayOffsets()
 
   snapshot = null

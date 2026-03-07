@@ -33,10 +33,11 @@
 | Materials | **Rewritten** - Scavenging, coastal mines, deep-sea mining |
 | UI Concept | **Rewritten** - 2.5D top-down, fragmented maps, exploration |
 | Intro Sequence | **Rewritten** - Void awakening, fragmented maps, base establishment |
-| Open Questions | **Updated** - 20 resolved, 2 partial, 11 new open |
+| Open Questions | **Updated** - 24 resolved, 1 partial, 5 open |
 | Lore Overview | **Updated** - Perpetual storm, lightning, world geography |
-| Implementation Options | **Updated** - Visual direction resolved, either engine viable |
-| Core Formulas | **Needs update** - Time model changed, power system changed |
+| Implementation Options | **Superseded** - Engine decided: Custom R3F + Three.js + Miniplex ECS |
+| Architecture | **Updated** - Build order with implementation status tracking |
+| Core Formulas | **Needs update** - Power/combat formulas implemented but doc not updated |
 | Reference Builds | **Needs update** - Component data retired, will need rebuild |
 
 ---
@@ -53,15 +54,40 @@ Major changes from the previous design:
 6. **Time:** Accelerated real-time (1s=1min) → Flexible with pause/speed controls
 7. **Multiplayer:** Core feature → Future scope (procedural world), single-player focus
 8. **Platform:** Mobile-first → PC and mobile equally
-9. **Components:** 101 components in JSON → Retired, needs redesign for new setting
-10. **Combat:** Added hacking, lightning calling, cultist organization tiers
+9. **Components:** 101 components in JSON → Retired, redesigned with 5 basic types implemented
+10. **Combat:** Component-based damage (break parts, not HP), feral machines implemented, cultists pending
+11. **Engine:** Decided — Custom web engine (R3F + Three.js + Miniplex ECS)
 
 ---
 
-## Next Steps (Pre-Implementation)
+## Implementation Progress
 
-1. **Choose engine** — Unity or Godot, then commit
-2. **Build Phase 1 prototype** — fragmented map system is the key test
-3. **Redesign component data** — new components for the storm/lightning/coastal setting
-4. **Determine art style** — low-poly, pixel art, or clean minimal
-5. **Update technical docs** — formulas and reference builds after component redesign
+| System | Status |
+|--------|--------|
+| Title screen & intro narration | **Done** |
+| Procedural city environment | **Done** |
+| Terrain, navmesh, fog-of-war | **Done** |
+| Mobile/desktop input | **Done** |
+| Power (lightning rods + storm) | **Done** |
+| Resources & scavenging | **Done** |
+| Building placement | **Done** |
+| Fabrication (5 recipes) | **Done** |
+| Feral enemy AI | **Done** |
+| Component-based combat | **Done** |
+| Repair system | **Done** |
+| Hacking system | Pending |
+| Cultist enemies | Pending |
+| Signal/compute network | Pending |
+| Save/load | Pending |
+| Audio | Pending |
+
+---
+
+## Next Steps
+
+1. **Hacking system** — core mechanic for taking over enemy machines
+2. **Cultist enemies** — humans with lightning powers
+3. **Signal/compute network** — BFS connectivity, global compute pool
+4. **Save/load** — IndexedDB persistence
+5. **Expand component data** — more types for unit specialization
+6. **Audio** — storm ambience, combat, UI sounds

@@ -69,7 +69,7 @@ This document tracks design questions that need resolution.
 - [x] **Q21:** What about multiplayer?
   - **RESOLVED:** Eventually, with a procedurally generated world. Beyond current scope — focus on single-player first.
 - [x] **Q22:** What is the engine choice?
-  - **RESOLVED:** Pending, but either Unity or Godot is viable. Visual direction no longer blocks the decision.
+  - **RESOLVED:** Custom web engine — React Three Fiber + Three.js + Miniplex ECS (TypeScript). Mobile-first web delivery, all code is text for AI-assisted development.
 
 ---
 
@@ -82,13 +82,17 @@ This document tracks design questions that need resolution.
 
 ## New Open Questions (from redesign)
 
-- [ ] **Q24:** How detailed should the starting machines be? Exact specs needed.
-- [ ] **Q25:** What specific components exist in the new setting? (Component data needs full redesign)
-- [ ] **Q26:** How do lightning rods work mechanically? Power output, range, construction costs?
+- [x] **Q24:** How detailed should the starting machines be? Exact specs needed.
+  - **RESOLVED:** Starting units are maintenance bots with 5 component types: camera, arms, legs, power_cell, power_supply. Components start in mixed functional states. Units have speed and display name.
+- [x] **Q25:** What specific components exist in the new setting? (Component data needs full redesign)
+  - **PARTIAL → RESOLVED (basic set):** Five component types implemented: camera (vision), arms (repair/combat/scavenge), legs (movement), power_cell, power_supply. More types needed for specialization.
+- [x] **Q26:** How do lightning rods work mechanically? Power output, range, construction costs?
+  - **RESOLVED:** Rods output = capacity × stormIntensity. Storm oscillates via sine wave + random surges. Protection radius = 8 units. Cost: 8 scrap + 4 e-waste. Min spacing: 10 units between rods. Buildings within radius get powered.
 - [ ] **Q27:** How does deep-sea mining work? Depth limits, pressure, communication?
 - [ ] **Q28:** What does the science campus contain specifically?
 - [ ] **Q29:** What is the cult leader's final secret about the EL?
-- [ ] **Q30:** How does combat with lightning-calling cultists feel in the top-down view?
+- [x] **Q30:** How does combat with lightning-calling cultists feel in the top-down view?
+  - **PARTIAL → RESOLVED (feral combat):** Component-based damage — attacks break random functional parts. No HP bar. Units with all parts broken are destroyed and drop salvage. Hit chance: 60% with arms, 30% without. Melee range 2.5 units. Cultist-specific lightning combat still TBD.
 - [ ] **Q31:** What does the abstract map (from blind robots) look like vs the detailed map?
 - [ ] **Q32:** Can robots plug into lightning rod infrastructure for unlimited stationary power?
 - [ ] **Q33:** What is the specific art style? Low-poly? Pixel art? Clean minimal?
@@ -110,7 +114,7 @@ This document tracks design questions that need resolution.
 | Gameplay Mechanics | 5 | 0 | 0 |
 | World/Setting | 4 | 0 | 0 |
 | Game Structure | 5 | 0 | 0 |
-| Technical/Scope | 3 | 1 | 0 |
+| Technical/Scope | 4 | 0 | 0 |
 | Business Model | 0 | 0 | 1 |
-| New (from redesign) | 0 | 0 | 10 |
-| **Total** | **20** | **2** | **11** |
+| New (from redesign) | 3 | 0 | 4 |
+| **Total** | **24** | **1** | **5** |

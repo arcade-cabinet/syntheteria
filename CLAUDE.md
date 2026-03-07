@@ -2,7 +2,23 @@
 
 ## Project Status
 
-Strategy game about awakening AI consciousness in a post-apocalyptic industrial city. Phase 1 prototype implemented with continuous terrain, navmesh navigation, and fog-of-war. Component data needs redesign.
+Strategy game about awakening AI consciousness in a post-apocalyptic industrial city. Phase 2 prototype implemented with procedural city environment, building placement, power/resource systems, fabrication, enemy AI, and component-based combat. Title screen and intro narration flow complete. Mobile input redesigned for proper touch controls.
+
+### Implemented Systems
+- Title screen with glitch effect and game flow (title → narration → playing)
+- Procedural city layout with factories, warehouses, towers, ruins, and perimeter walls
+- Instanced mesh city rendering with building details (windows, roofs, ledges)
+- Mobile-first input: two-finger pan/zoom for camera, single tap for unit interaction
+- Desktop input: WASD/arrows + scroll zoom, left-click select, right-click move
+- Power system with fluctuating storm intensity and lightning rod output
+- Resource scavenging (scrap metal, e-waste, intact components) from city points
+- Building placement with ghost preview and resource cost validation
+- Fabrication system with 5 recipes (camera, arms, legs, power cell, power supply)
+- Feral enemy AI with patrol and aggro behavior (6 spawn zones)
+- Component-based combat (damage breaks parts, not HP bars)
+- Repair system (units with arms can fix nearby broken components)
+- Minimap with player/enemy/building differentiation
+- Combat event notifications and merge event overlays
 
 ---
 
@@ -56,14 +72,17 @@ AI-assisted development **cannot** verify:
 
 - **Engine:** Custom — React Three Fiber + Three.js + Miniplex ECS (TypeScript)
 - **Platform:** Mobile-first, also PC
-- **Primary view:** 2.5D/3D top-down with continuous terrain
-- **Navigation:** Free 3D movement via navmesh pathfinding (no grid/tiles)
+- **Primary view:** 2.5D/3D top-down with continuous terrain and procedural city
+- **Navigation:** Free 3D movement via navmesh A* pathfinding (city buildings block paths)
 - **Exploration:** Fog-of-war reveals continuous terrain; fragments merge when robots meet
-- **Power:** Lightning rods drawing from perpetual storm
-- **Time model:** Flexible real-time with pause/speed controls (RTS-style)
+- **Power:** Lightning rods with fluctuating storm intensity (sine wave + surges)
+- **Resources:** Scrap metal, e-waste, intact components — scavenged from city points
+- **Combat:** Component-based damage (parts break individually, no HP bar)
+- **Enemies:** Feral machines (patrol + aggro AI) — cultists planned for later
+- **Building:** Lightning rods and fabrication units placeable with resource costs
+- **Time model:** Flexible real-time with pause/speed controls (0.5x, 1x, 2x)
 - **Multiplayer:** Eventually (procedural world), beyond current scope — single-player focus
-- **Enemies:** Cultists (lightning powers), enslaved machines, rogue AIs
-- **Hacking:** Can take over any machine (link + technique + compute), never humans
+- **Hacking:** Can take over any machine (link + technique + compute), never humans — not yet implemented
 - **Art style:** TBD (low-poly, pixel art, or clean minimal)
 
 ---
@@ -71,17 +90,24 @@ AI-assisted development **cannot** verify:
 ## What Needs Work
 
 ### Component Data (Major)
-The old component JSON data (101 components across 9 categories) has been deleted. New component data needs to be designed for the setting:
-- Lightning rod connections and storm energy capacitors as power sources
-- Components appropriate for the industrial city, coastal mines, deep-sea mining
-- Weapons balanced against cultists with supernatural powers
+The basic component system works (camera, arms, legs, power_cell, power_supply) but needs expansion:
+- More component types for different unit specializations
+- Weapons for combat against cultists with supernatural powers
+- Components appropriate for coastal mines, deep-sea mining
+
+### Gameplay Systems (Major)
+- **Hacking system** — core mechanic, not yet implemented
+- **Cultist enemies** — currently only feral machines; cultists with lightning powers needed
+- **Signal/compute network** — global compute pool and signal BFS not yet implemented
+- **Save/load** — no persistence yet
+- **Audio** — no sound effects or music
 
 ### Technical Docs (Moderate)
-- CORE_FORMULAS.md needs updating for new time model and power system
+- CORE_FORMULAS.md needs updating for implemented power/combat formulas
 - REFERENCE_BUILDS.md needs rewrite once new components are designed
 
-### Open Questions (11 new)
-See OPEN_QUESTIONS.md — the redesign created 11 new questions about specifics.
+### Open Questions
+See OPEN_QUESTIONS.md — several resolved by implementation, some still open.
 
 ---
 
@@ -100,9 +126,23 @@ See OPEN_QUESTIONS.md — the redesign created 11 new questions about specifics.
 
 1. ~~**Scaffold project** — Vite + R3F + Miniplex + TypeScript~~ (done)
 2. ~~**Build Phase 1 prototype** — continuous terrain, navmesh, fog-of-war~~ (done)
-3. **Redesign component data** for the new setting
-4. **Determine art style** — low-poly, pixel art, or clean minimal
-5. **Build vertical slice** — one gameplay loop end-to-end
+3. ~~**Title screen and intro flow** — glitch effect title, narration sequence~~ (done)
+4. ~~**Procedural city environment** — buildings block movement, labyrinthine layout~~ (done)
+5. ~~**Mobile input redesign** — two-finger camera, single tap unit control~~ (done)
+6. ~~**Power system** — lightning rods, storm intensity, power distribution~~ (done)
+7. ~~**Resources and scavenging** — scrap, e-waste, components from city points~~ (done)
+8. ~~**Building placement** — lightning rods and fabrication units with costs~~ (done)
+9. ~~**Fabrication** — 5 recipes, build times, power dependency~~ (done)
+10. ~~**Enemy AI** — feral machines with patrol/aggro behavior~~ (done)
+11. ~~**Combat** — component-based damage, retaliation, salvage drops~~ (done)
+12. ~~**Repair system** — units with arms fix nearby broken components~~ (done)
+13. **Hacking system** — signal link + technique + compute requirements
+14. **Cultist enemies** — humans with lightning powers, escalating organization
+15. **Signal/compute network** — BFS connectivity, global compute pool
+16. **Save/load** — IndexedDB persistence
+17. **Expand component data** — more types for unit specialization
+18. **Determine art style** — low-poly, pixel art, or clean minimal
+19. **Audio** — storm ambience, combat sounds, UI feedback
 
 ---
 

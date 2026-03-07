@@ -1,6 +1,8 @@
 /**
- * DOM overlay UI: resource bar, speed controls, unit info, minimap.
+ * DOM overlay UI: resource bar, power info, speed controls, build toolbar,
+ * unit info, combat log, minimap.
  */
+import { useState } from "react"
 import { useSyncExternalStore } from "react"
 import {
   subscribe,
@@ -10,7 +12,15 @@ import {
 } from "../ecs/gameState"
 import { units, buildings } from "../ecs/world"
 import { WORLD_HALF } from "../ecs/terrain"
-import type { UnitComponent } from "../ecs/types"
+import {
+  getActivePlacement,
+  setActivePlacement,
+  BUILDING_COSTS,
+  type PlaceableType,
+} from "../systems/buildingPlacement"
+import { startRepair } from "../systems/repair"
+import { startFabrication, RECIPES } from "../systems/fabrication"
+import type { UnitComponent, Entity } from "../ecs/types"
 
 function ComponentStatus({ comp }: { comp: UnitComponent }) {
   return (
@@ -32,6 +42,186 @@ function ComponentStatus({ comp }: { comp: UnitComponent }) {
       </span>
       {!comp.functional && (
         <span style={{ color: "#ff4444", fontSize: "11px" }}>BROKEN</span>
+      )}
+    </div>
+  )
+}
+
+function BuildToolbar() {
+  const active = getActivePlacement()
+  const snap = useSyncExternalStore(subscribe, getSnapshot)
+
+  const items: { type: PlaceableType; label: string }[] = [
+    { type: "lightning_rod", label: "ROD" },
+    { type: "fabrication_unit", label: "FAB" },
+  ]
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        right: "16px",
+        top: "50%",
+        transform: "translateY(-50%)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+        pointerEvents: "auto",
+      }}
+    >
+      {items.map(({ type, label }) => {
+        const isActive = active === type
+        const costs = BUILDING_COSTS[type!]
+        const canAfford = costs.every(c => snap.resources[c.type] >= c.amount)
+
+        return (
+          <button
+            key={type}
+            onClick={() => setActivePlacement(isActive ? null : type)}
+            title={costs.map(c => `${c.amount} ${c.type}`).join(", ")}
+            style={{
+              background: isActive ? "rgba(0,255,170,0.2)" : "rgba(0,0,0,0.7)",
+              color: canAfford ? "#00ffaa" : "#00ffaa44",
+              border: isActive ? "2px solid #00ffaa" : "1px solid #00ffaa44",
+              borderRadius: "6px",
+              padding: "10px 8px",
+              fontSize: "11px",
+              fontFamily: "'Courier New', monospace",
+              cursor: canAfford ? "pointer" : "default",
+              minWidth: "50px",
+              textAlign: "center",
+              letterSpacing: "0.1em",
+            }}
+          >
+            {label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function RepairPanel({ selectedUnit }: { selectedUnit: Entity }) {
+  const brokenComps = selectedUnit.unit.components.filter(c => !c.functional)
+  if (brokenComps.length === 0) return null
+
+  // Find a nearby unit with arms to be the repairer
+  const allUnits = Array.from(units)
+  const repairer = allUnits.find(u => {
+    if (u.id === selectedUnit.id) return false
+    if (u.faction !== "player") return false
+    if (!u.unit.components.some(c => c.name === "arms" && c.functional)) return false
+    const dx = u.worldPosition.x - selectedUnit.worldPosition.x
+    const dz = u.worldPosition.z - selectedUnit.worldPosition.z
+    return Math.sqrt(dx * dx + dz * dz) < 3.0
+  })
+
+  if (!repairer) return null
+
+  return (
+    <div style={{ marginTop: "8px", borderTop: "1px solid #00ffaa22", paddingTop: "6px" }}>
+      <div style={{ fontSize: "11px", color: "#00ffaa88", marginBottom: "4px" }}>
+        REPAIR ({repairer.unit.displayName} nearby)
+      </div>
+      {brokenComps.map((comp, i) => (
+        <button
+          key={i}
+          onClick={() => startRepair(repairer, selectedUnit, comp.name)}
+          style={{
+            display: "block",
+            width: "100%",
+            textAlign: "left",
+            background: "rgba(255,68,68,0.1)",
+            color: "#ff8866",
+            border: "1px solid #ff444444",
+            borderRadius: "4px",
+            padding: "4px 8px",
+            fontSize: "11px",
+            fontFamily: "'Courier New', monospace",
+            cursor: "pointer",
+            marginBottom: "3px",
+          }}
+        >
+          Fix {comp.name.replace(/_/g, " ")}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function FabricationPanel() {
+  const snap = useSyncExternalStore(subscribe, getSnapshot)
+  const [expanded, setExpanded] = useState(false)
+
+  // Find a powered fabrication unit
+  const fabricator = Array.from(buildings).find(
+    b => b.building.type === "fabrication_unit" && b.building.powered && b.building.operational
+  )
+
+  if (!fabricator) return null
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        bottom: "16px",
+        left: "250px",
+        background: "rgba(0, 0, 0, 0.8)",
+        border: "1px solid #aa884444",
+        borderRadius: "8px",
+        padding: "10px 14px",
+        fontSize: "12px",
+        pointerEvents: "auto",
+        minWidth: "180px",
+      }}
+    >
+      <div
+        onClick={() => setExpanded(!expanded)}
+        style={{ cursor: "pointer", color: "#aa8844", fontWeight: "bold", marginBottom: "4px" }}
+      >
+        FABRICATOR {expanded ? "[-]" : "[+]"}
+      </div>
+
+      {/* Active jobs */}
+      {snap.fabricationJobs.length > 0 && (
+        <div style={{ color: "#00ffaa88", fontSize: "11px", marginBottom: "4px" }}>
+          {snap.fabricationJobs.map((job, i) => (
+            <div key={i}>
+              {job.recipe.name}: {job.ticksRemaining}t remaining
+            </div>
+          ))}
+        </div>
+      )}
+
+      {expanded && (
+        <div style={{ marginTop: "4px" }}>
+          {RECIPES.map((recipe) => {
+            const canAfford = recipe.costs.every(c => snap.resources[c.type] >= c.amount)
+            return (
+              <button
+                key={recipe.name}
+                onClick={() => startFabrication(fabricator, recipe.name)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  textAlign: "left",
+                  background: canAfford ? "rgba(170,136,68,0.1)" : "transparent",
+                  color: canAfford ? "#aa8844" : "#aa884444",
+                  border: "1px solid #aa884433",
+                  borderRadius: "4px",
+                  padding: "4px 8px",
+                  fontSize: "11px",
+                  fontFamily: "'Courier New', monospace",
+                  cursor: canAfford ? "pointer" : "default",
+                  marginBottom: "3px",
+                }}
+                title={recipe.costs.map(c => `${c.amount} ${c.type}`).join(", ")}
+              >
+                {recipe.name} ({recipe.buildTime}t)
+              </button>
+            )
+          })}
+        </div>
       )}
     </div>
   )
@@ -59,44 +249,53 @@ export function GameUI() {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          padding: "12px 16px",
+          padding: "8px 12px",
           background:
             "linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%)",
           pointerEvents: "auto",
+          flexWrap: "wrap",
+          gap: "4px 0",
         }}
       >
-        <div style={{ display: "flex", gap: "20px", fontSize: "14px" }}>
+        <div style={{ display: "flex", gap: "16px", fontSize: "13px", alignItems: "center" }}>
           <span>UNITS: {snap.unitCount}</span>
-          <span>BUILDINGS: {buildingCount}</span>
-          <span>FRAGMENTS: {fragmentCount}</span>
-          <span>TICK: {snap.tick}</span>
+          <span>BLDG: {buildingCount}</span>
+          {snap.enemyCount > 0 && (
+            <span style={{ color: "#ff4444" }}>HOSTILE: {snap.enemyCount}</span>
+          )}
+          <span>FRAG: {fragmentCount}</span>
         </div>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          <button
-            onClick={() => setGameSpeed(0.5)}
-            style={speedButtonStyle(snap.gameSpeed === 0.5)}
-          >
-            0.5x
-          </button>
-          <button
-            onClick={() => setGameSpeed(1)}
-            style={speedButtonStyle(snap.gameSpeed === 1)}
-          >
-            1x
-          </button>
-          <button
-            onClick={() => setGameSpeed(2)}
-            style={speedButtonStyle(snap.gameSpeed === 2)}
-          >
-            2x
-          </button>
-          <button
-            onClick={togglePause}
-            style={speedButtonStyle(snap.paused)}
-          >
+
+        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+          <button onClick={() => setGameSpeed(0.5)} style={speedButtonStyle(snap.gameSpeed === 0.5)}>0.5x</button>
+          <button onClick={() => setGameSpeed(1)} style={speedButtonStyle(snap.gameSpeed === 1)}>1x</button>
+          <button onClick={() => setGameSpeed(2)} style={speedButtonStyle(snap.gameSpeed === 2)}>2x</button>
+          <button onClick={togglePause} style={speedButtonStyle(snap.paused)}>
             {snap.paused ? "PLAY" : "PAUSE"}
           </button>
         </div>
+      </div>
+
+      {/* Resource bar */}
+      <div
+        style={{
+          display: "flex",
+          gap: "16px",
+          padding: "4px 12px 8px",
+          fontSize: "11px",
+          color: "#00ffaa99",
+          pointerEvents: "auto",
+        }}
+      >
+        <span title="Scrap Metal">SCRAP: {snap.resources.scrapMetal}</span>
+        <span title="Electronic Waste">E-WASTE: {snap.resources.eWaste}</span>
+        <span title="Intact Components">PARTS: {snap.resources.intactComponents}</span>
+        <span style={{ color: stormColor(snap.power.stormIntensity) }} title="Storm Intensity">
+          STORM: {(snap.power.stormIntensity * 100).toFixed(0)}%
+        </span>
+        <span title="Power Generation / Demand">
+          PWR: {snap.power.totalGeneration.toFixed(0)}/{snap.power.totalDemand.toFixed(0)}
+        </span>
       </div>
 
       {/* Selected unit info */}
@@ -116,26 +315,21 @@ export function GameUI() {
             pointerEvents: "auto",
           }}
         >
-          <div
-            style={{
-              fontSize: "15px",
-              fontWeight: "bold",
-              marginBottom: "4px",
-            }}
-          >
+          <div style={{ fontSize: "15px", fontWeight: "bold", marginBottom: "4px" }}>
             {selectedUnit.unit.displayName}
           </div>
           <div style={{ color: "#00ffaa88", fontSize: "11px", marginBottom: "6px" }}>
             {selectedUnit.unit.type.replace(/_/g, " ").toUpperCase()}
+            {selectedUnit.faction !== "player" && (
+              <span style={{ color: "#ff4444", marginLeft: "8px" }}>HOSTILE</span>
+            )}
           </div>
-          <div>Speed: {selectedUnit.unit.speed}</div>
-          <div>Fragment: {selectedUnit.mapFragment.fragmentId}</div>
+          <div>Speed: {selectedUnit.unit.speed.toFixed(1)}</div>
           <div>
             Pos: ({selectedUnit.worldPosition.x.toFixed(1)},{" "}
             {selectedUnit.worldPosition.z.toFixed(1)})
           </div>
 
-          {/* Components */}
           <div
             style={{
               marginTop: "8px",
@@ -151,15 +345,40 @@ export function GameUI() {
             ))}
           </div>
 
-          <div
-            style={{
-              fontSize: "11px",
-              color: "#00ffaa88",
-              marginTop: "8px",
-            }}
-          >
-            Click to select &bull; Right-click to move
+          {selectedUnit.faction === "player" && (
+            <RepairPanel selectedUnit={selectedUnit} />
+          )}
+
+          <div style={{ fontSize: "11px", color: "#00ffaa88", marginTop: "8px" }}>
+            Tap to select &bull; Tap ground to move
           </div>
+        </div>
+      )}
+
+      {/* Combat notifications */}
+      {snap.combatEvents.length > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            top: "80px",
+            right: "80px",
+            background: "rgba(40, 0, 0, 0.85)",
+            border: "1px solid #ff444466",
+            borderRadius: "8px",
+            padding: "8px 14px",
+            fontSize: "11px",
+            color: "#ff6644",
+            maxWidth: "220px",
+            pointerEvents: "none",
+          }}
+        >
+          {snap.combatEvents.slice(0, 3).map((e, i) => (
+            <div key={i}>
+              {e.targetDestroyed
+                ? `${e.targetId} DESTROYED`
+                : `${e.targetId}: ${e.componentDamaged} damaged`}
+            </div>
+          ))}
         </div>
       )}
 
@@ -177,17 +396,28 @@ export function GameUI() {
             padding: "20px 32px",
             fontSize: "18px",
             textAlign: "center",
-            animation: "fadeIn 0.5s ease-out",
           }}
         >
           MAP FRAGMENTS MERGED
         </div>
       )}
 
-      {/* Minimap (bottom-right) */}
+      {/* Build toolbar */}
+      <BuildToolbar />
+
+      {/* Fabrication panel */}
+      <FabricationPanel />
+
+      {/* Minimap */}
       <Minimap />
     </div>
   )
+}
+
+function stormColor(intensity: number): string {
+  if (intensity > 1.1) return "#ffaa00"
+  if (intensity > 0.8) return "#00ffaa"
+  return "#00ffaa66"
 }
 
 function Minimap() {
@@ -216,7 +446,6 @@ function Minimap() {
           ctx.fillStyle = "#000"
           ctx.fillRect(0, 0, 120, 120)
 
-          // Draw buildings as squares
           ctx.fillStyle = "#aa8844"
           for (const entity of buildings) {
             const x = 60 + (entity.worldPosition.x / WORLD_HALF) * 50
@@ -224,9 +453,9 @@ function Minimap() {
             ctx.fillRect(x - 2, y - 2, 5, 5)
           }
 
-          // Draw units as dots
-          ctx.fillStyle = "#ffaa00"
           for (const entity of units) {
+            const isEnemy = entity.faction !== "player"
+            ctx.fillStyle = isEnemy ? "#ff3333" : "#ffaa00"
             const x = 60 + (entity.worldPosition.x / WORLD_HALF) * 50
             const y = 60 + (entity.worldPosition.z / WORLD_HALF) * 50
             ctx.fillRect(x - 1, y - 1, 3, 3)

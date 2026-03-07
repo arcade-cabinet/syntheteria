@@ -119,7 +119,9 @@ function BuildingMesh({ entity }: { entity: Entity }) {
       )
     }
     if (ringRef.current) {
-      ringRef.current.visible = entity.building.selected
+      // Fabrication units are also units — use unit.selected if available
+      const selected = "unit" in entity ? entity.unit.selected : entity.building.selected
+      ringRef.current.visible = selected
     }
   })
 
@@ -224,9 +226,11 @@ function GhostBuilding() {
 export function UnitRenderer() {
   return (
     <>
-      {Array.from(units).map((entity) => (
-        <UnitMesh key={entity.id} entity={entity} />
-      ))}
+      {Array.from(units)
+        .filter((entity) => entity.unit.type !== "fabrication_unit")
+        .map((entity) => (
+          <UnitMesh key={entity.id} entity={entity} />
+        ))}
       {Array.from(buildings).map((entity) => (
         <BuildingMesh key={entity.id} entity={entity} />
       ))}

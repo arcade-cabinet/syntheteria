@@ -1,17 +1,21 @@
 /**
- * Procedural city layout generator.
+ * Procedural city layout generator — circuit-board labyrinth style.
  *
- * Generates a somewhat labyrinthine industrial city with:
- * - Large factory buildings and warehouses
- * - Narrow streets and alleyways between them
- * - Open plazas and junctions
- * - Rubble and collapsed sections that partially block paths
+ * Instead of isolated buildings, the city is composed of elongated
+ * interconnected walls forming a labyrinth. The layout resembles
+ * a giant circuit board when viewed from above: long corridors,
+ * right-angle turns, T-junctions, and dead ends.
+ *
+ * Building types now represent wall segments and nodes:
+ * - "conduit" — long narrow wall segments (traces on a circuit board)
+ * - "node" — wider junction blocks where corridors meet (IC pads)
+ * - "tower" — tall antenna/pylon structures at key junctions
+ * - "ruin" — broken/collapsed wall segments with gaps
+ * - "wall" — perimeter walls enclosing the city
  *
  * The layout is deterministic (seeded) so navmesh and rendering agree.
  * Buildings are stored as axis-aligned rectangles in world space.
  */
-
-// City layout doesn't need WORLD_HALF — it uses its own bounds
 
 // Seeded PRNG for deterministic city generation
 function seededRandom(seed: number): () => number {
@@ -32,21 +36,24 @@ export interface CityBuilding {
   /** Building height for rendering */
   height: number
   /** Type affects visual appearance */
-  type: "factory" | "warehouse" | "tower" | "ruin" | "wall"
+  type: "conduit" | "node" | "tower" | "ruin" | "wall"
 }
 
 let cachedBuildings: CityBuilding[] | null = null
 
 /**
- * City area: the starting area is an industrial district roughly
- * centered around where the player spawns (near x=5..20, z=10..18).
- * We generate the city in a region around (-30,-30) to (50,50) world coords,
- * leaving open terrain beyond for future areas.
+ * City area bounds — the labyrinth fills this region.
+ * Open terrain beyond for future areas (coast, campus, etc.)
  */
 const CITY_MIN_X = -30
 const CITY_MAX_X = 50
 const CITY_MIN_Z = -20
 const CITY_MAX_Z = 50
+
+/** Check if a point is inside the city bounds */
+export function isInsideCityBounds(x: number, z: number): boolean {
+  return x >= CITY_MIN_X && x <= CITY_MAX_X && z >= CITY_MIN_Z && z <= CITY_MAX_Z
+}
 
 export function getCityBuildings(): CityBuilding[] {
   if (cachedBuildings) return cachedBuildings
@@ -54,160 +61,279 @@ export function getCityBuildings(): CityBuilding[] {
   const rng = seededRandom(42)
   const buildings: CityBuilding[] = []
 
-  // --- Grid-based block layout ---
-  // Streets run roughly every 8-12 units, creating city blocks.
-  // Within each block, place 1-3 buildings with gaps (alleys).
+  // --- Circuit-board labyrinth generation ---
+  // We generate a maze-like structure using a grid of corridors.
+  // Primary corridors run N-S and E-W at regular intervals.
+  // Secondary corridors connect them, creating the labyrinth.
+  // Junctions become "nodes" (wider blocks like IC pads).
 
-  const BLOCK_SIZE = 10
-  const STREET_WIDTH = 3
+  const CORRIDOR_SPACING = 8  // distance between primary corridors
+  const WALL_THICKNESS = 0.6  // half-width of corridor walls
+  const WALL_HEIGHT_MIN = 3
+  const WALL_HEIGHT_MAX = 5
+  const NODE_SIZE = 1.5       // half-extent of junction nodes
 
-  for (let bz = CITY_MIN_Z; bz < CITY_MAX_Z; bz += BLOCK_SIZE + STREET_WIDTH) {
-    for (let bx = CITY_MIN_X; bx < CITY_MAX_X; bx += BLOCK_SIZE + STREET_WIDTH) {
-      // Skip some blocks for plazas / open areas
-      const skipChance = rng()
-      if (skipChance < 0.15) continue
+  // Spawn area clearance (5,10) to (20,18) — keep navigable
+  const isSpawnArea = (x: number, z: number) =>
+    x > 2 && x < 23 && z > 7 && z < 21
 
-      // Keep a clear area around spawn points (5,10) to (20,18)
-      const blockCenterX = bx + BLOCK_SIZE / 2
-      const blockCenterZ = bz + BLOCK_SIZE / 2
-      if (blockCenterX > 2 && blockCenterX < 23 && blockCenterZ > 7 && blockCenterZ < 21) {
-        // Spawn area — place smaller/fewer buildings
-        if (rng() < 0.6) continue
-        const hw = 1.5 + rng() * 1.5
-        const hd = 1.5 + rng() * 1.5
-        const h = 1.5 + rng() * 2
-        buildings.push({
-          x: blockCenterX + (rng() - 0.5) * 3,
-          z: blockCenterZ + (rng() - 0.5) * 3,
-          halfW: hw,
-          halfD: hd,
-          height: h,
-          type: rng() < 0.5 ? "ruin" : "warehouse",
-        })
+  // --- Primary N-S corridors (vertical traces) ---
+  for (let x = CITY_MIN_X + 4; x < CITY_MAX_X - 4; x += CORRIDOR_SPACING) {
+    const xOff = (rng() - 0.5) * 1.5 // slight offset for organic feel
+    const corridorX = x + xOff
+
+    // Break corridor into segments between cross-corridors
+    for (let z = CITY_MIN_Z + 4; z < CITY_MAX_Z - 8; z += CORRIDOR_SPACING) {
+      const zOff = (rng() - 0.5) * 1.0
+      const segStart = z + zOff
+      const segEnd = segStart + CORRIDOR_SPACING - 1
+
+      // Skip segments that overlap spawn area
+      if (isSpawnArea(corridorX, (segStart + segEnd) / 2)) {
+        // Place a shorter ruin segment at the edge instead
+        if (rng() < 0.4) {
+          const ruinLen = 1.5 + rng() * 2
+          buildings.push({
+            x: corridorX,
+            z: segStart + ruinLen / 2,
+            halfW: WALL_THICKNESS,
+            halfD: ruinLen / 2,
+            height: 1.5 + rng() * 1.5,
+            type: "ruin",
+          })
+        }
         continue
       }
 
-      // Normal city block: fill with buildings
-      const numBuildings = rng() < 0.3 ? 1 : rng() < 0.7 ? 2 : 3
-      const subDivisions = subdivideBlock(bx, bz, BLOCK_SIZE, numBuildings, rng)
+      // Randomly break some segments (creates passages)
+      if (rng() < 0.15) continue
 
-      for (const sub of subDivisions) {
-        // Inset from block edge for alley space
-        const inset = 0.3 + rng() * 0.5
-        const hw = Math.max(1.2, sub.w / 2 - inset)
-        const hd = Math.max(1.2, sub.d / 2 - inset)
+      // Sometimes split into two segments with a gap (doorway)
+      if (rng() < 0.25) {
+        const gapPos = segStart + (segEnd - segStart) * (0.3 + rng() * 0.4)
+        const gapSize = 1.5 + rng() * 1.5
+        const seg1Len = gapPos - gapSize / 2 - segStart
+        const seg2Len = segEnd - (gapPos + gapSize / 2)
+        const h = WALL_HEIGHT_MIN + rng() * (WALL_HEIGHT_MAX - WALL_HEIGHT_MIN)
 
-        const typeRoll = rng()
-        let type: CityBuilding["type"]
-        let height: number
-
-        if (typeRoll < 0.25) {
-          type = "factory"
-          height = 3 + rng() * 4
-        } else if (typeRoll < 0.5) {
-          type = "warehouse"
-          height = 2 + rng() * 3
-        } else if (typeRoll < 0.65) {
-          type = "tower"
-          height = 5 + rng() * 6
-        } else if (typeRoll < 0.85) {
-          type = "ruin"
-          height = 1 + rng() * 3
-        } else {
-          type = "wall"
-          height = 2 + rng() * 2
+        if (seg1Len > 1) {
+          buildings.push({
+            x: corridorX,
+            z: segStart + seg1Len / 2,
+            halfW: WALL_THICKNESS,
+            halfD: seg1Len / 2,
+            height: h,
+            type: "conduit",
+          })
         }
-
-        buildings.push({
-          x: sub.cx,
-          z: sub.cz,
-          halfW: hw,
-          halfD: hd,
-          height,
-          type,
-        })
+        if (seg2Len > 1) {
+          buildings.push({
+            x: corridorX,
+            z: segEnd - seg2Len / 2,
+            halfW: WALL_THICKNESS,
+            halfD: seg2Len / 2,
+            height: h,
+            type: "conduit",
+          })
+        }
+        continue
       }
+
+      const segLen = segEnd - segStart
+      const height = WALL_HEIGHT_MIN + rng() * (WALL_HEIGHT_MAX - WALL_HEIGHT_MIN)
+      const isRuin = rng() < 0.12
+
+      buildings.push({
+        x: corridorX,
+        z: (segStart + segEnd) / 2,
+        halfW: WALL_THICKNESS,
+        halfD: segLen / 2,
+        height: isRuin ? height * 0.5 : height,
+        type: isRuin ? "ruin" : "conduit",
+      })
     }
   }
 
-  // Add some outer perimeter walls / large ruins at edges
+  // --- Primary E-W corridors (horizontal traces) ---
+  for (let z = CITY_MIN_Z + 4; z < CITY_MAX_Z - 4; z += CORRIDOR_SPACING) {
+    const zOff = (rng() - 0.5) * 1.5
+    const corridorZ = z + zOff
+
+    for (let x = CITY_MIN_X + 4; x < CITY_MAX_X - 8; x += CORRIDOR_SPACING) {
+      const xOff = (rng() - 0.5) * 1.0
+      const segStart = x + xOff
+      const segEnd = segStart + CORRIDOR_SPACING - 1
+
+      if (isSpawnArea((segStart + segEnd) / 2, corridorZ)) {
+        if (rng() < 0.4) {
+          const ruinLen = 1.5 + rng() * 2
+          buildings.push({
+            x: segStart + ruinLen / 2,
+            z: corridorZ,
+            halfW: ruinLen / 2,
+            halfD: WALL_THICKNESS,
+            height: 1.5 + rng() * 1.5,
+            type: "ruin",
+          })
+        }
+        continue
+      }
+
+      if (rng() < 0.15) continue
+
+      if (rng() < 0.25) {
+        const gapPos = segStart + (segEnd - segStart) * (0.3 + rng() * 0.4)
+        const gapSize = 1.5 + rng() * 1.5
+        const seg1Len = gapPos - gapSize / 2 - segStart
+        const seg2Len = segEnd - (gapPos + gapSize / 2)
+        const h = WALL_HEIGHT_MIN + rng() * (WALL_HEIGHT_MAX - WALL_HEIGHT_MIN)
+
+        if (seg1Len > 1) {
+          buildings.push({
+            x: segStart + seg1Len / 2,
+            z: corridorZ,
+            halfW: seg1Len / 2,
+            halfD: WALL_THICKNESS,
+            height: h,
+            type: "conduit",
+          })
+        }
+        if (seg2Len > 1) {
+          buildings.push({
+            x: segEnd - seg2Len / 2,
+            z: corridorZ,
+            halfW: seg2Len / 2,
+            halfD: WALL_THICKNESS,
+            height: h,
+            type: "conduit",
+          })
+        }
+        continue
+      }
+
+      const segLen = segEnd - segStart
+      const height = WALL_HEIGHT_MIN + rng() * (WALL_HEIGHT_MAX - WALL_HEIGHT_MIN)
+      const isRuin = rng() < 0.12
+
+      buildings.push({
+        x: (segStart + segEnd) / 2,
+        z: corridorZ,
+        halfW: segLen / 2,
+        halfD: WALL_THICKNESS,
+        height: isRuin ? height * 0.5 : height,
+        type: isRuin ? "ruin" : "conduit",
+      })
+    }
+  }
+
+  // --- Junction nodes (IC pads) at corridor intersections ---
+  for (let x = CITY_MIN_X + 4; x < CITY_MAX_X - 4; x += CORRIDOR_SPACING) {
+    for (let z = CITY_MIN_Z + 4; z < CITY_MAX_Z - 4; z += CORRIDOR_SPACING) {
+      if (isSpawnArea(x, z)) continue
+      if (rng() < 0.25) continue // skip some junctions for variety
+
+      const isTower = rng() < 0.15
+      const nodeHeight = isTower ? 6 + rng() * 5 : WALL_HEIGHT_MIN + rng() * 2
+
+      buildings.push({
+        x: x + (rng() - 0.5) * 1.5,
+        z: z + (rng() - 0.5) * 1.5,
+        halfW: isTower ? 0.8 : NODE_SIZE,
+        halfD: isTower ? 0.8 : NODE_SIZE,
+        height: nodeHeight,
+        type: isTower ? "tower" : "node",
+      })
+    }
+  }
+
+  // --- Secondary diagonal/offset connectors (makes it more labyrinthine) ---
+  for (let x = CITY_MIN_X + 8; x < CITY_MAX_X - 8; x += CORRIDOR_SPACING * 2) {
+    for (let z = CITY_MIN_Z + 8; z < CITY_MAX_Z - 8; z += CORRIDOR_SPACING * 2) {
+      if (isSpawnArea(x + CORRIDOR_SPACING / 2, z + CORRIDOR_SPACING / 2)) continue
+      if (rng() < 0.5) continue
+
+      const offX = CORRIDOR_SPACING / 2 + (rng() - 0.5) * 2
+      const offZ = CORRIDOR_SPACING / 2 + (rng() - 0.5) * 2
+      const cx = x + offX
+      const cz = z + offZ
+
+      // Short connecting wall segment
+      const isHorizontal = rng() < 0.5
+      const len = 2 + rng() * 3
+      const h = WALL_HEIGHT_MIN + rng() * 1.5
+
+      buildings.push({
+        x: cx,
+        z: cz,
+        halfW: isHorizontal ? len / 2 : WALL_THICKNESS,
+        halfD: isHorizontal ? WALL_THICKNESS : len / 2,
+        height: h,
+        type: rng() < 0.2 ? "ruin" : "conduit",
+      })
+    }
+  }
+
+  // --- Perimeter walls ---
   addPerimeterStructures(buildings, rng)
 
   cachedBuildings = buildings
   return buildings
 }
 
-function subdivideBlock(
-  bx: number,
-  bz: number,
-  size: number,
-  count: number,
-  rng: () => number
-): { cx: number; cz: number; w: number; d: number }[] {
-  if (count === 1) {
-    return [{ cx: bx + size / 2, cz: bz + size / 2, w: size, d: size }]
-  }
-  if (count === 2) {
-    // Split horizontally or vertically
-    if (rng() < 0.5) {
-      const split = 0.35 + rng() * 0.3
-      const w1 = size * split
-      const w2 = size * (1 - split)
-      return [
-        { cx: bx + w1 / 2, cz: bz + size / 2, w: w1 - 0.5, d: size },
-        { cx: bx + w1 + w2 / 2, cz: bz + size / 2, w: w2 - 0.5, d: size },
-      ]
-    } else {
-      const split = 0.35 + rng() * 0.3
-      const d1 = size * split
-      const d2 = size * (1 - split)
-      return [
-        { cx: bx + size / 2, cz: bz + d1 / 2, w: size, d: d1 - 0.5 },
-        { cx: bx + size / 2, cz: bz + d1 + d2 / 2, w: size, d: d2 - 0.5 },
-      ]
-    }
-  }
-  // 3 buildings: split once, then split the larger half
-  const split = 0.45 + rng() * 0.1
-  if (rng() < 0.5) {
-    const w1 = size * split
-    const w2 = size * (1 - split)
-    const subSplit = 0.4 + rng() * 0.2
-    const d1 = size * subSplit
-    const d2 = size * (1 - subSplit)
-    return [
-      { cx: bx + w1 / 2, cz: bz + size / 2, w: w1 - 0.5, d: size },
-      { cx: bx + w1 + w2 / 2, cz: bz + d1 / 2, w: w2 - 0.5, d: d1 - 0.5 },
-      { cx: bx + w1 + w2 / 2, cz: bz + d1 + d2 / 2, w: w2 - 0.5, d: d2 - 0.5 },
-    ]
-  } else {
-    const d1 = size * split
-    const d2 = size * (1 - split)
-    const subSplit = 0.4 + rng() * 0.2
-    const w1 = size * subSplit
-    const w2 = size * (1 - subSplit)
-    return [
-      { cx: bx + size / 2, cz: bz + d1 / 2, w: size, d: d1 - 0.5 },
-      { cx: bx + w1 / 2, cz: bz + d1 + d2 / 2, w: w1 - 0.5, d: d2 - 0.5 },
-      { cx: bx + w1 + w2 / 2, cz: bz + d1 + d2 / 2, w: w2 - 0.5, d: d2 - 0.5 },
-    ]
-  }
-}
-
 function addPerimeterStructures(buildings: CityBuilding[], rng: () => number) {
-  // Large wall segments along city edges
-  const segments = [
-    { x: CITY_MIN_X - 2, z: 10, halfW: 1.5, halfD: 15, type: "wall" as const },
-    { x: CITY_MAX_X + 2, z: 10, halfW: 1.5, halfD: 15, type: "wall" as const },
-    { x: 10, z: CITY_MIN_Z - 2, halfW: 15, halfD: 1.5, type: "wall" as const },
-    { x: 10, z: CITY_MAX_Z + 2, halfW: 15, halfD: 1.5, type: "wall" as const },
-  ]
+  // Segmented perimeter walls that look like PCB edge traces
+  const SEGMENT_LEN = 8
+  const GAP_CHANCE = 0.2
 
-  for (const seg of segments) {
-    if (rng() < 0.3) continue // Some perimeter sections are destroyed
+  // North wall
+  for (let x = CITY_MIN_X; x < CITY_MAX_X; x += SEGMENT_LEN) {
+    if (rng() < GAP_CHANCE) continue
     buildings.push({
-      ...seg,
+      x: x + SEGMENT_LEN / 2,
+      z: CITY_MAX_Z + 2,
+      halfW: SEGMENT_LEN / 2 - 0.3,
+      halfD: 1.0,
       height: 3 + rng() * 2,
+      type: "wall",
+    })
+  }
+
+  // South wall
+  for (let x = CITY_MIN_X; x < CITY_MAX_X; x += SEGMENT_LEN) {
+    if (rng() < GAP_CHANCE) continue
+    buildings.push({
+      x: x + SEGMENT_LEN / 2,
+      z: CITY_MIN_Z - 2,
+      halfW: SEGMENT_LEN / 2 - 0.3,
+      halfD: 1.0,
+      height: 3 + rng() * 2,
+      type: "wall",
+    })
+  }
+
+  // West wall
+  for (let z = CITY_MIN_Z; z < CITY_MAX_Z; z += SEGMENT_LEN) {
+    if (rng() < GAP_CHANCE) continue
+    buildings.push({
+      x: CITY_MIN_X - 2,
+      z: z + SEGMENT_LEN / 2,
+      halfW: 1.0,
+      halfD: SEGMENT_LEN / 2 - 0.3,
+      height: 3 + rng() * 2,
+      type: "wall",
+    })
+  }
+
+  // East wall
+  for (let z = CITY_MIN_Z; z < CITY_MAX_Z; z += SEGMENT_LEN) {
+    if (rng() < GAP_CHANCE) continue
+    buildings.push({
+      x: CITY_MAX_X + 2,
+      z: z + SEGMENT_LEN / 2,
+      halfW: 1.0,
+      halfD: SEGMENT_LEN / 2 - 0.3,
+      height: 3 + rng() * 2,
+      type: "wall",
     })
   }
 }

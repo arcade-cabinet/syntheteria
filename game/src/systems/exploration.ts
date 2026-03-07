@@ -5,6 +5,7 @@
  */
 import { units } from "../ecs/world"
 import { getFragment, setFogAt, type FogState } from "../ecs/terrain"
+import { hasCamera } from "../ecs/types"
 
 const VISION_RADIUS = 6 // world units around the unit
 
@@ -15,7 +16,7 @@ export function explorationSystem() {
 
     const wx = entity.worldPosition.x
     const wz = entity.worldPosition.z
-    const fogType: FogState = entity.unit.hasCamerasSensor ? 2 : 1
+    const fogType: FogState = hasCamera(entity) ? 2 : 1
 
     // Reveal cells within vision radius (circle)
     const r = Math.ceil(VISION_RADIUS)

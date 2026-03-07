@@ -20,17 +20,19 @@ import { subscribe, getSnapshot } from "../ecs/gameState"
 const MESH_STEP = 1
 const VERTS_PER_AXIS = Math.floor(WORLD_SIZE / MESH_STEP) + 1
 
-// Color palette
-const COLOR_WATER = new THREE.Color(0x1a3a4a)
-const COLOR_ROUGH = new THREE.Color(0x4a6a3a)
-const COLOR_NORMAL = new THREE.Color(0x6a8a5a)
-const COLOR_STEEP = new THREE.Color(0x8a7a5a)
+// Color palette — industrial wasteland tones
+const COLOR_WATER = new THREE.Color(0x0a2a35)
+const COLOR_MUD = new THREE.Color(0x3a3520)
+const COLOR_DIRT = new THREE.Color(0x4a4a38)
+const COLOR_GROUND = new THREE.Color(0x555540)
+const COLOR_RUBBLE = new THREE.Color(0x6a6050)
 
 function getTerrainColor(rawHeight: number): THREE.Color {
   if (rawHeight < 0.15) return COLOR_WATER
-  if (rawHeight < 0.3) return COLOR_ROUGH
-  if (rawHeight < 0.7) return COLOR_NORMAL
-  return COLOR_STEEP
+  if (rawHeight < 0.22) return COLOR_MUD
+  if (rawHeight < 0.4) return COLOR_DIRT
+  if (rawHeight < 0.7) return COLOR_GROUND
+  return COLOR_RUBBLE
 }
 
 // Shared geometry data (positions, indices, normals, colors) — built once

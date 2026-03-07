@@ -3,22 +3,31 @@
  */
 import { world } from "./world"
 import { createFragment, getFragment, getTerrainHeight } from "./terrain"
-import type { Entity } from "./types"
+import type { Entity, UnitComponent } from "./types"
 
 let nextEntityId = 0
 
 /**
- * Spawn a robot unit at a world position.
- * Creates a new fragment if no fragmentId is provided.
+ * Spawn a maintenance bot at a world position.
+ * Components determine what the bot can do (camera for vision, arms for repair, etc.)
  */
 export function spawnUnit(options: {
   x: number
   z: number
   fragmentId?: string
-  type?: string
-  hasCamera?: boolean
+  type?: "maintenance_bot" | "utility_drone"
+  displayName?: string
+  speed?: number
+  components: UnitComponent[]
 }): Entity {
-  const { x, z, type = "maintenance_bot", hasCamera = true } = options
+  const {
+    x,
+    z,
+    type = "maintenance_bot",
+    displayName = "Maintenance Bot",
+    speed = 3,
+    components,
+  } = options
 
   // Create or reuse fragment
   let fragment
@@ -38,15 +47,48 @@ export function spawnUnit(options: {
     mapFragment: { fragmentId: fragment.id },
     unit: {
       type,
-      health: 100,
-      maxHealth: 100,
-      speed: 5, // world units per second
+      displayName,
+      speed,
       selected: false,
-      hasCamerasSensor: hasCamera,
+      components,
     },
-  } as Entity)
+    navigation: { path: [], pathIndex: 0, moving: false },
+  } as Partial<Entity> as Entity)
 
   return entity
+}
+
+/**
+ * Spawn a fabrication unit (stationary building) at a world position.
+ */
+export function spawnFabricationUnit(options: {
+  x: number
+  z: number
+  fragmentId: string
+  powered?: boolean
+  components?: UnitComponent[]
+}): Entity {
+  const fragment = getFragment(options.fragmentId)
+  if (!fragment) throw new Error(`Fragment ${options.fragmentId} not found`)
+
+  const y = getTerrainHeight(options.x, options.z)
+
+  return world.add({
+    id: `bldg_${nextEntityId++}`,
+    faction: "player" as const,
+    worldPosition: { x: options.x, y, z: options.z },
+    mapFragment: { fragmentId: options.fragmentId },
+    building: {
+      type: "fabrication_unit",
+      powered: options.powered ?? false,
+      operational: (options.powered ?? false),
+      components: options.components ?? [
+        { name: "power_supply", functional: false, material: "electronic" },
+        { name: "fabrication_arm", functional: true, material: "metal" },
+        { name: "material_hopper", functional: true, material: "metal" },
+      ],
+    },
+  } as Partial<Entity> as Entity)
 }
 
 /**
@@ -67,11 +109,16 @@ export function spawnLightningRod(options: {
     faction: "player" as const,
     worldPosition: { x: options.x, y, z: options.z },
     mapFragment: { fragmentId: options.fragmentId },
-    building: { type: "lightning_rod", powered: true, operational: true },
+    building: {
+      type: "lightning_rod",
+      powered: true,
+      operational: true,
+      components: [],
+    },
     lightningRod: {
       rodCapacity: 10,
       currentOutput: 7,
       protectionRadius: 8,
     },
-  } as Entity)
+  } as Partial<Entity> as Entity)
 }

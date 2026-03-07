@@ -17,26 +17,32 @@ You awaken as an AI consciousness in a void. You connect to broken machines — 
 
 ---
 
-## Engine Decision: Unity vs Godot
+## Engine Decision: Custom (R3F + Three.js + ECS)
 
-### Decision Status: Pending (either viable)
+### Decision Status: Decided — Custom web engine
 
-The 2.5D/3D top-down view with fragmented maps works in both engines.
+Using React Three Fiber, Three.js, and Miniplex ECS. No Unity, no Godot.
 
-| Factor | Godot | Unity |
-|--------|-------|-------|
-| **Agentic development** | Better - text-based scenes AI can read/verify | Worse - binary scene files |
-| **Graphics debugging** | Limited | Excellent (Frame Debugger, PIX, RenderDoc) |
-| **Mobile** | Adequate, less battle-tested | Industry standard |
-| **3D tooling** | Adequate for 2.5D top-down | Mature |
-| **Cost** | Free forever | Free under $200K, then $2,200/seat/year |
-| **CI** | Simple (`--headless`) | Needs license management |
+**Rationale:**
+- **Mobile-first:** Web-native runs on any device with a browser — no app store gatekeeping
+- **AI-assisted development:** All code is text (TypeScript, JSX) — fully readable and verifiable by AI
+- **Fragmented map system:** Custom chunk-based renderer maps directly to the game's core mechanic
+- **Free forever:** No licensing costs at any scale
+- **Iteration speed:** Hot reload, instant deploy, no compile step for logic changes
+- **CI:** Standard web tooling (Vitest, Playwright, GitHub Actions)
+
+**Trade-offs accepted:**
+- Must build more from scratch (no built-in physics, animation, etc.)
+- 3D performance ceiling lower than native engines for extreme scenes
+- Mobile WebGL has device-specific quirks to handle
+
+See: [ARCHITECTURE.md](./docs/technical/ARCHITECTURE.md) for full technical design.
 
 ### Key Insight: Visual Verification Limit
 
 AI-assisted development works well for:
 - Game logic, formulas, data structures
-- Scene structure (in Godot - text-based)
+- Scene structure (all text-based JSX/TypeScript)
 - Unit tests, integration tests
 
 AI-assisted development **cannot** verify:
@@ -48,7 +54,8 @@ AI-assisted development **cannot** verify:
 
 ## Current Design Decisions
 
-- **Platform:** PC and mobile equally
+- **Engine:** Custom — React Three Fiber + Three.js + Miniplex ECS (TypeScript)
+- **Platform:** Mobile-first, also PC
 - **Primary view:** 2.5D/3D top-down with fragmented map exploration
 - **Exploration:** Disconnected map fragments merge when robots find each other
 - **Power:** Lightning rods drawing from perpetual storm
@@ -77,21 +84,21 @@ See OPEN_QUESTIONS.md — the redesign created 11 new questions about specifics.
 
 ---
 
-## Testing Strategy (Either Engine)
+## Testing Strategy
 
 | Layer | Tool | Purpose |
 |-------|------|---------|
-| Unit | GdUnit4 (Godot) / NUnit (Unity) | Component stats, formulas, game logic |
-| Integration | GodotTestDriver / Play Mode Tests | Scene interactions, systems |
-| E2E | Custom bot scripts | Full gameplay loops |
-| CI | gdUnit4-action / GameCI | Automated on every commit |
+| Unit | Vitest | ECS systems, formulas, game logic |
+| Integration | Vitest + @testing-library/react | React components, state bridge |
+| E2E | Playwright | Full gameplay loops in browser |
+| CI | GitHub Actions | Automated on every commit |
 
 ---
 
 ## Next Steps
 
-1. **Choose engine** — either is viable; pick and commit
-2. **Build Phase 1 prototype** — fragmented map system is the key test
+1. **Scaffold project** — Vite + R3F + Miniplex + TypeScript
+2. **Build Phase 1 prototype** — chunk grid, fragment system, void rendering (mobile-first)
 3. **Redesign component data** for the new setting
 4. **Determine art style** — low-poly, pixel art, or clean minimal
 5. **Build vertical slice** — one gameplay loop end-to-end
@@ -100,7 +107,8 @@ See OPEN_QUESTIONS.md — the redesign created 11 new questions about specifics.
 
 ## Resources
 
-- [GdUnit4](https://github.com/MikeSchulze/gdUnit4) - Godot testing
-- [GodotTestDriver](https://github.com/chickensoft-games/GodotTestDriver) - Godot integration testing
-- [Unity Frame Debugger](https://docs.unity3d.com/6000.2/Documentation/Manual/FrameDebugger.html)
-- [Unity Test Framework](https://docs.unity3d.com/Packages/com.unity.test-framework@2.0/manual/index.html)
+- [React Three Fiber](https://r3f.docs.pmnd.rs/) - React renderer for Three.js
+- [Miniplex](https://github.com/hmans/miniplex) - ECS for TypeScript
+- [drei](https://github.com/pmndrs/drei) - R3F helpers and abstractions
+- [Vitest](https://vitest.dev/) - Unit testing
+- [Playwright](https://playwright.dev/) - E2E browser testing

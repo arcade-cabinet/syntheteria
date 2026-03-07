@@ -60,22 +60,39 @@ This is not an abstract UI game — it requires actual world rendering with 2.5D
 
 ---
 
-### Decision Status: Pending
+### Custom Web Engine (React Three Fiber + Three.js + Miniplex ECS)
 
-Both engines can handle the 2.5D/3D top-down view with fragmented maps. The visual direction no longer blocks the engine choice — either engine is viable.
+**Strengths:**
+- Mobile-first web delivery — runs in any browser, no app store
+- All code is text (TypeScript/JSX) — fully AI-readable and verifiable
+- Custom chunk renderer maps directly to the fragmented map mechanic
+- Free forever, no licensing at any scale
+- Vite hot reload for instant iteration
+- Standard web CI tooling (Vitest, Playwright, GitHub Actions)
 
-**Factors still favoring Godot:** Text-based scenes, free forever, simpler CI, better for agentic development
-**Factors still favoring Unity:** More mature 3D tools, better mobile optimization, larger ecosystem
+**Weaknesses:**
+- Must build more systems from scratch (no built-in physics, animation editor)
+- 3D performance ceiling lower than native engines for extreme scenes
+- Mobile WebGL has device-specific quirks
+
+See: [ARCHITECTURE.md](../technical/ARCHITECTURE.md) for full technical design.
+
+---
+
+### Decision Status: Decided — Custom Web Engine
+
+The custom R3F/Three.js/ECS stack was chosen over Unity and Godot for mobile-first delivery, full AI-assisted development compatibility, and direct alignment with the fragmented map system.
 
 ---
 
 ## Platform Strategy
 
-### Both Equally (PC + Mobile)
+### Mobile-First, Also PC
 
-The 2.5D top-down view with touch-friendly controls should work on both:
-- **PC:** Mouse/keyboard, detailed interactions, full screen real estate
-- **Mobile:** Touch controls, simplified interactions, adapted UI layout
+The game is a web app. Touch is the primary input. Desktop mouse/keyboard is an enhancement.
+
+- **Mobile:** Touch controls are the default. UI sized for fingers. 30fps target on mid-range phones.
+- **PC:** Mouse/keyboard adds precision (box select, hotkeys). 60fps target.
 
 ### Design Considerations
 
@@ -134,14 +151,14 @@ Scope:
 
 ---
 
-## Testing Strategy (Either Engine)
+## Testing Strategy
 
 | Layer | Tool | Purpose |
 |-------|------|---------|
-| Unit | GdUnit4 (Godot) / NUnit (Unity) | Component stats, formulas, game logic |
-| Integration | GodotTestDriver / Play Mode Tests | Scene interactions, systems |
-| E2E | Custom bot scripts | Full gameplay loops |
-| CI | gdUnit4-action / GameCI | Automated on every commit |
+| Unit | Vitest | ECS systems, formulas, game logic |
+| Integration | Vitest + @testing-library/react | React components, state bridge |
+| E2E | Playwright | Full gameplay loops in browser |
+| CI | GitHub Actions | Automated on every commit |
 
 ---
 
@@ -149,16 +166,16 @@ Scope:
 
 | Decision | Options | Status |
 |----------|---------|--------|
-| Game engine | Unity / Godot | Pending (either viable) |
+| Game engine | Custom (R3F + Three.js + Miniplex ECS) | **Decided** |
 | Visual style detail | Low-poly / Pixel art / Clean minimal | TBD |
-| Save system | JSON / Binary / SQLite | TBD |
+| Save system | IndexedDB (primary) + localStorage (fallback) | Decided |
 | Multiplayer timing | Post-launch (procedural world) | Deferred |
 
 ---
 
 ## Next Steps
 
-1. **Choose engine** — either is viable; pick and commit
+1. **Scaffold project** — Vite + R3F + Miniplex + TypeScript
 2. **Build Phase 1 prototype** — fragmented map system is the key test
 3. **Iterate based on playtesting** — adjust scope based on what's fun
 4. **Determine visual style detail** — low-poly, pixel art, or clean minimal

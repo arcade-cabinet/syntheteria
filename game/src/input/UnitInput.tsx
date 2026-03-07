@@ -15,6 +15,12 @@ import * as THREE from "three"
 import { units } from "../ecs/world"
 import { findPath } from "../systems/pathfinding"
 import { getFragment } from "../ecs/terrain"
+import {
+  getActivePlacement,
+  updateGhostPosition,
+  confirmPlacement,
+  cancelPlacement,
+} from "../systems/buildingPlacement"
 import type { Entity } from "../ecs/types"
 
 const GROUND_PLANE = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
@@ -92,6 +98,15 @@ export function UnitInput() {
       const point = getWorldPointFromEvent(clientX, clientY, camera, gl.domElement)
       if (!point) return
 
+      // Building placement mode
+      if (getActivePlacement()) {
+        updateGhostPosition(point.x, point.z)
+        if (confirmPlacement()) {
+          // Placed successfully
+        }
+        return
+      }
+
       const unitAtPoint = findUnitAtPoint(point)
       const currentlySelected = getSelectedUnit()
 
@@ -105,7 +120,6 @@ export function UnitInput() {
         // Tapped empty ground with a unit selected — move there
         issueMoveTo(currentlySelected, point.x, point.z)
       }
-      // If nothing selected and tapped empty ground — do nothing
     },
     [camera, gl]
   )
@@ -188,8 +202,26 @@ export function UnitInput() {
       touchStart.current = null
     }
 
+    // Mouse move for ghost building preview
+    const onMouseMove = (e: MouseEvent) => {
+      if (!getActivePlacement()) return
+      const point = getWorldPointFromEvent(e.clientX, e.clientY, camera, gl.domElement)
+      if (point) {
+        updateGhostPosition(point.x, point.z)
+      }
+    }
+
+    // Escape to cancel placement
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && getActivePlacement()) {
+        cancelPlacement()
+      }
+    }
+
     canvas.addEventListener("pointerdown", onPointerDown)
     canvas.addEventListener("contextmenu", onContextMenu)
+    canvas.addEventListener("mousemove", onMouseMove)
+    window.addEventListener("keydown", onKeyDown)
     canvas.addEventListener("touchstart", onTouchStart, { passive: true })
     canvas.addEventListener("touchmove", onTouchMove, { passive: true })
     canvas.addEventListener("touchend", onTouchEnd)
@@ -197,6 +229,8 @@ export function UnitInput() {
     return () => {
       canvas.removeEventListener("pointerdown", onPointerDown)
       canvas.removeEventListener("contextmenu", onContextMenu)
+      canvas.removeEventListener("mousemove", onMouseMove)
+      window.removeEventListener("keydown", onKeyDown)
       canvas.removeEventListener("touchstart", onTouchStart)
       canvas.removeEventListener("touchmove", onTouchMove)
       canvas.removeEventListener("touchend", onTouchEnd)

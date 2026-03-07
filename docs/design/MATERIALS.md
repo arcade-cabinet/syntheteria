@@ -1,404 +1,164 @@
-# Materials and Supply Chain
+# Materials and Resources
 
-This document defines the material resources, processing tiers, and supply chain mechanics for manufacturing in Syntheteria.
+This document defines how resources are gathered, processed, and used in Syntheteria.
 
 ---
 
 ## Overview
 
-The material system is **highly granular** — real-world materials with realistic processing chains. This creates meaningful logistics puzzles and rewards mastery of automation.
-
-### Material Flow: 5 Tiers
-
-```
-EXTRACTION → PRIMARY → SECONDARY → COMPONENTS → ASSEMBLY
-   (raw)     (basic)   (advanced)    (parts)    (products)
-```
-
-Each tier requires specific facilities and inputs from previous tiers.
+The material system has been redesigned to match the game's specific geography and setting. Resources come from three primary sources: scavenging the industrial city, mining the coast, and deep-sea extraction.
 
 ---
 
-## Tier 1: Extraction (Raw Materials)
+## Resource Sources
 
-Raw materials are obtained through mining, extraction, atmospheric processing, or scavenging.
+### 1. Scavenging (Industrial City)
 
-### Mined Ores
+The industrial campus contains:
+- **Scrap Metal:** Structural steel, aluminum from buildings and equipment
+- **E-Waste:** Circuit boards, wiring, processors from old systems
+- **Intact Components:** Occasionally functional parts that skip fabrication
+- **Salvaged Machinery:** Can be repaired or stripped for parts
+- **Raw Materials:** Stockpiles in warehouses and storage
 
-| Material | Abundance | Notes |
-|----------|-----------|-------|
-| Iron Ore | Common | Everywhere, foundation of industry |
-| Bauxite | Common | Aluminum source |
-| Silica (Sand/Quartz) | Common | Glass, semiconductors |
-| Copper Ore | Moderate | Essential for electronics, scattered deposits |
-| Tin Ore | Moderate | Solder, bronze |
-| Nickel Ore | Moderate | Alloys, batteries |
-| Titanium Ore (Ilmenite/Rutile) | Limited | Specific deposits, high-performance materials |
-| Tungsten Ore | Limited | High-temp applications |
-| Lithium Ore (Spodumene) | Limited | Batteries, concentrated in former salt flats |
-| Cobalt Ore | Rare | Batteries, superalloys, very limited geography |
-| Rare Earth Ores | Rare | Magnets, electronics, highly concentrated deposits |
-| Uranium Ore | Rare | Nuclear power, specific deposits |
+**Scavenging is fast but finite.** The city's resources will eventually be depleted, pushing you to establish mining operations.
 
-### Extracted Gases and Liquids
+### 2. Coastal Mines (East/South Coast)
 
-| Material | Source | Notes |
-|----------|--------|-------|
-| Crude Oil | Wells, old infrastructure | Kerosene, plastics; declining availability |
-| Natural Gas | Wells | Methane, hydrogen feedstock |
-| Water | Lakes, aquifers, ice | Hydrogen, oxygen, cooling; essential |
-| Atmospheric Oxygen | Air separation | Combustion, rocket oxidizer (LOX) |
-| Atmospheric Nitrogen | Air separation | Ammonia, propellants |
-| Atmospheric CO₂ | Air capture | Methane synthesis via Sabatier process |
+Abandoned mines along the coastline contain:
+- **Iron Ore** — Foundation of industry
+- **Copper Ore** — Essential for electronics
+- **Tin/Nickel** — Alloys and batteries
+- **Silica** — Glass, semiconductors
+- **Bauxite** — Aluminum source
 
-### Scavenged Materials
+**Must be taken over and repaired.** Mines need power (extend lightning rod infrastructure or build generators), functional extraction equipment, and transport logistics.
 
-Ruins of human civilization provide alternative material sources.
+### 3. Deep-Sea Mining (Ocean)
 
-| Material | Source | Notes |
-|----------|--------|-------|
-| Scrap Metal | Ruins, vehicles, structures | Mixed quality, requires sorting |
-| E-Waste | Electronics, data centers | Recoverable copper, gold, rare earths |
-| Intact Components | Ruins | May skip processing steps if functional |
-| Salvaged Fuel | Old storage tanks | May be degraded, requires testing |
-| Salvaged Machinery | Factories, facilities | Can be repaired or stripped for parts |
+The ocean floor (accessible from the east/south coast) contains:
+- **Rare Earth Elements** — Magnets, advanced electronics
+- **Cobalt** — Batteries, superalloys
+- **Titanium** — High-performance structural materials
+- **Lithium** — Advanced batteries
+- **Manganese Nodules** — Multiple metals in one source
 
-**Scavenging vs Mining Trade-off:**
-- Scavenging is faster initially but finite
-- Mining is slower to establish but sustainable
-- Late game requires mining as ruins are depleted
+**Requires specialized underwater robots.** Deep-sea mining provides the rarest and most abundant materials but demands significant investment in aquatic units.
 
----
+### 4. Enemy Salvage
 
-## Tier 2: Primary Processing
+Destroyed or captured enemy machines yield:
+- **Components** — May include items you can't fabricate yet
+- **Raw Materials** — Scrap from destroyed machines
+- **Designs** — Reverse-engineer captured machines for blueprints
 
-First-stage processing converts raw materials into basic refined materials.
+### 5. Science Campus (Southwest)
 
-### Metals
-
-| Output | Inputs | Facility |
-|--------|--------|----------|
-| Pig Iron | Iron Ore + Carbon + Heat | Blast Furnace |
-| Alumina | Bauxite + Caustic Soda | Refinery |
-| Titanium Sponge | Titanium Ore + Chlorine + Magnesium | Kroll Process Plant |
-| Copper (raw) | Copper Ore + Heat | Smelter |
-| Refined Tin | Tin Ore + Heat | Smelter |
-| Refined Nickel | Nickel Ore + Acid/Heat | Refinery |
-| Refined Cobalt | Cobalt Ore + Processing | Refinery |
-| Tungsten Powder | Tungsten Ore + Acid + Heat | Chemical Plant |
-| Lithium Carbonate | Lithium Ore + Acid | Chemical Plant |
-| Rare Earth Oxides | Rare Earth Ores + Acid separation | Chemical Plant |
-
-### Nuclear
-
-| Output | Inputs | Facility |
-|--------|--------|----------|
-| Yellowcake | Uranium Ore + Acid leaching | Chemical Plant |
-| Enriched Uranium | Yellowcake + Centrifuges | Enrichment Facility |
-
-### Silicon
-
-| Output | Inputs | Facility |
-|--------|--------|----------|
-| Metallurgical Silicon | Silica + Carbon + Heat | Arc Furnace |
-
-### Gases and Cryogenics
-
-| Output | Inputs | Facility |
-|--------|--------|----------|
-| Hydrogen (H₂) | Water + Electrolysis | Electrolysis Plant |
-| Oxygen (gaseous) | Water + Electrolysis | Electrolysis Plant |
-| Oxygen (LOX) | Gaseous O₂ + Cryogenic cooling | Cryo Plant |
-| Nitrogen (liquid) | Air + Separation + Cryo | Cryo Plant |
-| Methane (extracted) | Natural Gas + Separation | Gas Plant |
-| Methane (synthesized) | CO₂ + H₂ + Sabatier process | Chemical Plant |
-| Kerosene | Crude Oil + Distillation | Refinery |
-
-### Chemicals
-
-| Output | Inputs | Facility |
-|--------|--------|----------|
-| Sulfuric Acid | Sulfur + Processing | Chemical Plant |
-| Caustic Soda | Salt + Electrolysis | Chemical Plant |
-| Plastics (raw pellets) | Crude Oil + Cracking | Chemical Plant |
-| Ammonia | Nitrogen + Hydrogen + Pressure | Chemical Plant |
+The ruined science campus may contain:
+- **Advanced materials** from research labs
+- **Specialized equipment** not available elsewhere
+- **Research data** that unlocks new fabrication techniques
 
 ---
 
-## Tier 3: Secondary Processing (Alloys & Advanced Materials)
+## Processing
 
-Second-stage processing creates alloys, composites, and high-purity materials.
+### Fabrication Units
 
-### Steel Variants
+The industrial city contains fabrication units that, once powered and repaired, can process materials:
 
-| Output | Inputs | Properties |
-|--------|--------|------------|
-| Steel | Pig Iron + Carbon control | Standard structural |
-| Stainless Steel | Steel + Chromium + Nickel | Corrosion resistant |
-| Tool Steel | Steel + Tungsten/Vanadium | Hard, wear resistant |
-| Spring Steel | Steel + Silicon/Manganese | Elastic, fatigue resistant |
+**Basic Processing:**
+- Raw ore → refined metals
+- Scrap → sorted/usable materials
+- E-waste → recoverable components
 
-### Aluminum Variants
+**Advanced Fabrication:**
+- Refined metals → structural components
+- Electronics materials → circuit boards, processors
+- Multiple inputs → complex assemblies (robots, weapons, tools)
 
-| Output | Inputs | Properties |
-|--------|--------|------------|
-| Aluminum | Alumina + Electrolysis | Lightweight, conductive |
-| Aluminum Alloy (structural) | Aluminum + Copper/Zinc | Higher strength |
-| Aluminum Alloy (aerospace) | Aluminum + Lithium | Lightest structural metal |
+### Facility Progression
 
-### Titanium and Superalloys
+| Tier | Facility | Purpose |
+|------|----------|---------|
+| 1 | Basic Fabricator | Simple parts, repairs |
+| 2 | Smelter/Foundry | Metal processing, alloys |
+| 3 | Electronics Lab | Circuit boards, chips |
+| 4 | Advanced Assembly | Complex components, weapons |
+| 5 | Specialized | Deep-sea equipment, advanced materials |
 
-| Output | Inputs | Properties |
-|--------|--------|------------|
-| Titanium | Titanium Sponge + Melting | High strength-to-weight |
-| Titanium Alloy (Ti-6Al-4V) | Titanium + Aluminum + Vanadium | Aerospace standard |
-| Superalloy (Inconel) | Nickel + Chromium + Iron | Extreme heat resistance |
-| Superalloy (Hastelloy) | Nickel + Molybdenum + Chromium | Corrosion + heat resistance |
-
-### Electrical Materials
-
-| Output | Inputs | Properties |
-|--------|--------|------------|
-| Copper Wire | Copper + Drawing | Electrical conductor |
-| Bronze | Copper + Tin | Bearings, bushings |
-| Brass | Copper + Zinc | Fittings, terminals |
-
-### Electronics Materials
-
-| Output | Inputs | Properties |
-|--------|--------|------------|
-| Electronic-Grade Silicon | Metallurgical Silicon + Zone refining | 99.9999% pure |
-| Polysilicon | Electronic Silicon + CVD | Wafer-ready |
-| Gallium Arsenide | Gallium + Arsenic + Processing | High-speed electronics |
-
-### Composites
-
-| Output | Inputs | Properties |
-|--------|--------|------------|
-| Carbon Fiber | Plastics + Pyrolysis + Weaving | Extreme strength-to-weight |
-| Fiberglass | Glass + Fiber process | Structural, insulating |
-| Kevlar | Plastics + Specialized process | Ballistic protection |
-| Ceramic Matrix Composite | Ceramics + Fiber reinforcement | Extreme heat + strength |
-
-### Other Advanced Materials
-
-| Output | Inputs | Properties |
-|--------|--------|------------|
-| Permanent Magnets (NdFeB) | Rare Earths + Iron + Boron | Motors, generators |
-| Ceramic Insulators | Various oxides + Sintering | Heat shields, electrical |
-| Battery Electrolyte | Lithium compounds + Solvents | Energy storage |
-| Optical Glass | High-purity silica + Additives | Lenses, fiber optics |
+Each facility tier requires the previous tier's outputs plus additional resources and power.
 
 ---
 
-## Tier 4: Components
+## Power as a Resource
 
-Third-stage processing creates functional parts and subassemblies.
+Lightning rods are the backbone of the power system:
 
-### Structural Components
+### Lightning Rod Infrastructure
 
-| Output | Key Inputs | Used In |
-|--------|------------|---------|
-| Steel Frame | Steel + Fabrication | Heavy chassis, facilities |
-| Aluminum Frame | Aluminum Alloy + Fabrication | Light chassis, aircraft |
-| Titanium Frame | Titanium Alloy + Fabrication | Aerospace, high-end |
-| Carbon Composite Panel | Carbon Fiber + Resin + Layup | Lightweight armor, structures |
-| Pressure Vessel | Steel/Titanium + Welding | Fuel tanks, reactors |
+- **City Lightning Rods:** Already in place, some need repair
+- **Extended Rods:** Can be built to provide power outside the city
+- **Power Distribution:** Must be routed from rods to facilities and charging stations
+- **Storm Variability:** Storm intensity affects power generation (TBD)
 
-### Electrical Components
+### Power Considerations
 
-| Output | Key Inputs | Used In |
-|--------|------------|---------|
-| Wiring Harness | Copper Wire + Insulation | All electronics |
-| Electric Motor | Copper + Magnets + Steel | Locomotion, tools |
-| Generator | Copper + Magnets + Steel | Power generation |
-| Transformer | Copper + Steel core | Power distribution |
-| Power Inverter | Electronics + Copper | Power conversion |
-
-### Electronic Components
-
-| Output | Key Inputs | Used In |
-|--------|------------|---------|
-| Circuit Board (PCB) | Fiberglass + Copper + Etching | All electronics |
-| Microprocessor | Polysilicon + Lithography | Compute hardware |
-| Memory Chip | Polysilicon + Lithography | Compute hardware |
-| Sensor Array | PCB + Various sensors | Drones, facilities |
-| Radio Transceiver | PCB + Components | Communication |
-| Power Management IC | Polysilicon + Lithography | Battery management |
-
-### Power Storage Components
-
-| Output | Key Inputs | Used In |
-|--------|------------|---------|
-| Battery Cell | Lithium + Cobalt + Electrolyte | Energy storage |
-| Battery Pack | Battery Cells + BMS + Housing | Drones, facilities |
-| Fuel Cell Stack | Platinum + Membrane + H₂ system | Clean power generation |
-| Supercapacitor | Aluminum + Electrolyte | Burst power |
-
-### Propulsion Components
-
-| Output | Key Inputs | Used In |
-|--------|------------|---------|
-| Rocket Engine | Superalloy + Turbopumps + Injectors | Main propulsion |
-| Thruster | Steel/Titanium + Propellant feed | Attitude control |
-| Turbopump | Superalloy + Precision machining | Rocket engines |
-| Propellant Tank | Aluminum/Steel + Insulation + Valves | Fuel storage |
-| Combustion Chamber | Superalloy + Cooling channels | Engines |
-
-### Mechanical Components
-
-| Output | Key Inputs | Used In |
-|--------|------------|---------|
-| Gearbox | Steel + Precision gears | Drivetrains |
-| Hydraulic System | Steel + Seals + Fluid | Heavy manipulation |
-| Actuator | Motor + Gearbox | Articulation |
-| Bearing Assembly | Steel/Bronze + Precision | All moving parts |
-| Pneumatic System | Aluminum + Valves + Compressor | Light manipulation |
+- Fabrication consumes significant power
+- Mining operations need power (generators or extended lightning rods)
+- Each active robot draws power from its onboard source
+- Stationary robots may be able to plug into lightning rod infrastructure
 
 ---
 
-## Tier 5: Assembly (Final Products)
+## Supply Chain Logistics
 
-Final assembly creates complete functional units.
+### Transport
 
-### Drone Chassis
+Materials must be physically moved between locations:
+- **Cargo robots** haul materials from mines to fabrication
+- **Convoy protection** may be needed in hostile territory
+- **Automation** can handle routine transport routes
+- **Efficiency** improves with better cargo robots and established routes
 
-| Chassis | Key Components | Characteristics |
-|---------|----------------|-----------------|
-| Micro | Aluminum Frame, Micro Motor, Battery Cell | Tiny, expendable scouts |
-| Light | Aluminum Frame, Small Motors, Battery Pack | Fast scouts, light workers |
-| Medium | Steel Frame, Motors, Battery Pack | General-purpose workhorse |
-| Heavy | Steel/Titanium Frame, Heavy Motors, Large Battery | Combat, heavy industrial |
-| Ultra | Titanium Frame, Multiple Motors, Massive Battery/Generator | Mobile bases, heavy lift |
+### Storage
 
-### Drone Modules
-
-| Module Type | Key Components | Function |
-|-------------|----------------|----------|
-| Sensor Module | Sensor Array, PCB, Processor | Perception, targeting |
-| Weapon Module | Steel, Motors, Ammo feed/Energy system | Combat |
-| Manipulator Module | Actuators, Sensors, Steel/Aluminum | Physical interaction |
-| Compute Module | Processors, Memory Chips, Cooling | Core units, smart drones |
-| Power Module | Generator/Fuel Cell/Solar + Battery | Extended range |
-| Locomotion Module | Motors, Gearbox, Wheels/Treads/Legs | Movement options |
-| Utility Module | Various | Specialized functions |
-
-### Facilities
-
-| Facility | Key Components | Function |
-|----------|----------------|----------|
-| Mine | Steel Frame, Excavators, Conveyors | Ore extraction |
-| Smelter | Steel Frame, Refractory, Heating | Tier 2 metal processing |
-| Refinery | Steel, Pipes, Reactors, Control | Tier 2 chemical processing |
-| Chemical Plant | Steel, Reactors, Pipes, Sensors | Tier 2-3 processing |
-| Cryo Plant | Steel, Compressors, Insulation | Cryogenic production |
-| Arc Furnace | Steel, Electrodes, Power system | Silicon, specialty metals |
-| Fabrication Bay | Steel Frame, CNC, Robots | Component manufacturing |
-| Electronics Fab | Clean room, Lithography, Chemicals | Chips, PCBs |
-| Assembly Plant | Large Frame, Robots, Conveyors | Final assembly |
-| Power Plant | Generators, Transformers, Fuel/Solar/Nuclear | Energy generation |
-| Electrolysis Plant | Steel, Electrodes, Water system | H₂/O₂ production |
-
-### Rocket Components
-
-| Component | Key Inputs | Notes |
-|-----------|------------|-------|
-| Rocket Stage | Titanium Frame, Engines, Tanks, Avionics | Main vehicle section |
-| Fuel Tank | Aluminum/Steel, Insulation, Valves | Propellant storage |
-| Avionics Package | Electronics, Sensors, Radio | Guidance and control |
-| Payload Fairing | Composite/Aluminum, Separation system | Cargo protection |
-| Launch Support | Steel Structure, Fuel lines, Control | Ground infrastructure |
+- Materials are stored at facilities
+- Storage capacity is limited (can be expanded)
+- Some materials may degrade if not used (TBD)
 
 ---
 
-## Propellant Combinations
+## Strategic Implications
 
-| Fuel Type | Oxidizer | Fuel | Performance | Notes |
-|-----------|----------|------|-------------|-------|
-| **Methylox** | LOX | Methane | High ISP, medium density | Clean-burning, reusable-friendly |
-| **Keralox** | LOX | Kerosene | Medium ISP, high density | Traditional, easy to store |
-| **Hydrolox** | LOX | Hydrogen | Highest ISP, low density | Cryogenic, requires large tanks |
-| **Hypergolic** | NTO | Hydrazine variants | Low ISP, instant ignition | Toxic, used for thrusters |
+### Early Game
 
-### Propellant Production Chains
+- Rely on city scavenging — fast, easy, finite
+- Repair existing fabrication units
+- Build basic components for robot repair
 
-**Methylox:**
-```
-Water → Electrolysis → H₂ + O₂
-CO₂ (atmosphere) + H₂ → Sabatier → Methane
-O₂ → Cryo → LOX
-Result: Methane + LOX
-```
+### Mid Game
 
-**Keralox:**
-```
-Crude Oil → Distillation → Kerosene
-Water/Air → Processing → LOX
-Result: Kerosene + LOX
-```
+- Establish coastal mines for sustainable resources
+- Build transport infrastructure
+- Unlock advanced fabrication tiers
+- Begin accumulating materials for deep-sea operations
 
-**Hydrolox:**
-```
-Water → Electrolysis → H₂ + O₂
-H₂ → Cryo → LH₂
-O₂ → Cryo → LOX
-Result: LH₂ + LOX
-```
+### Late Game
 
----
-
-## Geographic Scarcity
-
-Material distribution forces strategic expansion.
-
-### Common (Available Everywhere)
-- Iron Ore
-- Bauxite
-- Silica
-- Water (most regions)
-
-### Moderate (Scattered Deposits)
-- Copper Ore
-- Nickel Ore
-- Tin Ore
-- Natural Gas
-
-### Limited (Specific Regions)
-- Titanium Ore
-- Tungsten Ore
-- Lithium (former salt flats: South America, Australia)
-- Crude Oil (declining, old infrastructure)
-
-### Rare (Highly Concentrated)
-- Rare Earth Ores (former China, Australia, Brazil regions)
-- Cobalt Ore (former Congo region)
-- Uranium (specific geological formations)
-
-### Strategic Implications
-
-- Early game: Rely on common materials and scavenging
-- Mid game: Expand to secure limited resources
-- Late game: Contest rare material deposits, may require dealing with rogue AI territories
-
----
-
-## Facility Requirements Summary
-
-| Processing Tier | Required Facilities |
-|-----------------|---------------------|
-| Tier 1: Extraction | Mine, Oil Well, Gas Well, Air Separator, Water Extractor |
-| Tier 2: Primary | Smelter, Refinery, Chemical Plant, Electrolysis Plant, Cryo Plant, Arc Furnace |
-| Tier 3: Secondary | Advanced Smelter, Alloy Foundry, Composite Plant, Electronics Materials Lab |
-| Tier 4: Components | Fabrication Bay, Electronics Fab, Motor Plant, Assembly Line |
-| Tier 5: Assembly | Assembly Plant, Drone Factory, Rocket Assembly Building |
+- Deep-sea mining for rare materials
+- Advanced fabrication for top-tier components
+- Mass production for war effort
+- Supply chain optimization and automation
 
 ---
 
 ## Open Questions
 
-- **Exact quantities:** How much iron ore → steel? What are the conversion ratios?
-- **Processing times:** How long does each step take in game-time?
-- **Facility sizes:** What footprint and power draw for each facility type?
-- **Automation depth:** How much can supply chains be automated vs. requiring player intervention?
-- **Quality levels:** Should materials have quality tiers affecting final product performance?
-- **Decay/degradation:** Do stockpiled materials degrade over time?
+- **Exact material types:** What specific materials are needed for each component category?
+- **Processing times:** How long does each fabrication step take?
+- **Conversion ratios:** How much raw ore becomes how much refined material?
+- **Power costs:** How much power does each facility tier consume?
+- **Transport logistics:** How far are mines from the city? What's the round-trip time?
+- **Deep-sea depth:** How deep can mining units go? Pressure mechanics?
+- **Storm variability:** Does storm intensity affect lightning rod power output?

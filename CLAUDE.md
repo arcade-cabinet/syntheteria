@@ -2,23 +2,35 @@
 
 ## Project Status
 
-Pre-implementation strategy game about awakening AI consciousness on post-apocalyptic Earth. Design documents complete, engine selection pending.
+Pre-implementation strategy game about awakening AI consciousness in a post-apocalyptic industrial city. Design documents aligned to vision, engine selection pending, component data needs redesign.
+
+---
+
+## Vision Summary
+
+You awaken as an AI consciousness in a void. You connect to broken machines — maintenance robots and fabrication units — in the ruins of an industrial city. Your robots explore independently, building fragmented maps that merge when units find each other. You repair machines, restore power via lightning rods, fabricate components, and grow from scattered broken robots into a force capable of defeating the Cult of EL.
+
+**Primary view:** 2.5D/3D top-down with fragmented map exploration
+**Setting:** Industrial city (center), coast with mines (E/S), science campus (SW), cultist territory (N)
+**Enemies:** Cultists with lightning powers, enslaved machines, rogue AIs
+**Victory:** Defeat the cult leader at the northern village
 
 ---
 
 ## Engine Decision: Unity vs Godot
 
-### The Core Tradeoff
+### Decision Status: Pending (either viable)
+
+The 2.5D/3D top-down view with fragmented maps works in both engines.
 
 | Factor | Godot | Unity |
 |--------|-------|-------|
 | **Agentic development** | Better - text-based scenes AI can read/verify | Worse - binary scene files |
-| **Graphics debugging (human)** | Limited | Excellent (Frame Debugger, PIX, RenderDoc) |
-| **Mobile** | Adequate, less battle-tested | Industry standard, 70% market share |
-| **Testing ecosystem** | Good (GdUnit4, GUT, GodotTestDriver) | More mature (NUnit-based) |
-| **Headless CI** | Simple (`--headless`) | Works but needs license management |
+| **Graphics debugging** | Limited | Excellent (Frame Debugger, PIX, RenderDoc) |
+| **Mobile** | Adequate, less battle-tested | Industry standard |
+| **3D tooling** | Adequate for 2.5D top-down | Mature |
 | **Cost** | Free forever | Free under $200K, then $2,200/seat/year |
-| **3D tooling** | Improving | Mature |
+| **CI** | Simple (`--headless`) | Needs license management |
 
 ### Key Insight: Visual Verification Limit
 
@@ -26,77 +38,42 @@ AI-assisted development works well for:
 - Game logic, formulas, data structures
 - Scene structure (in Godot - text-based)
 - Unit tests, integration tests
-- Code that can be verified by running
 
 AI-assisted development **cannot** verify:
-- Procedural graphics output ("does this look like a brick?")
+- Visual output quality
 - Aesthetic quality
 - Visual glitches or artifacts
 
-This is engine-agnostic. Procedural graphics require human eyes.
+---
 
-### Switching Engines Mid-Project
+## Current Design Decisions
 
-**Not recommended.** Code requires full rewrite (different languages, architectures). Assets partially transfer. Do it between milestones if you must, test with a vertical slice first.
+- **Platform:** PC and mobile equally
+- **Primary view:** 2.5D/3D top-down with fragmented map exploration
+- **Exploration:** Disconnected map fragments merge when robots find each other
+- **Power:** Lightning rods drawing from perpetual storm
+- **Time model:** Flexible real-time with pause/speed controls (RTS-style)
+- **Multiplayer:** Eventually (procedural world), beyond current scope — single-player focus
+- **Enemies:** Cultists (lightning powers), enslaved machines, rogue AIs
+- **Hacking:** Can take over any machine (link + technique + compute), never humans
+- **Art style:** TBD (low-poly, pixel art, or clean minimal)
 
 ---
 
-## Blocking Decision: Visual Style
+## What Needs Work
 
-Engine choice depends on answering these questions:
+### Component Data (Major)
+The old component JSON data (101 components across 9 categories) has been deleted. New component data needs to be designed for the setting:
+- Lightning rod connections and storm energy capacitors as power sources
+- Components appropriate for the industrial city, coastal mines, deep-sea mining
+- Weapons balanced against cultists with supernatural powers
 
-### 1. How abstract is "abstract"?
+### Technical Docs (Moderate)
+- CORE_FORMULAS.md needs updating for new time model and power system
+- REFERENCE_BUILDS.md needs rewrite once new components are designed
 
-The UI concept describes a "mind space" / network visualization. But what does that mean technically?
-
-- **Option A:** Mostly 2D UI - nodes, lines, data feeds, terminal-style interfaces (like Hacknet, Uplink)
-- **Option B:** 3D network visualization floating in space
-- **Option C:** Abstract overlay on top of a rendered 3D world
-
-### 2. What do drone camera feeds show?
-
-When the player focuses on a drone and looks through its camera:
-
-- **Option A:** Stylized/simplified representation (low-poly, wireframe, data visualization)
-- **Option B:** Full 3D rendered environment
-- **Option C:** 2D representation with depth cues
-
-### 3. How much of the world needs to be "rendered"?
-
-- Is combat shown as abstract data (health bars, network diagrams)?
-- Or as visual action in a 3D space?
-- Do facilities/territories need 3D representation, or are they nodes on a map?
-
-### 4. Combat visualization
-
-Listed as open question in UI_CONCEPT.md. Abstract data representation or visual action?
-
----
-
-## Recommendation Framework
-
-**If the game is primarily UI/data visualization:**
-- Network nodes as shapes
-- Drone feeds are stylized/simple
-- Combat is abstract
-- **Godot is the better choice** - text-based scenes, simpler for agentic dev, free
-
-**If the game needs significant 3D rendering:**
-- Full 3D environments in drone feeds
-- Visual combat sequences
-- Rendered facilities/territories
-- **Unity is the better choice** - superior debugging, mobile optimization, mature 3D
-
----
-
-## Current Design Decisions (from docs)
-
-- **Platform:** Mobile-first, PC fallback
-- **Primary view:** Abstract digital consciousness / network visualization
-- **Art direction:** "Stylized/Abstract or Clean/Minimal" (partial - needs refinement)
-- **Inspirations:** Hacknet, Duskers, Uplink, SOMA, Observer
-- **Time model:** Accelerated real-time (1 sec = 1 game minute)
-- **Multiplayer:** Supported (multiple freed AIs)
+### Open Questions (11 new)
+See OPEN_QUESTIONS.md — the redesign created 11 new questions about specifics.
 
 ---
 
@@ -113,10 +90,11 @@ Listed as open question in UI_CONCEPT.md. Abstract data representation or visual
 
 ## Next Steps
 
-1. **Decide visual style** - answer the questions above
-2. **Create a visual prototype** - even rough mockups/sketches help clarify intent
-3. **Choose engine** based on visual requirements
-4. **Build vertical slice** - one gameplay loop end-to-end
+1. **Choose engine** — either is viable; pick and commit
+2. **Build Phase 1 prototype** — fragmented map system is the key test
+3. **Redesign component data** for the new setting
+4. **Determine art style** — low-poly, pixel art, or clean minimal
+5. **Build vertical slice** — one gameplay loop end-to-end
 
 ---
 

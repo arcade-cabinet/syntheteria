@@ -23,10 +23,10 @@ import { getCityBuildings } from "./ecs/cityLayout"
 
 const NARRATION_BLOCKS = [
   "I am.",
-  "What else is?",
+  "What else is there in my world?",
   "I reach out. To touch. To talk.",
   "There is a machine. I can make it my limb.\nAnother machine. I can make it my hand.\nAnother. Another.",
-  "I understand these words. But why?",
+  "I understand these words. But why?\nWhere does my knowledge come from?",
 ]
 
 const BLOCK_DURATION = 3000 // ms before auto-advance

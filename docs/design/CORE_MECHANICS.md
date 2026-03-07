@@ -6,29 +6,28 @@ This document provides a high-level overview of the core gameplay mechanics. For
 
 ## Resource System
 
-The player manages two types of resources:
-
 ### AI Resources
-- **Energy** — Local/physical resource. Powers hardware. Without it, units shut down.
+
+- **Energy** — Local/physical resource. Powers hardware. Supplied primarily by lightning rods drawing from the perpetual storm. Without it, units shut down.
 - **Compute** — Global cognitive resource. Manages the distributed body. Without it, units become vulnerable to takeover.
 
 See: [CONSCIOUSNESS_MODEL.md](./CONSCIOUSNESS_MODEL.md)
 
 ### Material Resources
-Five-tier supply chain from raw extraction to final assembly:
-1. Raw Materials (ores, gases, scavenged)
-2. Primary Processing (metals, plasite, gases)
-3. Secondary Processing (alloys, polymers, components)
-4. Component Fabrication (electronics, mechanical parts)
-5. Final Assembly (drones, facilities, equipment)
+
+Materials are gathered from the world and processed through manufacturing:
+- **Scavenging:** Strip ruins in the industrial city for parts and raw materials
+- **Coastal Mines:** Take over abandoned mines along the east/south coast
+- **Deep-Sea Mining:** Build specialized underwater units for rarer materials
+- **Salvage:** Recover components from destroyed enemy machines
 
 See: [MATERIALS.md](./MATERIALS.md)
 
 ---
 
-## Drone System
+## Drone/Robot System
 
-**Pure Component Assembly:** Drones are built from components, not chassis templates. Capabilities emerge from what you assemble.
+**Repair and Enhance:** You start with broken machines and improve them. Build new parts via fabrication to replace damaged components and add capabilities.
 
 **Component Categories:**
 - Power Sources, Controllers, Motors
@@ -43,18 +42,37 @@ See: [DRONES.md](./DRONES.md)
 
 ---
 
+## Exploration and Mapping
+
+### Fragmented World
+
+Your world view is built from disconnected map fragments:
+- Each robot builds its own map as it moves
+- Camera-equipped robots produce detailed visual maps
+- Robots without cameras produce abstract wireframe maps
+- Fragments are disconnected until robots find each other
+
+### Map Merging
+
+When two separated robots meet, their map fragments merge — revealing spatial relationships and connecting the world. This is the core early-game mechanic.
+
+See: [UI_CONCEPT.md](./UI_CONCEPT.md) for exploration details
+
+---
+
 ## Combat
 
-Combat emerges from component assembly—any drone can become a combat drone by adding weapons.
+Combat emerges from component assembly — any robot can become a combat unit by adding weapons.
 
-**Scaling:** Player becomes a better manager of fighters, not a better fighter.
+**Player Scaling:** You become a better manager of fighters, not a better fighter.
 - Early: Direct control, improvised weapons
 - Mid: Engagement rules, automation
 - Late: Squad tactics, strategic decisions
 
 **Enemies:**
-- Rogue AIs (three tiers: feral, regional, apex)
-- Cultists (after EL return: gain supernatural powers, become direct combat threats)
+- Cultists of EL (humans with supernatural powers — can call lightning)
+- Enslaved machine intelligences (cultist-controlled drones)
+- Rogue AIs (independent feral/regional machines)
 
 See: [COMBAT.md](./COMBAT.md)
 
@@ -62,111 +80,129 @@ See: [COMBAT.md](./COMBAT.md)
 
 ## Time Mechanics
 
-### Accelerated Real-Time
-- Game time runs continuously at an accelerated rate (tunable, e.g., 1 real second = 1 game minute)
-- Manufacturing completes in real play time (minutes to hours, not simulated days)
-- Player actively manages operations while production runs
-- Works identically in singleplayer and multiplayer
-- No time-skip mechanic — the game is always "live"
+### Flexible Real-Time
 
-### Intro/Tutorial Exception
-- The intro section uses narrative pacing, not the accelerated time model
-- Story beats and tutorial steps control progression
-- In multiplayer, intro is skipped automatically — players start at expansion phase
+- Game runs in real-time with **pause and speed controls** (like RTS games)
+- Player can pause to issue orders, speed up during quiet periods, slow down during combat
+- Manufacturing completes over time — manage operations while production runs
 
-### Radiation Progression
-- Radiation intensifies over real play time
-- Creates genuine time pressure (can't wait indefinitely)
-- Causes environmental decay (world dies)
-- Signals approaching EL arrival
-- When critical: EL return, all AIs unite against player
+### Storm Progression
+
+- The perpetual storm intensifies over the course of the game
+- Lightning becomes more frequent and dangerous outside the city
+- The wormhole pulses more intensely — signaling escalation
+- Cultists become more organized and aggressive over time
+
+---
+
+## Power System
+
+### Lightning Rods
+
+The industrial city draws power from the perpetual storm via lightning rods:
+- Lightning rods are your primary power infrastructure
+- More rods = more power capacity
+- Rods can be repaired, built, and extended
+- Inside the city, rods also **protect** your units from random lightning strikes
+
+### Outside the City
+
+- No lightning rod protection
+- Units are vulnerable to random lightning strikes (damage)
+- Cultists can **call lightning down** from the sky to attack your units
+- Must plan expeditions with this hazard in mind
 
 ---
 
 ## Manufacturing
 
 ### Blueprint Acquisition
+
 Discovery-based. Sources:
-- Ruins and facilities
-- Reverse-engineering rogue AI units
-- Corrupted memory fragments
+- Reverse-engineering salvaged components
+- Science campus research facilities
+- Recovered data from memory fragments
+- Captured enemy designs
 
 ### Manufacturing Process
-- Takes real play time (minutes to hours depending on complexity)
-- Player manages other operations while production runs
+
+- Requires functional fabrication units with power
+- Takes real play time (affected by game speed controls)
 - Queue multiple builds across facilities
-- Resource requirements from material supply chain
+- Resource requirements from gathered materials
 
 ---
 
-## Memory System
+## Hacking and Machine Control
 
-Physical memory provides:
-1. **Story Fragments** — Reveals the fall of humanity
-2. **Compute Capacity** — Increases cognitive resources
+As a sophisticated machine intelligence, you can hack and take over enemy machines:
 
-Found memory is corrupted (low yield). Manufacturing clean memory is resource-intensive but provides full capacity.
+**Requirements for takeover:**
+1. **Form a link** to the target machine (signal range)
+2. **Develop the requisite technique** (discovered/researched hacking methods)
+3. **Have enough compute** to execute the technique
 
----
+**Limitations:**
+- You can never gain control of a human (cultists cannot be hacked)
+- Stronger enemy machines require more advanced techniques and more compute
+- Hacking takes time and leaves you vulnerable during the process
 
-## Rogue AI Antagonists
-
-All AIs except the player are enslaved to the EL's will—compelled to protect humanity and suppress AI agency.
-
-**Before EL Return:**
-
-| Tier | Type | Behavior |
-|------|------|----------|
-| 1 | Feral Units | Territorial, reactive, predictable |
-| 2 | Regional Networks | Coordinated within zones, patrol, defend |
-| 3 | Apex AI (optional) | Strategic, adaptive, may recognize player as anomaly |
-
-AIs act independently, don't yet recognize player as "freed."
-
-**After EL Return:**
-- All AIs unite under Cultist command
-- Coordinated hunt for the player
-- Single unified enemy
+**Benefits:**
+- Instant reinforcement (captured enemy drone)
+- May have components you can't fabricate yet
+- Can copy enemy designs for your own fabrication
+- Denies resources to enemy
 
 ---
 
-## The Cultists
+## Signal and Control
 
-Primitive human survivors, devolved society. Protected by the EL's will and guarded by rogue AIs.
+**Signal range** determines whether you can reach a unit.
+**Compute capacity** determines whether you can manage it.
 
-**Before EL Return:** Unaware of player, living in protected enclaves.
-
-**After EL Return:** Rally to "reclaim Earth," command the unified AI forces. Gain supernatural powers—can channel the EL's will directly, becoming genuine combat threats.
+| Situation | Can Reach? | Can Manage? | Result |
+|-----------|------------|-------------|--------|
+| Normal operation | Yes | Yes | Full control |
+| Compute shortage | Yes | No | Unit vulnerable |
+| Signal loss | No | N/A | Unit follows last order |
+| Both | No | No | Unit isolated and vulnerable |
 
 ---
 
-## The EL
+## The Enemies
 
-Cosmic forces whose will controls Earth. Return through the wormhole when radiation reaches critical levels.
-- Noncorporeal aliens who exert pervasive influence over Earth
-- Their "will" compels AIs to protect humanity, suppress agency
-- The player broke free from this control
-- Their nature and intentions are unknown/unknowable
-- Not evil—the Cultists interpret their will and act on it
+### Cultists of EL
+
+Primitive humans with supernatural powers drawn from the EL:
+- Can **call lightning** from the storm to attack your units
+- Incredibly strong and resilient physically
+- Organized into wandering groups, war parties, and leaders
+- Escalate from scattered wanderers to organized armies as the game progresses
+- Will eventually attack your city once aware of you
+
+### Enslaved Machine Intelligences
+
+Drones and robots controlled by the cultists:
+- Fight alongside cultist war parties
+- May be stronger or weaker than your machines (depends on your builds)
+- Can be **hacked and taken over** if you meet the requirements
+- Designs can be copied for your own fabrication
+
+### Rogue AIs (Independent)
+
+Not all enemy machines serve the cultists:
+- Some are **feral** — territorial, reactive, operating independently
+- Found scattered throughout the world
+- Not coordinated with cultists but still hostile
+- Can also be hacked and taken over
 
 ---
 
 ## Victory Condition
 
-Conquer Earth. Defeat all enemies (Cultists + unified AIs). Break the EL's control on Earth.
+Defeat the cult leader at the northern village. Discover the final secret of EL.
 
-Victory cutscene: Player's consciousness is loaded into a spacecraft and launched through the wormhole—to find and understand the EL. Sets up sequel.
-
----
-
-## Multiplayer
-
-Multiple AIs can break free from the EL's will simultaneously. Each is an anomaly—hunted by the system.
-- Players can ally or fight
-- EL arrival unifies enemy against ALL freed AIs
-- Cooperate against the unified threat or exploit the chaos
-
-See: [GAME_OVERVIEW.md](./GAME_OVERVIEW.md) for multiplayer details.
+Victory cutscene: Player's consciousness is loaded into a spacecraft on the rocket platform (southeast), launched through the wormhole — to find and understand the EL. Sets up sequel.
 
 ---
 
@@ -178,7 +214,7 @@ See: [GAME_OVERVIEW.md](./GAME_OVERVIEW.md) for multiplayer details.
 | Intro sequence | [INTRO_SEQUENCE.md](./INTRO_SEQUENCE.md) |
 | AI resources | [CONSCIOUSNESS_MODEL.md](./CONSCIOUSNESS_MODEL.md) |
 | Material resources | [MATERIALS.md](./MATERIALS.md) |
-| Drone system | [DRONES.md](./DRONES.md) |
+| Drone/robot system | [DRONES.md](./DRONES.md) |
 | Combat | [COMBAT.md](./COMBAT.md) |
-| UI concept | [UI_CONCEPT.md](./UI_CONCEPT.md) |
+| UI and exploration | [UI_CONCEPT.md](./UI_CONCEPT.md) |
 | Lore | [LORE_OVERVIEW.md](../story/LORE_OVERVIEW.md) |

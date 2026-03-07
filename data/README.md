@@ -1,14 +1,25 @@
 # Syntheteria Data
 
-This directory contains engine-agnostic game data in JSON format.
+This directory will contain engine-agnostic game data.
 
-## Structure
+## Status: Pending Redesign
+
+The previous component data (101 components across 9 categories) and JSON schemas have been retired. The new component data needs to be designed to match the updated game setting:
+
+- **Lightning rod power** instead of generic batteries/generators
+- **Storm energy** as the primary power source
+- **Coastal mine** and **deep-sea mining** resources
+- **Anti-cultist** weapons and defenses (lightning resistance?)
+- **Hacking equipment** as a core component category
+
+## Planned Structure
 
 ```
 data/
-├── schema/                    # JSON Schema definitions
-│   └── component.schema.json  # Component data structure
-├── components/                # Component definitions by category
+├── schema/               # JSON Schema definitions (TBD)
+│   ├── component.schema.json
+│   └── save.schema.json
+├── components/           # Component data by category (TBD)
 │   ├── power_sources.json
 │   ├── controllers.json
 │   ├── motors.json
@@ -21,72 +32,24 @@ data/
 └── README.md
 ```
 
-## Usage
+## Component Categories
 
-### Loading Components
+Nine categories remain relevant:
 
-All component files follow the same structure:
-
-```json
-{
-  "$schema": "../schema/component.schema.json",
-  "components": [
-    { "id": "...", "name": "...", ... },
-    { "id": "...", "name": "...", ... }
-  ]
-}
-```
-
-To load all components, iterate through all JSON files in the `components/` directory.
-
-### Component Categories
-
-| Category | Description |
-|----------|-------------|
-| `power_source` | Batteries, generators, fuel cells, solar panels |
-| `controller` | CPUs, compute modules, server racks |
-| `motor` | Motors and servos that provide torque |
-| `locomotion` | Wheels, treads, legs, rotors |
-| `sensor` | Cameras, radar, lidar, environmental sensors |
-| `manipulation` | Grippers, arms, drills, welders |
-| `weapon` | Projectile, energy, and melee weapons |
-| `communication` | Radios, relays, ECM |
-| `utility` | Cargo bays, fuel tanks, stealth, repair |
-
-### Tier System
-
-Components are rated 1-5:
-- **Tier 1**: Basic, available from start
-- **Tier 2**: Early game unlocks
-- **Tier 3**: Mid-game technology
-- **Tier 4**: Advanced, requires rare materials
-- **Tier 5**: End-game, requires significant investment
-
-### Blueprint Requirements
-
-Components with `crafting.blueprint_required: true` must be discovered before they can be manufactured. Discovery sources:
-- Memory fragments
-- Enemy salvage
-- Exploration
+1. **Power Sources** — Batteries, generators, lightning rod connections, storm capacitors
+2. **Controllers** — Microcontrollers, CPUs, compute modules, server racks
+3. **Motors** — Micro to industrial, servos, hydraulic systems
+4. **Locomotion** — Wheels, treads, legs, rotors, aquatic propulsion
+5. **Sensors** — Cameras, radar, lidar, sonar, environmental sensors
+6. **Manipulation** — Grippers, arms, drills, welders, cutters
+7. **Weapons** — Melee, ranged, area/support, electronic warfare
+8. **Communication** — Radios, relay antennas, laser comm, ECM
+9. **Utility** — Cargo, fuel tanks, stealth, repair kits, hacking interfaces
 
 ## Validation
 
-Component files can be validated against the JSON Schema:
+Once schemas are defined, validate with:
 
 ```bash
-# Using ajv-cli
-npx ajv validate -s schema/component.schema.json -d "components/*.json"
+ajv validate -s schema/component.schema.json -d "components/*.json"
 ```
-
-## Adding New Components
-
-1. Choose the appropriate category file
-2. Add a new component object to the `components` array
-3. Ensure `id` is unique across all components
-4. Validate against the schema
-
-## Related Documentation
-
-- [Core Formulas](../docs/technical/CORE_FORMULAS.md) - How component stats translate to gameplay
-- [Drones](../docs/design/DRONES.md) - Design philosophy and assembly rules
-- [Materials](../docs/design/MATERIALS.md) - Crafting material sources

@@ -70,6 +70,7 @@ function isValidPlacement(x: number, z: number, type: PlaceableType): boolean {
   // Lightning rods need spacing
   if (type === "lightning_rod") {
     for (const rod of lightningRods) {
+      if (!rod.worldPosition) continue
       const dx = rod.worldPosition.x - x
       const dz = rod.worldPosition.z - z
       if (Math.sqrt(dx * dx + dz * dz) < MIN_ROD_SPACING) return false

@@ -11,7 +11,7 @@
 import { world, units } from "../ecs/world"
 import { hasArms } from "../ecs/types"
 import { addResource } from "./resources"
-import type { Entity } from "../ecs/types"
+import type { UnitEntity } from "../ecs/types"
 
 const MELEE_RANGE = 2.5
 const ATTACK_CHANCE = 0.4 // chance per tick when in range
@@ -33,7 +33,7 @@ export function getLastCombatEvents(): CombatEvent[] {
  * Try to damage a random functional component on the target.
  * Returns the component name that was damaged, or null.
  */
-function dealDamage(attacker: Entity, target: Entity): string | null {
+function dealDamage(attacker: UnitEntity, target: UnitEntity): string | null {
   const functionalParts = target.unit.components.filter(c => c.functional)
   if (functionalParts.length === 0) return null
 
@@ -50,14 +50,14 @@ function dealDamage(attacker: Entity, target: Entity): string | null {
 /**
  * Check if a unit is destroyed (all components broken).
  */
-function isDestroyed(entity: Entity): boolean {
+function isDestroyed(entity: UnitEntity): boolean {
   return entity.unit.components.every(c => !c.functional)
 }
 
 /**
  * Destroy a unit — remove from world, drop salvage.
  */
-function destroyUnit(entity: Entity) {
+function destroyUnit(entity: UnitEntity) {
   // Drop some resources as salvage
   const componentCount = entity.unit.components.length
   addResource("scrapMetal", Math.floor(componentCount * 1.5))
@@ -73,7 +73,7 @@ function destroyUnit(entity: Entity) {
  */
 export function combatSystem() {
   const events: CombatEvent[] = []
-  const toDestroy: Entity[] = []
+  const toDestroy: UnitEntity[] = []
 
   const allUnits = Array.from(units)
 

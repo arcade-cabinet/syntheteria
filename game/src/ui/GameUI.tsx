@@ -20,7 +20,7 @@ import {
 } from "../systems/buildingPlacement"
 import { startRepair } from "../systems/repair"
 import { startFabrication, RECIPES } from "../systems/fabrication"
-import type { UnitComponent, Entity } from "../ecs/types"
+import type { UnitComponent, Entity, UnitEntity, BuildingEntity } from "../ecs/types"
 
 function ComponentStatus({ comp }: { comp: UnitComponent }) {
   return (
@@ -101,7 +101,7 @@ function BuildToolbar() {
   )
 }
 
-function RepairPanel({ selectedUnit }: { selectedUnit: Entity }) {
+function RepairPanel({ selectedUnit }: { selectedUnit: UnitEntity }) {
   const brokenComps = selectedUnit.unit.components.filter(c => !c.functional)
   if (brokenComps.length === 0) return null
 
@@ -149,7 +149,7 @@ function RepairPanel({ selectedUnit }: { selectedUnit: Entity }) {
   )
 }
 
-function BuildingRepairPanel({ selectedBuilding }: { selectedBuilding: Entity }) {
+function BuildingRepairPanel({ selectedBuilding }: { selectedBuilding: BuildingEntity }) {
   const brokenComps = selectedBuilding.building.components.filter(c => !c.functional)
   if (brokenComps.length === 0) return null
 
@@ -346,7 +346,7 @@ export function GameUI() {
   const selectedUnit = Array.from(units).find((u) => u.unit.selected)
   // Only show building panel for pure buildings (not fabrication units, which show in unit panel)
   const selectedBuilding = Array.from(buildings).find(
-    (b) => b.building.selected && !("unit" in b)
+    (b) => b.building.selected && !b.unit
   )
   const fragmentCount = snap.fragments.length
   const buildingCount = Array.from(buildings).length
@@ -444,7 +444,7 @@ export function GameUI() {
           {selectedUnit.unit.speed > 0 && (
             <div>Speed: {selectedUnit.unit.speed.toFixed(1)}</div>
           )}
-          {"building" in selectedUnit && (
+          {selectedUnit.building && (
             <div style={{ color: selectedUnit.building.powered ? "#00ff88" : "#ff4444" }}>
               {selectedUnit.building.powered ? "POWERED" : "UNPOWERED"}
               {" / "}
@@ -475,7 +475,7 @@ export function GameUI() {
             <RepairPanel selectedUnit={selectedUnit} />
           )}
 
-          {selectedUnit.unit.type === "fabrication_unit" && "building" in selectedUnit && (
+          {selectedUnit.unit.type === "fabrication_unit" && selectedUnit.building && (
             <InlineFabricationPanel fabricator={selectedUnit} />
           )}
 

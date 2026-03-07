@@ -3,7 +3,7 @@
  */
 import { world } from "./world"
 import { createFragment, getFragment, getTerrainHeight } from "./terrain"
-import type { Entity, UnitComponent } from "./types"
+import type { Entity, UnitComponent, UnitEntity } from "./types"
 
 let nextEntityId = 0
 
@@ -19,7 +19,7 @@ export function spawnUnit(options: {
   displayName?: string
   speed?: number
   components: UnitComponent[]
-}): Entity {
+}): UnitEntity {
   const {
     x,
     z,
@@ -55,7 +55,7 @@ export function spawnUnit(options: {
     navigation: { path: [], pathIndex: 0, moving: false },
   } as Partial<Entity> as Entity)
 
-  return entity
+  return entity as UnitEntity
 }
 
 /**

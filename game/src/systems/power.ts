@@ -8,7 +8,7 @@
  * Storm intensity affects rod output (fluctuates over time).
  */
 import { lightningRods, buildings, units } from "../ecs/world"
-import type { Entity } from "../ecs/types"
+import type { BuildingEntity } from "../ecs/types"
 
 /** How far power reaches from a lightning rod */
 const DEFAULT_POWER_RADIUS = 12
@@ -65,7 +65,7 @@ function getTotalPowerDemand(): number {
   return demand
 }
 
-function getBuildingPowerDemand(entity: Entity): number {
+function getBuildingPowerDemand(entity: BuildingEntity): number {
   switch (entity.building.type) {
     case "fabrication_unit": return 3
     case "lightning_rod": return 0 // generates, doesn't consume
@@ -73,7 +73,7 @@ function getBuildingPowerDemand(entity: Entity): number {
   }
 }
 
-function getUnitPowerDemand(entity: Entity): number {
+function getUnitPowerDemand(entity: { navigation?: { moving: boolean } }): number {
   // Moving units consume more
   const baseDemand = 0.5
   const movingBonus = entity.navigation?.moving ? 0.3 : 0

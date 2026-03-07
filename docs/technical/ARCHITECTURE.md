@@ -630,18 +630,20 @@ function StormSky() {
 
 **Not OrbitControls.** Syntheteria uses a top-down strategic camera designed for touch.
 
-### Touch (Primary)
+### Touch (Primary) — IMPLEMENTED
 
-| Gesture | Action |
-|---------|--------|
-| One-finger drag | Pan camera |
-| Pinch | Zoom in/out |
-| Tap unit | Select unit |
-| Tap ground | Deselect / set rally point |
-| Long-press unit | Context menu (move, hack, repair) |
-| Long-press ground | Building placement |
-| Two-finger tap | Pause/unpause |
-| Swipe from edge | Open panel (building toolbar, unit info) |
+| Gesture | Action | Status |
+|---------|--------|--------|
+| Two-finger drag | Pan camera | Implemented |
+| Pinch | Zoom in/out | Implemented |
+| Single tap unit | Select unit | Implemented |
+| Single tap ground | Move selected unit | Implemented |
+| Long-press unit | Context menu (move, hack, repair) | Not yet |
+| Long-press ground | Building placement | Via toolbar instead |
+| Two-finger tap | Pause/unpause | Not yet |
+| Swipe from edge | Open panel | Not yet |
+
+> **Design change:** Single-finger drag was moved from camera pan to unit interaction. Camera pan requires two fingers to avoid conflicting with unit tap-to-move.
 
 ### Keyboard/Mouse (PC Enhancement)
 
@@ -782,32 +784,32 @@ interface SaveData {
 
 ## 14. Build Order
 
-| Phase | What | Key Validation |
-|-------|------|----------------|
-| 1 | Chunk grid + terrain generation | Can create/render chunks with abstract and detailed modes |
-| 2 | Fragment system + void rendering | Multiple fragments float independently in void |
-| 3 | Camera (top-down pan/zoom) | Works on desktop and mobile touch |
-| 4 | Unit spawning + movement | Units move within fragments, smooth interpolation |
-| 5 | Exploration system | Robots reveal chunks as they move, abstract vs detailed |
-| 6 | Fragment merging | Two robots meeting triggers merge animation |
-| 7 | ECS simulation loop | Fixed-tick systems run in order |
-| 8 | Lightning rods + power network | BFS power distribution, protection zones |
-| 9 | Compute + signal systems | Global compute pool, signal BFS, disconnection |
-| 10 | State bridge + UI overlay | Resource bar, minimap, unit panels |
-| 11 | Building placement | Ghost preview, validation, construction |
-| 12 | Robot components + fabrication | Component slots, assembly validation, fabrication queues |
-| 13 | Pathfinding + navigation | A* over chunk grids, cross-chunk pathing |
-| 14 | Selection + commands | Click, box-select, right-click commands |
-| 15 | Hacking system | Target selection, progress, conversion |
-| 16 | Combat + enemies | Cultists, enslaved machines, rogue AIs, lightning attacks |
-| 17 | Automation routines | Engagement rules, patrol routes, behavior editor |
-| 18 | Storm progression + escalation | Intensifying storm, cultist aggression |
-| 19 | Audio | Storm ambience, lightning cracks, UI sounds |
-| 20 | Save/load | IndexedDB persistence, auto-save |
-| 21 | Story/narration | Intro sequence, discoveries, lore reveals |
-| 22 | Polish | Animations, particles, screen shake, juice |
+| Phase | What | Key Validation | Status |
+|-------|------|----------------|--------|
+| 1 | Chunk grid + terrain generation | Can create/render chunks with abstract and detailed modes | **Done** |
+| 2 | Fragment system + void rendering | Multiple fragments float independently in void | **Done** |
+| 3 | Camera (top-down pan/zoom) | Works on desktop and mobile touch | **Done** |
+| 4 | Unit spawning + movement | Units move within fragments, smooth interpolation | **Done** |
+| 5 | Exploration system | Robots reveal chunks as they move, abstract vs detailed | **Done** |
+| 6 | Fragment merging | Two robots meeting triggers merge animation | **Done** |
+| 7 | ECS simulation loop | Fixed-tick systems run in order | **Done** |
+| 8 | Lightning rods + power network | Power distribution, protection zones | **Done** |
+| 9 | Compute + signal systems | Global compute pool, signal BFS, disconnection | Pending |
+| 10 | State bridge + UI overlay | Resource bar, minimap, unit panels | **Done** |
+| 11 | Building placement | Ghost preview, validation, construction | **Done** |
+| 12 | Robot components + fabrication | Component slots, assembly validation, fabrication queues | **Done** (basic) |
+| 13 | Pathfinding + navigation | A* over navmesh, building obstacles | **Done** |
+| 14 | Selection + commands | Click, tap, right-click commands | **Done** |
+| 15 | Hacking system | Target selection, progress, conversion | Pending |
+| 16 | Combat + enemies | Feral machines, component-based damage | **Done** (feral only) |
+| 17 | Automation routines | Engagement rules, patrol routes, behavior editor | Pending |
+| 18 | Storm progression + escalation | Intensifying storm, cultist aggression | Pending |
+| 19 | Audio | Storm ambience, lightning cracks, UI sounds | Pending |
+| 20 | Save/load | IndexedDB persistence, auto-save | Pending |
+| 21 | Story/narration | Intro sequence, discoveries, lore reveals | **Done** (intro only) |
+| 22 | Polish | Animations, particles, screen shake, juice | Pending |
 
-**Phase 1–6 is the vertical slice** — the fragmented map system is the game's identity and the hardest technical challenge. If this works, everything else layers on top.
+**Phases 1–14 are substantially complete.** The core gameplay loop works: explore, scavenge, build, fabricate, fight, repair. Next priorities are hacking, cultist enemies, and signal/compute networks.
 
 ---
 

@@ -12,37 +12,51 @@ Your first challenge is to navigate your scattered, broken robots toward each ot
 
 From there, you grow. You venture outside the city into a dangerous open world. You discover abandoned mines along the coast, a ruined science campus to the west, and the territory of the **Cult of EL** to the north — supernatural humans who can call lightning from the sky and command enslaved machine intelligences. You hack enemy drones, build an army, and push north to confront the cult leader and discover the final secret of EL.
 
-## Interactive Prototype
+## Playable Prototype
 
-An interactive 3D prototype demonstrating the core visual concepts lives in [`prototype/index.html`](prototype/index.html). Open it in a browser to see:
+The game runs as a web application built with React Three Fiber + Three.js + Miniplex ECS.
 
-- **Fragmented map system** — Three map pieces floating in void (two detailed, one abstract/wireframe)
-- **Perpetual storm sky** — Drifting clouds with a pulsating wormhole visible overhead
-- **Lightning rod strikes** — Bolts hitting rods from the storm, powering the city
-- **Robot units** — Selectable, movable units on each map fragment
-- **Minimap** — Top-right overview showing all fragments and units
-- **Consciousness narration** — Opening text sequence
+```bash
+cd game
+npm install
+npm run dev
+```
 
-**Controls:**
+**Controls (Mobile):**
+- Single tap — Select unit / tap ground to move
+- Two-finger drag — Pan camera
+- Pinch — Zoom in/out
+
+**Controls (Desktop):**
 - `WASD` / Arrow keys — Pan camera
 - Scroll wheel — Zoom in/out
-- Left-click — Select a robot
-- Right-click — Move selected robot
-- `Space` — Pause/resume
-- `M` — Merge nearest map fragments
+- Left-click — Select unit / click ground to move
+- Right-click — Move selected unit
+- `Escape` — Cancel building placement
 
 ## Project Status
 
-**Phase: Pre-Implementation**
+**Phase: Phase 2 Prototype**
 
 | Area | Status |
 |------|--------|
-| Game design documents | Aligned to vision (10 design docs) |
-| Lore and narrative | Complete |
-| Engine selection | Pending (Unity vs Godot — either viable) |
-| Component data | Needs redesign for storm/lightning/coastal setting |
-| Interactive prototype | Three.js concept demo |
-| Implementation | Not started |
+| Engine | **Decided** — Custom: React Three Fiber + Three.js + Miniplex ECS |
+| Title screen & intro | **Implemented** — Glitch title, narration sequence |
+| Procedural city | **Implemented** — Factories, warehouses, towers, ruins, walls |
+| Terrain & navigation | **Implemented** — Continuous terrain, navmesh A*, fog-of-war |
+| Mobile input | **Implemented** — Two-finger camera, single tap unit control |
+| Power system | **Implemented** — Lightning rods, storm intensity, distribution |
+| Resources | **Implemented** — Scrap, e-waste, components; city scavenge points |
+| Building placement | **Implemented** — Lightning rods, fabrication units with costs |
+| Fabrication | **Implemented** — 5 recipes, build times, power dependency |
+| Enemy AI | **Implemented** — Feral machines with patrol/aggro behavior |
+| Combat | **Implemented** — Component-based damage, retaliation, salvage |
+| Repair | **Implemented** — Units with arms fix nearby broken parts |
+| Hacking | Not yet implemented |
+| Cultist enemies | Not yet implemented |
+| Save/load | Not yet implemented |
+| Audio | Not yet implemented |
+| Art style | TBD |
 
 ## Core Mechanics
 
@@ -183,61 +197,82 @@ See [Core Formulas](docs/technical/CORE_FORMULAS.md) for full specifications.
 syntheteria/
 ├── CLAUDE.md                     # AI development context
 ├── README.md                     # This file
+├── game/                         # Main game application
+│   ├── src/
+│   │   ├── App.tsx               # Game phases (title → narration → playing)
+│   │   ├── ecs/                  # Entity-Component-System
+│   │   │   ├── world.ts          # Miniplex world, archetype queries
+│   │   │   ├── types.ts          # Entity interface, component types
+│   │   │   ├── terrain.ts        # Fragment-based terrain, fog-of-war
+│   │   │   ├── cityLayout.ts     # Procedural city generation (seeded PRNG)
+│   │   │   └── gameState.ts      # Simulation tick manager, React state bridge
+│   │   ├── systems/              # ECS systems (run each tick)
+│   │   │   ├── exploration.ts    # Fog-of-war reveal
+│   │   │   ├── fragmentMerge.ts  # Map fragment merging
+│   │   │   ├── navmesh.ts        # A* pathfinding with building obstacles
+│   │   │   ├── power.ts          # Storm intensity, lightning rod output
+│   │   │   ├── resources.ts      # Scavenging, resource pool
+│   │   │   ├── repair.ts         # Component repair by nearby units
+│   │   │   ├── buildingPlacement.ts # Ghost preview, validation, placement
+│   │   │   ├── fabrication.ts    # Recipe crafting, build queues
+│   │   │   ├── enemies.ts        # Feral machine AI (patrol/aggro)
+│   │   │   └── combat.ts         # Component-based damage, retaliation
+│   │   ├── rendering/            # Three.js/R3F visual components
+│   │   │   ├── TerrainRenderer.tsx
+│   │   │   ├── CityRenderer.tsx  # Instanced mesh city buildings
+│   │   │   ├── UnitRenderer.tsx  # Units, buildings, ghost preview
+│   │   │   └── LandscapeProps.tsx
+│   │   ├── input/                # Player input handling
+│   │   │   ├── TopDownCamera.tsx  # Pan/zoom (mobile + desktop)
+│   │   │   └── UnitInput.tsx     # Selection, movement, building placement
+│   │   └── ui/                   # React DOM overlay
+│   │       ├── TitleScreen.tsx   # Main menu with glitch effect
+│   │       └── GameUI.tsx        # HUD, minimap, panels, toolbar
+│   └── package.json
 ├── prototype/
-│   └── index.html                # Interactive 3D concept prototype (Three.js)
+│   └── index.html                # Early Three.js concept demo
 ├── docs/
 │   ├── INDEX.md                  # Documentation hub
-│   ├── design/
-│   │   ├── GAME_OVERVIEW.md      # High-level concept, world, phases
-│   │   ├── CORE_MECHANICS.md     # Systems: resources, hacking, power, time
-│   │   ├── CONSCIOUSNESS_MODEL.md # Energy, compute, signal, failure states
-│   │   ├── DRONES.md             # Robot assembly, repair, components
-│   │   ├── COMBAT.md             # Cultists, lightning, hacking, enemies
-│   │   ├── MATERIALS.md          # Scavenging, mining, fabrication
-│   │   ├── UI_CONCEPT.md         # 2.5D top-down, fragmented maps
-│   │   ├── INTRO_SEQUENCE.md     # Void awakening, first repairs
-│   │   ├── IMPLEMENTATION_OPTIONS.md # Engine comparison, dev phases
-│   │   └── OPEN_QUESTIONS.md     # Design decisions tracker
-│   ├── story/
-│   │   └── LORE_OVERVIEW.md      # Timeline, EL, Cultists, world
-│   └── technical/
-│       ├── CORE_FORMULAS.md      # Math for power, compute, hacking
-│       └── REFERENCE_BUILDS.md   # Robot archetypes (pending redesign)
+│   ├── design/                   # Game design documents
+│   ├── story/                    # Lore and narrative
+│   └── technical/                # Architecture, formulas
 └── data/
-    └── README.md                 # Component data (pending redesign)
+    └── README.md                 # Component data (pending expansion)
 ```
 
 ## Engine Decision
 
-Pending. Either Unity or Godot is viable for the 2.5D/3D top-down view with fragmented maps.
+**Decided: Custom web engine** — React Three Fiber + Three.js + Miniplex ECS (TypeScript).
 
-| Factor | Godot | Unity |
-|--------|-------|-------|
-| AI-assisted dev | Better (text-based scenes) | Worse (binary scenes) |
-| 3D tooling | Adequate for 2.5D | Mature |
-| Mobile | Adequate | Industry standard |
-| Cost | Free forever | Free under $200K revenue |
-| CI | Simple (`--headless`) | Needs license management |
+**Rationale:**
+- **Mobile-first:** Web-native, runs in any browser — no app store gatekeeping
+- **AI-assisted development:** All code is text (TypeScript, JSX) — fully readable by AI
+- **Free forever:** No licensing costs at any scale
+- **Fast iteration:** Vite hot reload, instant deploy
 
-See [Implementation Options](docs/design/IMPLEMENTATION_OPTIONS.md) for full analysis.
+See [ARCHITECTURE.md](docs/technical/ARCHITECTURE.md) for full technical design.
 
 ## What Needs Work
 
 | Priority | Item | Details |
 |----------|------|---------|
-| High | Component data | Old 101-component dataset retired. New data needed for storm/lightning/coastal setting |
-| High | Engine selection | Choose Unity or Godot and commit |
+| High | Hacking system | Core mechanic — signal link + technique + compute |
+| High | Cultist enemies | Lightning-calling humans, escalating organization |
+| High | Signal/compute network | BFS connectivity, global compute pool |
+| Medium | Component expansion | More types beyond camera/arms/legs/power |
 | Medium | Art style | Low-poly, pixel art, or clean minimal — TBD |
-| Medium | Technical docs | Core formulas and reference builds need updating |
-| Low | 11 open questions | See [OPEN_QUESTIONS.md](docs/design/OPEN_QUESTIONS.md) |
+| Medium | Save/load | IndexedDB persistence |
+| Medium | Audio | Storm ambience, combat sounds, UI feedback |
+| Low | Technical docs | Core formulas and reference builds need updating |
 
 ## Next Steps
 
-1. **Choose engine** — pick Unity or Godot and commit
-2. **Build Phase 1 prototype** — fragmented map system is the signature mechanic to validate
-3. **Redesign component data** — lightning rods, storm capacitors, deep-sea equipment
-4. **Determine art style** — low-poly, pixel art, or clean minimal
-5. **Build vertical slice** — one complete gameplay loop end-to-end
+1. **Hacking system** — the signature mechanic for taking over enemy machines
+2. **Cultist enemies** — humans with lightning powers, escalating threat
+3. **Signal/compute network** — connectivity and compute pool management
+4. **Save/load** — persist game state to IndexedDB
+5. **Expand components** — more unit specialization options
+6. **Audio** — storm ambience, combat, UI sounds
 
 ## License
 

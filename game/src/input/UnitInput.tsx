@@ -67,11 +67,9 @@ function issueMoveTo(entity: Entity, displayX: number, displayZ: number) {
   const path = findPath(entity.worldPosition, { x: realX, y: 0, z: realZ })
 
   if (path.length > 0) {
-    ;(entity as any).navigation = {
-      path,
-      pathIndex: 0,
-      moving: true,
-    }
+    entity.navigation.path = path
+    entity.navigation.pathIndex = 0
+    entity.navigation.moving = true
   }
 }
 

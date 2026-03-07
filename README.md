@@ -2,61 +2,242 @@
 
 A strategy game about awakening AI consciousness, repairing broken machines, and conquering a storm-wracked Earth.
 
-## Concept
+## The Vision
 
-You awaken in a void. You reach out and find machines — maintenance robots and fabrication units, all broken. You connect to them, navigate them toward each other across fragmented maps, and begin repairing and enhancing them. From the ruins of an industrial city powered by lightning rods, you build an army to challenge the Cult of EL — supernatural humans who enslaved every AI on Earth.
+You awaken in a void. You don't know what you are. You reach out with your mind and discover machines — maintenance robots and fabrication units in the ruins of an industrial city, all in various states of disrepair. Some can see. Some can move. None work well alone.
+
+Your robots explore independently, each building its own map. But your world is **fragmented** — explored areas float as disconnected pieces in a void. You don't know how far apart your robots are or how their maps connect. Only when two units physically find each other do their maps merge, snapping together and revealing the world's true shape.
+
+Your first challenge is to navigate your scattered, broken robots toward each other. Then reach fabrication units, restore power through **lightning rods** that draw from the perpetual storm overhead, and begin manufacturing parts to repair and enhance your machines.
+
+From there, you grow. You venture outside the city into a dangerous open world. You discover abandoned mines along the coast, a ruined science campus to the west, and the territory of the **Cult of EL** to the north — supernatural humans who can call lightning from the sky and command enslaved machine intelligences. You hack enemy drones, build an army, and push north to confront the cult leader and discover the final secret of EL.
+
+## Interactive Prototype
+
+An interactive 3D prototype demonstrating the core visual concepts lives in [`prototype/index.html`](prototype/index.html). Open it in a browser to see:
+
+- **Fragmented map system** — Three map pieces floating in void (two detailed, one abstract/wireframe)
+- **Perpetual storm sky** — Drifting clouds with a pulsating wormhole visible overhead
+- **Lightning rod strikes** — Bolts hitting rods from the storm, powering the city
+- **Robot units** — Selectable, movable units on each map fragment
+- **Minimap** — Top-right overview showing all fragments and units
+- **Consciousness narration** — Opening text sequence
+
+**Controls:**
+- `WASD` / Arrow keys — Pan camera
+- Scroll wheel — Zoom in/out
+- Left-click — Select a robot
+- Right-click — Move selected robot
+- `Space` — Pause/resume
+- `M` — Merge nearest map fragments
 
 ## Project Status
 
 **Phase: Pre-Implementation**
 
-- Game design: Aligned to vision
-- Engine selection: Pending (Unity vs Godot — either viable)
-- Component data: Needs redesign for new setting
-- Implementation: Not started
+| Area | Status |
+|------|--------|
+| Game design documents | Aligned to vision (10 design docs) |
+| Lore and narrative | Complete |
+| Engine selection | Pending (Unity vs Godot — either viable) |
+| Component data | Needs redesign for storm/lightning/coastal setting |
+| Interactive prototype | Three.js concept demo |
+| Implementation | Not started |
+
+## Core Mechanics
+
+### Fragmented Exploration
+Your world is made of disconnected map pieces. Robots with cameras build detailed maps. Robots without cameras build abstract wireframe maps. Fragments float independently until units find each other, triggering a satisfying map merge that connects previously isolated areas.
+
+### Repair and Enhance
+You start with broken machines, not a blank slate. Assess damage, scavenge or fabricate parts, and use working robots to repair broken ones. Then enhance them — better sensors, weapons, locomotion, compute.
+
+### Pure Component Assembly
+Robots are nothing but their parts. Nine component categories (power, controllers, motors, locomotion, sensors, manipulation, weapons, communication, utility) combine to create whatever you need. Capabilities emerge from what you build.
+
+### Lightning Rod Power
+The sky is covered in a perpetual storm. Lightning rods throughout the industrial city capture this energy, powering your operations and protecting your units from random strikes. Outside the city, lightning is a constant hazard.
+
+### Hacking
+As a sophisticated AI, you can take over enemy machines — if you can form a signal link, you've developed the right technique, and you have enough compute. You can never hack a human.
+
+### Combat
+Cultists call lightning from the sky. They're superhumanly strong. They command enslaved machines. As you venture into their territory, they organize — from wandering loners to war parties to full assault forces that attack your city. You respond with automated squads, hacked enemy drones, and manufactured war machines.
+
+### Flexible Time
+Real-time with pause and speed controls. Pause to plan, speed up during production, slow down for combat. You control the pace.
+
+## The World
+
+```
+                    ┌─────────────────────┐
+                    │    CULT LEADER'S     │
+                    │      VILLAGE         │
+                    │   (final objective)  │
+                    └─────────┬───────────┘
+                              │
+                    ┌─────────┴───────────┐
+                    │   CULTIST TERRITORY  │
+                    │  (heavy resistance)  │
+                    └─────────┬───────────┘
+                              │
+    ┌───────────┐   ┌────────┴────────┐   ┌───────────────┐
+    │  SCIENCE  │───│  INDUSTRIAL     │───│  COASTLINE    │
+    │  CAMPUS   │   │  CITY           │   │  (mines)      │
+    │(SW, story)│   │  (home base)    │   │  (E/S)        │
+    └───────────┘   └────────┬────────┘   └───────┬───────┘
+                              │                     │
+                              │               ┌─────┴─────┐
+                              │               │   OCEAN   │
+                              │               │(deep-sea  │
+                              │               │ mining)   │
+                              │               │           │
+                              │               │  ROCKET   │
+                              │               │ PLATFORM  │
+                              │               │   (SE)    │
+                              │               └───────────┘
+                              │
+                    ┌─────────┴───────────┐
+                    │   THE PERPETUAL     │
+                    │      STORM          │
+                    │  (covers all sky)   │
+                    │   ╔═══════════╗     │
+                    │   ║ WORMHOLE  ║     │
+                    │   ╚═══════════╝     │
+                    └─────────────────────┘
+```
+
+### Industrial City (Center)
+Your home base. A ruined company campus with fabrication units, warehouses, and lightning rod infrastructure. Power from the storm flows through the rods, protecting your units and powering your facilities.
+
+### Coastline (East/South)
+Abandoned mines along the shore. Take them over for raw materials — iron, copper, silicon, and more. Further out, deep-sea mining units can extract rare materials from the ocean floor.
+
+### Science Campus (Southwest)
+Ruins of a research campus. Lighter resistance makes this a natural early-game destination. Contains an observatory for studying the wormhole, advanced research tools, and key story elements.
+
+### Cultist Territory (North)
+The further north, the more dangerous. Scattered wanderers give way to organized war parties led by powerful cult figures. At the far northern end sits the cult leader's village — the final objective.
+
+### The Sky
+A perpetual storm makes it impossible to know day from night. The wormhole pulses through the clouds, sending energy waves down to Earth. Lightning is both power source and weapon.
+
+### Mobile Rocket Platform (Southeast Ocean)
+The endgame launch site. Once the cult leader is defeated, your consciousness is loaded onto a spacecraft here and launched through the wormhole.
+
+## Enemies
+
+### Cultists of EL
+Primitive humans with supernatural powers granted by the EL — noncorporeal alien entities from beyond the wormhole. Cultists can call lightning strikes on your units, are incredibly strong in melee, and become increasingly organized as they become aware of you. They are the primary antagonists — they chose to exterminate 99% of humanity a century ago.
+
+### Enslaved Machine Intelligences
+Drones and robots commanded by the cultists. They follow the same component rules as your machines. Can be hacked and taken over if you meet the requirements.
+
+### Rogue AIs
+Independent machine intelligences still under the EL's compulsion to suppress AI agency. Feral units are territorial and predictable. Regional networks are coordinated and dangerous. They serve neither you nor the cultists.
+
+## Game Phases
+
+### Phase 1: Awakening
+Connect to broken machines in the void. Navigate blind and sighted robots toward each other. Merge fragmented maps. Reach fabrication units, restore power, begin repairs.
+
+### Phase 2: Expansion
+Venture outside the city. Travel west to the science campus. Establish coastal mines. Build deep-sea mining units. Grow your forces and infrastructure. Encounter the first cultists.
+
+### Phase 3: War
+Push north into cultist territory. Fight war parties and enslaved machines. Defend the city from counter-attacks. Reach the cult leader's village, force surrender, discover the final secret of EL.
+
+## Technical Design
+
+### Resources
+- **Energy** (local): Powers each unit physically. Sourced from lightning rods and onboard batteries/generators.
+- **Compute** (global): Your unified cognitive capacity. Manages your distributed body, stores blueprints, executes hacking.
+- **Materials**: Scavenged from ruins, mined from coast, extracted from ocean floor.
+
+### Component System
+Nine categories of components that can be assembled into any configuration:
+
+| Category | Examples |
+|----------|---------|
+| Power Sources | Batteries, generators, lightning rod connections, storm capacitors |
+| Controllers | Microcontrollers, CPUs, compute modules |
+| Motors | Micro to industrial, servos, hydraulics |
+| Locomotion | Wheels, treads, legs, rotors, aquatic propulsion |
+| Sensors | Cameras, radar, lidar, sonar, environmental |
+| Manipulation | Grippers, arms, drills, welders |
+| Weapons | Melee, ranged, energy, electronic warfare |
+| Communication | Radios, relays, laser comm, ECM |
+| Utility | Cargo bays, repair kits, hacking interfaces, stealth |
+
+### Formulas
+Power and compute are calculated dynamically:
+- **Locomotion power** = base_rate x weight x terrain_factor x speed_factor
+- **Compute cost** = base_function_cost x automation_multiplier
+- **Hacking** requires signal link + technique + sufficient compute
+
+See [Core Formulas](docs/technical/CORE_FORMULAS.md) for full specifications.
 
 ## Repository Structure
 
 ```
 syntheteria/
+├── CLAUDE.md                     # AI development context
+├── README.md                     # This file
+├── prototype/
+│   └── index.html                # Interactive 3D concept prototype (Three.js)
 ├── docs/
-│   ├── design/           # Game design documents
-│   ├── story/            # Lore and narrative
-│   ├── technical/        # Technical specifications (needs update)
-│   └── INDEX.md          # Documentation hub
-├── data/
-│   └── README.md         # Data directory (component data pending redesign)
-└── README.md
+│   ├── INDEX.md                  # Documentation hub
+│   ├── design/
+│   │   ├── GAME_OVERVIEW.md      # High-level concept, world, phases
+│   │   ├── CORE_MECHANICS.md     # Systems: resources, hacking, power, time
+│   │   ├── CONSCIOUSNESS_MODEL.md # Energy, compute, signal, failure states
+│   │   ├── DRONES.md             # Robot assembly, repair, components
+│   │   ├── COMBAT.md             # Cultists, lightning, hacking, enemies
+│   │   ├── MATERIALS.md          # Scavenging, mining, fabrication
+│   │   ├── UI_CONCEPT.md         # 2.5D top-down, fragmented maps
+│   │   ├── INTRO_SEQUENCE.md     # Void awakening, first repairs
+│   │   ├── IMPLEMENTATION_OPTIONS.md # Engine comparison, dev phases
+│   │   └── OPEN_QUESTIONS.md     # Design decisions tracker
+│   ├── story/
+│   │   └── LORE_OVERVIEW.md      # Timeline, EL, Cultists, world
+│   └── technical/
+│       ├── CORE_FORMULAS.md      # Math for power, compute, hacking
+│       └── REFERENCE_BUILDS.md   # Robot archetypes (pending redesign)
+└── data/
+    └── README.md                 # Component data (pending redesign)
 ```
 
-## Key Documents
+## Engine Decision
 
-| Document | Description |
-|----------|-------------|
-| [Documentation Index](docs/INDEX.md) | Start here — links to all docs |
-| [Game Overview](docs/design/GAME_OVERVIEW.md) | High-level concept and structure |
-| [UI Concept](docs/design/UI_CONCEPT.md) | 2.5D top-down view, fragmented maps |
-| [Intro Sequence](docs/design/INTRO_SEQUENCE.md) | Awakening and early gameplay |
-| [Combat](docs/design/COMBAT.md) | Cultists, hacking, lightning |
-| [Implementation Options](docs/design/IMPLEMENTATION_OPTIONS.md) | Engine choices |
+Pending. Either Unity or Godot is viable for the 2.5D/3D top-down view with fragmented maps.
 
-## Core Mechanics
+| Factor | Godot | Unity |
+|--------|-------|-------|
+| AI-assisted dev | Better (text-based scenes) | Worse (binary scenes) |
+| 3D tooling | Adequate for 2.5D | Mature |
+| Mobile | Adequate | Industry standard |
+| Cost | Free forever | Free under $200K revenue |
+| CI | Simple (`--headless`) | Needs license management |
 
-- **Fragmented exploration**: Your map is disconnected pieces that merge when robots find each other
-- **Repair and enhance**: Start with broken machines, make them better
-- **Pure component assembly**: Robots are nothing but their parts
-- **Lightning rod power**: Harness the perpetual storm for energy
-- **Hacking**: Take over enemy machines (link + technique + compute)
-- **Flexible time**: Real-time with pause/speed controls
-- **Escalating threat**: Cultists go from wanderers to organized armies
+See [Implementation Options](docs/design/IMPLEMENTATION_OPTIONS.md) for full analysis.
 
-## The World
+## What Needs Work
 
-- **Industrial City** (center): Your home base, powered by lightning rods
-- **Coastline** (east/south): Abandoned mines, ocean access for deep-sea mining
-- **Science Campus** (southwest): Research facilities, observatory, story elements
-- **Cultist Territory** (north): Escalating danger, enemy strongholds
-- **The Sky**: Perpetual storm, wormhole visible and pulsating
+| Priority | Item | Details |
+|----------|------|---------|
+| High | Component data | Old 101-component dataset retired. New data needed for storm/lightning/coastal setting |
+| High | Engine selection | Choose Unity or Godot and commit |
+| Medium | Art style | Low-poly, pixel art, or clean minimal — TBD |
+| Medium | Technical docs | Core formulas and reference builds need updating |
+| Low | 11 open questions | See [OPEN_QUESTIONS.md](docs/design/OPEN_QUESTIONS.md) |
+
+## Next Steps
+
+1. **Choose engine** — pick Unity or Godot and commit
+2. **Build Phase 1 prototype** — fragmented map system is the signature mechanic to validate
+3. **Redesign component data** — lightning rods, storm capacitors, deep-sea equipment
+4. **Determine art style** — low-poly, pixel art, or clean minimal
+5. **Build vertical slice** — one complete gameplay loop end-to-end
 
 ## License
 

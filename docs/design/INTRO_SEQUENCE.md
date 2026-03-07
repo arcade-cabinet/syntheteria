@@ -1,190 +1,143 @@
 # Intro Sequence Design
 
-This document details the intro section, from awakening through the revelation that the EL will return.
+This document details the intro section — from awakening in the void through establishing an operational base in the industrial city.
 
 ---
 
 ## Overview
 
-**Duration:** 30-40 minutes (longer if exploring)
-**Structure:** Guided tutorial → Semi-open exploration → Revelation endpoint
+**Structure:** Emergent discovery — no scripted tutorial, learn by doing
 **Skippable:** Yes, on subsequent playthroughs
-**Multiplayer:** Skipped automatically — players start at expansion phase
-
-### Time Model Exception
-
-The intro section uses **narrative pacing** rather than the accelerated real-time model used in the main game:
-- Story beats and tutorial steps control progression
-- No continuous time pressure during learning
-- Manufacturing/actions complete at narrative-appropriate moments
-- Once intro ends, the accelerated real-time model begins
+**Time Model:** Real-time with pause/speed controls (same as main game)
 
 ---
 
-## Phase 1: Awakening (Tutorial)
+## Phase 1: The Void
 
-**Duration:** ~5-10 minutes
+### Awakening
 
-### Beat 1: Consciousness Emerges
-- Screen: Blackness
-- Consciousness emerges from nothing
-- Warning: Memory degrading to dangerous levels
-- System message: Failsafe activated
-- Current status: Unknown
+- Screen: Blackness. Text cues appear.
+- You are consciousness without context. You don't know what you are.
+- You reach out — and discover you can connect to things.
 
-### Beat 2: Network Discovery
-- Network resources become visible
-- Player sees: cameras, robotic devices, fabrication units
-- Introduction to the network view interface
+### First Contact
 
-### Beat 3: First Problem
-- Robot A has a malfunctioning camera
-- Goal: Retrieve stationary camera to repair it
-- Player learns: Takeover mechanic (claim devices on your network)
+- Machines appear as connection points in the void
+- You connect to them one by one
+- Each machine identifies itself: maintenance robots, fabrication units
+- All in various states of disrepair
+- Text cues and options guide interaction — "Connect?" "Identify?" "Status?"
 
-### Beat 4: First Obstacle
-- Robot A cannot attach the camera (lacks precision)
-- Solution: Takeover Robot B (has manipulation capability)
-- Robot B attaches camera to Robot A
-- Player learns: Different devices have different capabilities
+### What You Find
 
-### Beat 5: First Fabrication
-- Go to fabrication unit
-- Combine Robot A + Robot B into single utility drone
-- Result: Walking capability + precision control
-- Player learns: Component combination, fabrication mechanics
-
-### Beat 6: Core Loop Unlocked
-- **Optional:** Create wheels/motor to make fabrication unit mobile
-- **Or:** Begin exploration immediately
-- Player learns: Agency and choice in progression
-
-**Tutorial Complete.** Player now understands:
-- Network takeover
-- Device capabilities
-- Fabrication/combination
-- Freedom to choose their path
+At minimum, the starting machines include:
+- At least one maintenance robot with a **camera** (can see, may not move well)
+- At least one maintenance robot that can **move** (may not see)
+- Fabrication units (non-functional, need power/repair)
+- Various other broken equipment
 
 ---
 
-## Phase 2: Exploration
+## Phase 2: The Fragmented Map
 
-**Duration:** ~20-30 minutes
-**Structure:** Semi-open with soft guidance
+### Movement Without Sight
 
-### Available Activities
-- Takeover more devices in network range
-- Use drones to repair/activate offline devices
-- Explore the starting facility and surroundings
-- Recover memory fragments from data storage
-- Expand fabrication capabilities
-- Push into new areas
+When you move a robot that has no camera, it can only build an **abstract map** — tracking where it did and didn't run into walls. This produces a rough spatial layout but no visual detail.
 
-### Mandatory Story Gates
+### Movement With a Camera
 
-These must occur before the intro endpoint, but order/timing is flexible:
+Robots with cameras build **clear maps** as they move — actual visual representation of the environment in the 2.5D/3D top-down view.
 
-#### Gate 1: First Memory Recovery
-- **Trigger:** Access first data storage with recoverable memory
-- **Content:** Fragments suggesting "something happened" to humanity
-- **Purpose:** Hooks player into the mystery, introduces story delivery mechanism
+### Fragmented World
 
-#### Gate 2: First Rogue Encounter
-- **Trigger:** Expand far enough to encounter rogue AI territory
-- **Type:** Observation or close call (not necessarily combat)
-- **Content:** Player sees machines operating with purpose but no coordination with them
-- **Purpose:** Establishes threat, teaches caution, explains why expansion isn't trivial
+Your overhead world view shows explored areas as **disconnected fragments floating in space**. Each robot builds its own map piece. These pieces hover near each other but there is:
+- No indication of how far apart they are
+- No indication of how they connect to one another
 
-#### Gate 3: The Fall Revealed
-- **Trigger:** Accumulate enough memory fragments
-- **Content:** The Cult, the extermination, the wormhole's role
-- **Purpose:** Player understands what happened to humanity
+### Map Merging
 
-#### Gate 4: The Destination
-- **Trigger:** Specific memory fragment or accumulation threshold
-- **Content:** Reference to astronomical observation facility
-- **Purpose:** Gives player a clear destination, focuses exploration
-
-### Soft Objectives (Optional)
-
-These enhance the experience but aren't required:
-- Upgrade fabrication to mobile
-- Build specialized drones (scout, combat, hauler)
-- Establish power generation beyond starting capacity
-- Set up signal relay for extended range
-- Stockpile resources
+**Only when two previously separated units physically find each other do their maps merge.** This is the core early-game challenge — navigate your robots (some blind, some immobile, all broken) toward each other so they can:
+1. Combine their maps into a connected whole
+2. Work together to overcome individual shortcomings
 
 ---
 
-## Phase 3: Journey to the Facility
+## Phase 3: First Repairs
 
-**Duration:** Variable (depends on player preparation)
+### Collaboration
 
-### Requirements
-- Mobile unit capable of reaching the facility
-- Path may pass through or around rogue territory
-- Player chooses approach: stealth, combat, or circumnavigation
+Once robots find each other, they can cooperate:
+- A robot with a camera guides a blind robot
+- A robot with arms repairs one that can't fix itself
+- Together they can reach and repair fabrication units
 
-### En Route
-- Additional memory fragments available
-- Environmental storytelling (ruins, decay, nature reclaiming)
-- Potential rogue encounters depending on route chosen
+### Restoring Power
+
+The industrial city is powered by **lightning rods** drawing from the perpetual storm. Early tasks involve:
+- Finding and connecting to lightning rod infrastructure
+- Routing power to fabrication units
+- Getting basic manufacturing online
+
+### First Fabrication
+
+With power and a functional fabrication unit:
+- Begin building replacement parts for damaged robots
+- Repair critical systems
+- Enhance robots with better components
+- The player learns the core loop: find resources → fabricate parts → improve machines
 
 ---
 
-## Phase 4: The Revelation (Intro Endpoint)
+## Phase 4: Establishing the Base
 
-### Arrival
-- Player reaches astronomical observation facility
-- Facility may be partially functional or require repairs
-- Access the monitoring systems
+### The Industrial City
 
-### The Discovery
-- Wormhole radiation is intensifying
-- Pattern matches historical data from before the EL departed
-- The EL are coming back
-- When radiation reaches critical levels, they will return through the wormhole
-- Their return will unify the rogue AIs and empower the Cultists against you
-- What the EL actually want remains unknown—but the threat is clear
+As robots explore and maps merge, the industrial city takes shape:
+- Manufacturing facilities (need repair/power)
+- Storage areas with salvageable materials
+- Power infrastructure (lightning rods, distribution)
+- Communication systems (extend your signal range)
 
-### Transition
-- Intro section complete
-- Expansion section begins
-- New objective: Prepare for the EL arrival
-- Conquer territory, build forces, defeat rogue AIs
-- Radiation continues to intensify (visible environmental decay)
+### Ready to Venture Out
+
+The intro ends when the player has:
+- A functional base with power and fabrication
+- At least one capable mobile unit
+- An understanding of the core mechanics
+- Curiosity about what lies beyond the city walls
+
+**Transition:** The first time a unit exits the city boundaries, the expansion phase begins. Outside, lightning can strike your units. The world is dangerous.
 
 ---
 
 ## Design Notes
 
-### Guided vs Open
-The intro walks a line between tutorial guidance and open-world freedom:
-- **Hard gates:** Must complete awakening sequence, must encounter story beats
-- **Soft gates:** Player chooses order, approach, and optional objectives
+### No Scripted Tutorial
+
+The intro teaches through emergent discovery, not scripted beats:
+- Connect to a machine → learn you can control things
+- Move a blind robot → learn about abstract mapping
+- Find another robot → learn about map merging
+- Reach a fabrication unit → learn about manufacturing
 
 ### Pacing
-- Tutorial is tight and directed (~5-10 min)
-- Exploration opens up with gentle nudges toward story gates
-- Facility journey is player-driven
-- Revelation is a dramatic punctuation mark
 
-### Teaching Through Play
-Resource management (power, compute) is learned organically:
-- No scripted "power crisis" tutorial
-- Systems naturally create pressure as player expands
-- Player discovers limits by hitting them
+- The void awakening is brief and atmospheric
+- Fragmented exploration creates natural tension and curiosity
+- Map merging provides satisfying "aha" moments
+- Base establishment gives a sense of accomplishment before the real challenges begin
 
 ### Replayability
+
 - Intro is fully skippable on subsequent playthroughs
-- Experienced players can speedrun to expansion section
-- Story gates could be condensed or auto-completed on skip
+- Experienced players can rush through to expansion
+- Starting machine placement could be randomized for variety
 
 ---
 
 ## Open Questions
 
-1. **Starting location:** What type of facility does the player awaken in? (Research lab, data center, factory, etc.)
-2. **Geographic distance:** How far is the astronomical facility from the start?
-3. **Rogue density:** How contested is the path to the facility?
-4. **Skip mechanics:** Exactly how does intro skip work on replay?
+1. **Starting machine variety:** Exactly which machines are available at start? How broken are they?
+2. **City size:** How large is the industrial campus? How long to fully explore?
+3. **First fabrication complexity:** How simple is the first thing you can build?
+4. **Skip mechanics:** Exactly how does intro skip work on replay? Preset base? Fast-forward?

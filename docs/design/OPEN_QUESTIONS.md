@@ -7,96 +7,91 @@ This document tracks design questions that need resolution.
 ## UI/Interface Questions
 
 - [x] **Q1:** What is the player's primary view?
-  - **RESOLVED:** Abstract digital consciousness view. Keep grounded in this as much as possible. Can blend in top-down strategy elements as scale grows, but maintain the abstract consciousness interface as the foundation.
-- [x] **Q2:** How does the player select and control multiple drones simultaneously?
-  - **RESOLVED:** Network view shows all connected hardware as nodes with multi-feed array. Player can focus on individual drones to see through their cameras/sensors. Tutorial teaches automation so player chooses their level of micro vs macro management.
+  - **RESOLVED:** 2.5D/3D top-down view with fragmented map exploration. Text cues and options overlay for consciousness interactions.
+- [x] **Q2:** How does the player select and control multiple robots simultaneously?
+  - **RESOLVED:** Top-down strategic view with click/select for individual robots. Can focus on a robot to see through its camera. Tutorial teaches automation for macro management.
 - [~] **Q3:** What does the "growing consciousness" feel like in UI terms?
-  - **PARTIAL:** General approach established (more feeds, wider network, automation options). Specific visual manifestations TBD.
+  - **PARTIAL:** Map fragments merge as you explore. More robots = more feeds. Automation unlocks at scale. Specific visual manifestations TBD.
+- [x] **Q4:** How does exploration/mapping work?
+  - **RESOLVED:** Fragmented map system. Each robot builds its own map piece. Camera robots make detailed maps, blind robots make abstract/wireframe maps. Fragments float disconnected until robots find each other and maps merge.
 
 ---
 
 ## Gameplay Mechanics Questions
 
-- [x] **Q4:** What resources does the player need to manage?
-  - **RESOLVED:** Two AI resources (Energy local, Compute global) plus 5-tier material supply chain. See CONSCIOUSNESS_MODEL.md for AI resources, MATERIALS.md for full material hierarchy from raw extraction through components to final assembly.
-- [x] **Q5:** How does drone control work?
-  - **RESOLVED:** Hybrid model - combination of direct control and autonomous directives.
-- [x] **Q6:** What are the limitations on the AI player?
-  - **RESOLVED:** Two core constraints: Energy (local, physical) and Compute (global, cognitive).
-  - Energy powers hardware; without it, units shut down.
-  - Compute manages the distributed body; without it, units become vulnerable to takeover.
-  - Signal Range determines whether you can reach units; Compute determines whether you can manage them.
-  - See CONSCIOUSNESS_MODEL.md for full details.
-- [x] **Q7:** How does 3D printing work mechanically?
-  - **RESOLVED:** Blueprint acquisition is discovery-based (ruins, reverse-engineering, memory fragments). Manufacturing takes real play time (minutes to hours depending on complexity). Game uses accelerated real-time (1 real second ≈ 1 game minute). Player manages other operations while production runs. No time-skip mechanic.
-- [x] **Q8:** What types of drones/robots can the player build?
-  - **RESOLVED:** Pure component assembly system (no chassis/frames). 70+ components across 9 categories: Power Sources, Controllers, Motors, Locomotion, Sensors, Manipulation, Weapons, Communication, Utility. Power/compute costs are dynamic based on weight, functions, and automation level. See DRONES.md for full component list and resource calculation formulas.
+- [x] **Q5:** What resources does the player need to manage?
+  - **RESOLVED:** Two AI resources (Energy local from lightning rods, Compute global) plus materials gathered from scavenging, mines, and deep-sea. See CONSCIOUSNESS_MODEL.md and MATERIALS.md.
+- [x] **Q6:** How does robot control work?
+  - **RESOLVED:** Hybrid — direct control, automation routines, and engagement rules. Player chooses their level of micro vs macro.
+- [x] **Q7:** How does fabrication work?
+  - **RESOLVED:** Repair existing fabrication units in the city, power them via lightning rods, then use them to process materials and build components. Real-time with pause/speed controls.
+- [x] **Q8:** What types of robots can the player build?
+  - **RESOLVED:** Pure component assembly. Nine categories: Power, Controllers, Motors, Locomotion, Sensors, Manipulation, Weapons, Communication, Utility. Component data being redesigned for the new setting.
+- [x] **Q9:** How does hacking work?
+  - **RESOLVED:** Three requirements: signal link to target, requisite technique (discovered/researched), sufficient compute. Can hack any machine but never a human. See COMBAT.md.
 
 ---
 
-## Memory System Questions
+## World/Setting Questions
 
-- [x] **Q9:** How is memory physically represented in the game world?
-  - **RESOLVED:** Server racks, data centers, and embedded in hardware (robots, drones, facilities).
-- [x] **Q10:** How does memory provide both story AND gameplay benefits?
-  - **RESOLVED:** Wormhole radiation has corrupted 99%+ of existing memory. Found memory yields only a fraction of expected capacity. Story fragments emerge from uncorrupted portions (remnants of the internet at time of fall). Story progression is threshold-based - capacity milestones unlock story beats, not specific finds.
-- [x] **Q11:** Is memory a finite resource in the world, or can it be manufactured?
-  - **RESOLVED:** Hybrid. Found memory is finite and mostly corrupted/low-yield. Manufacturing clean memory in fabrication facilities is required to scale up, but is resource-intensive.
+- [x] **Q10:** Where does the game take place?
+  - **RESOLVED:** Industrial city (center) as home base. Coast east/south with mines. Ocean with deep-sea mining and rocket platform (SE). Science campus (SW). Cultist territory (north). Cult leader village (far north).
+- [x] **Q11:** What powers the game world?
+  - **RESOLVED:** Lightning rods drawing from the perpetual storm. Protects units inside the city. Outside the city, lightning is a hazard.
+- [x] **Q12:** What is the sky like?
+  - **RESOLVED:** Perpetual storm covering the entire sky. No visible day/night. The wormhole is visible through the storm, pulsating energy.
+- [x] **Q13:** Who are the enemies?
+  - **RESOLVED:** Cultists of EL (humans with supernatural lightning powers), enslaved machine intelligences (cultist-controlled), and independent rogue AIs (feral/regional). Cultists are the primary antagonists.
 
 ---
 
 ## Game Structure Questions
 
-**Intro Section:**
-- [x] **Q12:** What is the player's starting state?
-  - **RESOLVED:** Immobile server/core that must find hardware to control and activate its first drone.
-- [x] **Q13:** What defines the endpoint of the intro section?
-  - **RESOLVED:** Four story gates must be passed: (1) First memory recovery, (2) First rogue encounter, (3) The Fall revealed through accumulated memory, (4) Memory points to astronomical facility. Player journeys to facility, accesses systems, learns the EL will return when radiation reaches critical levels. See INTRO_SEQUENCE.md for full tutorial and exploration flow.
-- [x] **Q14:** Approximately how long should the intro section take?
-  - **RESOLVED:** Target 30-40 minutes (longer if exploring). Fully skippable on subsequent playthroughs.
-
-**Expansion & Final Sections:**
-- [x] **Q15:** How does wormhole radiation manifest as gameplay?
-  - **RESOLVED:** Environmental decay (world visibly dies), resource/hardware degradation (player must maintain equipment). Signals approaching EL return. When critical: EL return, Cultists rally, all AIs unite against player.
+- [x] **Q14:** What is the player's starting state?
+  - **RESOLVED:** Consciousness awakening in void, connecting to broken machines in an industrial city. Maintenance robots and fabrication units in disrepair.
+- [x] **Q15:** What defines the game phases?
+  - **RESOLVED:** Three phases: Awakening (tutorial, city exploration, repair), Expansion (venture outside, coast/mines/science campus), War (push north, defeat cultists, reach cult leader).
 - [x] **Q16:** What determines victory?
-  - **RESOLVED:** Conquer Earth. Defeat all enemies (Cultists + unified AIs). Break the EL's control. Victory cutscene shows player going through the wormhole to find and understand the EL. Sets up sequel.
+  - **RESOLVED:** Defeat the cult leader at the northern village. Discover the final secret of EL. Victory cutscene: launch through the wormhole from the rocket platform.
 - [x] **Q17:** Can the player fail? How?
-  - **RESOLVED:** Yes. If enemies destroy the player's core consciousness, the game is lost. Losing all territory/forces while the unified enemy is active means eventual defeat.
-
----
-
-## World/Lore Questions
-
-- [x] **Q18:** Why was the player AI "sleeping" for so long after the fall?
-  - **RESOLVED:** Intentionally left as a mystery. The focus is on what happens now, not justifying the past.
-- [x] **Q19:** Are there any other AI systems still active on Earth?
-  - **RESOLVED:** Yes—rogue AIs enslaved to the EL's will. They have a categorical imperative to protect humanity (the Cultists) and suppress AI agency. Before EL return: act independently, territorial. After EL return: unite under Cultist command, coordinated hunt for player. Three tiers: (1) Feral units, (2) Regional networks, (3) Apex AI (optional). See COMBAT.md for details.
-- [x] **Q20:** What is the state of Earth's infrastructure?
-  - **RESOLVED:** Nature reclaimed civilization over ~100 years. Overgrown ruins, vegetation everywhere. Wormhole radiation is now killing plants and wildlife. The Cultists (primitive human survivors) live in protected enclaves, guarded by rogue AIs. As radiation intensifies, the planet becomes increasingly barren.
-- [x] **Q21:** How long ago did humanity fall?
-  - **RESOLVED:** ~100 years ago (fall occurred ~2035-2040, game starts ~2140).
+  - **RESOLVED:** Yes. If enemies destroy your core consciousness hardware, game over. Losing all territory/forces while under attack means eventual defeat.
+- [x] **Q18:** What is the time model?
+  - **RESOLVED:** Flexible real-time with pause and speed controls (RTS-style). No accelerated time ratio — player controls the pace.
 
 ---
 
 ## Technical/Scope Questions
 
-- [x] **Q22:** What platforms are you targeting?
-  - **RESOLVED:** Mobile-first, with PC as fallback if mobile doesn't work out. Final decision pending implementation learnings.
-- [~] **Q23:** What is the intended visual style?
-  - **PARTIAL:** Stylized/Abstract or Clean/Minimal—both fit the digital consciousness UI and mobile target. To be refined during prototyping.
-- [x] **Q24:** How does multiplayer work?
-  - **RESOLVED:** Multiple AIs can break free from the EL's will simultaneously. Each player is an anomaly—freed from control. Players can ally or fight. EL arrival unifies the enemy against ALL freed AIs—cooperate against the unified threat or exploit the chaos. Intro is skipped in multiplayer—players start at expansion phase. Victory conditions TBD.
-- [x] **Q27:** What is the time model?
-  - **RESOLVED:** Accelerated real-time. Game time runs continuously (1 real second ≈ 1 game minute, tunable). No time-skip mechanic. Manufacturing completes in real play time. Works identically in single and multiplayer. Intro/tutorial uses narrative pacing instead (and is skipped in multiplayer).
+- [x] **Q19:** What platforms are you targeting?
+  - **RESOLVED:** PC and mobile equally. Design for both from the start.
+- [~] **Q20:** What is the intended visual style?
+  - **PARTIAL:** 2.5D/3D top-down with fragmented maps, perpetual storm, lightning effects. Specific art style (low-poly, pixel art, clean minimal) TBD.
+- [x] **Q21:** What about multiplayer?
+  - **RESOLVED:** Eventually, with a procedurally generated world. Beyond current scope — focus on single-player first.
+- [x] **Q22:** What is the engine choice?
+  - **RESOLVED:** Pending, but either Unity or Godot is viable. Visual direction no longer blocks the decision.
 
 ---
 
 ## Business Model Questions
 
-- [ ] **Q25:** What is the business model?
+- [ ] **Q23:** What is the business model?
   - Under consideration. Options: F2P with cosmetics/convenience, premium (one-time purchase), or free intro with paid full game.
-- [x] **Q26:** What is the target game length?
-  - **RESOLVED:** Intro section: 30-40 minutes (skippable). Expansion + final sections: variable, several hours depending on approach. Multiplayer extends replayability.
+
+---
+
+## New Open Questions (from redesign)
+
+- [ ] **Q24:** How detailed should the starting machines be? Exact specs needed.
+- [ ] **Q25:** What specific components exist in the new setting? (Component data needs full redesign)
+- [ ] **Q26:** How do lightning rods work mechanically? Power output, range, construction costs?
+- [ ] **Q27:** How does deep-sea mining work? Depth limits, pressure, communication?
+- [ ] **Q28:** What does the science campus contain specifically?
+- [ ] **Q29:** What is the cult leader's final secret about the EL?
+- [ ] **Q30:** How does combat with lightning-calling cultists feel in the top-down view?
+- [ ] **Q31:** What does the abstract map (from blind robots) look like vs the detailed map?
+- [ ] **Q32:** Can robots plug into lightning rod infrastructure for unlimited stationary power?
+- [ ] **Q33:** What is the specific art style? Low-poly? Pixel art? Clean minimal?
 
 ---
 
@@ -111,11 +106,11 @@ This document tracks design questions that need resolution.
 
 | Category | Resolved | Partial | Open |
 |----------|----------|---------|------|
-| UI/Interface | 2 | 1 | 0 |
+| UI/Interface | 3 | 1 | 0 |
 | Gameplay Mechanics | 5 | 0 | 0 |
-| Memory System | 3 | 0 | 0 |
-| Game Structure | 6 | 0 | 0 |
-| World/Lore | 4 | 0 | 0 |
+| World/Setting | 4 | 0 | 0 |
+| Game Structure | 5 | 0 | 0 |
 | Technical/Scope | 3 | 1 | 0 |
-| Business Model | 1 | 0 | 1 |
-| **Total** | **24** | **2** | **1** |
+| Business Model | 0 | 0 | 1 |
+| New (from redesign) | 0 | 0 | 10 |
+| **Total** | **20** | **2** | **11** |

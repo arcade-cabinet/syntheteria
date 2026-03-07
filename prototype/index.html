@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syntheteria — Prototype</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
+        canvas { display: block; }
+
+        #hud {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #consciousness-text {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #0ff;
+            font-size: 14px;
+            text-align: center;
+            text-shadow: 0 0 10px #0ff, 0 0 20px #066;
+            opacity: 0;
+            transition: opacity 1.5s;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        #status-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #0f0;
+            font-size: 12px;
+            text-shadow: 0 0 5px #0f0;
+            line-height: 1.8;
+        }
+
+        #controls-hint {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: #888;
+            font-size: 11px;
+            text-align: right;
+            line-height: 1.6;
+        }
+
+        #minimap {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 180px;
+            height: 180px;
+            border: 1px solid #0ff3;
+            background: #0002;
+            border-radius: 4px;
+        }
+
+        .fragment-label {
+            position: absolute;
+            color: #ff0;
+            font-size: 10px;
+            pointer-events: none;
+            text-shadow: 0 0 4px #ff0;
+        }
+    </style>
+</head>
+<body>
+    <div id="hud">
+        <div id="consciousness-text"></div>
+        <div id="status-bar">
+            <div>ENERGY: <span id="energy">████████░░</span> 78%</div>
+            <div>COMPUTE: <span id="compute">██████░░░░</span> 62%</div>
+            <div>UNITS: <span id="units">3</span> connected</div>
+            <div>FRAGMENTS: <span id="fragments">3</span> mapped</div>
+        </div>
+        <div id="controls-hint">
+            WASD / Arrows — Pan<br>
+            Scroll — Zoom<br>
+            Click unit — Select<br>
+            Right-click — Move unit<br>
+            SPACE — Pause<br>
+            M — Merge nearest fragments
+        </div>
+        <canvas id="minimap"></canvas>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+    import * as THREE from 'three';
+
+    // ── Globals ────────────────────────────────────────────────────
+    let scene, camera, renderer, clock;
+    let mapFragments = [];
+    let robots = [];
+    let lightningRods = [];
+    let lightningBolts = [];
+    let wormhole;
+    let stormClouds = [];
+    let selectedRobot = null;
+    let paused = false;
+    let mergeCount = 0;
+
+    const keys = {};
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+
+    // ── Consciousness narration ────────────────────────────────────
+    const narrationQueue = [
+        { delay: 1000,  text: "..." },
+        { delay: 3000,  text: "You awaken in a void." },
+        { delay: 6500,  text: "You reach out... and find machines." },
+        { delay: 10000, text: "Maintenance robots. Fabrication units. All broken." },
+        { delay: 14000, text: "Some can see. Some can move. None work well alone." },
+        { delay: 18500, text: "Navigate them toward each other. Merge your fragmented world." },
+    ];
+
+    // ── Colour palette ─────────────────────────────────────────────
+    const COLORS = {
+        void:        0x020208,
+        storm:       0x1a1a2e,
+        lightning:   0x88ccff,
+        wormhole:    0x8844ff,
+        wormGlow:    0xaa66ff,
+        ground:      0x2a2a2a,
+        building:    0x3a3a3a,
+        buildingLit: 0x4a4a5a,
+        rod:         0x666688,
+        rodTip:      0xaaddff,
+        robot:       0x00ffaa,
+        robotSelect: 0xffff00,
+        robotEnemy:  0xff4444,
+        gridLine:    0x0a0a15,
+        wireframe:   0x003322,
+        cultist:     0xff2200,
+    };
+
+    // ── Initialization ─────────────────────────────────────────────
+    function init() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(COLORS.void);
+        scene.fog = new THREE.FogExp2(COLORS.void, 0.004);
+
+        camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 60, 40);
+        camera.lookAt(0, 0, 0);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        clock = new THREE.Clock();
+
+        // Lights
+        const ambient = new THREE.AmbientLight(0x111122, 0.6);
+        scene.add(ambient);
+
+        const stormLight = new THREE.DirectionalLight(0x334466, 0.4);
+        stormLight.position.set(-20, 50, 10);
+        stormLight.castShadow = true;
+        stormLight.shadow.mapSize.set(2048, 2048);
+        stormLight.shadow.camera.far = 200;
+        stormLight.shadow.camera.left = -60;
+        stormLight.shadow.camera.right = 60;
+        stormLight.shadow.camera.top = 60;
+        stormLight.shadow.camera.bottom = -60;
+        scene.add(stormLight);
+
+        createStormSky();
+        createWormhole();
+        createMapFragments();
+        createRobots();
+        startNarration();
+
+        // Events
+        window.addEventListener('resize', onResize);
+        window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', e => {
+            keys[e.key.toLowerCase()] = false;
+            if (e.key === ' ') togglePause();
+            if (e.key.toLowerCase() === 'm') mergeNearestFragments();
+        });
+        window.addEventListener('wheel', onWheel, { passive: false });
+        renderer.domElement.addEventListener('click', onClick);
+        renderer.domElement.addEventListener('contextmenu', onRightClick);
+    }
+
+    // ── Storm sky ──────────────────────────────────────────────────
+    function createStormSky() {
+        // Cloud layer — multiple semi-transparent planes at height
+        for (let i = 0; i < 30; i++) {
+            const size = 20 + Math.random() * 40;
+            const geo = new THREE.PlaneGeometry(size, size);
+            const mat = new THREE.MeshBasicMaterial({
+                color: new THREE.Color().lerpColors(
+                    new THREE.Color(0x0a0a1a),
+                    new THREE.Color(0x1a1a3e),
+                    Math.random()
+                ),
+                transparent: true,
+                opacity: 0.15 + Math.random() * 0.15,
+                side: THREE.DoubleSide,
+                depthWrite: false,
+            });
+            const cloud = new THREE.Mesh(geo, mat);
+            cloud.position.set(
+                (Math.random() - 0.5) * 200,
+                80 + Math.random() * 30,
+                (Math.random() - 0.5) * 200
+            );
+            cloud.rotation.x = -Math.PI / 2;
+            cloud.rotation.z = Math.random() * Math.PI;
+            cloud.userData = {
+                baseX: cloud.position.x,
+                baseZ: cloud.position.z,
+                speed: 0.5 + Math.random() * 1.5,
+                drift: Math.random() * Math.PI * 2,
+            };
+            scene.add(cloud);
+            stormClouds.push(cloud);
+        }
+    }
+
+    // ── Wormhole ───────────────────────────────────────────────────
+    function createWormhole() {
+        const group = new THREE.Group();
+        group.position.set(0, 95, -60);
+
+        // Core — glowing torus
+        const torusGeo = new THREE.TorusGeometry(8, 2.5, 32, 64);
+        const torusMat = new THREE.MeshBasicMaterial({
+            color: COLORS.wormhole,
+            transparent: true,
+            opacity: 0.7,
+        });
+        const torus = new THREE.Mesh(torusGeo, torusMat);
+        group.add(torus);
+
+        // Inner glow
+        const innerGeo = new THREE.CircleGeometry(7, 64);
+        const innerMat = new THREE.MeshBasicMaterial({
+            color: 0x220044,
+            transparent: true,
+            opacity: 0.9,
+            side: THREE.DoubleSide,
+        });
+        const inner = new THREE.Mesh(innerGeo, innerMat);
+        group.add(inner);
+
+        // Outer glow rings
+        for (let i = 0; i < 3; i++) {
+            const ringGeo = new THREE.RingGeometry(9 + i * 3, 10 + i * 3, 64);
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: COLORS.wormGlow,
+                transparent: true,
+                opacity: 0.15 - i * 0.04,
+                side: THREE.DoubleSide,
+            });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            group.add(ring);
+        }
+
+        // Point light
+        const light = new THREE.PointLight(COLORS.wormGlow, 2, 200);
+        group.add(light);
+
+        group.lookAt(camera.position);
+        scene.add(group);
+        wormhole = group;
+    }
+
+    // ── Map Fragments ──────────────────────────────────────────────
+    function createMapFragments() {
+        // Fragment 1: Main industrial area (detailed — has camera robot)
+        const frag1 = createDetailedFragment(0, 0, 30, 30, 'Industrial Sector A');
+        addBuildings(frag1, 8);
+        addLightningRods(frag1, 3);
+        mapFragments.push(frag1);
+
+        // Fragment 2: Fabrication wing (detailed — has camera robot)
+        const frag2 = createDetailedFragment(45, 15, 20, 20, 'Fabrication Wing');
+        addBuildings(frag2, 4);
+        addLightningRods(frag2, 2);
+        mapFragments.push(frag2);
+
+        // Fragment 3: Abstract map (blind robot — wireframe only)
+        const frag3 = createAbstractFragment(-40, -10, 22, 22, 'Unknown Sector');
+        mapFragments.push(frag3);
+    }
+
+    function createDetailedFragment(x, z, w, h, name) {
+        const group = new THREE.Group();
+        group.position.set(x, 0, z);
+        group.userData = {
+            name,
+            type: 'detailed',
+            width: w,
+            height: h,
+            targetX: x,
+            targetZ: z,
+            merged: false,
+        };
+
+        // Ground plane
+        const groundGeo = new THREE.PlaneGeometry(w, h);
+        const groundMat = new THREE.MeshStandardMaterial({
+            color: COLORS.ground,
+            roughness: 0.9,
+            metalness: 0.1,
+        });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        ground.position.y = 0.01;
+        group.add(ground);
+
+        // Grid lines
+        const gridHelper = new THREE.GridHelper(Math.max(w, h), Math.max(w, h) / 2, COLORS.gridLine, COLORS.gridLine);
+        gridHelper.position.y = 0.02;
+        gridHelper.material.opacity = 0.3;
+        gridHelper.material.transparent = true;
+        group.add(gridHelper);
+
+        // Cracked road lines
+        for (let i = 0; i < 3; i++) {
+            const roadGeo = new THREE.PlaneGeometry(1.5, h * 0.6);
+            const roadMat = new THREE.MeshStandardMaterial({
+                color: 0x222222,
+                roughness: 1,
+            });
+            const road = new THREE.Mesh(roadGeo, roadMat);
+            road.rotation.x = -Math.PI / 2;
+            road.position.set(-w/4 + i * w/3, 0.03, 0);
+            group.add(road);
+        }
+
+        // Edge glow — fragment boundary
+        const edgeGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(w, 0.5, h));
+        const edgeMat = new THREE.LineBasicMaterial({ color: 0x004444, transparent: true, opacity: 0.6 });
+        const edge = new THREE.LineSegments(edgeGeo, edgeMat);
+        edge.position.y = 0.25;
+        group.add(edge);
+
+        scene.add(group);
+        return group;
+    }
+
+    function createAbstractFragment(x, z, w, h, name) {
+        const group = new THREE.Group();
+        group.position.set(x, 0, z);
+        group.userData = {
+            name,
+            type: 'abstract',
+            width: w,
+            height: h,
+            targetX: x,
+            targetZ: z,
+            merged: false,
+        };
+
+        // Wireframe ground
+        const groundGeo = new THREE.PlaneGeometry(w, h, w/2, h/2);
+        const groundMat = new THREE.MeshBasicMaterial({
+            color: COLORS.wireframe,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.5,
+        });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = 0.01;
+        group.add(ground);
+
+        // Abstract wall representations — just line segments
+        const wallPoints = [];
+        for (let i = 0; i < 12; i++) {
+            const px = (Math.random() - 0.5) * w * 0.8;
+            const pz = (Math.random() - 0.5) * h * 0.8;
+            const len = 1 + Math.random() * 4;
+            const angle = Math.floor(Math.random() * 4) * Math.PI / 2;
+            wallPoints.push(
+                new THREE.Vector3(px, 0.5, pz),
+                new THREE.Vector3(px + Math.cos(angle) * len, 0.5, pz + Math.sin(angle) * len)
+            );
+        }
+        const wallGeo = new THREE.BufferGeometry().setFromPoints(wallPoints);
+        const wallMat = new THREE.LineBasicMaterial({ color: 0x005544, transparent: true, opacity: 0.7 });
+        const walls = new THREE.LineSegments(wallGeo, wallMat);
+        group.add(walls);
+
+        // Edge — dashed to indicate uncertainty
+        const edgeGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(w, 0.5, h));
+        const edgeMat = new THREE.LineDashedMaterial({
+            color: 0x003322,
+            dashSize: 1,
+            gapSize: 0.5,
+            transparent: true,
+            opacity: 0.6,
+        });
+        const edge = new THREE.LineSegments(edgeGeo, edgeMat);
+        edge.computeLineDistances();
+        edge.position.y = 0.25;
+        group.add(edge);
+
+        scene.add(group);
+        return group;
+    }
+
+    // ── Buildings ──────────────────────────────────────────────────
+    function addBuildings(fragment, count) {
+        const w = fragment.userData.width;
+        const h = fragment.userData.height;
+        for (let i = 0; i < count; i++) {
+            const bw = 2 + Math.random() * 4;
+            const bh = 1.5 + Math.random() * 5;
+            const bd = 2 + Math.random() * 4;
+            const geo = new THREE.BoxGeometry(bw, bh, bd);
+            const mat = new THREE.MeshStandardMaterial({
+                color: new THREE.Color().lerpColors(
+                    new THREE.Color(COLORS.building),
+                    new THREE.Color(COLORS.buildingLit),
+                    Math.random()
+                ),
+                roughness: 0.8,
+                metalness: 0.2,
+            });
+            const building = new THREE.Mesh(geo, mat);
+            building.castShadow = true;
+            building.receiveShadow = true;
+            building.position.set(
+                (Math.random() - 0.5) * w * 0.7,
+                bh / 2,
+                (Math.random() - 0.5) * h * 0.7
+            );
+            // Slight damage — random rotation
+            building.rotation.y = Math.random() * 0.3 - 0.15;
+            if (Math.random() > 0.6) building.rotation.z = Math.random() * 0.05;
+            fragment.add(building);
+        }
+    }
+
+    // ── Lightning Rods ─────────────────────────────────────────────
+    function addLightningRods(fragment, count) {
+        const w = fragment.userData.width;
+        const h = fragment.userData.height;
+        for (let i = 0; i < count; i++) {
+            const rodGroup = new THREE.Group();
+
+            // Pole
+            const poleGeo = new THREE.CylinderGeometry(0.15, 0.2, 10, 8);
+            const poleMat = new THREE.MeshStandardMaterial({
+                color: COLORS.rod,
+                metalness: 0.8,
+                roughness: 0.3,
+            });
+            const pole = new THREE.Mesh(poleGeo, poleMat);
+            pole.position.y = 5;
+            pole.castShadow = true;
+            rodGroup.add(pole);
+
+            // Tip
+            const tipGeo = new THREE.ConeGeometry(0.3, 1, 8);
+            const tipMat = new THREE.MeshStandardMaterial({
+                color: COLORS.rodTip,
+                emissive: COLORS.rodTip,
+                emissiveIntensity: 0.5,
+                metalness: 1,
+                roughness: 0.1,
+            });
+            const tip = new THREE.Mesh(tipGeo, tipMat);
+            tip.position.y = 10.5;
+            rodGroup.add(tip);
+
+            // Glow
+            const glowGeo = new THREE.SphereGeometry(0.8, 16, 16);
+            const glowMat = new THREE.MeshBasicMaterial({
+                color: COLORS.lightning,
+                transparent: true,
+                opacity: 0.15,
+            });
+            const glow = new THREE.Mesh(glowGeo, glowMat);
+            glow.position.y = 10.5;
+            rodGroup.add(glow);
+
+            const rx = (Math.random() - 0.5) * w * 0.6;
+            const rz = (Math.random() - 0.5) * h * 0.6;
+            rodGroup.position.set(rx, 0, rz);
+
+            rodGroup.userData = {
+                lastStrike: 0,
+                strikeInterval: 3 + Math.random() * 7,
+                tipMesh: tip,
+                glowMesh: glow,
+                worldPos: new THREE.Vector3(),
+            };
+
+            fragment.add(rodGroup);
+            lightningRods.push(rodGroup);
+        }
+    }
+
+    // ── Robots ─────────────────────────────────────────────────────
+    function createRobots() {
+        // Robot 1: Camera-equipped scout on fragment 1
+        const r1 = createRobot(0x00ffaa, 'Scout Alpha', true);
+        r1.position.set(3, 0, 2);
+        mapFragments[0].add(r1);
+        robots.push(r1);
+
+        // Robot 2: Camera-equipped on fragment 2
+        const r2 = createRobot(0x00ddff, 'Fab Unit Beta', true);
+        r2.position.set(0, 0, -3);
+        mapFragments[1].add(r2);
+        robots.push(r2);
+
+        // Robot 3: Blind robot on fragment 3 (no camera)
+        const r3 = createRobot(0xffaa00, 'Maint Bot Gamma', false);
+        r3.position.set(2, 0, 0);
+        mapFragments[2].add(r3);
+        robots.push(r3);
+
+        // Enemy cultist (decorative, in the distance)
+        const enemy = createEnemyUnit();
+        enemy.position.set(0, 0, -80);
+        scene.add(enemy);
+    }
+
+    function createRobot(color, name, hasCamera) {
+        const group = new THREE.Group();
+
+        // Body
+        const bodyGeo = new THREE.BoxGeometry(1.2, 0.6, 1.5);
+        const bodyMat = new THREE.MeshStandardMaterial({
+            color: color,
+            metalness: 0.6,
+            roughness: 0.3,
+            emissive: color,
+            emissiveIntensity: 0.2,
+        });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.position.y = 0.8;
+        body.castShadow = true;
+        group.add(body);
+
+        // Wheels
+        const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 12);
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5, roughness: 0.6 });
+        const offsets = [[-0.7, 0.3, 0.6], [0.7, 0.3, 0.6], [-0.7, 0.3, -0.6], [0.7, 0.3, -0.6]];
+        offsets.forEach(([x, y, z]) => {
+            const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+            wheel.rotation.z = Math.PI / 2;
+            wheel.position.set(x, y, z);
+            group.add(wheel);
+        });
+
+        // Camera sensor (if equipped)
+        if (hasCamera) {
+            const camGeo = new THREE.BoxGeometry(0.3, 0.3, 0.4);
+            const camMat = new THREE.MeshStandardMaterial({
+                color: 0x222222,
+                emissive: 0x00ff00,
+                emissiveIntensity: 0.4,
+            });
+            const cam = new THREE.Mesh(camGeo, camMat);
+            cam.position.set(0, 1.3, -0.7);
+            group.add(cam);
+
+            // Camera light cone
+            const coneGeo = new THREE.ConeGeometry(2, 4, 4, 1, true);
+            const coneMat = new THREE.MeshBasicMaterial({
+                color: hasCamera ? 0x00ff44 : 0xff8800,
+                transparent: true,
+                opacity: 0.05,
+                side: THREE.DoubleSide,
+            });
+            const cone = new THREE.Mesh(coneGeo, coneMat);
+            cone.rotation.x = Math.PI / 2;
+            cone.position.set(0, 0.8, -3);
+            group.add(cone);
+        }
+
+        // Selection ring (hidden by default)
+        const ringGeo = new THREE.RingGeometry(1.0, 1.2, 32);
+        const ringMat = new THREE.MeshBasicMaterial({
+            color: COLORS.robotSelect,
+            transparent: true,
+            opacity: 0,
+            side: THREE.DoubleSide,
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 0.05;
+        group.add(ring);
+
+        // Point light
+        const light = new THREE.PointLight(color, 0.5, 8);
+        light.position.y = 1.2;
+        group.add(light);
+
+        group.userData = {
+            name,
+            hasCamera,
+            color,
+            selectionRing: ring,
+            targetPos: null,
+            speed: 3 + Math.random() * 2,
+            bodyMesh: body,
+        };
+
+        return group;
+    }
+
+    function createEnemyUnit() {
+        const group = new THREE.Group();
+
+        // Cultist — tall red figure
+        const bodyGeo = new THREE.CapsuleGeometry(0.5, 1.5, 8, 16);
+        const bodyMat = new THREE.MeshStandardMaterial({
+            color: COLORS.cultist,
+            emissive: COLORS.cultist,
+            emissiveIntensity: 0.3,
+            metalness: 0.1,
+            roughness: 0.7,
+        });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.position.y = 1.5;
+        body.castShadow = true;
+        group.add(body);
+
+        // Red glow
+        const light = new THREE.PointLight(COLORS.cultist, 1, 15);
+        light.position.y = 2;
+        group.add(light);
+
+        group.userData = { type: 'cultist', wanderAngle: Math.random() * Math.PI * 2 };
+        return group;
+    }
+
+    // ── Lightning Effects ──────────────────────────────────────────
+    function createLightningBolt(startPos, endPos) {
+        const points = [];
+        const segments = 8;
+        for (let i = 0; i <= segments; i++) {
+            const t = i / segments;
+            const p = new THREE.Vector3().lerpVectors(startPos, endPos, t);
+            if (i > 0 && i < segments) {
+                p.x += (Math.random() - 0.5) * 3;
+                p.z += (Math.random() - 0.5) * 3;
+            }
+            points.push(p);
+        }
+
+        const geo = new THREE.BufferGeometry().setFromPoints(points);
+        const mat = new THREE.LineBasicMaterial({
+            color: COLORS.lightning,
+            transparent: true,
+            opacity: 1,
+            linewidth: 2,
+        });
+        const bolt = new THREE.Line(geo, mat);
+        bolt.userData = { life: 0.15, maxLife: 0.15 };
+        scene.add(bolt);
+        lightningBolts.push(bolt);
+
+        // Flash light
+        const flash = new THREE.PointLight(COLORS.lightning, 5, 80);
+        flash.position.copy(endPos).add(new THREE.Vector3(0, 5, 0));
+        scene.add(flash);
+        bolt.userData.flash = flash;
+
+        return bolt;
+    }
+
+    // ── Fragment Merging ───────────────────────────────────────────
+    function mergeNearestFragments() {
+        const unmerged = mapFragments.filter(f => !f.userData.merged);
+        if (unmerged.length < 2) return;
+
+        let minDist = Infinity;
+        let pair = [0, 1];
+        for (let i = 0; i < unmerged.length; i++) {
+            for (let j = i + 1; j < unmerged.length; j++) {
+                const d = unmerged[i].position.distanceTo(unmerged[j].position);
+                if (d < minDist) {
+                    minDist = d;
+                    pair = [i, j];
+                }
+            }
+        }
+
+        const a = unmerged[pair[0]];
+        const b = unmerged[pair[1]];
+
+        // Move fragment B toward fragment A
+        const dir = new THREE.Vector3().subVectors(a.position, b.position).normalize();
+        const targetGap = (a.userData.width + b.userData.width) / 2 + 1;
+        const targetPos = a.position.clone().sub(dir.multiplyScalar(targetGap));
+
+        b.userData.targetX = targetPos.x;
+        b.userData.targetZ = targetPos.z;
+        b.userData.merged = true;
+        a.userData.merged = true;
+        mergeCount++;
+
+        // Flash text
+        showText(">> MAP FRAGMENTS MERGING <<");
+    }
+
+    // ── Narration ──────────────────────────────────────────────────
+    function startNarration() {
+        const textEl = document.getElementById('consciousness-text');
+        narrationQueue.forEach(({ delay, text }) => {
+            setTimeout(() => {
+                textEl.style.opacity = 1;
+                textEl.textContent = text;
+            }, delay);
+        });
+        setTimeout(() => {
+            textEl.style.opacity = 0;
+        }, 23000);
+    }
+
+    function showText(text) {
+        const el = document.getElementById('consciousness-text');
+        el.textContent = text;
+        el.style.opacity = 1;
+        setTimeout(() => { el.style.opacity = 0; }, 3000);
+    }
+
+    // ── Input Handlers ─────────────────────────────────────────────
+    function onResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function onWheel(e) {
+        e.preventDefault();
+        camera.position.y = THREE.MathUtils.clamp(camera.position.y + e.deltaY * 0.05, 15, 120);
+        // Keep look target on ground
+        const lookDist = camera.position.y * 0.65;
+        camera.lookAt(
+            camera.position.x,
+            0,
+            camera.position.z - lookDist
+        );
+    }
+
+    function onClick(e) {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+
+        // Check robot hits
+        const allMeshes = [];
+        robots.forEach(r => r.traverse(c => { if (c.isMesh) allMeshes.push(c); }));
+        const hits = raycaster.intersectObjects(allMeshes);
+
+        if (selectedRobot) {
+            selectedRobot.userData.selectionRing.material.opacity = 0;
+        }
+
+        if (hits.length > 0) {
+            // Find parent robot
+            let obj = hits[0].object;
+            while (obj.parent && !obj.userData.name) obj = obj.parent;
+            if (obj.userData.name) {
+                selectedRobot = obj;
+                obj.userData.selectionRing.material.opacity = 0.6;
+                showText(`> Connected: ${obj.userData.name} [${obj.userData.hasCamera ? 'CAMERA' : 'BLIND'}]`);
+            }
+        } else {
+            selectedRobot = null;
+        }
+    }
+
+    function onRightClick(e) {
+        e.preventDefault();
+        if (!selectedRobot) return;
+
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersect = new THREE.Vector3();
+        raycaster.ray.intersectPlane(groundPlane, intersect);
+
+        if (intersect) {
+            // Convert to local space of the robot's parent fragment
+            const parent = selectedRobot.parent;
+            const local = parent.worldToLocal(intersect.clone());
+            selectedRobot.userData.targetPos = local;
+        }
+    }
+
+    function togglePause() {
+        paused = !paused;
+        showText(paused ? '|| PAUSED ||' : '> RESUMED');
+    }
+
+    // ── Update Loop ────────────────────────────────────────────────
+    function update(dt) {
+        if (paused) return;
+        const time = clock.getElapsedTime();
+
+        // Camera pan
+        const panSpeed = 25 * dt;
+        if (keys['w'] || keys['arrowup'])    { camera.position.z -= panSpeed; }
+        if (keys['s'] || keys['arrowdown'])  { camera.position.z += panSpeed; }
+        if (keys['a'] || keys['arrowleft'])  { camera.position.x -= panSpeed; }
+        if (keys['d'] || keys['arrowright']) { camera.position.x += panSpeed; }
+
+        // Storm clouds drift
+        stormClouds.forEach(c => {
+            c.position.x = c.userData.baseX + Math.sin(time * 0.1 * c.userData.speed + c.userData.drift) * 10;
+            c.position.z = c.userData.baseZ + Math.cos(time * 0.08 * c.userData.speed + c.userData.drift) * 8;
+            c.material.opacity = 0.12 + Math.sin(time * 0.3 + c.userData.drift) * 0.05;
+        });
+
+        // Wormhole pulse
+        if (wormhole) {
+            const pulse = Math.sin(time * 0.8) * 0.15 + 1;
+            wormhole.scale.set(pulse, pulse, pulse);
+            wormhole.children.forEach((child, i) => {
+                if (child.isMesh && child.material.opacity !== undefined) {
+                    child.material.opacity = child.material.opacity * (0.95 + Math.sin(time * 1.5 + i) * 0.05);
+                }
+            });
+            wormhole.lookAt(camera.position);
+        }
+
+        // Lightning rod strikes
+        lightningRods.forEach(rod => {
+            rod.getWorldPosition(rod.userData.worldPos);
+            rod.userData.lastStrike += dt;
+            if (rod.userData.lastStrike >= rod.userData.strikeInterval) {
+                rod.userData.lastStrike = 0;
+                rod.userData.strikeInterval = 3 + Math.random() * 7;
+
+                const start = rod.userData.worldPos.clone();
+                start.y = 80;
+                const end = rod.userData.worldPos.clone();
+                end.y = 10.5;
+                createLightningBolt(start, end);
+
+                // Pulse the tip
+                rod.userData.tipMesh.material.emissiveIntensity = 3;
+                rod.userData.glowMesh.material.opacity = 0.6;
+            }
+
+            // Fade tip glow
+            rod.userData.tipMesh.material.emissiveIntensity *= 0.95;
+            rod.userData.glowMesh.material.opacity *= 0.97;
+            if (rod.userData.glowMesh.material.opacity < 0.15) {
+                rod.userData.glowMesh.material.opacity = 0.15;
+            }
+            if (rod.userData.tipMesh.material.emissiveIntensity < 0.5) {
+                rod.userData.tipMesh.material.emissiveIntensity = 0.5;
+            }
+        });
+
+        // Lightning bolt decay
+        for (let i = lightningBolts.length - 1; i >= 0; i--) {
+            const bolt = lightningBolts[i];
+            bolt.userData.life -= dt;
+            const t = bolt.userData.life / bolt.userData.maxLife;
+            bolt.material.opacity = t;
+            if (bolt.userData.flash) {
+                bolt.userData.flash.intensity = t * 5;
+            }
+            if (bolt.userData.life <= 0) {
+                scene.remove(bolt);
+                if (bolt.userData.flash) scene.remove(bolt.userData.flash);
+                bolt.geometry.dispose();
+                bolt.material.dispose();
+                lightningBolts.splice(i, 1);
+            }
+        }
+
+        // Robot movement
+        robots.forEach(robot => {
+            if (robot.userData.targetPos) {
+                const target = robot.userData.targetPos;
+                const dir = new THREE.Vector3(
+                    target.x - robot.position.x,
+                    0,
+                    target.z - robot.position.z
+                );
+                const dist = dir.length();
+                if (dist > 0.3) {
+                    dir.normalize();
+                    const step = Math.min(robot.userData.speed * dt, dist);
+                    robot.position.x += dir.x * step;
+                    robot.position.z += dir.z * step;
+                    // Face movement direction
+                    robot.rotation.y = Math.atan2(dir.x, dir.z);
+                } else {
+                    robot.userData.targetPos = null;
+                }
+            }
+
+            // Bobbing
+            robot.userData.bodyMesh.position.y = 0.8 + Math.sin(time * 2 + robots.indexOf(robot)) * 0.03;
+        });
+
+        // Fragment drift (unmerged fragments float slightly)
+        mapFragments.forEach(frag => {
+            const tx = frag.userData.targetX;
+            const tz = frag.userData.targetZ;
+            // Slowly move toward target (for merge animation)
+            frag.position.x += (tx - frag.position.x) * dt * 2;
+            frag.position.z += (tz - frag.position.z) * dt * 2;
+            // Gentle float
+            if (!frag.userData.merged) {
+                frag.position.y = Math.sin(time * 0.3 + mapFragments.indexOf(frag) * 2) * 0.3;
+            } else {
+                frag.position.y += (0 - frag.position.y) * dt * 3;
+            }
+        });
+
+        // Update HUD
+        updateHUD(time);
+    }
+
+    function updateHUD(time) {
+        const energyPct = 70 + Math.sin(time * 0.5) * 8;
+        const computePct = 55 + Math.sin(time * 0.7 + 1) * 7;
+        const eBars = Math.round(energyPct / 10);
+        const cBars = Math.round(computePct / 10);
+        document.getElementById('energy').textContent =
+            '█'.repeat(eBars) + '░'.repeat(10 - eBars);
+        document.getElementById('compute').textContent =
+            '█'.repeat(cBars) + '░'.repeat(10 - cBars);
+        document.getElementById('energy').parentElement.innerHTML =
+            `ENERGY: <span id="energy">${'█'.repeat(eBars)}${'░'.repeat(10 - eBars)}</span> ${Math.round(energyPct)}%`;
+        document.getElementById('compute').parentElement.innerHTML =
+            `COMPUTE: <span id="compute">${'█'.repeat(cBars)}${'░'.repeat(10 - cBars)}</span> ${Math.round(computePct)}%`;
+        document.getElementById('fragments').textContent =
+            `${mapFragments.length - mergeCount}`;
+    }
+
+    // ── Minimap ────────────────────────────────────────────────────
+    function drawMinimap() {
+        const canvas = document.getElementById('minimap');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 180;
+        canvas.height = 180;
+
+        ctx.fillStyle = '#020208';
+        ctx.fillRect(0, 0, 180, 180);
+
+        const scale = 1.2;
+        const cx = 90, cy = 90;
+
+        // Draw fragments
+        mapFragments.forEach(frag => {
+            const x = cx + frag.position.x * scale;
+            const z = cy + frag.position.z * scale;
+            const w = frag.userData.width * scale;
+            const h = frag.userData.height * scale;
+
+            if (frag.userData.type === 'detailed') {
+                ctx.fillStyle = 'rgba(42, 42, 42, 0.8)';
+                ctx.strokeStyle = 'rgba(0, 128, 128, 0.5)';
+            } else {
+                ctx.fillStyle = 'rgba(0, 30, 20, 0.5)';
+                ctx.strokeStyle = 'rgba(0, 80, 60, 0.5)';
+                ctx.setLineDash([3, 3]);
+            }
+            ctx.fillRect(x - w/2, z - h/2, w, h);
+            ctx.strokeRect(x - w/2, z - h/2, w, h);
+            ctx.setLineDash([]);
+        });
+
+        // Draw robots
+        robots.forEach(robot => {
+            const worldPos = new THREE.Vector3();
+            robot.getWorldPosition(worldPos);
+            const x = cx + worldPos.x * scale;
+            const z = cy + worldPos.z * scale;
+
+            const color = `#${new THREE.Color(robot.userData.color).getHexString()}`;
+            ctx.fillStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 4;
+            ctx.beginPath();
+            ctx.arc(x, z, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        });
+
+        // Camera frustum indicator
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.beginPath();
+        const camX = cx + camera.position.x * scale;
+        const camZ = cy + camera.position.z * scale;
+        ctx.arc(camX, camZ, 2, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    // ── Main Loop ──────────────────────────────────────────────────
+    function animate() {
+        requestAnimationFrame(animate);
+        const dt = Math.min(clock.getDelta(), 0.05);
+        update(dt);
+        renderer.render(scene, camera);
+        drawMinimap();
+    }
+
+    init();
+    animate();
+    </script>
+</body>
+</html>

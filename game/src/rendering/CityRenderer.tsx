@@ -1,30 +1,65 @@
 /**
- * Renders city buildings as instanced meshes.
- * Each building type has a distinct visual style appropriate for
- * a post-apocalyptic industrial city.
+ * Renders city buildings as instanced meshes with a circuit-board aesthetic.
+ *
+ * Conduits are long thin walls with glowing trace lines along their tops.
+ * Nodes are wider junction blocks with emissive circuit patterns.
+ * Towers are tall pylons with blinking antenna lights.
+ * Ruins are broken segments, partially collapsed.
+ * Walls are perimeter segments.
+ *
+ * All buildings are fog-aware: only visible where the player's
+ * combined fog-of-war has revealed terrain (fog state >= 1).
  */
-import { useMemo } from "react"
+import { useMemo, useRef } from "react"
+import { useFrame } from "@react-three/fiber"
 import * as THREE from "three"
 import { getCityBuildings, type CityBuilding } from "../ecs/cityLayout"
-import { getTerrainHeight } from "../ecs/terrain"
+import { getTerrainHeight, getAllFragments, worldToFogIndex } from "../ecs/terrain"
 
+// Circuit-board color palette — dark metallic with cyan/green accents
 const COLORS: Record<CityBuilding["type"], number> = {
-  factory: 0x4a4a50,
-  warehouse: 0x5a5548,
-  tower: 0x3a3a44,
-  ruin: 0x6a5a4a,
-  wall: 0x555555,
+  conduit: 0x1a1a2e,   // dark blue-black
+  node: 0x16213e,      // slightly lighter dark blue
+  tower: 0x0f3460,     // deep blue
+  ruin: 0x2a2a2a,      // neutral dark grey
+  wall: 0x1a1a1a,      // near-black
 }
 
-const DARK_ACCENT: Record<CityBuilding["type"], number> = {
-  factory: 0x333338,
-  warehouse: 0x44403a,
-  tower: 0x2a2a32,
-  ruin: 0x4a3e34,
-  wall: 0x3a3a3a,
+const ACCENT_COLORS: Record<CityBuilding["type"], number> = {
+  conduit: 0x00e5ff,   // cyan trace on top
+  node: 0x00ff88,      // green circuit pad
+  tower: 0x00e5ff,     // cyan antenna
+  ruin: 0x334433,      // dim green (faded)
+  wall: 0x003344,      // dark teal
 }
 
-function BuildingGroup({ buildings, type }: { buildings: CityBuilding[]; type: CityBuilding["type"] }) {
+/**
+ * Check if a world position has been revealed by any player fragment.
+ * Returns true if fog state >= 1 in any fragment.
+ */
+function isRevealedAtPosition(x: number, z: number): boolean {
+  const fogIdx = worldToFogIndex(x, z)
+  if (fogIdx < 0) return false
+
+  const fragments = getAllFragments()
+  for (const frag of fragments) {
+    if (frag.fog[fogIdx] >= 1) return true
+  }
+  return false
+}
+
+function BuildingGroup({
+  buildings,
+  type,
+}: {
+  buildings: CityBuilding[]
+  type: CityBuilding["type"]
+}) {
+  const mainRef = useRef<THREE.InstancedMesh>(null)
+  const accentRef = useRef<THREE.InstancedMesh>(null)
+  const buildingsRef = useRef(buildings)
+  buildingsRef.current = buildings
+
   const { mainMesh, accentMesh } = useMemo(() => {
     const dummy = new THREE.Object3D()
 
@@ -33,9 +68,16 @@ function BuildingGroup({ buildings, type }: { buildings: CityBuilding[]; type: C
     const mainMat = new THREE.MeshLambertMaterial({ color: COLORS[type] })
     const main = new THREE.InstancedMesh(mainGeo, mainMat, buildings.length)
 
-    // Accent details (roof/trim) — slightly darker, offset on top
-    const accentGeo = new THREE.BoxGeometry(1, 1, 1)
-    const accentMat = new THREE.MeshLambertMaterial({ color: DARK_ACCENT[type] })
+    // Accent details — glowing traces/edges
+    const accentGeo =
+      type === "tower"
+        ? new THREE.CylinderGeometry(0.08, 0.15, 1, 6)
+        : new THREE.BoxGeometry(1, 1, 1)
+    const accentMat = new THREE.MeshBasicMaterial({
+      color: ACCENT_COLORS[type],
+      transparent: true,
+      opacity: 0.8,
+    })
     const accent = new THREE.InstancedMesh(accentGeo, accentMat, buildings.length)
 
     buildings.forEach((b, i) => {
@@ -47,39 +89,38 @@ function BuildingGroup({ buildings, type }: { buildings: CityBuilding[]; type: C
       dummy.rotation.set(0, 0, 0)
 
       if (type === "ruin") {
-        // Ruins are tilted slightly
-        dummy.rotation.z = (Math.sin(b.x * 7.3 + b.z * 3.1) * 0.08)
-        dummy.rotation.x = (Math.cos(b.x * 2.7 + b.z * 5.9) * 0.05)
+        dummy.rotation.z = Math.sin(b.x * 7.3 + b.z * 3.1) * 0.08
+        dummy.rotation.x = Math.cos(b.x * 2.7 + b.z * 5.9) * 0.05
       }
 
       dummy.updateMatrix()
       main.setMatrixAt(i, dummy.matrix)
 
-      // Accent: roof overhang / ledge
-      if (type === "factory") {
-        // Factory: flat roof with slight overhang
-        dummy.position.set(b.x, terrainY + b.height + 0.15, b.z)
-        dummy.scale.set(b.halfW * 2 + 0.3, 0.3, b.halfD * 2 + 0.3)
+      // Accent: trace line on top of conduits, pad glow for nodes, etc.
+      if (type === "conduit") {
+        // Thin glowing strip along the top center
+        dummy.position.set(b.x, terrainY + b.height + 0.05, b.z)
+        dummy.scale.set(b.halfW * 2 * 0.3, 0.1, b.halfD * 2 + 0.1)
         dummy.rotation.set(0, 0, 0)
-      } else if (type === "warehouse") {
-        // Warehouse: peaked roof
-        dummy.position.set(b.x, terrainY + b.height + 0.4, b.z)
-        dummy.scale.set(b.halfW * 1.6, 0.8, b.halfD * 2 + 0.2)
+      } else if (type === "node") {
+        // Flat glowing pad on top
+        dummy.position.set(b.x, terrainY + b.height + 0.05, b.z)
+        dummy.scale.set(b.halfW * 2 * 0.7, 0.08, b.halfD * 2 * 0.7)
         dummy.rotation.set(0, 0, 0)
       } else if (type === "tower") {
-        // Tower: smaller cap on top
-        dummy.position.set(b.x, terrainY + b.height + 0.3, b.z)
-        dummy.scale.set(b.halfW * 1.4, 0.6, b.halfD * 1.4)
+        // Tall antenna on top
+        dummy.position.set(b.x, terrainY + b.height + 1.5, b.z)
+        dummy.scale.set(1, 3, 1)
         dummy.rotation.set(0, 0, 0)
       } else if (type === "ruin") {
-        // Ruins: broken top edge
-        dummy.position.set(b.x + 0.2, terrainY + b.height * 0.8, b.z - 0.1)
-        dummy.scale.set(b.halfW * 1.2, b.height * 0.3, b.halfD * 0.6)
+        // Faint broken trace
+        dummy.position.set(b.x + 0.2, terrainY + b.height * 0.7, b.z - 0.1)
+        dummy.scale.set(b.halfW * 1.0, 0.05, b.halfD * 0.5)
         dummy.rotation.set(0.1, 0.3, 0.05)
       } else {
-        // Wall: flat top
-        dummy.position.set(b.x, terrainY + b.height + 0.1, b.z)
-        dummy.scale.set(b.halfW * 2 + 0.2, 0.2, b.halfD * 2 + 0.2)
+        // Wall: edge glow on top
+        dummy.position.set(b.x, terrainY + b.height + 0.05, b.z)
+        dummy.scale.set(b.halfW * 2 + 0.1, 0.08, b.halfD * 2 + 0.1)
         dummy.rotation.set(0, 0, 0)
       }
       dummy.updateMatrix()
@@ -92,75 +133,136 @@ function BuildingGroup({ buildings, type }: { buildings: CityBuilding[]; type: C
     return { mainMesh: main, accentMesh: accent }
   }, [buildings, type])
 
+  // Per-frame fog visibility update
+  useFrame(() => {
+    const main = mainRef.current ?? mainMesh
+    const accent = accentRef.current ?? accentMesh
+    const bs = buildingsRef.current
+    const dummy = new THREE.Object3D()
+
+    for (let i = 0; i < bs.length; i++) {
+      const b = bs[i]
+      const revealed = isRevealedAtPosition(b.x, b.z)
+
+      if (revealed) {
+        const terrainY = getTerrainHeight(b.x, b.z)
+        dummy.position.set(b.x, terrainY + b.height / 2, b.z)
+        dummy.scale.set(b.halfW * 2, b.height, b.halfD * 2)
+        dummy.rotation.set(0, 0, 0)
+        if (type === "ruin") {
+          dummy.rotation.z = Math.sin(b.x * 7.3 + b.z * 3.1) * 0.08
+          dummy.rotation.x = Math.cos(b.x * 2.7 + b.z * 5.9) * 0.05
+        }
+      } else {
+        // Hide by scaling to zero
+        dummy.position.set(0, -100, 0)
+        dummy.scale.set(0, 0, 0)
+        dummy.rotation.set(0, 0, 0)
+      }
+      dummy.updateMatrix()
+      main.setMatrixAt(i, dummy.matrix)
+
+      if (revealed) {
+        const terrainY = getTerrainHeight(b.x, b.z)
+        if (type === "conduit") {
+          dummy.position.set(b.x, terrainY + b.height + 0.05, b.z)
+          dummy.scale.set(b.halfW * 2 * 0.3, 0.1, b.halfD * 2 + 0.1)
+          dummy.rotation.set(0, 0, 0)
+        } else if (type === "node") {
+          dummy.position.set(b.x, terrainY + b.height + 0.05, b.z)
+          dummy.scale.set(b.halfW * 2 * 0.7, 0.08, b.halfD * 2 * 0.7)
+          dummy.rotation.set(0, 0, 0)
+        } else if (type === "tower") {
+          dummy.position.set(b.x, terrainY + b.height + 1.5, b.z)
+          dummy.scale.set(1, 3, 1)
+          dummy.rotation.set(0, 0, 0)
+        } else if (type === "ruin") {
+          dummy.position.set(b.x + 0.2, terrainY + b.height * 0.7, b.z - 0.1)
+          dummy.scale.set(b.halfW * 1.0, 0.05, b.halfD * 0.5)
+          dummy.rotation.set(0.1, 0.3, 0.05)
+        } else {
+          dummy.position.set(b.x, terrainY + b.height + 0.05, b.z)
+          dummy.scale.set(b.halfW * 2 + 0.1, 0.08, b.halfD * 2 + 0.1)
+          dummy.rotation.set(0, 0, 0)
+        }
+      } else {
+        dummy.position.set(0, -100, 0)
+        dummy.scale.set(0, 0, 0)
+        dummy.rotation.set(0, 0, 0)
+      }
+      dummy.updateMatrix()
+      accent.setMatrixAt(i, dummy.matrix)
+    }
+
+    main.instanceMatrix.needsUpdate = true
+    accent.instanceMatrix.needsUpdate = true
+  })
+
   return (
     <>
-      <primitive object={mainMesh} />
-      <primitive object={accentMesh} />
+      <primitive ref={mainRef} object={mainMesh} />
+      <primitive ref={accentRef} object={accentMesh} />
     </>
   )
 }
 
 /**
- * Window detail layer — adds glowing windows to buildings for atmosphere.
+ * Ground-level circuit trace lines — thin glowing lines on the ground
+ * between buildings, reinforcing the circuit-board aesthetic.
  */
-function WindowDetails({ buildings }: { buildings: CityBuilding[] }) {
+function CircuitTraces({ buildings }: { buildings: CityBuilding[] }) {
   const mesh = useMemo(() => {
-    // Only add windows to factory, warehouse, tower types
-    const eligible = buildings.filter(b => b.type !== "wall" && b.type !== "ruin" && b.height > 2)
-    if (eligible.length === 0) return null
+    // Create ground-level trace lines connecting nearby conduits/nodes
+    const traceData: { x: number; y: number; z: number; sx: number; sz: number }[] = []
 
-    // Estimate total windows
-    const windowData: { x: number; y: number; z: number; sx: number; sy: number }[] = []
+    const conduits = buildings.filter((b) => b.type === "conduit" || b.type === "node")
 
-    for (const b of eligible) {
-      const numFloors = Math.floor(b.height / 1.5)
+    for (const b of conduits) {
       const terrainY = getTerrainHeight(b.x, b.z)
+      // Hash-based decorative traces radiating from buildings
+      const hash = Math.sin(b.x * 127.1 + b.z * 311.7) * 43758.5453
+      const frac = hash - Math.floor(hash)
+      if (frac > 0.4) continue
 
-      for (let floor = 0; floor < numFloors; floor++) {
-        const y = terrainY + 1 + floor * 1.5
-
-        // Windows on front and back (z faces)
-        const numWindowsX = Math.floor(b.halfW * 2 / 1.2)
-        for (let w = 0; w < numWindowsX; w++) {
-          const wx = b.x - b.halfW + 0.6 + w * 1.2
-          // Use hash to decide if window is lit
-          const hash = Math.sin(wx * 127.1 + y * 311.7 + b.z * 71.3) * 43758.5453
-          if (hash - Math.floor(hash) > 0.7) continue // some windows dark
-
-          windowData.push({ x: wx, y, z: b.z + b.halfD + 0.01, sx: 0.4, sy: 0.5 })
-          windowData.push({ x: wx, y, z: b.z - b.halfD - 0.01, sx: 0.4, sy: 0.5 })
-        }
-
-        // Windows on sides (x faces)
-        const numWindowsZ = Math.floor(b.halfD * 2 / 1.2)
-        for (let w = 0; w < numWindowsZ; w++) {
-          const wz = b.z - b.halfD + 0.6 + w * 1.2
-          const hash = Math.sin(b.x * 99.3 + y * 177.1 + wz * 233.7) * 43758.5453
-          if (hash - Math.floor(hash) > 0.7) continue
-
-          windowData.push({ x: b.x + b.halfW + 0.01, y, z: wz, sx: 0.4, sy: 0.5 })
-          windowData.push({ x: b.x - b.halfW - 0.01, y, z: wz, sx: 0.4, sy: 0.5 })
-        }
+      // Short trace extending from building edge
+      const dir = Math.floor(frac * 4) // 0=N, 1=E, 2=S, 3=W
+      const len = 1 + frac * 3
+      if (dir === 0 || dir === 2) {
+        const zOff = dir === 0 ? b.halfD + len / 2 : -(b.halfD + len / 2)
+        traceData.push({
+          x: b.x,
+          y: terrainY + 0.02,
+          z: b.z + zOff,
+          sx: 0.08,
+          sz: len,
+        })
+      } else {
+        const xOff = dir === 1 ? b.halfW + len / 2 : -(b.halfW + len / 2)
+        traceData.push({
+          x: b.x + xOff,
+          y: terrainY + 0.02,
+          z: b.z,
+          sx: len,
+          sz: 0.08,
+        })
       }
     }
 
-    if (windowData.length === 0) return null
+    if (traceData.length === 0) return null
 
     const dummy = new THREE.Object3D()
-    const geo = new THREE.PlaneGeometry(1, 1)
+    const geo = new THREE.BoxGeometry(1, 0.02, 1)
     const mat = new THREE.MeshBasicMaterial({
-      color: 0x224433,
+      color: 0x00e5ff,
       transparent: true,
-      opacity: 0.4,
-      side: THREE.DoubleSide,
+      opacity: 0.3,
     })
-    const instancedMesh = new THREE.InstancedMesh(geo, mat, windowData.length)
+    const instancedMesh = new THREE.InstancedMesh(geo, mat, traceData.length)
 
-    windowData.forEach((w, i) => {
-      dummy.position.set(w.x, w.y, w.z)
-      dummy.scale.set(w.sx, w.sy, 1)
-      // Determine facing direction based on position offset from building
-      dummy.lookAt(w.x, w.y, w.z + 1) // default facing, works for z-face windows
+    traceData.forEach((t, i) => {
+      dummy.position.set(t.x, t.y, t.z)
+      dummy.scale.set(t.sx, 1, t.sz)
+      dummy.rotation.set(0, 0, 0)
       dummy.updateMatrix()
       instancedMesh.setMatrixAt(i, dummy.matrix)
     })
@@ -178,8 +280,8 @@ export function CityRenderer() {
 
   const grouped = useMemo(() => {
     const groups: Record<CityBuilding["type"], CityBuilding[]> = {
-      factory: [],
-      warehouse: [],
+      conduit: [],
+      node: [],
       tower: [],
       ruin: [],
       wall: [],
@@ -202,7 +304,7 @@ export function CityRenderer() {
             />
           )
       )}
-      <WindowDetails buildings={allBuildings} />
+      <CircuitTraces buildings={allBuildings} />
     </>
   )
 }

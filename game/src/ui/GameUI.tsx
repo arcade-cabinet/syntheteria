@@ -1,5 +1,5 @@
 /**
- * DOM overlay UI: resource bar, speed controls, unit info, minimap, narration.
+ * DOM overlay UI: resource bar, speed controls, unit info, minimap.
  */
 import { useSyncExternalStore } from "react"
 import {
@@ -8,14 +8,41 @@ import {
   setGameSpeed,
   togglePause,
 } from "../ecs/gameState"
-import { units } from "../ecs/world"
+import { units, buildings } from "../ecs/world"
 import { WORLD_HALF } from "../ecs/terrain"
+import type { UnitComponent } from "../ecs/types"
+
+function ComponentStatus({ comp }: { comp: UnitComponent }) {
+  return (
+    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+      <span
+        style={{
+          display: "inline-block",
+          width: "8px",
+          height: "8px",
+          borderRadius: "50%",
+          background: comp.functional ? "#00ff88" : "#ff4444",
+          boxShadow: comp.functional
+            ? "0 0 4px #00ff88"
+            : "0 0 4px #ff4444",
+        }}
+      />
+      <span style={{ textTransform: "capitalize" }}>
+        {comp.name.replace(/_/g, " ")}
+      </span>
+      {!comp.functional && (
+        <span style={{ color: "#ff4444", fontSize: "11px" }}>BROKEN</span>
+      )}
+    </div>
+  )
+}
 
 export function GameUI() {
   const snap = useSyncExternalStore(subscribe, getSnapshot)
 
   const selectedUnit = Array.from(units).find((u) => u.unit.selected)
   const fragmentCount = snap.fragments.length
+  const buildingCount = Array.from(buildings).length
 
   return (
     <div
@@ -33,12 +60,14 @@ export function GameUI() {
           display: "flex",
           justifyContent: "space-between",
           padding: "12px 16px",
-          background: "linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%)",
+          background:
+            "linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%)",
           pointerEvents: "auto",
         }}
       >
         <div style={{ display: "flex", gap: "20px", fontSize: "14px" }}>
           <span>UNITS: {snap.unitCount}</span>
+          <span>BUILDINGS: {buildingCount}</span>
           <span>FRAGMENTS: {fragmentCount}</span>
           <span>TICK: {snap.tick}</span>
         </div>
@@ -83,22 +112,53 @@ export function GameUI() {
             padding: "12px 16px",
             fontSize: "13px",
             lineHeight: "1.6",
-            minWidth: "200px",
+            minWidth: "220px",
             pointerEvents: "auto",
           }}
         >
-          <div style={{ fontSize: "15px", fontWeight: "bold", marginBottom: "4px" }}>
+          <div
+            style={{
+              fontSize: "15px",
+              fontWeight: "bold",
+              marginBottom: "4px",
+            }}
+          >
+            {selectedUnit.unit.displayName}
+          </div>
+          <div style={{ color: "#00ffaa88", fontSize: "11px", marginBottom: "6px" }}>
             {selectedUnit.unit.type.replace(/_/g, " ").toUpperCase()}
           </div>
-          <div>HP: {selectedUnit.unit.health}/{selectedUnit.unit.maxHealth}</div>
           <div>Speed: {selectedUnit.unit.speed}</div>
-          <div>Camera: {selectedUnit.unit.hasCamerasSensor ? "YES" : "NO"}</div>
           <div>Fragment: {selectedUnit.mapFragment.fragmentId}</div>
           <div>
-            Pos: ({selectedUnit.worldPosition.x.toFixed(1)}, {selectedUnit.worldPosition.z.toFixed(1)})
+            Pos: ({selectedUnit.worldPosition.x.toFixed(1)},{" "}
+            {selectedUnit.worldPosition.z.toFixed(1)})
           </div>
-          <div style={{ fontSize: "11px", color: "#00ffaa88", marginTop: "8px" }}>
-            Tap ground → select &bull; Right-click → move
+
+          {/* Components */}
+          <div
+            style={{
+              marginTop: "8px",
+              borderTop: "1px solid #00ffaa22",
+              paddingTop: "8px",
+            }}
+          >
+            <div style={{ fontSize: "12px", color: "#00ffaa88", marginBottom: "4px" }}>
+              COMPONENTS
+            </div>
+            {selectedUnit.unit.components.map((comp, i) => (
+              <ComponentStatus key={i} comp={comp} />
+            ))}
+          </div>
+
+          <div
+            style={{
+              fontSize: "11px",
+              color: "#00ffaa88",
+              marginTop: "8px",
+            }}
+          >
+            Click to select &bull; Right-click to move
           </div>
         </div>
       )}
@@ -156,10 +216,17 @@ function Minimap() {
           ctx.fillStyle = "#000"
           ctx.fillRect(0, 0, 120, 120)
 
+          // Draw buildings as squares
+          ctx.fillStyle = "#aa8844"
+          for (const entity of buildings) {
+            const x = 60 + (entity.worldPosition.x / WORLD_HALF) * 50
+            const y = 60 + (entity.worldPosition.z / WORLD_HALF) * 50
+            ctx.fillRect(x - 2, y - 2, 5, 5)
+          }
+
           // Draw units as dots
           ctx.fillStyle = "#ffaa00"
           for (const entity of units) {
-            // Map world coords to minimap coords
             const x = 60 + (entity.worldPosition.x / WORLD_HALF) * 50
             const y = 60 + (entity.worldPosition.z / WORLD_HALF) * 50
             ctx.fillRect(x - 1, y - 1, 3, 3)

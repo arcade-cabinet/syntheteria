@@ -7,15 +7,14 @@ import { Canvas, useFrame } from "@react-three/fiber"
 import { TerrainRenderer } from "./rendering/TerrainRenderer"
 import { UnitRenderer } from "./rendering/UnitRenderer"
 import { StormSky } from "./rendering/StormSky"
+import { LandscapeProps } from "./rendering/LandscapeProps"
 import { TopDownCamera } from "./input/TopDownCamera"
 import { UnitInput } from "./input/UnitInput"
 import { GameUI } from "./ui/GameUI"
 import { simulationTick, getGameSpeed } from "./ecs/gameState"
 import { movementSystem } from "./systems/movement"
-import { spawnUnit } from "./ecs/factory"
+import { spawnUnit, spawnFabricationUnit } from "./ecs/factory"
 import { buildNavGraph } from "./systems/navmesh"
-import { clusterFragments } from "./ecs/terrain"
-import { units } from "./ecs/world"
 
 // --- Narration ---
 
@@ -104,62 +103,49 @@ function NarrationOverlay({ onComplete }: { onComplete: () => void }) {
 function initializeWorld() {
   buildNavGraph()
 
-  // Group 1: Two robots near the industrial city center
-  const unit1 = spawnUnit({
-    x: 8,
-    z: 8,
-    type: "maintenance_bot",
-    hasCamera: true,
+  // Bot 1: Has a working camera but broken arms.
+  // Can see and direct, but cannot physically repair.
+  const bot1 = spawnUnit({
+    x: 5,
+    z: 10,
+    displayName: "Bot Alpha",
+    components: [
+      { name: "camera", functional: true, material: "electronic" },
+      { name: "arms", functional: false, material: "metal" },
+      { name: "legs", functional: true, material: "metal" },
+      { name: "power_cell", functional: true, material: "electronic" },
+    ],
   })
 
+  // Bot 2: Has working arms but broken camera.
+  // Can manipulate objects, but navigates blind (abstract fog only).
   spawnUnit({
-    x: 10,
-    z: 6,
-    fragmentId: unit1.mapFragment.fragmentId,
-    type: "scout",
-    hasCamera: true,
+    x: 20,
+    z: 18,
+    fragmentId: bot1.mapFragment.fragmentId,
+    displayName: "Bot Beta",
+    components: [
+      { name: "camera", functional: false, material: "electronic" },
+      { name: "arms", functional: true, material: "metal" },
+      { name: "legs", functional: true, material: "metal" },
+      { name: "power_cell", functional: true, material: "electronic" },
+    ],
   })
 
-  // Group 2: A lone robot to the east (separate fragment)
-  spawnUnit({
-    x: 45,
-    z: 15,
-    type: "maintenance_bot",
-    hasCamera: false,
+  // Fabrication unit: Stationary building, no power.
+  // Both bots must reach it. The camera bot directs the arms bot to
+  // repair the power supply, then fabricate replacement parts.
+  spawnFabricationUnit({
+    x: 12,
+    z: 14,
+    fragmentId: bot1.mapFragment.fragmentId,
+    powered: false,
+    components: [
+      { name: "power_supply", functional: false, material: "electronic" },
+      { name: "fabrication_arm", functional: true, material: "metal" },
+      { name: "material_hopper", functional: true, material: "metal" },
+    ],
   })
-
-  // Group 3: Another isolated robot to the west
-  spawnUnit({
-    x: -23,
-    z: 32,
-    type: "scout",
-    hasCamera: true,
-  })
-
-  // Calculate fragment centers from unit positions and cluster them
-  const fragmentCenters = new Map<string, { x: number; z: number; count: number }>()
-  for (const entity of units) {
-    const fid = entity.mapFragment.fragmentId
-    const existing = fragmentCenters.get(fid)
-    if (existing) {
-      existing.x += entity.worldPosition.x
-      existing.z += entity.worldPosition.z
-      existing.count++
-    } else {
-      fragmentCenters.set(fid, {
-        x: entity.worldPosition.x,
-        z: entity.worldPosition.z,
-        count: 1,
-      })
-    }
-  }
-
-  const centers = new Map<string, { x: number; z: number }>()
-  for (const [fid, data] of fragmentCenters) {
-    centers.set(fid, { x: data.x / data.count, z: data.z / data.count })
-  }
-
-  clusterFragments(centers, 15) // cluster within 15 world units
 
   // Initial exploration tick so terrain is visible
   simulationTick()
@@ -216,6 +202,7 @@ export default function App() {
         <directionalLight position={[10, 20, 10]} intensity={0.6} color="#aabbff" />
 
         <TerrainRenderer />
+        <LandscapeProps />
         <UnitRenderer />
 
         <TopDownCamera />

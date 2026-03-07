@@ -104,6 +104,7 @@ function UnitMesh({ entity }: { entity: Entity }) {
 
 function BuildingMesh({ entity }: { entity: Entity }) {
   const groupRef = useRef<THREE.Group>(null)
+  const ringRef = useRef<THREE.Mesh>(null)
 
   useFrame(() => {
     const frag = getFragment(entity.mapFragment.fragmentId)
@@ -116,6 +117,11 @@ function BuildingMesh({ entity }: { entity: Entity }) {
         entity.worldPosition.y,
         entity.worldPosition.z + oz
       )
+    }
+    if (ringRef.current) {
+      // Fabrication units are also units — use unit.selected if available
+      const selected = "unit" in entity ? entity.unit.selected : entity.building.selected
+      ringRef.current.visible = selected
     }
   })
 
@@ -176,6 +182,12 @@ function BuildingMesh({ entity }: { entity: Entity }) {
           </mesh>
         </>
       )}
+
+      {/* Selection ring */}
+      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]} visible={false}>
+        <ringGeometry args={[1.0, 1.2, 16]} />
+        <meshBasicMaterial color={COLOR_SELECTED} side={THREE.DoubleSide} />
+      </mesh>
     </group>
   )
 }
@@ -214,9 +226,11 @@ function GhostBuilding() {
 export function UnitRenderer() {
   return (
     <>
-      {Array.from(units).map((entity) => (
-        <UnitMesh key={entity.id} entity={entity} />
-      ))}
+      {Array.from(units)
+        .filter((entity) => entity.unit.type !== "fabrication_unit")
+        .map((entity) => (
+          <UnitMesh key={entity.id} entity={entity} />
+        ))}
       {Array.from(buildings).map((entity) => (
         <BuildingMesh key={entity.id} entity={entity} />
       ))}

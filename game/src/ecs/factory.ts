@@ -59,34 +59,46 @@ export function spawnUnit(options: {
 }
 
 /**
- * Spawn a fabrication unit (stationary building) at a world position.
+ * Spawn a fabrication unit — an immobile unit with building power tracking.
+ * Has both `unit` (for selection/UI/components) and `building` (for power system).
  */
 export function spawnFabricationUnit(options: {
   x: number
   z: number
   fragmentId: string
   powered?: boolean
+  displayName?: string
   components?: UnitComponent[]
 }): Entity {
   const fragment = getFragment(options.fragmentId)
   if (!fragment) throw new Error(`Fragment ${options.fragmentId} not found`)
 
   const y = getTerrainHeight(options.x, options.z)
+  const powered = options.powered ?? false
 
   return world.add({
-    id: `bldg_${nextEntityId++}`,
+    id: `fab_${nextEntityId++}`,
     faction: "player" as const,
     worldPosition: { x: options.x, y, z: options.z },
     mapFragment: { fragmentId: options.fragmentId },
-    building: {
-      type: "fabrication_unit",
-      powered: options.powered ?? false,
-      operational: (options.powered ?? false),
+    unit: {
+      type: "fabrication_unit" as const,
+      displayName: options.displayName ?? "Fabrication Unit",
+      speed: 0,
+      selected: false,
       components: options.components ?? [
         { name: "power_supply", functional: false, material: "electronic" },
         { name: "fabrication_arm", functional: true, material: "metal" },
         { name: "material_hopper", functional: true, material: "metal" },
       ],
+    },
+    navigation: { path: [], pathIndex: 0, moving: false },
+    building: {
+      type: "fabrication_unit",
+      powered,
+      operational: powered,
+      selected: false,
+      components: [],
     },
   } as Partial<Entity> as Entity)
 }
@@ -113,6 +125,7 @@ export function spawnLightningRod(options: {
       type: "lightning_rod",
       powered: true,
       operational: true,
+      selected: false,
       components: [],
     },
     lightningRod: {

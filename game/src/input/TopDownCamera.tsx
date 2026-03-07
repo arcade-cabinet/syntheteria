@@ -1,6 +1,9 @@
 /**
  * Mobile-first top-down camera with touch pan/zoom and keyboard/mouse support.
  * No rotation — always looking straight down.
+ *
+ * Mobile: Two-finger drag to pan, pinch to zoom. Single-finger reserved for unit input.
+ * Desktop: WASD/arrows to pan, scroll to zoom. Middle-click drag to pan.
  */
 import { useRef, useEffect } from "react"
 import { useThree, useFrame } from "@react-three/fiber"
@@ -20,10 +23,14 @@ export function TopDownCamera() {
 
   // Touch state
   const touchState = useRef<{
-    lastTouch: { x: number; y: number } | null
+    twoFingerCenter: { x: number; y: number } | null
     lastPinchDist: number | null
     lastMoveTime: number
-  }>({ lastTouch: null, lastPinchDist: null, lastMoveTime: 0 })
+    isPanning: boolean
+  }>({ twoFingerCenter: null, lastPinchDist: null, lastMoveTime: 0, isPanning: false })
+
+  // Mouse drag state
+  const mouseDrag = useRef<{ lastX: number; lastY: number } | null>(null)
 
   // Initialize camera
   useEffect(() => {
@@ -43,59 +50,110 @@ export function TopDownCamera() {
     }
   }, [])
 
-  // Mouse wheel zoom
+  // Mouse wheel zoom + middle-click drag
   useEffect(() => {
     const canvas = gl.domElement
+
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       zoom.current = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom.current + e.deltaY * 0.05))
     }
+
+    const onMouseDown = (e: MouseEvent) => {
+      // Middle mouse button for camera pan
+      if (e.button === 1) {
+        e.preventDefault()
+        mouseDrag.current = { lastX: e.clientX, lastY: e.clientY }
+      }
+    }
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!mouseDrag.current) return
+      const dx = e.clientX - mouseDrag.current.lastX
+      const dy = e.clientY - mouseDrag.current.lastY
+      const scale = zoom.current * 0.003
+      target.current.x -= dx * scale
+      target.current.z -= dy * scale
+      mouseDrag.current = { lastX: e.clientX, lastY: e.clientY }
+    }
+
+    const onMouseUp = (e: MouseEvent) => {
+      if (e.button === 1) {
+        mouseDrag.current = null
+      }
+    }
+
     canvas.addEventListener("wheel", onWheel, { passive: false })
-    return () => canvas.removeEventListener("wheel", onWheel)
+    canvas.addEventListener("mousedown", onMouseDown)
+    window.addEventListener("mousemove", onMouseMove)
+    window.addEventListener("mouseup", onMouseUp)
+    return () => {
+      canvas.removeEventListener("wheel", onWheel)
+      canvas.removeEventListener("mousedown", onMouseDown)
+      window.removeEventListener("mousemove", onMouseMove)
+      window.removeEventListener("mouseup", onMouseUp)
+    }
   }, [gl])
 
-  // Touch events for pan and pinch zoom
+  // Touch events: two-finger pan and pinch zoom only
   useEffect(() => {
     const canvas = gl.domElement
     const ts = touchState.current
 
+    const getTwoFingerCenter = (e: TouchEvent) => ({
+      x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+      y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+    })
+
+    const getPinchDist = (e: TouchEvent) => {
+      const dx = e.touches[0].clientX - e.touches[1].clientX
+      const dy = e.touches[0].clientY - e.touches[1].clientY
+      return Math.sqrt(dx * dx + dy * dy)
+    }
+
     const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        ts.lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+      if (e.touches.length === 2) {
+        ts.twoFingerCenter = getTwoFingerCenter(e)
+        ts.lastPinchDist = getPinchDist(e)
+        ts.isPanning = true
         velocity.current = { x: 0, z: 0 }
-      } else if (e.touches.length === 2) {
-        const dx = e.touches[0].clientX - e.touches[1].clientX
-        const dy = e.touches[0].clientY - e.touches[1].clientY
-        ts.lastPinchDist = Math.sqrt(dx * dx + dy * dy)
-        ts.lastTouch = null
+      } else {
+        ts.isPanning = false
       }
     }
 
     const onTouchMove = (e: TouchEvent) => {
-      e.preventDefault()
-      if (e.touches.length === 1 && ts.lastTouch) {
-        const dx = e.touches[0].clientX - ts.lastTouch.x
-        const dy = e.touches[0].clientY - ts.lastTouch.y
-        const scale = zoom.current * 0.003
-        velocity.current.x = -dx * scale
-        velocity.current.z = -dy * scale
-        target.current.x += velocity.current.x
-        target.current.z += velocity.current.z
-        ts.lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-        ts.lastMoveTime = performance.now()
-      } else if (e.touches.length === 2 && ts.lastPinchDist !== null) {
-        const dx = e.touches[0].clientX - e.touches[1].clientX
-        const dy = e.touches[0].clientY - e.touches[1].clientY
-        const dist = Math.sqrt(dx * dx + dy * dy)
-        const delta = ts.lastPinchDist - dist
-        zoom.current = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom.current + delta * 0.1))
+      if (e.touches.length === 2 && ts.isPanning) {
+        e.preventDefault()
+
+        // Pan from two-finger drag
+        const center = getTwoFingerCenter(e)
+        if (ts.twoFingerCenter) {
+          const dx = center.x - ts.twoFingerCenter.x
+          const dy = center.y - ts.twoFingerCenter.y
+          const scale = zoom.current * 0.003
+          velocity.current.x = -dx * scale
+          velocity.current.z = -dy * scale
+          target.current.x += velocity.current.x
+          target.current.z += velocity.current.z
+          ts.lastMoveTime = performance.now()
+        }
+        ts.twoFingerCenter = center
+
+        // Pinch zoom
+        const dist = getPinchDist(e)
+        if (ts.lastPinchDist !== null) {
+          const delta = ts.lastPinchDist - dist
+          zoom.current = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom.current + delta * 0.1))
+        }
         ts.lastPinchDist = dist
       }
     }
 
     const onTouchEnd = () => {
-      ts.lastTouch = null
+      ts.twoFingerCenter = null
       ts.lastPinchDist = null
+      ts.isPanning = false
     }
 
     canvas.addEventListener("touchstart", onTouchStart, { passive: false })
@@ -122,7 +180,7 @@ export function TopDownCamera() {
     velocity.current.x *= MOMENTUM_DECAY
     velocity.current.z *= MOMENTUM_DECAY
     if (Math.abs(velocity.current.x) > 0.001 || Math.abs(velocity.current.z) > 0.001) {
-      if (!touchState.current.lastTouch) {
+      if (!touchState.current.isPanning) {
         target.current.x += velocity.current.x
         target.current.z += velocity.current.z
       }

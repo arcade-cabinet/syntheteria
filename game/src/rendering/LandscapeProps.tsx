@@ -5,6 +5,7 @@
 import { useMemo } from "react"
 import * as THREE from "three"
 import { getTerrainHeight, isWalkable, WORLD_HALF } from "../ecs/terrain"
+import { isInsideBuilding } from "../ecs/cityLayout"
 
 // Simple seeded hash for deterministic placement
 function hash(x: number, z: number): number {
@@ -27,8 +28,9 @@ function generateProps(): PropInstance[] {
     for (let gx = -WORLD_HALF; gx < WORLD_HALF; gx += STEP) {
       const h = hash(gx, gz)
 
-      // Skip water and sparse placement
+      // Skip water, buildings, and sparse placement
       if (!isWalkable(gx, gz)) continue
+      if (isInsideBuilding(gx, gz)) continue
       if (h > 0.25) continue // ~25% chance of placing something
 
       const terrainY = getTerrainHeight(gx, gz)

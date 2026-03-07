@@ -4,6 +4,9 @@
  */
 import { explorationSystem } from "../systems/exploration"
 import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge"
+import { powerSystem, getPowerSnapshot, type PowerSnapshot } from "../systems/power"
+import { resourceSystem, getResources, type ResourcePool } from "../systems/resources"
+import { repairSystem } from "../systems/repair"
 import { getAllFragments, updateDisplayOffsets, type MapFragment } from "./terrain"
 import { units } from "./world"
 
@@ -14,6 +17,8 @@ export interface GameSnapshot {
   fragments: MapFragment[]
   unitCount: number
   mergeEvents: MergeEvent[]
+  power: PowerSnapshot
+  resources: ResourcePool
 }
 
 let tick = 0
@@ -31,6 +36,8 @@ function buildSnapshot(): GameSnapshot {
     fragments: getAllFragments(),
     unitCount: Array.from(units).length,
     mergeEvents: lastMergeEvents,
+    power: getPowerSnapshot(),
+    resources: getResources(),
   }
 }
 
@@ -64,6 +71,9 @@ export function simulationTick() {
 
   explorationSystem()
   lastMergeEvents = fragmentMergeSystem()
+  powerSystem(tick)
+  resourceSystem()
+  repairSystem()
   updateDisplayOffsets()
 
   snapshot = null

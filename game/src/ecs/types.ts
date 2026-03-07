@@ -54,6 +54,7 @@ export interface Entity {
     type: string
     powered: boolean
     operational: boolean
+    selected: boolean
     components: UnitComponent[]
   }
 

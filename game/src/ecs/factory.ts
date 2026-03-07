@@ -82,6 +82,7 @@ export function spawnFabricationUnit(options: {
       type: "fabrication_unit",
       powered: options.powered ?? false,
       operational: (options.powered ?? false),
+      selected: false,
       components: options.components ?? [
         { name: "power_supply", functional: false, material: "electronic" },
         { name: "fabrication_arm", functional: true, material: "metal" },
@@ -113,6 +114,7 @@ export function spawnLightningRod(options: {
       type: "lightning_rod",
       powered: true,
       operational: true,
+      selected: false,
       components: [],
     },
     lightningRod: {

@@ -4,12 +4,22 @@
  *
  * Navigation uses continuous 3D positions (no grid/tiles).
  * Units move freely through the world via navmesh pathfinding.
+ *
+ * Units have functional/broken parts instead of hit points.
  */
 
 export interface Vec3 {
   x: number
   y: number
   z: number
+}
+
+/** A physical component that can be functional or broken */
+export interface UnitComponent {
+  name: string
+  functional: boolean
+  /** Material needed to fabricate a replacement */
+  material: "metal" | "plastic" | "electronic"
 }
 
 export interface Entity {
@@ -25,12 +35,11 @@ export interface Entity {
 
   // Unit (mobile robot)
   unit: {
-    type: string
-    health: number
-    maxHealth: number
+    type: "maintenance_bot" | "utility_drone"
+    displayName: string
     speed: number // world units per second at 1x game speed
     selected: boolean
-    hasCamerasSensor: boolean // produces detailed maps vs abstract
+    components: UnitComponent[]
   }
 
   // Navigation — navmesh path as world-space waypoints
@@ -45,6 +54,7 @@ export interface Entity {
     type: string
     powered: boolean
     operational: boolean
+    components: UnitComponent[]
   }
 
   // Lightning rod specialization
@@ -53,4 +63,33 @@ export interface Entity {
     currentOutput: number
     protectionRadius: number
   }
+}
+
+// --- Component helpers ---
+
+export function hasCamera(entity: Entity): boolean {
+  return entity.unit.components.some(
+    (c) => c.name === "camera" && c.functional
+  )
+}
+
+export function hasArms(entity: Entity): boolean {
+  return entity.unit.components.some(
+    (c) => c.name === "arms" && c.functional
+  )
+}
+
+export function hasFunctionalComponent(
+  components: UnitComponent[],
+  name: string
+): boolean {
+  return components.some((c) => c.name === name && c.functional)
+}
+
+export function getBrokenComponents(components: UnitComponent[]): UnitComponent[] {
+  return components.filter((c) => !c.functional)
+}
+
+export function getFunctionalComponents(components: UnitComponent[]): UnitComponent[] {
+  return components.filter((c) => c.functional)
 }

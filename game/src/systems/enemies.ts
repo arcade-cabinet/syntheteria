@@ -24,12 +24,14 @@ const SPAWN_ZONES = [
   { x: 10, z: 48 },
 ]
 
-const MAX_ENEMIES = 6
-const SPAWN_INTERVAL = 30 // ticks between spawn attempts
-const PATROL_RANGE = 20
-const AGGRO_RANGE = 8
+// Light early-game presence: just a few wandering drones, no cultists.
+// Player has no weapons initially and must avoid them.
+const MAX_ENEMIES = 3
+const SPAWN_INTERVAL = 60 // ticks between spawn attempts (slower spawning)
+const PATROL_RANGE = 15
+const AGGRO_RANGE = 6  // slightly shorter aggro range — gives player more room
 
-let spawnTimer = 15 // start with some delay
+let spawnTimer = 40 // longer initial delay so player can orient
 
 // Track enemy entities by id
 const enemyIds = new Set<string>()

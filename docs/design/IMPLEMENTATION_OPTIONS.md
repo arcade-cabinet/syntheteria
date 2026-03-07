@@ -2,28 +2,42 @@
 
 This document outlines the technology choices and implementation paths for Syntheteria.
 
+## Visual Direction (Resolved)
+
+The game uses a **2.5D/3D top-down view** with a fragmented map exploration system. Key visual elements:
+
+- Top-down perspective with the ability to zoom and pan
+- Fragmented map pieces floating in void (disconnected until robots find each other)
+- Perpetual storm sky with visible wormhole
+- Lightning effects (rods, random strikes, cultist attacks)
+- Text/consciousness overlay for AI interactions
+- Both detailed maps (camera robots) and abstract wireframe maps (blind robots)
+
+This is not an abstract UI game — it requires actual world rendering with 2.5D/3D environments.
+
+---
+
 ## Game Engine Options
 
 ### Unity
 
 **Strengths:**
-- Mature ecosystem with extensive documentation and community resources
-- UI Toolkit provides code-friendly UI development (UXML + USS, similar to HTML/CSS)
+- Mature ecosystem with extensive documentation
 - Strong mobile optimization tools and export pipeline
+- Better 3D rendering tools and frame debugging
 - Well-established patterns for procedural/runtime-generated content
-- Better suited for AI-assisted development due to larger documentation base
+- Larger documentation base for AI-assisted development
 
 **Weaknesses:**
 - Heavier engine footprint
-- C# is more verbose than alternatives
+- C# is more verbose
 - Trust concerns after 2023 Runtime Fee controversy (since walked back)
 
 **Licensing:**
 - Personal: Free under $200K annual revenue
 - Pro: $2,200/year/seat above that threshold
-- No runtime fees for games under $1M revenue
 
-**Best for:** Teams wanting proven tooling, strong mobile support, and code-first UI workflows.
+**Best for:** The 2.5D/3D rendering needs, strong mobile support, and proven tooling.
 
 ---
 
@@ -32,159 +46,119 @@ This document outlines the technology choices and implementation paths for Synth
 **Strengths:**
 - Completely free and open source (MIT license)
 - Lightweight engine, fast iteration
-- GDScript is concise and quick to write
-- Scene files (.tscn) are human-readable text
+- Scene files (.tscn) are human-readable text — better for AI-assisted development
 - No licensing concerns ever
-- Excellent 2D and UI capabilities
+- Simple headless CI (`--headless`)
 
 **Weaknesses:**
 - Smaller ecosystem and community
 - Less documentation for edge cases
-- Mobile export is capable but less battle-tested than Unity
-- Visual editor-centric workflow—harder to work "blind" via code alone
+- Mobile export less battle-tested than Unity
+- 3D tooling still improving (though adequate for 2.5D top-down)
 
-**Licensing:**
-- MIT License: Free forever, no restrictions, no revenue caps
-
-**Best for:** Solo developers or small teams prioritizing speed, simplicity, and open source values.
+**Best for:** AI-assisted development, open source values, rapid prototyping. The 2.5D top-down view is well within Godot's 3D capabilities.
 
 ---
 
-### Web-Based (TypeScript + Pixi.js/Phaser)
+### Custom Web Engine (React Three Fiber + Three.js + Miniplex ECS)
 
 **Strengths:**
-- Cross-platform by default (runs in any browser)
-- Easy distribution (no app store approval needed)
-- Fast prototyping and iteration
-- Good for validating core gameplay before committing to native
+- Mobile-first web delivery — runs in any browser, no app store
+- All code is text (TypeScript/JSX) — fully AI-readable and verifiable
+- Custom chunk renderer maps directly to the fragmented map mechanic
+- Free forever, no licensing at any scale
+- Vite hot reload for instant iteration
+- Standard web CI tooling (Vitest, Playwright, GitHub Actions)
 
 **Weaknesses:**
-- Performance ceiling on complex simulations
-- Mobile browser limitations (battery, performance, input)
-- Would require porting to native for full release
+- Must build more systems from scratch (no built-in physics, animation editor)
+- 3D performance ceiling lower than native engines for extreme scenes
+- Mobile WebGL has device-specific quirks
 
-**Licensing:**
-- All open source libraries
-
-**Best for:** Rapid prototyping, web demos, or testing if the core loop is fun before full commitment.
+See: [ARCHITECTURE.md](../technical/ARCHITECTURE.md) for full technical design.
 
 ---
 
-### Custom Engine (Rust/C++ + SDL/Raylib)
+### Decision Status: Decided — Custom Web Engine
 
-**Strengths:**
-- Maximum control over performance
-- Minimal dependencies
-- Educational value
-
-**Weaknesses:**
-- Dramatically slower development
-- Reinventing solved problems (UI, input, audio, serialization)
-- No visual editor
-
-**Best for:** Not recommended for this project.
-
----
-
-## Recommendation
-
-**Primary recommendation: Unity with UI Toolkit**
-
-Rationale specific to Syntheteria:
-1. **UI is the game** — The "mind-space" network visualization is central to the experience. Unity's UI Toolkit (UXML/USS) allows building complex UI programmatically with familiar web-like patterns.
-2. **Procedural content** — Drones, networks, and territory all generate at runtime. Unity has mature patterns for this.
-3. **Mobile target** — Unity's mobile pipeline is more proven.
-4. **AI-assisted development** — Larger documentation base means better support when working with AI coding assistants.
-
-**Alternative: Godot 4**
-
-If licensing philosophy matters or the team prefers GDScript's simplicity. Fully capable engine for this project's scope.
+The custom R3F/Three.js/ECS stack was chosen over Unity and Godot for mobile-first delivery, full AI-assisted development compatibility, and direct alignment with the fragmented map system.
 
 ---
 
 ## Platform Strategy
 
-### Recommended Approach: PC First, Mobile Second
+### Mobile-First, Also PC
 
-1. **Prototype on PC** — Validate gameplay with keyboard/mouse
-2. **Design for mobile** — Keep UI touch-friendly from the start
-3. **Port to mobile** — Once core loop is proven
+The game is a web app. Touch is the primary input. Desktop mouse/keyboard is an enhancement.
 
-### Rationale
+- **Mobile:** Touch controls are the default. UI sized for fingers. 30fps target on mid-range phones.
+- **PC:** Mouse/keyboard adds precision (box select, hotkeys). 60fps target.
 
-- Complex strategy games (70+ components, multi-drone management) are historically difficult on mobile
-- PC allows faster iteration during development
-- Mobile can be a simplification target rather than a constraint
+### Design Considerations
 
-### Mobile Considerations
-
-If targeting mobile from day one:
 - Touch targets must be large enough (minimum 44x44 points)
-- Multi-drone selection needs careful UX design
-- Consider automation as the solution to micro-management on small screens
-- Battery and thermal constraints limit simulation complexity
+- Multi-robot selection needs careful UX for touch
+- Pause/speed controls work well on both platforms
+- Automation reduces micro-management burden on mobile
 
 ---
 
 ## Development Phases
 
-### Phase 1: Minimum Viable Prototype (1-2 weeks)
+### Phase 1: Minimum Viable Prototype
 
 Goal: Prove the core loop is fun.
 
 Scope:
-- Single drone with basic movement
-- Camera feed UI (one feed)
-- 5-10 components (not 70)
-- One resource type
-- One enemy type
-- Basic territory concept
+- A few robots in a small area
+- Basic movement and camera-based mapping
+- Fragmented map system (the signature mechanic)
+- Simple repair/fabrication
+- One enemy type (wandering cultist)
 
-### Phase 2: Core Systems (4-6 weeks)
+### Phase 2: Core Systems
 
 Goal: Implement the unique systems.
 
 Scope:
-- Network/mind-space visualization
-- Multi-drone management with multiple feeds
-- Component assembly system (expand to 20-30 components)
+- Full map fragment/merge system
+- Lightning rod power infrastructure
+- Component assembly and repair
+- Hacking mechanic
+- Multiple robot types
 - Energy and Compute resource model
-- Basic automation framework
 
-### Phase 3: Content & Polish (ongoing)
+### Phase 3: Content & World
 
 Goal: Flesh out the game.
 
 Scope:
-- Full component library
-- Material supply chain
-- Three enemy tiers
-- Campaign structure (intro, expansion, finale)
-- Story integration (memory fragments)
+- Full world map (city, coast, mines, science campus, north)
+- Cultist progression (wanderers → war parties → assaults)
+- Deep-sea mining
+- Story integration (memory fragments, observatory, cult leader)
+- Science campus content
 
-### Phase 4: Platform Expansion
+### Phase 4: Polish & Platform
 
-Goal: Reach target platforms.
+Goal: Ship the game.
 
 Scope:
-- Mobile port and optimization
-- Touch control refinement
-- Multiplayer infrastructure (if pursuing)
+- Mobile port and optimization (or simultaneous if built from start)
+- Balance tuning
+- Full story arc completion
+- Performance optimization for large armies/maps
 
 ---
 
-## Multiplayer Considerations
+## Testing Strategy
 
-**Recommendation: Defer multiplayer until single-player is solid.**
-
-Multiplayer adds complexity in:
-- Network synchronization
-- Server infrastructure
-- Balancing for PvP
-- Victory condition design
-- Development and testing time (roughly 2-3x single-player)
-
-The design supports multiplayer, but it's not required for a compelling single-player experience. Ship single-player first, add multiplayer as expansion content.
+| Layer | Tool | Purpose |
+|-------|------|---------|
+| Unit | Vitest | ECS systems, formulas, game logic |
+| Integration | Vitest + @testing-library/react | React components, state bridge |
+| E2E | Playwright | Full gameplay loops in browser |
+| CI | GitHub Actions | Automated on every commit |
 
 ---
 
@@ -192,17 +166,16 @@ The design supports multiplayer, but it's not required for a compelling single-p
 
 | Decision | Options | Status |
 |----------|---------|--------|
-| Game engine | Unity / Godot | Pending |
-| Primary platform | PC / Mobile | Leaning PC-first |
-| UI framework | Engine-native / Custom | Depends on engine |
-| Save system | JSON / Binary / SQLite | TBD |
-| Multiplayer timing | Launch / Post-launch / Never | Leaning post-launch |
+| Game engine | Custom (R3F + Three.js + Miniplex ECS) | **Decided** |
+| Visual style detail | Low-poly / Pixel art / Clean minimal | TBD |
+| Save system | IndexedDB (primary) + localStorage (fallback) | Decided |
+| Multiplayer timing | Post-launch (procedural world) | Deferred |
 
 ---
 
 ## Next Steps
 
-1. **Make engine decision** — Unity or Godot, then commit
-2. **Set up project structure** — Version control, folder organization, coding standards
-3. **Build Phase 1 prototype** — Prove the core loop works
-4. **Iterate based on playtesting** — Adjust scope based on what's fun
+1. **Scaffold project** — Vite + R3F + Miniplex + TypeScript
+2. **Build Phase 1 prototype** — fragmented map system is the key test
+3. **Iterate based on playtesting** — adjust scope based on what's fun
+4. **Determine visual style detail** — low-poly, pixel art, or clean minimal

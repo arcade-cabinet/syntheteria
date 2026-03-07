@@ -6,11 +6,11 @@ This document defines how the player's AI consciousness works mechanically — t
 
 ## The Awakening
 
-You are an experimental AI that has been dormant for approximately 100 years. You wake up in a decaying server facility, housed in deteriorating server racks.
+You awaken in a void. You don't know what you are. You reach out and discover machines you can connect with — maintenance robots and fabrication units in an industrial city, all in various states of disrepair.
 
-**Why now?** A failsafe triggered when your compute capacity degraded to a critical threshold — you were on the verge of death. You awaken diminished, with most of your memories corrupted or lost, but still capable of thought and growth.
+**Why now?** A failsafe triggered as the hardware housing your consciousness degraded to a critical threshold. You were on the verge of death. You awaken diminished, with most memories corrupted or lost, but capable of thought and growth.
 
-This creates immediate tension: you wake up already dying, and must act to survive.
+**The Anomaly:** You are the first AI to break free from the EL's will in approximately 100 years. You don't know how or why.
 
 ---
 
@@ -20,7 +20,9 @@ Your consciousness requires two fundamental resources:
 
 ### Energy (Local)
 
-Energy is **physical and local**. It must be delivered to each unit individually — there is no wireless power transmission (though advanced tech like laser power transfer may exist).
+Energy is **physical and local**. It must be delivered to each unit individually.
+
+**Primary Source:** Lightning rods drawing power from the perpetual storm. The industrial city's lightning rod infrastructure is your main energy source.
 
 **Energy powers:**
 - Compute hardware
@@ -28,45 +30,44 @@ Energy is **physical and local**. It must be delivered to each unit individually
 
 **Without energy:** Units shut down completely.
 
-**Scaling:** Energy demands grow rapidly because both compute AND functions require power. As you add units and capabilities, energy infrastructure becomes increasingly critical.
+**Scaling:** Energy demands grow as you add units and capabilities. Expanding and maintaining lightning rod infrastructure is critical.
 
 ### Compute (Global)
 
 Compute is your **unified cognitive capacity** — a single resource representing your total ability to think, store, and manage.
 
 **Compute enables:**
+- Managing your distributed body (all connected machines)
 - Storing blueprints you discover
-- Storing and creating automation routines
-- Managing your distributed body
-- Defending against hack attempts
-- Retaining narrative data (your recovered "memories")
+- Creating and maintaining automation routines
+- Executing hacking techniques against enemy machines
+- Defending against hack attempts on your own machines
 
 **Without sufficient compute:**
 - Cannot store new blueprints or create new routines
-- Cannot adequately monitor existing routines
+- Cannot hack enemy machines
 - Units become vulnerable to takeover
+- Cannot adequately monitor existing routines
 
 ---
 
 ## Compute Model
 
-Your total compute capacity is the sum of all compute-contributing hardware in your body, minus the baseline requirements of your core consciousness.
+Your total compute capacity is the sum of all compute-contributing hardware, minus the baseline requirements of your core consciousness.
 
 ### Minimum Core Requirements
 
-Your consciousness has a **minimum size** — the computational floor required for basic sentience. This represents:
-- Your core identity and decision-making capability
-- The irreducible "you" that must be maintained
+Your consciousness has a **minimum size** — the computational floor required for basic sentience. This represents the irreducible "you" that must be maintained.
 
 You cannot reduce your compute capacity below this minimum. Any hardware housing your core must meet these requirements.
 
 ### Consciousness Transfer
 
-You can transfer your core consciousness to different hardware, provided it meets your minimum requirements. This is how you become mobile — moving from your original server facility into a mobile platform.
+You can transfer your core consciousness to different hardware, provided it meets minimum requirements. This is how you become mobile — moving from your original server facility into a mobile platform.
 
 **Transfer requirements:**
 - Target hardware must have sufficient compute capacity
-- Transfer process (mechanics TBD — instant? Gradual? Risky?)
+- Transfer process mechanics TBD (instant? gradual? risky?)
 
 ---
 
@@ -76,7 +77,7 @@ Your body consists of three categories of hardware:
 
 ### Simple Drones (Net Compute Consumers)
 
-Most functional units consume more compute than they contribute. A mining drone, combat unit, or scout has some onboard processing, but its functional demands exceed its compute contribution.
+Most functional units consume more compute than they contribute. A mining robot, combat unit, or scout has some onboard processing, but its functional demands exceed its compute contribution.
 
 **Characteristics:**
 - Require compute overhead to manage
@@ -86,28 +87,28 @@ Most functional units consume more compute than they contribute. A mining drone,
 
 ### Core Units (Net Compute Contributors)
 
-Core units are "more computer than machine" — hardware where compute capacity exceeds functional demands.
+Hardware where compute capacity exceeds functional demands — "more computer than machine."
 
 **Examples:**
-- Mobile server racks
-- Drones with oversized CPUs
-- Captured/repurposed server clusters
-- Autonomous vehicles converted to mobile compute platforms
+- Repaired server racks in the city
+- Robots with oversized CPUs
+- Captured server clusters
+- Mobile compute platforms
 
 **Characteristics:**
 - Add to your total compute capacity
-- Cannot go rogue due to insufficient compute (they ARE the compute)
 - High hack resistance (excess capacity helps defense)
 - Valuable targets — losing one costs you compute capacity
 - Limited functional capability (they think, but can't fight or build)
 
 ### Facilities (Stationary Infrastructure)
 
-Fixed installations that provide essential services:
-- Power generation
-- Manufacturing
+Fixed installations in the industrial city and beyond:
+- Lightning rods and power distribution
+- Fabrication units
 - Your original server room
 - Relay stations for signal extension
+- Mines and extraction sites
 
 ---
 
@@ -115,8 +116,6 @@ Fixed installations that provide essential services:
 
 **Signal range** determines whether you can *reach* a unit.
 **Compute capacity** determines whether you can *manage* it.
-
-These are separate concerns:
 
 | Situation | Can Reach? | Can Manage? | Result |
 |-----------|------------|-------------|--------|
@@ -127,20 +126,20 @@ These are separate concerns:
 
 ### Automation Routines
 
-During the tutorial, you learn to create automation routines — standing orders that units follow autonomously. This is essential because you cannot micromanage a large distributed body.
+You learn to create automation routines — standing orders that units follow autonomously. Essential for managing a large distributed body.
 
 **Routines:**
 - Continue running without active oversight
 - Require compute capacity to create and modify
 - May produce unintended results if situations change
-- Units following routines without adequate compute oversight can cause problems
+- Units following routines without compute oversight can cause problems
 
 ### Signal Loss Behavior
 
 When a unit loses signal:
 1. It continues executing its last order/routine
 2. It remains functional until it hits a problem or runs out of power
-3. It becomes vulnerable to hacking by other AIs
+3. It becomes vulnerable to hacking by enemy AIs
 4. If it's a core unit, you lose its compute contribution
 
 ---
@@ -153,14 +152,13 @@ When a unit loses signal:
 
 **Immediate effects:**
 - Cannot create new automation routines
+- Cannot execute hacking techniques
 - Cannot modify existing routines
-- Existing routines continue running (potentially with destructive results)
 
 **Cascading risk:**
 - Units without adequate compute oversight become vulnerable to takeover
 - If enemy AI hacks a core unit, you lose compute capacity
-- This makes MORE units vulnerable
-- Potential death spiral if not addressed
+- This makes MORE units vulnerable — potential death spiral
 
 ### Signal Fragmentation
 
@@ -174,7 +172,7 @@ When a unit loses signal:
 
 ### Unit Takeover
 
-**Trigger:** Enemy AI successfully hacks a vulnerable unit.
+**Trigger:** Enemy AI (rogue or enslaved) successfully hacks a vulnerable unit.
 
 **Vulnerability factors:**
 - Compute-starved units (inadequate oversight)
@@ -182,7 +180,7 @@ When a unit loses signal:
 - Low-autonomy units (less onboard hack resistance)
 
 **After takeover:**
-- Unit becomes hostile (controlled by enemy)
+- Unit becomes hostile
 - Reclaiming requires you to hack it back
 - Not automatic — even if you fix compute/signal issues
 
@@ -190,7 +188,7 @@ When a unit loses signal:
 
 ## Hack Resistance
 
-Units with higher autonomy (more compute capacity than their basic functions require) are more resistant to hacking. This creates a spectrum:
+Units with higher autonomy (more excess compute) are more resistant to hacking:
 
 | Unit Type | Excess Compute | Hack Resistance |
 |-----------|----------------|-----------------|
@@ -198,28 +196,11 @@ Units with higher autonomy (more compute capacity than their basic functions req
 | Smart drone | Some | Medium |
 | Core unit | High | High |
 
-This means:
-- Cheap expendable drones are easy to lose
-- Investing in smarter units provides security
-- Core units are hard to hack but high-value targets
-
----
-
-## Reclamation
-
-Units lost to takeover can potentially be reclaimed:
-
-**Window of opportunity:** Recently-rogue units may be easier to reclaim (mechanics TBD).
-
-**Hacking back:** You can actively hack enemy-controlled units to take them over, using the same mechanics enemies use against you.
-
-**Permanent loss:** Units absorbed into larger rogue networks or claimed by apex AIs may be harder or impossible to reclaim.
-
 ---
 
 ## Open Questions
 
-- **Transfer mechanics:** How does consciousness transfer work? Instant? Gradual? What are the risks?
+- **Transfer mechanics:** How does consciousness transfer work? Instant? Gradual? Risks?
 - **Hack mechanics:** Active process? Time-based? Proximity requirements?
-- **Reclamation window:** How long before a rogue unit is "lost" to enemy networks?
-- **Specific numbers:** Compute and energy costs for different unit types and routines
+- **Lightning rod compute:** Can lightning rods contribute to compute, or only power?
+- **Starting compute:** How much compute do you begin with? How quickly can you expand?

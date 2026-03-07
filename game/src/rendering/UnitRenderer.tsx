@@ -12,7 +12,7 @@ import { getFragment } from "../ecs/terrain"
 import { hasCamera, hasArms } from "../ecs/types"
 import { getGhostPosition, getActivePlacement } from "../systems/buildingPlacement"
 import { getTerrainHeight } from "../ecs/terrain"
-import type { Entity } from "../ecs/types"
+import type { UnitEntity, BuildingEntity } from "../ecs/types"
 
 const COLOR_UNIT = 0x44aaff
 const COLOR_ENEMY = 0xff3333
@@ -23,7 +23,7 @@ const COLOR_BUILDING = 0x888888
 const COLOR_BUILDING_UNPOWERED = 0x554444
 const COLOR_FABRICATION = 0xaa8844
 
-function UnitMesh({ entity }: { entity: Entity }) {
+function UnitMesh({ entity }: { entity: UnitEntity }) {
   const groupRef = useRef<THREE.Group>(null)
   const ringRef = useRef<THREE.Mesh>(null)
 
@@ -102,12 +102,12 @@ function UnitMesh({ entity }: { entity: Entity }) {
   )
 }
 
-function BuildingMesh({ entity }: { entity: Entity }) {
+function BuildingMesh({ entity }: { entity: BuildingEntity }) {
   const groupRef = useRef<THREE.Group>(null)
   const ringRef = useRef<THREE.Mesh>(null)
 
   useFrame(() => {
-    const frag = getFragment(entity.mapFragment.fragmentId)
+    const frag = entity.mapFragment ? getFragment(entity.mapFragment.fragmentId) : null
     const ox = frag?.displayOffset.x ?? 0
     const oz = frag?.displayOffset.z ?? 0
 
@@ -120,7 +120,7 @@ function BuildingMesh({ entity }: { entity: Entity }) {
     }
     if (ringRef.current) {
       // Fabrication units are also units — use unit.selected if available
-      const selected = "unit" in entity ? entity.unit.selected : entity.building.selected
+      const selected = entity.unit ? entity.unit.selected : entity.building.selected
       ringRef.current.visible = selected
     }
   })

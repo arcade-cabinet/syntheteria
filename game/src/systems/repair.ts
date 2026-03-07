@@ -9,7 +9,7 @@
 import { units, buildings } from "../ecs/world"
 import { hasArms } from "../ecs/types"
 import { spendResource, type ResourcePool } from "./resources"
-import type { Entity, UnitComponent } from "../ecs/types"
+import type { Entity, UnitComponent, UnitEntity } from "../ecs/types"
 
 /** Repair range — units must be within this distance */
 const REPAIR_RANGE = 3.0
@@ -40,7 +40,7 @@ export function getActiveRepairs(): RepairAction[] {
  * Returns true if repair was started successfully.
  */
 export function startRepair(
-  repairer: Entity,
+  repairer: UnitEntity,
   target: Entity,
   componentName: string
 ): boolean {
@@ -48,15 +48,16 @@ export function startRepair(
   if (!hasArms(repairer)) return false
 
   // Validate distance
+  if (!repairer.worldPosition || !target.worldPosition) return false
   const dx = repairer.worldPosition.x - target.worldPosition.x
   const dz = repairer.worldPosition.z - target.worldPosition.z
   const dist = Math.sqrt(dx * dx + dz * dz)
   if (dist > REPAIR_RANGE) return false
 
   // Find the broken component (on unit or building)
-  const components = "unit" in target ? target.unit.components : target.building.components
-  const comp = components.find(
-    c => c.name === componentName && !c.functional
+  const components = target.unit ? target.unit.components : target.building?.components
+  const comp = components?.find(
+    (c: UnitComponent) => c.name === componentName && !c.functional
   )
   if (!comp) return false
 
@@ -96,7 +97,7 @@ export function repairSystem() {
       for (const unit of units) {
         if (unit.id === repair.targetId) {
           const comp = unit.unit.components.find(
-            c => c.name === repair.componentName && !c.functional
+            (c: UnitComponent) => c.name === repair.componentName && !c.functional
           )
           if (comp) comp.functional = true
           found = true
@@ -107,7 +108,7 @@ export function repairSystem() {
         for (const bldg of buildings) {
           if (bldg.id === repair.targetId) {
             const comp = bldg.building.components.find(
-              c => c.name === repair.componentName && !c.functional
+              (c: UnitComponent) => c.name === repair.componentName && !c.functional
             )
             if (comp) comp.functional = true
             break

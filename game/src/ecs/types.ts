@@ -1,12 +1,15 @@
 /**
  * Syntheteria ECS Entity type and component definitions.
  * All components are optional — Miniplex queries select by presence.
+ *
+ * Navigation uses continuous 3D positions (no grid/tiles).
+ * Units move freely through the world via navmesh pathfinding.
  */
 
-export interface GridCell {
-  chunkId: string
+export interface Vec3 {
   x: number
   y: number
+  z: number
 }
 
 export interface Entity {
@@ -14,13 +17,10 @@ export interface Entity {
   id: string
   faction: "player" | "cultist" | "rogue" | "feral"
 
-  // Spatial — grid position within a chunk
-  position: GridCell
+  // Continuous 3D position (single source of truth)
+  worldPosition: Vec3
 
-  // Continuous 3D coords for smooth rendering (updated per-frame)
-  worldPosition: { x: number; y: number; z: number }
-
-  // Which map fragment this entity belongs to
+  // Which map fragment this entity belongs to (for fog-of-war grouping)
   mapFragment: { fragmentId: string }
 
   // Unit (mobile robot)
@@ -28,14 +28,14 @@ export interface Entity {
     type: string
     health: number
     maxHealth: number
-    speed: number // grid cells per second at 1x game speed
+    speed: number // world units per second at 1x game speed
     selected: boolean
     hasCamerasSensor: boolean // produces detailed maps vs abstract
   }
 
-  // Navigation — A* path
+  // Navigation — navmesh path as world-space waypoints
   navigation: {
-    path: GridCell[]
+    path: Vec3[]
     pathIndex: number
     moving: boolean
   }

@@ -1,52 +1,28 @@
 /**
- * Exploration system: reveals chunks around moving units.
+ * Exploration system: reveals fog around units based on distance.
  * Camera-equipped robots produce "detailed" fog; others produce "abstract".
+ * Operates on the continuous fog grid in each fragment.
  */
 import { units } from "../ecs/world"
-import {
-  getFragment,
-  getOrCreateChunk,
-  CHUNK_SIZE,
-  type FogState,
-} from "../ecs/fragments"
+import { getFragment, setFogAt, type FogState } from "../ecs/terrain"
 
-const VISION_RADIUS = 3 // tiles around the unit
+const VISION_RADIUS = 6 // world units around the unit
 
 export function explorationSystem() {
   for (const entity of units) {
     const fragment = getFragment(entity.mapFragment.fragmentId)
     if (!fragment) continue
 
-    const [chunkCx, chunkCy] = entity.position.chunkId.split(",").map(Number)
-    const tx = entity.position.x
-    const ty = entity.position.y
+    const wx = entity.worldPosition.x
+    const wz = entity.worldPosition.z
+    const fogType: FogState = entity.unit.hasCamerasSensor ? 2 : 1
 
-    const fogType: FogState = entity.unit.hasCamerasSensor ? "detailed" : "abstract"
-
-    // Reveal tiles within vision radius
-    for (let dy = -VISION_RADIUS; dy <= VISION_RADIUS; dy++) {
-      for (let dx = -VISION_RADIUS; dx <= VISION_RADIUS; dx++) {
-        if (dx * dx + dy * dy > VISION_RADIUS * VISION_RADIUS) continue
-
-        let tileX = tx + dx
-        let tileY = ty + dy
-        let cx = chunkCx
-        let cy = chunkCy
-
-        // Handle chunk boundary crossings
-        while (tileX < 0) { cx--; tileX += CHUNK_SIZE }
-        while (tileX >= CHUNK_SIZE) { cx++; tileX -= CHUNK_SIZE }
-        while (tileY < 0) { cy--; tileY += CHUNK_SIZE }
-        while (tileY >= CHUNK_SIZE) { cy++; tileY -= CHUNK_SIZE }
-
-        const chunk = getOrCreateChunk(fragment, cx, cy)
-
-        // Only upgrade fog, never downgrade (detailed > abstract > unexplored)
-        const current = chunk.fog[tileY][tileX]
-        if (current === "unexplored" || (current === "abstract" && fogType === "detailed")) {
-          chunk.fog[tileY][tileX] = fogType
-          chunk.hasRevealed = true
-        }
+    // Reveal cells within vision radius (circle)
+    const r = Math.ceil(VISION_RADIUS)
+    for (let dz = -r; dz <= r; dz++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (dx * dx + dz * dz > VISION_RADIUS * VISION_RADIUS) continue
+        setFogAt(fragment, wx + dx, wz + dz, fogType)
       }
     }
   }

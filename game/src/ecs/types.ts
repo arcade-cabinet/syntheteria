@@ -67,7 +67,12 @@ export interface WireComponent {
 
 /** Mining drill — extracts resources from terrain */
 export interface MinerComponent {
-	resourceType: "scrap_metal" | "e_waste" | "rare_alloy" | "copper" | "fiber_optics";
+	resourceType:
+		| "scrap_metal"
+		| "e_waste"
+		| "rare_alloy"
+		| "copper"
+		| "fiber_optics";
 	extractionRate: number; // items per tick
 	outputBeltId: string | null;
 	drillHealth: number; // 0..1

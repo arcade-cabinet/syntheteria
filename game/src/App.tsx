@@ -22,17 +22,27 @@ import { getActivePlayerBot } from "./ecs/world";
 import { FPSCamera } from "./input/FPSCamera";
 import { FPSInput } from "./input/FPSInput";
 import { PhysicsSystem } from "./physics/PhysicsSystem";
+import { BeltRenderer } from "./rendering/BeltRenderer";
+import { CameraEffects } from "./rendering/CameraEffects";
 import { CityRenderer } from "./rendering/CityRenderer";
+import { FactoryRenderer } from "./rendering/FactoryRenderer";
+import { Flashlight } from "./rendering/Flashlight";
+import { HologramRenderer } from "./rendering/HologramRenderer";
 import { LandscapeProps } from "./rendering/LandscapeProps";
 import { OtterRenderer } from "./rendering/OtterRenderer";
 import { StormSky } from "./rendering/StormSky";
 import { TerrainRenderer } from "./rendering/TerrainRenderer";
 import { UnitRenderer } from "./rendering/UnitRenderer";
+import { WireRenderer } from "./rendering/WireRenderer";
+import { beltTransportSystem } from "./systems/beltTransport";
+import { botAutomationSystem } from "./systems/botAutomation";
+import { cultistAISystem } from "./systems/cultistAI";
 import { movementSystem } from "./systems/movement";
 import { buildNavGraph } from "./systems/navmesh";
 import { resetScavengePoints } from "./systems/resources";
 import { Bezel } from "./ui/Bezel";
 import { FPSHUD } from "./ui/FPSHUD";
+import { InventoryView } from "./ui/InventoryView";
 import { MobileControls } from "./ui/MobileControls";
 import { getEquippedTool } from "./ui/RadialToolMenu";
 import { TitleScreen } from "./ui/TitleScreen";
@@ -165,9 +175,14 @@ function GameLoop() {
 		const speed = getGameSpeed();
 		if (speed <= 0) return;
 
-		movementSystem(delta, speed);
+		const scaledDelta = delta * speed;
 
-		simAccumulator.current += delta * speed;
+		movementSystem(delta, speed);
+		beltTransportSystem(scaledDelta);
+		botAutomationSystem(scaledDelta);
+		cultistAISystem(scaledDelta);
+
+		simAccumulator.current += scaledDelta;
 		while (simAccumulator.current >= SIM_INTERVAL) {
 			simAccumulator.current -= SIM_INTERVAL;
 			simulationTick();
@@ -249,8 +264,14 @@ export default function App() {
 				<CityRenderer />
 				<UnitRenderer />
 				<OtterRenderer />
+				<BeltRenderer />
+				<WireRenderer />
+				<FactoryRenderer />
+				<HologramRenderer />
 
 				<FPSCamera />
+				<CameraEffects />
+				<Flashlight />
 				<FPSInput />
 				<PhysicsSystem />
 				<AudioSystem />
@@ -259,6 +280,7 @@ export default function App() {
 
 			{/* HUD overlays on the viewport */}
 			<FPSHUD />
+			<InventoryView />
 
 			{/* Mobile controls — joystick, tool view, action buttons */}
 			{isMobile && (

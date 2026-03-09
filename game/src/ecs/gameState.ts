@@ -16,18 +16,23 @@ import {
 	getActiveJobs,
 } from "../systems/fabrication";
 import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge";
+import { hackingSystem } from "../systems/hacking";
+import { miningSystem } from "../systems/mining";
 import { otterSystem } from "../systems/otters";
 import {
 	getPowerSnapshot,
 	type PowerSnapshot,
 	powerSystem,
 } from "../systems/power";
+import { processingSystem } from "../systems/processing";
 import { repairSystem } from "../systems/repair";
 import {
 	getResources,
 	type ResourcePool,
 	resourceSystem,
 } from "../systems/resources";
+import { signalNetworkSystem } from "../systems/signalNetwork";
+import { wireNetworkSystem } from "../systems/wireNetwork";
 import {
 	getAllFragments,
 	type MapFragment,
@@ -109,9 +114,14 @@ export function simulationTick() {
 	explorationSystem();
 	lastMergeEvents = fragmentMergeSystem();
 	powerSystem(tick);
+	wireNetworkSystem();
+	signalNetworkSystem();
 	resourceSystem();
+	miningSystem();
+	processingSystem();
 	repairSystem();
 	fabricationSystem();
+	hackingSystem();
 	enemySystem();
 	combatSystem();
 	otterSystem();

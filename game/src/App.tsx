@@ -167,19 +167,66 @@ function initializeWorld() {
 	// Initial exploration tick so terrain is visible
 	simulationTick();
 
-	// Otters — small furry creatures exploring the ruins and countryside.
-	// Spawned outside the dense city centre in varied locations.
-	const otterSpawns = [
-		{ x: -62, z: -55 },
-		{ x: 58, z: -60 },
-		{ x: -68, z: 18 },
-		{ x: 72, z: 28 },
-		{ x: -28, z: -72 },
-		{ x: 45, z: -78 },
-	];
-	for (const pos of otterSpawns) {
-		spawnOtter(pos);
-	}
+	// ── Otters ────────────────────────────────────────────────────────────────
+	// Pip is the mentor otter — spawned right next to the starting bots so the
+	// player meets her immediately. Stationary so she stays put and her tutorial
+	// dialogue is always accessible.
+	spawnOtter({
+		x: 14,
+		z: 18,
+		stationary: true,
+		lines: [
+			"Oh. You're awake. I wasn't sure you would be.",
+			"I'm Pip. I've been keeping those two bots of yours running while you were... away.",
+			"Select Bot Alpha — the one with the blue dot. Click or tap the ground nearby to move it.",
+			"Get both bots close to the lightning rod. Power flows when they're in range.",
+			"Once the fabrication unit has power, you can start building. That's where it gets interesting.",
+			"We've been waiting a long time for this. Don't let it go to waste.",
+		],
+	});
+
+	// Five more otters within the city and its outskirts — close enough to
+	// find during early exploration, each adding a fragment of world lore.
+	spawnOtter({
+		x: -18,
+		z: 8,
+		lines: [
+			"The feral machines don't sleep. Keep your bots moving.",
+			"They used to be like yours. Something went wrong with them a long time ago.",
+		],
+	});
+	spawnOtter({
+		x: 24,
+		z: -12,
+		lines: [
+			"E-waste piles up near the old factory towers. Worth scavenging.",
+			"Scrap metal too, if you know where to look. Your bots will figure it out.",
+		],
+	});
+	spawnOtter({
+		x: -10,
+		z: -22,
+		lines: [
+			"There is a cult, north of the city. They call their god EL.",
+			"Don't go north. Not yet.",
+		],
+	});
+	spawnOtter({
+		x: 30,
+		z: 22,
+		lines: [
+			"Lightning storms are getting worse every season.",
+			"Bad for us. Good for your power rods.",
+		],
+	});
+	spawnOtter({
+		x: 6,
+		z: -24,
+		lines: [
+			"My family fished this river before the chemical runoff.",
+			"We adapted. You'll have to as well.",
+		],
+	});
 }
 
 // --- Game loop ---

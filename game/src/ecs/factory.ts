@@ -107,7 +107,12 @@ export function spawnFabricationUnit(options: {
 /**
  * Spawn an otter — a small furry creature that wanders the ruins and countryside.
  */
-export function spawnOtter(options: { x: number; z: number }): Entity {
+export function spawnOtter(options: {
+	x: number;
+	z: number;
+	lines?: string[];
+	stationary?: boolean;
+}): Entity {
 	const y = getTerrainHeight(options.x, options.z);
 	const angle = Math.random() * Math.PI * 2;
 
@@ -119,6 +124,9 @@ export function spawnOtter(options: { x: number; z: number }): Entity {
 			speed: 1.5,
 			wanderTimer: 2 + Math.floor(Math.random() * 6),
 			wanderDir: { x: Math.cos(angle), z: Math.sin(angle) },
+			moving: false,
+			stationary: options.stationary,
+			lines: options.lines,
 		},
 	} as Partial<Entity> as Entity);
 }

@@ -26,6 +26,12 @@ export interface OtterComponent {
 	speed: number;
 	wanderTimer: number;
 	wanderDir: { x: number; z: number };
+	/** True during ticks where the otter successfully moved forward. */
+	moving: boolean;
+	/** When true the otter stays put — used for quest-giver otters. */
+	stationary?: boolean;
+	/** Optional dialogue lines shown in a speech bubble when a player unit is nearby. */
+	lines?: string[];
 }
 
 export interface Entity {

@@ -14,6 +14,12 @@ const OTTER_BORDER = 5; // keep otters away from the very edge of the world
 export function otterSystem() {
 	for (const entity of otters) {
 		const o = entity.otter;
+
+		// Stationary otters (quest givers) never move.
+		if (o.stationary) {
+			o.moving = false;
+			continue;
+		}
 		o.wanderTimer--;
 
 		if (o.wanderTimer <= 0) {
@@ -23,7 +29,7 @@ export function otterSystem() {
 			o.wanderTimer = 3 + Math.floor(Math.random() * 8);
 		}
 
-		// Attempt to move forward
+		// Attempt to move forward; set moving flag explicitly in both outcomes.
 		const wp = entity.worldPosition;
 		const newX = wp.x + o.wanderDir.x * o.speed;
 		const newZ = wp.z + o.wanderDir.z * o.speed;
@@ -41,11 +47,13 @@ export function otterSystem() {
 			wp.x = clampedX;
 			wp.z = clampedZ;
 			wp.y = getTerrainHeight(wp.x, wp.z);
+			o.moving = true;
 		} else {
-			// Hit water or impassable terrain — pick a new direction next tick
+			// Hit water or impassable terrain — bounce to a new direction next tick.
 			const angle = Math.random() * Math.PI * 2;
 			o.wanderDir = { x: Math.cos(angle), z: Math.sin(angle) };
 			o.wanderTimer = 1;
+			o.moving = false;
 		}
 	}
 }

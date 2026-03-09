@@ -1,215 +1,223 @@
 /**
- * Procedurally renders otters — small furry creatures roaming the ruins.
+ * Renders otters as animated billboard sprites using the pre-rendered keyframe
+ * PNG sequences extracted from otter.zip, with proximity-triggered speech bubbles
+ * that guide the player through the game.
  *
- * Each otter is composed of basic Three.js primitives assembled into a
- * recognisable otter shape: elongated body, rounded head with ears,
- * bright eyes, nose, paws, and an animated tail that sways as they move.
+ * Textures are shared across all otter instances. The Vite base URL is prepended
+ * so paths resolve correctly whether the app is served at / or /syntheteria/.
  *
- * The whole group faces the otter's current wander direction and bobs
- * gently so they feel alive rather than static.
+ * Speech bubbles use drei's <Html> component — a DOM element anchored to a 3D
+ * world position. They appear when any player unit is within PROXIMITY world
+ * units, and advance on click.
  */
 
+import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import type { OtterEntity } from "../ecs/types";
-import { otters } from "../ecs/world";
+import { otters, units } from "../ecs/world";
 
-// Otter colour palette
-const COLOR_FUR = 0x7a4e2d; // rich dark brown
-const COLOR_BELLY = 0xc49a6c; // warm tan underside
-const COLOR_DARK = 0x150a04; // near-black for eyes and nose
-const COLOR_NOSE = 0x3a1a0a; // slightly warmer dark for nose
+// ---------------------------------------------------------------------------
+// Shared texture bank — loaded once, reused by every OtterSprite instance.
+// BASE_URL handles the /syntheteria/ Vite base in both dev and production.
+// ---------------------------------------------------------------------------
 
-/** Derive a stable per-otter phase offset from its id string. */
-function otterPhaseOffset(id: string): number {
+const IDLE_FRAME_COUNT = 20;
+const WALK_FRAME_COUNT = 8;
+const ANIM_FPS = 8;
+
+// Source frame dimensions (px) — used only for aspect-ratio calculation.
+const SOURCE_WIDTH = 786;
+const SOURCE_HEIGHT = 691;
+
+// World-unit size derived from source aspect ratio.
+const SPRITE_HEIGHT = 1.4;
+const SPRITE_WIDTH = SPRITE_HEIGHT * (SOURCE_WIDTH / SOURCE_HEIGHT);
+
+// How close (world units) a player unit must be to trigger a speech bubble.
+const PROXIMITY = 10;
+
+function loadFrames(anim: string, count: number): THREE.Texture[] {
+	const loader = new THREE.TextureLoader();
+	const base = import.meta.env.BASE_URL as string;
+	return Array.from({ length: count }, (_, i) => {
+		const idx = String(i).padStart(3, "0");
+		const tex = loader.load(`${base}otters/brown/${anim}_${idx}.png`);
+		tex.colorSpace = THREE.SRGBColorSpace;
+		return tex;
+	});
+}
+
+const idleFrames = loadFrames("idle", IDLE_FRAME_COUNT);
+const walkFrames = loadFrames("walk", WALK_FRAME_COUNT);
+
+// ---------------------------------------------------------------------------
+// Speech bubble styles — terminal aesthetic, slightly warmer for organic feel
+// ---------------------------------------------------------------------------
+
+const BUBBLE: React.CSSProperties = {
+	background: "rgba(0, 18, 12, 0.94)",
+	border: "1px solid rgba(0, 255, 160, 0.75)",
+	borderRadius: "8px",
+	padding: "10px 14px",
+	maxWidth: "210px",
+	minWidth: "120px",
+	cursor: "pointer",
+	userSelect: "none",
+	pointerEvents: "auto",
+	fontFamily: "'Courier New', monospace",
+	fontSize: "12px",
+	lineHeight: "1.6",
+	color: "#00ffaa",
+	textShadow: "0 0 8px rgba(0,255,160,0.35)",
+	boxShadow: "0 0 16px rgba(0,255,160,0.12)",
+	position: "relative",
+};
+
+const TAIL: React.CSSProperties = {
+	position: "absolute",
+	bottom: "-8px",
+	left: "50%",
+	transform: "translateX(-50%)",
+	width: 0,
+	height: 0,
+	borderLeft: "8px solid transparent",
+	borderRight: "8px solid transparent",
+	borderTop: "8px solid rgba(0, 255, 160, 0.75)",
+};
+
+const ADVANCE: React.CSSProperties = {
+	display: "block",
+	textAlign: "right",
+	marginTop: "6px",
+	fontSize: "10px",
+	opacity: 0.6,
+};
+
+// ---------------------------------------------------------------------------
+// Per-otter component
+// ---------------------------------------------------------------------------
+
+/** Stable per-otter time offset so sprites don't all animate in sync. */
+function phaseOffset(id: string): number {
 	let h = 0;
 	for (let i = 0; i < id.length; i++) {
 		h = (h * 31 + id.charCodeAt(i)) & 0xffffffff;
 	}
-	return ((h >>> 0) / 0xffffffff) * Math.PI * 2;
+	return ((h >>> 0) / 0xffffffff) * (IDLE_FRAME_COUNT / ANIM_FPS);
 }
 
-function OtterMesh({ entity }: { entity: OtterEntity }) {
+function OtterSprite({ entity }: { entity: OtterEntity }) {
+	// Group drives 3D position; sprite + Html are children so they move together.
 	const groupRef = useRef<THREE.Group>(null);
-	const tailGroupRef = useRef<THREE.Group>(null);
-	const leftFrontPawRef = useRef<THREE.Mesh>(null);
-	const rightFrontPawRef = useRef<THREE.Mesh>(null);
-	const leftBackPawRef = useRef<THREE.Mesh>(null);
-	const rightBackPawRef = useRef<THREE.Mesh>(null);
+	const spriteRef = useRef<THREE.Sprite>(null);
 
-	const phaseOffset = otterPhaseOffset(entity.id);
+	// SpriteMaterial created once per otter; we swap .map imperatively each frame.
+	const materialRef = useRef(
+		new THREE.SpriteMaterial({
+			map: idleFrames[0],
+			transparent: true,
+			alphaTest: 0.05,
+			depthWrite: false,
+		}),
+	);
+
+	// Dispose material on unmount to avoid GPU leaks.
+	useEffect(() => {
+		const mat = materialRef.current;
+		return () => {
+			mat.dispose();
+		};
+	}, []);
+
+	const offset = phaseOffset(entity.id);
+	const lines = entity.otter.lines ?? [];
+
+	// Proximity state — only triggers a React re-render when it actually changes.
+	const isNearRef = useRef(false);
+	const [isNear, setIsNear] = useState(false);
+	const [dialogueIndex, setDialogueIndex] = useState(0);
 
 	useFrame((state) => {
-		if (!groupRef.current) return;
-
-		const t = state.clock.elapsedTime;
-		const bob = Math.sin(t * 2.1 + phaseOffset) * 0.025;
-
 		const wp = entity.worldPosition;
-		groupRef.current.position.set(wp.x, wp.y + 0.13 + bob, wp.z);
 
-		// Face movement direction
-		const { x, z } = entity.otter.wanderDir;
-		if (x !== 0 || z !== 0) {
-			groupRef.current.rotation.y = Math.atan2(x, z);
+		// Keep group at otter world position.
+		if (groupRef.current) {
+			groupRef.current.position.set(wp.x, wp.y, wp.z);
 		}
 
-		// Tail sway
-		if (tailGroupRef.current) {
-			tailGroupRef.current.rotation.y = Math.sin(t * 3.5 + phaseOffset) * 0.45;
+		// Swap animation frame.
+		if (spriteRef.current) {
+			const frames = entity.otter.moving ? walkFrames : idleFrames;
+			const idx =
+				Math.floor((state.clock.elapsedTime + offset) * ANIM_FPS) %
+				frames.length;
+			materialRef.current.map = frames[idx];
+			materialRef.current.needsUpdate = true;
 		}
 
-		// Subtle paw paddle — alternating pairs
-		const stride = Math.sin(t * 4 + phaseOffset);
-		if (leftFrontPawRef.current)
-			leftFrontPawRef.current.position.z = 0.13 + stride * 0.04;
-		if (rightFrontPawRef.current)
-			rightFrontPawRef.current.position.z = 0.13 - stride * 0.04;
-		if (leftBackPawRef.current)
-			leftBackPawRef.current.position.z = -0.12 - stride * 0.04;
-		if (rightBackPawRef.current)
-			rightBackPawRef.current.position.z = -0.12 + stride * 0.04;
+		// Proximity check — show bubble when any player unit is close enough.
+		let near = false;
+		for (const unit of units) {
+			if (unit.faction !== "player") continue;
+			const dx = unit.worldPosition.x - wp.x;
+			const dz = unit.worldPosition.z - wp.z;
+			if (dx * dx + dz * dz < PROXIMITY * PROXIMITY) {
+				near = true;
+				break;
+			}
+		}
+		if (near !== isNearRef.current) {
+			isNearRef.current = near;
+			setIsNear(near);
+		}
 	});
+
+	const currentLine = lines[dialogueIndex] ?? null;
+	const hasMore = dialogueIndex < lines.length - 1;
+
+	const advance = () => {
+		if (hasMore) setDialogueIndex((i) => i + 1);
+	};
 
 	return (
 		<group ref={groupRef}>
-			{/* ── Body ─────────────────────────────────────────────── */}
-			{/* Main barrel — elongated sphere */}
-			<mesh scale={[1, 0.55, 1.7]}>
-				<sphereGeometry args={[0.19, 10, 7]} />
-				<meshLambertMaterial color={COLOR_FUR} />
-			</mesh>
+			{/* Billboard sprite — THREE.Sprite auto-faces the camera */}
+			<sprite
+				ref={spriteRef}
+				material={materialRef.current}
+				position={[0, SPRITE_HEIGHT * 0.5, 0]}
+				scale={[SPRITE_WIDTH, SPRITE_HEIGHT, 1]}
+			/>
 
-			{/* Belly patch — lighter underside */}
-			<mesh position={[0, -0.07, 0]} scale={[0.72, 0.38, 1.25]}>
-				<sphereGeometry args={[0.19, 10, 7]} />
-				<meshLambertMaterial color={COLOR_BELLY} />
-			</mesh>
-
-			{/* ── Head ─────────────────────────────────────────────── */}
-			<mesh position={[0, 0.05, 0.27]}>
-				<sphereGeometry args={[0.135, 10, 7]} />
-				<meshLambertMaterial color={COLOR_FUR} />
-			</mesh>
-
-			{/* Cheek pouches — slight widening at the sides */}
-			<mesh position={[-0.09, 0.02, 0.3]} scale={[1, 0.8, 0.8]}>
-				<sphereGeometry args={[0.075, 7, 5]} />
-				<meshLambertMaterial color={COLOR_FUR} />
-			</mesh>
-			<mesh position={[0.09, 0.02, 0.3]} scale={[1, 0.8, 0.8]}>
-				<sphereGeometry args={[0.075, 7, 5]} />
-				<meshLambertMaterial color={COLOR_FUR} />
-			</mesh>
-
-			{/* ── Ears ─────────────────────────────────────────────── */}
-			<mesh position={[-0.09, 0.16, 0.23]}>
-				<sphereGeometry args={[0.048, 7, 5]} />
-				<meshLambertMaterial color={COLOR_FUR} />
-			</mesh>
-			<mesh position={[0.09, 0.16, 0.23]}>
-				<sphereGeometry args={[0.048, 7, 5]} />
-				<meshLambertMaterial color={COLOR_FUR} />
-			</mesh>
-
-			{/* ── Face ─────────────────────────────────────────────── */}
-			{/* Left eye */}
-			<mesh position={[-0.062, 0.08, 0.39]}>
-				<sphereGeometry args={[0.026, 6, 5]} />
-				<meshLambertMaterial color={COLOR_DARK} />
-			</mesh>
-			{/* Left eye highlight */}
-			<mesh position={[-0.055, 0.092, 0.414]}>
-				<sphereGeometry args={[0.008, 4, 4]} />
-				<meshLambertMaterial color={0xffffff} />
-			</mesh>
-
-			{/* Right eye */}
-			<mesh position={[0.062, 0.08, 0.39]}>
-				<sphereGeometry args={[0.026, 6, 5]} />
-				<meshLambertMaterial color={COLOR_DARK} />
-			</mesh>
-			{/* Right eye highlight */}
-			<mesh position={[0.069, 0.092, 0.414]}>
-				<sphereGeometry args={[0.008, 4, 4]} />
-				<meshLambertMaterial color={0xffffff} />
-			</mesh>
-
-			{/* Nose — slightly rounded triangle shape approximated with a squashed sphere */}
-			<mesh position={[0, 0.045, 0.415]} scale={[1.1, 0.7, 0.8]}>
-				<sphereGeometry args={[0.032, 6, 5]} />
-				<meshLambertMaterial color={COLOR_NOSE} />
-			</mesh>
-
-			{/* Whisker stubs — thin horizontal boxes */}
-			<mesh position={[-0.11, 0.038, 0.395]} rotation={[0, 0.15, 0]}>
-				<boxGeometry args={[0.09, 0.008, 0.008]} />
-				<meshLambertMaterial color={COLOR_BELLY} />
-			</mesh>
-			<mesh position={[0.11, 0.038, 0.395]} rotation={[0, -0.15, 0]}>
-				<boxGeometry args={[0.09, 0.008, 0.008]} />
-				<meshLambertMaterial color={COLOR_BELLY} />
-			</mesh>
-			<mesh position={[-0.11, 0.022, 0.393]} rotation={[0, 0.08, 0]}>
-				<boxGeometry args={[0.085, 0.008, 0.008]} />
-				<meshLambertMaterial color={COLOR_BELLY} />
-			</mesh>
-			<mesh position={[0.11, 0.022, 0.393]} rotation={[0, -0.08, 0]}>
-				<boxGeometry args={[0.085, 0.008, 0.008]} />
-				<meshLambertMaterial color={COLOR_BELLY} />
-			</mesh>
-
-			{/* ── Tail ─────────────────────────────────────────────── */}
-			{/* Tail pivots at the base so the sway looks natural */}
-			<group ref={tailGroupRef} position={[0, 0.04, -0.31]}>
-				{/* Base segment — thicker */}
-				<mesh>
-					<sphereGeometry args={[0.09, 8, 5]} />
-					<meshLambertMaterial color={COLOR_FUR} />
-				</mesh>
-				{/* Mid segment */}
-				<mesh position={[0, 0, -0.14]}>
-					<sphereGeometry args={[0.07, 7, 5]} />
-					<meshLambertMaterial color={COLOR_FUR} />
-				</mesh>
-				{/* Tip — thinnest */}
-				<mesh position={[0, 0, -0.26]}>
-					<sphereGeometry args={[0.05, 6, 4]} />
-					<meshLambertMaterial color={COLOR_FUR} />
-				</mesh>
-			</group>
-
-			{/* ── Paws ─────────────────────────────────────────────── */}
-			{/* Front left */}
-			<mesh ref={leftFrontPawRef} position={[-0.14, -0.09, 0.13]}>
-				<sphereGeometry args={[0.055, 6, 4]} />
-				<meshLambertMaterial color={COLOR_BELLY} />
-			</mesh>
-			{/* Front right */}
-			<mesh ref={rightFrontPawRef} position={[0.14, -0.09, 0.13]}>
-				<sphereGeometry args={[0.055, 6, 4]} />
-				<meshLambertMaterial color={COLOR_BELLY} />
-			</mesh>
-			{/* Back left */}
-			<mesh ref={leftBackPawRef} position={[-0.14, -0.09, -0.12]}>
-				<sphereGeometry args={[0.063, 6, 4]} />
-				<meshLambertMaterial color={COLOR_BELLY} />
-			</mesh>
-			{/* Back right */}
-			<mesh ref={rightBackPawRef} position={[0.14, -0.09, -0.12]}>
-				<sphereGeometry args={[0.063, 6, 4]} />
-				<meshLambertMaterial color={COLOR_BELLY} />
-			</mesh>
+			{/* Speech bubble — visible when a player unit is nearby */}
+			{isNear && currentLine && (
+				<Html
+					position={[0, SPRITE_HEIGHT * 1.15, 0]}
+					center
+					zIndexRange={[300, 0]}
+				>
+					<div style={BUBBLE} onClick={advance}>
+						{currentLine}
+						{hasMore && <span style={ADVANCE}>tap to continue ▶</span>}
+						<div style={TAIL} />
+					</div>
+				</Html>
+			)}
 		</group>
 	);
 }
+
+// ---------------------------------------------------------------------------
+// Renderer — one sprite per otter entity
+// ---------------------------------------------------------------------------
 
 export function OtterRenderer() {
 	return (
 		<>
 			{Array.from(otters).map((entity) => (
-				<OtterMesh key={entity.id} entity={entity} />
+				<OtterSprite key={entity.id} entity={entity} />
 			))}
 		</>
 	);

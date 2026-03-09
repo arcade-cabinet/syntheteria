@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { TerrainRenderer } from "./rendering/TerrainRenderer"
 import { UnitRenderer } from "./rendering/UnitRenderer"
+import { OtterRenderer } from "./rendering/OtterRenderer"
 import { StormSky } from "./rendering/StormSky"
 import { LandscapeProps } from "./rendering/LandscapeProps"
 import { CityRenderer } from "./rendering/CityRenderer"
@@ -15,7 +16,7 @@ import { GameUI } from "./ui/GameUI"
 import { TitleScreen } from "./ui/TitleScreen"
 import { simulationTick, getGameSpeed } from "./ecs/gameState"
 import { movementSystem } from "./systems/movement"
-import { spawnUnit, spawnFabricationUnit, spawnLightningRod } from "./ecs/factory"
+import { spawnUnit, spawnFabricationUnit, spawnLightningRod, spawnOtter } from "./ecs/factory"
 import { buildNavGraph } from "./systems/navmesh"
 import { getCityBuildings } from "./ecs/cityLayout"
 
@@ -24,6 +25,7 @@ import { getCityBuildings } from "./ecs/cityLayout"
 const NARRATION_BLOCKS = [
   "I am.",
   "What else is there in my world?",
+  "Something small moves in the ruins.\nBrown. Warm. Alive.\nNot machine — not wires — not circuitry.\nThe word arrives unbidden: otter.",
   "I reach out. To touch. To talk.",
   "There is a machine. I can make it my limb.\nAnother machine. I can make it my hand.\nAnother. Another.",
   "I understand these words. But why?\nWhere does my knowledge come from?",
@@ -160,6 +162,20 @@ function initializeWorld() {
 
   // Initial exploration tick so terrain is visible
   simulationTick()
+
+  // Otters — small furry creatures exploring the ruins and countryside.
+  // Spawned outside the dense city centre in varied locations.
+  const otterSpawns = [
+    { x: -62, z: -55 },
+    { x: 58,  z: -60 },
+    { x: -68, z:  18 },
+    { x:  72, z:  28 },
+    { x: -28, z: -72 },
+    { x:  45, z: -78 },
+  ]
+  for (const pos of otterSpawns) {
+    spawnOtter(pos)
+  }
 }
 
 // --- Game loop ---
@@ -220,6 +236,7 @@ export default function App() {
         <LandscapeProps />
         <CityRenderer />
         <UnitRenderer />
+        <OtterRenderer />
 
         <TopDownCamera />
         <UnitInput />

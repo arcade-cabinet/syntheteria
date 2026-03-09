@@ -104,8 +104,24 @@ export function spawnFabricationUnit(options: {
 }
 
 /**
- * Spawn a lightning rod building at a world position.
+ * Spawn an otter — a small furry creature that wanders the ruins and countryside.
  */
+export function spawnOtter(options: { x: number; z: number }): Entity {
+  const y = getTerrainHeight(options.x, options.z)
+  const angle = Math.random() * Math.PI * 2
+
+  return world.add({
+    id: `otter_${nextEntityId++}`,
+    faction: "wildlife" as const,
+    worldPosition: { x: options.x, y, z: options.z },
+    otter: {
+      speed: 1.5,
+      wanderTimer: 2 + Math.floor(Math.random() * 6),
+      wanderDir: { x: Math.cos(angle), z: Math.sin(angle) },
+    },
+  } as Partial<Entity> as Entity)
+}
+
 export function spawnLightningRod(options: {
   x: number
   z: number

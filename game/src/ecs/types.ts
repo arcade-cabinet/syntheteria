@@ -22,10 +22,16 @@ export interface UnitComponent {
   material: "metal" | "plastic" | "electronic"
 }
 
+export interface OtterComponent {
+  speed: number
+  wanderTimer: number
+  wanderDir: { x: number; z: number }
+}
+
 export interface Entity {
   // Identity
   id: string
-  faction: "player" | "cultist" | "rogue" | "feral"
+  faction: "player" | "cultist" | "rogue" | "feral" | "wildlife"
 
   // Continuous 3D position (single source of truth)
   worldPosition?: Vec3
@@ -64,6 +70,9 @@ export interface Entity {
     currentOutput: number
     protectionRadius: number
   }
+
+  // Otter — small furry wildlife that wanders the ruins
+  otter?: OtterComponent
 }
 
 /** Entity with guaranteed unit components (matches units query) */
@@ -74,6 +83,9 @@ export type BuildingEntity = Entity & Required<Pick<Entity, "building" | "worldP
 
 /** Entity with guaranteed lightning rod components (matches lightningRods query) */
 export type LightningRodEntity = Entity & Required<Pick<Entity, "lightningRod" | "building" | "worldPosition">>
+
+/** Entity with guaranteed otter components (matches otters query) */
+export type OtterEntity = Entity & Required<Pick<Entity, "otter" | "worldPosition">>
 
 // --- Component helpers ---
 

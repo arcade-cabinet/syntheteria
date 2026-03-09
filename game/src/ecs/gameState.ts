@@ -10,6 +10,7 @@ import { repairSystem } from "../systems/repair"
 import { fabricationSystem, getActiveJobs, type FabricationJob } from "../systems/fabrication"
 import { enemySystem } from "../systems/enemies"
 import { combatSystem, getLastCombatEvents, type CombatEvent } from "../systems/combat"
+import { otterSystem } from "../systems/otters"
 import { getAllFragments, updateDisplayOffsets, type MapFragment } from "./terrain"
 import { units } from "./world"
 
@@ -92,6 +93,7 @@ export function simulationTick() {
   fabricationSystem()
   enemySystem()
   combatSystem()
+  otterSystem()
   updateDisplayOffsets()
 
   snapshot = null

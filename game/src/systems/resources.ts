@@ -8,6 +8,7 @@
  */
 
 import { isInsideBuilding } from "../ecs/cityLayout";
+import { worldPRNG } from "../ecs/seed";
 import { hasArms } from "../ecs/types";
 import { units } from "../ecs/world";
 
@@ -51,21 +52,17 @@ export interface ScavengePoint {
 	amountPerScavenge: number;
 }
 
-// Seeded PRNG
-function seededRandom(seed: number): () => number {
-	let s = seed;
-	return () => {
-		s = (s * 1103515245 + 12345) & 0x7fffffff;
-		return s / 0x7fffffff;
-	};
-}
-
 let scavengePoints: ScavengePoint[] | null = null;
+
+/** Reset cached scavenge points — call when the world seed changes. */
+export function resetScavengePoints() {
+	scavengePoints = null;
+}
 
 export function getScavengePoints(): ScavengePoint[] {
 	if (scavengePoints) return scavengePoints;
 
-	const rng = seededRandom(789);
+	const rng = worldPRNG("resources");
 	const points: ScavengePoint[] = [];
 
 	// Scatter scavenge points through the city area

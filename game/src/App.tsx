@@ -54,19 +54,17 @@ function NarrationOverlay({ onComplete }: { onComplete: () => void }) {
 		}
 	}, [blockIndex, onComplete]);
 
-	// Fade in on new block
+	// Fade in the new block and schedule auto-advance.
+	// Runs whenever `advance` changes, which happens each time blockIndex or
+	// onComplete changes (advance is memoised with useCallback over those deps).
 	useEffect(() => {
 		const fadeIn = setTimeout(() => setOpacity(1), 100);
-		return () => clearTimeout(fadeIn);
-	}, [blockIndex]);
-
-	// Auto-advance timer
-	useEffect(() => {
 		timerRef.current = setTimeout(advance, BLOCK_DURATION);
 		return () => {
+			clearTimeout(fadeIn);
 			if (timerRef.current) clearTimeout(timerRef.current);
 		};
-	}, [blockIndex, advance]);
+	}, [advance]);
 
 	// Click/tap to advance immediately
 	const handleClick = useCallback(() => {

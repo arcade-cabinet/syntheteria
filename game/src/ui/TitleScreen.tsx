@@ -110,8 +110,8 @@ export function TitleScreen({ onNewGame }: { onNewGame: () => void }) {
 				}}
 			>
 				<MenuButton label="NEW GAME" onClick={onNewGame} primary />
-				<MenuButton label="CONTINUE" onClick={() => {}} disabled />
-				<MenuButton label="SETTINGS" onClick={() => {}} disabled />
+				<MenuButton label="CONTINUE" disabled />
+				<MenuButton label="SETTINGS" disabled />
 			</div>
 
 			{/* Version */}
@@ -138,7 +138,7 @@ function MenuButton({
 	disabled,
 }: {
 	label: string;
-	onClick: () => void;
+	onClick?: () => void;
 	primary?: boolean;
 	disabled?: boolean;
 }) {
@@ -149,6 +149,7 @@ function MenuButton({
 			onClick={disabled ? undefined : onClick}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
+			disabled={disabled}
 			style={{
 				background: disabled
 					? "transparent"

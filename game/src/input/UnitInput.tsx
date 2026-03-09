@@ -299,7 +299,7 @@ export function UnitInput() {
 			canvas.removeEventListener("touchmove", onTouchMove);
 			canvas.removeEventListener("touchend", onTouchEnd);
 		};
-	}, [gl, handleTap, handleRightClick]);
+	}, [gl, camera, handleTap, handleRightClick]);
 
 	return null;
 }

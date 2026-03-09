@@ -6,7 +6,8 @@
  */
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AudioSystem } from "./audio/AudioSystem";
 import { getCityBuildings, resetCityLayout } from "./ecs/cityLayout";
 import {
 	spawnFabricationUnit,
@@ -14,11 +15,13 @@ import {
 	spawnOtter,
 	spawnUnit,
 } from "./ecs/factory";
-import { getGameSpeed, simulationTick } from "./ecs/gameState";
+import { getGameSpeed, getSnapshot, simulationTick } from "./ecs/gameState";
 import { setWorldSeed } from "./ecs/seed";
 import { initTerrainFromSeed } from "./ecs/terrain";
+import { getActivePlayerBot } from "./ecs/world";
 import { FPSCamera } from "./input/FPSCamera";
 import { FPSInput } from "./input/FPSInput";
+import { PhysicsSystem } from "./physics/PhysicsSystem";
 import { CityRenderer } from "./rendering/CityRenderer";
 import { LandscapeProps } from "./rendering/LandscapeProps";
 import { OtterRenderer } from "./rendering/OtterRenderer";
@@ -28,7 +31,10 @@ import { UnitRenderer } from "./rendering/UnitRenderer";
 import { movementSystem } from "./systems/movement";
 import { buildNavGraph } from "./systems/navmesh";
 import { resetScavengePoints } from "./systems/resources";
+import { Bezel } from "./ui/Bezel";
 import { FPSHUD } from "./ui/FPSHUD";
+import { MobileControls } from "./ui/MobileControls";
+import { getEquippedTool } from "./ui/RadialToolMenu";
 import { TitleScreen } from "./ui/TitleScreen";
 
 // --- World initialization ---
@@ -192,18 +198,39 @@ export default function App() {
 		setPhase("playing");
 	};
 
+	// Detect touch device
+	const isMobile = "ontouchstart" in globalThis || navigator.maxTouchPoints > 0;
+
+	// Mobile action handlers
+	const handleInteract = useCallback(() => {
+		// Simulate E key press for FPSInput
+		window.dispatchEvent(new KeyboardEvent("keydown", { key: "e" }));
+	}, []);
+
+	const handleSwitchBot = useCallback(() => {
+		window.dispatchEvent(new KeyboardEvent("keydown", { key: "q" }));
+	}, []);
+
+	const handlePrimaryAction = useCallback(() => {
+		// Primary action depends on equipped tool — for now, same as interact
+		window.dispatchEvent(new KeyboardEvent("keydown", { key: "e" }));
+	}, []);
+
 	if (phase === "title") {
 		return <TitleScreen onNewGame={handleNewGame} />;
 	}
 
+	// Get game state for bezel informatics
+	const snap = getSnapshot();
+	const bot = getActivePlayerBot();
+
 	return (
-		<div
-			style={{
-				width: "100vw",
-				height: "100vh",
-				background: "#000",
-				touchAction: "none",
-			}}
+		<Bezel
+			resources={snap.resources}
+			power={snap.power}
+			equippedTool={getEquippedTool().toUpperCase()}
+			botName={bot?.unit.displayName}
+			isMobile={isMobile}
 		>
 			<Canvas
 				camera={{ fov: 75, near: 0.1, far: 500 }}
@@ -225,10 +252,22 @@ export default function App() {
 
 				<FPSCamera />
 				<FPSInput />
+				<PhysicsSystem />
+				<AudioSystem />
 				<GameLoop />
 			</Canvas>
 
+			{/* HUD overlays on the viewport */}
 			<FPSHUD />
-		</div>
+
+			{/* Mobile controls — joystick, tool view, action buttons */}
+			{isMobile && (
+				<MobileControls
+					onInteract={handleInteract}
+					onSwitchBot={handleSwitchBot}
+					onPrimaryAction={handlePrimaryAction}
+				/>
+			)}
+		</Bezel>
 	);
 }

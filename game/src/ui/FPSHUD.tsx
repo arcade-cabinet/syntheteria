@@ -17,6 +17,7 @@ import {
 } from "../ecs/gameState";
 import type { UnitComponent } from "../ecs/types";
 import { buildings, getActivePlayerBot, units } from "../ecs/world";
+
 // Building/fabrication imports reserved for future build-mode HUD panels
 
 const MONO = "'Courier New', monospace";
@@ -89,9 +90,7 @@ function ComponentBar({ comp }: { comp: UnitComponent }) {
 					height: "6px",
 					borderRadius: "50%",
 					background: comp.functional ? "#00ff88" : "#ff4444",
-					boxShadow: comp.functional
-						? "0 0 4px #00ff88"
-						: "0 0 6px #ff4444",
+					boxShadow: comp.functional ? "0 0 4px #00ff88" : "0 0 6px #ff4444",
 				}}
 			/>
 			<span
@@ -216,8 +215,7 @@ function SpeedControls() {
 							snap.gameSpeed === s && !snap.paused
 								? "#00ffaa"
 								: "rgba(0,0,0,0.6)",
-						color:
-							snap.gameSpeed === s && !snap.paused ? "#000" : "#00ffaa",
+						color: snap.gameSpeed === s && !snap.paused ? "#000" : "#00ffaa",
 						border: "1px solid #00ffaa44",
 						borderRadius: "3px",
 						padding: "3px 8px",
@@ -310,7 +308,9 @@ function SelectedInfo() {
 				<div style={{ fontWeight: "bold", marginBottom: "4px" }}>
 					{selectedUnit.unit.displayName}
 				</div>
-				<div style={{ fontSize: "10px", color: "#00ffaa66", marginBottom: "6px" }}>
+				<div
+					style={{ fontSize: "10px", color: "#00ffaa66", marginBottom: "6px" }}
+				>
 					{selectedUnit.unit.type.replace(/_/g, " ").toUpperCase()}
 					{selectedUnit.faction !== "player" && (
 						<span style={{ color: "#ff4444", marginLeft: "8px" }}>HOSTILE</span>

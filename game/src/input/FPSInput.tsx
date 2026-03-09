@@ -22,10 +22,7 @@ const raycaster = new THREE.Raycaster();
 const INTERACT_RANGE = 4.0;
 
 /** Find the closest entity within interact range of the player. */
-function findNearbyEntity(
-	playerX: number,
-	playerZ: number,
-): Entity | null {
+function findNearbyEntity(playerX: number, playerZ: number): Entity | null {
 	let closest: Entity | null = null;
 	let closestDist = INTERACT_RANGE;
 

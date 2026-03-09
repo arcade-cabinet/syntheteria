@@ -14,9 +14,10 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { isInsideBuilding } from "../ecs/cityLayout";
 import { getTerrainHeight } from "../ecs/terrain";
 import { getActivePlayerBot } from "../ecs/world";
-import { isInsideBuilding } from "../ecs/cityLayout";
+import { joystickState } from "../ui/MobileJoystick";
 
 const EYE_HEIGHT = 1.4;
 const MOVE_SPEED = 5.0;
@@ -203,8 +204,14 @@ export function FPSCamera() {
 		if (k.has("a") || k.has("arrowleft")) moveX -= 1;
 		if (k.has("d") || k.has("arrowright")) moveX += 1;
 
-		// --- Movement from touch joystick ---
-		if (touchMove.current) {
+		// --- Movement from nipplejs joystick (mobile) ---
+		if (joystickState.active) {
+			moveX += joystickState.moveX;
+			moveZ += joystickState.moveZ;
+		}
+
+		// --- Movement from raw touch (fallback if nipplejs not active) ---
+		if (!joystickState.active && touchMove.current) {
 			const tm = touchMove.current;
 			const dx = tm.currentX - tm.startX;
 			const dy = tm.currentY - tm.startY;
@@ -231,10 +238,8 @@ export function FPSCamera() {
 			const cosYaw = Math.cos(yaw);
 
 			// Forward is -Z in local space, map to world via yaw
-			const worldMoveX =
-				moveX * cosYaw - moveZ * sinYaw;
-			const worldMoveZ =
-				moveX * sinYaw + moveZ * cosYaw;
+			const worldMoveX = moveX * cosYaw - moveZ * sinYaw;
+			const worldMoveZ = moveX * sinYaw + moveZ * cosYaw;
 
 			const newX = wp.x + worldMoveX * speed;
 			const newZ = wp.z + worldMoveZ * speed;
@@ -281,7 +286,6 @@ function switchBot() {
 	// Activate next
 	const nextIdx = (currentIdx + 1) % bots.length;
 	bots[nextIdx].playerControlled.isActive = true;
-	bots[nextIdx].playerControlled.yaw =
-		bots[currentIdx].playerControlled.yaw;
+	bots[nextIdx].playerControlled.yaw = bots[currentIdx].playerControlled.yaw;
 	bots[nextIdx].playerControlled.pitch = 0;
 }

@@ -34,6 +34,104 @@ export interface OtterComponent {
 	lines?: string[];
 }
 
+// --- Factory components ---
+
+/** Conveyor belt direction */
+export type BeltDirection = "north" | "south" | "east" | "west";
+export type BeltTier = "basic" | "fast" | "express";
+
+/** A single conveyor belt segment */
+export interface BeltComponent {
+	direction: BeltDirection;
+	speed: number; // items per second
+	tier: BeltTier;
+	/** Entity ID of item currently on this segment */
+	carrying: string | null;
+	/** Next belt entity ID in the chain */
+	nextBeltId: string | null;
+	/** Previous belt entity ID in the chain */
+	prevBeltId: string | null;
+	/** Progress of carried item along this segment 0..1 */
+	itemProgress: number;
+}
+
+/** Wire connection — power or signal cable between two entities */
+export interface WireComponent {
+	wireType: "power" | "signal";
+	fromEntityId: string;
+	toEntityId: string;
+	length: number;
+	currentLoad: number; // 0..1
+	maxCapacity: number;
+}
+
+/** Mining drill — extracts resources from terrain */
+export interface MinerComponent {
+	resourceType: "scrap_metal" | "e_waste" | "rare_alloy" | "copper" | "fiber_optics";
+	extractionRate: number; // items per tick
+	outputBeltId: string | null;
+	drillHealth: number; // 0..1
+	active: boolean;
+}
+
+/** Processor — transforms raw materials into refined ones */
+export interface ProcessorComponent {
+	processorType: "smelter" | "refiner" | "separator";
+	recipe: string | null;
+	inputBeltId: string | null;
+	outputBeltId: string | null;
+	progress: number; // 0..1
+	speed: number; // ticks to complete
+	active: boolean;
+}
+
+/** Holographic emitter — projects sprites/data into 3D space */
+export interface HologramComponent {
+	spriteId: string;
+	animState: "idle" | "walk" | "talk";
+	opacity: number;
+	flickerSeed: number;
+	flickerPhase: number;
+	linkedEntityId: string | null;
+}
+
+/** An item on a conveyor belt or in inventory */
+export interface ItemComponent {
+	itemType: string;
+	quantity: number;
+}
+
+/** Hackable target — can be taken over by player */
+export interface HackableComponent {
+	/** Compute cost to hack */
+	difficulty: number;
+	/** Current hack progress 0..1 */
+	hackProgress: number;
+	/** Whether currently being hacked */
+	beingHacked: boolean;
+	/** Whether already hacked (player-controlled) */
+	hacked: boolean;
+}
+
+/** Signal relay — extends signal network range */
+export interface SignalRelayComponent {
+	signalRange: number;
+	connectedTo: string[];
+	signalStrength: number; // 0..1
+}
+
+/** Bot automation routine */
+export interface AutomationComponent {
+	routine: "idle" | "patrol" | "guard" | "work" | "follow";
+	/** Entity ID to follow (for 'follow' routine) */
+	followTarget: string | null;
+	/** Patrol waypoints */
+	patrolPoints: Vec3[];
+	patrolIndex: number;
+	/** Work target entity ID (for 'work' routine — e.g. a miner to tend) */
+	workTarget: string | null;
+}
+
 export interface Entity {
 	// Identity
 	id: string;
@@ -76,6 +174,23 @@ export interface Entity {
 		currentOutput: number;
 		protectionRadius: number;
 	};
+
+	// Factory components
+	belt?: BeltComponent;
+	wire?: WireComponent;
+	miner?: MinerComponent;
+	processor?: ProcessorComponent;
+	item?: ItemComponent;
+
+	// Holographic projection
+	hologram?: HologramComponent;
+
+	// Hacking / signal
+	hackable?: HackableComponent;
+	signalRelay?: SignalRelayComponent;
+
+	// Bot automation (for non-player-controlled bots)
+	automation?: AutomationComponent;
 
 	// Otter — small furry wildlife that wanders the ruins
 	otter?: OtterComponent;

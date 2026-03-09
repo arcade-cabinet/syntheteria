@@ -18,6 +18,17 @@ export const lightningRods = world.with(
 );
 export const otters = world.with("otter", "worldPosition");
 
+// Factory queries
+export const belts = world.with("belt", "worldPosition");
+export const wires = world.with("wire");
+export const miners = world.with("miner", "building", "worldPosition");
+export const processors = world.with("processor", "building", "worldPosition");
+export const items = world.with("item", "worldPosition");
+export const holograms = world.with("hologram", "worldPosition");
+export const hackables = world.with("hackable", "worldPosition");
+export const signalRelays = world.with("signalRelay", "worldPosition");
+export const automatedBots = world.with("automation", "unit", "worldPosition");
+
 // FPS: the player-controlled bot
 export const playerBots = world.with(
 	"playerControlled",

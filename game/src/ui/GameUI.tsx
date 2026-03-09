@@ -1,6 +1,12 @@
 /**
  * DOM overlay UI: resource bar, power info, speed controls, build toolbar,
  * unit info, combat log, minimap.
+ *
+ * All font sizes use CSS custom properties (--ui-xs … --ui-xl) defined in
+ * index.css so they scale responsively across phone / tablet / desktop.
+ * Panels are clamped to --panel-w so they never overflow a small screen.
+ * Safe-area insets (--sat / --sar / --sab / --sal) keep content clear of
+ * iPhone notches and home-indicator bars.
  */
 import { useState, useSyncExternalStore } from "react";
 import {
@@ -26,28 +32,38 @@ import {
 import { RECIPES, startFabrication } from "../systems/fabrication";
 import { startRepair } from "../systems/repair";
 
+// ── helpers ─────────────────────────────────────────────────────────────────
+
+/** Shared monospace font family */
+const MONO = "'Courier New', monospace";
+
 function ComponentStatus({ comp }: { comp: UnitComponent }) {
 	return (
 		<div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
 			<span
 				style={{
 					display: "inline-block",
-					width: "8px",
-					height: "8px",
+					width: "9px",
+					height: "9px",
 					borderRadius: "50%",
+					flexShrink: 0,
 					background: comp.functional ? "#00ff88" : "#ff4444",
 					boxShadow: comp.functional ? "0 0 4px #00ff88" : "0 0 4px #ff4444",
 				}}
 			/>
-			<span style={{ textTransform: "capitalize" }}>
+			<span style={{ textTransform: "capitalize", fontSize: "var(--ui-sm)" }}>
 				{comp.name.replace(/_/g, " ")}
 			</span>
 			{!comp.functional && (
-				<span style={{ color: "#ff4444", fontSize: "11px" }}>BROKEN</span>
+				<span style={{ color: "#ff4444", fontSize: "var(--ui-xs)" }}>
+					BROKEN
+				</span>
 			)}
 		</div>
 	);
 }
+
+// ── build toolbar ────────────────────────────────────────────────────────────
 
 function BuildToolbar() {
 	const active = getActivePlacement();
@@ -62,7 +78,7 @@ function BuildToolbar() {
 		<div
 			style={{
 				position: "absolute",
-				right: "16px",
+				right: "calc(16px + var(--sar))",
 				top: "50%",
 				transform: "translateY(-50%)",
 				display: "flex",
@@ -84,15 +100,16 @@ function BuildToolbar() {
 						onClick={() => setActivePlacement(isActive ? null : type)}
 						title={costs.map((c) => `${c.amount} ${c.type}`).join(", ")}
 						style={{
-							background: isActive ? "rgba(0,255,170,0.2)" : "rgba(0,0,0,0.7)",
+							background: isActive ? "rgba(0,255,170,0.2)" : "rgba(0,0,0,0.75)",
 							color: canAfford ? "#00ffaa" : "#00ffaa44",
 							border: isActive ? "2px solid #00ffaa" : "1px solid #00ffaa44",
 							borderRadius: "6px",
 							padding: "10px 8px",
-							fontSize: "11px",
-							fontFamily: "'Courier New', monospace",
+							fontSize: "var(--ui-sm)",
+							fontFamily: MONO,
 							cursor: canAfford ? "pointer" : "default",
-							minWidth: "50px",
+							minWidth: "52px",
+							minHeight: "48px",
 							textAlign: "center",
 							letterSpacing: "0.1em",
 						}}
@@ -105,11 +122,12 @@ function BuildToolbar() {
 	);
 }
 
+// ── repair panel (unit) ──────────────────────────────────────────────────────
+
 function RepairPanel({ selectedUnit }: { selectedUnit: UnitEntity }) {
 	const brokenComps = selectedUnit.unit.components.filter((c) => !c.functional);
 	if (brokenComps.length === 0) return null;
 
-	// Find a nearby unit with arms to be the repairer
 	const allUnits = Array.from(units);
 	const repairer = allUnits.find((u) => {
 		if (u.id === selectedUnit.id) return false;
@@ -132,7 +150,11 @@ function RepairPanel({ selectedUnit }: { selectedUnit: UnitEntity }) {
 			}}
 		>
 			<div
-				style={{ fontSize: "11px", color: "#00ffaa88", marginBottom: "4px" }}
+				style={{
+					fontSize: "var(--ui-xs)",
+					color: "#00ffaa88",
+					marginBottom: "4px",
+				}}
 			>
 				REPAIR ({repairer.unit.displayName} nearby)
 			</div>
@@ -148,11 +170,12 @@ function RepairPanel({ selectedUnit }: { selectedUnit: UnitEntity }) {
 						color: "#ff8866",
 						border: "1px solid #ff444444",
 						borderRadius: "4px",
-						padding: "4px 8px",
-						fontSize: "11px",
-						fontFamily: "'Courier New', monospace",
+						padding: "6px 8px",
+						fontSize: "var(--ui-sm)",
+						fontFamily: MONO,
 						cursor: "pointer",
 						marginBottom: "3px",
+						minHeight: "36px",
 					}}
 				>
 					Fix {comp.name.replace(/_/g, " ")}
@@ -161,6 +184,8 @@ function RepairPanel({ selectedUnit }: { selectedUnit: UnitEntity }) {
 		</div>
 	);
 }
+
+// ── repair panel (building) ──────────────────────────────────────────────────
 
 function BuildingRepairPanel({
 	selectedBuilding,
@@ -172,7 +197,6 @@ function BuildingRepairPanel({
 	);
 	if (brokenComps.length === 0) return null;
 
-	// Find a nearby player unit with arms to be the repairer
 	const allUnits = Array.from(units);
 	const repairer = allUnits.find((u) => {
 		if (u.faction !== "player") return false;
@@ -192,7 +216,11 @@ function BuildingRepairPanel({
 			}}
 		>
 			<div
-				style={{ fontSize: "11px", color: "#00ffaa88", marginBottom: "4px" }}
+				style={{
+					fontSize: "var(--ui-xs)",
+					color: "#00ffaa88",
+					marginBottom: "4px",
+				}}
 			>
 				REPAIR{" "}
 				{repairer
@@ -214,11 +242,12 @@ function BuildingRepairPanel({
 						color: repairer ? "#ff8866" : "#ff886644",
 						border: "1px solid #ff444444",
 						borderRadius: "4px",
-						padding: "4px 8px",
-						fontSize: "11px",
-						fontFamily: "'Courier New', monospace",
+						padding: "6px 8px",
+						fontSize: "var(--ui-sm)",
+						fontFamily: MONO,
 						cursor: repairer ? "pointer" : "default",
 						marginBottom: "3px",
+						minHeight: "36px",
 					}}
 				>
 					Fix {comp.name.replace(/_/g, " ")}
@@ -228,13 +257,14 @@ function BuildingRepairPanel({
 	);
 }
 
+// ── inline fabrication panel (inside selected-unit card) ────────────────────
+
 function InlineFabricationPanel({ fabricator }: { fabricator: Entity }) {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
 	const [expanded, setExpanded] = useState(false);
 	const isPowered =
 		fabricator.building?.powered && fabricator.building?.operational;
 
-	// Active jobs for this fabricator
 	const myJobs = snap.fabricationJobs.filter(
 		(j) => j.fabricatorId === fabricator.id,
 	);
@@ -252,7 +282,7 @@ function InlineFabricationPanel({ fabricator }: { fabricator: Entity }) {
 				style={{
 					cursor: "pointer",
 					color: "#aa8844",
-					fontSize: "12px",
+					fontSize: "var(--ui-sm)",
 					fontWeight: "bold",
 					marginBottom: "4px",
 				}}
@@ -262,7 +292,11 @@ function InlineFabricationPanel({ fabricator }: { fabricator: Entity }) {
 
 			{myJobs.length > 0 && (
 				<div
-					style={{ color: "#00ffaa88", fontSize: "11px", marginBottom: "4px" }}
+					style={{
+						color: "#00ffaa88",
+						fontSize: "var(--ui-xs)",
+						marginBottom: "4px",
+					}}
 				>
 					{myJobs.map((job, i) => (
 						<div key={i}>
@@ -292,11 +326,12 @@ function InlineFabricationPanel({ fabricator }: { fabricator: Entity }) {
 									color: canAfford ? "#aa8844" : "#aa884444",
 									border: "1px solid #aa884433",
 									borderRadius: "4px",
-									padding: "4px 8px",
-									fontSize: "11px",
-									fontFamily: "'Courier New', monospace",
+									padding: "6px 8px",
+									fontSize: "var(--ui-sm)",
+									fontFamily: MONO,
 									cursor: canAfford ? "pointer" : "default",
 									marginBottom: "3px",
+									minHeight: "36px",
 								}}
 								title={recipe.costs
 									.map((c) => `${c.amount} ${c.type}`)
@@ -310,7 +345,7 @@ function InlineFabricationPanel({ fabricator }: { fabricator: Entity }) {
 			)}
 
 			{expanded && !isPowered && (
-				<div style={{ color: "#ff444488", fontSize: "11px" }}>
+				<div style={{ color: "#ff444488", fontSize: "var(--ui-sm)" }}>
 					Requires power to fabricate
 				</div>
 			)}
@@ -318,11 +353,14 @@ function InlineFabricationPanel({ fabricator }: { fabricator: Entity }) {
 	);
 }
 
+// ── standalone fabrication shortcut panel ────────────────────────────────────
+// Shown above the unit panel (or standalone) when a powered fab unit exists
+// and none is currently selected — lets players queue jobs without selecting it.
+
 function FabricationPanel() {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
 	const [expanded, setExpanded] = useState(false);
 
-	// Find a powered fabrication unit
 	const fabricator = Array.from(buildings).find(
 		(b) =>
 			b.building.type === "fabrication_unit" &&
@@ -336,15 +374,16 @@ function FabricationPanel() {
 		<div
 			style={{
 				position: "absolute",
-				bottom: "16px",
-				left: "250px",
-				background: "rgba(0, 0, 0, 0.8)",
+				bottom: "calc(16px + var(--sab))",
+				left: "calc(16px + var(--sal))",
+				background: "rgba(0, 0, 0, 0.82)",
 				border: "1px solid #aa884444",
 				borderRadius: "8px",
 				padding: "10px 14px",
-				fontSize: "12px",
+				fontSize: "var(--ui-sm)",
 				pointerEvents: "auto",
-				minWidth: "180px",
+				width: "var(--panel-w)",
+				fontFamily: MONO,
 			}}
 		>
 			<div
@@ -359,10 +398,13 @@ function FabricationPanel() {
 				FABRICATOR {expanded ? "[-]" : "[+]"}
 			</div>
 
-			{/* Active jobs */}
 			{snap.fabricationJobs.length > 0 && (
 				<div
-					style={{ color: "#00ffaa88", fontSize: "11px", marginBottom: "4px" }}
+					style={{
+						color: "#00ffaa88",
+						fontSize: "var(--ui-xs)",
+						marginBottom: "4px",
+					}}
 				>
 					{snap.fabricationJobs.map((job, i) => (
 						<div key={i}>
@@ -392,11 +434,12 @@ function FabricationPanel() {
 									color: canAfford ? "#aa8844" : "#aa884444",
 									border: "1px solid #aa884433",
 									borderRadius: "4px",
-									padding: "4px 8px",
-									fontSize: "11px",
-									fontFamily: "'Courier New', monospace",
+									padding: "6px 8px",
+									fontSize: "var(--ui-sm)",
+									fontFamily: MONO,
 									cursor: canAfford ? "pointer" : "default",
 									marginBottom: "3px",
+									minHeight: "36px",
 								}}
 								title={recipe.costs
 									.map((c) => `${c.amount} ${c.type}`)
@@ -412,16 +455,21 @@ function FabricationPanel() {
 	);
 }
 
+// ── main GameUI ──────────────────────────────────────────────────────────────
+
 export function GameUI() {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
 
 	const selectedUnit = Array.from(units).find((u) => u.unit.selected);
-	// Only show building panel for pure buildings (not fabrication units, which show in unit panel)
 	const selectedBuilding = Array.from(buildings).find(
 		(b) => b.building.selected && !b.unit,
 	);
 	const fragmentCount = snap.fragments.length;
 	const buildingCount = Array.from(buildings).length;
+
+	// Show fabrication shortcut only when fab unit exists but isn't selected
+	const showFabShortcut =
+		!selectedUnit?.unit.type.includes("fabrication") && !selectedBuilding;
 
 	return (
 		<div
@@ -429,29 +477,32 @@ export function GameUI() {
 				position: "absolute",
 				inset: 0,
 				pointerEvents: "none",
-				fontFamily: "'Courier New', monospace",
+				fontFamily: MONO,
 				color: "#00ffaa",
 			}}
 		>
-			{/* Top bar */}
+			{/* ── Top bar ── */}
 			<div
 				style={{
 					display: "flex",
 					justifyContent: "space-between",
-					padding: "8px 12px",
+					alignItems: "center",
+					padding: `calc(8px + var(--sat)) calc(12px + var(--sar)) 8px calc(12px + var(--sal))`,
 					background:
-						"linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%)",
+						"linear-gradient(180deg, rgba(0,0,0,0.75) 0%, transparent 100%)",
 					pointerEvents: "auto",
 					flexWrap: "wrap",
-					gap: "4px 0",
+					gap: "6px",
 				}}
 			>
+				{/* Status counts */}
 				<div
 					style={{
 						display: "flex",
-						gap: "16px",
-						fontSize: "13px",
+						gap: "clamp(10px, 3vw, 18px)",
+						fontSize: "var(--ui-md)",
 						alignItems: "center",
+						flexWrap: "wrap",
 					}}
 				>
 					<span>UNITS: {snap.unitCount}</span>
@@ -462,40 +513,33 @@ export function GameUI() {
 					<span>FRAG: {fragmentCount}</span>
 				</div>
 
+				{/* Speed controls */}
 				<div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-					<button
-						onClick={() => setGameSpeed(0.5)}
-						style={speedButtonStyle(snap.gameSpeed === 0.5)}
-					>
-						0.5x
-					</button>
-					<button
-						onClick={() => setGameSpeed(1)}
-						style={speedButtonStyle(snap.gameSpeed === 1)}
-					>
-						1x
-					</button>
-					<button
-						onClick={() => setGameSpeed(2)}
-						style={speedButtonStyle(snap.gameSpeed === 2)}
-					>
-						2x
-					</button>
+					{([0.5, 1, 2] as const).map((s) => (
+						<button
+							key={s}
+							onClick={() => setGameSpeed(s)}
+							style={speedButtonStyle(snap.gameSpeed === s && !snap.paused)}
+						>
+							{s}x
+						</button>
+					))}
 					<button onClick={togglePause} style={speedButtonStyle(snap.paused)}>
 						{snap.paused ? "PLAY" : "PAUSE"}
 					</button>
 				</div>
 			</div>
 
-			{/* Resource bar */}
+			{/* ── Resource bar ── */}
 			<div
 				style={{
 					display: "flex",
-					gap: "16px",
-					padding: "4px 12px 8px",
-					fontSize: "11px",
+					gap: "clamp(10px, 3vw, 18px)",
+					padding: `4px calc(12px + var(--sal)) 8px`,
+					fontSize: "var(--ui-sm)",
 					color: "#00ffaa99",
-					pointerEvents: "auto",
+					pointerEvents: "none",
+					flexWrap: "wrap",
 				}}
 			>
 				<span title="Scrap Metal">SCRAP: {snap.resources.scrapMetal}</span>
@@ -515,26 +559,28 @@ export function GameUI() {
 				</span>
 			</div>
 
-			{/* Selected unit info */}
+			{/* ── Selected unit info ── */}
 			{selectedUnit && (
 				<div
 					style={{
 						position: "absolute",
-						bottom: "16px",
-						left: "16px",
-						background: "rgba(0, 0, 0, 0.8)",
+						bottom: `calc(16px + var(--sab))`,
+						left: `calc(16px + var(--sal))`,
+						background: "rgba(0, 0, 0, 0.85)",
 						border: "1px solid #00ffaa44",
 						borderRadius: "8px",
 						padding: "12px 16px",
-						fontSize: "13px",
+						fontSize: "var(--ui-md)",
 						lineHeight: "1.6",
-						minWidth: "220px",
+						width: "var(--panel-w)",
+						maxHeight: "55vh",
+						overflowY: "auto",
 						pointerEvents: "auto",
 					}}
 				>
 					<div
 						style={{
-							fontSize: "15px",
+							fontSize: "var(--ui-lg)",
 							fontWeight: "bold",
 							marginBottom: "4px",
 						}}
@@ -544,7 +590,7 @@ export function GameUI() {
 					<div
 						style={{
 							color: "#00ffaa88",
-							fontSize: "11px",
+							fontSize: "var(--ui-xs)",
 							marginBottom: "6px",
 						}}
 					>
@@ -569,7 +615,7 @@ export function GameUI() {
 							{selectedUnit.building.operational ? "OPERATIONAL" : "OFFLINE"}
 						</div>
 					)}
-					<div>
+					<div style={{ fontSize: "var(--ui-xs)", color: "#00ffaa66" }}>
 						Pos: ({selectedUnit.worldPosition.x.toFixed(1)},{" "}
 						{selectedUnit.worldPosition.z.toFixed(1)})
 					</div>
@@ -583,7 +629,7 @@ export function GameUI() {
 					>
 						<div
 							style={{
-								fontSize: "12px",
+								fontSize: "var(--ui-xs)",
 								color: "#00ffaa88",
 								marginBottom: "4px",
 							}}
@@ -605,7 +651,11 @@ export function GameUI() {
 						)}
 
 					<div
-						style={{ fontSize: "11px", color: "#00ffaa88", marginTop: "8px" }}
+						style={{
+							fontSize: "var(--ui-xs)",
+							color: "#00ffaa88",
+							marginTop: "8px",
+						}}
 					>
 						{selectedUnit.unit.speed > 0
 							? "Tap to select \u2022 Tap ground to move"
@@ -614,26 +664,28 @@ export function GameUI() {
 				</div>
 			)}
 
-			{/* Selected building info */}
+			{/* ── Selected building info ── */}
 			{selectedBuilding && (
 				<div
 					style={{
 						position: "absolute",
-						bottom: "16px",
-						left: "16px",
-						background: "rgba(0, 0, 0, 0.8)",
+						bottom: `calc(16px + var(--sab))`,
+						left: `calc(16px + var(--sal))`,
+						background: "rgba(0, 0, 0, 0.85)",
 						border: "1px solid #aa884444",
 						borderRadius: "8px",
 						padding: "12px 16px",
-						fontSize: "13px",
+						fontSize: "var(--ui-md)",
 						lineHeight: "1.6",
-						minWidth: "220px",
+						width: "var(--panel-w)",
+						maxHeight: "55vh",
+						overflowY: "auto",
 						pointerEvents: "auto",
 					}}
 				>
 					<div
 						style={{
-							fontSize: "15px",
+							fontSize: "var(--ui-lg)",
 							fontWeight: "bold",
 							marginBottom: "4px",
 							color: "#aa8844",
@@ -644,7 +696,7 @@ export function GameUI() {
 					<div
 						style={{
 							color: "#aa884488",
-							fontSize: "11px",
+							fontSize: "var(--ui-xs)",
 							marginBottom: "6px",
 						}}
 					>
@@ -652,7 +704,7 @@ export function GameUI() {
 						{" / "}
 						{selectedBuilding.building.operational ? "OPERATIONAL" : "OFFLINE"}
 					</div>
-					<div>
+					<div style={{ fontSize: "var(--ui-xs)", color: "#aa884466" }}>
 						Pos: ({selectedBuilding.worldPosition.x.toFixed(1)},{" "}
 						{selectedBuilding.worldPosition.z.toFixed(1)})
 					</div>
@@ -667,7 +719,7 @@ export function GameUI() {
 						>
 							<div
 								style={{
-									fontSize: "12px",
+									fontSize: "var(--ui-xs)",
 									color: "#aa884488",
 									marginBottom: "4px",
 								}}
@@ -687,6 +739,7 @@ export function GameUI() {
 									marginTop: "8px",
 									borderTop: "1px solid #aa884422",
 									paddingTop: "8px",
+									fontSize: "var(--ui-sm)",
 								}}
 							>
 								<div>
@@ -703,27 +756,31 @@ export function GameUI() {
 					<BuildingRepairPanel selectedBuilding={selectedBuilding} />
 
 					<div
-						style={{ fontSize: "11px", color: "#aa884488", marginTop: "8px" }}
+						style={{
+							fontSize: "var(--ui-xs)",
+							color: "#aa884488",
+							marginTop: "8px",
+						}}
 					>
 						Tap to select
 					</div>
 				</div>
 			)}
 
-			{/* Combat notifications */}
+			{/* ── Combat notifications ── */}
 			{snap.combatEvents.length > 0 && (
 				<div
 					style={{
 						position: "absolute",
-						top: "80px",
-						right: "80px",
-						background: "rgba(40, 0, 0, 0.85)",
+						top: "90px",
+						right: `calc(72px + var(--sar))`,
+						background: "rgba(40, 0, 0, 0.88)",
 						border: "1px solid #ff444466",
 						borderRadius: "8px",
 						padding: "8px 14px",
-						fontSize: "11px",
+						fontSize: "var(--ui-sm)",
 						color: "#ff6644",
-						maxWidth: "220px",
+						maxWidth: "min(220px, 45vw)",
 						pointerEvents: "none",
 					}}
 				>
@@ -737,7 +794,7 @@ export function GameUI() {
 				</div>
 			)}
 
-			{/* Merge event notification */}
+			{/* ── Fragment merge notification ── */}
 			{snap.mergeEvents.length > 0 && (
 				<div
 					style={{
@@ -749,7 +806,7 @@ export function GameUI() {
 						border: "2px solid #00ffaa",
 						borderRadius: "12px",
 						padding: "20px 32px",
-						fontSize: "18px",
+						fontSize: "var(--ui-xl)",
 						textAlign: "center",
 					}}
 				>
@@ -757,17 +814,19 @@ export function GameUI() {
 				</div>
 			)}
 
-			{/* Build toolbar */}
+			{/* ── Build toolbar ── */}
 			<BuildToolbar />
 
-			{/* Fabrication panel */}
-			<FabricationPanel />
+			{/* ── Fabrication shortcut ── */}
+			{showFabShortcut && <FabricationPanel />}
 
-			{/* Minimap */}
+			{/* ── Minimap ── */}
 			<Minimap />
 		</div>
 	);
 }
+
+// ── helpers ──────────────────────────────────────────────────────────────────
 
 function stormColor(intensity: number): string {
 	if (intensity > 1.1) return "#ffaa00";
@@ -780,11 +839,11 @@ function Minimap() {
 		<div
 			style={{
 				position: "absolute",
-				bottom: "16px",
-				right: "16px",
-				width: "120px",
-				height: "120px",
-				background: "rgba(0, 0, 0, 0.8)",
+				bottom: `calc(16px + var(--sab))`,
+				right: `calc(16px + var(--sar))`,
+				width: "clamp(90px, 22vw, 130px)",
+				height: "clamp(90px, 22vw, 130px)",
+				background: "rgba(0, 0, 0, 0.82)",
 				border: "1px solid #00ffaa44",
 				borderRadius: "8px",
 				overflow: "hidden",
@@ -796,24 +855,28 @@ function Minimap() {
 					if (!canvas) return;
 					const ctx = canvas.getContext("2d");
 					if (!ctx) return;
-					canvas.width = 120;
-					canvas.height = 120;
+					const sz = canvas.offsetWidth || 100;
+					canvas.width = sz;
+					canvas.height = sz;
 					ctx.fillStyle = "#000";
-					ctx.fillRect(0, 0, 120, 120);
+					ctx.fillRect(0, 0, sz, sz);
+
+					const half = sz / 2;
+					const scale = (sz * 0.45) / WORLD_HALF;
 
 					ctx.fillStyle = "#aa8844";
 					for (const entity of buildings) {
-						const x = 60 + (entity.worldPosition.x / WORLD_HALF) * 50;
-						const y = 60 + (entity.worldPosition.z / WORLD_HALF) * 50;
+						const x = half + entity.worldPosition.x * scale;
+						const y = half + entity.worldPosition.z * scale;
 						ctx.fillRect(x - 2, y - 2, 5, 5);
 					}
 
 					for (const entity of units) {
 						const isEnemy = entity.faction !== "player";
 						ctx.fillStyle = isEnemy ? "#ff3333" : "#ffaa00";
-						const x = 60 + (entity.worldPosition.x / WORLD_HALF) * 50;
-						const y = 60 + (entity.worldPosition.z / WORLD_HALF) * 50;
-						ctx.fillRect(x - 1, y - 1, 3, 3);
+						const x = half + entity.worldPosition.x * scale;
+						const y = half + entity.worldPosition.z * scale;
+						ctx.fillRect(x - 1.5, y - 1.5, 3, 3);
 					}
 				}}
 				style={{ width: "100%", height: "100%" }}
@@ -824,18 +887,19 @@ function Minimap() {
 
 function speedButtonStyle(active: boolean): React.CSSProperties {
 	return {
-		background: active ? "#00ffaa" : "transparent",
+		background: active ? "#00ffaa" : "rgba(0,0,0,0.6)",
 		color: active ? "#000" : "#00ffaa",
 		border: "1px solid #00ffaa",
 		borderRadius: "4px",
 		padding: "4px 10px",
-		fontSize: "12px",
+		fontSize: "var(--ui-sm)",
 		cursor: "pointer",
-		fontFamily: "'Courier New', monospace",
-		minWidth: "44px",
+		fontFamily: MONO,
+		minWidth: "48px",
 		minHeight: "44px",
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
+		letterSpacing: "0.05em",
 	};
 }

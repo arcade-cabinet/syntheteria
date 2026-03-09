@@ -17,6 +17,8 @@
  * Buildings are stored as axis-aligned rectangles in world space.
  */
 
+import { worldPRNG } from "./seed";
+
 // Seeded PRNG for deterministic city generation
 function seededRandom(seed: number): () => number {
 	let s = seed;
@@ -57,10 +59,19 @@ export function isInsideCityBounds(x: number, z: number): boolean {
 	);
 }
 
+/** Reset cached layout — call when the world seed changes before a new game. */
+export function resetCityLayout() {
+	cachedBuildings = null;
+}
+
 export function getCityBuildings(): CityBuilding[] {
 	if (cachedBuildings) return cachedBuildings;
 
-	const rng = seededRandom(42);
+	// Use worldPRNG("city") so city layout is deterministic per world seed.
+	// Fall back to a simple numeric seed to keep the legacy seededRandom path.
+	const _prng = worldPRNG("city");
+	const _seedNum = Math.floor(_prng() * 0x7fffffff);
+	const rng = seededRandom(_seedNum);
 	const buildings: CityBuilding[] = [];
 
 	// --- Circuit-board labyrinth generation ---

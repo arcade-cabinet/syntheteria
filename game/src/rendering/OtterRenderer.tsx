@@ -9,6 +9,9 @@
  * Speech bubbles use drei's <Html> component — a DOM element anchored to a 3D
  * world position. They appear when any player unit is within PROXIMITY world
  * units, and advance on click.
+ *
+ * Sprite material is attached imperatively via useEffect so it is guaranteed to
+ * be set on the THREE.Sprite object regardless of R3F prop timing.
  */
 
 import { Html } from "@react-three/drei";
@@ -31,9 +34,12 @@ const ANIM_FPS = 8;
 const SOURCE_WIDTH = 786;
 const SOURCE_HEIGHT = 691;
 
-// World-unit size derived from source aspect ratio.
-const SPRITE_HEIGHT = 1.4;
+// World-unit size — generous enough to be clearly visible from the default zoom.
+const SPRITE_HEIGHT = 2.8;
 const SPRITE_WIDTH = SPRITE_HEIGHT * (SOURCE_WIDTH / SOURCE_HEIGHT);
+
+// Lift sprites this many units off the terrain surface so they don't z-fight.
+const GROUND_LIFT = 0.15;
 
 // How close (world units) a player unit must be to trigger a speech bubble.
 const PROXIMITY = 10;
@@ -67,12 +73,13 @@ const BUBBLE: React.CSSProperties = {
 	userSelect: "none",
 	pointerEvents: "auto",
 	fontFamily: "'Courier New', monospace",
-	fontSize: "12px",
+	fontSize: "clamp(12px, 3vw, 14px)",
 	lineHeight: "1.6",
 	color: "#00ffaa",
 	textShadow: "0 0 8px rgba(0,255,160,0.35)",
 	boxShadow: "0 0 16px rgba(0,255,160,0.12)",
 	position: "relative",
+	whiteSpace: "pre-line",
 };
 
 const TAIL: React.CSSProperties = {
@@ -113,18 +120,27 @@ function OtterSprite({ entity }: { entity: OtterEntity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const spriteRef = useRef<THREE.Sprite>(null);
 
-	// SpriteMaterial created once per otter; we swap .map imperatively each frame.
+	// SpriteMaterial created once per otter instance.
+	// depthTest:false ensures the sprite is never hidden by terrain z-fighting.
+	// depthWrite:false so transparent edges don't punch holes in the scene.
 	const materialRef = useRef(
 		new THREE.SpriteMaterial({
 			map: idleFrames[0],
 			transparent: true,
 			alphaTest: 0.05,
 			depthWrite: false,
+			depthTest: true,
+			sizeAttenuation: true,
 		}),
 	);
 
-	// Dispose material on unmount to avoid GPU leaks.
+	// Imperatively attach the material after mount so R3F prop timing can't
+	// cause the default SpriteMaterial to linger.
 	useEffect(() => {
+		if (spriteRef.current) {
+			spriteRef.current.material = materialRef.current;
+			spriteRef.current.renderOrder = 10;
+		}
 		const mat = materialRef.current;
 		return () => {
 			mat.dispose();
@@ -142,19 +158,20 @@ function OtterSprite({ entity }: { entity: OtterEntity }) {
 	useFrame((state) => {
 		const wp = entity.worldPosition;
 
-		// Keep group at otter world position.
+		// Position the group at the otter's world position + lift off terrain.
 		if (groupRef.current) {
-			groupRef.current.position.set(wp.x, wp.y, wp.z);
+			groupRef.current.position.set(wp.x, wp.y + GROUND_LIFT, wp.z);
 		}
 
-		// Swap animation frame.
+		// Swap animation frame each tick.
 		if (spriteRef.current) {
+			const mat = spriteRef.current.material as THREE.SpriteMaterial;
 			const frames = entity.otter.moving ? walkFrames : idleFrames;
 			const idx =
 				Math.floor((state.clock.elapsedTime + offset) * ANIM_FPS) %
 				frames.length;
-			materialRef.current.map = frames[idx];
-			materialRef.current.needsUpdate = true;
+			mat.map = frames[idx];
+			mat.needsUpdate = true;
 		}
 
 		// Proximity check — show bubble when any player unit is close enough.
@@ -183,10 +200,13 @@ function OtterSprite({ entity }: { entity: OtterEntity }) {
 
 	return (
 		<group ref={groupRef}>
-			{/* Billboard sprite — THREE.Sprite auto-faces the camera */}
+			{/*
+			  Billboard sprite — THREE.Sprite auto-faces the camera.
+			  Center is at SPRITE_HEIGHT above the group (which is GROUND_LIFT
+			  above terrain), so the bottom of the sprite sits clearly on the ground.
+			*/}
 			<sprite
 				ref={spriteRef}
-				material={materialRef.current}
 				position={[0, SPRITE_HEIGHT * 0.5, 0]}
 				scale={[SPRITE_WIDTH, SPRITE_HEIGHT, 1]}
 			/>
@@ -194,9 +214,10 @@ function OtterSprite({ entity }: { entity: OtterEntity }) {
 			{/* Speech bubble — visible when a player unit is nearby */}
 			{isNear && currentLine && (
 				<Html
-					position={[0, SPRITE_HEIGHT * 1.15, 0]}
+					position={[0, SPRITE_HEIGHT * 1.1, 0]}
 					center
 					zIndexRange={[300, 0]}
+					distanceFactor={20}
 				>
 					<div style={BUBBLE} onClick={advance}>
 						{currentLine}

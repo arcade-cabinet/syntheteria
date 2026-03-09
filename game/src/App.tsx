@@ -8,6 +8,7 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AudioSystem } from "./audio/AudioSystem";
+import { placeBelt } from "./ecs/beltFactory";
 import { getCityBuildings, resetCityLayout } from "./ecs/cityLayout";
 import {
 	spawnFabricationUnit,
@@ -15,10 +16,13 @@ import {
 	spawnOtter,
 	spawnUnit,
 } from "./ecs/factory";
+import { spawnMiner, spawnProcessor } from "./ecs/factoryBuildings";
 import { getGameSpeed, getSnapshot, simulationTick } from "./ecs/gameState";
 import { setWorldSeed } from "./ecs/seed";
-import { initTerrainFromSeed } from "./ecs/terrain";
-import { getActivePlayerBot } from "./ecs/world";
+import { getTerrainHeight, initTerrainFromSeed } from "./ecs/terrain";
+import type { Entity } from "./ecs/types";
+import { placeWire } from "./ecs/wireFactory";
+import { getActivePlayerBot, world } from "./ecs/world";
 import { FPSCamera } from "./input/FPSCamera";
 import { FPSInput } from "./input/FPSInput";
 import { PhysicsSystem } from "./physics/PhysicsSystem";
@@ -36,7 +40,7 @@ import { UnitRenderer } from "./rendering/UnitRenderer";
 import { WireRenderer } from "./rendering/WireRenderer";
 import { beltTransportSystem } from "./systems/beltTransport";
 import { botAutomationSystem } from "./systems/botAutomation";
-import { cultistAISystem } from "./systems/cultistAI";
+import { cultistAISystem, spawnCultist } from "./systems/cultistAI";
 import { movementSystem } from "./systems/movement";
 import { buildNavGraph } from "./systems/navmesh";
 import { resetScavengePoints } from "./systems/resources";
@@ -163,6 +167,73 @@ function initializeWorld(seed: number) {
 			"We adapted. You'll have to as well.",
 		],
 	});
+
+	// ── Factory infrastructure ───────────────────────────────────────
+	const frag = bot1.mapFragment.fragmentId;
+
+	// Second lightning rod — further out, player must expand to reach it
+	const rod2 = spawnLightningRod({ x: 25, z: 15, fragmentId: frag });
+
+	// Mining drill near the starting area (scrap metal deposit)
+	const miner1 = spawnMiner({
+		x: 20,
+		z: 10,
+		fragmentId: frag,
+		resourceType: "scrapMetal",
+	});
+
+	// Processor — smelter to refine scrap
+	const proc1 = spawnProcessor({
+		x: 22,
+		z: 10,
+		fragmentId: frag,
+		processorType: "smelter",
+	});
+
+	// Conveyor belt chain: miner → processor (3 segments going east)
+	placeBelt(21, 10, "east");
+
+	// Power wire from lightning rod to fabrication unit
+	placeWire(rod2.id, miner1.id, "power");
+	placeWire(rod2.id, proc1.id, "power");
+
+	// ── Signal relays ────────────────────────────────────────────────
+	// Signal relay near starting area — extends player signal range
+	world.add({
+		id: "relay_start",
+		faction: "player",
+		worldPosition: { x: 12, y: getTerrainHeight(12, 15), z: 15 },
+		mapFragment: { fragmentId: frag },
+		signalRelay: {
+			signalRange: 15,
+			connectedTo: [],
+			signalStrength: 0,
+		},
+	} as Partial<Entity> as Entity);
+
+	// Signal relay further out — needs to be hacked or wired
+	world.add({
+		id: "relay_east",
+		faction: "feral",
+		worldPosition: { x: 30, y: getTerrainHeight(30, 12), z: 12 },
+		mapFragment: { fragmentId: frag },
+		signalRelay: {
+			signalRange: 12,
+			connectedTo: [],
+			signalStrength: 0,
+		},
+		hackable: {
+			difficulty: 20,
+			hackProgress: 0,
+			beingHacked: false,
+			hacked: false,
+		},
+	} as Partial<Entity> as Entity);
+
+	// ── Cultists ─────────────────────────────────────────────────────
+	// Northern territory patrol — far enough that players discover them later
+	spawnCultist({ x: 15, z: -30, fragmentId: frag, patrolRadius: 10 });
+	spawnCultist({ x: 22, z: -35, fragmentId: frag, patrolRadius: 8 });
 }
 
 // --- Game loop ---

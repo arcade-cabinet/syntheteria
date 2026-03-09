@@ -20,6 +20,8 @@ export function spawnUnit(options: {
 	displayName?: string;
 	speed?: number;
 	components: UnitComponent[];
+	/** If true, this bot starts as the active player-controlled bot. */
+	playerControlled?: boolean;
 }): UnitEntity {
 	const {
 		x,
@@ -41,7 +43,7 @@ export function spawnUnit(options: {
 
 	const y = getTerrainHeight(x, z);
 
-	const entity = world.add({
+	const entityData: Partial<Entity> = {
 		id: `unit_${nextEntityId++}`,
 		faction: "player" as const,
 		worldPosition: { x, y, z },
@@ -54,7 +56,17 @@ export function spawnUnit(options: {
 			components,
 		},
 		navigation: { path: [], pathIndex: 0, moving: false },
-	} as Partial<Entity> as Entity);
+	};
+
+	if (options.playerControlled !== undefined) {
+		entityData.playerControlled = {
+			isActive: options.playerControlled,
+			yaw: 0,
+			pitch: 0,
+		};
+	}
+
+	const entity = world.add(entityData as Entity);
 
 	return entity as UnitEntity;
 }

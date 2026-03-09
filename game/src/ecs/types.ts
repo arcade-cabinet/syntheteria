@@ -79,6 +79,15 @@ export interface Entity {
 
 	// Otter — small furry wildlife that wanders the ruins
 	otter?: OtterComponent;
+
+	// FPS player control — the bot the player is currently piloting
+	playerControlled?: {
+		isActive: boolean;
+		/** Yaw (horizontal look) in radians */
+		yaw: number;
+		/** Pitch (vertical look) in radians, clamped to ±π/2 */
+		pitch: number;
+	};
 }
 
 /** Entity with guaranteed unit components (matches units query) */
@@ -96,6 +105,10 @@ export type LightningRodEntity = Entity &
 /** Entity with guaranteed otter components (matches otters query) */
 export type OtterEntity = Entity &
 	Required<Pick<Entity, "otter" | "worldPosition">>;
+
+/** Entity with guaranteed player-controlled components */
+export type PlayerEntity = Entity &
+	Required<Pick<Entity, "playerControlled" | "unit" | "worldPosition">>;
 
 // --- Component helpers ---
 

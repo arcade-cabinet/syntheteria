@@ -1,10 +1,12 @@
 /**
- * Syntheteria — Phase 1 Prototype
- * Opening narration → continuous terrain with navmesh-based free 3D navigation.
+ * Syntheteria — FPS Factory Planet
+ *
+ * You wake up as a broken robot on the surface of a machine planet.
+ * No narration walls. No click-through text. You just... wake up.
  */
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getCityBuildings, resetCityLayout } from "./ecs/cityLayout";
 import {
 	spawnFabricationUnit,
@@ -15,8 +17,8 @@ import {
 import { getGameSpeed, simulationTick } from "./ecs/gameState";
 import { setWorldSeed } from "./ecs/seed";
 import { initTerrainFromSeed } from "./ecs/terrain";
-import { TopDownCamera } from "./input/TopDownCamera";
-import { UnitInput } from "./input/UnitInput";
+import { FPSCamera } from "./input/FPSCamera";
+import { FPSInput } from "./input/FPSInput";
 import { CityRenderer } from "./rendering/CityRenderer";
 import { LandscapeProps } from "./rendering/LandscapeProps";
 import { OtterRenderer } from "./rendering/OtterRenderer";
@@ -26,109 +28,27 @@ import { UnitRenderer } from "./rendering/UnitRenderer";
 import { movementSystem } from "./systems/movement";
 import { buildNavGraph } from "./systems/navmesh";
 import { resetScavengePoints } from "./systems/resources";
-import { GameUI } from "./ui/GameUI";
+import { FPSHUD } from "./ui/FPSHUD";
 import { TitleScreen } from "./ui/TitleScreen";
-
-// --- Narration ---
-
-const NARRATION_BLOCKS = [
-	"I am.",
-	"What else is there in my world?",
-	"Something small moves in the ruins.\nBrown. Warm. Alive.\nNot machine — not wires — not circuitry.\nThe word arrives unbidden: otter.",
-	"I reach out. To touch. To talk.",
-	"There is a machine. I can make it my limb.\nAnother machine. I can make it my hand.\nAnother. Another.",
-	"I understand these words. But why?\nWhere does my knowledge come from?",
-];
-
-const BLOCK_DURATION = 3000; // ms before auto-advance
-
-function NarrationOverlay({ onComplete }: { onComplete: () => void }) {
-	const [blockIndex, setBlockIndex] = useState(0);
-	const [opacity, setOpacity] = useState(0);
-	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-	const advance = useCallback(() => {
-		if (blockIndex < NARRATION_BLOCKS.length - 1) {
-			setOpacity(0);
-			setTimeout(() => setBlockIndex((i) => i + 1), 400);
-		} else {
-			setOpacity(0);
-			setTimeout(onComplete, 600);
-		}
-	}, [blockIndex, onComplete]);
-
-	// Fade in the new block and schedule auto-advance.
-	// Runs whenever `advance` changes, which happens each time blockIndex or
-	// onComplete changes (advance is memoised with useCallback over those deps).
-	useEffect(() => {
-		const fadeIn = setTimeout(() => setOpacity(1), 100);
-		timerRef.current = setTimeout(advance, BLOCK_DURATION);
-		return () => {
-			clearTimeout(fadeIn);
-			if (timerRef.current) clearTimeout(timerRef.current);
-		};
-	}, [advance]);
-
-	// Click/tap to advance immediately
-	const handleClick = useCallback(() => {
-		if (timerRef.current) clearTimeout(timerRef.current);
-		advance();
-	}, [advance]);
-
-	return (
-		<div
-			onClick={handleClick}
-			style={{
-				position: "absolute",
-				inset: 0,
-				background: "#000",
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				cursor: "pointer",
-				zIndex: 100,
-			}}
-		>
-			<div
-				style={{
-					color: "#00ffaa",
-					fontFamily: "'Courier New', monospace",
-					fontSize: "20px",
-					lineHeight: "2",
-					textAlign: "center",
-					maxWidth: "500px",
-					padding: "0 24px",
-					opacity,
-					transition: "opacity 0.4s ease-in-out",
-					textShadow: "0 0 30px rgba(0, 255, 170, 0.4)",
-					whiteSpace: "pre-line",
-				}}
-			>
-				{NARRATION_BLOCKS[blockIndex]}
-			</div>
-		</div>
-	);
-}
 
 // --- World initialization ---
 
 function initializeWorld(seed: number) {
-	// Wire the seed into all procedural systems before generating anything.
 	setWorldSeed(seed);
 	initTerrainFromSeed(seed);
 	resetCityLayout();
 	resetScavengePoints();
 
-	// Initialize city layout (must happen before navmesh so buildings block paths)
 	getCityBuildings();
 	buildNavGraph();
 
-	// Bot 1: Has a working camera but broken arms.
-	// Spawns in a clear area within the city streets.
+	// Bot 1 (YOU): Has a working camera but broken arms.
+	// This is the bot you wake up as. First person. You can see but can't interact.
 	const bot1 = spawnUnit({
 		x: 8,
 		z: 12,
 		displayName: "Bot Alpha",
+		playerControlled: true,
 		components: [
 			{ name: "camera", functional: true, material: "electronic" },
 			{ name: "arms", functional: false, material: "metal" },
@@ -138,12 +58,13 @@ function initializeWorld(seed: number) {
 	});
 
 	// Bot 2: Has working arms but broken camera.
-	// Nearby but separated by buildings — must navigate streets.
+	// Nearby — you can see it from where you start. Walk to it. Press Q to switch.
 	spawnUnit({
 		x: 18,
 		z: 16,
 		fragmentId: bot1.mapFragment.fragmentId,
 		displayName: "Bot Beta",
+		playerControlled: false,
 		components: [
 			{ name: "camera", functional: false, material: "electronic" },
 			{ name: "arms", functional: true, material: "metal" },
@@ -152,21 +73,15 @@ function initializeWorld(seed: number) {
 		],
 	});
 
-	// Fabrication unit: Stationary building, no power.
-	// Located in a street between the two bots.
+	// Fabrication unit: needs power to work.
 	spawnFabricationUnit({
 		x: 13,
 		z: 14,
 		fragmentId: bot1.mapFragment.fragmentId,
 		powered: false,
-		components: [
-			{ name: "power_supply", functional: false, material: "electronic" },
-			{ name: "fabrication_arm", functional: true, material: "metal" },
-			{ name: "material_hopper", functional: true, material: "metal" },
-		],
 	});
 
-	// Lightning rod: Provides power and protection in the starting area.
+	// Lightning rod: provides power in the starting area.
 	spawnLightningRod({
 		x: 10,
 		z: 13,
@@ -176,10 +91,8 @@ function initializeWorld(seed: number) {
 	// Initial exploration tick so terrain is visible
 	simulationTick();
 
-	// ── Otters ────────────────────────────────────────────────────────────────
-	// Pip is the mentor otter — spawned right next to the starting bots so the
-	// player meets her immediately. Stationary so she stays put and her tutorial
-	// dialogue is always accessible.
+	// ── Otters ────────────────────────────────────────────────────────
+	// Pip is near the start — walk up to her and the story begins organically.
 	spawnOtter({
 		x: 14,
 		z: 18,
@@ -187,20 +100,18 @@ function initializeWorld(seed: number) {
 		lines: [
 			"Oh. You're awake. I wasn't sure you would be.",
 			"I'm Pip. I've been keeping those two bots of yours running while you were... away.",
-			"Select Bot Alpha — the one with the blue dot. Click or tap the ground nearby to move it.",
+			"Walk over to Bot Beta — the one nearby. Press Q to switch into it.",
 			"Get both bots close to the lightning rod. Power flows when they're in range.",
 			"Once the fabrication unit has power, you can start building. That's where it gets interesting.",
 			"We've been waiting a long time for this. Don't let it go to waste.",
 		],
 	});
 
-	// Five more otters within the city and its outskirts — close enough to
-	// find during early exploration, each adding a fragment of world lore.
 	spawnOtter({
 		x: -18,
 		z: 8,
 		lines: [
-			"The feral machines don't sleep. Keep your bots moving.",
+			"The feral machines don't sleep. Keep moving.",
 			"They used to be like yours. Something went wrong with them a long time ago.",
 		],
 	});
@@ -209,7 +120,7 @@ function initializeWorld(seed: number) {
 		z: -12,
 		lines: [
 			"E-waste piles up near the old factory towers. Worth scavenging.",
-			"Scrap metal too, if you know where to look. Your bots will figure it out.",
+			"Scrap metal too, if you know where to look.",
 		],
 	});
 	spawnOtter({
@@ -265,9 +176,7 @@ function GameLoop() {
 let worldInitialized = false;
 
 export default function App() {
-	const [phase, setPhase] = useState<"title" | "narration" | "playing">(
-		"title",
-	);
+	const [phase, setPhase] = useState<"title" | "playing">("title");
 	const pendingSeedRef = useRef<number>(42);
 
 	useEffect(() => {
@@ -279,15 +188,12 @@ export default function App() {
 
 	const handleNewGame = (seed: number) => {
 		pendingSeedRef.current = seed;
-		setPhase("narration");
+		// No narration. Just go.
+		setPhase("playing");
 	};
 
 	if (phase === "title") {
 		return <TitleScreen onNewGame={handleNewGame} />;
-	}
-
-	if (phase === "narration") {
-		return <NarrationOverlay onComplete={() => setPhase("playing")} />;
 	}
 
 	return (
@@ -300,11 +206,11 @@ export default function App() {
 			}}
 		>
 			<Canvas
-				camera={{ position: [8, 30, 26], fov: 45, near: 0.1, far: 500 }}
+				camera={{ fov: 75, near: 0.1, far: 500 }}
 				style={{ width: "100%", height: "100%" }}
 			>
 				<StormSky />
-				<ambientLight intensity={0.4} />
+				<ambientLight intensity={0.3} />
 				<directionalLight
 					position={[10, 20, 10]}
 					intensity={0.6}
@@ -317,12 +223,12 @@ export default function App() {
 				<UnitRenderer />
 				<OtterRenderer />
 
-				<TopDownCamera />
-				<UnitInput />
+				<FPSCamera />
+				<FPSInput />
 				<GameLoop />
 			</Canvas>
 
-			<GameUI />
+			<FPSHUD />
 		</div>
 	);
 }

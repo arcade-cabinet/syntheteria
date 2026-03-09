@@ -2,7 +2,7 @@
  * ECS world instance and archetype queries.
  */
 import { World } from "miniplex";
-import type { Entity } from "./types";
+import type { Entity, PlayerEntity } from "./types";
 
 export const world = new World<Entity>();
 
@@ -17,3 +17,18 @@ export const lightningRods = world.with(
 	"worldPosition",
 );
 export const otters = world.with("otter", "worldPosition");
+
+// FPS: the player-controlled bot
+export const playerBots = world.with(
+	"playerControlled",
+	"unit",
+	"worldPosition",
+);
+
+/** Get the currently active player bot (the one being piloted). */
+export function getActivePlayerBot(): PlayerEntity | null {
+	for (const entity of playerBots) {
+		if (entity.playerControlled.isActive) return entity as PlayerEntity;
+	}
+	return null;
+}

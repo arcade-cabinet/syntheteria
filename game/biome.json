@@ -78,7 +78,6 @@
 				}
 			}
 		},
-		{ "includes": ["**/*.{ts,tsx}"], "javascript": { "globals": [] } },
 		{
 			"includes": ["**/*.{ts,tsx,mts,cts}"],
 			"linter": {

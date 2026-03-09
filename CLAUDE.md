@@ -2,34 +2,43 @@
 
 ## Project Status
 
-Strategy game about awakening AI consciousness in a post-apocalyptic industrial city. Phase 2 prototype implemented with procedural city environment, building placement, power/resource systems, fabrication, enemy AI, and component-based combat. Title screen and intro narration flow complete. Mobile input redesigned for proper touch controls.
+**MAJOR REDESIGN IN PROGRESS** — Pivoting from 2.5D top-down strategy to **3D first-person factory planet exploration/building game.**
 
-### Implemented Systems
-- Title screen with glitch effect and game flow (title → narration → playing)
-- Procedural city layout with factories, warehouses, towers, ruins, and perimeter walls
-- Instanced mesh city rendering with building details (windows, roofs, ledges)
-- Mobile-first input: two-finger pan/zoom for camera, single tap for unit interaction
-- Desktop input: WASD/arrows + scroll zoom, left-click select, right-click move
-- Power system with fluctuating storm intensity and lightning rod output
-- Resource scavenging (scrap metal, e-waste, intact components) from city points
-- Building placement with ghost preview and resource cost validation
-- Fabrication system with 5 recipes (camera, arms, legs, power cell, power supply)
-- Feral enemy AI with patrol and aggro behavior (6 spawn zones)
+Previous Phase 2 prototype exists with working ECS, terrain, power, fabrication, combat, and pathfinding systems. These are being restructured for FPS view and factory mechanics (conveyor belts, wires, mining, processing).
+
+See: [FACTORY_PLANET_FPS_REDESIGN.md](./docs/design/FACTORY_PLANET_FPS_REDESIGN.md) for the full design vision.
+
+### Core Systems (Carry Forward)
+- Miniplex ECS with component-based entities
+- Procedural terrain generation (reinterpret for machine planet surface)
+- Power system with storm intensity and lightning rods (add physical wire networks)
+- Resource system (expand from scavenging to mining → belt transport → processing → fabrication)
+- Fabrication system (belt-fed input/output)
 - Component-based combat (damage breaks parts, not HP bars)
-- Repair system (units with arms can fix nearby broken components)
-- Minimap with player/enemy/building differentiation
-- Combat event notifications and merge event overlays
+- Feral enemy AI with patrol and aggro behavior
+- Pathfinding/navmesh (for NPC bots; player uses direct FPS control)
+- Game state tick loop
+
+### Systems Being Replaced
+- Top-down camera → FPS camera (pointer lock, WASD, attached to player bot)
+- Click-to-select unit input → Direct first-person bot control + consciousness transfer
+- Bird's-eye unit/building rendering → Ground-level PBR rendering
+- Billboard otter sprites → Holographic projection system (Star Wars style)
+- 9-screen narration intro → Organic story discovery through exploration
+- Minimap/selection panels → FPS HUD
 
 ---
 
 ## Vision Summary
 
-You awaken as an AI consciousness in a void. You connect to broken machines — maintenance robots and fabrication units — in the ruins of an industrial city. Your robots explore independently, building fragmented maps that merge when units find each other. You repair machines, restore power via lightning rods, fabricate components, and grow from scattered broken robots into a force capable of defeating the Cult of EL.
+You awaken as a broken robot on the surface of a machine planet. First person. You see through a damaged camera sensor — glitchy, scan-lined. Your arms don't work. Nearby, another bot has arms but no camera. Together, you're functional. From there: explore the machine planet, mine raw resources, build conveyor belts and processing chains, fabricate increasingly complex components, construct more bots, and expand your factory network across the planet's surface.
 
-**Primary view:** 2.5D/3D top-down with fragmented map exploration
-**Setting:** Industrial city (center), coast with mines (E/S), science campus (SW), cultist territory (N)
-**Enemies:** Cultists with lightning powers, enslaved machines, rogue AIs
-**Victory:** Defeat the cult leader at the northern village
+**Primary view:** 3D first-person (you ARE the bot)
+**Setting:** Machine planet — terrain is corroded metal, slag heaps, cable forests, processor graveyards
+**Core loop:** Explore → Mine → Transport (belts) → Process → Fabricate → Build → Expand
+**Story:** Unfolds organically through exploration, holographic logs, otter encounters — no forced narration
+**Enemies:** Feral machines, cultists with lightning powers, rogue AIs
+**Victory:** Defeat the Cult of EL, launch through the wormhole
 
 ---
 
@@ -40,74 +49,73 @@ You awaken as an AI consciousness in a void. You connect to broken machines — 
 Using React Three Fiber, Three.js, and Miniplex ECS. No Unity, no Godot.
 
 **Rationale:**
-- **Mobile-first:** Web-native runs on any device with a browser — no app store gatekeeping
+- **Web-native:** Runs in any browser — no app store gatekeeping
 - **AI-assisted development:** All code is text (TypeScript, JSX) — fully readable and verifiable by AI
-- **Continuous terrain + navmesh:** Custom terrain renderer with navmesh pathfinding for free 3D movement
+- **FPS + factory systems:** R3F handles first-person cameras, PBR materials, instanced belt/wire rendering
 - **Free forever:** No licensing costs at any scale
 - **Iteration speed:** Hot reload, instant deploy, no compile step for logic changes
-- **CI:** Standard web tooling (Vitest, Playwright, GitHub Actions)
 
 **Trade-offs accepted:**
 - Must build more from scratch (no built-in physics, animation, etc.)
 - 3D performance ceiling lower than native engines for extreme scenes
 - Mobile WebGL has device-specific quirks to handle
+- FPS pointer lock has browser-specific behavior
 
-See: [ARCHITECTURE.md](./docs/technical/ARCHITECTURE.md) for full technical design.
-
-### Key Insight: Visual Verification Limit
-
-AI-assisted development works well for:
-- Game logic, formulas, data structures
-- Scene structure (all text-based JSX/TypeScript)
-- Unit tests, integration tests
-
-AI-assisted development **cannot** verify:
-- Visual output quality
-- Aesthetic quality
-- Visual glitches or artifacts
+See: [ARCHITECTURE.md](./docs/technical/ARCHITECTURE.md) for technical design (being updated for FPS).
 
 ---
 
 ## Current Design Decisions
 
 - **Engine:** Custom — React Three Fiber + Three.js + Miniplex ECS (TypeScript)
-- **Platform:** Mobile-first, also PC
-- **Primary view:** 2.5D/3D top-down with continuous terrain and procedural city
-- **Navigation:** Free 3D movement via navmesh A* pathfinding (city buildings block paths)
-- **Exploration:** Fog-of-war reveals continuous terrain; fragments merge when robots meet
-- **Power:** Lightning rods with fluctuating storm intensity (sine wave + surges)
-- **Resources:** Scrap metal, e-waste, intact components — scavenged from city points
-- **Combat:** Component-based damage (parts break individually, no HP bar)
-- **Enemies:** Feral machines (patrol + aggro AI) — cultists planned for later
-- **Building:** Lightning rods and fabrication units placeable with resource costs
-- **Time model:** Flexible real-time with pause/speed controls (0.5x, 1x, 2x)
-- **Multiplayer:** Eventually (procedural world), beyond current scope — single-player focus
-- **Hacking:** Can take over any machine (link + technique + compute), never humans — not yet implemented
-- **Art style:** TBD (low-poly, pixel art, or clean minimal)
+- **Platform:** PC primary (FPS), mobile secondary (virtual sticks)
+- **Primary view:** 3D first-person — you are the bot
+- **Navigation:** Direct WASD control for player bot; navmesh A* for NPC bots
+- **Exploration:** Walk the machine planet surface, discover regions organically
+- **Power:** Lightning rods + physical wire networks with catenary cable rendering
+- **Resources:** Mining drills → conveyor belts → processors → fabrication units
+- **Combat:** Component-based damage from first person
+- **Enemies:** Feral machines, cultists with lightning powers
+- **Building:** First-person placement of belts, wires, miners, processors, fabrication units
+- **Art style:** PBR procedural materials (rusted metal, circuit traces, emissive glow)
+- **Sprites:** Holographic projections (billboard behavior is correct for holograms)
+- **Story:** Organic discovery — no forced narration screens
+- **Multiplayer:** Future scope — multiple bots on same planet
 
 ---
 
 ## What Needs Work
 
-### Component Data (Major)
-The basic component system works (camera, arms, legs, power_cell, power_supply) but needs expansion:
-- More component types for different unit specializations
-- Weapons for combat against cultists with supernatural powers
-- Components appropriate for coastal mines, deep-sea mining
+### FPS Foundation (Critical — Current Priority)
+- Replace `TopDownCamera` with `FPSCamera` (pointer lock, WASD, bot-attached)
+- Replace `UnitInput` with FPS direct control
+- Add `PlayerControlled` component to ECS
+- Building collision for FPS movement
+- Bot switching (consciousness transfer between owned bots)
+
+### Factory Systems (Major)
+- Conveyor belt ECS components, placement, rendering, transport logic
+- Wire ECS components, placement, catenary rendering, power flow
+- Mining drill buildings (extract → belt output)
+- Processor buildings (smelter, refiner — belt in/out)
+- Expanded fabrication (belt-fed input, belt output)
+
+### PBR Ground-Level Rendering (Major)
+- Procedural PBR materials (rusted steel, circuit board, rubber belt, etc.)
+- Rebuild renderers for eye-level detail
+- Holographic projection shader for otter sprites and data displays
 
 ### Gameplay Systems (Major)
 - **Hacking system** — core mechanic, not yet implemented
-- **Cultist enemies** — currently only feral machines; cultists with lightning powers needed
-- **Signal/compute network** — global compute pool and signal BFS not yet implemented
-- **Save/load** — no persistence yet
-- **Audio** — no sound effects or music
+- **Cultist enemies** — humans with lightning powers
+- **Signal/compute network** — global compute pool, BFS connectivity
+- **Save/load** — IndexedDB persistence
+- **Audio** — storm ambience, machinery sounds, combat
 
-### Technical Docs (Moderate)
-- CORE_FORMULAS.md needs updating for implemented power/combat formulas
-- REFERENCE_BUILDS.md needs rewrite once new components are designed
-
-### Open Questions
-See OPEN_QUESTIONS.md — several resolved by implementation, some still open.
+### Organic Story
+- Remove forced narration overlay
+- Story discovery through holographic logs, otter encounters, environmental details
+- Tutorial through gameplay, not text walls
 
 ---
 
@@ -124,25 +132,31 @@ See OPEN_QUESTIONS.md — several resolved by implementation, some still open.
 
 ## Next Steps
 
-1. ~~**Scaffold project** — Vite + R3F + Miniplex + TypeScript~~ (done)
-2. ~~**Build Phase 1 prototype** — continuous terrain, navmesh, fog-of-war~~ (done)
-3. ~~**Title screen and intro flow** — glitch effect title, narration sequence~~ (done)
-4. ~~**Procedural city environment** — buildings block movement, labyrinthine layout~~ (done)
-5. ~~**Mobile input redesign** — two-finger camera, single tap unit control~~ (done)
-6. ~~**Power system** — lightning rods, storm intensity, power distribution~~ (done)
-7. ~~**Resources and scavenging** — scrap, e-waste, components from city points~~ (done)
-8. ~~**Building placement** — lightning rods and fabrication units with costs~~ (done)
-9. ~~**Fabrication** — 5 recipes, build times, power dependency~~ (done)
-10. ~~**Enemy AI** — feral machines with patrol/aggro behavior~~ (done)
-11. ~~**Combat** — component-based damage, retaliation, salvage drops~~ (done)
-12. ~~**Repair system** — units with arms fix nearby broken components~~ (done)
-13. **Hacking system** — signal link + technique + compute requirements
-14. **Cultist enemies** — humans with lightning powers, escalating organization
-15. **Signal/compute network** — BFS connectivity, global compute pool
-16. **Save/load** — IndexedDB persistence
-17. **Expand component data** — more types for unit specialization
-18. **Determine art style** — low-poly, pixel art, or clean minimal
-19. **Audio** — storm ambience, combat sounds, UI feedback
+### Phase 1: FPS Foundation
+1. **FPS Camera** — pointer lock, WASD movement, attached to player bot
+2. **Direct bot control** — replace click-to-select with first-person embodiment
+3. **Building collision** — can't walk through structures
+4. **Bot switching** — transfer consciousness between bots (Q key)
+
+### Phase 2: Ground-Level Rendering
+5. **PBR materials** — procedural textures for metal, circuit, belt surfaces
+6. **Eye-level buildings** — rebuild CityRenderer for walkable scale
+7. **Eye-level bots** — rebuild UnitRenderer with detail
+8. **Holographic projections** — otter sprites as holograms with shader effects
+
+### Phase 3: Factory Systems
+9. **Conveyor belts** — placement, rendering, item transport
+10. **Power wires** — catenary cables, visible power flow
+11. **Mining drills** — resource extraction to belt output
+12. **Processors** — belt-in, transform, belt-out
+13. **Expanded fabrication** — more recipes, belt integration
+
+### Phase 4: Gameplay Expansion
+14. **Hacking system** — signal link + technique + compute
+15. **Cultist enemies** — lightning-wielding humans
+16. **Signal/compute network** — BFS connectivity
+17. **Save/load** — IndexedDB persistence
+18. **Audio** — storm, machinery, combat
 
 ---
 

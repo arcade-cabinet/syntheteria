@@ -80,16 +80,7 @@
 		},
 		{ "includes": ["**/*.{ts,tsx}"], "javascript": { "globals": [] } },
 		{
-			"includes": [
-				"**/*.{ts,tsx}",
-				"**/*.ts",
-				"**/*.{ts,tsx}",
-				"**/*.tsx",
-				"**/*.{ts,tsx}",
-				"**/*.mts",
-				"**/*.{ts,tsx}",
-				"**/*.cts"
-			],
+			"includes": ["**/*.{ts,tsx,mts,cts}"],
 			"linter": {
 				"rules": {
 					"complexity": { "noArguments": "error" },

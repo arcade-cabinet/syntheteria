@@ -28,5 +28,20 @@
     "metalness": 0.95,
     "roughness": 0.15,
     "color": "#C0C0C0"
+  },
+  "machineAssembly": {
+    "materialQuality": {
+      "iron": 1.0,
+      "scrap_iron": 1.0,
+      "copper": 1.2,
+      "stone": 0.8,
+      "carbon": 1.5,
+      "titanium": 2.0,
+      "aluminum": 1.1,
+      "gold": 1.8
+    },
+    "defaultQuality": 1.0,
+    "baseEfficiency": 1.0,
+    "baseDurability": 100
   }
 }

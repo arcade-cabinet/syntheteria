@@ -8,8 +8,11 @@
  * - Must be on walkable terrain (not water, not inside existing buildings)
  * - Must have enough resources
  * - Lightning rods need minimum spacing from other rods
+ *
+ * Tunables sourced from config/buildings.json.
  */
 
+import { config } from "../../config";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { spawnFabricationUnit, spawnLightningRod } from "../ecs/factory";
 import { isWalkable } from "../ecs/terrain";
@@ -24,20 +27,11 @@ export interface PlacementCost {
 	amount: number;
 }
 
-export const BUILDING_COSTS: Record<string, PlacementCost[]> = {
-	lightning_rod: [
-		{ type: "scrapMetal", amount: 8 },
-		{ type: "eWaste", amount: 4 },
-	],
-	fabrication_unit: [
-		{ type: "scrapMetal", amount: 12 },
-		{ type: "eWaste", amount: 6 },
-		{ type: "intactComponents", amount: 2 },
-	],
-};
+export const BUILDING_COSTS: Record<string, PlacementCost[]> =
+	config.buildings.placementCosts as unknown as Record<string, PlacementCost[]>;
 
 /** Minimum distance between lightning rods */
-const MIN_ROD_SPACING = 10;
+const MIN_ROD_SPACING = config.buildings.lightning_rod.minSpacing;
 
 let activePlacement: PlaceableType = null;
 let ghostPosition: { x: number; z: number } | null = null;

@@ -34,5 +34,38 @@
   "harvesting": {
     "defaultRange": 3.0,
     "defaultPowderCapacity": 100
+  },
+  "scavenging": {
+    "range": 2.5,
+    "spawnChance": 0.35,
+    "gridSpacing": 4,
+    "gridMinX": -25,
+    "gridMaxX": 45,
+    "gridMinZ": -15,
+    "gridMaxZ": 45,
+    "jitter": 3,
+    "types": {
+      "scrapMetal": {
+        "weight": 0.5,
+        "amountMin": 2,
+        "amountRange": 3,
+        "remainingMin": 3,
+        "remainingRange": 4
+      },
+      "eWaste": {
+        "weight": 0.35,
+        "amountMin": 1,
+        "amountRange": 2,
+        "remainingMin": 2,
+        "remainingRange": 3
+      },
+      "intactComponents": {
+        "weight": 0.15,
+        "amountMin": 1,
+        "amountRange": 1,
+        "remainingMin": 1,
+        "remainingRange": 2
+      }
+    }
   }
 }

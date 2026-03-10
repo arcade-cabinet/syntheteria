@@ -16,6 +16,8 @@
   "fogResolution": 200,
   "displayOffsetDriftRate": 0.003,
   "displayOffsetSnapThreshold": 0.01,
+  "navStep": 2,
+  "fragmentMergeDistance": 6,
   "biomes": {
     "foundry": {
       "color": "#3a3a3a"

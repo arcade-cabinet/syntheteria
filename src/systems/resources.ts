@@ -5,12 +5,17 @@
  * - Scrap metal, e-waste, intact components
  * - Scavenge points scattered through the city
  * - Units with functional arms can scavenge nearby points
+ *
+ * Tunables sourced from config/mining.json scavenging section.
  */
 
+import { config } from "../../config";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { worldPRNG } from "../ecs/seed";
 import { hasArms } from "../ecs/types";
 import { units } from "../ecs/world";
+
+const scavCfg = config.mining.scavenging;
 
 export interface ResourcePool {
 	scrapMetal: number;
@@ -93,9 +98,9 @@ export function getScavengePoints(): ScavengePoint[] {
 	const points: ScavengePoint[] = [];
 
 	// Scatter scavenge points through the city area
-	for (let z = -15; z < 45; z += 4) {
-		for (let x = -25; x < 45; x += 4) {
-			if (rng() > 0.35) continue; // ~35% chance
+	for (let z = scavCfg.gridMinZ; z < scavCfg.gridMaxZ; z += scavCfg.gridSpacing) {
+		for (let x = scavCfg.gridMinX; x < scavCfg.gridMaxX; x += scavCfg.gridSpacing) {
+			if (rng() > scavCfg.spawnChance) continue;
 			// Don't place inside buildings
 			if (isInsideBuilding(x, z)) continue;
 
@@ -104,23 +109,29 @@ export function getScavengePoints(): ScavengePoint[] {
 			let amount: number;
 			let remaining: number;
 
-			if (typeRoll < 0.5) {
+			const scrapWeight = scavCfg.types.scrapMetal.weight;
+			const eWasteWeight = scrapWeight + scavCfg.types.eWaste.weight;
+
+			if (typeRoll < scrapWeight) {
 				type = "scrapMetal";
-				amount = 2 + Math.floor(rng() * 3);
-				remaining = 3 + Math.floor(rng() * 4);
-			} else if (typeRoll < 0.85) {
+				const t = scavCfg.types.scrapMetal;
+				amount = t.amountMin + Math.floor(rng() * t.amountRange);
+				remaining = t.remainingMin + Math.floor(rng() * t.remainingRange);
+			} else if (typeRoll < eWasteWeight) {
 				type = "eWaste";
-				amount = 1 + Math.floor(rng() * 2);
-				remaining = 2 + Math.floor(rng() * 3);
+				const t = scavCfg.types.eWaste;
+				amount = t.amountMin + Math.floor(rng() * t.amountRange);
+				remaining = t.remainingMin + Math.floor(rng() * t.remainingRange);
 			} else {
 				type = "intactComponents";
-				amount = 1;
-				remaining = 1 + Math.floor(rng() * 2);
+				const t = scavCfg.types.intactComponents;
+				amount = t.amountMin + Math.floor(rng() * t.amountRange);
+				remaining = t.remainingMin + Math.floor(rng() * t.remainingRange);
 			}
 
 			points.push({
-				x: x + (rng() - 0.5) * 3,
-				z: z + (rng() - 0.5) * 3,
+				x: x + (rng() - 0.5) * scavCfg.jitter,
+				z: z + (rng() - 0.5) * scavCfg.jitter,
 				remaining,
 				type,
 				amountPerScavenge: amount,
@@ -133,7 +144,7 @@ export function getScavengePoints(): ScavengePoint[] {
 }
 
 /** Auto-scavenge range for units with arms */
-const SCAVENGE_RANGE = 2.5;
+const SCAVENGE_RANGE = scavCfg.range;
 
 /**
  * Scavenging system. Called once per sim tick.

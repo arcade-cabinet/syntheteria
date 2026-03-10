@@ -4,8 +4,11 @@
  * Samples terrain walkability on a coarse grid to build a navigation graph.
  * A* pathfinding over the graph produces world-space waypoints.
  * Line-of-sight path smoothing removes redundant waypoints for natural movement.
+ *
+ * Tunables sourced from config/terrain.json (navStep, walkCost).
  */
 
+import { config } from "../../config";
 import { isInsideBuilding, nearBuildingEdge } from "../ecs/cityLayout";
 import {
 	getWalkCost,
@@ -16,8 +19,10 @@ import {
 import type { Vec3 } from "../ecs/types";
 
 // Navigation graph resolution — one node every NAV_STEP world units
-export const NAV_STEP = 2;
+export const NAV_STEP = config.terrain.navStep;
 const NAV_SIZE = Math.floor(WORLD_SIZE / NAV_STEP); // nodes per axis
+
+const NEAR_BUILDING_EDGE_COST = config.terrain.walkCost.nearBuildingEdge;
 
 // Walkability grid: true = walkable
 let walkGrid: boolean[] = [];
@@ -45,7 +50,7 @@ export function buildNavGraph() {
 				costGrid[idx] = getWalkCost(wx, wz);
 				// Slightly higher cost near building edges (units hug walls less)
 				if (nearBuildingEdge(wx, wz)) {
-					costGrid[idx] = Math.max(costGrid[idx], 1.3);
+					costGrid[idx] = Math.max(costGrid[idx], NEAR_BUILDING_EDGE_COST);
 				}
 			}
 		}

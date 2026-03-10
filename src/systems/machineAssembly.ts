@@ -9,11 +9,14 @@
  *
  * Stats scale by the average material quality of constituent cubes.
  *
+ * Tunables sourced from config/materials.json machineAssembly section.
+ *
  * Uses module-level state (Map store) with _resetMachineState for
  * test cleanup. Blueprint/config data is passed as parameters, not
  * imported from JSON.
  */
 
+import { config } from "../../config";
 import type { GridCoord } from "./gridSnap";
 import type { MatchResult } from "./patternMatcher";
 
@@ -37,30 +40,25 @@ export interface MachineData {
 }
 
 // ---------------------------------------------------------------------------
-// Constants
+// Constants (from config/materials.json machineAssembly)
 // ---------------------------------------------------------------------------
+
+const assemblyCfg = config.materials.machineAssembly;
 
 /**
  * Quality multiplier per material type.
  * Higher quality materials produce machines with better stats.
  */
 export const MATERIAL_QUALITY: Record<string, number> = {
-	iron: 1.0,
-	scrap_iron: 1.0,
-	copper: 1.2,
-	stone: 0.8,
-	carbon: 1.5,
-	titanium: 2.0,
-	aluminum: 1.1,
-	gold: 1.8,
+	...assemblyCfg.materialQuality,
 };
 
 /** Default quality for materials not listed in MATERIAL_QUALITY. */
-const DEFAULT_QUALITY = 1.0;
+const DEFAULT_QUALITY = assemblyCfg.defaultQuality;
 
 /** Base stats before material quality scaling. */
-const BASE_EFFICIENCY = 1.0;
-const BASE_DURABILITY = 100;
+const BASE_EFFICIENCY = assemblyCfg.baseEfficiency;
+const BASE_DURABILITY = assemblyCfg.baseDurability;
 
 // ---------------------------------------------------------------------------
 // Module state

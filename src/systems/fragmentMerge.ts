@@ -1,13 +1,16 @@
 /**
  * Fragment merge system: detects when units from different fragments
  * are close enough to merge, then combines their fog data.
+ *
+ * Merge distance sourced from config/terrain.json.
  */
 
+import { config } from "../../config";
 import { deleteFragment, FOG_RES, getFragment } from "../ecs/terrain";
 import type { UnitEntity } from "../ecs/types";
 import { units } from "../ecs/world";
 
-const MERGE_DISTANCE = 6; // world units
+const MERGE_DISTANCE = config.terrain.fragmentMergeDistance;
 
 export interface MergeEvent {
 	absorbedId: string;

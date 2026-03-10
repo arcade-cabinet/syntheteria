@@ -1,0 +1,31 @@
+{
+  "relations": {
+    "defaultStance": "neutral",
+    "stances": ["hostile", "unfriendly", "neutral", "friendly", "allied"],
+    "stanceThresholds": {
+      "hostile": -50,
+      "unfriendly": -20,
+      "neutral": 0,
+      "friendly": 30,
+      "allied": 60
+    }
+  },
+  "opinionModifiers": {
+    "tradeDeal": 15,
+    "brokenTrade": -25,
+    "attackedUs": -40,
+    "sharedEnemy": 10,
+    "territoryInfringement": -15,
+    "cubeGift": 5,
+    "allianceProposal": 20,
+    "betrayal": -60
+  },
+  "tradeRatios": {
+    "scrapMetal_to_eWaste": 2,
+    "eWaste_to_intactComponents": 3,
+    "scrapMetal_to_intactComponents": 5
+  },
+  "checkInterval": 300,
+  "decayRate": 0.01,
+  "tradeProposalCooldown": 600
+}

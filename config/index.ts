@@ -26,6 +26,9 @@ import renderingConfig from './rendering.json';
 import territoryConfig from './territory.json';
 import textureMappingConfig from './textureMapping.json';
 import botAutomationConfig from './botAutomation.json';
+import discoveriesConfig from './discoveries.json';
+import diplomacyConfig from './diplomacy.json';
+import victoryConfig from './victory.json';
 
 export const config = {
   units: unitsConfig,
@@ -53,6 +56,9 @@ export const config = {
   territory: territoryConfig,
   textureMapping: textureMappingConfig,
   botAutomation: botAutomationConfig,
+  discoveries: discoveriesConfig,
+  diplomacy: diplomacyConfig,
+  victory: victoryConfig,
 } as const;
 
 export type GameConfig = typeof config;

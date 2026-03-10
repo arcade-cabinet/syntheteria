@@ -43,6 +43,70 @@
     "waypointReachDistance": 2,
     "components": ["arms", "camera"]
   },
+  "rogue": {
+    "spawnRate": 0.003,
+    "maxCount": 2,
+    "patrolRange": 25,
+    "aggroRange": 8,
+    "damage": 3,
+    "speed": 3.0,
+    "hackDifficulty": 80,
+    "stealthDuration": 20,
+    "stealthCooldown": 40,
+    "components": ["arms", "camera", "stealth_module"],
+    "description": "Fast rogue units that can cloak and ambush"
+  },
+  "ancientMachines": {
+    "guardian": {
+      "hp": 500,
+      "damage": 10,
+      "range": 12,
+      "speed": 1.0,
+      "awakeTriggerRadius": 15,
+      "patrolRadius": 20,
+      "description": "Ancient machine guardians that awaken when disturbed",
+      "components": ["heavy_arms", "sensor_array", "power_core", "armor_plating"],
+      "loot": {
+        "scrapMetal": 30,
+        "eWaste": 15,
+        "intactComponents": 5,
+        "rare_earth": 3
+      }
+    },
+    "sentinel": {
+      "hp": 200,
+      "damage": 5,
+      "range": 20,
+      "speed": 0,
+      "awakeTriggerRadius": 10,
+      "description": "Stationary ancient turrets guarding high-value deposits",
+      "components": ["sensor_array", "beam_weapon"],
+      "loot": {
+        "scrapMetal": 10,
+        "eWaste": 10,
+        "intactComponents": 3,
+        "gold": 1
+      }
+    },
+    "swarmDrone": {
+      "hp": 30,
+      "damage": 1,
+      "range": 4,
+      "speed": 4.0,
+      "swarmSize": 8,
+      "swarmRadius": 5,
+      "description": "Ancient micro-drones that attack in swarms",
+      "components": ["micro_arms"],
+      "loot": {
+        "eWaste": 2,
+        "quantum_crystal": 0.1
+      }
+    },
+    "awakeProbability": 0.01,
+    "maxAwakeGuardians": 3,
+    "despawnAfterTicks": 600,
+    "spawnNearDeposits": ["rare_earth", "gold", "quantum_crystal"]
+  },
   "perception": {
     "defaultFOV": 120,
     "scoutFOV": 180,

@@ -1,21 +1,68 @@
 {
   "standard": {
+    "name": "Standard",
+    "description": "Balanced resources and threats. The default experience.",
     "worldSize": 200,
     "oreAbundance": 1.0,
     "enemyDensity": 1.0,
-    "aiOpponents": 3
+    "aiOpponents": 3,
+    "stormSeverity": 1.0,
+    "startingResources": "normal"
   },
   "abundant": {
+    "name": "Resource Rich",
+    "description": "Plentiful resources with fewer enemies. Good for learning.",
     "worldSize": 200,
     "oreAbundance": 1.5,
     "enemyDensity": 0.7,
-    "aiOpponents": 2
+    "aiOpponents": 2,
+    "stormSeverity": 0.8,
+    "startingResources": "generous"
   },
   "hostile": {
+    "name": "Hostile",
+    "description": "Scarce resources, many enemies, severe storms. For veterans.",
     "worldSize": 150,
     "oreAbundance": 0.8,
     "enemyDensity": 1.5,
-    "aiOpponents": 4
+    "aiOpponents": 4,
+    "stormSeverity": 1.5,
+    "startingResources": "sparse"
+  },
+  "marathon": {
+    "name": "Marathon",
+    "description": "Massive world with extended progression. Longer games.",
+    "worldSize": 400,
+    "oreAbundance": 1.2,
+    "enemyDensity": 1.0,
+    "aiOpponents": 3,
+    "stormSeverity": 1.0,
+    "startingResources": "normal"
+  },
+  "duel": {
+    "name": "Duel",
+    "description": "Small map, one AI opponent. Fast-paced 1v1.",
+    "worldSize": 100,
+    "oreAbundance": 1.0,
+    "enemyDensity": 0.5,
+    "aiOpponents": 1,
+    "stormSeverity": 0.7,
+    "startingResources": "generous"
+  },
+  "survival": {
+    "name": "Survival",
+    "description": "No AI opponents. Survive escalating storms and ferals.",
+    "worldSize": 150,
+    "oreAbundance": 0.6,
+    "enemyDensity": 2.0,
+    "aiOpponents": 0,
+    "stormSeverity": 2.0,
+    "startingResources": "normal"
+  },
+  "startingResources": {
+    "sparse": { "scrapMetal": 5, "eWaste": 2, "intactComponents": 0 },
+    "normal": { "scrapMetal": 15, "eWaste": 8, "intactComponents": 1 },
+    "generous": { "scrapMetal": 30, "eWaste": 15, "intactComponents": 3 }
   },
   "cityBounds": {
     "minX": -30,

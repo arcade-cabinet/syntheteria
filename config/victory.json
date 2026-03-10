@@ -1,0 +1,43 @@
+{
+	"conditions": {
+		"economic": {
+			"name": "Economic Dominance",
+			"description": "Accumulate overwhelming material wealth",
+			"cubeThreshold": 500,
+			"territoryPercentage": 0.4,
+			"checkInterval": 60
+		},
+		"military": {
+			"name": "Military Conquest",
+			"description": "Destroy all enemy civilizations",
+			"eliminationRequired": true,
+			"checkInterval": 60
+		},
+		"scientific": {
+			"name": "Scientific Supremacy",
+			"description": "Research all tier 5 technologies",
+			"requiredTier": 5,
+			"checkInterval": 60
+		},
+		"cultural": {
+			"name": "Cultural Dominion",
+			"description": "Have the most active otter holograms and quest completions",
+			"hologramThreshold": 10,
+			"questThreshold": 20,
+			"checkInterval": 60
+		},
+		"hacking": {
+			"name": "Digital Takeover",
+			"description": "Hack and control all enemy infrastructure",
+			"hackPercentageRequired": 0.75,
+			"checkInterval": 60
+		},
+		"survival": {
+			"name": "Last Bot Standing",
+			"description": "Be the last civilization with functional units",
+			"checkInterval": 60
+		}
+	},
+	"gracePeriodTicks": 3000,
+	"victoryAnnouncementDelay": 60
+}

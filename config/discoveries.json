@@ -1,0 +1,27 @@
+{
+  "types": {
+    "ancient_ruin": {
+      "discoveryReward": { "type": "technology", "value": "random_tier_1" },
+      "proximityRange": 3.0,
+      "scanTime": 5
+    },
+    "ore_vein": {
+      "discoveryReward": { "type": "resource", "value": "random_ore", "amount": 50 },
+      "proximityRange": 5.0,
+      "scanTime": 2
+    },
+    "data_cache": {
+      "discoveryReward": { "type": "compute", "value": 100 },
+      "proximityRange": 2.0,
+      "scanTime": 8
+    },
+    "otter_nest": {
+      "discoveryReward": { "type": "quest", "value": "otter_quest_chain" },
+      "proximityRange": 4.0,
+      "scanTime": 3
+    }
+  },
+  "spawnDensity": 0.02,
+  "revealOnExplore": true,
+  "fogRevealRadius": 8
+}

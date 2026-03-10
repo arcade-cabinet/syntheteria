@@ -36,5 +36,43 @@
     "separator",
     "furnace",
     "outpost"
-  ]
+  ],
+  "stormEscalation": {
+    "phases": [
+      {
+        "name": "calm",
+        "durationTicks": 600,
+        "intensityMultiplier": 0.5,
+        "damageChance": 0
+      },
+      {
+        "name": "brewing",
+        "durationTicks": 300,
+        "intensityMultiplier": 0.8,
+        "damageChance": 0.01
+      },
+      {
+        "name": "active",
+        "durationTicks": 400,
+        "intensityMultiplier": 1.2,
+        "damageChance": 0.05
+      },
+      {
+        "name": "surge",
+        "durationTicks": 100,
+        "intensityMultiplier": 2.0,
+        "damageChance": 0.15
+      },
+      {
+        "name": "aftermath",
+        "durationTicks": 200,
+        "intensityMultiplier": 0.3,
+        "damageChance": 0
+      }
+    ],
+    "escalationRate": 0.001,
+    "maxEscalationLevel": 3,
+    "lightningStrikeRadius": 5,
+    "lightningStrikeDamage": 25
+  }
 }

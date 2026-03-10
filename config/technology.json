@@ -20,5 +20,241 @@
       "cost": 400,
       "unlocks": ["signal_relay", "hacking_module", "formation_controller"]
     }
-  ]
+  ],
+  "techTree": [
+    {
+      "id": "scrap_processing",
+      "name": "Scrap Processing",
+      "tier": 1,
+      "researchCost": 30,
+      "prerequisites": [],
+      "effects": {
+        "unlocks": ["basic_belt", "basic_furnace"],
+        "bonuses": {}
+      },
+      "factionBonus": null
+    },
+    {
+      "id": "basic_smelting",
+      "name": "Basic Smelting",
+      "tier": 1,
+      "researchCost": 40,
+      "prerequisites": [],
+      "effects": {
+        "unlocks": ["lightning_rod"],
+        "bonuses": { "harvestSpeed": 0.1 }
+      },
+      "factionBonus": null
+    },
+    {
+      "id": "belt_transport",
+      "name": "Belt Transport",
+      "tier": 1,
+      "researchCost": 35,
+      "prerequisites": [],
+      "effects": {
+        "unlocks": ["belt_mk1"],
+        "bonuses": {}
+      },
+      "factionBonus": null
+    },
+    {
+      "id": "automated_mining",
+      "name": "Automated Mining",
+      "tier": 2,
+      "researchCost": 80,
+      "prerequisites": ["scrap_processing"],
+      "effects": {
+        "unlocks": ["auto_miner"],
+        "bonuses": { "miningRate": 0.2 }
+      },
+      "factionBonus": "reclaimers"
+    },
+    {
+      "id": "outpost_construction",
+      "name": "Outpost Construction",
+      "tier": 2,
+      "researchCost": 90,
+      "prerequisites": ["scrap_processing"],
+      "effects": {
+        "unlocks": ["outpost"],
+        "bonuses": { "claimRadius": 0.15 }
+      },
+      "factionBonus": null
+    },
+    {
+      "id": "signal_relay_network",
+      "name": "Signal Relay Network",
+      "tier": 2,
+      "researchCost": 100,
+      "prerequisites": ["basic_smelting"],
+      "effects": {
+        "unlocks": ["signal_relay"],
+        "bonuses": { "signalRange": 0.2 }
+      },
+      "factionBonus": "signal_choir"
+    },
+    {
+      "id": "copper_refining",
+      "name": "Copper Refining",
+      "tier": 2,
+      "researchCost": 85,
+      "prerequisites": ["basic_smelting"],
+      "effects": {
+        "unlocks": ["copper_ingot", "copper_wire"],
+        "bonuses": {}
+      },
+      "factionBonus": null
+    },
+    {
+      "id": "turret_defense",
+      "name": "Turret Defense",
+      "tier": 3,
+      "researchCost": 180,
+      "prerequisites": ["automated_mining", "copper_refining"],
+      "effects": {
+        "unlocks": ["turret_mk1"],
+        "bonuses": { "turretDamage": 0.1 }
+      },
+      "factionBonus": "iron_creed"
+    },
+    {
+      "id": "combat_bots",
+      "name": "Combat Bots",
+      "tier": 3,
+      "researchCost": 200,
+      "prerequisites": ["automated_mining"],
+      "effects": {
+        "unlocks": ["combat_bot", "patrol_route"],
+        "bonuses": { "botSpeed": 0.15 }
+      },
+      "factionBonus": "volt_collective"
+    },
+    {
+      "id": "wall_reinforcement",
+      "name": "Wall Reinforcement",
+      "tier": 3,
+      "researchCost": 160,
+      "prerequisites": ["outpost_construction"],
+      "effects": {
+        "unlocks": ["reinforced_wall"],
+        "bonuses": { "wallDurability": 0.25 }
+      },
+      "factionBonus": "iron_creed"
+    },
+    {
+      "id": "advanced_smelter",
+      "name": "Advanced Smelter",
+      "tier": 3,
+      "researchCost": 170,
+      "prerequisites": ["copper_refining"],
+      "effects": {
+        "unlocks": ["smelter_mk2"],
+        "bonuses": { "smeltingSpeed": 0.2 }
+      },
+      "factionBonus": null
+    },
+    {
+      "id": "titanium_processing",
+      "name": "Titanium Processing",
+      "tier": 4,
+      "researchCost": 350,
+      "prerequisites": ["advanced_smelter", "turret_defense"],
+      "effects": {
+        "unlocks": ["titanium_ingot", "titanium_plate"],
+        "bonuses": { "cubeDurability": 0.3 }
+      },
+      "factionBonus": null
+    },
+    {
+      "id": "advanced_fabrication",
+      "name": "Advanced Fabrication",
+      "tier": 4,
+      "researchCost": 380,
+      "prerequisites": ["combat_bots", "advanced_smelter"],
+      "effects": {
+        "unlocks": ["fabricator_mk2", "express_belt"],
+        "bonuses": { "craftingSpeed": 0.25 }
+      },
+      "factionBonus": null
+    },
+    {
+      "id": "network_infiltration",
+      "name": "Network Infiltration",
+      "tier": 4,
+      "researchCost": 400,
+      "prerequisites": ["signal_relay_network", "combat_bots"],
+      "effects": {
+        "unlocks": ["hacking_module", "signal_jammer"],
+        "bonuses": { "hackSpeed": 0.3 }
+      },
+      "factionBonus": "signal_choir"
+    },
+    {
+      "id": "fortress_architecture",
+      "name": "Fortress Architecture",
+      "tier": 4,
+      "researchCost": 360,
+      "prerequisites": ["wall_reinforcement", "turret_defense"],
+      "effects": {
+        "unlocks": ["blast_door", "turret_mk2"],
+        "bonuses": { "wallDurability": 0.3, "turretRange": 0.2 }
+      },
+      "factionBonus": "iron_creed"
+    },
+    {
+      "id": "matter_compression",
+      "name": "Matter Compression",
+      "tier": 5,
+      "researchCost": 600,
+      "prerequisites": ["titanium_processing", "advanced_fabrication"],
+      "effects": {
+        "unlocks": ["compressor_mk2", "dense_cube"],
+        "bonuses": { "compressionYield": 0.4 }
+      },
+      "factionBonus": null
+    },
+    {
+      "id": "alloy_forging",
+      "name": "Alloy Forging",
+      "tier": 5,
+      "researchCost": 650,
+      "prerequisites": ["titanium_processing"],
+      "effects": {
+        "unlocks": ["alloy_furnace", "composite_plate"],
+        "bonuses": { "cubeDurability": 0.5 }
+      },
+      "factionBonus": "reclaimers"
+    },
+    {
+      "id": "quantum_computing",
+      "name": "Quantum Computing",
+      "tier": 5,
+      "researchCost": 700,
+      "prerequisites": ["network_infiltration", "advanced_fabrication"],
+      "effects": {
+        "unlocks": ["quantum_relay", "mass_hack"],
+        "bonuses": { "hackSpeed": 0.5, "signalRange": 0.4 }
+      },
+      "factionBonus": "signal_choir"
+    },
+    {
+      "id": "swarm_command",
+      "name": "Swarm Command",
+      "tier": 5,
+      "researchCost": 680,
+      "prerequisites": ["advanced_fabrication", "fortress_architecture"],
+      "effects": {
+        "unlocks": ["swarm_controller", "bot_factory"],
+        "bonuses": { "botSpeed": 0.3, "botCapacity": 0.5 }
+      },
+      "factionBonus": "volt_collective"
+    }
+  ],
+  "factionResearchBonuses": {
+    "signal_choir": 1.5,
+    "reclaimers": 0.8,
+    "volt_collective": 1.0,
+    "iron_creed": 0.9
+  }
 }

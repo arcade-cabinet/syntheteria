@@ -5,14 +5,14 @@
  * based on territory state. These are called by other systems (resources,
  * building placement, exploration, combat) to apply territory bonuses.
  *
+ * Tunables sourced from config/territory.json.
+ *
  * Effects:
- * - Resource gathering bonus in owned territory (1.5x gather rate)
- * - Building cost reduction in owned territory (0.8x)
+ * - Resource gathering bonus in owned territory
+ * - Building cost reduction in owned territory
  * - Fog of war reveal within territory radius
  * - Enemy intrusion alert when hostile enters your territory
  * - Territory contestation: overlapping claims reduce both strengths
- *
- * All tunables sourced from config/territory.json via centralized config.
  */
 
 import { config } from "../../config";

@@ -14,6 +14,7 @@
  * import issues in test environments.
  */
 
+import miningConfig from "../../config/mining.json";
 import { getDeposit } from "./oreSpawner";
 
 // ---------------------------------------------------------------------------
@@ -43,14 +44,14 @@ export interface HarvestUpdateResult {
 }
 
 // ---------------------------------------------------------------------------
-// Constants (from config/mining.json)
+// Constants (from config/mining.json harvesting section)
 // ---------------------------------------------------------------------------
 
 /** Default harvest range in meters — player must be within this distance */
-export const DEFAULT_HARVEST_RANGE = 3.0;
+export const DEFAULT_HARVEST_RANGE: number = miningConfig.harvesting.defaultRange;
 
 /** Default powder capacity per ore type */
-export const DEFAULT_POWDER_CAPACITY = 100;
+export const DEFAULT_POWDER_CAPACITY: number = miningConfig.harvesting.defaultPowderCapacity;
 
 // ---------------------------------------------------------------------------
 // Module state

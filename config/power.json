@@ -24,6 +24,6 @@
   "wireMinPassthrough": 0.05,
   "powerSatisfactionThreshold": 0.9,
   "signalDegradationPerUnit": 0.02,
-  "signalMinStrength": 0.05,
+  "signalMinStrength": 0.1,
   "signalComputeMultiplier": 10
 }

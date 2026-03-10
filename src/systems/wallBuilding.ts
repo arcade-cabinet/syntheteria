@@ -6,40 +6,39 @@
  * from its constituent cube materials. Walls provide defense cover and
  * can be damaged/breached.
  *
- * Material HP hierarchy: scrap_metal < iron < copper < silicon < steel < chrome < titanium
+ * Tunables sourced from config/combat.json (walls section).
  *
  * Depends on cubeStacking.ts for the stack registry.
  */
 
+import { config } from "../../config";
 import type { GridCoord } from "./gridSnap";
 import { gridKey } from "./gridSnap";
 import { type StackedCubeData, getAllStackedCubes } from "./cubeStacking";
 
 // ---------------------------------------------------------------------------
-// Constants
+// Config-driven constants
 // ---------------------------------------------------------------------------
 
+const wallsCfg = config.combat.walls;
+
 /** Minimum number of cubes in a line to form a wall segment. */
-const MIN_WALL_LENGTH = 3;
+const MIN_WALL_LENGTH = wallsCfg.minWallLength;
 
 /** HP per cube by material type. Higher = stronger wall. */
-export const MATERIAL_WALL_HP: Record<string, number> = {
-	scrap_metal: 50,
-	scrap: 50,
-	rock: 40,
-	iron: 100,
-	copper: 80,
-	silicon: 120,
-	steel: 200,
-	chrome: 300,
-	titanium: 350,
-};
+export const MATERIAL_WALL_HP: Record<string, number> = { ...wallsCfg.materialWallHp };
 
 /** Default HP for unknown material types. */
-const DEFAULT_CUBE_HP = 75;
+const DEFAULT_CUBE_HP = wallsCfg.defaultCubeHp;
 
 /** Defense bonus multiplier for units behind a wall. */
-export const WALL_DEFENSE_BONUS = 0.5;
+export const WALL_DEFENSE_BONUS = wallsCfg.wallDefenseBonus;
+
+/** Breach threshold — wall is breached when HP drops below this fraction of maxHp. */
+const BREACH_THRESHOLD = wallsCfg.breachThreshold;
+
+/** How many cells to scan for cover in the threat direction. */
+const COVER_SCAN_DISTANCE = wallsCfg.coverScanDistance;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -328,8 +327,8 @@ export function getCoverBonus(
 	threatDirection: { x: number; z: number },
 ): number {
 	// Check cells between position and threat for wall segments
-	// Simple scan: check 1-3 cells in the threat direction
-	for (let dist = 1; dist <= 3; dist++) {
+	// Simple scan: check 1-N cells in the threat direction
+	for (let dist = 1; dist <= COVER_SCAN_DISTANCE; dist++) {
 		const checkX = position.x + Math.round(threatDirection.x * dist);
 		const checkZ = position.z + Math.round(threatDirection.z * dist);
 
@@ -371,7 +370,7 @@ export function damageWall(
 	segment.hp = Math.max(0, segment.hp - amount);
 
 	const destroyed = segment.hp === 0;
-	const breached = destroyed || segment.hp < segment.maxHp * 0.3;
+	const breached = destroyed || segment.hp < segment.maxHp * BREACH_THRESHOLD;
 
 	segment.breached = breached;
 

@@ -9,8 +9,10 @@
  * stays pure and testable without WASM.
  */
 
+import miningConfig from "../../config/mining.json";
+
 // ---------------------------------------------------------------------------
-// Ore type definitions — mirrors config/mining.json oreTypes
+// Ore type definitions — sourced from config/mining.json oreTypes
 // ---------------------------------------------------------------------------
 
 /** Ore type configuration from mining.json */
@@ -20,23 +22,14 @@ export interface OreTypeConfig {
 	color: string;
 }
 
-/** Valid ore type names — kept in sync with mining.json */
-export const VALID_ORE_TYPES: ReadonlyArray<string> = [
-	"rock",
-	"scrap_iron",
-	"copper",
-	"silicon",
-	"titanium",
-];
+/** Valid ore type names — sourced from mining.json */
+export const VALID_ORE_TYPES: ReadonlyArray<string> = Object.keys(
+	miningConfig.oreTypes,
+);
 
-/** Default ore type configs matching config/mining.json */
-export const ORE_TYPE_CONFIGS: Record<string, OreTypeConfig> = {
-	rock: { hardness: 1, grindSpeed: 1.0, color: "#8B7355" },
-	scrap_iron: { hardness: 2, grindSpeed: 0.8, color: "#8B4513" },
-	copper: { hardness: 3, grindSpeed: 0.6, color: "#B87333" },
-	silicon: { hardness: 4, grindSpeed: 0.4, color: "#A0A0C0" },
-	titanium: { hardness: 5, grindSpeed: 0.3, color: "#C0C0C0" },
-};
+/** Ore type configs sourced from config/mining.json */
+export const ORE_TYPE_CONFIGS: Record<string, OreTypeConfig> =
+	miningConfig.oreTypes as Record<string, OreTypeConfig>;
 
 // ---------------------------------------------------------------------------
 // OreDeposit data type

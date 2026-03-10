@@ -1,13 +1,16 @@
 /**
  * Furnace system -- spawns furnace entities with hopper input queues.
  *
- * A furnace accepts material cubes into its hopper (max 5). When powered
- * and given a recipe, it processes items from the hopper queue and produces
- * output items. Rapier static body creation is injected via an optional
- * callback so the system stays pure and testable without WASM.
+ * A furnace accepts material cubes into its hopper (max configurable).
+ * When powered and given a recipe, it processes items from the hopper
+ * queue and produces output items. Rapier static body creation is
+ * injected via an optional callback so the system stays pure and
+ * testable without WASM.
  *
  * Config reference: config/furnace.json
  */
+
+import furnaceConfig from "../../config/furnace.json";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -54,11 +57,11 @@ export interface FurnaceState {
 }
 
 // ---------------------------------------------------------------------------
-// Constants
+// Constants (from config/furnace.json)
 // ---------------------------------------------------------------------------
 
 /** Default maximum number of items in the hopper. */
-const DEFAULT_MAX_HOPPER_SIZE = 5;
+const DEFAULT_MAX_HOPPER_SIZE: number = furnaceConfig.defaultMaxHopperSize;
 
 // ---------------------------------------------------------------------------
 // Module state
@@ -76,7 +79,7 @@ const furnaces = new Map<string, FurnaceData>();
  *
  * @param position - world position for the furnace
  * @param createPhysicsBody - optional callback to create a Rapier static body
- * @param maxHopperSize - optional override for hopper capacity (default: 5)
+ * @param maxHopperSize - optional override for hopper capacity (default from config)
  * @returns the created FurnaceData
  */
 export function createFurnace(

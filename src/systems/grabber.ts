@@ -15,9 +15,10 @@
  * - setDynamic: re-enable physics when released
  * - applyImpulse: launch the cube on throw
  *
- * Config reference: config/cubeMaterials.json
+ * Config reference: config/units.json grabber section
  */
 
+import unitsConfig from "../../config/units.json";
 import {
 	canPlaceAt,
 	registerStackedCube,
@@ -71,11 +72,11 @@ export interface DropOptions {
 }
 
 // ---------------------------------------------------------------------------
-// Constants
+// Constants (from config/units.json grabber section)
 // ---------------------------------------------------------------------------
 
 /** Maximum distance in meters at which a cube can be grabbed. */
-const GRAB_REACH = 2.0;
+const GRAB_REACH: number = unitsConfig.grabber.reach;
 
 // ---------------------------------------------------------------------------
 // Module state

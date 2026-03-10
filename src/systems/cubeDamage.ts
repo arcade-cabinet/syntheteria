@@ -11,8 +11,10 @@
  *  - A structural integrity check is triggered on neighboring cubes
  */
 
+import cubeMaterialsConfig from "../../config/cubeMaterials.json";
+
 // ---------------------------------------------------------------------------
-// Material durability data — mirrors config/cubeMaterials.json
+// Material durability data — sourced from config/cubeMaterials.json
 // ---------------------------------------------------------------------------
 
 export interface CubeMaterialData {
@@ -24,47 +26,21 @@ export interface CubeMaterialData {
 
 /**
  * Canonical durability values per material type.
- * Keep in sync with config/cubeMaterials.json.
+ * Sourced from config/cubeMaterials.json.
  */
-export const CUBE_MATERIALS: Record<string, CubeMaterialData> = {
-	scrap: {
-		displayName: "Scrap",
-		durability: 50,
-		weight: 1.0,
-		description: "Salvaged scrap metal. Cheap and fast to place, but brittle.",
-	},
-	iron: {
-		displayName: "Iron",
-		durability: 100,
-		weight: 2.0,
-		description: "Standard structural iron. Reliable and balanced.",
-	},
-	steel: {
-		displayName: "Steel",
-		durability: 200,
-		weight: 3.0,
-		description: "Reinforced steel plating. Tough but heavy.",
-	},
-	titanium: {
-		displayName: "Titanium",
-		durability: 350,
-		weight: 2.5,
-		description:
-			"Lightweight titanium alloy. Excellent durability-to-weight ratio.",
-	},
-	concrete: {
-		displayName: "Concrete",
-		durability: 150,
-		weight: 4.0,
-		description: "Poured concrete block. Heavy and moderately tough.",
-	},
-	composite: {
-		displayName: "Composite",
-		durability: 250,
-		weight: 1.5,
-		description: "Advanced composite laminate. Light and very durable.",
-	},
-};
+export const CUBE_MATERIALS: Record<string, CubeMaterialData> = Object.fromEntries(
+	Object.entries(cubeMaterialsConfig)
+		.filter(([_, v]) => typeof v === "object" && v !== null && "durability" in v)
+		.map(([key, v]) => [
+			key,
+			{
+				displayName: (v as Record<string, unknown>).name as string,
+				durability: (v as Record<string, unknown>).durability as number,
+				weight: (v as Record<string, unknown>).weight as number,
+				description: (v as Record<string, unknown>).description as string,
+			},
+		]),
+);
 
 // ---------------------------------------------------------------------------
 // Types

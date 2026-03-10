@@ -5,10 +5,19 @@
  * BFS outward from player bot positions through relays within range.
  * Signal strength degrades with distance; connected relays contribute compute
  * to a global pool used by the hacking system.
+ *
+ * Tunables sourced from config/power.json (signalMinStrength, signalComputeMultiplier).
  */
 
+import { config } from "../../config";
 import type { Entity, Vec3 } from "../ecs/types";
 import { playerBots, signalRelays, wires, world } from "../ecs/world";
+
+/** Signal minimum strength threshold from config. */
+const SIGNAL_MIN_STRENGTH = config.power.signalMinStrength;
+
+/** Compute contribution per unit of signal strength from config. */
+const SIGNAL_COMPUTE_MULTIPLIER = config.power.signalComputeMultiplier;
 
 function getEntityById(id: string): Entity | undefined {
 	for (const entity of world) {
@@ -88,7 +97,7 @@ function distXZ(a: Vec3, b: Vec3): number {
  * 1. Reset all relay signal strengths.
  * 2. BFS from each player bot outward through relays.
  * 3. Signal strength = max(0, 1 - distance / relay.signalRange).
- * 4. Relays with strength > 0.1 are "connected" and contribute compute.
+ * 4. Relays with strength > signalMinStrength are "connected" and contribute compute.
  */
 export function signalNetworkSystem() {
 	connectedRelayIds.clear();
@@ -128,7 +137,7 @@ export function signalNetworkSystem() {
 			bestStrength = Math.max(bestStrength, strength);
 		}
 
-		if (bestStrength > 0.1) {
+		if (bestStrength > SIGNAL_MIN_STRENGTH) {
 			relay.signalRelay.signalStrength = bestStrength;
 			visited.add(relay.id);
 			queue.push({ relayId: relay.id, strength: bestStrength });
@@ -161,7 +170,7 @@ export function signalNetworkSystem() {
 				current.strength * (1 - dist / neighborEntity.signalRelay.signalRange),
 			);
 
-			if (strength > 0.1) {
+			if (strength > SIGNAL_MIN_STRENGTH) {
 				visited.add(neighborId);
 				neighborEntity.signalRelay.signalStrength = strength;
 				connectedRelayIds.add(neighborId);
@@ -170,11 +179,11 @@ export function signalNetworkSystem() {
 		}
 	}
 
-	// Compute global pool: each connected relay contributes strength * 10
+	// Compute global pool: each connected relay contributes strength * multiplier
 	for (const relayId of connectedRelayIds) {
 		const entity = getEntityById(relayId);
 		if (entity?.signalRelay) {
-			globalCompute += entity.signalRelay.signalStrength * 10;
+			globalCompute += entity.signalRelay.signalStrength * SIGNAL_COMPUTE_MULTIPLIER;
 		}
 	}
 }

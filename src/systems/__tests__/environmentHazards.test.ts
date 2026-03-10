@@ -505,7 +505,7 @@ describe("hazards — scrap_storm resource drops", () => {
 			environmentHazardSystem(i);
 		}
 
-		const _firstCall = getResourceDropEvents();
+		getResourceDropEvents();
 		const secondCall = getResourceDropEvents();
 		expect(secondCall).toHaveLength(0);
 	});

@@ -186,7 +186,7 @@ describe("stormForecast — generateForecast", () => {
 
 	it("forecast at a future time skips past events", () => {
 		initForecast(42);
-		const earlyForecast = generateForecast(0, 3000);
+		generateForecast(0, 3000);
 		const lateForecast = generateForecast(2000, 1000);
 
 		// Late forecast should not include events that ended before t=2000

@@ -74,10 +74,12 @@ export interface BridgeState {
 const DAMAGE_FLASH_DECAY_RATE = 2.0;
 
 /** Health threshold (fraction) below which the low-health warning fires. */
-const _LOW_HEALTH_THRESHOLD = 0.25;
+// @ts-ignore reserved for future use
+const LOW_HEALTH_THRESHOLD = 0.25;
 
 /** Power threshold (fraction) below which the low-power warning fires. */
-const _LOW_POWER_THRESHOLD = 0.15;
+// @ts-ignore reserved for future use
+const LOW_POWER_THRESHOLD = 0.15;
 
 // ---------------------------------------------------------------------------
 // Module state
@@ -185,8 +187,10 @@ export function bridgeTick(delta: number): void {
 	}
 
 	// --- Check warnings ---
-	const _healthFraction = playerMaxHealth > 0 ? playerHealth / playerMaxHealth : 0;
-	const _powerFraction = playerMaxPower > 0 ? playerPower / playerMaxPower : 0;
+	// @ts-ignore reserved for future use
+	const healthFraction = playerMaxHealth > 0 ? playerHealth / playerMaxHealth : 0;
+	// @ts-ignore reserved for future use
+	const powerFraction = playerMaxPower > 0 ? playerPower / playerMaxPower : 0;
 
 	updateStatusBar("componentHealth", {
 		current: playerHealth,

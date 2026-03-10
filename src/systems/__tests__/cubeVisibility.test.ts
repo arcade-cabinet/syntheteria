@@ -218,7 +218,7 @@ describe("getVisiblePiles — range filtering", () => {
 	});
 
 	it("computes correct distance", () => {
-		const _id = registerCubePile({ x: 3, y: 0, z: 4 }, ["c1"], ["iron"], [3]);
+		registerCubePile({ x: 3, y: 0, z: 4 }, ["c1"], ["iron"], [3]);
 
 		const visible = getVisiblePiles(
 			{ x: 0, y: 0, z: 0 },
@@ -236,7 +236,7 @@ describe("getVisiblePiles — range filtering", () => {
 
 describe("getVisiblePiles — line of sight", () => {
 	it("blocks visibility when a wall is between observer and pile", () => {
-		const _id = registerCubePile({ x: 20, y: 0, z: 0 }, ["c1"], ["iron"], [3]);
+		registerCubePile({ x: 20, y: 0, z: 0 }, ["c1"], ["iron"], [3]);
 
 		// Wall at x=10, blocking the line from (0,0,0) to (20,0,0)
 		addWall({ x: 10, y: 0, z: 0 }, { x: 1, z: 5 });
@@ -251,7 +251,7 @@ describe("getVisiblePiles — line of sight", () => {
 	});
 
 	it("allows visibility when wall is not on the line", () => {
-		const _id = registerCubePile({ x: 20, y: 0, z: 0 }, ["c1"], ["iron"], [3]);
+		registerCubePile({ x: 20, y: 0, z: 0 }, ["c1"], ["iron"], [3]);
 
 		// Wall at z=20, not between observer and pile
 		addWall({ x: 10, y: 0, z: 20 }, { x: 1, z: 1 });
@@ -266,7 +266,7 @@ describe("getVisiblePiles — line of sight", () => {
 	});
 
 	it("clears walls with clearWalls", () => {
-		const _id = registerCubePile({ x: 20, y: 0, z: 0 }, ["c1"], ["iron"], [3]);
+		registerCubePile({ x: 20, y: 0, z: 0 }, ["c1"], ["iron"], [3]);
 		addWall({ x: 10, y: 0, z: 0 }, { x: 1, z: 5 });
 
 		clearWalls();
@@ -367,7 +367,7 @@ describe("getVisiblePiles — enemy detection", () => {
 
 describe("getVisiblePiles — primary material", () => {
 	it("returns the most common material", () => {
-		const _id = registerCubePile(
+		registerCubePile(
 			{ x: 5, y: 0, z: 0 },
 			["c1", "c2", "c3"],
 			["iron", "copper", "iron"],
@@ -724,7 +724,7 @@ describe("reset", () => {
 	});
 
 	it("clears all defenses", () => {
-		const _id = registerCubePile({ x: 0, y: 0, z: 0 }, ["c1"], ["iron"], [20]);
+		registerCubePile({ x: 0, y: 0, z: 0 }, ["c1"], ["iron"], [20]);
 		setDefenseRadius("turret1", { x: 0, y: 0, z: 0 }, 20);
 		reset();
 
@@ -740,7 +740,7 @@ describe("reset", () => {
 		addWall({ x: 10, y: 0, z: 0 }, { x: 1, z: 5 });
 		reset();
 
-		const _id = registerCubePile({ x: 20, y: 0, z: 0 }, ["c1"], ["iron"], [3]);
+		registerCubePile({ x: 20, y: 0, z: 0 }, ["c1"], ["iron"], [3]);
 		const visible = getVisiblePiles(
 			{ x: 0, y: 0, z: 0 },
 			"player",

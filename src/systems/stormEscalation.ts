@@ -66,6 +66,7 @@ const LIGHTNING_STRIKE_DAMAGE = stormConfig.lightningStrikeDamage;
 let currentPhaseIndex = 0;
 let phaseTimer = 0;
 let escalationLevel = 0;
+// @ts-ignore written but value not yet read
 let totalTicksElapsed = 0;
 let pendingEvents: LightningStrikeEvent[] = [];
 

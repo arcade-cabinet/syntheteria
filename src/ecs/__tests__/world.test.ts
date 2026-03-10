@@ -296,7 +296,7 @@ describe("switchBot", () => {
 	});
 
 	it("wraps around — switching enough times returns to original bot", () => {
-		const _bot1 = addPlayerBot("bot1", true);
+		addPlayerBot("bot1", true);
 		addPlayerBot("bot2", false);
 
 		// Switch once (bot1 -> bot2)

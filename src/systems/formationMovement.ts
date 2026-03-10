@@ -10,7 +10,8 @@
  * Tunables sourced from config/botMovement.json.
  */
 
-import { config as _config } from "../../config";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { config } from "../../config";
 
 // ---------------------------------------------------------------------------
 // Types

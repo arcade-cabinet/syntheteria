@@ -761,7 +761,7 @@ describe("Integration: tech progression", () => {
 		expect(newAvailable.find((t) => t.id === firstTech.id)).toBeUndefined();
 
 		// If there's a tech that requires firstTech, it should now be available
-		const _unlockedByFirst = newAvailable.filter((t) =>
+		newAvailable.filter((t) =>
 			t.prerequisites.includes(firstTech.id),
 		);
 		// The tech tree may or may not have dependent techs — just verify no crash
@@ -873,9 +873,9 @@ describe("Integration: quest lifecycle", () => {
 		expect(completedQuests).toContain(firstQuest.id);
 
 		// Check rewards were granted (they add to resource pool)
-		const _resources = getResources();
+		getResources();
 		// Rewards vary by quest — just verify no crash and next quest started
-		const _newActive = getActiveQuests();
+		getActiveQuests();
 		// Next quest should have auto-started (if there is one)
 		if (getQuestProgress(firstQuest.id)!.target > 0) {
 			// quest was valid and completed

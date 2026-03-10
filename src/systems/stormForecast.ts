@@ -102,7 +102,8 @@ const TRANSITION_WEIGHTS: Record<WeatherEventType, Record<WeatherEventType, numb
 // Seeded PRNG — mulberry32
 // ---------------------------------------------------------------------------
 
-let _rngSeed = 0;
+// @ts-ignore written but value not yet read
+let rngSeed = 0;
 let rngState = 0;
 
 function mulberry32(): number {
@@ -128,7 +129,8 @@ let lastWarningLevel: StormWarningLevel = "none";
 let listeners: ForecastListener[] = [];
 let nextListenerId = 1;
 let predictions: PredictionRecord[] = [];
-let _lastUpdateTime = 0;
+// @ts-ignore written but value not yet read
+let lastUpdateTime = 0;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -309,7 +311,7 @@ function notifyListeners(
  * Must be called before using any other forecast functions.
  */
 export function initForecast(seed: number): void {
-	_rngSeed = seed;
+	rngSeed = seed;
 	rngState = seed;
 	initialized = true;
 	forecastAccuracy = BASE_FORECAST_ACCURACY;
@@ -318,7 +320,7 @@ export function initForecast(seed: number): void {
 	listeners = [];
 	nextListenerId = 1;
 	predictions = [];
-	_lastUpdateTime = 0;
+	lastUpdateTime = 0;
 
 	// Generate initial schedule covering the first cycle
 	ensureScheduleCovers(BASE_CYCLE_LENGTH * 3);
@@ -480,7 +482,7 @@ export function updateForecast(currentTime: number): void {
 		notifyListeners(newLevel, stormEvent);
 	}
 
-	_lastUpdateTime = currentTime;
+	lastUpdateTime = currentTime;
 }
 
 /**
@@ -532,7 +534,7 @@ export function recordPrediction(
  */
 export function reset(): void {
 	initialized = false;
-	_rngSeed = 0;
+	rngSeed = 0;
 	rngState = 0;
 	forecastAccuracy = BASE_FORECAST_ACCURACY;
 	eventSchedule = [];
@@ -540,7 +542,7 @@ export function reset(): void {
 	listeners = [];
 	nextListenerId = 1;
 	predictions = [];
-	_lastUpdateTime = 0;
+	lastUpdateTime = 0;
 }
 
 /**

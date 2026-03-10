@@ -68,7 +68,7 @@ describe("formation creation", () => {
 	});
 
 	it("removes bots from previous formation when creating new one", () => {
-		const _id1 = createFormation(["bot_1", "bot_2", "bot_3"]);
+		createFormation(["bot_1", "bot_2", "bot_3"]);
 		const id2 = createFormation(["bot_1", "bot_4"]);
 
 		// bot_1 should be in new formation, not old
@@ -230,7 +230,7 @@ describe("bot removal", () => {
 	});
 
 	it("recalculates offsets after removal", () => {
-		const _id = createFormation(["b1", "b2", "b3", "b4"], "line", 3);
+		createFormation(["b1", "b2", "b3", "b4"], "line", 3);
 		removeFromFormation("b2");
 
 		// Should now have 3 bots with recalculated offsets

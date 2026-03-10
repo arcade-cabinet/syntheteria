@@ -56,7 +56,8 @@ export interface QuestTemplate {
 // Config references
 // ---------------------------------------------------------------------------
 
-const _questsCfg = config.quests;
+// @ts-ignore reserved for future use
+const questsCfg = config.quests;
 
 // ---------------------------------------------------------------------------
 // Constants

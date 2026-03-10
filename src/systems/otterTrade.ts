@@ -157,7 +157,8 @@ const DEFAULT_CATALOG: TradeItem[] = [
 ];
 
 /** All known material types for the legendary "one of each" trade. */
-const _ALL_MATERIAL_TYPES = [
+// @ts-ignore reserved for future use
+const ALL_MATERIAL_TYPES = [
 	"scrap_iron",
 	"iron",
 	"copper",
@@ -501,7 +502,8 @@ export function executeTrade(
 	}
 
 	// Check affordability
-	const { affordable, missing: _missing } = canAffordTrade(traderId, itemId, playerInventory);
+	// @ts-ignore missing reserved for future use
+	const { affordable, missing } = canAffordTrade(traderId, itemId, playerInventory);
 	if (!affordable) {
 		return {
 			success: false,

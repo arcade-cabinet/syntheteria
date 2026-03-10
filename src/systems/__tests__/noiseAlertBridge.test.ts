@@ -10,7 +10,6 @@ import {
 	getPendingOrderCount,
 	reset,
 } from "../noiseAlertBridge";
-import type { InvestigationOrder } from "../noiseAlertBridge";
 
 // ---------------------------------------------------------------------------
 // Helpers

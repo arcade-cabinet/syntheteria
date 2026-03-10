@@ -202,7 +202,7 @@ describe("worldPRNG", () => {
 	it("is deterministic for the same seed + purpose", () => {
 		setWorldSeed(100);
 		const rng1 = worldPRNG("terrain");
-		const _rng2 = worldPRNG("terrain");
+		worldPRNG("terrain");
 		// Both should produce the same values
 		// (since they're derived from the same seed + purpose hash)
 		setWorldSeed(100);

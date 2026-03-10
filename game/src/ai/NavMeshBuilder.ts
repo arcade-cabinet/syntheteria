@@ -312,7 +312,10 @@ export function buildNavMesh(
 
 	// Add each region's centroid to the spatial index
 	for (const region of navMesh.regions) {
-		spatialIndex.addEntityToPartition(region, region.centroid);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const partitionIndex = spatialIndex.getIndexForPosition(region.centroid);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		spatialIndex.addEntityToPartition(region as any, partitionIndex);
 	}
 
 	navMesh.spatialIndex = spatialIndex;

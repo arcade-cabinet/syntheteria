@@ -17,6 +17,7 @@
 
 import type { Entity as KootaEntity } from "koota";
 import type { Entity as MiniplexEntity } from "../types";
+import type { FactionId } from "../../../ecs/traits/core";
 import { world as miniplexWorld } from "../world";
 import {
 	Automation,
@@ -98,7 +99,7 @@ function ensureKootaEntity(mpEntity: MiniplexEntity): KootaEntity {
 			y: mpEntity.worldPosition?.y ?? 0,
 			z: mpEntity.worldPosition?.z ?? 0,
 		}),
-		Faction({ value: mpEntity.faction ?? "feral" }),
+		Faction({ value: (mpEntity.faction ?? "feral") as string as FactionId }),
 	);
 
 	// Add IsPlayerControlled trait if the Miniplex entity has it
@@ -388,7 +389,7 @@ function syncPosition(mpEntity: MiniplexEntity, kEntity: KootaEntity): void {
 function syncFaction(mpEntity: MiniplexEntity, kEntity: KootaEntity): void {
 	if (mpEntity.faction) {
 		kEntity.set(Faction, {
-			value: mpEntity.faction as ReturnType<typeof Faction>["value"],
+			value: mpEntity.faction as string as FactionId,
 		});
 	}
 }

@@ -20,42 +20,43 @@
  * Keys used in the GOAP world state.
  * Each key represents a boolean condition about the faction's situation.
  */
-export enum WorldStateKey {
+export const WorldStateKey = {
 	/** Faction has idle units available for assignment */
-	HAS_IDLE_UNITS = "has_idle_units",
+	HAS_IDLE_UNITS: "has_idle_units",
 	/** Faction has enough resources to build structures */
-	HAS_RESOURCES = "has_resources",
+	HAS_RESOURCES: "has_resources",
 	/** Faction has explored enough map to know where to expand */
-	HAS_SCOUTED = "has_scouted",
+	HAS_SCOUTED: "has_scouted",
 	/** Faction has an outpost or forward base */
-	HAS_OUTPOST = "has_outpost",
+	HAS_OUTPOST: "has_outpost",
 	/** Faction's territory has defensive structures */
-	HAS_DEFENSES = "has_defenses",
+	HAS_DEFENSES: "has_defenses",
 	/** Faction has a target enemy location identified */
-	HAS_ENEMY_TARGET = "has_enemy_target",
+	HAS_ENEMY_TARGET: "has_enemy_target",
 	/** Faction has active miners producing resources */
-	HAS_MINERS = "has_miners",
+	HAS_MINERS: "has_miners",
 	/** Faction has completed a tech research */
-	HAS_TECH_PROGRESS = "has_tech_progress",
+	HAS_TECH_PROGRESS: "has_tech_progress",
 	/** Faction has a trade partner available */
-	HAS_TRADE_PARTNER = "has_trade_partner",
+	HAS_TRADE_PARTNER: "has_trade_partner",
 	/** Faction territory has been expanded */
-	TERRITORY_EXPANDED = "territory_expanded",
+	TERRITORY_EXPANDED: "territory_expanded",
 	/** Faction resources have been gathered this cycle */
-	RESOURCES_GATHERED = "resources_gathered",
+	RESOURCES_GATHERED: "resources_gathered",
 	/** Faction defenses are built */
-	DEFENSES_BUILT = "defenses_built",
+	DEFENSES_BUILT: "defenses_built",
 	/** Faction has researched new tech */
-	TECH_RESEARCHED = "tech_researched",
+	TECH_RESEARCHED: "tech_researched",
 	/** Faction has launched an attack */
-	ATTACK_LAUNCHED = "attack_launched",
+	ATTACK_LAUNCHED: "attack_launched",
 	/** Faction has scouted new areas */
-	MAP_SCOUTED = "map_scouted",
+	MAP_SCOUTED: "map_scouted",
 	/** Faction has completed a trade */
-	TRADE_COMPLETE = "trade_complete",
+	TRADE_COMPLETE: "trade_complete",
 	/** Faction has hoarded cubes */
-	CUBES_HOARDED = "cubes_hoarded",
-}
+	CUBES_HOARDED: "cubes_hoarded",
+} as const;
+export type WorldStateKey = (typeof WorldStateKey)[keyof typeof WorldStateKey];
 
 /** World state is a partial boolean map over WorldStateKey values. */
 export type WorldState = Partial<Record<WorldStateKey, boolean>>;

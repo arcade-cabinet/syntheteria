@@ -10,24 +10,25 @@
  * All strategic goals available to civilization governors.
  * These map to the `evaluatorWeights` keys in the CivilizationGovernorSchema.
  */
-export enum CivGoal {
+export const CivGoal = {
 	/** Claim new territory by establishing outposts */
-	EXPAND_TERRITORY = "expand_territory",
+	EXPAND_TERRITORY: "expand_territory",
 	/** Collect resources (scrap, e-waste, cubes) from the world */
-	GATHER_RESOURCES = "gather_resources",
+	GATHER_RESOURCES: "gather_resources",
 	/** Build walls and turrets around controlled territory */
-	BUILD_DEFENSES = "build_defenses",
+	BUILD_DEFENSES: "build_defenses",
 	/** Advance through the technology tree */
-	RESEARCH_TECH = "research_tech",
+	RESEARCH_TECH: "research_tech",
 	/** Launch an attack against an enemy faction or the player */
-	ATTACK_ENEMY = "attack_enemy",
+	ATTACK_ENEMY: "attack_enemy",
 	/** Send scouts to reveal unexplored map regions */
-	SCOUT_MAP = "scout_map",
+	SCOUT_MAP: "scout_map",
 	/** Propose a trade deal with another faction */
-	TRADE = "trade",
+	TRADE: "trade",
 	/** Accumulate material cubes for future use */
-	HOARD_CUBES = "hoard_cubes",
-}
+	HOARD_CUBES: "hoard_cubes",
+} as const;
+export type CivGoal = (typeof CivGoal)[keyof typeof CivGoal];
 
 /**
  * A scored goal ready for prioritization by the governor.

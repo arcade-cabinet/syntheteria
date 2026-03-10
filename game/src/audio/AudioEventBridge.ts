@@ -33,6 +33,10 @@ import {
 import { onResourceGain } from "../systems/resources";
 import { onSelectionChange } from "../input/selectionState";
 import type { CombatEvent } from "../systems/combat";
+import {
+	getCoreLoopSnapshot,
+	subscribeCoreLoop,
+} from "../systems/CoreLoopSystem";
 
 // ---------------------------------------------------------------------------
 // Internal tracking state
@@ -241,6 +245,36 @@ export function initAudioBridge(): void {
 		}
 	});
 	unsubscribers.push(unsubSelection);
+
+	// ── Core loop state → grinding, compression, cube sounds ─────────────
+	let prevHarvesting = false;
+	let prevCompressing = false;
+	const unsubCoreLoop = subscribeCoreLoop(() => {
+		const snap = getCoreLoopSnapshot();
+
+		// Harvesting started → play continuous grinding
+		if (snap.isHarvesting && !prevHarvesting) {
+			if (throttle("grinding", 300)) {
+				playGrinding();
+			}
+		}
+		prevHarvesting = snap.isHarvesting;
+
+		// Compression started → play compression sound
+		if (snap.isCompressing && !prevCompressing) {
+			if (throttle("compression", 500)) {
+				playCompression();
+			}
+		}
+		// Compression completed → play cube place sound
+		if (!snap.isCompressing && prevCompressing) {
+			if (throttle("cube_place_compress", 300)) {
+				playCubePlace();
+			}
+		}
+		prevCompressing = snap.isCompressing;
+	});
+	unsubscribers.push(unsubCoreLoop);
 
 	// ── Game state snapshot polling ───────────────────────────────────────
 	// Subscribe to the game state store — fires on every simulation tick

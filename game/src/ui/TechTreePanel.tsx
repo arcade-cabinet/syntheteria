@@ -80,7 +80,6 @@ function layoutTechTree(tree: TechNode[]): LayoutNode[] {
 
 function TechTreeNode({
 	layoutNode,
-	factionId,
 	factionColor,
 	isAvailable,
 	isComplete,

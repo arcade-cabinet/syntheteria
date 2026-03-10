@@ -15,16 +15,17 @@
 // Types
 // ---------------------------------------------------------------------------
 
-export enum FormationType {
+export const FormationType = {
 	/** Side by side, centered on the leader. */
-	LINE = "line",
+	LINE: "line",
 	/** V-shape with leader at the point. */
-	WEDGE = "wedge",
+	WEDGE: "wedge",
 	/** Single file behind the leader. */
-	COLUMN = "column",
+	COLUMN: "column",
 	/** Ring around the leader. */
-	CIRCLE = "circle",
-}
+	CIRCLE: "circle",
+} as const;
+export type FormationType = (typeof FormationType)[keyof typeof FormationType];
 
 export interface FormationSpacing {
 	/** Lateral spacing for LINE formation (meters). Default: 2 */

@@ -16,8 +16,8 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+	type CompressionResult,
 	DEFAULT_COMPRESSION_CONFIGS,
-	type MaterialCubeData,
 	_resetCompressionState,
 	cancelCompression,
 	getCompressionProgress,
@@ -335,7 +335,7 @@ describe("compression completion", () => {
 		// Advance in small steps
 		const steps = 20;
 		const stepSize = compressionTime / steps;
-		let lastResult = { completed: false, cube: undefined as MaterialCubeData | undefined };
+		let lastResult: CompressionResult = { completed: false };
 		for (let i = 0; i < steps; i++) {
 			lastResult = updateCompression(stepSize);
 		}

@@ -23,9 +23,12 @@ import { materialFactory } from "./MaterialFactory";
 interface CubeMaterialDef {
 	displayName: string;
 	texturePath: string;
-	texturePrefix: string;
-	hasMetalness: boolean;
-	hasAO: boolean;
+	/** Texture file prefix (e.g. "Metal038_1K-JPG"). Derived from texturePath if absent. */
+	texturePrefix?: string;
+	/** Whether the material has a dedicated metalness map. Defaults to true for metalness > 0.5. */
+	hasMetalness?: boolean;
+	/** Whether the material has an AO map. Defaults to false. */
+	hasAO?: boolean;
 	metalness: number;
 	roughness: number;
 	displacementScale: number;
@@ -33,10 +36,27 @@ interface CubeMaterialDef {
 	fallbackColor: string;
 }
 
-const MATERIAL_DEFS = cubeMaterialsConfig.materials as Record<
+const RAW_DEFS = cubeMaterialsConfig.materials as unknown as Record<
 	string,
 	CubeMaterialDef
 >;
+
+/** Populate computed defaults for fields the JSON config may omit. */
+function withDefaults(def: CubeMaterialDef): Required<CubeMaterialDef> {
+	const pathParts = def.texturePath.replace(/\/$/, "").split("/");
+	const dirName = pathParts[pathParts.length - 1] ?? "unknown";
+	return {
+		...def,
+		texturePrefix: def.texturePrefix ?? dirName,
+		hasMetalness: def.hasMetalness ?? def.metalness > 0.5,
+		hasAO: def.hasAO ?? false,
+	};
+}
+
+const MATERIAL_DEFS: Record<string, Required<CubeMaterialDef>> = {};
+for (const [key, def] of Object.entries(RAW_DEFS)) {
+	MATERIAL_DEFS[key] = withDefaults(def);
+}
 
 // ---------------------------------------------------------------------------
 // Texture path construction

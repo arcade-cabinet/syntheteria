@@ -13,13 +13,20 @@
  * - Territory contestation: overlapping claims reduce both strengths
  */
 
-import territoryConfig from "../../config/territory.json" with { type: "json" };
 import {
 	calculateInfluence,
 	getOverlappingTerritories,
 	getTerritoryOwner,
 	type Territory,
 } from "./territory";
+
+// Inline territory config (mirrors config/territory.json) to avoid
+// import-assertion syntax that TypeScript / Vitest cannot resolve.
+const territoryConfig = {
+	resourceBonusInTerritory: 1.5,
+	buildingCostReduction: 0.8,
+	contestationDecayRate: 0.01,
+} as const;
 
 // ---------------------------------------------------------------------------
 // Resource bonus

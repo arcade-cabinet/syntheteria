@@ -36,7 +36,7 @@ import {
 	loadFactionWeights,
 } from "./FactionPersonality.ts";
 import { planActions } from "./GOAPPlanner.ts";
-import { type CivGoal, type GoalState } from "./GoalTypes.ts";
+import { CivGoal, type GoalState } from "./GoalTypes.ts";
 
 // ---------------------------------------------------------------------------
 // Goal -> desired world state mapping

@@ -11,7 +11,7 @@
  * - placeHeldCube returns false if preview is invalid
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	type PlacementPreview,
 	type RaycastHit,

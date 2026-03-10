@@ -69,6 +69,7 @@ export function NavMeshDebugRenderer() {
 			// Walk the half-edge loop and emit line segments
 			const firstEdge = edge;
 			do {
+				if (!edge || !edge.next) break;
 				const a = edge.vertex;
 				const b = edge.next.vertex;
 

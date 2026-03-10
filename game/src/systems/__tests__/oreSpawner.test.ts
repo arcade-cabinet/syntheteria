@@ -13,8 +13,6 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-	type CreatePhysicsBody,
-	type OreDepositData,
 	ORE_TYPE_CONFIGS,
 	VALID_ORE_TYPES,
 	getAllDeposits,

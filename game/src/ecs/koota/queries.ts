@@ -106,10 +106,12 @@ export const poweredBuildings = createQuery(Building, Faction, Position);
 export const allBelts = createQuery(Belt, Position);
 
 /** Belts that have a successor in the chain. */
-export const linkedBelts = createQuery(Belt, NextBelt("*"));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const linkedBelts = createQuery(Belt, NextBelt("*") as any);
 
 /** Terminal belts (no successor — items pile up here). */
-export const terminalBelts = createQuery(Belt, Not(NextBelt("*")));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const terminalBelts = createQuery(Belt, Not(NextBelt("*") as any));
 
 /**
  * Active belts — belts currently carrying an item.
@@ -119,13 +121,15 @@ export const terminalBelts = createQuery(Belt, Not(NextBelt("*")));
 export const activeBelts = createQuery(Belt, Position);
 
 /** All wires in the network — mirrors `wires`. */
-export const allWires = createQuery(Wire, ConnectsFrom("*"), ConnectsTo("*"));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const allWires = createQuery(Wire, ConnectsFrom("*") as any, ConnectsTo("*") as any);
 
 /**
  * Power wires — all wires with type='power'.
  * Filter `type === 'power'` at read time since Wire.type is a data field.
  */
-export const powerWires = createQuery(Wire, ConnectsFrom("*"), ConnectsTo("*"));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const powerWires = createQuery(Wire, ConnectsFrom("*") as any, ConnectsTo("*") as any);
 
 /** Mining drills — mirrors `miners`. */
 export const allMiners = createQuery(Miner, Building, Position);
@@ -159,23 +163,27 @@ export const allOreDeposits = createQuery(OreDeposit, Position);
 export const allMaterialCubes = createQuery(MaterialCube, Position);
 
 /** Cubes currently being carried by a unit. */
-export const heldCubes = createQuery(MaterialCube, HeldBy("*"));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const heldCubes = createQuery(MaterialCube, HeldBy("*") as any);
 
 /** Cubes riding on conveyor belts. */
-export const beltCubes = createQuery(MaterialCube, OnBelt("*"));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const beltCubes = createQuery(MaterialCube, OnBelt("*") as any);
 
 /** Cubes stored in hoppers. */
-export const hopperCubes = createQuery(MaterialCube, InHopper("*"));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const hopperCubes = createQuery(MaterialCube, InHopper("*") as any);
 
 /** Cubes placed as structural elements on the build grid. */
 export const placedCubes = createQuery(MaterialCube, PlacedAt);
 
 /** Free cubes — not held, not on belt, not in hopper, not placed. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const freeCubes = createQuery(
 	MaterialCube,
-	Not(HeldBy("*")),
-	Not(OnBelt("*")),
-	Not(InHopper("*")),
+	Not(HeldBy("*") as any),
+	Not(OnBelt("*") as any),
+	Not(InHopper("*") as any),
 	Not(PlacedAt),
 );
 

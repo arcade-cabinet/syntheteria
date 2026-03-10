@@ -278,6 +278,25 @@ export function getHeldCube(): string | null {
 	return heldCubeId;
 }
 
+/**
+ * Get all registered cube entities (for rendering).
+ */
+export function getAllCubes(): ReadonlyMap<string, CubeEntity> {
+	return cubeRegistry;
+}
+
+/**
+ * Set a cube's position (used by heldCubeSync to move held cubes).
+ */
+export function setCubePosition(id: string, pos: Vec3): void {
+	const cube = cubeRegistry.get(id);
+	if (cube) {
+		cube.position.x = pos.x;
+		cube.position.y = pos.y;
+		cube.position.z = pos.z;
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Test reset
 // ---------------------------------------------------------------------------

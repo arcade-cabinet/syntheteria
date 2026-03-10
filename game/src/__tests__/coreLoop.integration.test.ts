@@ -56,7 +56,6 @@ import {
 
 // Cube placement
 import {
-	canPlaceCube,
 	placeCube,
 	removeCube,
 	getOccupiedSlots,
@@ -73,10 +72,7 @@ import {
 
 // Grid snap
 import {
-	snapToGrid,
 	gridToWorld,
-	gridKey,
-	getAdjacentSlots,
 } from "../systems/gridSnap.ts";
 
 // Wall builder
@@ -87,7 +83,6 @@ import {
 
 // Wall placement
 import {
-	placeWall,
 	buildWall,
 } from "../systems/wallPlacement.ts";
 

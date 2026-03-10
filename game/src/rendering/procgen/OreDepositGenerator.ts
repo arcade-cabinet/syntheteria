@@ -19,7 +19,8 @@
  */
 
 import * as THREE from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+// mergeGeometries imported for future multi-lobe deposits
+import type {} from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { createBoxFromPanels, createPanel, type BoxFaceOptions } from "./PanelGeometry.ts";
 
 // ---------------------------------------------------------------------------

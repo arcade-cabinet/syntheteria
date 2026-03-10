@@ -37,7 +37,9 @@ import { CityRenderer } from "./rendering/CityRenderer";
 import { EnvironmentSetup } from "./rendering/EnvironmentSetup";
 import { FactoryRenderer } from "./rendering/FactoryRenderer";
 import { Flashlight } from "./rendering/Flashlight";
+import { FreeCubeRenderer } from "./rendering/FreeCubeRenderer";
 import { FurnaceRenderer } from "./rendering/FurnaceRenderer";
+import { PlacementPreview } from "./rendering/PlacementPreview";
 import { HologramRenderer } from "./rendering/HologramRenderer";
 import { LandscapeProps } from "./rendering/LandscapeProps";
 import { OreDepositRenderer } from "./rendering/OreDepositRenderer";
@@ -202,7 +204,7 @@ function initializeWorld(seed: number) {
 		x: 20,
 		z: 10,
 		fragmentId: frag,
-		resourceType: "scrapMetal",
+		resourceType: "scrap_metal",
 	});
 
 	// Processor — smelter to refine scrap
@@ -401,8 +403,10 @@ export default function App() {
 				<FactoryRenderer />
 				<HologramRenderer />
 				<OreDepositRenderer />
+				<FreeCubeRenderer />
 				<PlacedCubeRenderer />
 				<FurnaceRenderer />
+				<PlacementPreview />
 
 				<FPSCamera />
 				<CameraEffects />

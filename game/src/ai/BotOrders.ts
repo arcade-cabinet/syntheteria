@@ -20,17 +20,18 @@ import type { Vec3 } from "../ecs/types.ts";
 // Order types
 // ---------------------------------------------------------------------------
 
-export enum BotOrderType {
-	PATROL_AREA = "patrol_area",
-	ATTACK_TARGET = "attack_target",
-	GUARD_POSITION = "guard_position",
-	GATHER_RESOURCES = "gather_resources",
-	RETURN_TO_BASE = "return_to_base",
-	FOLLOW = "follow",
-}
+export const BotOrderType = {
+	PATROL_AREA: "patrol_area",
+	ATTACK_TARGET: "attack_target",
+	GUARD_POSITION: "guard_position",
+	GATHER_RESOURCES: "gather_resources",
+	RETURN_TO_BASE: "return_to_base",
+	FOLLOW: "follow",
+} as const;
+export type BotOrderType = (typeof BotOrderType)[keyof typeof BotOrderType];
 
 export interface PatrolAreaOrder {
-	type: BotOrderType.PATROL_AREA;
+	type: typeof BotOrderType.PATROL_AREA;
 	/** Center of the patrol zone in world space. */
 	center: Vec3;
 	/** Radius within which the bot picks random waypoints. */
@@ -38,13 +39,13 @@ export interface PatrolAreaOrder {
 }
 
 export interface AttackTargetOrder {
-	type: BotOrderType.ATTACK_TARGET;
+	type: typeof BotOrderType.ATTACK_TARGET;
 	/** Entity ID of the target to attack. */
 	targetId: string;
 }
 
 export interface GuardPositionOrder {
-	type: BotOrderType.GUARD_POSITION;
+	type: typeof BotOrderType.GUARD_POSITION;
 	/** World-space position to defend. */
 	position: Vec3;
 	/** Maximum distance the bot may stray from the guard point. */
@@ -52,17 +53,17 @@ export interface GuardPositionOrder {
 }
 
 export interface GatherResourcesOrder {
-	type: BotOrderType.GATHER_RESOURCES;
+	type: typeof BotOrderType.GATHER_RESOURCES;
 	/** Entity ID of the resource deposit to gather from. */
 	depositId: string;
 }
 
 export interface ReturnToBaseOrder {
-	type: BotOrderType.RETURN_TO_BASE;
+	type: typeof BotOrderType.RETURN_TO_BASE;
 }
 
 export interface FollowOrder {
-	type: BotOrderType.FOLLOW;
+	type: typeof BotOrderType.FOLLOW;
 	/** Entity ID of the entity to follow. */
 	targetId: string;
 }

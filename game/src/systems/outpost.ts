@@ -9,8 +9,21 @@
  * metadata, mirroring the pattern used by resources and fabrication.
  */
 
-import territoryConfig from "../../config/territory.json" with { type: "json" };
 import { getTerrainHeight } from "../ecs/terrain";
+
+// Inline territory config (mirrors config/territory.json) to avoid
+// import-assertion syntax that TypeScript / Vitest cannot resolve.
+const territoryConfig = {
+	outpostTiers: [
+		{ tier: 1, radius: 10, cubeCost: 20, upgradeCost: 40 },
+		{ tier: 2, radius: 20, cubeCost: 40, upgradeCost: 80 },
+		{ tier: 3, radius: 35, cubeCost: 80 },
+	],
+	resourceBonusInTerritory: 1.5,
+	buildingCostReduction: 0.8,
+	contestationDecayRate: 0.01,
+	minimumOutpostSpacing: 15,
+} as const;
 import type { Entity } from "../ecs/types";
 import { world } from "../ecs/world";
 import {

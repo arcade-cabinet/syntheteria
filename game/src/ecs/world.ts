@@ -18,6 +18,9 @@ export const lightningRods = world.with(
 );
 export const otters = world.with("otter", "worldPosition");
 
+// Placed cube queries (for stockpile rendering)
+export const placedCubes = world.with("placedAt", "materialCube", "worldPosition");
+
 // Factory queries
 export const belts = world.with("belt", "worldPosition");
 export const wires = world.with("wire");

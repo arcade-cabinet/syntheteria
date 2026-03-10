@@ -14,7 +14,6 @@ import * as THREE from "three";
 import {
 	getCubeAt,
 	getOccupiedSlots,
-	type PlacedCubeData,
 } from "../systems/cubePlacement";
 import { GRID_SIZE, gridToWorld } from "../systems/gridSnap";
 import { ORE_TYPE_CONFIGS } from "../systems/oreSpawner";

@@ -14,7 +14,7 @@
  * Config reference: config/furnace.json  (tiers[0].recipes)
  */
 
-import { type FurnaceData, getFurnace } from "./furnace";
+import { getFurnace } from "./furnace";
 
 // ---------------------------------------------------------------------------
 // Types

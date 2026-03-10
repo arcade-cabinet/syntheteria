@@ -11,11 +11,10 @@
  * - Edge cases: empty pattern, single cell, multi-layer (3D stacking)
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { type GridCoord, gridKey } from "../gridSnap";
 import {
 	type Blueprint,
-	type MatchResult,
 	matchBlueprint,
 	rotatePattern90,
 } from "../patternMatcher";

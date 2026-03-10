@@ -17,6 +17,11 @@ import {
 	getActivePlacement,
 	updateGhostPosition,
 } from "../systems/buildingPlacement";
+import { isCompressing, startCompression } from "../systems/compression";
+import { dropCube, getHeldCube, grabCube } from "../systems/grabber";
+import { getPowderStorage, startHarvesting } from "../systems/harvesting";
+import { getHoveredEntity } from "./ObjectSelectionSystem";
+import { setSelected } from "./selectionState";
 
 const raycaster = new THREE.Raycaster();
 const INTERACT_RANGE = 4.0;
@@ -94,11 +99,88 @@ export function FPSInput() {
 		}
 	}, [camera]);
 
+	// --- Quick-grab: G key toggles grab/drop ---
+	const handleGrab = useCallback(() => {
+		const bot = getActivePlayerBot();
+		if (!bot) return;
+		const wp = bot.worldPosition;
+
+		if (getHeldCube() !== null) {
+			// Drop in front of player
+			const forward = new THREE.Vector3();
+			camera.getWorldDirection(forward);
+			dropCube({
+				x: wp.x + forward.x * 1.5,
+				y: 0.25,
+				z: wp.z + forward.z * 1.5,
+			});
+			return;
+		}
+
+		// Try to grab the hovered entity
+		const hovered = getHoveredEntity();
+		if (hovered.entityId) {
+			grabCube(hovered.entityId, wp);
+		}
+	}, [camera]);
+
+	// --- Compress: C key starts compression of highest-quantity powder ---
+	const handleCompress = useCallback(() => {
+		if (isCompressing()) return;
+		const powderStorage = getPowderStorage();
+		if (powderStorage.size === 0) return;
+
+		// Find material with most powder
+		let bestMaterial = "";
+		let bestAmount = 0;
+		for (const [material, amount] of powderStorage) {
+			if (amount > bestAmount) {
+				bestMaterial = material;
+				bestAmount = amount;
+			}
+		}
+		if (bestMaterial) {
+			startCompression(bestMaterial, powderStorage);
+		}
+	}, []);
+
+	// --- Harvest: F key starts harvesting the looked-at deposit ---
+	const handleHarvest = useCallback(() => {
+		const bot = getActivePlayerBot();
+		if (!bot) return;
+		const wp = bot.worldPosition;
+		const hovered = getHoveredEntity();
+		if (hovered.entityId) {
+			// Tell InteractionSystem by selecting + dispatching
+			setSelected(hovered.entityId);
+			startHarvesting(hovered.entityId, wp, () => {
+				// Return deposit position (approximate from hover)
+				if (hovered.hitPoint) {
+					return {
+						x: hovered.hitPoint.x,
+						y: hovered.hitPoint.y,
+						z: hovered.hitPoint.z,
+					};
+				}
+				return wp;
+			});
+		}
+	}, []);
+
 	useEffect(() => {
 		const onKeyDown = (e: KeyboardEvent) => {
 			const key = e.key.toLowerCase();
 			if (key === "e") {
 				handleInteract();
+			}
+			if (key === "g") {
+				handleGrab();
+			}
+			if (key === "c") {
+				handleCompress();
+			}
+			if (key === "f") {
+				handleHarvest();
 			}
 			if (key === "escape" && getActivePlacement()) {
 				cancelPlacement();
@@ -121,7 +203,7 @@ export function FPSInput() {
 			window.removeEventListener("keydown", onKeyDown);
 			canvas.removeEventListener("pointerdown", onPointerDown);
 		};
-	}, [gl, handleInteract]);
+	}, [gl, handleInteract, handleGrab, handleCompress, handleHarvest]);
 
 	return null;
 }

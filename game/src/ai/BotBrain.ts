@@ -35,34 +35,36 @@ import { BotOrderType, type BotOrder } from "./BotOrders.ts";
 // Bot states
 // ---------------------------------------------------------------------------
 
-export enum BotState {
-	IDLE = "idle",
-	PATROL = "patrol",
-	SEEK_TARGET = "seek_target",
-	ATTACK = "attack",
-	FLEE = "flee",
-	GUARD = "guard",
-	GATHER = "gather",
-	RETURN_TO_BASE = "return_to_base",
-	FOLLOW = "follow",
-}
+export const BotState = {
+	IDLE: "idle",
+	PATROL: "patrol",
+	SEEK_TARGET: "seek_target",
+	ATTACK: "attack",
+	FLEE: "flee",
+	GUARD: "guard",
+	GATHER: "gather",
+	RETURN_TO_BASE: "return_to_base",
+	FOLLOW: "follow",
+} as const;
+export type BotState = (typeof BotState)[keyof typeof BotState];
 
 // ---------------------------------------------------------------------------
 // Steering output — what the BotBrainSystem should do with the Yuka Vehicle
 // ---------------------------------------------------------------------------
 
-export enum SteeringCommand {
+export const SteeringCommand = {
 	/** No movement — stop all steering. */
-	STOP = "stop",
+	STOP: "stop",
 	/** Seek at full speed toward a target position. */
-	SEEK = "seek",
+	SEEK: "seek",
 	/** Arrive (decelerate) at a target position. */
-	ARRIVE = "arrive",
+	ARRIVE: "arrive",
 	/** Flee away from a threat position. */
-	FLEE = "flee",
+	FLEE: "flee",
 	/** Wander randomly. */
-	WANDER = "wander",
-}
+	WANDER: "wander",
+} as const;
+export type SteeringCommand = (typeof SteeringCommand)[keyof typeof SteeringCommand];
 
 export interface SteeringOutput {
 	command: SteeringCommand;

@@ -37,6 +37,8 @@ export interface Grabbable {
 	resourceType: "scrapMetal" | "eWaste" | "intactComponents";
 	/** How much of that resource the cube is worth. */
 	value: number;
+	/** Weight of the cube (required by Entity.grabbable). */
+	weight: number;
 }
 
 /** Relation: this cube is currently held by a unit. */
@@ -47,11 +49,13 @@ export interface HeldBy {
 /**
  * Extended entity type that includes cube traits.
  * Cubes are ECS entities with worldPosition + grabbable.
+ * Uses `raidHeldBy` to avoid conflict with Entity.heldBy (which is a string).
  */
 export interface CubeEntity extends Entity {
 	worldPosition: Vec3;
 	grabbable: Grabbable;
-	heldBy?: HeldBy;
+	/** Raid-specific held-by relation (separate from Entity.heldBy). */
+	raidHeldBy?: HeldBy;
 }
 
 // ---------------------------------------------------------------------------
@@ -358,7 +362,7 @@ function tickLoot(raid: RaidPlan): void {
 		// Skip if this unit already holds a cube
 		if (
 			raid.stolenCubeIds.some(
-				(cid) => cubeEntities.get(cid)?.heldBy?.unitId === raider.id,
+				(cid) => cubeEntities.get(cid)?.raidHeldBy?.unitId === raider.id,
 			)
 		) {
 			continue;
@@ -367,7 +371,7 @@ function tickLoot(raid: RaidPlan): void {
 		const cube = findNearestAvailableCube(raider.worldPosition, LOOT_RANGE);
 		if (cube) {
 			// Grab: set HeldBy relation
-			cube.heldBy = { unitId: raider.id };
+			cube.raidHeldBy = { unitId: raider.id };
 			raid.stolenCubeIds.push(cube.id);
 			anyGrabbed = true;
 		}
@@ -384,7 +388,7 @@ function tickLoot(raid: RaidPlan): void {
 		const unloadedUnits = alive.filter(
 			(u) =>
 				!raid.stolenCubeIds.some(
-					(cid) => cubeEntities.get(cid)?.heldBy?.unitId === u.id,
+					(cid) => cubeEntities.get(cid)?.raidHeldBy?.unitId === u.id,
 				),
 		);
 		const remainingCubes = findNearestAvailableCube(
@@ -427,9 +431,9 @@ function tickRetreat(raid: RaidPlan): void {
 		// Drop all carried cubes at home position
 		for (const cid of raid.stolenCubeIds) {
 			const cube = cubeEntities.get(cid);
-			if (cube?.heldBy) {
+			if (cube?.raidHeldBy) {
 				cube.worldPosition = { ...raid.homePosition };
-				cube.heldBy = undefined;
+				cube.raidHeldBy = undefined;
 			}
 		}
 		raid.phase = "DONE";
@@ -486,7 +490,7 @@ function findNearestAvailableCube(pos: Vec3, range: number): CubeEntity | null {
 	let closestDist = range;
 
 	for (const cube of cubeEntities.values()) {
-		if (cube.heldBy) continue; // already held
+		if (cube.raidHeldBy) continue; // already held
 		const d = distXZ(pos, cube.worldPosition);
 		if (d < closestDist) {
 			closestDist = d;

@@ -123,7 +123,7 @@ export function createFurnace(
  */
 export function insertCubeIntoFurnace(
 	furnaceId: string,
-	cubeId: string,
+	_cubeId: string,
 	material: string,
 	removeCubeCallback?: RemoveCubeCallback,
 ): boolean {

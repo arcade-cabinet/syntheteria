@@ -14,7 +14,7 @@
  * import issues in test environments.
  */
 
-import { type OreDepositData, getDeposit } from "./oreSpawner";
+import { getDeposit } from "./oreSpawner";
 
 // ---------------------------------------------------------------------------
 // Types

@@ -14,8 +14,6 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-	type FurnaceData,
-	type FurnaceState,
 	_resetFurnaceState,
 	createFurnace,
 	getAllFurnaces,

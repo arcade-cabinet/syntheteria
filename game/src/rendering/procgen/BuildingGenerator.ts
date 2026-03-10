@@ -271,7 +271,7 @@ function generateLightningRod(
 // ---------------------------------------------------------------------------
 
 function generateFabricationUnit(
-  rand: SeededRandom,
+  _rand: SeededRandom,
   colors: FactionColors,
 ): THREE.Group {
   const group = new THREE.Group();

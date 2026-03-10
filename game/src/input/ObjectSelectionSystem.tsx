@@ -23,7 +23,6 @@ import type { Entity } from "../ecs/types";
 import {
 	belts,
 	buildings,
-	getActivePlayerBot,
 	hackables,
 	items,
 	miners,

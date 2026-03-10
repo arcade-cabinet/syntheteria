@@ -295,6 +295,15 @@ export type OtterEntity = Entity &
 export type PlayerEntity = Entity &
 	Required<Pick<Entity, "playerControlled" | "unit" | "worldPosition">>;
 
+/** Entity with guaranteed placedAt + materialCube + position (matches placedCubes query) */
+export interface PlacedCubeEntity extends Entity {
+	worldPosition: Vec3;
+	placedAt: PlacedAtComponent;
+	materialCube: MaterialCubeComponent;
+	/** Alias used by StockpileGlow for material ID lookup */
+	placedCube: { materialId: string };
+}
+
 // --- Component helpers ---
 
 export function hasCamera(entity: UnitEntity): boolean {

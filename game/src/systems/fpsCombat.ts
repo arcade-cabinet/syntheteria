@@ -10,7 +10,7 @@
  * player-controlled bot.
  */
 
-import type { UnitComponent, UnitEntity } from "../ecs/types";
+import type { UnitEntity } from "../ecs/types";
 import { hasFunctionalComponent } from "../ecs/types";
 import { getActivePlayerBot, units, world } from "../ecs/world";
 import { addResource } from "./resources";
@@ -146,7 +146,7 @@ export function fireWelder(): void {
  * Handles enemy retaliation against the player bot when enemies
  * are within melee range.
  */
-export function fpsCombatSystem(delta: number): void {
+export function fpsCombatSystem(_delta: number): void {
 	const bot = getActivePlayerBot();
 	if (!bot) return;
 

@@ -16,8 +16,6 @@ import {
 	getQuestProgress,
 	getQuestState,
 	onQuestComplete,
-	type QuestDefinition,
-	type QuestState,
 } from "./questSystem";
 
 // ---------------------------------------------------------------------------

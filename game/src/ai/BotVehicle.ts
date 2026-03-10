@@ -27,7 +27,12 @@ export interface BotVehicleOptions {
  * All physics constants are pulled from config/botMovement.json.
  */
 export function createBotVehicle(options: BotVehicleOptions): Vehicle {
-	const profile = config.botMovement[options.botType];
+	const profile = config.botMovement[options.botType] as {
+		maxSpeed: number;
+		maxForce: number;
+		mass: number;
+		turnRate: number;
+	};
 
 	const vehicle = new Vehicle();
 	vehicle.maxSpeed = profile.maxSpeed;

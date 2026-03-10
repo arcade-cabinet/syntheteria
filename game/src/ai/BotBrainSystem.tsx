@@ -283,13 +283,8 @@ function applySteeringOutput(
  * Place inside <Canvas> alongside <YukaSystem />.
  * Renders nothing — pure logic.
  *
- * ```tsx
- * <Canvas>
- *   <YukaSystem />
- *   <BotBrainSystem />
- *   {/* ... */}
- * </Canvas>
- * ```
+ * Usage: Place inside Canvas alongside YukaSystem.
+ * Renders nothing — pure logic.
  */
 export function BotBrainSystem() {
 	useFrame((_, delta) => {

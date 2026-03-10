@@ -68,6 +68,7 @@ function makeCube(
 		grabbable: {
 			resourceType: "scrapMetal",
 			value: 3,
+			weight: 1,
 		},
 	} as CubeEntity;
 	registerCube(cube);
@@ -269,8 +270,8 @@ describe("raidSystem", () => {
 			// LOOT tick — grabs the cube
 			executeRaid(raidId, 0);
 
-			expect(cube.heldBy).toBeDefined();
-			expect(cube.heldBy!.unitId).toBe("r1");
+			expect(cube.raidHeldBy).toBeDefined();
+			expect(cube.raidHeldBy!.unitId).toBe("r1");
 		});
 
 		it("each unit grabs at most one cube", () => {
@@ -300,8 +301,8 @@ describe("raidSystem", () => {
 
 			// Verify distinct unit assignments
 			const holders = new Set<string>();
-			if (c1.heldBy) holders.add(c1.heldBy.unitId);
-			if (c2.heldBy) holders.add(c2.heldBy.unitId);
+			if (c1.raidHeldBy) holders.add(c1.raidHeldBy.unitId);
+			if (c2.raidHeldBy) holders.add(c2.raidHeldBy.unitId);
 			expect(holders.size).toBe(2);
 		});
 
@@ -345,7 +346,7 @@ describe("raidSystem", () => {
 
 			expect(getRaidStatus(raidId)!.phase).toBe("DONE");
 			// Cube should be dropped at home
-			expect(cube.heldBy).toBeUndefined();
+			expect(cube.raidHeldBy).toBeUndefined();
 			expect(cube.worldPosition.x).toBe(homePos.x);
 			expect(cube.worldPosition.z).toBe(homePos.z);
 		});

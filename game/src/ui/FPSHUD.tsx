@@ -271,8 +271,11 @@ function Hints() {
 			<div>WASD move</div>
 			<div>MOUSE look</div>
 			<div>E interact</div>
+			<div>F harvest</div>
+			<div>C compress</div>
+			<div>G grab/drop</div>
 			<div>Q switch bot</div>
-			<div>CLICK to lock cursor</div>
+			<div>CLICK select</div>
 		</div>
 	);
 }

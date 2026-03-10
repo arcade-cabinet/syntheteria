@@ -11,7 +11,6 @@ import type { GridCoord } from "../gridSnap";
 import { _resetPlacementGrid, getCubeAt } from "../cubePlacement";
 import {
 	type StockpileCube,
-	type WallPlacementResult,
 	buildWall,
 	placeWall,
 } from "../wallPlacement";

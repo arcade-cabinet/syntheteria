@@ -18,7 +18,8 @@ import {
 } from "./compression";
 import { getAllFurnaces } from "./furnace";
 import { updateFurnaceProcessing } from "./furnaceProcessing";
-import { registerCube } from "./grabber";
+import { getHeldCube, registerCube, setCubePosition } from "./grabber";
+import { updateHeldCubePosition } from "./heldCubeSync";
 import {
 	getHarvestingState,
 	getPowderStorage,
@@ -132,6 +133,13 @@ export function CoreLoopSystem() {
 				});
 			}
 		}
+
+		// --- Held cube sync ---
+		updateHeldCubePosition(
+			{ position: playerPosition, forward: { x: _playerDir.x, y: _playerDir.y, z: _playerDir.z } },
+			getHeldCube,
+			setCubePosition,
+		);
 
 		// --- Update snapshot for HUD ---
 		const powderStorage = getPowderStorage();

@@ -240,6 +240,10 @@ function distributePowerBFS(): PowerGridSnapshot {
 		for (const { neighborId, wireEntity, wireLength } of unvisited) {
 			visited.add(neighborId);
 
+			// Guard: wireEntity.wire should always be present in the power graph,
+			// but the Entity type makes it optional.
+			if (!wireEntity.wire) continue;
+
 			// Wire capacity limits flow
 			const capacityLimit = wireEntity.wire.maxCapacity || wireMaxCapacity;
 			const flow = Math.min(powerPerBranch, capacityLimit);

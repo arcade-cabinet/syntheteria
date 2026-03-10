@@ -9,7 +9,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { gridKey } from "../gridSnap";
 import {
-	type PlacedCubeData,
 	_resetPlacementGrid,
 	canPlaceCube,
 	checkStructuralIntegrity,

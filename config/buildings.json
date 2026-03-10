@@ -48,6 +48,18 @@
       { "name": "output_chute", "functional": true, "material": "metal" }
     ]
   },
+  "turret": {
+    "powerRequired": 2,
+    "range": 12,
+    "damage": 1,
+    "fireRateTicks": 4,
+    "hitChance": 0.7,
+    "defaultComponents": [
+      { "name": "targeting_sensor", "functional": true, "material": "electronic" },
+      { "name": "barrel", "functional": true, "material": "metal" },
+      { "name": "ammo_feed", "functional": true, "material": "metal" }
+    ]
+  },
   "placementCosts": {
     "lightning_rod": [
       { "type": "scrapMetal", "amount": 8 },
@@ -57,6 +69,11 @@
       { "type": "scrapMetal", "amount": 12 },
       { "type": "eWaste", "amount": 6 },
       { "type": "intactComponents", "amount": 2 }
+    ],
+    "turret": [
+      { "type": "scrapMetal", "amount": 10 },
+      { "type": "eWaste", "amount": 5 },
+      { "type": "intactComponents", "amount": 1 }
     ]
   },
   "blueprints": {

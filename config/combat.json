@@ -16,5 +16,37 @@
     "enemyMeleeRange": 5,
     "enemyAttackChancePerFrame": 0.02,
     "hitResultValidMs": 200
+  },
+  "walls": {
+    "minWallLength": 3,
+    "defaultCubeHp": 75,
+    "wallDefenseBonus": 0.5,
+    "breachThreshold": 0.3,
+    "coverScanDistance": 3,
+    "materialWallHp": {
+      "scrap_metal": 50,
+      "scrap": 50,
+      "rock": 40,
+      "iron": 100,
+      "copper": 80,
+      "silicon": 120,
+      "steel": 200,
+      "chrome": 300,
+      "titanium": 350
+    }
+  },
+  "raid": {
+    "engageRange": 3.0,
+    "lootRange": 2.0,
+    "retreatArrivalRange": 3.0,
+    "clusterRadius": 6.0,
+    "defenderScanRadius": 12.0,
+    "forceRatioThreshold": 1.5,
+    "defenderComponentEstimate": 3,
+    "valueWeights": {
+      "scrapMetal": 1,
+      "eWaste": 2,
+      "intactComponents": 5
+    }
   }
 }

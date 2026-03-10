@@ -82,5 +82,17 @@
       "plastic": { "type": "scrapMetal", "amount": 1 },
       "electronic": { "type": "eWaste", "amount": 2 }
     }
+  },
+  "defaultMaxHopperSize": 5,
+  "compression": {
+    "cubeSize": 0.5,
+    "configs": {
+      "iron": { "powderRequired": 100, "compressionTime": 2.0 },
+      "copper": { "powderRequired": 80, "compressionTime": 1.5 },
+      "stone": { "powderRequired": 60, "compressionTime": 1.0 },
+      "scrap_iron": { "powderRequired": 100, "compressionTime": 2.0 },
+      "silicon": { "powderRequired": 120, "compressionTime": 2.5 },
+      "titanium": { "powderRequired": 150, "compressionTime": 3.0 }
+    }
   }
 }

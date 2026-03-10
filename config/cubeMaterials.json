@@ -1,72 +1,132 @@
 {
+  "scrap": {
+    "name": "Scrap",
+    "value": 0,
+    "color": "0x6b5b3d",
+    "glowColor": "0x887755",
+    "category": "metal",
+    "durability": 50,
+    "weight": 1.0,
+    "description": "Salvaged scrap metal. Cheap and fast to place, but brittle."
+  },
   "iron": {
     "name": "Iron",
     "value": 1,
     "color": "0x8a8a8a",
     "glowColor": "0x99aacc",
-    "category": "metal"
+    "category": "metal",
+    "durability": 100,
+    "weight": 2.0,
+    "description": "Standard structural iron. Reliable and balanced."
   },
   "copper": {
     "name": "Copper",
     "value": 3,
     "color": "0xb87333",
     "glowColor": "0xdd8844",
-    "category": "metal"
+    "category": "metal",
+    "durability": 75,
+    "weight": 1.8,
+    "description": "Conductive copper. Better as wiring than walls."
   },
   "steel": {
     "name": "Steel",
     "value": 5,
     "color": "0xaaaabc",
     "glowColor": "0xbbccdd",
-    "category": "metal"
+    "category": "metal",
+    "durability": 200,
+    "weight": 3.0,
+    "description": "Reinforced steel plating. Tough but heavy."
   },
   "titanium": {
     "name": "Titanium",
     "value": 12,
     "color": "0xc0c0d0",
     "glowColor": "0xddddff",
-    "category": "metal"
+    "category": "metal",
+    "durability": 350,
+    "weight": 2.5,
+    "description": "Lightweight titanium alloy. Excellent durability-to-weight ratio."
+  },
+  "concrete": {
+    "name": "Concrete",
+    "value": 2,
+    "color": "0x888888",
+    "glowColor": "0xaaaaaa",
+    "category": "mineral",
+    "durability": 150,
+    "weight": 4.0,
+    "description": "Poured concrete block. Heavy and moderately tough."
+  },
+  "composite": {
+    "name": "Composite",
+    "value": 10,
+    "color": "0x446644",
+    "glowColor": "0x66aa66",
+    "category": "advanced",
+    "durability": 250,
+    "weight": 1.5,
+    "description": "Advanced composite laminate. Light and very durable."
   },
   "silicon": {
     "name": "Silicon",
     "value": 4,
     "color": "0x556688",
     "glowColor": "0x4488cc",
-    "category": "electronic"
+    "category": "electronic",
+    "durability": 60,
+    "weight": 1.5,
+    "description": "Silicon wafer block. Fragile but essential for electronics."
   },
   "circuit": {
     "name": "Circuit Board",
     "value": 8,
     "color": "0x228844",
     "glowColor": "0x00ff88",
-    "category": "electronic"
+    "category": "electronic",
+    "durability": 40,
+    "weight": 1.0,
+    "description": "Printed circuit board. Very fragile."
   },
   "processor": {
     "name": "Processor",
     "value": 20,
     "color": "0x334455",
     "glowColor": "0x00e5ff",
-    "category": "electronic"
+    "category": "electronic",
+    "durability": 30,
+    "weight": 0.8,
+    "description": "Advanced processor chip. Extremely fragile and valuable."
   },
   "polymer": {
     "name": "Polymer",
     "value": 2,
     "color": "0x445544",
     "glowColor": "0x66aa66",
-    "category": "organic"
+    "category": "organic",
+    "durability": 80,
+    "weight": 0.5,
+    "description": "Synthetic polymer. Lightweight and flexible."
   },
   "crystal": {
     "name": "Crystal",
     "value": 15,
     "color": "0x88aacc",
     "glowColor": "0xaaddff",
-    "category": "rare"
+    "category": "rare",
+    "durability": 120,
+    "weight": 1.2,
+    "description": "Energy crystal. Resonates with power systems."
   },
   "power_core": {
     "name": "Power Core",
     "value": 25,
     "color": "0xaaaa22",
     "glowColor": "0xffff44",
-    "category": "rare"
+    "category": "rare",
+    "durability": 180,
+    "weight": 2.0,
+    "description": "Concentrated power core. Handle with extreme care."
   }
 }

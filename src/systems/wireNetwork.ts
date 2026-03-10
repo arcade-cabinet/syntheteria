@@ -7,6 +7,7 @@
  * Runs each simulation tick after the power system updates rod outputs.
  */
 
+import { config } from "../../config";
 import type { Entity } from "../ecs/types";
 import {
 	buildings,
@@ -15,6 +16,12 @@ import {
 	wires,
 	world,
 } from "../ecs/world";
+
+const WIRE_PASSTHROUGH = config.power.wirePassthroughFactor;
+const WIRE_MIN_PASSTHROUGH = config.power.wireMinPassthrough;
+const WIRE_POWER_THRESHOLD = config.power.wirePowerThreshold;
+const SIGNAL_DEGRADATION = config.power.signalDegradationPerUnit;
+const SIGNAL_MIN_STRENGTH = config.power.signalMinStrength;
 
 /**
  * Find an entity by ID. Returns undefined if not found.
@@ -124,13 +131,13 @@ function distributePowerThroughWires() {
 			wireFlows.set(wire.id, existingFlow + flow);
 
 			// Mark the neighbor as powered if it receives meaningful power
-			if (flow > 0.1) {
+			if (flow > WIRE_POWER_THRESHOLD) {
 				wirePoweredEntities.add(neighborId);
 			}
 
 			// Continue BFS — power degrades slightly through each wire segment
-			const passthrough = flow * 0.95;
-			if (passthrough > 0.05) {
+			const passthrough = flow * WIRE_PASSTHROUGH;
+			if (passthrough > WIRE_MIN_PASSTHROUGH) {
 				queue.push({
 					entityId: neighborId,
 					availablePower: passthrough,
@@ -199,7 +206,7 @@ function distributeSignalThroughWires() {
 			visited.add(neighborId);
 
 			// Signal degrades with wire length
-			const degradation = Math.max(0, 1 - wire.wire!.length * 0.02);
+			const degradation = Math.max(0, 1 - wire.wire!.length * SIGNAL_DEGRADATION);
 			const propagatedStrength = current.signalStrength * degradation;
 
 			// Set wire load based on signal strength
@@ -214,7 +221,7 @@ function distributeSignalThroughWires() {
 				neighborEntity.signalRelay.signalStrength = propagatedStrength;
 			}
 
-			if (propagatedStrength > 0.05) {
+			if (propagatedStrength > SIGNAL_MIN_STRENGTH) {
 				queue.push({
 					entityId: neighborId,
 					signalStrength: propagatedStrength,

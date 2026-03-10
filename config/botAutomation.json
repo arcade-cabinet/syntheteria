@@ -1,0 +1,6 @@
+{
+  "guardRange": 8,
+  "followDistance": 3,
+  "workDistance": 2,
+  "waypointReachThreshold": 2
+}

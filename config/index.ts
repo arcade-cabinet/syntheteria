@@ -23,6 +23,9 @@ import mapPresetsConfig from './mapPresets.json';
 import terrainConfig from './terrain.json';
 import audioConfig from './audio.json';
 import renderingConfig from './rendering.json';
+import territoryConfig from './territory.json';
+import textureMappingConfig from './textureMapping.json';
+import botAutomationConfig from './botAutomation.json';
 
 export const config = {
   units: unitsConfig,
@@ -47,6 +50,9 @@ export const config = {
   terrain: terrainConfig,
   audio: audioConfig,
   rendering: renderingConfig,
+  territory: territoryConfig,
+  textureMapping: textureMappingConfig,
+  botAutomation: botAutomationConfig,
 } as const;
 
 export type GameConfig = typeof config;

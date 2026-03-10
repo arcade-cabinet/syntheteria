@@ -30,5 +30,9 @@
   "compressionRatio": 100,
   "drillHealthDegradationPerItem": 0.001,
   "minerBufferMax": 5,
-  "defaultExtractionRate": 0.1
+  "defaultExtractionRate": 0.1,
+  "harvesting": {
+    "defaultRange": 3.0,
+    "defaultPowderCapacity": 100
+  }
 }

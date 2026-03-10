@@ -7,23 +7,13 @@
  * consumed and the output is produced.
  */
 
+import { config } from "../../config";
 import type { Entity } from "../ecs/types";
 import { processors, world } from "../ecs/world";
 
 /** Recipe maps: processorType → { inputItem → outputItem } */
-export const PROCESSING_RECIPES: Record<string, Record<string, string>> = {
-	smelter: {
-		scrap_metal: "refined_metal",
-		copper: "copper_ingot",
-	},
-	refiner: {
-		e_waste: "intact_components",
-		rare_alloy: "advanced_alloy",
-	},
-	separator: {
-		fiber_optics: "optical_cable",
-	},
-} as const;
+export const PROCESSING_RECIPES: Record<string, Record<string, string>> =
+	config.processing.recipes;
 
 /** Internal state: what item a processor is currently working on */
 const processorInputs = new Map<string, string>();

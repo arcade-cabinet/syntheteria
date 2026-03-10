@@ -8,6 +8,7 @@ import {
 	combatSystem,
 	getLastCombatEvents,
 } from "../systems/combat";
+import { aiCivilizationSystem } from "../systems/aiCivilization";
 import { enemySystem } from "../systems/enemies";
 import { explorationSystem } from "../systems/exploration";
 import {
@@ -39,6 +40,7 @@ import { updateResearch } from "../systems/techTree";
 import { applyTechEffects } from "../systems/techEffects";
 import { getAllTerritories } from "../systems/territory";
 import { applyContestationDecay } from "../systems/territoryEffects";
+import { turretSystem } from "../systems/turret";
 import { wireNetworkSystem } from "../systems/wireNetwork";
 import {
 	checkGameOver,
@@ -145,6 +147,7 @@ export function simulationTick() {
 	hackingSystem();
 	enemySystem();
 	combatSystem();
+	turretSystem();
 	otterSystem();
 	updateQuests(1);
 
@@ -163,6 +166,9 @@ export function simulationTick() {
 	for (const raidId of getActiveRaidIds()) {
 		executeRaid(raidId, 1);
 	}
+
+	// AI civilization economics (independent faction resource loops)
+	aiCivilizationSystem();
 
 	updateDisplayOffsets();
 

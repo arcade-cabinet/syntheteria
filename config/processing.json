@@ -3,5 +3,18 @@
 		"speed": 2.0,
 		"cubeSpacing": 0.6,
 		"cubeSize": 0.5
+	},
+	"recipes": {
+		"smelter": {
+			"scrap_metal": "refined_metal",
+			"copper": "copper_ingot"
+		},
+		"refiner": {
+			"e_waste": "intact_components",
+			"rare_alloy": "advanced_alloy"
+		},
+		"separator": {
+			"fiber_optics": "optical_cable"
+		}
 	}
 }

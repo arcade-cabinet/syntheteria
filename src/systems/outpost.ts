@@ -7,23 +7,12 @@
  *
  * The module keeps a lightweight side-table mapping entity IDs to outpost
  * metadata, mirroring the pattern used by resources and fabrication.
+ *
+ * All tunables sourced from config/territory.json via centralized config.
  */
 
+import { config } from "../../config";
 import { getTerrainHeight } from "../ecs/terrain";
-
-// Inline territory config (mirrors config/territory.json) to avoid
-// import-assertion syntax that TypeScript / Vitest cannot resolve.
-const territoryConfig = {
-	outpostTiers: [
-		{ tier: 1, radius: 10, cubeCost: 20, upgradeCost: 40 },
-		{ tier: 2, radius: 20, cubeCost: 40, upgradeCost: 80 },
-		{ tier: 3, radius: 35, cubeCost: 80 },
-	],
-	resourceBonusInTerritory: 1.5,
-	buildingCostReduction: 0.8,
-	contestationDecayRate: 0.01,
-	minimumOutpostSpacing: 15,
-} as const;
 import type { Entity } from "../ecs/types";
 import { world } from "../ecs/world";
 import {
@@ -31,6 +20,8 @@ import {
 	removeTerritory as removeTerritoryById,
 	type Territory,
 } from "./territory";
+
+const territoryCfg = config.territory;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,11 +48,11 @@ const outposts = new Map<string, OutpostRecord>();
  * Falls back to a sensible formula if the tier exceeds config entries.
  */
 export function getOutpostRadius(tier: number): number {
-	const entry = territoryConfig.outpostTiers.find((t) => t.tier === tier);
+	const entry = territoryCfg.outpostTiers.find((t) => t.tier === tier);
 	if (entry) return entry.radius;
 	// Fallback: extrapolate from last defined tier
 	const last =
-		territoryConfig.outpostTiers[territoryConfig.outpostTiers.length - 1];
+		territoryCfg.outpostTiers[territoryCfg.outpostTiers.length - 1];
 	return last.radius + (tier - last.tier) * 15;
 }
 
@@ -97,7 +88,7 @@ export function createOutpost(
 		const dx = existing.worldPosition.x - position.x;
 		const dz = existing.worldPosition.z - position.z;
 		const dist = Math.sqrt(dx * dx + dz * dz);
-		if (dist < territoryConfig.minimumOutpostSpacing) {
+		if (dist < territoryCfg.minimumOutpostSpacing) {
 			return null;
 		}
 	}
@@ -138,7 +129,7 @@ export function upgradeOutpost(outpostId: string, tick = 0): boolean {
 	const record = outposts.get(outpostId);
 	if (!record) return false;
 
-	const maxTier = territoryConfig.outpostTiers.length;
+	const maxTier = territoryCfg.outpostTiers.length;
 	if (record.tier >= maxTier) return false;
 
 	const entity = world.entities.find((e) => e.id === outpostId);

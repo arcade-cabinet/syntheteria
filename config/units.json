@@ -28,5 +28,11 @@
     "min": 0.5,
     "max": 4,
     "default": 1.0
+  },
+  "grabber": {
+    "reach": 2.0
+  },
+  "cubeStacking": {
+    "defaultMaxRange": 5.0
   }
 }

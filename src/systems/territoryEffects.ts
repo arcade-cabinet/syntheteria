@@ -11,8 +11,11 @@
  * - Fog of war reveal within territory radius
  * - Enemy intrusion alert when hostile enters your territory
  * - Territory contestation: overlapping claims reduce both strengths
+ *
+ * All tunables sourced from config/territory.json via centralized config.
  */
 
+import { config } from "../../config";
 import {
 	calculateInfluence,
 	getOverlappingTerritories,
@@ -20,13 +23,7 @@ import {
 	type Territory,
 } from "./territory";
 
-// Inline territory config (mirrors config/territory.json) to avoid
-// import-assertion syntax that TypeScript / Vitest cannot resolve.
-const territoryConfig = {
-	resourceBonusInTerritory: 1.5,
-	buildingCostReduction: 0.8,
-	contestationDecayRate: 0.01,
-} as const;
+const territoryCfg = config.territory;
 
 // ---------------------------------------------------------------------------
 // Resource bonus
@@ -44,7 +41,7 @@ export function getResourceMultiplier(
 ): number {
 	const owner = getTerritoryOwner(position, territories);
 	if (owner === factionId) {
-		return territoryConfig.resourceBonusInTerritory;
+		return territoryCfg.resourceBonusInTerritory;
 	}
 	return 1.0;
 }
@@ -65,7 +62,7 @@ export function getBuildingCostMultiplier(
 ): number {
 	const owner = getTerritoryOwner(position, territories);
 	if (owner === factionId) {
-		return territoryConfig.buildingCostReduction;
+		return territoryCfg.buildingCostReduction;
 	}
 	return 1.0;
 }
@@ -161,7 +158,7 @@ export function detectIntrusions(
  */
 export function applyContestationDecay(territories: Territory[]): void {
 	const overlaps = getOverlappingTerritories(territories);
-	const decayRate = territoryConfig.contestationDecayRate;
+	const decayRate = territoryCfg.contestationDecayRate;
 
 	for (const [a, b] of overlaps) {
 		a.strength = Math.max(0, a.strength - decayRate);

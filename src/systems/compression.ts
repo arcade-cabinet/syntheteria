@@ -12,6 +12,8 @@
  * Module-level state with _resetCompressionState for test cleanup.
  */
 
+import furnaceConfig from "../../config/furnace.json";
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -42,21 +44,15 @@ export interface CompressionResult {
 }
 
 // ---------------------------------------------------------------------------
-// Constants
+// Constants (from config/furnace.json compression section)
 // ---------------------------------------------------------------------------
 
 /** Cube side length in meters. */
-export const CUBE_SIZE = 0.5;
+export const CUBE_SIZE: number = furnaceConfig.compression.cubeSize;
 
 /** Per-material compression configs (powder cost + compression time). */
-export const DEFAULT_COMPRESSION_CONFIGS: Record<string, CompressionConfig> = {
-	iron: { powderRequired: 100, compressionTime: 2.0 },
-	copper: { powderRequired: 80, compressionTime: 1.5 },
-	stone: { powderRequired: 60, compressionTime: 1.0 },
-	scrap_iron: { powderRequired: 100, compressionTime: 2.0 },
-	silicon: { powderRequired: 120, compressionTime: 2.5 },
-	titanium: { powderRequired: 150, compressionTime: 3.0 },
-};
+export const DEFAULT_COMPRESSION_CONFIGS: Record<string, CompressionConfig> =
+	furnaceConfig.compression.configs as Record<string, CompressionConfig>;
 
 // ---------------------------------------------------------------------------
 // Module state

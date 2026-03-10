@@ -7,7 +7,7 @@
  */
 
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { getSnapshot } from "../ecs/gameState";
 import { disposeAudioBridge, initAudioBridge } from "./AudioEventBridge";
 import {
@@ -18,33 +18,39 @@ import {
 } from "./SpatialAudio";
 
 export function AudioSystem() {
-	const initAttempted = useRef(false);
-
 	// Initialize audio on first user click/tap (required by browsers)
 	useEffect(() => {
+		const addListeners = () => {
+			window.addEventListener("click", handleInteraction, { once: true });
+			window.addEventListener("touchstart", handleInteraction, {
+				once: true,
+			});
+		};
+
+		const removeListeners = () => {
+			window.removeEventListener("click", handleInteraction);
+			window.removeEventListener("touchstart", handleInteraction);
+		};
+
 		const handleInteraction = async () => {
-			if (initAttempted.current) return;
-			initAttempted.current = true;
+			// Remove the other listener (only one of click/touchstart fires)
+			removeListeners();
+
 			try {
 				await initAudio();
 				// Start the event bridge — subscribes to gameplay events
 				initAudioBridge();
-				// Success — remove listeners so we don't re-init
-				window.removeEventListener("click", handleInteraction);
-				window.removeEventListener("touchstart", handleInteraction);
 			} catch {
-				// Audio init can fail silently — game works without it
-				// Allow retry on next interaction
-				initAttempted.current = false;
+				// Audio init can fail silently — game works without it.
+				// Re-register so the next user interaction retries.
+				addListeners();
 			}
 		};
 
-		window.addEventListener("click", handleInteraction);
-		window.addEventListener("touchstart", handleInteraction);
+		addListeners();
 
 		return () => {
-			window.removeEventListener("click", handleInteraction);
-			window.removeEventListener("touchstart", handleInteraction);
+			removeListeners();
 			disposeAudioBridge();
 			disposeAudio();
 		};

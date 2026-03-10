@@ -55,6 +55,9 @@ function distToPlayer(x: number, z: number): number {
  * Returns true if hack was started, false if conditions not met.
  */
 export function startHack(entityId: string): boolean {
+	// Only one hack at a time — reject if already hacking something
+	if (activeHackTargetId !== null) return false;
+
 	const entity = getEntityById(entityId);
 	if (!entity?.hackable || !entity.worldPosition) return false;
 
@@ -63,9 +66,6 @@ export function startHack(entityId: string): boolean {
 
 	// Already being hacked
 	if (entity.hackable.beingHacked) return false;
-
-	// Another hack is already in progress — only one at a time
-	if (activeHackTargetId !== null) return false;
 
 	// Check player proximity
 	const dist = distToPlayer(entity.worldPosition.x, entity.worldPosition.z);

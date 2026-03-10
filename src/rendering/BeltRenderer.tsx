@@ -9,6 +9,13 @@
  *   - basic: conveyor.glb (plain)
  *   - fast: conveyor-stripe.glb (striped marking)
  *   - express: conveyor-bars.glb (safety rails)
+ *
+ * NOTE: Belt surface animation is not yet wired up here. The BeltMaterial
+ * module (materials/BeltMaterial.ts) provides a canvas-generated rubber
+ * texture with cross-hatch tread and a UV scroll helper (updateBeltUV),
+ * but this renderer currently relies on the GLB models' baked materials.
+ * To add visible belt motion in the future, apply createBeltMaterial() to
+ * the conveyor surface mesh and call updateBeltUV() in the useFrame loop.
  */
 
 import { useGLTF } from "@react-three/drei";
@@ -67,6 +74,7 @@ function BeltSegment({ entity }: { entity: Entity }) {
 	const modelPath = BELT_MODELS[tier] ?? BELT_MODELS.basic;
 	const { scene } = useGLTF(modelPath);
 
+	// TODO: Add scrolling texture map — UV animation is ready but has no visible effect without a texture
 	const cloned = useMemo(() => {
 		const clone = scene.clone(true);
 		const scale = computeBeltScale(clone);

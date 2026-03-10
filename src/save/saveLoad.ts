@@ -9,6 +9,7 @@ import { getSnapshot, setGameSpeed, setTickCount } from "../ecs/gameState";
 import { getWorldSeed, setWorldSeed } from "../ecs/seed";
 import type { Entity, UnitComponent, Vec3 } from "../ecs/types";
 import { world } from "../ecs/world";
+import { getStormIntensity, setStormIntensity } from "../systems/power";
 import {
 	addResource,
 	getResources,
@@ -36,6 +37,7 @@ export interface SaveData {
 	playTimeSeconds: number;
 	gameSpeed: number;
 	tickCount: number;
+	stormIntensity: number;
 	entities: SavedEntityData[];
 	resources: ResourcePool;
 }
@@ -164,6 +166,7 @@ export function serializeWorld(name: string, playTimeSeconds = 0): SaveData {
 		playTimeSeconds,
 		gameSpeed: snap.gameSpeed,
 		tickCount: snap.tick,
+		stormIntensity: getStormIntensity(),
 		entities,
 		resources: getResources(),
 	};
@@ -189,6 +192,7 @@ export function deserializeWorld(data: SaveData): void {
 	// Restore simulation state
 	setGameSpeed(data.gameSpeed);
 	setTickCount(data.tickCount);
+	setStormIntensity(data.stormIntensity);
 
 	// Restore entities
 	for (const saved of data.entities) {

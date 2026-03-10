@@ -2,9 +2,14 @@
  * Conveyor belt PBR material with animated UV scrolling.
  *
  * The belt surface is dark rubber with a cross-hatch tread pattern generated
- * as a normal map. Metallic side rails are provided as a separate material.
+ * as a canvas texture (albedo + normal map). Metallic side rails are provided
+ * as a separate material.
  *
  * Call `updateBeltUV` each frame to scroll the belt surface.
+ *
+ * NOTE: Not yet consumed by BeltRenderer.tsx, which currently uses GLB model
+ * materials from the Kenney ConveyorKit. These utilities are available for
+ * when custom procedural belt surfaces replace the GLB baked materials.
  */
 
 import * as THREE from "three";

@@ -352,22 +352,37 @@ function GhostWire() {
 
 export function WireRenderer() {
 	const groupRef = useRef<THREE.Group>(null);
-	const [wireCount, setWireCount] = useState(0);
+	const wireEntitiesRef = useRef<(Entity & Required<Pick<Entity, "wire">>)[]>([]);
+	const [, setWireVersion] = useState(0);
 
-	// Track wire count to trigger re-render when wires are added/removed
+	// Periodically sync wire list into ref; bump version only when list changes
 	useFrame(() => {
-		const currentCount = Array.from(wires).length;
-		if (currentCount !== wireCount) {
-			setWireCount(currentCount);
+		const current = Array.from(wires) as (Entity & Required<Pick<Entity, "wire">>)[];
+		const cached = wireEntitiesRef.current;
+
+		// Quick length check first, then compare ids
+		let changed = current.length !== cached.length;
+		if (!changed) {
+			for (let i = 0; i < current.length; i++) {
+				if (current[i].id !== cached[i].id) {
+					changed = true;
+					break;
+				}
+			}
+		}
+
+		if (changed) {
+			wireEntitiesRef.current = current;
+			setWireVersion((v) => v + 1);
 		}
 	});
 
 	return (
 		<group ref={groupRef}>
-			{Array.from(wires).map((wireEntity) => (
+			{wireEntitiesRef.current.map((wireEntity) => (
 				<WireMesh
 					key={wireEntity.id}
-					wireEntity={wireEntity as Entity & Required<Pick<Entity, "wire">>}
+					wireEntity={wireEntity}
 				/>
 			))}
 			<GhostWire />

@@ -46,6 +46,38 @@ export function getProcessorInput(processorId: string): string | null {
 }
 
 /**
+ * Feed an item directly into a processor's input queue.
+ *
+ * Used by the belt transport system when a physical cube reaches a machine
+ * hopper via belt routing. Returns true if the processor accepted the item
+ * (i.e. the processor exists, is idle, and has a matching recipe).
+ */
+export function feedProcessor(
+	processorId: string,
+	itemType: string,
+): boolean {
+	// Reject if the processor is already working on something
+	if (processorInputs.has(processorId)) return false;
+
+	const entity = getEntityById(processorId);
+	if (!entity?.processor) return false;
+
+	const proc = entity.processor;
+
+	// Must be active and powered
+	if (!proc.active || !entity.building?.powered) return false;
+
+	// Must have a valid recipe that accepts this item type
+	const recipes = PROCESSING_RECIPES[proc.processorType];
+	if (!recipes || recipes[itemType] === undefined) return false;
+
+	processorInputs.set(processorId, itemType);
+	proc.progress = 0;
+
+	return true;
+}
+
+/**
  * Run processing system. Called once per simulation tick.
  */
 export function processingSystem() {

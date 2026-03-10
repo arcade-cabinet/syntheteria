@@ -234,7 +234,7 @@ export function FPSInput() {
 			}
 		};
 
-		// Desktop left-click with pointer lock = interact (touch uses mobile action buttons)
+		// Mouse left-click with pointer lock = interact (touch is ignored here; mobile controls handle it)
 		const canvas = gl.domElement;
 		const onPointerDown = (e: PointerEvent) => {
 			if (e.pointerType === "touch") return;

@@ -1,0 +1,218 @@
+{
+  "_description": "Maps game entity types to 3DPSX asset paths. The PSX retro style provides the gritty industrial aesthetic that defines Syntheteria's machine planet.",
+  "_assetRoot": "/Volumes/home/assets/3DPSX",
+
+  "buildings": {
+    "furnace": {
+      "models": [
+        "PSX Mega Pack II v1.8/Large Props & Machinery/distillery_mx_1.glb",
+        "PSX Mega Pack II v1.8/Large Props & Machinery/chimney_a_1.glb"
+      ],
+      "description": "Industrial furnace for smelting cubes",
+      "scale": 1.0
+    },
+    "lightning_rod": {
+      "models": [
+        "PSX Mega Pack II v1.8/Large Props & Machinery/electrical_equipment_1.glb",
+        "PSX Mega Pack II v1.8/Large Props & Machinery/electrical_equipment_2.glb"
+      ],
+      "description": "Power collection from storms",
+      "scale": 1.0
+    },
+    "turret": {
+      "models": [
+        "PSX Mega Pack II v1.8/Large Props & Machinery/machinery_mx_1.glb"
+      ],
+      "description": "Automated defense turret",
+      "scale": 0.8
+    },
+    "processor": {
+      "models": [
+        "Props/Electrical/Machinery_1.glb",
+        "Props/Electrical/Machinery_2.glb",
+        "Props/Electrical/Machinery_3.glb"
+      ],
+      "description": "Resource processing machine",
+      "scale": 1.0
+    },
+    "outpost": {
+      "models": [
+        "PSX Mega Pack II v1.8/Buildings/building_hr_1.glb"
+      ],
+      "description": "Territory claim outpost",
+      "scale": 1.0
+    }
+  },
+
+  "infrastructure": {
+    "pipe_straight": {
+      "models": [
+        "Props/Electrical/Pipe_V1_Straight.glb",
+        "Props/Electrical/Pipe_V2_Straight.glb",
+        "PSX Mega Pack II v1.8/Large Props & Machinery/pipe_ax_1.glb"
+      ],
+      "description": "Straight pipe section for wire/belt routing"
+    },
+    "pipe_curved": {
+      "models": [
+        "Props/Electrical/Pipe_V1_Curved.glb",
+        "Props/Electrical/Pipe_V2_Curved.glb"
+      ],
+      "description": "Curved pipe section"
+    },
+    "pipe_angled": {
+      "models": [
+        "Props/Electrical/Pipe_Angled.glb"
+      ],
+      "description": "Angled pipe junction"
+    },
+    "valve": {
+      "models": [
+        "Props/Electrical/Valve.glb"
+      ],
+      "description": "Flow control valve"
+    },
+    "beam_horizontal": {
+      "models": [
+        "PSX Mega Pack II v1.8/Modular Structures/beam_hc_horizonatal_1.glb",
+        "PSX Mega Pack II v1.8/Modular Structures/beam_hc_horizonatal_2.glb"
+      ],
+      "description": "Support beam for structures"
+    },
+    "beam_vertical": {
+      "models": [
+        "PSX Mega Pack II v1.8/Modular Structures/beam_hc_vertical_1.glb",
+        "PSX Mega Pack II v1.8/Modular Structures/beam_hc_vertical_2.glb"
+      ],
+      "description": "Vertical support column"
+    },
+    "concrete_pipe": {
+      "models": [
+        "PSX Mega Pack II v1.8/Modular Structures/concrete_pipe_hm_1_end.glb",
+        "PSX Mega Pack II v1.8/Modular Structures/concrete_pipe_hm_1_middle.glb"
+      ],
+      "description": "Large tunnel/pipe sections"
+    }
+  },
+
+  "terrain": {
+    "debris": {
+      "models": [
+        "PSX Mega Pack II v1.8/Debris & Misc/brick_mx_1.glb",
+        "PSX Mega Pack II v1.8/Debris & Misc/brick_mx_2.glb",
+        "PSX Mega Pack II v1.8/Debris & Misc/brick_mx_3.glb"
+      ],
+      "description": "Scattered rubble for terrain decoration",
+      "scatter": true,
+      "density": 0.1
+    },
+    "ruins": {
+      "models": [
+        "PSX Mega Pack II v1.8/Modular Structures/doorway_hr_1.glb"
+      ],
+      "description": "Ruined structures from ancient machine civilization"
+    }
+  },
+
+  "props": {
+    "machinery_variants": {
+      "models": [
+        "Props/Electrical/Machinery_4.glb",
+        "Props/Electrical/Machinery_5.glb",
+        "Props/Electrical/Machinery_6.glb",
+        "Props/Electrical/Machinery_7.glb",
+        "Props/Electrical/Machinery_8.glb",
+        "Props/Electrical/Machinery_9.glb"
+      ],
+      "description": "Decorative machinery for factory interiors"
+    },
+    "tools": {
+      "pickaxe": {
+        "models": ["Props/Tools/Pickaxe/Pickaxe.glb"],
+        "description": "Mining pickaxe (harvester visual)"
+      },
+      "hatchet": {
+        "models": ["Props/Tools/Hatchet/Hatchet.glb"],
+        "description": "Melee weapon option"
+      }
+    },
+    "weapons": {
+      "revolver": {
+        "models": ["Props/Weapons/HandCannon/Gun/Revolver.glb"],
+        "description": "Ranged weapon — industrial revolver"
+      },
+      "chainsaw": {
+        "models": ["Props/Weapons/Chainsaw_2.0/Chainsaw.glb"],
+        "description": "Melee weapon — industrial chainsaw harvester"
+      }
+    },
+    "traps": {
+      "models": [
+        "Props/Traps/BearTrap/BearTrap_Set.glb"
+      ],
+      "description": "Defensive trap placement"
+    }
+  },
+
+  "environment": {
+    "nature": {
+      "trees": {
+        "path": "Environment/Nature/Trees",
+        "description": "Dead/mechanical trees for rust plains biome"
+      },
+      "rocks": {
+        "path": "Environment/Nature/Rocks",
+        "description": "Rock formations for ore deposit visuals"
+      },
+      "bushes": {
+        "path": "Environment/Nature/Bushes",
+        "description": "Metallic scrub for terrain detail"
+      }
+    },
+    "light_sources": {
+      "path": "PSX Mega Pack II v1.8/Light Sources",
+      "description": "Industrial lighting for bases and factories"
+    },
+    "doors_gates": {
+      "path": "PSX Mega Pack II v1.8/Doors & Gates",
+      "description": "Base entrance and wall gate pieces"
+    }
+  },
+
+  "characters": {
+    "player_bot_base": {
+      "path": "Characters/ChibiCharacters",
+      "description": "Base character models to customize per faction",
+      "note": "These are chibi-proportioned — will need faction-specific material swaps"
+    }
+  },
+
+  "factionVisualOverrides": {
+    "reclaimers": {
+      "materialTint": "#8B4513",
+      "roughness": 0.9,
+      "metalness": 0.3,
+      "note": "Rusty, scavenged look — use heavy rust textures"
+    },
+    "volt_collective": {
+      "materialTint": "#4488CC",
+      "roughness": 0.2,
+      "metalness": 0.9,
+      "emissiveColor": "#2266AA",
+      "note": "Chrome + heat-blue — clean and electric"
+    },
+    "signal_choir": {
+      "materialTint": "#88AA88",
+      "roughness": 0.4,
+      "metalness": 0.7,
+      "emissiveColor": "#44CC44",
+      "note": "Anodized aluminum — green data glow"
+    },
+    "iron_creed": {
+      "materialTint": "#777777",
+      "roughness": 0.5,
+      "metalness": 0.8,
+      "note": "Brushed steel — heavy, fortress-like"
+    }
+  }
+}

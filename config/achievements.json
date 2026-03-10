@@ -1,0 +1,229 @@
+{
+  "achievements": [
+    {
+      "id": "explorer_bronze",
+      "title": "Curious Wanderer",
+      "description": "Discover 5 locations",
+      "type": "exploration",
+      "tier": "bronze",
+      "requirement": 5,
+      "statKey": "locationsDiscovered"
+    },
+    {
+      "id": "explorer_silver",
+      "title": "Trailblazer",
+      "description": "Discover 25 locations",
+      "type": "exploration",
+      "tier": "silver",
+      "requirement": 25,
+      "statKey": "locationsDiscovered"
+    },
+    {
+      "id": "explorer_gold",
+      "title": "Cartographer",
+      "description": "Discover 100 locations",
+      "type": "exploration",
+      "tier": "gold",
+      "requirement": 100,
+      "statKey": "locationsDiscovered"
+    },
+    {
+      "id": "fighter_bronze",
+      "title": "Scrap Brawler",
+      "description": "Defeat 10 enemies",
+      "type": "combat",
+      "tier": "bronze",
+      "requirement": 10,
+      "statKey": "enemiesDefeated"
+    },
+    {
+      "id": "fighter_silver",
+      "title": "Iron Warrior",
+      "description": "Defeat 100 enemies",
+      "type": "combat",
+      "tier": "silver",
+      "requirement": 100,
+      "statKey": "enemiesDefeated"
+    },
+    {
+      "id": "fighter_gold",
+      "title": "Annihilator",
+      "description": "Defeat 1000 enemies",
+      "type": "combat",
+      "tier": "gold",
+      "requirement": 1000,
+      "statKey": "enemiesDefeated"
+    },
+    {
+      "id": "hoarder_bronze",
+      "title": "Cube Collector",
+      "description": "Accumulate 10 cubes",
+      "type": "economy",
+      "tier": "bronze",
+      "requirement": 10,
+      "statKey": "cubesAccumulated"
+    },
+    {
+      "id": "hoarder_silver",
+      "title": "Stockpiler",
+      "description": "Accumulate 100 cubes",
+      "type": "economy",
+      "tier": "silver",
+      "requirement": 100,
+      "statKey": "cubesAccumulated"
+    },
+    {
+      "id": "hoarder_gold",
+      "title": "Cube Magnate",
+      "description": "Accumulate 1000 cubes",
+      "type": "economy",
+      "tier": "gold",
+      "requirement": 1000,
+      "statKey": "cubesAccumulated"
+    },
+    {
+      "id": "builder_bronze",
+      "title": "Foundation Layer",
+      "description": "Place 5 structures",
+      "type": "building",
+      "tier": "bronze",
+      "requirement": 5,
+      "statKey": "structuresPlaced"
+    },
+    {
+      "id": "builder_silver",
+      "title": "Architect",
+      "description": "Place 50 structures",
+      "type": "building",
+      "tier": "silver",
+      "requirement": 50,
+      "statKey": "structuresPlaced"
+    },
+    {
+      "id": "builder_gold",
+      "title": "Master Builder",
+      "description": "Place 500 structures",
+      "type": "building",
+      "tier": "gold",
+      "requirement": 500,
+      "statKey": "structuresPlaced"
+    },
+    {
+      "id": "trader_bronze",
+      "title": "Barterer",
+      "description": "Complete 5 trades",
+      "type": "social",
+      "tier": "bronze",
+      "requirement": 5,
+      "statKey": "tradesCompleted"
+    },
+    {
+      "id": "trader_silver",
+      "title": "Merchant",
+      "description": "Complete 25 trades",
+      "type": "social",
+      "tier": "silver",
+      "requirement": 25,
+      "statKey": "tradesCompleted"
+    },
+    {
+      "id": "trader_gold",
+      "title": "Trade Baron",
+      "description": "Complete 100 trades",
+      "type": "social",
+      "tier": "gold",
+      "requirement": 100,
+      "statKey": "tradesCompleted"
+    },
+    {
+      "id": "level_bronze",
+      "title": "Awakened",
+      "description": "Reach level 3",
+      "type": "mastery",
+      "tier": "bronze",
+      "requirement": 3,
+      "statKey": "playerLevel"
+    },
+    {
+      "id": "level_silver",
+      "title": "Veteran",
+      "description": "Reach level 5",
+      "type": "mastery",
+      "tier": "silver",
+      "requirement": 5,
+      "statKey": "playerLevel"
+    },
+    {
+      "id": "level_gold",
+      "title": "Ascendant",
+      "description": "Reach level 10",
+      "type": "mastery",
+      "tier": "gold",
+      "requirement": 10,
+      "statKey": "playerLevel"
+    },
+    {
+      "id": "miner_bronze",
+      "title": "Ore Nibbler",
+      "description": "Harvest 50 ore",
+      "type": "economy",
+      "tier": "bronze",
+      "requirement": 50,
+      "statKey": "oreHarvested"
+    },
+    {
+      "id": "miner_silver",
+      "title": "Deep Driller",
+      "description": "Harvest 500 ore",
+      "type": "economy",
+      "tier": "silver",
+      "requirement": 500,
+      "statKey": "oreHarvested"
+    },
+    {
+      "id": "miner_gold",
+      "title": "Strip Miner",
+      "description": "Harvest 5000 ore",
+      "type": "economy",
+      "tier": "gold",
+      "requirement": 5000,
+      "statKey": "oreHarvested"
+    },
+    {
+      "id": "quester_bronze",
+      "title": "Errand Runner",
+      "description": "Complete 3 quests",
+      "type": "exploration",
+      "tier": "bronze",
+      "requirement": 3,
+      "statKey": "questsCompleted"
+    },
+    {
+      "id": "quester_silver",
+      "title": "Questmaster",
+      "description": "Complete 10 quests",
+      "type": "exploration",
+      "tier": "silver",
+      "requirement": 10,
+      "statKey": "questsCompleted"
+    },
+    {
+      "id": "conqueror_bronze",
+      "title": "Land Grabber",
+      "description": "Claim 3 territories",
+      "type": "exploration",
+      "tier": "bronze",
+      "requirement": 3,
+      "statKey": "territoriesClaimed"
+    },
+    {
+      "id": "conqueror_gold",
+      "title": "Dominion",
+      "description": "Claim 20 territories",
+      "type": "exploration",
+      "tier": "gold",
+      "requirement": 20,
+      "statKey": "territoriesClaimed"
+    }
+  ]
+}

@@ -31,6 +31,14 @@ import diplomacyConfig from './diplomacy.json';
 import victoryConfig from './victory.json';
 import weatherConfig from './weather.json';
 import environmentHazardsConfig from './environmentHazards.json';
+import inventoryConfig from './inventory.json';
+import craftingConfig from './crafting.json';
+import progressionConfig from './progression.json';
+import achievementsConfig from './achievements.json';
+import cameraConfig from './camera.json';
+import particlesConfig from './particles.json';
+import interactionConfig from './interaction.json';
+import biomesConfig from './biomes.json';
 
 export const config = {
   units: unitsConfig,
@@ -63,6 +71,14 @@ export const config = {
   victory: victoryConfig,
   weather: weatherConfig,
   environmentHazards: environmentHazardsConfig,
+  inventory: inventoryConfig,
+  crafting: craftingConfig,
+  progression: progressionConfig,
+  achievements: achievementsConfig,
+  camera: cameraConfig,
+  particles: particlesConfig,
+  interaction: interactionConfig,
+  biomes: biomesConfig,
 } as const;
 
 export type GameConfig = typeof config;

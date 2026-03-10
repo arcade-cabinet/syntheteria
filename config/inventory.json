@@ -1,0 +1,20 @@
+{
+  "defaultSlots": 8,
+  "maxWeight": 20,
+  "minSpeedMultiplier": 0.4,
+  "items": {
+    "scrapMetal": { "category": "cube", "weight": 2.0, "maxStack": 4 },
+    "iron": { "category": "cube", "weight": 3.0, "maxStack": 4 },
+    "copper": { "category": "cube", "weight": 2.5, "maxStack": 4 },
+    "silicon": { "category": "cube", "weight": 1.5, "maxStack": 4 },
+    "titanium": { "category": "cube", "weight": 4.0, "maxStack": 4 },
+    "eWaste": { "category": "cube", "weight": 1.0, "maxStack": 4 },
+    "grabber": { "category": "tool", "weight": 1.5, "maxStack": 1 },
+    "drill": { "category": "tool", "weight": 2.0, "maxStack": 1 },
+    "circuitBoard": { "category": "component", "weight": 0.5, "maxStack": 8 },
+    "wireBundle": { "category": "component", "weight": 0.3, "maxStack": 8 },
+    "ironPlate": { "category": "component", "weight": 1.0, "maxStack": 8 },
+    "camera": { "category": "component", "weight": 0.8, "maxStack": 1 },
+    "powerCell": { "category": "component", "weight": 1.2, "maxStack": 1 }
+  }
+}

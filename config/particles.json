@@ -1,0 +1,65 @@
+{
+  "maxParticles": 200,
+  "effects": {
+    "harvest_sparks": {
+      "defaultDuration": 30,
+      "defaultIntensity": 0.6,
+      "defaultColor": "#FFA500",
+      "direction": { "x": 0, "y": 1, "z": 0 }
+    },
+    "compress_burst": {
+      "defaultDuration": 20,
+      "defaultIntensity": 0.9,
+      "defaultColor": "#FFDD44",
+      "direction": { "x": 0, "y": 1, "z": 0 }
+    },
+    "cube_impact": {
+      "defaultDuration": 15,
+      "defaultIntensity": 0.4,
+      "defaultColor": "#AAAAAA",
+      "direction": { "x": 0, "y": 1, "z": 0 }
+    },
+    "explosion": {
+      "defaultDuration": 45,
+      "defaultIntensity": 1.0,
+      "defaultColor": "#FF4400",
+      "direction": { "x": 0, "y": 1, "z": 0 }
+    },
+    "lightning_strike": {
+      "defaultDuration": 10,
+      "defaultIntensity": 1.0,
+      "defaultColor": "#88CCFF",
+      "direction": { "x": 0, "y": -1, "z": 0 }
+    },
+    "acid_drip": {
+      "defaultDuration": 60,
+      "defaultIntensity": 0.3,
+      "defaultColor": "#44FF44",
+      "direction": { "x": 0, "y": -1, "z": 0 }
+    },
+    "smoke": {
+      "defaultDuration": 90,
+      "defaultIntensity": 0.2,
+      "defaultColor": "#666666",
+      "direction": { "x": 0, "y": 1, "z": 0 }
+    },
+    "dust_trail": {
+      "defaultDuration": 40,
+      "defaultIntensity": 0.15,
+      "defaultColor": "#AA9966",
+      "direction": { "x": 0, "y": 0.5, "z": 0 }
+    },
+    "build_sparks": {
+      "defaultDuration": 25,
+      "defaultIntensity": 0.5,
+      "defaultColor": "#FFCC00",
+      "direction": { "x": 0, "y": 1, "z": 0 }
+    },
+    "heal_glow": {
+      "defaultDuration": 50,
+      "defaultIntensity": 0.4,
+      "defaultColor": "#44FFAA",
+      "direction": { "x": 0, "y": 1, "z": 0 }
+    }
+  }
+}

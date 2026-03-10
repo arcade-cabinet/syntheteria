@@ -1,0 +1,67 @@
+{
+  "defaultCraftRange": 3.0,
+  "recipes": [
+    {
+      "id": "camera_module",
+      "name": "Camera Module",
+      "inputs": [
+        { "itemId": "eWaste", "count": 4 },
+        { "itemId": "circuitBoard", "count": 1 }
+      ],
+      "outputItemId": "camera",
+      "outputCount": 1,
+      "craftTicks": 8
+    },
+    {
+      "id": "arm_assembly",
+      "name": "Arm Assembly",
+      "inputs": [
+        { "itemId": "scrapMetal", "count": 5 }
+      ],
+      "outputItemId": "grabber",
+      "outputCount": 1,
+      "craftTicks": 6
+    },
+    {
+      "id": "leg_assembly",
+      "name": "Leg Assembly",
+      "inputs": [
+        { "itemId": "scrapMetal", "count": 4 }
+      ],
+      "outputItemId": "ironPlate",
+      "outputCount": 2,
+      "craftTicks": 5
+    },
+    {
+      "id": "power_cell",
+      "name": "Power Cell",
+      "inputs": [
+        { "itemId": "eWaste", "count": 3 },
+        { "itemId": "scrapMetal", "count": 2 }
+      ],
+      "outputItemId": "powerCell",
+      "outputCount": 1,
+      "craftTicks": 7
+    },
+    {
+      "id": "wire_bundle",
+      "name": "Wire Bundle",
+      "inputs": [
+        { "itemId": "copper", "count": 1 }
+      ],
+      "outputItemId": "wireBundle",
+      "outputCount": 4,
+      "craftTicks": 4
+    },
+    {
+      "id": "circuit_board",
+      "name": "Circuit Board",
+      "inputs": [
+        { "itemId": "silicon", "count": 2 }
+      ],
+      "outputItemId": "circuitBoard",
+      "outputCount": 1,
+      "craftTicks": 10
+    }
+  ]
+}

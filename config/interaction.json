@@ -1,0 +1,58 @@
+{
+  "maxRangeByType": {
+    "ore_deposit": 3.0,
+    "cube": 2.5,
+    "furnace": 3.0,
+    "building": 4.0,
+    "bot": 5.0,
+    "enemy": 15.0,
+    "outpost": 5.0,
+    "trade_post": 4.0
+  },
+  "actionsByType": {
+    "ore_deposit": [
+      { "id": "harvest", "label": "Harvest" },
+      { "id": "scan", "label": "Scan" }
+    ],
+    "cube": [
+      { "id": "grab", "label": "Grab" },
+      { "id": "inspect", "label": "Inspect" },
+      { "id": "throw", "label": "Throw" }
+    ],
+    "furnace": [
+      { "id": "open_menu", "label": "Open Menu" },
+      { "id": "deposit_cube", "label": "Deposit Cube" },
+      { "id": "repair", "label": "Repair" }
+    ],
+    "building": [
+      { "id": "interact", "label": "Interact" },
+      { "id": "upgrade", "label": "Upgrade" },
+      { "id": "demolish", "label": "Demolish" },
+      { "id": "repair", "label": "Repair" }
+    ],
+    "bot": [
+      { "id": "switch_to", "label": "Switch To" },
+      { "id": "follow", "label": "Follow" },
+      { "id": "command", "label": "Command" },
+      { "id": "repair", "label": "Repair" }
+    ],
+    "enemy": [
+      { "id": "attack", "label": "Attack" },
+      { "id": "hack", "label": "Hack" },
+      { "id": "scan", "label": "Scan" }
+    ],
+    "outpost": [
+      { "id": "claim", "label": "Claim" },
+      { "id": "upgrade", "label": "Upgrade" },
+      { "id": "demolish", "label": "Demolish" }
+    ],
+    "trade_post": [
+      { "id": "trade", "label": "Trade" },
+      { "id": "inspect", "label": "Inspect" }
+    ]
+  },
+  "highlightColor": "#00FF88",
+  "highlightIntensity": 0.3,
+  "radialMenuRadius": 80,
+  "radialMenuAnimDuration": 0.2
+}

@@ -1,0 +1,60 @@
+{
+  "biomes": {
+    "rust_plains": {
+      "moveSpeedMod": 1.0,
+      "harvestMod": 1.0,
+      "visibility": 1.0,
+      "bgColor": "#8B6914",
+      "signalBonus": 1.0,
+      "passable": true
+    },
+    "scrap_hills": {
+      "moveSpeedMod": 0.8,
+      "harvestMod": 1.2,
+      "visibility": 1.0,
+      "bgColor": "#6B5B3A",
+      "signalBonus": 1.0,
+      "passable": true
+    },
+    "chrome_ridge": {
+      "moveSpeedMod": 0.6,
+      "harvestMod": 0.8,
+      "visibility": 0.7,
+      "bgColor": "#A0A0B0",
+      "signalBonus": 1.0,
+      "passable": true
+    },
+    "signal_plateau": {
+      "moveSpeedMod": 0.9,
+      "harvestMod": 0.7,
+      "visibility": 1.0,
+      "bgColor": "#6A5ACD",
+      "signalBonus": 1.5,
+      "passable": true
+    },
+    "deep_water": {
+      "moveSpeedMod": 0.0,
+      "harvestMod": 0.0,
+      "visibility": 0.3,
+      "bgColor": "#1A1A3E",
+      "signalBonus": 0.5,
+      "passable": false
+    },
+    "shallow_water": {
+      "moveSpeedMod": 0.4,
+      "harvestMod": 0.0,
+      "visibility": 0.5,
+      "bgColor": "#2E4A6E",
+      "signalBonus": 0.8,
+      "passable": true
+    }
+  },
+  "defaultModifiers": {
+    "moveSpeedMod": 1.0,
+    "harvestMod": 1.0,
+    "visibility": 1.0,
+    "bgColor": "#555555",
+    "signalBonus": 1.0,
+    "passable": true
+  }
+}

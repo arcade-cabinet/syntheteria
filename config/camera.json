@@ -1,0 +1,39 @@
+{
+  "defaultFov": 75,
+  "fovRange": { "min": 60, "max": 120 },
+  "fovLerpSpeed": 8,
+  "sprintFovBonus": 10,
+  "headBob": {
+    "amplitudeY": 0.04,
+    "amplitudeX": 0.02,
+    "frequency": 8
+  },
+  "shake": {
+    "compression": {
+      "intensity": 0.15,
+      "duration": 0.4,
+      "frequency": 20,
+      "decayRate": 6
+    },
+    "explosion": {
+      "intensity": 0.4,
+      "duration": 0.8,
+      "frequency": 15,
+      "decayRate": 4
+    },
+    "damage": {
+      "intensity": 0.1,
+      "duration": 0.25,
+      "frequency": 25,
+      "decayRate": 8
+    },
+    "cubeImpact": {
+      "intensity": 0.06,
+      "duration": 0.2,
+      "frequency": 18,
+      "decayRate": 7
+    }
+  },
+  "pitchClamp": 1.5707963,
+  "mouseSensitivityDefault": 0.5
+}

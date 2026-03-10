@@ -1,0 +1,68 @@
+{
+  "xpDivisor": 100,
+  "xpRewards": {
+    "quest": 500,
+    "craft": 25,
+    "discovery": 150,
+    "battle": 50,
+    "trade": 75
+  },
+  "levelBonuses": {
+    "miningSpeedPerLevel": 0.02,
+    "movementSpeedPerLevel": 0.01,
+    "baseInventorySlots": 5,
+    "inventorySlotsPerLevel": 1
+  },
+  "levelUnlocks": {
+    "1": {
+      "recipes": ["iron_plate", "copper_wire"],
+      "buildings": ["storage_crate"],
+      "abilities": ["scan"]
+    },
+    "2": {
+      "recipes": ["steel_beam", "circuit_board"],
+      "buildings": ["smelter"],
+      "abilities": ["dash"]
+    },
+    "3": {
+      "recipes": ["alloy_ingot", "motor"],
+      "buildings": ["assembler", "turret_base"],
+      "abilities": ["overclock"]
+    },
+    "4": {
+      "recipes": ["advanced_circuit", "power_cell"],
+      "buildings": ["refinery", "radar_tower"],
+      "abilities": ["shield"]
+    },
+    "5": {
+      "recipes": ["quantum_core", "nano_fiber"],
+      "buildings": ["fabricator", "signal_jammer"],
+      "abilities": ["teleport"]
+    },
+    "6": {
+      "recipes": ["fusion_cell", "adaptive_alloy"],
+      "buildings": ["mega_furnace", "drone_bay"],
+      "abilities": ["overcharge"]
+    },
+    "7": {
+      "recipes": ["singularity_shard"],
+      "buildings": ["fortress_gate"],
+      "abilities": ["emp_burst"]
+    },
+    "8": {
+      "recipes": ["void_crystal"],
+      "buildings": ["orbital_relay"],
+      "abilities": ["mass_recall"]
+    },
+    "9": {
+      "recipes": ["omega_catalyst"],
+      "buildings": ["world_engine"],
+      "abilities": ["domination_field"]
+    },
+    "10": {
+      "recipes": ["genesis_matrix"],
+      "buildings": ["nexus_core"],
+      "abilities": ["ascension"]
+    }
+  }
+}

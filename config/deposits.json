@@ -3,25 +3,74 @@
   "minDistanceBetween": 5,
   "types": {
     "rock": {
-      "frequency": 0.4,
-      "yieldRange": [50, 200]
+      "frequency": 0.30,
+      "yieldRange": [50, 200],
+      "tier": 1,
+      "biomePreference": ["foundry", "slag"],
+      "description": "Common stone deposits. Low value but abundant."
     },
     "scrap_iron": {
-      "frequency": 0.3,
-      "yieldRange": [30, 150]
+      "frequency": 0.25,
+      "yieldRange": [30, 150],
+      "tier": 1,
+      "biomePreference": ["foundry", "cable"],
+      "description": "Salvageable iron. The backbone of early construction."
     },
     "copper": {
       "frequency": 0.15,
-      "yieldRange": [20, 80]
+      "yieldRange": [20, 80],
+      "tier": 2,
+      "biomePreference": ["cable", "processor"],
+      "description": "Conductive copper veins. Essential for wiring and electronics."
     },
     "silicon": {
-      "frequency": 0.1,
-      "yieldRange": [10, 50]
+      "frequency": 0.10,
+      "yieldRange": [10, 50],
+      "tier": 2,
+      "biomePreference": ["processor"],
+      "description": "Crystalline silicon. Key ingredient for circuit boards."
     },
     "titanium": {
       "frequency": 0.05,
-      "yieldRange": [5, 30]
+      "yieldRange": [5, 30],
+      "tier": 3,
+      "biomePreference": ["slag"],
+      "description": "Ultra-strong titanium. The pinnacle of structural materials."
+    },
+    "carbon": {
+      "frequency": 0.05,
+      "yieldRange": [10, 40],
+      "tier": 3,
+      "biomePreference": ["cable", "slag"],
+      "description": "Carbon fiber compounds. Lightweight and extremely durable."
+    },
+    "rare_earth": {
+      "frequency": 0.03,
+      "yieldRange": [5, 20],
+      "tier": 4,
+      "biomePreference": ["processor"],
+      "description": "Rare earth elements. Required for advanced electronics and magnets."
+    },
+    "gold": {
+      "frequency": 0.02,
+      "yieldRange": [3, 15],
+      "tier": 4,
+      "biomePreference": ["foundry"],
+      "description": "Precious gold deposits. Exceptional conductivity for quantum circuits."
+    },
+    "quantum_crystal": {
+      "frequency": 0.01,
+      "yieldRange": [1, 5],
+      "tier": 5,
+      "biomePreference": ["processor", "cable"],
+      "description": "Mysterious quantum-entangled crystals. Required for endgame technology."
     }
+  },
+  "biomeMultipliers": {
+    "foundry": { "rock": 1.5, "scrap_iron": 1.3, "gold": 2.0 },
+    "slag": { "titanium": 1.5, "carbon": 1.3, "rock": 1.2 },
+    "cable": { "copper": 1.5, "carbon": 1.3, "quantum_crystal": 1.5 },
+    "processor": { "silicon": 1.5, "rare_earth": 2.0, "quantum_crystal": 2.0 }
   },
   "scavenging": {
     "autoScavengeRange": 2.5,

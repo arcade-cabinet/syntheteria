@@ -1,8 +1,9 @@
 {
   "reclaimers": {
     "name": "Reclaimers",
-    "description": "Scavenger economy, rusted iron aesthetic",
+    "description": "Scavenger economy, rusted iron aesthetic. Masters of recycling and repurposing.",
     "color": "#8B4513",
+    "accentColor": "#D4A574",
     "governorBias": {
       "economy": 1.5,
       "mining": 1.3,
@@ -10,12 +11,46 @@
       "defense": 1.0,
       "research": 0.7,
       "expansion": 1.0
-    }
+    },
+    "uniqueAbilities": {
+      "scrapRecovery": {
+        "name": "Scrap Recovery",
+        "description": "Destroyed enemy units yield 50% more scrap",
+        "salvageMultiplier": 1.5
+      },
+      "rustResistance": {
+        "name": "Rust Resistance",
+        "description": "Buildings degrade 30% slower from storm damage",
+        "stormDamageReduction": 0.3
+      }
+    },
+    "uniqueUnit": {
+      "type": "scrounger",
+      "name": "Scrounger Bot",
+      "description": "Fast scout that auto-scavenges while moving",
+      "speed": 1.5,
+      "scavengeWhileMoving": true
+    },
+    "uniqueBuilding": {
+      "type": "recycler",
+      "name": "Recycling Plant",
+      "description": "Converts any 3 cube types into 2 of a chosen type",
+      "conversionRatio": 0.67,
+      "processingTime": 8
+    },
+    "startingBonus": {
+      "scrapMetal": 20,
+      "eWaste": 5
+    },
+    "researchSpeedMultiplier": 0.8,
+    "harvestSpeedMultiplier": 1.2,
+    "buildCostMultiplier": 0.9
   },
   "volt_collective": {
     "name": "Volt Collective",
-    "description": "Lightning aggressors, chrome + heat-blue",
+    "description": "Lightning aggressors, chrome + heat-blue. Harness storm energy for war.",
     "color": "#4169E1",
+    "accentColor": "#00BFFF",
     "governorBias": {
       "economy": 0.8,
       "mining": 1.0,
@@ -23,12 +58,49 @@
       "defense": 0.9,
       "research": 1.0,
       "expansion": 1.3
-    }
+    },
+    "uniqueAbilities": {
+      "stormHarvest": {
+        "name": "Storm Harvest",
+        "description": "Lightning rods produce 25% more power during surge phases",
+        "surgeBonus": 0.25
+      },
+      "shockWeapons": {
+        "name": "Shock Weapons",
+        "description": "Combat units have 15% chance to stun on hit",
+        "stunChance": 0.15,
+        "stunDurationTicks": 3
+      }
+    },
+    "uniqueUnit": {
+      "type": "shock_trooper",
+      "name": "Shock Trooper",
+      "description": "Heavy combat bot with area-of-effect lightning attack",
+      "speed": 0.8,
+      "aoeRadius": 3,
+      "aoeDamage": 2
+    },
+    "uniqueBuilding": {
+      "type": "tesla_coil",
+      "name": "Tesla Coil",
+      "description": "Area denial building that damages enemies in range",
+      "range": 8,
+      "damagePerTick": 0.5,
+      "powerRequired": 5
+    },
+    "startingBonus": {
+      "scrapMetal": 10,
+      "eWaste": 10
+    },
+    "researchSpeedMultiplier": 1.0,
+    "harvestSpeedMultiplier": 1.0,
+    "buildCostMultiplier": 1.1
   },
   "signal_choir": {
     "name": "Signal Choir",
-    "description": "Hive-mind hackers, anodized aluminum",
+    "description": "Hive-mind hackers, anodized aluminum. Control through information.",
     "color": "#9370DB",
+    "accentColor": "#E0B0FF",
     "governorBias": {
       "economy": 1.0,
       "mining": 0.8,
@@ -36,12 +108,49 @@
       "defense": 1.0,
       "research": 1.5,
       "expansion": 0.9
-    }
+    },
+    "uniqueAbilities": {
+      "signalBoost": {
+        "name": "Signal Boost",
+        "description": "Signal relays have 30% more range",
+        "relayRangeMultiplier": 1.3
+      },
+      "hackAcceleration": {
+        "name": "Hack Acceleration",
+        "description": "Hacking operations complete 40% faster",
+        "hackSpeedMultiplier": 1.4
+      }
+    },
+    "uniqueUnit": {
+      "type": "infiltrator",
+      "name": "Infiltrator Bot",
+      "description": "Stealth unit that can hack buildings while cloaked",
+      "speed": 1.2,
+      "cloakDuration": 30,
+      "cloakCooldown": 60,
+      "hackRange": 5
+    },
+    "uniqueBuilding": {
+      "type": "signal_amplifier",
+      "name": "Signal Amplifier",
+      "description": "Extends signal network range and boosts compute generation",
+      "signalBoost": 2.0,
+      "computeMultiplier": 1.5,
+      "powerRequired": 3
+    },
+    "startingBonus": {
+      "eWaste": 15,
+      "intactComponents": 3
+    },
+    "researchSpeedMultiplier": 1.5,
+    "harvestSpeedMultiplier": 0.9,
+    "buildCostMultiplier": 1.0
   },
   "iron_creed": {
     "name": "Iron Creed",
-    "description": "Fortress builders, brushed steel",
+    "description": "Fortress builders, brushed steel. Impenetrable defense and patience.",
     "color": "#708090",
+    "accentColor": "#B0C4DE",
     "governorBias": {
       "economy": 1.0,
       "mining": 1.0,
@@ -49,6 +158,44 @@
       "defense": 1.5,
       "research": 0.8,
       "expansion": 0.7
-    }
+    },
+    "uniqueAbilities": {
+      "fortification": {
+        "name": "Fortification",
+        "description": "Walls have 40% more HP",
+        "wallHpMultiplier": 1.4
+      },
+      "garrisonBonus": {
+        "name": "Garrison Bonus",
+        "description": "Units behind walls deal 20% more damage",
+        "behindWallDamageMultiplier": 1.2
+      }
+    },
+    "uniqueUnit": {
+      "type": "bastion",
+      "name": "Bastion Bot",
+      "description": "Slow heavy bot that can deploy into a stationary turret",
+      "speed": 0.5,
+      "deployedRange": 15,
+      "deployedDamage": 3,
+      "deployTime": 5,
+      "undeployTime": 8
+    },
+    "uniqueBuilding": {
+      "type": "bunker",
+      "name": "Bunker",
+      "description": "Garrisoned units inside take 50% less damage and have extended range",
+      "garrisonSlots": 3,
+      "damageReduction": 0.5,
+      "rangeMultiplier": 1.5,
+      "powerRequired": 2
+    },
+    "startingBonus": {
+      "scrapMetal": 15,
+      "intactComponents": 2
+    },
+    "researchSpeedMultiplier": 0.9,
+    "harvestSpeedMultiplier": 1.0,
+    "buildCostMultiplier": 0.85
   }
 }

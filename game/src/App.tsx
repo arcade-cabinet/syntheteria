@@ -7,6 +7,7 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { saveGame } from "./save/SaveManager";
 import { buildNavMesh } from "./ai/NavMeshBuilder";
 import { NavMeshDebugRenderer } from "./ai/NavMeshDebugRenderer";
 import { YukaManager } from "./ai/YukaManager";
@@ -68,12 +69,12 @@ import { Bezel } from "./ui/Bezel";
 import { CoreLoopHUD } from "./ui/CoreLoopHUD";
 import { FPSHUD } from "./ui/FPSHUD";
 import { InventoryView } from "./ui/InventoryView";
-import { ObjectActionMenu } from "./ui/ObjectActionMenu";
 import { MobileControls } from "./ui/MobileControls";
 import { PowerOverlay } from "./ui/PowerOverlay";
 import type { PregameConfig } from "./ui/PregameScreen";
 import { PregameScreen } from "./ui/PregameScreen";
 import { getEquippedTool } from "./ui/RadialToolMenu";
+import { SaveLoadMenu } from "./ui/SaveLoadMenu";
 import { TitleScreen } from "./ui/TitleScreen";
 
 // --- World initialization ---
@@ -315,6 +316,7 @@ let worldInitialized = false;
 
 export default function App() {
 	const [phase, setPhase] = useState<"title" | "pregame" | "playing">("title");
+	const [saveMenuOpen, setSaveMenuOpen] = useState(false);
 	const pendingSeedRef = useRef<number>(42);
 	const pregameConfigRef = useRef<PregameConfig | null>(null);
 
@@ -323,6 +325,38 @@ export default function App() {
 			worldInitialized = true;
 			initializeWorld(pendingSeedRef.current);
 		}
+	}, [phase]);
+
+	// ESC key toggles save/load menu during gameplay.
+	// Uses keyup to avoid conflicts with other ESC handlers (ObjectActionMenu,
+	// RadialMenu, InventoryView) which use keydown.
+	useEffect(() => {
+		if (phase !== "playing") return;
+
+		const onKeyUp = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				setSaveMenuOpen((prev) => !prev);
+			}
+		};
+
+		window.addEventListener("keyup", onKeyUp);
+		return () => window.removeEventListener("keyup", onKeyUp);
+	}, [phase]);
+
+	// Autosave every 5 minutes
+	useEffect(() => {
+		if (phase !== "playing") return;
+
+		const interval = setInterval(
+			() => {
+				saveGame("autosave").catch((err) =>
+					console.warn("[Autosave] Failed:", err),
+				);
+			},
+			5 * 60 * 1000,
+		);
+
+		return () => clearInterval(interval);
 	}, [phase]);
 
 	// Title screen "New Game" → go to pregame config
@@ -362,8 +396,25 @@ export default function App() {
 		window.dispatchEvent(new KeyboardEvent("keydown", { key: "e" }));
 	}, []);
 
+	const handleHarvest = useCallback(() => {
+		window.dispatchEvent(new KeyboardEvent("keydown", { key: "f" }));
+	}, []);
+
+	const handleCompress = useCallback(() => {
+		window.dispatchEvent(new KeyboardEvent("keydown", { key: "c" }));
+	}, []);
+
+	const handleGrab = useCallback(() => {
+		window.dispatchEvent(new KeyboardEvent("keydown", { key: "g" }));
+	}, []);
+
 	if (phase === "title") {
-		return <TitleScreen onNewGame={handleNewGame} />;
+		return (
+			<TitleScreen
+				onNewGame={handleNewGame}
+				onContinue={() => setPhase("playing")}
+			/>
+		);
 	}
 
 	if (phase === "pregame") {
@@ -435,7 +486,6 @@ export default function App() {
 			<CoreLoopHUD />
 			<PowerOverlay />
 			<InventoryView />
-			<ObjectActionMenu />
 
 			{/* Mobile controls — joystick, tool view, action buttons */}
 			{isMobile && (
@@ -443,6 +493,17 @@ export default function App() {
 					onInteract={handleInteract}
 					onSwitchBot={handleSwitchBot}
 					onPrimaryAction={handlePrimaryAction}
+					onHarvest={handleHarvest}
+					onCompress={handleCompress}
+					onGrab={handleGrab}
+				/>
+			)}
+
+			{/* Save/Load menu — ESC to toggle */}
+			{saveMenuOpen && (
+				<SaveLoadMenu
+					onClose={() => setSaveMenuOpen(false)}
+					onLoadComplete={() => setSaveMenuOpen(false)}
 				/>
 			)}
 		</Bezel>

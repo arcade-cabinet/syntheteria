@@ -9,6 +9,16 @@ export default defineConfig({
 	optimizeDeps: {
 		exclude: ["@dimforge/rapier3d-compat"],
 	},
+	build: {
+		rollupOptions: {
+			output: {
+				manualChunks: {
+					three: ["three"],
+					r3f: ["@react-three/fiber", "@react-three/drei"],
+				},
+			},
+		},
+	},
 	test: {
 		exclude: [
 			"**/node_modules/**",

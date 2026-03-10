@@ -2,9 +2,14 @@
  * Mobile controls overlay — combines all mobile-specific UI.
  *
  * Layout:
- * - Left: nipplejs movement joystick
+ * - Left: nipplejs movement joystick (bottom-left quadrant)
  * - Bottom center: equipped tool view (tap to open radial menu)
- * - Right: action buttons (USE, E interact, Q switch bot)
+ * - Right: action buttons arranged for single-thumb access
+ *   - Primary cluster (right thumb): Harvest, Compress, Grab/Drop
+ *   - Secondary row: Interact (E), Switch Bot (Q)
+ *
+ * All elements respect safe area insets for notch/home indicator devices.
+ * Touch targets are minimum 48x48px (exceeds WCAG 2.5.5 Level AAA).
  *
  * Only renders on touch devices.
  */
@@ -18,12 +23,18 @@ interface MobileControlsProps {
 	onInteract: () => void;
 	onSwitchBot: () => void;
 	onPrimaryAction: () => void;
+	onHarvest: () => void;
+	onCompress: () => void;
+	onGrab: () => void;
 }
 
 export function MobileControls({
 	onInteract,
 	onSwitchBot,
 	onPrimaryAction,
+	onHarvest,
+	onCompress,
+	onGrab,
 }: MobileControlsProps) {
 	const [radialOpen, setRadialOpen] = useState(false);
 
@@ -37,6 +48,10 @@ export function MobileControls({
 				inset: 0,
 				pointerEvents: "none",
 				zIndex: 15,
+				/* Safe area padding applied to the container so children can use relative offsets */
+				paddingLeft: "env(safe-area-inset-left, 0px)",
+				paddingRight: "env(safe-area-inset-right, 0px)",
+				paddingBottom: "env(safe-area-inset-bottom, 0px)",
 			}}
 		>
 			{/* Movement joystick — left side */}
@@ -50,6 +65,9 @@ export function MobileControls({
 				onPrimaryAction={onPrimaryAction}
 				onInteract={onInteract}
 				onSwitchBot={onSwitchBot}
+				onHarvest={onHarvest}
+				onCompress={onCompress}
+				onGrab={onGrab}
 			/>
 
 			{/* Radial menu overlay */}

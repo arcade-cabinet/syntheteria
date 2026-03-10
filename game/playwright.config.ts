@@ -7,8 +7,10 @@ import { defineConfig, devices } from "@playwright/test";
  * CI            : `npm run test:e2e`      — starts vite dev server automatically
  * Interactive UI: `npm run test:e2e:ui`   — Playwright UI mode
  *
- * The webServer block starts `vite` and waits until localhost:5173 is ready.
- * In CI the existing server is never reused (each run is clean).
+ * Uses the Vite dev server (not Expo) for E2E tests because:
+ * 1. Vite serves at localhost:5173 with base path /syntheteria/
+ * 2. Expo web requires additional native module setup not needed for E2E
+ * 3. The game code is identical — only the bundler differs
  */
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -31,7 +33,8 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: "http://localhost:5173",
+    // Vite serves the app at /syntheteria/ due to the base config
+    baseURL: "http://localhost:5173/syntheteria/",
     // Capture trace on the first retry so failures are debuggable.
     trace: "on-first-retry",
     // Capture screenshot on failure.
@@ -53,8 +56,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:5173",
+    command: "npm run dev:vite",
+    url: "http://localhost:5173/syntheteria/",
     // Reuse a running dev server locally; always start fresh in CI.
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,

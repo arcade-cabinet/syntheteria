@@ -1,11 +1,16 @@
 /**
- * Equipped tool "held" view — bottom center of viewport.
+ * Equipped tool "held" view -- bottom center of viewport.
  *
  * Shows a procedurally generated representation of the currently
  * equipped tool, like a first-person weapon/tool view.
  * Tapping it opens the radial tool menu.
  *
- * Also includes action buttons on the right side for mobile.
+ * Also includes action buttons on the right side for mobile:
+ * - Primary cluster: Harvest (F), Compress (C), Grab (G) -- core loop actions
+ * - Secondary buttons: Interact (E), Switch Bot (Q)
+ *
+ * All touch targets meet WCAG 2.5.5 minimum (48x48px).
+ * Safe area insets are handled by the parent MobileControls container.
  */
 
 import { useEffect, useState } from "react";
@@ -19,12 +24,12 @@ const TOOL_VISUALS: Record<
 	ToolType,
 	{ color: string; shape: string; label: string }
 > = {
-	scanner: { color: "#00ffaa", shape: "◎", label: "SCANNER" },
-	repair: { color: "#44aaff", shape: "⚙", label: "REPAIR ARM" },
-	welder: { color: "#ffaa00", shape: "⚡", label: "WELDER" },
-	fabricate: { color: "#aa44ff", shape: "⬡", label: "FABRICATOR" },
-	build: { color: "#44ff88", shape: "▦", label: "BUILDER" },
-	scavenge: { color: "#ff8844", shape: "◈", label: "SALVAGER" },
+	scanner: { color: "#00ffaa", shape: "\u25ce", label: "SCANNER" },
+	repair: { color: "#44aaff", shape: "\u2699", label: "REPAIR ARM" },
+	welder: { color: "#ffaa00", shape: "\u26a1", label: "WELDER" },
+	fabricate: { color: "#aa44ff", shape: "\u2b21", label: "FABRICATOR" },
+	build: { color: "#44ff88", shape: "\u25a6", label: "BUILDER" },
+	scavenge: { color: "#ff8844", shape: "\u25c8", label: "SALVAGER" },
 };
 
 interface EquippedToolViewProps {
@@ -45,7 +50,7 @@ export function EquippedToolView({ onTap }: EquippedToolViewProps) {
 			onClick={onTap}
 			style={{
 				position: "absolute",
-				bottom: "8px",
+				bottom: "max(12px, env(safe-area-inset-bottom, 0px))",
 				left: "50%",
 				transform: "translateX(-50%)",
 				width: "80px",
@@ -81,52 +86,112 @@ export function EquippedToolView({ onTap }: EquippedToolViewProps) {
 
 /**
  * Right-side action buttons for mobile FPS.
- * Primary action (use tool) + secondary (interact/switch bot).
+ *
+ * Layout (right-thumb reachable, bottom-up):
+ *
+ *        [Q]  [E]        <-- secondary row, top
+ *     [GRAB]  [USE]      <-- middle row
+ *   [COMPRESS] [HARVEST] <-- primary cluster, bottom (most-used actions)
+ *
+ * Harvest and Compress are the most frequent core loop actions and sit
+ * at the bottom-right where the right thumb naturally rests.
+ * Grab/Drop is just above since it alternates with harvest flow.
  */
 export function ActionButtons({
 	onPrimaryAction,
 	onInteract,
 	onSwitchBot,
+	onHarvest,
+	onCompress,
+	onGrab,
 }: {
 	onPrimaryAction: () => void;
 	onInteract: () => void;
 	onSwitchBot: () => void;
+	onHarvest: () => void;
+	onCompress: () => void;
+	onGrab: () => void;
 }) {
 	return (
 		<div
 			style={{
 				position: "absolute",
-				right: "12px",
-				bottom: "20px",
+				right: "max(16px, env(safe-area-inset-right, 0px))",
+				bottom: "max(20px, env(safe-area-inset-bottom, 0px))",
 				display: "flex",
 				flexDirection: "column",
-				gap: "10px",
+				alignItems: "flex-end",
+				gap: "12px",
 				pointerEvents: "auto",
 				zIndex: 20,
 			}}
 		>
-			{/* Primary action — large button */}
-			<ActionBtn
-				label="USE"
-				color="#00ffaa"
-				size={56}
-				onPress={onPrimaryAction}
-			/>
-			{/* Interact */}
-			<ActionBtn label="E" color="#44aaff" size={44} onPress={onInteract} />
-			{/* Switch bot */}
-			<ActionBtn label="Q" color="#ffaa44" size={44} onPress={onSwitchBot} />
+			{/* Secondary row -- top (less frequent) */}
+			<div style={{ display: "flex", gap: "12px" }}>
+				<ActionBtn
+					label="Q"
+					sublabel="BOT"
+					color="#ffaa44"
+					size={48}
+					onPress={onSwitchBot}
+				/>
+				<ActionBtn
+					label="E"
+					sublabel="ACT"
+					color="#44aaff"
+					size={48}
+					onPress={onInteract}
+				/>
+			</div>
+
+			{/* Middle row -- grab + use */}
+			<div style={{ display: "flex", gap: "12px" }}>
+				<ActionBtn
+					label="G"
+					sublabel="GRAB"
+					color="#88ddff"
+					size={52}
+					onPress={onGrab}
+				/>
+				<ActionBtn
+					label="USE"
+					sublabel=""
+					color="#00ffaa"
+					size={56}
+					onPress={onPrimaryAction}
+				/>
+			</div>
+
+			{/* Primary cluster -- bottom (most-used core loop) */}
+			<div style={{ display: "flex", gap: "12px" }}>
+				<ActionBtn
+					label="C"
+					sublabel="PRESS"
+					color="#ff6644"
+					size={56}
+					onPress={onCompress}
+				/>
+				<ActionBtn
+					label="F"
+					sublabel="MINE"
+					color="#ffcc00"
+					size={56}
+					onPress={onHarvest}
+				/>
+			</div>
 		</div>
 	);
 }
 
 function ActionBtn({
 	label,
+	sublabel,
 	color,
 	size,
 	onPress,
 }: {
 	label: string;
+	sublabel: string;
 	color: string;
 	size: number;
 	onPress: () => void;
@@ -139,24 +204,44 @@ function ActionBtn({
 				onPress();
 			}}
 			style={{
-				width: size,
-				height: size,
+				width: Math.max(size, 48),
+				height: Math.max(size, 48),
 				borderRadius: "50%",
-				background: "rgba(0, 8, 4, 0.7)",
+				background: "rgba(0, 8, 4, 0.75)",
 				border: `2px solid ${color}66`,
 				color,
-				fontSize: size > 50 ? "13px" : "11px",
+				fontSize: size >= 52 ? "14px" : "12px",
 				fontFamily: "'Courier New', monospace",
 				fontWeight: "bold",
 				letterSpacing: "0.05em",
 				cursor: "pointer",
 				display: "flex",
+				flexDirection: "column",
 				alignItems: "center",
 				justifyContent: "center",
-				boxShadow: `0 0 8px ${color}22`,
+				boxShadow: `0 0 10px ${color}22`,
+				padding: 0,
+				/* Prevent text selection on rapid taps */
+				WebkitUserSelect: "none",
+				userSelect: "none",
+				/* Prevent touch callout on iOS */
+				WebkitTouchCallout: "none",
 			}}
 		>
-			{label}
+			<span style={{ lineHeight: 1 }}>{label}</span>
+			{sublabel && (
+				<span
+					style={{
+						fontSize: "6px",
+						opacity: 0.7,
+						letterSpacing: "0.08em",
+						marginTop: "1px",
+						lineHeight: 1,
+					}}
+				>
+					{sublabel}
+				</span>
+			)}
 		</button>
 	);
 }

@@ -11,15 +11,19 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { phraseToSeed, randomSeed, seedToPhrase } from "../ecs/seed";
+import { getSaveSlots, loadGame, type SaveSlotInfo } from "../save/SaveManager";
 
 export function TitleScreen({
 	onNewGame,
+	onContinue,
 }: {
 	onNewGame: (seed: number) => void;
+	onContinue?: () => void;
 }) {
 	const [titleOpacity, setTitleOpacity] = useState(0);
 	const [menuOpacity, setMenuOpacity] = useState(0);
 	const [glitch, setGlitch] = useState(false);
+	const [latestSave, setLatestSave] = useState<SaveSlotInfo | null>(null);
 
 	// Seed state — one random seed at startup, shown as a phrase
 	const [phraseInput, setPhraseInput] = useState(() =>
@@ -27,6 +31,23 @@ export function TitleScreen({
 	);
 	const [parseError, setParseError] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
+
+	// Check for existing saves to enable CONTINUE button
+	useEffect(() => {
+		getSaveSlots()
+			.then((slots) => {
+				if (slots.length > 0) {
+					// Sort by most recently updated
+					const sorted = [...slots].sort(
+						(a, b) => b.updatedAt - a.updatedAt,
+					);
+					setLatestSave(sorted[0]);
+				}
+			})
+			.catch(() => {
+				// No saves or error — leave CONTINUE disabled
+			});
+	}, []);
 
 	useEffect(() => {
 		const t1 = setTimeout(() => setTitleOpacity(1), 200);
@@ -226,7 +247,21 @@ export function TitleScreen({
 				</div>
 
 				<MenuButton label="NEW GAME" onClick={handleNewGame} primary />
-				<MenuButton label="CONTINUE" disabled />
+				<MenuButton
+					label="CONTINUE"
+					disabled={!latestSave}
+					onClick={
+						latestSave
+							? () => {
+									loadGame(latestSave.slotId)
+										.then(() => onContinue?.())
+										.catch((err) =>
+											console.error("[Continue] Load failed:", err),
+										);
+								}
+							: undefined
+					}
+				/>
 				<MenuButton label="SETTINGS" disabled />
 			</div>
 

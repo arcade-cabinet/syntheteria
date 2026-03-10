@@ -56,9 +56,12 @@ interface RadialToolMenuProps {
 }
 
 export function RadialToolMenu({ onClose }: RadialToolMenuProps) {
-	const radius = 90;
-	const centerX = 150;
-	const centerY = 150;
+	// Increased radius and item sizes for comfortable touch targets.
+	// Each tool circle is r=32 (64px diameter), exceeding WCAG 48px minimum.
+	const radius = 100;
+	const svgSize = 340;
+	const centerX = svgSize / 2;
+	const centerY = svgSize / 2;
 
 	const handleSelect = (tool: Tool) => {
 		setEquippedTool(tool.id);
@@ -69,11 +72,11 @@ export function RadialToolMenu({ onClose }: RadialToolMenuProps) {
 		<div
 			style={{
 				position: "absolute",
-				bottom: "60px",
+				bottom: `max(60px, env(safe-area-inset-bottom, 0px))`,
 				left: "50%",
 				transform: "translateX(-50%)",
-				width: "300px",
-				height: "300px",
+				width: `${svgSize}px`,
+				height: `${svgSize}px`,
 				zIndex: 50,
 				pointerEvents: "auto",
 			}}
@@ -82,12 +85,16 @@ export function RadialToolMenu({ onClose }: RadialToolMenuProps) {
 				if (e.target === e.currentTarget) onClose();
 			}}
 		>
-			<svg width="300" height="300" viewBox="0 0 300 300">
+			<svg
+				width={svgSize}
+				height={svgSize}
+				viewBox={`0 0 ${svgSize} ${svgSize}`}
+			>
 				{/* Background circle */}
 				<circle
 					cx={centerX}
 					cy={centerY}
-					r={radius + 30}
+					r={radius + 40}
 					fill="rgba(0, 8, 4, 0.9)"
 					stroke="#00ffaa33"
 					strokeWidth="1"
@@ -106,11 +113,11 @@ export function RadialToolMenu({ onClose }: RadialToolMenuProps) {
 							onClick={() => handleSelect(tool)}
 							style={{ cursor: "pointer" }}
 						>
-							{/* Hit area */}
+							{/* Hit area -- r=32 gives 64px diameter touch target */}
 							<circle
 								cx={x}
 								cy={y}
-								r={28}
+								r={32}
 								fill={isActive ? `${tool.color}22` : "rgba(0,0,0,0.4)"}
 								stroke={isActive ? tool.color : "#00ffaa44"}
 								strokeWidth={isActive ? 2 : 1}
@@ -118,21 +125,21 @@ export function RadialToolMenu({ onClose }: RadialToolMenuProps) {
 							{/* Icon */}
 							<text
 								x={x}
-								y={y - 4}
+								y={y - 5}
 								textAnchor="middle"
 								dominantBaseline="central"
 								fill={tool.color}
-								fontSize="18"
+								fontSize="20"
 							>
 								{tool.icon}
 							</text>
 							{/* Label */}
 							<text
 								x={x}
-								y={y + 14}
+								y={y + 15}
 								textAnchor="middle"
 								fill={isActive ? tool.color : "#00ffaa88"}
-								fontSize="8"
+								fontSize="9"
 								fontFamily="'Courier New', monospace"
 								letterSpacing="0.05em"
 							>
@@ -142,11 +149,11 @@ export function RadialToolMenu({ onClose }: RadialToolMenuProps) {
 					);
 				})}
 
-				{/* Center — current tool */}
+				{/* Center -- current tool */}
 				<circle
 					cx={centerX}
 					cy={centerY}
-					r={20}
+					r={22}
 					fill="rgba(0,8,4,0.9)"
 					stroke="#00ffaa44"
 					strokeWidth="1"

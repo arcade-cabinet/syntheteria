@@ -57,17 +57,10 @@ export function beltTransportSystem(deltaTick: number) {
 			continue;
 		}
 
-		// If the next entity is a processor building, deliver the item to it
+		// If the next entity is a processor building, hold item at end of belt.
+		// The processingSystem() will pull the item when the processor is ready.
 		if (nextEntity.processor) {
-			if (nextEntity.processor.active && nextEntity.processor.recipe !== null) {
-				// Processor accepts the item
-				belt.carrying = null;
-				belt.itemProgress = 0;
-				// Processor progress is handled by its own system
-			} else {
-				// Processor not ready — item piles up
-				belt.itemProgress = 1.0;
-			}
+			belt.itemProgress = 1.0;
 			continue;
 		}
 

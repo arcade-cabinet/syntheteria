@@ -29,6 +29,13 @@ export function getResources(): ResourcePool {
 	return { ...resources };
 }
 
+/** Reset all resource counts to zero. Used by save/load to avoid inflation. */
+export function resetResourcePool() {
+	resources.scrapMetal = 0;
+	resources.eWaste = 0;
+	resources.intactComponents = 0;
+}
+
 export function addResource(type: keyof ResourcePool, amount: number) {
 	resources[type] += amount;
 }

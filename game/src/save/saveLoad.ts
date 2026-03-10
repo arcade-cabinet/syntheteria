@@ -5,15 +5,15 @@
  * and persists via IndexedDB as a browser fallback before expo-sqlite.
  */
 
-import { getSnapshot } from "../ecs/gameState";
+import { getSnapshot, setGameSpeed, setTickCount } from "../ecs/gameState";
 import { getWorldSeed, setWorldSeed } from "../ecs/seed";
 import type { Entity, UnitComponent, Vec3 } from "../ecs/types";
 import { world } from "../ecs/world";
-import { getStormIntensity } from "../systems/power";
 import {
 	addResource,
 	getResources,
 	type ResourcePool,
+	resetResourcePool,
 } from "../systems/resources";
 
 // ---------------------------------------------------------------------------
@@ -36,7 +36,6 @@ export interface SaveData {
 	playTimeSeconds: number;
 	gameSpeed: number;
 	tickCount: number;
-	stormIntensity: number;
 	entities: SavedEntityData[];
 	resources: ResourcePool;
 }
@@ -165,7 +164,6 @@ export function serializeWorld(name: string, playTimeSeconds = 0): SaveData {
 		playTimeSeconds,
 		gameSpeed: snap.gameSpeed,
 		tickCount: snap.tick,
-		stormIntensity: getStormIntensity(),
 		entities,
 		resources: getResources(),
 	};
@@ -187,6 +185,10 @@ export function deserializeWorld(data: SaveData): void {
 
 	// Restore seed
 	setWorldSeed(data.seed);
+
+	// Restore simulation state
+	setGameSpeed(data.gameSpeed);
+	setTickCount(data.tickCount);
 
 	// Restore entities
 	for (const saved of data.entities) {
@@ -254,9 +256,9 @@ export function deserializeWorld(data: SaveData): void {
 		world.add(entity);
 	}
 
-	// Restore resources
+	// Restore resources — reset pool first to prevent inflation on re-load
+	resetResourcePool();
 	const res = data.resources;
-	// Reset to zero then add saved amounts
 	addResource("scrapMetal", res.scrapMetal);
 	addResource("eWaste", res.eWaste);
 	addResource("intactComponents", res.intactComponents);

@@ -101,8 +101,9 @@ function distributePowerThroughWires() {
 	// Track power flowing through each wire
 	const wireFlows = new Map<string, number>();
 
-	while (queue.length > 0) {
-		const current = queue.shift()!;
+	let head = 0;
+	while (head < queue.length) {
+		const current = queue[head++];
 		const neighbors = graph.get(current.entityId);
 		if (!neighbors) continue;
 
@@ -187,8 +188,9 @@ function distributeSignalThroughWires() {
 		visited.add(relay.id);
 	}
 
-	while (queue.length > 0) {
-		const current = queue.shift()!;
+	let signalHead = 0;
+	while (signalHead < queue.length) {
+		const current = queue[signalHead++];
 		const neighbors = graph.get(current.entityId);
 		if (!neighbors) continue;
 

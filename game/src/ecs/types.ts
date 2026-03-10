@@ -45,7 +45,7 @@ export interface BeltComponent {
 	direction: BeltDirection;
 	speed: number; // items per second
 	tier: BeltTier;
-	/** Entity ID of item currently on this segment */
+	/** Item type string currently on this segment (e.g., 'scrap_metal'), or null if empty */
 	carrying: string | null;
 	/** Next belt entity ID in the chain */
 	nextBeltId: string | null;

@@ -28,14 +28,18 @@ export function AudioSystem() {
 			initAttempted.current = true;
 			try {
 				await initAudio();
+				// Success — remove listeners so we don't re-init
+				window.removeEventListener("click", handleInteraction);
+				window.removeEventListener("touchstart", handleInteraction);
 			} catch {
 				// Audio init can fail silently — game works without it
+				// Allow retry on next interaction
 				initAttempted.current = false;
 			}
 		};
 
-		window.addEventListener("click", handleInteraction, { once: true });
-		window.addEventListener("touchstart", handleInteraction, { once: true });
+		window.addEventListener("click", handleInteraction);
+		window.addEventListener("touchstart", handleInteraction);
 
 		return () => {
 			window.removeEventListener("click", handleInteraction);

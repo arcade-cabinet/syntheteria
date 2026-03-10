@@ -7,7 +7,7 @@
  */
 
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import type { Entity } from "../ecs/types";
 import { wires, world } from "../ecs/world";
@@ -71,6 +71,11 @@ function WireMesh({
 		return Array.from({ length: SPARK_COUNT }, () => new THREE.Vector3());
 	}, []);
 
+	// Cache last endpoint positions to avoid rebuilding geometry every frame
+	const lastFromRef = useRef({ x: NaN, y: NaN, z: NaN });
+	const lastToRef = useRef({ x: NaN, y: NaN, z: NaN });
+	const curveRef = useRef<THREE.CatmullRomCurve3 | null>(null);
+
 	useFrame(() => {
 		const fromEntity = getEntityById(wireEntity.wire.fromEntityId);
 		const toEntity = getEntityById(wireEntity.wire.toEntityId);
@@ -84,32 +89,42 @@ function WireMesh({
 			return;
 		}
 
-		const from = new THREE.Vector3(
-			fromEntity.worldPosition.x,
-			fromEntity.worldPosition.y + 0.8,
-			fromEntity.worldPosition.z,
-		);
-		const to = new THREE.Vector3(
-			toEntity.worldPosition.x,
-			toEntity.worldPosition.y + 0.8,
-			toEntity.worldPosition.z,
-		);
+		const fx = fromEntity.worldPosition.x;
+		const fy = fromEntity.worldPosition.y + 0.8;
+		const fz = fromEntity.worldPosition.z;
+		const tx = toEntity.worldPosition.x;
+		const ty = toEntity.worldPosition.y + 0.8;
+		const tz = toEntity.worldPosition.z;
 
-		const length = from.distanceTo(to);
-		const sagAmount = length * 0.15;
-		const points = buildCatenaryPoints(from, to, sagAmount);
-		const curve = new THREE.CatmullRomCurve3(points);
+		// Only rebuild geometry when endpoints have actually moved
+		const lf = lastFromRef.current;
+		const lt = lastToRef.current;
+		const endpointsChanged =
+			lf.x !== fx || lf.y !== fy || lf.z !== fz ||
+			lt.x !== tx || lt.y !== ty || lt.z !== tz;
 
-		// Replace geometry
-		const oldGeometry = meshRef.current.geometry;
-		meshRef.current.geometry = new THREE.TubeGeometry(
-			curve,
-			CATENARY_SEGMENTS,
-			radius,
-			6,
-			false,
-		);
-		oldGeometry.dispose();
+		if (endpointsChanged) {
+			lf.x = fx; lf.y = fy; lf.z = fz;
+			lt.x = tx; lt.y = ty; lt.z = tz;
+
+			const from = new THREE.Vector3(fx, fy, fz);
+			const to = new THREE.Vector3(tx, ty, tz);
+			const length = from.distanceTo(to);
+			const sagAmount = length * 0.15;
+			const points = buildCatenaryPoints(from, to, sagAmount);
+			curveRef.current = new THREE.CatmullRomCurve3(points);
+
+			// Replace geometry
+			const oldGeometry = meshRef.current.geometry;
+			meshRef.current.geometry = new THREE.TubeGeometry(
+				curveRef.current,
+				CATENARY_SEGMENTS,
+				radius,
+				6,
+				false,
+			);
+			oldGeometry.dispose();
+		}
 
 		meshRef.current.visible = true;
 
@@ -127,10 +142,10 @@ function WireMesh({
 			const sparkMesh = sparkRefs.current[i];
 			if (!sparkMesh) continue;
 
-			if (overloaded) {
+			if (overloaded && curveRef.current) {
 				// Place spark at random point along the curve
 				const t = Math.random();
-				const pos = curve.getPointAt(t);
+				const pos = curveRef.current.getPointAt(t);
 				// Small random offset for visual variety
 				pos.x += (Math.random() - 0.5) * 0.15;
 				pos.y += (Math.random() - 0.5) * 0.15;
@@ -179,19 +194,13 @@ function WireMesh({
 
 export function WireRenderer() {
 	const groupRef = useRef<THREE.Group>(null);
-	const wireEntitiesRef = useRef<(Entity & Required<Pick<Entity, "wire">>)[]>(
-		[],
-	);
+	const [wireCount, setWireCount] = useState(0);
 
-	// Sync wire entity list periodically (not every frame)
-	useFrame(({ clock }) => {
-		// Update entity list every ~0.5s to avoid overhead
-		if (
-			Math.floor(clock.elapsedTime * 2) !==
-			Math.floor((clock.elapsedTime - 0.016) * 2)
-		) {
-			wireEntitiesRef.current = Array.from(wires) as (Entity &
-				Required<Pick<Entity, "wire">>)[];
+	// Track wire count to trigger re-render when wires are added/removed
+	useFrame(() => {
+		const currentCount = Array.from(wires).length;
+		if (currentCount !== wireCount) {
+			setWireCount(currentCount);
 		}
 	});
 

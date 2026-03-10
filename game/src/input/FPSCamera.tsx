@@ -16,7 +16,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { getTerrainHeight } from "../ecs/terrain";
-import { getActivePlayerBot } from "../ecs/world";
+import { getActivePlayerBot, playerBots } from "../ecs/world";
 import { joystickState } from "../ui/MobileJoystick";
 
 const EYE_HEIGHT = 1.4;
@@ -270,8 +270,6 @@ export function FPSCamera() {
 }
 
 // --- Bot switching ---
-
-import { playerBots } from "../ecs/world";
 
 function switchBot() {
 	const bots = Array.from(playerBots);

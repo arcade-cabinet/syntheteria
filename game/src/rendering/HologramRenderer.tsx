@@ -232,13 +232,29 @@ function HologramSprite({ entity }: { entity: OtterEntity }) {
 		[offset],
 	);
 
+	// Per-instance particle materials (need individual opacity).
+	const particleMaterials = useMemo(
+		() =>
+			Array.from({ length: PARTICLE_COUNT }, () => particleMaterial.clone()),
+		[],
+	);
+
+	// Dispose particle materials on unmount.
+	useEffect(() => {
+		return () => {
+			for (const mat of particleMaterials) {
+				mat.dispose();
+			}
+		};
+	}, [particleMaterials]);
+
 	// Speech-bubble state.
 	const lines = entity.otter.lines ?? [];
 	const isNearRef = useRef(false);
 	const [isNear, setIsNear] = useState(false);
 	const [dialogueIndex, setDialogueIndex] = useState(0);
 
-	useFrame((state) => {
+	useFrame((state, delta) => {
 		const wp = entity.worldPosition;
 		const t = state.clock.elapsedTime;
 
@@ -262,7 +278,7 @@ function HologramSprite({ entity }: { entity: OtterEntity }) {
 			const mesh = particleRefs.current[i];
 			if (!mesh) continue;
 
-			p.y += p.speed * state.clock.getDelta();
+			p.y += p.speed * delta;
 			if (p.y > p.maxY) {
 				p.y = p.resetY;
 			}
@@ -333,7 +349,7 @@ function HologramSprite({ entity }: { entity: OtterEntity }) {
 						particleRefs.current[i] = el;
 					}}
 					geometry={particleGeometry}
-					material={particleMaterial.clone()}
+					material={particleMaterials[i]}
 					position={[0, FLOAT_ABOVE_PAD + SPRITE_HEIGHT, 0]}
 					renderOrder={11}
 				/>

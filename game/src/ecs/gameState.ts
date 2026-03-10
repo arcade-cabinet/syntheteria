@@ -93,6 +93,12 @@ export function setGameSpeed(speed: number) {
 	notify();
 }
 
+/** Restore tick count from a save file. */
+export function setTickCount(count: number) {
+	tick = count;
+	snapshot = null;
+}
+
 export function togglePause() {
 	paused = !paused;
 	snapshot = null;

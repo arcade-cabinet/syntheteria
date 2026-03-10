@@ -64,6 +64,9 @@ export function startHack(entityId: string): boolean {
 	// Already being hacked
 	if (entity.hackable.beingHacked) return false;
 
+	// Another hack is already in progress — only one at a time
+	if (activeHackTargetId !== null) return false;
+
 	// Check player proximity
 	const dist = distToPlayer(entity.worldPosition.x, entity.worldPosition.z);
 	if (dist > HACK_START_RANGE) return false;

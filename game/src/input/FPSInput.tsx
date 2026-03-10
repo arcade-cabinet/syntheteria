@@ -105,7 +105,7 @@ export function FPSInput() {
 			}
 		};
 
-		// Touch tap on right side = interact
+		// Desktop left-click with pointer lock = interact (touch uses mobile action buttons)
 		const canvas = gl.domElement;
 		const onPointerDown = (e: PointerEvent) => {
 			if (e.pointerType === "touch") return;

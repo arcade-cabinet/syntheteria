@@ -12,6 +12,7 @@ import * as THREE from "three";
 import { getTerrainHeight } from "../ecs/terrain";
 import type { BeltDirection, Entity } from "../ecs/types";
 import { belts } from "../ecs/world";
+import { createBeltMaterial } from "./materials/BeltMaterial";
 
 /** Direction rotation (Y-axis) for pointing arrows */
 const DIRECTION_ROTATIONS: Record<BeltDirection, number> = {
@@ -63,14 +64,7 @@ function BeltSegment({ entity }: { entity: Entity }) {
 
 	const arrowGeo = useMemo(() => createArrowGeometry(), []);
 
-	const surfaceMaterial = useMemo(() => {
-		const mat = new THREE.MeshStandardMaterial({
-			color: 0x333333,
-			metalness: 0.7,
-			roughness: 0.4,
-		});
-		return mat;
-	}, []);
+	const surfaceMaterial = useMemo(() => createBeltMaterial(), []);
 
 	const rotation = DIRECTION_ROTATIONS[belt.direction];
 	const scrollDir = UV_SCROLL_DIR[belt.direction];

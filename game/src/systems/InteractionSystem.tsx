@@ -239,6 +239,15 @@ export function InteractionSystem() {
 					}
 					break;
 				}
+				case "open": {
+					// Dispatch event so CoreLoopHUD can show the furnace detail panel
+					window.dispatchEvent(
+						new CustomEvent("coreloop:furnace-open", {
+							detail: { furnaceId: entityId },
+						}),
+					);
+					break;
+				}
 				case "place": {
 					// Place held cube at a grid position
 					const occupied = getOccupiedSlots();

@@ -13,7 +13,7 @@
  */
 
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import * as THREE from "three";
 import { addStaticBox, isPhysicsInitialized } from "../physics/PhysicsWorld";
 import { getAllDeposits, type OreDepositData } from "../systems/oreSpawner";
@@ -63,10 +63,10 @@ function DepositMesh({ deposit }: DepositMeshProps) {
 		? deposit.colliderRadius * DEPLETED_SCALE
 		: deposit.colliderRadius * BASE_SCALE;
 
-	// Register physics collider on mount
-	useEffect(() => {
+	// Retry collider registration each frame until physics is ready
+	useFrame(() => {
 		ensureCollider(deposit);
-	}, [deposit]);
+	});
 
 	const yPos = deposit.position.y + deposit.colliderRadius * 0.5;
 

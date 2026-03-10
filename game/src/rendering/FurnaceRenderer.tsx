@@ -10,7 +10,7 @@
  */
 
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import * as THREE from "three";
 import { addStaticBox, isPhysicsInitialized } from "../physics/PhysicsWorld";
 import { type FurnaceData, getAllFurnaces } from "../systems/furnace";
@@ -64,12 +64,10 @@ function FurnaceMesh({ furnace }: FurnaceMeshProps) {
 	const bodyRef = useRef<THREE.Mesh>(null);
 	const glowRef = useRef<THREE.Mesh>(null);
 
-	// Register physics collider on mount
-	useEffect(() => {
-		ensureCollider(furnace);
-	}, [furnace]);
-
 	useFrame(({ clock }) => {
+		// Retry collider registration each frame until physics is ready
+		ensureCollider(furnace);
+
 		if (!bodyRef.current) return;
 
 		const mat = bodyRef.current.material as THREE.MeshStandardMaterial;

@@ -38,6 +38,7 @@ import { EnvironmentSetup } from "./rendering/EnvironmentSetup";
 import { FactoryRenderer } from "./rendering/FactoryRenderer";
 import { Flashlight } from "./rendering/Flashlight";
 import { FreeCubeRenderer } from "./rendering/FreeCubeRenderer";
+import { HarvestParticles } from "./rendering/HarvestParticles";
 import { FurnaceRenderer } from "./rendering/FurnaceRenderer";
 import { PlacementPreview } from "./rendering/PlacementPreview";
 import { HologramRenderer } from "./rendering/HologramRenderer";
@@ -407,6 +408,7 @@ export default function App() {
 				<PlacedCubeRenderer />
 				<FurnaceRenderer />
 				<PlacementPreview />
+				<HarvestParticles />
 
 				<FPSCamera />
 				<CameraEffects />

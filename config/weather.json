@@ -1,0 +1,52 @@
+{
+  "states": {
+    "clear": {
+      "visibilityRange": 1.0,
+      "movementSpeedModifier": 1.0,
+      "damageModifier": 0.0,
+      "powerGenerationModifier": 1.0,
+      "lightningStrikeChance": 0.0
+    },
+    "overcast": {
+      "visibilityRange": 0.7,
+      "movementSpeedModifier": 1.0,
+      "damageModifier": 0.0,
+      "powerGenerationModifier": 0.8,
+      "lightningStrikeChance": 0.0
+    },
+    "storm": {
+      "visibilityRange": 0.4,
+      "movementSpeedModifier": 0.8,
+      "damageModifier": 0.0,
+      "powerGenerationModifier": 1.5,
+      "lightningStrikeChance": 0.05
+    },
+    "electromagnetic_surge": {
+      "visibilityRange": 0.3,
+      "movementSpeedModifier": 0.6,
+      "damageModifier": 0.0,
+      "powerGenerationModifier": 2.5,
+      "lightningStrikeChance": 0.15
+    },
+    "acid_rain": {
+      "visibilityRange": 0.5,
+      "movementSpeedModifier": 0.7,
+      "damageModifier": 2.0,
+      "powerGenerationModifier": 0.9,
+      "lightningStrikeChance": 0.02
+    }
+  },
+  "transitionIntervalTicks": 600,
+  "transitionWeights": {
+    "clear": { "clear": 40, "overcast": 35, "storm": 10, "electromagnetic_surge": 5, "acid_rain": 10 },
+    "overcast": { "clear": 25, "overcast": 30, "storm": 25, "electromagnetic_surge": 5, "acid_rain": 15 },
+    "storm": { "clear": 10, "overcast": 20, "storm": 30, "electromagnetic_surge": 20, "acid_rain": 20 },
+    "electromagnetic_surge": { "clear": 15, "overcast": 20, "storm": 30, "electromagnetic_surge": 20, "acid_rain": 15 },
+    "acid_rain": { "clear": 20, "overcast": 25, "storm": 20, "electromagnetic_surge": 10, "acid_rain": 25 }
+  },
+  "stormIntensityDecayRate": 0.01,
+  "stormIntensityGrowthRate": 0.02,
+  "forecastAccuracyDecay": 0.15,
+  "acidRainDamagePerTick": 0.5,
+  "acidRainProtectionTypes": ["shelter", "acid_shield"]
+}

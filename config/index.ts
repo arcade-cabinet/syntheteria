@@ -29,6 +29,8 @@ import botAutomationConfig from './botAutomation.json';
 import discoveriesConfig from './discoveries.json';
 import diplomacyConfig from './diplomacy.json';
 import victoryConfig from './victory.json';
+import weatherConfig from './weather.json';
+import environmentHazardsConfig from './environmentHazards.json';
 
 export const config = {
   units: unitsConfig,
@@ -59,6 +61,8 @@ export const config = {
   discoveries: discoveriesConfig,
   diplomacy: diplomacyConfig,
   victory: victoryConfig,
+  weather: weatherConfig,
+  environmentHazards: environmentHazardsConfig,
 } as const;
 
 export type GameConfig = typeof config;

@@ -6,9 +6,14 @@
 
 // Re-export bridge
 export {
+	destroyEntityById,
 	getEntityMap,
 	getKootaEntity,
+	getMiniplexId,
 	resetBridge,
+	spawnKootaEntity,
+	syncAfterFrame,
+	syncBeforeFrame,
 	syncMiniplexToKoota,
 } from "./bridge";
 // Re-export queries
@@ -101,3 +106,8 @@ export {
 	Wire,
 	WorkTarget,
 } from "./world";
+// Re-export serialization
+export {
+	deserializeKootaWorld,
+	serializeKootaWorld,
+} from "./serialize";

@@ -272,6 +272,7 @@ export const Automation = trait(() => ({
 		| "build_wall",
 	followTarget: null as string | null,
 	patrolPoints: [] as { x: number; y: number; z: number }[],
+	patrolIndex: 0,
 	workTarget: null as string | null,
 }));
 
@@ -288,6 +289,8 @@ export const WorkTarget = relation({ exclusive: true });
 export const Otter = trait(() => ({
 	speed: 1.5,
 	wanderTimer: 4,
+	wanderDir: { x: 1, z: 0 } as { x: number; z: number },
+	moving: false,
 	stationary: false,
 	lines: [] as string[],
 	questIndex: 0,
@@ -300,6 +303,11 @@ export const Otter = trait(() => ({
 export const Hologram = trait(() => ({
 	sourceEmitterId: "" as string,
 	emissiveColor: "#00ff88",
+	spriteId: "" as string,
+	animState: "idle" as "idle" | "walk" | "talk",
+	opacity: 1,
+	flickerSeed: 0,
+	flickerPhase: 0,
 }));
 
 /** HologramSource — relation from a hologram to its emitter. */

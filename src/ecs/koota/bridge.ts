@@ -330,6 +330,7 @@ function ensureKootaEntity(mpEntity: MiniplexEntity): KootaEntity {
 					y: p.y,
 					z: p.z,
 				})),
+				patrolIndex: mpEntity.automation.patrolIndex,
 				workTarget: mpEntity.automation.workTarget,
 			}),
 		);
@@ -341,6 +342,8 @@ function ensureKootaEntity(mpEntity: MiniplexEntity): KootaEntity {
 			Otter({
 				speed: mpEntity.otter.speed,
 				wanderTimer: mpEntity.otter.wanderTimer,
+				wanderDir: { x: mpEntity.otter.wanderDir.x, z: mpEntity.otter.wanderDir.z },
+				moving: mpEntity.otter.moving,
 				stationary: mpEntity.otter.stationary ?? false,
 				lines: mpEntity.otter.lines ? [...mpEntity.otter.lines] : [],
 				questIndex: 0,
@@ -354,6 +357,11 @@ function ensureKootaEntity(mpEntity: MiniplexEntity): KootaEntity {
 			Hologram({
 				sourceEmitterId: mpEntity.hologram.linkedEntityId ?? "",
 				emissiveColor: "#00ff88",
+				spriteId: mpEntity.hologram.spriteId,
+				animState: mpEntity.hologram.animState,
+				opacity: mpEntity.hologram.opacity,
+				flickerSeed: mpEntity.hologram.flickerSeed,
+				flickerPhase: mpEntity.hologram.flickerPhase,
 			}),
 		);
 	}
@@ -369,6 +377,7 @@ function ensureKootaEntity(mpEntity: MiniplexEntity): KootaEntity {
 	}
 
 	entityMap.set(mpEntity.id, kEntity);
+	reverseEntityMap.set(kEntity, mpEntity.id);
 	return kEntity;
 }
 
@@ -841,6 +850,7 @@ function syncAutomation(
 				y: p.y,
 				z: p.z,
 			})),
+			patrolIndex: mpEntity.automation.patrolIndex,
 			workTarget: mpEntity.automation.workTarget,
 		});
 
@@ -868,6 +878,8 @@ function syncOtter(mpEntity: MiniplexEntity, kEntity: KootaEntity): void {
 		kEntity.set(Otter, {
 			speed: mpEntity.otter.speed,
 			wanderTimer: mpEntity.otter.wanderTimer,
+			wanderDir: { x: mpEntity.otter.wanderDir.x, z: mpEntity.otter.wanderDir.z },
+			moving: mpEntity.otter.moving,
 			stationary: mpEntity.otter.stationary ?? false,
 			lines: mpEntity.otter.lines ? [...mpEntity.otter.lines] : [],
 			questIndex: 0,
@@ -889,6 +901,11 @@ function syncHologram(mpEntity: MiniplexEntity, kEntity: KootaEntity): void {
 		kEntity.set(Hologram, {
 			sourceEmitterId: mpEntity.hologram.linkedEntityId ?? "",
 			emissiveColor: "#00ff88",
+			spriteId: mpEntity.hologram.spriteId,
+			animState: mpEntity.hologram.animState,
+			opacity: mpEntity.hologram.opacity,
+			flickerSeed: mpEntity.hologram.flickerSeed,
+			flickerPhase: mpEntity.hologram.flickerPhase,
 		});
 	} else if (kEntity.has(Hologram)) {
 		kEntity.remove(Hologram);
@@ -1009,6 +1026,7 @@ export function syncMiniplexToKoota(): void {
 	// Destroy Koota entities whose Miniplex counterparts were removed
 	for (const [mpId, kEntity] of entityMap) {
 		if (!aliveIds.has(mpId)) {
+			reverseEntityMap.delete(kEntity);
 			kEntity.destroy();
 			entityMap.delete(mpId);
 		}
@@ -1024,4 +1042,239 @@ export function resetBridge(): void {
 		kEntity.destroy();
 	}
 	entityMap.clear();
+	reverseEntityMap.clear();
+}
+
+// ---------------------------------------------------------------------------
+// Reverse lookup: Koota entity → Miniplex ID
+// ---------------------------------------------------------------------------
+
+const reverseEntityMap = new Map<KootaEntity, string>();
+
+/**
+ * Look up the Miniplex entity ID for a given Koota entity.
+ * Returns undefined if no mapping exists.
+ */
+export function getMiniplexId(kEntity: KootaEntity): string | undefined {
+	return reverseEntityMap.get(kEntity);
+}
+
+// ---------------------------------------------------------------------------
+// Bidirectional spawn/destroy
+// ---------------------------------------------------------------------------
+
+/**
+ * Spawn an entity in both Miniplex and Koota worlds simultaneously.
+ * Returns both entity handles. The Miniplex entity is the source of truth
+ * for the entity ID, while the Koota entity receives all mapped traits.
+ *
+ * This is the preferred way to create entities during the migration period.
+ */
+export function spawnKootaEntity(mpEntityData: Partial<MiniplexEntity> & { id: string }): {
+	miniplex: MiniplexEntity;
+	koota: KootaEntity;
+} {
+	// Add to Miniplex first (source of truth for ID and legacy systems)
+	const mpEntity = miniplexWorld.add(mpEntityData as MiniplexEntity);
+
+	// Create the Koota mirror
+	const kEntity = ensureKootaEntity(mpEntity);
+
+	// Set up reverse mapping
+	reverseEntityMap.set(kEntity, mpEntity.id);
+
+	return { miniplex: mpEntity, koota: kEntity };
+}
+
+/**
+ * Destroy an entity by its Miniplex ID from both worlds.
+ * Returns true if the entity was found and destroyed.
+ */
+export function destroyEntityById(entityId: string): boolean {
+	// Remove from Miniplex
+	let mpEntity: MiniplexEntity | undefined;
+	for (const entity of miniplexWorld) {
+		if (entity.id === entityId) {
+			mpEntity = entity;
+			break;
+		}
+	}
+
+	if (mpEntity) {
+		miniplexWorld.remove(mpEntity);
+	}
+
+	// Remove from Koota
+	const kEntity = entityMap.get(entityId);
+	if (kEntity) {
+		reverseEntityMap.delete(kEntity);
+		kEntity.destroy();
+		entityMap.delete(entityId);
+		return true;
+	}
+
+	return mpEntity !== undefined;
+}
+
+// ---------------------------------------------------------------------------
+// Per-frame sync hooks
+// ---------------------------------------------------------------------------
+
+/**
+ * Call at the START of each frame, before any systems run.
+ * Synchronizes Miniplex → Koota so Koota queries reflect latest Miniplex state.
+ */
+export function syncBeforeFrame(): void {
+	syncMiniplexToKoota();
+}
+
+/**
+ * Call at the END of each frame, after all systems have run.
+ * Synchronizes Koota → Miniplex for any writes that Koota-migrated systems made.
+ * This allows systems still reading from Miniplex to see Koota changes.
+ */
+export function syncAfterFrame(): void {
+	syncKootaToMiniplex();
+}
+
+/**
+ * Write Koota trait data back to Miniplex entities.
+ * Called at end-of-frame so legacy systems see Koota changes.
+ *
+ * Only syncs traits that migrated systems are known to write to.
+ * Add more sync blocks here as systems are migrated.
+ */
+function syncKootaToMiniplex(): void {
+	for (const [mpId, kEntity] of entityMap) {
+		// Find the Miniplex entity
+		let mpEntity: MiniplexEntity | undefined;
+		for (const entity of miniplexWorld) {
+			if (entity.id === mpId) {
+				mpEntity = entity;
+				break;
+			}
+		}
+		if (!mpEntity) continue;
+
+		// Sync Position back
+		if (mpEntity.worldPosition && kEntity.has(Position)) {
+			const pos = kEntity.get(Position)!;
+			mpEntity.worldPosition.x = pos.x;
+			mpEntity.worldPosition.y = pos.y;
+			mpEntity.worldPosition.z = pos.z;
+		}
+
+		// Sync Navigation back
+		if (mpEntity.navigation && kEntity.has(Navigation)) {
+			const nav = kEntity.get(Navigation)!;
+			mpEntity.navigation.path = [...nav.path];
+			mpEntity.navigation.pathIndex = nav.pathIndex;
+			mpEntity.navigation.moving = nav.moving;
+		}
+
+		// Sync Unit back
+		if (mpEntity.unit && kEntity.has(Unit)) {
+			const unit = kEntity.get(Unit)!;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			mpEntity.unit.type = unit.type as any;
+			mpEntity.unit.displayName = unit.displayName;
+			mpEntity.unit.speed = unit.speed;
+			mpEntity.unit.selected = unit.selected;
+			// Components: sync functional state back
+			for (let i = 0; i < unit.components.length && i < mpEntity.unit.components.length; i++) {
+				mpEntity.unit.components[i].functional = unit.components[i].functional;
+			}
+		}
+
+		// Sync Building back
+		if (mpEntity.building && kEntity.has(Building)) {
+			const bldg = kEntity.get(Building)!;
+			mpEntity.building.powered = bldg.powered;
+			mpEntity.building.operational = bldg.operational;
+		}
+
+		// Sync LightningRod back
+		if (mpEntity.lightningRod && kEntity.has(LightningRod)) {
+			const rod = kEntity.get(LightningRod)!;
+			mpEntity.lightningRod.rodCapacity = rod.capacity;
+			mpEntity.lightningRod.currentOutput = rod.currentOutput;
+			mpEntity.lightningRod.protectionRadius = rod.protectionRadius;
+		}
+
+		// Sync Hackable back
+		if (mpEntity.hackable && kEntity.has(Hackable)) {
+			const hack = kEntity.get(Hackable)!;
+			mpEntity.hackable.difficulty = hack.difficulty;
+			mpEntity.hackable.hackProgress = hack.progress;
+			mpEntity.hackable.beingHacked = hack.beingHacked;
+			mpEntity.hackable.hacked = hack.hacked;
+		}
+
+		// Sync SignalRelay back
+		if (mpEntity.signalRelay && kEntity.has(SignalRelay)) {
+			const sig = kEntity.get(SignalRelay)!;
+			mpEntity.signalRelay.signalRange = sig.range;
+			mpEntity.signalRelay.connectedTo = [...sig.connectedTo];
+			mpEntity.signalRelay.signalStrength = sig.signalStrength;
+		}
+
+		// Sync Automation back
+		if (mpEntity.automation && kEntity.has(Automation)) {
+			const auto = kEntity.get(Automation)!;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			mpEntity.automation.routine = auto.routine as any;
+			mpEntity.automation.followTarget = auto.followTarget;
+			mpEntity.automation.patrolPoints = auto.patrolPoints.map(p => ({ x: p.x, y: p.y, z: p.z }));
+			mpEntity.automation.patrolIndex = auto.patrolIndex;
+			mpEntity.automation.workTarget = auto.workTarget;
+		}
+
+		// Sync Otter back
+		if (mpEntity.otter && kEntity.has(Otter)) {
+			const otter = kEntity.get(Otter)!;
+			mpEntity.otter.speed = otter.speed;
+			mpEntity.otter.wanderTimer = otter.wanderTimer;
+			mpEntity.otter.wanderDir = { x: otter.wanderDir.x, z: otter.wanderDir.z };
+			mpEntity.otter.moving = otter.moving;
+			if (otter.stationary !== undefined) {
+				mpEntity.otter.stationary = otter.stationary;
+			}
+		}
+
+		// Sync Faction back (for hacking system which changes faction)
+		if (mpEntity.faction && kEntity.has(Faction)) {
+			const factionVal = kEntity.get(Faction)!.value;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(mpEntity as any).faction = factionVal;
+		}
+
+		// Sync OreDeposit back
+		if (mpEntity.oreDeposit && kEntity.has(OreDeposit)) {
+			const ore = kEntity.get(OreDeposit)!;
+			mpEntity.oreDeposit.currentYield = ore.currentYield;
+			mpEntity.oreDeposit.maxYield = ore.maxYield;
+		}
+
+		// Sync Belt back
+		if (mpEntity.belt && kEntity.has(Belt)) {
+			const belt = kEntity.get(Belt)!;
+			mpEntity.belt.carrying = belt.carrying;
+			mpEntity.belt.itemProgress = belt.itemProgress;
+			mpEntity.belt.speed = belt.speed;
+		}
+
+		// Sync Miner back
+		if (mpEntity.miner && kEntity.has(Miner)) {
+			const miner = kEntity.get(Miner)!;
+			mpEntity.miner.drillHealth = miner.drillHealth;
+			mpEntity.miner.extractionRate = miner.extractionRate;
+		}
+
+		// Sync Processor back
+		if (mpEntity.processor && kEntity.has(Processor)) {
+			const proc = kEntity.get(Processor)!;
+			mpEntity.processor.progress = proc.progress;
+			mpEntity.processor.active = proc.active;
+		}
+	}
 }

@@ -22,15 +22,23 @@ export interface UnitComponent {
 	material: "metal" | "plastic" | "electronic";
 }
 
+/**
+ * Component for otter hologram projections.
+ *
+ * Lore: The home-planet AI that dispatched the player adopted an Earth otter
+ * as its holographic avatar. Holograms appear at fixed positions in the world
+ * — Star-Wars-style translucent projections — providing tutorials, crafting
+ * guidance, and quest progression.
+ */
 export interface OtterComponent {
 	speed: number;
 	wanderTimer: number;
 	wanderDir: { x: number; z: number };
-	/** True during ticks where the otter successfully moved forward. */
+	/** True during ticks where the hologram plays a walk-cycle animation (currently unused — holograms are stationary). */
 	moving: boolean;
-	/** When true the otter stays put — used for quest-giver otters. */
+	/** When true the hologram stays at its spawn position (all holograms are stationary by design). */
 	stationary?: boolean;
-	/** Optional dialogue lines shown in a speech bubble when a player unit is nearby. */
+	/** Dialogue lines shown in a holographic speech bubble when a player unit is nearby. */
 	lines?: string[];
 }
 
@@ -262,7 +270,7 @@ export interface Entity {
 	// Bot automation (for non-player-controlled bots)
 	automation?: AutomationComponent;
 
-	// Otter — small furry wildlife that wanders the ruins
+	// Otter hologram — projection from the home-planet AI
 	otter?: OtterComponent;
 
 	// FPS player control — the bot the player is currently piloting

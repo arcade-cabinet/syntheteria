@@ -1,11 +1,16 @@
 /**
- * Otter trade system — otter holograms offer rare recipes, materials,
- * upgrades, cosmetics, and intel in exchange for specific cube combinations.
+ * Holographic reward system — the home-planet AI's otter holograms unlock
+ * rare recipes, materials, upgrades, cosmetics, and intel as rewards for
+ * completing objectives or delivering specific cube combinations.
  *
  * Creates a secondary economy layer on top of the physical cube economy.
- * Traders have distinct personalities that affect inventory composition,
- * pricing, and dialogue. Inventory refreshes periodically with deterministic
+ * Each hologram projection point has a distinct "personality" (reflecting
+ * facets of the home-planet AI) that affects available rewards, costs,
+ * and dialogue. Inventory refreshes periodically with deterministic
  * RNG support for testability.
+ *
+ * Lore: The home-planet AI uses these reward offerings to guide the player
+ * toward strategic goals, disguised as a trading interaction.
  *
  * No config dependency — all defaults are self-contained.
  */

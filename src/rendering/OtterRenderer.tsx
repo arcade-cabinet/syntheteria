@@ -1,10 +1,16 @@
 /**
- * Renders otters as animated billboard sprites using the pre-rendered keyframe
- * PNG sequences extracted from otter.zip, with proximity-triggered speech bubbles
- * that guide the player through the game.
+ * Renders otter holograms as animated billboard sprites using the pre-rendered
+ * keyframe PNG sequences extracted from otter.zip, with proximity-triggered
+ * holographic speech bubbles that guide the player through the game.
  *
- * Textures are shared across all otter instances. The Vite base URL is prepended
- * so paths resolve correctly whether the app is served at / or /syntheteria/.
+ * Lore: The home-planet AI that dispatched the player found Earth otters
+ * endearing and adopted an otter as its holographic avatar. These projections
+ * appear Star-Wars-style (think R2-D2 projecting Princess Leia) at fixed
+ * positions in the world, delivering tutorials and quest progression.
+ *
+ * Textures are shared across all hologram instances. The Vite base URL is
+ * prepended so paths resolve correctly whether the app is served at / or
+ * /syntheteria/.
  *
  * Speech bubbles use drei's <Html> component — a DOM element anchored to a 3D
  * world position. They appear when any player unit is within PROXIMITY world

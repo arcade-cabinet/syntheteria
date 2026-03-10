@@ -294,12 +294,14 @@ Storms charge lightning rods (power) but damage exposed cube piles.
 This creates a cycle: build roofs over cubes before storms hit.
 Need: cube damage from weather, roof/shelter building, storm forecasting.
 
-### 6.6 "Otter Secret Economy"
+### 6.6 "Holographic Reward System"
 
-Otters are quest-givers. What if they also trade? The otter holograms
-could offer rare recipes or materials in exchange for specific cube
-combinations. This adds a secondary economy layer and makes otters
-feel more alive. Need: otter trade system, rare otter-only recipes.
+The otter holograms are projections from the home-planet AI that sent
+the player on this colony mission. The AI could use these projections
+to offer rare recipes, upgrades, or intel as rewards for completing
+objectives or delivering specific cube combinations. This adds a
+secondary economy layer where the home AI strategically guides the
+player via disguised incentives. Already implemented in `otterTrade.ts`.
 
 ---
 

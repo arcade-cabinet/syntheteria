@@ -150,35 +150,45 @@ function initializeWorld(seed: number) {
 
 	simulationTick();
 
-	// Otters
+	// ── Otter Holograms ──────────────────────────────────────────────────────
+	// The home-planet AI that dispatched the player found Earth otters endearing
+	// and adopted an otter as its holographic avatar. Holograms appear at fixed
+	// positions — Star-Wars-style translucent projections — delivering tutorials,
+	// crafting guidance, and quest progression.
+	//
+	// Pip is the primary hologram — spawned right next to the starting bots so
+	// the player encounters it immediately.
 	spawnOtter({
 		x: 14,
 		z: 18,
 		stationary: true,
 		lines: [
-			"Oh. You're awake. I wasn't sure you would be.",
-			"I'm Pip. I've been keeping those two bots of yours running while you were... away.",
+			"Oh. You're awake. I wasn't sure the signal would reach you.",
+			"I'm Pip — your home-planet AI's local projection. I've been monitoring those two bots while you were offline.",
 			"Walk over to Bot Beta — the one nearby. Press Q to switch into it.",
 			"Get both bots close to the lightning rod. Power flows when they're in range.",
 			"Once the fabrication unit has power, you can start building. That's where it gets interesting.",
-			"We've been waiting a long time for this. Don't let it go to waste.",
+			"Home base has been waiting a long time for this signal. Don't let it go to waste.",
 		],
 	});
 
+	// Five more hologram projection points within the city and its outskirts —
+	// close enough to find during early exploration, each relaying mission
+	// intelligence from the home-planet AI.
 	spawnOtter({
 		x: -18,
 		z: 8,
 		lines: [
-			"The feral machines don't sleep. Keep moving.",
-			"They used to be like yours. Something went wrong with them a long time ago.",
+			"The feral machines don't sleep. Keep your bots moving.",
+			"They used to be like yours. Something corrupted their directives a long time ago.",
 		],
 	});
 	spawnOtter({
 		x: 24,
 		z: -12,
 		lines: [
-			"E-waste piles up near the old factory towers. Worth scavenging.",
-			"Scrap metal too, if you know where to look.",
+			"Sensors show e-waste deposits near the old factory towers. Worth scavenging.",
+			"Scrap metal too — your bots should be able to locate it.",
 		],
 	});
 	spawnOtter({
@@ -193,16 +203,16 @@ function initializeWorld(seed: number) {
 		x: 30,
 		z: 22,
 		lines: [
-			"Lightning storms are getting worse every season.",
-			"Bad for us. Good for your power rods.",
+			"Lightning storms are getting worse every cycle.",
+			"Dangerous for unshielded circuits. Good for your power rods.",
 		],
 	});
 	spawnOtter({
 		x: 6,
 		z: -24,
 		lines: [
-			"My family fished this river before the chemical runoff.",
-			"We adapted. You'll have to as well.",
+			"This river carried industrial runoff before the machines went feral.",
+			"The environment has adapted. You'll have to as well.",
 		],
 	});
 

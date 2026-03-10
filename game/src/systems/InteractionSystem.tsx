@@ -11,13 +11,34 @@
 import { useThree } from "@react-three/fiber";
 import { useEffect } from "react";
 import * as THREE from "three";
+import {
+	belts,
+	buildings,
+	hackables,
+	lightningRods,
+	otters,
+	signalRelays,
+	units,
+} from "../ecs/world";
+import {
+	type EntityCategory,
+	getHoveredEntity,
+} from "../input/ObjectSelectionSystem";
 import { onSelectionChange } from "../input/selectionState";
 import type { RadialAction } from "../ui/RadialActionMenu";
 import { getActionsForEntity } from "./actionRegistry";
 import { getOccupiedSlots, placeCube } from "./cubePlacement";
 import { getPlacementPreview, placeHeldCube } from "./cubeStacking";
 import { getAllFurnaces, insertCubeIntoFurnace } from "./furnace";
-import { dropCube, getCube, getHeldCube, grabCube, throwCube } from "./grabber";
+import { startSmelting } from "./furnaceProcessing";
+import {
+	dropCube,
+	getCube,
+	getHeldCube,
+	grabCube,
+	throwCube,
+	unregisterCube,
+} from "./grabber";
 import { startHarvesting } from "./harvesting";
 import { getDeposit } from "./oreSpawner";
 
@@ -25,17 +46,51 @@ import { getDeposit } from "./oreSpawner";
 // Types
 // ---------------------------------------------------------------------------
 
-interface MenuState {
+export interface MenuState {
 	visible: boolean;
 	actions: RadialAction[];
 	entityId: string | null;
 	entityTraits: string[];
+	/** The entity category from ObjectSelectionSystem for visual context. */
+	entityCategory: EntityCategory;
 	position: { x: number; y: number };
 }
 
 // ---------------------------------------------------------------------------
 // Trait resolution helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Map an EntityCategory from ObjectSelectionSystem to trait strings
+ * that the actionRegistry understands. This bridges the gap between
+ * the hover/selection system and the action system.
+ */
+function traitsFromCategory(category: EntityCategory): string[] {
+	switch (category) {
+		case "unit":
+			return ["Unit"];
+		case "building":
+			return ["Building"];
+		case "miner":
+			return ["Building"];
+		case "processor":
+			return ["Building"];
+		case "belt":
+			return ["Belt"];
+		case "wire":
+			return [];
+		case "item":
+			return [];
+		case "otter":
+			return ["Otter"];
+		case "hackable":
+			return ["Hackable"];
+		case "signalRelay":
+			return ["SignalRelay"];
+		default:
+			return [];
+	}
+}
 
 /** Resolve entity traits from its ID by checking all system registries. */
 function resolveEntityTraits(entityId: string): string[] {
@@ -69,6 +124,72 @@ function resolveEntityTraits(entityId: string): string[] {
 		return traits;
 	}
 
+	// Check units (bots)
+	for (const u of units) {
+		if (u.id === entityId) {
+			traits.push("Unit");
+			return traits;
+		}
+	}
+
+	// Check buildings — differentiate lightning rods
+	for (const rod of lightningRods) {
+		if (rod.id === entityId) {
+			traits.push("LightningRod", "Building");
+			return traits;
+		}
+	}
+
+	for (const b of buildings) {
+		if (b.id === entityId) {
+			traits.push("Building");
+			return traits;
+		}
+	}
+
+	// Check signal relays
+	for (const sr of signalRelays) {
+		if (sr.id === entityId) {
+			traits.push("SignalRelay");
+			return traits;
+		}
+	}
+
+	// Check hackables
+	for (const h of hackables) {
+		if (h.id === entityId) {
+			traits.push("Hackable");
+			return traits;
+		}
+	}
+
+	// Check belts
+	for (const belt of belts) {
+		if (belt.id === entityId) {
+			traits.push("Belt");
+			return traits;
+		}
+	}
+
+	// Check otters
+	for (const otter of otters) {
+		if (otter.id === entityId) {
+			traits.push("Otter");
+			return traits;
+		}
+	}
+
+	// Fallback: use the hovered entity category from ObjectSelectionSystem
+	const hovered = getHoveredEntity();
+	if (hovered.entityId === entityId && hovered.entityType) {
+		const categoryTraits = traitsFromCategory(hovered.entityType);
+		for (const t of categoryTraits) {
+			if (!traits.includes(t)) {
+				traits.push(t);
+			}
+		}
+	}
+
 	return traits;
 }
 
@@ -88,6 +209,7 @@ let menuState: MenuState = {
 	actions: [],
 	entityId: null,
 	entityTraits: [],
+	entityCategory: null,
 	position: { x: 0, y: 0 },
 };
 
@@ -128,11 +250,17 @@ export function InteractionSystem() {
 					actions: [],
 					entityId: null,
 					entityTraits: [],
+					entityCategory: null,
 					position: { x: 0, y: 0 },
 				};
 				notifyMenu();
 				return;
 			}
+
+			// Get the entity category from ObjectSelectionSystem for visual context
+			const hovered = getHoveredEntity();
+			const category: EntityCategory =
+				hovered.entityId === newId ? hovered.entityType : null;
 
 			// Resolve traits for the selected entity
 			const traits = resolveEntityTraits(newId);
@@ -143,6 +271,7 @@ export function InteractionSystem() {
 					actions: [],
 					entityId: newId,
 					entityTraits: [],
+					entityCategory: category,
 					position: { x: 0, y: 0 },
 				};
 				notifyMenu();
@@ -157,6 +286,7 @@ export function InteractionSystem() {
 					actions: [],
 					entityId: newId,
 					entityTraits: traits,
+					entityCategory: category,
 					position: { x: 0, y: 0 },
 				};
 				notifyMenu();
@@ -169,6 +299,7 @@ export function InteractionSystem() {
 				actions,
 				entityId: newId,
 				entityTraits: traits,
+				entityCategory: category,
 				position: {
 					x: window.innerWidth / 2,
 					y: window.innerHeight / 2,
@@ -230,11 +361,34 @@ export function InteractionSystem() {
 				}
 				case "insert": {
 					// Insert held cube into furnace hopper
-					const heldId = getHeldCube();
-					if (heldId) {
-						const cube = getCube(heldId);
-						if (cube) {
-							insertCubeIntoFurnace(entityId, heldId, cube.material);
+					const insertHeldId = getHeldCube();
+					if (insertHeldId) {
+						const insertCube = getCube(insertHeldId);
+						if (insertCube) {
+							const inserted = insertCubeIntoFurnace(
+								entityId,
+								insertHeldId,
+								insertCube.material,
+								() => {
+									unregisterCube(insertHeldId);
+								},
+							);
+							if (inserted) {
+								// Release held state (drop off-screen since cube is consumed)
+								dropCube({ x: 0, y: -1000, z: 0 });
+								// Auto-start smelting if furnace is powered and idle
+								const insertFurnaces = getAllFurnaces();
+								const targetFurnace = insertFurnaces.find(
+									(f) => f.id === entityId,
+								);
+								if (
+									targetFurnace &&
+									targetFurnace.isPowered &&
+									!targetFurnace.isProcessing
+								) {
+									startSmelting(entityId);
+								}
+							}
 						}
 					}
 					break;
@@ -273,6 +427,73 @@ export function InteractionSystem() {
 					}
 					break;
 				}
+				case "inspect": {
+					// Dispatch inspect event — consumed by HUD to show detail panel
+					window.dispatchEvent(
+						new CustomEvent("coreloop:inspect", {
+							detail: {
+								entityId,
+								traits: menuState.entityTraits,
+								category: menuState.entityCategory,
+							},
+						}),
+					);
+					break;
+				}
+				case "switch": {
+					// Switch player control to another bot (Q key equivalent)
+					window.dispatchEvent(
+						new CustomEvent("coreloop:switch-bot", {
+							detail: { entityId },
+						}),
+					);
+					break;
+				}
+				case "command": {
+					// Open command menu for a bot
+					window.dispatchEvent(
+						new CustomEvent("coreloop:command-bot", {
+							detail: { entityId },
+						}),
+					);
+					break;
+				}
+				case "power_toggle": {
+					// Toggle power on a building
+					window.dispatchEvent(
+						new CustomEvent("coreloop:power-toggle", {
+							detail: { entityId },
+						}),
+					);
+					break;
+				}
+				case "disassemble": {
+					// Disassemble a building
+					window.dispatchEvent(
+						new CustomEvent("coreloop:disassemble", {
+							detail: { entityId },
+						}),
+					);
+					break;
+				}
+				case "connect_wire": {
+					// Start wire connection from this entity
+					window.dispatchEvent(
+						new CustomEvent("coreloop:connect-wire", {
+							detail: { entityId },
+						}),
+					);
+					break;
+				}
+				case "hack": {
+					// Start hacking a hackable entity
+					window.dispatchEvent(
+						new CustomEvent("coreloop:hack", {
+							detail: { entityId },
+						}),
+					);
+					break;
+				}
 				default:
 					break;
 			}
@@ -283,6 +504,7 @@ export function InteractionSystem() {
 				actions: [],
 				entityId: null,
 				entityTraits: [],
+				entityCategory: null,
 				position: { x: 0, y: 0 },
 			};
 			notifyMenu();

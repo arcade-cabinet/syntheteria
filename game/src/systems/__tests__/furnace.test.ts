@@ -60,13 +60,13 @@ describe("createFurnace", () => {
 		expect(furnace.maxHopperSize).toBe(5);
 	});
 
-	it("creates furnace not processing and not powered", () => {
+	it("creates furnace not processing and powered by default", () => {
 		const furnace = createFurnace(makePosition());
 
 		expect(furnace.isProcessing).toBe(false);
 		expect(furnace.currentItem).toBeNull();
 		expect(furnace.progress).toBe(0);
-		expect(furnace.isPowered).toBe(false);
+		expect(furnace.isPowered).toBe(true);
 	});
 
 	it("assigns unique IDs to each furnace", () => {
@@ -248,7 +248,7 @@ describe("getFurnaceState", () => {
 		expect(state!.isProcessing).toBe(false);
 		expect(state!.currentItem).toBeNull();
 		expect(state!.progress).toBe(0);
-		expect(state!.isPowered).toBe(false);
+		expect(state!.isPowered).toBe(true);
 	});
 
 	it("returns correct state after inserting cubes", () => {

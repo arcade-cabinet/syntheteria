@@ -386,7 +386,8 @@ describe("dropCube", () => {
 		registerCube(cube);
 
 		grabCube("cube_0", PLAYER_ORIGIN);
-		dropCube(vec3(1, 0, 0));
+		// Use snapToStack: false to skip stacking, which removes Grabbable
+		dropCube(vec3(1, 0, 0), undefined, { snapToStack: false });
 		const result = grabCube("cube_0", PLAYER_ORIGIN);
 
 		expect(result).toBe(true);

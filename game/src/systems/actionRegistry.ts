@@ -4,6 +4,11 @@
  * Every clickable entity in the world has traits (e.g. OreDeposit, MaterialCube,
  * Grabbable). This registry determines which actions appear in the radial menu
  * based on which traits the entity has.
+ *
+ * Actions also carry a `category` for visual grouping in the ObjectActionMenu:
+ *   - "primary"   — main interaction (harvest, grab, open, hack)
+ *   - "secondary" — supporting actions (inspect, connect wire, command)
+ *   - "danger"    — destructive actions (disassemble, throw)
  */
 
 export interface Action {
@@ -11,6 +16,8 @@ export interface Action {
 	label: string;
 	icon: string;
 	enabled: boolean;
+	/** Visual category for the ObjectActionMenu wedge color. */
+	category?: "primary" | "secondary" | "danger";
 }
 
 interface TraitPattern {
@@ -19,53 +26,311 @@ interface TraitPattern {
 }
 
 const registry: TraitPattern[] = [
+	// ── Ore Deposits ─────────────────────────────────────────────────
 	{
 		traits: ["OreDeposit"],
 		actions: [
-			{ id: "harvest", label: "Harvest", icon: "pickaxe", enabled: true },
+			{
+				id: "harvest",
+				label: "HARVEST",
+				icon: "\u26CF",
+				enabled: true,
+				category: "primary",
+			},
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
 		],
 	},
+
+	// ── Material Cubes (held) ────────────────────────────────────────
 	{
 		traits: ["MaterialCube", "HeldBy"],
 		actions: [
-			{ id: "drop", label: "Drop", icon: "arrow-down", enabled: true },
-			{ id: "throw", label: "Throw", icon: "arrow-up-right", enabled: true },
+			{
+				id: "drop",
+				label: "DROP",
+				icon: "\u2193",
+				enabled: true,
+				category: "primary",
+			},
+			{
+				id: "throw",
+				label: "THROW",
+				icon: "\u2197",
+				enabled: true,
+				category: "danger",
+			},
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
 		],
 	},
+
+	// ── Material Cubes (grabbable) ───────────────────────────────────
 	{
 		traits: ["MaterialCube", "Grabbable"],
 		actions: [
-			{ id: "grab", label: "Grab", icon: "hand", enabled: true },
+			{
+				id: "grab",
+				label: "GRAB",
+				icon: "\u270B",
+				enabled: true,
+				category: "primary",
+			},
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
 		],
 	},
+
+	// ── Material Cubes (generic fallback — no grab without Grabbable) ─
 	{
-		traits: ["Hopper"],
+		traits: ["MaterialCube"],
 		actions: [
-			{ id: "insert", label: "Insert", icon: "inbox", enabled: true },
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
 		],
 	},
+
+	// ── Furnace with Hopper ──────────────────────────────────────────
+	{
+		traits: ["Furnace", "Hopper"],
+		actions: [
+			{
+				id: "open",
+				label: "OPEN",
+				icon: "\u2630",
+				enabled: true,
+				category: "primary",
+			},
+			{
+				id: "insert",
+				label: "DROP IN",
+				icon: "\u2B07",
+				enabled: true,
+				category: "primary",
+			},
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
+		],
+	},
+
+	// ── Furnace (standalone) ─────────────────────────────────────────
 	{
 		traits: ["Furnace"],
 		actions: [
-			{ id: "open", label: "Open", icon: "flame", enabled: true },
+			{
+				id: "open",
+				label: "OPEN",
+				icon: "\u2630",
+				enabled: true,
+				category: "primary",
+			},
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
 		],
 	},
+
+	// ── Hopper (standalone, on non-furnace machines) ─────────────────
 	{
-		traits: ["Belt"],
+		traits: ["Hopper"],
 		actions: [
-			{ id: "rotate", label: "Rotate", icon: "rotate-cw", enabled: true },
+			{
+				id: "insert",
+				label: "INSERT",
+				icon: "\u2B07",
+				enabled: true,
+				category: "primary",
+			},
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
 		],
 	},
+
+	// ── Bots (non-player units) ──────────────────────────────────────
+	{
+		traits: ["Unit"],
+		actions: [
+			{
+				id: "switch",
+				label: "SWITCH (Q)",
+				icon: "\u21C4",
+				enabled: true,
+				category: "primary",
+			},
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
+			{
+				id: "command",
+				label: "COMMAND",
+				icon: "\u25B6",
+				enabled: true,
+				category: "secondary",
+			},
+		],
+	},
+
+	// ── Buildings (generic) ──────────────────────────────────────────
+	{
+		traits: ["Building"],
+		actions: [
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
+			{
+				id: "power_toggle",
+				label: "POWER",
+				icon: "\u23FB",
+				enabled: true,
+				category: "primary",
+			},
+			{
+				id: "disassemble",
+				label: "DISMANTLE",
+				icon: "\u2716",
+				enabled: true,
+				category: "danger",
+			},
+		],
+	},
+
+	// ── Lightning Rods ───────────────────────────────────────────────
 	{
 		traits: ["LightningRod"],
 		actions: [
-			{ id: "inspect", label: "Inspect", icon: "zap", enabled: true },
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
+			{
+				id: "connect_wire",
+				label: "WIRE",
+				icon: "\u26A1",
+				enabled: true,
+				category: "primary",
+			},
 		],
 	},
+
+	// ── Signal Relays ────────────────────────────────────────────────
+	{
+		traits: ["SignalRelay"],
+		actions: [
+			{
+				id: "hack",
+				label: "HACK",
+				icon: "\u2588",
+				enabled: true,
+				category: "primary",
+			},
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
+		],
+	},
+
+	// ── Hackable (generic) ───────────────────────────────────────────
 	{
 		traits: ["Hackable"],
 		actions: [
-			{ id: "hack", label: "Hack", icon: "terminal", enabled: true },
+			{
+				id: "hack",
+				label: "HACK",
+				icon: "\u2588",
+				enabled: true,
+				category: "primary",
+			},
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
+		],
+	},
+
+	// ── Belts ────────────────────────────────────────────────────────
+	{
+		traits: ["Belt"],
+		actions: [
+			{
+				id: "rotate",
+				label: "ROTATE",
+				icon: "\u21BB",
+				enabled: true,
+				category: "primary",
+			},
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
+		],
+	},
+
+	// ── Otters ───────────────────────────────────────────────────────
+	{
+		traits: ["Otter"],
+		actions: [
+			{
+				id: "inspect",
+				label: "INSPECT",
+				icon: "\u25C9",
+				enabled: true,
+				category: "secondary",
+			},
 		],
 	},
 ];

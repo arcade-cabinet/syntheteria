@@ -18,7 +18,18 @@ import {
 	updateGhostPosition,
 } from "../systems/buildingPlacement";
 import { isCompressing, startCompression } from "../systems/compression";
-import { dropCube, getHeldCube, grabCube } from "../systems/grabber";
+import {
+	getAllFurnaces,
+	insertCubeIntoFurnace,
+} from "../systems/furnace";
+import { startSmelting } from "../systems/furnaceProcessing";
+import {
+	dropCube,
+	getCube,
+	getHeldCube,
+	grabCube,
+	unregisterCube,
+} from "../systems/grabber";
 import { getPowderStorage, startHarvesting } from "../systems/harvesting";
 import { getHoveredEntity } from "./ObjectSelectionSystem";
 import { setSelected } from "./selectionState";
@@ -106,14 +117,50 @@ export function FPSInput() {
 		const wp = bot.worldPosition;
 
 		if (getHeldCube() !== null) {
-			// Drop in front of player
-			const forward = new THREE.Vector3();
-			camera.getWorldDirection(forward);
-			dropCube({
-				x: wp.x + forward.x * 1.5,
-				y: 0.25,
-				z: wp.z + forward.z * 1.5,
-			});
+			const heldId = getHeldCube()!;
+			const heldCube = getCube(heldId);
+
+			// Check if we're looking at or near a furnace — auto-feed the cube
+			const furnaces = getAllFurnaces();
+			const FURNACE_FEED_RANGE = 3.0;
+			let fedToFurnace = false;
+
+			for (const furnace of furnaces) {
+				const dx = furnace.position.x - wp.x;
+				const dz = furnace.position.z - wp.z;
+				const dist = Math.sqrt(dx * dx + dz * dz);
+				if (dist < FURNACE_FEED_RANGE && heldCube) {
+					const inserted = insertCubeIntoFurnace(
+						furnace.id,
+						heldId,
+						heldCube.material,
+						() => {
+							unregisterCube(heldId);
+						},
+					);
+					if (inserted) {
+						// Release the held cube (clear held state without physics drop)
+						dropCube({ x: 0, y: -1000, z: 0 }); // drop off-screen, cube is already unregistered
+						// Auto-start smelting if furnace is powered and not already processing
+						if (furnace.isPowered && !furnace.isProcessing) {
+							startSmelting(furnace.id);
+						}
+						fedToFurnace = true;
+						break;
+					}
+				}
+			}
+
+			if (!fedToFurnace) {
+				// Normal drop in front of player
+				const forward = new THREE.Vector3();
+				camera.getWorldDirection(forward);
+				dropCube({
+					x: wp.x + forward.x * 1.5,
+					y: 0.25,
+					z: wp.z + forward.z * 1.5,
+				});
+			}
 			return;
 		}
 

@@ -11,15 +11,34 @@
  * - placeHeldCube returns false if preview is invalid
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	type PlacementPreview,
 	type RaycastHit,
+	_resetStackRegistry,
+	canPlaceAt,
+	findUnsupportedCubes,
+	getAllStackedCubes,
 	getPlacementPreview,
+	getStackAt,
+	getStackHeight,
+	getStackedCubeAt,
 	placeHeldCube,
+	registerStackedCube,
+	removeAndTopple,
+	snapToGrid,
+	unregisterStackedCube,
 } from "../cubeStacking";
 import { gridKey } from "../gridSnap";
 import type { CubeEntity, Vec3 } from "../grabber";
+
+// ---------------------------------------------------------------------------
+// Setup — reset stack registry between tests
+// ---------------------------------------------------------------------------
+
+beforeEach(() => {
+	_resetStackRegistry();
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -571,5 +590,262 @@ describe("placeHeldCube — place fails", () => {
 		);
 
 		expect(result).toBe(false);
+	});
+});
+
+// ===========================================================================
+// Stack registry API tests
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// snapToGrid
+// ---------------------------------------------------------------------------
+
+describe("snapToGrid", () => {
+	it("snaps world position to nearest 0.5m grid center", () => {
+		const result = snapToGrid(vec3(0.3, 0.0, 0.3));
+		// 0.3 / 0.5 = 0.6 → round = 1 → 1 * 0.5 = 0.5
+		expect(result.x).toBeCloseTo(0.5);
+		expect(result.y).toBeCloseTo(0.0);
+		expect(result.z).toBeCloseTo(0.5);
+	});
+
+	it("snaps exactly at grid center", () => {
+		const result = snapToGrid(vec3(0.5, 0.5, 0.5));
+		expect(result.x).toBeCloseTo(0.5);
+		expect(result.y).toBeCloseTo(0.5);
+		expect(result.z).toBeCloseTo(0.5);
+	});
+
+	it("handles negative coordinates", () => {
+		const result = snapToGrid(vec3(-0.3, 0.0, -0.3));
+		expect(result.x).toBeCloseTo(-0.5);
+		expect(result.z).toBeCloseTo(-0.5);
+	});
+
+	it("returns origin for zero position", () => {
+		const result = snapToGrid(vec3(0, 0, 0));
+		expect(result.x).toBeCloseTo(0.0);
+		expect(result.y).toBeCloseTo(0.0);
+		expect(result.z).toBeCloseTo(0.0);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// canPlaceAt
+// ---------------------------------------------------------------------------
+
+describe("canPlaceAt", () => {
+	it("returns true at ground level (y=0) with empty registry", () => {
+		expect(canPlaceAt({ x: 0, y: 0, z: 0 })).toBe(true);
+	});
+
+	it("returns false if slot is already occupied", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		expect(canPlaceAt({ x: 0, y: 0, z: 0 })).toBe(false);
+	});
+
+	it("returns true when stacking on top of existing cube", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		expect(canPlaceAt({ x: 0, y: 1, z: 0 })).toBe(true);
+	});
+
+	it("returns false for floating cube (no support below)", () => {
+		expect(canPlaceAt({ x: 0, y: 2, z: 0 })).toBe(false);
+	});
+
+	it("returns false at y=1 with no ground cube", () => {
+		expect(canPlaceAt({ x: 5, y: 1, z: 5 })).toBe(false);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// registerStackedCube / getStackedCubeAt
+// ---------------------------------------------------------------------------
+
+describe("registerStackedCube", () => {
+	it("registers a cube and makes it retrievable", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		const data = getStackedCubeAt({ x: 0, y: 0, z: 0 });
+		expect(data).toBeDefined();
+		expect(data!.entityId).toBe("cube-1");
+		expect(data!.material).toBe("iron");
+	});
+
+	it("returns false if slot is already occupied", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		const result = registerStackedCube("cube-2", { x: 0, y: 0, z: 0 }, "copper");
+		expect(result).toBe(false);
+	});
+
+	it("returns true for successful registration", () => {
+		const result = registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		expect(result).toBe(true);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// unregisterStackedCube
+// ---------------------------------------------------------------------------
+
+describe("unregisterStackedCube", () => {
+	it("removes a registered cube", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		const removed = unregisterStackedCube({ x: 0, y: 0, z: 0 });
+		expect(removed).toBeDefined();
+		expect(removed!.entityId).toBe("cube-1");
+		expect(getStackedCubeAt({ x: 0, y: 0, z: 0 })).toBeUndefined();
+	});
+
+	it("returns undefined for empty slot", () => {
+		const removed = unregisterStackedCube({ x: 0, y: 0, z: 0 });
+		expect(removed).toBeUndefined();
+	});
+});
+
+// ---------------------------------------------------------------------------
+// getStackAt / getStackHeight
+// ---------------------------------------------------------------------------
+
+describe("getStackAt / getStackHeight", () => {
+	it("returns cubes in a column sorted by Y ascending", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		registerStackedCube("cube-2", { x: 0, y: 1, z: 0 }, "copper");
+		registerStackedCube("cube-3", { x: 0, y: 2, z: 0 }, "steel");
+
+		const stack = getStackAt(0, 0);
+		expect(stack).toHaveLength(3);
+		expect(stack[0].gridCoord.y).toBe(0);
+		expect(stack[1].gridCoord.y).toBe(1);
+		expect(stack[2].gridCoord.y).toBe(2);
+	});
+
+	it("returns empty array for empty column", () => {
+		const stack = getStackAt(5, 5);
+		expect(stack).toHaveLength(0);
+	});
+
+	it("getStackHeight returns correct count", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		registerStackedCube("cube-2", { x: 0, y: 1, z: 0 }, "iron");
+		expect(getStackHeight(0, 0)).toBe(2);
+	});
+
+	it("getStackHeight returns 0 for empty column", () => {
+		expect(getStackHeight(10, 10)).toBe(0);
+	});
+
+	it("does not include cubes at different XZ positions", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		registerStackedCube("cube-2", { x: 1, y: 0, z: 0 }, "iron");
+		expect(getStackHeight(0, 0)).toBe(1);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// getAllStackedCubes
+// ---------------------------------------------------------------------------
+
+describe("getAllStackedCubes", () => {
+	it("returns all registered cubes", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		registerStackedCube("cube-2", { x: 1, y: 0, z: 0 }, "copper");
+		const all = getAllStackedCubes();
+		expect(all.size).toBe(2);
+	});
+
+	it("returns empty map when no cubes are registered", () => {
+		const all = getAllStackedCubes();
+		expect(all.size).toBe(0);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// findUnsupportedCubes — topple detection
+// ---------------------------------------------------------------------------
+
+describe("findUnsupportedCubes", () => {
+	it("returns empty array when all cubes are on ground", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		registerStackedCube("cube-2", { x: 1, y: 0, z: 0 }, "iron");
+		expect(findUnsupportedCubes()).toHaveLength(0);
+	});
+
+	it("returns empty array for a valid stack", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		registerStackedCube("cube-2", { x: 0, y: 1, z: 0 }, "iron");
+		registerStackedCube("cube-3", { x: 0, y: 2, z: 0 }, "iron");
+		expect(findUnsupportedCubes()).toHaveLength(0);
+	});
+
+	it("finds floating cubes with no ground connection", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		registerStackedCube("cube-2", { x: 10, y: 3, z: 10 }, "iron");
+		const unsupported = findUnsupportedCubes();
+		expect(unsupported).toHaveLength(1);
+		expect(unsupported[0].entityId).toBe("cube-2");
+	});
+
+	it("returns empty for bridge structure connected to ground", () => {
+		// Two pillars connected by a bridge
+		registerStackedCube("c1", { x: 0, y: 0, z: 0 }, "iron");
+		registerStackedCube("c2", { x: 0, y: 1, z: 0 }, "iron");
+		registerStackedCube("c3", { x: 1, y: 1, z: 0 }, "iron"); // bridge
+		registerStackedCube("c4", { x: 2, y: 1, z: 0 }, "iron");
+		registerStackedCube("c5", { x: 2, y: 0, z: 0 }, "iron");
+		expect(findUnsupportedCubes()).toHaveLength(0);
+	});
+
+	it("returns empty array when registry is empty", () => {
+		expect(findUnsupportedCubes()).toHaveLength(0);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// removeAndTopple
+// ---------------------------------------------------------------------------
+
+describe("removeAndTopple", () => {
+	it("removes the target cube and returns toppled cubes", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		registerStackedCube("cube-2", { x: 0, y: 1, z: 0 }, "iron");
+		registerStackedCube("cube-3", { x: 0, y: 2, z: 0 }, "iron");
+
+		// Remove the middle cube — top cube should topple
+		const toppled = removeAndTopple({ x: 0, y: 1, z: 0 });
+		expect(toppled).toHaveLength(1);
+		expect(toppled[0].entityId).toBe("cube-3");
+
+		// Only ground cube remains
+		expect(getAllStackedCubes().size).toBe(1);
+		expect(getStackedCubeAt({ x: 0, y: 0, z: 0 })).toBeDefined();
+	});
+
+	it("returns empty array when removing a leaf cube (no cascade)", () => {
+		registerStackedCube("cube-1", { x: 0, y: 0, z: 0 }, "iron");
+		registerStackedCube("cube-2", { x: 0, y: 1, z: 0 }, "iron");
+
+		const toppled = removeAndTopple({ x: 0, y: 1, z: 0 });
+		expect(toppled).toHaveLength(0);
+		expect(getAllStackedCubes().size).toBe(1);
+	});
+
+	it("returns empty array for removing from empty position", () => {
+		const toppled = removeAndTopple({ x: 5, y: 5, z: 5 });
+		expect(toppled).toHaveLength(0);
+	});
+
+	it("cascades topple when removing a pillar supporting a bridge", () => {
+		// Single pillar holding up a horizontal row
+		registerStackedCube("base", { x: 0, y: 0, z: 0 }, "iron");
+		registerStackedCube("mid", { x: 0, y: 1, z: 0 }, "iron");
+		registerStackedCube("top", { x: 0, y: 2, z: 0 }, "iron");
+		registerStackedCube("arm1", { x: 1, y: 2, z: 0 }, "iron");
+		registerStackedCube("arm2", { x: 2, y: 2, z: 0 }, "iron");
+
+		// Remove the middle — everything above topples
+		const toppled = removeAndTopple({ x: 0, y: 1, z: 0 });
+		expect(toppled).toHaveLength(3); // top, arm1, arm2
+		expect(getAllStackedCubes().size).toBe(1); // only base remains
 	});
 });

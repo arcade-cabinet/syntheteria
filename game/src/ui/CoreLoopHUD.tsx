@@ -13,25 +13,19 @@
  * Machine-vision aesthetic matching FPSHUD (terminal green, monospace).
  */
 
-import {
-	useCallback,
-	useEffect,
-	useState,
-	useSyncExternalStore,
-} from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
 	getCoreLoopSnapshot,
 	subscribeCoreLoop,
 } from "../systems/CoreLoopSystem";
-import { getAllFurnaces, getFurnaceState } from "../systems/furnace";
+import { getFurnaceState } from "../systems/furnace";
 import {
 	DEFAULT_RECIPES,
 	getSmeltingProgress,
 } from "../systems/furnaceProcessing";
 import { getCube, getHeldCube } from "../systems/grabber";
-import { getMenuState, subscribeMenu } from "../systems/InteractionSystem";
 import { ORE_TYPE_CONFIGS } from "../systems/oreSpawner";
-import { RadialActionMenu } from "./RadialActionMenu";
+import { ObjectActionMenu } from "./ObjectActionMenu";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -239,12 +233,13 @@ function HeldCubeIndicator() {
 
 function FurnaceStatus() {
 	// Re-render when core loop state changes (furnaces process each frame)
-	useSyncExternalStore(subscribeCoreLoop, getCoreLoopSnapshot);
+	const snap = useSyncExternalStore(subscribeCoreLoop, getCoreLoopSnapshot);
 
-	const furnaces = getAllFurnaces();
-	const activeFurnaces = furnaces.filter((f) => f.isProcessing);
+	const visibleFurnaces = snap.furnaces.filter(
+		(f) => f.isProcessing || f.hopperSize > 0 || f.isPowered,
+	);
 
-	if (activeFurnaces.length === 0) return null;
+	if (visibleFurnaces.length === 0) return null;
 
 	return (
 		<div
@@ -257,7 +252,7 @@ function FurnaceStatus() {
 				borderRadius: "6px",
 				padding: "8px 12px",
 				pointerEvents: "none",
-				minWidth: "120px",
+				minWidth: "140px",
 			}}
 		>
 			<div
@@ -270,40 +265,66 @@ function FurnaceStatus() {
 			>
 				FURNACE
 			</div>
-			{activeFurnaces.map((f) => (
-				<div key={f.id} style={{ marginBottom: "4px" }}>
+			{visibleFurnaces.map((f) => (
+				<div key={f.id} style={{ marginBottom: "6px" }}>
+					{/* Power + hopper status line */}
 					<div
 						style={{
 							display: "flex",
 							justifyContent: "space-between",
-							fontSize: "11px",
-							color: "#ff6600",
+							fontSize: "10px",
+							color: f.isPowered ? "#ff660088" : "#ff444488",
+							marginBottom: "2px",
 						}}
 					>
+						<span>{f.isPowered ? "POWERED" : "NO POWER"}</span>
 						<span>
-							{(f.currentItem ?? "").replace(/_/g, " ").toUpperCase()}
+							HOPPER {f.hopperSize}/{f.maxHopperSize}
 						</span>
-						<span>{(f.progress * 100).toFixed(0)}%</span>
 					</div>
-					<div
-						style={{
-							width: "100%",
-							height: "3px",
-							background: "rgba(255, 102, 0, 0.2)",
-							borderRadius: "1px",
-							overflow: "hidden",
-							marginTop: "2px",
-						}}
-					>
+					{f.isProcessing && f.currentItem ? (
+						<>
+							<div
+								style={{
+									display: "flex",
+									justifyContent: "space-between",
+									fontSize: "11px",
+									color: "#ff6600",
+								}}
+							>
+								<span>{f.currentItem.replace(/_/g, " ").toUpperCase()}</span>
+								<span>{(f.progress * 100).toFixed(0)}%</span>
+							</div>
+							<div
+								style={{
+									width: "100%",
+									height: "3px",
+									background: "rgba(255, 102, 0, 0.2)",
+									borderRadius: "1px",
+									overflow: "hidden",
+									marginTop: "2px",
+								}}
+							>
+								<div
+									style={{
+										width: `${f.progress * 100}%`,
+										height: "100%",
+										background: "#ff6600",
+										borderRadius: "1px",
+									}}
+								/>
+							</div>
+						</>
+					) : (
 						<div
 							style={{
-								width: `${f.progress * 100}%`,
-								height: "100%",
-								background: "#ff6600",
-								borderRadius: "1px",
+								fontSize: "10px",
+								color: "#ff660044",
 							}}
-						/>
-					</div>
+						>
+							IDLE
+						</div>
+					)}
 				</div>
 			))}
 		</div>
@@ -467,9 +488,7 @@ function FurnaceDetailPanel() {
 							marginBottom: "4px",
 						}}
 					>
-						<span>
-							{state.currentItem.replace(/_/g, " ").toUpperCase()}
-						</span>
+						<span>{state.currentItem.replace(/_/g, " ").toUpperCase()}</span>
 						<span>{progressPct}%</span>
 					</div>
 					<div
@@ -533,9 +552,7 @@ function FurnaceDetailPanel() {
 							marginBottom: "2px",
 						}}
 					>
-						<span>
-							{recipe.input.replace(/_/g, " ").toUpperCase()}
-						</span>
+						<span>{recipe.input.replace(/_/g, " ").toUpperCase()}</span>
 						<span>
 							{"\u2192"} {recipe.output.replace(/_/g, " ").toUpperCase()} (
 							{recipe.smeltTime}s)
@@ -544,37 +561,6 @@ function FurnaceDetailPanel() {
 				))}
 			</div>
 		</div>
-	);
-}
-
-function ActionMenuOverlay() {
-	const menu = useSyncExternalStore(subscribeMenu, getMenuState);
-
-	const handleAction = useCallback((actionId: string) => {
-		window.dispatchEvent(
-			new CustomEvent("coreloop:action", {
-				detail: { actionId },
-			}),
-		);
-	}, []);
-
-	const handleDismiss = useCallback(() => {
-		window.dispatchEvent(
-			new CustomEvent("coreloop:action", {
-				detail: { actionId: "__dismiss__" },
-			}),
-		);
-	}, []);
-
-	if (!menu.visible || menu.actions.length === 0) return null;
-
-	return (
-		<RadialActionMenu
-			actions={menu.actions}
-			position={menu.position}
-			onAction={handleAction}
-			onDismiss={handleDismiss}
-		/>
 	);
 }
 
@@ -598,7 +584,7 @@ export function CoreLoopHUD() {
 			<HeldCubeIndicator />
 			<FurnaceStatus />
 			<FurnaceDetailPanel />
-			<ActionMenuOverlay />
+			<ObjectActionMenu />
 		</div>
 	);
 }

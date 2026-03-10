@@ -17,7 +17,7 @@ import {
 	updateCompression,
 } from "./compression";
 import { getAllFurnaces } from "./furnace";
-import { updateFurnaceProcessing } from "./furnaceProcessing";
+import { startSmelting, updateFurnaceProcessing } from "./furnaceProcessing";
 import { getHeldCube, registerCube, setCubePosition } from "./grabber";
 import { updateHeldCubePosition } from "./heldCubeSync";
 import {
@@ -30,6 +30,16 @@ import {
 // Module-level state for HUD consumption (avoids per-frame React setState)
 // ---------------------------------------------------------------------------
 
+interface FurnaceSnapshot {
+	id: string;
+	isProcessing: boolean;
+	isPowered: boolean;
+	currentItem: string | null;
+	progress: number;
+	hopperSize: number;
+	maxHopperSize: number;
+}
+
 interface CoreLoopSnapshot {
 	/** Whether the player is currently harvesting */
 	isHarvesting: boolean;
@@ -41,6 +51,10 @@ interface CoreLoopSnapshot {
 	isCompressing: boolean;
 	/** Compression progress 0..1 */
 	compressionProgress: number;
+	/** ID of currently held cube, or null */
+	heldCubeId: string | null;
+	/** Snapshot of all furnace states */
+	furnaces: FurnaceSnapshot[];
 }
 
 let currentSnapshot: CoreLoopSnapshot = {
@@ -49,6 +63,8 @@ let currentSnapshot: CoreLoopSnapshot = {
 	powderStorage: new Map(),
 	isCompressing: false,
 	compressionProgress: 0,
+	heldCubeId: null,
+	furnaces: [],
 };
 
 const listeners = new Set<() => void>();
@@ -122,6 +138,15 @@ export function CoreLoopSystem() {
 		// --- Furnace Processing ---
 		const furnaces = getAllFurnaces();
 		for (const furnace of furnaces) {
+			// Auto-start smelting if the furnace has items and is idle + powered
+			if (
+				!furnace.isProcessing &&
+				furnace.isPowered &&
+				furnace.hopperQueue.length > 0
+			) {
+				startSmelting(furnace.id);
+			}
+
 			const result = updateFurnaceProcessing(furnace.id, delta);
 			// If smelting completed, register the output cube
 			if (result?.completed && result.outputMaterial && result.outputPosition) {
@@ -145,6 +170,15 @@ export function CoreLoopSystem() {
 		const powderStorage = getPowderStorage();
 		const compressionProgress = getCompressionProgress();
 		const compressing = isCompressing();
+		const heldCubeId = getHeldCube();
+
+		// Build furnace hash segment
+		const furnaceHash = furnaces
+			.map(
+				(f) =>
+					`${f.id}:${f.isProcessing ? 1 : 0}:${f.isPowered ? 1 : 0}:${f.progress.toFixed(2)}:${f.hopperQueue.length}`,
+			)
+			.join(";");
 
 		const newHash = [
 			harvestState?.isActive ? "1" : "0",
@@ -154,6 +188,8 @@ export function CoreLoopSystem() {
 			Array.from(powderStorage.entries())
 				.map(([k, v]) => `${k}:${v.toFixed(1)}`)
 				.join(","),
+			heldCubeId ?? "none",
+			furnaceHash,
 		].join("|");
 
 		if (newHash !== prevHashRef.current) {
@@ -164,6 +200,16 @@ export function CoreLoopSystem() {
 				powderStorage,
 				isCompressing: compressing,
 				compressionProgress,
+				heldCubeId,
+				furnaces: furnaces.map((f) => ({
+					id: f.id,
+					isProcessing: f.isProcessing,
+					isPowered: f.isPowered,
+					currentItem: f.currentItem,
+					progress: f.progress,
+					hopperSize: f.hopperQueue.length,
+					maxHopperSize: f.maxHopperSize,
+				})),
 			};
 			notifyListeners();
 		}

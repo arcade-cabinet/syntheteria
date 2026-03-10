@@ -5,6 +5,11 @@
  * attached to their body, and drop or throw it. Only one cube can be
  * held at a time. Cubes must have the "Grabbable" trait to be picked up.
  *
+ * When dropping a cube near other cubes or the ground, the drop position
+ * is snapped to the nearest 0.5m grid position via the cubeStacking
+ * system. The cube is also registered in the stackRegistry and structural
+ * integrity is checked after placement.
+ *
  * Rapier physics is decoupled via optional callbacks:
  * - setKinematic: freeze the cube body while held
  * - setDynamic: re-enable physics when released
@@ -12,6 +17,13 @@
  *
  * Config reference: config/cubeMaterials.json
  */
+
+import {
+	canPlaceAt,
+	registerStackedCube,
+	snapToGrid,
+} from "./cubeStacking";
+import { snapToGrid as gridSnapToGrid } from "./gridSnap";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -48,6 +60,14 @@ export interface ReleaseCallbacks {
 	setDynamic?: (id: string) => void;
 	/** Apply an impulse vector to the rigid body (throw only) */
 	applyImpulse?: (id: string, impulse: Vec3) => void;
+	/** Called for each cube that topples after a structural change */
+	onTopple?: (id: string, position: Vec3) => void;
+}
+
+/** Options for controlling drop behavior. */
+export interface DropOptions {
+	/** If true, snap the drop position to the 0.5m grid and register in stackRegistry. Default: true. */
+	snapToStack?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -175,6 +195,12 @@ export function grabCube(
 /**
  * Drop the currently held cube at a given position.
  *
+ * When snapToStack is enabled (default), the drop position is snapped
+ * to the nearest 0.5m grid position. If the grid position has support
+ * (ground or cube below), the cube is registered in the stackRegistry
+ * and its physics body stays kinematic (frozen). Otherwise it drops
+ * with dynamic physics at the snapped position.
+ *
  * Removes the "HeldBy" trait, restores "Grabbable", sets the cube
  * position, and calls the optional setDynamic callback.
  *
@@ -183,6 +209,7 @@ export function grabCube(
 export function dropCube(
 	dropPosition: Vec3,
 	callbacks?: ReleaseCallbacks,
+	options?: DropOptions,
 ): boolean {
 	if (heldCubeId === null) {
 		return false;
@@ -195,6 +222,16 @@ export function dropCube(
 		return false;
 	}
 
+	const doSnap = options?.snapToStack !== false;
+
+	// Compute the final drop position (snap to grid if enabled)
+	let finalPosition: Vec3;
+	if (doSnap) {
+		finalPosition = snapToGrid(dropPosition);
+	} else {
+		finalPosition = { ...dropPosition };
+	}
+
 	// Update traits: remove HeldBy, add Grabbable
 	const heldIdx = cube.traits.indexOf("HeldBy");
 	if (heldIdx !== -1) {
@@ -202,13 +239,33 @@ export function dropCube(
 	}
 	cube.traits.push("Grabbable");
 
-	// Set position
-	cube.position.x = dropPosition.x;
-	cube.position.y = dropPosition.y;
-	cube.position.z = dropPosition.z;
+	// Set position to snapped location
+	cube.position.x = finalPosition.x;
+	cube.position.y = finalPosition.y;
+	cube.position.z = finalPosition.z;
 
-	// Re-enable physics
-	callbacks?.setDynamic?.(heldCubeId);
+	// Try to register in the stack registry if snapping
+	if (doSnap) {
+		const gridCoord = gridSnapToGrid(finalPosition);
+		if (canPlaceAt(gridCoord)) {
+			registerStackedCube(heldCubeId, gridCoord, cube.material);
+			// Cube is stacked — add Stacked trait, keep it static
+			if (!cube.traits.includes("Stacked")) {
+				cube.traits.push("Stacked");
+			}
+			// Remove Grabbable since stacked cubes need explicit unstacking
+			const grabbableIdx = cube.traits.indexOf("Grabbable");
+			if (grabbableIdx !== -1) {
+				cube.traits.splice(grabbableIdx, 1);
+			}
+		} else {
+			// Cannot stack — just drop with physics
+			callbacks?.setDynamic?.(heldCubeId);
+		}
+	} else {
+		// No snap — re-enable physics
+		callbacks?.setDynamic?.(heldCubeId);
+	}
 
 	heldCubeId = null;
 

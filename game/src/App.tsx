@@ -50,10 +50,12 @@ import { SelectionHighlight } from "./rendering/SelectionHighlight";
 import { usePreloadTerrainMaterials } from "./rendering/TerrainPBR";
 import { TerrainRenderer } from "./rendering/TerrainRenderer";
 import { UnitRenderer } from "./rendering/UnitRenderer";
+import { WallRenderer } from "./rendering/WallRenderer";
 import { WireRenderer } from "./rendering/WireRenderer";
 import { updateBeltTransport } from "./systems/beltTransport";
 import { botAutomationSystem } from "./systems/botAutomation";
 import { CoreLoopSystem } from "./systems/CoreLoopSystem";
+import { GameplaySystems } from "./systems/GameplaySystems";
 import { cultistAISystem, spawnCultist } from "./systems/cultistAI";
 import { createFurnace } from "./systems/furnace";
 import { InteractionSystem } from "./systems/InteractionSystem";
@@ -66,6 +68,7 @@ import { Bezel } from "./ui/Bezel";
 import { CoreLoopHUD } from "./ui/CoreLoopHUD";
 import { FPSHUD } from "./ui/FPSHUD";
 import { InventoryView } from "./ui/InventoryView";
+import { ObjectActionMenu } from "./ui/ObjectActionMenu";
 import { MobileControls } from "./ui/MobileControls";
 import { PowerOverlay } from "./ui/PowerOverlay";
 import type { PregameConfig } from "./ui/PregameScreen";
@@ -409,6 +412,7 @@ export default function App() {
 				<FurnaceRenderer />
 				<PlacementPreview />
 				<HarvestParticles />
+				<WallRenderer />
 
 				<FPSCamera />
 				<CameraEffects />
@@ -422,6 +426,7 @@ export default function App() {
 				<CoreLoopSystem />
 				<InteractionSystem />
 				<YukaSystem />
+				<GameplaySystems />
 				<NavMeshDebugRenderer />
 			</Canvas>
 
@@ -430,6 +435,7 @@ export default function App() {
 			<CoreLoopHUD />
 			<PowerOverlay />
 			<InventoryView />
+			<ObjectActionMenu />
 
 			{/* Mobile controls — joystick, tool view, action buttons */}
 			{isMobile && (

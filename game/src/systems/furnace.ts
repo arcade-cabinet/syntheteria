@@ -94,7 +94,7 @@ export function createFurnace(
 		isProcessing: false,
 		currentItem: null,
 		progress: 0,
-		isPowered: false,
+		isPowered: true, // default to powered until power network is implemented
 	};
 
 	// Register in module store

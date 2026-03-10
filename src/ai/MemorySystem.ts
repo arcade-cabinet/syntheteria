@@ -229,7 +229,7 @@ export function getRecentThreats(
 
 	for (const raw of memories.values()) {
 		const age = currentTime - raw.lastSeenTime;
-		if (age > maxAge) continue;
+		if (age >= maxAge) continue;
 
 		const confidence = raw.visible
 			? 1.0

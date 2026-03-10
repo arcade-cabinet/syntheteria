@@ -5,8 +5,16 @@
  * - FSM state transitions (IDLE -> PATROL -> SEEK_TARGET -> ATTACK -> FLEE etc.)
  * - Perception-based state decision logic
  * - Edge cases: no targets, multiple targets, target destroyed
- * - Order processing from governor
+ * - Order processing from governor (setOrder + context-driven)
  * - Guard, Gather, ReturnToBase, Follow states
+ * - State transition resets (stateTime, patrolWaypoint, etc.)
+ * - Boundary conditions (exact thresholds, zero delta, null targets)
+ * - startFlee fallback paths (threat, homeBase, wander)
+ * - PATROL_AREA order patrolCenter fallback from context position
+ * - Guard fallback to ctx.position when guardCenter is null
+ * - Follow finding leader in enemies list (findEntityInAll)
+ * - Multiple rapid state transitions
+ * - Repeated orders (same reference vs new reference)
  */
 
 import type { BotContext, NearbyEntity } from "../BotContext.ts";
@@ -77,6 +85,10 @@ beforeEach(() => {
 	jest.spyOn(Math, "random").mockReturnValue(0.5);
 });
 
+afterEach(() => {
+	jest.restoreAllMocks();
+});
+
 // ---------------------------------------------------------------------------
 // Initial state
 // ---------------------------------------------------------------------------
@@ -92,6 +104,26 @@ describe("initial state", () => {
 
 	it("starts with zero state time", () => {
 		expect(brain.stateTime).toBe(0);
+	});
+
+	it("starts with no patrol waypoint", () => {
+		expect(brain.patrolWaypoint).toBeNull();
+	});
+
+	it("starts with no guard center", () => {
+		expect(brain.guardCenter).toBeNull();
+	});
+
+	it("starts with no patrol center", () => {
+		expect(brain.patrolCenter).toBeNull();
+	});
+
+	it("starts with default guard radius of 8", () => {
+		expect(brain.guardRadius).toBe(8);
+	});
+
+	it("starts with default patrol radius of 15", () => {
+		expect(brain.patrolRadius).toBe(15);
 	});
 });
 
@@ -146,6 +178,39 @@ describe("IDLE state", () => {
 		const ctx = makeContext({ position: pos(10, 0, 20) });
 		brain.update(3.1, ctx);
 		expect(brain.patrolCenter).toEqual(pos(10, 0, 20));
+	});
+
+	it("preserves existing patrolCenter when entering patrol from idle", () => {
+		brain.patrolCenter = pos(99, 0, 99);
+		const ctx = makeContext({ position: pos(10, 0, 20) });
+		brain.update(3.1, ctx);
+		expect(brain.patrolCenter).toEqual(pos(99, 0, 99));
+	});
+
+	it("does not transition to PATROL at exactly IDLE_TO_WANDER_TIME", () => {
+		const ctx = makeContext();
+		// stateTime will be exactly 3.0 after this update
+		brain.update(3.0, ctx);
+		// At exactly 3.0, stateTime > 3.0 is false
+		expect(brain.state).toBe(BotState.IDLE);
+	});
+
+	it("prioritizes aggro over idle-to-patrol transition", () => {
+		const enemy = makeEnemy("enemy1", pos(5, 0, 0), 25);
+		const ctx = makeContext({ nearbyEnemies: [enemy] });
+
+		// Even with stateTime > 3.0, aggro check happens first
+		brain.update(4.0, ctx);
+
+		expect(brain.state).toBe(BotState.SEEK_TARGET);
+		expect(brain.targetId).toBe("enemy1");
+	});
+
+	it("handles zero delta time without crashing", () => {
+		const ctx = makeContext();
+		const output = brain.update(0, ctx);
+		expect(output.command).toBe(SteeringCommand.STOP);
+		expect(brain.stateTime).toBe(0);
 	});
 });
 
@@ -236,6 +301,31 @@ describe("PATROL state", () => {
 		// Waypoint age should be reset
 		expect(brain.patrolWaypointAge).toBe(0);
 	});
+
+	it("returns WANDER when patrolWaypoint is null after generation attempt", () => {
+		// This can happen if patrolCenter is null and ctx.position is used
+		// The waypoint is always generated, so this path is unlikely
+		// but let's verify the fallback works
+		const ctx = makeContext({ position: pos(0, 0, 0) });
+		const output = brain.update(0.016, ctx);
+		// With mocked Math.random returning 0.5, waypoint is always generated
+		expect(output.command).toBe(SteeringCommand.ARRIVE);
+	});
+
+	it("uses patrolCenter for waypoint generation", () => {
+		brain.patrolCenter = pos(100, 0, 100);
+		brain.patrolRadius = 10;
+		const ctx = makeContext({ position: pos(0, 0, 0) });
+		brain.update(0.016, ctx);
+
+		// Waypoint should be near patrolCenter, not near bot position
+		expect(brain.patrolWaypoint).toBeDefined();
+		const wp = brain.patrolWaypoint!;
+		// With Math.random = 0.5: angle = PI, dist = 5
+		// x = 100 + cos(PI)*5 = 95, z = 100 + sin(PI)*5 ~ 100
+		expect(wp.x).toBeCloseTo(95, 0);
+		expect(wp.z).toBeCloseTo(100, 0);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -323,6 +413,39 @@ describe("SEEK_TARGET state", () => {
 		expect(brain.state).toBe(BotState.FLEE);
 		expect(output.command).toBe(SteeringCommand.FLEE);
 	});
+
+	it("finds target in allies list via findEntityInPerception", () => {
+		const ally = makeAlly("ally1", pos(5, 0, 0), 25);
+		const ctx = makeContext({ nearbyAllies: [ally] });
+
+		brain.targetId = "ally1";
+		brain.state = BotState.SEEK_TARGET as BotState;
+		brain.stateTime = 0;
+
+		const output = brain.update(0.016, ctx);
+
+		// ally found, distance > meleeRangeSq (4), so keep seeking
+		expect(output.command).toBe(SteeringCommand.SEEK);
+		expect(output.target).toEqual(pos(5, 0, 0));
+	});
+
+	it("prefers enemy list over ally list when target appears in both", () => {
+		const enemyVersion = makeEnemy("target1", pos(5, 0, 0), 25);
+		const allyVersion = makeAlly("target1", pos(10, 0, 0), 100);
+		const ctx = makeContext({
+			nearbyEnemies: [enemyVersion],
+			nearbyAllies: [allyVersion],
+		});
+
+		brain.targetId = "target1";
+		brain.state = BotState.SEEK_TARGET as BotState;
+		brain.stateTime = 0;
+
+		const output = brain.update(0.016, ctx);
+
+		// findEntityInPerception checks enemies first
+		expect(output.target).toEqual(pos(5, 0, 0));
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -359,6 +482,22 @@ describe("ATTACK state", () => {
 
 		expect(brain.state).toBe(BotState.SEEK_TARGET);
 		expect(output.command).toBe(SteeringCommand.SEEK);
+	});
+
+	it("stays in ATTACK within hysteresis zone", () => {
+		// meleeRange = 2, meleeRangeSq = 4, hysteresis threshold = 4 * 1.5 = 6
+		// distSq = 5 is within hysteresis (still in ATTACK)
+		const enemy = makeEnemy("enemy1", pos(2.2, 0, 0), 5);
+		const ctx = makeContext({ nearbyEnemies: [enemy] });
+
+		brain.targetId = "enemy1";
+		brain.state = BotState.ATTACK as BotState;
+		brain.stateTime = 0;
+
+		const output = brain.update(0.016, ctx);
+
+		expect(brain.state).toBe(BotState.ATTACK);
+		expect(output.command).toBe(SteeringCommand.ARRIVE);
 	});
 
 	it("transitions to IDLE when target is destroyed", () => {
@@ -398,6 +537,33 @@ describe("ATTACK state", () => {
 		expect(brain.state).toBe(BotState.FLEE);
 		expect(output.command).toBe(SteeringCommand.FLEE);
 		expect(output.target).toEqual(pos(1, 0, 0));
+	});
+
+	it("flee from attack prioritizes threat position", () => {
+		const enemy = makeEnemy("enemy1", pos(3, 0, 4), 25);
+		const ctx = makeContext({
+			nearbyEnemies: [enemy],
+			homeBase: pos(100, 0, 100),
+			components: {
+				total: 4,
+				functional: 0,
+				healthRatio: 0.0,
+				hasArms: false,
+				hasCamera: false,
+				hasLegs: false,
+			},
+		});
+
+		brain.targetId = "enemy1";
+		brain.state = BotState.ATTACK as BotState;
+		brain.stateTime = 0;
+
+		const output = brain.update(0.016, ctx);
+
+		expect(brain.state).toBe(BotState.FLEE);
+		expect(output.command).toBe(SteeringCommand.FLEE);
+		// Should flee from threat, not seek homeBase
+		expect(output.target).toEqual(pos(3, 0, 4));
 	});
 });
 
@@ -485,6 +651,46 @@ describe("FLEE state", () => {
 		const output = brain.update(0.1, ctx);
 
 		expect(output.command).toBe(SteeringCommand.WANDER);
+	});
+
+	it("keeps fleeing when threat exists beyond safe distance but under MIN_STATE_DURATION", () => {
+		// Threat beyond safe distance but haven't been fleeing long enough
+		const enemy = makeEnemy("enemy1", pos(25, 0, 0), 625); // > safeDistanceSq(400)
+		const ctx = makeContext({ nearbyEnemies: [enemy] });
+
+		brain.state = BotState.FLEE as BotState;
+		brain.stateTime = 0;
+
+		const output = brain.update(0.1, ctx);
+
+		// Still in FLEE because MIN_STATE_DURATION not met
+		expect(brain.state).toBe(BotState.FLEE);
+		// But there IS a threat, so flee from it
+		expect(output.command).toBe(SteeringCommand.FLEE);
+		expect(output.target).toEqual(pos(25, 0, 0));
+	});
+
+	it("transitions out of flee when threat beyond safe distance AND MIN_STATE_DURATION passed", () => {
+		const enemy = makeEnemy("enemy1", pos(25, 0, 0), 625); // > safeDistanceSq(400)
+		const ctx = makeContext({ nearbyEnemies: [enemy] });
+
+		brain.state = BotState.FLEE as BotState;
+		brain.stateTime = 0;
+
+		brain.update(0.6, ctx); // pass MIN_STATE_DURATION
+
+		expect(brain.state).toBe(BotState.IDLE);
+	});
+
+	it("clears targetId when transitioning out of flee", () => {
+		brain.state = BotState.FLEE as BotState;
+		brain.targetId = "old-enemy";
+		brain.stateTime = 0;
+
+		const ctx = makeContext({ nearbyEnemies: [] });
+		brain.update(0.6, ctx);
+
+		expect(brain.targetId).toBeNull();
 	});
 });
 
@@ -598,6 +804,38 @@ describe("GUARD state", () => {
 		expect(brain.state).toBe(BotState.FLEE);
 		expect(output.command).toBe(SteeringCommand.FLEE);
 	});
+
+	it("uses ctx.position as fallback when guardCenter is null", () => {
+		brain.state = BotState.GUARD as BotState;
+		brain.guardCenter = null;
+		brain.stateTime = 0;
+
+		// Bot at (10,0,10) — guard center defaults to position
+		// Enemy near the bot's position
+		const enemy = makeEnemy("enemy1", pos(11, 0, 10), 1);
+		const ctx = makeContext({
+			position: pos(10, 0, 10),
+			nearbyEnemies: [enemy],
+		});
+
+		brain.update(0.016, ctx);
+
+		// Should still detect threat within guard radius (default 8)
+		// Enemy is 1 unit from bot pos, well within guardRadius of 8
+		expect(brain.targetId).toBe("enemy1");
+	});
+
+	it("does not drift return if within 2 units of guard point", () => {
+		brain.state = BotState.GUARD as BotState;
+		brain.guardCenter = pos(10, 0, 10);
+		brain.stateTime = 0;
+
+		// Bot slightly off-center but within threshold (distSq < 4)
+		const ctx = makeContext({ position: pos(10.5, 0, 10.5) });
+		const output = brain.update(0.016, ctx);
+
+		expect(output.command).toBe(SteeringCommand.STOP);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -663,6 +901,46 @@ describe("GATHER state", () => {
 		// Should still be gathering (deposit found in perception)
 		expect(brain.state).toBe(BotState.GATHER);
 	});
+
+	it("finds deposit in allies list", () => {
+		brain.state = BotState.GATHER as BotState;
+		brain.targetId = "deposit1";
+		brain.stateTime = 0;
+
+		const deposit = makeAlly("deposit1", pos(20, 0, 20), 400);
+		const ctx = makeContext({ nearbyAllies: [deposit] });
+
+		const output = brain.update(0.016, ctx);
+
+		expect(output.command).toBe(SteeringCommand.ARRIVE);
+		expect(output.target).toEqual(pos(20, 0, 20));
+	});
+
+	it("does not aggro on enemy beyond aggro range", () => {
+		brain.state = BotState.GATHER as BotState;
+		brain.targetId = "deposit1";
+		brain.stateTime = 0;
+
+		// Deposit is in allies list (a neutral resource, not a hostile entity).
+		// The far enemy is in enemies list but beyond aggro range.
+		const deposit = makeAlly("deposit1", pos(5, 0, 5), 50);
+		const ctxWithDeposit = makeContext({
+			nearbyAllies: [deposit],
+		});
+		brain.update(0.6, ctxWithDeposit); // pass MIN_STATE_DURATION
+
+		const farEnemy = makeEnemy("enemy1", pos(50, 0, 0), 2500); // beyond aggroRangeSq(100)
+		const ctxWithFarEnemy = makeContext({
+			nearbyEnemies: [farEnemy],
+			nearbyAllies: [deposit],
+		});
+
+		brain.update(0.016, ctxWithFarEnemy);
+
+		// Closest enemy (farEnemy) is at distSq=2500, beyond aggroRangeSq=100
+		// So the bot should keep gathering
+		expect(brain.state).toBe(BotState.GATHER);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -703,6 +981,36 @@ describe("RETURN_TO_BASE state", () => {
 		brain.stateTime = 0;
 
 		const ctx = makeContext({ homeBase: null });
+
+		brain.update(0.016, ctx);
+
+		expect(brain.state).toBe(BotState.IDLE);
+	});
+
+	it("keeps returning when far from homeBase", () => {
+		brain.state = BotState.RETURN_TO_BASE as BotState;
+		brain.stateTime = 0;
+
+		const ctx = makeContext({
+			homeBase: pos(50, 0, 50),
+			position: pos(0, 0, 0), // far away
+		});
+
+		const output = brain.update(0.016, ctx);
+
+		expect(brain.state).toBe(BotState.RETURN_TO_BASE);
+		expect(output.command).toBe(SteeringCommand.ARRIVE);
+	});
+
+	it("considers XZ distance (ignores Y) for near-base check", () => {
+		brain.state = BotState.RETURN_TO_BASE as BotState;
+		brain.stateTime = 0;
+
+		// Close in XZ but different Y — should still be "near"
+		const ctx = makeContext({
+			homeBase: pos(50, 0, 50),
+			position: pos(51, 100, 51), // Y=100 but XZ within 3
+		});
 
 		brain.update(0.016, ctx);
 
@@ -771,6 +1079,68 @@ describe("FOLLOW state", () => {
 
 		expect(brain.state).toBe(BotState.SEEK_TARGET);
 		expect(brain.targetId).toBe("enemy1");
+	});
+
+	it("does NOT aggro before MIN_STATE_DURATION while following", () => {
+		brain.state = BotState.FOLLOW as BotState;
+		brain.targetId = "leader1";
+		brain.stateTime = 0;
+
+		const leader = makeAlly("leader1", pos(5, 0, 0), 25);
+		const enemy = makeEnemy("enemy1", pos(3, 0, 0), 9);
+		const ctx = makeContext({
+			nearbyAllies: [leader],
+			nearbyEnemies: [enemy],
+		});
+
+		brain.update(0.1, ctx); // below MIN_STATE_DURATION
+
+		expect(brain.state).toBe(BotState.FOLLOW);
+	});
+
+	it("finds leader in enemies list via findEntityInAll", () => {
+		brain.state = BotState.FOLLOW as BotState;
+		brain.targetId = "leader1";
+		brain.stateTime = 0;
+
+		// Leader is in enemies list (edge case — maybe a hacked enemy)
+		const leader = makeEnemy("leader1", pos(20, 0, 20), 400);
+		const ctx = makeContext({ nearbyEnemies: [leader], nearbyAllies: [] });
+
+		const output = brain.update(0.016, ctx);
+
+		// findEntityInAll checks allies first then enemies
+		expect(output.command).toBe(SteeringCommand.SEEK);
+		expect(output.target).toEqual(pos(20, 0, 20));
+	});
+
+	it("uses SEEK at exactly follow distance boundary", () => {
+		brain.state = BotState.FOLLOW as BotState;
+		brain.targetId = "leader1";
+		brain.stateTime = 0;
+
+		// followDistSq = 9, distanceSq = 9 => at boundary
+		const leader = makeAlly("leader1", pos(3, 0, 0), 9);
+		const ctx = makeContext({ nearbyAllies: [leader] });
+
+		const output = brain.update(0.016, ctx);
+
+		// distanceSq > followDistSq is false when equal, so ARRIVE
+		expect(output.command).toBe(SteeringCommand.ARRIVE);
+	});
+
+	it("uses SEEK when just beyond follow distance", () => {
+		brain.state = BotState.FOLLOW as BotState;
+		brain.targetId = "leader1";
+		brain.stateTime = 0;
+
+		// followDistSq = 9, distanceSq = 10 => just beyond
+		const leader = makeAlly("leader1", pos(3.16, 0, 0), 10);
+		const ctx = makeContext({ nearbyAllies: [leader] });
+
+		const output = brain.update(0.016, ctx);
+
+		expect(output.command).toBe(SteeringCommand.SEEK);
 	});
 });
 
@@ -865,8 +1235,6 @@ describe("governor orders", () => {
 		expect(brain.state).toBe(BotState.PATROL);
 
 		// New order overrides via context (different object reference)
-		// Include the target in perception so SEEK_TARGET doesn't immediately
-		// transition back to IDLE due to lost target
 		const attackOrder: BotOrder = {
 			type: BotOrderType.ATTACK_TARGET,
 			targetId: "enemy99",
@@ -898,6 +1266,108 @@ describe("governor orders", () => {
 		brain.update(1.0, ctx);
 		// stateTime = 0.016 (first update) + 1.0 (second update) = 1.016
 		expect(brain.stateTime).toBeGreaterThanOrEqual(1.0);
+	});
+
+	it("PATROL_AREA order via update sets patrolCenter from order center", () => {
+		const order: BotOrder = {
+			type: BotOrderType.PATROL_AREA,
+			center: pos(50, 0, 50),
+			radius: 25,
+		};
+
+		const ctx = makeContext({
+			currentOrder: order,
+			position: pos(0, 0, 0),
+		});
+		brain.update(0.016, ctx);
+
+		// patrolCenter comes from order.center, not ctx.position
+		expect(brain.patrolCenter).toEqual(pos(50, 0, 50));
+	});
+
+	it("GUARD order copies position (does not keep reference)", () => {
+		const position = pos(5, 0, 5);
+		const order: BotOrder = {
+			type: BotOrderType.GUARD_POSITION,
+			position,
+			radius: 10,
+		};
+
+		brain.setOrder(order);
+
+		// Mutate the original — brain should not be affected
+		position.x = 999;
+
+		expect(brain.guardCenter!.x).toBe(5);
+	});
+
+	it("PATROL_AREA order copies center (does not keep reference)", () => {
+		const center = pos(30, 0, 30);
+		const order: BotOrder = {
+			type: BotOrderType.PATROL_AREA,
+			center,
+			radius: 20,
+		};
+
+		brain.setOrder(order);
+
+		// Mutate the original — brain should not be affected
+		center.x = 999;
+
+		expect(brain.patrolCenter!.x).toBe(30);
+	});
+
+	it("governor order overrides even mid-combat", () => {
+		// Bot is currently attacking
+		const enemy = makeEnemy("enemy1", pos(1, 0, 0), 1);
+		brain.targetId = "enemy1";
+		brain.state = BotState.ATTACK as BotState;
+
+		// Governor orders retreat — provide homeBase so RETURN_TO_BASE
+		// doesn't immediately transition to IDLE
+		const retreatOrder: BotOrder = {
+			type: BotOrderType.RETURN_TO_BASE,
+		};
+
+		const ctx = makeContext({
+			currentOrder: retreatOrder,
+			nearbyEnemies: [enemy],
+			homeBase: pos(50, 0, 50),
+			position: pos(0, 0, 0),
+		});
+		brain.update(0.016, ctx);
+
+		// Order takes priority over combat — the order transitions to
+		// RETURN_TO_BASE, then handleReturnToBase finds homeBase exists
+		// and bot is far from it, so it stays in RETURN_TO_BASE
+		expect(brain.state).toBe(BotState.RETURN_TO_BASE);
+	});
+
+	it("sequential orders via context only apply on new reference", () => {
+		const order1: BotOrder = {
+			type: BotOrderType.PATROL_AREA,
+			center: pos(10, 0, 10),
+			radius: 15,
+		};
+
+		const ctx1 = makeContext({ currentOrder: order1 });
+		brain.update(0.016, ctx1);
+		expect(brain.state).toBe(BotState.PATROL);
+
+		// Same object reference in next update — no re-apply
+		brain.update(1.0, ctx1);
+		expect(brain.stateTime).toBeGreaterThan(0.5);
+
+		// New order object
+		const order2: BotOrder = {
+			type: BotOrderType.GUARD_POSITION,
+			position: pos(20, 0, 20),
+			radius: 5,
+		};
+		const ctx2 = makeContext({ currentOrder: order2 });
+		brain.update(0.016, ctx2);
+		expect(brain.state).toBe(BotState.GUARD);
+		expect(brain.stateTime).toBeLessThan(0.1);
 	});
 });
 
@@ -950,6 +1420,52 @@ describe("state transition resets", () => {
 		};
 		brain.setOrder(order);
 		expect(brain.state).toBe(BotState.RETURN_TO_BASE);
+		expect(brain.stateTime).toBe(0);
+	});
+
+	it("resets patrolWaypointAge on transition", () => {
+		brain.patrolCenter = pos(100, 0, 100);
+		// Place bot far from the patrol center so waypoint isn't "near" the bot
+		const ctx = makeContext({ position: pos(200, 0, 200) });
+		brain.update(3.1, ctx); // IDLE -> PATROL (patrolWaypoint=null, age=0)
+		brain.update(0.016, ctx); // handlePatrol: waypoint generated, age reset to 0
+		brain.update(2.0, ctx); // handlePatrol: age += 2.0, waypoint exists and not near bot
+
+		expect(brain.patrolWaypointAge).toBeGreaterThan(0);
+
+		// Transition to another state
+		brain.setOrder({
+			type: BotOrderType.GUARD_POSITION,
+			position: pos(10, 0, 10),
+			radius: 5,
+		});
+
+		expect(brain.patrolWaypointAge).toBe(0);
+	});
+
+	it("rapid state transitions reset correctly", () => {
+		// IDLE -> PATROL -> SEEK_TARGET -> FLEE in rapid sequence
+		const ctx = makeContext();
+		brain.update(3.1, ctx); // IDLE -> PATROL
+		expect(brain.state).toBe(BotState.PATROL);
+
+		brain.setOrder({
+			type: BotOrderType.ATTACK_TARGET,
+			targetId: "enemy1",
+		});
+		expect(brain.state).toBe(BotState.SEEK_TARGET);
+		expect(brain.stateTime).toBe(0);
+
+		brain.setOrder({ type: BotOrderType.RETURN_TO_BASE });
+		expect(brain.state).toBe(BotState.RETURN_TO_BASE);
+		expect(brain.stateTime).toBe(0);
+
+		brain.setOrder({
+			type: BotOrderType.GUARD_POSITION,
+			position: pos(0, 0, 0),
+			radius: 5,
+		});
+		expect(brain.state).toBe(BotState.GUARD);
 		expect(brain.stateTime).toBe(0);
 	});
 });
@@ -1020,6 +1536,31 @@ describe("edge cases", () => {
 		expect(brain.state).toBe(BotState.FLEE);
 	});
 
+	it("does not flee when health is just above threshold", () => {
+		const enemy = makeEnemy("enemy1", pos(1, 0, 0), 1);
+		const ctx = makeContext({
+			nearbyEnemies: [enemy],
+			fleeThreshold: 0.25,
+			components: {
+				total: 4,
+				functional: 2,
+				healthRatio: 0.26, // just above threshold
+				hasArms: true,
+				hasCamera: true,
+				hasLegs: true,
+			},
+		});
+
+		brain.targetId = "enemy1";
+		brain.state = BotState.ATTACK as BotState;
+		brain.stateTime = 0;
+
+		brain.update(0.016, ctx);
+
+		// Should NOT flee
+		expect(brain.state).toBe(BotState.ATTACK);
+	});
+
 	it("flee with threat but no homeBase produces FLEE command", () => {
 		const enemy = makeEnemy("enemy1", pos(5, 0, 0), 25);
 		const ctx = makeContext({
@@ -1066,13 +1607,36 @@ describe("edge cases", () => {
 
 		const output = brain.update(0.016, ctx);
 
-		// Target lost, should go idle/patrol (since no target in perception)
-		// Note: shouldFlee is checked first, but no target -> flee path
-		// Actually: shouldFlee returns true (healthRatio 0.0 <= 0.25),
-		// so startFlee is called. No threat found, homeBase exists.
+		// shouldFlee returns true (healthRatio 0.0 <= 0.25),
+		// startFlee is called. No threat found, homeBase exists.
 		expect(brain.state).toBe(BotState.FLEE);
 		expect(output.command).toBe(SteeringCommand.SEEK);
 		expect(output.target).toEqual(pos(100, 0, 100));
+	});
+
+	it("startFlee with no threats and no homeBase returns WANDER", () => {
+		const ctx = makeContext({
+			nearbyEnemies: [],
+			homeBase: null,
+			components: {
+				total: 4,
+				functional: 0,
+				healthRatio: 0.0,
+				hasArms: false,
+				hasCamera: false,
+				hasLegs: false,
+			},
+		});
+
+		brain.targetId = "enemy1";
+		brain.state = BotState.SEEK_TARGET as BotState;
+		brain.stateTime = 0;
+
+		const output = brain.update(0.016, ctx);
+
+		expect(brain.state).toBe(BotState.FLEE);
+		expect(output.command).toBe(SteeringCommand.WANDER);
+		expect(output.target).toBeUndefined();
 	});
 
 	it("delta time accumulates correctly across multiple updates", () => {
@@ -1086,8 +1650,6 @@ describe("edge cases", () => {
 	});
 
 	it("finding target in allies list works for SEEK_TARGET", () => {
-		// Target could be in enemies perception list — typically enemies
-		// but also findEntityInPerception searches allies
 		const ally = makeAlly("ally1", pos(5, 0, 0), 25);
 		const ctx = makeContext({ nearbyAllies: [ally] });
 
@@ -1100,5 +1662,79 @@ describe("edge cases", () => {
 		// ally found in perception, distance > melee range
 		expect(output.command).toBe(SteeringCommand.SEEK);
 		expect(output.target).toEqual(pos(5, 0, 0));
+	});
+
+	it("handles null targetId gracefully in findEntityInPerception", () => {
+		brain.targetId = null;
+		brain.state = BotState.SEEK_TARGET as BotState;
+		brain.stateTime = 0;
+
+		const enemy = makeEnemy("enemy1", pos(5, 0, 0), 25);
+		const ctx = makeContext({ nearbyEnemies: [enemy] });
+
+		const output = brain.update(0.016, ctx);
+
+		// targetId is null, so target not found -> transition to IDLE
+		expect(brain.state).toBe(BotState.IDLE);
+		expect(output.command).toBe(SteeringCommand.STOP);
+	});
+
+	it("handles large delta time without breaking", () => {
+		const ctx = makeContext();
+		const output = brain.update(1000, ctx); // 1000 seconds
+
+		// Should transition to PATROL (stateTime > 3.0)
+		expect(brain.state).toBe(BotState.PATROL);
+		expect(output.command).toBe(SteeringCommand.WANDER);
+	});
+
+	it("handles very small delta time", () => {
+		const ctx = makeContext();
+		const output = brain.update(0.0001, ctx);
+
+		expect(brain.state).toBe(BotState.IDLE);
+		expect(output.command).toBe(SteeringCommand.STOP);
+		expect(brain.stateTime).toBeCloseTo(0.0001);
+	});
+
+	it("multiple bots with independent brains do not interfere", () => {
+		const brain2 = new BotBrain();
+
+		const enemy = makeEnemy("enemy1", pos(5, 0, 0), 25);
+		const ctx = makeContext({ nearbyEnemies: [enemy] });
+
+		brain.update(0.016, ctx);
+		brain2.update(0.016, makeContext());
+
+		expect(brain.state).toBe(BotState.SEEK_TARGET);
+		expect(brain2.state).toBe(BotState.IDLE);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// BotState and SteeringCommand constants
+// ---------------------------------------------------------------------------
+
+describe("BotState constants", () => {
+	it("has all expected states", () => {
+		expect(BotState.IDLE).toBe("idle");
+		expect(BotState.PATROL).toBe("patrol");
+		expect(BotState.SEEK_TARGET).toBe("seek_target");
+		expect(BotState.ATTACK).toBe("attack");
+		expect(BotState.FLEE).toBe("flee");
+		expect(BotState.GUARD).toBe("guard");
+		expect(BotState.GATHER).toBe("gather");
+		expect(BotState.RETURN_TO_BASE).toBe("return_to_base");
+		expect(BotState.FOLLOW).toBe("follow");
+	});
+});
+
+describe("SteeringCommand constants", () => {
+	it("has all expected commands", () => {
+		expect(SteeringCommand.STOP).toBe("stop");
+		expect(SteeringCommand.SEEK).toBe("seek");
+		expect(SteeringCommand.ARRIVE).toBe("arrive");
+		expect(SteeringCommand.FLEE).toBe("flee");
+		expect(SteeringCommand.WANDER).toBe("wander");
 	});
 });

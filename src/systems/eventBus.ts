@@ -90,6 +90,127 @@ export interface DiscoveryFoundEvent {
 	tick: number;
 }
 
+
+export interface HarvestStartedEvent {
+	type: "harvest_started";
+	entityId: string;
+	depositId: string;
+	materialType: string;
+	tick: number;
+}
+
+export interface HarvestCompleteEvent {
+	type: "harvest_complete";
+	entityId: string;
+	depositId: string;
+	materialType: string;
+	powderGained: number;
+	tick: number;
+}
+
+export interface CompressionStartedEvent {
+	type: "compression_started";
+	entityId: string;
+	materialType: string;
+	tick: number;
+}
+
+export interface CubeSpawnedEvent {
+	type: "cube_spawned";
+	cubeId: string;
+	materialType: string;
+	position: { x: number; y: number; z: number };
+	source: "compression" | "furnace" | "spawn";
+	tick: number;
+}
+
+export interface CubeGrabbedEvent {
+	type: "cube_grabbed";
+	cubeId: string;
+	entityId: string;
+	materialType: string;
+	tick: number;
+}
+
+export interface CubeDroppedEvent {
+	type: "cube_dropped";
+	cubeId: string;
+	entityId: string;
+	position: { x: number; y: number; z: number };
+	tick: number;
+}
+
+export interface CubeThrownEvent {
+	type: "cube_thrown";
+	cubeId: string;
+	entityId: string;
+	direction: { x: number; y: number; z: number };
+	force: number;
+	tick: number;
+}
+
+export interface FurnaceDepositEvent {
+	type: "furnace_deposit";
+	furnaceId: string;
+	materialType: string;
+	entityId: string;
+	tick: number;
+}
+
+export interface SmeltingCompleteEvent {
+	type: "smelting_complete";
+	furnaceId: string;
+	inputMaterial: string;
+	outputMaterial: string;
+	tick: number;
+}
+
+export interface DamageTakenEvent {
+	type: "damage_taken";
+	targetId: string;
+	sourceId: string;
+	amount: number;
+	damageType: string;
+	tick: number;
+}
+
+export interface EntityDeathEvent {
+	type: "entity_death";
+	entityId: string;
+	killedBy: string;
+	entityType: string;
+	tick: number;
+}
+
+export interface PlayerRespawnEvent {
+	type: "player_respawn";
+	entityId: string;
+	position: { x: number; y: number; z: number };
+	tick: number;
+}
+
+export interface WeatherChangeEvent {
+	type: "weather_change";
+	previousWeather: string;
+	newWeather: string;
+	tick: number;
+}
+
+export interface AchievementUnlockedEvent {
+	type: "achievement_unlocked";
+	achievementId: string;
+	tier: number;
+	tick: number;
+}
+
+export interface LevelUpEvent {
+	type: "level_up";
+	entityId: string;
+	previousLevel: number;
+	newLevel: number;
+	tick: number;
+}
+
 export type GameEvent =
 	| CombatKillEvent
 	| QuestCompleteEvent
@@ -100,7 +221,22 @@ export type GameEvent =
 	| CubeStolenEvent
 	| StormStrikeEvent
 	| DiplomacyChangedEvent
-	| DiscoveryFoundEvent;
+	| DiscoveryFoundEvent
+	| HarvestStartedEvent
+	| HarvestCompleteEvent
+	| CompressionStartedEvent
+	| CubeSpawnedEvent
+	| CubeGrabbedEvent
+	| CubeDroppedEvent
+	| CubeThrownEvent
+	| FurnaceDepositEvent
+	| SmeltingCompleteEvent
+	| DamageTakenEvent
+	| EntityDeathEvent
+	| PlayerRespawnEvent
+	| WeatherChangeEvent
+	| AchievementUnlockedEvent
+	| LevelUpEvent;
 
 export type GameEventType = GameEvent["type"];
 

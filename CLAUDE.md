@@ -2,55 +2,75 @@
 
 ## Project Status
 
-**3D first-person factory planet game** — you ARE a broken robot on the surface of a machine planet. Explore, mine, build conveyor belts and wire networks, fabricate components, expand your factory across the planet.
+**First-person 4X on a machine planet.** You are a broken robot. You grind ore veins into powder, compress it into physical cubes, carry cubes to your furnace, and craft tools, bots, and buildings. Expand your territory, defend your cube stockpiles, and compete against AI civilizations governed by Yuka GOAP for control of the planet.
 
-All core systems implemented: FPS camera/input, factory loop (belts, wires, mining, processing), hacking with signal network, cultist AI, bot automation, save/load, procedural PBR materials, holographic projections, camera damage effects, flashlight, inventory overlay, factory audio.
+### Current State: Architecture Migration
 
-### Implemented Systems
-- **FPS Camera** — pointer lock mouse look, WASD movement, building collision with axis-sliding
-- **Bot switching** — Q key transfers consciousness between owned bots, preserves yaw
-- **Mobile controls** — nipplejs joystick (left), radial tool menu (bottom center), action buttons (right)
-- **Bezel UI** — frames gameplay viewport; top bar shows resources/power/storm, bottom shows equipped tool and hints; handles device notches via CSS safe-area-inset
-- **Rapier physics** — WASM physics engine with building colliders, ground plane, kinematic player body
-- **Tone.js audio** — storm ambience (brown noise + AutoFilter), lightning strikes, metal impacts, machinery hum, UI beeps
-- **Factory audio** — belt hum, mining drill, processing sparks, fabrication completion sounds
-- **Tool system** — 6 tools (scanner, repair, welder, fabricator, builder, salvager) with radial selection menu
-- **ECS game logic** — Miniplex entities with playerControlled, unit, building, belt, wire, miner, processor, hackable, automation, hologram, signalRelay components
-- **Procedural city** — labyrinthine buildings block FPS movement, instanced mesh rendering
-- **Procedural terrain** — heightfield with machine planet colors
-- **Power system** — lightning rods, storm intensity, power distribution via wire networks
-- **Wire network** — BFS power distribution from lightning rods through power wires, signal propagation via signal wires; catenary curve rendering with glow and spark particles on overload
-- **Resource scavenging** — scrap metal, e-waste, intact components
-- **Mining** — mining drill buildings extract resources from terrain deposits
-- **Processing** — smelter, refiner, separator buildings transform raw materials
-- **Belt transport** — conveyor belts with auto-linking, item transport, animated rendering with BeltMaterial
-- **Fabrication** — 5 recipes, power dependency
-- **Combat** — component-based damage from first person (parts break, not HP), FPS raycasting
-- **Hacking** — proximity-based, requires compute from signal network, progress bar, converts entities to player faction
-- **Signal network** — BFS signal propagation from player bots through relays, global compute pool
-- **Feral enemy AI** — patrol and aggro behavior
-- **Cultist AI** — cultists with lightning attacks, patrol/chase/flee behavior, escalating groups
-- **Bot automation** — 5 routines (idle, patrol, guard, follow, work) with navmesh pathfinding
-- **Camera effects** — glitch/static/interference when camera component is damaged
-- **Flashlight** — SpotLight attached to camera, toggled with F key, requires power cell
-- **Inventory** — Tab key overlay showing components, resources, equipped tool, network status
-- **Holographic projections** — custom shader for holographic otter displays with emitter pads
-- **PBR materials** — procedural textures for rusted metal, circuit board, conveyor belt, terrain zones (foundry, slag, cable, processor)
-- **Save/load** — serialize/deserialize entire ECS world, IndexedDB persistence
-- **Title screen** — glitch effect, direct to FPS gameplay (no narration walls)
+The prototype has working FPS camera, factory systems (belts, wires, mining, processing), combat, hacking, and procedural terrain. We are migrating to:
+
+- **Koota ECS** (from Miniplex) — trait-based SoA storage, relations, reactive queries, change detection
+- **Expo SDK 55 + Metro** (from Vite) — native iOS/Android builds, static JSON config imports
+- **Yuka AI** — GOAP governors for AI civilizations, Vehicle steering for bot movement, NavMesh pathfinding
+- **JSON config/tunables** — all game balance externalized to editable JSON files
+- **Contextual interaction** — every object is clickable with radial action menu (replaces tool system)
+- **Physical cube economy** — resources are physical rigid body cubes, not abstract counters
+
+### Design Documents
+
+All architecture and design decisions are documented in `docs/design/`:
+
+| GDD | Topic |
+|-----|-------|
+| 002 | Koota ECS + Expo/Metro + JSON config migration |
+| 003 | 4X framework, contextual interaction, Yuka governors, race selection |
+| 004 | Core game loop — harvesting, cubes, compression, furnace |
+| 005 | Visual identity — procedural mechanical generation, Yuka vehicles, PBR art direction |
+
+**These GDDs are the source of truth for all design decisions.**
 
 ---
 
-## Vision Summary
+## Vision
 
-You awaken as a broken robot on the surface of a machine planet. First person. You see through a damaged camera sensor — glitchy, scan-lined. Your arms don't work. Nearby, another bot has arms but no camera. Together, you're functional. From there: explore the machine planet, mine raw resources, build conveyor belts and processing chains, fabricate increasingly complex components, construct more bots, and expand your factory network across the planet's surface.
+### The Game in One Paragraph
 
-**Primary view:** 3D first-person (you ARE the bot)
-**Setting:** Machine planet — corroded metal terrain, slag heaps, cable forests, processor graveyards
-**Core loop:** Explore → Mine → Transport (belts) → Process → Fabricate → Build → Expand
-**Story:** Organic discovery — holographic logs, otter encounters, no forced narration
-**Enemies:** Feral machines, cultists with lightning powers, rogue AIs
-**Victory:** Defeat the Cult of EL, launch through the wormhole
+You awaken as a broken robot on a machine planet. Your only tool is a Harvester — a grinding arm. Walk up to a scrap ore vein jutting from rusted terrain, hold the button, watch particles spiral into your body. When full, compress: screen shakes, pressure gauges spike, and a physical cube of scrap metal ejects at your feet. Grab it. Carry it to your furnace — the one machine you start with. Drop the cube in the hopper. Tap the furnace. Craft a Grabber arm, a better drill, a conveyor belt. Automate. Expand. Build walls before the other civilizations raid your cube pile. This is a first-person 4X where your wealth is the physical stack of cubes sitting outside your base, visible to everyone.
+
+### The 4X Pillars
+
+| Pillar | Mechanic |
+|--------|----------|
+| **eXplore** | Fog of war, terrain scanning, discovering resource deposits and ruins |
+| **eXpand** | Claim territory with outposts, extend power/signal networks |
+| **eXploit** | Grind → Compress → Carry → Process → Fabricate → Build |
+| **eXterminate** | FPS combat, bot armies, hacking enemy infrastructure, cube raiding |
+
+### Core Loop
+
+```
+Grind ore deposit → Powder fills capacity gauge
+    → Compress (screen shake, pressure/heat HUD)
+    → Physical cube ejects
+    → Grab cube → Carry to furnace hopper
+    → Tap furnace → Radial menu → Select recipe
+    → Furnace processes → Item slides out
+    → Install on bot / Place in world / Feed to next machine
+```
+
+### Material States
+
+1. **Raw Deposits** — organic geological formations protruding from terrain (NOT cubes)
+2. **Powder** — internal to bot, shown on HUD capacity bar
+3. **Cubes** — physical 0.5m rigid bodies, grab/stack/carry/drop, raid-able by enemies
+
+### Civilizations
+
+| Race | Style | Governor Bias |
+|------|-------|--------------|
+| Reclaimers | Scavenger economy, rusted iron aesthetic | +Economy, +Mining |
+| Volt Collective | Lightning aggressors, chrome + heat-blue | +Military, +Expand |
+| Signal Choir | Hive-mind hackers, anodized aluminum | +Research, +Hacking |
+| Iron Creed | Fortress builders, brushed steel | +Defense, +Walls |
 
 ---
 
@@ -59,152 +79,176 @@ You awaken as a broken robot on the surface of a machine planet. First person. Y
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
 | 3D Engine | React Three Fiber + Three.js | Rendering, camera, materials |
-| ECS | Miniplex | Game logic, entities, queries |
-| Physics | Rapier (`@dimforge/rapier3d-compat`) | Collisions, rigid bodies, raycasting |
+| ECS | **Koota** (migrating from Miniplex) | Trait-based entities, reactive queries, relations |
+| Physics | Rapier (`@react-three/rapier`) | Collisions, rigid bodies, raycasting for interaction |
+| AI | **Yuka** | GOAP governors, Vehicle steering, NavMesh, perception |
 | Audio | Tone.js | Spatial audio, procedural sound effects |
 | Animation | anime.js | UI animations, transitions |
 | Mobile Input | nipplejs | Virtual joystick for mobile FPS |
-| Save/Load | IndexedDB (browser), Drizzle ORM + expo-sqlite (planned native) | Cross-platform persistence |
-| Build | Vite + TypeScript | Hot reload, fast builds |
+| Persistence | expo-sqlite + Drizzle ORM (native), IndexedDB (web) | Cross-platform save/load |
+| Bundler | **Expo SDK 55 + Metro** (migrating from Vite) | Native builds, static JSON imports |
 | Lint | Biome | Code quality |
 | Test | Vitest + Playwright | Unit + E2E |
 
-### Why R3F (not Babylon/native engine)
-- Web-native: runs in any browser, no app store gatekeeping
-- AI-assisted dev: all code is text TypeScript/JSX — fully readable
-- Hot reload, instant deploy
-- Expo-compatible for React Native if needed later
-- Free forever
+---
+
+## Architecture (Target)
+
+```
+syntheteria/
+├── app/                        # Expo Router
+│   ├── _layout.tsx             # Root: WorldProvider, fonts, persistence
+│   ├── +html.tsx               # Web: SharedArrayBuffer headers
+│   ├── index.tsx               # Title screen
+│   ├── setup/
+│   │   ├── index.tsx           # Race selection
+│   │   └── map.tsx             # Map customization
+│   └── game/
+│       └── index.tsx           # Game: Canvas + HUD + controls
+├── config/                     # JSON tunables (ALL game balance here)
+│   ├── units.json              # Bot types, speeds, components
+│   ├── buildings.json          # Building types, power requirements
+│   ├── belts.json              # Belt tier speeds
+│   ├── mining.json             # Extraction rates per ore type
+│   ├── processing.json         # Smelter/refiner/separator recipes
+│   ├── furnace.json            # Furnace recipes per tech tier
+│   ├── enemies.json            # Enemy stats per type
+│   ├── civilizations.json      # Race definitions + governor profiles
+│   ├── technology.json         # Tech tree tiers and unlocks
+│   ├── deposits.json           # Ore deposit placement rules
+│   ├── power.json              # Lightning rods, wire limits, storm
+│   ├── combat.json             # Damage, ranges, cooldowns
+│   ├── hacking.json            # Compute costs, hack speeds
+│   ├── materials.json          # PBR material palette specs
+│   ├── cubeMaterials.json      # Per-cube PBR treatments
+│   ├── factionVisuals.json     # Per-race visual identity
+│   ├── botMovement.json        # Yuka Vehicle configs per bot type
+│   ├── quests.json             # Otter hologram quest progression
+│   ├── mapPresets.json         # Map generation presets
+│   ├── terrain.json            # Heightfield, zone colors, deposits
+│   ├── audio.json              # Volume levels, ambient layers
+│   └── rendering.json          # Material params, LOD, particles
+├── game/                       # Game logic
+│   ├── config/
+│   │   └── index.ts            # Type-safe JSON imports (typeof inference)
+│   ├── ecs/
+│   │   ├── world.ts            # Koota world + world traits (GameTime, ResourcePool, etc.)
+│   │   ├── traits/
+│   │   │   ├── core.ts         # Position, Faction, IsPlayerControlled
+│   │   │   ├── unit.ts         # Unit, Building, LightningRod
+│   │   │   ├── factory.ts      # Belt, Wire, Miner, Processor + relations
+│   │   │   ├── materials.ts    # OreDeposit, MaterialCube, PowderStorage, Hopper
+│   │   │   └── ai.ts           # Hackable, SignalRelay, Automation, Otter, Hologram
+│   │   ├── actions.ts          # createActions: spawn/destroy bundles
+│   │   └── Provider.tsx        # WorldProvider wrapper
+│   ├── ai/
+│   │   ├── governor/           # Yuka GOAP civilization governors
+│   │   │   ├── entity.ts       # CivGovernorEntity (GameEntity + Think)
+│   │   │   ├── evaluators.ts   # Expand/Economy/Military/Defense/Research/Diplomacy
+│   │   │   └── CivilizationGovernor.ts
+│   │   ├── unit/               # Yuka GOAP unit-level AI
+│   │   │   ├── entity.ts       # UnitBrainEntity
+│   │   │   └── evaluators.ts   # Patrol/Attack/Flee/Guard
+│   │   ├── vehicles/           # Yuka Vehicle + steering
+│   │   │   └── VehicleManager.ts
+│   │   ├── navigation/         # Yuka NavMesh pathfinding
+│   │   └── perception/         # Yuka Vision + MemorySystem
+│   ├── systems/                # ECS systems (Koota queries)
+│   ├── input/                  # FPS camera, object selection, mobile controls
+│   │   ├── FPSCamera.tsx
+│   │   ├── ObjectSelectionSystem.tsx  # Rapier raycast → highlight → radial menu
+│   │   └── FPSMovement.ts
+│   ├── audio/                  # Tone.js audio
+│   ├── rendering/
+│   │   ├── procgen/            # Procedural geometry generators
+│   │   │   ├── PanelGeometry.ts    # Beveled panels with insets, bolts, vents
+│   │   │   ├── BotGenerator.ts     # Panel-assembled bot meshes
+│   │   │   ├── BuildingGenerator.ts # Procedural machine buildings
+│   │   │   └── DepositGenerator.ts  # Organic ore deposit meshes
+│   │   ├── SelectionHighlight.tsx  # Emissive glow on hover/select
+│   │   ├── BotRenderer.tsx         # Procedural bots (replaces UnitRenderer)
+│   │   ├── CubeRenderer.tsx        # Instanced PBR material cubes
+│   │   ├── DepositRenderer.tsx     # Organic ore deposit rendering
+│   │   └── materials/
+│   │       ├── MaterialFactory.ts  # Composable PBR from JSON specs
+│   │       └── NormalMapComposer.ts # Layered bolt/seam/vent/hex details
+│   ├── physics/                # Rapier WASM
+│   ├── save/                   # Drizzle ORM + expo-sqlite / IndexedDB
+│   └── ui/
+│       ├── Bezel.tsx
+│       ├── FPSHUD.tsx
+│       ├── ObjectActionMenu.tsx    # Context-sensitive radial per clicked object
+│       ├── InventoryView.tsx
+│       ├── MobileControls.tsx
+│       └── TitleScreen.tsx
+├── app.json                    # Expo config
+├── metro.config.js             # Metro: WASM + GLB assets, tslib fix
+├── babel.config.js             # babel-preset-expo
+└── tsconfig.json               # Extends expo/tsconfig.base
+```
 
 ---
 
-## Architecture
+## Design Decisions
 
-```
-game/src/
-├── audio/          # Sound systems
-│   ├── SpatialAudio.ts    # Storm, lightning, impacts, UI beeps
-│   ├── AudioSystem.tsx    # R3F component: hooks audio to game state
-│   └── FactoryAudio.ts   # Belt hum, mining, processing, fabrication sounds
-├── ecs/            # Entity-Component-System (engine-agnostic)
-│   ├── types.ts           # Entity types, all components
-│   ├── world.ts           # Miniplex world, archetype queries
-│   ├── factory.ts         # Entity spawning (units, otters, buildings)
-│   ├── beltFactory.ts     # Belt placement, removal, auto-linking
-│   ├── wireFactory.ts     # Wire placement between entities
-│   ├── factoryBuildings.ts # Miner/processor factory functions
-│   ├── terrain.ts         # Procedural terrain heightfield
-│   ├── cityLayout.ts      # Procedural city buildings
-│   ├── gameState.ts       # Simulation tick, game speed, snapshot bridge
-│   └── seed.ts            # World seed management
-├── input/          # FPS input handling
-│   ├── FPSCamera.tsx      # Pointer lock, WASD, touch look, bot switching
-│   ├── FPSInput.tsx       # E to interact, click to place, building mode
-│   └── FPSMovement.ts     # Jump, gravity, walk bob
-├── physics/        # Rapier WASM physics
-│   ├── PhysicsWorld.ts    # Init, colliders, rigid bodies, raycasting
-│   └── PhysicsSystem.tsx  # R3F component: steps physics, syncs bot
-├── rendering/      # Three.js renderers
-│   ├── BeltRenderer.tsx   # Conveyor belts with animated items
-│   ├── CameraEffects.tsx  # Glitch/static when camera damaged
-│   ├── CityRenderer.tsx   # Instanced city buildings
-│   ├── FactoryRenderer.tsx # Miners and processors
-│   ├── Flashlight.tsx     # SpotLight on camera (F key)
-│   ├── HologramRenderer.tsx # Holographic otter projections
-│   ├── HolographicShader.ts # Custom holographic ShaderMaterial
-│   ├── LandscapeProps.tsx # Terrain decorations
-│   ├── OtterRenderer.tsx  # Otter billboard sprites
-│   ├── StormSky.tsx       # Dynamic storm sky
-│   ├── TerrainRenderer.tsx # Terrain mesh
-│   ├── UnitRenderer.tsx   # Bot models
-│   ├── WireRenderer.tsx   # Catenary cable rendering + spark FX
-│   └── materials/         # Procedural PBR materials
-│       ├── MetalMaterial.ts   # Rusted metal with plate seams
-│       ├── CircuitMaterial.ts # Circuit board traces
-│       ├── BeltMaterial.ts    # Animated conveyor surface
-│       └── TerrainMaterial.ts # Zone variants (foundry/slag/cable/processor)
-├── save/           # Persistence
-│   ├── saveLoad.ts        # Serialize/deserialize ECS, IndexedDB CRUD
-│   └── schema.ts          # Drizzle ORM schema (for future native)
-├── systems/        # ECS systems
-│   ├── beltTransport.ts   # Belt item movement (frame-based)
-│   ├── botAutomation.ts   # Bot routines: idle/patrol/guard/follow/work
-│   ├── combat.ts          # Component-based damage
-│   ├── cultistAI.ts       # Cultist patrol/chase/lightning attacks
-│   ├── enemies.ts         # Feral machine AI
-│   ├── exploration.ts     # Fog-of-war terrain reveal
-│   ├── fabrication.ts     # Build recipes
-│   ├── fpsCombat.ts       # FPS raycasting combat
-│   ├── fragmentMerge.ts   # Map fragment merging
-│   ├── hacking.ts         # Hack entities with compute power
-│   ├── mining.ts          # Mining drill extraction
-│   ├── movement.ts        # Path-following movement
-│   ├── navmesh.ts         # A* pathfinding graph
-│   ├── otters.ts          # Otter NPC behavior
-│   ├── power.ts           # Lightning rod power + storm
-│   ├── processing.ts      # Smelter/refiner/separator recipes
-│   ├── repair.ts          # Component repair
-│   ├── resources.ts       # Resource scavenging
-│   ├── signalNetwork.ts   # BFS signal propagation + compute pool
-│   └── wireNetwork.ts     # BFS power/signal distribution via wires
-├── ui/             # React UI overlays
-│   ├── Bezel.tsx          # Viewport frame with safe-area handling
-│   ├── FPSHUD.tsx         # Crosshair, status, combat notifications
-│   ├── InventoryView.tsx  # Tab key system inventory overlay
-│   ├── MobileControls.tsx # Joystick + tool view + action buttons
-│   ├── MobileJoystick.tsx # nipplejs integration
-│   ├── RadialToolMenu.tsx # SVG radial tool selector
-│   ├── EquippedToolView.tsx # Equipped tool indicator + action buttons
-│   └── TitleScreen.tsx    # Glitch title, game start
-└── App.tsx         # Main: Bezel → Canvas → 3D scene + systems + HUD
-```
-
----
-
-## Current Design Decisions
-
-- **Engine:** R3F + Three.js + Miniplex ECS (TypeScript)
-- **Platform:** PC primary (FPS), mobile secondary (virtual sticks + bezel UI)
-- **View:** 3D first-person — you are the bot
-- **Navigation:** Direct WASD for player bot; navmesh A* for NPC bots
-- **Collision:** Building collision via `isInsideBuilding()` with axis-sliding
-- **Power:** Lightning rods → power wires (BFS distribution) → buildings
-- **Resources:** Mining drills → conveyor belts → processors → fabrication
-- **Combat:** Component-based damage from first person (raycasting)
-- **Hacking:** Proximity + compute power from signal relay network
-- **Art style:** PBR procedural materials (rusted metal, circuit traces, emissive glow)
-- **Sprites:** Holographic projections (billboard behavior is correct for holograms)
-- **Story:** Organic discovery — no forced narration
-- **Mobile:** Bezel UI frames viewport, nipplejs joystick, radial tool menu, action buttons
-- **Save/Load:** IndexedDB in browser, Drizzle ORM + expo-sqlite planned for native
+- **Engine:** R3F + Three.js + Koota ECS + Yuka AI (TypeScript)
+- **Platform:** Expo SDK 55 — web, iOS, Android from one codebase
+- **View:** 3D first-person — you ARE the bot
+- **Interaction:** Contextual — click any object → emissive highlight → radial action menu
+- **No tool system:** Actions depend on what you click, not what you "equip"
+- **Economy:** Physical cubes — your wealth is visible, steal-able, raid-able
+- **AI:** Yuka GOAP governors evaluate strategic goals; Yuka Vehicles steer bots
+- **Movement:** Yuka Vehicle with velocity/acceleration/steering behaviors (not teleporting)
+- **Pathfinding:** Yuka NavMesh (replaces grid A*)
+- **Art style:** Industrial mechanical PBR — panels, bolts, chrome, rust, NOT flat colored cubes
+- **Procedural geometry:** Panel-based construction for bots/buildings, organic noise for deposits
+- **Factions:** 4 races with distinct visual identity (materials, locomotion, head styles)
+- **Config:** Every tunable in JSON — balance changes never require code changes
+- **Story:** Otter holograms as quest guides — organic discovery, no forced narration
+- **Save/Load:** expo-sqlite on native, IndexedDB on web, Koota serialization
 
 ---
 
 ## What Needs Work
 
-### Integration & Testing (High Priority)
-- Test all new systems together in gameplay
-- Add test entity spawns (miners, processors, belts, wires, relays, cultists) to initializeWorld
-- Verify FPS combat raycasting works with new entity types
-- E2E tests for factory loop (mine → belt → process → fabricate)
+### Architecture Migration (Critical Path)
+- [ ] Expo project scaffolding (app/, app.json, metro.config.js)
+- [ ] Koota ECS: define all traits, create world, migrate systems one at a time
+- [ ] JSON config: create config/ directory, externalize all hardcoded values
+- [ ] Yuka: Vehicle system for bot movement, NavMesh for pathfinding
+- [ ] Contextual interaction: ObjectSelectionSystem + ObjectActionMenu
 
-### Polish (Medium Priority)
-- Expo SDK 55 setup for native mobile deployment
-- anime.js UI transitions for inventory, tool switching
-- More component types for unit specialization
-- Weapon components for cultist combat
-- Expanded processing/fabrication recipes
+### Core Loop (High Priority)
+- [ ] OreDeposit trait + procedural deposit renderer (organic shapes)
+- [ ] Harvester mechanic (grind → particles → powder gauge)
+- [ ] Compression mechanic (screen shake, pressure/heat overlay, cube ejects)
+- [ ] MaterialCube as physical Rapier rigid body with PBR material
+- [ ] Grabber tool (magnetic beam, carry/drop/throw cubes)
+- [ ] Furnace machine (hopper input, radial recipe menu, output slot)
+- [ ] Belt transport of physical cubes (not abstract items)
 
-### Art & UX (Medium Priority)
-- Apply procedural PBR materials to terrain and buildings
-- Improve bot models with detail geometry
-- Sound effect tuning and ambient audio layers
-- Cultist visual design
+### Visual Identity (High Priority)
+- [ ] Panel-based procedural geometry (PanelGeometry.ts)
+- [ ] BotGenerator: faction-distinct bots with panels, bolts, vents, chrome
+- [ ] MaterialFactory: composable PBR from JSON material specs
+- [ ] NormalMapComposer: layered detail (bolts, seams, vents, hex patterns)
+- [ ] Cube materials: each ore type has unique PBR treatment
+- [ ] Replace all meshLambertMaterial with MeshStandardMaterial
 
-### Open Questions
-- Final art style direction (low-poly vs clean minimal)
-- Multiplayer architecture (eventual)
-- Mobile performance optimization thresholds
+### 4X Systems (Medium Priority)
+- [ ] CivilizationGovernor with Yuka GOAP evaluators
+- [ ] Territory claiming (outposts, claim radius, border visualization)
+- [ ] Fog of war (hidden/explored/visible)
+- [ ] Race selection + map customization pregame screens
+- [ ] Tech tree progression (config/technology.json)
+- [ ] AI civilization economics (harvest → compress → carry → build)
+
+### Polish
+- [ ] Otter hologram quest system (config/quests.json)
+- [ ] Formation movement (Yuka OffsetPursuit + Separation)
+- [ ] Cube stacking physics (snap grid, topple when unstable)
+- [ ] Raid/theft mechanics (grab enemy cubes, defend stockpiles)
+- [ ] Instanced rendering for performance at scale
 
 ---
 
@@ -221,12 +265,15 @@ game/src/
 
 ## Resources
 
-- [React Three Fiber](https://r3f.docs.pmnd.rs/) - React renderer for Three.js
-- [Miniplex](https://github.com/hmans/miniplex) - ECS for TypeScript
-- [drei](https://github.com/pmndrs/drei) - R3F helpers and abstractions
-- [Rapier](https://rapier.rs/) - Physics engine (WASM)
-- [Tone.js](https://tonejs.github.io/) - Web audio synthesis
-- [nipplejs](https://yoannmoi.net/nipplejs/) - Virtual joystick
-- [anime.js](https://animejs.com/) - Animation library
-- [Vitest](https://vitest.dev/) - Unit testing
-- [Playwright](https://playwright.dev/) - E2E browser testing
+- [Koota](https://github.com/pmndrs/koota) — Trait-based ECS (pmndrs)
+- [Yuka](https://github.com/Mugen87/yuka) — Game AI: GOAP, steering, navmesh, perception
+- [React Three Fiber](https://r3f.docs.pmnd.rs/) — React renderer for Three.js
+- [drei](https://github.com/pmndrs/drei) — R3F helpers
+- [Rapier](https://rapier.rs/) — Physics engine (WASM)
+- [Tone.js](https://tonejs.github.io/) — Web audio synthesis
+- [Expo](https://expo.dev/) — React Native + Web framework
+- [Drizzle ORM](https://orm.drizzle.team/) — Type-safe SQL
+- [nipplejs](https://yoannmoi.net/nipplejs/) — Virtual joystick
+- [anime.js](https://animejs.com/) — Animation library
+- [Vitest](https://vitest.dev/) — Unit testing
+- [Playwright](https://playwright.dev/) — E2E browser testing

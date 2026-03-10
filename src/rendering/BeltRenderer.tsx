@@ -10,12 +10,10 @@
  *   - fast: conveyor-stripe.glb (striped marking)
  *   - express: conveyor-bars.glb (safety rails)
  *
- * NOTE: Belt surface animation is not yet wired up here. The BeltMaterial
- * module (materials/BeltMaterial.ts) provides a canvas-generated rubber
- * texture with cross-hatch tread and a UV scroll helper (updateBeltUV),
- * but this renderer currently relies on the GLB models' baked materials.
- * To add visible belt motion in the future, apply createBeltMaterial() to
- * the conveyor surface mesh and call updateBeltUV() in the useFrame loop.
+ * Belt surface meshes (identified by name containing "belt" or "conveyor")
+ * receive a procedural rubber texture from BeltMaterial.ts with animated
+ * UV scrolling to convey motion. Rail/frame meshes keep the GLB's baked
+ * materials.
  */
 
 import { useGLTF } from "@react-three/drei";
@@ -25,6 +23,7 @@ import * as THREE from "three";
 import { getTerrainHeight } from "../ecs/terrain";
 import type { BeltDirection, BeltTier, Entity } from "../ecs/types";
 import { belts } from "../ecs/world";
+import { createBeltMaterial, updateBeltUV } from "./materials/BeltMaterial";
 import { resolveCubeMaterial } from "./materials/CubeMaterialProvider";
 
 // ─── Model paths per tier ────────────────────────────────────────────────
@@ -66,6 +65,7 @@ function computeBeltScale(scene: THREE.Object3D): number {
 function BeltSegment({ entity }: { entity: Entity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const itemRef = useRef<THREE.Mesh>(null);
+	const elapsedRef = useRef(0);
 
 	const belt = entity.belt!;
 	const pos = entity.worldPosition!;
@@ -74,21 +74,37 @@ function BeltSegment({ entity }: { entity: Entity }) {
 	const modelPath = BELT_MODELS[tier] ?? BELT_MODELS.basic;
 	const { scene } = useGLTF(modelPath);
 
-	// TODO: Add scrolling texture map — UV animation is ready but has no visible effect without a texture
+	const beltMaterial = useMemo(() => createBeltMaterial(), []);
+
 	const cloned = useMemo(() => {
 		const clone = scene.clone(true);
 		const scale = computeBeltScale(clone);
 		clone.scale.setScalar(scale);
+		// Apply scrolling belt material to the conveyor surface mesh
+		clone.traverse((child) => {
+			if (child instanceof THREE.Mesh) {
+				const name = child.name.toLowerCase();
+				// Target the conveyor surface (not rails/frame). Common Kenney
+				// ConveyorKit mesh names: "belt", "conveyor", or the largest mesh.
+				if (name.includes("belt") || name.includes("conveyor")) {
+					child.material = beltMaterial;
+				}
+			}
+		});
 		return clone;
-	}, [scene]);
+	}, [scene, beltMaterial]);
 
 	const rotation = DIRECTION_ROTATIONS[belt.direction];
 
-	useFrame(() => {
+	useFrame((_, delta) => {
 		if (!groupRef.current) return;
 
 		const y = getTerrainHeight(pos.x, pos.z);
 		groupRef.current.position.set(pos.x, y, pos.z);
+
+		// Animate belt surface scrolling
+		elapsedRef.current += delta;
+		updateBeltUV(beltMaterial, belt.speed ?? 1, elapsedRef.current);
 
 		// Update carried item position
 		if (itemRef.current) {

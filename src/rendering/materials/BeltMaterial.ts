@@ -7,9 +7,8 @@
  *
  * Call `updateBeltUV` each frame to scroll the belt surface.
  *
- * NOTE: Not yet consumed by BeltRenderer.tsx, which currently uses GLB model
- * materials from the Kenney ConveyorKit. These utilities are available for
- * when custom procedural belt surfaces replace the GLB baked materials.
+ * Consumed by BeltRenderer.tsx — applied to GLB conveyor surface meshes,
+ * replacing baked materials with animated procedural textures.
  */
 
 import * as THREE from "three";

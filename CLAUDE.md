@@ -92,99 +92,83 @@ Grind ore deposit → Powder fills capacity gauge
 
 ---
 
-## Architecture (Target)
+## Architecture
 
 ```
 syntheteria/
-├── app/                        # Expo Router
+├── app/                        # Expo Router screens
 │   ├── _layout.tsx             # Root: WorldProvider, fonts, persistence
 │   ├── +html.tsx               # Web: SharedArrayBuffer headers
 │   ├── index.tsx               # Title screen
-│   ├── setup/
-│   │   ├── index.tsx           # Race selection
-│   │   └── map.tsx             # Map customization
 │   └── game/
 │       └── index.tsx           # Game: Canvas + HUD + controls
 ├── config/                     # JSON tunables (ALL game balance here)
+│   ├── index.ts                # Type-safe JSON imports (typeof inference)
 │   ├── units.json              # Bot types, speeds, components
 │   ├── buildings.json          # Building types, power requirements
-│   ├── belts.json              # Belt tier speeds
+│   ├── processing.json         # Smelter/refiner/separator recipes + belt config
 │   ├── mining.json             # Extraction rates per ore type
-│   ├── processing.json         # Smelter/refiner/separator recipes
-│   ├── furnace.json            # Furnace recipes per tech tier
-│   ├── enemies.json            # Enemy stats per type
+│   ├── cubeMaterials.json      # Cube material game balance (name, value, color)
 │   ├── civilizations.json      # Race definitions + governor profiles
 │   ├── technology.json         # Tech tree tiers and unlocks
-│   ├── deposits.json           # Ore deposit placement rules
+│   ├── terrain.json            # Heightfield, zone colors, deposits
 │   ├── power.json              # Lightning rods, wire limits, storm
 │   ├── combat.json             # Damage, ranges, cooldowns
 │   ├── hacking.json            # Compute costs, hack speeds
-│   ├── materials.json          # PBR material palette specs
-│   ├── cubeMaterials.json      # Per-cube PBR treatments
-│   ├── factionVisuals.json     # Per-race visual identity
-│   ├── botMovement.json        # Yuka Vehicle configs per bot type
 │   ├── quests.json             # Otter hologram quest progression
 │   ├── mapPresets.json         # Map generation presets
-│   ├── terrain.json            # Heightfield, zone colors, deposits
 │   ├── audio.json              # Volume levels, ambient layers
 │   └── rendering.json          # Material params, LOD, particles
-├── game/                       # Game logic
-│   ├── config/
-│   │   └── index.ts            # Type-safe JSON imports (typeof inference)
-│   ├── ecs/
-│   │   ├── world.ts            # Koota world + world traits (GameTime, ResourcePool, etc.)
-│   │   ├── traits/
-│   │   │   ├── core.ts         # Position, Faction, IsPlayerControlled
-│   │   │   ├── unit.ts         # Unit, Building, LightningRod
-│   │   │   ├── factory.ts      # Belt, Wire, Miner, Processor + relations
-│   │   │   ├── materials.ts    # OreDeposit, MaterialCube, PowderStorage, Hopper
-│   │   │   └── ai.ts           # Hackable, SignalRelay, Automation, Otter, Hologram
-│   │   ├── actions.ts          # createActions: spawn/destroy bundles
-│   │   └── Provider.tsx        # WorldProvider wrapper
-│   ├── ai/
-│   │   ├── governor/           # Yuka GOAP civilization governors
-│   │   │   ├── entity.ts       # CivGovernorEntity (GameEntity + Think)
-│   │   │   ├── evaluators.ts   # Expand/Economy/Military/Defense/Research/Diplomacy
-│   │   │   └── CivilizationGovernor.ts
-│   │   ├── unit/               # Yuka GOAP unit-level AI
-│   │   │   ├── entity.ts       # UnitBrainEntity
-│   │   │   └── evaluators.ts   # Patrol/Attack/Flee/Guard
-│   │   ├── vehicles/           # Yuka Vehicle + steering
-│   │   │   └── VehicleManager.ts
-│   │   ├── navigation/         # Yuka NavMesh pathfinding
-│   │   └── perception/         # Yuka Vision + MemorySystem
-│   ├── systems/                # ECS systems (Koota queries)
-│   ├── input/                  # FPS camera, object selection, mobile controls
-│   │   ├── FPSCamera.tsx
-│   │   ├── ObjectSelectionSystem.tsx  # Rapier raycast → highlight → radial menu
-│   │   └── FPSMovement.ts
-│   ├── audio/                  # Tone.js audio
-│   ├── rendering/
+├── src/                        # Game logic (all source code)
+│   ├── ai/                     # Yuka GOAP AI
+│   │   └── goap/               # CivilizationGovernor, evaluators
+│   ├── audio/                  # Tone.js spatial audio
+│   ├── ecs/                    # Miniplex ECS (migrating to Koota)
+│   │   ├── world.ts            # ECS world instance
+│   │   ├── types.ts            # Entity type definitions
+│   │   ├── gameState.ts        # Global game state (speed, tick)
+│   │   └── seed.ts             # Seeded RNG
+│   ├── input/                  # FPS camera, object selection, mobile
+│   │   ├── FPSInput.tsx        # Keyboard/mouse + touch controls
+│   │   └── ObjectSelectionSystem.tsx  # Rapier raycast → radial menu
+│   ├── physics/                # Rapier WASM setup
+│   ├── rendering/              # Three.js rendering
+│   │   ├── materials/          # PBR material system
+│   │   │   ├── MaterialFactory.ts      # Composable PBR from texture sets
+│   │   │   ├── CubeMaterialProvider.tsx # Per-cube PBR materials
+│   │   │   └── cubePBRMaterials.json   # PBR texture configs (separate from game balance)
 │   │   ├── procgen/            # Procedural geometry generators
-│   │   │   ├── PanelGeometry.ts    # Beveled panels with insets, bolts, vents
-│   │   │   ├── BotGenerator.ts     # Panel-assembled bot meshes
-│   │   │   ├── BuildingGenerator.ts # Procedural machine buildings
-│   │   │   └── DepositGenerator.ts  # Organic ore deposit meshes
-│   │   ├── SelectionHighlight.tsx  # Emissive glow on hover/select
-│   │   ├── BotRenderer.tsx         # Procedural bots (replaces UnitRenderer)
-│   │   ├── CubeRenderer.tsx        # Instanced PBR material cubes
-│   │   ├── DepositRenderer.tsx     # Organic ore deposit rendering
-│   │   └── materials/
-│   │       ├── MaterialFactory.ts  # Composable PBR from JSON specs
-│   │       └── NormalMapComposer.ts # Layered bolt/seam/vent/hex details
-│   ├── physics/                # Rapier WASM
-│   ├── save/                   # Drizzle ORM + expo-sqlite / IndexedDB
-│   └── ui/
-│       ├── Bezel.tsx
-│       ├── FPSHUD.tsx
-│       ├── ObjectActionMenu.tsx    # Context-sensitive radial per clicked object
-│       ├── InventoryView.tsx
-│       ├── MobileControls.tsx
-│       └── TitleScreen.tsx
+│   │   └── shaders/            # Custom GLSL shaders
+│   ├── save/                   # IndexedDB persistence (web)
+│   ├── systems/                # ECS systems (game logic)
+│   │   ├── beltTransport.ts    # Physical cube belt movement
+│   │   ├── beltRouting.ts      # Belt-to-belt/machine connections
+│   │   ├── processing.ts       # Smelter/refiner recipes
+│   │   ├── mining.ts           # Ore extraction
+│   │   ├── power.ts            # Lightning rod power network
+│   │   ├── hacking.ts          # Compute-based hacking
+│   │   ├── combat.ts           # FPS combat
+│   │   ├── grabber.ts          # Cube grab/carry/drop
+│   │   ├── resources.ts        # Resource pool tracking
+│   │   └── __tests__/          # Vitest unit tests (1,220 tests)
+│   └── ui/                     # React HUD components
+│       ├── FPSHUD.tsx          # Main game HUD overlay
+│       ├── Bezel.tsx           # Retro CRT bezel frame
+│       └── ObjectActionMenu.tsx # Context-sensitive radial menu
+├── public/                     # Static assets served by Vite
+│   └── textures/materials/     # PBR texture maps (Git LFS)
+├── assets/                     # GLB models (Git LFS)
+├── docs/design/                # GDD design documents (002-005)
+├── tests/                      # E2E Playwright tests
+├── .gitattributes              # Git LFS tracking (*.glb, *.exr, *.jpg, *.png)
+├── .github/workflows/          # CI (ci.yml) + Deploy (deploy.yml)
+├── package.json                # "syntheteria" — deps, scripts
+├── vite.config.ts              # Vite bundler config
+├── tsconfig.json               # TypeScript config
+├── biome.json                  # Biome linter config
 ├── app.json                    # Expo config
-├── metro.config.js             # Metro: WASM + GLB assets, tslib fix
-├── babel.config.js             # babel-preset-expo
-└── tsconfig.json               # Extends expo/tsconfig.base
+├── metro.config.js             # Metro config (for future native builds)
+└── babel.config.js             # Babel config (expo preset)
 ```
 
 ---
@@ -212,43 +196,50 @@ syntheteria/
 ## What Needs Work
 
 ### Architecture Migration (Critical Path)
-- [ ] Expo project scaffolding (app/, app.json, metro.config.js)
-- [ ] Koota ECS: define all traits, create world, migrate systems one at a time
-- [ ] JSON config: create config/ directory, externalize all hardcoded values
-- [ ] Yuka: Vehicle system for bot movement, NavMesh for pathfinding
-- [ ] Contextual interaction: ObjectSelectionSystem + ObjectActionMenu
+- [x] Expo project scaffolding (app/, app.json, metro.config.js)
+- [x] JSON config: config/ directory with 22 JSON files + type-safe loader
+- [x] Git LFS for binary assets (*.glb, *.exr, *.jpg, *.png — 773 MB tracked)
+- [x] CI/CD workflows updated (lfs: true, flattened paths)
+- [x] Repository flattened — no more game/ subdirectory
+- [ ] Koota ECS: migrate from Miniplex (traits defined in ecs/traits/, bridge in ecs/koota/)
+- [x] Yuka-style AI: BotVehicle steering, NavMeshBuilder, PathfindingSystem (7,038 lines total)
+- [x] Contextual interaction: ObjectSelectionSystem (476 lines) + ObjectActionMenu (487 lines)
 
 ### Core Loop (High Priority)
-- [ ] OreDeposit trait + procedural deposit renderer (organic shapes)
-- [ ] Harvester mechanic (grind → particles → powder gauge)
-- [ ] Compression mechanic (screen shake, pressure/heat overlay, cube ejects)
-- [ ] MaterialCube as physical Rapier rigid body with PBR material
-- [ ] Grabber tool (magnetic beam, carry/drop/throw cubes)
-- [ ] Furnace machine (hopper input, radial recipe menu, output slot)
-- [ ] Belt transport of physical cubes (not abstract items)
+- [x] Belt transport system (beltTransport.ts — physical cube movement with spacing/back-pressure)
+- [x] Belt routing (beltRouting.ts — belt-to-belt and belt-to-machine connections)
+- [x] Processing system (processing.ts — smelter/refiner/separator recipes)
+- [x] Mining system (mining.ts — ore extraction with rates from config)
+- [x] Grabber system (grabber.ts — cube grab/carry/drop)
+- [x] Save/load (saveLoad.ts — IndexedDB persistence, full world serialization)
+- [x] MaterialCube PBR materials (CubeMaterialProvider — 15 material types with PBR textures)
+- [x] OreDeposit + procedural deposit renderer (OreDepositGenerator — 672 lines)
+- [x] Harvester mechanic (harvesting.ts — 232 lines, grind → particles → powder)
+- [x] Compression mechanic (compression.ts — 181 lines, screen shake + cube eject)
+- [x] Furnace machine (furnace.ts + furnaceProcessing.ts — 474 lines, hopper → recipes → output)
 
 ### Visual Identity (High Priority)
-- [ ] Panel-based procedural geometry (PanelGeometry.ts)
-- [ ] BotGenerator: faction-distinct bots with panels, bolts, vents, chrome
-- [ ] MaterialFactory: composable PBR from JSON material specs
-- [ ] NormalMapComposer: layered detail (bolts, seams, vents, hex patterns)
-- [ ] Cube materials: each ore type has unique PBR treatment
-- [ ] Replace all meshLambertMaterial with MeshStandardMaterial
+- [x] MaterialFactory: composable PBR from texture sets
+- [x] Cube materials: 15 ore types with unique PBR treatment (cubePBRMaterials.json)
+- [x] Panel-based procedural geometry (PanelGeometry.ts — 563 lines)
+- [x] BotGenerator: faction-distinct bots with panels, bolts, vents, chrome (BotGenerator + BotParts — 1,238 lines)
+- [x] NormalMapComposer: layered detail (bolts, seams, vents, hex patterns — 231 lines)
+- [x] Replace all meshLambertMaterial with MeshStandardMaterial
 
 ### 4X Systems (Medium Priority)
-- [ ] CivilizationGovernor with Yuka GOAP evaluators
-- [ ] Territory claiming (outposts, claim radius, border visualization)
-- [ ] Fog of war (hidden/explored/visible)
-- [ ] Race selection + map customization pregame screens
-- [ ] Tech tree progression (config/technology.json)
+- [x] CivilizationGovernor with Yuka GOAP evaluators (basic implementation)
+- [x] Fog of war (fogOfWar.ts — hidden/explored/visible)
+- [x] Tech tree progression (techTree.ts + config/technology.json)
+- [x] Territory claiming (territory.ts + outpost.ts — 406 lines)
+- [x] Race selection + map customization (FactionSelect.tsx + OpponentConfig.tsx — 518 lines)
 - [ ] AI civilization economics (harvest → compress → carry → build)
 
 ### Polish
-- [ ] Otter hologram quest system (config/quests.json)
-- [ ] Formation movement (Yuka OffsetPursuit + Separation)
-- [ ] Cube stacking physics (snap grid, topple when unstable)
-- [ ] Raid/theft mechanics (grab enemy cubes, defend stockpiles)
-- [ ] Instanced rendering for performance at scale
+- [x] Otter hologram quest system (questSystem.ts + config/quests.json)
+- [x] Formation movement (FormationSystem + FormationPatterns — 524 lines)
+- [x] Cube stacking physics (cubeStacking.ts — 461 lines)
+- [x] Raid/theft mechanics (raidSystem.ts + raidTargeting.ts — 737 lines)
+- [x] Instanced rendering (InstancedCubeRenderer.tsx — 387 lines)
 
 ---
 

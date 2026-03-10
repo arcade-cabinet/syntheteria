@@ -217,9 +217,11 @@ function FragmentTerrain({ fragmentId }: { fragmentId: string }) {
 	return (
 		<group ref={groupRef}>
 			<mesh geometry={detailedGeo}>
-				<meshLambertMaterial
+				<meshStandardMaterial
 					vertexColors
 					transparent
+					roughness={0.85}
+					metalness={0.05}
 					side={THREE.DoubleSide}
 					onBeforeCompile={(shader) => {
 						shader.vertexShader = shader.vertexShader.replace(

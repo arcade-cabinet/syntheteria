@@ -1,0 +1,31 @@
+{
+  "cube_materials": {
+    "scrap_iron": { "dir": "iron", "source": "Metal038" },
+    "scrap_metal": { "dir": "scrap_metal", "source": "Metal007" },
+    "copper": { "dir": "copper", "source": "Metal025" },
+    "iron": { "dir": "iron", "source": "Metal038" },
+    "steel": { "dir": "steel", "source": "Metal015" },
+    "titanium": { "dir": "titanium", "source": "Metal023" },
+    "silicon": { "dir": "silicon", "source": "Concrete012" },
+    "carbon": { "dir": "carbon", "source": "Ground058" },
+    "alloy": { "dir": "alloy", "source": "Metal031" },
+    "stone": { "dir": "stone", "source": "Rock034" }
+  },
+  "building_materials": {
+    "metal_plates": { "dir": "metal_plates", "source": "MetalPlates006" },
+    "reinforced_concrete": { "dir": "reinforced_concrete", "source": "Concrete020" },
+    "rust": { "dir": "rust", "source": "Rust003" },
+    "heavy_rust": { "dir": "heavy_rust", "source": "Rust005" }
+  },
+  "faction_materials": {
+    "reclaimers": { "dir": "faction_reclaimers", "source": "PaintedMetal008", "accent": "#c45a20" },
+    "volt_collective": { "dir": "faction_volt_collective", "source": "Metal035", "accent": "#2090ff" },
+    "signal_choir": { "dir": "faction_signal_choir", "source": "Metal029", "accent": "#90d0ff" },
+    "iron_creed": { "dir": "faction_iron_creed", "source": "MetalPlates003", "accent": "#888888" }
+  },
+  "terrain_materials": {
+    "ground_industrial": { "dir": "ground_industrial", "source": "Ground058" },
+    "ore_rock": { "dir": "ore_rock", "source": "Rock034" }
+  },
+  "texture_maps": ["Color", "Metalness", "NormalGL", "Roughness", "Displacement"]
+}

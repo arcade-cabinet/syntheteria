@@ -1,0 +1,50 @@
+{
+  "mechs": {
+    "description": "Animated mech characters - one per faction",
+    "models": {
+      "reclaimers": "mechs/George.glb",
+      "volt_collective": "mechs/Leela.glb",
+      "signal_choir": "mechs/Mike.glb",
+      "iron_creed": "mechs/Stan.glb"
+    },
+    "animations": 18,
+    "source": "Kenney Animated Mech Pack"
+  },
+  "robot": {
+    "description": "Generic animated robot",
+    "models": { "default": "robot/Robot.glb" },
+    "animations": 14,
+    "source": "Quaternius Animated Robot"
+  },
+  "conveyor": {
+    "description": "Factory conveyor belt kit pieces",
+    "prefix": "conveyor/",
+    "pieces": {
+      "belt": ["conveyor.glb", "conveyor-long.glb", "conveyor-sides.glb", "conveyor-long-sides.glb"],
+      "belt_striped": ["conveyor-stripe.glb", "conveyor-long-stripe.glb", "conveyor-stripe-sides.glb"],
+      "belt_bars": ["conveyor-bars.glb", "conveyor-bars-high.glb", "conveyor-bars-fence.glb"],
+      "hopper": ["cover-hopper.glb", "cover-stripe-hopper.glb"],
+      "robot_arms": ["robot-arm-a.glb", "robot-arm-b.glb"],
+      "scanners": ["scanner-high.glb", "scanner-low.glb"],
+      "structures": ["structure-short.glb", "structure-medium.glb", "structure-high.glb", "structure-tall.glb", "structure-doorway.glb"],
+      "covers": ["cover-bar.glb", "cover-corner.glb", "cover-stripe.glb", "cover-top.glb", "cover-window.glb"]
+    }
+  },
+  "psx": {
+    "description": "PSX-style retro industrial assets",
+    "categories": {
+      "machinery": { "prefix": "psx/machinery/", "count": 52 },
+      "structures": { "prefix": "psx/structures/", "count": 210 },
+      "debris": { "prefix": "psx/debris/", "count": 34 },
+      "weapons": { "prefix": "psx/weapons/", "count": 31 },
+      "props": { "prefix": "psx/props/", "count": 16 },
+      "modular_props": { "prefix": "psx/modular_props/", "count": 27 },
+      "lights": { "prefix": "psx/lights/", "count": 10 },
+      "buildings": { "prefix": "psx/buildings/", "count": 14 },
+      "doors": { "prefix": "psx/doors/", "count": 6 },
+      "electrical": { "prefix": "psx/electrical/", "count": 15 },
+      "traps": { "prefix": "psx/traps/", "count": 20 },
+      "nature": { "prefix": "psx/nature/", "count": 124 }
+    }
+  }
+}

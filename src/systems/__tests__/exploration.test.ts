@@ -13,6 +13,17 @@
 // Mocks — jest.mock factories must not reference outer variables (hoisted)
 // ---------------------------------------------------------------------------
 
+jest.mock("../../../config", () => ({
+	config: {
+		rendering: {
+			fogOfWar: {
+				defaultVisionRange: 6,
+				cameraVisionBonus: 10,
+			},
+		},
+	},
+}));
+
 jest.mock("../../ecs/terrain", () => ({
 	getFragment: jest.fn(),
 	setFogAt: jest.fn(),

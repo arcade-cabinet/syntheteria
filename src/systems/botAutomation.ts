@@ -4,13 +4,16 @@
  * Bots with an automation component execute one of five routines:
  *   - idle:   Stand still, occasionally randomize yaw
  *   - patrol: Follow patrolPoints in order, loop back to start
- *   - guard:  Stay near position, attack enemies within range 8
- *   - follow: Move toward followTarget entity, maintain distance 3
+ *   - guard:  Stay near position, attack enemies within range
+ *   - follow: Move toward followTarget entity, maintain distance
  *   - work:   Move toward workTarget entity, stay nearby
  *
  * Uses navmesh pathfinding for movement. Runs each frame with delta time.
+ *
+ * Config reference: config/botAutomation.json
  */
 
+import botAutomationConfig from "../../config/botAutomation.json";
 import type { Entity, UnitEntity, Vec3 } from "../ecs/types";
 import { automatedBots, units, world } from "../ecs/world";
 
@@ -23,10 +26,10 @@ function getEntityById(id: string): Entity | undefined {
 
 import { findPath } from "./pathfinding";
 
-const GUARD_RANGE = 8;
-const FOLLOW_DISTANCE = 3;
-const WORK_DISTANCE = 2;
-const WAYPOINT_REACH_THRESHOLD = 2;
+const GUARD_RANGE: number = botAutomationConfig.guardRange;
+const FOLLOW_DISTANCE: number = botAutomationConfig.followDistance;
+const WORK_DISTANCE: number = botAutomationConfig.workDistance;
+const WAYPOINT_REACH_THRESHOLD: number = botAutomationConfig.waypointReachThreshold;
 
 /** Cooldown timers per entity to avoid pathfinding every frame. */
 const pathCooldowns = new Map<string, number>();

@@ -2,13 +2,16 @@
  * Exploration system: reveals fog around units based on distance.
  * Camera-equipped robots produce "detailed" fog; others produce "abstract".
  * Operates on the continuous fog grid in each fragment.
+ *
+ * Vision radius sourced from config/rendering.json fogOfWar section.
  */
 
+import { config } from "../../config";
 import { type FogState, getFragment, setFogAt } from "../ecs/terrain";
 import { hasCamera } from "../ecs/types";
 import { units } from "../ecs/world";
 
-const VISION_RADIUS = 6; // world units around the unit
+const VISION_RADIUS = config.rendering.fogOfWar.defaultVisionRange;
 
 export function explorationSystem() {
 	for (const entity of units) {

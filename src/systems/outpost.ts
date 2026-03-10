@@ -5,14 +5,16 @@
  * building component. Each outpost has a tier (1–3) that determines its
  * territory radius and upgrade cost.
  *
+ * Tunables sourced from config/territory.json.
+ *
  * The module keeps a lightweight side-table mapping entity IDs to outpost
  * metadata, mirroring the pattern used by resources and fabrication.
- *
- * All tunables sourced from config/territory.json via centralized config.
  */
 
 import { config } from "../../config";
 import { getTerrainHeight } from "../ecs/terrain";
+
+const territoryCfg = config.territory;
 import type { Entity } from "../ecs/types";
 import { world } from "../ecs/world";
 import {
@@ -20,8 +22,6 @@ import {
 	removeTerritory as removeTerritoryById,
 	type Territory,
 } from "./territory";
-
-const territoryCfg = config.territory;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -48,7 +48,7 @@ const outposts = new Map<string, OutpostRecord>();
  * Falls back to a sensible formula if the tier exceeds config entries.
  */
 export function getOutpostRadius(tier: number): number {
-	const entry = territoryCfg.outpostTiers.find((t) => t.tier === tier);
+	const entry = territoryCfg.outpostTiers.find((t: { tier: number }) => t.tier === tier);
 	if (entry) return entry.radius;
 	// Fallback: extrapolate from last defined tier
 	const last =

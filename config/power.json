@@ -25,5 +25,16 @@
   "powerSatisfactionThreshold": 0.9,
   "signalDegradationPerUnit": 0.02,
   "signalMinStrength": 0.1,
-  "signalComputeMultiplier": 10
+  "signalComputeMultiplier": 10,
+  "wireMaxLength": 25,
+  "connectableTypes": [
+    "lightning_rod",
+    "fabrication_unit",
+    "miner",
+    "smelter",
+    "refiner",
+    "separator",
+    "furnace",
+    "outpost"
+  ]
 }

@@ -8,11 +8,14 @@
  * Storm intensity affects rod output (fluctuates over time).
  */
 
+import { config } from "../../config";
 import type { BuildingEntity } from "../ecs/types";
 import { buildings, lightningRods, units } from "../ecs/world";
 
+const powerCfg = config.power;
+
 /** How far power reaches from a lightning rod */
-const DEFAULT_POWER_RADIUS = 12;
+const DEFAULT_POWER_RADIUS = powerCfg.defaultPowerRadius;
 
 /** Storm intensity oscillates — affects all rod output */
 let stormIntensity = 1.0;
@@ -23,12 +26,22 @@ let stormPhase = 0;
  * The storm fluctuates with slow waves, occasionally surging.
  */
 function updateStormIntensity(tick: number) {
-	stormPhase = tick * 0.02;
+	stormPhase = tick * powerCfg.stormPhaseRate;
 	// Base oscillation (slow sine wave)
-	const base = 0.7 + 0.2 * Math.sin(stormPhase * 0.3);
+	const base =
+		powerCfg.stormBaseOscillationMin +
+		powerCfg.stormBaseOscillationAmplitude *
+			Math.sin(stormPhase * powerCfg.stormBaseFrequency);
 	// Occasional surges
-	const surge = Math.max(0, Math.sin(stormPhase * 1.7 + 2.3)) * 0.3;
-	stormIntensity = Math.min(1.5, base + surge);
+	const surge =
+		Math.max(
+			0,
+			Math.sin(
+				stormPhase * powerCfg.stormSurgeFrequency +
+					powerCfg.stormSurgePhaseOffset,
+			),
+		) * powerCfg.stormSurgeAmplitude;
+	stormIntensity = Math.min(powerCfg.stormMaxIntensity, base + surge);
 }
 
 export function getStormIntensity(): number {
@@ -74,20 +87,21 @@ function getTotalPowerDemand(): number {
 function getBuildingPowerDemand(entity: BuildingEntity): number {
 	switch (entity.building.type) {
 		case "fabrication_unit":
-			return 3;
+			return powerCfg.fabricationUnitDemand;
 		case "lightning_rod":
 			return 0; // generates, doesn't consume
+		case "miner":
+			return powerCfg.minerDemand;
 		default:
-			return 1;
+			return powerCfg.defaultBuildingDemand;
 	}
 }
 
 function getUnitPowerDemand(entity: {
 	navigation?: { moving: boolean };
 }): number {
-	// Moving units consume more
-	const baseDemand = 0.5;
-	const movingBonus = entity.navigation?.moving ? 0.3 : 0;
+	const baseDemand = powerCfg.unitBaseDemand;
+	const movingBonus = entity.navigation?.moving ? powerCfg.unitMovingBonus : 0;
 	return baseDemand + movingBonus;
 }
 

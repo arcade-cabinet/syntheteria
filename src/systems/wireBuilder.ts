@@ -9,9 +9,11 @@
  *
  * Validation rules:
  *   - Both entities must have wire ports (buildings, signal relays)
- *   - Wire length must not exceed maxWireLength from config
+ *   - Wire length must not exceed wireMaxLength from config
  *   - No duplicate wire between the same two entities
  *   - Source and target must be different entities
+ *
+ * Tunables sourced from config/power.json.
  */
 
 import { config } from "../../config";
@@ -36,17 +38,8 @@ export interface WirePreview {
 	length: number;
 }
 
-/** Entity types that can accept wire connections */
-const CONNECTABLE_TYPES = new Set([
-	"lightning_rod",
-	"fabrication_unit",
-	"miner",
-	"smelter",
-	"refiner",
-	"separator",
-	"furnace",
-	"outpost",
-]);
+/** Entity types that can accept wire connections (from config/power.json) */
+const CONNECTABLE_TYPES = new Set(config.power.connectableTypes);
 
 // ---------------------------------------------------------------------------
 // State
@@ -135,7 +128,7 @@ export function canConnect(
 		entityA.worldPosition,
 		entityB.worldPosition,
 	);
-	const maxLength = config.power.wireMaxCapacity * 5; // max length scales with capacity
+	const maxLength = config.power.wireMaxLength;
 	if (length > maxLength) {
 		return {
 			valid: false,

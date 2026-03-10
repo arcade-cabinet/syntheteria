@@ -8,12 +8,12 @@
  *
  * After completing, the next hopper item is auto-started if available.
  *
- * Recipes are injected as a parameter (default: DEFAULT_RECIPES derived from
- * config/furnace.json values) so that Vitest tests run without JSON imports.
+ * Recipes sourced from config/furnace.json tiers[0].recipes.
  *
  * Config reference: config/furnace.json  (tiers[0].recipes)
  */
 
+import furnaceConfig from "../../config/furnace.json";
 import { getFurnace } from "./furnace";
 
 // ---------------------------------------------------------------------------
@@ -66,11 +66,13 @@ const OUTPUT_OFFSET_Z = 1.5;
  * Default smelting recipes derived from config/furnace.json tiers[0].recipes.
  * Exported so tests can reference without JSON imports.
  */
-export const DEFAULT_RECIPES: SmeltingRecipe[] = [
-	{ input: "scrap_iron", output: "iron_plate", smeltTime: 10 },
-	{ input: "copper", output: "wire_bundle", smeltTime: 8 },
-	{ input: "silicon", output: "circuit_board", smeltTime: 15 },
-];
+export const DEFAULT_RECIPES: SmeltingRecipe[] = Object.values(
+	furnaceConfig.tiers[0].recipes,
+).map((r) => ({
+	input: r.inputs[0].material,
+	output: r.output,
+	smeltTime: r.time,
+}));
 
 // ---------------------------------------------------------------------------
 // Module state
@@ -105,8 +107,8 @@ function computeOutputPosition(furnacePosition: Vec3): Vec3 {
  * Start smelting the first item in the furnace's hopper.
  *
  * Pops the front of the hopper queue, finds a matching recipe, and begins
- * the smelting timer. The furnace's `isProcessing` / `currentItem` /
- * `progress` fields are updated on the underlying FurnaceData.
+ * the smelting timer. The furnace's isProcessing / currentItem /
+ * progress fields are updated on the underlying FurnaceData.
  *
  * @param furnaceId - ID of the furnace to start smelting on
  * @param recipes   - optional recipe list (defaults to DEFAULT_RECIPES)

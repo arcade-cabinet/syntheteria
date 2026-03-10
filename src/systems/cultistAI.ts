@@ -3,13 +3,16 @@
  *
  * Cultists are fundamentally different from feral machines:
  *   - They patrol in pairs/groups (organized movement)
- *   - They have lightning discharge attacks (AoE, radius 4, cooldown 10s)
- *   - They close to range 6 before attacking
- *   - They can be hacked (difficulty 50)
+ *   - They have lightning discharge attacks (AoE, configurable radius, cooldown)
+ *   - They close to configurable range before attacking
+ *   - They can be hacked (configurable difficulty)
  *
  * Cultists spawn in the northern territory and patrol with purpose.
+ *
+ * Config reference: config/enemies.json cultist section
  */
 
+import enemiesConfig from "../../config/enemies.json";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { createFragment, getTerrainHeight, isWalkable } from "../ecs/terrain";
 import type { Entity, UnitEntity, Vec3 } from "../ecs/types";
@@ -18,11 +21,13 @@ import { findPath } from "./pathfinding";
 
 let nextCultistId = 0;
 
-const LIGHTNING_RANGE = 6;
-const LIGHTNING_AOE_RADIUS = 4;
-const LIGHTNING_COOLDOWN = 10; // seconds
-const AGGRO_RANGE = 12;
-const PATROL_SPEED = 2.5;
+const cultistCfg = enemiesConfig.cultist;
+
+const LIGHTNING_RANGE: number = cultistCfg.lightningRange;
+const LIGHTNING_AOE_RADIUS: number = cultistCfg.lightningRadius;
+const LIGHTNING_COOLDOWN: number = cultistCfg.lightningCooldown;
+const AGGRO_RANGE: number = cultistCfg.aggroRange;
+const PATROL_SPEED: number = cultistCfg.patrolSpeed;
 
 /** Per-entity cooldown tracking (entityId -> seconds remaining). */
 const lightningCooldowns = new Map<string, number>();
@@ -53,14 +58,14 @@ export function spawnCultist(options: {
 	fragmentId?: string;
 	patrolRadius?: number;
 }): Entity {
-	const { x, z, fragmentId, patrolRadius = 12 } = options;
+	const { x, z, fragmentId, patrolRadius = cultistCfg.defaultPatrolRadius } = options;
 	const id = `cultist_${nextCultistId++}`;
 	const y = getTerrainHeight(x, z);
 	const fragment = fragmentId ?? createFragment().id;
 
 	// Generate patrol points in a circle around spawn
 	const patrolPoints: Vec3[] = [];
-	const numPoints = 3 + Math.floor(Math.random() * 3); // 3-5 patrol points
+	const numPoints = cultistCfg.patrolPointsMin + Math.floor(Math.random() * (cultistCfg.patrolPointsMax - cultistCfg.patrolPointsMin + 1));
 	for (let i = 0; i < numPoints; i++) {
 		const angle = (i / numPoints) * Math.PI * 2;
 		const px = x + Math.cos(angle) * patrolRadius * (0.5 + Math.random() * 0.5);
@@ -95,7 +100,7 @@ export function spawnCultist(options: {
 		},
 		navigation: { path: [], pathIndex: 0, moving: false },
 		hackable: {
-			difficulty: 50,
+			difficulty: cultistCfg.hackDifficulty,
 			hackProgress: 0,
 			beingHacked: false,
 			hacked: false,
@@ -119,7 +124,7 @@ export function spawnCultist(options: {
  */
 export function spawnCultistPair(x: number, z: number, patrolRadius?: number) {
 	const groupId = `group_${nextGroupId++}`;
-	const offset = 2 + Math.random() * 2;
+	const offset = cultistCfg.pairSpawnOffset + Math.random() * cultistCfg.pairSpawnOffsetVariation;
 	const angle = Math.random() * Math.PI * 2;
 
 	const c1 = spawnCultist({
@@ -210,8 +215,8 @@ function hasLightningArray(entity: UnitEntity): boolean {
  * Cultist AI system. Called each frame with delta time.
  *
  * Behavior:
- *   1. If a player unit is within AGGRO_RANGE (12):
- *      - Close to LIGHTNING_RANGE (6)
+ *   1. If a player unit is within AGGRO_RANGE:
+ *      - Close to LIGHTNING_RANGE
  *      - If within range and cooldown ready: discharge lightning AoE
  *   2. Otherwise: patrol assigned waypoints
  */
@@ -284,14 +289,14 @@ export function cultistAISystem(delta: number) {
 
 			// Check if close enough to current patrol point
 			const distToPoint = distXZ(unit.worldPosition, patrolTarget);
-			if (distToPoint < 2) {
+			if (distToPoint < cultistCfg.waypointReachDistance) {
 				// Advance to next point
 				unit.automation.patrolIndex = (idx + 1) % points.length;
 				continue;
 			}
 
 			// Path toward patrol point (with some randomness to avoid lockstep)
-			if (Math.random() < 0.1) {
+			if (Math.random() < cultistCfg.patrolMoveChance) {
 				const path = findPath(unit.worldPosition, patrolTarget);
 				if (path.length > 0 && unit.navigation) {
 					unit.navigation.path = path;

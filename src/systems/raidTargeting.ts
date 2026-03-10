@@ -5,11 +5,25 @@
  * Stockpiles are clusters of placed cubes (Grabbable entities).
  * Targets are prioritised by material value, vulnerability (distance
  * from player defenders), and accessibility (pathfinding cost proxy).
+ *
+ * Tunables sourced from config/combat.json (raid section).
  */
 
+import { config } from "../../config";
 import type { Entity, Vec3 } from "../ecs/types";
 import { units } from "../ecs/world";
 import { type CubeEntity, getCubes } from "./raidSystem";
+
+// ---------------------------------------------------------------------------
+// Config-driven constants
+// ---------------------------------------------------------------------------
+
+const raidCfg = config.combat.raid;
+
+/** Cubes within this radius of each other are considered one stockpile. */
+const CLUSTER_RADIUS = raidCfg.clusterRadius;
+/** Radius around a stockpile in which we count defenders. */
+const DEFENDER_SCAN_RADIUS = raidCfg.defenderScanRadius;
 
 // ---------------------------------------------------------------------------
 // Target description
@@ -29,23 +43,10 @@ export interface RaidTarget {
 }
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/** Cubes within this radius of each other are considered one stockpile. */
-const CLUSTER_RADIUS = 6.0;
-/** Radius around a stockpile in which we count defenders. */
-const DEFENDER_SCAN_RADIUS = 12.0;
-
-// ---------------------------------------------------------------------------
 // Material value weights — higher = more attractive to raiders.
 // ---------------------------------------------------------------------------
 
-const VALUE_WEIGHTS: Record<string, number> = {
-	scrapMetal: 1,
-	eWaste: 2,
-	intactComponents: 5,
-};
+const VALUE_WEIGHTS: Record<string, number> = { ...raidCfg.valueWeights };
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -136,7 +137,7 @@ export function assessRaidViability(
 	}
 
 	// Expected defense: threat level weighted by average component count
-	const expectedDefense = target.threatLevel * 3; // assume ~3 functional components per defender
+	const expectedDefense = target.threatLevel * raidCfg.defenderComponentEstimate;
 
 	const forceRatio =
 		expectedDefense > 0
@@ -145,8 +146,8 @@ export function assessRaidViability(
 				? 10
 				: 0;
 
-	// Need at least 1.5:1 force ratio to consider viable
-	const viable = forceRatio >= 1.5 && availableForce > 0;
+	// Need at least forceRatioThreshold force ratio to consider viable
+	const viable = forceRatio >= raidCfg.forceRatioThreshold && availableForce > 0;
 
 	return {
 		viable,

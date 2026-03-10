@@ -9,8 +9,11 @@
  * placement preview (ghost snap) and the place-held-cube action.
  *
  * Depends on gridSnap.ts for grid math utilities.
+ *
+ * Config reference: config/units.json cubeStacking section
  */
 
+import unitsConfig from "../../config/units.json";
 import type { CubeEntity, Vec3 } from "./grabber";
 import type { GridCoord } from "./gridSnap";
 import {
@@ -21,11 +24,11 @@ import {
 } from "./gridSnap";
 
 // ---------------------------------------------------------------------------
-// Constants
+// Constants (from config/units.json cubeStacking section)
 // ---------------------------------------------------------------------------
 
 /** Default maximum raycast distance for placement preview (meters). */
-const DEFAULT_MAX_RANGE = 5.0;
+const DEFAULT_MAX_RANGE: number = unitsConfig.cubeStacking.defaultMaxRange;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -300,7 +303,7 @@ export function removeAndTopple(gridPos: GridCoord): StackedCubeData[] {
  *
  * @param hit            Raycast result from the physics engine, or null.
  * @param occupiedSlots  Set of gridKey strings for all occupied slots.
- * @param maxRange       Maximum hit distance in world units (default 5.0).
+ * @param maxRange       Maximum hit distance in world units (default from config).
  */
 export function getPlacementPreview(
 	hit: RaycastHit | null,

@@ -7,13 +7,26 @@
  * Each raiding unit can grab one cube (Grabbable trait) and carry it
  * via a HeldBy relation back to the faction's home territory.
  *
+ * Tunables sourced from config/combat.json (raid section).
+ *
  * Integrates with existing combat (component-based damage) and
  * pathfinding (navmesh A*) systems.
  */
 
+import { config } from "../../config";
 import type { Entity, UnitEntity, Vec3 } from "../ecs/types";
 import { units } from "../ecs/world";
 import { findPath } from "./pathfinding";
+
+// ---------------------------------------------------------------------------
+// Config-driven constants
+// ---------------------------------------------------------------------------
+
+const raidCfg = config.combat.raid;
+
+const ENGAGE_RANGE = raidCfg.engageRange;
+const LOOT_RANGE = raidCfg.lootRange;
+const RETREAT_ARRIVAL_RANGE = raidCfg.retreatArrivalRange;
 
 // ---------------------------------------------------------------------------
 // Raid phases
@@ -110,14 +123,6 @@ export function getCubes(): CubeEntity[] {
 export function getCube(id: string): CubeEntity | undefined {
 	return cubeEntities.get(id);
 }
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const ENGAGE_RANGE = 3.0;
-const LOOT_RANGE = 2.0;
-const RETREAT_ARRIVAL_RANGE = 3.0;
 
 // ---------------------------------------------------------------------------
 // Public API

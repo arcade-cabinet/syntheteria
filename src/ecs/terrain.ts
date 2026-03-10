@@ -8,14 +8,20 @@
  * Display offsets: fragments appear clustered together initially, then
  * gradually drift apart to their real positions as the map fills in.
  * When only one fragment remains, display matches reality.
+ *
+ * Tunables sourced from config/terrain.json.
  */
 
+import { config } from "../../config";
+
+const terrainCfg = config.terrain;
+
 // World bounds (terrain extends from -HALF to +HALF on each axis)
-export const WORLD_SIZE = 200;
+export const WORLD_SIZE = terrainCfg.worldSize;
 export const WORLD_HALF = WORLD_SIZE / 2;
 
 // Fog grid resolution — one cell per world unit
-export const FOG_RES = WORLD_SIZE;
+export const FOG_RES = terrainCfg.fogResolution;
 
 export type FogState = 0 | 1 | 2; // 0=unexplored, 1=abstract, 2=detailed
 
@@ -52,15 +58,15 @@ export function initTerrainFromSeed(seed: number) {
  * Returns Y value (elevation). Phase offsets vary per world seed.
  */
 export function getTerrainHeight(x: number, z: number): number {
-	const wx = x * 0.08;
-	const wz = z * 0.08;
+	const wx = x * terrainCfg.terrainFrequency;
+	const wz = z * terrainCfg.terrainFrequency;
 	const [p0, p1, p2] = _terrainPhase;
 	const h =
 		0.5 +
 		0.3 * Math.sin(wx * 1.2 + wz * 0.8 + p0) +
 		0.15 * Math.sin(wx * 2.5 + wz * 1.7 + p1) +
 		0.05 * Math.sin(wx * 5.1 + wz * 4.3 + p2);
-	return Math.max(0, Math.min(1, h)) * 0.5; // 0–0.5 elevation
+	return Math.max(0, Math.min(1, h)) * terrainCfg.heightScale;
 }
 
 /**
@@ -68,8 +74,8 @@ export function getTerrainHeight(x: number, z: number): number {
  * Water (very low terrain) is impassable.
  */
 export function isWalkable(x: number, z: number): boolean {
-	const raw = getTerrainHeight(x, z) / 0.5; // undo the *0.5 scaling
-	return raw >= 0.15; // below 0.15 is water
+	const raw = getTerrainHeight(x, z) / terrainCfg.heightScale; // undo the height scaling
+	return raw >= terrainCfg.waterLevel;
 }
 
 /**
@@ -77,11 +83,11 @@ export function isWalkable(x: number, z: number): boolean {
  * 1.0 = normal, higher = harder, 0 = impassable.
  */
 export function getWalkCost(x: number, z: number): number {
-	const raw = getTerrainHeight(x, z) / 0.5;
-	if (raw < 0.15) return 0; // water
-	if (raw < 0.3) return 1.5; // rough
-	if (raw < 0.7) return 1.0; // normal
-	return 2.0; // steep
+	const raw = getTerrainHeight(x, z) / terrainCfg.heightScale;
+	if (raw < terrainCfg.waterLevel) return terrainCfg.walkCost.water;
+	if (raw < terrainCfg.walkCost.roughThreshold) return terrainCfg.walkCost.rough;
+	if (raw < terrainCfg.walkCost.steepThreshold) return terrainCfg.walkCost.normal;
+	return terrainCfg.walkCost.steep;
 }
 
 // --- Fragment (fog-of-war group) management ---
@@ -119,8 +125,11 @@ export function deleteFragment(id: string) {
 
 // --- Display offset management ---
 
-// How fast offsets decay toward zero each tick (0.003 = ~0.3% per tick)
-const DRIFT_RATE = 0.003;
+// How fast offsets decay toward zero each tick
+const DRIFT_RATE = terrainCfg.displayOffsetDriftRate;
+
+/** Snap threshold for zeroing out offsets. */
+const SNAP_THRESHOLD = terrainCfg.displayOffsetSnapThreshold;
 
 /**
  * Set initial display offsets that cluster all fragments close together.
@@ -175,8 +184,8 @@ export function updateDisplayOffsets() {
 
 		// Snap to zero when very close
 		if (
-			Math.abs(frag.displayOffset.x) < 0.01 &&
-			Math.abs(frag.displayOffset.z) < 0.01
+			Math.abs(frag.displayOffset.x) < SNAP_THRESHOLD &&
+			Math.abs(frag.displayOffset.z) < SNAP_THRESHOLD
 		) {
 			frag.displayOffset.x = 0;
 			frag.displayOffset.z = 0;

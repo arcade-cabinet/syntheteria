@@ -1,3 +1,5 @@
+> **SUPERSEDED** -- Engine and platform decisions have been finalized: R3F + Three.js + Koota ECS + Yuka AI, bundled with Expo SDK 55 + Metro. See [GDD-002](./002-koota-expo-migration.md) for the current architecture.
+
 # Implementation Options
 
 This document outlines the technology choices and implementation paths for Syntheteria.

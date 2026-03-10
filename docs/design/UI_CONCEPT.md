@@ -1,3 +1,5 @@
+> **SUPERSEDED** -- This document describes the pre-redesign 2.5D top-down UI. The game now uses a first-person HUD with contextual radial action menus. See [GDD-003](./003-4x-interaction-governors.md) for the interaction model and `src/ui/FPSHUD.tsx` for the current HUD.
+
 # Syntheteria - UI Concept: 2.5D Top-Down with Fragmented Exploration
 
 ## Design Philosophy

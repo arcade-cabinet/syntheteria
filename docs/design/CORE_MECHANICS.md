@@ -1,3 +1,5 @@
+> **SUPERSEDED** -- This document describes the pre-redesign 2.5D game. The game has been completely redesigned as a first-person 3D 4X. See [GDD-003](./003-4x-interaction-governors.md) and [GDD-004](./004-core-loop-cubes-harvesting.md) for the current design.
+
 # Syntheteria - Core Mechanics Overview
 
 This document provides a high-level overview of the core gameplay mechanics. For detailed specifications, see the linked documents.

@@ -1,3 +1,5 @@
+> **SUPERSEDED** -- This document describes the pre-redesign 2.5D game. The cultist combat system has been replaced by 4X faction warfare with cube raiding. See [GDD-003](./003-4x-interaction-governors.md) for the current design.
+
 # Combat System
 
 Combat is not a separate system — it emerges from component assembly. Any robot can become a combat unit by attaching weapons.

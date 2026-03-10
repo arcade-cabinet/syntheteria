@@ -1,3 +1,5 @@
+> **SUPERSEDED** -- Most questions tracked here were resolved during the redesign to a first-person 3D 4X. See GDD-002 through GDD-006 for current design decisions.
+
 # Syntheteria - Open Questions
 
 This document tracks design questions that need resolution.

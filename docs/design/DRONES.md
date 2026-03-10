@@ -1,3 +1,5 @@
+> **SUPERSEDED** -- This document describes the pre-redesign 2.5D game. The drone repair/enhance system has been replaced by faction-specific procedural bots. See [GDD-005](./005-visual-identity-procgen-yuka-vehicles.md) for the current design.
+
 # Drone / Robot System
 
 This document defines how robots are repaired, built, and enhanced from components, and how their resource requirements are calculated dynamically.

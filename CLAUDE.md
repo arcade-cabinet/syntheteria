@@ -197,11 +197,12 @@ syntheteria/
 
 ### Architecture Migration (Critical Path)
 - [x] Expo project scaffolding (app/, app.json, metro.config.js)
-- [x] JSON config: config/ directory with 22 JSON files + type-safe loader
+- [x] JSON config: config/ directory with 39 JSON files + type-safe loader
 - [x] Git LFS for binary assets (*.glb, *.exr, *.jpg, *.png — 773 MB tracked)
 - [x] CI/CD workflows updated (lfs: true, flattened paths)
 - [x] Repository flattened — no more game/ subdirectory
 - [ ] Koota ECS: migrate from Miniplex (traits defined in ecs/traits/, bridge in ecs/koota/)
+- [ ] Expo SDK 55 + Metro bundler (still on Vite)
 - [x] Yuka-style AI: BotVehicle steering, NavMeshBuilder, PathfindingSystem (7,038 lines total)
 - [x] Contextual interaction: ObjectSelectionSystem (476 lines) + ObjectActionMenu (487 lines)
 
@@ -210,36 +211,48 @@ syntheteria/
 - [x] Belt routing (beltRouting.ts — belt-to-belt and belt-to-machine connections)
 - [x] Processing system (processing.ts — smelter/refiner/separator recipes)
 - [x] Mining system (mining.ts — ore extraction with rates from config)
-- [x] Grabber system (grabber.ts — cube grab/carry/drop)
+- [x] Grabber system (grabber.ts — cube grab/carry/drop + quickDeposit)
 - [x] Save/load (saveLoad.ts — IndexedDB persistence, full world serialization)
+- [x] MaterialCube as physical Rapier rigid body (cubePhysicsModel.ts, cubeStacking.ts, cubePlacement.ts)
 - [x] MaterialCube PBR materials (CubeMaterialProvider — 15 material types with PBR textures)
-- [x] OreDeposit + procedural deposit renderer (OreDepositGenerator — 672 lines)
-- [x] Harvester mechanic (harvesting.ts — 232 lines, grind → particles → powder)
-- [x] Compression mechanic (compression.ts — 181 lines, screen shake + cube eject)
-- [x] Furnace machine (furnace.ts + furnaceProcessing.ts — 474 lines, hopper → recipes → output)
+- [x] OreDeposit + procedural deposit renderer (oreSpawner.ts, depositRenderData.ts, OreDepositGenerator — 672 lines)
+- [x] Harvester mechanic (harvesting.ts + harvestCompress.ts — grind → particles → powder)
+- [x] Compression mechanic (compression.ts + compressionJuice.ts + screenShake.ts — screen shake + cube eject)
+- [x] Furnace machine (furnace.ts + fabrication.ts — hopper → recipes → output)
 
 ### Visual Identity (High Priority)
 - [x] MaterialFactory: composable PBR from texture sets
 - [x] Cube materials: 15 ore types with unique PBR treatment (cubePBRMaterials.json)
-- [x] Panel-based procedural geometry (PanelGeometry.ts — 563 lines)
-- [x] BotGenerator: faction-distinct bots with panels, bolts, vents, chrome (BotGenerator + BotParts — 1,238 lines)
+- [x] Panel-based procedural geometry (PanelGeometry.ts — 563 lines, exists but not wired to rendering)
+- [x] BotGenerator: faction-distinct bots (BotGenerator + BotParts — 1,238 lines, exists but not wired to rendering)
 - [x] NormalMapComposer: layered detail (bolts, seams, vents, hex patterns — 231 lines)
-- [x] Replace all meshLambertMaterial with MeshStandardMaterial
+- [ ] Wire PanelGeometry + BotGenerator into live R3F rendering pipeline
+- [ ] MaterialFactory driven by JSON specs (currently hardcoded)
+- [ ] Replace all meshLambertMaterial with MeshStandardMaterial
 
 ### 4X Systems (Medium Priority)
-- [x] CivilizationGovernor with Yuka GOAP evaluators (basic implementation)
-- [x] Fog of war (fogOfWar.ts — hidden/explored/visible)
-- [x] Tech tree progression (techTree.ts + config/technology.json)
-- [x] Territory claiming (territory.ts + outpost.ts — 406 lines)
-- [x] Race selection + map customization (FactionSelect.tsx + OpponentConfig.tsx — 518 lines)
-- [ ] AI civilization economics (harvest → compress → carry → build)
+- [x] CivilizationGovernor with GOAP (CivilizationGovernor.ts + GOAPPlanner.ts)
+- [x] Fog of war (fogOfWar.ts + fogOfWarManager.ts — hidden/explored/visible, runs in tick loop)
+- [x] Tech tree progression (techTree.ts + techResearch.ts + techEffects.ts + config/technology.json)
+- [x] Territory claiming (territory.ts + territoryControl.ts + territoryEffects.ts — contestation decay in tick loop)
+- [x] Race selection system (raceSelection.ts exists, FactionSelect.tsx + OpponentConfig.tsx — 518 lines)
+- [ ] Pregame lobby UI (race selection, map settings, Human/AI slot assignment)
+- [ ] AI civilization economics (aiCivilization.ts runs but doesn't do physical harvest → compress → carry → build)
+- [ ] CivilizationGovernor GOAP overhaul (perception-limited, full 4X loop)
 
 ### Polish
-- [x] Otter hologram quest system (questSystem.ts + config/quests.json)
-- [x] Formation movement (FormationSystem + FormationPatterns — 524 lines)
-- [x] Cube stacking physics (cubeStacking.ts — 461 lines)
-- [x] Raid/theft mechanics (raidSystem.ts + raidTargeting.ts — 737 lines)
-- [x] Instanced rendering (InstancedCubeRenderer.tsx — 387 lines)
+- [x] Otter hologram quest system (questSystem.ts + proceduralQuests.ts + otterTrade.ts + config/quests.json)
+- [x] Formation movement (FormationSystem.ts + formationMovement.ts — 524 lines)
+- [x] Cube stacking physics (cubeStacking.ts + structuralCollapse.ts — 461 lines)
+- [x] Raid/theft mechanics (raidSystem.ts + raidTargeting.ts + cubePileTracker.ts — 737 lines, runs in tick loop)
+- [x] Instanced rendering (InstancedCubeRenderer.tsx — 387 lines, exists but not connected to R3F)
+
+### New Items
+- [ ] Wire InstancedCubeRenderer into live R3F scene
+- [ ] AI-vs-AI spectator mode
+- [ ] Headed Chrome E2E playtesting
+- [ ] expo-sqlite game.db with governor decision tables
+- [ ] Yuka Vehicle system for bot movement (steering behaviors, not just pathfinding)
 
 ---
 

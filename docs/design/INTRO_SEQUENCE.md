@@ -1,3 +1,5 @@
+> **SUPERSEDED** -- This document describes the pre-redesign 2.5D intro sequence (void awakening, map merging). The intro is now handled by the otter hologram quest system. See `config/quests.json` and `src/systems/questSystem.ts` for the current onboarding.
+
 # Intro Sequence Design
 
 This document details the intro section — from awakening in the void through establishing an operational base in the industrial city.

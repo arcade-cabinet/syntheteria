@@ -1,3 +1,5 @@
+> **SUPERSEDED** -- This document describes the pre-redesign 2.5D game. The abstract AI resource model (energy, compute, signal) has been replaced by a physical cube economy. See [GDD-004](./004-core-loop-cubes-harvesting.md) and [GDD-006](./006-cube-building-economy.md) for the current design.
+
 # Consciousness Model
 
 This document defines how the player's AI consciousness works mechanically — the resources that sustain it, the hardware that houses it, and the failure states that threaten it.

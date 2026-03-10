@@ -1,3 +1,5 @@
+> **SUPERSEDED** -- This document describes the pre-redesign 2.5D game. The material system has been replaced by the physical cube economy (grind -> compress -> carry -> process). See [GDD-004](./004-core-loop-cubes-harvesting.md) and [GDD-006](./006-cube-building-economy.md) for the current design.
+
 # Materials and Resources
 
 This document defines how resources are gathered, processed, and used in Syntheteria.

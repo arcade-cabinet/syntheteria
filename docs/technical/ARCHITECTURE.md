@@ -1,31 +1,6 @@
-# Syntheteria — Web Architecture (R3F + ECS)
+# Syntheteria -- Technical Architecture
 
-This document defines the technical architecture for Syntheteria using React Three Fiber, Three.js, and an Entity-Component-System pattern — designed around the game's actual mechanics: fragmented maps, AI consciousness, storm-based power, hacking, and combat against cultists.
-
----
-
-## Why Custom Engine (Not Unity/Godot)
-
-- **Mobile-first web delivery:** Runs in any browser on any device — no app store, no install, no gatekeeping. The game is a URL.
-- **AI-assisted development:** Everything is text (TypeScript, JSX). No binary scene files. AI can read, write, and verify all code.
-- **Perfect fit for fragmented maps:** Custom chunk-based renderer maps directly to the game's signature mechanic. No fighting an engine's assumptions about continuous worlds.
-- **Free forever:** No licensing at any scale.
-- **Fast iteration:** Vite hot reload. Change a system → see it immediately.
-
-**Trade-offs accepted:** Must build more from scratch. Lower 3D performance ceiling than native. Mobile WebGL quirks.
-
----
-
-## Mobile-First Design Principles
-
-The game targets mobile as the primary platform, with PC as a natural extension.
-
-- **Touch controls are the default.** Mouse/keyboard are enhancements, not requirements.
-- **UI sized for fingers.** Minimum 44px touch targets. No tiny buttons or hover-dependent interactions.
-- **Performance budget for mid-range phones.** Target 30fps on 2-year-old Android devices. 60fps on flagship/PC.
-- **Responsive canvas.** Full-screen on mobile, resizable window on desktop.
-- **Battery-aware.** Reduce tick rate and particle effects when battery is low (Battery Status API where available).
-- **Offline-capable.** Service worker for asset caching. Game state in IndexedDB. Playable without network after first load.
+First-person 3D 4X factory game built with React Three Fiber and an Entity-Component-System pattern. You are a broken robot on a machine planet. Grind ore deposits into powder, compress powder into physical cubes, carry cubes to machines, and build an industrial civilization while competing against AI factions.
 
 ---
 
@@ -33,797 +8,645 @@ The game targets mobile as the primary platform, with PC as a natural extension.
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| Rendering | React Three Fiber + Three.js | 2.5D/3D top-down scene |
-| ECS | Miniplex | Entity management, archetype queries |
-| UI | React DOM overlay | Resource bars, building toolbar, unit panels, minimap |
-| State bridge | useSyncExternalStore | ECS → React UI sync |
-| Pathfinding | A* over chunk grids | Unit movement |
-| Audio | Howler.js or Web Audio API | Storm ambience, lightning, combat |
-| Persistence | IndexedDB | Save/load full world state |
-| Build | Vite | Dev server, bundling, PWA plugin |
-| Testing | Vitest + Playwright | Unit/integration + E2E |
+| Rendering | React Three Fiber 9.5 + Three.js 0.183 | 3D scene, FPS camera, PBR materials |
+| ECS | Miniplex 2.0 (migrating to Koota 0.6) | Entity management, archetype queries |
+| Physics | Rapier 0.14 (`@dimforge/rapier3d-compat`) | Rigid bodies, collisions, raycasting |
+| AI | Yuka 0.7 + custom GOAP + FSM | Vehicle steering, NavMesh pathfinding, governors |
+| Audio | Tone.js 15.1 | Spatial audio, procedural synth sound effects |
+| Animation | anime.js 4.3 | UI animations, screen transitions |
+| Mobile Input | nipplejs 0.10 | Virtual joystick for mobile FPS |
+| UI | React DOM overlay | HUD, radial menus, tech tree, pregame screens |
+| State bridge | `useSyncExternalStore` | ECS to React UI sync |
+| Build | Vite 7.3 (primary), Expo SDK 55 (scaffolded for native) | Dev server, bundling |
+| Lint | Biome 2.4 | Code quality |
+| Test | Jest 30 + ts-jest (unit), Playwright 1.58 (E2E) | 158+ test files |
+| CI | GitHub Actions | `ci.yml` (lint + test), `deploy.yml` |
 
 ---
 
-## 1. Entity-Component-System
+## Two-Loop Architecture
 
-### Entity Interface
-
-All components are optional properties on a single Entity type. Miniplex queries select entities by which components they have.
-
-```ts
-interface Entity {
-  // Identity
-  id: string
-  faction: "player" | "cultist" | "rogue" | "feral"
-
-  // Spatial
-  position: { chunkId: string; localX: number; localY: number }
-  worldPosition: { x: number; y: number; z: number }  // continuous, for rendering
-
-  // Map fragment membership
-  mapFragment: { fragmentId: string }
-
-  // Unit
-  unit: {
-    type: string            // "maintenance_bot", "scout", "combat", "mining", "aquatic", etc.
-    health: number
-    maxHealth: number
-    speed: number           // grid cells per game tick
-    selected: boolean
-    automationLevel: "direct" | "simple" | "reactive" | "adaptive" | "autonomous"
-  }
-
-  // Components (the robot's physical parts)
-  robotComponents: {
-    slots: RobotComponent[]  // power sources, controllers, motors, locomotion, sensors, etc.
-    totalWeight: number      // cached, recalculated on change
-    powerCapacity: number    // cached
-    powerDraw: number        // cached, dynamic based on activity
-    computeContribution: number
-    computeCost: number
-  }
-
-  // Navigation
-  navigation: {
-    path: GridCell[]
-    pathIndex: number
-    moving: boolean
-  }
-
-  // Building / Facility
-  building: {
-    type: string             // "lightning_rod", "fabrication_unit", "relay_station", "server_rack", etc.
-    powered: boolean
-    operational: boolean
-    footprint: GridCell[]
-  }
-
-  // Lightning rod (specialization of building)
-  lightningRod: {
-    rodCapacity: number
-    currentOutput: number
-    protectionRadius: number  // grid cells shielded from random strikes
-  }
-
-  // Power network membership
-  powerNetwork: { networkId: string }
-
-  // Signal / communication
-  signal: {
-    range: number
-    connected: boolean       // within player signal network
-    relaySource: boolean     // this entity extends signal
-  }
-
-  // Hacking state
-  hacking: {
-    targetId: string | null
-    technique: string | null
-    progress: number         // 0..1
-    computeCostPerTick: number
-  }
-
-  // Combat
-  combat: {
-    weapons: WeaponState[]
-    engagementRule: "attack" | "flee" | "protect" | "hold"
-    targetId: string | null
-    inCombat: boolean
-  }
-
-  // Cultist (human enemy — cannot be hacked)
-  cultist: {
-    rank: "wanderer" | "warrior" | "leader" | "cult_leader"
-    lightningCooldown: number
-    lightningPower: number
-    meleeStrength: number
-  }
-
-  // Automation routine
-  automation: {
-    routineId: string
-    instructions: AutomationInstruction[]
-    active: boolean
-  }
-
-  // Sensor
-  sensor: {
-    type: "camera" | "radar" | "lidar" | "sonar" | "chemical" | "em" | "seismic"
-    range: number
-    producesDetailedMap: boolean  // cameras → detailed, others → abstract
-  }
-
-  // Cargo / resources carried
-  cargo: {
-    items: CargoItem[]
-    capacity: number
-  }
-
-  // Fabrication queue (on fabrication buildings)
-  fabrication: {
-    queue: BlueprintOrder[]
-    currentProgress: number
-    powered: boolean
-  }
-
-  // Storm lightning strike (transient entity)
-  lightningStrike: {
-    targetPosition: { x: number; y: number }
-    damage: number
-    sourceType: "random" | "cultist"
-    ticksRemaining: number
-  }
-}
-```
-
-### Key Queries (Archetypes)
-
-```ts
-const units        = world.with("unit", "position", "worldPosition")
-const buildings    = world.with("building", "position")
-const lightningRods = world.with("lightningRod", "building", "powerNetwork")
-const movingUnits  = world.with("unit", "navigation", "worldPosition")
-const selectedUnits = world.with("unit").where(e => e.unit.selected)
-const playerUnits  = world.with("unit", "faction").where(e => e.faction === "player")
-const enemyUnits   = world.with("unit", "faction").where(e => e.faction !== "player")
-const cultists     = world.with("cultist", "position")
-const hackableUnits = world.with("unit", "faction").where(e => e.faction !== "player" && !("cultist" in e))
-const fabricators  = world.with("fabrication", "building")
-const relays       = world.with("signal").where(e => e.signal.relaySource)
-const sensors      = world.with("sensor", "position")
-```
-
----
-
-## 2. Fragmented Map System
-
-This is the game's signature mechanic and the most architecturally significant departure from a standard RTS.
-
-### Data Model
-
-```ts
-interface MapFragment {
-  id: string
-  chunks: Map<string, Chunk>        // chunkId → chunk data
-  exploredBy: Set<string>           // entity IDs that contributed
-  detailLevel: "abstract" | "detailed" | "mixed"
-  connectedFragments: Set<string>   // fragments merged with this one
-  // Rendering offset — fragments float in void at arbitrary positions until merged
-  displayOffset: { x: number; y: number; rotation: number }
-}
-
-interface Chunk {
-  id: string
-  fragmentId: string
-  grid: TileType[][]           // e.g. 16x16 tiles
-  walkCosts: number[][]        // A* weights
-  occupied: boolean[][]        // building footprints, unwalkable
-  fogState: "unexplored" | "abstract" | "detailed" | "stale"
-  terrainMesh: THREE.BufferGeometry | null   // generated on reveal
-  lastObservedTick: number
-}
-```
-
-### How Fragments Work
-
-1. **Each robot has a `mapFragment` component** linking it to the fragment it belongs to.
-2. **As a robot moves**, the `explorationSystem` reveals chunks around it:
-   - Robots with camera sensors → `"detailed"` fog state (full visual terrain)
-   - Robots without cameras → `"abstract"` fog state (wireframe/schematic)
-3. **Fragments are disconnected.** The player sees explored areas as islands floating in void. There is **no spatial relationship** between fragments until they merge.
-4. **When two robots from different fragments physically meet** (adjacent grid cells), the `fragmentMergeSystem` fires:
-   - Calculates the spatial offset between the two fragments
-   - Plays a merge animation (fragments slide together and snap)
-   - Combines into a single fragment; all entities update their `mapFragment` component
-   - Reveals the true spatial relationship
-5. **Rendering:** Each fragment is a `<group>` in R3F, positioned by its `displayOffset`. Unmerged fragments have arbitrary offsets. Merged fragments share a unified coordinate space.
-
-### Chunk-Based Terrain (Not Single BufferGeometry)
-
-Terrain is rendered per-chunk, not as a single mesh. This is essential because:
-- Chunks are revealed incrementally as robots explore
-- Different chunks have different detail levels (abstract vs detailed)
-- Fog of war needs per-chunk state
-- Late game may have hundreds of chunks; only render visible ones
-
-```tsx
-function ChunkRenderer({ chunk }: { chunk: Chunk }) {
-  if (chunk.fogState === "unexplored") return null
-  if (chunk.fogState === "abstract") return <AbstractChunkMesh chunk={chunk} />
-  return <DetailedChunkMesh chunk={chunk} />
-}
-```
-
-### Abstract vs Detailed Maps
-
-| Map Type | Source | Visual |
-|----------|--------|--------|
-| Abstract | Robots without cameras (sonar, radar, etc.) | Wireframe walls, obstacle outlines, no texture |
-| Detailed | Camera-equipped robots | Full terrain, buildings, objects rendered |
-| Mixed | Fragment with both types of exploration | Detailed where cameras went, abstract elsewhere |
-
----
-
-## 3. Two-Loop Architecture
+All game logic runs in two separated loops to decouple simulation stability from frame rate.
 
 ### Simulation Tick (Fixed Interval)
 
-Runs at 1 tick/second at 1x speed. Adjustable: 0 (paused), 0.5x, 1x, 2x, 4x.
-
-**Tick order:**
+`simulationTick()` in `src/ecs/gameState.ts` runs at a fixed cadence adjusted by game speed (0.5x through 4x, or paused). Each tick executes systems in a deterministic order:
 
 ```
-1. stormSystem()           — update storm intensity, schedule random lightning strikes
-2. lightningStrikeSystem() — resolve pending strikes (damage, protection checks)
-3. powerNetworkSystem()    — BFS from lightning rods, distribute energy, check rod protection zones
-4. computePoolSystem()     — sum global compute, calculate demand, flag overextended units
-5. signalNetworkSystem()   — BFS from core/relays, determine unit connectivity
-6. explorationSystem()     — reveal chunks around moving units, check for fragment merges
-7. fragmentMergeSystem()   — process pending merges
-8. hackingSystem()         — progress active hacks, resolve completions/failures
-9. combatSystem()          — resolve damage, apply engagement rules, cultist lightning calls
-10. automationSystem()     — execute automation routines for units with routines
-11. navigationSystem()     — compute A* paths for units that need them
-12. fabricationSystem()    — progress build queues
-13. resourceSystem()       — material gathering, consumption
-14. decaySystem()          — component degradation (if enabled)
-15. escalationSystem()     — cultist aggression, storm progression over game time
+ 1. explorationSystem()         -- reveal chunks around moving units
+ 2. fragmentMergeSystem()       -- merge map fragments when robots meet
+ 3. powerSystem(tick)           -- lightning rod output, protection zones
+ 4. wireNetworkSystem()         -- wire connectivity graph
+ 5. updatePowerGrid()           -- power distribution BFS
+ 6. signalNetworkSystem()       -- signal range BFS from core/relays
+ 7. resourceSystem()            -- material gathering, consumption
+ 8. miningSystem()              -- ore extraction with drill health
+ 9. processingSystem()          -- smelter/refiner/separator recipes
+10. repairSystem()              -- building/unit repair
+11. fabricationSystem()         -- fabrication queue progression
+12. hackingSystem()             -- hack progress, compute costs
+13. enemySystem()               -- feral machine spawning and behavior
+14. combatSystem()              -- damage resolution, engagement rules
+15. turretSystem()              -- automated turret targeting
+16. otterSystem()               -- otter wandering behavior
+17. updateQuests(1)             -- quest condition checking
+18. applyContestationDecay()    -- overlapping territory weakening
+19. updateResearch() x5         -- tech progression for all 5 factions
+20. applyTechEffects()          -- apply completed research bonuses
+21. executeRaid() (per active)  -- raid state machine advance
+22. aiCivilizationSystem()      -- AI faction economic simulation
+23. updateDisplayOffsets()      -- fragment rendering positions
+24. checkGameOver()             -- victory/loss condition check
 ```
 
-### Render Loop (60fps via useFrame)
+After all systems run, a snapshot is built and listeners are notified, triggering React UI updates via `useSyncExternalStore`.
 
-Only handles smooth visual interpolation. **No game logic here.**
+### Render Loop (Per-Frame via `useFrame`)
 
-```ts
-function movementSystem(delta: number) {
-  for (const entity of movingUnits) {
-    const nav = entity.navigation
-    if (!nav.moving || nav.pathIndex >= nav.path.length) continue
+R3F components read ECS state directly each frame for smooth visual interpolation. No game state mutation here -- only visual updates:
 
-    const target = nav.path[nav.pathIndex]
-    const targetWorld = gridToWorld(target, entity.mapFragment)
-    const wp = entity.worldPosition
-
-    // Lerp toward next waypoint
-    const step = entity.unit.speed * delta * gameSpeedMultiplier
-    const dx = targetWorld.x - wp.x
-    const dz = targetWorld.z - wp.z
-    const dist = Math.sqrt(dx * dx + dz * dz)
-
-    if (dist <= step) {
-      // Reached waypoint
-      wp.x = targetWorld.x
-      wp.z = targetWorld.z
-      entity.position = { chunkId: target.chunkId, localX: target.x, localY: target.y }
-      nav.pathIndex++
-      if (nav.pathIndex >= nav.path.length) nav.moving = false
-    } else {
-      wp.x += (dx / dist) * step
-      wp.z += (dz / dist) * step
-    }
-  }
-}
-```
+- **`CoreLoopSystem`** (`src/systems/CoreLoopSystem.tsx`) -- updates harvesting, compression, furnace processing, and held-cube sync every frame. Exposes a snapshot for the HUD via its own `subscribeCoreLoop` store.
+- **`GameplaySystems`** (`src/systems/GameplaySystems.tsx`) -- runs less-frequent strategic checks (cube stacking, pattern matching for machine assembly, wall detection) on slower cadences.
+- **`InteractionSystem`** (`src/systems/InteractionSystem.tsx`) -- contextual interaction raycasting and action dispatch.
+- **Movement interpolation** -- `movementSystem` (`src/systems/movement.ts`) lerps unit positions toward navmesh waypoints.
+- **Steering** -- `YukaSystem` (`src/ai/YukaSystem.tsx`) ticks the Yuka entity manager each frame, updating vehicle positions.
+- **Rendering components** -- each renderer reads `worldPosition` directly from entities; positions never flow through React state.
 
 **Critical rule:** Never put per-frame positions into React state. Scene components read ECS directly in `useFrame`.
 
 ---
 
-## 4. Power Network System
+## Directory Structure
 
-Lightning rods are not generic "power buildings." They draw intermittent energy from the perpetual storm.
+```
+syntheteria/
+├── src/
+│   ├── App.tsx                    # Phase router: title -> pregame -> game
+│   ├── main.tsx                   # React DOM entry (Vite)
+│   ├── GameScene.tsx              # Canvas + all 3D/physics/audio (lazy-loaded)
+│   │
+│   ├── ecs/                       # Entity-Component-System core
+│   │   ├── types.ts               # Entity interface (30+ component types)
+│   │   ├── world.ts               # Miniplex world instance + archetype queries
+│   │   ├── gameState.ts           # Simulation tick loop, game speed, snapshot
+│   │   ├── terrain.ts             # Heightfield terrain + map fragment data
+│   │   ├── seed.ts                # Seeded PRNG (deterministic generation)
+│   │   ├── factory.ts             # Entity spawn: units, buildings, otters
+│   │   ├── factoryBuildings.ts    # Miner/processor spawn functions
+│   │   ├── beltFactory.ts         # Belt entity creation
+│   │   ├── wireFactory.ts         # Wire entity creation
+│   │   ├── cityLayout.ts          # Procedural city building placement
+│   │   └── koota/                 # Koota migration (in progress)
+│   │       ├── traits.ts          # Koota trait definitions
+│   │       ├── world.ts           # Koota world instance
+│   │       ├── queries.ts         # Koota reactive queries
+│   │       ├── bridge.ts          # Miniplex <-> Koota sync bridge
+│   │       ├── serialize.ts       # Koota world serialization
+│   │       └── MIGRATION_STATUS.md
+│   │
+│   ├── systems/                   # ECS systems (140 files, ~41K lines)
+│   │   ├── __tests__/             # 138 Jest test files (~67K lines)
+│   │   └── ... (see System Inventory below)
+│   │
+│   ├── ai/                        # AI subsystem (21 files)
+│   │   ├── goap/                  # GOAP civilization governor (6 files)
+│   │   ├── BotBrain.ts            # 9-state FSM for unit behavior
+│   │   ├── BotVehicle.ts          # Yuka Vehicle wrapper
+│   │   ├── SteeringBehaviors.ts   # Seek/arrive/flee/wander
+│   │   ├── NavMeshBuilder.ts      # Build NavMesh from terrain
+│   │   ├── PathfindingSystem.ts   # NavMesh pathfinding API
+│   │   ├── PerceptionSystem.ts    # Cone-of-sight with LOS occlusion
+│   │   ├── MemorySystem.ts        # Entity memory with confidence decay
+│   │   ├── ThreatAssessment.ts    # Multi-factor threat evaluation
+│   │   ├── FormationSystem.ts     # Squad formation management
+│   │   ├── FormationPatterns.ts   # Line/wedge/column/circle offsets
+│   │   ├── YukaManager.ts         # Singleton Yuka entity manager
+│   │   └── YukaSystem.tsx         # R3F component driving Yuka updates
+│   │
+│   ├── rendering/                 # Three.js rendering (36 files)
+│   │   ├── TerrainRenderer.tsx    # Heightfield terrain mesh
+│   │   ├── TerrainPBR.tsx         # PBR terrain materials
+│   │   ├── UnitRenderer.tsx       # Bot/unit meshes
+│   │   ├── CubeRenderer.tsx       # Material cube rendering
+│   │   ├── FreeCubeRenderer.tsx   # Loose cubes
+│   │   ├── PlacedCubeRenderer.tsx # Placed/structural cubes
+│   │   ├── WallRenderer.tsx       # Cube-stack walls
+│   │   ├── BeltRenderer.tsx       # Conveyor belt meshes
+│   │   ├── WireRenderer.tsx       # Power/signal wire meshes
+│   │   ├── FactoryRenderer.tsx    # Factory machines
+│   │   ├── FurnaceRenderer.tsx    # Furnace with hopper
+│   │   ├── OreDepositRenderer.tsx # Ore vein meshes
+│   │   ├── CityRenderer.tsx       # Pre-placed city buildings
+│   │   ├── OtterRenderer.tsx      # Otter sprite billboards
+│   │   ├── HologramRenderer.tsx   # Holographic projections
+│   │   ├── FogOfWarRenderer.tsx   # Fog overlay
+│   │   ├── SelectionHighlight.tsx # Emissive glow on hover/select
+│   │   ├── StockpileGlow.tsx      # Cube stockpile indicator
+│   │   ├── HarvestParticles.tsx   # Grinding particle effects
+│   │   ├── StormSky.tsx           # Storm dome skybox
+│   │   ├── InstancedCubeRenderer.tsx + InstancedCubeManager.ts  # (built, not wired)
+│   │   ├── materials/             # PBR material system (10 files)
+│   │   │   ├── MaterialFactory.ts      # Composable PBR from texture sets
+│   │   │   ├── CubeMaterialProvider.tsx # Per-cube PBR (15 material types)
+│   │   │   ├── cubePBRMaterials.json   # PBR texture map configs
+│   │   │   ├── NormalMapComposer.ts    # Layered detail (bolts, seams, vents)
+│   │   │   └── MetalMaterial / BeltMaterial / CircuitMaterial / TerrainMaterial
+│   │   ├── procgen/               # Procedural geometry (7 files)
+│   │   │   ├── PanelGeometry.ts        # Beveled panels with insets, bolts
+│   │   │   ├── BotGenerator.ts + BotParts.ts  # Faction-distinct bot meshes
+│   │   │   ├── BuildingGenerator.ts    # Procedural machine buildings
+│   │   │   ├── OreDepositGenerator.ts  # Organic ore deposit shapes
+│   │   │   └── PanelDemo.tsx           # Interactive panel demo
+│   │   └── shaders/
+│   │       └── fogShader.ts       # Custom fog GLSL
+│   │
+│   ├── input/                     # Player input (8 files)
+│   │   ├── FPSCamera.tsx          # First-person camera (pointer lock)
+│   │   ├── FPSInput.tsx           # Keyboard/mouse + touch input
+│   │   ├── FPSMovement.ts         # Walk, sprint, jump, gravity
+│   │   ├── ObjectSelectionSystem.tsx  # Rapier raycast -> radial menu
+│   │   ├── raycastUtils.ts        # Physics raycast helpers
+│   │   └── selectionState.ts      # Selection state store
+│   │
+│   ├── audio/                     # Tone.js audio (10 files)
+│   │   ├── SoundEngine.ts         # Core Tone.js synth engine
+│   │   ├── SynthSounds.ts         # Procedural synth sound definitions
+│   │   ├── GameSounds.ts          # Game event sound mappings
+│   │   ├── SpatialAudio.ts        # 3D positional audio
+│   │   ├── StormAmbience.ts       # Ambient storm soundscape
+│   │   ├── FactoryAudio.ts        # Factory machine sounds
+│   │   ├── AudioEventBridge.ts    # ECS event -> audio trigger bridge
+│   │   └── AudioSystem.tsx        # R3F audio system component
+│   │
+│   ├── physics/                   # Rapier WASM (2 files)
+│   │   ├── PhysicsSystem.tsx      # R3F physics provider
+│   │   └── PhysicsWorld.ts        # Rapier world setup
+│   │
+│   ├── save/                      # Persistence (3 files)
+│   │   ├── SaveManager.ts         # IndexedDB save slot management
+│   │   ├── saveLoad.ts            # Save/load orchestration
+│   │   └── schema.ts              # Drizzle ORM schema (for expo-sqlite)
+│   │
+│   └── ui/                        # React HUD components (24 files)
+│       ├── FPSHUD.tsx             # Main game HUD overlay
+│       ├── CoreLoopHUD.tsx        # Harvest/compress/furnace status
+│       ├── ObjectActionMenu.tsx   # Context-sensitive radial menu
+│       ├── RadialActionMenu.tsx   # Radial menu rendering
+│       ├── TechTreePanel.tsx      # Tech tree visualization
+│       ├── QuestPanel.tsx         # Quest tracker
+│       ├── PowerOverlay.tsx       # Power network visualization
+│       ├── InventoryView.tsx      # Inventory panel
+│       ├── SaveLoadMenu.tsx       # Save/load UI
+│       ├── FactionSelect.tsx      # Race selection
+│       ├── OpponentConfig.tsx     # AI opponent configuration
+│       ├── PregameScreen.tsx      # Pre-game setup
+│       ├── TitleScreen.tsx        # Title screen
+│       ├── GameOverScreen.tsx     # Victory/defeat
+│       ├── MobileControls.tsx     # Touch overlay
+│       ├── MobileJoystick.tsx     # nipplejs joystick
+│       ├── Bezel.tsx              # Retro CRT bezel frame
+│       └── ErrorBoundary.tsx      # React error boundary
+│
+├── config/                        # JSON tunables (39 files + index.ts)
+├── app/                           # Expo Router screens (scaffolded)
+├── public/textures/materials/     # PBR texture maps (Git LFS)
+├── assets/                        # GLB models (Git LFS)
+├── docs/design/                   # GDD design documents (002-005)
+├── tests/e2e/                     # Playwright E2E tests
+├── .github/workflows/             # CI + Deploy
+├── jest.config.js                 # Jest with ts-jest
+├── biome.json                     # Biome linter
+├── vite.config.ts                 # Vite bundler
+├── app.json / metro.config.js     # Expo (scaffolded)
+└── tsconfig.json                  # TypeScript
+```
 
-### Storm Model
+---
+
+## ECS Architecture
+
+### Miniplex (Current)
+
+The game runs on Miniplex 2.0 with a single `Entity` interface where all components are optional properties. Miniplex queries select entities by which components they have.
+
+**Entity type** (`src/ecs/types.ts`) -- 30+ optional component fields including:
+
+- **Identity**: `id`, `faction` ("player" | "cultist" | "rogue" | "feral" | "wildlife")
+- **Spatial**: `worldPosition` (continuous 3D Vec3 -- single source of truth for position)
+- **Unit**: type, speed, displayName, functional/broken component list (`UnitComponent[]`)
+- **Factory**: `belt`, `wire`, `miner`, `processor`, `item`
+- **Materials**: `oreDeposit`, `materialCube`, `placedAt`, `grabbable`, `powderStorage`, `hopper`, `cubeStack`
+- **Ownership**: `heldBy`, `onBelt`, `inHopper` (entity ID references)
+- **AI/Signal**: `hackable`, `signalRelay`, `automation`
+- **FPS**: `playerControlled` (isActive, yaw, pitch)
+- **Visual**: `hologram`, `otter`
+- **Structural**: `building`, `lightningRod`, `navigation`, `mapFragment`
+
+**Archetype queries** (`src/ecs/world.ts`):
 
 ```ts
-interface StormState {
-  intensity: number           // 0.0–1.0, increases over game time
-  strikeFrequency: number     // strikes per tick outside protection zones
-  currentPhase: "calm" | "building" | "active" | "surge"
-  phaseTimer: number
-}
+const units         = world.with("unit", "worldPosition", "mapFragment");
+const playerBots    = world.with("playerControlled", "unit", "worldPosition");
+const buildings     = world.with("building", "worldPosition");
+const lightningRods = world.with("lightningRod", "building", "worldPosition");
+const belts         = world.with("belt", "worldPosition");
+const placedCubes   = world.with("placedAt", "materialCube", "worldPosition");
+const miners        = world.with("miner", "building", "worldPosition");
+const processors    = world.with("processor", "building", "worldPosition");
+const hackables     = world.with("hackable", "worldPosition");
+const otters        = world.with("otter", "worldPosition");
+const holograms     = world.with("hologram", "worldPosition");
 ```
 
-Storm intensity cycles through phases and trends upward over the game. During surges, lightning rods produce more power but random strikes are more dangerous.
+Key helper: `getActivePlayerBot()` returns the bot the player is currently piloting. `switchBot()` and `switchBotTo()` handle bot switching.
 
-### Power Distribution (BFS)
+### Koota Migration (In Progress)
 
-```
-1. For each lightning rod: currentOutput = rodCapacity × stormIntensity × phaseMultiplier
-2. Build power graph: rods → distribution lines → connected buildings/stations
-3. BFS from rods, distributing available power to connected entities
-4. Entities mark powered = true/false
-5. Robots stationary near rod infrastructure: may draw unlimited power (Q32, TBD)
-```
+`src/ecs/koota/` contains the migration scaffolding:
 
-### Protection Zones
+- `traits.ts` -- Koota trait definitions mirroring Miniplex components
+- `world.ts` -- Koota world instance
+- `queries.ts` -- Koota reactive queries
+- `bridge.ts` -- Bidirectional Miniplex <-> Koota sync for incremental migration
+- `serialize.ts` -- Koota world serialization for save/load
+- `MIGRATION_STATUS.md` -- Detailed migration plan
 
-Each lightning rod defines a `protectionRadius`. Units within the radius are shielded from random strikes. Outside: vulnerable.
+Koota brings trait-based SoA storage, relations, reactive queries, and change detection. The bridge allows systems to be migrated one at a time while both ECS instances stay in sync.
+
+---
+
+## System Inventory
+
+The `src/systems/` directory contains 140 system files totaling approximately 41,000 lines.
+
+### Core Loop (Per-Frame -- Harvest, Compress, Build)
+
+| System | File | Purpose |
+|--------|------|---------|
+| Harvesting | `harvesting.ts` | Ore grinding -> powder accumulation |
+| Harvest+Compress | `harvestCompress.ts` | Harvest-to-compress state bridge |
+| Compression | `compression.ts` | Powder -> physical cube ejection |
+| Compression Juice | `compressionJuice.ts` | Screen shake, pressure/heat overlays |
+| Furnace | `furnace.ts` | Furnace state management |
+| Furnace Processing | `furnaceProcessing.ts` | Hopper -> recipe -> output cube |
+| Fabrication | `fabrication.ts` | Build queue progression |
+| Grabber | `grabber.ts` | Cube grab/carry/drop/throw + quickDeposit |
+| Held Cube Sync | `heldCubeSync.ts` | Sync held cube to bot hand position |
+
+### Factory and Infrastructure (Tick-Based)
+
+| System | File | Purpose |
+|--------|------|---------|
+| Belt Transport | `beltTransport.ts` | Physical cube movement with spacing/back-pressure |
+| Belt Routing | `beltRouting.ts` | Belt-to-belt and belt-to-machine connections |
+| Mining | `mining.ts` | Automated drill ore extraction |
+| Processing | `processing.ts` | Smelter/refiner/separator recipes |
+| Power | `power.ts` | Lightning rod output based on storm phase |
+| Power Routing | `powerRouting.ts` | Power distribution BFS through wire graph |
+| Wire Network | `wireNetwork.ts` | Wire connection propagation |
+| Wire Builder | `wireBuilder.ts` | Wire placement and validation |
+| Signal Network | `signalNetwork.ts` | Signal relay BFS connectivity |
+| Building Placement | `buildingPlacement.ts` | Ghost preview, validation, construction |
+| Machine Assembly | `machineAssembly.ts` | Assemble machines from cube patterns |
+| Pattern Matcher | `patternMatcher.ts` | Match cube arrangements against blueprints |
+| Grid Snap | `gridSnap.ts` | Snap placement to terrain grid |
+
+### Cube Economy
+
+| System | File | Purpose |
+|--------|------|---------|
+| Cube Stacking | `cubeStacking.ts` | Snap-grid registration, topple detection |
+| Structural Collapse | `structuralCollapse.ts` | Collapse when support cubes removed |
+| Cube Placement | `cubePlacement.ts` | Placement validation |
+| Cube Physics | `cubePhysicsModel.ts` | Rapier rigid body parameters per material |
+| Cube Material Props | `cubeMaterialProperties.ts` | Per-material physics (weight, friction) |
+| Cube Damage | `cubeDamage.ts` | Per-cube HP and destruction |
+| Cube Ammo | `cubeAmmo.ts` | Cubes as throwable ammunition |
+| Cube Economy | `cubeEconomy.ts` | Value/trade calculations |
+| Cube Pile Tracker | `cubePileTracker.ts` | Stockpile location tracking |
+| Decoy Pile | `decoyPile.ts` | Fake piles to misdirect raiders |
+| Quick Deposit | `quickDeposit.ts` | Quick-deposit cubes into nearby hoppers |
+| Wall Building | `wallBuilder.ts`, `wallBuilding.ts`, `wallPlacement.ts` | Walls from cube stacks |
+
+### Combat
+
+| System | File | Purpose |
+|--------|------|---------|
+| Combat | `combat.ts` | Tick-based damage resolution |
+| FPS Combat | `fpsCombat.ts` | Real-time first-person combat |
+| Damage Model | `damageModel.ts` | Component-based damage (functional/broken parts) |
+| Turret | `turret.ts` | Automated defense turrets |
+| Raid System | `raidSystem.ts` | Raid state machine (scout -> approach -> steal -> flee) |
+| Raid Targeting | `raidTargeting.ts` | AI raid target selection |
+| Hacking | `hacking.ts` | Compute-based entity hacking |
+| Breach Detection | `breachDetection.ts` | Unauthorized access detection |
+| Shelter | `shelterSystem.ts` | Cover/shelter mechanics |
+
+### AI and Automation
+
+| System | File | Purpose |
+|--------|------|---------|
+| AI Civilization | `aiCivilization.ts` | AI faction economic simulation |
+| AI Peace Period | `aiPeacePeriod.ts` | Early-game aggression delay |
+| Cultist AI | `cultistAI.ts` | Cultist faction behavior |
+| Enemies | `enemies.ts` | Feral/rogue unit spawning and behavior |
+| Bot Automation | `botAutomation.ts` | Routine execution (patrol/guard/work/follow) |
+| Bot Command | `botCommand.ts` | Command queue for bot orders |
+| Bot Fleet | `botFleetManager.ts` | Multi-bot fleet coordination |
+| Noise Attraction | `noiseAttraction.ts` | Sound-based enemy attraction |
+
+### Territory and Exploration
+
+| System | File | Purpose |
+|--------|------|---------|
+| Exploration | `exploration.ts` | Reveal chunks as units move |
+| Fragment Merge | `fragmentMerge.ts` | Merge map fragments when robots meet |
+| Fog of War | `fogOfWar.ts`, `fogOfWarManager.ts` | Hidden/explored/visible states |
+| Territory | `territory.ts`, `territoryControl.ts`, `territoryEffects.ts` | Claim, contestation, decay |
+| Outpost | `outpost.ts` | Territory outpost mechanics |
+
+### Progression and Quests
+
+| System | File | Purpose |
+|--------|------|---------|
+| Tech Tree | `techTree.ts`, `techResearch.ts`, `techEffects.ts` | Research + bonuses |
+| Quest System | `questSystem.ts`, `proceduralQuests.ts`, `questDialogue.ts` | Quest tracking + dialogue |
+| Otters | `otters.ts`, `otterTrade.ts` | Otter wandering, dialogue, trading |
+| Discovery | `discoverySystem.ts` | Exploration discovery events |
+| Diplomacy | `diplomacySystem.ts` | Inter-faction relations |
+| Victory | `victoryTracking.ts`, `gameOverDetection.ts` | Win/loss evaluation |
+
+### Environment
+
+| System | File | Purpose |
+|--------|------|---------|
+| Weather | `weatherSystem.ts`, `weatherEffects.ts` | Weather state + gameplay effects |
+| Storm | `stormEscalation.ts`, `stormForecast.ts` | Storm intensity + prediction |
+| Hazards | `environmentHazards.ts` | Environmental damage zones |
+| Biomes | `biomeSystem.ts` | Biome assignment and properties |
+| Map Generator | `mapGenerator.ts` | Procedural world generation |
+| Ore Spawner | `oreSpawner.ts` | Ore deposit placement |
+
+### Infrastructure
+
+| System | File | Purpose |
+|--------|------|---------|
+| Event Bus | `eventBus.ts` | Typed publish/subscribe (25 event types) |
+| Spatial Index | `spatialIndex.ts` | Spatial partitioning for queries |
+| Action Registry | `actionRegistry.ts`, `contextualActions.ts` | Contextual action dispatch |
+| Screen Shake | `screenShake.ts` | Camera shake effects |
+| Save/Load | `saveLoad.ts`, `newGameInit.ts`, `playerEntity.ts` | Persistence + initialization |
+| Settings | `settingsSystem.ts`, `balanceTuning.ts` | Runtime configuration |
+
+---
+
+## JSON Config System
+
+All game balance is externalized to 39 JSON files in `config/`. The type-safe loader at `config/index.ts` imports every JSON file and re-exports them as a single `config` object with full TypeScript inference via `typeof`:
 
 ```ts
-function isProtected(position: GridCell): boolean {
-  for (const rod of lightningRods) {
-    if (gridDistance(position, rod.position) <= rod.lightningRod.protectionRadius) {
-      return true
-    }
-  }
-  return false
-}
+import { config } from '../config';
+
+const beltSpeed = config.belts.tiers.fast.speed;          // fully typed
+const reclaimerBias = config.civilizations.reclaimers;     // exact shape known
+const scrapRate = config.mining.rates.scrap_metal;         // number
 ```
+
+Balance changes -- belt speeds, ore extraction rates, recipe costs, tech tree unlocks, combat damage, raid timing -- never require code changes.
+
+**Config files by domain:**
+
+- **Economy**: `units.json`, `buildings.json`, `belts.json`, `mining.json`, `processing.json`, `furnace.json`, `cubeMaterials.json`, `crafting.json`, `inventory.json`
+- **Combat**: `combat.json`, `hacking.json`, `enemies.json`
+- **4X**: `civilizations.json`, `technology.json`, `territory.json`, `diplomacy.json`, `victory.json`, `deposits.json`
+- **World**: `terrain.json`, `mapPresets.json`, `biomes.json`, `weather.json`, `environmentHazards.json`
+- **Visual**: `materials.json`, `factionVisuals.json`, `rendering.json`, `textureMapping.json`, `particles.json`
+- **Gameplay**: `quests.json`, `botMovement.json`, `botAutomation.json`, `power.json`, `interaction.json`, `camera.json`, `discoveries.json`, `progression.json`, `achievements.json`
+- **Assets**: `assetMapping.json`, `audio.json`
 
 ---
 
-## 5. Compute and Signal Systems
+## AI Architecture
 
-### Global Compute Pool
+Three-tier AI with clear separation between strategic, tactical, and movement layers.
+
+### Tier 1: CivilizationGovernor (GOAP)
+
+`src/ai/goap/CivilizationGovernor.ts` -- one per AI faction. Each faction (Reclaimers, Volt Collective, Signal Choir, Iron Creed) has a governor with personality-weighted goal evaluators defined in `config/civilizations.json`.
+
+Supporting files:
+- `GOAPPlanner.ts` -- A* search over world state conditions
+- `GoalTypes.ts` -- strategic goals (expand, gather, defend, research, attack, scout, trade, hoard)
+- `ActionTypes.ts` -- GOAP actions with preconditions, effects, and costs
+- `FactionPersonality.ts` -- per-race personality weights + situational modifiers
+
+The `aiCivilization.ts` system ticks the governor each simulation tick, translating GOAP plans into bot orders.
+
+### Tier 2: BotBrain (FSM)
+
+`src/ai/BotBrain.ts` -- finite state machine for individual bot behavior with 9 states:
+
+```
+IDLE -> PATROL -> SEEK_TARGET -> ATTACK -> FLEE
+                                   ^        |
+                                   +--------+
+GUARD -> (engages enemies within radius, returns to post)
+GATHER -> (approach deposit, auto-aggro if threatened)
+RETURN_TO_BASE -> (head home when inventory full)
+FOLLOW -> (trail a leader at set distance)
+```
+
+Each bot receives orders from its faction's governor and combines them with local perception (`BotContext.ts` -- nearby enemies/allies sorted by distance, health ratio, aggro range) to decide state transitions. Output is a `SteeringOutput` with a command (STOP, SEEK, ARRIVE, FLEE, WANDER) and optional target position.
+
+`BotBrainSystem.tsx` is the R3F component that runs BotBrain updates per frame.
+
+### Tier 3: Steering and Navigation
+
+- **`BotVehicle.ts`** -- wraps Yuka `Vehicle` with velocity/acceleration/steering
+- **`SteeringBehaviors.ts`** -- seek, arrive, flee, wander behaviors
+- **`NavMeshBuilder.ts`** -- generates Yuka NavMesh from terrain and obstacles
+- **`PathfindingSystem.ts`** -- A* pathfinding over NavMesh with path follower API
+- **`useBotSteering.ts`** -- React hook linking Miniplex entity to Yuka Vehicle
+- **`YukaManager.ts`** -- singleton Yuka entity manager
+- **`YukaSystem.tsx`** -- R3F component driving Yuka updates each frame
+
+### Perception and Memory
+
+- **`PerceptionSystem.ts`** -- cone-of-sight vision with line-of-sight occlusion
+- **`MemorySystem.ts`** -- entity memory with time-based confidence decay
+- **`ThreatAssessment.ts`** -- multi-factor threat scoring (distance, health, weapon type)
+- **`FormationSystem.ts`** + **`FormationPatterns.ts`** -- squad formations (line/wedge/column/circle) using offset pursuit and separation
+
+---
+
+## Rendering Pipeline
+
+### Scene Composition
+
+`GameScene.tsx` is lazy-loaded via `React.lazy()` to keep the title/pregame bundle small. It sets up:
+
+1. **R3F Canvas** with FPS camera, Rapier physics provider, environment lighting
+2. **Terrain**: `TerrainRenderer` (heightfield mesh) + `TerrainPBR` (PBR materials with preloading)
+3. **Buildings**: `CityRenderer` (pre-placed), `FactoryRenderer` (miners/processors), `FurnaceRenderer`
+4. **Cubes**: `FreeCubeRenderer` (loose), `PlacedCubeRenderer` (structural), `WallRenderer` (stacked)
+5. **Factory**: `BeltRenderer`, `WireRenderer`, `OreDepositRenderer`
+6. **Units**: `UnitRenderer` (bots), `OtterRenderer` (sprite billboards)
+7. **Effects**: `HologramRenderer`, `FogOfWarRenderer`, `StockpileGlow`, `HarvestParticles`, `StormSky`, `Flashlight`, `CameraEffects`
+8. **Input**: `FPSCamera` (pointer lock), `FPSInput`, `ObjectSelectionSystem` (Rapier raycast -> radial menu)
+9. **Systems**: `CoreLoopSystem`, `GameplaySystems`, `InteractionSystem`, `YukaSystem`, `AudioSystem`
+10. **DOM overlay**: `FPSHUD`, `CoreLoopHUD`, `ObjectActionMenu`, `QuestPanel`, `TechTreePanel`, `PowerOverlay`, `MobileControls`, `Bezel`
+
+### PBR Material System
+
+`src/rendering/materials/MaterialFactory.ts` builds composable PBR materials from texture sets (color, metalness, normal, roughness, displacement). `CubeMaterialProvider.tsx` maps each of the 15 ore types to unique PBR treatments configured in `cubePBRMaterials.json`. Specialized materials: `MetalMaterial.ts`, `BeltMaterial.ts`, `CircuitMaterial.ts`, `TerrainMaterial.ts`.
+
+`NormalMapComposer.ts` generates layered normal maps with procedural detail -- bolts, seams, vents, hex patterns -- for the industrial mechanical aesthetic.
+
+### Procedural Geometry
+
+`src/rendering/procgen/` contains generators that build meshes programmatically:
+
+- **`PanelGeometry.ts`** -- beveled panels with configurable insets, bolt holes, and vent slots
+- **`BotGenerator.ts`** + **`BotParts.ts`** -- faction-distinct bot meshes assembled from panels (head, torso, limbs)
+- **`BuildingGenerator.ts`** -- procedural machine building meshes
+- **`OreDepositGenerator.ts`** -- organic ore deposit shapes using noise
+
+These generators are functional but not yet wired into the live R3F rendering pipeline. Units and buildings currently use simpler placeholder meshes.
+
+### Instanced Rendering
+
+`InstancedCubeRenderer.tsx` and `InstancedCubeManager.ts` implement Three.js InstancedMesh for rendering large numbers of cubes efficiently. Built but not yet connected to the live scene.
+
+---
+
+## Physical Cube Economy
+
+Resources are not abstract counters. They are physical 0.5m rigid body cubes with PBR materials, visible to all factions.
+
+### Material States
+
+1. **Raw Deposits** -- organic geological formations protruding from terrain (not cubes). Rendered by `OreDepositRenderer`.
+2. **Powder** -- internal to the player bot. Shown on the HUD capacity bar. Accumulated by `harvesting.ts`.
+3. **Cubes** -- physical Rapier rigid bodies. Can be grabbed, carried, stacked, dropped, thrown as ammo, placed on belts, loaded into hoppers, stolen by enemies.
+
+### Cube Lifecycle
+
+```
+Deposit -> [grind] -> Powder -> [compress] -> Cube -> [carry to furnace] -> [smelt] -> Refined Cube
+                                                   -> [place on belt] -> transported to machine
+                                                   -> [stack] -> wall / structure
+                                                   -> [throw] -> projectile (cubeAmmo)
+                                                   -> [get raided] -> enemy steals cube
+```
+
+### Why Physical?
+
+Your wealth is the stack of cubes sitting outside your base, visible to every faction. Enemies can plan raids (`raidSystem.ts` + `raidTargeting.ts`) to steal your cubes. You can build decoy piles (`decoyPile.ts`) to misdirect them. You can build walls by stacking cubes (`wallBuilding.ts`), where the material type determines structural strength.
+
+---
+
+## Key Design Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| **First-person view** | You ARE the bot. Intimate relationship with the physical economy. `FPSCamera.tsx` with pointer lock. Switch bots via `switchBot()`. |
+| **Contextual interaction** | Click any object -> emissive highlight -> radial action menu. No tool system. Actions depend on target, not equipped item. |
+| **Physical cubes** | Wealth is visible, steal-able, raid-able. Creates natural tension and strategic depth. |
+| **Component-based damage** | Units have functional/broken parts (`UnitComponent[]`), not HP bars. Losing your camera = losing vision. Losing arms = cannot grab cubes. |
+| **Config-driven balance** | 39 JSON files cover every tunable. Balance changes never require code changes. |
+| **Two-loop separation** | Fixed ticks for deterministic simulation; frame rate for smooth rendering. Scene components read ECS in `useFrame`, never through React state. |
+| **Lazy scene loading** | `GameScene` is `React.lazy()`. Title and pregame load instantly; 3D bundle loaded only when game starts. |
+| **Seeded generation** | `src/ecs/seed.ts` provides deterministic PRNG. Same seed phrase = same world. |
+| **Miniplex -> Koota** | Koota adds trait-based SoA storage, relations, reactive queries. Migration is incremental via `bridge.ts`. |
+| **GOAP for strategic AI** | Governors evaluate goals dynamically via planner, not scripted behavior trees. |
+| **Yuka for movement** | Vehicle steering with proper velocity/acceleration. NavMesh for pathfinding. Not teleporting. |
+
+---
+
+## State Bridge (ECS to React)
+
+The simulation tick notifies React UI via `useSyncExternalStore`:
 
 ```ts
-function computePoolSystem() {
-  let totalCapacity = 0
-  let totalDemand = 0
+// In src/ecs/gameState.ts
+export function subscribe(listener: () => void): () => void { ... }
+export function getSnapshot(): GameSnapshot { ... }
 
-  for (const entity of playerUnits) {
-    const rc = entity.robotComponents
-    if (!rc) continue
-    const net = rc.computeContribution - rc.computeCost
-    if (net > 0) totalCapacity += net
-    else totalDemand += Math.abs(net)
-  }
-
-  globalState.compute.capacity = totalCapacity
-  globalState.compute.demand = totalDemand
-  globalState.compute.available = totalCapacity - totalDemand
-
-  // Flag units vulnerable to takeover if overextended
-  if (globalState.compute.available < 0) {
-    flagVulnerableUnits()
-  }
+// GameSnapshot contains:
+interface GameSnapshot {
+  tick: number;
+  gameSpeed: number;
+  paused: boolean;
+  fragments: MapFragment[];
+  unitCount: number;
+  enemyCount: number;
+  mergeEvents: MergeEvent[];
+  combatEvents: CombatEvent[];
+  power: PowerSnapshot;
+  resources: ResourcePool;
+  fabricationJobs: FabricationJob[];
+  gameOver: GameOverState | null;
 }
 ```
 
-### Signal Network (BFS from Core)
-
-```ts
-function signalNetworkSystem() {
-  // Start from core infrastructure (server room)
-  const visited = new Set<string>()
-  const queue: Entity[] = [coreEntity]
-
-  while (queue.length > 0) {
-    const current = queue.shift()!
-    // Mark all units within this entity's signal range as connected
-    for (const unit of playerUnits) {
-      if (gridDistance(current.position, unit.position) <= current.signal.range) {
-        unit.signal.connected = true
-        visited.add(unit.id)
-        // If this unit is a relay, add it to the queue
-        if (unit.signal?.relaySource && !visited.has(unit.id)) {
-          queue.push(unit)
-        }
-      }
-    }
-  }
-
-  // Units not visited are disconnected
-  for (const unit of playerUnits) {
-    if (!visited.has(unit.id)) {
-      unit.signal.connected = false
-      // Disconnected units follow last order, are vulnerable to hacking
-    }
-  }
-}
-```
+`CoreLoopSystem` has its own separate store (`subscribeCoreLoop` / `getCoreLoopSnapshot`) for per-frame data (harvesting state, compression progress, furnace snapshots, held cube ID) that changes too frequently for the main tick store.
 
 ---
 
-## 6. Hacking System
+## Testing
 
-### Process
+| Layer | Tool | Location | Count |
+|-------|------|----------|-------|
+| Unit | Jest + ts-jest | `src/*/__tests__/` | 158 test files |
+| Integration | Jest | `src/__tests__/coreLoop.integration.test.ts` | 1 file |
+| E2E | Playwright | `tests/e2e/` | 4 specs |
+| CI | GitHub Actions | `.github/workflows/ci.yml` | Lint + type check + tests |
 
-1. Player selects a hacking-capable unit and targets an enemy machine
-2. System checks: signal link? technique discovered? compute available?
-3. Creates/updates the `hacking` component on the attacking unit
-4. Each sim tick: `progress += computeAllocated / hackDifficulty`
-5. During hacking, the unit is vulnerable (reduced defense)
-6. On completion: target's `faction` flips to `"player"`, compute demand increases
-7. Cultists (entities with `cultist` component) are **immune** — hack attempts are blocked at validation
+Jest config (`jest.config.js`): ts-jest transform, node environment, matches `src/**/__tests__/**/*.test.{ts,tsx}`.
 
-```ts
-function hackingSystem() {
-  for (const entity of world.with("hacking")) {
-    const hack = entity.hacking
-    if (!hack.targetId) continue
+Test files by domain: `src/systems/__tests__/` (138 files, ~67K lines), `src/ai/__tests__/` (10), `src/ecs/__tests__/` (6), `src/input/__tests__/` (2+), `src/save/__tests__/` (1), `src/ui/__tests__/` (1).
 
-    const target = world.get(hack.targetId)
-    if (!target || "cultist" in target) {
-      // Invalid or unhackable target — cancel
-      hack.targetId = null
-      continue
-    }
-
-    if (!entity.signal?.connected) {
-      // Lost signal — hack paused
-      continue
-    }
-
-    if (globalState.compute.available < hack.computeCostPerTick) {
-      // Not enough compute — hack stalls
-      continue
-    }
-
-    globalState.compute.available -= hack.computeCostPerTick
-    hack.progress += hack.computeCostPerTick / getHackDifficulty(target)
-
-    if (hack.progress >= 1.0) {
-      // Success — convert target
-      target.faction = "player"
-      hack.targetId = null
-      hack.progress = 0
-    }
-  }
-}
-```
+Run: `npm test` (unit), `npm run test:e2e` (E2E), `npm run test:e2e:ui` (interactive E2E).
 
 ---
 
-## 7. Combat System
+## Application Flow
 
-Combat is **not a separate mode** — it emerges from component assembly and automation.
-
-### Damage Model
-
-Component-based damage: attacks damage individual `RobotComponent` slots, reducing robot capability progressively rather than a single HP bar depleting.
-
-```ts
-interface WeaponState {
-  component: RobotComponent    // the weapon component
-  cooldown: number
-  range: number                // grid cells
-  damageType: "physical" | "energy" | "lightning"
-}
 ```
-
-### Cultist Lightning Attacks
-
-Cultists call lightning as a combat ability, not a building mechanic:
-
-```ts
-function cultistCombatSystem() {
-  for (const cultist of cultists) {
-    if (cultist.cultist.lightningCooldown > 0) {
-      cultist.cultist.lightningCooldown--
-      continue
-    }
-
-    // Find nearest player unit in line of sight
-    const target = findNearestVisible(cultist, playerUnits)
-    if (!target) continue
-
-    // Spawn a lightning strike entity
-    world.add({
-      lightningStrike: {
-        targetPosition: { x: target.worldPosition.x, y: target.worldPosition.z },
-        damage: BASE_LIGHTNING_DAMAGE * cultist.cultist.lightningPower,
-        sourceType: "cultist",
-        ticksRemaining: 1
-      }
-    })
-    cultist.cultist.lightningCooldown = getCooldownByRank(cultist.cultist.rank)
-  }
-}
+main.tsx (Vite entry)
+  └── App.tsx (phase state machine: title | pregame | playing)
+        ├── "title"   -> TitleScreen.tsx
+        ├── "pregame" -> PregameScreen.tsx (race selection, map config, AI opponents)
+        └── "playing" -> GameScene.tsx (React.lazy, lazy-loaded)
+                           ├── Canvas (R3F)
+                           │   ├── FPSCamera + FPSInput (pointer lock, WASD)
+                           │   ├── PhysicsSystem (Rapier WASM)
+                           │   ├── EnvironmentSetup (lights, HDRI)
+                           │   ├── TerrainRenderer + TerrainPBR
+                           │   ├── CityRenderer + FactoryRenderer + FurnaceRenderer
+                           │   ├── FreeCubeRenderer + PlacedCubeRenderer + WallRenderer
+                           │   ├── BeltRenderer + WireRenderer
+                           │   ├── OreDepositRenderer + LandscapeProps
+                           │   ├── UnitRenderer + OtterRenderer
+                           │   ├── HologramRenderer + FogOfWarRenderer
+                           │   ├── SelectionHighlight + StockpileGlow + WealthIndicator
+                           │   ├── HarvestParticles + StormSky + Flashlight + CameraEffects
+                           │   ├── PlacementPreview
+                           │   ├── ObjectSelectionSystem
+                           │   ├── CoreLoopSystem (per-frame)
+                           │   ├── GameplaySystems (per-frame)
+                           │   ├── InteractionSystem (per-frame)
+                           │   ├── YukaSystem (AI steering)
+                           │   ├── AudioSystem (Tone.js)
+                           │   └── NavMeshDebugRenderer (debug toggle)
+                           └── DOM Overlay
+                               ├── FPSHUD + CoreLoopHUD
+                               ├── ObjectActionMenu
+                               ├── PowerOverlay
+                               ├── QuestPanel + TechTreePanel
+                               ├── InventoryView
+                               ├── MobileControls
+                               ├── SaveLoadMenu
+                               ├── GameOverScreen
+                               └── Bezel
 ```
-
-### Engagement Rules and Automation
-
-Units follow their `combat.engagementRule` when not under direct control:
-
-| Rule | Behavior |
-|------|----------|
-| `attack` | Engage any enemy in range |
-| `flee` | Retreat when enemies detected |
-| `protect` | Attack enemies threatening a designated unit/building |
-| `hold` | Attack only if attacked, don't pursue |
-
-At higher automation levels, units make more sophisticated decisions (flanking, retreating when damaged, calling for support).
-
----
-
-## 8. 3D Rendering
-
-### Scene Structure
-
-```tsx
-<Canvas camera={{ position: [0, 50, 30], fov: 45 }}>
-  <StormSky />           {/* Perpetual storm dome, wormhole pulse */}
-  <ambientLight intensity={0.3} />
-  <StormLighting />      {/* Dynamic directional light simulating storm flashes */}
-
-  {/* Each fragment is its own group, positioned by displayOffset */}
-  {fragments.map(frag => (
-    <group key={frag.id} position={[frag.displayOffset.x, 0, frag.displayOffset.y]}>
-      {/* Chunks within this fragment */}
-      {Array.from(frag.chunks.values()).map(chunk => (
-        <ChunkRenderer key={chunk.id} chunk={chunk} />
-      ))}
-    </group>
-  ))}
-
-  {/* Units — read worldPosition in useFrame, never in React state */}
-  <UnitRenderer />
-
-  {/* Lightning strike effects (transient) */}
-  <LightningEffects />
-
-  {/* Buildings rendered per-instance or instanced mesh */}
-  <BuildingRenderer />
-
-  <TopDownControls />    {/* Custom controls: pan, zoom, no orbit rotation */}
-</Canvas>
-```
-
-### Unit Rendering
-
-```tsx
-function UnitRenderer() {
-  const meshRefs = useRef<Map<string, THREE.Mesh>>(new Map())
-
-  useFrame(() => {
-    for (const entity of units) {
-      const mesh = meshRefs.current.get(entity.id)
-      if (mesh) {
-        mesh.position.set(
-          entity.worldPosition.x,
-          entity.worldPosition.y,
-          entity.worldPosition.z
-        )
-      }
-    }
-  })
-
-  // Render meshes — type determines model
-  return <>{/* ... */}</>
-}
-```
-
-### Abstract vs Detailed Chunk Rendering
-
-- **Detailed chunks:** Vertex-colored BufferGeometry per chunk, building models, props
-- **Abstract chunks:** Wireframe material, wall outlines only, grid overlay — visually distinct "sensor data" feel
-- **Stale chunks:** Detailed but desaturated/faded (haven't been observed recently)
-
-### Storm Sky
-
-The perpetual storm is always overhead. The wormhole pulses through it.
-
-```tsx
-function StormSky() {
-  // Custom shader: animated storm clouds, wormhole glow center
-  // Intensity driven by stormState from ECS
-  // Lightning flashes sync with lightningStrike entities
-}
-```
-
----
-
-## 9. Camera Controls (Mobile-First)
-
-**Not OrbitControls.** Syntheteria uses a top-down strategic camera designed for touch.
-
-### Touch (Primary) — IMPLEMENTED
-
-| Gesture | Action | Status |
-|---------|--------|--------|
-| Two-finger drag | Pan camera | Implemented |
-| Pinch | Zoom in/out | Implemented |
-| Single tap unit | Select unit | Implemented |
-| Single tap ground | Move selected unit | Implemented |
-| Long-press unit | Context menu (move, hack, repair) | Not yet |
-| Long-press ground | Building placement | Via toolbar instead |
-| Two-finger tap | Pause/unpause | Not yet |
-| Swipe from edge | Open panel | Not yet |
-
-> **Design change:** Single-finger drag was moved from camera pan to unit interaction. Camera pan requires two fingers to avoid conflicting with unit tap-to-move.
-
-### Keyboard/Mouse (PC Enhancement)
-
-| Input | Action |
-|-------|--------|
-| WASD / arrows | Pan |
-| Scroll wheel | Zoom |
-| Left-click | Select |
-| Right-click | Move / context command |
-| Click-drag | Box selection |
-
-### Camera Behavior
-
-- **No rotation** — always top-down
-- **Robot focus:** Tap a unit → camera smoothly pans to center on it
-- **First-person peek:** Optional camera-feed view from a robot's sensor (picture-in-picture)
-- **Momentum scrolling:** Pan has inertia on touch for natural feel
-- **Zoom limits:** Prevent zooming too far in (performance) or too far out (lost context)
-
----
-
-## 10. Building Placement
-
-Same flow as the original proposal, but buildings are setting-appropriate:
-
-| Building | Purpose |
-|----------|---------|
-| Lightning Rod | Power generation from storm + protection radius |
-| Power Conduit | Connect rods to buildings, extend power network |
-| Fabrication Unit | Manufacture components from materials |
-| Server Rack | Stationary compute contributor |
-| Relay Station | Extend signal range for unit connectivity |
-| Storage Depot | Material storage |
-| Defense Turret | Automated defense (late game) |
-
-**Placement flow:**
-1. Select building type from toolbar
-2. Ghost preview follows cursor, snapped to grid
-3. Green = valid (terrain OK, cost met, power network reachable), Red = invalid
-4. Click → deduct materials → spawn ECS entity → mark grid cells occupied/unwalkable
-5. Building starts unpowered until connected to power network
-
----
-
-## 11. Unit Selection and Commands
-
-### Touch (Primary)
-
-- **Tap unit:** Select it. Tap another to switch. Tap void to deselect.
-- **Long-press selected unit → drag:** Move command (shows path preview)
-- **Long-press enemy machine:** Context radial → Attack / Hack
-- **Long-press friendly building:** Context radial → Repair / Enter
-- **Multi-select:** Tap first unit, then tap additional units (additive). Or use a "select all nearby" button.
-
-### Mouse (PC)
-
-- **Left-click:** Select unit (or building). Raycasts through R3F.
-- **Right-click on ground:** Move selected units (compute A* path, attach Navigation component)
-- **Right-click on enemy machine:** Context menu → Attack / Hack (if hackable)
-- **Right-click on friendly building:** Context menu → Repair / Garrison
-- **Box selection:** Click-drag rectangle selects all player units within bounds
-- **Ctrl+number:** Assign group. **Number:** Recall group.
-
-### Shared
-
-All input methods ultimately call the same ECS command functions (`moveUnitsTo`, `attackTarget`, `hackTarget`, etc.). The input layer is thin and swappable.
-
----
-
-## 12. UI Overlay (React DOM)
-
-```tsx
-<div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-  {/* Top bar: global resources */}
-  <ResourceBar energy={snap.energy} compute={snap.compute} materials={snap.materials} />
-
-  {/* Left: building toolbar */}
-  <BuildingToolbar onSelect={setBuildingType} />
-
-  {/* Bottom: selected unit info / robot components */}
-  <UnitInfoPanel selected={snap.selectedUnits} />
-
-  {/* Bottom-right: minimap showing all fragments */}
-  <Minimap fragments={snap.fragments} units={snap.unitPositions} />
-
-  {/* Top-right: game speed controls */}
-  <SpeedControls speed={snap.gameSpeed} onPause={pause} onSetSpeed={setSpeed} />
-
-  {/* Contextual: hacking progress, fabrication queue, automation editor */}
-  <ContextualPanels />
-
-  {/* Story narration overlay */}
-  <NarrationOverlay />
-</div>
-```
-
-All interactive elements get `pointerEvents: "auto"`.
-
-### State Bridge
-
-```ts
-const useGameSnapshot = () => useSyncExternalStore(
-  gameWorld.subscribe,    // called after each sim tick
-  gameWorld.getSnapshot   // returns immutable snapshot
-)
-```
-
-Scene components read ECS directly in `useFrame`. UI components read snapshots.
-
----
-
-## 13. Persistence
-
-### Save Format
-
-```ts
-interface SaveData {
-  version: number
-  gameTick: number
-  stormState: StormState
-  globalCompute: ComputeState
-  fragments: MapFragment[]          // all fragment data including chunk grids
-  entities: SerializedEntity[]      // full ECS dump
-  discoveredBlueprints: string[]
-  discoveredTechniques: string[]
-  escalationLevel: number
-}
-```
-
-### Storage
-
-- Primary: IndexedDB (larger save files, chunk data can be big)
-- Fallback: localStorage (small saves only)
-- Auto-save every N ticks
-- Manual save/load from UI
-
----
-
-## 14. Build Order
-
-| Phase | What | Key Validation | Status |
-|-------|------|----------------|--------|
-| 1 | Chunk grid + terrain generation | Can create/render chunks with abstract and detailed modes | **Done** |
-| 2 | Fragment system + void rendering | Multiple fragments float independently in void | **Done** |
-| 3 | Camera (top-down pan/zoom) | Works on desktop and mobile touch | **Done** |
-| 4 | Unit spawning + movement | Units move within fragments, smooth interpolation | **Done** |
-| 5 | Exploration system | Robots reveal chunks as they move, abstract vs detailed | **Done** |
-| 6 | Fragment merging | Two robots meeting triggers merge animation | **Done** |
-| 7 | ECS simulation loop | Fixed-tick systems run in order | **Done** |
-| 8 | Lightning rods + power network | Power distribution, protection zones | **Done** |
-| 9 | Compute + signal systems | Global compute pool, signal BFS, disconnection | Pending |
-| 10 | State bridge + UI overlay | Resource bar, minimap, unit panels | **Done** |
-| 11 | Building placement | Ghost preview, validation, construction | **Done** |
-| 12 | Robot components + fabrication | Component slots, assembly validation, fabrication queues | **Done** (basic) |
-| 13 | Pathfinding + navigation | A* over navmesh, building obstacles | **Done** |
-| 14 | Selection + commands | Click, tap, right-click commands | **Done** |
-| 15 | Hacking system | Target selection, progress, conversion | Pending |
-| 16 | Combat + enemies | Feral machines, component-based damage | **Done** (feral only) |
-| 17 | Automation routines | Engagement rules, patrol routes, behavior editor | Pending |
-| 18 | Storm progression + escalation | Intensifying storm, cultist aggression | Pending |
-| 19 | Audio | Storm ambience, lightning cracks, UI sounds | Pending |
-| 20 | Save/load | IndexedDB persistence, auto-save | Pending |
-| 21 | Story/narration | Intro sequence, discoveries, lore reveals | **Done** (intro only) |
-| 22 | Polish | Animations, particles, screen shake, juice | Pending |
-
-**Phases 1–14 are substantially complete.** The core gameplay loop works: explore, scavenge, build, fabricate, fight, repair. Next priorities are hacking, cultist enemies, and signal/compute networks.
-
----
-
-## Key Differences from Generic RTS Architecture
-
-| Generic RTS | Syntheteria |
-|-------------|-------------|
-| Single continuous map | Fragmented maps that merge |
-| Simplex noise terrain at startup | Chunks revealed incrementally by robots |
-| Steady-state power buildings | Storm-driven intermittent lightning rods |
-| Fixed unit types | Pure component assembly — any robot is its parts |
-| Standard fog of war | Abstract vs detailed maps based on sensor type |
-| No hacking | Hacking is a core combat/expansion mechanic |
-| Generic enemies | Cultists (unhackable humans with lightning) + hackable machines |
-| OrbitControls | Fixed top-down with pan/zoom (mobile-friendly) |
-| Single terrain mesh | Per-chunk meshes with different detail levels |
-| No consciousness model | Global compute pool, signal network, vulnerability cascades |

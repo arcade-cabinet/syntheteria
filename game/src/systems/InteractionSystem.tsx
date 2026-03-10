@@ -26,10 +26,13 @@ import {
 } from "../input/ObjectSelectionSystem";
 import { onSelectionChange } from "../input/selectionState";
 import type { RadialAction } from "../ui/RadialActionMenu";
-import { getActionsForEntity } from "./actionRegistry";
+import {
+	type ActionContext,
+	getActionsForEntity,
+} from "./actionRegistry";
 import { getOccupiedSlots, placeCube } from "./cubePlacement";
 import { getPlacementPreview, placeHeldCube } from "./cubeStacking";
-import { getAllFurnaces, insertCubeIntoFurnace } from "./furnace";
+import { getAllFurnaces, getFurnace, insertCubeIntoFurnace } from "./furnace";
 import { startSmelting } from "./furnaceProcessing";
 import {
 	dropCube,
@@ -87,6 +90,10 @@ function traitsFromCategory(category: EntityCategory): string[] {
 			return ["Hackable"];
 		case "signalRelay":
 			return ["SignalRelay"];
+		case "oreDeposit":
+			return ["OreDeposit"];
+		case "furnace":
+			return ["Furnace", "Hopper"];
 		default:
 			return [];
 	}
@@ -278,8 +285,32 @@ export function InteractionSystem() {
 				return;
 			}
 
+			// Build action context for dynamic enable/disable
+			const actionContext: ActionContext = {
+				isHoldingCube: getHeldCube() !== null,
+			};
+
+			// If this is a furnace, add furnace-specific context
+			if (traits.includes("Furnace")) {
+				const furnaceData = getFurnace(newId);
+				if (furnaceData) {
+					actionContext.furnaceHasHopperItems =
+						furnaceData.hopperQueue.length > 0;
+					actionContext.furnaceIsProcessing = furnaceData.isProcessing;
+				}
+			}
+
+			// If holding a cube, add the material type
+			const heldId = getHeldCube();
+			if (heldId) {
+				const heldCubeData = getCube(heldId);
+				if (heldCubeData) {
+					actionContext.heldCubeMaterial = heldCubeData.material;
+				}
+			}
+
 			// Get available actions
-			const actions = getActionsForEntity(traits);
+			const actions = getActionsForEntity(traits, actionContext);
 			if (actions.length === 0) {
 				menuState = {
 					visible: false,
@@ -400,6 +431,19 @@ export function InteractionSystem() {
 							detail: { furnaceId: entityId },
 						}),
 					);
+					break;
+				}
+				case "smelt": {
+					// Start smelting the first item in the furnace's hopper
+					const smeltFurnace = getFurnace(entityId);
+					if (
+						smeltFurnace &&
+						smeltFurnace.isPowered &&
+						!smeltFurnace.isProcessing &&
+						smeltFurnace.hopperQueue.length > 0
+					) {
+						startSmelting(entityId);
+					}
 					break;
 				}
 				case "place": {

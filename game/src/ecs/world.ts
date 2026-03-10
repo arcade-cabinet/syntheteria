@@ -2,6 +2,7 @@
  * ECS world instance and archetype queries.
  */
 import { World } from "miniplex";
+import { notifyStateChange } from "./gameState";
 import type { Entity, PlayerEntity } from "./types";
 
 export const world = new World<Entity>();
@@ -19,7 +20,11 @@ export const lightningRods = world.with(
 export const otters = world.with("otter", "worldPosition");
 
 // Placed cube queries (for stockpile rendering)
-export const placedCubes = world.with("placedAt", "materialCube", "worldPosition");
+export const placedCubes = world.with(
+	"placedAt",
+	"materialCube",
+	"worldPosition",
+);
 
 // Factory queries
 export const belts = world.with("belt", "worldPosition");
@@ -45,4 +50,56 @@ export function getActivePlayerBot(): PlayerEntity | null {
 		if (entity.playerControlled.isActive) return entity as PlayerEntity;
 	}
 	return null;
+}
+
+/**
+ * Cycle to the next player-controlled bot.
+ * Preserves the current yaw so the new bot faces the same direction.
+ * Returns the newly active bot, or null if switching was not possible.
+ */
+export function switchBot(): PlayerEntity | null {
+	const bots = Array.from(playerBots);
+	if (bots.length <= 1) return null;
+
+	const currentIdx = bots.findIndex((b) => b.playerControlled.isActive);
+	if (currentIdx < 0) return null;
+
+	// Deactivate current
+	bots[currentIdx].playerControlled.isActive = false;
+
+	// Activate next
+	const nextIdx = (currentIdx + 1) % bots.length;
+	bots[nextIdx].playerControlled.isActive = true;
+	bots[nextIdx].playerControlled.yaw = bots[currentIdx].playerControlled.yaw;
+	bots[nextIdx].playerControlled.pitch = 0;
+
+	notifyStateChange();
+	return bots[nextIdx] as PlayerEntity;
+}
+
+/**
+ * Switch to a specific bot by entity ID.
+ * Used by the contextual interaction menu "switch" action.
+ * Returns the newly active bot, or null if the entity was not found.
+ */
+export function switchBotTo(entityId: string): PlayerEntity | null {
+	const bots = Array.from(playerBots);
+
+	const target = bots.find((b) => b.id === entityId);
+	if (!target) return null;
+	if (target.playerControlled.isActive) return target as PlayerEntity; // already active
+
+	// Deactivate current
+	const current = bots.find((b) => b.playerControlled.isActive);
+	if (current) {
+		current.playerControlled.isActive = false;
+		// Preserve yaw direction
+		target.playerControlled.yaw = current.playerControlled.yaw;
+	}
+
+	target.playerControlled.isActive = true;
+	target.playerControlled.pitch = 0;
+
+	notifyStateChange();
+	return target as PlayerEntity;
 }

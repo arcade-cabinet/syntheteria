@@ -24,16 +24,21 @@ import {
 	type PowerSnapshot,
 	powerSystem,
 } from "../systems/power";
-import { updateQuests } from "../systems/questSystem";
 import { updatePowerGrid } from "../systems/powerRouting";
 import { processingSystem } from "../systems/processing";
+import { updateQuests } from "../systems/questSystem";
 import { repairSystem } from "../systems/repair";
 import {
 	getResources,
 	type ResourcePool,
 	resourceSystem,
 } from "../systems/resources";
+import { getActiveRaidIds, executeRaid } from "../systems/raidSystem";
 import { signalNetworkSystem } from "../systems/signalNetwork";
+import { updateResearch } from "../systems/techTree";
+import { applyTechEffects } from "../systems/techEffects";
+import { getAllTerritories } from "../systems/territory";
+import { applyContestationDecay } from "../systems/territoryEffects";
 import { wireNetworkSystem } from "../systems/wireNetwork";
 import {
 	getAllFragments,
@@ -135,6 +140,23 @@ export function simulationTick() {
 	combatSystem();
 	otterSystem();
 	updateQuests(1);
+
+	// Territory contestation decay (overlapping faction territories weaken)
+	applyContestationDecay([...getAllTerritories()]);
+
+	// Tech research progression for all factions
+	for (const factionId of ["player", "reclaimers", "volt_collective", "signal_choir", "iron_creed"]) {
+		const completedTech = updateResearch(factionId, 1);
+		if (completedTech) {
+			applyTechEffects(factionId);
+		}
+	}
+
+	// Execute active raids (state machine advance)
+	for (const raidId of getActiveRaidIds()) {
+		executeRaid(raidId, 1);
+	}
+
 	updateDisplayOffsets();
 
 	snapshot = null;
@@ -145,6 +167,16 @@ function notify() {
 	for (const listener of listeners) {
 		listener();
 	}
+}
+
+/**
+ * Force a state change notification without running a simulation tick.
+ * Used when game-relevant state changes outside the tick loop
+ * (e.g., switching the active player bot).
+ */
+export function notifyStateChange() {
+	snapshot = null;
+	notify();
 }
 
 export function subscribe(listener: () => void): () => void {

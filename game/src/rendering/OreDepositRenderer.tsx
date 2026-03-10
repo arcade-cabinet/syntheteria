@@ -1,26 +1,23 @@
 /**
- * OreDepositRenderer — renders ore deposit entities as sphere/rock meshes.
+ * OreDepositRenderer — renders ore deposit entities using PBR materials.
  *
- * Reads from oreSpawner.getAllDeposits() each frame and renders each deposit
- * as a dodecahedron with a material color matching the ORE_TYPE_CONFIGS.
- * The mesh has userData.entityId set for raycast selection by
- * ObjectSelectionSystem.
+ * Each deposit is a dodecahedron (organic rock shape) with PBR material
+ * matching its ore type. Uses the same material resolution system as cubes
+ * for visual consistency (scrap_iron cube came from a scrap_iron deposit).
  *
- * Deposits with zero quantity are rendered as depleted (dark, small).
- * Physics colliders are registered via the raw Rapier PhysicsWorld module
- * (addStaticBox approximation — sphere collider not available in the
- * current API, so we use a box that roughly matches the deposit radius).
+ * Deposits with zero quantity are rendered as depleted (darkened, shrunken).
+ * Physics colliders are registered via the raw Rapier PhysicsWorld module.
  */
 
 import { useFrame } from "@react-three/fiber";
 import { useRef, useState } from "react";
 import * as THREE from "three";
+import { registerColliderEntity } from "../input/raycastUtils";
 import { addStaticBox, isPhysicsInitialized } from "../physics/PhysicsWorld";
 import { getAllDeposits, type OreDepositData } from "../systems/oreSpawner";
+import { resolveCubeMaterial } from "./materials/CubeMaterialProvider";
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
+// ─── Constants ───────────────────────────────────────────────────────────
 
 /** Base visual radius for deposits (scaled by colliderRadius) */
 const BASE_SCALE = 0.8;
@@ -28,9 +25,15 @@ const BASE_SCALE = 0.8;
 /** Depleted deposits shrink to this fraction of their original size */
 const DEPLETED_SCALE = 0.3;
 
-// ---------------------------------------------------------------------------
-// Physics collider registration (one-time per deposit)
-// ---------------------------------------------------------------------------
+// ─── Depleted material cache ─────────────────────────────────────────────
+
+const depletedMaterial = new THREE.MeshStandardMaterial({
+	color: "#333333",
+	roughness: 0.9,
+	metalness: 0.1,
+});
+
+// ─── Physics collider registration ───────────────────────────────────────
 
 const registeredColliders = new Set<string>();
 
@@ -41,29 +44,47 @@ function ensureCollider(deposit: OreDepositData): void {
 	const r = deposit.colliderRadius;
 	const yCenter = deposit.position.y + r * 0.5;
 
-	// Approximate sphere collider with a cube of half-extents = radius
-	addStaticBox(deposit.position.x, yCenter, deposit.position.z, r, r * 0.7, r);
+	const collider = addStaticBox(
+		deposit.position.x,
+		yCenter,
+		deposit.position.z,
+		r,
+		r * 0.7,
+		r,
+	);
+
+	if (collider) {
+		registerColliderEntity(collider.handle, deposit.id);
+	}
 
 	registeredColliders.add(deposit.id);
 }
 
-// ---------------------------------------------------------------------------
-// Individual deposit mesh
-// ---------------------------------------------------------------------------
+// ─── Shared geometry ─────────────────────────────────────────────────────
 
-interface DepositMeshProps {
-	deposit: OreDepositData;
+let sharedGeo: THREE.DodecahedronGeometry | null = null;
+
+function getDodecahedronGeo(): THREE.DodecahedronGeometry {
+	if (!sharedGeo) {
+		sharedGeo = new THREE.DodecahedronGeometry(1, 1);
+	}
+	return sharedGeo;
 }
 
-function DepositMesh({ deposit }: DepositMeshProps) {
+// ─── Individual deposit mesh ─────────────────────────────────────────────
+
+function DepositMesh({ deposit }: { deposit: OreDepositData }) {
 	const meshRef = useRef<THREE.Mesh>(null);
-	const color = deposit.color;
 	const depleted = deposit.quantity <= 0;
 	const scale = depleted
 		? deposit.colliderRadius * DEPLETED_SCALE
 		: deposit.colliderRadius * BASE_SCALE;
 
-	// Retry collider registration each frame until physics is ready
+	// Resolve PBR material for this ore type (falls back to flat color if textures unavailable)
+	const material = depleted
+		? depletedMaterial
+		: resolveCubeMaterial(deposit.type);
+
 	useFrame(() => {
 		ensureCollider(deposit);
 	});
@@ -75,28 +96,19 @@ function DepositMesh({ deposit }: DepositMeshProps) {
 			ref={meshRef}
 			position={[deposit.position.x, yPos, deposit.position.z]}
 			scale={[scale, scale * 0.7, scale]}
+			geometry={getDodecahedronGeo()}
+			material={material}
 			userData={{
 				entityId: deposit.id,
 				entityType: "oreDeposit",
 			}}
 			castShadow
 			receiveShadow
-		>
-			<dodecahedronGeometry args={[1, 1]} />
-			<meshStandardMaterial
-				color={depleted ? "#333333" : color}
-				roughness={0.85}
-				metalness={depleted ? 0.1 : 0.4}
-				emissive={depleted ? "#000000" : color}
-				emissiveIntensity={depleted ? 0 : 0.05}
-			/>
-		</mesh>
+		/>
 	);
 }
 
-// ---------------------------------------------------------------------------
-// Main renderer
-// ---------------------------------------------------------------------------
+// ─── Main renderer ───────────────────────────────────────────────────────
 
 export function OreDepositRenderer() {
 	const [snapshots, setSnapshots] = useState<OreDepositData[]>([]);
@@ -105,7 +117,6 @@ export function OreDepositRenderer() {
 	useFrame(() => {
 		const deposits = getAllDeposits();
 
-		// Build a hash to detect changes without re-rendering every frame
 		const hash = deposits
 			.map(
 				(d) =>

@@ -1,38 +1,31 @@
 /**
- * FurnaceRenderer — renders furnace entities as box meshes.
+ * FurnaceRenderer — renders furnace entities using PSX chimney model.
  *
- * Reads from furnace.getAllFurnaces() each frame and renders each furnace
- * as a metallic box with an emissive glow when processing. The mesh
- * has userData.entityId set for raycast selection by ObjectSelectionSystem.
- *
- * Furnaces pulse orange when smelting and show a hopper indicator.
+ * Uses chimney_a_1.glb from the PSX machinery pack as the visual base.
+ * Furnaces pulse orange when smelting and show a glow at the chimney top.
  * Physics colliders are registered via the raw Rapier PhysicsWorld module.
  */
 
+import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { registerColliderEntity } from "../input/raycastUtils";
 import { addStaticBox, isPhysicsInitialized } from "../physics/PhysicsWorld";
 import { type FurnaceData, getAllFurnaces } from "../systems/furnace";
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
+// ─── Constants ───────────────────────────────────────────────────────────
 
-/** Furnace visual dimensions */
-const FURNACE_WIDTH = 1.2;
+const FURNACE_MODEL = "/models/psx/machinery/chimney_a_1.glb";
 const FURNACE_HEIGHT = 1.5;
-const FURNACE_DEPTH = 1.2;
+const FURNACE_HALF_WIDTH = 0.6;
 
 /** Processing glow colors */
 const PROCESSING_EMISSIVE = new THREE.Color(0xff6600);
 const IDLE_EMISSIVE = new THREE.Color(0x331100);
-const POWERED_COLOR = new THREE.Color(0x888888);
-const UNPOWERED_COLOR = new THREE.Color(0x555555);
+const ZERO_EMISSIVE = new THREE.Color(0x000000);
 
-// ---------------------------------------------------------------------------
-// Physics collider registration (one-time per furnace)
-// ---------------------------------------------------------------------------
+// ─── Physics collider registration ───────────────────────────────────────
 
 const registeredColliders = new Set<string>();
 
@@ -40,51 +33,74 @@ function ensureCollider(furnace: FurnaceData): void {
 	if (registeredColliders.has(furnace.id)) return;
 	if (!isPhysicsInitialized()) return;
 
-	addStaticBox(
+	const collider = addStaticBox(
 		furnace.position.x,
 		furnace.position.y + FURNACE_HEIGHT * 0.5,
 		furnace.position.z,
-		FURNACE_WIDTH * 0.5,
+		FURNACE_HALF_WIDTH,
 		FURNACE_HEIGHT * 0.5,
-		FURNACE_DEPTH * 0.5,
+		FURNACE_HALF_WIDTH,
 	);
+
+	if (collider) {
+		registerColliderEntity(collider.handle, furnace.id);
+	}
 
 	registeredColliders.add(furnace.id);
 }
 
-// ---------------------------------------------------------------------------
-// Individual furnace mesh
-// ---------------------------------------------------------------------------
+// ─── Model helpers ───────────────────────────────────────────────────────
 
-interface FurnaceMeshProps {
-	furnace: FurnaceData;
+function computeScale(scene: THREE.Object3D): number {
+	const box = new THREE.Box3().setFromObject(scene);
+	const size = box.getSize(new THREE.Vector3());
+	const maxDim = Math.max(size.x, size.y, size.z);
+	return maxDim > 0 ? FURNACE_HEIGHT / maxDim : 1;
 }
 
-function FurnaceMesh({ furnace }: FurnaceMeshProps) {
-	const bodyRef = useRef<THREE.Mesh>(null);
+function setEmissive(
+	scene: THREE.Object3D,
+	color: THREE.Color,
+	intensity: number,
+) {
+	scene.traverse((child) => {
+		if (child instanceof THREE.Mesh && child.material) {
+			const mat = child.material as THREE.MeshStandardMaterial;
+			if (mat.isMeshStandardMaterial) {
+				mat.emissive = color;
+				mat.emissiveIntensity = intensity;
+			}
+		}
+	});
+}
+
+// ─── Individual furnace mesh ─────────────────────────────────────────────
+
+function FurnaceMesh({ furnace }: { furnace: FurnaceData }) {
 	const glowRef = useRef<THREE.Mesh>(null);
+	const { scene } = useGLTF(FURNACE_MODEL);
+
+	const cloned = useMemo(() => {
+		const clone = scene.clone(true);
+		const scale = computeScale(clone);
+		clone.scale.setScalar(scale);
+		return clone;
+	}, [scene]);
 
 	useFrame(({ clock }) => {
-		// Retry collider registration each frame until physics is ready
 		ensureCollider(furnace);
 
-		if (!bodyRef.current) return;
-
-		const mat = bodyRef.current.material as THREE.MeshStandardMaterial;
 		const processing = furnace.isProcessing;
 		const powered = furnace.isPowered;
 
 		if (processing) {
-			// Pulse emissive when processing
-			const pulse = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 3));
-			mat.emissive.copy(PROCESSING_EMISSIVE);
-			mat.emissiveIntensity = pulse;
+			const pulse =
+				0.3 + 0.7 * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 3));
+			setEmissive(cloned, PROCESSING_EMISSIVE, pulse);
 		} else if (powered) {
-			mat.emissive.copy(IDLE_EMISSIVE);
-			mat.emissiveIntensity = 0.2;
+			setEmissive(cloned, IDLE_EMISSIVE, 0.2);
 		} else {
-			mat.emissive.set(0x000000);
-			mat.emissiveIntensity = 0;
+			setEmissive(cloned, ZERO_EMISSIVE, 0);
 		}
 
 		// Glow sphere on top when processing
@@ -100,40 +116,17 @@ function FurnaceMesh({ furnace }: FurnaceMeshProps) {
 		}
 	});
 
-	const yCenter = furnace.position.y + FURNACE_HEIGHT * 0.5;
-
 	return (
-		<group position={[furnace.position.x, yCenter, furnace.position.z]}>
-			{/* Main body */}
-			<mesh
-				ref={bodyRef}
-				userData={{
-					entityId: furnace.id,
-					entityType: "furnace",
-				}}
-				castShadow
-				receiveShadow
-			>
-				<boxGeometry args={[FURNACE_WIDTH, FURNACE_HEIGHT, FURNACE_DEPTH]} />
-				<meshStandardMaterial
-					color={furnace.isPowered ? POWERED_COLOR : UNPOWERED_COLOR}
-					roughness={0.4}
-					metalness={0.7}
-					emissive={IDLE_EMISSIVE}
-					emissiveIntensity={0}
-				/>
-			</mesh>
-
-			{/* Hopper opening (top inset) */}
-			<mesh position={[0, FURNACE_HEIGHT * 0.45, 0]} receiveShadow>
-				<boxGeometry args={[FURNACE_WIDTH * 0.5, 0.15, FURNACE_DEPTH * 0.5]} />
-				<meshStandardMaterial color="#222222" roughness={0.9} metalness={0.2} />
-			</mesh>
+		<group
+			position={[furnace.position.x, furnace.position.y, furnace.position.z]}
+			userData={{ entityId: furnace.id, entityType: "furnace" }}
+		>
+			<primitive object={cloned} />
 
 			{/* Processing glow on top */}
 			<mesh
 				ref={glowRef}
-				position={[0, FURNACE_HEIGHT * 0.55, 0]}
+				position={[0, FURNACE_HEIGHT + 0.1, 0]}
 				visible={false}
 			>
 				<sphereGeometry args={[0.2, 8, 8]} />
@@ -148,9 +141,7 @@ function FurnaceMesh({ furnace }: FurnaceMeshProps) {
 	);
 }
 
-// ---------------------------------------------------------------------------
-// Main renderer
-// ---------------------------------------------------------------------------
+// ─── Main renderer ───────────────────────────────────────────────────────
 
 export function FurnaceRenderer() {
 	const [snapshots, setSnapshots] = useState<FurnaceData[]>([]);
@@ -160,7 +151,10 @@ export function FurnaceRenderer() {
 		const furnaces = getAllFurnaces();
 
 		const hash = furnaces
-			.map((f) => `${f.id}:${f.isProcessing ? 1 : 0}:${f.isPowered ? 1 : 0}`)
+			.map(
+				(f) =>
+					`${f.id}:${f.isProcessing ? 1 : 0}:${f.isPowered ? 1 : 0}`,
+			)
 			.join("|");
 
 		if (hash !== prevHashRef.current) {
@@ -177,3 +171,6 @@ export function FurnaceRenderer() {
 		</>
 	);
 }
+
+// Preload furnace model
+useGLTF.preload(FURNACE_MODEL);

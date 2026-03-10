@@ -15,7 +15,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useRef, useState } from "react";
 import * as THREE from "three";
 import { getAllCubes, getHeldCube } from "../systems/grabber";
-import { ORE_TYPE_CONFIGS } from "../systems/oreSpawner";
+import { resolveCubeMaterial } from "./materials/CubeMaterialProvider";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -24,29 +24,6 @@ import { ORE_TYPE_CONFIGS } from "../systems/oreSpawner";
 const CUBE_SIZE = 0.5;
 const HELD_FORWARD = 1.2;
 const HELD_DOWN = 0.3;
-
-// ---------------------------------------------------------------------------
-// Material cache
-// ---------------------------------------------------------------------------
-
-const materialCache = new Map<string, THREE.MeshStandardMaterial>();
-
-function getMaterialForType(materialType: string): THREE.MeshStandardMaterial {
-	const cached = materialCache.get(materialType);
-	if (cached) return cached;
-
-	const config = ORE_TYPE_CONFIGS[materialType];
-	const color = config?.color ?? "#808080";
-
-	const mat = new THREE.MeshStandardMaterial({
-		color,
-		roughness: 0.5,
-		metalness: 0.6,
-	});
-
-	materialCache.set(materialType, mat);
-	return mat;
-}
 
 // ---------------------------------------------------------------------------
 // Shared geometry
@@ -153,7 +130,7 @@ export function FreeCubeRenderer() {
 						}
 					}}
 					geometry={geometry}
-					material={getMaterialForType(cube.material)}
+					material={resolveCubeMaterial(cube.material)}
 					position={[cube.x, cube.y, cube.z]}
 					castShadow
 					receiveShadow

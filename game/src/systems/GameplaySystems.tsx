@@ -21,10 +21,18 @@ import {
 	assembleMachine,
 } from "./machineAssembly";
 import {
+	getCubeHP,
+	initCubeHP,
+	registerCubePosition,
+	setOnCubeDestroyed,
+} from "./cubeDamage";
+import {
 	getAllStackedCubes,
 	removeAndTopple,
 } from "./cubeStacking";
 import { unregisterCube } from "./grabber";
+import { gridToWorld } from "./gridSnap";
+import { detectWallSegments } from "./wallBuilding";
 
 // ---------------------------------------------------------------------------
 // Blueprint definitions (passed to pattern matcher, not hardcoded in module)
@@ -140,6 +148,22 @@ export function GameplaySystems() {
 	useEffect(() => {
 		// Reset state on mount
 		patternCheckTimer = 0;
+
+		// Register cube destruction callback: when cubeDamage destroys a cube,
+		// remove it from the stacking system and handle topple
+		setOnCubeDestroyed((cubeId: string) => {
+			const stacked = getAllStackedCubes();
+			for (const [_key, data] of stacked) {
+				if (data.entityId === cubeId) {
+					const toppled = removeAndTopple(data.gridCoord);
+					unregisterCube(cubeId);
+					for (const t of toppled) {
+						unregisterCube(t.entityId);
+					}
+					break;
+				}
+			}
+		});
 	}, []);
 
 	useFrame((_, delta) => {
@@ -149,7 +173,25 @@ export function GameplaySystems() {
 		patternCheckTimer += delta;
 		if (patternCheckTimer >= PATTERN_CHECK_INTERVAL) {
 			patternCheckTimer = 0;
+
+			// Ensure all stacked cubes have HP initialized and positions registered
+			// (only init cubes that don't already have HP to avoid resetting damage)
+			const stacked = getAllStackedCubes();
+			for (const [_key, data] of stacked) {
+				if (!getCubeHP(data.entityId)) {
+					initCubeHP(data.entityId, data.material);
+				}
+				const worldPos = gridToWorld(data.gridCoord);
+				registerCubePosition(data.entityId, {
+					x: worldPos.x,
+					y: worldPos.y,
+					z: worldPos.z,
+				});
+			}
+
 			checkPatternMatches();
+			// Recalculate wall segments when cube arrangements may have changed
+			detectWallSegments();
 		}
 	});
 

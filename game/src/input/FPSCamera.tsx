@@ -16,7 +16,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { getTerrainHeight } from "../ecs/terrain";
-import { getActivePlayerBot, playerBots } from "../ecs/world";
+import { getActivePlayerBot, switchBot, switchBotTo } from "../ecs/world";
 import { joystickState } from "../ui/MobileJoystick";
 
 const EYE_HEIGHT = 1.4;
@@ -86,22 +86,33 @@ export function FPSCamera() {
 		};
 	}, [gl]);
 
-	// --- Keyboard ---
+	// --- Keyboard + bot-switch event ---
 	useEffect(() => {
 		const onKeyDown = (e: KeyboardEvent) => {
 			keys.current.add(e.key.toLowerCase());
-			// Q to switch bots
+			// Q to cycle through player bots
 			if (e.key.toLowerCase() === "q") {
 				switchBot();
 			}
 		};
 		const onKeyUp = (e: KeyboardEvent) =>
 			keys.current.delete(e.key.toLowerCase());
+
+		// Listen for contextual interaction menu "switch" action
+		const onSwitchBot = (e: Event) => {
+			const detail = (e as CustomEvent).detail;
+			if (detail?.entityId) {
+				switchBotTo(detail.entityId);
+			}
+		};
+
 		window.addEventListener("keydown", onKeyDown);
 		window.addEventListener("keyup", onKeyUp);
+		window.addEventListener("coreloop:switch-bot", onSwitchBot);
 		return () => {
 			window.removeEventListener("keydown", onKeyDown);
 			window.removeEventListener("keyup", onKeyUp);
+			window.removeEventListener("coreloop:switch-bot", onSwitchBot);
 		};
 	}, []);
 
@@ -267,23 +278,4 @@ export function FPSCamera() {
 	});
 
 	return null;
-}
-
-// --- Bot switching ---
-
-function switchBot() {
-	const bots = Array.from(playerBots);
-	if (bots.length <= 1) return;
-
-	const currentIdx = bots.findIndex((b) => b.playerControlled.isActive);
-	if (currentIdx < 0) return;
-
-	// Deactivate current
-	bots[currentIdx].playerControlled.isActive = false;
-
-	// Activate next
-	const nextIdx = (currentIdx + 1) % bots.length;
-	bots[nextIdx].playerControlled.isActive = true;
-	bots[nextIdx].playerControlled.yaw = bots[currentIdx].playerControlled.yaw;
-	bots[nextIdx].playerControlled.pitch = 0;
 }

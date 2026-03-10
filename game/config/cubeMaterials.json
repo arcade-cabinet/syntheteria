@@ -1,8 +1,40 @@
 {
   "materials": {
+    "rock": {
+      "displayName": "Rock",
+      "texturePath": "textures/materials/ore_rock/",
+      "texturePrefix": "Rock034_1K-JPG",
+      "hasMetalness": false,
+      "metalness": 0.05,
+      "roughness": 0.9,
+      "displacementScale": 0.04,
+      "envMapIntensity": 0.4,
+      "fallbackColor": "#8B7355"
+    },
+    "scrap_iron": {
+      "displayName": "Scrap Iron",
+      "texturePath": "textures/materials/iron/",
+      "texturePrefix": "Metal038_1K-JPG",
+      "metalness": 0.7,
+      "roughness": 0.55,
+      "displacementScale": 0.03,
+      "envMapIntensity": 0.8,
+      "fallbackColor": "#8B4513"
+    },
+    "scrap_metal": {
+      "displayName": "Scrap Metal",
+      "texturePath": "textures/materials/scrap_metal/",
+      "texturePrefix": "Metal007_1K-JPG",
+      "metalness": 0.6,
+      "roughness": 0.6,
+      "displacementScale": 0.03,
+      "envMapIntensity": 0.7,
+      "fallbackColor": "#666666"
+    },
     "iron": {
       "displayName": "Iron",
       "texturePath": "textures/materials/iron/",
+      "texturePrefix": "Metal038_1K-JPG",
       "metalness": 0.85,
       "roughness": 0.4,
       "displacementScale": 0.02,
@@ -12,15 +44,39 @@
     "copper": {
       "displayName": "Copper",
       "texturePath": "textures/materials/copper/",
+      "texturePrefix": "Metal035_1K-JPG",
       "metalness": 0.95,
       "roughness": 0.3,
       "displacementScale": 0.01,
       "envMapIntensity": 1.2,
       "fallbackColor": "#b87333"
     },
+    "silicon": {
+      "displayName": "Silicon",
+      "texturePath": "textures/materials/silicon/",
+      "texturePrefix": "Concrete012_1K-JPG",
+      "hasMetalness": false,
+      "metalness": 0.15,
+      "roughness": 0.7,
+      "displacementScale": 0.02,
+      "envMapIntensity": 0.6,
+      "fallbackColor": "#A0A0C0"
+    },
+    "titanium": {
+      "displayName": "Titanium",
+      "texturePath": "textures/materials/titanium/",
+      "texturePrefix": "Metal023_1K-JPG",
+      "metalness": 0.9,
+      "roughness": 0.2,
+      "displacementScale": 0.01,
+      "envMapIntensity": 1.5,
+      "fallbackColor": "#C0C0C0"
+    },
     "stone": {
       "displayName": "Stone",
       "texturePath": "textures/materials/stone/",
+      "texturePrefix": "Concrete032_1K-JPG",
+      "hasMetalness": false,
       "metalness": 0.05,
       "roughness": 0.9,
       "displacementScale": 0.04,
@@ -30,6 +86,7 @@
     "carbon": {
       "displayName": "Carbon",
       "texturePath": "textures/materials/carbon/",
+      "texturePrefix": "Metal036_1K-JPG",
       "metalness": 0.3,
       "roughness": 0.6,
       "displacementScale": 0.01,
@@ -39,6 +96,7 @@
     "steel": {
       "displayName": "Steel",
       "texturePath": "textures/materials/steel/",
+      "texturePrefix": "MetalPlates009_1K-JPG",
       "metalness": 0.9,
       "roughness": 0.25,
       "displacementScale": 0.01,
@@ -48,6 +106,7 @@
     "alloy": {
       "displayName": "Alloy",
       "texturePath": "textures/materials/alloy/",
+      "texturePrefix": "DiamondPlate001_1K-JPG",
       "metalness": 0.88,
       "roughness": 0.35,
       "displacementScale": 0.015,
@@ -57,6 +116,8 @@
     "reinforced_concrete": {
       "displayName": "Reinforced Concrete",
       "texturePath": "textures/materials/reinforced_concrete/",
+      "texturePrefix": "Concrete028_1K-JPG",
+      "hasMetalness": false,
       "metalness": 0.1,
       "roughness": 0.85,
       "displacementScale": 0.05,
@@ -66,6 +127,7 @@
     "refined_metal": {
       "displayName": "Refined Metal",
       "texturePath": "textures/materials/steel/",
+      "texturePrefix": "MetalPlates009_1K-JPG",
       "metalness": 0.85,
       "roughness": 0.35,
       "displacementScale": 0.015,
@@ -75,6 +137,7 @@
     "copper_ingot": {
       "displayName": "Copper Ingot",
       "texturePath": "textures/materials/copper/",
+      "texturePrefix": "Metal035_1K-JPG",
       "metalness": 0.95,
       "roughness": 0.25,
       "displacementScale": 0.01,
@@ -84,6 +147,7 @@
     "advanced_alloy": {
       "displayName": "Advanced Alloy",
       "texturePath": "textures/materials/alloy/",
+      "texturePrefix": "DiamondPlate001_1K-JPG",
       "metalness": 0.92,
       "roughness": 0.2,
       "displacementScale": 0.01,

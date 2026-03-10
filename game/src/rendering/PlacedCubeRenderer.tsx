@@ -16,36 +16,13 @@ import {
 	getOccupiedSlots,
 } from "../systems/cubePlacement";
 import { GRID_SIZE, gridToWorld } from "../systems/gridSnap";
-import { ORE_TYPE_CONFIGS } from "../systems/oreSpawner";
+import { resolveCubeMaterial } from "./materials/CubeMaterialProvider";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 const CUBE_SIZE = GRID_SIZE; // 0.5m
-
-// ---------------------------------------------------------------------------
-// Material cache
-// ---------------------------------------------------------------------------
-
-const materialCache = new Map<string, THREE.MeshStandardMaterial>();
-
-function getMaterialForType(materialType: string): THREE.MeshStandardMaterial {
-	const cached = materialCache.get(materialType);
-	if (cached) return cached;
-
-	const config = ORE_TYPE_CONFIGS[materialType];
-	const color = config?.color ?? "#808080";
-
-	const mat = new THREE.MeshStandardMaterial({
-		color,
-		roughness: 0.6,
-		metalness: 0.5,
-	});
-
-	materialCache.set(materialType, mat);
-	return mat;
-}
 
 // ---------------------------------------------------------------------------
 // Shared geometry
@@ -123,7 +100,7 @@ export function PlacedCubeRenderer() {
 				<mesh
 					key={cube.key}
 					geometry={geometry}
-					material={getMaterialForType(cube.material)}
+					material={resolveCubeMaterial(cube.material)}
 					position={[cube.worldX, cube.worldY, cube.worldZ]}
 					castShadow
 					receiveShadow

@@ -1,20 +1,34 @@
 /**
- * Renders all conveyor belts in the world.
+ * Renders all conveyor belts in the world using GLB conveyor models.
  *
- * Each belt is a flat box with metallic side rails, a direction arrow,
- * and an animated scrolling surface. Carried items are shown as small
- * colored boxes interpolated along the belt based on itemProgress.
+ * Each belt segment uses the Kenney ConveyorKit `conveyor.glb` model,
+ * rotated to match the belt direction. Carried items are shown as small
+ * colored cubes interpolated along the belt surface.
+ *
+ * Belt tiers use different model variants:
+ *   - basic: conveyor.glb (plain)
+ *   - fast: conveyor-stripe.glb (striped marking)
+ *   - express: conveyor-bars.glb (safety rails)
  */
 
+import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { getTerrainHeight } from "../ecs/terrain";
-import type { BeltDirection, Entity } from "../ecs/types";
+import type { BeltDirection, BeltTier, Entity } from "../ecs/types";
 import { belts } from "../ecs/world";
-import { createBeltMaterial } from "./materials/BeltMaterial";
+import { resolveCubeMaterial } from "./materials/CubeMaterialProvider";
 
-/** Direction rotation (Y-axis) for pointing arrows */
+// ─── Model paths per tier ────────────────────────────────────────────────
+
+const BELT_MODELS: Record<BeltTier, string> = {
+	basic: "/models/conveyor/conveyor.glb",
+	fast: "/models/conveyor/conveyor-stripe.glb",
+	express: "/models/conveyor/conveyor-bars.glb",
+};
+
+/** Direction rotation (Y-axis) for pointing belt direction */
 const DIRECTION_ROTATIONS: Record<BeltDirection, number> = {
 	north: 0,
 	south: Math.PI,
@@ -30,122 +44,89 @@ const DIRECTION_VECTORS: Record<BeltDirection, { x: number; z: number }> = {
 	west: { x: -1, z: 0 },
 };
 
-/** UV scroll direction (opposite of movement so texture appears to move with items) */
-const UV_SCROLL_DIR: Record<BeltDirection, { u: number; v: number }> = {
-	north: { u: 0, v: 1 },
-	south: { u: 0, v: -1 },
-	east: { u: -1, v: 0 },
-	west: { u: 1, v: 0 },
-};
+// ─── Belt segment with GLB model ─────────────────────────────────────────
 
-/**
- * Arrow geometry — a simple triangle pointing in +Z, rotated per direction.
- */
-function createArrowGeometry(): THREE.BufferGeometry {
-	const shape = new THREE.Shape();
-	shape.moveTo(0, 0.3);
-	shape.lineTo(-0.2, -0.15);
-	shape.lineTo(0.2, -0.15);
-	shape.closePath();
+/** Desired width of a belt segment in world units. */
+const BELT_WORLD_SIZE = 1.0;
 
-	const geo = new THREE.ShapeGeometry(shape);
-	// Rotate so it lies flat on XZ plane pointing -Z (north)
-	geo.rotateX(-Math.PI / 2);
-	return geo;
+function computeBeltScale(scene: THREE.Object3D): number {
+	const box = new THREE.Box3().setFromObject(scene);
+	const size = box.getSize(new THREE.Vector3());
+	const maxXZ = Math.max(size.x, size.z);
+	return maxXZ > 0 ? BELT_WORLD_SIZE / maxXZ : 1;
 }
 
 function BeltSegment({ entity }: { entity: Entity }) {
 	const groupRef = useRef<THREE.Group>(null);
-	const surfaceRef = useRef<THREE.Mesh>(null);
 	const itemRef = useRef<THREE.Mesh>(null);
 
 	const belt = entity.belt!;
 	const pos = entity.worldPosition!;
+	const tier = belt.tier ?? "basic";
 
-	const arrowGeo = useMemo(() => createArrowGeometry(), []);
+	const modelPath = BELT_MODELS[tier] ?? BELT_MODELS.basic;
+	const { scene } = useGLTF(modelPath);
 
-	const surfaceMaterial = useMemo(() => createBeltMaterial(), []);
+	const cloned = useMemo(() => {
+		const clone = scene.clone(true);
+		const scale = computeBeltScale(clone);
+		clone.scale.setScalar(scale);
+		return clone;
+	}, [scene]);
 
 	const rotation = DIRECTION_ROTATIONS[belt.direction];
-	const scrollDir = UV_SCROLL_DIR[belt.direction];
 
-	useFrame((_state, delta) => {
+	useFrame(() => {
 		if (!groupRef.current) return;
 
-		// Position the belt at terrain height
 		const y = getTerrainHeight(pos.x, pos.z);
 		groupRef.current.position.set(pos.x, y, pos.z);
-
-		// Animate UV offset for scrolling surface effect
-		if (surfaceMaterial.map) {
-			surfaceMaterial.map.offset.x += scrollDir.u * belt.speed * delta * 0.5;
-			surfaceMaterial.map.offset.y += scrollDir.v * belt.speed * delta * 0.5;
-		}
 
 		// Update carried item position
 		if (itemRef.current) {
 			if (belt.carrying !== null) {
 				itemRef.current.visible = true;
 				const dir = DIRECTION_VECTORS[belt.direction];
-				// Interpolate from -0.5 to +0.5 along direction
 				const offset = belt.itemProgress - 0.5;
-				itemRef.current.position.set(dir.x * offset, 0.15, dir.z * offset);
+				itemRef.current.position.set(
+					dir.x * offset,
+					0.2,
+					dir.z * offset,
+				);
 			} else {
 				itemRef.current.visible = false;
 			}
 		}
 	});
 
+	// Resolve material for carried item
+	const itemMaterial = belt.carrying
+		? resolveCubeMaterial(belt.carrying)
+		: undefined;
+
 	return (
-		<group ref={groupRef}>
-			{/* Belt surface */}
-			<mesh ref={surfaceRef} position={[0, 0.05, 0]} material={surfaceMaterial}>
-				<boxGeometry args={[1, 0.1, 1]} />
-			</mesh>
-
-			{/* Left rail */}
-			<mesh position={[-0.45, 0.1, 0]}>
-				<boxGeometry args={[0.1, 0.1, 1]} />
-				<meshStandardMaterial
-					color={0x666666}
-					metalness={0.8}
-					roughness={0.3}
-				/>
-			</mesh>
-
-			{/* Right rail */}
-			<mesh position={[0.45, 0.1, 0]}>
-				<boxGeometry args={[0.1, 0.1, 1]} />
-				<meshStandardMaterial
-					color={0x666666}
-					metalness={0.8}
-					roughness={0.3}
-				/>
-			</mesh>
-
-			{/* Direction arrow */}
-			<mesh
-				geometry={arrowGeo}
-				position={[0, 0.12, 0]}
-				rotation={[0, rotation, 0]}
-			>
-				<meshBasicMaterial color={0x00ffaa} />
-			</mesh>
+		<group ref={groupRef} rotation={[0, rotation, 0]}>
+			<primitive object={cloned} />
 
 			{/* Carried item (hidden when not carrying) */}
-			<mesh ref={itemRef} position={[0, 0.15, 0]} visible={false}>
+			<mesh
+				ref={itemRef}
+				position={[0, 0.2, 0]}
+				visible={false}
+				material={itemMaterial}
+			>
 				<boxGeometry args={[0.3, 0.2, 0.3]} />
-				<meshStandardMaterial color={0xffaa33} emissive={0x331100} />
 			</mesh>
 		</group>
 	);
 }
 
+// ─── Main renderer ───────────────────────────────────────────────────────
+
 export function BeltRenderer() {
 	const [beltCount, setBeltCount] = useState(0);
 
 	useFrame(() => {
-		// Track belt count to trigger re-render when belts are added/removed
 		const currentCount = Array.from(belts).length;
 		if (currentCount !== beltCount) {
 			setBeltCount(currentCount);
@@ -159,4 +140,9 @@ export function BeltRenderer() {
 			))}
 		</>
 	);
+}
+
+// Preload all belt models
+for (const path of Object.values(BELT_MODELS)) {
+	useGLTF.preload(path);
 }

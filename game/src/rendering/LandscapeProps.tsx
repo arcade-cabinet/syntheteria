@@ -178,9 +178,15 @@ function PropGroup({
 			geo = new THREE.BoxGeometry(1, 1, 1);
 		}
 
+		const mat = new THREE.MeshStandardMaterial({
+			color: COLORS[type],
+			roughness: type === "scrap" || type === "debris" ? 0.5 : 0.85,
+			metalness: type === "scrap" ? 0.6 : type === "debris" ? 0.3 : 0.05,
+		});
+
 		const instancedMesh = new THREE.InstancedMesh(
 			geo,
-			new THREE.MeshLambertMaterial({ color: COLORS[type] }),
+			mat,
 			instances.length,
 		);
 

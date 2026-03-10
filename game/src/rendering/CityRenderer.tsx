@@ -70,7 +70,11 @@ function BuildingGroup({
 
 		// Main building bodies
 		const mainGeo = new THREE.BoxGeometry(1, 1, 1);
-		const mainMat = new THREE.MeshLambertMaterial({ color: COLORS[type] });
+		const mainMat = new THREE.MeshStandardMaterial({
+			color: COLORS[type],
+			roughness: 0.6,
+			metalness: 0.3,
+		});
 		const main = new THREE.InstancedMesh(mainGeo, mainMat, buildings.length);
 
 		// Accent details — glowing traces/edges

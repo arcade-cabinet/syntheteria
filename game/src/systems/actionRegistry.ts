@@ -20,9 +20,26 @@ export interface Action {
 	category?: "primary" | "secondary" | "danger";
 }
 
+/** Context passed to getActionsForEntity for dynamic enable/disable checks. */
+export interface ActionContext {
+	/** Whether the player is currently holding a cube. */
+	isHoldingCube?: boolean;
+	/** Material type of the held cube, if any. */
+	heldCubeMaterial?: string;
+	/** Whether the target furnace has items in the hopper. */
+	furnaceHasHopperItems?: boolean;
+	/** Whether the target furnace is currently processing. */
+	furnaceIsProcessing?: boolean;
+}
+
 interface TraitPattern {
 	traits: string[];
 	actions: Action[];
+	/**
+	 * Optional function to dynamically adjust actions based on context.
+	 * Called after initial matching — can modify enabled state, add/remove actions.
+	 */
+	adjustActions?: (actions: Action[], context: ActionContext) => Action[];
 }
 
 const registry: TraitPattern[] = [
@@ -125,7 +142,14 @@ const registry: TraitPattern[] = [
 				id: "insert",
 				label: "DROP IN",
 				icon: "\u2B07",
-				enabled: true,
+				enabled: false, // dynamically enabled when player holds a cube
+				category: "primary",
+			},
+			{
+				id: "smelt",
+				label: "SMELT",
+				icon: "\uD83D\uDD25",
+				enabled: false, // dynamically enabled when hopper has items and furnace is idle
 				category: "primary",
 			},
 			{
@@ -136,6 +160,22 @@ const registry: TraitPattern[] = [
 				category: "secondary",
 			},
 		],
+		adjustActions: (actions, context) => {
+			return actions.map((a) => {
+				if (a.id === "insert") {
+					return { ...a, enabled: !!context.isHoldingCube };
+				}
+				if (a.id === "smelt") {
+					return {
+						...a,
+						enabled:
+							!!context.furnaceHasHopperItems &&
+							!context.furnaceIsProcessing,
+					};
+				}
+				return a;
+			});
+		},
 	},
 
 	// ── Furnace (standalone) ─────────────────────────────────────────
@@ -150,6 +190,13 @@ const registry: TraitPattern[] = [
 				category: "primary",
 			},
 			{
+				id: "smelt",
+				label: "SMELT",
+				icon: "\uD83D\uDD25",
+				enabled: false, // dynamically enabled when hopper has items and furnace is idle
+				category: "primary",
+			},
+			{
 				id: "inspect",
 				label: "INSPECT",
 				icon: "\u25C9",
@@ -157,6 +204,19 @@ const registry: TraitPattern[] = [
 				category: "secondary",
 			},
 		],
+		adjustActions: (actions, context) => {
+			return actions.map((a) => {
+				if (a.id === "smelt") {
+					return {
+						...a,
+						enabled:
+							!!context.furnaceHasHopperItems &&
+							!context.furnaceIsProcessing,
+					};
+				}
+				return a;
+			});
+		},
 	},
 
 	// ── Hopper (standalone, on non-furnace machines) ─────────────────
@@ -342,8 +402,14 @@ const registry: TraitPattern[] = [
  * entity's trait set. More-specific patterns (more required traits) are
  * checked first so that, e.g., `['MaterialCube', 'HeldBy']` matches the
  * drop/throw pattern before the grab pattern.
+ *
+ * @param traits - the entity's trait strings
+ * @param context - optional context for dynamic enable/disable of actions
  */
-export function getActionsForEntity(traits: string[]): Action[] {
+export function getActionsForEntity(
+	traits: string[],
+	context: ActionContext = {},
+): Action[] {
 	const traitSet = new Set(traits);
 	const actions: Action[] = [];
 	const matchedIds = new Set<string>();
@@ -355,7 +421,12 @@ export function getActionsForEntity(traits: string[]): Action[] {
 
 	for (const pattern of sorted) {
 		if (pattern.traits.every((t) => traitSet.has(t))) {
-			for (const action of pattern.actions) {
+			// Apply dynamic adjustments if the pattern has an adjustActions hook
+			const patternActions = pattern.adjustActions
+				? pattern.adjustActions(pattern.actions, context)
+				: pattern.actions;
+
+			for (const action of patternActions) {
 				if (!matchedIds.has(action.id)) {
 					matchedIds.add(action.id);
 					actions.push(action);

@@ -33,6 +33,9 @@ import {
 	wires,
 } from "../ecs/world";
 import { getPhysicsWorld, isPhysicsInitialized } from "../physics/PhysicsWorld";
+import { getAllFurnaces } from "../systems/furnace";
+import { getCube } from "../systems/grabber";
+import { getDeposit } from "../systems/oreSpawner";
 import { castSelectionRay, type Vec3 } from "./raycastUtils";
 import { setSelected } from "./selectionState";
 
@@ -58,6 +61,8 @@ export type EntityCategory =
 	| "otter"
 	| "hackable"
 	| "signalRelay"
+	| "oreDeposit"
+	| "furnace"
 	| "ground"
 	| null;
 
@@ -451,6 +456,13 @@ export function ObjectSelectionSystem() {
 
 /** Check if an entity with the given ID still exists in any archetype. */
 function entityExists(id: string): boolean {
+	// Check ore deposits (module registry, not ECS)
+	if (getDeposit(id)) return true;
+	// Check furnaces (module registry, not ECS)
+	for (const f of getAllFurnaces()) if (f.id === id) return true;
+	// Check cubes in grabber registry
+	if (getCube(id)) return true;
+	// Check ECS archetypes
 	for (const e of units) if (e.id === id) return true;
 	for (const e of buildings) if (e.id === id) return true;
 	for (const e of belts) if (e.id === id) return true;

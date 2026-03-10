@@ -17,12 +17,28 @@ import {
 } from "../ecs/gameState";
 import type { UnitComponent } from "../ecs/types";
 import { buildings, getActivePlayerBot, units } from "../ecs/world";
+import { getLastHitResult } from "../systems/fpsCombat";
 
 // Building/fabrication imports reserved for future build-mode HUD panels
 
 const MONO = "'Courier New', monospace";
 
 function Crosshair() {
+	// Flash crosshair on hit (red miss / green hit) for ~200ms after firing
+	const hitResult = getLastHitResult();
+	const age = performance.now() - hitResult.timestamp;
+	const isActive = age < 200;
+	const crosshairColor = isActive
+		? hitResult.hit
+			? "#ff4444"
+			: "#ffaa00"
+		: "#00ffaa88";
+	const dotColor = isActive
+		? hitResult.hit
+			? "#ff4444"
+			: "#ffaa00"
+		: "#00ffaa";
+
 	return (
 		<div
 			style={{
@@ -38,7 +54,7 @@ function Crosshair() {
 				style={{
 					width: "20px",
 					height: "2px",
-					background: "#00ffaa88",
+					background: crosshairColor,
 					position: "absolute",
 					top: "50%",
 					left: "50%",
@@ -49,7 +65,7 @@ function Crosshair() {
 				style={{
 					width: "2px",
 					height: "20px",
-					background: "#00ffaa88",
+					background: crosshairColor,
 					position: "absolute",
 					top: "50%",
 					left: "50%",
@@ -62,7 +78,7 @@ function Crosshair() {
 					width: "3px",
 					height: "3px",
 					borderRadius: "50%",
-					background: "#00ffaa",
+					background: dotColor,
 					position: "absolute",
 					top: "50%",
 					left: "50%",
@@ -110,6 +126,8 @@ function ComponentBar({ comp }: { comp: UnitComponent }) {
 }
 
 function BotStatus() {
+	// Subscribe to state changes so we re-render when the active bot switches
+	useSyncExternalStore(subscribe, getSnapshot);
 	const bot = getActivePlayerBot();
 	if (!bot) return null;
 

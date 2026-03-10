@@ -59,6 +59,30 @@ export const HDRI_PRESETS = {
 		backgroundIntensity: 0.15,
 		environmentIntensity: 0.3,
 	},
+	day_industrial_003: {
+		label: "Day Industrial 003",
+		file: "/textures/hdri/DayEnvironmentHDRI003_1K_HDR.exr",
+		backgroundIntensity: 0.6,
+		environmentIntensity: 1.0,
+	},
+	day_industrial_007: {
+		label: "Day Industrial 007",
+		file: "/textures/hdri/DayEnvironmentHDRI007_1K_HDR.exr",
+		backgroundIntensity: 0.55,
+		environmentIntensity: 0.95,
+	},
+	day_industrial_011: {
+		label: "Day Industrial 011",
+		file: "/textures/hdri/DayEnvironmentHDRI011_1K_HDR.exr",
+		backgroundIntensity: 0.5,
+		environmentIntensity: 0.9,
+	},
+	day_industrial_015: {
+		label: "Day Industrial 015",
+		file: "/textures/hdri/DayEnvironmentHDRI015_1K_HDR.exr",
+		backgroundIntensity: 0.55,
+		environmentIntensity: 0.95,
+	},
 } as const satisfies Record<string, HdriPreset>;
 
 export type HdriPresetKey = keyof typeof HDRI_PRESETS;
@@ -79,5 +103,6 @@ export function getHdriForStormIntensity(
 	if (stormIntensity >= 1.2) return "storm_dramatic";
 	if (stormIntensity >= 0.9) return "storm_overcast";
 	if (stormIntensity >= 0.6) return "overcast_heavy";
-	return "evening_cloudy";
+	if (stormIntensity >= 0.3) return "evening_cloudy";
+	return "day_industrial_003";
 }

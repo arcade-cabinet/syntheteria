@@ -22,7 +22,7 @@ import {
 	setGetUnits,
 	setOnDiscovery,
 } from "../discoverySystem";
-import type { UnitInfo, DiscoveryEvent } from "../discoverySystem";
+import type { UnitInfo } from "../discoverySystem";
 
 // ---------------------------------------------------------------------------
 // Setup / teardown

@@ -280,7 +280,7 @@ describe("slot rotation", () => {
 		setAutosaveCallback(cb);
 		setAutosaveInterval(10);
 
-		const slots: number[] = [];
+		const _slots: number[] = [];
 		for (let i = 1; i <= 40; i++) {
 			autosaveSystem(i);
 		}

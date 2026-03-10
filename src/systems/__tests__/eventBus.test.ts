@@ -21,7 +21,6 @@ jest.mock("../../../config", () => ({
 
 import {
 	type CombatKillEvent,
-	type EventPayload,
 	type GameEvent,
 	type GameEventType,
 	type ResourceGatheredEvent,

@@ -26,8 +26,6 @@ import {
 } from "../quickDeposit";
 
 import type {
-	QuickDepositPrompt,
-	QuickDepositResult,
 	QuickDepositTarget,
 	Vec3,
 } from "../quickDeposit";

@@ -16,7 +16,6 @@ import {
 	setMasterVolume,
 	getMasterVolume,
 	reset,
-	type SoundCue,
 } from "../audioFeedbackMap";
 
 // ---------------------------------------------------------------------------

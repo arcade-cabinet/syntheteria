@@ -26,7 +26,7 @@ import {
 	reset,
 	_setOverridePresets,
 } from "../weatherEffects";
-import type { WeatherModifiers, WeatherPreset } from "../weatherEffects";
+import type { WeatherPreset } from "../weatherEffects";
 
 // ---------------------------------------------------------------------------
 // Setup

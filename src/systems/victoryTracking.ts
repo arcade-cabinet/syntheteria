@@ -133,7 +133,7 @@ function evaluateMilitary(queries: GameStateQueries, faction: string): Condition
 	}
 
 	// Total factions minus self = total enemies. Dead enemies / total enemies = score
-	const totalEnemies = aliveFactions.length - 1 + enemiesAlive.length;
+	const _totalEnemies = aliveFactions.length - 1 + enemiesAlive.length;
 	// Actually: we need to know the total number of factions that existed, not just alive ones.
 	// Since we only have alive factions, we approximate: if 0 enemies alive, score = 1.
 	const score = enemiesAlive.length === 0 ? 1.0 : Math.max(0, 1 - enemiesAlive.length / 3);

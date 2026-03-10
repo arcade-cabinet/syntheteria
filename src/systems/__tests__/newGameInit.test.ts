@@ -108,15 +108,14 @@ import {
 	getLastResult,
 	reset,
 	type NewGameOptions,
-	type NewGameResult,
 } from "../newGameInit";
 
 import { getWorldSeed } from "../../ecs/seed";
 import { getCellState } from "../fogOfWarManager";
-import { isTutorialActive, resetTutorial } from "../tutorialSystem";
-import { getHUDState, resetHUDState } from "../hudState";
-import { getBot, resetBotFleet, getFactionBots } from "../botFleetManager";
-import { getAllDeposits, resetDeposits } from "../oreSpawner";
+import { isTutorialActive } from "../tutorialSystem";
+import { getHUDState } from "../hudState";
+import { getBot, getFactionBots } from "../botFleetManager";
+import { getAllDeposits } from "../oreSpawner";
 import type { WorldData } from "../mapGenerator";
 
 // ---------------------------------------------------------------------------

@@ -25,7 +25,6 @@ jest.mock("../../../config", () => ({
 }));
 
 import {
-	type SoundEvent,
 	type SoundEventType,
 	type TriggerSoundOptions,
 	type Vec3,

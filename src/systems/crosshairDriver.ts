@@ -151,7 +151,7 @@ function resolveStyle(entityType: string, mode: PlayerMode): CrosshairStyle {
 /**
  * Format target name for display, including status information.
  */
-function formatTargetName(hit: RaycastHit, playerState: PlayerLookState): string {
+function formatTargetName(hit: RaycastHit, _playerState: PlayerLookState): string {
 	const name = hit.displayName;
 
 	switch (hit.entityType) {

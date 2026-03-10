@@ -14,7 +14,6 @@ import {
 	getCompressionProgress,
 	getCompressionPhase,
 	reset,
-	type CompressionFrame,
 	type CompressionPhase,
 } from "../compressionJuice";
 

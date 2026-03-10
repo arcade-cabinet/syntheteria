@@ -149,9 +149,9 @@ describe("spawnPlayer", () => {
 	});
 
 	it("generates unique entity IDs", () => {
-		const a = spawnPlayer("reclaimers", "Reclaimer");
+		const _a = spawnPlayer("reclaimers", "Reclaimer");
 		reset();
-		const b = spawnPlayer("volt", "Volt");
+		const _b = spawnPlayer("volt", "Volt");
 		// After reset, counter resets so IDs are fresh — but within a session they differ
 		// Re-spawn without reset to test uniqueness
 		reset();

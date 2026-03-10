@@ -328,7 +328,7 @@ export function checkQuickDeposit(
  */
 export function executeQuickDeposit(
 	targetId: string,
-	cubeId: string,
+	_cubeId: string,
 	cubeMaterial: string,
 ): QuickDepositResult {
 	const target = targets.get(targetId);

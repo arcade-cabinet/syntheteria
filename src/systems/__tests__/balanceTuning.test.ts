@@ -16,7 +16,6 @@ import {
 	calculateTimeToKill,
 	assessCombatBalance,
 	type EconomyConfig,
-	type CoreLoopTiming,
 } from "../balanceTuning";
 
 // ---------------------------------------------------------------------------

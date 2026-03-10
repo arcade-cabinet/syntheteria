@@ -87,7 +87,7 @@ function dist3d(
 	return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
-function distXZ(
+function _distXZ(
 	a: { x: number; y: number; z: number },
 	b: { x: number; y: number; z: number },
 ): number {
@@ -115,7 +115,7 @@ function getPrimaryMaterial(breakdown: Record<string, number>): string {
 /**
  * Compute total value from per-cube material list and value list.
  */
-function computeTotalValue(materials: string[], values: number[]): number {
+function computeTotalValue(_materials: string[], values: number[]): number {
 	let total = 0;
 	for (let i = 0; i < values.length; i++) {
 		total += values[i];
@@ -357,7 +357,7 @@ export function getVisiblePiles(
  */
 export function calculatePileAttractiveness(
 	pile: CubePile,
-	observerFaction: string,
+	_observerFaction: string,
 	distance = 0,
 ): number {
 	// Value component: normalize by a reference value (e.g., 50 units of wealth)

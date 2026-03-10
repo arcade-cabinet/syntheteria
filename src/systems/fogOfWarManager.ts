@@ -40,7 +40,7 @@ export type FogLevel = typeof FOG_HIDDEN | typeof FOG_EXPLORED | typeof FOG_VISI
 // ---------------------------------------------------------------------------
 
 const fowConfig = config.rendering.fogOfWar;
-const DEFAULT_VISION_RANGE: number = fowConfig.defaultVisionRange;
+const _DEFAULT_VISION_RANGE: number = fowConfig.defaultVisionRange;
 
 // ---------------------------------------------------------------------------
 // Per-faction state
@@ -74,7 +74,7 @@ function fogLevelToState(level: FogLevel): FogState {
 	return "hidden";
 }
 
-function stateToFogLevel(state: FogState): FogLevel {
+function _stateToFogLevel(state: FogState): FogLevel {
 	if (state === "visible") return FOG_VISIBLE;
 	if (state === "explored") return FOG_EXPLORED;
 	return FOG_HIDDEN;

@@ -105,7 +105,7 @@ let pendingResourceDrops: ResourceDropEvent[] = [];
 // Helpers
 // ---------------------------------------------------------------------------
 
-function dist3d(a: Position, b: Position): number {
+function _dist3d(a: Position, b: Position): number {
 	const dx = a.x - b.x;
 	const dy = a.y - b.y;
 	const dz = a.z - b.z;

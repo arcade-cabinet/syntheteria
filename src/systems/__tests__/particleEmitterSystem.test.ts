@@ -23,7 +23,6 @@ jest.mock("../../../config", () => ({
 
 import {
 	type EmitParticleOptions,
-	type ParticleEffect,
 	type ParticleEffectType,
 	type Vec3,
 	emitParticle,

@@ -249,7 +249,7 @@ export function executeAction(actionId: string): boolean {
 	// Close menu after action
 	radialMenuOpen = false;
 	availableActions = [];
-	const savedTarget = selectedTarget;
+	const _savedTarget = selectedTarget;
 	selectedTarget = null;
 
 	notifyListeners();

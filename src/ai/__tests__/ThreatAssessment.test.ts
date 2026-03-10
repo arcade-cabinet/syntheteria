@@ -43,7 +43,7 @@ jest.mock("../MemorySystem.ts", () => ({
 // ---------------------------------------------------------------------------
 
 import type { MemoryRecord } from "../MemorySystem.ts";
-import type { BotContext, NearbyEntity } from "../BotContext.ts";
+import type { BotContext } from "../BotContext.ts";
 import type { Entity, Vec3 } from "../../ecs/types.ts";
 import {
 	assessThreat,

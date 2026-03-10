@@ -44,7 +44,6 @@ import {
 	isInsideCityBounds,
 	isInsideBuilding,
 	nearBuildingEdge,
-	type CityBuilding,
 } from "../cityLayout";
 
 // ---------------------------------------------------------------------------
@@ -204,7 +203,7 @@ describe("isInsideBuilding", () => {
 		const buildings = getCityBuildings();
 		const b = buildings[0];
 		// Just outside the east edge
-		const outside = isInsideBuilding(b.x + b.halfW + 5, b.z);
+		const _outside = isInsideBuilding(b.x + b.halfW + 5, b.z);
 		// This might still be inside another building, so we test with a
 		// point far from any building instead
 		expect(isInsideBuilding(-100, -100)).toBe(false);

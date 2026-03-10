@@ -26,7 +26,6 @@ import {
 import {
 	distanceSqXZ,
 	summarizeComponents,
-	type BotContext,
 	type NearbyEntity,
 	type ComponentStatus,
 } from "../BotContext.ts";

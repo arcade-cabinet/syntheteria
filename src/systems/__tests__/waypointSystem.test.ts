@@ -27,7 +27,7 @@ import {
 	toggleVisibility,
 	updateWaypoints,
 } from "../waypointSystem";
-import type { Waypoint, WaypointType } from "../waypointSystem";
+import type { Waypoint } from "../waypointSystem";
 
 // ---------------------------------------------------------------------------
 // Setup — reset state before each test

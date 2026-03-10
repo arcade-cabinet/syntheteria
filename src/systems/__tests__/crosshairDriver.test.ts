@@ -25,7 +25,6 @@ import {
 	reset,
 	type RaycastHit,
 	type PlayerLookState,
-	type CrosshairStyle,
 } from "../crosshairDriver";
 
 // ---------------------------------------------------------------------------

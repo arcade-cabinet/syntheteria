@@ -56,7 +56,7 @@ export interface QuestTemplate {
 // Config references
 // ---------------------------------------------------------------------------
 
-const questsCfg = config.quests;
+const _questsCfg = config.quests;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -148,7 +148,7 @@ function makeBuildReward(difficulty: number): QuestReward {
 	};
 }
 
-function makeExploreObjective(difficulty: number): QuestObjective {
+function makeExploreObjective(_difficulty: number): QuestObjective {
 	const region = pickRandom(EXPLORE_REGIONS);
 	return {
 		id: `obj_explore_${nextQuestId}`,

@@ -32,7 +32,7 @@ import {
 import { startTutorial, resetTutorial } from "./tutorialSystem";
 import { resetHUDState, updateBotInfo, updateCoords } from "./hudState";
 import { resetWeather, setRngSeed as setWeatherRngSeed } from "./weatherSystem";
-import { resetEconomy, getEconomy } from "./economySimulation";
+import { resetEconomy } from "./economySimulation";
 import { registerBot, resetBotFleet } from "./botFleetManager";
 
 // ---------------------------------------------------------------------------

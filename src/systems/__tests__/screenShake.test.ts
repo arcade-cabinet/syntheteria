@@ -18,7 +18,6 @@
 
 import {
 	type ShakeConfig,
-	type ShakeOutput,
 	cancelAllShakes,
 	cancelShake,
 	createCompressionShake,

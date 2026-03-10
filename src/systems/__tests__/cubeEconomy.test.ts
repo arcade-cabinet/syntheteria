@@ -383,7 +383,7 @@ describe("getCubesByFaction", () => {
 	});
 
 	it("returns copies not references to internal state", () => {
-		const id = spawnCube("reclaimers", "iron", 0, 0);
+		const _id = spawnCube("reclaimers", "iron", 0, 0);
 		const cubes1 = getCubesByFaction("reclaimers");
 		const cubes2 = getCubesByFaction("reclaimers");
 

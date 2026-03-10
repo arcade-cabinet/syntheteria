@@ -16,9 +16,6 @@
  */
 
 import {
-	type AttractedEnemy,
-	type ListenerInfo,
-	type NoiseEvent,
 	NOISE_PRESETS,
 	type Vec3,
 	emitNoise,

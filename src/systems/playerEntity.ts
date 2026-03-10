@@ -241,7 +241,7 @@ export function spawnPlayer(
 export function takeDamage(
 	amount: number,
 	sourceId: string = "unknown",
-	damageType: string = "kinetic",
+	_damageType: string = "kinetic",
 ): DamageResult {
 	if (!playerState || playerState.isDead) {
 		return { finalDamage: 0, healthRemaining: playerState?.health ?? 0, isDead: playerState?.isDead ?? true, killedBy: null };

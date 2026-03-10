@@ -10,7 +10,7 @@
  * Tunables sourced from config/botMovement.json.
  */
 
-import { config } from "../../config";
+import { config as _config } from "../../config";
 
 // ---------------------------------------------------------------------------
 // Types

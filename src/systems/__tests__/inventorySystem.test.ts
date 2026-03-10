@@ -16,9 +16,6 @@
  */
 
 import {
-	type AddItemResult,
-	type BotInventory,
-	type ItemDef,
 	_resetInventoryState,
 	addItem,
 	createInventory,

@@ -26,7 +26,6 @@ import {
 	type CommandHandler,
 	type CommandPriority,
 	type CommandType,
-	type ProcessResult,
 	cancelCommand,
 	enqueueCommand,
 	getCommandHistory,

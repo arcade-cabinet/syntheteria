@@ -27,7 +27,6 @@ import {
 	getRarityColor,
 	reset,
 	type EntityData,
-	type Rarity,
 	type TooltipData,
 } from "../tooltipSystem";
 

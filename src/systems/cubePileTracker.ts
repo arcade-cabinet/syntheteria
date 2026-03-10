@@ -131,7 +131,7 @@ export function recalculatePiles(clusterRadius: number): void {
 	const result: CubePile[] = [];
 	let pileIndex = 0;
 
-	for (const [groupKey, groupCubes] of groups.entries()) {
+	for (const [_groupKey, groupCubes] of groups.entries()) {
 		pileIndex++;
 
 		// Compute center as average position

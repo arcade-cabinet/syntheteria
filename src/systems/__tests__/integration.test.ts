@@ -109,7 +109,6 @@ import {
 import {
 	_resetGrabberState,
 	dropCube,
-	getCube,
 	grabCube,
 	registerCube,
 } from "../grabber";
@@ -135,8 +134,6 @@ import {
 import {
 	_resetCraftingState,
 	craftingSystem,
-	getActiveJobs,
-	getRecipe,
 	registerBotPosition,
 	registerMachinePosition,
 	startCraft,
@@ -171,9 +168,7 @@ import {
 // Progression
 import {
 	addXP,
-	calculateLevel,
 	getPlayerStats,
-	getLevelBonuses,
 	resetProgression,
 } from "../progressionSystem";
 
@@ -187,7 +182,6 @@ import {
 } from "../diplomacySystem";
 import {
 	createTradeRoute,
-	getAllTradeRoutes,
 	getTradeRoute,
 	resetTradeRoutes,
 	setStanceResolver,
@@ -197,7 +191,6 @@ import {
 
 // Weather + storm escalation
 import {
-	getCurrentWeather,
 	getWeatherModifiers,
 	resetWeather,
 	setRngSeed,
@@ -227,12 +220,10 @@ import {
 	autoStartFirstQuest,
 	getActiveQuests,
 	getQuestProgress,
-	getQuestState,
 	isQuestComplete,
 	notifyQuestEvent,
 	onQuestComplete,
 	resetQuests,
-	startQuest,
 	updateQuests,
 } from "../questSystem";
 
@@ -248,15 +239,12 @@ import {
 
 // Achievement system
 import {
-	checkAchievements,
-	getCompletedAchievements,
 	resetAchievements,
 } from "../achievementSystem";
 
 // Save / Load
 import {
 	createSave,
-	loadSave,
 	registerSerializer,
 	resetSaveLoad,
 	saveToSlot,
@@ -292,7 +280,6 @@ import {
 
 // Resources
 import {
-	addResource,
 	getResources,
 	resetResourcePool,
 } from "../resources";
@@ -774,7 +761,7 @@ describe("Integration: tech progression", () => {
 		expect(newAvailable.find((t) => t.id === firstTech.id)).toBeUndefined();
 
 		// If there's a tech that requires firstTech, it should now be available
-		const unlockedByFirst = newAvailable.filter((t) =>
+		const _unlockedByFirst = newAvailable.filter((t) =>
 			t.prerequisites.includes(firstTech.id),
 		);
 		// The tech tree may or may not have dependent techs — just verify no crash
@@ -886,9 +873,9 @@ describe("Integration: quest lifecycle", () => {
 		expect(completedQuests).toContain(firstQuest.id);
 
 		// Check rewards were granted (they add to resource pool)
-		const resources = getResources();
+		const _resources = getResources();
 		// Rewards vary by quest — just verify no crash and next quest started
-		const newActive = getActiveQuests();
+		const _newActive = getActiveQuests();
 		// Next quest should have auto-started (if there is one)
 		if (getQuestProgress(firstQuest.id)!.target > 0) {
 			// quest was valid and completed

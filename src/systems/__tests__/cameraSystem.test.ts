@@ -359,7 +359,7 @@ describe("camera shake", () => {
 		triggerShake(10.0, 1.0, 15, 0.1); // Very strong, slow decay
 		updateCamera(0.01, false, 0);
 
-		const beforeState = getCameraState();
+		const _beforeState = getCameraState();
 
 		// Try a much weaker shake
 		triggerShake(0.001, 0.5);

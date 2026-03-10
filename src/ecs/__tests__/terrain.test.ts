@@ -54,7 +54,6 @@ import {
 	worldToFogIndex,
 	getFogAt,
 	setFogAt,
-	type FogState,
 } from "../terrain";
 
 // ---------------------------------------------------------------------------

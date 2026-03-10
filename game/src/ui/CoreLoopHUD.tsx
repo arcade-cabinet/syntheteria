@@ -8,16 +8,26 @@
  * - Held cube indicator
  * - Furnace status (when near furnace)
  * - Radial action menu (when an entity is selected)
+ * - Furnace detail panel (opened via "open" action on a furnace)
  *
  * Machine-vision aesthetic matching FPSHUD (terminal green, monospace).
  */
 
-import { useCallback, useSyncExternalStore } from "react";
+import {
+	useCallback,
+	useEffect,
+	useState,
+	useSyncExternalStore,
+} from "react";
 import {
 	getCoreLoopSnapshot,
 	subscribeCoreLoop,
 } from "../systems/CoreLoopSystem";
-import { getAllFurnaces } from "../systems/furnace";
+import { getAllFurnaces, getFurnaceState } from "../systems/furnace";
+import {
+	DEFAULT_RECIPES,
+	getSmeltingProgress,
+} from "../systems/furnaceProcessing";
 import { getCube, getHeldCube } from "../systems/grabber";
 import { getMenuState, subscribeMenu } from "../systems/InteractionSystem";
 import { ORE_TYPE_CONFIGS } from "../systems/oreSpawner";
@@ -300,6 +310,243 @@ function FurnaceStatus() {
 	);
 }
 
+function FurnaceDetailPanel() {
+	const [furnaceId, setFurnaceId] = useState<string | null>(null);
+
+	// Re-render when core loop state changes so progress updates live
+	useSyncExternalStore(subscribeCoreLoop, getCoreLoopSnapshot);
+
+	useEffect(() => {
+		const handleOpen = (e: Event) => {
+			const detail = (e as CustomEvent<{ furnaceId: string }>).detail;
+			if (detail?.furnaceId) {
+				setFurnaceId(detail.furnaceId);
+			}
+		};
+		const handleClose = () => setFurnaceId(null);
+
+		window.addEventListener("coreloop:furnace-open", handleOpen);
+		window.addEventListener("coreloop:furnace-close", handleClose);
+		return () => {
+			window.removeEventListener("coreloop:furnace-open", handleOpen);
+			window.removeEventListener("coreloop:furnace-close", handleClose);
+		};
+	}, []);
+
+	if (!furnaceId) return null;
+
+	const state = getFurnaceState(furnaceId);
+	if (!state) return null;
+
+	const progress = getSmeltingProgress(furnaceId);
+	const progressPct = (progress * 100).toFixed(0);
+
+	return (
+		<div
+			style={{
+				position: "absolute",
+				top: "50%",
+				left: "50%",
+				transform: "translate(-50%, -50%)",
+				background: "rgba(0, 8, 4, 0.9)",
+				border: "1px solid #ff660066",
+				borderRadius: "8px",
+				padding: "16px 20px",
+				pointerEvents: "auto",
+				minWidth: "260px",
+				fontFamily: MONO,
+				zIndex: 100,
+			}}
+		>
+			{/* Header */}
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+					marginBottom: "12px",
+				}}
+			>
+				<div
+					style={{
+						color: "#ff6600",
+						fontSize: "12px",
+						letterSpacing: "0.15em",
+						fontWeight: "bold",
+					}}
+				>
+					FURNACE [{state.id}]
+				</div>
+				<button
+					type="button"
+					onClick={() => setFurnaceId(null)}
+					style={{
+						background: "none",
+						border: "1px solid #ff660044",
+						borderRadius: "3px",
+						color: "#ff660088",
+						cursor: "pointer",
+						fontSize: "10px",
+						padding: "2px 6px",
+						fontFamily: MONO,
+					}}
+				>
+					CLOSE
+				</button>
+			</div>
+
+			{/* Power status */}
+			<div
+				style={{
+					fontSize: "10px",
+					color: state.isPowered ? "#00ffaa" : "#ff4444",
+					marginBottom: "10px",
+					letterSpacing: "0.1em",
+				}}
+			>
+				POWER: {state.isPowered ? "ONLINE" : "OFFLINE"}
+			</div>
+
+			{/* Hopper contents */}
+			<div
+				style={{
+					color: "#ff660088",
+					fontSize: "10px",
+					letterSpacing: "0.1em",
+					marginBottom: "4px",
+				}}
+			>
+				HOPPER [{state.hopperSize}/{state.maxHopperSize}]
+			</div>
+			<div
+				style={{
+					marginBottom: "12px",
+					padding: "6px 8px",
+					background: "rgba(255, 102, 0, 0.08)",
+					borderRadius: "4px",
+					minHeight: "20px",
+				}}
+			>
+				{state.hopperContents.length === 0 ? (
+					<div style={{ color: "#ff660044", fontSize: "10px" }}>EMPTY</div>
+				) : (
+					state.hopperContents.map((mat, i) => (
+						<div
+							key={`${mat}-${i}`}
+							style={{
+								color: "#ff6600",
+								fontSize: "11px",
+								marginBottom: "1px",
+							}}
+						>
+							{mat.replace(/_/g, " ").toUpperCase()}
+						</div>
+					))
+				)}
+			</div>
+
+			{/* Processing status */}
+			<div
+				style={{
+					color: "#ff660088",
+					fontSize: "10px",
+					letterSpacing: "0.1em",
+					marginBottom: "4px",
+				}}
+			>
+				PROCESSING
+			</div>
+			{state.isProcessing && state.currentItem ? (
+				<div style={{ marginBottom: "12px" }}>
+					<div
+						style={{
+							display: "flex",
+							justifyContent: "space-between",
+							fontSize: "11px",
+							color: "#ff6600",
+							marginBottom: "4px",
+						}}
+					>
+						<span>
+							{state.currentItem.replace(/_/g, " ").toUpperCase()}
+						</span>
+						<span>{progressPct}%</span>
+					</div>
+					<div
+						style={{
+							width: "100%",
+							height: "4px",
+							background: "rgba(255, 102, 0, 0.2)",
+							borderRadius: "2px",
+							overflow: "hidden",
+						}}
+					>
+						<div
+							style={{
+								width: `${progressPct}%`,
+								height: "100%",
+								background: "#ff6600",
+								borderRadius: "2px",
+								transition: "width 0.1s linear",
+							}}
+						/>
+					</div>
+				</div>
+			) : (
+				<div
+					style={{
+						color: "#ff660044",
+						fontSize: "10px",
+						marginBottom: "12px",
+					}}
+				>
+					IDLE
+				</div>
+			)}
+
+			{/* Available recipes */}
+			<div
+				style={{
+					color: "#ff660088",
+					fontSize: "10px",
+					letterSpacing: "0.1em",
+					marginBottom: "4px",
+				}}
+			>
+				RECIPES
+			</div>
+			<div
+				style={{
+					padding: "6px 8px",
+					background: "rgba(255, 102, 0, 0.08)",
+					borderRadius: "4px",
+				}}
+			>
+				{DEFAULT_RECIPES.map((recipe) => (
+					<div
+						key={recipe.input}
+						style={{
+							display: "flex",
+							justifyContent: "space-between",
+							fontSize: "10px",
+							color: "#ff660099",
+							marginBottom: "2px",
+						}}
+					>
+						<span>
+							{recipe.input.replace(/_/g, " ").toUpperCase()}
+						</span>
+						<span>
+							{"\u2192"} {recipe.output.replace(/_/g, " ").toUpperCase()} (
+							{recipe.smeltTime}s)
+						</span>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
 function ActionMenuOverlay() {
 	const menu = useSyncExternalStore(subscribeMenu, getMenuState);
 
@@ -350,6 +597,7 @@ export function CoreLoopHUD() {
 			<CompressionBar />
 			<HeldCubeIndicator />
 			<FurnaceStatus />
+			<FurnaceDetailPanel />
 			<ActionMenuOverlay />
 		</div>
 	);

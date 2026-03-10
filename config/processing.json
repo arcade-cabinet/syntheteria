@@ -1,0 +1,7 @@
+{
+	"belt": {
+		"speed": 2.0,
+		"cubeSpacing": 0.6,
+		"cubeSize": 0.5
+	}
+}

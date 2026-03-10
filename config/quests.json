@@ -1,0 +1,147 @@
+{
+  "sequence": [
+    "quest_first_harvest",
+    "quest_first_cube",
+    "quest_first_craft",
+    "quest_build_furnace",
+    "quest_build_wall",
+    "quest_claim_territory",
+    "quest_defend_raid"
+  ],
+  "quests": {
+    "quest_first_harvest": {
+      "name": "First Harvest",
+      "description": "Scavenge scrap metal from the city ruins",
+      "type": "harvest_N_ore",
+      "target": 5,
+      "resource": "scrapMetal",
+      "reward": { "eWaste": 3 },
+      "dialogue": {
+        "start": [
+          "See those scrap piles in the ruins? Your bots can pick them apart.",
+          "Move a bot with arms near a scavenge point. It'll collect automatically."
+        ],
+        "progress_50": [
+          "Good, keep going. Every bit of scrap is a piece of something new."
+        ],
+        "complete": [
+          "That's enough scrap to start building. Not bad for a first outing.",
+          "Here, take this e-waste I found. You'll need it later."
+        ]
+      }
+    },
+    "quest_first_cube": {
+      "name": "First Compression",
+      "description": "Fabricate your first component at a powered fabrication unit",
+      "type": "compress_N_cubes",
+      "target": 1,
+      "reward": { "intactComponents": 1 },
+      "dialogue": {
+        "start": [
+          "You have raw materials now. Time to make something useful.",
+          "Select a powered fabrication unit and queue up a recipe."
+        ],
+        "complete": [
+          "Your first fabrication! The machines remember how to build.",
+          "Take this component. Consider it a gift from the old world."
+        ]
+      }
+    },
+    "quest_first_craft": {
+      "name": "Arm Assembly",
+      "description": "Fabricate an Arm Assembly to restore broken bots",
+      "type": "assemble_first_machine",
+      "target": 1,
+      "recipe": "Arm Assembly",
+      "reward": { "scrapMetal": 5 },
+      "dialogue": {
+        "start": [
+          "Some of the bots out there have broken arms. They can't scavenge without them.",
+          "Fabricate an Arm Assembly. You know the recipe."
+        ],
+        "complete": [
+          "Arms ready. Now you can fix those broken bots.",
+          "Every repair makes us a little stronger. Here's some scrap for the effort."
+        ]
+      }
+    },
+    "quest_build_furnace": {
+      "name": "Power Up",
+      "description": "Build a lightning rod to generate power",
+      "type": "build_first_wall",
+      "target": 1,
+      "buildingType": "lightning_rod",
+      "reward": { "eWaste": 5 },
+      "dialogue": {
+        "start": [
+          "The storms here aren't just weather. They're energy.",
+          "Build a lightning rod. The taller it is, the more power it pulls from the sky."
+        ],
+        "progress_50": [
+          "Almost there. Find a good spot away from the other rods."
+        ],
+        "complete": [
+          "Power flows. The grid hums again.",
+          "Here's some salvaged electronics. Put them to good use."
+        ]
+      }
+    },
+    "quest_build_wall": {
+      "name": "Establish Fabrication",
+      "description": "Build a fabrication unit to manufacture components",
+      "type": "build_first_wall",
+      "target": 1,
+      "buildingType": "fabrication_unit",
+      "reward": { "intactComponents": 2 },
+      "dialogue": {
+        "start": [
+          "You need a fabrication unit. It's how you turn raw scrap into real parts.",
+          "Place one near a power source. It won't work without juice."
+        ],
+        "complete": [
+          "A fabricator online. Now we're in business.",
+          "Keep it powered. Keep it running. These parts are a start."
+        ]
+      }
+    },
+    "quest_claim_territory": {
+      "name": "Claim Territory",
+      "description": "Establish your first outpost to secure an area",
+      "type": "claim_territory",
+      "target": 1,
+      "reward": { "scrapMetal": 10, "eWaste": 5 },
+      "dialogue": {
+        "start": [
+          "You need to mark your ground. The ferals respect borders... sometimes.",
+          "Claim a territory. Build an outpost. Make it yours."
+        ],
+        "complete": [
+          "Territory claimed. The ferals will think twice now.",
+          "Here are supplies for fortifying your position."
+        ]
+      }
+    },
+    "quest_defend_raid": {
+      "name": "Hold the Line",
+      "description": "Defeat 3 feral machines that wander into your territory",
+      "type": "harvest_N_ore",
+      "target": 3,
+      "resource": "feralsDefeated",
+      "reward": { "intactComponents": 3, "scrapMetal": 8 },
+      "dialogue": {
+        "start": [
+          "The ferals have noticed you. They'll come.",
+          "Defend what you've built. Three of them should test your mettle."
+        ],
+        "progress_50": [
+          "Keep fighting. They don't stop until they're scrapped."
+        ],
+        "complete": [
+          "You held. Impressive, for a newly awakened consciousness.",
+          "The cult of EL will be harder. But that's a problem for later.",
+          "Take these parts. You've earned them."
+        ]
+      }
+    }
+  }
+}

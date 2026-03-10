@@ -1,0 +1,57 @@
+{
+  "spawnDensity": 0.03,
+  "minDistanceBetween": 5,
+  "types": {
+    "rock": {
+      "frequency": 0.4,
+      "yieldRange": [50, 200]
+    },
+    "scrap_iron": {
+      "frequency": 0.3,
+      "yieldRange": [30, 150]
+    },
+    "copper": {
+      "frequency": 0.15,
+      "yieldRange": [20, 80]
+    },
+    "silicon": {
+      "frequency": 0.1,
+      "yieldRange": [10, 50]
+    },
+    "titanium": {
+      "frequency": 0.05,
+      "yieldRange": [5, 30]
+    }
+  },
+  "scavenging": {
+    "autoScavengeRange": 2.5,
+    "gridSpacing": 4,
+    "spawnChance": 0.35,
+    "cityBoundsX": [-25, 45],
+    "cityBoundsZ": [-15, 45],
+    "positionRandomization": 3,
+    "types": {
+      "scrapMetal": {
+        "chance": 0.5,
+        "amountMin": 2,
+        "amountMax": 5,
+        "remainingMin": 3,
+        "remainingMax": 7
+      },
+      "eWaste": {
+        "chance": 0.35,
+        "amountMin": 1,
+        "amountMax": 3,
+        "remainingMin": 2,
+        "remainingMax": 5
+      },
+      "intactComponents": {
+        "chance": 0.15,
+        "amountMin": 1,
+        "amountMax": 1,
+        "remainingMin": 1,
+        "remainingMax": 3
+      }
+    }
+  }
+}

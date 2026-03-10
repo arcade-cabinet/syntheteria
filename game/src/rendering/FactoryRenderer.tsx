@@ -8,11 +8,12 @@
  */
 
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { getFragment } from "../ecs/terrain";
 import type { Entity } from "../ecs/types";
 import { miners, processors } from "../ecs/world";
+import { getMinerPBRMaterial, getProcessorPBRMaterial } from "./TerrainPBR";
 
 const MATERIAL_PROPS = {
 	metalness: 0.8,
@@ -37,6 +38,7 @@ function MinerMesh({ entity }: { entity: Entity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const drillRef = useRef<THREE.Mesh>(null);
 	const ledRef = useRef<THREE.Mesh>(null);
+	const minerMat = useMemo(() => getMinerPBRMaterial(), []);
 
 	useFrame((_state, delta) => {
 		const frag = entity.mapFragment
@@ -83,16 +85,14 @@ function MinerMesh({ entity }: { entity: Entity }) {
 
 	return (
 		<group ref={groupRef}>
-			{/* Base platform */}
-			<mesh position={[0, 0.2, 0]}>
+			{/* Base platform — rusted metal PBR */}
+			<mesh position={[0, 0.2, 0]} material={minerMat}>
 				<boxGeometry args={[1.4, 0.4, 1.4]} />
-				<meshStandardMaterial color={0x666666} {...MATERIAL_PROPS} />
 			</mesh>
 
-			{/* Drill column */}
-			<mesh position={[0, 1.2, 0]}>
+			{/* Drill column — rusted metal PBR */}
+			<mesh position={[0, 1.2, 0]} material={minerMat}>
 				<cylinderGeometry args={[0.15, 0.2, 1.6, 8]} />
-				<meshStandardMaterial color={0x888888} {...MATERIAL_PROPS} />
 			</mesh>
 
 			{/* Drill head (rotates) */}
@@ -101,10 +101,9 @@ function MinerMesh({ entity }: { entity: Entity }) {
 				<meshStandardMaterial color={0xaaaa44} {...MATERIAL_PROPS} />
 			</mesh>
 
-			{/* Motor housing */}
-			<mesh position={[0, 0.6, 0]}>
+			{/* Motor housing — rusted metal PBR */}
+			<mesh position={[0, 0.6, 0]} material={minerMat}>
 				<boxGeometry args={[0.6, 0.4, 0.6]} />
-				<meshStandardMaterial color={0x555555} {...MATERIAL_PROPS} />
 			</mesh>
 
 			{/* Status LED */}
@@ -126,6 +125,7 @@ function ProcessorMesh({ entity }: { entity: Entity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const chimneyGlowRef = useRef<THREE.Mesh>(null);
 	const bodyRef = useRef<THREE.Mesh>(null);
+	const procMat = useMemo(() => getProcessorPBRMaterial(), []);
 
 	useFrame((state) => {
 		const frag = entity.mapFragment
@@ -182,10 +182,9 @@ function ProcessorMesh({ entity }: { entity: Entity }) {
 
 	return (
 		<group ref={groupRef}>
-			{/* Base platform */}
-			<mesh position={[0, 0.15, 0]}>
+			{/* Base platform — concrete/metal PBR */}
+			<mesh position={[0, 0.15, 0]} material={procMat}>
 				<boxGeometry args={[1.8, 0.3, 1.8]} />
-				<meshStandardMaterial color={0x555555} {...MATERIAL_PROPS} />
 			</mesh>
 
 			{/* Main body */}
@@ -199,10 +198,9 @@ function ProcessorMesh({ entity }: { entity: Entity }) {
 				/>
 			</mesh>
 
-			{/* Chimney */}
-			<mesh position={[0.4, 1.7, -0.3]}>
+			{/* Chimney — concrete/metal PBR */}
+			<mesh position={[0.4, 1.7, -0.3]} material={procMat}>
 				<cylinderGeometry args={[0.12, 0.15, 0.8, 8]} />
-				<meshStandardMaterial color={0x444444} {...MATERIAL_PROPS} />
 			</mesh>
 
 			{/* Chimney glow */}
@@ -217,16 +215,14 @@ function ProcessorMesh({ entity }: { entity: Entity }) {
 				/>
 			</mesh>
 
-			{/* Input port */}
-			<mesh position={[-0.71, 0.6, 0]}>
+			{/* Input port — concrete/metal PBR */}
+			<mesh position={[-0.71, 0.6, 0]} material={procMat}>
 				<boxGeometry args={[0.1, 0.3, 0.4]} />
-				<meshStandardMaterial color={0x334455} {...MATERIAL_PROPS} />
 			</mesh>
 
-			{/* Output port */}
-			<mesh position={[0.71, 0.6, 0]}>
+			{/* Output port — concrete/metal PBR */}
+			<mesh position={[0.71, 0.6, 0]} material={procMat}>
 				<boxGeometry args={[0.1, 0.3, 0.4]} />
-				<meshStandardMaterial color={0x554433} {...MATERIAL_PROPS} />
 			</mesh>
 		</group>
 	);

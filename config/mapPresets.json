@@ -1,0 +1,53 @@
+{
+  "standard": {
+    "worldSize": 200,
+    "oreAbundance": 1.0,
+    "enemyDensity": 1.0,
+    "aiOpponents": 3
+  },
+  "abundant": {
+    "worldSize": 200,
+    "oreAbundance": 1.5,
+    "enemyDensity": 0.7,
+    "aiOpponents": 2
+  },
+  "hostile": {
+    "worldSize": 150,
+    "oreAbundance": 0.8,
+    "enemyDensity": 1.5,
+    "aiOpponents": 4
+  },
+  "cityBounds": {
+    "minX": -30,
+    "maxX": 50,
+    "minZ": -20,
+    "maxZ": 50
+  },
+  "cityLayout": {
+    "corridorSpacing": 8,
+    "wallThickness": 0.6,
+    "wallHeightMin": 3,
+    "wallHeightMax": 5,
+    "nodeSize": 1.5,
+    "spawnAreaClearance": { "minX": 2, "maxX": 23, "minZ": 7, "maxZ": 21 },
+    "segmentSkipChance": 0.15,
+    "doorwayChance": 0.25,
+    "doorwayGapMin": 1.5,
+    "doorwayGapMax": 3.0,
+    "ruinChance": 0.12,
+    "junctionSkipChance": 0.25,
+    "towerChance": 0.15,
+    "towerHeightMin": 6,
+    "towerHeightMax": 11,
+    "secondaryConnectorSkipChance": 0.5,
+    "perimeterSegmentLength": 8,
+    "perimeterGapChance": 0.2
+  },
+  "navmesh": {
+    "navStep": 2,
+    "maxAStarNodes": 5000,
+    "buildingEdgeCostMultiplier": 1.3,
+    "diagonalMoveCost": 1.414,
+    "octileHeuristicWeight": 0.414
+  }
+}

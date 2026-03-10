@@ -106,6 +106,56 @@ export interface ItemComponent {
 	quantity: number;
 }
 
+/** Mineable resource node in the terrain */
+export interface OreDepositComponent {
+	oreType: string;
+	currentYield: number;
+	maxYield: number;
+	hardness: number;
+}
+
+/** A physical block of processed material */
+export interface MaterialCubeComponent {
+	material: string;
+	quality: number;
+	hp: number;
+	maxHp: number;
+	damaged: boolean;
+}
+
+/** Grid position for cubes placed as structural elements */
+export interface PlacedAtComponent {
+	gridX: number;
+	gridZ: number;
+	gridY: number;
+}
+
+/** Marks an entity as something a unit can pick up */
+export interface GrabbableComponent {
+	weight: number;
+}
+
+/** Bulk storage for ground/powdered materials */
+export interface PowderStorageComponent {
+	material: string;
+	amount: number;
+	capacity: number;
+}
+
+/** Container that holds material cubes for processing */
+export interface HopperComponent {
+	slots: number;
+	contents: { material: string; count: number }[];
+}
+
+/** Column of placed cubes at a grid position */
+export interface CubeStackComponent {
+	cubes: string[];
+	gridX: number;
+	gridZ: number;
+	height: number;
+}
+
 /** Hackable target — can be taken over by player */
 export interface HackableComponent {
 	/** Compute cost to hack */
@@ -186,6 +236,21 @@ export interface Entity {
 	miner?: MinerComponent;
 	processor?: ProcessorComponent;
 	item?: ItemComponent;
+
+	// Material / resource components
+	oreDeposit?: OreDepositComponent;
+	materialCube?: MaterialCubeComponent;
+	placedAt?: PlacedAtComponent;
+	grabbable?: GrabbableComponent;
+	powderStorage?: PowderStorageComponent;
+	hopper?: HopperComponent;
+	cubeStack?: CubeStackComponent;
+	/** Entity ID of the entity holding this cube */
+	heldBy?: string;
+	/** Entity ID of the belt this cube is riding */
+	onBelt?: string;
+	/** Entity ID of the hopper storing this cube */
+	inHopper?: string;
 
 	// Holographic projection
 	hologram?: HologramComponent;

@@ -2,23 +2,22 @@
  * R3F component that manages the Tone.js audio system.
  *
  * - Initializes audio on first user interaction
+ * - Starts the AudioEventBridge to wire gameplay events to SFX
  * - Updates storm intensity each frame from game state
- * - Listens for combat events and plays impact sounds
  */
 
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { getSnapshot } from "../ecs/gameState";
+import { disposeAudioBridge, initAudioBridge } from "./AudioEventBridge";
 import {
 	disposeAudio,
 	initAudio,
 	isAudioInitialized,
-	playMetalImpact,
 	updateStormIntensity,
 } from "./SpatialAudio";
 
 export function AudioSystem() {
-	const lastCombatCount = useRef(0);
 	const initAttempted = useRef(false);
 
 	// Initialize audio on first user click/tap (required by browsers)
@@ -28,6 +27,8 @@ export function AudioSystem() {
 			initAttempted.current = true;
 			try {
 				await initAudio();
+				// Start the event bridge — subscribes to gameplay events
+				initAudioBridge();
 				// Success — remove listeners so we don't re-init
 				window.removeEventListener("click", handleInteraction);
 				window.removeEventListener("touchstart", handleInteraction);
@@ -44,6 +45,7 @@ export function AudioSystem() {
 		return () => {
 			window.removeEventListener("click", handleInteraction);
 			window.removeEventListener("touchstart", handleInteraction);
+			disposeAudioBridge();
 			disposeAudio();
 		};
 	}, []);
@@ -57,12 +59,9 @@ export function AudioSystem() {
 		// Update storm ambience intensity
 		updateStormIntensity(snap.power.stormIntensity);
 
-		// Play combat impact sounds for new events
-		const currentCombatCount = snap.combatEvents.length;
-		if (currentCombatCount > lastCombatCount.current) {
-			playMetalImpact();
-		}
-		lastCombatCount.current = currentCombatCount;
+		// Combat events, resource scavenging, fabrication, enemy detection,
+		// and lightning strikes are all handled by the AudioEventBridge
+		// via game state subscriptions — no per-frame polling needed here.
 	});
 
 	return null;

@@ -1,0 +1,31 @@
+{
+  "maintenance_bot": {
+    "maxSpeed": 5.0,
+    "maxForce": 10.0,
+    "mass": 1.0,
+    "turnRate": 3.0,
+    "carrySpeedMultiplier": 0.6,
+    "defaultSpeed": 3
+  },
+  "heavy_bot": {
+    "maxSpeed": 3.0,
+    "maxForce": 15.0,
+    "mass": 2.0,
+    "turnRate": 2.0,
+    "carrySpeedMultiplier": 0.4,
+    "defaultSpeed": 2
+  },
+  "automation": {
+    "guardRange": 8,
+    "followDistance": 3,
+    "workDistance": 2,
+    "waypointReachThreshold": 2,
+    "guardReturnThreshold": 3,
+    "guardPathCooldown": 0.3,
+    "followPathCooldown": 0.5,
+    "workPathCooldown": 0.5,
+    "patrolPathCooldown": 0.5,
+    "idleYawChangeChance": 0.01,
+    "idleYawChangeAmount": 0.5
+  }
+}

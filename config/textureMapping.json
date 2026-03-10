@@ -1,0 +1,107 @@
+{
+  "description": "PBR texture mapping for Syntheteria cube building materials. Each material maps to a texture set from the 2DPhotorealistic library. Textures are copied into game/public/textures/materials/<materialId>/",
+  "sourceLibrary": "2DPhotorealistic/MATERIAL/1K-JPG",
+  "resolution": "1K",
+  "materials": {
+    "iron": {
+      "displayName": "Iron",
+      "description": "Dark industrial iron with worn patina — raw smelted ore cubes",
+      "textureSet": "Metal038",
+      "sourcePath": "2DPhotorealistic/MATERIAL/1K-JPG/Metal038",
+      "localPath": "textures/materials/iron",
+      "files": {
+        "color": "Metal038_1K-JPG_Color.jpg",
+        "metalness": "Metal038_1K-JPG_Metalness.jpg",
+        "normal": "Metal038_1K-JPG_NormalGL.jpg",
+        "roughness": "Metal038_1K-JPG_Roughness.jpg",
+        "displacement": "Metal038_1K-JPG_Displacement.jpg"
+      }
+    },
+    "copper": {
+      "displayName": "Copper",
+      "description": "Warm copper/bronze tone — refined from copper ore",
+      "textureSet": "Metal035",
+      "sourcePath": "2DPhotorealistic/MATERIAL/1K-JPG/Metal035",
+      "localPath": "textures/materials/copper",
+      "files": {
+        "color": "Metal035_1K-JPG_Color.jpg",
+        "metalness": "Metal035_1K-JPG_Metalness.jpg",
+        "normal": "Metal035_1K-JPG_NormalGL.jpg",
+        "roughness": "Metal035_1K-JPG_Roughness.jpg",
+        "displacement": "Metal035_1K-JPG_Displacement.jpg"
+      }
+    },
+    "stone": {
+      "displayName": "Stone",
+      "description": "Rough dark concrete/rock — compressed stone powder cubes",
+      "textureSet": "Concrete032",
+      "sourcePath": "2DPhotorealistic/MATERIAL/1K-JPG/Concrete032",
+      "localPath": "textures/materials/stone",
+      "files": {
+        "color": "Concrete032_1K-JPG_Color.jpg",
+        "ao": "Concrete032_1K-JPG_AmbientOcclusion.jpg",
+        "normal": "Concrete032_1K-JPG_NormalGL.jpg",
+        "roughness": "Concrete032_1K-JPG_Roughness.jpg",
+        "displacement": "Concrete032_1K-JPG_Displacement.jpg"
+      },
+      "notes": "No metalness map (non-metallic material). Has AmbientOcclusion instead."
+    },
+    "carbon": {
+      "displayName": "Carbon",
+      "description": "Dark dense polished material — compressed carbon cubes",
+      "textureSet": "Metal036",
+      "sourcePath": "2DPhotorealistic/MATERIAL/1K-JPG/Metal036",
+      "localPath": "textures/materials/carbon",
+      "files": {
+        "color": "Metal036_1K-JPG_Color.jpg",
+        "metalness": "Metal036_1K-JPG_Metalness.jpg",
+        "normal": "Metal036_1K-JPG_NormalGL.jpg",
+        "roughness": "Metal036_1K-JPG_Roughness.jpg",
+        "displacement": "Metal036_1K-JPG_Displacement.jpg"
+      }
+    },
+    "steel": {
+      "displayName": "Steel",
+      "description": "Clean brushed steel plates — refined iron alloy",
+      "textureSet": "MetalPlates009",
+      "sourcePath": "2DPhotorealistic/MATERIAL/1K-JPG/MetalPlates009",
+      "localPath": "textures/materials/steel",
+      "files": {
+        "color": "MetalPlates009_1K-JPG_Color.jpg",
+        "metalness": "MetalPlates009_1K-JPG_Metalness.jpg",
+        "normal": "MetalPlates009_1K-JPG_NormalGL.jpg",
+        "roughness": "MetalPlates009_1K-JPG_Roughness.jpg",
+        "displacement": "MetalPlates009_1K-JPG_Displacement.jpg"
+      }
+    },
+    "alloy": {
+      "displayName": "Alloy",
+      "description": "Industrial diamond plate composite — refined copper+iron blend",
+      "textureSet": "DiamondPlate001",
+      "sourcePath": "2DPhotorealistic/MATERIAL/1K-JPG/DiamondPlate001",
+      "localPath": "textures/materials/alloy",
+      "files": {
+        "color": "DiamondPlate001_1K-JPG_Color.jpg",
+        "metalness": "DiamondPlate001_1K-JPG_Metalness.jpg",
+        "normal": "DiamondPlate001_1K-JPG_NormalGL.jpg",
+        "roughness": "DiamondPlate001_1K-JPG_Roughness.jpg",
+        "displacement": "DiamondPlate001_1K-JPG_Displacement.jpg"
+      }
+    },
+    "reinforced_concrete": {
+      "displayName": "Reinforced Concrete",
+      "description": "Industrial paneled concrete — refined stone with steel reinforcement",
+      "textureSet": "Concrete028",
+      "sourcePath": "2DPhotorealistic/MATERIAL/1K-JPG/Concrete028",
+      "localPath": "textures/materials/reinforced_concrete",
+      "files": {
+        "color": "Concrete028_1K-JPG_Color.jpg",
+        "ao": "Concrete028_1K-JPG_AmbientOcclusion.jpg",
+        "normal": "Concrete028_1K-JPG_NormalGL.jpg",
+        "roughness": "Concrete028_1K-JPG_Roughness.jpg",
+        "displacement": "Concrete028_1K-JPG_Displacement.jpg"
+      },
+      "notes": "No metalness map (non-metallic material). Has AmbientOcclusion instead."
+    }
+  }
+}

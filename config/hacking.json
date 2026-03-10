@@ -1,0 +1,15 @@
+{
+  "startRange": 4,
+  "cancelRange": 8,
+  "baseComputeCost": 10,
+  "progressPerCompute": 0.1,
+  "factionResistance": {
+    "feral": 1.0,
+    "cultist": 2.0,
+    "rogue": 1.5
+  },
+  "signalNetwork": {
+    "computePerRelayStrength": 10,
+    "minSignalStrength": 0.1
+  }
+}

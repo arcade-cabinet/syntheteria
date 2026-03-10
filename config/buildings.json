@@ -1,0 +1,79 @@
+{
+  "furnace": {
+    "powerRequired": 2,
+    "processSpeed": 1.0,
+    "hopperSlots": 2
+  },
+  "lightning_rod": {
+    "capacity": 2,
+    "protectionRadius": 12,
+    "defaultRodCapacity": 10,
+    "defaultCurrentOutput": 7,
+    "defaultProtectionRadius": 8,
+    "minSpacing": 10
+  },
+  "fabrication_unit": {
+    "powerRequired": 3,
+    "buildSpeedMultiplier": 1.0,
+    "defaultComponents": [
+      { "name": "power_supply", "functional": false, "material": "electronic" },
+      { "name": "fabrication_arm", "functional": true, "material": "metal" },
+      { "name": "material_hopper", "functional": true, "material": "metal" }
+    ]
+  },
+  "outpost": {
+    "powerRequired": 1,
+    "claimRadius": 15,
+    "cost": {
+      "rock": 8,
+      "iron": 4
+    }
+  },
+  "miner": {
+    "powerRequired": 2,
+    "defaultExtractionRate": 0.1,
+    "drillHealthDegradation": 0.001,
+    "bufferCapacity": 5,
+    "defaultComponents": [
+      { "name": "drill_head", "functional": true, "material": "metal" },
+      { "name": "motor", "functional": true, "material": "electronic" }
+    ]
+  },
+  "processor": {
+    "powerRequired": 1,
+    "defaultSpeed": 60,
+    "defaultComponents": [
+      { "name": "processing_unit", "functional": true, "material": "electronic" },
+      { "name": "intake", "functional": true, "material": "metal" },
+      { "name": "output_chute", "functional": true, "material": "metal" }
+    ]
+  },
+  "placementCosts": {
+    "lightning_rod": [
+      { "type": "scrapMetal", "amount": 8 },
+      { "type": "eWaste", "amount": 4 }
+    ],
+    "fabrication_unit": [
+      { "type": "scrapMetal", "amount": 12 },
+      { "type": "eWaste", "amount": 6 },
+      { "type": "intactComponents", "amount": 2 }
+    ]
+  },
+  "blueprints": {
+    "basic_miner": {
+      "pattern": [[["scrap_iron", "scrap_iron"]]],
+      "result": "miner",
+      "description": "2 iron cubes side by side"
+    },
+    "basic_fabricator": {
+      "pattern": [[["copper", "scrap_iron"], ["scrap_iron", "copper"]]],
+      "result": "fabricator",
+      "description": "2x2 alternating copper and iron"
+    },
+    "turret": {
+      "pattern": [[["scrap_iron"], ["scrap_iron"], ["titanium"]]],
+      "result": "turret",
+      "description": "2 iron stacked with titanium on top"
+    }
+  }
+}

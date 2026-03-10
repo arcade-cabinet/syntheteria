@@ -1,0 +1,235 @@
+/**
+ * Raid targeting — scans the world for enemy stockpiles and evaluates
+ * raid viability for an attacking faction.
+ *
+ * Stockpiles are clusters of placed cubes (Grabbable entities).
+ * Targets are prioritised by material value, vulnerability (distance
+ * from player defenders), and accessibility (pathfinding cost proxy).
+ */
+
+import type { Entity, Vec3 } from "../ecs/types";
+import { units } from "../ecs/world";
+import { type CubeEntity, getCubes } from "./raidSystem";
+
+// ---------------------------------------------------------------------------
+// Target description
+// ---------------------------------------------------------------------------
+
+export interface RaidTarget {
+	/** Centroid of the cube cluster. */
+	position: Vec3;
+	/** Sum of all cube values in the cluster. */
+	estimatedValue: number;
+	/** Rough threat level: how many functional defenders are nearby. */
+	threatLevel: number;
+	/** Number of cubes in the cluster. */
+	cubeCount: number;
+	/** Ids of cubes in this cluster (for downstream use). */
+	cubeIds: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** Cubes within this radius of each other are considered one stockpile. */
+const CLUSTER_RADIUS = 6.0;
+/** Radius around a stockpile in which we count defenders. */
+const DEFENDER_SCAN_RADIUS = 12.0;
+
+// ---------------------------------------------------------------------------
+// Material value weights — higher = more attractive to raiders.
+// ---------------------------------------------------------------------------
+
+const VALUE_WEIGHTS: Record<string, number> = {
+	scrapMetal: 1,
+	eWaste: 2,
+	intactComponents: 5,
+};
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+/**
+ * Find raid targets visible to the given faction.
+ *
+ * Scans all cube entities NOT owned by `faction`, clusters nearby cubes
+ * into stockpiles, and returns them sorted by a composite score:
+ *   score = value * (1 / (1 + threatLevel))
+ *
+ * Higher-value, lower-threat targets sort first.
+ *
+ * @param faction - the attacking faction (cubes belonging to this faction are ignored)
+ */
+export function findRaidTargets(faction: Entity["faction"]): RaidTarget[] {
+	const cubes = getCubes();
+
+	// Filter to cubes that belong to the enemy (i.e. NOT our faction, and not held)
+	const enemyCubes = cubes.filter((c) => c.faction !== faction && !c.heldBy);
+
+	if (enemyCubes.length === 0) return [];
+
+	// Cluster cubes by proximity
+	const clusters = clusterCubes(enemyCubes);
+
+	// Build RaidTarget for each cluster
+	const targets: RaidTarget[] = clusters.map((cluster) => {
+		const centroid = computeCentroid(cluster);
+		const estimatedValue = cluster.reduce(
+			(sum, c) =>
+				sum +
+				(VALUE_WEIGHTS[c.grabbable.resourceType] ?? 1) * c.grabbable.value,
+			0,
+		);
+		const threatLevel = countDefendersNear(
+			centroid,
+			DEFENDER_SCAN_RADIUS,
+			faction,
+		);
+		return {
+			position: centroid,
+			estimatedValue,
+			threatLevel,
+			cubeCount: cluster.length,
+			cubeIds: cluster.map((c) => c.id),
+		};
+	});
+
+	// Sort by composite score: high value & low threat first
+	targets.sort((a, b) => {
+		const scoreA = a.estimatedValue / (1 + a.threatLevel);
+		const scoreB = b.estimatedValue / (1 + b.threatLevel);
+		return scoreB - scoreA;
+	});
+
+	return targets;
+}
+
+/**
+ * Assess whether a given faction has enough force to raid a target.
+ *
+ * Compares available combat-capable units from the faction against
+ * the expected defense strength.
+ *
+ * @returns an object with the assessment details and a `viable` flag
+ */
+export function assessRaidViability(
+	faction: Entity["faction"],
+	target: RaidTarget,
+): {
+	viable: boolean;
+	availableForce: number;
+	expectedDefense: number;
+	forceRatio: number;
+} {
+	// Count combat-capable units of the attacking faction
+	let availableForce = 0;
+	for (const u of units) {
+		if (u.faction !== faction) continue;
+		const functionalCount = u.unit.components.filter(
+			(c) => c.functional,
+		).length;
+		if (functionalCount > 0) {
+			availableForce += functionalCount;
+		}
+	}
+
+	// Expected defense: threat level weighted by average component count
+	const expectedDefense = target.threatLevel * 3; // assume ~3 functional components per defender
+
+	const forceRatio =
+		expectedDefense > 0
+			? availableForce / expectedDefense
+			: availableForce > 0
+				? 10
+				: 0;
+
+	// Need at least 1.5:1 force ratio to consider viable
+	const viable = forceRatio >= 1.5 && availableForce > 0;
+
+	return {
+		viable,
+		availableForce,
+		expectedDefense,
+		forceRatio,
+	};
+}
+
+// ---------------------------------------------------------------------------
+// Internals
+// ---------------------------------------------------------------------------
+
+/**
+ * Simple single-linkage clustering: group cubes that are within
+ * CLUSTER_RADIUS of at least one other cube in the same cluster.
+ */
+function clusterCubes(cubes: CubeEntity[]): CubeEntity[][] {
+	const assigned = new Set<string>();
+	const clusters: CubeEntity[][] = [];
+
+	for (const cube of cubes) {
+		if (assigned.has(cube.id)) continue;
+
+		// BFS to find connected cubes
+		const cluster: CubeEntity[] = [cube];
+		assigned.add(cube.id);
+		const queue = [cube];
+
+		while (queue.length > 0) {
+			const current = queue.pop()!;
+			for (const other of cubes) {
+				if (assigned.has(other.id)) continue;
+				if (
+					distXZ(current.worldPosition, other.worldPosition) <= CLUSTER_RADIUS
+				) {
+					cluster.push(other);
+					assigned.add(other.id);
+					queue.push(other);
+				}
+			}
+		}
+
+		clusters.push(cluster);
+	}
+
+	return clusters;
+}
+
+function computeCentroid(cubes: CubeEntity[]): Vec3 {
+	let x = 0;
+	let z = 0;
+	for (const c of cubes) {
+		x += c.worldPosition.x;
+		z += c.worldPosition.z;
+	}
+	const n = cubes.length;
+	return { x: x / n, y: 0, z: z / n };
+}
+
+/**
+ * Count functional player/defending units near a position.
+ * "Defending" means any unit NOT belonging to the attacking faction.
+ */
+function countDefendersNear(
+	pos: Vec3,
+	radius: number,
+	attackingFaction: Entity["faction"],
+): number {
+	let count = 0;
+	for (const u of units) {
+		if (u.faction === attackingFaction) continue;
+		if (u.faction === "wildlife") continue; // otters don't fight
+		if (!u.unit.components.some((c) => c.functional)) continue;
+		if (distXZ(u.worldPosition, pos) <= radius) {
+			count++;
+		}
+	}
+	return count;
+}
+
+function distXZ(a: Vec3, b: Vec3): number {
+	const dx = a.x - b.x;
+	const dz = a.z - b.z;
+	return Math.sqrt(dx * dx + dz * dz);
+}

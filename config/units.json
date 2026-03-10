@@ -1,0 +1,32 @@
+{
+  "maintenance_bot": {
+    "speed": 5.0,
+    "powerDraw": 1,
+    "maxComponents": 5,
+    "visionRange": 6,
+    "defaultComponents": [
+      { "name": "camera", "functional": true, "material": "electronic" },
+      { "name": "arms", "functional": true, "material": "metal" },
+      { "name": "legs", "functional": true, "material": "metal" },
+      { "name": "power_cell", "functional": true, "material": "electronic" }
+    ]
+  },
+  "otters": {
+    "defaultSpeed": 1.5,
+    "wanderTimerMin": 2,
+    "wanderTimerMax": 8,
+    "worldBorderMargin": 5,
+    "bounceWanderTimer": 1,
+    "wanderTimerRefreshMin": 3,
+    "wanderTimerRefreshMax": 11
+  },
+  "exploration": {
+    "visionRadius": 6,
+    "fragmentMergeDistance": 6
+  },
+  "gameSpeed": {
+    "min": 0.5,
+    "max": 4,
+    "default": 1.0
+  }
+}

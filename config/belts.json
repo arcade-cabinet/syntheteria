@@ -1,0 +1,16 @@
+{
+  "tiers": {
+    "basic": {
+      "speed": 1.0,
+      "powerCost": 0
+    },
+    "fast": {
+      "speed": 2.0,
+      "powerCost": 0.5
+    },
+    "express": {
+      "speed": 4.0,
+      "powerCost": 1.0
+    }
+  }
+}

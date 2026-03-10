@@ -7,6 +7,10 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { buildNavMesh } from "./ai/NavMeshBuilder";
+import { NavMeshDebugRenderer } from "./ai/NavMeshDebugRenderer";
+import { YukaManager } from "./ai/YukaManager";
+import { YukaSystem } from "./ai/YukaSystem.tsx";
 import { AudioSystem } from "./audio/AudioSystem";
 import { placeBelt } from "./ecs/beltFactory";
 import { getCityBuildings, resetCityLayout } from "./ecs/cityLayout";
@@ -18,36 +22,51 @@ import {
 } from "./ecs/factory";
 import { spawnMiner, spawnProcessor } from "./ecs/factoryBuildings";
 import { getGameSpeed, getSnapshot, simulationTick } from "./ecs/gameState";
-import { setWorldSeed } from "./ecs/seed";
+import { phraseToSeed, setWorldSeed } from "./ecs/seed";
 import { getTerrainHeight, initTerrainFromSeed } from "./ecs/terrain";
 import type { Entity } from "./ecs/types";
 import { placeWire } from "./ecs/wireFactory";
 import { getActivePlayerBot, world } from "./ecs/world";
 import { FPSCamera } from "./input/FPSCamera";
 import { FPSInput } from "./input/FPSInput";
+import { ObjectSelectionSystem } from "./input/ObjectSelectionSystem";
 import { PhysicsSystem } from "./physics/PhysicsSystem";
 import { BeltRenderer } from "./rendering/BeltRenderer";
 import { CameraEffects } from "./rendering/CameraEffects";
 import { CityRenderer } from "./rendering/CityRenderer";
+import { EnvironmentSetup } from "./rendering/EnvironmentSetup";
 import { FactoryRenderer } from "./rendering/FactoryRenderer";
 import { Flashlight } from "./rendering/Flashlight";
+import { FurnaceRenderer } from "./rendering/FurnaceRenderer";
 import { HologramRenderer } from "./rendering/HologramRenderer";
 import { LandscapeProps } from "./rendering/LandscapeProps";
+import { OreDepositRenderer } from "./rendering/OreDepositRenderer";
 import { OtterRenderer } from "./rendering/OtterRenderer";
-import { StormSky } from "./rendering/StormSky";
+import { PlacedCubeRenderer } from "./rendering/PlacedCubeRenderer";
+import { SelectionHighlight } from "./rendering/SelectionHighlight";
+import { usePreloadTerrainMaterials } from "./rendering/TerrainPBR";
 import { TerrainRenderer } from "./rendering/TerrainRenderer";
 import { UnitRenderer } from "./rendering/UnitRenderer";
 import { WireRenderer } from "./rendering/WireRenderer";
-import { beltTransportSystem } from "./systems/beltTransport";
+import { updateBeltTransport } from "./systems/beltTransport";
 import { botAutomationSystem } from "./systems/botAutomation";
+import { CoreLoopSystem } from "./systems/CoreLoopSystem";
 import { cultistAISystem, spawnCultist } from "./systems/cultistAI";
+import { createFurnace } from "./systems/furnace";
+import { InteractionSystem } from "./systems/InteractionSystem";
 import { movementSystem } from "./systems/movement";
 import { buildNavGraph } from "./systems/navmesh";
+import { spawnInitialDeposits } from "./systems/oreSpawner";
+import { autoStartFirstQuest } from "./systems/questSystem";
 import { resetScavengePoints } from "./systems/resources";
 import { Bezel } from "./ui/Bezel";
+import { CoreLoopHUD } from "./ui/CoreLoopHUD";
 import { FPSHUD } from "./ui/FPSHUD";
 import { InventoryView } from "./ui/InventoryView";
 import { MobileControls } from "./ui/MobileControls";
+import { PowerOverlay } from "./ui/PowerOverlay";
+import type { PregameConfig } from "./ui/PregameScreen";
+import { PregameScreen } from "./ui/PregameScreen";
 import { getEquippedTool } from "./ui/RadialToolMenu";
 import { TitleScreen } from "./ui/TitleScreen";
 
@@ -61,6 +80,10 @@ function initializeWorld(seed: number) {
 
 	getCityBuildings();
 	buildNavGraph();
+
+	// Build Yuka NavMesh for navmesh-based pathfinding (parallel to grid A*)
+	const yukaNavMesh = buildNavMesh();
+	YukaManager.setNavMesh(yukaNavMesh);
 
 	// Bot 1 (YOU): Has a working camera but broken arms.
 	// This is the bot you wake up as. First person. You can see but can't interact.
@@ -234,9 +257,26 @@ function initializeWorld(seed: number) {
 	// Northern territory patrol — far enough that players discover them later
 	spawnCultist({ x: 15, z: -30, fragmentId: frag, patrolRadius: 10 });
 	spawnCultist({ x: 22, z: -35, fragmentId: frag, patrolRadius: 8 });
+
+	// ── Ore deposits ────────────────────────────────────────────────
+	// Scatter 15 ore deposits across a 200m world area
+	spawnInitialDeposits(15, 200);
+
+	// ── Starting furnace ────────────────────────────────────────────
+	// Player's first furnace — near the fabrication unit
+	createFurnace({ x: 13, y: 0, z: 14 });
+
+	// ── Quest system ─────────────────────────────────────────────────
+	autoStartFirstQuest();
 }
 
 // --- Game loop ---
+
+/** Preloads PBR textures for terrain and buildings on mount. */
+function PBRPreloader() {
+	usePreloadTerrainMaterials();
+	return null;
+}
 
 function GameLoop() {
 	const simAccumulator = useRef(0);
@@ -249,7 +289,7 @@ function GameLoop() {
 		const scaledDelta = delta * speed;
 
 		movementSystem(delta, speed);
-		beltTransportSystem(scaledDelta);
+		updateBeltTransport(scaledDelta);
 		botAutomationSystem(scaledDelta);
 		cultistAISystem(scaledDelta);
 
@@ -268,8 +308,9 @@ function GameLoop() {
 let worldInitialized = false;
 
 export default function App() {
-	const [phase, setPhase] = useState<"title" | "playing">("title");
+	const [phase, setPhase] = useState<"title" | "pregame" | "playing">("title");
 	const pendingSeedRef = useRef<number>(42);
+	const pregameConfigRef = useRef<PregameConfig | null>(null);
 
 	useEffect(() => {
 		if (phase === "playing" && !worldInitialized) {
@@ -278,10 +319,23 @@ export default function App() {
 		}
 	}, [phase]);
 
-	const handleNewGame = (seed: number) => {
+	// Title screen "New Game" → go to pregame config
+	const handleNewGame = (_seed: number) => {
+		setPhase("pregame");
+	};
+
+	// Pregame "Start Game" → initialize world and play
+	const handlePregameStart = (config: PregameConfig) => {
+		pregameConfigRef.current = config;
+		// Resolve seed from the map settings phrase
+		const seed = phraseToSeed(config.mapSettings.seedPhrase) ?? 42;
 		pendingSeedRef.current = seed;
-		// No narration. Just go.
 		setPhase("playing");
+	};
+
+	// Pregame "Back" → return to title
+	const handlePregameBack = () => {
+		setPhase("title");
 	};
 
 	// Detect touch device
@@ -306,6 +360,12 @@ export default function App() {
 		return <TitleScreen onNewGame={handleNewGame} />;
 	}
 
+	if (phase === "pregame") {
+		return (
+			<PregameScreen onStart={handlePregameStart} onBack={handlePregameBack} />
+		);
+	}
+
 	// Get game state for bezel informatics
 	const snap = getSnapshot();
 	const bot = getActivePlayerBot();
@@ -322,12 +382,13 @@ export default function App() {
 				camera={{ fov: 75, near: 0.1, far: 500 }}
 				style={{ width: "100%", height: "100%" }}
 			>
-				<StormSky />
-				<ambientLight intensity={0.3} />
+				<PBRPreloader />
+				<EnvironmentSetup />
+				<ambientLight intensity={0.15} />
 				<directionalLight
 					position={[10, 20, 10]}
-					intensity={0.6}
-					color="#aabbff"
+					intensity={0.4}
+					color="#8899cc"
 				/>
 
 				<TerrainRenderer />
@@ -339,18 +400,29 @@ export default function App() {
 				<WireRenderer />
 				<FactoryRenderer />
 				<HologramRenderer />
+				<OreDepositRenderer />
+				<PlacedCubeRenderer />
+				<FurnaceRenderer />
 
 				<FPSCamera />
 				<CameraEffects />
 				<Flashlight />
 				<FPSInput />
+				<ObjectSelectionSystem />
+				<SelectionHighlight />
 				<PhysicsSystem />
 				<AudioSystem />
 				<GameLoop />
+				<CoreLoopSystem />
+				<InteractionSystem />
+				<YukaSystem />
+				<NavMeshDebugRenderer />
 			</Canvas>
 
 			{/* HUD overlays on the viewport */}
 			<FPSHUD />
+			<CoreLoopHUD />
+			<PowerOverlay />
 			<InventoryView />
 
 			{/* Mobile controls — joystick, tool view, action buttons */}

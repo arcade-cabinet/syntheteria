@@ -1,0 +1,20 @@
+{
+  "meleeRange": 2.5,
+  "meleeHitChance": 0.6,
+  "meleeDamage": 1,
+  "meleeHitChanceNoArms": 0.3,
+  "hackerRange": 4,
+  "welderRange": 3,
+  "welderDamage": 2,
+  "welderCooldown": 1.0,
+  "attackChancePerTick": 0.4,
+  "salvageScrapMultiplier": 1.5,
+  "salvageEWasteChance": 0.5,
+  "fpsCombat": {
+    "welderRange": 6,
+    "welderConeAngle": 0.85,
+    "enemyMeleeRange": 5,
+    "enemyAttackChancePerFrame": 0.02,
+    "hitResultValidMs": 200
+  }
+}

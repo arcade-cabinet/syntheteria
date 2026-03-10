@@ -1,0 +1,9 @@
+{
+  "masterVolume": 0.7,
+  "sfxVolume": 1.0,
+  "ambientVolume": 0.5,
+  "musicVolume": 0.3,
+  "stormAmbienceVolume": 0.4,
+  "combatSfxVolume": 0.8,
+  "uiFeedbackVolume": 0.6
+}

@@ -1,0 +1,24 @@
+{
+  "tiers": [
+    {
+      "name": "Scrap",
+      "cost": 0,
+      "unlocks": ["basic_belt", "basic_furnace", "lightning_rod"]
+    },
+    {
+      "name": "Refined",
+      "cost": 50,
+      "unlocks": ["fast_belt", "smelter", "walls", "outpost"]
+    },
+    {
+      "name": "Precision",
+      "cost": 150,
+      "unlocks": ["express_belt", "refiner", "separator", "turret"]
+    },
+    {
+      "name": "Advanced",
+      "cost": 400,
+      "unlocks": ["signal_relay", "hacking_module", "formation_controller"]
+    }
+  ]
+}

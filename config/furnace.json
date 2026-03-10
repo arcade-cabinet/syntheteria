@@ -1,0 +1,86 @@
+{
+  "tiers": [
+    {
+      "name": "Basic Furnace",
+      "techRequired": 0,
+      "recipes": {
+        "iron_plate": {
+          "inputs": [{ "material": "scrap_iron", "count": 2 }],
+          "output": "iron_plate",
+          "time": 10
+        },
+        "wire_bundle": {
+          "inputs": [{ "material": "copper", "count": 1 }],
+          "output": "wire_bundle",
+          "time": 8
+        },
+        "circuit_board": {
+          "inputs": [{ "material": "silicon", "count": 2 }],
+          "output": "circuit_board",
+          "time": 15
+        }
+      }
+    }
+  ],
+  "fabrication": {
+    "recipes": [
+      {
+        "name": "Camera Module",
+        "outputComponent": "camera",
+        "outputMaterial": "electronic",
+        "costs": [
+          { "type": "eWaste", "amount": 4 },
+          { "type": "intactComponents", "amount": 1 }
+        ],
+        "buildTime": 8
+      },
+      {
+        "name": "Arm Assembly",
+        "outputComponent": "arms",
+        "outputMaterial": "metal",
+        "costs": [
+          { "type": "scrapMetal", "amount": 5 }
+        ],
+        "buildTime": 6
+      },
+      {
+        "name": "Leg Assembly",
+        "outputComponent": "legs",
+        "outputMaterial": "metal",
+        "costs": [
+          { "type": "scrapMetal", "amount": 4 }
+        ],
+        "buildTime": 5
+      },
+      {
+        "name": "Power Cell",
+        "outputComponent": "power_cell",
+        "outputMaterial": "electronic",
+        "costs": [
+          { "type": "eWaste", "amount": 3 },
+          { "type": "scrapMetal", "amount": 2 }
+        ],
+        "buildTime": 7
+      },
+      {
+        "name": "Power Supply",
+        "outputComponent": "power_supply",
+        "outputMaterial": "electronic",
+        "costs": [
+          { "type": "eWaste", "amount": 5 },
+          { "type": "intactComponents", "amount": 1 }
+        ],
+        "buildTime": 10
+      }
+    ]
+  },
+  "repair": {
+    "range": 3.0,
+    "ticksToRepair": 5,
+    "costs": {
+      "metal": { "type": "scrapMetal", "amount": 3 },
+      "plastic": { "type": "scrapMetal", "amount": 1 },
+      "electronic": { "type": "eWaste", "amount": 2 }
+    }
+  }
+}

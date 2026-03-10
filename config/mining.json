@@ -1,0 +1,34 @@
+{
+  "oreTypes": {
+    "rock": {
+      "hardness": 1,
+      "grindSpeed": 1.0,
+      "color": "#8B7355"
+    },
+    "scrap_iron": {
+      "hardness": 2,
+      "grindSpeed": 0.8,
+      "color": "#8B4513"
+    },
+    "copper": {
+      "hardness": 3,
+      "grindSpeed": 0.6,
+      "color": "#B87333"
+    },
+    "silicon": {
+      "hardness": 4,
+      "grindSpeed": 0.4,
+      "color": "#A0A0C0"
+    },
+    "titanium": {
+      "hardness": 5,
+      "grindSpeed": 0.3,
+      "color": "#C0C0C0"
+    }
+  },
+  "powderCapacity": 100,
+  "compressionRatio": 100,
+  "drillHealthDegradationPerItem": 0.001,
+  "minerBufferMax": 5,
+  "defaultExtractionRate": 0.1
+}

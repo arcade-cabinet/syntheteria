@@ -1,85 +1,248 @@
 /**
- * Belt transport system — moves items along conveyor belt chains.
+ * Belt transport system — physical MaterialCube entities ride along conveyor belts.
  *
- * Each tick, items on belts advance by belt.speed * deltaTick.
- * When an item reaches the end of a belt segment (itemProgress >= 1.0),
- * it transfers to the next belt in the chain. If the next entity has a
- * processor component, the item is delivered to it instead.
- * Items pile up (stop advancing) if there is no next belt or the next
- * belt is already carrying something.
+ * Cubes are placed at a belt's input end and move toward the output end at
+ * the configured belt speed. While on a belt, cubes are in kinematic mode
+ * (physics-driven position). When they reach the output end they are either
+ * fed into a connected machine hopper (via beltRouting) or ejected back to
+ * dynamic mode so they tumble onto the ground.
+ *
+ * Module-level state pattern (same as fabrication.ts, resources.ts, etc.).
  */
 
-import type { Entity } from "../ecs/types";
-import { belts, world } from "../ecs/world";
+import { getConnectedOutput, type BeltConnection } from "./beltRouting";
+
+// ---------------------------------------------------------------------------
+// Config — values match config/processing.json
+// ---------------------------------------------------------------------------
+
+/** Belt speed in world-units per second (from config/processing.json belt.speed) */
+const BELT_SPEED = 2.0;
+
+/** Minimum spacing between cube centres on a belt in metres (from config/processing.json belt.cubeSpacing) */
+const CUBE_SPACING = 0.6;
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export type BodyType = "kinematic" | "dynamic";
+
+export interface CubeOnBelt {
+	cubeId: string;
+	/** 0 = input end, 1 = output end (normalised progress along belt) */
+	progress: number;
+	bodyType: BodyType;
+}
+
+export interface Belt {
+	beltId: string;
+	/** Total length of the belt in world units */
+	length: number;
+	/** Cubes currently riding on this belt, sorted by progress ascending */
+	cubes: CubeOnBelt[];
+}
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+
+const belts: Map<string, Belt> = new Map();
+
+// ---------------------------------------------------------------------------
+// Lifecycle helpers (for tests and hot-reload)
+// ---------------------------------------------------------------------------
+
+/** Reset all belt state. Intended for tests. */
+export function resetBelts(): void {
+	belts.clear();
+}
+
+/** Register a belt so the transport system knows about it. */
+export function registerBelt(beltId: string, length: number): void {
+	if (belts.has(beltId)) return;
+	belts.set(beltId, { beltId, length, cubes: [] });
+}
+
+/** Unregister a belt (e.g. when deconstructed). Ejects all cubes. */
+export function unregisterBelt(beltId: string): void {
+	belts.delete(beltId);
+}
+
+export function getBelt(beltId: string): Belt | undefined {
+	return belts.get(beltId);
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
 
 /**
- * Find an entity by ID. Returns undefined if not found.
+ * Place a cube at the input end of a belt (progress = 0).
+ * Returns false if the belt is at capacity or the cube is already on it.
  */
-function getEntityById(id: string): Entity | undefined {
-	for (const entity of world) {
-		if (entity.id === id) return entity;
+export function addCubeToBelt(cubeId: string, beltId: string): boolean {
+	const belt = belts.get(beltId);
+	if (!belt) return false;
+
+	// Already on this belt?
+	if (belt.cubes.some((c) => c.cubeId === cubeId)) return false;
+
+	// Capacity check: how many cubes can fit?
+	const maxCubes = Math.max(1, Math.floor(belt.length / CUBE_SPACING));
+	if (belt.cubes.length >= maxCubes) return false;
+
+	// Ensure spacing at input end — the first cube's progress (in world units)
+	// must be >= CUBE_SPACING from 0, or there must be no cubes yet.
+	if (belt.cubes.length > 0) {
+		const firstCubeWorldPos = belt.cubes[0].progress * belt.length;
+		if (firstCubeWorldPos < CUBE_SPACING) return false;
 	}
-	return undefined;
+
+	belt.cubes.unshift({
+		cubeId,
+		progress: 0,
+		bodyType: "kinematic",
+	});
+
+	return true;
 }
 
 /**
- * Run belt transport. Called once per simulation tick.
- * @param deltaTick - time elapsed this tick in seconds (at current game speed)
+ * Manually remove a cube from whatever belt it's on (e.g. player grabs it).
+ * Returns true if found and removed.
  */
-export function beltTransportSystem(deltaTick: number) {
-	for (const entity of belts) {
-		const belt = entity.belt;
-
-		// Nothing to move if not carrying an item
-		if (belt.carrying === null) continue;
-
-		// Advance item progress
-		const newProgress = belt.itemProgress + belt.speed * deltaTick;
-
-		if (newProgress < 1.0) {
-			// Item still in transit on this belt segment
-			belt.itemProgress = newProgress;
-			continue;
-		}
-
-		// Item has reached the end of this belt segment
-		if (belt.nextBeltId === null) {
-			// No next belt — item piles up, cap progress at 1.0
-			belt.itemProgress = 1.0;
-			continue;
-		}
-
-		const nextEntity = getEntityById(belt.nextBeltId);
-		if (!nextEntity) {
-			// Next belt entity no longer exists — treat as dead end
-			belt.itemProgress = 1.0;
-			belt.nextBeltId = null;
-			continue;
-		}
-
-		// If the next entity is a processor building, hold item at end of belt.
-		// The processingSystem() will pull the item when the processor is ready.
-		if (nextEntity.processor) {
-			belt.itemProgress = 1.0;
-			continue;
-		}
-
-		// Next entity is a belt — transfer item if the next belt is empty
-		if (nextEntity.belt) {
-			if (nextEntity.belt.carrying !== null) {
-				// Next belt is occupied — item piles up
-				belt.itemProgress = 1.0;
-				continue;
-			}
-
-			// Transfer item to next belt
-			nextEntity.belt.carrying = belt.carrying;
-			nextEntity.belt.itemProgress = 0;
-			belt.carrying = null;
-			belt.itemProgress = 0;
-		} else {
-			// Next entity has no belt or processor — dead end
-			belt.itemProgress = 1.0;
+export function removeCubeFromBelt(cubeId: string): boolean {
+	for (const belt of belts.values()) {
+		const idx = belt.cubes.findIndex((c) => c.cubeId === cubeId);
+		if (idx !== -1) {
+			belt.cubes.splice(idx, 1);
+			return true;
 		}
 	}
+	return false;
+}
+
+/**
+ * Query the cubes currently riding a belt and their absolute positions
+ * (as a fraction 0..1 along the belt).
+ */
+export function getBeltContents(
+	beltId: string,
+): { cubeId: string; progress: number }[] {
+	const belt = belts.get(beltId);
+	if (!belt) return [];
+	return belt.cubes.map((c) => ({ cubeId: c.cubeId, progress: c.progress }));
+}
+
+// ---------------------------------------------------------------------------
+// Callbacks (set by beltRouting or game wiring)
+// ---------------------------------------------------------------------------
+
+/** Called when a cube reaches the belt output and there's a connected machine. */
+export type OnCubeDelivered = (
+	cubeId: string,
+	connection: BeltConnection,
+) => void;
+
+/** Called when a cube is ejected from a belt end (no connection). */
+export type OnCubeEjected = (cubeId: string, beltId: string) => void;
+
+let onDelivered: OnCubeDelivered | null = null;
+let onEjected: OnCubeEjected | null = null;
+
+export function setOnCubeDelivered(cb: OnCubeDelivered | null): void {
+	onDelivered = cb;
+}
+
+export function setOnCubeEjected(cb: OnCubeEjected | null): void {
+	onEjected = cb;
+}
+
+// ---------------------------------------------------------------------------
+// Per-frame update
+// ---------------------------------------------------------------------------
+
+/** Cubes that were ejected/delivered during the last update (for external reading). */
+let lastEjected: { cubeId: string; beltId: string }[] = [];
+let lastDelivered: { cubeId: string; beltId: string }[] = [];
+
+export function getLastEjected(): { cubeId: string; beltId: string }[] {
+	return lastEjected;
+}
+export function getLastDelivered(): { cubeId: string; beltId: string }[] {
+	return lastDelivered;
+}
+
+/**
+ * Advance all cubes on all belts. Call once per frame with frame delta (seconds).
+ */
+export function updateBeltTransport(delta: number): void {
+	const ejected: { cubeId: string; beltId: string }[] = [];
+	const delivered: { cubeId: string; beltId: string }[] = [];
+
+	for (const belt of belts.values()) {
+		if (belt.cubes.length === 0) continue;
+
+		const progressStep = (BELT_SPEED * delta) / belt.length;
+
+		// Move cubes from output-end first so we can check spacing correctly.
+		// Cubes are sorted by progress ascending, so iterate in reverse.
+		for (let i = belt.cubes.length - 1; i >= 0; i--) {
+			const cube = belt.cubes[i];
+
+			// Desired new progress
+			let newProgress = cube.progress + progressStep;
+
+			// Enforce spacing with the cube ahead (if any)
+			if (i < belt.cubes.length - 1) {
+				const ahead = belt.cubes[i + 1];
+				const maxProgress = ahead.progress - CUBE_SPACING / belt.length;
+				if (newProgress > maxProgress) {
+					newProgress = maxProgress;
+				}
+			}
+
+			// Clamp to [0, 1]
+			if (newProgress > 1) newProgress = 1;
+			if (newProgress < 0) newProgress = 0;
+
+			cube.progress = newProgress;
+		}
+
+		// Check if the last cube (highest progress) has reached the output end
+		const last = belt.cubes[belt.cubes.length - 1];
+		if (last && last.progress >= 1) {
+			// Try to hand off to connected belt or machine
+			const connection = getConnectedOutput(belt.beltId);
+
+			if (connection && connection.type === "belt") {
+				// Try to add to connected belt's input
+				const accepted = addCubeToBelt(last.cubeId, connection.targetId);
+				if (accepted) {
+					belt.cubes.pop();
+					delivered.push({ cubeId: last.cubeId, beltId: belt.beltId });
+				}
+				// If not accepted (target full), cube stays at progress=1
+			} else if (connection && connection.type === "machine") {
+				// Deliver to machine hopper
+				belt.cubes.pop();
+				delivered.push({ cubeId: last.cubeId, beltId: belt.beltId });
+				if (onDelivered) {
+					onDelivered(last.cubeId, connection);
+				}
+			} else {
+				// No connection — eject cube (switch to dynamic body)
+				last.bodyType = "dynamic";
+				belt.cubes.pop();
+				ejected.push({ cubeId: last.cubeId, beltId: belt.beltId });
+				if (onEjected) {
+					onEjected(last.cubeId, belt.beltId);
+				}
+			}
+		}
+	}
+
+	lastEjected = ejected;
+	lastDelivered = delivered;
 }

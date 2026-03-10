@@ -25,19 +25,32 @@ const resources: ResourcePool = {
 	intactComponents: 0,
 };
 
+// --- Resource gain subscribers ---
+type ResourceGainCallback = (type: keyof ResourcePool, amount: number) => void;
+const resourceGainListeners = new Set<ResourceGainCallback>();
+
+export function onResourceGain(
+	callback: ResourceGainCallback,
+): () => void {
+	resourceGainListeners.add(callback);
+	return () => {
+		resourceGainListeners.delete(callback);
+	};
+}
+
+function notifyResourceGain(type: keyof ResourcePool, amount: number) {
+	for (const cb of resourceGainListeners) {
+		cb(type, amount);
+	}
+}
+
 export function getResources(): ResourcePool {
 	return { ...resources };
 }
 
-/** Reset all resource counts to zero. Used by save/load to avoid inflation. */
-export function resetResourcePool() {
-	resources.scrapMetal = 0;
-	resources.eWaste = 0;
-	resources.intactComponents = 0;
-}
-
 export function addResource(type: keyof ResourcePool, amount: number) {
 	resources[type] += amount;
+	notifyResourceGain(type, amount);
 }
 
 export function spendResource(
@@ -47,6 +60,13 @@ export function spendResource(
 	if (resources[type] < amount) return false;
 	resources[type] -= amount;
 	return true;
+}
+
+/** Reset the resource pool to zero — for testing and save/load. */
+export function resetResourcePool(): void {
+	resources.scrapMetal = 0;
+	resources.eWaste = 0;
+	resources.intactComponents = 0;
 }
 
 // --- Scavenge Points ---
@@ -138,6 +158,7 @@ export function resourceSystem() {
 
 			if (dist <= SCAVENGE_RANGE) {
 				resources[point.type] += point.amountPerScavenge;
+				notifyResourceGain(point.type, point.amountPerScavenge);
 				point.remaining--;
 				break; // one scavenge per tick per unit
 			}

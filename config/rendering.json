@@ -1,0 +1,180 @@
+{
+  "selectionRayMaxDistance": 50,
+  "shadowMapSize": 1024,
+  "maxParticles": 500,
+  "lodDistances": [20, 50, 100],
+  "instancedBatchSize": 100,
+  "stormSky": {
+    "sphereRadius": 200,
+    "sphereSegments": 32,
+    "lightningFlashThreshold": 0.997,
+    "lightningFlashRate": 4.0,
+    "wormholePulseRate": 0.8,
+    "wormholeGlowRadius": 0.3
+  },
+  "unitColors": {
+    "player": "0x44aaff",
+    "enemy": "0xff3333",
+    "enemyTread": "0x553322",
+    "selected": "0xffaa00",
+    "broken": "0xff4444",
+    "building": "0x888888",
+    "buildingUnpowered": "0x554444",
+    "fabrication": "0xaa8844"
+  },
+  "cityColors": {
+    "conduit": "0x1a1a2e",
+    "node": "0x16213e",
+    "tower": "0x0f3460",
+    "ruin": "0x2a2a2a",
+    "wall": "0x1a1a1a"
+  },
+  "cityAccentColors": {
+    "conduit": "0x00e5ff",
+    "node": "0x00ff88",
+    "tower": "0x00e5ff",
+    "ruin": "0x334433",
+    "wall": "0x003344"
+  },
+  "processorGlowColors": {
+    "smelter": "0xff6600",
+    "refiner": "0x0066ff",
+    "separator": "0x00ff66"
+  },
+  "fogOfWar": {
+    "gridResolution": 2.0,
+    "defaultVisionRange": 15,
+    "cameraVisionBonus": 10,
+    "exploredDarkness": 0.6,
+    "edgeBlendSize": 3.0
+  },
+  "terrainPBR": {
+    "enabled": true,
+    "uvRepeat": 40,
+    "primaryTexture": "MetalWalkway004",
+    "secondaryTexture": "MetalWalkway008",
+    "texturePath": "textures/terrain/",
+    "primaryMaterial": {
+      "metalness": 0.7,
+      "roughness": 0.5,
+      "normalScale": 0.8,
+      "envMapIntensity": 0.8
+    },
+    "secondaryMaterial": {
+      "metalness": 0.65,
+      "roughness": 0.55,
+      "normalScale": 0.7,
+      "envMapIntensity": 0.7
+    }
+  },
+  "buildingPBR": {
+    "enabled": true,
+    "conduit": {
+      "texture": "carbon",
+      "metalness": 0.4,
+      "roughness": 0.6,
+      "tint": "0x2a2a3e"
+    },
+    "node": {
+      "texture": "steel",
+      "metalness": 0.85,
+      "roughness": 0.3,
+      "tint": "0x3a3a4e"
+    },
+    "tower": {
+      "texture": "iron",
+      "metalness": 0.9,
+      "roughness": 0.25,
+      "tint": "0x4a4a60"
+    },
+    "ruin": {
+      "texture": "rust",
+      "metalness": 0.5,
+      "roughness": 0.85,
+      "tint": "0x5a4a3a"
+    },
+    "wall": {
+      "texture": "reinforced_concrete",
+      "metalness": 0.1,
+      "roughness": 0.85,
+      "tint": "0x3a3a3a"
+    },
+    "lightning_rod": {
+      "texture": "steel",
+      "metalness": 0.95,
+      "roughness": 0.15,
+      "tint": "0x8888aa"
+    },
+    "fabrication": {
+      "texture": "iron",
+      "metalness": 0.7,
+      "roughness": 0.45,
+      "tint": "0x666677"
+    },
+    "miner": {
+      "texture": "rust",
+      "metalness": 0.6,
+      "roughness": 0.75,
+      "tint": "0x887766"
+    },
+    "processor": {
+      "texture": "reinforced_concrete",
+      "metalness": 0.2,
+      "roughness": 0.75,
+      "tint": "0x777777"
+    }
+  },
+  "decals": {
+    "maxDecals": 100,
+    "checkInterval": 2.0,
+    "damageThreshold": 0.5,
+    "rustAgeThreshold": 60,
+    "rustAgeVariance": 60,
+    "types": {
+      "crack": {
+        "color": "0x222222",
+        "emissive": "0x000000",
+        "emissiveIntensity": 0,
+        "opacity": 0.8,
+        "metalness": 0.1,
+        "roughness": 0.95,
+        "fadeAfter": -1,
+        "fadeDuration": 10,
+        "size": [0.3, 0.3, 0.15]
+      },
+      "rust": {
+        "color": "0x8b4513",
+        "emissive": "0x000000",
+        "emissiveIntensity": 0,
+        "opacity": 0.7,
+        "metalness": 0.3,
+        "roughness": 0.9,
+        "fadeAfter": -1,
+        "fadeDuration": 15,
+        "size": [0.35, 0.35, 0.15]
+      },
+      "scorch": {
+        "color": "0x111111",
+        "emissive": "0xff4400",
+        "emissiveIntensity": 0.15,
+        "opacity": 0.85,
+        "metalness": 0.05,
+        "roughness": 0.98,
+        "fadeAfter": 30,
+        "fadeDuration": 20,
+        "size": [0.4, 0.4, 0.15]
+      },
+      "moss": {
+        "color": "0x2d5a27",
+        "emissive": "0x001100",
+        "emissiveIntensity": 0.05,
+        "opacity": 0.6,
+        "metalness": 0.0,
+        "roughness": 1.0,
+        "fadeAfter": -1,
+        "fadeDuration": 30,
+        "size": [0.4, 0.4, 0.1]
+      }
+    }
+  }
+}

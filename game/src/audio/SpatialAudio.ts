@@ -1,149 +1,212 @@
 /**
- * Spatial audio system using Tone.js.
+ * 3D spatial audio system for Syntheteria.
  *
- * Provides positional 3D audio for:
- * - Storm ambience (omnidirectional, intensity-modulated)
- * - Lightning strikes (positional, loud transients)
- * - Machinery hum (positional, near fabrication units/lightning rods)
- * - Combat sounds (positional impacts)
- * - UI feedback (non-positional clicks/beeps)
+ * Uses the Web Audio API PannerNode (via Tone.Panner3D) for distance-based
+ * attenuation and stereo positioning. Sounds are placed in world coordinates
+ * and automatically attenuate based on distance from the listener (camera).
  *
- * The listener position is updated each frame to match the player bot.
+ * Re-exports convenience wrappers used by AudioSystem.tsx so the existing
+ * import contract is preserved.
  */
 
 import * as Tone from "tone";
+import { playMetalImpact as gameSoundsMetalImpact } from "./GameSounds";
+import {
+	disposeAudio as engineDispose,
+	initAudio as engineInit,
+	isAudioInitialized as engineIsInit,
+	getCategoryBus,
+	isAudioInitialized,
+} from "./SoundEngine";
+import {
+	startStormAmbience,
+	stopStormAmbience,
+	updateStormAudio,
+} from "./StormAmbience";
 
-// Audio state
-let initialized = false;
-let masterVolume: Tone.Volume;
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
-// Ambient layers
-let stormNoise: Tone.Noise | null = null;
-let stormFilter: Tone.AutoFilter | null = null;
-let stormVolume: Tone.Volume | null = null;
+export interface Vec3 {
+	x: number;
+	y: number;
+	z: number;
+}
+
+export interface SpatialOptions {
+	/** Maximum audible distance (default 50). */
+	maxDistance?: number;
+	/** Reference distance for attenuation curve (default 1). */
+	refDistance?: number;
+	/** Rolloff factor — higher = faster attenuation (default 1). */
+	rolloffFactor?: number;
+	/** Volume offset in dB (default 0). */
+	volumeDb?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Listener management
+// ---------------------------------------------------------------------------
+
+let listenerPosition: Vec3 = { x: 0, y: 0, z: 0 };
 
 /**
- * Initialize the audio system. Must be called from a user gesture (click/tap).
+ * Update the listener (camera) position. Call each frame from the render loop.
  */
-export async function initAudio(): Promise<void> {
-	if (initialized) return;
-
-	await Tone.start();
-
-	masterVolume = new Tone.Volume(-6).toDestination();
-
-	// --- Storm ambience ---
-	stormVolume = new Tone.Volume(-12).connect(masterVolume);
-	stormFilter = new Tone.AutoFilter({
-		frequency: 0.15,
-		baseFrequency: 100,
-		octaves: 3,
-		depth: 0.8,
-	})
-		.connect(stormVolume)
-		.start();
-	stormNoise = new Tone.Noise("brown").connect(stormFilter);
-	stormNoise.start();
-
-	initialized = true;
+export function setListenerPosition(pos: Vec3): void {
+	listenerPosition = pos;
+	// Tone.Listener maps to the AudioContext listener
+	if (isAudioInitialized()) {
+		const ctx = Tone.getContext();
+		const listener = ctx.rawContext.listener;
+		if (listener.positionX) {
+			// Modern API (AudioListener with AudioParams)
+			listener.positionX.value = pos.x;
+			listener.positionY.value = pos.y;
+			listener.positionZ.value = pos.z;
+		} else if (typeof listener.setPosition === "function") {
+			// Legacy API fallback
+			(
+				listener as unknown as {
+					setPosition: (x: number, y: number, z: number) => void;
+				}
+			).setPosition(pos.x, pos.y, pos.z);
+		}
+	}
 }
 
 /**
- * Update storm intensity — modulates the ambience volume and filter.
+ * Get the current listener position.
  */
-export function updateStormIntensity(intensity: number): void {
-	if (!stormVolume || !stormFilter) return;
-	// Map intensity 0-1.5 to volume -20 to -6 dB
-	stormVolume.volume.value = -20 + intensity * 10;
-	stormFilter.frequency.value = 0.1 + intensity * 0.3;
+export function getListenerPosition(): Vec3 {
+	return listenerPosition;
 }
 
-/**
- * Play a lightning strike sound effect.
- */
-export function playLightningStrike(): void {
-	if (!initialized) return;
+// ---------------------------------------------------------------------------
+// Spatial sound playback
+// ---------------------------------------------------------------------------
 
-	// Synthetic thunder using noise burst + filter
-	const noise = new Tone.Noise("white");
-	const filter = new Tone.Filter(800, "lowpass");
-	const env = new Tone.AmplitudeEnvelope({
-		attack: 0.01,
-		decay: 0.3,
-		sustain: 0.1,
-		release: 1.5,
+/**
+ * Play a one-shot synthesized sound at a 3D world position.
+ *
+ * The caller provides a factory that builds a Tone.js signal chain and
+ * returns a dispose callback + duration. The factory receives a Tone.Panner3D
+ * node that is already connected to the appropriate category bus — the factory
+ * should connect its final output to this panner.
+ *
+ * @param position  - World-space coordinates.
+ * @param factory   - Builds audio nodes, connects to panner, returns cleanup.
+ * @param options   - Distance model parameters and volume.
+ */
+export function playSpatial(
+	position: Vec3,
+	factory: (panner: Tone.Panner3D) => {
+		dispose: () => void;
+		durationMs: number;
+	},
+	options?: SpatialOptions,
+): void {
+	if (!isAudioInitialized()) return;
+
+	const bus = getCategoryBus("sfx");
+	if (!bus) return;
+
+	const maxDist = options?.maxDistance ?? 50;
+	const refDist = options?.refDistance ?? 1;
+	const rolloff = options?.rolloffFactor ?? 1;
+
+	const panner = new Tone.Panner3D({
+		positionX: position.x,
+		positionY: position.y,
+		positionZ: position.z,
+		maxDistance: maxDist,
+		refDistance: refDist,
+		rolloffFactor: rolloff,
+		distanceModel: "inverse",
+		panningModel: "HRTF",
 	});
-	const vol = new Tone.Volume(-3).connect(masterVolume);
 
-	noise.connect(filter);
-	filter.connect(env);
-	env.connect(vol);
+	if (options?.volumeDb) {
+		const offsetVol = new Tone.Volume(options.volumeDb);
+		panner.connect(offsetVol);
+		offsetVol.connect(bus);
 
-	noise.start();
-	env.triggerAttackRelease(0.8);
+		const { dispose: innerDispose, durationMs } = factory(panner);
 
-	// Cleanup after sound finishes
-	setTimeout(() => {
-		noise.stop();
-		noise.dispose();
-		filter.dispose();
-		env.dispose();
-		vol.dispose();
-	}, 3000);
+		setTimeout(() => {
+			innerDispose();
+			panner.dispose();
+			offsetVol.dispose();
+		}, durationMs);
+	} else {
+		panner.connect(bus);
+
+		const { dispose: innerDispose, durationMs } = factory(panner);
+
+		setTimeout(() => {
+			innerDispose();
+			panner.dispose();
+		}, durationMs);
+	}
 }
 
 /**
- * Play a metallic impact sound (for combat).
+ * Play a metallic impact sound at a 3D position (e.g. combat hit location).
  */
-export function playMetalImpact(): void {
-	if (!initialized) return;
+export function playSpatialMetalImpact(position: Vec3): void {
+	playSpatial(
+		position,
+		(panner) => {
+			const synth = new Tone.MetalSynth({
+				envelope: { attack: 0.001, decay: 0.2, release: 0.3 },
+				harmonicity: 3.1,
+				modulationIndex: 16,
+				resonance: 2000,
+				octaves: 1.5,
+			});
+			synth.volume.value = -12;
+			synth.connect(panner);
+			synth.triggerAttackRelease("C2", 0.15);
 
-	const synth = new Tone.MetalSynth({
-		envelope: { attack: 0.001, decay: 0.2, release: 0.3 },
-		harmonicity: 3.1,
-		modulationIndex: 16,
-		resonance: 2000,
-		octaves: 1.5,
-	}).connect(masterVolume);
-
-	synth.volume.value = -12;
-	synth.triggerAttackRelease("C2", 0.15);
-
-	setTimeout(() => synth.dispose(), 1000);
+			return {
+				dispose: () => synth.dispose(),
+				durationMs: 1000,
+			};
+		},
+		{ maxDistance: 40, refDistance: 2 },
+	);
 }
 
 /**
- * Play a UI feedback beep.
+ * Play a machinery hum at a 3D position. Returns a stop function.
+ * Useful for fabrication units and lightning rods.
  */
-export function playUIBeep(): void {
-	if (!initialized) return;
+export function playSpatialMachineHum(position: Vec3): (() => void) | null {
+	if (!isAudioInitialized()) return null;
 
-	const synth = new Tone.Synth({
-		oscillator: { type: "square" },
-		envelope: { attack: 0.005, decay: 0.05, sustain: 0, release: 0.05 },
-	}).connect(masterVolume);
+	const bus = getCategoryBus("ambience");
+	if (!bus) return null;
 
-	synth.volume.value = -18;
-	synth.triggerAttackRelease("C5", 0.03);
-
-	setTimeout(() => synth.dispose(), 200);
-}
-
-/**
- * Play a machinery hum (looping, returns stop function).
- */
-export function playMachineryHum(): (() => void) | null {
-	if (!initialized) return null;
-
-	const osc = new Tone.Oscillator({
-		frequency: 60,
-		type: "sawtooth",
+	const panner = new Tone.Panner3D({
+		positionX: position.x,
+		positionY: position.y,
+		positionZ: position.z,
+		maxDistance: 30,
+		refDistance: 2,
+		rolloffFactor: 1.5,
+		distanceModel: "inverse",
+		panningModel: "HRTF",
 	});
+	panner.connect(bus);
+
+	const osc = new Tone.Oscillator({ frequency: 60, type: "sawtooth" });
 	const filter = new Tone.Filter(200, "lowpass");
-	const vol = new Tone.Volume(-24).connect(masterVolume);
+	const vol = new Tone.Volume(-24);
 
 	osc.connect(filter);
 	filter.connect(vol);
+	vol.connect(panner);
 	osc.start();
 
 	return () => {
@@ -151,21 +214,88 @@ export function playMachineryHum(): (() => void) | null {
 		osc.dispose();
 		filter.dispose();
 		vol.dispose();
+		panner.dispose();
 	};
 }
 
 /**
- * Clean up all audio resources.
+ * Play an electrical crackle at a 3D position (lightning rod discharge).
  */
-export function disposeAudio(): void {
-	stormNoise?.stop();
-	stormNoise?.dispose();
-	stormFilter?.dispose();
-	stormVolume?.dispose();
-	masterVolume?.dispose();
-	initialized = false;
+export function playSpatialCrackle(position: Vec3): void {
+	playSpatial(
+		position,
+		(panner) => {
+			const noise = new Tone.Noise("white");
+			const filter = new Tone.Filter({
+				frequency: 3000 + Math.random() * 2000,
+				type: "highpass",
+			});
+			const crusher = new Tone.BitCrusher(3);
+			const env = new Tone.AmplitudeEnvelope({
+				attack: 0.002,
+				decay: 0.05 + Math.random() * 0.05,
+				sustain: 0.1,
+				release: 0.12,
+			});
+
+			noise.connect(crusher);
+			crusher.connect(filter);
+			filter.connect(env);
+			env.connect(panner);
+
+			noise.start();
+			env.triggerAttackRelease(0.08 + Math.random() * 0.06);
+
+			return {
+				dispose: () => {
+					noise.stop();
+					noise.dispose();
+					filter.dispose();
+					crusher.dispose();
+					env.dispose();
+				},
+				durationMs: 600,
+			};
+		},
+		{ maxDistance: 35, refDistance: 3 },
+	);
 }
 
-export function isAudioInitialized(): boolean {
-	return initialized;
+// ---------------------------------------------------------------------------
+// Backward-compatible re-exports (used by AudioSystem.tsx)
+// ---------------------------------------------------------------------------
+
+/**
+ * Initialize audio — delegates to SoundEngine, then starts storm ambience.
+ */
+export async function initAudio(): Promise<void> {
+	await engineInit();
+	startStormAmbience();
 }
+
+/**
+ * Dispose all audio — stops storm, then tears down SoundEngine.
+ */
+export function disposeAudio(): void {
+	stopStormAmbience();
+	engineDispose();
+}
+
+/**
+ * Update storm intensity — delegates to StormAmbience module.
+ */
+export function updateStormIntensity(intensity: number): void {
+	updateStormAudio(intensity);
+}
+
+/**
+ * Play a non-spatial metal impact sound — delegates to GameSounds.
+ */
+export function playMetalImpact(): void {
+	gameSoundsMetalImpact();
+}
+
+/**
+ * Check if audio is initialized.
+ */
+export { engineIsInit as isAudioInitialized };

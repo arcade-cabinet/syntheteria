@@ -1,0 +1,94 @@
+{
+  "materials": {
+    "iron": {
+      "displayName": "Iron",
+      "texturePath": "textures/materials/iron/",
+      "metalness": 0.85,
+      "roughness": 0.4,
+      "displacementScale": 0.02,
+      "envMapIntensity": 1.0,
+      "fallbackColor": "#888888"
+    },
+    "copper": {
+      "displayName": "Copper",
+      "texturePath": "textures/materials/copper/",
+      "metalness": 0.95,
+      "roughness": 0.3,
+      "displacementScale": 0.01,
+      "envMapIntensity": 1.2,
+      "fallbackColor": "#b87333"
+    },
+    "stone": {
+      "displayName": "Stone",
+      "texturePath": "textures/materials/stone/",
+      "metalness": 0.05,
+      "roughness": 0.9,
+      "displacementScale": 0.04,
+      "envMapIntensity": 0.5,
+      "fallbackColor": "#808080"
+    },
+    "carbon": {
+      "displayName": "Carbon",
+      "texturePath": "textures/materials/carbon/",
+      "metalness": 0.3,
+      "roughness": 0.6,
+      "displacementScale": 0.01,
+      "envMapIntensity": 0.8,
+      "fallbackColor": "#333333"
+    },
+    "steel": {
+      "displayName": "Steel",
+      "texturePath": "textures/materials/steel/",
+      "metalness": 0.9,
+      "roughness": 0.25,
+      "displacementScale": 0.01,
+      "envMapIntensity": 1.5,
+      "fallbackColor": "#c0c0c0"
+    },
+    "alloy": {
+      "displayName": "Alloy",
+      "texturePath": "textures/materials/alloy/",
+      "metalness": 0.88,
+      "roughness": 0.35,
+      "displacementScale": 0.015,
+      "envMapIntensity": 1.3,
+      "fallbackColor": "#a0a0b0"
+    },
+    "reinforced_concrete": {
+      "displayName": "Reinforced Concrete",
+      "texturePath": "textures/materials/reinforced_concrete/",
+      "metalness": 0.1,
+      "roughness": 0.85,
+      "displacementScale": 0.05,
+      "envMapIntensity": 0.4,
+      "fallbackColor": "#a0a0a0"
+    },
+    "refined_metal": {
+      "displayName": "Refined Metal",
+      "texturePath": "textures/materials/steel/",
+      "metalness": 0.85,
+      "roughness": 0.35,
+      "displacementScale": 0.015,
+      "envMapIntensity": 1.2,
+      "fallbackColor": "#aaaaaa"
+    },
+    "copper_ingot": {
+      "displayName": "Copper Ingot",
+      "texturePath": "textures/materials/copper/",
+      "metalness": 0.95,
+      "roughness": 0.25,
+      "displacementScale": 0.01,
+      "envMapIntensity": 1.3,
+      "fallbackColor": "#cc8844"
+    },
+    "advanced_alloy": {
+      "displayName": "Advanced Alloy",
+      "texturePath": "textures/materials/alloy/",
+      "metalness": 0.92,
+      "roughness": 0.2,
+      "displacementScale": 0.01,
+      "envMapIntensity": 1.6,
+      "fallbackColor": "#b0b0c0"
+    }
+  }
+}

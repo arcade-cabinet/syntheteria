@@ -24,6 +24,8 @@ import {
 	type PowerSnapshot,
 	powerSystem,
 } from "../systems/power";
+import { updateQuests } from "../systems/questSystem";
+import { updatePowerGrid } from "../systems/powerRouting";
 import { processingSystem } from "../systems/processing";
 import { repairSystem } from "../systems/repair";
 import {
@@ -121,6 +123,7 @@ export function simulationTick() {
 	lastMergeEvents = fragmentMergeSystem();
 	powerSystem(tick);
 	wireNetworkSystem();
+	updatePowerGrid();
 	signalNetworkSystem();
 	resourceSystem();
 	miningSystem();
@@ -131,6 +134,7 @@ export function simulationTick() {
 	enemySystem();
 	combatSystem();
 	otterSystem();
+	updateQuests(1);
 	updateDisplayOffsets();
 
 	snapshot = null;

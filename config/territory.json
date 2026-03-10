@@ -1,0 +1,11 @@
+{
+	"outpostTiers": [
+		{ "tier": 1, "radius": 10, "cubeCost": 20, "upgradeCost": 40 },
+		{ "tier": 2, "radius": 20, "cubeCost": 40, "upgradeCost": 80 },
+		{ "tier": 3, "radius": 35, "cubeCost": 80 }
+	],
+	"resourceBonusInTerritory": 1.5,
+	"buildingCostReduction": 0.8,
+	"contestationDecayRate": 0.01,
+	"minimumOutpostSpacing": 15
+}

@@ -1,0 +1,38 @@
+{
+  "reclaimers": {
+    "chassisStyle": "angular",
+    "headStyle": "dome",
+    "armStyle": "clamp",
+    "locomotion": "treads",
+    "primaryColor": "#8B4513",
+    "accentColor": "#DAA520",
+    "rustLevel": 0.4
+  },
+  "volt_collective": {
+    "chassisStyle": "sleek",
+    "headStyle": "visor",
+    "armStyle": "probe",
+    "locomotion": "hover",
+    "primaryColor": "#4169E1",
+    "accentColor": "#FF4500",
+    "emissiveGlow": 0.3
+  },
+  "signal_choir": {
+    "chassisStyle": "rounded",
+    "headStyle": "antenna_cluster",
+    "armStyle": "tendril",
+    "locomotion": "legs",
+    "primaryColor": "#9370DB",
+    "accentColor": "#00CED1",
+    "anodized": true
+  },
+  "iron_creed": {
+    "chassisStyle": "blocky",
+    "headStyle": "sensor_array",
+    "armStyle": "heavy_arm",
+    "locomotion": "tracks",
+    "primaryColor": "#708090",
+    "accentColor": "#FFD700",
+    "brushedMetal": true
+  }
+}

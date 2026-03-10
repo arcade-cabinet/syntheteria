@@ -1,0 +1,55 @@
+{
+  "feral": {
+    "spawnRate": 0.02,
+    "maxCount": 3,
+    "patrolRange": 15,
+    "aggroRange": 6,
+    "damage": 1,
+    "components": ["arms"],
+    "spawnInterval": 60,
+    "initialSpawnDelay": 40,
+    "patrolChancePerTick": 0.3,
+    "spawnRandomizationRadius": 6,
+    "cameraChance": 0.6,
+    "armsChance": 0.7,
+    "baseSpeed": 2.0,
+    "speedVariation": 1.5,
+    "spawnZones": [
+      { "x": -25, "z": 0 },
+      { "x": -25, "z": 25 },
+      { "x": 45, "z": 0 },
+      { "x": 45, "z": 25 },
+      { "x": 10, "z": -18 },
+      { "x": 10, "z": 48 }
+    ]
+  },
+  "cultist": {
+    "spawnRate": 0.005,
+    "maxCount": 5,
+    "patrolRange": 20,
+    "aggroRange": 12,
+    "damage": 2,
+    "lightningRadius": 4,
+    "lightningCooldown": 10,
+    "lightningRange": 6,
+    "patrolSpeed": 2.5,
+    "hackDifficulty": 50,
+    "defaultPatrolRadius": 12,
+    "patrolPointsMin": 3,
+    "patrolPointsMax": 5,
+    "pairSpawnOffset": 2,
+    "pairSpawnOffsetVariation": 2,
+    "patrolMoveChance": 0.1,
+    "waypointReachDistance": 2,
+    "components": ["arms", "camera"]
+  },
+  "perception": {
+    "defaultFOV": 120,
+    "scoutFOV": 180,
+    "heavyFOV": 90,
+    "defaultRange": 15,
+    "cameraRangeBonus": 10,
+    "memoryDuration": 30,
+    "threatThreshold": 0.5
+  }
+}

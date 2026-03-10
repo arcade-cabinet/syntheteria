@@ -12,27 +12,22 @@
  * - moving flag set correctly in both outcomes
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 // ---------------------------------------------------------------------------
 // Mock dependencies
 // ---------------------------------------------------------------------------
 
-const { mockOtters } = vi.hoisted(() => ({
-	mockOtters: [] as Array<unknown>,
-}));
-
+const mockOtters = [] as Array<unknown>;
 let mockIsWalkable = true;
 let mockTerrainHeight = 0.25;
 
-vi.mock("../../ecs/terrain", () => ({
+jest.mock("../../ecs/terrain", () => ({
 	WORLD_SIZE: 200,
 	WORLD_HALF: 100,
 	getTerrainHeight: (_x: number, _z: number) => mockTerrainHeight,
 	isWalkable: (_x: number, _z: number) => mockIsWalkable,
 }));
 
-vi.mock("../../ecs/world", () => ({
+jest.mock("../../ecs/world", () => ({
 	otters: mockOtters,
 }));
 

@@ -1,4 +1,3 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	_resetSelectionState,
 	getSelected,
@@ -37,17 +36,17 @@ describe("selectionState", () => {
 	// ─── Subscriber pattern ─────────────────────────────────────────────
 
 	it("onSelectionChange fires callback with { newId, oldId }", () => {
-		const cb = vi.fn();
+		const cb = jest.fn();
 		onSelectionChange(cb);
 
 		setSelected("entity_a");
 
-		expect(cb).toHaveBeenCalledOnce();
+		expect(cb).toHaveBeenCalledTimes(1);
 		expect(cb).toHaveBeenCalledWith({ newId: "entity_a", oldId: null });
 	});
 
 	it("callback receives previous selection as oldId", () => {
-		const cb = vi.fn();
+		const cb = jest.fn();
 		onSelectionChange(cb);
 
 		setSelected("entity_a");
@@ -61,7 +60,7 @@ describe("selectionState", () => {
 	});
 
 	it("callback fires when clearing selection", () => {
-		const cb = vi.fn();
+		const cb = jest.fn();
 		setSelected("entity_x");
 		onSelectionChange(cb);
 
@@ -71,35 +70,35 @@ describe("selectionState", () => {
 	});
 
 	it("multiple subscribers all receive events", () => {
-		const cb1 = vi.fn();
-		const cb2 = vi.fn();
+		const cb1 = jest.fn();
+		const cb2 = jest.fn();
 		onSelectionChange(cb1);
 		onSelectionChange(cb2);
 
 		setSelected("entity_multi");
 
-		expect(cb1).toHaveBeenCalledOnce();
-		expect(cb2).toHaveBeenCalledOnce();
+		expect(cb1).toHaveBeenCalledTimes(1);
+		expect(cb2).toHaveBeenCalledTimes(1);
 	});
 
 	// ─── Unsubscribe ────────────────────────────────────────────────────
 
 	it("unsubscribe stops callbacks", () => {
-		const cb = vi.fn();
+		const cb = jest.fn();
 		const unsub = onSelectionChange(cb);
 
 		setSelected("entity_before");
-		expect(cb).toHaveBeenCalledOnce();
+		expect(cb).toHaveBeenCalledTimes(1);
 
 		unsub();
 
 		setSelected("entity_after");
-		expect(cb).toHaveBeenCalledOnce(); // still 1, not 2
+		expect(cb).toHaveBeenCalledTimes(1); // still 1, not 2
 	});
 
 	it("unsubscribe only removes the specific listener", () => {
-		const cb1 = vi.fn();
-		const cb2 = vi.fn();
+		const cb1 = jest.fn();
+		const cb2 = jest.fn();
 		const unsub1 = onSelectionChange(cb1);
 		onSelectionChange(cb2);
 
@@ -107,13 +106,13 @@ describe("selectionState", () => {
 		setSelected("entity_test");
 
 		expect(cb1).not.toHaveBeenCalled();
-		expect(cb2).toHaveBeenCalledOnce();
+		expect(cb2).toHaveBeenCalledTimes(1);
 	});
 
 	// ─── Edge cases ─────────────────────────────────────────────────────
 
 	it("setSelected same ID still fires callback", () => {
-		const cb = vi.fn();
+		const cb = jest.fn();
 		onSelectionChange(cb);
 
 		setSelected("entity_same");
@@ -127,7 +126,7 @@ describe("selectionState", () => {
 	});
 
 	it("setSelected(null) when already null fires callback", () => {
-		const cb = vi.fn();
+		const cb = jest.fn();
 		onSelectionChange(cb);
 
 		setSelected(null);

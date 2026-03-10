@@ -11,32 +11,28 @@
  * - Multiple entities processed independently
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 // ---------------------------------------------------------------------------
 // Mock dependencies
 // ---------------------------------------------------------------------------
 
-// vi.hoisted runs before the hoisted vi.mock calls, so the array exists in time
-const { mockMovingUnits } = vi.hoisted(() => ({
-	mockMovingUnits: [] as Array<{
-		worldPosition: { x: number; y: number; z: number };
-		unit: { speed: number };
-		navigation: {
-			path: { x: number; y: number; z: number }[];
-			pathIndex: number;
-			moving: boolean;
-		};
-	}>,
-}));
+// Mock declarations for jest.mock factory hoisting
+const mockMovingUnits = [] as Array<{
+	worldPosition: { x: number; y: number; z: number };
+	unit: { speed: number };
+	navigation: {
+		path: { x: number; y: number; z: number }[];
+		pathIndex: number;
+		moving: boolean;
+	};
+}>;
 
 // Mock getTerrainHeight to return a predictable value
-vi.mock("../../ecs/terrain", () => ({
-	getTerrainHeight: vi.fn((_x: number, _z: number) => 0),
+jest.mock("../../ecs/terrain", () => ({
+	getTerrainHeight: jest.fn((_x: number, _z: number) => 0),
 }));
 
 // We mock the world module so `movingUnits` is a controllable array
-vi.mock("../../ecs/world", () => ({
+jest.mock("../../ecs/world", () => ({
 	movingUnits: mockMovingUnits,
 }));
 
@@ -89,7 +85,7 @@ function wp(x: number, y = 0, z = 0) {
 
 beforeEach(() => {
 	mockMovingUnits.length = 0;
-	vi.mocked(getTerrainHeight).mockReturnValue(0);
+	jest.mocked(getTerrainHeight).mockReturnValue(0);
 });
 
 // ---------------------------------------------------------------------------
@@ -338,7 +334,7 @@ describe("path index advancement", () => {
 
 describe("terrain height updates", () => {
 	it("sets Y from getTerrainHeight when moving toward waypoint", () => {
-		vi.mocked(getTerrainHeight).mockReturnValue(1.5);
+		jest.mocked(getTerrainHeight).mockReturnValue(1.5);
 
 		const entity = createMovingEntity({
 			x: 0,
@@ -356,7 +352,7 @@ describe("terrain height updates", () => {
 	});
 
 	it("sets Y from getTerrainHeight when reaching waypoint", () => {
-		vi.mocked(getTerrainHeight).mockReturnValue(0.75);
+		jest.mocked(getTerrainHeight).mockReturnValue(0.75);
 
 		const entity = createMovingEntity({
 			x: 0,

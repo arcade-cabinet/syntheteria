@@ -1,8 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 // ─── Mock Rapier (WASM can't load in Node) ──────────────────────────────────
 
-vi.mock("@dimforge/rapier3d-compat", () => {
+jest.mock("@dimforge/rapier3d-compat", () => {
 	class MockRay {
 		origin: { x: number; y: number; z: number };
 		dir: { x: number; y: number; z: number };
@@ -33,7 +31,7 @@ import {
 
 interface MockCollider {
 	handle: number;
-	castRayAndGetNormal: ReturnType<typeof vi.fn>;
+	castRayAndGetNormal: ReturnType<typeof jest.fn>;
 }
 
 function makeMockCollider(
@@ -42,7 +40,7 @@ function makeMockCollider(
 ): MockCollider {
 	return {
 		handle,
-		castRayAndGetNormal: vi.fn().mockReturnValue({ normal }),
+		castRayAndGetNormal: jest.fn().mockReturnValue({ normal }),
 	};
 }
 
@@ -50,7 +48,7 @@ function makeMockWorld(
 	hit: { timeOfImpact: number; collider: MockCollider } | null,
 ) {
 	return {
-		castRay: vi.fn().mockReturnValue(hit),
+		castRay: jest.fn().mockReturnValue(hit),
 	} as unknown as import("@dimforge/rapier3d-compat").World;
 }
 

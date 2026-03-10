@@ -6,7 +6,6 @@
  * and territories survive a serialize → deserialize cycle.
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
 import { setGameSpeed, setTickCount } from "../../ecs/gameState";
 import { setWorldSeed } from "../../ecs/seed";
 import type { Entity } from "../../ecs/types";

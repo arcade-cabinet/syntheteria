@@ -11,7 +11,6 @@
  * - Module state reset between tests
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	ORE_TYPE_CONFIGS,
 	VALID_ORE_TYPES,
@@ -186,7 +185,7 @@ describe("ore type validation", () => {
 
 describe("physics body creation", () => {
 	it("calls createPhysicsBody callback with position and radius", () => {
-		const mockCreateBody = vi.fn();
+		const mockCreateBody = jest.fn();
 		const pos = makePosition(5, 0, 10);
 
 		spawnOreDeposit(
@@ -199,7 +198,7 @@ describe("physics body creation", () => {
 			mockCreateBody,
 		);
 
-		expect(mockCreateBody).toHaveBeenCalledOnce();
+		expect(mockCreateBody).toHaveBeenCalledTimes(1);
 		expect(mockCreateBody).toHaveBeenCalledWith(
 			expect.objectContaining({ x: 5, y: 0, z: 10 }),
 			1.5,
@@ -296,7 +295,7 @@ describe("spawnInitialDeposits", () => {
 	});
 
 	it("calls createPhysicsBody for each deposit", () => {
-		const mockCreateBody = vi.fn();
+		const mockCreateBody = jest.fn();
 		const deposits = spawnInitialDeposits(4, 100, {
 			createPhysicsBody: mockCreateBody,
 			rng: seededRng(33),

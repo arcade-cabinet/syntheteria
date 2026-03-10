@@ -12,7 +12,6 @@
  * - Module state resets between tests
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	_resetGrabberState,
 	type CubeEntity,
@@ -257,11 +256,11 @@ describe("grabCube — successful grab", () => {
 	it("calls setKinematic callback with cube ID", () => {
 		const cube = makeGrabbableCube("cube_0", vec3(1, 0, 0));
 		registerCube(cube);
-		const setKinematic = vi.fn();
+		const setKinematic = jest.fn();
 
 		grabCube("cube_0", PLAYER_ORIGIN, { setKinematic });
 
-		expect(setKinematic).toHaveBeenCalledOnce();
+		expect(setKinematic).toHaveBeenCalledTimes(1);
 		expect(setKinematic).toHaveBeenCalledWith("cube_0");
 	});
 
@@ -275,7 +274,7 @@ describe("grabCube — successful grab", () => {
 	it("does not call setKinematic when grab fails", () => {
 		const cube = makeGrabbableCube("cube_0", vec3(5, 0, 0)); // out of reach
 		registerCube(cube);
-		const setKinematic = vi.fn();
+		const setKinematic = jest.fn();
 
 		grabCube("cube_0", PLAYER_ORIGIN, { setKinematic });
 
@@ -351,11 +350,11 @@ describe("dropCube", () => {
 		const cube = makeGrabbableCube("cube_0", vec3(1, 0, 0));
 		registerCube(cube);
 		grabCube("cube_0", PLAYER_ORIGIN);
-		const setDynamic = vi.fn();
+		const setDynamic = jest.fn();
 
 		dropCube(vec3(2, 0, 0), { setDynamic });
 
-		expect(setDynamic).toHaveBeenCalledOnce();
+		expect(setDynamic).toHaveBeenCalledTimes(1);
 		expect(setDynamic).toHaveBeenCalledWith("cube_0");
 	});
 
@@ -451,11 +450,11 @@ describe("throwCube", () => {
 		const cube = makeGrabbableCube("cube_0", vec3(1, 0, 0));
 		registerCube(cube);
 		grabCube("cube_0", PLAYER_ORIGIN);
-		const setDynamic = vi.fn();
+		const setDynamic = jest.fn();
 
 		throwCube(vec3(1, 0, 0), 10, { setDynamic });
 
-		expect(setDynamic).toHaveBeenCalledOnce();
+		expect(setDynamic).toHaveBeenCalledTimes(1);
 		expect(setDynamic).toHaveBeenCalledWith("cube_0");
 	});
 
@@ -463,11 +462,11 @@ describe("throwCube", () => {
 		const cube = makeGrabbableCube("cube_0", vec3(1, 0, 0));
 		registerCube(cube);
 		grabCube("cube_0", PLAYER_ORIGIN);
-		const applyImpulse = vi.fn();
+		const applyImpulse = jest.fn();
 
 		throwCube(vec3(1, 0, 0), 10, { applyImpulse });
 
-		expect(applyImpulse).toHaveBeenCalledOnce();
+		expect(applyImpulse).toHaveBeenCalledTimes(1);
 		expect(applyImpulse).toHaveBeenCalledWith("cube_0", {
 			x: 10,
 			y: 0,
@@ -479,7 +478,7 @@ describe("throwCube", () => {
 		const cube = makeGrabbableCube("cube_0", vec3(1, 0, 0));
 		registerCube(cube);
 		grabCube("cube_0", PLAYER_ORIGIN);
-		const applyImpulse = vi.fn();
+		const applyImpulse = jest.fn();
 
 		throwCube(vec3(0, 1, 0.5), 20, { applyImpulse });
 

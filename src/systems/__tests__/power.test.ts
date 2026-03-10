@@ -12,7 +12,6 @@
  * - Edge cases: zero rods, zero buildings, zero storm, max power
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
 	BuildingEntity,
 	Entity,
@@ -23,14 +22,10 @@ import type {
 // Mock ECS world collections
 // ---------------------------------------------------------------------------
 
-const { mockLightningRods, mockBuildings, mockUnits } = vi.hoisted(() => {
-	const mockLightningRods: LightningRodEntity[] = [];
-	const mockBuildings: BuildingEntity[] = [];
-	const mockUnits: Entity[] = [];
-	return { mockLightningRods, mockBuildings, mockUnits };
-});
-
-vi.mock("../../ecs/world", () => ({
+const mockLightningRods: LightningRodEntity[] = [];
+const mockBuildings: BuildingEntity[] = [];
+const mockUnits: Entity[] = [];
+jest.mock("../../ecs/world", () => ({
 	lightningRods: mockLightningRods,
 	buildings: mockBuildings,
 	units: mockUnits,

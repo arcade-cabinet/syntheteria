@@ -6,7 +6,6 @@
  * checkStructuralIntegrity BFS, and edge cases.
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
 import { gridKey } from "../gridSnap";
 import {
 	_resetPlacementGrid,

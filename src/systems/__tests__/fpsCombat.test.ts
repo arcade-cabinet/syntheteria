@@ -9,11 +9,9 @@
  * - Edge cases: no player bot, broken arms, no enemies, out of range
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 // Mock the resources module so we can inspect salvage drops without side effects.
-vi.mock("../resources", () => ({
-	addResource: vi.fn(),
+jest.mock("../resources", () => ({
+	addResource: jest.fn(),
 }));
 
 import type { Entity, UnitComponent } from "../../ecs/types";
@@ -113,7 +111,7 @@ function makeEnemy(
 const trackedEntities: Entity[] = [];
 
 beforeEach(() => {
-	vi.clearAllMocks();
+	jest.clearAllMocks();
 });
 
 afterEach(() => {
@@ -166,7 +164,7 @@ describe("fpsCombat — fireWelder arms", () => {
 	});
 
 	it("can fire when player bot has functional arms", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		// yaw=0, forward = (0, -1) in XZ (fwdX = -sin(0)=0, fwdZ = -cos(0)=-1)
 		makePlayerBot("p1", { x: 0, y: 0, z: 0 }, { yaw: 0 });
@@ -184,7 +182,7 @@ describe("fpsCombat — fireWelder arms", () => {
 
 describe("fpsCombat — fireWelder range", () => {
 	it("hits enemy within WELDER_RANGE (6)", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		// yaw=0 => forward is (0, -1)
 		makePlayerBot("p1", { x: 0, y: 0, z: 0 }, { yaw: 0 });
@@ -213,7 +211,7 @@ describe("fpsCombat — fireWelder range", () => {
 	});
 
 	it("hits the closest enemy when multiple are in range", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makePlayerBot("p1", { x: 0, y: 0, z: 0 }, { yaw: 0 });
 		const nearEnemy = makeEnemy("e_near", "feral", { x: 0, y: 0, z: -2 });
@@ -267,7 +265,7 @@ describe("fpsCombat — fireWelder faction filtering", () => {
 
 describe("fpsCombat — fireWelder damage", () => {
 	it("breaks a functional component on the target", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makePlayerBot("p1", { x: 0, y: 0, z: 0 }, { yaw: 0 });
 		const enemy = makeEnemy("e1", "feral", { x: 0, y: 0, z: -3 });
@@ -280,7 +278,7 @@ describe("fpsCombat — fireWelder damage", () => {
 	});
 
 	it("destroys enemy when all components are broken by welder", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makePlayerBot("p1", { x: 0, y: 0, z: 0 }, { yaw: 0 });
 		// Enemy with one component — will be destroyed
@@ -325,7 +323,7 @@ describe("fpsCombat — enemy retaliation", () => {
 
 	it("enemies within ENEMY_MELEE_RANGE (5) can damage player bot", () => {
 		// Ensure every attack lands
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const bot = makePlayerBot("p1", { x: 0, y: 0, z: 0 });
 		makeEnemy("e1", "feral", { x: 3, y: 0, z: 0 }); // dist=3 < 5
@@ -338,7 +336,7 @@ describe("fpsCombat — enemy retaliation", () => {
 	});
 
 	it("enemies beyond ENEMY_MELEE_RANGE (5) do not attack", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const bot = makePlayerBot("p1", { x: 0, y: 0, z: 0 });
 		makeEnemy("e1", "feral", { x: 6, y: 0, z: 0 }); // dist=6 > 5
@@ -351,7 +349,7 @@ describe("fpsCombat — enemy retaliation", () => {
 	});
 
 	it("skips enemies with all components broken", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const bot = makePlayerBot("p1", { x: 0, y: 0, z: 0 });
 		makeEnemy("e1", "feral", { x: 2, y: 0, z: 0 }, {
@@ -371,7 +369,7 @@ describe("fpsCombat — enemy retaliation", () => {
 	});
 
 	it("skips player faction enemies", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const bot = makePlayerBot("p1", { x: 0, y: 0, z: 0 });
 		// Ally unit should not attack
@@ -385,7 +383,7 @@ describe("fpsCombat — enemy retaliation", () => {
 	});
 
 	it("does not attack when player bot has no functional components", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makePlayerBot("p1", { x: 0, y: 0, z: 0 }, {
 			components: makeComponents({
@@ -402,7 +400,7 @@ describe("fpsCombat — enemy retaliation", () => {
 	});
 
 	it("stops enemy navigation during combat", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makePlayerBot("p1", { x: 0, y: 0, z: 0 });
 		const enemy = makeEnemy("e1", "feral", { x: 2, y: 0, z: 0 });
@@ -414,7 +412,7 @@ describe("fpsCombat — enemy retaliation", () => {
 	});
 
 	it("does not crash when enemy has no navigation component", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makePlayerBot("p1", { x: 0, y: 0, z: 0 });
 		makeEnemy("e1", "feral", { x: 2, y: 0, z: 0 }, { navigation: false });
@@ -424,7 +422,7 @@ describe("fpsCombat — enemy retaliation", () => {
 
 	it("probability check prevents most attacks per frame (ENEMY_ATTACK_CHANCE = 0.02)", () => {
 		// random returns 0.5 > 0.02 => attack chance fails
-		vi.spyOn(Math, "random").mockReturnValue(0.5);
+		jest.spyOn(Math, "random").mockReturnValue(0.5);
 
 		const bot = makePlayerBot("p1", { x: 0, y: 0, z: 0 });
 		makeEnemy("e1", "feral", { x: 2, y: 0, z: 0 });

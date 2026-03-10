@@ -10,7 +10,6 @@
  * - Material-based repair costs
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
 	BuildingEntity,
 	Entity,
@@ -21,13 +20,9 @@ import type {
 // Mock ECS world collections
 // ---------------------------------------------------------------------------
 
-const { mockUnits, mockBuildings } = vi.hoisted(() => {
-	const mockUnits: Entity[] = [];
-	const mockBuildings: BuildingEntity[] = [];
-	return { mockUnits, mockBuildings };
-});
-
-vi.mock("../../ecs/world", () => ({
+const mockUnits: Entity[] = [];
+const mockBuildings: BuildingEntity[] = [];
+jest.mock("../../ecs/world", () => ({
 	units: mockUnits,
 	buildings: mockBuildings,
 	world: [],

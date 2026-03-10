@@ -1,4 +1,3 @@
-import { afterEach, describe, expect, it } from "vitest";
 import { Vehicle } from "yuka";
 import { FormationType } from "../FormationPatterns.ts";
 import {

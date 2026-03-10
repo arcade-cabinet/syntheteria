@@ -9,7 +9,6 @@
  * - NAV_STEP: coordinate conversion and grid resolution
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
 import { WORLD_HALF, WORLD_SIZE } from "../../ecs/terrain";
 import { buildNavGraph, findNavPath, NAV_STEP } from "../navmesh";
 

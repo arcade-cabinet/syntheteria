@@ -8,19 +8,18 @@
  * dynamic mode so they tumble onto the ground.
  *
  * Module-level state pattern (same as fabrication.ts, resources.ts, etc.).
+ * Tunables sourced from config/processing.json.
  */
 
+import { config } from "../../config";
 import { getConnectedOutput, type BeltConnection } from "./beltRouting";
 
 // ---------------------------------------------------------------------------
-// Config — values match config/processing.json
+// Config — values from config/processing.json
 // ---------------------------------------------------------------------------
 
-/** Belt speed in world-units per second (from config/processing.json belt.speed) */
-const BELT_SPEED = 2.0;
-
-/** Minimum spacing between cube centres on a belt in metres (from config/processing.json belt.cubeSpacing) */
-const CUBE_SPACING = 0.6;
+const BELT_SPEED = config.processing.belt.speed;
+const CUBE_SPACING = config.processing.belt.cubeSpacing;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -85,15 +84,11 @@ export function addCubeToBelt(cubeId: string, beltId: string): boolean {
 	const belt = belts.get(beltId);
 	if (!belt) return false;
 
-	// Already on this belt?
 	if (belt.cubes.some((c) => c.cubeId === cubeId)) return false;
 
-	// Capacity check: how many cubes can fit?
 	const maxCubes = Math.max(1, Math.floor(belt.length / CUBE_SPACING));
 	if (belt.cubes.length >= maxCubes) return false;
 
-	// Ensure spacing at input end — the first cube's progress (in world units)
-	// must be >= CUBE_SPACING from 0, or there must be no cubes yet.
 	if (belt.cubes.length > 0) {
 		const firstCubeWorldPos = belt.cubes[0].progress * belt.length;
 		if (firstCubeWorldPos < CUBE_SPACING) return false;
@@ -186,15 +181,11 @@ export function updateBeltTransport(delta: number): void {
 
 		const progressStep = (BELT_SPEED * delta) / belt.length;
 
-		// Move cubes from output-end first so we can check spacing correctly.
-		// Cubes are sorted by progress ascending, so iterate in reverse.
 		for (let i = belt.cubes.length - 1; i >= 0; i--) {
 			const cube = belt.cubes[i];
 
-			// Desired new progress
 			let newProgress = cube.progress + progressStep;
 
-			// Enforce spacing with the cube ahead (if any)
 			if (i < belt.cubes.length - 1) {
 				const ahead = belt.cubes[i + 1];
 				const maxProgress = ahead.progress - CUBE_SPACING / belt.length;
@@ -203,36 +194,29 @@ export function updateBeltTransport(delta: number): void {
 				}
 			}
 
-			// Clamp to [0, 1]
 			if (newProgress > 1) newProgress = 1;
 			if (newProgress < 0) newProgress = 0;
 
 			cube.progress = newProgress;
 		}
 
-		// Check if the last cube (highest progress) has reached the output end
 		const last = belt.cubes[belt.cubes.length - 1];
 		if (last && last.progress >= 1) {
-			// Try to hand off to connected belt or machine
 			const connection = getConnectedOutput(belt.beltId);
 
 			if (connection && connection.type === "belt") {
-				// Try to add to connected belt's input
 				const accepted = addCubeToBelt(last.cubeId, connection.targetId);
 				if (accepted) {
 					belt.cubes.pop();
 					delivered.push({ cubeId: last.cubeId, beltId: belt.beltId });
 				}
-				// If not accepted (target full), cube stays at progress=1
 			} else if (connection && connection.type === "machine") {
-				// Deliver to machine hopper
 				belt.cubes.pop();
 				delivered.push({ cubeId: last.cubeId, beltId: belt.beltId });
 				if (onDelivered) {
 					onDelivered(last.cubeId, connection);
 				}
 			} else {
-				// No connection — eject cube (switch to dynamic body)
 				last.bodyType = "dynamic";
 				belt.cubes.pop();
 				ejected.push({ cubeId: last.cubeId, beltId: belt.beltId });

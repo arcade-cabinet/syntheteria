@@ -8,20 +8,24 @@
  *
  * Enemies within melee range automatically retaliate against the
  * player-controlled bot.
+ *
+ * All tunables sourced from config/combat.json.
  */
 
+import { config } from "../../config";
 import type { UnitEntity } from "../ecs/types";
 import { hasFunctionalComponent } from "../ecs/types";
 import { getActivePlayerBot, units, world } from "../ecs/world";
 import { addResource } from "./resources";
 
 // ---------------------------------------------------------------------------
-// Constants
+// Constants (from config/combat.json)
 // ---------------------------------------------------------------------------
 
-const WELDER_RANGE = 6;
-const ENEMY_MELEE_RANGE = 5;
-const ENEMY_ATTACK_CHANCE = 0.02; // per frame (not per tick — called at 60fps)
+const WELDER_RANGE = config.combat.fpsCombat.welderRange;
+const WELDER_CONE_ANGLE = config.combat.fpsCombat.welderConeAngle;
+const ENEMY_MELEE_RANGE = config.combat.fpsCombat.enemyMeleeRange;
+const ENEMY_ATTACK_CHANCE = config.combat.fpsCombat.enemyAttackChancePerFrame;
 
 // ---------------------------------------------------------------------------
 // Hit result state (for HUD crosshair feedback)
@@ -61,8 +65,12 @@ function isDestroyed(entity: UnitEntity): boolean {
 
 function destroyUnit(entity: UnitEntity) {
 	const componentCount = entity.unit.components.length;
-	addResource("scrapMetal", Math.floor(componentCount * 1.5));
-	if (Math.random() > 0.5) addResource("eWaste", 1);
+	addResource(
+		"scrapMetal",
+		Math.floor(componentCount * config.combat.salvageScrapMultiplier),
+	);
+	if (Math.random() < config.combat.salvageEWasteChance)
+		addResource("eWaste", 1);
 	world.remove(entity);
 }
 
@@ -81,7 +89,6 @@ export function fireWelder(): void {
 	const bot = getActivePlayerBot();
 	if (!bot) return;
 
-	// Need functional arms to use welder
 	if (!hasFunctionalComponent(bot.unit.components, "arms")) {
 		lastHitResult = { hit: false, timestamp: performance.now() };
 		return;
@@ -89,7 +96,6 @@ export function fireWelder(): void {
 
 	const yaw = bot.playerControlled.yaw;
 
-	// Camera forward direction (in world XZ, ignoring pitch for target finding)
 	const fwdX = -Math.sin(yaw);
 	const fwdZ = -Math.cos(yaw);
 
@@ -106,13 +112,11 @@ export function fireWelder(): void {
 
 		if (dist > WELDER_RANGE) continue;
 
-		// Check if entity is roughly in front of the camera (dot product)
 		const dirX = dx / dist;
 		const dirZ = dz / dist;
 		const dot = dirX * fwdX + dirZ * fwdZ;
 
-		// Must be within ~30 degree cone
-		if (dot < 0.85) continue;
+		if (dot < WELDER_CONE_ANGLE) continue;
 
 		if (dist < closestDist) {
 			closestDist = dist;
@@ -163,17 +167,14 @@ export function fpsCombatSystem(_delta: number): void {
 
 		if (dist > ENEMY_MELEE_RANGE) continue;
 
-		// Probability-based attack per frame
 		if (Math.random() > ENEMY_ATTACK_CHANCE) continue;
 
-		// Enemy attacks a random functional component on the player bot
 		const functional = bot.unit.components.filter((c) => c.functional);
 		if (functional.length === 0) continue;
 
 		const victim = functional[Math.floor(Math.random() * functional.length)];
 		victim.functional = false;
 
-		// Stop enemy movement while fighting
 		if (entity.navigation) {
 			entity.navigation.moving = false;
 		}

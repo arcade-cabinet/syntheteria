@@ -10,7 +10,6 @@
  * - getContestingFactions: multi-faction overlap detection
  */
 
-import { describe, expect, it } from "vitest";
 import type { Territory } from "../territory";
 import {
 	applyContestationDecay,

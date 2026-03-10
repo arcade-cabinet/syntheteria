@@ -14,7 +14,6 @@
  * - Edge cases: unknown quest, empty dialogue config, empty queue
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
 import {
 	advanceDialogue,
 	checkMilestones,

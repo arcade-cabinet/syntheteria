@@ -9,7 +9,6 @@
  * - Edge cases: disconnected belts, circular routes, replacing connections
  */
 
-import { afterEach, describe, expect, it } from "vitest";
 import {
 	connectBelts,
 	connectBeltToMachine,

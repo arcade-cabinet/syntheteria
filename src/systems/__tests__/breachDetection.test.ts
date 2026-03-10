@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 import { checkBreach, type GridCoord } from "../breachDetection.ts";
 
 /** Helper — builds a straight wall along the X axis at y=0, z=0. */

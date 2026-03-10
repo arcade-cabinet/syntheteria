@@ -11,7 +11,6 @@
  * - placeHeldCube returns false if preview is invalid
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	type PlacementPreview,
 	type RaycastHit,
@@ -276,10 +275,10 @@ describe("placeHeldCube — success", () => {
 			valid: true,
 		};
 
-		const getHeldCubeFn = vi.fn(() => "cube_0");
-		const dropCubeFn = vi.fn(() => true);
-		const placeCubeFn = vi.fn(() => true);
-		const getCubeFn = vi.fn(() => makeCube("cube_0", "iron"));
+		const getHeldCubeFn = jest.fn(() => "cube_0");
+		const dropCubeFn = jest.fn(() => true);
+		const placeCubeFn = jest.fn(() => true);
+		const getCubeFn = jest.fn(() => makeCube("cube_0", "iron"));
 
 		const result = placeHeldCube(
 			preview,
@@ -299,8 +298,8 @@ describe("placeHeldCube — success", () => {
 			valid: true,
 		};
 
-		const dropCubeFn = vi.fn(() => true);
-		const placeCubeFn = vi.fn(() => true);
+		const dropCubeFn = jest.fn(() => true);
+		const placeCubeFn = jest.fn(() => true);
 
 		placeHeldCube(
 			preview,
@@ -310,7 +309,7 @@ describe("placeHeldCube — success", () => {
 			() => makeCube("cube_0"),
 		);
 
-		expect(dropCubeFn).toHaveBeenCalledOnce();
+		expect(dropCubeFn).toHaveBeenCalledTimes(1);
 		expect(dropCubeFn).toHaveBeenCalledWith({ x: 1.0, y: 0.0, z: 1.5 });
 	});
 
@@ -321,7 +320,7 @@ describe("placeHeldCube — success", () => {
 			valid: true,
 		};
 
-		const placeCubeFn = vi.fn(() => true);
+		const placeCubeFn = jest.fn(() => true);
 
 		placeHeldCube(
 			preview,
@@ -331,7 +330,7 @@ describe("placeHeldCube — success", () => {
 			() => makeCube("cube_0", "copper"),
 		);
 
-		expect(placeCubeFn).toHaveBeenCalledOnce();
+		expect(placeCubeFn).toHaveBeenCalledTimes(1);
 		expect(placeCubeFn).toHaveBeenCalledWith(
 			"cube_0",
 			{ x: 1, y: 0, z: 1 },
@@ -346,7 +345,7 @@ describe("placeHeldCube — success", () => {
 			valid: true,
 		};
 
-		const placeCubeFn = vi.fn(() => true);
+		const placeCubeFn = jest.fn(() => true);
 
 		placeHeldCube(
 			preview,
@@ -371,11 +370,11 @@ describe("placeHeldCube — success", () => {
 		};
 
 		const callOrder: string[] = [];
-		const dropCubeFn = vi.fn(() => {
+		const dropCubeFn = jest.fn(() => {
 			callOrder.push("drop");
 			return true;
 		});
-		const placeCubeFn = vi.fn(() => {
+		const placeCubeFn = jest.fn(() => {
 			callOrder.push("place");
 			return true;
 		});
@@ -407,9 +406,9 @@ describe("placeHeldCube — not holding a cube", () => {
 		const result = placeHeldCube(
 			preview,
 			() => null,
-			vi.fn(() => true),
-			vi.fn(() => true),
-			vi.fn(),
+			jest.fn(() => true),
+			jest.fn(() => true),
+			jest.fn(),
 		);
 
 		expect(result).toBe(false);
@@ -422,14 +421,14 @@ describe("placeHeldCube — not holding a cube", () => {
 			valid: true,
 		};
 
-		const dropCubeFn = vi.fn(() => true);
+		const dropCubeFn = jest.fn(() => true);
 
 		placeHeldCube(
 			preview,
 			() => null,
 			dropCubeFn,
-			vi.fn(() => true),
-			vi.fn(),
+			jest.fn(() => true),
+			jest.fn(),
 		);
 
 		expect(dropCubeFn).not.toHaveBeenCalled();
@@ -442,14 +441,14 @@ describe("placeHeldCube — not holding a cube", () => {
 			valid: true,
 		};
 
-		const placeCubeFn = vi.fn(() => true);
+		const placeCubeFn = jest.fn(() => true);
 
 		placeHeldCube(
 			preview,
 			() => null,
-			vi.fn(() => true),
+			jest.fn(() => true),
 			placeCubeFn,
-			vi.fn(),
+			jest.fn(),
 		);
 
 		expect(placeCubeFn).not.toHaveBeenCalled();
@@ -472,8 +471,8 @@ describe("placeHeldCube — invalid preview", () => {
 		const result = placeHeldCube(
 			preview,
 			() => "cube_0",
-			vi.fn(() => true),
-			vi.fn(() => true),
+			jest.fn(() => true),
+			jest.fn(() => true),
 			() => makeCube("cube_0"),
 		);
 
@@ -487,13 +486,13 @@ describe("placeHeldCube — invalid preview", () => {
 			valid: false,
 		};
 
-		const dropCubeFn = vi.fn(() => true);
+		const dropCubeFn = jest.fn(() => true);
 
 		placeHeldCube(
 			preview,
 			() => "cube_0",
 			dropCubeFn,
-			vi.fn(() => true),
+			jest.fn(() => true),
 			() => makeCube("cube_0"),
 		);
 
@@ -516,8 +515,8 @@ describe("placeHeldCube — cube not found in registry", () => {
 		const result = placeHeldCube(
 			preview,
 			() => "cube_0",
-			vi.fn(() => true),
-			vi.fn(() => true),
+			jest.fn(() => true),
+			jest.fn(() => true),
 			() => undefined,
 		);
 
@@ -541,7 +540,7 @@ describe("placeHeldCube — drop fails", () => {
 			preview,
 			() => "cube_0",
 			() => false,
-			vi.fn(() => true),
+			jest.fn(() => true),
 			() => makeCube("cube_0"),
 		);
 
@@ -555,7 +554,7 @@ describe("placeHeldCube — drop fails", () => {
 			valid: true,
 		};
 
-		const placeCubeFn = vi.fn(() => true);
+		const placeCubeFn = jest.fn(() => true);
 
 		placeHeldCube(
 			preview,

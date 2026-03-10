@@ -14,7 +14,6 @@
  * - Module state resets between tests
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
 import {
 	type CompressionResult,
 	DEFAULT_COMPRESSION_CONFIGS,

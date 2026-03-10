@@ -10,23 +10,18 @@
  * - resourceSystem: point depletion, one scavenge per tick per unit, no arms = skip
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 // ---------------------------------------------------------------------------
 // Mock dependencies
 // ---------------------------------------------------------------------------
 
-const { mockUnits } = vi.hoisted(() => ({
-	mockUnits: [] as Array<unknown>,
-}));
-
+const mockUnits = [] as Array<unknown>;
 // Mock isInsideBuilding to always return false (no buildings block scavenge points)
-vi.mock("../../ecs/cityLayout", () => ({
+jest.mock("../../ecs/cityLayout", () => ({
 	isInsideBuilding: () => false,
 }));
 
 // Mock seed to provide deterministic PRNG
-vi.mock("../../ecs/seed", () => ({
+jest.mock("../../ecs/seed", () => ({
 	worldPRNG: (_purpose: string) => {
 		// Simple deterministic PRNG for testing
 		let s = 42;
@@ -38,7 +33,7 @@ vi.mock("../../ecs/seed", () => ({
 }));
 
 // Mock hasArms
-vi.mock("../../ecs/types", () => ({
+jest.mock("../../ecs/types", () => ({
 	hasArms: (entity: { unit?: { components: Array<{ name: string; functional: boolean }> } }) => {
 		if (!entity.unit) return false;
 		return entity.unit.components.some(
@@ -48,7 +43,7 @@ vi.mock("../../ecs/types", () => ({
 	},
 }));
 
-vi.mock("../../ecs/world", () => ({
+jest.mock("../../ecs/world", () => ({
 	units: mockUnits,
 }));
 
@@ -213,7 +208,7 @@ describe("resetResourcePool", () => {
 
 describe("onResourceGain", () => {
 	it("fires callback on addResource", () => {
-		const cb = vi.fn();
+		const cb = jest.fn();
 		onResourceGain(cb);
 
 		addResource("scrapMetal", 5);
@@ -222,7 +217,7 @@ describe("onResourceGain", () => {
 	});
 
 	it("fires callback for each addResource call", () => {
-		const cb = vi.fn();
+		const cb = jest.fn();
 		onResourceGain(cb);
 
 		addResource("scrapMetal", 5);
@@ -234,7 +229,7 @@ describe("onResourceGain", () => {
 	});
 
 	it("unsubscribe stops callbacks", () => {
-		const cb = vi.fn();
+		const cb = jest.fn();
 		const unsub = onResourceGain(cb);
 
 		addResource("scrapMetal", 5);
@@ -246,8 +241,8 @@ describe("onResourceGain", () => {
 	});
 
 	it("multiple subscribers all receive events", () => {
-		const cb1 = vi.fn();
-		const cb2 = vi.fn();
+		const cb1 = jest.fn();
+		const cb2 = jest.fn();
 		onResourceGain(cb1);
 		onResourceGain(cb2);
 
@@ -416,7 +411,7 @@ describe("resourceSystem", () => {
 	});
 
 	it("fires resource gain callback on scavenge", () => {
-		const cb = vi.fn();
+		const cb = jest.fn();
 		onResourceGain(cb);
 
 		const points = getScavengePoints();

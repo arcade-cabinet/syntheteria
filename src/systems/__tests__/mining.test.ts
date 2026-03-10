@@ -11,19 +11,14 @@
  * - Output belt interaction (carries item, belt full fallback to buffer)
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 // ---------------------------------------------------------------------------
 // Mock dependencies
 // ---------------------------------------------------------------------------
 
-// vi.hoisted runs before the hoisted vi.mock calls
-const { mockMiners, mockWorldEntities } = vi.hoisted(() => ({
-	mockMiners: [] as Array<unknown>,
-	mockWorldEntities: [] as Array<unknown>,
-}));
-
-vi.mock("../../ecs/world", () => ({
+// Mock declarations for jest.mock factory hoisting
+const mockMiners = [] as Array<unknown>;
+const mockWorldEntities = [] as Array<unknown>;
+jest.mock("../../ecs/world", () => ({
 	miners: mockMiners,
 	world: mockWorldEntities,
 }));
@@ -119,7 +114,7 @@ beforeEach(() => {
 	// Reset the module-level Maps (extractionCounters, minerBuffers).
 	// Since they are private, we re-import a fresh module by clearing the cache.
 	// A simpler approach: just run enough ticks with an empty miner list to be safe,
-	// but the cleanest is to reload. Instead, we use vi.resetModules in a dynamic import.
+	// but the cleanest is to reload. Instead, we use jest.resetModules in a dynamic import.
 	// However, since we already imported at top level, we rely on the test isolation
 	// provided by unique entity IDs per test and explicit counter management.
 });

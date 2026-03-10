@@ -14,38 +14,20 @@
  * - Edge cases: disconnected wires, no wires, no rods, long chains, cycles
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Entity } from "../../ecs/types";
 
 // ---------------------------------------------------------------------------
 // Mock collections — populated per test
 // ---------------------------------------------------------------------------
 
-const {
-	mockWorld,
-	mockBuildings,
-	mockLightningRods,
-	mockWires,
-	mockMiners,
-	mockProcessors,
-} = vi.hoisted(() => {
-	const mockWorld: Entity[] = [];
-	const mockBuildings: Entity[] = [];
-	const mockLightningRods: Entity[] = [];
-	const mockWires: Entity[] = [];
-	const mockMiners: Entity[] = [];
-	const mockProcessors: Entity[] = [];
-	return {
-		mockWorld,
-		mockBuildings,
-		mockLightningRods,
-		mockWires,
-		mockMiners,
-		mockProcessors,
-	};
-});
+const mockWorld: Entity[] = [];
+const mockBuildings: Entity[] = [];
+const mockLightningRods: Entity[] = [];
+const mockWires: Entity[] = [];
+const mockMiners: Entity[] = [];
+const mockProcessors: Entity[] = [];
 
-vi.mock("../../ecs/world", () => ({
+jest.mock("../../ecs/world", () => ({
 	world: mockWorld,
 	buildings: mockBuildings,
 	lightningRods: mockLightningRods,
@@ -54,7 +36,7 @@ vi.mock("../../ecs/world", () => ({
 	processors: mockProcessors,
 }));
 
-vi.mock("../../../config", () => ({
+jest.mock("../../../config", () => ({
 	config: {
 		power: {
 			wireLossPerUnit: 0.02,

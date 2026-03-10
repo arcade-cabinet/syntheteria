@@ -12,7 +12,6 @@
  * - Module state reset between tests
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	_resetFurnaceState,
 	createFurnace,
@@ -106,12 +105,12 @@ describe("createFurnace", () => {
 
 describe("physics body creation", () => {
 	it("calls createPhysicsBody callback with position", () => {
-		const mockCreateBody = vi.fn();
+		const mockCreateBody = jest.fn();
 		const pos = makePosition(5, 0, 10);
 
 		createFurnace(pos, mockCreateBody);
 
-		expect(mockCreateBody).toHaveBeenCalledOnce();
+		expect(mockCreateBody).toHaveBeenCalledTimes(1);
 		expect(mockCreateBody).toHaveBeenCalledWith(
 			expect.objectContaining({ x: 5, y: 0, z: 10 }),
 		);
@@ -184,16 +183,16 @@ describe("insertCubeIntoFurnace", () => {
 
 	it("calls removeCubeCallback on successful insert", () => {
 		const furnace = createFurnace(makePosition());
-		const removeCube = vi.fn();
+		const removeCube = jest.fn();
 
 		insertCubeIntoFurnace(furnace.id, "cube_1", "scrap_iron", removeCube);
 
-		expect(removeCube).toHaveBeenCalledOnce();
+		expect(removeCube).toHaveBeenCalledTimes(1);
 	});
 
 	it("does not call removeCubeCallback when hopper is full", () => {
 		const furnace = createFurnace(makePosition());
-		const removeCube = vi.fn();
+		const removeCube = jest.fn();
 
 		// Fill hopper
 		for (let i = 0; i < 5; i++) {

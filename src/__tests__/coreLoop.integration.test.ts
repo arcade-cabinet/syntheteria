@@ -8,8 +8,6 @@
  *       build wall → match blueprint → assemble machine → disassemble
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-
 // Ore spawning
 import {
 	spawnOreDeposit,

@@ -9,7 +9,6 @@
  * - Guard, Gather, ReturnToBase, Follow states
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BotContext, NearbyEntity } from "../BotContext.ts";
 import { BotOrderType, type BotOrder } from "../BotOrders.ts";
 import { BotBrain, BotState, SteeringCommand } from "../BotBrain.ts";
@@ -75,7 +74,7 @@ let brain: BotBrain;
 beforeEach(() => {
 	brain = new BotBrain();
 	// Deterministic random for patrol waypoints
-	vi.spyOn(Math, "random").mockReturnValue(0.5);
+	jest.spyOn(Math, "random").mockReturnValue(0.5);
 });
 
 // ---------------------------------------------------------------------------

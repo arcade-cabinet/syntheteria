@@ -11,22 +11,16 @@
  * - No active player bot fallback
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 // ---------------------------------------------------------------------------
-// Mock setup — vi.hoisted runs before vi.mock factory hoisting
+// Mock declarations for jest.mock factory hoisting
 // ---------------------------------------------------------------------------
 
-const { mockWorld, mockPlayerBots, mockSignalRelays, mockWires } = vi.hoisted(
-	() => ({
-		mockWorld: [] as any[],
-		mockPlayerBots: [] as any[],
-		mockSignalRelays: [] as any[],
-		mockWires: [] as any[],
-	}),
-);
+const mockWorld = [] as any[];
+const mockPlayerBots = [] as any[];
+const mockSignalRelays = [] as any[];
+const mockWires = [] as any[];
 
-vi.mock("../../ecs/world", () => ({
+jest.mock("../../ecs/world", () => ({
 	world: mockWorld,
 	playerBots: mockPlayerBots,
 	signalRelays: mockSignalRelays,

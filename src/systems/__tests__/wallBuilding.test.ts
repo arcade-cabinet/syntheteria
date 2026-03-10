@@ -9,7 +9,6 @@
  * - Edge cases (no cubes, single cube, short lines)
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
 import {
 	_resetStackRegistry,
 	registerStackedCube,

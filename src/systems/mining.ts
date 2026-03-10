@@ -4,16 +4,18 @@
  * Each tick, active powered miners increment an internal counter.
  * When the counter reaches the extraction interval (1 / extractionRate),
  * an item is produced and placed on the output belt or buffered.
- * Drill health degrades slightly with each extraction (0.001 per item).
+ *
+ * Tunables sourced from config/mining.json.
  */
 
+import { config } from "../../config";
 import type { Entity } from "../ecs/types";
 import { miners, world } from "../ecs/world";
 
 /** Internal extraction counters keyed by entity ID */
 const extractionCounters = new Map<string, number>();
 
-/** Internal buffers keyed by entity ID (max 5) */
+/** Internal buffers keyed by entity ID */
 const minerBuffers = new Map<string, number>();
 
 /**
@@ -59,25 +61,26 @@ export function miningSystem() {
 		// Time to extract — reset counter
 		extractionCounters.set(entity.id, 0);
 
-		// Degrade drill health
-		miner.drillHealth = Math.max(0, miner.drillHealth - 0.001);
+		// Degrade drill health (rate from config)
+		miner.drillHealth = Math.max(
+			0,
+			miner.drillHealth - config.mining.drillHealthDegradationPerItem,
+		);
 
 		// Try to place on output belt
 		if (miner.outputBeltId !== null) {
 			const beltEntity = getEntityById(miner.outputBeltId);
 			if (beltEntity?.belt && beltEntity.belt.carrying === null) {
-				// Place item on belt
 				beltEntity.belt.carrying = miner.resourceType;
 				beltEntity.belt.itemProgress = 0;
 				continue;
 			}
 		}
 
-		// Buffer the item (max 5)
+		// Buffer the item (max from config)
 		const currentBuffer = minerBuffers.get(entity.id) ?? 0;
-		if (currentBuffer < 5) {
+		if (currentBuffer < config.mining.minerBufferMax) {
 			minerBuffers.set(entity.id, currentBuffer + 1);
 		}
-		// If buffer is full, item is lost (drill still degrades)
 	}
 }

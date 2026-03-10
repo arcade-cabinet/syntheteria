@@ -10,7 +10,6 @@
  * - Edge cases: double-start, unknown quest, overflow progress
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	advanceDialogue,
 	enqueueDialogue,
@@ -302,7 +301,7 @@ describe("quest sequencing", () => {
 
 describe("quest rewards", () => {
 	it("completion callback fires on quest completion", () => {
-		const callback = vi.fn();
+		const callback = jest.fn();
 		onQuestComplete(callback);
 
 		startQuest("quest_first_harvest");
@@ -317,7 +316,7 @@ describe("quest rewards", () => {
 	});
 
 	it("completion callback can be unregistered", () => {
-		const callback = vi.fn();
+		const callback = jest.fn();
 		const unsubscribe = onQuestComplete(callback);
 		unsubscribe();
 

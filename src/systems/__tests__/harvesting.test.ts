@@ -12,7 +12,6 @@
  * - Module state resets between tests
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
 import {
 	DEFAULT_HARVEST_RANGE,
 	type Vec3,

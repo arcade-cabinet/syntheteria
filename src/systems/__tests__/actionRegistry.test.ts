@@ -1,4 +1,3 @@
-import { describe, it, expect } from "vitest";
 import { getActionsForEntity } from "../actionRegistry";
 import type { Action } from "../actionRegistry";
 

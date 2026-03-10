@@ -10,11 +10,9 @@
  * - Edge cases: no cubes, no defenders, empty world
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 // Mock raidSystem to control getCubes()
-vi.mock("../raidSystem", () => ({
-	getCubes: vi.fn(() => []),
+jest.mock("../raidSystem", () => ({
+	getCubes: jest.fn(() => []),
 }));
 
 import type { Entity, UnitComponent } from "../../ecs/types";
@@ -94,8 +92,8 @@ function makeCube(
 const trackedEntities: Entity[] = [];
 
 beforeEach(() => {
-	vi.clearAllMocks();
-	vi.mocked(getCubes).mockReturnValue([]);
+	jest.clearAllMocks();
+	jest.mocked(getCubes).mockReturnValue([]);
 });
 
 afterEach(() => {
@@ -115,13 +113,13 @@ afterEach(() => {
 
 describe("raidTargeting — findRaidTargets", () => {
 	it("returns empty array when no cubes exist", () => {
-		vi.mocked(getCubes).mockReturnValue([]);
+		jest.mocked(getCubes).mockReturnValue([]);
 		const targets = findRaidTargets("feral");
 		expect(targets).toEqual([]);
 	});
 
 	it("returns empty array when all cubes belong to the attacking faction", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "feral", { x: 0, y: 0, z: 0 }),
 			makeCube("c2", "feral", { x: 1, y: 0, z: 0 }),
 		]);
@@ -132,13 +130,13 @@ describe("raidTargeting — findRaidTargets", () => {
 	it("ignores held cubes", () => {
 		const cube = makeCube("c1", "player", { x: 0, y: 0, z: 0 });
 		(cube as any).heldBy = "some_unit";
-		vi.mocked(getCubes).mockReturnValue([cube]);
+		jest.mocked(getCubes).mockReturnValue([cube]);
 		const targets = findRaidTargets("feral");
 		expect(targets).toEqual([]);
 	});
 
 	it("finds enemy cubes (player cubes when attacking as feral)", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 10, y: 0, z: 10 }),
 		]);
 		const targets = findRaidTargets("feral");
@@ -153,7 +151,7 @@ describe("raidTargeting — findRaidTargets", () => {
 
 describe("raidTargeting — cube clustering", () => {
 	it("groups nearby cubes into a single cluster (within CLUSTER_RADIUS=6)", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 10, y: 0, z: 10 }),
 			makeCube("c2", "player", { x: 12, y: 0, z: 10 }), // dist=2 < 6
 			makeCube("c3", "player", { x: 14, y: 0, z: 10 }), // dist=2 from c2, 4 from c1
@@ -164,7 +162,7 @@ describe("raidTargeting — cube clustering", () => {
 	});
 
 	it("separates distant cubes into different clusters", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 0, y: 0, z: 0 }),
 			makeCube("c2", "player", { x: 1, y: 0, z: 0 }), // cluster 1
 			makeCube("c3", "player", { x: 50, y: 0, z: 50 }), // cluster 2
@@ -175,7 +173,7 @@ describe("raidTargeting — cube clustering", () => {
 
 	it("single-linkage clustering chains cubes", () => {
 		// c1 -> c2 -> c3 each within 5 units of next, but c1 to c3 = 10
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 0, y: 0, z: 0 }),
 			makeCube("c2", "player", { x: 5, y: 0, z: 0 }),
 			makeCube("c3", "player", { x: 10, y: 0, z: 0 }),
@@ -193,7 +191,7 @@ describe("raidTargeting — cube clustering", () => {
 
 describe("raidTargeting — value scoring", () => {
 	it("scores scrapMetal cubes at weight 1", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "scrapMetal", 3),
 		]);
 		const targets = findRaidTargets("feral");
@@ -201,7 +199,7 @@ describe("raidTargeting — value scoring", () => {
 	});
 
 	it("scores eWaste cubes at weight 2", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "eWaste", 3),
 		]);
 		const targets = findRaidTargets("feral");
@@ -209,7 +207,7 @@ describe("raidTargeting — value scoring", () => {
 	});
 
 	it("scores intactComponents cubes at weight 5", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "intactComponents", 2),
 		]);
 		const targets = findRaidTargets("feral");
@@ -217,7 +215,7 @@ describe("raidTargeting — value scoring", () => {
 	});
 
 	it("sums values across a cluster", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "scrapMetal", 2),   // 1*2 = 2
 			makeCube("c2", "player", { x: 1, y: 0, z: 0 }, "eWaste", 3),       // 2*3 = 6
 			makeCube("c3", "player", { x: 2, y: 0, z: 0 }, "intactComponents", 1), // 5*1 = 5
@@ -234,7 +232,7 @@ describe("raidTargeting — value scoring", () => {
 
 describe("raidTargeting — threat level", () => {
 	it("counts player defenders near the stockpile", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 10, y: 0, z: 10 }),
 		]);
 
@@ -247,7 +245,7 @@ describe("raidTargeting — threat level", () => {
 	});
 
 	it("does not count attacking faction's own units as defenders", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 10, y: 0, z: 10 }),
 		]);
 
@@ -259,7 +257,7 @@ describe("raidTargeting — threat level", () => {
 	});
 
 	it("does not count wildlife as defenders", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 10, y: 0, z: 10 }),
 		]);
 
@@ -270,7 +268,7 @@ describe("raidTargeting — threat level", () => {
 	});
 
 	it("does not count units with all components broken", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 10, y: 0, z: 10 }),
 		]);
 
@@ -288,7 +286,7 @@ describe("raidTargeting — threat level", () => {
 	});
 
 	it("does not count defenders outside DEFENDER_SCAN_RADIUS (12)", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 10, y: 0, z: 10 }),
 		]);
 
@@ -305,7 +303,7 @@ describe("raidTargeting — threat level", () => {
 
 describe("raidTargeting — sorting", () => {
 	it("sorts higher-value lower-threat targets first", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			// Cluster 1: low value (at x=0)
 			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "scrapMetal", 1),
 			// Cluster 2: high value (at x=50)
@@ -320,7 +318,7 @@ describe("raidTargeting — sorting", () => {
 	});
 
 	it("penalizes high-threat targets in sorting", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			// Cluster 1: same value as cluster 2, but has defenders
 			makeCube("c1", "player", { x: 10, y: 0, z: 10 }, "scrapMetal", 5),
 			// Cluster 2: same value, no defenders
@@ -345,7 +343,7 @@ describe("raidTargeting — sorting", () => {
 
 describe("raidTargeting — centroid", () => {
 	it("computes centroid of a single cube", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 10, y: 0, z: 20 }),
 		]);
 
@@ -355,7 +353,7 @@ describe("raidTargeting — centroid", () => {
 	});
 
 	it("computes centroid of multiple cubes", () => {
-		vi.mocked(getCubes).mockReturnValue([
+		jest.mocked(getCubes).mockReturnValue([
 			makeCube("c1", "player", { x: 0, y: 0, z: 0 }),
 			makeCube("c2", "player", { x: 4, y: 0, z: 0 }),
 			makeCube("c3", "player", { x: 2, y: 0, z: 4 }), // all within CLUSTER_RADIUS=6

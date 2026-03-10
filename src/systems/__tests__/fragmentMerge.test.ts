@@ -9,7 +9,6 @@
  * - Edge cases: same fragment, beyond merge distance, no fragments
  */
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	createFragment,
 	deleteFragment,

@@ -12,7 +12,6 @@
  * - getProcessorInput helper
  */
 
-import { afterEach, describe, expect, it } from "vitest";
 import type { Entity } from "../../ecs/types";
 import { world } from "../../ecs/world";
 import {

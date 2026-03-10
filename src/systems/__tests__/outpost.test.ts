@@ -11,7 +11,6 @@
  * - resetOutposts: store cleanup
  */
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { world } from "../../ecs/world";
 import type { Entity } from "../../ecs/types";
 import {

@@ -13,11 +13,9 @@
  * - Edge cases: no automated bots, missing targets
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 // Mock pathfinding before importing botAutomation
-vi.mock("../pathfinding", () => ({
-	findPath: vi.fn((_start: unknown, goal: { x: number; z: number }) => {
+jest.mock("../pathfinding", () => ({
+	findPath: jest.fn((_start: unknown, goal: { x: number; z: number }) => {
 		return [{ x: goal.x, y: 0, z: goal.z }];
 	}),
 }));
@@ -158,7 +156,7 @@ function makeWorkAutomation(targetId: string): AutomationComponent {
 const trackedEntities: Entity[] = [];
 
 beforeEach(() => {
-	vi.clearAllMocks();
+	jest.clearAllMocks();
 });
 
 afterEach(() => {

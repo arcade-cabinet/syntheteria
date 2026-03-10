@@ -5,7 +5,6 @@
  * tech effects application, bonus aggregation, and unlock gating.
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
 import {
 	applyTechEffects,
 	getEffectsForTech,

@@ -4,8 +4,11 @@
  * Feral bots spawn at city edges and patrol randomly.
  * They are hostile — will attack player units in range.
  * Can be hacked and taken over (future feature).
+ *
+ * All tunables sourced from config/enemies.json.
  */
 
+import { config } from "../../config";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { createFragment, getTerrainHeight, isWalkable } from "../ecs/terrain";
 import type { Entity, UnitEntity, Vec3 } from "../ecs/types";
@@ -14,26 +17,18 @@ import { findPath } from "./pathfinding";
 
 let nextEnemyId = 0;
 
-/** Spawn points at edges of the city */
-const SPAWN_ZONES = [
-	{ x: -25, z: 0 },
-	{ x: -25, z: 25 },
-	{ x: 45, z: 0 },
-	{ x: 45, z: 25 },
-	{ x: 10, z: -18 },
-	{ x: 10, z: 48 },
-];
+const feralConfig = config.enemies.feral;
 
-// Light early-game presence: just a few wandering drones, no cultists.
-// Player has no weapons initially and must avoid them.
-const MAX_ENEMIES = 3;
-const SPAWN_INTERVAL = 60; // ticks between spawn attempts (slower spawning)
-const PATROL_RANGE = 15;
-const AGGRO_RANGE = 6; // slightly shorter aggro range — gives player more room
+/** Spawn points at edges of the city (from config) */
+const SPAWN_ZONES = feralConfig.spawnZones;
 
-let spawnTimer = 40; // longer initial delay so player can orient
+const MAX_ENEMIES = feralConfig.maxCount;
+const SPAWN_INTERVAL = feralConfig.spawnInterval;
+const PATROL_RANGE = feralConfig.patrolRange;
+const AGGRO_RANGE = feralConfig.aggroRange;
 
-// Track enemy entities by id
+let spawnTimer = feralConfig.initialSpawnDelay;
+
 const enemyIds = new Set<string>();
 
 function countEnemies(): number {
@@ -45,11 +40,11 @@ function countEnemies(): number {
 }
 
 function findValidSpawn(): { x: number; z: number } | null {
-	// Try each spawn zone with slight randomization
 	const shuffled = [...SPAWN_ZONES].sort(() => Math.random() - 0.5);
 	for (const zone of shuffled) {
-		const x = zone.x + (Math.random() - 0.5) * 6;
-		const z = zone.z + (Math.random() - 0.5) * 6;
+		const r = feralConfig.spawnRandomizationRadius;
+		const x = zone.x + (Math.random() - 0.5) * r;
+		const z = zone.z + (Math.random() - 0.5) * r;
 		if (isWalkable(x, z) && !isInsideBuilding(x, z)) {
 			return { x, z };
 		}
@@ -65,9 +60,8 @@ function spawnEnemy() {
 	const y = getTerrainHeight(pos.x, pos.z);
 	const id = `enemy_${nextEnemyId++}`;
 
-	// Feral bots have random component states
-	const hasCam = Math.random() > 0.4;
-	const hasArmsRoll = Math.random() > 0.3;
+	const hasCam = Math.random() < feralConfig.cameraChance;
+	const hasArmsRoll = Math.random() < feralConfig.armsChance;
 
 	world.add({
 		id,
@@ -77,7 +71,8 @@ function spawnEnemy() {
 		unit: {
 			type: "maintenance_bot",
 			displayName: `Feral ${id.slice(-2).toUpperCase()}`,
-			speed: 2 + Math.random() * 1.5,
+			speed:
+				feralConfig.baseSpeed + Math.random() * feralConfig.speedVariation,
 			selected: false,
 			components: [
 				{ name: "camera", functional: hasCam, material: "electronic" },
@@ -133,24 +128,19 @@ function findNearestPlayerUnit(enemy: UnitEntity): UnitEntity | null {
  * - Aggros on nearby player units
  */
 export function enemySystem() {
-	// Spawn check
 	spawnTimer--;
 	if (spawnTimer <= 0 && countEnemies() < MAX_ENEMIES) {
 		spawnEnemy();
 		spawnTimer = SPAWN_INTERVAL;
 	}
 
-	// AI for each enemy
 	for (const unit of units) {
 		if (unit.faction !== "feral") continue;
 
-		// If moving, let it continue
 		if (unit.navigation?.moving) continue;
 
-		// Check for nearby player units to aggro
 		const target = findNearestPlayerUnit(unit);
 		if (target) {
-			// Move toward player unit
 			const path = findPath(unit.worldPosition, target.worldPosition);
 			if (path.length > 0 && unit.navigation) {
 				unit.navigation.path = path;
@@ -160,8 +150,7 @@ export function enemySystem() {
 			continue;
 		}
 
-		// Patrol randomly (30% chance per tick when idle)
-		if (Math.random() < 0.3) {
+		if (Math.random() < feralConfig.patrolChancePerTick) {
 			const patrolTarget = getPatrolTarget(unit.worldPosition);
 			if (patrolTarget) {
 				const path = findPath(unit.worldPosition, patrolTarget);

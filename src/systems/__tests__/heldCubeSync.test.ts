@@ -9,7 +9,6 @@
  * - Custom multiplier override
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
 import {
 	CARRY_DOWN_OFFSET,
 	CARRY_FORWARD_OFFSET,

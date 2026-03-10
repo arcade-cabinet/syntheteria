@@ -30,6 +30,13 @@ import {
 	playSpatialCrackle,
 	playSpatialMetalImpact,
 } from "./SpatialAudio";
+import {
+	playCubeDrop,
+	playCubePickup,
+	playDamageTaken,
+	playPowerUp,
+	playQuestComplete,
+} from "./SynthSounds";
 import { onResourceGain } from "../systems/resources";
 import { onSelectionChange } from "../input/selectionState";
 import type { CombatEvent } from "../systems/combat";
@@ -37,6 +44,8 @@ import {
 	getCoreLoopSnapshot,
 	subscribeCoreLoop,
 } from "../systems/CoreLoopSystem";
+import { onQuestComplete } from "../systems/questSystem";
+import { onGameOver } from "../systems/gameOverDetection";
 
 // ---------------------------------------------------------------------------
 // Internal tracking state
@@ -249,6 +258,7 @@ export function initAudioBridge(): void {
 	// ── Core loop state → grinding, compression, cube sounds ─────────────
 	let prevHarvesting = false;
 	let prevCompressing = false;
+	let prevHeldCubeId: string | null = null;
 	const unsubCoreLoop = subscribeCoreLoop(() => {
 		const snap = getCoreLoopSnapshot();
 
@@ -273,8 +283,42 @@ export function initAudioBridge(): void {
 			}
 		}
 		prevCompressing = snap.isCompressing;
+
+		// Cube picked up → metallic click
+		if (snap.heldCubeId !== null && prevHeldCubeId === null) {
+			if (throttle("cube_pickup", 200)) {
+				playCubePickup();
+			}
+		}
+		// Cube dropped → low thud
+		if (snap.heldCubeId === null && prevHeldCubeId !== null) {
+			if (throttle("cube_drop", 200)) {
+				playCubeDrop();
+			}
+		}
+		prevHeldCubeId = snap.heldCubeId;
 	});
 	unsubscribers.push(unsubCoreLoop);
+
+	// ── Quest completion → ascending arpeggio ────────────────────────────
+	const unsubQuest = onQuestComplete((_questId) => {
+		if (throttle("quest_complete", 1000)) {
+			playQuestComplete();
+		}
+	});
+	unsubscribers.push(unsubQuest);
+
+	// ── Game over → power up fanfare (victory) or damage buzz (loss) ──
+	const unsubGameOver = onGameOver((state) => {
+		if (state.won) {
+			playQuestComplete();
+			// Delayed second arpeggio for emphasis
+			setTimeout(() => playPowerUp(), 400);
+		} else {
+			playDamageTaken();
+		}
+	});
+	unsubscribers.push(unsubGameOver);
 
 	// ── Game state snapshot polling ───────────────────────────────────────
 	// Subscribe to the game state store — fires on every simulation tick

@@ -10,7 +10,6 @@
  * - Edge cases: self-connect, duplicate wires, missing entities, max length
  */
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Entity } from "../../ecs/types";
 import { world } from "../../ecs/world";
 

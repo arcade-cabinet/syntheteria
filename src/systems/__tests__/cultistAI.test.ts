@@ -10,21 +10,19 @@
  * - Edge cases: hacked cultists, broken legs, no targets
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 // Mock terrain and city layout before importing cultistAI
-vi.mock("../../ecs/terrain", () => ({
-	getTerrainHeight: vi.fn((_x: number, _z: number) => 0),
-	isWalkable: vi.fn(() => true),
-	createFragment: vi.fn(() => ({ id: "test_frag" })),
+jest.mock("../../ecs/terrain", () => ({
+	getTerrainHeight: jest.fn((_x: number, _z: number) => 0),
+	isWalkable: jest.fn(() => true),
+	createFragment: jest.fn(() => ({ id: "test_frag" })),
 }));
 
-vi.mock("../../ecs/cityLayout", () => ({
-	isInsideBuilding: vi.fn(() => false),
+jest.mock("../../ecs/cityLayout", () => ({
+	isInsideBuilding: jest.fn(() => false),
 }));
 
-vi.mock("../pathfinding", () => ({
-	findPath: vi.fn((_start: unknown, goal: { x: number; z: number }) => {
+jest.mock("../pathfinding", () => ({
+	findPath: jest.fn((_start: unknown, goal: { x: number; z: number }) => {
 		return [{ x: goal.x, y: 0, z: goal.z }];
 	}),
 }));
@@ -89,7 +87,7 @@ function makePlayerUnit(
 const trackedEntities: Entity[] = [];
 
 beforeEach(() => {
-	vi.clearAllMocks();
+	jest.clearAllMocks();
 });
 
 afterEach(() => {
@@ -226,7 +224,7 @@ describe("cultistAI — target acquisition", () => {
 
 describe("cultistAI — lightning discharge", () => {
 	it("fires lightning when player is within LIGHTNING_RANGE (6) and cooldown ready", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const cultist = spawnCultist({ x: 0, z: 0 });
 		trackedEntities.push(cultist);
@@ -244,7 +242,7 @@ describe("cultistAI — lightning discharge", () => {
 	});
 
 	it("does not fire lightning when on cooldown", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const cultist = spawnCultist({ x: 0, z: 0 });
 		trackedEntities.push(cultist);
@@ -261,7 +259,7 @@ describe("cultistAI — lightning discharge", () => {
 	});
 
 	it("fires lightning again after cooldown expires", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const cultist = spawnCultist({ x: 0, z: 0 });
 		trackedEntities.push(cultist);
@@ -295,7 +293,7 @@ describe("cultistAI — lightning discharge", () => {
 	});
 
 	it("lightning AoE hits multiple player units", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const cultist = spawnCultist({ x: 0, z: 0 });
 		trackedEntities.push(cultist);
@@ -315,7 +313,7 @@ describe("cultistAI — lightning discharge", () => {
 	});
 
 	it("stops moving during lightning attack", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const cultist = spawnCultist({ x: 0, z: 0 });
 		trackedEntities.push(cultist);
@@ -385,7 +383,7 @@ describe("cultistAI — edge cases", () => {
 	});
 
 	it("events are replaced each tick (not accumulated)", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const cultist = spawnCultist({ x: 0, z: 0 });
 		trackedEntities.push(cultist);
@@ -406,7 +404,7 @@ describe("cultistAI — edge cases", () => {
 	});
 
 	it("lightning event contains correct structure", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const cultist = spawnCultist({ x: 0, z: 0 });
 		trackedEntities.push(cultist);

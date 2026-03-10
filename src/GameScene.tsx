@@ -91,6 +91,7 @@ import { PowerOverlay } from "./ui/PowerOverlay";
 import { QuestPanel } from "./ui/QuestPanel";
 import { TechTreePanel } from "./ui/TechTreePanel";
 import { getEquippedTool } from "./ui/RadialToolMenu";
+import { GameOverScreen } from "./ui/GameOverScreen";
 import { SaveLoadMenu } from "./ui/SaveLoadMenu";
 
 // --- World initialization ---
@@ -472,6 +473,9 @@ export default function GameScene({ seed }: GameSceneProps) {
 					onLoadComplete={() => setSaveMenuOpen(false)}
 				/>
 			)}
+
+			{/* Game over overlay — victory or loss */}
+			{snap.gameOver && <GameOverScreen state={snap.gameOver} />}
 		</Bezel>
 	);
 }

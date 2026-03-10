@@ -5,7 +5,6 @@
  * hit-testing functions directly.
  */
 
-import { describe, expect, it } from "vitest";
 import {
 	calculateButtonPositions,
 	isClickOutsideMenu,

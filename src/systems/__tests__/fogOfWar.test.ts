@@ -12,7 +12,6 @@
  * - Reset, dispose, dirty flag helpers
  */
 
-import { afterEach, describe, expect, it } from "vitest";
 import * as THREE from "three";
 import {
 	DEFAULT_VISION_RANGE,

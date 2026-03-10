@@ -10,20 +10,15 @@
  * - Edge cases: no active placement, no ghost position, no player unit
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Entity, LightningRodEntity } from "../../ecs/types";
 
 // ---------------------------------------------------------------------------
 // Mock dependencies
 // ---------------------------------------------------------------------------
 
-const { mockLightningRods, mockUnits } = vi.hoisted(() => {
-	const mockLightningRods: LightningRodEntity[] = [];
-	const mockUnits: Entity[] = [];
-	return { mockLightningRods, mockUnits };
-});
-
-vi.mock("../../ecs/world", () => ({
+const mockLightningRods: LightningRodEntity[] = [];
+const mockUnits: Entity[] = [];
+jest.mock("../../ecs/world", () => ({
 	lightningRods: mockLightningRods,
 	units: mockUnits,
 	world: [],
@@ -33,7 +28,7 @@ vi.mock("../../ecs/world", () => ({
 const walkablePositions = new Set<string>();
 const buildingPositions = new Set<string>();
 
-vi.mock("../../ecs/terrain", () => ({
+jest.mock("../../ecs/terrain", () => ({
 	isWalkable: (x: number, z: number) => {
 		// Default: walkable unless explicitly marked
 		const key = `${Math.round(x * 100)},${Math.round(z * 100)}`;
@@ -42,20 +37,20 @@ vi.mock("../../ecs/terrain", () => ({
 	},
 }));
 
-vi.mock("../../ecs/cityLayout", () => ({
+jest.mock("../../ecs/cityLayout", () => ({
 	isInsideBuilding: (x: number, z: number) => {
 		const key = `${Math.round(x * 100)},${Math.round(z * 100)}`;
 		return buildingPositions.has(key);
 	},
 }));
 
-vi.mock("../../ecs/factory", () => ({
-	spawnLightningRod: vi.fn(),
-	spawnFabricationUnit: vi.fn(),
+jest.mock("../../ecs/factory", () => ({
+	spawnLightningRod: jest.fn(),
+	spawnFabricationUnit: jest.fn(),
 }));
 
-vi.mock("../navmesh", () => ({
-	buildNavGraph: vi.fn(),
+jest.mock("../navmesh", () => ({
+	buildNavGraph: jest.fn(),
 }));
 
 // Import after mocking

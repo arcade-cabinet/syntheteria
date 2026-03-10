@@ -8,11 +8,9 @@
  * - Cancel aborts correctly and units retreat
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 // Mock pathfinding before importing raidSystem so the module picks up the mock.
-vi.mock("../pathfinding", () => ({
-	findPath: vi.fn((_start, goal) => {
+jest.mock("../pathfinding", () => ({
+	findPath: jest.fn((_start, goal) => {
 		// Return a trivial one-waypoint path directly to the goal.
 		return [{ x: goal.x, y: 0, z: goal.z }];
 	}),

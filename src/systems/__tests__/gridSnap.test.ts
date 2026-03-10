@@ -11,7 +11,6 @@
  * - Edge cases: negative coordinates, zero, large values
  */
 
-import { describe, expect, it } from "vitest";
 import {
 	GRID_SIZE,
 	type GridCoord,

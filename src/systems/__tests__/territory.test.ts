@@ -5,7 +5,6 @@
  * (claim/remove) are tested via the module store + reset helpers.
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
 // We import the world only for claimTerritory/removeTerritory signatures;
 // the world is not actually mutated by those functions.
 import { world } from "../../ecs/world";

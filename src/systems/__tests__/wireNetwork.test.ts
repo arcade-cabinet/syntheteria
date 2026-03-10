@@ -11,29 +11,18 @@
  * - Edge cases: no wires, no rods, disconnected graphs, long chains
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BuildingEntity, Entity, LightningRodEntity } from "../../ecs/types";
 
 // ---------------------------------------------------------------------------
 // Mock ECS world collections
 // ---------------------------------------------------------------------------
 
-const {
-	mockWorld,
-	mockBuildings,
-	mockLightningRods,
-	mockWires,
-	mockSignalRelays,
-} = vi.hoisted(() => {
-	const mockWorld: Entity[] = [];
-	const mockBuildings: BuildingEntity[] = [];
-	const mockLightningRods: LightningRodEntity[] = [];
-	const mockWires: Entity[] = [];
-	const mockSignalRelays: Entity[] = [];
-	return { mockWorld, mockBuildings, mockLightningRods, mockWires, mockSignalRelays };
-});
-
-vi.mock("../../ecs/world", () => ({
+const mockWorld: Entity[] = [];
+const mockBuildings: BuildingEntity[] = [];
+const mockLightningRods: LightningRodEntity[] = [];
+const mockWires: Entity[] = [];
+const mockSignalRelays: Entity[] = [];
+jest.mock("../../ecs/world", () => ({
 	world: mockWorld,
 	buildings: mockBuildings,
 	lightningRods: mockLightningRods,

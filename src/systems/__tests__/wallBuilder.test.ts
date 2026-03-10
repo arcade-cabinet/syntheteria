@@ -6,7 +6,6 @@
  * getWallCost returns the matching count.
  */
 
-import { describe, expect, it } from "vitest";
 import type { GridCoord } from "../gridSnap";
 import { calculateWallLine, getWallCost } from "../wallBuilder";
 

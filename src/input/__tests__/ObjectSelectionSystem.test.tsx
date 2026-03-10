@@ -1,8 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 // ─── Mock Rapier (WASM can't load in Node) ──────────────────────────────────
 
-vi.mock("@dimforge/rapier3d-compat", () => {
+jest.mock("@dimforge/rapier3d-compat", () => {
 	class MockRay {
 		origin: { x: number; y: number; z: number };
 		dir: { x: number; y: number; z: number };
@@ -23,7 +21,7 @@ vi.mock("@dimforge/rapier3d-compat", () => {
 
 // ─── Mock Three.js ──────────────────────────────────────────────────────────
 
-vi.mock("three", () => {
+jest.mock("three", () => {
 	class Vector3 {
 		x: number;
 		y: number;
@@ -87,21 +85,21 @@ vi.mock("three", () => {
 
 // ─── Mock R3F hooks ─────────────────────────────────────────────────────────
 
-vi.mock("@react-three/fiber", () => ({
-	useThree: vi.fn(() => ({
+jest.mock("@react-three/fiber", () => ({
+	useThree: jest.fn(() => ({
 		camera: {},
 		gl: { domElement: document.createElement("canvas") },
 		scene: { children: [] },
 	})),
-	useFrame: vi.fn(),
+	useFrame: jest.fn(),
 }));
 
 // ─── Mock ECS world (all entity arrays empty) ──────────────────────────────
 
-vi.mock("../../ecs/world", () => ({
+jest.mock("../../ecs/world", () => ({
 	belts: [],
 	buildings: [],
-	getActivePlayerBot: vi.fn(),
+	getActivePlayerBot: jest.fn(),
 	hackables: [],
 	items: [],
 	miners: [],
@@ -114,32 +112,32 @@ vi.mock("../../ecs/world", () => ({
 
 // ─── Mock Physics ───────────────────────────────────────────────────────────
 
-vi.mock("../../physics/PhysicsWorld", () => ({
-	getPhysicsWorld: vi.fn(),
-	isPhysicsInitialized: vi.fn(),
+jest.mock("../../physics/PhysicsWorld", () => ({
+	getPhysicsWorld: jest.fn(),
+	isPhysicsInitialized: jest.fn(),
 }));
 
 // ─── Mock raycastUtils ──────────────────────────────────────────────────────
 
-vi.mock("../raycastUtils", () => ({
-	castSelectionRay: vi.fn(),
+jest.mock("../raycastUtils", () => ({
+	castSelectionRay: jest.fn(),
 	SELECTION_RAY_MAX_DISTANCE: 50,
-	registerColliderEntity: vi.fn(),
-	unregisterColliderEntity: vi.fn(),
-	clearColliderEntityMap: vi.fn(),
-	getEntityForCollider: vi.fn(),
+	registerColliderEntity: jest.fn(),
+	unregisterColliderEntity: jest.fn(),
+	clearColliderEntityMap: jest.fn(),
+	getEntityForCollider: jest.fn(),
 }));
 
 // ─── Mock selectionState ────────────────────────────────────────────────────
 
-vi.mock("../selectionState", () => ({
-	setSelected: vi.fn(),
-	getSelected: vi.fn(),
-	onSelectionChange: vi.fn(),
-	_resetSelectionState: vi.fn(),
+jest.mock("../selectionState", () => ({
+	setSelected: jest.fn(),
+	getSelected: jest.fn(),
+	onSelectionChange: jest.fn(),
+	_resetSelectionState: jest.fn(),
 }));
 
-// ─── Imports (after mocks, vitest hoists vi.mock above these) ───────────────
+// ─── Imports (after mocks, jest hoists jest.mock above these) ───────────────
 
 import { handleSelectionClick } from "../ObjectSelectionSystem.tsx";
 import { castSelectionRay } from "../raycastUtils.ts";
@@ -151,11 +149,11 @@ describe("handleSelectionClick", () => {
 	const mockWorld = {} as import("@dimforge/rapier3d-compat").World;
 
 	beforeEach(() => {
-		vi.clearAllMocks();
+		jest.clearAllMocks();
 	});
 
 	it("calls setSelected with entity ID when ray hits a registered entity", () => {
-		vi.mocked(castSelectionRay).mockReturnValue({
+		jest.mocked(castSelectionRay).mockReturnValue({
 			entityId: "ore_deposit_1",
 			point: { x: 0, y: 0, z: -5 },
 			normal: { x: 0, y: 1, z: 0 },
@@ -177,7 +175,7 @@ describe("handleSelectionClick", () => {
 	});
 
 	it("calls setSelected(null) when ray misses (no hit)", () => {
-		vi.mocked(castSelectionRay).mockReturnValue(null);
+		jest.mocked(castSelectionRay).mockReturnValue(null);
 
 		handleSelectionClick(
 			{ x: 0, y: 1, z: 0 },
@@ -201,7 +199,7 @@ describe("handleSelectionClick", () => {
 	});
 
 	it("passes camera position and direction to castSelectionRay", () => {
-		vi.mocked(castSelectionRay).mockReturnValue(null);
+		jest.mocked(castSelectionRay).mockReturnValue(null);
 
 		const cameraPos = { x: 10, y: 2, z: -5 };
 		const cameraDir = { x: 0.5, y: -0.3, z: -0.8 };
@@ -216,7 +214,7 @@ describe("handleSelectionClick", () => {
 	});
 
 	it("selects different entities on successive clicks", () => {
-		vi.mocked(castSelectionRay)
+		jest.mocked(castSelectionRay)
 			.mockReturnValueOnce({
 				entityId: "cube_1",
 				point: { x: 1, y: 0, z: -3 },
@@ -241,7 +239,7 @@ describe("handleSelectionClick", () => {
 	it("mobile tap uses same handleSelectionClick function as desktop click", () => {
 		// Both desktop click and mobile tap call the same handleSelectionClick.
 		// Verify the function works identically regardless of caller.
-		vi.mocked(castSelectionRay).mockReturnValue({
+		jest.mocked(castSelectionRay).mockReturnValue({
 			entityId: "furnace_7",
 			point: { x: 3, y: 0, z: -2 },
 			normal: { x: 0, y: 1, z: 0 },

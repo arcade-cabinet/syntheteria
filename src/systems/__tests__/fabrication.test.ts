@@ -9,19 +9,14 @@
  * - getActiveJobs returns copies
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BuildingEntity, Entity } from "../../ecs/types";
 
 // ---------------------------------------------------------------------------
 // Mock ECS world collections
 // ---------------------------------------------------------------------------
 
-const { mockBuildings } = vi.hoisted(() => {
-	const mockBuildings: BuildingEntity[] = [];
-	return { mockBuildings };
-});
-
-vi.mock("../../ecs/world", () => ({
+const mockBuildings: BuildingEntity[] = [];
+jest.mock("../../ecs/world", () => ({
 	buildings: mockBuildings,
 	world: [],
 }));

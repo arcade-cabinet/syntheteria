@@ -11,7 +11,6 @@
  * - Edge cases: empty pattern, single cell, multi-layer (3D stacking)
  */
 
-import { describe, expect, it } from "vitest";
 import { type GridCoord, gridKey } from "../gridSnap";
 import {
 	type Blueprint,

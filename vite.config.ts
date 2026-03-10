@@ -1,9 +1,9 @@
-import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
 // https://vite.dev/config/
+// Kept for legacy vite build scripts (dev:vite, build:vite, preview).
+// Primary build/test now uses Expo/Metro + Jest.
 export default defineConfig({
-	plugins: [react()],
 	base: "/syntheteria/",
 	// Rapier WASM support
 	optimizeDeps: {
@@ -18,12 +18,5 @@ export default defineConfig({
 				},
 			},
 		},
-	},
-	test: {
-		exclude: [
-			"**/node_modules/**",
-			"**/dist/**",
-			"**/tests/e2e/**",
-		],
 	},
 });

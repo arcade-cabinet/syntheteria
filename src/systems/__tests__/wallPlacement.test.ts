@@ -6,7 +6,6 @@
  * and the buildWall convenience wrapper.
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GridCoord } from "../gridSnap";
 import { _resetPlacementGrid, getCubeAt } from "../cubePlacement";
 import {
@@ -198,7 +197,7 @@ describe("placeWall", () => {
 	// -----------------------------------------------------------------------
 
 	it("uses injected placeCubeFn when provided", () => {
-		const mockPlaceCube = vi.fn().mockReturnValue(true);
+		const mockPlaceCube = jest.fn().mockReturnValue(true);
 		const slots: GridCoord[] = [{ x: 0, y: 0, z: 0 }];
 		const stockpile = makeStockpile("iron", 1);
 
@@ -212,7 +211,7 @@ describe("placeWall", () => {
 	});
 
 	it("counts as failed when placeCubeFn returns false", () => {
-		const mockPlaceCube = vi.fn().mockReturnValue(false);
+		const mockPlaceCube = jest.fn().mockReturnValue(false);
 		const slots: GridCoord[] = [
 			{ x: 0, y: 0, z: 0 },
 			{ x: 1, y: 0, z: 0 },
@@ -291,7 +290,7 @@ describe("buildWall", () => {
 	});
 
 	it("uses injected placeCubeFn", () => {
-		const mockPlaceCube = vi.fn().mockReturnValue(true);
+		const mockPlaceCube = jest.fn().mockReturnValue(true);
 		const stockpile = makeStockpile("iron", 1);
 
 		buildWall(0, 0, 0, 0, 1, "iron", stockpile, mockPlaceCube);

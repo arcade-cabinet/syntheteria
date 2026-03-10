@@ -41,6 +41,11 @@ import { getAllTerritories } from "../systems/territory";
 import { applyContestationDecay } from "../systems/territoryEffects";
 import { wireNetworkSystem } from "../systems/wireNetwork";
 import {
+	checkGameOver,
+	type GameOverState,
+	getGameOverState,
+} from "../systems/gameOverDetection";
+import {
 	getAllFragments,
 	type MapFragment,
 	updateDisplayOffsets,
@@ -59,6 +64,7 @@ export interface GameSnapshot {
 	power: PowerSnapshot;
 	resources: ResourcePool;
 	fabricationJobs: FabricationJob[];
+	gameOver: GameOverState | null;
 }
 
 let tick = 0;
@@ -87,6 +93,7 @@ function buildSnapshot(): GameSnapshot {
 		power: getPowerSnapshot(),
 		resources: getResources(),
 		fabricationJobs: getActiveJobs(),
+		gameOver: getGameOverState(),
 	};
 }
 
@@ -158,6 +165,9 @@ export function simulationTick() {
 	}
 
 	updateDisplayOffsets();
+
+	// Check victory/loss conditions
+	checkGameOver();
 
 	snapshot = null;
 	notify();

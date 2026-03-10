@@ -9,22 +9,20 @@
  * - Fog only upgrades, never downgrades
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 // ---------------------------------------------------------------------------
-// Mocks — vi.mock factories must not reference outer variables (hoisted)
+// Mocks — jest.mock factories must not reference outer variables (hoisted)
 // ---------------------------------------------------------------------------
 
-vi.mock("../../ecs/terrain", () => ({
-	getFragment: vi.fn(),
-	setFogAt: vi.fn(),
+jest.mock("../../ecs/terrain", () => ({
+	getFragment: jest.fn(),
+	setFogAt: jest.fn(),
 }));
 
-vi.mock("../../ecs/types", () => ({
-	hasCamera: vi.fn(),
+jest.mock("../../ecs/types", () => ({
+	hasCamera: jest.fn(),
 }));
 
-vi.mock("../../ecs/world", () => ({
+jest.mock("../../ecs/world", () => ({
 	units: [],
 }));
 
@@ -35,9 +33,9 @@ import { units } from "../../ecs/world";
 import { explorationSystem } from "../exploration";
 
 // Cast to mock types for test manipulation
-const mockSetFogAt = vi.mocked(setFogAt);
-const mockGetFragment = vi.mocked(getFragment);
-const mockHasCamera = vi.mocked(hasCamera);
+const mockSetFogAt = jest.mocked(setFogAt);
+const mockGetFragment = jest.mocked(getFragment);
+const mockHasCamera = jest.mocked(hasCamera);
 const mockUnits = units as unknown as Array<{
 	worldPosition: { x: number; z: number };
 	mapFragment: { fragmentId: string };

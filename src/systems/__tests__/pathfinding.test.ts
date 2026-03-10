@@ -9,8 +9,6 @@
  * - Single-waypoint path has height applied
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 // ---------------------------------------------------------------------------
 // Mock dependencies
 // ---------------------------------------------------------------------------
@@ -18,11 +16,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 let mockNavPath: Array<{ x: number; y: number; z: number }> = [];
 let mockTerrainHeightFn: (x: number, z: number) => number = () => 0.25;
 
-vi.mock("../../ecs/terrain", () => ({
+jest.mock("../../ecs/terrain", () => ({
 	getTerrainHeight: (x: number, z: number) => mockTerrainHeightFn(x, z),
 }));
 
-vi.mock("../navmesh", () => ({
+jest.mock("../navmesh", () => ({
 	findNavPath: (
 		_startX: number,
 		_startZ: number,

@@ -72,6 +72,18 @@ export {
 	playCultistLightning,
 } from "./FactoryAudio";
 
+// Procedural game-event sounds
+export {
+	playHarvesting,
+	playCompressionThump,
+	playCubePickup,
+	playCubeDrop,
+	playBeltHum,
+	playPowerUp,
+	playDamageTaken,
+	playQuestComplete,
+} from "./SynthSounds";
+
 // Event bridge — wires gameplay events to sounds
 export {
 	initAudioBridge,

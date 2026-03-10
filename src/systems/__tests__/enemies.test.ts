@@ -10,21 +10,19 @@
  * - Edge cases: no spawn zones valid, no player units
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 // Mock terrain and city layout before importing enemies
-vi.mock("../../ecs/terrain", () => ({
-	getTerrainHeight: vi.fn((_x: number, _z: number) => 0),
-	isWalkable: vi.fn(() => true),
-	createFragment: vi.fn(() => ({ id: "test_frag" })),
+jest.mock("../../ecs/terrain", () => ({
+	getTerrainHeight: jest.fn((_x: number, _z: number) => 0),
+	isWalkable: jest.fn(() => true),
+	createFragment: jest.fn(() => ({ id: "test_frag" })),
 }));
 
-vi.mock("../../ecs/cityLayout", () => ({
-	isInsideBuilding: vi.fn(() => false),
+jest.mock("../../ecs/cityLayout", () => ({
+	isInsideBuilding: jest.fn(() => false),
 }));
 
-vi.mock("../pathfinding", () => ({
-	findPath: vi.fn((_start: unknown, goal: { x: number; z: number }) => {
+jest.mock("../pathfinding", () => ({
+	findPath: jest.fn((_start: unknown, goal: { x: number; z: number }) => {
 		return [{ x: goal.x, y: 0, z: goal.z }];
 	}),
 }));
@@ -100,7 +98,7 @@ function getAllFerals(): Entity[] {
 const trackedEntities: Entity[] = [];
 
 beforeEach(() => {
-	vi.clearAllMocks();
+	jest.clearAllMocks();
 });
 
 afterEach(() => {
@@ -253,7 +251,7 @@ describe("enemies — aggro", () => {
 		feral.navigation!.moving = false;
 
 		// Use a high random value so patrol doesn't trigger (> 0.3)
-		vi.spyOn(Math, "random").mockReturnValue(0.9);
+		jest.spyOn(Math, "random").mockReturnValue(0.9);
 
 		enemySystem();
 
@@ -295,7 +293,7 @@ describe("enemies — aggro", () => {
 describe("enemies — patrol", () => {
 	it("patrols randomly when no player is nearby (30% chance)", () => {
 		// random returns 0.1 < 0.3 => patrol triggers
-		vi.spyOn(Math, "random").mockReturnValue(0.1);
+		jest.spyOn(Math, "random").mockReturnValue(0.1);
 
 		for (let i = 0; i < 41; i++) {
 			enemySystem();
@@ -314,7 +312,7 @@ describe("enemies — patrol", () => {
 	});
 
 	it("does not patrol when random > 0.3", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0.5);
+		jest.spyOn(Math, "random").mockReturnValue(0.5);
 
 		for (let i = 0; i < 41; i++) {
 			enemySystem();

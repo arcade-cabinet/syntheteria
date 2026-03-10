@@ -12,28 +12,22 @@
  * - Module state resets between tests
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 // ---------------------------------------------------------------------------
-// Mock setup — vi.hoisted runs before vi.mock factory hoisting
+// Mock declarations for jest.mock factory hoisting
 // ---------------------------------------------------------------------------
 
-const { mockWorld, mockHackables, mockPlayerBots, mockCompute } = vi.hoisted(
-	() => ({
-		mockWorld: [] as any[],
-		mockHackables: [] as any[],
-		mockPlayerBots: [] as any[],
-		mockCompute: { value: 0 },
-	}),
-);
+const mockWorld = [] as any[];
+const mockHackables = [] as any[];
+const mockPlayerBots = [] as any[];
+const mockCompute = { value: 0 };
 
-vi.mock("../../ecs/world", () => ({
+jest.mock("../../ecs/world", () => ({
 	world: mockWorld,
 	hackables: mockHackables,
 	playerBots: mockPlayerBots,
 }));
 
-vi.mock("../signalNetwork", () => ({
+jest.mock("../signalNetwork", () => ({
 	getGlobalCompute: () => mockCompute.value,
 }));
 

@@ -15,11 +15,9 @@
  * - Combat event recording
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 // Mock the resources module so we can inspect salvage drops without side effects.
-vi.mock("../resources", () => ({
-	addResource: vi.fn(),
+jest.mock("../resources", () => ({
+	addResource: jest.fn(),
 }));
 
 import type { Entity, UnitComponent } from "../../ecs/types";
@@ -104,7 +102,7 @@ function makePlayer(
 const trackedEntities: Entity[] = [];
 
 beforeEach(() => {
-	vi.clearAllMocks();
+	jest.clearAllMocks();
 });
 
 afterEach(() => {
@@ -125,7 +123,7 @@ afterEach(() => {
 describe("combat — faction hostility", () => {
 	it("feral units attack player units", () => {
 		// Seed Math.random so attacks always land
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 1, y: 0, z: 0 });
@@ -140,7 +138,7 @@ describe("combat — faction hostility", () => {
 
 	it("player units do not initiate attacks (only retaliate)", () => {
 		// Math.random = 0 ensures attack chance and hit chance both pass
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makePlayer("p1", { x: 0, y: 0, z: 0 });
 		makePlayer("p2", { x: 1, y: 0, z: 0 });
@@ -152,7 +150,7 @@ describe("combat — faction hostility", () => {
 	});
 
 	it("feral units do not attack other feral units", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makeFeral("f2", { x: 1, y: 0, z: 0 });
@@ -164,7 +162,7 @@ describe("combat — faction hostility", () => {
 	});
 
 	it("feral units do not attack wildlife", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makeUnit("w1", "wildlife", { x: 1, y: 0, z: 0 });
@@ -176,7 +174,7 @@ describe("combat — faction hostility", () => {
 	});
 
 	it("non-feral factions do not initiate attacks", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeUnit("c1", "cultist", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 1, y: 0, z: 0 });
@@ -194,7 +192,7 @@ describe("combat — faction hostility", () => {
 
 describe("combat — melee range", () => {
 	it("attacks when units are within MELEE_RANGE (2.5)", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 2, y: 0, z: 0 }); // dist = 2.0 < 2.5
@@ -206,7 +204,7 @@ describe("combat — melee range", () => {
 	});
 
 	it("attacks when units are exactly at MELEE_RANGE boundary", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 2.5, y: 0, z: 0 }); // dist = 2.5 = MELEE_RANGE
@@ -219,7 +217,7 @@ describe("combat — melee range", () => {
 	});
 
 	it("does NOT attack when units are beyond MELEE_RANGE", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 3, y: 0, z: 0 }); // dist = 3.0 > 2.5
@@ -231,7 +229,7 @@ describe("combat — melee range", () => {
 	});
 
 	it("uses 2D distance (ignores Y axis)", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 1, y: 100, z: 0 }); // dx=1, dz=0, dy ignored
@@ -244,7 +242,7 @@ describe("combat — melee range", () => {
 	});
 
 	it("calculates diagonal distance correctly", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		// dist = sqrt(2*2 + 2*2) = sqrt(8) ≈ 2.83 > 2.5
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
@@ -264,7 +262,7 @@ describe("combat — melee range", () => {
 describe("combat — component damage", () => {
 	it("breaks a functional component on the target", () => {
 		// Math.random returns 0 for all rolls: attack chance, hit chance, component pick
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		const player = makePlayer("p1", { x: 1, y: 0, z: 0 });
@@ -286,7 +284,7 @@ describe("combat — component damage", () => {
 	});
 
 	it("records the damaged component name in the combat event", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		const player = makePlayer("p1", { x: 1, y: 0, z: 0 });
@@ -311,7 +309,7 @@ describe("combat — component damage", () => {
 			power_cell: true,
 		});
 
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 1, y: 0, z: 0 }, { components });
@@ -342,7 +340,7 @@ describe("combat — arms bonus", () => {
 			0, // component pick index
 		];
 		let callIndex = 0;
-		vi.spyOn(Math, "random").mockImplementation(() => {
+		jest.spyOn(Math, "random").mockImplementation(() => {
 			const val = randomValues[callIndex % randomValues.length];
 			callIndex++;
 			return val;
@@ -374,7 +372,7 @@ describe("combat — arms bonus", () => {
 
 		// Reset mock
 		callIndex = 0;
-		vi.spyOn(Math, "random").mockImplementation(() => {
+		jest.spyOn(Math, "random").mockImplementation(() => {
 			const val = randomValues[callIndex % randomValues.length];
 			callIndex++;
 			return val;
@@ -402,7 +400,7 @@ describe("combat — arms bonus", () => {
 describe("combat — attack chance", () => {
 	it("does not attack when random exceeds ATTACK_CHANCE (0.4)", () => {
 		// random returns 0.5 > 0.4 => attack chance fails
-		vi.spyOn(Math, "random").mockReturnValue(0.5);
+		jest.spyOn(Math, "random").mockReturnValue(0.5);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 1, y: 0, z: 0 });
@@ -415,7 +413,7 @@ describe("combat — attack chance", () => {
 
 	it("attacks when random is below ATTACK_CHANCE (0.4)", () => {
 		// random returns 0 which passes all checks
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 1, y: 0, z: 0 });
@@ -433,7 +431,7 @@ describe("combat — attack chance", () => {
 
 describe("combat — unit destruction", () => {
 	it("destroys a unit when all components are broken", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 
@@ -453,7 +451,7 @@ describe("combat — unit destruction", () => {
 	});
 
 	it("does not destroy a unit with remaining functional components", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 
@@ -469,7 +467,7 @@ describe("combat — unit destruction", () => {
 	});
 
 	it("drops salvage resources on destruction", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 
@@ -486,17 +484,17 @@ describe("combat — unit destruction", () => {
 		expect(addResource).toHaveBeenCalledWith("scrapMetal", 1);
 	});
 
-	it("may drop eWaste on destruction (random < 0.5)", () => {
-		// Control the random sequence so that the eWaste roll passes
+	it("does not drop eWaste when random >= salvageEWasteChance", () => {
+		// Control the random sequence so that the eWaste roll fails
 		const randomSequence = [
 			0, // ATTACK_CHANCE
 			0, // hitChance for feral->player dealDamage
 			0, // component index pick
 			// retaliation won't matter — player destroyed
-			0, // eWaste chance in destroyUnit (0 < 0.5 => drops, but check is > 0.5, so 0 does NOT drop)
+			0.6, // eWaste chance: 0.6 >= 0.5, so no drop (check is < salvageEWasteChance)
 		];
 		let idx = 0;
-		vi.spyOn(Math, "random").mockImplementation(() => {
+		jest.spyOn(Math, "random").mockImplementation(() => {
 			const val = randomSequence[idx % randomSequence.length];
 			idx++;
 			return val;
@@ -511,23 +509,23 @@ describe("combat — unit destruction", () => {
 
 		combatSystem();
 
-		// Math.random() returned 0 for the eWaste roll: 0 > 0.5 is false, so no eWaste
-		const eWasteCalls = (addResource as ReturnType<typeof vi.fn>).mock.calls.filter(
+		// Math.random() returned 0.6 for the eWaste roll: 0.6 < 0.5 is false, so no eWaste
+		const eWasteCalls = (addResource as ReturnType<typeof jest.fn>).mock.calls.filter(
 			(call: unknown[]) => call[0] === "eWaste",
 		);
 		expect(eWasteCalls).toHaveLength(0);
 	});
 
-	it("drops eWaste when random > 0.5 in destroy path", () => {
+	it("drops eWaste when random < salvageEWasteChance in destroy path", () => {
 		// Sequence: attack chance pass, hit, component pick, eWaste roll
 		const randomSequence = [
 			0, // ATTACK_CHANCE
 			0, // hitChance
 			0, // component pick
-			0.6, // eWaste chance (0.6 > 0.5 => drops)
+			0.3, // eWaste chance: 0.3 < 0.5 => drops
 		];
 		let idx = 0;
-		vi.spyOn(Math, "random").mockImplementation(() => {
+		jest.spyOn(Math, "random").mockImplementation(() => {
 			const val = randomSequence[idx % randomSequence.length];
 			idx++;
 			return val;
@@ -542,7 +540,7 @@ describe("combat — unit destruction", () => {
 
 		combatSystem();
 
-		const eWasteCalls = (addResource as ReturnType<typeof vi.fn>).mock.calls.filter(
+		const eWasteCalls = (addResource as ReturnType<typeof jest.fn>).mock.calls.filter(
 			(call: unknown[]) => call[0] === "eWaste",
 		);
 		expect(eWasteCalls).toHaveLength(1);
@@ -550,7 +548,7 @@ describe("combat — unit destruction", () => {
 	});
 
 	it("salvage scrapMetal scales with component count", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 
@@ -575,7 +573,7 @@ describe("combat — unit destruction", () => {
 
 describe("combat — already-destroyed units", () => {
 	it("feral with all components broken does not attack", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const brokenComponents = makeComponents({
 			camera: false,
@@ -593,7 +591,7 @@ describe("combat — already-destroyed units", () => {
 	});
 
 	it("player with all components broken does not retaliate", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 
@@ -621,7 +619,7 @@ describe("combat — already-destroyed units", () => {
 
 describe("combat — retaliation", () => {
 	it("player unit retaliates against feral attacker", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const feral = makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 1, y: 0, z: 0 });
@@ -645,7 +643,7 @@ describe("combat — retaliation", () => {
 
 	it("player does not retaliate when it has no functional components after being hit", () => {
 		// Player has 1 component — feral destroys it, then player can't retaliate
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		const fragileComponents: UnitComponent[] = [
@@ -668,7 +666,7 @@ describe("combat — retaliation", () => {
 
 describe("combat — navigation halt", () => {
 	it("stops attacker navigation.moving during combat", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		const feral = makeFeral("f1", { x: 0, y: 0, z: 0 });
 		feral.navigation!.moving = true;
@@ -681,7 +679,7 @@ describe("combat — navigation halt", () => {
 	});
 
 	it("does not crash when attacker has no navigation component", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f_nonav", { x: 0, y: 0, z: 0 }, { navigation: false });
 		makePlayer("p1", { x: 1, y: 0, z: 0 });
@@ -697,7 +695,7 @@ describe("combat — navigation halt", () => {
 
 describe("combat — one target per tick", () => {
 	it("each feral attacks at most one player unit per tick", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 1, y: 0, z: 0 });
@@ -719,7 +717,7 @@ describe("combat — one target per tick", () => {
 
 describe("combat — multiple attackers", () => {
 	it("multiple ferals can attack in the same tick", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makeFeral("f2", { x: 0, y: 0, z: 1 });
@@ -748,7 +746,7 @@ describe("combat — event recording", () => {
 	});
 
 	it("events are replaced each tick (not accumulated)", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 1, y: 0, z: 0 });
@@ -773,7 +771,7 @@ describe("combat — event recording", () => {
 	});
 
 	it("event contains correct attacker and target IDs", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 		makePlayer("p1", { x: 1, y: 0, z: 0 });
@@ -789,7 +787,7 @@ describe("combat — event recording", () => {
 	});
 
 	it("targetDestroyed is true only when all components are broken", () => {
-		vi.spyOn(Math, "random").mockReturnValue(0);
+		jest.spyOn(Math, "random").mockReturnValue(0);
 
 		makeFeral("f1", { x: 0, y: 0, z: 0 });
 

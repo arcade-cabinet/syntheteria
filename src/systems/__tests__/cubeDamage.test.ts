@@ -1,4 +1,3 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	CUBE_MATERIALS,
 	damageCube,
@@ -109,7 +108,7 @@ describe("cubeDamage", () => {
 		});
 
 		it("fires onCubeDestroyed callback on destruction", () => {
-			const cb = vi.fn();
+			const cb = jest.fn();
 			setOnCubeDestroyed(cb);
 			initCubeHP("cube-cb", "scrap");
 			damageCube("cube-cb", 50);
@@ -117,7 +116,7 @@ describe("cubeDamage", () => {
 		});
 
 		it("does not fire callback when cube survives", () => {
-			const cb = vi.fn();
+			const cb = jest.fn();
 			setOnCubeDestroyed(cb);
 			initCubeHP("cube-cb2", "iron");
 			damageCube("cube-cb2", 10);

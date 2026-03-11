@@ -9,85 +9,41 @@
  *   - MetalWalkway004: denser grating pattern (city center / high areas)
  *   - MetalWalkway008: wider grating pattern (periphery / low areas)
  *
- * Building materials are also provided here for the CityRenderer and
- * UnitRenderer to consume.
+ * Material parameters (metalness, roughness, tints, texture names) are read
+ * from config/rendering.json `terrainPBR` and `buildingPBR` sections so they
+ * can be tuned without touching rendering code.
  */
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import type { PBRTextureSet } from "./materials/MaterialFactory";
+import { config } from "../../config";
+import type { MaterialSpec } from "./materials/MaterialFactory";
 import { materialFactory } from "./materials/MaterialFactory";
 
 // ---------------------------------------------------------------------------
-// Texture path configuration
+// Config-driven texture path helpers
 // ---------------------------------------------------------------------------
 
-const TERRAIN_TEXTURE_BASE = "textures/terrain/";
-
-/** PBR texture set for MetalWalkway004 (dense grating, city center). */
-const WALKWAY_004_TEXTURES: PBRTextureSet = {
-	color: `${TERRAIN_TEXTURE_BASE}MetalWalkway004_1K-JPG_Color.jpg`,
-	metalness: `${TERRAIN_TEXTURE_BASE}MetalWalkway004_1K-JPG_Metalness.jpg`,
-	normal: `${TERRAIN_TEXTURE_BASE}MetalWalkway004_1K-JPG_NormalGL.jpg`,
-	roughness: `${TERRAIN_TEXTURE_BASE}MetalWalkway004_1K-JPG_Roughness.jpg`,
-};
-
-/** PBR texture set for MetalWalkway008 (wider grating, periphery). */
-const WALKWAY_008_TEXTURES: PBRTextureSet = {
-	color: `${TERRAIN_TEXTURE_BASE}MetalWalkway008_1K-JPG_Color.jpg`,
-	metalness: `${TERRAIN_TEXTURE_BASE}MetalWalkway008_1K-JPG_Metalness.jpg`,
-	normal: `${TERRAIN_TEXTURE_BASE}MetalWalkway008_1K-JPG_NormalGL.jpg`,
-	roughness: `${TERRAIN_TEXTURE_BASE}MetalWalkway008_1K-JPG_Roughness.jpg`,
-};
-
-// Building material textures (from public/textures/materials/)
-const MATERIAL_BASE = "textures/materials/";
-
-const IRON_TEXTURES: PBRTextureSet = {
-	color: `${MATERIAL_BASE}iron/Metal038_1K-JPG_Color.jpg`,
-	metalness: `${MATERIAL_BASE}iron/Metal038_1K-JPG_Metalness.jpg`,
-	normal: `${MATERIAL_BASE}iron/Metal038_1K-JPG_NormalGL.jpg`,
-	roughness: `${MATERIAL_BASE}iron/Metal038_1K-JPG_Roughness.jpg`,
-	displacement: `${MATERIAL_BASE}iron/Metal038_1K-JPG_Displacement.jpg`,
-};
-
-const STEEL_TEXTURES: PBRTextureSet = {
-	color: `${MATERIAL_BASE}steel/MetalPlates009_1K-JPG_Color.jpg`,
-	metalness: `${MATERIAL_BASE}steel/MetalPlates009_1K-JPG_Metalness.jpg`,
-	normal: `${MATERIAL_BASE}steel/MetalPlates009_1K-JPG_NormalGL.jpg`,
-	roughness: `${MATERIAL_BASE}steel/MetalPlates009_1K-JPG_Roughness.jpg`,
-	displacement: `${MATERIAL_BASE}steel/MetalPlates009_1K-JPG_Displacement.jpg`,
-};
-
-const CONCRETE_TEXTURES: PBRTextureSet = {
-	color: `${MATERIAL_BASE}reinforced_concrete/Concrete028_1K-JPG_Color.jpg`,
-	metalness: `${MATERIAL_BASE}reinforced_concrete/Concrete028_1K-JPG_Color.jpg`, // no metalness map; use color as fallback
-	normal: `${MATERIAL_BASE}reinforced_concrete/Concrete028_1K-JPG_NormalGL.jpg`,
-	roughness: `${MATERIAL_BASE}reinforced_concrete/Concrete028_1K-JPG_Roughness.jpg`,
-	displacement: `${MATERIAL_BASE}reinforced_concrete/Concrete028_1K-JPG_Displacement.jpg`,
-};
-
-const RUST_TEXTURES: PBRTextureSet = {
-	color: `${MATERIAL_BASE}rust/Rust003_1K-JPG_Color.jpg`,
-	metalness: `${MATERIAL_BASE}rust/Rust003_1K-JPG_Metalness.jpg`,
-	normal: `${MATERIAL_BASE}rust/Rust003_1K-JPG_NormalGL.jpg`,
-	roughness: `${MATERIAL_BASE}rust/Rust003_1K-JPG_Roughness.jpg`,
-};
-
-const CARBON_TEXTURES: PBRTextureSet = {
-	color: `${MATERIAL_BASE}carbon/Metal036_1K-JPG_Color.jpg`,
-	metalness: `${MATERIAL_BASE}carbon/Metal036_1K-JPG_Metalness.jpg`,
-	normal: `${MATERIAL_BASE}carbon/Metal036_1K-JPG_NormalGL.jpg`,
-	roughness: `${MATERIAL_BASE}carbon/Metal036_1K-JPG_Roughness.jpg`,
-	displacement: `${MATERIAL_BASE}carbon/Metal036_1K-JPG_Displacement.jpg`,
-};
+/**
+ * Build a PBR texture set for a MetalWalkway terrain texture directly from
+ * the texture name stored in config.rendering.terrainPBR.
+ *
+ * Terrain textures live in `textures/terrain/` and follow the pattern
+ * `<TextureName>_1K-JPG_<Map>.jpg`.
+ */
+function walkwayTexturePaths(textureName: string) {
+	const base = `${config.rendering.terrainPBR.texturePath}${textureName}_1K-JPG_`;
+	return {
+		color: `${base}Color.jpg`,
+		metalness: `${base}Metalness.jpg`,
+		normal: `${base}NormalGL.jpg`,
+		roughness: `${base}Roughness.jpg`,
+	};
+}
 
 // ---------------------------------------------------------------------------
 // UV repeat configuration
 // ---------------------------------------------------------------------------
-
-/** How many times to tile the terrain texture across the full world. */
-const TERRAIN_UV_REPEAT = 40;
 
 /**
  * Apply UV tiling to all textures in a material.
@@ -122,33 +78,33 @@ function setMaterialRepeat(
 /**
  * Get (or create) the primary terrain PBR material (MetalWalkway004).
  * Tiled to cover the full world area with proper UV repeat.
+ * Texture name and PBR params come from config.rendering.terrainPBR.
  */
 export function getTerrainPBRMaterial(): THREE.MeshStandardMaterial {
 	const existing = materialFactory.getMaterial("terrain_walkway_004");
 	if (existing) return existing;
 
+	const terrainCfg = config.rendering.terrainPBR;
+	const uvRepeat = terrainCfg.uvRepeat;
+	const params = terrainCfg.primaryMaterial;
+
 	const material = materialFactory.createMaterial(
 		"terrain_walkway_004",
-		WALKWAY_004_TEXTURES,
+		walkwayTexturePaths(terrainCfg.primaryTexture),
 		{
-			metalness: 0.7,
-			roughness: 0.5,
+			metalness: params.metalness,
+			roughness: params.roughness,
 			displacementScale: 0,
-			envMapIntensity: 0.8,
-			normalScale: 0.8,
+			envMapIntensity: params.envMapIntensity,
+			normalScale: params.normalScale,
 		},
 	);
 
-	setMaterialRepeat(material, TERRAIN_UV_REPEAT);
+	setMaterialRepeat(material, uvRepeat);
 
-	// Also set repeat on the placeholder textures that will be swapped in
-	// when real textures load
-	const checkAndSetRepeat = () => {
-		setMaterialRepeat(material, TERRAIN_UV_REPEAT);
-	};
-	// Schedule a follow-up to catch async-loaded textures
-	setTimeout(checkAndSetRepeat, 500);
-	setTimeout(checkAndSetRepeat, 2000);
+	// Schedule follow-ups to catch async-loaded textures
+	setTimeout(() => setMaterialRepeat(material, uvRepeat), 500);
+	setTimeout(() => setMaterialRepeat(material, uvRepeat), 2000);
 
 	return material;
 }
@@ -156,30 +112,32 @@ export function getTerrainPBRMaterial(): THREE.MeshStandardMaterial {
 /**
  * Get (or create) the secondary terrain PBR material (MetalWalkway008).
  * Used for terrain periphery areas.
+ * Texture name and PBR params come from config.rendering.terrainPBR.
  */
 export function getTerrainPBRMaterialAlt(): THREE.MeshStandardMaterial {
 	const existing = materialFactory.getMaterial("terrain_walkway_008");
 	if (existing) return existing;
 
+	const terrainCfg = config.rendering.terrainPBR;
+	const uvRepeat = terrainCfg.uvRepeat;
+	const params = terrainCfg.secondaryMaterial;
+
 	const material = materialFactory.createMaterial(
 		"terrain_walkway_008",
-		WALKWAY_008_TEXTURES,
+		walkwayTexturePaths(terrainCfg.secondaryTexture),
 		{
-			metalness: 0.65,
-			roughness: 0.55,
+			metalness: params.metalness,
+			roughness: params.roughness,
 			displacementScale: 0,
-			envMapIntensity: 0.7,
-			normalScale: 0.7,
+			envMapIntensity: params.envMapIntensity,
+			normalScale: params.normalScale,
 		},
 	);
 
-	setMaterialRepeat(material, TERRAIN_UV_REPEAT);
+	setMaterialRepeat(material, uvRepeat);
 
-	const checkAndSetRepeat = () => {
-		setMaterialRepeat(material, TERRAIN_UV_REPEAT);
-	};
-	setTimeout(checkAndSetRepeat, 500);
-	setTimeout(checkAndSetRepeat, 2000);
+	setTimeout(() => setMaterialRepeat(material, uvRepeat), 500);
+	setTimeout(() => setMaterialRepeat(material, uvRepeat), 2000);
 
 	return material;
 }
@@ -197,6 +155,86 @@ export type CityBuildingMaterialType =
 	| "wall";
 
 /**
+ * Building types that use non-metallic textures (no dedicated metalness map).
+ * These have their metalnessMap cleared after creation.
+ */
+const NON_METALLIC_BUILDING_TYPES = new Set<CityBuildingMaterialType>([
+	"wall",
+]);
+
+/**
+ * Extra building types exposed by helper functions that also pull from
+ * config.rendering.buildingPBR.
+ */
+type ExtendedBuildingType =
+	| CityBuildingMaterialType
+	| "lightning_rod"
+	| "fabrication"
+	| "miner"
+	| "processor";
+
+/**
+ * Get a PBR material for the given building type, driven entirely by
+ * config.rendering.buildingPBR entries.
+ *
+ *   - conduit      -> dark carbon fiber (traces/corridors)
+ *   - node         -> steel metal plates (junction blocks)
+ *   - tower        -> iron/metallic (pylons/antennas)
+ *   - ruin         -> rusted metal (collapsed structures)
+ *   - wall         -> reinforced concrete (perimeter)
+ *   - lightning_rod -> polished steel
+ *   - fabrication  -> iron composite
+ *   - miner        -> weathered rust
+ *   - processor    -> concrete/metal base
+ */
+function getBuildingMaterial(type: ExtendedBuildingType): THREE.MeshStandardMaterial {
+	const name = `building_${type}`;
+	const existing = materialFactory.getMaterial(name);
+	if (existing) return existing;
+
+	const buildingPBR = config.rendering.buildingPBR as Record<
+		string,
+		{
+			texture: string;
+			metalness: number;
+			roughness: number;
+			tint: string;
+			normalScale?: number;
+			envMapIntensity?: number;
+		}
+	>;
+
+	const entry = buildingPBR[type];
+	if (!entry) {
+		console.warn(
+			`TerrainPBR: no buildingPBR config entry for type "${type}". Using fallback.`,
+		);
+		return materialFactory.createFromSpec(name, { textureMappingKey: "iron" });
+	}
+
+	const spec: MaterialSpec = {
+		textureMappingKey: entry.texture,
+		options: {
+			metalness: entry.metalness,
+			roughness: entry.roughness,
+			displacementScale: 0,
+			envMapIntensity: entry.envMapIntensity ?? 1.0,
+			normalScale: entry.normalScale ?? 1.0,
+			color: new THREE.Color(Number(entry.tint)),
+		},
+	};
+
+	const mat = materialFactory.createFromSpec(name, spec);
+
+	// Non-metallic materials (concrete) don't have a real metalness map
+	if (NON_METALLIC_BUILDING_TYPES.has(type as CityBuildingMaterialType)) {
+		mat.metalnessMap = null;
+	}
+
+	return mat;
+}
+
+/**
  * Get a PBR material for the given city building type.
  *
  *   - conduit  -> dark carbon fiber (traces/corridors)
@@ -208,89 +246,7 @@ export type CityBuildingMaterialType =
 export function getBuildingPBRMaterial(
 	type: CityBuildingMaterialType,
 ): THREE.MeshStandardMaterial {
-	const name = `building_${type}`;
-	const existing = materialFactory.getMaterial(name);
-	if (existing) return existing;
-
-	switch (type) {
-		case "conduit": {
-			const mat = materialFactory.createMaterial(
-				name,
-				CARBON_TEXTURES,
-				{
-					metalness: 0.4,
-					roughness: 0.6,
-					displacementScale: 0,
-					envMapIntensity: 0.6,
-					normalScale: 0.8,
-					color: new THREE.Color(0x2a2a3e),
-				},
-			);
-			return mat;
-		}
-		case "node": {
-			const mat = materialFactory.createMaterial(
-				name,
-				STEEL_TEXTURES,
-				{
-					metalness: 0.85,
-					roughness: 0.3,
-					displacementScale: 0,
-					envMapIntensity: 1.2,
-					normalScale: 1.0,
-					color: new THREE.Color(0x3a3a4e),
-				},
-			);
-			return mat;
-		}
-		case "tower": {
-			const mat = materialFactory.createMaterial(
-				name,
-				IRON_TEXTURES,
-				{
-					metalness: 0.9,
-					roughness: 0.25,
-					displacementScale: 0,
-					envMapIntensity: 1.4,
-					normalScale: 1.0,
-					color: new THREE.Color(0x4a4a60),
-				},
-			);
-			return mat;
-		}
-		case "ruin": {
-			const mat = materialFactory.createMaterial(
-				name,
-				RUST_TEXTURES,
-				{
-					metalness: 0.5,
-					roughness: 0.85,
-					displacementScale: 0,
-					envMapIntensity: 0.4,
-					normalScale: 1.2,
-					color: new THREE.Color(0x5a4a3a),
-				},
-			);
-			return mat;
-		}
-		case "wall": {
-			const mat = materialFactory.createMaterial(
-				name,
-				CONCRETE_TEXTURES,
-				{
-					metalness: 0.1,
-					roughness: 0.85,
-					displacementScale: 0,
-					envMapIntensity: 0.4,
-					normalScale: 1.0,
-					color: new THREE.Color(0x3a3a3a),
-				},
-			);
-			// Concrete doesn't have a real metalness map
-			mat.metalnessMap = null;
-			return mat;
-		}
-	}
+	return getBuildingMaterial(type);
 }
 
 /**
@@ -298,18 +254,7 @@ export function getBuildingPBRMaterial(
  * Highly metallic, polished steel appearance.
  */
 export function getLightningRodPBRMaterial(): THREE.MeshStandardMaterial {
-	const name = "building_lightning_rod";
-	const existing = materialFactory.getMaterial(name);
-	if (existing) return existing;
-
-	return materialFactory.createMaterial(name, STEEL_TEXTURES, {
-		metalness: 0.95,
-		roughness: 0.15,
-		displacementScale: 0,
-		envMapIntensity: 1.8,
-		normalScale: 0.6,
-		color: new THREE.Color(0x8888aa),
-	});
+	return getBuildingMaterial("lightning_rod");
 }
 
 /**
@@ -317,18 +262,7 @@ export function getLightningRodPBRMaterial(): THREE.MeshStandardMaterial {
  * Concrete/metal composite look.
  */
 export function getFabricationPBRMaterial(): THREE.MeshStandardMaterial {
-	const name = "building_fabrication";
-	const existing = materialFactory.getMaterial(name);
-	if (existing) return existing;
-
-	return materialFactory.createMaterial(name, IRON_TEXTURES, {
-		metalness: 0.7,
-		roughness: 0.45,
-		displacementScale: 0,
-		envMapIntensity: 1.0,
-		normalScale: 0.9,
-		color: new THREE.Color(0x666677),
-	});
+	return getBuildingMaterial("fabrication");
 }
 
 /**
@@ -336,18 +270,7 @@ export function getFabricationPBRMaterial(): THREE.MeshStandardMaterial {
  * Rusted, weathered metal appearance.
  */
 export function getMinerPBRMaterial(): THREE.MeshStandardMaterial {
-	const name = "building_miner";
-	const existing = materialFactory.getMaterial(name);
-	if (existing) return existing;
-
-	return materialFactory.createMaterial(name, RUST_TEXTURES, {
-		metalness: 0.6,
-		roughness: 0.75,
-		displacementScale: 0,
-		envMapIntensity: 0.5,
-		normalScale: 1.0,
-		color: new THREE.Color(0x887766),
-	});
+	return getBuildingMaterial("miner");
 }
 
 /**
@@ -359,14 +282,8 @@ export function getProcessorPBRMaterial(): THREE.MeshStandardMaterial {
 	const existing = materialFactory.getMaterial(name);
 	if (existing) return existing;
 
-	const mat = materialFactory.createMaterial(name, CONCRETE_TEXTURES, {
-		metalness: 0.2,
-		roughness: 0.75,
-		displacementScale: 0,
-		envMapIntensity: 0.5,
-		normalScale: 1.0,
-		color: new THREE.Color(0x777777),
-	});
+	const mat = getBuildingMaterial("processor");
+	// Processor uses concrete which has no metalness map
 	mat.metalnessMap = null;
 	return mat;
 }

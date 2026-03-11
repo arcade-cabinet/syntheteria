@@ -2,6 +2,8 @@
  * Tests for MaterialFactory texture loading, caching, and error handling.
  *
  * Three.js is mocked to isolate the factory logic from WebGL rendering.
+ * Config is mocked so createFromSpec / createForFaction tests are
+ * deterministic without reading the real JSON files.
  */
 
 // Track load callbacks for simulating success/failure
@@ -67,6 +69,7 @@ jest.mock("three", () => {
 		r = 1;
 		g = 1;
 		b = 1;
+		constructor(_v?: unknown) {}
 		copy(other: MockColor) {
 			this.r = other.r;
 			this.g = other.g;
@@ -131,6 +134,71 @@ jest.mock("three", () => {
 		LinearSRGBColorSpace,
 	};
 });
+
+// ---------------------------------------------------------------------------
+// Mock config — deterministic values for createFromSpec / createForFaction
+// ---------------------------------------------------------------------------
+
+jest.mock("../../../../config", () => ({
+	config: {
+		textureMapping: {
+			materials: {
+				iron: {
+					localPath: "textures/materials/iron",
+					files: {
+						color: "Metal038_1K-JPG_Color.jpg",
+						metalness: "Metal038_1K-JPG_Metalness.jpg",
+						normal: "Metal038_1K-JPG_NormalGL.jpg",
+						roughness: "Metal038_1K-JPG_Roughness.jpg",
+						displacement: "Metal038_1K-JPG_Displacement.jpg",
+					},
+				},
+				steel: {
+					localPath: "textures/materials/steel",
+					files: {
+						color: "MetalPlates009_1K-JPG_Color.jpg",
+						metalness: "MetalPlates009_1K-JPG_Metalness.jpg",
+						normal: "MetalPlates009_1K-JPG_NormalGL.jpg",
+						roughness: "MetalPlates009_1K-JPG_Roughness.jpg",
+						displacement: "MetalPlates009_1K-JPG_Displacement.jpg",
+					},
+				},
+				// non-metallic: no metalness key → should fall back to color path
+				reinforced_concrete: {
+					localPath: "textures/materials/reinforced_concrete",
+					files: {
+						color: "Concrete028_1K-JPG_Color.jpg",
+						normal: "Concrete028_1K-JPG_NormalGL.jpg",
+						roughness: "Concrete028_1K-JPG_Roughness.jpg",
+						displacement: "Concrete028_1K-JPG_Displacement.jpg",
+					},
+				},
+			},
+		},
+		factionVisuals: {
+			reclaimers: {
+				primaryColor: "#8B4513",
+				accentColor: "#DAA520",
+				rustLevel: 0.4,
+			},
+			volt_collective: {
+				primaryColor: "#4169E1",
+				accentColor: "#FF4500",
+				emissiveGlow: 0.3,
+			},
+			signal_choir: {
+				primaryColor: "#9370DB",
+				accentColor: "#00CED1",
+				anodized: true,
+			},
+			iron_creed: {
+				primaryColor: "#708090",
+				accentColor: "#FFD700",
+				brushedMetal: true,
+			},
+		},
+	},
+}));
 
 import { MaterialFactory, type PBRTextureSet } from "../MaterialFactory";
 
@@ -287,6 +355,165 @@ describe("MaterialFactory", () => {
 			factory.createMaterial("iron", makeTextureSet());
 			factory.dispose();
 			expect(factory.getMaterial("iron")).toBeUndefined();
+		});
+	});
+
+	// ---------------------------------------------------------------------------
+	// createFromSpec — JSON-driven material creation
+	// ---------------------------------------------------------------------------
+
+	describe("createFromSpec", () => {
+		it("returns a material for a known textureMapping key", () => {
+			const mat = factory.createFromSpec("spec_iron", {
+				textureMappingKey: "iron",
+			});
+			expect(mat).toBeDefined();
+		});
+
+		it("returns cached material on second call with same name", () => {
+			const mat1 = factory.createFromSpec("spec_iron", {
+				textureMappingKey: "iron",
+			});
+			const mat2 = factory.createFromSpec("spec_iron", {
+				textureMappingKey: "iron",
+			});
+			expect(mat1).toBe(mat2);
+		});
+
+		it("applies PBR options from spec", () => {
+			const mat = factory.createFromSpec("spec_steel", {
+				textureMappingKey: "steel",
+				options: { metalness: 0.95, roughness: 0.15 },
+			});
+			expect(mat.metalness).toBe(0.95);
+			expect(mat.roughness).toBe(0.15);
+		});
+
+		it("uses texture paths from config.textureMapping", () => {
+			factory.createFromSpec("spec_iron2", { textureMappingKey: "iron" });
+			// Texture load should have been requested for the config-derived path
+			const colorRequest = loadRequests.find((r) =>
+				r.path.includes("textures/materials/iron"),
+			);
+			expect(colorRequest).toBeDefined();
+		});
+
+		it("falls back gracefully for unknown textureMapping key", () => {
+			const mat = factory.createFromSpec("spec_unknown", {
+				textureMappingKey: "nonexistent_material",
+			});
+			expect(mat).toBeDefined();
+			expect(console.warn).toHaveBeenCalledWith(
+				expect.stringContaining("nonexistent_material"),
+			);
+		});
+
+		it("handles non-metallic materials (no metalness file) without crashing", () => {
+			const mat = factory.createFromSpec("spec_concrete", {
+				textureMappingKey: "reinforced_concrete",
+			});
+			expect(mat).toBeDefined();
+			// Metalness path should fall back to the color path
+			const metalnessReq = loadRequests.find(
+				(r) =>
+					r.path.includes("reinforced_concrete") &&
+					r.path.includes("Color.jpg"),
+			);
+			expect(metalnessReq).toBeDefined();
+		});
+
+		it("material is accessible via getMaterial after creation", () => {
+			factory.createFromSpec("spec_iron3", { textureMappingKey: "iron" });
+			expect(factory.getMaterial("spec_iron3")).toBeDefined();
+		});
+
+		it("material is cleared after dispose", () => {
+			factory.createFromSpec("spec_iron4", { textureMappingKey: "iron" });
+			factory.dispose();
+			expect(factory.getMaterial("spec_iron4")).toBeUndefined();
+		});
+	});
+
+	// ---------------------------------------------------------------------------
+	// createForFaction — faction-tinted PBR materials from factionVisuals config
+	// ---------------------------------------------------------------------------
+
+	describe("createForFaction", () => {
+		it("returns a material for a known faction", () => {
+			const mat = factory.createForFaction("reclaimers");
+			expect(mat).toBeDefined();
+		});
+
+		it("caches the material for reuse", () => {
+			const mat1 = factory.createForFaction("reclaimers");
+			const mat2 = factory.createForFaction("reclaimers");
+			expect(mat1).toBe(mat2);
+		});
+
+		it("produces distinct materials for different factions", () => {
+			const reclaimer = factory.createForFaction("reclaimers");
+			const volt = factory.createForFaction("volt_collective");
+			expect(reclaimer).not.toBe(volt);
+		});
+
+		it("produces distinct materials for same faction with different texture keys", () => {
+			const withIron = factory.createForFaction("reclaimers", "iron");
+			const withSteel = factory.createForFaction("reclaimers", "steel");
+			expect(withIron).not.toBe(withSteel);
+		});
+
+		it("warns and returns a fallback for unknown faction", () => {
+			const mat = factory.createForFaction("unknown_faction");
+			expect(mat).toBeDefined();
+			expect(console.warn).toHaveBeenCalledWith(
+				expect.stringContaining("unknown_faction"),
+			);
+		});
+
+		it("rust-heavy faction (reclaimers) has higher roughness than chrome faction (volt)", () => {
+			const reclaimerMat = factory.createForFaction("reclaimers", "iron");
+			const voltMat = factory.createForFaction("volt_collective", "iron");
+			expect(reclaimerMat.roughness).toBeGreaterThan(voltMat.roughness);
+		});
+
+		it("brushedMetal faction (iron_creed) has high metalness", () => {
+			const mat = factory.createForFaction("iron_creed");
+			expect(mat.metalness).toBeGreaterThanOrEqual(0.8);
+		});
+
+		it("anodized faction (signal_choir) has lower roughness than rusted faction", () => {
+			const choirMat = factory.createForFaction("signal_choir");
+			const reclaimerMat = factory.createForFaction("reclaimers");
+			expect(choirMat.roughness).toBeLessThan(reclaimerMat.roughness);
+		});
+
+		it("extraOptions override the faction defaults", () => {
+			const mat = factory.createForFaction("reclaimers", "iron", {
+				metalness: 0.1,
+				roughness: 0.99,
+			});
+			expect(mat.metalness).toBe(0.1);
+			expect(mat.roughness).toBe(0.99);
+		});
+
+		it("faction material is accessible via getMaterial", () => {
+			factory.createForFaction("reclaimers");
+			expect(factory.getMaterial("faction_reclaimers_iron")).toBeDefined();
+		});
+
+		it("faction material is cleared after dispose", () => {
+			factory.createForFaction("volt_collective");
+			factory.dispose();
+			expect(factory.getMaterial("faction_volt_collective_iron")).toBeUndefined();
+		});
+
+		it("creates all four factions without throwing", () => {
+			expect(() => {
+				factory.createForFaction("reclaimers");
+				factory.createForFaction("volt_collective");
+				factory.createForFaction("signal_choir");
+				factory.createForFaction("iron_creed");
+			}).not.toThrow();
 		});
 	});
 });

@@ -7,9 +7,14 @@
  *
  * Supports creating tinted/modified variants from a base material, and
  * proper disposal of all cached textures and materials.
+ *
+ * JSON-driven API:
+ *   - createFromSpec(name, spec)  — build a material from a MaterialSpec
+ *   - createForFaction(faction)   — tinted material from factionVisuals config
  */
 
 import * as THREE from "three";
+import { config } from "../../../config";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -44,6 +49,105 @@ export interface VariantModifications {
 	roughnessAdd?: number;
 	/** Add to the metalness value (clamped 0-1) */
 	metalnessAdd?: number;
+}
+
+/**
+ * A JSON-serialisable material specification used by createFromSpec.
+ *
+ * Maps directly to the entries in config/textureMapping.json `materials`
+ * combined with PBR option overrides.
+ *
+ * PBR defaults are read from config/materials.json when a matching key
+ * exists there; spec.options override those defaults.
+ */
+export interface MaterialSpec {
+	/**
+	 * Key into config.textureMapping.materials that provides the texture set.
+	 * Also used to look up PBR defaults from config/materials.json when present.
+	 * e.g. "iron", "steel", "rust".
+	 */
+	textureMappingKey: string;
+	/** PBR options to apply on top of the config.materials defaults. */
+	options?: MaterialOptions;
+}
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Read a texture mapping entry from config and return a PBRTextureSet.
+ * Falls back to empty paths when the key is unknown so callers get a
+ * graceful fallback rather than a hard crash.
+ */
+function textureMappingToPBRSet(key: string): PBRTextureSet {
+	const materials = config.textureMapping.materials as Record<
+		string,
+		{
+			localPath: string;
+			files: {
+				color?: string;
+				metalness?: string;
+				normal?: string;
+				roughness?: string;
+				displacement?: string;
+			};
+		}
+	>;
+	const entry = materials[key];
+	if (!entry) {
+		console.warn(
+			`MaterialFactory.createFromSpec: unknown textureMapping key "${key}". Using empty texture paths.`,
+		);
+		return { color: "", metalness: "", normal: "", roughness: "" };
+	}
+
+	const base = entry.localPath.endsWith("/")
+		? entry.localPath
+		: `${entry.localPath}/`;
+	const f = entry.files;
+	// For non-metallic materials the config omits `metalness`; fall back to the
+	// color texture so MeshStandardMaterial still gets a valid map.
+	return {
+		color: f.color ? `${base}${f.color}` : "",
+		metalness: f.metalness
+			? `${base}${f.metalness}`
+			: f.color
+				? `${base}${f.color}`
+				: "",
+		normal: f.normal ? `${base}${f.normal}` : "",
+		roughness: f.roughness ? `${base}${f.roughness}` : "",
+		displacement: f.displacement ? `${base}${f.displacement}` : undefined,
+	};
+}
+
+/**
+ * Read PBR defaults (metalness, roughness, color) from config/materials.json
+ * for a given key. Returns null if the key is not present.
+ *
+ * This is used by createFromSpec to source PBR parameters from config rather
+ * than hardcoded 0.5/0.5 fallbacks.
+ */
+function materialsConfigToPBROptions(key: string): MaterialOptions | null {
+	const materials = config.materials as Record<
+		string,
+		{ metalness?: number; roughness?: number; color?: string }
+	>;
+	const entry = materials[key];
+	if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+	// Only simple PBR entries have these numeric keys (skip complex objects like machineAssembly)
+	if (
+		entry.metalness === undefined &&
+		entry.roughness === undefined &&
+		entry.color === undefined
+	) {
+		return null;
+	}
+	const opts: MaterialOptions = {};
+	if (entry.metalness !== undefined) opts.metalness = entry.metalness;
+	if (entry.roughness !== undefined) opts.roughness = entry.roughness;
+	if (entry.color !== undefined) opts.color = new THREE.Color(entry.color);
+	return opts;
 }
 
 // ---------------------------------------------------------------------------
@@ -276,6 +380,143 @@ export class MaterialFactory {
 
 		this.cache.set(name, material);
 		return material;
+	}
+
+	/**
+	 * Create a PBR material from a JSON-driven MaterialSpec.
+	 *
+	 * Resolves the PBR texture set from config.textureMapping using
+	 * spec.textureMappingKey. PBR defaults (metalness, roughness, color) are
+	 * read from config/materials.json when a matching key exists there.
+	 * spec.options override those config defaults.
+	 *
+	 * This is the preferred API when material definitions live in config
+	 * rather than being hardcoded in rendering code.
+	 *
+	 * @param name - Cache key for this material
+	 * @param spec - Descriptor with a textureMapping key and optional PBR overrides
+	 */
+	createFromSpec(name: string, spec: MaterialSpec): THREE.MeshStandardMaterial {
+		const cached = this.cache.get(name);
+		if (cached) return cached;
+
+		const textures = textureMappingToPBRSet(spec.textureMappingKey);
+		// Merge: config.materials defaults < spec.options
+		const configDefaults = materialsConfigToPBROptions(spec.textureMappingKey);
+		const mergedOptions: MaterialOptions = {
+			...configDefaults,
+			...spec.options,
+		};
+		return this.createMaterial(name, textures, mergedOptions);
+	}
+
+	/**
+	 * Create a PBR material for a building type using config/rendering.json
+	 * buildingPBR definitions.
+	 *
+	 * Looks up config.rendering.buildingPBR[buildingType] for texture key,
+	 * metalness, roughness, and tint. Falls back to a generic iron material
+	 * if the building type is not found.
+	 *
+	 * @param buildingType - Building type key from config.rendering.buildingPBR
+	 */
+	createForBuilding(buildingType: string): THREE.MeshStandardMaterial {
+		const cacheKey = `building_${buildingType}`;
+		const cached = this.cache.get(cacheKey);
+		if (cached) return cached;
+
+		const buildingPBR = (
+			config.rendering as {
+				buildingPBR?: Record<
+					string,
+					{
+						texture: string;
+						metalness: number;
+						roughness: number;
+						tint: string;
+					}
+				>;
+			}
+		).buildingPBR;
+
+		const entry = buildingPBR?.[buildingType];
+		if (!entry) {
+			console.warn(
+				`MaterialFactory.createForBuilding: unknown building type "${buildingType}". Using iron fallback.`,
+			);
+			return this.createFromSpec(cacheKey, { textureMappingKey: "iron" });
+		}
+
+		const options: MaterialOptions = {
+			metalness: entry.metalness,
+			roughness: entry.roughness,
+			color: new THREE.Color(Number(entry.tint)),
+		};
+
+		return this.createFromSpec(cacheKey, {
+			textureMappingKey: entry.texture,
+			options,
+		});
+	}
+
+	/**
+	 * Create a faction-themed PBR material from config.factionVisuals.
+	 *
+	 * Looks up the faction entry in config.factionVisuals and creates a
+	 * material tinted with the faction's primaryColor. Uses the "iron"
+	 * texture set from config.textureMapping as the base — callers can
+	 * override this by passing a different textureMappingKey.
+	 *
+	 * @param faction     - Key from config.factionVisuals (e.g. "reclaimers")
+	 * @param texMappingKey - Optional texture base (defaults to "iron")
+	 * @param extraOptions  - Additional PBR options to merge
+	 */
+	createForFaction(
+		faction: string,
+		texMappingKey = "iron",
+		extraOptions?: Omit<MaterialOptions, "color">,
+	): THREE.MeshStandardMaterial {
+		const cacheKey = `faction_${faction}_${texMappingKey}`;
+		const cached = this.cache.get(cacheKey);
+		if (cached) return cached;
+
+		const factionVisuals = config.factionVisuals as Record<
+			string,
+			{
+				primaryColor: string;
+				accentColor?: string;
+				rustLevel?: number;
+				emissiveGlow?: number;
+				anodized?: boolean;
+				brushedMetal?: boolean;
+			}
+		>;
+		const visual = factionVisuals[faction];
+		if (!visual) {
+			console.warn(
+				`MaterialFactory.createForFaction: unknown faction "${faction}". Using default material.`,
+			);
+			return this.createFromSpec(cacheKey, { textureMappingKey: texMappingKey });
+		}
+
+		// Faction-specific PBR tweaks driven by visual traits
+		const rustLevel = visual.rustLevel ?? 0;
+		const emissiveGlow = visual.emissiveGlow ?? 0;
+		const anodized = visual.anodized ?? false;
+		const brushedMetal = visual.brushedMetal ?? false;
+
+		const baseMetalness = anodized ? 0.7 : brushedMetal ? 0.85 : emissiveGlow > 0 ? 0.9 : 0.75;
+		const baseRoughness = brushedMetal ? 0.35 : anodized ? 0.25 : 0.3 + rustLevel * 0.5;
+
+		const options: MaterialOptions = {
+			...extraOptions,
+			color: new THREE.Color(visual.primaryColor),
+			metalness: extraOptions?.metalness ?? baseMetalness,
+			roughness: extraOptions?.roughness ?? baseRoughness,
+		};
+
+		const textures = textureMappingToPBRSet(texMappingKey);
+		return this.createMaterial(cacheKey, textures, options);
 	}
 
 	/**

@@ -35,6 +35,132 @@
   "cubeStacking": {
     "defaultMaxRange": 5.0
   },
+  "botVariants": {
+    "_comment": "5 generic cross-faction bot role archetypes. BotBrainSystem reads these to tune FSM thresholds per bot type. All factions can produce these via standard fabrication.",
+    "scout": {
+      "displayName": "Scout",
+      "role": "scout",
+      "speed": 7.0,
+      "hp": 60,
+      "attackDamage": 5,
+      "attackRange": 2.0,
+      "attackCooldown": 1.5,
+      "aggroRange": 6,
+      "visionRange": 22,
+      "fleeThreshold": 0.2,
+      "patrolRadius": 30,
+      "gatherFirst": false,
+      "techTier": 1,
+      "fabricationRecipe": "scout",
+      "botType": "scout",
+      "fsmOverrides": {
+        "aggroRangeSq": 36,
+        "patrolRangeSq": 900,
+        "fleeThreshold": 0.2,
+        "preferFlee": true
+      },
+      "description": "Fastest bot. Explores, scouts for deposits and enemy positions. Flees combat rather than fighting. Enormous vision range."
+    },
+    "hauler": {
+      "displayName": "Hauler",
+      "role": "hauler",
+      "speed": 3.0,
+      "hp": 150,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 999,
+      "aggroRange": 0,
+      "visionRange": 8,
+      "fleeThreshold": 0.5,
+      "patrolRadius": 5,
+      "gatherFirst": true,
+      "carryCapacity": 4,
+      "techTier": 1,
+      "fabricationRecipe": "hauler",
+      "botType": "hauler",
+      "fsmOverrides": {
+        "aggroRangeSq": 0,
+        "fleeThreshold": 0.5,
+        "preferGather": true,
+        "preferReturnToBase": true
+      },
+      "description": "Non-combat logistics bot. Carries up to 4 cubes at once. Always seeks deposits, returns to base when full. Never attacks."
+    },
+    "combat": {
+      "displayName": "Combat Bot",
+      "role": "combat",
+      "speed": 4.5,
+      "hp": 200,
+      "attackDamage": 28,
+      "attackRange": 3.0,
+      "attackCooldown": 0.9,
+      "aggroRange": 14,
+      "visionRange": 12,
+      "fleeThreshold": 0.1,
+      "patrolRadius": 12,
+      "gatherFirst": false,
+      "techTier": 3,
+      "fabricationRecipe": "combat_bot",
+      "botType": "combat",
+      "fsmOverrides": {
+        "aggroRangeSq": 196,
+        "patrolRangeSq": 144,
+        "fleeThreshold": 0.1,
+        "preferAttack": true
+      },
+      "description": "General-purpose fighter. High aggro range, low flee threshold — holds ground under fire. The backbone of any military force."
+    },
+    "engineer": {
+      "displayName": "Engineer",
+      "role": "engineer",
+      "speed": 3.5,
+      "hp": 100,
+      "attackDamage": 8,
+      "attackRange": 2.0,
+      "attackCooldown": 1.5,
+      "aggroRange": 6,
+      "visionRange": 10,
+      "fleeThreshold": 0.4,
+      "patrolRadius": 10,
+      "gatherFirst": false,
+      "buildSpeed": 2.0,
+      "repairRange": 4.0,
+      "techTier": 2,
+      "fabricationRecipe": "engineer_bot",
+      "botType": "engineer",
+      "fsmOverrides": {
+        "aggroRangeSq": 36,
+        "preferBuild": true,
+        "preferRepair": true
+      },
+      "description": "Builds structures 2x faster than standard bots. Passively repairs damaged buildings within 4m. Weak in direct combat but invaluable for base expansion."
+    },
+    "hacker_generic": {
+      "displayName": "Hacker Bot",
+      "role": "hacker",
+      "speed": 4.0,
+      "hp": 70,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 999,
+      "aggroRange": 0,
+      "visionRange": 16,
+      "fleeThreshold": 0.6,
+      "patrolRadius": 8,
+      "gatherFirst": false,
+      "hackRange": 8,
+      "hackSpeed": 1.5,
+      "techTier": 3,
+      "fabricationRecipe": "hacker_bot_generic",
+      "botType": "hacker_generic",
+      "fsmOverrides": {
+        "aggroRangeSq": 0,
+        "fleeThreshold": 0.6,
+        "preferHack": true
+      },
+      "description": "Specialist infiltrator. No weapons — breaks enemy belt-routing connections and disrupts building output through hacking. Flees immediately when discovered."
+    }
+  },
   "factionUnits": {
     "_comment": "12 unique faction combat/utility units — 3 per faction. Speed in m/s. attackDamage per hit. attackRange in world units. techTier gates fabrication.",
     "salvager": {

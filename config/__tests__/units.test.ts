@@ -155,4 +155,83 @@ describe("units.json", () => {
 			expect(tiers.size).toBeGreaterThan(1);
 		});
 	});
+
+	describe("botVariants", () => {
+		const variants = unitsConfig.botVariants as unknown as Record<string, {
+			displayName: string;
+			role: string;
+			speed: number;
+			hp: number;
+			visionRange: number;
+			fleeThreshold: number;
+			techTier: number;
+			fabricationRecipe: string;
+			botType: string;
+			fsmOverrides: Record<string, unknown>;
+		}>;
+
+		const EXPECTED_VARIANTS = ["scout", "hauler", "combat", "engineer", "hacker_generic"];
+
+		it("defines all 5 bot variant archetypes", () => {
+			for (const id of EXPECTED_VARIANTS) {
+				expect(variants[id]).toBeDefined();
+			}
+		});
+
+		it("every variant has required fields", () => {
+			for (const id of EXPECTED_VARIANTS) {
+				const v = variants[id];
+				expect(typeof v.displayName).toBe("string");
+				expect(typeof v.role).toBe("string");
+				expect(v.speed).toBeGreaterThan(0);
+				expect(v.hp).toBeGreaterThan(0);
+				expect(v.visionRange).toBeGreaterThan(0);
+				expect(v.fleeThreshold).toBeGreaterThanOrEqual(0);
+				expect(v.fleeThreshold).toBeLessThanOrEqual(1);
+				expect(v.techTier).toBeGreaterThanOrEqual(1);
+				expect(typeof v.fabricationRecipe).toBe("string");
+				expect(typeof v.botType).toBe("string");
+				expect(typeof v.fsmOverrides).toBe("object");
+			}
+		});
+
+		it("scout has highest vision range", () => {
+			const visions = EXPECTED_VARIANTS.map((id) => variants[id].visionRange);
+			expect(variants["scout"].visionRange).toBe(Math.max(...visions));
+		});
+
+		it("scout has highest speed", () => {
+			const speeds = EXPECTED_VARIANTS.map((id) => variants[id].speed);
+			expect(variants["scout"].speed).toBe(Math.max(...speeds));
+		});
+
+		it("combat bot has lowest flee threshold (holds ground longest)", () => {
+			const thresholds = EXPECTED_VARIANTS.map((id) => variants[id].fleeThreshold);
+			expect(variants["combat"].fleeThreshold).toBe(Math.min(...thresholds));
+		});
+
+		it("combat bot has lowest flee threshold among fighters", () => {
+			expect(variants["combat"].fleeThreshold).toBeLessThan(variants["engineer"].fleeThreshold);
+		});
+
+		it("hacker has no attack damage", () => {
+			const hacker = unitsConfig.botVariants as unknown as Record<string, { attackDamage?: number }>;
+			expect(hacker["hacker_generic"].attackDamage).toBe(0);
+		});
+
+		it("hauler has carry capacity", () => {
+			const hauler = unitsConfig.botVariants as unknown as Record<string, { carryCapacity?: number }>;
+			expect(hauler["hauler"].carryCapacity).toBeGreaterThan(0);
+		});
+
+		it("engineer has build speed multiplier", () => {
+			const eng = unitsConfig.botVariants as unknown as Record<string, { buildSpeed?: number }>;
+			expect(eng["engineer"].buildSpeed).toBeGreaterThan(1);
+		});
+
+		it("all roles are distinct", () => {
+			const roles = EXPECTED_VARIANTS.map((id) => variants[id].role);
+			expect(new Set(roles).size).toBe(5);
+		});
+	});
 });

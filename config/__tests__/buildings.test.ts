@@ -418,6 +418,98 @@ describe("factionBuildings", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Advanced buildings
+// ---------------------------------------------------------------------------
+
+describe("advancedBuildings", () => {
+	const advanced = buildingsConfig.advancedBuildings as unknown as Record<string, {
+		displayName: string;
+		category: string;
+		cubeCost: Record<string, number> | null;
+		powerRequired: number;
+		buildTimeSeconds: number;
+		techTier: number;
+		hp: number;
+		effect: string;
+		effectDescription: string;
+		buildingType: string;
+	}>;
+
+	const EXPECTED_ADVANCED = [
+		"advanced_fabricator",
+		"research_lab",
+		"radar_tower",
+		"shield_generator",
+		"teleporter",
+	];
+
+	it("defines all 5 advanced buildings", () => {
+		for (const id of EXPECTED_ADVANCED) {
+			expect(advanced[id]).toBeDefined();
+		}
+	});
+
+	it("every advanced building has required fields", () => {
+		for (const id of EXPECTED_ADVANCED) {
+			const b = advanced[id];
+			expect(typeof b.displayName).toBe("string");
+			expect(typeof b.category).toBe("string");
+			expect(b.powerRequired).toBeGreaterThan(0);
+			expect(b.buildTimeSeconds).toBeGreaterThan(0);
+			expect(b.techTier).toBeGreaterThanOrEqual(3);
+			expect(b.techTier).toBeLessThanOrEqual(5);
+			expect(b.hp).toBeGreaterThan(0);
+			expect(typeof b.effect).toBe("string");
+			expect(typeof b.effectDescription).toBe("string");
+			expect(typeof b.buildingType).toBe("string");
+		}
+	});
+
+	it("teleporter is highest tech tier (tier 5)", () => {
+		expect(advanced["teleporter"].techTier).toBe(5);
+	});
+
+	it("radar_tower is accessible at tier 3", () => {
+		expect(advanced["radar_tower"].techTier).toBeLessThanOrEqual(3);
+	});
+
+	it("advanced_fabricator has 2x speed multiplier", () => {
+		const af = buildingsConfig.advancedBuildings as unknown as Record<string, { fabricationSpeedMultiplier?: number }>;
+		expect(af["advanced_fabricator"].fabricationSpeedMultiplier).toBe(2.0);
+	});
+
+	it("shield_generator has shield HP > 0", () => {
+		const sg = buildingsConfig.advancedBuildings as unknown as Record<string, { shieldHP?: number }>;
+		expect(sg["shield_generator"].shieldHP).toBeGreaterThan(0);
+	});
+
+	it("radar_tower has vision radius > 0", () => {
+		const rt = buildingsConfig.advancedBuildings as unknown as Record<string, { visionRadius?: number }>;
+		expect(rt["radar_tower"].visionRadius).toBeGreaterThan(0);
+	});
+
+	it("research_lab generates research points per minute", () => {
+		const rl = buildingsConfig.advancedBuildings as unknown as Record<string, { researchPerMinute?: number }>;
+		expect(rl["research_lab"].researchPerMinute).toBeGreaterThan(0);
+	});
+
+	it("cube costs reference valid materials", () => {
+		for (const id of EXPECTED_ADVANCED) {
+			const cost = advanced[id].cubeCost;
+			if (!cost) continue;
+			for (const mat of Object.keys(cost)) {
+				expect(VALID_CUBE_MATERIALS).toContain(mat);
+			}
+		}
+	});
+
+	it("building types are all unique", () => {
+		const types = EXPECTED_ADVANCED.map((id) => advanced[id].buildingType);
+		expect(new Set(types).size).toBe(5);
+	});
+});
+
+// ---------------------------------------------------------------------------
 // No placeholder values
 // ---------------------------------------------------------------------------
 

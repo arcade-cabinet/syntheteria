@@ -460,6 +460,88 @@
 			"note": "Iron-exclusive. Largest footprint of any building. Imposing multi-tower visual."
 		}
 	},
+	"advancedBuildings": {
+		"_comment": "5 advanced cross-faction buildings available to all factions (gated by tech tier). Each unlocks a new gameplay mechanic.",
+		"advanced_fabricator": {
+			"displayName": "Advanced Fabricator",
+			"category": "production",
+			"cubeCost": { "iron": 6, "silicon": 4, "copper": 4, "rare_earth": 1 },
+			"powerRequired": 5,
+			"buildTimeSeconds": 60,
+			"techTier": 4,
+			"hp": 400,
+			"effect": "tier4_recipes",
+			"effectDescription": "Unlocks Tier 4 fabrication recipes: Tesla Coil Unit, Hacking Hub components, Artillery Bot, and advanced cubes (titanium → advanced_alloy, rare_earth → quantum_crystal precursors). Processes recipes 2x faster than the standard Fabrication Unit.",
+			"fabricationSpeedMultiplier": 2.0,
+			"unlockedTechTier": 4,
+			"buildingType": "advanced_fabricator",
+			"note": "Requires Tech Tier 4 (Quantum Processing) to build."
+		},
+		"research_lab": {
+			"displayName": "Research Lab",
+			"category": "production",
+			"cubeCost": { "silicon": 6, "rare_earth": 3, "gold": 2, "copper": 3 },
+			"powerRequired": 6,
+			"buildTimeSeconds": 80,
+			"techTier": 4,
+			"hp": 300,
+			"effect": "tech_research",
+			"effectDescription": "Generates 8 research points per minute (compared to 1 from the basic tech node). Enables faction-specific tech branches. All adjacent buildings share a 15% efficiency bonus from research synergy.",
+			"researchPerMinute": 8,
+			"synergyRadius": 12,
+			"synergyBonus": 0.15,
+			"buildingType": "research_lab",
+			"note": "Only one Research Lab may be active per faction at a time."
+		},
+		"radar_tower": {
+			"displayName": "Radar Tower",
+			"category": "infrastructure",
+			"cubeCost": { "silicon": 4, "copper": 5, "titanium": 2 },
+			"powerRequired": 3,
+			"buildTimeSeconds": 35,
+			"techTier": 3,
+			"hp": 180,
+			"effect": "fog_reveal",
+			"effectDescription": "Permanently reveals all terrain and entities within 25m radius. Enemy units within range are tracked in real-time — positions shown on minimap even through fog of war. Enables early detection of incoming raids.",
+			"visionRadius": 25,
+			"trackingRadius": 25,
+			"buildingType": "radar_tower",
+			"note": "Destroyable — destroying an enemy Radar Tower restores fog of war in its radius."
+		},
+		"shield_generator": {
+			"displayName": "Shield Generator",
+			"category": "defense",
+			"cubeCost": { "titanium": 5, "silicon": 3, "rare_earth": 2, "copper": 3 },
+			"powerRequired": 8,
+			"buildTimeSeconds": 55,
+			"techTier": 4,
+			"hp": 350,
+			"effect": "shield_dome",
+			"effectDescription": "Projects a 12m radius energy shield. All friendly buildings within the dome take 50% reduced damage. Shield absorbs up to 500 total damage before requiring 30s to recharge. Does not protect units, only structures.",
+			"shieldRadius": 12,
+			"damageReduction": 0.5,
+			"shieldHP": 500,
+			"rechargeTime": 30,
+			"buildingType": "shield_generator",
+			"note": "Power-hungry. Disabling power to this building drops the shield immediately."
+		},
+		"teleporter": {
+			"displayName": "Teleporter",
+			"category": "infrastructure",
+			"cubeCost": { "quantum_crystal": 2, "titanium": 4, "rare_earth": 2, "gold": 2 },
+			"powerRequired": 7,
+			"buildTimeSeconds": 75,
+			"techTier": 5,
+			"hp": 280,
+			"effect": "instant_transport",
+			"effectDescription": "Instantly transports units and cubes between paired Teleporter buildings. Transport cooldown 3s per item/unit. Requires two linked Teleporters. Destroyed Teleporter strands linked units mid-transport (they appear at nearest safe position).",
+			"transportCooldown": 3,
+			"maxRange": 500,
+			"buildingType": "teleporter",
+			"pairedRequired": true,
+			"note": "Endgame logistics. Pair two Teleporters to create an instant supply line across the map."
+		}
+	},
 	"blueprints": {
 		"basic_miner": {
 			"pattern": [[["scrap_iron", "scrap_iron"]]],

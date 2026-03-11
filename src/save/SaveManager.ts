@@ -9,6 +9,13 @@
  * - Round-trip safe: serialize -> store -> load -> deserialize preserves state
  */
 
+import {
+	isNativeDbAvailable,
+	nativeDeleteSave,
+	nativeGetAllSaves,
+	nativeGetSave,
+	nativePutSave,
+} from "./db";
 import { getSnapshot, setGameSpeed, setTickCount } from "../ecs/gameState";
 import { getWorldSeed, setWorldSeed } from "../ecs/seed";
 import type { Entity, UnitComponent, Vec3 } from "../ecs/types";
@@ -688,6 +695,12 @@ export async function saveGame(
 
 	const payload = serializeWorld(slotId, slotName, playTime, existingCreatedAt);
 
+	// Native: use expo-sqlite via db.ts
+	if (isNativeDbAvailable()) {
+		nativePutSave(slotId, payload);
+		return;
+	}
+
 	try {
 		if (useIDB) {
 			await idbPut(payload);
@@ -715,18 +728,23 @@ export async function saveGame(
 export async function loadGame(slotId: SaveSlotId): Promise<void> {
 	let data: SavePayload | undefined;
 
-	try {
-		data = useIDB ? await idbGet(slotId) : lsGet(slotId);
-	} catch (err) {
-		if (useIDB) {
-			console.warn(
-				"[SaveManager] IndexedDB read failed, trying localStorage:",
-				err,
-			);
-			useIDB = false;
-			data = lsGet(slotId);
-		} else {
-			throw err;
+	// Native: use expo-sqlite via db.ts
+	if (isNativeDbAvailable()) {
+		data = nativeGetSave(slotId) as SavePayload | undefined;
+	} else {
+		try {
+			data = useIDB ? await idbGet(slotId) : lsGet(slotId);
+		} catch (err) {
+			if (useIDB) {
+				console.warn(
+					"[SaveManager] IndexedDB read failed, trying localStorage:",
+					err,
+				);
+				useIDB = false;
+				data = lsGet(slotId);
+			} else {
+				throw err;
+			}
 		}
 	}
 
@@ -751,18 +769,23 @@ export async function loadGame(slotId: SaveSlotId): Promise<void> {
 export async function getSaveSlots(): Promise<SaveSlotInfo[]> {
 	let payloads: SavePayload[];
 
-	try {
-		payloads = useIDB ? await idbGetAll() : lsGetAll();
-	} catch (err) {
-		if (useIDB) {
-			console.warn(
-				"[SaveManager] IndexedDB read failed, trying localStorage:",
-				err,
-			);
-			useIDB = false;
-			payloads = lsGetAll();
-		} else {
-			throw err;
+	// Native: use expo-sqlite via db.ts
+	if (isNativeDbAvailable()) {
+		payloads = nativeGetAllSaves() as SavePayload[];
+	} else {
+		try {
+			payloads = useIDB ? await idbGetAll() : lsGetAll();
+		} catch (err) {
+			if (useIDB) {
+				console.warn(
+					"[SaveManager] IndexedDB read failed, trying localStorage:",
+					err,
+				);
+				useIDB = false;
+				payloads = lsGetAll();
+			} else {
+				throw err;
+			}
 		}
 	}
 
@@ -773,6 +796,12 @@ export async function getSaveSlots(): Promise<SaveSlotInfo[]> {
  * Delete a save from the specified slot.
  */
 export async function deleteSave(slotId: SaveSlotId): Promise<void> {
+	// Native: use expo-sqlite via db.ts
+	if (isNativeDbAvailable()) {
+		nativeDeleteSave(slotId);
+		return;
+	}
+
 	try {
 		if (useIDB) {
 			await idbDelete(slotId);

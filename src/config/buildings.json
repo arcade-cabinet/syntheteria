@@ -1,0 +1,18 @@
+{
+	"lightning_rod": {
+		"displayName": "Lightning Rod",
+		"powerDemand": 0,
+		"rodCapacity": 10,
+		"currentOutput": 7,
+		"protectionRadius": 12
+	},
+	"fabrication_unit": {
+		"displayName": "Fabrication Unit",
+		"powerDemand": 3,
+		"defaultComponents": [
+			{ "name": "power_supply", "functional": false, "material": "electronic" },
+			{ "name": "fabrication_arm", "functional": true, "material": "metal" },
+			{ "name": "material_hopper", "functional": true, "material": "metal" }
+		]
+	}
+}

@@ -1,0 +1,65 @@
+# Iteration 7 Log
+
+## Metadata
+
+- **Task ID**: US-014
+- **Task Title**: Furnace Entity and Hopper Input
+- **Description**: Furnace Entity and Hopper Input
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-11T02:39:30.534Z
+- **Ended At**: 2026-03-11T02:40:29.719Z
+- **Duration**: 59s
+- **Input Tokens**: 31
+- **Output Tokens**: 1978
+- **Total Tokens**: 2009
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+`★ Insight ─────────────────────────────────────`
+US-014 is about creating a **furnace system** — a key part of the factory loop. The furnace accepts physical cubes via a hopper queue, which is the bridge between the grab/carry mechanic and the processing/smelting mechanic. This is a pure game logic module with no R3F dependencies, making it ideal for unit testing.
+`─────────────────────────────────────────────────`
+
+Let me start by studying the progress file and existing codebase to understand what's already been done.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/furnace*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/__tests__/furnace*[0m
+Furnace files already exist. Let me verify they meet all acceptance criteria.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/furnace.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/__tests__/furnace.test.ts[0m
+Implementation and tests already exist. Let me verify the tests pass.
+[94m[Bash][0m Run furnace unit tests $ npx jest src/systems/__tests__/furnace.test.ts 2>&1
+All 27 tests pass. Let me verify each acceptance criterion:
+
+| Criterion | Status |
+|-----------|--------|
+| `createFurnace` spawns entity with Hopper and Processor traits | ✅ `FurnaceData` has `hopperQueue` (Hopper) + `isProcessing`/`currentItem`/`progress` (Processor) |
+| Furnace has Rapier static body | ✅ Via `createPhysicsBody` callback injection (line 107-109) |
+| `insertCubeIntoFurnace` adds material to hopper queue | ✅ Pushes to `hopperQueue` (line 144) |
+| Returns false if hopper full (5 max) | ✅ Checks `>= maxHopperSize` where default is 5 from config (line 139) |
+| Removes cube entity from world on insert | ✅ Via `removeCubeCallback` (line 148) |
+| `getFurnaceState` returns current state | ✅ Returns defensive copy snapshot (lines 160-176) |
+| Unit test passes | ✅ 27/27 tests passing |
+
+`★ Insight ─────────────────────────────────────`
+**Dependency injection for testability**: The furnace module avoids importing Rapier WASM directly by accepting `createPhysicsBody` and `removeCubeCallback` as optional callbacks. This keeps the module pure and testable without WASM mocking — a pattern used consistently across this codebase for systems that interact with physics.
+
+**Module-level Map store**: `furnaces = new Map<string, FurnaceData>()` with `_resetFurnaceState()` follows the same lightweight store pattern used throughout (selection state, territory, etc.). No React or ECS framework needed for the store itself.
+`─────────────────────────────────────────────────`
+
+Now let me append the progress entry.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-09 - US-002" → "---
+
+## 2026-03-10 - US-014
+- Verified existing im..."
+US-014 is already fully implemented and all 27 tests pass. No code changes were needed.
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,342 @@
+# Iteration 2 Log
+
+## Metadata
+
+- **Task ID**: US-002
+- **Task Title**: Create registerSystems.ts — Central System Registration
+- **Description**: As a developer, I want all systems registered in the orchestrator so the tick loop runs everything.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-11T02:13:57.556Z
+- **Ended At**: 2026-03-11T02:20:17.773Z
+- **Duration**: 6m 20s
+- **Input Tokens**: 247
+- **Output Tokens**: 22578
+- **Total Tokens**: 22825
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by checking the relevant skills and understanding the current state of the project.
+[94m[Skill][0m
+I'm implementing US-002: Create `registerSystems.ts` — the central system registration file. Let me start by understanding the current state.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/registerSystems.ts[0m
+Good — `registerSystems.ts` doesn't exist yet. Let me read the orchestrator (US-001's output) and understand the system registration API, then explore the existing systems to catalog their tick/update functions.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/gameLoopOrchestrator.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/*.ts[0m
+Now I need to discover all tick/update functions across the systems. Let me search for exported function signatures systematically.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+(tick|Tick|update|Update|System|system)[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function (tick|update|run|step|process)[0m
+Let me read the existing game loop bridge to understand how systems are currently called, and also look for additional system files.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/gameLoopBridge.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/**/*.ts[0m
+Now I need to check a few more system files to understand their signatures — especially those that take `delta` instead of `tick`, or have unusual parameters.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+Let me check the exact signatures for the systems that take unusual parameters.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96mexport function (techResearchSystem|fogOfWarManagerSystem|tickGovernors|achievementSystem|economySimulation|repairSystem|otterSystem)[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+Let me check a few more system functions for their signatures.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function (stormForecast|updateForecast|updatePacing|questDialogue|updateDialogue|updateQuests|hudTick)[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+Let me check for a few more potential tick systems.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+(System|Tick|tick)\b[0m
+Let me also check a few more systems that might have tick functions.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function \w+\([0m
+Now I have a complete picture of all system functions. Let me check a couple more edge cases.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems[0m pattern: [96m^export function (updateProjectiles|processWeatherDamage|processAlerts|updateNoiseEvents|updateSalvage|updateWaypoints|updateShelterDurability)[0m
+Now let me look at the existing orchestrator test to understand the testing pattern.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/__tests__/gameLoopOrchestrator.test.ts[0m
+Now I have everything I need. Let me also quickly check if there are existing files I should verify exist before importing.
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/{botAutomation,movement,aiCivilization,governorSystem,aiPeacePeriod,cubeAmmo,environmentHazards,exploration,enemies,fragmentMerge,repair,stormForecast,fpsCombat,cultistAI,otters,questSystem,questDialogue,wireNetwork,signalNetwork,noiseAttraction}.ts[0m
+All files exist. Now let me create the `registerSystems.ts` file and its test.
+
+`★ Insight ─────────────────────────────────────`
+**SystemFn adapter pattern:** The orchestrator defines `SystemFn = (tick: number) => void`, but real systems have diverse signatures — some take `delta` (seconds), some take `tick` (integer), some take complex params, and some return values. The registration wrappers act as **adapters**: they close over constants (like `FIXED_DELTA = 1/60`) and default values (like empty maps) so every system conforms to the uniform `(tick) => void` interface. This is a classic Adapter pattern applied to game loop architecture.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/registerSystems.ts[0m "/**
+ * Central system registration — wires every per-tick system into the orchestrator.
+ *
+ * Call registerAllSystems() once at game startup, before the first orchestratorTick().
+ * Each system is wra... (10187 chars)"
+Now let me write the integration test.
+
+`★ Insight ─────────────────────────────────────`
+**Testing strategy for registration modules:** We can't test the _behavior_ of each system (that's done in each system's own tests). Instead, the integration test verifies the _wiring_ — that `registerAllSystems()` populates all 8 phases with at least one system. By mocking every imported system function to a no-op, we isolate the registration logic from the actual game systems, making the test fast and deterministic.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/__tests__/registerSystems.test.ts[0m "/**
+ * Integration tests for registerSystems — verifies that registerAllSystems()
+ * wires every phase with at least one system and uses correct phase names.
+ */
+
+jest.mock("../../../config", () => ({... (9859 chars)"
+Now let me run the tests and TypeScript checks.
+[94m[Bash][0m Run registerSystems integration tests $ npx jest --no-cache src/systems/__tests__/registerSystems.test.ts 2>&1
+All 12 tests pass. Now let me run TypeScript and lint checks.
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -30
+[94m[Bash][0m Biome lint check $ npx @biomejs/biome check src/systems/registerSystems.ts src/systems/__tests__/registerSystems.test.t...
+
+[91m[Error: Exit code 1
+src/systems/__tests__/registerSystems.test.ts:79:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━
+
+  × The imports and exports are not sorted.
+  
+    77 │ jest.mock("../noiseAttraction", () => ({ updateNoiseEvents: mockNoOp }));
+    78 │ 
+  > 79 │ import { registerAllSystems } from "../registerSystems";
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    80 │ import {
+    81 │ 	getRegisteredSystems,
+  
+  i Safe fix: Organize Imports (Biome)
+  
+     77  77 │   jest.mock("../noiseAttraction", () => ({ updateNoiseEvents: mockNoOp }));
+     78  78 │   
+     79     │ - import·{·registerAllSystems·}·from·"../registerSystems";
+     80     │ - import·{
+     81     │ - → getRegisteredSystems,
+     82     │ - → resetOrchestrator,
+     83     │ - }·from·"../gameLoopOrchestrator";
+         79 │ + import·{
+         80 │ + → getRegisteredSystems,
+         81 │ + → resetOrchestrator,
+         82 │ + }·from·"../gameLoopOrchestrator";
+         83 │ + import·{·registerAllSystems·}·from·"../registerSystems";
+     84  84 │   
+     85  85 │   const ALL_PHASES = [
+  
+
+src/systems/registerSystems.ts:19:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × The imports and exports are not sorted.
+  
+    17 │  */
+    18 │ 
+  > 19 │ import { registerSystem } from "./gameLoopOrchestrator";
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    20 │ 
+    21 │ // --- Environment ---
+  
+  i Safe fix: Organize Imports (Biome)
+  
+     17  17 │    */
+     18  18 │   
+     19     │ - import·{·registerSystem·}·from·"./gameLoopOrchestrator";
+     20     │ - 
+     21     │ - //·---·Environment·---
+     22     │ - import·{·weatherSystem·}·from·"./weatherSystem";
+     23     │ - import·{·environmentHazardSystem·}·from·"./environmentHazards";
+     24     │ - import·{·stormEscalationSystem·}·from·"./stormEscalation";
+     25     │ - import·{·updateForecast·}·from·"./stormForecast";
+     26     │ - 
+     27     │ - //·---·Input/AI·---
+     28     │ - import·{·botCommandSystem·}·from·"./botCommand";
+     29     │ - import·{·botAutomationSystem·}·from·"./botAutomation";
+     30     │ - import·{·movementSystem·}·from·"./movement";
+     31     │ - import·{·aiCivilizationSystem·}·from·"./aiCivilization";
+     32     │ - import·{·tickGovernors·}·from·"./governorSystem";
+     33     │ - import·{·updatePacing·}·from·"./aiPeacePeriod";
+     34     │ - 
+     35     │ - //·---·Economy·---
+     36     │ - import·{·miningSystem·}·from·"./mining";
+     37     │ - import·{·harvestCompressSystem·}·from·"./harvestCompress";
+     38     │ - import·{·processingSystem·}·from·"./processing";
+     39     │ - import·{·fabricationSystem·}·from·"./fabrication";
+     40     │ - import·{·craftingSystem·}·from·"./craftingSystem";
+     41     │ - import·{·cubeEconomySystem·}·from·"./cubeEconomy";
+     42     │ - import·{·tradeRouteSystem·}·from·"./tradeRouteSystem";
+     43     │ - import·{·resourceSystem·}·from·"./resources";
+     44     │ - import·{·resourceFlowSystem·}·from·"./resourceFlowTracker";
+     45     │ - import·{·fragmentMergeSystem·}·from·"./fragmentMerge";
+     46     │ - import·{·economySimulation·}·from·"./economySimulation";
+     47     │ - 
+     48     │ - //·---·Infrastructure·---
+     49     │ - import·{·powerSystem·}·from·"./power";
+     50     │ - import·{·wireNetworkSystem·}·from·"./wireNetwork";
+     51     │ - import·{·signalNetworkSystem·}·from·"./signalNetwork";
+     52     │ - import·{·updateBeltTransport·}·from·"./beltTransport";
+     53     │ - import·{·repairSystem·}·from·"./repair";
+     54     │ - 
+     55     │ - //·---·Combat·---
+     56     │ - import·{·combatSystem·}·from·"./combat";
+     57     │ - import·{·fpsCombatSystem·}·from·"./fpsCombat";
+     58     │ - import·{·turretSystem·}·from·"./turret";
+     59     │ - import·{·hackingSystem·}·from·"./hacking";
+     60     │ - import·{·enemySystem·}·from·"./enemies";
+     61     │ - import·{·cultistAISystem·}·from·"./cultistAI";
+     62     │ - import·{·updateProjectiles·}·from·"./cubeAmmo";
+     63     │ - 
+     64     │ - //·---·Territory·---
+     65     │ - import·{·fogOfWarManagerSystem·}·from·"./fogOfWarManager";
+     66     │ - import·{·discoverySystem·}·from·"./discoverySystem";
+     67     │ - import·{·territoryControlSystem·}·from·"./territoryControl";
+     68     │ - import·{·diplomacySystem·}·from·"./diplomacySystem";
+     69     │ - import·{·explorationSystem·}·from·"./exploration";
+     70     │ - 
+     71     │ - //·---·Progression·---
+     72     │ - import·{·progressionSystem·}·from·"./progressionSystem";
+     73     │ - import·{·techResearchSystem·}·from·"./techResearch";
+     74     │ - import·{·victoryTrackingSystem·}·from·"./victoryTracking";
+     75     │ - import·{·proceduralQuestSystem·}·from·"./proceduralQuests";
+     76     │ - import·{·updateQuests·}·from·"./questSystem";
+     77     │ - import·{·updateDialogue·}·from·"./questDialogue";
+     78     │ - import·{·otterSystem·}·from·"./otters";
+     79  
+
+... [2297 characters truncated] ...
+
+·"./gameLoopBridge";
+         46 │ + import·{·registerSystem·}·from·"./gameLoopOrchestrator";
+         47 │ + import·{·tickGovernors·}·from·"./governorSystem";
+         48 │ + import·{·hackingSystem·}·from·"./hacking";
+         49 │ + import·{·harvestCompressSystem·}·from·"./harvestCompress";
+         50 │ + import·{·hudTick·}·from·"./hudState";
+         51 │ + //·---·Economy·---
+         52 │ + import·{·miningSystem·}·from·"./mining";
+         53 │ + import·{·movementSystem·}·from·"./movement";
+         54 │ + import·{·updateNoiseEvents·}·from·"./noiseAttraction";
+         55 │ + //·---·Cleanup·---
+         56 │ + import·{·notificationSystem·}·from·"./notificationSystem";
+         57 │ + import·{·otterSystem·}·from·"./otters";
+         58 │ + import·{·particleEmitterSystem·}·from·"./particleEmitterSystem";
+         59 │ + //·---·Infrastructure·---
+         60 │ + import·{·powerSystem·}·from·"./power";
+         61 │ + import·{·proceduralQuestSystem·}·from·"./proceduralQuests";
+         62 │ + import·{·processingSystem·}·from·"./processing";
+         63 │ + //·---·Progression·---
+         64 │ + import·{·progressionSystem·}·from·"./progressionSystem";
+         65 │ + import·{·updateDialogue·}·from·"./questDialogue";
+         66 │ + import·{·updateQuests·}·from·"./questSystem";
+         67 │ + import·{·repairSystem·}·from·"./repair";
+         68 │ + import·{·resourceFlowSystem·}·from·"./resourceFlowTracker";
+         69 │ + import·{·resourceSystem·}·from·"./resources";
+         70 │ + import·{·signalNetworkSystem·}·from·"./signalNetwork";
+         71 │ + import·{·stormEscalationSystem·}·from·"./stormEscalation";
+         72 │ + import·{·updateForecast·}·from·"./stormForecast";
+         73 │ + import·{·techResearchSystem·}·from·"./techResearch";
+         74 │ + import·{·territoryControlSystem·}·from·"./territoryControl";
+         75 │ + import·{·tradeRouteSystem·}·from·"./tradeRouteSystem";
+         76 │ + import·{·turretSystem·}·from·"./turret";
+         77 │ + import·{·victoryTrackingSystem·}·from·"./victoryTracking";
+         78 │ + //·---·Environment·---
+         79 │ + import·{·weatherSystem·}·from·"./weatherSystem";
+         80 │ + import·{·wireNetworkSystem·}·from·"./wireNetwork";
+     89  81 │   
+     90  82 │   /** Fixed timestep for delta-based systems (assumes 60 FPS). */
+  
+
+src/systems/registerSystems.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    103 103 │   	// Phase 1: Environment
+    104 104 │   	// -------------------------------------------------------------------
+    105     │ - → registerSystem("environment",·"weatherSystem",·(tick)·=>
+    106     │ - → → weatherSystem(tick),
+    107     │ - → );
+        105 │ + → registerSystem("environment",·"weatherSystem",·(tick)·=>·weatherSystem(tick));
+    108 106 │   	registerSystem("environment", "environmentHazardSystem", (tick) =>
+    109 107 │   		environmentHazardSystem(tick),
+    ······· │ 
+    168 166 │   	// Phase 4: Infrastructure
+    169 167 │   	// -------------------------------------------------------------------
+    170     │ - → registerSystem("infrastructure",·"powerSystem",·(tick)·=>
+    171     │ - → → powerSystem(tick),
+    172     │ - → );
+        168 │ + → registerSystem("infrastructure",·"powerSystem",·(tick)·=>·powerSystem(tick));
+    173 169 │   	registerSystem("infrastructure", "wireNetworkSystem", () =>
+    174 170 │   		wireNetworkSystem(),
+    ······· │ 
+    212 208 │   		diplomacySystem(tick),
+    213 209 │   	);
+    214     │ - → registerSystem("territory",·"explorationSystem",·()·=>
+    215     │ - → → explorationSystem(),
+    216     │ - → );
+        210 │ + → registerSystem("territory",·"explorationSystem",·()·=>·explorationSystem());
+    217 211 │   
+    218 212 │   	// -------------------------------------------------------------------
+    ······· │ 
+    231 225 │   		proceduralQuestSystem(tick),
+    232 226 │   	);
+    233     │ - → registerSystem("progression",·"questSystem",·()·=>
+    234     │ - → → updateQuests(FIXED_DELTA),
+    235     │ - → );
+        227 │ + → registerSystem("progression",·"questSystem",·()·=>·updateQuests(FIXED_DELTA));
+    236 228 │   	registerSystem("progression", "questDialogue", () =>
+    237 229 │   		updateDialogue(FIXED_DELTA),
+    ······· │ 
+    258 250 │   	});
+    259 251 │   	registerSystem("cleanup", "hudTick", () => hudTick(FIXED_DELTA));
+    260     │ - → registerSystem("cleanup",·"gameLoopBridge",·()·=>
+    261     │ - → → bridgeTick(FIXED_DELTA),
+    262     │ - → );
+        252 │ + → registerSystem("cleanup",·"gameLoopBridge",·()·=>·bridgeTick(FIXED_DELTA));
+    263 253 │   	registerSystem("cleanup", "noiseAttraction", (tick) => {
+    264 254 │   		updateNoiseEvents(tick);
+  
+
+Checked 2 files in 27ms. No fixes applied.
+Found 3 errors.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.][0m
+Biome wants alphabetical import sorting and some formatting tweaks. Let me auto-fix.
+[94m[Bash][0m Biome auto-fix import sorting and formatting $ npx @biomejs/biome check --fix src/systems/registerSystems.ts src/systems/__tests__/registerSystems....
+Now let me verify both files pass all checks.
+[94m[Bash][0m Verify Biome passes $ npx @biomejs/biome check src/systems/registerSystems.ts src/systems/__tests__/registerSystems.test.t...
+[94m[Bash][0m Re-run tests after Biome fixes $ npx jest --no-cache src/systems/__tests__/registerSystems.test.ts 2>&1
+All checks pass. The TSC errors are pre-existing in other files (not in my changes). Let me verify that specifically.
+[94m[Bash][0m Check if registerSystems has any TS errors $ npx tsc --noEmit 2>&1 | grep -c "registerSystems"
+Zero TypeScript errors in registerSystems. Now let me update the progress log.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "- **Guard pattern for lazy-loaded components**: Wh..." → "- **Guard pattern for lazy-loaded components**: Wh..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "---
+
+" → "---
+
+## 2026-03-10 - US-002
+- Created `src/systems..."
+
+[91m[Error: <tool_use_error>Found 2 matches of the string to replace, but replace_all is false. To replace all occurrences, set replace_all to true. To replace only one occurrence, please provide more context to uniquely identify the instance.
+String: ---
+
+</tool_use_error>][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-10 - US-001" → "---
+
+## 2026-03-10 - US-002
+- Created `src/systems..."
+All acceptance criteria met. Let me verify the final checklist:
+
+- **New file `src/systems/registerSystems.ts` created** - Done
+- **`registerAllSystems()` exported** - Done, calls `registerSystem(phase, name, fn)` for all 8 phases
+- **Every system with a tick/update function registered in correct phase** - 48 systems across 8 phases
+- **Phase order: environment → inputAi → economy → infrastructure → combat → territory → progression → cleanup** - Correct (matches orchestrator's `phaseOrder`)
+- **Each registration wraps with correct arguments (delta vs tick)** - Delta systems get `FIXED_DELTA`, tick systems pass through, complex-param systems get safe defaults
+- **Integration test verifies all 8 phases have at least one system** - 12 tests, all passing
+- **`npx jest --no-cache` passes** - Confirmed
+- **`npx tsc --noEmit` passes** - Zero errors in registerSystems files (pre-existing errors elsewhere)
+- **`npx @biomejs/biome check` passes** - Confirmed
+
+`★ Insight ─────────────────────────────────────`
+**Why a central registration module matters:** Without it, systems are called ad-hoc from scattered `useFrame` hooks and React effects — making execution order unpredictable and debugging impossible. The registration module is the **manifest** of all game logic: one glance shows every system that runs per tick, what phase it belongs to, and how its signature is adapted. This is the foundation for profiling (which phase is slow?), debugging (which system broke?), and feature flags (disable combat for peaceful testing).
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,62 @@
+# Iteration 13 Log
+
+## Metadata
+
+- **Task ID**: US-010
+- **Task Title**: Held Cube Camera Follow
+- **Description**: Held Cube Camera Follow
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-11T02:46:26.283Z
+- **Ended At**: 2026-03-11T02:47:21.092Z
+- **Duration**: 54s
+- **Input Tokens**: 31
+- **Output Tokens**: 1857
+- **Total Tokens**: 1888
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+`★ Insight ─────────────────────────────────────`
+**US-010: Held Cube Camera Follow** — This story creates the visual feedback loop for carrying cubes. When a player grabs a cube (US-009), it needs to float in front of the camera like a first-person "held item." The key design choices:
+1. **Offset from camera** (1.5m forward, 0.3m down) — keeps the cube visible but not obstructing the center crosshair
+2. **Speed penalty** (0.6x) — carrying cubes should feel heavy, creating strategic tension about when/where to carry
+3. **Config-driven** — the speed multiplier comes from JSON config, not hardcoded
+`─────────────────────────────────────────────────`
+
+Let me start by studying the progress file and understanding the current state.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Glob][0m pattern: [96msrc/systems/heldCubeSync*[0m
+[94m[Glob][0m pattern: [96msrc/systems/__tests__/heldCubeSync*[0m
+Both files already exist. Let me verify they meet the acceptance criteria.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/heldCubeSync.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/__tests__/heldCubeSync.test.ts[0m
+Implementation and tests already exist. Let me verify the tests pass.
+[94m[Bash][0m Run heldCubeSync tests $ npx jest src/systems/__tests__/heldCubeSync.test.ts 2>&1
+All 19 tests pass. Let me verify against each acceptance criterion:
+
+| Criterion | Status |
+|-----------|--------|
+| Held cube position set to camera forward offset (1.5m forward, 0.3m down) | `CARRY_FORWARD_OFFSET = 1.5`, `CARRY_DOWN_OFFSET = 0.3`, formula at line 68-75 |
+| `getCarrySpeedMultiplier` returns 1.0 when not carrying | Line 91-92: `if (!isCarrying) return 1.0` |
+| Returns 0.6 when carrying (from `config/botMovement.json`) | `DEFAULT_CARRY_SPEED_MULTIPLIER = 0.6`, verified in test line 176-178 |
+| No position update when not holding a cube | Line 63-66: early return when `getHeldCube()` returns null |
+| Unit test passes | 19/19 passing |
+
+All acceptance criteria are met. Now let me append the progress entry.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "  - `GRAB_REACH` loaded from `config/units.json` a..." → "  - `GRAB_REACH` loaded from `config/units.json` a..."
+`★ Insight ─────────────────────────────────────`
+**Callback injection pattern** — This module demonstrates a recurring codebase pattern: instead of importing Rapier/ECS directly, functions accept callbacks (`getHeldCube`, `setCubePosition`). This makes the module:
+1. **Testable without WASM** — tests pass simple lambdas instead of mocking Rapier
+2. **Decoupled** — the same logic works whether cubes are tracked in Miniplex, Koota, or a plain Map
+3. **Composable** — callers wire dependencies at the integration layer (GameScene/GameLoop)
+`─────────────────────────────────────────────────`
+
+US-010 is already fully implemented and all 19 tests pass. No changes were needed.
+
+<promise>COMPLETE</promise>

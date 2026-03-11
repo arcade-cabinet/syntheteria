@@ -1,0 +1,68 @@
+# Iteration 19 Log
+
+## Metadata
+
+- **Task ID**: US-019
+- **Task Title**: Machine Assembly (Cubes to Machine)
+- **Description**: Machine Assembly (Cubes to Machine)
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-11T02:53:15.112Z
+- **Ended At**: 2026-03-11T02:54:11.979Z
+- **Duration**: 56s
+- **Input Tokens**: 27
+- **Output Tokens**: 1973
+- **Total Tokens**: 2000
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+`★ Insight ─────────────────────────────────────`
+US-019 is the **machine assembly system** — the final transformation in the core loop where placed cubes matching a blueprint pattern get consumed and become a functional Building entity. This is a classic "crafting grid" pattern (like Minecraft's crafting table) but in 3D with rotation support.
+`─────────────────────────────────────────────────`
+
+Let me start by studying the progress file and the prerequisite implementations.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/machineAssembly*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/__tests__/machineAssembly*[0m
+Both files already exist. Let me read them and verify they meet the acceptance criteria.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/machineAssembly.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/__tests__/machineAssembly.test.ts[0m
+The implementation and tests already exist. Let me verify the tests pass.
+[94m[Bash][0m Run machineAssembly tests $ npx jest src/systems/__tests__/machineAssembly.test.ts --no-coverage 2>&1
+All 16 tests pass. Let me verify against each acceptance criterion:
+
+| Criterion | Status |
+|---|---|
+| `assembleMachine` removes all constituent cube entities | Lines 127-135: iterates `matchResult.cubeCoords` and calls `removeCubeFn` for each. Test at line 76 verifies. |
+| Creates Building entity at anchor position | Lines 138-156: creates `MachineData` with anchor from first cube coord, stores in registry. Test at line 91 verifies. |
+| Machine type from `blueprint.result` | Line 150: `type: matchResult.blueprint.result`. Test at line 105 verifies. |
+| Stats scale by material quality | Lines 84-101: `calculateStats` averages `MATERIAL_QUALITY` across all cubes, multiplies base stats. Test at line 117 verifies iron (1.0) vs titanium (2.0). |
+| `disassembleMachine` restores cubes at original positions | Lines 172-198: iterates stored `cubePositions`, calls `placeCubeFn` for each. Test at line 217 verifies. |
+| Round-trip preserves material types | Lines 126-129: stores `{ coord, material }` during assembly. Line 188: passes material to `placeCubeFn`. Test at line 243 verifies copper/iron preservation. |
+| Unit test passes | 16/16 tests passing. |
+
+All acceptance criteria are met. Now let me append to progress.md.
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "  - `cubeCoords` in `MatchResult` excludes undersc..." → "  - `cubeCoords` in `MatchResult` excludes undersc..."
+`★ Insight ─────────────────────────────────────`
+**US-019 Machine Assembly** follows two key design patterns worth noting:
+
+1. **Callback injection over module coupling** — Instead of importing `cubePlacement.removeCube` directly, `assembleMachine` accepts a `removeCubeFn` parameter. This means the assembly system is completely testable in isolation and could work with any cube storage backend (ECS, database, etc.).
+
+2. **Material quality as a stat multiplier** — The `calculateStats` function averages material quality across all cubes in a machine, then multiplies base stats. This creates an emergent gameplay decision: do you use your rare titanium cubes (quality 2.0) for a miner that extracts faster, or save them for a turret that's more durable? The math is simple multiplication but creates meaningful resource allocation tension.
+`─────────────────────────────────────────────────`
+
+US-019 is already fully implemented and all 16 tests pass. The implementation covers:
+
+- **`assembleMachine`** — records cube positions/materials, removes cubes via callback, calculates quality-scaled stats, stores machine in module registry
+- **`disassembleMachine`** — restores cubes at original positions with original materials, removes machine from registry
+- **`calculateStats`** — averages `MATERIAL_QUALITY` across all constituent cubes, multiplies base efficiency/durability
+- Full round-trip preservation verified (assemble → disassemble → cubes restored with correct materials)
+
+No changes were needed.
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,238 @@
+# Iteration 1 Log
+
+## Metadata
+
+- **Task ID**: US-001
+- **Task Title**: Remove initializeWorld from GameScene
+- **Description**: As a developer, I want a single init path so that world state is never duplicated.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-11T02:07:34.233Z
+- **Ended At**: 2026-03-11T02:13:56.540Z
+- **Duration**: 6m 22s
+- **Input Tokens**: 630
+- **Output Tokens**: 13006
+- **Total Tokens**: 13636
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by understanding the current state and then implement the changes.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Glob][0m pattern: [96m**/GameScene.tsx[0m
+[94m[Glob][0m pattern: [96m**/newGameInit.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/GameScene.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/newGameInit.ts[0m
+Now let me check how App.tsx calls GameScene and whether it already calls `initFromConfig`.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/App.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src[0m pattern: [96mGameScene|initFromConfig|getLastResult[0m
+`★ Insight ─────────────────────────────────────`
+The codebase has a **dual init path problem**: `App.tsx` already calls `initFromConfig()` (the new 12-step init orchestrator from `newGameInit.ts`) during the loading phase, but `GameScene.tsx` also has its own `initializeWorld()` that does a simpler, hardcoded version of the same setup. This means world state could be initialized twice or inconsistently. The fix is to trust the single init path via `App.tsx` and use `getLastResult()` as a guard in `GameScene`.
+`─────────────────────────────────────────────────`
+
+Now let me identify which imports are only used by `initializeWorld` and make the changes.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/GameScene.tsx[0m pattern: [96mcultistAISystem|spawnCultist[0m
+Good. `cultistAISystem` is used in `GameLoop` (line 310), but `spawnCultist` is only in `initializeWorld`. Let me also verify `simulationTick` usage outside `initializeWorld`.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/GameScene.tsx[0m pattern: [96msimulationTick[0m
+`simulationTick` is used on line 316 in `GameLoop`, so that import stays. Now I'll make all the edits. Let me also check which tests reference `GameScene` or `initializeWorld`.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src[0m pattern: [96minitializeWorld|GameSceneProps|GameScene[0m
+No tests reference `initializeWorld` or `GameScene` directly. Let me now apply the changes to `GameScene.tsx`.
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/GameScene.tsx[0m edit: "import { Canvas, useFrame } from "@react-three/fib..." → "import { Canvas, useFrame } from "@react-three/fib..."
+Now delete the `initializeWorld` function, the `worldInitialized` flag, and the `useEffect` that calls it, and update the component to use `getLastResult()` as guard.
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/GameScene.tsx[0m edit: "// --- World initialization ---
+
+function initiali..." → "// --- Game loop ---"
+Now remove the `worldInitialized` flag, the `useEffect` that called `initializeWorld`, and update the component signature.
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/GameScene.tsx[0m edit: "// --- GameScene ---
+
+let worldInitialized = false..." → "// --- GameScene ---
+
+export default function Game..."
+Now update `App.tsx` to remove the `seed` prop from `GameScene`.
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/App.tsx[0m edit: "function PlayingView({ onQuitToTitle }: { onQuitTo..." → "function PlayingView({ onQuitToTitle }: { onQuitTo..."
+Now check if `useRef` is still needed in `App.tsx` after removing `pendingSeedRef` from `PlayingView`. It's still used in `App()` for `pendingSeedRef` and `pendingConfigRef`.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/App.tsx[0m
+Let me verify the final state of `GameScene.tsx`.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/GameScene.tsx[0m
+Wait — the early return before hooks violates React's Rules of Hooks. I need to move the guard after all hooks.
+
+`★ Insight ─────────────────────────────────────`
+**React Rules of Hooks**: Hooks must be called unconditionally, in the same order every render. An early `return null` before `useEffect`/`useCallback` calls would cause hooks to be called conditionally, leading to runtime errors. The guard must come after all hook calls.
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/GameScene.tsx[0m edit: "export default function GameScene() {
+	const [save..." → "export default function GameScene() {
+	const [save..."
+Now run the quality checks.
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -30
+[94m[Bash][0m Check for TS errors in our changed files $ npx tsc --noEmit 2>&1 | grep -E "GameScene|App\.tsx|newGameInit" | head -20
+No TypeScript errors in our changed files (`GameScene.tsx`, `App.tsx`). The existing errors are all pre-existing TS6133 (unused variables in test files) and unrelated to our changes.
+[94m[Bash][0m Biome lint check on changed files $ npx @biomejs/biome check src/GameScene.tsx src/App.tsx 2>&1
+
+[91m[Error: Exit code 1
+src/App.tsx:11:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × The imports and exports are not sorted.
+  
+     9 │  */
+    10 │ 
+  > 11 │ import { lazy, Suspense, useEffect, useRef, useState } from "react";
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    12 │ import { useSyncExternalStore } from "react";
+    13 │ import { getSnapshot, subscribe } from "./ecs/gameState";
+  
+  i Safe fix: Organize Imports (Biome)
+  
+      9   9 │    */
+     10  10 │   
+     11     │ - import·{·lazy,·Suspense,·useEffect,·useRef,·useState·}·from·"react";
+     12     │ - import·{·useSyncExternalStore·}·from·"react";
+         11 │ + import·{·lazy,·Suspense,·useEffect,·useRef,·useState,·useSyncExternalStore·}·from·"react";
+     13  12 │   import { getSnapshot, subscribe } from "./ecs/gameState";
+     14  13 │   import { phraseToSeed } from "./ecs/seed";
+     15     │ - import·type·{·PregameConfig·}·from·"./ui/PregameScreen";
+     16     │ - import·{·PregameScreen·}·from·"./ui/PregameScreen";
+     17     │ - import·{·TitleScreen·}·from·"./ui/TitleScreen";
+     18     │ - import·{·LoadingScreen·}·from·"./ui/LoadingScreen";
+     19     │ - import·{·PauseMenu·}·from·"./ui/PauseMenu";
+     20     │ - import·{·ErrorBoundary·}·from·"./ui/ErrorBoundary";
+     21     │ - import·{·initFromConfig,·type·NewGameConfig·}·from·"./systems/newGameInit";
+         14 │ + import·{·initFromConfig,·type·NewGameConfig·}·from·"./systems/newGameInit";
+         15 │ + import·{·ErrorBoundary·}·from·"./ui/ErrorBoundary";
+         16 │ + import·{·LoadingScreen·}·from·"./ui/LoadingScreen";
+         17 │ + import·{·PauseMenu·}·from·"./ui/PauseMenu";
+         18 │ + import·type·{·PregameConfig·}·from·"./ui/PregameScreen";
+         19 │ + import·{·PregameScreen·}·from·"./ui/PregameScreen";
+         20 │ + import·{·TitleScreen·}·from·"./ui/TitleScreen";
+     22  21 │   
+     23  22 │   // Lazy-load the entire 3D scene — keeps title/pregame bundle tiny.
+  
+
+src/App.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     86  86 │   
+     87  87 │   			if (!result.success) {
+     88     │ - → → → → console.error(
+     89     │ - → → → → → "[newGameInit]·Initialization·failed:",
+     90     │ - → → → → → result.errors,
+     91     │ - → → → → );
+         88 │ + → → → → console.error("[newGameInit]·Initialization·failed:",·result.errors);
+     92  89 │   			}
+     93  90 │   
+  
+
+src/GameScene.tsx:7:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × The imports and exports are not sorted.
+  
+    5 │  */
+    6 │ 
+  > 7 │ import { Canvas, useFrame } from "@react-three/fiber";
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    8 │ import {
+    9 │ 	useCallback,
+  
+  i Safe fix: Organize Imports (Biome)
+  
+     31  31 │   import { CityRenderer } from "./rendering/CityRenderer";
+     32  32 │   import { EnvironmentSetup } from "./rendering/EnvironmentSetup";
+     33     │ - import·{·PostProcessing·}·from·"./rendering/PostProcessing";
+     34     │ - import·{·FactoryRenderer·}·from·"./rendering/FactoryRenderer";
+     35     │ - import·{·Flashlight·}·from·"./rendering/Flashlight";
+     36     │ - import·{·FogOfWarRenderer·}·from·"./rendering/FogOfWarRenderer";
+     37     │ - import·{·FreeCubeRenderer·}·from·"./rendering/FreeCubeRenderer";
+     38     │ - import·{·FurnaceRenderer·}·from·"./rendering/FurnaceRenderer";
+     39     │ - import·{·HarvestParticles·}·from·"./rendering/HarvestParticles";
+     40     │ - import·{·HologramRenderer·}·from·"./rendering/HologramRenderer";
+     41     │ - import·{·LandscapeProps·}·from·"./rendering/LandscapeProps";
+         33 │ + import·{·FactoryRenderer·}·from·"./rendering/FactoryRenderer";
+         34 │ + import·{·Flashlight·}·from·"./rendering/Flashlight";
+         35 │ + import·{·FogOfWarRenderer·}·from·"./rendering/FogOfWarRenderer";
+         36 │ + import·{·FreeCubeRenderer·}·from·"./rendering/FreeCubeRenderer";
+         37 │ + import·{·FurnaceRenderer·}·from·"./rendering/FurnaceRenderer";
+         38 │ + import·{·HarvestParticles·}·from·"./rendering/HarvestParticles";
+         39 │ + import·{·HologramRenderer·}·from·"./rendering/HologramRenderer";
+         40 │ + import·{·LandscapeProps·}·from·"./rendering/LandscapeProps";
+         41 │ + import·{·usePreloadCubeMaterials·}·from·"./rendering/materials/CubeMaterialProvider";
+     42  42 │   import { OreDepositRenderer } from "./rendering/OreDepositRenderer";
+     43  43 │   import { OtterRenderer } from "./rendering/OtterRenderer";
+     44  44 │   import { PlacedCubeRenderer } from "./rendering/PlacedCubeRenderer";
+     45  45 │   import { PlacementPreview } from "./rendering/PlacementPreview";
+     46     │ - import·{·SelectionHighlight·}·from·"./rendering/SelectionHighlight";
+     47     │ - import·{·StockpileGlow·}·from·"./rendering/StockpileGlow";
+     48     │ - import·{·StormSky·}·from·"./rendering/StormSky";
+     49     │ - import·{·usePreloadCubeMaterials·}·from·"./rendering/materials/CubeMaterialProvider";
+         46 │ + import·{·PostProcessing·}·from·"./rendering/PostProcessing";
+         47 │ + import·{·SelectionHighlight·}·from·"./rendering/SelectionHighlight";
+         48 │ + import·{·StockpileGlow·}·from·"./rendering/StockpileGlow";
+         49 │ + import·{·StormSky·}·from·"./rendering/StormSky";
+     50  50 │   import { usePreloadTerrainMaterials } from "./rendering/TerrainPBR";
+     51  51 │   import { TerrainRenderer } from "./rendering/TerrainRenderer";
+    ······· │ 
+     67  67 │   import { CoreLoopHUD } from "./ui/CoreLoopHUD";
+     68  68 │   import { FPSHUD } from "./ui/FPSHUD";
+     69     │ - import·{·InventoryView·}·from·"./ui/InventoryView";
+     70     │ - import·{·MobileControls·}·from·"./ui/MobileControls";
+     71     │ - import·{·ObjectActionMenu·}·from·"./ui/ObjectActionMenu";
+     72     │ - import·{·PowerOverlay·}·from·"./ui/PowerOverlay";
+     73     │ - import·{·QuestPanel·}·from·"./ui/QuestPanel";
+     74     │ - import·{·TechTreePanel·}·from·"./ui/TechTreePanel";
+         69 │ + import·{·GameOverScreen·}·from·"./ui/GameOverScreen";
+         70 │ + import·{·InventoryView·}·from·"./ui/InventoryView";
+         71 │ + import·{·MobileControls·}·from·"./ui/MobileControls";
+         72 │ + import·{·ObjectActionMenu·}·from·"./ui/ObjectActionMenu";
+         73 │ + import·{·PowerOverlay·}·from·"./ui/PowerOverlay";
+         74 │ + import·{·QuestPanel·}·from·"./ui/QuestPanel";
+     75  75 │   import { getEquippedTool } from "./ui/RadialToolMenu";
+     76     │ - import·{·GameOverScreen·}·from·"./ui/GameOverScreen";
+     77     │ - import·{·SaveLoadMenu·}·from·"./ui/SaveLoadMenu";
+         76 │ + import·{·SaveLoadMenu·}·from·"./ui/SaveLoadMenu";
+         77 │ + import·{·TechTreePanel·}·from·"./ui/TechTreePanel";
+     78  78 │   
+     79  79 │   // --- Game loop ---
+  
+
+Checked 2 files in 28ms. No fixes applied.
+Found 3 errors.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.][0m
+Biome wants sorted imports. Let me fix those.
+[94m[Bash][0m Auto-fix Biome import sorting and formatting $ npx @biomejs/biome check --fix src/GameScene.tsx src/App.tsx 2>&1
+Now run the tests.
+[94m[Bash][0m Run full test suite $ npx jest --no-cache 2>&1 | tail -30
+All 30,375 tests passing across 1,025 suites. Let me verify Biome is clean now.
+[94m[Bash][0m Final Biome lint check $ npx @biomejs/biome check src/GameScene.tsx src/App.tsx 2>&1
+All clean. Now let me update the progress file.
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "*Add reusable patterns discovered during developme..." → "*Add reusable patterns discovered during developme..."
+`★ Insight ─────────────────────────────────────`
+**Single init path**: The old `initializeWorld()` was a 188-line hardcoded world setup that duplicated what `initFromConfig()` in `newGameInit.ts` does via a proper 12-step orchestrator. By removing it and using `getLastResult()` as a guard, `GameScene` now trusts that `App.tsx` has already initialized the world during the loading phase — no more risk of double-initialization or inconsistent state.
+
+**Import hygiene**: Removing a large function often leaves behind orphaned imports. In this case, 16+ imports (factory functions, terrain helpers, AI managers) were only used by `initializeWorld`. Biome's import organizer then re-sorts the remaining imports alphabetically.
+`─────────────────────────────────────────────────`
+
+## Summary
+
+**US-001 complete.** Here's what was done:
+
+| Change | Detail |
+|--------|--------|
+| `initializeWorld()` deleted | 188 lines removed (GameScene.tsx:100-287) |
+| `worldInitialized` flag deleted | Module-level guard variable removed |
+| `useEffect` calling init deleted | The mount effect that triggered `initializeWorld(seed)` |
+| 16+ orphaned imports removed | `buildNavMesh`, `YukaManager`, `placeBelt`, `spawnUnit`, `spawnOtter`, `createFurnace`, etc. |
+| `getLastResult()` guard added | Returns `null` if `initFromConfig()` hasn't been called by App.tsx |
+| `seed` prop removed | `GameSceneProps` interface deleted; component takes no props |
+| `App.tsx` updated | `<GameScene />` rendered without seed prop |
+
+**Quality checks:**
+- `npx tsc --noEmit` — no new errors (pre-existing TS6133 in test files only)
+- `npx @biomejs/biome check` — clean
+- `npx jest --no-cache` — **30,375 tests passing** across 1,025 suites
+
+<promise>COMPLETE</promise>

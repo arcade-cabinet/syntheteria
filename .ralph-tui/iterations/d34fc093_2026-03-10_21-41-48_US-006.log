@@ -1,0 +1,61 @@
+# Iteration 9 Log
+
+## Metadata
+
+- **Task ID**: US-006
+- **Task Title**: OreDeposit Entity Spawner
+- **Description**: OreDeposit Entity Spawner
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-11T02:41:48.602Z
+- **Ended At**: 2026-03-11T02:42:50.952Z
+- **Duration**: 1m 2s
+- **Input Tokens**: 31
+- **Output Tokens**: 2214
+- **Total Tokens**: 2245
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by studying the progress file and understanding the current state, then implement US-006.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Glob][0m pattern: [96msrc/systems/oreSpawner*[0m
+[94m[Glob][0m pattern: [96msrc/systems/__tests__/oreSpawner*[0m
+Both files already exist. Let me verify the existing implementation meets all acceptance criteria.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/oreSpawner.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/__tests__/oreSpawner.test.ts[0m
+Implementation and tests both exist. Let me verify the tests pass.
+[94m[Bash][0m Run oreSpawner tests $ npx jest src/systems/__tests__/oreSpawner.test.ts --no-coverage 2>&1
+All 24 tests pass. Let me verify against each acceptance criterion:
+
+| Criterion | Status |
+|-----------|--------|
+| `spawnOreDeposit` creates entity with OreDeposit data (type, quantity) | Line 103-143: creates `OreDepositData` with type, quantity, position, hardness, grindSpeed, color |
+| Entity has Rapier static body with sphere collider | Lines 139-141: calls `createPhysicsBody(position, radius)` callback; tests verify at line 187-216 |
+| Ore type matches one in `config/mining.json` oreTypes | Lines 26-28: `VALID_ORE_TYPES = Object.keys(miningConfig.oreTypes)`; line 114 validates |
+| `spawnInitialDeposits` places `count` deposits at valid positions | Lines 163-223: random placement within world bounds, min distance enforced |
+| Invalid ore type throws error | Lines 114-118: throws with descriptive message; tested at lines 148-179 |
+| Unit test passes | 24/24 tests passing |
+
+This story was already fully implemented. Let me update progress.md.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "## 2026-03-10 - US-015
+- Verified existing impleme..." → "## 2026-03-10 - US-015
+- Verified existing impleme..."
+`★ Insight ─────────────────────────────────────`
+**US-006 was already fully implemented** — 24 tests, all passing. Key patterns worth noting:
+
+1. **Callback injection for WASM-heavy deps**: Rather than mocking Rapier in tests, the spawner accepts an optional `createPhysicsBody` callback. No callback = no physics = pure logic testing. This is the same pattern used by `furnace.ts` and is the cleanest way to decouple from WASM in this codebase.
+
+2. **Seeded RNG injection**: `spawnInitialDeposits` accepts an `rng` parameter defaulting to `Math.random`. Tests pass a deterministic LCG (`seededRng(42)`) for reproducible placement. This is a great pattern for any system with randomness.
+
+3. **Bounded retry loops**: `maxAttempts = count * 10` prevents infinite loops when min-distance constraints make it impossible to place all requested deposits. The function gracefully returns fewer deposits rather than hanging.
+`─────────────────────────────────────────────────`
+
+All 6 acceptance criteria verified. No code changes needed.
+
+<promise>COMPLETE</promise>

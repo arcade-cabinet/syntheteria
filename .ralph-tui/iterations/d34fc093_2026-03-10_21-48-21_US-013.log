@@ -1,0 +1,76 @@
+# Iteration 15 Log
+
+## Metadata
+
+- **Task ID**: US-013
+- **Task Title**: Place Cube from Hand onto Grid
+- **Description**: Place Cube from Hand onto Grid
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-11T02:48:21.994Z
+- **Ended At**: 2026-03-11T02:49:40.647Z
+- **Duration**: 1m 18s
+- **Input Tokens**: 39
+- **Output Tokens**: 2661
+- **Total Tokens**: 2700
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+`★ Insight ─────────────────────────────────────`
+**US-013: Place Cube from Hand onto Grid** integrates two prior systems — the grabber (US-009) and cube placement with structural integrity (US-012). The key design challenge is converting a continuous raycast hit point into a discrete grid slot adjacent to the hit surface, using the hit normal to determine which face was hit and thus where the new cube should go.
+`─────────────────────────────────────────────────`
+
+Let me start by studying the progress and existing code.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/cubeStacking*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/__tests__/cubeStacking*[0m
+Both files exist. Let me read them along with the dependencies (grabber.ts, cubePlacement.ts, gridSnap.ts).
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/cubeStacking.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/__tests__/cubeStacking.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/grabber.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/cubePlacement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/gridSnap.ts[0m
+The implementation is already complete. Both `cubeStacking.ts` and its test file exist with full coverage. Let me verify all acceptance criteria and run the tests.
+
+Let me check the acceptance criteria against the code:
+
+1. **`getPlacementPreview` returns grid coords near raycast hit** - Lines 308-352 of cubeStacking.ts
+2. **Preview snaps to adjacent empty slot** - Lines 333-339 (offsets by normal when slot occupied)
+3. **Returns `valid:false` if `canPlaceCube` fails** - Line 342 calls `canPlaceCubeCheck`
+4. **Returns null if no surface in range** - Lines 314-315 (null hit) and 319-327 (max range)
+5. **`placeHeldCube` drops cube then places at grid position** - Lines 377-419
+6. **Returns false if not holding a cube** - Lines 390-393
+7. **Unit test passes** - Let me verify:
+[94m[Bash][0m Run cubeStacking tests $ npx jest src/systems/__tests__/cubeStacking.test.ts --no-coverage 2>&1
+All 62 tests pass. Let me also run a quick typecheck to confirm no errors.
+[94m[Bash][0m TypeScript check $ npx tsc --noEmit --pretty 2>&1 | tail -5
+[94m[Bash][0m Check TS error count $ npx tsc --noEmit --pretty 2>&1 | head -5
+Pre-existing TS errors in unrelated files — none in `cubeStacking.ts` or its test. The implementation is fully complete.
+
+`★ Insight ─────────────────────────────────────`
+**Why `cubeStacking.ts` duplicates placement validation:** The `canPlaceCubeCheck` helper (line 433) duplicates the logic from `cubePlacement.ts:canPlaceCube`. This is intentional — `getPlacementPreview` is a pure function that takes an `occupiedSlots: Set<string>` parameter, so it doesn't depend on `cubePlacement`'s module-level registry. This keeps the preview computation side-effect-free and independently testable.
+
+**Callback injection pattern:** `placeHeldCube` takes 4 function parameters instead of importing directly from `grabber.ts` and `cubePlacement.ts`. This avoids circular dependencies (grabber already imports from cubeStacking) and makes tests trivial — just pass `jest.fn()` stubs.
+`─────────────────────────────────────────────────`
+
+Now let me update progress.md.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "  - `_resetPlacementGrid()` follows established un..." → "  - `_resetPlacementGrid()` follows established un..."
+US-013 is already fully implemented and all 62 tests pass. The acceptance criteria are all met:
+
+| Criteria | Status |
+|----------|--------|
+| `getPlacementPreview` returns grid coords near raycast hit | `cubeStacking.ts:308-352` |
+| Preview snaps to adjacent empty slot | Lines 333-339 — offsets by surface normal |
+| Returns `valid:false` if `canPlaceCube` fails | Line 342 calls `canPlaceCubeCheck` |
+| Returns null if no surface in range | Lines 314-315 (null hit), 319-327 (max range) |
+| `placeHeldCube` drops cube then places at grid position | Lines 377-419 — orchestrates drop→snap→register |
+| Returns false if not holding a cube | Lines 390-393 |
+| Unit test passes | **62 tests passing** |
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,73 @@
+# Iteration 20 Log
+
+## Metadata
+
+- **Task ID**: US-020
+- **Task Title**: Integration Test — Full Core Loop
+- **Description**: Integration Test — Full Core Loop
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-11T02:54:12.983Z
+- **Ended At**: 2026-03-11T02:55:18.349Z
+- **Duration**: 1m 5s
+- **Input Tokens**: 39
+- **Output Tokens**: 2099
+- **Total Tokens**: 2138
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+`★ Insight ─────────────────────────────────────`
+This is US-020, the capstone integration test that exercises the entire core game loop end-to-end. Integration tests like this are valuable because they verify that individually-tested units actually compose correctly — catching interface mismatches, state leaks, and ordering bugs that unit tests miss.
+`─────────────────────────────────────────────────`
+
+Let me start by studying the progress file and understanding the current state, then look at the existing implementations to write the integration test.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Glob][0m pattern: [96msrc/__tests__/coreLoop*[0m
+[94m[Glob][0m pattern: [96msrc/systems/harvesting.ts[0m
+The integration test file already exists. Let me read it and check its current state.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/__tests__/coreLoop.integration.test.ts[0m
+The integration test file already exists and looks comprehensive. Let me run it to verify it passes.
+[94m[Bash][0m Run the core loop integration test $ npx jest 'src/__tests__/coreLoop.integration.test.ts' --no-coverage 2>&1
+All 6 tests pass. Let me verify this meets every acceptance criterion:
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+
+
+`★ Insight ─────────────────────────────────────`
+This integration test was already fully implemented in a prior iteration. It exercises the complete core game loop chain across 6 test cases:
+
+1. **Full end-to-end loop** (10 steps): spawn deposit → harvest → compress 4 cubes → grab → place on grid → build wall → blueprint match → assemble machine → disassemble
+2. **Harvest depletion**: verifies deposit drains to zero and powder accumulates correctly
+3. **Compression gating**: insufficient powder rejected, progress tracked, concurrent compression blocked
+4. **Grab → carry → place round-trip**: trait transitions (Grabbable → HeldBy), speed penalty, grid placement
+5. **Wall building**: Bresenham line + stockpile consumption, partial/wrong-material failure cases
+6. **Machine assembly/disassembly**: mixed materials, quality scaling, material-preserving round-trip
+
+The key architectural pattern here is **callback injection** — every system that would normally touch Rapier physics (grabber, placement, ore spawner) accepts callbacks instead. This means the integration test uses *real* system functions with zero WASM mocking, testing actual cross-module data flow.
+`─────────────────────────────────────────────────`
+
+## US-020: Already Complete
+
+All 6 tests pass (6/6) — the integration test was implemented in a prior iteration and covers every acceptance criterion:
+
+| Criterion | Status | Test Coverage |
+|-----------|--------|---------------|
+| Spawns ore deposit, harvests until enough powder | **Pass** | `full loop` step 1-2, `harvest depletes` |
+| Compresses into cube, verifies MaterialCube | **Pass** | `full loop` step 3, `compression requires` |
+| Grabs cube, verifies held state | **Pass** | `full loop` step 4, `grab → carry → place` |
+| Places on grid, verifies PlacedAt trait | **Pass** | `full loop` step 5, `grab → carry → place` |
+| Builds wall from multiple cubes | **Pass** | `full loop` step 7, `wall building` |
+| Matches blueprint, assembles machine | **Pass** | `full loop` steps 8-9, `machine assembly` |
+| All assertions pass with real system functions | **Pass** | No mocks — callback injection only |
+| Integration test passes | **Pass** | `npx jest 'src/__tests__/coreLoop.integration.test.ts'` → 6/6 |
+
+Now let me append the progress entry.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "  - Test imports real `cubePlacement` functions (n..." → "  - Test imports real `cubePlacement` functions (n..."
+US-020 is complete. The integration test was already fully implemented and all 6 tests pass, covering the entire core game loop from ore deposit spawning through machine assembly and disassembly. This is the final story (20/20) in the PRD.
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,67 @@
+# Iteration 8 Log
+
+## Metadata
+
+- **Task ID**: US-015
+- **Task Title**: Furnace Smelting Timer and Output
+- **Description**: Furnace Smelting Timer and Output
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-11T02:40:30.723Z
+- **Ended At**: 2026-03-11T02:41:47.597Z
+- **Duration**: 1m 16s
+- **Input Tokens**: 35
+- **Output Tokens**: 2381
+- **Total Tokens**: 2416
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+`★ Insight ─────────────────────────────────────`
+US-015 builds the furnace processing tick — the time-based smelting that converts input cubes to output cubes. This is a classic **game loop timer pattern**: accumulate delta time, check against a recipe duration, and spawn output on completion. The key design constraint is that the timer must pause when unpowered, creating strategic decisions around power management.
+`─────────────────────────────────────────────────`
+
+Let me start by studying the progress file and the existing furnace implementation from US-014.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/furnace*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/__tests__/furnace*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96mconfig/furnace*[0m
+Both `furnaceProcessing.ts` and its test already exist. Let me check if they already meet the acceptance criteria.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/furnaceProcessing.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/__tests__/furnaceProcessing.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/config/furnace.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/furnace.ts[0m
+Both `furnaceProcessing.ts` and its test file already exist with comprehensive implementations. Let me verify all acceptance criteria are met by running the tests.
+[94m[Bash][0m Run furnace processing tests $ npx jest --no-coverage src/systems/__tests__/furnaceProcessing.test.ts 2>&1
+All 34 tests pass. Let me verify against each acceptance criterion:
+
+| Criterion | Status | Evidence |
+|-----------|--------|----------|
+| Timer advances when powered | ✅ | `updateFurnaceProcessing` line 214: `state.elapsed += delta` when `furnace.isPowered` |
+| Timer does NOT advance when unpowered | ✅ | Line 209: returns `{ completed: false }` without advancing when `!furnace.isPowered` |
+| Completion creates output cube at furnace output position | ✅ | Line 219: `computeOutputPosition(furnace.position)` returns offset position |
+| Output type from `config/furnace.json` recipe lookup | ✅ | `DEFAULT_RECIPES` built from `furnaceConfig.tiers` at lines 71-89 |
+| Next hopper item auto-starts after output | ✅ | Lines 230-231: `startSmelting(furnaceId, recipes)` called after completion |
+| Smelt time matches config recipe | ✅ | Tests verify exact timing (scrap_iron=10s, copper=12s, silicon=25s) |
+| Unit test passes | ✅ | 34/34 tests pass |
+
+`★ Insight ─────────────────────────────────────`
+This furnace processing system demonstrates two solid patterns:
+1. **Callback injection** — Rapier WASM is never imported; physics creation is passed as a callback, keeping the module pure and testable without mocking WASM.
+2. **Power-gated timer** — The `isPowered` check happens *before* `elapsed += delta`, so unpowered ticks are a no-op. This is the classic "conditional accumulator" pattern used in factory games (Factorio, Satisfactory) where machines pause without losing progress.
+`─────────────────────────────────────────────────`
+
+US-015 is already fully implemented. Now let me update the progress log.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "  - TypeScript type check passes cleanly from `gam..." → "  - TypeScript type check passes cleanly from `gam..."
+US-015 is already fully implemented and verified:
+
+- **`src/systems/furnaceProcessing.ts`** — 291 lines covering `startSmelting`, `updateFurnaceProcessing`, `setFurnacePowered`, `getSmeltingProgress`, with recipes derived from `config/furnace.json`
+- **`src/systems/__tests__/furnaceProcessing.test.ts`** — 34 tests all passing, covering powered/unpowered timer, recipe timing, output position, auto-start, power cycling, edge cases
+- All 7 acceptance criteria met
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,71 @@
+# Iteration 12 Log
+
+## Metadata
+
+- **Task ID**: US-009
+- **Task Title**: Grab Mechanic (Pick Up Cube)
+- **Description**: Grab Mechanic (Pick Up Cube)
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-11T02:45:14.906Z
+- **Ended At**: 2026-03-11T02:46:25.278Z
+- **Duration**: 1m 10s
+- **Input Tokens**: 31
+- **Output Tokens**: 2533
+- **Total Tokens**: 2564
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+`★ Insight ─────────────────────────────────────`
+US-009 is the **grab mechanic** — the player's ability to pick up, carry, drop, and throw physical cubes. This is a critical link in the core loop chain: after compression creates a cube (US-008), the player needs to physically interact with it. The key design decisions here are:
+1. **Relation-based ownership** — `HeldBy` links cube to player, enabling queries like "what is player X holding?"
+2. **Physics state transitions** — cubes switch between Dynamic (free), Kinematic (held, follows camera), and Fixed (placed)
+3. **Distance validation** — prevents telekinesis; player must be within 2.0m
+`─────────────────────────────────────────────────`
+
+Let me start by studying the progress file and existing codebase to understand what's already implemented.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/grabber*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria[0m pattern: [96msrc/systems/__tests__/grabber*[0m
+Both files already exist. Let me verify they meet the acceptance criteria.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/grabber.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/__tests__/grabber.test.ts[0m
+Implementation and tests both exist. Let me verify the tests pass.
+[94m[Bash][0m Run grabber unit tests $ npx jest src/systems/__tests__/grabber.test.ts 2>&1 | tail -30
+All 50 tests pass. Let me verify each acceptance criterion against the implementation:
+
+| Acceptance Criterion | Status | Evidence |
+|---|---|---|
+| `grabCube` returns false if cube not Grabbable | **Pass** | `grabber.ts:162` checks trait, test line 81 |
+| Returns false if out of reach (>2.0m) | **Pass** | `grabber.ts:171` distance check, tests line 112-178 |
+| Returns false if already holding a cube | **Pass** | `grabber.ts:152` null check, test line 186 |
+| Creates HeldBy relation on success, body to Kinematic | **Pass** | `grabber.ts:182-185` trait swap + callback, tests line 227-265 |
+| `dropCube` removes HeldBy, body to Dynamic | **Pass** | `grabber.ts:237-268` trait swap + callback, tests line 289-393 |
+| `throwCube` removes HeldBy, body to Dynamic, applies impulse | **Pass** | `grabber.ts:305-321` trait swap + impulse, tests line 400-512 |
+| `getHeldCube` returns held cube ID or null | **Pass** | `grabber.ts:336`, tests line 519-548 |
+| Unit test passes | **Pass** | 50/50 tests passing |
+
+`★ Insight ─────────────────────────────────────`
+The grabber implementation demonstrates several excellent patterns:
+1. **Callback injection for physics** — `GrabCallbacks` and `ReleaseCallbacks` interfaces let callers pass Rapier operations without the grabber importing WASM. This makes tests trivially simple with `jest.fn()`.
+2. **Trait-as-state-machine** — Cubes transition between `Grabbable → HeldBy → Grabbable` via trait array mutation, mirroring how a real ECS trait system works but in plain TypeScript.
+3. **Defensive registry copies** — `registerCube` clones position and traits to prevent external mutation of internal state, which is crucial when game systems pass object references around.
+`─────────────────────────────────────────────────`
+
+Now let me append the progress entry.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "  - Also has `compressionJuice.ts` (screen shake, ..." → "  - Also has `compressionJuice.ts` (screen shake, ..."
+US-009 is already fully implemented and verified. All 50 tests pass, covering every acceptance criterion. The grabber system includes:
+
+- **`grabCube`** — validates Grabbable trait, 2.0m reach, single-hold constraint; swaps traits and calls `setKinematic`
+- **`dropCube`** — restores Grabbable, calls `setDynamic`, with optional snap-to-stack integration
+- **`throwCube`** — restores Grabbable, calls `setDynamic` + `applyImpulse` with direction * force
+- **`getHeldCube`** — returns held cube ID or null
+- **Registry** — defensive copies, auto-cleanup on unregister
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,11 @@
+{
+	"power": {
+		"defaultRadius": 12,
+		"baseStormIntensity": 0.7,
+		"stormOscillation": 0.2,
+		"stormSurgeMax": 0.3
+	},
+	"hacking": {
+		"baseDifficulty": 10
+	}
+}

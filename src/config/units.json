@@ -1,0 +1,20 @@
+{
+	"maintenance_bot": {
+		"displayName": "Maintenance Bot",
+		"speed": 3.0,
+		"powerDemand": 0.5,
+		"movingPowerBonus": 0.3
+	},
+	"utility_drone": {
+		"displayName": "Utility Drone",
+		"speed": 4.0,
+		"powerDemand": 0.5,
+		"movingPowerBonus": 0.3
+	},
+	"fabrication_unit": {
+		"displayName": "Fabrication Unit",
+		"speed": 0,
+		"powerDemand": 0,
+		"movingPowerBonus": 0
+	}
+}

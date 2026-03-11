@@ -1,0 +1,64 @@
+# Iteration 16 Log
+
+## Metadata
+
+- **Task ID**: US-016
+- **Task Title**: Wall Line Calculator (Bresenham)
+- **Description**: Wall Line Calculator (Bresenham)
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-11T02:49:41.652Z
+- **Ended At**: 2026-03-11T02:50:34.299Z
+- **Duration**: 52s
+- **Input Tokens**: 29
+- **Output Tokens**: 1662
+- **Total Tokens**: 1691
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+`★ Insight ─────────────────────────────────────`
+**US-016: Wall Line Calculator** uses Bresenham's line algorithm — a classic rasterization technique from 1962 that determines which grid cells a line passes through. It's used here to calculate which grid slots need cubes when building a wall between two points, extended vertically by a height parameter.
+`─────────────────────────────────────────────────`
+
+Let me start by studying the progress file and the prerequisite US-011 (gridSnap) to understand existing patterns.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m
+[94m[Glob][0m pattern: [96m**/wallBuilder*[0m
+[94m[Glob][0m pattern: [96m**/gridSnap*[0m
+The files already exist. Let me check if the implementation is complete.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/wallBuilder.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/src/systems/__tests__/wallBuilder.test.ts[0m
+Implementation already exists. Let me verify it passes the tests and also check the gridSnap dependency.
+[94m[Bash][0m Run wallBuilder tests $ npx jest src/systems/__tests__/wallBuilder.test.ts 2>&1
+All 21 tests pass. Let me verify each acceptance criterion:
+
+| Criterion | Status |
+|-----------|--------|
+| `calculateWallLine` from (0,0) to (5,0) height 3 returns 18 slots | **Line 37**: `expect(slots).toHaveLength(18)` |
+| Handles diagonal lines correctly via Bresenham | **Lines 92-137**: 45-degree, steep, gentle, negative, mixed-sign diagonals |
+| Height parameter controls wall Y levels | **Lines 175-197**: height 1/5/N all verified |
+| `getWallCost` returns exact slot count | **Lines 204-220**: matches `calculateWallLine().length` |
+| Handles single-point wall (start equals end) | **Lines 143-169**: single column, shared XZ, Y levels |
+| Unit test passes | **21 tests passing** |
+
+`★ Insight ─────────────────────────────────────`
+**Bresenham's algorithm here** uses the "all-octants" variant with separate error tracking for X and Z axes. The `err = dx - dz` initialization and `e2 = 2*err` trick avoids floating-point math entirely — the wall footprint is computed with pure integer arithmetic, making it deterministic regardless of direction or slope.
+
+**Vertical extrusion** is a simple nested loop — Bresenham gives the XZ footprint, then each cell gets `height` copies at Y=0..height-1. Total slots = footprint cells × height.
+`─────────────────────────────────────────────────`
+
+Now let me update progress.md.
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/syntheteria/.ralph-tui/progress.md[0m edit: "## 2026-03-10 - US-012" → "## 2026-03-10 - US-016
+- Verified existing impleme..."
+Implementation is already complete from a prior iteration. All 21 tests pass, and every acceptance criterion is satisfied.
+
+**Summary:**
+- `src/systems/wallBuilder.ts` — pure Bresenham line algorithm + vertical extrusion
+- `src/systems/__tests__/wallBuilder.test.ts` — 21 tests covering horizontal, vertical, diagonal, single-point, and height variations
+- No changes needed
+
+<promise>COMPLETE</promise>

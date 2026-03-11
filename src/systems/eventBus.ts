@@ -230,6 +230,54 @@ export interface RecipeUnlockedEvent {
 	tick: number;
 }
 
+export interface AncientMachineAwakenedEvent {
+	type: "ancient_machine_awakened";
+	/** Unique ID of the awakened entity */
+	entityId: string;
+	/** "sentinel" | "crawler" | "colossus" */
+	machineType: string;
+	/** World position of the awakening */
+	position: { x: number; y: number; z: number };
+	/** Substrate damage level that triggered the awakening */
+	substrateDamage: number;
+	tick: number;
+}
+
+export interface SubstrateDamagedEvent {
+	type: "substrate_damaged";
+	/** Source action that caused the damage */
+	cause: "mining" | "building_over_access" | "sentinel_destroyed" | "crawler_destroyed";
+	/** Damage amount added this event */
+	amount: number;
+	/** Running total substrate damage */
+	totalDamage: number;
+	tick: number;
+}
+
+export interface ResidualRelationshipChangedEvent {
+	type: "residual_relationship_changed";
+	/** New relationship score (negative = hostile, positive = friendly) */
+	newScore: number;
+	/** Change delta from previous score */
+	delta: number;
+	/** Cause of the change */
+	cause: string;
+	tick: number;
+}
+
+export interface AncientMachineHostileEvent {
+	type: "ancient_machine_hostile";
+	entityId: string;
+	machineType: string;
+	tick: number;
+}
+
+export interface ColossusAwakeningEvent {
+	type: "colossus_awakening";
+	entityId: string;
+	tick: number;
+}
+
 export type GameEvent =
 	| CombatKillEvent
 	| QuestCompleteEvent
@@ -257,7 +305,12 @@ export type GameEvent =
 	| AchievementUnlockedEvent
 	| LevelUpEvent
 	| GameOverEvent
-	| RecipeUnlockedEvent;
+	| RecipeUnlockedEvent
+	| AncientMachineAwakenedEvent
+	| AncientMachineHostileEvent
+	| ColossusAwakeningEvent
+	| SubstrateDamagedEvent
+	| ResidualRelationshipChangedEvent;
 
 export type GameEventType = GameEvent["type"];
 

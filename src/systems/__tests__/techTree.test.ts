@@ -1,6 +1,9 @@
 /**
  * Unit tests for tech tree progression and tech effects systems.
  *
+ * The techTree module now delegates state to techResearch.ts (canonical).
+ * These tests validate the adapter layer and integration with techEffects.
+ *
  * Covers: research lifecycle, prerequisites, available-tech filtering,
  * tech effects application, bonus aggregation, and unlock gating.
  */
@@ -21,8 +24,21 @@ import {
 	isResearched,
 	resetTechTree,
 	startResearch,
-	updateResearch,
 } from "../techTree.ts";
+import { techResearchSystem } from "../techResearch";
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const PLENTY = 999999;
+
+function researchAndComplete(factionId: string, techId: string): void {
+	const started = startResearch(factionId, techId);
+	if (started) {
+		techResearchSystem({ [factionId]: PLENTY });
+	}
+}
 
 // ---------------------------------------------------------------------------
 // Setup
@@ -47,55 +63,26 @@ describe("getTechTree", () => {
 		for (const node of getTechTree()) {
 			expect(node.id).toBeTruthy();
 			expect(node.name).toBeTruthy();
-			expect(node.tier).toBeGreaterThanOrEqual(0);
+			expect(node.tier).toBeGreaterThanOrEqual(1);
 			expect(node.cost).toBeDefined();
-			expect(node.cost.cubes).toBeGreaterThanOrEqual(0);
+			expect(node.cost.cubes).toBeGreaterThan(0);
 			expect(node.cost.time).toBeGreaterThanOrEqual(1);
 			expect(Array.isArray(node.unlocks)).toBe(true);
 			expect(Array.isArray(node.prerequisites)).toBe(true);
 		}
 	});
 
-	it("tier 0 nodes have zero cube cost", () => {
-		const tier0 = getTechTree().filter((n) => n.tier === 0);
-		expect(tier0.length).toBeGreaterThan(0);
-		for (const node of tier0) {
-			expect(node.cost.cubes).toBe(0);
-		}
-	});
-
-	it("tier 0 nodes have no prerequisites", () => {
-		const tier0 = getTechTree().filter((n) => n.tier === 0);
-		for (const node of tier0) {
-			expect(node.prerequisites).toEqual([]);
-		}
+	it("tier 1 techs with no prerequisites exist", () => {
+		const tier1NoPrereqs = getTechTree().filter(
+			(n) => n.tier === 1 && n.prerequisites.length === 0,
+		);
+		expect(tier1NoPrereqs.length).toBeGreaterThan(0);
 	});
 
 	it("higher tier nodes have prerequisites", () => {
-		const higherTier = getTechTree().filter((n) => n.tier > 0);
+		const higherTier = getTechTree().filter((n) => n.tier > 1);
 		for (const node of higherTier) {
 			expect(node.prerequisites.length).toBeGreaterThan(0);
-		}
-	});
-});
-
-// ---------------------------------------------------------------------------
-// Auto-research of tier 0
-// ---------------------------------------------------------------------------
-
-describe("auto-research tier 0", () => {
-	it("tier 0 techs are automatically researched for any faction", () => {
-		const tier0 = getTechTree().filter((n) => n.tier === 0);
-		for (const node of tier0) {
-			expect(isResearched("reclaimers", node.id)).toBe(true);
-			expect(isResearched("volt_collective", node.id)).toBe(true);
-		}
-	});
-
-	it("tier 1+ techs are not auto-researched", () => {
-		const tier1 = getTechTree().filter((n) => n.tier === 1);
-		for (const node of tier1) {
-			expect(isResearched("reclaimers", node.id)).toBe(false);
 		}
 	});
 });
@@ -119,9 +106,10 @@ describe("startResearch", () => {
 	});
 
 	it("returns false for already researched tech", () => {
-		const tier0 = getTechTree().find((n) => n.tier === 0);
-		expect(tier0).toBeDefined();
-		expect(startResearch("reclaimers", tier0!.id)).toBe(false);
+		const available = getAvailableTechs("reclaimers");
+		const techId = available[0].id;
+		researchAndComplete("reclaimers", techId);
+		expect(startResearch("reclaimers", techId)).toBe(false);
 	});
 
 	it("returns false if another research is in progress", () => {
@@ -141,12 +129,13 @@ describe("startResearch", () => {
 });
 
 // ---------------------------------------------------------------------------
-// updateResearch
+// techResearchSystem (replaces updateResearch)
 // ---------------------------------------------------------------------------
 
-describe("updateResearch", () => {
-	it("returns null when no research is active", () => {
-		expect(updateResearch("reclaimers", 1)).toBeNull();
+describe("techResearchSystem via techTree adapter", () => {
+	it("returns empty when no research is active", () => {
+		const completed = techResearchSystem({ reclaimers: 1 });
+		expect(completed).toEqual([]);
 	});
 
 	it("advances progress without completing", () => {
@@ -154,41 +143,31 @@ describe("updateResearch", () => {
 		const tech = available[0];
 		startResearch("reclaimers", tech.id);
 
-		// Advance by 1 tick — should not complete
-		const result = updateResearch("reclaimers", 1);
-		expect(result).toBeNull();
+		techResearchSystem({ reclaimers: 1 });
 
 		const progress = getResearchProgress("reclaimers");
 		expect(progress).not.toBeNull();
-		expect(progress!.progress).toBe(1);
+		// Progress is 1 * faction bonus (reclaimers = 0.8)
+		expect(progress!.progress).toBeCloseTo(0.8);
 	});
 
-	it("returns completed tech id when research finishes", () => {
+	it("returns completed tech when research finishes", () => {
 		const available = getAvailableTechs("reclaimers");
 		const tech = available[0];
 		startResearch("reclaimers", tech.id);
 
-		const progress = getResearchProgress("reclaimers");
-		expect(progress).not.toBeNull();
+		const completed = techResearchSystem({ reclaimers: PLENTY });
+		expect(completed.length).toBe(1);
+		expect(completed[0].techId).toBe(tech.id);
 
-		// Advance by the full research time
-		const result = updateResearch("reclaimers", progress!.totalTime);
-		expect(result).toBe(tech.id);
-
-		// Should now be researched
 		expect(isResearched("reclaimers", tech.id)).toBe(true);
-
-		// No more active research
 		expect(getResearchProgress("reclaimers")).toBeNull();
 	});
 
 	it("completing research adds tech to researched set", () => {
 		const available = getAvailableTechs("reclaimers");
 		const tech = available[0];
-		startResearch("reclaimers", tech.id);
-
-		const progress = getResearchProgress("reclaimers");
-		updateResearch("reclaimers", progress!.totalTime);
+		researchAndComplete("reclaimers", tech.id);
 
 		const researched = getResearchedTechs("reclaimers");
 		expect(researched).toContain(tech.id);
@@ -248,34 +227,30 @@ describe("cancelResearch", () => {
 // ---------------------------------------------------------------------------
 
 describe("getAvailableTechs", () => {
-	it("returns tier-1 techs after tier-0 auto-research", () => {
+	it("returns tier-1 techs with no prerequisites initially", () => {
 		const available = getAvailableTechs("reclaimers");
 		expect(available.length).toBeGreaterThan(0);
 
-		// All returned techs should have tier > 0 (tier 0 already researched)
+		// All initially available techs should have tier 1 and no prerequisites
 		for (const tech of available) {
-			expect(tech.tier).toBeGreaterThan(0);
+			expect(tech.prerequisites).toEqual([]);
 		}
 	});
 
 	it("does not include already researched techs", () => {
-		const tier0ids = getTechTree()
-			.filter((n) => n.tier === 0)
-			.map((n) => n.id);
 		const available = getAvailableTechs("reclaimers");
+		const first = available[0];
+		researchAndComplete("reclaimers", first.id);
 
-		for (const tech of available) {
-			expect(tier0ids).not.toContain(tech.id);
-		}
+		const afterResearch = getAvailableTechs("reclaimers");
+		expect(afterResearch.map((t) => t.id)).not.toContain(first.id);
 	});
 
 	it("unlocks higher-tier techs after completing prerequisites", () => {
 		// Complete all tier 1 techs
 		const tier1 = getTechTree().filter((n) => n.tier === 1);
 		for (const tech of tier1) {
-			startResearch("reclaimers", tech.id);
-			const progress = getResearchProgress("reclaimers");
-			updateResearch("reclaimers", progress!.totalTime);
+			researchAndComplete("reclaimers", tech.id);
 		}
 
 		const available = getAvailableTechs("reclaimers");
@@ -293,9 +268,7 @@ describe("faction independence", () => {
 		const available = getAvailableTechs("reclaimers");
 		const techId = available[0].id;
 
-		startResearch("reclaimers", techId);
-		const progress = getResearchProgress("reclaimers");
-		updateResearch("reclaimers", progress!.totalTime);
+		researchAndComplete("reclaimers", techId);
 
 		expect(isResearched("reclaimers", techId)).toBe(true);
 		expect(isResearched("volt_collective", techId)).toBe(false);
@@ -307,35 +280,44 @@ describe("faction independence", () => {
 // ---------------------------------------------------------------------------
 
 describe("applyTechEffects", () => {
-	it("computes unlocks from auto-researched tier-0 techs", () => {
+	it("computes unlocks after researching a tech", () => {
+		// Research basic_smelting which unlocks lightning_rod
+		const lightningRodTech = getTechTree().find((n) =>
+			n.unlocks.includes("lightning_rod"),
+		);
+		if (!lightningRodTech) return;
+
+		researchAndComplete("reclaimers", lightningRodTech.id);
 		applyTechEffects("reclaimers");
 
-		// Tier 0 includes lightning_rod
 		expect(isUnlocked("reclaimers", "unlock_building:lightning_rod")).toBe(
 			true,
 		);
 	});
 
-	it("does not unlock higher-tier items without research", () => {
+	it("does not unlock items without research", () => {
 		applyTechEffects("reclaimers");
 
 		expect(isUnlocked("reclaimers", "unlock_building:smelter")).toBe(false);
 	});
 
 	it("unlocks items after research completes", () => {
-		// Research smelter (tier 1)
 		const smelterTech = getTechTree().find((n) =>
 			n.unlocks.includes("smelter"),
 		);
-		if (smelterTech) {
-			startResearch("reclaimers", smelterTech.id);
-			const progress = getResearchProgress("reclaimers");
-			updateResearch("reclaimers", progress!.totalTime);
-			applyTechEffects("reclaimers");
+		if (!smelterTech) return;
 
-			expect(isUnlocked("reclaimers", "unlock_building:smelter")).toBe(true);
-			expect(isUnlocked("reclaimers", "unlock_recipe:smelter")).toBe(true);
+		// Research prerequisites first
+		for (const prereq of smelterTech.prerequisites) {
+			if (!getResearchedTechs("reclaimers").includes(prereq)) {
+				researchAndComplete("reclaimers", prereq);
+			}
 		}
+		researchAndComplete("reclaimers", smelterTech.id);
+		applyTechEffects("reclaimers");
+
+		expect(isUnlocked("reclaimers", "unlock_building:smelter")).toBe(true);
+		expect(isUnlocked("reclaimers", "unlock_recipe:smelter")).toBe(true);
 	});
 });
 
@@ -346,25 +328,27 @@ describe("applyTechEffects", () => {
 describe("getTechBonus", () => {
 	it("returns 0 when no bonuses are active", () => {
 		applyTechEffects("reclaimers");
-		// Tier 0 techs don't grant numerical bonuses
 		expect(getTechBonus("reclaimers", "bonus_harvest_speed")).toBe(0);
 	});
 
 	it("returns accumulated bonus after researching bonus-granting techs", () => {
-		// Research fast_belt (grants bonus_harvest_speed: 0.15)
 		const fastBeltTech = getTechTree().find((n) =>
 			n.unlocks.includes("fast_belt"),
 		);
-		if (fastBeltTech) {
-			startResearch("reclaimers", fastBeltTech.id);
-			const progress = getResearchProgress("reclaimers");
-			updateResearch("reclaimers", progress!.totalTime);
-			applyTechEffects("reclaimers");
+		if (!fastBeltTech) return;
 
-			expect(getTechBonus("reclaimers", "bonus_harvest_speed")).toBeCloseTo(
-				0.15,
-			);
+		// Research prerequisites first
+		for (const prereq of fastBeltTech.prerequisites) {
+			if (!getResearchedTechs("reclaimers").includes(prereq)) {
+				researchAndComplete("reclaimers", prereq);
+			}
 		}
+		researchAndComplete("reclaimers", fastBeltTech.id);
+		applyTechEffects("reclaimers");
+
+		expect(getTechBonus("reclaimers", "bonus_harvest_speed")).toBeCloseTo(
+			0.15,
+		);
 	});
 
 	it("returns 0 for faction with no effects applied", () => {
@@ -378,15 +362,28 @@ describe("getTechBonus", () => {
 
 describe("isUnlocked shorthand", () => {
 	it("checks by full key with colon notation", () => {
+		const lightningRodTech = getTechTree().find((n) =>
+			n.unlocks.includes("lightning_rod"),
+		);
+		if (!lightningRodTech) return;
+
+		researchAndComplete("reclaimers", lightningRodTech.id);
 		applyTechEffects("reclaimers");
+
 		expect(isUnlocked("reclaimers", "unlock_building:lightning_rod")).toBe(
 			true,
 		);
 	});
 
 	it("checks all unlock types when no colon is used", () => {
+		const lightningRodTech = getTechTree().find((n) =>
+			n.unlocks.includes("lightning_rod"),
+		);
+		if (!lightningRodTech) return;
+
+		researchAndComplete("reclaimers", lightningRodTech.id);
 		applyTechEffects("reclaimers");
-		// "lightning_rod" is in unlock_building:lightning_rod
+
 		expect(isUnlocked("reclaimers", "lightning_rod")).toBe(true);
 	});
 

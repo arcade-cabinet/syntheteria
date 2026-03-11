@@ -151,8 +151,8 @@ jest.mock("../../systems/raidSystem", () => ({
 jest.mock("../../systems/signalNetwork", () => ({
 	signalNetworkSystem: jest.fn(),
 }));
-jest.mock("../../systems/techTree", () => ({
-	updateResearch: jest.fn(() => null),
+jest.mock("../../systems/techResearch", () => ({
+	techResearchSystem: jest.fn(() => []),
 }));
 jest.mock("../../systems/techEffects", () => ({
 	applyTechEffects: jest.fn(),

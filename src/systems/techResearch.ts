@@ -20,6 +20,7 @@ import { config } from "../../config";
 export interface TechDefinition {
 	id: string;
 	name: string;
+	description?: string;
 	tier: number;
 	researchCost: number;
 	prerequisites: string[];
@@ -49,8 +50,8 @@ export interface FactionResearchState {
 const techDefs: TechDefinition[] = config.technology
 	.techTree as unknown as TechDefinition[];
 
-const factionBonuses: Record<string, number> =
-	config.technology.factionResearchBonuses as Record<string, number>;
+const factionBonuses: Record<string, number> = config.technology
+	.factionResearchBonuses as Record<string, number>;
 
 // ---------------------------------------------------------------------------
 // Module state
@@ -120,7 +121,8 @@ export function startResearch(faction: string, techId: string): boolean {
 	if (!tech) return false;
 	if (state.researched.has(techId)) return false;
 	if (state.active !== null) return false;
-	if (!tech.prerequisites.every((pre) => state.researched.has(pre))) return false;
+	if (!tech.prerequisites.every((pre) => state.researched.has(pre)))
+		return false;
 
 	state.active = {
 		techId,
@@ -182,6 +184,38 @@ export function techResearchSystem(
 	}
 
 	return completed;
+}
+
+/**
+ * Return the full tech tree (all definitions from config).
+ */
+export function getTechTree(): TechDefinition[] {
+	return [...techDefs];
+}
+
+/**
+ * Return the tech definition with the given id, or undefined.
+ */
+export function getTechNode(techId: string): TechDefinition | undefined {
+	return findTech(techId);
+}
+
+/**
+ * Return all researched tech IDs for a faction.
+ */
+export function getResearchedTechs(faction: string): string[] {
+	return [...getOrCreate(faction).researched];
+}
+
+/**
+ * Cancel current research for a faction. Returns the cancelled tech ID or null.
+ */
+export function cancelResearch(faction: string): string | null {
+	const state = getOrCreate(faction);
+	if (!state.active) return null;
+	const cancelledId = state.active.techId;
+	state.active = null;
+	return cancelledId;
 }
 
 /**

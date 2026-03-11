@@ -313,6 +313,111 @@ describe("blueprints", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Faction buildings
+// ---------------------------------------------------------------------------
+
+describe("factionBuildings", () => {
+	const factionBuildings = buildingsConfig.factionBuildings as unknown as Record<string, {
+		faction: string;
+		displayName: string;
+		category: string;
+		cubeCost: Record<string, number> | null;
+		powerRequired: number;
+		buildTimeSeconds: number;
+		techTier: number;
+		hp: number;
+		effect: string;
+		effectDescription: string;
+		buildingType: string;
+		visualStyle: string;
+	}>;
+
+	const EXPECTED_BUILDINGS = [
+		"salvage_yard", "repair_bay",         // reclaimers
+		"power_plant", "tesla_tower",         // volt_collective
+		"relay_station", "hacking_hub",       // signal_choir
+		"barracks", "fortress",               // iron_creed
+	];
+
+	it("defines all 8 faction buildings", () => {
+		for (const id of EXPECTED_BUILDINGS) {
+			expect(factionBuildings[id]).toBeDefined();
+		}
+	});
+
+	it("every faction building has required fields", () => {
+		for (const id of EXPECTED_BUILDINGS) {
+			const b = factionBuildings[id];
+			expect(typeof b.faction).toBe("string");
+			expect(typeof b.displayName).toBe("string");
+			expect(typeof b.category).toBe("string");
+			expect(b.powerRequired).toBeGreaterThanOrEqual(0);
+			expect(b.buildTimeSeconds).toBeGreaterThan(0);
+			expect(b.techTier).toBeGreaterThanOrEqual(1);
+			expect(b.techTier).toBeLessThanOrEqual(5);
+			expect(b.hp).toBeGreaterThan(0);
+			expect(typeof b.effect).toBe("string");
+			expect(typeof b.effectDescription).toBe("string");
+			expect(typeof b.buildingType).toBe("string");
+			expect(typeof b.visualStyle).toBe("string");
+		}
+	});
+
+	it("2 buildings belong to each faction", () => {
+		const factionCounts: Record<string, number> = {};
+		for (const id of EXPECTED_BUILDINGS) {
+			const faction = factionBuildings[id].faction;
+			factionCounts[faction] = (factionCounts[faction] ?? 0) + 1;
+		}
+		expect(factionCounts["reclaimers"]).toBe(2);
+		expect(factionCounts["volt_collective"]).toBe(2);
+		expect(factionCounts["signal_choir"]).toBe(2);
+		expect(factionCounts["iron_creed"]).toBe(2);
+	});
+
+	it("Reclaimer buildings: salvage_yard and repair_bay", () => {
+		expect(factionBuildings["salvage_yard"].faction).toBe("reclaimers");
+		expect(factionBuildings["repair_bay"].faction).toBe("reclaimers");
+	});
+
+	it("Volt Collective buildings: power_plant and tesla_tower", () => {
+		expect(factionBuildings["power_plant"].faction).toBe("volt_collective");
+		expect(factionBuildings["tesla_tower"].faction).toBe("volt_collective");
+	});
+
+	it("Signal Choir buildings: relay_station and hacking_hub", () => {
+		expect(factionBuildings["relay_station"].faction).toBe("signal_choir");
+		expect(factionBuildings["hacking_hub"].faction).toBe("signal_choir");
+	});
+
+	it("Iron Creed buildings: barracks and fortress", () => {
+		expect(factionBuildings["barracks"].faction).toBe("iron_creed");
+		expect(factionBuildings["fortress"].faction).toBe("iron_creed");
+	});
+
+	it("fortress has highest HP of all faction buildings", () => {
+		const hps = EXPECTED_BUILDINGS.map((id) => factionBuildings[id].hp);
+		expect(factionBuildings["fortress"].hp).toBe(Math.max(...hps));
+	});
+
+	it("cube costs reference only valid materials", () => {
+		for (const id of EXPECTED_BUILDINGS) {
+			const cost = factionBuildings[id].cubeCost;
+			if (!cost) continue;
+			for (const mat of Object.keys(cost)) {
+				expect(VALID_CUBE_MATERIALS).toContain(mat);
+			}
+		}
+	});
+
+	it("all faction buildings have unique visual styles", () => {
+		const styles = EXPECTED_BUILDINGS.map((id) => factionBuildings[id].visualStyle);
+		// Not all should be the same — at least 4 distinct faction styles
+		expect(new Set(styles).size).toBeGreaterThanOrEqual(4);
+	});
+});
+
+// ---------------------------------------------------------------------------
 // No placeholder values
 // ---------------------------------------------------------------------------
 

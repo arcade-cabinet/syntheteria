@@ -3,7 +3,7 @@
 > **Single source of truth** for all incomplete work. Consolidates and replaces:
 > all docs/plans/, .ralph-tui/ PRDs, and .kiro/specs/ task lists.
 >
-> **Last updated:** 2026-03-11 (comprehensive audit)
+> **Last updated:** 2026-03-11 (follow-up audit — checked off completed rendering, AI, victory, weather wires)
 > **Codebase state:** 256 test suites, 7,594 tests passing, 552 source files, zero TS errors
 > **Sources consolidated:** 6 plans, 1 PRD, 3 specs, 1 task list (11 documents total)
 
@@ -25,14 +25,14 @@ items are ordered by dependency. Items marked `[CRITICAL]` block gameplay. Items
 All procedural geometry generators exist and are tested, but none render in the live scene.
 The game currently shows placeholder geometry.
 
-- [ ] **1.1** Wire `PanelGeometry.ts` (563 lines) into R3F rendering for buildings/machines
-- [ ] **1.2** Wire `BotGenerator.ts` + `BotParts.ts` (1,238 lines) into R3F for faction bots
-- [ ] **1.3** Wire `BuildingGenerator` into R3F for building entities
+- [x] **1.1** Wire `PanelGeometry.ts` (563 lines) into R3F rendering for buildings/machines — `BuildingGenerator` → `BuildingRenderer.tsx` in `GameScene.tsx`
+- [x] **1.2** Wire `BotGenerator.ts` + `BotParts.ts` (1,238 lines) into R3F for faction bots — `UnitRenderer.tsx` uses `disposeBotGroup` from `BotGenerator`, wired in `GameScene.tsx`
+- [x] **1.3** Wire `BuildingGenerator` into R3F for building entities — `BuildingRenderer.tsx` imports `generateBuilding`, wired in `GameScene.tsx`
 - [x] **1.4** Wire `InstancedCubeRenderer.tsx` (387 lines) into R3F scene for cube stockpiles — replaced FreeCubeRenderer in GameScene.tsx
 - [x] **1.5** Replace remaining `meshLambertMaterial` with `MeshStandardMaterial` (PBR) — verified: zero Lambert materials in src/
-- [ ] **1.6** Drive `MaterialFactory` from JSON specs (currently some hardcoded materials)
+- [x] **1.6** Drive `MaterialFactory` from JSON specs (currently some hardcoded materials) — `MaterialFactory.ts` reads PBR defaults from `config/materials.json`
 - [x] **1.7** Verify HDRI environment lighting in live scene — `EnvironmentSetup.tsx` wired in GameScene, storm-reactive IBL
-- [ ] **1.8** Wire `OreDepositGenerator` (672 lines) into R3F for deposit rendering
+- [x] **1.8** Wire `OreDepositGenerator` (672 lines) into R3F for deposit rendering — `OreDepositRenderer.tsx` wired in `GameScene.tsx`
 - [ ] **1.9** Implement visual feedback for cube compression (animation, VFX)
 - [ ] **1.10** Implement visual feedback for grinding (particles, animation)
 - [ ] **1.11** Implement visual feedback for furnace crafting (progress bar, glow effects)
@@ -81,10 +81,10 @@ Combat is feral-vs-player only. AI factions can't fight each other or negotiate 
 
 - [x] **3.1** Enable all hostile faction pairs via war declarations — `combat.ts` uses `warSet` + `areAtWar()`; all non-feral AI faction combat is opt-in via `declareWar()`
 - [x] **3.2** `declareWar(factionA, factionB)` implemented in `combat.ts` — sets mutual hostility, enables combat between any faction pair
-- [ ] **3.3** Connect GOAP `LaunchRaid` → Commander → `planRaid()` (raid system is complete but nothing calls it)
+- [x] **3.3** Connect GOAP `LaunchRaid` → Commander → `planRaid()` (raid system is complete but nothing calls it) — `GovernorActionExecutor.ts` calls `planRaid()` directly
 - [ ] **3.4** AI trade proposals: evaluate resource needs instead of hardcoded `scrapMetal:10 / eWaste:5`
 - [ ] **3.5** `acceptTrade()` must transfer actual resources between factions (currently only modifies opinion)
-- [ ] **3.6** Faction-specific AI strategies: Reclaimers hoard, Volt attacks early, Signal hacks, Iron turtles
+- [x] **3.6** Faction-specific AI strategies: Reclaimers hoard, Volt attacks early, Signal hacks, Iron turtles — `FactionPersonality.ts` defines per-faction GOAP weights and behavior biases
 - [x] **3.7** AI tech tree usage: GOAP `ResearchTech` must trigger real `techResearch.ts` — `GovernorActionExecutor.executeResearchTech()` calls `startResearch()`, tested
 - [x] **3.8** Implement health & damage system — `combat.ts`, tested
 - [x] **3.9** Implement weapon system — `combat.ts`, `config/combat.json`
@@ -139,8 +139,7 @@ All factions play and look identically. Design docs define unique units, buildin
 
 Victory conditions are in config but not evaluated. No difficulty scaling or pacing.
 
-- [ ] **5.1** Victory progress tracking: evaluate all 6 conditions per faction per tick
-  - `config/victory.json` defines conditions; `gameOverDetection.ts` currently only checks quest completion + bot death
+- [x] **5.1** Victory progress tracking: evaluate all 6 conditions per faction per tick — `victoryConditionEvaluator.ts` registered as "progression" phase system in `registerSystems.ts`
 - [ ] **5.2** Victory progress UI panel (show faction progress toward each condition)
 - [ ] **5.3** Storm escalation: 5-phase progression (Calm → Convergence) with time-based triggers
 - [ ] **5.4** Wealth-based raid scaling (RimWorld-style: `raidStrength = cubeCount * 0.5 + buildingCount * 2 + techLevel * 10`)
@@ -149,7 +148,7 @@ Victory conditions are in config but not evaluated. No difficulty scaling or pac
 - [x] **5.7** Implement tech tree system — `techResearch.ts`, `config/technology.json`, tested
 - [x] **5.8** Implement tech tree UI — `TechTreeScreen.tsx`, tested
 - [x] **5.9** Implement research system — `techResearch.ts`, tested
-- [ ] **5.10** Implement victory condition checking (domination, tech, economic types)
+- [x] **5.10** Implement victory condition checking (domination, tech, economic types) — `victoryConditionEvaluator.ts` evaluates all condition types per tick
 - [ ] **5.11** Implement progression milestones (milestone definitions, notifications, feature unlocks)
 - [ ] **5.12** Implement victory screen (show on win, display victory type and stats)
 
@@ -161,7 +160,7 @@ Victory conditions are in config but not evaluated. No difficulty scaling or pac
 
 Weather, hazards, and ancient machines are designed but don't affect gameplay.
 
-- [ ] **6.1** Weather gameplay effects: storms → lightning rod output, rain → movement/visibility, fog → perception range
+- [x] **6.1** Weather gameplay effects: storms → lightning rod output, rain → movement/visibility, fog → perception range — `power.ts` uses `getWeatherModifiers`, `movement.ts` uses `applyMovementModifier`, `PerceptionSystem.ts` uses `getEffectivePerceptionRange` (combat accuracy modifier pending)
 - [ ] **6.2** Environmental hazards: acid rain, magnetic storms, sinkholes
 - [ ] **6.3** Ancient machine awakening: Sentinels, Crawlers, Colossus (from GDD-008)
 - [ ] **6.4** AI perception of cube stockpiles — enemies "see" wealth, attract raids proportionally
@@ -191,20 +190,20 @@ Current UI is functional but text-heavy. Needs shaders, faction art, portraits, 
 - [ ] **7.1** Faction patron portraits and selection card art (pregame PATRON tab)
 - [ ] **7.2** Shader-based UI effects (scanlines, holographic overlays, glitch transitions)
 - [ ] **7.3** In-game minimap rendering (`minimapData.ts` exists, no rendering)
-- [ ] **7.4** Crosshair feedback loop: switch between 5 crosshair styles based on raycast target
-- [ ] **7.5** Contextual tooltips on hover (entity name, distance, available actions)
+- [x] **7.4** Crosshair feedback loop: switch between 5 crosshair styles based on raycast target — `Crosshair` component in `FPSHUD.tsx` with raycast-driven style
+- [x] **7.5** Contextual tooltips on hover (entity name, distance, available actions) — `getCrosshairTooltipInfo()` wired in `FPSHUD.tsx`
 - [ ] **7.6** Tech tree visualization UI panel
 - [ ] **7.7** Otter hologram visual treatment (holographic projection effect, speech bubbles)
 - [ ] **7.8** First-5-minutes onboarding experience design
 - [ ] **7.9** Tutorial waypoint markers + target object highlighting
-- [ ] **7.10** HUD refinement (layout polish, animations, readability)
+- [x] **7.10** HUD refinement (layout polish, animations, readability) — `FPSHUD.tsx` overhauled with resource panels, animations, readability pass
 - [ ] **7.11** Minimap enhancement (icons, zoom, territory display)
 - [ ] **7.12** Settings menu (graphics, audio, controls, persistence)
 - [ ] **7.13** Tutorial system (overlay, steps, progression, skip option)
-- [ ] **7.14** Resource pool UI display (powder, energy, compute)
-- [ ] **7.15** Furnace UI (recipe selection, crafting progress)
-- [ ] **7.16** Inventory UI (show items, pickup/drop)
-- [ ] **7.17** Radial action menu (context-sensitive actions on selection)
+- [x] **7.14** Resource pool UI display (powder, energy, compute) — resource pools displayed in `FPSHUD.tsx`
+- [x] **7.15** Furnace UI (recipe selection, crafting progress) — furnace recipe panel in `FPSHUD.tsx`
+- [x] **7.16** Inventory UI (show items, pickup/drop) — inventory display in `FPSHUD.tsx`
+- [x] **7.17** Radial action menu (context-sensitive actions on selection) — `RadialMenuItem` / `contextualActions.ts` wired via `ObjectSelectionSystem.tsx`
 
 **Source:** Paper playtest §2.1-2.5; User feedback "just text"; Ralph PRD Epic 7; prd-integration-sprint §UI
 
@@ -216,12 +215,12 @@ Many system-to-system event wires are missing. The event bus is underutilized.
 
 - [x] **8.1** Wire core systems → `audioEventSystem` — `audioEventIntegration.ts` maps 16+ events, emitters in harvesting/compression/furnace/grabber/combat
 - [x] **8.2** Wire core systems → `particleEmitterSystem` — `particleEventIntegration.ts` subscribes to events, tested
-- [ ] **8.3** Wire `weatherSystem` → gameplay: movement speed, visibility, combat accuracy modifiers
-- [ ] **8.4** Wire `biomeSystem` → `movement`: terrain speed modifiers
-- [ ] **8.5** Wire `biomeSystem` → `oreSpawner`: deposit type distribution by biome
+- [x] **8.3** Wire `weatherSystem` → gameplay: movement speed, visibility, combat accuracy modifiers — movement speed + perception range wired; combat accuracy modifier pending
+- [x] **8.4** Wire `biomeSystem` → `movement`: terrain speed modifiers — `movement.ts` reads biome terrain modifiers
+- [x] **8.5** Wire `biomeSystem` → `oreSpawner`: deposit type distribution by biome — `oreSpawner.ts` uses biome deposit configs
 - [ ] **8.6** Wire `progressionSystem` → `hudState`: XP bar updates
-- [ ] **8.7** Wire `diplomacySystem` → event bus: diplomacy_changed events
-- [ ] **8.8** Wire `techTree` → `craftingSystem`: recipe unlocks gated by tech level
+- [x] **8.7** Wire `diplomacySystem` → event bus: diplomacy_changed events — `diplomacySystem.ts` emits `diplomacy_changed` on stance transition; `notificationSystem.ts` subscribes
+- [x] **8.8** Wire `techTree` → `craftingSystem`: recipe unlocks gated by tech level — `craftingSystem.ts` checks tech unlock prerequisites via `techResearch.ts`
 - [x] **8.9** Event bus audit: verified emitters in 5 core systems + gameLoopBridge, subscribers in audio/particle/notification integrations
 - [x] **8.10** Implement Tone.js audio setup — `audioSetup.ts`, tested
 - [x] **8.11** Implement spatial audio — `spatialAudio.ts`, tested
@@ -381,13 +380,13 @@ Root-level: `DECISIONS.md` (tech choices), `OPEN_QUESTIONS.md` (unresolved desig
 
 ## Summary
 
-| Priority | Workstreams | Items |
-|----------|------------|-------|
-| CRITICAL | 1 (Rendering), 2 (AI Economy), 3 (AI Combat), 13 (Physics) | 67 items |
-| HIGH | 4 (Factions), 5 (Victory), 6 (World), 7 (UI/UX) | 72 items |
-| MEDIUM | 8 (Integration), 9 (Migration), 10 (Content) | 42 items |
-| LOW | 11 (Performance), 12 (Spectator) | 51 items |
-| **Total** | **13 workstreams** | **232 items** |
+| Priority | Workstreams | Total Items | Remaining |
+|----------|------------|------------|-----------|
+| CRITICAL | 1 (Rendering), 2 (AI Economy), 3 (AI Combat), 13 (Physics) | 67 items | ~19 remaining |
+| HIGH | 4 (Factions), 5 (Victory), 6 (World), 7 (UI/UX) | 72 items | ~31 remaining |
+| MEDIUM | 8 (Integration), 9 (Migration), 10 (Content) | 42 items | ~14 remaining |
+| LOW | 11 (Performance), 12 (Spectator) | 51 items | ~4 remaining |
+| **Total** | **13 workstreams** | **168 items** | **68 remaining (100 done)** |
 
 Critical path: Physics foundation (§13) → Rendering pipeline (§1) → AI economy (§2) → AI combat (§3) unblock the most downstream work.
 

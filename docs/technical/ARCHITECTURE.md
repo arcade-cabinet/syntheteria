@@ -231,7 +231,7 @@ The game runs on Miniplex 2.0 with a single `Entity` interface where all compone
 
 **Entity type** (`src/ecs/types.ts`) -- 30+ optional component fields including:
 
-- **Identity**: `id`, `faction` ("player" | "cultist" | "rogue" | "feral" | "wildlife")
+- **Identity**: `id`, `faction` ("player" | "reclaimers" | "volt_collective" | "signal_choir" | "iron_creed" | "feral" | "cultist" | "rogue" | "wildlife")
 - **Spatial**: `worldPosition` (continuous 3D Vec3 -- single source of truth for position)
 - **Unit**: type, speed, displayName, functional/broken component list (`UnitComponent[]`)
 - **Factory**: `belt`, `wire`, `miner`, `processor`, `item`

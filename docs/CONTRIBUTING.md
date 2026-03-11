@@ -119,14 +119,17 @@ syntheteria/
 │   ├── systems/     # 140 ECS systems (game logic)
 │   └── ui/          # React HUD components
 ├── docs/
-│   ├── ARCHITECTURE.md    # System overview
-│   ├── CONFIG.md          # Config schema reference
-│   ├── CONTRIBUTING.md    # This file
-│   └── design/            # GDD design documents
+│   ├── ARCHITECTURE.md          # High-level overview (see technical/ for full inventory)
+│   ├── CONFIG.md                # Config schema reference
+│   ├── CONTRIBUTING.md          # This file
+│   ├── REMAINING-WORK.md        # Task tracker
+│   ├── technical/ARCHITECTURE.md # Canonical full system inventory
+│   ├── technical/CORE_FORMULAS.md # All implemented game formulas
+│   └── design/                  # GDD design documents
 └── tests/e2e/       # Playwright E2E tests
 ```
 
-Full architecture: [docs/ARCHITECTURE.md](./ARCHITECTURE.md).
+Full architecture: [docs/technical/ARCHITECTURE.md](./technical/ARCHITECTURE.md) (canonical) — [docs/ARCHITECTURE.md](./ARCHITECTURE.md) is a short overview that links there.
 Config reference: [docs/CONFIG.md](./CONFIG.md).
 
 ---
@@ -223,7 +226,8 @@ const speed = 4.0; // hardcoded
 2. Import config via `import { config } from '../../config'`
 3. Create `src/systems/__tests__/mySystem.test.ts`
 4. Wire into the simulation tick in `src/ecs/gameState.ts`
-5. Add to the system inventory in `docs/technical/ARCHITECTURE.md`
+5. Add to the system inventory in `docs/technical/ARCHITECTURE.md` (the System Inventory table)
+6. If the system introduces new formulas or rates, document them in `docs/technical/CORE_FORMULAS.md`
 
 Template for a system test:
 

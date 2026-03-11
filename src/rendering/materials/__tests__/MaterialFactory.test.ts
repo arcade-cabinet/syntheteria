@@ -175,6 +175,34 @@ jest.mock("../../../../config", () => ({
 				},
 			},
 		},
+		materials: {
+			iron: { metalness: 0.8, roughness: 0.3, color: "#A0A0A0" },
+			copper: { metalness: 0.9, roughness: 0.2, color: "#B87333" },
+			steel: { metalness: 0.85, roughness: 0.25, color: "#C0C0C0" },
+			// machineAssembly has no simple PBR keys — should be ignored
+			machineAssembly: {
+				materialQuality: { iron: 1.0 },
+				defaultQuality: 1.0,
+				baseEfficiency: 1.0,
+				baseDurability: 100,
+			},
+		},
+		rendering: {
+			buildingPBR: {
+				tower: {
+					texture: "iron",
+					metalness: 0.9,
+					roughness: 0.25,
+					tint: "0x4a4a60",
+				},
+				wall: {
+					texture: "reinforced_concrete",
+					metalness: 0.1,
+					roughness: 0.85,
+					tint: "0x3a3a3a",
+				},
+			},
+		},
 		factionVisuals: {
 			reclaimers: {
 				primaryColor: "#8B4513",
@@ -431,6 +459,110 @@ describe("MaterialFactory", () => {
 			factory.createFromSpec("spec_iron4", { textureMappingKey: "iron" });
 			factory.dispose();
 			expect(factory.getMaterial("spec_iron4")).toBeUndefined();
+		});
+	});
+
+	// ---------------------------------------------------------------------------
+	// createFromSpec — materials.json PBR defaults
+	// ---------------------------------------------------------------------------
+
+	describe("createFromSpec — config.materials defaults", () => {
+		it("uses metalness from config.materials when no spec.options provided", () => {
+			const mat = factory.createFromSpec("iron_defaults", {
+				textureMappingKey: "iron",
+			});
+			// iron in mock config has metalness: 0.8
+			expect(mat.metalness).toBe(0.8);
+		});
+
+		it("uses roughness from config.materials when no spec.options provided", () => {
+			const mat = factory.createFromSpec("iron_defaults2", {
+				textureMappingKey: "iron",
+			});
+			// iron in mock config has roughness: 0.3
+			expect(mat.roughness).toBe(0.3);
+		});
+
+		it("spec.options override config.materials defaults", () => {
+			const mat = factory.createFromSpec("iron_override", {
+				textureMappingKey: "iron",
+				options: { metalness: 0.1, roughness: 0.99 },
+			});
+			expect(mat.metalness).toBe(0.1);
+			expect(mat.roughness).toBe(0.99);
+		});
+
+		it("partial spec.options only override specified fields", () => {
+			const mat = factory.createFromSpec("iron_partial", {
+				textureMappingKey: "iron",
+				options: { metalness: 0.2 },
+			});
+			// roughness should come from config.materials default
+			expect(mat.metalness).toBe(0.2);
+			expect(mat.roughness).toBe(0.3);
+		});
+
+		it("machineAssembly key (no PBR fields) falls through to hardcoded defaults", () => {
+			// machineAssembly has no metalness/roughness/color so should use factory defaults
+			const mat = factory.createFromSpec("machine", {
+				textureMappingKey: "machineAssembly",
+			});
+			// Should not throw; material is created with factory defaults (0.5/0.5)
+			expect(mat).toBeDefined();
+		});
+	});
+
+	// ---------------------------------------------------------------------------
+	// createForBuilding — building PBR from config.rendering.buildingPBR
+	// ---------------------------------------------------------------------------
+
+	describe("createForBuilding", () => {
+		it("returns a material for a known building type", () => {
+			const mat = factory.createForBuilding("tower");
+			expect(mat).toBeDefined();
+		});
+
+		it("caches the material for reuse", () => {
+			const mat1 = factory.createForBuilding("tower");
+			const mat2 = factory.createForBuilding("tower");
+			expect(mat1).toBe(mat2);
+		});
+
+		it("produces distinct materials for different building types", () => {
+			const tower = factory.createForBuilding("tower");
+			const wall = factory.createForBuilding("wall");
+			expect(tower).not.toBe(wall);
+		});
+
+		it("applies metalness from buildingPBR config", () => {
+			const mat = factory.createForBuilding("tower");
+			// tower metalness: 0.9
+			expect(mat.metalness).toBe(0.9);
+		});
+
+		it("applies roughness from buildingPBR config", () => {
+			const mat = factory.createForBuilding("wall");
+			// wall roughness: 0.85
+			expect(mat.roughness).toBe(0.85);
+		});
+
+		it("warns and returns fallback for unknown building type", () => {
+			const mat = factory.createForBuilding("unknown_building");
+			expect(mat).toBeDefined();
+			expect(console.warn).toHaveBeenCalledWith(
+				expect.stringContaining("unknown_building"),
+			);
+		});
+
+		it("material is accessible via getMaterial after creation", () => {
+			factory.createForBuilding("tower");
+			expect(factory.getMaterial("building_tower")).toBeDefined();
+		});
+
+		it("material is cleared after dispose", () => {
+			factory.createForBuilding("tower");
+			factory.dispose();
+			expect(factory.getMaterial("building_tower")).toBeUndefined();
 		});
 	});
 

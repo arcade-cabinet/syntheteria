@@ -426,26 +426,34 @@ export class MaterialFactory {
 		if (cached) return cached;
 
 		const buildingPBR = (
-			config.rendering as {
+			config.rendering as unknown as {
 				buildingPBR?: Record<
 					string,
-					{
-						texture: string;
-						metalness: number;
-						roughness: number;
-						tint: string;
-					}
+					| {
+							texture: string;
+							metalness: number;
+							roughness: number;
+							tint: string;
+					  }
+					| boolean
 				>;
 			}
 		).buildingPBR;
 
-		const entry = buildingPBR?.[buildingType];
-		if (!entry) {
+		const rawEntry = buildingPBR?.[buildingType];
+		// Filter out the `enabled` boolean field which co-exists in buildingPBR
+		if (!rawEntry || typeof rawEntry !== "object") {
 			console.warn(
 				`MaterialFactory.createForBuilding: unknown building type "${buildingType}". Using iron fallback.`,
 			);
 			return this.createFromSpec(cacheKey, { textureMappingKey: "iron" });
 		}
+		const entry = rawEntry as {
+			texture: string;
+			metalness: number;
+			roughness: number;
+			tint: string;
+		};
 
 		const options: MaterialOptions = {
 			metalness: entry.metalness,

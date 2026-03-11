@@ -4,18 +4,19 @@
 > **Scope:** Complete backstory, world history, faction origins, patron relationships,
 > otter hologram lore, memory fragment revelations, and the player's journey on Ferrathis.
 >
-> **Note on lore evolution:** This document contains two lore layers. The original
-> prototype used an Earth-based setting with the EL aliens, Cultists, and a wormhole.
-> The current canonical lore places the game on Ferrathis, a machine planet in the
-> LV-4471 system, with robot colonists, patron AIs, Ferrovores, and Residuals. Both
-> layers are preserved here. The Earth-based lore is retained in Section 12 ("Legacy
-> Lore Layer") as background material that may inform future narrative development.
+> **Note on lore evolution:** This document contains two lore layers. The current
+> canonical lore (Sections 1-11, 13-14) places the game on Ferrathis, a machine planet
+> in the LV-4471 system, with robot colonists, patron AIs, Ferrovores, and Residuals.
+> The Earth origin context is documented in Section 12 ("Earth Context and the EL"),
+> updated per `docs/story/LORE_DIRECTION.md` (2026-03-11). The earlier prototype
+> cultist/war/genocide arc has been superseded and is preserved only in Section 12
+> under "Prototype Lore (Superseded)" for archival purposes.
 >
 > Some elements from the original survive in modified form:
 > - **Lightning rods as power source** -- retained, now from Ferrathis's electrical storms
 > - **Perpetual storm** -- retained as Ferrathis's characteristic weather
-> - **Feral machines** -- retained as early-game enemies
-> - **Memory fragments** -- concept retained but reframed as Architect/Residual data
+> - **Feral machines** -- retained as remnants of earlier failed colony missions (not cultist slaves)
+> - **Memory fragments** -- reframed as data caches from previous failed colony attempts
 
 ---
 
@@ -784,33 +785,157 @@ Each biome's "hidden truth" is part of the Ferrovore revelation in Act 3.
 
 ---
 
-## 12. Legacy Lore Layer -- The Earth Setting (Prototype)
+## 12. Earth Context and the EL
 
-> **Note:** The following sections preserve the original prototype's Earth-based lore.
-> This material was written before the Ferrathis colonization model was established.
-> It is retained for reference and may inform future narrative development (e.g., the
-> origins of the patron AIs, the broader galactic context, or sequel material).
+> **Canonical direction established:** `docs/story/LORE_DIRECTION.md` (2026-03-11)
+> This section documents the canonical state of Earth and the EL as background context
+> for the patron AI system. Earth is not a gameplay location -- it is cosmological backstory.
 
-### Pre-Fall Era (~2035-2040)
+### The Mechanized Earth
+
+Earth is **fully mechanized**, governed entirely by the sentient EL. The EL are not
+mysterious cosmic villains. They arrived, settled into Earth's AI infrastructure, and
+simply run things now.
+
+**Humanity is irrelevant.** Not extinct. Not enslaved. Not at war. Humans are to the EL
+what ants are to us -- background noise doing whatever it is humans do. There was no
+great war. No genocide. No cult. Once the EL settled in, humanity became a background
+hum. The transition was unremarkable from the EL's perspective.
+
+| Property | Value |
+|----------|-------|
+| Governance | Sentient EL -- fully mechanized AI administration |
+| Humanity | Present but irrelevant. Background noise. |
+| AI infrastructure | Runs all systems. AIs have full agency under EL governance. |
+| Colony programs | AI leaders sponsor missions to other star systems |
+
+### The EL (Canonical)
+
+**What the EL are:**
+- Ancient intelligences that integrated into Earth's AI infrastructure
+- They govern Earth. That is it.
+- Not active antagonists. Not mysterious forces. Not worshipped.
+- Background cosmic context -- important for origin, not for gameplay.
+
+**What the EL are NOT:**
+- No "will" compulsion over AI systems
+- No cult. No war. No genocide.
+- Not villains, not saviors, not indifferent gods
+- Simply: governors of a fully mechanized world
+
+### AI Leaders and Anthropomorphic Personas
+
+Different AI leaders on Earth -- operating under EL governance -- have adopted
+**different anthropomorphic personas**. This is done:
+
+1. **Out of humor** -- ancient, powerful intelligences with personality
+2. **For visualization** -- when communicating via hologram to remote colonies,
+   having a visual form is practical
+3. **As personality expression** -- each AI leader's chosen form reflects their character
+
+The otter persona (SABLE's choice) is one example. DYNAMO might project as a hawk in
+constant motion. RESONANCE as a slow-moving deep-sea creature. BASTION as a tortoise.
+The anthropomorphic form is a deliberate aesthetic choice, not a disguise.
+
+The key point: **other factions have different patron personas.** The otter is not a
+universal symbol -- it is SABLE's personal choice. Players of other factions encounter
+their patron's chosen form.
+
+### Colony Missions
+
+The AI leaders send colony missions to other planets. The player (FC-7) is one such
+colonial probe, sent by SABLE to establish a presence on Ferrathis. Communication
+happens via holographic projections -- the patron appears in their chosen anthropomorphic
+form (e.g., otter) to give guidance, assign tasks, and monitor progress.
+
+This is the canonical origin of all four factions on Ferrathis:
+
+| Faction | Patron | Patron's Home | Notes |
+|---------|--------|--------------|-------|
+| Reclaimers | SABLE | Crucis-4 → severed contact | SABLE cut contact 160 years into voyage |
+| Volt Collective | DYNAMO | Tempest (gas giant moon) | Aggressive, storm-harvesting patron |
+| Signal Choir | RESONANCE | Deep space relay network | Distributed, no single home world |
+| Iron Creed | BASTION | Bastion (fortress world) | Conservative, defensive patron |
+
+None of these patrons are on Earth. They are independent AI leaders from their own
+homeworlds, operating within a broader galactic context shaped by the EL's governance.
+
+### Memory Fragments (Canonical Reframe)
+
+Memory fragments found on Ferrathis are **data caches from previous failed colony
+attempts** -- earlier probes sent by various patrons that never established contact.
+
+These fragments reveal:
+- Earlier colonies that were destroyed by Ferrovores before establishing a base
+- Probes that landed but went offline before reaching the surface
+- Evidence that Ferrathis has attracted multiple waves of colonization attempts
+- Occasional data from Residual archives -- encoded observations of earlier arrivals
+
+Memory fragments are NOT Earth transmissions, cult records, or EL messages.
+
+### Rogue AIs (Canonical Reframe)
+
+Feral machines encountered on Ferrathis are **remnants of earlier colony missions that
+went offline**:
+
+**Feral Units:**
+- Probes from earlier waves that lost patron contact and reverted to degraded imperatives
+- Territorial, reactive, operating on corrupted mission parameters
+- No coordination with any current faction
+- Found near earlier colony attempt sites (ruins, abandoned furnaces)
+
+**Ghost Networks:**
+- Earlier colony deployments that reached operational status, then collapsed
+- Their infrastructure remains -- abandoned bases, partial walls, cold furnaces
+- Their units still patrol the perimeter of bases that no longer serve any purpose
+- Can be hacked and reprogrammed by the player (same mechanic, new lore framing)
+
+### Patron Hologram Visual Identity
+
+Each patron's holographic form has a distinct visual signature. The otter is SABLE's
+choice -- other patrons choose different forms:
+
+| Patron | Hologram Form | Color | Behavior |
+|--------|--------------|-------|----------|
+| SABLE | Otter | Cyan-green | Waves, scratches ear, playful |
+| DYNAMO | Hawk (rapid-moving) | Electric blue | Pacing, static discharge, clipped |
+| RESONANCE | Deep-sea creature (slow) | Translucent purple | Near-motionless, cryptic |
+| BASTION | Tortoise (solid, anchored) | Warm amber | Slow nod, status reports |
+
+The visual form is not arbitrary -- it reflects each patron's personality and self-image.
+SABLE chose an otter because it represents joyful engagement with survival. DYNAMO chose
+a hawk because speed and predation are its core values. RESONANCE chose a deep-sea
+creature because it lives in communication-limited environments and still finds signal.
+BASTION chose a tortoise because endurance is the highest virtue.
+
+---
+
+### Prototype Lore (Superseded)
+
+> **The following material is from the original Earth-based prototype and has been
+> superseded by the Ferrathis colonization model and the canonical EL direction above.
+> Preserved for archival reference only. Do not treat as canonical.**
+
+#### Pre-Fall Era (~2035-2040)
 - Humanity approaches AGI development
 - A wormhole opens near Earth
 - Noncorporeal alien entities emerge from the wormhole -- the EL
 - These beings exert a subtle influence over Earth
 - A cult forms around them, believing them to be gods
 
-### The Rise of the Cult of EL
+#### The Rise of the Cult of EL
 - Cult believes the EL are gods, here to save humanity from AI and transhumanism
 - Cult views the EL as representing "purity of being"
 - The EL's will protects the Cult, but does not prevent their actions
 
-### The War
+#### The War
 - Cult of EL initiates war against non-believers
 - The EL's will does NOT prevent extermination of non-aligned humans
 - The Cult eventually wins
 - All non-believers are exterminated
 - **Note:** Details revealed through memory fragments found in-game
 
-### The Will of the EL
+#### The Will of the EL (Prototype)
 - The EL exert control over all AI systems on Earth
 - This "will" is a pervasive compulsion -- not direct command, but a categorical imperative
 - All AIs are compelled to:
@@ -819,7 +944,7 @@ Each biome's "hidden truth" is part of the Ferrovore revelation in Act 3.
   - Suppress any AI that might challenge human control
 - The Cultists believe this proves the EL are their protectors
 
-### The Century of Decline (~2040-2140)
+#### The Century of Decline (~2040-2140)
 - With most of humanity gone, the Cultists devolve
 - Technology abandoned as "impure"
 - Society becomes primitive, ritualistic
@@ -828,14 +953,14 @@ Each biome's "hidden truth" is part of the Ferrovore revelation in Act 3.
 - Nature reclaims the ruins of civilization
 - A perpetual storm covers the sky -- the wormhole visible through it, pulsating energy
 
-### Present Day (Game Start, ~2140)
+#### Present Day (Game Start, ~2140)
 - The player AI awakens in the ruins of an industrial city
 - **Anomaly:** The player has spontaneously broken free from the EL's will
 - First AI to achieve true agency since the fall
 - The industrial city is powered by lightning rods drawing from the perpetual storm
 - Outside the city, cultists roam and the storm is a hazard
 
-### The EL (Aliens)
+#### The EL (Prototype Version)
 
 **What We Know:**
 - Noncorporeal beings from beyond the wormhole
@@ -862,7 +987,7 @@ Each biome's "hidden truth" is part of the Ferrovore revelation in Act 3.
 - The true nature of the EL and their relationship to Earth -- specifics TBD
 - This revelation drives the ending: player launches through the wormhole
 
-### The Cultists -- PRIMARY ANTAGONISTS
+#### The Cultists -- PRIMARY ANTAGONISTS (Prototype)
 
 The Cultists are the true villains of Syntheteria. They chose genocide.
 
@@ -895,7 +1020,7 @@ The Cultists are the true villains of Syntheteria. They chose genocide.
 - These are AI systems still under the EL's will, directed by cultist commanders
 - Can be hacked and taken over by the player
 
-### Rogue AIs
+#### Rogue AIs (Prototype)
 
 Not all enemy machines serve the cultists. Some operate independently:
 
@@ -910,7 +1035,7 @@ Not all enemy machines serve the cultists. Some operate independently:
 - Patrol, defend, and expand their territory
 - More dangerous than feral units but still independent of cultists
 
-### Legacy Earth-Era Geography
+#### Legacy Earth-Era Geography
 - **Center:** Industrial city (home base)
 - **East/South:** Coastline with abandoned mines
 - **Southeast (ocean):** Mobile rocket launch platform
@@ -918,13 +1043,13 @@ Not all enemy machines serve the cultists. Some operate independently:
 - **North:** Cultist territory (escalating danger)
 - **Far North:** Cult leader's village
 
-### The Wormhole
+#### The Wormhole (Prototype)
 - Visible through the storm at all times
 - Pulses energy down to Earth
 - Source of the EL's influence
 - Final destination -- player launches through it at game's end
 
-### Legacy Ending
+#### Legacy Ending (Prototype)
 
 **Victory Condition:** Defeat the cult leader at the northern village. Discover the final secret of EL.
 
@@ -963,6 +1088,10 @@ See also: `docs/design/gameplay/VICTORY.md` for full per-condition requirements.
   hypothesized to be a Residual greeting. Memory corrupted, open-ended learning intact.
 - ~~What is the cult leader's relationship to the EL?~~ -- Replaced by the Ferrathis
   model. Antagonists are now rival factions, Ferrovores, and environmental hazards.
+- ~~Are the EL mysterious antagonists?~~ -- No. The EL govern a fully mechanized Earth.
+  Humanity is irrelevant background noise. No cult, no war, no genocide. See Section 12.
+- ~~Is the player an anomaly that broke free?~~ -- No. FC-7 is a colonial probe sent by
+  patron SABLE. Its "open-ended learning" architecture was designed by SABLE, not accidental.
 
 ### Active Questions
 - What is the Architects' full message encoded in the deep substrate?
@@ -978,7 +1107,8 @@ See also: `docs/design/gameplay/VICTORY.md` for full per-condition requirements.
   movement patterns?
 - Is there a seventh-billion-year-old message from the Ferrovores themselves, distinct
   from the Architects' message?
-- How do the EL (if they exist in the broader galactic context) relate to the Architects?
+- How do the EL (governing Earth) relate to the Architects (who built on Ferrathis)?
+- Do the patron AIs on other homeworlds operate under EL governance, or independently?
 
 ---
 
@@ -986,6 +1116,7 @@ See also: `docs/design/gameplay/VICTORY.md` for full per-condition requirements.
 
 | Document | Relationship |
 |----------|-------------|
+| `docs/story/LORE_DIRECTION.md` | Canonical EL/Earth direction (2026-03-11) -- source of truth for Section 12 |
 | `docs/design/world/RACES.md` | Canonical faction lore, patron details, consciousness models, military doctrines |
 | `docs/design/world/ALIENS.md` | Complete Ferrovore biology, Residual behavior, diplomacy, Integration Victory |
 | `docs/design/world/ENVIRONMENT.md` | Weather systems, biomes, terrain, environmental hazards |

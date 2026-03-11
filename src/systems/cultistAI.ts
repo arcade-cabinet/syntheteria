@@ -22,7 +22,9 @@ import { findPath } from "./pathfinding";
 
 let nextCultistId = 0;
 
-const cultistCfg = enemiesConfig.cultist;
+// TODO: Rework into faction religious subtype. Config key removed; using feral as fallback.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const cultistCfg = ((enemiesConfig as Record<string, unknown>)["cultist"] ?? enemiesConfig.feral) as any;
 
 const LIGHTNING_RANGE: number = cultistCfg.lightningRange;
 const LIGHTNING_AOE_RADIUS: number = cultistCfg.lightningRadius;

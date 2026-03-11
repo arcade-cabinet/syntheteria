@@ -30,7 +30,7 @@ import { processCommands } from "./commandQueue";
 import { craftingSystem } from "./craftingSystem";
 import { updateProjectiles } from "./cubeAmmo";
 import { cubeEconomySystem } from "./cubeEconomy";
-import { cultistAISystem } from "./cultistAI";
+// cultistAI removed — cultists no longer exist in game lore (see LORE_DIRECTION.md)
 import { diplomacySystem } from "./diplomacySystem";
 import { discoverySystem } from "./discoverySystem";
 import { economySimulation } from "./economySimulation";
@@ -181,9 +181,7 @@ export function registerAllSystems(): void {
 	registerSystem("combat", "turretSystem", () => turretSystem());
 	registerSystem("combat", "hackingSystem", () => hackingSystem());
 	registerSystem("combat", "enemySystem", () => enemySystem());
-	registerSystem("combat", "cultistAISystem", () =>
-		cultistAISystem(FIXED_DELTA),
-	);
+	// cultistAI removed — cultists no longer exist in game lore
 	registerSystem("combat", "cubeAmmo", () => {
 		updateProjectiles(FIXED_DELTA);
 	});

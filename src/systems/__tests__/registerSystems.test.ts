@@ -48,7 +48,7 @@ jest.mock("../fpsCombat", () => ({ fpsCombatSystem: mockNoOp }));
 jest.mock("../turret", () => ({ turretSystem: mockNoOp }));
 jest.mock("../hacking", () => ({ hackingSystem: mockNoOp }));
 jest.mock("../enemies", () => ({ enemySystem: mockNoOp }));
-jest.mock("../cultistAI", () => ({ cultistAISystem: mockNoOp }));
+// cultistAI removed — cultists no longer in game lore
 jest.mock("../cubeAmmo", () => ({ updateProjectiles: mockNoOp }));
 
 jest.mock("../fogOfWarManager", () => ({ fogOfWarManagerSystem: mockNoOp }));
@@ -197,7 +197,7 @@ describe("phase population", () => {
 		expect(systems.combat).toContain("turretSystem");
 		expect(systems.combat).toContain("hackingSystem");
 		expect(systems.combat).toContain("enemySystem");
-		expect(systems.combat).toContain("cultistAISystem");
+		// cultistAISystem removed — no cultists in game lore
 		expect(systems.combat).toContain("cubeAmmo");
 	});
 

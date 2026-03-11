@@ -1,60 +1,30 @@
 /**
- * Game loop orchestrator — coordinates ALL game systems in correct execution order.
+ * Game loop orchestrator — centralized system registration and tick dispatch.
  *
- * This is the central tick dispatcher. It ensures systems run in dependency
- * order and provides phase-based grouping for profiling and debugging.
+ * Systems are registered into named phases. Each tick, phases execute in order.
+ * Within a phase, systems execute in registration order.
  *
- * Execution phases per tick:
- *   1. Environment   — weather, storms, hazards, time-of-day
- *   2. Input/AI      — bot commands, AI decisions, formations, movement
- *   3. Economy       — mining, harvesting, compression, crafting, trade
- *   4. Infrastructure — power, wires, belts, signal networks
- *   5. Combat        — FPS combat, turrets, raids, cultist AI
- *   6. Territory     — fog of war, discovery, territory control, diplomacy
- *   7. Progression   — tech research, quests, victory tracking
- *   8. Cleanup       — expiry, decay, display offsets
+ * Phases (in execution order):
+ *   environment  — weather, storms, hazards, biome effects
+ *   inputAi      — AI governors, bot automation, cultist AI, pathfinding
+ *   economy      — mining, harvesting, belt transport, processing, furnaces,
+ *                  cube economy, resources, economy simulation
+ *   infrastructure — power routing, signal network, wire network, building placement
+ *   combat       — combat, hacking, raid systems, turrets, wall defense
+ *   territory    — fog of war, territory control, territory effects, diplomacy
+ *   progression  — tech research, quests, achievements, victory tracking
+ *   cleanup      — game loop bridge, game over detection, autosave
  */
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+type TickFn = (tick: number) => void;
 
-export interface PhaseTimings {
-	environment: number;
-	inputAi: number;
-	economy: number;
-	infrastructure: number;
-	combat: number;
-	territory: number;
-	progression: number;
-	cleanup: number;
-	total: number;
-}
-
-export type SystemFn = (tick: number) => void;
-
-interface PhaseRegistration {
+interface RegisteredSystem {
 	name: string;
-	fn: SystemFn;
+	fn: TickFn;
 	enabled: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Phase registries
-// ---------------------------------------------------------------------------
-
-const phases: Record<string, PhaseRegistration[]> = {
-	environment: [],
-	inputAi: [],
-	economy: [],
-	infrastructure: [],
-	combat: [],
-	territory: [],
-	progression: [],
-	cleanup: [],
-};
-
-const phaseOrder = [
+const PHASE_ORDER = [
 	"environment",
 	"inputAi",
 	"economy",
@@ -63,176 +33,119 @@ const phaseOrder = [
 	"territory",
 	"progression",
 	"cleanup",
-];
+] as const;
 
-// ---------------------------------------------------------------------------
-// Internal state
-// ---------------------------------------------------------------------------
+export type Phase = (typeof PHASE_ORDER)[number];
+
+const phases = new Map<Phase, RegisteredSystem[]>();
+
+for (const phase of PHASE_ORDER) {
+	phases.set(phase, []);
+}
 
 let currentTick = 0;
-let lastTimings: PhaseTimings = {
-	environment: 0,
-	inputAi: 0,
-	economy: 0,
-	infrastructure: 0,
-	combat: 0,
-	territory: 0,
-	progression: 0,
-	cleanup: 0,
-	total: 0,
-};
 let profilingEnabled = false;
+let lastTimings: Record<string, number> = { total: 0 };
 
-// ---------------------------------------------------------------------------
-// Registration API
-// ---------------------------------------------------------------------------
-
-/**
- * Register a system function to run in a specific phase.
- */
 export function registerSystem(
-	phase: string,
+	phase: Phase | string,
 	name: string,
-	fn: SystemFn,
+	fn: TickFn,
 ): void {
-	const phaseList = phases[phase];
-	if (!phaseList) {
+	const list = phases.get(phase as Phase);
+	if (!list) {
 		throw new Error(`Unknown phase: ${phase}`);
 	}
-	// Prevent duplicate registration
-	if (phaseList.some((s) => s.name === name)) return;
-	phaseList.push({ name, fn, enabled: true });
-}
-
-/**
- * Enable or disable a specific system by name.
- */
-export function setSystemEnabled(name: string, enabled: boolean): void {
-	for (const phaseList of Object.values(phases)) {
-		const system = phaseList.find((s) => s.name === name);
-		if (system) {
-			system.enabled = enabled;
-			return;
-		}
+	if (list.some((s) => s.name === name)) {
+		return;
 	}
+	list.push({ name, fn, enabled: true });
 }
 
-/**
- * Check if a system is currently enabled.
- */
-export function isSystemEnabled(name: string): boolean {
-	for (const phaseList of Object.values(phases)) {
-		const system = phaseList.find((s) => s.name === name);
-		if (system) return system.enabled;
-	}
-	return false;
-}
-
-/**
- * Get all registered system names grouped by phase.
- */
-export function getRegisteredSystems(): Record<string, string[]> {
-	const result: Record<string, string[]> = {};
-	for (const [phase, systems] of Object.entries(phases)) {
-		result[phase] = systems.map((s) => s.name);
-	}
-	return result;
-}
-
-// ---------------------------------------------------------------------------
-// Profiling
-// ---------------------------------------------------------------------------
-
-export function enableProfiling(enabled: boolean): void {
-	profilingEnabled = enabled;
-}
-
-export function getLastTimings(): PhaseTimings {
-	return { ...lastTimings };
-}
-
-// ---------------------------------------------------------------------------
-// Main tick
-// ---------------------------------------------------------------------------
-
-/**
- * Execute one full game tick across all phases.
- * Returns the tick number that was executed.
- */
 export function orchestratorTick(): number {
 	currentTick++;
-
+	const phaseTimings: Record<string, number> = {};
 	let totalStart = 0;
 	if (profilingEnabled) {
 		totalStart = performance.now();
 	}
 
-	const timings: Partial<PhaseTimings> = {};
-
-	for (const phaseName of phaseOrder) {
-		const phaseList = phases[phaseName];
-
+	for (const phase of PHASE_ORDER) {
 		let phaseStart = 0;
 		if (profilingEnabled) {
 			phaseStart = performance.now();
 		}
-
-		for (const system of phaseList) {
-			if (system.enabled) {
-				system.fn(currentTick);
-			}
+		const systems = phases.get(phase)!;
+		for (const sys of systems) {
+			if (!sys.enabled) continue;
+			sys.fn(currentTick);
 		}
-
 		if (profilingEnabled) {
-			timings[phaseName as keyof PhaseTimings] =
-				performance.now() - phaseStart;
+			phaseTimings[phase] = performance.now() - phaseStart;
 		}
 	}
 
 	if (profilingEnabled) {
-		timings.total = performance.now() - totalStart;
-		lastTimings = timings as PhaseTimings;
+		lastTimings = { ...phaseTimings, total: performance.now() - totalStart };
 	}
 
 	return currentTick;
 }
 
-/**
- * Get the current tick count.
- */
 export function getCurrentTick(): number {
 	return currentTick;
 }
 
-/**
- * Set tick count (for save/load).
- */
 export function setCurrentTick(tick: number): void {
 	currentTick = tick;
 }
 
-// ---------------------------------------------------------------------------
-// Reset
-// ---------------------------------------------------------------------------
+export function setSystemEnabled(name: string, enabled: boolean): void {
+	for (const list of phases.values()) {
+		for (const sys of list) {
+			if (sys.name === name) {
+				sys.enabled = enabled;
+				return;
+			}
+		}
+	}
+}
 
-/**
- * Clear all registered systems and reset tick. For testing.
- */
+export function isSystemEnabled(name: string): boolean {
+	for (const list of phases.values()) {
+		for (const sys of list) {
+			if (sys.name === name) {
+				return sys.enabled;
+			}
+		}
+	}
+	return false;
+}
+
+export function enableProfiling(enabled: boolean): void {
+	profilingEnabled = enabled;
+	if (!enabled) {
+		lastTimings = { total: 0 };
+	}
+}
+
+export function getLastTimings(): Record<string, number> {
+	return { ...lastTimings };
+}
+
+export function getRegisteredSystems(): Record<string, string[]> {
+	const result: Record<string, string[]> = {};
+	for (const phase of PHASE_ORDER) {
+		result[phase] = phases.get(phase)!.map((s) => s.name);
+	}
+	return result;
+}
+
 export function resetOrchestrator(): void {
-	for (const phaseList of Object.values(phases)) {
-		phaseList.length = 0;
+	for (const phase of PHASE_ORDER) {
+		phases.set(phase, []);
 	}
 	currentTick = 0;
-	lastTimings = {
-		environment: 0,
-		inputAi: 0,
-		economy: 0,
-		infrastructure: 0,
-		combat: 0,
-		territory: 0,
-		progression: 0,
-		cleanup: 0,
-		total: 0,
-	};
 	profilingEnabled = false;
+	lastTimings = { total: 0 };
 }

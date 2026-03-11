@@ -1,144 +1,248 @@
 /**
- * System registration — imports all game systems and registers them
- * with the orchestrator in the correct phase order.
+ * Central system registration — wires every per-tick system into the orchestrator.
  *
- * Call registerAllSystems() once at startup, before the first orchestratorTick().
+ * Call registerAllSystems() once at game startup, before the first orchestratorTick().
+ * Each system is wrapped to adapt its specific signature (delta, tick, complex params)
+ * to the uniform SystemFn(tick: number) => void interface.
+ *
+ * Phase order:
+ *   1. environment    — weather, storms, hazards
+ *   2. inputAi        — bot commands, AI decisions, movement
+ *   3. economy        — mining, harvesting, processing, crafting, trade
+ *   4. infrastructure — power, wires, belts, signal, repair
+ *   5. combat         — FPS combat, turrets, hacking, enemies, projectiles
+ *   6. territory      — fog of war, discovery, territory control, diplomacy
+ *   7. progression    — tech research, quests, victory tracking, XP
+ *   8. cleanup        — notifications, particles, audio, autosave, HUD, bridge
  */
 
-import { updateDisplayOffsets } from "../ecs/terrain";
 import { aiCivilizationSystem } from "./aiCivilization";
-// --- combat phase ---
+import { updatePacing } from "./aiPeacePeriod";
+import { audioEventSystem } from "./audioEventSystem";
+import { autosaveSystem } from "./autosaveSystem";
+import { updateBeltTransport } from "./beltTransport";
+import { botAutomationSystem } from "./botAutomation";
+// --- Input/AI ---
+import { botCommandSystem } from "./botCommand";
+// --- Combat ---
 import { combatSystem } from "./combat";
+import { processCommands } from "./commandQueue";
+import { craftingSystem } from "./craftingSystem";
+import { updateProjectiles } from "./cubeAmmo";
 import { cubeEconomySystem } from "./cubeEconomy";
+import { cultistAISystem } from "./cultistAI";
 import { diplomacySystem } from "./diplomacySystem";
+import { discoverySystem } from "./discoverySystem";
 import { economySimulation } from "./economySimulation";
 import { enemySystem } from "./enemies";
 import { environmentHazardSystem } from "./environmentHazards";
 import { explorationSystem } from "./exploration";
 import { fabricationSystem } from "./fabrication";
+// --- Territory ---
+import { fogOfWarManagerSystem } from "./fogOfWarManager";
+import { fpsCombatSystem } from "./fpsCombat";
 import { fragmentMergeSystem } from "./fragmentMerge";
-// --- cleanup phase ---
-import { gameLoopBridge } from "./gameLoopBridge";
+import { bridgeTick } from "./gameLoopBridge";
 import { registerSystem } from "./gameLoopOrchestrator";
-import { checkGameOver } from "./gameOverDetection";
-// --- inputAi phase ---
 import { tickGovernors } from "./governorSystem";
 import { hackingSystem } from "./hacking";
-// --- economy phase ---
+import { harvestCompressSystem } from "./harvestCompress";
+import { hudTick } from "./hudState";
+// --- Economy ---
 import { miningSystem } from "./mining";
+import { movementSystem } from "./movement";
+import { updateNoiseEvents } from "./noiseAttraction";
+// --- Cleanup ---
+import { notificationSystem } from "./notificationSystem";
 import { otterSystem } from "./otters";
+import { particleEmitterSystem } from "./particleEmitterSystem";
+// --- Infrastructure ---
 import { powerSystem } from "./power";
-// --- infrastructure phase ---
-import { updatePowerGrid } from "./powerRouting";
+import { proceduralQuestSystem } from "./proceduralQuests";
 import { processingSystem } from "./processing";
+// --- Progression ---
+import { progressionSystem } from "./progressionSystem";
+import { updateDialogue } from "./questDialogue";
 import { updateQuests } from "./questSystem";
-import { executeRaid, getActiveRaidIds } from "./raidSystem";
 import { repairSystem } from "./repair";
+import { resourceFlowSystem } from "./resourceFlowTracker";
 import { resourceSystem } from "./resources";
 import { signalNetworkSystem } from "./signalNetwork";
 import { stormEscalationSystem } from "./stormEscalation";
-// --- progression phase ---
+import { updateForecast } from "./stormForecast";
 import { techResearchSystem } from "./techResearch";
-import { getAllTerritories } from "./territory";
-// --- territory phase ---
 import { territoryControlSystem } from "./territoryControl";
-import { applyContestationDecay } from "./territoryEffects";
+import { tradeRouteSystem } from "./tradeRouteSystem";
 import { turretSystem } from "./turret";
 import { victoryTrackingSystem } from "./victoryTracking";
-import { detectWallSegments } from "./wallBuilding";
-// --- environment phase ---
+// --- Environment ---
 import { weatherSystem } from "./weatherSystem";
 import { wireNetworkSystem } from "./wireNetwork";
 
-let registered = false;
+/** Fixed timestep for delta-based systems (assumes 60 FPS). */
+const FIXED_DELTA = 1 / 60;
 
+/**
+ * Register all game systems into the orchestrator's phase-based tick loop.
+ *
+ * Systems that take `delta` receive FIXED_DELTA (1/60s).
+ * Systems that take complex params (e.g. fogOfWarManagerSystem) receive
+ * safe defaults — real data feeding comes from higher-level integration.
+ * Systems that return values have their returns silently discarded.
+ */
 export function registerAllSystems(): void {
-	if (registered) return;
-	registered = true;
-
-	// ── environment ─────────────────────────────────────────────────
-	registerSystem("environment", "weather", (tick) => weatherSystem(tick));
-	registerSystem("environment", "stormEscalation", (tick) =>
-		stormEscalationSystem(tick),
-	);
-	registerSystem("environment", "environmentHazards", (tick) =>
+	// -------------------------------------------------------------------
+	// Phase 1: Environment
+	// -------------------------------------------------------------------
+	registerSystem("environment", "weatherSystem", (tick) => weatherSystem(tick));
+	registerSystem("environment", "environmentHazardSystem", (tick) =>
 		environmentHazardSystem(tick),
 	);
-	registerSystem("environment", "exploration", () => explorationSystem());
-	registerSystem("environment", "fragmentMerge", () => fragmentMergeSystem());
-	registerSystem("environment", "otterWandering", () => otterSystem());
+	registerSystem("environment", "stormEscalationSystem", (tick) =>
+		stormEscalationSystem(tick),
+	);
+	registerSystem("environment", "stormForecast", (tick) =>
+		updateForecast(tick),
+	);
 
-	// ── inputAi ─────────────────────────────────────────────────────
-	registerSystem("inputAi", "governors", (tick) => tickGovernors(tick));
-	registerSystem("inputAi", "aiCivilization", () => aiCivilizationSystem());
+	// -------------------------------------------------------------------
+	// Phase 2: Input/AI
+	// -------------------------------------------------------------------
+	registerSystem("inputAi", "botCommandSystem", (tick) =>
+		botCommandSystem(tick),
+	);
+	registerSystem("inputAi", "botAutomationSystem", () =>
+		botAutomationSystem(FIXED_DELTA),
+	);
+	registerSystem("inputAi", "movementSystem", () =>
+		movementSystem(FIXED_DELTA, 1),
+	);
+	registerSystem("inputAi", "aiCivilizationSystem", () =>
+		aiCivilizationSystem(),
+	);
+	registerSystem("inputAi", "tickGovernors", (tick) => {
+		tickGovernors(tick);
+	});
+	registerSystem("inputAi", "aiPeacePeriod", (tick) => updatePacing(tick));
 
-	// ── economy ─────────────────────────────────────────────────────
-	registerSystem("economy", "mining", () => miningSystem());
-	registerSystem("economy", "processing", () => processingSystem());
-	registerSystem("economy", "resources", () => resourceSystem());
-	registerSystem("economy", "cubeEconomy", () => cubeEconomySystem());
-	registerSystem("economy", "fabrication", () => fabricationSystem());
-	registerSystem("economy", "repair", () => repairSystem());
+	// -------------------------------------------------------------------
+	// Phase 3: Economy
+	// -------------------------------------------------------------------
+	registerSystem("economy", "miningSystem", () => miningSystem());
+	registerSystem("economy", "harvestCompressSystem", () => {
+		harvestCompressSystem();
+	});
+	registerSystem("economy", "processingSystem", () => processingSystem());
+	registerSystem("economy", "fabricationSystem", () => fabricationSystem());
+	registerSystem("economy", "craftingSystem", (tick) => {
+		craftingSystem(tick);
+	});
+	registerSystem("economy", "cubeEconomySystem", () => {
+		cubeEconomySystem();
+	});
+	registerSystem("economy", "tradeRouteSystem", (tick) =>
+		tradeRouteSystem(tick),
+	);
+	registerSystem("economy", "resourceSystem", () => resourceSystem());
+	registerSystem("economy", "resourceFlowSystem", (tick) =>
+		resourceFlowSystem(tick),
+	);
+	registerSystem("economy", "fragmentMergeSystem", () => {
+		fragmentMergeSystem();
+	});
 	registerSystem("economy", "economySimulation", (tick) =>
 		economySimulation(tick),
 	);
 
-	// ── infrastructure ──────────────────────────────────────────────
-	registerSystem("infrastructure", "power", (tick) => powerSystem(tick));
-	registerSystem("infrastructure", "powerRouting", () => updatePowerGrid());
-	registerSystem("infrastructure", "signalNetwork", () =>
+	// -------------------------------------------------------------------
+	// Phase 4: Infrastructure
+	// -------------------------------------------------------------------
+	registerSystem("infrastructure", "powerSystem", (tick) => powerSystem(tick));
+	registerSystem("infrastructure", "wireNetworkSystem", () =>
+		wireNetworkSystem(),
+	);
+	registerSystem("infrastructure", "signalNetworkSystem", () =>
 		signalNetworkSystem(),
 	);
-	registerSystem("infrastructure", "wireNetwork", () => wireNetworkSystem());
+	registerSystem("infrastructure", "beltTransport", () =>
+		updateBeltTransport(FIXED_DELTA),
+	);
+	registerSystem("infrastructure", "repairSystem", () => repairSystem());
 
-	// ── combat ──────────────────────────────────────────────────────
-	registerSystem("combat", "combat", () => combatSystem());
-	registerSystem("combat", "hacking", () => hackingSystem());
-	registerSystem("combat", "turrets", () => turretSystem());
-	registerSystem("combat", "wallDetection", () => detectWallSegments());
-	registerSystem("combat", "enemies", () => enemySystem());
-	registerSystem("combat", "raids", () => {
-		for (const raidId of getActiveRaidIds()) {
-			executeRaid(raidId, 1);
-		}
+	// -------------------------------------------------------------------
+	// Phase 5: Combat
+	// -------------------------------------------------------------------
+	registerSystem("combat", "combatSystem", () => combatSystem());
+	registerSystem("combat", "fpsCombatSystem", () =>
+		fpsCombatSystem(FIXED_DELTA),
+	);
+	registerSystem("combat", "turretSystem", () => turretSystem());
+	registerSystem("combat", "hackingSystem", () => hackingSystem());
+	registerSystem("combat", "enemySystem", () => enemySystem());
+	registerSystem("combat", "cultistAISystem", () =>
+		cultistAISystem(FIXED_DELTA),
+	);
+	registerSystem("combat", "cubeAmmo", () => {
+		updateProjectiles(FIXED_DELTA);
 	});
 
-	// ── territory ───────────────────────────────────────────────────
-	registerSystem("territory", "territoryControl", () =>
+	// -------------------------------------------------------------------
+	// Phase 6: Territory
+	// -------------------------------------------------------------------
+	registerSystem("territory", "fogOfWarManager", () =>
+		fogOfWarManagerSystem(new Map()),
+	);
+	registerSystem("territory", "discoverySystem", () => discoverySystem());
+	registerSystem("territory", "territoryControlSystem", () =>
 		territoryControlSystem(),
 	);
-	registerSystem("territory", "contestationDecay", () =>
-		applyContestationDecay([...getAllTerritories()]),
+	registerSystem("territory", "diplomacySystem", (tick) =>
+		diplomacySystem(tick),
 	);
-	registerSystem("territory", "diplomacy", (tick) => diplomacySystem(tick));
-	// TODO: updateFogOfWar requires per-faction unit positions — needs adapter
+	registerSystem("territory", "explorationSystem", () => explorationSystem());
 
-	// ── progression ─────────────────────────────────────────────────
-	// techResearchSystem receives compute per faction. The orchestrator runs at 1Hz
-	// so delta=1 second per tick. Each faction gets 1 compute point per second;
-	// actual values should be driven by signal relay output in a future iteration.
-	registerSystem("progression", "techResearch", () =>
-		techResearchSystem({
-			player: 1,
-			reclaimers: 1,
-			volt_collective: 1,
-			signal_choir: 1,
-			iron_creed: 1,
-		}),
+	// -------------------------------------------------------------------
+	// Phase 7: Progression
+	// -------------------------------------------------------------------
+	registerSystem("progression", "progressionSystem", (tick) =>
+		progressionSystem(tick),
 	);
-	// updateQuests takes a delta in seconds; orchestrator fires at 1Hz so delta=1.
-	registerSystem("progression", "quests", () => updateQuests(1));
-	registerSystem("progression", "victoryTracking", (tick) =>
+	registerSystem("progression", "techResearchSystem", () => {
+		techResearchSystem({});
+	});
+	registerSystem("progression", "victoryTrackingSystem", (tick) =>
 		victoryTrackingSystem(tick),
 	);
+	registerSystem("progression", "proceduralQuestSystem", (tick) =>
+		proceduralQuestSystem(tick),
+	);
+	registerSystem("progression", "questSystem", () => updateQuests(FIXED_DELTA));
+	registerSystem("progression", "questDialogue", () =>
+		updateDialogue(FIXED_DELTA),
+	);
+	registerSystem("progression", "otterSystem", () => otterSystem());
 
-	// ── cleanup ─────────────────────────────────────────────────────
-	registerSystem("cleanup", "displayOffsets", () => updateDisplayOffsets());
-	// gameLoopBridge takes a delta; orchestrator fires at 1Hz so delta=1 second.
-	registerSystem("cleanup", "gameLoopBridge", () => gameLoopBridge(1));
-	registerSystem("cleanup", "gameOverDetection", () => checkGameOver());
-}
-
-export function resetRegistration(): void {
-	registered = false;
+	// -------------------------------------------------------------------
+	// Phase 8: Cleanup
+	// -------------------------------------------------------------------
+	registerSystem("cleanup", "notificationSystem", (tick) =>
+		notificationSystem(tick),
+	);
+	registerSystem("cleanup", "particleEmitterSystem", (tick) =>
+		particleEmitterSystem(tick),
+	);
+	registerSystem("cleanup", "audioEventSystem", (tick) =>
+		audioEventSystem(tick),
+	);
+	registerSystem("cleanup", "autosaveSystem", (tick) => {
+		autosaveSystem(tick);
+	});
+	registerSystem("cleanup", "commandQueue", (tick) => {
+		processCommands(tick);
+	});
+	registerSystem("cleanup", "hudTick", () => hudTick(FIXED_DELTA));
+	registerSystem("cleanup", "gameLoopBridge", () => bridgeTick(FIXED_DELTA));
+	registerSystem("cleanup", "noiseAttraction", (tick) => {
+		updateNoiseEvents(tick);
+	});
 }

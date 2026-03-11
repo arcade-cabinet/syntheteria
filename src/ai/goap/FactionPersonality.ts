@@ -24,6 +24,8 @@ export interface GovernorBias {
 	defense: number;
 	research: number;
 	expansion: number;
+	/** Optional religion bias — drives PURSUE_ENLIGHTENMENT goal weight. Defaults to 0. */
+	religion?: number;
 }
 
 /** Full faction config entry from civilizations.json */
@@ -61,6 +63,21 @@ export interface FactionSituation {
 	techTier?: number;
 	/** Maximum tech tier available */
 	maxTechTier?: number;
+	/**
+	 * Total estimated economic value of visible enemy cube stockpiles.
+	 * Used by aggressive factions (e.g., Volt Collective) to evaluate raid urgency.
+	 */
+	enemyStockpileValue?: number;
+	/**
+	 * True if any enemy faction has a hackable building within signal range.
+	 * Used by Signal Choir to boost attack via hacking rather than combat.
+	 */
+	hackableTargetsNearby?: boolean;
+	/**
+	 * Number of walls and defensive structures owned by this faction.
+	 * Used by Iron Creed to decide when it is adequately fortified.
+	 */
+	ownWallCount?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -84,6 +101,8 @@ const GOAL_BIAS_MAP: Record<
 	[CivGoal.SCOUT_MAP]: { expansion: 0.6, military: 0.4 },
 	[CivGoal.TRADE]: { economy: 0.7, research: 0.3 },
 	[CivGoal.HOARD_CUBES]: { economy: 0.6, mining: 0.4 },
+	// Religion bias drives the enlightenment path; falls back to 0 if faction has no religion key
+	[CivGoal.PURSUE_ENLIGHTENMENT]: { religion: 1.0 },
 };
 
 // ---------------------------------------------------------------------------
@@ -109,7 +128,7 @@ export function computeBaseWeights(bias: GovernorBias): GoalWeights {
 		let totalContribution = 0;
 
 		for (const [biasKey, contribution] of Object.entries(mapping)) {
-			const biasValue = bias[biasKey as keyof GovernorBias];
+			const biasValue = bias[biasKey as keyof GovernorBias] ?? 0;
 			weightedSum += biasValue * contribution;
 			totalContribution += contribution;
 		}
@@ -135,13 +154,22 @@ export function computeBaseWeights(bias: GovernorBias): GoalWeights {
  * - Many idle units -> stronger EXPAND/ATTACK urge
  * - Behind on tech -> stronger RESEARCH urge
  *
+ * When `factionId` is provided, faction-specific strategy overrides are also
+ * applied on top of the universal modifiers:
+ * - reclaimers: boost HOARD_CUBES when resources are plentiful
+ * - volt_collective: boost ATTACK_ENEMY when enemy stockpiles are large
+ * - signal_choir: boost RESEARCH_TECH always + ATTACK when hackable targets are nearby
+ * - iron_creed: suppress ATTACK_ENEMY while wall count is low; boost BUILD_DEFENSES
+ *
  * @param baseWeights - Personality-based weights from computeBaseWeights
  * @param situation - Current game state snapshot for this faction
+ * @param factionId - Optional faction identifier for faction-specific overrides
  * @returns Modified weights with situational adjustments applied
  */
 export function applySituationalModifiers(
 	baseWeights: GoalWeights,
 	situation: FactionSituation,
+	factionId?: string,
 ): GoalWeights {
 	const modified = { ...baseWeights };
 
@@ -224,7 +252,118 @@ export function applySituationalModifiers(
 		);
 	}
 
+	// Faction-specific strategy overrides
+	if (factionId) {
+		applyFactionStrategy(modified, situation, factionId);
+	}
+
 	return modified;
+}
+
+/**
+ * Apply faction-specific strategic overrides on top of universal situational modifiers.
+ *
+ * Each faction has a distinct playstyle defined by its GDD archetype:
+ *
+ * - **Reclaimers** (scavenger): hoard cubes aggressively when resources flow well;
+ *   prefer HOARD_CUBES over combat.
+ *
+ * - **Volt Collective** (aggressor): attack early and often when enemy stockpiles
+ *   are visible — wealth attracts their raids; penalize trade heavily.
+ *
+ * - **Signal Choir** (hacker): always prioritize RESEARCH_TECH for tech progression;
+ *   when hackable targets are nearby boost ATTACK_ENEMY to represent hacking offensives
+ *   rather than raw combat.
+ *
+ * - **Iron Creed** (fortress): suppress ATTACK_ENEMY until sufficiently walled;
+ *   boost BUILD_DEFENSES whenever wall count is below their comfort threshold.
+ *
+ * Modifies `weights` in place (called after the universal pass in applySituationalModifiers).
+ */
+function applyFactionStrategy(
+	weights: GoalWeights,
+	situation: FactionSituation,
+	factionId: string,
+): void {
+	switch (factionId) {
+		case "reclaimers": {
+			// Reclaimers hoard: if resources are comfortable, strongly prefer hoarding
+			if (
+				situation.resourceLevel !== undefined &&
+				situation.resourceLevel >= 0.4
+			) {
+				// Plentiful resources → push HOARD_CUBES toward max
+				weights[CivGoal.HOARD_CUBES] = Math.min(
+					1,
+					weights[CivGoal.HOARD_CUBES] * 1.4,
+				);
+				// Reduce attack urge — Reclaimers prefer scavenging to fighting
+				weights[CivGoal.ATTACK_ENEMY] *= 0.6;
+			}
+			break;
+		}
+
+		case "volt_collective": {
+			// Volt Collective attacks early: enemy stockpile wealth triggers raids
+			if (
+				situation.enemyStockpileValue !== undefined &&
+				situation.enemyStockpileValue > 0
+			) {
+				// Scale attack boost by how rich the enemy is (cap at 2x)
+				const wealthBoost = Math.min(
+					2,
+					1 + situation.enemyStockpileValue / 500,
+				);
+				weights[CivGoal.ATTACK_ENEMY] = Math.min(
+					1,
+					weights[CivGoal.ATTACK_ENEMY] * wealthBoost,
+				);
+			}
+			// Volt always prefers combat over trade
+			weights[CivGoal.TRADE] *= 0.4;
+			break;
+		}
+
+		case "signal_choir": {
+			// Signal Choir always prioritizes research (technology is their weapon)
+			weights[CivGoal.RESEARCH_TECH] = Math.min(
+				1,
+				weights[CivGoal.RESEARCH_TECH] * 1.5,
+			);
+			// Reduce raw military attacks — Signal Choir hacks, not brawls
+			weights[CivGoal.ATTACK_ENEMY] *= 0.5;
+			// When hackable targets exist, re-enable attack as "hacking offensive"
+			if (situation.hackableTargetsNearby) {
+				weights[CivGoal.ATTACK_ENEMY] = Math.min(
+					1,
+					weights[CivGoal.ATTACK_ENEMY] * 2.5,
+				);
+			}
+			break;
+		}
+
+		case "iron_creed": {
+			// Iron Creed turtles: suppress attack until adequately fortified
+			const WALL_COMFORT_THRESHOLD = 4;
+			const wallCount = situation.ownWallCount ?? 0;
+			if (wallCount < WALL_COMFORT_THRESHOLD) {
+				// Under-fortified: focus on building defenses, suppress attack
+				weights[CivGoal.BUILD_DEFENSES] = Math.min(
+					1,
+					weights[CivGoal.BUILD_DEFENSES] * 1.6,
+				);
+				weights[CivGoal.ATTACK_ENEMY] *= 0.3;
+				weights[CivGoal.EXPAND_TERRITORY] *= 0.5;
+			}
+			// Iron Creed never prioritizes trade or risky expansion
+			weights[CivGoal.TRADE] *= 0.6;
+			break;
+		}
+
+		default:
+			// Unknown faction — no overrides applied
+			break;
+	}
 }
 
 /**

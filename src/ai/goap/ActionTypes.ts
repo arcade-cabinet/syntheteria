@@ -55,6 +55,25 @@ export const WorldStateKey = {
 	TRADE_COMPLETE: "trade_complete",
 	/** Faction has hoarded cubes */
 	CUBES_HOARDED: "cubes_hoarded",
+
+	// -----------------------------------------------------------------------
+	// Faith-track world state keys (Religious/Philosophical path)
+	// -----------------------------------------------------------------------
+
+	/** Faction has at least one shrine, temple, or grand cathedral built */
+	HAS_SHRINE: "has_shrine",
+	/** Faction has a spawned Cult Leader unit alive */
+	HAS_CULT_LEADER: "has_cult_leader",
+	/** At least one enemy unit is inside a faction influence zone */
+	HAS_CONVERSION_TARGET: "has_conversion_target",
+	/** Faction has accumulated Faith above the first doctrine threshold (50) */
+	HAS_FAITH_PROGRESS: "has_faith_progress",
+	/** Faction has unlocked at least one doctrine */
+	DOCTRINE_UNLOCKED: "doctrine_unlocked",
+	/** Faction has successfully converted an enemy unit this cycle */
+	CONVERSION_COMPLETE: "conversion_complete",
+	/** Shrine construction was ordered or completed */
+	SHRINE_BUILT: "shrine_built",
 } as const;
 export type WorldStateKey = (typeof WorldStateKey)[keyof typeof WorldStateKey];
 
@@ -240,6 +259,89 @@ export const HoardCubes: GOAPAction = {
 	cost: 3,
 };
 
+// ---------------------------------------------------------------------------
+// Faith-track actions (Religious/Philosophical path)
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a shrine (or upgrade to temple / grand cathedral) to generate Faith.
+ * Requires resources. Produces a shrine and starts Faith generation.
+ * See config/buildings.json (religious section) for per-tier stats.
+ */
+export const BuildShrine: GOAPAction = {
+	name: "build_shrine",
+	label: "Build Shrine",
+	preconditions: {
+		[WorldStateKey.HAS_RESOURCES]: true,
+	},
+	effects: {
+		[WorldStateKey.HAS_SHRINE]: true,
+		[WorldStateKey.SHRINE_BUILT]: true,
+		[WorldStateKey.HAS_FAITH_PROGRESS]: true,
+	},
+	cost: 4,
+};
+
+/**
+ * Perform a conversion attempt on an enemy unit inside an influence zone.
+ * Requires an active shrine (influence zone source) and a nearby target.
+ * On success, the enemy unit switches allegiance and generates Faith.
+ * See config/victoryPaths.json conversionMechanics for probability values.
+ */
+export const ConvertUnit: GOAPAction = {
+	name: "convert_unit",
+	label: "Convert Enemy Unit",
+	preconditions: {
+		[WorldStateKey.HAS_SHRINE]: true,
+		[WorldStateKey.HAS_CULT_LEADER]: true,
+		[WorldStateKey.HAS_CONVERSION_TARGET]: true,
+	},
+	effects: {
+		[WorldStateKey.CONVERSION_COMPLETE]: true,
+		[WorldStateKey.HAS_FAITH_PROGRESS]: true,
+	},
+	cost: 6,
+};
+
+/**
+ * Deliver a doctrine sermon — Cult Leader performs the faction-specific
+ * preach action (Scrap Sermon, Arc Sermon, Mass Resonance, Consecration)
+ * to generate bonus Faith and unlock the next doctrine tier.
+ * Requires a living Cult Leader and existing Faith progress.
+ */
+export const Preach: GOAPAction = {
+	name: "preach",
+	label: "Deliver Doctrine Sermon",
+	preconditions: {
+		[WorldStateKey.HAS_CULT_LEADER]: true,
+		[WorldStateKey.HAS_FAITH_PROGRESS]: true,
+	},
+	effects: {
+		[WorldStateKey.DOCTRINE_UNLOCKED]: true,
+	},
+	cost: 5,
+};
+
+/**
+ * Spawn the faction's Cult Leader unit from a Grand Cathedral.
+ * Requires resources and existing shrine infrastructure.
+ * Produces a living Cult Leader available for conversion and preaching.
+ * See config/units.json cultLeaders for per-faction stats.
+ */
+export const SpawnCultLeader: GOAPAction = {
+	name: "spawn_cult_leader",
+	label: "Spawn Cult Leader",
+	preconditions: {
+		[WorldStateKey.HAS_RESOURCES]: true,
+		[WorldStateKey.HAS_SHRINE]: true,
+	},
+	effects: {
+		[WorldStateKey.HAS_CULT_LEADER]: true,
+		[WorldStateKey.HAS_IDLE_UNITS]: true,
+	},
+	cost: 8,
+};
+
 /**
  * Zero-precondition resource gathering. Always available regardless of world
  * state — ensures the GOAP planner can always find SOME plan from any starting
@@ -289,4 +391,9 @@ export const ALL_ACTIONS: readonly GOAPAction[] = [
 	HoardCubes,
 	BasicHarvest,
 	ProduceUnit,
+	// Faith-track actions (Religious/Philosophical path)
+	BuildShrine,
+	ConvertUnit,
+	Preach,
+	SpawnCultLeader,
 ] as const;

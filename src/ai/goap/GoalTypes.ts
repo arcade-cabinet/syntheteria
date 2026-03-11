@@ -27,6 +27,13 @@ export const CivGoal = {
 	TRADE: "trade",
 	/** Accumulate material cubes for future use */
 	HOARD_CUBES: "hoard_cubes",
+	/**
+	 * Pursue the Religious/Philosophical victory path — accumulate Faith via
+	 * shrines, convert enemy units, and unlock doctrines toward Enlightenment.
+	 * Only scored when faction governor has religionBias > 0 in config.
+	 * See config/victoryPaths.json and docs/design/gameplay/VICTORY_PATHS.md.
+	 */
+	PURSUE_ENLIGHTENMENT: "pursue_enlightenment",
 } as const;
 export type CivGoal = (typeof CivGoal)[keyof typeof CivGoal];
 

@@ -57,6 +57,8 @@ const GOAL_DESIRED_STATE: Record<CivGoal, WorldState> = {
 	scout_map: { [WorldStateKey.MAP_SCOUTED]: true },
 	trade: { [WorldStateKey.TRADE_COMPLETE]: true },
 	hoard_cubes: { [WorldStateKey.CUBES_HOARDED]: true },
+	// Religious/Philosophical path: target doctrine unlocks via shrine → cult leader → conversion chain
+	pursue_enlightenment: { [WorldStateKey.DOCTRINE_UNLOCKED]: true },
 };
 
 // ---------------------------------------------------------------------------
@@ -168,10 +170,11 @@ export class CivilizationGovernor {
 	 * @returns The action to execute this tick, or null if idle/planning
 	 */
 	tick(situation: FactionSituation, worldState: WorldState): GOAPAction {
-		// Apply situational modifiers to personality weights
+		// Apply situational modifiers to personality weights (with faction-specific overrides)
 		this.effectiveWeights = applySituationalModifiers(
 			this.baseWeights,
 			situation,
+			this.civId,
 		);
 
 		// Periodically re-evaluate goals

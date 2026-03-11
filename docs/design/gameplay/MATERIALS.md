@@ -4,6 +4,9 @@
 **Supersedes:** `docs/design/MATERIALS.md`, `GDD-004` (materials sections), `GDD-006`, `GDD-012`
 **Scope:** Complete specification of the physical cube economy -- resource philosophy, material hierarchy, extraction rates, compression mechanics, furnace recipes, building costs, cube physics, wall construction, machine assembly, economy pacing, raid scaling, patron shipments, AI economy, visual design, and all formulas.
 
+See also: `docs/design/world/VISUAL_IDENTITY.md` — consolidated visual identity reference
+(per-material PBR treatment, cube visual specs, ore deposit shapes, building aesthetics).
+
 **Config files:** `config/mining.json`, `config/furnace.json`, `config/cubeMaterials.json`, `config/buildings.json`, `config/economy.json`
 
 **See also:**

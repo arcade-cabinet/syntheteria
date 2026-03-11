@@ -3,6 +3,7 @@
 **Authoritative reference for weather, terrain, biomes, and environmental hazards.**
 
 See also: `docs/design/gameplay/AUDIO.md` — storm ambience layers, biome soundscapes, lightning sound triggers, sinkhole warning rumble.
+See also: `docs/design/world/VISUAL_IDENTITY.md` — biome terrain colors and visual features, weather visual states, storm sky shader, hazard visual descriptions, decal configs.
 
 ---
 

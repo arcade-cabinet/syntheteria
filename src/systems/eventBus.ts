@@ -211,6 +211,25 @@ export interface LevelUpEvent {
 	tick: number;
 }
 
+export interface GameOverEvent {
+	type: "game_over";
+	winnerId: string;
+	condition: string;
+	conditionName: string;
+	tick: number;
+}
+
+export interface RecipeUnlockedEvent {
+	type: "recipe_unlocked";
+	/** Furnace tier number that just became available (e.g. 2, 3, 4, 5) */
+	furnaceTier: number;
+	/** Tech tier that was crossed to unlock this furnace tier */
+	techRequired: number;
+	/** All recipe IDs now newly available */
+	recipeIds: string[];
+	tick: number;
+}
+
 export type GameEvent =
 	| CombatKillEvent
 	| QuestCompleteEvent
@@ -236,7 +255,9 @@ export type GameEvent =
 	| PlayerRespawnEvent
 	| WeatherChangeEvent
 	| AchievementUnlockedEvent
-	| LevelUpEvent;
+	| LevelUpEvent
+	| GameOverEvent
+	| RecipeUnlockedEvent;
 
 export type GameEventType = GameEvent["type"];
 

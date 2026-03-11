@@ -226,6 +226,27 @@
 					"time": 20,
 					"output": "component_titan_armor",
 					"category": "component"
+				},
+				"laser_drill": {
+					"inputs": { "titanium": 2, "silicon": 2, "copper": 3 },
+					"time": 40,
+					"output": "tool_harvester_t3_laser",
+					"category": "tool",
+					"_note": "Laser drill variant — faster extraction, lower material yield per swing but higher cycle rate"
+				},
+				"ai_core_mk1": {
+					"inputs": { "silicon": 3, "titanium": 1, "copper": 2 },
+					"time": 45,
+					"output": "component_ai_core",
+					"category": "component",
+					"_note": "AI core — enables autonomous bot decision-making beyond basic patrol/attack"
+				},
+				"memory_expansion_pack": {
+					"inputs": { "silicon": 2, "carbon": 1, "copper": 1 },
+					"time": 25,
+					"output": "component_memory_pack",
+					"category": "component",
+					"_note": "Increases bot memory capacity — required for complex GOAP planning in tier-2 bots"
 				}
 			}
 		},
@@ -280,6 +301,34 @@
 					"time": 300,
 					"output": "building_core_tap",
 					"category": "building"
+				},
+				"quantum_processor": {
+					"inputs": { "quantum_crystal": 1, "silicon": 2, "rare_earth": 1 },
+					"time": 75,
+					"output": "component_quantum_processor",
+					"category": "component",
+					"_note": "Quantum processor — enables substrate interface research and advanced AI governor capabilities"
+				},
+				"ai_core_mk2": {
+					"inputs": { "quantum_crystal": 1, "titanium": 2, "silicon": 3 },
+					"time": 90,
+					"output": "component_ai_core_mk2",
+					"category": "component",
+					"_note": "Advanced AI core — enables full autonomous faction-level decision-making for top-tier bots"
+				},
+				"substrate_probe": {
+					"inputs": { "quantum_crystal": 2, "rare_earth": 2, "titanium": 1 },
+					"time": 120,
+					"output": "tool_substrate_probe",
+					"category": "tool",
+					"_note": "Required to access Residual substrate access points and read Architect encoded messages"
+				},
+				"ferrovore_pheromone_lure": {
+					"inputs": { "carbon": 2, "rare_earth": 1 },
+					"time": 30,
+					"output": "consumable_ferrovore_lure",
+					"category": "consumable",
+					"_note": "Draws Ferrovore packs toward a target location — can redirect raids or bait enemies"
 				}
 			}
 		}
@@ -296,6 +345,49 @@
 			"time": 25,
 			"output": "material_steel",
 			"category": "material"
+		},
+		"advanced_alloy_cube": {
+			"inputs": { "titanium": 1, "rare_earth": 1 },
+			"time": 30,
+			"output": "material_advanced_alloy",
+			"category": "material",
+			"_note": "Multi-stage: smelt iron first, then alloy with rare earth"
+		},
+		"chromium_composite": {
+			"inputs": { "steel": 1, "carbon": 2 },
+			"time": 35,
+			"output": "material_chromium_composite",
+			"category": "material",
+			"_note": "High-density composite — wall strength 2x standard steel"
+		},
+		"ferrovore_crystal_alloy": {
+			"inputs": { "rare_earth": 1, "ferrovore_crystal": 1 },
+			"time": 45,
+			"output": "material_ferrovore_alloy",
+			"category": "material",
+			"techRequired": 4,
+			"_note": "Requires Ferrovore Crystal (from tamed pack or hive). Ultra-hard material for endgame walls"
+		}
+	},
+	"refinerRecipes": {
+		"silicon_wafer": {
+			"inputs": { "silicon": 2 },
+			"time": 20,
+			"output": "component_silicon_wafer",
+			"category": "component"
+		},
+		"copper_trace": {
+			"inputs": { "copper": 2 },
+			"time": 12,
+			"output": "component_copper_trace",
+			"category": "component"
+		},
+		"quantum_matrix": {
+			"inputs": { "quantum_crystal": 1, "silicon": 1 },
+			"time": 60,
+			"output": "component_quantum_matrix",
+			"category": "component",
+			"techRequired": 4
 		}
 	},
 	"compression": {

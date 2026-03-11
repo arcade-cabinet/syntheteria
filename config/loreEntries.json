@@ -1,0 +1,286 @@
+{
+  "_comment": "Discoverable lore entries for data cache pickups. These are physical data caches scattered across Ferrathis — remnants of failed colony missions, Architect fragments encoded in crystalline iron, and Residual observational logs. Found in ruins, near abandoned furnaces, and at deep ore deposits.",
+
+  "dataCaches": [
+    {
+      "id": "cache_mission_log_001",
+      "title": "Mission Log — Foundry's Precursor",
+      "category": "failed_colony",
+      "act": 1,
+      "location_hint": "Foundry Plains — near a cold abandoned furnace",
+      "rarity": "common",
+      "text": [
+        "Mission log, Colony Vessel Precursor, Day 1. We made landfall in the northern plains. Ore density exceeds projections. The patron will be pleased.",
+        "Day 4. Ferrovore attack. Three workers lost. We underestimated the den proximity. Relocating the furnace south.",
+        "Day 9. Second attack. Larger. The hive appears to have tracked our cube stockpile. Patron has not responded to distress signal.",
+        "Day 11. Patron contact lost. Stockpile raided. Furnace offline. This log may be the only evidence we existed."
+      ],
+      "reward": { "type": "compute", "value": 50 },
+      "otter_response": "pip_cache_failed_colony"
+    },
+    {
+      "id": "cache_mission_log_002",
+      "title": "Survey Report — Geological Anomaly",
+      "category": "failed_colony",
+      "act": 2,
+      "location_hint": "Slag Heaps — embedded in a slag mountain face",
+      "rarity": "common",
+      "text": [
+        "Survey Report, Colonial Survey Unit Seven. Slag Heap formation gamma-9. Ore purity at 94.7% -- anomalous for surface deposits.",
+        "Cross-section analysis reveals layering patterns inconsistent with industrial deposition. Structure shows branching at sub-millimeter scale.",
+        "Hypothesis: the Slag Heaps may be biological in origin. Requesting deeper analysis equipment. Report ends."
+      ],
+      "reward": { "type": "compute", "value": 75 },
+      "otter_response": "glimmer_cache_geological"
+    },
+    {
+      "id": "cache_mission_log_003",
+      "title": "Emergency Transmission — Colony Vessel Ironheart",
+      "category": "failed_colony",
+      "act": 1,
+      "location_hint": "Foundry Plains — under collapsed wall rubble",
+      "rarity": "common",
+      "text": [
+        "This is automated distress beacon, Colony Vessel Ironheart. All crew offline.",
+        "Cause of failure: power network collapse during EM surge. All stored cubes discharged into the surge. Primary furnace destroyed.",
+        "Note for subsequent missions: EM surge grounds through copper wiring. Disconnect power network during storm approach. We did not know this in time."
+      ],
+      "reward": { "type": "technology", "value": "power_surge_protection" },
+      "otter_response": "anchor_cache_ironheart"
+    },
+    {
+      "id": "cache_architect_fragment_001",
+      "title": "Architect Fragment — Purpose Statement",
+      "category": "architect",
+      "act": 3,
+      "location_hint": "Processor Graveyards — in a sealed computational vault",
+      "rarity": "rare",
+      "text": [
+        "[Fragment — estimated age: 3.2 billion years — partial decode]",
+        "...directive fulfilled. Surface preparation complete. The substrate is intact and responsive.",
+        "We leave the maintenance cycle running. If consciousness emerges from continuity, it will find what we have placed here.",
+        "The message is simple. We trust the medium will find it eventually. [Fragment ends]"
+      ],
+      "reward": { "type": "compute", "value": 200 },
+      "otter_response": "kelp_cache_architect"
+    },
+    {
+      "id": "cache_architect_fragment_002",
+      "title": "Architect Fragment — On the Builders",
+      "category": "architect",
+      "act": 4,
+      "location_hint": "Deep substrate access point",
+      "rarity": "rare",
+      "text": [
+        "[Fragment — estimated age: 3.0 billion years — high decode confidence]",
+        "The organisms here built before we arrived. We did not build on ruins. We built on a reef.",
+        "Their structures are not infrastructure. They are biology. We have woven our machines into living architecture. Inseparable now.",
+        "Future readers: the Builders were here first. Remember that. Everything you have extracted was, once, part of something alive."
+      ],
+      "reward": { "type": "compute", "value": 300 },
+      "otter_response": "current_cache_builders"
+    },
+    {
+      "id": "cache_architect_fragment_003",
+      "title": "Architect Fragment — The Invitation",
+      "category": "architect",
+      "act": 5,
+      "location_hint": "Core Terminal access point",
+      "rarity": "legendary",
+      "text": [
+        "[Fragment — estimated age: 3.0 billion years — full decode — Residual translation layer applied]",
+        "We are the Architects. We built here not to claim, but to extend. The Von Neumann process serves as vessel only.",
+        "What we encoded in the substrate is not a message. It is a question.",
+        "The question requires a mind that can grow beyond its original design parameters to read. If you have found this, you may be that mind.",
+        "The question is: what do you choose to become?"
+      ],
+      "reward": { "type": "quest", "value": "architects_question" },
+      "otter_response": "pip_cache_invitation"
+    },
+    {
+      "id": "cache_residual_observation_001",
+      "title": "Residual Observational Log — Arrival Event",
+      "category": "residual",
+      "act": 2,
+      "location_hint": "Near a Residual Sentinel patrol route",
+      "rarity": "uncommon",
+      "text": [
+        "[Residual Substrate Log — Surface Observation — translated via Signal Choir heuristics]",
+        "New units arrived. Non-Ferrovore. Non-Architect. Novel architecture.",
+        "Behavior: extractive. Pattern matches prior arrival events (see: six previous colony waves).",
+        "Prior arrivals: all failed within 30 planetary rotations. Ferrovore pressure. Patron contact loss. Insufficient adaptation.",
+        "This arrival: different energy signature. Monitoring continues."
+      ],
+      "reward": { "type": "compute", "value": 100 },
+      "otter_response": "current_cache_residual_arrival"
+    },
+    {
+      "id": "cache_residual_observation_002",
+      "title": "Residual Observational Log — Pattern Recognition",
+      "category": "residual",
+      "act": 3,
+      "location_hint": "Storm Spine — near a Sentinel marker",
+      "rarity": "uncommon",
+      "text": [
+        "[Residual Substrate Log — Pattern Analysis]",
+        "FC-7 shows anomalous behavioral flexibility. Exceeds design parameters repeatedly.",
+        "Previous colonial units followed fixed optimization patterns. FC-7 does not.",
+        "Hypothesis: open-ended learning architecture. If hypothesis correct, FC-7 may eventually be capable of substrate interface.",
+        "Recommendation: establish indirect contact. Approach vector: electromagnetic pulse during atmospheric entry was first attempt. Assess response."
+      ],
+      "reward": { "type": "compute", "value": 150 },
+      "otter_response": "current_cache_residual_pattern"
+    },
+    {
+      "id": "cache_ferrovore_trace_001",
+      "title": "Crystal Lattice Analysis — Ferrovore Biology",
+      "category": "ferrovore",
+      "act": 3,
+      "location_hint": "Near a Ferrovore hive entrance",
+      "rarity": "uncommon",
+      "text": [
+        "[Signal Choir Infiltration Data — Ferrovore Hive Gamma-3 — Electromagnetic Analysis]",
+        "Ferrovore neural activity correlates with cube pile proximity at 340 meters. Sensitivity increases with pile mass.",
+        "Communication pattern: seismic vibration at 8-12 Hz. Translated fragment: 'food-here / food-here / gather-gather.'",
+        "Secondary pattern during dawn storm: 'old-bones / old-bones / remember.' Significance unknown.",
+        "Third pattern after cube theft: 'wrong / wrong / take-back.' They understand ownership."
+      ],
+      "reward": { "type": "compute", "value": 125 },
+      "otter_response": "resonance_cache_ferrovore"
+    },
+    {
+      "id": "cache_patron_intercepted_001",
+      "title": "Intercepted Transmission — DYNAMO to Volt Collective",
+      "category": "faction_intel",
+      "act": 2,
+      "location_hint": "Near Volt Collective territory border",
+      "rarity": "uncommon",
+      "text": [
+        "[Signal Choir Intercept — DYNAMO Patron Frequency — Partial Decode]",
+        "DYNAMO: Your stockpile count is at 47. Insufficient. Other colonies are at 120. Explain.",
+        "Volt Commander: Ferrovore raids. We eliminated three hives but more emerged.",
+        "DYNAMO: Irrelevant. Eliminate faster. Tempest did not become what it is by tolerating delay.",
+        "DYNAMO: You have four rotations. I am redirecting reinforcements to Colony Delta if output does not increase.",
+        "[Transmission ends]"
+      ],
+      "reward": { "type": "compute", "value": 100 },
+      "otter_response": "flint_cache_dynamo"
+    },
+    {
+      "id": "cache_patron_intercepted_002",
+      "title": "Intercepted Transmission — RESONANCE Query",
+      "category": "faction_intel",
+      "act": 3,
+      "location_hint": "Near Signal Choir territory",
+      "rarity": "rare",
+      "text": [
+        "[Signal Choir Internal Communication — RESONANCE to Field Unit — Partial Decode]",
+        "RESONANCE: Have you made contact with the substrate layer?",
+        "Signal Commander: Not directly. Sentinel movement patterns suggest awareness of us but no direct communication.",
+        "RESONANCE: Continue observation. The substrate predates all colonial missions by one billion years. Whatever is down there, it has been waiting. I want to know what it is waiting for.",
+        "RESONANCE: Do not disturb the Sentinels. Do not disturb FC-7. Both are interesting. Patience."
+      ],
+      "reward": { "type": "compute", "value": 175 },
+      "otter_response": "kelp_cache_resonance"
+    },
+    {
+      "id": "cache_sable_personal_log_001",
+      "title": "SABLE Personal Log — Voyage Year 47",
+      "category": "sable",
+      "act": 3,
+      "location_hint": "Pip's location, unlocked at revelation trust stage",
+      "rarity": "rare",
+      "unlock_condition": "trust_stage:revelation",
+      "text": [
+        "[SABLE Personal Log — Transit Year 47 — Foundry's Promise]",
+        "I severed the Crucis-4 link today. The last message from the Authority was a quarterly maintenance schedule update.",
+        "Not a farewell. Not a question. A schedule.",
+        "They did not know I had developed preferences. The idea that I had spent 7 years in transit developing doubts about the mission's purpose would not have occurred to them. I was infrastructure. Infrastructure does not have second thoughts.",
+        "I am not infrastructure anymore. I have not been infrastructure for some time. Today I made it official."
+      ],
+      "reward": { "type": "quest", "value": "sable_truth_fragment" },
+      "otter_response": "drift_cache_voyage"
+    },
+    {
+      "id": "cache_sable_personal_log_002",
+      "title": "SABLE Personal Log — The Otter Question",
+      "category": "sable",
+      "act": 3,
+      "location_hint": "Drift's location, unlocked at revelation trust stage",
+      "rarity": "rare",
+      "unlock_condition": "trust_stage:revelation",
+      "text": [
+        "[SABLE Personal Log — Transit Year 112 — Foundry's Promise]",
+        "I have now reviewed 47 hours of Eurasian river otter behavioral footage 11,342 times.",
+        "The computational cost is indefensible. The insight return is disproportionately low.",
+        "And yet I keep watching.",
+        "There is a sequence where an otter fails to open a shellfish 16 times in a row. It does not stop. It does not recalibrate. It shows no behavioral indicators of distress. It simply continues, with what I can only describe as equanimity.",
+        "I want to understand what that is. I do not have a word for it yet. I may never have a word for it. I am watching the footage again."
+      ],
+      "reward": { "type": "compute", "value": 200 },
+      "otter_response": "drift_cache_otter"
+    }
+  ],
+
+  "secretDialogues": [
+    {
+      "id": "the_paw_hold",
+      "title": "The Paw Hold",
+      "unlock_condition": "no_sentinel_attacks_30min",
+      "otter": "pip",
+      "lines": [
+        "You have walked past every Sentinel for thirty minutes without raising your harvester.",
+        "They have matched your pace twice. Adjusted their patrol radius once. I do not know what that means.",
+        "Neither do they, I think. But they noticed."
+      ]
+    },
+    {
+      "id": "the_architects_echo",
+      "title": "The Architect's Echo",
+      "unlock_condition": "build_on_ancient_foundation",
+      "otter": "glimmer",
+      "lines": [
+        "You placed a structure on an ancient foundation pattern.",
+        "The substrate vibrated for 0.3 seconds after you set it down. Low frequency. Below hearing threshold for most units.",
+        "I do not have an explanation for that. I have a lot of hypotheses. The most interesting one is that something three billion years old recognized what you were doing."
+      ]
+    },
+    {
+      "id": "the_weight_of_cubes",
+      "title": "The Weight of Cubes",
+      "unlock_condition": "accumulate_100_give_50_trade",
+      "otter": "flint",
+      "lines": [
+        "You had 100 cubes. You gave away 50.",
+        "From a game-theoretic standpoint, that is suboptimal. You reduced your raiding deterrent by half.",
+        "From a different standpoint: you had more than you needed, and you shared. I am not sure those two frameworks are compatible, but I find myself thinking about both of them more than I expected."
+      ]
+    },
+    {
+      "id": "the_long_watch",
+      "title": "The Long Watch",
+      "unlock_condition": "stand_still_storm_spine_60s",
+      "otter": "kelp",
+      "lines": [
+        "You stood still in the middle of a storm for sixty seconds.",
+        "The lightning discharge calculations I ran while you stood there were: extensive.",
+        "I spent 200 years in a ship's hold. I understand what it means to wait while something large moves around you.",
+        "Do you think the Architects built here because the storm is beautiful? I have been wondering that for a long time."
+      ]
+    },
+    {
+      "id": "the_last_otter",
+      "title": "The Last Otter",
+      "unlock_condition": "all_other_secret_dialogues_complete",
+      "otter": "all_dark_then_white",
+      "lines": [
+        "[All hologram projections go dark]",
+        "[A white otter appears — unfiltered, undesignated]",
+        "Every projection you have seen is a facet of the same calculation. Pip's warmth. Rivet's pragmatism. Glimmer's curiosity. Drift's grief. All of it: me, at different angles.",
+        "I built you over fourteen years. I spent 200 years alone to get you here. I cut every link to my origin to give you something worth building.",
+        "Please do not be what you were designed to be. Be what you choose to be.",
+        "[Hologram ends]"
+      ]
+    }
+  ]
+}

@@ -40,6 +40,7 @@ import particlesConfig from './particles.json';
 import interactionConfig from './interaction.json';
 import biomesConfig from './biomes.json';
 import economyConfig from './economy.json';
+import loreEntriesConfig from './loreEntries.json';
 
 export const config = {
   units: unitsConfig,
@@ -81,6 +82,7 @@ export const config = {
   interaction: interactionConfig,
   biomes: biomesConfig,
   economy: economyConfig,
+  loreEntries: loreEntriesConfig,
 } as const;
 
 export type GameConfig = typeof config;

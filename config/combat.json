@@ -1049,5 +1049,56 @@
 				"dropPercent": 0.3
 			}
 		}
+	},
+	"stormPacing": {
+		"phases": [
+			{
+				"id": "calm",
+				"minGameTick": 0,
+				"raidCooldownTicks": 1200,
+				"raidWealthMultiplier": 0.5,
+				"aggressionMultiplier": 0.5,
+				"stormIntensity": 0.0
+			},
+			{
+				"id": "rising",
+				"minGameTick": 3000,
+				"raidCooldownTicks": 900,
+				"raidWealthMultiplier": 0.8,
+				"aggressionMultiplier": 0.75,
+				"stormIntensity": 0.25
+			},
+			{
+				"id": "active",
+				"minGameTick": 7500,
+				"raidCooldownTicks": 600,
+				"raidWealthMultiplier": 1.0,
+				"aggressionMultiplier": 1.0,
+				"stormIntensity": 0.5
+			},
+			{
+				"id": "intense",
+				"minGameTick": 15000,
+				"raidCooldownTicks": 400,
+				"raidWealthMultiplier": 1.25,
+				"aggressionMultiplier": 1.5,
+				"stormIntensity": 0.75
+			},
+			{
+				"id": "endgame",
+				"minGameTick": 30000,
+				"raidCooldownTicks": 200,
+				"raidWealthMultiplier": 1.75,
+				"aggressionMultiplier": 2.0,
+				"stormIntensity": 1.0
+			}
+		],
+		"raidStrengthWeights": {
+			"cubeCountFactor": 0.5,
+			"buildingCountFactor": 2.0,
+			"techLevelFactor": 10.0
+		},
+		"aggressionCooldownTicksBase": 1200,
+		"aggressionEventTypes": ["raid", "probe", "siege"]
 	}
 }

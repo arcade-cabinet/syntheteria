@@ -34,5 +34,64 @@
   },
   "cubeStacking": {
     "defaultMaxRange": 5.0
+  },
+  "cultLeaders": {
+    "_comment": "Cult Leader special units — one per faction for the Religious/Philosophical path. Require Grand Cathedral + Faith >= 700 to spawn. Each has unique conversion and aura abilities.",
+    "rust_saint": {
+      "faction": "reclaimers",
+      "displayName": "Rust Saint",
+      "speed": 2.5,
+      "hp": 300,
+      "conversionRange": 8,
+      "conversionChanceMultiplier": 2.0,
+      "aura": "scrap_sermon",
+      "auraRadius": 10,
+      "auraFaithBonus": 1.2,
+      "fabricationRecipe": "cult_leader_reclaimers",
+      "description": "Does not attack. Converts through demonstration — performs work near enemies. Slow but extremely durable."
+    },
+    "ordained_conductor": {
+      "faction": "volt_collective",
+      "displayName": "Ordained Conductor",
+      "speed": 4.0,
+      "hp": 200,
+      "conversionRange": 10,
+      "conversionChanceMultiplier": 1.8,
+      "conversionMethod": "lightning_immunity_grant",
+      "aura": "arc_sermon",
+      "auraRadius": 12,
+      "stormFaithMultiplier": 3.0,
+      "fabricationRecipe": "cult_leader_volt",
+      "description": "Wreathed in electric arcs. Converts by granting lightning immunity — enemy units who survive a strike near the Conductor become believers."
+    },
+    "voice_unbroken": {
+      "faction": "signal_choir",
+      "displayName": "Voice Unbroken",
+      "speed": 3.5,
+      "hp": 150,
+      "conversionRange": 15,
+      "conversionChanceMultiplier": 2.5,
+      "conversionMethod": "signal_injection",
+      "aura": "mass_resonance",
+      "auraRadius": 20,
+      "hackingRangeBonus": 1.5,
+      "fabricationRecipe": "cult_leader_signal",
+      "description": "Broadcasts continuously to all allied units. Longest conversion range of any cult leader but lowest HP. Converts via signal transmission."
+    },
+    "first_builder": {
+      "faction": "iron_creed",
+      "displayName": "First Builder",
+      "speed": 2.0,
+      "hp": 500,
+      "conversionRange": 6,
+      "conversionChanceMultiplier": 1.5,
+      "conversionMethod": "construction_demonstration",
+      "conversionTrigger": "build_during_combat",
+      "aura": "foundation_march",
+      "auraRadius": 8,
+      "buildSpeedBonus": 2.0,
+      "fabricationRecipe": "cult_leader_iron",
+      "description": "Does not speak. Carries tools, not weapons. Any enemy unit that observes the First Builder completing a structure during active combat has a conversion chance."
+    }
   }
 }

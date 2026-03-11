@@ -235,6 +235,49 @@
 			"note": "Fake cubes, alerts on touch"
 		}
 	},
+	"religious": {
+		"_comment": "Religious/Philosophical path buildings — Faith generators with influence zones. Per-faction variants share the same base stats but have distinct visual identities (see config/factionVisuals.json). Display names resolved at runtime from config/victoryPaths.json factionCults.",
+
+		"shrine": {
+			"displayName": "Shrine",
+			"cubeCost": { "scrap_iron": 3, "rock": 2 },
+			"powerRequired": 0,
+			"buildTimeSeconds": 10,
+			"techTier": 2,
+			"hp": 80,
+			"faithOutputPerTick": 1.0,
+			"influenceRadius": 8,
+			"faithPressurePerTick": 0.1,
+			"upgradesTo": "temple",
+			"note": "Base Faith generator. No power required. Vulnerable — low HP. Per-faction display name from victoryPaths.json."
+		},
+		"temple": {
+			"displayName": "Temple",
+			"cubeCost": { "copper": 4, "silicon": 2, "scrap_iron": 4 },
+			"powerRequired": 1,
+			"buildTimeSeconds": 30,
+			"techTier": 3,
+			"hp": 200,
+			"faithOutputPerTick": 3.0,
+			"influenceRadius": 15,
+			"faithPressurePerTick": 0.3,
+			"upgradesTo": "grand_cathedral",
+			"note": "Upgraded Shrine. Requires power. Stronger influence zone."
+		},
+		"grand_cathedral": {
+			"displayName": "Grand Cathedral",
+			"cubeCost": { "titanium": 3, "silicon": 3, "copper": 4, "rare_earth": 1 },
+			"powerRequired": 3,
+			"buildTimeSeconds": 90,
+			"techTier": 4,
+			"hp": 500,
+			"faithOutputPerTick": 8.0,
+			"influenceRadius": 25,
+			"faithPressurePerTick": 0.7,
+			"required_for_victory": "enlightenment",
+			"note": "Apex religious structure. Required for Enlightenment Victory. One per faction."
+		}
+	},
 	"endgame": {
 		"teleporter_pad": {
 			"displayName": "Teleporter Pad",

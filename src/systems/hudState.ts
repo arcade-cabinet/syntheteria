@@ -53,11 +53,22 @@ export interface StatusBar {
 	color: string;
 }
 
+export interface XPBar {
+	totalXP: number;
+	level: number;
+	xpToNextLevel: number;
+	/** Milestone notification messages queued for display (newest last). */
+	pendingMilestoneNotifications: string[];
+}
+
 export interface HUDState {
 	// Resource display
 	powderGauge: PowderGauge;
 	cubesCarried: number;
 	maxCubesCarried: number;
+
+	// Progression
+	xpBar: XPBar;
 
 	// Compression
 	compression: CompressionOverlay;
@@ -103,6 +114,7 @@ function createDefaultState(): HUDState {
 		powderGauge: { current: 0, max: 100, resourceType: "" },
 		cubesCarried: 0,
 		maxCubesCarried: 4,
+		xpBar: { totalXP: 0, level: 0, xpToNextLevel: 100, pendingMilestoneNotifications: [] },
 		compression: { active: false, progress: 0, pressure: 0, temperature: 0 },
 		crosshair: { visible: true, style: "default" },
 		radialMenu: { open: false, items: [], selectedIndex: -1 },
@@ -242,6 +254,11 @@ export function updateGameInfo(
 export function setCubesCarried(count: number, max: number): void {
 	state.cubesCarried = count;
 	state.maxCubesCarried = max;
+	notify();
+}
+
+export function updateXPBar(xpBar: Partial<XPBar>): void {
+	state.xpBar = { ...state.xpBar, ...xpBar };
 	notify();
 }
 

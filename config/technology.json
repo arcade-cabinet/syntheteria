@@ -1385,5 +1385,103 @@
     "localTechRequiresResearchBuilding": true,
     "independenceUnlocksAllLocalTech": true,
     "patronSatisfactionThresholdForTech": 0.3
+  },
+
+  "faithTechTrack": {
+    "_comment": "Faith-track technologies for the Religious/Philosophical victory path. These are unlocked by Faith accumulation (from shrines/temples), NOT by Reason/compute research. They exist alongside the Reason tech tree — players can pursue both or specialize.",
+    "faithTechs": [
+      {
+        "id": "basic_shrine_construction",
+        "name": "Shrine Construction",
+        "faithRequired": 20,
+        "prerequisites": [],
+        "effects": {
+          "unlocks": ["shrine"],
+          "description": "Unlocks Shrine buildable. Available to all factions; visual variant depends on faction."
+        },
+        "availableTo": "all"
+      },
+      {
+        "id": "influence_zone_awareness",
+        "name": "Influence Zone Awareness",
+        "faithRequired": 40,
+        "prerequisites": ["basic_shrine_construction"],
+        "effects": {
+          "unlocks": ["influence_zone_display"],
+          "description": "Minimap shows your influence zone radius and enemy units under faith pressure."
+        },
+        "availableTo": "all"
+      },
+      {
+        "id": "conversion_training",
+        "name": "Conversion Training",
+        "faithRequired": 80,
+        "prerequisites": ["influence_zone_awareness"],
+        "effects": {
+          "unlocks": ["conversion_action"],
+          "conversionRangeBonus": 1.0,
+          "description": "Unlocks the Conversion action for Cult Leader units."
+        },
+        "availableTo": "all"
+      },
+      {
+        "id": "temple_architecture",
+        "name": "Temple Architecture",
+        "faithRequired": 120,
+        "prerequisites": ["basic_shrine_construction"],
+        "effects": {
+          "unlocks": ["temple"],
+          "description": "Unlocks Temple upgrade from Shrine. Requires tech tier 3."
+        },
+        "availableTo": "all"
+      },
+      {
+        "id": "doctrine_codification",
+        "name": "Doctrine Codification",
+        "faithRequired": 200,
+        "prerequisites": ["conversion_training"],
+        "effects": {
+          "unlocks": ["doctrine_unlock_acceleration"],
+          "doctrineUnlockSpeedBonus": 1.25,
+          "description": "Doctrines unlock 25% faster. Formalizing beliefs makes them spread more efficiently."
+        },
+        "availableTo": "all"
+      },
+      {
+        "id": "grand_cathedral_architecture",
+        "name": "Grand Cathedral Architecture",
+        "faithRequired": 400,
+        "prerequisites": ["temple_architecture", "doctrine_codification"],
+        "effects": {
+          "unlocks": ["grand_cathedral"],
+          "description": "Unlocks Grand Cathedral upgrade from Temple. Required for Enlightenment Victory."
+        },
+        "availableTo": "all"
+      },
+      {
+        "id": "cult_leader_fabrication",
+        "name": "Cult Leader Fabrication",
+        "faithRequired": 600,
+        "prerequisites": ["grand_cathedral_architecture"],
+        "effects": {
+          "unlocks": ["cult_leader_unit"],
+          "description": "Unlocks fabrication recipe for this faction's Cult Leader unit. Requires Grand Cathedral to be built."
+        },
+        "availableTo": "all"
+      },
+      {
+        "id": "mass_conversion_ritual",
+        "name": "Mass Conversion Ritual",
+        "faithRequired": 800,
+        "prerequisites": ["cult_leader_fabrication"],
+        "effects": {
+          "unlocks": ["mass_conversion_action"],
+          "conversionRangeBonus": 2.0,
+          "simultaneousConversions": 3,
+          "description": "The Cult Leader can now target up to 3 enemy units simultaneously with conversion attempts."
+        },
+        "availableTo": "all"
+      }
+    ]
   }
 }

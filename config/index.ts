@@ -41,6 +41,7 @@ import interactionConfig from './interaction.json';
 import biomesConfig from './biomes.json';
 import economyConfig from './economy.json';
 import loreEntriesConfig from './loreEntries.json';
+import victoryPathsConfig from './victoryPaths.json';
 
 export const config = {
   units: unitsConfig,
@@ -83,6 +84,7 @@ export const config = {
   biomes: biomesConfig,
   economy: economyConfig,
   loreEntries: loreEntriesConfig,
+  victoryPaths: victoryPathsConfig,
 } as const;
 
 export type GameConfig = typeof config;

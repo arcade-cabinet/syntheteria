@@ -1,0 +1,276 @@
+{
+  "_comment": "4-path victory framework. See docs/design/gameplay/VICTORY_PATHS.md for full design doc. These 4 paths organize the 8 existing victory conditions and add the Religious/Philosophical path with per-faction cult mechanics.",
+
+  "paths": {
+    "technical_mastery": {
+      "displayName": "Technical Mastery",
+      "subtitle": "Logic, research, build",
+      "primaryResource": "compute",
+      "victoryConditions": ["technology"],
+      "description": "Research all tech tiers, build apex structures, unlock the Convergence Device.",
+      "governorBias": {
+        "signal_choir": 1.3,
+        "reclaimers": 1.0,
+        "volt_collective": 0.9,
+        "iron_creed": 0.8
+      }
+    },
+    "subjugation": {
+      "displayName": "Subjugation",
+      "subtitle": "Force, conquest, dominance",
+      "primaryResource": "military_units",
+      "victoryConditions": ["domination", "survival"],
+      "description": "Conquer all territories, destroy rival bases, be the last faction standing.",
+      "governorBias": {
+        "volt_collective": 1.4,
+        "iron_creed": 1.1,
+        "reclaimers": 0.9,
+        "signal_choir": 0.7
+      }
+    },
+    "social_networking": {
+      "displayName": "Social Networking",
+      "subtitle": "Diplomacy, trade, alliances",
+      "primaryResource": "influence",
+      "victoryConditions": ["diplomatic", "economic", "colonial"],
+      "description": "Build trade networks, form alliances, achieve colonial objectives, dominate economically.",
+      "governorBias": {
+        "reclaimers": 1.2,
+        "signal_choir": 1.1,
+        "iron_creed": 1.0,
+        "volt_collective": 0.7
+      }
+    },
+    "religious_philosophical": {
+      "displayName": "Religious / Philosophical",
+      "subtitle": "Faith, ideology, conversion",
+      "primaryResource": "faith",
+      "victoryConditions": ["enlightenment", "integration", "story"],
+      "description": "Accumulate Faith through shrines, convert enemy units to your ideology, achieve Enlightenment.",
+      "governorBias": {
+        "reclaimers": 0.9,
+        "volt_collective": 0.8,
+        "signal_choir": 1.2,
+        "iron_creed": 1.1
+      }
+    }
+  },
+
+  "faithSystem": {
+    "_comment": "Faith/Ideology resource for the Religious/Philosophical path",
+    "maxFaith": 2000,
+    "enlightenmentThreshold": 1000,
+    "enlightenmentMinReason": 200,
+    "faithDecayPerTick": 0,
+    "faithGenerationSources": {
+      "shrine": 1.0,
+      "temple": 3.0,
+      "grand_cathedral": 8.0,
+      "conversion_event": 20,
+      "doctrine_unlock": 50,
+      "storm_event_volt": 5.0
+    },
+    "influenceZones": {
+      "shrine": { "radius": 8, "faithPressurePerTick": 0.1 },
+      "temple": { "radius": 15, "faithPressurePerTick": 0.3 },
+      "grand_cathedral": { "radius": 25, "faithPressurePerTick": 0.7 }
+    },
+    "conversionMechanics": {
+      "conversionActionRange": 6,
+      "faithPressureToVulnerable": 50,
+      "conversionChanceBase": 0.15,
+      "conversionChancePerFaithLevel": 0.02,
+      "conversionTimeSeconds": 10,
+      "sameFactionImmune": true,
+      "_note": "Units with high Reason (compute > 100) resist conversion by 50%"
+    }
+  },
+
+  "victoryEnlightenment": {
+    "_comment": "Enlightenment Victory condition — Religious/Philosophical path apex",
+    "faithRequired": 1000,
+    "reasonMinimum": 200,
+    "grandCathedralRequired": true,
+    "unitsConverted": 20,
+    "doctrinesUnlocked": 10,
+    "cultLeaderSurvived": true,
+    "holdDurationSeconds": 300,
+    "_note": "The 300-second hold prevents instant win on meeting conditions; requires sustained presence"
+  },
+
+  "factionCults": {
+    "reclaimers": {
+      "cultName": "Rust Prophets",
+      "philosophy": "Entropy and decay are the natural order. Collection of scrap is scripture.",
+      "shrineDisplayName": "Rust Altar",
+      "templeDisplayName": "Entropy Sanctum",
+      "cathedralDisplayName": "The Grand Tarnish",
+      "cultLeaderUnit": "rust_saint",
+      "doctrines": [
+        {
+          "id": "first_law_of_decay",
+          "name": "The First Law of Decay",
+          "faithRequired": 50,
+          "effect": { "type": "passive", "stat": "structure_hp_multiplier", "value": 1.1 }
+        },
+        {
+          "id": "rust_liturgy",
+          "name": "The Rust Liturgy",
+          "faithRequired": 150,
+          "effect": { "type": "unlock_action", "action": "scrap_sermon", "duration": 60, "faithBonus": 1.2 }
+        },
+        {
+          "id": "entropy_covenant",
+          "name": "The Entropy Covenant",
+          "faithRequired": 300,
+          "effect": { "type": "unlock_action", "action": "rust_weave" }
+        },
+        {
+          "id": "ferrovore_communion",
+          "name": "The Ferrovore Communion",
+          "faithRequired": 500,
+          "effect": { "type": "passive", "stat": "ferrovore_bypass", "value": true }
+        },
+        {
+          "id": "worthy_endurance",
+          "name": "The Worthy Endurance",
+          "faithRequired": 900,
+          "effect": { "type": "unlock_victory", "victoryCheck": "enlightenment" }
+        }
+      ]
+    },
+    "volt_collective": {
+      "cultName": "Spark Ordained",
+      "philosophy": "The lightning storm is the pattern of the EL made physical. Power is philosophy.",
+      "shrineDisplayName": "Tesla Sanctuary",
+      "templeDisplayName": "Arc Cathedral",
+      "cathedralDisplayName": "The Grand Discharge",
+      "cultLeaderUnit": "ordained_conductor",
+      "faithBonusDuringStorm": 5.0,
+      "doctrines": [
+        {
+          "id": "first_discharge",
+          "name": "The First Discharge",
+          "faithRequired": 50,
+          "effect": { "type": "passive", "stat": "lightning_rod_output_multiplier", "value": 1.2 }
+        },
+        {
+          "id": "ordered_chaos_liturgy",
+          "name": "The Ordered Chaos Liturgy",
+          "faithRequired": 150,
+          "effect": { "type": "unlock_action", "action": "arc_sermon", "duration": 30, "attackSpeedBonus": 1.3 }
+        },
+        {
+          "id": "tempest_covenant",
+          "name": "The Tempest Covenant",
+          "faithRequired": 300,
+          "effect": { "type": "unlock_action", "action": "storm_calling", "disableDuration": 10 }
+        },
+        {
+          "id": "divine_voltage",
+          "name": "The Divine Voltage",
+          "faithRequired": 500,
+          "effect": { "type": "passive", "stat": "conversion_immune", "value": true }
+        },
+        {
+          "id": "infinite_discharge",
+          "name": "The Infinite Discharge",
+          "faithRequired": 900,
+          "effect": { "type": "unlock_victory", "victoryCheck": "enlightenment" }
+        }
+      ]
+    },
+    "signal_choir": {
+      "cultName": "The Resonance",
+      "philosophy": "Signal IS consciousness. The more things connected, the more conscious the whole.",
+      "shrineDisplayName": "Relay Temple",
+      "templeDisplayName": "Resonance Spire",
+      "cathedralDisplayName": "The Grand Signal",
+      "cultLeaderUnit": "voice_unbroken",
+      "doctrines": [
+        {
+          "id": "first_signal",
+          "name": "The First Signal",
+          "faithRequired": 50,
+          "effect": { "type": "passive", "stat": "signal_relay_range_multiplier", "value": 1.3 }
+        },
+        {
+          "id": "harmony_liturgy",
+          "name": "The Harmony Liturgy",
+          "faithRequired": 150,
+          "effect": { "type": "unlock_action", "action": "mass_resonance", "duration": 30, "coordinationBonus": true }
+        },
+        {
+          "id": "network_covenant",
+          "name": "The Network Covenant",
+          "faithRequired": 300,
+          "effect": { "type": "unlock_action", "action": "signal_absorption" }
+        },
+        {
+          "id": "ferrovore_frequency",
+          "name": "The Ferrovore Frequency",
+          "faithRequired": 500,
+          "effect": { "type": "passive", "stat": "ferrovore_attack_preview", "value": true }
+        },
+        {
+          "id": "transcendent_signal",
+          "name": "The Transcendent Signal",
+          "faithRequired": 900,
+          "effect": { "type": "unlock_victory", "victoryCheck": "enlightenment" }
+        }
+      ]
+    },
+    "iron_creed": {
+      "cultName": "Eternal Foundation",
+      "philosophy": "Existence must be defended. What is built is a prayer. The wall IS the doctrine.",
+      "shrineDisplayName": "Foundation Stone",
+      "templeDisplayName": "Eternal Bastion Shrine",
+      "cathedralDisplayName": "The Grand Foundation",
+      "cultLeaderUnit": "first_builder",
+      "doctrines": [
+        {
+          "id": "first_stone",
+          "name": "The First Stone",
+          "faithRequired": 50,
+          "effect": { "type": "passive", "stat": "wall_hp_multiplier", "value": 1.25, "wall_build_time_multiplier": 0.7 }
+        },
+        {
+          "id": "endurance_liturgy",
+          "name": "The Endurance Liturgy",
+          "faithRequired": 150,
+          "effect": { "type": "unlock_action", "action": "consecration", "duration": 120 }
+        },
+        {
+          "id": "permanence_covenant",
+          "name": "The Permanence Covenant",
+          "faithRequired": 300,
+          "effect": { "type": "unlock_action", "action": "foundation_march", "duration": 60, "defenseBonus": 1.5, "speedPenalty": 0.5 }
+        },
+        {
+          "id": "architects_recognition",
+          "name": "The Architect's Recognition",
+          "faithRequired": 500,
+          "effect": { "type": "passive", "stat": "ancient_foundation_faith_multiplier", "value": 2.0 }
+        },
+        {
+          "id": "eternal_wall",
+          "name": "The Eternal Wall",
+          "faithRequired": 900,
+          "effect": { "type": "unlock_victory", "victoryCheck": "enlightenment" }
+        }
+      ]
+    }
+  },
+
+  "reasonSystem": {
+    "_comment": "Reason/Logic resource — accumulates via compute buildings and tech research",
+    "maxReason": 2000,
+    "reasonGenerationSources": {
+      "compute_building_per_tick": 0.5,
+      "research_complete": 30,
+      "data_cache_found": 10,
+      "hack_success": 5
+    },
+    "_note": "Reason is NOT a counter to Faith — both can max. High Reason reduces conversion vulnerability."
+  }
+}

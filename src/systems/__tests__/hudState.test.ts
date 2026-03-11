@@ -24,6 +24,7 @@ import {
 	toggleOverlay,
 	setOverlay,
 	hudTick,
+	updateXPBar,
 	resetHUDState,
 } from "../hudState";
 
@@ -279,6 +280,70 @@ describe("subscriptions", () => {
 		unsub();
 		updatePowderGauge({ current: 20 });
 		expect(count).toBe(1); // not called after unsub
+	});
+});
+
+// ---------------------------------------------------------------------------
+// XP bar
+// ---------------------------------------------------------------------------
+
+describe("xpBar", () => {
+	it("has default XP bar state", () => {
+		const state = getHUDState();
+		expect(state.xpBar.totalXP).toBe(0);
+		expect(state.xpBar.level).toBe(0);
+		expect(state.xpBar.xpToNextLevel).toBe(100);
+		expect(state.xpBar.pendingMilestoneNotifications).toEqual([]);
+	});
+
+	it("updates totalXP and level", () => {
+		updateXPBar({ totalXP: 400, level: 2, xpToNextLevel: 500 });
+		const state = getHUDState();
+		expect(state.xpBar.totalXP).toBe(400);
+		expect(state.xpBar.level).toBe(2);
+		expect(state.xpBar.xpToNextLevel).toBe(500);
+	});
+
+	it("partial update preserves unchanged fields", () => {
+		updateXPBar({ totalXP: 100 });
+		expect(getHUDState().xpBar.level).toBe(0); // unchanged
+		expect(getHUDState().xpBar.xpToNextLevel).toBe(100); // unchanged
+	});
+
+	it("stores pending milestone notification messages", () => {
+		updateXPBar({
+			pendingMilestoneNotifications: [
+				"First cube compressed. Belt system unlocked.",
+			],
+		});
+		expect(
+			getHUDState().xpBar.pendingMilestoneNotifications,
+		).toHaveLength(1);
+		expect(
+			getHUDState().xpBar.pendingMilestoneNotifications[0],
+		).toBe("First cube compressed. Belt system unlocked.");
+	});
+
+	it("notifies subscribers when XP bar updates", () => {
+		let count = 0;
+		subscribeHUD(() => count++);
+		updateXPBar({ totalXP: 50 });
+		expect(count).toBe(1);
+	});
+
+	it("resets xpBar on resetHUDState", () => {
+		updateXPBar({
+			totalXP: 9999,
+			level: 10,
+			xpToNextLevel: 0,
+			pendingMilestoneNotifications: ["some notification"],
+		});
+		resetHUDState();
+		const state = getHUDState();
+		expect(state.xpBar.totalXP).toBe(0);
+		expect(state.xpBar.level).toBe(0);
+		expect(state.xpBar.xpToNextLevel).toBe(100);
+		expect(state.xpBar.pendingMilestoneNotifications).toEqual([]);
 	});
 });
 

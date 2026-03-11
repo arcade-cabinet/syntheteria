@@ -64,5 +64,88 @@
       "buildings": ["nexus_core"],
       "abilities": ["ascension"]
     }
-  }
+  },
+  "milestones": [
+    {
+      "id": "first_cube",
+      "title": "First Cube",
+      "description": "Compress your first physical cube",
+      "statKey": "totalCrafts",
+      "threshold": 1,
+      "featureUnlock": "belt_system",
+      "notificationMessage": "First cube compressed. Belt system unlocked."
+    },
+    {
+      "id": "ten_cubes",
+      "title": "Getting Started",
+      "description": "Compress 10 cubes",
+      "statKey": "totalCrafts",
+      "threshold": 10,
+      "featureUnlock": "auto_grabber",
+      "notificationMessage": "10 cubes compressed. Auto-grabber unlocked."
+    },
+    {
+      "id": "first_kill",
+      "title": "Defender",
+      "description": "Defeat your first enemy",
+      "statKey": "totalKills",
+      "threshold": 1,
+      "featureUnlock": "turret_placement",
+      "notificationMessage": "First enemy defeated. Turret placement unlocked."
+    },
+    {
+      "id": "ten_kills",
+      "title": "Combat Tested",
+      "description": "Defeat 10 enemies",
+      "statKey": "totalKills",
+      "threshold": 10,
+      "featureUnlock": "bot_combat",
+      "notificationMessage": "10 enemies defeated. Combat bots unlocked."
+    },
+    {
+      "id": "first_trade",
+      "title": "Trader",
+      "description": "Complete your first trade",
+      "statKey": "totalTrades",
+      "threshold": 1,
+      "featureUnlock": "trade_post",
+      "notificationMessage": "First trade complete. Trade post unlocked."
+    },
+    {
+      "id": "first_discovery",
+      "title": "Explorer",
+      "description": "Discover your first location",
+      "statKey": "totalDiscoveries",
+      "threshold": 1,
+      "featureUnlock": "fog_scan",
+      "notificationMessage": "First location discovered. Fog scanner unlocked."
+    },
+    {
+      "id": "first_quest",
+      "title": "On a Mission",
+      "description": "Complete your first quest",
+      "statKey": "totalQuestsCompleted",
+      "threshold": 1,
+      "featureUnlock": "otter_relay",
+      "notificationMessage": "First quest complete. Otter relay channel opened."
+    },
+    {
+      "id": "fifty_crafts",
+      "title": "Factory Operator",
+      "description": "Compress 50 cubes",
+      "statKey": "totalCrafts",
+      "threshold": 50,
+      "featureUnlock": "advanced_belts",
+      "notificationMessage": "50 cubes compressed. Advanced belts unlocked."
+    },
+    {
+      "id": "hundred_kills",
+      "title": "Warlord",
+      "description": "Defeat 100 enemies",
+      "statKey": "totalKills",
+      "threshold": 100,
+      "featureUnlock": "orbital_strike",
+      "notificationMessage": "100 enemies defeated. Orbital strike unlocked."
+    }
+  ]
 }

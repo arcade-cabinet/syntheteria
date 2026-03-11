@@ -44,9 +44,16 @@ import { signalNetworkSystem } from "../systems/signalNetwork";
 import { techResearchSystem } from "../systems/techResearch";
 import { applyTechEffects } from "../systems/techEffects";
 import { updateResearch } from "../systems/techTree";
+import {
+	getMilestoneNotifications,
+	getPlayerStats,
+	progressionSystem,
+} from "../systems/progressionSystem";
+import { stormSystem } from "../systems/stormSystem";
 import { getAllTerritories } from "../systems/territory";
 import { applyContestationDecay } from "../systems/territoryEffects";
 import { turretSystem } from "../systems/turret";
+import { updateXPBar } from "../systems/hudState";
 import { wireNetworkSystem } from "../systems/wireNetwork";
 import {
 	getAllFragments,
@@ -173,8 +180,22 @@ export function simulationTick() {
 		executeRaid(raidId, 1);
 	}
 
+	// Storm escalation — advance phase, update aggression timers
+	stormSystem(tick);
+
 	// AI civilization economics (independent faction resource loops)
-	aiCivilizationSystem();
+	aiCivilizationSystem(tick);
+
+	// Player progression (XP, levels, milestones)
+	progressionSystem(tick);
+	const pStats = getPlayerStats();
+	const milestoneMessages = getMilestoneNotifications().map((n) => n.message);
+	updateXPBar({
+		totalXP: pStats.totalXP,
+		level: pStats.level,
+		xpToNextLevel: pStats.xpToNextLevel,
+		pendingMilestoneNotifications: milestoneMessages,
+	});
 
 	updateDisplayOffsets();
 

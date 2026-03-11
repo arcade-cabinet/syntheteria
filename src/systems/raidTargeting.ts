@@ -2,6 +2,11 @@
  * Raid targeting — scans the world for enemy stockpiles and evaluates
  * raid viability for an attacking faction.
  *
+ * Also exposes calculateRaidStrength() which implements the wealth-scaling
+ * formula from GDD §5.3:
+ *   raidStrength = cubeCount*0.5 + buildingCount*2 + techLevel*10
+ * multiplied by the active storm phase's raidWealthMultiplier.
+ *
  * Stockpiles are clusters of placed cubes (Grabbable entities).
  * Targets are prioritised by material value, vulnerability (distance
  * from player defenders), and accessibility (pathfinding cost proxy).
@@ -13,6 +18,9 @@ import { config } from "../../config";
 import type { Entity, Vec3 } from "../ecs/types";
 import { units } from "../ecs/koota/compat";
 import { type CubeEntity, getCubes } from "./raidSystem";
+import { calculateRaidStrength as _calculateRaidStrength } from "./stormSystem";
+export type { RaidStrengthInput } from "./stormSystem";
+export { calculateRaidStrength } from "./stormSystem";
 
 // ---------------------------------------------------------------------------
 // Config-driven constants

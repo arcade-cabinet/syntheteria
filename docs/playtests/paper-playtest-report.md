@@ -7,6 +7,13 @@
 
 ---
 
+## Implementation Status Audit (2026-03-11)
+
+> Cross-referenced against codebase state: 256 test suites, 7,594 tests passing, 552 source files.
+> See `docs/REMAINING-WORK.md` for the full work specification.
+
+---
+
 ## First Impressions (Title Screen)
 
 I see "SYNTHETERIA" in big amber monospace type on a dark background with a rivet dot pattern, scan lines, corner bolts, and a glitch effect. Subtitle reads "MACHINE PLANET -- SECTOR 7 COLONY OUTPOST." There's a version badge "v0.1.0 -- PHASE 1 PROTOTYPE" and a green dot that says "SYSTEMS NOMINAL."
@@ -198,19 +205,35 @@ But NONE of it is in the game yet. It's all in design documents. The player expe
 
 1. **ONBOARDING IS BROKEN.** The tutorial exists in code but likely isn't wired to the otter hologram. A new player spawns into a world with text control hints and no guidance. In Subnautica, you hear Lifepod 5's computer giving you survival priorities. In Factorio, the campaign walks you through each step. Here? Silence.
 
+   > **[IMPLEMENTED]** `tutorialOtterBridge.ts` now syncs tutorial step dialogue to the otter entity's speech bubble lines. Registered in `registerSystems.ts` game loop (calls `syncTutorialToOtter()` each tick). Tested in `tutorialOtterBridge.test.ts`. The bridge that was "probably broken" now exists and is wired. **Remaining:** visual verification in a live build not yet done; otter texture assets (`otter.zip`) still required for the hologram to render visually. See REMAINING-WORK.md 7.7, 7.8, 7.9, 7.13.
+
 2. **NO MUSIC OR AMBIENT AUDIO ON LOAD.** The AudioSystem initializes on first click. Before that, silence. Even after init, the storm ambience is the main audio element. Where's the soundtrack? Where's the industrial mechanical drone that says "you're on a machine planet"?
+
+   > **[IMPLEMENTED]** Full audio system now exists: `AdaptiveMusic.ts` (5 layered states: explore/build/combat/raid/victory via Tone.js Transport), `SFXLibrary.ts` (procedural sound effects), `SpatialAudio.ts`, `StormAmbience.ts`, `BiomeAmbience.ts`, `FactoryAudio.ts`, `AudioEventBridge.ts` (maps 16+ game events to sounds), `AudioQuality.ts` (GPU-based quality tiers). All tested. `audioEventIntegration.ts` wires harvesting/compression/furnace/grabber/combat events to audio system. See REMAINING-WORK.md 8.1, 8.10-8.14 (all checked). **Remaining:** Title screen music not confirmed; audio still gated behind first user interaction (browser autoplay policy).
 
 3. **NO MINIMAP OR WORLD OVERVIEW.** I have zero spatial awareness. Where am I? Where are the enemies? Where are resources? Factorio gives you a zoomable map from minute one. Even Subnautica has a compass and biome names.
 
+   > **[PARTIALLY DONE]** `minimapData.ts` exists with full logic: terrain grid, fog of war overlay, entity tracking, territory borders, rendering to pixel grid. Tested in `minimapData.test.ts`. However, **no R3F UI renderer** consumes this data -- `GameUI.tsx` references minimap but the visual component is not wired. See REMAINING-WORK.md 7.3, 7.11.
+
 4. **AI OPPONENTS ARE INERT.** The GOAP governor has documented bugs that prevent it from doing anything meaningful. The 4X promise is "compete against AI civilizations." If they don't compete, the game is just a single-player sandbox with no stakes.
+
+   > **[PARTIALLY DONE]** Governor infrastructure significantly improved: `governorSystem.ts` wired to game loop with `tickGovernors()`, `GovernorActionExecutor` translates GOAP actions to bot orders via `actionToOrder()` (46+ tests), `economySimulation.ts` registered in economy phase, AI tech research wired through `GovernorActionExecutor.executeResearchTech()`. AI-produced cubes spawn as real entities (`aiCivilization.ts` calls `spawnCube()`). **Remaining:** AI bots still don't run the full harvest-compress-carry pipeline (REMAINING-WORK.md 2.2, 2.4); GOAP `LaunchRaid` not connected to commander/`planRaid()` (3.3); faction-specific AI strategies not implemented (3.6); trade transfers only modify opinion, not real resources (3.5). The AI is structured but not yet a competitive opponent.
 
 5. **NO CLEAR GOAL.** The game over detection system exists (victory = control all territory or destroy all rivals; loss = all units destroyed). But the player never learns these goals. There's no "OBJECTIVE: Establish dominance over Ferrathis" anywhere visible.
 
+   > **[PARTIALLY DONE]** `victoryConditionEvaluator.ts` now evaluates all 8 victory conditions per faction per tick (colonial, domination, economic, technology, diplomatic, integration, survival, story) with hold timers, tiebreaker resolution, and alert threshold events. `victoryTracking.ts` also registered in game loop. Config in `config/victory.json`. Fully tested. **Remaining:** No victory progress UI panel (REMAINING-WORK.md 5.2); no victory screen (5.12); no in-game objective tracker that SHOWS the player what they're working toward. The evaluator runs silently.
+
 6. **INCONSISTENT INTERACTION MODEL.** Tools (RadialToolMenu: scanner/repair/welder/fabricator/builder/salvager) AND contextual clicking (ObjectActionMenu) both exist. The GDD says "no tools" but the code has a full tool system. Pick one.
+
+   > **[NOT STARTED]** Both `RadialToolMenu.tsx` and the contextual `ObjectActionMenu` / `InteractionSystem.tsx` still coexist. `EquippedToolView.tsx`, `InventoryView.tsx` reference tool switching. No resolution of this design conflict. See REMAINING-WORK.md 7.17 (radial action menu listed but not framed as a conflict to resolve).
 
 7. **THE BEZEL/HUD ARE DOUBLED.** The Bezel top bar shows "SCRAP:X E-WASTE:X PARTS:X" AND the FPSHUD ResourceBar shows the exact same data. Two overlapping resource displays. The bottom bezel shows "SCANNER" and control hints, AND the FPSHUD Hints component shows the same controls.
 
+   > **[NOT STARTED]** Both `Bezel.tsx` and `FPSHUD.tsx` remain in the codebase. `CoreLoopHUD.tsx` adds a third layer of contextual HUD elements. No deduplication has occurred. See REMAINING-WORK.md 7.10 (HUD refinement).
+
 8. **NO FEEDBACK ON PROGRESSION.** When I research a tech, what changes? The TechEffects system applies bonuses but there's no notification: "TECH COMPLETE: Advanced Mining -- Ore extraction +30%." Quest completions have a notification banner, but tech completions don't.
+
+   > **[PARTIALLY DONE]** `notificationSystem.ts` exists and is registered. `techResearch.ts` and `techEffects.ts` apply bonuses. However, wiring from tech completion to notification system is not confirmed. See REMAINING-WORK.md 8.6 (wire progressionSystem to hudState), 5.11 (progression milestone notifications).
 
 ---
 
@@ -222,6 +245,8 @@ Factorio's genius is the belt grid -- you see resources flowing, splitters split
 
 **Rating: Foundation is there. Implementation gaps are critical.**
 
+> **[STATUS UPDATE]** Belt transport (`beltTransport.ts`), belt routing (`beltRouting.ts`), and belt rendering exist with spacing/back-pressure. Audio events wired for belt/factory sounds. Physical cube movement on belts is the core system. Belt placement UX flow still needs live verification. See REMAINING-WORK.md 2.16 (checked).
+
 ### vs Subnautica: Exploration and Wonder
 
 Subnautica's first hour is INCREDIBLE. You crash-land in an alien ocean. Every direction is a mystery. You see bioluminescent creatures, coral forests, dark caves. The PDA gives you contextual info. The radio pulls you toward story objectives.
@@ -232,6 +257,8 @@ The otter holograms are Syntheteria's equivalent of Subnautica's PDA. If they wo
 
 **Rating: High potential, needs visual variety and working otter integration.**
 
+> **[STATUS UPDATE]** Otter bridge now wired (`tutorialOtterBridge.ts`). `OtterRenderer.tsx` and `HologramRenderer.tsx` exist for visual rendering. Biome system (`biomeSystem.ts`) with 4 biomes in `config/biomes.json` (desert, forest, mountain, wasteland). `discoverySystem.ts` and `exploration.ts` exist. Visual variety still depends on wiring procgen (REMAINING-WORK.md 1.1-1.8).
+
 ### vs RimWorld: Stories and Drama
 
 RimWorld generates emergent stories through character interactions, disasters, and decisions. Syntheteria's 4X frame should generate drama through faction competition, raids, and resource scarcity. The raid system, territory contestation, and AI governors are all designed for this.
@@ -240,11 +267,15 @@ But with inert AI, there's no drama. No one raids your cube pile. No one contest
 
 **Rating: Systems exist on paper. Zero drama in practice.**
 
+> **[STATUS UPDATE]** Raid system (`raidSystem.ts`, `raidTargeting.ts`) and cube visibility (`cubeVisibility.ts` -- AI can see cube piles, assess attractiveness) are fully implemented and tested. `cubePileTracker.ts` tracks pile locations. `diplomacySystem.ts` registered in game loop. `environmentHazards.ts` adds world events (radiation, toxic spill, unstable ground, magnetic anomaly, scrap storm). `stormEscalation.ts` manages storm lifecycle. `weatherEffects.ts` bridges weather to gameplay modifiers. The **drama infrastructure** exists but AI opponents don't yet act on it (REMAINING-WORK.md 3.3, 3.6, 5.4-5.6).
+
 ### vs Satisfactory: Building Beauty
 
 Satisfactory lets you build beautiful factories in a gorgeous world. The first-person perspective creates a sense of scale and ownership. Syntheteria shares the first-person factory concept but the visual execution is unclear. The procedural geometry systems (PanelGeometry, BotGenerator, BuildingGenerator) exist but aren't wired into the live R3F rendering pipeline. The material system uses PBR but many meshes likely still use `meshLambertMaterial` (the GDD notes this as an issue).
 
 **Rating: Architecture is ready but visual polish is pre-alpha.**
+
+> **[STATUS UPDATE]** `meshLambertMaterial` has been fully replaced -- zero Lambert materials remain in `src/` (REMAINING-WORK.md 1.5 checked). `InstancedCubeRenderer.tsx` wired into GameScene (1.4 checked). `SelectionHighlight.tsx` and `PlacementPreview.tsx` wired (1.12, 1.13 checked). HDRI environment lighting reactive to storms (1.7 checked). Procgen generators (PanelGeometry, BotGenerator, BuildingGenerator) still NOT wired to live R3F pipeline (1.1-1.3 still open).
 
 ---
 
@@ -252,23 +283,43 @@ Satisfactory lets you build beautiful factories in a gorgeous world. The first-p
 
 1. **No working tutorial/onboarding.** Tutorial steps are defined, otter dialogue is written, but the bridge from tutorial system to otter speech bubbles appears disconnected. New players will be lost. This is the single most important fix. Without it, 90% of players bounce in 2 minutes.
 
+   > **[IMPLEMENTED - tutorialOtterBridge.ts]** Bridge now exists and is wired into game loop via `registerSystems.ts`. `syncTutorialToOtter()` pipes tutorial step dialogue into otter entity lines each tick. Tested. Visual verification in live build still needed.
+
 2. **AI opponents are inert.** The GOAP governor has critical bugs (rounding, no fallback, unreachable preconditions). The entire 4X promise -- competition, raids, territory -- is dead. This turns "first-person 4X" into "first-person sandbox."
+
+   > **[PARTIALLY DONE - governorSystem.ts, economySimulation.ts]** Governor tick loop, action executor, economy simulation, and AI tech research all wired. AI cubes spawn as real entities. However, AI bots don't run full harvest-compress-carry; GOAP-to-raid pipeline not connected; faction-specific strategies not implemented. See REMAINING-WORK.md 2.2, 2.4, 3.1-3.6.
 
 3. **No music or ambient atmosphere at any screen.** The title screen is silent. The game world relies on storm ambience initialized only after first click. There's no soundtrack. Audio is 50% of immersion. Right now it's 0%.
 
+   > **[IMPLEMENTED - src/audio/]** Full audio stack: AdaptiveMusic.ts (5-state layered synthesis), SFXLibrary.ts, SpatialAudio.ts, StormAmbience.ts, BiomeAmbience.ts, FactoryAudio.ts, AudioEventBridge.ts (16+ events), AudioQuality.ts. All tested. Browser autoplay policy still gates initial playback.
+
 4. **Duplicate/conflicting interaction models.** RadialToolMenu (equip tools) AND ObjectActionMenu (contextual click) both exist. The GDD explicitly says "no tools." One must die. This confusion will plague every interaction.
+
+   > **[NOT STARTED]** Both systems still coexist. No design resolution made.
 
 5. **Doubled HUD elements.** The Bezel top bar AND FPSHUD ResourceBar show identical data. The Bezel bottom AND FPSHUD Hints show identical controls. Pick one presentation layer.
 
+   > **[NOT STARTED]** Both Bezel.tsx and FPSHUD.tsx remain. No deduplication.
+
 6. **No minimap or spatial awareness tools.** No map, no compass, no waypoints. Players need to understand where they are on the planet, where resources are, where enemies are. Even a simple compass heading would help.
+
+   > **[PARTIALLY DONE - minimapData.ts]** Data layer complete (terrain, fog, entities, territory borders). Tested. Waypoint system exists (`waypointSystem.ts`). No UI renderer to display minimap to player. See REMAINING-WORK.md 7.3, 7.11.
 
 7. **Color scheme inconsistency.** TitleScreen/PregameScreen/LoadingScreen use amber/chrome (#e8a020). FactionSelect/MapConfig/OpponentConfig use terminal green (#00ffaa). Bezel/FPSHUD/CoreLoopHUD use terminal green. The aesthetic is split between two identities.
 
+   > **[NOT STARTED]** `designTokens.ts` exists in `src/ui/` but color unification across all screens has not been addressed. See REMAINING-WORK.md 7.10.
+
 8. **No clear goal communication.** Victory/loss conditions exist in code but are never presented to the player. The game needs an ever-present objective tracker or at minimum a briefing at game start.
+
+   > **[PARTIALLY DONE - victoryConditionEvaluator.ts]** Full 8-condition evaluator with per-faction scoring, hold timers, tiebreakers, and alert threshold events. Registered in game loop. No UI panel surfaces this to the player. See REMAINING-WORK.md 5.2, 5.12.
 
 9. **Loading screen doesn't show active progress.** The active loading screen (14-step progress, otter tease at 80%) is never invoked -- the init runs synchronously in one frame, so only the passive "INITIALIZING..." pulse bar shows. The beautiful loading screen design is wasted.
 
+   > **[NOT STARTED]** `LoadingScreen.tsx` exists with both modes, but the synchronous init path in `App.tsx` still prevents active mode from rendering. No async init refactor has been done.
+
 10. **Pause menu has disabled features.** Save, Load, and Settings are all grayed out in the pause menu. ESC opens a save/load menu separately. Two overlapping pause/menu systems with incomplete features.
+
+    > **[PARTIALLY DONE]** `SaveManager.ts` exists with 4 save slots, ECS serialization, versioning. IndexedDB persistence works on web (tested). `SettingsScreen.tsx` exists. However, pause menu integration with save/load is not confirmed as fully wired. See REMAINING-WORK.md 7.12, 9.5-9.6.
 
 ---
 
@@ -296,14 +347,17 @@ But right now, it's an engine, not a game. The player journey from "I launched t
 
 **If I downloaded this as an Early Access supporter who reads dev blogs?** I'd be excited. The bones are excellent. Fix the onboarding, make the AI compete, add music, and this could be special.
 
-**Priority order for making this fun:**
-1. Wire the otter tutorial (make Pip actually talk to me)
-2. Fix AI governor bugs (make rivals actually play the game)
-3. Add music/ambient audio (make the planet feel alive)
-4. Resolve tool-vs-contextual interaction (pick one, delete the other)
-5. Deduplicate HUD (one resource display, one control hint area)
-6. Add a minimap or compass
-7. Unify the color scheme (amber OR green, not both)
-8. Communicate victory conditions
-9. Wire the active loading screen
-10. Add visual variety to terrain (landmarks, ruins, discoveries)
+**Priority order for making this fun (with 2026-03-11 status):**
+
+| # | Recommendation | Status | Key Files |
+|---|----------------|--------|-----------|
+| 1 | Wire the otter tutorial | **IMPLEMENTED** | `tutorialOtterBridge.ts`, `registerSystems.ts` |
+| 2 | Fix AI governor bugs | **PARTIALLY DONE** | `governorSystem.ts`, `economySimulation.ts` -- governor wired but AI doesn't run full game loop |
+| 3 | Add music/ambient audio | **IMPLEMENTED** | `AdaptiveMusic.ts`, `SFXLibrary.ts`, `SpatialAudio.ts`, `StormAmbience.ts`, `BiomeAmbience.ts`, `AudioEventBridge.ts` |
+| 4 | Resolve tool-vs-contextual interaction | **NOT STARTED** | `RadialToolMenu.tsx` vs `ObjectActionMenu` -- both still coexist |
+| 5 | Deduplicate HUD | **NOT STARTED** | `Bezel.tsx` + `FPSHUD.tsx` still both present |
+| 6 | Add a minimap or compass | **PARTIALLY DONE** | `minimapData.ts` data layer complete, no UI renderer |
+| 7 | Unify the color scheme | **NOT STARTED** | `designTokens.ts` exists but not applied globally |
+| 8 | Communicate victory conditions | **PARTIALLY DONE** | `victoryConditionEvaluator.ts` evaluates all 8 conditions, no UI panel |
+| 9 | Wire the active loading screen | **NOT STARTED** | `LoadingScreen.tsx` exists, sync init prevents active mode |
+| 10 | Add visual variety to terrain | **PARTIALLY DONE** | `biomeSystem.ts` (4 biomes), `discoverySystem.ts`, `exploration.ts` -- procgen not wired to R3F |

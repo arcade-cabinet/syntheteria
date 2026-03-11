@@ -6,6 +6,9 @@
  * and territories survive a serialize → deserialize cycle.
  */
 
+jest.mock("react-native", () => ({ Platform: { OS: "web" } }));
+jest.mock("expo-sqlite", () => ({}));
+
 import { setGameSpeed, setTickCount } from "../../ecs/gameState";
 import { setWorldSeed } from "../../ecs/seed";
 import type { Entity } from "../../ecs/types";

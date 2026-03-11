@@ -50,24 +50,32 @@ export interface RaidStrengthInput {
 // Config
 // ---------------------------------------------------------------------------
 
-const stormPacingCfg = (
-	config.combat as typeof config.combat & {
-		stormPacing: {
-			phases: StormPhase[];
-			raidStrengthWeights: {
-				cubeCountFactor: number;
-				buildingCountFactor: number;
-				techLevelFactor: number;
+function getStormPacingCfg() {
+	return (
+		config.combat as typeof config.combat & {
+			stormPacing: {
+				phases: StormPhase[];
+				raidStrengthWeights: {
+					cubeCountFactor: number;
+					buildingCountFactor: number;
+					techLevelFactor: number;
+				};
+				aggressionCooldownTicksBase: number;
+				aggressionEventTypes: string[];
 			};
-			aggressionCooldownTicksBase: number;
-			aggressionEventTypes: string[];
-		};
-	}
-).stormPacing;
+		}
+	).stormPacing;
+}
 
-const PHASES: StormPhase[] = stormPacingCfg.phases;
-const STRENGTH_WEIGHTS = stormPacingCfg.raidStrengthWeights;
-const BASE_AGGRESSION_COOLDOWN = stormPacingCfg.aggressionCooldownTicksBase;
+function getPHASES(): StormPhase[] {
+	return getStormPacingCfg()?.phases ?? [];
+}
+function getSTRENGTH_WEIGHTS() {
+	return getStormPacingCfg()?.raidStrengthWeights ?? { cubeCountFactor: 0.5, buildingCountFactor: 2, techLevelFactor: 10 };
+}
+function getBASE_AGGRESSION_COOLDOWN() {
+	return getStormPacingCfg()?.aggressionCooldownTicksBase ?? 100;
+}
 
 // ---------------------------------------------------------------------------
 // Module-level state
@@ -86,8 +94,8 @@ const aggressionStates = new Map<string, AggressionState>();
  */
 export function getPhaseIndexForTick(tick: number): number {
 	let idx = 0;
-	for (let i = 0; i < PHASES.length; i++) {
-		if (tick >= PHASES[i].minGameTick) {
+	for (let i = 0; i < getPHASES().length; i++) {
+		if (tick >= getPHASES()[i].minGameTick) {
 			idx = i;
 		}
 	}
@@ -98,7 +106,7 @@ export function getPhaseIndexForTick(tick: number): number {
  * Get the current storm phase definition.
  */
 export function getCurrentPhase(): StormPhase {
-	return PHASES[currentPhaseIndex];
+	return getPHASES()[currentPhaseIndex];
 }
 
 /**
@@ -115,9 +123,9 @@ export function getCurrentPhaseIndex(): number {
  */
 export function calculateRaidStrength(input: RaidStrengthInput): number {
 	const base =
-		input.cubeCount * STRENGTH_WEIGHTS.cubeCountFactor +
-		input.buildingCount * STRENGTH_WEIGHTS.buildingCountFactor +
-		input.techLevel * STRENGTH_WEIGHTS.techLevelFactor;
+		input.cubeCount * getSTRENGTH_WEIGHTS().cubeCountFactor +
+		input.buildingCount * getSTRENGTH_WEIGHTS().buildingCountFactor +
+		input.techLevel * getSTRENGTH_WEIGHTS().techLevelFactor;
 	return base * getCurrentPhase().raidWealthMultiplier;
 }
 
@@ -127,9 +135,9 @@ export function calculateRaidStrength(input: RaidStrengthInput): number {
  */
 export function calculateBaseRaidStrength(input: RaidStrengthInput): number {
 	return (
-		input.cubeCount * STRENGTH_WEIGHTS.cubeCountFactor +
-		input.buildingCount * STRENGTH_WEIGHTS.buildingCountFactor +
-		input.techLevel * STRENGTH_WEIGHTS.techLevelFactor
+		input.cubeCount * getSTRENGTH_WEIGHTS().cubeCountFactor +
+		input.buildingCount * getSTRENGTH_WEIGHTS().buildingCountFactor +
+		input.techLevel * getSTRENGTH_WEIGHTS().techLevelFactor
 	);
 }
 
@@ -145,7 +153,7 @@ export function registerFactionAggression(faction: string): void {
 	if (!aggressionStates.has(faction)) {
 		aggressionStates.set(faction, {
 			faction,
-			cooldownTicksRemaining: BASE_AGGRESSION_COOLDOWN,
+			cooldownTicksRemaining: getBASE_AGGRESSION_COOLDOWN(),
 			isReady: false,
 			lastEventTick: 0,
 			totalEvents: 0,

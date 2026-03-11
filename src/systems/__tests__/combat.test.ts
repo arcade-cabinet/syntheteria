@@ -6,13 +6,16 @@
  * - Melee damage exchange between hostile feral/player units
  * - Random component breakage mechanics (arm bonus, hit chance)
  * - Unit destruction when all components broken
- * - Faction hostility checks (feral attacks player only)
+ * - Faction hostility checks (feral attacks non-feral/non-wildlife; AI factions via declareWar)
  * - Range/proximity requirements for melee (MELEE_RANGE = 2.5)
  * - Edge cases: already-destroyed units, same-faction units, zero damage
  * - Salvage resource drops on destruction
  * - Navigation halt during combat
  * - Retaliation mechanics
  * - Combat event recording
+ * - declareWar: sets mutual hostility between any two factions
+ * - Multi-faction AI-vs-AI combat
+ * - resetCombat clears war state and events
  */
 
 // Mock the resources module so we can inspect salvage drops without side effects.
@@ -28,9 +31,15 @@ jest.mock("../../ecs/koota/compat", () => ({
 	},
 }));
 
-import type { Entity, UnitComponent } from "../../ecs/types";
+import type { Entity, FactionId, UnitComponent } from "../../ecs/types";
 import { world } from "../../ecs/world";
-import { combatSystem, getLastCombatEvents } from "../combat";
+import {
+	areAtWar,
+	combatSystem,
+	declareWar,
+	getLastCombatEvents,
+	resetCombat,
+} from "../combat";
 import { addResource } from "../resources";
 
 // ---------------------------------------------------------------------------
@@ -58,7 +67,7 @@ function makeComponents(
 /** Spawn a unit in the ECS world and track it for cleanup. */
 function makeUnit(
 	id: string,
-	faction: Entity["faction"],
+	faction: FactionId,
 	pos: { x: number; y: number; z: number },
 	opts: {
 		components?: UnitComponent[];
@@ -111,6 +120,7 @@ const trackedEntities: Entity[] = [];
 
 beforeEach(() => {
 	jest.clearAllMocks();
+	resetCombat();
 });
 
 afterEach(() => {
@@ -839,5 +849,310 @@ describe("combat — edge cases", () => {
 
 		expect(() => combatSystem()).not.toThrow();
 		expect(getLastCombatEvents()).toEqual([]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// declareWar
+// ---------------------------------------------------------------------------
+
+describe("declareWar", () => {
+	it("areAtWar returns false before any declaration", () => {
+		expect(areAtWar("reclaimers", "volt_collective")).toBe(false);
+	});
+
+	it("areAtWar returns true after declareWar", () => {
+		declareWar("reclaimers", "volt_collective");
+		expect(areAtWar("reclaimers", "volt_collective")).toBe(true);
+	});
+
+	it("war is mutual — areAtWar(A,B) equals areAtWar(B,A)", () => {
+		declareWar("reclaimers", "signal_choir");
+		expect(areAtWar("signal_choir", "reclaimers")).toBe(true);
+	});
+
+	it("declareWar is idempotent — calling twice has no error and stays at war", () => {
+		declareWar("iron_creed", "volt_collective");
+		declareWar("iron_creed", "volt_collective");
+		expect(areAtWar("iron_creed", "volt_collective")).toBe(true);
+	});
+
+	it("declaring war against self does nothing", () => {
+		declareWar("reclaimers", "reclaimers");
+		expect(areAtWar("reclaimers", "reclaimers")).toBe(false);
+	});
+
+	it("declaring war between player and an AI faction works", () => {
+		declareWar("player", "iron_creed");
+		expect(areAtWar("player", "iron_creed")).toBe(true);
+	});
+
+	it("independent faction pairs do not affect each other", () => {
+		declareWar("reclaimers", "volt_collective");
+		expect(areAtWar("reclaimers", "signal_choir")).toBe(false);
+		expect(areAtWar("signal_choir", "volt_collective")).toBe(false);
+	});
+
+	it("all four AI faction IDs are accepted without TypeScript error", () => {
+		const factions: FactionId[] = [
+			"reclaimers",
+			"volt_collective",
+			"signal_choir",
+			"iron_creed",
+		];
+		for (let i = 0; i < factions.length - 1; i++) {
+			declareWar(factions[i], factions[i + 1]);
+		}
+		expect(areAtWar("reclaimers", "volt_collective")).toBe(true);
+		expect(areAtWar("volt_collective", "signal_choir")).toBe(true);
+		expect(areAtWar("signal_choir", "iron_creed")).toBe(true);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Multi-faction AI-vs-AI combat
+// ---------------------------------------------------------------------------
+
+describe("combat — multi-faction AI-vs-AI", () => {
+	it("AI faction attacks enemy AI faction after war declaration", () => {
+		jest.spyOn(Math, "random").mockReturnValue(0);
+
+		declareWar("reclaimers", "volt_collective");
+
+		makeUnit("r1", "reclaimers", { x: 0, y: 0, z: 0 });
+		makeUnit("v1", "volt_collective", { x: 1, y: 0, z: 0 });
+
+		combatSystem();
+		const events = getLastCombatEvents();
+
+		// At least one attack should have landed
+		expect(events.length).toBeGreaterThanOrEqual(1);
+		const attackerFactions = new Set(
+			events.map((e) => {
+				const unit = [
+					...trackedEntities,
+				].find((u) => u.id === e.attackerId);
+				return unit?.faction;
+			}),
+		);
+		// Both factions should appear as attackers (attacker + retaliation)
+		expect(attackerFactions.has("reclaimers")).toBe(true);
+		expect(attackerFactions.has("volt_collective")).toBe(true);
+	});
+
+	it("AI factions at peace do not fight each other", () => {
+		jest.spyOn(Math, "random").mockReturnValue(0);
+
+		// No declareWar call — should remain peaceful
+		makeUnit("r1", "reclaimers", { x: 0, y: 0, z: 0 });
+		makeUnit("v1", "volt_collective", { x: 1, y: 0, z: 0 });
+
+		combatSystem();
+		expect(getLastCombatEvents()).toHaveLength(0);
+	});
+
+	it("AI factions of the same faction do not fight each other", () => {
+		jest.spyOn(Math, "random").mockReturnValue(0);
+
+		declareWar("reclaimers", "volt_collective"); // irrelevant pair
+		makeUnit("r1", "reclaimers", { x: 0, y: 0, z: 0 });
+		makeUnit("r2", "reclaimers", { x: 1, y: 0, z: 0 });
+
+		combatSystem();
+		expect(getLastCombatEvents()).toHaveLength(0);
+	});
+
+	it("war declaration between A and B does not cause A to fight C", () => {
+		jest.spyOn(Math, "random").mockReturnValue(0);
+
+		declareWar("reclaimers", "volt_collective");
+		// signal_choir is NOT at war with reclaimers
+		makeUnit("r1", "reclaimers", { x: 0, y: 0, z: 0 });
+		makeUnit("s1", "signal_choir", { x: 1, y: 0, z: 0 });
+
+		combatSystem();
+		expect(getLastCombatEvents()).toHaveLength(0);
+	});
+
+	it("player-vs-AI faction combat works after war declaration", () => {
+		jest.spyOn(Math, "random").mockReturnValue(0);
+
+		declareWar("player", "iron_creed");
+		// Player is passive (never initiates), but iron_creed is now at war
+		// and will initiate against the player.
+		makeUnit("ic1", "iron_creed", { x: 0, y: 0, z: 0 });
+		makePlayer("p1", { x: 1, y: 0, z: 0 });
+
+		combatSystem();
+		const events = getLastCombatEvents();
+
+		// iron_creed should attack the player
+		const icAttacks = events.filter((e) => e.attackerId === "ic1");
+		expect(icAttacks.length).toBeGreaterThanOrEqual(1);
+	});
+
+	it("three-way war: each pair declared independently", () => {
+		jest.spyOn(Math, "random").mockReturnValue(0);
+
+		declareWar("reclaimers", "volt_collective");
+		declareWar("volt_collective", "signal_choir");
+		// reclaimers and signal_choir are NOT at war with each other
+
+		makeUnit("r1", "reclaimers", { x: 0, y: 0, z: 0 });
+		makeUnit("v1", "volt_collective", { x: 1, y: 0, z: 0 });
+		// Place signal_choir far from reclaimers (> melee range) but in range of volt_collective
+		makeUnit("s1", "signal_choir", { x: 2, y: 0, z: 0 });
+
+		combatSystem();
+		const events = getLastCombatEvents();
+
+		// volt_collective is at war with both reclaimers and signal_choir
+		// reclaimers <-> volt_collective: both at x=0 and x=1, dist=1 < 2.5 → engage
+		// volt_collective <-> signal_choir: dist=1 < 2.5 → engage
+		// reclaimers <-> signal_choir: NOT at war → no fight
+		const r1_attacks = events.filter((e) => e.attackerId === "r1");
+		const reclaimers_vs_signal = events.filter(
+			(e) =>
+				(e.attackerId === "r1" && e.targetId === "s1") ||
+				(e.attackerId === "s1" && e.targetId === "r1"),
+		);
+
+		// reclaimers should attack volt_collective (declared war)
+		expect(r1_attacks.some((e) => e.targetId === "v1")).toBe(true);
+		// signal_choir may retaliate against volt_collective but NOT attack reclaimers
+		expect(reclaimers_vs_signal).toHaveLength(0);
+	});
+
+	it("feral still attacks AI faction units (feral is always hostile)", () => {
+		jest.spyOn(Math, "random").mockReturnValue(0);
+
+		makeFeral("f1", { x: 0, y: 0, z: 0 });
+		makeUnit("r1", "reclaimers", { x: 1, y: 0, z: 0 });
+
+		combatSystem();
+		const events = getLastCombatEvents();
+
+		const feralAttacks = events.filter((e) => e.attackerId === "f1");
+		expect(feralAttacks.length).toBeGreaterThanOrEqual(1);
+	});
+
+	it("feral attacks signal_choir, iron_creed, volt_collective units (no war needed)", () => {
+		jest.spyOn(Math, "random").mockReturnValue(0);
+
+		const aiFactions: FactionId[] = [
+			"signal_choir",
+			"iron_creed",
+			"volt_collective",
+		];
+		for (const faction of aiFactions) {
+			// Each test isolated by position — use 50-unit offsets to avoid range overlap
+			const offset = aiFactions.indexOf(faction) * 50;
+			makeUnit(`feral_${faction}`, "feral", {
+				x: offset,
+				y: 0,
+				z: 0,
+			});
+			makeUnit(`ai_${faction}`, faction, {
+				x: offset + 1,
+				y: 0,
+				z: 0,
+			});
+		}
+
+		combatSystem();
+		const events = getLastCombatEvents();
+
+		// One attack pair per faction (feral + retaliation)
+		for (const faction of aiFactions) {
+			const feralId = `feral_${faction}`;
+			const feralAttacks = events.filter((e) => e.attackerId === feralId);
+			expect(feralAttacks.length).toBeGreaterThanOrEqual(1);
+		}
+	});
+
+	it("damage system breaks components on any hostile faction pair", () => {
+		jest.spyOn(Math, "random").mockReturnValue(0);
+
+		declareWar("reclaimers", "iron_creed");
+
+		const reclaimerUnit = makeUnit("r1", "reclaimers", { x: 0, y: 0, z: 0 });
+		const ironCreedUnit = makeUnit("ic1", "iron_creed", { x: 1, y: 0, z: 0 });
+
+		const rFunctionalBefore = reclaimerUnit.unit!.components.filter(
+			(c) => c.functional,
+		).length;
+		const icFunctionalBefore = ironCreedUnit.unit!.components.filter(
+			(c) => c.functional,
+		).length;
+
+		combatSystem();
+
+		const rFunctionalAfter = reclaimerUnit.unit!.components.filter(
+			(c) => c.functional,
+		).length;
+		const icFunctionalAfter = ironCreedUnit.unit!.components.filter(
+			(c) => c.functional,
+		).length;
+
+		// At least one side should have taken damage
+		const totalDamageTaken =
+			rFunctionalBefore -
+			rFunctionalAfter +
+			(icFunctionalBefore - icFunctionalAfter);
+		expect(totalDamageTaken).toBeGreaterThanOrEqual(1);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// resetCombat
+// ---------------------------------------------------------------------------
+
+describe("combat — resetCombat", () => {
+	it("clears war declarations", () => {
+		declareWar("reclaimers", "volt_collective");
+		expect(areAtWar("reclaimers", "volt_collective")).toBe(true);
+
+		resetCombat();
+
+		expect(areAtWar("reclaimers", "volt_collective")).toBe(false);
+	});
+
+	it("clears lastCombatEvents", () => {
+		jest.spyOn(Math, "random").mockReturnValue(0);
+
+		makeFeral("f1", { x: 0, y: 0, z: 0 });
+		makePlayer("p1", { x: 1, y: 0, z: 0 });
+
+		combatSystem();
+		expect(getLastCombatEvents().length).toBeGreaterThan(0);
+
+		resetCombat();
+
+		expect(getLastCombatEvents()).toEqual([]);
+	});
+
+	it("AI factions no longer fight after resetCombat clears their war", () => {
+		jest.spyOn(Math, "random").mockReturnValue(0);
+
+		declareWar("reclaimers", "volt_collective");
+		resetCombat();
+
+		makeUnit("r1", "reclaimers", { x: 0, y: 0, z: 0 });
+		makeUnit("v1", "volt_collective", { x: 1, y: 0, z: 0 });
+
+		combatSystem();
+		expect(getLastCombatEvents()).toHaveLength(0);
+	});
+
+	it("new war declarations work normally after reset", () => {
+		jest.spyOn(Math, "random").mockReturnValue(0);
+
+		declareWar("reclaimers", "volt_collective");
+		resetCombat();
+
+		// Re-declare after reset
+		declareWar("signal_choir", "iron_creed");
+		expect(areAtWar("signal_choir", "iron_creed")).toBe(true);
+		expect(areAtWar("reclaimers", "volt_collective")).toBe(false);
 	});
 });

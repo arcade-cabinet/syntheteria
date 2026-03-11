@@ -195,10 +195,22 @@ export interface AutomationComponent {
 	workTarget: string | null;
 }
 
+/** All recognised faction identifiers. AI civilizations use the four named factions. */
+export type FactionId =
+	| "player"
+	| "reclaimers"
+	| "volt_collective"
+	| "signal_choir"
+	| "iron_creed"
+	| "feral"
+	| "cultist"
+	| "rogue"
+	| "wildlife";
+
 export interface Entity {
 	// Identity
 	id: string;
-	faction: "player" | "cultist" | "rogue" | "feral" | "wildlife";
+	faction: FactionId;
 
 	// Continuous 3D position (single source of truth)
 	worldPosition?: Vec3;

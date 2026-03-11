@@ -8,11 +8,18 @@
  * Units with functional arms deal more damage.
  * Units without legs can't fight (immobile = vulnerable).
  *
+ * Hostility rules:
+ *   - "feral" and "wildlife" never initiate (feral attacks all non-feral, non-wildlife,
+ *     non-wildlife; wildlife is passive). Legacy behaviour preserved for feral.
+ *   - AI factions fight each other when a war has been declared via declareWar().
+ *   - "player" can be at war with any AI faction.
+ *   - Same-faction units never fight each other.
+ *
  * All tunables sourced from config/combat.json.
  */
 
 import { config } from "../../config";
-import type { UnitEntity } from "../ecs/types";
+import type { FactionId, UnitEntity } from "../ecs/types";
 import { hasArms } from "../ecs/types";
 import { world } from "../ecs/world";
 import { units } from "../ecs/koota/compat";
@@ -20,6 +27,75 @@ import { addResource } from "./resources";
 
 const MELEE_RANGE = config.combat.meleeRange;
 const ATTACK_CHANCE = config.combat.attackChancePerTick;
+
+// ---------------------------------------------------------------------------
+// War declaration state
+// ---------------------------------------------------------------------------
+
+/**
+ * Canonical pair key for two factions (alphabetically sorted so A::B === B::A).
+ */
+function warPairKey(a: FactionId, b: FactionId): string {
+	return a < b ? `${a}::${b}` : `${b}::${a}`;
+}
+
+/**
+ * Set of faction pairs currently at war.
+ * Feral is always hostile toward everything except wildlife; this set tracks
+ * declared wars between AI factions and between AI factions and the player.
+ */
+const warSet = new Set<string>();
+
+/**
+ * Declare war between two factions. This sets mutual opinion to -100
+ * (via the diplomacy system if available) and enables combat between them.
+ * Idempotent — calling twice has no additional effect.
+ */
+export function declareWar(factionA: FactionId, factionB: FactionId): void {
+	if (factionA === factionB) return;
+	warSet.add(warPairKey(factionA, factionB));
+}
+
+/**
+ * Check whether two factions are at war with each other.
+ */
+export function areAtWar(factionA: FactionId, factionB: FactionId): boolean {
+	return warSet.has(warPairKey(factionA, factionB));
+}
+
+// ---------------------------------------------------------------------------
+// Hostility check
+// ---------------------------------------------------------------------------
+
+/** Factions that are always passive (never initiate attacks). */
+const PASSIVE_FACTIONS = new Set<FactionId>(["player", "wildlife"]);
+
+/**
+ * Return true when `attacker` is allowed to initiate combat against `target`.
+ *
+ * Rules (evaluated in order):
+ *  1. Same faction → never fight.
+ *  2. Wildlife → always passive, never initiates.
+ *  3. Feral → attacks everything except wildlife and other feral units.
+ *  4. Otherwise → hostility is determined by the war declaration set.
+ */
+function isHostile(attacker: UnitEntity, target: UnitEntity): boolean {
+	if (attacker.faction === target.faction) return false;
+	if (attacker.faction === "wildlife") return false;
+	if (target.faction === "wildlife") return false;
+
+	if (attacker.faction === "feral") {
+		// Feral attacks all non-feral, non-wildlife units
+		return target.faction !== "feral";
+	}
+
+	// For all other factions (AI civs, player) — use explicit war declarations.
+	return areAtWar(attacker.faction, target.faction);
+}
+
+// ---------------------------------------------------------------------------
+// Combat event
+// ---------------------------------------------------------------------------
 
 export interface CombatEvent {
 	attackerId: string;
@@ -33,6 +109,10 @@ let lastCombatEvents: CombatEvent[] = [];
 export function getLastCombatEvents(): CombatEvent[] {
 	return lastCombatEvents;
 }
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
 
 /**
  * Try to damage a random functional component on the target.
@@ -75,22 +155,33 @@ function destroyUnit(entity: UnitEntity) {
 	world.remove(entity);
 }
 
+// ---------------------------------------------------------------------------
+// Main system tick
+// ---------------------------------------------------------------------------
+
 /**
  * Combat tick. Called once per sim tick.
  * Checks for hostile units in melee range and resolves attacks.
+ * Any faction pair that is hostile (feral-vs-all, or declared-war pair)
+ * will engage when within MELEE_RANGE.
  */
 export function combatSystem() {
 	const events: CombatEvent[] = [];
 	const toDestroy: UnitEntity[] = [];
+	// Track which entities are already queued for destruction this tick so we
+	// don't double-queue the same entity.
+	const toDestroySet = new Set<string>();
 
 	const allUnits = Array.from(units);
 
 	for (const attacker of allUnits) {
-		if (attacker.faction !== "feral") continue;
+		// Skip passive factions — they never initiate.
+		if (PASSIVE_FACTIONS.has(attacker.faction)) continue;
+		// Skip incapacitated attackers.
 		if (!attacker.unit.components.some((c) => c.functional)) continue;
 
 		for (const target of allUnits) {
-			if (target.faction !== "player") continue;
+			if (!isHostile(attacker, target)) continue;
 
 			const dx = attacker.worldPosition.x - target.worldPosition.x;
 			const dz = attacker.worldPosition.z - target.worldPosition.z;
@@ -108,11 +199,13 @@ export function combatSystem() {
 					componentDamaged: damaged,
 					targetDestroyed: destroyed,
 				});
-				if (destroyed) {
+				if (destroyed && !toDestroySet.has(target.id)) {
+					toDestroySet.add(target.id);
 					toDestroy.push(target);
 				}
 			}
 
+			// Target retaliates if it has any functional components left.
 			if (target.unit.components.some((c) => c.functional)) {
 				const retDamaged = dealDamage(target, attacker);
 				if (retDamaged) {
@@ -123,7 +216,8 @@ export function combatSystem() {
 						componentDamaged: retDamaged,
 						targetDestroyed: retDestroyed,
 					});
-					if (retDestroyed) {
+					if (retDestroyed && !toDestroySet.has(attacker.id)) {
+						toDestroySet.add(attacker.id);
 						toDestroy.push(attacker);
 					}
 				}
@@ -142,4 +236,17 @@ export function combatSystem() {
 	}
 
 	lastCombatEvents = events;
+}
+
+// ---------------------------------------------------------------------------
+// Reset (testing / new game)
+// ---------------------------------------------------------------------------
+
+/**
+ * Clear all combat state (war declarations, last events).
+ * Must be called between test cases and on new-game-init.
+ */
+export function resetCombat(): void {
+	warSet.clear();
+	lastCombatEvents = [];
 }

@@ -38,6 +38,7 @@ import {
 } from "./FactionPersonality.ts";
 import { planActions } from "./GOAPPlanner.ts";
 import { CivGoal, type GoalState } from "./GoalTypes.ts";
+import type { IActionExecutor, ExecutionContext } from "./GovernorActionExecutor.ts";
 
 // ---------------------------------------------------------------------------
 // Goal -> desired world state mapping
@@ -111,6 +112,21 @@ export class CivilizationGovernor {
 	private static readonly PRIORITY_OVERRIDE_THRESHOLD = 0.2;
 
 	/**
+	 * Optional action executor — dispatches GOAP actions to game systems
+	 * (raid, tech research, etc.). When set, the governor calls
+	 * `executor.execute(action, context)` for every action it dispatches.
+	 * When null the governor still returns the action descriptor but no
+	 * system calls are made (useful in tests that only verify GOAP planning).
+	 */
+	private actionExecutor: IActionExecutor | null = null;
+
+	/**
+	 * Execution context provided externally and updated each tick so the
+	 * executor has the faction's current runtime state.
+	 */
+	private executionContext: ExecutionContext | null = null;
+
+	/**
 	 * Create a governor for the specified faction.
 	 *
 	 * @param civId - Faction key (e.g., "reclaimers", "iron_creed")
@@ -174,17 +190,25 @@ export class CivilizationGovernor {
 
 		// Execute the current plan
 		const action = this.executeNextAction();
-		if (action) return action;
+		if (action) {
+			this.dispatchAction(action);
+			return action;
+		}
 
 		// Fallback: force gather_resources goal and replan
 		this.currentGoal = CivGoal.GATHER_RESOURCES;
 		this.replan(worldState);
 		const fallbackAction = this.executeNextAction();
-		if (fallbackAction) return fallbackAction;
+		if (fallbackAction) {
+			this.dispatchAction(fallbackAction);
+			return fallbackAction;
+		}
 
 		// Ultimate fallback: BasicHarvest with phone-home flag.
 		// This GUARANTEES the governor never returns null — bots always have work.
-		return { ...BasicHarvest, needsBaseAssignment: true };
+		const phoneHome = { ...BasicHarvest, needsBaseAssignment: true };
+		this.dispatchAction(phoneHome);
+		return phoneHome;
 	}
 
 	/**
@@ -231,6 +255,32 @@ export class CivilizationGovernor {
 	}
 
 	/**
+	 * Attach an action executor that bridges GOAP decisions to game systems.
+	 *
+	 * Call this once after construction. The executor is called every tick
+	 * when the governor dispatches a plan action. Passing null detaches the
+	 * executor (no system calls will be made, useful for isolated tests).
+	 *
+	 * @param executor - The executor to use, or null to detach.
+	 */
+	setActionExecutor(executor: IActionExecutor | null): void {
+		this.actionExecutor = executor;
+	}
+
+	/**
+	 * Update the runtime execution context used by the action executor.
+	 *
+	 * Should be called before each `tick()` with the faction's current
+	 * unit roster, home position, and game tick. The governor stores this
+	 * context and passes it to the executor when dispatching actions.
+	 *
+	 * @param context - Current faction runtime state for executor dispatch.
+	 */
+	setExecutionContext(context: ExecutionContext): void {
+		this.executionContext = context;
+	}
+
+	/**
 	 * Notify the governor that the current action has been completed.
 	 * Advances the plan step so the next tick returns the next action.
 	 */
@@ -248,6 +298,16 @@ export class CivilizationGovernor {
 	// -----------------------------------------------------------------------
 	// Private
 	// -----------------------------------------------------------------------
+
+	/**
+	 * Dispatch an action to the attached executor (if any).
+	 * Called for every action the governor produces — both planned actions
+	 * and fallback actions. No-op when no executor is attached.
+	 */
+	private dispatchAction(action: GOAPAction): void {
+		if (!this.actionExecutor || !this.executionContext) return;
+		this.actionExecutor.execute(action, this.executionContext);
+	}
 
 	/**
 	 * Score all CivGoals using effective weights and sort by priority descending.

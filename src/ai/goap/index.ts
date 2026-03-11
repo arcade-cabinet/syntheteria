@@ -37,6 +37,12 @@ export {
 } from "./ActionTypes.ts";
 // Governor
 export { CivilizationGovernor } from "./CivilizationGovernor.ts";
+// Action executor — bridges GOAP decisions to game systems
+export {
+	GovernorActionExecutor,
+	type ExecutionContext,
+	type IActionExecutor,
+} from "./GovernorActionExecutor.ts";
 // Faction personality
 export {
 	applySituationalModifiers,

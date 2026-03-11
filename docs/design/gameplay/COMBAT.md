@@ -4,6 +4,7 @@
 
 **See also:**
 - `docs/design/gameplay/OVERVIEW.md` — eXterminate pillar summary
+- `docs/design/gameplay/AUDIO.md` — combat SFX (metal impact, damage, laser shot, combat impact), alert sound, adaptive music combat and raid layers
 - `docs/design/gameplay/MATERIALS.md` — cube values and economy context
 - `docs/design/gameplay/VICTORY.md` — Domination and Survival victory conditions
 - `docs/design/agents/GOVERNORS.md` — AI decision-making for when to attack

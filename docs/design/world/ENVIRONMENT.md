@@ -2,6 +2,8 @@
 
 **Authoritative reference for weather, terrain, biomes, and environmental hazards.**
 
+See also: `docs/design/gameplay/AUDIO.md` — storm ambience layers, biome soundscapes, lightning sound triggers, sinkhole warning rumble.
+
 ---
 
 ## Design Philosophy
@@ -419,6 +421,8 @@ Two water types serve as terrain boundaries:
 
 ### Faction Biome Preferences
 
+Each faction has a preferred starting biome based on its economic and strategic strengths. See `RACES.md` for full faction profiles. Preference data is also stored in `config/biomes.json` under `factionBiomePreferences`.
+
 | Faction | Preferred Biome | Reason |
 |---------|----------------|--------|
 | Reclaimers | Rust Plains | Scrap abundance, easy logistics |
@@ -561,19 +565,7 @@ Bridges can be destroyed by targeting their support columns. Destroyed bridges c
 
 ## Alien Native Territories
 
-Alien natives occupy biome regions before colonists arrive. Expanding into native territory forces the trade/fight/integrate decision.
-
-| Biome | Native Presence | Village Density | Unique Resource |
-|-------|----------------|----------------|-----------------|
-| Rust Plains | Low | 1 per 50x50 area | Corroded Circuits |
-| Scrap Hills | Medium | 1 per 40x40 area | Deep Slag Crystals |
-| Chrome Ridge | High | 1 per 30x30 area | Resonance Ore |
-| Signal Plateau | Very High | 1 per 25x25 area | Signal Roots |
-| Cable Forest | Medium | 1 per 35x35 area | Living Wire |
-
-**Territory radius:** Each village claims a 15m radius. Building within this radius triggers hostility escalation (Wary -> Hostile) unless allied.
-
-**Colonization tension:** The richest biomes (Chrome Ridge, Signal Plateau) have the highest native density. Expanding into them means investing in native relations (trade quests, time) or fighting through (fast, but permanently locks out integration victory and unique resources for that village).
+Native presence per biome is documented in `ALIENS.md` (Section: Hive Tiers, Placement). Summary data is also stored in `config/biomes.json` under `alienNativeTerritories`. See `ALIENS.md` for full hive tier progression, territory radius, hostility escalation, and the colonization tension dynamic.
 
 ---
 
@@ -625,15 +617,13 @@ sinkholeProbability = max(0, (miningDensityIn10m - 20) * 0.001) per tick
 
 All values in this document are driven by JSON configuration files. Changing balance never requires code changes.
 
-| Config File | Contents |
-|-------------|----------|
-| `config/biomes.json` | Biome definitions, terrain mechanics, processing cycles, weather states, transition weights, hazards, bridges, alien territories, weather-biome interactions, storm intensity params, forecasting accuracy, shipment effects |
+### Primary Config: `config/biomes.json`
 
-The `biomes.json` file is the single source of truth for all environment system tuning. It contains:
+The single source of truth for all environment system tuning. Contains:
 
 - `biomes.*` -- per-biome modifier tables (movement, harvest, visibility, signal, lightning, resources, features)
 - `weatherStates.*` -- per-weather modifier tables (all 5 states with full numeric values)
-- `weatherTransitions.*` -- Markov chain weight matrix
+- `weatherTransitions.*` -- Markov chain weight matrix (uses decimal probabilities: 0.4, 0.35...)
 - `stormIntensity.*` -- ramp/decay rates, check intervals
 - `weatherForecasting.*` -- accuracy per forecast distance
 - `weatherShipmentEffects.*` -- patron shipment behavior per weather
@@ -646,3 +636,26 @@ The `biomes.json` file is the single source of truth for all environment system 
 - `cycleProgression[]` -- timeline of which cycles appear at which game time
 - `factionBiomePreferences.*` -- AI governor biome targeting
 - `alienNativeTerritories.*` -- native presence and unique resources per biome
+
+### Additional Config Files
+
+| Config File | Contents | Relationship |
+|-------------|----------|-------------|
+| `config/weather.json` | Weather states, transition weights, storm intensity, forecast accuracy, acid rain | **Partially overlaps** `biomes.json`. Code (`weatherSystem.ts`) imports from `weather.json`. Uses integer weights (40, 35...) vs biomes.json decimals (0.4, 0.35...) -- semantically equivalent. |
+| `config/terrain.json` | World size, water level, height layers, walk costs, biome colors | Terrain generation params. Uses short biome names ("foundry", "slag", "cable", "processor") -- 4 biomes vs 7 in `biomes.json`. |
+| `config/environmentHazards.json` | Hazard types (radiation_zone, toxic_spill, unstable_ground, magnetic_anomaly, scrap_storm) | **Different hazard set** from this document (acid_pool, thermal_vent, rubble_field, sinkhole). Needs reconciliation. |
+
+### Code References
+
+| Source File | Purpose | Config Source |
+|-------------|---------|--------------|
+| `src/systems/weatherSystem.ts` | Weather state machine, transitions, forecast | `config/weather.json` |
+| `src/systems/biomeSystem.ts` | Biome modifiers, grid lookup, pathfinding | **Hardcoded** (does not import from `config/biomes.json`) |
+| `src/ecs/terrain.ts` | Procedural terrain heightfield, fog of war | `config/terrain.json` |
+
+### Known Config Discrepancies
+
+1. **Weather data duplication:** `config/weather.json` and `config/biomes.json` both define weather states and transition weights. `weatherSystem.ts` reads from `weather.json`.
+2. **Hazard mismatch:** `config/environmentHazards.json` defines 5 hazard types (radiation_zone, toxic_spill, unstable_ground, magnetic_anomaly, scrap_storm). This document and `config/biomes.json` define 4 different hazards (acid_pool, thermal_vent, rubble_field, sinkhole) plus magnetic_anomaly (shared). Needs unification.
+3. **Biome naming:** `config/terrain.json` uses 4 short names (foundry, slag, cable, processor). `config/biomes.json` uses 7 entries with both `displayName` and `loreName`. `biomeSystem.ts` hardcodes 6 entries matching `biomes.json` keys.
+4. **biomeSystem.ts is not config-driven:** Biome modifiers are hardcoded in code rather than loaded from `config/biomes.json`. Should be migrated to config-driven.

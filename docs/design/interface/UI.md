@@ -4,6 +4,8 @@
 **Date:** 2026-03-11
 **Scope:** Complete UI/UX specification covering aesthetic philosophy, design system, every screen from title through gameplay, and accessibility requirements.
 
+See also: `docs/design/gameplay/AUDIO.md` — UI beep, alert sound, AudioSettingsPanel (volume sliders), audio bus defaults, raid alert audio treatment.
+
 ---
 
 ## 1. UI Philosophy

@@ -12,6 +12,7 @@ What the player DOES. Core loop, economy, combat, progression, win conditions.
 | `COMBAT.md` | FPS combat, bot armies, hacking, raids, defense, turrets | Damage model (config-verified), hack mechanics, raid behavior state machine, siege warfare, alien natives, ancient machines. Contains Section 14 formula reference. |
 | `PROGRESSION.md` | Tech tree (5 tiers), unlock paths, difficulty curve, research mechanics | Tier breakdown, research costs, unlock dependencies, 5-act journey pacing. Cross-references config/technology.json explicitly. |
 | `VICTORY.md` | 8 victory conditions, 3-act pacing, storm progression, counter-play | Colonial, Domination, Economic, Technology, Diplomatic, Integration, Survival, Story. Contains all AI governor evaluator formulas, Victory Progress Panel spec. |
+| `AUDIO.md` | Complete audio design reference | Bus architecture, SFX library (all game sounds), biome soundscapes, storm ambience layers, adaptive music states, quality tiers, config values, known gaps. |
 
 ## Config Files
 
@@ -28,6 +29,7 @@ These JSON files control gameplay balance — docs reference them but don't dupl
 | `config/economy.json` | Wealth brackets, trade rates |
 | `config/quests.json` | Quest progression, otter dialogue |
 | `config/victory.json` | Victory condition thresholds, hold durations, storm phases, tiebreaker order |
+| `config/audio.json` | Volume levels, SFX synthesis parameters, quality tier feature flags |
 
 ## Canonical Authority
 
@@ -39,6 +41,8 @@ These JSON files control gameplay balance — docs reference them but don't dupl
 | Victory thresholds? | VICTORY.md + config/victory.json |
 | Tech tree structure? | PROGRESSION.md + config/technology.json |
 | Compression timings? | config/furnace.json compression.configs |
+| Audio SFX parameters? | AUDIO.md Section 10 + config/audio.json |
+| What sounds exist and where are they? | AUDIO.md Section 11 (source file map) |
 
 ## Cross-References
 
@@ -46,3 +50,5 @@ These JSON files control gameplay balance — docs reference them but don't dupl
 - For open/unresolved design questions: `docs/design/OPEN_QUESTIONS.md`
 - For combat damage formulas and hacking math: `COMBAT.md` Section 14
 - For material economy formulas: `MATERIALS.md` and `docs/technical/CORE_FORMULAS.md` (note: CORE_FORMULAS.md has gaps flagged in OPEN_QUESTIONS.md)
+- For storm sound behavior: `AUDIO.md` Section 5.2 (storm ambience) and `docs/design/world/ENVIRONMENT.md` (storm system mechanics)
+- For biome sound identity: `AUDIO.md` Section 5.1 (biome ambience table)

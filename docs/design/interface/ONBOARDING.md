@@ -3,6 +3,8 @@
 **Status:** Active
 **Scope:** New player experience from first boot to self-sufficient base -- the emotional arc of "I'm broken, I can harvest, I can build, I have power"
 
+**See also:** `docs/design/gameplay/OVERVIEW.md` §Holographic Projections and §The Colonization Model (otter lore), `docs/design/gameplay/MECHANICS.md` §Core Loop (mechanics the tutorial teaches), `docs/design/interface/UI.md` §5.5 (QuestPanel component), `docs/design/interface/INTERACTION.md` §6 (actions the tutorial introduces)
+
 ---
 
 ## 1. Onboarding Philosophy

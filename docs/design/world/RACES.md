@@ -3,8 +3,10 @@
 > **Canonical document** for all faction, lore, and narrative design.
 > Supersedes: `GDD-007-race-design.md`, `007-lore-and-narrative.md`, `CONSCIOUSNESS_MODEL.md`, `DRONES.md`.
 >
-> See also: `docs/design/world/VISUAL_IDENTITY.md` — consolidated visual identity
-> reference (faction aesthetics, PBR specs, shader details, cube material visuals).
+> See also:
+> - `docs/design/world/VISUAL_IDENTITY.md` — consolidated visual identity reference (faction aesthetics, PBR specs, shader details, cube material visuals)
+> - `docs/design/agents/GOVERNORS.md` — GOAP governor implementation: how `governorBias` weights translate to goal priorities, situational modifiers, action executor, and per-act pacing (§4-§10)
+> - `docs/design/agents/BOTS.md` — Bot FSM states, steering behaviors, formation movement, unique unit stats
 
 ---
 

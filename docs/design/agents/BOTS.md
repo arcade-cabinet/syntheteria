@@ -2,7 +2,12 @@
 
 The authoritative design document for all bot/unit systems in Syntheteria. Covers philosophy, types, faction visuals, procedural generation, crafting, power, AI steering, brain states, repair, and formations.
 
-**References:** `config/combat.json` (botTypes, factionUniqueUnits, veterancy), `config/furnace.json` (bot chassis recipes), `config/units.json` (movement, components), `config/civilizations.json` (faction profiles)
+**References:** `config/combat.json` (botTypes, factionUniqueUnits, veterancy), `config/furnace.json` (bot chassis recipes), `config/units.json` (movement, components), `config/civilizations.json` (faction profiles), `config/botMovement.json` (Yuka Vehicle physics)
+
+**See also:**
+- `docs/design/world/RACES.md` — Faction lore, visual identity tables, unique units, military doctrines
+- `docs/design/gameplay/COMBAT.md` §4 — Full bot stat blocks, unit counter matrix, TTK analysis, squad AI behavior
+- `docs/design/gameplay/COMBAT.md` §5 — Hacking mechanics (compute cost, faction modifiers, hack outcomes)
 
 ---
 
@@ -16,13 +21,13 @@ In practice this means:
 
 - **Furnace crafting** produces bot chassis from physical cubes. A `battle_bot_chassis` recipe consumes 6 scrap iron, 2 copper, and 1 silicon cube. The furnace output is a living entity.
 - **Faction-specific procedural generation** gives each chassis a unique visual identity based on race materials, head style, locomotion, and wear level. Two battle bots from different factions look and feel completely different.
-- **Dynamic resource calculation** -- power draw and compute cost scale with what the bot weighs, what it is doing, and how autonomously it operates.
-- **Repair vs. replace** -- damaged bots can be repaired with cubes (cheaper, keeps veterancy), or scrapped and rebuilt from scratch (expensive, resets to rookie). The tradeoff is always present.
-- **Maximum freedom** -- the system does not impose hard roles. A worker bot can fight (badly). A scout can carry a cube (slowly). Roles are preferences, not constraints.
+- **Dynamic resource calculation** — power draw and compute cost scale with what the bot weighs, what it is doing, and how autonomously it operates.
+- **Repair vs. replace** — damaged bots can be repaired with cubes (cheaper, keeps veterancy), or scrapped and rebuilt from scratch (expensive, resets to rookie). The tradeoff is always present.
+- **Maximum freedom** — the system does not impose hard roles. A worker bot can fight (badly). A scout can carry a cube (slowly). Roles are preferences, not constraints.
 
 ### Starting Conditions
 
-You awaken as a broken robot on a machine planet. Your first task is to assess damaged machines scattered across the terrain -- some with cameras, some mobile, all needing repair. Fabrication units sit unpowered nearby. Get power flowing, repair what you can, then begin building from scratch.
+You awaken as a broken robot on a machine planet. Your first task is to assess damaged machines scattered across the terrain — some with cameras, some mobile, all needing repair. Fabrication units sit unpowered nearby. Get power flowing, repair what you can, then begin building from scratch.
 
 ---
 
@@ -32,12 +37,12 @@ Six bot types are produced via furnace recipes. Stats from `config/combat.json >
 
 | Type | HP | Damage | Speed | Armor | Role | Tech Tier |
 |------|---:|-------:|------:|------:|------|-----------|
-| **Worker** | 80 | 4 | 5.0 | 10 | Economy -- harvest, carry, build, repair | 3 (Silicon & Carbon) |
-| **Scout** | 60 | 5 | 7.0 | 0 | Reconnaissance -- 2x perception range, 180-degree FOV | 3 |
-| **Soldier** | 100 | 8 | 5.0 | 15 | Combat -- standard infantry, takes cover | 3 |
-| **Heavy** | 200 | 15 (+5 AoE) | 3.0 | 40 | Siege -- deploys into immobile 2x damage mode | 4 (Titanium) |
-| **Hacker** | 50 | 3 | 5.5 | 5 | Support -- hacks enemy bots and buildings | 4 |
-| **Titan** | 500 | 25 (+10 AoE) | 2.5 | 60 | Endgame siege -- unhackable, self-repairing, 3 wall-hits to breach | 5 (Endgame) |
+| **Worker** | 80 | 4 | 5.0 | 10 | Economy — harvest, carry, build, repair | 3 (Silicon & Carbon) |
+| **Scout** | 60 | 5 | 7.0 | 0 | Reconnaissance — 2x perception range, 180-degree FOV | 3 |
+| **Soldier** | 100 | 8 | 5.0 | 15 | Combat — standard infantry, takes cover | 3 |
+| **Heavy** | 200 | 15 (+5 AoE) | 3.0 | 40 | Siege — deploys into immobile 2x damage mode | 4 (Titanium) |
+| **Hacker** | 50 | 3 | 5.5 | 5 | Support — hacks enemy bots and buildings | 4 |
+| **Titan** | 500 | 25 (+10 AoE) | 2.5 | 60 | Endgame siege — unhackable, self-repairing, 3 wall-hits to breach | 5 (Endgame) |
 
 ### Faction Unique Units
 
@@ -49,6 +54,8 @@ Each race has one unique bot unlocked via patron blueprints:
 | **Shock Trooper** | Volt Collective | 120 | 4.0 | Lightning chain attack (5 AoE, 3m radius) |
 | **Infiltrator** | Signal Choir | 50 | 6.0 | 30-second cloak, hacks while cloaked |
 | **Bastion** | Iron Creed | 160 | 2.5 / 0 | Deploys into stationary turret (8 dmg mobile, 15 deployed) |
+
+Full stat blocks for all bot types are in `docs/design/gameplay/COMBAT.md` §4.1.
 
 ### Veterancy
 
@@ -65,43 +72,39 @@ Bots gain veterancy through combat kills. Veterancy persists through repairs but
 
 ## 3. Faction Visual Identity
 
-Each civilization has a distinct material palette, bot anatomy, and building aesthetic. Visual config lives in `config/civilizations.json` (faction visuals section).
+Each civilization has a distinct material palette, bot anatomy, and building aesthetic. Visual config lives in `config/civilizations.json` (faction visuals section). Full per-faction tables are in `docs/design/world/RACES.md` §Visual Identity.
 
 ### 3.1 Reclaimers
 
 - **Primary:** Rusted iron (metalness 0.7, roughness 0.85, heavy rust wear)
 - **Accent:** Oxidized copper (patina green)
 - **Emissive:** `#00ffaa`
-- **Bot style:** Visor head, crane arms, treads, wear level 0.6
-- **Buildings:** 4 pipes, 2 chimneys, medium panel complexity
-- **Feel:** Scavengers. Everything looks salvaged, repaired, jury-rigged.
+- **Bot style:** Dome sensor head, crane arms, treads, wear level 0.4-0.6
+- **Distinguishing feature:** No two units look identical — mismatched panels, patchwork coloring
 
 ### 3.2 Volt Collective
 
 - **Primary:** Chrome (metalness 1.0, roughness 0.08, clean reflective)
-- **Accent:** Heat-blued titanium (purple-blue tint)
-- **Emissive:** `#ffaa00`
-- **Bot style:** Turret head, piston arms, biped legs, wear level 0.2
-- **Buildings:** 1 pipe, no chimneys, high panel complexity
-- **Feel:** Sleek aggressors. Chrome and heat. Lightning-fast, dangerous.
+- **Accent:** Heat-blued titanium (electric blue tint)
+- **Emissive:** `#4169E1` with `#FF4500` accents
+- **Bot style:** Visor head, probe arms, hover locomotion, wear level 0.2
+- **Distinguishing feature:** Visible electrical arcs between body panels; units crackle during Overcharge
 
 ### 3.3 Signal Choir
 
 - **Primary:** Anodized aluminum (metalness 0.8, roughness 0.2, lightweight)
 - **Accent:** Matte carbon (non-reflective)
-- **Emissive:** `#aa44ff`
-- **Bot style:** Dome head, articulated arms, hover locomotion, wear level 0.1
-- **Buildings:** No pipes, no chimneys, maximum panel complexity
-- **Feel:** Hive-mind. Clean, precise, alien. Everything floats.
+- **Emissive:** `#9370DB` with `#00CED1` data traces
+- **Bot style:** Antenna cluster head, tendril arms, spider legs, wear level 0.1
+- **Distinguishing feature:** Visible data stream lines connecting nearby units; surfaces shimmer
 
 ### 3.4 Iron Creed
 
 - **Primary:** Brushed steel (metalness 0.9, roughness 0.3, clean panels)
-- **Accent:** Scorched metal (heat-darkened, dirty)
-- **Emissive:** `#aa8844`
+- **Accent:** Scorched metal (heat-darkened)
+- **Emissive:** `#708090` to `#B0C4DE`
 - **Bot style:** Angular head, piston arms, quadruped legs, wear level 0.3
-- **Buildings:** 2 pipes, 1 chimney, medium panel complexity
-- **Feel:** Fortress builders. Heavy, grounded, immovable. Built to last.
+- **Distinguishing feature:** Heavy plate construction; units look immovable and permanent
 
 ---
 
@@ -111,7 +114,7 @@ Bots and buildings are not hand-modeled. They are assembled from procedural geom
 
 ### 4.1 PanelGeometry
 
-Every machine surface is a **panel** -- a rectangular segment with beveled edges, center inset, and bolt pattern. Key parameters:
+Every machine surface is a **panel** — a rectangular segment with beveled edges, center inset, and bolt pattern. Key parameters:
 
 ```typescript
 interface PanelConfig {
@@ -134,11 +137,11 @@ Source: `src/rendering/procgen/PanelGeometry.ts` (563 lines)
 
 Bots are assembled from panel groups with five distinct visual sections:
 
-1. **Chassis** -- main body from multiple panels (front with inset display, sides with vents, top with bolt grid)
-2. **Head** -- sensor module: `dome` | `angular` | `visor` | `turret`
-3. **Arms** -- if present: `piston` | `articulated` | `crane` | `none`
-4. **Locomotion** -- `treads` | `legs_biped` | `legs_quad` | `hover` | `wheels`
-5. **Details** -- antennae, vents, panel lines, faction stripe
+1. **Chassis** — main body from multiple panels (front with inset display, sides with vents, top with bolt grid)
+2. **Head** — sensor module: `dome` | `angular` | `visor` | `turret`
+3. **Arms** — if present: `piston` | `articulated` | `crane` | `none`
+4. **Locomotion** — `treads` | `legs_biped` | `legs_quad` | `hover` | `wheels`
+5. **Details** — antennae, vents, panel lines, faction stripe
 
 ```typescript
 interface BotVisualConfig {
@@ -247,7 +250,7 @@ Grind ore deposit -> Powder fills capacity
 
 ### 6.1 Power Calculation
 
-Bot power draw is **dynamic** -- it depends on activity, not fixed per-component costs.
+Bot power draw is **dynamic** — it depends on activity, not fixed per-component costs.
 
 **Locomotion power:**
 
@@ -308,185 +311,215 @@ Base compute pool: 100. Bots beyond signal range operate at reduced autonomy (Si
 
 ## 7. Yuka Vehicle Steering
 
-Every bot is a Yuka `Vehicle` entity with physics-based movement -- velocity, acceleration, mass, max turn rate. No teleportation.
+Every bot is a Yuka `Vehicle` entity with physics-based movement — velocity, acceleration, mass, max turn rate. No teleportation.
 
 ### 7.1 Vehicle Properties per Bot Type
 
-From `config/botMovement.json` (referenced in GDD-005):
+From `config/botMovement.json`:
 
-| Bot | maxSpeed | maxForce | maxTurnRate | Mass |
-|-----|--------:|--------:|-----------:|-----:|
-| Worker | 3.0 | 5.0 | 2.0 | 2.0 |
-| Scout | 5.0 | 8.0 | 3.5 | 0.8 |
-| Soldier | 4.0 | 10.0 | 1.5 | 5.0 |
-| Harvester | 2.0 | 3.0 | 1.0 | 8.0 |
+| Bot Type | maxSpeed | maxForce | mass | turnRate | carrySpeedMultiplier |
+|----------|--------:|--------:|-----:|--------:|--------------------:|
+| maintenance_bot | 5.0 | 10.0 | 1.0 | 3.0 | 0.6 |
+| heavy_bot | 3.0 | 15.0 | 2.0 | 2.0 | 0.4 |
 
-Heavier bots accelerate slower and feel heavier. Carrying a cube reduces maxSpeed by 30%.
+The `automation` section of `config/botMovement.json` provides tuning constants used by BotBrain:
 
-### 7.2 Steering Behaviors
+| Parameter | Value | Use |
+|-----------|------:|-----|
+| guardRange | 8 | GUARD state: attack enemies within this radius |
+| followDistance | 3 | FOLLOW state: maintain this distance from leader |
+| workDistance | 2 | Proximity threshold for "arrived at deposit/furnace" |
+| waypointReachThreshold | 2 | PATROL: how close before picking next waypoint |
 
-| Behavior | Use Case |
-|----------|----------|
-| `SeekBehavior` | Move directly toward target (approaching deposit, enemy) |
-| `ArriveBehavior` | Seek but decelerate at target (cube pickup precision) |
-| `FleeBehavior` | Move away from threat (damaged bot retreating) |
-| `PursuitBehavior` | Predict and intercept moving target (combat pursuit) |
-| `EvadeBehavior` | Predict and flee from moving pursuer |
-| `WanderBehavior` | Random meandering (idle patrol) |
-| `ObstacleAvoidanceBehavior` | Steer around buildings and terrain |
-| `FollowPathBehavior` | Follow NavMesh path with smooth curves |
-| `AlignmentBehavior` | Match heading with nearby allies (formation) |
-| `CohesionBehavior` | Stay near group center (squad movement) |
-| `SeparationBehavior` | Maintain spacing from nearby entities |
-| `InterposeBehavior` | Position between two entities (bodyguard) |
-| `OffsetPursuitBehavior` | Follow leader at fixed offset (formation position) |
+`config/botAutomation.json` mirrors the core subset: `guardRange: 8`, `followDistance: 3`, `workDistance: 2`, `waypointReachThreshold: 2`.
 
-### 7.3 Integration
+Heavier bots accelerate slower and feel heavier. Carrying a cube reduces `maxSpeed` by the `carrySpeedMultiplier` (0.6x for maintenance_bot = 40% speed reduction).
+
+### 7.2 BotVehicle Factory
+
+`src/ai/BotVehicle.ts` creates Yuka Vehicles from config:
 
 ```typescript
-// Yuka EntityManager runs per-frame, updating all Vehicle positions
-useFrame((_, delta) => {
-  yukaTime.update();
-  yukaEntityManager.update(delta);  // steering + pathfollowing + avoidance
-  // Then run ECS systems which read updated positions
-});
+export function createBotVehicle(options: BotVehicleOptions): Vehicle {
+  const profile = config.botMovement[options.botType];
+  const vehicle = new Vehicle();
+  vehicle.maxSpeed = profile.maxSpeed;
+  vehicle.maxForce = profile.maxForce;
+  vehicle.mass = profile.mass;
+  vehicle.maxTurnRate = profile.turnRate;
+  vehicle.position.set(x, y, z);
+  vehicle.boundingRadius = 0.5;   // all bots share same bounding radius
+  return vehicle;
+}
 ```
 
-Each Yuka Vehicle syncs its world matrix to the Three.js mesh via `setRenderComponent()`. The mesh has `matrixAutoUpdate = false` so Yuka controls position directly.
+### 7.3 Steering Behaviors (from SteeringBehaviors.ts)
 
-### 7.4 NavMesh Pathfinding
+`src/ai/SteeringBehaviors.ts` attaches a full suite of behaviors to each vehicle. Behaviors are created **deactivated** — the BotBrainSystem enables only the relevant one per state:
 
-Yuka `NavMesh` replaces the old grid-based A*. Navigation mesh is generated from terrain walkability and building footprints. Bots request paths via `navMesh.findPath(from, to)` and follow them with `FollowPathBehavior`.
+| Behavior | Weight | Active When |
+|----------|-------:|-------------|
+| `SeekBehavior` | 1.0 | SEEK_TARGET, GATHER, FOLLOW (far), PHONE_HOME |
+| `ArriveBehavior` | 1.0 | PATROL (waypoint), ATTACK, GUARD (intercept), GATHER (near) |
+| `FleeBehavior` | 1.0 | FLEE |
+| `WanderBehavior` | 0.5 | PATROL (no waypoint), fallback |
+| `ObstacleAvoidanceBehavior` | 3.0 | Always active |
+| `SeparationBehavior` | 1.5 | Always active |
 
-### 7.5 Perception
+`ObstacleAvoidanceBehavior` and `SeparationBehavior` run in parallel with whatever high-level behavior is active. The higher weight on obstacle avoidance (3.0) ensures bots reliably navigate around buildings.
 
-Each bot has a Yuka `Vision` system with configurable range and field of view:
+For formations, `FormationSystem.ts` adds `OffsetPursuitBehavior` on followers (see Section 10).
 
-- Scout: 12 range, 180-degree FOV, 2x perception multiplier
-- Soldier: 10 range, 120-degree FOV
-- Heavy: 8 range, 90-degree FOV
+### 7.4 Steering Output to Yuka Translation
 
-`MemorySystem` tracks seen entities for 5 seconds after leaving vision cone. This drives threat assessment and target selection.
+`BotBrain.update()` returns a `SteeringOutput`:
+
+```typescript
+export interface SteeringOutput {
+  command: SteeringCommand;  // STOP | SEEK | ARRIVE | FLEE | WANDER
+  target?: Vec3;
+}
+```
+
+The `BotBrainSystem` translates this to Yuka behavior toggles:
+
+| SteeringCommand | Yuka action |
+|-----------------|-------------|
+| `STOP` | Deactivate all behaviors |
+| `SEEK` | Enable SeekBehavior, set target |
+| `ARRIVE` | Enable ArriveBehavior, set target |
+| `FLEE` | Enable FleeBehavior, set target |
+| `WANDER` | Enable WanderBehavior |
+
+### 7.5 NavMesh Pathfinding
+
+`src/ai/NavMeshBuilder.ts` generates a Yuka `NavMesh` from terrain walkability and building footprints. Grid resolution is 2 world units per cell. A `CellSpacePartitioning` spatial index is attached for O(1) region lookups.
+
+`src/ai/PathfindingSystem.ts` wraps `NavMesh.findPath()` with:
+- Path smoothing (removes collinear/redundant waypoints via XZ-plane cross-product test)
+- `FollowPathBehavior` integration
+- Terrain Y correction (all waypoints get proper ground height)
+
+Bots request paths via `requestPath(entityId, target)` and navigate with `FollowPathBehavior`.
+
+### 7.6 Perception
+
+`src/ai/PerceptionSystem.ts` wraps Yuka's `Vision` class with game-specific logic. FOV and range come from `config/enemies.json > perception`:
+
+| Bot Type | Range | FOV | Notes |
+|----------|------:|----:|-------|
+| Default | `defaultRange` | `defaultFOV` | Standard bots |
+| Scout | `defaultRange + cameraRangeBonus` | `scoutFOV` (180°) | Wide-angle awareness |
+| Heavy | `defaultRange` | `heavyFOV` (90°) | Narrow, focused |
+
+Line-of-sight is blocked by city buildings and placed cubes (obstacle data from `NavMeshBuilder`). Vision range is modified by weather conditions via `getEffectivePerceptionRange()`.
+
+`MemorySystem` tracks seen entities for 5 seconds after leaving vision cone, driving threat assessment and target selection.
 
 ---
 
 ## 8. Bot Brain States
 
-Each bot runs a finite state machine (FSM) that determines its current behavior. The FSM consumes `BotContext` (perception data, base reference, economy state) and outputs `SteeringCommand` for the Yuka Vehicle.
+Each bot runs a **10-state finite state machine** (FSM) that determines its current behavior. The FSM consumes `BotContext` (perception data, base reference, economy state) and produces `SteeringOutput` for the Yuka Vehicle.
 
-### 8.1 State Enumeration
+The actual implementation in `src/ai/BotBrain.ts` has these 10 states:
 
-```
-CORE STATES:
-  IDLE           -- no task, waiting for Phone Home
-  PATROL         -- walking a patrol route around base perimeter
+```typescript
+export const BotState = {
+  // Core
+  IDLE: "idle",
+  PATROL: "patrol",
+  PHONE_HOME: "phone_home",
 
-COMBAT STATES:
-  SEEK_TARGET    -- moving toward detected enemy
-  ATTACK         -- within range, engaging
-  FLEE           -- health critical, retreating to base
-  GUARD          -- holding position at defensive point
-  FOLLOW         -- following a leader entity
+  // Combat
+  SEEK_TARGET: "seek_target",
+  ATTACK: "attack",
+  FLEE: "flee",
+  GUARD: "guard",
+  FOLLOW: "follow",
 
-ECONOMY STATES:
-  HARVEST        -- grinding an ore deposit (8-15s per fill)
-  COMPRESS       -- compressing powder into cube (2-4s)
-  PICKUP_CUBE    -- walking to a loose cube to grab it
-  CARRY_CUBE     -- carrying cube to destination (speed -30%)
-  DELIVER_CUBE   -- dropping cube into furnace hopper or stockpile
-  BUILD          -- constructing a structure (progress 0-100%)
-  SCOUT          -- exploring fog-of-war tiles
-
-COLONIZATION STATES:
-  SHIP_HOME      -- carrying cubes to shipment point for patron
-  MOVE_TO_BASE   -- relocating to new base (inter-base transfer)
-  TRADE_NATIVE   -- interacting with alien native entity
+  // Economy
+  GATHER: "gather",
+  RETURN_TO_BASE: "return_to_base",
+} as const;
 ```
 
-### 8.2 Harvest State Machine
+Note: The design also specifies COMPRESS, PICKUP_CUBE, CARRY_CUBE, DELIVER_CUBE, BUILD, SCOUT, SHIP_HOME, MOVE_TO_BASE, and TRADE_NATIVE states for the full economy and colonization loop. The current implementation has GATHER and RETURN_TO_BASE as the economy states, with the full set to be expanded.
+
+### 8.1 State Transitions
 
 ```
-IDLE -> claim HARVEST task from work queue
-  |
-  v
-HARVEST (move to deposit, begin grinding)
-  | powder capacity full
-  v
-COMPRESS (stationary, 2-4s)
-  | cube spawns at feet
-  v
-HARVEST (return to deposit for next load)
-  | deposit depleted
-  v
-IDLE -> Phone Home -> next task
+IDLE -> SEEK_TARGET   : enemy in aggroRange (auto-aggro)
+IDLE -> PHONE_HOME    : idle > 3 seconds AND homeBase exists
+IDLE -> PATROL        : idle > 3 seconds AND no homeBase
+
+PATROL -> SEEK_TARGET : enemy in aggroRange
+PHONE_HOME -> IDLE    : arrived at homeBase (within 5 units)
+PHONE_HOME -> SEEK_TARGET : enemy spotted while traveling
+
+SEEK_TARGET -> ATTACK : enemy within meleeRange
+SEEK_TARGET -> FLEE   : health <= fleeThreshold
+SEEK_TARGET -> PATROL/IDLE : target lost
+
+ATTACK -> FLEE        : health <= fleeThreshold
+ATTACK -> SEEK_TARGET : target moved out of 1.5x meleeRange
+ATTACK -> IDLE        : target destroyed or lost
+
+FLEE -> PATROL/IDLE   : safe distance reached AND stateTime > MIN_STATE_DURATION
+
+GUARD -> ATTACK       : enemy enters guardRadius
+GUARD -> SEEK_TARGET  : enemy within aggroRange (if health OK)
+
+GATHER -> SEEK_TARGET : enemy in aggroRange
+GATHER -> IDLE        : deposit lost or depleted
+
+RETURN_TO_BASE -> IDLE : arrived at homeBase (within 3 units)
+RETURN_TO_BASE -> IDLE : no homeBase
 ```
 
-Combat interrupts at any point: enemy in aggro range triggers `SEEK_TARGET`.
+Orders from the governor override any current state immediately via `setOrder()`.
 
-### 8.3 Transport State Machine
+### 8.2 State Handler Details
 
-```
-IDLE -> claim TRANSPORT task from work queue
-  |
-  v
-PICKUP_CUBE (move to cube, grab)
-  | destination == shipment point?
-  +-- YES -> SHIP_HOME (carry to patron point, cube destroyed on delivery)
-  +-- NO  -> CARRY_CUBE (move to furnace/stockpile)
-  |
-  v
-DELIVER_CUBE (drop into hopper or onto pile)
-  |
-  v
-IDLE -> Phone Home -> next task
-```
+**IDLE:** Checks for threats (auto-aggro). After `IDLE_TO_WANDER_TIME = 3.0s`, transitions to `PHONE_HOME` if a `homeBase` is set, or `PATROL` otherwise.
 
-If health drops below 30% while carrying, the bot drops the cube and enters `FLEE`.
+**PHONE_HOME:** Moves toward `ctx.homeBase`. Reacts to enemies (SEEK_TARGET interrupt). On arrival (within 5 units), transitions to IDLE — the system layer then calls `phoneHome()` to claim a task from the Base work queue.
 
-### 8.4 Build State Machine
+**PATROL:** Generates random waypoints within `patrolRadius = 15` of `patrolCenter`. Waypoints are refreshed every `PATROL_WAYPOINT_LIFETIME = 5.0s` or when the bot arrives within 4 units. Reacts to enemies.
 
-```
-IDLE -> claim BUILD task from work queue
-  |
-  v
-BUILD (move to site, construct)
-  | progress 0% -> 100% over build time
-  | combat interrupt: progress saved, resume later
-  | construction complete
-  +-- built outpost? -> new BaseAgent spawns
-  v
-IDLE -> Phone Home -> next task
-```
+**SEEK_TARGET:** Moves toward target. On arrival within `meleeRange`, transitions to ATTACK. On target loss, returns to PATROL or IDLE.
 
-### 8.5 Scout State Machine
+**ATTACK:** Stays close to target (ArriveBehavior). On target moving > 1.5x meleeRange, re-enters SEEK_TARGET. On target loss, returns to IDLE.
 
-```
-IDLE -> claim SCOUT task from work queue
-  |
-  v
-SCOUT (spiral outward, reveal fog tiles)
-  | enemy detected -> record in memory, continue
-  | deposit discovered -> record in faction knowledge
-  | alien native spotted -> emit NATIVE_SPOTTED event
-  | area 80% explored
-  v
-IDLE -> Phone Home -> next task
-```
+**FLEE:** Flees from closest threat. If no threats or safe distance reached (after `MIN_STATE_DURATION = 0.5s`), returns to PATROL/IDLE. Falls back to fleeing toward `homeBase` if no immediate threat is found.
 
-### 8.6 Emergency Overrides
+**GUARD:** Holds at `guardCenter`. Attacks enemies that enter `guardRadius = 8`. Returns to guard point if drifted > 2 units. Does not chase enemies beyond guard radius.
 
-Checked every frame, override any current state:
+**GATHER:** Moves toward deposit target (ArriveBehavior). Reacts to enemies (auto-aggro). On deposit loss, returns to IDLE.
 
-1. **Health < 20% AND enemies nearby** -> `FLEE` (drop cube, run to base, alert defense)
-2. **Health < 50% AND outnumbered 3:1** -> `FLEE`
-3. **Home base under attack AND role == combat** -> `GUARD` base at max speed
+**RETURN_TO_BASE:** Moves toward `homeBase`. On arrival (within 3 units) or if no homeBase, transitions to IDLE.
 
-### 8.7 The Phone Home Guarantee
+**FOLLOW:** Maintains distance from leader entity. Uses SeekBehavior when > 3 units away, ArriveBehavior when closer. Reacts to enemies (auto-aggro).
 
-No bot ever idles. When a bot has no task:
+### 8.3 Orders from Governor
+
+The governor issues typed `BotOrder` objects (from `BotOrders.ts`):
+
+| OrderType | State Transition | Parameters |
+|-----------|-----------------|------------|
+| `PATROL_AREA` | -> PATROL | center: Vec3, radius: number |
+| `ATTACK_TARGET` | -> SEEK_TARGET | targetId: string |
+| `GUARD_POSITION` | -> GUARD | position: Vec3, radius: number |
+| `GATHER_RESOURCES` | -> GATHER | depositId: string |
+| `RETURN_TO_BASE` | -> RETURN_TO_BASE | (none) |
+| `FOLLOW` | -> FOLLOW | targetId: string |
+
+### 8.4 The Phone Home Guarantee
+
+**No bot ever idles.** This is the architectural invariant:
 
 ```
-Has task from Base work queue?  -> execute
+Has order from governor?  -> execute
   |
   NO
   v
@@ -494,14 +527,17 @@ BotBrain produces state transition?  -> execute (e.g., enemy detected)
   |
   NO
   v
-Stuck / idle / task completed?
-  -> Phone Home to nearest Base Agent
+IDLE for > 3 seconds?
+  -> PHONE_HOME to nearest Base Agent
+  -> Arrive at base -> IDLE -> system claims task from work queue
   -> Work queue ALWAYS has tasks:
        Priority 1: Pending harvest
        Priority 2: Loose cubes needing transport
        Priority 3: Pending build order
        Priority 4: Patrol base perimeter (ALWAYS available)
 ```
+
+The `PHONE_HOME` state was added precisely for this guarantee — it is not a fallback within `IDLE` but a distinct state with its own travel behavior.
 
 ---
 
@@ -528,7 +564,7 @@ Worker bots repair at 2 HP/second. Cost per 50 HP repaired: 1 scrap iron cube.
 | Time | Fast (5-15s) | Slow (20-120s furnace time) |
 | Veterancy | **Preserved** | **Reset to Rookie** |
 | Requires | Worker bot nearby + cubes | Furnace + recipe cubes |
-| Risk | Bot is vulnerable during repair | Safe -- furnace does the work |
+| Risk | Bot is vulnerable during repair | Safe — furnace does the work |
 
 For ace-veterancy bots (1.3x damage/HP), repair is almost always worthwhile. For rookies under heavy fire, sometimes it is cheaper to let them fall and fabricate a replacement.
 
@@ -548,26 +584,33 @@ Worker bots auto-repair buildings when assigned maintenance tasks by the Base Ag
 
 ### 9.4 Component Degradation
 
-Components wear over time through use. This is not yet specified in detail -- open design question. Current plan: components have a durability value that decreases with use, repaired by maintenance bots with appropriate cube materials.
+Components wear over time through use. This is not yet specified in detail — open design question. Current plan: components have a durability value that decreases with use, repaired by maintenance bots with appropriate cube materials.
 
 ---
 
 ## 10. Formation Movement
 
-Squads of bots move in coordinated formations using Yuka steering:
+Squads of bots move in coordinated formations using Yuka steering.
 
-### 10.1 Steering Composition
+### 10.1 FormationSystem (from FormationSystem.ts)
 
+`src/ai/FormationSystem.ts` manages squad formations. Lifecycle:
+
+1. `createFormation()` — assigns leader + members, computes offsets, attaches `OffsetPursuitBehavior` to followers
+2. `updateFormation()` — called each frame to handle destroyed members, recomputes offsets when roster changes
+3. `dissolveFormation()` — removes `OffsetPursuit` behaviors, frees followers to steer independently
+
+**Steering composition:**
 ```typescript
-// Leader navigates via FollowPathBehavior
-// Followers use OffsetPursuitBehavior (maintain formation offset)
-// All units add SeparationBehavior (prevent overlap)
-function createSquad(leader: Vehicle, followers: Vehicle[], offsets: Vec3[]) {
-  followers.forEach((follower, i) => {
-    follower.steering.add(new OffsetPursuitBehavior(leader, offsets[i]));
-    follower.steering.add(new SeparationBehavior());  // weight 0.5
-  });
-}
+// Leader navigates via its own seek/arrive/follow path behaviors
+// Followers use OffsetPursuitBehavior (maintain formation offset from leader)
+// All units have SeparationBehavior (prevent overlap, always active)
+createFormation({
+  leaderId: leader.entityId,
+  memberIds: follower.entityIds,
+  type: FormationType.LINE,  // or WEDGE, COLUMN, SPREAD
+  spacing: { patrol: 3, combat: 5, siege: 8, retreat: 2 },
+});
 ```
 
 ### 10.2 Formation Spacing
@@ -583,11 +626,16 @@ From `config/combat.json > squadBehavior`:
 
 ### 10.3 Squad Behavior Rules
 
-- Engage if outnumbered 2:1: yes
-- Engage if even: cautious (evaluate before committing)
-- Retreat if HP below 30%
-- Rush-defend friendly buildings within 20m radius
-- Prioritize high-value targets
+From `docs/design/gameplay/COMBAT.md` §4.4:
+
+| Condition | Behavior |
+|-----------|----------|
+| Enemy spotted, squad outnumbers 2:1 | Engage aggressively |
+| Enemy spotted, roughly even | Engage cautiously (seek cover first) |
+| Enemy spotted, squad outnumbered | Fall back to nearest defensive position |
+| Squad HP below 30% average | Retreat to base for repair |
+| High-value target spotted (lone worker with cubes) | Prioritize, even if outnumbered |
+| Friendly building under attack | Rush to defend (all bots within 20m) |
 
 Source: `src/ai/FormationSystem.ts` + `src/systems/formationMovement.ts` (524 lines combined)
 
@@ -608,6 +656,8 @@ All bot balance is externalized to JSON. No hardcoded values in game logic.
 | `config/furnace.json > tiers` | Bot chassis recipes and component recipes |
 | `config/furnace.json > repair` | Repair costs, range, speed |
 | `config/furnace.json > compression` | Cube creation parameters |
+| `config/botMovement.json` | Yuka Vehicle physics (maxSpeed, maxForce, mass, turnRate, carrySpeedMultiplier) |
+| `config/botAutomation.json` | BotBrain behavioral constants (guardRange, followDistance, workDistance, waypointReachThreshold) |
 | `config/units.json` | Movement speeds, vision range, grabber reach |
 | `config/civilizations.json` | Faction visual profiles (materials, bot style, building style) |
 | `config/materials.json` | PBR material palette for procedural generation |
@@ -616,8 +666,9 @@ All bot balance is externalized to JSON. No hardcoded values in game logic.
 
 ## 12. Open Questions
 
-- **Deep-sea mining units** -- aquatic locomotion for underwater resource extraction (pressure-resistant construction, hydrojets, extended power). Needed for rare materials on east/south coast. Not yet designed in detail.
-- **Component degradation** -- do components wear out over time? Rate? Repair cost curve?
-- **Lightning rod connections** -- can bots plug into the power grid for unlimited power while stationary?
-- **Bot customization** -- should the player be able to swap individual components on existing bots, or only fabricate whole chassis?
-- **Deep-sea communication** -- how do submerged bots maintain signal network connection?
+- **Deep-sea mining units** — aquatic locomotion for underwater resource extraction (pressure-resistant construction, hydrojets, extended power). Needed for rare materials on east/south coast. Not yet designed in detail.
+- **Component degradation** — do components wear out over time? Rate? Repair cost curve?
+- **Lightning rod connections** — can bots plug into the power grid for unlimited power while stationary?
+- **Bot customization** — should the player be able to swap individual components on existing bots, or only fabricate whole chassis?
+- **Deep-sea communication** — how do submerged bots maintain signal network connection?
+- **Economy brain states** — COMPRESS, PICKUP_CUBE, CARRY_CUBE, DELIVER_CUBE, BUILD, SCOUT, SHIP_HOME, MOVE_TO_BASE, TRADE_NATIVE are designed but not yet implemented in BotBrain.ts. The current `GATHER` state covers basic harvesting; full economy loop is the next major BotBrain expansion.

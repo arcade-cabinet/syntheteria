@@ -7,7 +7,8 @@
 - `docs/design/gameplay/AUDIO.md` — combat SFX (metal impact, damage, laser shot, combat impact), alert sound, adaptive music combat and raid layers
 - `docs/design/gameplay/MATERIALS.md` — cube values and economy context
 - `docs/design/gameplay/VICTORY.md` — Domination and Survival victory conditions
-- `docs/design/agents/GOVERNORS.md` — AI decision-making for when to attack
+- `docs/design/agents/GOVERNORS.md` — AI decision-making for when to attack (§4 GOAP governor, §4.6 GovernorActionExecutor for raid dispatch)
+- `docs/design/agents/BOTS.md` — Bot unit stats, FSM states, steering behaviors, formation movement
 
 Combat is not a separate system -- it emerges from the physical cube economy. Every fight costs cubes. Cubes thrown as weapons are cubes not used for building. Bots destroyed are cubes spent on construction lost. Walls breached are cubes exposed to theft. The fundamental tension: **wealth makes you powerful but also makes you a target.**
 

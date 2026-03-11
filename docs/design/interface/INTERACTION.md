@@ -4,6 +4,8 @@
 
 Extracted from GDD-003 and refined against the implemented codebase.
 
+**See also:** `docs/design/gameplay/OVERVIEW.md` §Design Principles (contextual interaction philosophy), `docs/design/gameplay/MECHANICS.md` §Core Loop (harvest/compress/grab/furnace actions), `docs/design/interface/UI.md` §7 (radial menu component architecture)
+
 ---
 
 ## 1. Interaction Philosophy
@@ -15,7 +17,7 @@ What you can do depends on:
 - What you are doing (holding a cube? in build mode?)
 - How far away you are (per-category interaction ranges)
 
-This replaces the old tool system (`RadialToolMenu`, `EquippedToolView`, `getEquippedTool`) entirely.
+This replaces the old per-entity tool-equip pattern for world interactions. Note: `RadialToolMenu`, `EquippedToolView`, and `getEquippedTool` still exist and are used by `MobileControls` and `InventoryView` for tool selection (the player's active stance/capability). The contextual model handles what you can do to a world object; the tool menu handles what mode the player is in. These are distinct concerns -- see `docs/design/interface/UI.md` §7.1.
 
 ---
 
@@ -48,16 +50,16 @@ otter | hackable | signalRelay | oreDeposit | furnace | ground
 
 ### 2.4 Interaction Ranges
 
-Each entity category has a maximum interaction range in world units:
+Each entity category has a maximum interaction range in world units. The source of truth is `config/interaction.json` (`maxRangeByType`):
 
 | Category | Range | Category | Range |
 |----------|-------|----------|-------|
-| ore_deposit | 3.0 | enemy_bot | 15.0 |
-| material_cube | 2.5 | friendly_bot | 5.0 |
-| furnace | 3.0 | otter | 3.0-4.0 |
-| belt | 3.0 | wall | 3.0-4.0 |
-| lightning_rod | 4.0 | wire | 3.0-4.0 |
-| turret | 4.0 | building | 4.0 |
+| ore_deposit | 3.0 | enemy | 15.0 |
+| cube | 2.5 | bot | 5.0 |
+| furnace | 3.0 | outpost | 5.0 |
+| building | 4.0 | trade_post | 4.0 |
+
+Additional ranges tracked in `ObjectSelectionSystem.tsx` code (not yet in config): otter (3.0-4.0), wall (3.0-4.0), wire (3.0-4.0), belt (3.0), lightning_rod (4.0), turret (4.0).
 
 ### 2.5 Configuration Constants
 
@@ -462,4 +464,15 @@ Mods and dynamic content can register additional actions at runtime via `registe
 | `src/systems/interactionState.ts` | Pure-logic interaction state (hover, select, radial open) |
 | `src/systems/crosshairDriver.ts` | Crosshair style, target name, distance, prompts, health bars |
 | `src/ui/ObjectActionMenu.tsx` | SVG radial menu React component |
+| `src/ui/RadialActionMenu.tsx` | Pure layout/hit-testing radial menu component |
 | `src/ui/MobileControls.tsx` | Mobile overlay: joystick, action buttons, tool view |
+| `src/ui/RadialToolMenu.tsx` | Tool selection radial menu (player stance/capability) |
+| `src/ui/EquippedToolView.tsx` | Bottom-center equipped tool display + mobile action buttons |
+
+---
+
+## 14. Config References
+
+| Config | Controls |
+|--------|----------|
+| `config/interaction.json` | `maxRangeByType` (interaction distances), `actionsByType` (available actions per entity category), `highlightColor`, `highlightIntensity`, `radialMenuRadius` (80), `radialMenuAnimDuration` (0.2s) |

@@ -4,7 +4,9 @@ The authoritative reference for Syntheteria's moment-to-moment gameplay systems.
 
 **Config files:** `config/mining.json`, `config/furnace.json`, `config/cubeMaterials.json`, `config/machineAssembly.json`, `config/buildings.json`, `config/quests.json`, `config/technology.json`
 
-See also: `docs/design/gameplay/AUDIO.md` — grinding SFX, compression sound design (hydraulic press crescendo), cube pickup/drop/place sounds, belt clank, furnace roar, machine hums.
+**See also (interface):** `docs/design/interface/INTERACTION.md` (radial action menus for furnace/ore/cube/belt, FPS controls, build mode), `docs/design/interface/UI.md` §5.2 (CoreLoopHUD -- powder gauge, compression bar, furnace status), `docs/design/interface/ONBOARDING.md` (how these mechanics are introduced to new players)
+
+See also: `docs/design/gameplay/AUDIO.md` -- grinding SFX, compression sound design (hydraulic press crescendo), cube pickup/drop/place sounds, belt clank, furnace roar, machine hums.
 
 ---
 

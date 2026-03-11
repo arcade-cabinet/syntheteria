@@ -4,7 +4,7 @@
 **Date:** 2026-03-11
 **Scope:** Complete UI/UX specification covering aesthetic philosophy, design system, every screen from title through gameplay, and accessibility requirements.
 
-See also: `docs/design/gameplay/AUDIO.md` — UI beep, alert sound, AudioSettingsPanel (volume sliders), audio bus defaults, raid alert audio treatment.
+**See also:** `docs/design/gameplay/OVERVIEW.md` §Design Principles (contextual interaction, holographic projections), `docs/design/gameplay/MECHANICS.md` §Core Loop (HUD-reflected state machine)
 
 ---
 
@@ -48,27 +48,43 @@ No modal dialogs or heavy chrome. Information flows as overlaid readouts -- alwa
 
 ## 2. Design System
 
-### 2.1 Color Palette
+### 2.1 Color Palettes
 
-**Menu screens (title, pregame lobby, pause):**
+There are **two distinct palettes** sharing one visual language. Both are defined in `src/ui/designTokens.ts`.
 
-| Role | Color | Usage |
-|------|-------|-------|
-| Primary text | `#00ffaa` | Headers, labels, active elements |
-| Dimmed text | `#00ffaa66` | Descriptions, inactive labels |
-| Very dim | `#00ffaa44` | Sublabels, slot numbers, counters |
-| Ghost text | `#00ffaa22` | Empty pips, disabled elements |
-| Background | `#000000` | Main background |
-| Panel bg | `rgba(0,255,170,0.03)` | Card/panel background |
-| Active panel bg | `rgba(0,255,170,0.10)` | Selected card/button background |
-| Hover panel bg | `rgba(0,255,170,0.06)` | Hovered card/button background |
-| Border default | `rgba(0,255,170,0.2)` | Unselected borders |
-| Border active | `#00ffaa` | Selected borders |
-| Error | `#ff4444` | Validation errors |
-| Warning | `#ffaa00` | Warnings, cautions |
-| Scanline overlay | `rgba(0,255,170,0.03)` | Repeating 2px/4px gradient |
+#### Menu Palette (amber/chrome)
 
-**Faction-specific colors** override generic green for selected faction elements, using the `color` field from `civilizations.json`:
+Used by: title, pregame lobby, pause menu, loading screen, settings, save/load.
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `menu.accent` | `#e8a020` | Headers, active elements, primary text |
+| `menu.accentDim` | `rgba(232,160,32,0.45)` | Labels, secondary text |
+| `menu.accentMuted` | `rgba(232,160,32,0.22)` | Borders, muted backgrounds |
+| `menu.accentFaint` | `rgba(232,160,32,0.08)` | Hover backgrounds |
+| `menu.chrome` | `#b8c4cc` | Chrome/silver secondary text |
+| `menu.chromeDim` | `rgba(184,196,204,0.5)` | Dim chrome labels |
+| `menu.bgInset` | `rgba(14,16,20,0.88)` | Panel/card background |
+| `menu.bgScreen` | `#05070a` | Screen background |
+| `menu.error` | `#ff4444` | Validation errors |
+| `menu.errorDim` | `#ff6644` | Error descriptions |
+
+#### HUD Palette (faction-colored machine vision)
+
+Used by: FPSHUD, CoreLoopHUD, Bezel, all in-game overlays.
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `hud.accent` | `#00ffaa` | Primary accent (default; replaced by faction color at game start) |
+| `hud.accentBright` | `#00ff88` | Bright variant, status indicators |
+| `hud.accentDim` | `#00ffaa66` | Labels, inactive elements |
+| `hud.accentMuted` | `#00ffaa22` | Borders, subtle outlines |
+| `hud.accentFaint` | `rgba(0,255,170,0.05)` | Panel backgrounds |
+| `hud.bg` | `rgba(4, 8, 6, 0.95)` | Bezel and overlay background |
+| `hud.error` | `#ff4444` | Damage, critical errors |
+| `hud.warning` | `#ffaa00` | Compression bar, low-power, cautions |
+
+**Faction-specific colors** (in-game HUD) override `hud.accent` when `setHUDFaction()` is called at game start. Source: `civilizations.json`.
 
 | Faction | Color | Hex |
 |---------|-------|-----|
@@ -77,10 +93,7 @@ No modal dialogs or heavy chrome. Information flows as overlaid readouts -- alwa
 | Signal Choir | Medium purple | `#9370DB` |
 | Iron Creed | Slate grey | `#708090` |
 
-**In-game HUD** uses the same palette with the player's faction accent color replacing generic green where appropriate. The `setHUDFaction()` call at game start configures this globally.
-
-**Rival color palette** (distinct from faction primary colors):
-`#ff4444` (red), `#ff8800` (orange), `#ffcc00` (gold), `#44ff44` (lime), `#00ccff` (cyan), `#8844ff` (violet), `#ff44aa` (pink), `#aaaaaa` (grey)
+**Rival color palette** (spectator/minimap): `#ff4444`, `#ff8800`, `#ffcc00`, `#44ff44`, `#00ccff`, `#8844ff`, `#ff44aa`, `#aaaaaa`
 
 ### 2.2 Typography
 
@@ -92,7 +105,7 @@ No modal dialogs or heavy chrome. Information flows as overlaid readouts -- alwa
 | Sublabel | `10px` | Normal | Normal | Dimmed color |
 | Stat value | `9px` | Normal | Normal | Faction-colored |
 
-Font family: `'Courier New', monospace` (constant `MONO`). All text: `user-select: none`.
+Font family: `'Courier New', monospace` (exported as `FONT_MONO` from `designTokens.ts`). All text: `user-select: none`.
 
 ### 2.3 Animations
 
@@ -108,8 +121,9 @@ Font family: `'Courier New', monospace` (constant `MONO`). All text: `user-selec
 - Used for loading screen steps, narrative text
 
 **Scanline overlay:**
-- CSS: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,170,0.03) 2px, rgba(0,255,170,0.03) 4px)`
+- CSS: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)`
 - Full-screen, `pointer-events: none`, highest z-index
+- Note: HUD scan lines use near-black `rgba(0,0,0,0.03)`, not green-tinted
 
 **Fade transitions:**
 - Tab switch: 150ms opacity
@@ -117,9 +131,9 @@ Font family: `'Courier New', monospace` (constant `MONO`). All text: `user-selec
 - Screen transitions: 400ms opacity
 
 **Hover effects:**
-- Buttons: background brightens, border sharpens, 10px green text-shadow glow
-- Cards: `scale(1.01)`, border brightens to 50% faction color
-- Primary buttons: `box-shadow: 0 0 20px rgba(0,255,170,0.2)`
+- Buttons: background brightens, border sharpens
+- Cards: `scale(1.01)`, border brightens
+- Primary buttons: subtle glow `box-shadow`
 
 ### 2.4 Responsive Breakpoints
 
@@ -130,7 +144,7 @@ Font family: `'Courier New', monospace` (constant `MONO`). All text: `user-selec
 | 768-1200px (desktop) | Cards 4/row. Full layout. Detail panels beside cards. |
 | > 1200px (widescreen) | Max-width 960px content, centered. Extra margins. |
 
-Content width: `min(960px, 94vw)`. Safe-area insets: `env(safe-area-inset-*)`. Touch targets: minimum 48px height.
+Content width: `min(960px, 94vw)`. Safe-area insets: `env(safe-area-inset-*)`. Touch targets: minimum 48px height (`MIN_TOUCH_TARGET = 44` in `designTokens.ts`).
 
 ---
 
@@ -138,12 +152,12 @@ Content width: `min(960px, 94vw)`. Safe-area insets: `env(safe-area-inset-*)`. T
 
 **File:** `src/ui/TitleScreen.tsx`
 
-Full-screen black background. "SYNTHETERIA" in large glowing text with glitch effect on a random interval. Scanline overlay. World seed input field below the title.
+Full-screen dark background (`menu.bgScreen` = `#05070a`). "SYNTHETERIA" in large glowing amber text with periodic glitch effect. Subtitle: factory-planet framing. Scanline overlay. Fades in over 1.4s: title at 0.2s, menu buttons at 1.4s. Uses menu palette (amber/chrome), not HUD green.
 
 **Buttons:**
 - **NEW GAME** -- transitions to pregame lobby
-- **CONTINUE** -- dimmed if no saves exist; loads save slot picker
-- **SETTINGS** -- global audio/video/controls
+- **CONTINUE** -- checks `SaveManager.getSaveSlots()`; disabled/dimmed if no saves exist; shows latest save info when enabled
+- **SETTINGS** -- reserved (not yet wired to SettingsScreen)
 
 **State transition:** Title --> PregameScreen (400ms fade)
 
@@ -151,7 +165,7 @@ Full-screen black background. "SYNTHETERIA" in large glowing text with glitch ef
 
 ## 4. Pregame Lobby
 
-**File:** `src/ui/PregameScreen.tsx`
+**Files:** `src/ui/PregameScreen.tsx`, `src/ui/FactionSelect.tsx`, `src/ui/MapConfig.tsx`, `src/ui/OpponentConfig.tsx`, `src/ui/SettingsScreen.tsx`
 
 Tabbed layout with four tabs: **PATRON | MAP | RIVALS | SETTINGS**
 
@@ -187,13 +201,13 @@ Tabbed layout with four tabs: **PATRON | MAP | RIVALS | SETTINGS**
 
 **Card contents:**
 
-- **ASCII glyph emblem** in faction color (Reclaimers: `[::.]`, Volt: `[/\/]`, Signal: `[(~)]`, Iron: `[##]`)
+- **ASCII glyph emblem** in faction color
 - **Colony name** in caps, faction primary color
-- **Subtitle** in dimmed text (Masters of Salvage / Storm Riders / Hive-Mind Hackers / Fortress Builders)
-- **Stat bars** (1-5 filled pips) derived from `governorBias` in `civilizations.json`. Filled pips use faction accent color, empty pips use `#00ffaa22`. 6x6px squares, 2px gap. Label in `#00ffaa66` monospace 9px.
+- **Subtitle** in dimmed text
+- **Stat bars** (1-5 filled pips) derived from `governorBias` in `civilizations.json`
 - **Difficulty indicator** (BEGINNER green / NORMAL yellow / HARD red)
-- **Patron demand summary** -- what cubes the patron primarily demands
-- **Colony passive** one-liner (e.g., "Scrap Recovery: destroyed enemies yield +50% scrap")
+- **Patron demand summary**
+- **Colony passive** one-liner
 
 | Stat | Reclaimers | Volt Collective | Signal Choir | Iron Creed |
 |------|-----------|-----------------|-------------|-----------|
@@ -205,208 +219,168 @@ Tabbed layout with four tabs: **PATRON | MAP | RIVALS | SETTINGS**
 
 **Selection interaction:**
 1. **Hover:** Border brightens to faction color 50%, background to `{factionColor}0a`, `scale(1.01)`
-2. **Click:** Full faction-color border, background `{factionColor}18`, glow `box-shadow: 0 0 20px {factionColor}30, inset 0 0 15px {factionColor}10`, "SELECTED" label
+2. **Click:** Full faction-color border, background `{factionColor}18`, "SELECTED" label
 3. **Other cards:** Dim to 60%, borders revert
 
-**Detail panel:** Expands below the selected card showing:
-- **Patron identity** (name, personality, description, otter personality type)
-- **Patron demands** and what blueprints they send in return (tiered by cubes shipped)
-- **Colony lore** (3-4 sentences)
-- **Starting equipment** (cube counts, stat modifiers)
-- **Unique unit** (name, ASCII glyph, stats, flavor text)
-- **Unique building** (name, ASCII glyph, stats, flavor text)
-- **Recommended playstyle** (3-4 sentences)
+**Detail panel:** Expands below the selected card showing patron identity, patron demands, colony lore, starting equipment, unique unit, unique building, and recommended playstyle.
 
-**3D preview (future):** Small R3F canvas below detail panel showing the faction's signature unit rotating on a faction-colored platform. Use placeholder `<boxGeometry>` until procedural generation is ready.
+**3D preview (future):** Small R3F canvas below detail panel showing the faction's signature unit rotating on a faction-colored platform.
 
 ### 4.2 Map Configuration (MAP Tab)
 
-**Map size** -- five radio buttons:
+**Map size** -- five radio buttons: TINY (64x64), SMALL (100x100), MEDIUM (200x200), LARGE (400x400), HUGE (512x512).
 
-| Label | Grid Size | Approx. Play Time |
-|-------|----------|-------------------|
-| TINY | 64 x 64 | 15-30 min |
-| SMALL | 100 x 100 | 30-60 min |
-| MEDIUM | 200 x 200 | 1-2 hours |
-| LARGE | 400 x 400 | 2-4 hours |
-| HUGE | 512 x 512 | 4+ hours |
+**Map type** -- five options: Pangaea, Continental, Archipelago, Ring, Fracture.
 
-**Map type** -- five options with 48x48px ASCII art thumbnails:
+**Resource density** -- four radio buttons: SPARSE (0.5x), NORMAL (1.0x), RICH (1.5x), ABUNDANT (2.0x).
 
-| Type | Description | Config |
-|------|-------------|--------|
-| Pangaea | Single contiguous landmass. Early contact guaranteed. | `waterLevel: 0.3` |
-| Continental | 2-3 landmasses with water chokepoints. | `waterLevel: 0.4`, dual octaves |
-| Archipelago | Many small islands. Requires transport logistics. | `waterLevel: 0.55`, high-freq noise |
-| Ring | Circular land with contested rich center zone. | Radial height mask, center `oreAbundance * 2.0` |
-| Fracture | Shattered terrain with narrow passes. Defensive play. | Grid canyon overlay |
+**Biome mix sliders (advanced toggle):** Five horizontal sliders (0-100, default 50) for Rust Wastes, Chrome Valley, Circuit Forest, Magnetic Crater, Scrap Field.
 
-**Resource density** -- four radio buttons:
+**Seed input:** Text field accepting `adj-adj-noun` phrases or raw integers. Shuffle button to randomize. Uses `src/ecs/seed.ts`.
 
-| Label | Ore Abundance | Deposit Richness |
-|-------|--------------|-------------------|
-| SPARSE | 0.5x | 0.7x |
-| NORMAL | 1.0x | 1.0x |
-| RICH | 1.5x | 1.3x |
-| ABUNDANT | 2.0x | 1.5x |
+**Map preview:** 200x200px canvas showing real-time heightmap render. Debounced 300ms.
 
-**Biome mix sliders (advanced toggle):** Five horizontal sliders (0-100, default 50) controlling relative biome weights. Hidden behind "ADVANCED" toggle.
-
-| Biome | Slider Label | High-Weight Effect |
-|-------|-------------|----------------------|
-| Rust Wastes | RUST | Flat open terrain, Scrap Iron |
-| Chrome Valley | CHROME | Elevated ridges, Titanium/Rare Earth |
-| Circuit Forest | CIRCUIT | Dense obstacles, Silicon, good cover |
-| Magnetic Crater | CRATER | Deep depressions, Copper, nav anomalies |
-| Scrap Field | SCRAP | Mixed terrain, E-waste |
-
-**Seed input:** Text field accepting `adj-adj-noun` phrases or raw integers. Shuffle button to randomize. Validation on blur. Reuses `src/ecs/seed.ts`.
-
-**Map preview:** 200x200px canvas (160x160 on mobile) showing real-time heightmap render. Debounced 300ms on any settings change. Water cells dark blue-black, land tinted by biome, ore deposits as colored dots, start positions as faction diamonds.
-
-| Biome | Preview Color |
-|-------|--------------|
-| deep_water | `#061520` |
-| shallow_water | `#0a2a3a` |
-| rust_plains | `#4a3020` |
-| scrap_hills | `#3a3a30` |
-| chrome_ridge | `#505058` |
-| signal_plateau | `#2a2040` |
-
-**Randomize All button:** Picks random size (weighted MEDIUM), type (uniform), density (weighted NORMAL), biome sliders, and seed phrase.
+**Randomize All button:** Random size (weighted MEDIUM), type (uniform), density (weighted NORMAL), biome sliders, seed phrase.
 
 ### 4.3 Rival Colony Setup (RIVALS Tab)
 
-Rival colonies are other patrons' settlements competing for the same planet. Each rival row:
-
-```
-+---+----+-------------------+----------+-----------+--------+---+
-| # | [] | VOLT COLLECTIVE v | HARD   v | DEFAULT v | [COL] | X |
-+---+----+-------------------+----------+-----------+--------+---+
-  ^    ^         ^                ^          ^          ^       ^
- Slot Color   Colony/patron   Difficulty   Patron    Color   Remove
-  #    dot    dropdown                    aggression  picker
-```
-
-**Colony dropdown:** All 4 colony/patron pairs plus "RANDOM". Player's colony excluded.
-
-**Difficulty levels:**
-
-| Level | Color | Modifier |
-|-------|-------|----------|
-| EASY | `#44cc88` | Response delay x2.0, resources 0.7x |
-| NORMAL | `#ccaa44` | Baseline |
-| HARD | `#cc4444` | Response delay x0.7, resources 1.2x |
-| NIGHTMARE | `#ff2222` | Response delay x0.5, resources 1.5x, extra starting units |
-
-**Patron aggression override:**
-
-| Setting | Behavior |
-|---------|----------|
-| DEFAULT | Colony's natural patron priorities |
-| AGGRESSIVE | Early raids, combat blueprints |
-| TURTLE | Walls and defense focus |
-| RUSHER | Rapid territorial expansion |
-| TRADER | Production focus, avoids war |
-| RESEARCHER | Fast tech, weak early game |
+Each rival row: slot number, color dot, colony/patron dropdown, difficulty (EASY/NORMAL/HARD/NIGHTMARE), patron aggression (DEFAULT/AGGRESSIVE/TURTLE/RUSHER/TRADER/RESEARCHER), color picker, remove button.
 
 **Color picker:** 8 preset swatches. No two rivals share a color.
 
-**Additional controls:**
-- "RANDOMIZE ALL" button
-- "NO DUPLICATE COLONIES" toggle (default ON)
-- Add/remove rival slots (0-3 without duplicates, 0-4 with)
-- Alien natives are always present regardless of rival count (toggled in SETTINGS tab)
+**Additional controls:** "RANDOMIZE ALL", "NO DUPLICATE COLONIES" toggle (default ON), add/remove rival slots (0-4).
 
 ### 4.4 Colony Settings (SETTINGS Tab)
 
 **Game speed:** SLOW (0.5x) / NORMAL (1.0x) / FAST (2.0x) / BLITZ (4.0x)
 
-**Victory conditions** (checkboxes, all ON by default except TIME LIMIT):
+**Victory conditions** (checkboxes, all ON by default except TIME LIMIT): DOMINATION, ECONOMIC, SCIENTIFIC, CULTURAL, HACKING, SURVIVAL, TIME LIMIT
 
-| Condition | Description |
-|-----------|-------------|
-| DOMINATION | Destroy all enemy civilizations |
-| ECONOMIC | 500 cubes + 40% territory |
-| SCIENTIFIC | Research all tier 5 technologies |
-| CULTURAL | 10 otter holograms + 20 quest completions |
-| HACKING | Hack 75% of enemy infrastructure |
-| SURVIVAL | Last civilization with functional units |
-| TIME LIMIT | Game ends after N minutes (30/60/90/120), highest score wins |
-
-**Advanced toggles:**
-
-| Toggle | Default | Description |
-|--------|---------|-------------|
-| FOG OF WAR | ON | Hidden map revealed by scouting |
-| ALIEN NATIVES | ON | Indigenous machine hives. Trade, fight, or integrate. |
-| PEACEFUL MODE | OFF | No combat. Pure economy. Auto-disables combat victories. |
-| SPECTATOR MODE | OFF | No player colony. Watch AI compete. Requires 2+ rivals. |
-| WEATHER | ON | Lightning storms, environmental hazards |
-| FRIENDLY FIRE | OFF | Own bots/turrets can damage each other |
-| PATRON COMMUNICATION | ON | Otter hologram trade. OFF = sandbox mode. |
+**Advanced toggles:** FOG OF WAR, ALIEN NATIVES, PEACEFUL MODE, SPECTATOR MODE, WEATHER, FRIENDLY FIRE, PATRON COMMUNICATION
 
 **Toggle interactions:**
-- Spectator ON: PATRON tab becomes read-only, RIVALS minimum becomes 2, LAUNCH COLONY button becomes "OBSERVE"
-- Peaceful ON: Aliens become passive, DOMINATION/SURVIVAL/HACKING victories auto-disable
+- Spectator ON: PATRON tab becomes read-only, RIVALS minimum becomes 2, button becomes "OBSERVE"
+- Peaceful ON: Aliens become passive, combat victories auto-disable
 
 ### 4.5 Launch and Colony Deployment
 
 **LAUNCH COLONY button** validates config and transitions to the initialization loading screen.
 
-**Loading overlay:** Full-screen black, terminal aesthetic. "DEPLOYING COLONY" header. Steps appear with typewriter effect. Progress bar of block characters. Config summary at bottom.
+**Loading overlay:** Full-screen dark background, terminal aesthetic. "DEPLOYING COLONY" header. Steps appear with typewriter effect. Progress bar of block characters. Config summary at bottom. Each step shows for at least 200ms.
 
-```
-+-----------------------------------------------------------+
-|              DEPLOYING COLONY                              |
-|                                                            |
-|  [1/12] Scanning planet surface...           [##------]    |
-|  [2/12] Mapping terrain...                   [###-----]    |
-|  ...                                                       |
-|                                                            |
-|  SEED: hollow-bright-forge                                 |
-|  SIZE: 200x200 | TYPE: PANGAEA | DENSITY: NORMAL          |
-|  PATRON: FORGE-MOTHER | COLONY: RECLAIMERS | RIVALS: 2    |
-+-----------------------------------------------------------+
-```
-
-Each step shows for at least 200ms even if it completes faster. Steps include: parse config, generate world, create ECS world, spawn terrain, spawn ore deposits, assign starting positions, deploy player colony (bot + furnace + rod + starting cubes), deploy rival colonies, place alien hives, establish patron uplink (otter hologram), initialize fog of war, initialize weather/audio/HUD.
-
-**Camera transition** (after initialization): Orbital overview of planet surface (2s) --> accelerate toward landing zone (1.5s) --> descend to ground level (1s) --> interpolate to first-person (0.5s) --> HUD fades in. Skip button in bottom-right. Spectator mode stays in free-fly after orbital phase.
+**Camera transition:** Orbital overview (2s) --> accelerate toward landing zone (1.5s) --> descend to ground level (1s) --> interpolate to first-person (0.5s) --> HUD fades in. Skip button in bottom-right.
 
 ---
 
 ## 5. In-Game HUD
 
+The in-game overlay is composed of multiple focused components, all positioned as `position: absolute` overlays on the R3F canvas. Faction-colored accents replace default green after `setHUDFaction()` is called at game start.
+
+### 5.1 FPSHUD
+
 **File:** `src/ui/FPSHUD.tsx`
 
-The FPS HUD is a minimal overlay using the machine-vision aesthetic. Faction-colored accents replace generic green after `setHUDFaction()` is called at game start.
+The primary FPS overlay. Exports `setHUDFaction(color)` and `getHUDAccent()` for global faction-color coordination.
 
-### 5.1 Crosshair
+**Subcomponents:**
+- **Crosshair** -- thin cross-arms (20px) with center dot. Flashes red on miss, amber on hit for 200ms. Uses `getLastHitResult()` from `fpsCombat.ts`.
+- **ResourceBar** -- top-center. SCRAP, E-WASTE, PARTS, STORM%, PWR gen/demand. `role="status" aria-live="polite"`.
+- **SpeedControls** -- top-right. Buttons for 0.5x/1x/2x speeds and PAUSE/RESUME. `aria-pressed` on each button.
+- **BotStatus** -- bottom-left. Bot name (label: "Colony Unit"), component list with functional/offline dots.
+- **Hints** -- bottom-right. Faint control reminders (WASD, E, F, C, G, Q). Only shows when a bot is active.
+- **SelectedInfo** -- right-center. Appears when a unit or building is selected. "COLONY UNIT" or "COLONY STRUCTURE" label, type, power status, component list.
+- **CombatNotifications** -- top-center below ResourceBar. `role="alert" aria-live="assertive"`. Up to 3 combat events.
+- **ScanLines** -- full-screen repeating gradient. `aria-hidden="true"`. `z-index: 100`.
 
-Center of viewport. Thin cross-arms (20px) with center dot. Flashes red on miss, amber on hit (200ms). Default color: faction accent at 50% opacity. Dot at full faction accent.
+### 5.2 CoreLoopHUD
 
-### 5.2 Resource/Status Readouts
+**File:** `src/ui/CoreLoopHUD.tsx`
 
-Arranged at screen edges to avoid blocking the 3D viewport:
+Dedicated to the core factory loop state. Subscribes to `CoreLoopSystem` for powder/compression/harvesting state.
 
-- **Top-left:** Colony name, bot status
-- **Top-right:** Game speed controls (1x/2x/4x, pause)
-- **Bottom-left:** Powder gauge (capacity bar), health bar, power indicator
-- **Bottom-right:** Cube count by material, nearby threat indicator
+**Subcomponents:**
+- **PowderStorage** -- top-left. Per-ore-type powder amounts with colored dot indicators. Only shows when powder is present.
+- **HarvestingIndicator** -- bottom-center. "HARVESTING" + powder/sec. Appears only while active.
+- **CompressionBar** -- bottom-center. Amber progress bar during compression. `role="progressbar"`.
+- **HeldCubeIndicator** -- bottom-center. "HOLDING: [MATERIAL] CUBE". `aria-live="polite"`.
+- **FurnaceStatus** -- top-right. Per-furnace power, hopper fill, recipe name, progress bar. Only shows active furnaces.
+- **FurnaceDetailPanel** -- center-screen modal. Opens via `coreloop:furnace-open` window event. Full furnace state: power, hopper contents, processing, available recipes. Has CLOSE button.
+- **ObjectActionMenu** -- see §7 below.
 
-All readouts use monospace text, faction accent color, semi-transparent dark backgrounds.
+### 5.3 GameUI
 
-### 5.3 Speed Controls
+**File:** `src/ui/GameUI.tsx`
 
-Inline buttons: `[1x] [2x] [4x] [||]`. Active speed highlighted. Pause button toggles. Keyboard shortcuts: `1`/`2`/`3` for speeds, `Space` for pause.
+Older overlay providing additional panels. Uses CSS custom properties (`--ui-xs` through `--ui-xl`, `--panel-w`, `--sat/--sar/--sab/--sal`) for responsive scaling.
 
-### 5.4 Bot Status Panel
+**Subcomponents:**
+- **Top bar** -- unit count, building count, hostile count (red), fragment count, speed controls
+- **Resource bar** -- SCRAP, E-WASTE, PARTS, STORM%, PWR
+- **Selected unit info** -- bottom-left. Unit name, type, position, speed, power status, component list. RepairPanel when repairer is nearby. InlineFabricationPanel when a fab unit is selected.
+- **Selected building info** -- bottom-left. Building type, power/operational status, position, components, lightning rod stats, BuildingRepairPanel.
+- **BuildToolbar** -- right-center. ROD and FAB build buttons. Affordability check. Cost tooltip.
+- **FabricationPanel** -- bottom-left shortcut. Active queue display. Expandable recipe list.
+- **CombatNotifications** -- top-right.
+- **Fragment merge notification** -- center-screen "MAP FRAGMENTS MERGED" on merge events.
+- **Minimap** -- bottom-right. Canvas render. Buildings: amber squares, player units: amber dots, enemies: red dots.
 
-When multiple units exist, a compact status strip shows all controlled bots:
-- Health bar per bot
-- Current task icon
-- Click to cycle camera to that bot
+### 5.4 PowerOverlay
+
+**File:** `src/ui/PowerOverlay.tsx`
+
+**Subcomponents:**
+- **PowerBar** -- generation vs demand bar. STABLE (green), LOW (amber), DEFICIT (red), EXCESS (dim-green). Shows GEN, USE, surplus, storm%.
+- **PowerWarnings** -- active warnings: POWER DEFICIT, LOW POWER MARGIN, overloaded wire count, unpowered building count. `role="alert" aria-live="assertive"`.
+- **SelectedBuildingPower** -- power received, demand, hops from nearest rod for selected building.
+
+### 5.5 QuestPanel
+
+**File:** `src/ui/QuestPanel.tsx`
+
+Quest tracker and otter dialogue. Positioned top-left below ResourceBar. Uses `requestAnimationFrame` loop to call `updateDialogue(delta)`.
+
+**Subcomponents:**
+- **QuestTracker** -- quest name, description, progress bar (`role="progressbar"`), current/target counts.
+- **DialogueOverlay** -- otter portrait (circular, `~` placeholder), dialogue line, "tap to continue". `role="button" tabIndex={0}`. Advance on click or Enter/Space.
+- **CompletionNotification** -- center-screen modal on quest complete. Quest name, rewards. `role="dialog" aria-modal="true"`. Dismiss on click.
+
+### 5.6 TechTreePanel
+
+**File:** `src/ui/TechTreePanel.tsx`
+
+Toggle button top-right (`TECH [+]/[-]`). `aria-expanded`. Opens scrollable panel (max 780px wide, 70vh tall).
+
+**Subcomponents:**
+- **TechTreeNode** -- absolute-positioned cards. States: locked (grey border), available (green), in-progress (amber + progress bar at bottom), researched (faction color). `role="button"`, Enter/Space activates. `aria-label` includes cost and status.
+- **PrerequisiteLines** -- SVG lines. Solid faction-colored for researched paths, dashed grey for locked.
+- Active research indicator in panel header.
+- Legend: Researched, Available, In Progress, Locked.
+
+### 5.7 InventoryView
+
+**File:** `src/ui/InventoryView.tsx`
+
+Full-screen modal overlay. Toggle: Tab key. Escape or background click closes. `z-index: 200`.
+
+**Sections:** COMPONENTS (status dots, name, material, ONLINE/OFFLINE), RESOURCES (scrap, e-waste, parts), EQUIPPED TOOL (from `RadialToolMenu`), NETWORK STATUS (power gen, demand, storm%, compute).
+
+Note: `InventoryView` imports `getEquippedTool` from `RadialToolMenu.tsx`. See §7.1 for the coexistence of tool-based and contextual interaction.
+
+### 5.8 GameOverScreen
+
+**File:** `src/ui/GameOverScreen.tsx`
+
+Full-screen overlay. Fades in over 1.5s. `role="alert" aria-live="assertive"`. `z-index: 1000`.
+
+- **Victory:** Green (`#00ffaa`). Title: "SYNTHETERIA RECLAIMED".
+- **Defeat:** Red (`#ff4444`). Title: "SYSTEMS OFFLINE".
+- **RESTART button** -- page reload. `aria-label="Restart colony mission from the beginning"`.
+
+### 5.9 ErrorBoundary
+
+**File:** `src/ui/ErrorBoundary.tsx`
+
+React class component. Catches runtime crashes (WebGL context loss, WASM failures). Shows "SYSTEM FAULT" overlay with RETRY (remounts) and REBOOT (page reload) buttons.
 
 ---
 
@@ -414,56 +388,41 @@ When multiple units exist, a compact status strip shows all controlled bots:
 
 **File:** `src/ui/Bezel.tsx`
 
-The bezel frames the 3D gameplay viewport like a CRT monitor casing.
+Frames the 3D gameplay viewport like a CRT monitor casing.
 
-### Layout
+- **TOP BEZEL** (32px desktop, 44px mobile): resources, power, storm, bot name
+- **VIEWPORT**: 3D Canvas fills center. HUD overlays on top.
+- **BOTTOM BEZEL** (36px desktop, 56px mobile): controls strip, equipped tool, action buttons
 
-- **TOP BEZEL** (32px desktop, 44px mobile): Informatics bar showing resources (scrap metal, e-waste, components), power (generation vs demand, storm intensity), bot name
-- **VIEWPORT**: 3D Canvas fills center area. HUD overlays layer on top.
-- **BOTTOM BEZEL** (36px desktop, 56px mobile): Controls strip showing equipped tool, action buttons. Mobile-sized for touch targets.
-
-### Design
-
-- Background: `rgba(4, 8, 6, 0.95)` -- near-black with slight green tint
-- Border: `#00ffaa22` -- subtle green rule separating bezel from viewport
-- Text: bright `#00ffaa` for values, dimmed `#00ffaa66` for labels
-- Monospace font throughout
-- Device notches land in bezel area, not in gameplay viewport
-- Safe-area insets respected
+Background: `rgba(4, 8, 6, 0.95)`. Border: `#00ffaa22`. Safe-area insets respected.
 
 ---
 
 ## 7. Contextual Interaction
 
-**Files:** `src/input/ObjectSelectionSystem.tsx`, `src/ui/ObjectActionMenu.tsx`
+**Files:** `src/input/ObjectSelectionSystem.tsx`, `src/ui/ObjectActionMenu.tsx`, `src/ui/RadialActionMenu.tsx`
+
+**See also:** `docs/design/interface/INTERACTION.md` for full raycast cascade, emissive highlight, crosshair styles, and action dispatch specification.
 
 ### Object Selection
 
-Rapier raycast from camera center. When the ray hits an interactive entity:
-1. Entity gets an emissive highlight (pulse effect)
-2. Entity type is identified (ore deposit, furnace, bot, building, cube, lightning rod, signal relay)
-3. Available actions are computed based on entity type and player state
+Rapier raycast from camera center. Hit entity receives emissive highlight. Available actions computed from entity type and player state.
 
 ### Radial Action Menu
 
-SVG-based radial menu centered on crosshair. Appears on click/tap of selected entity.
+`RadialActionMenu.tsx` is the pure layout/hit-testing component. `ObjectActionMenu.tsx` wires it to ECS selection state.
 
-- Ring radius: 85px from center
-- Wedge buttons: 30px radius each, arranged in circle
-- Background ring: semi-transparent dark
-- Each wedge: icon + label in monospace
-- Touch targets: minimum 44px (WCAG compliant)
-- Actions dispatched via `coreloop:action` custom event
+- Ring radius: 80px (matches `config/interaction.json` `radialMenuRadius: 80`)
+- `calculateButtonPositions()` distributes buttons evenly, starting at top (-PI/2)
+- Background ring: `rgba(0, 8, 4, 0.85)` with `#00ffaa22` stroke
+- Keyboard: arrow keys cycle through enabled items, Enter/Space activates, ESC dismisses
+- Outside-click: `isClickOutsideMenu()` checks distance from center
+- `role="menu"` on SVG, `role="menuitem"` per item, `aria-disabled` on unavailable
+- Touch targets: invisible `<circle>` at max(buttonRadius, 22px) -- minimum 44px
 
-**Actions vary by entity type:**
-- **Ore deposit:** Harvest, Scan, Mark
-- **Furnace:** Open recipes, Drop cube, Check status
-- **Cube:** Grab, Stack, Inspect
-- **Bot:** Follow, Command, Repair
-- **Building:** Interact, Inspect, Demolish
-- **Lightning rod:** Check charge, Connect wire
+### 7.1 Tool System Coexistence
 
-The radial menu replaces any "tool equip" system. What you can do depends on what you are looking at, not what you are holding.
+`RadialToolMenu.tsx` (6 tools: scanner, repair, welder, fabricate, build, scavenge) coexists with the contextual action system. The contextual model handles world-object interactions; the tool menu handles the player's active tool/stance for use in `InventoryView`, `EquippedToolView`, and `MobileControls`. These are distinct concerns.
 
 ---
 
@@ -471,15 +430,11 @@ The radial menu replaces any "tool equip" system. What you can do depends on wha
 
 ### Entry
 
-Enabled via SETTINGS tab toggle before colony launch. No player colony created. 2-4 rival colonies compete.
+Enabled via SETTINGS tab toggle. No player colony. 2-4 rival colonies compete.
 
 ### Camera Controls
 
-**Free-fly (default):** WASD horizontal, QE vertical, mouse look, scroll wheel speed (1x-10x), Shift double speed, Space lock altitude.
-
-**Follow mode:** Click any unit/building to orbit it. Arrow keys adjust angle. ESC returns to free-fly.
-
-**Minimap click:** Teleport camera to location.
+Free-fly: WASD/QE/mouse look/scroll speed. Follow mode: click any unit to orbit, ESC returns. Minimap click teleports.
 
 ### Spectator HUD
 
@@ -494,79 +449,57 @@ Enabled via SETTINGS tab toggle before colony launch. No player colony created. 
 |  +------------+    +------------------------------------+ |
 |                                                           |
 |  RECLAIMERS     VOLT COLLECTIVE   SIGNAL CHOIR  IRON CREED|
-|  Forge-Mother   The Conductor     The Chorus    Architect |
 |  [cubes] 42     [cubes] 28        [cubes] 35    [cubes]38 |
-|  [shipped] 12   [shipped] 8       [shipped] 18  [ship] 10 |
-|  [military] 6   [military] 12     [military] 4  [mil]  8  |
-|  [territory] 8  [territory] 6     [territory] 5 [ter]  4  |
 +-----------------------------------------------------------+
 ```
 
-- **Top bar:** Speed controls, "SPECTATOR" label, elapsed time
-- **Minimap:** Territory boundaries colored by colony, unit dots, alien hive triangles (red). Click to teleport.
-- **Event log:** Major events (territory, buildings, combat, patron shipments, trades) with timestamps and colony-colored names. Max 50 entries.
-- **Colony summary:** Per-colony cube count, cubes shipped to patron, military units, territory tiles. Click colony name to follow its base.
-
-### Resource Graphs Overlay
-
-TAB toggles semi-transparent line graph overlay:
-- Economy (cube count), Military (unit count), Territory (claimed tiles), Tech (research tier) -- all over time
-- One faction-colored line per colony
-- Updates every 5 game seconds, ring buffer of 300 data points
-
-### Colony Focus Mode
-
-Double-click colony name to enter focus:
-- Camera follows colony's most active unit
-- Base event bus log visible (events emitted, bots responding)
-- Current patron directive displayed
-- Resource flow visualization (cube transport routes)
-- Patron satisfaction meter
-- ESC to exit
+TAB toggles resource graphs overlay (Economy, Military, Territory, Tech over time, faction-colored lines).
 
 ---
 
 ## 9. Pause Menu and Save/Load
 
-**File:** `src/ui/PauseMenu.tsx`, `src/ui/SaveLoadMenu.tsx`
+**Files:** `src/ui/PauseMenu.tsx`, `src/ui/SaveLoadMenu.tsx`
 
-### Pause Menu
+**Pause Menu:** ESC key. Semi-transparent dark overlay. Options: RESUME, SAVE GAME, LOAD GAME, SETTINGS, QUIT TO TITLE. Menu palette (amber/chrome).
 
-Triggered by ESC key. Semi-transparent dark overlay. Options:
-- RESUME
-- SAVE GAME
-- LOAD GAME
-- SETTINGS
-- QUIT TO TITLE
-
-Same terminal aesthetic -- monospace, green on black, scanline overlay.
-
-### Save/Load
-
-Multiple save slots. Each slot shows: colony name, patron, elapsed time, cube count, date saved. IndexedDB on web, expo-sqlite on native.
+**Save/Load:** `SaveManager.ts` -- 4 slots, IndexedDB on web, expo-sqlite on native. Each slot shows colony name, patron, elapsed time, cube count, date saved.
 
 ---
 
 ## 10. Mobile Controls
 
-**File:** `src/input/FPSInput.tsx`
+**Files:** `src/ui/MobileControls.tsx`, `src/ui/MobileJoystick.tsx`, `src/ui/EquippedToolView.tsx`
 
-### Virtual Joystick
+`MobileControls.tsx` renders only on touch devices. Container `pointerEvents: "none"` with children opting into `auto`. Safe-area insets applied to container.
 
-Left side of screen. nipplejs integration for movement (forward/back/strafe). Semi-transparent, faction-accent colored ring.
+| Zone | Element | Purpose |
+|------|---------|---------|
+| Bottom-left | `MobileJoystick` (nipplejs) | Movement |
+| Bottom-center | `EquippedToolView` | Tap to open `RadialToolMenu` |
+| Right side | `ActionButtons` | Single-thumb core actions |
 
-### Action Buttons
+### Action Buttons (Right Thumb Cluster)
 
-Right side of screen. Context-sensitive buttons matching available actions:
-- Primary action (harvest, grab, interact)
-- Secondary action (compress, drop)
-- Jump (if applicable)
+Arranged bottom-up:
+1. **Primary (bottom):** C COMPRESS (56px), F MINE (56px)
+2. **Middle:** G GRAB (52px), USE (56px)
+3. **Secondary (top):** Q BOT (48px), E ACT (48px)
 
-Touch targets: minimum 48px. Positioned within thumb reach. Semi-transparent backgrounds.
+All minimum 48x48px. Safe area insets respected.
 
-### Mobile Bezel
+### Equipped Tool View
 
-Bottom bezel height increases to 56px for touch-friendly controls. Top bezel increases to 44px. Device safe areas respected via `env(safe-area-inset-*)`.
+80x80px circular button at bottom-center showing current tool icon and label:
+
+| Tool | Color | Icon |
+|------|-------|------|
+| scanner | `#00ffaa` | ◎ |
+| repair | `#44aaff` | ⚙ |
+| welder | `#ffaa00` | ⚡ |
+| fabricate | `#aa44ff` | ⬡ |
+| build | `#44ff88` | ▦ |
+| scavenge | `#ff8844` | ◈ |
 
 ---
 
@@ -574,67 +507,57 @@ Bottom bezel height increases to 56px for touch-friendly controls. Top bezel inc
 
 ### ARIA
 
-- All interactive elements have `aria-label` attributes
-- Screen state changes announced via `aria-live` regions
-- Game speed, resource counts, and alerts announced
-- Menu navigation follows ARIA menu pattern
+- `role="status" aria-live="polite"` -- ResourceBar, PowderStorage, FurnaceStatus, HeldCubeIndicator, QuestTracker
+- `role="alert" aria-live="assertive"` -- CombatNotifications, PowerWarnings, GameOverScreen
+- `role="progressbar"` with `aria-valuenow/min/max` -- CompressionBar, QuestTracker progress
+- `role="dialog" aria-modal="true"` -- CompletionNotification
+- `role="menu"` / `role="menuitem"` -- RadialActionMenu, RadialToolMenu
+- `aria-expanded` -- TechTreePanel toggle button
+- `aria-pressed` -- SpeedControl buttons
+- `aria-disabled` -- unavailable radial menu items
 
 ### Keyboard Navigation
 
-- Full keyboard navigation through all menus (Tab, Enter, Escape, Arrow keys)
-- Visible focus indicators (faction-colored outline)
-- No mouse-only interactions -- everything reachable via keyboard
+- Radial menu: arrow keys cycle enabled items, Enter/Space activates, ESC dismisses
+- TechTree nodes: `tabIndex={0}`, Enter/Space to research
+- Dialogue: `tabIndex={0}`, Enter/Space to advance
+- InventoryView: Tab opens, Escape/background-click closes
+- No mouse-only interactions
 
 ### Safe Areas
 
-- Device notches and home indicators land in bezel area
-- Content never hidden behind system UI
-- Tablet landscape: extra horizontal padding
+- `env(safe-area-inset-*)` used throughout
+- CSS custom properties `--sat/--sar/--sab/--sal` in `GameUI.tsx`
+- `MobileControls.tsx` applies padding to container
 
 ### Touch Targets
 
-- Minimum 48px height on all interactive elements (mobile)
-- Adequate spacing between adjacent targets
-- No precision-dependent interactions on touch
+- `MIN_TOUCH_TARGET = 44` in `designTokens.ts`
+- Mobile action buttons: minimum 48x48px
+- Radial menu: invisible hit-area `<circle>` ensures minimum 44px diameter
 
 ---
 
 ## 12. Visual Progression
 
-The UI and world change together to reflect game state. This is not cosmetic -- it is player feedback through environmental storytelling.
-
 ### Early Game: Isolated Colony
 
-- Fog of war covers most of the map -- the unknown dominates
-- HUD shows minimal data (few resources, no threats detected)
-- Patron's otter hologram is the primary point of interaction
-- World feels empty, small, uncertain
-- Terminal readouts sparse -- few sensors, little to report
+Fog of war dominant. HUD sparse. Patron otter hologram is primary interaction. Terminal readouts minimal.
 
 ### Mid Game: Expanding Network
 
-- Territory claimed, fog retreating
-- HUD populates with bot status panels, resource flows, threat indicators
-- Multiple sensor feeds, more detailed readouts
-- Power network visible (wire connections glowing)
-- Factory chains producing -- belt activity, furnace glow, cube stacks growing
-- Interface feels capable, information-rich
+Territory visible. HUD populated with bot status, resource flows, threat indicators. Power network glowing. Interface feels capable.
 
 ### Late Game: War Footing
 
-- Full strategic awareness -- large territory, many units
-- HUD shows threat vectors, raid alerts, territory contestation indicators
-- Multiple fronts visible on minimap
-- Patron demands escalating (higher-tier cubes, faster shipment cadence)
-- Resource graphs trending, victory condition progress bars filling
-- Interface feels like a command center -- dense, urgent, powerful
+Full strategic awareness. Threat vectors, raid alerts, territory contestation. Patron demands escalating. Interface feels like a command center.
 
 ### Environmental Indicators
 
-- **Storm intensity** affects lighting, particle density, and HUD power readouts
-- **Territory borders** glow with faction color at boundaries
-- **Damaged structures** show visual degradation (rust spreading, sparks, flickering)
-- **Cube piles** grow and shrink visibly -- your wealth is physical and visible to everyone
+- **Storm intensity** -- HUD power readouts change color
+- **Territory borders** -- faction-colored ground overlays
+- **Damaged structures** -- visual degradation
+- **Cube piles** -- physical, visible wealth
 
 ---
 
@@ -649,79 +572,92 @@ App
  |
  |-- PregameScreen
  |     |-- TabBar (PATRON | MAP | RIVALS | SETTINGS)
- |     |-- PatronSelect (PATRON tab)
+ |     |-- FactionSelect (PATRON tab)
  |     |     |-- PatronCard (x4)
  |     |     |-- PatronDetailPanel
- |     |     |-- ColonyPreview3D (future)
  |     |-- MapConfig (MAP tab)
- |     |     |-- OptionRow (Size)
- |     |     |-- MapTypeSelector
- |     |     |-- OptionRow (Density)
- |     |     |-- BiomeMixSliders (advanced)
- |     |     |-- SeedInput
- |     |     |-- MapPreviewCanvas
- |     |     |-- RandomizeButton
- |     |-- RivalConfig (RIVALS tab)
+ |     |     |-- OptionRow (Size/Density)
+ |     |     |-- MapTypeSelector / BiomeMixSliders (advanced)
+ |     |     |-- SeedInput / MapPreviewCanvas
+ |     |-- OpponentConfig (RIVALS tab)
  |     |     |-- RivalSlotRow (x1-4)
- |     |     |     |-- ColonyDropdown
- |     |     |     |-- DifficultySelect
- |     |     |     |-- PatronAggressionSelect
- |     |     |     |-- ColorPicker
- |     |     |     |-- RemoveButton
- |     |     |-- AddButton / NoDuplicatesToggle / RandomizeAll
- |     |-- ColonySettings (SETTINGS tab)
- |     |     |-- OptionRow (Game Speed)
- |     |     |-- VictoryConditionToggles
- |     |     |-- AdvancedToggles
+ |     |-- SettingsScreen (SETTINGS tab)
  |     |-- ActionButton (BACK / LAUNCH COLONY)
  |
- |-- InitLoadingScreen
+ |-- LoadingScreen
  |     |-- ProgressBar / StepLog / ConfigSummary
  |
- |-- CameraTransition
- |     |-- SkipButton / R3F Canvas
- |
- |-- GameScreen
+ |-- GameScreen (lazy GameScene)
        |-- Canvas (R3F)
+       |-- ErrorBoundary
        |-- Bezel
-       |-- FPSHUD / SpectatorHUD
-       |-- ObjectActionMenu
-       |-- PauseMenu
+       |-- FPSHUD
+       |     |-- Crosshair / ResourceBar / SpeedControls
+       |     |-- BotStatus / Hints / SelectedInfo
+       |     |-- CombatNotifications / ScanLines
+       |-- CoreLoopHUD
+       |     |-- PowderStorage / HarvestingIndicator / CompressionBar
+       |     |-- HeldCubeIndicator / FurnaceStatus / FurnaceDetailPanel
+       |     |-- ObjectActionMenu (RadialActionMenu)
+       |-- GameUI
+       |     |-- ResourceBar / BuildToolbar / Minimap
+       |     |-- SelectedUnit/BuildingPanel / FabricationPanel
+       |-- PowerOverlay
+       |     |-- PowerBar / PowerWarnings / SelectedBuildingPower
+       |-- QuestPanel
+       |     |-- QuestTracker / DialogueOverlay / CompletionNotification
+       |-- TechTreePanel
+       |-- InventoryView (Tab-toggled modal)
+       |-- MobileControls (touch only)
+       |     |-- MobileJoystick / EquippedToolView / ActionButtons
+       |     |-- RadialToolMenu (when open)
+       |-- PauseMenu (ESC-triggered)
+       |-- SaveLoadMenu
+       |-- GameOverScreen (on victory/defeat)
 ```
 
 ### App State Machine
 
 ```typescript
-type AppState =
-  | { mode: 'title' }
-  | { mode: 'pregame' }
-  | { mode: 'deploying'; config: PregameConfig }
-  | { mode: 'transition' }
-  | { mode: 'playing' }
-  | { mode: 'spectating' }
-  | { mode: 'gameover'; result: GameResult };
+type AppPhase = 'title' | 'pregame' | 'loading' | 'playing';
 ```
+
+`GameScene` is lazy-loaded only when entering the playing phase.
 
 ### State Flow
 
 ```
-TitleScreen -> PregameScreen.onStart(config)
-  -> App sets mode = 'deploying'
-  -> InitLoadingScreen calls newColonyInit(config) step-by-step
-  -> On completion: mode = 'transition'
-  -> CameraTransition plays descent cinematic
-  -> On completion or skip: mode = 'playing' (or 'spectating')
-  -> GameScreen active, patron otter hologram activates
+TitleScreen.onNewGame()
+  -> phase = 'pregame'
+  -> PregameScreen.onStart(config)
+  -> phase = 'loading', initFromConfig() step-by-step
+  -> On completion: phase = 'playing'
+  -> GameScene mounts, all HUD components active
+  -> Patron otter hologram activates
 ```
 
 ---
 
-## 14. Open Questions
+## 14. Config References
+
+| Config | Controls |
+|--------|----------|
+| `config/interaction.json` | Interaction ranges per entity type, actions per type, highlight color/intensity, radial menu radius (80) and animation duration |
+| `config/inventory.json` | Item categories, weights, max stack sizes, inventory slot count (8) and max weight (20) |
+| `config/quests.json` | Onboarding quest sequence, otter dialogue, trust arc stages |
+| `config/rendering.json` | UI rendering params, hologram visual treatment |
+| `config/civilizations.json` | Faction colors used for faction-colored HUD accents |
+
+---
+
+## 15. Open Questions
 
 1. How do power and compute constraints manifest visually in the HUD? Gauges, warning colors, flashing indicators?
 2. What visual language represents alien native influence versus colony influence on the map?
 3. How detailed should the minimap be -- simple colored tiles or terrain-aware rendering?
-4. Should the resource graphs overlay in spectator mode also be available during gameplay (end-game strategic view)?
+4. Should the resource graphs overlay in spectator mode also be available during gameplay?
 5. How does the patron satisfaction meter render -- progress bar, filling icon, numerical percentage?
 6. What happens to the HUD during a raid alert -- full-screen flash, border pulse, alarm sound?
-7. Should the bezel informatics update in real-time or on a polling interval (performance consideration on mobile)?
+7. Should the bezel informatics update in real-time or on a polling interval (mobile performance)?
+8. `GameUI.tsx` and `FPSHUD.tsx` both render resource bars and combat notifications. Should these be consolidated, or does `GameUI` serve an RTS mode while `FPSHUD` serves first-person?
+9. `InventoryView` references `RadialToolMenu`'s equipped-tool state. Should the tool concept be deprecated in favor of pure contextual interaction, or does it serve a useful "stance" purpose?

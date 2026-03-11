@@ -2,19 +2,24 @@
 
 **Status:** Authoritative
 **Date:** 2026-03-11
-**Scope:** The complete AI system for Syntheteria -- philosophy, 3-layer architecture, faction behavior, and implementation spec.
+**Scope:** The complete AI system for Syntheteria — philosophy, 3-layer architecture, faction behavior, and implementation spec.
 
 **Merges:** CONSCIOUSNESS_MODEL.md, GDD-009 (Colony AI Architecture), GDD-003 (Governors/Evaluators)
+
+**See also:**
+- `docs/design/world/RACES.md` — Per-faction lore, GOAP weight tables, base agency flavour, military doctrines
+- `docs/design/gameplay/COMBAT.md` §13 — AI combat decision rules (when to attack, when to retreat, target selection)
+- `docs/design/gameplay/OVERVIEW.md` §Civilizations — Player-facing summary of AI faction biases
 
 ---
 
 ## 1. AI Philosophy: Emergent Machine Intelligence
 
-Syntheteria's AI is not a human emperor making grand strategy decisions. It is **distributed machine intelligence** -- awareness that emerges from computation, extends through signal networks, and degrades under resource pressure.
+Syntheteria's AI is not a human emperor making grand strategy decisions. It is **distributed machine intelligence** — awareness that emerges from computation, extends through signal networks, and degrades under resource pressure.
 
 ### 1.1 Core Principle: Computation as Awareness
 
-Every AI entity in Syntheteria requires computational resources to function. More compute means sharper decision-making, faster reactions, better planning. Less compute means degraded awareness -- slower responses, worse task prioritization, vulnerability to hostile takeover.
+Every AI entity in Syntheteria requires computational resources to function. More compute means sharper decision-making, faster reactions, better planning. Less compute means degraded awareness — slower responses, worse task prioritization, vulnerability to hostile takeover.
 
 This is expressed mechanically through three pillars:
 
@@ -30,16 +35,16 @@ A governor's effective intelligence depends on whether it can **reach** its unit
 
 | Situation | Can Reach? | Can Manage? | Result |
 |-----------|------------|-------------|--------|
-| Normal operation | Yes | Yes | Full control -- base agent runs optimally |
+| Normal operation | Yes | Yes | Full control — base agent runs optimally |
 | Compute shortage | Yes | No | Unit vulnerable to hacking, cannot update task priorities |
 | Signal loss | No | N/A | Unit continues last order, can be hacked by enemies |
-| Both | No | No | Unit isolated and vulnerable -- easy raid target |
+| Both | No | No | Unit isolated and vulnerable — easy raid target |
 
 Signal loss occurs when units move beyond relay range or when enemy Signal Choir infiltrators disrupt relay chains. Isolated bots continue their last orders but cannot receive new tasks from their base agent, making them predictable and exploitable.
 
 ### 1.3 Failure States and Vulnerability
 
-The AI system models cascading failure -- losing one component can trigger a chain reaction:
+The AI system models cascading failure — losing one component can trigger a chain reaction:
 
 **Compute Overextension:** When a colony's compute demand exceeds capacity (too many bots, too few signal relays), peripheral units become vulnerable. Enemy hacking can capture these units, reducing compute further, creating a death spiral. Governors must balance expansion against compute headroom.
 
@@ -66,21 +71,21 @@ The Signal Choir faction specializes in hacking, making their infiltrator bots a
 
 ### 2.1 Why Colonization, Not Civilization
 
-The AI architecture models robot colonies, not human empires. Robots don't think like emperors with grand strategy -- they are rational agents making cost-benefit calculations. The game follows a 3-act structure that evolves organically through a **patron dependency gradient**:
+The AI architecture models robot colonies, not human empires. Robots don't think like emperors with grand strategy — they are rational agents making cost-benefit calculations. The game follows a 3-act structure that evolves organically through a **patron dependency gradient**:
 
 | Act | Phase | Patron Dependency | Core Gameplay |
 |-----|-------|-------------------|---------------|
-| **Act 1: Colonization** | Early game (0-15 min) | High -- patron is sole source of blueprints | Harvest, compress, ship cubes home, receive blueprints. Build first base and furnace. Learn the core loop. |
-| **Act 2: Factory** | Mid game (15-40 min) | Declining -- furnace recipes produce blueprints locally | Automate with belts and machines. Optimize resource flows. Patron still useful but no longer essential. |
-| **Act 3: Conquest** | Late game (40+ min) | Low -- patron is one trade partner among many | Self-sufficient multi-base empire. Bot armies, territory control, subjugate rival colonies. |
+| **Act 1: Colonization** | Early game (0-15 min) | High — patron is sole source of blueprints | Harvest, compress, ship cubes home, receive blueprints. Build first base and furnace. Learn the core loop. |
+| **Act 2: Factory** | Mid game (15-40 min) | Declining — furnace recipes produce blueprints locally | Automate with belts and machines. Optimize resource flows. Patron still useful but no longer essential. |
+| **Act 3: Conquest** | Late game (40+ min) | Low — patron is one trade partner among many | Self-sufficient multi-base empire. Bot armies, territory control, subjugate rival colonies. |
 
-The transition between acts is **not dramatic**. There is no "declare independence" moment. As local blueprint production increases, the marginal value of shipping cubes home decreases. The colony gradually stops needing the patron. Both sides have vested interest -- the patron wants resources, the colony wants tech -- so the relationship persists but shifts in balance.
+The transition between acts is **not dramatic**. There is no "declare independence" moment. As local blueprint production increases, the marginal value of shipping cubes home decreases. The colony gradually stops needing the patron. Both sides have vested interest — the patron wants resources, the colony wants tech — so the relationship persists but shifts in balance.
 
 ### 2.2 The Three Actors
 
 **Home Planet Patron (per race):** An AI on the home planet that dispatched this colony. Communicates infrequently via otter hologram projections. Sends material requests, delivers blueprints and reinforcements in exchange. Each race has a different patron with different priorities.
 
-**Colonial Bases (per settlement):** Autonomous event-driven agents anchored to physical buildings. Each base has its own event bus, work queue, bot roster, cube inventory. Bases communicate needs via demand signals over wire/signal networks. No central brain -- emergent coordination.
+**Colonial Bases (per settlement):** Autonomous event-driven agents anchored to physical buildings. Each base has its own event bus, work queue, bot roster, cube inventory. Bases communicate needs via demand signals over wire/signal networks. No central brain — emergent coordination.
 
 **Alien Natives (indigenous):** Were here before the colonists. Not competing for patron favor. Can be traded with, fought, or subjugated. Their relationship with each colony adds strategic depth, particularly in Act 3.
 
@@ -124,9 +129,168 @@ The transition between acts is **not dramatic**. There is no "declare independen
 
 ---
 
-## 4. Patron Agent (Strategic Layer)
+## 4. GOAP Governor (Strategic Layer)
 
-### 4.1 Core Concept
+### 4.1 CivilizationGovernor — What It Actually Does
+
+`src/ai/goap/CivilizationGovernor.ts` is the **GOAP planner** that runs at the strategic level. One governor exists per AI faction. Each tick it:
+
+1. Reads the faction's current `FactionSituation` (resource level, threat, tech tier, idle units, outpost count, exploration fraction)
+2. Computes effective goal weights by applying situational modifiers to personality weights
+3. Scores all `CivGoal` values and sorts by priority
+4. Runs the A* GOAP planner (`GOAPPlanner.ts`) to find the cheapest action sequence achieving the top goal
+5. Returns the next `GOAPAction` to execute, or falls back to `BasicHarvest` (no bot ever idles)
+
+The governor re-evaluates goals every 10 ticks (`REEVAL_INTERVAL = 10`). It only switches goals when a new goal outprioritizes the current goal by more than 0.2 (`PRIORITY_OVERRIDE_THRESHOLD`), providing inertia against rapid oscillation.
+
+### 4.2 CivGoals (from GoalTypes.ts)
+
+Eight strategic goals the governor evaluates each tick:
+
+| CivGoal | Description |
+|---------|-------------|
+| `expand_territory` | Claim new territory via outposts |
+| `gather_resources` | Collect scrap, e-waste, and cubes |
+| `build_defenses` | Build walls and turrets |
+| `research_tech` | Advance through tech tree |
+| `attack_enemy` | Launch raid against enemy faction |
+| `scout_map` | Send scouts to reveal fog-of-war |
+| `trade` | Propose trade deal with neighbor |
+| `hoard_cubes` | Accumulate material cubes |
+
+Goals with already-satisfied desired world state get a 90% priority penalty (multiplied by 0.1) to drive the governor toward goals that still need work.
+
+### 4.3 GOAP Actions (from ActionTypes.ts)
+
+Ten actions the planner can chain. Each has preconditions, effects on world state, and a cost:
+
+| Action | Cost | Preconditions | Effects |
+|--------|-----:|---------------|---------|
+| `BasicHarvest` | 3 | (none) | `has_resources`, `resources_gathered` |
+| `SendScoutParty` | 2 | `has_idle_units` | `has_scouted`, `map_scouted` |
+| `AssignMiners` | 2 | `has_idle_units` | `has_miners`, `has_resources`, `resources_gathered` |
+| `TradeOffer` | 3 | `has_resources`, `has_trade_partner` | `trade_complete` |
+| `HoardCubes` | 3 | `has_miners` | `cubes_hoarded` |
+| `ProduceUnit` | 5 | `has_resources` | `has_idle_units` |
+| `BuildOutpost` | 4 | `has_scouted`, `has_resources` | `has_outpost`, `territory_expanded` |
+| `ResearchTech` | 6 | `has_resources` | `has_tech_progress`, `tech_researched` |
+| `BuildWalls` | 5 | `has_resources`, `has_outpost` | `has_defenses`, `defenses_built` |
+| `LaunchRaid` | 7 | `has_idle_units`, `has_enemy_target` | `attack_launched` |
+
+`BasicHarvest` has no preconditions — it guarantees the planner can always find some plan from any starting state. It is also the ultimate fallback the governor returns when the planner fails entirely, with `needsBaseAssignment: true` set so the bot knows to phone home.
+
+### 4.4 GOAPPlanner (A* Search)
+
+`src/ai/goap/GOAPPlanner.ts` implements a standard A* search over world states:
+
+- Each node is a `WorldState` (partial `Record<WorldStateKey, boolean>`)
+- Edges are actions whose preconditions are met in the current node's state
+- Edge cost is the action's `cost` field
+- Heuristic: count of unsatisfied goal conditions (admissible — never overestimates)
+- Max 1000 iterations before giving up (prevents infinite loops)
+
+Typical plan length is 1-4 actions. For example, to expand territory from a resource-sparse start:
+```
+[AssignMiners]  -> has_resources
+  +[BuildOutpost] -> territory_expanded
+```
+Or from a fully idle state:
+```
+[SendScoutParty] -> has_scouted
+  +[AssignMiners] -> has_resources
+    +[BuildOutpost] -> territory_expanded
+```
+
+### 4.5 FactionPersonality (from FactionPersonality.ts)
+
+`src/ai/goap/FactionPersonality.ts` bridges `config/civilizations.json` to goal weights.
+
+**How weights are computed:**
+
+Each `CivGoal` is a weighted sum of relevant `governorBias` fields:
+
+| CivGoal | Bias contributions |
+|---------|--------------------|
+| `expand_territory` | expansion×0.7 + military×0.3 |
+| `gather_resources` | economy×0.5 + mining×0.5 |
+| `build_defenses` | defense×0.8 + military×0.2 |
+| `research_tech` | research×0.9 + economy×0.1 |
+| `attack_enemy` | military×0.8 + expansion×0.2 |
+| `scout_map` | expansion×0.6 + military×0.4 |
+| `trade` | economy×0.7 + research×0.3 |
+| `hoard_cubes` | economy×0.6 + mining×0.4 |
+
+Normalized to `[0..1]` by dividing by `1.5 * totalContribution`. Bias values range ~0.7–1.5.
+
+**Situational modifiers applied each tick:**
+
+| Condition | Effect |
+|-----------|--------|
+| `resourceLevel < 0.3` | `gather_resources` × up to 1.6x, `hoard_cubes` × up to 1.6x |
+| `underAttack == true` | `build_defenses` × 1.5, `expand_territory` × 0.5, `trade` × 0.3 |
+| `explorationLevel < 0.4` | `scout_map` × up to 1.6x |
+| `idleRatio > 0.5` | `expand_territory` × up to 1.75x, `attack_enemy` × up to 1.75x |
+| `techProgress < 0.5` | `research_tech` × up to 1.75x |
+| `outpostCount == 0` | `expand_territory` × 1.4x |
+
+### 4.6 GovernorActionExecutor (from GovernorActionExecutor.ts)
+
+`src/ai/goap/GovernorActionExecutor.ts` translates GOAP actions into concrete system calls. It implements the `IActionExecutor` interface and is injected into the governor via `setActionExecutor()`.
+
+Only two GOAP actions require direct system calls. All others are resolved at the unit-brain level:
+
+| GOAP Action | Executor behavior |
+|-------------|------------------|
+| `launch_raid` | Calls `findRaidTargets(faction)` → `assessRaidViability(faction, target)` → `planRaid(faction, position, unitIds, homePosition, tick)`. Returns raid ID on success, null if no viable target. |
+| `research_tech` | Calls `getResearchProgress(faction)` (no-op if in progress), then `getAvailableTechs(faction)`, then `startResearch(faction, tech.id)`. Returns tech ID on success, null otherwise. |
+| All other actions | Returns null — handled by unit brain layer. |
+
+The executor receives an `ExecutionContext` with: `faction` (ID), `unitIds` (available bots), `homePosition` (Vec3), `tick` (current sim tick).
+
+### 4.7 GovernorSystem (Bridge Layer)
+
+`src/systems/governorSystem.ts` bridges the GOAP governor to the running game. It sits on top of `aiCivilization.ts` (which handles passive harvest and phase-cycling) and adds strategic prioritization.
+
+On each tick it:
+1. Reads `CivState` from `aiCivilization.ts` (resources, threat level, territory, tech tier)
+2. Translates `CivState` → `FactionSituation` (governor personality inputs)
+3. Translates `CivState` → `WorldState` (GOAP boolean conditions)
+4. Calls `governor.tick(situation, worldState)` to get the `GOAPAction`
+5. Translates `GOAPAction.name` into bot commands issued to idle bots
+
+**GOAP action → bot command translation:**
+
+| GOAPAction | Bot Command |
+|------------|-------------|
+| `basic_harvest` | `harvest` at nearest deposit |
+| `assign_miners` | `harvest` issued to all idle bots |
+| `send_scout_party` | `patrol` with wide radius |
+| `build_outpost` | `build` at expansion target position |
+| `build_walls` | `build` at base perimeter |
+| `research_tech` | `idle` (tech is passive) |
+| `launch_raid` | `attack` toward nearest enemy base |
+| `hoard_cubes` | `harvest` directed to stockpile |
+| `produce_unit` | `idle` (production handled by fabrication system) |
+| `trade_offer` | `idle` (handled by diplomacySystem) |
+
+### 4.8 aiCivilization.ts (Passive Economic Layer)
+
+`src/systems/aiCivilization.ts` provides the base economic loop that the GOAP governor runs on top of. It is a state machine (`GATHER → BUILD → EXPAND → DEFEND`) with passive resource harvesting scaled by faction biases. The governor does not replace this — it adds strategic prioritization on top.
+
+**CivPhases:**
+
+| Phase | Duration | Trigger | Behavior |
+|-------|----------:|---------|---------|
+| `GATHER` | ~50 ticks | Start, or after defense | Passive resource accumulation at faction harvest rate |
+| `BUILD` | ~50 ticks | Enough cubes to build | Consume cubes for buildings/units |
+| `EXPAND` | ~50 ticks | Buildings placed | Grow territory, dispatch bots outward |
+| `DEFEND` | ~50 ticks | `threatLevel` high | Pull bots back, prioritize turrets and walls |
+
+---
+
+## 5. Patron Agent (Strategic Layer)
+
+### 5.1 Core Concept
 
 The Home Planet Patron is a remote AI entity that:
 - **Does NOT see** the colony's internal state (no aggregated base reports)
@@ -137,7 +301,7 @@ The Home Planet Patron is a remote AI entity that:
 
 This is architecturally simpler than an omniscient governor because the patron operates on a slow cadence with limited information.
 
-### 4.2 PatronAgent Class
+### 5.2 PatronAgent Class
 
 ```typescript
 export class PatronAgent {
@@ -194,11 +358,11 @@ export interface PatronReward {
 export type PatronPersonality = 'demanding' | 'supportive' | 'mysterious' | 'strategic';
 ```
 
-### 4.3 Request Generation
+### 5.3 Request Generation
 
 The patron selects materials based on race-specific priorities with weighted random selection. Quantity scales with game time (requests grow larger as the colony matures). Request fulfillment improves satisfaction, which improves reward quality.
 
-### 4.4 Reward Quality Scaling
+### 5.4 Reward Quality Scaling
 
 | Satisfaction | Reward Tier |
 |-------------|-------------|
@@ -206,7 +370,7 @@ The patron selects materials based on race-specific priorities with weighted ran
 | > 0.6 | Blueprint unlock (next in tech progression) |
 | < 0.6 | Basic supplies (5 scrap cubes) |
 
-### 4.5 The Patron Dependency Gradient
+### 5.5 The Patron Dependency Gradient
 
 The patron relationship is a cost-benefit curve that shifts across the 3 acts:
 
@@ -225,7 +389,7 @@ ACT 3: Local production covers most needs.
 
 For AI factions, each Base Agent evaluates this gradient using a heuristic that considers: local cube count, active threats, patron satisfaction, wall coverage, race bias, local blueprint capacity, and tech tier. The fraction naturally decreases as the colony advances.
 
-### 4.6 Patron-Colony Communication Flow
+### 5.6 Patron-Colony Communication Flow
 
 ```
 PatronAgent generates PatronDirective
@@ -248,7 +412,9 @@ OtterTrader inventory refreshes with new blueprints/rewards
 
 For AI factions, this happens programmatically. For the player faction, the otter hologram UI is the patron interface.
 
-### 4.7 Race-Specific Patron Behavior
+### 5.7 Race-Specific Patron Behavior
+
+See `docs/design/world/RACES.md` for full per-faction lore. Summary of AI behavioral differences:
 
 | Race | Patron Name | Personality | Primary Request | Receives |
 |------|-------------|-------------|-----------------|----------|
@@ -259,11 +425,11 @@ For AI factions, this happens programmatically. For the player faction, the otte
 
 ---
 
-## 5. Base Agent (Operational Layer)
+## 6. Base Agent (Operational Layer)
 
-### 5.1 Core Concept
+### 6.1 Core Concept
 
-The Base Agent is the **primary intelligence** in the architecture. It is NOT a subordinate executing patron commands -- it IS the colony's operational brain. Each settlement is an autonomous event-driven node.
+The Base Agent is the **primary intelligence** in the architecture. It is NOT a subordinate executing patron commands — it IS the colony's operational brain. Each settlement is an autonomous event-driven node.
 
 The existing `BaseAgent.ts` implements this pattern with:
 - Local event bus (`on()` / `emit()`)
@@ -271,16 +437,16 @@ The existing `BaseAgent.ts` implements this pattern with:
 - State scanners that generate tasks from local conditions
 - Patrol tasks as guaranteed fallback (no bot ever idles)
 
-### 5.2 How Patron Directives Influence Base Behavior
+### 6.2 How Patron Directives Influence Base Behavior
 
 The patron doesn't command bases directly. Patron directives become **priority modifiers** on the base's local decision-making:
 
 - If patron requests a specific material, the base boosts harvest priority for deposits of that material type
 - Matching cubes already in inventory get queued for transport to the shipment point
 - Low patron satisfaction causes the base to prioritize shipment transport
-- The base still makes its own decisions -- the patron only shifts weights
+- The base still makes its own decisions — the patron only shifts weights
 
-### 5.3 Event Types
+### 6.3 Event Types
 
 ```typescript
 export const BaseEventType = {
@@ -300,7 +466,7 @@ export const BaseEventType = {
 } as const;
 ```
 
-### 5.4 Inter-Base Communication: Demand Signals
+### 6.4 Inter-Base Communication: Demand Signals
 
 Bases communicate needs through **demand signals** transmitted over wire/signal networks. This creates emergent supply chain behavior without centralized planning.
 
@@ -318,12 +484,12 @@ interface DemandSignal {
 ```
 
 Demand signals flow naturally:
-1. Base A's furnace is starving -- broadcasts material demand
-2. Base B has surplus of that material -- dispatches transport bot
-3. Patron requests chrome -- Base C near chrome deposit boosts harvest, broadcasts surplus
-4. Base D far from chrome -- broadcasts demand, receives chrome via inter-base transport
+1. Base A's furnace is starving — broadcasts material demand
+2. Base B has surplus of that material — dispatches transport bot
+3. Patron requests chrome — Base C near chrome deposit boosts harvest, broadcasts surplus
+4. Base D far from chrome — broadcasts demand, receives chrome via inter-base transport
 
-### 5.5 Resource Allocation Tables
+### 6.5 Resource Allocation Tables
 
 Each base adjusts bot allocation based on the current act and situation:
 
@@ -339,7 +505,7 @@ Each base adjusts bot allocation based on the current act and situation:
 
 Base adjusts at most 1-2 bots per tick to avoid thrashing.
 
-### 5.6 Base Lifecycle
+### 6.6 Base Lifecycle
 
 **Spawning a new Base Agent (expansion):**
 ```
@@ -363,339 +529,160 @@ Enemy raid destroys outpost building
 
 ---
 
-## 6. Bot Brain (Tactical Layer)
+## 7. Faction Governor Profiles
 
-### 6.1 FSM States
+Each civilization race has distinct personality biases. The authoritative source for **lore, military doctrine, base agency flavour, matchup notes, and per-faction GOAP weight explanations** is `docs/design/world/RACES.md`.
 
-```typescript
-export const BotState = {
-  // Core states
-  IDLE: 'idle',
-  PATROL: 'patrol',
-  SEEK_TARGET: 'seek_target',
-  ATTACK: 'attack',
-  FLEE: 'flee',
-  GUARD: 'guard',
-  FOLLOW: 'follow',
+This section records the **config values** from `config/civilizations.json` and how they translate to GOAP behavior.
 
-  // Economy states
-  HARVEST: 'harvest',
-  COMPRESS: 'compress',
-  PICKUP_CUBE: 'pickup_cube',
-  CARRY_CUBE: 'carry_cube',
-  DELIVER_CUBE: 'deliver_cube',
-  BUILD: 'build',
-  SCOUT: 'scout',
-  MOVE_TO_BASE: 'move_to_base',
+### 7.1 Config Schema
 
-  // Colonization states
-  SHIP_HOME: 'ship_home',
-  TRADE_NATIVE: 'trade_native',
-} as const;
-```
-
-### 6.2 The "Phone Home" Guarantee
-
-**No bot ever idles.** This is the architectural invariant:
-
-```
-Bot has a task from Base work queue?
-  YES -> execute task (BotBrain handles tactical execution)
-  NO  |
-      v
-Bot Brain produces a state transition?
-  YES -> execute (e.g., enemy detected -> SEEK_TARGET)
-  NO  |
-      v
-Bot is stuck / idle / task completed / target lost?
-  -> "Phone Home" to nearest Base Agent
-  -> Base Agent work queue ALWAYS has tasks:
-      Priority 1: Pending harvest task
-      Priority 2: Loose cubes needing transport
-      Priority 3: Pending build order
-      Priority 4: Patrol base perimeter (ALWAYS available)
-```
-
-In practice, the IDLE state waits 1 second, then claims a task from the nearest base's work queue. If nothing else is available, patrol is always there.
-
-### 6.3 State Machines
-
-**Harvest cycle:**
-```
-IDLE -> claim HARVEST task -> HARVEST (move to deposit, grind 8-15s)
-  -> powder full -> COMPRESS (2-4s, cube spawns at feet)
-  -> HARVEST (return to deposit for next load)
-  -> deposit depleted -> IDLE -> Phone Home
-  [enemy in aggro range at any point -> SEEK_TARGET interrupt]
-```
-
-**Transport cycle:**
-```
-IDLE -> claim TRANSPORT task -> PICKUP_CUBE (move to cube, grab)
-  -> destination check:
-     -> shipment point -> SHIP_HOME -> PatronAgent.receiveCubeShipment()
-     -> furnace/stockpile -> CARRY_CUBE (move, 30% speed penalty)
-  -> arrive -> DELIVER_CUBE (drop) -> IDLE -> Phone Home
-  [health < 30% + enemies -> drop cube, FLEE]
-```
-
-**Build cycle:**
-```
-IDLE -> claim BUILD task -> BUILD (move to site, construct 0-100%)
-  -> complete -> [outpost? new BaseAgent spawns] -> IDLE -> Phone Home
-  [enemy interrupt -> progress saved, SEEK_TARGET]
-```
-
-**Scout cycle:**
-```
-IDLE -> claim SCOUT task -> SCOUT (spiral outward, reveal fog)
-  -> discover deposit/enemy/native -> record in faction knowledge
-  -> area 80% explored -> IDLE -> Phone Home
-```
-
-### 6.4 Emergency Overrides
-
-Checked every frame, override any current state:
-
-| Priority | Condition | Action |
-|----------|-----------|--------|
-| 1 | Health < 20% AND enemies nearby | Drop cube if carrying, FLEE toward home base, base emits DEFENSE_ALERT |
-| 2 | Health < 50% AND outnumbered 3:1 | FLEE |
-| 3 | Home base under attack AND role == combat | Override current orders, GUARD base at max speed |
-
-### 6.5 Yuka Vehicle Steering
-
-Each bot is a Yuka Vehicle with steering behaviors:
-
-| SteeringCommand | Yuka Behavior |
-|-----------------|---------------|
-| STOP | Clear all behaviors |
-| SEEK | SeekBehavior toward target |
-| ARRIVE | ArriveBehavior (decelerate at target) |
-| FLEE | FleeBehavior from target |
-| WANDER | WanderBehavior |
-
-For squads: `OffsetPursuitBehavior` (FormationSystem.ts) + `SeparationBehavior` for spacing.
-Carrying a cube reduces maxSpeed by 30% (from config).
-
-### 6.6 Extended BotContext
+Each faction entry in `config/civilizations.json` has:
 
 ```typescript
-export interface BotContext {
-  // Existing fields (position, health, weapon, etc.)
-
-  // Base Agent reference
-  homeBaseId: string;
-  homeBase: BaseAgent | null;
-
-  // Economy perception
-  nearbyDeposits: NearbyDeposit[];
-  nearbyCubes: NearbyCube[];
-  nearbyFurnaces: NearbyFurnace[];
-  powderLevel: number;               // 0..1
-  carryingCube: string | null;
-
-  // Role
-  assignedRole: BotRole;
-
-  // Colonization-specific
-  nearbyNatives: NearbyNative[];
-  patronRequestMaterial: string | null;
+{
+  name: string;
+  description: string;
+  color: string;         // hex, used for territory overlay + emissive color
+  accentColor: string;
+  governorBias: {
+    economy: number;     // 0.7 - 1.5 range
+    mining: number;
+    military: number;
+    defense: number;
+    research: number;
+    expansion: number;
+  };
+  uniqueAbilities: { ... };    // passive bonuses (not governor-controlled)
+  uniqueUnit: { ... };         // faction-specific bot type
+  uniqueBuilding: { ... };     // faction-specific structure
+  startingBonus: { ... };      // starting cube inventory
+  researchSpeedMultiplier: number;
+  harvestSpeedMultiplier: number;
+  buildCostMultiplier: number;
 }
 ```
+
+Note: `governorBias` does NOT have a `diplomacy` key. The `trade` and `hoard_cubes` goals are computed from `economy` and `mining` bias combinations (see Section 4.5).
+
+### 7.2 Reclaimers
+
+Config `governorBias` (from `config/civilizations.json`):
+
+| Bias | Value |
+|------|------:|
+| economy | 1.5 |
+| mining | 1.3 |
+| military | 0.8 |
+| defense | 1.0 |
+| research | 0.7 |
+| expansion | 1.0 |
+
+Derived GOAP goal priorities (highest to lowest):
+1. `gather_resources` (economy + mining → strong)
+2. `hoard_cubes` (economy + mining → strong)
+3. `build_defenses` (defense moderate)
+4. `expand_territory` (expansion + military moderate)
+5. `research_tech` (research weak — slowest tech race)
+
+Economic modifiers: `harvestSpeedMultiplier: 1.2`, `buildCostMultiplier: 0.9`, `researchSpeedMultiplier: 0.8`
+
+Starting bonus: 20 scrap metal + 5 e-waste cubes
+
+Unique ability: `scrapRecovery` (destroyed enemies yield 1.5x scrap), `rustResistance` (30% storm damage reduction to buildings)
+
+See RACES.md §Reclaimers for lore, military doctrine, and base agency details.
+
+### 7.3 Volt Collective
+
+Config `governorBias`:
+
+| Bias | Value |
+|------|------:|
+| economy | 0.8 |
+| mining | 1.0 |
+| military | 1.5 |
+| defense | 0.9 |
+| research | 1.0 |
+| expansion | 1.3 |
+
+Derived GOAP goal priorities (highest to lowest):
+1. `attack_enemy` (military + expansion → very strong)
+2. `expand_territory` (expansion + military → strong)
+3. `scout_map` (expansion + military → strong, needed to find targets)
+4. `research_tech` (research moderate)
+5. `gather_resources` (economy + mining moderate)
+
+Economic modifiers: `harvestSpeedMultiplier: 1.0`, `buildCostMultiplier: 1.1`, `researchSpeedMultiplier: 1.0`
+
+Starting bonus: 10 scrap + 10 e-waste
+
+Unique ability: `stormHarvest` (+25% power during storms), `shockWeapons` (15% stun chance on hit)
+
+See RACES.md §Volt Collective for lore and military doctrine.
+
+### 7.4 Signal Choir
+
+Config `governorBias`:
+
+| Bias | Value |
+|------|------:|
+| economy | 1.0 |
+| mining | 0.8 |
+| military | 0.7 |
+| defense | 1.0 |
+| research | 1.5 |
+| expansion | 0.9 |
+
+Derived GOAP goal priorities (highest to lowest):
+1. `research_tech` (research → very strong)
+2. `trade` (economy + research → strong, gathers intelligence via trade)
+3. `build_defenses` (defense + military moderate)
+4. `gather_resources` (economy + mining moderate)
+5. `expand_territory` (expansion moderate)
+6. `attack_enemy` (military weak — prefers hacking over direct assault)
+
+Economic modifiers: `harvestSpeedMultiplier: 0.9`, `buildCostMultiplier: 1.0`, `researchSpeedMultiplier: 1.5`
+
+Starting bonus: 15 e-waste + 3 intact components
+
+Unique ability: `signalBoost` (relay range ×1.3), `hackAcceleration` (hack speed ×1.4)
+
+See RACES.md §Signal Choir for lore and military doctrine.
+
+### 7.5 Iron Creed
+
+Config `governorBias`:
+
+| Bias | Value |
+|------|------:|
+| economy | 1.0 |
+| mining | 1.0 |
+| military | 1.0 |
+| defense | 1.5 |
+| research | 0.8 |
+| expansion | 0.7 |
+
+Derived GOAP goal priorities (highest to lowest):
+1. `build_defenses` (defense → very strong — wall everything)
+2. `gather_resources` (economy + mining → strong)
+3. `hoard_cubes` (economy + mining → strong, cubes go into walls)
+4. `attack_enemy` (military moderate)
+5. `expand_territory` (expansion + military moderate, but expansion bias low)
+
+Economic modifiers: `harvestSpeedMultiplier: 1.0`, `buildCostMultiplier: 0.85`, `researchSpeedMultiplier: 0.9`
+
+Starting bonus: 15 scrap + 2 intact components
+
+Unique ability: `fortification` (wall HP ×1.4), `garrisonBonus` (+20% damage behind walls)
+
+See RACES.md §Iron Creed for lore and military doctrine.
 
 ---
 
-## 7. Governor Evaluators (Legacy Reference)
+## 8. Situation Assessment (WorldQueryInterface)
 
-The v2 architecture used Yuka GOAP evaluators (`Think` + `GoalEvaluator`) at the strategic level. The v4 architecture replaces this with the simpler Patron/Base model. However, the evaluator weights remain as **faction personality biases** that influence base-level decision-making.
-
-### 7.1 Strategic Evaluator Categories
-
-| Evaluator | What It Measures | Drives |
-|-----------|-----------------|--------|
-| **Expand** | Few territories, surplus resources, no threats | Outpost placement, scout priority |
-| **Economy** | Low production rate, empty build slots | Factory construction, furnace recipes |
-| **Military** | Border pressure, can afford units, army weaker than enemy | Combat bot production, raid planning |
-| **Defense** | Recent attacks, unfortified borders | Wall construction, turret placement |
-| **Research** | Stability (low threats), available compute | Tech progression, blueprint production |
-| **Diplomacy** | Known neighbors, surplus materials for trade | Trade offers, alliance formation |
-
-### 7.2 Evaluator Formulas
-
-Each evaluator calculates a desirability score (0..1) multiplied by the faction's `characterBias` weight:
-
-**ExpandEvaluator:**
-```
-fewTerritories = max(0, 1 - claimedTiles / 50) * 0.5
-hasResources = scrapMetal > 20 ? 0.3 : 0
-noThreats = borderPressure < 0.3 ? 0.2 : 0
-score = characterBias * (fewTerritories + hasResources + noThreats)
-```
-
-**EconomyEvaluator:**
-```
-lowProduction = productionRate < claimedTiles * 0.5 ? 0.6 : 0.1
-hasSpace = emptyBuildSlots > 0 ? 0.3 : 0
-score = characterBias * (lowProduction + hasSpace)
-```
-
-**MilitaryEvaluator:**
-```
-threat = borderPressure * 0.5
-canAfford = refinedMetal > 10 ? 0.3 : 0
-lowArmy = militaryStrength < enemyStrength ? 0.4 : 0
-score = characterBias * (threat + canAfford + lowArmy)
-```
-
-**DefenseEvaluator:**
-```
-recentAttack = recentDamage > 0 ? 0.5 : 0
-unfortified = unfortifiedBorders / max(1, totalBorders) * 0.4
-score = characterBias * (recentAttack + unfortified)
-```
-
-**ResearchEvaluator:**
-```
-stable = borderPressure < 0.2 ? 0.3 : 0
-hasCompute = computeAvailable > 5 ? 0.3 : 0
-score = characterBias * (0.1 + stable + hasCompute)
-```
-
-**DiplomacyEvaluator:**
-```
-hasNeighbors = knownCivs > 0 ? 0.2 : 0
-wantsTrade = surplusTypes > 0 ? 0.3 : 0
-score = characterBias * (hasNeighbors + wantsTrade)
-```
-
-In the current architecture, these scores feed into Base Agent allocation decisions rather than a top-level GOAP planner.
-
----
-
-## 8. Faction Governor Profiles
-
-Each civilization race has distinct personality biases from `config/civilizations.json`:
-
-### 8.1 The Reclaimers
-
-```json
-{
-  "displayName": "The Reclaimers",
-  "description": "Scavenger machines that rebuild from ruins. Strong economy, weak military.",
-  "color": "#00ffaa",
-  "governor": {
-    "expandWeight": 0.7,
-    "economyWeight": 1.2,
-    "militaryWeight": 0.5,
-    "defenseWeight": 0.8,
-    "researchWeight": 0.9,
-    "diplomacyWeight": 1.0
-  },
-  "patronPersonality": "supportive",
-  "shipHomeBias": 0.6,
-  "nativePolicy": "trade_first",
-  "bonuses": {
-    "miningEfficiency": 1.3,
-    "fabricationSpeed": 1.2,
-    "combatDamage": 0.8
-  }
-}
-```
-
-**Play pattern:** Ships scrap home aggressively in Act 1 (cheap, builds satisfaction fast). Recycling blueprints let cubes go further. Economy advantage compounds. Expands fast in Act 2. Economic Victory path in Act 3 with massive cube stockpiles. Trades with alien natives for rare materials.
-
-### 8.2 Volt Collective
-
-```json
-{
-  "displayName": "Volt Collective",
-  "description": "Lightning-worshipping machines. Powerful storms, aggressive expansion.",
-  "color": "#ffaa00",
-  "governor": {
-    "expandWeight": 1.1,
-    "economyWeight": 0.7,
-    "militaryWeight": 1.3,
-    "defenseWeight": 0.6,
-    "researchWeight": 0.5,
-    "diplomacyWeight": 0.4
-  },
-  "patronPersonality": "demanding",
-  "shipHomeBias": 0.3,
-  "nativePolicy": "aggressive",
-  "bonuses": {
-    "lightningRodOutput": 1.5,
-    "combatDamage": 1.3,
-    "miningEfficiency": 0.9
-  }
-}
-```
-
-**Play pattern:** Patron demands chrome/rare alloy -- expensive but weapons follow. Low shipment fraction (keeps cubes for military). Shock trooper reinforcements arrive early. Forward bases built aggressively. First raids by minute 20. Shortest Act 2 of all races. Military Victory path. Hostile to alien natives.
-
-### 8.3 The Signal Choir
-
-```json
-{
-  "displayName": "The Signal Choir",
-  "description": "Networked hive-mind. Supreme hacking, distributed compute.",
-  "color": "#aa44ff",
-  "governor": {
-    "expandWeight": 0.8,
-    "economyWeight": 0.9,
-    "militaryWeight": 0.6,
-    "defenseWeight": 0.7,
-    "researchWeight": 1.4,
-    "diplomacyWeight": 1.1
-  },
-  "patronPersonality": "mysterious",
-  "shipHomeBias": 0.45,
-  "nativePolicy": "study",
-  "bonuses": {
-    "hackingSpeed": 1.5,
-    "signalRange": 1.4,
-    "miningEfficiency": 0.8
-  }
-}
-```
-
-**Play pattern:** Patron requests fiber optics. Blueprint rewards are hacking tools. Reaches factory phase fastest (research bias 1.5). Studies alien natives. Infiltrator bots deployed to hack enemy infrastructure. Subjugation Victory path -- hacks instead of brute force.
-
-### 8.4 Iron Creed
-
-```json
-{
-  "displayName": "Iron Creed",
-  "description": "Armored fortress builders. Slow expansion, impenetrable defense.",
-  "color": "#aa8844",
-  "governor": {
-    "expandWeight": 0.4,
-    "economyWeight": 1.0,
-    "militaryWeight": 0.9,
-    "defenseWeight": 1.5,
-    "researchWeight": 0.7,
-    "diplomacyWeight": 0.6
-  },
-  "patronPersonality": "strategic",
-  "shipHomeBias": 0.4,
-  "nativePolicy": "fortify",
-  "bonuses": {
-    "buildingHealth": 1.5,
-    "wallStrength": 2.0,
-    "combatDamage": 1.1,
-    "miningEfficiency": 0.7,
-    "expansionSpeed": 0.6
-  }
-}
-```
-
-**Play pattern:** Patron requests iron/copper for fortification specs. Home base fully walled before expanding. Slowest expansion but most secure. Each outpost becomes a fortress. Longest Act 2 of all races. Territorial Victory path -- slow advance, hold every inch. Builds walls around native territory borders.
-
----
-
-## 9. Situation Assessment (WorldQueryInterface)
-
-Governors and Base Agents communicate with the game world through a typed interface. No direct ECS access -- all queries go through this abstraction:
+Governors and Base Agents communicate with the game world through a typed interface. No direct ECS access — all queries go through this abstraction:
 
 ```typescript
 export interface WorldQueryInterface {
@@ -760,9 +747,9 @@ export interface WorldQueryInterface {
 
 ---
 
-## 10. Action Execution: Plans to Bot Commands
+## 9. Action Execution: Plans to Bot Commands
 
-### 10.1 CivilizationAI Entry Point
+### 9.1 CivilizationAI Entry Point
 
 ```typescript
 export class CivilizationAI {
@@ -797,7 +784,7 @@ export class CivilizationAI {
 }
 ```
 
-### 10.2 System Registration
+### 9.2 System Registration
 
 ```typescript
 const factionAIs = new Map<string, CivilizationAI>();
@@ -817,7 +804,7 @@ export function civilizationAISystem(dt: number, world: WorldQueryInterface): vo
 }
 ```
 
-### 10.3 Event Flow Examples
+### 9.3 Event Flow Examples
 
 **Patron request fulfilled:**
 ```
@@ -841,9 +828,9 @@ Enemy raid destroys outpost
 
 ---
 
-## 11. Pacing Integration: 3-Act Aggression Scaling
+## 10. Pacing Integration: 3-Act Aggression Scaling
 
-### 11.1 Act Detection
+### 10.1 Act Detection
 
 Act transitions are organic, based on colony state, not player action:
 
@@ -859,69 +846,44 @@ function getCurrentAct(
 }
 ```
 
-### 11.2 Race-Specific Pacing
+### 10.2 Race-Specific Pacing
 
 | Race | Act 1 Duration | Act 2 Duration | Act 3 Start | Notes |
 |------|---------------|---------------|-------------|-------|
 | Reclaimers | 0-15 min | 15-35 min | ~35 min | Economy focus, slow military ramp |
 | Volt Collective | 0-12 min | 12-25 min | ~25 min | Fastest to Act 3, raids by minute 20 |
-| Signal Choir | 0-13 min | 13-30 min | ~30 min | Fastest to Act 2 (research bias), infiltration begins early |
+| Signal Choir | 0-13 min | 13-30 min | ~30 min | Fastest to Act 2 (research bias 1.5), infiltration begins early |
 | Iron Creed | 0-18 min | 18-45 min | ~45 min | Slowest overall, but most secure at each phase |
-
-### 11.3 Patron Behavior Across Acts
-
-```typescript
-function getPatronBehaviorForAct(act: 1 | 2 | 3): PatronBehavior {
-  switch (act) {
-    case 1: return {
-      requestFrequency: 'frequent',
-      rewardQuality: 'essential',
-      reinforcementChance: 0.3,
-      tolerance: 'patient',
-    };
-    case 2: return {
-      requestFrequency: 'moderate',
-      rewardQuality: 'premium',
-      reinforcementChance: 0.15,
-      tolerance: 'expectant',
-    };
-    case 3: return {
-      requestFrequency: 'rare',
-      rewardQuality: 'exclusive',
-      reinforcementChance: 0.05,
-      tolerance: 'pragmatic',
-    };
-  }
-}
-```
 
 ---
 
-## 12. Performance Budgets
+## 11. Performance Budgets
 
-### 12.1 Tick Frequencies
+### 11.1 Tick Frequencies
 
 | Component | Easy | Normal | Hard | Nightmare |
 |-----------|------|--------|------|-----------|
 | Patron tick | 300s | 180s | 120s | 90s |
 | Base Agent tick | 10s | 7s | 5s | 3s |
 | Bot Brain | per frame | per frame | per frame | per frame |
+| Governor GOAP tick | every 10 frames | every 10 frames | every 10 frames | every 10 frames |
 | Demand signal broadcast | 10s cooldown | 10s cooldown | 10s cooldown | 10s cooldown |
 
-### 12.2 Computation Costs
+### 11.2 Computation Costs
 
-- **PatronAgent.tick():** Lightweight -- weighted random selection, satisfaction math. O(priorities).
+- **PatronAgent.tick():** Lightweight — weighted random selection, satisfaction math. O(priorities).
 - **BaseAgent.tick():** Scans deposits, cubes, threats in territory radius. O(entities in radius). Capped by `territoryRadius: 40`.
+- **CivilizationGovernor.tick():** Scores 8 goals, runs A* planner over ~10 actions. O(goals + planner iterations). Planner capped at 1000 iterations; typical plan < 5 iterations.
 - **BotBrain.update():** Per-frame FSM transition check. O(1) per bot. Perception queries cached.
 - **Inter-base demand:** O(bases * demand_signals). Typically 2-5 bases * 3-5 demands = negligible.
 
-### 12.3 Bot Reassignment Limits
+### 11.3 Bot Reassignment Limits
 
 Base adjusts at most 2 bots per tick (`maxBotReassignmentsPerTick: 2`) to prevent allocation thrashing. This means a base with 10 bots takes 5 ticks minimum to fully reallocate, providing natural inertia against rapid priority oscillation.
 
 ---
 
-## 13. Difficulty Scaling
+## 12. Difficulty Scaling
 
 | Parameter | Easy | Normal | Hard | Nightmare |
 |-----------|------|--------|------|-----------|
@@ -935,7 +897,7 @@ Base adjusts at most 2 bots per tick (`maxBotReassignmentsPerTick: 2`) to preven
 | Reinforcement quality | Basic bots | Mixed | Elite bots | Elite + timing |
 | Inter-base efficiency | Slow transport | Normal | Fast transport | Instant |
 
-### 13.1 Decision Quality Noise
+### 12.1 Decision Quality Noise
 
 ```typescript
 function applyDifficultyNoise(score: number, difficulty: Difficulty): number {
@@ -948,17 +910,17 @@ function applyDifficultyNoise(score: number, difficulty: Difficulty): number {
 }
 ```
 
-On Easy, AI factions make suboptimal decisions frequently -- building the wrong thing, expanding at the wrong time. On Nightmare, AI factions play perfectly and get a 10% bonus to aggressive strategies.
+On Easy, AI factions make suboptimal decisions frequently — building the wrong thing, expanding at the wrong time. On Nightmare, AI factions play perfectly and get a 10% bonus to aggressive strategies.
 
 ---
 
-## 14. Config References
+## 13. Config References
 
-### 14.1 config/civilizations.json
+### 13.1 config/civilizations.json
 
-Faction definitions including governor profiles, patron personality, starting units, bonuses, ship-home bias, and native policy. See Section 8 for full per-race configs.
+Faction definitions including: `governorBias` (6 fields), unique abilities, unique unit, unique building, starting bonuses, `researchSpeedMultiplier`, `harvestSpeedMultiplier`, `buildCostMultiplier`. See Section 7 for per-race values.
 
-### 14.2 config/aiColony.json
+### 13.2 config/aiColony.json
 
 All AI-specific tunables externalized:
 
@@ -1024,34 +986,42 @@ All AI-specific tunables externalized:
 }
 ```
 
-### 14.3 Existing Code Integration
+### 13.3 Existing Code Integration
 
 | Existing Code | Governor Role |
 |---------------|--------------|
+| `src/ai/goap/CivilizationGovernor.ts` | GOAP strategic planner (per-faction, per-tick) |
+| `src/ai/goap/GOAPPlanner.ts` | A* search planner — finds cheapest action sequence |
+| `src/ai/goap/ActionTypes.ts` | 10 GOAP actions + WorldStateKey enum |
+| `src/ai/goap/GoalTypes.ts` | 8 CivGoals + GoalState type |
+| `src/ai/goap/FactionPersonality.ts` | Config → goal weights, situational modifiers |
+| `src/ai/goap/GovernorActionExecutor.ts` | Bridges GOAP decisions to raid + research systems |
+| `src/systems/governorSystem.ts` | Wires governor to aiCivilization.ts + bot commands |
+| `src/systems/aiCivilization.ts` | Passive economic state machine (GATHER/BUILD/EXPAND/DEFEND) |
 | `src/systems/otterTrade.ts` | IS the patron trade interface |
 | `src/rendering/OtterRenderer.tsx` | IS the patron communication channel |
 | `src/ai/base/BaseAgent.ts` | IS the autonomous base agent |
 | `src/ai/base/BaseWorkQueue.ts` | IS the task claiming system |
-| `src/ai/BotBrain.ts` | IS the bot tactical FSM (extended with economy + colonization states) |
-| `src/ai/BotOrders.ts` | IS the order system (extended with new order types) |
-| `src/ai/BotContext.ts` | IS the perception snapshot (extended with economy + native data) |
+| `src/ai/BotBrain.ts` | IS the bot tactical FSM |
+| `src/ai/BotOrders.ts` | IS the order system |
+| `src/ai/BotContext.ts` | IS the perception snapshot |
 | `src/ai/BotVehicle.ts` | IS the Yuka Vehicle factory |
 | `src/ai/PerceptionSystem.ts` | IS the vision cone checks |
 | `src/ai/FormationSystem.ts` | IS the squad movement |
-| `src/ai/goap/GOAPPlanner.ts` | IS the A* planner for bot-level tactical planning |
-| `src/ai/goap/FactionPersonality.ts` | Feeds into patron personality |
 
-### 14.4 Yuka Class Usage
+### 13.4 Yuka Class Usage
 
 ```
 yuka.Vehicle                  (one per bot, steering behaviors)
 yuka.SteeringBehavior
   +-- SeekBehavior, ArriveBehavior, FleeBehavior, WanderBehavior
-  +-- OffsetPursuitBehavior   (formations)
-  +-- SeparationBehavior      (squad spacing)
-yuka.Vision                   (cone-of-sight per bot)
+  +-- ObstacleAvoidanceBehavior  (always active, weight 3.0)
+  +-- SeparationBehavior         (always active, weight 1.5)
+  +-- OffsetPursuitBehavior   (formations — FormationSystem.ts)
+yuka.Vision                   (cone-of-sight per bot — PerceptionSystem.ts)
 yuka.MemorySystem             (entity memory per bot)
-yuka.NavMesh                  (pathfinding)
+yuka.NavMesh                  (pathfinding — NavMeshBuilder.ts)
+yuka.FollowPathBehavior       (path following — PathfindingSystem.ts)
 ```
 
-Yuka's `Think` and `GoalEvaluator` classes are NOT used at the strategic level. Strategy comes from patron requests + local base reactions, not from evaluator scoring. This is a deliberate simplification from v2.
+Yuka's `Think` and `GoalEvaluator` classes are **not used** in the strategic layer. Strategy comes from `CivilizationGovernor` (GOAP A* + FactionPersonality weights), not from Yuka evaluator scoring.

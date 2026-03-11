@@ -1,5 +1,7 @@
 # Syntheteria -- Game Overview
 
+**See also (interface):** `docs/design/interface/UI.md` (HUD components, screen specs, design system), `docs/design/interface/INTERACTION.md` (radial action menu, raycast, FPS controls), `docs/design/interface/ONBOARDING.md` (first-5-minutes tutorial arc)
+
 ## What Is Syntheteria?
 
 You awaken as a broken robot on a machine planet. Your only tool is a Harvester -- a grinding arm. Walk up to an ore vein jutting from rusted terrain, hold the button, watch particles spiral into your body. When full, compress: screen shakes, pressure gauges spike, and a physical cube of scrap metal ejects at your feet. Grab it. Carry it to your furnace. Drop the cube in the hopper. Tap the furnace. Craft a better drill, a conveyor belt, a combat drone. Automate. Expand. Build walls before the other civilizations raid your cube pile. Syntheteria is a first-person 4X where your wealth is the physical stack of cubes sitting outside your base, visible to everyone.
@@ -189,6 +191,11 @@ Four robot races compete on the machine planet. Each has a distinct visual ident
 | Iron Creed | Fortress builders | +Defense, +Walls | Brushed steel, heavy plate armor |
 
 Each civilization is governed by a Yuka GOAP AI that evaluates strategic goals (expand, economy, military, defense, research, diplomacy) each tick, weighted by the race's governor profile. Governor weights are JSON-driven -- balance changes never require code changes.
+
+**See also:**
+- `docs/design/agents/GOVERNORS.md` — Full AI architecture: GOAP planner, FactionPersonality weights, GovernorActionExecutor, Base Agent event bus, patron-colony communication
+- `docs/design/agents/BOTS.md` — Bot FSM states, Yuka steering, NavMesh pathfinding, formation movement
+- `docs/design/world/RACES.md` — Per-faction lore, GOAP weight tables, military doctrines, unique units
 
 ---
 

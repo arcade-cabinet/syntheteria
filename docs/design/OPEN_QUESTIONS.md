@@ -64,7 +64,7 @@ This document tracks design questions that need resolution. Questions are marked
   - **RESOLVED:** 4X progression. eXplore (fog of war, terrain scanning). eXpand (claim territory with outposts, extend power/signal networks). eXploit (grind, compress, carry, process, fabricate, build). eXterminate (FPS combat, bot armies, hacking enemy infrastructure, cube raiding).
 
 - [x] **Q16:** What determines victory?
-  - **RESOLVED:** Victory conditions system implemented (docs/design/011-victory-conditions.md). Multiple victory types appropriate for 4X gameplay.
+  - **RESOLVED:** 8-condition victory evaluator implemented in `src/systems/victoryConditionEvaluator.ts` (643 lines). Conditions: Colonial, Domination, Economic, Technology, Diplomatic, Integration, Survival, Story. Hold timers for Domination/Economic (5 min sustained). Tiebreaker priority order. Alert thresholds at 25/50/75%. Grace period at game start. All tunables in `config/victory.json`. Design documented in `docs/design/gameplay/VICTORY.md`. Supersedes earlier 6-condition model in `victoryTracking.ts`.
 
 - [x] **Q17:** Can the player fail? How?
   - **RESOLVED:** Yes. If all bots are destroyed and you have no resources to rebuild, game over. Enemies can raid your cube stockpiles, destroying your economic base.
@@ -141,14 +141,14 @@ These questions emerged from the Factory Planet FPS Redesign document and remain
 - [~] **Q35:** Belt routing UI -- how does first-person belt placement feel?
   - **PARTIAL.** Build mode exists with ghost preview placement. But the exact UX for planning long belt routes in first-person is unresolved. Options: ghost preview extending from player, holographic overlay showing planned route, or a temporary top-down camera mode for planning.
 
-- [ ] **Q36:** Scale of factory -- how large do factory networks get?
-  - **OPEN.** Need LOD for distant belt networks? Instanced rendering exists (InstancedCubeRenderer, 387 lines) but isn't wired to the R3F scene yet. Performance at planetary scale with hundreds of belts, wires, and buildings is untested.
+- [~] **Q36:** Scale of factory -- how large do factory networks get?
+  - **PARTIAL.** InstancedCubeRenderer is now wired into GameScene.tsx and handles 5,000+ cubes via instanced draw calls. However, LOD for distant belt networks and performance profiling at planetary scale with hundreds of belts, wires, and buildings remain untested. Source: `src/rendering/InstancedCubeRenderer.tsx`, `src/GameScene.tsx`.
 
 - [ ] **Q37:** Underground belts -- can belts go underground to cross each other?
   - **OPEN.** How does this look/work in first-person? Factorio has underground belt pairs. In FPS, this could be visually represented as belts descending into floor grates and emerging elsewhere. Needs design.
 
-- [ ] **Q38:** Bot followers -- can non-active bots follow the player?
-  - **OPEN.** Yuka Vehicle steering supports "follow" behavior. The automation system has a "follow" routine. But the UX for managing followers (how many? formation? commands while following?) needs design. Formation movement system exists (524 lines) but needs integration testing with FPS gameplay.
+- [~] **Q38:** Bot followers -- can non-active bots follow the player?
+  - **PARTIAL.** Yuka Vehicle steering supports "follow" behavior. The automation system (`src/systems/botAutomation.ts`) has a "follow" routine. Formation movement system exists (`src/ai/FormationSystem.ts`, tested). `GovernorActionExecutor` can issue follow/patrol commands to bots. But the UX for managing followers in first-person (how many? formation? commands while following?) needs design and integration testing with FPS gameplay.
 
 - [ ] **Q39:** Multiplayer implications for factory planet?
   - **OPEN.** Multiple players on the same planet, each as a bot, building competing/cooperating factory networks? This is deferred but the 4X AI governor architecture was designed with eventual multiplayer in mind (AI governors could be swapped for human players).
@@ -171,6 +171,25 @@ These questions emerged from the Factory Planet FPS Redesign document and remain
 
 ---
 
+## Production Run Questions (from 2026-03-11 audit)
+
+- [ ] **Q44:** How should weather gameplay effects be wired to live systems?
+  - **OPEN.** `weatherEffects.ts` defines modifier presets (movement speed, visibility, combat accuracy, cube damage). `weatherStructureBridge.ts` handles structural damage. But the wires to actual gameplay systems (movement.ts reading speed multipliers, combat.ts reading accuracy multipliers, fogOfWarManager reading visibility range) are not yet connected. Systems exist independently but don't consume weather state.
+
+- [ ] **Q45:** What happens to the Koota bridge sync overhead at scale?
+  - **OPEN.** The bidirectional Miniplex-Koota bridge (`src/ecs/koota/bridge.ts`) runs `syncBeforeFrame()` and `syncAfterFrame()` every frame for all entities. With 42+ files still importing Miniplex, the bridge is load-bearing. At scale (1000+ entities, 4 AI factions), the per-frame double-sync may become a bottleneck. No profiling data exists. See `src/ecs/koota/MIGRATION_STATUS.md`.
+
+- [ ] **Q46:** How should AI factions run the full physical economy pipeline?
+  - **OPEN.** AI factions currently spawn cubes passively at their base positions via `aiCivilization.ts`. They do not send bots to deposits, harvest ore, compress powder, carry cubes, or feed furnaces. The `GovernorActionExecutor` can issue harvest commands but the bot-level execution (walk to deposit, grind, compress, carry back) is not yet implemented. This is the single biggest gap preventing meaningful AI-vs-AI gameplay. See REMAINING-WORK.md section 2.
+
+- [ ] **Q47:** Should `victoryTracking.ts` (6 conditions) be removed now that `victoryConditionEvaluator.ts` (8 conditions) exists?
+  - **OPEN.** Both files exist. `victoryConditionEvaluator.ts` is the authoritative evaluator with hold timers and tiebreakers. `victoryTracking.ts` tracks a different 6-condition set (Economic, Military, Scientific, Cultural, Hacking, Survival). Unclear if `victoryTracking.ts` serves any purpose or if it should be archived.
+
+- [ ] **Q48:** What is the OtterRenderer's future?
+  - **OPEN.** `OtterRenderer.tsx` still exists in the codebase but is no longer imported by GameScene.tsx. HologramRenderer fully supersedes it. Should OtterRenderer be deleted, or kept as a reference/fallback?
+
+---
+
 ## Status Key
 
 - [ ] Unanswered / Open
@@ -190,6 +209,20 @@ These questions emerged from the Factory Planet FPS Redesign document and remain
 | Technical/Scope | 4 | 0 | 0 |
 | Business Model | 0 | 0 | 1 |
 | Redesign (FPS migration) | 10 | 0 | 0 |
-| FPS Open Questions | 0 | 2 | 4 |
-| New Questions | 0 | 0 | 4 |
-| **Total** | **32** | **2** | **9** |
+| FPS Open Questions | 0 | 3 | 3 |
+| New Questions (ongoing dev) | 0 | 0 | 4 |
+| Production Run Questions | 0 | 0 | 5 |
+| **Total** | **32** | **3** | **13** |
+
+---
+
+## Formula Gaps (Note for config-docs agent)
+
+`docs/technical/CORE_FORMULAS.md` has a "Needs Redesign" section (section 9) that still references cultist lightning and the old top-down design. The following are gaps between what CORE_FORMULAS.md documents and what is currently implemented:
+
+- **Combat damage formulas** in COMBAT.md (Section 14) and `config/combat.json` implement full DR, DPS, TTK, raid scaling, and siege formulas. CORE_FORMULAS.md does not reflect these.
+- **Hacking formulas** in COMBAT.md (Section 5.6) and `config/combat.json` computeSystem specify the live compute generation formula. CORE_FORMULAS.md section 6 uses a different formula structure.
+- **Lightning rod power** in CORE_FORMULAS.md section 8.3 references "cultist lightning" which was removed in the 4X redesign. The `config/victory.json` storm phases and `config/power.json` define the current model.
+- **Territory control** formulas are implemented in `src/systems/territory.ts` and `territoryControl.ts` but absent from CORE_FORMULAS.md.
+
+The config-docs agent owns CORE_FORMULAS.md. These gaps are flagged here for cross-reference.

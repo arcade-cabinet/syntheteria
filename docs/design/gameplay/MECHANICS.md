@@ -4,6 +4,8 @@ The authoritative reference for Syntheteria's moment-to-moment gameplay systems.
 
 **Config files:** `config/mining.json`, `config/furnace.json`, `config/cubeMaterials.json`, `config/machineAssembly.json`, `config/buildings.json`, `config/quests.json`, `config/technology.json`
 
+See also: `docs/design/gameplay/AUDIO.md` — grinding SFX, compression sound design (hydraulic press crescendo), cube pickup/drop/place sounds, belt clank, furnace roar, machine hums.
+
 ---
 
 ## 1. Design Philosophy
@@ -137,39 +139,70 @@ Compressed powder becomes a cube -- a physical rigid body in the world:
 
 ## 4. Material Types & Properties
 
-Six material types with distinct strategic roles. Defined in `config/cubeMaterials.json`.
+Twelve material types (9 raw + 3 processed) with distinct strategic roles. Raw materials are defined in `config/mining.json` and `config/cubeMaterials.json`. Processed materials come from furnace smelting (`config/furnace.json`).
+
+See `docs/design/gameplay/MATERIALS.md` for the complete economy specification including extraction rates, compression timings, furnace recipes, wall HP, and economic pacing.
 
 ### 4.1 Material Table
 
-| Material | Hardness | Weight | Conductivity | Rarity | Compression Threshold | HP/Cube | Carry Speed |
-|----------|----------|--------|-------------|--------|----------------------|---------|-------------|
-| **Rock** | 0.5 | 1.0 | 0.0 | Abundant | 40 powder | 50 | 100% |
-| **Scrap Iron** | 1.0 | 1.5 | 0.1 | Common | 60 powder | 100 | 85% |
-| **Iron** | 1.8 | 2.0 | 0.15 | Processed | N/A (smelted) | 180 | 75% |
-| **Copper** | 0.8 | 1.2 | 1.0 | Moderate | 80 powder | 80 | 90% |
-| **Silicon** | 0.6 | 0.8 | 0.7 | Rare | 100 powder | 60 | 95% |
-| **Titanium** | 3.0 | 2.5 | 0.2 | Very Rare | 120 powder | 300 | 70% |
+**Raw materials** (harvestable from ore deposits):
+
+| Material | Rarity | Grind Speed | Powder to Fill | Compress Time | Cube HP | Wall HP | Cube Value | Carry Speed |
+|----------|--------|-------------|----------------|---------------|---------|---------|------------|-------------|
+| **Rock** | Abundant | 1.0x | 40 | 1.0s | 25 | 50 | 0.5 | 100% |
+| **Scrap Iron** | Common | 0.8x | 60 | 1.5s | 50 | 100 | 1.0 | 85% |
+| **Copper** | Moderate | 0.6x | 80 | 2.0s | 40 | 80 | 1.5 | 90% |
+| **Carbon** | Uncommon | 0.35x | 90 | 2.0s | 60 | 120 | 2.5 | 92% |
+| **Silicon** | Rare | 0.4x | 100 | 2.5s | 30 | 60 | 2.0 | 95% |
+| **Titanium** | Very Rare | 0.3x | 120 | 3.5s | 150 | 300 | 5.0 | 70% |
+| **Rare Earth** | Ultra Rare | 0.2x | 150 | 4.0s | 40 | 80 | 8.0 | 95% |
+| **Gold** | Ultra Rare | 0.25x | 130 | 3.5s | 35 | 70 | 10.0 | 88% |
+| **Quantum Crystal** | Legendary | 0.1x | 200 | 5.0s | 60 | 120 | 25.0 | 95% |
+
+**Processed materials** (smelted from raw cubes -- cannot be mined directly):
+
+| Material | Recipe | Cube HP | Wall HP | Cube Value |
+|----------|--------|---------|---------|------------|
+| **Iron** | 2x Scrap Iron (smelter, 15s) | 90 | 180 | 3.0 |
+| **Steel** | 2x Iron + 1x Carbon (smelter, 25s) | 200 | 400 | 6.0 |
+| **Advanced Alloy** | 1x Titanium + 1x Rare Earth (smelter, 30s) | 250 | 500 | 12.0 |
+
+**Compression values confirmed against `config/furnace.json` compression configs.**
 
 ### 4.2 Material Roles
 
-**Rock** -- The planet's base substrate. Everywhere. Cheap, fast to compress, weak. A wall of rock cubes stops a scout bot but crumbles under sustained fire. Good for bulk construction early game. Later, rock becomes insulation material inside machine assemblies and disposable filler for siege walls.
+**Rock** -- The planet's base substrate. Everywhere. Cheap, fast to compress, weak. A wall of rock cubes stops a scout bot but crumbles under sustained fire. Good for bulk construction early game. Later used as insulation filler and disposable siege walls.
 
-**Scrap Iron** -- Remnant metal found across the surface in slag heaps, ruin fields, and corroded plates. Primary structural material through early and mid game. Stronger than rock, widely available, and the feedstock for smelting into proper iron.
+**Scrap Iron** -- Remnant metal found across slag heaps, ruin fields, and corroded plates. The primary structural material through early and mid game. The feedstock for smelting into Iron (2 scrap iron --> 1 iron).
 
-**Iron** (Processed) -- Scrap iron cubes fed through a furnace produce iron cubes. Cleaner, stronger, required for machine assembly. You never mine iron directly; you smelt it from scrap (2 scrap iron --> 1 iron). This creates a natural production bottleneck gating mid-game progression.
+**Copper** -- Found in veins threading cliff faces, identifiable by green patina. The conductivity material -- required for wiring, circuits, and power distribution. Without copper, machines have no way to connect to power or signal.
 
-**Copper** -- Found in veins threading through cliff faces, identifiable by green patina. The conductivity material -- required for wiring, circuits, and power distribution. Without copper, you have machines with no way to connect them.
+**Carbon** -- Dark fibrous material found in carbonized terrain veins. Lightweight but strong. Required for carbon fiber construction, compute cores, and the Iron-to-Steel smelting chain.
 
-**Silicon** -- Glassy crystalline outcrops in processor graveyards. Rare and fragile but essential for electronics, signal processing, and compute. Silicon cubes have a distinctive translucent quality.
+**Silicon** -- Glassy crystalline outcrops in processor graveyards. Rare and fragile but essential for electronics, signal processing, and compute. Has a distinctive translucent quality. Required for most mid-game circuit recipes.
 
-**Titanium** -- The premium material. Dark metallic bands in mountain faces and deep ravines. Extremely hard to find, extremely hard to harvest (requires Plasma Cutter or better), and extremely strong. A wall of titanium is nearly impenetrable.
+**Titanium** -- Dark metallic bands in mountain faces and deep ravines. Extremely hard to find, requires Plasma Cutter (Tier 3) to harvest, and extremely strong. A wall of titanium is nearly impenetrable. The primary endgame structural material before Advanced Alloy.
+
+**Rare Earth** -- Teal-tinted crystalline deposits found near ancient machine sites. Required for quantum electronics, EMP effects, and the Advanced Alloy recipe. Limited total deposits per map.
+
+**Gold** -- Dense yellow metalite, found in small veins near ancient machine ruins. Highest economic value per raw cube. Heavy, slow to extract, irreplaceable. Often used as the cost anchor for endgame buildings.
+
+**Quantum Crystal** -- Violet crystalline formations, the rarest material on the planet. Found only at Planet Core Access Points, guarded by Ancient Machines. Required for the Convergence Device and teleporter pad. A single Quantum Crystal cube is worth more than a dozen iron cubes.
+
+**Iron** (Processed) -- Smelted from 2x Scrap Iron. Cleaner, stronger, required for most mid-game machine assembly. You never mine iron directly -- it must be smelted, creating a natural production bottleneck gating mid-game progression.
+
+**Steel** (Processed) -- Smelted from 2x Iron + 1x Carbon. The best mid-game structural material. Steel walls at 200 HP/cube represent a major upgrade from iron's 90 HP/cube. Requires the smelter chain to be fully operational.
+
+**Advanced Alloy** (Processed) -- Smelted from 1x Titanium + 1x Rare Earth. The premium endgame material. Walls of Advanced Alloy are nearly fortress-grade. Costs require access to both Titanium veins (contested mountain biomes) and Rare Earth deposits (ancient machine territory).
 
 ### 4.3 Strategic Progression
 
 ```
-Early Game:    Rock (bulk fill) + Scrap Iron (structure)
-Mid Game:      Iron (strong structure) + Copper (wiring/power)
-Late Game:     Silicon (electronics/signal) + Titanium (premium everything)
+Early Game:  Rock (bulk fill) + Scrap Iron (structure)
+Mid Game:    Iron (strong structure) + Copper (wiring) + Carbon (compute/carbon fiber)
+Late Game:   Silicon (electronics) + Titanium (fortress walls) + Steel (endgame standard)
+Endgame:     Rare Earth + Gold (premium buildings) + Quantum Crystal (Convergence Device)
+             Advanced Alloy (ultimate walls)
 ```
 
 ### 4.4 PBR Visual Identity
@@ -180,10 +213,16 @@ Each material has a distinct PBR treatment in `config/cubeMaterials.json`. At a 
 |----------|-----------|
 | Rock | Dull brown-gray, matte, no reflections |
 | Scrap Iron | Dark rusty orange, rough, rust patches visible |
-| Iron | Clean silver-gray, reflective, brushed surface |
 | Copper | Warm orange with green patina edges, moderate shine |
+| Carbon | Matte black with fibrous texture, absorbs light |
 | Silicon | Blue-gray, glassy, faint internal glow |
 | Titanium | Bright silver, sharp reflections, purple-blue heat marks |
+| Rare Earth | Teal-cyan with inner luminescence |
+| Gold | High-gloss warm yellow, mirror reflective |
+| Quantum Crystal | Deep violet, subsurface scatter, pulsing emission |
+| Iron | Clean silver-gray, reflective, brushed surface |
+| Steel | Darker silver with directional tool marks, higher roughness at edges |
+| Advanced Alloy | Platinum-silver, iridescent micro-faceting |
 
 ### 4.5 Cube HP & Damage
 

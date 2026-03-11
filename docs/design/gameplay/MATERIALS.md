@@ -1,7 +1,15 @@
-# Materials and Economy
+# Syntheteria -- Materials & Economy
 
 **Status:** Authoritative
-**Scope:** Complete specification of the physical cube economy -- resource philosophy, material hierarchy, extraction rates, compression mechanics, furnace recipes, building costs, economy pacing, raid scaling, patron shipments, AI economy, and all formulas.
+**Supersedes:** `docs/design/MATERIALS.md`, `GDD-004` (materials sections), `GDD-006`, `GDD-012`
+**Scope:** Complete specification of the physical cube economy -- resource philosophy, material hierarchy, extraction rates, compression mechanics, furnace recipes, building costs, cube physics, wall construction, machine assembly, economy pacing, raid scaling, patron shipments, AI economy, visual design, and all formulas.
+
+**Config files:** `config/mining.json`, `config/furnace.json`, `config/cubeMaterials.json`, `config/buildings.json`, `config/economy.json`
+
+**See also:**
+- `docs/design/gameplay/MECHANICS.md` -- Section 4 for material quick-reference table (summarized from here)
+- `docs/design/gameplay/COMBAT.md` -- cube weapon damage, wall HP, raid mechanics
+- `docs/design/gameplay/VICTORY.md` -- Economic Victory (500 cubes, 4 types) and Colonial Victory (patron shipments)
 
 ---
 
@@ -50,6 +58,30 @@ SHIP HOME   --> delayed benefit (blueprint, tech, reinforcement from patron)
 
 This ship-or-spend tension is the Colonization model's core strategic lever.
 
+### 1.4 Resource Sources
+
+Materials come from multiple sources that unlock progressively:
+
+**Primary: Ore Deposits** -- Geological formations protruding from terrain. Organic shapes (not cubes), visually distinct per material type. The main source for all nine raw materials. Finite per deposit, respawn on timers.
+
+**Secondary: Enemy Salvage** -- Destroyed or captured enemy machines yield raw materials and occasionally components:
+- **Components** -- may include items you cannot yet fabricate
+- **Raw materials** -- scrap from destroyed machines (primarily Scrap Iron cubes)
+- **Designs** -- reverse-engineer captured machines for blueprints (rare drop)
+
+**Tertiary: Patron Shipments** -- Home planet patron sends pre-built components, blueprints, and reinforcement bots in exchange for cube shipments. See Section 12.
+
+### 1.5 Supply Chain Logistics
+
+Materials must be physically moved between locations. This creates a logistics layer that rewards automation and punishes overextension:
+
+- **Manual carry** -- player or bot walks cubes one at a time. Slow but precise. Early game only.
+- **Conveyor belts** -- automated cube transport. The primary logistics backbone.
+- **Worker bot convoys** -- assigned carry routes between stockpiles, deposits, and machines.
+- **Power infrastructure** -- lightning rods + copper wire cubes carry power between buildings.
+
+Efficiency improves with better grabber tiers, faster belts, and optimized factory layouts. But every supply line is an attack surface -- belts can be cut, convoys ambushed, power lines severed.
+
 ---
 
 ## 2. Material Hierarchy
@@ -82,19 +114,66 @@ Processed materials are created in the Smelter building by combining raw cubes. 
 | Steel | 2x Iron + 1x Carbon cube | 200 | 400 | 8.0 |
 | Advanced Alloy | 1x Titanium + 1x Rare Earth cube | 250 | 500 | 18.0 |
 
-### 2.3 Material Properties
+### 2.3 Material Property Definitions
 
-- **Grind Speed** -- multiplier on extraction rate. Lower = harder to grind. Quantum Crystal at 0.1x takes 10 times longer than Rock at 1.0x.
+Each material has five gameplay-relevant stat axes plus visual properties:
+
+- **Hardness** -- determines wall HP multiplier and structural strength. Titanium (3.0) is six times harder than rock (0.5).
+- **Weight** -- affects carry speed and stacking stability. Heavy cubes (titanium at 2.5) need wider base footprints for tall stacks.
+- **Conductivity** -- determines suitability for power/signal wiring. Copper (1.0) is the primary conductor. Rock (0.0) cannot carry power at all.
+- **Grind Speed** -- multiplier on extraction rate. Lower = harder to grind. Quantum Crystal at 0.1x takes 10x longer than Rock at 1.0x.
 - **Powder to Fill** -- how much powder is needed to compress one cube. Higher = more grinding per cube.
 - **Compress Time** -- duration of the compression animation. Longer for rarer materials.
-- **Cube HP** -- hit points when a cube is used as a thrown projectile or destructible object.
-- **Wall HP** -- hit points when a cube is placed as a wall segment.
+- **Cube HP** -- hit points when a cube is loose (thrown, dropped, impacted).
+- **Wall HP** -- hit points when a cube is placed as part of a wall structure.
 - **Base Value** -- economic worth for trade, raid attractiveness, and victory condition progress.
 - **Carry Speed** -- movement speed multiplier while carrying this cube type. Titanium at 70% makes you noticeably slower.
 
+### 2.4 Material Descriptions and Strategic Roles
+
+**Rock** -- The planet's base substrate. Everywhere. Cheap, fast to compress, weak. A wall of rock cubes stops a scout bot but crumbles under sustained fire. Good for bulk construction early game when nothing better is available. Later, rock becomes insulation material inside machine assemblies and disposable filler for siege walls you expect to lose. PBR: gray-brown base (RGB 140, 130, 115), roughness 0.85, metalness 0.05, granular sediment texture with hairline fracture lines.
+
+**Scrap Iron** -- The remnant metal found across the planet's surface in slag heaps, ruin fields, and corroded surface plates. Your primary structural material through early and mid game. Stronger than rock, widely available, and the feedstock for smelting into proper iron. PBR: dark gray with orange-brown rust patches (RGB 110, 85, 65), roughness 0.75, metalness 0.7, rivet grid pattern, heavy rust wear.
+
+**Iron** (Processed) -- Scrap iron cubes fed through a smelter produce iron cubes -- cleaner, stronger, and required for machine assembly. You never mine iron directly; you smelt it from scrap. This creates a natural production bottleneck that gates mid-game progression. PBR: clean metallic gray (RGB 175, 180, 190), roughness 0.3, metalness 0.9, brushed steel grain.
+
+**Copper** -- Found in veins threading through cliff faces and ravine walls, identifiable by the distinctive green patina. Copper is the conductivity material -- required for any wiring, circuit construction, or power distribution. Without copper, you have machines with no way to connect them. PBR: warm orange-brown with green patina edges (base RGB 185, 115, 65), roughness 0.5, metalness 0.6, oxidation patterns procedurally generated per cube.
+
+**Silicon** -- Glassy crystalline outcrops found in processor graveyards and crystal fields. Rare and fragile, but essential for electronics, signal processing, and compute components. Silicon cubes have a distinctive translucent quality. PBR: blue-gray (RGB 140, 155, 185), roughness 0.08, metalness 0.3, hex pattern, translucency 0.3, subtle internal glow (#8899cc).
+
+**Titanium** -- The premium material. Dark metallic bands exposed in mountain faces and deep ravines. Extremely hard to find, extremely hard to harvest (requires Plasma Cutter or better), and extremely strong. A wall of titanium cubes is nearly impenetrable. PBR: bright cool silver (RGB 200, 205, 215), roughness 0.2, metalness 0.85, panel seams + bolt grid, iridescent purple-blue heat-wear tint.
+
+**Carbon** -- Dark, sooty compressed layers found in cable forests and old foundries. Uncommon but strong, carbon is essential for steel production (iron + carbon) and lightweight armor. PBR: matte black, layered compressed texture.
+
+**Rare Earth** -- Faintly glowing nodules found in underground cavities and rare surface exposures. Ultra-rare, essential for advanced electronics and endgame tech. PBR: faint cyan emissive glow, smooth surface with luminescent veins.
+
+**Gold** -- Ultra-rare high-value material. Primarily used for patron shipments and endgame recipes. PBR: warm metallic gold.
+
+**Quantum Crystal** -- The rarest material in the game. Legendary deposits never respawn. Required for victory-condition buildings and endgame tech. Over a minute to fill even with the best drill. PBR: deep purple emissive, crystalline structure.
+
+### 2.5 Strategic Material Roles by Game Phase
+
+```
+Early Game:    Rock (bulk fill) + Scrap Iron (structure)
+               Scrap is everywhere, rock even more so.
+               Build ugly but functional walls and first furnace.
+
+Mid Game:      Iron (strong structure) + Copper (wiring/power)
+               Smelting scrap into iron doubles wall strength.
+               Copper unlocks power connections between machines.
+
+Late Game:     Silicon (electronics/signal) + Titanium (premium everything)
+               Silicon enables compute network, advanced fabrication.
+               Titanium walls and machines are nearly unbreakable.
+
+Endgame:       Rare Earth + Gold (patron trade) + Quantum Crystal (victory)
+               Rare materials fuel endgame tech and patron rewards.
+               Every Quantum Crystal deposit on the map is precious.
+```
+
 ---
 
-## 3. Extraction Rates and Drill Tiers
+## 3. Extraction & Mining
 
 ### 3.1 Design Goal
 
@@ -180,11 +259,7 @@ Higher tier drills are louder, attracting enemies from farther away. This create
 
 **Design note:** Quantum Crystal takes over a minute to fill even with the best drill. This is intentional -- it is the most valuable material in the game. The player should feel its rarity through the grind time.
 
----
-
-## 4. Deposit Spawning and Depletion
-
-### 4.1 Deposit Yield and Respawn
+### 3.6 Deposit Yield, Depletion, and Respawn
 
 Each deposit node contains a finite amount of powder. When depleted, the deposit crumbles.
 
@@ -202,14 +277,14 @@ Each deposit node contains a finite amount of powder. When depleted, the deposit
 
 **Cubes per Deposit** = yield / powderToFill. Fractional means the last harvest may not yield enough for a full cube (leftover powder remains in player storage).
 
-**Respawn behavior notes:**
-- "Same location" -- the deposit reappears at its original coordinates. Allows permanent mining outposts.
-- "Same biome, shifted" -- respawns within the same biome but at a random offset (10-30 units). Prevents camping.
+**Respawn behavior:**
+- "Same location" -- deposit reappears at original coordinates. Allows permanent mining outposts.
+- "Same biome, shifted" -- respawns within the same biome at a random offset (10-30 units). Prevents camping.
 - "Random in biome" -- respawns anywhere within the biome. Requires scouting.
 - "Random on map" -- respawns at any valid deposit location on the entire map. Drives exploration.
 - "Never" -- Quantum Crystal deposits are one-time-only. Every crystal on the map is precious.
 
-### 4.2 Depletion Visual Stages
+### 3.7 Depletion Visual Stages
 
 | Remaining % | Visual |
 |-------------|--------|
@@ -219,7 +294,7 @@ Each deposit node contains a finite amount of powder. When depleted, the deposit
 | 25% | Heavily fragmented, nearly flat |
 | 0% | Crumbles to dust (particle burst), scarred terrain |
 
-### 4.3 Guaranteed Spawn Placement
+### 3.8 Guaranteed Spawn Placement
 
 Deposit placement guarantees the player can find resources immediately:
 
@@ -230,18 +305,27 @@ Deposit placement guarantees the player can find resources immediately:
 | Copper | 30 | 60 | 1 (visible from spawn with scanner) |
 | Silicon | 50 | 100 | 0 (requires exploration) |
 
-### 4.4 Enemy Salvage
+### 3.9 Deposit Visual Design
 
-Destroyed or captured enemy machines yield raw materials and occasionally components:
-- **Components** -- may include items you cannot yet fabricate
-- **Raw materials** -- scrap from destroyed machines (primarily Scrap Iron cubes)
-- **Designs** -- reverse-engineer captured machines for blueprints (rare drop)
+Ore deposits are **organic, geological formations** -- not cubes, not abstract icons. They protrude from terrain, jut out of mountainsides, cluster in ravines:
+
+| Deposit Type | Visual | Where Found |
+|-------------|--------|-------------|
+| Rock | Gray-brown geological formations, rough and angular | Everywhere on surface |
+| Scrap Ore | Rusted metal sheets, bent rebar, corroded plates | Surface ruins, slag heaps |
+| Copper Vein | Green-patina veins threading through rock | Cliff faces, ravine walls |
+| Silicon Cluster | Glassy crystalline outcrops | Processor graveyards, crystal fields |
+| Carbon Deposit | Dark, sooty compressed layers | Cable forests, old foundries |
+| Titanium Seam | Dark metallic bands in mountain faces | Deep terrain, mountain bases |
+| Rare Earth Node | Faintly glowing nodules | Underground cavities, rare surface |
+
+Deposits have procedural geometry with distinct PBR materials per type. Veins have visible volume and deplete visually as you harvest (shrink, crack, crumble). Depleted veins leave behind scarred terrain.
 
 ---
 
-## 5. Compression Mechanics
+## 4. Compression (Powder to Cube)
 
-### 5.1 Design Goal
+### 4.1 Design Goal
 
 Compression is the **most satisfying micro-interaction** in the game. Every time you compress a cube, you should feel it. The 1-5 second duration is a reward moment, not downtime. It must have:
 - Escalating screen shake
@@ -249,7 +333,7 @@ Compression is the **most satisfying micro-interaction** in the game. Every time
 - Sound design crescendo
 - Physical cube eject with bounce
 
-### 5.2 Compression Timing Table
+### 4.2 Compression Timing Table
 
 | Material | Powder Required | Duration | Screen Shake Peak | Eject Velocity |
 |----------|----------------|----------|-------------------|----------------|
@@ -263,7 +347,7 @@ Compression is the **most satisfying micro-interaction** in the game. Every time
 | Gold | 130 | 3.5s | 0.85 | 1.1 m/s |
 | Quantum Crystal | 200 | 5.0s | 1.0 | 0.8 m/s |
 
-### 5.3 Screen Shake Curve
+### 4.3 Screen Shake Curve
 
 ```
 shakeIntensity(t) = peakIntensity * easeInQuad(t / duration)
@@ -273,7 +357,7 @@ where easeInQuad(x) = x * x
 
 The shake starts barely noticeable and builds to peak at the moment of cube ejection. At t=duration, there is a sharp spike to 1.5x peak for exactly 2 frames (the "SLAM"), then instant drop to 0.
 
-### 5.4 Pressure and Heat Gauges
+### 4.4 Pressure and Heat Gauges
 
 **Pressure gauge** (left side of compression overlay):
 ```
@@ -288,7 +372,7 @@ where delay = duration * 0.15
 ```
 Heat starts slightly after pressure (delayed by 15% of duration), creating a staggered fill that feels more mechanical.
 
-### 5.5 Sound Design Spec
+### 4.5 Sound Design Spec
 
 | Phase | Duration | Sound |
 |-------|----------|-------|
@@ -298,7 +382,7 @@ Heat starts slightly after pressure (delayed by 15% of duration), creating a sta
 | SLAM | Frame of completion | Heavy metallic SLAM + reverb tail (200ms) |
 | Settle | Post-slam 500ms | Metallic ring-down, cube bounce clanks |
 
-### 5.6 Compression Quality
+### 4.6 Compression Quality
 
 | Condition | Quality Multiplier | Visual |
 |-----------|-------------------|--------|
@@ -309,7 +393,7 @@ Heat starts slightly after pressure (delayed by 15% of duration), creating a sta
 
 Quality affects cube value in trade and wall HP: `effectiveHP = quality * baseHP`. A cracked titanium cube (0.7 * 300 = 210 wall HP) is still better than a clean scrap cube (100 wall HP).
 
-### 5.7 Cube Eject Physics
+### 4.7 Cube Eject Physics
 
 ```
 ejectDirection = playerForward * 0.7 + Vector3.UP * 0.3  (normalized)
@@ -320,11 +404,244 @@ frictionCoefficient = 0.6  (settle quickly)
 
 The cube physically pops out in front of the player, bounces once on the ground, and settles. Total settle time: ~1 second for heavy materials, ~1.5s for light materials.
 
+### 4.8 Compression Particle Effects
+
+| Material | Particle Style |
+|----------|---------------|
+| Rock | Brown-gray dust cloud, settles quickly |
+| Scrap Iron | Orange-brown sparks + rust dust |
+| Copper | Warm orange sparks with green-tinted edges |
+| Silicon | Blue-white crystalline sparkle, slow fade |
+| Titanium | Bright white flash + purple-blue afterglow sparks |
+| Carbon | Dark sooty puffs with ember sparks |
+| Rare Earth | Cyan glowing motes, float upward slowly |
+| Gold | Warm golden sparks, bright flash |
+| Quantum Crystal | Purple-white energy burst, lingering glow particles |
+
 ---
 
-## 6. Furnace Recipes
+## 5. Cube Physics & Construction
 
-### 6.1 Tier 1: Salvage (Starting)
+### 5.1 Cubes as Rigid Bodies
+
+Every material cube in the world is a 0.5m Rapier rigid body with a cuboid collider. Cubes are the fundamental unit of construction, storage, trade, and combat. There are no abstract resource counters. If you have 40 iron cubes, there are 40 physical iron cubes sitting somewhere in the world that enemies can see, steal, or destroy.
+
+Rapier rigid body configuration per cube:
+- Type: `dynamic` when loose (falls, rolls, can be pushed)
+- Type: `kinematicPosition` when placed on grid (locked in position, immovable by physics)
+- Collider: `cuboid(0.25, 0.25, 0.25)` -- half-extents for 0.5m cube
+- Friction: 0.8 (cubes don't slide easily on surfaces)
+- Restitution: 0.1 (minimal bounce -- heavy industrial materials)
+- Mass: derived from `material.weight` (affects carry speed and throw distance)
+
+**Cube interactions (via contextual radial menu):**
+- `[GRAB]` -- magnet grab, carry it
+- `[STACK]` -- place into a stack (snap grid)
+- `[INFO]` -- show material type, quality, HP
+- `[CRUSH]` -- break back into powder (lossy, ~50% recovery)
+
+### 5.2 Snap Grid
+
+Cubes align to a global 0.5m snap grid when placed near existing structures or flat ground. The grid exists everywhere but is invisible until the player enters placement mode.
+
+```
+Snap rules:
+- Cube center within 0.3m of a grid point -> snap to that grid point
+- Adjacent to an already-placed cube -> snap to the neighbor face
+- On flat ground (slope < 15 degrees) -> snap to ground-level grid
+- On steep terrain -> no snap (cube is loose, rolls downhill)
+```
+
+When entering placement mode (holding a cube with the Grabber and aiming at a valid surface), a ghost preview appears:
+- Semi-transparent version of the cube at the snap position
+- Green tint when placement is valid
+- Red tint when blocked (overlapping another cube or collider)
+- Wireframe grid lines visible on adjacent faces showing available expansion
+- Material-specific ghost (shows what the actual cube will look like)
+
+### 5.3 Stacking and Structural Stability
+
+Cubes stack vertically. Gravity holds them in place. Stacking is the fundamental building action -- walls are stacks, towers are tall stacks, buildings are organized stacks.
+
+```
+Stacking physics:
+- Max stable height: 8 cubes (4m) for unsupported column
+- Buttressed columns (adjacent stacks providing lateral support): up to 16 cubes (8m)
+- Center of mass calculation: per-column, recalculated when cubes added/removed
+- Stability threshold: center of mass must remain within base footprint
+- Material weight affects stability: heavy cubes (titanium, iron) need wider bases
+```
+
+### 5.4 Toppling
+
+Towers topple when their center of mass exceeds the base support footprint. You cannot build a single-column tower 20 cubes high -- you need pyramidal or buttressed designs for height.
+
+```
+Toppling calculation (per column, per physics tick):
+
+  centerOfMassX = sum(cube.weight * cube.gridX) / sum(cube.weight)
+  centerOfMassZ = sum(cube.weight * cube.gridZ) / sum(cube.weight)
+
+  baseSupportRadius = (number of ground-level cubes in connected group) * 0.25m
+
+  if distance(centerOfMass.xz, baseCenter.xz) > baseSupportRadius:
+    trigger topple event
+    convert top N cubes from kinematic -> dynamic (they fall with physics)
+    apply random angular impulse (tumbling)
+    each cube takes fall damage: fallDamage = cube.weight * fallHeight * 10
+```
+
+Toppling is dramatic -- a tower of iron cubes collapsing creates a cascade of physics objects clanking and tumbling. Nearby entities take crush damage if hit.
+
+### 5.5 Individual Cube HP and Damage
+
+Each cube has individual HP based on its material hardness. Cubes in a wall are independently destructible.
+
+```
+Cube HP formula:
+  cube.maxHp = material.hpPerCube * cube.quality
+  cube.hp = cube.maxHp (when freshly compressed or smelted)
+
+Damage application:
+  cube.hp -= incomingDamage
+  if cube.hp <= cube.maxHp * 0.5:
+    cube.damaged = true       // visual: cracks appear
+  if cube.hp <= 0:
+    destroy cube
+    spawn rubble (70% chance: 1 damaged cube of same material, quality 0.3-0.6)
+    recalculate column stability (may trigger topple cascade)
+```
+
+### 5.6 Material Mixing
+
+Walls and structures CAN mix materials. A rock foundation with iron upper walls is valid and sometimes strategically optimal (cheap base, strong where it matters):
+- Seam lines between different materials are more pronounced (thicker normal map gap)
+- Color contrast makes the material boundary obvious
+- No structural penalty for mixing -- only cosmetic
+- Mixed walls give defenders information: they can see where weak cubes are and prioritize repairs
+
+---
+
+## 6. Wall Building & Defense
+
+### 6.1 Walls Are Just Cubes
+
+There is no "wall" entity type. Walls are emergent structures created by stacking cubes in a line. A wall is defined by its geometry -- if cubes form a contiguous line at least 2 cubes long and at least 2 cubes tall, the game recognizes it as a wall for AI targeting and structural integrity calculations.
+
+```
+Wall recognition heuristic:
+  For each group of contiguous placed cubes:
+    if width >= 2 AND height >= 2:
+      classify as "wall segment"
+      register in defense graph for AI pathfinding
+      enable wall integrity overlay when selected
+```
+
+This means wall design is freeform. Build L-shapes, zigzags, star forts, layered walls, walls with embedded copper wiring, walls with silicon windows that let signal through. The system does not constrain; it recognizes patterns.
+
+### 6.2 Wall Strength
+
+Wall strength is the sum of individual cube HPs along any cross-section:
+
+```
+Wall strength at a point:
+  strengthAtColumn(x, z) = sum of cube.hp for all cubes at grid column (x, z)
+
+Total wall integrity:
+  wallIntegrity = min(strengthAtColumn for each column in wall)
+  // The wall is only as strong as its weakest column
+```
+
+Meaningful defensive construction decisions:
+- A 3-cube-thick rock wall (3 * 50 = 150 HP per column) is weaker than a single-cube iron wall (180 HP)
+- But the rock wall is cheaper and wider, potentially absorbing more area damage
+- Mixing a rock core with iron facing gives 50 + 180 = 230 HP at moderate cost
+
+### 6.3 Blueprint Mode
+
+For larger structures, the player can enter blueprint mode:
+1. Open build menu -> select "Blueprint" -> select "Wall"
+2. First-person view shifts to a projection overlay
+3. Aim at ground to set wall start point -> click
+4. Drag to set wall end point -> click
+5. Set wall height (scroll or number key) -> confirm
+6. Ghost cubes appear showing the planned wall outline
+7. Assign a bot (or self) to the blueprint
+8. Assigned bot carries cubes from nearest stockpile and fills blueprint
+9. Bot prioritizes bottom row first, then each subsequent row (structural stability)
+10. Unfilled blueprint positions show as wireframe outlines
+
+### 6.4 Breach Mechanics
+
+Attackers target the weakest cube in a wall section. Destroying individual cubes creates holes:
+
+```
+Attack targeting (AI):
+1. Scan wall for lowest-HP cube at ground level
+2. Concentrate fire on that cube
+3. When cube destroyed -> hole in wall (1 cube gap)
+4. If ground-level cube destroyed, check column stability
+   - Cubes above may topple into the gap
+   - Or may hold if adjacent columns provide lateral support
+5. Once a hole exists, melee attackers path through it
+6. Ranged attackers continue widening the breach
+```
+
+### 6.5 Rubble
+
+When cubes in a wall are destroyed, they create rubble -- loose cubes and damaged cubes that scatter on the ground:
+- 70% chance: spawn 1 damaged cube of same material (quality 0.3-0.6)
+- 30% chance: nothing (material lost to damage)
+- Damaged cubes can be re-compressed in a furnace to recover ~50% of material
+- Rubble slows movement through a breached area
+- After a siege, both attacker and defender can salvage rubble cubes
+
+### 6.6 Doorways and Gates
+
+Doorways are gaps intentionally left in walls -- a doorway is just a wall with a 1-cube-wide, 2-cube-tall gap. Basic: 1 wide, 2 tall. Wide: 2 wide, 2 tall (vehicle access). A door mechanism (2 iron + 1 copper) can be placed in a doorway for proximity-sensor opening/closing.
+
+---
+
+## 7. Machine Assembly
+
+### 7.1 Machines from Cubes
+
+Machines are assembled by placing specific cube types in specific spatial patterns in the world. When the pattern is complete, the cubes merge into a functional machine entity. You physically build the machine shape with cubes, and when the last cube clicks into place, the structure activates.
+
+### 7.2 Assembly Patterns
+
+Key machine assembly patterns (defined in `config/machineAssembly.json`):
+
+**Furnace** (2x2x2): 4 iron (base) + 3 rock + 1 copper (top). The starter machine, provided free at game start.
+
+**Lightning Rod** (1x1x6): 4 iron (base shaft) + 2 copper (conductor tip). Captures storm energy. Must be tall for efficiency.
+
+**Smelter** (2x3x2): 8 iron + 2 rock + 2 copper. Higher-tier furnace for iron/steel production. Requires power.
+
+**Fabrication Unit** (3x2x2): 8 iron + 2 copper + 2 silicon. Advanced crafting. Requires power.
+
+**Outpost Core** (3x3x3): 12 iron + 5 copper + 2 silicon. Claims territory in a 20m radius. Requires power.
+
+**Defense Turret** (2x2x2): 4 titanium + 2 silicon + 2 copper. Automated defense, range 12, 25 damage, 1.5s attack rate.
+
+### 7.3 Assembly Process
+
+1. Player places cubes matching a machine pattern
+2. After each cube placement, system checks all rotations (0, 90, 180, 270 degrees around Y axis)
+3. If pattern matches: brief activation animation (0.5s) with emissive pulse, particle burst, subtle camera shake
+4. Individual cube entities are destroyed
+5. Single machine entity spawns at pattern center with procedural panel-based mesh
+6. Machine is now functional with hopper, output, and power connection
+
+### 7.4 Disassembly
+
+Machines can be dismantled via radial menu -> [DISMANTLE]. Takes 10 seconds. Cubes returned at original pattern positions with quality reduced by wear (quality * 0.85). Enables nomadic play -- tear down, relocate, rebuild.
+
+---
+
+## 8. Furnace Recipes
+
+### 8.1 Tier 1: Salvage (Starting)
 
 Available from game start. Requires only Scrap Iron and Rock cubes.
 
@@ -339,7 +656,7 @@ Available from game start. Requires only Scrap Iron and Rock cubes.
 | Scrap Wall Panel | 3x Scrap Iron + 2x Rock | 12s | building_wall_scrap | Building |
 | Basic Miner Frame | 6x Scrap Iron | 25s | building_miner_t1 | Building |
 
-### 6.2 Tier 2: Copper Processing (requires Harvester T2)
+### 8.2 Tier 2: Copper Processing (requires Harvester T2)
 
 | Recipe | Inputs | Time | Output | Category |
 |--------|--------|------|--------|----------|
@@ -352,7 +669,7 @@ Available from game start. Requires only Scrap Iron and Rock cubes.
 | Signal Relay | 2x Copper + 1x Scrap Iron | 14s | building_signal_relay | Building |
 | Copper Wall Panel | 4x Copper + 2x Rock | 16s | building_wall_copper | Building |
 
-### 6.3 Tier 3: Silicon and Carbon (requires Harvester T2+)
+### 8.3 Tier 3: Silicon and Carbon (requires Harvester T2+)
 
 | Recipe | Inputs | Time | Output | Category |
 |--------|--------|------|--------|----------|
@@ -366,7 +683,15 @@ Available from game start. Requires only Scrap Iron and Rock cubes.
 | Smelter | 4x Scrap Iron + 2x Carbon + 1x Copper | 35s | building_smelter | Building |
 | Refiner | 3x Silicon + 2x Copper + 2x Scrap Iron | 35s | building_refiner | Building |
 
-### 6.4 Tier 4: Titanium (requires Harvester T3+)
+### 8.4 Smelter Recipes (requires Smelter building)
+
+| Recipe | Inputs | Time | Output | Category |
+|--------|--------|------|--------|----------|
+| Iron Cube | 2x Scrap Iron cubes | 15s | 1x Iron cube | Material |
+| Steel Cube | 2x Iron + 1x Carbon cubes | 25s | 1x Steel cube | Material |
+| Advanced Alloy Cube | 1x Titanium + 1x Rare Earth cubes | 30s | 1x Advanced Alloy cube | Material |
+
+### 8.5 Tier 4: Titanium (requires Harvester T3+)
 
 | Recipe | Inputs | Time | Output | Category |
 |--------|--------|------|--------|----------|
@@ -379,7 +704,7 @@ Available from game start. Requires only Scrap Iron and Rock cubes.
 | Formation Controller | 2x Silicon + 1x Titanium + 1x Copper | 25s | component_formation_ctrl | Component |
 | Titan Armor Plate | 3x Titanium + 1x Carbon | 20s | component_titan_armor | Component |
 
-### 6.5 Tier 5: Endgame (requires Harvester T4)
+### 8.6 Tier 5: Endgame (requires Harvester T4)
 
 | Recipe | Inputs | Time | Output | Category |
 |--------|--------|------|--------|----------|
@@ -394,21 +719,9 @@ Available from game start. Requires only Scrap Iron and Rock cubes.
 
 ---
 
-## 7. Smelter Recipes
+## 9. Building Costs
 
-The Smelter is a separate building from the Furnace. It converts raw cubes into processed material cubes with higher stats. Requires the Smelter building (Tier 3 furnace recipe).
-
-| Recipe | Inputs | Time | Output | Category |
-|--------|--------|------|--------|----------|
-| Iron Cube | 2x Scrap Iron cubes | 15s | 1x Iron cube | Material |
-| Steel Cube | 2x Iron + 1x Carbon cubes | 25s | 1x Steel cube | Material |
-| Advanced Alloy Cube | 1x Titanium + 1x Rare Earth cubes | 30s | 1x Advanced Alloy cube | Material |
-
----
-
-## 8. Building Costs
-
-### 8.1 Production Buildings
+### 9.1 Production Buildings
 
 | Building | Cube Cost | Power Required | Build Time | Tech Tier | Notes |
 |----------|-----------|---------------|------------|-----------|-------|
@@ -418,7 +731,7 @@ The Smelter is a separate building from the Furnace. It converts raw cubes into 
 | Refiner | 3x Silicon + 2x Copper + 2x Scrap Iron | 2 | 20s | 3 | Processes rare materials |
 | Fabrication Unit | 4x Iron + 2x Silicon + 2x Copper | 3 | 25s | 3 | Advanced crafting recipes |
 
-### 8.2 Infrastructure
+### 9.2 Infrastructure
 
 | Building | Cube Cost | Power Required | Build Time | Tech Tier | Notes |
 |----------|-----------|---------------|------------|-----------|-------|
@@ -431,7 +744,7 @@ The Smelter is a separate building from the Furnace. It converts raw cubes into 
 | Signal Relay | 2x Copper + 1x Scrap Iron | 1 | 10s | 2 | Extends signal/compute network |
 | Signal Amplifier | 3x Silicon + 2x Copper | 3 | 18s | 3 | Boosts signal range 2x |
 
-### 8.3 Defense
+### 9.3 Defense
 
 | Building | Cube Cost | Power Required | Build Time | Tech Tier | Wall HP | Notes |
 |----------|-----------|---------------|------------|-----------|---------|-------|
@@ -444,7 +757,7 @@ The Smelter is a separate building from the Furnace. It converts raw cubes into 
 | Bunker | 4x Titanium + 3x Iron + 2x Silicon | 2 | 25s | 4 | 800 | 3 garrison slots |
 | Gate | 2x Iron + 1x Copper | 1 | 10s | 2 | 200 | Controllable passage |
 
-### 8.4 Territory
+### 9.4 Territory
 
 | Building | Cube Cost | Power Required | Build Time | Tech Tier | Claim Radius | Notes |
 |----------|-----------|---------------|------------|-----------|-------------|-------|
@@ -455,9 +768,9 @@ The Smelter is a separate building from the Furnace. It converts raw cubes into 
 
 ---
 
-## 9. Economy Pacing
+## 10. Economy Pacing
 
-### 9.1 Value Generation by Game Phase
+### 10.1 Value Generation by Game Phase
 
 | Phase | Materials Available | Value/Minute (solo, no automation) |
 |-------|--------------------|------------------------------------|
@@ -468,7 +781,7 @@ The Smelter is a separate building from the Furnace. It converts raw cubes into 
 
 **With full automation (belts + auto-miners):** multiply by 3-5x.
 
-### 9.2 Value/Minute Derivation (Early Game)
+### 10.2 Value/Minute Derivation (Early Game)
 
 Player with Tier 1 drill, no automation:
 1. Walk to scrap deposit (5 units away, speed 5 u/s) = 1s
@@ -485,7 +798,7 @@ With some rock mixed in (faster grind, lower value):
 - Rock cycle: ~12.5 seconds, value 0.5
 - Average: ~3.0 value/min
 
-### 9.3 Key Economic Milestones
+### 10.3 Key Economic Milestones
 
 | Milestone | Target Time | Cube Value Required |
 |-----------|-------------|---------------------|
@@ -497,7 +810,7 @@ With some rock mixed in (faster grind, lower value):
 | First territory claim (outpost) | 40 minutes | ~40 spent |
 | Iron smelting operational | 50 minutes | ~20 spent |
 
-### 9.4 Minute-by-Minute Projection (Solo, First 20 Minutes)
+### 10.4 Minute-by-Minute Projection (Solo, First 20 Minutes)
 
 | Minute | Activity | Cubes Produced | Total Cubes | Total Value | Notes |
 |--------|----------|---------------|-------------|-------------|-------|
@@ -505,10 +818,10 @@ With some rock mixed in (faster grind, lower value):
 | 1-2 | Grind first scrap iron deposit. | 1 | 1 | 1.0 | First cube! |
 | 2-3 | Compress. Carry to furnace. Start second. | 1 | 2 | 2.0 | Manual hauling |
 | 3-4 | Third cube. Feed furnace 3x scrap -> Grabber. | 1 | 0 | 0 | Spent 3 cubes crafting |
-| 4-5 | Grind + compress 2 cubes (faster with grabber reach). | 2 | 2 | 2.0 | Grabber helps |
+| 4-5 | Grind + compress 2 cubes (faster with grabber). | 2 | 2 | 2.0 | Grabber helps |
 | 5-6 | 2 more cubes. | 2 | 4 | 4.0 | Building stockpile |
 | 6-7 | Feed furnace 4x scrap -> Diamond Drill. | 0 | 0 | 0 | Spent 4 cubes |
-| 7-8 | Drill T2: now mining copper too. First copper cube. | 2 | 2 | 2.5 | Mixed materials |
+| 7-8 | Drill T2: now mining copper. First copper cube. | 2 | 2 | 2.5 | Mixed materials |
 | 8-10 | Mining copper + scrap. 4 cubes produced. | 4 | 6 | 7.5 | Faster now |
 | 10-12 | Craft belt + auto-hopper. Automation begins. | 0 | 2 | 2.5 | Spent 4 cubes |
 | 12-15 | Belt running. Semi-automated. ~3 cubes/min. | 9 | 11 | 14.0 | Automation boost |
@@ -517,9 +830,9 @@ With some rock mixed in (faster grind, lower value):
 
 ---
 
-## 10. Wealth Brackets and Raid Scaling
+## 11. Wealth Brackets and Raid Scaling
 
-### 10.1 Wealth Bracket Table
+### 11.1 Wealth Bracket Table
 
 | Bracket | Total Cube Value | Raid Frequency | Max Raid Size |
 |---------|-----------------|----------------|---------------|
@@ -530,7 +843,7 @@ With some rock mixed in (faster grind, lower value):
 | Rich | 201-500 | Every 3 min | 6 soldiers + 2 heavy + 1 hacker |
 | Opulent | 501+ | Every 2 min | 8 soldiers + 3 heavy + 2 hackers |
 
-### 10.2 Raid Point Formula
+### 11.2 Raid Point Formula
 
 ```
 raidPoints = totalVisibleCubeValue * 0.5 + buildingCount * 2 + techLevel * 10
@@ -540,11 +853,38 @@ maxRaiders = min(15, floor(raidPoints / 15))
 
 Note: cubes stored in Underground Storage are excluded from `totalVisibleCubeValue`. This makes hidden storage a strategic defense investment.
 
+### 11.3 Stockpile Visibility and Raid Attractiveness
+
+Large stockpiles attract raiders. Enemy AI runs a periodic stockpile scan and evaluates whether a raid is worth the risk:
+
+```
+Raid attractiveness:
+  raidScore = stockpileValue * visibilityFactor - defenseEstimate
+
+  visibilityFactor:
+    1.0 if stockpile is on open ground (no walls)
+    0.5 if stockpile is partially enclosed (walls on 2+ sides)
+    0.2 if stockpile is fully enclosed (walls on all sides + roof)
+    0.0 if stockpile is inside an active outpost with turrets
+
+  defenseEstimate:
+    sum of (wall.hp + turret.dps * 30 + patrol_bot.combat_rating)
+    for all defenses within 10m of stockpile
+```
+
+### 11.4 Storage Strategy
+
+**Open stockpile:** Cubes on the ground. Fast to grab, maximum vulnerability. Good for active build sites and low-value materials.
+
+**Walled storage:** Cubes enclosed in a cube-built room. Must walk through doorway to access. Slower but protected from ranged attacks.
+
+**Vault:** Fully enclosed structure with door mechanism (copper + iron). Locked access (requires circuit board key). Attackers must breach walls. Slowest access, maximum protection. Good for silicon, titanium, strategic reserves.
+
 ---
 
-## 11. Furnace Throughput and Factory Layout
+## 12. Furnace Throughput and Factory Layout
 
-### 11.1 Furnace Stats
+### 12.1 Furnace Stats
 
 | Stat | Value |
 |------|-------|
@@ -554,7 +894,7 @@ Note: cubes stored in Underground Storage are excluded from `totalVisibleCubeVal
 | Powered speed bonus | 1.5x processing speed |
 | Max queue depth | 1 recipe at a time |
 
-### 11.2 Multi-Furnace Efficiency
+### 12.2 Multi-Furnace Efficiency
 
 Building multiple furnaces at a single base has diminishing returns on player attention:
 
@@ -567,7 +907,7 @@ Building multiple furnaces at a single base has diminishing returns on player at
 
 With belts and auto-hoppers, this penalty disappears -- the system self-feeds.
 
-### 11.3 Optimal Factory Layout (Early Game)
+### 12.3 Optimal Factory Layout (Early Game)
 
 ```
 Deposit (10m) --[belt]--> Auto-Hopper --> Furnace --> Output
@@ -581,9 +921,9 @@ Deposit (10m) --[belt]--> Auto-Hopper --> Furnace --> Output
 - Furnace processing: 10-15 seconds (Tier 1 recipes)
 - **Bottleneck: furnace processing time**
 - With 1 belt feeding 1 furnace: 1 cube processed per 10-15 seconds
-- Need 2 belts feeding 1 furnace for continuous operation (one cube arrives while previous is processing)
+- Need 2 belts feeding 1 furnace for continuous operation
 
-### 11.4 Base Agency and Per-Base Economics
+### 12.4 Base Agency and Per-Base Economics
 
 Each settlement (base) is an autonomous agent with its own work queues, furnace capacity, and cube stockpile.
 
@@ -608,7 +948,7 @@ Each settlement (base) is an autonomous agent with its own work queues, furnace 
 
 No diminishing returns on separate bases (unlike multiple furnaces at a single base). Each base's furnace operates independently with its own work queue.
 
-### 11.5 Inter-Base Transport
+### 12.5 Inter-Base Transport
 
 Cubes must physically travel between bases. There is no teleportation or abstract resource sharing (until endgame Teleporter).
 
@@ -625,7 +965,7 @@ transportTime = distance / transportSpeed
 cubesPerMinute = (capacity / transportTime) * 60
 ```
 
-### 11.6 Supply Line Vulnerability
+### 12.6 Supply Line Vulnerability
 
 Inter-base belt networks and worker convoys create attack surfaces:
 
@@ -638,7 +978,7 @@ Inter-base belt networks and worker convoys create attack surfaces:
 
 Attacking supply lines is a legitimate strategy. A civ with 3 rich bases but poor inter-base logistics is fragile.
 
-### 11.7 Base Work Queue Priority
+### 12.7 Base Work Queue Priority
 
 Each base's autonomous agent schedules work in this priority order:
 
@@ -657,7 +997,7 @@ Bots always "phone home" to their nearest base when they have no active task. A 
 
 ---
 
-## 12. Patron Shipment Economy (Colonization Model)
+## 13. Patron Shipment Economy (Colonization Model)
 
 > **Design Reference:** See COLONIZATION-MODEL.md for the full Colonization pivot rationale.
 
@@ -665,7 +1005,7 @@ The primary economic relationship is between your colony and your home planet pa
 
 The otter hologram system (`otterTrade.ts`, `OtterRenderer.tsx`) serves as the home planet communication interface. Otter holograms deliver patron demands, accept shipments, and dispense rewards.
 
-### 12.1 Patron Demand System
+### 13.1 Patron Demand System
 
 Each race's home planet patron periodically requests specific materials. Fulfilling demands earns favor and unlocks rewards. Ignoring demands reduces future support.
 
@@ -695,7 +1035,7 @@ if fulfillmentScore >= 0.5: partial reward (50% of reward value)
 if fulfillmentScore < 0.5: demand failed, patronFavor -= 10
 ```
 
-### 12.2 Patron Favor
+### 13.2 Patron Favor
 
 Favor determines what your patron is willing to send you.
 
@@ -722,7 +1062,7 @@ Favor determines what your patron is willing to send you.
 
 **Starting favor:** 15 (Neutral, close to Trusted)
 
-### 12.3 Patron Reward Catalog
+### 13.3 Patron Reward Catalog
 
 Rewards are received via otter hologram delivery -- a physical crate materializes at your base.
 
@@ -763,7 +1103,7 @@ Rewards are received via otter hologram delivery -- a physical crate materialize
 | Teleporter Blueprint | 100 cubes | Endgame logistics |
 | Patron-Exclusive Blueprint | 50 cubes | Late-game tech only available through patron trade |
 
-### 12.4 The Ship-or-Spend Tension
+### 13.4 The Ship-or-Spend Tension
 
 **Economic pressure curve:**
 
@@ -774,7 +1114,7 @@ Rewards are received via otter hologram delivery -- a physical crate materialize
 | Late (40-70 min) | 1 major / 5 min | Low (established) | 40-60% |
 | Endgame (70+ min) | 1 critical / 5 min | Variable (war or peace) | 0-10% (self-sufficient) |
 
-### 12.5 Patron Dependency Gradient
+### 13.5 Patron Dependency Gradient
 
 Independence is NOT a binary event. It is a **gradient** -- a natural economic transition as the colony's local production scales. There is no "declare independence" button. Robots don't revolt; they rationally shift resource allocation.
 
@@ -788,7 +1128,7 @@ Independence is NOT a binary event. It is a **gradient** -- a natural economic t
 
 The patron WANTS a successful colony. Both sides benefit from continued trade. High patron favor in Act 3 unlocks patron-exclusive tech. Low patron favor reduces trade options but never results in punitive action.
 
-### 12.6 Inter-Colony Trade
+### 13.6 Inter-Colony Trade
 
 Trade between rival colonies on the machine planet is secondary to the patron economy. It uses physical cube exchange at neutral border points.
 
@@ -813,9 +1153,9 @@ fairTrade = tradeRatio >= 0.8 && tradeRatio <= 1.2
 
 ---
 
-## 13. AI Economy
+## 14. AI Economy
 
-### 13.1 Difficulty Multipliers
+### 14.1 Difficulty Multipliers
 
 | Difficulty | Harvest Rate | Build Speed | Starting Cubes | Peace Period | Aggression |
 |-----------|-------------|-------------|---------------|-------------|------------|
@@ -825,7 +1165,7 @@ fairTrade = tradeRatio >= 0.8 && tradeRatio <= 1.2
 | Hard | 1.3x | 1.2x | 30 | 3 min | High |
 | Brutal | 1.6x | 1.5x | 50 | 1 min | Very High |
 
-### 13.2 AI Build Order Targets
+### 14.2 AI Build Order Targets
 
 | Milestone | Easy | Normal | Hard | Brutal |
 |-----------|------|--------|------|--------|
@@ -837,7 +1177,7 @@ fairTrade = tradeRatio >= 0.8 && tradeRatio <= 1.2
 | First raid launched | Never | 12 min | 6 min | 3 min |
 | Iron smelting | 20 min | 12 min | 8 min | 5 min |
 
-### 13.3 AI Passive Cube Generation
+### 14.3 AI Passive Cube Generation
 
 Until full factory automation is implemented, AI factions generate cubes passively:
 
@@ -858,7 +1198,7 @@ cubesPerMinute = 2.0 * 1.0 * 2 * 1.5 = 6.0 cubes/min
 
 **Critical implementation note:** Use `Math.max(1, Math.ceil(...))` to guarantee at least 1 cube per evaluation cycle. `Math.round()` produces 0 for small values.
 
-### 13.4 AI Material Distribution
+### 14.4 AI Material Distribution
 
 AI factions generate cubes of specific materials based on their biome and faction preferences:
 
@@ -869,7 +1209,7 @@ AI factions generate cubes of specific materials based on their biome and factio
 | Signal Choir | 15% | 30% | 35% | 5% | 15% Rare Earth |
 | Iron Creed | 35% | 15% | 10% | 25% | 15% Rock |
 
-### 13.5 Peace Period Mechanics
+### 14.5 Peace Period Mechanics
 
 During the peace period:
 - AI factions do not declare war on the player
@@ -880,7 +1220,7 @@ During the peace period:
 - A countdown timer is visible on the HUD: "PEACE ENDS IN 3:00"
 - When peace ends, AI re-evaluates all diplomatic stances immediately
 
-### 13.6 AI Base Expansion
+### 14.6 AI Base Expansion
 
 AI civs decide when to build a new base using this evaluation:
 
@@ -911,7 +1251,7 @@ newBaseDesirability =
 | T+180s | First cubes being produced at new base. |
 | T+300s | Basic wall perimeter. Base is "online." |
 
-### 13.7 AI Patron Interaction
+### 14.7 AI Patron Interaction
 
 AI civilizations interact with their own home planet patrons using the same system:
 
@@ -933,7 +1273,68 @@ aiShipmentDecision =
 
 ---
 
-## 14. Master Formula Reference
+## 15. Visual Design
+
+### 15.1 Cube Material Appearance
+
+Each material type has a distinct PBR treatment defined in `config/cubeMaterials.json`. At a glance from 10+ meters, a player should identify material type by color and surface quality alone:
+
+```
+Rock:       Dull brown-gray, matte, no reflections
+Scrap Iron: Dark rusty orange, rough, rust patches visible
+Iron:       Clean silver-gray, reflective, brushed surface
+Copper:     Warm orange with green patina edges, moderate shine
+Silicon:    Blue-gray, glassy, faint internal glow
+Titanium:   Bright silver, sharp reflections, purple-blue heat marks
+Carbon:     Matte black, layered compressed texture
+Rare Earth: Faint cyan glow, smooth with luminescent veins
+Gold:       Warm metallic gold, high reflectivity
+Quantum:    Deep purple emissive, crystalline
+```
+
+### 15.2 Seam Lines Between Placed Cubes
+
+When cubes are placed adjacent to each other, subtle seam lines appear at the junction:
+- 2px dark gap rendered via normal map depression at cube edges
+- Gap color: slightly darker than average of adjacent material colors
+- Different materials: gap widens to 4px, color shifts to near-black
+- Seam lines are part of the cube's edge bevel (configured per material in `cubeMaterials.json`)
+
+### 15.3 Damage Visualization
+
+Cube damage is visible on each individual cube, providing at-a-glance wall integrity:
+
+| HP % | Visual |
+|------|--------|
+| 100% | Pristine -- material as defined in PBR config |
+| 75% | Light damage -- 1-2 hairline cracks in normal map |
+| 50% | Moderate -- major cracks, reduced metalness (-0.2), increased roughness (+0.2) |
+| 25% | Heavy -- deep cracks, fragments missing from edges, faint smoke particles |
+| 0% | Destroyed -- cube shatters, rubble spawns, particle burst |
+
+### 15.4 Wall Integrity Overlay
+
+In "defense view" (a HUD mode) or when a wall is selected, cubes show a color overlay indicating remaining HP:
+- 100-75% HP: Green tint (emissive #00ff44)
+- 75-50% HP: Yellow tint (emissive #ffaa00)
+- 50-25% HP: Orange tint (emissive #ff6600)
+- 25-0% HP: Red tint (emissive #ff0000, pulsing)
+
+### 15.5 Stockpile Glow
+
+Large concentrations of valuable materials emit a faint environmental glow, visible from distance. Dual purpose: player can locate stockpiles at night, enemies can spot targets.
+
+```
+glowIntensity = sum(cubeValue) / 100
+glowColor = weighted average of material glow colors in pile
+glowRadius = sqrt(cubeCount) * 0.5m
+```
+
+Glow only activates when 5+ cubes of a single material type are within 2m. Point light placed at pile center with subtle pulsing (0.8-1.0 intensity oscillation, period 4 seconds).
+
+---
+
+## 16. Master Formula Reference
 
 ```
 -- Extraction --
@@ -951,10 +1352,24 @@ cubeQuality = 1.0 * damageModifier * rushModifier
 effectiveCubeValue = baseValue * quality
 wallHP = hpPerCube * quality
 
+-- Cube Physics --
+cube.maxHp = material.hpPerCube * cube.quality
+throwDamage = cube.weight * velocity * 5
+fallDamage = cube.weight * fallHeight * 10
+
+-- Wall Strength --
+strengthAtColumn(x, z) = sum(cube.hp) for all cubes at grid column (x, z)
+wallIntegrity = min(strengthAtColumn) across all columns
+
+-- Stacking --
+maxStableHeight = 8 cubes (unsupported), 16 cubes (buttressed)
+baseSupportRadius = groundCubes * 0.25m
+
 -- Wealth & Raids --
 raidPoints = totalVisibleCubeValue * 0.5 + buildingCount * 2 + techLevel * 10
 raidInterval = max(120, 600 - raidPoints * 2) seconds
 maxRaiders = min(15, floor(raidPoints / 15))
+raidScore = stockpileValue * visibilityFactor - defenseEstimate
 
 -- AI Economy --
 cubesPerMinute = baseCubeRate * difficultyMult * max(1, territories) * factionEconomyBias
@@ -982,11 +1397,11 @@ cubesPerMinute = (capacity / transportTime) * 60
 
 ---
 
-## 15. Config File References
+## 17. Config File References
 
 All economy tuning values are externalized to JSON config files. Balance changes never require code changes.
 
-### 15.1 config/mining.json
+### 17.1 config/mining.json
 
 Controls extraction rates, drill tiers, ore types, and harvesting parameters.
 
@@ -1004,22 +1419,14 @@ Controls extraction rates, drill tiers, ore types, and harvesting parameters.
     "quantum_crystal": { "hardness": 8, "grindSpeed": 0.1, "color": "#8800FF" }
   },
   "defaultExtractionRate": 0.1,
-  "drillTiers": {
-    "1": { "name": "Salvage Grinder", "rateMultiplier": 1.0, "capacity": 60, "mineableTypes": ["rock", "scrap_iron"], "soundLevel": "low", "aggroRadius": 8 },
-    "2": { "name": "Diamond Drill", "rateMultiplier": 2.0, "capacity": 100, "mineableTypes": ["rock", "scrap_iron", "copper", "carbon"], "soundLevel": "medium", "aggroRadius": 15 },
-    "3": { "name": "Plasma Cutter", "rateMultiplier": 3.6, "capacity": 150, "mineableTypes": ["rock", "scrap_iron", "copper", "carbon", "silicon", "titanium"], "soundLevel": "high", "aggroRadius": 25 },
-    "4": { "name": "Quantum Extractor", "rateMultiplier": 6.0, "capacity": 250, "mineableTypes": ["rock", "scrap_iron", "copper", "carbon", "silicon", "titanium", "rare_earth", "gold", "quantum_crystal"], "soundLevel": "very_high", "aggroRadius": 40 }
-  },
-  "harvesting": {
-    "defaultRange": 3.0,
-    "defaultPowderCapacity": 60
-  }
+  "drillTiers": { ... },
+  "harvesting": { "defaultRange": 3.0, "defaultPowderCapacity": 60 }
 }
 ```
 
-### 15.2 config/furnace.json (Compression Section)
+### 17.2 config/furnace.json
 
-Controls compression timing, feedback curves, and cube eject physics.
+Controls compression timing, feedback curves, cube eject physics, and furnace recipes.
 
 ```json
 {
@@ -1028,45 +1435,23 @@ Controls compression timing, feedback curves, and cube eject physics.
     "configs": {
       "rock": { "powderRequired": 40, "compressionTime": 1.0 },
       "scrap_iron": { "powderRequired": 60, "compressionTime": 1.5 },
-      "copper": { "powderRequired": 80, "compressionTime": 2.0 },
-      "carbon": { "powderRequired": 90, "compressionTime": 2.0 },
-      "silicon": { "powderRequired": 100, "compressionTime": 2.5 },
-      "titanium": { "powderRequired": 120, "compressionTime": 3.5 },
-      "rare_earth": { "powderRequired": 150, "compressionTime": 4.0 },
-      "gold": { "powderRequired": 130, "compressionTime": 3.5 },
-      "quantum_crystal": { "powderRequired": 200, "compressionTime": 5.0 }
+      ...
     },
-    "screenShake": {
-      "curveType": "easeInQuad",
-      "slamMultiplier": 1.5,
-      "slamFrames": 2
-    },
+    "screenShake": { "curveType": "easeInQuad", "slamMultiplier": 1.5, "slamFrames": 2 },
     "pressureGauge": { "curveType": "easeInCubic", "redZoneThreshold": 0.85 },
     "heatGauge": { "curveType": "easeInQuad", "delayPercent": 0.15 },
-    "ejectPhysics": {
-      "forwardWeight": 0.7,
-      "upWeight": 0.3,
-      "bounceRestitution": 0.3,
-      "friction": 0.6
-    }
+    "ejectPhysics": { "forwardWeight": 0.7, "upWeight": 0.3, "bounceRestitution": 0.3, "friction": 0.6 }
   }
 }
 ```
 
-### 15.3 config/economy.json
+### 17.3 config/economy.json
 
 Controls wealth brackets, raid scaling, AI economy, trade ratios, and patron shipments.
 
 ```json
 {
-  "wealthBrackets": {
-    "destitute": { "maxValue": 10, "raidIntervalSeconds": null, "maxRaiders": 0 },
-    "poor": { "maxValue": 30, "raidIntervalSeconds": 600, "maxRaiders": 2 },
-    "modest": { "maxValue": 80, "raidIntervalSeconds": 420, "maxRaiders": 4 },
-    "wealthy": { "maxValue": 200, "raidIntervalSeconds": 300, "maxRaiders": 5 },
-    "rich": { "maxValue": 500, "raidIntervalSeconds": 180, "maxRaiders": 9 },
-    "opulent": { "maxValue": null, "raidIntervalSeconds": 120, "maxRaiders": 13 }
-  },
+  "wealthBrackets": { ... },
   "raidPointFormula": {
     "cubeValueWeight": 0.5,
     "buildingWeight": 2.0,
@@ -1079,77 +1464,29 @@ Controls wealth brackets, raid scaling, AI economy, trade ratios, and patron shi
   },
   "aiEconomy": {
     "baseCubeRate": 2.0,
-    "difficultyMultipliers": {
-      "peaceful": 0.5,
-      "easy": 0.7,
-      "normal": 1.0,
-      "hard": 1.3,
-      "brutal": 1.6
-    },
-    "peacePeriodSeconds": {
-      "peaceful": null,
-      "easy": 600,
-      "normal": 300,
-      "hard": 180,
-      "brutal": 60
-    }
+    "difficultyMultipliers": { "peaceful": 0.5, "easy": 0.7, "normal": 1.0, "hard": 1.3, "brutal": 1.6 },
+    "peacePeriodSeconds": { "peaceful": null, "easy": 600, "normal": 300, "hard": 180, "brutal": 60 }
   },
-  "trade": {
-    "fairRatioMin": 0.8,
-    "fairRatioMax": 1.2,
-    "generousThreshold": 0.8,
-    "exploitativeThreshold": 1.5,
-    "opinionOnCompleteTrade": 10,
-    "opinionOnRejectTrade": -5,
-    "opinionOnAmbushConvoy": -50,
-    "opinionOnBreakAgreement": -30,
-    "tradeEmbargoSeconds": 600
-  },
+  "trade": { "fairRatioMin": 0.8, "fairRatioMax": 1.2, ... },
   "patronShipments": {
     "demandCycleSeconds": 300,
-    "demandTiers": {
-      "minor": { "minValue": 5, "maxValue": 15, "deadlineSeconds": 300, "favorGain": 5 },
-      "standard": { "minValue": 20, "maxValue": 50, "deadlineSeconds": 480, "favorGain": 10 },
-      "major": { "minValue": 60, "maxValue": 150, "deadlineSeconds": 720, "favorGain": 20 },
-      "critical": { "minValue": 200, "maxValue": null, "deadlineSeconds": 900, "favorGain": 35 }
-    },
-    "favor": {
-      "startingFavor": 15,
-      "minFavor": -50,
-      "maxFavor": 100,
-      "partialFulfillmentThreshold": 0.5,
-      "failPenalty": -10,
-      "ignorePenalty": -15,
-      "independenceFavorCost": -100,
-      "levels": {
-        "disfavored": { "min": -50, "max": -1 },
-        "neutral": { "min": 0, "max": 24 },
-        "trusted": { "min": 25, "max": 49 },
-        "favored": { "min": 50, "max": 79 },
-        "essential": { "min": 80, "max": 100 }
-      }
-    },
-    "patronPriorities": {
-      "reclaimers": ["scrap_iron", "carbon", "rock"],
-      "volt_collective": ["copper", "rare_earth", "gold"],
-      "signal_choir": ["silicon", "rare_earth", "quantum_crystal"],
-      "iron_creed": ["titanium", "iron", "steel"]
-    },
-    "independence": {
-      "requiredFavor": 80,
-      "requiredStockpileValue": 200,
-      "requiredBases": 3,
-      "punitiveWaves": 3,
-      "punitiveBotsPerWave": 5,
-      "punitiveWaveIntervalSeconds": 300
-    },
-    "aiShipEfficiency": {
-      "peaceful": 0.1,
-      "easy": 0.2,
-      "normal": 0.3,
-      "hard": 0.4,
-      "brutal": 0.5
-    }
+    "demandTiers": { ... },
+    "favor": { "startingFavor": 15, "minFavor": -50, "maxFavor": 100, ... },
+    "patronPriorities": { ... }
   }
 }
 ```
+
+### 17.4 config/cubeMaterials.json
+
+Controls per-material PBR treatment, gameplay stats (hardness, weight, conductivity), and visual properties. See Section 2.4 for material-level details.
+
+### 17.5 Other Related Config Files
+
+| Config File | Relevant Economy Data |
+|------------|----------------------|
+| `config/buildings.json` | Building costs, power requirements, build times |
+| `config/technology.json` | Tech tree unlocks that gate drill tiers and recipes |
+| `config/combat.json` | Damage values used in raid/wall balance calculations |
+| `config/biomes.json` | `biomeHarvestMod` and `weatherHarvestMod` for extraction formula |
+| `config/quests.json` | Otter hologram quest triggers tied to economy milestones |

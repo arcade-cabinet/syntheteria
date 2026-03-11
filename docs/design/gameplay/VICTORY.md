@@ -1,5 +1,15 @@
 # Syntheteria -- Victory Conditions
 
+**Config:** `config/victory.json`
+**System:** `src/systems/victoryConditionEvaluator.ts`, `src/systems/gameOverDetection.ts`
+
+**See also:**
+- `docs/design/gameplay/OVERVIEW.md` -- high-level 8-condition summary
+- `docs/design/gameplay/MATERIALS.md` -- Economic Victory (500 cubes) and Colonial Victory (patron shipments)
+- `docs/design/gameplay/PROGRESSION.md` -- Technology Victory (Tier 5 + Convergence Device)
+- `docs/design/gameplay/COMBAT.md` -- Domination, Survival, and combat counter-play
+- `docs/design/agents/GOVERNORS.md` -- AI victory evaluator weight parameters
+
 ## Overview
 
 Syntheteria offers eight distinct victory conditions. Each represents a fundamentally different way to master the machine planet. No two victories feel the same. No single strategy dominates all map configurations. Every victory is blockable by opponents who recognize the threat.
@@ -576,7 +586,9 @@ If two factions pursue the same victory type simultaneously, the tiebreaker is t
 
 ## Config References
 
-All victory tuning lives in `config/victory.json`:
+All victory tuning lives in `config/victory.json`.
+
+**Config drift note:** `config/victory.json` currently contains four extra condition keys not implemented by `victoryConditionEvaluator.ts`: `military`, `scientific`, `cultural`, and `hacking`. These appear to be legacy entries from an earlier design pass. The evaluator only reads the 8 canonical conditions listed in this document. These extra keys should be removed from config in a future cleanup pass.
 
 | Parameter Path | Type | Description |
 |----------------|------|-------------|
@@ -584,11 +596,11 @@ All victory tuning lives in `config/victory.json`:
 | `conditions.colonial.objectivesRequireAll` | boolean | Must complete all objectives |
 | `conditions.colonial.availableDuringActs` | number[] | Valid acts [1, 2] |
 | `conditions.domination.outpostControlPercent` | number | Territory threshold (0.75) |
-| `conditions.domination.holdDurationSeconds` | number | Hold time (300) |
+| `conditions.domination.holdDurationTicks` | number | Hold time in game ticks (300 = 5 min at 1 tick/second) |
 | `conditions.domination.outpostLocations` | object | Per-map-size location counts |
 | `conditions.economic.totalCubesRequired` | number | Cube threshold (500) |
 | `conditions.economic.materialDiversityRequired` | number | Min material types (4) |
-| `conditions.economic.holdDurationSeconds` | number | Hold time (300) |
+| `conditions.economic.holdDurationTicks` | number | Hold time in game ticks (300 = 5 min at 1 tick/second) |
 | `conditions.technology.requiredTechTier` | number | Tech tier needed (5) |
 | `conditions.technology.deviceCubesRequired` | number | Device construction cubes (100) |
 | `conditions.technology.deviceBuildTimeSeconds` | number | Activation duration (180) |
@@ -597,9 +609,9 @@ All victory tuning lives in `config/victory.json`:
 | `conditions.integration.residualRelationshipRequired` | number | Residual rep needed (80) |
 | `conditions.integration.resonanceCubesRequired` | number | Offering cubes (50) |
 | `conditions.integration.resonanceDurationSeconds` | number | Protocol duration (120) |
-| `conditions.survival.convergenceStartMinutes` | number | Natural start time (480) |
-| `conditions.survival.earlyTriggerThresholds` | object | Countdown by progress % |
-| `conditions.survival.convergencePhases` | object | Phase damage/duration config |
+| `conditions.survival.convergenceStartTick` | number | Tick at which Convergence begins (28800 = 480 min at 1 tick/second) |
+| `stormProgression.phases` | array | 5-phase storm escalation (calm/rising/storm/tempest/convergence) |
+| `earlyTriggerThresholds` | object | Countdown (in ticks) when a faction reaches 50/75/90% progress |
 | `conditions.story.coreAccessPointsRequired` | number | Core points needed (3) |
 | `conditions.story.playerOnly` | boolean | AI cannot pursue (true) |
 | `progressPanel.updateIntervalSeconds` | number | Evaluation frequency (10) |

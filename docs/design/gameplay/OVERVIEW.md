@@ -226,16 +226,13 @@ What makes Syntheteria different from other factory builders and 4X games:
 
 ## Victory Conditions
 
-1. **Colonial Victory** -- Fulfill all home-planet patron objectives
-2. **Domination** -- Control 75% of planet territory
-3. **Economic** -- Accumulate 500 cubes across 4+ material types
-4. **Technology** -- Research Tier 5 tech and build the Convergence Device
-5. **Diplomatic** -- All surviving civilizations allied or vassalized
-6. **Integration** -- Successfully ally with the Residuals (alien natives)
-7. **Survival** -- Last faction standing after Storm Convergence
-8. **Story** -- Discover the Architects' message in the deep substrate (player only)
+There are eight distinct victory paths. Each represents a fundamentally different way to master the machine planet, and every victory is blockable by opponents who recognize the threat.
+
+**Summary:** Colonial, Domination, Economic, Technology, Diplomatic, Integration, Survival, Story.
 
 Independence from the home-planet patron is not a binary victory condition. It is a gradient -- patron dependency decreases organically as local production scales.
+
+**See also:** `docs/design/gameplay/VICTORY.md` for full per-condition requirements, hold durations, AI governor evaluators, 3-act pacing, storm progression, counter-play, and narrative payoffs. All victory tuning lives in `config/victory.json`.
 
 ---
 
@@ -253,19 +250,6 @@ The color palette: cyan/green (#00ffaa, #00e5ff) for holographic projections and
 
 ## Open Questions
 
-### World and Setting
-- How do Residuals (alien natives) integrate mechanically? Are they a full faction with territory, or a neutral force with trade/quest interactions?
-- What is the Architects' message in the deep substrate? How does the story ending connect to the colonization framing?
+Several design questions from this document have been resolved during development (Residuals are a neutral force with trade/quest/integration path, not a competing faction; player death transfers consciousness to nearest bot; business model is deferred). Others remain open.
 
-### Gameplay
-- Player death: when the active bot is destroyed, does consciousness auto-transfer to the nearest bot? Or is it game over if all bots are destroyed?
-- Belt routing UX: how does first-person belt placement feel? Ghost preview extending from player, or a projected holographic overlay showing the planned route?
-- Scale of factory: how large do factory networks get? Do we need LOD for distant belt networks?
-- Underground belts: can belts go underground to cross each other? How does this look in first-person?
-- Bot followers: can non-active bots follow the player like Minecraft wolves, or do they always stay at assigned tasks?
-
-### Multiplayer
-- Multiple human players on the same planet, each as a bot, building competing or cooperating factory networks? This is beyond current scope but the architecture should not prevent it.
-
-### Business Model
-- Free-to-play with cosmetics/convenience, premium (one-time purchase), or free intro with paid full game? Not yet decided.
+**See also:** `docs/design/OPEN_QUESTIONS.md` for the authoritative tracked list of all open and resolved questions with status markers.

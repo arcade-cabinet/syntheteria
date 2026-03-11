@@ -1,5 +1,13 @@
 # Combat System
 
+**Config:** `config/combat.json`
+
+**See also:**
+- `docs/design/gameplay/OVERVIEW.md` — eXterminate pillar summary
+- `docs/design/gameplay/MATERIALS.md` — cube values and economy context
+- `docs/design/gameplay/VICTORY.md` — Domination and Survival victory conditions
+- `docs/design/agents/GOVERNORS.md` — AI decision-making for when to attack
+
 Combat is not a separate system -- it emerges from the physical cube economy. Every fight costs cubes. Cubes thrown as weapons are cubes not used for building. Bots destroyed are cubes spent on construction lost. Walls breached are cubes exposed to theft. The fundamental tension: **wealth makes you powerful but also makes you a target.**
 
 Combat is not the game's primary loop -- the core loop is harvest/compress/carry/build. Combat exists to create stakes for the economy, to make defense meaningful, and to enable the eXterminate pillar of the 4X.

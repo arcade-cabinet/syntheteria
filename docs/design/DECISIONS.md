@@ -287,6 +287,145 @@ Koota has no built-in serialization, so a custom `serializeWorld()` / `deseriali
 
 ---
 
+## Decision 12: Rendering -- HologramRenderer supersedes OtterRenderer
+
+### Original Decision: OtterRenderer
+
+The prototype used **OtterRenderer** -- animated billboard sprites rendered as Three.js `<Sprite>` elements with proximity-triggered speech bubbles. This worked for the initial prototype but had two problems:
+
+1. **Technical:** Three.js `<Sprite>` elements lack a `matrixWorld` property in some code paths. When `ObjectSelectionSystem` raycasted against them, orphaned sprites caused `matrixWorld` crashes.
+2. **Thematic:** Sprites floating in space had no in-world justification.
+
+### Migration Decision: HologramRenderer
+
+**HologramRenderer** replaces OtterRenderer entirely. Each otter entity now renders as:
+1. **Emitter pad** -- dark cylinder with cyan emissive edge glow on the ground
+2. **Projection cone** -- faint transparent cone from pad upward
+3. **Holographic sprite** -- billboard quad using a custom holographic ShaderMaterial (scan lines, flicker, dissolution)
+4. **Dissolution particles** -- small translucent squares drifting upward
+
+Billboard behavior is thematically justified: holograms SHOULD face the viewer. The OtterRenderer import was removed from `GameScene.tsx` with a comment explaining the supersession.
+
+**Source:** `src/rendering/HologramRenderer.tsx` (389 lines), `src/rendering/HolographicShader.ts`
+
+---
+
+## Decision 13: Cube Rendering -- InstancedCubeRenderer replaces FreeCubeRenderer
+
+### Original Decision: FreeCubeRenderer
+
+The prototype used **FreeCubeRenderer** -- one `<mesh>` per cube in the scene. This scales poorly beyond a few hundred cubes because each mesh is a separate draw call.
+
+### Migration Decision: InstancedCubeRenderer
+
+**InstancedCubeRenderer** uses Three.js `InstancedMesh` to render up to 5,000+ cubes in a single draw call per material type. Each material type gets its own instanced mesh with PBR materials from `CubeMaterialProvider`. Instance matrices are updated per frame from ECS data.
+
+InstancedCubeRenderer is wired into the live R3F scene in `GameScene.tsx`. FreeCubeRenderer remains in the codebase but is no longer imported by any active scene component.
+
+**Source:** `src/rendering/InstancedCubeRenderer.tsx` (387 lines), `src/GameScene.tsx`
+
+---
+
+## Decision 14: AI Strategic Layer -- GovernorActionExecutor bridges GOAP to game systems
+
+### Decision
+
+The **GovernorActionExecutor** class translates GOAP action decisions from `CivilizationGovernor` into concrete game system calls. It is injected into the governor via `setActionExecutor()` to keep the governor decoupled from system imports.
+
+### Architecture
+
+```
+CivilizationGovernor (GOAP planner)
+  → evaluates goals/weights per faction personality
+  → selects best GOAPAction
+  → calls executor.execute(action, context)
+
+GovernorActionExecutor
+  → LaunchRaid  → findRaidTargets + assessRaidViability + planRaid
+  → ResearchTech → getAvailableTechs + startResearch
+  → (other actions) → delegated to unit-level BotBrain, not system calls
+```
+
+The `governorSystem.ts` orchestrates the full loop: reads faction CivState, translates it to GOAP WorldState, ticks the governor, and translates the resulting action into BotCommands for idle bots. This bridges the strategic GOAP layer with the tactical unit layer.
+
+**Source:** `src/ai/goap/GovernorActionExecutor.ts`, `src/systems/governorSystem.ts`
+
+---
+
+## Decision 15: Victory Conditions -- 8-condition evaluator with hold timers and tiebreakers
+
+### Decision
+
+Victory is evaluated per-faction per-tick via `victoryConditionEvaluator.ts`, checking 8 distinct conditions defined in `config/victory.json`. This was chosen over the earlier 6-condition model in `victoryTracking.ts` (which tracked Economic, Military, Scientific, Cultural, Hacking, and Survival).
+
+### The 8 Conditions
+
+| # | Victory | Requirement |
+|---|---------|-------------|
+| 1 | Colonial | Patron satisfaction >= 80% AND all objectives complete |
+| 2 | Domination | Control 75% of outpost locations for 5 min (hold timer) |
+| 3 | Economic | 500+ cubes of 4+ material types for 5 min (hold timer) |
+| 4 | Technology | Tier 5 tech researched AND Convergence Device constructed |
+| 5 | Diplomatic | All surviving factions allied or vassalized |
+| 6 | Integration | Residual relationship >= 80 AND Resonance Protocol complete |
+| 7 | Survival | Last faction with powered outpost after Storm Convergence |
+| 8 | Story | All 4 narrative requirements met (player-only) |
+
+### Design Choices
+
+- **Hold timers** for Domination and Economic prevent flash victories from lucky raids. You must sustain the threshold for 5 continuous real-time minutes.
+- **Tiebreaker ordering** (story > integration > technology > colonial > diplomatic > economic > domination > survival) resolves simultaneous victories.
+- **Alert thresholds** fire events at 25%, 50%, 75% progress so all factions are warned.
+- **Grace period** (configurable) prevents victory checks in the first N ticks.
+- **Query injection** (`VictoryStateQueries` interface) keeps the evaluator testable without importing concrete system modules.
+
+The earlier `victoryTracking.ts` (6 conditions) remains in the codebase but is superseded by the evaluator for authoritative victory determination.
+
+**Source:** `src/systems/victoryConditionEvaluator.ts` (643 lines), `config/victory.json`, `docs/design/gameplay/VICTORY.md`
+
+---
+
+## Decision 16: Weather Gameplay Effects -- Pure preset mapping
+
+### Decision
+
+Weather states map to concrete gameplay modifiers via a pure preset system in `weatherEffects.ts`. Six weather presets (clear, cloudy, rain, storm, fog, acid_rain) each define multipliers for:
+- Movement speed, visibility range, perception range
+- Lightning chance, combat accuracy, harvest speed
+- Cube exposure damage per second
+- Audio presets, skybox tint, particle density
+
+### Architecture
+
+`weatherSystem.ts` manages state transitions and storm intensity. `weatherEffects.ts` is a pure mapping layer with no config imports -- modifiers are hardcoded presets selected by weather state string. `weatherStructureBridge.ts` connects storm damage to structural collapse, applying per-material weather resistance and shelter protection checks.
+
+This three-layer approach keeps weather logic testable: the state machine, the modifier lookup, and the damage application are all independently unit-tested.
+
+**Source:** `src/systems/weatherEffects.ts`, `src/systems/weatherSystem.ts`, `src/systems/weatherStructureBridge.ts`
+
+---
+
+## Decision 17: Physical Cube Economy for AI Factions
+
+### Decision
+
+AI civilizations must interact with the physical cube economy -- the same rigid body cubes that the player uses. AI-produced cubes spawn as real Rapier rigid bodies at faction base positions, not abstract counters.
+
+### Why This Matters
+
+The physical cube economy is the game's core differentiator. If AI factions operated on abstract counters while the player dealt with physical cubes, the core design would be undermined: raids would be asymmetric (you can steal the player's cubes but not the AI's), cube pile visibility would only threaten the player, and the economic victory condition would be meaningless for AI.
+
+### Implementation Status
+
+- `aiCivilization.ts` calls `spawnCube()` to create real rigid body cube entities at faction bases
+- `newGameInit.ts` sets base positions for each faction
+- `economySimulation.ts` tracks per-faction GDP, stockpile values, and trade balance from real cube economy data
+- **Not yet complete:** AI bots do not yet run the full harvest-compress-carry pipeline. They generate cubes passively. Full physical AI economy is a critical remaining work item (see REMAINING-WORK.md section 2).
+
+**Source:** `src/systems/aiCivilization.ts`, `src/systems/economySimulation.ts`, `src/systems/cubeEconomy.ts`
+
+---
+
 ## Migration History
 
 | When | What Changed | Why |
@@ -299,6 +438,12 @@ Koota has no built-in serialization, so a custom `serializeWorld()` / `deseriali
 | GDD-002 | Vitest to Jest + ts-jest | CJS compatibility with Metro, broader ecosystem |
 | GDD-002 | Billboard sprites to holographic projections | FPS view makes billboard rotation thematically correct as holograms |
 | GDD-002 | Tool-based interaction to contextual | Faster, more discoverable; radial menu adapts to clicked object |
+| Production | OtterRenderer → HologramRenderer | Sprite matrixWorld crashes, thematic justification for billboard |
+| Production | FreeCubeRenderer → InstancedCubeRenderer | Draw call reduction for 5,000+ cubes |
+| Production | 6-condition victory → 8-condition evaluator | Richer victory paths, hold timers, tiebreakers, alert thresholds |
+| Production | Abstract AI economy → physical cube spawning | AI must participate in the physical cube economy |
+| Production | Weather presets → gameplay effect bridge | Storms affect movement, visibility, accuracy, cube damage |
+| Production | Standalone GOAP → GovernorActionExecutor bridge | Strategic GOAP decisions need concrete system calls |
 
 ---
 
@@ -307,14 +452,19 @@ Koota has no built-in serialization, so a custom `serializeWorld()` / `deseriali
 ```
 Engine:       React Three Fiber + Three.js
 ECS:          Koota (trait-based SoA, relations, change detection)
+              Miniplex bridge still active (42+ files pending migration)
 Physics:      Rapier WASM (@react-three/rapier)
 AI:           Yuka (GOAP governors, Vehicle steering, NavMesh)
+              GovernorActionExecutor bridges GOAP → game systems
 Audio:        Tone.js (spatial, procedural, adaptive)
 Bundler:      Expo SDK 55 + Metro (web + iOS + Android)
 Persistence:  IndexedDB (web) + expo-sqlite + Drizzle (native)
-Testing:      Jest + ts-jest (7,594 tests)
-Config:       39+ JSON files, type-inferred at compile time
+Testing:      Jest + ts-jest (7,594 tests across 256 suites)
+Config:       42 JSON files, type-inferred at compile time via config/index.ts
 CI/CD:        GitHub Actions (lint, typecheck, test, deploy)
+Rendering:    InstancedCubeRenderer (cubes), HologramRenderer (otters)
+Victory:      8-condition evaluator with hold timers and tiebreakers
+Weather:      3-layer system (state machine → modifier presets → damage bridge)
 ```
 
 ---
@@ -323,10 +473,12 @@ CI/CD:        GitHub Actions (lint, typecheck, test, deploy)
 
 | Decision | Options Under Consideration | Status |
 |----------|---------------------------|--------|
-| Visual art style detail | Low-poly / pixel art / clean minimal / industrial PBR | Leaning industrial PBR, not finalized |
-| Multiplayer architecture | Peer-to-peer / authoritative server / post-launch | Deferred -- single-player first |
-| Native mobile performance | Acceptable on mid-range phones? Needs profiling | Untested -- web works, iOS/Android not yet built |
-| expo-sqlite schema design | Governor decision tables, analytics, save slots | Designed but not implemented |
-| Quality tier auto-detection | GPU capability detection for mobile throttling | System exists, not wired to R3F scene |
-| InstancedCubeRenderer | Connected to R3F scene? Performance at scale? | Exists (387 lines), not yet wired in |
-| Wire MaterialFactory to JSON | Currently some materials hardcoded | Partially done |
+| Visual art style detail | Low-poly / pixel art / clean minimal / industrial PBR | **RESOLVED.** Industrial mechanical PBR. Procedural panel-based geometry, composable PBR from texture sets, 15 material types. |
+| Multiplayer architecture | Peer-to-peer / authoritative server / post-launch | Deferred -- single-player first. AI governors designed for eventual human player swap. |
+| Native mobile performance | Acceptable on mid-range phones? Needs profiling | Untested -- web works, iOS/Android not yet built. |
+| expo-sqlite schema design | Governor decision tables, analytics, save slots | Designed but not implemented. |
+| Quality tier auto-detection | GPU capability detection for mobile throttling | System exists (`qualityTier.ts`), not wired to R3F scene. |
+| InstancedCubeRenderer scale | Performance at 5,000+ cubes with 4 AI factions? | Wired into GameScene. Needs profiling under full load. |
+| Wire MaterialFactory to JSON | Currently some materials hardcoded | Partially done. `CubeMaterialProvider` is JSON-driven; other material paths still use hardcoded values. |
+| Full Koota migration | Miniplex coexists via bridge; 42+ files still import Miniplex | Bridge works but adds per-frame sync overhead. Migration can proceed system-by-system. |
+| AI physical economy | Passive cube spawning vs. full harvest-compress-carry | Passive spawning implemented. Full physical pipeline for AI is critical remaining work. |

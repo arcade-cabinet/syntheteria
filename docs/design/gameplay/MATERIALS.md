@@ -1,16 +1,62 @@
-# GDD-012: Economy Balance -- Harvest Rates, Compression, Furnace, Cube Values
+# Materials and Economy
 
-**Status:** Final (Colonization Pivot Applied)
-**Date:** 2026-03-10
-**Scope:** Complete numerical balance for the physical cube economy -- every rate, cost, duration, and formula that drives the core loop. Economy follows the **Colonization model**: the core strategic decision is whether to use cubes locally or ship them home to your patron for blueprints, tech, and reinforcements.
+**Status:** Authoritative
+**Scope:** Complete specification of the physical cube economy -- resource philosophy, material hierarchy, extraction rates, compression mechanics, furnace recipes, building costs, economy pacing, raid scaling, patron shipments, AI economy, and all formulas.
 
 ---
 
-## 1. Material Hierarchy
+## 1. Resource Philosophy
 
-Six raw materials form the economy. Each is harvested from deposits, compressed into 0.5m physical cubes, and used for construction, crafting, trade, and combat. Iron is a processed material (smelted from scrap iron). All values below are final tuning targets.
+### 1.1 Why Physical Resources
 
-### 1.1 Master Material Table
+In Syntheteria, resources are not abstract counters in a UI. They are **physical 0.5m rigid body cubes** that exist in the world, obey physics, can be stacked, carried, dropped, stolen, and destroyed. Your wealth is the pile of cubes sitting outside your base, visible to everyone.
+
+This design choice has three consequences that drive the entire game:
+
+1. **Scarcity drives expansion.** Ore deposits in your starting biome are finite. When they deplete, you must explore further, claim new territory, and defend longer supply lines. There is no "turtle and win" strategy -- the map forces you outward.
+
+2. **Wealth is visible and vulnerable.** Every cube you stockpile is a target. Rival civilizations can see your pile, estimate your strength, and decide whether to raid. Hiding cubes underground or behind walls is a real strategic choice with real trade-offs (hidden cubes cannot be quickly accessed for crafting).
+
+3. **Logistics are physical.** Moving cubes from a remote deposit to your furnace requires belts, worker bots, or manual carrying. Distance matters. Convoy protection matters. A severed supply line is an immediate economic crisis, not a percentage debuff.
+
+### 1.2 Scarcity Pressure Curve
+
+The map is designed so that easy resources deplete first, forcing progression through increasingly difficult extraction:
+
+| Game Phase | Resource Access | Expansion Pressure |
+|------------|----------------|-------------------|
+| Early (0-10 min) | Rock and Scrap Iron deposits near spawn | None -- abundant nearby |
+| Mid (10-30 min) | Copper visible on scanner, Silicon requires exploration | Moderate -- must venture out |
+| Late (30-60 min) | Titanium in contested biomes, Rare Earth at map edges | High -- territory wars |
+| Endgame (60+ min) | Gold scattered, Quantum Crystal one-time-only | Critical -- every deposit matters |
+
+### 1.3 The Core Loop
+
+```
+Grind ore deposit --> Powder fills capacity gauge
+    --> Compress (screen shake, pressure/heat HUD)
+    --> Physical cube ejects
+    --> Grab cube --> Carry to furnace hopper
+    --> Tap furnace --> Radial menu --> Select recipe
+    --> Furnace processes --> Item slides out
+    --> Install on bot / Place in world / Feed to next machine
+```
+
+Every cube you compress faces a choice:
+```
+USE LOCALLY --> immediate benefit (wall, weapon, building, bot)
+SHIP HOME   --> delayed benefit (blueprint, tech, reinforcement from patron)
+```
+
+This ship-or-spend tension is the Colonization model's core strategic lever.
+
+---
+
+## 2. Material Hierarchy
+
+Nine raw materials and three processed materials form the economy. Each raw material is harvested from deposits, compressed into 0.5m physical cubes, and used for construction, crafting, trade, and combat. Processed materials are smelted from raw cubes -- they cannot be mined directly.
+
+### 2.1 Master Material Table
 
 | Material | Tier | Rarity | Deposit Freq | Grind Speed | Powder to Fill | Compress Time | Cube HP | Wall HP | Base Value | Carry Speed |
 |----------|------|--------|-------------|-------------|----------------|---------------|---------|---------|------------|-------------|
@@ -24,7 +70,11 @@ Six raw materials form the economy. Each is harvested from deposits, compressed 
 | Gold | 4 | Ultra Rare | 2% | 0.25x | 130 | 3.5s | 35 | 70 | 10.0 | 88% |
 | Quantum Crystal | 5 | Legendary | 1% | 0.1x | 200 | 5.0s | 60 | 120 | 25.0 | 95% |
 
-**Processed materials (smelted, not mined):**
+**Tier progression:** Higher tiers require better drill upgrades to extract. Tier 1 materials are available from game start. Each subsequent tier gates behind a drill upgrade that itself costs cubes from the previous tier, creating a natural tech ramp.
+
+### 2.2 Processed Materials (Smelted, Not Mined)
+
+Processed materials are created in the Smelter building by combining raw cubes. They cannot be found in deposits.
 
 | Material | Recipe | Cube HP | Wall HP | Base Value |
 |----------|--------|---------|---------|------------|
@@ -32,15 +82,25 @@ Six raw materials form the economy. Each is harvested from deposits, compressed 
 | Steel | 2x Iron + 1x Carbon cube | 200 | 400 | 8.0 |
 | Advanced Alloy | 1x Titanium + 1x Rare Earth cube | 250 | 500 | 18.0 |
 
+### 2.3 Material Properties
+
+- **Grind Speed** -- multiplier on extraction rate. Lower = harder to grind. Quantum Crystal at 0.1x takes 10 times longer than Rock at 1.0x.
+- **Powder to Fill** -- how much powder is needed to compress one cube. Higher = more grinding per cube.
+- **Compress Time** -- duration of the compression animation. Longer for rarer materials.
+- **Cube HP** -- hit points when a cube is used as a thrown projectile or destructible object.
+- **Wall HP** -- hit points when a cube is placed as a wall segment.
+- **Base Value** -- economic worth for trade, raid attractiveness, and victory condition progress.
+- **Carry Speed** -- movement speed multiplier while carrying this cube type. Titanium at 70% makes you noticeably slower.
+
 ---
 
-## 2. Harvesting Loop -- The Core Feel
+## 3. Extraction Rates and Drill Tiers
 
-### 2.1 Design Goal
+### 3.1 Design Goal
 
 Grinding a deposit must feel like **physical labor**. Not instant, not boring -- satisfying in the way that breaking rocks in a good mining game feels. The player should feel the hardness of the material through timing and feedback. Target: **8-15 seconds** to fill capacity, scaling by drill tier and material hardness.
 
-### 2.2 Extraction Rate Formula
+### 3.2 Extraction Rate Formula
 
 ```
 effectiveRate = baseExtractionRate * drillTierMultiplier * oreGrindSpeed * biomeHarvestMod * weatherHarvestMod
@@ -49,16 +109,24 @@ ticksToFill = powderCapacity / effectiveRate
 secondsToFill = ticksToFill / 60  (assuming 60 ticks per second)
 ```
 
-### 2.3 Drill Tier Table
+- `baseExtractionRate` = 0.1 powder/tick (config: `mining.json > defaultExtractionRate`)
+- `drillTierMultiplier` = per-tier multiplier from drill table
+- `oreGrindSpeed` = per-material multiplier from master material table
+- `biomeHarvestMod` = biome-specific bonus/penalty (config: `biomes.json`)
+- `weatherHarvestMod` = storm/weather effect on extraction (config: `biomes.json`)
+
+### 3.3 Drill Tier Table
 
 | Tier | Name | Base Rate | Capacity | Mineable Types | Unlock Cost | Sound Level |
 |------|------|-----------|----------|---------------|-------------|-------------|
-| 1 | Salvage Grinder | 0.5/tick | 60 | Rock, Scrap Iron | Starting | Low |
-| 2 | Diamond Drill | 1.0/tick | 100 | + Copper, Carbon | 4x Scrap cubes | Medium |
-| 3 | Plasma Cutter | 1.8/tick | 150 | + Silicon, Titanium | 2x Copper + 1x Silicon | High |
-| 4 | Quantum Extractor | 3.0/tick | 250 | All including Rare Earth, Gold, Quantum Crystal | 1x Titanium + 1x Rare Earth | Very High |
+| 1 | Salvage Grinder | 0.1/tick (1.0x) | 60 | Rock, Scrap Iron | Starting | Low |
+| 2 | Diamond Drill | 0.2/tick (2.0x) | 100 | + Copper, Carbon | 4x Scrap Iron cubes | Medium |
+| 3 | Plasma Cutter | 0.36/tick (3.6x) | 150 | + Silicon, Titanium | 2x Copper + 1x Silicon | High |
+| 4 | Quantum Extractor | 0.6/tick (6.0x) | 250 | All (+ Rare Earth, Gold, Quantum Crystal) | 1x Titanium + 1x Rare Earth | Very High |
 
-**Sound Level matters:** Higher tier drills are louder, attracting enemies from farther away. This creates a stealth-vs-speed trade-off.
+### 3.4 Sound Level and Aggro
+
+Higher tier drills are louder, attracting enemies from farther away. This creates a stealth-vs-speed trade-off.
 
 | Sound Level | Aggro Radius |
 |-------------|-------------|
@@ -67,36 +135,16 @@ secondsToFill = ticksToFill / 60  (assuming 60 ticks per second)
 | High | 25 units |
 | Very High | 40 units |
 
-### 2.4 Time-to-Fill Calculations (at 60 ticks/second)
+### 3.5 Time-to-Fill Tables
 
-**Tier 1 Drill (Salvage Grinder), capacity 60:**
-
-| Material | Grind Speed | Effective Rate | Ticks to Fill | Seconds |
-|----------|-------------|---------------|---------------|---------|
-| Rock | 1.0 | 0.5 | 120 | **2.0s** |
-| Scrap Iron | 0.8 | 0.4 | 150 | **2.5s** |
-
-Wait -- this is too fast. The paper playtest found the same issue. With capacity 60 and rate 0.5, filling takes only 2 seconds. That is far too quick for something that should feel like work.
-
-**REBALANCED:** The base extraction rate must be **0.1/tick** (not 0.5). The drill tier multiplier increases this, but the base must be slower.
-
-**Corrected Tier 1 Drill, capacity 60:**
-
-| Material | Grind Speed | Effective Rate | Ticks to Fill | Seconds |
-|----------|-------------|---------------|---------------|---------|
-| Rock | 1.0 | 0.10 | 600 | **10.0s** |
-| Scrap Iron | 0.8 | 0.08 | 750 | **12.5s** |
-
-That hits the 8-15 second target. Now the full table:
-
-**Tier 1 Drill (capacity 60, base rate 0.10):**
+**Tier 1 Drill (Salvage Grinder), capacity 60, base rate 0.10:**
 
 | Material | Effective Rate | Seconds to Fill |
 |----------|---------------|-----------------|
 | Rock | 0.100 | 10.0 |
 | Scrap Iron | 0.080 | 12.5 |
 
-**Tier 2 Drill (capacity 100, base rate 0.20):**
+**Tier 2 Drill (Diamond Drill), capacity 100, base rate 0.20:**
 
 | Material | Effective Rate | Seconds to Fill |
 |----------|---------------|-----------------|
@@ -105,7 +153,7 @@ That hits the 8-15 second target. Now the full table:
 | Copper | 0.120 | 13.9 |
 | Carbon | 0.070 | 23.8 |
 
-**Tier 3 Drill (capacity 150, base rate 0.36):**
+**Tier 3 Drill (Plasma Cutter), capacity 150, base rate 0.36:**
 
 | Material | Effective Rate | Seconds to Fill |
 |----------|---------------|-----------------|
@@ -116,7 +164,7 @@ That hits the 8-15 second target. Now the full table:
 | Silicon | 0.144 | 17.4 |
 | Titanium | 0.108 | 23.1 |
 
-**Tier 4 Drill (capacity 250, base rate 0.60):**
+**Tier 4 Drill (Quantum Extractor), capacity 250, base rate 0.60:**
 
 | Material | Effective Rate | Seconds to Fill |
 |----------|---------------|-----------------|
@@ -132,7 +180,11 @@ That hits the 8-15 second target. Now the full table:
 
 **Design note:** Quantum Crystal takes over a minute to fill even with the best drill. This is intentional -- it is the most valuable material in the game. The player should feel its rarity through the grind time.
 
-### 2.5 Deposit Yield and Depletion
+---
+
+## 4. Deposit Spawning and Depletion
+
+### 4.1 Deposit Yield and Respawn
 
 Each deposit node contains a finite amount of powder. When depleted, the deposit crumbles.
 
@@ -148,9 +200,16 @@ Each deposit node contains a finite amount of powder. When depleted, the deposit
 | Gold | 20-75 | 0.15-0.6 | 2400s (40 min) | Random on map |
 | Quantum Crystal | 10-30 | 0.05-0.15 | Never | One-time only |
 
-**Cubes per Deposit** = yield / compressionThreshold. Fractional means the last harvest may not yield enough for a full cube (leftover powder remains in storage).
+**Cubes per Deposit** = yield / powderToFill. Fractional means the last harvest may not yield enough for a full cube (leftover powder remains in player storage).
 
-**Depletion visual stages:**
+**Respawn behavior notes:**
+- "Same location" -- the deposit reappears at its original coordinates. Allows permanent mining outposts.
+- "Same biome, shifted" -- respawns within the same biome but at a random offset (10-30 units). Prevents camping.
+- "Random in biome" -- respawns anywhere within the biome. Requires scouting.
+- "Random on map" -- respawns at any valid deposit location on the entire map. Drives exploration.
+- "Never" -- Quantum Crystal deposits are one-time-only. Every crystal on the map is precious.
+
+### 4.2 Depletion Visual Stages
 
 | Remaining % | Visual |
 |-------------|--------|
@@ -160,9 +219,9 @@ Each deposit node contains a finite amount of powder. When depleted, the deposit
 | 25% | Heavily fragmented, nearly flat |
 | 0% | Crumbles to dust (particle burst), scarred terrain |
 
-### 2.6 Distance to Nearest Deposit from Spawn
+### 4.3 Guaranteed Spawn Placement
 
-Guaranteed spawn placement ensures the player can find resources immediately:
+Deposit placement guarantees the player can find resources immediately:
 
 | Material | Min Distance from Spawn | Max Distance | Guaranteed Count within Range |
 |----------|------------------------|-------------|-------------------------------|
@@ -171,19 +230,26 @@ Guaranteed spawn placement ensures the player can find resources immediately:
 | Copper | 30 | 60 | 1 (visible from spawn with scanner) |
 | Silicon | 50 | 100 | 0 (requires exploration) |
 
+### 4.4 Enemy Salvage
+
+Destroyed or captured enemy machines yield raw materials and occasionally components:
+- **Components** -- may include items you cannot yet fabricate
+- **Raw materials** -- scrap from destroyed machines (primarily Scrap Iron cubes)
+- **Designs** -- reverse-engineer captured machines for blueprints (rare drop)
+
 ---
 
-## 3. Compression -- The Signature Moment
+## 5. Compression Mechanics
 
-### 3.1 Design Goal
+### 5.1 Design Goal
 
-Compression is the **most satisfying micro-interaction** in the game. Every time you compress a cube, you should feel it. The 2-4 second duration is a reward moment, not downtime. It must have:
+Compression is the **most satisfying micro-interaction** in the game. Every time you compress a cube, you should feel it. The 1-5 second duration is a reward moment, not downtime. It must have:
 - Escalating screen shake
 - Visual pressure/heat gauges
 - Sound design crescendo
 - Physical cube eject with bounce
 
-### 3.2 Compression Timing Table
+### 5.2 Compression Timing Table
 
 | Material | Powder Required | Duration | Screen Shake Peak | Eject Velocity |
 |----------|----------------|----------|-------------------|----------------|
@@ -197,7 +263,7 @@ Compression is the **most satisfying micro-interaction** in the game. Every time
 | Gold | 130 | 3.5s | 0.85 | 1.1 m/s |
 | Quantum Crystal | 200 | 5.0s | 1.0 | 0.8 m/s |
 
-### 3.3 Screen Shake Curve
+### 5.3 Screen Shake Curve
 
 ```
 shakeIntensity(t) = peakIntensity * easeInQuad(t / duration)
@@ -207,7 +273,7 @@ where easeInQuad(x) = x * x
 
 The shake starts barely noticeable and builds to peak at the moment of cube ejection. At t=duration, there is a sharp spike to 1.5x peak for exactly 2 frames (the "SLAM"), then instant drop to 0.
 
-### 3.4 Pressure and Heat Gauges
+### 5.4 Pressure and Heat Gauges
 
 **Pressure gauge** (left side of compression overlay):
 ```
@@ -222,7 +288,7 @@ where delay = duration * 0.15
 ```
 Heat starts slightly after pressure (delayed by 15% of duration), creating a staggered fill that feels more mechanical.
 
-### 3.5 Sound Design Spec
+### 5.5 Sound Design Spec
 
 | Phase | Duration | Sound |
 |-------|----------|-------|
@@ -232,7 +298,7 @@ Heat starts slightly after pressure (delayed by 15% of duration), creating a sta
 | SLAM | Frame of completion | Heavy metallic SLAM + reverb tail (200ms) |
 | Settle | Post-slam 500ms | Metallic ring-down, cube bounce clanks |
 
-### 3.6 Compression Quality
+### 5.6 Compression Quality
 
 | Condition | Quality Multiplier | Visual |
 |-----------|-------------------|--------|
@@ -241,9 +307,9 @@ Heat starts slightly after pressure (delayed by 15% of duration), creating a sta
 | Interrupted (enemy hit) | Fails | No cube, powder lost (50%) |
 | Rushed (cancel early at 80%+) | 0.8x | Slightly deformed, rough texture |
 
-Quality affects cube value in trade and wall HP (quality * base HP). A cracked titanium cube (0.7 * 300 = 210 wall HP) is still better than a clean scrap cube (100 wall HP).
+Quality affects cube value in trade and wall HP: `effectiveHP = quality * baseHP`. A cracked titanium cube (0.7 * 300 = 210 wall HP) is still better than a clean scrap cube (100 wall HP).
 
-### 3.7 Cube Eject Physics
+### 5.7 Cube Eject Physics
 
 ```
 ejectDirection = playerForward * 0.7 + Vector3.UP * 0.3  (normalized)
@@ -256,13 +322,142 @@ The cube physically pops out in front of the player, bounces once on the ground,
 
 ---
 
-## 4. Cube Value and Economy Flow
+## 6. Furnace Recipes
 
-### 4.1 Value Hierarchy
+### 6.1 Tier 1: Salvage (Starting)
 
-Base Value determines trade worth, raid attractiveness, and victory condition progress.
+Available from game start. Requires only Scrap Iron and Rock cubes.
 
-**Economic velocity:** How fast can a solo player generate value?
+| Recipe | Inputs | Time | Output | Category |
+|--------|--------|------|--------|----------|
+| Grabber Arm | 3x Scrap Iron | 10s | tool_grabber_t1 | Tool |
+| Diamond Drill Bit | 4x Scrap Iron | 15s | tool_harvester_t2 | Tool |
+| Scanner Lens | 2x Scrap Iron | 8s | tool_scanner_t1 | Tool |
+| Basic Power Cell | 5x Scrap Iron | 20s | component_power_cell | Component |
+| Repair Patch | 2x Scrap Iron | 5s | consumable_repair | Consumable |
+| Rock Foundation | 4x Rock | 8s | building_foundation | Building |
+| Scrap Wall Panel | 3x Scrap Iron + 2x Rock | 12s | building_wall_scrap | Building |
+| Basic Miner Frame | 6x Scrap Iron | 25s | building_miner_t1 | Building |
+
+### 6.2 Tier 2: Copper Processing (requires Harvester T2)
+
+| Recipe | Inputs | Time | Output | Category |
+|--------|--------|------|--------|----------|
+| Wire Bundle | 2x Copper | 12s | component_wire_bundle | Component |
+| Belt Segment | 3x Scrap Iron + 1x Copper | 15s | building_belt_segment | Building |
+| Auto-Hopper | 4x Scrap Iron + 2x Copper | 20s | building_auto_hopper | Building |
+| Grabber Mk2 | 3x Copper + 2x Scrap Iron | 15s | tool_grabber_t2 | Tool |
+| Lightning Rod | 3x Copper + 2x Scrap Iron | 18s | building_lightning_rod | Building |
+| Power Wire | 1x Copper | 8s | building_power_wire_x5 | Building |
+| Signal Relay | 2x Copper + 1x Scrap Iron | 14s | building_signal_relay | Building |
+| Copper Wall Panel | 4x Copper + 2x Rock | 16s | building_wall_copper | Building |
+
+### 6.3 Tier 3: Silicon and Carbon (requires Harvester T2+)
+
+| Recipe | Inputs | Time | Output | Category |
+|--------|--------|------|--------|----------|
+| Circuit Board | 2x Silicon + 1x Copper | 25s | component_circuit_board | Component |
+| Battle Bot Chassis | 6x Scrap Iron + 2x Copper + 1x Silicon | 30s | unit_battle_bot | Unit |
+| Scout Bot Chassis | 3x Scrap Iron + 1x Copper + 1x Silicon | 20s | unit_scout_bot | Unit |
+| Worker Bot Chassis | 4x Scrap Iron + 2x Copper | 22s | unit_worker_bot | Unit |
+| Hacking Module | 3x Silicon + 2x Copper | 30s | component_hacking_module | Component |
+| Compute Core | 2x Silicon + 1x Carbon | 28s | component_compute_core | Component |
+| Carbon Fiber Panel | 3x Carbon + 1x Scrap Iron | 20s | building_wall_carbon | Building |
+| Smelter | 4x Scrap Iron + 2x Carbon + 1x Copper | 35s | building_smelter | Building |
+| Refiner | 3x Silicon + 2x Copper + 2x Scrap Iron | 35s | building_refiner | Building |
+
+### 6.4 Tier 4: Titanium (requires Harvester T3+)
+
+| Recipe | Inputs | Time | Output | Category |
+|--------|--------|------|--------|----------|
+| Plasma Cutter | 2x Titanium + 1x Silicon + 2x Copper | 30s | tool_harvester_t3 | Tool |
+| Defense Turret | 3x Titanium + 2x Silicon + 3x Copper | 40s | building_turret | Building |
+| Fortified Wall | 4x Titanium + 4x Scrap Iron | 25s | building_wall_titanium | Building |
+| Outpost Core | 2x Titanium + 2x Silicon + 4x Copper + 4x Scrap Iron | 60s | building_outpost | Building |
+| Heavy Bot Chassis | 5x Titanium + 3x Iron + 2x Silicon | 45s | unit_heavy_bot | Unit |
+| Hacker Bot Chassis | 3x Silicon + 2x Copper + 1x Titanium | 35s | unit_hacker_bot | Unit |
+| Formation Controller | 2x Silicon + 1x Titanium + 1x Copper | 25s | component_formation_ctrl | Component |
+| Titan Armor Plate | 3x Titanium + 1x Carbon | 20s | component_titan_armor | Component |
+
+### 6.5 Tier 5: Endgame (requires Harvester T4)
+
+| Recipe | Inputs | Time | Output | Category |
+|--------|--------|------|--------|----------|
+| Quantum Extractor | 2x Rare Earth + 1x Gold + 2x Titanium | 50s | tool_harvester_t4 | Tool |
+| Advanced Alloy Cube | 1x Titanium + 1x Rare Earth cubes | 30s | 1x Advanced Alloy cube | Material |
+| Gravity Grabber | 2x Rare Earth + 1x Gold + 1x Silicon | 40s | tool_grabber_t4 | Tool |
+| Signal Jammer | 3x Silicon + 2x Rare Earth + 1x Gold | 45s | building_signal_jammer | Building |
+| Fusion Core | 1x Quantum Crystal + 2x Rare Earth + 1x Gold | 90s | component_fusion_core | Component |
+| Titan-Class Bot | 8x Titanium + 4x Silicon + 2x Rare Earth + 1x Gold | 120s | unit_titan_bot | Unit |
+| Teleporter Pad | 2x Quantum Crystal + 3x Rare Earth + 2x Gold | 180s | building_teleporter | Building |
+| Planet Core Tap | 3x Quantum Crystal + 5x Titanium + 3x Rare Earth | 300s | building_core_tap | Building (victory) |
+
+---
+
+## 7. Smelter Recipes
+
+The Smelter is a separate building from the Furnace. It converts raw cubes into processed material cubes with higher stats. Requires the Smelter building (Tier 3 furnace recipe).
+
+| Recipe | Inputs | Time | Output | Category |
+|--------|--------|------|--------|----------|
+| Iron Cube | 2x Scrap Iron cubes | 15s | 1x Iron cube | Material |
+| Steel Cube | 2x Iron + 1x Carbon cubes | 25s | 1x Steel cube | Material |
+| Advanced Alloy Cube | 1x Titanium + 1x Rare Earth cubes | 30s | 1x Advanced Alloy cube | Material |
+
+---
+
+## 8. Building Costs
+
+### 8.1 Production Buildings
+
+| Building | Cube Cost | Power Required | Build Time | Tech Tier | Notes |
+|----------|-----------|---------------|------------|-----------|-------|
+| Furnace (starter) | FREE | 0 | -- | 1 | Provided at game start |
+| Basic Miner | 6x Scrap Iron | 2 | 15s | 1 | Auto-extracts from deposits |
+| Smelter | 4x Scrap Iron + 2x Carbon + 1x Copper | 2 | 20s | 3 | Scrap -> Iron, Iron+Carbon -> Steel |
+| Refiner | 3x Silicon + 2x Copper + 2x Scrap Iron | 2 | 20s | 3 | Processes rare materials |
+| Fabrication Unit | 4x Iron + 2x Silicon + 2x Copper | 3 | 25s | 3 | Advanced crafting recipes |
+
+### 8.2 Infrastructure
+
+| Building | Cube Cost | Power Required | Build Time | Tech Tier | Notes |
+|----------|-----------|---------------|------------|-----------|-------|
+| Belt Segment | 3x Scrap Iron + 1x Copper | 0 | 5s | 2 | Moves cubes at 2 u/s |
+| Fast Belt | 4x Iron + 2x Copper | 1 | 8s | 4 | Moves cubes at 4 u/s |
+| Express Belt | 4x Titanium + 3x Copper | 2 | 12s | 5 | Moves cubes at 8 u/s |
+| Auto-Hopper | 4x Scrap Iron + 2x Copper | 0 | 10s | 2 | Belt -> furnace feeder |
+| Lightning Rod | 3x Copper + 2x Scrap Iron | 0 (generates) | 12s | 2 | Generates power |
+| Power Wire (x5) | 1x Copper | 0 | 3s | 2 | Carries power between buildings |
+| Signal Relay | 2x Copper + 1x Scrap Iron | 1 | 10s | 2 | Extends signal/compute network |
+| Signal Amplifier | 3x Silicon + 2x Copper | 3 | 18s | 3 | Boosts signal range 2x |
+
+### 8.3 Defense
+
+| Building | Cube Cost | Power Required | Build Time | Tech Tier | Wall HP | Notes |
+|----------|-----------|---------------|------------|-----------|---------|-------|
+| Scrap Wall Panel | 3x Scrap Iron + 2x Rock | 0 | 8s | 1 | 150 | Cheapest wall |
+| Copper Wall Panel | 4x Copper + 2x Rock | 0 | 10s | 2 | 240 | Conducts power through wall |
+| Carbon Wall Panel | 3x Carbon + 1x Scrap Iron | 0 | 10s | 3 | 360 | Lightweight but strong |
+| Titanium Wall Panel | 4x Titanium + 4x Scrap Iron | 0 | 15s | 4 | 900 | Nearly impenetrable |
+| Cube Wall (stacked) | Cubes directly | 0 | Instant | 1 | Per-cube HP | Manual stacking |
+| Turret | 3x Titanium + 2x Silicon + 3x Copper | 2 | 20s | 4 | 400 | Automated fire, range 12 |
+| Bunker | 4x Titanium + 3x Iron + 2x Silicon | 2 | 25s | 4 | 800 | 3 garrison slots |
+| Gate | 2x Iron + 1x Copper | 1 | 10s | 2 | 200 | Controllable passage |
+
+### 8.4 Territory
+
+| Building | Cube Cost | Power Required | Build Time | Tech Tier | Claim Radius | Notes |
+|----------|-----------|---------------|------------|-----------|-------------|-------|
+| Outpost Core | 2x Ti + 2x Si + 4x Cu + 4x Scrap | 1 | 30s | 4 | 15 | Claims territory |
+| Outpost Upgrade | 3x Titanium + 2x Silicon | 2 | 20s | 5 | 25 | Expands claim radius |
+| Underground Storage | 6x Rock + 4x Scrap Iron | 0 | 20s | 2 | -- | Hides 20 cubes from perception |
+| Decoy Pile | 3x Rock | 0 | 8s | 1 | -- | Fake cubes, alerts on touch |
+
+---
+
+## 9. Economy Pacing
+
+### 9.1 Value Generation by Game Phase
 
 | Phase | Materials Available | Value/Minute (solo, no automation) |
 |-------|--------------------|------------------------------------|
@@ -273,7 +468,7 @@ Base Value determines trade worth, raid attractiveness, and victory condition pr
 
 **With full automation (belts + auto-miners):** multiply by 3-5x.
 
-### 4.2 Value/Minute Derivation (Early Game Example)
+### 9.2 Value/Minute Derivation (Early Game)
 
 Player with Tier 1 drill, no automation:
 1. Walk to scrap deposit (5 units away, speed 5 u/s) = 1s
@@ -290,316 +485,19 @@ With some rock mixed in (faster grind, lower value):
 - Rock cycle: ~12.5 seconds, value 0.5
 - Average: ~3.0 value/min
 
-This feels right. Early game is a grind. You are manually hauling cubes one at a time.
-
-### 4.3 Wealth Brackets (for raid scaling)
-
-| Bracket | Total Cube Value | Raid Frequency | Max Raid Size |
-|---------|-----------------|----------------|---------------|
-| Destitute | 0-10 | No raids | -- |
-| Poor | 11-30 | Every 10 min | 2 scouts |
-| Modest | 31-80 | Every 7 min | 3 scouts + 1 soldier |
-| Wealthy | 81-200 | Every 5 min | 4 soldiers + 1 heavy |
-| Rich | 201-500 | Every 3 min | 6 soldiers + 2 heavy + 1 hacker |
-| Opulent | 501+ | Every 2 min | 8 soldiers + 3 heavy + 2 hackers |
-
-Formula:
-```
-raidPoints = totalVisibleCubeValue * 0.5 + buildingCount * 2 + techLevel * 10
-raidInterval = max(120, 600 - raidPoints * 2) seconds
-maxRaiders = floor(raidPoints / 15) capped at 15
-```
-
----
-
-## 5. Furnace Recipes -- Complete Table
-
-### 5.1 Tier 1: Salvage (Starting)
-
-Available from game start. Requires only scrap iron and rock cubes.
-
-| Recipe | Inputs | Time | Output | Category |
-|--------|--------|------|--------|----------|
-| Grabber Arm | 3x Scrap Iron | 10s | tool_grabber_t1 | Tool |
-| Diamond Drill Bit | 4x Scrap Iron | 15s | tool_harvester_t2 | Tool |
-| Scanner Lens | 2x Scrap Iron | 8s | tool_scanner_t1 | Tool |
-| Basic Power Cell | 5x Scrap Iron | 20s | component_power_cell | Component |
-| Repair Patch | 2x Scrap Iron | 5s | consumable_repair | Consumable |
-| Rock Foundation | 4x Rock | 8s | building_foundation | Building |
-| Scrap Wall Panel | 3x Scrap Iron + 2x Rock | 12s | building_wall_scrap | Building |
-| Basic Miner Frame | 6x Scrap Iron | 25s | building_miner_t1 | Building |
-
-### 5.2 Tier 2: Copper Processing (requires Harvester T2)
-
-| Recipe | Inputs | Time | Output | Category |
-|--------|--------|------|--------|----------|
-| Wire Bundle | 2x Copper | 12s | component_wire_bundle | Component |
-| Belt Segment | 3x Scrap Iron + 1x Copper | 15s | building_belt_segment | Building |
-| Auto-Hopper | 4x Scrap Iron + 2x Copper | 20s | building_auto_hopper | Building |
-| Grabber Mk2 | 3x Copper + 2x Scrap Iron | 15s | tool_grabber_t2 | Tool |
-| Lightning Rod | 3x Copper + 2x Scrap Iron | 18s | building_lightning_rod | Building |
-| Power Wire | 1x Copper | 8s | building_power_wire_x5 | Building |
-| Signal Relay | 2x Copper + 1x Scrap Iron | 14s | building_signal_relay | Building |
-| Copper Wall Panel | 4x Copper + 2x Rock | 16s | building_wall_copper | Building |
-
-### 5.3 Tier 3: Silicon and Carbon (requires Harvester T2+)
-
-| Recipe | Inputs | Time | Output | Category |
-|--------|--------|------|--------|----------|
-| Circuit Board | 2x Silicon + 1x Copper | 25s | component_circuit_board | Component |
-| Battle Bot Chassis | 6x Scrap Iron + 2x Copper + 1x Silicon | 30s | unit_battle_bot | Unit |
-| Scout Bot Chassis | 3x Scrap Iron + 1x Copper + 1x Silicon | 20s | unit_scout_bot | Unit |
-| Worker Bot Chassis | 4x Scrap Iron + 2x Copper | 22s | unit_worker_bot | Unit |
-| Hacking Module | 3x Silicon + 2x Copper | 30s | component_hacking_module | Component |
-| Compute Core | 2x Silicon + 1x Carbon | 28s | component_compute_core | Component |
-| Carbon Fiber Panel | 3x Carbon + 1x Scrap Iron | 20s | building_wall_carbon | Building |
-| Smelter | 4x Scrap Iron + 2x Carbon + 1x Copper | 35s | building_smelter | Building |
-| Refiner | 3x Silicon + 2x Copper + 2x Scrap Iron | 35s | building_refiner | Building |
-
-### 5.4 Smelter Recipes (requires Smelter building)
-
-| Recipe | Inputs | Time | Output | Category |
-|--------|--------|------|--------|----------|
-| Iron Cube | 2x Scrap Iron cubes | 15s | 1x Iron cube | Material |
-| Steel Cube | 2x Iron + 1x Carbon cubes | 25s | 1x Steel cube | Material |
-
-### 5.5 Tier 4: Titanium (requires Harvester T3+)
-
-| Recipe | Inputs | Time | Output | Category |
-|--------|--------|------|--------|----------|
-| Plasma Cutter | 2x Titanium + 1x Silicon + 2x Copper | 30s | tool_harvester_t3 | Tool |
-| Defense Turret | 3x Titanium + 2x Silicon + 3x Copper | 40s | building_turret | Building |
-| Fortified Wall | 4x Titanium + 4x Scrap Iron | 25s | building_wall_titanium | Building |
-| Outpost Core | 2x Titanium + 2x Silicon + 4x Copper + 4x Scrap Iron | 60s | building_outpost | Building |
-| Heavy Bot Chassis | 5x Titanium + 3x Iron + 2x Silicon | 45s | unit_heavy_bot | Unit |
-| Hacker Bot Chassis | 3x Silicon + 2x Copper + 1x Titanium | 35s | unit_hacker_bot | Unit |
-| Formation Controller | 2x Silicon + 1x Titanium + 1x Copper | 25s | component_formation_ctrl | Component |
-| Titan Armor Plate | 3x Titanium + 1x Carbon | 20s | component_titan_armor | Component |
-
-### 5.6 Tier 5: Endgame (requires Harvester T4)
-
-| Recipe | Inputs | Time | Output | Category |
-|--------|--------|------|--------|----------|
-| Quantum Extractor | 2x Rare Earth + 1x Gold + 2x Titanium | 50s | tool_harvester_t4 | Tool |
-| Advanced Alloy Cube | 1x Titanium + 1x Rare Earth cubes | 30s | 1x Advanced Alloy cube | Material |
-| Gravity Grabber | 2x Rare Earth + 1x Gold + 1x Silicon | 40s | tool_grabber_t4 | Tool |
-| Signal Jammer | 3x Silicon + 2x Rare Earth + 1x Gold | 45s | building_signal_jammer | Building |
-| Fusion Core | 1x Quantum Crystal + 2x Rare Earth + 1x Gold | 90s | component_fusion_core | Component |
-| Titan-Class Bot | 8x Titanium + 4x Silicon + 2x Rare Earth + 1x Gold | 120s | unit_titan_bot | Unit |
-| Teleporter Pad | 2x Quantum Crystal + 3x Rare Earth + 2x Gold | 180s | building_teleporter | Building |
-| Planet Core Tap | 3x Quantum Crystal + 5x Titanium + 3x Rare Earth | 300s | building_core_tap | Building (victory) |
-
----
-
-## 6. Building Costs -- Complete Table
-
-### 6.1 Production Buildings
-
-| Building | Cube Cost | Power Required | Build Time | Tech Tier | Notes |
-|----------|-----------|---------------|------------|-----------|-------|
-| Furnace (starter) | FREE | 0 | -- | 1 | Provided at game start |
-| Basic Miner | 6x Scrap Iron | 2 | 15s | 1 | Auto-extracts from deposits |
-| Smelter | 4x Scrap Iron + 2x Carbon + 1x Copper | 2 | 20s | 3 | Scrap -> Iron, Iron+Carbon -> Steel |
-| Refiner | 3x Silicon + 2x Copper + 2x Scrap Iron | 2 | 20s | 3 | Processes rare materials |
-| Fabrication Unit | 4x Iron + 2x Silicon + 2x Copper | 3 | 25s | 3 | Advanced crafting recipes |
-
-### 6.2 Infrastructure
-
-| Building | Cube Cost | Power Required | Build Time | Tech Tier | Notes |
-|----------|-----------|---------------|------------|-----------|-------|
-| Belt Segment | 3x Scrap Iron + 1x Copper | 0 | 5s | 2 | Moves cubes at 2 u/s |
-| Fast Belt | 4x Iron + 2x Copper | 1 | 8s | 4 | Moves cubes at 4 u/s |
-| Express Belt | 4x Titanium + 3x Copper | 2 | 12s | 5 | Moves cubes at 8 u/s |
-| Auto-Hopper | 4x Scrap Iron + 2x Copper | 0 | 10s | 2 | Belt -> furnace feeder |
-| Lightning Rod | 3x Copper + 2x Scrap Iron | 0 (generates) | 12s | 2 | Generates power |
-| Power Wire (x5) | 1x Copper | 0 | 3s | 2 | Carries power between buildings |
-| Signal Relay | 2x Copper + 1x Scrap Iron | 1 | 10s | 2 | Extends signal/compute network |
-| Signal Amplifier | 3x Silicon + 2x Copper | 3 | 18s | 3 | Boosts signal range 2x |
-
-### 6.3 Defense
-
-| Building | Cube Cost | Power Required | Build Time | Tech Tier | Wall HP | Notes |
-|----------|-----------|---------------|------------|-----------|---------|-------|
-| Scrap Wall Panel | 3x Scrap Iron + 2x Rock | 0 | 8s | 1 | 150 | Cheapest wall |
-| Copper Wall Panel | 4x Copper + 2x Rock | 0 | 10s | 2 | 240 | Conducts power through wall |
-| Carbon Wall Panel | 3x Carbon + 1x Scrap Iron | 0 | 10s | 3 | 360 | Lightweight but strong |
-| Titanium Wall Panel | 4x Titanium + 4x Scrap Iron | 0 | 15s | 4 | 900 | Nearly impenetrable |
-| Cube Wall (stacked) | Cubes directly | 0 | Instant | 1 | Per-cube HP | Manual stacking |
-| Turret | 3x Titanium + 2x Silicon + 3x Copper | 2 | 20s | 4 | 400 | Automated fire, range 12 |
-| Bunker | 4x Titanium + 3x Iron + 2x Silicon | 2 | 25s | 4 | 800 | 3 garrison slots |
-| Gate | 2x Iron + 1x Copper | 1 | 10s | 2 | 200 | Controllable passage |
-
-### 6.4 Territory
-
-| Building | Cube Cost | Power Required | Build Time | Tech Tier | Claim Radius | Notes |
-|----------|-----------|---------------|------------|-----------|-------------|-------|
-| Outpost Core | 2x Ti + 2x Si + 4x Cu + 4x Scrap | 1 | 30s | 4 | 15 | Claims territory |
-| Outpost Upgrade | 3x Titanium + 2x Silicon | 2 | 20s | 5 | 25 | Expands claim radius |
-| Underground Storage | 6x Rock + 4x Scrap Iron | 0 | 20s | 2 | -- | Hides 20 cubes from perception |
-| Decoy Pile | 3x Rock | 0 | 8s | 1 | -- | Fake cubes, alerts on touch |
-
----
-
-## 7. Furnace Throughput and Machine Balance
-
-### 7.1 Furnace Stats
-
-| Stat | Value |
-|------|-------|
-| Hopper capacity | 3 cubes (upgradeable to 5, then 8) |
-| Processing speed | 1.0x (base) |
-| Power required | 2 (when powered -- optional early game) |
-| Powered speed bonus | 1.5x processing speed |
-| Max queue depth | 1 recipe at a time |
-
-### 7.2 Multi-Furnace Efficiency
-
-Building multiple furnaces is valid but has diminishing returns on player attention:
-
-| Furnace Count | Effective Throughput | Rationale |
-|---------------|---------------------|-----------|
-| 1 | 1.0x | Manual attention |
-| 2 | 1.8x | Context-switching penalty |
-| 3 | 2.4x | Harder to keep all fed |
-| 4+ | 2.8x (cap) | Belt automation required |
-
-With belts and auto-hoppers, this penalty disappears -- the system self-feeds.
-
-### 7.3 Optimal Factory Layout (Early Game)
-
-```
-Deposit (10m) --[belt]--> Auto-Hopper --> Furnace --> Output
-                                                   \--> Stockpile
-```
-
-**Throughput calculation:**
-- Belt speed: 2 u/s
-- Belt length: 10 units
-- Transport time: 5 seconds per cube
-- Furnace processing: 10-15 seconds (Tier 1 recipes)
-- **Bottleneck: furnace processing time**
-- With 1 belt feeding 1 furnace: 1 cube processed per 10-15 seconds
-- Need 2 belts feeding 1 furnace for continuous operation (one cube arrives while previous is processing)
-
-### 7.4 Base Agency and Per-Base Economics
-
-Each settlement (base) is an autonomous agent with its own work queues, furnace capacity, and cube stockpile. Economy scales per-base, not per-civilization.
-
-#### 7.4.1 Base Economic Profile
-
-Every base maintains these local resources:
-
-| Resource | Scope | Notes |
-|----------|-------|-------|
-| Cube stockpile | Per-base | Physical cubes at this base. Visible, raidable. |
-| Furnace capacity | Per-base | Each base has its own furnace(s). More bases = more throughput. |
-| Work queue | Per-base | Harvest, transport, build, patrol, furnace scheduling |
-| Bot roster | Per-base | Bots assigned to this base. "Phone home" to nearest base when idle. |
-| Power grid | Per-base | Lightning rods and wires are local to each base |
-
-#### 7.4.2 Multi-Base Throughput Scaling
-
-| Bases Owned | Total Furnace Capacity | Notes |
-|-------------|----------------------|-------|
-| 1 (starter) | 1x | Single furnace, manual or single belt |
-| 2 | 2x | Second base needs its own furnace built |
-| 3 | 3x | Each base operates independently |
-| 4+ | 4x+ | Linear scaling, but transport logistics become the bottleneck |
-
-**No diminishing returns on separate bases** -- unlike multiple furnaces at a single base (7.2), each base's furnace operates independently with its own work queue. The bottleneck shifts from furnace throughput to **inter-base transport logistics**.
-
-#### 7.4.3 Inter-Base Transport
-
-Cubes must physically travel between bases. There is no teleportation or abstract resource sharing.
-
-| Transport Method | Speed | Capacity | Risk |
-|-----------------|-------|----------|------|
-| Manual carry (player) | 5 u/s (with cube) | 1-8 cubes (by grabber tier) | Player is vulnerable while carrying |
-| Worker bot convoy | 5 u/s | 4 cubes per worker | Convoy can be ambushed |
-| Belt network | 2-8 u/s (by tier) | Continuous flow | Belt can be destroyed by raids |
-| Teleporter pad (endgame) | Instant | 1 cube per 5s | Extremely expensive, requires power |
-
-**Transport time formula:**
-```
-transportTime = distance / transportSpeed
-cubesPerMinute = (capacity / transportTime) * 60
-```
-
-**Example:** Two bases 50 units apart, 2 worker bots with 4 cubes each:
-```
-roundTripTime = (50 / 5) * 2 = 20 seconds
-cubesPerTrip = 8 (2 workers * 4 cubes)
-cubesPerMinute = (8 / 20) * 60 = 24 cubes/min
-```
-
-But those workers are not harvesting during transit. Transport is a real economic cost.
-
-#### 7.4.4 Supply Line Vulnerability
-
-Inter-base belt networks and worker convoys create attack surfaces:
-
-| Vulnerability | Effect of Disruption | Recovery |
-|--------------|---------------------|----------|
-| Belt segment destroyed | Flow stops until repaired | 1x Scrap Iron + 5s rebuild per segment |
-| Worker bot destroyed | 4 cubes dropped on ground (lootable) | Must build replacement (22s + cost) |
-| Road ambush | Cubes scattered, workers damaged | Manual collection, repair |
-| Teleporter disabled | Instant transport lost | Requires power restoration |
-
-**Design note:** Attacking supply lines is a legitimate strategy. A civ with 3 rich bases but poor inter-base logistics is fragile. Belt networks along exposed routes should be defended or routed through safe terrain.
-
-#### 7.4.5 Base Work Queue Priority
-
-Each base's autonomous agent schedules work in this priority order:
-
-| Priority | Task | Condition |
-|----------|------|-----------|
-| 1 | Emergency repair | Any building below 25% HP |
-| 2 | Furnace scheduling | Cubes in hopper, recipe selected |
-| 3 | Harvest (assigned deposits) | Deposits in territory with available bots |
-| 4 | Transport (to furnace) | Cubes at deposit, furnace has hopper space |
-| 5 | Transport (inter-base) | Surplus cubes, other base needs materials |
-| 6 | Build (queued buildings) | Materials available, build site ready |
-| 7 | Patrol | Idle bots with no other work |
-| 8 | Explore | Scout bots with no assigned patrol |
-
-Bots always "phone home" to their nearest base when they have no active task. A destroyed base causes all its bots to reassign to the next nearest base, creating a temporary efficiency loss as they travel.
-
-#### 7.4.6 AI Base Expansion Economics
-
-AI civs decide when to build a new base using this evaluation:
-
-```
-newBaseDesirability =
-  (nearestUntappedDepositValue * 0.4) +
-  (distanceFromExistingBase > 30 ? 0.3 : 0) +
-  (currentBaseCapacityUtilization > 0.8 ? 0.3 : 0) -
-  (militaryThreatAtLocation * 0.5) -
-  (baseBuildCost / currentCubeStockpile * 0.3)
-```
-
-**New base establishment cost:**
-- Outpost Core: 2x Ti + 2x Si + 4x Cu + 4x Scrap (from building table)
-- Furnace: FREE (one provided per outpost)
-- Lightning Rod: 3x Cu + 2x Scrap
-- Basic perimeter: ~10x Scrap Iron (walls)
-- **Total minimum: ~30 cubes worth of materials**
-
-**Base establishment timeline (AI, normal difficulty):**
-
-| Time | Event |
-|------|-------|
-| T+0 | Outpost Core placed. Territory claimed. |
-| T+30s | Furnace placed and operational. |
-| T+60s | Lightning rod placed. Power online. |
-| T+120s | First belt line to nearest deposit. |
-| T+180s | First cubes being produced at new base. |
-| T+300s | Basic wall perimeter. Base is "online." |
-
----
-
-## 8. Economy Pacing -- Minute-by-Minute Projection
-
-### 8.1 Solo Player, First 20 Minutes
+### 9.3 Key Economic Milestones
+
+| Milestone | Target Time | Cube Value Required |
+|-----------|-------------|---------------------|
+| First cube | 2 minutes | 1.0 |
+| First tool crafted (Grabber) | 4 minutes | 3.0 spent |
+| First automation (belt) | 12 minutes | 4.0 spent |
+| First defense (wall) | 18 minutes | 5.0 spent |
+| First combat bot | 35 minutes | ~15 spent |
+| First territory claim (outpost) | 40 minutes | ~40 spent |
+| Iron smelting operational | 50 minutes | ~20 spent |
+
+### 9.4 Minute-by-Minute Projection (Solo, First 20 Minutes)
 
 | Minute | Activity | Cubes Produced | Total Cubes | Total Value | Notes |
 |--------|----------|---------------|-------------|-------------|-------|
@@ -617,100 +515,157 @@ newBaseDesirability =
 | 15-18 | Build scanner, explore. Find silicon. | 9 | 18 | 23.5 | Stockpile growing |
 | 18-20 | First feral raid (wealth bracket: "Modest"). | 6 | 20 | 27.0 | Defense needed |
 
-### 8.2 Key Economic Milestones
+---
 
-| Milestone | Target Time | Cube Value Required |
-|-----------|-------------|---------------------|
-| First cube | 2 minutes | 1.0 |
-| First tool crafted (Grabber) | 4 minutes | 3.0 spent |
-| First automation (belt) | 12 minutes | 4.0 spent |
-| First defense (wall) | 18 minutes | 5.0 spent |
-| First territory claim (outpost) | 40 minutes | ~40 spent |
-| First combat bot | 35 minutes | ~15 spent |
-| Iron smelting operational | 50 minutes | ~20 spent |
+## 10. Wealth Brackets and Raid Scaling
+
+### 10.1 Wealth Bracket Table
+
+| Bracket | Total Cube Value | Raid Frequency | Max Raid Size |
+|---------|-----------------|----------------|---------------|
+| Destitute | 0-10 | No raids | -- |
+| Poor | 11-30 | Every 10 min | 2 scouts |
+| Modest | 31-80 | Every 7 min | 3 scouts + 1 soldier |
+| Wealthy | 81-200 | Every 5 min | 4 soldiers + 1 heavy |
+| Rich | 201-500 | Every 3 min | 6 soldiers + 2 heavy + 1 hacker |
+| Opulent | 501+ | Every 2 min | 8 soldiers + 3 heavy + 2 hackers |
+
+### 10.2 Raid Point Formula
+
+```
+raidPoints = totalVisibleCubeValue * 0.5 + buildingCount * 2 + techLevel * 10
+raidInterval = max(120, 600 - raidPoints * 2) seconds
+maxRaiders = min(15, floor(raidPoints / 15))
+```
+
+Note: cubes stored in Underground Storage are excluded from `totalVisibleCubeValue`. This makes hidden storage a strategic defense investment.
 
 ---
 
-## 9. AI Economy Scaling
+## 11. Furnace Throughput and Factory Layout
 
-### 9.1 AI Difficulty Multipliers
+### 11.1 Furnace Stats
 
-| Difficulty | Harvest Rate | Build Speed | Starting Cubes | Peace Period | Aggression |
-|-----------|-------------|-------------|---------------|-------------|------------|
-| Peaceful | 0.5x | 0.5x | 10 | Infinite | Never attacks |
-| Easy | 0.7x | 0.7x | 15 | 10 min | Low |
-| Normal | 1.0x | 1.0x | 20 | 5 min | Medium |
-| Hard | 1.3x | 1.2x | 30 | 3 min | High |
-| Brutal | 1.6x | 1.5x | 50 | 1 min | Very High |
+| Stat | Value |
+|------|-------|
+| Hopper capacity | 3 cubes (upgradeable to 5, then 8) |
+| Processing speed | 1.0x (base) |
+| Power required | 2 (when powered -- optional early game) |
+| Powered speed bonus | 1.5x processing speed |
+| Max queue depth | 1 recipe at a time |
 
-### 9.2 AI Build Order Targets
+### 11.2 Multi-Furnace Efficiency
 
-Each AI civilization follows a build order that varies by faction but hits these milestones:
+Building multiple furnaces at a single base has diminishing returns on player attention:
 
-| Milestone | Easy | Normal | Hard | Brutal |
-|-----------|------|--------|------|--------|
-| First furnace operational | Start | Start | Start | Start |
-| First 10 cubes stockpiled | 5 min | 3 min | 2 min | 1 min |
-| First belt line | 8 min | 5 min | 3 min | 2 min |
-| First outpost | 15 min | 8 min | 5 min | 3 min |
-| First combat bot | 12 min | 7 min | 4 min | 2.5 min |
-| First raid launched | Never | 12 min | 6 min | 3 min |
-| Iron smelting | 20 min | 12 min | 8 min | 5 min |
+| Furnace Count | Effective Throughput | Rationale |
+|---------------|---------------------|-----------|
+| 1 | 1.0x | Manual attention |
+| 2 | 1.8x | Context-switching penalty |
+| 3 | 2.4x | Harder to keep all fed |
+| 4+ | 2.8x (cap) | Belt automation required |
 
-### 9.3 AI Passive Cube Generation (Simplified)
+With belts and auto-hoppers, this penalty disappears -- the system self-feeds.
 
-Until full factory automation is implemented, AI factions generate cubes passively:
+### 11.3 Optimal Factory Layout (Early Game)
 
 ```
-cubesPerMinute = baseCubeRate * difficultyMultiplier * territoryCount * factionEconomyBias
-
-where:
-  baseCubeRate = 2.0 cubes/minute
-  difficultyMultiplier = from table above
-  territoryCount = max(1, outposts owned)
-  factionEconomyBias = from civilizations.json governorBias.economy
+Deposit (10m) --[belt]--> Auto-Hopper --> Furnace --> Output
+                                                   \--> Stockpile
 ```
 
-**Example: Normal difficulty, Reclaimers (economy bias 1.5), 2 territories:**
+**Throughput calculation:**
+- Belt speed: 2 u/s
+- Belt length: 10 units
+- Transport time: 5 seconds per cube
+- Furnace processing: 10-15 seconds (Tier 1 recipes)
+- **Bottleneck: furnace processing time**
+- With 1 belt feeding 1 furnace: 1 cube processed per 10-15 seconds
+- Need 2 belts feeding 1 furnace for continuous operation (one cube arrives while previous is processing)
+
+### 11.4 Base Agency and Per-Base Economics
+
+Each settlement (base) is an autonomous agent with its own work queues, furnace capacity, and cube stockpile.
+
+**Per-base resources:**
+
+| Resource | Scope | Notes |
+|----------|-------|-------|
+| Cube stockpile | Per-base | Physical cubes at this base. Visible, raidable. |
+| Furnace capacity | Per-base | Each base has its own furnace(s). |
+| Work queue | Per-base | Harvest, transport, build, patrol, furnace scheduling |
+| Bot roster | Per-base | Bots assigned to this base. "Phone home" when idle. |
+| Power grid | Per-base | Lightning rods and wires are local to each base |
+
+**Multi-base throughput scaling:**
+
+| Bases Owned | Total Furnace Capacity | Notes |
+|-------------|----------------------|-------|
+| 1 (starter) | 1x | Single furnace, manual or single belt |
+| 2 | 2x | Second base needs its own furnace built |
+| 3 | 3x | Each base operates independently |
+| 4+ | 4x+ | Linear scaling, transport logistics become bottleneck |
+
+No diminishing returns on separate bases (unlike multiple furnaces at a single base). Each base's furnace operates independently with its own work queue.
+
+### 11.5 Inter-Base Transport
+
+Cubes must physically travel between bases. There is no teleportation or abstract resource sharing (until endgame Teleporter).
+
+| Transport Method | Speed | Capacity | Risk |
+|-----------------|-------|----------|------|
+| Manual carry (player) | 5 u/s (with cube) | 1-8 cubes (by grabber tier) | Player is vulnerable while carrying |
+| Worker bot convoy | 5 u/s | 4 cubes per worker | Convoy can be ambushed |
+| Belt network | 2-8 u/s (by tier) | Continuous flow | Belt can be destroyed by raids |
+| Teleporter pad (endgame) | Instant | 1 cube per 5s | Extremely expensive, requires power |
+
+**Transport time formula:**
 ```
-cubesPerMinute = 2.0 * 1.0 * 2 * 1.5 = 6.0 cubes/min
+transportTime = distance / transportSpeed
+cubesPerMinute = (capacity / transportTime) * 60
 ```
 
-**Critical fix for rounding bug:** The current code uses `Math.round()` which produces 0 for small values. The formula must use `Math.max(1, Math.ceil(...))` to guarantee at least 1 cube per evaluation cycle.
+### 11.6 Supply Line Vulnerability
 
-### 9.4 AI Material Distribution
+Inter-base belt networks and worker convoys create attack surfaces:
 
-AI factions generate cubes of specific materials based on their biome and preferences:
+| Vulnerability | Effect of Disruption | Recovery |
+|--------------|---------------------|----------|
+| Belt segment destroyed | Flow stops until repaired | 1x Scrap Iron + 5s rebuild per segment |
+| Worker bot destroyed | 4 cubes dropped on ground (lootable) | Must build replacement (22s + cost) |
+| Road ambush | Cubes scattered, workers damaged | Manual collection, repair |
+| Teleporter disabled | Instant transport lost | Requires power restoration |
 
-| Faction | Scrap Iron | Copper | Silicon | Titanium | Other |
-|---------|-----------|--------|---------|----------|-------|
-| Reclaimers | 40% | 20% | 10% | 5% | 25% Rock |
-| Volt Collective | 25% | 35% | 15% | 10% | 15% Carbon |
-| Signal Choir | 15% | 30% | 35% | 5% | 15% Rare Earth |
-| Iron Creed | 35% | 15% | 10% | 25% | 15% Rock |
+Attacking supply lines is a legitimate strategy. A civ with 3 rich bases but poor inter-base logistics is fragile.
 
-### 9.5 Peace Period Mechanics
+### 11.7 Base Work Queue Priority
 
-During the peace period:
-- AI factions do not declare war on the player
-- AI factions do not send raids against the player
-- AI factions CAN fight each other (inter-AI peace is separate)
-- Feral bots still spawn and attack normally
-- AI builds economy, defense, and military during peace
-- A countdown timer is visible on the HUD: "PEACE ENDS IN 3:00"
-- When peace ends, AI re-evaluates all diplomatic stances immediately
+Each base's autonomous agent schedules work in this priority order:
+
+| Priority | Task | Condition |
+|----------|------|-----------|
+| 1 | Emergency repair | Any building below 25% HP |
+| 2 | Furnace scheduling | Cubes in hopper, recipe selected |
+| 3 | Harvest (assigned deposits) | Deposits in territory with available bots |
+| 4 | Transport (to furnace) | Cubes at deposit, furnace has hopper space |
+| 5 | Transport (inter-base) | Surplus cubes, other base needs materials |
+| 6 | Build (queued buildings) | Materials available, build site ready |
+| 7 | Patrol | Idle bots with no other work |
+| 8 | Explore | Scout bots with no assigned patrol |
+
+Bots always "phone home" to their nearest base when they have no active task. A destroyed base causes all its bots to reassign to the next nearest base, creating a temporary efficiency loss.
 
 ---
 
-## 10. Home Planet Shipments (Colony ↔ Patron Economy)
+## 12. Patron Shipment Economy (Colonization Model)
 
 > **Design Reference:** See COLONIZATION-MODEL.md for the full Colonization pivot rationale.
 
-The primary economic relationship is between your colony and your home planet patron -- not between rival factions. You ship cubes home; your patron sends back blueprints, tech unlocks, and reinforcement units. This is the game's core strategic decision: **use cubes locally for immediate benefit, or ship them home for long-term advantage.**
+The primary economic relationship is between your colony and your home planet patron -- not between rival factions. You ship cubes home; your patron sends back blueprints, tech unlocks, and reinforcement units.
 
 The otter hologram system (`otterTrade.ts`, `OtterRenderer.tsx`) serves as the home planet communication interface. Otter holograms deliver patron demands, accept shipments, and dispense rewards.
 
-### 10.1 Patron Demand System
+### 12.1 Patron Demand System
 
 Each race's home planet patron periodically requests specific materials. Fulfilling demands earns favor and unlocks rewards. Ignoring demands reduces future support.
 
@@ -740,9 +695,9 @@ if fulfillmentScore >= 0.5: partial reward (50% of reward value)
 if fulfillmentScore < 0.5: demand failed, patronFavor -= 10
 ```
 
-### 10.2 Patron Favor
+### 12.2 Patron Favor
 
-Favor determines what your patron is willing to send you. It replaces the abstract "tech tree research" mechanic.
+Favor determines what your patron is willing to send you.
 
 | Favor Level | Range | Effect |
 |-------------|-------|--------|
@@ -763,11 +718,11 @@ Favor determines what your patron is willing to send you. It replaces the abstra
 | Partial fulfillment (50%+) | Half of full reward |
 | Fail demand (miss deadline) | -10 |
 | Ignore demand (no cubes shipped) | -15 |
-| Stop shipping entirely for 30+ min | -20 (patron expresses concern, reduces reward tier) |
+| Stop shipping entirely for 30+ min | -20 |
 
 **Starting favor:** 15 (Neutral, close to Trusted)
 
-### 10.3 Patron Reward Catalog
+### 12.3 Patron Reward Catalog
 
 Rewards are received via otter hologram delivery -- a physical crate materializes at your base.
 
@@ -808,19 +763,7 @@ Rewards are received via otter hologram delivery -- a physical crate materialize
 | Teleporter Blueprint | 100 cubes | Endgame logistics |
 | Patron-Exclusive Blueprint | 50 cubes | Late-game tech only available through patron trade |
 
-### 10.4 The Ship-or-Spend Tension
-
-This is the Colonization model's core strategic lever:
-
-```
-Every cube you compress faces a choice:
-  ├── USE LOCALLY → immediate benefit (wall, weapon, building, bot)
-  └── SHIP HOME → delayed benefit (blueprint, tech, reinforcement)
-
-earlyGameBias = use locally (need walls, tools, survival)
-midGameBias = balance (need tech to progress, need defenses to survive)
-lateGameBias = use locally (self-sufficient) with occasional patron trades for exclusive tech
-```
+### 12.4 The Ship-or-Spend Tension
 
 **Economic pressure curve:**
 
@@ -829,29 +772,23 @@ lateGameBias = use locally (self-sufficient) with occasional patron trades for e
 | Early (0-15 min) | 1 minor / 5 min | High (survival) | 10-20% |
 | Mid (15-40 min) | 1 standard / 5 min | Medium (expansion) | 30-40% |
 | Late (40-70 min) | 1 major / 5 min | Low (established) | 40-60% |
-| Endgame (70+ min) | 1 critical / 5 min | Variable (war or peace) | 0-10% (self-sufficient, specialized trades only) |
+| Endgame (70+ min) | 1 critical / 5 min | Variable (war or peace) | 0-10% (self-sufficient) |
 
-### 10.5 Patron Dependency Gradient
+### 12.5 Patron Dependency Gradient
 
-Independence is NOT a binary event. It is a **gradient** -- a natural economic transition that occurs as the colony's local production scales. There is no "declare independence" button. Robots don't revolt; they rationally shift resource allocation as local capability grows.
+Independence is NOT a binary event. It is a **gradient** -- a natural economic transition as the colony's local production scales. There is no "declare independence" button. Robots don't revolt; they rationally shift resource allocation.
 
-**3-Act progression of patron dependency:**
+**3-Act progression:**
 
 | Act | Colony State | Patron Shipping % | Local Production % | Patron Relationship |
 |-----|-------------|-------------------|-------------------|---------------------|
-| Act 1: Colonization | Dependent | 40-60% of cubes shipped home | Limited furnace recipes | Patron commands, colony obeys |
-| Act 2: Factory | Transitioning | 15-30% shipped home | Local recipes replace patron shipments | Patron advises, colony evaluates |
-| Act 3: Conquest | Self-sufficient | 0-10% shipped home (specialized trades only) | Full self-sufficiency | Patron is trade partner, not lifeline |
+| Act 1: Colonization | Dependent | 40-60% shipped home | Limited furnace recipes | Patron commands, colony obeys |
+| Act 2: Factory | Transitioning | 15-30% shipped home | Local recipes replace shipments | Patron advises, colony evaluates |
+| Act 3: Conquest | Self-sufficient | 0-10% shipped home | Full self-sufficiency | Patron is trade partner, not lifeline |
 
-**Why the patron doesn't punish independence:**
-- The patron WANTS a successful colony -- a thriving colony produces more absolute trade volume even if the percentage shipped home decreases
-- Both sides benefit from continued trade (patron-unique blueprints for rare materials)
-- For robots, the transition is rational cost-benefit: the patron recognizes that local production is more efficient than cross-system shipping
-- The relationship evolves from commander-subordinate to trade-partners to equals
+The patron WANTS a successful colony. Both sides benefit from continued trade. High patron favor in Act 3 unlocks patron-exclusive tech. Low patron favor reduces trade options but never results in punitive action.
 
-**Patron favor still matters in Act 3:** High patron favor unlocks patron-exclusive tech (blueprints unavailable through local research). Low patron favor reduces trade options but never results in punitive action. The patron is a rational trade partner, not a vindictive overlord.
-
-### 10.6 Inter-Colony Trade (Secondary)
+### 12.6 Inter-Colony Trade
 
 Trade between rival colonies on the machine planet is secondary to the patron economy. It uses physical cube exchange at neutral border points.
 
@@ -874,9 +811,107 @@ fairTrade = tradeRatio >= 0.8 && tradeRatio <= 1.2
 | Ambush trade convoy | -50 opinion, immediate war declaration |
 | Break trade agreement | -30 opinion, 10-minute trade embargo |
 
-**Alien native trade:** The indigenous machine species (alien natives) can be traded with using a separate reputation system. They offer unique materials and information not available from patrons. See GDD for alien natives.
+---
 
-### 10.7 AI Patron Interaction
+## 13. AI Economy
+
+### 13.1 Difficulty Multipliers
+
+| Difficulty | Harvest Rate | Build Speed | Starting Cubes | Peace Period | Aggression |
+|-----------|-------------|-------------|---------------|-------------|------------|
+| Peaceful | 0.5x | 0.5x | 10 | Infinite | Never attacks |
+| Easy | 0.7x | 0.7x | 15 | 10 min | Low |
+| Normal | 1.0x | 1.0x | 20 | 5 min | Medium |
+| Hard | 1.3x | 1.2x | 30 | 3 min | High |
+| Brutal | 1.6x | 1.5x | 50 | 1 min | Very High |
+
+### 13.2 AI Build Order Targets
+
+| Milestone | Easy | Normal | Hard | Brutal |
+|-----------|------|--------|------|--------|
+| First furnace operational | Start | Start | Start | Start |
+| First 10 cubes stockpiled | 5 min | 3 min | 2 min | 1 min |
+| First belt line | 8 min | 5 min | 3 min | 2 min |
+| First outpost | 15 min | 8 min | 5 min | 3 min |
+| First combat bot | 12 min | 7 min | 4 min | 2.5 min |
+| First raid launched | Never | 12 min | 6 min | 3 min |
+| Iron smelting | 20 min | 12 min | 8 min | 5 min |
+
+### 13.3 AI Passive Cube Generation
+
+Until full factory automation is implemented, AI factions generate cubes passively:
+
+```
+cubesPerMinute = baseCubeRate * difficultyMultiplier * territoryCount * factionEconomyBias
+
+where:
+  baseCubeRate = 2.0 cubes/minute
+  difficultyMultiplier = from difficulty table
+  territoryCount = max(1, outposts owned)
+  factionEconomyBias = from civilizations.json governorBias.economy
+```
+
+**Example: Normal difficulty, Reclaimers (economy bias 1.5), 2 territories:**
+```
+cubesPerMinute = 2.0 * 1.0 * 2 * 1.5 = 6.0 cubes/min
+```
+
+**Critical implementation note:** Use `Math.max(1, Math.ceil(...))` to guarantee at least 1 cube per evaluation cycle. `Math.round()` produces 0 for small values.
+
+### 13.4 AI Material Distribution
+
+AI factions generate cubes of specific materials based on their biome and faction preferences:
+
+| Faction | Scrap Iron | Copper | Silicon | Titanium | Other |
+|---------|-----------|--------|---------|----------|-------|
+| Reclaimers | 40% | 20% | 10% | 5% | 25% Rock |
+| Volt Collective | 25% | 35% | 15% | 10% | 15% Carbon |
+| Signal Choir | 15% | 30% | 35% | 5% | 15% Rare Earth |
+| Iron Creed | 35% | 15% | 10% | 25% | 15% Rock |
+
+### 13.5 Peace Period Mechanics
+
+During the peace period:
+- AI factions do not declare war on the player
+- AI factions do not send raids against the player
+- AI factions CAN fight each other (inter-AI peace is separate)
+- Feral bots still spawn and attack normally
+- AI builds economy, defense, and military during peace
+- A countdown timer is visible on the HUD: "PEACE ENDS IN 3:00"
+- When peace ends, AI re-evaluates all diplomatic stances immediately
+
+### 13.6 AI Base Expansion
+
+AI civs decide when to build a new base using this evaluation:
+
+```
+newBaseDesirability =
+  (nearestUntappedDepositValue * 0.4) +
+  (distanceFromExistingBase > 30 ? 0.3 : 0) +
+  (currentBaseCapacityUtilization > 0.8 ? 0.3 : 0) -
+  (militaryThreatAtLocation * 0.5) -
+  (baseBuildCost / currentCubeStockpile * 0.3)
+```
+
+**New base establishment cost:**
+- Outpost Core: 2x Ti + 2x Si + 4x Cu + 4x Scrap
+- Furnace: FREE (one provided per outpost)
+- Lightning Rod: 3x Cu + 2x Scrap
+- Basic perimeter: ~10x Scrap Iron (walls)
+- **Total minimum: ~30 cubes worth of materials**
+
+**Base establishment timeline (AI, normal difficulty):**
+
+| Time | Event |
+|------|-------|
+| T+0 | Outpost Core placed. Territory claimed. |
+| T+30s | Furnace placed and operational. |
+| T+60s | Lightning rod placed. Power online. |
+| T+120s | First belt line to nearest deposit. |
+| T+180s | First cubes being produced at new base. |
+| T+300s | Basic wall perimeter. Base is "online." |
+
+### 13.7 AI Patron Interaction
 
 AI civilizations interact with their own home planet patrons using the same system:
 
@@ -886,11 +921,7 @@ aiShipmentDecision =
   if localThreat > 0.6: prioritize local use (need defense)
   if cubeStockpile > 100: ship surplus home
   default: ship (cubesPerMinute * 0.3) home, keep rest local
-
-aiDemandFulfillment = max(0, cubesAvailable - localReserve) / demandedValue
 ```
-
-AI civs at higher difficulty levels ship more efficiently and receive patron rewards faster:
 
 | Difficulty | AI Ship Efficiency | Patron Demand Discount |
 |-----------|-------------------|----------------------|
@@ -902,9 +933,62 @@ AI civs at higher difficulty levels ship more efficiently and receive patron rew
 
 ---
 
-## 11. Config Changes Required
+## 14. Master Formula Reference
 
-### 11.1 config/mining.json Updates
+```
+-- Extraction --
+effectiveRate = baseExtractionRate * drillTierMultiplier * oreGrindSpeed * biomeHarvestMod * weatherHarvestMod
+ticksToFill = powderCapacity / effectiveRate
+secondsToFill = ticksToFill / 60
+
+-- Compression --
+shakeIntensity(t) = peakIntensity * (t / duration)^2
+pressure(t) = (t / duration)^3
+heat(t) = ((t - delay) / (duration - delay))^2, where delay = duration * 0.15
+cubeQuality = 1.0 * damageModifier * rushModifier
+
+-- Cube Value --
+effectiveCubeValue = baseValue * quality
+wallHP = hpPerCube * quality
+
+-- Wealth & Raids --
+raidPoints = totalVisibleCubeValue * 0.5 + buildingCount * 2 + techLevel * 10
+raidInterval = max(120, 600 - raidPoints * 2) seconds
+maxRaiders = min(15, floor(raidPoints / 15))
+
+-- AI Economy --
+cubesPerMinute = baseCubeRate * difficultyMult * max(1, territories) * factionEconomyBias
+cubesPerEval = max(1, ceil(cubesPerMinute * evalInterval / 60))
+
+-- Trade --
+tradeRatio = offeredTotalValue / requestedTotalValue
+isFair = tradeRatio >= 0.8 && tradeRatio <= 1.2
+
+-- Patron Shipments (Colonization Model) --
+fulfillmentScore = sum(shippedCubeValue) / demandedValue
+favorChange = if fulfillment >= 1.0 then +tierFavorGain, elif >= 0.5 then +tierFavorGain/2, else -10
+optimalShipPercent = gamePhaseShipRate * (1 - localThreat)
+aiShipDecision = if favor < 25 then prioritize_ship, elif threat > 0.6 then prioritize_local, else ship_surplus
+
+-- Factory Throughput --
+beltDeliveryTime = beltLength / beltSpeed
+furnaceCycleTime = recipeTime / (1 + 0.5 * isPowered)
+throughput = min(beltDeliveryRate, 1 / furnaceCycleTime)
+
+-- Inter-Base Transport --
+transportTime = distance / transportSpeed
+cubesPerMinute = (capacity / transportTime) * 60
+```
+
+---
+
+## 15. Config File References
+
+All economy tuning values are externalized to JSON config files. Balance changes never require code changes.
+
+### 15.1 config/mining.json
+
+Controls extraction rates, drill tiers, ore types, and harvesting parameters.
 
 ```json
 {
@@ -933,7 +1017,9 @@ AI civs at higher difficulty levels ship more efficiently and receive patron rew
 }
 ```
 
-### 11.2 config/furnace.json Compression Updates
+### 15.2 config/furnace.json (Compression Section)
+
+Controls compression timing, feedback curves, and cube eject physics.
 
 ```json
 {
@@ -967,7 +1053,9 @@ AI civs at higher difficulty levels ship more efficiently and receive patron rew
 }
 ```
 
-### 11.3 config/economy.json (NEW)
+### 15.3 config/economy.json
+
+Controls wealth brackets, raid scaling, AI economy, trade ratios, and patron shipments.
 
 ```json
 {
@@ -1064,134 +1152,4 @@ AI civs at higher difficulty levels ship more efficiently and receive patron rew
     }
   }
 }
-```
-
----
-
-## 12. Balance Verification -- Paper Playtest Scenarios
-
-### Scenario 1: "Can I build a Grabber before I starve?"
-
-Player starts with 0 cubes and Tier 1 drill.
-- Need: 3 scrap iron cubes for Grabber Arm
-- Time per cube: grind (12.5s) + compress (1.5s) + walk (2s) = 16s
-- Total: 48 seconds for 3 cubes + 10s furnace time = **58 seconds**
-- Verdict: Achievable within 2 minutes. PASS.
-
-### Scenario 2: "First raid timing"
-
-At 18 minutes, player has ~27 value in cubes (from pacing table).
-- Wealth bracket: "Poor" (11-30)
-- Raid interval: 10 minutes
-- Raid size: 2 scouts
-- Player has no combat bot yet but has a wall
-- 2 scouts vs 1 scrap wall (150 HP): scouts deal 1 damage/tick at 0.4 attack chance
-  - DPS per scout: 0.4 * 1 = 0.4/tick, or 24 damage/minute
-  - 2 scouts: 48 damage/minute
-  - Time to breach wall: 150 / 48 = 3.1 minutes
-- Player has 3 minutes to react (fight manually, build another wall, or flee)
-- Verdict: Survivable with manual intervention. PASS.
-
-### Scenario 3: "5 iron cubes vs 3 enemy scouts -- who wins?"
-
-Player throws iron cubes at scouts:
-- Iron cube throw damage: 20 per hit (see GDD-013)
-- Scout HP: 60 (from enemies config)
-- Cube throw rate: 1 throw per 1.5 seconds
-- Player has 5 cubes to throw: 5 * 20 = 100 potential damage
-- 3 scouts * 60 HP = 180 total enemy HP
-- Player kills 1.6 scouts before running out of cubes
-- Remaining 1.4 scouts attack player at melee
-- Player must finish with drill arm (melee)
-- Verdict: Challenging but winnable. Cubes are effective but expensive. PASS.
-
-### Scenario 4: "AI economy doesn't starve"
-
-Normal difficulty, Reclaimers (economy 1.5), 1 territory:
-```
-cubesPerMinute = 2.0 * 1.0 * 1 * 1.5 = 3.0 cubes/min
-```
-- After 3 minutes: 9 cubes (enough for first tools)
-- After 8 minutes: 24 cubes (enough for outpost materials)
-- Math.ceil(3.0) = 3 -- no rounding to zero. PASS.
-
-### Scenario 5: "Titanium wall vs full raid"
-
-Opulent bracket (500+ value). Max raid: 13 raiders.
-- Titanium wall panel: 900 HP
-- Soldier bot damage: 2/tick at 0.4 chance = 0.8 DPS per soldier
-- 8 soldiers: 6.4 DPS against wall
-- Time to breach: 900 / 6.4 = 140 ticks = ~2.3 minutes at 60 TPS
-- During this time, player turrets (2 DPS each, 3 turrets = 6 DPS) kill soldiers
-- Soldier HP: 80. Time to kill one soldier: 80 / 6 = 13 ticks
-- Over 140 ticks, turrets kill 10 soldiers
-- Verdict: Titanium wall + 3 turrets can hold against max raid. PASS.
-
-### Scenario 6: "Can I fulfill the first patron demand?"
-
-First demand arrives at ~5 minutes: Minor tier, 5-15 value, 5 min deadline.
-- Worst case: 15 value demanded. Need to ship ~15 value in cubes.
-- At minute 5, player has ~10 cubes valued at ~12 (from pacing table 8.1).
-- Player can ship ~8-10 value (keeping some for local use).
-- fulfillmentScore = 10 / 15 = 0.67 (above 0.5 partial threshold)
-- Result: Partial reward (+2.5 favor instead of +5). Player stays at Neutral.
-- Best case: 5 value demanded. Ship 5x Rock cubes (value 2.5) + 3x Scrap (value 3.0) = 5.5 value.
-- fulfillmentScore = 5.5 / 5 = 1.1. Full reward. +5 favor → favor = 20 (still Neutral).
-- Verdict: First demand is achievable without crippling local economy. PASS.
-
-### Scenario 7: "Independence viability check"
-
-Requirements: Favor 80+, 200 stockpile value, 3 bases, Broadcast Tower.
-- Reaching Essential favor (80): Need ~12 successful major/critical shipments after starting at 15.
-  - 6 major (+20 each = +120) puts you at 135, capped at 100. Achievable by minute 50-60.
-- 200 stockpile value: With late-game automation at 20 value/min, takes ~15 minutes of saving.
-- 3 bases: Outpost cost is ~30 cubes each. With 2 extra outposts = 60 cubes. Achievable by minute 40.
-- Punitive expedition: 3 waves of 5 bots (15 total). Player should have turrets + heavy bots by now.
-  - 5 soldiers (100 HP each) vs 3 turrets (2 DPS each = 6 DPS total) = killed in ~83 seconds per wave.
-  - 5-minute gaps give time to repair between waves.
-- Verdict: Independence is achievable around minute 70-80. Challenging but fair. PASS.
-
----
-
-## 13. Formula Reference Sheet
-
-```
--- Extraction --
-effectiveRate = baseExtractionRate * drillTierMultiplier * oreGrindSpeed * biomeHarvestMod * weatherHarvestMod
-ticksToFill = powderCapacity / effectiveRate
-secondsToFill = ticksToFill / 60
-
--- Compression --
-shakeIntensity(t) = peakIntensity * (t / duration)^2
-pressure(t) = (t / duration)^3
-heat(t) = ((t - delay) / (duration - delay))^2, where delay = duration * 0.15
-cubeQuality = 1.0 * damageModifier * rushModifier
-
--- Cube Value --
-effectiveCubeValue = baseValue * quality
-wallHP = hpPerCube * quality
-
--- Wealth & Raids --
-raidPoints = totalVisibleCubeValue * 0.5 + buildingCount * 2 + techLevel * 10
-raidInterval = max(120, 600 - raidPoints * 2) seconds
-maxRaiders = min(15, floor(raidPoints / 15))
-
--- AI Economy --
-cubesPerMinute = baseCubeRate * difficultyMult * max(1, territories) * factionEconomyBias
-cubesPerEval = max(1, ceil(cubesPerMinute * evalInterval / 60))
-
--- Trade --
-tradeRatio = offeredTotalValue / requestedTotalValue
-isFair = tradeRatio >= 0.8 && tradeRatio <= 1.2
-
--- Patron Shipments (Colonization Model) --
-fulfillmentScore = sum(shippedCubeValue) / demandedValue
-favorChange = if fulfillment >= 1.0 then +tierFavorGain, elif >= 0.5 then +tierFavorGain/2, else -10
-optimalShipPercent = gamePhaseShipRate * (1 - localThreat)
-aiShipDecision = if favor < 25 then prioritize_ship, elif threat > 0.6 then prioritize_local, else ship_surplus
-
--- Factory Throughput --
-beltDeliveryTime = beltLength / beltSpeed
-furnaceCycleTime = recipeTime / (1 + 0.5 * isPowered)
-throughput = min(beltDeliveryRate, 1 / furnaceCycleTime)
 ```

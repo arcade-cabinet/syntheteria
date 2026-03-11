@@ -41,7 +41,9 @@ import { HologramRenderer } from "./rendering/HologramRenderer";
 import { LandscapeProps } from "./rendering/LandscapeProps";
 import { usePreloadCubeMaterials } from "./rendering/materials/CubeMaterialProvider";
 import { OreDepositRenderer } from "./rendering/OreDepositRenderer";
-import { OtterRenderer } from "./rendering/OtterRenderer";
+// OtterRenderer removed — HologramRenderer supersedes it (both rendered all
+// otters, and OtterRenderer's <sprite> elements caused matrixWorld crashes
+// when ObjectSelectionSystem raycasted against orphaned sprites).
 import { PlacedCubeRenderer } from "./rendering/PlacedCubeRenderer";
 import { PlacementPreview } from "./rendering/PlacementPreview";
 import { PostProcessing } from "./rendering/PostProcessing";
@@ -212,7 +214,6 @@ export default function GameScene() {
 				<LandscapeProps />
 				<CityRenderer />
 				<UnitRenderer />
-				<OtterRenderer />
 				<BeltRenderer />
 				<WireRenderer />
 				<FactoryRenderer />

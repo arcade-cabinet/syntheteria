@@ -17,16 +17,19 @@ The prototype has working FPS camera, factory systems (belts, wires, mining, pro
 
 ### Design Documents
 
-All architecture and design decisions are documented in `docs/design/`:
+All design decisions are documented in `docs/design/` organized by domain. Each directory has an `AGENTS.md` describing its contents.
 
-| GDD | Topic |
-|-----|-------|
-| 002 | Koota ECS + Expo/Metro + JSON config migration |
-| 003 | 4X framework, contextual interaction, Yuka governors, race selection |
-| 004 | Core game loop — harvesting, cubes, compression, furnace |
-| 005 | Visual identity — procedural mechanical generation, Yuka vehicles, PBR art direction |
+| Directory | Documents |
+|-----------|-----------|
+| `gameplay/` | OVERVIEW, MECHANICS, MATERIALS, COMBAT, PROGRESSION, VICTORY |
+| `world/` | ENVIRONMENT, RACES, ALIENS |
+| `agents/` | GOVERNORS, BOTS |
+| `interface/` | UI, INTERACTION, ONBOARDING |
+| `research/` | 4X_ANALYSIS |
 
-**These GDDs are the source of truth for all design decisions.**
+Root-level: `DECISIONS.md` (tech choices), `OPEN_QUESTIONS.md` (unresolved design).
+
+**These documents are the source of truth for all design decisions.**
 
 ---
 
@@ -88,7 +91,7 @@ Grind ore deposit → Powder fills capacity gauge
 | Persistence | expo-sqlite + Drizzle ORM (native), IndexedDB (web) | Cross-platform save/load |
 | Bundler | **Expo SDK 55 + Metro** (migrating from Vite) | Native builds, static JSON imports |
 | Lint | Biome | Code quality |
-| Test | Vitest + Playwright | Unit + E2E |
+| Test | Jest + ts-jest, Playwright | Unit + E2E |
 
 ---
 
@@ -158,7 +161,7 @@ syntheteria/
 ├── public/                     # Static assets served by Vite
 │   └── textures/materials/     # PBR texture maps (Git LFS)
 ├── assets/                     # GLB models (Git LFS)
-├── docs/design/                # GDD design documents (002-005)
+├── docs/design/                # Game design (gameplay/, world/, agents/, interface/, research/)
 ├── tests/                      # E2E Playwright tests
 ├── .gitattributes              # Git LFS tracking (*.glb, *.exr, *.jpg, *.png)
 ├── .github/workflows/          # CI (ci.yml) + Deploy (deploy.yml)
@@ -229,5 +232,5 @@ Critical path summary:
 - [Drizzle ORM](https://orm.drizzle.team/) — Type-safe SQL
 - [nipplejs](https://yoannmoi.net/nipplejs/) — Virtual joystick
 - [anime.js](https://animejs.com/) — Animation library
-- [Vitest](https://vitest.dev/) — Unit testing
+- [Jest](https://jestjs.io/) — Unit testing
 - [Playwright](https://playwright.dev/) — E2E browser testing

@@ -17,8 +17,8 @@ import {
 	getTechNode as _getTechNode,
 	getTechTree as _getTechTree,
 	isResearched as _isResearched,
-	resetTechResearch,
 	startResearch as _startResearch,
+	resetTechResearch,
 	type TechDefinition,
 } from "./techResearch";
 
@@ -40,7 +40,7 @@ function toTechNode(def: TechDefinition): TechNode {
 	return {
 		id: def.id,
 		name: def.name,
-		description: (def as unknown as Record<string, unknown>).description as string ?? `${def.name} (Tier ${def.tier})`,
+		description: def.description ?? `${def.name} (Tier ${def.tier})`,
 		tier: def.tier,
 		prerequisites: def.prerequisites,
 		cost: { cubes: def.researchCost, time: def.researchCost * 2 },
@@ -97,7 +97,10 @@ export function resetTechTree(): void {
  * @deprecated Use techResearchSystem from techResearch.ts instead.
  * This shim exists for backward compatibility with gameState.ts.
  */
-export function updateResearch(factionId: string, _delta: number): string | null {
+export function updateResearch(
+	factionId: string,
+	_delta: number,
+): string | null {
 	// The old tick-based updateResearch is replaced by the compute-point-based
 	// techResearchSystem. This shim is intentionally a no-op — callers should
 	// migrate to techResearchSystem.

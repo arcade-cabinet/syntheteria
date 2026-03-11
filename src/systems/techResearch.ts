@@ -20,6 +20,7 @@ import { config } from "../../config";
 export interface TechDefinition {
 	id: string;
 	name: string;
+	description?: string;
 	tier: number;
 	researchCost: number;
 	prerequisites: string[];
@@ -49,8 +50,8 @@ export interface FactionResearchState {
 const techDefs: TechDefinition[] = config.technology
 	.techTree as unknown as TechDefinition[];
 
-const factionBonuses: Record<string, number> =
-	config.technology.factionResearchBonuses as Record<string, number>;
+const factionBonuses: Record<string, number> = config.technology
+	.factionResearchBonuses as Record<string, number>;
 
 // ---------------------------------------------------------------------------
 // Module state
@@ -120,7 +121,8 @@ export function startResearch(faction: string, techId: string): boolean {
 	if (!tech) return false;
 	if (state.researched.has(techId)) return false;
 	if (state.active !== null) return false;
-	if (!tech.prerequisites.every((pre) => state.researched.has(pre))) return false;
+	if (!tech.prerequisites.every((pre) => state.researched.has(pre)))
+		return false;
 
 	state.active = {
 		techId,

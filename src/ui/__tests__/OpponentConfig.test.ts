@@ -35,7 +35,10 @@ function addOpponent(
 		available.length > 0
 			? available[0]
 			: ALL_FACTIONS.filter((f) => f !== playerFaction)[0];
-	return [...opponents, { faction, difficulty: "normal" } as OpponentSlot];
+	return [
+		...opponents,
+		{ faction, difficulty: "normal", victoryBias: "subjugation" } as OpponentSlot,
+	];
 }
 
 function removeOpponent(
@@ -87,9 +90,14 @@ describe("addOpponent", () => {
 		expect(result[0].difficulty).toBe("normal");
 	});
 
+	it("adds opponent with a default victoryBias", () => {
+		const result = addOpponent([], "reclaimers");
+		expect(result[0].victoryBias).toBeDefined();
+	});
+
 	it("picks a faction not already used", () => {
 		const existing: OpponentSlot[] = [
-			{ faction: "volt_collective", difficulty: "normal" },
+			{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
 		];
 		const result = addOpponent(existing, "reclaimers");
 		const newFaction = result[result.length - 1].faction;
@@ -99,8 +107,8 @@ describe("addOpponent", () => {
 
 	it("prefers factions not used by player or existing opponents", () => {
 		const existing: OpponentSlot[] = [
-			{ faction: "volt_collective", difficulty: "easy" },
-			{ faction: "signal_choir", difficulty: "hard" },
+			{ faction: "volt_collective", difficulty: "easy", victoryBias: "subjugation" },
+			{ faction: "signal_choir", difficulty: "hard", victoryBias: "technical_mastery" },
 		];
 		const result = addOpponent(existing, "reclaimers");
 		const newFaction = result[result.length - 1].faction;
@@ -110,7 +118,7 @@ describe("addOpponent", () => {
 
 	it("returns a new array (does not mutate original)", () => {
 		const original: OpponentSlot[] = [
-			{ faction: "volt_collective", difficulty: "normal" },
+			{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
 		];
 		const result = addOpponent(original, "reclaimers");
 		expect(result).not.toBe(original);
@@ -125,8 +133,8 @@ describe("addOpponent", () => {
 describe("removeOpponent", () => {
 	it("removes opponent at given index", () => {
 		const opponents: OpponentSlot[] = [
-			{ faction: "volt_collective", difficulty: "normal" },
-			{ faction: "signal_choir", difficulty: "easy" },
+			{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
+			{ faction: "signal_choir", difficulty: "easy", victoryBias: "technical_mastery" },
 		];
 		const result = removeOpponent(opponents, 0);
 		expect(result).toHaveLength(1);
@@ -135,8 +143,8 @@ describe("removeOpponent", () => {
 
 	it("removes last opponent", () => {
 		const opponents: OpponentSlot[] = [
-			{ faction: "volt_collective", difficulty: "normal" },
-			{ faction: "signal_choir", difficulty: "easy" },
+			{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
+			{ faction: "signal_choir", difficulty: "easy", victoryBias: "technical_mastery" },
 		];
 		const result = removeOpponent(opponents, 1);
 		expect(result).toHaveLength(1);
@@ -145,7 +153,7 @@ describe("removeOpponent", () => {
 
 	it("returns empty array when removing the only opponent", () => {
 		const opponents: OpponentSlot[] = [
-			{ faction: "iron_creed", difficulty: "hard" },
+			{ faction: "iron_creed", difficulty: "hard", victoryBias: "social_networking" },
 		];
 		const result = removeOpponent(opponents, 0);
 		expect(result).toHaveLength(0);
@@ -153,8 +161,8 @@ describe("removeOpponent", () => {
 
 	it("does not mutate the original array", () => {
 		const opponents: OpponentSlot[] = [
-			{ faction: "volt_collective", difficulty: "normal" },
-			{ faction: "signal_choir", difficulty: "easy" },
+			{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
+			{ faction: "signal_choir", difficulty: "easy", victoryBias: "technical_mastery" },
 		];
 		removeOpponent(opponents, 0);
 		expect(opponents).toHaveLength(2);
@@ -162,9 +170,9 @@ describe("removeOpponent", () => {
 
 	it("preserves remaining opponents in order", () => {
 		const opponents: OpponentSlot[] = [
-			{ faction: "reclaimers", difficulty: "easy" },
-			{ faction: "volt_collective", difficulty: "normal" },
-			{ faction: "signal_choir", difficulty: "hard" },
+			{ faction: "reclaimers", difficulty: "easy", victoryBias: "social_networking" },
+			{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
+			{ faction: "signal_choir", difficulty: "hard", victoryBias: "technical_mastery" },
 		];
 		const result = removeOpponent(opponents, 1);
 		expect(result[0].faction).toBe("reclaimers");
@@ -179,7 +187,7 @@ describe("removeOpponent", () => {
 describe("updateSlot", () => {
 	it("updates difficulty of slot at index", () => {
 		const opponents: OpponentSlot[] = [
-			{ faction: "volt_collective", difficulty: "normal" },
+			{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
 		];
 		const result = updateSlot(opponents, 0, { difficulty: "hard" });
 		expect(result[0].difficulty).toBe("hard");
@@ -187,16 +195,24 @@ describe("updateSlot", () => {
 
 	it("updates faction of slot at index", () => {
 		const opponents: OpponentSlot[] = [
-			{ faction: "volt_collective", difficulty: "normal" },
+			{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
 		];
 		const result = updateSlot(opponents, 0, { faction: "iron_creed" });
 		expect(result[0].faction).toBe("iron_creed");
 	});
 
+	it("updates victoryBias of slot at index", () => {
+		const opponents: OpponentSlot[] = [
+			{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
+		];
+		const result = updateSlot(opponents, 0, { victoryBias: "religious_philosophical" });
+		expect(result[0].victoryBias).toBe("religious_philosophical");
+	});
+
 	it("does not modify other slots", () => {
 		const opponents: OpponentSlot[] = [
-			{ faction: "volt_collective", difficulty: "normal" },
-			{ faction: "signal_choir", difficulty: "easy" },
+			{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
+			{ faction: "signal_choir", difficulty: "easy", victoryBias: "technical_mastery" },
 		];
 		const result = updateSlot(opponents, 0, { difficulty: "hard" });
 		expect(result[1]).toEqual(opponents[1]);
@@ -204,7 +220,7 @@ describe("updateSlot", () => {
 
 	it("does not mutate the original array", () => {
 		const opponents: OpponentSlot[] = [
-			{ faction: "volt_collective", difficulty: "normal" },
+			{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
 		];
 		updateSlot(opponents, 0, { difficulty: "hard" });
 		expect(opponents[0].difficulty).toBe("normal");
@@ -212,10 +228,11 @@ describe("updateSlot", () => {
 
 	it("preserves unpatched fields in updated slot", () => {
 		const opponents: OpponentSlot[] = [
-			{ faction: "volt_collective", difficulty: "normal" },
+			{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
 		];
 		const result = updateSlot(opponents, 0, { difficulty: "easy" });
 		expect(result[0].faction).toBe("volt_collective");
+		expect(result[0].victoryBias).toBe("subjugation");
 	});
 });
 
@@ -224,10 +241,15 @@ describe("updateSlot", () => {
 // ---------------------------------------------------------------------------
 
 describe("OpponentSlot shape", () => {
-	it("has faction and difficulty fields", () => {
-		const slot: OpponentSlot = { faction: "reclaimers", difficulty: "normal" };
+	it("has faction, difficulty, and victoryBias fields", () => {
+		const slot: OpponentSlot = {
+			faction: "reclaimers",
+			difficulty: "normal",
+			victoryBias: "subjugation",
+		};
 		expect(slot).toHaveProperty("faction");
 		expect(slot).toHaveProperty("difficulty");
+		expect(slot).toHaveProperty("victoryBias");
 	});
 
 	it("difficulty accepts easy/normal/hard", () => {
@@ -237,8 +259,29 @@ describe("OpponentSlot shape", () => {
 			"hard",
 		];
 		for (const d of difficulties) {
-			const slot: OpponentSlot = { faction: "reclaimers", difficulty: d };
+			const slot: OpponentSlot = {
+				faction: "reclaimers",
+				difficulty: d,
+				victoryBias: "technical_mastery",
+			};
 			expect(slot.difficulty).toBe(d);
+		}
+	});
+
+	it("victoryBias accepts all four path IDs", () => {
+		const paths: OpponentSlot["victoryBias"][] = [
+			"technical_mastery",
+			"subjugation",
+			"social_networking",
+			"religious_philosophical",
+		];
+		for (const bias of paths) {
+			const slot: OpponentSlot = {
+				faction: "volt_collective",
+				difficulty: "normal",
+				victoryBias: bias,
+			};
+			expect(slot.victoryBias).toBe(bias);
 		}
 	});
 });

@@ -20,9 +20,11 @@ import { getSnapshot, subscribe } from "./ecs/gameState";
 import { phraseToSeed } from "./ecs/seed";
 import { initFromConfig, type NewGameConfig } from "./systems/newGameInit";
 import { registerAllSystems } from "./systems/registerSystems";
+import { setSpectatorMode } from "./systems/spectatorSystem";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { LoadingScreen } from "./ui/LoadingScreen";
 import { PauseMenu } from "./ui/PauseMenu";
+import type { FactionId } from "./ui/FactionSelect";
 import type { PregameConfig } from "./ui/PregameScreen";
 import { PregameScreen } from "./ui/PregameScreen";
 import { TitleScreen } from "./ui/TitleScreen";
@@ -41,12 +43,19 @@ function toNewGameConfig(config: PregameConfig): NewGameConfig {
 		large: 400,
 	};
 
+	const opponentBias: Record<string, string> = {};
+	for (const opp of config.opponents) {
+		opponentBias[opp.faction] = opp.victoryBias;
+	}
+
 	return {
 		playerRace: config.faction,
 		mapSize: sizeMap[config.mapSettings.mapSize] ?? 200,
 		mapType: "standard",
 		aiOpponents: config.opponents.map((o) => o.faction),
 		difficulty: "normal",
+		playerVictoryPath: config.victoryPath,
+		opponentVictoryBias: opponentBias,
 	};
 }
 
@@ -60,6 +69,36 @@ export default function App() {
 	// Title screen "New Game" → go to pregame config
 	const handleNewGame = () => {
 		setPhase("pregame");
+	};
+
+	// Title screen "SPECTATE" → launch an AI-only game in spectator mode
+	const handleSpectate = () => {
+		setSpectatorMode(true);
+		// Use default config: 4 AI factions, medium map, normal difficulty
+		const spectatorConfig: NewGameConfig = {
+			playerRace: "reclaimers", // player faction (won't be human-controlled)
+			mapSize: 200,
+			mapType: "standard",
+			aiOpponents: ["volt_collective", "signal_choir", "iron_creed"],
+			difficulty: "normal",
+		};
+		pendingConfigRef.current = {
+			faction: spectatorConfig.playerRace as FactionId,
+			victoryPath: "subjugation",
+			mapSettings: {
+				mapSize: "medium",
+				oreDensity: "normal",
+				stormIntensity: "moderate",
+				startingResources: "standard",
+				seedPhrase: "spectator",
+			},
+			opponents: spectatorConfig.aiOpponents.map((f) => ({
+				faction: f as FactionId,
+				difficulty: "normal" as const,
+				victoryBias: "subjugation" as const,
+			})),
+		};
+		setPhase("loading");
 	};
 
 	// Pregame "Start Game" → transition to loading, then play
@@ -109,6 +148,7 @@ export default function App() {
 			<TitleScreen
 				onNewGame={handleNewGame}
 				onContinue={() => setPhase("playing")}
+				onSpectate={handleSpectate}
 			/>
 		);
 	}

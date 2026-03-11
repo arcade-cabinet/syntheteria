@@ -15,10 +15,14 @@ import { useState } from "react";
 import civilizations from "../../config/civilizations.json";
 import { FONT_MONO, menu } from "./designTokens";
 import type { FactionId } from "./FactionSelect";
+import type { VictoryPathId } from "./VictoryPathSelector";
+import { VictoryPathDropdown } from "./VictoryPathSelector";
 
 export interface OpponentSlot {
 	faction: FactionId;
 	difficulty: "easy" | "normal" | "hard";
+	/** Declared victory path preference for this AI opponent. Defaults to "subjugation". */
+	victoryBias?: VictoryPathId;
 }
 
 const ALL_FACTIONS = Object.keys(civilizations) as FactionId[];
@@ -52,7 +56,7 @@ export function OpponentConfig({
 			available.length > 0
 				? available[0]
 				: ALL_FACTIONS.filter((f) => f !== playerFaction)[0];
-		onChange([...opponents, { faction, difficulty: "normal" }]);
+		onChange([...opponents, { faction, difficulty: "normal", victoryBias: "subjugation" }]);
 	};
 
 	const removeOpponent = (index: number) => {
@@ -148,99 +152,129 @@ function OpponentSlotRow({
 		<div
 			style={{
 				display: "flex",
-				alignItems: "center",
-				gap: "8px",
+				flexDirection: "column",
+				gap: "6px",
 				background: menu.accentFaint,
 				border: `1px solid ${civ.color}44`,
 				borderRadius: "6px",
 				padding: "10px 12px",
 			}}
 		>
-			{/* Slot number */}
-			<div
-				aria-hidden="true"
-				style={{
-					fontFamily: FONT_MONO,
-					fontSize: "11px",
-					color: menu.accentMuted,
-					width: "20px",
-					flexShrink: 0,
-				}}
-			>
-				{index + 1}.
+			{/* Top row: index, color dot, faction, difficulty, remove */}
+			<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+				{/* Slot number */}
+				<div
+					aria-hidden="true"
+					style={{
+						fontFamily: FONT_MONO,
+						fontSize: "11px",
+						color: menu.accentMuted,
+						width: "20px",
+						flexShrink: 0,
+					}}
+				>
+					{index + 1}.
+				</div>
+
+				{/* Faction color dot */}
+				<div
+					aria-hidden="true"
+					style={{
+						width: "10px",
+						height: "10px",
+						borderRadius: "2px",
+						background: civ.color,
+						boxShadow: `0 0 6px ${civ.color}60`,
+						flexShrink: 0,
+					}}
+				/>
+
+				{/* Faction select */}
+				<StyledSelect
+					value={slot.faction}
+					onChange={(v) => onUpdate({ faction: v as FactionId })}
+					options={ALL_FACTIONS.filter((f) => f !== playerFaction).map(
+						(f) => ({
+							value: f,
+							label: civilizations[f].name.toUpperCase(),
+						}),
+					)}
+					style={{ flex: 1 }}
+					aria-label={`Rival ${index + 1} faction`}
+				/>
+
+				{/* Difficulty select */}
+				<StyledSelect
+					value={slot.difficulty}
+					onChange={(v) =>
+						onUpdate({ difficulty: v as OpponentSlot["difficulty"] })
+					}
+					options={[
+						{ value: "easy", label: "EASY" },
+						{ value: "normal", label: "NORMAL" },
+						{ value: "hard", label: "HARD" },
+					]}
+					style={{ width: "90px" }}
+					color={diffColor}
+					aria-label={`Rival ${index + 1} difficulty`}
+				/>
+
+				{/* Remove */}
+				<button
+					onClick={onRemove}
+					aria-label={`Remove rival ${index + 1}`}
+					style={{
+						background: "transparent",
+						border: "1px solid rgba(255,68,68,0.3)",
+						borderRadius: "4px",
+						color: "#ff444488",
+						fontFamily: FONT_MONO,
+						fontSize: "14px",
+						padding: "4px 8px",
+						cursor: "pointer",
+						lineHeight: 1,
+						flexShrink: 0,
+						transition: "all 0.15s ease",
+					}}
+					onMouseEnter={(e) => {
+						e.currentTarget.style.borderColor = "#ff4444";
+						e.currentTarget.style.color = "#ff4444";
+					}}
+					onMouseLeave={(e) => {
+						e.currentTarget.style.borderColor = "rgba(255,68,68,0.3)";
+						e.currentTarget.style.color = "#ff444488";
+					}}
+				>
+					X
+				</button>
 			</div>
 
-			{/* Faction color dot */}
+			{/* Second row: victory bias */}
 			<div
-				aria-hidden="true"
 				style={{
-					width: "10px",
-					height: "10px",
-					borderRadius: "2px",
-					background: civ.color,
-					boxShadow: `0 0 6px ${civ.color}60`,
-					flexShrink: 0,
-				}}
-			/>
-
-			{/* Faction select */}
-			<StyledSelect
-				value={slot.faction}
-				onChange={(v) => onUpdate({ faction: v as FactionId })}
-				options={ALL_FACTIONS.filter((f) => f !== playerFaction).map(
-					(f) => ({
-						value: f,
-						label: civilizations[f].name.toUpperCase(),
-					}),
-				)}
-				style={{ flex: 1 }}
-				aria-label={`Rival ${index + 1} faction`}
-			/>
-
-			{/* Difficulty select */}
-			<StyledSelect
-				value={slot.difficulty}
-				onChange={(v) =>
-					onUpdate({ difficulty: v as OpponentSlot["difficulty"] })
-				}
-				options={[
-					{ value: "easy", label: "EASY" },
-					{ value: "normal", label: "NORMAL" },
-					{ value: "hard", label: "HARD" },
-				]}
-				style={{ width: "90px" }}
-				color={diffColor}
-				aria-label={`Rival ${index + 1} difficulty`}
-			/>
-
-			{/* Remove */}
-			<button
-				onClick={onRemove}
-				aria-label={`Remove rival ${index + 1}`}
-				style={{
-					background: "transparent",
-					border: "1px solid rgba(255,68,68,0.3)",
-					borderRadius: "4px",
-					color: "#ff444488",
-					fontFamily: FONT_MONO,
-					fontSize: "14px",
-					padding: "4px 8px",
-					cursor: "pointer",
-					lineHeight: 1,
-					flexShrink: 0,
-					transition: "all 0.15s ease",
-				}}
-				onMouseEnter={(e) => {
-					e.currentTarget.style.borderColor = "#ff4444";
-					e.currentTarget.style.color = "#ff4444";
-				}}
-				onMouseLeave={(e) => {
-					e.currentTarget.style.borderColor = "rgba(255,68,68,0.3)";
-					e.currentTarget.style.color = "#ff444488";
+					display: "flex",
+					alignItems: "center",
+					gap: "8px",
+					paddingLeft: "28px",
 				}}
 			>
-				X
-			</button>
+				<span
+					style={{
+						fontFamily: FONT_MONO,
+						fontSize: "9px",
+						color: menu.accentMuted,
+						letterSpacing: "0.12em",
+						flexShrink: 0,
+					}}
+				>
+					AI BIAS:
+				</span>
+				<VictoryPathDropdown
+					value={slot.victoryBias ?? "subjugation"}
+					onChange={(v) => onUpdate({ victoryBias: v })}
+					aria-label={`Rival ${index + 1} victory path bias`}
+				/>
+			</div>
 		</div>
 	);
 }

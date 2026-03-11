@@ -36,6 +36,7 @@ import { resetWeather, setRngSeed as setWeatherRngSeed } from "./weatherSystem";
 import { resetEconomy } from "./economySimulation";
 import { registerBot, resetBotFleet } from "./botFleetManager";
 import { BaseAgent } from "../ai/base/BaseAgent";
+import { setBasePosition, initializeCivilizations } from "./aiCivilization";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -73,6 +74,10 @@ export interface NewGameConfig {
 	mapType: string;
 	aiOpponents: string[];
 	difficulty: string;
+	/** Player's preferred victory path — used to orient AI starting resources. */
+	playerVictoryPath?: string;
+	/** Per-opponent victory bias, keyed by faction ID. */
+	opponentVictoryBias?: Record<string, string>;
 }
 
 /**
@@ -173,6 +178,9 @@ const mapPresetsConfig = config.mapPresets;
 // ---------------------------------------------------------------------------
 
 let lastResult: NewGameResult | null = null;
+
+/** Player faction ID from the last successful initNewGame call. */
+let lastPlayerFaction: string | null = null;
 
 /** BaseAgent instances keyed by faction ID. One per starting base. */
 const baseAgents = new Map<string, BaseAgent>();
@@ -660,7 +668,13 @@ export function initNewGame(options: NewGameOptions): NewGameResult {
 		});
 	}
 
-	// --- Step 6b: Create BaseAgents for all starting bases ---
+	// --- Step 6b: Initialize AI civilizations + set base positions ---
+	initializeCivilizations();
+	for (const aiData of aiFactionData) {
+		setBasePosition(aiData.faction, aiData.spawnPosition.x, aiData.spawnPosition.z);
+	}
+
+	// --- Step 6c: Create BaseAgents for all starting bases ---
 	baseAgents.clear();
 
 	// Player base agent
@@ -807,6 +821,7 @@ export function initNewGame(options: NewGameOptions): NewGameResult {
 	};
 
 	lastResult = result;
+	lastPlayerFaction = options.playerFaction;
 	return result;
 }
 
@@ -819,6 +834,13 @@ export function initNewGame(options: NewGameOptions): NewGameResult {
  */
 export function getLastResult(): NewGameResult | null {
 	return lastResult ? { ...lastResult, errors: [...lastResult.errors] } : null;
+}
+
+/**
+ * Get the player faction ID from the last successful initNewGame call, or null.
+ */
+export function getLastPlayerFaction(): string | null {
+	return lastPlayerFaction;
 }
 
 /**
@@ -926,6 +948,7 @@ export function initFromConfig(gameConfig: NewGameConfig): NewGameResult {
  */
 export function reset(): void {
 	lastResult = null;
+	lastPlayerFaction = null;
 
 	// Clear BaseAgents
 	for (const agent of baseAgents.values()) {

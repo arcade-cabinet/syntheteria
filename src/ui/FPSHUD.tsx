@@ -9,6 +9,7 @@
  */
 
 import { memo, useCallback, useMemo, useSyncExternalStore } from "react";
+import { FaithBar } from "./FaithBar";
 import {
 	getSnapshot,
 	setGameSpeed,
@@ -17,7 +18,15 @@ import {
 } from "../ecs/gameState";
 import type { UnitComponent } from "../ecs/types";
 import { buildings, getActivePlayerBot, units } from "../ecs/world";
+import {
+	getHoveredEntity,
+} from "../input/ObjectSelectionSystem";
+import { getActivePlacement } from "../systems/buildingPlacement";
 import { getLastHitResult } from "../systems/fpsCombat";
+import {
+	formatDistance,
+	getCrosshairTooltipInfo,
+} from "./crosshairTooltip";
 
 // Building/fabrication imports reserved for future build-mode HUD panels
 
@@ -46,71 +55,234 @@ export function getHUDAccent(): string {
 // ---------------------------------------------------------------------------
 
 function Crosshair() {
+	// Re-render on game state changes (covers pause, speed, combat events)
+	useSyncExternalStore(subscribe, getSnapshot);
+
 	// Flash crosshair on hit (red miss / amber hit) for ~200ms after firing
 	const hitResult = getLastHitResult();
 	const age = performance.now() - hitResult.timestamp;
-	const isActive = age < 200;
+	const isHitFlash = age < 200;
 	const accent = getHUDAccent();
-	const crosshairColor = isActive
+
+	// Determine crosshair style from hovered entity
+	const hovered = getHoveredEntity();
+	const isBuildMode = !!getActivePlacement();
+	const hoveredUnit = hovered.entityId
+		? Array.from(units).find((u) => u.id === hovered.entityId)
+		: null;
+	const isEnemy = hoveredUnit ? hoveredUnit.faction !== "player" : false;
+
+	const tooltipInfo = getCrosshairTooltipInfo(
+		hovered.entityType,
+		hoveredUnit?.unit?.displayName ?? null,
+		hovered.distance > 0 ? hovered.distance : null,
+		isBuildMode,
+		isEnemy,
+	);
+
+	// Color logic: hit flash overrides style color
+	const styleColors: Record<string, string> = {
+		none: `${accent}88`,
+		interact: "#00aaff",
+		harvest: "#ffaa00",
+		combat: "#ff4444",
+		build: "#00ff88",
+	};
+	const baseColor = styleColors[tooltipInfo.style] ?? `${accent}88`;
+	const crosshairColor = isHitFlash
 		? hitResult.hit
 			? "#ff4444"
 			: "#ffaa00"
-		: `${accent}88`;
-	const dotColor = isActive
+		: baseColor;
+	const dotColor = isHitFlash
 		? hitResult.hit
 			? "#ff4444"
 			: "#ffaa00"
-		: accent;
+		: tooltipInfo.style === "none"
+			? accent
+			: baseColor;
+
+	// Shape varies by style
+	const armLength = tooltipInfo.style === "combat" ? 14 : 20;
+	const gap = tooltipInfo.style === "interact" || tooltipInfo.style === "build" ? 4 : 0;
+	const showDot = tooltipInfo.style !== "build";
+	const showCorners = tooltipInfo.style === "interact" || tooltipInfo.style === "build";
 
 	return (
-		<div
-			aria-hidden="true"
-			style={{
-				position: "absolute",
-				top: "50%",
-				left: "50%",
-				transform: "translate(-50%, -50%)",
-				pointerEvents: "none",
-			}}
-		>
-			{/* Horizontal arm */}
+		<>
+			{/* Crosshair */}
 			<div
+				aria-hidden="true"
 				style={{
-					width: "20px",
-					height: "2px",
-					background: crosshairColor,
 					position: "absolute",
 					top: "50%",
 					left: "50%",
 					transform: "translate(-50%, -50%)",
+					pointerEvents: "none",
 				}}
-			/>
-			{/* Vertical arm */}
-			<div
-				style={{
-					width: "2px",
-					height: "20px",
-					background: crosshairColor,
-					position: "absolute",
-					top: "50%",
-					left: "50%",
-					transform: "translate(-50%, -50%)",
-				}}
-			/>
-			{/* Center dot */}
-			<div
-				style={{
-					width: "3px",
-					height: "3px",
-					borderRadius: "50%",
-					background: dotColor,
-					position: "absolute",
-					top: "50%",
-					left: "50%",
-					transform: "translate(-50%, -50%)",
-				}}
-			/>
-		</div>
+			>
+				{/* Horizontal arm left */}
+				<div
+					style={{
+						width: `${armLength / 2 - gap}px`,
+						height: "2px",
+						background: crosshairColor,
+						position: "absolute",
+						top: "50%",
+						left: "50%",
+						transform: `translate(calc(-100% - ${gap}px), -50%)`,
+					}}
+				/>
+				{/* Horizontal arm right */}
+				<div
+					style={{
+						width: `${armLength / 2 - gap}px`,
+						height: "2px",
+						background: crosshairColor,
+						position: "absolute",
+						top: "50%",
+						left: "50%",
+						transform: `translate(${gap}px, -50%)`,
+					}}
+				/>
+				{/* Vertical arm top */}
+				<div
+					style={{
+						width: "2px",
+						height: `${armLength / 2 - gap}px`,
+						background: crosshairColor,
+						position: "absolute",
+						top: "50%",
+						left: "50%",
+						transform: `translate(-50%, calc(-100% - ${gap}px))`,
+					}}
+				/>
+				{/* Vertical arm bottom */}
+				<div
+					style={{
+						width: "2px",
+						height: `${armLength / 2 - gap}px`,
+						background: crosshairColor,
+						position: "absolute",
+						top: "50%",
+						left: "50%",
+						transform: `translate(-50%, ${gap}px)`,
+					}}
+				/>
+				{/* Center dot */}
+				{showDot && (
+					<div
+						style={{
+							width: "3px",
+							height: "3px",
+							borderRadius: "50%",
+							background: dotColor,
+							position: "absolute",
+							top: "50%",
+							left: "50%",
+							transform: "translate(-50%, -50%)",
+						}}
+					/>
+				)}
+				{/* Corner brackets for interact/build style */}
+				{showCorners && (
+					<>
+						{/* Top-left corner */}
+						<div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-14px, -14px)" }}>
+							<div style={{ width: "6px", height: "2px", background: crosshairColor, position: "absolute", top: 0, left: 0 }} />
+							<div style={{ width: "2px", height: "6px", background: crosshairColor, position: "absolute", top: 0, left: 0 }} />
+						</div>
+						{/* Top-right corner */}
+						<div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(8px, -14px)" }}>
+							<div style={{ width: "6px", height: "2px", background: crosshairColor, position: "absolute", top: 0, right: 0 }} />
+							<div style={{ width: "2px", height: "6px", background: crosshairColor, position: "absolute", top: 0, right: 0 }} />
+						</div>
+						{/* Bottom-left corner */}
+						<div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-14px, 8px)" }}>
+							<div style={{ width: "6px", height: "2px", background: crosshairColor, position: "absolute", bottom: 0, left: 0 }} />
+							<div style={{ width: "2px", height: "6px", background: crosshairColor, position: "absolute", bottom: 0, left: 0 }} />
+						</div>
+						{/* Bottom-right corner */}
+						<div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(8px, 8px)" }}>
+							<div style={{ width: "6px", height: "2px", background: crosshairColor, position: "absolute", bottom: 0, right: 0 }} />
+							<div style={{ width: "2px", height: "6px", background: crosshairColor, position: "absolute", bottom: 0, right: 0 }} />
+						</div>
+					</>
+				)}
+			</div>
+
+			{/* Contextual tooltip — shown when hovering an entity */}
+			{tooltipInfo.entityLabel && (
+				<div
+					aria-live="polite"
+					aria-label={`Looking at: ${tooltipInfo.entityLabel}`}
+					style={{
+						position: "absolute",
+						top: "calc(50% + 28px)",
+						left: "50%",
+						transform: "translateX(-50%)",
+						background: "rgba(0, 8, 4, 0.82)",
+						border: `1px solid ${crosshairColor}44`,
+						borderRadius: "4px",
+						padding: "5px 10px",
+						pointerEvents: "none",
+						fontFamily: MONO,
+						textAlign: "center",
+						whiteSpace: "nowrap",
+					}}
+				>
+					{/* Entity label + distance */}
+					<div
+						style={{
+							color: crosshairColor,
+							fontSize: "11px",
+							fontWeight: "bold",
+							letterSpacing: "0.08em",
+							marginBottom: tooltipInfo.actions.length > 0 ? "3px" : 0,
+						}}
+					>
+						{tooltipInfo.entityLabel}
+						{tooltipInfo.distance !== null && (
+							<span style={{ color: `${crosshairColor}88`, marginLeft: "8px", fontWeight: "normal" }}>
+								{formatDistance(tooltipInfo.distance)}
+							</span>
+						)}
+					</div>
+					{/* Action hints */}
+					{tooltipInfo.actions.length > 0 && (
+						<div
+							style={{
+								display: "flex",
+								gap: "10px",
+								justifyContent: "center",
+								flexWrap: "wrap",
+							}}
+						>
+							{tooltipInfo.actions.map((action) => (
+								<span
+									key={action.key}
+									style={{ fontSize: "10px", color: `${crosshairColor}88`, letterSpacing: "0.05em" }}
+								>
+									<span
+										style={{
+											background: `${crosshairColor}22`,
+											border: `1px solid ${crosshairColor}44`,
+											borderRadius: "2px",
+											padding: "0 4px",
+											marginRight: "3px",
+											fontSize: "9px",
+										}}
+									>
+										{action.key}
+									</span>
+									{action.label}
+								</span>
+							))}
+						</div>
+					)}
+				</div>
+			)}
+		</>
 	);
 }
 
@@ -520,6 +692,7 @@ export function FPSHUD() {
 			<ResourceBar />
 			<SpeedControls />
 			<BotStatus />
+			<FaithBar />
 			<Hints />
 			<SelectedInfo />
 			<CombatNotifications />

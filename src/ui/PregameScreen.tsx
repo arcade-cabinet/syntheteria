@@ -23,6 +23,8 @@ import { OpponentConfig } from "./OpponentConfig";
 // ---------------------------------------------------------------------------
 
 import { FONT_MONO, menu } from "./designTokens";
+import type { VictoryPathId } from "./VictoryPathSelector";
+import { VictoryPathSelector } from "./VictoryPathSelector";
 
 const MONO = FONT_MONO;
 const COLOR_ACCENT = menu.accent;
@@ -39,6 +41,7 @@ type Tab = "patron" | "map" | "rivals" | "settings";
 
 export interface PregameConfig {
 	faction: FactionId;
+	victoryPath: VictoryPathId;
 	mapSettings: MapSettings;
 	opponents: OpponentSlot[];
 }
@@ -55,13 +58,14 @@ interface PregameScreenProps {
 export function PregameScreen({ onStart, onBack }: PregameScreenProps) {
 	const [activeTab, setActiveTab] = useState<Tab>("patron");
 	const [faction, setFaction] = useState<FactionId>("reclaimers");
+	const [victoryPath, setVictoryPath] = useState<VictoryPathId>("technical_mastery");
 	const [mapSettings, setMapSettings] = useState<MapSettings>(
 		DEFAULT_MAP_SETTINGS,
 	);
 	const [opponents, setOpponents] = useState<OpponentSlot[]>([
-		{ faction: "volt_collective", difficulty: "normal" },
-		{ faction: "signal_choir", difficulty: "normal" },
-		{ faction: "iron_creed", difficulty: "normal" },
+		{ faction: "volt_collective", difficulty: "normal", victoryBias: "subjugation" },
+		{ faction: "signal_choir", difficulty: "normal", victoryBias: "technical_mastery" },
+		{ faction: "iron_creed", difficulty: "normal", victoryBias: "social_networking" },
 	]);
 	const [fadeIn, setFadeIn] = useState(0);
 	const [glitch, setGlitch] = useState(false);
@@ -88,7 +92,7 @@ export function PregameScreen({ onStart, onBack }: PregameScreenProps) {
 
 	const handleStart = () => {
 		if (!seedValid) return;
-		onStart({ faction, mapSettings, opponents });
+		onStart({ faction, victoryPath, mapSettings, opponents });
 	};
 
 	const tabs: { id: Tab; label: string }[] = [
@@ -261,7 +265,14 @@ export function PregameScreen({ onStart, onBack }: PregameScreenProps) {
 					}}
 				>
 					{activeTab === "patron" && (
-						<FactionSelect selected={faction} onSelect={setFaction} />
+						<>
+							<FactionSelect selected={faction} onSelect={setFaction} />
+							<VictoryPathHeader />
+							<VictoryPathSelector
+								selected={victoryPath}
+								onSelect={setVictoryPath}
+							/>
+						</>
 					)}
 					{activeTab === "map" && (
 						<MapConfig settings={mapSettings} onChange={setMapSettings} />
@@ -304,6 +315,28 @@ export function PregameScreen({ onStart, onBack }: PregameScreenProps) {
 					/>
 				</div>
 			</div>
+		</div>
+	);
+}
+
+// ---------------------------------------------------------------------------
+// Victory path section header
+// ---------------------------------------------------------------------------
+
+function VictoryPathHeader() {
+	return (
+		<div
+			style={{
+				marginTop: "20px",
+				marginBottom: "4px",
+				fontFamily: MONO,
+				fontSize: "9px",
+				color: COLOR_ACCENT_DIM,
+				letterSpacing: "0.3em",
+				textTransform: "uppercase",
+			}}
+		>
+			// VICTORY PATH //
 		</div>
 	);
 }

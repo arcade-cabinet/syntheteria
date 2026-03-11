@@ -1,131 +1,114 @@
 /**
  * Renders all units and buildings at their displayed positions.
  *
- * Units use animated GLB mech models mapped by faction:
- *   - player → George (Reclaimers mech)
- *   - feral  → Leela (Volt Collective mech)
- *   - cultist → Mike (Signal Choir mech)
- *   - rogue  → Stan (Iron Creed mech)
- *   - wildlife / other → Robot generic model
+ * Units use procedural geometry from BotGenerator, producing faction-distinct
+ * meshes (different heads, locomotion, materials) with geometry caching so
+ * entities of the same type share underlying Three.js geometries/materials.
  *
- * Buildings use procedural geometry (fabrication unit, lightning rod).
+ * Buildings use GLB models (fabrication unit, lightning rod).
  */
 
-import { useAnimations, useGLTF } from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { getFragment, getTerrainHeight } from "../ecs/terrain";
 import type { BuildingEntity, UnitEntity } from "../ecs/types";
 import { buildings, units } from "../ecs/world";
+import { disposeBotGroup } from "./procgen/BotGenerator";
+import {
+	entitySeed,
+	getBotCacheKey,
+	getBotTemplate,
+	clearBotGeometryCache,
+	getBobOffset,
+	getFactionAccentColor,
+	getFactionEmissiveIntensity,
+} from "./botUtils";
 import {
 	getActivePlacement,
 	getGhostPosition,
 } from "../systems/buildingPlacement";
+
+// Re-export pure utilities so callers can import from a single file
+export {
+	entitySeed,
+	getBotCacheKey,
+	getBotTemplate,
+	clearBotGeometryCache,
+	getBobOffset,
+	getFactionAccentColor,
+	getFactionEmissiveIntensity,
+};
 
 // ─── Building model paths ────────────────────────────────────────────────
 
 const LIGHTNING_ROD_MODEL = "/models/psx/machinery/electrical_equipment_1.glb";
 const FABRICATION_MODEL = "/models/psx/machinery/tank_system_mx_1.glb";
 
-// ─── Faction → Model mapping ─────────────────────────────────────────────
-
-const MECH_MODELS: Record<string, string> = {
-	player: "/models/mechs/George.glb",
-	feral: "/models/mechs/Leela.glb",
-	cultist: "/models/mechs/Mike.glb",
-	rogue: "/models/mechs/Stan.glb",
-};
-
-const ROBOT_MODEL = "/models/robot/Robot.glb";
-
-/** Desired height for all mech models (world units). */
-const MECH_HEIGHT = 1.6;
-
 // ─── Color constants ─────────────────────────────────────────────────────
 
+/** Fallback selection color (used by BuildingMesh which has no faction). */
 const COLOR_SELECTED = 0xffaa00;
 const COLOR_BROKEN = 0xff4444;
 
-// ─── Mech-powered unit mesh ──────────────────────────────────────────────
+// ─── Bot height constant (used for selection ring and broken indicator) ──
 
-/** Computes a uniform scale so the model fits within MECH_HEIGHT. */
-function computeModelScale(scene: THREE.Object3D): number {
-	const box = new THREE.Box3().setFromObject(scene);
-	const size = box.getSize(new THREE.Vector3());
-	const maxDim = Math.max(size.x, size.y, size.z);
-	return maxDim > 0 ? MECH_HEIGHT / maxDim : 1;
-}
+const BOT_HEIGHT = 1.6;
+
+// ─── Procedural bot mesh ─────────────────────────────────────────────────
 
 /**
- * Tint all MeshStandardMaterial children with a faction accent color.
- * Only applied to enemy units so player bots keep their original textures.
+ * Renders a single unit entity using procedural BotGenerator geometry.
+ *
+ * On first render the bot group is cloned from the template cache and
+ * attached as a Three.js primitive. Per-frame updates position, rotation,
+ * and locomotion bob from ECS state.
  */
-function tintModel(scene: THREE.Object3D, color: THREE.Color) {
-	scene.traverse((child) => {
-		if (child instanceof THREE.Mesh && child.material) {
-			const mat = child.material as THREE.MeshStandardMaterial;
-			if (mat.isMeshStandardMaterial) {
-				mat.emissive = color;
-				mat.emissiveIntensity = 0.15;
-			}
-		}
-	});
-}
-
-const FACTION_TINTS: Record<string, THREE.Color> = {
-	feral: new THREE.Color(0.3, 0.1, 0.0),
-	cultist: new THREE.Color(0.0, 0.15, 0.3),
-	rogue: new THREE.Color(0.2, 0.2, 0.05),
-};
-
-function MechUnitMesh({ entity }: { entity: UnitEntity }) {
+function ProceduralBotMesh({ entity }: { entity: UnitEntity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const ringRef = useRef<THREE.Mesh>(null);
-	const prevMoving = useRef(false);
 
-	const modelPath = MECH_MODELS[entity.faction] ?? ROBOT_MODEL;
-	const { scene, animations } = useGLTF(modelPath);
+	// Derive a stable seed from the entity id so each bot looks slightly
+	// different even within the same faction/type.
+	const seed = useMemo(() => entitySeed(entity.id), [entity.id]);
 
-	// Clone the scene so each unit gets its own instance
-	const cloned = useMemo(() => {
-		const clone = scene.clone(true);
-		const scale = computeModelScale(clone);
-		clone.scale.setScalar(scale);
+	// Faction-specific accent color for the selection ring
+	const accentColor = useMemo(
+		() => getFactionAccentColor(entity.faction),
+		[entity.faction],
+	);
 
-		// Apply faction tint to enemy units
-		const tint = FACTION_TINTS[entity.faction];
-		if (tint) tintModel(clone, tint);
+	// Build or retrieve the bot group clone. We clone so that position and
+	// rotation transforms are owned by this component instance.
+	const botGroup = useMemo(() => {
+		const template = getBotTemplate(entity.unit.type, entity.faction, seed);
+		// clone(true) deep-clones children but shares geometries and materials
+		return template.clone(true);
+	}, [entity.unit.type, entity.faction, seed]);
 
-		return clone;
-	}, [scene, entity.faction]);
-
-	// Set up animation mixer
-	const animGroupRef = useRef<THREE.Group>(null);
-	const { actions, mixer } = useAnimations(animations, animGroupRef);
-
-	// Play idle animation on mount
+	// Dispose the cloned group on unmount
 	useEffect(() => {
-		// Kenney mechs have: Idle, Walk, Run, Jump, etc.
-		const idle = actions.Idle ?? actions.idle ?? Object.values(actions)[0];
-		if (idle) {
-			idle.reset().fadeIn(0.2).play();
-		}
-	}, [actions]);
+		return () => {
+			disposeBotGroup(botGroup);
+		};
+	}, [botGroup]);
 
-	useFrame((_, delta) => {
+	useFrame(({ clock }) => {
 		const frag = getFragment(entity.mapFragment.fragmentId);
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
 
 		if (groupRef.current) {
+			const isMoving = entity.navigation?.moving ?? false;
+			const bob = getBobOffset(entity.faction, isMoving, clock.elapsedTime);
+
 			groupRef.current.position.set(
 				entity.worldPosition.x + ox,
-				entity.worldPosition.y,
+				entity.worldPosition.y + bob,
 				entity.worldPosition.z + oz,
 			);
 
-			// Rotate to face movement direction (yaw)
 			if (entity.playerControlled) {
 				groupRef.current.rotation.y = entity.playerControlled.yaw;
 			}
@@ -134,35 +117,14 @@ function MechUnitMesh({ entity }: { entity: UnitEntity }) {
 		if (ringRef.current) {
 			ringRef.current.visible = entity.unit.selected;
 		}
-
-		// Update animation mixer
-		mixer.update(delta);
-
-		// Swap between walk and idle based on movement
-		const isMoving = entity.navigation?.moving ?? false;
-		if (isMoving !== prevMoving.current) {
-			prevMoving.current = isMoving;
-			const walk =
-				actions.Walk ?? actions.walk ?? actions.Run ?? actions.run;
-			const idle = actions.Idle ?? actions.idle;
-
-			if (isMoving && walk) {
-				idle?.fadeOut(0.2);
-				walk.reset().fadeIn(0.2).play();
-			} else if (!isMoving && idle) {
-				walk?.fadeOut(0.2);
-				idle.reset().fadeIn(0.2).play();
-			}
-		}
 	});
 
 	return (
 		<group ref={groupRef}>
-			<group ref={animGroupRef}>
-				<primitive object={cloned} />
-			</group>
+			{/* Procedural bot mesh — cloned group from BotGenerator */}
+			<primitive object={botGroup} />
 
-			{/* Selection ring */}
+			{/* Selection ring — tinted with faction accent color */}
 			<mesh
 				ref={ringRef}
 				rotation={[-Math.PI / 2, 0, 0]}
@@ -171,14 +133,14 @@ function MechUnitMesh({ entity }: { entity: UnitEntity }) {
 			>
 				<ringGeometry args={[0.5, 0.65, 16]} />
 				<meshBasicMaterial
-					color={COLOR_SELECTED}
+					color={accentColor}
 					side={THREE.DoubleSide}
 				/>
 			</mesh>
 
 			{/* Broken component indicator — red sphere above head */}
 			{entity.unit.components.some((c) => !c.functional) && (
-				<mesh position={[0, MECH_HEIGHT + 0.3, 0]}>
+				<mesh position={[0, BOT_HEIGHT + 0.3, 0]}>
 					<sphereGeometry args={[0.08, 8, 8]} />
 					<meshBasicMaterial
 						color={COLOR_BROKEN}
@@ -370,7 +332,7 @@ export function UnitRenderer() {
 			{Array.from(units)
 				.filter((entity) => entity.unit.type !== "fabrication_unit")
 				.map((entity) => (
-					<MechUnitMesh key={entity.id} entity={entity} />
+					<ProceduralBotMesh key={entity.id} entity={entity} />
 				))}
 			{Array.from(buildings).map((entity) => (
 				<BuildingMesh key={entity.id} entity={entity} />
@@ -380,10 +342,6 @@ export function UnitRenderer() {
 	);
 }
 
-// Preload all models so they're in the cache before first render
-for (const path of Object.values(MECH_MODELS)) {
-	useGLTF.preload(path);
-}
-useGLTF.preload(ROBOT_MODEL);
+// Preload building models so they're in cache before first render
 useGLTF.preload(LIGHTNING_ROD_MODEL);
 useGLTF.preload(FABRICATION_MODEL);

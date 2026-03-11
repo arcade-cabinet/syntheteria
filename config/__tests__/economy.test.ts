@@ -25,6 +25,9 @@ const ALL_RAW_MATERIALS = [
 	"rare_earth",
 	"gold",
 	"quantum_crystal",
+	"e_waste",
+	"fiber_optics",
+	"rare_alloy",
 ] as const;
 
 const ALL_ALLOYS = ["iron", "steel", "advanced_alloy"] as const;
@@ -58,11 +61,11 @@ const WEALTH_BRACKETS = [
 // ---------------------------------------------------------------------------
 
 describe("raw materials", () => {
-	it("has all 9 raw materials", () => {
+	it("has all 12 raw materials (including e_waste, fiber_optics, rare_alloy)", () => {
 		for (const mat of ALL_RAW_MATERIALS) {
 			expect(economyConfig.materials[mat]).toBeDefined();
 		}
-		expect(Object.keys(economyConfig.materials)).toHaveLength(9);
+		expect(Object.keys(economyConfig.materials)).toHaveLength(12);
 	});
 
 	it("every material has required fields with correct types", () => {
@@ -99,6 +102,9 @@ describe("raw materials", () => {
 
 			expect(typeof m.baseValue).toBe("number");
 			expect(m.baseValue).toBeGreaterThan(0);
+
+			expect(typeof m.cubeValue).toBe("number");
+			expect(m.cubeValue).toBeGreaterThan(0);
 
 			expect(typeof m.carrySpeedMod).toBe("number");
 			expect(m.carrySpeedMod).toBeGreaterThan(0);
@@ -184,7 +190,7 @@ describe("alloys", () => {
 		expect(Object.keys(economyConfig.alloys)).toHaveLength(3);
 	});
 
-	it("every alloy has inputs, smeltTime, cubeHp, wallHp, baseValue", () => {
+	it("every alloy has inputs, smeltTime, cubeHp, wallHp, baseValue, cubeValue", () => {
 		for (const alloy of ALL_ALLOYS) {
 			const a = economyConfig.alloys[alloy];
 			expect(a.inputs).toBeDefined();
@@ -197,6 +203,8 @@ describe("alloys", () => {
 			expect(a.wallHp).toBeGreaterThan(0);
 			expect(typeof a.baseValue).toBe("number");
 			expect(a.baseValue).toBeGreaterThan(0);
+			expect(typeof a.cubeValue).toBe("number");
+			expect(a.cubeValue).toBeGreaterThan(0);
 		}
 	});
 
@@ -771,13 +779,13 @@ describe("trade multipliers", () => {
 		...ALL_ALLOYS,
 	] as const;
 
-	it("has trade multipliers for all 9 raw materials and 3 alloys", () => {
+	it("has trade multipliers for all raw materials and alloys", () => {
 		for (const mat of ALL_TRADEABLE) {
 			expect(
 				(economyConfig as any).tradeMultipliers[mat],
 			).toBeDefined();
 		}
-		expect(Object.keys((economyConfig as any).tradeMultipliers)).toHaveLength(12);
+		expect(Object.keys((economyConfig as any).tradeMultipliers)).toHaveLength(15);
 	});
 
 	it("every entry has tradeValueMod, demandLevel, and notes", () => {
@@ -1012,7 +1020,7 @@ describe("stockpile depreciation", () => {
 		expect(depreciation.underground_multiplier).toBe(0);
 	});
 
-	it("has decay rates for all 9 raw materials and 3 alloys", () => {
+	it("has decay rates for all raw materials and alloys", () => {
 		const allMats = [...ALL_RAW_MATERIALS, ...ALL_ALLOYS];
 		for (const mat of allMats) {
 			expect(depreciation.materialRates[mat]).toBeDefined();

@@ -30,6 +30,28 @@ jest.mock("../../../config", () => ({
 				threatThreshold: 0.5,
 			},
 		},
+		weather: {
+			states: {
+				clear: { visibilityRange: 1.0, movementSpeedModifier: 1.0, damageModifier: 0.0, powerGenerationModifier: 1.0, lightningStrikeChance: 0.0 },
+				overcast: { visibilityRange: 0.7, movementSpeedModifier: 1.0, damageModifier: 0.0, powerGenerationModifier: 0.8, lightningStrikeChance: 0.0 },
+				storm: { visibilityRange: 0.4, movementSpeedModifier: 0.8, damageModifier: 0.0, powerGenerationModifier: 1.5, lightningStrikeChance: 0.05 },
+				electromagnetic_surge: { visibilityRange: 0.3, movementSpeedModifier: 0.6, damageModifier: 0.0, powerGenerationModifier: 2.5, lightningStrikeChance: 0.15 },
+				acid_rain: { visibilityRange: 0.5, movementSpeedModifier: 0.7, damageModifier: 2.0, powerGenerationModifier: 0.9, lightningStrikeChance: 0.02 },
+			},
+			transitionIntervalTicks: 600,
+			transitionWeights: {
+				clear: { clear: 40, overcast: 35, storm: 10, electromagnetic_surge: 5, acid_rain: 10 },
+				overcast: { clear: 25, overcast: 30, storm: 25, electromagnetic_surge: 5, acid_rain: 15 },
+				storm: { clear: 10, overcast: 20, storm: 30, electromagnetic_surge: 20, acid_rain: 20 },
+				electromagnetic_surge: { clear: 15, overcast: 20, storm: 30, electromagnetic_surge: 20, acid_rain: 15 },
+				acid_rain: { clear: 20, overcast: 25, storm: 20, electromagnetic_surge: 10, acid_rain: 25 },
+			},
+			stormIntensityDecayRate: 0.01,
+			stormIntensityGrowthRate: 0.02,
+			forecastAccuracyDecay: 0.15,
+			acidRainDamagePerTick: 0.5,
+			acidRainProtectionTypes: ["shelter", "acid_shield"],
+		},
 	},
 }));
 
@@ -186,7 +208,10 @@ import {
 	getVisibleEntities,
 	clearVisionCache,
 	clearAllVisionCaches,
+	getVisibleEnemyPiles,
+	computePileDetectionRange,
 } from "../PerceptionSystem.ts";
+import type { CubePile } from "../../systems/cubePileTracker.ts";
 
 import type { Entity, Vec3 } from "../../ecs/types.ts";
 
@@ -744,5 +769,144 @@ describe("edge cases", () => {
 		// Direction to waypoint is zero-length -> falls back to default +Z
 		const result = canSee("observer", "target", [observer, target]);
 		expect(result).toBe(true);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Pile perception (§6.4 — wealth attracts raids)
+// ---------------------------------------------------------------------------
+
+function makePile(
+	pileId: string,
+	ownerFaction: string,
+	cubeCount: number,
+	totalEconomicValue: number,
+	cx: number,
+	cz: number,
+): CubePile {
+	return {
+		pileId,
+		center: { x: cx, y: 0, z: cz },
+		cubeCount,
+		materialBreakdown: {},
+		totalEconomicValue,
+		ownerFaction,
+		topY: 0,
+	};
+}
+
+describe("computePileDetectionRange", () => {
+	it("returns baseRange when cubeCount is 0", () => {
+		expect(computePileDetectionRange(20, 0)).toBe(20);
+	});
+
+	it("scales with cubeCount using PILE_SIZE_SCALE = 0.05", () => {
+		// effectiveRange = 20 * (1 + 10 * 0.05) = 20 * 1.5 = 30
+		expect(computePileDetectionRange(20, 10)).toBeCloseTo(30);
+	});
+
+	it("doubling cubeCount doubles the additional range (linear scaling)", () => {
+		const r10 = computePileDetectionRange(10, 10); // 10 * 1.5 = 15
+		const r20 = computePileDetectionRange(10, 20); // 10 * 2.0 = 20
+		expect(r20 - 10).toBeCloseTo(2 * (r10 - 10));
+	});
+
+	it("large piles have significantly extended detection range", () => {
+		const small = computePileDetectionRange(20, 5);  // 20 * 1.25 = 25
+		const large = computePileDetectionRange(20, 40); // 20 * 3.0 = 60
+		expect(large).toBeGreaterThan(small * 2);
+	});
+});
+
+describe("getVisibleEnemyPiles", () => {
+	it("returns empty array when no enemy piles are provided", () => {
+		const result = getVisibleEnemyPiles({ x: 0, z: 0 }, 20, []);
+		expect(result).toEqual([]);
+	});
+
+	it("returns pile within effective detection range", () => {
+		// baseRange=20, cubeCount=10 → effectiveRange = 20 * 1.5 = 30
+		// pile at distance 25 → should be visible
+		const piles = [makePile("p1", "enemy", 10, 100, 25, 0)];
+		const result = getVisibleEnemyPiles({ x: 0, z: 0 }, 20, piles);
+
+		expect(result.length).toBe(1);
+		expect(result[0].pile.pileId).toBe("p1");
+	});
+
+	it("excludes pile beyond effective detection range", () => {
+		// baseRange=20, cubeCount=1 → effectiveRange = 20 * 1.05 = 21
+		// pile at distance 30 → beyond range
+		const piles = [makePile("p1", "enemy", 1, 100, 30, 0)];
+		const result = getVisibleEnemyPiles({ x: 0, z: 0 }, 20, piles);
+
+		expect(result).toEqual([]);
+	});
+
+	it("larger pile can be detected from farther away (wealth makes you visible)", () => {
+		const observer = { x: 0, z: 0 };
+		const baseRange = 10;
+
+		// Small pile at distance 12 — with 1 cube: range = 10 * 1.05 = 10.5 → NOT visible
+		const smallPile = makePile("small", "enemy", 1, 50, 12, 0);
+		// Large pile at distance 12 — with 20 cubes: range = 10 * 2.0 = 20 → visible
+		const largePile = makePile("large", "enemy", 20, 500, 12, 0);
+
+		const resultSmall = getVisibleEnemyPiles(observer, baseRange, [smallPile]);
+		const resultLarge = getVisibleEnemyPiles(observer, baseRange, [largePile]);
+
+		expect(resultSmall).toEqual([]);
+		expect(resultLarge.length).toBe(1);
+	});
+
+	it("excludes piles with value below threshold (5)", () => {
+		const piles = [makePile("p1", "enemy", 10, 4, 5, 0)]; // value=4 < threshold=5
+		const result = getVisibleEnemyPiles({ x: 0, z: 0 }, 50, piles);
+		expect(result).toEqual([]);
+	});
+
+	it("sorts visible piles by economic value descending", () => {
+		const piles = [
+			makePile("cheap", "enemy", 5, 20, 5, 0),
+			makePile("expensive", "enemy", 5, 200, 5, 0),
+			makePile("medium", "enemy", 5, 100, 5, 0),
+		];
+
+		const result = getVisibleEnemyPiles({ x: 0, z: 0 }, 50, piles);
+
+		expect(result.length).toBe(3);
+		expect(result[0].pile.totalEconomicValue).toBe(200);
+		expect(result[1].pile.totalEconomicValue).toBe(100);
+		expect(result[2].pile.totalEconomicValue).toBe(20);
+	});
+
+	it("includes effectiveRange and distance in each result", () => {
+		const piles = [makePile("p1", "enemy", 10, 100, 15, 0)];
+		const result = getVisibleEnemyPiles({ x: 0, z: 0 }, 20, piles);
+
+		expect(result.length).toBe(1);
+		expect(result[0].effectiveRange).toBeCloseTo(30); // 20 * 1.5
+		expect(result[0].distance).toBeCloseTo(15);
+	});
+
+	it("handles multiple visible piles from non-origin observer", () => {
+		const observer = { x: 100, z: 100 };
+		const piles = [
+			makePile("near", "enemy", 10, 50, 115, 100), // distance = 15
+			makePile("far", "enemy", 10, 50, 150, 100),  // distance = 50
+		];
+		// baseRange=20, cubeCount=10 → effectiveRange = 30
+		// near (dist=15): visible; far (dist=50): NOT visible
+		const result = getVisibleEnemyPiles(observer, 20, piles);
+
+		expect(result.length).toBe(1);
+		expect(result[0].pile.pileId).toBe("near");
+	});
+
+	it("exact boundary pile at effectiveRange is included", () => {
+		// effectiveRange = 10 * (1 + 10 * 0.05) = 15, pile at exactly dist=15
+		const piles = [makePile("p1", "enemy", 10, 100, 15, 0)];
+		const result = getVisibleEnemyPiles({ x: 0, z: 0 }, 10, piles);
+		expect(result.length).toBe(1);
 	});
 });

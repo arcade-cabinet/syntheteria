@@ -22,9 +22,11 @@ const BG_INSET = menu.bgInset;
 export function TitleScreen({
 	onNewGame,
 	onContinue,
+	onSpectate,
 }: {
 	onNewGame: () => void;
 	onContinue?: () => void;
+	onSpectate?: () => void;
 }) {
 	const [titleOpacity, setTitleOpacity] = useState(0);
 	const [menuOpacity, setMenuOpacity] = useState(0);
@@ -261,8 +263,9 @@ export function TitleScreen({
 					/>
 					<MenuButton
 						label="SPECTATE"
-						disabled
-						aria-label="Spectate mode — not yet available"
+						disabled={!onSpectate}
+						onClick={onSpectate}
+						aria-label={onSpectate ? "Watch AI factions compete in spectator mode" : "Spectate mode — not yet available"}
 					/>
 				</div>
 			</div>

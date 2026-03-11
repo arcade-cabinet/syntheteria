@@ -14,7 +14,7 @@
  */
 
 import { getSnapshot, subscribe } from "../ecs/gameState";
-import { lightningRods, units } from "../ecs/world";
+import { lightningRods, units } from "../ecs/koota/compat";
 import {
 	playAlert,
 	playCompression,

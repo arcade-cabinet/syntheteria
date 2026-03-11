@@ -151,6 +151,24 @@ const TUTORIAL_STEPS: Omit<TutorialStep, "current" | "completed" | "skipped">[] 
 
 let tutorialState: TutorialState = createFreshState();
 
+/** useSyncExternalStore-compatible listeners. */
+const tutorialListeners = new Set<() => void>();
+
+function notifyTutorial(): void {
+	for (const fn of tutorialListeners) fn();
+}
+
+/** Subscribe to tutorial state changes (useSyncExternalStore API). */
+export function subscribeTutorial(callback: () => void): () => void {
+	tutorialListeners.add(callback);
+	return () => tutorialListeners.delete(callback);
+}
+
+/** Snapshot for useSyncExternalStore — returns a stable reference per change. */
+export function getTutorialSnapshot(): TutorialState {
+	return tutorialState;
+}
+
 function createFreshState(): TutorialState {
 	return {
 		active: false,
@@ -177,6 +195,7 @@ export function startTutorial(startTick = 0): void {
 	tutorialState = createFreshState();
 	tutorialState.active = true;
 	tutorialState.startedAt = startTick;
+	notifyTutorial();
 }
 
 /**
@@ -249,6 +268,7 @@ export function skipTutorial(currentTick = 0): void {
 			step.skipped = true;
 		}
 	}
+	notifyTutorial();
 }
 
 /**
@@ -297,6 +317,8 @@ function advanceStep(): void {
 		tutorialState.active = false;
 		tutorialState.completedAt = Date.now();
 	}
+
+	notifyTutorial();
 }
 
 // ---------------------------------------------------------------------------
@@ -305,4 +327,5 @@ function advanceStep(): void {
 
 export function resetTutorial(): void {
 	tutorialState = createFreshState();
+	notifyTutorial();
 }

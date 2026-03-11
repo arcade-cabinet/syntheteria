@@ -1,14 +1,24 @@
 /**
- * Renders city buildings as instanced meshes with a circuit-board aesthetic.
+ * Renders city buildings as instanced meshes with an industrial panel aesthetic.
  *
- * Conduits are long thin walls with glowing trace lines along their tops.
- * Nodes are wider junction blocks with emissive circuit patterns.
- * Towers are tall pylons with blinking antenna lights.
- * Ruins are broken segments, partially collapsed.
- * Walls are perimeter segments.
+ * Main building bodies are generated with PanelGeometry (beveled edges, bolt
+ * holes, vent slots, seam lines) for each building type:
  *
- * All buildings are fog-aware: only visible where the player's
- * combined fog-of-war has revealed terrain (fog state >= 1).
+ *   conduit — long wall segments: edge bolts, horizontal vent slots
+ *   node    — wide junction blocks: grid bolts, recessed inset
+ *   tower   — tall pylons: corner bolts, vertical vent slots
+ *   ruin    — broken segments: no bolts, rough seams
+ *   wall    — perimeter walls: corner bolts, minimal detail
+ *
+ * The panel geometry is created at unit scale (1×1×1) and then scaled via
+ * InstancedMesh transform matrices — same performance as the old BoxGeometry
+ * approach, but with full panel surface detail.
+ *
+ * Accent detail meshes (glowing traces, pads, antennas) remain as simple
+ * geometry since they're thin overlay strips that don't need panel detail.
+ *
+ * All buildings are fog-aware: only visible where the player's combined
+ * fog-of-war has revealed terrain (fog state >= 1).
  */
 
 import { useFrame } from "@react-three/fiber";
@@ -20,6 +30,179 @@ import {
 	getTerrainHeight,
 	worldToFogIndex,
 } from "../ecs/terrain";
+import { createBoxFromPanels } from "./procgen/PanelGeometry";
+import type { BoxFaceOptions } from "./procgen/PanelGeometry";
+
+// ---------------------------------------------------------------------------
+// Panel face options per building type
+//
+// All geometries are created at 1×1×1 unit scale. InstancedMesh matrices
+// scale them to the correct building dimensions at render time.
+// ---------------------------------------------------------------------------
+
+/**
+ * Build panel face options for each city building type.
+ * The options are chosen to match the circuit-board aesthetic:
+ * - Conduits are structural walls → edge bolts, horizontal vents
+ * - Nodes are junction hubs      → grid bolts, deep inset
+ * - Towers are tall pylons       → corner bolts, vertical vents
+ * - Ruins are collapsed pieces   → no bolts, heavy seams (worn out)
+ * - Walls are perimeter barriers → corner bolts, minimal detail
+ */
+export function buildPanelFaces(type: CityBuilding["type"]): BoxFaceOptions {
+	switch (type) {
+		case "conduit":
+			return {
+				front: {
+					boltPattern: "edges",
+					boltRadius: 0.025,
+					boltCount: 3,
+					insetDepth: 0.04,
+					insetMargin: 0.06,
+					ventSlots: 2,
+					seamLines: 1,
+				},
+				back: {
+					boltPattern: "edges",
+					boltRadius: 0.025,
+					boltCount: 3,
+					insetDepth: 0.03,
+					ventSlots: 2,
+				},
+				left: { boltPattern: "corners", boltRadius: 0.02, insetDepth: 0.02 },
+				right: { boltPattern: "corners", boltRadius: 0.02, insetDepth: 0.02 },
+				top: {
+					boltPattern: "grid",
+					boltCount: 2,
+					boltRadius: 0.015,
+					insetDepth: 0.02,
+				},
+				bottom: { boltPattern: "none", insetDepth: 0 },
+			};
+
+		case "node":
+			return {
+				front: {
+					boltPattern: "grid",
+					boltCount: 3,
+					boltRadius: 0.025,
+					insetDepth: 0.05,
+					insetMargin: 0.08,
+					seamLines: 2,
+				},
+				back: {
+					boltPattern: "grid",
+					boltCount: 3,
+					boltRadius: 0.025,
+					insetDepth: 0.04,
+					seamLines: 1,
+				},
+				left: {
+					boltPattern: "edges",
+					boltRadius: 0.02,
+					boltCount: 3,
+					insetDepth: 0.03,
+					seamLines: 1,
+				},
+				right: {
+					boltPattern: "edges",
+					boltRadius: 0.02,
+					boltCount: 3,
+					insetDepth: 0.03,
+					seamLines: 1,
+				},
+				top: {
+					boltPattern: "grid",
+					boltCount: 3,
+					boltRadius: 0.02,
+					insetDepth: 0.04,
+					insetMargin: 0.1,
+				},
+				bottom: { boltPattern: "none", insetDepth: 0 },
+			};
+
+		case "tower":
+			return {
+				front: {
+					boltPattern: "corners",
+					boltRadius: 0.02,
+					insetDepth: 0.04,
+					insetMargin: 0.08,
+					ventSlots: 4,
+					ventVertical: true,
+					seamLines: 3,
+				},
+				back: {
+					boltPattern: "corners",
+					boltRadius: 0.02,
+					ventSlots: 4,
+					ventVertical: true,
+					seamLines: 2,
+				},
+				left: {
+					boltPattern: "corners",
+					boltRadius: 0.018,
+					ventSlots: 3,
+					ventVertical: true,
+				},
+				right: {
+					boltPattern: "corners",
+					boltRadius: 0.018,
+					ventSlots: 3,
+					ventVertical: true,
+				},
+				top: { boltPattern: "grid", boltCount: 2, boltRadius: 0.015, insetDepth: 0.03 },
+				bottom: { boltPattern: "none", insetDepth: 0 },
+			};
+
+		case "ruin":
+			// Worn-out appearance: no bolts, rough seam lines only
+			return {
+				front: {
+					boltPattern: "none",
+					insetDepth: 0.02,
+					insetMargin: 0.12,
+					seamLines: 3,
+				},
+				back: {
+					boltPattern: "none",
+					insetDepth: 0.01,
+					seamLines: 2,
+				},
+				left: { boltPattern: "none", seamLines: 2 },
+				right: { boltPattern: "none", seamLines: 2 },
+				top: { boltPattern: "none", insetDepth: 0.01 },
+				bottom: { boltPattern: "none", insetDepth: 0 },
+			};
+
+		case "wall":
+		default:
+			return {
+				front: {
+					boltPattern: "corners",
+					boltRadius: 0.02,
+					insetDepth: 0.025,
+					insetMargin: 0.07,
+					seamLines: 1,
+				},
+				back: {
+					boltPattern: "corners",
+					boltRadius: 0.02,
+					insetDepth: 0.02,
+					seamLines: 1,
+				},
+				left: { boltPattern: "corners", boltRadius: 0.015 },
+				right: { boltPattern: "corners", boltRadius: 0.015 },
+				top: {
+					boltPattern: "grid",
+					boltCount: 2,
+					boltRadius: 0.012,
+					insetDepth: 0.015,
+				},
+				bottom: { boltPattern: "none", insetDepth: 0 },
+			};
+	}
+}
 
 // Circuit-board color palette — dark metallic with cyan/green accents
 const COLORS: Record<CityBuilding["type"], number> = {
@@ -68,12 +251,13 @@ function BuildingGroup({
 	const { mainMesh, accentMesh } = useMemo(() => {
 		const dummy = new THREE.Object3D();
 
-		// Main building bodies
-		const mainGeo = new THREE.BoxGeometry(1, 1, 1);
+		// Main building bodies — panel geometry at unit scale (1×1×1).
+		// Each instance's transform matrix scales to the correct building dimensions.
+		const mainGeo = createBoxFromPanels(1, 1, 1, buildPanelFaces(type));
 		const mainMat = new THREE.MeshStandardMaterial({
 			color: COLORS[type],
-			roughness: 0.6,
-			metalness: 0.3,
+			roughness: type === "ruin" ? 0.85 : 0.55,
+			metalness: type === "ruin" ? 0.15 : 0.45,
 		});
 		const main = new THREE.InstancedMesh(mainGeo, mainMat, buildings.length);
 

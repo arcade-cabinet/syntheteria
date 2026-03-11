@@ -103,6 +103,42 @@ let lastCheckTick: Record<VictoryConditionKey, number> = {
 /** Per-faction progress cache, updated each time conditions are evaluated */
 const factionProgress = new Map<string, FactionVictoryProgress>();
 
+/** useSyncExternalStore-compatible listeners */
+const victoryListeners = new Set<() => void>();
+
+function notifyVictory(): void {
+	for (const fn of victoryListeners) fn();
+}
+
+/** Subscribe to victory state changes (useSyncExternalStore API). */
+export function subscribeVictory(callback: () => void): () => void {
+	victoryListeners.add(callback);
+	return () => victoryListeners.delete(callback);
+}
+
+/**
+ * Stable snapshot for useSyncExternalStore — returns a frozen snapshot object.
+ * Reference changes only when winner or factionProgress changes.
+ */
+export interface VictorySnapshot {
+	winner: Winner | null;
+	factionProgress: ReadonlyMap<string, FactionVictoryProgress>;
+}
+
+let _victorySnapshot: VictorySnapshot = { winner: null, factionProgress: new Map() };
+
+export function getVictorySnapshot(): VictorySnapshot {
+	return _victorySnapshot;
+}
+
+function refreshSnapshot(): void {
+	_victorySnapshot = {
+		winner: winner ? { ...winner } : null,
+		factionProgress: new Map(factionProgress),
+	};
+	notifyVictory();
+}
+
 // ---------------------------------------------------------------------------
 // Condition evaluators — pure functions
 // ---------------------------------------------------------------------------
@@ -269,18 +305,22 @@ export function victoryTrackingSystem(currentTick: number): void {
 					conditionName,
 					tick: currentTick,
 				});
+				refreshSnapshot();
 				return; // stop checking once someone wins
 			}
 		}
 	}
 
 	// Update lastCheckTick for each condition that was evaluated this tick
+	let anyUpdated = false;
 	for (const key of Object.keys(evaluators) as VictoryConditionKey[]) {
 		const interval = conditions[key].checkInterval;
 		if (currentTick - lastCheckTick[key] >= interval) {
 			lastCheckTick[key] = currentTick;
+			anyUpdated = true;
 		}
 	}
+	if (anyUpdated) refreshSnapshot();
 }
 
 /**
@@ -341,4 +381,6 @@ export function resetVictoryTracking(): void {
 		hacking: -Infinity,
 		survival: -Infinity,
 	};
+	_victorySnapshot = { winner: null, factionProgress: new Map() };
+	notifyVictory();
 }

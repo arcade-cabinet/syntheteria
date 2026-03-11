@@ -8,6 +8,7 @@
 import { getSnapshot, setGameSpeed, setTickCount } from "../ecs/gameState";
 import { getWorldSeed, setWorldSeed } from "../ecs/seed";
 import type { Entity, UnitComponent, Vec3 } from "../ecs/types";
+import { resetBridge, spawnKootaEntity } from "../ecs/koota/bridge";
 import { world } from "../ecs/world";
 import { getStormIntensity, setStormIntensity } from "../systems/power";
 import {
@@ -180,7 +181,8 @@ export function serializeWorld(name: string, playTimeSeconds = 0): SaveData {
  * Clear the ECS world and recreate all entities from a SaveData snapshot.
  */
 export function deserializeWorld(data: SaveData): void {
-	// Clear all existing entities
+	// Clear all existing entities from both Miniplex and Koota
+	resetBridge();
 	const existing = Array.from(world);
 	for (const e of existing) {
 		world.remove(e);
@@ -257,7 +259,7 @@ export function deserializeWorld(data: SaveData): void {
 			entity.otter = cd.otter as Entity["otter"];
 		}
 
-		world.add(entity);
+		spawnKootaEntity(entity as Entity & { id: string });
 	}
 
 	// Restore resources — reset pool first to prevent inflation on re-load

@@ -126,6 +126,24 @@ let currentEntry: DialogueEntry | null = null;
 /** Whether the completion listener has been registered. */
 let listenerRegistered = false;
 
+/** useSyncExternalStore-compatible listeners for dialogue changes. */
+const dialogueListeners = new Set<() => void>();
+
+function notifyDialogue(): void {
+	for (const fn of dialogueListeners) fn();
+}
+
+/** Subscribe to dialogue state changes (useSyncExternalStore API). */
+export function subscribeDialogue(callback: () => void): () => void {
+	dialogueListeners.add(callback);
+	return () => dialogueListeners.delete(callback);
+}
+
+/** Stable snapshot accessor for useSyncExternalStore. */
+export function getDialogueSnapshot(): DialogueEntry | null {
+	return currentEntry;
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -222,9 +240,11 @@ export function advanceDialogue(): boolean {
 		dialogueQueue.shift();
 		displayTimer = 0;
 		currentEntry = dialogueQueue.length > 0 ? dialogueQueue[0] : null;
+		notifyDialogue();
 		return currentEntry !== null;
 	}
 	currentEntry = null;
+	notifyDialogue();
 	return false;
 }
 
@@ -239,6 +259,7 @@ export function updateDialogue(delta: number): void {
 	if (!currentEntry && dialogueQueue.length > 0) {
 		currentEntry = dialogueQueue[0];
 		displayTimer = 0;
+		notifyDialogue();
 	}
 
 	if (!currentEntry) return;

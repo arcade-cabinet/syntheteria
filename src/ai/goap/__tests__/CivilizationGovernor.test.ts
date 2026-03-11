@@ -184,7 +184,8 @@ describe("CivilizationGovernor — goal evaluation", () => {
 		const worldState: WorldState = { [WorldStateKey.HAS_IDLE_UNITS]: true };
 
 		gov.tick(normalSituation, worldState);
-		const initialGoal = gov.getCurrentGoal();
+		// Capture initial goal for conceptual context (not compared directly — weights may vary)
+		gov.getCurrentGoal();
 
 		// Simulate being under attack — should shift priorities
 		const crisisSituation: FactionSituation = {
@@ -200,7 +201,7 @@ describe("CivilizationGovernor — goal evaluation", () => {
 
 		// The goal may or may not have changed depending on weights,
 		// but the governor should still produce valid actions
-		const action = gov.tick(crisisSituation, worldState);
+		gov.tick(crisisSituation, worldState);
 		// Governor should still be functional
 		expect(gov.getCurrentGoal()).not.toBeNull();
 	});

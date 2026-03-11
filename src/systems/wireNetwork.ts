@@ -9,9 +9,9 @@
 
 import { config } from "../../config";
 import type { Entity } from "../ecs/types";
-import { world } from "../ecs/world";
 import {
 	buildings,
+	getEntityById,
 	lightningRods,
 	signalRelays,
 	wires,
@@ -22,16 +22,6 @@ const WIRE_MIN_PASSTHROUGH = config.power.wireMinPassthrough;
 const WIRE_POWER_THRESHOLD = config.power.wirePowerThreshold;
 const SIGNAL_DEGRADATION = config.power.signalDegradationPerUnit;
 const SIGNAL_MIN_STRENGTH = config.power.signalMinStrength;
-
-/**
- * Find an entity by ID. Returns undefined if not found.
- */
-function getEntityById(id: string): Entity | undefined {
-	for (const entity of world) {
-		if (entity.id === id) return entity;
-	}
-	return undefined;
-}
 
 /** Set of entity IDs that are powered via wire connections */
 const wirePoweredEntities = new Set<string>();

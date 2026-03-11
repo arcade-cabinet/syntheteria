@@ -12,6 +12,8 @@
  *   - GatherResources: entity ID of a resource deposit to mine
  *   - ReturnToBase: go home (base position resolved from context)
  *   - Follow: entity ID of a leader to trail
+ *   - FlankTarget: approach target from a perpendicular angle (tactical flanking)
+ *   - SiegeTarget: breach walls / fortified positions by circling to a weak point
  */
 
 import type { Vec3 } from "../ecs/types.ts";
@@ -27,6 +29,8 @@ export const BotOrderType = {
 	GATHER_RESOURCES: "gather_resources",
 	RETURN_TO_BASE: "return_to_base",
 	FOLLOW: "follow",
+	FLANK_TARGET: "flank_target",
+	SIEGE_TARGET: "siege_target",
 } as const;
 export type BotOrderType = (typeof BotOrderType)[keyof typeof BotOrderType];
 
@@ -68,6 +72,26 @@ export interface FollowOrder {
 	targetId: string;
 }
 
+export interface FlankTargetOrder {
+	type: typeof BotOrderType.FLANK_TARGET;
+	/** Entity ID of the target to flank. */
+	targetId: string;
+	/**
+	 * Flank angle offset in radians from the direct approach vector.
+	 * Positive = flank right, negative = flank left.
+	 * Defaults to PI/2 (90° right flank) if omitted.
+	 */
+	flankAngle?: number;
+}
+
+export interface SiegeTargetOrder {
+	type: typeof BotOrderType.SIEGE_TARGET;
+	/** World-space position of the fortification/wall to breach. */
+	targetPosition: Vec3;
+	/** Approach radius — how close the bot gets before attacking. */
+	approachRadius: number;
+}
+
 /** Discriminated union of all order types. */
 export type BotOrder =
 	| PatrolAreaOrder
@@ -75,4 +99,6 @@ export type BotOrder =
 	| GuardPositionOrder
 	| GatherResourcesOrder
 	| ReturnToBaseOrder
-	| FollowOrder;
+	| FollowOrder
+	| FlankTargetOrder
+	| SiegeTargetOrder;

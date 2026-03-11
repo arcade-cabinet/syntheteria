@@ -13,8 +13,14 @@
  */
 
 // ---------------------------------------------------------------------------
-// Mock config — must appear before import
+// Mock dependencies — must appear before import
 // ---------------------------------------------------------------------------
+
+const mockNotifyNewlyUnlocked = jest.fn();
+jest.mock("../furnaceProcessing", () => ({
+	notifyNewlyUnlockedRecipes: (...args: unknown[]) =>
+		mockNotifyNewlyUnlocked(...args),
+}));
 
 jest.mock("../../../config", () => ({
 	config: {
@@ -95,6 +101,7 @@ import {
 
 beforeEach(() => {
 	resetTechResearch();
+	mockNotifyNewlyUnlocked.mockClear();
 });
 
 // ---------------------------------------------------------------------------
@@ -517,6 +524,62 @@ describe("multi-faction independence", () => {
 			faction: "signal_choir",
 			techId: "basic_mining",
 		});
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Recipe unlock wiring — notifyNewlyUnlockedRecipes called on completion
+// ---------------------------------------------------------------------------
+
+describe("recipe unlock wiring", () => {
+	it("calls notifyNewlyUnlockedRecipes when a tech completes", () => {
+		startResearch("reclaimers", "basic_mining");
+		techResearchSystem({ reclaimers: PLENTY }, 100);
+
+		expect(mockNotifyNewlyUnlocked).toHaveBeenCalledTimes(1);
+	});
+
+	it("passes previous researched set (without new tech) as first arg", () => {
+		startResearch("reclaimers", "basic_mining");
+		techResearchSystem({ reclaimers: PLENTY }, 0);
+
+		const [prevResearched] = mockNotifyNewlyUnlocked.mock.calls[0];
+		// Before completion, basic_mining was NOT yet in the set
+		expect(prevResearched.has("basic_mining")).toBe(false);
+	});
+
+	it("passes updated researched set (with new tech) as second arg", () => {
+		startResearch("reclaimers", "basic_mining");
+		techResearchSystem({ reclaimers: PLENTY }, 0);
+
+		const [, nextResearched] = mockNotifyNewlyUnlocked.mock.calls[0];
+		// After completion, basic_mining IS in the set
+		expect(nextResearched.has("basic_mining")).toBe(true);
+	});
+
+	it("passes tick as third arg", () => {
+		startResearch("reclaimers", "basic_mining");
+		techResearchSystem({ reclaimers: PLENTY }, 999);
+
+		const [, , tick] = mockNotifyNewlyUnlocked.mock.calls[0];
+		expect(tick).toBe(999);
+	});
+
+	it("does NOT call notifyNewlyUnlockedRecipes when research is in progress (not complete)", () => {
+		startResearch("reclaimers", "basic_mining");
+		// Pass only a tiny amount of compute — not enough to finish (cost=100)
+		techResearchSystem({ reclaimers: 1 }, 0);
+
+		expect(mockNotifyNewlyUnlocked).not.toHaveBeenCalled();
+	});
+
+	it("calls notifyNewlyUnlockedRecipes once per completing faction per tick", () => {
+		startResearch("reclaimers", "basic_mining");
+		startResearch("volt_collective", "basic_belts");
+		techResearchSystem({ reclaimers: PLENTY, volt_collective: PLENTY }, 0);
+
+		// Both factions complete a tech — each should trigger a notify call
+		expect(mockNotifyNewlyUnlocked).toHaveBeenCalledTimes(2);
 	});
 });
 

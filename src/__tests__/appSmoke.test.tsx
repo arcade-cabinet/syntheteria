@@ -133,6 +133,9 @@ jest.mock("../rendering/WallRenderer", () => ({
 jest.mock("../rendering/SelectionHighlight", () => ({
 	SelectionHighlight: noopComponent,
 }));
+jest.mock("../rendering/BuildingRenderer", () => ({
+	BuildingRenderer: noopComponent,
+}));
 jest.mock("../rendering/CameraEffects", () => ({
 	CameraEffects: noopComponent,
 }));

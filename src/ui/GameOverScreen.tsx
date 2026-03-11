@@ -10,6 +10,8 @@
 
 import { useEffect, useState } from "react";
 import type { GameOverState } from "../systems/gameOverDetection";
+import { getLastPlayerFaction } from "../systems/newGameInit";
+import { getConditionDisplayName, getVictoryTagline } from "./victoryProgressData";
 
 const MONO = "'Courier New', monospace";
 
@@ -32,6 +34,7 @@ export function GameOverScreen({ state }: GameOverScreenProps) {
 	};
 
 	const isVictory = state.won;
+	const playerFaction = getLastPlayerFaction();
 
 	const accentColor = isVictory ? "#00ffaa" : "#ff4444";
 	const bgColor = isVictory
@@ -45,9 +48,16 @@ export function GameOverScreen({ state }: GameOverScreenProps) {
 		: "0 0 40px rgba(255, 68, 68, 0.15)";
 
 	const title = isVictory ? "SYNTHETERIA RECLAIMED" : "SYSTEMS OFFLINE";
-	const subtitle = isVictory
-		? "The machine planet answers to you now."
-		: "Critical failure. All systems non-responsive.";
+
+	// Faction-specific tagline replaces the generic subtitle
+	const subtitle = getVictoryTagline(playerFaction, isVictory);
+
+	// Parse the condition name from the reason field if possible
+	// reason format is typically "Condition name achieved: <detail>"
+	const conditionMatch = state.reason.match(/^([^:.\n]+)/);
+	const conditionDisplay = conditionMatch
+		? getConditionDisplayName(conditionMatch[1].toLowerCase().trim())
+		: null;
 
 	return (
 		<div
@@ -137,6 +147,24 @@ export function GameOverScreen({ state }: GameOverScreenProps) {
 				>
 					{subtitle}
 				</p>
+
+				{/* Condition badge — shown when a victory condition is identified */}
+				{conditionDisplay && isVictory && (
+					<div
+						style={{
+							display: "inline-block",
+							fontSize: "10px",
+							color: `${accentColor}cc`,
+							border: `1px solid ${accentColor}44`,
+							borderRadius: "3px",
+							padding: "3px 10px",
+							letterSpacing: "0.2em",
+							margin: "0 0 12px 0",
+						}}
+					>
+						{conditionDisplay.toUpperCase()}
+					</div>
+				)}
 
 				{/* Reason */}
 				<p

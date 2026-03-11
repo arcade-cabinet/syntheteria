@@ -15,8 +15,8 @@
 import { config } from "../../config";
 import type { UnitEntity } from "../ecs/types";
 import { hasFunctionalComponent } from "../ecs/types";
-import { getActivePlayerBot, world } from "../ecs/world";
-import { units } from "../ecs/koota/compat";
+import { destroyEntityById } from "../ecs/koota/bridge";
+import { getActivePlayerBot, units } from "../ecs/koota/compat";
 import { addResource } from "./resources";
 
 // ---------------------------------------------------------------------------
@@ -72,7 +72,7 @@ function destroyUnit(entity: UnitEntity) {
 	);
 	if (Math.random() < config.combat.salvageEWasteChance)
 		addResource("eWaste", 1);
-	world.remove(entity);
+	destroyEntityById(entity.id);
 }
 
 // ---------------------------------------------------------------------------

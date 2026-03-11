@@ -25,6 +25,19 @@ import {
 	snapToGrid,
 } from "./cubeStacking";
 import { snapToGrid as gridSnapToGrid } from "./gridSnap";
+import { emit } from "./eventBus";
+
+// ---------------------------------------------------------------------------
+// Audio helper — fire-and-forget; never throws into gameplay code
+// ---------------------------------------------------------------------------
+
+function safeEmit(event: Parameters<typeof emit>[0]): void {
+	try {
+		emit(event);
+	} catch {
+		// Audio integration must never crash gameplay
+	}
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -186,6 +199,14 @@ export function grabCube(
 
 	heldCubeId = cubeId;
 
+	safeEmit({
+		type: "cube_grabbed",
+		cubeId,
+		entityId: "player",
+		materialType: cube.material,
+		tick: 0,
+	});
+
 	return true;
 }
 
@@ -268,6 +289,14 @@ export function dropCube(
 		callbacks?.setDynamic?.(heldCubeId);
 	}
 
+	safeEmit({
+		type: "cube_dropped",
+		cubeId: cube.id,
+		entityId: "player",
+		position: { x: finalPosition.x, y: finalPosition.y, z: finalPosition.z },
+		tick: 0,
+	});
+
 	heldCubeId = null;
 
 	return true;
@@ -319,6 +348,15 @@ export function throwCube(
 		z: direction.z * force,
 	};
 	callbacks?.applyImpulse?.(thrownId, impulse);
+
+	safeEmit({
+		type: "cube_thrown",
+		cubeId: thrownId,
+		entityId: "player",
+		direction: { x: direction.x, y: direction.y, z: direction.z },
+		force,
+		tick: 0,
+	});
 
 	heldCubeId = null;
 

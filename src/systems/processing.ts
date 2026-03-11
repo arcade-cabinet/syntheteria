@@ -9,8 +9,7 @@
 
 import { config } from "../../config";
 import type { Entity } from "../ecs/types";
-import { world } from "../ecs/world";
-import { processors } from "../ecs/koota/compat";
+import { getEntityById, processors } from "../ecs/koota/compat";
 
 /** Recipe maps: processorType → { inputItem → outputItem } */
 export const PROCESSING_RECIPES: Record<string, Record<string, string>> =
@@ -18,16 +17,6 @@ export const PROCESSING_RECIPES: Record<string, Record<string, string>> =
 
 /** Internal state: what item a processor is currently working on */
 const processorInputs = new Map<string, string>();
-
-/**
- * Find an entity by ID. Returns undefined if not found.
- */
-function getEntityById(id: string): Entity | undefined {
-	for (const entity of world) {
-		if (entity.id === id) return entity;
-	}
-	return undefined;
-}
 
 /**
  * Get the item type a processor is currently processing, if any.

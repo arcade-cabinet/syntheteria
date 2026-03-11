@@ -13,6 +13,19 @@
  */
 
 import furnaceConfig from "../../config/furnace.json";
+import { emit } from "./eventBus";
+
+// ---------------------------------------------------------------------------
+// Audio helper — fire-and-forget; never throws into gameplay code
+// ---------------------------------------------------------------------------
+
+function safeEmit(event: Parameters<typeof emit>[0]): void {
+	try {
+		emit(event);
+	} catch {
+		// Audio integration must never crash gameplay
+	}
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -111,6 +124,13 @@ export function startCompression(
 		duration: config.compressionTime,
 	};
 
+	safeEmit({
+		type: "compression_started",
+		entityId: "player",
+		materialType: material,
+		tick: 0,
+	});
+
 	return true;
 }
 
@@ -141,6 +161,15 @@ export function updateCompression(delta: number): CompressionResult {
 
 	currentCompression = null;
 
+	safeEmit({
+		type: "cube_spawned",
+		cubeId: cube.id,
+		materialType: cube.material,
+		position: { x: 0, y: 0, z: 0 },
+		source: "compression",
+		tick: 0,
+	});
+
 	return { completed: true, cube };
 }
 
@@ -166,6 +195,75 @@ export function isCompressing(): boolean {
  */
 export function cancelCompression(): void {
 	currentCompression = null;
+}
+
+// ---------------------------------------------------------------------------
+// HUD data helpers
+// ---------------------------------------------------------------------------
+
+export interface CompressionMaterialInfo {
+	/** Material identifier */
+	material: string;
+	/** Powder required to compress one cube */
+	powderRequired: number;
+	/** Duration of compression in seconds */
+	compressionTime: number;
+	/** Screen shake intensity at compression peak (0.0–1.0) */
+	screenShakePeak: number;
+	/** Cube eject velocity (higher = more energetic) */
+	ejectVelocity: number;
+}
+
+/**
+ * Get compression info for all materials with configured compression parameters.
+ * Used by the HUD to show per-material differentiation (cost, time, intensity).
+ */
+export function getCompressionMaterialInfo(): CompressionMaterialInfo[] {
+	return Object.entries(
+		furnaceConfig.compression.configs as Record<
+			string,
+			{
+				powderRequired: number;
+				compressionTime: number;
+				screenShakePeak?: number;
+				ejectVelocity?: number;
+			}
+		>,
+	).map(([material, cfg]) => ({
+		material,
+		powderRequired: cfg.powderRequired,
+		compressionTime: cfg.compressionTime,
+		screenShakePeak: cfg.screenShakePeak ?? 0.5,
+		ejectVelocity: cfg.ejectVelocity ?? 1.5,
+	}));
+}
+
+/**
+ * Get compression info for a single material, or null if not configured.
+ */
+export function getCompressionInfoForMaterial(
+	material: string,
+): CompressionMaterialInfo | null {
+	const cfg = DEFAULT_COMPRESSION_CONFIGS[material];
+	if (!cfg) return null;
+	const raw = (
+		furnaceConfig.compression.configs as Record<
+			string,
+			{
+				powderRequired: number;
+				compressionTime: number;
+				screenShakePeak?: number;
+				ejectVelocity?: number;
+			}
+		>
+	)[material];
+	return {
+		material,
+		powderRequired: cfg.powderRequired,
+		compressionTime: cfg.compressionTime,
+		screenShakePeak: raw?.screenShakePeak ?? 0.5,
+		ejectVelocity: raw?.ejectVelocity ?? 1.5,
+	};
 }
 
 /**

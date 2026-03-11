@@ -97,6 +97,20 @@ jest.mock("../../../config", () => ({
 				silicon: { hardness: 3, grindSpeed: 0.6, color: "#A0A0A0" },
 			},
 		},
+		combat: {
+			stormPacing: {
+				phases: [
+					{ id: "early", minGameTick: 0, raidCooldownTicks: 500, raidWealthMultiplier: 1.0, aggressionMultiplier: 1.0, stormIntensity: 0.3 },
+				],
+				raidStrengthWeights: { cubeCountFactor: 0.5, buildingCountFactor: 2, techLevelFactor: 10 },
+				aggressionCooldownTicksBase: 300,
+				aggressionEventTypes: ["raid"],
+			},
+		},
+		territory: {
+			outpostTiers: [{ cubeCost: 5, radius: 20 }],
+			minimumOutpostSpacing: 30,
+		},
 	},
 }));
 
@@ -107,6 +121,7 @@ import {
 	getDifficultyModifiers,
 	getSpawnPoint,
 	getLastResult,
+	getLastPlayerFaction,
 	getBaseAgents,
 	getBaseAgent,
 	getAlienHives,
@@ -740,6 +755,34 @@ describe("getLastResult", () => {
 		expect(r1).toEqual(r2);
 		expect(r1).not.toBe(r2);
 		expect(r1.errors).not.toBe(r2.errors);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// getLastPlayerFaction
+// ---------------------------------------------------------------------------
+
+describe("getLastPlayerFaction", () => {
+	it("returns null before any game is initialized", () => {
+		expect(getLastPlayerFaction()).toBeNull();
+	});
+
+	it("returns the player faction after initNewGame", () => {
+		initNewGame(defaultOptions({ worldSeed: 42, playerFaction: "reclaimers" }));
+		expect(getLastPlayerFaction()).toBe("reclaimers");
+	});
+
+	it("reflects the faction from the most recent initNewGame call", () => {
+		initNewGame(defaultOptions({ worldSeed: 1, playerFaction: "reclaimers" }));
+		reset();
+		initNewGame(defaultOptions({ worldSeed: 2, playerFaction: "iron_creed", aiFactions: ["reclaimers", "volt_collective", "signal_choir"] }));
+		expect(getLastPlayerFaction()).toBe("iron_creed");
+	});
+
+	it("returns null after reset()", () => {
+		initNewGame(defaultOptions({ worldSeed: 42, playerFaction: "reclaimers" }));
+		reset();
+		expect(getLastPlayerFaction()).toBeNull();
 	});
 });
 

@@ -19,8 +19,7 @@
 import { config } from "../../config";
 import type { Entity, Vec3 } from "../ecs/types";
 import { placeWire, removeWire } from "../ecs/wireFactory";
-import { world } from "../ecs/world";
-import { wires } from "../ecs/koota/compat";
+import { getEntityById, wires } from "../ecs/koota/compat";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -53,13 +52,6 @@ let preview: WirePreview | null = null;
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function getEntityById(id: string): Entity | undefined {
-	for (const entity of world) {
-		if (entity.id === id) return entity;
-	}
-	return undefined;
-}
 
 function distanceBetween(a: Vec3, b: Vec3): number {
 	const dx = a.x - b.x;

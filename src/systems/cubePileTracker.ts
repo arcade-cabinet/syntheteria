@@ -33,17 +33,23 @@ export interface CubePile {
 }
 
 // ---------------------------------------------------------------------------
-// Economic values (hardcoded per spec)
+// Economic values (from config/economy.json)
 // ---------------------------------------------------------------------------
 
-const MATERIAL_VALUES: Record<string, number> = {
-	scrap_iron: 5,
-	iron: 25,
-	copper: 15,
-	e_waste: 10,
-	fiber_optics: 60,
-	rare_alloy: 100,
-};
+import economyConfig from "../../config/economy.json";
+
+type MaterialEntry = { cubeValue?: number };
+
+const MATERIAL_VALUES: Record<string, number> = (() => {
+	const result: Record<string, number> = {};
+	for (const [k, v] of Object.entries(economyConfig.materials as Record<string, MaterialEntry>)) {
+		if (typeof v.cubeValue === "number") result[k] = v.cubeValue;
+	}
+	for (const [k, v] of Object.entries(economyConfig.alloys as Record<string, MaterialEntry>)) {
+		if (typeof v.cubeValue === "number") result[k] = v.cubeValue;
+	}
+	return result;
+})();
 
 const DEFAULT_VALUE = 5;
 

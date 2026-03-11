@@ -17,10 +17,13 @@
 import { config } from "../../config";
 import type { Entity, Vec3 } from "../ecs/types";
 import { units } from "../ecs/koota/compat";
+import { type PerceivedPile, getVisibleEnemyPiles } from "../ai/PerceptionSystem";
+import type { CubePile } from "./cubePileTracker";
 import { type CubeEntity, getCubes } from "./raidSystem";
 import { calculateRaidStrength as _calculateRaidStrength } from "./stormSystem";
 export type { RaidStrengthInput } from "./stormSystem";
 export { calculateRaidStrength } from "./stormSystem";
+export type { PerceivedPile };
 
 // ---------------------------------------------------------------------------
 // Config-driven constants
@@ -163,6 +166,68 @@ export function assessRaidViability(
 		expectedDefense,
 		forceRatio,
 	};
+}
+
+/**
+ * Governor-level raid target discovery using pile-based perception.
+ *
+ * Uses the wealth-attracts-raids formula (GDD §6.4):
+ *   effectiveRange = baseRange * (1 + pile.cubeCount * 0.05)
+ *
+ * Only piles within the faction's (wealth-scaled) detection range are
+ * considered as raid targets. This means larger, richer stockpiles are
+ * detectable from farther away — a deliberate design tension: hoarding
+ * wealth makes you a bigger target.
+ *
+ * @param attackingFaction - Faction ID initiating the raid scan
+ * @param observerPosition - World XZ position of the faction's base or scout
+ * @param basePerceptionRange - Base detection range in world units
+ * @param allPiles - All cube piles in the world (from getPiles())
+ * @returns RaidTargets derived from visible enemy piles, sorted by composite score
+ */
+export function findRaidTargetsFromPiles(
+	attackingFaction: Entity["faction"],
+	observerPosition: { x: number; z: number },
+	basePerceptionRange: number,
+	allPiles: CubePile[],
+): RaidTarget[] {
+	// Filter to enemy piles only
+	const enemyPiles = allPiles.filter((p) => p.ownerFaction !== attackingFaction);
+
+	// Use pile perception (wealth-scales detection range)
+	const visiblePiles: PerceivedPile[] = getVisibleEnemyPiles(
+		observerPosition,
+		basePerceptionRange,
+		enemyPiles,
+	);
+
+	if (visiblePiles.length === 0) return [];
+
+	// Convert visible piles to RaidTargets
+	const targets: RaidTarget[] = visiblePiles.map(({ pile }) => {
+		const threatLevel = countDefendersNear(
+			pile.center,
+			DEFENDER_SCAN_RADIUS,
+			attackingFaction,
+		);
+
+		return {
+			position: pile.center,
+			estimatedValue: pile.totalEconomicValue,
+			threatLevel,
+			cubeCount: pile.cubeCount,
+			cubeIds: [], // pile-based targets don't carry individual cube IDs
+		};
+	});
+
+	// Sort by composite score: high value, low threat first
+	targets.sort((a, b) => {
+		const scoreA = a.estimatedValue / (1 + a.threatLevel);
+		const scoreB = b.estimatedValue / (1 + b.threatLevel);
+		return scoreB - scoreA;
+	});
+
+	return targets;
 }
 
 // ---------------------------------------------------------------------------

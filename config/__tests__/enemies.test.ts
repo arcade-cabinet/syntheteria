@@ -64,21 +64,65 @@ describe("enemies.json", () => {
 		});
 	});
 
-	describe("ancientMachines", () => {
-		it("has guardian, sentinel, and swarmDrone", () => {
-			expect(enemiesConfig.ancientMachines.guardian).toBeDefined();
-			expect(enemiesConfig.ancientMachines.sentinel).toBeDefined();
-			expect(enemiesConfig.ancientMachines.swarmDrone).toBeDefined();
+	describe("ancientMachines — Residuals", () => {
+		const am = enemiesConfig.ancientMachines;
+
+		it("has sentinel, crawler, and colossus", () => {
+			expect(am.sentinel).toBeDefined();
+			expect(am.crawler).toBeDefined();
+			expect(am.colossus).toBeDefined();
 		});
 
-		it("guardian has most HP", () => {
-			expect(enemiesConfig.ancientMachines.guardian.hp).toBeGreaterThan(
-				enemiesConfig.ancientMachines.sentinel.hp,
+		it("Sentinel HP is a range (hpMin < hpMax)", () => {
+			expect(am.sentinel.hpMin).toBeLessThan(am.sentinel.hpMax);
+		});
+
+		it("Crawler HP is a range (hpMin < hpMax)", () => {
+			expect(am.crawler.hpMin).toBeLessThan(am.crawler.hpMax);
+		});
+
+		it("Colossus has fixed HP >= 1000", () => {
+			expect(am.colossus.hp).toBeGreaterThanOrEqual(1000);
+		});
+
+		it("Colossus has awakening conditions", () => {
+			expect(am.colossus.awakeningConditions.substrateDamageThreshold).toBeGreaterThan(0);
+			expect(typeof am.colossus.awakeningConditions.storyProgressionFlag).toBe("string");
+		});
+
+		it("Colossus has integration conditions for victory path", () => {
+			expect(am.colossus.integrationConditions.relationshipThreshold).toBeGreaterThan(0);
+			expect(am.colossus.integrationConditions.cubeOfferings.length).toBeGreaterThan(0);
+		});
+
+		it("awakening thresholds scale: sentinel <= crawler < colossus", () => {
+			expect(am.awakening.sentinelAwakeThreshold).toBeLessThanOrEqual(
+				am.awakening.crawlerAwakeThreshold,
+			);
+			expect(am.awakening.crawlerAwakeThreshold).toBeLessThan(
+				am.awakening.colossusAwakeThreshold,
 			);
 		});
 
-		it("spawns near rare deposits", () => {
-			expect(enemiesConfig.ancientMachines.spawnNearDeposits.length).toBeGreaterThan(0);
+		it("relationship penalties: Crawler > Sentinel", () => {
+			expect(am.crawler.relationshipPenalty).toBeGreaterThan(am.sentinel.relationshipPenalty);
+		});
+
+		it("substrate damage decay is positive", () => {
+			expect(am.awakening.substrateDamageDecayPerTick).toBeGreaterThan(0);
+		});
+
+		it("each archetype has loot defined", () => {
+			expect(am.sentinel.loot).toBeDefined();
+			expect(am.crawler.loot).toBeDefined();
+			// Colossus has no loot (it's a crisis event, not a kill reward)
+			expect(am.colossus.loot).toBeDefined();
+		});
+
+		it("each archetype has components", () => {
+			expect(am.sentinel.components.length).toBeGreaterThan(0);
+			expect(am.crawler.components.length).toBeGreaterThan(0);
+			expect(am.colossus.components.length).toBeGreaterThan(0);
 		});
 	});
 

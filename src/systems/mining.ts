@@ -10,24 +10,13 @@
 
 import { config } from "../../config";
 import type { Entity } from "../ecs/types";
-import { world } from "../ecs/world";
-import { miners } from "../ecs/koota/compat";
+import { getEntityById, miners } from "../ecs/koota/compat";
 
 /** Internal extraction counters keyed by entity ID */
 const extractionCounters = new Map<string, number>();
 
 /** Internal buffers keyed by entity ID */
 const minerBuffers = new Map<string, number>();
-
-/**
- * Find an entity by ID. Returns undefined if not found.
- */
-function getEntityById(id: string): Entity | undefined {
-	for (const entity of world) {
-		if (entity.id === id) return entity;
-	}
-	return undefined;
-}
 
 /** Get the current buffer count for a miner. */
 export function getMinerBuffer(minerId: string): number {

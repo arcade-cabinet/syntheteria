@@ -73,6 +73,8 @@ function makeCivState(overrides: Partial<CivState> = {}): CivState {
 		militaryStrength: 2,
 		techLevel: 1,
 		ticksAlive: 0,
+		basePosition: { x: 0, z: 0 },
+		lastExpansionTarget: null,
 		...overrides,
 	};
 }

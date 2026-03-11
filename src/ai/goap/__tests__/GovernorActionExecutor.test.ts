@@ -11,6 +11,7 @@
  * - Unknown/unhandled action names do not throw (graceful no-op)
  * - ExecutionContext unit-list filtering selects faction-owned units
  * - Governor wires executor: tick with LaunchRaid goal produces a raid
+ * - cubePileTracker wealth scoring re-ranks targets toward richer enemy piles
  */
 
 import {
@@ -55,10 +56,18 @@ jest.mock("../../../systems/techResearch", () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// Mock cubePileTracker
+// ---------------------------------------------------------------------------
+
+jest.mock("../../../systems/cubePileTracker", () => ({
+	getPiles: jest.fn(() => []),
+}));
+
+// ---------------------------------------------------------------------------
 // Imports after mocks
 // ---------------------------------------------------------------------------
 
-import { planRaid, resetRaidSystem } from "../../../systems/raidSystem";
+import { planRaid } from "../../../systems/raidSystem";
 import {
 	findRaidTargets,
 	assessRaidViability,
@@ -67,10 +76,11 @@ import {
 	getAvailableTechs,
 	startResearch,
 	getResearchProgress,
-	resetTechResearch,
 } from "../../../systems/techResearch";
+import { getPiles } from "../../../systems/cubePileTracker";
 import type { RaidTarget } from "../../../systems/raidTargeting";
 import type { TechDefinition } from "../../../systems/techResearch";
+import type { CubePile } from "../../../systems/cubePileTracker";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -78,10 +88,6 @@ import type { TechDefinition } from "../../../systems/techResearch";
 
 function pos(x = 0, y = 0, z = 0): Vec3 {
 	return { x, y, z };
-}
-
-function makeUnit(id: string, position: Vec3 = pos()) {
-	return { id, worldPosition: position };
 }
 
 function makeContext(overrides: Partial<ExecutionContext> = {}): ExecutionContext {
@@ -117,6 +123,19 @@ function makeTechDef(id: string): TechDefinition {
 	};
 }
 
+function makePile(overrides: Partial<CubePile> = {}): CubePile {
+	return {
+		pileId: "pile_1",
+		center: pos(100, 0, 100),
+		cubeCount: 10,
+		materialBreakdown: { scrap_iron: 10 },
+		totalEconomicValue: 500,
+		ownerFaction: "player",
+		topY: 1,
+		...overrides,
+	};
+}
+
 // ---------------------------------------------------------------------------
 // Typed mock helpers
 // ---------------------------------------------------------------------------
@@ -137,6 +156,7 @@ const mockStartResearch = startResearch as jest.MockedFunction<
 const mockGetResearchProgress = getResearchProgress as jest.MockedFunction<
 	typeof getResearchProgress
 >;
+const mockGetPiles = getPiles as jest.MockedFunction<typeof getPiles>;
 
 // ---------------------------------------------------------------------------
 // Setup
@@ -368,6 +388,160 @@ describe("GovernorActionExecutor — governor integration", () => {
 			expect.any(Object),
 			expect.any(Number),
 		);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// cubePileTracker wealth scoring
+// ---------------------------------------------------------------------------
+
+describe("GovernorActionExecutor — cubePileTracker wealth re-ranking", () => {
+	beforeEach(() => {
+		// Default: viable raid with two targets, no pile data
+		mockAssessRaidViability.mockReturnValue({
+			viable: true,
+			availableForce: 5,
+			expectedDefense: 0,
+			forceRatio: 10,
+		});
+		mockPlanRaid.mockReturnValue("raid_piletest");
+		mockGetPiles.mockReturnValue([]);
+	});
+
+	it("falls back to original order when no pile data exists", () => {
+		const t1 = makeRaidTarget({ position: pos(10, 0, 10), estimatedValue: 100 });
+		const t2 = makeRaidTarget({ position: pos(50, 0, 50), estimatedValue: 200 });
+		// t2 has higher value so raidTargeting puts it first
+		mockFindRaidTargets.mockReturnValue([t2, t1]);
+
+		const ctx = makeContext();
+		executor.execute(LaunchRaid, ctx);
+
+		// Without pile data, should use t2 (first from raidTargeting)
+		expect(mockPlanRaid).toHaveBeenCalledWith(
+			expect.any(String),
+			t2.position,
+			expect.any(Array),
+			expect.any(Object),
+			expect.any(Number),
+		);
+	});
+
+	it("boosts a lower-valued target that sits near a high-value enemy pile", () => {
+		// t1 has lower base value but sits near a huge enemy pile
+		const t1 = makeRaidTarget({
+			position: pos(10, 0, 10),
+			estimatedValue: 50,
+			threatLevel: 0,
+		});
+		// t2 has higher base value but no pile nearby
+		const t2 = makeRaidTarget({
+			position: pos(200, 0, 200),
+			estimatedValue: 200,
+			threatLevel: 0,
+		});
+
+		// raidTargeting would normally put t2 first (higher value)
+		mockFindRaidTargets.mockReturnValue([t2, t1]);
+
+		// A high-value enemy pile sits right next to t1 (within 20 units)
+		const richPile = makePile({
+			pileId: "pile_rich",
+			center: pos(12, 0, 12),
+			totalEconomicValue: 50000, // very rich
+			ownerFaction: "player",
+		});
+		mockGetPiles.mockReturnValue([richPile]);
+
+		const ctx = makeContext({ faction: "reclaimers" });
+		executor.execute(LaunchRaid, ctx);
+
+		// Pile boost should push t1 ahead of t2
+		expect(mockPlanRaid).toHaveBeenCalledWith(
+			expect.any(String),
+			t1.position,
+			expect.any(Array),
+			expect.any(Object),
+			expect.any(Number),
+		);
+	});
+
+	it("ignores own faction's piles (does not boost toward own stockpile)", () => {
+		const t1 = makeRaidTarget({ position: pos(10, 0, 10), estimatedValue: 50 });
+		const t2 = makeRaidTarget({ position: pos(200, 0, 200), estimatedValue: 200 });
+		mockFindRaidTargets.mockReturnValue([t2, t1]);
+
+		// A high-value pile near t1 but it belongs to the SAME faction
+		const ownPile = makePile({
+			pileId: "pile_own",
+			center: pos(12, 0, 12),
+			totalEconomicValue: 50000,
+			ownerFaction: "reclaimers", // same as attacking faction
+		});
+		mockGetPiles.mockReturnValue([ownPile]);
+
+		const ctx = makeContext({ faction: "reclaimers" });
+		executor.execute(LaunchRaid, ctx);
+
+		// Own pile should not boost t1 — t2 (higher base value) should still be chosen
+		expect(mockPlanRaid).toHaveBeenCalledWith(
+			expect.any(String),
+			t2.position,
+			expect.any(Array),
+			expect.any(Object),
+			expect.any(Number),
+		);
+	});
+
+	it("does not boost a target when pile is beyond the boost radius", () => {
+		const t1 = makeRaidTarget({ position: pos(10, 0, 10), estimatedValue: 50 });
+		const t2 = makeRaidTarget({ position: pos(200, 0, 200), estimatedValue: 200 });
+		mockFindRaidTargets.mockReturnValue([t2, t1]);
+
+		// Enemy pile is far from both targets (>20 units from t1)
+		const farPile = makePile({
+			pileId: "pile_far",
+			center: pos(10, 0, 40), // 30 units from t1 — outside boost radius
+			totalEconomicValue: 50000,
+			ownerFaction: "player",
+		});
+		mockGetPiles.mockReturnValue([farPile]);
+
+		const ctx = makeContext({ faction: "reclaimers" });
+		executor.execute(LaunchRaid, ctx);
+
+		// Pile is too far — t2 remains the top pick (higher base value)
+		expect(mockPlanRaid).toHaveBeenCalledWith(
+			expect.any(String),
+			t2.position,
+			expect.any(Array),
+			expect.any(Object),
+			expect.any(Number),
+		);
+	});
+
+	it("does not call planRaid when no raid targets are returned regardless of pile data", () => {
+		mockFindRaidTargets.mockReturnValue([]);
+		mockGetPiles.mockReturnValue([
+			makePile({ totalEconomicValue: 99999, ownerFaction: "player" }),
+		]);
+
+		const ctx = makeContext();
+		const result = executor.execute(LaunchRaid, ctx);
+
+		expect(mockPlanRaid).not.toHaveBeenCalled();
+		expect(result).toBeNull();
+	});
+
+	it("getPiles is called each time executeLaunchRaid runs", () => {
+		const target = makeRaidTarget();
+		mockFindRaidTargets.mockReturnValue([target]);
+
+		const ctx = makeContext();
+		executor.execute(LaunchRaid, ctx);
+		executor.execute(LaunchRaid, ctx);
+
+		expect(mockGetPiles).toHaveBeenCalledTimes(2);
 	});
 });
 

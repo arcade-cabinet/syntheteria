@@ -13,6 +13,8 @@
 import { useState } from "react";
 import civilizations from "../../config/civilizations.json";
 import { FONT_MONO, menu } from "./designTokens";
+import { PatronPortrait } from "./PatronPortrait";
+import { PATRON_PERSONAS } from "./patronData";
 
 export type FactionId = keyof typeof civilizations;
 
@@ -24,13 +26,6 @@ const FACTION_BONUSES: Record<FactionId, string[]> = {
 	iron_creed: ["+20% combat damage", "+15% armor durability", "Start with fortified position"],
 };
 
-/** ASCII art portrait glyphs for each faction. */
-const FACTION_GLYPHS: Record<FactionId, string> = {
-	reclaimers: "[::.]",
-	volt_collective: "[/\\/]",
-	signal_choir: "[(~)]",
-	iron_creed: "[##]",
-};
 
 interface FactionSelectProps {
 	selected: FactionId;
@@ -76,8 +71,8 @@ function FactionCard({
 	const [hovered, setHovered] = useState(false);
 	const civ = civilizations[id];
 	const bonuses = FACTION_BONUSES[id];
-	const glyph = FACTION_GLYPHS[id];
 	const factionColor = civ.color;
+	const patron = PATRON_PERSONAS[id];
 
 	// Selected → faction color, hovered → faction hint, default → amber/chrome
 	const borderColor = isSelected
@@ -114,38 +109,61 @@ function FactionCard({
 				display: "flex",
 				flexDirection: "column",
 				gap: "8px",
-				minHeight: "160px",
+				minHeight: "200px",
 			}}
 		>
-			{/* Portrait glyph + name */}
-			<div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-				<div
-					aria-hidden="true"
-					style={{
-						fontFamily: FONT_MONO,
-						fontSize: "20px",
-						color: isSelected ? factionColor : menu.accentDim,
-						textShadow: isSelected
-							? `0 0 12px ${factionColor}60`
-							: "none",
-						lineHeight: 1,
-					}}
-				>
-					{glyph}
-				</div>
-				<div
-					style={{
-						fontFamily: FONT_MONO,
-						fontSize: "14px",
-						fontWeight: "bold",
-						color: isSelected ? factionColor : menu.chrome,
-						letterSpacing: "0.1em",
-						textShadow: isSelected
-							? `0 0 8px ${factionColor}40`
-							: "none",
-					}}
-				>
-					{civ.name.toUpperCase()}
+			{/* Portrait + faction name row */}
+			<div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+				{/* Holographic patron portrait */}
+				<PatronPortrait
+					persona={patron}
+					isSelected={isSelected}
+					isHovered={hovered}
+					size={80}
+				/>
+
+				{/* Name + patron info */}
+				<div style={{ flex: 1, minWidth: 0 }}>
+					{/* Faction name */}
+					<div
+						style={{
+							fontFamily: FONT_MONO,
+							fontSize: "14px",
+							fontWeight: "bold",
+							color: isSelected ? factionColor : menu.chrome,
+							letterSpacing: "0.1em",
+							textShadow: isSelected ? `0 0 8px ${factionColor}40` : "none",
+							marginBottom: "4px",
+						}}
+					>
+						{civ.name.toUpperCase()}
+					</div>
+
+					{/* Patron name */}
+					<div
+						style={{
+							fontFamily: FONT_MONO,
+							fontSize: "10px",
+							color: isSelected ? `${factionColor}cc` : menu.accentDim,
+							letterSpacing: "0.15em",
+							marginBottom: "4px",
+						}}
+					>
+						PATRON: {patron.patronName}
+					</div>
+
+					{/* Tagline */}
+					<div
+						style={{
+							fontFamily: FONT_MONO,
+							fontSize: "10px",
+							color: menu.chromeDim,
+							lineHeight: 1.4,
+							fontStyle: "italic",
+						}}
+					>
+						"{patron.tagline}"
+					</div>
 				</div>
 			</div>
 
@@ -159,6 +177,20 @@ function FactionCard({
 				}}
 			>
 				{civ.description}
+			</div>
+
+			{/* Patron personality line */}
+			<div
+				style={{
+					fontFamily: FONT_MONO,
+					fontSize: "10px",
+					color: isSelected ? `${factionColor}88` : "rgba(184,196,204,0.3)",
+					letterSpacing: "0.08em",
+					borderLeft: `2px solid ${isSelected ? factionColor + "44" : "rgba(184,196,204,0.15)"}`,
+					paddingLeft: "8px",
+				}}
+			>
+				{patron.personality}
 			</div>
 
 			{/* Bonuses */}

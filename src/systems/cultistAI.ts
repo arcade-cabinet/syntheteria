@@ -1,30 +1,36 @@
 /**
- * Cultist enemy AI system — organized human enemies with lightning powers.
+ * Cult Leader AI system — faction religious subtype units with influence zone projection.
  *
- * Cultists are fundamentally different from feral machines:
- *   - They patrol in pairs/groups (organized movement)
- *   - They have lightning discharge attacks (AoE, configurable radius, cooldown)
- *   - They close to configurable range before attacking
- *   - They can be hacked (configurable difficulty)
+ * Cult Leaders are special faction units that project influence zones for the
+ * Religious/Philosophical victory path. They:
+ *   - Patrol near shrines/temples to maximise influence zone coverage
+ *   - Use conversionSystem to attempt conversion of vulnerable enemy units
+ *   - Use lightning attacks (inherited from volt_raider config as fallback)
+ *   - Can be hacked (configurable difficulty)
  *
- * Cultists spawn in the northern territory and patrol with purpose.
+ * Each faction has a distinct Cult Leader variant:
+ *   Reclaimers   → rust_saint          (converts via demonstrated work)
+ *   Volt Coll.   → ordained_conductor  (converts via lightning immunity grant)
+ *   Signal Choir → voice_unbroken      (converts via signal network invitation)
+ *   Iron Creed   → first_builder       (converts via construction demonstration)
  *
- * Config reference: config/enemies.json cultist section
+ * Config reference: config/enemies.json volt_raider section (base AI config)
+ *                   config/victoryPaths.json factionCults (cult identity)
  */
 
 import enemiesConfig from "../../config/enemies.json";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { createFragment, getTerrainHeight, isWalkable } from "../ecs/terrain";
 import type { Entity, UnitEntity, Vec3 } from "../ecs/types";
-import { world } from "../ecs/world";
+import { spawnKootaEntity } from "../ecs/koota/bridge";
 import { units } from "../ecs/koota/compat";
 import { findPath } from "./pathfinding";
 
 let nextCultistId = 0;
 
-// TODO: Rework into faction religious subtype. Config key removed; using feral as fallback.
+// Cult leaders share base AI config with volt_raider (patrol, lightning, hack).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const cultistCfg = ((enemiesConfig as Record<string, unknown>)["cultist"] ?? enemiesConfig.feral) as any;
+const cultistCfg = enemiesConfig.volt_raider as any;
 
 const LIGHTNING_RANGE: number = cultistCfg.lightningRange;
 const LIGHTNING_AOE_RADIUS: number = cultistCfg.lightningRadius;
@@ -83,7 +89,7 @@ export function spawnCultist(options: {
 		patrolPoints.push({ x, y, z });
 	}
 
-	const entity = world.add({
+	const { miniplex: entity } = spawnKootaEntity({
 		id,
 		faction: "cultist" as const,
 		worldPosition: { x, y, z },
@@ -115,7 +121,7 @@ export function spawnCultist(options: {
 			patrolIndex: 0,
 			workTarget: null,
 		},
-	} as Partial<Entity> as Entity);
+	} as Partial<Entity> & { id: string });
 
 	lightningCooldowns.set(id, 0);
 

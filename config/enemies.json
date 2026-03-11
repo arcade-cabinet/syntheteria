@@ -58,55 +58,84 @@
     "description": "Fast rogue units that can cloak and ambush"
   },
   "ancientMachines": {
-    "guardian": {
-      "hp": 500,
-      "damage": 10,
-      "range": 12,
-      "speed": 1.0,
-      "awakeTriggerRadius": 15,
-      "patrolRadius": 20,
-      "description": "Ancient machine guardians that awaken when disturbed",
-      "components": ["heavy_arms", "sensor_array", "power_core", "armor_plating"],
-      "loot": {
-        "scrapMetal": 30,
-        "eWaste": 15,
-        "intactComponents": 5,
-        "rare_earth": 3
-      }
-    },
     "sentinel": {
-      "hp": 200,
-      "damage": 5,
-      "range": 20,
+      "hpMin": 200,
+      "hpMax": 400,
+      "damageMin": 8,
+      "damageMax": 20,
+      "range": 22,
+      "speed": 1.5,
+      "patrolRadius": 18,
+      "hostileOnSubstrateDamage": true,
+      "defaultRelationship": "neutral",
+      "description": "Residual Sentinel — patrols near deep substrate access points. Hostile only if attacked or substrate structures are damaged. Communicates through movement patterns.",
+      "components": ["sensor_array", "em_pulse_emitter", "patrol_core"],
+      "loot": {
+        "e_waste": 8,
+        "scrap_iron": 12,
+        "quantum_crystal": 1
+      },
+      "relationshipPenalty": 15
+    },
+    "crawler": {
+      "hpMin": 150,
+      "hpMax": 300,
+      "damageMin": 6,
+      "damageMax": 15,
+      "range": 6,
+      "speed": 2.5,
+      "repairRate": 5,
+      "hostileOnStructureDamage": true,
+      "defaultRelationship": "neutral",
+      "description": "Residual Crawler — repairs ancient infrastructure. Multi-legged, low profile. Attacks anyone who damages the structure it maintains. Non-hostile otherwise.",
+      "components": ["repair_arm", "sensor_array", "multi_leg_drive"],
+      "loot": {
+        "e_waste": 5,
+        "scrap_iron": 8,
+        "titanium": 2
+      },
+      "relationshipPenalty": 25
+    },
+    "colossus": {
+      "hp": 5000,
+      "damageMin": 50,
+      "damageMax": 120,
+      "range": 40,
       "speed": 0,
-      "awakeTriggerRadius": 10,
-      "description": "Stationary ancient turrets guarding high-value deposits",
-      "components": ["sensor_array", "beam_weapon"],
-      "loot": {
-        "scrapMetal": 10,
-        "eWaste": 10,
-        "intactComponents": 3,
-        "gold": 1
-      }
+      "emPulseRadius": 80,
+      "emPulseDamage": 30,
+      "emPulseInterval": 20,
+      "defaultRelationship": "dormant",
+      "awakeningConditions": {
+        "substrateDamageThreshold": 500,
+        "relationshipThreshold": -50,
+        "storyProgressionFlag": "colossus_chamber_accessed"
+      },
+      "integrationConditions": {
+        "relationshipThreshold": 80,
+        "cubeOfferings": ["copper", "silicon", "titanium"],
+        "cubeOfferingCount": 50
+      },
+      "description": "The Colossus — dormant Von Neumann probe beneath the Storm Spine. Three billion years old. Not a combat encounter: a natural disaster with intent. Awakening triggers planet-wide EM events.",
+      "components": ["progenitor_core", "em_array", "mass_fabricator"],
+      "loot": {},
+      "locationHint": "storm_spine_deep",
+      "relationshipPenalty": 0
     },
-    "swarmDrone": {
-      "hp": 30,
-      "damage": 1,
-      "range": 4,
-      "speed": 4.0,
-      "swarmSize": 8,
-      "swarmRadius": 5,
-      "description": "Ancient micro-drones that attack in swarms",
-      "components": ["micro_arms"],
-      "loot": {
-        "eWaste": 2,
-        "quantum_crystal": 0.1
-      }
-    },
-    "awakeProbability": 0.01,
-    "maxAwakeGuardians": 3,
-    "despawnAfterTicks": 600,
-    "spawnNearDeposits": ["rare_earth", "gold", "quantum_crystal"]
+    "awakening": {
+      "substrateDamagePerMiningTick": 1,
+      "substrateDamagePerBuildOverAccess": 50,
+      "substrateDamagePerSentinelDestroyed": 30,
+      "substrateDamagePerCrawlerDestroyed": 20,
+      "substrateDamageDecayPerTick": 0.1,
+      "sentinelAwakeThreshold": 100,
+      "crawlerAwakeThreshold": 150,
+      "colossusAwakeThreshold": 500,
+      "maxActiveSentinels": 4,
+      "maxActiveCrawlers": 6,
+      "despawnAfterTicks": 1200,
+      "guardedSites": ["core_access_point", "substrate_conduit", "processor_graveyard", "colossus_chamber"]
+    }
   },
   "perception": {
     "defaultFOV": 120,

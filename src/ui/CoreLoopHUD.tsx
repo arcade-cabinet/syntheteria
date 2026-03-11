@@ -25,7 +25,18 @@ import {
 } from "../systems/furnaceProcessing";
 import { getCube, getHeldCube } from "../systems/grabber";
 import { ORE_TYPE_CONFIGS } from "../systems/oreSpawner";
+import { getPlayerState } from "../systems/playerEntity";
+import {
+	calculateXPToNextLevel,
+	getPlayerStats,
+} from "../systems/progressionSystem";
 import { ObjectActionMenu } from "./ObjectActionMenu";
+import {
+	buildHealthGauge,
+	buildPowderGauge,
+	buildXPBarInfo,
+	fillToCSSPercent,
+} from "./hudGauges";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -585,6 +596,229 @@ function FurnaceDetailPanel() {
 }
 
 // ---------------------------------------------------------------------------
+// PlayerStatusBar — health + powder gauges on the left-side panel
+// ---------------------------------------------------------------------------
+
+function PlayerStatusBar() {
+	// Subscribe to core loop so we re-render when harvest/compression updates
+	useSyncExternalStore(subscribeCoreLoop, getCoreLoopSnapshot);
+
+	const player = getPlayerState();
+	if (!player) return null;
+
+	const healthGauge = buildHealthGauge(player.health, player.maxHealth);
+	const powderGauge = buildPowderGauge(
+		player.powderCurrent,
+		player.powderCapacity,
+		player.powderType,
+	);
+
+	return (
+		<div
+			role="status"
+			aria-live="polite"
+			aria-label="Player status"
+			style={{
+				position: "absolute",
+				bottom: "calc(160px + env(safe-area-inset-bottom, 0px))",
+				left: "calc(16px + env(safe-area-inset-left, 0px))",
+				background: "rgba(0, 8, 4, 0.78)",
+				border: "1px solid #00ffaa22",
+				borderRadius: "6px",
+				padding: "8px 12px",
+				pointerEvents: "none",
+				minWidth: "140px",
+			}}
+		>
+			{/* Section label */}
+			<div
+				style={{
+					color: "#00ffaa55",
+					fontSize: "9px",
+					letterSpacing: "0.2em",
+					marginBottom: "6px",
+					textTransform: "uppercase",
+				}}
+			>
+				Bot Status
+			</div>
+
+			{/* Health gauge */}
+			<div style={{ marginBottom: "6px" }}>
+				<div
+					style={{
+						display: "flex",
+						justifyContent: "space-between",
+						fontSize: "10px",
+						color: healthGauge.color,
+						marginBottom: "2px",
+						letterSpacing: "0.05em",
+					}}
+					aria-label={healthGauge.label}
+				>
+					<span>HULL</span>
+					<span>
+						{Math.round(player.health)}/{Math.round(player.maxHealth)}
+					</span>
+				</div>
+				<div
+					aria-hidden="true"
+					style={{
+						width: "100%",
+						height: "4px",
+						background: "rgba(0,255,136,0.1)",
+						borderRadius: "2px",
+						overflow: "hidden",
+					}}
+				>
+					<div
+						style={{
+							width: fillToCSSPercent(healthGauge.fill),
+							height: "100%",
+							background: healthGauge.color,
+							borderRadius: "2px",
+							transition: "width 0.2s ease-out",
+						}}
+					/>
+				</div>
+			</div>
+
+			{/* Powder gauge */}
+			<div>
+				<div
+					style={{
+						display: "flex",
+						justifyContent: "space-between",
+						fontSize: "10px",
+						color: powderGauge.color,
+						marginBottom: "2px",
+						letterSpacing: "0.05em",
+					}}
+					aria-label={powderGauge.label}
+				>
+					<span>
+						POWDER
+						{player.powderType && (
+							<span style={{ color: "#ffaa0066", marginLeft: "4px" }}>
+								{player.powderType.replace(/_/g, " ").toUpperCase()}
+							</span>
+						)}
+					</span>
+					<span>
+						{player.powderCurrent.toFixed(0)}/{player.powderCapacity}
+					</span>
+				</div>
+				<div
+					aria-hidden="true"
+					style={{
+						width: "100%",
+						height: "4px",
+						background: "rgba(255,170,0,0.1)",
+						borderRadius: "2px",
+						overflow: "hidden",
+					}}
+				>
+					<div
+						style={{
+							width: fillToCSSPercent(powderGauge.fill),
+							height: "100%",
+							background: powderGauge.color,
+							borderRadius: "2px",
+							transition: "width 0.1s linear",
+						}}
+					/>
+				</div>
+				{powderGauge.fill >= 1.0 && (
+					<div
+						style={{
+							color: "#ffdd00",
+							fontSize: "9px",
+							letterSpacing: "0.12em",
+							marginTop: "2px",
+							textAlign: "right",
+						}}
+					>
+						COMPRESS READY (C)
+					</div>
+				)}
+			</div>
+		</div>
+	);
+}
+
+// ---------------------------------------------------------------------------
+// XPLevelBar — level + XP progress at bottom-left above player status
+// ---------------------------------------------------------------------------
+
+function XPLevelBar() {
+	// Subscribe so we re-render after XP events
+	useSyncExternalStore(subscribeCoreLoop, getCoreLoopSnapshot);
+
+	const stats = getPlayerStats();
+	const xpToNext = calculateXPToNextLevel(stats.totalXP);
+	const info = buildXPBarInfo(stats.totalXP, xpToNext, stats.level);
+
+	return (
+		<div
+			role="status"
+			aria-live="polite"
+			aria-label={info.label}
+			style={{
+				position: "absolute",
+				bottom: "calc(260px + env(safe-area-inset-bottom, 0px))",
+				left: "calc(16px + env(safe-area-inset-left, 0px))",
+				background: "rgba(0, 8, 4, 0.78)",
+				border: "1px solid #00ffaa22",
+				borderRadius: "6px",
+				padding: "6px 12px",
+				pointerEvents: "none",
+				minWidth: "140px",
+			}}
+		>
+			{/* Level + label */}
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "space-between",
+					fontSize: "10px",
+					color: "#00ffaa88",
+					marginBottom: "3px",
+					letterSpacing: "0.08em",
+				}}
+			>
+				<span style={{ color: "#00ffaa", fontWeight: "bold" }}>
+					LVL {info.level}
+				</span>
+				<span style={{ color: "#00ffaa55" }}>
+					{info.xpCurrent} / {info.xpCurrent + info.xpToNext} XP
+				</span>
+			</div>
+			{/* XP bar */}
+			<div
+				aria-hidden="true"
+				style={{
+					width: "100%",
+					height: "3px",
+					background: "rgba(0,255,170,0.1)",
+					borderRadius: "2px",
+					overflow: "hidden",
+				}}
+			>
+				<div
+					style={{
+						width: fillToCSSPercent(info.levelProgress),
+						height: "100%",
+						background: "linear-gradient(90deg, #00ffaa, #00aaff)",
+						borderRadius: "2px",
+						transition: "width 0.3s ease-out",
+					}}
+				/>
+			</div>
+		</div>
+	);
+}
+
+// ---------------------------------------------------------------------------
 // Main HUD
 // ---------------------------------------------------------------------------
 
@@ -598,6 +832,8 @@ export function CoreLoopHUD() {
 				fontFamily: MONO,
 			}}
 		>
+			<XPLevelBar />
+			<PlayerStatusBar />
 			<PowderStorage />
 			<HarvestingIndicator />
 			<CompressionBar />

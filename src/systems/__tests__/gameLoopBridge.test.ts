@@ -123,6 +123,21 @@ jest.mock("../progressionSystem", () => ({
 	},
 }));
 
+// Victory tracking mock — controls what victoryTrackingSystem reports
+const mockIsGameOver = jest.fn<boolean, []>(() => false);
+const mockGetWinner = jest.fn<{ faction: string; condition: string; conditionName: string } | null, []>(() => null);
+const mockVictoryTrackingSystem = jest.fn();
+const mockSetGameStateQueries = jest.fn();
+const mockResetVictoryTracking = jest.fn();
+
+jest.mock("../victoryTracking", () => ({
+	victoryTrackingSystem: (...args: unknown[]) => mockVictoryTrackingSystem(...args),
+	setGameStateQueries: (...args: unknown[]) => mockSetGameStateQueries(...args),
+	isGameOver: () => mockIsGameOver(),
+	getWinner: () => mockGetWinner(),
+	resetVictoryTracking: () => mockResetVictoryTracking(),
+}));
+
 // ---------------------------------------------------------------------------
 // Imports (after mocks)
 // ---------------------------------------------------------------------------
@@ -141,6 +156,9 @@ import {
 	getBridgeState,
 	getTickCount,
 	reset,
+	setVictoryGameStateQueries,
+	bridgeIsGameOver,
+	bridgeGetWinner,
 } from "../gameLoopBridge";
 import type { CompressEvent } from "../harvestCompress";
 import type { SmeltingResult } from "../furnaceProcessing";
@@ -194,6 +212,11 @@ beforeEach(() => {
 	jest.clearAllMocks();
 	(getHarvestingState as jest.Mock).mockReturnValue(null);
 	(getCompressionState as jest.Mock).mockReturnValue(null);
+	mockIsGameOver.mockReturnValue(false);
+	mockGetWinner.mockReturnValue(null);
+	mockVictoryTrackingSystem.mockReset();
+	mockSetGameStateQueries.mockReset();
+	mockResetVictoryTracking.mockReset();
 });
 
 // ===========================================================================
@@ -945,5 +968,200 @@ describe("gameLoopBridge", () => {
 		gameLoopBridge(0.016);
 		gameLoopBridge(0.016);
 		expect(getTickCount()).toBe(3);
+	});
+});
+
+// ===========================================================================
+// Victory condition wiring
+// ===========================================================================
+
+describe("victory condition wiring — bridgeTick calls victoryTrackingSystem", () => {
+	it("calls victoryTrackingSystem on each bridgeTick", () => {
+		bridgeTick(0.016);
+		expect(mockVictoryTrackingSystem).toHaveBeenCalledTimes(1);
+	});
+
+	it("passes current tick count to victoryTrackingSystem", () => {
+		bridgeTick(0.016); // tick becomes 1 after this call, but call happens at tickCount=0
+		expect(mockVictoryTrackingSystem).toHaveBeenCalledWith(0);
+	});
+
+	it("calls victoryTrackingSystem on every tick", () => {
+		bridgeTick(0.016);
+		bridgeTick(0.016);
+		bridgeTick(0.016);
+		expect(mockVictoryTrackingSystem).toHaveBeenCalledTimes(3);
+	});
+
+	it("passes increasing tick counts across successive calls", () => {
+		bridgeTick(0.016);
+		bridgeTick(0.016);
+		expect(mockVictoryTrackingSystem).toHaveBeenNthCalledWith(1, 0);
+		expect(mockVictoryTrackingSystem).toHaveBeenNthCalledWith(2, 1);
+	});
+});
+
+describe("victory condition wiring — game_over event", () => {
+	it("emits game_over event on the tick victoryTrackingSystem first sets a winner", () => {
+		// Simulate victoryTrackingSystem causing isGameOver to become true mid-tick:
+		// - Before victoryTrackingSystem runs: false (captured as wasGameOver)
+		// - After victoryTrackingSystem runs: true (the second isGameOver() call)
+		let callCount = 0;
+		mockIsGameOver.mockImplementation(() => {
+			// First call each tick is the wasGameOver snapshot; second is the post-check
+			callCount++;
+			return callCount > 1;
+		});
+		mockGetWinner.mockReturnValue({
+			faction: "reclaimers",
+			condition: "military",
+			conditionName: "Military Conquest",
+		});
+
+		bridgeTick(0.016);
+
+		expect(emit).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "game_over",
+				winnerId: "reclaimers",
+				condition: "military",
+				conditionName: "Military Conquest",
+			}),
+		);
+	});
+
+	it("does not emit game_over when isGameOver returns false throughout tick", () => {
+		mockIsGameOver.mockReturnValue(false);
+
+		bridgeTick(0.016);
+		bridgeTick(0.016);
+
+		expect(emit).not.toHaveBeenCalledWith(
+			expect.objectContaining({ type: "game_over" }),
+		);
+	});
+
+	it("does not re-emit game_over on subsequent ticks once already game over", () => {
+		// Both wasGameOver and post-check are true from tick 1 onwards — no new transition
+		mockIsGameOver.mockReturnValue(true);
+		mockGetWinner.mockReturnValue({
+			faction: "signal_choir",
+			condition: "scientific",
+			conditionName: "Scientific Supremacy",
+		});
+
+		bridgeTick(0.016);
+		bridgeTick(0.016);
+		bridgeTick(0.016);
+
+		const gameOverCalls = (emit as jest.Mock).mock.calls.filter(
+			(args: unknown[]) =>
+				typeof args[0] === "object" &&
+				args[0] !== null &&
+				(args[0] as { type: string }).type === "game_over",
+		);
+		// No transition (wasGameOver=true on entry every tick), so never fires
+		expect(gameOverCalls.length).toBe(0);
+	});
+
+	it("sends a persistent notification when game_over fires", () => {
+		// Simulate the transition within a single tick
+		let callCount = 0;
+		mockIsGameOver.mockImplementation(() => {
+			callCount++;
+			return callCount > 1;
+		});
+		mockGetWinner.mockReturnValue({
+			faction: "iron_creed",
+			condition: "economic",
+			conditionName: "Economic Dominance",
+		});
+
+		bridgeTick(0.016);
+
+		expect(addNotification).toHaveBeenCalledWith(
+			"success",
+			"Victory!",
+			"iron_creed achieved Economic Dominance",
+			expect.any(Number),
+			0,
+		);
+	});
+});
+
+describe("victory condition wiring — bridgeIsGameOver / bridgeGetWinner", () => {
+	it("bridgeIsGameOver returns false when no faction has won", () => {
+		mockIsGameOver.mockReturnValue(false);
+		expect(bridgeIsGameOver()).toBe(false);
+	});
+
+	it("bridgeIsGameOver returns true when a faction has won", () => {
+		mockIsGameOver.mockReturnValue(true);
+		expect(bridgeIsGameOver()).toBe(true);
+	});
+
+	it("bridgeGetWinner returns null when no winner yet", () => {
+		mockGetWinner.mockReturnValue(null);
+		expect(bridgeGetWinner()).toBeNull();
+	});
+
+	it("bridgeGetWinner returns winner info when game is over", () => {
+		const expectedWinner = {
+			faction: "volt_collective",
+			condition: "domination",
+			conditionName: "Domination",
+		};
+		mockGetWinner.mockReturnValue(expectedWinner);
+
+		const result = bridgeGetWinner();
+		expect(result).toEqual(expectedWinner);
+	});
+
+	it("getBridgeState includes victoryGameOver and victoryWinner fields", () => {
+		mockIsGameOver.mockReturnValue(true);
+		const expectedWinner = {
+			faction: "reclaimers",
+			condition: "cultural",
+			conditionName: "Cultural Dominion",
+		};
+		mockGetWinner.mockReturnValue(expectedWinner);
+
+		const state = getBridgeState();
+		expect(state.victoryGameOver).toBe(true);
+		expect(state.victoryWinner).toEqual(expectedWinner);
+	});
+
+	it("getBridgeState shows victoryGameOver false and null winner when no win", () => {
+		mockIsGameOver.mockReturnValue(false);
+		mockGetWinner.mockReturnValue(null);
+
+		const state = getBridgeState();
+		expect(state.victoryGameOver).toBe(false);
+		expect(state.victoryWinner).toBeNull();
+	});
+});
+
+describe("victory condition wiring — setVictoryGameStateQueries", () => {
+	it("delegates to setGameStateQueries in victoryTracking", () => {
+		const queries = {
+			getCubeCount: jest.fn(() => 0),
+			getTerritoryPercentage: jest.fn(() => 0),
+			getAliveFactions: jest.fn(() => []),
+			getMaxResearchedTier: jest.fn(() => 0),
+			getHologramCount: jest.fn(() => 0),
+			getQuestCompletionCount: jest.fn(() => 0),
+			getHackPercentage: jest.fn(() => 0),
+		};
+
+		setVictoryGameStateQueries(queries);
+
+		expect(mockSetGameStateQueries).toHaveBeenCalledWith(queries);
+	});
+});
+
+describe("victory condition wiring — reset clears victory state", () => {
+	it("calls resetVictoryTracking on reset", () => {
+		reset();
+		expect(mockResetVictoryTracking).toHaveBeenCalled();
 	});
 });

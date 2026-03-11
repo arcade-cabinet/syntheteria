@@ -83,6 +83,15 @@ import {
 	type GameStats,
 	type AchievementEvent,
 } from "./achievementSystem";
+import {
+	victoryTrackingSystem,
+	setGameStateQueries,
+	isGameOver,
+	getWinner,
+	resetVictoryTracking,
+	type GameStateQueries,
+	type Winner,
+} from "./victoryTracking";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -111,6 +120,10 @@ export interface BridgeState {
 	enemiesDefeatedTotal: number;
 	/** Lifetime count of structures placed. */
 	structuresPlacedTotal: number;
+	/** True once a faction has satisfied a victory condition. */
+	victoryGameOver: boolean;
+	/** The winning faction/condition, or null if the game is still in progress. */
+	victoryWinner: Winner | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -340,6 +353,29 @@ export function bridgeTick(delta: number): void {
 			damageFlashIntensity - delta * DAMAGE_FLASH_DECAY_RATE,
 		);
 		triggerDamageFlash(damageFlashIntensity);
+	}
+
+	// --- Victory condition check (delegates to victoryTrackingSystem) ---
+	const wasGameOver = isGameOver();
+	victoryTrackingSystem(tickCount);
+	if (!wasGameOver && isGameOver()) {
+		const w = getWinner();
+		if (w) {
+			emit({
+				type: "game_over",
+				winnerId: w.faction,
+				condition: w.condition,
+				conditionName: w.conditionName,
+				tick: tickCount,
+			});
+			addNotification(
+				"success",
+				"Victory!",
+				`${w.faction} achieved ${w.conditionName}`,
+				tickCount,
+				0, // persistent — never auto-dismiss
+			);
+		}
 	}
 
 	// --- Achievement system check (every 60 ticks to avoid per-frame cost) ---
@@ -724,6 +760,32 @@ export function setPlayerPower(current: number, max: number): void {
 // ---------------------------------------------------------------------------
 
 /**
+ * Register the game state query functions used by the victory tracking system.
+ *
+ * Must be called before the first bridgeTick if victory conditions should be
+ * evaluated. Safe to call multiple times — subsequent calls update the queries.
+ *
+ * @param queries - Implementations that read live game state.
+ */
+export function setVictoryGameStateQueries(queries: GameStateQueries): void {
+	setGameStateQueries(queries);
+}
+
+/**
+ * True if any faction has satisfied a victory condition this game.
+ */
+export function bridgeIsGameOver(): boolean {
+	return isGameOver();
+}
+
+/**
+ * Returns the winning faction and condition, or null if the game continues.
+ */
+export function bridgeGetWinner(): Winner | null {
+	return getWinner();
+}
+
+/**
  * Get a snapshot of the bridge's internal state for debugging or testing.
  */
 export function getBridgeState(): BridgeState {
@@ -744,6 +806,8 @@ export function getBridgeState(): BridgeState {
 		oreHarvestedTotal: statsOreHarvested,
 		enemiesDefeatedTotal: statsEnemiesDefeated,
 		structuresPlacedTotal: statsStructuresPlaced,
+		victoryGameOver: isGameOver(),
+		victoryWinner: getWinner(),
 	};
 }
 
@@ -784,4 +848,5 @@ export function reset(): void {
 		unsubAchievements();
 		unsubAchievements = null;
 	}
+	resetVictoryTracking();
 }

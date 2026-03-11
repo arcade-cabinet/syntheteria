@@ -580,3 +580,258 @@ describe("loadFactionWeights", () => {
 		expect(hasDifference).toBe(true);
 	});
 });
+
+// ---------------------------------------------------------------------------
+// Faction-specific strategy overrides
+// ---------------------------------------------------------------------------
+
+describe("applySituationalModifiers — Reclaimers strategy (hoard)", () => {
+	const reclaimersBias: GovernorBias = {
+		economy: 1.2,
+		mining: 1.3,
+		military: 0.8,
+		defense: 1.0,
+		research: 0.7,
+		expansion: 1.0,
+	};
+
+	it("boosts HOARD_CUBES when resources are plentiful (>= 0.4)", () => {
+		const base = computeBaseWeights(reclaimersBias);
+		const baseHoard = base[CivGoal.HOARD_CUBES];
+
+		const situation: FactionSituation = { resourceLevel: 0.6 };
+		const modified = applySituationalModifiers(base, situation, "reclaimers");
+
+		expect(modified[CivGoal.HOARD_CUBES]).toBeGreaterThan(baseHoard);
+	});
+
+	it("reduces ATTACK_ENEMY when resources are plentiful", () => {
+		const base = computeBaseWeights(reclaimersBias);
+		const baseAttack = base[CivGoal.ATTACK_ENEMY];
+
+		const situation: FactionSituation = { resourceLevel: 0.7 };
+		const modified = applySituationalModifiers(base, situation, "reclaimers");
+
+		expect(modified[CivGoal.ATTACK_ENEMY]).toBeLessThan(baseAttack);
+	});
+
+	it("does NOT boost HOARD_CUBES when resources are scarce (< 0.4)", () => {
+		const base = computeBaseWeights(reclaimersBias);
+		const baseHoard = base[CivGoal.HOARD_CUBES];
+
+		// Scarce resources — no hoard boost (universal low-resource modifier applies instead)
+		const situation: FactionSituation = { resourceLevel: 0.2 };
+		const modified = applySituationalModifiers(base, situation, "reclaimers");
+
+		// HOARD_CUBES may be boosted by the universal low-resource pass, but NOT by faction strategy
+		// We just verify it's not boosted by a LARGER amount than the universal pass alone would produce
+		const universalOnly = applySituationalModifiers(base, situation);
+		expect(modified[CivGoal.HOARD_CUBES]).toBeCloseTo(
+			universalOnly[CivGoal.HOARD_CUBES],
+			5,
+		);
+	});
+});
+
+describe("applySituationalModifiers — Volt Collective strategy (aggressor)", () => {
+	const voltBias: GovernorBias = {
+		economy: 0.8,
+		mining: 1.0,
+		military: 1.5,
+		defense: 0.9,
+		research: 1.0,
+		expansion: 1.3,
+	};
+
+	it("boosts ATTACK_ENEMY when enemy stockpile value is high", () => {
+		const base = computeBaseWeights(voltBias);
+		const baseAttack = base[CivGoal.ATTACK_ENEMY];
+
+		const situation: FactionSituation = { enemyStockpileValue: 1000 };
+		const modified = applySituationalModifiers(base, situation, "volt_collective");
+
+		expect(modified[CivGoal.ATTACK_ENEMY]).toBeGreaterThan(baseAttack);
+	});
+
+	it("does not boost ATTACK_ENEMY when enemy stockpile value is 0", () => {
+		const base = computeBaseWeights(voltBias);
+		const baseAttack = base[CivGoal.ATTACK_ENEMY];
+
+		const situation: FactionSituation = { enemyStockpileValue: 0 };
+		const modified = applySituationalModifiers(base, situation, "volt_collective");
+
+		// No wealth → no raid boost (but TRADE is still penalized)
+		expect(modified[CivGoal.ATTACK_ENEMY]).toBe(baseAttack);
+	});
+
+	it("always reduces TRADE weight", () => {
+		const base = computeBaseWeights(voltBias);
+		const baseTrade = base[CivGoal.TRADE];
+
+		const situation: FactionSituation = {};
+		const modified = applySituationalModifiers(base, situation, "volt_collective");
+
+		expect(modified[CivGoal.TRADE]).toBeLessThan(baseTrade);
+	});
+
+	it("attack boost is capped at 1.0", () => {
+		const base = computeBaseWeights(voltBias);
+
+		const situation: FactionSituation = { enemyStockpileValue: 999999 };
+		const modified = applySituationalModifiers(base, situation, "volt_collective");
+
+		expect(modified[CivGoal.ATTACK_ENEMY]).toBeLessThanOrEqual(1.0);
+	});
+});
+
+describe("applySituationalModifiers — Signal Choir strategy (hacker)", () => {
+	const signalBias: GovernorBias = {
+		economy: 1.0,
+		mining: 0.8,
+		military: 0.7,
+		defense: 1.0,
+		research: 1.5,
+		expansion: 0.9,
+	};
+
+	it("always boosts RESEARCH_TECH regardless of situation", () => {
+		const base = computeBaseWeights(signalBias);
+		const baseResearch = base[CivGoal.RESEARCH_TECH];
+
+		const neutral: FactionSituation = {};
+		const modified = applySituationalModifiers(base, neutral, "signal_choir");
+
+		expect(modified[CivGoal.RESEARCH_TECH]).toBeGreaterThan(baseResearch);
+	});
+
+	it("reduces ATTACK_ENEMY (Signal Choir avoids raw combat)", () => {
+		const base = computeBaseWeights(signalBias);
+		const baseAttack = base[CivGoal.ATTACK_ENEMY];
+
+		const situation: FactionSituation = {};
+		const modified = applySituationalModifiers(base, situation, "signal_choir");
+
+		expect(modified[CivGoal.ATTACK_ENEMY]).toBeLessThan(baseAttack);
+	});
+
+	it("boosts ATTACK_ENEMY when hackable targets are nearby (hacking offensive)", () => {
+		const base = computeBaseWeights(signalBias);
+		const noHackSituation: FactionSituation = { hackableTargetsNearby: false };
+		const hackSituation: FactionSituation = { hackableTargetsNearby: true };
+
+		const noHackMod = applySituationalModifiers(base, noHackSituation, "signal_choir");
+		const hackMod = applySituationalModifiers(base, hackSituation, "signal_choir");
+
+		// Attack should be higher when hackable targets are present
+		expect(hackMod[CivGoal.ATTACK_ENEMY]).toBeGreaterThan(
+			noHackMod[CivGoal.ATTACK_ENEMY],
+		);
+	});
+});
+
+describe("applySituationalModifiers — Iron Creed strategy (fortress)", () => {
+	const ironBias: GovernorBias = {
+		economy: 1.0,
+		mining: 1.0,
+		military: 1.0,
+		defense: 1.5,
+		research: 0.8,
+		expansion: 0.7,
+	};
+
+	it("boosts BUILD_DEFENSES when wall count is below comfort threshold (4)", () => {
+		const base = computeBaseWeights(ironBias);
+		const baseDefense = base[CivGoal.BUILD_DEFENSES];
+
+		const situation: FactionSituation = { ownWallCount: 1 };
+		const modified = applySituationalModifiers(base, situation, "iron_creed");
+
+		expect(modified[CivGoal.BUILD_DEFENSES]).toBeGreaterThan(baseDefense);
+	});
+
+	it("suppresses ATTACK_ENEMY when under-fortified", () => {
+		const base = computeBaseWeights(ironBias);
+		const baseAttack = base[CivGoal.ATTACK_ENEMY];
+
+		const situation: FactionSituation = { ownWallCount: 0 };
+		const modified = applySituationalModifiers(base, situation, "iron_creed");
+
+		expect(modified[CivGoal.ATTACK_ENEMY]).toBeLessThan(baseAttack);
+	});
+
+	it("suppresses EXPAND_TERRITORY when under-fortified", () => {
+		const base = computeBaseWeights(ironBias);
+		const baseExpand = base[CivGoal.EXPAND_TERRITORY];
+
+		const situation: FactionSituation = { ownWallCount: 2 };
+		const modified = applySituationalModifiers(base, situation, "iron_creed");
+
+		expect(modified[CivGoal.EXPAND_TERRITORY]).toBeLessThan(baseExpand);
+	});
+
+	it("does NOT suppress attack when adequately fortified (>= 4 walls)", () => {
+		const base = computeBaseWeights(ironBias);
+		const baseAttack = base[CivGoal.ATTACK_ENEMY];
+
+		const wellFortified: FactionSituation = { ownWallCount: 5 };
+		const modified = applySituationalModifiers(base, wellFortified, "iron_creed");
+
+		// No under-fortified suppression; TRADE penalty still applies
+		// Attack should be >= baseAttack * 0.6 (only TRADE penalty path, not the wall block)
+		expect(modified[CivGoal.ATTACK_ENEMY]).toBeCloseTo(baseAttack, 5);
+	});
+
+	it("always reduces TRADE weight", () => {
+		const base = computeBaseWeights(ironBias);
+		const baseTrade = base[CivGoal.TRADE];
+
+		const situation: FactionSituation = { ownWallCount: 10 };
+		const modified = applySituationalModifiers(base, situation, "iron_creed");
+
+		expect(modified[CivGoal.TRADE]).toBeLessThan(baseTrade);
+	});
+});
+
+describe("applySituationalModifiers — faction override is additive with universal modifiers", () => {
+	it("Volt Collective under attack still boosts BUILD_DEFENSES (universal) + reduces TRADE (faction)", () => {
+		const voltBias: GovernorBias = {
+			economy: 0.8,
+			mining: 1.0,
+			military: 1.5,
+			defense: 0.9,
+			research: 1.0,
+			expansion: 1.3,
+		};
+		const base = computeBaseWeights(voltBias);
+		const baseTrade = base[CivGoal.TRADE];
+		const baseDefense = base[CivGoal.BUILD_DEFENSES];
+
+		const situation: FactionSituation = { underAttack: true };
+		const modified = applySituationalModifiers(base, situation, "volt_collective");
+
+		// Universal under-attack modifier boosts BUILD_DEFENSES
+		expect(modified[CivGoal.BUILD_DEFENSES]).toBeGreaterThan(baseDefense);
+		// Faction-specific modifier reduces TRADE further (stacks with universal attack penalty)
+		expect(modified[CivGoal.TRADE]).toBeLessThan(baseTrade * 0.3); // 0.3 (universal) * 0.4 (volt) < baseTrade * 0.3
+	});
+
+	it("unknown faction does not apply any overrides beyond universal modifiers", () => {
+		const bias: GovernorBias = {
+			economy: 1.0,
+			mining: 1.0,
+			military: 1.0,
+			defense: 1.0,
+			research: 1.0,
+			expansion: 1.0,
+		};
+		const base = computeBaseWeights(bias);
+		const situation: FactionSituation = { resourceLevel: 0.5 };
+
+		const withUnknown = applySituationalModifiers(base, situation, "xenos");
+		const withoutFaction = applySituationalModifiers(base, situation);
+
+		for (const goal of Object.values(CivGoal)) {
+			expect(withUnknown[goal]).toBeCloseTo(withoutFaction[goal], 10);
+		}
+	});
+});

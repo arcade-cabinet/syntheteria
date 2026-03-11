@@ -16,6 +16,8 @@ import { getTerrainHeight } from "../ecs/terrain";
 
 const territoryCfg = config.territory;
 import type { Entity } from "../ecs/types";
+import { destroyEntityById, spawnKootaEntity } from "../ecs/koota/bridge";
+import { getEntityById } from "../ecs/koota/compat";
 import { world } from "../ecs/world";
 import {
 	claimTerritory,
@@ -82,7 +84,7 @@ export function createOutpost(
 ): string | null {
 	// Enforce minimum spacing
 	for (const [, record] of outposts) {
-		const existing = world.entities.find((e) => e.id === record.entityId);
+		const existing = getEntityById(record.entityId);
 		if (!existing?.worldPosition) continue;
 
 		const dx = existing.worldPosition.x - position.x;
@@ -96,7 +98,7 @@ export function createOutpost(
 	const radius = getOutpostRadius(tier);
 	const y = getTerrainHeight(position.x, position.z);
 
-	const entity = world.add({
+	const { miniplex: entity } = spawnKootaEntity({
 		id: `outpost_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
 		faction: factionId as Entity["faction"],
 		worldPosition: { x: position.x, y, z: position.z },
@@ -107,7 +109,7 @@ export function createOutpost(
 			selected: false,
 			components: [],
 		},
-	} as Partial<Entity> as Entity);
+	} as Partial<Entity> & { id: string });
 
 	const territory = claimTerritory(world, factionId, position, radius, tick);
 
@@ -132,7 +134,7 @@ export function upgradeOutpost(outpostId: string, tick = 0): boolean {
 	const maxTier = territoryCfg.outpostTiers.length;
 	if (record.tier >= maxTier) return false;
 
-	const entity = world.entities.find((e) => e.id === outpostId);
+	const entity = getEntityById(outpostId);
 	if (!entity?.worldPosition) return false;
 
 	// Remove old territory and create expanded one
@@ -164,11 +166,7 @@ export function destroyOutpost(outpostId: string): void {
 
 	removeTerritoryById(world, record.territoryId);
 
-	const entity = world.entities.find((e) => e.id === outpostId);
-	if (entity) {
-		world.remove(entity);
-	}
-
+	destroyEntityById(outpostId);
 	outposts.delete(outpostId);
 }
 

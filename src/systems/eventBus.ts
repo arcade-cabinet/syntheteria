@@ -278,6 +278,75 @@ export interface ColossusAwakeningEvent {
 	tick: number;
 }
 
+export interface FaithGeneratedEvent {
+	type: "faith_generated";
+	/** Faction generating faith */
+	faction: string;
+	/** Amount of faith generated this tick */
+	amount: number;
+	/** Building or source that generated it */
+	source: string;
+	/** Running total faith for this faction */
+	totalFaith: number;
+	tick: number;
+}
+
+export interface ShrinePlacedEvent {
+	type: "shrine_placed";
+	/** Faction that placed the shrine */
+	faction: string;
+	/** Building type: "shrine" | "temple" | "grand_cathedral" */
+	buildingType: string;
+	position: { x: number; y: number; z: number };
+	/** Unique shrine ID */
+	shrineId: string;
+	tick: number;
+}
+
+export interface DoctrineUnlockedEvent {
+	type: "doctrine_unlocked";
+	faction: string;
+	/** Doctrine ID from victoryPaths.json factionCults[faction].doctrines */
+	doctrineId: string;
+	doctrineName: string;
+	/** Total faith at the time of unlocking */
+	faithAtUnlock: number;
+	tick: number;
+}
+
+export interface UnitConvertedEvent {
+	type: "unit_converted";
+	/** Entity ID of the unit that was converted */
+	entityId: string;
+	/** Faction the unit belonged to before conversion */
+	fromFaction: string;
+	/** Faction the unit now belongs to */
+	toFaction: string;
+	/** Cult leader entity ID that performed the conversion */
+	cultLeaderId: string;
+	tick: number;
+}
+
+export interface EnlightenmentProgressEvent {
+	type: "enlightenment_progress";
+	faction: string;
+	/** Current faith total */
+	faith: number;
+	/** Faith required for victory */
+	faithRequired: number;
+	/** Number of units converted so far */
+	unitsConverted: number;
+	/** Units converted required for victory */
+	unitsConvertedRequired: number;
+	/** Number of doctrines unlocked */
+	doctrinesUnlocked: number;
+	/** Whether Grand Cathedral has been built */
+	grandCathedralBuilt: boolean;
+	/** Whether all conditions are met */
+	victoryEligible: boolean;
+	tick: number;
+}
+
 export type GameEvent =
 	| CombatKillEvent
 	| QuestCompleteEvent
@@ -310,7 +379,12 @@ export type GameEvent =
 	| AncientMachineHostileEvent
 	| ColossusAwakeningEvent
 	| SubstrateDamagedEvent
-	| ResidualRelationshipChangedEvent;
+	| ResidualRelationshipChangedEvent
+	| FaithGeneratedEvent
+	| ShrinePlacedEvent
+	| DoctrineUnlockedEvent
+	| UnitConvertedEvent
+	| EnlightenmentProgressEvent;
 
 export type GameEventType = GameEvent["type"];
 

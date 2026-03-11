@@ -16,6 +16,7 @@
  * - reset clears everything
  */
 
+import economyConfig from "../../../config/economy.json";
 import {
 	registerCube,
 	unregisterCube,
@@ -29,6 +30,13 @@ import {
 	reset,
 } from "../cubePileTracker";
 import type { CubeInfo } from "../cubePileTracker";
+
+// Helper: resolve cube value from config (materials + alloys), fallback to 5
+function configCubeValue(mat: string): number {
+	const mats = economyConfig.materials as Record<string, { cubeValue?: number }>;
+	const alloys = economyConfig.alloys as Record<string, { cubeValue?: number }>;
+	return mats[mat]?.cubeValue ?? alloys[mat]?.cubeValue ?? 5;
+}
 
 // ---------------------------------------------------------------------------
 // Setup / teardown
@@ -297,8 +305,9 @@ describe("materialBreakdown", () => {
 // ---------------------------------------------------------------------------
 
 describe("totalEconomicValue", () => {
-	it("sums values of all cubes in a pile using hardcoded values", () => {
-		// iron=25, copper=15
+	it("sums values of all cubes in a pile using config values", () => {
+		const ironVal = configCubeValue("iron");
+		const copperVal = configCubeValue("copper");
 		registerCube(
 			makeCube({
 				cubeId: "c1",
@@ -315,7 +324,7 @@ describe("totalEconomicValue", () => {
 		);
 		recalculatePiles(4);
 
-		expect(getPiles()[0].totalEconomicValue).toBe(40);
+		expect(getPiles()[0].totalEconomicValue).toBe(ironVal + copperVal);
 	});
 
 	it("uses fallback value of 5 for unknown material types", () => {
@@ -331,7 +340,8 @@ describe("totalEconomicValue", () => {
 	});
 
 	it("calculates correctly for expensive materials", () => {
-		// rare_alloy=100, fiber_optics=60
+		const rareAlloyVal = configCubeValue("rare_alloy");
+		const fiberOpticsVal = configCubeValue("fiber_optics");
 		registerCube(
 			makeCube({
 				cubeId: "c1",
@@ -346,24 +356,18 @@ describe("totalEconomicValue", () => {
 		);
 		recalculatePiles(4);
 
-		expect(getPiles()[0].totalEconomicValue).toBe(160);
+		expect(getPiles()[0].totalEconomicValue).toBe(rareAlloyVal + fiberOpticsVal);
 	});
 
-	it("uses correct value for each known material", () => {
-		const expectations: Record<string, number> = {
-			scrap_iron: 5,
-			iron: 25,
-			copper: 15,
-			e_waste: 10,
-			fiber_optics: 60,
-			rare_alloy: 100,
-		};
+	it("uses correct value for each known material (from economy.json cubeValue)", () => {
+		const materialIds = ["scrap_iron", "iron", "copper", "e_waste", "fiber_optics", "rare_alloy"];
 
-		for (const [mat, expectedValue] of Object.entries(expectations)) {
+		for (const mat of materialIds) {
 			reset();
 			registerCube(makeCube({ cubeId: `c_${mat}`, materialType: mat }));
 			recalculatePiles(4);
-			expect(getPiles()[0].totalEconomicValue).toBe(expectedValue);
+			const expected = configCubeValue(mat);
+			expect(getPiles()[0].totalEconomicValue).toBe(expected);
 		}
 	});
 });
@@ -459,7 +463,7 @@ describe("getLargestPile", () => {
 
 describe("getTotalValueByFaction", () => {
 	it("sums economic value across all piles for a faction", () => {
-		// iron=25 each, two piles of 1 cube each
+		const ironVal = configCubeValue("iron");
 		registerCube(
 			makeCube({
 				cubeId: "c1",
@@ -478,7 +482,7 @@ describe("getTotalValueByFaction", () => {
 		);
 		recalculatePiles(4);
 
-		expect(getTotalValueByFaction("reclaimers")).toBe(50);
+		expect(getTotalValueByFaction("reclaimers")).toBe(ironVal * 2);
 	});
 
 	it("returns 0 for a faction with no piles", () => {
@@ -491,6 +495,8 @@ describe("getTotalValueByFaction", () => {
 	});
 
 	it("does not include other factions' values", () => {
+		const rareAlloyVal = configCubeValue("rare_alloy");
+		const ironVal = configCubeValue("iron");
 		registerCube(
 			makeCube({
 				cubeId: "c1",
@@ -507,8 +513,8 @@ describe("getTotalValueByFaction", () => {
 		);
 		recalculatePiles(4);
 
-		expect(getTotalValueByFaction("reclaimers")).toBe(100);
-		expect(getTotalValueByFaction("volt_collective")).toBe(25);
+		expect(getTotalValueByFaction("reclaimers")).toBe(rareAlloyVal);
+		expect(getTotalValueByFaction("volt_collective")).toBe(ironVal);
 	});
 });
 
@@ -685,7 +691,7 @@ describe("edge cases", () => {
 		expect(pile.cubeCount).toBe(1);
 		expect(pile.center).toEqual({ x: 5, y: 3, z: 5 });
 		expect(pile.topY).toBe(3);
-		expect(pile.totalEconomicValue).toBe(100);
+		expect(pile.totalEconomicValue).toBe(configCubeValue("rare_alloy"));
 	});
 
 	it("recalculation is idempotent with the same data", () => {

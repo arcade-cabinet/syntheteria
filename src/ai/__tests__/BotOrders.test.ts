@@ -22,6 +22,8 @@ import {
 	type GatherResourcesOrder,
 	type ReturnToBaseOrder,
 	type FollowOrder,
+	type FlankTargetOrder,
+	type SiegeTargetOrder,
 } from "../BotOrders.ts";
 import {
 	distanceSqXZ,
@@ -68,9 +70,17 @@ describe("BotOrderType constants", () => {
 		expect(BotOrderType.FOLLOW).toBe("follow");
 	});
 
-	it("has exactly 6 order types", () => {
+	it("FLANK_TARGET has correct value", () => {
+		expect(BotOrderType.FLANK_TARGET).toBe("flank_target");
+	});
+
+	it("SIEGE_TARGET has correct value", () => {
+		expect(BotOrderType.SIEGE_TARGET).toBe("siege_target");
+	});
+
+	it("has exactly 8 order types", () => {
 		const keys = Object.keys(BotOrderType);
-		expect(keys).toHaveLength(6);
+		expect(keys).toHaveLength(8);
 	});
 
 	it("all values are unique strings", () => {
@@ -201,6 +211,62 @@ describe("FollowOrder", () => {
 	});
 });
 
+describe("FlankTargetOrder", () => {
+	it("can be constructed with required fields only", () => {
+		const order: FlankTargetOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy-7",
+		};
+
+		expect(order.type).toBe("flank_target");
+		expect(order.targetId).toBe("enemy-7");
+		expect(order.flankAngle).toBeUndefined();
+	});
+
+	it("accepts optional flankAngle", () => {
+		const order: FlankTargetOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy-7",
+			flankAngle: -Math.PI / 2,
+		};
+
+		expect(order.flankAngle).toBeCloseTo(-Math.PI / 2);
+	});
+
+	it("accepts positive flankAngle for right flank", () => {
+		const order: FlankTargetOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy-7",
+			flankAngle: Math.PI / 2,
+		};
+
+		expect(order.flankAngle).toBeCloseTo(Math.PI / 2);
+	});
+});
+
+describe("SiegeTargetOrder", () => {
+	it("can be constructed with required fields", () => {
+		const order: SiegeTargetOrder = {
+			type: BotOrderType.SIEGE_TARGET,
+			targetPosition: pos(100, 0, 100),
+			approachRadius: 12,
+		};
+
+		expect(order.type).toBe("siege_target");
+		expect(order.targetPosition).toEqual({ x: 100, y: 0, z: 100 });
+		expect(order.approachRadius).toBe(12);
+	});
+
+	it("accepts zero approach radius", () => {
+		const order: SiegeTargetOrder = {
+			type: BotOrderType.SIEGE_TARGET,
+			targetPosition: pos(0, 0, 0),
+			approachRadius: 0,
+		};
+		expect(order.approachRadius).toBe(0);
+	});
+});
+
 // ===========================================================================
 // Discriminated union (BotOrder)
 // ===========================================================================
@@ -297,6 +363,12 @@ describe("BotOrder discriminated union", () => {
 			{ type: BotOrderType.GATHER_RESOURCES, depositId: "d1" },
 			{ type: BotOrderType.RETURN_TO_BASE },
 			{ type: BotOrderType.FOLLOW, targetId: "l1" },
+			{ type: BotOrderType.FLANK_TARGET, targetId: "e1" },
+			{
+				type: BotOrderType.SIEGE_TARGET,
+				targetPosition: pos(10, 0, 10),
+				approachRadius: 8,
+			},
 		];
 
 		const types: string[] = [];
@@ -320,6 +392,12 @@ describe("BotOrder discriminated union", () => {
 				case BotOrderType.FOLLOW:
 					types.push("follow");
 					break;
+				case BotOrderType.FLANK_TARGET:
+					types.push("flank");
+					break;
+				case BotOrderType.SIEGE_TARGET:
+					types.push("siege");
+					break;
 			}
 		}
 
@@ -330,6 +408,8 @@ describe("BotOrder discriminated union", () => {
 			"gather",
 			"return",
 			"follow",
+			"flank",
+			"siege",
 		]);
 	});
 });

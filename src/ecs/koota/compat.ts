@@ -187,3 +187,31 @@ export const miners = makeQueryIterable(getMiners);
 export const processors = makeQueryIterable(getProcessors);
 export const hackables = makeQueryIterable(getHackables);
 export const signalRelays = makeQueryIterable(getSignalRelays);
+
+// ---------------------------------------------------------------------------
+// Utility lookups — replaces world iteration in migrated systems
+// ---------------------------------------------------------------------------
+
+/**
+ * Find a Miniplex entity by its string ID.
+ * Iterates the Miniplex world directly (O(N)) — use only for one-off lookups,
+ * not for hot-path per-entity iteration.
+ */
+export function getEntityById(entityId: string): Entity | undefined {
+	for (const entity of miniplexWorld) {
+		if (entity.id === entityId) return entity;
+	}
+	return undefined;
+}
+
+/**
+ * Get the currently active player bot (the entity being piloted).
+ * Returns null if no player bot is active.
+ * Equivalent to world.ts getActivePlayerBot() but sourced through compat.
+ */
+export function getActivePlayerBot(): PlayerEntity | null {
+	for (const entity of getPlayerBots()) {
+		if (entity.playerControlled?.isActive) return entity as PlayerEntity;
+	}
+	return null;
+}

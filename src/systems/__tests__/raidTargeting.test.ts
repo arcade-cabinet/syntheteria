@@ -15,6 +15,14 @@ jest.mock("../raidSystem", () => ({
 	getCubes: jest.fn(() => []),
 }));
 
+// Mock PerceptionSystem for pile-perception tests
+const mockGetVisibleEnemyPiles = jest.fn().mockReturnValue([]);
+const mockComputePileDetectionRange = jest.fn().mockImplementation((base: number, count: number) => base * (1 + count * 0.05));
+jest.mock("../../ai/PerceptionSystem", () => ({
+	getVisibleEnemyPiles: (...args: unknown[]) => mockGetVisibleEnemyPiles(...args),
+	computePileDetectionRange: (...args: unknown[]) => mockComputePileDetectionRange(...args),
+}));
+
 // Compat layer: defer world access until iteration time to avoid circular init issues
 jest.mock("../../ecs/koota/compat", () => ({
 	get units() {
@@ -27,7 +35,9 @@ import type { Entity, UnitComponent } from "../../ecs/types";
 import { world } from "../../ecs/world";
 import type { CubeEntity } from "../raidSystem";
 import { getCubes } from "../raidSystem";
-import { assessRaidViability, findRaidTargets } from "../raidTargeting";
+import type { CubePile } from "../cubePileTracker";
+import { assessRaidViability, findRaidTargets, findRaidTargetsFromPiles } from "../raidTargeting";
+import type { PerceivedPile } from "../../ai/PerceptionSystem";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -481,5 +491,125 @@ describe("raidTargeting — assessRaidViability", () => {
 
 		const result = assessRaidViability("feral", target);
 		expect(result.availableForce).toBe(4); // only feral's 4 components
+	});
+});
+
+// ---------------------------------------------------------------------------
+// findRaidTargetsFromPiles (§6.4 — pile-based governor raid discovery)
+// ---------------------------------------------------------------------------
+
+function makeCubePile(
+	pileId: string,
+	ownerFaction: string,
+	cubeCount: number,
+	totalEconomicValue: number,
+	cx: number,
+	cz: number,
+): CubePile {
+	return {
+		pileId,
+		center: { x: cx, y: 0, z: cz },
+		cubeCount,
+		materialBreakdown: {},
+		totalEconomicValue,
+		ownerFaction,
+		topY: 0,
+	};
+}
+
+function makePerceivedPile(
+	pile: CubePile,
+	effectiveRange = 20,
+	distance = 10,
+): PerceivedPile {
+	return { pile, effectiveRange, distance };
+}
+
+describe("findRaidTargetsFromPiles", () => {
+	beforeEach(() => {
+		mockGetVisibleEnemyPiles.mockReturnValue([]);
+		jest.clearAllMocks();
+	});
+
+	it("returns empty array when no piles are visible", () => {
+		mockGetVisibleEnemyPiles.mockReturnValue([]);
+
+		const result = findRaidTargetsFromPiles("reclaimers", { x: 0, z: 0 }, 20, []);
+		expect(result).toEqual([]);
+	});
+
+	it("converts visible piles to RaidTargets", () => {
+		const pile = makeCubePile("p1", "volt_collective", 10, 500, 20, 0);
+		mockGetVisibleEnemyPiles.mockReturnValue([makePerceivedPile(pile)]);
+
+		const result = findRaidTargetsFromPiles("reclaimers", { x: 0, z: 0 }, 20, [pile]);
+
+		expect(result.length).toBe(1);
+		expect(result[0].cubeCount).toBe(10);
+		expect(result[0].estimatedValue).toBe(500);
+		expect(result[0].position).toEqual(pile.center);
+	});
+
+	it("filters out own faction piles via getVisibleEnemyPiles filtering", () => {
+		const ownPile = makeCubePile("own", "reclaimers", 5, 100, 10, 0);
+		// getVisibleEnemyPiles was already passed only enemy piles — function filters before calling
+		mockGetVisibleEnemyPiles.mockReturnValue([]); // no visible enemy piles
+
+		const result = findRaidTargetsFromPiles("reclaimers", { x: 0, z: 0 }, 20, [ownPile]);
+		expect(result).toEqual([]);
+	});
+
+	it("sorts results by composite score: value / (1 + threat)", () => {
+		const richPile = makeCubePile("rich", "enemy", 5, 1000, 10, 0);
+		const cheapPile = makeCubePile("cheap", "enemy", 5, 100, 15, 0);
+
+		mockGetVisibleEnemyPiles.mockReturnValue([
+			makePerceivedPile(cheapPile),
+			makePerceivedPile(richPile),
+		]);
+
+		const result = findRaidTargetsFromPiles("reclaimers", { x: 0, z: 0 }, 20, [richPile, cheapPile]);
+
+		// richPile should be sorted first (higher value, no defenders)
+		expect(result[0].estimatedValue).toBe(1000);
+		expect(result[1].estimatedValue).toBe(100);
+	});
+
+	it("cubeIds is empty for pile-based targets (piles don't carry individual IDs)", () => {
+		const pile = makeCubePile("p1", "enemy", 5, 100, 10, 0);
+		mockGetVisibleEnemyPiles.mockReturnValue([makePerceivedPile(pile)]);
+
+		const result = findRaidTargetsFromPiles("reclaimers", { x: 0, z: 0 }, 20, [pile]);
+
+		expect(result[0].cubeIds).toEqual([]);
+	});
+
+	it("calls getVisibleEnemyPiles with observer position, base range, and enemy-only piles", () => {
+		const ownPile = makeCubePile("own", "reclaimers", 5, 100, 0, 0);
+		const enemyPile = makeCubePile("enemy", "volt_collective", 5, 200, 10, 0);
+		mockGetVisibleEnemyPiles.mockReturnValue([]);
+
+		findRaidTargetsFromPiles("reclaimers", { x: 50, z: 50 }, 30, [ownPile, enemyPile]);
+
+		expect(mockGetVisibleEnemyPiles).toHaveBeenCalledWith(
+			{ x: 50, z: 50 },
+			30,
+			[enemyPile], // only enemy pile passed
+		);
+	});
+
+	it("multiple visible piles all become raid targets", () => {
+		const piles = [
+			makeCubePile("p1", "enemy", 5, 100, 10, 0),
+			makeCubePile("p2", "enemy", 5, 200, 15, 0),
+			makeCubePile("p3", "enemy", 5, 300, 20, 0),
+		];
+		mockGetVisibleEnemyPiles.mockReturnValue(
+			piles.map((p) => makePerceivedPile(p)),
+		);
+
+		const result = findRaidTargetsFromPiles("reclaimers", { x: 0, z: 0 }, 50, piles);
+
+		expect(result.length).toBe(3);
 	});
 });

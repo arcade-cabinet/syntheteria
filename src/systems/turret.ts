@@ -11,7 +11,7 @@
 
 import { config } from "../../config";
 import type { BuildingEntity, UnitEntity } from "../ecs/types";
-import { world } from "../ecs/world";
+import { destroyEntityById } from "../ecs/koota/bridge";
 import { buildings, units } from "../ecs/koota/compat";
 import { addResource } from "./resources";
 
@@ -109,7 +109,7 @@ function destroyUnit(entity: UnitEntity): void {
 	if (Math.random() < combatCfg.salvageEWasteChance) {
 		addResource("eWaste", 1);
 	}
-	world.remove(entity);
+	destroyEntityById(entity.id);
 }
 
 // ---------------------------------------------------------------------------

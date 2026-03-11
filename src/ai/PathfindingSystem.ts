@@ -18,7 +18,7 @@ import { FollowPathBehavior, Path, Vector3 as YukaVector3 } from "yuka";
 
 import { getTerrainHeight } from "../ecs/terrain";
 import type { Entity, Vec3 } from "../ecs/types";
-import { world } from "../ecs/world";
+import { getEntityById } from "../ecs/koota/compat";
 import { YukaManager } from "./YukaManager";
 
 // ---------------------------------------------------------------------------
@@ -186,13 +186,7 @@ export function requestPath(entityId: string, targetPosition: Vec3): boolean {
 	}
 
 	// Find the entity in the ECS world
-	let entity: Entity | undefined;
-	for (const e of world) {
-		if (e.id === entityId) {
-			entity = e;
-			break;
-		}
-	}
+	const entity: Entity | undefined = getEntityById(entityId);
 
 	if (!entity) {
 		console.warn(

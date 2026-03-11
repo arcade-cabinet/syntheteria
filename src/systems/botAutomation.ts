@@ -15,15 +15,7 @@
 
 import botAutomationConfig from "../../config/botAutomation.json";
 import type { Entity, UnitEntity, Vec3 } from "../ecs/types";
-import { world } from "../ecs/world";
-import { automatedBots, units } from "../ecs/koota/compat";
-
-function getEntityById(id: string): Entity | undefined {
-	for (const entity of world) {
-		if (entity.id === id) return entity;
-	}
-	return undefined;
-}
+import { automatedBots, getEntityById, units } from "../ecs/koota/compat";
 
 import { findPath } from "./pathfinding";
 

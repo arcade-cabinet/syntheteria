@@ -16,6 +16,19 @@
 
 import miningConfig from "../../config/mining.json";
 import { getDeposit } from "./oreSpawner";
+import { emit } from "./eventBus";
+
+// ---------------------------------------------------------------------------
+// Audio helper — fire-and-forget; never throws into gameplay code
+// ---------------------------------------------------------------------------
+
+function safeEmit(event: Parameters<typeof emit>[0]): void {
+	try {
+		emit(event);
+	} catch {
+		// Audio integration must never crash gameplay
+	}
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -109,6 +122,14 @@ export function startHarvesting(
 		getDepositPosition,
 	};
 
+	safeEmit({
+		type: "harvest_started",
+		entityId: "player",
+		depositId,
+		materialType: deposit.type,
+		tick: 0,
+	});
+
 	return true;
 }
 
@@ -177,8 +198,22 @@ export function updateHarvesting(
 	const depleted = deposit.quantity <= 0;
 	if (depleted) {
 		deposit.quantity = 0;
+
+		const harvestType = deposit.type;
+		const totalPowder = currentHarvest.powderAccumulated;
+		const depositId = currentHarvest.depositId;
+
 		currentHarvest.isActive = false;
 		currentHarvest = null;
+
+		safeEmit({
+			type: "harvest_complete",
+			entityId: "player",
+			depositId,
+			materialType: harvestType,
+			powderGained: totalPowder,
+			tick: 0,
+		});
 	}
 
 	return {

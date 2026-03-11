@@ -45,7 +45,7 @@ function toNewGameConfig(config: PregameConfig): NewGameConfig {
 
 	const opponentBias: Record<string, string> = {};
 	for (const opp of config.opponents) {
-		opponentBias[opp.faction] = opp.victoryBias;
+		opponentBias[opp.faction] = opp.victoryBias ?? "subjugation";
 	}
 
 	return {

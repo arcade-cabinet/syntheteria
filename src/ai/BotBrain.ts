@@ -47,6 +47,20 @@ export const BotState = {
 	RETURN_TO_BASE: "return_to_base",
 	FOLLOW: "follow",
 	PHONE_HOME: "phone_home",
+	/**
+	 * FLANK — approach the target from a perpendicular angle.
+	 * The bot computes a flanking intercept point 90° off the direct
+	 * attack vector and arrives there before transitioning to ATTACK.
+	 * Used by melee-heavy bots and governor-directed squad tactics.
+	 */
+	FLANK: "flank",
+	/**
+	 * SIEGE — circle a fortified position to find a weak point.
+	 * The bot spirals inward from an approach radius, looking for
+	 * gaps in walls or low-threat entry points before attacking.
+	 * Transitions to ATTACK when within melee range or on timeout.
+	 */
+	SIEGE: "siege",
 } as const;
 export type BotState = (typeof BotState)[keyof typeof BotState];
 
@@ -88,6 +102,31 @@ const MIN_STATE_DURATION = 0.5;
 const PATROL_WAYPOINT_LIFETIME = 5.0;
 
 /**
+ * Faction ID for Signal Choir — these bots favor hacking over melee.
+ * When attacking, Signal Choir bots maintain distance and "hack" rather
+ * than closing to melee range. They still fall through to melee if the
+ * target closes on them.
+ */
+const SIGNAL_CHOIR_FACTION = "signal_choir";
+
+/**
+ * Preferred engagement distance for Signal Choir hack attacks (world units).
+ * They hold at this range rather than closing to melee.
+ */
+const HACK_PREFERRED_RANGE = 6;
+
+/**
+ * Maximum time to spend in SIEGE state before giving up and attacking directly.
+ */
+const SIEGE_TIMEOUT = 10.0;
+
+/**
+ * How many radians the siege bot rotates around the target each second
+ * while searching for a low-threat approach angle.
+ */
+const SIEGE_ORBIT_SPEED = 0.8;
+
+/**
  * Finite state machine controlling one bot's tactical behavior.
  *
  * Pure logic — no direct ECS or Yuka dependencies. Receives a BotContext
@@ -121,6 +160,28 @@ export class BotBrain {
 
 	/** Patrol radius (from order or config). */
 	patrolRadius = 15;
+
+	/**
+	 * Flank angle offset in radians (set by FLANK_TARGET order).
+	 * The flanking intercept point is computed by rotating the approach
+	 * vector by this angle around the Y axis.
+	 */
+	flankAngle = Math.PI / 2;
+
+	/**
+	 * Siege target position (world space, set by SIEGE_TARGET order).
+	 * The bot orbits this point at approachRadius, spiraling inward.
+	 */
+	siegeTargetPos: Vec3 | null = null;
+
+	/** Approach radius for siege behavior (set by SIEGE_TARGET order). */
+	siegeApproachRadius = 8;
+
+	/**
+	 * Current orbit angle for siege behavior (radians, accumulated per frame).
+	 * Reset when entering SIEGE state.
+	 */
+	siegeOrbitAngle = 0;
 
 	/** The last order received from the governor. */
 	private lastOrder: BotOrder | null = null;
@@ -167,6 +228,10 @@ export class BotBrain {
 				return this.handleFollow(delta, ctx);
 			case BotState.PHONE_HOME:
 				return this.handlePhoneHome(delta, ctx);
+			case BotState.FLANK:
+				return this.handleFlank(delta, ctx);
+			case BotState.SIEGE:
+				return this.handleSiege(delta, ctx);
 			default:
 				return { command: SteeringCommand.STOP };
 		}
@@ -230,6 +295,19 @@ export class BotBrain {
 			case BotOrderType.FOLLOW:
 				this.targetId = order.targetId;
 				this.transitionTo(BotState.FOLLOW);
+				break;
+
+			case BotOrderType.FLANK_TARGET:
+				this.targetId = order.targetId;
+				this.flankAngle = order.flankAngle ?? Math.PI / 2;
+				this.transitionTo(BotState.FLANK);
+				break;
+
+			case BotOrderType.SIEGE_TARGET:
+				this.siegeTargetPos = { ...order.targetPosition };
+				this.siegeApproachRadius = order.approachRadius;
+				this.siegeOrbitAngle = 0;
+				this.transitionTo(BotState.SIEGE);
 				break;
 		}
 	}
@@ -342,8 +420,25 @@ export class BotBrain {
 			return { command: SteeringCommand.STOP };
 		}
 
-		// If target moved out of melee range, chase it.
 		const meleeRangeSq = ctx.meleeRange * ctx.meleeRange;
+
+		// Signal Choir faction prefers hack attacks — maintain distance rather
+		// than closing to melee. They hold at HACK_PREFERRED_RANGE and only
+		// close to melee if the target is already inside that range.
+		if (ctx.faction === SIGNAL_CHOIR_FACTION) {
+			const hackRangeSq = HACK_PREFERRED_RANGE * HACK_PREFERRED_RANGE;
+			if (target.distanceSq > meleeRangeSq) {
+				// Keep at hack range — flee away if too close, seek if too far
+				if (target.distanceSq < hackRangeSq) {
+					// Target too close — back away
+					return { command: SteeringCommand.FLEE, target: target.position };
+				}
+				// Stay at hack range — hold position and let hack damage resolve
+				return { command: SteeringCommand.ARRIVE, target: target.position };
+			}
+		}
+
+		// If target moved out of melee range, chase it.
 		if (target.distanceSq > meleeRangeSq * 1.5) {
 			this.transitionTo(BotState.SEEK_TARGET);
 			return { command: SteeringCommand.SEEK, target: target.position };
@@ -534,6 +629,107 @@ export class BotBrain {
 		return { command: SteeringCommand.WANDER };
 	}
 
+	private handleFlank(_delta: number, ctx: BotContext): SteeringOutput {
+		// Check flee condition — safety trumps tactics.
+		if (this.shouldFlee(ctx)) {
+			return this.startFlee(ctx);
+		}
+
+		// Find the flank target.
+		const target = this.findEntityInPerception(ctx, this.targetId);
+
+		if (!target) {
+			// Target lost — fall back.
+			this.targetId = null;
+			this.transitionTo(
+				this.patrolCenter ? BotState.PATROL : BotState.IDLE,
+			);
+			return { command: SteeringCommand.STOP };
+		}
+
+		// Compute the flanking intercept point.
+		// We rotate the vector from target → us by flankAngle, then place
+		// the intercept point at melee range + a small buffer from the target.
+		const interceptPoint = this.computeFlankPoint(
+			ctx.position,
+			target.position,
+			this.flankAngle,
+			ctx.meleeRange + 1,
+		);
+
+		// Check if we have reached the flank position (within 2 units).
+		const toInterceptSq = this.distanceSqXZ(ctx.position, interceptPoint);
+		const meleeRangeSq = ctx.meleeRange * ctx.meleeRange;
+
+		if (toInterceptSq <= 4 || target.distanceSq <= meleeRangeSq) {
+			// At flank position or close enough to engage — transition to attack.
+			this.transitionTo(BotState.ATTACK);
+			return { command: SteeringCommand.ARRIVE, target: target.position };
+		}
+
+		// Move to the flank intercept point.
+		return { command: SteeringCommand.SEEK, target: interceptPoint };
+	}
+
+	private handleSiege(delta: number, ctx: BotContext): SteeringOutput {
+		// Check flee condition.
+		if (this.shouldFlee(ctx)) {
+			return this.startFlee(ctx);
+		}
+
+		const siegePos = this.siegeTargetPos;
+		if (!siegePos) {
+			this.transitionTo(BotState.IDLE);
+			return { command: SteeringCommand.STOP };
+		}
+
+		// On timeout, give up orbiting and switch to direct attack.
+		if (this.stateTime > SIEGE_TIMEOUT) {
+			this.transitionTo(BotState.SEEK_TARGET);
+			return { command: SteeringCommand.SEEK, target: siegePos };
+		}
+
+		// Advance the orbit angle.
+		this.siegeOrbitAngle += SIEGE_ORBIT_SPEED * delta;
+
+		// Compute the current orbit point around the siege target.
+		// The radius shrinks slightly each second to spiral inward.
+		const spiralRadius = Math.max(
+			ctx.meleeRange,
+			this.siegeApproachRadius - this.stateTime * 0.5,
+		);
+
+		const orbitPoint: Vec3 = {
+			x: siegePos.x + Math.cos(this.siegeOrbitAngle) * spiralRadius,
+			y: siegePos.y,
+			z: siegePos.z + Math.sin(this.siegeOrbitAngle) * spiralRadius,
+		};
+
+		// If we're within melee range of the siege target, switch to attack.
+		const distToTargetSq = this.distanceSqXZ(ctx.position, siegePos);
+		const meleeRangeSq = ctx.meleeRange * ctx.meleeRange;
+
+		if (distToTargetSq <= meleeRangeSq * 1.5) {
+			// Set targetId so ATTACK can find the target in perception.
+			const closestEnemy = this.findClosestThreat(ctx);
+			if (closestEnemy) {
+				this.targetId = closestEnemy.id;
+				this.transitionTo(BotState.ATTACK);
+				return {
+					command: SteeringCommand.ARRIVE,
+					target: closestEnemy.position,
+				};
+			}
+			// No visible enemy — arrived but nothing to hit, stop.
+			this.siegeTargetPos = null;
+			this.transitionTo(BotState.IDLE);
+			return { command: SteeringCommand.STOP };
+		}
+
+		// Spiral toward the orbit point.
+		return { command: SteeringCommand.SEEK, target: orbitPoint };
+	}
+
 	// -----------------------------------------------------------------------
 	// Helpers
 	// -----------------------------------------------------------------------
@@ -606,6 +802,56 @@ export class BotBrain {
 		const dx = a.x - b.x;
 		const dz = a.z - b.z;
 		return dx * dx + dz * dz;
+	}
+
+	/**
+	 * Compute a flanking intercept point around a target.
+	 *
+	 * The approach vector (observer → target) is rotated by `angleRad`
+	 * on the XZ plane, and a point at `radius` from the target along
+	 * that rotated vector is returned.
+	 *
+	 * @param observerPos - Bot's current world position
+	 * @param targetPos   - Target's world position
+	 * @param angleRad    - Rotation offset (PI/2 = right flank, -PI/2 = left)
+	 * @param radius      - Distance from target to place the intercept point
+	 */
+	private computeFlankPoint(
+		observerPos: Vec3,
+		targetPos: Vec3,
+		angleRad: number,
+		radius: number,
+	): Vec3 {
+		// Direction from observer to target
+		const dx = targetPos.x - observerPos.x;
+		const dz = targetPos.z - observerPos.z;
+		const len = Math.sqrt(dx * dx + dz * dz);
+
+		if (len < 0.001) {
+			// Observer and target at same position — flank to the right by default
+			return {
+				x: targetPos.x + Math.cos(angleRad) * radius,
+				y: targetPos.y,
+				z: targetPos.z + Math.sin(angleRad) * radius,
+			};
+		}
+
+		// Normalise direction
+		const ndx = dx / len;
+		const ndz = dz / len;
+
+		// Rotate by angleRad around Y axis (XZ plane rotation)
+		const cos = Math.cos(angleRad);
+		const sin = Math.sin(angleRad);
+		const rdx = ndx * cos - ndz * sin;
+		const rdz = ndx * sin + ndz * cos;
+
+		// Place intercept at `radius` units from target along rotated direction
+		return {
+			x: targetPos.x + rdx * radius,
+			y: targetPos.y,
+			z: targetPos.z + rdz * radius,
+		};
 	}
 
 	/**

@@ -18,6 +18,89 @@
  * - Callback unsubscription
  */
 
+const mockEmit = jest.fn();
+jest.mock("../eventBus", () => ({
+	emit: (...args: unknown[]) => mockEmit(...args),
+}));
+
+// Config mock — progressionSystem.ts imports directly from the JSON file,
+// not through the config index, so we mock the JSON module path.
+jest.mock("../../../config/progression.json", () => ({
+	xpDivisor: 100,
+	xpRewards: { quest: 500, craft: 25, discovery: 150, battle: 50, trade: 75 },
+	levelBonuses: {
+		miningSpeedPerLevel: 0.02,
+		movementSpeedPerLevel: 0.01,
+		baseInventorySlots: 5,
+		inventorySlotsPerLevel: 1,
+	},
+	levelUnlocks: {
+		"1": {
+			recipes: ["iron_plate", "copper_wire"],
+			buildings: ["storage_crate"],
+			abilities: ["scan"],
+		},
+		"2": {
+			recipes: ["steel_beam", "circuit_board"],
+			buildings: ["smelter"],
+			abilities: ["dash"],
+		},
+		"3": {
+			recipes: ["alloy_ingot", "motor"],
+			buildings: ["assembler", "turret_base"],
+			abilities: ["overclock"],
+		},
+		"5": {
+			recipes: ["quantum_core", "nano_fiber"],
+			buildings: ["fabricator", "signal_jammer"],
+			abilities: ["teleport"],
+		},
+		"10": {
+			recipes: ["genesis_matrix"],
+			buildings: ["nexus_core"],
+			abilities: ["ascension"],
+		},
+	},
+	milestones: [
+		{
+			id: "first_craft",
+			title: "First Compression",
+			description: "Compress your first cube",
+			statKey: "totalCrafts",
+			threshold: 1,
+			featureUnlock: "belt_system",
+			notificationMessage: "Belt system unlocked.",
+		},
+		{
+			id: "ten_crafts",
+			title: "Getting Started",
+			description: "Compress 10 cubes",
+			statKey: "totalCrafts",
+			threshold: 10,
+			featureUnlock: "auto_grabber",
+			notificationMessage: "Auto-grabber unlocked.",
+		},
+		{
+			id: "first_kill",
+			title: "Defender",
+			description: "Defeat your first enemy",
+			statKey: "totalKills",
+			threshold: 1,
+			featureUnlock: "turret_placement",
+			notificationMessage: "Turret placement unlocked.",
+		},
+		{
+			id: "first_quest",
+			title: "On a Mission",
+			description: "Complete your first quest",
+			statKey: "totalQuestsCompleted",
+			threshold: 1,
+			featureUnlock: "otter_relay",
+			notificationMessage: "Otter relay opened.",
+		},
+	],
+}));
+
 jest.mock("../../../config", () => ({
 	config: {},
 }));
@@ -29,8 +112,12 @@ import {
 	getAllUnlocksUpToLevel,
 	getLevelBonuses,
 	getLevelUnlocks,
+	getMilestoneNotifications,
+	getMilestoneProgress,
 	getPlayerStats,
+	getUnlockedFeatures,
 	getXPHistory,
+	isFeatureUnlocked,
 	onLevelUp,
 	progressionSystem,
 	resetProgression,
@@ -44,6 +131,7 @@ import {
 
 beforeEach(() => {
 	resetProgression();
+	mockEmit.mockClear();
 });
 
 // ---------------------------------------------------------------------------
@@ -583,5 +671,181 @@ describe("progression — resetProgression", () => {
 		progressionSystem(1);
 		resetProgression();
 		expect(getPlayerStats().xpToNextLevel).toBe(100);
+	});
+
+	it("clears milestone state on reset", () => {
+		addXP(25, "craft"); // totalCrafts = 1, triggers first_craft
+		progressionSystem(1);
+		expect(getMilestoneNotifications()).toHaveLength(1);
+
+		resetProgression();
+
+		expect(getMilestoneNotifications()).toHaveLength(0);
+		expect(isFeatureUnlocked("belt_system")).toBe(false);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Event bus — level_up events
+// ---------------------------------------------------------------------------
+
+describe("progression — level_up event bus", () => {
+	it("emits level_up when XP crosses level threshold", () => {
+		addXP(100, "quest"); // level 0 -> 1
+		progressionSystem(10);
+
+		expect(mockEmit).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "level_up",
+				entityId: "player",
+				previousLevel: 0,
+				newLevel: 1,
+				tick: 10,
+			}),
+		);
+	});
+
+	it("emits one level_up per level when jumping multiple levels", () => {
+		addXP(900, "quest"); // level 0 -> 3
+		progressionSystem(5);
+
+		const levelUpCalls = mockEmit.mock.calls.filter(
+			(c) => c[0]?.type === "level_up",
+		);
+		expect(levelUpCalls).toHaveLength(3);
+
+		expect(levelUpCalls[0][0]).toMatchObject({ previousLevel: 0, newLevel: 1 });
+		expect(levelUpCalls[1][0]).toMatchObject({ previousLevel: 1, newLevel: 2 });
+		expect(levelUpCalls[2][0]).toMatchObject({ previousLevel: 2, newLevel: 3 });
+	});
+
+	it("does NOT emit level_up when no level change", () => {
+		addXP(50, "craft"); // still level 0
+		progressionSystem(1);
+
+		const levelUpCalls = mockEmit.mock.calls.filter(
+			(c) => c[0]?.type === "level_up",
+		);
+		expect(levelUpCalls).toHaveLength(0);
+	});
+
+	it("does NOT emit level_up again on subsequent ticks at same level", () => {
+		addXP(100, "quest"); // level 1
+		progressionSystem(1);
+		mockEmit.mockClear();
+
+		progressionSystem(2);
+		const levelUpCalls = mockEmit.mock.calls.filter(
+			(c) => c[0]?.type === "level_up",
+		);
+		expect(levelUpCalls).toHaveLength(0);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Milestones — threshold crossing and notifications
+// ---------------------------------------------------------------------------
+
+describe("progression — milestones", () => {
+	it("triggers first_craft milestone when totalCrafts reaches 1", () => {
+		addXP(25, "craft"); // totalCrafts = 1
+		progressionSystem(1);
+
+		const notifications = getMilestoneNotifications();
+		expect(notifications).toHaveLength(1);
+		expect(notifications[0].milestoneId).toBe("first_craft");
+		expect(notifications[0].featureUnlock).toBe("belt_system");
+		expect(notifications[0].tick).toBe(1);
+	});
+
+	it("emits achievement_unlocked when milestone fires", () => {
+		addXP(25, "craft"); // totalCrafts = 1
+		progressionSystem(7);
+
+		const achievementCalls = mockEmit.mock.calls.filter(
+			(c) => c[0]?.type === "achievement_unlocked",
+		);
+		expect(achievementCalls.length).toBeGreaterThan(0);
+		expect(achievementCalls[0][0]).toMatchObject({
+			type: "achievement_unlocked",
+			achievementId: "first_craft",
+			tier: 1,
+			tick: 7,
+		});
+	});
+
+	it("unlocks the associated feature when milestone fires", () => {
+		addXP(25, "craft"); // totalCrafts = 1
+		progressionSystem(1);
+
+		expect(isFeatureUnlocked("belt_system")).toBe(true);
+		expect(getUnlockedFeatures().has("belt_system")).toBe(true);
+	});
+
+	it("does NOT re-fire milestone on subsequent ticks", () => {
+		addXP(25, "craft");
+		progressionSystem(1);
+		mockEmit.mockClear();
+
+		progressionSystem(2); // same stats, no new milestone
+
+		const achievementCalls = mockEmit.mock.calls.filter(
+			(c) => c[0]?.type === "achievement_unlocked",
+		);
+		expect(achievementCalls).toHaveLength(0);
+	});
+
+	it("fires multiple milestones independently in same tick", () => {
+		// Both first_craft and first_kill should fire
+		addXP(25, "craft"); // totalCrafts = 1
+		addXP(50, "battle"); // totalKills = 1
+		progressionSystem(1);
+
+		const notifications = getMilestoneNotifications();
+		const ids = notifications.map((n) => n.milestoneId);
+		expect(ids).toContain("first_craft");
+		expect(ids).toContain("first_kill");
+		expect(isFeatureUnlocked("belt_system")).toBe(true);
+		expect(isFeatureUnlocked("turret_placement")).toBe(true);
+	});
+
+	it("fires ten_crafts milestone only after threshold is crossed", () => {
+		// Add 9 crafts — should NOT trigger ten_crafts
+		for (let i = 0; i < 9; i++) addXP(25, "craft");
+		progressionSystem(1);
+
+		const notifications = getMilestoneNotifications();
+		expect(notifications.some((n) => n.milestoneId === "ten_crafts")).toBe(false);
+
+		// Add 10th craft — now it fires
+		addXP(25, "craft");
+		progressionSystem(2);
+		expect(getMilestoneNotifications().some((n) => n.milestoneId === "ten_crafts")).toBe(true);
+	});
+
+	it("isFeatureUnlocked returns false for unlocked feature before milestone", () => {
+		expect(isFeatureUnlocked("belt_system")).toBe(false);
+	});
+
+	it("getMilestoneProgress returns all milestones with correct triggered state", () => {
+		addXP(25, "craft");
+		progressionSystem(1);
+
+		const progress = getMilestoneProgress();
+		const firstCraft = progress.find((p) => p.milestone.id === "first_craft");
+		const firstKill = progress.find((p) => p.milestone.id === "first_kill");
+
+		expect(firstCraft?.triggered).toBe(true);
+		expect(firstCraft?.currentValue).toBe(1);
+		expect(firstKill?.triggered).toBe(false);
+		expect(firstKill?.currentValue).toBe(0);
+	});
+
+	it("milestone notification includes message text from config", () => {
+		addXP(25, "craft");
+		progressionSystem(1);
+
+		const notifications = getMilestoneNotifications();
+		expect(notifications[0].message).toBe("Belt system unlocked.");
 	});
 });

@@ -12,7 +12,7 @@ import { config } from "../../config";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { createFragment, getTerrainHeight, isWalkable } from "../ecs/terrain";
 import type { Entity, UnitEntity, Vec3 } from "../ecs/types";
-import { world } from "../ecs/world";
+import { spawnKootaEntity } from "../ecs/koota/bridge";
 import { units } from "../ecs/koota/compat";
 import { findPath } from "./pathfinding";
 
@@ -64,7 +64,7 @@ function spawnEnemy() {
 	const hasCam = Math.random() < feralConfig.cameraChance;
 	const hasArmsRoll = Math.random() < feralConfig.armsChance;
 
-	world.add({
+	spawnKootaEntity({
 		id,
 		faction: "feral" as const,
 		worldPosition: { x: pos.x, y, z: pos.z },
@@ -83,7 +83,7 @@ function spawnEnemy() {
 			],
 		},
 		navigation: { path: [], pathIndex: 0, moving: false },
-	} as Partial<Entity> as Entity);
+	} as Partial<Entity> & { id: string });
 
 	enemyIds.add(id);
 }

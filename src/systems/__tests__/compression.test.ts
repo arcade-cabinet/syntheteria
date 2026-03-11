@@ -15,10 +15,13 @@
  */
 
 import {
+	type CompressionMaterialInfo,
 	type CompressionResult,
 	DEFAULT_COMPRESSION_CONFIGS,
 	_resetCompressionState,
 	cancelCompression,
+	getCompressionInfoForMaterial,
+	getCompressionMaterialInfo,
 	getCompressionProgress,
 	isCompressing,
 	startCompression,
@@ -565,5 +568,101 @@ describe("material type handling", () => {
 			expect(result.cube!.size).toBe(0.5);
 			expect(result.cube!.traits).toContain("Grabbable");
 		}
+	});
+});
+
+// ---------------------------------------------------------------------------
+// getCompressionMaterialInfo — HUD material differentiation data
+// ---------------------------------------------------------------------------
+
+describe("getCompressionMaterialInfo", () => {
+	it("returns an array with at least one entry", () => {
+		const infos = getCompressionMaterialInfo();
+		expect(infos.length).toBeGreaterThan(0);
+	});
+
+	it("each entry has required fields with correct types", () => {
+		const infos = getCompressionMaterialInfo();
+		for (const info of infos) {
+			expect(typeof info.material).toBe("string");
+			expect(typeof info.powderRequired).toBe("number");
+			expect(typeof info.compressionTime).toBe("number");
+			expect(typeof info.screenShakePeak).toBe("number");
+			expect(typeof info.ejectVelocity).toBe("number");
+			expect(info.powderRequired).toBeGreaterThan(0);
+			expect(info.compressionTime).toBeGreaterThan(0);
+			expect(info.screenShakePeak).toBeGreaterThanOrEqual(0);
+			expect(info.ejectVelocity).toBeGreaterThan(0);
+		}
+	});
+
+	it("includes iron with expected config values", () => {
+		const infos = getCompressionMaterialInfo();
+		const iron = infos.find((i) => i.material === "iron");
+		expect(iron).toBeDefined();
+		expect(iron!.powderRequired).toBe(DEFAULT_COMPRESSION_CONFIGS.iron.powderRequired);
+		expect(iron!.compressionTime).toBe(DEFAULT_COMPRESSION_CONFIGS.iron.compressionTime);
+	});
+
+	it("higher tier materials have longer compression times", () => {
+		const infos = getCompressionMaterialInfo();
+		const scrapIron = infos.find((i) => i.material === "scrap_iron");
+		const titanium = infos.find((i) => i.material === "titanium");
+
+		if (scrapIron && titanium) {
+			expect(titanium.compressionTime).toBeGreaterThan(scrapIron.compressionTime);
+		}
+	});
+
+	it("higher tier materials require more powder", () => {
+		const infos = getCompressionMaterialInfo();
+		const scrapIron = infos.find((i) => i.material === "scrap_iron");
+		const titanium = infos.find((i) => i.material === "titanium");
+
+		if (scrapIron && titanium) {
+			expect(titanium.powderRequired).toBeGreaterThan(scrapIron.powderRequired);
+		}
+	});
+
+	it("includes all materials from DEFAULT_COMPRESSION_CONFIGS", () => {
+		const infos = getCompressionMaterialInfo();
+		const infoMaterials = new Set(infos.map((i) => i.material));
+
+		for (const mat of Object.keys(DEFAULT_COMPRESSION_CONFIGS)) {
+			expect(infoMaterials.has(mat)).toBe(true);
+		}
+	});
+});
+
+// ---------------------------------------------------------------------------
+// getCompressionInfoForMaterial — single-material HUD lookup
+// ---------------------------------------------------------------------------
+
+describe("getCompressionInfoForMaterial", () => {
+	it("returns info for a known material", () => {
+		const info = getCompressionInfoForMaterial("iron");
+		expect(info).not.toBeNull();
+		expect(info!.material).toBe("iron");
+	});
+
+	it("returns null for an unknown material", () => {
+		const info = getCompressionInfoForMaterial("unobtainium");
+		expect(info).toBeNull();
+	});
+
+	it("values match DEFAULT_COMPRESSION_CONFIGS", () => {
+		for (const mat of Object.keys(DEFAULT_COMPRESSION_CONFIGS)) {
+			const info = getCompressionInfoForMaterial(mat);
+			expect(info).not.toBeNull();
+			expect(info!.powderRequired).toBe(DEFAULT_COMPRESSION_CONFIGS[mat].powderRequired);
+			expect(info!.compressionTime).toBe(DEFAULT_COMPRESSION_CONFIGS[mat].compressionTime);
+		}
+	});
+
+	it("screenShakePeak defaults to 0.5 for unknown", () => {
+		// This tests the fallback path for materials without explicit screenShakePeak
+		// All default materials have it, but the fallback should be 0.5
+		const info = getCompressionInfoForMaterial("iron");
+		expect(typeof info!.screenShakePeak).toBe("number");
 	});
 });

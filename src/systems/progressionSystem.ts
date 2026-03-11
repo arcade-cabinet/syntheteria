@@ -1,5 +1,5 @@
 /**
- * Progression system — player experience and leveling.
+ * Progression system — player experience, leveling, milestones, and feature unlocks.
  *
  * XP is gained from completing quests, crafting items, discovering locations,
  * winning battles, and trading. Each level unlocks new recipes, building types,
@@ -8,7 +8,18 @@
  *
  * Level formula: level = floor(sqrt(totalXP / 100))
  * This is deterministic — no randomness in progression formulas.
+ *
+ * Milestones are defined in config/progression.json and checked every tick.
+ * When a milestone's statKey threshold is crossed, a notification is queued
+ * and the associated featureUnlock is registered. Events are emitted on the
+ * global event bus for HUD and UI consumption.
+ *
+ * Config references:
+ *   config/progression.json  (xpRewards, levelUnlocks, milestones)
  */
+
+import progressionConfig from "../../config/progression.json";
+import { emit } from "./eventBus";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -51,6 +62,24 @@ export interface LevelUnlocks {
 	abilities: string[];
 }
 
+export interface MilestoneDefinition {
+	id: string;
+	title: string;
+	description: string;
+	statKey: keyof PlayerStats;
+	threshold: number;
+	featureUnlock: string;
+	notificationMessage: string;
+}
+
+export interface MilestoneNotification {
+	milestoneId: string;
+	title: string;
+	message: string;
+	featureUnlock: string;
+	tick: number;
+}
+
 // ---------------------------------------------------------------------------
 // Constants — XP per source type
 // ---------------------------------------------------------------------------
@@ -64,61 +93,37 @@ export const XP_REWARDS: Record<XPSource, number> = {
 };
 
 // ---------------------------------------------------------------------------
-// Level unlock definitions
+// Config — milestones and level unlocks
 // ---------------------------------------------------------------------------
 
-const LEVEL_UNLOCKS: Record<number, LevelUnlocks> = {
-	1: {
-		recipes: ["iron_plate", "copper_wire"],
-		buildings: ["storage_crate"],
-		abilities: ["scan"],
-	},
-	2: {
-		recipes: ["steel_beam", "circuit_board"],
-		buildings: ["smelter"],
-		abilities: ["dash"],
-	},
-	3: {
-		recipes: ["alloy_ingot", "motor"],
-		buildings: ["assembler", "turret_base"],
-		abilities: ["overclock"],
-	},
-	4: {
-		recipes: ["advanced_circuit", "power_cell"],
-		buildings: ["refinery", "radar_tower"],
-		abilities: ["shield"],
-	},
-	5: {
-		recipes: ["quantum_core", "nano_fiber"],
-		buildings: ["fabricator", "signal_jammer"],
-		abilities: ["teleport"],
-	},
-	6: {
-		recipes: ["fusion_cell", "adaptive_alloy"],
-		buildings: ["mega_furnace", "drone_bay"],
-		abilities: ["overcharge"],
-	},
-	7: {
-		recipes: ["singularity_shard"],
-		buildings: ["fortress_gate"],
-		abilities: ["emp_burst"],
-	},
-	8: {
-		recipes: ["void_crystal"],
-		buildings: ["orbital_relay"],
-		abilities: ["mass_recall"],
-	},
-	9: {
-		recipes: ["omega_catalyst"],
-		buildings: ["world_engine"],
-		abilities: ["domination_field"],
-	},
-	10: {
-		recipes: ["genesis_matrix"],
-		buildings: ["nexus_core"],
-		abilities: ["ascension"],
-	},
-};
+const MILESTONES: MilestoneDefinition[] = (
+	progressionConfig.milestones as Array<{
+		id: string;
+		title: string;
+		description: string;
+		statKey: string;
+		threshold: number;
+		featureUnlock: string;
+		notificationMessage: string;
+	}>
+).map((m) => ({ ...m, statKey: m.statKey as keyof PlayerStats }));
+
+// ---------------------------------------------------------------------------
+// Level unlock definitions (from config + fallback to hardcoded for tests)
+// ---------------------------------------------------------------------------
+
+const CONFIG_LEVEL_UNLOCKS = progressionConfig.levelUnlocks as Record<
+	string,
+	{ recipes: string[]; buildings: string[]; abilities: string[] }
+>;
+
+const LEVEL_UNLOCKS: Record<number, LevelUnlocks> = (() => {
+	const result: Record<number, LevelUnlocks> = {};
+	for (const [key, value] of Object.entries(CONFIG_LEVEL_UNLOCKS)) {
+		result[Number(key)] = value;
+	}
+	return result;
+})();
 
 // ---------------------------------------------------------------------------
 // Internal state
@@ -128,6 +133,15 @@ let stats: PlayerStats = createDefaultStats();
 let xpHistory: XPEvent[] = [];
 const levelUpCallbacks: Array<(level: number, unlocks: LevelUnlocks) => void> =
 	[];
+
+/** Set of milestone IDs already triggered (prevents re-firing). */
+const triggeredMilestones = new Set<string>();
+
+/** Ordered list of milestone notifications (newest last). */
+const milestoneNotifications: MilestoneNotification[] = [];
+
+/** Set of feature unlock IDs unlocked via milestones. */
+const unlockedFeatures = new Set<string>();
 
 function createDefaultStats(): PlayerStats {
 	return {
@@ -181,10 +195,11 @@ export function calculateXPToNextLevel(totalXP: number): number {
  * Inventory: +1 slot per level (base 5)
  */
 export function getLevelBonuses(level: number): LevelBonuses {
+	const cfg = progressionConfig.levelBonuses;
 	return {
-		miningSpeedMultiplier: 1 + level * 0.02,
-		movementSpeedMultiplier: 1 + level * 0.01,
-		inventorySlots: 5 + level,
+		miningSpeedMultiplier: 1 + level * cfg.miningSpeedPerLevel,
+		movementSpeedMultiplier: 1 + level * cfg.movementSpeedPerLevel,
+		inventorySlots: cfg.baseInventorySlots + level * cfg.inventorySlotsPerLevel,
 	};
 }
 
@@ -214,6 +229,56 @@ export function getAllUnlocksUpToLevel(level: number): LevelUnlocks {
 		result.abilities.push(...unlocks.abilities);
 	}
 	return result;
+}
+
+// ---------------------------------------------------------------------------
+// Milestone helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Return the stat value used to check a milestone's statKey.
+ */
+function getStatValue(statKey: keyof PlayerStats): number {
+	const value = stats[statKey];
+	// All PlayerStats values are numbers; level is derived but stored
+	return typeof value === "number" ? value : 0;
+}
+
+/**
+ * Check all milestones and fire notifications for newly-crossed thresholds.
+ * Called each tick from progressionSystem after updating level.
+ */
+function checkMilestones(currentTick: number): void {
+	for (const milestone of MILESTONES) {
+		if (triggeredMilestones.has(milestone.id)) continue;
+
+		const statValue = getStatValue(milestone.statKey);
+		if (statValue >= milestone.threshold) {
+			triggeredMilestones.add(milestone.id);
+			unlockedFeatures.add(milestone.featureUnlock);
+
+			const notification: MilestoneNotification = {
+				milestoneId: milestone.id,
+				title: milestone.title,
+				message: milestone.notificationMessage,
+				featureUnlock: milestone.featureUnlock,
+				tick: currentTick,
+			};
+			milestoneNotifications.push(notification);
+
+			// Emit achievement_unlocked event on the bus — tier 1 for milestones
+			try {
+				emit({
+					type: "achievement_unlocked",
+					achievementId: milestone.id,
+					tier: 1,
+					tick: currentTick,
+				});
+			} catch {
+				// Event bus errors must not crash gameplay
+			}
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -281,10 +346,48 @@ export function onLevelUp(
 }
 
 /**
+ * Get all milestone notifications that have fired, in order.
+ */
+export function getMilestoneNotifications(): readonly MilestoneNotification[] {
+	return [...milestoneNotifications];
+}
+
+/**
+ * Get the set of feature IDs unlocked by milestones.
+ */
+export function getUnlockedFeatures(): ReadonlySet<string> {
+	return unlockedFeatures;
+}
+
+/**
+ * Check whether a specific feature has been unlocked via a milestone.
+ */
+export function isFeatureUnlocked(featureId: string): boolean {
+	return unlockedFeatures.has(featureId);
+}
+
+/**
+ * Get milestone progress for the HUD/UI.
+ * Returns each milestone definition with current stat value and whether it's triggered.
+ */
+export function getMilestoneProgress(): Array<{
+	milestone: MilestoneDefinition;
+	currentValue: number;
+	triggered: boolean;
+}> {
+	return MILESTONES.map((m) => ({
+		milestone: m,
+		currentValue: getStatValue(m.statKey),
+		triggered: triggeredMilestones.has(m.id),
+	}));
+}
+
+/**
  * Main system tick. Call once per simulation tick.
  *
  * - Increments playtimeTicks
- * - Checks for level-ups and emits events
+ * - Checks for level-ups and emits level_up events + callbacks
+ * - Checks milestones and emits achievement_unlocked events
  * - Updates xpToNextLevel
  */
 export function progressionSystem(currentTick: number): void {
@@ -294,17 +397,33 @@ export function progressionSystem(currentTick: number): void {
 	const oldLevel = stats.level;
 
 	if (newLevel > oldLevel) {
-		// Fire level-up callbacks for each level gained
+		// Fire level-up callbacks and emit bus events for each level gained
 		for (let lvl = oldLevel + 1; lvl <= newLevel; lvl++) {
 			const unlocks = getLevelUnlocks(lvl);
 			for (const cb of levelUpCallbacks) {
 				cb(lvl, unlocks);
+			}
+
+			// Emit level_up event on the bus
+			try {
+				emit({
+					type: "level_up",
+					entityId: "player",
+					previousLevel: lvl - 1,
+					newLevel: lvl,
+					tick: currentTick,
+				});
+			} catch {
+				// Event bus errors must not crash gameplay
 			}
 		}
 		stats.level = newLevel;
 	}
 
 	stats.xpToNextLevel = calculateXPToNextLevel(stats.totalXP);
+
+	// Check milestones after updating level (so playerLevel statKey works)
+	checkMilestones(currentTick);
 }
 
 /**
@@ -314,4 +433,7 @@ export function resetProgression(): void {
 	stats = createDefaultStats();
 	xpHistory = [];
 	levelUpCallbacks.length = 0;
+	triggeredMilestones.clear();
+	milestoneNotifications.length = 0;
+	unlockedFeatures.clear();
 }

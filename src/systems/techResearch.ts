@@ -12,6 +12,7 @@
  */
 
 import { config } from "../../config";
+import { notifyNewlyUnlockedRecipes } from "./furnaceProcessing";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -153,6 +154,7 @@ export function getResearchProgress(
  */
 export function techResearchSystem(
 	computeByFaction: Record<string, number>,
+	tick = 0,
 ): { faction: string; techId: string }[] {
 	const completed: { faction: string; techId: string }[] = [];
 
@@ -176,10 +178,17 @@ export function techResearchSystem(
 		state.active.progress += effectiveCompute;
 
 		if (state.active.progress >= state.active.cost) {
+			// Capture the set of researched techs BEFORE adding the new one
+			// so notifyNewlyUnlockedRecipes can diff prev vs next.
+			const prevResearched = new Set(state.researched);
+
 			state.researched.add(state.active.techId);
 			const completedId = state.active.techId;
 			state.active = null;
 			completed.push({ faction, techId: completedId });
+
+			// Emit recipe_unlocked events for any furnace tiers now newly accessible.
+			notifyNewlyUnlockedRecipes(prevResearched, state.researched, tick);
 		}
 	}
 

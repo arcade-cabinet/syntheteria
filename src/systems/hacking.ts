@@ -13,16 +13,8 @@
 
 import { config } from "../../config";
 import type { Entity } from "../ecs/types";
-import { world } from "../ecs/world";
-import { hackables, playerBots } from "../ecs/koota/compat";
+import { getEntityById, hackables, playerBots } from "../ecs/koota/compat";
 import { getGlobalCompute } from "./signalNetwork";
-
-function getEntityById(id: string): Entity | undefined {
-	for (const entity of world) {
-		if (entity.id === id) return entity;
-	}
-	return undefined;
-}
 
 const HACK_START_RANGE = config.hacking.startRange;
 const HACK_CANCEL_RANGE = config.hacking.cancelRange;

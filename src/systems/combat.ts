@@ -21,9 +21,22 @@
 import { config } from "../../config";
 import type { FactionId, UnitEntity } from "../ecs/types";
 import { hasArms } from "../ecs/types";
-import { world } from "../ecs/world";
+import { destroyEntityById } from "../ecs/koota/bridge";
 import { units } from "../ecs/koota/compat";
 import { addResource } from "./resources";
+import { emit } from "./eventBus";
+
+// ---------------------------------------------------------------------------
+// Audio helper — fire-and-forget; never throws into gameplay code
+// ---------------------------------------------------------------------------
+
+function safeEmit(event: Parameters<typeof emit>[0]): void {
+	try {
+		emit(event);
+	} catch {
+		// Audio integration must never crash gameplay
+	}
+}
 
 const MELEE_RANGE = config.combat.meleeRange;
 const ATTACK_CHANCE = config.combat.attackChancePerTick;
@@ -152,7 +165,15 @@ function destroyUnit(entity: UnitEntity) {
 	if (Math.random() < config.combat.salvageEWasteChance)
 		addResource("eWaste", 1);
 
-	world.remove(entity);
+	safeEmit({
+		type: "entity_death",
+		entityId: entity.id,
+		killedBy: "combat",
+		entityType: entity.faction,
+		tick: 0,
+	});
+
+	destroyEntityById(entity.id);
 }
 
 // ---------------------------------------------------------------------------
@@ -199,6 +220,14 @@ export function combatSystem() {
 					componentDamaged: damaged,
 					targetDestroyed: destroyed,
 				});
+				safeEmit({
+					type: "damage_taken",
+					targetId: target.id,
+					sourceId: attacker.id,
+					amount: 1,
+					damageType: "melee",
+					tick: 0,
+				});
 				if (destroyed && !toDestroySet.has(target.id)) {
 					toDestroySet.add(target.id);
 					toDestroy.push(target);
@@ -215,6 +244,14 @@ export function combatSystem() {
 						targetId: attacker.id,
 						componentDamaged: retDamaged,
 						targetDestroyed: retDestroyed,
+					});
+					safeEmit({
+						type: "damage_taken",
+						targetId: attacker.id,
+						sourceId: target.id,
+						amount: 1,
+						damageType: "melee",
+						tick: 0,
 					});
 					if (retDestroyed && !toDestroySet.has(attacker.id)) {
 						toDestroySet.add(attacker.id);

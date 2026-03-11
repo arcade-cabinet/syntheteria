@@ -24,6 +24,9 @@ import { config } from "../../config/index.ts";
 import type { CityBuilding } from "../ecs/cityLayout.ts";
 import { getCityBuildings } from "../ecs/cityLayout.ts";
 import type { Entity, Vec3 } from "../ecs/types.ts";
+import type { CubePile } from "../systems/cubePileTracker.ts";
+import { getCurrentWeather } from "../systems/weatherSystem.ts";
+import { getEffectivePerceptionRange } from "../systems/weatherEffects.ts";
 
 // ---------------------------------------------------------------------------
 // Config — pulled from config/enemies.json perception section
@@ -139,11 +142,12 @@ function getVision(entity: Entity): Vision {
 	const fovDeg = getFOVForEntity(entity);
 	vision.fieldOfView = degToRad(fovDeg);
 
-	// Configure range — camera component extends it.
+	// Configure range — camera component extends it, then weather reduces it.
 	const hasCamera =
 		entity.unit?.components.some((c) => c.name === "camera" && c.functional) ??
 		false;
-	vision.range = DEFAULT_RANGE + (hasCamera ? CAMERA_RANGE_BONUS : 0);
+	const baseRange = DEFAULT_RANGE + (hasCamera ? CAMERA_RANGE_BONUS : 0);
+	vision.range = getEffectivePerceptionRange(baseRange, getCurrentWeather());
 
 	// Update obstacles reference.
 	vision.obstacles = obstacleEntities;
@@ -325,4 +329,87 @@ export function clearVisionCache(entityId: string): void {
  */
 export function clearAllVisionCaches(): void {
 	visionCache.clear();
+}
+
+// ---------------------------------------------------------------------------
+// Faction-level pile perception (§6.4 — wealth attracts raids)
+// ---------------------------------------------------------------------------
+
+/**
+ * Wealth scaling factor for pile detection range.
+ * A pile with N cubes can be detected from `baseRange * (1 + N * PILE_SIZE_SCALE)`.
+ * Larger stockpiles are effectively more "visible" — they broadcast their wealth.
+ */
+const PILE_SIZE_SCALE = 0.05;
+
+/** Minimum pile value (in economic units) to be worth raiding. */
+const MIN_PILE_VALUE_THRESHOLD = 5;
+
+/**
+ * A perceived enemy pile as seen by a raiding faction governor.
+ */
+export interface PerceivedPile {
+	/** Original pile data */
+	pile: CubePile;
+	/** Effective detection range used to perceive this pile */
+	effectiveRange: number;
+	/** Distance from the observer's position to the pile center */
+	distance: number;
+}
+
+/**
+ * Governor-level pile perception: scan all provided enemy piles and return
+ * those that are visible from `observerPosition` given a base perception range.
+ *
+ * Detection range formula (GDD §6.4):
+ *   effectiveRange = baseRange * (1 + pile.cubeCount * PILE_SIZE_SCALE)
+ *
+ * A pile is visible if the observer is within its effective detection range.
+ * Piles below MIN_PILE_VALUE_THRESHOLD are ignored (not worth raiding).
+ *
+ * Results are sorted by economic value descending — the richest visible targets first.
+ *
+ * @param observerPosition - World XZ position of the observing faction's base/scout
+ * @param basePerceptionRange - The faction's base detection radius in world units
+ * @param enemyPiles - All enemy cube piles to scan (e.g., from getPiles() filtered by faction)
+ * @returns Perceived enemy piles within detection range, richest first
+ */
+export function getVisibleEnemyPiles(
+	observerPosition: { x: number; z: number },
+	basePerceptionRange: number,
+	enemyPiles: CubePile[],
+): PerceivedPile[] {
+	const visible: PerceivedPile[] = [];
+
+	for (const pile of enemyPiles) {
+		// Ignore low-value piles — not worth raider attention
+		if (pile.totalEconomicValue < MIN_PILE_VALUE_THRESHOLD) continue;
+
+		// Detection range scales with pile size (larger = more visible)
+		const effectiveRange = basePerceptionRange * (1 + pile.cubeCount * PILE_SIZE_SCALE);
+
+		const dx = pile.center.x - observerPosition.x;
+		const dz = pile.center.z - observerPosition.z;
+		const distance = Math.sqrt(dx * dx + dz * dz);
+
+		if (distance <= effectiveRange) {
+			visible.push({ pile, effectiveRange, distance });
+		}
+	}
+
+	// Sort richest first — governor should consider most valuable targets
+	visible.sort((a, b) => b.pile.totalEconomicValue - a.pile.totalEconomicValue);
+	return visible;
+}
+
+/**
+ * Compute effective detection range for a single pile.
+ * Pure utility — exported for use in tests and editor tooling.
+ *
+ * @param baseRange - The faction's base perception range
+ * @param cubeCount - Number of cubes in the pile
+ * @returns Effective detection radius for this pile
+ */
+export function computePileDetectionRange(baseRange: number, cubeCount: number): number {
+	return baseRange * (1 + cubeCount * PILE_SIZE_SCALE);
 }

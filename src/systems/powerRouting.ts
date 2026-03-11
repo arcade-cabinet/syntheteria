@@ -13,9 +13,9 @@
 
 import { config } from "../../config";
 import type { Entity } from "../ecs/types";
-import { world } from "../ecs/world";
 import {
 	buildings,
+	getEntityById,
 	lightningRods,
 	miners,
 	processors,
@@ -71,13 +71,6 @@ let gridSnapshot: PowerGridSnapshot = {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function getEntityById(id: string): Entity | undefined {
-	for (const entity of world) {
-		if (entity.id === id) return entity;
-	}
-	return undefined;
-}
 
 /**
  * Get the power demand for a building based on its type.

@@ -1828,3 +1828,538 @@ describe("SteeringCommand constants", () => {
 		expect(SteeringCommand.WANDER).toBe("wander");
 	});
 });
+
+// ---------------------------------------------------------------------------
+// §4.5 Flanking behavior
+// ---------------------------------------------------------------------------
+
+describe("FLANK state — flanking tactical approach", () => {
+	it("transitions to FLANK when FLANK_TARGET order is issued", () => {
+		const order: BotOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy1",
+		};
+		brain.setOrder(order);
+		expect(brain.state).toBe(BotState.FLANK);
+		expect(brain.targetId).toBe("enemy1");
+	});
+
+	it("uses default PI/2 flank angle when none specified", () => {
+		const order: BotOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy1",
+		};
+		brain.setOrder(order);
+		expect(brain.flankAngle).toBeCloseTo(Math.PI / 2);
+	});
+
+	it("uses custom flank angle from order", () => {
+		const order: BotOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy1",
+			flankAngle: -Math.PI / 2,
+		};
+		brain.setOrder(order);
+		expect(brain.flankAngle).toBeCloseTo(-Math.PI / 2);
+	});
+
+	it("FLANK: seeks toward flank intercept point while target is out of melee", () => {
+		const order: BotOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy1",
+			flankAngle: Math.PI / 2,
+		};
+		brain.setOrder(order);
+
+		// Bot at origin, enemy at (20, 0, 0) — well outside melee range (2)
+		// Approach vector is (+X), rotating 90° gives +Z flank direction
+		// Intercept point should be near (20, 0, 3) — same X as enemy, offset in Z
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [makeEnemy("enemy1", pos(20, 0, 0), 400)],
+		});
+		const output = brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.FLANK);
+		expect(output.command).toBe(SteeringCommand.SEEK);
+		expect(output.target).toBeDefined();
+		// The flank intercept is offset in Z (perpendicular to approach), not directly at (20, 0, 0)
+		expect(output.target!.z).not.toBeCloseTo(0, 0); // has Z offset from direct path
+	});
+
+	it("FLANK: transitions to ATTACK when target is within melee range", () => {
+		const order: BotOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy1",
+		};
+		brain.setOrder(order);
+
+		// Enemy is within melee range
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [makeEnemy("enemy1", pos(1, 0, 0), 1)],
+		});
+		brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.ATTACK);
+	});
+
+	it("FLANK: flank point is perpendicular to approach vector (right flank)", () => {
+		const order: BotOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy1",
+			flankAngle: Math.PI / 2,
+		};
+		brain.setOrder(order);
+
+		// Bot at origin, enemy directly north at (0, 0, 10)
+		// Right flank (PI/2) should produce an intercept point to the east
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [makeEnemy("enemy1", pos(0, 0, 10), 100)],
+		});
+		const output = brain.update(0.1, ctx);
+
+		expect(output.command).toBe(SteeringCommand.SEEK);
+		// Flank to the right of enemy → intercept X should be negative
+		// (enemy is at z=10 from origin; rotating approach vector +90° around Y
+		// gives direction pointing in -X, so intercept is at enemy.x + dx*r = negative X)
+		expect(output.target!.x).toBeLessThan(0);
+	});
+
+	it("FLANK: transitions to IDLE when target is lost", () => {
+		const order: BotOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy1",
+		};
+		brain.setOrder(order);
+
+		// No enemies in perception
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			nearbyEnemies: [],
+		});
+		brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.IDLE);
+		expect(brain.targetId).toBeNull();
+	});
+
+	it("FLANK: flees when health is critical", () => {
+		const order: BotOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy1",
+		};
+		brain.setOrder(order);
+
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [makeEnemy("enemy1", pos(10, 0, 0), 100)],
+			components: {
+				total: 4,
+				functional: 1,
+				healthRatio: 0.1, // below flee threshold
+				hasArms: true,
+				hasCamera: false,
+				hasLegs: false,
+			},
+			fleeThreshold: 0.25,
+		});
+		brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.FLEE);
+	});
+
+	it("FLANK: falls back to PATROL when target lost and patrolCenter set", () => {
+		const order: BotOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy1",
+		};
+		brain.setOrder(order);
+		brain.patrolCenter = pos(5, 0, 5);
+
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			nearbyEnemies: [],
+		});
+		brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.PATROL);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// §4.6 Siege behavior
+// ---------------------------------------------------------------------------
+
+describe("SIEGE state — fortification breach", () => {
+	it("transitions to SIEGE when SIEGE_TARGET order is issued", () => {
+		const order: BotOrder = {
+			type: BotOrderType.SIEGE_TARGET,
+			targetPosition: pos(50, 0, 50),
+			approachRadius: 8,
+		};
+		brain.setOrder(order);
+
+		expect(brain.state).toBe(BotState.SIEGE);
+		expect(brain.siegeTargetPos).toEqual(pos(50, 0, 50));
+		expect(brain.siegeApproachRadius).toBe(8);
+		expect(brain.siegeOrbitAngle).toBe(0);
+	});
+
+	it("SIEGE: moves toward orbit point around siege target", () => {
+		const order: BotOrder = {
+			type: BotOrderType.SIEGE_TARGET,
+			targetPosition: pos(50, 0, 50),
+			approachRadius: 8,
+		};
+		brain.setOrder(order);
+
+		const ctx = makeContext({
+			position: pos(0, 0, 0), // far from siege target
+			meleeRange: 2,
+			nearbyEnemies: [],
+		});
+		const output = brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.SIEGE);
+		expect(output.command).toBe(SteeringCommand.SEEK);
+		// Target should be the orbit point (not the siege position itself)
+		expect(output.target).toBeDefined();
+	});
+
+	it("SIEGE: orbit angle advances each frame", () => {
+		const order: BotOrder = {
+			type: BotOrderType.SIEGE_TARGET,
+			targetPosition: pos(50, 0, 50),
+			approachRadius: 8,
+		};
+		brain.setOrder(order);
+
+		const ctx = makeContext({ position: pos(0, 0, 0), nearbyEnemies: [] });
+		brain.update(0.5, ctx);
+		const angle1 = brain.siegeOrbitAngle;
+		brain.update(0.5, ctx);
+		const angle2 = brain.siegeOrbitAngle;
+
+		expect(angle2).toBeGreaterThan(angle1);
+	});
+
+	it("SIEGE: transitions to ATTACK when within melee range and enemy visible", () => {
+		const order: BotOrder = {
+			type: BotOrderType.SIEGE_TARGET,
+			targetPosition: pos(1, 0, 0),
+			approachRadius: 8,
+		};
+		brain.setOrder(order);
+
+		// Bot is very close to siege target — enemy at the siege position
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [makeEnemy("wall_unit", pos(1, 0, 0), 1)],
+		});
+		brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.ATTACK);
+		expect(brain.targetId).toBe("wall_unit");
+	});
+
+	it("SIEGE: transitions to IDLE when within melee range but no enemy visible", () => {
+		const order: BotOrder = {
+			type: BotOrderType.SIEGE_TARGET,
+			targetPosition: pos(1, 0, 0),
+			approachRadius: 8,
+		};
+		brain.setOrder(order);
+
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [],
+		});
+		brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.IDLE);
+	});
+
+	it("SIEGE: times out after SIEGE_TIMEOUT and switches to SEEK_TARGET", () => {
+		const order: BotOrder = {
+			type: BotOrderType.SIEGE_TARGET,
+			targetPosition: pos(50, 0, 50),
+			approachRadius: 8,
+		};
+		brain.setOrder(order);
+		// Fast-forward past timeout
+		brain.stateTime = 11.0; // SIEGE_TIMEOUT is 10.0
+
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [],
+		});
+		brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.SEEK_TARGET);
+	});
+
+	it("SIEGE: flees when health is critical", () => {
+		const order: BotOrder = {
+			type: BotOrderType.SIEGE_TARGET,
+			targetPosition: pos(50, 0, 50),
+			approachRadius: 8,
+		};
+		brain.setOrder(order);
+
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			nearbyEnemies: [makeEnemy("e1", pos(10, 0, 0), 100)],
+			components: {
+				total: 4,
+				functional: 1,
+				healthRatio: 0.1,
+				hasArms: true,
+				hasCamera: false,
+				hasLegs: false,
+			},
+			fleeThreshold: 0.25,
+		});
+		brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.FLEE);
+	});
+
+	it("SIEGE: goes IDLE when siegeTargetPos is null (edge case)", () => {
+		brain.state = BotState.SIEGE as BotState;
+		brain.siegeTargetPos = null;
+
+		const ctx = makeContext({ position: pos(0, 0, 0), nearbyEnemies: [] });
+		brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.IDLE);
+	});
+
+	it("SIEGE: resets orbit angle to 0 on new order", () => {
+		brain.siegeOrbitAngle = 3.14;
+		const order: BotOrder = {
+			type: BotOrderType.SIEGE_TARGET,
+			targetPosition: pos(50, 0, 50),
+			approachRadius: 10,
+		};
+		brain.setOrder(order);
+
+		expect(brain.siegeOrbitAngle).toBe(0);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// §4.7 Signal Choir hack attack behavior
+// ---------------------------------------------------------------------------
+
+describe("Signal Choir hack attack — maintain distance", () => {
+	it("Signal Choir bots back away when target is too close (inside hack range)", () => {
+		brain.state = BotState.ATTACK as BotState;
+		brain.targetId = "enemy1";
+
+		// Signal Choir faction — should maintain hack distance
+		const ctx = makeContext({
+			faction: "signal_choir",
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [makeEnemy("enemy1", pos(3, 0, 0), 9)], // 3 units away — inside hack range (6)
+		});
+		const output = brain.update(0.1, ctx);
+
+		// Should flee backward (FLEE from target position) to maintain hack distance
+		expect(output.command).toBe(SteeringCommand.FLEE);
+		expect(output.target).toEqual(pos(3, 0, 0));
+	});
+
+	it("Signal Choir bots back away when at close-but-still-outside-melee distance (inside hack range)", () => {
+		brain.state = BotState.ATTACK as BotState;
+		brain.targetId = "enemy1";
+
+		// distanceSq = 16 (4 units) — inside hack range (6), outside melee (2)
+		// Signal Choir wants 6-unit distance — 4 units is too close, flee
+		const ctx = makeContext({
+			faction: "signal_choir",
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [makeEnemy("enemy1", pos(4, 0, 0), 16)],
+		});
+		const output = brain.update(0.1, ctx);
+
+		// Too close to hack target — back away (FLEE)
+		expect(output.command).toBe(SteeringCommand.FLEE);
+		expect(output.target).toEqual(pos(4, 0, 0));
+	});
+
+	it("Signal Choir holds at max hack range when target is outside hack range but inside perception", () => {
+		brain.state = BotState.ATTACK as BotState;
+		brain.targetId = "enemy1";
+
+		// distanceSq = 100 (10 units) — outside hack range (6), outside melee (2)
+		// Signal Choir holds at hack range rather than chasing further
+		const ctx = makeContext({
+			faction: "signal_choir",
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [makeEnemy("enemy1", pos(10, 0, 0), 100)],
+		});
+		const output = brain.update(0.1, ctx);
+
+		// Outside hack range but Signal Choir doesn't chase — ARRIVE holds position
+		expect(brain.state).toBe(BotState.ATTACK);
+		expect(output.command).toBe(SteeringCommand.ARRIVE);
+	});
+
+	it("non-Signal-Choir bots close to melee as normal (within melee range)", () => {
+		brain.state = BotState.ATTACK as BotState;
+		brain.targetId = "enemy1";
+
+		// Reclaimers faction — should behave normally (close to melee)
+		// distanceSq = 1 (1 unit) — within melee range (2)
+		const ctx = makeContext({
+			faction: "reclaimers",
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [makeEnemy("enemy1", pos(1, 0, 0), 1)],
+		});
+		const output = brain.update(0.1, ctx);
+
+		// Normal faction stays in ATTACK and arrives at target
+		expect(brain.state).toBe(BotState.ATTACK);
+		expect(output.command).toBe(SteeringCommand.ARRIVE);
+	});
+
+	it("Signal Choir still flees when health is critical", () => {
+		brain.state = BotState.ATTACK as BotState;
+		brain.targetId = "enemy1";
+
+		const ctx = makeContext({
+			faction: "signal_choir",
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [makeEnemy("enemy1", pos(3, 0, 0), 9)],
+			components: {
+				total: 4,
+				functional: 1,
+				healthRatio: 0.1,
+				hasArms: false,
+				hasCamera: false,
+				hasLegs: false,
+			},
+			fleeThreshold: 0.25,
+		});
+		brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.FLEE);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// §4.8 Formation integration via FOLLOW orders
+// ---------------------------------------------------------------------------
+
+describe("Formation wiring — FOLLOW order integration", () => {
+	it("formation followers enter FOLLOW state via FOLLOW order", () => {
+		const order: BotOrder = {
+			type: BotOrderType.FOLLOW,
+			targetId: "leader_bot",
+		};
+		brain.setOrder(order);
+
+		expect(brain.state).toBe(BotState.FOLLOW);
+		expect(brain.targetId).toBe("leader_bot");
+	});
+
+	it("formation leader uses ATTACK_TARGET to charge while followers follow", () => {
+		// Leader gets an attack order
+		const leaderOrder: BotOrder = {
+			type: BotOrderType.ATTACK_TARGET,
+			targetId: "enemy_base",
+		};
+		brain.setOrder(leaderOrder);
+		expect(brain.state).toBe(BotState.SEEK_TARGET);
+
+		// A second brain (follower) gets a FOLLOW order pointed at leader
+		const followerBrain = new BotBrain();
+		const followOrder: BotOrder = {
+			type: BotOrderType.FOLLOW,
+			targetId: "leader_bot",
+		};
+		followerBrain.setOrder(followOrder);
+		expect(followerBrain.state).toBe(BotState.FOLLOW);
+	});
+
+	it("FLANK_TARGET order allows formation flanking — separate bots flank opposite sides", () => {
+		// Bot 1 flanks right
+		const rightFlankOrder: BotOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy1",
+			flankAngle: Math.PI / 2,
+		};
+		brain.setOrder(rightFlankOrder);
+		expect(brain.flankAngle).toBeCloseTo(Math.PI / 2);
+
+		// Bot 2 flanks left
+		const leftFlankBrain = new BotBrain();
+		const leftFlankOrder: BotOrder = {
+			type: BotOrderType.FLANK_TARGET,
+			targetId: "enemy1",
+			flankAngle: -Math.PI / 2,
+		};
+		leftFlankBrain.setOrder(leftFlankOrder);
+		expect(leftFlankBrain.flankAngle).toBeCloseTo(-Math.PI / 2);
+
+		// Both should be in FLANK state
+		expect(brain.state).toBe(BotState.FLANK);
+		expect(leftFlankBrain.state).toBe(BotState.FLANK);
+
+		// Their intercept points should be on opposite sides of the target
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [makeEnemy("enemy1", pos(0, 0, 10), 100)],
+		});
+		const leftCtx = makeContext({
+			position: pos(0, 0, 0),
+			meleeRange: 2,
+			nearbyEnemies: [makeEnemy("enemy1", pos(0, 0, 10), 100)],
+		});
+
+		const rightOutput = brain.update(0.1, ctx);
+		const leftOutput = leftFlankBrain.update(0.1, leftCtx);
+
+		expect(rightOutput.target).toBeDefined();
+		expect(leftOutput.target).toBeDefined();
+		// Right flank should be at negative X, left flank at positive X
+		expect(rightOutput.target!.x).toBeLessThan(0);
+		expect(leftOutput.target!.x).toBeGreaterThan(0);
+	});
+
+	it("FOLLOW: follower auto-aggros when threat enters aggro range", () => {
+		const order: BotOrder = {
+			type: BotOrderType.FOLLOW,
+			targetId: "leader_bot",
+		};
+		brain.setOrder(order);
+
+		// Threat within aggro range enters the scene
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			nearbyAllies: [makeAlly("leader_bot", pos(3, 0, 0), 9)],
+			nearbyEnemies: [makeEnemy("threat", pos(5, 0, 0), 25)], // within aggroRangeSq: 100
+			aggroRangeSq: 100,
+		});
+		brain.stateTime = 1.0; // past MIN_STATE_DURATION
+		brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.SEEK_TARGET);
+		expect(brain.targetId).toBe("threat");
+	});
+});

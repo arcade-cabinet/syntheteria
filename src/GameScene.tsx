@@ -15,6 +15,7 @@ import {
 import { NavMeshDebugRenderer } from "./ai/NavMeshDebugRenderer";
 import { YukaSystem } from "./ai/YukaSystem.tsx";
 import { AudioSystem } from "./audio/AudioSystem";
+import { config } from "../config";
 import {
 	getGameSpeed,
 	getSnapshot,
@@ -25,16 +26,18 @@ import { syncAfterFrame, syncBeforeFrame } from "./ecs/koota/bridge";
 import { getActivePlayerBot } from "./ecs/world";
 import { FPSCamera } from "./input/FPSCamera";
 import { FPSInput } from "./input/FPSInput";
+import { TopDownCamera } from "./input/TopDownCamera";
 import { ObjectSelectionSystem } from "./input/ObjectSelectionSystem";
 import { PhysicsSystem } from "./physics/PhysicsSystem";
 import { BeltRenderer } from "./rendering/BeltRenderer";
+import { BuildingRenderer } from "./rendering/BuildingRenderer";
 import { CameraEffects } from "./rendering/CameraEffects";
 import { CityRenderer } from "./rendering/CityRenderer";
 import { EnvironmentSetup } from "./rendering/EnvironmentSetup";
 import { FactoryRenderer } from "./rendering/FactoryRenderer";
 import { Flashlight } from "./rendering/Flashlight";
 import { FogOfWarRenderer } from "./rendering/FogOfWarRenderer";
-import { FreeCubeRenderer } from "./rendering/FreeCubeRenderer";
+import { InstancedCubeRenderer } from "./rendering/InstancedCubeRenderer";
 import { FurnaceRenderer } from "./rendering/FurnaceRenderer";
 import { HarvestParticles } from "./rendering/HarvestParticles";
 import { HologramRenderer } from "./rendering/HologramRenderer";
@@ -62,7 +65,7 @@ import { GameplaySystems } from "./systems/GameplaySystems";
 import { orchestratorTick } from "./systems/gameLoopOrchestrator";
 import { InteractionSystem } from "./systems/InteractionSystem";
 import { movementSystem } from "./systems/movement";
-import { getLastResult } from "./systems/newGameInit";
+import { getLastPlayerFaction, getLastResult } from "./systems/newGameInit";
 import { Bezel } from "./ui/Bezel";
 import { CoreLoopHUD } from "./ui/CoreLoopHUD";
 import { FPSHUD } from "./ui/FPSHUD";
@@ -74,7 +77,15 @@ import { PowerOverlay } from "./ui/PowerOverlay";
 import { QuestPanel } from "./ui/QuestPanel";
 import { getEquippedTool } from "./ui/RadialToolMenu";
 import { SaveLoadMenu } from "./ui/SaveLoadMenu";
+import { setHUDFaction } from "./ui/FPSHUD";
 import { TechTreePanel } from "./ui/TechTreePanel";
+import { TutorialOverlay } from "./ui/TutorialOverlay";
+import { VictoryProgressPanel } from "./ui/VictoryProgressPanel";
+import { SpectatorHUD } from "./ui/SpectatorHUD";
+import {
+	getSpectatorSnapshot,
+	subscribeSpectator,
+} from "./systems/spectatorSystem";
 
 // --- Game loop ---
 
@@ -148,6 +159,16 @@ export default function GameScene() {
 		return () => clearInterval(interval);
 	}, []);
 
+	// Apply player faction accent color to the HUD once on mount
+	useEffect(() => {
+		const factionId = getLastPlayerFaction();
+		if (!factionId) return;
+		const civConfig = (config.civilizations as Record<string, { accentColor?: string }>)[factionId];
+		if (civConfig?.accentColor) {
+			setHUDFaction(civConfig.accentColor);
+		}
+	}, []);
+
 	// Mobile action handlers
 	const handleInteract = useCallback(() => {
 		window.dispatchEvent(new KeyboardEvent("keydown", { key: "e" }));
@@ -175,6 +196,7 @@ export default function GameScene() {
 
 	// Subscribe to game state for reactive bezel informatics (bot name, resources, power)
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
+	const spectator = useSyncExternalStore(subscribeSpectator, getSpectatorSnapshot);
 	const bot = getActivePlayerBot();
 
 	// Guard: require successful newGameInit before rendering
@@ -217,9 +239,10 @@ export default function GameScene() {
 				<BeltRenderer />
 				<WireRenderer />
 				<FactoryRenderer />
+				<BuildingRenderer />
 				<HologramRenderer />
 				<OreDepositRenderer />
-				<FreeCubeRenderer />
+				<InstancedCubeRenderer />
 				<PlacedCubeRenderer />
 				<StockpileGlow />
 				<WealthIndicator />
@@ -228,11 +251,18 @@ export default function GameScene() {
 				<HarvestParticles />
 				<WallRenderer />
 
-				<FPSCamera />
-				<Flashlight />
-				<FPSInput />
-				<ObjectSelectionSystem />
-				<SelectionHighlight />
+				{/* Camera — FPS in normal play, top-down in spectator mode */}
+				{spectator.active ? (
+					<TopDownCamera />
+				) : (
+					<>
+						<FPSCamera />
+						<Flashlight />
+						<FPSInput />
+						<ObjectSelectionSystem />
+						<SelectionHighlight />
+					</>
+				)}
 				<PhysicsSystem />
 				<AudioSystem />
 				<GameLoop />
@@ -247,8 +277,11 @@ export default function GameScene() {
 			<CameraEffects />
 
 			{/* HUD overlays on the viewport */}
+			<SpectatorHUD />
 			<FPSHUD />
 			<CoreLoopHUD />
+			<TutorialOverlay />
+			<VictoryProgressPanel />
 			<PowerOverlay />
 			<InventoryView />
 			<QuestPanel />

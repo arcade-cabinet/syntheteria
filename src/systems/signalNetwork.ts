@@ -11,21 +11,13 @@
 
 import { config } from "../../config";
 import type { Entity, Vec3 } from "../ecs/types";
-import { world } from "../ecs/world";
-import { playerBots, signalRelays, wires } from "../ecs/koota/compat";
+import { getEntityById, playerBots, signalRelays, wires } from "../ecs/koota/compat";
 
 /** Signal minimum strength threshold from config. */
 const SIGNAL_MIN_STRENGTH = config.power.signalMinStrength;
 
 /** Compute contribution per unit of signal strength from config. */
 const SIGNAL_COMPUTE_MULTIPLIER = config.power.signalComputeMultiplier;
-
-function getEntityById(id: string): Entity | undefined {
-	for (const entity of world) {
-		if (entity.id === id) return entity;
-	}
-	return undefined;
-}
 
 /** Global compute pool — sum of compute from all connected relays. */
 let globalCompute = 0;

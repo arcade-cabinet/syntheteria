@@ -18,7 +18,10 @@ import {
 	getDeposit,
 	resetDeposits,
 	spawnInitialDeposits,
+	spawnInitialDepositsInBiome,
 	spawnOreDeposit,
+	buildBiomeOreWeights,
+	pickWeightedOreType,
 } from "../oreSpawner";
 
 // ---------------------------------------------------------------------------
@@ -326,6 +329,214 @@ describe("spawnInitialDeposits", () => {
 	it("returns empty array when count is 0", () => {
 		const deposits = spawnInitialDeposits(0, 100);
 		expect(deposits).toEqual([]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// buildBiomeOreWeights
+// ---------------------------------------------------------------------------
+
+describe("buildBiomeOreWeights", () => {
+	it("returns an entry for every ore type in the list", () => {
+		const weights = buildBiomeOreWeights("rust_plains");
+		expect(weights).toHaveLength(VALID_ORE_TYPES.length);
+		for (const oreType of VALID_ORE_TYPES) {
+			expect(weights.some((w) => w.type === oreType)).toBe(true);
+		}
+	});
+
+	it("applies biome resourceMultiplier for known ore types", () => {
+		// rust_plains: gold multiplier = 2.0, rock = 1.5, scrap_iron = 1.3
+		const weights = buildBiomeOreWeights("rust_plains");
+		const gold = weights.find((w) => w.type === "gold");
+		const rock = weights.find((w) => w.type === "rock");
+		const scrapIron = weights.find((w) => w.type === "scrap_iron");
+
+		expect(gold?.weight).toBe(2.0);
+		expect(rock?.weight).toBe(1.5);
+		expect(scrapIron?.weight).toBe(1.3);
+	});
+
+	it("gives weight 1.0 (baseline) to ore types not in biome multipliers", () => {
+		// rust_plains has no multiplier for 'quantum_crystal'
+		const weights = buildBiomeOreWeights("rust_plains");
+		const qc = weights.find((w) => w.type === "quantum_crystal");
+		expect(qc?.weight).toBe(1.0);
+	});
+
+	it("unknown biome gives all ore types weight 1.0", () => {
+		const weights = buildBiomeOreWeights("nonexistent_biome");
+		for (const entry of weights) {
+			expect(entry.weight).toBe(1.0);
+		}
+	});
+
+	it("respects custom oreTypes list", () => {
+		const weights = buildBiomeOreWeights("rust_plains", ["rock", "copper"]);
+		expect(weights).toHaveLength(2);
+		expect(weights.map((w) => w.type)).toEqual(["rock", "copper"]);
+	});
+
+	it("chrome_ridge has higher weight for titanium than rock", () => {
+		const weights = buildBiomeOreWeights("chrome_ridge");
+		const titanium = weights.find((w) => w.type === "titanium")!;
+		const rock = weights.find((w) => w.type === "rock")!;
+		// chrome_ridge: titanium=2.0, rock absent (1.0)
+		expect(titanium.weight).toBeGreaterThan(rock.weight);
+	});
+
+	it("signal_plateau has high weight for rare_earth and quantum_crystal", () => {
+		const weights = buildBiomeOreWeights("signal_plateau");
+		const rareEarth = weights.find((w) => w.type === "rare_earth")!;
+		const qc = weights.find((w) => w.type === "quantum_crystal")!;
+		// signal_plateau: both = 2.0
+		expect(rareEarth.weight).toBe(2.0);
+		expect(qc.weight).toBe(2.0);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// pickWeightedOreType
+// ---------------------------------------------------------------------------
+
+describe("pickWeightedOreType", () => {
+	it("always picks an ore type in the weight table", () => {
+		const weights = buildBiomeOreWeights("rust_plains");
+		const types = new Set(VALID_ORE_TYPES);
+		for (let i = 0; i < 50; i++) {
+			const picked = pickWeightedOreType(weights, Math.random);
+			expect(types.has(picked)).toBe(true);
+		}
+	});
+
+	it("picks the only type when there is one entry", () => {
+		const weights = [{ type: "titanium", weight: 5.0 }];
+		expect(pickWeightedOreType(weights, Math.random)).toBe("titanium");
+	});
+
+	it("never picks a type with weight 0", () => {
+		const weights = [
+			{ type: "rock", weight: 0 },
+			{ type: "copper", weight: 10 },
+		];
+		for (let i = 0; i < 30; i++) {
+			expect(pickWeightedOreType(weights, Math.random)).toBe("copper");
+		}
+	});
+
+	it("higher weight ore type is picked more often over many trials", () => {
+		// gold weight 10x vs rock weight 1x
+		const weights = [
+			{ type: "rock", weight: 1 },
+			{ type: "gold", weight: 10 },
+		];
+		let goldCount = 0;
+		const trials = 1000;
+		for (let i = 0; i < trials; i++) {
+			if (pickWeightedOreType(weights, Math.random) === "gold") goldCount++;
+		}
+		// Expect gold to be picked ~90% of the time; allow generous margin
+		expect(goldCount / trials).toBeGreaterThan(0.75);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// spawnInitialDepositsInBiome
+// ---------------------------------------------------------------------------
+
+describe("spawnInitialDepositsInBiome", () => {
+	it("spawns the requested number of deposits", () => {
+		const deposits = spawnInitialDepositsInBiome("rust_plains", 5, 100, {
+			rng: seededRng(42),
+		});
+		expect(deposits).toHaveLength(5);
+	});
+
+	it("all deposits have valid ore types", () => {
+		const deposits = spawnInitialDepositsInBiome("scrap_hills", 10, 200, {
+			rng: seededRng(123),
+		});
+		for (const d of deposits) {
+			expect(VALID_ORE_TYPES).toContain(d.type);
+		}
+	});
+
+	it("deposits are within world bounds", () => {
+		const worldSize = 100;
+		const half = worldSize / 2;
+		const deposits = spawnInitialDepositsInBiome("signal_plateau", 10, worldSize, {
+			rng: seededRng(99),
+		});
+		for (const d of deposits) {
+			expect(d.position.x).toBeGreaterThanOrEqual(-half);
+			expect(d.position.x).toBeLessThanOrEqual(half);
+			expect(d.position.z).toBeGreaterThanOrEqual(-half);
+			expect(d.position.z).toBeLessThanOrEqual(half);
+		}
+	});
+
+	it("enforces minimum distance between deposits", () => {
+		const minDistance = 10;
+		const deposits = spawnInitialDepositsInBiome("chrome_ridge", 6, 200, {
+			minDistance,
+			rng: seededRng(77),
+		});
+		for (let i = 0; i < deposits.length; i++) {
+			for (let j = i + 1; j < deposits.length; j++) {
+				const dx = deposits[i].position.x - deposits[j].position.x;
+				const dz = deposits[i].position.z - deposits[j].position.z;
+				const dist = Math.sqrt(dx * dx + dz * dz);
+				expect(dist).toBeGreaterThanOrEqual(minDistance);
+			}
+		}
+	});
+
+	it("rust_plains: gold appears more often than ore types absent from biome multipliers", () => {
+		// rust_plains gold=2.0, quantum_crystal absent (1.0 baseline)
+		// Over many deposits, gold should appear more than its even-share baseline
+		const deposits = spawnInitialDepositsInBiome("rust_plains", 200, 2000, {
+			minDistance: 5,
+			rng: seededRng(7),
+		});
+		const goldCount = deposits.filter((d) => d.type === "gold").length;
+		const qcCount = deposits.filter((d) => d.type === "quantum_crystal").length;
+		// gold (weight 2.0) should beat quantum_crystal (weight 1.0) significantly
+		expect(goldCount).toBeGreaterThan(qcCount);
+	});
+
+	it("signal_plateau: rare_earth appears among the most common types", () => {
+		const deposits = spawnInitialDepositsInBiome("signal_plateau", 200, 2000, {
+			minDistance: 5,
+			rng: seededRng(13),
+		});
+		const typeCounts: Record<string, number> = {};
+		for (const d of deposits) {
+			typeCounts[d.type] = (typeCounts[d.type] ?? 0) + 1;
+		}
+		const rareEarthCount = typeCounts["rare_earth"] ?? 0;
+		const rockCount = typeCounts["rock"] ?? 0;
+		// rare_earth (weight 2.0) vs rock (baseline 1.0)
+		expect(rareEarthCount).toBeGreaterThan(rockCount);
+	});
+
+	it("registers all deposits in module store", () => {
+		spawnInitialDepositsInBiome("rust_plains", 4, 100, {
+			rng: seededRng(42),
+		});
+		expect(getAllDeposits()).toHaveLength(4);
+	});
+
+	it("returns empty array when count is 0", () => {
+		const deposits = spawnInitialDepositsInBiome("rust_plains", 0, 100);
+		expect(deposits).toEqual([]);
+	});
+
+	it("unknown biome falls back to uniform distribution without throwing", () => {
+		expect(() => {
+			spawnInitialDepositsInBiome("unknown_biome", 5, 100, {
+				rng: seededRng(1),
+			});
+		}).not.toThrow();
 	});
 });
 

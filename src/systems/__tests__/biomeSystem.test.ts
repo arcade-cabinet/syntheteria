@@ -114,15 +114,25 @@ describe("getBiomeModifiers", () => {
 // ---------------------------------------------------------------------------
 
 describe("getDefinedBiomes", () => {
-	it("returns all 6 biome types", () => {
+	it("returns all 7 biome types", () => {
 		const biomes = getDefinedBiomes();
-		expect(biomes).toHaveLength(6);
+		expect(biomes).toHaveLength(7);
 		expect(biomes).toContain("rust_plains");
 		expect(biomes).toContain("scrap_hills");
 		expect(biomes).toContain("chrome_ridge");
 		expect(biomes).toContain("signal_plateau");
+		expect(biomes).toContain("cable_forest");
 		expect(biomes).toContain("deep_water");
 		expect(biomes).toContain("shallow_water");
+	});
+
+	it("returns correct modifiers for cable_forest", () => {
+		const mods = getBiomeModifiers("cable_forest");
+		expect(mods.moveSpeedMod).toBe(0.5);
+		expect(mods.harvestMod).toBe(1.1);
+		expect(mods.visibility).toBe(0.4);
+		expect(mods.signalBonus).toBe(0.6);
+		expect(mods.passable).toBe(true);
 	});
 });
 

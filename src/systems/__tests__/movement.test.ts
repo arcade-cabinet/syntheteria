@@ -26,6 +26,15 @@ const mockMovingUnits = [] as Array<{
 	};
 }>;
 
+const mockGetBiomeAt = jest.fn((_x: number, _z: number) => ({
+	moveSpeedMod: 1.0,
+	harvestMod: 1.0,
+	visibility: 1.0,
+	bgColor: "#555555",
+	signalBonus: 1.0,
+	passable: true,
+}));
+
 // Mock getTerrainHeight to return a predictable value
 jest.mock("../../ecs/terrain", () => ({
 	getTerrainHeight: jest.fn((_x: number, _z: number) => 0),
@@ -39,6 +48,11 @@ jest.mock("../../ecs/world", () => ({
 // Also mock the Koota compat layer (movement.ts now imports from here)
 jest.mock("../../ecs/koota/compat", () => ({
 	movingUnits: mockMovingUnits,
+}));
+
+// Mock biomeSystem so tests control biome speed modifier
+jest.mock("../biomeSystem", () => ({
+	getBiomeAt: (...args: [number, number]) => mockGetBiomeAt(...args),
 }));
 
 import { getTerrainHeight } from "../../ecs/terrain";
@@ -91,6 +105,15 @@ function wp(x: number, y = 0, z = 0) {
 beforeEach(() => {
 	mockMovingUnits.length = 0;
 	jest.mocked(getTerrainHeight).mockReturnValue(0);
+	// Default biome: no penalty
+	mockGetBiomeAt.mockReturnValue({
+		moveSpeedMod: 1.0,
+		harvestMod: 1.0,
+		visibility: 1.0,
+		bgColor: "#555555",
+		signalBonus: 1.0,
+		passable: true,
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -552,5 +575,148 @@ describe("multiple entities", () => {
 		expect(fast.navigation.moving).toBe(false);
 		expect(slow.navigation.moving).toBe(true);
 		expect(slow.worldPosition.x).toBeCloseTo(1);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Biome speed modifier
+// ---------------------------------------------------------------------------
+
+describe("biome speed modifier", () => {
+	it("applies biome moveSpeedMod multiplicatively with base speed", () => {
+		// scrap_hills: moveSpeedMod = 0.8
+		mockGetBiomeAt.mockReturnValue({
+			moveSpeedMod: 0.8,
+			harvestMod: 1.2,
+			visibility: 1.0,
+			bgColor: "#6B5B3A",
+			signalBonus: 1.0,
+			passable: true,
+		});
+
+		const entity = createMovingEntity({
+			x: 0,
+			z: 0,
+			speed: 10,
+			path: [wp(100, 0, 0)],
+			moving: true,
+		});
+		mockMovingUnits.push(entity);
+
+		movementSystem(1.0, 1.0);
+
+		// effectiveSpeed = 10 (base) * 1.0 (clear weather) * 0.8 (scrap_hills) = 8
+		expect(entity.worldPosition.x).toBeCloseTo(8);
+	});
+
+	it("applies chrome_ridge biome moveSpeedMod 0.6", () => {
+		mockGetBiomeAt.mockReturnValue({
+			moveSpeedMod: 0.6,
+			harvestMod: 0.8,
+			visibility: 0.7,
+			bgColor: "#A0A0B0",
+			signalBonus: 1.0,
+			passable: true,
+		});
+
+		const entity = createMovingEntity({
+			x: 0,
+			z: 0,
+			speed: 10,
+			path: [wp(100, 0, 0)],
+			moving: true,
+		});
+		mockMovingUnits.push(entity);
+
+		movementSystem(1.0, 1.0);
+
+		// effectiveSpeed = 10 * 1.0 * 0.6 = 6
+		expect(entity.worldPosition.x).toBeCloseTo(6);
+	});
+
+	it("applies cable_forest biome moveSpeedMod 0.5", () => {
+		mockGetBiomeAt.mockReturnValue({
+			moveSpeedMod: 0.5,
+			harvestMod: 1.1,
+			visibility: 0.4,
+			bgColor: "#2A3A2A",
+			signalBonus: 0.6,
+			passable: true,
+		});
+
+		const entity = createMovingEntity({
+			x: 0,
+			z: 0,
+			speed: 10,
+			path: [wp(100, 0, 0)],
+			moving: true,
+		});
+		mockMovingUnits.push(entity);
+
+		movementSystem(1.0, 1.0);
+
+		// effectiveSpeed = 10 * 1.0 * 0.5 = 5
+		expect(entity.worldPosition.x).toBeCloseTo(5);
+	});
+
+	it("biome modifier 1.0 (rust_plains) leaves speed unchanged", () => {
+		// mockGetBiomeAt default already returns moveSpeedMod: 1.0
+		const entity = createMovingEntity({
+			x: 0,
+			z: 0,
+			speed: 10,
+			path: [wp(100, 0, 0)],
+			moving: true,
+		});
+		mockMovingUnits.push(entity);
+
+		movementSystem(1.0, 1.0);
+
+		// effectiveSpeed = 10 * 1.0 * 1.0 = 10
+		expect(entity.worldPosition.x).toBeCloseTo(10);
+	});
+
+	it("biome modifier 0.0 (deep_water) halts movement", () => {
+		mockGetBiomeAt.mockReturnValue({
+			moveSpeedMod: 0.0,
+			harvestMod: 0.0,
+			visibility: 0.3,
+			bgColor: "#1A1A3E",
+			signalBonus: 0.5,
+			passable: false,
+		});
+
+		const entity = createMovingEntity({
+			x: 5,
+			z: 5,
+			speed: 10,
+			path: [wp(50, 0, 50)],
+			moving: true,
+		});
+		mockMovingUnits.push(entity);
+
+		movementSystem(1.0, 1.0);
+
+		// step = 0 — entity should not move
+		expect(entity.worldPosition.x).toBeCloseTo(5);
+		expect(entity.worldPosition.z).toBeCloseTo(5);
+	});
+
+	it("queries getBiomeAt using floor of entity world position", () => {
+		const entity = createMovingEntity({
+			x: 3.7,
+			z: 8.2,
+			speed: 10,
+			path: [wp(100, 0, 100)],
+			moving: true,
+		});
+		mockMovingUnits.push(entity);
+
+		movementSystem(1.0, 1.0);
+
+		expect(mockGetBiomeAt).toHaveBeenCalledWith(
+			Math.floor(3.7),
+			Math.floor(8.2),
+		);
 	});
 });

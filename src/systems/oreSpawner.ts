@@ -10,6 +10,7 @@
  */
 
 import miningConfig from "../../config/mining.json";
+import biomesConfig from "../../config/biomes.json";
 
 // ---------------------------------------------------------------------------
 // Ore type definitions — sourced from config/mining.json oreTypes
@@ -141,6 +142,135 @@ export function spawnOreDeposit(
 	}
 
 	return deposit;
+}
+
+// ---------------------------------------------------------------------------
+// Biome-weighted ore type selection
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a weighted ore type table for a named biome.
+ *
+ * biomes.json resourceMultipliers are used as relative weights.
+ * Ore types in VALID_ORE_TYPES that are absent from the biome's
+ * resourceMultipliers receive a weight of 1.0 (baseline).
+ *
+ * @param biomeName - biome key from biomes.json (e.g. "rust_plains")
+ * @param oreTypes  - ore types to consider (defaults to VALID_ORE_TYPES)
+ * @returns array of { type, weight } entries with total weight > 0
+ */
+export function buildBiomeOreWeights(
+	biomeName: string,
+	oreTypes: ReadonlyArray<string> = VALID_ORE_TYPES,
+): Array<{ type: string; weight: number }> {
+	const biomes = biomesConfig.biomes as Record<
+		string,
+		{ resourceMultipliers?: Record<string, number> }
+	>;
+	const multipliers = biomes[biomeName]?.resourceMultipliers ?? {};
+
+	return oreTypes.map((type) => ({
+		type,
+		weight: multipliers[type] ?? 1.0,
+	}));
+}
+
+/**
+ * Pick a random ore type from a weighted table.
+ *
+ * @param weights - array from buildBiomeOreWeights
+ * @param rng     - random function returning [0, 1)
+ * @returns ore type string
+ */
+export function pickWeightedOreType(
+	weights: Array<{ type: string; weight: number }>,
+	rng: () => number,
+): string {
+	const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
+	let roll = rng() * totalWeight;
+	for (const entry of weights) {
+		roll -= entry.weight;
+		if (roll <= 0) {
+			return entry.type;
+		}
+	}
+	// Fallback — floating-point rounding safety
+	return weights[weights.length - 1].type;
+}
+
+/**
+ * Spawn multiple ore deposits at random valid positions within a world area,
+ * selecting ore types according to the biome's resource multipliers.
+ *
+ * Ore types favoured by the biome (higher resourceMultiplier in biomes.json)
+ * appear proportionally more often. Types absent from biome multipliers have
+ * weight 1.0 (baseline).
+ *
+ * @param biomeName - biome key (e.g. "rust_plains") used to weight ore selection
+ * @param count     - number of deposits to spawn
+ * @param worldSize - width/depth of the square world area
+ * @param options   - same options as spawnInitialDeposits
+ * @returns array of spawned OreDepositData
+ */
+export function spawnInitialDepositsInBiome(
+	biomeName: string,
+	count: number,
+	worldSize: number,
+	options: {
+		minDistance?: number;
+		defaultQuantity?: number;
+		defaultColliderRadius?: number;
+		createPhysicsBody?: CreatePhysicsBody;
+		oreTypes?: ReadonlyArray<string>;
+		rng?: () => number;
+	} = {},
+): OreDepositData[] {
+	const {
+		minDistance = 5,
+		defaultQuantity = 100,
+		defaultColliderRadius = 1.0,
+		createPhysicsBody,
+		oreTypes = VALID_ORE_TYPES,
+		rng = Math.random,
+	} = options;
+
+	const weights = buildBiomeOreWeights(biomeName, oreTypes);
+	const half = worldSize / 2;
+	const spawned: OreDepositData[] = [];
+	const maxAttempts = count * 10;
+	let attempts = 0;
+
+	while (spawned.length < count && attempts < maxAttempts) {
+		attempts++;
+
+		const x = rng() * worldSize - half;
+		const z = rng() * worldSize - half;
+
+		const tooClose = spawned.some((d) => {
+			const dx = d.position.x - x;
+			const dz = d.position.z - z;
+			return Math.sqrt(dx * dx + dz * dz) < minDistance;
+		});
+
+		if (tooClose) continue;
+
+		const oreType = pickWeightedOreType(weights, rng);
+
+		const deposit = spawnOreDeposit(
+			{
+				type: oreType,
+				quantity: defaultQuantity,
+				position: { x, y: 0, z },
+				colliderRadius: defaultColliderRadius,
+			},
+			createPhysicsBody,
+			oreTypes,
+		);
+
+		spawned.push(deposit);
+	}
+
+	return spawned;
 }
 
 /**

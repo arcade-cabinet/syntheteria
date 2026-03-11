@@ -64,6 +64,14 @@ const BIOME_DEFINITIONS: Record<string, BiomeModifiers> = {
 		signalBonus: 1.5,
 		passable: true,
 	},
+	cable_forest: {
+		moveSpeedMod: 0.5,
+		harvestMod: 1.1,
+		visibility: 0.4,
+		bgColor: "#2A3A2A",
+		signalBonus: 0.6,
+		passable: true,
+	},
 	deep_water: {
 		moveSpeedMod: 0.0,
 		harvestMod: 0.0,

@@ -5,8 +5,12 @@
 
 import { getTerrainHeight } from "../ecs/terrain";
 import { movingUnits } from "../ecs/koota/compat";
+import { getCurrentWeather } from "./weatherSystem";
+import { applyMovementModifier } from "./weatherEffects";
+import { getBiomeAt } from "./biomeSystem";
 
 export function movementSystem(delta: number, gameSpeed: number) {
+	const weather = getCurrentWeather();
 	for (const entity of movingUnits) {
 		const nav = entity.navigation!;
 		if (!nav.moving || nav.pathIndex >= nav.path.length) {
@@ -16,7 +20,12 @@ export function movementSystem(delta: number, gameSpeed: number) {
 
 		const target = nav.path[nav.pathIndex];
 		const wp = entity.worldPosition!;
-		const step = entity.unit!.speed * delta * gameSpeed;
+		const weatherSpeed = applyMovementModifier(entity.unit!.speed, weather);
+		// Apply biome terrain modifier multiplicatively on top of weather modifier.
+		// Grid coords are integer (floor) of world position.
+		const biomeModifiers = getBiomeAt(Math.floor(wp.x), Math.floor(wp.z));
+		const effectiveSpeed = weatherSpeed * biomeModifiers.moveSpeedMod;
+		const step = effectiveSpeed * delta * gameSpeed;
 
 		const dx = target.x - wp.x;
 		const dz = target.z - wp.z;

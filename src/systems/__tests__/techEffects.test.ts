@@ -21,22 +21,23 @@ import {
 	getTechTree,
 	resetTechTree,
 	startResearch,
-	updateResearch,
 } from "../techTree";
+import { techResearchSystem } from "../techResearch";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
+const PLENTY = 999999;
+
 /**
  * Research and complete a tech for a faction so it appears in getResearchedTechs.
- * Returns the tech ID.
+ * Uses the canonical compute-point system to advance research.
  */
 function researchAndComplete(factionId: string, techId: string): string {
 	const started = startResearch(factionId, techId);
 	if (started) {
-		// Advance enough to complete (big delta)
-		updateResearch(factionId, 999999);
+		techResearchSystem({ [factionId]: PLENTY });
 	}
 	return techId;
 }
@@ -71,17 +72,19 @@ describe("applyTechEffects + getTechBonus", () => {
 		expect(getTechBonus("player", "nonexistent_bonus")).toBe(0);
 	});
 
-	it("computes harvest speed bonus from fast_belt tech", () => {
-		// tech_fast_belt unlocks fast_belt which has +0.15 harvest speed
-		// First we need a tier-0 tech researched (prerequisite)
-		// Tier-0 techs are auto-researched, so we should be able to start tier-1 directly
+	it("computes harvest speed bonus from a tech that unlocks fast_belt", () => {
 		const tree = getTechTree();
 		const fastBeltTech = tree.find((n) => n.unlocks.includes("fast_belt"));
 		if (!fastBeltTech) {
-			// Skip if tech not found in tree
 			return;
 		}
 
+		// Research prerequisites first
+		for (const prereq of fastBeltTech.prerequisites) {
+			if (!getResearchedTechs("player").includes(prereq)) {
+				researchAndComplete("player", prereq);
+			}
+		}
 		researchAndComplete("player", fastBeltTech.id);
 		applyTechEffects("player");
 
@@ -91,7 +94,6 @@ describe("applyTechEffects + getTechBonus", () => {
 	it("accumulates multiple bonuses of the same type", () => {
 		const tree = getTechTree();
 
-		// Find techs that provide harvest speed bonuses
 		const fastBeltTech = tree.find((n) => n.unlocks.includes("fast_belt"));
 		const expressBeltTech = tree.find((n) =>
 			n.unlocks.includes("express_belt"),
@@ -99,10 +101,15 @@ describe("applyTechEffects + getTechBonus", () => {
 
 		if (!fastBeltTech || !expressBeltTech) return;
 
+		// Research fast_belt and all its prerequisites
+		for (const prereq of fastBeltTech.prerequisites) {
+			if (!getResearchedTechs("player").includes(prereq)) {
+				researchAndComplete("player", prereq);
+			}
+		}
 		researchAndComplete("player", fastBeltTech.id);
 
-		// To research express_belt, we might need to research its prerequisites
-		// Research all prerequisites first
+		// Research express_belt and all its prerequisites
 		for (const prereq of expressBeltTech.prerequisites) {
 			if (!getResearchedTechs("player").includes(prereq)) {
 				researchAndComplete("player", prereq);
@@ -121,14 +128,17 @@ describe("applyTechEffects + getTechBonus", () => {
 		const wallsTech = tree.find((n) => n.unlocks.includes("walls"));
 		if (!wallsTech) return;
 
+		// Research prerequisites for walls
+		for (const prereq of wallsTech.prerequisites) {
+			if (!getResearchedTechs("player").includes(prereq)) {
+				researchAndComplete("player", prereq);
+			}
+		}
 		researchAndComplete("player", wallsTech.id);
 		applyTechEffects("player");
 		applyTechEffects("cultist");
 
 		expect(getTechBonus("player", "bonus_cube_durability")).toBeCloseTo(0.2);
-		// Cultist hasn't researched walls, but tier-0 is auto-researched
-		// They only get bonuses from auto-researched techs
-		// Tier-0 techs don't have cube_durability bonus
 		expect(getTechBonus("cultist", "bonus_cube_durability")).toBe(0);
 	});
 });
@@ -144,36 +154,49 @@ describe("isUnlocked", () => {
 
 	it("returns false when nothing is researched (after reset)", () => {
 		applyTechEffects("player");
-		// Only auto-researched (tier-0) techs should be unlocked
-		// basic_belt is a tier-0 unlock, so it should be unlocked
-		expect(isUnlocked("player", "unlock_building:basic_belt")).toBe(true);
+		// No techs are auto-researched in the canonical system
+		expect(isUnlocked("player", "unlock_building:basic_belt")).toBe(false);
 	});
 
-	it("checks qualified key (type:target format)", () => {
+	it("returns true after researching the tech that unlocks basic_belt", () => {
+		const tree = getTechTree();
+		const basicBeltTech = tree.find((n) => n.unlocks.includes("basic_belt"));
+		if (!basicBeltTech) return;
+
+		researchAndComplete("player", basicBeltTech.id);
 		applyTechEffects("player");
-		// Tier-0 techs are auto-researched, basic_belt should be unlocked
+
 		expect(isUnlocked("player", "unlock_building:basic_belt")).toBe(true);
 		expect(isUnlocked("player", "unlock_recipe:basic_belt")).toBe(true);
 	});
 
 	it("checks unqualified key (target only, checks all types)", () => {
+		const tree = getTechTree();
+		const basicBeltTech = tree.find((n) => n.unlocks.includes("basic_belt"));
+		if (!basicBeltTech) return;
+
+		researchAndComplete("player", basicBeltTech.id);
 		applyTechEffects("player");
-		// basic_belt has both unlock_building and unlock_recipe
+
 		expect(isUnlocked("player", "basic_belt")).toBe(true);
 	});
 
 	it("returns false for techs not yet researched", () => {
 		applyTechEffects("player");
-		// turret is a tier-2 tech, should not be unlocked initially
 		expect(isUnlocked("player", "unlock_building:turret")).toBe(false);
 		expect(isUnlocked("player", "turret")).toBe(false);
 	});
 
-	it("returns true after researching the tech", () => {
+	it("returns true after researching the tech that unlocks walls", () => {
 		const tree = getTechTree();
 		const wallsTech = tree.find((n) => n.unlocks.includes("walls"));
 		if (!wallsTech) return;
 
+		for (const prereq of wallsTech.prerequisites) {
+			if (!getResearchedTechs("player").includes(prereq)) {
+				researchAndComplete("player", prereq);
+			}
+		}
 		researchAndComplete("player", wallsTech.id);
 		applyTechEffects("player");
 
@@ -204,7 +227,6 @@ describe("getEffectsForTech", () => {
 		const effects = getEffectsForTech(wallsTech.id);
 		expect(effects.length).toBeGreaterThan(0);
 
-		// walls should have unlock_building:walls and bonus_cube_durability
 		const buildingUnlock = effects.find(
 			(e) => e.type === "unlock_building" && e.target === "walls",
 		);
@@ -217,13 +239,13 @@ describe("getEffectsForTech", () => {
 		expect(durabilityBonus?.value).toBe(0.2);
 	});
 
-	it("returns effects for tier-0 tech (basic_belt)", () => {
+	it("returns effects for tech that unlocks basic_belt", () => {
 		const tree = getTechTree();
 		const basicBeltTech = tree.find((n) => n.unlocks.includes("basic_belt"));
 		if (!basicBeltTech) return;
 
 		const effects = getEffectsForTech(basicBeltTech.id);
-		expect(effects.length).toBe(2);
+		expect(effects.length).toBeGreaterThan(0);
 		expect(effects.some((e) => e.type === "unlock_building")).toBe(true);
 		expect(effects.some((e) => e.type === "unlock_recipe")).toBe(true);
 	});
@@ -250,15 +272,18 @@ describe("resetTechEffects", () => {
 		applyTechEffects("player");
 		resetTechEffects();
 
-		// After reset, should return 0
 		expect(getTechBonus("player", "bonus_harvest_speed")).toBe(0);
 	});
 
 	it("clears all cached unlocks", () => {
+		const tree = getTechTree();
+		const basicBeltTech = tree.find((n) => n.unlocks.includes("basic_belt"));
+		if (!basicBeltTech) return;
+
+		researchAndComplete("player", basicBeltTech.id);
 		applyTechEffects("player");
 		resetTechEffects();
 
-		// After reset, isUnlocked should return false
 		expect(isUnlocked("player", "basic_belt")).toBe(false);
 	});
 

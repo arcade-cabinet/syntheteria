@@ -185,6 +185,38 @@ export function techResearchSystem(
 }
 
 /**
+ * Return the full tech tree (all definitions from config).
+ */
+export function getTechTree(): TechDefinition[] {
+	return [...techDefs];
+}
+
+/**
+ * Return the tech definition with the given id, or undefined.
+ */
+export function getTechNode(techId: string): TechDefinition | undefined {
+	return findTech(techId);
+}
+
+/**
+ * Return all researched tech IDs for a faction.
+ */
+export function getResearchedTechs(faction: string): string[] {
+	return [...getOrCreate(faction).researched];
+}
+
+/**
+ * Cancel current research for a faction. Returns the cancelled tech ID or null.
+ */
+export function cancelResearch(faction: string): string | null {
+	const state = getOrCreate(faction);
+	if (!state.active) return null;
+	const cancelledId = state.active.techId;
+	state.active = null;
+	return cancelledId;
+}
+
+/**
  * Reset all research state. Used for tests and new-game initialization.
  */
 export function resetTechResearch(): void {

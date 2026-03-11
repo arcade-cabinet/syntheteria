@@ -36,7 +36,7 @@ import {
 } from "../systems/resources";
 import { getActiveRaidIds, executeRaid } from "../systems/raidSystem";
 import { signalNetworkSystem } from "../systems/signalNetwork";
-import { updateResearch } from "../systems/techTree";
+import { techResearchSystem } from "../systems/techResearch";
 import { applyTechEffects } from "../systems/techEffects";
 import { getAllTerritories } from "../systems/territory";
 import { applyContestationDecay } from "../systems/territoryEffects";
@@ -154,12 +154,17 @@ export function simulationTick() {
 	// Territory contestation decay (overlapping faction territories weaken)
 	applyContestationDecay([...getAllTerritories()]);
 
-	// Tech research progression for all factions
-	for (const factionId of ["player", "reclaimers", "volt_collective", "signal_choir", "iron_creed"]) {
-		const completedTech = updateResearch(factionId, 1);
-		if (completedTech) {
-			applyTechEffects(factionId);
-		}
+	// Tech research progression for all factions (compute-point based)
+	const computeByFaction: Record<string, number> = {
+		player: 1,
+		reclaimers: 1,
+		volt_collective: 1,
+		signal_choir: 1,
+		iron_creed: 1,
+	};
+	const completedTechs = techResearchSystem(computeByFaction);
+	for (const { faction } of completedTechs) {
+		applyTechEffects(faction);
 	}
 
 	// Execute active raids (state machine advance)

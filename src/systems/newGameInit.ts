@@ -29,7 +29,8 @@ import {
 	resetFogOfWar,
 	FOG_VISIBLE,
 } from "./fogOfWarManager";
-import { startTutorial, resetTutorial } from "./tutorialSystem";
+import { startTutorial, resetTutorial, getCurrentStep } from "./tutorialSystem";
+import { resetTutorialOtterBridge } from "./tutorialOtterBridge";
 import { resetHUDState, updateBotInfo, updateCoords } from "./hudState";
 import { resetWeather, setRngSeed as setWeatherRngSeed } from "./weatherSystem";
 import { resetEconomy } from "./economySimulation";
@@ -751,6 +752,25 @@ export function initNewGame(options: NewGameOptions): NewGameResult {
 	const otterGuide = placeOtterGuide(playerSpawn, otterRng);
 	otterGuideData = otterGuide;
 
+	// Spawn Pip as an actual ECS entity so OtterRenderer can display it.
+	// The first tutorial step's otterDialogue becomes the initial speech bubble.
+	// Lazy require to avoid triggering ECS world init at import time (breaks test mocks).
+	// Non-fatal: game works without the otter entity, just no speech bubbles.
+	const firstStep = getCurrentStep();
+	try {
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		const { spawnOtter } = require("../ecs/factory") as typeof import("../ecs/factory");
+		spawnOtter({
+			x: otterGuide.position.x,
+			z: otterGuide.position.z,
+			lines: firstStep ? [firstStep.otterDialogue] : [],
+			stationary: true,
+		});
+	} catch {
+		// ECS world not initialized (test env) — otter entity will be created
+		// by the renderer when the world is ready.
+	}
+
 	// --- Step 11: Place starter resources near player ---
 	try {
 		const starterRng = makePRNG(worldSeed + 3000);
@@ -925,4 +945,5 @@ export function reset(): void {
 	resetEconomy();
 	resetBotFleet();
 	resetTutorial();
+	resetTutorialOtterBridge();
 }

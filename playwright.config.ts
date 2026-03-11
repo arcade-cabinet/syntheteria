@@ -7,9 +7,11 @@ import { defineConfig, devices } from "@playwright/test";
  * CI            : `npm run test:e2e`      — starts Expo web dev server automatically
  * Interactive UI: `npm run test:e2e:ui`   — Playwright UI mode
  *
- * Uses the Expo web dev server at localhost:8081.
- * Run `npm run dev` in a separate terminal to reuse an existing server locally.
+ * Uses the Expo web dev server (port from DEV_PORT env or 19801).
+ * Run `npx expo start --web --port 19801 --host lan` to start locally.
  */
+const port = process.env.DEV_PORT ?? "19801";
+
 export default defineConfig({
   testDir: "./tests/e2e",
 
@@ -32,7 +34,7 @@ export default defineConfig({
 
   use: {
     // Expo web serves at root (no base path)
-    baseURL: "http://localhost:8081",
+    baseURL: `http://localhost:${port}`,
     // Capture trace on the first retry so failures are debuggable.
     trace: "on-first-retry",
     // Capture screenshot on failure.
@@ -55,7 +57,7 @@ export default defineConfig({
 
   webServer: {
     command: "npm run dev",
-    url: "http://localhost:8081",
+    url: `http://localhost:${port}`,
     // Reuse a running dev server locally; always start fresh in CI.
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

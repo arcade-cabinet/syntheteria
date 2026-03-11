@@ -7,13 +7,14 @@
  *  - Remove button
  *
  * Add button at the bottom if fewer than 4 slots.
+ *
+ * Uses menu palette (amber/chrome) as base — faction colors as accents.
  */
 
 import { useState } from "react";
 import civilizations from "../../config/civilizations.json";
+import { FONT_MONO, menu } from "./designTokens";
 import type { FactionId } from "./FactionSelect";
-
-const MONO = "'Courier New', monospace";
 
 export interface OpponentSlot {
 	faction: FactionId;
@@ -94,9 +95,9 @@ export function OpponentConfig({
 			{opponents.length === 0 && (
 				<div
 					style={{
-						fontFamily: MONO,
+						fontFamily: FONT_MONO,
 						fontSize: "12px",
-						color: "#00ffaa44",
+						color: menu.accentMuted,
 						textAlign: "center",
 						padding: "24px 0",
 						letterSpacing: "0.1em",
@@ -114,9 +115,9 @@ export function OpponentConfig({
 			{/* Slot count indicator */}
 			<div
 				style={{
-					fontFamily: MONO,
+					fontFamily: FONT_MONO,
 					fontSize: "10px",
-					color: "#00ffaa44",
+					color: menu.accentMuted,
 					textAlign: "center",
 					letterSpacing: "0.1em",
 				}}
@@ -149,7 +150,7 @@ function OpponentSlotRow({
 				display: "flex",
 				alignItems: "center",
 				gap: "8px",
-				background: "rgba(0,255,170,0.03)",
+				background: menu.accentFaint,
 				border: `1px solid ${civ.color}44`,
 				borderRadius: "6px",
 				padding: "10px 12px",
@@ -159,9 +160,9 @@ function OpponentSlotRow({
 			<div
 				aria-hidden="true"
 				style={{
-					fontFamily: MONO,
+					fontFamily: FONT_MONO,
 					fontSize: "11px",
-					color: "#00ffaa44",
+					color: menu.accentMuted,
 					width: "20px",
 					flexShrink: 0,
 				}}
@@ -221,7 +222,7 @@ function OpponentSlotRow({
 					border: "1px solid rgba(255,68,68,0.3)",
 					borderRadius: "4px",
 					color: "#ff444488",
-					fontFamily: MONO,
+					fontFamily: FONT_MONO,
 					fontSize: "14px",
 					padding: "4px 8px",
 					cursor: "pointer",
@@ -265,11 +266,11 @@ function StyledSelect({
 			aria-label={ariaLabel}
 			onChange={(e) => onChange(e.target.value)}
 			style={{
-				background: "rgba(0,255,170,0.05)",
-				border: "1px solid rgba(0,255,170,0.2)",
+				background: menu.accentFaint,
+				border: `1px solid ${menu.accentMuted}`,
 				borderRadius: "4px",
-				color: color ?? "#00ffaa",
-				fontFamily: MONO,
+				color: color ?? menu.chrome,
+				fontFamily: FONT_MONO,
 				fontSize: "11px",
 				padding: "6px 8px",
 				cursor: "pointer",
@@ -284,7 +285,7 @@ function StyledSelect({
 				<option
 					key={opt.value}
 					value={opt.value}
-					style={{ background: "#0a0f0c", color: "#00ffaa" }}
+					style={{ background: "#0e1014", color: menu.chrome }}
 				>
 					{opt.label}
 				</option>
@@ -310,15 +311,15 @@ function AddButton({
 			onMouseLeave={() => setHovered(false)}
 			style={{
 				background: hovered
-					? "rgba(0,255,170,0.08)"
+					? menu.accentFaint
 					: "transparent",
-				border: "1px dashed rgba(0,255,170,0.3)",
+				border: `1px dashed ${menu.accentMuted}`,
 				borderRadius: "6px",
 				padding: "10px",
 				cursor: "pointer",
-				fontFamily: MONO,
+				fontFamily: FONT_MONO,
 				fontSize: "12px",
-				color: hovered ? "#00ffaa" : "#00ffaa66",
+				color: hovered ? menu.accent : menu.accentDim,
 				letterSpacing: "0.1em",
 				transition: "all 0.15s ease",
 				textAlign: "center",

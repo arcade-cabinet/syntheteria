@@ -7,12 +7,13 @@
  *  - Storm intensity: calm / moderate / violent
  *  - Starting resources: minimal / standard / abundant
  *  - Seed input: text field for reproducible maps (adj-adj-noun or number)
+ *
+ * Uses menu palette (amber/chrome) — this is a pregame screen.
  */
 
 import { useRef, useState } from "react";
 import { phraseToSeed, randomSeed, seedToPhrase } from "../ecs/seed";
-
-const MONO = "'Courier New', monospace";
+import { FONT_MONO, menu } from "./designTokens";
 
 export interface MapSettings {
 	mapSize: "small" | "medium" | "large";
@@ -120,9 +121,9 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 					htmlFor="mission-seed-input"
 					style={{
 						display: "block",
-						fontFamily: MONO,
+						fontFamily: FONT_MONO,
 						fontSize: "10px",
-						color: "#00ffaa66",
+						color: menu.accentDim,
 						letterSpacing: "0.15em",
 						marginBottom: "6px",
 					}}
@@ -142,19 +143,19 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 						aria-describedby={parseError ? "seed-error" : undefined}
 						style={{
 							flex: 1,
-							background: "rgba(0,255,170,0.05)",
+							background: menu.accentFaint,
 							border: parseError
-								? "1px solid #ff4444"
-								: "1px solid rgba(0,255,170,0.25)",
+								? `1px solid ${menu.error}`
+								: `1px solid ${menu.accentMuted}`,
 							borderRadius: "4px",
-							color: parseError ? "#ff8866" : "#00ffaa",
-							fontFamily: MONO,
+							color: parseError ? menu.errorDim : menu.accent,
+							fontFamily: FONT_MONO,
 							fontSize: "13px",
 							padding: "8px 10px",
 							letterSpacing: "0.05em",
 							outline: "none",
 							textAlign: "center",
-							caretColor: "#00ffaa",
+							caretColor: menu.accent,
 						}}
 						placeholder="hollow-bright-forge"
 					/>
@@ -162,11 +163,11 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 						onClick={shuffleSeed}
 						aria-label="Generate random mission seed"
 						style={{
-							background: "rgba(0,255,170,0.07)",
-							border: "1px solid rgba(0,255,170,0.3)",
+							background: menu.accentFaint,
+							border: `1px solid ${menu.accentMuted}`,
 							borderRadius: "4px",
-							color: "#00ffaa",
-							fontFamily: MONO,
+							color: menu.accent,
+							fontFamily: FONT_MONO,
 							fontSize: "16px",
 							padding: "8px 10px",
 							cursor: "pointer",
@@ -182,8 +183,8 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 						id="seed-error"
 						role="alert"
 						style={{
-							color: "#ff6644",
-							fontFamily: MONO,
+							color: menu.errorDim,
+							fontFamily: FONT_MONO,
 							fontSize: "10px",
 							marginTop: "4px",
 							textAlign: "center",
@@ -218,9 +219,9 @@ function OptionRow({
 			<div
 				id={`option-label-${groupLabel.replace(/\s+/g, "-").toLowerCase()}`}
 				style={{
-					fontFamily: MONO,
+					fontFamily: FONT_MONO,
 					fontSize: "10px",
-					color: "#00ffaa66",
+					color: menu.accentDim,
 					letterSpacing: "0.15em",
 					marginBottom: "6px",
 				}}
@@ -270,13 +271,13 @@ function OptionButton({
 			style={{
 				flex: 1,
 				background: isSelected
-					? "rgba(0,255,170,0.12)"
+					? "rgba(232,160,32,0.14)"
 					: hovered
-						? "rgba(0,255,170,0.06)"
-						: "rgba(0,255,170,0.03)",
+						? menu.accentFaint
+						: "rgba(232,160,32,0.03)",
 				border: isSelected
-					? "1px solid #00ffaa"
-					: "1px solid rgba(0,255,170,0.2)",
+					? `1px solid ${menu.accent}`
+					: `1px solid ${menu.accentMuted}`,
 				borderRadius: "4px",
 				padding: "8px 4px",
 				cursor: "pointer",
@@ -289,9 +290,9 @@ function OptionButton({
 		>
 			<span
 				style={{
-					fontFamily: MONO,
+					fontFamily: FONT_MONO,
 					fontSize: "11px",
-					color: isSelected ? "#00ffaa" : "#00ffaa88",
+					color: isSelected ? menu.accent : menu.accentDim,
 					letterSpacing: "0.08em",
 					fontWeight: isSelected ? "bold" : "normal",
 				}}
@@ -302,9 +303,9 @@ function OptionButton({
 				<span
 					aria-hidden="true"
 					style={{
-						fontFamily: MONO,
+						fontFamily: FONT_MONO,
 						fontSize: "9px",
-						color: "#00ffaa44",
+						color: menu.accentMuted,
 					}}
 				>
 					{sublabel}

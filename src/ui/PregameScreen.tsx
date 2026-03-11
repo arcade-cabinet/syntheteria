@@ -19,15 +19,17 @@ import type { OpponentSlot } from "./OpponentConfig";
 import { OpponentConfig } from "./OpponentConfig";
 
 // ---------------------------------------------------------------------------
-// Design tokens — match TitleScreen industrial palette
+// Design tokens — shared with TitleScreen
 // ---------------------------------------------------------------------------
 
-const MONO = "'Courier New', monospace";
-const COLOR_ACCENT = "#e8a020";
-const COLOR_ACCENT_DIM = "rgba(232,160,32,0.45)";
-const COLOR_ACCENT_MUTED = "rgba(232,160,32,0.22)";
-const COLOR_CHROME = "#b8c4cc";
-const BG_INSET = "rgba(14,16,20,0.92)";
+import { FONT_MONO, menu } from "./designTokens";
+
+const MONO = FONT_MONO;
+const COLOR_ACCENT = menu.accent;
+const COLOR_ACCENT_DIM = menu.accentDim;
+const COLOR_ACCENT_MUTED = menu.accentMuted;
+const COLOR_CHROME = menu.chrome;
+const BG_INSET = menu.bgInset;
 
 // ---------------------------------------------------------------------------
 // Types

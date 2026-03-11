@@ -74,6 +74,7 @@ import { techResearchSystem } from "./techResearch";
 import { territoryControlSystem } from "./territoryControl";
 import { tradeRouteSystem } from "./tradeRouteSystem";
 import { turretSystem } from "./turret";
+import { syncTutorialToOtter } from "./tutorialOtterBridge";
 import { victoryTrackingSystem } from "./victoryTracking";
 // --- Environment ---
 import { weatherSystem } from "./weatherSystem";
@@ -221,6 +222,9 @@ export function registerAllSystems(): void {
 		updateDialogue(FIXED_DELTA),
 	);
 	registerSystem("progression", "otterSystem", () => otterSystem());
+	registerSystem("progression", "tutorialOtterBridge", () =>
+		syncTutorialToOtter(),
+	);
 
 	// -------------------------------------------------------------------
 	// Phase 8: Cleanup

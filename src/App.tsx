@@ -8,17 +8,24 @@
  * the heavy 3D scene is lazy-loaded only when the player starts.
  */
 
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { useSyncExternalStore } from "react";
+import {
+	lazy,
+	Suspense,
+	useEffect,
+	useRef,
+	useState,
+	useSyncExternalStore,
+} from "react";
 import { getSnapshot, subscribe } from "./ecs/gameState";
 import { phraseToSeed } from "./ecs/seed";
+import { initFromConfig, type NewGameConfig } from "./systems/newGameInit";
+import { registerAllSystems } from "./systems/registerSystems";
+import { ErrorBoundary } from "./ui/ErrorBoundary";
+import { LoadingScreen } from "./ui/LoadingScreen";
+import { PauseMenu } from "./ui/PauseMenu";
 import type { PregameConfig } from "./ui/PregameScreen";
 import { PregameScreen } from "./ui/PregameScreen";
 import { TitleScreen } from "./ui/TitleScreen";
-import { LoadingScreen } from "./ui/LoadingScreen";
-import { PauseMenu } from "./ui/PauseMenu";
-import { ErrorBoundary } from "./ui/ErrorBoundary";
-import { initFromConfig, type NewGameConfig } from "./systems/newGameInit";
 
 // Lazy-load the entire 3D scene — keeps title/pregame bundle tiny.
 // Vite creates a separate chunk for GameScene + all its Three.js dependencies.
@@ -51,7 +58,7 @@ export default function App() {
 	const pendingConfigRef = useRef<PregameConfig | null>(null);
 
 	// Title screen "New Game" → go to pregame config
-	const handleNewGame = (_seed: number) => {
+	const handleNewGame = () => {
 		setPhase("pregame");
 	};
 
@@ -85,11 +92,11 @@ export default function App() {
 			const result = initFromConfig(gameConfig);
 
 			if (!result.success) {
-				console.error(
-					"[newGameInit] Initialization failed:",
-					result.errors,
-				);
+				console.error("[newGameInit] Initialization failed:", result.errors);
 			}
+
+			// Register all systems into the orchestrator after world init
+			registerAllSystems();
 
 			setPhase("playing");
 		});
@@ -129,14 +136,11 @@ export default function App() {
 
 function PlayingView({ onQuitToTitle }: { onQuitToTitle: () => void }) {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
-	const pendingSeedRef = useRef<number>(42);
 
 	return (
-		<div style={{ position: "relative", width: "100%", height: "100%" }}>
-			<Suspense fallback={<LoadingScreen />}>
-				<GameScene seed={pendingSeedRef.current} />
-			</Suspense>
+		<Suspense fallback={<LoadingScreen />}>
+			<GameScene />
 			{snap.paused && <PauseMenu onQuitToTitle={onQuitToTitle} />}
-		</div>
+		</Suspense>
 	);
 }

@@ -55,17 +55,12 @@ import { WallRenderer } from "./rendering/WallRenderer";
 import { WealthIndicator } from "./rendering/WealthIndicator";
 import { WireRenderer } from "./rendering/WireRenderer";
 import { saveGame } from "./save/SaveManager";
-import { updateBeltTransport } from "./systems/beltTransport";
-import { botAutomationSystem } from "./systems/botAutomation";
 import { CoreLoopSystem } from "./systems/CoreLoopSystem";
-import { cultistAISystem } from "./systems/cultistAI";
-import { fpsCombatSystem } from "./systems/fpsCombat";
 import { GameplaySystems } from "./systems/GameplaySystems";
 import { orchestratorTick } from "./systems/gameLoopOrchestrator";
 import { InteractionSystem } from "./systems/InteractionSystem";
 import { movementSystem } from "./systems/movement";
 import { getLastResult } from "./systems/newGameInit";
-import { registerAllSystems } from "./systems/registerSystems";
 import { Bezel } from "./ui/Bezel";
 import { CoreLoopHUD } from "./ui/CoreLoopHUD";
 import { FPSHUD } from "./ui/FPSHUD";
@@ -102,13 +97,8 @@ function GameLoop() {
 
 		const scaledDelta = delta * speed;
 
+		// Per-frame: needs raw delta for smooth interpolation
 		movementSystem(delta, speed);
-
-		// Per-frame systems: need actual frame delta, not 1Hz tick
-		updateBeltTransport(scaledDelta);
-		botAutomationSystem(scaledDelta);
-		cultistAISystem(scaledDelta);
-		fpsCombatSystem(delta);
 
 		simAccumulator.current += scaledDelta;
 		while (simAccumulator.current >= SIM_INTERVAL) {
@@ -125,20 +115,8 @@ function GameLoop() {
 
 // --- GameScene ---
 
-export interface GameSceneProps {
-	seed: number;
-}
-
-export default function GameScene({ seed: _seed }: GameSceneProps) {
+export default function GameScene() {
 	const [saveMenuOpen, setSaveMenuOpen] = useState(false);
-
-	// Register all systems once on first render (guard prevents double-registration
-	// from StrictMode double-invocation; registerAllSystems is also idempotent).
-	const registeredRef = useRef(false);
-	if (!registeredRef.current) {
-		registerAllSystems();
-		registeredRef.current = true;
-	}
 
 	// ESC key toggles save/load menu.
 	// Uses keyup to avoid conflicts with other ESC handlers (ObjectActionMenu,
@@ -250,7 +228,6 @@ export default function GameScene({ seed: _seed }: GameSceneProps) {
 				<WallRenderer />
 
 				<FPSCamera />
-				<CameraEffects />
 				<Flashlight />
 				<FPSInput />
 				<ObjectSelectionSystem />
@@ -264,6 +241,9 @@ export default function GameScene({ seed: _seed }: GameSceneProps) {
 				<GameplaySystems />
 				<NavMeshDebugRenderer />
 			</Canvas>
+
+			{/* Camera damage CSS overlays (must be outside Canvas — renders HTML) */}
+			<CameraEffects />
 
 			{/* HUD overlays on the viewport */}
 			<FPSHUD />

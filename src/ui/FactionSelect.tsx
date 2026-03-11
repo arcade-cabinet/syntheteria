@@ -5,12 +5,14 @@
  * description, portrait glyph, and gameplay bonuses. Clicking a
  * card selects that faction. The selected card gets a highlight
  * border and glow matching the faction color.
+ *
+ * Uses menu palette (amber/chrome) as base — faction colors only
+ * appear when selected or hovered to show "this is YOUR choice."
  */
 
 import { useState } from "react";
 import civilizations from "../../config/civilizations.json";
-
-const MONO = "'Courier New', monospace";
+import { FONT_MONO, menu } from "./designTokens";
 
 export type FactionId = keyof typeof civilizations;
 
@@ -77,17 +79,18 @@ function FactionCard({
 	const glyph = FACTION_GLYPHS[id];
 	const factionColor = civ.color;
 
+	// Selected → faction color, hovered → faction hint, default → amber/chrome
 	const borderColor = isSelected
 		? factionColor
 		: hovered
 			? `${factionColor}88`
-			: "rgba(0,255,170,0.2)";
+			: menu.accentMuted;
 
 	const bgColor = isSelected
 		? `${factionColor}18`
 		: hovered
 			? `${factionColor}0a`
-			: "rgba(0,255,170,0.03)";
+			: "rgba(232,160,32,0.03)";
 
 	return (
 		<button
@@ -119,9 +122,9 @@ function FactionCard({
 				<div
 					aria-hidden="true"
 					style={{
-						fontFamily: MONO,
+						fontFamily: FONT_MONO,
 						fontSize: "20px",
-						color: isSelected ? factionColor : "#00ffaa88",
+						color: isSelected ? factionColor : menu.accentDim,
 						textShadow: isSelected
 							? `0 0 12px ${factionColor}60`
 							: "none",
@@ -132,10 +135,10 @@ function FactionCard({
 				</div>
 				<div
 					style={{
-						fontFamily: MONO,
+						fontFamily: FONT_MONO,
 						fontSize: "14px",
 						fontWeight: "bold",
-						color: isSelected ? factionColor : "#00ffaa",
+						color: isSelected ? factionColor : menu.chrome,
 						letterSpacing: "0.1em",
 						textShadow: isSelected
 							? `0 0 8px ${factionColor}40`
@@ -149,9 +152,9 @@ function FactionCard({
 			{/* Description */}
 			<div
 				style={{
-					fontFamily: MONO,
+					fontFamily: FONT_MONO,
 					fontSize: "11px",
-					color: "#00ffaa88",
+					color: menu.chromeDim,
 					lineHeight: 1.4,
 				}}
 			>
@@ -171,9 +174,9 @@ function FactionCard({
 					<div
 						key={b}
 						style={{
-							fontFamily: MONO,
+							fontFamily: FONT_MONO,
 							fontSize: "10px",
-							color: isSelected ? `${factionColor}cc` : "#00ffaa66",
+							color: isSelected ? `${factionColor}cc` : menu.accentDim,
 							letterSpacing: "0.03em",
 						}}
 					>
@@ -187,7 +190,7 @@ function FactionCard({
 				<div
 					aria-hidden="true"
 					style={{
-						fontFamily: MONO,
+						fontFamily: FONT_MONO,
 						fontSize: "10px",
 						color: factionColor,
 						letterSpacing: "0.15em",

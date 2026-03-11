@@ -4,55 +4,32 @@
  * Industrial mechanical aesthetic: chrome panels, amber-orange accents,
  * rust tones. NOT generic terminal green.
  *
- * Every world has a three-word seed phrase (adj-adj-noun) derived from a
- * 32-bit numeric seed. A random phrase is generated on first load.
- * The player can type a different phrase (or a raw number) to reproduce
- * a specific world — like entering a Minecraft seed.
- *
- * The phrase is passed to onNewGame() so App can set the world seed before
- * initialising the game.
+ * Clean entry point: just the brand + menu buttons. Seed configuration
+ * happens in the pregame screen where the player sets up their mission.
  */
-import { useEffect, useRef, useState } from "react";
-import { phraseToSeed, randomSeed, seedToPhrase } from "../ecs/seed";
+import { useEffect, useState } from "react";
 import { getSaveSlots, loadGame, type SaveSlotInfo } from "../save/SaveManager";
+import { FONT_MONO, menu } from "./designTokens";
 
-// ---------------------------------------------------------------------------
-// Design tokens — industrial mechanical, NOT terminal green
-// ---------------------------------------------------------------------------
-
-const MONO = "'Courier New', monospace";
-
-/** Primary chrome/amber accent color */
-const COLOR_ACCENT = "#e8a020";
-/** Secondary dim amber */
-const COLOR_ACCENT_DIM = "rgba(232,160,32,0.45)";
-/** Muted accent for inactive elements */
-const COLOR_ACCENT_MUTED = "rgba(232,160,32,0.22)";
-/** Chrome highlight */
-const COLOR_CHROME = "#b8c4cc";
-/** Error / alert red */
-const COLOR_ERROR = "#cc3322";
-/** Secondary panel (inset) */
-const BG_INSET = "rgba(14,16,20,0.88)";
+// Aliases for readability (match shared design tokens)
+const MONO = FONT_MONO;
+const COLOR_ACCENT = menu.accent;
+const COLOR_ACCENT_DIM = menu.accentDim;
+const COLOR_ACCENT_MUTED = menu.accentMuted;
+const COLOR_CHROME = menu.chrome;
+const BG_INSET = menu.bgInset;
 
 export function TitleScreen({
 	onNewGame,
 	onContinue,
 }: {
-	onNewGame: (seed: number) => void;
+	onNewGame: () => void;
 	onContinue?: () => void;
 }) {
 	const [titleOpacity, setTitleOpacity] = useState(0);
 	const [menuOpacity, setMenuOpacity] = useState(0);
 	const [glitch, setGlitch] = useState(false);
 	const [latestSave, setLatestSave] = useState<SaveSlotInfo | null>(null);
-
-	// Seed state — one random seed at startup, shown as a phrase
-	const [phraseInput, setPhraseInput] = useState(() =>
-		seedToPhrase(randomSeed()),
-	);
-	const [parseError, setParseError] = useState(false);
-	const inputRef = useRef<HTMLInputElement>(null);
 
 	// Check for existing saves to enable CONTINUE button
 	useEffect(() => {
@@ -92,24 +69,7 @@ export function TitleScreen({
 	}, []);
 
 	const handleNewGame = () => {
-		const parsed = phraseToSeed(phraseInput);
-		if (parsed === null) {
-			setParseError(true);
-			inputRef.current?.focus();
-			return;
-		}
-		setParseError(false);
-		onNewGame(parsed);
-	};
-
-	const handlePhraseChange = (val: string) => {
-		setPhraseInput(val);
-		setParseError(false);
-	};
-
-	const shuffleSeed = () => {
-		setPhraseInput(seedToPhrase(randomSeed()));
-		setParseError(false);
+		onNewGame();
 	};
 
 	return (
@@ -269,26 +229,6 @@ export function TitleScreen({
 						padding: "20px 20px 16px",
 					}}
 				>
-					{/* Seed input section */}
-					<SeedInput
-						value={phraseInput}
-						onChange={handlePhraseChange}
-						onShuffle={shuffleSeed}
-						onSubmit={handleNewGame}
-						hasError={parseError}
-						inputRef={inputRef}
-					/>
-
-					{/* Divider */}
-					<div
-						style={{
-							width: "100%",
-							height: "1px",
-							background: COLOR_ACCENT_MUTED,
-							margin: "4px 0",
-						}}
-					/>
-
 					{/* Buttons */}
 					<MenuButton
 						label="NEW GAME"
@@ -369,110 +309,6 @@ export function TitleScreen({
 				/>
 				SYSTEMS NOMINAL
 			</div>
-		</div>
-	);
-}
-
-// ---------------------------------------------------------------------------
-// Seed input row
-// ---------------------------------------------------------------------------
-
-function SeedInput({
-	value,
-	onChange,
-	onShuffle,
-	onSubmit,
-	hasError,
-	inputRef,
-}: {
-	value: string;
-	onChange: (val: string) => void;
-	onShuffle: () => void;
-	onSubmit: () => void;
-	hasError: boolean;
-	inputRef: React.RefObject<HTMLInputElement | null>;
-}) {
-	return (
-		<div style={{ width: "100%" }}>
-			<div
-				style={{
-					fontFamily: MONO,
-					fontSize: "9px",
-					color: COLOR_ACCENT_DIM,
-					letterSpacing: "0.25em",
-					marginBottom: "6px",
-					textAlign: "center",
-				}}
-			>
-				MISSION SEED
-			</div>
-			<div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-				<input
-					ref={inputRef}
-					value={value}
-					onChange={(e) => onChange(e.target.value)}
-					onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-					spellCheck={false}
-					autoComplete="off"
-					aria-label="Mission seed phrase"
-					aria-invalid={hasError}
-					style={{
-						flex: 1,
-						background: "rgba(232,160,32,0.04)",
-						border: hasError
-							? `1px solid ${COLOR_ERROR}`
-							: `1px solid ${COLOR_ACCENT_MUTED}`,
-						borderRadius: "3px",
-						color: hasError ? "#cc6655" : COLOR_CHROME,
-						fontFamily: MONO,
-						fontSize: "clamp(11px, 2.8vw, 13px)",
-						padding: "8px 10px",
-						letterSpacing: "0.04em",
-						outline: "none",
-						width: "100%",
-						textAlign: "center",
-						caretColor: COLOR_ACCENT,
-					}}
-					placeholder="hollow-bright-forge"
-				/>
-				<button
-					onClick={onShuffle}
-					title="Generate random mission seed"
-					aria-label="Random seed"
-					style={{
-						background: "rgba(232,160,32,0.06)",
-						border: `1px solid ${COLOR_ACCENT_MUTED}`,
-						borderRadius: "3px",
-						color: COLOR_ACCENT,
-						fontFamily: MONO,
-						fontSize: "15px",
-						padding: "7px 10px",
-						cursor: "pointer",
-						flexShrink: 0,
-						lineHeight: 1,
-						minWidth: "36px",
-						minHeight: "36px",
-					}}
-				>
-					&#x27F3;
-				</button>
-			</div>
-			{hasError && (
-				<div
-					role="alert"
-					aria-live="assertive"
-					style={{
-						color: COLOR_ERROR,
-						fontFamily: MONO,
-						fontSize: "10px",
-						marginTop: "4px",
-						textAlign: "center",
-						letterSpacing: "0.05em",
-					}}
-				>
-					invalid seed — use adj-adj-noun or a number
-				</div>
-			)}
 		</div>
 	);
 }

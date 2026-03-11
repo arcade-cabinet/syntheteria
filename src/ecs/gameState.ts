@@ -3,12 +3,12 @@
  * Bridges ECS mutable state to React via useSyncExternalStore.
  */
 
+import { aiCivilizationSystem } from "../systems/aiCivilization";
 import {
 	type CombatEvent,
 	combatSystem,
 	getLastCombatEvents,
 } from "../systems/combat";
-import { aiCivilizationSystem } from "../systems/aiCivilization";
 import { enemySystem } from "../systems/enemies";
 import { explorationSystem } from "../systems/exploration";
 import {
@@ -17,6 +17,11 @@ import {
 	getActiveJobs,
 } from "../systems/fabrication";
 import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge";
+import {
+	checkGameOver,
+	type GameOverState,
+	getGameOverState,
+} from "../systems/gameOverDetection";
 import { hackingSystem } from "../systems/hacking";
 import { miningSystem } from "../systems/mining";
 import { otterSystem } from "../systems/otters";
@@ -28,25 +33,21 @@ import {
 import { updatePowerGrid } from "../systems/powerRouting";
 import { processingSystem } from "../systems/processing";
 import { updateQuests } from "../systems/questSystem";
+import { executeRaid, getActiveRaidIds } from "../systems/raidSystem";
 import { repairSystem } from "../systems/repair";
 import {
 	getResources,
 	type ResourcePool,
 	resourceSystem,
 } from "../systems/resources";
-import { getActiveRaidIds, executeRaid } from "../systems/raidSystem";
 import { signalNetworkSystem } from "../systems/signalNetwork";
 import { techResearchSystem } from "../systems/techResearch";
 import { applyTechEffects } from "../systems/techEffects";
+import { updateResearch } from "../systems/techTree";
 import { getAllTerritories } from "../systems/territory";
 import { applyContestationDecay } from "../systems/territoryEffects";
 import { turretSystem } from "../systems/turret";
 import { wireNetworkSystem } from "../systems/wireNetwork";
-import {
-	checkGameOver,
-	type GameOverState,
-	getGameOverState,
-} from "../systems/gameOverDetection";
 import {
 	getAllFragments,
 	type MapFragment,
@@ -188,6 +189,15 @@ function notify() {
 	for (const listener of listeners) {
 		listener();
 	}
+}
+
+/**
+ * Invalidate the snapshot and notify React subscribers.
+ * Called after orchestratorTick() to trigger useSyncExternalStore re-renders.
+ */
+export function invalidateSnapshot() {
+	snapshot = null;
+	notify();
 }
 
 /**

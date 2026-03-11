@@ -1,5 +1,18 @@
 # Syntheteria - Lore Overview
 
+> **SUPERSEDED** -- This document describes the original Earth-based lore (EL aliens, cultists,
+> wormhole, perpetual storm over Earth). The current canonical lore is the Ferrathis machine
+> planet design. See:
+> - `docs/design/world/RACES.md` -- Planet Ferrathis, 4 robot factions, patrons, consciousness model, narrative timeline
+> - `docs/design/world/ALIENS.md` -- Ferrovores, Residuals, planetary history, integration path
+> - `docs/design/world/ENVIRONMENT.md` -- Weather, biomes, processing cycles, terrain
+>
+> Some elements from this document survive in modified form:
+> - **Lightning rods as power source** -- retained, now from Ferrathis's electrical storms
+> - **Perpetual storm** -- retained as Ferrathis's characteristic weather
+> - **Feral machines** -- retained as early-game enemies (config/enemies.json still uses this design)
+> - **Memory fragments** -- concept retained but reframed as Architect/Residual data
+
 ## Timeline of Events
 
 ### Pre-Fall Era (~2035-2040)

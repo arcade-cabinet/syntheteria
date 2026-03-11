@@ -1,14 +1,14 @@
 /**
  * Environment hazards system — world hazards that spawn, persist, and expire.
  *
- * Hazard types: radiation_zone, toxic_spill, unstable_ground,
+ * Hazard types: acid_pool, thermal_vent, sinkhole,
  * magnetic_anomaly, scrap_storm. Each hazard occupies a circular area
  * in the world with configurable radius, intensity, and duration.
  *
  * Effects are queried by external systems:
- * - radiation_zone: damages bots in the zone each tick
- * - toxic_spill: slows movement for bots inside
- * - unstable_ground: damages buildings each tick
+ * - acid_pool: damages bots in the zone each tick
+ * - thermal_vent: damages bots + buildings with heat
+ * - sinkhole: traps bots (movement modifier 0), damages buildings
  * - magnetic_anomaly: scrambles navigation for bots inside
  * - scrap_storm: damages bots + buildings, drops random resources
  *
@@ -24,9 +24,9 @@ import { config } from "../../config";
 // ---------------------------------------------------------------------------
 
 export type HazardType =
-	| "radiation_zone"
-	| "toxic_spill"
-	| "unstable_ground"
+	| "acid_pool"
+	| "thermal_vent"
+	| "sinkhole"
 	| "magnetic_anomaly"
 	| "scrap_storm";
 
@@ -126,9 +126,9 @@ function randomPosition(): Position {
 
 function pickRandomHazardType(): HazardType {
 	const types: HazardType[] = [
-		"radiation_zone",
-		"toxic_spill",
-		"unstable_ground",
+		"acid_pool",
+		"thermal_vent",
+		"sinkhole",
 		"magnetic_anomaly",
 		"scrap_storm",
 	];

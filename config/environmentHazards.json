@@ -1,37 +1,40 @@
 {
   "hazardTypes": {
-    "radiation_zone": {
+    "acid_pool": {
       "damagePerTick": 1.5,
-      "movementModifier": 1.0,
-      "buildingDamagePerTick": 0.0,
+      "movementModifier": 0.7,
+      "buildingDamagePerTick": 0.5,
       "navigationScramble": false,
       "dropsResources": false,
       "defaultRadius": 8,
       "defaultIntensity": 1.0,
       "defaultDurationTicks": 1200,
-      "color": "#00ff44"
+      "color": "#88cc00",
+      "note": "Pooled acid corrodes units and cubes; matches biomes.json acid_pool hazard"
     },
-    "toxic_spill": {
-      "damagePerTick": 0.0,
-      "movementModifier": 0.4,
-      "buildingDamagePerTick": 0.0,
+    "thermal_vent": {
+      "damagePerTick": 2.5,
+      "movementModifier": 0.6,
+      "buildingDamagePerTick": 1.0,
       "navigationScramble": false,
       "dropsResources": false,
       "defaultRadius": 6,
       "defaultIntensity": 1.0,
       "defaultDurationTicks": 900,
-      "color": "#8b4513"
+      "color": "#ff4400",
+      "note": "Superheated vents in chrome_ridge; matches biomes.json thermal_vent hazard"
     },
-    "unstable_ground": {
-      "damagePerTick": 0.0,
-      "movementModifier": 1.0,
-      "buildingDamagePerTick": 3.0,
+    "sinkhole": {
+      "damagePerTick": 5.0,
+      "movementModifier": 0.1,
+      "buildingDamagePerTick": 5.0,
       "navigationScramble": false,
       "dropsResources": false,
-      "defaultRadius": 10,
+      "defaultRadius": 3,
       "defaultIntensity": 1.0,
       "defaultDurationTicks": 600,
-      "color": "#ffaa00"
+      "color": "#332211",
+      "note": "Collapse zones triggered by heavy mining; matches biomes.json sinkhole hazard"
     },
     "magnetic_anomaly": {
       "damagePerTick": 0.0,

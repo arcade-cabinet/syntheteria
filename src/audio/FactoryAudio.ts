@@ -5,14 +5,26 @@
  * hacking interference, footsteps, belt item transfers, and cultist
  * lightning. Each looping sound returns a stop function for cleanup.
  *
- * All nodes connect through a local volume node to Tone.Destination,
- * matching the pattern used by SpatialAudio.ts.
+ * All nodes connect through the SoundEngine SFX category bus so that
+ * master volume and SFX volume settings from audio.json are respected.
+ * Falls back to Tone.Destination if the engine is not yet initialized.
  */
 
 import * as Tone from "tone";
+import { getCategoryBus } from "./SoundEngine";
 
-// Shared volume for all factory sounds — matches masterVolume level in SpatialAudio
-const factoryVolume = new Tone.Volume(-6).toDestination();
+/**
+ * Returns the current SFX bus from SoundEngine, or creates a local
+ * passthrough volume connected to Tone.Destination as a fallback.
+ * The fallback is intentionally NOT cached — when the engine initializes
+ * it will be returned on the next call.
+ */
+function getSfxBus(): Tone.Volume | Tone.ToneAudioNode {
+	const bus = getCategoryBus("sfx");
+	if (bus) return bus;
+	// Fallback: no-op volume direct to destination (audio engine not yet init)
+	return new Tone.Volume(0).toDestination();
+}
 
 // ---------------------------------------------------------------------------
 // Belt motor — looping mechanical hum
@@ -25,6 +37,7 @@ const factoryVolume = new Tone.Volume(-6).toDestination();
 export function playBeltMotor(): (() => void) | null {
 	if (Tone.getContext().state !== "running") return null;
 
+	const sfxBus = getSfxBus();
 	const osc = new Tone.Oscillator({ frequency: 40, type: "sawtooth" });
 	const oscFilter = new Tone.Filter(120, "lowpass");
 	const oscVol = new Tone.Volume(-18);
@@ -35,11 +48,11 @@ export function playBeltMotor(): (() => void) | null {
 
 	osc.connect(oscFilter);
 	oscFilter.connect(oscVol);
-	oscVol.connect(factoryVolume);
+	oscVol.connect(sfxBus);
 
 	noise.connect(noiseFilter);
 	noiseFilter.connect(noiseVol);
-	noiseVol.connect(factoryVolume);
+	noiseVol.connect(sfxBus);
 
 	osc.start();
 	noise.start();
@@ -67,6 +80,7 @@ export function playBeltMotor(): (() => void) | null {
 export function playDrillSound(): (() => void) | null {
 	if (Tone.getContext().state !== "running") return null;
 
+	const sfxBus = getSfxBus();
 	const osc = new Tone.Oscillator({ frequency: 200, type: "sawtooth" });
 	const lfo = new Tone.LFO({ frequency: 8, min: 150, max: 250 });
 	const filter = new Tone.Filter(600, "lowpass");
@@ -75,7 +89,7 @@ export function playDrillSound(): (() => void) | null {
 	lfo.connect(osc.frequency);
 	osc.connect(filter);
 	filter.connect(vol);
-	vol.connect(factoryVolume);
+	vol.connect(sfxBus);
 
 	lfo.start();
 	osc.start();
@@ -107,8 +121,9 @@ export function playProcessorHum(
 ): (() => void) | null {
 	if (Tone.getContext().state !== "running") return null;
 
+	const sfxBus = getSfxBus();
 	const vol = new Tone.Volume(-16);
-	vol.connect(factoryVolume);
+	vol.connect(sfxBus);
 
 	const disposables: Tone.ToneAudioNode[] = [vol];
 
@@ -196,12 +211,13 @@ export function playHackingNoise(): (() => void) | null {
 	const filter = new Tone.Filter(1000, "bandpass");
 	const vol = new Tone.Volume(-12);
 
+	const sfxBus = getSfxBus();
 	sweepLfo.connect(filter.frequency);
 	noise.connect(crusher);
 	crusher.connect(filter);
 	sweepOsc.connect(filter);
 	filter.connect(vol);
-	vol.connect(factoryVolume);
+	vol.connect(sfxBus);
 
 	noise.start();
 	sweepOsc.start();
@@ -245,10 +261,11 @@ export function playFootstep(): void {
 	});
 	const vol = new Tone.Volume(-15 + Math.random() * 3);
 
+	const sfxBus = getSfxBus();
 	noise.connect(filter);
 	filter.connect(env);
 	env.connect(vol);
-	vol.connect(factoryVolume);
+	vol.connect(sfxBus);
 
 	noise.start();
 	env.triggerAttackRelease(0.05);
@@ -281,8 +298,9 @@ export function playBeltItem(): void {
 	});
 	const vol = new Tone.Volume(-18);
 
+	const sfxBus = getSfxBus();
 	synth.connect(vol);
-	vol.connect(factoryVolume);
+	vol.connect(sfxBus);
 
 	synth.triggerAttackRelease("C3", 0.04);
 
@@ -333,8 +351,9 @@ export function playCultistLightning(): void {
 	sweepOsc.connect(sweepEnv);
 	sweepEnv.connect(reverb);
 
+	const sfxBus = getSfxBus();
 	reverb.connect(vol);
-	vol.connect(factoryVolume);
+	vol.connect(sfxBus);
 
 	noise.start();
 	sweepOsc.start();

@@ -31,6 +31,16 @@ const makeNodeStub = () => ({
 	triggerAttackRelease: jest.fn(),
 });
 
+// Shared sfx bus stub returned by getCategoryBus mock
+const mockSfxBus = {
+	connect: jest.fn(),
+	dispose: jest.fn(),
+};
+
+jest.mock("../SoundEngine", () => ({
+	getCategoryBus: jest.fn(() => mockSfxBus),
+}));
+
 jest.mock("tone", () => ({
 	getContext: jest.fn(() => ({ state: mockContextState })),
 	Volume: jest.fn(() => ({
@@ -105,6 +115,29 @@ describe("return null when context not running", () => {
 // ---------------------------------------------------------------------------
 // Looping sounds — running context
 // ---------------------------------------------------------------------------
+
+describe("SFX bus routing", () => {
+	it("playBeltMotor routes through SoundEngine sfx bus, not Tone.Destination", () => {
+		mockContextState = "running";
+		const { getCategoryBus } = jest.requireMock("../SoundEngine") as {
+			getCategoryBus: jest.Mock;
+		};
+		getCategoryBus.mockReturnValue(mockSfxBus);
+		playBeltMotor();
+		expect(getCategoryBus).toHaveBeenCalledWith("sfx");
+		expect(mockSfxBus.connect).not.toHaveBeenCalled(); // we connect TO it, not from it
+	});
+
+	it("falls back gracefully when SoundEngine not initialized (returns null bus)", () => {
+		mockContextState = "running";
+		const { getCategoryBus } = jest.requireMock("../SoundEngine") as {
+			getCategoryBus: jest.Mock;
+		};
+		getCategoryBus.mockReturnValue(null);
+		// Should not throw even when bus is null
+		expect(() => playBeltMotor()).not.toThrow();
+	});
+});
 
 describe("playBeltMotor", () => {
 	it("returns a stop function when context is running", () => {

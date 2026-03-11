@@ -1,11 +1,11 @@
 import enemiesConfig from "../enemies.json";
 
 describe("enemies.json", () => {
-	const factions = ["feral", "cultist", "rogue"] as const;
+	const factions = ["feral", "volt_raider", "rogue"] as const;
 
 	it("has all hostile factions", () => {
 		for (const faction of factions) {
-			expect(enemiesConfig[faction]).toBeDefined();
+			expect((enemiesConfig as any)[faction]).toBeDefined();
 		}
 	});
 
@@ -34,15 +34,22 @@ describe("enemies.json", () => {
 		});
 	});
 
-	describe("cultist", () => {
+	describe("volt_raider", () => {
+		const voltRaider = (enemiesConfig as any).volt_raider;
+
 		it("has lightning abilities", () => {
-			expect(enemiesConfig.cultist.lightningRadius).toBeGreaterThan(0);
-			expect(enemiesConfig.cultist.lightningCooldown).toBeGreaterThan(0);
-			expect(enemiesConfig.cultist.lightningRange).toBeGreaterThan(0);
+			expect(voltRaider.lightningRadius).toBeGreaterThan(0);
+			expect(voltRaider.lightningCooldown).toBeGreaterThan(0);
+			expect(voltRaider.lightningRange).toBeGreaterThan(0);
 		});
 
 		it("has hack difficulty", () => {
-			expect(enemiesConfig.cultist.hackDifficulty).toBeGreaterThan(0);
+			expect(voltRaider.hackDifficulty).toBeGreaterThan(0);
+		});
+
+		it("has a description", () => {
+			expect(typeof voltRaider.description).toBe("string");
+			expect(voltRaider.description.length).toBeGreaterThan(10);
 		});
 	});
 

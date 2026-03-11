@@ -3,10 +3,12 @@
  *
  * Each biome on the machine planet has distinct movement, harvesting,
  * visibility, and special modifiers. This module provides:
- *   - Biome definitions with gameplay modifiers
+ *   - Biome definitions loaded from config/biomes.json
  *   - Grid-based biome lookup initialized from map generation output
  *   - Movement cost and passability queries for pathfinding / AI
  */
+
+import biomesConfig from "../../config/biomes.json";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -28,76 +30,40 @@ export interface BiomeModifiers {
 }
 
 // ---------------------------------------------------------------------------
-// Biome definitions — static gameplay data
+// Biome definitions — loaded from config/biomes.json
 // ---------------------------------------------------------------------------
 
-const BIOME_DEFINITIONS: Record<string, BiomeModifiers> = {
-	rust_plains: {
-		moveSpeedMod: 1.0,
-		harvestMod: 1.0,
-		visibility: 1.0,
-		bgColor: "#8B6914",
-		signalBonus: 1.0,
-		passable: true,
-	},
-	scrap_hills: {
-		moveSpeedMod: 0.8,
-		harvestMod: 1.2,
-		visibility: 1.0,
-		bgColor: "#6B5B3A",
-		signalBonus: 1.0,
-		passable: true,
-	},
-	chrome_ridge: {
-		moveSpeedMod: 0.6,
-		harvestMod: 0.8,
-		visibility: 0.7,
-		bgColor: "#A0A0B0",
-		signalBonus: 1.0,
-		passable: true,
-	},
-	signal_plateau: {
-		moveSpeedMod: 0.9,
-		harvestMod: 0.7,
-		visibility: 1.0,
-		bgColor: "#6A5ACD",
-		signalBonus: 1.5,
-		passable: true,
-	},
-	cable_forest: {
-		moveSpeedMod: 0.5,
-		harvestMod: 1.1,
-		visibility: 0.4,
-		bgColor: "#2A3A2A",
-		signalBonus: 0.6,
-		passable: true,
-	},
-	deep_water: {
-		moveSpeedMod: 0.0,
-		harvestMod: 0.0,
-		visibility: 0.3,
-		bgColor: "#1A1A3E",
-		signalBonus: 0.5,
-		passable: false,
-	},
-	shallow_water: {
-		moveSpeedMod: 0.4,
-		harvestMod: 0.0,
-		visibility: 0.5,
-		bgColor: "#2E4A6E",
-		signalBonus: 0.8,
-		passable: true,
-	},
-};
+/**
+ * Build the BiomeModifiers lookup from biomes.json.
+ * Only the fields consumed by pathfinding / AI are extracted here;
+ * additional per-biome data (lore names, resource multipliers, etc.)
+ * lives in the config and can be read directly when needed.
+ */
+function buildBiomeDefinitions(): Record<string, BiomeModifiers> {
+	const result: Record<string, BiomeModifiers> = {};
+	for (const [name, biome] of Object.entries(biomesConfig.biomes)) {
+		result[name] = {
+			moveSpeedMod: biome.moveSpeedMod,
+			harvestMod: biome.harvestMod,
+			visibility: biome.visibility,
+			bgColor: biome.bgColor,
+			signalBonus: biome.signalBonus,
+			passable: biome.passable,
+		};
+	}
+	return result;
+}
+
+const BIOME_DEFINITIONS: Record<string, BiomeModifiers> = buildBiomeDefinitions();
 
 /** Default modifiers returned when biome name is unknown. */
 const DEFAULT_MODIFIERS: BiomeModifiers = {
-	moveSpeedMod: 1.0,
-	harvestMod: 1.0,
-	visibility: 1.0,
-	bgColor: "#555555",
-	signalBonus: 1.0,
-	passable: true,
+	moveSpeedMod: biomesConfig.defaultModifiers.moveSpeedMod,
+	harvestMod: biomesConfig.defaultModifiers.harvestMod,
+	visibility: biomesConfig.defaultModifiers.visibility,
+	bgColor: biomesConfig.defaultModifiers.bgColor,
+	signalBonus: biomesConfig.defaultModifiers.signalBonus,
+	passable: biomesConfig.defaultModifiers.passable,
 };
 
 // ---------------------------------------------------------------------------

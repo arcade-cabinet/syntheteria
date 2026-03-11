@@ -19,17 +19,26 @@
   "navStep": 2,
   "fragmentMergeDistance": 6,
   "biomes": {
-    "foundry": {
-      "color": "#3a3a3a"
+    "rust_plains": {
+      "color": "#8B6914"
     },
-    "slag": {
-      "color": "#555544"
+    "scrap_hills": {
+      "color": "#6B5B3A"
     },
-    "cable": {
-      "color": "#2a3a2a"
+    "chrome_ridge": {
+      "color": "#A0A0B0"
     },
-    "processor": {
-      "color": "#4a4a5a"
+    "signal_plateau": {
+      "color": "#6A5ACD"
+    },
+    "cable_forest": {
+      "color": "#2A3A2A"
+    },
+    "deep_water": {
+      "color": "#1A1A3E"
+    },
+    "shallow_water": {
+      "color": "#2E4A6E"
     }
   }
 }

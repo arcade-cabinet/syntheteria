@@ -23,7 +23,7 @@
       { "x": 10, "z": 48 }
     ]
   },
-  "cultist": {
+  "volt_raider": {
     "spawnRate": 0.005,
     "maxCount": 5,
     "patrolRange": 20,
@@ -41,7 +41,8 @@
     "pairSpawnOffsetVariation": 2,
     "patrolMoveChance": 0.1,
     "waypointReachDistance": 2,
-    "components": ["arms", "camera"]
+    "components": ["arms", "camera"],
+    "description": "Rogue Volt Collective unit that uses lightning attacks"
   },
   "rogue": {
     "spawnRate": 0.003,

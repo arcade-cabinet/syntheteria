@@ -24,10 +24,10 @@ jest.mock("../../../config", () => ({
 	config: {
 		environmentHazards: {
 			hazardTypes: {
-				radiation_zone: {
+				acid_pool: {
 					damagePerTick: 1.5,
-					movementModifier: 1.0,
-					buildingDamagePerTick: 0.0,
+					movementModifier: 0.4,
+					buildingDamagePerTick: 0.5,
 					navigationScramble: false,
 					dropsResources: false,
 					defaultRadius: 8,
@@ -35,20 +35,20 @@ jest.mock("../../../config", () => ({
 					defaultDurationTicks: 1200,
 					color: "#00ff44",
 				},
-				toxic_spill: {
-					damagePerTick: 0.0,
+				thermal_vent: {
+					damagePerTick: 2.0,
 					movementModifier: 0.4,
-					buildingDamagePerTick: 0.0,
+					buildingDamagePerTick: 1.0,
 					navigationScramble: false,
 					dropsResources: false,
 					defaultRadius: 6,
 					defaultIntensity: 1.0,
 					defaultDurationTicks: 900,
-					color: "#8b4513",
+					color: "#ff4400",
 				},
-				unstable_ground: {
+				sinkhole: {
 					damagePerTick: 0.0,
-					movementModifier: 1.0,
+					movementModifier: 0.0,
 					buildingDamagePerTick: 3.0,
 					navigationScramble: false,
 					dropsResources: false,
@@ -121,10 +121,10 @@ beforeEach(() => {
 describe("hazards — spawnHazard", () => {
 	it("creates a hazard with correct fields", () => {
 		const pos: Position = { x: 10, y: 0, z: 20 };
-		const h = spawnHazard("radiation_zone", pos, 8, 1.0, 1200);
+		const h = spawnHazard("acid_pool", pos, 8, 1.0, 1200);
 
 		expect(h.id).toMatch(/^hazard_\d+$/);
-		expect(h.type).toBe("radiation_zone");
+		expect(h.type).toBe("acid_pool");
 		expect(h.position).toEqual(pos);
 		expect(h.radius).toBe(8);
 		expect(h.intensity).toBe(1.0);
@@ -134,14 +134,14 @@ describe("hazards — spawnHazard", () => {
 
 	it("assigns unique IDs to each hazard", () => {
 		const h1 = spawnHazard(
-			"radiation_zone",
+			"acid_pool",
 			{ x: 0, y: 0, z: 0 },
 			5,
 			1,
 			100,
 		);
 		const h2 = spawnHazard(
-			"toxic_spill",
+			"thermal_vent",
 			{ x: 10, y: 0, z: 10 },
 			5,
 			1,
@@ -152,13 +152,13 @@ describe("hazards — spawnHazard", () => {
 
 	it("adds hazard to active list", () => {
 		expect(getActiveHazards()).toHaveLength(0);
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 100);
 		expect(getActiveHazards()).toHaveLength(1);
 	});
 
 	it("copies position to prevent external mutation", () => {
 		const pos: Position = { x: 10, y: 0, z: 20 };
-		const h = spawnHazard("radiation_zone", pos, 5, 1, 100);
+		const h = spawnHazard("acid_pool", pos, 5, 1, 100);
 		pos.x = 999;
 		expect(h.position.x).toBe(10);
 	});
@@ -170,23 +170,23 @@ describe("hazards — spawnHazard", () => {
 
 describe("hazards — getHazardsNearPosition", () => {
 	it("returns hazards overlapping a query circle", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 10, 1, 100);
-		spawnHazard("toxic_spill", { x: 50, y: 0, z: 50 }, 5, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 10, 1, 100);
+		spawnHazard("thermal_vent", { x: 50, y: 0, z: 50 }, 5, 1, 100);
 
 		const nearby = getHazardsNearPosition({ x: 5, y: 0, z: 0 }, 3);
 		expect(nearby).toHaveLength(1);
-		expect(nearby[0].type).toBe("radiation_zone");
+		expect(nearby[0].type).toBe("acid_pool");
 	});
 
 	it("returns empty array when nothing is nearby", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 100);
 		const nearby = getHazardsNearPosition({ x: 100, y: 0, z: 100 }, 1);
 		expect(nearby).toHaveLength(0);
 	});
 
 	it("returns multiple overlapping hazards", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 10, 1, 100);
-		spawnHazard("toxic_spill", { x: 5, y: 0, z: 0 }, 10, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 10, 1, 100);
+		spawnHazard("thermal_vent", { x: 5, y: 0, z: 0 }, 10, 1, 100);
 		spawnHazard("magnetic_anomaly", { x: 3, y: 0, z: 0 }, 10, 1, 100);
 
 		const nearby = getHazardsNearPosition({ x: 2, y: 0, z: 0 }, 1);
@@ -194,7 +194,7 @@ describe("hazards — getHazardsNearPosition", () => {
 	});
 
 	it("uses 2D distance (ignores Y)", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 100);
 		// Far in Y but close in XZ
 		const nearby = getHazardsNearPosition({ x: 2, y: 500, z: 0 }, 1);
 		expect(nearby).toHaveLength(1);
@@ -202,7 +202,7 @@ describe("hazards — getHazardsNearPosition", () => {
 
 	it("correctly handles boundary distance (radius + query radius)", () => {
 		// Hazard at origin with radius 5
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 100);
 
 		// Query at distance 7 with radius 2: 7 <= 5 + 2 = 7 => included
 		const atBoundary = getHazardsNearPosition({ x: 7, y: 0, z: 0 }, 2);
@@ -224,24 +224,24 @@ describe("hazards — isPositionSafe", () => {
 	});
 
 	it("returns false when inside a hazard radius", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 10, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 10, 1, 100);
 		expect(isPositionSafe({ x: 5, y: 0, z: 0 })).toBe(false);
 	});
 
 	it("returns true when outside all hazard radii", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 100);
 		expect(isPositionSafe({ x: 20, y: 0, z: 20 })).toBe(true);
 	});
 
 	it("returns false at exact boundary (distance == radius)", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 100);
 		// Distance exactly 5
 		expect(isPositionSafe({ x: 5, y: 0, z: 0 })).toBe(false);
 	});
 
 	it("checks all hazards, not just the first", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 3, 1, 100);
-		spawnHazard("toxic_spill", { x: 50, y: 0, z: 50 }, 5, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 3, 1, 100);
+		spawnHazard("thermal_vent", { x: 50, y: 0, z: 50 }, 5, 1, 100);
 
 		// Safe from first but not second
 		expect(isPositionSafe({ x: 48, y: 0, z: 50 })).toBe(false);
@@ -262,26 +262,26 @@ describe("hazards — getEffectsAtPosition", () => {
 		expect(effects.dropsResources).toBe(false);
 	});
 
-	it("returns radiation damage for position inside radiation_zone", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 10, 1.0, 100);
+	it("returns acid damage for position inside acid_pool", () => {
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 10, 1.0, 100);
 		const effects = getEffectsAtPosition({ x: 5, y: 0, z: 0 });
 		expect(effects.damagePerTick).toBe(1.5);
 	});
 
 	it("damage scales with hazard intensity", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 10, 2.0, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 10, 2.0, 100);
 		const effects = getEffectsAtPosition({ x: 5, y: 0, z: 0 });
 		expect(effects.damagePerTick).toBe(3.0); // 1.5 * 2.0
 	});
 
-	it("toxic_spill reduces movement speed", () => {
-		spawnHazard("toxic_spill", { x: 0, y: 0, z: 0 }, 10, 1.0, 100);
+	it("thermal_vent reduces movement speed", () => {
+		spawnHazard("thermal_vent", { x: 0, y: 0, z: 0 }, 10, 1.0, 100);
 		const effects = getEffectsAtPosition({ x: 2, y: 0, z: 0 });
 		expect(effects.movementModifier).toBe(0.4);
 	});
 
-	it("unstable_ground damages buildings", () => {
-		spawnHazard("unstable_ground", { x: 0, y: 0, z: 0 }, 10, 1.0, 100);
+	it("sinkhole damages buildings", () => {
+		spawnHazard("sinkhole", { x: 0, y: 0, z: 0 }, 10, 1.0, 100);
 		const effects = getEffectsAtPosition({ x: 2, y: 0, z: 0 });
 		expect(effects.buildingDamagePerTick).toBe(3.0);
 	});
@@ -302,21 +302,21 @@ describe("hazards — getEffectsAtPosition", () => {
 	});
 
 	it("overlapping hazards stack damage additively", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 10, 1.0, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 10, 1.0, 100);
 		spawnHazard("scrap_storm", { x: 3, y: 0, z: 0 }, 10, 1.0, 100);
 		const effects = getEffectsAtPosition({ x: 2, y: 0, z: 0 });
-		expect(effects.damagePerTick).toBe(1.5 + 2.0); // radiation + scrap
+		expect(effects.damagePerTick).toBe(1.5 + 2.0); // acid + scrap
 	});
 
 	it("overlapping hazards use minimum movement modifier", () => {
-		spawnHazard("toxic_spill", { x: 0, y: 0, z: 0 }, 10, 1.0, 100); // 0.4
+		spawnHazard("thermal_vent", { x: 0, y: 0, z: 0 }, 10, 1.0, 100); // 0.4
 		spawnHazard("scrap_storm", { x: 3, y: 0, z: 0 }, 10, 1.0, 100); // 0.6
 		const effects = getEffectsAtPosition({ x: 2, y: 0, z: 0 });
 		expect(effects.movementModifier).toBe(0.4); // min(0.4, 0.6)
 	});
 
 	it("does not include effects from hazards that do not overlap", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1.0, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1.0, 100);
 		const effects = getEffectsAtPosition({ x: 50, y: 0, z: 50 });
 		expect(effects.damagePerTick).toBe(0);
 	});
@@ -328,13 +328,13 @@ describe("hazards — getEffectsAtPosition", () => {
 
 describe("hazards — tick down and expiry", () => {
 	it("decrements ticksRemaining each tick", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 100);
 		environmentHazardSystem(1);
 		expect(getActiveHazards()[0].ticksRemaining).toBe(99);
 	});
 
 	it("removes hazard when ticksRemaining reaches 0", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 3);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 3);
 		expect(getActiveHazards()).toHaveLength(1);
 
 		environmentHazardSystem(1);
@@ -348,8 +348,8 @@ describe("hazards — tick down and expiry", () => {
 	});
 
 	it("removes multiple expired hazards in same tick", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 1);
-		spawnHazard("toxic_spill", { x: 10, y: 0, z: 10 }, 5, 1, 1);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 1);
+		spawnHazard("thermal_vent", { x: 10, y: 0, z: 10 }, 5, 1, 1);
 		expect(getActiveHazards()).toHaveLength(2);
 
 		environmentHazardSystem(1);
@@ -357,12 +357,12 @@ describe("hazards — tick down and expiry", () => {
 	});
 
 	it("does not remove hazards that still have ticks remaining", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 1);
-		spawnHazard("toxic_spill", { x: 10, y: 0, z: 10 }, 5, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 1);
+		spawnHazard("thermal_vent", { x: 10, y: 0, z: 10 }, 5, 1, 100);
 
 		environmentHazardSystem(1);
 		expect(getActiveHazards()).toHaveLength(1);
-		expect(getActiveHazards()[0].type).toBe("toxic_spill");
+		expect(getActiveHazards()[0].type).toBe("thermal_vent");
 	});
 });
 
@@ -398,7 +398,7 @@ describe("hazards — periodic spawning", () => {
 		// Pre-fill with max hazards
 		for (let i = 0; i < 10; i++) {
 			spawnHazard(
-				"radiation_zone",
+				"acid_pool",
 				{ x: i * 10, y: 0, z: 0 },
 				5,
 				1,
@@ -418,9 +418,9 @@ describe("hazards — periodic spawning", () => {
 		resetEnvironmentHazards();
 
 		const validTypes: HazardType[] = [
-			"radiation_zone",
-			"toxic_spill",
-			"unstable_ground",
+			"acid_pool",
+			"thermal_vent",
+			"sinkhole",
 			"magnetic_anomaly",
 			"scrap_storm",
 		];
@@ -511,8 +511,8 @@ describe("hazards — scrap_storm resource drops", () => {
 	});
 
 	it("non-scrap_storm hazards do not generate drops", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 10, 1, 50);
-		spawnHazard("toxic_spill", { x: 20, y: 0, z: 0 }, 10, 1, 50);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 10, 1, 50);
+		spawnHazard("thermal_vent", { x: 20, y: 0, z: 0 }, 10, 1, 50);
 
 		for (let i = 1; i <= 50; i++) {
 			environmentHazardSystem(i);
@@ -530,7 +530,7 @@ describe("hazards — scrap_storm resource drops", () => {
 describe("hazards — removeHazard", () => {
 	it("removes a hazard by ID", () => {
 		const h = spawnHazard(
-			"radiation_zone",
+			"acid_pool",
 			{ x: 0, y: 0, z: 0 },
 			5,
 			1,
@@ -549,18 +549,18 @@ describe("hazards — removeHazard", () => {
 
 	it("removes only the specified hazard", () => {
 		const h1 = spawnHazard(
-			"radiation_zone",
+			"acid_pool",
 			{ x: 0, y: 0, z: 0 },
 			5,
 			1,
 			100,
 		);
-		spawnHazard("toxic_spill", { x: 20, y: 0, z: 20 }, 5, 1, 100);
+		spawnHazard("thermal_vent", { x: 20, y: 0, z: 20 }, 5, 1, 100);
 		expect(getActiveHazards()).toHaveLength(2);
 
 		removeHazard(h1.id);
 		expect(getActiveHazards()).toHaveLength(1);
-		expect(getActiveHazards()[0].type).toBe("toxic_spill");
+		expect(getActiveHazards()[0].type).toBe("thermal_vent");
 	});
 });
 
@@ -628,8 +628,8 @@ describe("hazards — deterministic RNG", () => {
 
 describe("hazards — reset", () => {
 	it("clears all active hazards", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 100);
-		spawnHazard("toxic_spill", { x: 10, y: 0, z: 10 }, 5, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 100);
+		spawnHazard("thermal_vent", { x: 10, y: 0, z: 10 }, 5, 1, 100);
 		expect(getActiveHazards()).toHaveLength(2);
 
 		resetEnvironmentHazards();
@@ -637,11 +637,11 @@ describe("hazards — reset", () => {
 	});
 
 	it("resets hazard ID counter", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 100);
 		resetEnvironmentHazards();
 
 		const h = spawnHazard(
-			"toxic_spill",
+			"thermal_vent",
 			{ x: 0, y: 0, z: 0 },
 			5,
 			1,
@@ -693,14 +693,14 @@ describe("hazards — edge cases", () => {
 	});
 
 	it("handles zero-duration hazard (expires immediately)", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 5, 1, 0);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 5, 1, 0);
 		environmentHazardSystem(1);
 		// Duration 0, ticksRemaining went to -1, should be removed
 		expect(getActiveHazards()).toHaveLength(0);
 	});
 
 	it("handles zero-radius hazard", () => {
-		spawnHazard("radiation_zone", { x: 0, y: 0, z: 0 }, 0, 1, 100);
+		spawnHazard("acid_pool", { x: 0, y: 0, z: 0 }, 0, 1, 100);
 		// Only exact position is unsafe
 		expect(isPositionSafe({ x: 0, y: 0, z: 0 })).toBe(false);
 		expect(isPositionSafe({ x: 0.1, y: 0, z: 0 })).toBe(true);
@@ -709,7 +709,7 @@ describe("hazards — edge cases", () => {
 	it("handles many concurrent hazards without error", () => {
 		for (let i = 0; i < 100; i++) {
 			spawnHazard(
-				"radiation_zone",
+				"acid_pool",
 				{ x: i * 5, y: 0, z: 0 },
 				2,
 				1,

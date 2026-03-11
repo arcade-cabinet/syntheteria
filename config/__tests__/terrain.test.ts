@@ -1,4 +1,5 @@
 import terrainConfig from "../terrain.json";
+import biomesConfig from "../biomes.json";
 
 describe("terrain.json", () => {
 	it("has positive world size", () => {
@@ -48,6 +49,20 @@ describe("terrain.json", () => {
 			for (const [, biome] of Object.entries(terrainConfig.biomes)) {
 				expect(typeof biome.color).toBe("string");
 				expect(biome.color).toMatch(/^#[0-9a-fA-F]{6}$/);
+			}
+		});
+
+		it("terrain biome names match biomes.json canonical names", () => {
+			const canonicalBiomes = new Set(Object.keys(biomesConfig.biomes));
+			for (const name of Object.keys(terrainConfig.biomes)) {
+				expect(canonicalBiomes.has(name)).toBe(true);
+			}
+		});
+
+		it("has all 7 canonical biomes from biomes.json", () => {
+			const terrainBiomes = new Set(Object.keys(terrainConfig.biomes));
+			for (const name of Object.keys(biomesConfig.biomes)) {
+				expect(terrainBiomes.has(name)).toBe(true);
 			}
 		});
 	});

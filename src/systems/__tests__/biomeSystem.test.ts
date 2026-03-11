@@ -9,6 +9,7 @@
  * - Edge cases (out of bounds, unknown biomes, empty grid)
  */
 
+import biomesConfig from "../../../config/biomes.json";
 import {
 	getBiomeModifiers,
 	getDefinedBiomes,
@@ -303,6 +304,30 @@ describe("resetBiomeGrid", () => {
 
 		resetBiomeGrid();
 		expect(getBiomeNameAt(0, 0)).toBe("unknown");
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Config-driven: values match biomes.json
+// ---------------------------------------------------------------------------
+
+describe("config-driven biome definitions", () => {
+	it("getDefinedBiomes returns all biomes from biomes.json", () => {
+		const configBiomes = Object.keys(biomesConfig.biomes);
+		const defined = getDefinedBiomes();
+		expect(defined.sort()).toEqual(configBiomes.sort());
+	});
+
+	it("biome modifiers match biomes.json values", () => {
+		for (const [name, configBiome] of Object.entries(biomesConfig.biomes)) {
+			const mods = getBiomeModifiers(name);
+			expect(mods.moveSpeedMod).toBe(configBiome.moveSpeedMod);
+			expect(mods.harvestMod).toBe(configBiome.harvestMod);
+			expect(mods.visibility).toBe(configBiome.visibility);
+			expect(mods.signalBonus).toBe(configBiome.signalBonus);
+			expect(mods.passable).toBe(configBiome.passable);
+			expect(mods.bgColor).toBe(configBiome.bgColor);
+		}
 	});
 });
 

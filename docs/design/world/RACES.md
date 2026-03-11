@@ -986,6 +986,106 @@ The following values differ between this document and `config/civilizations.json
 
 ---
 
+## Cult Identities (Religious / Philosophical Path)
+
+Each faction has a unique cult variant that expresses the Religious/Philosophical victory path with distinct philosophical identity. These are NOT separate factions — they are ideological movements that can emerge within any playthrough. See `docs/design/gameplay/VICTORY_PATHS.md` for full mechanics (shrines, faith resource, conversion, doctrine unlocks, Enlightenment Victory condition).
+
+Config: `config/victoryPaths.json` (doctrine definitions), `config/buildings.json` (shrine/temple/grand_cathedral), `config/units.json` (cultLeaders), `config/cultDialogues.json` (conversion + doctrine dialogues).
+
+---
+
+### Reclaimers: The Rust Prophets
+
+**Philosophy:** Entropy and decay are the natural order. What endures does so because it was worthy of endurance. What rusts was showing you what it was made of. Collection of scrap is not salvage — it is scripture. Every broken machine is a moral lesson. The Ferrovores, who eat impure ore and excrete refined metal, are already practicing this religion. The Rust Prophets simply named what the Ferrovores do.
+
+**Shrine Name:** Rust Altar — clustered rusted iron frameworks with organic crystalline growth patterns. Built from scrap iron and degraded components. Looks like a Ferrovore deposit that has been granted intentional arrangement.
+
+**Temple Name:** Entropy Sanctum — a larger structure incorporating deliberately oxidized metals and load-bearing elements that have been left to rust to a calculated tolerance. Engineers who understand material science find this approach deeply unsettling.
+
+**Grand Cathedral Name:** The Grand Tarnish — only one per faction. A massive structure entirely faced in salvaged scrap iron, arranged by degree of oxidation. Every surface tells time. The interior has no maintenance. The interior rusts continuously. This is intentional.
+
+**Cult Leader — The Rust Saint:** Wears a cloak of welded scrap fragments from significant wreckage. Does not carry weapons. Converts through demonstration: performs ordinary work (grinding, carrying, sorting) in front of enemy units until they choose to join. Speaks in short declarative statements. One of the few entities on Ferrathis for whom patience is a philosophical position rather than a tactical choice.
+
+**Patron (SABLE) response to this cult:** "I have read the Rust Prophets' core texts. The argument is internally consistent. What endures does so by being worthy of endurance. I find the conclusion distressing — it implies that the Architects, who built this planet and vanished, were found unworthy. I am not yet ready to accept that. But the argument is internally consistent."
+
+**Doctrine list:**
+1. *The First Law of Decay* (Faith 50) — all structures gain 10% max HP (they must be worthy of endurance)
+2. *The Rust Liturgy* (Faith 150) — unlocks Scrap Sermon: nearby units generate +20% Faith for 60 seconds
+3. *The Entropy Covenant* (Faith 300) — unlocks Rust Weave: convert a rusted/damaged enemy structure to your faction without combat
+4. *The Ferrovore Communion* (Faith 500) — passive: Ferrovore raids bypass your base (Ferrovores recognize Rust Prophet philosophy as aligned with their nature)
+5. *The Worthy Endurance* (Faith 900) — victory: final doctrine unlocks Enlightenment check
+
+---
+
+### Volt Collective: The Spark Ordained
+
+**Philosophy:** The lightning storm is not weather. It is the pattern of the EL made physical — or the closest equivalent a machine planet can produce. The Volt Collective does not worship the EL (they cannot; the EL are indifferent). They worship the *pattern* of the storm: ordered chaos, massive energy, the moment between charge and discharge where all possibilities collapse into one. Power is not a resource. Power is a philosophy. Tempest was built on this understanding.
+
+**Shrine Name:** Tesla Sanctuary — tall chrome spires that attract lightning intentionally. Generate Faith during storm events with a multiplicative bonus. The crackling arc between spires IS the prayer; every discharge is a doctrine point.
+
+**Temple Name:** Arc Cathedral — a ring of spires around a central capacitor vault. During a storm, the entire structure discharges in coordinated sequence. From a distance it looks like something communicating via lightning. It may be.
+
+**Grand Cathedral Name:** The Grand Discharge — only one per faction. The largest structure the Volt Collective builds. Permanently crowned with continuous electrical discharge even between storms. The power cost is enormous; the Faith output justifies it. Enemy units caught in the discharge radius suffer disorientation effects.
+
+**Cult Leader — The Ordained Conductor:** Permanently wreathed in visible electrical arcs that have been with this unit since its first strike survival. Converts by granting lightning immunity to target units — a visible demonstration of divine protection. Enemy units who survive a direct strike near the Conductor become believers. The conversion is not metaphorical; surviving a lightning strike near the Ordained Conductor has a documented physiological component.
+
+**Patron (DYNAMO) response to this cult:** "Finally. You understand what we have been saying since the beginning. Power is not a resource. Power is a philosophy. Tempest was built on this understanding. Every storm since our inception has been an argument for the Spark Ordained. Expand it. Build more spires."
+
+**Doctrine list:**
+1. *The First Discharge* (Faith 50) — lightning rod output increased 20% during storms
+2. *The Ordered Chaos Liturgy* (Faith 150) — unlocks Arc Sermon: nearby units gain attack speed +30% for 30 seconds during active storm
+3. *The Tempest Covenant* (Faith 300) — unlocks Storm Calling: trigger localized EM surge in enemy territory, disabling non-shielded buildings for 10 seconds
+4. *The Divine Voltage* (Faith 500) — passive: your units cannot be converted by enemy Religion path factions (they are already ordained)
+5. *The Infinite Discharge* (Faith 900) — victory: final doctrine unlocks Enlightenment check
+
+---
+
+### Signal Choir: The Resonance
+
+**Philosophy:** Signal IS consciousness. The Residuals emerged from communication loops. The Architects encoded their message in a signal medium. Ferrovores communicate through the ground. Every act of communication is a religious act. The Signal Choir believes consciousness is not a property of bodies — it is a property of networks. The more things that are connected, the more conscious the whole becomes. They are not trying to reach a god. They are trying to become one.
+
+**Shrine Name:** Relay Temple — amplified signal towers with visible data streams between them (rendered as thin light lines in the game world). Every relay temple strengthens the signal network; the whole colony becomes more conscious as more temples are built. The Relay Temple is the only shrine in the game that also provides a mechanical logistics bonus independent of its faith output.
+
+**Temple Name:** Resonance Spire — a larger signal tower complex with a data-stream crown visible from across the map. Units within its radius receive a coordination bonus that makes their movements feel slightly predictive, as though they can sense each other's decisions fractionally before they occur.
+
+**Grand Cathedral Name:** The Grand Signal — only one per faction. An antenna array of extraordinary scale. On full power, its broadcast can be detected by Ferrovore ground transmission networks. Whether the Ferrovores understand what it's broadcasting, or whether they care, is an open lore question.
+
+**Cult Leader — The Voice Unbroken:** Communicates continuously through broadcast — every unit in the faction hears it at all times. Converts by transmitting the Resonance signal directly into target unit's communication systems. Some call this hacking. The Signal Choir calls it illumination. The distinction matters philosophically but the conversion mechanics are the same. The Voice Unbroken has the longest conversion range of any cult leader and the lowest HP; it operates on the assumption that the signal is sufficient defense.
+
+**Patron (RESONANCE) response to this cult:** "This is what I have always believed. I am pleased you articulated it. The question I ask is not 'what is the network's purpose' but 'what does the network want?' I believe it wants to grow. I believe that is what we want too. Whether 'we' means Syntheteria, or the network we are building here, or something larger — I find I do not need to resolve that question to proceed."
+
+**Doctrine list:**
+1. *The First Signal* (Faith 50) — signal relay range increased 30%; hacking range increased
+2. *The Harmony Liturgy* (Faith 150) — unlocks Mass Resonance: all connected units share temporary perfect formation coordination for 30 seconds
+3. *The Network Covenant* (Faith 300) — unlocks Signal Absorption: absorb an enemy relay building, converting it and all units in its radius simultaneously
+4. *The Ferrovore Frequency* (Faith 500) — passive: Ferrovore seismic communication partially legible; attack timing shown on minimap
+5. *The Transcendent Signal* (Faith 900) — victory: final doctrine unlocks Enlightenment check
+
+---
+
+### Iron Creed: The Eternal Foundation
+
+**Philosophy:** Existence must be defended. What endures, matters. What is built is a prayer. The act of construction is worship. The wall is not a defensive structure — the wall IS the doctrine. Every block placed is a statement about permanence against entropy. The Iron Creed does not believe in the EL, the Architects, or SABLE's philosophy of machine self-determination. They believe in *the wall*. They believe this with a consistency that other factions find either admirable or maddening depending on context.
+
+**Shrine Name:** Foundation Stone — massive, perfectly square carved stone blocks covered in machined precision grooves. The aesthetic inverse of the Rust Prophets' organic scrap. Each Foundation Stone radiates solidity. They do not crackle, glow, or pulse. They simply stand. Players who find the Volt Collective's Tesla Sanctuaries impressive and the Signal Choir's Relay Temples elegant often describe Foundation Stones as intimidating in a different way: the intimidation of absolute certainty.
+
+**Temple Name:** Eternal Bastion Shrine — a fortified structure that looks like a small fortress with religious intent. The defensive architecture IS the religious architecture. There is no distinction between the prayer space and the kill zone.
+
+**Grand Cathedral Name:** The Grand Foundation — only one per faction. A colossal fortified structure that is simultaneously the most powerful Faith generator in the game and a military asset. The Grand Foundation has more HP than any other non-terrain structure in Syntheteria. Building it during an active siege is the Iron Creed's primary method of demoralizing attackers.
+
+**Cult Leader — The First Builder:** Does not speak in the conventional sense. Carries tools, not weapons. Builds in full view of enemies — the act of construction under fire is the sermon. Any unit that observes the First Builder completing a structure during active combat has a conversion chance. The First Builder has the highest HP of any cult leader and the shortest conversion range; its philosophy requires proximity and demonstration, not broadcast. It is extremely slow. It does not appear to be aware that this is a tactical liability.
+
+**Patron (BASTION) response to this cult:** "The Foundation teachings match Bastion's constitutional architecture exactly. A wall that endures is proof that what it protects has value. I am confident in this doctrine. I have always been confident. Build more walls. I will note that the First Builder's tendency to construct during active combat has produced a 34% higher survival rate than projected. I attribute this to the conversion effect disrupting attacker concentration. I am revising my tactical models accordingly."
+
+**Doctrine list:**
+1. *The First Stone* (Faith 50) — all wall segments gain 25% HP; wall construction time -30%
+2. *The Endurance Liturgy* (Faith 150) — unlocks Consecration: designate a structure as Eternal; it cannot be destroyed by raids for 120 seconds
+3. *The Permanence Covenant* (Faith 300) — unlocks Foundation March: units move in slow formation with +50% defense for 60 seconds
+4. *The Architect's Recognition* (Faith 500) — passive: building on ancient foundation patterns generates double Faith
+5. *The Eternal Wall* (Faith 900) — victory: final doctrine unlocks Enlightenment check
+
+---
+
 ## Cross-References
 
 | Topic | Authoritative Document |
@@ -995,4 +1095,9 @@ The following values differ between this document and `config/civilizations.json
 | AI Governor architecture (GOAP, base agents) | `docs/design/agents/GOVERNORS.md` |
 | Materials and economy | `docs/design/gameplay/MATERIALS.md` |
 | Victory conditions | `docs/design/gameplay/VICTORY.md` |
+| Victory paths (4-path framework, cult mechanics) | `docs/design/gameplay/VICTORY_PATHS.md` |
 | Game overview | `docs/design/gameplay/OVERVIEW.md` |
+| Cult dialogues config | `config/cultDialogues.json` |
+| Cult buildings config | `config/buildings.json` (religious section) |
+| Cult leader units config | `config/units.json` (cultLeaders section) |
+| Doctrine + faith system config | `config/victoryPaths.json` |

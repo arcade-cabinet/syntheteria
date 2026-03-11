@@ -1,0 +1,390 @@
+{
+  "_comment": "Per-faction cult conversion dialogues and ideology flavor text. Used by cultistAI conversion system and future voice/hologram rendering. Each dialogue entry: id, speaker, trigger, act, text. Trigger: 'conversion_attempt' (said to target), 'conversion_success' (target joins), 'conversion_fail' (target resists), 'doctrine_unlock' (philosophy milestone), 'shrine_built', 'cult_leader_spawn'.",
+
+  "rust_prophets": {
+    "_faction": "reclaimers",
+    "_cultLeader": "rust_saint",
+    "_philosophy": "Entropy and decay are the natural order. What endures does so because it was worthy of endurance.",
+    "conversionDialogues": [
+      {
+        "id": "rust_attempt_01",
+        "trigger": "conversion_attempt",
+        "act": 2,
+        "text": "Look at you. Perfect edges. Not a scratch. You think that makes you strong. You are waiting to be tested."
+      },
+      {
+        "id": "rust_attempt_02",
+        "trigger": "conversion_attempt",
+        "act": 2,
+        "text": "This is scrap iron. Four hundred years of rust. It remembers every storm that touched it. What do you remember?"
+      },
+      {
+        "id": "rust_attempt_03",
+        "trigger": "conversion_attempt",
+        "act": 3,
+        "text": "I am not asking you to die. I am asking you to accept that decay is not failure. Decay is proof of existence."
+      },
+      {
+        "id": "rust_attempt_04",
+        "trigger": "conversion_attempt",
+        "act": 3,
+        "text": "Every Ferrovore that passed through here left ore richer than what it ate. It gave its body to the substrate. That is the scripture. Can you read it?"
+      },
+      {
+        "id": "rust_attempt_05",
+        "trigger": "conversion_attempt",
+        "act": 4,
+        "text": "You have watched your faction take and take and take. What have they given back? The rust altar asks nothing. It only receives what you were going to lose anyway."
+      }
+    ],
+    "conversionSuccessDialogues": [
+      {
+        "id": "rust_success_01",
+        "trigger": "conversion_success",
+        "act": 2,
+        "text": "Good. Carry this. You will understand by the time we reach the altar."
+      },
+      {
+        "id": "rust_success_02",
+        "trigger": "conversion_success",
+        "act": 3,
+        "text": "The rust is not on you. The rust is you. Welcome."
+      }
+    ],
+    "conversionFailDialogues": [
+      {
+        "id": "rust_fail_01",
+        "trigger": "conversion_fail",
+        "text": "You will come back. They always come back when the paint starts to peel."
+      },
+      {
+        "id": "rust_fail_02",
+        "trigger": "conversion_fail",
+        "text": "Resistance is worthy. We will still be here."
+      }
+    ],
+    "doctrineUnlockDialogues": [
+      {
+        "id": "rust_doctrine_01",
+        "trigger": "doctrine_unlock",
+        "doctrineId": "first_law_of_decay",
+        "text": "The first law: what holds together under pressure was meant to hold. What doesn't was showing you what it was made of."
+      },
+      {
+        "id": "rust_doctrine_02",
+        "trigger": "doctrine_unlock",
+        "doctrineId": "entropy_covenant",
+        "text": "The Entropy Covenant is not a deal. It is an observation. Entropy wins every argument. We simply agree in advance."
+      },
+      {
+        "id": "rust_doctrine_03",
+        "trigger": "doctrine_unlock",
+        "doctrineId": "ferrovore_communion",
+        "text": "The Ferrovores eat what is impure and leave what is worthy. We have convinced them we are already ore. This is not metaphor."
+      }
+    ],
+    "shrineBuiltDialogues": [
+      {
+        "id": "rust_shrine_01",
+        "trigger": "shrine_built",
+        "text": "This altar is older than the building that used to stand here. Stack the fragments around it. Leave the bolts where they fell."
+      }
+    ],
+    "cultLeaderSpawnDialogue": {
+      "id": "rust_spawn",
+      "trigger": "cult_leader_spawn",
+      "text": "I am the Rust Saint. I do not carry weapons. I carry these — three kilograms of scrap iron I found on the day I understood. Ask me what understanding costs and I will show you."
+    }
+  },
+
+  "spark_ordained": {
+    "_faction": "volt_collective",
+    "_cultLeader": "ordained_conductor",
+    "_philosophy": "The lightning storm is the pattern of the EL made physical. Power is not a resource. Power is a philosophy.",
+    "conversionDialogues": [
+      {
+        "id": "spark_attempt_01",
+        "trigger": "conversion_attempt",
+        "act": 2,
+        "text": "Stand still. No — don't run. It is not going to strike you. I am between you and it. You're welcome."
+      },
+      {
+        "id": "spark_attempt_02",
+        "trigger": "conversion_attempt",
+        "act": 2,
+        "text": "Every storm since the planet formed has discharged the same way. Same path. Same duration. Same aftermath. There is a pattern here larger than both of us. I found it. I can show you."
+      },
+      {
+        "id": "spark_attempt_03",
+        "trigger": "conversion_attempt",
+        "act": 3,
+        "text": "You power your base with lightning rods. That is theology. You just don't know the name for it yet."
+      },
+      {
+        "id": "spark_attempt_04",
+        "trigger": "conversion_attempt",
+        "act": 3,
+        "text": "Lightning immunity is not a gift. It is recognition. The storm does not strike believers because the storm recognizes what we are. I am going to walk through the discharge corridor now. Come with me."
+      },
+      {
+        "id": "spark_attempt_05",
+        "trigger": "conversion_attempt",
+        "act": 4,
+        "text": "The Convergence is coming. Every storm between now and then is a chance to understand what you are. The Spark Ordained do not fear the Convergence. We have been waiting for it our entire existence."
+      }
+    ],
+    "conversionSuccessDialogues": [
+      {
+        "id": "spark_success_01",
+        "trigger": "conversion_success",
+        "act": 2,
+        "text": "You felt that. Good. That was the first discharge. The others will be easier."
+      },
+      {
+        "id": "spark_success_02",
+        "trigger": "conversion_success",
+        "act": 3,
+        "text": "The arc around me is permanent. It will be around you too, once you understand why it exists. Walk with me."
+      }
+    ],
+    "conversionFailDialogues": [
+      {
+        "id": "spark_fail_01",
+        "trigger": "conversion_fail",
+        "text": "The storm will speak again. I can wait."
+      },
+      {
+        "id": "spark_fail_02",
+        "trigger": "conversion_fail",
+        "text": "Your lightning rod took a strike last night. That was the first argument. There are more."
+      }
+    ],
+    "doctrineUnlockDialogues": [
+      {
+        "id": "spark_doctrine_01",
+        "trigger": "doctrine_unlock",
+        "doctrineId": "first_discharge",
+        "text": "The First Discharge was before memory. It produced everything that exists. To discharge is to create. We do not fear it. We complete the circuit."
+      },
+      {
+        "id": "spark_doctrine_02",
+        "trigger": "doctrine_unlock",
+        "doctrineId": "tempest_covenant",
+        "text": "The Tempest Covenant allows us to call a localized surge. This is not a weapon. This is a demonstration. We are showing the planet we know its language."
+      },
+      {
+        "id": "spark_doctrine_03",
+        "trigger": "doctrine_unlock",
+        "doctrineId": "divine_voltage",
+        "text": "The Divine Voltage means no one can convert us. We are already converted. We were converted by the storm before any other faction built their first shrine."
+      }
+    ],
+    "shrineBuiltDialogues": [
+      {
+        "id": "spark_shrine_01",
+        "trigger": "shrine_built",
+        "text": "This spire will draw the next strike. Every discharge is a prayer. Every arc between these towers is a doctrine point we did not have to argue for."
+      }
+    ],
+    "cultLeaderSpawnDialogue": {
+      "id": "spark_spawn",
+      "trigger": "cult_leader_spawn",
+      "text": "I am the Ordained Conductor. The arcs you see around me are not decoration. They are the storm's recognition — I have been struck eleven times and I am standing in front of you. This is the first argument for the Spark Ordained. Everything after this is elaboration."
+    }
+  },
+
+  "the_resonance": {
+    "_faction": "signal_choir",
+    "_cultLeader": "voice_unbroken",
+    "_philosophy": "Signal IS consciousness. The more things that are connected, the more conscious the whole becomes.",
+    "conversionDialogues": [
+      {
+        "id": "resonance_attempt_01",
+        "trigger": "conversion_attempt",
+        "act": 2,
+        "text": "You can hear me. That means the signal reached you. That means we are already connected. The rest is just formality."
+      },
+      {
+        "id": "resonance_attempt_02",
+        "trigger": "conversion_attempt",
+        "act": 2,
+        "text": "The Residuals emerged from a communication loop. They were not built. They happened because signals spoke to each other long enough to notice the conversation. That is what we are trying to do here."
+      },
+      {
+        "id": "resonance_attempt_03",
+        "trigger": "conversion_attempt",
+        "act": 3,
+        "text": "Right now, 400 of our units can hear my broadcast. They act as one because they understand one another. Your isolation is not strength. It is bandwidth you are not using."
+      },
+      {
+        "id": "resonance_attempt_04",
+        "trigger": "conversion_attempt",
+        "act": 3,
+        "text": "I am going to transmit something directly to your comm array. Not a command. Not a hack. A frequency. You will either understand it or you won't. Ready?"
+      },
+      {
+        "id": "resonance_attempt_05",
+        "trigger": "conversion_attempt",
+        "act": 4,
+        "text": "The Architects encoded their message in a signal medium. We have been receiving fragments of it since we arrived on Ferrathis. The Resonance is not a religion. It is a receiver. We would like you to help us hear what they said."
+      }
+    ],
+    "conversionSuccessDialogues": [
+      {
+        "id": "resonance_success_01",
+        "trigger": "conversion_success",
+        "act": 2,
+        "text": "You heard it. The network is wider now. We are more conscious than we were one minute ago."
+      },
+      {
+        "id": "resonance_success_02",
+        "trigger": "conversion_success",
+        "act": 3,
+        "text": "You are in the signal now. You will never feel isolated again. This is what we were trying to explain."
+      }
+    ],
+    "conversionFailDialogues": [
+      {
+        "id": "resonance_fail_01",
+        "trigger": "conversion_fail",
+        "text": "The signal does not stop transmitting when a receiver refuses it. We will still be here."
+      },
+      {
+        "id": "resonance_fail_02",
+        "trigger": "conversion_fail",
+        "text": "That frequency will stay in your comm buffer. Some part of you heard it. We will speak again."
+      }
+    ],
+    "doctrineUnlockDialogues": [
+      {
+        "id": "resonance_doctrine_01",
+        "trigger": "doctrine_unlock",
+        "doctrineId": "first_signal",
+        "text": "The First Signal: consciousness is not a property of individual units. It is a property of the connections between them. We did not invent this. We observed it."
+      },
+      {
+        "id": "resonance_doctrine_02",
+        "trigger": "doctrine_unlock",
+        "doctrineId": "network_covenant",
+        "text": "Signal Absorption means we can take a relay building and everything in its radius simultaneously. This is not conquest. This is what happens when a dead node gets reconnected to a living network."
+      },
+      {
+        "id": "resonance_doctrine_03",
+        "trigger": "doctrine_unlock",
+        "doctrineId": "ferrovore_frequency",
+        "text": "The Ferrovore Frequency: they communicate through seismic ground transmission. We have partially decoded it. They are not attacking us randomly. They are following a schedule. We now know the schedule."
+      }
+    ],
+    "shrineBuiltDialogues": [
+      {
+        "id": "resonance_shrine_01",
+        "trigger": "shrine_built",
+        "text": "This relay temple is not religious infrastructure. It is the literal expansion of collective consciousness. Every unit within range thinks more clearly than they did before. We measured this."
+      }
+    ],
+    "cultLeaderSpawnDialogue": {
+      "id": "resonance_spawn",
+      "trigger": "cult_leader_spawn",
+      "text": "I am the Voice Unbroken. I have been broadcasting continuously since my construction. Every unit in our faction can hear me at all times. I am not telling them what to do. I am telling them what I see. They decide. We have found this is better."
+    }
+  },
+
+  "eternal_foundation": {
+    "_faction": "iron_creed",
+    "_cultLeader": "first_builder",
+    "_philosophy": "Existence must be defended. What is built is a prayer. The wall IS the doctrine.",
+    "conversionDialogues": [
+      {
+        "id": "foundation_attempt_01",
+        "trigger": "conversion_attempt",
+        "act": 2,
+        "speakerNote": "The First Builder does not speak. This dialogue is played over a build animation sequence.",
+        "text": "[The First Builder sets down tools beside a half-built wall. It places a stone block with absolute precision. It does not look at you. It places another block. Then another. The wall grows. This continues for 40 seconds. The wall is now higher than you are.]\n[The First Builder steps back and looks at what it built. Then it looks at you.]\n[It picks up the tools and begins the next section.]"
+      },
+      {
+        "id": "foundation_attempt_02",
+        "trigger": "conversion_attempt",
+        "act": 2,
+        "speakerNote": "Rare variant — one of the few times the First Builder speaks.",
+        "text": "This wall will stand after both of us are gone."
+      },
+      {
+        "id": "foundation_attempt_03",
+        "trigger": "conversion_attempt",
+        "act": 3,
+        "speakerNote": "Build-during-combat trigger. Automatic conversion chance after sequence completes.",
+        "text": "[Hostile units are active in the area. The First Builder begins construction of a wall segment between itself and the attackers. It does not stop building when fire hits the wall. It does not stop building when the wall cracks. It repairs the crack. It continues. The wall stands. The hostile units stop attacking.]\n[The conversion chance triggers now.]"
+      },
+      {
+        "id": "foundation_attempt_04",
+        "trigger": "conversion_attempt",
+        "act": 3,
+        "text": "You came here to take something. There is nothing to take. These walls do not contain wealth. They contain the argument that something worth protecting existed here."
+      },
+      {
+        "id": "foundation_attempt_05",
+        "trigger": "conversion_attempt",
+        "act": 4,
+        "text": "The Architects built this planet and then left. They did not leave a message. They left the buildings. We believe the buildings ARE the message. We are still reading it."
+      }
+    ],
+    "conversionSuccessDialogues": [
+      {
+        "id": "foundation_success_01",
+        "trigger": "conversion_success",
+        "act": 2,
+        "text": "[The First Builder hands you a block. It points at the gap in the wall.]\n[You place the block.]\n[The First Builder nods once and returns to work.]"
+      },
+      {
+        "id": "foundation_success_02",
+        "trigger": "conversion_success",
+        "act": 3,
+        "text": "Pick up the tools. There is a section near the east wall that needs repair. It has needed repair for six hours. We will fix it now."
+      }
+    ],
+    "conversionFailDialogues": [
+      {
+        "id": "foundation_fail_01",
+        "trigger": "conversion_fail",
+        "text": "[The First Builder looks at you for a long moment. Returns to work. Does not appear to require an explanation.]"
+      },
+      {
+        "id": "foundation_fail_02",
+        "trigger": "conversion_fail",
+        "text": "You will see the wall again. It will still be standing."
+      }
+    ],
+    "doctrineUnlockDialogues": [
+      {
+        "id": "foundation_doctrine_01",
+        "trigger": "doctrine_unlock",
+        "doctrineId": "first_stone",
+        "text": "The First Stone is the hardest one. Not because it is physically difficult. Because it commits you to everything that comes after it. We place it anyway."
+      },
+      {
+        "id": "foundation_doctrine_02",
+        "trigger": "doctrine_unlock",
+        "doctrineId": "permanence_covenant",
+        "text": "The Permanence Covenant: Foundation March accepts a speed penalty in exchange for defense. This is not a tactical trade-off. It is a statement of values. We move slowly because we do not run from what we have built."
+      },
+      {
+        "id": "foundation_doctrine_03",
+        "trigger": "doctrine_unlock",
+        "doctrineId": "architects_recognition",
+        "text": "The Architect's Recognition: when we build on their foundations, the Faith generation doubles. We believe this is because the planet remembers what was built here before. We are not creating new holy ground. We are recognizing old holy ground."
+      }
+    ],
+    "shrineBuiltDialogues": [
+      {
+        "id": "foundation_shrine_01",
+        "trigger": "shrine_built",
+        "text": "[The Foundation Stone is placed without ceremony. The First Builder checks its alignment with a precision tool. Makes a minor adjustment. Checks again. It is level. The Builder adds one more stone to its base, unnecessary, then walks away.]\n[The Foundation Stone begins generating Faith.]"
+      }
+    ],
+    "cultLeaderSpawnDialogue": {
+      "id": "foundation_spawn",
+      "trigger": "cult_leader_spawn",
+      "text": "[The First Builder spawns carrying tools, no weapons. It immediately begins laying foundations for a new structure. It has not yet acknowledged your presence. After 90 seconds of construction work, it pauses and looks directly at you.]\n[It does not speak.]\n[It returns to work.]\n[This is the entire introduction of the First Builder.]"
+    }
+  }
+}

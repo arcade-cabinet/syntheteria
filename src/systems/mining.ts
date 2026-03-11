@@ -10,7 +10,8 @@
 
 import { config } from "../../config";
 import type { Entity } from "../ecs/types";
-import { miners, world } from "../ecs/world";
+import { world } from "../ecs/world";
+import { miners } from "../ecs/koota/compat";
 
 /** Internal extraction counters keyed by entity ID */
 const extractionCounters = new Map<string, number>();
@@ -38,10 +39,10 @@ export function getMinerBuffer(minerId: string): number {
  */
 export function miningSystem() {
 	for (const entity of miners) {
-		const miner = entity.miner;
+		const miner = entity.miner!;
 
 		// Skip inactive or unpowered miners
-		if (!miner.active || !entity.building.powered) continue;
+		if (!miner.active || !entity.building!.powered) continue;
 
 		// Skip broken drills
 		if (miner.drillHealth <= 0) {

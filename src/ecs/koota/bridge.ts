@@ -1172,11 +1172,10 @@ function syncKootaToMiniplex(): void {
 			mpEntity.navigation.moving = nav.moving;
 		}
 
-		// Sync Unit back
+		// Sync Unit back — Koota stores type as `string`, Miniplex expects a union literal
 		if (mpEntity.unit && kEntity.has(Unit)) {
 			const unit = kEntity.get(Unit)!;
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			mpEntity.unit.type = unit.type as any;
+			mpEntity.unit.type = unit.type as typeof mpEntity.unit.type;
 			mpEntity.unit.displayName = unit.displayName;
 			mpEntity.unit.speed = unit.speed;
 			mpEntity.unit.selected = unit.selected;
@@ -1218,11 +1217,10 @@ function syncKootaToMiniplex(): void {
 			mpEntity.signalRelay.signalStrength = sig.signalStrength;
 		}
 
-		// Sync Automation back
+		// Sync Automation back — Koota stores routine as `string`, Miniplex expects a union literal
 		if (mpEntity.automation && kEntity.has(Automation)) {
 			const auto = kEntity.get(Automation)!;
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			mpEntity.automation.routine = auto.routine as any;
+			mpEntity.automation.routine = auto.routine as typeof mpEntity.automation.routine;
 			mpEntity.automation.followTarget = auto.followTarget;
 			mpEntity.automation.patrolPoints = auto.patrolPoints.map(p => ({ x: p.x, y: p.y, z: p.z }));
 			mpEntity.automation.patrolIndex = auto.patrolIndex;
@@ -1241,18 +1239,22 @@ function syncKootaToMiniplex(): void {
 			}
 		}
 
-		// Sync Faction back (for hacking system which changes faction)
+		// Sync Faction back (for hacking system which changes faction).
+		// Direct assignment via mutable cast — faction is not readonly at runtime.
 		if (mpEntity.faction && kEntity.has(Faction)) {
-			const factionVal = kEntity.get(Faction)!.value;
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(mpEntity as any).faction = factionVal;
+			const factionVal = kEntity.get(Faction)?.value;
+			if (factionVal !== undefined) {
+				(mpEntity as { faction: string }).faction = factionVal;
+			}
 		}
 
 		// Sync OreDeposit back
 		if (mpEntity.oreDeposit && kEntity.has(OreDeposit)) {
-			const ore = kEntity.get(OreDeposit)!;
-			mpEntity.oreDeposit.currentYield = ore.currentYield;
-			mpEntity.oreDeposit.maxYield = ore.maxYield;
+			const ore = kEntity.get(OreDeposit);
+			if (ore) {
+				mpEntity.oreDeposit.currentYield = ore.currentYield;
+				mpEntity.oreDeposit.maxYield = ore.maxYield;
+			}
 		}
 
 		// Sync Belt back

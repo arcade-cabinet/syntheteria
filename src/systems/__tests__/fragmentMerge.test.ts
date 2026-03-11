@@ -9,6 +9,14 @@
  * - Edge cases: same fragment, beyond merge distance, no fragments
  */
 
+// Compat layer: defer world access until iteration time to avoid circular init issues
+jest.mock("../../ecs/koota/compat", () => ({
+	get units() {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		return require("../../ecs/world").units;
+	},
+}));
+
 import {
 	createFragment,
 	deleteFragment,

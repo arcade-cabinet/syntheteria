@@ -13,7 +13,7 @@
  * pick the correct frame.
  */
 
-import { otters } from "../ecs/world";
+import { otters } from "../ecs/koota/compat";
 
 export function otterSystem() {
 	for (const entity of otters) {

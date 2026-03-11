@@ -57,6 +57,42 @@ export class MaterialFactory {
 	private pendingLoads = new Map<string, Promise<THREE.Texture>>();
 
 	/**
+	 * Create a 1x1 fallback texture with a given color.
+	 * Used when texture loading fails to prevent rendering crashes.
+	 */
+	private createFallbackTexture(
+		hex = 0x808080,
+		colorSpace: THREE.ColorSpace = THREE.LinearSRGBColorSpace,
+	): THREE.Texture {
+		const canvas = typeof document !== "undefined"
+			? document.createElement("canvas")
+			: null;
+		if (canvas) {
+			canvas.width = 1;
+			canvas.height = 1;
+			const ctx = canvas.getContext("2d");
+			if (ctx) {
+				const r = (hex >> 16) & 0xff;
+				const g = (hex >> 8) & 0xff;
+				const b = hex & 0xff;
+				ctx.fillStyle = `rgb(${r},${g},${b})`;
+				ctx.fillRect(0, 0, 1, 1);
+			}
+			const texture = new THREE.CanvasTexture(canvas);
+			texture.wrapS = THREE.RepeatWrapping;
+			texture.wrapT = THREE.RepeatWrapping;
+			texture.colorSpace = colorSpace;
+			return texture;
+		}
+		// SSR/Node fallback — return a blank texture
+		const texture = new THREE.Texture();
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.colorSpace = colorSpace;
+		return texture;
+	}
+
+	/**
 	 * Load a single texture, returning a cached instance if already loaded.
 	 * Uses a pending-loads map to avoid duplicate concurrent requests for
 	 * the same path.
@@ -94,6 +130,26 @@ export class MaterialFactory {
 	}
 
 	/**
+	 * Load a texture with fallback — resolves to a fallback texture
+	 * instead of rejecting on failure.
+	 */
+	private loadTextureWithFallback(path: string): Promise<THREE.Texture> {
+		return this.loadTexture(path).catch((error) => {
+			console.warn(
+				`MaterialFactory: failed to load texture "${path}", using fallback.`,
+				error,
+			);
+			const isColor = path.includes("Color");
+			const fallback = this.createFallbackTexture(
+				isColor ? 0x808080 : 0x8080ff,
+				isColor ? THREE.SRGBColorSpace : THREE.LinearSRGBColorSpace,
+			);
+			this.textureCache.set(path, fallback);
+			return fallback;
+		});
+	}
+
+	/**
 	 * Load a texture synchronously, returning a placeholder if not yet loaded
 	 * and kicking off the async load in the background. The placeholder is a
 	 * 1x1 white texture that will be replaced once loading completes.
@@ -107,13 +163,20 @@ export class MaterialFactory {
 		placeholder.wrapS = THREE.RepeatWrapping;
 		placeholder.wrapT = THREE.RepeatWrapping;
 
-		this.loadTexture(path).then((loaded) => {
-			// Copy loaded data into the placeholder so any material referencing
-			// it automatically picks up the real texture
-			placeholder.image = loaded.image;
-			placeholder.colorSpace = loaded.colorSpace;
-			placeholder.needsUpdate = true;
-		});
+		this.loadTexture(path)
+			.then((loaded) => {
+				// Copy loaded data into the placeholder so any material referencing
+				// it automatically picks up the real texture
+				placeholder.image = loaded.image;
+				placeholder.colorSpace = loaded.colorSpace;
+				placeholder.needsUpdate = true;
+			})
+			.catch((error) => {
+				console.warn(
+					`MaterialFactory: failed to load texture "${path}", keeping placeholder.`,
+					error,
+				);
+			});
 
 		return placeholder;
 	}
@@ -178,14 +241,14 @@ export class MaterialFactory {
 		if (cached) return cached;
 
 		const loadPromises: Promise<THREE.Texture>[] = [
-			this.loadTexture(textures.color),
-			this.loadTexture(textures.metalness),
-			this.loadTexture(textures.normal),
-			this.loadTexture(textures.roughness),
+			this.loadTextureWithFallback(textures.color),
+			this.loadTextureWithFallback(textures.metalness),
+			this.loadTextureWithFallback(textures.normal),
+			this.loadTextureWithFallback(textures.roughness),
 		];
 
 		if (textures.displacement) {
-			loadPromises.push(this.loadTexture(textures.displacement));
+			loadPromises.push(this.loadTextureWithFallback(textures.displacement));
 		}
 
 		const loaded = await Promise.all(loadPromises);

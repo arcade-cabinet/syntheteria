@@ -26,10 +26,15 @@ const wallsCfg = config.combat.walls;
 const MIN_WALL_LENGTH = wallsCfg.minWallLength;
 
 /** HP per cube by material type. Higher = stronger wall. */
-export const MATERIAL_WALL_HP: Record<string, number> = { ...wallsCfg.materialWallHp };
+export const MATERIAL_WALL_HP: Record<string, number> = Object.fromEntries(
+	Object.entries(wallsCfg.materialWallHp).map(([mat, hp]) => [
+		mat,
+		typeof hp === "object" && hp !== null ? (hp as { perCube: number }).perCube : hp as number,
+	]),
+);
 
 /** Default HP for unknown material types. */
-const DEFAULT_CUBE_HP = wallsCfg.defaultCubeHp;
+const DEFAULT_CUBE_HP = (wallsCfg as Record<string, unknown>).defaultCubeHp as number ?? 25;
 
 /** Defense bonus multiplier for units behind a wall. */
 export const WALL_DEFENSE_BONUS = wallsCfg.wallDefenseBonus;

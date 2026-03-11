@@ -8,7 +8,7 @@
  * Pure layout/hit-testing functions are exported for testability.
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -84,6 +84,40 @@ export function isClickOutsideMenu(
 	return distance > menuRadius + BUTTON_RADIUS + 4;
 }
 
+/**
+ * Navigate focus among radial menu items using arrow keys.
+ * Returns the index to focus next given the current index, direction, and
+ * the enabled state of each action. Cycles through enabled items only,
+ * wrapping around. Returns -1 if no enabled items exist.
+ *
+ * direction: 1 = forward (ArrowRight/ArrowDown), -1 = backward (ArrowLeft/ArrowUp)
+ */
+export function getNextFocusIndex(
+	currentIndex: number,
+	direction: 1 | -1,
+	actions: Pick<RadialAction, "enabled">[],
+): number {
+	const count = actions.length;
+	if (count === 0) return -1;
+
+	// Find the first enabled item if nothing focused yet
+	if (currentIndex < 0) {
+		const first = direction === 1 ? 0 : count - 1;
+		for (let i = 0; i < count; i++) {
+			const idx = (first + i * direction + count * count) % count;
+			if (actions[idx].enabled) return idx;
+		}
+		return -1;
+	}
+
+	// Cycle to the next/previous enabled item, wrapping around
+	for (let step = 1; step <= count; step++) {
+		const idx = ((currentIndex + step * direction) % count + count) % count;
+		if (actions[idx].enabled) return idx;
+	}
+	return -1;
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 const MONO = "'Courier New', monospace";
@@ -95,17 +129,35 @@ export function RadialActionMenu({
 	onDismiss,
 }: RadialActionMenuProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
+	const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+	const itemRefs = useRef<(SVGGElement | null)[]>([]);
 
-	// ESC key dismisses the menu
+	// ESC key dismisses the menu; arrow keys navigate; Enter/Space activate
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === "Escape") {
 				onDismiss();
+				return;
+			}
+			if (
+				e.key === "ArrowRight" ||
+				e.key === "ArrowDown" ||
+				e.key === "ArrowLeft" ||
+				e.key === "ArrowUp"
+			) {
+				e.preventDefault();
+				const direction =
+					e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : -1;
+				const next = getNextFocusIndex(focusedIndex, direction, actions);
+				if (next >= 0) {
+					setFocusedIndex(next);
+					itemRefs.current[next]?.focus();
+				}
 			}
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [onDismiss]);
+	}, [onDismiss, focusedIndex, actions]);
 
 	// Click outside dismisses the menu
 	useEffect(() => {
@@ -151,6 +203,8 @@ export function RadialActionMenu({
 			}}
 		>
 			<svg
+				role="menu"
+				aria-label="Object actions"
 				width={viewSize}
 				height={viewSize}
 				viewBox={`${-halfView} ${-halfView} ${viewSize} ${viewSize}`}
@@ -180,12 +234,28 @@ export function RadialActionMenu({
 				{actions.map((action, i) => {
 					const pos = positions[i];
 					const buttonSize = Math.max(BUTTON_RADIUS, MIN_TOUCH_TARGET / 2);
+					const isFocused = focusedIndex === i;
 
 					return (
 						<g
 							key={action.id}
+							ref={(el) => {
+								itemRefs.current[i] = el;
+							}}
+							role="menuitem"
+							tabIndex={action.enabled ? 0 : -1}
+							aria-label={action.label}
+							aria-disabled={!action.enabled}
+							onFocus={() => setFocusedIndex(i)}
+							onBlur={() => setFocusedIndex(-1)}
 							onClick={() => {
 								if (action.enabled) {
+									onAction(action.id);
+								}
+							}}
+							onKeyDown={(e) => {
+								if (action.enabled && (e.key === "Enter" || e.key === " ")) {
+									e.preventDefault();
 									onAction(action.id);
 								}
 							}}
@@ -210,9 +280,28 @@ export function RadialActionMenu({
 										? "rgba(0, 20, 10, 0.9)"
 										: "rgba(20, 20, 20, 0.7)"
 								}
-								stroke={action.enabled ? "#00ffaa66" : "#00ffaa22"}
-								strokeWidth="1"
+								stroke={
+									isFocused
+										? "#00ffaa"
+										: action.enabled
+											? "#00ffaa66"
+											: "#00ffaa22"
+								}
+								strokeWidth={isFocused ? "2" : "1"}
 							/>
+							{/* Focus ring — visible keyboard focus indicator */}
+							{isFocused && (
+								<circle
+									cx={pos.x}
+									cy={pos.y}
+									r={buttonSize + 4}
+									fill="none"
+									stroke="#00ffaa"
+									strokeWidth="1.5"
+									strokeDasharray="4 3"
+									opacity="0.7"
+								/>
+							)}
 							{/* Icon */}
 							<text
 								x={pos.x}

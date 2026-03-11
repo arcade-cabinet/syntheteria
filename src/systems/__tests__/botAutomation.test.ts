@@ -20,6 +20,18 @@ jest.mock("../pathfinding", () => ({
 	}),
 }));
 
+// Compat layer: defer world access until iteration time to avoid circular init issues
+jest.mock("../../ecs/koota/compat", () => ({
+	get automatedBots() {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		return require("../../ecs/world").automatedBots;
+	},
+	get units() {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		return require("../../ecs/world").units;
+	},
+}));
+
 import type { AutomationComponent, Entity, UnitComponent, Vec3 } from "../../ecs/types";
 import { world } from "../../ecs/world";
 import { botAutomationSystem } from "../botAutomation";

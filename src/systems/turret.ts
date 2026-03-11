@@ -11,10 +11,11 @@
 
 import { config } from "../../config";
 import type { BuildingEntity, UnitEntity } from "../ecs/types";
-import { buildings, units, world } from "../ecs/world";
+import { world } from "../ecs/world";
+import { buildings, units } from "../ecs/koota/compat";
 import { addResource } from "./resources";
 
-const turretCfg = config.buildings.turret;
+const turretCfg = config.buildings.defense.turret;
 const combatCfg = config.combat;
 
 // ---------------------------------------------------------------------------

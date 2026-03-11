@@ -47,6 +47,11 @@ jest.mock("../../ecs/world", () => ({
 	units: mockUnits,
 }));
 
+// Also mock the Koota compat layer (resources.ts now imports from here)
+jest.mock("../../ecs/koota/compat", () => ({
+	units: mockUnits,
+}));
+
 import {
 	addResource,
 	getResources,

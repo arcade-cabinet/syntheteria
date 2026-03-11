@@ -36,6 +36,11 @@ jest.mock("../../ecs/world", () => ({
 	movingUnits: mockMovingUnits,
 }));
 
+// Also mock the Koota compat layer (movement.ts now imports from here)
+jest.mock("../../ecs/koota/compat", () => ({
+	movingUnits: mockMovingUnits,
+}));
+
 import { getTerrainHeight } from "../../ecs/terrain";
 import { movementSystem } from "../movement";
 

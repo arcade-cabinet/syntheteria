@@ -14,7 +14,8 @@
 import { config } from "../../config";
 import type { UnitEntity } from "../ecs/types";
 import { hasArms } from "../ecs/types";
-import { units, world } from "../ecs/world";
+import { world } from "../ecs/world";
+import { units } from "../ecs/koota/compat";
 import { addResource } from "./resources";
 
 const MELEE_RANGE = config.combat.meleeRange;

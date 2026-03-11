@@ -8,37 +8,94 @@
  * the heavy 3D scene is lazy-loaded only when the player starts.
  */
 
-import { lazy, Suspense, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { useSyncExternalStore } from "react";
+import { getSnapshot, subscribe } from "./ecs/gameState";
 import { phraseToSeed } from "./ecs/seed";
 import type { PregameConfig } from "./ui/PregameScreen";
 import { PregameScreen } from "./ui/PregameScreen";
 import { TitleScreen } from "./ui/TitleScreen";
 import { LoadingScreen } from "./ui/LoadingScreen";
+import { PauseMenu } from "./ui/PauseMenu";
+import { ErrorBoundary } from "./ui/ErrorBoundary";
+import { initFromConfig, type NewGameConfig } from "./systems/newGameInit";
 
 // Lazy-load the entire 3D scene — keeps title/pregame bundle tiny.
 // Vite creates a separate chunk for GameScene + all its Three.js dependencies.
 const GameScene = lazy(() => import("./GameScene"));
 
+/**
+ * Convert PregameConfig from the UI into NewGameConfig for the init system.
+ */
+function toNewGameConfig(config: PregameConfig): NewGameConfig {
+	const sizeMap: Record<string, number> = {
+		small: 100,
+		medium: 200,
+		large: 400,
+	};
+
+	return {
+		playerRace: config.faction,
+		mapSize: sizeMap[config.mapSettings.mapSize] ?? 200,
+		mapType: "standard",
+		aiOpponents: config.opponents.map((o) => o.faction),
+		difficulty: "normal",
+	};
+}
+
 export default function App() {
-	const [phase, setPhase] = useState<"title" | "pregame" | "playing">("title");
+	const [phase, setPhase] = useState<
+		"title" | "pregame" | "loading" | "playing"
+	>("title");
 	const pendingSeedRef = useRef<number>(42);
+	const pendingConfigRef = useRef<PregameConfig | null>(null);
 
 	// Title screen "New Game" → go to pregame config
 	const handleNewGame = (_seed: number) => {
 		setPhase("pregame");
 	};
 
-	// Pregame "Start Game" → initialize world and play
+	// Pregame "Start Game" → transition to loading, then play
 	const handlePregameStart = (config: PregameConfig) => {
 		const seed = phraseToSeed(config.mapSettings.seedPhrase) ?? 42;
 		pendingSeedRef.current = seed;
-		setPhase("playing");
+		pendingConfigRef.current = config;
+		setPhase("loading");
 	};
 
 	// Pregame "Back" → return to title
 	const handlePregameBack = () => {
 		setPhase("title");
 	};
+
+	// Run initialization during LOADING phase
+	useEffect(() => {
+		if (phase !== "loading") return;
+
+		const config = pendingConfigRef.current;
+		if (!config) {
+			setPhase("playing");
+			return;
+		}
+
+		// Run the 12-step init sequence, then transition to playing.
+		// Uses requestAnimationFrame to let the loading screen render first.
+		const raf = requestAnimationFrame(() => {
+			const gameConfig = toNewGameConfig(config);
+			const result = initFromConfig(gameConfig);
+
+			if (!result.success) {
+				console.error(
+					"[newGameInit] Initialization failed:",
+					result.errors,
+				);
+			}
+
+			setPhase("playing");
+		});
+
+		return () => cancelAnimationFrame(raf);
+	}, [phase]);
 
 	if (phase === "title") {
 		return (
@@ -55,9 +112,31 @@ export default function App() {
 		);
 	}
 
+	if (phase === "loading") {
+		return <LoadingScreen />;
+	}
+
 	return (
-		<Suspense fallback={<LoadingScreen />}>
-			<GameScene seed={pendingSeedRef.current} />
-		</Suspense>
+		<ErrorBoundary>
+			<PlayingView onQuitToTitle={() => setPhase("title")} />
+		</ErrorBoundary>
+	);
+}
+
+// ---------------------------------------------------------------------------
+// Playing view — GameScene + PauseMenu overlay
+// ---------------------------------------------------------------------------
+
+function PlayingView({ onQuitToTitle }: { onQuitToTitle: () => void }) {
+	const snap = useSyncExternalStore(subscribe, getSnapshot);
+	const pendingSeedRef = useRef<number>(42);
+
+	return (
+		<div style={{ position: "relative", width: "100%", height: "100%" }}>
+			<Suspense fallback={<LoadingScreen />}>
+				<GameScene seed={pendingSeedRef.current} />
+			</Suspense>
+			{snap.paused && <PauseMenu onQuitToTitle={onQuitToTitle} />}
+		</div>
 	);
 }

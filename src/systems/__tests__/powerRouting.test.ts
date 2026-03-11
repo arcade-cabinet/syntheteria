@@ -36,6 +36,15 @@ jest.mock("../../ecs/world", () => ({
 	processors: mockProcessors,
 }));
 
+// Also mock the Koota compat layer (powerRouting.ts now imports from here)
+jest.mock("../../ecs/koota/compat", () => ({
+	buildings: mockBuildings,
+	lightningRods: mockLightningRods,
+	wires: mockWires,
+	miners: mockMiners,
+	processors: mockProcessors,
+}));
+
 jest.mock("../../../config", () => ({
 	config: {
 		power: {

@@ -157,6 +157,7 @@ function OpponentSlotRow({
 		>
 			{/* Slot number */}
 			<div
+				aria-hidden="true"
 				style={{
 					fontFamily: MONO,
 					fontSize: "11px",
@@ -170,6 +171,7 @@ function OpponentSlotRow({
 
 			{/* Faction color dot */}
 			<div
+				aria-hidden="true"
 				style={{
 					width: "10px",
 					height: "10px",
@@ -191,6 +193,7 @@ function OpponentSlotRow({
 					}),
 				)}
 				style={{ flex: 1 }}
+				aria-label={`Rival ${index + 1} faction`}
 			/>
 
 			{/* Difficulty select */}
@@ -206,12 +209,13 @@ function OpponentSlotRow({
 				]}
 				style={{ width: "90px" }}
 				color={diffColor}
+				aria-label={`Rival ${index + 1} difficulty`}
 			/>
 
 			{/* Remove */}
 			<button
 				onClick={onRemove}
-				title="Remove opponent"
+				aria-label={`Remove rival ${index + 1}`}
 				style={{
 					background: "transparent",
 					border: "1px solid rgba(255,68,68,0.3)",
@@ -246,16 +250,19 @@ function StyledSelect({
 	options,
 	style,
 	color,
+	"aria-label": ariaLabel,
 }: {
 	value: string;
 	onChange: (val: string) => void;
 	options: { value: string; label: string }[];
 	style?: React.CSSProperties;
 	color?: string;
+	"aria-label"?: string;
 }) {
 	return (
 		<select
 			value={value}
+			aria-label={ariaLabel}
 			onChange={(e) => onChange(e.target.value)}
 			style={{
 				background: "rgba(0,255,170,0.05)",
@@ -298,6 +305,7 @@ function AddButton({
 	return (
 		<button
 			onClick={onClick}
+			aria-label={`Add rival ${count + 1} of 4`}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 			style={{

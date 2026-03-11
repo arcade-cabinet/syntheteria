@@ -1,0 +1,1577 @@
+{
+	"materials": {
+		"rock": {
+			"tier": 1,
+			"rarity": "abundant",
+			"depositFrequency": 0.3,
+			"grindSpeed": 1.0,
+			"powderToFill": 40,
+			"compressTime": 1.0,
+			"cubeHp": 25,
+			"wallHp": 50,
+			"baseValue": 0.5,
+			"carrySpeedMod": 1.0
+		},
+		"scrap_iron": {
+			"tier": 1,
+			"rarity": "common",
+			"depositFrequency": 0.25,
+			"grindSpeed": 0.8,
+			"powderToFill": 60,
+			"compressTime": 1.5,
+			"cubeHp": 50,
+			"wallHp": 100,
+			"baseValue": 1.0,
+			"carrySpeedMod": 0.85
+		},
+		"copper": {
+			"tier": 2,
+			"rarity": "moderate",
+			"depositFrequency": 0.15,
+			"grindSpeed": 0.6,
+			"powderToFill": 80,
+			"compressTime": 2.0,
+			"cubeHp": 40,
+			"wallHp": 80,
+			"baseValue": 1.5,
+			"carrySpeedMod": 0.9
+		},
+		"silicon": {
+			"tier": 2,
+			"rarity": "rare",
+			"depositFrequency": 0.1,
+			"grindSpeed": 0.4,
+			"powderToFill": 100,
+			"compressTime": 2.5,
+			"cubeHp": 30,
+			"wallHp": 60,
+			"baseValue": 2.0,
+			"carrySpeedMod": 0.95
+		},
+		"carbon": {
+			"tier": 3,
+			"rarity": "uncommon",
+			"depositFrequency": 0.05,
+			"grindSpeed": 0.35,
+			"powderToFill": 90,
+			"compressTime": 2.0,
+			"cubeHp": 60,
+			"wallHp": 120,
+			"baseValue": 2.5,
+			"carrySpeedMod": 0.92
+		},
+		"titanium": {
+			"tier": 3,
+			"rarity": "very_rare",
+			"depositFrequency": 0.05,
+			"grindSpeed": 0.3,
+			"powderToFill": 120,
+			"compressTime": 3.5,
+			"cubeHp": 150,
+			"wallHp": 300,
+			"baseValue": 5.0,
+			"carrySpeedMod": 0.7
+		},
+		"rare_earth": {
+			"tier": 4,
+			"rarity": "ultra_rare",
+			"depositFrequency": 0.03,
+			"grindSpeed": 0.2,
+			"powderToFill": 150,
+			"compressTime": 4.0,
+			"cubeHp": 40,
+			"wallHp": 80,
+			"baseValue": 8.0,
+			"carrySpeedMod": 0.95
+		},
+		"gold": {
+			"tier": 4,
+			"rarity": "ultra_rare",
+			"depositFrequency": 0.02,
+			"grindSpeed": 0.25,
+			"powderToFill": 130,
+			"compressTime": 3.5,
+			"cubeHp": 35,
+			"wallHp": 70,
+			"baseValue": 10.0,
+			"carrySpeedMod": 0.88
+		},
+		"quantum_crystal": {
+			"tier": 5,
+			"rarity": "legendary",
+			"depositFrequency": 0.01,
+			"grindSpeed": 0.1,
+			"powderToFill": 200,
+			"compressTime": 5.0,
+			"cubeHp": 60,
+			"wallHp": 120,
+			"baseValue": 25.0,
+			"carrySpeedMod": 0.95
+		}
+	},
+	"alloys": {
+		"iron": {
+			"inputs": {
+				"scrap_iron": 2
+			},
+			"smeltTime": 15,
+			"cubeHp": 90,
+			"wallHp": 180,
+			"baseValue": 2.5,
+			"carrySpeedMod": 0.82
+		},
+		"steel": {
+			"inputs": {
+				"iron": 2,
+				"carbon": 1
+			},
+			"smeltTime": 25,
+			"cubeHp": 200,
+			"wallHp": 400,
+			"baseValue": 8.0,
+			"carrySpeedMod": 0.75
+		},
+		"advanced_alloy": {
+			"inputs": {
+				"titanium": 1,
+				"rare_earth": 1
+			},
+			"smeltTime": 30,
+			"cubeHp": 250,
+			"wallHp": 500,
+			"baseValue": 18.0,
+			"carrySpeedMod": 0.8
+		}
+	},
+	"compression": {
+		"cubeSize": 0.5,
+		"baseExtractionRate": 0.1,
+		"screenShake": {
+			"curveType": "easeInQuad",
+			"slamMultiplier": 1.5,
+			"slamFrames": 2
+		},
+		"pressureGauge": {
+			"curveType": "easeInCubic",
+			"redZoneThreshold": 0.85
+		},
+		"heatGauge": {
+			"curveType": "easeInQuad",
+			"delayPercent": 0.15
+		},
+		"ejectPhysics": {
+			"forwardWeight": 0.7,
+			"upWeight": 0.3,
+			"bounceRestitution": 0.3,
+			"friction": 0.6
+		},
+		"qualityModifiers": {
+			"normal": 1.0,
+			"damageDuring": 0.7,
+			"interrupted": 0,
+			"rushed": 0.8
+		}
+	},
+	"deposits": {
+		"rock": {
+			"yieldMin": 200,
+			"yieldMax": 600,
+			"respawnSeconds": 180,
+			"respawnMode": "same_location"
+		},
+		"scrap_iron": {
+			"yieldMin": 180,
+			"yieldMax": 450,
+			"respawnSeconds": 300,
+			"respawnMode": "same_location"
+		},
+		"copper": {
+			"yieldMin": 120,
+			"yieldMax": 320,
+			"respawnSeconds": 480,
+			"respawnMode": "same_biome_shifted"
+		},
+		"silicon": {
+			"yieldMin": 80,
+			"yieldMax": 250,
+			"respawnSeconds": 600,
+			"respawnMode": "same_biome_shifted"
+		},
+		"carbon": {
+			"yieldMin": 100,
+			"yieldMax": 280,
+			"respawnSeconds": 420,
+			"respawnMode": "same_biome_shifted"
+		},
+		"titanium": {
+			"yieldMin": 60,
+			"yieldMax": 180,
+			"respawnSeconds": 900,
+			"respawnMode": "random_in_biome"
+		},
+		"rare_earth": {
+			"yieldMin": 30,
+			"yieldMax": 100,
+			"respawnSeconds": 1800,
+			"respawnMode": "random_on_map"
+		},
+		"gold": {
+			"yieldMin": 20,
+			"yieldMax": 75,
+			"respawnSeconds": 2400,
+			"respawnMode": "random_on_map"
+		},
+		"quantum_crystal": {
+			"yieldMin": 10,
+			"yieldMax": 30,
+			"respawnSeconds": null,
+			"respawnMode": "never"
+		}
+	},
+	"wealthBrackets": {
+		"destitute": {
+			"maxValue": 10,
+			"raidIntervalSeconds": null,
+			"maxRaiders": 0
+		},
+		"poor": {
+			"maxValue": 30,
+			"raidIntervalSeconds": 600,
+			"maxRaiders": 2
+		},
+		"modest": {
+			"maxValue": 80,
+			"raidIntervalSeconds": 420,
+			"maxRaiders": 4
+		},
+		"wealthy": {
+			"maxValue": 200,
+			"raidIntervalSeconds": 300,
+			"maxRaiders": 5
+		},
+		"rich": {
+			"maxValue": 500,
+			"raidIntervalSeconds": 180,
+			"maxRaiders": 9
+		},
+		"opulent": {
+			"maxValue": null,
+			"raidIntervalSeconds": 120,
+			"maxRaiders": 13
+		}
+	},
+	"raidPointFormula": {
+		"cubeValueWeight": 0.5,
+		"buildingWeight": 2.0,
+		"techLevelWeight": 10.0,
+		"raiderDivisor": 15,
+		"maxRaiders": 15,
+		"minIntervalSeconds": 120,
+		"baseIntervalSeconds": 600,
+		"intervalReductionPerPoint": 2
+	},
+	"aiDifficulty": {
+		"peaceful": {
+			"harvestRateMod": 0.5,
+			"buildSpeedMod": 0.5,
+			"startingCubes": 10,
+			"peacePeriodSeconds": null,
+			"aggression": "never",
+			"shipEfficiency": 0.1,
+			"patronDemandDiscount": 0.5
+		},
+		"easy": {
+			"harvestRateMod": 0.7,
+			"buildSpeedMod": 0.7,
+			"startingCubes": 15,
+			"peacePeriodSeconds": 600,
+			"aggression": "low",
+			"shipEfficiency": 0.2,
+			"patronDemandDiscount": 0.3
+		},
+		"normal": {
+			"harvestRateMod": 1.0,
+			"buildSpeedMod": 1.0,
+			"startingCubes": 20,
+			"peacePeriodSeconds": 300,
+			"aggression": "medium",
+			"shipEfficiency": 0.3,
+			"patronDemandDiscount": 0
+		},
+		"hard": {
+			"harvestRateMod": 1.3,
+			"buildSpeedMod": 1.2,
+			"startingCubes": 30,
+			"peacePeriodSeconds": 180,
+			"aggression": "high",
+			"shipEfficiency": 0.4,
+			"patronDemandDiscount": -0.2
+		},
+		"brutal": {
+			"harvestRateMod": 1.6,
+			"buildSpeedMod": 1.5,
+			"startingCubes": 50,
+			"peacePeriodSeconds": 60,
+			"aggression": "very_high",
+			"shipEfficiency": 0.5,
+			"patronDemandDiscount": -0.4
+		}
+	},
+	"aiEconomy": {
+		"baseCubeRate": 2.0,
+		"materialDistribution": {
+			"reclaimers": {
+				"scrap_iron": 0.4,
+				"copper": 0.2,
+				"silicon": 0.1,
+				"titanium": 0.05,
+				"rock": 0.25
+			},
+			"volt_collective": {
+				"scrap_iron": 0.25,
+				"copper": 0.35,
+				"silicon": 0.15,
+				"titanium": 0.1,
+				"carbon": 0.15
+			},
+			"signal_choir": {
+				"scrap_iron": 0.15,
+				"copper": 0.3,
+				"silicon": 0.35,
+				"titanium": 0.05,
+				"rare_earth": 0.15
+			},
+			"iron_creed": {
+				"scrap_iron": 0.35,
+				"copper": 0.15,
+				"silicon": 0.1,
+				"titanium": 0.25,
+				"rock": 0.15
+			}
+		}
+	},
+	"trade": {
+		"fairRatioMin": 0.8,
+		"fairRatioMax": 1.2,
+		"generousThreshold": 0.8,
+		"exploitativeThreshold": 1.5,
+		"opinionOnCompleteTrade": 10,
+		"opinionOnRejectTrade": -5,
+		"opinionOnAmbushConvoy": -50,
+		"opinionOnBreakAgreement": -30,
+		"tradeEmbargoSeconds": 600
+	},
+	"patronShipments": {
+		"demandCycleSeconds": 300,
+		"demandTiers": {
+			"minor": {
+				"minValue": 5,
+				"maxValue": 15,
+				"deadlineSeconds": 300,
+				"favorGain": 5
+			},
+			"standard": {
+				"minValue": 20,
+				"maxValue": 50,
+				"deadlineSeconds": 480,
+				"favorGain": 10
+			},
+			"major": {
+				"minValue": 60,
+				"maxValue": 150,
+				"deadlineSeconds": 720,
+				"favorGain": 20
+			},
+			"critical": {
+				"minValue": 200,
+				"maxValue": null,
+				"deadlineSeconds": 900,
+				"favorGain": 35
+			}
+		},
+		"favor": {
+			"startingFavor": 15,
+			"minFavor": -50,
+			"maxFavor": 100,
+			"partialFulfillmentThreshold": 0.5,
+			"failPenalty": -10,
+			"ignorePenalty": -15,
+			"independenceFavorCost": -100,
+			"levels": {
+				"disfavored": {
+					"min": -50,
+					"max": -1
+				},
+				"neutral": {
+					"min": 0,
+					"max": 24
+				},
+				"trusted": {
+					"min": 25,
+					"max": 49
+				},
+				"favored": {
+					"min": 50,
+					"max": 79
+				},
+				"essential": {
+					"min": 80,
+					"max": 100
+				}
+			}
+		},
+		"patronPriorities": {
+			"reclaimers": [
+				"scrap_iron",
+				"carbon",
+				"rock"
+			],
+			"volt_collective": [
+				"copper",
+				"rare_earth",
+				"gold"
+			],
+			"signal_choir": [
+				"silicon",
+				"rare_earth",
+				"quantum_crystal"
+			],
+			"iron_creed": [
+				"titanium",
+				"iron",
+				"steel"
+			]
+		},
+		"independence": {
+			"requiredFavor": 80,
+			"requiredStockpileValue": 200,
+			"requiredBases": 3,
+			"punitiveWaves": 3,
+			"punitiveBotsPerWave": 5,
+			"punitiveWaveIntervalSeconds": 300
+		}
+	},
+	"drillTiers": {
+		"1": {
+			"name": "Salvage Grinder",
+			"baseRate": 0.1,
+			"rateMultiplier": 1.0,
+			"capacity": 60,
+			"mineableTypes": [
+				"rock",
+				"scrap_iron"
+			],
+			"soundLevel": "low",
+			"aggroRadius": 8,
+			"cost": null
+		},
+		"2": {
+			"name": "Diamond Drill",
+			"baseRate": 0.1,
+			"rateMultiplier": 2.0,
+			"capacity": 100,
+			"mineableTypes": [
+				"rock",
+				"scrap_iron",
+				"copper",
+				"carbon"
+			],
+			"soundLevel": "medium",
+			"aggroRadius": 15,
+			"cost": {
+				"scrap_iron": 4
+			}
+		},
+		"3": {
+			"name": "Plasma Cutter",
+			"baseRate": 0.1,
+			"rateMultiplier": 3.6,
+			"capacity": 150,
+			"mineableTypes": [
+				"rock",
+				"scrap_iron",
+				"copper",
+				"carbon",
+				"silicon",
+				"titanium"
+			],
+			"soundLevel": "high",
+			"aggroRadius": 25,
+			"cost": {
+				"copper": 2,
+				"silicon": 1
+			}
+		},
+		"4": {
+			"name": "Quantum Extractor",
+			"baseRate": 0.1,
+			"rateMultiplier": 6.0,
+			"capacity": 250,
+			"mineableTypes": [
+				"rock",
+				"scrap_iron",
+				"copper",
+				"carbon",
+				"silicon",
+				"titanium",
+				"rare_earth",
+				"gold",
+				"quantum_crystal"
+			],
+			"soundLevel": "very_high",
+			"aggroRadius": 40,
+			"cost": {
+				"titanium": 1,
+				"rare_earth": 1
+			}
+		}
+	},
+	"furnaceThroughput": {
+		"hopperCapacity": [
+			3,
+			5,
+			8
+		],
+		"processSpeedBase": 1.0,
+		"poweredSpeedBonus": 1.5,
+		"multiFurnaceEfficiency": {
+			"1": 1.0,
+			"2": 1.8,
+			"3": 2.4,
+			"4": 2.8
+		}
+	},
+	"interBaseTransport": {
+		"manual_carry": {
+			"speed": 5,
+			"capacity": "1-8_by_grabber_tier"
+		},
+		"worker_convoy": {
+			"speed": 5,
+			"capacityPerWorker": 4
+		},
+		"belt_network": {
+			"speedByTier": {
+				"1": 2,
+				"2": 4,
+				"3": 8
+			}
+		},
+		"teleporter": {
+			"speed": "instant",
+			"cubesPer5Seconds": 1
+		}
+	},
+	"economicVelocity": {
+		"earlyGameValuePerMinute": 3.0,
+		"midGameValuePerMinute": 6.0,
+		"lateGameValuePerMinute": 12.0,
+		"endgameValuePerMinute": 20.0,
+		"automationMultiplierRange": [
+			3,
+			5
+		]
+	},
+	"furnaceRecipes": {
+		"tier1_salvage": [
+			{
+				"id": "tool_grabber_t1",
+				"name": "Grabber Arm",
+				"inputs": {
+					"scrap_iron": 3
+				},
+				"time": 10,
+				"category": "tool"
+			},
+			{
+				"id": "tool_harvester_t2",
+				"name": "Diamond Drill Bit",
+				"inputs": {
+					"scrap_iron": 4
+				},
+				"time": 15,
+				"category": "tool"
+			},
+			{
+				"id": "tool_scanner_t1",
+				"name": "Scanner Lens",
+				"inputs": {
+					"scrap_iron": 2
+				},
+				"time": 8,
+				"category": "tool"
+			},
+			{
+				"id": "component_power_cell",
+				"name": "Basic Power Cell",
+				"inputs": {
+					"scrap_iron": 5
+				},
+				"time": 20,
+				"category": "component"
+			},
+			{
+				"id": "consumable_repair",
+				"name": "Repair Patch",
+				"inputs": {
+					"scrap_iron": 2
+				},
+				"time": 5,
+				"category": "consumable"
+			},
+			{
+				"id": "building_foundation",
+				"name": "Rock Foundation",
+				"inputs": {
+					"rock": 4
+				},
+				"time": 8,
+				"category": "building"
+			},
+			{
+				"id": "building_wall_scrap",
+				"name": "Scrap Wall Panel",
+				"inputs": {
+					"scrap_iron": 3,
+					"rock": 2
+				},
+				"time": 12,
+				"category": "building"
+			},
+			{
+				"id": "building_miner_t1",
+				"name": "Basic Miner Frame",
+				"inputs": {
+					"scrap_iron": 6
+				},
+				"time": 25,
+				"category": "building"
+			}
+		],
+		"tier2_copper": [
+			{
+				"id": "component_wire_bundle",
+				"name": "Wire Bundle",
+				"inputs": {
+					"copper": 2
+				},
+				"time": 12,
+				"category": "component"
+			},
+			{
+				"id": "building_belt_segment",
+				"name": "Belt Segment",
+				"inputs": {
+					"scrap_iron": 3,
+					"copper": 1
+				},
+				"time": 15,
+				"category": "building"
+			},
+			{
+				"id": "building_auto_hopper",
+				"name": "Auto-Hopper",
+				"inputs": {
+					"scrap_iron": 4,
+					"copper": 2
+				},
+				"time": 20,
+				"category": "building"
+			},
+			{
+				"id": "tool_grabber_t2",
+				"name": "Grabber Mk2",
+				"inputs": {
+					"copper": 3,
+					"scrap_iron": 2
+				},
+				"time": 15,
+				"category": "tool"
+			},
+			{
+				"id": "building_lightning_rod",
+				"name": "Lightning Rod",
+				"inputs": {
+					"copper": 3,
+					"scrap_iron": 2
+				},
+				"time": 18,
+				"category": "building"
+			},
+			{
+				"id": "building_power_wire_x5",
+				"name": "Power Wire",
+				"inputs": {
+					"copper": 1
+				},
+				"time": 8,
+				"category": "building"
+			},
+			{
+				"id": "building_signal_relay",
+				"name": "Signal Relay",
+				"inputs": {
+					"copper": 2,
+					"scrap_iron": 1
+				},
+				"time": 14,
+				"category": "building"
+			},
+			{
+				"id": "building_wall_copper",
+				"name": "Copper Wall Panel",
+				"inputs": {
+					"copper": 4,
+					"rock": 2
+				},
+				"time": 16,
+				"category": "building"
+			}
+		],
+		"tier3_silicon_carbon": [
+			{
+				"id": "component_circuit_board",
+				"name": "Circuit Board",
+				"inputs": {
+					"silicon": 2,
+					"copper": 1
+				},
+				"time": 25,
+				"category": "component"
+			},
+			{
+				"id": "unit_battle_bot",
+				"name": "Battle Bot Chassis",
+				"inputs": {
+					"scrap_iron": 6,
+					"copper": 2,
+					"silicon": 1
+				},
+				"time": 30,
+				"category": "unit"
+			},
+			{
+				"id": "unit_scout_bot",
+				"name": "Scout Bot Chassis",
+				"inputs": {
+					"scrap_iron": 3,
+					"copper": 1,
+					"silicon": 1
+				},
+				"time": 20,
+				"category": "unit"
+			},
+			{
+				"id": "unit_worker_bot",
+				"name": "Worker Bot Chassis",
+				"inputs": {
+					"scrap_iron": 4,
+					"copper": 2
+				},
+				"time": 22,
+				"category": "unit"
+			},
+			{
+				"id": "component_hacking_module",
+				"name": "Hacking Module",
+				"inputs": {
+					"silicon": 3,
+					"copper": 2
+				},
+				"time": 30,
+				"category": "component"
+			},
+			{
+				"id": "component_compute_core",
+				"name": "Compute Core",
+				"inputs": {
+					"silicon": 2,
+					"carbon": 1
+				},
+				"time": 28,
+				"category": "component"
+			},
+			{
+				"id": "building_wall_carbon",
+				"name": "Carbon Fiber Panel",
+				"inputs": {
+					"carbon": 3,
+					"scrap_iron": 1
+				},
+				"time": 20,
+				"category": "building"
+			},
+			{
+				"id": "building_smelter",
+				"name": "Smelter",
+				"inputs": {
+					"scrap_iron": 4,
+					"carbon": 2,
+					"copper": 1
+				},
+				"time": 35,
+				"category": "building"
+			},
+			{
+				"id": "building_refiner",
+				"name": "Refiner",
+				"inputs": {
+					"silicon": 3,
+					"copper": 2,
+					"scrap_iron": 2
+				},
+				"time": 35,
+				"category": "building"
+			}
+		],
+		"smelter_recipes": [
+			{
+				"id": "iron_cube",
+				"name": "Iron Cube",
+				"inputs": {
+					"scrap_iron": 2
+				},
+				"time": 15,
+				"category": "material",
+				"requiresBuilding": "smelter"
+			},
+			{
+				"id": "steel_cube",
+				"name": "Steel Cube",
+				"inputs": {
+					"iron": 2,
+					"carbon": 1
+				},
+				"time": 25,
+				"category": "material",
+				"requiresBuilding": "smelter"
+			}
+		],
+		"tier4_titanium": [
+			{
+				"id": "tool_harvester_t3",
+				"name": "Plasma Cutter",
+				"inputs": {
+					"titanium": 2,
+					"silicon": 1,
+					"copper": 2
+				},
+				"time": 30,
+				"category": "tool"
+			},
+			{
+				"id": "building_turret",
+				"name": "Defense Turret",
+				"inputs": {
+					"titanium": 3,
+					"silicon": 2,
+					"copper": 3
+				},
+				"time": 40,
+				"category": "building"
+			},
+			{
+				"id": "building_wall_titanium",
+				"name": "Fortified Wall",
+				"inputs": {
+					"titanium": 4,
+					"scrap_iron": 4
+				},
+				"time": 25,
+				"category": "building"
+			},
+			{
+				"id": "building_outpost",
+				"name": "Outpost Core",
+				"inputs": {
+					"titanium": 2,
+					"silicon": 2,
+					"copper": 4,
+					"scrap_iron": 4
+				},
+				"time": 60,
+				"category": "building"
+			},
+			{
+				"id": "unit_heavy_bot",
+				"name": "Heavy Bot Chassis",
+				"inputs": {
+					"titanium": 5,
+					"iron": 3,
+					"silicon": 2
+				},
+				"time": 45,
+				"category": "unit"
+			},
+			{
+				"id": "unit_hacker_bot",
+				"name": "Hacker Bot Chassis",
+				"inputs": {
+					"silicon": 3,
+					"copper": 2,
+					"titanium": 1
+				},
+				"time": 35,
+				"category": "unit"
+			},
+			{
+				"id": "component_formation_ctrl",
+				"name": "Formation Controller",
+				"inputs": {
+					"silicon": 2,
+					"titanium": 1,
+					"copper": 1
+				},
+				"time": 25,
+				"category": "component"
+			},
+			{
+				"id": "component_titan_armor",
+				"name": "Titan Armor Plate",
+				"inputs": {
+					"titanium": 3,
+					"carbon": 1
+				},
+				"time": 20,
+				"category": "component"
+			}
+		],
+		"tier5_endgame": [
+			{
+				"id": "tool_harvester_t4",
+				"name": "Quantum Extractor",
+				"inputs": {
+					"rare_earth": 2,
+					"gold": 1,
+					"titanium": 2
+				},
+				"time": 50,
+				"category": "tool"
+			},
+			{
+				"id": "advanced_alloy_cube",
+				"name": "Advanced Alloy Cube",
+				"inputs": {
+					"titanium": 1,
+					"rare_earth": 1
+				},
+				"time": 30,
+				"category": "material"
+			},
+			{
+				"id": "tool_grabber_t4",
+				"name": "Gravity Grabber",
+				"inputs": {
+					"rare_earth": 2,
+					"gold": 1,
+					"silicon": 1
+				},
+				"time": 40,
+				"category": "tool"
+			},
+			{
+				"id": "building_signal_jammer",
+				"name": "Signal Jammer",
+				"inputs": {
+					"silicon": 3,
+					"rare_earth": 2,
+					"gold": 1
+				},
+				"time": 45,
+				"category": "building"
+			},
+			{
+				"id": "component_fusion_core",
+				"name": "Fusion Core",
+				"inputs": {
+					"quantum_crystal": 1,
+					"rare_earth": 2,
+					"gold": 1
+				},
+				"time": 90,
+				"category": "component"
+			},
+			{
+				"id": "unit_titan_bot",
+				"name": "Titan-Class Bot",
+				"inputs": {
+					"titanium": 8,
+					"silicon": 4,
+					"rare_earth": 2,
+					"gold": 1
+				},
+				"time": 120,
+				"category": "unit"
+			},
+			{
+				"id": "building_teleporter",
+				"name": "Teleporter Pad",
+				"inputs": {
+					"quantum_crystal": 2,
+					"rare_earth": 3,
+					"gold": 2
+				},
+				"time": 180,
+				"category": "building"
+			},
+			{
+				"id": "building_core_tap",
+				"name": "Planet Core Tap",
+				"inputs": {
+					"quantum_crystal": 3,
+					"titanium": 5,
+					"rare_earth": 3
+				},
+				"time": 300,
+				"category": "building"
+			}
+		]
+	},
+	"buildingCosts": {
+		"production": {
+			"furnace": {
+				"cost": null,
+				"power": 0,
+				"buildTime": 0,
+				"techTier": 1,
+				"notes": "Provided at game start"
+			},
+			"basic_miner": {
+				"cost": {
+					"scrap_iron": 6
+				},
+				"power": 2,
+				"buildTime": 15,
+				"techTier": 1
+			},
+			"smelter": {
+				"cost": {
+					"scrap_iron": 4,
+					"carbon": 2,
+					"copper": 1
+				},
+				"power": 2,
+				"buildTime": 20,
+				"techTier": 3
+			},
+			"refiner": {
+				"cost": {
+					"silicon": 3,
+					"copper": 2,
+					"scrap_iron": 2
+				},
+				"power": 2,
+				"buildTime": 20,
+				"techTier": 3
+			},
+			"fabrication_unit": {
+				"cost": {
+					"iron": 4,
+					"silicon": 2,
+					"copper": 2
+				},
+				"power": 3,
+				"buildTime": 25,
+				"techTier": 3
+			}
+		},
+		"infrastructure": {
+			"belt_segment": {
+				"cost": {
+					"scrap_iron": 3,
+					"copper": 1
+				},
+				"power": 0,
+				"buildTime": 5,
+				"techTier": 2,
+				"speed": 2
+			},
+			"fast_belt": {
+				"cost": {
+					"iron": 4,
+					"copper": 2
+				},
+				"power": 1,
+				"buildTime": 8,
+				"techTier": 4,
+				"speed": 4
+			},
+			"express_belt": {
+				"cost": {
+					"titanium": 4,
+					"copper": 3
+				},
+				"power": 2,
+				"buildTime": 12,
+				"techTier": 5,
+				"speed": 8
+			},
+			"auto_hopper": {
+				"cost": {
+					"scrap_iron": 4,
+					"copper": 2
+				},
+				"power": 0,
+				"buildTime": 10,
+				"techTier": 2
+			},
+			"lightning_rod": {
+				"cost": {
+					"copper": 3,
+					"scrap_iron": 2
+				},
+				"power": 0,
+				"buildTime": 12,
+				"techTier": 2,
+				"notes": "Generates power"
+			},
+			"power_wire_x5": {
+				"cost": {
+					"copper": 1
+				},
+				"power": 0,
+				"buildTime": 3,
+				"techTier": 2
+			},
+			"signal_relay": {
+				"cost": {
+					"copper": 2,
+					"scrap_iron": 1
+				},
+				"power": 1,
+				"buildTime": 10,
+				"techTier": 2
+			},
+			"signal_amplifier": {
+				"cost": {
+					"silicon": 3,
+					"copper": 2
+				},
+				"power": 3,
+				"buildTime": 18,
+				"techTier": 3
+			}
+		},
+		"defense": {
+			"scrap_wall_panel": {
+				"cost": {
+					"scrap_iron": 3,
+					"rock": 2
+				},
+				"power": 0,
+				"buildTime": 8,
+				"techTier": 1,
+				"wallHp": 150
+			},
+			"copper_wall_panel": {
+				"cost": {
+					"copper": 4,
+					"rock": 2
+				},
+				"power": 0,
+				"buildTime": 10,
+				"techTier": 2,
+				"wallHp": 240
+			},
+			"carbon_wall_panel": {
+				"cost": {
+					"carbon": 3,
+					"scrap_iron": 1
+				},
+				"power": 0,
+				"buildTime": 10,
+				"techTier": 3,
+				"wallHp": 360
+			},
+			"titanium_wall_panel": {
+				"cost": {
+					"titanium": 4,
+					"scrap_iron": 4
+				},
+				"power": 0,
+				"buildTime": 15,
+				"techTier": 4,
+				"wallHp": 900
+			},
+			"turret": {
+				"cost": {
+					"titanium": 3,
+					"silicon": 2,
+					"copper": 3
+				},
+				"power": 2,
+				"buildTime": 20,
+				"techTier": 4,
+				"wallHp": 400
+			},
+			"bunker": {
+				"cost": {
+					"titanium": 4,
+					"iron": 3,
+					"silicon": 2
+				},
+				"power": 2,
+				"buildTime": 25,
+				"techTier": 4,
+				"wallHp": 800,
+				"garrisonSlots": 3
+			},
+			"gate": {
+				"cost": {
+					"iron": 2,
+					"copper": 1
+				},
+				"power": 1,
+				"buildTime": 10,
+				"techTier": 2,
+				"wallHp": 200
+			}
+		},
+		"territory": {
+			"outpost_core": {
+				"cost": {
+					"titanium": 2,
+					"silicon": 2,
+					"copper": 4,
+					"scrap_iron": 4
+				},
+				"power": 1,
+				"buildTime": 30,
+				"techTier": 4,
+				"claimRadius": 15
+			},
+			"outpost_upgrade": {
+				"cost": {
+					"titanium": 3,
+					"silicon": 2
+				},
+				"power": 2,
+				"buildTime": 20,
+				"techTier": 5,
+				"claimRadius": 25
+			},
+			"underground_storage": {
+				"cost": {
+					"rock": 6,
+					"scrap_iron": 4
+				},
+				"power": 0,
+				"buildTime": 20,
+				"techTier": 2,
+				"cubeCapacity": 20
+			},
+			"decoy_pile": {
+				"cost": {
+					"rock": 3
+				},
+				"power": 0,
+				"buildTime": 8,
+				"techTier": 1
+			}
+		}
+	},
+	"tradeMultipliers": {
+		"rock": {
+			"tradeValueMod": 0.3,
+			"demandLevel": "low",
+			"notes": "Bulk filler material, always available"
+		},
+		"scrap_iron": {
+			"tradeValueMod": 0.8,
+			"demandLevel": "medium",
+			"notes": "Universal starter material, moderate demand"
+		},
+		"copper": {
+			"tradeValueMod": 1.2,
+			"demandLevel": "high",
+			"notes": "Critical for wiring and electronics"
+		},
+		"silicon": {
+			"tradeValueMod": 1.5,
+			"demandLevel": "high",
+			"notes": "Required for compute and hacking"
+		},
+		"carbon": {
+			"tradeValueMod": 1.3,
+			"demandLevel": "medium",
+			"notes": "Alloy ingredient, structural material"
+		},
+		"titanium": {
+			"tradeValueMod": 1.8,
+			"demandLevel": "high",
+			"notes": "Premium structural and military material"
+		},
+		"rare_earth": {
+			"tradeValueMod": 2.5,
+			"demandLevel": "very_high",
+			"notes": "Endgame tech component, always in demand"
+		},
+		"gold": {
+			"tradeValueMod": 3.0,
+			"demandLevel": "very_high",
+			"notes": "Currency-grade material, universal acceptance"
+		},
+		"quantum_crystal": {
+			"tradeValueMod": 5.0,
+			"demandLevel": "extreme",
+			"notes": "Non-renewable, ultimate trade currency"
+		},
+		"iron": {
+			"tradeValueMod": 1.0,
+			"demandLevel": "medium",
+			"notes": "Processed alloy, baseline trade value"
+		},
+		"steel": {
+			"tradeValueMod": 2.0,
+			"demandLevel": "high",
+			"notes": "Premium alloy for military and structures"
+		},
+		"advanced_alloy": {
+			"tradeValueMod": 4.0,
+			"demandLevel": "very_high",
+			"notes": "Endgame alloy, extremely desirable"
+		}
+	},
+	"cubeValueScaling": {
+		"raw": {
+			"multiplier": 1.0,
+			"description": "Unprocessed cubes compressed from raw powder"
+		},
+		"smelted": {
+			"multiplier": 2.5,
+			"description": "Cubes produced by smelter (iron, steel)"
+		},
+		"refined": {
+			"multiplier": 3.0,
+			"description": "Cubes produced by refiner (purified materials)"
+		},
+		"crafted_component": {
+			"multiplier": 4.0,
+			"description": "Finished components (circuit boards, power cells)"
+		},
+		"crafted_tool": {
+			"multiplier": 5.0,
+			"description": "Tools and equipment (grabbers, drills, scanners)"
+		},
+		"crafted_unit": {
+			"multiplier": 8.0,
+			"description": "Bot chassis — highest value manufactured goods"
+		}
+	},
+	"factionTradeMatrix": {
+		"reclaimers": {
+			"reclaimers": 1.0,
+			"volt_collective": 0.9,
+			"signal_choir": 0.7,
+			"iron_creed": 1.1,
+			"preferredExports": ["scrap_iron", "carbon", "rock"],
+			"preferredImports": ["silicon", "copper", "rare_earth"]
+		},
+		"volt_collective": {
+			"reclaimers": 0.9,
+			"volt_collective": 1.0,
+			"signal_choir": 1.1,
+			"iron_creed": 0.8,
+			"preferredExports": ["copper", "carbon"],
+			"preferredImports": ["titanium", "rare_earth", "gold"]
+		},
+		"signal_choir": {
+			"reclaimers": 0.7,
+			"volt_collective": 1.1,
+			"signal_choir": 1.0,
+			"iron_creed": 0.6,
+			"preferredExports": ["silicon", "rare_earth"],
+			"preferredImports": ["scrap_iron", "titanium", "carbon"]
+		},
+		"iron_creed": {
+			"reclaimers": 1.1,
+			"volt_collective": 0.8,
+			"signal_choir": 0.6,
+			"iron_creed": 1.0,
+			"preferredExports": ["titanium", "iron", "steel"],
+			"preferredImports": ["copper", "silicon", "rare_earth"]
+		}
+	},
+	"supplyDemandCurves": {
+		"priceFloor": 0.25,
+		"priceCeiling": 4.0,
+		"baselineStockpile": 20,
+		"elasticity": {
+			"rock": {
+				"surplusDecayRate": 0.05,
+				"deficitGrowthRate": 0.03,
+				"notes": "Very inelastic — always cheap, never expensive"
+			},
+			"scrap_iron": {
+				"surplusDecayRate": 0.08,
+				"deficitGrowthRate": 0.06,
+				"notes": "Moderate elasticity"
+			},
+			"copper": {
+				"surplusDecayRate": 0.10,
+				"deficitGrowthRate": 0.10,
+				"notes": "High elasticity — price swings significantly"
+			},
+			"silicon": {
+				"surplusDecayRate": 0.10,
+				"deficitGrowthRate": 0.12,
+				"notes": "High elasticity, deficit spikes fast"
+			},
+			"carbon": {
+				"surplusDecayRate": 0.07,
+				"deficitGrowthRate": 0.08,
+				"notes": "Moderate elasticity"
+			},
+			"titanium": {
+				"surplusDecayRate": 0.12,
+				"deficitGrowthRate": 0.15,
+				"notes": "Very elastic — rare material swings hard"
+			},
+			"rare_earth": {
+				"surplusDecayRate": 0.15,
+				"deficitGrowthRate": 0.20,
+				"notes": "Extremely elastic — endgame scarcity"
+			},
+			"gold": {
+				"surplusDecayRate": 0.12,
+				"deficitGrowthRate": 0.18,
+				"notes": "Very elastic — universal currency premium"
+			},
+			"quantum_crystal": {
+				"surplusDecayRate": 0.20,
+				"deficitGrowthRate": 0.25,
+				"notes": "Most elastic — non-renewable drives panic buying"
+			}
+		},
+		"surplusThreshold": 1.5,
+		"deficitThreshold": 0.5,
+		"priceUpdateIntervalSeconds": 60
+	},
+	"stockpileDepreciation": {
+		"enabled": true,
+		"tickIntervalSeconds": 120,
+		"exposedMultiplier": 1.0,
+		"sheltered_multiplier": 0.3,
+		"underground_multiplier": 0.0,
+		"materialRates": {
+			"rock": {
+				"decayPerTick": 0.0,
+				"notes": "Inert — does not decay"
+			},
+			"scrap_iron": {
+				"decayPerTick": 0.002,
+				"notes": "Rusts slowly when exposed"
+			},
+			"copper": {
+				"decayPerTick": 0.001,
+				"notes": "Patina forms but minimal structural loss"
+			},
+			"silicon": {
+				"decayPerTick": 0.0,
+				"notes": "Chemically stable"
+			},
+			"carbon": {
+				"decayPerTick": 0.0,
+				"notes": "Chemically stable"
+			},
+			"titanium": {
+				"decayPerTick": 0.0,
+				"notes": "Corrosion resistant"
+			},
+			"rare_earth": {
+				"decayPerTick": 0.003,
+				"notes": "Reactive elements degrade without containment"
+			},
+			"gold": {
+				"decayPerTick": 0.0,
+				"notes": "Noble metal — no decay"
+			},
+			"quantum_crystal": {
+				"decayPerTick": 0.005,
+				"notes": "Quantum decoherence — most fragile material"
+			},
+			"iron": {
+				"decayPerTick": 0.001,
+				"notes": "Smelted iron is more stable than raw scrap"
+			},
+			"steel": {
+				"decayPerTick": 0.0005,
+				"notes": "Alloy resists corrosion well"
+			},
+			"advanced_alloy": {
+				"decayPerTick": 0.0,
+				"notes": "Engineered for zero degradation"
+			}
+		},
+		"acidRainMultiplier": 3.0,
+		"stormMultiplier": 1.5
+	},
+	"biomeYieldModifiers": {
+		"rust_plains": {
+			"rock": 1.5,
+			"scrap_iron": 1.3,
+			"copper": 1.0,
+			"silicon": 0.8,
+			"carbon": 0.9,
+			"titanium": 0.5,
+			"rare_earth": 0.3,
+			"gold": 2.0,
+			"quantum_crystal": 0.1
+		},
+		"scrap_hills": {
+			"rock": 1.2,
+			"scrap_iron": 1.0,
+			"copper": 0.8,
+			"silicon": 0.7,
+			"carbon": 1.3,
+			"titanium": 1.5,
+			"rare_earth": 0.5,
+			"gold": 0.3,
+			"quantum_crystal": 0.2
+		},
+		"chrome_ridge": {
+			"rock": 0.8,
+			"scrap_iron": 0.7,
+			"copper": 0.9,
+			"silicon": 1.5,
+			"carbon": 1.2,
+			"titanium": 2.0,
+			"rare_earth": 0.8,
+			"gold": 0.5,
+			"quantum_crystal": 0.5
+		},
+		"signal_plateau": {
+			"rock": 0.5,
+			"scrap_iron": 0.6,
+			"copper": 1.3,
+			"silicon": 1.5,
+			"carbon": 0.8,
+			"titanium": 0.7,
+			"rare_earth": 2.0,
+			"gold": 1.0,
+			"quantum_crystal": 2.0
+		},
+		"cable_forest": {
+			"rock": 0.7,
+			"scrap_iron": 1.2,
+			"copper": 2.0,
+			"silicon": 0.9,
+			"carbon": 1.5,
+			"titanium": 0.4,
+			"rare_earth": 0.6,
+			"gold": 0.4,
+			"quantum_crystal": 1.5
+		}
+	},
+	"furnaceStats": {
+		"hopperCapacity": 3,
+		"hopperUpgrades": [
+			5,
+			8
+		],
+		"baseProcessingSpeed": 1.0,
+		"poweredSpeedBonus": 1.5,
+		"powerRequired": 2,
+		"maxQueueDepth": 1
+	}
+}

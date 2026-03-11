@@ -66,6 +66,9 @@ function PowerBar() {
 
 	return (
 		<div
+			role="status"
+			aria-live="polite"
+			aria-label={`Power grid: ${statusText}. Generation ${generation.toFixed(1)}, demand ${demand.toFixed(1)}`}
 			style={{
 				display: "flex",
 				flexDirection: "column",
@@ -222,6 +225,9 @@ function PowerWarnings() {
 
 	return (
 		<div
+			role="alert"
+			aria-live="assertive"
+			aria-label="Power grid warnings"
 			style={{
 				display: "flex",
 				flexDirection: "column",

@@ -12,6 +12,14 @@
  * - getProcessorInput helper
  */
 
+// Compat layer: defer world access until iteration time to avoid circular init issues
+jest.mock("../../ecs/koota/compat", () => ({
+	get processors() {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		return require("../../ecs/world").processors;
+	},
+}));
+
 import type { Entity } from "../../ecs/types";
 import { world } from "../../ecs/world";
 import {

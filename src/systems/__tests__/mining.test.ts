@@ -23,6 +23,11 @@ jest.mock("../../ecs/world", () => ({
 	world: mockWorldEntities,
 }));
 
+// Also mock the Koota compat layer (mining.ts now imports from here)
+jest.mock("../../ecs/koota/compat", () => ({
+	miners: mockMiners,
+}));
+
 import { getMinerBuffer, miningSystem } from "../mining";
 
 // ---------------------------------------------------------------------------

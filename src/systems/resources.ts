@@ -13,7 +13,7 @@ import { config } from "../../config";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { worldPRNG } from "../ecs/seed";
 import { hasArms } from "../ecs/types";
-import { units } from "../ecs/world";
+import { units } from "../ecs/koota/compat";
 
 const scavCfg = config.mining.scavenging;
 
@@ -23,15 +23,15 @@ export interface ResourcePool {
 	intactComponents: number;
 }
 
-// Global resource pool
-const resources: ResourcePool = {
+// Global resource pool — supports both legacy named keys and raw material names.
+const resources: Record<string, number> = {
 	scrapMetal: 0,
 	eWaste: 0,
 	intactComponents: 0,
 };
 
 // --- Resource gain subscribers ---
-type ResourceGainCallback = (type: keyof ResourcePool, amount: number) => void;
+type ResourceGainCallback = (type: string, amount: number) => void;
 const resourceGainListeners = new Set<ResourceGainCallback>();
 
 export function onResourceGain(
@@ -43,35 +43,35 @@ export function onResourceGain(
 	};
 }
 
-function notifyResourceGain(type: keyof ResourcePool, amount: number) {
+function notifyResourceGain(type: string, amount: number) {
 	for (const cb of resourceGainListeners) {
 		cb(type, amount);
 	}
 }
 
-export function getResources(): ResourcePool {
-	return { ...resources };
+export function getResources(): ResourcePool & Record<string, number> {
+	return { scrapMetal: 0, eWaste: 0, intactComponents: 0, ...resources };
 }
 
-export function addResource(type: keyof ResourcePool, amount: number) {
-	resources[type] += amount;
+export function addResource(type: string, amount: number) {
+	resources[type] = (resources[type] ?? 0) + amount;
 	notifyResourceGain(type, amount);
 }
 
 export function spendResource(
-	type: keyof ResourcePool,
+	type: string,
 	amount: number,
 ): boolean {
-	if (resources[type] < amount) return false;
-	resources[type] -= amount;
+	if ((resources[type] ?? 0) < amount) return false;
+	resources[type] = (resources[type] ?? 0) - amount;
 	return true;
 }
 
 /** Reset the resource pool to zero — for testing and save/load. */
 export function resetResourcePool(): void {
-	resources.scrapMetal = 0;
-	resources.eWaste = 0;
-	resources.intactComponents = 0;
+	for (const key of Object.keys(resources)) {
+		resources[key] = 0;
+	}
 }
 
 // --- Scavenge Points ---

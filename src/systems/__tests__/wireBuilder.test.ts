@@ -10,6 +10,14 @@
  * - Edge cases: self-connect, duplicate wires, missing entities, max length
  */
 
+// Compat layer: defer world access until iteration time to avoid circular init issues
+jest.mock("../../ecs/koota/compat", () => ({
+	get wires() {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		return require("../../ecs/world").wires;
+	},
+}));
+
 import type { Entity } from "../../ecs/types";
 import { world } from "../../ecs/world";
 

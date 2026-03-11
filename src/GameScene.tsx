@@ -45,6 +45,7 @@ import { BeltRenderer } from "./rendering/BeltRenderer";
 import { CameraEffects } from "./rendering/CameraEffects";
 import { CityRenderer } from "./rendering/CityRenderer";
 import { EnvironmentSetup } from "./rendering/EnvironmentSetup";
+import { PostProcessing } from "./rendering/PostProcessing";
 import { FactoryRenderer } from "./rendering/FactoryRenderer";
 import { Flashlight } from "./rendering/Flashlight";
 import { FogOfWarRenderer } from "./rendering/FogOfWarRenderer";
@@ -412,6 +413,7 @@ export default function GameScene({ seed }: GameSceneProps) {
 				<PBRPreloader />
 				<EnvironmentSetup />
 				<StormSky />
+				<PostProcessing />
 				<ambientLight intensity={0.15} />
 				<directionalLight
 					position={[10, 20, 10]}

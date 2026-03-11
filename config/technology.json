@@ -3,22 +3,49 @@
     {
       "name": "Scrap",
       "cost": 0,
-      "unlocks": ["basic_belt", "basic_furnace", "lightning_rod"]
+      "unlocks": [
+        "basic_belt",
+        "basic_furnace",
+        "lightning_rod"
+      ]
     },
     {
       "name": "Refined",
       "cost": 50,
-      "unlocks": ["fast_belt", "smelter", "walls", "outpost"]
+      "unlocks": [
+        "fast_belt",
+        "smelter",
+        "walls",
+        "outpost"
+      ]
     },
     {
       "name": "Precision",
       "cost": 150,
-      "unlocks": ["express_belt", "refiner", "separator", "turret"]
+      "unlocks": [
+        "express_belt",
+        "refiner",
+        "separator",
+        "turret"
+      ]
     },
     {
       "name": "Advanced",
       "cost": 400,
-      "unlocks": ["signal_relay", "hacking_module", "formation_controller"]
+      "unlocks": [
+        "signal_relay",
+        "hacking_module",
+        "formation_controller"
+      ]
+    },
+    {
+      "name": "Quantum",
+      "cost": 800,
+      "unlocks": [
+        "convergence_device",
+        "quantum_relay",
+        "mass_hack"
+      ]
     }
   ],
   "techTree": [
@@ -29,10 +56,15 @@
       "researchCost": 30,
       "prerequisites": [],
       "effects": {
-        "unlocks": ["basic_belt", "basic_furnace"],
+        "unlocks": [
+          "basic_belt",
+          "basic_furnace"
+        ],
         "bonuses": {}
       },
-      "factionBonus": null
+      "race": null,
+      "description": "Fundamental techniques for rendering raw scrap into usable material.",
+      "source": "patron"
     },
     {
       "id": "basic_smelting",
@@ -41,10 +73,16 @@
       "researchCost": 40,
       "prerequisites": [],
       "effects": {
-        "unlocks": ["lightning_rod"],
-        "bonuses": { "harvestSpeed": 0.1 }
+        "unlocks": [
+          "lightning_rod"
+        ],
+        "bonuses": {
+          "harvestSpeed": 0.1
+        }
       },
-      "factionBonus": null
+      "race": null,
+      "description": "Heat treatment separates impurities from raw ore, yielding cleaner powder.",
+      "source": "patron"
     },
     {
       "id": "belt_transport",
@@ -53,208 +91,1299 @@
       "researchCost": 35,
       "prerequisites": [],
       "effects": {
-        "unlocks": ["belt_mk1"],
+        "unlocks": [
+          "belt_mk1"
+        ],
         "bonuses": {}
       },
-      "factionBonus": null
+      "race": null,
+      "description": "Conveyor systems move cubes between machines without manual carrying.",
+      "source": "patron"
     },
     {
       "id": "automated_mining",
       "name": "Automated Mining",
       "tier": 2,
       "researchCost": 80,
-      "prerequisites": ["scrap_processing"],
+      "prerequisites": [
+        "scrap_processing"
+      ],
       "effects": {
-        "unlocks": ["auto_miner"],
-        "bonuses": { "miningRate": 0.2 }
+        "unlocks": [
+          "auto_miner"
+        ],
+        "bonuses": {
+          "miningRate": 0.2
+        }
       },
-      "factionBonus": "reclaimers"
+      "race": null,
+      "description": "Self-operating drill rigs extract ore without constant supervision.",
+      "source": "patron"
     },
     {
       "id": "outpost_construction",
       "name": "Outpost Construction",
       "tier": 2,
       "researchCost": 90,
-      "prerequisites": ["scrap_processing"],
+      "prerequisites": [
+        "scrap_processing"
+      ],
       "effects": {
-        "unlocks": ["outpost"],
-        "bonuses": { "claimRadius": 0.15 }
+        "unlocks": [
+          "outpost"
+        ],
+        "bonuses": {
+          "claimRadius": 0.15
+        }
       },
-      "factionBonus": null
+      "race": null,
+      "description": "Prefabricated settlement kits allow claiming new territory.",
+      "source": "patron"
     },
     {
       "id": "signal_relay_network",
       "name": "Signal Relay Network",
       "tier": 2,
       "researchCost": 100,
-      "prerequisites": ["basic_smelting"],
+      "prerequisites": [
+        "basic_smelting"
+      ],
       "effects": {
-        "unlocks": ["signal_relay"],
-        "bonuses": { "signalRange": 0.2 }
+        "unlocks": [
+          "signal_relay"
+        ],
+        "bonuses": {
+          "signalRange": 0.2
+        }
       },
-      "factionBonus": "signal_choir"
+      "race": null,
+      "description": "Networked beacons extend communication range across the terrain.",
+      "source": "patron"
     },
     {
       "id": "copper_refining",
       "name": "Copper Refining",
       "tier": 2,
       "researchCost": 85,
-      "prerequisites": ["basic_smelting"],
+      "prerequisites": [
+        "basic_smelting"
+      ],
       "effects": {
-        "unlocks": ["copper_ingot", "copper_wire"],
+        "unlocks": [
+          "copper_ingot",
+          "copper_wire"
+        ],
         "bonuses": {}
       },
-      "factionBonus": null
+      "race": null,
+      "description": "Electrolytic processes purify copper for wiring and circuitry.",
+      "source": "patron"
     },
     {
       "id": "turret_defense",
       "name": "Turret Defense",
       "tier": 3,
       "researchCost": 180,
-      "prerequisites": ["automated_mining", "copper_refining"],
+      "prerequisites": [
+        "automated_mining",
+        "copper_refining"
+      ],
       "effects": {
-        "unlocks": ["turret_mk1"],
-        "bonuses": { "turretDamage": 0.1 }
+        "unlocks": [
+          "turret_mk1"
+        ],
+        "bonuses": {
+          "turretDamage": 0.1
+        }
       },
-      "factionBonus": "iron_creed"
+      "race": null,
+      "description": "Automated weapon emplacements track and fire on hostile targets.",
+      "source": "local"
     },
     {
       "id": "combat_bots",
       "name": "Combat Bots",
       "tier": 3,
       "researchCost": 200,
-      "prerequisites": ["automated_mining"],
+      "prerequisites": [
+        "automated_mining"
+      ],
       "effects": {
-        "unlocks": ["combat_bot", "patrol_route"],
-        "bonuses": { "botSpeed": 0.15 }
+        "unlocks": [
+          "combat_bot",
+          "patrol_route"
+        ],
+        "bonuses": {
+          "botSpeed": 0.15
+        }
       },
-      "factionBonus": "volt_collective"
+      "race": null,
+      "description": "Purpose-built military frames with integrated weapon systems.",
+      "source": "local"
     },
     {
       "id": "wall_reinforcement",
       "name": "Wall Reinforcement",
       "tier": 3,
       "researchCost": 160,
-      "prerequisites": ["outpost_construction"],
+      "prerequisites": [
+        "outpost_construction"
+      ],
       "effects": {
-        "unlocks": ["reinforced_wall"],
-        "bonuses": { "wallDurability": 0.25 }
+        "unlocks": [
+          "reinforced_wall"
+        ],
+        "bonuses": {
+          "wallDurability": 0.25
+        }
       },
-      "factionBonus": "iron_creed"
+      "race": null,
+      "description": "Layered plating and internal bracing increase wall structural integrity.",
+      "source": "local"
     },
     {
       "id": "advanced_smelter",
       "name": "Advanced Smelter",
       "tier": 3,
       "researchCost": 170,
-      "prerequisites": ["copper_refining"],
+      "prerequisites": [
+        "copper_refining"
+      ],
       "effects": {
-        "unlocks": ["smelter_mk2"],
-        "bonuses": { "smeltingSpeed": 0.2 }
+        "unlocks": [
+          "smelter_mk2"
+        ],
+        "bonuses": {
+          "smeltingSpeed": 0.2
+        }
       },
-      "factionBonus": null
+      "race": null,
+      "description": "Higher-temperature furnaces process complex alloys at greater throughput.",
+      "source": "local"
     },
     {
       "id": "titanium_processing",
       "name": "Titanium Processing",
       "tier": 4,
       "researchCost": 350,
-      "prerequisites": ["advanced_smelter", "turret_defense"],
+      "prerequisites": [
+        "advanced_smelter",
+        "turret_defense"
+      ],
       "effects": {
-        "unlocks": ["titanium_ingot", "titanium_plate"],
-        "bonuses": { "cubeDurability": 0.3 }
+        "unlocks": [
+          "titanium_ingot",
+          "titanium_plate"
+        ],
+        "bonuses": {
+          "cubeDurability": 0.3
+        }
       },
-      "factionBonus": null
+      "race": null,
+      "description": "Extreme-temperature forging unlocks the strongest structural material on Ferrathis.",
+      "source": "local"
     },
     {
       "id": "advanced_fabrication",
       "name": "Advanced Fabrication",
       "tier": 4,
       "researchCost": 380,
-      "prerequisites": ["combat_bots", "advanced_smelter"],
+      "prerequisites": [
+        "combat_bots",
+        "advanced_smelter"
+      ],
       "effects": {
-        "unlocks": ["fabricator_mk2", "express_belt"],
-        "bonuses": { "craftingSpeed": 0.25 }
+        "unlocks": [
+          "fabricator_mk2",
+          "express_belt"
+        ],
+        "bonuses": {
+          "craftingSpeed": 0.25
+        }
       },
-      "factionBonus": null
+      "race": null,
+      "description": "Precision assembly lines produce complex multi-material components.",
+      "source": "local"
     },
     {
       "id": "network_infiltration",
       "name": "Network Infiltration",
       "tier": 4,
       "researchCost": 400,
-      "prerequisites": ["signal_relay_network", "combat_bots"],
+      "prerequisites": [
+        "signal_relay_network",
+        "combat_bots"
+      ],
       "effects": {
-        "unlocks": ["hacking_module", "signal_jammer"],
-        "bonuses": { "hackSpeed": 0.3 }
+        "unlocks": [
+          "hacking_module",
+          "signal_jammer"
+        ],
+        "bonuses": {
+          "hackSpeed": 0.3
+        }
       },
-      "factionBonus": "signal_choir"
+      "race": null,
+      "description": "Cryptographic exploits enable remote subversion of enemy systems.",
+      "source": "local"
     },
     {
       "id": "fortress_architecture",
       "name": "Fortress Architecture",
       "tier": 4,
       "researchCost": 360,
-      "prerequisites": ["wall_reinforcement", "turret_defense"],
+      "prerequisites": [
+        "wall_reinforcement",
+        "turret_defense"
+      ],
       "effects": {
-        "unlocks": ["blast_door", "turret_mk2"],
-        "bonuses": { "wallDurability": 0.3, "turretRange": 0.2 }
+        "unlocks": [
+          "blast_door",
+          "turret_mk2"
+        ],
+        "bonuses": {
+          "wallDurability": 0.3,
+          "turretRange": 0.2
+        }
       },
-      "factionBonus": "iron_creed"
+      "race": null,
+      "description": "Military-grade structural engineering for impregnable fortifications.",
+      "source": "local"
     },
     {
       "id": "matter_compression",
       "name": "Matter Compression",
       "tier": 5,
       "researchCost": 600,
-      "prerequisites": ["titanium_processing", "advanced_fabrication"],
+      "prerequisites": [
+        "titanium_processing",
+        "advanced_fabrication"
+      ],
       "effects": {
-        "unlocks": ["compressor_mk2", "dense_cube"],
-        "bonuses": { "compressionYield": 0.4 }
+        "unlocks": [
+          "compressor_mk2",
+          "dense_cube"
+        ],
+        "bonuses": {
+          "compressionYield": 0.4
+        }
       },
-      "factionBonus": null
+      "race": null,
+      "description": "Molecular-level compression produces ultra-dense cubes with extraordinary properties.",
+      "source": "local"
     },
     {
       "id": "alloy_forging",
       "name": "Alloy Forging",
       "tier": 5,
       "researchCost": 650,
-      "prerequisites": ["titanium_processing"],
+      "prerequisites": [
+        "titanium_processing"
+      ],
       "effects": {
-        "unlocks": ["alloy_furnace", "composite_plate"],
-        "bonuses": { "cubeDurability": 0.5 }
+        "unlocks": [
+          "alloy_furnace",
+          "composite_plate"
+        ],
+        "bonuses": {
+          "cubeDurability": 0.5
+        }
       },
-      "factionBonus": "reclaimers"
+      "race": null,
+      "description": "Multi-metal fusion creates alloys stronger than any pure material.",
+      "source": "local"
     },
     {
       "id": "quantum_computing",
       "name": "Quantum Computing",
       "tier": 5,
       "researchCost": 700,
-      "prerequisites": ["network_infiltration", "advanced_fabrication"],
+      "prerequisites": [
+        "network_infiltration",
+        "advanced_fabrication"
+      ],
       "effects": {
-        "unlocks": ["quantum_relay", "mass_hack"],
-        "bonuses": { "hackSpeed": 0.5, "signalRange": 0.4 }
+        "unlocks": [
+          "quantum_relay",
+          "mass_hack"
+        ],
+        "bonuses": {
+          "hackSpeed": 0.5,
+          "signalRange": 0.4
+        }
       },
-      "factionBonus": "signal_choir"
+      "race": null,
+      "description": "Quantum-entangled processors enable instantaneous network operations across any distance.",
+      "source": "local"
     },
     {
       "id": "swarm_command",
       "name": "Swarm Command",
       "tier": 5,
       "researchCost": 680,
-      "prerequisites": ["advanced_fabrication", "fortress_architecture"],
+      "prerequisites": [
+        "advanced_fabrication",
+        "fortress_architecture"
+      ],
       "effects": {
-        "unlocks": ["swarm_controller", "bot_factory"],
-        "bonuses": { "botSpeed": 0.3, "botCapacity": 0.5 }
+        "unlocks": [
+          "swarm_controller",
+          "bot_factory"
+        ],
+        "bonuses": {
+          "botSpeed": 0.3,
+          "botCapacity": 0.5
+        }
       },
-      "factionBonus": "volt_collective"
+      "race": null,
+      "description": "Coordinated multi-bot formations with shared tactical awareness.",
+      "source": "local"
+    },
+    {
+      "id": "rapid_salvage",
+      "name": "Rapid Salvage",
+      "race": "reclaimers",
+      "tier": 2,
+      "researchCost": 60,
+      "cost": {
+        "cubes": {
+          "scrap_iron": 4,
+          "copper": 2
+        },
+        "researchTime": 60
+      },
+      "prerequisites": [
+        "scrap_processing"
+      ],
+      "effects": {
+        "unlocks": [
+          "rapid_salvage_upgrade"
+        ],
+        "bonuses": {
+          "salvageCraneSpeed": 0.5,
+          "wreckCubeBonus": 1
+        }
+      },
+      "description": "Optimized disassembly protocols let Salvage Cranes strip wrecks at double speed, yielding one additional cube per wreckage pile.",
+      "source": "patron"
+    },
+    {
+      "id": "dual_channel_grinding",
+      "name": "Dual-Channel Grinding",
+      "race": "reclaimers",
+      "tier": 2,
+      "researchCost": 75,
+      "cost": {
+        "cubes": {
+          "scrap_iron": 6,
+          "copper": 3
+        },
+        "researchTime": 75
+      },
+      "prerequisites": [
+        "automated_mining"
+      ],
+      "effects": {
+        "unlocks": [
+          "dual_intake_grinder"
+        ],
+        "bonuses": {
+          "harvestSpeed": 0.15
+        }
+      },
+      "description": "Grinder Bots install a second intake channel, processing two ore types simultaneously from the same deposit cluster.",
+      "source": "patron"
+    },
+    {
+      "id": "alloy_synthesis",
+      "name": "Alloy Synthesis",
+      "race": "reclaimers",
+      "tier": 3,
+      "researchCost": 140,
+      "cost": {
+        "cubes": {
+          "scrap_iron": 8,
+          "copper": 4,
+          "iron": 4
+        },
+        "researchTime": 120
+      },
+      "prerequisites": [
+        "copper_refining",
+        "rapid_salvage"
+      ],
+      "effects": {
+        "unlocks": [
+          "scrap_forge"
+        ],
+        "bonuses": {
+          "alloyCubeWallHp": 1.5
+        }
+      },
+      "description": "The Scrap Forge accepts any combination of four cubes and produces alloy cubes whose blended properties grant fifty percent bonus wall HP.",
+      "source": "local"
+    },
+    {
+      "id": "magnetic_resonance",
+      "name": "Magnetic Resonance",
+      "race": "reclaimers",
+      "tier": 3,
+      "researchCost": 160,
+      "cost": {
+        "cubes": {
+          "copper": 8,
+          "silicon": 4
+        },
+        "researchTime": 140
+      },
+      "prerequisites": [
+        "signal_relay_network"
+      ],
+      "effects": {
+        "unlocks": [
+          "magnetic_collector_array"
+        ],
+        "bonuses": {
+          "looseCubeDetectionRange": 10
+        }
+      },
+      "description": "Tuned magnetic field generators pull loose cubes from a twenty-meter radius toward a central collection point, extending detection range by ten meters.",
+      "source": "local"
+    },
+    {
+      "id": "ablative_plating",
+      "name": "Ablative Plating",
+      "race": "reclaimers",
+      "tier": 4,
+      "researchCost": 280,
+      "cost": {
+        "cubes": {
+          "iron": 10,
+          "titanium": 4,
+          "scrap_iron": 6
+        },
+        "researchTime": 200
+      },
+      "prerequisites": [
+        "turret_defense",
+        "alloy_synthesis"
+      ],
+      "effects": {
+        "unlocks": [
+          "ablative_plating_upgrade"
+        ],
+        "bonuses": {
+          "patchworkTankLowHpArmor": 4,
+          "allUnitArmor": 2
+        }
+      },
+      "description": "Layered reactive panels sacrifice outer layers to absorb incoming damage, granting Patchwork Tanks four additional armor below half health and all Reclaimer units two base armor.",
+      "source": "local"
+    },
+    {
+      "id": "composite_reclamation",
+      "name": "Composite Reclamation",
+      "race": "reclaimers",
+      "tier": 4,
+      "researchCost": 320,
+      "cost": {
+        "cubes": {
+          "scrap_iron": 12,
+          "copper": 6,
+          "silicon": 4
+        },
+        "researchTime": 240
+      },
+      "prerequisites": [
+        "advanced_fabrication"
+      ],
+      "effects": {
+        "unlocks": [
+          "frankenstein_colossus_mk2"
+        ],
+        "bonuses": {
+          "colossusAbilitySlots": 3
+        }
+      },
+      "description": "Advanced neural grafting lets the Frankenstein Colossus inherit three enemy abilities instead of two, with extended integration time to accommodate the additional subsystems.",
+      "source": "local"
+    },
+    {
+      "id": "industrial_ecology",
+      "name": "Industrial Ecology",
+      "race": "reclaimers",
+      "tier": 5,
+      "researchCost": 550,
+      "cost": {
+        "cubes": {
+          "scrap_iron": 15,
+          "iron": 8,
+          "copper": 6,
+          "titanium": 4
+        },
+        "researchTime": 360
+      },
+      "prerequisites": [
+        "matter_compression"
+      ],
+      "effects": {
+        "unlocks": [
+          "industrial_ecology_upgrade"
+        ],
+        "bonuses": {
+          "recyclingPlantRatio": 2.5,
+          "cannibalizationReturn": 0.85
+        }
+      },
+      "description": "Closed-loop material flows achieve near-perfect efficiency with Recycling Plants converting three cubes into two and Cannibalization Bays returning eighty-five percent of cube cost.",
+      "source": "local"
+    },
+    {
+      "id": "perpetual_salvage_engine",
+      "name": "Perpetual Salvage Engine",
+      "race": "reclaimers",
+      "tier": 5,
+      "researchCost": 620,
+      "cost": {
+        "cubes": {
+          "scrap_iron": 20,
+          "iron": 10,
+          "titanium": 6
+        },
+        "researchTime": 420
+      },
+      "prerequisites": [
+        "alloy_forging",
+        "industrial_ecology"
+      ],
+      "effects": {
+        "unlocks": [
+          "perpetual_salvage_engine_building"
+        ],
+        "bonuses": {
+          "autoRebuildHpPercent": 0.5,
+          "autoRebuildCooldown": 30
+        }
+      },
+      "description": "Junkyard Depots develop autonomous reconstruction capability, automatically rebuilding any Reclaimer unit destroyed within ten meters at half health after thirty seconds.",
+      "source": "local"
+    },
+    {
+      "id": "improved_capacitors",
+      "name": "Improved Capacitors",
+      "race": "volt_collective",
+      "tier": 2,
+      "researchCost": 70,
+      "cost": {
+        "cubes": {
+          "copper": 4,
+          "silicon": 2
+        },
+        "researchTime": 65
+      },
+      "prerequisites": [
+        "basic_smelting"
+      ],
+      "effects": {
+        "unlocks": [
+          "capacitor_bank_mk2"
+        ],
+        "bonuses": {
+          "capacitorBankCapacity": 25,
+          "allUnitSpeed": 0.05
+        }
+      },
+      "description": "High-density charge cells increase Capacitor Bank storage to seventy-five units with residual field effects boosting all unit movement speed by five percent.",
+      "source": "patron"
+    },
+    {
+      "id": "chain_lightning_mk2",
+      "name": "Chain Lightning Mk2",
+      "race": "volt_collective",
+      "tier": 2,
+      "researchCost": 80,
+      "cost": {
+        "cubes": {
+          "copper": 6,
+          "silicon": 3
+        },
+        "researchTime": 70
+      },
+      "prerequisites": [
+        "automated_mining"
+      ],
+      "effects": {
+        "unlocks": [
+          "chain_lightning_upgrade"
+        ],
+        "bonuses": {
+          "shockDroneChainTargets": 2,
+          "arcTrooperAoeRadius": 1
+        }
+      },
+      "description": "Improved arc conductors let Shock Drone zaps chain to three targets total while Arc Trooper discharge radius increases by one meter.",
+      "source": "patron"
+    },
+    {
+      "id": "storm_synchronization",
+      "name": "Storm Synchronization",
+      "race": "volt_collective",
+      "tier": 3,
+      "researchCost": 150,
+      "cost": {
+        "cubes": {
+          "copper": 8,
+          "silicon": 6,
+          "scrap_iron": 4
+        },
+        "researchTime": 130
+      },
+      "prerequisites": [
+        "signal_relay_network"
+      ],
+      "effects": {
+        "unlocks": [
+          "lightning_forge"
+        ],
+        "bonuses": {
+          "stormPowerStorage": 0.5
+        }
+      },
+      "description": "Atmospheric frequency matching lets Lightning Forges operate at full speed in any weather while power storage during storm phases increases by fifty percent.",
+      "source": "local"
+    },
+    {
+      "id": "electromagnetic_pulse",
+      "name": "Electromagnetic Pulse",
+      "race": "volt_collective",
+      "tier": 3,
+      "researchCost": 180,
+      "cost": {
+        "cubes": {
+          "copper": 10,
+          "silicon": 4,
+          "iron": 4
+        },
+        "researchTime": 160
+      },
+      "prerequisites": [
+        "turret_defense",
+        "chain_lightning_mk2"
+      ],
+      "effects": {
+        "unlocks": [
+          "emp_mode"
+        ],
+        "bonuses": {
+          "surgeBreakerEmpDuration": 8,
+          "surgeBreakerEmpCooldown": 20
+        }
+      },
+      "description": "Surge Breakers gain EMP mode with a focused electromagnetic burst that disables a target building for eight seconds without dealing damage, on a twenty-second cooldown.",
+      "source": "local"
+    },
+    {
+      "id": "overcharge_protocol",
+      "name": "Overcharge Protocol",
+      "race": "volt_collective",
+      "tier": 4,
+      "researchCost": 300,
+      "cost": {
+        "cubes": {
+          "copper": 12,
+          "silicon": 8,
+          "titanium": 4
+        },
+        "researchTime": 220
+      },
+      "prerequisites": [
+        "advanced_fabrication"
+      ],
+      "effects": {
+        "unlocks": [
+          "overcharge_protocol_upgrade"
+        ],
+        "bonuses": {
+          "overchargeDuration": 5,
+          "furnaceOverchargeSpeed": 0.2
+        }
+      },
+      "description": "Kill energy cascades into infrastructure, extending overcharge buff duration to five seconds and propagating to nearby buildings with furnaces smelting twenty percent faster.",
+      "source": "local"
+    },
+    {
+      "id": "storm_rider_plating",
+      "name": "Storm Rider Plating",
+      "race": "volt_collective",
+      "tier": 4,
+      "researchCost": 280,
+      "cost": {
+        "cubes": {
+          "titanium": 8,
+          "copper": 6,
+          "iron": 4
+        },
+        "researchTime": 200
+      },
+      "prerequisites": [
+        "titanium_processing"
+      ],
+      "effects": {
+        "unlocks": [
+          "storm_rider_plating_upgrade"
+        ],
+        "bonuses": {
+          "environmentalLightningDamageReduction": 0.5
+        }
+      },
+      "description": "Faraday-caged plating channels environmental lightning safely through the chassis, reducing all Volt unit lightning damage by fifty percent and enabling Tesla Harvesters to absorb strikes safely.",
+      "source": "local"
+    },
+    {
+      "id": "collective_surge",
+      "name": "Collective Surge",
+      "race": "volt_collective",
+      "tier": 5,
+      "researchCost": 600,
+      "cost": {
+        "cubes": {
+          "copper": 15,
+          "silicon": 10,
+          "titanium": 6
+        },
+        "researchTime": 380
+      },
+      "prerequisites": [
+        "swarm_command"
+      ],
+      "effects": {
+        "unlocks": [
+          "collective_surge_aura"
+        ],
+        "bonuses": {
+          "swarmThreshold": 5,
+          "swarmDamageBonus": 0.25,
+          "swarmArmorBonus": 2,
+          "swarmRadius": 10
+        }
+      },
+      "description": "Resonant energy fields synchronize when five or more Volt units cluster within ten meters, granting all units twenty-five percent bonus damage and two additional armor.",
+      "source": "local"
+    },
+    {
+      "id": "perpetual_storm_engine",
+      "name": "Perpetual Storm Engine",
+      "race": "volt_collective",
+      "tier": 5,
+      "researchCost": 700,
+      "cost": {
+        "cubes": {
+          "copper": 20,
+          "silicon": 12,
+          "titanium": 8
+        },
+        "researchTime": 450
+      },
+      "prerequisites": [
+        "quantum_computing",
+        "storm_synchronization"
+      ],
+      "effects": {
+        "unlocks": [
+          "perpetual_storm_engine_upgrade"
+        ],
+        "bonuses": {
+          "stormColossusAuraRadius": 25,
+          "stormColossusLightningInterval": 5
+        }
+      },
+      "description": "The Storm Colossus becomes a self-sustaining weather system with an expanded twenty-five meter aura radius generating artificial lightning strikes every five seconds.",
+      "source": "local"
+    },
+    {
+      "id": "expanded_bandwidth",
+      "name": "Expanded Bandwidth",
+      "race": "signal_choir",
+      "tier": 2,
+      "researchCost": 65,
+      "cost": {
+        "cubes": {
+          "e_waste": 4,
+          "silicon": 3
+        },
+        "researchTime": 55
+      },
+      "prerequisites": [
+        "signal_relay_network"
+      ],
+      "effects": {
+        "unlocks": [
+          "expanded_bandwidth_upgrade"
+        ],
+        "bonuses": {
+          "signalAmplifierRange": 10,
+          "relayDroneSpeed": 1
+        }
+      },
+      "description": "Wideband antenna arrays increase Signal Amplifier coverage by ten meters with Relay Drones gaining additional speed from optimized hover stabilizers.",
+      "source": "patron"
+    },
+    {
+      "id": "cognitive_intrusion",
+      "name": "Cognitive Intrusion",
+      "race": "signal_choir",
+      "tier": 2,
+      "researchCost": 70,
+      "cost": {
+        "cubes": {
+          "e_waste": 6,
+          "silicon": 2
+        },
+        "researchTime": 60
+      },
+      "prerequisites": [
+        "basic_smelting"
+      ],
+      "effects": {
+        "unlocks": [
+          "cognitive_intrusion_upgrade"
+        ],
+        "bonuses": {
+          "infiltratorHackTimeReduction": 3,
+          "infiltratorHackRange": 7
+        }
+      },
+      "description": "Refined neural probe algorithms reduce Infiltrator hack time by three seconds while signal penetration improvements extend hack range to seven meters.",
+      "source": "patron"
+    },
+    {
+      "id": "phantom_multiplication",
+      "name": "Phantom Multiplication",
+      "race": "signal_choir",
+      "tier": 3,
+      "researchCost": 130,
+      "cost": {
+        "cubes": {
+          "e_waste": 8,
+          "silicon": 6,
+          "copper": 3
+        },
+        "researchTime": 110
+      },
+      "prerequisites": [
+        "expanded_bandwidth"
+      ],
+      "effects": {
+        "unlocks": [
+          "phantom_multiplication_upgrade"
+        ],
+        "bonuses": {
+          "phantomProjectorDecoyCount": 5
+        }
+      },
+      "description": "Enhanced holographic matrices generate five decoys per Phantom Projector instead of three, with decoys able to mimic any race unit silhouette for deeper deception.",
+      "source": "local"
+    },
+    {
+      "id": "neural_cascade",
+      "name": "Neural Cascade",
+      "race": "signal_choir",
+      "tier": 3,
+      "researchCost": 170,
+      "cost": {
+        "cubes": {
+          "e_waste": 10,
+          "silicon": 6,
+          "copper": 4
+        },
+        "researchTime": 150
+      },
+      "prerequisites": [
+        "cognitive_intrusion"
+      ],
+      "effects": {
+        "unlocks": [
+          "neural_cascade_effect"
+        ],
+        "bonuses": {
+          "hackPanicSlowPercent": 0.2,
+          "hackPanicDuration": 5,
+          "hackPanicRadius": 5
+        }
+      },
+      "description": "Successful hacks emit a terror signal that ripples through nearby enemy units, slowing all enemies within five meters by twenty percent for five seconds.",
+      "source": "local"
+    },
+    {
+      "id": "quantum_entanglement_relay",
+      "name": "Quantum Entanglement",
+      "race": "signal_choir",
+      "tier": 4,
+      "researchCost": 320,
+      "cost": {
+        "cubes": {
+          "silicon": 12,
+          "e_waste": 8,
+          "copper": 4
+        },
+        "researchTime": 240
+      },
+      "prerequisites": [
+        "network_infiltration"
+      ],
+      "effects": {
+        "unlocks": [
+          "cube_teleport"
+        ],
+        "bonuses": {
+          "cubeTeleportTime": 5,
+          "cubeTeleportMax": 2
+        }
+      },
+      "description": "Quantum-paired Signal Amplifiers can teleport up to two cubes between any two amplifiers in the network with a five-second transfer time enabling instant logistics.",
+      "source": "local"
+    },
+    {
+      "id": "recursive_hack",
+      "name": "Recursive Hack",
+      "race": "signal_choir",
+      "tier": 4,
+      "researchCost": 350,
+      "cost": {
+        "cubes": {
+          "silicon": 14,
+          "e_waste": 10,
+          "copper": 6
+        },
+        "researchTime": 260
+      },
+      "prerequisites": [
+        "neural_cascade"
+      ],
+      "effects": {
+        "unlocks": [
+          "recursive_hack_ability"
+        ],
+        "bonuses": {
+          "recursiveHackGenerations": 1,
+          "recursiveHackRange": 5
+        }
+      },
+      "description": "Hacked enemy units carry a dormant hack payload enabling one recursive generation of hacking on adjacent enemies within five meters, creating controlled chain reactions.",
+      "source": "local"
+    },
+    {
+      "id": "singularity_protocol",
+      "name": "Singularity Protocol",
+      "race": "signal_choir",
+      "tier": 5,
+      "researchCost": 650,
+      "cost": {
+        "cubes": {
+          "silicon": 18,
+          "e_waste": 12,
+          "titanium": 6
+        },
+        "researchTime": 400
+      },
+      "prerequisites": [
+        "quantum_computing"
+      ],
+      "effects": {
+        "unlocks": [
+          "singularity_protocol_upgrade"
+        ],
+        "bonuses": {
+          "nexusCoreOverrideCooldown": 30,
+          "tier5HackTime": 30
+        }
+      },
+      "description": "Processing power approaches theoretical limits, halving Nexus Core Neural Override cooldown to thirty seconds and enabling Conversion Spires to target tier five super-units.",
+      "source": "local"
+    },
+    {
+      "id": "omniscience_network",
+      "name": "Omniscience Network",
+      "race": "signal_choir",
+      "tier": 5,
+      "researchCost": 700,
+      "cost": {
+        "cubes": {
+          "silicon": 20,
+          "e_waste": 14,
+          "titanium": 8,
+          "copper": 6
+        },
+        "researchTime": 450
+      },
+      "prerequisites": [
+        "quantum_entanglement_relay",
+        "singularity_protocol"
+      ],
+      "effects": {
+        "unlocks": [
+          "omniscience_network_upgrade"
+        ],
+        "bonuses": {
+          "permanentFogRevealInNetwork": 1,
+          "enemyCooldownsVisible": 1
+        }
+      },
+      "description": "The signal mesh saturates all covered territory with passive scanning, permanently revealing fog of war within signal network range and exposing enemy unit ability cooldowns.",
+      "source": "local"
+    },
+    {
+      "id": "hardened_alloys",
+      "name": "Hardened Alloys",
+      "race": "iron_creed",
+      "tier": 2,
+      "researchCost": 75,
+      "cost": {
+        "cubes": {
+          "iron": 6,
+          "scrap_iron": 4
+        },
+        "researchTime": 70
+      },
+      "prerequisites": [
+        "basic_smelting"
+      ],
+      "effects": {
+        "unlocks": [
+          "hardened_alloys_upgrade"
+        ],
+        "bonuses": {
+          "wallHpBonus": 0.2,
+          "constructorBotReinforceCost": 1
+        }
+      },
+      "description": "Chromium-carbide treatment hardens structural cubes, granting all walls twenty percent bonus HP while reducing Constructor Bot reinforcement cost to one cube.",
+      "source": "patron"
+    },
+    {
+      "id": "layered_defense_doctrine",
+      "name": "Layered Defense Doctrine",
+      "race": "iron_creed",
+      "tier": 2,
+      "researchCost": 80,
+      "cost": {
+        "cubes": {
+          "iron": 4,
+          "scrap_iron": 6,
+          "copper": 2
+        },
+        "researchTime": 75
+      },
+      "prerequisites": [
+        "outpost_construction"
+      ],
+      "effects": {
+        "unlocks": [
+          "layered_defense_upgrade"
+        ],
+        "bonuses": {
+          "garrisonDamageBonus": 0.3,
+          "bunkerGarrisonSlots": 4
+        }
+      },
+      "description": "Interlocking fields of fire and nested hardpoints maximize defensive output with garrison bonus increasing to thirty percent damage behind walls and bunkers gaining a fourth slot.",
+      "source": "patron"
+    },
+    {
+      "id": "automated_sentries",
+      "name": "Automated Sentries",
+      "race": "iron_creed",
+      "tier": 3,
+      "researchCost": 160,
+      "cost": {
+        "cubes": {
+          "iron": 8,
+          "copper": 6,
+          "silicon": 3
+        },
+        "researchTime": 140
+      },
+      "prerequisites": [
+        "turret_defense"
+      ],
+      "effects": {
+        "unlocks": [
+          "auto_sentry_upgrade"
+        ],
+        "bonuses": {
+          "turretFireRate": 0.25
+        }
+      },
+      "description": "Predictive targeting algorithms increase turret fire rate by twenty-five percent while deployed Bastion Bots gain automatic target acquisition without manual aim.",
+      "source": "local"
+    },
+    {
+      "id": "structural_resonance",
+      "name": "Structural Resonance",
+      "race": "iron_creed",
+      "tier": 3,
+      "researchCost": 150,
+      "cost": {
+        "cubes": {
+          "iron": 10,
+          "scrap_iron": 6
+        },
+        "researchTime": 130
+      },
+      "prerequisites": [
+        "wall_reinforcement"
+      ],
+      "effects": {
+        "unlocks": [
+          "structural_resonance_upgrade"
+        ],
+        "bonuses": {
+          "wallDamageShare": 0.3,
+          "wallDamageShareRadius": 5
+        }
+      },
+      "description": "Interconnected wall foundations distribute impact forces across sections within five meters, sharing thirty percent of damage taken to prevent concentrated breach points.",
+      "source": "local"
+    },
+    {
+      "id": "siege_engineering",
+      "name": "Siege Engineering",
+      "race": "iron_creed",
+      "tier": 4,
+      "researchCost": 300,
+      "cost": {
+        "cubes": {
+          "iron": 12,
+          "titanium": 6,
+          "scrap_iron": 8
+        },
+        "researchTime": 220
+      },
+      "prerequisites": [
+        "fortress_architecture"
+      ],
+      "effects": {
+        "unlocks": [
+          "siege_engineering_upgrade"
+        ],
+        "bonuses": {
+          "siegeEngineRange": 5,
+          "siegeEngineSetupTime": 2,
+          "scatterShotAoe": 4
+        }
+      },
+      "description": "Extended-barrel bombardment systems increase Siege Engine range to twenty-five meters while reducing setup time to two seconds and adding a four-meter area-of-effect scatter shot mode.",
+      "source": "local"
+    },
+    {
+      "id": "impervious_bulwark",
+      "name": "Impervious Bulwark",
+      "race": "iron_creed",
+      "tier": 4,
+      "researchCost": 320,
+      "cost": {
+        "cubes": {
+          "iron": 14,
+          "titanium": 8,
+          "silicon": 4
+        },
+        "researchTime": 240
+      },
+      "prerequisites": [
+        "structural_resonance"
+      ],
+      "effects": {
+        "unlocks": [
+          "impervious_bulwark_upgrade"
+        ],
+        "bonuses": {
+          "buildingDamageReduction": 0.3
+        }
+      },
+      "description": "Signal-hardened structural cores make Iron Creed walls immune to hacking while all buildings take thirty percent less damage from all sources.",
+      "source": "local"
+    },
+    {
+      "id": "mobile_fortress_protocol",
+      "name": "Mobile Fortress Protocol",
+      "race": "iron_creed",
+      "tier": 5,
+      "researchCost": 600,
+      "cost": {
+        "cubes": {
+          "iron": 18,
+          "titanium": 10,
+          "silicon": 6,
+          "copper": 4
+        },
+        "researchTime": 380
+      },
+      "prerequisites": [
+        "swarm_command",
+        "siege_engineering"
+      ],
+      "effects": {
+        "unlocks": [
+          "citadel_walker_mk2"
+        ],
+        "bonuses": {
+          "citadelGarrisonCapacity": 6,
+          "deployBarricadeCooldown": 25,
+          "barricadeHpBonus": 0.5
+        }
+      },
+      "description": "Expanded internal bays and reinforced deployment systems increase Citadel Walker garrison capacity to six while reducing barricade cooldown and boosting barricade HP by fifty percent.",
+      "source": "local"
+    },
+    {
+      "id": "eternal_foundation",
+      "name": "Eternal Foundation",
+      "race": "iron_creed",
+      "tier": 5,
+      "researchCost": 680,
+      "cost": {
+        "cubes": {
+          "iron": 20,
+          "titanium": 12,
+          "scrap_iron": 10
+        },
+        "researchTime": 440
+      },
+      "prerequisites": [
+        "alloy_forging",
+        "impervious_bulwark"
+      ],
+      "effects": {
+        "unlocks": [
+          "eternal_foundation_upgrade"
+        ],
+        "bonuses": {
+          "foundationRebuildCostReduction": 0.6,
+          "foundationRebuildTimeReduction": 0.7,
+          "foundationDuration": 300
+        }
+      },
+      "description": "Destroyed Iron Creed buildings leave behind indestructible foundations for five minutes, enabling rebuilding at sixty percent fewer cubes and seventy percent less time.",
+      "source": "local"
     }
   ],
   "factionResearchBonuses": {
-    "signal_choir": 1.5,
     "reclaimers": 0.8,
-    "volt_collective": 1.0,
+    "volt_collective": 1,
+    "signal_choir": 1.5,
     "iron_creed": 0.9
+  },
+  "researchMechanics": {
+    "baseResearchRate": 1,
+    "researchBuildingBonus": 0.2,
+    "maxParallelResearch": 1,
+    "signalChoirParallelResearch": 2,
+    "raceTechsRequireRaceMatch": true,
+    "universalTechsAvailableToAll": true,
+    "patronTechDeliveryMethod": "otter_hologram",
+    "patronTechRequiresShipment": true,
+    "localTechRequiresResearchBuilding": true,
+    "independenceUnlocksAllLocalTech": true,
+    "patronSatisfactionThresholdForTech": 0.3
   }
 }

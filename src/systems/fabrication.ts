@@ -7,7 +7,7 @@
  */
 
 import type { Entity } from "../ecs/types";
-import { buildings } from "../ecs/world";
+import { buildings } from "../ecs/koota/compat";
 import {
 	addResource,
 	getResources,

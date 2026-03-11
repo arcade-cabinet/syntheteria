@@ -11,7 +11,7 @@
 
 import { config } from "../../config";
 import type { Entity, Vec3 } from "../ecs/types";
-import { units } from "../ecs/world";
+import { units } from "../ecs/koota/compat";
 import { type CubeEntity, getCubes } from "./raidSystem";
 
 // ---------------------------------------------------------------------------

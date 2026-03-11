@@ -32,6 +32,13 @@ jest.mock("../../ecs/world", () => ({
 	world: [],
 }));
 
+// Also mock the Koota compat layer (power.ts now imports from here)
+jest.mock("../../ecs/koota/compat", () => ({
+	lightningRods: mockLightningRods,
+	buildings: mockBuildings,
+	units: mockUnits,
+}));
+
 // Import after mocking
 import {
 	getPowerSnapshot,

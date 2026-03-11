@@ -90,6 +90,12 @@ export interface GOAPAction {
 	 * Lower-cost actions are preferred when multiple paths exist.
 	 */
 	cost: number;
+	/**
+	 * When true, the executing bot should "phone home" to its nearest base
+	 * for a concrete task assignment rather than acting autonomously.
+	 * Set by the governor's fallback path when no real plan is available.
+	 */
+	needsBaseAssignment?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -235,6 +241,40 @@ export const HoardCubes: GOAPAction = {
 };
 
 /**
+ * Zero-precondition resource gathering. Always available regardless of world
+ * state — ensures the GOAP planner can always find SOME plan from any starting
+ * state. Higher cost than AssignMiners so the planner prefers specialized
+ * actions when their preconditions are met.
+ */
+export const BasicHarvest: GOAPAction = {
+	name: "basic_harvest",
+	label: "Basic Resource Gathering",
+	preconditions: {},
+	effects: {
+		[WorldStateKey.HAS_RESOURCES]: true,
+		[WorldStateKey.RESOURCES_GATHERED]: true,
+	},
+	cost: 3,
+};
+
+/**
+ * Produce a new unit from resources. Bridges the gap between "have resources"
+ * and "have idle units" so the planner can reach goals requiring units from
+ * an empty-unit state.
+ */
+export const ProduceUnit: GOAPAction = {
+	name: "produce_unit",
+	label: "Produce New Unit",
+	preconditions: {
+		[WorldStateKey.HAS_RESOURCES]: true,
+	},
+	effects: {
+		[WorldStateKey.HAS_IDLE_UNITS]: true,
+	},
+	cost: 5,
+};
+
+/**
  * All available GOAP actions. The planner searches this set to build plans.
  * Order does not matter; the planner evaluates all applicable actions.
  */
@@ -247,4 +287,6 @@ export const ALL_ACTIONS: readonly GOAPAction[] = [
 	LaunchRaid,
 	TradeOffer,
 	HoardCubes,
+	BasicHarvest,
+	ProduceUnit,
 ] as const;

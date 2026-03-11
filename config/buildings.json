@@ -1,96 +1,286 @@
 {
-  "furnace": {
-    "powerRequired": 2,
-    "processSpeed": 1.0,
-    "hopperSlots": 2
-  },
-  "lightning_rod": {
-    "capacity": 2,
-    "protectionRadius": 12,
-    "defaultRodCapacity": 10,
-    "defaultCurrentOutput": 7,
-    "defaultProtectionRadius": 8,
-    "minSpacing": 10
-  },
-  "fabrication_unit": {
-    "powerRequired": 3,
-    "buildSpeedMultiplier": 1.0,
-    "defaultComponents": [
-      { "name": "power_supply", "functional": false, "material": "electronic" },
-      { "name": "fabrication_arm", "functional": true, "material": "metal" },
-      { "name": "material_hopper", "functional": true, "material": "metal" }
-    ]
-  },
-  "outpost": {
-    "powerRequired": 1,
-    "claimRadius": 15,
-    "cost": {
-      "rock": 8,
-      "iron": 4
-    }
-  },
-  "miner": {
-    "powerRequired": 2,
-    "defaultExtractionRate": 0.1,
-    "drillHealthDegradation": 0.001,
-    "bufferCapacity": 5,
-    "defaultComponents": [
-      { "name": "drill_head", "functional": true, "material": "metal" },
-      { "name": "motor", "functional": true, "material": "electronic" }
-    ]
-  },
-  "processor": {
-    "powerRequired": 1,
-    "defaultSpeed": 60,
-    "defaultComponents": [
-      { "name": "processing_unit", "functional": true, "material": "electronic" },
-      { "name": "intake", "functional": true, "material": "metal" },
-      { "name": "output_chute", "functional": true, "material": "metal" }
-    ]
-  },
-  "turret": {
-    "powerRequired": 2,
-    "range": 12,
-    "damage": 1,
-    "fireRateTicks": 4,
-    "hitChance": 0.7,
-    "defaultComponents": [
-      { "name": "targeting_sensor", "functional": true, "material": "electronic" },
-      { "name": "barrel", "functional": true, "material": "metal" },
-      { "name": "ammo_feed", "functional": true, "material": "metal" }
-    ]
-  },
-  "placementCosts": {
-    "lightning_rod": [
-      { "type": "scrapMetal", "amount": 8 },
-      { "type": "eWaste", "amount": 4 }
-    ],
-    "fabrication_unit": [
-      { "type": "scrapMetal", "amount": 12 },
-      { "type": "eWaste", "amount": 6 },
-      { "type": "intactComponents", "amount": 2 }
-    ],
-    "turret": [
-      { "type": "scrapMetal", "amount": 10 },
-      { "type": "eWaste", "amount": 5 },
-      { "type": "intactComponents", "amount": 1 }
-    ]
-  },
-  "blueprints": {
-    "basic_miner": {
-      "pattern": [[["scrap_iron", "scrap_iron"]]],
-      "result": "miner",
-      "description": "2 iron cubes side by side"
-    },
-    "basic_fabricator": {
-      "pattern": [[["copper", "scrap_iron"], ["scrap_iron", "copper"]]],
-      "result": "fabricator",
-      "description": "2x2 alternating copper and iron"
-    },
-    "turret": {
-      "pattern": [[["scrap_iron"], ["scrap_iron"], ["titanium"]]],
-      "result": "turret",
-      "description": "2 iron stacked with titanium on top"
-    }
-  }
+	"production": {
+		"furnace": {
+			"displayName": "Furnace",
+			"cubeCost": null,
+			"powerRequired": 0,
+			"buildTimeSeconds": 0,
+			"techTier": 1,
+			"hp": 200,
+			"hopperCapacity": 3,
+			"processSpeed": 1.0,
+			"poweredSpeedBonus": 1.5,
+			"note": "Provided at game start"
+		},
+		"basic_miner": {
+			"displayName": "Basic Miner",
+			"cubeCost": { "scrap_iron": 6 },
+			"powerRequired": 2,
+			"buildTimeSeconds": 15,
+			"techTier": 1,
+			"hp": 150,
+			"extractionRate": 0.1,
+			"bufferCapacity": 5
+		},
+		"smelter": {
+			"displayName": "Smelter",
+			"cubeCost": { "scrap_iron": 4, "carbon": 2, "copper": 1 },
+			"powerRequired": 2,
+			"buildTimeSeconds": 20,
+			"techTier": 3,
+			"hp": 250,
+			"note": "Scrap -> Iron, Iron+Carbon -> Steel"
+		},
+		"refiner": {
+			"displayName": "Refiner",
+			"cubeCost": { "silicon": 3, "copper": 2, "scrap_iron": 2 },
+			"powerRequired": 2,
+			"buildTimeSeconds": 20,
+			"techTier": 3,
+			"hp": 250,
+			"note": "Processes rare materials"
+		},
+		"fabrication_unit": {
+			"displayName": "Fabrication Unit",
+			"cubeCost": { "iron": 4, "silicon": 2, "copper": 2 },
+			"powerRequired": 3,
+			"buildTimeSeconds": 25,
+			"techTier": 3,
+			"hp": 300,
+			"note": "Advanced crafting recipes"
+		}
+	},
+	"infrastructure": {
+		"belt_segment": {
+			"displayName": "Belt Segment",
+			"cubeCost": { "scrap_iron": 3, "copper": 1 },
+			"powerRequired": 0,
+			"buildTimeSeconds": 5,
+			"techTier": 2,
+			"hp": 50,
+			"speed": 2.0
+		},
+		"fast_belt": {
+			"displayName": "Fast Belt",
+			"cubeCost": { "iron": 4, "copper": 2 },
+			"powerRequired": 1,
+			"buildTimeSeconds": 8,
+			"techTier": 4,
+			"hp": 80,
+			"speed": 4.0
+		},
+		"express_belt": {
+			"displayName": "Express Belt",
+			"cubeCost": { "titanium": 4, "copper": 3 },
+			"powerRequired": 2,
+			"buildTimeSeconds": 12,
+			"techTier": 5,
+			"hp": 120,
+			"speed": 8.0
+		},
+		"auto_hopper": {
+			"displayName": "Auto-Hopper",
+			"cubeCost": { "scrap_iron": 4, "copper": 2 },
+			"powerRequired": 0,
+			"buildTimeSeconds": 10,
+			"techTier": 2,
+			"hp": 80,
+			"note": "Belt to furnace feeder"
+		},
+		"lightning_rod": {
+			"displayName": "Lightning Rod",
+			"cubeCost": { "copper": 3, "scrap_iron": 2 },
+			"powerRequired": 0,
+			"buildTimeSeconds": 12,
+			"techTier": 2,
+			"hp": 150,
+			"capacity": 10,
+			"protectionRadius": 8,
+			"minSpacing": 10,
+			"note": "Generates power, attracts lightning away from units"
+		},
+		"power_wire_x5": {
+			"displayName": "Power Wire (x5)",
+			"cubeCost": { "copper": 1 },
+			"powerRequired": 0,
+			"buildTimeSeconds": 3,
+			"techTier": 2,
+			"hp": 20
+		},
+		"signal_relay": {
+			"displayName": "Signal Relay",
+			"cubeCost": { "copper": 2, "scrap_iron": 1 },
+			"powerRequired": 1,
+			"buildTimeSeconds": 10,
+			"techTier": 2,
+			"hp": 80,
+			"computePerMinute": 10,
+			"maxComputeAdded": 50
+		},
+		"signal_amplifier": {
+			"displayName": "Signal Amplifier",
+			"cubeCost": { "silicon": 3, "copper": 2 },
+			"powerRequired": 3,
+			"buildTimeSeconds": 18,
+			"techTier": 3,
+			"hp": 120,
+			"computePerMinute": 30,
+			"maxComputeAdded": 150,
+			"signalChoirComputePerMinute": 45
+		}
+	},
+	"defense": {
+		"scrap_wall_panel": {
+			"displayName": "Scrap Wall Panel",
+			"cubeCost": { "scrap_iron": 3, "rock": 2 },
+			"powerRequired": 0,
+			"buildTimeSeconds": 8,
+			"techTier": 1,
+			"wallHp": 150
+		},
+		"copper_wall_panel": {
+			"displayName": "Copper Wall Panel",
+			"cubeCost": { "copper": 4, "rock": 2 },
+			"powerRequired": 0,
+			"buildTimeSeconds": 10,
+			"techTier": 2,
+			"wallHp": 240,
+			"note": "Conducts power through wall"
+		},
+		"carbon_wall_panel": {
+			"displayName": "Carbon Wall Panel",
+			"cubeCost": { "carbon": 3, "scrap_iron": 1 },
+			"powerRequired": 0,
+			"buildTimeSeconds": 10,
+			"techTier": 3,
+			"wallHp": 360,
+			"note": "Lightweight but strong"
+		},
+		"titanium_wall_panel": {
+			"displayName": "Titanium Wall Panel",
+			"cubeCost": { "titanium": 4, "scrap_iron": 4 },
+			"powerRequired": 0,
+			"buildTimeSeconds": 15,
+			"techTier": 4,
+			"wallHp": 900,
+			"note": "Nearly impenetrable"
+		},
+		"turret": {
+			"displayName": "Turret",
+			"cubeCost": { "titanium": 3, "silicon": 2, "copper": 3 },
+			"powerRequired": 2,
+			"buildTimeSeconds": 20,
+			"techTier": 4,
+			"hp": 400,
+			"range": 12,
+			"damage": 2,
+			"fireRateTicks": 4,
+			"hitChance": 0.7
+		},
+		"bunker": {
+			"displayName": "Bunker",
+			"cubeCost": { "titanium": 4, "iron": 3, "silicon": 2 },
+			"powerRequired": 2,
+			"buildTimeSeconds": 25,
+			"techTier": 4,
+			"hp": 800,
+			"garrisonSlots": 3
+		},
+		"gate": {
+			"displayName": "Gate",
+			"cubeCost": { "iron": 2, "copper": 1 },
+			"powerRequired": 1,
+			"buildTimeSeconds": 10,
+			"techTier": 2,
+			"hp": 200,
+			"note": "Controllable passage"
+		}
+	},
+	"territory": {
+		"outpost_core": {
+			"displayName": "Outpost Core",
+			"cubeCost": { "titanium": 2, "silicon": 2, "copper": 4, "scrap_iron": 4 },
+			"powerRequired": 1,
+			"buildTimeSeconds": 30,
+			"techTier": 4,
+			"hp": 500,
+			"claimRadius": 15
+		},
+		"outpost_upgrade": {
+			"displayName": "Outpost Upgrade",
+			"cubeCost": { "titanium": 3, "silicon": 2 },
+			"powerRequired": 2,
+			"buildTimeSeconds": 20,
+			"techTier": 5,
+			"claimRadius": 25,
+			"note": "Expands claim radius"
+		},
+		"underground_storage": {
+			"displayName": "Underground Storage",
+			"cubeCost": { "rock": 6, "scrap_iron": 4 },
+			"powerRequired": 0,
+			"buildTimeSeconds": 20,
+			"techTier": 2,
+			"hp": 300,
+			"hiddenCubeCapacity": 20,
+			"note": "Hides cubes from enemy perception"
+		},
+		"decoy_pile": {
+			"displayName": "Decoy Pile",
+			"cubeCost": { "rock": 3 },
+			"powerRequired": 0,
+			"buildTimeSeconds": 8,
+			"techTier": 1,
+			"hp": 50,
+			"note": "Fake cubes, alerts on touch"
+		}
+	},
+	"endgame": {
+		"teleporter_pad": {
+			"displayName": "Teleporter Pad",
+			"cubeCost": { "quantum_crystal": 2, "rare_earth": 3, "gold": 2 },
+			"powerRequired": 5,
+			"buildTimeSeconds": 60,
+			"techTier": 5,
+			"hp": 400,
+			"teleportIntervalSeconds": 5,
+			"note": "Instant cube transport, extremely expensive"
+		},
+		"signal_jammer": {
+			"displayName": "Signal Jammer",
+			"cubeCost": { "silicon": 3, "rare_earth": 2, "gold": 1 },
+			"powerRequired": 3,
+			"buildTimeSeconds": 30,
+			"techTier": 5,
+			"hp": 200,
+			"jamRadius": 15,
+			"note": "Blocks enemy signal/hacking in radius"
+		},
+		"planet_core_tap": {
+			"displayName": "Planet Core Tap",
+			"cubeCost": { "quantum_crystal": 3, "titanium": 5, "rare_earth": 3 },
+			"powerRequired": 10,
+			"buildTimeSeconds": 120,
+			"techTier": 5,
+			"hp": 1000,
+			"note": "Victory condition building"
+		}
+	},
+	"blueprints": {
+		"basic_miner": {
+			"pattern": [[["scrap_iron", "scrap_iron"]]],
+			"result": "miner",
+			"description": "2 iron cubes side by side"
+		},
+		"basic_fabricator": {
+			"pattern": [[["copper", "scrap_iron"], ["scrap_iron", "copper"]]],
+			"result": "fabricator",
+			"description": "2x2 alternating copper and iron"
+		},
+		"turret": {
+			"pattern": [[["scrap_iron"], ["scrap_iron"], ["titanium"]]],
+			"result": "turret",
+			"description": "2 iron stacked with titanium on top"
+		}
+	}
 }

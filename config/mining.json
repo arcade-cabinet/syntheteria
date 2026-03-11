@@ -1,71 +1,92 @@
 {
-  "oreTypes": {
-    "rock": {
-      "hardness": 1,
-      "grindSpeed": 1.0,
-      "color": "#8B7355"
-    },
-    "scrap_iron": {
-      "hardness": 2,
-      "grindSpeed": 0.8,
-      "color": "#8B4513"
-    },
-    "copper": {
-      "hardness": 3,
-      "grindSpeed": 0.6,
-      "color": "#B87333"
-    },
-    "silicon": {
-      "hardness": 4,
-      "grindSpeed": 0.4,
-      "color": "#A0A0C0"
-    },
-    "titanium": {
-      "hardness": 5,
-      "grindSpeed": 0.3,
-      "color": "#C0C0C0"
-    }
-  },
-  "powderCapacity": 100,
-  "compressionRatio": 100,
-  "drillHealthDegradationPerItem": 0.001,
-  "minerBufferMax": 5,
-  "defaultExtractionRate": 0.1,
-  "harvesting": {
-    "defaultRange": 3.0,
-    "defaultPowderCapacity": 100
-  },
-  "scavenging": {
-    "range": 2.5,
-    "spawnChance": 0.35,
-    "gridSpacing": 4,
-    "gridMinX": -25,
-    "gridMaxX": 45,
-    "gridMinZ": -15,
-    "gridMaxZ": 45,
-    "jitter": 3,
-    "types": {
-      "scrapMetal": {
-        "weight": 0.5,
-        "amountMin": 2,
-        "amountRange": 3,
-        "remainingMin": 3,
-        "remainingRange": 4
-      },
-      "eWaste": {
-        "weight": 0.35,
-        "amountMin": 1,
-        "amountRange": 2,
-        "remainingMin": 2,
-        "remainingRange": 3
-      },
-      "intactComponents": {
-        "weight": 0.15,
-        "amountMin": 1,
-        "amountRange": 1,
-        "remainingMin": 1,
-        "remainingRange": 2
-      }
-    }
-  }
+	"oreTypes": {
+		"rock": { "hardness": 1, "grindSpeed": 1.0, "color": "#8B7355" },
+		"scrap_iron": { "hardness": 2, "grindSpeed": 0.8, "color": "#8B4513" },
+		"copper": { "hardness": 3, "grindSpeed": 0.6, "color": "#B87333" },
+		"silicon": { "hardness": 4, "grindSpeed": 0.4, "color": "#A0A0C0" },
+		"carbon": { "hardness": 3, "grindSpeed": 0.35, "color": "#333333" },
+		"titanium": { "hardness": 5, "grindSpeed": 0.3, "color": "#C0C0C0" },
+		"rare_earth": { "hardness": 6, "grindSpeed": 0.2, "color": "#44BBBB" },
+		"gold": { "hardness": 5, "grindSpeed": 0.25, "color": "#FFD700" },
+		"quantum_crystal": { "hardness": 8, "grindSpeed": 0.1, "color": "#8800FF" }
+	},
+	"powderCapacity": 60,
+	"defaultExtractionRate": 0.1,
+	"drillTiers": {
+		"1": {
+			"name": "Salvage Grinder",
+			"rateMultiplier": 1.0,
+			"capacity": 60,
+			"mineableTypes": ["rock", "scrap_iron"],
+			"soundLevel": "low",
+			"aggroRadius": 8,
+			"unlockCost": null
+		},
+		"2": {
+			"name": "Diamond Drill",
+			"rateMultiplier": 2.0,
+			"capacity": 100,
+			"mineableTypes": ["rock", "scrap_iron", "copper", "carbon"],
+			"soundLevel": "medium",
+			"aggroRadius": 15,
+			"unlockCost": { "scrap_iron": 4 }
+		},
+		"3": {
+			"name": "Plasma Cutter",
+			"rateMultiplier": 3.6,
+			"capacity": 150,
+			"mineableTypes": ["rock", "scrap_iron", "copper", "carbon", "silicon", "titanium"],
+			"soundLevel": "high",
+			"aggroRadius": 25,
+			"unlockCost": { "copper": 2, "silicon": 1 }
+		},
+		"4": {
+			"name": "Quantum Extractor",
+			"rateMultiplier": 6.0,
+			"capacity": 250,
+			"mineableTypes": ["rock", "scrap_iron", "copper", "carbon", "silicon", "titanium", "rare_earth", "gold", "quantum_crystal"],
+			"soundLevel": "very_high",
+			"aggroRadius": 40,
+			"unlockCost": { "titanium": 1, "rare_earth": 1 }
+		}
+	},
+	"harvesting": {
+		"defaultRange": 3.0,
+		"defaultPowderCapacity": 60
+	},
+	"drillHealthDegradationPerItem": 0.001,
+	"minerBufferMax": 5,
+	"scavenging": {
+		"range": 2.5,
+		"spawnChance": 0.35,
+		"gridSpacing": 4,
+		"gridMinX": -25,
+		"gridMaxX": 45,
+		"gridMinZ": -15,
+		"gridMaxZ": 45,
+		"jitter": 3,
+		"types": {
+			"scrapMetal": {
+				"weight": 0.5,
+				"amountMin": 2,
+				"amountRange": 3,
+				"remainingMin": 3,
+				"remainingRange": 4
+			},
+			"eWaste": {
+				"weight": 0.35,
+				"amountMin": 1,
+				"amountRange": 2,
+				"remainingMin": 2,
+				"remainingRange": 3
+			},
+			"intactComponents": {
+				"weight": 0.15,
+				"amountMin": 1,
+				"amountRange": 1,
+				"remainingMin": 1,
+				"remainingRange": 2
+			}
+		}
+	}
 }

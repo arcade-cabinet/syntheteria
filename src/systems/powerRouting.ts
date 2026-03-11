@@ -13,14 +13,14 @@
 
 import { config } from "../../config";
 import type { Entity } from "../ecs/types";
+import { world } from "../ecs/world";
 import {
 	buildings,
 	lightningRods,
 	miners,
 	processors,
 	wires,
-	world,
-} from "../ecs/world";
+} from "../ecs/koota/compat";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -125,24 +125,30 @@ function buildPowerWireGraph(): Map<string, WireEdge[]> {
 	const graph = new Map<string, WireEdge[]>();
 
 	for (const wireEntity of wires) {
-		if (wireEntity.wire.wireType !== "power") continue;
+		const wire = wireEntity.wire;
+		if (!wire) continue;
+		if (wire.wireType !== "power") continue;
 
-		const fromId = wireEntity.wire.fromEntityId;
-		const toId = wireEntity.wire.toEntityId;
+		const fromId = wire.fromEntityId;
+		const toId = wire.toEntityId;
 
 		if (!graph.has(fromId)) graph.set(fromId, []);
 		if (!graph.has(toId)) graph.set(toId, []);
 
-		graph.get(fromId)!.push({
+		const fromEdges = graph.get(fromId) ?? [];
+		const toEdges = graph.get(toId) ?? [];
+		fromEdges.push({
 			neighborId: toId,
 			wireEntity,
-			wireLength: wireEntity.wire.length,
+			wireLength: wire.length,
 		});
-		graph.get(toId)!.push({
+		toEdges.push({
 			neighborId: fromId,
 			wireEntity,
-			wireLength: wireEntity.wire.length,
+			wireLength: wire.length,
 		});
+		graph.set(fromId, fromEdges);
+		graph.set(toId, toEdges);
 	}
 
 	return graph;
@@ -171,7 +177,7 @@ function distributePowerBFS(): PowerGridSnapshot {
 
 	// Reset all power wire loads
 	for (const wireEntity of wires) {
-		if (wireEntity.wire.wireType === "power") {
+		if (wireEntity.wire?.wireType === "power") {
 			wireEntity.wire.currentLoad = 0;
 		}
 	}
@@ -345,7 +351,7 @@ function applyPowerToBuildings(snapshot: PowerGridSnapshot) {
 	for (const miner of miners) {
 		if (snapshot.poweredEntityIds.has(miner.id)) {
 			const alloc = snapshot.allocations.get(miner.id);
-			if (alloc && alloc.satisfied) {
+			if (alloc && alloc.satisfied && miner.building) {
 				miner.building.powered = true;
 				miner.building.operational = true;
 			}
@@ -355,7 +361,7 @@ function applyPowerToBuildings(snapshot: PowerGridSnapshot) {
 	for (const proc of processors) {
 		if (snapshot.poweredEntityIds.has(proc.id)) {
 			const alloc = snapshot.allocations.get(proc.id);
-			if (alloc && alloc.satisfied) {
+			if (alloc && alloc.satisfied && proc.building) {
 				proc.building.powered = true;
 				proc.building.operational = true;
 			}

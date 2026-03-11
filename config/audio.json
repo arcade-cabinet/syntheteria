@@ -3,7 +3,77 @@
   "sfxVolume": 1.0,
   "ambientVolume": 0.5,
   "musicVolume": 0.3,
+  "uiVolume": 0.6,
   "stormAmbienceVolume": 0.4,
   "combatSfxVolume": 0.8,
-  "uiFeedbackVolume": 0.6
+  "uiFeedbackVolume": 0.6,
+  "qualityTiers": {
+    "high": {
+      "maxPolyphony": 32,
+      "spatialAudioEnabled": true,
+      "biomeAmbienceEnabled": true,
+      "adaptiveMusicEnabled": true,
+      "reverbEnabled": true
+    },
+    "medium": {
+      "maxPolyphony": 16,
+      "spatialAudioEnabled": true,
+      "biomeAmbienceEnabled": true,
+      "adaptiveMusicEnabled": true,
+      "reverbEnabled": false
+    },
+    "low": {
+      "maxPolyphony": 8,
+      "spatialAudioEnabled": false,
+      "biomeAmbienceEnabled": false,
+      "adaptiveMusicEnabled": true,
+      "reverbEnabled": false
+    }
+  },
+  "sfx": {
+    "grinding": {
+      "filterFrequency": 1200,
+      "filterQ": 6,
+      "lfoRate": 14,
+      "volumeDb": -8
+    },
+    "compression": {
+      "riseFrequency": 800,
+      "riseDuration": 0.3,
+      "thumpFrequency": 60,
+      "volumeDb": -6
+    },
+    "furnace": {
+      "noiseFilterFrequency": 200,
+      "sizzleFrequency": 80,
+      "volumeDb": -10
+    },
+    "hydraulicPress": {
+      "pressFrequency": 40,
+      "releaseDecay": 0.4,
+      "volumeDb": -4
+    },
+    "magneticHum": {
+      "frequency": 120,
+      "vibratoRate": 4,
+      "vibratoDepth": 6,
+      "volumeDb": -18
+    },
+    "beltClank": {
+      "frequency": 200,
+      "decayMs": 80,
+      "volumeDb": -14
+    },
+    "laserShot": {
+      "startFrequency": 2000,
+      "endFrequency": 400,
+      "duration": 0.12,
+      "volumeDb": -8
+    },
+    "combatImpact": {
+      "noiseDecay": 0.1,
+      "filterFrequency": 800,
+      "volumeDb": -6
+    }
+  }
 }

@@ -3,12 +3,11 @@ const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
-// Watch the parent syntheteria/ directory so Metro can resolve imports
-// to ../../../config/ (the shared JSON config directory outside game/)
-const monorepoRoot = path.resolve(__dirname, '..');
-config.watchFolders = [monorepoRoot];
+// Disable watchman — falls back to fs polling. Avoids watchman recrawl
+// issues when many projects share the same arcade-cabinet parent dir.
+config.resolver.useWatchman = false;
 
-// Ensure node_modules resolution still starts from the game/ directory
+// Ensure node_modules resolution still starts from the project directory
 config.resolver.nodeModulesPaths = [
   path.resolve(__dirname, 'node_modules'),
 ];

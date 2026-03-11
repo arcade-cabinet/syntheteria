@@ -8,7 +8,7 @@
  * gameOver state via the game state store.
  */
 
-import { playerBots } from "../ecs/world";
+import { playerBots } from "../ecs/koota/compat";
 import {
 	getQuestSequence,
 	isQuestComplete,

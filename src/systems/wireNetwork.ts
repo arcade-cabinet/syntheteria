@@ -9,13 +9,13 @@
 
 import { config } from "../../config";
 import type { Entity } from "../ecs/types";
+import { world } from "../ecs/world";
 import {
 	buildings,
 	lightningRods,
 	signalRelays,
 	wires,
-	world,
-} from "../ecs/world";
+} from "../ecs/koota/compat";
 
 const WIRE_PASSTHROUGH = config.power.wirePassthroughFactor;
 const WIRE_MIN_PASSTHROUGH = config.power.wireMinPassthrough;
@@ -46,17 +46,23 @@ function buildWireGraph(
 	const graph = new Map<string, { neighborId: string; wire: Entity }[]>();
 
 	for (const wireEntity of wires) {
-		if (wireEntity.wire.wireType !== wireType) continue;
+		const wire = wireEntity.wire;
+		if (!wire) continue;
+		if (wire.wireType !== wireType) continue;
 
-		const fromId = wireEntity.wire.fromEntityId;
-		const toId = wireEntity.wire.toEntityId;
+		const fromId = wire.fromEntityId;
+		const toId = wire.toEntityId;
 
 		if (!graph.has(fromId)) graph.set(fromId, []);
 		if (!graph.has(toId)) graph.set(toId, []);
 
 		// Power wires are bidirectional for graph traversal
-		graph.get(fromId)!.push({ neighborId: toId, wire: wireEntity });
-		graph.get(toId)!.push({ neighborId: fromId, wire: wireEntity });
+		const fromEdges = graph.get(fromId) ?? [];
+		const toEdges = graph.get(toId) ?? [];
+		fromEdges.push({ neighborId: toId, wire: wireEntity });
+		toEdges.push({ neighborId: fromId, wire: wireEntity });
+		graph.set(fromId, fromEdges);
+		graph.set(toId, toEdges);
 	}
 
 	return graph;
@@ -72,8 +78,8 @@ function distributePowerThroughWires() {
 
 	// Reset all power wire loads
 	for (const wireEntity of wires) {
-		if (wireEntity.wire!.wireType === "power") {
-			wireEntity.wire!.currentLoad = 0;
+		if (wireEntity.wire?.wireType === "power") {
+			wireEntity.wire.currentLoad = 0;
 		}
 	}
 
@@ -123,8 +129,8 @@ function distributePowerThroughWires() {
 		for (const { neighborId, wire } of unvisited) {
 			visited.add(neighborId);
 
-			// Wire capacity limits flow
-			const flow = Math.min(powerPerBranch, wire.wire!.maxCapacity);
+			// Wire capacity limits flow (wire.wire is guaranteed by buildWireGraph filter)
+			const flow = Math.min(powerPerBranch, wire.wire?.maxCapacity ?? 0);
 
 			// Track wire load
 			const existingFlow = wireFlows.get(wire.id) ?? 0;
@@ -149,12 +155,10 @@ function distributePowerThroughWires() {
 
 	// Apply wire loads
 	for (const wireEntity of wires) {
-		if (wireEntity.wire.wireType !== "power") continue;
+		const wire = wireEntity.wire;
+		if (!wire || wire.wireType !== "power") continue;
 		const flow = wireFlows.get(wireEntity.id) ?? 0;
-		wireEntity.wire.currentLoad = Math.min(
-			1,
-			flow / wireEntity.wire.maxCapacity,
-		);
+		wire.currentLoad = Math.min(1, flow / wire.maxCapacity);
 	}
 
 	// Update building powered state based on wire connections
@@ -174,7 +178,7 @@ function distributePowerThroughWires() {
 function distributeSignalThroughWires() {
 	// Reset all signal wire loads
 	for (const wireEntity of wires) {
-		if (wireEntity.wire.wireType === "signal") {
+		if (wireEntity.wire?.wireType === "signal") {
 			wireEntity.wire.currentLoad = 0;
 		}
 	}
@@ -188,6 +192,7 @@ function distributeSignalThroughWires() {
 
 	for (const relay of signalRelays) {
 		if (!graph.has(relay.id)) continue;
+		if (!relay.signalRelay) continue;
 		queue.push({
 			entityId: relay.id,
 			signalStrength: relay.signalRelay.signalStrength,
@@ -205,12 +210,13 @@ function distributeSignalThroughWires() {
 			if (visited.has(neighborId)) continue;
 			visited.add(neighborId);
 
-			// Signal degrades with wire length
-			const degradation = Math.max(0, 1 - wire.wire!.length * SIGNAL_DEGRADATION);
+			// Signal degrades with wire length (wire.wire is guaranteed by buildWireGraph filter)
+			const wireLen = wire.wire?.length ?? 0;
+			const degradation = Math.max(0, 1 - wireLen * SIGNAL_DEGRADATION);
 			const propagatedStrength = current.signalStrength * degradation;
 
 			// Set wire load based on signal strength
-			wire.wire!.currentLoad = Math.min(1, propagatedStrength);
+			if (wire.wire) wire.wire.currentLoad = Math.min(1, propagatedStrength);
 
 			// Update signal relay strength if the neighbor is a relay
 			const neighborEntity = getEntityById(neighborId);

@@ -40,6 +40,8 @@ export function FactionSelect({ selected, onSelect }: FactionSelectProps) {
 
 	return (
 		<div
+			role="radiogroup"
+			aria-label="Select patron faction"
 			style={{
 				display: "grid",
 				gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
@@ -89,6 +91,9 @@ function FactionCard({
 
 	return (
 		<button
+			role="radio"
+			aria-checked={isSelected}
+			aria-label={`${civ.name} — ${civ.description}`}
 			onClick={() => onSelect(id)}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
@@ -112,6 +117,7 @@ function FactionCard({
 			{/* Portrait glyph + name */}
 			<div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
 				<div
+					aria-hidden="true"
 					style={{
 						fontFamily: MONO,
 						fontSize: "20px",
@@ -179,6 +185,7 @@ function FactionCard({
 			{/* Selected indicator */}
 			{isSelected && (
 				<div
+					aria-hidden="true"
 					style={{
 						fontFamily: MONO,
 						fontSize: "10px",

@@ -46,8 +46,8 @@ beforeEach(() => {
 
 describe("getNextDialogue", () => {
 	it("returns start dialogue for active quest at progress 0", () => {
-		startQuest("quest_first_harvest");
-		const line = getNextDialogue("quest_first_harvest", 0);
+		startQuest("awaken_systems");
+		const line = getNextDialogue("awaken_systems", 0);
 		// Should return a string (first line of start dialogue) or null
 		// depending on quest config having start dialogue
 		if (line !== null) {
@@ -62,32 +62,29 @@ describe("getNextDialogue", () => {
 	});
 
 	it("returns null for NOT_STARTED quest", () => {
-		// quest_first_harvest has not been started
-		const line = getNextDialogue("quest_first_harvest", 0);
+		// awaken_systems has not been started
+		const line = getNextDialogue("awaken_systems", 0);
 		// getQuestState returns the state but status is NOT_STARTED
 		// The function checks status === "ACTIVE" for start stage
 		// Since it's NOT_STARTED, no stage matches and we get null
-		// Actually the function doesn't check if status is ACTIVE for the "start" check —
-		// it checks state.status === "ACTIVE" && progress === 0 for "start".
-		// So NOT_STARTED won't hit any branch.
 		expect(line).toBeNull();
 	});
 
 	it("does not return same stage dialogue twice", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 
-		getNextDialogue("quest_first_harvest", 0);
-		const second = getNextDialogue("quest_first_harvest", 0);
+		getNextDialogue("awaken_systems", 0);
+		const second = getNextDialogue("awaken_systems", 0);
 
 		// Second call should return null because stage is already triggered
 		expect(second).toBeNull();
 	});
 
 	it("returns progress_50 dialogue at 50% progress", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 		// Target is 5, so 50% = progress of 2.5 or more
 		// We need progress/target >= 0.5
-		const line = getNextDialogue("quest_first_harvest", 3);
+		const line = getNextDialogue("awaken_systems", 3);
 		// May return progress_50 line if quest config has it
 		// The function checks progress / target >= 0.5
 		if (line !== null) {
@@ -96,7 +93,7 @@ describe("getNextDialogue", () => {
 	});
 
 	it("returns complete dialogue for completed quest", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 		notifyQuestEvent({
 			type: "resource_gained",
 			detail: "scrapMetal",
@@ -104,7 +101,7 @@ describe("getNextDialogue", () => {
 		});
 		updateQuests(1);
 
-		const line = getNextDialogue("quest_first_harvest", 5);
+		const line = getNextDialogue("awaken_systems", 5);
 		// Quest is completed, should get "complete" stage
 		if (line !== null) {
 			expect(typeof line).toBe("string");
@@ -118,12 +115,12 @@ describe("getNextDialogue", () => {
 
 describe("enqueueDialogue", () => {
 	it("adds lines to the queue", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 
 		const queue = getDialogueQueue();
 		expect(queue.length).toBeGreaterThan(0);
-		expect(queue[0].questId).toBe("quest_first_harvest");
+		expect(queue[0].questId).toBe("awaken_systems");
 		expect(queue[0].stage).toBe("start");
 	});
 
@@ -133,22 +130,22 @@ describe("enqueueDialogue", () => {
 	});
 
 	it("deduplicates same stage", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 		const len1 = getDialogueQueue().length;
 
-		enqueueDialogue("quest_first_harvest", "start");
+		enqueueDialogue("awaken_systems", "start");
 		const len2 = getDialogueQueue().length;
 
 		expect(len2).toBe(len1);
 	});
 
 	it("allows different stages for same quest", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 		const len1 = getDialogueQueue().length;
 
-		enqueueDialogue("quest_first_harvest", "progress_50");
+		enqueueDialogue("awaken_systems", "progress_50");
 		const len2 = getDialogueQueue().length;
 
 		// If progress_50 has dialogue, length should increase
@@ -157,8 +154,8 @@ describe("enqueueDialogue", () => {
 	});
 
 	it("does not enqueue stage with no dialogue lines", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "nonexistent_stage");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "nonexistent_stage");
 		// Should not add anything since there's no dialogue for this stage
 		// Queue should be empty (or unchanged from before)
 		const queue = getDialogueQueue();
@@ -179,8 +176,8 @@ describe("getCurrentDialogue and advanceDialogue", () => {
 	});
 
 	it("getCurrentDialogue returns head after updateDialogue", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 
 		// updateDialogue populates currentEntry from queue head
 		updateDialogue(0);
@@ -188,14 +185,14 @@ describe("getCurrentDialogue and advanceDialogue", () => {
 		const current = getCurrentDialogue();
 		if (getDialogueQueue().length > 0) {
 			expect(current).not.toBeNull();
-			expect(current!.questId).toBe("quest_first_harvest");
+			expect(current!.questId).toBe("awaken_systems");
 			expect(current!.stage).toBe("start");
 		}
 	});
 
 	it("advanceDialogue shifts queue forward", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 
 		const initialLen = getDialogueQueue().length;
 		advanceDialogue();
@@ -205,8 +202,8 @@ describe("getCurrentDialogue and advanceDialogue", () => {
 	});
 
 	it("advanceDialogue returns false when queue becomes empty", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 
 		// Drain the queue
 		let hasMore = true;
@@ -223,8 +220,8 @@ describe("getCurrentDialogue and advanceDialogue", () => {
 	});
 
 	it("advanceDialogue returns true when there is a next entry", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 
 		const queueLen = getDialogueQueue().length;
 		if (queueLen > 1) {
@@ -240,8 +237,8 @@ describe("getCurrentDialogue and advanceDialogue", () => {
 
 describe("updateDialogue timer", () => {
 	it("does not advance before LINE_DISPLAY_DURATION (4s)", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 
 		const initialLen = getDialogueQueue().length;
 
@@ -252,8 +249,8 @@ describe("updateDialogue timer", () => {
 	});
 
 	it("auto-advances after LINE_DISPLAY_DURATION (4s)", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 
 		const initialLen = getDialogueQueue().length;
 		if (initialLen === 0) return; // no dialogue in config
@@ -267,8 +264,8 @@ describe("updateDialogue timer", () => {
 	});
 
 	it("accumulates delta across multiple calls", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 
 		const initialLen = getDialogueQueue().length;
 		if (initialLen === 0) return;
@@ -293,7 +290,7 @@ describe("updateDialogue timer", () => {
 
 describe("checkMilestones", () => {
 	it("enqueues start dialogue for newly active quest at progress 0", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 		resetDialogue(); // clear any auto-enqueued dialogue
 
 		checkMilestones();
@@ -306,7 +303,7 @@ describe("checkMilestones", () => {
 	});
 
 	it("enqueues progress_50 dialogue at 50%+ progress", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 		// Target is 5, add 3 to reach 60%
 		notifyQuestEvent({
 			type: "resource_gained",
@@ -323,7 +320,7 @@ describe("checkMilestones", () => {
 	});
 
 	it("does not duplicate milestones on repeated calls", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 		resetDialogue();
 
 		checkMilestones();
@@ -345,7 +342,7 @@ describe("completion listener", () => {
 		// updateDialogue registers the onQuestComplete listener
 		updateDialogue(0);
 
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 		notifyQuestEvent({
 			type: "resource_gained",
 			detail: "scrapMetal",
@@ -364,7 +361,7 @@ describe("completion listener", () => {
 		updateDialogue(0);
 		updateDialogue(0);
 
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 		notifyQuestEvent({
 			type: "resource_gained",
 			detail: "scrapMetal",
@@ -374,7 +371,7 @@ describe("completion listener", () => {
 
 		const queue = getDialogueQueue();
 		const completeEntries = queue.filter(
-			(e) => e.stage === "complete" && e.questId === "quest_first_harvest",
+			(e) => e.stage === "complete" && e.questId === "awaken_systems",
 		);
 		// Should have at most one batch of "complete" lines (not tripled)
 		// Get count of unique lines to verify no duplication
@@ -389,8 +386,8 @@ describe("completion listener", () => {
 
 describe("resetDialogue", () => {
 	it("clears all state", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 		updateDialogue(0); // populate currentEntry
 
 		resetDialogue();
@@ -400,12 +397,12 @@ describe("resetDialogue", () => {
 	});
 
 	it("allows re-triggering stages after reset", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 		const len1 = getDialogueQueue().length;
 
 		resetDialogue();
-		enqueueDialogue("quest_first_harvest", "start");
+		enqueueDialogue("awaken_systems", "start");
 		const len2 = getDialogueQueue().length;
 
 		expect(len2).toBe(len1); // same lines re-enqueued
@@ -422,8 +419,8 @@ describe("getDialogueQueue", () => {
 	});
 
 	it("entries have questId, line, and stage", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 
 		const queue = getDialogueQueue();
 		if (queue.length > 0) {

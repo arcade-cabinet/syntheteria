@@ -20,6 +20,11 @@ jest.mock("../../ecs/world", () => ({
 	otters: mockOtters,
 }));
 
+// Also mock the Koota compat layer (otters.ts now imports from here)
+jest.mock("../../ecs/koota/compat", () => ({
+	otters: mockOtters,
+}));
+
 import { otterSystem } from "../otters";
 
 // ---------------------------------------------------------------------------

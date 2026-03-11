@@ -90,8 +90,9 @@ function BuildToolbar() {
 			{items.map(({ type, label }) => {
 				const isActive = active === type;
 				const costs = BUILDING_COSTS[type!];
+				const resourcesAsRecord = snap.resources as unknown as Record<string, number>;
 				const canAfford = costs.every(
-					(c) => snap.resources[c.type] >= c.amount,
+					(c) => (resourcesAsRecord[c.type] ?? 0) >= c.amount,
 				);
 
 				return (
@@ -310,7 +311,7 @@ function InlineFabricationPanel({ fabricator }: { fabricator: Entity }) {
 				<div style={{ marginTop: "4px" }}>
 					{RECIPES.map((recipe) => {
 						const canAfford = recipe.costs.every(
-							(c) => snap.resources[c.type] >= c.amount,
+							(c) => ((snap.resources as unknown as Record<string, number>)[c.type] ?? 0) >= c.amount,
 						);
 						return (
 							<button
@@ -418,7 +419,7 @@ function FabricationPanel() {
 				<div style={{ marginTop: "4px" }}>
 					{RECIPES.map((recipe) => {
 						const canAfford = recipe.costs.every(
-							(c) => snap.resources[c.type] >= c.amount,
+							(c) => ((snap.resources as unknown as Record<string, number>)[c.type] ?? 0) >= c.amount,
 						);
 						return (
 							<button
@@ -532,6 +533,9 @@ export function GameUI() {
 
 			{/* ── Resource bar ── */}
 			<div
+				role="status"
+				aria-live="polite"
+				aria-label="Colony resources"
 				style={{
 					display: "flex",
 					gap: "clamp(10px, 3vw, 18px)",
@@ -770,9 +774,12 @@ export function GameUI() {
 			{/* ── Combat notifications ── */}
 			{snap.combatEvents.length > 0 && (
 				<div
+					role="alert"
+					aria-live="assertive"
+					aria-label="Combat alerts"
 					style={{
 						position: "absolute",
-						top: "90px",
+						top: "calc(90px + var(--sat))",
 						right: `calc(72px + var(--sar))`,
 						background: "rgba(40, 0, 0, 0.88)",
 						border: "1px solid #ff444466",
@@ -797,6 +804,8 @@ export function GameUI() {
 			{/* ── Fragment merge notification ── */}
 			{snap.mergeEvents.length > 0 && (
 				<div
+					role="alert"
+					aria-live="assertive"
 					style={{
 						position: "absolute",
 						top: "50%",

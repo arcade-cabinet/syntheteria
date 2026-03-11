@@ -9,7 +9,7 @@
 
 import type { Entity, UnitComponent, UnitEntity } from "../ecs/types";
 import { hasArms } from "../ecs/types";
-import { buildings, units } from "../ecs/world";
+import { buildings, units } from "../ecs/koota/compat";
 import { type ResourcePool, spendResource } from "./resources";
 
 /** Repair range — units must be within this distance */

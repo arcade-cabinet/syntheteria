@@ -11,12 +11,88 @@
  * can appear.
  */
 
+import questConfig from "../../config/quests.json";
 import {
 	getActiveQuests,
 	getQuestProgress,
 	getQuestState,
 	onQuestComplete,
 } from "./questSystem";
+
+// ---------------------------------------------------------------------------
+// Dialogue lookup — resolve dialogueKeys to actual lines via otterProjections
+// ---------------------------------------------------------------------------
+
+interface OtterDialogue {
+	id: string;
+	trigger: string;
+	lines: string[];
+}
+
+/** Cache mapping dialogueKey id → dialogue entry from otterProjections. */
+const dialogueLookup: Map<string, OtterDialogue> = new Map();
+let lookupBuilt = false;
+
+function buildDialogueLookup(): void {
+	if (lookupBuilt) return;
+	lookupBuilt = true;
+
+	const config = questConfig as { otterProjections?: Array<{ dialogues?: OtterDialogue[] }> };
+	if (!config.otterProjections) return;
+
+	for (const otter of config.otterProjections) {
+		if (!otter.dialogues) continue;
+		for (const d of otter.dialogues) {
+			dialogueLookup.set(d.id, d);
+		}
+	}
+}
+
+/**
+ * Resolve dialogue lines for a quest at a given stage by looking up
+ * dialogueKeys in the otterProjections config.
+ *
+ * Stage-to-trigger mapping:
+ *   "start"       → trigger prefix "quest_start:<questId>"
+ *   "progress_50" → trigger prefix "quest_progress:<questId>" (or fallback to start lines)
+ *   "complete"    → trigger prefix "quest_complete:<questId>"
+ */
+function resolveDialogueLines(
+	questId: string,
+	dialogueKeys: string[],
+	stage: string,
+): string[] {
+	buildDialogueLookup();
+
+	// Map stage to expected trigger prefix
+	const triggerPrefix =
+		stage === "start"
+			? `quest_start:${questId}`
+			: stage === "complete"
+				? `quest_complete:${questId}`
+				: stage === "progress_50"
+					? `quest_progress:${questId}`
+					: null;
+
+	// Look through the quest's dialogueKeys for a matching trigger
+	for (const key of dialogueKeys) {
+		const entry = dialogueLookup.get(key);
+		if (!entry) continue;
+
+		if (triggerPrefix && entry.trigger === triggerPrefix) {
+			return entry.lines;
+		}
+	}
+
+	// For "start" stage, fall back to the first dialogueKey's lines
+	// (most quests only have one dialogueKey mapped to quest_start)
+	if (stage === "start" && dialogueKeys.length > 0) {
+		const entry = dialogueLookup.get(dialogueKeys[0]);
+		if (entry) return entry.lines;
+	}
+
+	return [];
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -69,7 +145,11 @@ export function getNextDialogue(
 	if (!state) return null;
 
 	const def = state.definition;
-	const target = def.target;
+	// Aggregate target from all objectives
+	const target = state.objectiveStates.reduce(
+		(sum, os) => sum + os.target,
+		0,
+	);
 
 	// Determine which stage we're in
 	let stage: string;
@@ -87,8 +167,8 @@ export function getNextDialogue(
 	const triggered = getTriggered(questId);
 	if (triggered.has(stage)) return null;
 
-	const lines = def.dialogue[stage];
-	if (!lines || lines.length === 0) return null;
+	const lines = resolveDialogueLines(questId, def.dialogueKeys, stage);
+	if (lines.length === 0) return null;
 
 	// Mark as shown and return the first line
 	triggered.add(stage);
@@ -106,8 +186,12 @@ export function enqueueDialogue(questId: string, stage: string): void {
 	const triggered = getTriggered(questId);
 	if (triggered.has(stage)) return;
 
-	const lines = state.definition.dialogue[stage];
-	if (!lines || lines.length === 0) return;
+	const lines = resolveDialogueLines(
+		questId,
+		state.definition.dialogueKeys,
+		stage,
+	);
+	if (lines.length === 0) return;
 
 	triggered.add(stage);
 	for (const line of lines) {
@@ -200,6 +284,8 @@ export function resetDialogue(): void {
 	displayTimer = 0;
 	currentEntry = null;
 	listenerRegistered = false;
+	dialogueLookup.clear();
+	lookupBuilt = false;
 }
 
 // ---------------------------------------------------------------------------

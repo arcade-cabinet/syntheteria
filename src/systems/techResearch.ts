@@ -27,7 +27,8 @@ export interface TechDefinition {
 		unlocks: string[];
 		bonuses: Record<string, number>;
 	};
-	factionBonus: string | null;
+	/** Race/faction affinity for this tech (null = universal). */
+	race: string | null;
 }
 
 export interface ActiveResearch {
@@ -45,7 +46,8 @@ export interface FactionResearchState {
 // Config references
 // ---------------------------------------------------------------------------
 
-const techDefs: TechDefinition[] = config.technology.techTree as TechDefinition[];
+const techDefs: TechDefinition[] = config.technology
+	.techTree as unknown as TechDefinition[];
 
 const factionBonuses: Record<string, number> =
 	config.technology.factionResearchBonuses as Record<string, number>;
@@ -165,7 +167,7 @@ export function techResearchSystem(
 		let effectiveCompute = compute * getSpeedMultiplier(faction);
 
 		// Apply per-tech faction affinity bonus (+50% if this tech favors the faction)
-		if (tech.factionBonus === faction) {
+		if (tech.race === faction) {
 			effectiveCompute *= 1.5;
 		}
 

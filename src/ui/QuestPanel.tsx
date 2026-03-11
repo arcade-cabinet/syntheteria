@@ -12,7 +12,7 @@
  * - Otter portrait area next to dialogue text
  */
 
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
 	advanceDialogue,
 	getCurrentDialogue,
@@ -148,7 +148,14 @@ function QuestTracker({ quest }: { quest: QuestState }) {
 		<div style={{ marginBottom: "8px" }}>
 			<div style={QUEST_TITLE}>{quest.definition.name}</div>
 			<div style={QUEST_DESC}>{progress.description}</div>
-			<div style={PROGRESS_OUTER}>
+			<div
+				role="progressbar"
+				aria-valuenow={progress.current}
+				aria-valuemin={0}
+				aria-valuemax={progress.target}
+				aria-label={`${quest.definition.name} progress`}
+				style={PROGRESS_OUTER}
+			>
 				<div
 					style={{
 						width: `${percent}%`,
@@ -163,7 +170,7 @@ function QuestTracker({ quest }: { quest: QuestState }) {
 					}}
 				/>
 			</div>
-			<div style={PROGRESS_TEXT}>
+			<div aria-hidden="true" style={PROGRESS_TEXT}>
 				{progress.current} / {progress.target}
 			</div>
 		</div>
@@ -172,18 +179,30 @@ function QuestTracker({ quest }: { quest: QuestState }) {
 
 function DialogueOverlay() {
 	const dialogue = getCurrentDialogue();
+	const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			advanceDialogue();
+		}
+	}, []);
+
 	if (!dialogue) return null;
 
 	return (
-		<div style={DIALOGUE_BOX} onClick={() => advanceDialogue()}>
-			<div style={OTTER_PORTRAIT}>
-				<span role="img" aria-label="otter">
-					~
-				</span>
+		<div
+			role="button"
+			tabIndex={0}
+			aria-label="Otter dialogue — press to advance"
+			style={DIALOGUE_BOX}
+			onClick={advanceDialogue}
+			onKeyDown={handleKeyDown}
+		>
+			<div aria-hidden="true" style={OTTER_PORTRAIT}>
+				<span>~</span>
 			</div>
 			<div style={{ flex: 1 }}>
 				<div style={DIALOGUE_TEXT}>{dialogue.line}</div>
-				<span style={ADVANCE_HINT}>tap to continue</span>
+				<span aria-hidden="true" style={ADVANCE_HINT}>tap to continue</span>
 			</div>
 		</div>
 	);
@@ -193,7 +212,7 @@ function DialogueOverlay() {
 // Completion notification
 // ---------------------------------------------------------------------------
 
-function CompletionNotification({
+const CompletionNotification = memo(function CompletionNotification({
 	questName,
 	reward,
 	onDismiss,
@@ -202,10 +221,19 @@ function CompletionNotification({
 	reward: Record<string, number>;
 	onDismiss: () => void;
 }) {
-	const rewardEntries = Object.entries(reward).filter(([_, v]) => v > 0);
+	const rewardEntries = useMemo(
+		() => Object.entries(reward).filter(([, v]) => v > 0),
+		[reward],
+	);
 
 	return (
-		<div style={COMPLETION_BANNER} onClick={onDismiss}>
+		<div
+			role="dialog"
+			aria-modal="true"
+			aria-label={`Quest complete: ${questName}`}
+			style={COMPLETION_BANNER}
+			onClick={onDismiss}
+		>
 			<div
 				style={{
 					fontSize: "var(--ui-lg)",
@@ -244,7 +272,7 @@ function CompletionNotification({
 			</div>
 		</div>
 	);
-}
+});
 
 // ---------------------------------------------------------------------------
 // Main panel
@@ -279,6 +307,7 @@ export function QuestPanel() {
 		return () => cancelAnimationFrame(animFrame);
 	}, []);
 
+	const dismissCompletion = useCallback(() => setCompletedQuest(null), []);
 	const activeQuests = getActiveQuests();
 
 	if (activeQuests.length === 0 && !getCurrentDialogue() && !completedQuest) {
@@ -289,7 +318,12 @@ export function QuestPanel() {
 		<>
 			{/* Quest tracker panel */}
 			{activeQuests.length > 0 && (
-				<div style={PANEL}>
+				<div
+					role="status"
+					aria-live="polite"
+					aria-label="Active quests"
+					style={PANEL}
+				>
 					<div
 						style={{
 							fontSize: "var(--ui-xs)",
@@ -319,7 +353,7 @@ export function QuestPanel() {
 				<CompletionNotification
 					questName={completedQuest.name}
 					reward={completedQuest.reward}
-					onDismiss={() => setCompletedQuest(null)}
+					onDismiss={dismissCompletion}
 				/>
 			)}
 		</>

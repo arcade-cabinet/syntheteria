@@ -1,14 +1,14 @@
 /**
  * FPS heads-up display — minimal, immersive overlay.
  *
- * Shows: crosshair, bot status, resources, power, component health.
- * Replaces the top-down GameUI with panels designed for first-person play.
+ * Colonization framing: "Colony Status", faction-colored accents.
+ * Shows: crosshair, colony unit status, resources, power, component health.
  *
- * The HUD has a machine-vision aesthetic — scan lines, terminal green,
- * glitch effects when components are damaged.
+ * The HUD uses a machine-vision aesthetic — scan lines, terminal accents,
+ * faction-colored highlights where possible.
  */
 
-import { useSyncExternalStore } from "react";
+import { memo, useCallback, useMemo, useSyncExternalStore } from "react";
 import {
 	getSnapshot,
 	setGameSpeed,
@@ -23,24 +23,48 @@ import { getLastHitResult } from "../systems/fpsCombat";
 
 const MONO = "'Courier New', monospace";
 
+// ---------------------------------------------------------------------------
+// Player faction accent color — set at game start via setHUDFaction()
+// ---------------------------------------------------------------------------
+
+/** Default green — replaced at game start with faction color */
+let _hudAccent = "#00ffaa";
+const _accentListeners = new Set<() => void>();
+
+/** Call this when the player's faction is known (at game start). */
+export function setHUDFaction(factionAccentColor: string) {
+	_hudAccent = factionAccentColor;
+	for (const fn of _accentListeners) fn();
+}
+
+export function getHUDAccent(): string {
+	return _hudAccent;
+}
+
+// ---------------------------------------------------------------------------
+// Subcomponents
+// ---------------------------------------------------------------------------
+
 function Crosshair() {
-	// Flash crosshair on hit (red miss / green hit) for ~200ms after firing
+	// Flash crosshair on hit (red miss / amber hit) for ~200ms after firing
 	const hitResult = getLastHitResult();
 	const age = performance.now() - hitResult.timestamp;
 	const isActive = age < 200;
+	const accent = getHUDAccent();
 	const crosshairColor = isActive
 		? hitResult.hit
 			? "#ff4444"
 			: "#ffaa00"
-		: "#00ffaa88";
+		: `${accent}88`;
 	const dotColor = isActive
 		? hitResult.hit
 			? "#ff4444"
 			: "#ffaa00"
-		: "#00ffaa";
+		: accent;
 
 	return (
 		<div
+			aria-hidden="true"
 			style={{
 				position: "absolute",
 				top: "50%",
@@ -49,7 +73,7 @@ function Crosshair() {
 				pointerEvents: "none",
 			}}
 		>
-			{/* Simple cross */}
+			{/* Horizontal arm */}
 			<div
 				style={{
 					width: "20px",
@@ -61,6 +85,7 @@ function Crosshair() {
 					transform: "translate(-50%, -50%)",
 				}}
 			/>
+			{/* Vertical arm */}
 			<div
 				style={{
 					width: "2px",
@@ -89,7 +114,8 @@ function Crosshair() {
 	);
 }
 
-function ComponentBar({ comp }: { comp: UnitComponent }) {
+const ComponentBar = memo(function ComponentBar({ comp }: { comp: UnitComponent }) {
+	const accent = getHUDAccent();
 	return (
 		<div
 			style={{
@@ -111,7 +137,7 @@ function ComponentBar({ comp }: { comp: UnitComponent }) {
 			/>
 			<span
 				style={{
-					color: comp.functional ? "#00ffaa88" : "#ff444488",
+					color: comp.functional ? `${accent}88` : "#ff444488",
 					textTransform: "uppercase",
 					letterSpacing: "0.05em",
 				}}
@@ -123,31 +149,44 @@ function ComponentBar({ comp }: { comp: UnitComponent }) {
 			)}
 		</div>
 	);
-}
+});
 
 function BotStatus() {
 	// Subscribe to state changes so we re-render when the active bot switches
 	useSyncExternalStore(subscribe, getSnapshot);
 	const bot = getActivePlayerBot();
+	const accent = getHUDAccent();
 	if (!bot) return null;
 
 	return (
 		<div
 			style={{
 				position: "absolute",
-				bottom: "16px",
-				left: "16px",
+				bottom: `calc(16px + env(safe-area-inset-bottom, 0px))`,
+				left: `calc(16px + env(safe-area-inset-left, 0px))`,
 				background: "rgba(0, 8, 4, 0.75)",
-				border: "1px solid #00ffaa33",
+				border: `1px solid ${accent}33`,
 				borderRadius: "6px",
 				padding: "10px 14px",
 				pointerEvents: "none",
 				minWidth: "140px",
 			}}
 		>
+			{/* Section label */}
 			<div
 				style={{
-					color: "#00ffaa",
+					fontSize: "9px",
+					color: `${accent}55`,
+					letterSpacing: "0.2em",
+					marginBottom: "4px",
+					textTransform: "uppercase",
+				}}
+			>
+				Colony Unit
+			</div>
+			<div
+				style={{
+					color: accent,
 					fontSize: "13px",
 					fontWeight: "bold",
 					marginBottom: "6px",
@@ -167,42 +206,51 @@ function BotStatus() {
 
 function ResourceBar() {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
+	const accent = getHUDAccent();
+
+	const stormColor =
+		snap.power.stormIntensity > 1.1
+			? "#ffaa00"
+			: snap.power.stormIntensity > 0.8
+				? accent
+				: `${accent}66`;
 
 	return (
 		<div
+			role="status"
+			aria-live="polite"
+			aria-label="Colony resources"
 			style={{
 				position: "absolute",
-				top: "12px",
+				top: `calc(12px + env(safe-area-inset-top, 0px))`,
 				left: "50%",
 				transform: "translateX(-50%)",
 				display: "flex",
 				gap: "18px",
 				fontSize: "12px",
-				color: "#00ffaa99",
+				color: `${accent}99`,
 				background: "rgba(0, 8, 4, 0.6)",
 				padding: "6px 16px",
 				borderRadius: "4px",
-				border: "1px solid #00ffaa22",
+				border: `1px solid ${accent}22`,
 				pointerEvents: "none",
 				letterSpacing: "0.05em",
+				whiteSpace: "nowrap",
 			}}
 		>
-			<span>SCRAP:{snap.resources.scrapMetal}</span>
-			<span>E-WASTE:{snap.resources.eWaste}</span>
-			<span>PARTS:{snap.resources.intactComponents}</span>
-			<span
-				style={{
-					color:
-						snap.power.stormIntensity > 1.1
-							? "#ffaa00"
-							: snap.power.stormIntensity > 0.8
-								? "#00ffaa"
-								: "#00ffaa66",
-				}}
-			>
+			<span title="Scrap metal stockpile">
+				SCRAP:{snap.resources.scrapMetal}
+			</span>
+			<span title="E-waste stockpile">
+				E-WASTE:{snap.resources.eWaste}
+			</span>
+			<span title="Intact components stockpile">
+				PARTS:{snap.resources.intactComponents}
+			</span>
+			<span style={{ color: stormColor }} title="Storm intensity">
 				STORM:{(snap.power.stormIntensity * 100).toFixed(0)}%
 			</span>
-			<span>
+			<span title="Power: generation / demand">
 				PWR:{snap.power.totalGeneration.toFixed(0)}/
 				{snap.power.totalDemand.toFixed(0)}
 			</span>
@@ -210,31 +258,44 @@ function ResourceBar() {
 	);
 }
 
+const SPEED_OPTIONS = [0.5, 1, 2] as const;
+
 function SpeedControls() {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
+	const accent = getHUDAccent();
+
+	const onHalf = useCallback(() => setGameSpeed(0.5), []);
+	const onNormal = useCallback(() => setGameSpeed(1), []);
+	const onDouble = useCallback(() => setGameSpeed(2), []);
+	const speedHandlers = useMemo(
+		() => [onHalf, onNormal, onDouble],
+		[onHalf, onNormal, onDouble],
+	);
 
 	return (
 		<div
 			style={{
 				position: "absolute",
-				top: "12px",
-				right: "16px",
+				top: `calc(12px + env(safe-area-inset-top, 0px))`,
+				right: `calc(16px + env(safe-area-inset-right, 0px))`,
 				display: "flex",
 				gap: "4px",
 				pointerEvents: "auto",
 			}}
 		>
-			{([0.5, 1, 2] as const).map((s) => (
+			{SPEED_OPTIONS.map((s, i) => (
 				<button
 					key={s}
-					onClick={() => setGameSpeed(s)}
+					onClick={speedHandlers[i]}
+					aria-label={`Set game speed to ${s}x`}
+					aria-pressed={snap.gameSpeed === s && !snap.paused}
 					style={{
 						background:
 							snap.gameSpeed === s && !snap.paused
-								? "#00ffaa"
+								? accent
 								: "rgba(0,0,0,0.6)",
-						color: snap.gameSpeed === s && !snap.paused ? "#000" : "#00ffaa",
-						border: "1px solid #00ffaa44",
+						color: snap.gameSpeed === s && !snap.paused ? "#000" : accent,
+						border: `1px solid ${accent}44`,
 						borderRadius: "3px",
 						padding: "3px 8px",
 						fontSize: "11px",
@@ -249,10 +310,12 @@ function SpeedControls() {
 			))}
 			<button
 				onClick={togglePause}
+				aria-label={snap.paused ? "Resume colony simulation" : "Pause colony simulation"}
+				aria-pressed={snap.paused}
 				style={{
 					background: snap.paused ? "#ffaa00" : "rgba(0,0,0,0.6)",
-					color: snap.paused ? "#000" : "#00ffaa",
-					border: "1px solid #00ffaa44",
+					color: snap.paused ? "#000" : accent,
+					border: `1px solid ${accent}44`,
 					borderRadius: "3px",
 					padding: "3px 8px",
 					fontSize: "11px",
@@ -262,23 +325,25 @@ function SpeedControls() {
 					minHeight: "28px",
 				}}
 			>
-				{snap.paused ? "PLAY" : "PAUSE"}
+				{snap.paused ? "RESUME" : "PAUSE"}
 			</button>
 		</div>
 	);
 }
 
-function Hints() {
+const Hints = memo(function Hints() {
 	const bot = getActivePlayerBot();
+	const accent = getHUDAccent();
 	if (!bot) return null;
 
 	return (
 		<div
+			aria-label="Control hints"
 			style={{
 				position: "absolute",
-				bottom: "16px",
-				right: "16px",
-				color: "#00ffaa44",
+				bottom: `calc(16px + env(safe-area-inset-bottom, 0px))`,
+				right: `calc(16px + env(safe-area-inset-right, 0px))`,
+				color: `${accent}44`,
 				fontSize: "10px",
 				textAlign: "right",
 				lineHeight: "1.8",
@@ -286,24 +351,31 @@ function Hints() {
 				letterSpacing: "0.05em",
 			}}
 		>
-			<div>WASD move</div>
-			<div>MOUSE look</div>
-			<div>E interact</div>
-			<div>F harvest</div>
-			<div>C compress</div>
-			<div>G grab/drop</div>
-			<div>Q switch bot</div>
-			<div>CLICK select</div>
+			<div>WASD — move</div>
+			<div>MOUSE — look</div>
+			<div>E — interact</div>
+			<div>F — harvest ore</div>
+			<div>C — compress powder</div>
+			<div>G — grab/drop cube</div>
+			<div>Q — switch unit</div>
+			<div>CLICK — select</div>
 		</div>
 	);
-}
+});
 
 function SelectedInfo() {
 	// Subscribe to trigger re-renders on state changes
-	useSyncExternalStore(subscribe, getSnapshot);
-	const selectedUnit = Array.from(units).find((u) => u.unit.selected);
-	const selectedBuilding = Array.from(buildings).find(
-		(b) => b.building.selected && !b.unit,
+	const snap = useSyncExternalStore(subscribe, getSnapshot);
+	const accent = getHUDAccent();
+	const selectedUnit = useMemo(
+		() => Array.from(units).find((u) => u.unit.selected) ?? null,
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[snap],
+	);
+	const selectedBuilding = useMemo(
+		() => Array.from(buildings).find((b) => b.building.selected && !b.unit) ?? null,
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[snap],
 	);
 
 	if (!selectedUnit && !selectedBuilding) return null;
@@ -314,23 +386,26 @@ function SelectedInfo() {
 				style={{
 					position: "absolute",
 					top: "50%",
-					right: "16px",
+					right: `calc(16px + env(safe-area-inset-right, 0px))`,
 					transform: "translateY(-50%)",
 					background: "rgba(0, 8, 4, 0.8)",
-					border: "1px solid #00ffaa33",
+					border: `1px solid ${accent}33`,
 					borderRadius: "6px",
 					padding: "10px 14px",
 					pointerEvents: "none",
 					maxWidth: "200px",
 					fontSize: "12px",
-					color: "#00ffaa",
+					color: accent,
 				}}
 			>
+				<div style={{ fontSize: "9px", color: `${accent}55`, letterSpacing: "0.2em", marginBottom: "4px" }}>
+					{selectedUnit.faction === "player" ? "COLONY UNIT" : "RIVAL UNIT"}
+				</div>
 				<div style={{ fontWeight: "bold", marginBottom: "4px" }}>
 					{selectedUnit.unit.displayName}
 				</div>
 				<div
-					style={{ fontSize: "10px", color: "#00ffaa66", marginBottom: "6px" }}
+					style={{ fontSize: "10px", color: `${accent}66`, marginBottom: "6px" }}
 				>
 					{selectedUnit.unit.type.replace(/_/g, " ").toUpperCase()}
 					{selectedUnit.faction !== "player" && (
@@ -350,7 +425,7 @@ function SelectedInfo() {
 				style={{
 					position: "absolute",
 					top: "50%",
-					right: "16px",
+					right: `calc(16px + env(safe-area-inset-right, 0px))`,
 					transform: "translateY(-50%)",
 					background: "rgba(0, 8, 4, 0.8)",
 					border: "1px solid #aa884433",
@@ -362,6 +437,9 @@ function SelectedInfo() {
 					color: "#aa8844",
 				}}
 			>
+				<div style={{ fontSize: "9px", color: "#aa884455", letterSpacing: "0.2em", marginBottom: "4px" }}>
+					COLONY STRUCTURE
+				</div>
 				<div style={{ fontWeight: "bold", marginBottom: "4px" }}>
 					{selectedBuilding.building.type.replace(/_/g, " ").toUpperCase()}
 				</div>
@@ -381,9 +459,12 @@ function CombatNotifications() {
 
 	return (
 		<div
+			role="alert"
+			aria-live="assertive"
+			aria-label="Combat alerts"
 			style={{
 				position: "absolute",
-				top: "60px",
+				top: "calc(60px + env(safe-area-inset-top, 0px))",
 				left: "50%",
 				transform: "translateX(-50%)",
 				background: "rgba(40, 0, 0, 0.85)",
@@ -406,10 +487,10 @@ function CombatNotifications() {
 	);
 }
 
-// --- Scan line overlay for machine-vision aesthetic ---
-function ScanLines() {
+const ScanLines = memo(function ScanLines() {
 	return (
 		<div
+			aria-hidden="true"
 			style={{
 				position: "absolute",
 				inset: 0,
@@ -420,17 +501,19 @@ function ScanLines() {
 			}}
 		/>
 	);
-}
+});
 
 export function FPSHUD() {
 	return (
 		<div
+			role="region"
+			aria-label="Colony HUD"
 			style={{
 				position: "absolute",
 				inset: 0,
 				pointerEvents: "none",
 				fontFamily: MONO,
-				color: "#00ffaa",
+				color: getHUDAccent(),
 			}}
 		>
 			<Crosshair />

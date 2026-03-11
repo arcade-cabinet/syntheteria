@@ -30,6 +30,13 @@ jest.mock("../../ecs/world", () => ({
 	signalRelays: mockSignalRelays,
 }));
 
+jest.mock("../../ecs/koota/compat", () => ({
+	buildings: mockBuildings,
+	lightningRods: mockLightningRods,
+	signalRelays: mockSignalRelays,
+	wires: mockWires,
+}));
+
 // Import after mocking
 import { isEntityPowered, wireNetworkSystem } from "../wireNetwork";
 

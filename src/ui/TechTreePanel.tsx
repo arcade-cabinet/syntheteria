@@ -119,9 +119,17 @@ function TechTreeNode({
 		cursor = "pointer";
 	}
 
+	const isClickable = isAvailable && !isActive;
+	const statusLabel = isComplete ? "Researched" : isActive ? "Researching" : isAvailable ? "Available — click to research" : "Locked";
+
 	return (
 		<div
-			onClick={isAvailable && !isActive ? onClick : undefined}
+			role={isClickable ? "button" : undefined}
+			tabIndex={isClickable ? 0 : undefined}
+			aria-label={`${tech.name}: ${statusLabel}${!isComplete && tech.cost.cubes > 0 ? `, costs ${tech.cost.cubes} cubes` : ""}`}
+			aria-disabled={!isClickable}
+			onClick={isClickable ? onClick : undefined}
+			onKeyDown={isClickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
 			style={{
 				position: "absolute",
 				left: x,
@@ -363,6 +371,8 @@ export function TechTreePanel({
 			{/* Toggle button */}
 			<button
 				onClick={() => setOpen(!open)}
+				aria-expanded={open}
+				aria-label={open ? "Close tech tree" : "Open tech tree"}
 				style={{
 					background: open ? `${factionColor}22` : "rgba(0, 0, 0, 0.75)",
 					color: factionColor,
@@ -382,6 +392,8 @@ export function TechTreePanel({
 			{/* Panel */}
 			{open && (
 				<div
+					role="region"
+					aria-label={`${factionName} tech tree`}
 					style={{
 						position: "absolute",
 						top: "44px",
@@ -422,6 +434,9 @@ export function TechTreePanel({
 						{/* Active research indicator */}
 						{researchProgress && (
 							<div
+								role="status"
+								aria-live="polite"
+								aria-label="Active research progress"
 								style={{
 									fontSize: "10px",
 									color: "#ffaa00",

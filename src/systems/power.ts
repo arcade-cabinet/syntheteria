@@ -10,7 +10,7 @@
 
 import { config } from "../../config";
 import type { BuildingEntity } from "../ecs/types";
-import { buildings, lightningRods, units } from "../ecs/world";
+import { buildings, lightningRods, units } from "../ecs/koota/compat";
 
 const powerCfg = config.power;
 

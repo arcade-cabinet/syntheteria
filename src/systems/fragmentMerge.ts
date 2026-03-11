@@ -8,7 +8,7 @@
 import { config } from "../../config";
 import { deleteFragment, FOG_RES, getFragment } from "../ecs/terrain";
 import type { UnitEntity } from "../ecs/types";
-import { units } from "../ecs/world";
+import { units } from "../ecs/koota/compat";
 
 const MERGE_DISTANCE = config.terrain.fragmentMergeDistance;
 

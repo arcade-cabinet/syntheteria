@@ -16,22 +16,36 @@ import { config } from "../../config";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { spawnFabricationUnit, spawnLightningRod } from "../ecs/factory";
 import { isWalkable } from "../ecs/terrain";
-import { lightningRods, units } from "../ecs/world";
+import { lightningRods, units } from "../ecs/koota/compat";
 import { buildNavGraph } from "./navmesh";
-import { getResources, type ResourcePool, spendResource } from "./resources";
+import { getResources, spendResource } from "./resources";
 
 export type PlaceableType = "lightning_rod" | "fabrication_unit" | null;
 
 export interface PlacementCost {
-	type: keyof ResourcePool;
+	type: string;
 	amount: number;
 }
 
-export const BUILDING_COSTS: Record<string, PlacementCost[]> =
-	config.buildings.placementCosts as unknown as Record<string, PlacementCost[]>;
+/** Building costs derived from cube costs in config/buildings.json categories. */
+export const BUILDING_COSTS: Record<string, PlacementCost[]> = (() => {
+	const costs: Record<string, PlacementCost[]> = {};
+	for (const category of Object.values(config.buildings)) {
+		if (typeof category !== "object" || category === null) continue;
+		for (const [id, building] of Object.entries(category)) {
+			const b = building as Record<string, unknown>;
+			if (b.cubeCost && typeof b.cubeCost === "object") {
+				costs[id] = Object.entries(b.cubeCost as Record<string, number>).map(
+					([type, amount]) => ({ type, amount }),
+				);
+			}
+		}
+	}
+	return costs;
+})();
 
 /** Minimum distance between lightning rods */
-const MIN_ROD_SPACING = config.buildings.lightning_rod.minSpacing;
+const MIN_ROD_SPACING = config.buildings.infrastructure.lightning_rod.minSpacing;
 
 let activePlacement: PlaceableType = null;
 let ghostPosition: { x: number; z: number } | null = null;
@@ -92,7 +106,7 @@ export function confirmPlacement(): boolean {
 	// Check all costs can be paid before spending
 	const pool = getResources();
 	for (const cost of costs) {
-		if (pool[cost.type] < cost.amount) return false;
+		if ((pool[cost.type] ?? 0) < cost.amount) return false;
 	}
 
 	// Spend resources

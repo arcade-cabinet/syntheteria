@@ -13,7 +13,8 @@
 
 import { config } from "../../config";
 import type { Entity } from "../ecs/types";
-import { hackables, playerBots, world } from "../ecs/world";
+import { world } from "../ecs/world";
+import { hackables, playerBots } from "../ecs/koota/compat";
 import { getGlobalCompute } from "./signalNetwork";
 
 function getEntityById(id: string): Entity | undefined {
@@ -107,12 +108,13 @@ export function hackingSystem() {
 	const computeAvailable = getComputePool();
 
 	for (const entity of hackables) {
-		if (!entity.hackable.beingHacked) continue;
+		const hackable = entity.hackable;
+		if (!hackable?.beingHacked) continue;
 
-		const dist = distToPlayer(entity.worldPosition.x, entity.worldPosition.z);
+		const dist = distToPlayer(entity.worldPosition!.x, entity.worldPosition!.z);
 		if (dist > HACK_CANCEL_RANGE) {
-			entity.hackable.beingHacked = false;
-			entity.hackable.hackProgress = 0;
+			hackable.beingHacked = false;
+			hackable.hackProgress = 0;
 			if (activeHackTargetId === entity.id) {
 				activeHackTargetId = null;
 			}
@@ -121,15 +123,15 @@ export function hackingSystem() {
 
 		if (computeAvailable <= 0) continue;
 
-		const progressPerTick = computeAvailable / entity.hackable.difficulty;
-		entity.hackable.hackProgress = Math.min(
+		const progressPerTick = computeAvailable / hackable.difficulty;
+		hackable.hackProgress = Math.min(
 			1.0,
-			entity.hackable.hackProgress + progressPerTick,
+			hackable.hackProgress + progressPerTick,
 		);
 
-		if (entity.hackable.hackProgress >= 1.0) {
-			entity.hackable.hacked = true;
-			entity.hackable.beingHacked = false;
+		if (hackable.hackProgress >= 1.0) {
+			hackable.hacked = true;
+			hackable.beingHacked = false;
 			entity.faction = "player";
 
 			if (activeHackTargetId === entity.id) {

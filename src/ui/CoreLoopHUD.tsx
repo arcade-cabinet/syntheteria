@@ -45,10 +45,13 @@ function PowderStorage() {
 
 	return (
 		<div
+			role="status"
+			aria-live="polite"
+			aria-label="Powder storage"
 			style={{
 				position: "absolute",
-				top: "50px",
-				left: "16px",
+				top: "calc(50px + env(safe-area-inset-top, 0px))",
+				left: "calc(16px + env(safe-area-inset-left, 0px))",
 				background: "rgba(0, 8, 4, 0.75)",
 				border: "1px solid #00ffaa33",
 				borderRadius: "6px",
@@ -109,9 +112,12 @@ function HarvestingIndicator() {
 
 	return (
 		<div
+			role="status"
+			aria-live="polite"
+			aria-label="Harvesting active"
 			style={{
 				position: "absolute",
-				bottom: "100px",
+				bottom: "calc(100px + env(safe-area-inset-bottom, 0px))",
 				left: "50%",
 				transform: "translateX(-50%)",
 				background: "rgba(0, 8, 4, 0.8)",
@@ -153,9 +159,14 @@ function CompressionBar() {
 
 	return (
 		<div
+			role="progressbar"
+			aria-label="Compression progress"
+			aria-valuenow={Math.round(pct)}
+			aria-valuemin={0}
+			aria-valuemax={100}
 			style={{
 				position: "absolute",
-				bottom: "70px",
+				bottom: "calc(70px + env(safe-area-inset-bottom, 0px))",
 				left: "50%",
 				transform: "translateX(-50%)",
 				background: "rgba(0, 8, 4, 0.8)",
@@ -168,6 +179,7 @@ function CompressionBar() {
 			}}
 		>
 			<div
+				aria-hidden="true"
 				style={{
 					color: "#ffaa00",
 					fontSize: "11px",
@@ -178,6 +190,7 @@ function CompressionBar() {
 				COMPRESSING {pct.toFixed(0)}%
 			</div>
 			<div
+				aria-hidden="true"
 				style={{
 					width: "100%",
 					height: "4px",
@@ -211,9 +224,12 @@ function HeldCubeIndicator() {
 
 	return (
 		<div
+			role="status"
+			aria-live="polite"
+			aria-label={`Holding ${cube?.material ?? "unknown"} cube`}
 			style={{
 				position: "absolute",
-				bottom: "16px",
+				bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
 				left: "50%",
 				transform: "translateX(-50%)",
 				background: "rgba(0, 8, 4, 0.75)",
@@ -243,10 +259,13 @@ function FurnaceStatus() {
 
 	return (
 		<div
+			role="status"
+			aria-live="polite"
+			aria-label="Furnace status"
 			style={{
 				position: "absolute",
-				top: "50px",
-				right: "16px",
+				top: "calc(50px + env(safe-area-inset-top, 0px))",
+				right: "calc(16px + env(safe-area-inset-right, 0px))",
 				background: "rgba(0, 8, 4, 0.75)",
 				border: "1px solid #ff660033",
 				borderRadius: "6px",
@@ -401,6 +420,7 @@ function FurnaceDetailPanel() {
 				<button
 					type="button"
 					onClick={() => setFurnaceId(null)}
+					aria-label="Close furnace details"
 					style={{
 						background: "none",
 						border: "1px solid #ff660044",

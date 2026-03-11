@@ -87,14 +87,6 @@ function dist3d(
 	return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
-function _distXZ(
-	a: { x: number; y: number; z: number },
-	b: { x: number; y: number; z: number },
-): number {
-	const dx = a.x - b.x;
-	const dz = a.z - b.z;
-	return Math.sqrt(dx * dx + dz * dz);
-}
 
 /**
  * Get the material with the highest count in a breakdown.

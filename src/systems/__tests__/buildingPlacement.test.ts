@@ -24,6 +24,11 @@ jest.mock("../../ecs/world", () => ({
 	world: [],
 }));
 
+jest.mock("../../ecs/koota/compat", () => ({
+	lightningRods: mockLightningRods,
+	units: mockUnits,
+}));
+
 // Track walkable/inside state
 const walkablePositions = new Set<string>();
 const buildingPositions = new Set<string>();
@@ -143,19 +148,23 @@ function markInsideBuilding(x: number, z: number) {
 // ---------------------------------------------------------------------------
 
 describe("BUILDING_COSTS", () => {
-	it("lightning_rod costs scrapMetal and eWaste", () => {
-		expect(BUILDING_COSTS.lightning_rod).toEqual([
-			{ type: "scrapMetal", amount: 8 },
-			{ type: "eWaste", amount: 4 },
-		]);
+	it("lightning_rod has cube material costs", () => {
+		expect(BUILDING_COSTS.lightning_rod).toBeDefined();
+		expect(BUILDING_COSTS.lightning_rod.length).toBeGreaterThan(0);
+		// Should include copper and scrap_iron per buildings.json
+		const materials = BUILDING_COSTS.lightning_rod.map((c: { type: string }) => c.type);
+		expect(materials).toContain("copper");
+		expect(materials).toContain("scrap_iron");
 	});
 
-	it("fabrication_unit costs scrapMetal, eWaste, and intactComponents", () => {
-		expect(BUILDING_COSTS.fabrication_unit).toEqual([
-			{ type: "scrapMetal", amount: 12 },
-			{ type: "eWaste", amount: 6 },
-			{ type: "intactComponents", amount: 2 },
-		]);
+	it("fabrication_unit has cube material costs", () => {
+		expect(BUILDING_COSTS.fabrication_unit).toBeDefined();
+		expect(BUILDING_COSTS.fabrication_unit.length).toBeGreaterThan(0);
+		// Should include iron, silicon, copper per buildings.json
+		const materials = BUILDING_COSTS.fabrication_unit.map((c: { type: string }) => c.type);
+		expect(materials).toContain("iron");
+		expect(materials).toContain("silicon");
+		expect(materials).toContain("copper");
 	});
 });
 
@@ -284,8 +293,8 @@ describe("confirmPlacement", () => {
 		setActivePlacement("lightning_rod");
 		updateGhostPosition(10, 10);
 
-		addResource("scrapMetal", 100);
-		addResource("eWaste", 100);
+		addResource("copper", 100);
+		addResource("scrap_iron", 100);
 
 		expect(confirmPlacement()).toBe(false);
 	});
@@ -295,7 +304,7 @@ describe("confirmPlacement", () => {
 		setActivePlacement("lightning_rod");
 		updateGhostPosition(5, 5);
 
-		addResource("scrapMetal", 3); // Need 8
+		addResource("copper", 1); // Need 3
 
 		expect(confirmPlacement()).toBe(false);
 	});
@@ -303,8 +312,8 @@ describe("confirmPlacement", () => {
 	it("returns false when no player unit exists (no fragmentId)", () => {
 		setActivePlacement("lightning_rod");
 		updateGhostPosition(5, 5);
-		addResource("scrapMetal", 100);
-		addResource("eWaste", 100);
+		addResource("copper", 100);
+		addResource("scrap_iron", 100);
 
 		expect(confirmPlacement()).toBe(false);
 	});
@@ -313,8 +322,8 @@ describe("confirmPlacement", () => {
 		addPlayerUnit("frag-1");
 		setActivePlacement("lightning_rod");
 		updateGhostPosition(5, 5);
-		addResource("scrapMetal", 10);
-		addResource("eWaste", 10);
+		addResource("copper", 10);
+		addResource("scrap_iron", 10);
 
 		const result = confirmPlacement();
 
@@ -325,17 +334,17 @@ describe("confirmPlacement", () => {
 			fragmentId: "frag-1",
 		});
 		const pool = getResources();
-		expect(pool.scrapMetal).toBe(2); // 10 - 8
-		expect(pool.eWaste).toBe(6); // 10 - 4
+		expect(pool.copper).toBe(7); // 10 - 3
+		expect(pool.scrap_iron).toBe(8); // 10 - 2
 	});
 
 	it("places fabrication unit on success", () => {
 		addPlayerUnit("frag-2");
 		setActivePlacement("fabrication_unit");
 		updateGhostPosition(10, 10);
-		addResource("scrapMetal", 20);
-		addResource("eWaste", 10);
-		addResource("intactComponents", 5);
+		addResource("iron", 10);
+		addResource("silicon", 10);
+		addResource("copper", 10);
 
 		const result = confirmPlacement();
 
@@ -352,8 +361,8 @@ describe("confirmPlacement", () => {
 		addPlayerUnit("frag-3");
 		setActivePlacement("lightning_rod");
 		updateGhostPosition(5, 5);
-		addResource("scrapMetal", 10);
-		addResource("eWaste", 10);
+		addResource("copper", 10);
+		addResource("scrap_iron", 10);
 
 		confirmPlacement();
 

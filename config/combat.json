@@ -1,52 +1,1053 @@
 {
-  "meleeRange": 2.5,
-  "meleeHitChance": 0.6,
-  "meleeDamage": 1,
-  "meleeHitChanceNoArms": 0.3,
-  "hackerRange": 4,
-  "welderRange": 3,
-  "welderDamage": 2,
-  "welderCooldown": 1.0,
-  "attackChancePerTick": 0.4,
-  "salvageScrapMultiplier": 1.5,
-  "salvageEWasteChance": 0.5,
-  "fpsCombat": {
-    "welderRange": 6,
-    "welderConeAngle": 0.85,
-    "enemyMeleeRange": 5,
-    "enemyAttackChancePerFrame": 0.02,
-    "hitResultValidMs": 200
-  },
-  "walls": {
-    "minWallLength": 3,
-    "defaultCubeHp": 75,
-    "wallDefenseBonus": 0.5,
-    "breachThreshold": 0.3,
-    "coverScanDistance": 3,
-    "materialWallHp": {
-      "scrap_metal": 50,
-      "scrap": 50,
-      "rock": 40,
-      "iron": 100,
-      "copper": 80,
-      "silicon": 120,
-      "steel": 200,
-      "chrome": 300,
-      "titanium": 350
-    }
-  },
-  "raid": {
-    "engageRange": 3.0,
-    "lootRange": 2.0,
-    "retreatArrivalRange": 3.0,
-    "clusterRadius": 6.0,
-    "defenderScanRadius": 12.0,
-    "forceRatioThreshold": 1.5,
-    "defenderComponentEstimate": 3,
-    "valueWeights": {
-      "scrapMetal": 1,
-      "eWaste": 2,
-      "intactComponents": 5
-    }
-  }
+	"meleeRange": 2.5,
+	"attackChancePerTick": 0.3,
+	"meleeHitChance": 0.7,
+	"meleeHitChanceNoArms": 0.3,
+	"salvageScrapMultiplier": 1.5,
+	"salvageEWasteChance": 0.5,
+	"playerHealth": {
+		"maxHp": 100,
+		"titanArmorBonusHp": 50,
+		"respawnTimerSeconds": 10,
+		"respawnTimerUpgradedSeconds": 5,
+		"spawnProtectionSeconds": 3,
+		"powderLossOnDeath": 0.5,
+		"hpRegenPerSecond": 0.5,
+		"outOfCombatDelaySeconds": 5.0,
+		"maxArmorDR": 0.75,
+		"deathCubeDropAll": true,
+		"armorSources": {
+			"scrap_plating": {
+				"armorValue": 10,
+				"drPercent": 0.09,
+				"cost": {
+					"scrap_iron": 2
+				}
+			},
+			"iron_plating": {
+				"armorValue": 20,
+				"drPercent": 0.17,
+				"cost": {
+					"iron": 2
+				}
+			},
+			"carbon_weave": {
+				"armorValue": 30,
+				"drPercent": 0.23,
+				"cost": {
+					"carbon": 2
+				}
+			},
+			"titan_armor_plate": {
+				"armorValue": 50,
+				"drPercent": 0.33,
+				"cost": {
+					"titanium": 3,
+					"carbon": 1
+				}
+			}
+		}
+	},
+	"playerWeapons": {
+		"drill_lance": {
+			"displayName": "Drill Arm",
+			"type": "melee",
+			"tiers": {
+				"1": {
+					"damage": 8,
+					"range": 2.5,
+					"attackSpeed": 1.2,
+					"special": null
+				},
+				"2": {
+					"damage": 15,
+					"range": 2.5,
+					"attackSpeed": 1.0,
+					"special": "pierces_scrap"
+				},
+				"3": {
+					"damage": 25,
+					"range": 3.0,
+					"attackSpeed": 0.8,
+					"special": "aoe_1m_cone"
+				},
+				"4": {
+					"damage": 40,
+					"range": 3.0,
+					"attackSpeed": 0.6,
+					"special": "disrupts_shields"
+				}
+			},
+			"hitDetection": {
+				"type": "capsule_cast",
+				"radius": 0.3
+			},
+			"animation": {
+				"dipAngleDegrees": 10,
+				"swingDurationMs": 200,
+				"returnDurationMs": 100
+			}
+		},
+		"voltage_arc": {
+			"displayName": "Hack Beam",
+			"type": "sustained_channel",
+			"range": 8,
+			"rangeWithModule": 12,
+			"computeCostPerSecond": 5,
+			"breakDistance": 2,
+			"movementSpeedWhileChanneling": 0.5,
+			"damageVulnerabilityWhileChanneling": 1.5,
+			"connectWarmupSeconds": 0.5,
+			"interruptProgressReset": 0.5,
+			"hackTargets": {
+				"feral_scout": {
+					"hackTimeSeconds": 5,
+					"computeCost": 25,
+					"factionResistance": 1.0
+				},
+				"feral_soldier": {
+					"hackTimeSeconds": 8,
+					"computeCost": 40,
+					"factionResistance": 1.0
+				},
+				"feral_heavy": {
+					"hackTimeSeconds": 12,
+					"computeCost": 60,
+					"factionResistance": 1.0
+				},
+				"civ_scout": {
+					"hackTimeSeconds": 8,
+					"computeCost": 40,
+					"factionResistance": 1.5
+				},
+				"civ_soldier": {
+					"hackTimeSeconds": 12,
+					"computeCost": 60,
+					"factionResistance": 1.5
+				},
+				"civ_heavy": {
+					"hackTimeSeconds": 18,
+					"computeCost": 90,
+					"factionResistance": 1.5
+				},
+				"civ_hacker": {
+					"hackTimeSeconds": 10,
+					"computeCost": 50,
+					"factionResistance": 2.0
+				},
+				"ancient_swarm_drone": {
+					"hackTimeSeconds": 3,
+					"computeCost": 15,
+					"factionResistance": 3.0
+				},
+				"ancient_sentinel": {
+					"hackTimeSeconds": 25,
+					"computeCost": 125,
+					"factionResistance": 3.0
+				},
+				"ancient_guardian": {
+					"hackTimeSeconds": 45,
+					"computeCost": 225,
+					"factionResistance": 5.0
+				},
+				"building": {
+					"hackTimeSeconds": 15,
+					"computeCost": 75,
+					"factionResistance": 1.0
+				}
+			},
+			"hackOutcomes": {
+				"temporary_control": {
+					"durationSeconds": 60
+				},
+				"permanent_conversion": {
+					"computeMultiplier": 2.0,
+					"requiresModule": "hacking_module_t2"
+				},
+				"system_crash": {
+					"disableDurationSeconds": 30
+				},
+				"data_theft": {
+					"revealsRecipesAndTechLevel": true
+				},
+				"network_breach": {
+					"disableDurationSeconds": 20
+				}
+			}
+		},
+		"cube_launcher": {
+			"displayName": "Cube Launcher",
+			"type": "ranged_projectile",
+			"maxRange": 30,
+			"fireRate": 1.5,
+			"projectileSpeed": 20,
+			"gravity": 0.3,
+			"autoLoadRange": 3,
+			"damageByMaterial": {
+				"rock": {
+					"damage": 8,
+					"knockback": 1.0,
+					"special": "shatters_on_impact"
+				},
+				"scrap_iron": {
+					"damage": 15,
+					"knockback": 1.5,
+					"special": "50_percent_recovery"
+				},
+				"copper": {
+					"damage": 12,
+					"knockback": 1.2,
+					"special": "electrical_stun_0.5s"
+				},
+				"carbon": {
+					"damage": 18,
+					"knockback": 1.0,
+					"special": "70_percent_recovery"
+				},
+				"silicon": {
+					"damage": 10,
+					"knockback": 0.8,
+					"special": "shatter_aoe_2m_3damage"
+				},
+				"iron": {
+					"damage": 20,
+					"knockback": 2.0,
+					"special": "60_percent_recovery"
+				},
+				"titanium": {
+					"damage": 30,
+					"knockback": 2.5,
+					"special": "80_percent_recovery"
+				},
+				"steel": {
+					"damage": 25,
+					"knockback": 2.2,
+					"special": "75_percent_recovery"
+				},
+				"rare_earth": {
+					"damage": 35,
+					"knockback": 1.5,
+					"special": "emp_disables_electronics_2s"
+				},
+				"gold": {
+					"damage": 40,
+					"knockback": 1.8,
+					"special": null
+				},
+				"quantum_crystal": {
+					"damage": 50,
+					"knockback": 3.0,
+					"special": "phase_damage_ignores_armor"
+				},
+				"advanced_alloy": {
+					"damage": 45,
+					"knockback": 2.5,
+					"special": "90_percent_recovery"
+				}
+			},
+			"cubeRecovery": {
+				"shatterChance": 0.3,
+				"damagedCubeHpPercent": 0.5
+			}
+		}
+	},
+	"botTypes": {
+		"scout": {
+			"displayName": "Scout Bot",
+			"hp": 60,
+			"damage": 5,
+			"range": 12,
+			"speed": 7.0,
+			"armor": 0,
+			"cost": {
+				"scrap_iron": 3,
+				"copper": 1,
+				"silicon": 1
+			},
+			"buildTimeSeconds": 20,
+			"fov": 180,
+			"perceptionRangeMultiplier": 2.0,
+			"role": "reconnaissance",
+			"attackCooldown": 1.0,
+			"hitChanceOptimal": 0.8,
+			"hitChanceMax": 0.4
+		},
+		"soldier": {
+			"displayName": "Soldier Bot",
+			"hp": 100,
+			"damage": 8,
+			"range": 10,
+			"speed": 5.0,
+			"armor": 15,
+			"cost": {
+				"scrap_iron": 6,
+				"copper": 2,
+				"silicon": 1
+			},
+			"buildTimeSeconds": 30,
+			"fov": 120,
+			"perceptionRangeMultiplier": 1.0,
+			"role": "combat",
+			"attackCooldown": 1.0,
+			"hitChanceOptimal": 0.8,
+			"hitChanceMax": 0.4,
+			"coverDamageReduction": 0.5
+		},
+		"heavy": {
+			"displayName": "Heavy Bot",
+			"hp": 200,
+			"damage": 15,
+			"aoeDamage": 5,
+			"aoeRadius": 2,
+			"range": 8,
+			"speed": 3.0,
+			"armor": 40,
+			"cost": {
+				"titanium": 5,
+				"iron": 3,
+				"silicon": 2
+			},
+			"buildTimeSeconds": 45,
+			"fov": 90,
+			"perceptionRangeMultiplier": 1.0,
+			"role": "siege",
+			"attackCooldown": 1.5,
+			"hitChanceOptimal": 0.8,
+			"hitChanceMax": 0.4,
+			"siegeMode": {
+				"damageMultiplier": 2.0,
+				"rangeMultiplier": 2.0,
+				"immobile": true
+			}
+		},
+		"hacker": {
+			"displayName": "Hacker Bot",
+			"hp": 50,
+			"damage": 3,
+			"range": 10,
+			"speed": 5.5,
+			"armor": 5,
+			"cost": {
+				"silicon": 3,
+				"copper": 2,
+				"titanium": 1
+			},
+			"buildTimeSeconds": 35,
+			"fov": 120,
+			"perceptionRangeMultiplier": 1.0,
+			"role": "support",
+			"hackChannelTimeSeconds": 8,
+			"hackBuildingTimeSeconds": 15,
+			"hackBuildingDisableSeconds": 30,
+			"attackCooldown": 1.0,
+			"hitChanceOptimal": 0.8,
+			"hitChanceMax": 0.4
+		},
+		"worker": {
+			"displayName": "Worker Bot",
+			"hp": 80,
+			"damage": 4,
+			"range": 2.5,
+			"speed": 5.0,
+			"armor": 10,
+			"cost": {
+				"scrap_iron": 4,
+				"copper": 2
+			},
+			"buildTimeSeconds": 22,
+			"fov": 120,
+			"perceptionRangeMultiplier": 1.0,
+			"role": "economy",
+			"canHarvest": true,
+			"canCarryCubes": true,
+			"cubeCarryCapacity": 4,
+			"repairRatePerSecond": 2,
+			"repairCostPer50Hp": {
+				"scrap_iron": 1
+			},
+			"attackCooldown": 1.0,
+			"hitChanceOptimal": 0.8,
+			"hitChanceMax": 0.4
+		},
+		"titan": {
+			"displayName": "Titan Bot",
+			"hp": 500,
+			"damage": 25,
+			"aoeDamage": 10,
+			"aoeRadius": 3,
+			"range": 15,
+			"speed": 2.5,
+			"armor": 60,
+			"cost": {
+				"titanium": 8,
+				"silicon": 4,
+				"rare_earth": 2,
+				"gold": 1
+			},
+			"buildTimeSeconds": 120,
+			"fov": 120,
+			"perceptionRangeMultiplier": 1.5,
+			"role": "endgame_siege",
+			"attackCooldown": 2.0,
+			"hitChanceOptimal": 0.8,
+			"hitChanceMax": 0.4,
+			"unhackable": true,
+			"regenPerSecond": 2,
+			"wallHitsToDestroy": 3
+		}
+	},
+	"veterancy": {
+		"rookie": {
+			"killsRequired": 0,
+			"damageMod": 1.0,
+			"hpMod": 1.0,
+			"speedMod": 1.0,
+			"selfRepair": 0
+		},
+		"veteran": {
+			"killsRequired": 3,
+			"damageMod": 1.1,
+			"hpMod": 1.1,
+			"speedMod": 1.0,
+			"selfRepair": 0
+		},
+		"elite": {
+			"killsRequired": 8,
+			"damageMod": 1.2,
+			"hpMod": 1.2,
+			"speedMod": 1.1,
+			"selfRepair": 0
+		},
+		"ace": {
+			"killsRequired": 15,
+			"damageMod": 1.3,
+			"hpMod": 1.3,
+			"speedMod": 1.15,
+			"selfRepair": 0.5
+		}
+	},
+	"factionHacking": {
+		"reclaimers": {
+			"hackSpeedMod": 1.0,
+			"hackResistance": 1.0
+		},
+		"volt_collective": {
+			"hackSpeedMod": 1.0,
+			"hackResistance": 1.2
+		},
+		"signal_choir": {
+			"hackSpeedMod": 1.4,
+			"hackResistance": 2.0
+		},
+		"iron_creed": {
+			"hackSpeedMod": 0.8,
+			"hackResistance": 1.5
+		}
+	},
+	"computeSystem": {
+		"baseMaxCompute": 100,
+		"signalRelayComputePerMinute": 10,
+		"signalRelayMaxComputeAdded": 50,
+		"computeCorePerMinute": 20,
+		"computeCoreMaxComputeAdded": 100,
+		"signalAmplifierPerMinute": 30,
+		"signalAmplifierSignalChoirPerMinute": 45,
+		"signalAmplifierMaxComputeAdded": 150
+	},
+	"raid": {
+		"engageRange": 3.0,
+		"lootRange": 2.0,
+		"retreatArrivalRange": 3.0,
+		"clusterRadius": 6.0,
+		"defenderScanRadius": 12.0,
+		"forceRatioThreshold": 1.5,
+		"defenderComponentEstimate": 3,
+		"valueWeights": {
+			"scrapMetal": 1,
+			"eWaste": 2,
+			"intactComponents": 5,
+			"scrap_iron": 1,
+			"copper": 2,
+			"iron": 3,
+			"silicon": 4,
+			"titanium": 6,
+			"carbon": 2,
+			"steel": 5,
+			"advanced_alloy": 8,
+			"rare_earth": 7,
+			"gold": 9,
+			"quantum_crystal": 10,
+			"rock": 0.5
+		},
+		"maxEngageDurationSeconds": 60,
+		"maxLootTimeSeconds": 30,
+		"grabTimePerCubeSeconds": 1.5,
+		"soldierCubeCapacity": 2,
+		"workerCubeCapacity": 4,
+		"encumberedSpeedMod": 0.7,
+		"pursuitBreakDistance": 30,
+		"states": [
+			"planning",
+			"approach",
+			"engage",
+			"loot",
+			"retreat",
+			"deposit"
+		],
+		"approachSpeedMod": 0.8,
+		"factionAggression": {
+			"reclaimers": {
+				"aggressionMod": 0.7,
+				"preferredRaidSize": "small",
+				"style": "steal_avoid_combat"
+			},
+			"volt_collective": {
+				"aggressionMod": 1.5,
+				"preferredRaidSize": "large",
+				"style": "smash_and_grab"
+			},
+			"signal_choir": {
+				"aggressionMod": 1.0,
+				"preferredRaidSize": "medium",
+				"style": "hack_then_steal"
+			},
+			"iron_creed": {
+				"aggressionMod": 0.5,
+				"preferredRaidSize": "large",
+				"style": "raid_when_strong"
+			}
+		},
+		"raidComposition": [
+			{
+				"minRaidPoints": 10,
+				"scouts": 1,
+				"soldiers": 1,
+				"heavies": 0,
+				"hackers": 0,
+				"workers": 1
+			},
+			{
+				"minRaidPoints": 21,
+				"scouts": 1,
+				"soldiers": 2,
+				"heavies": 0,
+				"hackers": 0,
+				"workers": 1
+			},
+			{
+				"minRaidPoints": 41,
+				"scouts": 2,
+				"soldiers": 3,
+				"heavies": 1,
+				"hackers": 0,
+				"workers": 2
+			},
+			{
+				"minRaidPoints": 71,
+				"scouts": 2,
+				"soldiers": 4,
+				"heavies": 1,
+				"hackers": 1,
+				"workers": 2
+			},
+			{
+				"minRaidPoints": 101,
+				"scouts": 2,
+				"soldiers": 5,
+				"heavies": 2,
+				"hackers": 1,
+				"workers": 3
+			},
+			{
+				"minRaidPoints": 151,
+				"scouts": 3,
+				"soldiers": 6,
+				"heavies": 2,
+				"hackers": 2,
+				"workers": 3
+			},
+			{
+				"minRaidPoints": 201,
+				"scouts": 3,
+				"soldiers": 8,
+				"heavies": 3,
+				"hackers": 2,
+				"workers": 4
+			}
+		],
+		"cubeVisibilityFormula": {
+			"baseRange": 10,
+			"sqrtValueMultiplier": 2
+		}
+	},
+	"walls": {
+		"defaultCubeHp": 25,
+		"minWallLength": 3,
+		"wallDefenseBonus": 0.5,
+		"breachThreshold": 3,
+		"coverScanDistance": 3,
+		"cubeSnapDistance": 0.3,
+		"maxStackHeight": 8,
+		"unstableHeight": 6,
+		"toppleChancePerTick": 0.1,
+		"toppleThreshold": 0.5,
+		"fallingCubeDamage": 10,
+		"fallingCubeSelfDamagePercent": 0.2,
+		"collapseAnimationSecondsPerTier": 0.5,
+		"materialWallHp": {
+			"rock": {
+				"perCube": 25,
+				"perPanel": 75
+			},
+			"scrap_iron": {
+				"perCube": 50,
+				"perPanel": 150
+			},
+			"copper": {
+				"perCube": 40,
+				"perPanel": 120
+			},
+			"carbon": {
+				"perCube": 60,
+				"perPanel": 180
+			},
+			"iron": {
+				"perCube": 90,
+				"perPanel": 270
+			},
+			"silicon": {
+				"perCube": 30,
+				"perPanel": 90
+			},
+			"titanium": {
+				"perCube": 150,
+				"perPanel": 450
+			},
+			"steel": {
+				"perCube": 200,
+				"perPanel": 600
+			},
+			"advanced_alloy": {
+				"perCube": 250,
+				"perPanel": 750
+			}
+		}
+	},
+	"siege": {
+		"baseDestruction": {
+			"coreExplosionRadius": 5,
+			"coreExplosionDamage": 30,
+			"coreMaterialDropPercent": 0.3,
+			"botConfusedDurationSeconds": 5,
+			"botReassignmentTimeoutSeconds": 30,
+			"phoneHomeRadius": 50,
+			"feralAttackRange": 5,
+			"buildingShutdownDelaySeconds": 3
+		},
+		"supplyLines": {
+			"cascadeFailureThreshold": 3,
+			"degradedThroughputThreshold": 0.7,
+			"severedThroughputThreshold": 0.3,
+			"convoyEscortRatio": 3,
+			"convoyFrequencySeconds": 30,
+			"ambushStunDurationSeconds": 2,
+			"ambushDetectionRange": 5,
+			"convoyDropPercent": 1.0
+		},
+		"isolation": {
+			"beltWeight": 0.4,
+			"relayWeight": 0.3,
+			"convoyWeight": 0.3,
+			"isolatedThreshold": 0.7,
+			"minIsolationTimeSeconds": 60
+		},
+		"bombardment": {
+			"minDurationSeconds": 60,
+			"maxDurationSeconds": 120,
+			"heavySiegeDamageMultiplier": 2.0,
+			"heavySiegeRangeMultiplier": 2.0
+		},
+		"defense": {
+			"minDefensePriority": 0.2,
+			"maxDefensePriority": 1.0,
+			"defenseValueDivisor": 100,
+			"maxDefenseAllocation": 0.8,
+			"patrolRadiusMin": 0.5,
+			"patrolRadiusMax": 1.0,
+			"alertLevelMultipliers": [
+				1.0,
+				1.5,
+				2.0
+			],
+			"recentAttackWindowSeconds": 120,
+			"cubeVisibilityBase": 10,
+			"cubeVisibilityScaleFactor": 2
+		},
+		"loot": {
+			"priorityOrder": [
+				"quantum_crystal",
+				"gold",
+				"rare_earth",
+				"titanium",
+				"advanced_alloy",
+				"steel",
+				"iron",
+				"silicon",
+				"copper",
+				"carbon",
+				"scrap_iron",
+				"rock"
+			]
+		}
+	},
+	"squadBehavior": {
+		"patrolSpacing": 3,
+		"combatSpacing": 5,
+		"siegeSpacing": 8,
+		"retreatSpacing": 2,
+		"engageIfOutnumbered2to1": true,
+		"engageIfEven": "cautious",
+		"retreatIfHpBelow": 0.3,
+		"rushDefendFriendlyBuildingRadius": 20,
+		"prioritizeHighValueTargets": true
+	},
+	"fpsCombat": {
+		"welderRange": 6,
+		"welderConeAngle": 0.85,
+		"enemyMeleeRange": 5,
+		"enemyAttackChancePerFrame": 0.02,
+		"hitResultValidMs": 200
+	},
+	"armorFormula": {
+		"damageReduction": "armor / (armor + 100)",
+		"effectiveHp": "hp / (1 - damageReduction)"
+	},
+	"ancientMachines": {
+		"swarm_drone": {
+			"displayName": "Swarm Drone",
+			"hp": 30,
+			"damage": 1,
+			"range": 4,
+			"speed": 4.0,
+			"location": "near_quantum_crystal",
+			"triggerRadius": 10,
+			"swarmSize": 8,
+			"loot": {
+				"eWaste": 2,
+				"quantum_crystal_shard_chance": 0.1
+			}
+		},
+		"sentinel": {
+			"displayName": "Sentinel",
+			"hp": 200,
+			"damage": 5,
+			"range": 20,
+			"speed": 0,
+			"location": "near_gold_rare_earth",
+			"triggerRadius": 10,
+			"loot": {
+				"scrap": 10,
+				"eWaste": 10,
+				"intact_components": 3,
+				"gold": 1
+			}
+		},
+		"guardian": {
+			"displayName": "Guardian",
+			"hp": 500,
+			"damage": 10,
+			"range": 12,
+			"speed": 1.0,
+			"location": "near_quantum_crystal",
+			"triggerRadius": 15,
+			"awakenCondition": "tech_level_gte_3",
+			"phases": {
+				"1": {
+					"hpRange": [
+						51,
+						100
+					],
+					"speed": 1.0,
+					"turnSpeedDegPerSec": 90,
+					"attackPattern": "3_shots_2s_pause"
+				},
+				"2": {
+					"hpRange": [
+						26,
+						50
+					],
+					"speed": 2.0,
+					"groundSlamIntervalSeconds": 8,
+					"groundSlamRadius": 10,
+					"groundSlamDamage": 15,
+					"groundSlamTelegraphSeconds": 1.5
+				},
+				"3": {
+					"hpRange": [
+						0,
+						25
+					],
+					"spawnDrones": 4,
+					"selfRepairHpPerSecond": 3,
+					"selfRepairDurationSeconds": 10
+				}
+			},
+			"loot": {
+				"scrap": 30,
+				"eWaste": 15,
+				"intact_components": 5,
+				"rare_earth": 3
+			}
+		},
+		"colossus": {
+			"displayName": "Colossus",
+			"hp": 1500,
+			"damage": 30,
+			"aoeDamage": 15,
+			"aoeRadius": 5,
+			"range": 15,
+			"speed": 0.5,
+			"location": "planet_core_access",
+			"triggerRadius": 20,
+			"awakenCondition": "tech_level_gte_5_and_game_minute_gte_60",
+			"loot": {
+				"quantum_crystal": 5,
+				"rare_earth": 10
+			}
+		}
+	},
+	"nativeCombat": {
+		"warrior": {
+			"hp": 90,
+			"damage": 6,
+			"speed": 5.5,
+			"range": 3,
+			"aggroRadius": 8,
+			"warningPhaseSeconds": 3,
+			"swarmSize": {
+				"min": 4,
+				"max": 8
+			},
+			"terrainBonus": {
+				"speedMod": 1.3,
+				"damageMod": 1.2
+			},
+			"hitAndRunAttackSeconds": 10,
+			"hitAndRunRetreatDistance": 15,
+			"maxPursuitDistance": 30
+		},
+		"elder": {
+			"hp": 200,
+			"nonCombatant": true
+		},
+		"hostilityLevels": {
+			"peaceful": {
+				"behavior": "ignore"
+			},
+			"wary": {
+				"behavior": "warn_then_attack",
+				"warningSeconds": 3
+			},
+			"hostile": {
+				"behavior": "attack_on_sight"
+			},
+			"allied": {
+				"behavior": "fight_alongside",
+				"patrolWarriors": 2,
+				"warningAdvanceSeconds": 30
+			}
+		},
+		"villages": {
+			"scout_camp": {
+				"warriors": 4,
+				"lootCubes": 5,
+				"uniqueMaterials": 2,
+				"hostilityCost": "wary_to_hostile"
+			},
+			"settlement": {
+				"warriors": 6,
+				"lootCubes": 12,
+				"uniqueMaterials": 5,
+				"rareArtifacts": 1,
+				"hostilityCost": "permanent_hostile"
+			},
+			"elder_village": {
+				"warriors": 8,
+				"hasElder": true,
+				"lootCubes": 20,
+				"uniqueMaterials": 10,
+				"elderArtifacts": 1,
+				"hostilityCost": "all_natives_hostile"
+			}
+		}
+	},
+	"factionCombatBonuses": {
+		"reclaimers": {
+			"bonus": "scrap_recovery",
+			"scrapDropBonus": 0.5,
+			"repairCostReduction": 0.2
+		},
+		"volt_collective": {
+			"bonus": "shock_weapons",
+			"stunChanceOnHit": 0.15,
+			"stunDurationTicks": 3
+		},
+		"signal_choir": {
+			"bonus": "hack_acceleration",
+			"hackSpeedMultiplier": 1.4,
+			"massHackTechTier": 5,
+			"massHackRadius": 10,
+			"massHackComputeCost": 200,
+			"massHackChannelSeconds": 15
+		},
+		"iron_creed": {
+			"bonus": "fortification",
+			"wallHpBonus": 0.4,
+			"behindWallDamageBonus": 0.2
+		}
+	},
+	"factionUniqueUnits": {
+		"scrounger": {
+			"faction": "reclaimers",
+			"displayName": "Scrounger Bot",
+			"hp": 70,
+			"damage": 4,
+			"speed": 7.5,
+			"special": "auto_scavenges_kills_for_scrap"
+		},
+		"shock_trooper": {
+			"faction": "volt_collective",
+			"displayName": "Shock Trooper",
+			"hp": 120,
+			"damage": 10,
+			"aoeDamage": 5,
+			"aoeRadius": 3,
+			"speed": 4.0,
+			"special": "lightning_chain_attack"
+		},
+		"infiltrator": {
+			"faction": "signal_choir",
+			"displayName": "Infiltrator Bot",
+			"hp": 50,
+			"damage": 3,
+			"speed": 6.0,
+			"special": "cloaks_30s_hacks_while_cloaked"
+		},
+		"bastion": {
+			"faction": "iron_creed",
+			"displayName": "Bastion Bot",
+			"hp": 160,
+			"damageMobile": 8,
+			"damageDeployed": 15,
+			"speedMobile": 2.5,
+			"speedDeployed": 0,
+			"special": "deploys_into_stationary_turret"
+		}
+	},
+	"buildingDamage": {
+		"buildings": {
+			"furnace": {
+				"hp": 200,
+				"repairCostPer50Hp": {
+					"scrap_iron": 2
+				}
+			},
+			"miner": {
+				"hp": 150,
+				"repairCostPer50Hp": {
+					"scrap_iron": 1
+				}
+			},
+			"smelter": {
+				"hp": 200,
+				"repairCostPer50Hp": {
+					"scrap_iron": 2,
+					"carbon": 1
+				}
+			},
+			"refiner": {
+				"hp": 200,
+				"repairCostPer50Hp": {
+					"silicon": 1,
+					"copper": 1
+				}
+			},
+			"fabrication_unit": {
+				"hp": 250,
+				"repairCostPer50Hp": {
+					"iron": 2,
+					"silicon": 1
+				}
+			},
+			"lightning_rod": {
+				"hp": 100,
+				"repairCostPer50Hp": {
+					"copper": 1
+				}
+			},
+			"signal_relay": {
+				"hp": 80,
+				"repairCostPer50Hp": {
+					"copper": 1
+				}
+			},
+			"belt_segment": {
+				"hp": 50,
+				"repairCostPer50Hp": {
+					"scrap_iron": 1
+				}
+			},
+			"turret": {
+				"hp": 400,
+				"repairCostPer50Hp": {
+					"titanium": 2,
+					"silicon": 1
+				}
+			},
+			"outpost_core": {
+				"hp": 500,
+				"repairCostPer50Hp": {
+					"iron": 3,
+					"silicon": 2
+				}
+			}
+		},
+		"damageStates": {
+			"healthy": {
+				"hpRange": [
+					76,
+					100
+				],
+				"efficiency": 1.0
+			},
+			"damaged": {
+				"hpRange": [
+					51,
+					75
+				],
+				"efficiency": 0.8
+			},
+			"critical": {
+				"hpRange": [
+					26,
+					50
+				],
+				"efficiency": 0.5
+			},
+			"failing": {
+				"hpRange": [
+					1,
+					25
+				],
+				"efficiency": 0.2
+			},
+			"destroyed": {
+				"hpRange": [
+					0,
+					0
+				],
+				"dropPercent": 0.3
+			}
+		}
+	}
 }

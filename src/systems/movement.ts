@@ -4,19 +4,19 @@
  */
 
 import { getTerrainHeight } from "../ecs/terrain";
-import { movingUnits } from "../ecs/world";
+import { movingUnits } from "../ecs/koota/compat";
 
 export function movementSystem(delta: number, gameSpeed: number) {
 	for (const entity of movingUnits) {
-		const nav = entity.navigation;
+		const nav = entity.navigation!;
 		if (!nav.moving || nav.pathIndex >= nav.path.length) {
 			nav.moving = false;
 			continue;
 		}
 
 		const target = nav.path[nav.pathIndex];
-		const wp = entity.worldPosition;
-		const step = entity.unit.speed * delta * gameSpeed;
+		const wp = entity.worldPosition!;
+		const step = entity.unit!.speed * delta * gameSpeed;
 
 		const dx = target.x - wp.x;
 		const dz = target.z - wp.z;

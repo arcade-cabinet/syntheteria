@@ -1,60 +1,637 @@
 {
-  "biomes": {
-    "rust_plains": {
-      "moveSpeedMod": 1.0,
-      "harvestMod": 1.0,
-      "visibility": 1.0,
-      "bgColor": "#8B6914",
-      "signalBonus": 1.0,
-      "passable": true
-    },
-    "scrap_hills": {
-      "moveSpeedMod": 0.8,
-      "harvestMod": 1.2,
-      "visibility": 1.0,
-      "bgColor": "#6B5B3A",
-      "signalBonus": 1.0,
-      "passable": true
-    },
-    "chrome_ridge": {
-      "moveSpeedMod": 0.6,
-      "harvestMod": 0.8,
-      "visibility": 0.7,
-      "bgColor": "#A0A0B0",
-      "signalBonus": 1.0,
-      "passable": true
-    },
-    "signal_plateau": {
-      "moveSpeedMod": 0.9,
-      "harvestMod": 0.7,
-      "visibility": 1.0,
-      "bgColor": "#6A5ACD",
-      "signalBonus": 1.5,
-      "passable": true
-    },
-    "deep_water": {
-      "moveSpeedMod": 0.0,
-      "harvestMod": 0.0,
-      "visibility": 0.3,
-      "bgColor": "#1A1A3E",
-      "signalBonus": 0.5,
-      "passable": false
-    },
-    "shallow_water": {
-      "moveSpeedMod": 0.4,
-      "harvestMod": 0.0,
-      "visibility": 0.5,
-      "bgColor": "#2E4A6E",
-      "signalBonus": 0.8,
-      "passable": true
-    }
-  },
-  "defaultModifiers": {
-    "moveSpeedMod": 1.0,
-    "harvestMod": 1.0,
-    "visibility": 1.0,
-    "bgColor": "#555555",
-    "signalBonus": 1.0,
-    "passable": true
-  }
+	"biomes": {
+		"rust_plains": {
+			"displayName": "Rust Plains",
+			"loreName": "The Foundry Plains",
+			"moveSpeedMod": 1.0,
+			"harvestMod": 1.0,
+			"visibility": 1.0,
+			"signalBonus": 1.0,
+			"passable": true,
+			"bgColor": "#8B6914",
+			"lightningMultiplier": 1.0,
+			"alienSpawnRate": 0.02,
+			"resourceMultipliers": {
+				"rock": 1.5,
+				"scrap_iron": 1.3,
+				"gold": 2.0
+			},
+			"features": [
+				"scrap_piles",
+				"corroded_machinery"
+			],
+			"strategicRole": "Starting territory, furnace placement, belt logistics",
+			"ferrovoreNote": "The flat terrain is ancient Ferrovore digestive chamber. Slag pools are metabolic vents still active after billions of years."
+		},
+		"scrap_hills": {
+			"displayName": "Scrap Hills",
+			"loreName": "The Slag Heaps",
+			"moveSpeedMod": 0.8,
+			"harvestMod": 1.2,
+			"visibility": 1.0,
+			"signalBonus": 1.0,
+			"passable": true,
+			"bgColor": "#6B5B3A",
+			"lightningMultiplier": 1.0,
+			"alienSpawnRate": 0.03,
+			"resourceMultipliers": {
+				"titanium": 1.5,
+				"carbon": 1.3,
+				"rock": 1.2
+			},
+			"features": [
+				"slag_mounds",
+				"toxic_pools",
+				"narrow_passes"
+			],
+			"elevationBonus": {
+				"rangeBonus": 0.15,
+				"damageBonus": 0.1
+			},
+			"strategicRole": "Titanium access, defensible hills, chokepoints between hills",
+			"ferrovoreNote": "Not waste piles but Ferrovore construction sites. Rare earth nodules are fossilized bioluminescent organs."
+		},
+		"chrome_ridge": {
+			"displayName": "Chrome Ridge",
+			"loreName": "The Storm Spine",
+			"moveSpeedMod": 0.6,
+			"harvestMod": 0.8,
+			"visibility": 0.7,
+			"signalBonus": 1.0,
+			"passable": true,
+			"bgColor": "#A0A0B0",
+			"lightningMultiplier": 3.0,
+			"alienSpawnRate": 0.03,
+			"resourceMultipliers": {
+				"titanium": 2.0,
+				"silicon": 1.5,
+				"carbon": 1.2
+			},
+			"features": [
+				"cliff_faces",
+				"chrome_deposits",
+				"reflective_surfaces",
+				"treacherous_paths"
+			],
+			"clearWeatherVisibilityBonus": 1.3,
+			"strategicRole": "Premium materials, natural fortress locations, limited access points",
+			"ferrovoreNote": "The highest point on the planet. Atmospheric array built by Architects on Ferrovore crystalline spires, possibly for aesthetic as much as functional reasons."
+		},
+		"signal_plateau": {
+			"displayName": "Signal Plateau",
+			"loreName": "The Processor Graveyards",
+			"moveSpeedMod": 0.9,
+			"harvestMod": 0.7,
+			"visibility": 1.0,
+			"signalBonus": 1.5,
+			"passable": true,
+			"bgColor": "#6A5ACD",
+			"lightningMultiplier": 1.5,
+			"alienSpawnRate": 0.05,
+			"resourceMultipliers": {
+				"silicon": 1.5,
+				"rare_earth": 2.0,
+				"quantum_crystal": 2.0,
+				"copper": 1.3
+			},
+			"features": [
+				"processor_towers",
+				"silicon_fields",
+				"em_interference_zones",
+				"ancient_sentinels"
+			],
+			"processorTowerSignalBonus": 2.0,
+			"emInterferenceRadius": 5,
+			"strategicRole": "Signal network hub, rare resource access, compute generation",
+			"ferrovoreNote": "Processor towers are fossilized Ferrovore neural lattice columns. The server racks running maintenance loops for a billion years are built on biological substrate."
+		},
+		"cable_forest": {
+			"displayName": "Cable Forest",
+			"loreName": "The Cable Forests",
+			"moveSpeedMod": 0.5,
+			"harvestMod": 1.1,
+			"visibility": 0.4,
+			"signalBonus": 0.6,
+			"passable": true,
+			"bgColor": "#2A3A2A",
+			"lightningMultiplier": 0.0,
+			"alienSpawnRate": 0.05,
+			"resourceMultipliers": {
+				"copper": 2.0,
+				"carbon": 1.5,
+				"quantum_crystal": 1.5,
+				"scrap_iron": 1.2
+			},
+			"features": [
+				"cable_canopy",
+				"natural_traps",
+				"ambush_corridors"
+			],
+			"cableCanopy": {
+				"blocksLightning": true,
+				"blocksAcid": true
+			},
+			"snareChance": 0.05,
+			"snareDurationSeconds": 2,
+			"strategicRole": "Copper bonanza, ambush terrain, difficult to raid",
+			"ferrovoreNote": "Cable columns are Ferrovore neural lattice structures. The copper wiring bundles are crystallized digestive byproducts, not manufactured conduits."
+		},
+		"deep_water": {
+			"displayName": "Deep Water",
+			"moveSpeedMod": 0.0,
+			"harvestMod": 0.0,
+			"visibility": 0.3,
+			"signalBonus": 0.5,
+			"passable": false,
+			"bgColor": "#1A1A3E",
+			"lightningMultiplier": 1.0,
+			"alienSpawnRate": 0,
+			"resourceMultipliers": {},
+			"features": [],
+			"strategicRole": "Impassable terrain, border obstacle"
+		},
+		"shallow_water": {
+			"displayName": "Shallow Water",
+			"moveSpeedMod": 0.4,
+			"harvestMod": 0.0,
+			"visibility": 0.5,
+			"signalBonus": 0.8,
+			"passable": true,
+			"bgColor": "#2E4A6E",
+			"lightningMultiplier": 2.0,
+			"alienSpawnRate": 0,
+			"resourceMultipliers": {},
+			"features": [
+				"conducts_lightning"
+			],
+			"strategicRole": "Hazardous crossing, lightning conductor"
+		}
+	},
+	"defaultModifiers": {
+		"moveSpeedMod": 1.0,
+		"harvestMod": 1.0,
+		"visibility": 1.0,
+		"bgColor": "#555555",
+		"signalBonus": 1.0,
+		"passable": true
+	},
+	"terrain": {
+		"slopeModifiers": {
+			"flat": {
+				"threshold": 0.1,
+				"speedMod": 1.0
+			},
+			"gentle": {
+				"threshold": 0.3,
+				"speedMod": 0.9
+			},
+			"moderate": {
+				"threshold": 0.5,
+				"speedMod": 0.7,
+				"buildRestricted": true
+			},
+			"steep": {
+				"threshold": 0.7,
+				"speedMod": 0.5,
+				"noBuild": true
+			},
+			"cliff": {
+				"threshold": 1.0,
+				"speedMod": 0.0,
+				"impassable": true
+			}
+		},
+		"heightAdvantage": {
+			"rangeBonus": 0.15,
+			"damageBonus": 0.1,
+			"rangePenalty": -0.1,
+			"accuracyPenalty": -0.15
+		},
+		"hazards": {
+			"acid_pool": {
+				"damagePerSecond": 5,
+				"biomes": [
+					"cable_forest",
+					"scrap_hills"
+				]
+			},
+			"magnetic_anomaly": {
+				"headingOffsetDegrees": 30,
+				"biomes": [
+					"signal_plateau"
+				],
+				"normalRadius": 3,
+				"emSurgeRadius": 8,
+				"rareEarthYieldBonus": 0.5
+			},
+			"thermal_vent": {
+				"damagePerSecond": 10,
+				"stormDamageMultiplier": 3,
+				"biomes": [
+					"chrome_ridge"
+				]
+			},
+			"rubble_field": {
+				"speedMod": 0.4,
+				"snareChance": 0.2,
+				"biomes": [
+					"rust_plains"
+				]
+			},
+			"sinkhole": {
+				"damage": 30,
+				"stuckDurationSeconds": 5,
+				"warningDurationSeconds": 30,
+				"miningDensityThreshold": 20,
+				"radius": {
+					"min": 2,
+					"max": 4
+				},
+				"depth": 3,
+				"probabilityPerTick": 0.001
+			}
+		},
+		"bridges": {
+			"scrap_bridge": {
+				"span": 3,
+				"hp": 100,
+				"cost": {
+					"scrap_iron": 4
+				},
+				"width": 1
+			},
+			"iron_bridge": {
+				"span": 5,
+				"hp": 250,
+				"cost": {
+					"iron": 6,
+					"copper": 2
+				},
+				"width": 2
+			},
+			"titanium_bridge": {
+				"span": 8,
+				"hp": 500,
+				"cost": {
+					"titanium": 8,
+					"iron": 4
+				},
+				"width": 3
+			}
+		}
+	},
+	"processingCycles": {
+		"dormant": {
+			"displayName": "Dormant",
+			"durationMinutes": 15,
+			"weatherBias": {
+				"clear": 0.2,
+				"storm": -0.1
+			},
+			"resourceBonus": {
+				"rock": 0.2,
+				"scrap_iron": 0.2
+			},
+			"combatMod": 1.0,
+			"narrative": "Core systems idle. Calm surface."
+		},
+		"active": {
+			"displayName": "Active",
+			"durationMinutes": 15,
+			"weatherBias": {
+				"storm": 0.15,
+				"electromagnetic_surge": 0.1
+			},
+			"resourceBonus": {
+				"copper": 0.15,
+				"silicon": 0.15
+			},
+			"powerBonus": 0.3,
+			"combatMod": 1.0,
+			"narrative": "Core systems processing. Electrical activity rises."
+		},
+		"volatile": {
+			"displayName": "Volatile",
+			"durationMinutes": 12,
+			"weatherBias": {
+				"storm": 0.25,
+				"acid_rain": 0.15
+			},
+			"resourceBonus": {
+				"titanium": 0.2,
+				"carbon": 0.2
+			},
+			"movementPenalty": -0.1,
+			"combatMod": 1.1,
+			"narrative": "Core overheating. Planet surface destabilizes."
+		},
+		"convergent": {
+			"displayName": "Convergent",
+			"durationMinutes": 10,
+			"weatherBias": {
+				"electromagnetic_surge": 0.3,
+				"acid_rain": 0.2
+			},
+			"resourceBonus": {
+				"rare_earth": 0.3,
+				"gold": 0.3
+			},
+			"hackRangeBonus": 0.5,
+			"lightningMultiplier": 2.0,
+			"combatMod": 1.0,
+			"narrative": "Core systems peak. Maximum danger, maximum reward."
+		},
+		"aftermath": {
+			"displayName": "Aftermath",
+			"durationMinutes": 8,
+			"weatherBias": {
+				"clear": 0.3,
+				"overcast": 0.2
+			},
+			"resourceBonus": {
+				"all": 0.1
+			},
+			"repairSpeedBonus": 0.5,
+			"combatMod": 1.0,
+			"narrative": "Core exhausted. Brief window of recovery."
+		}
+	},
+	"cycleProgression": [
+		{
+			"gameTimeMinutes": 0,
+			"pattern": [
+				"dormant",
+				"active",
+				"dormant",
+				"active"
+			]
+		},
+		{
+			"gameTimeMinutes": 45,
+			"pattern": [
+				"active",
+				"volatile",
+				"active",
+				"volatile"
+			]
+		},
+		{
+			"gameTimeMinutes": 90,
+			"pattern": [
+				"volatile",
+				"convergent",
+				"volatile",
+				"aftermath"
+			]
+		},
+		{
+			"gameTimeMinutes": 150,
+			"pattern": [
+				"convergent",
+				"aftermath",
+				"convergent"
+			]
+		}
+	],
+	"factionBiomePreferences": {
+		"reclaimers": [
+			"rust_plains"
+		],
+		"volt_collective": [
+			"scrap_hills",
+			"rust_plains"
+		],
+		"signal_choir": [
+			"signal_plateau"
+		],
+		"iron_creed": [
+			"chrome_ridge",
+			"scrap_hills"
+		]
+	},
+	"weatherBiomeInteractions": {
+		"storm_chrome_ridge": {
+			"lightningFrequencyMultiplier": 3.0
+		},
+		"em_surge_signal_plateau": {
+			"hackRangeMultiplier": 3.0
+		},
+		"acid_rain_cable_forest": {
+			"acidDamage": 0,
+			"note": "Cable canopy protects from acid rain"
+		},
+		"storm_cable_forest": {
+			"lightningDamage": 0,
+			"note": "Cable canopy blocks lightning"
+		},
+		"clear_chrome_ridge": {
+			"visibilityMultiplier": 1.3
+		},
+		"overcast_cable_forest": {
+			"visibilityMultiplier": 0.625
+		},
+		"em_surge_chrome_ridge": {
+			"hackRangeMultiplier": 2.0
+		},
+		"em_surge_cable_forest": {
+			"signalBlocked": true
+		}
+	},
+	"weatherStates": {
+		"clear": {
+			"displayName": "Clear",
+			"visibilityRange": 1.0,
+			"movementSpeedModifier": 1.0,
+			"harvestEfficiencyModifier": 1.0,
+			"combatAccuracyModifier": 1.0,
+			"powerGenerationModifier": 1.0,
+			"lightningStrikeChance": 0.0,
+			"cubeDamagePerMinute": 0,
+			"solarBonus": 0.2,
+			"durationMinutes": {
+				"min": 5,
+				"max": 10
+			}
+		},
+		"overcast": {
+			"displayName": "Overcast",
+			"visibilityRange": 0.7,
+			"movementSpeedModifier": 1.0,
+			"harvestEfficiencyModifier": 0.95,
+			"combatAccuracyModifier": 0.9,
+			"powerGenerationModifier": 0.8,
+			"lightningStrikeChance": 0.0,
+			"cubeDamagePerMinute": 0,
+			"solarBonus": 0,
+			"durationMinutes": {
+				"min": 3,
+				"max": 8
+			}
+		},
+		"storm": {
+			"displayName": "Storm",
+			"visibilityRange": 0.4,
+			"movementSpeedModifier": 0.8,
+			"harvestEfficiencyModifier": 0.75,
+			"combatAccuracyModifier": 0.8,
+			"powerGenerationModifier": 1.5,
+			"lightningStrikeChance": 0.05,
+			"lightningDamage": 25,
+			"cubeDamagePerMinute": 0.5,
+			"solarBonus": 0,
+			"durationMinutes": {
+				"min": 2,
+				"max": 5
+			}
+		},
+		"electromagnetic_surge": {
+			"displayName": "Electromagnetic Surge",
+			"visibilityRange": 0.3,
+			"movementSpeedModifier": 0.6,
+			"harvestEfficiencyModifier": 0.5,
+			"combatAccuracyModifier": 0.7,
+			"powerGenerationModifier": 2.5,
+			"lightningStrikeChance": 0.15,
+			"lightningDamage": 35,
+			"hackRangeMultiplier": 2.0,
+			"hackResistanceMultiplier": 0.5,
+			"signalPacketLoss": 0.5,
+			"automationFailChance": 0.1,
+			"cubeDamagePerMinute": 1.0,
+			"solarBonus": 0,
+			"durationMinutes": {
+				"min": 1,
+				"max": 3
+			}
+		},
+		"acid_rain": {
+			"displayName": "Acid Rain",
+			"visibilityRange": 0.5,
+			"movementSpeedModifier": 0.7,
+			"harvestEfficiencyModifier": 0.8,
+			"combatAccuracyModifier": 0.85,
+			"powerGenerationModifier": 0.9,
+			"lightningStrikeChance": 0.02,
+			"acidDamagePerTick": 0.5,
+			"cubeDamagePerMinute": 2.0,
+			"solarBonus": 0,
+			"durationMinutes": {
+				"min": 2,
+				"max": 4
+			},
+			"acidCorrosionRates": {
+				"rock": 0.5,
+				"scrap_iron": 2.0,
+				"iron": 1.5,
+				"copper": 0.3,
+				"carbon": 0,
+				"silicon": 0,
+				"titanium": 0,
+				"steel": 0.5,
+				"rare_earth": 0.2,
+				"gold": 0,
+				"quantum_crystal": 0
+			}
+		}
+	},
+	"weatherTransitions": {
+		"clear": {
+			"clear": 0.4,
+			"overcast": 0.35,
+			"storm": 0.1,
+			"electromagnetic_surge": 0.05,
+			"acid_rain": 0.1
+		},
+		"overcast": {
+			"clear": 0.25,
+			"overcast": 0.3,
+			"storm": 0.25,
+			"electromagnetic_surge": 0.05,
+			"acid_rain": 0.15
+		},
+		"storm": {
+			"clear": 0.1,
+			"overcast": 0.2,
+			"storm": 0.3,
+			"electromagnetic_surge": 0.2,
+			"acid_rain": 0.2
+		},
+		"electromagnetic_surge": {
+			"clear": 0.15,
+			"overcast": 0.2,
+			"storm": 0.3,
+			"electromagnetic_surge": 0.2,
+			"acid_rain": 0.15
+		},
+		"acid_rain": {
+			"clear": 0.2,
+			"overcast": 0.25,
+			"storm": 0.2,
+			"electromagnetic_surge": 0.1,
+			"acid_rain": 0.25
+		}
+	},
+	"stormIntensity": {
+		"rampUpPerTick": 0.02,
+		"decayPerTick": 0.01,
+		"transitionTickInterval": 600,
+		"lightningStrikeCheckInterval": 10
+	},
+	"weatherForecasting": {
+		"maxForecastTransitions": 3,
+		"accuracy": {
+			"1": 0.85,
+			"2": 0.6,
+			"3": 0.4
+		}
+	},
+	"weatherShipmentEffects": {
+		"clear": {
+			"shipmentEffect": "normal",
+			"hologramQuality": "crystal_clear"
+		},
+		"overcast": {
+			"shipmentEffect": "normal",
+			"hologramQuality": "slight_static"
+		},
+		"storm": {
+			"shipmentDelaySeconds": 30,
+			"hologramQuality": "intermittent_flickering"
+		},
+		"electromagnetic_surge": {
+			"shipmentsBlocked": true,
+			"hologramQuality": "offline"
+		},
+		"acid_rain": {
+			"ironScrapCorrosionInTransit": true,
+			"hologramQuality": "distorted_yellow_tint"
+		}
+	},
+	"alienNativeTerritories": {
+		"rust_plains": {
+			"nativePresence": "low",
+			"villageDensityPerArea": "1_per_50x50",
+			"uniqueResource": "corroded_circuits"
+		},
+		"scrap_hills": {
+			"nativePresence": "medium",
+			"villageDensityPerArea": "1_per_40x40",
+			"uniqueResource": "deep_slag_crystals"
+		},
+		"chrome_ridge": {
+			"nativePresence": "high",
+			"villageDensityPerArea": "1_per_30x30",
+			"uniqueResource": "resonance_ore"
+		},
+		"signal_plateau": {
+			"nativePresence": "very_high",
+			"villageDensityPerArea": "1_per_25x25",
+			"uniqueResource": "signal_roots"
+		},
+		"cable_forest": {
+			"nativePresence": "medium",
+			"villageDensityPerArea": "1_per_35x35",
+			"uniqueResource": "living_wire"
+		}
+	}
 }

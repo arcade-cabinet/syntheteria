@@ -14,6 +14,14 @@ jest.mock("../resources", () => ({
 	addResource: jest.fn(),
 }));
 
+// Compat layer: defer world access until iteration time to avoid circular init issues
+jest.mock("../../ecs/koota/compat", () => ({
+	get units() {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		return require("../../ecs/world").units;
+	},
+}));
+
 import type { Entity, UnitComponent } from "../../ecs/types";
 import { world } from "../../ecs/world";
 import { fireWelder, fpsCombatSystem, getLastHitResult } from "../fpsCombat";

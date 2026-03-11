@@ -38,20 +38,28 @@ jest.mock("../../ecs/world", () => ({
 	},
 }));
 
+// Also mock the Koota compat layer (turret.ts now imports from here)
+jest.mock("../../ecs/koota/compat", () => ({
+	buildings: mockBuildings,
+	units: mockUnits,
+}));
+
 jest.mock("../../../config", () => ({
 	config: {
 		buildings: {
-			turret: {
-				powerRequired: 2,
-				range: 12,
-				damage: 1,
-				fireRateTicks: 4,
-				hitChance: 0.7,
-				defaultComponents: [
-					{ name: "targeting_sensor", functional: true, material: "electronic" },
-					{ name: "barrel", functional: true, material: "metal" },
-					{ name: "ammo_feed", functional: true, material: "metal" },
-				],
+			defense: {
+				turret: {
+					powerRequired: 2,
+					range: 12,
+					damage: 1,
+					fireRateTicks: 4,
+					hitChance: 0.7,
+					defaultComponents: [
+						{ name: "targeting_sensor", functional: true, material: "electronic" },
+						{ name: "barrel", functional: true, material: "metal" },
+						{ name: "ammo_feed", functional: true, material: "metal" },
+					],
+				},
 			},
 		},
 		combat: {

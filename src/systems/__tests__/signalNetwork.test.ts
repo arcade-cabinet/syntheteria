@@ -27,6 +27,13 @@ jest.mock("../../ecs/world", () => ({
 	wires: mockWires,
 }));
 
+// Also mock the Koota compat layer (signalNetwork.ts now imports from here)
+jest.mock("../../ecs/koota/compat", () => ({
+	playerBots: mockPlayerBots,
+	signalRelays: mockSignalRelays,
+	wires: mockWires,
+}));
+
 import {
 	getGlobalCompute,
 	isInSignalRange,

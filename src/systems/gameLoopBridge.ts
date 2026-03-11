@@ -6,24 +6,55 @@
  * produces CompressEvents that no one listens to, furnaces complete smelts
  * that never spawn cubes, and the HUD never updates.
  *
- * The bridge subscribes to internal system callbacks, polls state each frame,
- * and routes data between systems so they operate as a cohesive pipeline:
+ * The bridge polls system state each frame and routes data between systems
+ * so they operate as a cohesive pipeline. Call gameLoopBridge() once per tick.
  *
- *   harvestCompress → CompressEvent → grabber.registerCube
- *                                   → eventBus.emit("resource_gathered")
- *                                   → audioEventSystem.triggerSound
- *                                   → particleEmitterSystem.emitParticle
- *                                   → notificationSystem.addNotification
- *                                   → progressionSystem.addXP
+ * Integration map:
  *
- *   furnaceProcessing → SmeltingResult → grabber.registerCube
- *                                      → eventBus.emit("resource_gathered")
- *                                      → progressionSystem.addXP
+ *   Harvest → HUD (powder gauge)
+ *           → eventBus.emit("harvest_started")
+ *           → audioEventSystem.triggerSound("harvest_grind")
+ *           → particleEmitterSystem.emitParticle("harvest_sparks")
  *
- *   damage → hudState.updateStatusBar + triggerDamageFlash
+ *   Compress (polling) → HUD (compression overlay)
+ *                       → eventBus.emit("compression_started")
+ *
+ *   CompressEvent → grabber.registerCube
+ *                 → eventBus.emit("resource_gathered")
+ *                 → audioEventSystem.triggerSound("compress_whoosh")
+ *                 → particleEmitterSystem.emitParticle("compress_burst")
+ *                 → notificationSystem.addNotification
+ *                 → progressionSystem.addXP
+ *
+ *   SmeltingResult → grabber.registerCube
+ *                  → eventBus.emit("resource_gathered")
+ *                  → eventBus.emit("smelting_complete")
+ *                  → audioEventSystem.triggerSound("furnace_hum")
+ *                  → particleEmitterSystem.emitParticle("smoke")
+ *                  → notificationSystem.addNotification
+ *                  → progressionSystem.addXP
+ *
+ *   Damage → hudState.updateStatusBar + triggerDamageFlash
+ *          → audioEventSystem.triggerSound("damage_hit")
+ *          → eventBus.emit("damage_taken")
  *          → eventBus.emit("combat_kill") if lethal
  *
- *   position → hudState.updateCoords + updateGameInfo
+ *   Position → hudState.updateCoords + updateGameInfo
+ *
+ *   EnemyKilled → eventBus.emit("combat_kill")
+ *               → audioEventSystem.triggerSound("enemy_destroyed")
+ *               → progressionSystem.addXP(battle)
+ *               → notificationSystem.addNotification
+ *
+ *   BuildingPlaced → eventBus.emit("building_placed")
+ *                  → audioEventSystem.triggerSound("building_place")
+ *                  → particleEmitterSystem.emitParticle("construction_dust")
+ *                  → notificationSystem.addNotification
+ *
+ *   HarvestComplete → eventBus.emit("harvest_complete") on harvest→idle transition
+ *
+ *   AchievementSystem → polled every 60 ticks with lifetime GameStats
+ *                     → onAchievementComplete → notificationSystem
  */
 
 import { emit } from "./eventBus";
@@ -46,6 +77,12 @@ import { triggerSound } from "./audioEventSystem";
 import { emitParticle } from "./particleEmitterSystem";
 import { addNotification } from "./notificationSystem";
 import { addXP, XP_REWARDS } from "./progressionSystem";
+import {
+	achievementSystem,
+	onAchievementComplete,
+	type GameStats,
+	type AchievementEvent,
+} from "./achievementSystem";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -64,6 +101,16 @@ export interface BridgeState {
 	currentBiome: string;
 	cubesSpawnedTotal: number;
 	smeltingsCompletedTotal: number;
+	/** Deposit ID of current harvest (null when not harvesting). Used to track harvest_started. */
+	activeHarvestDepositId: string | null;
+	/** Whether compression was active last tick. Used to track compression_started. */
+	wasCompressing: boolean;
+	/** Lifetime count of ore harvest completions. */
+	oreHarvestedTotal: number;
+	/** Lifetime count of enemies defeated. */
+	enemiesDefeatedTotal: number;
+	/** Lifetime count of structures placed. */
+	structuresPlacedTotal: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,6 +147,26 @@ let smeltingsCompletedTotal = 0;
 /** The entity ID for the player (used to poll harvest/compress state). */
 let playerEntityId = "player";
 
+/** Tracks the deposit ID being harvested to detect harvest_started transitions. */
+let activeHarvestDepositId: string | null = null;
+
+/** Tracks the material type of the last active harvest (for harvest_complete event). */
+let lastHarvestMaterialType: string | null = null;
+
+/** Tracks whether compression was active last tick to detect compression_started. */
+let wasCompressing = false;
+
+// ---------------------------------------------------------------------------
+// Lifetime stats — fed to achievementSystem each tick
+// ---------------------------------------------------------------------------
+
+let statsOreHarvested = 0;
+let statsEnemiesDefeated = 0;
+let statsStructuresPlaced = 0;
+
+/** Unsubscribe handle for achievement completion callback. */
+let unsubAchievements: (() => void) | null = null;
+
 // ---------------------------------------------------------------------------
 // Initialization
 // ---------------------------------------------------------------------------
@@ -132,6 +199,17 @@ export function initBridge(entityId?: string): void {
 		max: playerMaxPower,
 	});
 	updateCoords(playerPosition.x, playerPosition.z);
+
+	// Wire achievement completion -> notification system
+	unsubAchievements = onAchievementComplete((event: AchievementEvent) => {
+		addNotification(
+			"success",
+			`Achievement: ${event.title}`,
+			`Tier: ${event.tier}`,
+			tickCount,
+			300,
+		);
+	});
 }
 
 /**
@@ -160,7 +238,7 @@ export function setPlayerEntityId(entityId: string): void {
  * @param delta - Time elapsed this frame in seconds.
  */
 export function bridgeTick(delta: number): void {
-	// --- Poll harvest state → update powder gauge ---
+	// --- Poll harvest state → update powder gauge + audio/particles ---
 	const harvestState = getHarvestingState(playerEntityId);
 	if (harvestState) {
 		updatePowderGauge({
@@ -168,6 +246,48 @@ export function bridgeTick(delta: number): void {
 			max: harvestState.capacity,
 			resourceType: harvestState.materialType,
 		});
+
+		// Emit harvest_started event on transition to new harvest
+		if (activeHarvestDepositId !== harvestState.depositId) {
+			activeHarvestDepositId = harvestState.depositId;
+			lastHarvestMaterialType = harvestState.materialType;
+			emit({
+				type: "harvest_started",
+				entityId: playerEntityId,
+				depositId: harvestState.depositId,
+				materialType: harvestState.materialType,
+				tick: tickCount,
+			});
+		}
+
+		// Trigger grinding audio (looping while harvest active)
+		triggerSound(
+			"harvest_grind",
+			{ x: playerPosition.x, y: 0, z: playerPosition.z },
+			{ loop: true, volume: 0.7, startTick: tickCount },
+		);
+
+		// Trigger spark particles while grinding
+		emitParticle(
+			"harvest_sparks",
+			{ x: playerPosition.x, y: 0.5, z: playerPosition.z },
+			{ intensity: 0.5, startTick: tickCount, duration: 5 },
+		);
+	} else {
+		// Emit harvest_complete on transition from harvesting -> idle
+		if (activeHarvestDepositId !== null) {
+			emit({
+				type: "harvest_complete",
+				entityId: playerEntityId,
+				depositId: activeHarvestDepositId,
+				materialType: lastHarvestMaterialType ?? "unknown",
+				powderGained: 0, // actual amount tracked by harvestCompress
+				tick: tickCount,
+			});
+			statsOreHarvested++;
+		}
+		activeHarvestDepositId = null;
+		lastHarvestMaterialType = null;
 	}
 
 	// --- Poll compression state → update compression overlay ---
@@ -181,7 +301,19 @@ export function bridgeTick(delta: number): void {
 			pressure: progress * 0.8 + 0.2,
 			temperature: progress * 0.6 + 0.1,
 		});
+
+		// Emit compression_started event on transition
+		if (!wasCompressing) {
+			wasCompressing = true;
+			emit({
+				type: "compression_started",
+				entityId: playerEntityId,
+				materialType: compressState.materialType,
+				tick: tickCount,
+			});
+		}
 	} else {
+		wasCompressing = false;
 		// Only deactivate if it was active
 		updateCompression({ active: false, progress: 0, pressure: 0, temperature: 0 });
 	}
@@ -210,9 +342,47 @@ export function bridgeTick(delta: number): void {
 		triggerDamageFlash(damageFlashIntensity);
 	}
 
+	// --- Achievement system check (every 60 ticks to avoid per-frame cost) ---
+	if (tickCount % 60 === 0) {
+		const gameStats: GameStats = {
+			locationsDiscovered: 0,
+			enemiesDefeated: statsEnemiesDefeated,
+			cubesAccumulated: cubesSpawnedTotal,
+			structuresPlaced: statsStructuresPlaced,
+			tradesCompleted: 0,
+			playerLevel: 0,
+			oreHarvested: statsOreHarvested,
+			cubesCompressed: cubesSpawnedTotal,
+			questsCompleted: 0,
+			beltSegmentsBuilt: 0,
+			wiresConnected: 0,
+			machinesAssembled: 0,
+			territoriesClaimed: 0,
+			botsBuilt: 0,
+		};
+		achievementSystem(tickCount, gameStats);
+	}
+
 	// --- Increment tick ---
 	tickCount++;
 	updateGameInfo(1, tickCount, currentBiome);
+}
+
+// ---------------------------------------------------------------------------
+// Single-call orchestrator
+// ---------------------------------------------------------------------------
+
+/**
+ * Main game loop bridge — called once per tick to wire all isolated systems.
+ *
+ * This is the single entry point that the game loop calls each frame.
+ * It delegates to bridgeTick for polling/updating, and is designed to be
+ * extended with additional per-tick coordination as systems are integrated.
+ *
+ * @param delta - Time elapsed this frame in seconds.
+ */
+export function gameLoopBridge(delta: number): void {
+	bridgeTick(delta);
 }
 
 // ---------------------------------------------------------------------------
@@ -315,7 +485,7 @@ export function processSmeltingResult(
 		material: result.outputMaterial,
 	});
 
-	// 2. Emit event bus event
+	// 2. Emit resource_gathered event
 	emit({
 		type: "resource_gathered",
 		resourceType: result.outputMaterial,
@@ -324,7 +494,29 @@ export function processSmeltingResult(
 		tick: tickCount,
 	});
 
-	// 3. Send notification
+	// 3. Emit smelting_complete event
+	emit({
+		type: "smelting_complete",
+		furnaceId,
+		inputMaterial: result.outputMaterial, // input is consumed; log output material
+		outputMaterial: result.outputMaterial,
+		tick: tickCount,
+	});
+
+	// 4. Trigger furnace audio
+	triggerSound("furnace_hum", { ...result.outputPosition }, {
+		volume: 0.6,
+		startTick: tickCount,
+	});
+
+	// 5. Trigger smoke particles
+	emitParticle("smoke", { ...result.outputPosition }, {
+		intensity: 0.5,
+		startTick: tickCount,
+		duration: 45,
+	});
+
+	// 6. Send notification
 	addNotification(
 		"success",
 		"Smelting Complete",
@@ -333,7 +525,7 @@ export function processSmeltingResult(
 		150,
 	);
 
-	// 4. Award XP
+	// 7. Award XP
 	addXP(XP_REWARDS.craft, "craft");
 
 	smeltingsCompletedTotal++;
@@ -374,6 +566,16 @@ export function onDamageTaken(amount: number, sourceId: string): void {
 		startTick: tickCount,
 	});
 
+	// Emit damage_taken event
+	emit({
+		type: "damage_taken",
+		targetId: playerEntityId,
+		sourceId,
+		amount,
+		damageType: "melee",
+		tick: tickCount,
+	});
+
 	// Check for lethal damage
 	if (playerHealth <= 0) {
 		emit({
@@ -384,6 +586,87 @@ export function onDamageTaken(amount: number, sourceId: string): void {
 			tick: tickCount,
 		});
 	}
+
+}
+
+/**
+ * Handle a building/structure being placed in the world.
+ *
+ * Emits building_placed event, increments placement stats for the
+ * achievement system, and sends a notification.
+ *
+ * @param buildingType - Type of building (e.g. "furnace", "turret", "belt").
+ * @param buildingId   - Unique ID of the placed building entity.
+ * @param position     - World position where the building was placed.
+ */
+export function onBuildingPlaced(
+	buildingType: string,
+	buildingId: string,
+	position: { x: number; y: number; z: number },
+): void {
+	emit({
+		type: "building_placed",
+		buildingType,
+		buildingId,
+		position,
+		tick: tickCount,
+	});
+
+	triggerSound("build_clang", position, {
+		volume: 0.7,
+		startTick: tickCount,
+	});
+
+	emitParticle("build_sparks", position, {
+		intensity: 0.4,
+		startTick: tickCount,
+		duration: 20,
+	});
+
+	statsStructuresPlaced++;
+
+	addNotification(
+		"info",
+		"Structure Placed",
+		`Built ${buildingType}`,
+		tickCount,
+		100,
+	);
+}
+
+/**
+ * Handle an enemy being killed by the player.
+ *
+ * Emits combat_kill event, awards battle XP, increments kill stats for
+ * the achievement system, and sends a notification.
+ *
+ * @param targetId   - ID of the defeated enemy entity.
+ * @param weaponType - Weapon used for the kill (e.g. "welder", "thrown_cube").
+ */
+export function onEnemyKilled(targetId: string, weaponType: string): void {
+	emit({
+		type: "combat_kill",
+		attackerId: playerEntityId,
+		targetId,
+		weaponType,
+		tick: tickCount,
+	});
+
+	triggerSound("explosion", { x: playerPosition.x, y: 0, z: playerPosition.z }, {
+		volume: 0.8,
+		startTick: tickCount,
+	});
+
+	addXP(XP_REWARDS.battle, "battle");
+	statsEnemiesDefeated++;
+
+	addNotification(
+		"success",
+		"Enemy Destroyed",
+		`Defeated ${targetId}`,
+		tickCount,
+		120,
+	);
 }
 
 // ---------------------------------------------------------------------------
@@ -456,6 +739,11 @@ export function getBridgeState(): BridgeState {
 		currentBiome,
 		cubesSpawnedTotal,
 		smeltingsCompletedTotal,
+		activeHarvestDepositId,
+		wasCompressing,
+		oreHarvestedTotal: statsOreHarvested,
+		enemiesDefeatedTotal: statsEnemiesDefeated,
+		structuresPlacedTotal: statsStructuresPlaced,
 	};
 }
 
@@ -486,4 +774,14 @@ export function reset(): void {
 	cubesSpawnedTotal = 0;
 	smeltingsCompletedTotal = 0;
 	playerEntityId = "player";
+	activeHarvestDepositId = null;
+	lastHarvestMaterialType = null;
+	wasCompressing = false;
+	statsOreHarvested = 0;
+	statsEnemiesDefeated = 0;
+	statsStructuresPlaced = 0;
+	if (unsubAchievements) {
+		unsubAchievements();
+		unsubAchievements = null;
+	}
 }

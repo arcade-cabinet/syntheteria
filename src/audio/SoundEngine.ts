@@ -5,10 +5,12 @@
  * one-shot sounds, and looping ambience. All other audio modules route through
  * this engine so volume settings from config/audio.json are respected globally.
  *
- * Categories:
- *   - sfx      (combat impacts, UI feedback, footsteps)
- *   - music    (score — unused for now, reserved)
- *   - ambience (storm, wind, environmental drones)
+ * Bus hierarchy:
+ *   Master Bus
+ *     -> sfx     (factory machinery, combat, footsteps)
+ *     -> music   (adaptive score)
+ *     -> ambience (storm, wind, environmental drones)
+ *     -> ui      (menu clicks, notifications, HUD feedback)
  */
 
 import * as Tone from "tone";
@@ -18,7 +20,7 @@ import audioConfig from "../../config/audio.json";
 // Types
 // ---------------------------------------------------------------------------
 
-export type AudioCategory = "sfx" | "music" | "ambience";
+export type AudioCategory = "sfx" | "music" | "ambience" | "ui";
 
 export interface PlaySoundOptions {
 	/** Volume offset in dB (default 0). */
@@ -54,6 +56,7 @@ const categoryVolumes: Record<AudioCategory, Tone.Volume | null> = {
 	sfx: null,
 	music: null,
 	ambience: null,
+	ui: null,
 };
 
 /** Active looping sounds keyed by caller-chosen id. */
@@ -78,6 +81,8 @@ function configVolumeForCategory(cat: AudioCategory): number {
 			return audioConfig.musicVolume ?? 0.3;
 		case "ambience":
 			return audioConfig.ambientVolume ?? 0.5;
+		case "ui":
+			return audioConfig.uiVolume ?? 0.6;
 	}
 }
 
@@ -100,7 +105,7 @@ export async function initAudio(): Promise<void> {
 	).toDestination();
 
 	// Category buses
-	for (const cat of ["sfx", "music", "ambience"] as AudioCategory[]) {
+	for (const cat of ["sfx", "music", "ambience", "ui"] as AudioCategory[]) {
 		const vol = new Tone.Volume(linearToDb(configVolumeForCategory(cat)));
 		vol.connect(masterVolume);
 		categoryVolumes[cat] = vol;
@@ -120,7 +125,7 @@ export function disposeAudio(): void {
 	activeLoops.clear();
 
 	// Dispose category volumes
-	for (const cat of ["sfx", "music", "ambience"] as AudioCategory[]) {
+	for (const cat of ["sfx", "music", "ambience", "ui"] as AudioCategory[]) {
 		categoryVolumes[cat]?.dispose();
 		categoryVolumes[cat] = null;
 	}

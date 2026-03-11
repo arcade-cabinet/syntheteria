@@ -15,7 +15,8 @@
 
 import botAutomationConfig from "../../config/botAutomation.json";
 import type { Entity, UnitEntity, Vec3 } from "../ecs/types";
-import { automatedBots, units, world } from "../ecs/world";
+import { world } from "../ecs/world";
+import { automatedBots, units } from "../ecs/koota/compat";
 
 function getEntityById(id: string): Entity | undefined {
 	for (const entity of world) {
@@ -268,6 +269,9 @@ export function botAutomationSystem(delta: number) {
 		// Skip player-faction bots that are being directly controlled
 		if (entity.playerControlled?.isActive) continue;
 
+		// Guard required components
+		if (!entity.unit || !entity.automation || !entity.worldPosition) continue;
+
 		// Skip if no functional legs (can't move)
 		if (
 			!entity.unit.components.some((c) => c.name === "legs" && c.functional)
@@ -275,21 +279,23 @@ export function botAutomationSystem(delta: number) {
 			continue;
 		}
 
+		const entityWithComponents = entity as Entity & Required<Pick<Entity, "unit" | "worldPosition" | "automation">>;
+
 		switch (entity.automation.routine) {
 			case "idle":
 				runIdle(entity, delta);
 				break;
 			case "patrol":
-				runPatrol(entity, delta);
+				runPatrol(entityWithComponents, delta);
 				break;
 			case "guard":
-				runGuard(entity, delta);
+				runGuard(entityWithComponents, delta);
 				break;
 			case "follow":
-				runFollow(entity, delta);
+				runFollow(entityWithComponents, delta);
 				break;
 			case "work":
-				runWork(entity, delta);
+				runWork(entityWithComponents, delta);
 				break;
 		}
 	}

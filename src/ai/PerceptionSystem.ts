@@ -149,8 +149,8 @@ function getVision(entity: Entity): Vision {
 	vision.obstacles = obstacleEntities;
 
 	// Update owner position.
-	if (entity.worldPosition) {
-		vision.owner!.position.set(
+	if (entity.worldPosition && vision.owner) {
+		vision.owner.position.set(
 			entity.worldPosition.x,
 			entity.worldPosition.y,
 			entity.worldPosition.z,
@@ -161,15 +161,17 @@ function getVision(entity: Entity): Vision {
 	// If the entity has navigation and is moving, use the path direction.
 	// Otherwise, default forward (positive Z in our coordinate system).
 	const dir = getEntityDirection(entity);
-	vision.owner!.rotation.lookAt(
-		vision.owner!.position,
-		new YukaVector3(
-			vision.owner!.position.x + dir.x,
-			vision.owner!.position.y + dir.y,
-			vision.owner!.position.z + dir.z,
-		),
-		new YukaVector3(0, 1, 0),
-	);
+	if (vision.owner) {
+		vision.owner.rotation.lookAt(
+			vision.owner.position,
+			new YukaVector3(
+				vision.owner.position.x + dir.x,
+				vision.owner.position.y + dir.y,
+				vision.owner.position.z + dir.z,
+			),
+			new YukaVector3(0, 1, 0),
+		);
+	}
 
 	return vision;
 }

@@ -63,16 +63,30 @@ const OUTPUT_OFFSET_Y = 1.0;
 const OUTPUT_OFFSET_Z = 1.5;
 
 /**
- * Default smelting recipes derived from config/furnace.json tiers[0].recipes.
+ * Default smelting recipes derived from config/furnace.json across all tiers.
+ * Each recipe maps the first input material to the output.
+ * Deduplicates by input material (first occurrence wins).
  * Exported so tests can reference without JSON imports.
  */
-export const DEFAULT_RECIPES: SmeltingRecipe[] = Object.values(
-	furnaceConfig.tiers[0].recipes,
-).map((r) => ({
-	input: r.inputs[0].material,
-	output: r.output,
-	smeltTime: r.time,
-}));
+export const DEFAULT_RECIPES: SmeltingRecipe[] = (() => {
+	const seen = new Set<string>();
+	const recipes: SmeltingRecipe[] = [];
+	for (const tier of Object.values(furnaceConfig.tiers)) {
+		for (const r of Object.values(
+			tier.recipes as Record<
+				string,
+				{ inputs: Record<string, number>; output: string; time: number }
+			>,
+		)) {
+			const input = Object.keys(r.inputs)[0];
+			if (!seen.has(input)) {
+				seen.add(input);
+				recipes.push({ input, output: r.output, smeltTime: r.time });
+			}
+		}
+	}
+	return recipes;
+})();
 
 // ---------------------------------------------------------------------------
 // Module state

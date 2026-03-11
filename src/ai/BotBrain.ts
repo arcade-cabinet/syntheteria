@@ -15,6 +15,7 @@
  *   GATHER         — moving toward a resource deposit to collect
  *   RETURN_TO_BASE — heading home (inventory full, or ordered to return)
  *   FOLLOW         — trailing another entity at a set distance
+ *   PHONE_HOME     — moving toward nearest Base to claim work from its queue
  *
  * Transition rules:
  *   PATROL  -> SEEK_TARGET  : enemy within aggroRange
@@ -45,6 +46,7 @@ export const BotState = {
 	GATHER: "gather",
 	RETURN_TO_BASE: "return_to_base",
 	FOLLOW: "follow",
+	PHONE_HOME: "phone_home",
 } as const;
 export type BotState = (typeof BotState)[keyof typeof BotState];
 
@@ -163,6 +165,8 @@ export class BotBrain {
 				return this.handleReturnToBase(delta, ctx);
 			case BotState.FOLLOW:
 				return this.handleFollow(delta, ctx);
+			case BotState.PHONE_HOME:
+				return this.handlePhoneHome(delta, ctx);
 			default:
 				return { command: SteeringCommand.STOP };
 		}
@@ -243,8 +247,14 @@ export class BotBrain {
 			return { command: SteeringCommand.SEEK, target: threat.position };
 		}
 
-		// After idling long enough, start wandering.
+		// After idling long enough, phone home for work or start wandering.
 		if (this.stateTime > IDLE_TO_WANDER_TIME) {
+			// If we have a home base, phone home to get a task from the Base work queue.
+			// This is the key link in the "NO BOT EVER IDLES" guarantee.
+			if (ctx.homeBase) {
+				this.transitionTo(BotState.PHONE_HOME);
+				return { command: SteeringCommand.ARRIVE, target: ctx.homeBase };
+			}
 			this.patrolCenter = this.patrolCenter ?? { ...ctx.position };
 			this.transitionTo(BotState.PATROL);
 			return { command: SteeringCommand.WANDER };
@@ -493,6 +503,35 @@ export class BotBrain {
 		}
 
 		return { command: SteeringCommand.ARRIVE, target: leader.position };
+	}
+
+	private handlePhoneHome(_delta: number, ctx: BotContext): SteeringOutput {
+		// Even while phoning home, react to immediate threats.
+		const threat = this.findClosestThreat(ctx);
+		if (
+			threat &&
+			threat.distanceSq <= ctx.aggroRangeSq &&
+			this.stateTime > MIN_STATE_DURATION
+		) {
+			this.targetId = threat.id;
+			this.transitionTo(BotState.SEEK_TARGET);
+			return { command: SteeringCommand.SEEK, target: threat.position };
+		}
+
+		if (ctx.homeBase) {
+			// Arrived at base — transition to IDLE so the system layer
+			// can call phoneHome() to claim a task from the work queue.
+			if (this.isNearPosition(ctx.position, ctx.homeBase, 5)) {
+				this.transitionTo(BotState.IDLE);
+				return { command: SteeringCommand.STOP };
+			}
+			return { command: SteeringCommand.ARRIVE, target: ctx.homeBase };
+		}
+
+		// No home base — fall back to patrol.
+		this.patrolCenter = this.patrolCenter ?? { ...ctx.position };
+		this.transitionTo(BotState.PATROL);
+		return { command: SteeringCommand.WANDER };
 	}
 
 	// -----------------------------------------------------------------------

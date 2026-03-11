@@ -27,7 +27,7 @@ jest.mock("../../../config", () => ({
 					researchCost: 100,
 					prerequisites: [],
 					effects: { unlocks: ["drill_mk1"], bonuses: { miningRate: 0.1 } },
-					factionBonus: null,
+					race: null,
 				},
 				{
 					id: "basic_belts",
@@ -36,7 +36,7 @@ jest.mock("../../../config", () => ({
 					researchCost: 80,
 					prerequisites: [],
 					effects: { unlocks: ["belt_mk1"], bonuses: {} },
-					factionBonus: null,
+					race: null,
 				},
 				{
 					id: "advanced_mining",
@@ -45,7 +45,7 @@ jest.mock("../../../config", () => ({
 					researchCost: 200,
 					prerequisites: ["basic_mining"],
 					effects: { unlocks: ["drill_mk2"], bonuses: { miningRate: 0.2 } },
-					factionBonus: "reclaimers",
+					race: "reclaimers",
 				},
 				{
 					id: "signal_boost",
@@ -54,7 +54,7 @@ jest.mock("../../../config", () => ({
 					researchCost: 150,
 					prerequisites: ["basic_belts"],
 					effects: { unlocks: ["signal_relay"], bonuses: { signalRange: 0.2 } },
-					factionBonus: "signal_choir",
+					race: "signal_choir",
 				},
 				{
 					id: "turrets",
@@ -63,7 +63,7 @@ jest.mock("../../../config", () => ({
 					researchCost: 300,
 					prerequisites: ["advanced_mining", "signal_boost"],
 					effects: { unlocks: ["turret_mk1"], bonuses: {} },
-					factionBonus: null,
+					race: null,
 				},
 			],
 			factionResearchBonuses: {
@@ -309,7 +309,7 @@ describe("faction research speed bonuses", () => {
 
 describe("per-tech faction affinity bonus", () => {
 	it("grants +50% for faction-aligned tech on top of global bonus", () => {
-		// advanced_mining has factionBonus: "reclaimers"
+		// advanced_mining has race: "reclaimers"
 		// reclaimers global = 0.8x, tech affinity = 1.5x
 		// effective = 10 * 0.8 * 1.5 = 12
 		startResearch("reclaimers", "basic_mining");
@@ -323,7 +323,7 @@ describe("per-tech faction affinity bonus", () => {
 	});
 
 	it("signal_choir gets both global 1.5x and tech affinity 1.5x on aligned techs", () => {
-		// signal_boost has factionBonus: "signal_choir"
+		// signal_boost has race: "signal_choir"
 		// signal_choir global = 1.5x, tech affinity = 1.5x
 		// effective = 10 * 1.5 * 1.5 = 22.5
 		startResearch("signal_choir", "basic_belts");
@@ -337,7 +337,7 @@ describe("per-tech faction affinity bonus", () => {
 	});
 
 	it("does not apply tech affinity bonus to non-aligned faction", () => {
-		// advanced_mining has factionBonus: "reclaimers"
+		// advanced_mining has race: "reclaimers"
 		// volt_collective global = 1.0x, no tech affinity
 		// effective = 10 * 1.0 = 10
 		startResearch("volt_collective", "basic_mining");

@@ -60,7 +60,7 @@ const PARTICLE_COUNT = 4;
 
 function loadFrames(anim: string, count: number): THREE.Texture[] {
 	const loader = new THREE.TextureLoader();
-	const base = import.meta.env.BASE_URL as string;
+	const base = "/";
 	return Array.from({ length: count }, (_, i) => {
 		const idx = String(i).padStart(3, "0");
 		const tex = loader.load(`${base}otters/brown/${anim}_${idx}.png`);

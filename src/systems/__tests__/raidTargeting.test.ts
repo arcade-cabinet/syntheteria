@@ -15,6 +15,14 @@ jest.mock("../raidSystem", () => ({
 	getCubes: jest.fn(() => []),
 }));
 
+// Compat layer: defer world access until iteration time to avoid circular init issues
+jest.mock("../../ecs/koota/compat", () => ({
+	get units() {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		return require("../../ecs/world").units;
+	},
+}));
+
 import type { Entity, UnitComponent } from "../../ecs/types";
 import { world } from "../../ecs/world";
 import type { CubeEntity } from "../raidSystem";
@@ -70,7 +78,7 @@ function makeCube(
 	id: string,
 	faction: Entity["faction"],
 	pos: { x: number; y: number; z: number },
-	resourceType: "scrapMetal" | "eWaste" | "intactComponents" = "scrapMetal",
+	resourceType: string = "scrap_iron",
 	value = 1,
 ): CubeEntity {
 	return {
@@ -190,39 +198,42 @@ describe("raidTargeting — cube clustering", () => {
 // ---------------------------------------------------------------------------
 
 describe("raidTargeting — value scoring", () => {
-	it("scores scrapMetal cubes at weight 1", () => {
+	it("scores scrap_iron cubes at configured weight", () => {
 		jest.mocked(getCubes).mockReturnValue([
-			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "scrapMetal", 3),
+			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "scrap_iron", 3),
 		]);
 		const targets = findRaidTargets("feral");
-		expect(targets[0].estimatedValue).toBe(3); // 1 * 3
+		// scrap_iron weight = 1, 3 cubes → 1 * 3 = 3
+		expect(targets[0].estimatedValue).toBe(3);
 	});
 
-	it("scores eWaste cubes at weight 2", () => {
+	it("scores copper cubes at configured weight", () => {
 		jest.mocked(getCubes).mockReturnValue([
-			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "eWaste", 3),
+			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "copper", 3),
 		]);
 		const targets = findRaidTargets("feral");
-		expect(targets[0].estimatedValue).toBe(6); // 2 * 3
+		// copper weight = 2, 3 cubes → 2 * 3 = 6
+		expect(targets[0].estimatedValue).toBe(6);
 	});
 
-	it("scores intactComponents cubes at weight 5", () => {
+	it("scores titanium cubes at configured weight", () => {
 		jest.mocked(getCubes).mockReturnValue([
-			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "intactComponents", 2),
+			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "titanium", 2),
 		]);
 		const targets = findRaidTargets("feral");
-		expect(targets[0].estimatedValue).toBe(10); // 5 * 2
+		// titanium weight = 6, 2 cubes → 6 * 2 = 12
+		expect(targets[0].estimatedValue).toBe(12);
 	});
 
 	it("sums values across a cluster", () => {
 		jest.mocked(getCubes).mockReturnValue([
-			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "scrapMetal", 2),   // 1*2 = 2
-			makeCube("c2", "player", { x: 1, y: 0, z: 0 }, "eWaste", 3),       // 2*3 = 6
-			makeCube("c3", "player", { x: 2, y: 0, z: 0 }, "intactComponents", 1), // 5*1 = 5
+			makeCube("c1", "player", { x: 0, y: 0, z: 0 }, "scrap_iron", 2),  // 1*2 = 2
+			makeCube("c2", "player", { x: 1, y: 0, z: 0 }, "copper", 3),      // 2*3 = 6
+			makeCube("c3", "player", { x: 2, y: 0, z: 0 }, "titanium", 1),    // 6*1 = 6
 		]);
 		const targets = findRaidTargets("feral");
 		expect(targets).toHaveLength(1);
-		expect(targets[0].estimatedValue).toBe(13); // 2 + 6 + 5
+		expect(targets[0].estimatedValue).toBe(14); // 2 + 6 + 6
 	});
 });
 

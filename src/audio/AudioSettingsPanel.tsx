@@ -1,7 +1,7 @@
 /**
  * Audio settings panel — React UI for controlling volume levels.
  *
- * Provides master, SFX, music, and ambience volume sliders with mute
+ * Provides master, SFX, music, ambience, and UI volume sliders with mute
  * toggles. Styled to match the existing terminal-aesthetic HUD:
  * monospace font, green-on-dark color scheme.
  *
@@ -45,6 +45,7 @@ const INITIAL_STATE: AudioSettingsState = {
 		sfx: { volume: 1.0, muted: false, preMuteVolume: 1.0 },
 		music: { volume: 0.3, muted: false, preMuteVolume: 0.3 },
 		ambience: { volume: 0.5, muted: false, preMuteVolume: 0.5 },
+		ui: { volume: 0.6, muted: false, preMuteVolume: 0.6 },
 	},
 };
 
@@ -284,6 +285,16 @@ export function AudioSettingsPanel({ onClose }: AudioSettingsPanelProps) {
 				onChange={(v) => handleCategoryChange("ambience", v)}
 				onMute={() => handleCategoryMute("ambience")}
 				color="#aa8844"
+			/>
+
+			{/* UI */}
+			<VolumeRow
+				label="UI"
+				value={state.categories.ui.volume}
+				muted={state.categories.ui.muted}
+				onChange={(v) => handleCategoryChange("ui", v)}
+				onMute={() => handleCategoryMute("ui")}
+				color="#ffaa44"
 			/>
 
 			<button type="button" style={closeButtonStyle} onClick={handleClose}>

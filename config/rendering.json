@@ -4,6 +4,35 @@
   "maxParticles": 500,
   "lodDistances": [20, 50, 100],
   "instancedBatchSize": 100,
+  "qualityTiers": {
+    "high": {
+      "shadowMapSize": 1024,
+      "maxParticles": 500,
+      "lodDistances": [20, 50, 100],
+      "instancedBatchSize": 100,
+      "renderDistance": 200,
+      "antialias": true,
+      "postProcessing": true
+    },
+    "medium": {
+      "shadowMapSize": 512,
+      "maxParticles": 200,
+      "lodDistances": [15, 35, 70],
+      "instancedBatchSize": 64,
+      "renderDistance": 120,
+      "antialias": true,
+      "postProcessing": false
+    },
+    "low": {
+      "shadowMapSize": 256,
+      "maxParticles": 80,
+      "lodDistances": [10, 25, 50],
+      "instancedBatchSize": 32,
+      "renderDistance": 80,
+      "antialias": false,
+      "postProcessing": false
+    }
+  },
   "stormSky": {
     "sphereRadius": 200,
     "sphereSegments": 32,

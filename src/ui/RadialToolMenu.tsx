@@ -70,6 +70,9 @@ export function RadialToolMenu({ onClose }: RadialToolMenuProps) {
 
 	return (
 		<div
+			role="dialog"
+			aria-label="Select tool"
+			aria-modal="true"
 			style={{
 				position: "absolute",
 				bottom: `max(60px, env(safe-area-inset-bottom, 0px))`,
@@ -86,6 +89,8 @@ export function RadialToolMenu({ onClose }: RadialToolMenuProps) {
 			}}
 		>
 			<svg
+				role="menu"
+				aria-label="Available tools"
 				width={svgSize}
 				height={svgSize}
 				viewBox={`0 0 ${svgSize} ${svgSize}`}
@@ -110,7 +115,17 @@ export function RadialToolMenu({ onClose }: RadialToolMenuProps) {
 					return (
 						<g
 							key={tool.id}
+							role="menuitem"
+							tabIndex={0}
+							aria-label={`${tool.label}${isActive ? " (equipped)" : ""}`}
+							aria-pressed={isActive}
 							onClick={() => handleSelect(tool)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" || e.key === " ") {
+									e.preventDefault();
+									handleSelect(tool);
+								}
+							}}
 							style={{ cursor: "pointer" }}
 						>
 							{/* Hit area -- r=32 gives 64px diameter touch target */}

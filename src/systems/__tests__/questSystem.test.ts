@@ -46,23 +46,23 @@ beforeEach(() => {
 
 describe("quest state transitions", () => {
 	it("quests start in NOT_STARTED state", () => {
-		const state = getQuestState("quest_first_harvest");
+		const state = getQuestState("awaken_systems");
 		expect(state).not.toBeNull();
 		expect(state!.status).toBe("NOT_STARTED");
 	});
 
 	it("startQuest transitions from NOT_STARTED to ACTIVE", () => {
-		const result = startQuest("quest_first_harvest");
+		const result = startQuest("awaken_systems");
 		expect(result).toBe(true);
 
-		const state = getQuestState("quest_first_harvest");
+		const state = getQuestState("awaken_systems");
 		expect(state!.status).toBe("ACTIVE");
-		expect(state!.current).toBe(0);
+		expect(state!.objectiveStates[0].current).toBe(0);
 	});
 
 	it("startQuest returns false for already active quest", () => {
-		startQuest("quest_first_harvest");
-		const result = startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
+		const result = startQuest("awaken_systems");
 		expect(result).toBe(false);
 	});
 
@@ -72,7 +72,7 @@ describe("quest state transitions", () => {
 	});
 
 	it("quest completes when progress reaches target", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 
 		// Harvest 5 scrap metal (target is 5)
 		for (let i = 0; i < 5; i++) {
@@ -84,11 +84,11 @@ describe("quest state transitions", () => {
 		}
 
 		updateQuests(1);
-		expect(isQuestComplete("quest_first_harvest")).toBe(true);
+		expect(isQuestComplete("awaken_systems")).toBe(true);
 	});
 
 	it("quest does not complete before reaching target", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 
 		notifyQuestEvent({
 			type: "resource_gained",
@@ -97,11 +97,11 @@ describe("quest state transitions", () => {
 		});
 
 		updateQuests(1);
-		expect(isQuestComplete("quest_first_harvest")).toBe(false);
+		expect(isQuestComplete("awaken_systems")).toBe(false);
 
-		const state = getQuestState("quest_first_harvest");
+		const state = getQuestState("awaken_systems");
 		expect(state!.status).toBe("ACTIVE");
-		expect(state!.current).toBe(3);
+		expect(state!.objectiveStates[0].current).toBe(3);
 	});
 });
 
@@ -110,8 +110,8 @@ describe("quest state transitions", () => {
 // ---------------------------------------------------------------------------
 
 describe("quest event processing", () => {
-	it("harvest_N_ore quest tracks resource gains", () => {
-		startQuest("quest_first_harvest");
+	it("harvest_ore quest tracks resource gains", () => {
+		startQuest("awaken_systems");
 
 		notifyQuestEvent({
 			type: "resource_gained",
@@ -119,14 +119,14 @@ describe("quest event processing", () => {
 			amount: 3,
 		});
 
-		const progress = getQuestProgress("quest_first_harvest");
+		const progress = getQuestProgress("awaken_systems");
 		expect(progress).not.toBeNull();
 		expect(progress!.current).toBe(3);
 		expect(progress!.target).toBe(5);
 	});
 
-	it("harvest_N_ore ignores wrong resource type", () => {
-		startQuest("quest_first_harvest");
+	it("harvest_ore ignores wrong resource type", () => {
+		startQuest("awaken_systems");
 
 		notifyQuestEvent({
 			type: "resource_gained",
@@ -134,24 +134,61 @@ describe("quest event processing", () => {
 			amount: 10,
 		});
 
-		const progress = getQuestProgress("quest_first_harvest");
+		const progress = getQuestProgress("awaken_systems");
 		expect(progress!.current).toBe(0);
 	});
 
-	it("compress_N_cubes quest tracks fabrication events", () => {
-		startQuest("quest_first_cube");
+	it("compress_cubes quest tracks cube_compressed events", () => {
+		startQuest("awaken_systems");
+		// Complete awaken_systems first so first_compression can start
+		notifyQuestEvent({
+			type: "resource_gained",
+			detail: "scrapMetal",
+			amount: 5,
+		});
+		updateQuests(1);
+
+		// first_compression should now be active (auto-started)
+		const firstCompressionState = getQuestState("first_compression");
+		expect(firstCompressionState!.status).toBe("ACTIVE");
 
 		notifyQuestEvent({
-			type: "component_fabricated",
+			type: "cube_compressed",
 			amount: 1,
 		});
 
-		const progress = getQuestProgress("quest_first_cube");
+		const progress = getQuestProgress("first_compression");
 		expect(progress!.current).toBe(1);
 	});
 
-	it("build_first_wall quest tracks building placement", () => {
-		startQuest("quest_build_furnace");
+	it("build_structure quest tracks building placement", () => {
+		// build_lightning_rod requires build_furnace completed
+		// Manually start it by completing prerequisites
+		startQuest("awaken_systems");
+		notifyQuestEvent({
+			type: "resource_gained",
+			detail: "scrapMetal",
+			amount: 5,
+		});
+		updateQuests(1); // completes awaken_systems, auto-starts first_compression
+
+		startQuest("first_compression");
+		notifyQuestEvent({ type: "cube_compressed", amount: 1 });
+		updateQuests(1); // completes first_compression, auto-starts build_furnace
+
+		const buildFurnaceState = getQuestState("build_furnace");
+		expect(buildFurnaceState!.status).toBe("ACTIVE");
+
+		notifyQuestEvent({
+			type: "component_fabricated",
+			detail: "improved_harvester",
+			amount: 1,
+		});
+		updateQuests(1); // completes build_furnace
+
+		// build_lightning_rod is in act2, not auto-started from act1
+		// Start it manually since prerequisites are met
+		startQuest("build_lightning_rod");
 
 		notifyQuestEvent({
 			type: "building_placed",
@@ -159,40 +196,40 @@ describe("quest event processing", () => {
 			amount: 1,
 		});
 
-		const progress = getQuestProgress("quest_build_furnace");
+		const progress = getQuestProgress("build_lightning_rod");
 		expect(progress!.current).toBe(1);
 	});
 
-	it("assemble_first_machine quest tracks specific recipe", () => {
-		startQuest("quest_first_craft");
-
-		// Wrong recipe
+	it("furnace_craft quest tracks recipe with detail matching", () => {
+		// Start and complete prerequisites for build_furnace
+		startQuest("awaken_systems");
 		notifyQuestEvent({
-			type: "recipe_completed",
-			detail: "Camera Module",
+			type: "resource_gained",
+			detail: "scrapMetal",
+			amount: 5,
+		});
+		updateQuests(1);
+		notifyQuestEvent({ type: "cube_compressed", amount: 1 });
+		updateQuests(1);
+
+		const state = getQuestState("build_furnace");
+		expect(state!.status).toBe("ACTIVE");
+
+		// Wrong recipe — should not advance
+		notifyQuestEvent({
+			type: "component_fabricated",
+			detail: "wrong_recipe",
 			amount: 1,
 		});
-		expect(getQuestProgress("quest_first_craft")!.current).toBe(0);
+		expect(getQuestProgress("build_furnace")!.current).toBe(0);
 
 		// Correct recipe
 		notifyQuestEvent({
-			type: "recipe_completed",
-			detail: "Arm Assembly",
+			type: "component_fabricated",
+			detail: "improved_harvester",
 			amount: 1,
 		});
-		expect(getQuestProgress("quest_first_craft")!.current).toBe(1);
-	});
-
-	it("claim_territory quest tracks territory claims", () => {
-		startQuest("quest_claim_territory");
-
-		notifyQuestEvent({
-			type: "territory_claimed",
-			amount: 1,
-		});
-
-		const progress = getQuestProgress("quest_claim_territory");
-		expect(progress!.current).toBe(1);
+		expect(getQuestProgress("build_furnace")!.current).toBe(1);
 	});
 
 	it("events do not affect NOT_STARTED quests", () => {
@@ -203,12 +240,12 @@ describe("quest event processing", () => {
 			amount: 10,
 		});
 
-		const progress = getQuestProgress("quest_first_harvest");
+		const progress = getQuestProgress("awaken_systems");
 		expect(progress!.current).toBe(0);
 	});
 
 	it("events do not affect COMPLETED quests", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 
 		// Complete the quest
 		notifyQuestEvent({
@@ -217,7 +254,7 @@ describe("quest event processing", () => {
 			amount: 5,
 		});
 		updateQuests(1);
-		expect(isQuestComplete("quest_first_harvest")).toBe(true);
+		expect(isQuestComplete("awaken_systems")).toBe(true);
 
 		// Further events should not change progress
 		notifyQuestEvent({
@@ -226,12 +263,12 @@ describe("quest event processing", () => {
 			amount: 10,
 		});
 
-		const progress = getQuestProgress("quest_first_harvest");
+		const progress = getQuestProgress("awaken_systems");
 		expect(progress!.current).toBe(5);
 	});
 
 	it("progress is clamped to target", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 
 		notifyQuestEvent({
 			type: "resource_gained",
@@ -239,7 +276,7 @@ describe("quest event processing", () => {
 			amount: 100,
 		});
 
-		const progress = getQuestProgress("quest_first_harvest");
+		const progress = getQuestProgress("awaken_systems");
 		expect(progress!.current).toBe(5); // target is 5
 	});
 });
@@ -249,8 +286,8 @@ describe("quest event processing", () => {
 // ---------------------------------------------------------------------------
 
 describe("quest sequencing", () => {
-	it("completing a quest auto-starts the next in sequence", () => {
-		startQuest("quest_first_harvest");
+	it("completing a quest auto-starts the next in same quest line", () => {
+		startQuest("awaken_systems");
 
 		notifyQuestEvent({
 			type: "resource_gained",
@@ -259,29 +296,29 @@ describe("quest sequencing", () => {
 		});
 		updateQuests(1);
 
-		// quest_first_cube should now be active
-		const nextState = getQuestState("quest_first_cube");
+		// first_compression should now be active (next in act1_awakening)
+		const nextState = getQuestState("first_compression");
 		expect(nextState!.status).toBe("ACTIVE");
 	});
 
 	it("getActiveQuests returns only ACTIVE quests", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 
 		const active = getActiveQuests();
 		expect(active).toHaveLength(1);
-		expect(active[0].id).toBe("quest_first_harvest");
+		expect(active[0].id).toBe("awaken_systems");
 	});
 
 	it("autoStartFirstQuest starts the first quest in sequence", () => {
 		const result = autoStartFirstQuest();
 		expect(result).toBe(true);
 
-		const state = getQuestState("quest_first_harvest");
+		const state = getQuestState("awaken_systems");
 		expect(state!.status).toBe("ACTIVE");
 	});
 
 	it("autoStartFirstQuest returns false if quests already started", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 
 		const result = autoStartFirstQuest();
 		expect(result).toBe(false);
@@ -290,8 +327,8 @@ describe("quest sequencing", () => {
 	it("getQuestSequence returns definitions in order", () => {
 		const sequence = getQuestSequence();
 		expect(sequence.length).toBeGreaterThan(0);
-		expect(sequence[0].id).toBe("quest_first_harvest");
-		expect(sequence[1].id).toBe("quest_first_cube");
+		expect(sequence[0].id).toBe("awaken_systems");
+		expect(sequence[1].id).toBe("first_compression");
 	});
 });
 
@@ -304,7 +341,7 @@ describe("quest rewards", () => {
 		const callback = jest.fn();
 		onQuestComplete(callback);
 
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 		notifyQuestEvent({
 			type: "resource_gained",
 			detail: "scrapMetal",
@@ -312,7 +349,7 @@ describe("quest rewards", () => {
 		});
 		updateQuests(1);
 
-		expect(callback).toHaveBeenCalledWith("quest_first_harvest");
+		expect(callback).toHaveBeenCalledWith("awaken_systems");
 	});
 
 	it("completion callback can be unregistered", () => {
@@ -320,7 +357,7 @@ describe("quest rewards", () => {
 		const unsubscribe = onQuestComplete(callback);
 		unsubscribe();
 
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 		notifyQuestEvent({
 			type: "resource_gained",
 			detail: "scrapMetal",
@@ -342,9 +379,9 @@ describe("getQuestProgress", () => {
 	});
 
 	it("returns description from quest definition", () => {
-		const progress = getQuestProgress("quest_first_harvest");
+		const progress = getQuestProgress("awaken_systems");
 		expect(progress!.description).toBe(
-			"Scavenge scrap metal from the city ruins",
+			"Your cognitive systems are scrambled from the atmospheric entry pulse. Reboot by harvesting scrap ore to confirm motor functions.",
 		);
 	});
 });
@@ -355,19 +392,19 @@ describe("getQuestProgress", () => {
 
 describe("quest dialogue", () => {
 	it("enqueueDialogue adds lines to the queue", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 
-		enqueueDialogue("quest_first_harvest", "start");
+		enqueueDialogue("awaken_systems", "start");
 
 		const queue = getDialogueQueue();
 		expect(queue.length).toBeGreaterThan(0);
-		expect(queue[0].questId).toBe("quest_first_harvest");
+		expect(queue[0].questId).toBe("awaken_systems");
 		expect(queue[0].stage).toBe("start");
 	});
 
 	it("getCurrentDialogue returns head of queue after update", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 
 		// Need to call updateDialogue to populate currentEntry
 		// But we can populate it manually by checking the queue
@@ -376,8 +413,8 @@ describe("quest dialogue", () => {
 	});
 
 	it("advanceDialogue moves to the next entry", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 
 		const initialLength = getDialogueQueue().length;
 		advanceDialogue();
@@ -387,12 +424,12 @@ describe("quest dialogue", () => {
 	});
 
 	it("enqueueDialogue does not duplicate same stage", () => {
-		startQuest("quest_first_harvest");
+		startQuest("awaken_systems");
 
-		enqueueDialogue("quest_first_harvest", "start");
+		enqueueDialogue("awaken_systems", "start");
 		const len1 = getDialogueQueue().length;
 
-		enqueueDialogue("quest_first_harvest", "start");
+		enqueueDialogue("awaken_systems", "start");
 		const len2 = getDialogueQueue().length;
 
 		expect(len2).toBe(len1); // no duplicate
@@ -404,8 +441,8 @@ describe("quest dialogue", () => {
 	});
 
 	it("resetDialogue clears all state", () => {
-		startQuest("quest_first_harvest");
-		enqueueDialogue("quest_first_harvest", "start");
+		startQuest("awaken_systems");
+		enqueueDialogue("awaken_systems", "start");
 
 		resetDialogue();
 

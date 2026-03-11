@@ -11,7 +11,8 @@
 
 import { config } from "../../config";
 import type { Entity, Vec3 } from "../ecs/types";
-import { playerBots, signalRelays, wires, world } from "../ecs/world";
+import { world } from "../ecs/world";
+import { playerBots, signalRelays, wires } from "../ecs/koota/compat";
 
 /** Signal minimum strength threshold from config. */
 const SIGNAL_MIN_STRENGTH = config.power.signalMinStrength;
@@ -48,16 +49,16 @@ function buildSignalGraph(): Map<string, string[]> {
 
 	// Add edges from signal wires
 	for (const wireEntity of wires) {
-		if (wireEntity.wire.wireType !== "signal") continue;
+		if (wireEntity.wire!.wireType !== "signal") continue;
 
-		const fromId = wireEntity.wire.fromEntityId;
-		const toId = wireEntity.wire.toEntityId;
+		const fromId = wireEntity.wire!.fromEntityId;
+		const toId = wireEntity.wire!.toEntityId;
 
 		if (!graph.has(fromId)) graph.set(fromId, []);
 		if (!graph.has(toId)) graph.set(toId, []);
 
-		graph.get(fromId)!.push(toId);
-		graph.get(toId)!.push(fromId);
+		(graph.get(fromId) ?? []).push(toId);
+		(graph.get(toId) ?? []).push(fromId);
 	}
 
 	// Add edges from spatial proximity (relays within range of each other)
@@ -66,15 +67,20 @@ function buildSignalGraph(): Map<string, string[]> {
 		for (let j = i + 1; j < relayArray.length; j++) {
 			const a = relayArray[i];
 			const b = relayArray[j];
-			const dx = a.worldPosition.x - b.worldPosition.x;
-			const dz = a.worldPosition.z - b.worldPosition.z;
+			const dx = a.worldPosition!.x - b.worldPosition!.x;
+			const dz = a.worldPosition!.z - b.worldPosition!.z;
 			const dist = Math.sqrt(dx * dx + dz * dz);
 
 			if (
-				dist <= Math.min(a.signalRelay.signalRange, b.signalRelay.signalRange)
+				dist <= Math.min(a.signalRelay!.signalRange, b.signalRelay!.signalRange)
 			) {
-				graph.get(a.id)!.push(b.id);
-				graph.get(b.id)!.push(a.id);
+				// a.id and b.id are guaranteed in graph (pre-populated above)
+				const aEdges = graph.get(a.id) ?? [];
+				const bEdges = graph.get(b.id) ?? [];
+				aEdges.push(b.id);
+				bEdges.push(a.id);
+				graph.set(a.id, aEdges);
+				graph.set(b.id, bEdges);
 			}
 		}
 	}
@@ -105,7 +111,7 @@ export function signalNetworkSystem() {
 
 	// Reset all relay strengths
 	for (const relay of signalRelays) {
-		relay.signalRelay.signalStrength = 0;
+		relay.signalRelay!.signalStrength = 0;
 	}
 
 	const graph = buildSignalGraph();
@@ -132,13 +138,13 @@ export function signalNetworkSystem() {
 	for (const relay of signalRelays) {
 		let bestStrength = 0;
 		for (const pos of playerPositions) {
-			const dist = distXZ(pos, relay.worldPosition);
-			const strength = Math.max(0, 1 - dist / relay.signalRelay.signalRange);
+			const dist = distXZ(pos, relay.worldPosition!);
+			const strength = Math.max(0, 1 - dist / relay.signalRelay!.signalRange);
 			bestStrength = Math.max(bestStrength, strength);
 		}
 
 		if (bestStrength > SIGNAL_MIN_STRENGTH) {
-			relay.signalRelay.signalStrength = bestStrength;
+			relay.signalRelay!.signalStrength = bestStrength;
 			visited.add(relay.id);
 			queue.push({ relayId: relay.id, strength: bestStrength });
 			connectedRelayIds.add(relay.id);

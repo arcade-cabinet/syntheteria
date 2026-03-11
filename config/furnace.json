@@ -1,98 +1,351 @@
 {
-  "tiers": [
-    {
-      "name": "Basic Furnace",
-      "techRequired": 0,
-      "recipes": {
-        "iron_plate": {
-          "inputs": [{ "material": "scrap_iron", "count": 2 }],
-          "output": "iron_plate",
-          "time": 10
-        },
-        "wire_bundle": {
-          "inputs": [{ "material": "copper", "count": 1 }],
-          "output": "wire_bundle",
-          "time": 8
-        },
-        "circuit_board": {
-          "inputs": [{ "material": "silicon", "count": 2 }],
-          "output": "circuit_board",
-          "time": 15
-        }
-      }
-    }
-  ],
-  "fabrication": {
-    "recipes": [
-      {
-        "name": "Camera Module",
-        "outputComponent": "camera",
-        "outputMaterial": "electronic",
-        "costs": [
-          { "type": "eWaste", "amount": 4 },
-          { "type": "intactComponents", "amount": 1 }
-        ],
-        "buildTime": 8
-      },
-      {
-        "name": "Arm Assembly",
-        "outputComponent": "arms",
-        "outputMaterial": "metal",
-        "costs": [
-          { "type": "scrapMetal", "amount": 5 }
-        ],
-        "buildTime": 6
-      },
-      {
-        "name": "Leg Assembly",
-        "outputComponent": "legs",
-        "outputMaterial": "metal",
-        "costs": [
-          { "type": "scrapMetal", "amount": 4 }
-        ],
-        "buildTime": 5
-      },
-      {
-        "name": "Power Cell",
-        "outputComponent": "power_cell",
-        "outputMaterial": "electronic",
-        "costs": [
-          { "type": "eWaste", "amount": 3 },
-          { "type": "scrapMetal", "amount": 2 }
-        ],
-        "buildTime": 7
-      },
-      {
-        "name": "Power Supply",
-        "outputComponent": "power_supply",
-        "outputMaterial": "electronic",
-        "costs": [
-          { "type": "eWaste", "amount": 5 },
-          { "type": "intactComponents", "amount": 1 }
-        ],
-        "buildTime": 10
-      }
-    ]
-  },
-  "repair": {
-    "range": 3.0,
-    "ticksToRepair": 5,
-    "costs": {
-      "metal": { "type": "scrapMetal", "amount": 3 },
-      "plastic": { "type": "scrapMetal", "amount": 1 },
-      "electronic": { "type": "eWaste", "amount": 2 }
-    }
-  },
-  "defaultMaxHopperSize": 5,
-  "compression": {
-    "cubeSize": 0.5,
-    "configs": {
-      "iron": { "powderRequired": 100, "compressionTime": 2.0 },
-      "copper": { "powderRequired": 80, "compressionTime": 1.5 },
-      "stone": { "powderRequired": 60, "compressionTime": 1.0 },
-      "scrap_iron": { "powderRequired": 100, "compressionTime": 2.0 },
-      "silicon": { "powderRequired": 120, "compressionTime": 2.5 },
-      "titanium": { "powderRequired": 150, "compressionTime": 3.0 }
-    }
-  }
+	"defaultMaxHopperSize": 5,
+	"hopperCapacity": 3,
+	"hopperUpgrades": [5, 8],
+	"processSpeed": 1.0,
+	"poweredSpeedBonus": 1.5,
+	"powerRequired": 2,
+	"maxQueueDepth": 1,
+	"tiers": {
+		"1": {
+			"name": "Salvage Tier",
+			"techRequired": 0,
+			"recipes": {
+				"grabber_arm": {
+					"inputs": { "scrap_iron": 3 },
+					"time": 10,
+					"output": "tool_grabber_t1",
+					"category": "tool"
+				},
+				"diamond_drill_bit": {
+					"inputs": { "scrap_iron": 4 },
+					"time": 15,
+					"output": "tool_harvester_t2",
+					"category": "tool"
+				},
+				"scanner_lens": {
+					"inputs": { "scrap_iron": 2 },
+					"time": 8,
+					"output": "tool_scanner_t1",
+					"category": "tool"
+				},
+				"basic_power_cell": {
+					"inputs": { "scrap_iron": 5 },
+					"time": 20,
+					"output": "component_power_cell",
+					"category": "component"
+				},
+				"repair_patch": {
+					"inputs": { "scrap_iron": 2 },
+					"time": 5,
+					"output": "consumable_repair",
+					"category": "consumable"
+				},
+				"rock_foundation": {
+					"inputs": { "rock": 4 },
+					"time": 8,
+					"output": "building_foundation",
+					"category": "building"
+				},
+				"scrap_wall_panel": {
+					"inputs": { "scrap_iron": 3, "rock": 2 },
+					"time": 12,
+					"output": "building_wall_scrap",
+					"category": "building"
+				},
+				"basic_miner_frame": {
+					"inputs": { "scrap_iron": 6 },
+					"time": 25,
+					"output": "building_miner_t1",
+					"category": "building"
+				}
+			}
+		},
+		"2": {
+			"name": "Copper Processing",
+			"techRequired": 2,
+			"recipes": {
+				"wire_bundle": {
+					"inputs": { "copper": 2 },
+					"time": 12,
+					"output": "component_wire_bundle",
+					"category": "component"
+				},
+				"belt_segment": {
+					"inputs": { "scrap_iron": 3, "copper": 1 },
+					"time": 15,
+					"output": "building_belt_segment",
+					"category": "building"
+				},
+				"auto_hopper": {
+					"inputs": { "scrap_iron": 4, "copper": 2 },
+					"time": 20,
+					"output": "building_auto_hopper",
+					"category": "building"
+				},
+				"grabber_mk2": {
+					"inputs": { "copper": 3, "scrap_iron": 2 },
+					"time": 15,
+					"output": "tool_grabber_t2",
+					"category": "tool"
+				},
+				"lightning_rod": {
+					"inputs": { "copper": 3, "scrap_iron": 2 },
+					"time": 18,
+					"output": "building_lightning_rod",
+					"category": "building"
+				},
+				"power_wire": {
+					"inputs": { "copper": 1 },
+					"time": 8,
+					"output": "building_power_wire_x5",
+					"category": "building"
+				},
+				"signal_relay": {
+					"inputs": { "copper": 2, "scrap_iron": 1 },
+					"time": 14,
+					"output": "building_signal_relay",
+					"category": "building"
+				},
+				"copper_wall_panel": {
+					"inputs": { "copper": 4, "rock": 2 },
+					"time": 16,
+					"output": "building_wall_copper",
+					"category": "building"
+				}
+			}
+		},
+		"3": {
+			"name": "Silicon and Carbon",
+			"techRequired": 2,
+			"recipes": {
+				"circuit_board": {
+					"inputs": { "silicon": 2, "copper": 1 },
+					"time": 25,
+					"output": "component_circuit_board",
+					"category": "component"
+				},
+				"battle_bot_chassis": {
+					"inputs": { "scrap_iron": 6, "copper": 2, "silicon": 1 },
+					"time": 30,
+					"output": "unit_battle_bot",
+					"category": "unit"
+				},
+				"scout_bot_chassis": {
+					"inputs": { "scrap_iron": 3, "copper": 1, "silicon": 1 },
+					"time": 20,
+					"output": "unit_scout_bot",
+					"category": "unit"
+				},
+				"worker_bot_chassis": {
+					"inputs": { "scrap_iron": 4, "copper": 2 },
+					"time": 22,
+					"output": "unit_worker_bot",
+					"category": "unit"
+				},
+				"hacking_module": {
+					"inputs": { "silicon": 3, "copper": 2 },
+					"time": 30,
+					"output": "component_hacking_module",
+					"category": "component"
+				},
+				"compute_core": {
+					"inputs": { "silicon": 2, "carbon": 1 },
+					"time": 28,
+					"output": "component_compute_core",
+					"category": "component"
+				},
+				"carbon_fiber_panel": {
+					"inputs": { "carbon": 3, "scrap_iron": 1 },
+					"time": 20,
+					"output": "building_wall_carbon",
+					"category": "building"
+				},
+				"smelter": {
+					"inputs": { "scrap_iron": 4, "carbon": 2, "copper": 1 },
+					"time": 35,
+					"output": "building_smelter",
+					"category": "building"
+				},
+				"refiner": {
+					"inputs": { "silicon": 3, "copper": 2, "scrap_iron": 2 },
+					"time": 35,
+					"output": "building_refiner",
+					"category": "building"
+				}
+			}
+		},
+		"4": {
+			"name": "Titanium",
+			"techRequired": 3,
+			"recipes": {
+				"plasma_cutter": {
+					"inputs": { "titanium": 2, "silicon": 1, "copper": 2 },
+					"time": 30,
+					"output": "tool_harvester_t3",
+					"category": "tool"
+				},
+				"defense_turret": {
+					"inputs": { "titanium": 3, "silicon": 2, "copper": 3 },
+					"time": 40,
+					"output": "building_turret",
+					"category": "building"
+				},
+				"fortified_wall": {
+					"inputs": { "titanium": 4, "scrap_iron": 4 },
+					"time": 25,
+					"output": "building_wall_titanium",
+					"category": "building"
+				},
+				"outpost_core": {
+					"inputs": { "titanium": 2, "silicon": 2, "copper": 4, "scrap_iron": 4 },
+					"time": 60,
+					"output": "building_outpost",
+					"category": "building"
+				},
+				"heavy_bot_chassis": {
+					"inputs": { "titanium": 5, "iron": 3, "silicon": 2 },
+					"time": 45,
+					"output": "unit_heavy_bot",
+					"category": "unit"
+				},
+				"hacker_bot_chassis": {
+					"inputs": { "silicon": 3, "copper": 2, "titanium": 1 },
+					"time": 35,
+					"output": "unit_hacker_bot",
+					"category": "unit"
+				},
+				"formation_controller": {
+					"inputs": { "silicon": 2, "titanium": 1, "copper": 1 },
+					"time": 25,
+					"output": "component_formation_ctrl",
+					"category": "component"
+				},
+				"titan_armor_plate": {
+					"inputs": { "titanium": 3, "carbon": 1 },
+					"time": 20,
+					"output": "component_titan_armor",
+					"category": "component"
+				}
+			}
+		},
+		"5": {
+			"name": "Endgame",
+			"techRequired": 4,
+			"recipes": {
+				"quantum_extractor": {
+					"inputs": { "rare_earth": 2, "gold": 1, "titanium": 2 },
+					"time": 50,
+					"output": "tool_harvester_t4",
+					"category": "tool"
+				},
+				"advanced_alloy_cube": {
+					"inputs": { "titanium": 1, "rare_earth": 1 },
+					"time": 30,
+					"output": "material_advanced_alloy",
+					"category": "material"
+				},
+				"gravity_grabber": {
+					"inputs": { "rare_earth": 2, "gold": 1, "silicon": 1 },
+					"time": 40,
+					"output": "tool_grabber_t4",
+					"category": "tool"
+				},
+				"signal_jammer": {
+					"inputs": { "silicon": 3, "rare_earth": 2, "gold": 1 },
+					"time": 45,
+					"output": "building_signal_jammer",
+					"category": "building"
+				},
+				"fusion_core": {
+					"inputs": { "quantum_crystal": 1, "rare_earth": 2, "gold": 1 },
+					"time": 90,
+					"output": "component_fusion_core",
+					"category": "component"
+				},
+				"titan_class_bot": {
+					"inputs": { "titanium": 8, "silicon": 4, "rare_earth": 2, "gold": 1 },
+					"time": 120,
+					"output": "unit_titan_bot",
+					"category": "unit"
+				},
+				"teleporter_pad": {
+					"inputs": { "quantum_crystal": 2, "rare_earth": 3, "gold": 2 },
+					"time": 180,
+					"output": "building_teleporter",
+					"category": "building"
+				},
+				"planet_core_tap": {
+					"inputs": { "quantum_crystal": 3, "titanium": 5, "rare_earth": 3 },
+					"time": 300,
+					"output": "building_core_tap",
+					"category": "building"
+				}
+			}
+		}
+	},
+	"smelterRecipes": {
+		"iron_cube": {
+			"inputs": { "scrap_iron": 2 },
+			"time": 15,
+			"output": "material_iron",
+			"category": "material"
+		},
+		"steel_cube": {
+			"inputs": { "iron": 2, "carbon": 1 },
+			"time": 25,
+			"output": "material_steel",
+			"category": "material"
+		}
+	},
+	"compression": {
+		"cubeSize": 0.5,
+		"configs": {
+			"rock": { "powderRequired": 40, "compressionTime": 1.0, "screenShakePeak": 0.3, "ejectVelocity": 2.0 },
+			"scrap_iron": { "powderRequired": 60, "compressionTime": 1.5, "screenShakePeak": 0.5, "ejectVelocity": 1.8 },
+			"copper": { "powderRequired": 80, "compressionTime": 2.0, "screenShakePeak": 0.6, "ejectVelocity": 1.6 },
+			"carbon": { "powderRequired": 90, "compressionTime": 2.0, "screenShakePeak": 0.6, "ejectVelocity": 1.5 },
+			"silicon": { "powderRequired": 100, "compressionTime": 2.5, "screenShakePeak": 0.7, "ejectVelocity": 1.4 },
+			"titanium": { "powderRequired": 120, "compressionTime": 3.5, "screenShakePeak": 0.9, "ejectVelocity": 1.0 },
+			"rare_earth": { "powderRequired": 150, "compressionTime": 4.0, "screenShakePeak": 0.8, "ejectVelocity": 1.2 },
+			"gold": { "powderRequired": 130, "compressionTime": 3.5, "screenShakePeak": 0.85, "ejectVelocity": 1.1 },
+			"quantum_crystal": { "powderRequired": 200, "compressionTime": 5.0, "screenShakePeak": 1.0, "ejectVelocity": 0.8 },
+			"iron": { "powderRequired": 60, "compressionTime": 1.5, "screenShakePeak": 0.5, "ejectVelocity": 1.8 },
+			"steel": { "powderRequired": 80, "compressionTime": 2.0, "screenShakePeak": 0.6, "ejectVelocity": 1.5 },
+			"stone": { "powderRequired": 40, "compressionTime": 1.0, "screenShakePeak": 0.3, "ejectVelocity": 2.0 }
+		},
+		"screenShake": {
+			"curveType": "easeInQuad",
+			"slamMultiplier": 1.5,
+			"slamFrames": 2
+		},
+		"pressureGauge": {
+			"curveType": "easeInCubic",
+			"redZoneThreshold": 0.85
+		},
+		"heatGauge": {
+			"curveType": "easeInQuad",
+			"delayPercent": 0.15
+		},
+		"ejectPhysics": {
+			"forwardWeight": 0.7,
+			"upWeight": 0.3,
+			"bounceRestitution": 0.3,
+			"friction": 0.6
+		},
+		"qualityModifiers": {
+			"normal": 1.0,
+			"damageDuring": 0.7,
+			"interrupted": 0,
+			"rushed": 0.8
+		}
+	},
+	"repair": {
+		"range": 3.0,
+		"ticksToRepair": 5,
+		"costs": {
+			"metal": { "type": "scrap_iron", "amount": 1 },
+			"electronic": { "type": "copper", "amount": 1 }
+		}
+	}
 }

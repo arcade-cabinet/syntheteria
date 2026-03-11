@@ -21,6 +21,11 @@ jest.mock("../../ecs/world", () => ({
 	world: [],
 }));
 
+// Also mock the Koota compat layer (fabrication.ts now imports from here)
+jest.mock("../../ecs/koota/compat", () => ({
+	buildings: mockBuildings,
+}));
+
 // Import after mocking
 import {
 	RECIPES,

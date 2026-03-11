@@ -40,3 +40,47 @@ body {
 	/* Panel max-width that fits any phone without overflow */
 	--panel-w: min(260px, calc(100vw - 32px));
 }
+
+/* Tablet breakpoint (768px+): wider panels, larger font floor */
+@media (min-width: 768px) {
+	:root {
+		--ui-xs: clamp(13px, 1.8vw, 15px);
+		--ui-sm: clamp(14px, 2vw, 16px);
+		--ui-md: clamp(15px, 2.2vw, 18px);
+		--ui-lg: clamp(18px, 2.6vw, 22px);
+		--ui-xl: clamp(20px, 3vw, 26px);
+
+		/* Wider panels on tablet — enough room for side-by-side info */
+		--panel-w: min(320px, 38vw);
+	}
+}
+
+/* Landscape orientation on narrow screens (phones in landscape) */
+@media (max-height: 500px) and (orientation: landscape) {
+	:root {
+		/* Shrink font scale so panels fit in reduced viewport height */
+		--ui-xs: 11px;
+		--ui-sm: 12px;
+		--ui-md: 13px;
+		--ui-lg: 14px;
+		--ui-xl: 16px;
+
+		/* Wider panel to use horizontal space */
+		--panel-w: min(280px, 40vw);
+	}
+}
+
+/* Tablet landscape: wider panels, side-by-side comfortable sizing */
+@media (min-width: 1024px) and (orientation: landscape) {
+	:root {
+		--panel-w: min(360px, 30vw);
+	}
+}
+
+/* Ensure touch targets meet minimum 44px height on all interactive elements */
+@media (pointer: coarse) {
+	button {
+		min-height: 44px;
+		min-width: 44px;
+	}
+}

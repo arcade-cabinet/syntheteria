@@ -111,8 +111,8 @@ export function placeBelt(
 		const neighbor = getBeltAt(nx, nz);
 		if (!neighbor || !neighbor.belt) continue;
 
-		const ngx = Math.round(neighbor.worldPosition!.x);
-		const ngz = Math.round(neighbor.worldPosition!.z);
+		const ngx = Math.round(neighbor.worldPosition?.x ?? 0);
+		const ngz = Math.round(neighbor.worldPosition?.z ?? 0);
 
 		// If the neighbor's direction points toward this belt, it feeds into us
 		if (directionPointsTo(neighbor.belt.direction, ngx, ngz, gx, gz)) {

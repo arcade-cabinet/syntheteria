@@ -27,6 +27,12 @@ jest.mock("../../ecs/world", () => ({
 	playerBots: mockPlayerBots,
 }));
 
+// Also mock the Koota compat layer (hacking.ts now imports from here)
+jest.mock("../../ecs/koota/compat", () => ({
+	hackables: mockHackables,
+	playerBots: mockPlayerBots,
+}));
+
 jest.mock("../signalNetwork", () => ({
 	getGlobalCompute: () => mockCompute.value,
 }));

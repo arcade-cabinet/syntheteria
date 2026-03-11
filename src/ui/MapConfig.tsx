@@ -80,6 +80,7 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 			{/* Map Size */}
 			<OptionRow
 				label="MAP SIZE"
+				groupLabel="Map size"
 				options={["small", "medium", "large"]}
 				value={settings.mapSize}
 				onChange={(v) => update({ mapSize: v as MapSettings["mapSize"] })}
@@ -89,6 +90,7 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 			{/* Ore Density */}
 			<OptionRow
 				label="ORE DENSITY"
+				groupLabel="Ore density"
 				options={["sparse", "normal", "rich"]}
 				value={settings.oreDensity}
 				onChange={(v) => update({ oreDensity: v as MapSettings["oreDensity"] })}
@@ -97,6 +99,7 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 			{/* Storm Intensity */}
 			<OptionRow
 				label="STORM INTENSITY"
+				groupLabel="Storm intensity"
 				options={["calm", "moderate", "violent"]}
 				value={settings.stormIntensity}
 				onChange={(v) => update({ stormIntensity: v as MapSettings["stormIntensity"] })}
@@ -105,6 +108,7 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 			{/* Starting Resources */}
 			<OptionRow
 				label="STARTING RESOURCES"
+				groupLabel="Starting resources"
 				options={["minimal", "standard", "abundant"]}
 				value={settings.startingResources}
 				onChange={(v) => update({ startingResources: v as MapSettings["startingResources"] })}
@@ -112,8 +116,10 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 
 			{/* Seed Input */}
 			<div>
-				<div
+				<label
+					htmlFor="mission-seed-input"
 					style={{
+						display: "block",
 						fontFamily: MONO,
 						fontSize: "10px",
 						color: "#00ffaa66",
@@ -121,16 +127,19 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 						marginBottom: "6px",
 					}}
 				>
-					WORLD SEED
-				</div>
+					MISSION SEED
+				</label>
 				<div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
 					<input
 						ref={inputRef}
+						id="mission-seed-input"
 						value={settings.seedPhrase}
 						onChange={(e) => handleSeedChange(e.target.value)}
 						onBlur={validateSeed}
 						spellCheck={false}
 						autoComplete="off"
+						aria-invalid={parseError}
+						aria-describedby={parseError ? "seed-error" : undefined}
 						style={{
 							flex: 1,
 							background: "rgba(0,255,170,0.05)",
@@ -151,7 +160,7 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 					/>
 					<button
 						onClick={shuffleSeed}
-						title="Random seed"
+						aria-label="Generate random mission seed"
 						style={{
 							background: "rgba(0,255,170,0.07)",
 							border: "1px solid rgba(0,255,170,0.3)",
@@ -170,6 +179,8 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 				</div>
 				{parseError && (
 					<div
+						id="seed-error"
+						role="alert"
 						style={{
 							color: "#ff6644",
 							fontFamily: MONO,
@@ -189,12 +200,14 @@ export function MapConfig({ settings, onChange }: MapConfigProps) {
 /** A row of radio-style option buttons with a label. */
 function OptionRow({
 	label,
+	groupLabel,
 	options,
 	value,
 	onChange,
 	sublabels,
 }: {
 	label: string;
+	groupLabel: string;
 	options: string[];
 	value: string;
 	onChange: (val: string) => void;
@@ -203,6 +216,7 @@ function OptionRow({
 	return (
 		<div>
 			<div
+				id={`option-label-${groupLabel.replace(/\s+/g, "-").toLowerCase()}`}
 				style={{
 					fontFamily: MONO,
 					fontSize: "10px",
@@ -213,7 +227,11 @@ function OptionRow({
 			>
 				{label}
 			</div>
-			<div style={{ display: "flex", gap: "6px" }}>
+			<div
+				role="radiogroup"
+				aria-labelledby={`option-label-${groupLabel.replace(/\s+/g, "-").toLowerCase()}`}
+				style={{ display: "flex", gap: "6px" }}
+			>
 				{options.map((opt) => (
 					<OptionButton
 						key={opt}
@@ -243,6 +261,9 @@ function OptionButton({
 
 	return (
 		<button
+			role="radio"
+			aria-checked={isSelected}
+			aria-label={sublabel ? `${label} (${sublabel})` : label}
 			onClick={onClick}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
@@ -279,6 +300,7 @@ function OptionButton({
 			</span>
 			{sublabel && (
 				<span
+					aria-hidden="true"
 					style={{
 						fontFamily: MONO,
 						fontSize: "9px",

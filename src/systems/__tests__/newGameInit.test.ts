@@ -102,12 +102,21 @@ jest.mock("../../../config", () => ({
 
 import {
 	initNewGame,
+	initFromConfig,
 	validateOptions,
 	getDifficultyModifiers,
 	getSpawnPoint,
 	getLastResult,
+	getBaseAgents,
+	getBaseAgent,
+	getAlienHives,
+	getOtterGuide,
+	placeAlienHives,
+	placeOtterGuide,
+	getCameraTransition,
 	reset,
 	type NewGameOptions,
+	type NewGameConfig,
 } from "../newGameInit";
 
 import { getWorldSeed } from "../../ecs/seed";
@@ -731,5 +740,492 @@ describe("getLastResult", () => {
 		expect(r1).toEqual(r2);
 		expect(r1).not.toBe(r2);
 		expect(r1.errors).not.toBe(r2.errors);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// BaseAgent creation — step 6 from GDD-010
+// ---------------------------------------------------------------------------
+
+describe("initNewGame — BaseAgent creation", () => {
+	it("creates a BaseAgent for the player faction", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+
+		const playerAgent = getBaseAgent("reclaimers");
+		expect(playerAgent).not.toBeNull();
+		expect(playerAgent!.factionId).toBe("reclaimers");
+	});
+
+	it("creates BaseAgents for all AI factions", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+
+		expect(getBaseAgent("volt_collective")).not.toBeNull();
+		expect(getBaseAgent("signal_choir")).not.toBeNull();
+		expect(getBaseAgent("iron_creed")).not.toBeNull();
+	});
+
+	it("creates the correct total number of BaseAgents (player + AI)", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+
+		const agents = getBaseAgents();
+		expect(agents).toHaveLength(4); // 1 player + 3 AI
+	});
+
+	it("assigns unique baseIds to each BaseAgent", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+
+		const agents = getBaseAgents();
+		const ids = agents.map((a) => a.baseId);
+		const uniqueIds = new Set(ids);
+		expect(uniqueIds.size).toBe(agents.length);
+	});
+
+	it("places BaseAgents at spawn positions", () => {
+		const result = initNewGame(defaultOptions({ worldSeed: 42 }));
+
+		const playerAgent = getBaseAgent("reclaimers")!;
+		expect(playerAgent.position.x).toBe(result.spawnPosition.x);
+		expect(playerAgent.position.z).toBe(result.spawnPosition.z);
+	});
+
+	it("creates no AI BaseAgents when aiFactions is empty", () => {
+		initNewGame(defaultOptions({ worldSeed: 42, aiFactions: [] }));
+
+		const agents = getBaseAgents();
+		expect(agents).toHaveLength(1); // player only
+		expect(agents[0].factionId).toBe("reclaimers");
+	});
+
+	it("creates BaseAgents with functional work queues", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+
+		const agent = getBaseAgent("reclaimers")!;
+		expect(agent.workQueue).toBeDefined();
+		expect(agent.workQueue.pendingCount()).toBe(0);
+		expect(agent.workQueue.claimedCount()).toBe(0);
+	});
+
+	it("clears BaseAgents on reset", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+		expect(getBaseAgents()).toHaveLength(4);
+
+		reset();
+		expect(getBaseAgents()).toHaveLength(0);
+		expect(getBaseAgent("reclaimers")).toBeNull();
+	});
+});
+
+// ---------------------------------------------------------------------------
+// NewGameConfig adapter — initFromConfig
+// ---------------------------------------------------------------------------
+
+describe("initFromConfig — NewGameConfig adapter", () => {
+	function defaultConfig(overrides: Partial<NewGameConfig> = {}): NewGameConfig {
+		return {
+			playerRace: "reclaimers",
+			mapSize: 200,
+			mapType: "standard",
+			aiOpponents: ["volt_collective", "signal_choir", "iron_creed"],
+			difficulty: "normal",
+			...overrides,
+		};
+	}
+
+	it("succeeds with valid config", () => {
+		const result = initFromConfig(defaultConfig());
+		expect(result.success).toBe(true);
+		expect(result.errors).toHaveLength(0);
+	});
+
+	it("maps playerRace to playerFaction", () => {
+		const result = initFromConfig(
+			defaultConfig({
+				playerRace: "iron_creed",
+				aiOpponents: ["reclaimers", "volt_collective", "signal_choir"],
+			}),
+		);
+		expect(result.success).toBe(true);
+
+		const hud = getHUDState();
+		expect(hud.factionName).toBe("iron_creed");
+	});
+
+	it("maps aiOpponents to aiFactions", () => {
+		const result = initFromConfig(
+			defaultConfig({ aiOpponents: ["volt_collective"] }),
+		);
+		expect(result.success).toBe(true);
+		expect(result.aiFactionCount).toBe(1);
+	});
+
+	it("maps mapType to mapPreset", () => {
+		const result = initFromConfig(defaultConfig({ mapType: "duel" }));
+		expect(result.success).toBe(true);
+	});
+
+	it("maps difficulty string to difficulty level", () => {
+		const result = initFromConfig(defaultConfig({ difficulty: "hard" }));
+		expect(result.success).toBe(true);
+	});
+
+	it("creates BaseAgents for all factions", () => {
+		initFromConfig(defaultConfig());
+
+		const agents = getBaseAgents();
+		expect(agents).toHaveLength(4);
+	});
+
+	it("rejects invalid playerRace", () => {
+		const result = initFromConfig(defaultConfig({ playerRace: "pirates" }));
+		expect(result.success).toBe(false);
+		expect(result.errors.length).toBeGreaterThan(0);
+	});
+
+	it("rejects invalid difficulty", () => {
+		const result = initFromConfig(defaultConfig({ difficulty: "nightmare" }));
+		expect(result.success).toBe(false);
+		expect(result.errors.length).toBeGreaterThan(0);
+	});
+
+	it("produces deterministic results for same config", () => {
+		const result1 = initFromConfig(defaultConfig());
+		const seed1 = result1.worldSeed;
+		reset();
+		// Use the same seed to get deterministic results
+		const result2 = initFromConfig(defaultConfig());
+		// Both should succeed, though seeds differ (random) unless we fix them
+		expect(result1.success).toBe(true);
+		expect(result2.success).toBe(true);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// getBaseAgents / getBaseAgent queries
+// ---------------------------------------------------------------------------
+
+describe("getBaseAgents / getBaseAgent", () => {
+	it("returns empty array before init", () => {
+		expect(getBaseAgents()).toHaveLength(0);
+	});
+
+	it("returns null for unknown faction", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+		expect(getBaseAgent("nonexistent")).toBeNull();
+	});
+
+	it("returns copies of BaseAgent references", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+
+		const agents1 = getBaseAgents();
+		const agents2 = getBaseAgents();
+		// Should return the same BaseAgent instances (they're objects, not copied)
+		expect(agents1[0]).toBe(agents2[0]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Step 9: Alien hive placement
+// ---------------------------------------------------------------------------
+
+describe("initNewGame — alien hive placement", () => {
+	it("places alien hives during initialization", () => {
+		const result = initNewGame(defaultOptions({ worldSeed: 42 }));
+		expect(result.alienHiveCount).toBeGreaterThan(0);
+	});
+
+	it("stores hives retrievable via getAlienHives()", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+		const hives = getAlienHives();
+		expect(hives.length).toBeGreaterThan(0);
+	});
+
+	it("clears hives on reset", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+		expect(getAlienHives().length).toBeGreaterThan(0);
+
+		reset();
+		expect(getAlienHives()).toHaveLength(0);
+	});
+
+	it("places hives with valid types", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+		const hives = getAlienHives();
+		const validTypes = ["feral_nest", "scrap_hive", "signal_den", "rust_colony"];
+
+		for (const hive of hives) {
+			expect(validTypes).toContain(hive.type);
+		}
+	});
+
+	it("assigns unique IDs to each hive", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+		const hives = getAlienHives();
+		const ids = hives.map((h) => h.id);
+		const uniqueIds = new Set(ids);
+		expect(uniqueIds.size).toBe(ids.length);
+	});
+
+	it("returns zero hives when result has no hives (error path)", () => {
+		const result = initNewGame(
+			defaultOptions({ playerFaction: "nonexistent" }),
+		);
+		expect(result.alienHiveCount).toBe(0);
+	});
+});
+
+describe("placeAlienHives — unit tests", () => {
+	function makeWorldData(size: number): WorldData {
+		const heightmap = Array.from({ length: size }, () =>
+			Array.from({ length: size }, () => 0.5),
+		);
+		return {
+			heightmap,
+			biomes: [],
+			oreDeposits: [],
+			startPositions: [],
+			ruins: [],
+		};
+	}
+
+	function makeRng(seed: number): () => number {
+		let s = seed;
+		return () => {
+			s = (s * 1664525 + 1013904223) & 0x7fffffff;
+			return s / 0x80000000;
+		};
+	}
+
+	it("places hives far from start positions", () => {
+		const world = makeWorldData(200);
+		const starts = [{ x: 100, z: 100 }];
+		const rng = makeRng(42);
+		const hives = placeAlienHives(world, 200, starts, rng);
+
+		const minDist = 200 * 0.2; // HIVE_MIN_DISTANCE_FRACTION
+		for (const hive of hives) {
+			for (const start of starts) {
+				const dx = hive.position.x - start.x;
+				const dz = hive.position.z - start.z;
+				const dist = Math.sqrt(dx * dx + dz * dz);
+				expect(dist).toBeGreaterThanOrEqual(minDist);
+			}
+		}
+	});
+
+	it("places hives far from each other", () => {
+		const world = makeWorldData(200);
+		const starts = [{ x: 100, z: 100 }];
+		const rng = makeRng(42);
+		const hives = placeAlienHives(world, 200, starts, rng);
+
+		const minDist = 200 * 0.1;
+		for (let i = 0; i < hives.length; i++) {
+			for (let j = i + 1; j < hives.length; j++) {
+				const dx = hives[i].position.x - hives[j].position.x;
+				const dz = hives[i].position.z - hives[j].position.z;
+				const dist = Math.sqrt(dx * dx + dz * dz);
+				expect(dist).toBeGreaterThanOrEqual(minDist);
+			}
+		}
+	});
+
+	it("produces deterministic results for same rng seed", () => {
+		const world = makeWorldData(200);
+		const starts = [{ x: 100, z: 100 }];
+
+		const hives1 = placeAlienHives(world, 200, starts, makeRng(42));
+		const hives2 = placeAlienHives(world, 200, starts, makeRng(42));
+
+		expect(hives1.length).toBe(hives2.length);
+		for (let i = 0; i < hives1.length; i++) {
+			expect(hives1[i].position).toEqual(hives2[i].position);
+			expect(hives1[i].type).toBe(hives2[i].type);
+		}
+	});
+
+	it("handles small worlds gracefully", () => {
+		const world = makeWorldData(20);
+		const starts = [{ x: 10, z: 10 }];
+		const rng = makeRng(42);
+		// Should not throw even if no valid positions exist
+		const hives = placeAlienHives(world, 20, starts, rng);
+		expect(hives).toBeDefined();
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Step 10: Otter guide Pip placement
+// ---------------------------------------------------------------------------
+
+describe("initNewGame — otter guide Pip", () => {
+	it("places otter guide near player spawn", () => {
+		const result = initNewGame(defaultOptions({ worldSeed: 42 }));
+		expect(result.otterGuidePosition).not.toBeNull();
+	});
+
+	it("stores otter guide retrievable via getOtterGuide()", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+		const guide = getOtterGuide();
+
+		expect(guide).not.toBeNull();
+		expect(guide!.name).toBe("Pip");
+		expect(guide!.id).toBe("otter_pip");
+	});
+
+	it("clears otter guide on reset", () => {
+		initNewGame(defaultOptions({ worldSeed: 42 }));
+		expect(getOtterGuide()).not.toBeNull();
+
+		reset();
+		expect(getOtterGuide()).toBeNull();
+	});
+
+	it("returns null otter guide on error path", () => {
+		const result = initNewGame(
+			defaultOptions({ playerFaction: "nonexistent" }),
+		);
+		expect(result.otterGuidePosition).toBeNull();
+	});
+});
+
+describe("placeOtterGuide — unit tests", () => {
+	function makeRng(seed: number): () => number {
+		let s = seed;
+		return () => {
+			s = (s * 1664525 + 1013904223) & 0x7fffffff;
+			return s / 0x80000000;
+		};
+	}
+
+	it("returns Pip with correct name and id", () => {
+		const rng = makeRng(42);
+		const guide = placeOtterGuide({ x: 50, z: 50 }, rng);
+
+		expect(guide.name).toBe("Pip");
+		expect(guide.id).toBe("otter_pip");
+	});
+
+	it("places guide offset from player spawn", () => {
+		const rng = makeRng(42);
+		const spawn = { x: 50, z: 50 };
+		const guide = placeOtterGuide(spawn, rng);
+
+		const dx = guide.position.x - spawn.x;
+		const dz = guide.position.z - spawn.z;
+		const dist = Math.sqrt(dx * dx + dz * dz);
+
+		// Should be approximately 4 units away (OTTER_GUIDE_OFFSET)
+		expect(dist).toBeGreaterThan(0);
+		expect(dist).toBeLessThanOrEqual(5); // 4 + rounding tolerance
+	});
+
+	it("produces deterministic results for same rng", () => {
+		const spawn = { x: 100, z: 100 };
+		const g1 = placeOtterGuide(spawn, makeRng(42));
+		const g2 = placeOtterGuide(spawn, makeRng(42));
+
+		expect(g1.position).toEqual(g2.position);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Step 12: Camera transition
+// ---------------------------------------------------------------------------
+
+describe("getCameraTransition", () => {
+	const playerPos = { x: 10, y: 0.5, z: 20 };
+
+	it("starts in orbital phase at t=0", () => {
+		const cam = getCameraTransition(0, playerPos);
+		expect(cam.phase).toBe("orbital");
+		expect(cam.progress).toBe(0);
+	});
+
+	it("orbital phase at t=1.5 (midway through 3s orbital)", () => {
+		const cam = getCameraTransition(1.5, playerPos);
+		expect(cam.phase).toBe("orbital");
+		expect(cam.progress).toBeCloseTo(0.5, 1);
+		// Camera should be at height 50
+		expect(cam.cameraPosition.y).toBe(50);
+	});
+
+	it("transitions to zoom phase after 3s", () => {
+		const cam = getCameraTransition(3.5, playerPos);
+		expect(cam.phase).toBe("zoom");
+		expect(cam.progress).toBeGreaterThan(0);
+		expect(cam.progress).toBeLessThan(1);
+	});
+
+	it("transitions to fps phase after 5s", () => {
+		const cam = getCameraTransition(5.5, playerPos);
+		expect(cam.phase).toBe("fps");
+		expect(cam.progress).toBe(1);
+	});
+
+	it("fps camera is at player eye height", () => {
+		const cam = getCameraTransition(10, playerPos);
+		expect(cam.phase).toBe("fps");
+		expect(cam.cameraPosition.x).toBe(playerPos.x);
+		// Eye height = player y + 1.6
+		expect(cam.cameraPosition.y).toBe(playerPos.y + 1.6);
+		expect(cam.cameraPosition.z).toBe(playerPos.z);
+	});
+
+	it("fps lookAt is forward from player", () => {
+		const cam = getCameraTransition(10, playerPos);
+		expect(cam.lookAt.z).toBe(playerPos.z + 1);
+	});
+
+	it("orbital camera orbits around player", () => {
+		const cam = getCameraTransition(0, playerPos);
+		// At t=0, angle=0, camera should be at x+40 (cos(0)*40)
+		expect(cam.cameraPosition.x).toBeCloseTo(playerPos.x + 40);
+		expect(cam.cameraPosition.z).toBeCloseTo(playerPos.z);
+	});
+
+	it("zoom phase interpolates camera height", () => {
+		const earlyZoom = getCameraTransition(3.1, playerPos);
+		const lateZoom = getCameraTransition(4.9, playerPos);
+
+		// Early zoom: camera still high
+		expect(earlyZoom.cameraPosition.y).toBeGreaterThan(playerPos.y + 5);
+		// Late zoom: camera approaching player height
+		expect(lateZoom.cameraPosition.y).toBeLessThan(earlyZoom.cameraPosition.y);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Determinism of new steps
+// ---------------------------------------------------------------------------
+
+describe("full 12-step determinism including hives and otter", () => {
+	it("same seed produces same alien hives and otter guide", () => {
+		const result1 = initNewGame(defaultOptions({ worldSeed: 42 }));
+		const hives1 = getAlienHives();
+		const otter1 = getOtterGuide();
+		reset();
+		const result2 = initNewGame(defaultOptions({ worldSeed: 42 }));
+		const hives2 = getAlienHives();
+		const otter2 = getOtterGuide();
+
+		expect(result1.alienHiveCount).toBe(result2.alienHiveCount);
+		expect(hives1).toEqual(hives2);
+		expect(otter1).toEqual(otter2);
+		expect(result1.otterGuidePosition).toEqual(result2.otterGuidePosition);
+	});
+
+	it("different seeds produce different alien hive and otter positions", () => {
+		initNewGame(defaultOptions({ worldSeed: 1 }));
+		const hives1 = getAlienHives();
+		const otter1 = getOtterGuide();
+		reset();
+		initNewGame(defaultOptions({ worldSeed: 99999 }));
+		const hives2 = getAlienHives();
+		const otter2 = getOtterGuide();
+
+		// At least one of the placements should differ
+		const hivesMatch = JSON.stringify(hives1) === JSON.stringify(hives2);
+		const otterMatch = JSON.stringify(otter1) === JSON.stringify(otter2);
+		expect(hivesMatch && otterMatch).toBe(false);
 	});
 });

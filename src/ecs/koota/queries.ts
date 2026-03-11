@@ -9,7 +9,7 @@
  * queries will coexist. Systems will be migrated one at a time.
  */
 
-import { createQuery, Not } from "koota";
+import { createQuery, Not, type Trait } from "koota";
 import {
 	Automation,
 	Belt,
@@ -44,6 +44,16 @@ import {
 	Unit,
 	Wire,
 } from "./world";
+
+/**
+ * Koota's `Not()` type signature accepts only `Trait`, but relation wildcard
+ * pairs (e.g. `HeldBy("*")`) are `RelationPair` — a valid `QueryParameter`
+ * that `createQuery` accepts directly, but `Not()` rejects at the type level.
+ * This helper performs a targeted cast so the intent is explicit.
+ */
+function notRelation<T>(relationPair: T): ReturnType<typeof Not> {
+	return Not(relationPair as unknown as Trait);
+}
 
 // ---------------------------------------------------------------------------
 // Core spatial queries
@@ -106,12 +116,10 @@ export const poweredBuildings = createQuery(Building, Faction, Position);
 export const allBelts = createQuery(Belt, Position);
 
 /** Belts that have a successor in the chain. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const linkedBelts = createQuery(Belt, NextBelt("*") as any);
+export const linkedBelts = createQuery(Belt, NextBelt("*"));
 
 /** Terminal belts (no successor — items pile up here). */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const terminalBelts = createQuery(Belt, Not(NextBelt("*") as any));
+export const terminalBelts = createQuery(Belt, notRelation(NextBelt("*")));
 
 /**
  * Active belts — belts currently carrying an item.
@@ -121,15 +129,13 @@ export const terminalBelts = createQuery(Belt, Not(NextBelt("*") as any));
 export const activeBelts = createQuery(Belt, Position);
 
 /** All wires in the network — mirrors `wires`. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const allWires = createQuery(Wire, ConnectsFrom("*") as any, ConnectsTo("*") as any);
+export const allWires = createQuery(Wire, ConnectsFrom("*"), ConnectsTo("*"));
 
 /**
  * Power wires — all wires with type='power'.
  * Filter `type === 'power'` at read time since Wire.type is a data field.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const powerWires = createQuery(Wire, ConnectsFrom("*") as any, ConnectsTo("*") as any);
+export const powerWires = createQuery(Wire, ConnectsFrom("*"), ConnectsTo("*"));
 
 /** Mining drills — mirrors `miners`. */
 export const allMiners = createQuery(Miner, Building, Position);
@@ -163,27 +169,23 @@ export const allOreDeposits = createQuery(OreDeposit, Position);
 export const allMaterialCubes = createQuery(MaterialCube, Position);
 
 /** Cubes currently being carried by a unit. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const heldCubes = createQuery(MaterialCube, HeldBy("*") as any);
+export const heldCubes = createQuery(MaterialCube, HeldBy("*"));
 
 /** Cubes riding on conveyor belts. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const beltCubes = createQuery(MaterialCube, OnBelt("*") as any);
+export const beltCubes = createQuery(MaterialCube, OnBelt("*"));
 
 /** Cubes stored in hoppers. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const hopperCubes = createQuery(MaterialCube, InHopper("*") as any);
+export const hopperCubes = createQuery(MaterialCube, InHopper("*"));
 
 /** Cubes placed as structural elements on the build grid. */
 export const placedCubes = createQuery(MaterialCube, PlacedAt);
 
 /** Free cubes — not held, not on belt, not in hopper, not placed. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const freeCubes = createQuery(
 	MaterialCube,
-	Not(HeldBy("*") as any),
-	Not(OnBelt("*") as any),
-	Not(InHopper("*") as any),
+	notRelation(HeldBy("*")),
+	notRelation(OnBelt("*")),
+	notRelation(InHopper("*")),
 	Not(PlacedAt),
 );
 

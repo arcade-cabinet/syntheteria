@@ -33,7 +33,7 @@ The planet's base substrate. Everywhere. Cheap, fast to compress, weak. A wall o
 - PBR treatment: Gray-brown base (RGB 140, 130, 115), roughness 0.85, metalness 0.05. Normal map shows granular sediment texture with hairline fracture lines. Slight warm undertone from iron oxide traces. No emissive. Edge wear shows lighter mineral underneath.
 
 **Scrap Iron**
-The remnant metal of the machine planet's previous industrial age. Found in slag heaps, ruin fields, and corroded surface plates. Your primary structural material through early and mid game. Stronger than rock, widely available, and the feedstock for smelting into proper iron.
+The remnant metal found across the planet's surface. Found in slag heaps, ruin fields, and corroded surface plates -- what the colonists assume are the remains of an ancient mechanical civilization, though the deepest deposits are actually Ferrovore biological excretions (see GDD-007, GDD-008). Your primary structural material through early and mid game. Stronger than rock, widely available, and the feedstock for smelting into proper iron.
 
 - Hardness: 1.0 (wall HP multiplier: 100 HP per cube)
 - Weight: 1.5 (85% carry speed)

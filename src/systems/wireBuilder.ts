@@ -19,7 +19,8 @@
 import { config } from "../../config";
 import type { Entity, Vec3 } from "../ecs/types";
 import { placeWire, removeWire } from "../ecs/wireFactory";
-import { wires, world } from "../ecs/world";
+import { world } from "../ecs/world";
+import { wires } from "../ecs/koota/compat";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -138,6 +139,7 @@ export function canConnect(
 
 	// Duplicate wire check
 	for (const wireEntity of wires) {
+		if (!wireEntity.wire) continue;
 		const { fromEntityId, toEntityId } = wireEntity.wire;
 		if (
 			(fromEntityId === entityA.id && toEntityId === entityB.id) ||
@@ -189,6 +191,7 @@ export function deleteWire(wireEntityId: string): void {
 export function getWiresForEntity(entityId: string): Entity[] {
 	const result: Entity[] = [];
 	for (const wireEntity of wires) {
+		if (!wireEntity.wire) continue;
 		if (
 			wireEntity.wire.fromEntityId === entityId ||
 			wireEntity.wire.toEntityId === entityId

@@ -33,21 +33,27 @@ jest.mock("../../ecs/types", () => ({
 	hasCamera: jest.fn(),
 }));
 
+const mockUnitsArray: Array<unknown> = [];
+
 jest.mock("../../ecs/world", () => ({
-	units: [],
+	units: mockUnitsArray,
+}));
+
+// Also mock the Koota compat layer (exploration.ts now imports from here)
+jest.mock("../../ecs/koota/compat", () => ({
+	units: mockUnitsArray,
 }));
 
 // Import mocked modules to access mock functions
 import { getFragment, setFogAt } from "../../ecs/terrain";
 import { hasCamera } from "../../ecs/types";
-import { units } from "../../ecs/world";
 import { explorationSystem } from "../exploration";
 
 // Cast to mock types for test manipulation
 const mockSetFogAt = jest.mocked(setFogAt);
 const mockGetFragment = jest.mocked(getFragment);
 const mockHasCamera = jest.mocked(hasCamera);
-const mockUnits = units as unknown as Array<{
+const mockUnits = mockUnitsArray as Array<{
 	worldPosition: { x: number; z: number };
 	mapFragment: { fragmentId: string };
 	unit: { components: Array<{ name: string; functional: boolean }> };

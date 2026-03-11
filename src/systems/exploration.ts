@@ -9,7 +9,7 @@
 import { config } from "../../config";
 import { type FogState, getFragment, setFogAt } from "../ecs/terrain";
 import { hasCamera } from "../ecs/types";
-import { units } from "../ecs/world";
+import { units } from "../ecs/koota/compat";
 
 const VISION_RADIUS = config.rendering.fogOfWar.defaultVisionRange;
 

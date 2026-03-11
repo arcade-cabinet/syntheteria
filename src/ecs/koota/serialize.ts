@@ -13,7 +13,7 @@
  * the canonical save format until all systems are fully migrated.
  */
 
-import type { Entity as KootaEntity } from "koota";
+import type { Entity as KootaEntity, ConfigurableTrait } from "koota";
 import {
 	Automation,
 	Belt,
@@ -161,8 +161,7 @@ export function deserializeKootaWorld(data: SerializedKootaWorld): KootaEntity[]
 
 	for (const saved of data.entities) {
 		// Build the trait initializers
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const traitInits: any[] = [];
+		const traitInits: ConfigurableTrait[] = [];
 
 		for (const [traitName, traitData] of Object.entries(saved.traits)) {
 			const traitCtor = traitByName.get(
@@ -174,9 +173,11 @@ export function deserializeKootaWorld(data: SerializedKootaWorld): KootaEntity[]
 				// Tag trait
 				traitInits.push(traitCtor);
 			} else {
-				// Data trait — pass the saved data as initializer
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				traitInits.push((traitCtor as any)(traitData));
+				// Data trait — call trait constructor with saved data to create
+				// a TraitTuple initializer. The cast is needed because the
+				// registry erases the specific trait schema type.
+				const traitInit = (traitCtor as (data: unknown) => ConfigurableTrait)(traitData);
+				traitInits.push(traitInit);
 			}
 		}
 

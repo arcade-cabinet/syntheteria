@@ -769,9 +769,9 @@ describe("Integration: tech progression", () => {
 	});
 
 	it("faction-specific tech bonus applies 1.5x multiplier", () => {
-		// Find a tech with factionBonus matching a faction
+		// Find a tech with race matching a faction (null = universal)
 		const available = getAvailableTechs("reclaimers");
-		const genericTech = available.find((t) => t.factionBonus === null);
+		const genericTech = available.find((t) => t.race === null);
 
 		if (!genericTech) return; // skip if no generic tech
 
@@ -845,22 +845,23 @@ describe("Integration: quest lifecycle", () => {
 		const completedQuests: string[] = [];
 		onQuestComplete((id) => completedQuests.push(id));
 
-		// Notify events matching the first quest's type
+		// Notify events matching the first quest's objective type
 		const def = firstQuest.definition;
-		if (def.type === "harvest_N_ore") {
-			for (let i = 0; i < def.target; i++) {
+		const obj = def.objectives[0];
+		if (obj.type === "harvest_ore") {
+			for (let i = 0; i < obj.target; i++) {
 				notifyQuestEvent({
 					type: "resource_gained",
-					detail: def.resource ?? "scrapMetal",
+					detail: obj.resource ?? "scrapMetal",
 					amount: 1,
 				});
 			}
-		} else if (def.type === "compress_N_cubes") {
-			for (let i = 0; i < def.target; i++) {
-				notifyQuestEvent({ type: "component_fabricated", amount: 1 });
+		} else if (obj.type === "compress_cubes") {
+			for (let i = 0; i < obj.target; i++) {
+				notifyQuestEvent({ type: "cube_compressed", amount: 1 });
 			}
-		} else if (def.type === "claim_territory") {
-			for (let i = 0; i < def.target; i++) {
+		} else if (obj.type === "claim_territory") {
+			for (let i = 0; i < obj.target; i++) {
 				notifyQuestEvent({ type: "territory_claimed", amount: 1 });
 			}
 		}

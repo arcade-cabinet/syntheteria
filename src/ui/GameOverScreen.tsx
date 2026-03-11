@@ -51,6 +51,9 @@ export function GameOverScreen({ state }: GameOverScreenProps) {
 
 	return (
 		<div
+			role="alert"
+			aria-live="assertive"
+			aria-label={isVictory ? "Victory: Colony mission complete" : "Defeat: Systems offline"}
 			style={{
 				position: "absolute",
 				inset: 0,
@@ -161,6 +164,7 @@ export function GameOverScreen({ state }: GameOverScreenProps) {
 				<button
 					type="button"
 					onClick={handleRestart}
+					aria-label="Restart colony mission from the beginning"
 					style={{
 						fontFamily: MONO,
 						fontSize: "14px",

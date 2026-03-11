@@ -9,7 +9,8 @@
 
 import { config } from "../../config";
 import type { Entity } from "../ecs/types";
-import { processors, world } from "../ecs/world";
+import { world } from "../ecs/world";
+import { processors } from "../ecs/koota/compat";
 
 /** Recipe maps: processorType → { inputItem → outputItem } */
 export const PROCESSING_RECIPES: Record<string, Record<string, string>> =
@@ -73,9 +74,10 @@ export function feedProcessor(
 export function processingSystem() {
 	for (const entity of processors) {
 		const proc = entity.processor;
+		if (!proc) continue;
 
 		// Skip inactive or unpowered processors
-		if (!proc.active || !entity.building.powered) continue;
+		if (!proc.active || !entity.building?.powered) continue;
 
 		// Must have a valid recipe set
 		if (proc.recipe === null) continue;

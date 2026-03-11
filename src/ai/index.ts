@@ -23,6 +23,18 @@ export {
 	type BotVehicleOptions,
 	createBotVehicle,
 } from "./BotVehicle.ts";
+// BotBrain FSM → Yuka Vehicle steering bridge
+export {
+	applySteeringOutput,
+	type BotBrainEntry,
+	getBotBrain,
+	getRegisteredBotCount,
+	isBotBrainRegistered,
+	registerBotBrain,
+	resetBotBrainSystem,
+	tickBotBrains,
+	unregisterBotBrain,
+} from "./BotBrainSystem.ts";
 // Formation system
 export {
 	DEFAULT_SPACING,

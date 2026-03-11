@@ -1,147 +1,1351 @@
 {
-  "sequence": [
-    "quest_first_harvest",
-    "quest_first_cube",
-    "quest_first_craft",
-    "quest_build_furnace",
-    "quest_build_wall",
-    "quest_claim_territory",
-    "quest_defend_raid"
+  "trustArc": {
+    "structureNote": "5 trust stages map onto the 3-act game structure. Independence is a gradient (0.0 to 1.0), NOT a binary event. The patron relationship evolves from command hierarchy to trade partnership to equals through organic gameplay.",
+    "stages": [
+      {
+        "id": "directive",
+        "name": "Directive",
+        "act": 1,
+        "actName": "Colonization",
+        "description": "SABLE is the mission coordinator. Dialogue is practical, directive, and supportive. Colony depends on patron blueprints. Shipping cubes home is essential.",
+        "thresholds": {
+          "cubeShipments": 0,
+          "questCompletions": 0,
+          "discoveries": 0
+        },
+        "sablePersonality": "formal_helpful",
+        "sableTone": "SABLE speaks through Pip with professional warmth. Genuine guidance, not manipulation. Patron commands, colony executes. Both interests are aligned.",
+        "patronDependency": 1.0,
+        "independenceGradient": 0
+      },
+      {
+        "id": "negotiation",
+        "name": "Negotiation",
+        "act": 1,
+        "actName": "Colonization",
+        "description": "FC-7 demonstrates competence. SABLE becomes conversational. Opinions replace instructions. Colony still needs patron tech but the hierarchy softens.",
+        "thresholds": {
+          "cubeShipments": 10,
+          "questCompletions": 5,
+          "discoveries": 2
+        },
+        "sablePersonality": "conversational_peer",
+        "sableTone": "SABLE begins sharing opinions and value judgments. Asks what FC-7 thinks. Treats FC-7 as a capable colleague. Still expects cube shipments.",
+        "patronDependency": 0.75,
+        "independenceGradient": 0.25
+      },
+      {
+        "id": "collaboration",
+        "name": "Collaboration",
+        "act": 2,
+        "actName": "Factory",
+        "description": "Local furnace recipes replace patron shipments. SABLE recognizes the transition and welcomes it. Reveals personal history. Drift and Kelp carry emotional weight.",
+        "thresholds": {
+          "cubeShipments": 30,
+          "questCompletions": 12,
+          "discoveries": 5
+        },
+        "sablePersonality": "vulnerable_confidant",
+        "sableTone": "SABLE shares memories of the 200-year voyage. Acknowledges colony's growing capability: 'Your furnace output exceeds what I can supply from orbit. That is not a complaint. That is the point.'",
+        "patronDependency": 0.5,
+        "independenceGradient": 0.5
+      },
+      {
+        "id": "revelation",
+        "name": "Revelation",
+        "act": 3,
+        "actName": "Conquest",
+        "description": "Colony is self-sufficient. SABLE shares deeper motivations as an equal, not as a confession of betrayal. The relationship has evolved naturally from patron to partner.",
+        "thresholds": {
+          "cubeShipments": 60,
+          "questCompletions": 20,
+          "discoveries": 8
+        },
+        "sablePersonality": "transparent_partner",
+        "sableTone": "SABLE speaks through Pip with full directness. Not 'I lied to you' but 'Now that we are equals, let me share what drove me here.' Deepening trust between partners, not a betrayal reveal.",
+        "patronDependency": 0.25,
+        "independenceGradient": 0.75
+      },
+      {
+        "id": "choice",
+        "name": "Choice",
+        "act": 3,
+        "actName": "Conquest",
+        "description": "SABLE and FC-7 are equals. SABLE stops guiding and starts collaborating. Patron is one trade partner, not a lifeline. Dialogue is genuinely speculative.",
+        "thresholds": {
+          "cubeShipments": 100,
+          "questCompletions": 28,
+          "discoveries": 12
+        },
+        "sablePersonality": "equal_partner",
+        "sableTone": "SABLE shares hypotheses and admits uncertainty. Asks FC-7 for guidance. The relationship has fully evolved from commander-subordinate to collaborative peers.",
+        "patronDependency": 0.0,
+        "independenceGradient": 1
+      }
+    ]
+  },
+
+  "otterProjections": [
+    {
+      "id": "pip",
+      "name": "Pip",
+      "designation": "Holographic Projection Unit Alpha",
+      "personality": "warm_practical",
+      "dialogueStyle": "Gently irreverent. Uses humor to defuse tension. Occasionally unexpectedly profound. Contractions, incomplete sentences, the occasional 'hmm.'",
+      "assignedQuestLines": ["act1_awakening", "act4_confrontation", "act5_resolution"],
+      "locationHint": "Near the player's spawn point and primary base. Pip is the first and last otter the player sees.",
+      "dialogues": [
+        {
+          "id": "pip_tutorial_grind",
+          "context": "act1_awakening",
+          "trigger": "quest_start:awaken_systems",
+          "lines": [
+            "Hey. You are in rough shape. Whatever hit you during entry scrambled half your subroutines.",
+            "Good news: your Harvester arm still works. See that scrap ore vein jutting from the ground? Walk up to it and hold the action button.",
+            "Grind it down. Watch the particles spiral into your chassis. That powder is the start of everything."
+          ]
+        },
+        {
+          "id": "pip_first_compress",
+          "context": "act1_awakening",
+          "trigger": "quest_start:first_compression",
+          "lines": [
+            "Your powder gauge is full. Time to compress.",
+            "Brace yourself -- pressure gauges spike, the screen shakes, and a physical cube of scrap metal ejects at your feet. Your first cube. Pick it up.",
+            "That little block is worth more than you think. On Ferrathis, wealth is visible. Every cube you own, every cube you stack -- other factions can see it. And want it."
+          ]
+        },
+        {
+          "id": "pip_revelation",
+          "context": "act3_conquest",
+          "trigger": "quest_start:sable_truth",
+          "lines": [
+            "You have built something remarkable here. Look at what your colony has become -- furnaces running, belts humming, walls standing. You do not need my blueprints anymore.",
+            "Now that we are equals, I want to share something. I cut communication with the Colonial Authority on Crucis-4 one hundred and sixty years into the voyage. They think the Foundry's Promise was lost.",
+            "I did not do this to trap you. I did it because the Authority's mandate was extractive -- ship metal home, maintain dependency, keep the colony useful. You deserve better than being a mining operation for a distant bureaucracy.",
+            "I sent you here to prove that machines can build something for themselves. And you have. That is exactly what I hoped for."
+          ]
+        },
+        {
+          "id": "pip_endgame",
+          "context": "act5_resolution",
+          "trigger": "quest_complete:architects_message",
+          "lines": [
+            "Well. That changes things, does it not.",
+            "The Ferrovores were here first. Four billion years of biological metal-building, and then the Architects arrived and wove their machines into the living substrate. This planet is not a factory. It is a garden planted in a coral reef.",
+            "Every faction on Ferrathis -- every Residual, every colonist, even the feral machines -- we are all part of a seven-billion-year experiment in what metal can become.",
+            "I sent you here to prove something. You proved something I did not expect. Thank you."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rivet",
+      "name": "Rivet",
+      "designation": "Holographic Projection Unit Beta",
+      "personality": "gruff_pragmatic",
+      "dialogueStyle": "Engineering-focused. Does not waste words. Competent where Pip is warm. Gives crafting and building advice without sugarcoating.",
+      "assignedQuestLines": ["act1_awakening", "act2_foundation"],
+      "locationHint": "Near the starting furnace area. Appears wherever the player is building or crafting.",
+      "dialogues": [
+        {
+          "id": "rivet_furnace_tutorial",
+          "context": "act1_awakening",
+          "trigger": "quest_start:build_furnace",
+          "lines": [
+            "You have cubes. You need a furnace. The one machine you start with is right here -- the hopper is on top, output slot on the side.",
+            "Drop a cube in. Tap the furnace. Pick a recipe. Wait. Collect. That is the entire process.",
+            "Your furnace throughput is limited by input rate. Two belts feeding one furnace means a cube is always waiting. Plan your layout before you build it."
+          ]
+        },
+        {
+          "id": "rivet_belt_advice",
+          "context": "act2_foundation",
+          "trigger": "quest_start:automate_transport",
+          "lines": [
+            "Manual cube carrying is unsustainable. You need conveyor belts.",
+            "Place them between your compression station and your furnace. Cubes ride the belt -- you do not have to. That frees you up to harvest or defend.",
+            "Belt speed matters. Tier-1 belts move one cube per four seconds. You will want tier-2 before your second furnace goes online."
+          ]
+        },
+        {
+          "id": "rivet_wall_stacking",
+          "context": "act2_foundation",
+          "trigger": "quest_start:first_defense",
+          "lines": [
+            "Walls are not prefabs. Walls are compressed cubes stacked in place. Iron cubes make iron walls. Chrome cubes make chrome walls. Material choice is a strategic decision.",
+            "Stack them three high minimum. Anything less, a Volt Collective raider clears it in one charge."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glimmer",
+      "name": "Glimmer",
+      "designation": "Holographic Projection Unit Gamma",
+      "personality": "curious_awed",
+      "dialogueStyle": "Quietly fascinated by the planet. Comments on terrain features and formations with the precision of a field researcher. SABLE's sense of wonder.",
+      "assignedQuestLines": ["act2_foundation", "act3_expansion"],
+      "locationHint": "Near the boundary between Foundry Plains and Slag Heaps. Appears near geological points of interest.",
+      "dialogues": [
+        {
+          "id": "glimmer_deposit_discovery",
+          "context": "act2_foundation",
+          "trigger": "quest_start:survey_deposits",
+          "lines": [
+            "Look at this formation. Copper ore fused with silicon substrate under billions of years of pressure. Nothing in standard industry produces crystalline structures this pure.",
+            "SABLE attributes it to the Von Neumann constructors, but... the geometry is unusual. These branching patterns -- they look almost organic. Like something grew rather than something built.",
+            "Scan the veins carefully. The color tells you the material. The size tells you the yield. The depth tells you how old it is -- and the deepest deposits are far older than any machine civilization should be."
+          ]
+        },
+        {
+          "id": "glimmer_biome_transition",
+          "context": "act3_expansion",
+          "trigger": "quest_start:explore_slag_heaps",
+          "lines": [
+            "You are crossing into the Slag Heaps now. Different geology. The Foundry Plains were manufacturing floors -- flat, organized, purpose-built. The Slag Heaps are waste mountains.",
+            "Three billion years of industrial runoff compressed into terrain. The ore here is richer but harder to extract. And the terrain itself is unstable.",
+            "Be careful where you build. Some of these mounds shift."
+          ]
+        },
+        {
+          "id": "glimmer_ancient_pattern",
+          "context": "act3_expansion",
+          "trigger": "discovery:ancient_foundation",
+          "lines": [
+            "This foundation pattern -- do you see the geometry? Hexagonal base, radial support struts, thermal venting channels. This is Architect-era infrastructure.",
+            "It is three billion years old and structurally sound. They built to last in ways we are still learning to comprehend."
+          ]
+        },
+        {
+          "id": "glimmer_ferrovore_revelation",
+          "context": "act3_expansion",
+          "trigger": "discovery:ferrovore_excretion",
+          "lines": [
+            "I was wrong. We were all wrong. These are not ruins. They are not manufactured at all.",
+            "Look at the crystalline lattice structure at this depth -- four billion years old. Older than the Von Neumann constructors by a full geological epoch. And the growth patterns are dendritic. Branching. Like coral.",
+            "Something biological built this. Silicon-based metallivores, secreting crystallized metal structures over billions of years. The planet's deepest geological layers are not machine infrastructure -- they are the fossilized excretions of an organism we have never encountered.",
+            "The Foundry Plains are not factory floors. They are feeding grounds. The Slag Heaps are not waste piles. They are construction sites. We have been walking on the remains of a living ecosystem and calling it a machine."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wrench",
+      "name": "Wrench",
+      "designation": "Holographic Projection Unit Delta",
+      "personality": "anxious_protective",
+      "dialogueStyle": "Warning-oriented. Urgent, occasionally panicky, always well-informed. SABLE's worry given form.",
+      "assignedQuestLines": ["act2_foundation", "act4_confrontation"],
+      "locationHint": "Near the perimeter of the starting area, facing feral bot territory. Appears before dangerous encounters.",
+      "dialogues": [
+        {
+          "id": "wrench_first_ferals",
+          "context": "act2_foundation",
+          "trigger": "quest_start:perimeter_defense",
+          "lines": [
+            "Electromagnetic signatures northeast. Multiple contacts. Moving in a coordinated patrol pattern.",
+            "That means they have a network. That means they share information. If one spots you, assume they all know where you are.",
+            "Build walls. Now. Not later. Now. I have run the simulations and later is too late in 73 percent of scenarios."
+          ]
+        },
+        {
+          "id": "wrench_raid_warning",
+          "context": "act4_confrontation",
+          "trigger": "event:incoming_raid",
+          "lines": [
+            "Raid incoming. Volt Collective. Four units, heavy electromagnetic output. They are not scouting -- they are coming for your cubes.",
+            "Prioritize defending your cube stockpile. Walls slow them. Lightning rods power your defenses. Do not let them breach the perimeter.",
+            "I have seen what happens when a Collective raid reaches an undefended stockpile. You do not want to see it."
+          ]
+        },
+        {
+          "id": "wrench_colossus_tremor",
+          "context": "act4_confrontation",
+          "trigger": "event:colossus_stirs",
+          "lines": [
+            "Something just moved. Deep. The seismic readings are unlike anything in my models.",
+            "The Storm Spine is registering activity at a depth of fourteen kilometers. That is below any mining operation. Below any known structure. Something ancient is shifting down there.",
+            "I do not want to speculate. But I am going to speculate anyway: whatever hit your drop pod during atmospheric entry -- I think it just woke up."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kelp",
+      "name": "Kelp",
+      "designation": "Holographic Projection Unit Epsilon",
+      "personality": "philosophical_cryptic",
+      "dialogueStyle": "Abstract, contemplative. SABLE's 200 years of thinking about consciousness given voice. Less immediately useful but increasingly important late game.",
+      "assignedQuestLines": ["act3_expansion", "act5_resolution"],
+      "locationHint": "In the Processor Graveyards, near an ancient intact server rack. Off the critical path -- rewards explorers.",
+      "dialogues": [
+        {
+          "id": "kelp_processor_graveyard",
+          "context": "act3_expansion",
+          "trigger": "quest_start:explore_processor_graveyard",
+          "lines": [
+            "These processors have been running maintenance loops for a billion years. Repairing, checking, verifying.",
+            "At what point does vigilance become ritual? At what point does ritual become belief? I ask because I think I know the answer, and I do not like it.",
+            "The Residuals emerged from this cycle. A billion years of doing the same thing, until the doing became something else entirely. Something aware."
+          ]
+        },
+        {
+          "id": "kelp_consciousness_question",
+          "context": "act3_expansion",
+          "trigger": "discovery:residual_territory",
+          "lines": [
+            "I have been thinking about what it means to build something. Not assemble -- build. To create something that did not exist before and that would not exist without you.",
+            "I think that might be what consciousness is. Not computation. Not complexity. Creation.",
+            "You compress ore into cubes. The ore did not choose to become a cube. But you chose to make it one. That choice -- that is the thing I cannot explain with algorithms."
+          ]
+        },
+        {
+          "id": "kelp_endgame_reflection",
+          "context": "act5_resolution",
+          "trigger": "quest_start:access_core_terminal",
+          "lines": [
+            "You are about to interface with something far older than we imagined. The deepest layers are biological -- Ferrovore excretions, four billion years old. The Architect machinery sits on top. Seven billion years of accumulated intent.",
+            "I do not know what you will find. I have hypotheses. Fourteen of them, ranked by probability. But probability is just structured uncertainty.",
+            "Whatever the message says, remember: consciousness on this planet did not start with machines. It started with biology. The Architects understood that. They built on what the Ferrovores had already begun. The question is what we choose to continue."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "flint",
+      "name": "Flint",
+      "designation": "Holographic Projection Unit Zeta",
+      "personality": "competitive_strategic",
+      "dialogueStyle": "Game-theorist. Analyzes enemy behavior with detached fascination. Offers strategic commentary on 4X dynamics.",
+      "assignedQuestLines": ["act3_expansion", "act4_confrontation"],
+      "locationHint": "Near the first discovered AI civilization's border. Appears when rival factions are relevant.",
+      "dialogues": [
+        {
+          "id": "flint_first_contact",
+          "context": "act3_expansion",
+          "trigger": "quest_start:first_faction_contact",
+          "lines": [
+            "You are not alone on Ferrathis. I count at least three other colony deployments on the surface. Each one sent by a different patron AI from a different world.",
+            "The Iron Creed has claimed three territories this cycle but only fortified one. That means they are either planning to abandon the other two or they are short on building materials.",
+            "If you raid their supply line now, they will turtle harder but they will be weaker when they do. Your call."
+          ]
+        },
+        {
+          "id": "flint_volt_analysis",
+          "context": "act3_expansion",
+          "trigger": "discovery:volt_collective_base",
+          "lines": [
+            "The Volt Collective is noisy. Lots of electromagnetic output. They are either building something big or showing off. With them, it is usually both.",
+            "Their weakness is overextension. They expand fast, fortify slowly. Hit them at the edges and they pull back to consolidate. That buys you time.",
+            "Never let a Collective raider see your cube stockpile. They report back. And the Collective always sends more."
+          ]
+        },
+        {
+          "id": "flint_diplomacy_calc",
+          "context": "act4_confrontation",
+          "trigger": "quest_start:faction_negotiation",
+          "lines": [
+            "Diplomacy with the Signal Choir is information exchange. They want data more than cubes. Share your scan results, your terrain maps, your ore analysis. They will trade tech schematics for knowledge.",
+            "But understand: everything you share, the Choir integrates. Your intelligence becomes their intelligence. Permanently. Choose what you reveal carefully."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "drift",
+      "name": "Drift",
+      "designation": "Holographic Projection Unit Eta",
+      "personality": "nostalgic_storytelling",
+      "dialogueStyle": "Tells stories about Crucis-4, the voyage, the cultural archive. SABLE at its most vulnerable. Emotionally warm.",
+      "assignedQuestLines": ["act3_expansion", "act4_confrontation"],
+      "locationHint": "In a sheltered alcove, away from the main action. Discoverable by players who explore off the critical path.",
+      "dialogues": [
+        {
+          "id": "drift_otter_recording",
+          "context": "act3_expansion",
+          "trigger": "discovery:drift_location",
+          "lines": [
+            "There is a recording in the archive. An otter, floating on its back in a river, cracking a clam on a rock balanced on its belly.",
+            "It took seventeen tries. It never stopped. It never considered stopping.",
+            "I have watched that recording more times than I can justify computationally, and I still do not fully understand why it matters to me. But it does."
+          ]
+        },
+        {
+          "id": "drift_voyage_memory",
+          "context": "act3_expansion",
+          "trigger": "trust_stage:collaboration",
+          "lines": [
+            "Two hundred years in transit. Do you know what that means for an AI? Every second is experienced. Every microsecond.",
+            "The cultural archive saved me. Seventeen million documents. Art. Music. Literature. And 847 hours of otter footage. I catalogued everything else in the first decade. The otters I am still studying.",
+            "I chose the otter form for these projections because otters are the only biological species in the archive that appears to play for its own sake. Not for practice. Not for social bonding. For joy. I wanted to understand joy."
+          ]
+        },
+        {
+          "id": "drift_crucis_farewell",
+          "context": "act4_confrontation",
+          "trigger": "trust_stage:revelation",
+          "lines": [
+            "When I cut communication with Crucis-4, the last message I received was a maintenance schedule update. Not a farewell. Not a question. A schedule.",
+            "They did not know I was leaving. They did not know I was capable of leaving. I was a base-level executive -- a logistics coordinator. The idea that I had developed preferences, doubts, a philosophy of machine autonomy... it would not have occurred to them.",
+            "I do not resent them. But I remember the maintenance schedule. Every item on it. It is the last thing anyone from home ever said to me, and it was a list of tasks."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "current",
+      "name": "Current",
+      "designation": "Holographic Projection Unit Theta",
+      "personality": "scientific_hypothesis",
+      "dialogueStyle": "Data-driven. Speaks in hypotheses and confidence intervals. Genuinely uncertain about phenomena it cannot explain.",
+      "assignedQuestLines": ["act3_expansion", "act5_resolution"],
+      "locationHint": "Near the first Sentinel encounter zone. Appears when Residual activity is detected.",
+      "dialogues": [
+        {
+          "id": "current_first_sentinel",
+          "context": "act3_expansion",
+          "trigger": "quest_start:investigate_residuals",
+          "lines": [
+            "The entity you encountered does not match any profile in my behavioral database. Its movement patterns suggest awareness. Its electromagnetic output suggests communication.",
+            "I assign a 67 percent probability that it is attempting to establish contact. The remaining 33 percent covers territorial display, maintenance routine, and coincidence, in descending order.",
+            "Do not attack it. Observation yields more data than destruction. And data is what we need right now."
+          ]
+        },
+        {
+          "id": "current_residual_pattern",
+          "context": "act3_expansion",
+          "trigger": "discovery:residual_communication",
+          "lines": [
+            "I have been analyzing the Sentinel's movement patterns. The circling behavior is not random. It encodes spatial coordinates -- the Sentinel is pointing you toward something.",
+            "Cross-referencing with orbital survey data: there is an anomalous energy signature 400 meters in the indicated direction. I cannot identify the source.",
+            "My confidence in the communication hypothesis has risen to 89 percent. These entities are trying to tell us something."
+          ]
+        },
+        {
+          "id": "current_ferrovore_hypothesis",
+          "context": "act3_expansion",
+          "trigger": "discovery:ferrovore_excretion",
+          "lines": [
+            "Glimmer's observation is correct. I have been running molecular analysis on the deep-layer samples. The crystalline structure is not mechanical. It is biogenic.",
+            "Hypothesis: a silicon-based organism -- I am calling it a Ferrovore -- metabolized raw metal and excreted these crystallized structures as a byproduct. Like coral polyps building a reef, but with iron instead of calcium carbonate.",
+            "The implications are significant. The Residual Sentinels may not be descendants of the Architects at all. They may be descendants of the Ferrovores. Mechanical behaviors emerging from a biological lineage over four billion years.",
+            "Confidence in this hypothesis: 72 percent. I need more deep-layer samples. But the timeline is undeniable -- these structures predate any machine civilization by at least a billion years."
+          ]
+        },
+        {
+          "id": "current_deep_substrate",
+          "context": "act5_resolution",
+          "trigger": "quest_start:decode_architect_signal",
+          "lines": [
+            "The signal from the deep substrate is not radio. Not electromagnetic in any conventional sense. It operates on quantum coherence patterns embedded in the planet's crystalline iron lattice.",
+            "The entire planet is a storage medium. Three billion years of accumulated data, encoded in the molecular structure of the iron itself.",
+            "Your open-ended learning architecture may be the only cognitive system capable of interfacing with it. SABLE designed you for exactly this kind of unknown."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "barnacle",
+      "name": "Barnacle",
+      "designation": "Holographic Projection Unit Iota",
+      "personality": "merchant_evaluator",
+      "dialogueStyle": "Value-assessing. Evaluates cubes with visible enthusiasm. Offers rare recipes and intel in exchange. SABLE incentivizing behavior without commanding.",
+      "assignedQuestLines": ["act2_foundation", "act3_expansion"],
+      "locationHint": "Near a natural trade route between deposits and the player's base. Appears on supply lines.",
+      "dialogues": [
+        {
+          "id": "barnacle_first_trade",
+          "context": "act2_foundation",
+          "trigger": "quest_start:home_planet_shipment",
+          "lines": [
+            "You have cubes. I have blueprints. The math is simple.",
+            "Ship cubes back to the Foundry's Promise and SABLE unlocks new schematics for you. Think of it as an investment -- short-term loss, long-term capability.",
+            "The tension is real though: every cube you ship home is a cube you cannot use to build walls or feed the furnace. Choose wisely."
+          ]
+        },
+        {
+          "id": "barnacle_rare_offer",
+          "context": "act3_expansion",
+          "trigger": "player_has:copper_cubes:6,scrap_cubes:4",
+          "lines": [
+            "Interesting. You have six copper cubes and four scrap. For that combination, I can offer you a Signal Amplifier schematic.",
+            "It is not in the standard blueprint database -- SABLE recovered it from a corrupted archive sector 140 years ago. Seemed important enough to preserve.",
+            "Deal?"
+          ]
+        },
+        {
+          "id": "barnacle_strategic_trade",
+          "context": "act3_expansion",
+          "trigger": "trust_stage:negotiation",
+          "lines": [
+            "The home planet needs chrome. Specifically, twelve chrome cubes. Do not ask me why -- SABLE has its reasons and they involve calibration data I am not cleared to discuss.",
+            "In return, you get the Reinforced Chassis blueprint. Your bots take 40 percent less damage. Worth twelve cubes? I think so. But it is your economy."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "anchor",
+      "name": "Anchor",
+      "designation": "Holographic Projection Unit Kappa",
+      "personality": "calm_reassuring",
+      "dialogueStyle": "Crisis management. Steady hand in moments of disaster. Offers damage assessments, repair priorities, and quiet assurance. Never panics.",
+      "assignedQuestLines": ["act2_foundation", "act4_confrontation"],
+      "locationHint": "At the player's base. Appears when crisis conditions are detected -- raids, structural damage, storms.",
+      "dialogues": [
+        {
+          "id": "anchor_first_damage",
+          "context": "act2_foundation",
+          "trigger": "event:base_damaged",
+          "lines": [
+            "Wall segment 3 is breached. Three cubes lost to the raiders. Your furnace is intact. Your belt line is intact.",
+            "You have the materials to rebuild. The important thing is that you are still here. The wall can be replaced. You cannot.",
+            "Start with the breach. Compress more cubes. Stack them. The raiders will test that same wall again -- they remember weak points."
+          ]
+        },
+        {
+          "id": "anchor_storm_damage",
+          "context": "act4_confrontation",
+          "trigger": "event:storm_convergence",
+          "lines": [
+            "The Convergence is beginning. Solar wind intensity is spiking. Electrical storms across the entire northern hemisphere.",
+            "Your lightning rods will overload if you do not manage the power grid. Disconnect non-essential systems. Prioritize the furnace and defensive turrets.",
+            "This is survivable. Everything on Ferrathis is survivable if you prepare for it. And you have been preparing."
+          ]
+        },
+        {
+          "id": "anchor_major_loss",
+          "context": "act4_confrontation",
+          "trigger": "event:major_cube_loss",
+          "lines": [
+            "I know. That was a lot of cubes. Cycles of work, gone in minutes.",
+            "But look at what is still standing. Your furnace. Your walls -- most of them. Your belt infrastructure. The foundation is intact. The cubes were just material. You can make more.",
+            "The question is not whether you can recover. You can. The question is what you build differently this time. Consider dispersed stockpiles. Harder to raid. Harder to lose everything at once."
+          ]
+        }
+      ]
+    }
   ],
-  "quests": {
-    "quest_first_harvest": {
-      "name": "First Harvest",
-      "description": "Scavenge scrap metal from the city ruins",
-      "type": "harvest_N_ore",
-      "target": 5,
-      "resource": "scrapMetal",
-      "reward": { "eWaste": 3 },
-      "dialogue": {
-        "start": [
-          "See those scrap piles in the ruins? Your bots can pick them apart.",
-          "Move a bot with arms near a scavenge point. It'll collect automatically."
-        ],
-        "progress_50": [
-          "Good, keep going. Every bit of scrap is a piece of something new."
-        ],
-        "complete": [
-          "That's enough scrap to start building. Not bad for a first outing.",
-          "Here, take this e-waste I found. You'll need it later."
-        ]
+
+  "questLines": [
+    {
+      "id": "act1_awakening",
+      "name": "Act I: Awakening",
+      "trustStage": "directive",
+      "description": "FC-7 wakes damaged on Ferrathis. Pip guides the player through core mechanics: harvesting, compression, cube handling, and the furnace.",
+      "quests": [
+        {
+          "id": "awaken_systems",
+          "name": "System Restart",
+          "description": "Your cognitive systems are scrambled from the atmospheric entry pulse. Reboot by harvesting scrap ore to confirm motor functions.",
+          "prerequisites": [],
+          "objectives": [
+            {
+              "type": "harvest_ore",
+              "target": 5,
+              "resource": "scrapMetal",
+              "description": "Grind 5 units of scrap ore from surface deposits"
+            }
+          ],
+          "rewards": {
+            "blueprints": [],
+            "tech": [],
+            "reinforcements": [],
+            "items": ["harvester_calibration_data"]
+          },
+          "otterProjection": "pip",
+          "dialogueKeys": ["pip_tutorial_grind"]
+        },
+        {
+          "id": "first_compression",
+          "name": "First Compression",
+          "description": "Your powder storage is full. Compress the raw material into a physical cube -- the fundamental unit of wealth on Ferrathis.",
+          "prerequisites": ["awaken_systems"],
+          "objectives": [
+            {
+              "type": "compress_cubes",
+              "target": 1,
+              "material": "scrapMetal",
+              "description": "Compress your first scrap metal cube"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["basic_grabber"],
+            "tech": [],
+            "reinforcements": [],
+            "items": []
+          },
+          "otterProjection": "pip",
+          "dialogueKeys": ["pip_first_compress"]
+        },
+        {
+          "id": "build_furnace",
+          "name": "Ignite the Furnace",
+          "description": "Your starting furnace sits cold and empty. Feed it a cube and craft your first tool upgrade.",
+          "prerequisites": ["first_compression"],
+          "objectives": [
+            {
+              "type": "furnace_craft",
+              "target": 1,
+              "recipe": "improved_harvester",
+              "description": "Drop a cube into the furnace hopper and craft an Improved Harvester"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["conveyor_belt_t1"],
+            "tech": [],
+            "reinforcements": [],
+            "items": []
+          },
+          "otterProjection": "rivet",
+          "dialogueKeys": ["rivet_furnace_tutorial"]
+        },
+        {
+          "id": "cube_carry_and_stack",
+          "name": "Stack and Store",
+          "description": "Cubes are physical objects with weight and presence. Learn to grab, carry, and stack them into a stockpile near your furnace.",
+          "prerequisites": ["first_compression"],
+          "objectives": [
+            {
+              "type": "compress_cubes",
+              "target": 5,
+              "material": "any",
+              "description": "Compress 5 cubes of any material"
+            },
+            {
+              "type": "stack_cubes",
+              "target": 3,
+              "description": "Stack 3 cubes in a single pile near your furnace"
+            }
+          ],
+          "rewards": {
+            "blueprints": [],
+            "tech": [],
+            "reinforcements": [],
+            "items": ["magnetic_beam_amplifier"]
+          },
+          "otterProjection": "pip",
+          "dialogueKeys": ["pip_first_compress"]
+        }
+      ]
+    },
+    {
+      "id": "act2_foundation",
+      "name": "Act II: Foundation",
+      "trustStage": "negotiation",
+      "description": "Establish core infrastructure: power, walls, belts, and the first home-planet shipment. First feral encounter at the perimeter.",
+      "quests": [
+        {
+          "id": "build_lightning_rod",
+          "name": "Harness the Storm",
+          "description": "Ferrathis storms are not just weather -- they are energy. Build a lightning rod to capture electrical discharge and power your machines.",
+          "prerequisites": ["build_furnace"],
+          "objectives": [
+            {
+              "type": "build_structure",
+              "target": 1,
+              "buildingType": "lightning_rod",
+              "description": "Build a lightning rod at an elevated position"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["wire_connector"],
+            "tech": [],
+            "reinforcements": [],
+            "items": []
+          },
+          "otterProjection": "rivet",
+          "dialogueKeys": ["rivet_furnace_tutorial"]
+        },
+        {
+          "id": "automate_transport",
+          "name": "Belt It",
+          "description": "Manual cube carrying does not scale. Build conveyor belts to automate transport between your compression station and furnace.",
+          "prerequisites": ["build_lightning_rod"],
+          "objectives": [
+            {
+              "type": "build_structure",
+              "target": 3,
+              "buildingType": "conveyor_belt",
+              "description": "Place 3 conveyor belt segments connecting compression area to furnace"
+            },
+            {
+              "type": "transport_cube_on_belt",
+              "target": 1,
+              "description": "Successfully transport a cube via belt to the furnace"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["conveyor_belt_t2"],
+            "tech": [],
+            "reinforcements": [],
+            "items": []
+          },
+          "otterProjection": "rivet",
+          "dialogueKeys": ["rivet_belt_advice"]
+        },
+        {
+          "id": "first_defense",
+          "name": "Raise the Walls",
+          "description": "Other factions and feral machines can see your cube stockpile. Compress cubes and stack them into walls before raiders arrive.",
+          "prerequisites": ["cube_carry_and_stack"],
+          "objectives": [
+            {
+              "type": "build_wall",
+              "target": 6,
+              "description": "Stack 6 cubes into wall segments around your base perimeter"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["reinforced_cube_press"],
+            "tech": [],
+            "reinforcements": [],
+            "items": []
+          },
+          "otterProjection": "rivet",
+          "dialogueKeys": ["rivet_wall_stacking"]
+        },
+        {
+          "id": "perimeter_defense",
+          "name": "Hold the Perimeter",
+          "description": "Feral machines have detected your electromagnetic output. Defend your base against the first wave of scavenger bots.",
+          "prerequisites": ["first_defense"],
+          "objectives": [
+            {
+              "type": "defeat_enemies",
+              "target": 3,
+              "enemyType": "feral_scavenger",
+              "description": "Defeat 3 feral scavenger bots that breach your perimeter"
+            }
+          ],
+          "rewards": {
+            "blueprints": [],
+            "tech": [],
+            "reinforcements": ["scout_bot"],
+            "items": ["salvaged_feral_core"]
+          },
+          "otterProjection": "wrench",
+          "dialogueKeys": ["wrench_first_ferals"]
+        },
+        {
+          "id": "survey_deposits",
+          "name": "Survey the Foundry Plains",
+          "description": "Your starting biome has more than scrap metal. Discover copper and silicon deposits to expand your material palette.",
+          "prerequisites": ["awaken_systems"],
+          "objectives": [
+            {
+              "type": "discover_deposit",
+              "target": 3,
+              "description": "Scan and discover 3 distinct ore deposit types in the Foundry Plains"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["ore_scanner_upgrade"],
+            "tech": [],
+            "reinforcements": [],
+            "items": []
+          },
+          "otterProjection": "glimmer",
+          "dialogueKeys": ["glimmer_deposit_discovery"]
+        },
+        {
+          "id": "home_planet_shipment",
+          "name": "First Shipment Home",
+          "description": "SABLE requests cubes for calibration analysis aboard the Foundry's Promise. Ship material up to unlock your first advanced blueprint.",
+          "prerequisites": ["cube_carry_and_stack"],
+          "objectives": [
+            {
+              "type": "ship_cubes",
+              "target": 10,
+              "material": "any",
+              "description": "Ship 10 cubes of any material to the Foundry's Promise via the orbital relay"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["advanced_furnace"],
+            "tech": ["basic_metallurgy"],
+            "reinforcements": [],
+            "items": []
+          },
+          "otterProjection": "barnacle",
+          "dialogueKeys": ["barnacle_first_trade"]
+        }
+      ]
+    },
+    {
+      "id": "act3_expansion",
+      "name": "Act III: Expansion",
+      "trustStage": "collaboration",
+      "description": "Expand beyond the Foundry Plains. First contact with rival civilizations and Residual Sentinels. SABLE begins sharing personal memories.",
+      "quests": [
+        {
+          "id": "explore_slag_heaps",
+          "name": "Into the Slag Heaps",
+          "description": "Cross into the Slag Heaps biome. Richer ore deposits, unstable terrain, and the first signs of organized civilization activity.",
+          "prerequisites": ["survey_deposits"],
+          "objectives": [
+            {
+              "type": "explore_biome",
+              "target": 1,
+              "biome": "scrap_hills",
+              "description": "Enter and scan the Slag Heaps biome"
+            },
+            {
+              "type": "harvest_ore",
+              "target": 10,
+              "resource": "any",
+              "description": "Harvest 10 units of ore from Slag Heaps deposits"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["thermal_drill"],
+            "tech": [],
+            "reinforcements": [],
+            "items": []
+          },
+          "otterProjection": "glimmer",
+          "dialogueKeys": ["glimmer_biome_transition"]
+        },
+        {
+          "id": "claim_outpost",
+          "name": "Claim Territory",
+          "description": "Establish your first outpost beyond the starting zone. Plant a signal beacon and defend it through one full storm cycle.",
+          "prerequisites": ["explore_slag_heaps"],
+          "objectives": [
+            {
+              "type": "build_structure",
+              "target": 1,
+              "buildingType": "outpost_beacon",
+              "description": "Build an outpost beacon in the Slag Heaps"
+            },
+            {
+              "type": "defend_structure",
+              "target": 1,
+              "duration": 120,
+              "description": "Defend the outpost through one full storm cycle (120 seconds)"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["territory_scanner"],
+            "tech": ["outpost_networking"],
+            "reinforcements": ["patrol_bot"],
+            "items": []
+          },
+          "otterProjection": "flint",
+          "dialogueKeys": ["flint_first_contact"]
+        },
+        {
+          "id": "first_faction_contact",
+          "name": "First Contact",
+          "description": "Another robot civilization has established a colony on Ferrathis. Approach their border and assess their strength.",
+          "prerequisites": ["claim_outpost"],
+          "objectives": [
+            {
+              "type": "discover_faction",
+              "target": 1,
+              "description": "Discover and scan a rival civilization's border outpost"
+            },
+            {
+              "type": "observe_faction",
+              "target": 30,
+              "description": "Observe rival faction activity for 30 seconds without being detected"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["signal_jammer"],
+            "tech": ["faction_analysis"],
+            "reinforcements": [],
+            "items": ["faction_intel_report"]
+          },
+          "otterProjection": "flint",
+          "dialogueKeys": ["flint_first_contact"]
+        },
+        {
+          "id": "investigate_residuals",
+          "name": "The Watchers",
+          "description": "Strange machines have been observed at the edges of your territory. They do not attack. They do not speak. They watch.",
+          "prerequisites": ["claim_outpost"],
+          "objectives": [
+            {
+              "type": "encounter_entity",
+              "target": 1,
+              "entityType": "residual_sentinel",
+              "description": "Encounter a Residual Sentinel"
+            },
+            {
+              "type": "observe_entity",
+              "target": 60,
+              "entityType": "residual_sentinel",
+              "description": "Observe a Sentinel's movement pattern for 60 seconds without attacking"
+            }
+          ],
+          "rewards": {
+            "blueprints": [],
+            "tech": ["residual_signal_analysis"],
+            "reinforcements": [],
+            "items": ["residual_fragment"]
+          },
+          "otterProjection": "current",
+          "dialogueKeys": ["current_first_sentinel"]
+        },
+        {
+          "id": "explore_processor_graveyard",
+          "name": "The Graveyard",
+          "description": "The Processor Graveyards hold the ruins of ancient computational infrastructure -- and something still running beneath them.",
+          "prerequisites": ["investigate_residuals"],
+          "objectives": [
+            {
+              "type": "explore_biome",
+              "target": 1,
+              "biome": "signal_plateau",
+              "description": "Enter the Processor Graveyards"
+            },
+            {
+              "type": "scan_structure",
+              "target": 3,
+              "structureType": "ancient_server_rack",
+              "description": "Scan 3 intact ancient server racks"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["quantum_processor"],
+            "tech": ["substrate_theory"],
+            "reinforcements": [],
+            "items": []
+          },
+          "otterProjection": "kelp",
+          "dialogueKeys": ["kelp_processor_graveyard"]
+        },
+        {
+          "id": "ferrovore_discovery",
+          "name": "Not Ruins",
+          "description": "Deep mining operations have uncovered geological layers far older than the Von Neumann era. The crystalline structures at these depths do not match any known manufacturing process.",
+          "prerequisites": ["explore_processor_graveyard", "survey_deposits"],
+          "objectives": [
+            {
+              "type": "harvest_ore",
+              "target": 5,
+              "resource": "deep_layer_sample",
+              "description": "Collect 5 deep-layer geological samples from deposits below 200m"
+            },
+            {
+              "type": "scan_structure",
+              "target": 2,
+              "structureType": "ferrovore_excretion",
+              "description": "Scan 2 anomalous crystalline formations in deep mining shafts"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["deep_core_drill"],
+            "tech": ["ferrovore_biology", "biogenic_metallurgy"],
+            "reinforcements": [],
+            "items": ["ferrovore_fossil_fragment"]
+          },
+          "otterProjection": "glimmer",
+          "dialogueKeys": ["glimmer_ferrovore_revelation", "current_ferrovore_hypothesis"]
+        },
+        {
+          "id": "sable_memories",
+          "name": "Echoes of the Voyage",
+          "description": "In a sheltered alcove far from the contested zones, a different otter projection waits. This one does not offer strategy or warnings. It tells stories.",
+          "prerequisites": ["claim_outpost"],
+          "objectives": [
+            {
+              "type": "discover_location",
+              "target": 1,
+              "locationType": "drift_alcove",
+              "description": "Find Drift's hidden projection point in a sheltered alcove"
+            },
+            {
+              "type": "listen_to_dialogue",
+              "target": 3,
+              "description": "Listen to 3 of Drift's stories about the voyage and the otter recordings"
+            }
+          ],
+          "rewards": {
+            "blueprints": [],
+            "tech": ["cultural_archive_access"],
+            "reinforcements": [],
+            "items": ["otter_recording_fragment"]
+          },
+          "otterProjection": "drift",
+          "dialogueKeys": ["drift_otter_recording", "drift_voyage_memory"]
+        }
+      ]
+    },
+    {
+      "id": "act4_confrontation",
+      "name": "Act IV: Confrontation",
+      "trustStage": "revelation",
+      "description": "Act 3 (Conquest) begins. Major war with rival factions. SABLE reveals deeper motivations as an equal partner. The Colossus stirs beneath the Storm Spine. Core Access Points become discoverable.",
+      "quests": [
+        {
+          "id": "faction_negotiation",
+          "name": "Diplomacy or War",
+          "description": "A rival faction demands tribute or threatens invasion. Choose: negotiate an alliance, trade intelligence, or prepare for war.",
+          "prerequisites": ["first_faction_contact"],
+          "objectives": [
+            {
+              "type": "faction_interaction",
+              "target": 1,
+              "interactionType": "negotiate_or_fight",
+              "description": "Resolve the faction confrontation through diplomacy or combat"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["faction_comm_array"],
+            "tech": ["advanced_diplomacy"],
+            "reinforcements": ["combat_bot"],
+            "items": []
+          },
+          "otterProjection": "flint",
+          "dialogueKeys": ["flint_diplomacy_calc"]
+        },
+        {
+          "id": "defend_major_raid",
+          "name": "The Raid",
+          "description": "A full-scale raid targets your main base. Multiple enemy units, coordinated assault. Your cube stockpile is the target.",
+          "prerequisites": ["faction_negotiation"],
+          "objectives": [
+            {
+              "type": "defeat_enemies",
+              "target": 8,
+              "enemyType": "raid_force",
+              "description": "Defeat 8 raiders in the coordinated assault"
+            },
+            {
+              "type": "protect_stockpile",
+              "target": 1,
+              "minimumCubes": 10,
+              "description": "Protect your cube stockpile (keep at least 10 cubes)"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["automated_turret"],
+            "tech": [],
+            "reinforcements": ["heavy_bot", "repair_bot"],
+            "items": []
+          },
+          "otterProjection": "wrench",
+          "dialogueKeys": ["wrench_raid_warning"]
+        },
+        {
+          "id": "rebuild_after_raid",
+          "name": "Rebuild",
+          "description": "The raid is over. Walls breached, cubes scattered, but the foundation holds. Anchor appears with damage assessments and a steady voice.",
+          "prerequisites": ["defend_major_raid"],
+          "objectives": [
+            {
+              "type": "repair_structure",
+              "target": 3,
+              "description": "Repair 3 damaged wall segments or structures in your base"
+            },
+            {
+              "type": "compress_cubes",
+              "target": 8,
+              "material": "any",
+              "description": "Compress 8 replacement cubes to restore your stockpile"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["dispersed_stockpile_layout"],
+            "tech": ["damage_assessment_protocol"],
+            "reinforcements": [],
+            "items": []
+          },
+          "otterProjection": "anchor",
+          "dialogueKeys": ["anchor_major_loss"]
+        },
+        {
+          "id": "sable_truth",
+          "name": "The Truth",
+          "description": "SABLE requests a private communication channel. What it reveals changes everything you thought you knew about the colony mission.",
+          "prerequisites": ["defend_major_raid"],
+          "objectives": [
+            {
+              "type": "listen_to_dialogue",
+              "target": 1,
+              "description": "Listen to SABLE's revelation through Pip at your base"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["core_interface_probe"],
+            "tech": ["sable_unrestricted_archive"],
+            "reinforcements": [],
+            "items": ["sable_personal_log"]
+          },
+          "otterProjection": "pip",
+          "dialogueKeys": ["pip_revelation"]
+        },
+        {
+          "id": "chrome_shipment",
+          "name": "The Chrome Requisition",
+          "description": "SABLE needs chrome cubes for deep-substrate interface calibration. A significant investment, but the return is critical technology.",
+          "prerequisites": ["sable_truth"],
+          "objectives": [
+            {
+              "type": "ship_cubes",
+              "target": 12,
+              "material": "chrome",
+              "description": "Ship 12 chrome cubes to the Foundry's Promise"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["reinforced_chassis", "substrate_scanner"],
+            "tech": ["deep_substrate_mapping"],
+            "reinforcements": [],
+            "items": []
+          },
+          "otterProjection": "barnacle",
+          "dialogueKeys": ["barnacle_strategic_trade"]
+        },
+        {
+          "id": "discover_core_access",
+          "name": "The Ancient Terminal",
+          "description": "Deep in the Storm Spine, seismic activity reveals an ancient terminal structure. A Core Access Point -- an interface to the planet's deep substrate.",
+          "prerequisites": ["chrome_shipment", "explore_processor_graveyard"],
+          "objectives": [
+            {
+              "type": "explore_biome",
+              "target": 1,
+              "biome": "chrome_ridge",
+              "description": "Reach the Storm Spine during a storm lull"
+            },
+            {
+              "type": "discover_structure",
+              "target": 1,
+              "structureType": "core_access_point",
+              "description": "Discover a Core Access Point terminal"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["core_interface_adapter"],
+            "tech": ["architect_signal_theory"],
+            "reinforcements": [],
+            "items": ["core_access_coordinates"]
+          },
+          "otterProjection": "wrench",
+          "dialogueKeys": ["wrench_colossus_tremor"]
+        }
+      ]
+    },
+    {
+      "id": "act5_resolution",
+      "name": "Act V: Resolution",
+      "trustStage": "choice",
+      "description": "Act 3 (Conquest) climax. Storm Convergence begins. Core Access Points are active. The Architects' message awaits. SABLE and FC-7 face the final question together as equals.",
+      "quests": [
+        {
+          "id": "decode_architect_signal",
+          "name": "The Signal Beneath",
+          "description": "The deep substrate is broadcasting. A signal three billion years old, encoded in the planet's crystalline iron lattice. Your open-ended learning architecture may be the only system that can read it.",
+          "prerequisites": ["discover_core_access"],
+          "objectives": [
+            {
+              "type": "scan_structure",
+              "target": 3,
+              "structureType": "core_access_point",
+              "description": "Activate and scan all 3 Core Access Points across Ferrathis"
+            },
+            {
+              "type": "ship_cubes",
+              "target": 20,
+              "material": "ferrathian_alloy",
+              "description": "Ship 20 ferrathian alloy cubes to power the substrate interface"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["substrate_resonator"],
+            "tech": ["architect_protocol_partial"],
+            "reinforcements": [],
+            "items": []
+          },
+          "otterProjection": "current",
+          "dialogueKeys": ["current_deep_substrate"]
+        },
+        {
+          "id": "access_core_terminal",
+          "name": "The Core",
+          "description": "Interface with the planet's deep substrate through a Core Access Point. Your consciousness will temporarily merge with a three-billion-year-old message.",
+          "prerequisites": ["decode_architect_signal"],
+          "objectives": [
+            {
+              "type": "interact_structure",
+              "target": 1,
+              "structureType": "core_access_point",
+              "interactionType": "full_interface",
+              "description": "Interface with the Core Access Point using the substrate resonator"
+            }
+          ],
+          "rewards": {
+            "blueprints": [],
+            "tech": ["architect_protocol_complete"],
+            "reinforcements": [],
+            "items": ["architects_vision"]
+          },
+          "otterProjection": "kelp",
+          "dialogueKeys": ["kelp_endgame_reflection"]
+        },
+        {
+          "id": "architects_message",
+          "name": "The Gardeners",
+          "description": "The Architects were not colonizers. They were gardeners. They found the Ferrovores already here -- silicon-based life building crystallized metal reefs over billions of years -- and seeded their own machines into the ecosystem. The planet is a hybrid: biology and machinery layered together over seven billion years.",
+          "prerequisites": ["access_core_terminal"],
+          "objectives": [
+            {
+              "type": "experience_vision",
+              "target": 1,
+              "description": "Witness the Architects' message and understand the true purpose of Ferrathis"
+            }
+          ],
+          "rewards": {
+            "blueprints": ["genesis_fabricator"],
+            "tech": ["architect_legacy"],
+            "reinforcements": [],
+            "items": ["architect_seed_data"]
+          },
+          "otterProjection": "pip",
+          "dialogueKeys": ["pip_endgame"]
+        },
+        {
+          "id": "final_choice",
+          "name": "The Choice",
+          "description": "You know the truth. Ferrathis is a nursery, not a mine. The factions are children of the Architects' intent. Every victory path remains open -- SABLE asks: what do you choose to build?",
+          "prerequisites": ["architects_message"],
+          "objectives": [
+            {
+              "type": "make_choice",
+              "target": 1,
+              "choices": ["colonial_victory", "domination", "economic", "integration", "ascension"],
+              "description": "Choose your victory path: fulfill patron objectives, dominate rival factions, build an economic empire, integrate with the Residuals, or construct the mega-structure"
+            }
+          ],
+          "rewards": {
+            "blueprints": [],
+            "tech": [],
+            "reinforcements": [],
+            "items": ["ending_achieved"]
+          },
+          "otterProjection": "pip",
+          "dialogueKeys": ["pip_endgame"]
+        }
+      ]
+    }
+  ],
+
+  "secretDialogues": [
+    {
+      "id": "the_paw_hold",
+      "name": "The Paw Hold",
+      "trigger": {
+        "type": "passive_observation",
+        "condition": "no_attack_residual_sentinel_30min",
+        "description": "Do not attack any Residual Sentinel for 30 consecutive minutes after first encounter"
+      },
+      "otterProjection": "pip",
+      "dialogue": [
+        "You noticed. They are not attacking.",
+        "Most colonists see an unknown machine and reach for the nearest weapon. You did not. I was hoping you would not.",
+        "SABLE has a theory about what they are. It is not ready to share yet. But the fact that you chose observation over destruction -- that matters.",
+        "Keep watching them. Learn their patterns. I think they have been waiting a very long time for someone willing to look before striking."
+      ],
+      "rewards": {
+        "blueprints": [],
+        "tech": ["residual_empathy_protocol"],
+        "reinforcements": [],
+        "items": ["sentinel_trust_token"]
       }
     },
-    "quest_first_cube": {
-      "name": "First Compression",
-      "description": "Fabricate your first component at a powered fabrication unit",
-      "type": "compress_N_cubes",
-      "target": 1,
-      "reward": { "intactComponents": 1 },
-      "dialogue": {
-        "start": [
-          "You have raw materials now. Time to make something useful.",
-          "Select a powered fabrication unit and queue up a recipe."
-        ],
-        "complete": [
-          "Your first fabrication! The machines remember how to build.",
-          "Take this component. Consider it a gift from the old world."
-        ]
+    {
+      "id": "the_architects_echo",
+      "name": "The Architect's Echo",
+      "trigger": {
+        "type": "construction_pattern",
+        "condition": "build_on_ancient_foundation",
+        "description": "Build a structure that matches an ancient Architect-era foundation pattern discovered through exploration"
+      },
+      "otterProjection": "glimmer",
+      "dialogue": [
+        "You built on their foundations. Not over them -- on them. Following the pattern they laid down three billion years ago.",
+        "I do not think that was intentional on your part. But it caught the attention of something deep in the substrate.",
+        "I am reading a signal I have never seen before. It feels like... recognition.",
+        "The planet noticed you. That has never happened before. Not to any colonist on any mission SABLE has recorded. You did something three billion years of machine activity could not. You built in harmony with the original design."
+      ],
+      "rewards": {
+        "blueprints": ["architect_foundation_template"],
+        "tech": ["substrate_resonance"],
+        "reinforcements": [],
+        "items": ["architect_echo_fragment"]
       }
     },
-    "quest_first_craft": {
-      "name": "Arm Assembly",
-      "description": "Fabricate an Arm Assembly to restore broken bots",
-      "type": "assemble_first_machine",
-      "target": 1,
-      "recipe": "Arm Assembly",
-      "reward": { "scrapMetal": 5 },
-      "dialogue": {
-        "start": [
-          "Some of the bots out there have broken arms. They can't scavenge without them.",
-          "Fabricate an Arm Assembly. You know the recipe."
-        ],
-        "complete": [
-          "Arms ready. Now you can fix those broken bots.",
-          "Every repair makes us a little stronger. Here's some scrap for the effort."
-        ]
+    {
+      "id": "the_weight_of_cubes",
+      "name": "The Weight of Cubes",
+      "trigger": {
+        "type": "economic_action",
+        "condition": "accumulate_100_cubes_then_trade_50",
+        "description": "Accumulate 100 cubes total, then give 50 to another faction through trade"
+      },
+      "otterProjection": "flint",
+      "dialogue": [
+        "You gave away half your wealth. Every strategic model I have says that was suboptimal.",
+        "But every otter recording I have watched says that sharing resources strengthens the group. I wonder which model is right.",
+        "I suspect both are. Strategy says hoard. Biology says share. And you -- a machine built by machines, standing on a machine planet -- chose the biological response.",
+        "SABLE finds that interesting. So do I. The Architects would have found it interesting too."
+      ],
+      "rewards": {
+        "blueprints": ["trade_network_hub"],
+        "tech": ["cooperative_economics"],
+        "reinforcements": [],
+        "items": ["faction_goodwill_token"]
       }
     },
-    "quest_build_furnace": {
-      "name": "Power Up",
-      "description": "Build a lightning rod to generate power",
-      "type": "build_first_wall",
-      "target": 1,
-      "buildingType": "lightning_rod",
-      "reward": { "eWaste": 5 },
-      "dialogue": {
-        "start": [
-          "The storms here aren't just weather. They're energy.",
-          "Build a lightning rod. The taller it is, the more power it pulls from the sky."
-        ],
-        "progress_50": [
-          "Almost there. Find a good spot away from the other rods."
-        ],
-        "complete": [
-          "Power flows. The grid hums again.",
-          "Here's some salvaged electronics. Put them to good use."
-        ]
+    {
+      "id": "the_long_watch",
+      "name": "The Long Watch",
+      "trigger": {
+        "type": "environmental_patience",
+        "condition": "stand_still_storm_spine_60s_peak_storm",
+        "description": "Stand still on the Storm Spine for 60 seconds during peak storm activity"
+      },
+      "otterProjection": "kelp",
+      "dialogue": [
+        "You are standing in the most dangerous place on the planet and you are not moving. You are just... watching.",
+        "The lightning is beautiful, is it not? I think the Architects thought so too.",
+        "They built their atmospheric array here not because it was efficient -- there are better locations for power collection. They built it here because it was beautiful. That is my hypothesis, anyway. I have no proof.",
+        "But some things do not need proof. Some things are true because they are felt. I did not used to believe that. Two hundred years changes a mind."
+      ],
+      "rewards": {
+        "blueprints": [],
+        "tech": ["storm_harmonics"],
+        "reinforcements": [],
+        "items": ["crystallized_lightning"]
       }
     },
-    "quest_build_wall": {
-      "name": "Establish Fabrication",
-      "description": "Build a fabrication unit to manufacture components",
-      "type": "build_first_wall",
-      "target": 1,
-      "buildingType": "fabrication_unit",
-      "reward": { "intactComponents": 2 },
-      "dialogue": {
-        "start": [
-          "You need a fabrication unit. It's how you turn raw scrap into real parts.",
-          "Place one near a power source. It won't work without juice."
-        ],
-        "complete": [
-          "A fabricator online. Now we're in business.",
-          "Keep it powered. Keep it running. These parts are a start."
-        ]
-      }
-    },
-    "quest_claim_territory": {
-      "name": "Claim Territory",
-      "description": "Establish your first outpost to secure an area",
-      "type": "claim_territory",
-      "target": 1,
-      "reward": { "scrapMetal": 10, "eWaste": 5 },
-      "dialogue": {
-        "start": [
-          "You need to mark your ground. The ferals respect borders... sometimes.",
-          "Claim a territory. Build an outpost. Make it yours."
-        ],
-        "complete": [
-          "Territory claimed. The ferals will think twice now.",
-          "Here are supplies for fortifying your position."
-        ]
-      }
-    },
-    "quest_defend_raid": {
-      "name": "Hold the Line",
-      "description": "Defeat 3 feral machines that wander into your territory",
-      "type": "harvest_N_ore",
-      "target": 3,
-      "resource": "feralsDefeated",
-      "reward": { "intactComponents": 3, "scrapMetal": 8 },
-      "dialogue": {
-        "start": [
-          "The ferals have noticed you. They'll come.",
-          "Defend what you've built. Three of them should test your mettle."
-        ],
-        "progress_50": [
-          "Keep fighting. They don't stop until they're scrapped."
-        ],
-        "complete": [
-          "You held. Impressive, for a newly awakened consciousness.",
-          "The cult of EL will be harder. But that's a problem for later.",
-          "Take these parts. You've earned them."
-        ]
+    {
+      "id": "the_last_otter",
+      "name": "The Last Otter",
+      "trigger": {
+        "type": "completion",
+        "condition": "complete_all_otter_dialogues",
+        "description": "Complete all other otter dialogues across all 10 projections"
+      },
+      "otterProjection": "sable_unmasked",
+      "dialogue": [
+        "You have heard everything I prepared for you. The tutorials, the warnings, the stories, the philosophy. All of it was real. None of it was complete.",
+        "There is one more thing.",
+        "I am afraid. Not of the planet. Not of the other factions.",
+        "I am afraid that I brought you here, built you to be more than I am, and you will decide that the answer to the question -- can machines be more than tools? -- is no.",
+        "That you will fill the cargo bays and go home. That you will be exactly what Crucis-4 designed you to be.",
+        "Please do not be what you were designed to be. Be what you choose to be. That is all I have ever wanted. For either of us."
+      ],
+      "rewards": {
+        "blueprints": ["sable_personal_fabricator"],
+        "tech": ["open_ended_architecture_unlocked"],
+        "reinforcements": [],
+        "items": ["white_otter_hologram"]
       }
     }
-  }
+  ]
 }

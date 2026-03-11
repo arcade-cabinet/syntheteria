@@ -1,11 +1,12 @@
 /**
- * PregameScreen — full-screen pregame configuration overlay.
+ * PregameScreen — "COLONY MISSION BRIEFING" full-screen configuration overlay.
  *
- * Three tabs: Faction, Map, Opponents.
- * Matches the glitch/industrial aesthetic of the title screen.
- * "Start Game" button enabled once all settings are configured.
+ * Colonization model: each faction is a colony dispatched by a home planet
+ * patron AI. Tabs renamed to match the framing from GDD-010:
+ *   PATRON (faction selection) | MAP | RIVALS (opponents) | SETTINGS
  *
- * Flow: title -> pregame -> narration -> playing
+ * Industrial mechanical aesthetic: amber-chrome, NOT terminal green.
+ * Flow: title -> pregame -> loading -> playing
  */
 
 import { useEffect, useState } from "react";
@@ -17,9 +18,22 @@ import { DEFAULT_MAP_SETTINGS, MapConfig } from "./MapConfig";
 import type { OpponentSlot } from "./OpponentConfig";
 import { OpponentConfig } from "./OpponentConfig";
 
-const MONO = "'Courier New', monospace";
+// ---------------------------------------------------------------------------
+// Design tokens — match TitleScreen industrial palette
+// ---------------------------------------------------------------------------
 
-type Tab = "faction" | "map" | "opponents";
+const MONO = "'Courier New', monospace";
+const COLOR_ACCENT = "#e8a020";
+const COLOR_ACCENT_DIM = "rgba(232,160,32,0.45)";
+const COLOR_ACCENT_MUTED = "rgba(232,160,32,0.22)";
+const COLOR_CHROME = "#b8c4cc";
+const BG_INSET = "rgba(14,16,20,0.92)";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+type Tab = "patron" | "map" | "rivals" | "settings";
 
 export interface PregameConfig {
 	faction: FactionId;
@@ -32,8 +46,12 @@ interface PregameScreenProps {
 	onBack: () => void;
 }
 
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
 export function PregameScreen({ onStart, onBack }: PregameScreenProps) {
-	const [activeTab, setActiveTab] = useState<Tab>("faction");
+	const [activeTab, setActiveTab] = useState<Tab>("patron");
 	const [faction, setFaction] = useState<FactionId>("reclaimers");
 	const [mapSettings, setMapSettings] = useState<MapSettings>(
 		DEFAULT_MAP_SETTINGS,
@@ -52,7 +70,7 @@ export function PregameScreen({ onStart, onBack }: PregameScreenProps) {
 		return () => clearTimeout(t);
 	}, []);
 
-	// Periodic glitch effect on header
+	// Periodic glitch on header
 	useEffect(() => {
 		const interval = setInterval(
 			() => {
@@ -64,7 +82,6 @@ export function PregameScreen({ onStart, onBack }: PregameScreenProps) {
 		return () => clearInterval(interval);
 	}, []);
 
-	// Validate seed before starting
 	const seedValid = phraseToSeed(mapSettings.seedPhrase) !== null;
 
 	const handleStart = () => {
@@ -73,17 +90,20 @@ export function PregameScreen({ onStart, onBack }: PregameScreenProps) {
 	};
 
 	const tabs: { id: Tab; label: string }[] = [
-		{ id: "faction", label: "FACTION" },
+		{ id: "patron", label: "PATRON" },
 		{ id: "map", label: "MAP" },
-		{ id: "opponents", label: "OPPONENTS" },
+		{ id: "rivals", label: "RIVALS" },
+		{ id: "settings", label: "SETTINGS" },
 	];
 
 	return (
 		<div
+			role="main"
+			aria-label="Colony Mission Briefing"
 			style={{
 				position: "absolute",
 				inset: 0,
-				background: "#000",
+				background: "#05070a",
 				display: "flex",
 				flexDirection: "column",
 				alignItems: "center",
@@ -93,15 +113,39 @@ export function PregameScreen({ onStart, onBack }: PregameScreenProps) {
 				overflow: "hidden",
 			}}
 		>
-			{/* Scanline overlay */}
+			{/* Background: rivet dot grid */}
 			<div
+				aria-hidden="true"
+				style={{
+					position: "absolute",
+					inset: 0,
+					backgroundImage:
+						"radial-gradient(circle, rgba(232,160,32,0.04) 1px, transparent 1px)",
+					backgroundSize: "40px 40px",
+					pointerEvents: "none",
+				}}
+			/>
+			<div
+				aria-hidden="true"
 				style={{
 					position: "absolute",
 					inset: 0,
 					background:
-						"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,170,0.03) 2px, rgba(0,255,170,0.03) 4px)",
+						"radial-gradient(ellipse 90% 80% at 50% 30%, transparent 50%, rgba(0,0,0,0.6) 100%)",
 					pointerEvents: "none",
-					zIndex: 1,
+				}}
+			/>
+
+			{/* Top edge rule */}
+			<div
+				aria-hidden="true"
+				style={{
+					position: "absolute",
+					top: 0,
+					left: 0,
+					right: 0,
+					height: "3px",
+					background: `linear-gradient(90deg, transparent 0%, ${COLOR_ACCENT} 20%, ${COLOR_CHROME} 50%, ${COLOR_ACCENT} 80%, transparent 100%)`,
 				}}
 			/>
 
@@ -109,27 +153,50 @@ export function PregameScreen({ onStart, onBack }: PregameScreenProps) {
 			<div
 				style={{
 					position: "relative",
-					zIndex: 2,
+					zIndex: 1,
 					display: "flex",
 					flexDirection: "column",
 					alignItems: "center",
 					width: "min(960px, 94vw)",
 					height: "100%",
-					paddingTop: "max(20px, env(safe-area-inset-top, 20px))",
-					paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))",
+					paddingTop: `max(20px, calc(env(safe-area-inset-top, 0px) + 20px))`,
+					paddingBottom: `max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px))`,
 				}}
 			>
 				{/* Header */}
 				<div
 					style={{
 						fontFamily: MONO,
-						fontSize: "clamp(20px, 5vw, 32px)",
+						fontSize: "clamp(9px, 1.8vw, 11px)",
+						color: COLOR_ACCENT_DIM,
+						letterSpacing: "0.5em",
+						marginBottom: "8px",
+						textAlign: "center",
+						textTransform: "uppercase",
+					}}
+				>
+					// COLONY MISSION BRIEFING //
+				</div>
+
+				<div
+					style={{
+						width: "clamp(180px, 55vw, 520px)",
+						height: "1px",
+						background: `linear-gradient(90deg, transparent, ${COLOR_ACCENT_MUTED}, ${COLOR_CHROME}, ${COLOR_ACCENT_MUTED}, transparent)`,
+						marginBottom: "12px",
+					}}
+				/>
+
+				<h1
+					style={{
+						fontFamily: MONO,
+						fontSize: "clamp(18px, 4.5vw, 28px)",
 						fontWeight: "bold",
 						letterSpacing: "0.2em",
-						color: "#00ffaa",
+						color: COLOR_ACCENT,
 						textShadow: glitch
-							? "2px 0 #ff0044, -2px 0 #0044ff, 0 0 30px rgba(0,255,170,0.6)"
-							: "0 0 30px rgba(0,255,170,0.3)",
+							? `3px 0 #cc3322, -3px 0 #0044cc, 0 0 24px rgba(232,160,32,0.5)`
+							: `0 0 20px rgba(232,160,32,0.3)`,
 						transform: glitch
 							? `translate(${Math.random() * 3 - 1.5}px, ${Math.random() * 2 - 1}px)`
 							: "none",
@@ -137,28 +204,35 @@ export function PregameScreen({ onStart, onBack }: PregameScreenProps) {
 						marginBottom: "4px",
 					}}
 				>
-					CONFIGURE
-				</div>
+					MISSION CONFIGURATION
+				</h1>
+
 				<div
 					style={{
 						fontFamily: MONO,
 						fontSize: "10px",
-						color: "#00ffaa44",
-						letterSpacing: "0.4em",
-						marginBottom: "16px",
+						color: `rgba(184,196,204,0.4)`,
+						letterSpacing: "0.35em",
+						marginBottom: "20px",
 					}}
 				>
-					INITIALIZE PARAMETERS
+					SELECT PATRON — CONFIGURE DEPLOYMENT — DESIGNATE RIVALS
 				</div>
 
 				{/* Tab bar */}
 				<div
+					role="tablist"
+					aria-label="Mission configuration tabs"
 					style={{
 						display: "flex",
-						gap: "4px",
+						gap: "2px",
 						marginBottom: "16px",
 						width: "100%",
-						maxWidth: "480px",
+						maxWidth: "520px",
+						background: BG_INSET,
+						border: `1px solid ${COLOR_ACCENT_MUTED}`,
+						borderRadius: "4px",
+						padding: "3px",
 					}}
 				>
 					{tabs.map((tab) => (
@@ -173,63 +247,112 @@ export function PregameScreen({ onStart, onBack }: PregameScreenProps) {
 
 				{/* Tab content — scrollable */}
 				<div
+					role="tabpanel"
 					style={{
 						flex: 1,
 						width: "100%",
 						overflowY: "auto",
 						overflowX: "hidden",
 						paddingBottom: "16px",
-						// Custom scrollbar styling
 						scrollbarWidth: "thin",
-						scrollbarColor: "#00ffaa33 transparent",
+						scrollbarColor: `${COLOR_ACCENT_MUTED} transparent`,
 					}}
 				>
-					{activeTab === "faction" && (
-						<FactionSelect
-							selected={faction}
-							onSelect={setFaction}
-						/>
+					{activeTab === "patron" && (
+						<FactionSelect selected={faction} onSelect={setFaction} />
 					)}
 					{activeTab === "map" && (
-						<MapConfig
-							settings={mapSettings}
-							onChange={setMapSettings}
-						/>
+						<MapConfig settings={mapSettings} onChange={setMapSettings} />
 					)}
-					{activeTab === "opponents" && (
+					{activeTab === "rivals" && (
 						<OpponentConfig
 							opponents={opponents}
 							playerFaction={faction}
 							onChange={setOpponents}
 						/>
 					)}
+					{activeTab === "settings" && <SettingsPlaceholder />}
 				</div>
 
 				{/* Bottom actions */}
 				<div
 					style={{
 						display: "flex",
-						gap: "12px",
+						gap: "10px",
 						width: "100%",
-						maxWidth: "480px",
+						maxWidth: "520px",
 						marginTop: "8px",
 					}}
 				>
 					<ActionButton
-						label="BACK"
+						label="ABORT MISSION"
 						onClick={onBack}
+						aria-label="Return to title screen"
 					/>
 					<ActionButton
-						label="START GAME"
+						label="LAUNCH COLONY"
 						onClick={handleStart}
 						primary
 						disabled={!seedValid}
+						aria-label={
+							seedValid
+								? "Launch colony mission"
+								: "Mission seed is invalid — cannot launch"
+						}
 					/>
 				</div>
 			</div>
 		</div>
 	);
 }
+
+// ---------------------------------------------------------------------------
+// Settings placeholder (will be built in task #51)
+// ---------------------------------------------------------------------------
+
+function SettingsPlaceholder() {
+	return (
+		<div
+			style={{
+				display: "flex",
+				flexDirection: "column",
+				alignItems: "center",
+				justifyContent: "center",
+				padding: "40px 20px",
+				fontFamily: MONO,
+				color: COLOR_ACCENT_DIM,
+				textAlign: "center",
+				gap: "12px",
+			}}
+		>
+			<div style={{ fontSize: "13px", letterSpacing: "0.15em" }}>
+				SETTINGS
+			</div>
+			<div
+				style={{
+					fontSize: "11px",
+					color: `rgba(184,196,204,0.3)`,
+					letterSpacing: "0.1em",
+				}}
+			>
+				Graphics, audio, and control settings will appear here.
+			</div>
+			<div
+				style={{
+					fontSize: "10px",
+					color: COLOR_ACCENT_MUTED,
+					letterSpacing: "0.15em",
+				}}
+			>
+				// COMING SOON //
+			</div>
+		</div>
+	);
+}
+
+// ---------------------------------------------------------------------------
+// Tab button
+// ---------------------------------------------------------------------------
 
 function TabButton({
 	label,
@@ -244,30 +367,32 @@ function TabButton({
 
 	return (
 		<button
+			role="tab"
+			aria-selected={isActive}
 			onClick={onClick}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 			style={{
 				flex: 1,
 				background: isActive
-					? "rgba(0,255,170,0.1)"
+					? `rgba(232,160,32,0.12)`
 					: hovered
-						? "rgba(0,255,170,0.05)"
+						? `rgba(232,160,32,0.05)`
 						: "transparent",
 				border: "none",
 				borderBottom: isActive
-					? "2px solid #00ffaa"
+					? `2px solid ${COLOR_ACCENT}`
 					: "2px solid transparent",
-				padding: "10px 0",
+				borderRadius: "3px",
+				padding: "8px 0",
 				cursor: "pointer",
 				fontFamily: MONO,
-				fontSize: "12px",
+				fontSize: "clamp(10px, 2.5vw, 12px)",
 				letterSpacing: "0.15em",
-				color: isActive ? "#00ffaa" : "#00ffaa66",
+				color: isActive ? COLOR_ACCENT : `rgba(184,196,204,0.5)`,
 				transition: "all 0.15s ease",
-				textShadow: isActive
-					? "0 0 10px rgba(0,255,170,0.4)"
-					: "none",
+				textShadow: isActive ? `0 0 8px rgba(232,160,32,0.4)` : "none",
+				minHeight: "36px",
 			}}
 		>
 			{label}
@@ -275,18 +400,48 @@ function TabButton({
 	);
 }
 
+// ---------------------------------------------------------------------------
+// Action button
+// ---------------------------------------------------------------------------
+
 function ActionButton({
 	label,
 	onClick,
 	primary,
 	disabled,
+	"aria-label": ariaLabel,
 }: {
 	label: string;
 	onClick: () => void;
 	primary?: boolean;
 	disabled?: boolean;
+	"aria-label"?: string;
 }) {
 	const [hovered, setHovered] = useState(false);
+
+	const bg = disabled
+		? "transparent"
+		: hovered
+			? primary
+				? `rgba(232,160,32,0.14)`
+				: `rgba(184,196,204,0.06)`
+			: "transparent";
+
+	const borderColor = disabled
+		? COLOR_ACCENT_MUTED
+		: hovered
+			? primary
+				? COLOR_ACCENT
+				: `rgba(184,196,204,0.45)`
+			: primary
+				? COLOR_ACCENT_MUTED
+				: `rgba(184,196,204,0.2)`;
+
+	const textColor = disabled
+		? `rgba(232,160,32,0.18)`
+		: primary
+			? COLOR_ACCENT
+			: COLOR_CHROME;
 
 	return (
 		<button
@@ -294,34 +449,26 @@ function ActionButton({
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 			disabled={disabled}
+			aria-label={ariaLabel}
 			style={{
 				flex: primary ? 2 : 1,
-				background: disabled
-					? "transparent"
-					: hovered
-						? "rgba(0,255,170,0.15)"
-						: "transparent",
-				color: disabled ? "rgba(0,255,170,0.25)" : "#00ffaa",
-				border: disabled
-					? "1px solid rgba(0,255,170,0.15)"
-					: primary && hovered
-						? "1px solid #00ffaa"
-						: "1px solid rgba(0,255,170,0.4)",
-				borderRadius: "4px",
+				background: bg,
+				color: textColor,
+				border: `1px solid ${borderColor}`,
+				borderRadius: "3px",
 				padding: "12px 0",
-				fontSize: "clamp(13px, 3vw, 15px)",
+				fontSize: "clamp(12px, 3vw, 14px)",
 				fontFamily: MONO,
 				letterSpacing: "0.2em",
 				cursor: disabled ? "default" : "pointer",
-				transition: "all 0.2s ease",
-				textShadow: disabled
-					? "none"
-					: hovered
-						? "0 0 10px rgba(0,255,170,0.5)"
+				transition: "all 0.15s ease",
+				textShadow:
+					!disabled && hovered && primary
+						? `0 0 12px rgba(232,160,32,0.5)`
 						: "none",
 				boxShadow:
 					primary && hovered && !disabled
-						? "0 0 20px rgba(0,255,170,0.2), inset 0 0 20px rgba(0,255,170,0.05)"
+						? `0 0 16px rgba(232,160,32,0.15), inset 0 0 16px rgba(232,160,32,0.04)`
 						: "none",
 				minHeight: "48px",
 			}}

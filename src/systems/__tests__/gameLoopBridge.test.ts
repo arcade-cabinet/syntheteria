@@ -5,8 +5,13 @@
  * Tests cover:
  * - initBridge sets up initial state and HUD values
  * - bridgeTick polls harvest/compress state and updates HUD
+ * - bridgeTick emits harvest_grind audio during active harvest
+ * - bridgeTick emits harvest_sparks particles during active harvest
+ * - bridgeTick emits harvest_started event on harvest start
+ * - bridgeTick emits compression_started event on compression start
  * - bridgeTick decays damage flash over time
  * - bridgeTick increments tick count
+ * - gameLoopBridge single-call orchestrator runs bridgeTick
  * - processCompressEvents registers cubes in grabber
  * - processCompressEvents emits resource_gathered events
  * - processCompressEvents triggers audio and particles
@@ -14,10 +19,13 @@
  * - processCompressEvents awards crafting XP
  * - processCompressEvents handles multiple events in one call
  * - processSmeltingResult spawns output cube on completion
+ * - processSmeltingResult triggers furnace_hum audio on completion
+ * - processSmeltingResult triggers smoke particles on completion
  * - processSmeltingResult ignores incomplete results
  * - processSmeltingResult ignores missing output data
  * - onDamageTaken reduces player health
  * - onDamageTaken triggers damage flash
+ * - onDamageTaken emits damage_taken event to event bus
  * - onDamageTaken emits combat_kill on lethal damage
  * - onDamageTaken ignores zero/negative damage
  * - updatePlayerPosition updates HUD coords and biome
@@ -122,6 +130,7 @@ jest.mock("../progressionSystem", () => ({
 import {
 	initBridge,
 	bridgeTick,
+	gameLoopBridge,
 	processCompressEvents,
 	processSmeltingResult,
 	onDamageTaken,
@@ -311,6 +320,141 @@ describe("bridgeTick", () => {
 			max: 100,
 		});
 	});
+
+	it("triggers harvest_grind audio while actively harvesting", () => {
+		(getHarvestingState as jest.Mock).mockReturnValue({
+			depositId: "dep_1",
+			powderCollected: 20,
+			capacity: 100,
+			materialType: "scrap_iron",
+		});
+
+		bridgeTick(0.016);
+
+		expect(triggerSound).toHaveBeenCalledWith(
+			"harvest_grind",
+			expect.any(Object),
+			expect.objectContaining({ loop: true }),
+		);
+	});
+
+	it("triggers harvest_sparks particles while actively harvesting", () => {
+		(getHarvestingState as jest.Mock).mockReturnValue({
+			depositId: "dep_1",
+			powderCollected: 20,
+			capacity: 100,
+			materialType: "scrap_iron",
+		});
+
+		bridgeTick(0.016);
+
+		expect(emitParticle).toHaveBeenCalledWith(
+			"harvest_sparks",
+			expect.any(Object),
+			expect.objectContaining({ intensity: expect.any(Number) }),
+		);
+	});
+
+	it("does NOT trigger harvest audio/particles when not harvesting", () => {
+		(getHarvestingState as jest.Mock).mockReturnValue(null);
+
+		bridgeTick(0.016);
+
+		expect(triggerSound).not.toHaveBeenCalledWith(
+			"harvest_grind",
+			expect.any(Object),
+			expect.any(Object),
+		);
+		expect(emitParticle).not.toHaveBeenCalledWith(
+			"harvest_sparks",
+			expect.any(Object),
+			expect.any(Object),
+		);
+	});
+
+	it("emits harvest_started event on first tick of harvesting", () => {
+		(getHarvestingState as jest.Mock).mockReturnValue({
+			depositId: "dep_1",
+			powderCollected: 0,
+			capacity: 100,
+			materialType: "scrap_iron",
+		});
+
+		bridgeTick(0.016);
+
+		expect(emit).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "harvest_started",
+				depositId: "dep_1",
+				materialType: "scrap_iron",
+			}),
+		);
+	});
+
+	it("does NOT re-emit harvest_started on subsequent ticks for same deposit", () => {
+		(getHarvestingState as jest.Mock).mockReturnValue({
+			depositId: "dep_1",
+			powderCollected: 0,
+			capacity: 100,
+			materialType: "scrap_iron",
+		});
+
+		bridgeTick(0.016);
+		jest.clearAllMocks();
+
+		(getHarvestingState as jest.Mock).mockReturnValue({
+			depositId: "dep_1",
+			powderCollected: 20,
+			capacity: 100,
+			materialType: "scrap_iron",
+		});
+
+		bridgeTick(0.016);
+
+		expect(emit).not.toHaveBeenCalledWith(
+			expect.objectContaining({ type: "harvest_started" }),
+		);
+	});
+
+	it("emits compression_started event on first tick of compression", () => {
+		(getCompressionState as jest.Mock).mockReturnValue({
+			progress: 0,
+			duration: 5,
+			materialType: "scrap_iron",
+		});
+
+		bridgeTick(0.016);
+
+		expect(emit).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "compression_started",
+				materialType: "scrap_iron",
+			}),
+		);
+	});
+
+	it("does NOT re-emit compression_started on subsequent ticks", () => {
+		(getCompressionState as jest.Mock).mockReturnValue({
+			progress: 0,
+			duration: 5,
+			materialType: "scrap_iron",
+		});
+
+		bridgeTick(0.016);
+		jest.clearAllMocks();
+
+		(getCompressionState as jest.Mock).mockReturnValue({
+			progress: 1,
+			duration: 5,
+			materialType: "scrap_iron",
+		});
+
+		bridgeTick(0.016);
+
+		expect(emit).not.toHaveBeenCalledWith(
+			expect.objectContaining({ type: "compression_started" }),
+		);
+	});
 });
 
 // ===========================================================================
@@ -480,6 +624,45 @@ describe("processSmeltingResult", () => {
 		processSmeltingResult("furnace_2", makeSmeltingResult());
 		expect(getBridgeState().smeltingsCompletedTotal).toBe(2);
 	});
+
+	it("triggers furnace_hum audio on smelting completion", () => {
+		processSmeltingResult("furnace_1", makeSmeltingResult());
+
+		expect(triggerSound).toHaveBeenCalledWith(
+			"furnace_hum",
+			expect.objectContaining({ x: 10, y: 1, z: 21.5 }),
+			expect.objectContaining({ volume: 0.6 }),
+		);
+	});
+
+	it("triggers smoke particles on smelting completion", () => {
+		processSmeltingResult("furnace_1", makeSmeltingResult());
+
+		expect(emitParticle).toHaveBeenCalledWith(
+			"smoke",
+			expect.objectContaining({ x: 10, y: 1, z: 21.5 }),
+			expect.objectContaining({ intensity: 0.5 }),
+		);
+	});
+
+	it("does NOT trigger audio/particles for incomplete results", () => {
+		processSmeltingResult("furnace_1", { completed: false });
+
+		expect(triggerSound).not.toHaveBeenCalled();
+		expect(emitParticle).not.toHaveBeenCalled();
+	});
+
+	it("emits smelting_complete event to event bus", () => {
+		processSmeltingResult("furnace_1", makeSmeltingResult());
+
+		expect(emit).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "smelting_complete",
+				furnaceId: "furnace_1",
+				outputMaterial: "iron_plate",
+			}),
+		);
+	});
 });
 
 // ===========================================================================
@@ -517,6 +700,19 @@ describe("onDamageTaken", () => {
 			"damage_hit",
 			expect.any(Object),
 			expect.objectContaining({ volume: 0.9 }),
+		);
+	});
+
+	it("emits damage_taken event to event bus", () => {
+		onDamageTaken(30, "enemy_1");
+		expect(emit).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "damage_taken",
+				targetId: "player",
+				sourceId: "enemy_1",
+				amount: 30,
+				damageType: "melee",
+			}),
 		);
 	});
 
@@ -687,5 +883,67 @@ describe("setPlayerEntityId", () => {
 		bridgeTick(0.016);
 		expect(getHarvestingState).toHaveBeenCalledWith("worker-7");
 		expect(getCompressionState).toHaveBeenCalledWith("worker-7");
+	});
+});
+
+// ===========================================================================
+// gameLoopBridge (single-call orchestrator)
+// ===========================================================================
+
+describe("gameLoopBridge", () => {
+	it("calls bridgeTick and increments tick count", () => {
+		gameLoopBridge(0.016);
+		expect(getTickCount()).toBe(1);
+	});
+
+	it("polls harvest state like bridgeTick does", () => {
+		(getHarvestingState as jest.Mock).mockReturnValue({
+			depositId: "dep_1",
+			powderCollected: 50,
+			capacity: 100,
+			materialType: "rock",
+		});
+
+		gameLoopBridge(0.016);
+
+		expect(updatePowderGauge).toHaveBeenCalledWith({
+			current: 50,
+			max: 100,
+			resourceType: "rock",
+		});
+	});
+
+	it("polls compression state like bridgeTick does", () => {
+		(getCompressionState as jest.Mock).mockReturnValue({
+			progress: 3,
+			duration: 5,
+			materialType: "rock",
+		});
+
+		gameLoopBridge(0.016);
+
+		expect(updateCompression).toHaveBeenCalledWith(
+			expect.objectContaining({
+				active: true,
+				progress: 3 / 5,
+			}),
+		);
+	});
+
+	it("decays damage flash like bridgeTick does", () => {
+		onDamageTaken(20, "e");
+		jest.clearAllMocks();
+
+		gameLoopBridge(0.5);
+
+		const state = getBridgeState();
+		expect(state.damageFlashIntensity).toBe(0);
+	});
+
+	it("multiple calls accumulate tick count", () => {
+		gameLoopBridge(0.016);
+		gameLoopBridge(0.016);
+		gameLoopBridge(0.016);
+		expect(getTickCount()).toBe(3);
 	});
 });

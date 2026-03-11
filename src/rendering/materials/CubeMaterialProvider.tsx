@@ -173,14 +173,24 @@ function createPBRMaterial(
 		const aoPath = buildAOPath(def);
 		if (aoPath) {
 			const loader = new THREE.TextureLoader();
-			loader.load(aoPath, (aoTex) => {
-				aoTex.wrapS = THREE.RepeatWrapping;
-				aoTex.wrapT = THREE.RepeatWrapping;
-				aoTex.colorSpace = THREE.LinearSRGBColorSpace;
-				material.aoMap = aoTex;
-				material.aoMapIntensity = 1.0;
-				material.needsUpdate = true;
-			});
+			loader.load(
+				aoPath,
+				(aoTex) => {
+					aoTex.wrapS = THREE.RepeatWrapping;
+					aoTex.wrapT = THREE.RepeatWrapping;
+					aoTex.colorSpace = THREE.LinearSRGBColorSpace;
+					material.aoMap = aoTex;
+					material.aoMapIntensity = 1.0;
+					material.needsUpdate = true;
+				},
+				undefined,
+				(error) => {
+					console.warn(
+						`[CubeMaterial] Failed to load AO texture for "${name}":`,
+						error,
+					);
+				},
+			);
 		}
 	}
 
@@ -238,19 +248,28 @@ function resolveMaterial(materialType: string): THREE.MeshStandardMaterial {
 		texturesProbing.add(materialType);
 		const texPaths = buildTexturePaths(def);
 
-		probeTexture(texPaths.color).then((available) => {
-			texturesProbing.delete(materialType);
-			if (available) {
-				texturesAvailable.add(materialType);
-				// Create the PBR material so it's cached for next access
-				createPBRMaterial(materialType, def);
-			} else {
+		probeTexture(texPaths.color)
+			.then((available) => {
+				texturesProbing.delete(materialType);
+				if (available) {
+					texturesAvailable.add(materialType);
+					// Create the PBR material so it's cached for next access
+					createPBRMaterial(materialType, def);
+				} else {
+					texturesMissing.add(materialType);
+					console.warn(
+						`[CubeMaterial] Textures not found for "${materialType}" at ${texPaths.color}, using fallback`,
+					);
+				}
+			})
+			.catch((error) => {
+				texturesProbing.delete(materialType);
 				texturesMissing.add(materialType);
 				console.warn(
-					`[CubeMaterial] Textures not found for "${materialType}" at ${texPaths.color}, using fallback`,
+					`[CubeMaterial] Error probing textures for "${materialType}":`,
+					error,
 				);
-			}
-		});
+			});
 	}
 
 	// Return fallback immediately -- the PBR version will be used on subsequent
@@ -339,18 +358,27 @@ export function usePreloadCubeMaterials(): void {
 			texturesProbing.add(name);
 			const texPaths = buildTexturePaths(def);
 
-			probeTexture(texPaths.color).then((available) => {
-				texturesProbing.delete(name);
-				if (available) {
-					texturesAvailable.add(name);
-					createPBRMaterial(name, def);
-				} else {
+			probeTexture(texPaths.color)
+				.then((available) => {
+					texturesProbing.delete(name);
+					if (available) {
+						texturesAvailable.add(name);
+						createPBRMaterial(name, def);
+					} else {
+						texturesMissing.add(name);
+						console.warn(
+							`[CubeMaterial] Preload: textures not found for "${name}" at ${texPaths.color}`,
+						);
+					}
+				})
+				.catch((error) => {
+					texturesProbing.delete(name);
 					texturesMissing.add(name);
 					console.warn(
-						`[CubeMaterial] Preload: textures not found for "${name}" at ${texPaths.color}`,
+						`[CubeMaterial] Preload: error probing "${name}":`,
+						error,
 					);
-				}
-			});
+				});
 		}
 
 		return () => {

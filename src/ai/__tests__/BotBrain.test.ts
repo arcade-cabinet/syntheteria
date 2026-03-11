@@ -1726,6 +1726,96 @@ describe("BotState constants", () => {
 		expect(BotState.GATHER).toBe("gather");
 		expect(BotState.RETURN_TO_BASE).toBe("return_to_base");
 		expect(BotState.FOLLOW).toBe("follow");
+		expect(BotState.PHONE_HOME).toBe("phone_home");
+	});
+});
+
+// ---------------------------------------------------------------------------
+// PHONE_HOME — idle bot moves to nearest Base for guaranteed work
+// ---------------------------------------------------------------------------
+
+describe("BotBrain — PHONE_HOME state", () => {
+	let brain: BotBrain;
+
+	beforeEach(() => {
+		brain = new BotBrain();
+	});
+
+	it("transitions from IDLE to PHONE_HOME when homeBase exists and idle timer expires", () => {
+		const ctx = makeContext({ homeBase: pos(50, 0, 50) });
+
+		// Tick past IDLE_TO_WANDER_TIME (3 seconds)
+		brain.update(3.1, ctx);
+
+		expect(brain.state).toBe(BotState.PHONE_HOME);
+	});
+
+	it("transitions from IDLE to PATROL (not PHONE_HOME) when no homeBase", () => {
+		const ctx = makeContext({ homeBase: null });
+
+		brain.update(3.1, ctx);
+
+		expect(brain.state).toBe(BotState.PATROL);
+	});
+
+	it("PHONE_HOME moves toward homeBase with ARRIVE steering", () => {
+		brain.state = BotState.PHONE_HOME as BotState;
+		brain.stateTime = 0;
+		const homeBase = pos(50, 0, 50);
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			homeBase,
+		});
+
+		const output = brain.update(0.1, ctx);
+
+		expect(output.command).toBe(SteeringCommand.ARRIVE);
+		expect(output.target).toEqual(homeBase);
+	});
+
+	it("transitions to IDLE when arriving near homeBase", () => {
+		brain.state = BotState.PHONE_HOME as BotState;
+		brain.stateTime = 0;
+		const homeBase = pos(3, 0, 3);
+		const ctx = makeContext({
+			position: pos(1, 0, 1), // within 5 units
+			homeBase,
+		});
+
+		const output = brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.IDLE);
+		expect(output.command).toBe(SteeringCommand.STOP);
+	});
+
+	it("reacts to threats while phoning home", () => {
+		brain.state = BotState.PHONE_HOME as BotState;
+		brain.stateTime = 1.0; // past MIN_STATE_DURATION
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			homeBase: pos(50, 0, 50),
+			nearbyEnemies: [makeEnemy("threat_1", pos(5, 0, 5), 50)],
+		});
+
+		const output = brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.SEEK_TARGET);
+		expect(brain.targetId).toBe("threat_1");
+		expect(output.command).toBe(SteeringCommand.SEEK);
+	});
+
+	it("falls back to PATROL if homeBase disappears during PHONE_HOME", () => {
+		brain.state = BotState.PHONE_HOME as BotState;
+		brain.stateTime = 0;
+		const ctx = makeContext({
+			position: pos(0, 0, 0),
+			homeBase: null,
+		});
+
+		const output = brain.update(0.1, ctx);
+
+		expect(brain.state).toBe(BotState.PATROL);
+		expect(output.command).toBe(SteeringCommand.WANDER);
 	});
 });
 

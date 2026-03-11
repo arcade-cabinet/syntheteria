@@ -24,6 +24,7 @@
 
 import {
 	ALL_ACTIONS,
+	BasicHarvest,
 	type GOAPAction,
 	type WorldState,
 	WorldStateKey,
@@ -150,7 +151,7 @@ export class CivilizationGovernor {
 	 * @param worldState - Current GOAP world state for this faction
 	 * @returns The action to execute this tick, or null if idle/planning
 	 */
-	tick(situation: FactionSituation, worldState: WorldState): GOAPAction | null {
+	tick(situation: FactionSituation, worldState: WorldState): GOAPAction {
 		// Apply situational modifiers to personality weights
 		this.effectiveWeights = applySituationalModifiers(
 			this.baseWeights,
@@ -172,7 +173,18 @@ export class CivilizationGovernor {
 		}
 
 		// Execute the current plan
-		return this.executeNextAction();
+		const action = this.executeNextAction();
+		if (action) return action;
+
+		// Fallback: force gather_resources goal and replan
+		this.currentGoal = CivGoal.GATHER_RESOURCES;
+		this.replan(worldState);
+		const fallbackAction = this.executeNextAction();
+		if (fallbackAction) return fallbackAction;
+
+		// Ultimate fallback: BasicHarvest with phone-home flag.
+		// This GUARANTEES the governor never returns null — bots always have work.
+		return { ...BasicHarvest, needsBaseAssignment: true };
 	}
 
 	/**

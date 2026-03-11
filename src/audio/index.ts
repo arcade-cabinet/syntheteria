@@ -92,6 +92,46 @@ export {
 	onUIInteraction,
 } from "./AudioEventBridge";
 
+// Factory and combat SFX library (config-driven)
+export {
+	playFurnaceRoar,
+	playHydraulicPress,
+	playMagneticHum,
+	playBeltClank,
+	playLaserShot,
+	playCombatImpact,
+} from "./SFXLibrary";
+
+// Per-biome ambient soundscapes with crossfading
+export {
+	setBiome,
+	stopBiomeAmbience,
+	getActiveBiome,
+	isBiomeAmbienceActive,
+	type BiomeId,
+} from "./BiomeAmbience";
+
+// Adaptive music system
+export {
+	startAdaptiveMusic,
+	stopAdaptiveMusic,
+	setMusicState,
+	getMusicState,
+	isAdaptiveMusicRunning,
+	type MusicState,
+} from "./AdaptiveMusic";
+
+// Audio quality tier integration
+export {
+	applyAudioQuality,
+	acquireVoice,
+	releaseVoice,
+	getActiveVoiceCount,
+	isReverbAllowed,
+	isSpatialAllowed,
+	getMaxPolyphony,
+} from "./AudioQuality";
+
 // R3F audio system component
 export { AudioSystem } from "./AudioSystem";
 

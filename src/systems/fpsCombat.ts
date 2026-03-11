@@ -15,7 +15,8 @@
 import { config } from "../../config";
 import type { UnitEntity } from "../ecs/types";
 import { hasFunctionalComponent } from "../ecs/types";
-import { getActivePlayerBot, units, world } from "../ecs/world";
+import { getActivePlayerBot, world } from "../ecs/world";
+import { units } from "../ecs/koota/compat";
 import { addResource } from "./resources";
 
 // ---------------------------------------------------------------------------

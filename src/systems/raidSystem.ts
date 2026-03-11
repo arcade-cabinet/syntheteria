@@ -15,7 +15,7 @@
 
 import { config } from "../../config";
 import type { Entity, UnitEntity, Vec3 } from "../ecs/types";
-import { units } from "../ecs/world";
+import { units } from "../ecs/koota/compat";
 import { findPath } from "./pathfinding";
 
 // ---------------------------------------------------------------------------

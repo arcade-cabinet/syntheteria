@@ -30,6 +30,10 @@ function sfxBus(): Tone.Volume | null {
 	return getCategoryBus("sfx");
 }
 
+function uiBus(): Tone.Volume | null {
+	return getCategoryBus("ui");
+}
+
 function combatVolDb(): number {
 	return 20 * Math.log10(Math.max(0.001, audioConfig.combatSfxVolume ?? 0.8));
 }
@@ -289,7 +293,7 @@ export function playMachineHum(): (() => void) | null {
  */
 export function playAlert(): void {
 	if (!isAudioInitialized()) return;
-	const bus = sfxBus();
+	const bus = uiBus() ?? sfxBus();
 	if (!bus) return;
 
 	const synth = new Tone.Synth({
@@ -398,7 +402,7 @@ export function playMetalImpact(): void {
  */
 export function playUIBeep(): void {
 	if (!isAudioInitialized()) return;
-	const bus = sfxBus();
+	const bus = uiBus() ?? sfxBus();
 	if (!bus) return;
 
 	const synth = new Tone.Synth({

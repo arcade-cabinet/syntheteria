@@ -138,6 +138,7 @@ describe("startSmelting", () => {
 
 describe("updateFurnaceProcessing", () => {
 	it("advances timer when powered", () => {
+		const recipe = DEFAULT_RECIPES.find((r) => r.input === "scrap_iron")!;
 		const furnace = makeFurnaceWithHopper(["scrap_iron"]);
 		setFurnacePowered(furnace.id, true);
 		startSmelting(furnace.id);
@@ -146,7 +147,7 @@ describe("updateFurnaceProcessing", () => {
 
 		expect(result).not.toBeNull();
 		expect(result!.completed).toBe(false);
-		expect(furnace.progress).toBeCloseTo(3 / 10);
+		expect(furnace.progress).toBeCloseTo(3 / recipe.smeltTime);
 	});
 
 	it("does NOT advance timer when unpowered", () => {
@@ -172,12 +173,12 @@ describe("updateFurnaceProcessing", () => {
 		setFurnacePowered(furnace.id, true);
 		startSmelting(furnace.id);
 
-		// scrap_iron recipe: smeltTime = 10
+		// scrap_iron recipe: smeltTime = 10, output = tool_grabber_t1
 		const result = updateFurnaceProcessing(furnace.id, 10);
 
 		expect(result).not.toBeNull();
 		expect(result!.completed).toBe(true);
-		expect(result!.outputMaterial).toBe("iron_plate");
+		expect(result!.outputMaterial).toBe("tool_grabber_t1");
 	});
 
 	it("completes when timer exceeds smeltTime", () => {
@@ -185,12 +186,12 @@ describe("updateFurnaceProcessing", () => {
 		setFurnacePowered(furnace.id, true);
 		startSmelting(furnace.id);
 
-		// copper recipe: smeltTime = 8
-		const result = updateFurnaceProcessing(furnace.id, 12);
+		// copper recipe: smeltTime = 12, output = component_wire_bundle
+		const result = updateFurnaceProcessing(furnace.id, 20);
 
 		expect(result).not.toBeNull();
 		expect(result!.completed).toBe(true);
-		expect(result!.outputMaterial).toBe("wire_bundle");
+		expect(result!.outputMaterial).toBe("component_wire_bundle");
 	});
 
 	it("returns output position offset from furnace position", () => {
@@ -252,33 +253,33 @@ describe("smelt time matches config", () => {
 		// At 0.01 more (total 10.0), should complete
 		const r2 = updateFurnaceProcessing(furnace.id, 0.01);
 		expect(r2!.completed).toBe(true);
-		expect(r2!.outputMaterial).toBe("iron_plate");
+		expect(r2!.outputMaterial).toBe("tool_grabber_t1");
 	});
 
-	it("copper takes 8 seconds", () => {
+	it("copper takes 12 seconds", () => {
 		const furnace = makeFurnaceWithHopper(["copper"]);
 		setFurnacePowered(furnace.id, true);
 		startSmelting(furnace.id);
 
-		const r1 = updateFurnaceProcessing(furnace.id, 7.99);
+		const r1 = updateFurnaceProcessing(furnace.id, 11.99);
 		expect(r1!.completed).toBe(false);
 
 		const r2 = updateFurnaceProcessing(furnace.id, 0.01);
 		expect(r2!.completed).toBe(true);
-		expect(r2!.outputMaterial).toBe("wire_bundle");
+		expect(r2!.outputMaterial).toBe("component_wire_bundle");
 	});
 
-	it("silicon takes 15 seconds", () => {
+	it("silicon takes 25 seconds", () => {
 		const furnace = makeFurnaceWithHopper(["silicon"]);
 		setFurnacePowered(furnace.id, true);
 		startSmelting(furnace.id);
 
-		const r1 = updateFurnaceProcessing(furnace.id, 14.99);
+		const r1 = updateFurnaceProcessing(furnace.id, 24.99);
 		expect(r1!.completed).toBe(false);
 
 		const r2 = updateFurnaceProcessing(furnace.id, 0.01);
 		expect(r2!.completed).toBe(true);
-		expect(r2!.outputMaterial).toBe("circuit_board");
+		expect(r2!.outputMaterial).toBe("component_circuit_board");
 	});
 });
 
@@ -296,7 +297,7 @@ describe("auto-start next hopper item", () => {
 		const result = updateFurnaceProcessing(furnace.id, 10);
 
 		expect(result!.completed).toBe(true);
-		expect(result!.outputMaterial).toBe("iron_plate");
+		expect(result!.outputMaterial).toBe("tool_grabber_t1");
 
 		// Furnace should now be processing copper
 		expect(furnace.isProcessing).toBe(true);
@@ -326,17 +327,17 @@ describe("auto-start next hopper item", () => {
 
 		// Complete scrap_iron (10s)
 		const r1 = updateFurnaceProcessing(furnace.id, 10);
-		expect(r1!.outputMaterial).toBe("iron_plate");
+		expect(r1!.outputMaterial).toBe("tool_grabber_t1");
 		expect(furnace.currentItem).toBe("copper");
 
-		// Complete copper (8s)
-		const r2 = updateFurnaceProcessing(furnace.id, 8);
-		expect(r2!.outputMaterial).toBe("wire_bundle");
+		// Complete copper (12s)
+		const r2 = updateFurnaceProcessing(furnace.id, 12);
+		expect(r2!.outputMaterial).toBe("component_wire_bundle");
 		expect(furnace.currentItem).toBe("silicon");
 
-		// Complete silicon (15s)
-		const r3 = updateFurnaceProcessing(furnace.id, 15);
-		expect(r3!.outputMaterial).toBe("circuit_board");
+		// Complete silicon (25s)
+		const r3 = updateFurnaceProcessing(furnace.id, 25);
+		expect(r3!.outputMaterial).toBe("component_circuit_board");
 		expect(furnace.isProcessing).toBe(false);
 	});
 });
@@ -399,7 +400,7 @@ describe("getSmeltingProgress", () => {
 		setFurnacePowered(furnace.id, true);
 		startSmelting(furnace.id);
 
-		updateFurnaceProcessing(furnace.id, 8);
+		updateFurnaceProcessing(furnace.id, 12);
 
 		// After completion with no more hopper items, progress resets
 		expect(getSmeltingProgress(furnace.id)).toBe(0);
@@ -411,25 +412,25 @@ describe("getSmeltingProgress", () => {
 // ---------------------------------------------------------------------------
 
 describe("DEFAULT_RECIPES", () => {
-	it("contains scrap_iron -> iron_plate recipe", () => {
+	it("contains scrap_iron -> tool_grabber_t1 recipe", () => {
 		const recipe = DEFAULT_RECIPES.find((r) => r.input === "scrap_iron");
 		expect(recipe).toBeDefined();
-		expect(recipe!.output).toBe("iron_plate");
+		expect(recipe!.output).toBe("tool_grabber_t1");
 		expect(recipe!.smeltTime).toBe(10);
 	});
 
-	it("contains copper -> wire_bundle recipe", () => {
+	it("contains copper -> component_wire_bundle recipe", () => {
 		const recipe = DEFAULT_RECIPES.find((r) => r.input === "copper");
 		expect(recipe).toBeDefined();
-		expect(recipe!.output).toBe("wire_bundle");
-		expect(recipe!.smeltTime).toBe(8);
+		expect(recipe!.output).toBe("component_wire_bundle");
+		expect(recipe!.smeltTime).toBe(12);
 	});
 
-	it("contains silicon -> circuit_board recipe", () => {
+	it("contains silicon -> component_circuit_board recipe", () => {
 		const recipe = DEFAULT_RECIPES.find((r) => r.input === "silicon");
 		expect(recipe).toBeDefined();
-		expect(recipe!.output).toBe("circuit_board");
-		expect(recipe!.smeltTime).toBe(15);
+		expect(recipe!.output).toBe("component_circuit_board");
+		expect(recipe!.smeltTime).toBe(25);
 	});
 });
 
@@ -456,7 +457,7 @@ describe("power interaction with timer", () => {
 		setFurnacePowered(furnace.id, true);
 		const result = updateFurnaceProcessing(furnace.id, 7);
 		expect(result!.completed).toBe(true);
-		expect(result!.outputMaterial).toBe("iron_plate");
+		expect(result!.outputMaterial).toBe("tool_grabber_t1");
 	});
 
 	it("furnace state reflects powered status via getFurnaceState", () => {

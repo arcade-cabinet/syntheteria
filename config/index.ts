@@ -39,6 +39,7 @@ import cameraConfig from './camera.json';
 import particlesConfig from './particles.json';
 import interactionConfig from './interaction.json';
 import biomesConfig from './biomes.json';
+import economyConfig from './economy.json';
 
 export const config = {
   units: unitsConfig,
@@ -79,6 +80,7 @@ export const config = {
   particles: particlesConfig,
   interaction: interactionConfig,
   biomes: biomesConfig,
+  economy: economyConfig,
 } as const;
 
 export type GameConfig = typeof config;

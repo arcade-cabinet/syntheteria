@@ -12,7 +12,8 @@ import { config } from "../../config";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { createFragment, getTerrainHeight, isWalkable } from "../ecs/terrain";
 import type { Entity, UnitEntity, Vec3 } from "../ecs/types";
-import { units, world } from "../ecs/world";
+import { world } from "../ecs/world";
+import { units } from "../ecs/koota/compat";
 import { findPath } from "./pathfinding";
 
 let nextEnemyId = 0;

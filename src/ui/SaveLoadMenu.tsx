@@ -2,9 +2,12 @@
  * Save/Load menu overlay.
  *
  * Shows 3 manual save slots + 1 autosave slot with save/load/delete actions.
- * Each slot displays timestamp, play time, tick count, and entity counts.
- * Includes confirmation dialogs for overwrite and delete.
+ * Each slot displays a screenshot thumbnail, timestamp, play time, tick count,
+ * and entity counts. Includes confirmation dialogs for overwrite and delete.
  * Loading spinner during save/load operations.
+ *
+ * Thumbnails are captured from the R3F canvas at save time and stored in
+ * localStorage keyed by slot ID (separate from the IndexedDB save payload).
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -20,6 +23,55 @@ import {
 } from "../save/SaveManager";
 
 const MONO = "'Courier New', monospace";
+
+// ---------------------------------------------------------------------------
+// Thumbnail helpers — localStorage-backed, keyed per slot
+// ---------------------------------------------------------------------------
+
+const THUMB_PREFIX = "syntheteria_thumb_";
+const THUMB_W = 160;
+const THUMB_H = 90;
+
+/** Capture a JPEG thumbnail from the Three.js canvas (before next RAF). */
+function captureThumb(): string | null {
+	try {
+		const canvas = document.querySelector<HTMLCanvasElement>("canvas");
+		if (!canvas) return null;
+		const offscreen = document.createElement("canvas");
+		offscreen.width = THUMB_W;
+		offscreen.height = THUMB_H;
+		const ctx = offscreen.getContext("2d");
+		if (!ctx) return null;
+		ctx.drawImage(canvas, 0, 0, THUMB_W, THUMB_H);
+		return offscreen.toDataURL("image/jpeg", 0.6);
+	} catch {
+		return null;
+	}
+}
+
+function saveThumb(slotId: SaveSlotId, dataUrl: string) {
+	try {
+		localStorage.setItem(`${THUMB_PREFIX}${slotId}`, dataUrl);
+	} catch {
+		// Storage quota — ignore
+	}
+}
+
+function loadThumb(slotId: SaveSlotId): string | null {
+	try {
+		return localStorage.getItem(`${THUMB_PREFIX}${slotId}`);
+	} catch {
+		return null;
+	}
+}
+
+function deleteThumb(slotId: SaveSlotId) {
+	try {
+		localStorage.removeItem(`${THUMB_PREFIX}${slotId}`);
+	} catch {
+		// ignore
+	}
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -95,6 +147,9 @@ function ConfirmDialog({
 
 	return (
 		<div
+			role="alertdialog"
+			aria-modal="true"
+			aria-label={message}
 			style={{
 				position: "absolute",
 				inset: 0,
@@ -129,6 +184,7 @@ function ConfirmDialog({
 				<div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
 					<button
 						onClick={onCancel}
+						aria-label="Cancel"
 						style={{
 							background: "rgba(255,255,255,0.05)",
 							color: "#00ffaa88",
@@ -146,6 +202,7 @@ function ConfirmDialog({
 					</button>
 					<button
 						onClick={onConfirm}
+						aria-label={confirmLabel}
 						style={{
 							background: `${confirmColor}22`,
 							color: confirmColor,
@@ -174,6 +231,7 @@ function ConfirmDialog({
 function SaveSlotCard({
 	slotId,
 	info,
+	thumb,
 	busy,
 	onSave,
 	onLoad,
@@ -181,6 +239,7 @@ function SaveSlotCard({
 }: {
 	slotId: SaveSlotId;
 	info: SaveSlotInfo | null;
+	thumb: string | null;
 	busy: boolean;
 	onSave: (slotId: SaveSlotId) => void;
 	onLoad: (slotId: SaveSlotId) => void;
@@ -232,26 +291,65 @@ function SaveSlotCard({
 				)}
 			</div>
 
-			{/* Slot data */}
+			{/* Slot preview + data */}
 			{!isEmpty && info && (
-				<div
-					style={{
-						fontSize: "11px",
-						color: "#00ffaa88",
-						lineHeight: 1.6,
-						marginBottom: "8px",
-					}}
-				>
-					<div>{formatDate(info.updatedAt)}</div>
-					<div>
-						Play time: {formatPlayTime(info.playTimeSeconds)} | Tick:{" "}
-						{info.tickCount}
+				<div style={{ display: "flex", gap: "10px", marginBottom: "8px" }}>
+					{/* Screenshot thumbnail */}
+					<div
+						aria-hidden="true"
+						style={{
+							flexShrink: 0,
+							width: THUMB_W / 2,
+							height: THUMB_H / 2,
+							borderRadius: "3px",
+							overflow: "hidden",
+							background: "rgba(0,0,0,0.5)",
+							border: "1px solid #00ffaa22",
+						}}
+					>
+						{thumb ? (
+							<img
+								src={thumb}
+								alt=""
+								style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+							/>
+						) : (
+							<div
+								style={{
+									width: "100%",
+									height: "100%",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									fontSize: "9px",
+									color: "#00ffaa22",
+									letterSpacing: "0.05em",
+								}}
+							>
+								NO PREVIEW
+							</div>
+						)}
 					</div>
-					<div>
-						Units: {info.unitCount} | Buildings: {info.buildingCount}
-					</div>
-					<div style={{ color: "#00ffaa55" }}>
-						Seed: {seedToPhrase(info.seed)}
+
+					{/* Stats */}
+					<div
+						style={{
+							flex: 1,
+							fontSize: "11px",
+							color: "#00ffaa88",
+							lineHeight: 1.6,
+						}}
+					>
+						<div>{formatDate(info.updatedAt)}</div>
+						<div>
+							{formatPlayTime(info.playTimeSeconds)} | T{info.tickCount}
+						</div>
+						<div>
+							{info.unitCount}u / {info.buildingCount}b
+						</div>
+						<div style={{ color: "#00ffaa55" }}>
+							{seedToPhrase(info.seed)}
+						</div>
 					</div>
 				</div>
 			)}
@@ -265,6 +363,7 @@ function SaveSlotCard({
 						color="#00ffaa"
 						disabled={busy}
 						onClick={() => onSave(slotId)}
+						ariaLabel={`Save colony to ${slotLabel(slotId)}`}
 					/>
 				)}
 
@@ -274,6 +373,7 @@ function SaveSlotCard({
 					color="#00aaff"
 					disabled={busy || isEmpty}
 					onClick={() => onLoad(slotId)}
+					ariaLabel={`Load colony from ${slotLabel(slotId)}`}
 				/>
 
 				{/* Delete button */}
@@ -282,6 +382,7 @@ function SaveSlotCard({
 					color="#ff4444"
 					disabled={busy || isEmpty}
 					onClick={() => onDelete(slotId)}
+					ariaLabel={`Delete save in ${slotLabel(slotId)}`}
 				/>
 			</div>
 		</div>
@@ -293,15 +394,18 @@ function SlotButton({
 	color,
 	disabled,
 	onClick,
+	ariaLabel,
 }: {
 	label: string;
 	color: string;
 	disabled?: boolean;
 	onClick: () => void;
+	ariaLabel?: string;
 }) {
 	return (
 		<button
 			onClick={disabled ? undefined : onClick}
+			aria-label={ariaLabel}
 			disabled={disabled}
 			style={{
 				flex: 1,
@@ -375,6 +479,9 @@ export function SaveLoadMenu({
 	onLoadComplete?: () => void;
 }) {
 	const [slots, setSlots] = useState<Map<SaveSlotId, SaveSlotInfo>>(new Map());
+	const [thumbs, setThumbs] = useState<Map<SaveSlotId, string | null>>(
+		new Map(),
+	);
 	const [loading, setLoading] = useState(true);
 	const [busy, setBusy] = useState(false);
 	const [busyMessage, setBusyMessage] = useState("");
@@ -390,6 +497,12 @@ export function SaveLoadMenu({
 				map.set(info.slotId, info);
 			}
 			setSlots(map);
+			// Reload thumbnails alongside slots
+			const tmap = new Map<SaveSlotId, string | null>();
+			for (const slotId of ALL_SLOT_IDS) {
+				tmap.set(slotId, loadThumb(slotId));
+			}
+			setThumbs(tmap);
 		} catch (err) {
 			console.error("[SaveLoadMenu] Failed to load slots:", err);
 		} finally {
@@ -417,11 +530,16 @@ export function SaveLoadMenu({
 	};
 
 	const performSave = async (slotId: SaveSlotId) => {
+		// Capture thumbnail before closing/hiding the game view
+		const thumb = captureThumb();
 		setBusy(true);
 		setBusyMessage("SAVING");
 		setConfirm(null);
 		try {
 			await saveGame(slotId);
+			if (thumb) {
+				saveThumb(slotId, thumb);
+			}
 			await refreshSlots();
 			flash("Save complete");
 		} catch (err) {
@@ -466,6 +584,7 @@ export function SaveLoadMenu({
 		setConfirm(null);
 		try {
 			await deleteSave(slotId);
+			deleteThumb(slotId);
 			await refreshSlots();
 			flash("Save deleted");
 		} catch (err) {
@@ -499,6 +618,9 @@ export function SaveLoadMenu({
 
 	return (
 		<div
+			role="dialog"
+			aria-modal="true"
+			aria-label="Save and load colony"
 			style={{
 				position: "absolute",
 				inset: 0,
@@ -530,7 +652,7 @@ export function SaveLoadMenu({
 					border: "1px solid #00ffaa33",
 					borderRadius: "10px",
 					padding: "20px",
-					width: "min(380px, 90vw)",
+					width: "min(420px, 90vw)",
 					maxHeight: "85vh",
 					overflowY: "auto",
 					position: "relative",
@@ -556,6 +678,7 @@ export function SaveLoadMenu({
 					</div>
 					<button
 						onClick={onClose}
+						aria-label="Close save menu"
 						style={{
 							background: "none",
 							border: "1px solid #00ffaa33",
@@ -573,19 +696,21 @@ export function SaveLoadMenu({
 				</div>
 
 				{/* Status message */}
-				{statusMessage && (
-					<div
-						style={{
-							textAlign: "center",
-							fontSize: "12px",
-							color: "#00ffaa88",
-							marginBottom: "12px",
-							letterSpacing: "0.05em",
-						}}
-					>
-						{statusMessage}
-					</div>
-				)}
+				<div
+					role="status"
+					aria-live="polite"
+					aria-atomic="true"
+					style={{
+						textAlign: "center",
+						fontSize: "12px",
+						color: "#00ffaa88",
+						marginBottom: statusMessage ? "12px" : "0",
+						letterSpacing: "0.05em",
+						minHeight: statusMessage ? undefined : "0",
+					}}
+				>
+					{statusMessage ?? ""}
+				</div>
 
 				{/* Save slots */}
 				<div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -594,6 +719,7 @@ export function SaveLoadMenu({
 							key={slotId}
 							slotId={slotId}
 							info={slots.get(slotId) ?? null}
+							thumb={thumbs.get(slotId) ?? null}
 							busy={busy}
 							onSave={handleSave}
 							onLoad={handleLoad}

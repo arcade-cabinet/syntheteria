@@ -11,6 +11,14 @@
  * - Reset clears game over state
  */
 
+// Compat layer: defer world access until iteration time to avoid circular init issues
+jest.mock("../../ecs/koota/compat", () => ({
+	get playerBots() {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		return require("../../ecs/world").playerBots;
+	},
+}));
+
 // Mock questSystem — control quest completion state
 jest.mock("../questSystem", () => ({
 	getQuestSequence: jest.fn(() => [

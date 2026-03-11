@@ -34,6 +34,7 @@ import { resetHUDState, updateBotInfo, updateCoords } from "./hudState";
 import { resetWeather, setRngSeed as setWeatherRngSeed } from "./weatherSystem";
 import { resetEconomy } from "./economySimulation";
 import { registerBot, resetBotFleet } from "./botFleetManager";
+import { BaseAgent } from "../ai/base/BaseAgent";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -60,6 +61,20 @@ export interface NewGameOptions {
 }
 
 /**
+ * Simplified new game configuration — the public-facing interface.
+ *
+ * Maps to NewGameOptions internally. Provides a cleaner API for the
+ * pregame lobby / GDD-010 initialization sequence.
+ */
+export interface NewGameConfig {
+	playerRace: string;
+	mapSize: number;
+	mapType: string;
+	aiOpponents: string[];
+	difficulty: string;
+}
+
+/**
  * Result of a new game initialization attempt.
  */
 export interface NewGameResult {
@@ -70,6 +85,8 @@ export interface NewGameResult {
 	depositCount: number;
 	aiFactionCount: number;
 	biomeCount: number;
+	alienHiveCount: number;
+	otterGuidePosition: { x: number; z: number } | null;
 	errors: string[];
 }
 
@@ -126,6 +143,23 @@ const SPAWN_VISION_RADIUS = 10;
 /** Starter cubes placed near the player. */
 const STARTER_CUBE_TYPES = ["scrap_iron", "scrap_iron", "scrap_iron", "copper", "copper"];
 
+/** Alien hive types for the machine planet. */
+const ALIEN_HIVE_TYPES = [
+	"feral_nest",
+	"scrap_hive",
+	"signal_den",
+	"rust_colony",
+] as const;
+
+/** Minimum distance from start positions to place alien hives. */
+const HIVE_MIN_DISTANCE_FRACTION = 0.2;
+
+/** Target hive density: 1 hive per this many square grid cells. */
+const HIVE_AREA_PER_HIVE = 5000;
+
+/** Otter guide offset distance from player spawn. */
+const OTTER_GUIDE_OFFSET = 4;
+
 // ---------------------------------------------------------------------------
 // Config references
 // ---------------------------------------------------------------------------
@@ -138,6 +172,15 @@ const mapPresetsConfig = config.mapPresets;
 // ---------------------------------------------------------------------------
 
 let lastResult: NewGameResult | null = null;
+
+/** BaseAgent instances keyed by faction ID. One per starting base. */
+const baseAgents = new Map<string, BaseAgent>();
+
+/** Alien hives placed during initialization. */
+let placedHives: AlienHiveData[] = [];
+
+/** Otter guide Pip data from initialization. */
+let otterGuideData: OtterGuideData | null = null;
 
 // ---------------------------------------------------------------------------
 // Public API — Difficulty modifiers
@@ -297,6 +340,188 @@ export function validateOptions(options: NewGameOptions): ValidationResult {
 }
 
 // ---------------------------------------------------------------------------
+// Public API — Alien hive placement
+// ---------------------------------------------------------------------------
+
+/** Data for a placed alien hive. */
+export interface AlienHiveData {
+	id: string;
+	position: { x: number; z: number };
+	type: string;
+}
+
+/**
+ * Place alien hives in unexplored territory, far from all start positions.
+ *
+ * Hive count scales with world area. Each hive is placed at least
+ * `worldSize * HIVE_MIN_DISTANCE_FRACTION` units from any start position
+ * and at least `worldSize * 0.1` units from other hives.
+ *
+ * Deterministic: identical seed + config produces identical hive placement.
+ */
+export function placeAlienHives(
+	worldData: WorldData,
+	worldSize: number,
+	startPositions: Array<{ x: number; z: number }>,
+	rng: () => number,
+): AlienHiveData[] {
+	const targetCount = Math.max(2, Math.floor((worldSize * worldSize) / HIVE_AREA_PER_HIVE));
+	const minDistFromStart = worldSize * HIVE_MIN_DISTANCE_FRACTION;
+	const minDistBetweenHives = worldSize * 0.1;
+
+	const hives: AlienHiveData[] = [];
+	const maxAttempts = targetCount * 30;
+	let attempts = 0;
+
+	while (hives.length < targetCount && attempts < maxAttempts) {
+		attempts++;
+
+		const gx = Math.floor(rng() * worldSize);
+		const gz = Math.floor(rng() * worldSize);
+
+		// Skip water cells
+		if (worldData.heightmap[gz]?.[gx] === undefined || worldData.heightmap[gz][gx] < 0.2) continue;
+
+		// Must be far from all start positions
+		const tooCloseToStart = startPositions.some((sp) => {
+			const dx = sp.x - gx;
+			const dz = sp.z - gz;
+			return Math.sqrt(dx * dx + dz * dz) < minDistFromStart;
+		});
+		if (tooCloseToStart) continue;
+
+		// Must be far from other hives
+		const tooCloseToHive = hives.some((h) => {
+			const dx = h.position.x - gx;
+			const dz = h.position.z - gz;
+			return Math.sqrt(dx * dx + dz * dz) < minDistBetweenHives;
+		});
+		if (tooCloseToHive) continue;
+
+		const typeIdx = Math.floor(rng() * ALIEN_HIVE_TYPES.length);
+		hives.push({
+			id: `hive_${hives.length}`,
+			position: { x: gx, z: gz },
+			type: ALIEN_HIVE_TYPES[typeIdx],
+		});
+	}
+
+	return hives;
+}
+
+// ---------------------------------------------------------------------------
+// Public API — Otter guide placement
+// ---------------------------------------------------------------------------
+
+/** Data for the otter guide Pip. */
+export interface OtterGuideData {
+	id: string;
+	position: { x: number; z: number };
+	name: string;
+}
+
+/**
+ * Place the otter guide hologram Pip near the player's start position.
+ *
+ * Pip is offset by OTTER_GUIDE_OFFSET units at a seeded angle from
+ * the player spawn so it's visible but not blocking.
+ */
+export function placeOtterGuide(
+	playerSpawn: { x: number; z: number },
+	rng: () => number,
+): OtterGuideData {
+	const angle = rng() * Math.PI * 2;
+	return {
+		id: "otter_pip",
+		position: {
+			x: Math.round(playerSpawn.x + Math.cos(angle) * OTTER_GUIDE_OFFSET),
+			z: Math.round(playerSpawn.z + Math.sin(angle) * OTTER_GUIDE_OFFSET),
+		},
+		name: "Pip",
+	};
+}
+
+// ---------------------------------------------------------------------------
+// Public API — Camera transition
+// ---------------------------------------------------------------------------
+
+/** Camera transition phase for the opening sequence. */
+export type CameraPhase = "orbital" | "zoom" | "fps";
+
+/**
+ * Compute the camera transition state for the opening cinematic.
+ *
+ * Timeline:
+ *   0-3s:   Orbital — camera orbits above the terrain, showing the world
+ *   3-5s:   Zoom — camera swoops down toward the player bot
+ *   5s+:    FPS — camera locked to player bot, controls enabled
+ *
+ * @param elapsed - seconds since game start
+ * @param playerPosition - player bot world position
+ */
+export function getCameraTransition(
+	elapsed: number,
+	playerPosition: { x: number; y: number; z: number },
+): {
+	phase: CameraPhase;
+	progress: number;
+	cameraPosition: { x: number; y: number; z: number };
+	lookAt: { x: number; y: number; z: number };
+} {
+	const ORBITAL_DURATION = 3.0;
+	const ZOOM_DURATION = 2.0;
+
+	if (elapsed < ORBITAL_DURATION) {
+		const progress = elapsed / ORBITAL_DURATION;
+		const angle = progress * Math.PI * 0.5;
+		const radius = 40;
+		const height = 50;
+
+		return {
+			phase: "orbital",
+			progress,
+			cameraPosition: {
+				x: playerPosition.x + Math.cos(angle) * radius,
+				y: height,
+				z: playerPosition.z + Math.sin(angle) * radius,
+			},
+			lookAt: playerPosition,
+		};
+	}
+
+	if (elapsed < ORBITAL_DURATION + ZOOM_DURATION) {
+		const progress = (elapsed - ORBITAL_DURATION) / ZOOM_DURATION;
+		const smooth = progress * progress * (3 - 2 * progress);
+
+		return {
+			phase: "zoom",
+			progress,
+			cameraPosition: {
+				x: playerPosition.x + Math.cos(Math.PI * 0.5) * 40 * (1 - smooth),
+				y: 50 * (1 - smooth) + (playerPosition.y + 1.6) * smooth,
+				z: playerPosition.z + Math.sin(Math.PI * 0.5) * 40 * (1 - smooth),
+			},
+			lookAt: playerPosition,
+		};
+	}
+
+	return {
+		phase: "fps",
+		progress: 1,
+		cameraPosition: {
+			x: playerPosition.x,
+			y: playerPosition.y + 1.6,
+			z: playerPosition.z,
+		},
+		lookAt: {
+			x: playerPosition.x,
+			y: playerPosition.y + 1.6,
+			z: playerPosition.z + 1,
+		},
+	};
+}
+
+// ---------------------------------------------------------------------------
 // Public API — Main orchestrator
 // ---------------------------------------------------------------------------
 
@@ -331,6 +556,8 @@ export function initNewGame(options: NewGameOptions): NewGameResult {
 			depositCount: 0,
 			aiFactionCount: 0,
 			biomeCount: 0,
+			alienHiveCount: 0,
+			otterGuidePosition: null,
 			errors: validation.errors,
 		};
 	}
@@ -368,6 +595,8 @@ export function initNewGame(options: NewGameOptions): NewGameResult {
 			depositCount: 0,
 			aiFactionCount: 0,
 			biomeCount: 0,
+			alienHiveCount: 0,
+			otterGuidePosition: null,
 			errors,
 		};
 	}
@@ -430,6 +659,27 @@ export function initNewGame(options: NewGameOptions): NewGameResult {
 		});
 	}
 
+	// --- Step 6b: Create BaseAgents for all starting bases ---
+	baseAgents.clear();
+
+	// Player base agent
+	const playerBaseAgent = new BaseAgent(
+		`base_${options.playerFaction}`,
+		options.playerFaction,
+		{ x: playerSpawn.x, y: 0, z: playerSpawn.z },
+	);
+	baseAgents.set(options.playerFaction, playerBaseAgent);
+
+	// AI base agents
+	for (const aiData of aiFactionData) {
+		const aiBaseAgent = new BaseAgent(
+			`base_${aiData.faction}`,
+			aiData.faction,
+			{ x: aiData.spawnPosition.x, y: 0, z: aiData.spawnPosition.z },
+		);
+		baseAgents.set(aiData.faction, aiBaseAgent);
+	}
+
 	// --- Step 7: Initialize world systems ---
 
 	// Fog of war — init maps for all factions, reveal around spawn points
@@ -487,7 +737,21 @@ export function initNewGame(options: NewGameOptions): NewGameResult {
 		startTutorial(0);
 	}
 
-	// --- Step 9: Place starter resources near player ---
+	// --- Step 9: Place alien hives in unexplored territory ---
+	const allSpawnPositions = [
+		playerSpawn,
+		...aiFactionData.map((ai) => ai.spawnPosition),
+	];
+	const hiveRng = makePRNG(worldSeed + 4000);
+	const alienHives = placeAlienHives(worldData, worldSize, allSpawnPositions, hiveRng);
+	placedHives = alienHives;
+
+	// --- Step 10: Place otter guide Pip near player spawn ---
+	const otterRng = makePRNG(worldSeed + 5000);
+	const otterGuide = placeOtterGuide(playerSpawn, otterRng);
+	otterGuideData = otterGuide;
+
+	// --- Step 11: Place starter resources near player ---
 	try {
 		const starterRng = makePRNG(worldSeed + 3000);
 		for (const cubeType of STARTER_CUBE_TYPES) {
@@ -517,6 +781,8 @@ export function initNewGame(options: NewGameOptions): NewGameResult {
 		depositCount: actualDepositCount,
 		aiFactionCount: aiFactionData.length,
 		biomeCount,
+		alienHiveCount: alienHives.length,
+		otterGuidePosition: otterGuide.position,
 		errors,
 	};
 
@@ -535,6 +801,102 @@ export function getLastResult(): NewGameResult | null {
 	return lastResult ? { ...lastResult, errors: [...lastResult.errors] } : null;
 }
 
+/**
+ * Get all BaseAgent instances created during initialization.
+ */
+export function getBaseAgents(): BaseAgent[] {
+	return Array.from(baseAgents.values());
+}
+
+/**
+ * Get the BaseAgent for a specific faction, or null if not found.
+ */
+export function getBaseAgent(factionId: string): BaseAgent | null {
+	return baseAgents.get(factionId) ?? null;
+}
+
+/**
+ * Get all alien hives placed during initialization.
+ */
+export function getAlienHives(): AlienHiveData[] {
+	return [...placedHives];
+}
+
+/**
+ * Get the otter guide Pip data, or null if not yet initialized.
+ */
+export function getOtterGuide(): OtterGuideData | null {
+	return otterGuideData ? { ...otterGuideData } : null;
+}
+
+// ---------------------------------------------------------------------------
+// Public API — NewGameConfig adapter
+// ---------------------------------------------------------------------------
+
+/**
+ * Map a mapSize number to the closest size category.
+ */
+function mapSizeToCategory(size: number): "small" | "medium" | "large" {
+	if (size <= 120) return "small";
+	if (size <= 300) return "medium";
+	return "large";
+}
+
+/**
+ * Validate and normalize a difficulty string.
+ * Returns the difficulty or null if invalid.
+ */
+function normalizeDifficulty(
+	difficulty: string,
+): "easy" | "normal" | "hard" | "brutal" | null {
+	const valid = ["easy", "normal", "hard", "brutal"];
+	if (valid.includes(difficulty)) {
+		return difficulty as "easy" | "normal" | "hard" | "brutal";
+	}
+	return null;
+}
+
+/**
+ * Initialize a new game from a NewGameConfig.
+ *
+ * This is a convenience adapter over initNewGame(NewGameOptions).
+ * It maps the simplified config interface to the full options format.
+ *
+ * @param config - Simplified new game configuration
+ * @returns NewGameResult with initialization outcome
+ */
+export function initFromConfig(gameConfig: NewGameConfig): NewGameResult {
+	const difficulty = normalizeDifficulty(gameConfig.difficulty);
+
+	if (!difficulty) {
+		return {
+			success: false,
+			worldSeed: 0,
+			playerEntityId: "",
+			spawnPosition: { x: 0, z: 0 },
+			depositCount: 0,
+			aiFactionCount: 0,
+			biomeCount: 0,
+			alienHiveCount: 0,
+			otterGuidePosition: null,
+			errors: [
+				`Invalid difficulty "${gameConfig.difficulty}". Valid: easy, normal, hard, brutal`,
+			],
+		};
+	}
+
+	const options: NewGameOptions = {
+		playerFaction: gameConfig.playerRace,
+		mapPreset: gameConfig.mapType,
+		difficulty,
+		enableTutorial: true,
+		aiFactions: gameConfig.aiOpponents,
+		mapSize: mapSizeToCategory(gameConfig.mapSize),
+	};
+
+	return initNewGame(options);
+}
+
 // ---------------------------------------------------------------------------
 // Reset
 // ---------------------------------------------------------------------------
@@ -544,6 +906,17 @@ export function getLastResult(): NewGameResult | null {
  */
 export function reset(): void {
 	lastResult = null;
+
+	// Clear BaseAgents
+	for (const agent of baseAgents.values()) {
+		agent.reset();
+	}
+	baseAgents.clear();
+
+	// Clear alien hives and otter guide
+	placedHives = [];
+	otterGuideData = null;
+
 	resetBiomeGrid();
 	resetDeposits();
 	resetFogOfWar();

@@ -167,8 +167,8 @@ describe("wall segment HP", () => {
 		expect(segments[0].maxHp).toBe(expectedHp);
 	});
 
-	it("scrap_metal has lower HP than iron", () => {
-		registerXLine(0, 2, "scrap_metal");
+	it("scrap_iron has lower HP than iron", () => {
+		registerXLine(0, 2, "scrap_iron");
 		const scrapSegments = detectWallSegments();
 		_resetStackRegistry();
 		_resetWallBuilding();
@@ -379,16 +379,16 @@ describe("getCoverBonus", () => {
 // ---------------------------------------------------------------------------
 
 describe("MATERIAL_WALL_HP ordering", () => {
-	it("scrap < iron < steel < chrome < titanium", () => {
-		const scrap = MATERIAL_WALL_HP.scrap_metal ?? 0;
+	it("scrap_iron < iron < steel < advanced_alloy", () => {
+		const scrap = MATERIAL_WALL_HP.scrap_iron ?? 0;
 		const iron = MATERIAL_WALL_HP.iron ?? 0;
 		const steel = MATERIAL_WALL_HP.steel ?? 0;
-		const chrome = MATERIAL_WALL_HP.chrome ?? 0;
+		const advanced = MATERIAL_WALL_HP.advanced_alloy ?? 0;
 		const titanium = MATERIAL_WALL_HP.titanium ?? 0;
 
 		expect(scrap).toBeLessThan(iron);
-		expect(iron).toBeLessThan(steel);
-		expect(steel).toBeLessThan(chrome);
-		expect(chrome).toBeLessThan(titanium);
+		expect(iron).toBeLessThan(titanium);
+		expect(titanium).toBeLessThan(steel);
+		expect(steel).toBeLessThan(advanced);
 	});
 });

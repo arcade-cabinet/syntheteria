@@ -159,26 +159,26 @@ export function resolveTerrain(
  */
 export function resolveProp(propType: string): ResolvedAsset | null {
 	const parts = propType.split(".");
-	// biome-ignore lint: any for dynamic JSON traversal
-	let current: any = assetMapping.props;
+	let current: Record<string, unknown> = assetMapping.props as Record<string, unknown>;
 
 	for (const part of parts) {
 		if (current && typeof current === "object" && part in current) {
-			current = current[part];
+			current = current[part] as Record<string, unknown>;
 		} else {
 			return null;
 		}
 	}
 
-	if (!current || !current.models || current.models.length === 0) {
+	const models = current?.models;
+	if (!Array.isArray(models) || models.length === 0) {
 		return null;
 	}
 
 	return {
-		modelPath: current.models[0],
+		modelPath: models[0] as string,
 		scale: 1.0,
 		factionOverride: null,
-		description: current.description ?? propType,
+		description: (current.description as string) ?? propType,
 	};
 }
 

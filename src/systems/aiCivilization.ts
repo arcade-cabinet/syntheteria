@@ -24,6 +24,7 @@ import {
 	consumeAggressionReady,
 	calculateRaidStrength,
 } from "./stormSystem";
+import { registerTradeTransfer, proposeTrade, getRelation } from "./diplomacySystem";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -92,6 +93,18 @@ export interface ProductionTarget {
 	urgency: number;
 }
 
+/**
+ * Result of evaluating a faction's trade needs.
+ * Surplus materials are offered; deficit materials are requested.
+ * Amounts are denominated in cube counts (integer ≥ 0).
+ */
+export interface TradeNeeds {
+	/** Materials this faction can afford to trade away. Key = material type. */
+	surplus: Record<string, number>;
+	/** Materials this faction needs. Key = material type. */
+	deficit: Record<string, number>;
+}
+
 /** Evaluated candidate position for an outpost. */
 export interface TerritoryCandidate {
 	position: { x: number; z: number };
@@ -110,6 +123,7 @@ export interface TerritoryCandidate {
 const civConfigs = config.civilizations;
 const territoryCfg = config.territory;
 const economyCfg = config.economy;
+const diplomacyCfg = config.diplomacy;
 
 /** Ticks per phase before auto-transitioning to the next. */
 const PHASE_DURATION = 50;
@@ -596,6 +610,156 @@ function updateThreatLevel(state: CivState, allStates: CivState[]): void {
 }
 
 // ---------------------------------------------------------------------------
+// AI trade proposals using real resource needs
+// ---------------------------------------------------------------------------
+
+/**
+ * AI factions propose trades based on actual surplus/deficit evaluation.
+ * Replaces the hardcoded scrapMetal→eWaste proposals in diplomacySystem.
+ * Called every `checkInterval` ticks from aiCivilizationSystem.
+ *
+ * Logic:
+ *   For each (from, to) faction pair at friendly+ stance:
+ *     - Compute from's surplus and to's deficit
+ *     - If there's overlap (from has what to wants), propose a trade
+ *     - Offer amount = min(from surplus of that material, to deficit)
+ *     - Request amount = half the offered value in cubes (simple 2:1 ratio)
+ */
+function aiProposeTrades(currentTick: number): void {
+	const allCivIds = Array.from(civStates.keys());
+	// Include "player" as a possible trade target
+	const allFactions = [...allCivIds, "player"];
+
+	for (const fromId of allCivIds) {
+		const fromNeeds = evaluateTradeNeeds(fromId);
+		if (Object.keys(fromNeeds.surplus).length === 0) continue;
+
+		for (const toId of allFactions) {
+			if (fromId === toId) continue;
+
+			const relation = getRelation(fromId, toId);
+			if (relation.stance !== "friendly" && relation.stance !== "allied") continue;
+
+			// Build offer from what fromId has that toId needs
+			const toNeeds = toId === "player" ? {} : evaluateTradeNeeds(toId).deficit;
+
+			const offer: Record<string, number> = {};
+			const request: Record<string, number> = {};
+
+			for (const [material, surplusAmt] of Object.entries(fromNeeds.surplus)) {
+				const toWants = (toNeeds as Record<string, number>)[material] ?? 0;
+				const offerAmt = toWants > 0
+					? Math.min(surplusAmt, toWants)
+					: Math.floor(surplusAmt * 0.3); // opportunistic offer even if no explicit deficit
+
+				if (offerAmt <= 0) continue;
+				offer[material] = offerAmt;
+
+				// Request half the cube-equivalent value back
+				// Cube amounts are fungible here — request.cubes = offer / 2
+				request.cubes = Math.max(1, Math.floor(offerAmt / 2));
+			}
+
+			if (Object.keys(offer).length > 0) {
+				proposeTrade(fromId, toId, offer, request, currentTick);
+			}
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Trade evaluation and resource transfer
+// ---------------------------------------------------------------------------
+
+/**
+ * Evaluate what a faction has surplus of (can offer) and is short on (wants).
+ *
+ * Surplus logic:
+ *   - "cubes": if cubes > BUILD_THRESHOLD * 2, surplus = cubes - BUILD_THRESHOLD
+ *
+ * Deficit logic:
+ *   - "cubes": if cubes < BUILD_THRESHOLD, deficit = BUILD_THRESHOLD - cubes
+ *
+ * The primary trade commodity is "cubes" (denominated in cube count).
+ * Specialized material-type surpluses (scrapMetal, eWaste, etc.) are derived
+ * from the faction's governor bias — high-mining factions generate scrapMetal
+ * surpluses while research-biased factions generate intactComponent surpluses.
+ */
+export function evaluateTradeNeeds(civId: string): TradeNeeds {
+	const state = civStates.get(civId);
+	if (!state) return { surplus: {}, deficit: {} };
+
+	const surplus: Record<string, number> = {};
+	const deficit: Record<string, number> = {};
+
+	// Cube surplus/deficit based on BUILD_THRESHOLD
+	if (state.resources.cubes > BUILD_THRESHOLD * 2) {
+		surplus.cubes = state.resources.cubes - BUILD_THRESHOLD;
+	} else if (state.resources.cubes < BUILD_THRESHOLD) {
+		deficit.cubes = BUILD_THRESHOLD - state.resources.cubes;
+	}
+
+	// Mining-biased factions accumulate scrap surplus faster
+	if (state.bias.mining >= 1.2 && state.resources.cubes >= 5) {
+		const scrappiness = Math.floor(state.bias.mining * state.resources.cubes * 0.1);
+		if (scrappiness > 0) surplus.scrapMetal = scrappiness;
+	}
+
+	// Economy-biased factions have eWaste from production
+	if (state.bias.economy >= 1.2 && state.resources.cubes >= 5) {
+		const waste = Math.floor(state.bias.economy * state.resources.cubes * 0.08);
+		if (waste > 0) surplus.eWaste = waste;
+	}
+
+	// Research-biased factions want more intactComponents (for tech)
+	if (state.bias.research >= 1.2 && state.techLevel < 4) {
+		deficit.intactComponents = Math.ceil(state.bias.research * 3);
+	}
+
+	// Expansion-biased factions need more cubes for outposts
+	if (state.bias.expansion >= 1.2) {
+		const expansionCost = territoryCfg.outpostTiers[0].cubeCost;
+		if (state.resources.cubes < expansionCost) {
+			deficit.cubes = Math.max(
+				deficit.cubes ?? 0,
+				expansionCost - state.resources.cubes,
+			);
+		}
+	}
+
+	return { surplus, deficit };
+}
+
+/**
+ * Transfer cubes from one faction to another.
+ * Returns true if the transfer succeeded (fromFaction had enough cubes).
+ * If fromFaction is not tracked (e.g., "player"), the transfer is allowed
+ * unconditionally and returns true.
+ */
+export function transferCubes(
+	fromFaction: string,
+	toFaction: string,
+	amount: number,
+): boolean {
+	if (amount <= 0) return true;
+
+	const from = civStates.get(fromFaction);
+	// If the from faction isn't tracked (e.g. "player"), allow the transfer
+	// — the player's cubes are managed externally.
+	if (from) {
+		if (from.resources.cubes < amount) return false;
+		from.resources.cubes -= amount;
+	}
+
+	const to = civStates.get(toFaction);
+	if (to) {
+		to.resources.cubes += amount;
+	}
+
+	return true;
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -611,6 +775,8 @@ export function initializeCivilizations(): void {
 	for (const civId of Object.keys(civConfigs)) {
 		getOrCreateCivState(civId);
 	}
+	// Wire the cube transfer callback into the diplomacy system
+	registerTradeTransfer(transferCubes);
 }
 
 /**
@@ -653,6 +819,11 @@ export function aiCivilizationSystem(currentTick = 0): void {
 
 	// Advance the physical harvest pipeline (all registered bots move + harvest + compress + carry)
 	tickAIHarvestPipeline();
+
+	// AI trade proposals at diplomacy check interval
+	if (currentTick % diplomacyCfg.checkInterval === 0) {
+		aiProposeTrades(currentTick);
+	}
 }
 
 /**

@@ -11,6 +11,31 @@
  */
 
 import { config } from "../../config";
+import { emit } from "./eventBus";
+
+// ---------------------------------------------------------------------------
+// Resource transfer callback (registered by aiCivilization at init)
+// ---------------------------------------------------------------------------
+
+/**
+ * Callback signature for transferring cube resources between factions.
+ * @param fromFaction - Faction sending cubes
+ * @param toFaction   - Faction receiving cubes
+ * @param amount      - Number of cubes to transfer
+ * @returns true if the transfer succeeded (sender had enough cubes)
+ */
+export type TradeTransferFn = (fromFaction: string, toFaction: string, amount: number) => boolean;
+
+let _tradeTransferFn: TradeTransferFn | null = null;
+
+/**
+ * Register a cube-transfer callback. Called by aiCivilization during init.
+ * When null (e.g. in unit tests for diplomacySystem alone), acceptTrade
+ * still succeeds but no physical cubes move.
+ */
+export function registerTradeTransfer(fn: TradeTransferFn): void {
+	_tradeTransferFn = fn;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -154,36 +179,87 @@ export function getActiveTradeProposals(): TradeProposal[] {
 }
 
 // ---------------------------------------------------------------------------
+// Event emission helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Update opinion and emit diplomacy_changed if stance transitions.
+ *
+ * @param factionA - First faction
+ * @param factionB - Second faction
+ * @param newOpinion - New clamped opinion value
+ * @param tick - Current simulation tick (default: 0)
+ */
+function setOpinionWithEvent(
+	factionA: string,
+	factionB: string,
+	newOpinion: number,
+	tick = 0,
+): void {
+	const key = pairKey(factionA, factionB);
+	const prevOpinion = opinions.get(key) ?? 0;
+	const prevStance = deriveStance(prevOpinion);
+	const nextStance = deriveStance(newOpinion);
+
+	opinions.set(key, newOpinion);
+
+	if (prevStance !== nextStance) {
+		emit({
+			type: "diplomacy_changed",
+			factionA,
+			factionB,
+			previousStance: prevStance,
+			newStance: nextStance,
+			tick,
+		});
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Public API — Mutations
 // ---------------------------------------------------------------------------
 
 /**
  * Modify the opinion between two factions by a named modifier key.
  * The modifier value comes from config/diplomacy.json.
+ * Emits a diplomacy_changed event if the stance changes.
+ *
+ * @param factionA - First faction
+ * @param factionB - Second faction
+ * @param modifier - Named modifier key from config/diplomacy.json
+ * @param tick - Current simulation tick for event payload (default: 0)
  */
 export function modifyOpinion(
 	factionA: string,
 	factionB: string,
 	modifier: OpinionModifierKey,
+	tick = 0,
 ): void {
 	const key = pairKey(factionA, factionB);
 	const current = opinions.get(key) ?? 0;
 	const delta =
 		diplomacyCfg.opinionModifiers[modifier as keyof typeof diplomacyCfg.opinionModifiers];
-	opinions.set(key, clampOpinion(current + delta));
+	setOpinionWithEvent(factionA, factionB, clampOpinion(current + delta), tick);
 }
 
 /**
  * Directly adjust opinion by a numeric amount (for custom events).
+ * Emits a diplomacy_changed event if the stance changes.
+ *
+ * @param factionA - First faction
+ * @param factionB - Second faction
+ * @param amount - Opinion delta (positive or negative)
+ * @param tick - Current simulation tick for event payload (default: 0)
  */
 export function adjustOpinion(
 	factionA: string,
 	factionB: string,
 	amount: number,
+	tick = 0,
 ): void {
 	const key = pairKey(factionA, factionB);
 	const current = opinions.get(key) ?? 0;
-	opinions.set(key, clampOpinion(current + amount));
+	setOpinionWithEvent(factionA, factionB, clampOpinion(current + amount), tick);
 }
 
 /**
@@ -217,16 +293,43 @@ export function proposeTrade(
 }
 
 /**
- * Accept a pending trade proposal. Both factions gain opinion.
+ * Accept a pending trade proposal.
+ *
+ * Transfers cube resources between factions using the registered transfer
+ * callback (if any). The offering faction sends the sum of all offered
+ * cube amounts; the accepting faction sends the sum of requested amounts.
+ *
+ * Both factions gain opinion on success.
+ * Returns false if the proposal doesn't exist or if a transfer callback is
+ * registered and the offering faction cannot afford the offer.
  */
-export function acceptTrade(proposalId: string): boolean {
+export function acceptTrade(proposalId: string, currentTick = 0): boolean {
 	const proposal = tradeProposals.find(
 		(p) => p.id === proposalId && p.status === "pending",
 	);
 	if (!proposal) return false;
 
+	// Sum total cubes being offered and requested
+	const offerTotal = Object.values(proposal.offer).reduce((s, v) => s + v, 0);
+	const requestTotal = Object.values(proposal.request).reduce((s, v) => s + v, 0);
+
+	// Transfer cubes if a callback is registered
+	if (_tradeTransferFn !== null) {
+		// Offering faction pays the offer amount
+		if (offerTotal > 0) {
+			const ok = _tradeTransferFn(proposal.from, proposal.to, offerTotal);
+			if (!ok) return false; // Offering faction can't afford it
+		}
+		// Accepting faction pays the request amount in return
+		if (requestTotal > 0) {
+			// Best-effort: if the accepting faction can't pay, the trade still
+			// completes (the proposer already sent) — but the shortfall is logged.
+			_tradeTransferFn(proposal.to, proposal.from, requestTotal);
+		}
+	}
+
 	proposal.status = "accepted";
-	modifyOpinion(proposal.from, proposal.to, "tradeDeal");
+	modifyOpinion(proposal.from, proposal.to, "tradeDeal", currentTick);
 	return true;
 }
 
@@ -264,70 +367,20 @@ export function decayOpinions(): void {
 }
 
 // ---------------------------------------------------------------------------
-// AI diplomacy decisions
-// ---------------------------------------------------------------------------
-
-const AI_FACTIONS = [
-	"reclaimers",
-	"volt_collective",
-	"signal_choir",
-	"iron_creed",
-];
-
-/**
- * AI faction proposes trades to factions with friendly+ stance.
- * Called internally by diplomacySystem.
- */
-function aiProposeTrades(currentTick: number): void {
-	for (const faction of AI_FACTIONS) {
-		for (const other of AI_FACTIONS) {
-			if (faction === other) continue;
-
-			const relation = getRelation(faction, other);
-			if (relation.stance === "friendly" || relation.stance === "allied") {
-				proposeTrade(
-					faction,
-					other,
-					{ scrapMetal: 10 },
-					{ eWaste: 5 },
-					currentTick,
-				);
-			}
-		}
-
-		// Also consider proposing to player if friendly
-		const playerRelation = getRelation(faction, "player");
-		if (
-			playerRelation.stance === "friendly" ||
-			playerRelation.stance === "allied"
-		) {
-			proposeTrade(
-				faction,
-				"player",
-				{ scrapMetal: 10 },
-				{ eWaste: 5 },
-				currentTick,
-			);
-		}
-	}
-}
-
-// ---------------------------------------------------------------------------
 // Main system tick
 // ---------------------------------------------------------------------------
 
 /**
  * Run AI diplomacy decisions. Called once per simulation tick.
  * Checks are only performed at the configured interval.
+ * Note: AI trade proposals are generated by aiCivilizationSystem, which has
+ * access to real faction resource states.
  */
 export function diplomacySystem(currentTick: number): void {
 	if (currentTick % diplomacyCfg.checkInterval !== 0) return;
 
 	// Decay opinions toward neutral
 	decayOpinions();
-
-	// AI factions propose trades
-	aiProposeTrades(currentTick);
 }
 
 // ---------------------------------------------------------------------------

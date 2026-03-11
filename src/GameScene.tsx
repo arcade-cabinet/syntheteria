@@ -15,7 +15,12 @@ import {
 import { NavMeshDebugRenderer } from "./ai/NavMeshDebugRenderer";
 import { YukaSystem } from "./ai/YukaSystem.tsx";
 import { AudioSystem } from "./audio/AudioSystem";
-import { getGameSpeed, getSnapshot, subscribe } from "./ecs/gameState";
+import {
+	getGameSpeed,
+	getSnapshot,
+	invalidateSnapshot,
+	subscribe,
+} from "./ecs/gameState";
 import { syncAfterFrame, syncBeforeFrame } from "./ecs/koota/bridge";
 import { getActivePlayerBot } from "./ecs/world";
 import { FPSCamera } from "./input/FPSCamera";
@@ -50,7 +55,11 @@ import { WallRenderer } from "./rendering/WallRenderer";
 import { WealthIndicator } from "./rendering/WealthIndicator";
 import { WireRenderer } from "./rendering/WireRenderer";
 import { saveGame } from "./save/SaveManager";
+import { updateBeltTransport } from "./systems/beltTransport";
+import { botAutomationSystem } from "./systems/botAutomation";
 import { CoreLoopSystem } from "./systems/CoreLoopSystem";
+import { cultistAISystem } from "./systems/cultistAI";
+import { fpsCombatSystem } from "./systems/fpsCombat";
 import { GameplaySystems } from "./systems/GameplaySystems";
 import { orchestratorTick } from "./systems/gameLoopOrchestrator";
 import { InteractionSystem } from "./systems/InteractionSystem";
@@ -69,9 +78,6 @@ import { QuestPanel } from "./ui/QuestPanel";
 import { getEquippedTool } from "./ui/RadialToolMenu";
 import { SaveLoadMenu } from "./ui/SaveLoadMenu";
 import { TechTreePanel } from "./ui/TechTreePanel";
-
-// Register all systems with the orchestrator once at module load
-registerAllSystems();
 
 // --- Game loop ---
 
@@ -94,12 +100,21 @@ function GameLoop() {
 			return;
 		}
 
+		const scaledDelta = delta * speed;
+
 		movementSystem(delta, speed);
 
-		simAccumulator.current += delta * speed;
+		// Per-frame systems: need actual frame delta, not 1Hz tick
+		updateBeltTransport(scaledDelta);
+		botAutomationSystem(scaledDelta);
+		cultistAISystem(scaledDelta);
+		fpsCombatSystem(delta);
+
+		simAccumulator.current += scaledDelta;
 		while (simAccumulator.current >= SIM_INTERVAL) {
 			simAccumulator.current -= SIM_INTERVAL;
 			orchestratorTick();
+			invalidateSnapshot();
 		}
 
 		syncAfterFrame();
@@ -116,6 +131,14 @@ export interface GameSceneProps {
 
 export default function GameScene({ seed: _seed }: GameSceneProps) {
 	const [saveMenuOpen, setSaveMenuOpen] = useState(false);
+
+	// Register all systems once on first render (guard prevents double-registration
+	// from StrictMode double-invocation; registerAllSystems is also idempotent).
+	const registeredRef = useRef(false);
+	if (!registeredRef.current) {
+		registerAllSystems();
+		registeredRef.current = true;
+	}
 
 	// ESC key toggles save/load menu.
 	// Uses keyup to avoid conflicts with other ESC handlers (ObjectActionMenu,

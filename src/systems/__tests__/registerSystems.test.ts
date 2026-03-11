@@ -60,6 +60,7 @@ jest.mock("../exploration", () => ({ explorationSystem: mockNoOp }));
 jest.mock("../progressionSystem", () => ({ progressionSystem: mockNoOp }));
 jest.mock("../techResearch", () => ({ techResearchSystem: mockNoOp }));
 jest.mock("../victoryTracking", () => ({ victoryTrackingSystem: mockNoOp }));
+jest.mock("../victoryConditionEvaluator", () => ({ wireTick: mockNoOp }));
 jest.mock("../proceduralQuests", () => ({ proceduralQuestSystem: mockNoOp }));
 jest.mock("../questSystem", () => ({ updateQuests: mockNoOp }));
 jest.mock("../questDialogue", () => ({ updateDialogue: mockNoOp }));
@@ -214,6 +215,7 @@ describe("phase population", () => {
 		expect(systems.progression).toContain("progressionSystem");
 		expect(systems.progression).toContain("techResearchSystem");
 		expect(systems.progression).toContain("victoryTrackingSystem");
+		expect(systems.progression).toContain("victoryConditionEvaluator");
 		expect(systems.progression).toContain("proceduralQuestSystem");
 		expect(systems.progression).toContain("questSystem");
 		expect(systems.progression).toContain("otterSystem");

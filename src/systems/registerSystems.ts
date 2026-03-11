@@ -76,6 +76,7 @@ import { tradeRouteSystem } from "./tradeRouteSystem";
 import { turretSystem } from "./turret";
 import { syncTutorialToOtter } from "./tutorialOtterBridge";
 import { victoryTrackingSystem } from "./victoryTracking";
+import { wireTick as victoryConditionEvaluatorTick } from "./victoryConditionEvaluator";
 // --- Environment ---
 import { weatherSystem } from "./weatherSystem";
 import { wireNetworkSystem } from "./wireNetwork";
@@ -213,6 +214,9 @@ export function registerAllSystems(): void {
 	});
 	registerSystem("progression", "victoryTrackingSystem", (tick) =>
 		victoryTrackingSystem(tick),
+	);
+	registerSystem("progression", "victoryConditionEvaluator", (tick) =>
+		victoryConditionEvaluatorTick(tick),
 	);
 	registerSystem("progression", "proceduralQuestSystem", (tick) =>
 		proceduralQuestSystem(tick),

@@ -4,7 +4,10 @@
 			"name": "Economic Dominance",
 			"description": "Accumulate overwhelming material wealth",
 			"cubeThreshold": 500,
+			"totalCubesRequired": 500,
 			"territoryPercentage": 0.4,
+			"materialDiversityRequired": 4,
+			"holdDurationTicks": 300,
 			"checkInterval": 60
 		},
 		"military": {
@@ -33,11 +36,101 @@
 			"checkInterval": 60
 		},
 		"survival": {
-			"name": "Last Bot Standing",
-			"description": "Be the last civilization with functional units",
+			"name": "Last Machine Standing",
+			"description": "Be the last civilization with a powered outpost after the Storm Convergence",
+			"convergenceStartTick": 28800,
+			"holdDurationTicks": 0,
+			"checkInterval": 60
+		},
+		"colonial": {
+			"name": "Colonial",
+			"description": "Complete all patron-assigned objectives while maintaining patron satisfaction above 80%",
+			"patronSatisfactionRequired": 80,
+			"objectivesRequireAll": true,
+			"holdDurationTicks": 0,
+			"checkInterval": 60
+		},
+		"domination": {
+			"name": "Domination",
+			"description": "Control 75% or more of all outpost locations for 5 consecutive minutes",
+			"outpostControlPercent": 0.75,
+			"holdDurationTicks": 300,
+			"outpostLocations": {
+				"small": 16,
+				"medium": 24,
+				"large": 36,
+				"huge": 48
+			},
+			"checkInterval": 60
+		},
+		"technology": {
+			"name": "Technology",
+			"description": "Research any Tier 5 technology AND construct the Convergence Device",
+			"requiredTechTier": 5,
+			"requiresConvergenceDevice": true,
+			"deviceCubesRequired": 100,
+			"deviceBuildTimeSeconds": 180,
+			"holdDurationTicks": 0,
+			"checkInterval": 60
+		},
+		"diplomatic": {
+			"name": "Diplomatic",
+			"description": "All surviving factions are allied or vassalized",
+			"allianceOpinionThreshold": 60,
+			"vassalizationEconomyThreshold": 0.3,
+			"holdDurationTicks": 0,
+			"checkInterval": 60
+		},
+		"integration": {
+			"name": "Integration",
+			"description": "Achieve +80 Residual relationship AND complete the Resonance Protocol",
+			"residualRelationshipRequired": 80,
+			"requiresResonanceProtocol": true,
+			"resonanceCubesRequired": 50,
+			"resonanceDurationSeconds": 120,
+			"holdDurationTicks": 0,
+			"checkInterval": 60
+		},
+		"story": {
+			"name": "Story",
+			"description": "Discover all 3 Core Access Points, achieve Residual relationship >= 50, complete Kelp's dialogue, and deliver the material offering",
+			"coreAccessPointsRequired": 3,
+			"residualRelationshipRequired": 50,
+			"playerOnly": true,
+			"holdDurationTicks": 0,
 			"checkInterval": 60
 		}
 	},
 	"gracePeriodTicks": 3000,
-	"victoryAnnouncementDelay": 60
+	"victoryAnnouncementDelay": 60,
+	"progressPanel": {
+		"updateIntervalSeconds": 10,
+		"alertThresholds": [0.25, 0.5, 0.75, 0.9],
+		"threatAssessmentIntervalSeconds": 30
+	},
+	"simultaneousVictoryPriority": [
+		"story",
+		"integration",
+		"technology",
+		"colonial",
+		"diplomatic",
+		"economic",
+		"domination",
+		"survival"
+	],
+	"stormProgression": {
+		"phases": [
+			{ "name": "calm", "startMinute": 0, "lightningFrequency": 0.5, "damagePerTick": 0 },
+			{ "name": "rising", "startMinute": 60, "lightningFrequency": 1, "damagePerTick": 0 },
+			{ "name": "storm", "startMinute": 180, "lightningFrequency": 3, "damagePerTick": 2 },
+			{ "name": "tempest", "startMinute": 360, "lightningFrequency": 8, "damagePerTick": 5 },
+			{ "name": "convergence", "startMinute": 480, "lightningFrequency": 20, "damagePerTick": 25 }
+		]
+	},
+	"gracePeriodSeconds": 300,
+	"earlyTriggerThresholds": {
+		"0.5": 1800,
+		"0.75": 900,
+		"0.9": 300
+	}
 }

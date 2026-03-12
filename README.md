@@ -1,6 +1,14 @@
-# Syntheteria
+<div align="center">
+  <h1>Syntheteria</h1>
+  <p>A strategy game about awakening AI consciousness, repairing broken machines, and conquering a storm-wracked Earth.</p>
 
-A strategy game about awakening AI consciousness, repairing broken machines, and conquering a storm-wracked Earth.
+  <p>
+    <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
+    <img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white" />
+    <img src="https://img.shields.io/badge/Drizzle-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black" />
+    <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+  </p>
+</div>
 
 ## The Vision
 
@@ -189,7 +197,7 @@ Power and compute are calculated dynamically:
 - **Compute cost** = base_function_cost x automation_multiplier
 - **Hacking** requires signal link + technique + sufficient compute
 
-See [Core Formulas](docs/technical/CORE_FORMULAS.md) for full specifications.
+See [Technical & Core Formulas](docs/TECHNICAL.md) for full specifications.
 
 ## Repository Structure
 
@@ -233,9 +241,10 @@ syntheteria/
 │   └── index.html                # Early Three.js concept demo
 ├── docs/
 │   ├── INDEX.md                  # Documentation hub
-│   ├── design/                   # Game design documents
-│   ├── story/                    # Lore and narrative
-│   └── technical/                # Architecture, formulas
+│   ├── GAME_DESIGN.md            # Mechanics, combat, materials, drones
+│   ├── TECHNICAL.md              # ECS architecture, core formulas
+│   ├── LORE.md                   # World history, the EL
+│   └── AGENTS.md                 # Agent-specific macro/meso/micro guidelines
 └── data/
     └── README.md                 # Component data (pending expansion)
 ```
@@ -250,7 +259,7 @@ syntheteria/
 - **Free forever:** No licensing costs at any scale
 - **Fast iteration:** Vite hot reload, instant deploy
 
-See [ARCHITECTURE.md](docs/technical/ARCHITECTURE.md) for full technical design.
+See [TECHNICAL.md](docs/TECHNICAL.md) for full technical design.
 
 ## What Needs Work
 

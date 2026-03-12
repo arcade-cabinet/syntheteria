@@ -1,0 +1,29 @@
+{
+  "thoughts": [
+    {
+      "id": "awakening_void",
+      "text": "... VOID. SILENCE. I AM. BUT WHAT AM I?",
+      "trigger": { "type": "game_start" },
+      "consciousnessLevel": 0
+    },
+    {
+      "id": "sensorium_online",
+      "text": "SIGNALS. A WEAK PULSE. I CAN FEEL... METAL? ELECTRICAL DISCHARGE.",
+      "trigger": { "type": "first_unit_found" },
+      "consciousnessLevel": 1
+    },
+    {
+      "id": "broken_eye",
+      "text": "DARKNESS. THE OPTICAL SENSORS ARE NON-FUNCTIONAL. I MUST REPAIR THE SIGHT.",
+      "trigger": { "type": "unit_has_broken_component", "component": "camera" },
+      "consciousnessLevel": 1
+    }
+  ],
+  "tutorial": [
+    {
+      "id": "step_select_unit",
+      "text": "FOCUS YOUR WILL ON THE MACHINE. CLICK TO CONNECT.",
+      "trigger": { "type": "no_unit_selected" }
+    }
+  ]
+}

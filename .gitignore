@@ -1,41 +1,56 @@
-# OS
-.DS_Store
-Thumbs.db
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# Editor
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Dependencies
+# dependencies
 node_modules/
+package-lock.json
+npm-shrinkwrap.json
 
-# Build output
+# Expo
+.expo/
 dist/
-dist-ssr/
+web-build/
+expo-env.d.ts
 
-# Env files
-*.local
-.env
-.env.*
-!.env.example
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
 
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
 
 # Playwright
-playwright-report/
-test-results/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
 
-# Raw asset source archives (extracted assets are committed separately)
-otter.zip
+# Local integration staging
+/pending-integration/
+
+# Local task-orchestration scratch data
+/.ralph-tui/

@@ -1,9 +1,9 @@
-import type { PersistedWorldRecord } from "../../db/worldPersistence";
+import type { PersistedWorldSnapshot } from "../../world/snapshots";
 import { initializeNewGame } from "../initialization";
 import { Building, Identity, Unit, WorldPosition } from "../traits";
 import { buildings, units, world } from "../world";
 
-function createPersistedWorld(): PersistedWorldRecord {
+function createPersistedWorld(): PersistedWorldSnapshot {
 	return {
 		saveGame: {
 			id: 1,

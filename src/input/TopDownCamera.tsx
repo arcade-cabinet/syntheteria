@@ -1,6 +1,11 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import {
+	getNextCycleTier,
+	getTargetHeightForTier,
+	updateZoomTier,
+} from "../systems/zoomTier";
 
 /**
  * Mobile-first top-down camera with touch pan/zoom and keyboard/mouse support.
@@ -38,6 +43,11 @@ export function TopDownCamera() {
 	// Mouse drag state
 	const mouseDrag = useRef<{ lastX: number; lastY: number } | null>(null);
 
+	// Double-tap zoom snap state
+	const lastTapTime = useRef(0);
+	const lastTapPos = useRef({ x: 0, y: 0 });
+	const snapTarget = useRef<number | null>(null);
+
 	// Initialize camera
 	useEffect(() => {
 		camera.position.set(
@@ -50,8 +60,16 @@ export function TopDownCamera() {
 
 	// Keyboard events
 	useEffect(() => {
-		const onKeyDown = (e: KeyboardEvent) =>
-			keys.current.add(e.key.toLowerCase());
+		const onKeyDown = (e: KeyboardEvent) => {
+			const key = e.key.toLowerCase();
+			keys.current.add(key);
+
+			// Z key: cycle zoom tier (desktop equivalent of double-tap)
+			if (key === "z" && !e.repeat) {
+				const nextTier = getNextCycleTier();
+				snapTarget.current = getTargetHeightForTier(nextTier);
+			}
+		};
 		const onKeyUp = (e: KeyboardEvent) =>
 			keys.current.delete(e.key.toLowerCase());
 		window.addEventListener("keydown", onKeyDown);
@@ -168,7 +186,25 @@ export function TopDownCamera() {
 			}
 		};
 
-		const onTouchEnd = () => {
+		const onTouchEnd = (e: TouchEvent) => {
+			// Double-tap detection for zoom snap (only on single-finger release)
+			if (e.changedTouches.length === 1 && !ts.isPanning) {
+				const now = performance.now();
+				const touch = e.changedTouches[0];
+				const dx = touch.clientX - lastTapPos.current.x;
+				const dy = touch.clientY - lastTapPos.current.y;
+				const timeDelta = now - lastTapTime.current;
+
+				if (timeDelta < 300 && dx * dx + dy * dy < 900) {
+					// Double-tap detected — snap to next zoom tier
+					const nextTier = getNextCycleTier();
+					snapTarget.current = getTargetHeightForTier(nextTier);
+				}
+
+				lastTapTime.current = now;
+				lastTapPos.current = { x: touch.clientX, y: touch.clientY };
+			}
+
 			ts.twoFingerCenter = null;
 			ts.lastPinchDist = null;
 			ts.isPanning = false;
@@ -206,6 +242,22 @@ export function TopDownCamera() {
 				target.current.z += velocity.current.z;
 			}
 		}
+
+		// Snap-to zoom tier animation
+		if (snapTarget.current !== null) {
+			const diff = snapTarget.current - zoom.current;
+			if (Math.abs(diff) < 0.5) {
+				zoom.current = snapTarget.current;
+				snapTarget.current = null;
+			} else {
+				// Smooth exponential lerp toward target (300ms feel)
+				zoom.current += diff * Math.min(1, delta * 6);
+			}
+			zoom.current = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom.current));
+		}
+
+		// Update zoom tier system with current camera height
+		updateZoomTier(zoom.current, delta);
 
 		// Update camera position (always top-down)
 		camera.position.set(

@@ -38,12 +38,12 @@ export function BuildToolbar() {
 	];
 
 	return (
-		<View className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-auto">
-			<View className="w-[214px] rounded-[24px] border border-white/10 bg-[#081017]/90 p-3 shadow-2xl">
-				<Text className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/45">
+		<View className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 pointer-events-auto">
+			<View className="w-[160px] md:w-[214px] rounded-[20px] md:rounded-[24px] border border-white/10 bg-[#081017]/90 p-2 md:p-3 shadow-2xl">
+				<Text className="font-mono text-[9px] md:text-[10px] uppercase tracking-[0.24em] text-white/45">
 					Construct
 				</Text>
-				<Text className="mt-1 font-mono text-sm uppercase tracking-[0.14em] text-[#defef3]">
+				<Text className="mt-0.5 md:mt-1 font-mono text-xs md:text-sm uppercase tracking-[0.14em] text-[#defef3]">
 					Field Deployment
 				</Text>
 				<View className="mt-3 gap-2">
@@ -65,7 +65,7 @@ export function BuildToolbar() {
 								icon={icon}
 								active={isActive}
 								disabled={!canAfford}
-								variant={type === "fabrication_unit" ? "secondary" : "primary"}
+								variant="utility"
 								onPress={() => setActivePlacement(isActive ? null : type)}
 							/>
 						);

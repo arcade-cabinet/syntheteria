@@ -27,6 +27,7 @@ export default defineConfig({
 		},
 		ctPort: 3100,
 		ctViteConfig: {
+			assetsInclude: ["**/*.glb", "**/*.gltf", "**/*.bin", "**/*.png"],
 			resolve: {
 				alias: [
 					{

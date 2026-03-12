@@ -1,11 +1,16 @@
 import { persistRuntimeWorldStateSync } from "../db/worldPersistence";
 import { getAllFragments } from "../ecs/terrain";
 import { getResources } from "../systems/resources";
+import { applyEntryToCity } from "./cityLifecycle";
 import { capturePersistableWorldEntities } from "./entityPersistence";
-import { getRuntimeState, setRuntimeScene } from "./runtimeState";
+import {
+	getRuntimeState,
+	setCityKitLabOpen,
+	setRuntimeScene,
+} from "./runtimeState";
 import { getActiveWorldSession } from "./session";
 
-function flushTransitionState() {
+export function syncActiveWorldSessionState() {
 	const session = getActiveWorldSession();
 	if (!session) {
 		return;
@@ -51,17 +56,14 @@ export function enterCityInstance(cityInstanceId: number) {
 		throw new Error(`City instance ${cityInstanceId} does not exist.`);
 	}
 
-	if (city.state === "latent") {
-		city.state = "surveyed";
-	}
-
+	applyEntryToCity(city);
 	setRuntimeScene("city", cityInstanceId);
-	flushTransitionState();
+	syncActiveWorldSessionState();
 }
 
 export function returnToWorld() {
 	setRuntimeScene("world", null);
-	flushTransitionState();
+	syncActiveWorldSessionState();
 }
 
 export function getActiveCityInstance() {
@@ -80,4 +82,12 @@ export function getActiveCityInstance() {
 
 export function getSceneMode() {
 	return getRuntimeState().activeScene;
+}
+
+export function openCityKitLab() {
+	setCityKitLabOpen(true);
+}
+
+export function closeCityKitLab() {
+	setCityKitLabOpen(false);
 }

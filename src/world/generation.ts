@@ -1,20 +1,16 @@
 import { pickTerrainSetId, type TerrainSetId } from "../config/terrainSetRules";
 import type { Biome, FogState } from "../ecs/terrain";
+import { createGeneratedCitySeed } from "./cityLifecycle";
 import {
 	getClimateProfileSpec,
 	getMapSizeSpec,
 	type NewGameConfig,
 } from "./config";
-
-export type WorldPoiType =
-	| "home_base"
-	| "coast_mines"
-	| "science_campus"
-	| "northern_cult_site"
-	| "deep_sea_gateway";
-
-export type CityInstanceState = "latent" | "surveyed" | "founded";
-export type CityGenerationStatus = "reserved" | "instanced";
+import type {
+	CityGenerationStatus,
+	CityInstanceState,
+	WorldPoiType,
+} from "./contracts";
 
 export interface GeneratedWorldTile {
 	q: number;
@@ -376,18 +372,17 @@ export function generateWorldData(config: NewGameConfig): GeneratedWorldData {
 	];
 
 	const cityInstances: GeneratedCityInstanceSeed[] = pointsOfInterest.map(
-		(poi) => ({
-			poiType: poi.type,
-			name: poi.name,
-			worldQ: poi.q,
-			worldR: poi.r,
-			layoutSeed: createPurposeSeed(
-				config.worldSeed,
-				`${poi.type}:${hashCoordinates(poi.q, poi.r)}`,
+		(poi) =>
+			createGeneratedCitySeed(
+				poi.type,
+				poi.name,
+				poi.q,
+				poi.r,
+				createPurposeSeed(
+					config.worldSeed,
+					`${poi.type}:${hashCoordinates(poi.q, poi.r)}`,
+				),
 			),
-			state: poi.type === "home_base" ? "founded" : "latent",
-			generationStatus: "reserved",
-		}),
 	);
 
 	return {

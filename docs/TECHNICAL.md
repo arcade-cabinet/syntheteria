@@ -38,6 +38,13 @@ Migrating to an Expo + Koota foundation provides true cross-platform capabilitie
 - **Outdoor Persistence:** Generated world headers, tiles, POIs, city-instance seeds, campaign scene state, resource pools, and persisted world actors are stored in Expo SQLite tables and reloaded on `Continue`.
 - **Runtime Sync:** Fog state, discovered POIs, city-instance state, active scene, resource deltas, and world actor snapshots are periodically synchronized back into SQLite.
 
+## 3.2 Weather And Storm Runtime
+- **Config Ownership:** Weather and storm tunables live in `src/config/weather.json`; visual and gameplay systems should consume config, not scatter magic numbers.
+- **Systems:** `src/systems/weather.ts` owns the chronometer, wormhole day/night cycle, visibility multipliers, and storm-profile visual/gameplay state. `src/systems/lightning.ts` owns deterministic bolt scheduling and rod-capture timing.
+- **Render Separation:** `src/rendering/StormSky.tsx`, `src/rendering/StormLighting.tsx`, `src/rendering/StormParticles.tsx`, and `src/rendering/LightningSystem.tsx` are rendering consumers of system state, not simulation owners.
+- **Contract Rule:** TSX/renderers must not invent weather logic locally. They read snapshot/config state from systems and config only.
+- **Status:** The weather/storm stack is in active implementation. Core config and system ownership exist; some rendering polish and overlay/network layers remain in progress.
+
 ## 4. Power & Signal Networks
 - **Power (BFS):** Lightning rods generate power based on storm intensity. Distributed via BFS to connected buildings/units.
 - **Signal (BFS):** Determines which units are within signal range. Disconnected units follow last orders and become vulnerable to hacking.
@@ -47,6 +54,7 @@ Migrating to an Expo + Koota foundation provides true cross-platform capabilitie
 - **Transition State:** The active scene and active city instance id are persisted in `campaign_states`.
 - **City Foundation:** Interior scenes currently use a deterministic square-grid assembly contract as a placeholder for future Quaternius-driven authored modules.
 - **Actor Hydration:** Outdoor units/buildings now hydrate from `world_entities`, which keeps runtime ECS state aligned with saved campaign state instead of using hard-coded reseeding.
+- **Shared Snapshots:** `src/world/snapshots.ts` is now the canonical world/city persisted-session-runtime contract, replacing duplicate record shapes across session state, UI context, and ECS hydration.
 
 ## 4.2 AI Runtime Contract
 - **AI Package Boundary:** `src/ai` is the only valid package for Yuka-backed behavior runtime work.

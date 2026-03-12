@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { Text, View } from "react-native";
+import { Text, View, useWindowDimensions } from "react-native";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import { getWorldHalfExtents } from "../../ecs/terrain";
 import { Identity, WorldPosition } from "../../ecs/traits";
@@ -8,22 +8,23 @@ import { MapIcon, RadarIcon } from "../icons";
 
 export function Minimap() {
 	useSyncExternalStore(subscribe, getSnapshot);
+	const { width } = useWindowDimensions();
 
-	const size = 154;
+	const size = width < 768 ? 112 : 154;
 	const half = size / 2;
 	const { x: worldHalfX, z: worldHalfZ } = getWorldHalfExtents();
 	const scale = (size * 0.45) / Math.max(worldHalfX, worldHalfZ, 1);
 
 	return (
-		<View className="absolute bottom-6 right-4 pointer-events-auto">
-			<View className="w-[172px] rounded-[24px] border border-white/10 bg-[#081017]/90 p-3 shadow-2xl">
+		<View className="absolute bottom-4 md:bottom-6 right-3 md:right-4 pointer-events-auto">
+			<View className="w-[140px] md:w-[172px] rounded-[20px] md:rounded-[24px] border border-white/10 bg-[#081017]/90 p-2 md:p-3 shadow-2xl">
 				<View className="flex-row items-center justify-between">
 					<View>
-						<Text className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/45">
+						<Text className="font-mono text-[9px] md:text-[10px] uppercase tracking-[0.24em] text-white/45">
 							World Scan
 						</Text>
-						<Text className="mt-1 font-mono text-sm uppercase tracking-[0.14em] text-[#defef3]">
-							Tactical Minimap
+						<Text className="mt-0.5 md:mt-1 font-mono text-xs md:text-sm uppercase tracking-[0.14em] text-[#defef3]">
+							Minimap
 						</Text>
 					</View>
 					<View className="h-8 w-8 items-center justify-center rounded-2xl border border-white/8 bg-white/5">

@@ -1,41 +1,44 @@
 import { useSyncExternalStore } from "react";
 import { View } from "react-native";
-import { getSnapshot, subscribe } from "../ecs/gameState";
-import { Building, Unit } from "../ecs/traits";
-import { buildings, units } from "../ecs/world";
+import { CityKitLab } from "../city/runtime/CityKitLab";
+import { closeCityKitLab } from "../world/cityTransition";
 import { getRuntimeState, subscribeRuntimeState } from "../world/runtimeState";
-import { BuildToolbar } from "./panels/BuildToolbar";
+import "../systems/radialProviders"; // Register radial menu action providers at startup
+import { RadialMenu } from "./RadialMenu";
 import { LocationPanel } from "./panels/LocationPanel";
 import { Minimap } from "./panels/Minimap";
 import { Notifications } from "./panels/Notifications";
-import { SelectedInfo } from "./panels/SelectedInfo";
+import { ResponsiveTopBar } from "./panels/ResourceStrip";
 import { ThoughtOverlay } from "./panels/ThoughtOverlay";
-import { TopBar } from "./panels/TopBar";
 
+/**
+ * GameUI — top-level HUD composition.
+ *
+ * The radial context menu (right-click / long-press) replaces SelectedInfo
+ * and BuildToolbar entirely. All contextual actions (repair, fabricate,
+ * build, move, attack, etc.) are accessed through the radial menu's
+ * composable provider system.
+ *
+ * Persistent HUD elements:
+ * - ResponsiveTopBar: resources, storm %, day counter, pause
+ * - Notifications: combat alerts, merge events
+ * - LocationPanel: world/city location context
+ * - Minimap: tactical overview
+ * - ThoughtOverlay: AI narration
+ * - RadialMenu: all contextual actions
+ */
 export function GameUI() {
-	const _snap = useSyncExternalStore(subscribe, getSnapshot);
 	const runtime = useSyncExternalStore(subscribeRuntimeState, getRuntimeState);
-	const selectedUnit = Array.from(units).find((u) => u.get(Unit)?.selected);
-	const selectedBuilding = Array.from(buildings).find(
-		(b) => b.get(Building)?.selected && !b.get(Unit),
-	);
-
-	const _showFabShortcut =
-		!selectedUnit?.get(Unit)?.type.includes("fabrication") && !selectedBuilding;
 
 	return (
 		<View className="absolute inset-0 pointer-events-none">
-			<TopBar />
+			<ResponsiveTopBar />
 			<Notifications />
-			<SelectedInfo />
 			<LocationPanel />
-			{runtime.activeScene === "world" && (
-				<>
-					<BuildToolbar />
-					<Minimap />
-				</>
-			)}
+			{runtime.activeScene === "world" && <Minimap />}
+			{runtime.cityKitLabOpen && <CityKitLab onClose={closeCityKitLab} />}
 			<ThoughtOverlay />
+			<RadialMenu />
 		</View>
 	);
 }

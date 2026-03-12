@@ -1,4 +1,8 @@
 import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+	DEFAULT_CITY_GENERATION_STATUS,
+	DEFAULT_CITY_INSTANCE_STATE,
+} from "../world/contracts";
 
 // Separate long-term persistence from short-term Koota ECS ticks.
 // These tables represent the "save file" of the player.
@@ -68,8 +72,10 @@ export const cityInstances = sqliteTable("city_instances", {
 	worldQ: integer("world_q").notNull(),
 	worldR: integer("world_r").notNull(),
 	layoutSeed: integer("layout_seed").notNull(),
-	generationStatus: text("generation_status").notNull().default("reserved"),
-	state: text("state").notNull().default("latent"),
+	generationStatus: text("generation_status")
+		.notNull()
+		.default(DEFAULT_CITY_GENERATION_STATUS),
+	state: text("state").notNull().default(DEFAULT_CITY_INSTANCE_STATE),
 });
 
 export const worldEntities = sqliteTable("world_entities", {

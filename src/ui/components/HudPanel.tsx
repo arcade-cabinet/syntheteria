@@ -6,7 +6,7 @@ interface HudPanelProps {
 	eyebrow?: string;
 	children: React.ReactNode;
 	className?: string;
-	variant?: "default" | "warning" | "danger";
+	variant?: "default" | "signal" | "warning" | "danger";
 }
 
 const PANEL_TONES = {
@@ -16,6 +16,13 @@ const PANEL_TONES = {
 		glow: "bg-[#6ff3c8]/12",
 		title: "text-[#d9fff3]",
 		eyebrow: "text-[#7ee7cb]",
+	},
+	signal: {
+		border: "border-[#8be6ff]/22",
+		header: "bg-[#8be6ff]/10",
+		glow: "bg-[#8be6ff]/10",
+		title: "text-[#edfaff]",
+		eyebrow: "text-[#90ddec]",
 	},
 	warning: {
 		border: "border-[#f7c76d]/30",

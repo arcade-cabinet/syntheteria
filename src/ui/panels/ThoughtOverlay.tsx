@@ -31,7 +31,7 @@ export function ThoughtOverlay() {
 				<Text className="mt-3 font-mono text-lg leading-7 tracking-[0.04em] text-[#e3fff5]">
 					{thought.text}
 				</Text>
-				<Text className="mt-4 font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">
+				<Text className="mt-4 font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">
 					Tap to dismiss
 				</Text>
 			</Pressable>

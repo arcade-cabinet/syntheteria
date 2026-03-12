@@ -1,20 +1,10 @@
 import type { ResourcePool } from "../systems/resources";
-import type { WorldPoiType } from "./generation";
-
-export type SceneMode = "world" | "city";
-
-export interface NearbyPoiContext {
-	cityInstanceId: number | null;
-	discovered: boolean;
-	distance: number;
-	name: string;
-	poiId: number;
-	poiType: WorldPoiType;
-}
+import type { NearbyPoiContext, SceneMode } from "./snapshots";
 
 type RuntimeState = {
 	activeCityInstanceId: number | null;
 	activeScene: SceneMode;
+	cityKitLabOpen: boolean;
 	currentTick: number;
 	nearbyPoi: NearbyPoiContext | null;
 	resources: ResourcePool;
@@ -25,6 +15,7 @@ const listeners = new Set<() => void>();
 let runtimeState: RuntimeState = {
 	activeCityInstanceId: null,
 	activeScene: "world",
+	cityKitLabOpen: false,
 	currentTick: 0,
 	nearbyPoi: null,
 	resources: {
@@ -53,6 +44,7 @@ export function resetRuntimeState() {
 	runtimeState = {
 		activeCityInstanceId: null,
 		activeScene: "world",
+		cityKitLabOpen: false,
 		currentTick: 0,
 		nearbyPoi: null,
 		resources: {
@@ -72,6 +64,14 @@ export function setRuntimeScene(
 		...runtimeState,
 		activeScene,
 		activeCityInstanceId,
+	};
+	notify();
+}
+
+export function setCityKitLabOpen(cityKitLabOpen: boolean) {
+	runtimeState = {
+		...runtimeState,
+		cityKitLabOpen,
 	};
 	notify();
 }

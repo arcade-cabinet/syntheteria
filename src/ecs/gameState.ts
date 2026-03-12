@@ -30,10 +30,25 @@ import {
 	type ResourcePool,
 	resourceSystem,
 } from "../systems/resources";
+import {
+	lightningSystem,
+	resetLightningSystem,
+} from "../systems/lightning";
+import {
+	networkOverlaySystem,
+	resetNetworkOverlay,
+} from "../systems/networkOverlay";
 import { signalNetworkSystem } from "../systems/signalNetworkSystem";
+import {
+	getWeatherSnapshot,
+	resetWeatherSystem,
+	type WeatherSnapshot,
+	weatherSystem,
+} from "../systems/weather";
 import { persistenceSystem } from "../world/persistenceSystem";
 import { poiSystem } from "../world/poiSystem";
 import { getRuntimeState, setRuntimeTick } from "../world/runtimeState";
+import type { NearbyPoiContext } from "../world/snapshots";
 import {
 	getAllFragments,
 	type MapFragment,
@@ -64,7 +79,10 @@ export interface GameSnapshot {
 	activeThought: Thought | null;
 	activeScene: "world" | "city";
 	activeCityInstanceId: number | null;
+	cityKitLabOpen: boolean;
 	nearbyPoiName: string | null;
+	nearbyPoi: NearbyPoiContext | null;
+	weather: WeatherSnapshot;
 }
 
 let tick = 0;
@@ -114,7 +132,10 @@ function buildSnapshot(): GameSnapshot {
 		activeThought: getActiveThought(),
 		activeScene: getRuntimeState().activeScene,
 		activeCityInstanceId: getRuntimeState().activeCityInstanceId,
+		cityKitLabOpen: getRuntimeState().cityKitLabOpen,
 		nearbyPoiName: getRuntimeState().nearbyPoi?.name ?? null,
+		nearbyPoi: getRuntimeState().nearbyPoi,
+		weather: getWeatherSnapshot(),
 	};
 }
 
@@ -164,7 +185,10 @@ export function simulationTick() {
 	explorationSystem();
 	lastMergeEvents = fragmentMergeSystem();
 	powerSystem(tick);
+	weatherSystem(tick, gameSpeed, getPowerSnapshot().stormIntensity);
+	lightningSystem(tick, getPowerSnapshot().stormIntensity);
 	signalNetworkSystem();
+	networkOverlaySystem(tick);
 	resourceSystem();
 	repairSystem();
 	fabricationSystem();
@@ -185,6 +209,9 @@ export function resetGameState() {
 	paused = false;
 	lastMergeEvents = [];
 	snapshot = null;
+	resetWeatherSystem();
+	resetLightningSystem();
+	resetNetworkOverlay();
 }
 
 const simulationInterval = setInterval(simulationTick, 1000 / 60);

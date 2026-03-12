@@ -105,5 +105,7 @@ describe("poiSystem", () => {
 
 		expect(getRuntimeState().nearbyPoi?.name).toBe("Science Campus");
 		expect(getRuntimeState().nearbyPoi?.cityInstanceId).toBe(9);
+		expect(getRuntimeState().nearbyPoi?.poiType).toBe("science_campus");
+		expect(getRuntimeState().nearbyPoi?.discovered).toBe(true);
 	});
 });

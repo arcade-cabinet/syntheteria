@@ -1,5 +1,4 @@
 import { resetWorldAIService } from "../ai";
-import type { PersistedWorldRecord } from "../db/worldPersistence";
 import { resetCombatState } from "../systems/combat";
 import { resetEnemyState } from "../systems/enemies";
 import { resetFabricationState } from "../systems/fabrication";
@@ -8,6 +7,7 @@ import { resetPowerSystem } from "../systems/power";
 import { resetResources, setResources } from "../systems/resources";
 import { hydratePersistedWorldEntities } from "../world/entityPersistence";
 import { resetRuntimeState, setRuntimeScene } from "../world/runtimeState";
+import type { PersistedWorldSnapshot } from "../world/snapshots";
 import { resetCityLayout } from "./cityLayout";
 import { resetFactoryEntityIds } from "./factory";
 import { resetGameState } from "./gameState";
@@ -20,7 +20,7 @@ function destroyAllEntities() {
 	}
 }
 
-export function initializeNewGame(persistedWorld: PersistedWorldRecord) {
+export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 	resetGameState();
 	resetTerrainState();
 	resetCityLayout();

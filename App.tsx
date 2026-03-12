@@ -27,6 +27,13 @@ import { TopDownCamera } from "./src/input/TopDownCamera";
 import { UnitInput } from "./src/input/UnitInput";
 import { CityInteriorRenderer } from "./src/rendering/CityInteriorRenderer";
 import { CityRenderer } from "./src/rendering/CityRenderer";
+import { GroundFog } from "./src/rendering/GroundFog";
+import { LandscapeProps } from "./src/rendering/LandscapeProps";
+import { LightningSystem } from "./src/rendering/LightningSystem";
+import { NetworkLineRenderer } from "./src/rendering/NetworkLineRenderer";
+import { StormLighting } from "./src/rendering/StormLighting";
+import { StormParticles } from "./src/rendering/StormParticles";
+import { StormSky } from "./src/rendering/StormSky";
 import { TerrainRenderer } from "./src/rendering/TerrainRenderer";
 import { UnitRenderer } from "./src/rendering/UnitRenderer";
 import { GameUI } from "./src/ui/GameUI";
@@ -38,6 +45,7 @@ import {
 	subscribeRuntimeState,
 } from "./src/world/runtimeState";
 import { setActiveWorldSession } from "./src/world/session";
+import { toWorldSessionSnapshot } from "./src/world/snapshots";
 import "./global.css";
 
 class ErrorBoundary extends Component<
@@ -119,16 +127,7 @@ export default function App() {
 	const hydratePersistedWorld = (persistedWorld: PersistedWorldRecord) => {
 		setWorldSeed(persistedWorld.config.worldSeed);
 		initGameplayPRNG(persistedWorld.config.worldSeed);
-		setActiveWorldSession({
-			saveGame: persistedWorld.saveGame,
-			config: persistedWorld.config,
-			worldMap: persistedWorld.worldMap,
-			tiles: persistedWorld.tiles,
-			pointsOfInterest: persistedWorld.pointsOfInterest,
-			cityInstances: persistedWorld.cityInstances,
-			campaignState: persistedWorld.campaignState,
-			resourceState: persistedWorld.resourceState,
-		});
+		setActiveWorldSession(toWorldSessionSnapshot(persistedWorld));
 		initializeNewGame(persistedWorld);
 	};
 
@@ -206,24 +205,34 @@ export default function App() {
 									</mesh>
 								}
 							>
-								<color attach="background" args={["#050505"]} />
-								<ambientLight intensity={0.5} />
-								<directionalLight
-									position={[10, 20, 10]}
-									intensity={1}
-									castShadow
-								/>
+								<color attach="background" args={["#030308"]} />
 
 								<TopDownCamera />
 								{runtimeState.activeScene === "world" ? (
 									<>
+										<StormSky />
+										<StormLighting />
+										<StormParticles />
+										<LightningSystem />
 										<UnitInput />
 										<TerrainRenderer />
+										<NetworkLineRenderer />
+										<LandscapeProps />
 										<CityRenderer />
 										<UnitRenderer />
+										<GroundFog />
 									</>
 								) : (
-									<CityInteriorRenderer />
+									<>
+										<ambientLight intensity={0.4} color={0x111122} />
+										<directionalLight
+											position={[0, 20, -10]}
+											intensity={0.5}
+											color={0x7744aa}
+											castShadow
+										/>
+										<CityInteriorRenderer />
+									</>
 								)}
 							</Suspense>
 						</Canvas>

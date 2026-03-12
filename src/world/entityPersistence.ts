@@ -1,7 +1,3 @@
-import type {
-	PersistableWorldEntity,
-	WorldEntityRecord,
-} from "../db/worldPersistence";
 import { registerExistingEntityId } from "../ecs/factory";
 import {
 	AIController,
@@ -15,6 +11,7 @@ import {
 	WorldPosition,
 } from "../ecs/traits";
 import { world } from "../ecs/world";
+import type { PersistableWorldEntity, WorldEntitySnapshot } from "./snapshots";
 
 export function capturePersistableWorldEntities(): PersistableWorldEntity[] {
 	const persisted: PersistableWorldEntity[] = [];
@@ -69,7 +66,7 @@ export function capturePersistableWorldEntities(): PersistableWorldEntity[] {
 	return persisted;
 }
 
-export function hydratePersistedWorldEntities(records: WorldEntityRecord[]) {
+export function hydratePersistedWorldEntities(records: WorldEntitySnapshot[]) {
 	for (const record of records) {
 		const traits = [Identity, WorldPosition] as any[];
 		if (record.fragment_id) {

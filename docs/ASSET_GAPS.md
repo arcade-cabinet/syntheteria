@@ -7,7 +7,7 @@ This document tracks which art and model categories are already sufficient for i
 Current confidence by area:
 
 - **World map hex terrain:** strong enough for production use in the current outdoor pipeline.
-- **City kit / modular interiors:** strong enough to begin real assembly validation, but not yet proven sufficient for full gameplay coverage.
+- **City kit / modular interiors:** fully copied, audited, previewed, and operationalized for runtime/config work.
 - **Player/robot roster:** partially covered.
 - **Cultists / human antagonists:** missing.
 - **Storm / lightning / wormhole spectacle:** missing as a cohesive runtime-ready set.
@@ -35,26 +35,27 @@ Open follow-ups:
 
 ## 2. City Modules (Quaternius / pending-integration/City)
 
-Status: **Promising, now under validation**
+Status: **Operationally sufficient for production-contract work**
 
 What we have:
 
-- floor modules
-- wall and door variants
-- roof variants
-- columns / stairs
-- props and detail pieces
+- 91 audited GLBs copied into `assets/models/city`
+- 91 rendered previews in `assets/generated/city-previews`
+- manifest-backed city model config in `src/config/generated/cityModelManifest.ts`
+- an in-app City Kit Lab for family and composite review
+- real GLB-backed city interior rendering
 
 Assessment:
 
-- The city kit appears sufficient for a first playable interior assembly system.
-- The key unresolved question was never just quantity of meshes; it was whether the pieces can be organized into a stable placement grammar. That is now addressed by the city module catalog and validation layer in code.
+- The city kit is no longer a blocker for city-system implementation.
+- The remaining work is semantic curation and higher-order grammar, not import or visibility.
+- The branch now has enough coverage to understand floors, walls, doors, roofs, columns, details, props, and stairs as actual runtime pieces.
 
 Still needed:
 
-- actual runtime import/mapping of validated modules into rendered city scenes
-- compatibility review for footprint, pivot/origin, and scale consistency across the kit
-- classification of which modules are structural vs decorative vs gameplay-significant
+- stronger landmark-specific city composites by gameplay role
+- continued visual curation of adjacency bias and zone affinity
+- POI landmark assets that are outside this indoor modular set
 
 ## 3. Robot / Machine Roster
 
@@ -122,7 +123,7 @@ Why this matters:
 
 ## 6. FX / Atmosphere Assets
 
-Status: **Missing / under-defined**
+Status: **Partially implemented, still incomplete**
 
 Needed:
 
@@ -136,6 +137,19 @@ Why this matters:
 
 - The docs rely heavily on storm identity and lightning as both narrative and mechanical language.
 - These effects are as important as character models for making the game read correctly.
+
+What now exists:
+
+- JSON-configured storm/weather tunables in `src/config/weather.json`
+- system-owned weather and lightning state in `src/systems/weather.ts` and `src/systems/lightning.ts`
+- render-side storm sky / lighting / particles / lightning components under `src/rendering`
+
+What still remains:
+
+- deeper polish and validation of the visual weather stack
+- cult-specific lightning effects
+- signal / compute / hacking visual language
+- route/network overlay composition tied cleanly into weather readability
 
 ## 7. UI / Branding Assets
 
@@ -159,7 +173,7 @@ Recommended next asset-search order:
 2. POI landmark kits for science campus / coast mines / cult north
 3. better fabrication / infrastructure robot silhouettes if current bots prove too generic
 4. lightning / storm / wormhole VFX
-5. supplementary city props only after the validated city grammar exposes real holes
+5. supplementary landmark assets only after the validated city grammar exposes real holes
 
 ## 9. Current Recommendation
 

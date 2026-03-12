@@ -11,6 +11,7 @@
 		"test": "jest",
 		"db:generate": "drizzle-kit generate",
 		"terrain:tilesets": "tsx scripts/slice-tilesets.ts",
+		"city:ingest": "tsx scripts/ingest-city-models.ts",
 		"assets:icons": "python3 scripts/generate-brand-icons.py",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",

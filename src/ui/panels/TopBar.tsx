@@ -8,6 +8,7 @@ import {
 	togglePause,
 } from "../../ecs/gameState";
 import { buildings } from "../../ecs/world";
+import { openCityKitLab } from "../../world/cityTransition";
 import { HudButton } from "../components/HudButton";
 import {
 	BoltIcon,
@@ -38,14 +39,14 @@ function StatChip({
 				: "border-[#6ff3c8]/24 bg-[#0a1718]/78 text-[#d9fff3]";
 
 	return (
-		<View className={`min-w-[112px] rounded-2xl border px-3 py-2 ${toneClass}`}>
-			<View className="flex-row items-center gap-2">
-				<View className="h-5 w-5 items-center justify-center">{icon}</View>
-				<Text className="font-mono text-[10px] uppercase tracking-[0.14em] opacity-70">
+		<View className={`min-w-[88px] md:min-w-[112px] rounded-xl md:rounded-2xl border px-2 md:px-3 py-1.5 md:py-2 ${toneClass}`}>
+			<View className="flex-row items-center gap-1.5 md:gap-2">
+				<View className="h-4 w-4 md:h-5 md:w-5 items-center justify-center">{icon}</View>
+				<Text className="font-mono text-[9px] md:text-[10px] uppercase tracking-[0.14em] opacity-70">
 					{label}
 				</Text>
 			</View>
-			<Text className="mt-2 font-mono text-base tracking-[0.12em]">
+			<Text className="mt-1 md:mt-2 font-mono text-sm md:text-base tracking-[0.12em]">
 				{value}
 			</Text>
 		</View>
@@ -59,14 +60,14 @@ export function TopBar() {
 
 	return (
 		<View className="absolute left-0 top-0 w-full pt-safe pointer-events-none">
-			<View className="mx-4 mt-3 gap-3">
-				<View className="pointer-events-auto flex-row items-start justify-between gap-4">
-					<View className="max-w-[60%] flex-row flex-wrap gap-2">
-						<View className="rounded-[22px] border border-[#6ff3c8]/25 bg-[#071117]/90 px-4 py-3 shadow-2xl">
-							<Text className="font-mono text-[10px] uppercase tracking-[0.26em] text-[#7ee7cb]">
+			<View className="mx-3 md:mx-4 mt-2 md:mt-3 gap-2 md:gap-3">
+				<View className="pointer-events-auto gap-2 md:flex-row md:items-start md:justify-between md:gap-4">
+					<View className="flex-row flex-wrap gap-2 md:max-w-[60%]">
+						<View className="rounded-[18px] md:rounded-[22px] border border-[#6ff3c8]/25 bg-[#071117]/90 px-3 md:px-4 py-2 md:py-3 shadow-2xl">
+							<Text className="font-mono text-[9px] md:text-[10px] uppercase tracking-[0.26em] text-[#7ee7cb]">
 								Synth Network
 							</Text>
-							<Text className="mt-1 font-mono text-lg uppercase tracking-[0.18em] text-[#e2fff5]">
+							<Text className="mt-0.5 md:mt-1 font-mono text-sm md:text-lg uppercase tracking-[0.18em] text-[#e2fff5]">
 								Storm Command Uplink
 							</Text>
 						</View>
@@ -96,11 +97,19 @@ export function TopBar() {
 						)}
 					</View>
 
-					<View className="pointer-events-auto min-w-[248px] rounded-[22px] border border-white/10 bg-[#071117]/92 p-3 shadow-2xl">
+					<View className="pointer-events-auto rounded-[18px] md:rounded-[22px] md:min-w-[248px] border border-white/10 bg-[#071117]/92 p-2 md:p-3 shadow-2xl">
 						<Text className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/45">
 							Sim Control
 						</Text>
 						<View className="mt-3 flex-row gap-2">
+							<HudButton
+								label="City Lab"
+								meta="inspect full module kit"
+								variant="secondary"
+								testID="topbar-city-lab"
+								onPress={openCityKitLab}
+								className="min-w-[112px]"
+							/>
 							{([0.5, 1, 2] as const).map((s) => (
 								<HudButton
 									key={s}
@@ -131,6 +140,12 @@ export function TopBar() {
 				</View>
 
 				<View className="pointer-events-auto flex-row flex-wrap gap-2">
+					<StatChip
+						label={`Day ${snap.weather.dayNumber}`}
+						value={snap.weather.phase.toUpperCase()}
+						icon={<StormIcon width={16} height={16} color="#b088d8" />}
+						tone="amber"
+					/>
 					<StatChip
 						label="Scrap"
 						value={snap.resources.scrapMetal}

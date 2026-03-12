@@ -220,7 +220,7 @@ function FabList({ fabricator }: { fabricator: Entity }) {
 								label={recipe.name}
 								meta={`${recipe.buildTime} ticks`}
 								icon={<FactoryIcon width={16} height={16} color="#f6c56a" />}
-								variant="secondary"
+								variant="utility"
 								disabled={!canAfford}
 								onPress={() => startFabrication(fabricator, recipe.name)}
 							/>
@@ -251,7 +251,7 @@ export function SelectedInfo() {
 		const variant = identity.faction === "player" ? "default" : "danger";
 
 		return (
-			<View className="absolute bottom-6 left-4 w-[358px] pointer-events-auto">
+			<View className="absolute bottom-6 left-4 right-4 md:right-auto md:w-[358px] pointer-events-auto">
 				<HudPanel
 					title={unit.displayName}
 					eyebrow={
@@ -322,7 +322,7 @@ export function SelectedInfo() {
 		const rod = selectedBuilding.get(LightningRod);
 
 		return (
-			<View className="absolute bottom-6 left-4 w-[358px] pointer-events-auto">
+			<View className="absolute bottom-6 left-4 right-4 md:right-auto md:w-[358px] pointer-events-auto">
 				<HudPanel
 					title={building.type.replace(/_/g, " ")}
 					eyebrow="Structure Link"

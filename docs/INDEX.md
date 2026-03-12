@@ -8,14 +8,17 @@ This is the central hub for the documentation of the Syntheteria project. The do
 - [Technical Architecture](./TECHNICAL.md) - Expo + Koota architecture, rendering/runtime loops, persistence boundaries, and core formulas.
 - [Lore](./LORE.md) - World history, the Cultists, the EL entities, and the story sequence of the player AI.
 - [World And City Systems](./WORLD_AND_CITY_SYSTEMS.md) - Persistent world-map generation, POI/state persistence, and the city transition / assembly contract.
+- [UI Brand And Experience](./UI_BRAND_AND_EXPERIENCE.md) - Canonical visual language, interaction tone, accessibility requirements, and player-surface standards.
 - [Asset Gaps](./ASSET_GAPS.md) - Current asset sufficiency, missing factions/POIs/VFX, and the next search targets for pending integration.
+- [Branch Review And Realignment](./BRANCH_REVIEW_AND_REALIGNMENT.md) - Repo-level review of the long-running branch, resolved handoff state, and current misalignments.
 - [Open Questions](./OPEN_QUESTIONS.md) - Preserved design decision log for unresolved and periodically revalidated questions.
 
 ## Agent Guidance
 
 - [Root Agent Plan](../AGENTS.md) - Overarching guidance, constraints, and immediate objectives for agents operating in the root of the repository.
 - [Agent Macro/Meso/Micro Plans](./AGENTS.md) - Specific, scoped plans (Macro milestones, Meso system tasks, Micro atomic patterns) for LLM implementations.
-- [Plans Workspace](./plans/AI_FOUNDATION_PLAN.md) - Active breadth-first planning documents for AI architecture, requirements, audits, and test strategy.
+- [Plans Workspace](./plans/WORLD_CITY_COMPLETION_PR_PLAN.md) - Active long-running branch plan for world/city completion, city kit operationalization, and test strategy.
+- [Claude UI Polish Plan](./plans/CLAUDE_UI_POLISH_PLAN.md) - UI refinement, accessibility, testing, and progress-communication contract for Claude-led polish work.
 
 ## Implementation Progress
 

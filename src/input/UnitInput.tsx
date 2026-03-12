@@ -2,7 +2,7 @@ import { useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { issueMoveCommand } from "../ai";
-import { getFragment } from "../ecs/terrain";
+import { getFragment, worldToHex } from "../ecs/terrain";
 import type { Entity, UnitEntity } from "../ecs/traits";
 import {
 	Building,
@@ -18,6 +18,12 @@ import {
 	getActivePlacement,
 	updateGhostPosition,
 } from "../systems/buildingPlacement";
+import {
+	type RadialOpenContext,
+	closeRadialMenu,
+	getRadialMenuState,
+	openRadialMenu,
+} from "../systems/radialMenu";
 
 /**
  * Handles unit selection and move commands.
@@ -106,6 +112,37 @@ function issueMoveTo(entity: UnitEntity, displayX: number, displayZ: number) {
 	});
 }
 
+/** Build a RadialOpenContext from a 3D world point. */
+function buildRadialContext(point: THREE.Vector3): RadialOpenContext {
+	const entity = findEntityAtPoint(point);
+	const hex = worldToHex(point.x, point.z);
+
+	if (entity) {
+		const unitComp = entity.get(Unit);
+		const buildingComp = entity.get(Building);
+		const identity = entity.get(Identity);
+
+		return {
+			selectionType: unitComp ? "unit" : "building",
+			targetEntityId: identity?.id ?? null,
+			targetHex: hex,
+			targetFaction: identity?.faction ?? null,
+		};
+	}
+
+	return {
+		selectionType: "empty_tile",
+		targetEntityId: null,
+		targetHex: hex,
+		targetFaction: null,
+	};
+}
+
+/** Long-press duration threshold in ms */
+const LONG_PRESS_MS = 500;
+/** Max movement in px before long-press is cancelled */
+const LONG_PRESS_MOVE_THRESHOLD = 100; // 10px squared
+
 function getSelectedEntity(): Entity | null {
 	for (const entity of units) {
 		if (entity.get(Unit)?.selected) return entity;
@@ -139,6 +176,8 @@ export function UnitInput() {
 		null,
 	);
 	const wasPanning = useRef(false);
+	const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const longPressFired = useRef(false);
 
 	const handleTap = useCallback(
 		(clientX: number, clientY: number) => {
@@ -188,12 +227,33 @@ export function UnitInput() {
 			);
 			if (!point) return;
 
-			// Right-click always moves selected units
-			for (const entity of units) {
-				if (entity.get(Unit)?.selected) {
-					issueMoveTo(entity, point.x, point.z);
-				}
+			// Close any existing radial menu first
+			if (getRadialMenuState().open) {
+				closeRadialMenu();
 			}
+
+			const context = buildRadialContext(point);
+			openRadialMenu(clientX, clientY, context);
+		},
+		[camera, gl],
+	);
+
+	const handleLongPress = useCallback(
+		(clientX: number, clientY: number) => {
+			const point = getWorldPointFromEvent(
+				clientX,
+				clientY,
+				camera,
+				gl.domElement,
+			);
+			if (!point) return;
+
+			if (getRadialMenuState().open) {
+				closeRadialMenu();
+			}
+
+			const context = buildRadialContext(point);
+			openRadialMenu(clientX, clientY, context);
 		},
 		[camera, gl],
 	);
@@ -205,6 +265,11 @@ export function UnitInput() {
 		const onPointerDown = (e: PointerEvent) => {
 			if (e.pointerType === "touch") return; // handled by touch events
 			if (e.button === 0) {
+				// Close radial menu on left-click if it's open
+				if (getRadialMenuState().open) {
+					closeRadialMenu();
+					return;
+				}
 				handleTap(e.clientX, e.clientY);
 			} else if (e.button === 2) {
 				handleRightClick(e.clientX, e.clientY);
@@ -216,20 +281,37 @@ export function UnitInput() {
 		};
 
 		// --- Mobile: touch events ---
-		// Single-finger tap = select or move. Multi-touch = camera pan (handled by TopDownCamera).
+		// Single-finger tap = select or move.
+		// Single-finger long-press = open radial menu.
+		// Multi-touch = camera pan (handled by TopDownCamera).
 		const onTouchStart = (e: TouchEvent) => {
 			if (e.touches.length !== 1) {
-				// Multi-touch started — mark as panning
+				// Multi-touch started — mark as panning, cancel long-press
 				wasPanning.current = true;
 				touchStart.current = null;
+				if (longPressTimer.current) {
+					clearTimeout(longPressTimer.current);
+					longPressTimer.current = null;
+				}
 				return;
 			}
 			wasPanning.current = false;
+			longPressFired.current = false;
+			const startX = e.touches[0].clientX;
+			const startY = e.touches[0].clientY;
 			touchStart.current = {
-				x: e.touches[0].clientX,
-				y: e.touches[0].clientY,
+				x: startX,
+				y: startY,
 				time: performance.now(),
 			};
+
+			// Start long-press timer
+			longPressTimer.current = setTimeout(() => {
+				if (!wasPanning.current && touchStart.current) {
+					longPressFired.current = true;
+					handleLongPress(startX, startY);
+				}
+			}, LONG_PRESS_MS);
 		};
 
 		const onTouchMove = (e: TouchEvent) => {
@@ -237,13 +319,31 @@ export function UnitInput() {
 			// If finger moved more than a small threshold, it's a pan not a tap
 			const dx = e.touches[0]?.clientX - touchStart.current.x;
 			const dy = e.touches[0]?.clientY - touchStart.current.y;
-			if (dx * dx + dy * dy > 100) {
+			if (dx * dx + dy * dy > LONG_PRESS_MOVE_THRESHOLD) {
 				// 10px threshold squared
 				wasPanning.current = true;
+				// Cancel long-press timer on significant movement
+				if (longPressTimer.current) {
+					clearTimeout(longPressTimer.current);
+					longPressTimer.current = null;
+				}
 			}
 		};
 
 		const onTouchEnd = (e: TouchEvent) => {
+			// Cancel any pending long-press timer
+			if (longPressTimer.current) {
+				clearTimeout(longPressTimer.current);
+				longPressTimer.current = null;
+			}
+
+			// Don't process tap if long-press already fired
+			if (longPressFired.current) {
+				longPressFired.current = false;
+				touchStart.current = null;
+				return;
+			}
+
 			// Only count as a tap if we weren't panning and touch was brief
 			if (wasPanning.current || !touchStart.current) {
 				touchStart.current = null;
@@ -256,7 +356,12 @@ export function UnitInput() {
 
 			const elapsed = performance.now() - touchStart.current.time;
 			if (elapsed < 300) {
-				handleTap(touchStart.current.x, touchStart.current.y);
+				// Close radial menu on tap if open, otherwise normal tap behavior
+				if (getRadialMenuState().open) {
+					closeRadialMenu();
+				} else {
+					handleTap(touchStart.current.x, touchStart.current.y);
+				}
 			}
 			touchStart.current = null;
 		};
@@ -299,7 +404,7 @@ export function UnitInput() {
 			canvas.removeEventListener("touchmove", onTouchMove);
 			canvas.removeEventListener("touchend", onTouchEnd);
 		};
-	}, [gl, camera, handleTap, handleRightClick]);
+	}, [gl, camera, handleTap, handleRightClick, handleLongPress]);
 
 	return null;
 }

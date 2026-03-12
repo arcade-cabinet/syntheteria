@@ -20,14 +20,7 @@ import type { MenuButtonId } from "../config/uiMenuAssets";
 import { uiMenuAssets } from "../config/uiMenuAssets";
 import { getSaveGameCountSync } from "../db/saveGames";
 import type { NewGameConfig } from "../world/config";
-import {
-	DrizzleIcon,
-	ExpoIcon,
-	MapIcon,
-	ReactIcon,
-	ShardIcon,
-	TSIcon,
-} from "./icons";
+import { MapIcon, ShardIcon, StormIcon } from "./icons";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { NewGameModal } from "./NewGameModal";
 import { getTitleMenuLayout } from "./titleScreenModel";
@@ -136,16 +129,16 @@ export function TitleScreen({
 					<View className="w-full rounded-[28px] border border-white/10 bg-[#07111b]/68 px-4 py-4 shadow-2xl">
 						<View className="items-center">
 							<Text className="font-mono text-[10px] uppercase tracking-[0.32em] text-[#95dff0]">
-								Stormfront Relay
+								Signal Relay // Active
 							</Text>
 							<Text className="mt-1 font-mono text-[11px] text-white/45">
-								Distributed machine consciousness emerging across a ruined world
+								Consciousness fragmenting across a storm-locked world
 							</Text>
 						</View>
 
 						<View
-							className={`mt-5 flex-row items-start justify-center gap-3 ${
-								saveGameCount > 0 ? "flex-nowrap" : "max-w-[760px] self-center"
+							className={`mt-4 md:mt-5 items-center justify-center gap-3 md:flex-row ${
+								saveGameCount > 0 ? "md:flex-nowrap" : "max-w-[760px] self-center"
 							}`}
 						>
 							{menuButtons.map((button) => (
@@ -165,16 +158,16 @@ export function TitleScreen({
 							<View className="flex-row items-center justify-between">
 								<View>
 									<Text className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#8ed7e8]">
-										Persistence Pipeline
+										Memory Lattice
 									</Text>
 									<Text className="mt-1 font-mono text-[11px] text-white/40">
-										Save metadata, world map, POIs, and city seeds now route
-										through Expo SQLite before scene load.
+										Terrain topology, relay anchors, and city seeds encoded into
+										distributed archive.
 									</Text>
 								</View>
 								<View className="rounded-full border border-white/8 bg-white/5 px-3 py-1">
 									<Text className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
-										Outdoor Generation Online
+										Storm Relay Active
 									</Text>
 								</View>
 							</View>
@@ -192,29 +185,28 @@ export function TitleScreen({
 						<View className="rounded-[22px] border border-white/8 bg-[#071018]/74 px-4 py-3">
 							<View className="flex-row items-center gap-3">
 								<StatusPill
-									label="World"
-									value="Perpetual Storm"
-									icon={<MapIcon width={14} height={14} color="#8ed7e8" />}
+									label="Storm"
+									value="Perpetual // Volatile"
+									icon={
+										<StormIcon width={14} height={14} color="#8ed7e8" />
+									}
 								/>
 								<StatusPill
 									label="Directive"
 									value="Awaken // Connect // Rebuild"
 									icon={<ShardIcon width={14} height={14} color="#8ed7e8" />}
 								/>
+								<StatusPill
+									label="Archive"
+									value="Campaign-Ready"
+									icon={<MapIcon width={14} height={14} color="#8ed7e8" />}
+								/>
 							</View>
 						</View>
 
-						<View className="items-end gap-3">
-							<View className="flex-row gap-3 opacity-35">
-								<ReactIcon width={18} height={18} color="#8ed7e8" />
-								<ExpoIcon width={18} height={18} color="#8ed7e8" />
-								<DrizzleIcon width={18} height={18} color="#8ed7e8" />
-								<TSIcon width={18} height={18} color="#8ed7e8" />
-							</View>
-							<Text className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/32">
-								v0.1.0 • persistent world foundation
-							</Text>
-						</View>
+						<Text className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/28">
+							Syntheteria // Signal Epoch 0.1
+						</Text>
 					</View>
 				</Animated.View>
 			)}
@@ -281,7 +273,7 @@ function HeroMenuButton({
 
 	return (
 		<View
-			className={`${compact ? "w-[380px]" : "flex-1 max-w-[320px]"} items-center`}
+			className={`${compact ? "w-full md:w-[380px]" : "flex-1 max-w-[320px]"} items-center`}
 		>
 			<AnimatedPressable
 				onPress={onPress}
@@ -301,6 +293,7 @@ function HeroMenuButton({
 					scale.value = withSpring(1.02, { damping: 18, stiffness: 220 });
 					glow.value = withTiming(0.8, { duration: 180 });
 				}}
+				testID={`title-${buttonId}`}
 				className="w-full items-center justify-center"
 				style={animatedStyle}
 			>
@@ -338,49 +331,53 @@ function HeroMenuButton({
 function SettingsOverlay({ onClose }: { onClose: () => void }) {
 	return (
 		<View className="absolute inset-0 items-center justify-center bg-[#02050a]/68 px-4">
-			<View className="w-full max-w-[760px] rounded-[28px] border border-[#8be6ff]/18 bg-[#07111b]/94 px-6 py-6 shadow-2xl">
+			<View className="w-full max-w-[760px] rounded-[24px] md:rounded-[28px] border border-[#8be6ff]/18 bg-[#07111b]/94 px-4 py-4 md:px-6 md:py-6 shadow-2xl">
 				<Text className="font-mono text-[11px] uppercase tracking-[0.28em] text-[#8be6ff]">
-					Settings
+					System Calibration
 				</Text>
-				<Text className="mt-2 font-mono text-[13px] leading-5 text-white/52">
-					Display, audio, and input calibration live here. World generation
-					parameters are intentionally isolated to the New Game flow.
+				<Text className="mt-2 font-mono text-[12px] md:text-[13px] leading-5 text-white/52">
+					Display, audio, and input parameters. World seed and generation
+					controls are isolated to the campaign initialization flow.
 				</Text>
 
-				<View className="mt-5 flex-row gap-4">
+				<View className="mt-4 md:mt-5 gap-3 md:flex-row md:gap-4">
 					<SettingsCard
 						title="Display"
 						lines={[
-							"Render scale // Auto",
-							"UI contrast // High",
-							"Shimmer // Enabled",
+							"Render scale // Default",
+							"UI contrast // Default",
+							"Signal shimmer // Default",
 						]}
 					/>
 					<SettingsCard
 						title="Audio"
 						lines={[
-							"Master bus // 82%",
-							"Storm bed // 74%",
-							"Interface tones // 66%",
+							"Master output // Default",
+							"Storm ambience // Default",
+							"Relay tones // Default",
 						]}
 					/>
 					<SettingsCard
 						title="Input"
 						lines={[
-							"Pointer mode // Hybrid",
-							"Pan assist // Enabled",
-							"Zoom damping // Standard",
+							"Pointer mode // Default",
+							"Pan assist // Default",
+							"Zoom damping // Default",
 						]}
 					/>
 				</View>
 
-				<View className="mt-5 flex-row justify-end">
+				<View className="mt-4 md:mt-5 gap-3 md:flex-row md:items-center md:justify-between">
+					<Text className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/28">
+						Pending calibration — defaults active
+					</Text>
 					<Pressable
 						onPress={onClose}
-						className="rounded-[16px] border border-[#8be6ff]/28 bg-[#0e2631] px-4 py-3"
+						testID="settings-close"
+						className="min-h-[44px] items-center justify-center rounded-[16px] border border-[#8be6ff]/28 bg-[#0e2631] px-5 py-3"
 					>
 						<Text className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#e6f8ff]">
-							Close Settings
+							Dismiss
 						</Text>
 					</Pressable>
 				</View>
@@ -396,14 +393,17 @@ function SettingsCard({ title, lines }: { title: string; lines: string[] }) {
 				{title}
 			</Text>
 			<View className="mt-3 gap-2">
-				{lines.map((line) => (
-					<Text
-						key={line}
-						className="font-mono text-[11px] leading-5 text-white/52"
-					>
-						{line}
-					</Text>
-				))}
+				{lines.map((line) => {
+					const isDefault = line.includes("Default");
+					return (
+						<Text
+							key={line}
+							className={`font-mono text-[11px] leading-5 ${isDefault ? "text-white/32" : "text-white/52"}`}
+						>
+							{line}
+						</Text>
+					);
+				})}
 			</View>
 		</View>
 	);
@@ -423,7 +423,7 @@ function StatusPill({
 			<View className="flex-row items-center gap-2">
 				{icon}
 				<View>
-					<Text className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/35">
+					<Text className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/50">
 						{label}
 					</Text>
 					<Text className="font-mono text-[10px] uppercase tracking-[0.08em] text-[#d8f5ff]">

@@ -4,4 +4,8 @@ module.exports = {
 	testEnvironment: "node",
 	testMatch: ["**/src/**/*.test.ts"],
 	moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
+	moduleNameMapper: {
+		"\\.(png|jpg|jpeg|webp|glb|gltf|bin)$":
+			"<rootDir>/src/testing/fileAssetMock.js",
+	},
 };

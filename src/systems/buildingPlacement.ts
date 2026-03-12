@@ -1,9 +1,9 @@
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { spawnFabricationUnit, spawnLightningRod } from "../ecs/factory";
-import { isWalkable } from "../ecs/terrain";
 import { Identity, MapFragment, WorldPosition } from "../ecs/traits";
 import { lightningRods, units } from "../ecs/world";
 import { getResources, type ResourcePool, spendResource } from "./resources";
+import { isPassableAtWorldPosition } from "../world/structuralSpace";
 /**
  * Building placement state machine.
  *
@@ -11,7 +11,7 @@ import { getResources, type ResourcePool, spendResource } from "./resources";
  * on the ground to place it. Ghost preview shows valid/invalid position.
  *
  * Placement rules:
- * - Must be on walkable terrain (not water, not inside existing buildings)
+ * - Must be on passable structural ground (not breach void, not inside existing buildings)
  * - Must have enough resources
  * - Lightning rods need minimum spacing from other rods
  */
@@ -68,7 +68,7 @@ export function updateGhostPosition(x: number, z: number) {
 
 function isValidPlacement(x: number, z: number, type: PlaceableType): boolean {
 	if (!type) return false;
-	if (!isWalkable(x, z)) return false;
+	if (!isPassableAtWorldPosition(x, z)) return false;
 	if (isInsideBuilding(x, z)) return false;
 
 	// Lightning rods need spacing

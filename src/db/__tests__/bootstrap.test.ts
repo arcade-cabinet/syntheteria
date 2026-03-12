@@ -15,10 +15,10 @@ describe("database bootstrap", () => {
 			"CREATE TABLE IF NOT EXISTS save_games",
 		);
 		expect(database.execCalls[0]).toContain(
-			"CREATE TABLE IF NOT EXISTS world_maps",
+			"CREATE TABLE IF NOT EXISTS ecumenopolis_maps",
 		);
 		expect(database.execCalls[0]).toContain(
-			"CREATE TABLE IF NOT EXISTS world_tiles",
+			"CREATE TABLE IF NOT EXISTS sector_cells",
 		);
 		expect(database.execCalls[0]).toContain(
 			"CREATE TABLE IF NOT EXISTS world_points_of_interest",
@@ -58,7 +58,9 @@ describe("database bootstrap", () => {
 			database.execCalls.some((sql) => sql.includes("ADD COLUMN world_seed")),
 		).toBe(true);
 		expect(
-			database.execCalls.some((sql) => sql.includes("ADD COLUMN map_size")),
+			database.execCalls.some((sql) =>
+				sql.includes("ADD COLUMN sector_scale"),
+			),
 		).toBe(true);
 		expect(
 			database.execCalls.some((sql) => sql.includes("ADD COLUMN difficulty")),

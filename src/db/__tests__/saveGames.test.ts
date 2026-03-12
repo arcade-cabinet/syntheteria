@@ -22,7 +22,7 @@ describe("save game persistence", () => {
 
 		expect(saveGame).not.toBeNull();
 		expect(saveGame?.world_seed).toBe(1337);
-		expect(saveGame?.map_size).toBe("standard");
+		expect(saveGame?.sector_scale).toBe("standard");
 		expect(saveGame?.difficulty).toBe("standard");
 		expect(saveGame?.climate_profile).toBe("temperate");
 		expect(saveGame?.storm_profile).toBe("volatile");

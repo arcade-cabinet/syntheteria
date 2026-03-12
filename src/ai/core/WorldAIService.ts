@@ -1,6 +1,10 @@
 import { FollowPathBehavior, Path, Vector3 } from "yuka";
+import { getBotDefinition } from "../../bots";
 import { gameplayRandom } from "../../ecs/seed";
-import { getTerrainHeight, hexToWorld, isWalkable } from "../../ecs/terrain";
+import {
+	getSurfaceHeightAtWorldPosition,
+	isPassableAtWorldPosition,
+} from "../../world/structuralSpace";
 import {
 	AIController,
 	Hacking,
@@ -21,16 +25,16 @@ import {
 import type { SyntheteriaAgent } from "../agents/SyntheteriaAgent";
 import type { AgentPersistenceState, AgentTaskState } from "../agents/types";
 import { planAgentTask } from "../goals/WorldPlanner";
-import { HexNavigationAdapter } from "../navigation/HexNavigationAdapter";
+import { SectorNavigationAdapter } from "../navigation/SectorNavigationAdapter";
 import { deserializeSingleAgentState } from "../serialization/AISerialization";
+import { NAVIGATION_TUNING, STEERING_TUNING } from "../config/behaviorProfiles";
 import { AIRuntime } from "./AIRuntime";
+import { gridToWorld, worldToGrid } from "../../world/sectorCoordinates";
 
 const AGGRO_RANGE = 6;
 const PATROL_RANGE = 15;
 const PATROL_CHANCE = 0.12;
 const TARGET_REPATH_DISTANCE = 1.5;
-const ARRIVAL_TOLERANCE = 0.45;
-
 type PathNode = { q: number; r: number };
 
 function distanceBetween(a: Vec3, b: Vec3) {
@@ -63,8 +67,8 @@ function getPatrolTarget(from: Vec3): Vec3 | null {
 	for (let attempt = 0; attempt < 5; attempt++) {
 		const x = from.x + (gameplayRandom() - 0.5) * PATROL_RANGE * 2;
 		const z = from.z + (gameplayRandom() - 0.5) * PATROL_RANGE * 2;
-		if (isWalkable(x, z)) {
-			return { x, y: getTerrainHeight(x, z), z };
+		if (isPassableAtWorldPosition(x, z)) {
+			return { x, y: getSurfaceHeightAtWorldPosition(x, z), z };
 		}
 	}
 	return null;
@@ -98,7 +102,7 @@ function findNearestUnitByFaction(
 
 export class WorldAIService {
 	readonly runtime = new AIRuntime();
-	private readonly navigation = new HexNavigationAdapter();
+	private readonly navigation = new SectorNavigationAdapter();
 
 	reset() {
 		this.runtime.reset();
@@ -181,17 +185,27 @@ export class WorldAIService {
 		const unit = entity.get(Unit)!;
 		const position = entity.get(WorldPosition)!;
 		const existing = this.runtime.registry.get(identity.id);
+		const botDefinition = getBotDefinition(unit.type);
 		if (existing) {
 			existing.position.set(position.x, position.y, position.z);
 			existing.maxSpeed = unit.speed;
+			existing.steeringProfile = botDefinition.steeringProfile;
+			existing.navigationProfile = botDefinition.navigationProfile;
+			existing.applyBehaviorProfile();
 			return existing;
 		}
 
 		const agent = ai.stateJson
 			? rehydrateAgentFromState(deserializeSingleAgentState(ai.stateJson))
-			: createAgentForRole(ai.role, identity.id, unit.speed);
+			: createAgentForRole(ai.role, identity.id, unit.speed, {
+					steeringProfile: botDefinition.steeringProfile,
+					navigationProfile: botDefinition.navigationProfile,
+				});
 		agent.position.set(position.x, position.y, position.z);
 		agent.maxSpeed = unit.speed;
+		agent.steeringProfile = botDefinition.steeringProfile;
+		agent.navigationProfile = botDefinition.navigationProfile;
+		agent.applyBehaviorProfile();
 
 		if (agent.task) {
 			this.applyTaskSteering(agent);
@@ -284,7 +298,11 @@ export class WorldAIService {
 		to: Vec3,
 		task: AgentTaskState,
 	) {
-		const pathNodes = this.navigation.findPath(from, to);
+		const navigationTuning = NAVIGATION_TUNING[agent.navigationProfile];
+		const pathNodes =
+			navigationTuning.mode === "direct_line"
+				? [worldToGrid(to.x, to.z)]
+				: this.navigation.findPath(from, to);
 		const payloadPath = pathNodes.map((node) => ({ q: node.q, r: node.r }));
 		agent.setTask({
 			...task,
@@ -304,18 +322,21 @@ export class WorldAIService {
 	private applyTaskSteering(agent: SyntheteriaAgent) {
 		const payload = clonePayloadRecord(agent.task?.payload);
 		const pathNodes = getPathPayload(payload);
+		const steeringTuning = STEERING_TUNING[agent.steeringProfile];
 		agent.steering.clear();
 
 		const yukaPath = new Path();
 		yukaPath.loop = false;
 		yukaPath.add(agent.position.clone());
 		for (const node of pathNodes) {
-			const worldPoint = hexToWorld(node.q, node.r);
+			const worldPoint = gridToWorld(node.q, node.r);
 			yukaPath.add(new Vector3(worldPoint.x, worldPoint.y, worldPoint.z));
 		}
 
 		if (pathNodes.length > 0) {
-			agent.steering.add(new FollowPathBehavior(yukaPath, ARRIVAL_TOLERANCE));
+			agent.steering.add(
+				new FollowPathBehavior(yukaPath, steeringTuning.arrivalTolerance),
+			);
 		}
 	}
 
@@ -342,7 +363,8 @@ export class WorldAIService {
 		if (
 			agent.task &&
 			destination &&
-			distanceBetween(worldPosition, destination) <= ARRIVAL_TOLERANCE
+			distanceBetween(worldPosition, destination) <=
+				STEERING_TUNING[agent.steeringProfile].arrivalTolerance
 		) {
 			agent.steering.clear();
 			if (agent.task.kind === "hack_target") {

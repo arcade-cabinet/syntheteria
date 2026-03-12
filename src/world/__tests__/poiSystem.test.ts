@@ -1,3 +1,4 @@
+import { createBotUnitState } from "../../bots";
 import { Identity, MapFragment, Unit, WorldPosition } from "../../ecs/traits";
 import { world } from "../../ecs/world";
 import { poiSystem } from "../poiSystem";
@@ -19,7 +20,7 @@ describe("poiSystem", () => {
 				id: 1,
 				name: "Network Test",
 				world_seed: 1,
-				map_size: "standard",
+				sector_scale: "standard",
 				difficulty: "standard",
 				climate_profile: "temperate",
 				storm_profile: "volatile",
@@ -29,28 +30,29 @@ describe("poiSystem", () => {
 			},
 			config: {
 				worldSeed: 1,
-				mapSize: "standard",
+				sectorScale: "standard",
 				difficulty: "standard",
 				climateProfile: "temperate",
 				stormProfile: "volatile",
 			},
-			worldMap: {
+			ecumenopolis: {
 				id: 1,
 				save_game_id: 1,
 				width: 40,
 				height: 40,
-				map_size: "standard",
+				sector_scale: "standard",
 				climate_profile: "temperate",
 				storm_profile: "volatile",
-				spawn_q: 0,
-				spawn_r: 0,
+				spawn_sector_id: "command_arcology",
+				spawn_anchor_key: "0,0",
 				generated_at: 0,
 			},
-			tiles: [],
+			sectorCells: [],
+			sectorStructures: [],
 			pointsOfInterest: [
 				{
 					id: 1,
-					world_map_id: 1,
+					ecumenopolis_id: 1,
 					type: "science_campus",
 					name: "Science Campus",
 					q: 2,
@@ -61,7 +63,7 @@ describe("poiSystem", () => {
 			cityInstances: [
 				{
 					id: 9,
-					world_map_id: 1,
+					ecumenopolis_id: 1,
 					poi_id: 1,
 					name: "Science Campus",
 					world_q: 2,
@@ -92,13 +94,15 @@ describe("poiSystem", () => {
 		const entity = world.spawn(Identity, MapFragment, Unit, WorldPosition);
 		entity.set(Identity, { id: "unit_1", faction: "player" });
 		entity.set(MapFragment, { fragmentId: "frag_0" });
-		entity.set(Unit, {
-			type: "maintenance_bot",
-			displayName: "Scout",
-			speed: 1,
-			selected: false,
-			components: [],
-		});
+		entity.set(
+			Unit,
+			createBotUnitState({
+				unitType: "maintenance_bot",
+				displayName: "Scout",
+				speed: 1,
+				components: [],
+			}),
+		);
 		entity.set(WorldPosition, { x: 1, y: 0, z: 1 });
 
 		poiSystem();

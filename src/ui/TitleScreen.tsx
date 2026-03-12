@@ -26,7 +26,6 @@ import { NewGameModal } from "./NewGameModal";
 import { getTitleMenuLayout } from "./titleScreenModel";
 
 const titleBackground = backgroundImage as ImageSourcePropType;
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type TitleScreenProps = {
 	onContinueGame: () => Promise<void> | void;
@@ -161,7 +160,7 @@ export function TitleScreen({
 										Memory Lattice
 									</Text>
 									<Text className="mt-1 font-mono text-[11px] text-white/40">
-										Terrain topology, relay anchors, and city seeds encoded into
+										Sector topology, relay anchors, and district seeds encoded into
 										distributed archive.
 									</Text>
 								</View>
@@ -270,32 +269,21 @@ function HeroMenuButton({
 	const glowStyle = useAnimatedStyle(() => ({
 		opacity: glow.value,
 	}));
+	const hotspotStyle = compact
+		? { left: 72, right: 72, top: 44, bottom: 28 }
+		: { left: 38, right: 38, top: 24, bottom: 20 };
+	const imageStyle = {
+		width: "100%" as const,
+		height: compact ? 148 : 128,
+	};
 
 	return (
 		<View
-			className={`${compact ? "w-full md:w-[380px]" : "flex-1 max-w-[320px]"} items-center`}
+			className={`${compact ? "w-full max-w-[380px]" : "flex-1 max-w-[320px]"} items-center`}
 		>
-			<AnimatedPressable
-				onPress={onPress}
-				onHoverIn={() => {
-					scale.value = withSpring(1.03, { damping: 18, stiffness: 220 });
-					glow.value = withTiming(0.95, { duration: 160 });
-				}}
-				onHoverOut={() => {
-					scale.value = withSpring(1, { damping: 18, stiffness: 220 });
-					glow.value = withTiming(0.55, { duration: 220 });
-				}}
-				onPressIn={() => {
-					scale.value = withSpring(0.985, { damping: 20, stiffness: 260 });
-					glow.value = withTiming(1, { duration: 90 });
-				}}
-				onPressOut={() => {
-					scale.value = withSpring(1.02, { damping: 18, stiffness: 220 });
-					glow.value = withTiming(0.8, { duration: 180 });
-				}}
-				testID={`title-${buttonId}`}
-				className="w-full items-center justify-center"
-				style={animatedStyle}
+			<Animated.View
+				className="relative w-full max-w-full items-center justify-center overflow-hidden"
+				style={[animatedStyle, { width: "100%" }]}
 			>
 				<Animated.View
 					pointerEvents="none"
@@ -306,7 +294,8 @@ function HeroMenuButton({
 					<Image
 						source={buttonSource}
 						resizeMode="contain"
-						className={`${compact ? "h-[148px]" : "h-[128px]"} w-full`}
+						style={imageStyle}
+						className="pointer-events-none"
 					/>
 				) : (
 					<View className="w-full rounded-[28px] border border-[#8be6ff]/26 bg-[#0b1822]/88 px-5 py-6">
@@ -320,7 +309,29 @@ function HeroMenuButton({
 						</View>
 					</View>
 				)}
-			</AnimatedPressable>
+				<Pressable
+					onPress={onPress}
+					onHoverIn={() => {
+						scale.value = withSpring(1.03, { damping: 18, stiffness: 220 });
+						glow.value = withTiming(0.95, { duration: 160 });
+					}}
+					onHoverOut={() => {
+						scale.value = withSpring(1, { damping: 18, stiffness: 220 });
+						glow.value = withTiming(0.55, { duration: 220 });
+					}}
+					onPressIn={() => {
+						scale.value = withSpring(0.985, { damping: 20, stiffness: 260 });
+						glow.value = withTiming(1, { duration: 90 });
+					}}
+					onPressOut={() => {
+						scale.value = withSpring(1.02, { damping: 18, stiffness: 220 });
+						glow.value = withTiming(0.8, { duration: 180 });
+					}}
+					testID={`title-${buttonId}`}
+					className="absolute z-10"
+					style={hotspotStyle}
+				/>
+			</Animated.View>
 			<Text className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[#8fdcec]">
 				{label} • {meta}
 			</Text>

@@ -1,11 +1,10 @@
-import { Clone, useGLTF } from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { getBotDefinition } from "../bots";
 import { resolveAssetUri } from "../config/assetUri";
 import { modelAssets } from "../config/modelAssets";
-import unitsConfigJson from "../config/units.json";
-import { getFragment, getTerrainHeight } from "../ecs/terrain";
 import type { BuildingEntity, UnitEntity } from "../ecs/traits";
 import {
 	Building,
@@ -22,27 +21,89 @@ import {
 	getActivePlacement,
 	getGhostPosition,
 } from "../systems/buildingPlacement";
-
-const unitsConfig = unitsConfigJson as any;
+import {
+	getStructuralFragment,
+	getSurfaceHeightAtWorldPosition,
+} from "../world/structuralSpace";
 
 const COLOR_SELECTED = 0xffaa00;
 const COLOR_BUILDING = 0x888888;
 const COLOR_BUILDING_UNPOWERED = 0x554444;
 const COLOR_FABRICATION = 0xaa8844;
 const COLOR_BROKEN = 0xff4444;
+const FACTION_BEACON_COLORS: Record<string, number> = {
+	player: 0x7ff7d4,
+	rogue: 0xffa36f,
+	cult: 0xd987ff,
+	feral: 0xff6f6f,
+};
+
+function normalizeUnitMaterial(
+	material: THREE.Material,
+	beaconColor: number,
+) {
+	if (!(material instanceof THREE.MeshStandardMaterial)) {
+		return;
+	}
+
+	const accent = new THREE.Color(beaconColor);
+	material.color = material.color.clone().lerp(new THREE.Color(0xb7c7d6), 0.4);
+	material.emissive = material.emissive.clone().lerp(accent, 0.12);
+	material.emissiveIntensity = 0.22;
+	material.roughness = Math.min(material.roughness ?? 0.92, 0.84);
+	material.metalness = Math.max(material.metalness ?? 0.1, 0.12);
+	material.side = THREE.DoubleSide;
+	material.needsUpdate = true;
+}
 
 function UnitMesh({ entity }: { entity: UnitEntity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const ringRef = useRef<THREE.Mesh>(null);
 
 	const unitType = entity.get(Unit)?.type || "maintenance_bot";
-	const config = unitsConfig[unitType] || unitsConfig["maintenance_bot"];
+	const config = getBotDefinition(unitType);
 	const modelPath = resolveAssetUri(modelAssets[config.model]);
-	const { scene } = useGLTF(modelPath);
+	const gltf = useGLTF(modelPath);
+	const scene = Array.isArray(gltf) ? gltf[0]?.scene : gltf.scene;
+	const faction = entity.get(Identity)?.faction ?? "player";
+	const beaconColor = FACTION_BEACON_COLORS[faction] ?? 0x8be6ff;
+	const normalizedScene = useMemo<THREE.Group | null>(() => {
+		if (!scene) {
+			return null;
+		}
+		const box = new THREE.Box3().setFromObject(scene);
+		const center = new THREE.Vector3();
+		box.getCenter(center);
+		const clone = scene.clone(true) as THREE.Group;
+		clone.position.set(-center.x, -box.min.y, -center.z);
+		clone.traverse((child) => {
+			if (!(child instanceof THREE.Mesh)) {
+				return;
+			}
+			child.castShadow = true;
+			child.receiveShadow = true;
+			if (Array.isArray(child.material)) {
+				child.material = child.material.map((material) => {
+					if (material instanceof THREE.MeshStandardMaterial) {
+						const next = material.clone();
+						normalizeUnitMaterial(next, beaconColor);
+						return next;
+					}
+					return material;
+				});
+				return;
+			}
+			if (child.material instanceof THREE.MeshStandardMaterial) {
+				child.material = child.material.clone();
+				normalizeUnitMaterial(child.material, beaconColor);
+			}
+		});
+		return clone;
+	}, [beaconColor, scene]);
 
 	useFrame(() => {
 		const frag = entity.has(MapFragment)
-			? getFragment(entity.get(MapFragment)!.fragmentId)
+			? getStructuralFragment(entity.get(MapFragment)!.fragmentId)
 			: null;
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
@@ -63,7 +124,32 @@ function UnitMesh({ entity }: { entity: UnitEntity }) {
 
 	return (
 		<group ref={groupRef}>
-			<Clone object={scene} scale={config.scale || 1} />
+			{normalizedScene ? (
+				<primitive
+					object={normalizedScene}
+					scale={[(config.scale || 1) * 1.25, (config.scale || 1) * 1.25, (config.scale || 1) * 1.25]}
+				/>
+			) : null}
+			<mesh position={[0, 1.4, 0]}>
+				<sphereGeometry args={[0.09, 14, 14]} />
+				<meshStandardMaterial
+					color={beaconColor}
+					emissive={beaconColor}
+					emissiveIntensity={0.75}
+					roughness={0.18}
+					metalness={0.08}
+				/>
+			</mesh>
+			<mesh position={[0, 0.15, 0]}>
+				<cylinderGeometry args={[0.09, 0.14, 0.12, 10]} />
+				<meshStandardMaterial
+					color={0x14232d}
+					emissive={beaconColor}
+					emissiveIntensity={0.18}
+					roughness={0.84}
+					metalness={0.1}
+				/>
+			</mesh>
 			{/* Selection ring */}
 			<mesh
 				ref={ringRef}
@@ -84,7 +170,7 @@ function BuildingMesh({ entity }: { entity: BuildingEntity }) {
 
 	useFrame(() => {
 		const frag = entity.has(MapFragment)
-			? getFragment(entity.get(MapFragment)!.fragmentId)
+			? getStructuralFragment(entity.get(MapFragment)!.fragmentId)
 			: null;
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
@@ -192,7 +278,7 @@ function GhostBuilding() {
 		}
 
 		groupRef.current.visible = true;
-		const y = getTerrainHeight(ghost.x, ghost.z);
+		const y = getSurfaceHeightAtWorldPosition(ghost.x, ghost.z);
 		groupRef.current.position.set(ghost.x, y, ghost.z);
 	});
 

@@ -1,12 +1,12 @@
-import { HexNavigationAdapter } from "./HexNavigationAdapter";
+import { SectorNavigationAdapter } from "./SectorNavigationAdapter";
 import { SquareGridNavigationAdapter } from "./SquareGridNavigationAdapter";
 
 describe("navigation adapters", () => {
-	it("uses the current world hex path contract", () => {
-		const adapter = new HexNavigationAdapter();
+	it("uses the current sector-surface path contract", () => {
+		const adapter = new SectorNavigationAdapter();
 		const path = adapter.findPath({ x: 0, y: 0, z: 0 }, { x: 10, y: 0, z: 10 });
 
-		expect(adapter.kind).toBe("hex");
+		expect(adapter.kind).toBe("sector");
 		expect(Array.isArray(path)).toBe(true);
 		for (const node of path) {
 			expect(node).toEqual(

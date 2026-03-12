@@ -3,7 +3,9 @@ import {
 	buildCityDirectorySummaries,
 	buildCityUnderstandingSnapshot,
 	deriveCityFootprintClass,
+	deriveCityPassabilityClass,
 	deriveCitySnapClass,
+	deriveCityStructuralRole,
 	summarizeCityModel,
 } from "./cityUnderstanding";
 
@@ -18,6 +20,23 @@ describe("cityUnderstanding", () => {
 		expect(wall && deriveCitySnapClass(wall)).toBe("edge_wall");
 		expect(door && deriveCitySnapClass(door)).toBe("portal_edge");
 		expect(stair && deriveCitySnapClass(stair)).toBe("vertical_connector");
+	});
+
+	it("derives passability and structural roles for core families", () => {
+		expect(deriveCityPassabilityClass("walkable")).toBe("passable");
+		expect(deriveCityPassabilityClass("blocking")).toBe("impassable");
+		expect(deriveCityPassabilityClass("portal")).toBe("transitional");
+		expect(deriveCityPassabilityClass("vertical_connector")).toBe("vertical");
+
+		const floor = CITY_MODELS.find((model) => model.family === "floor");
+		const wall = CITY_MODELS.find((model) => model.family === "wall");
+		const door = CITY_MODELS.find((model) => model.family === "door");
+		const stair = CITY_MODELS.find((model) => model.family === "stair");
+
+		expect(floor && deriveCityStructuralRole(floor)).toBe("surface");
+		expect(wall && deriveCityStructuralRole(wall)).toBe("barrier");
+		expect(door && deriveCityStructuralRole(door)).toBe("portal");
+		expect(stair && deriveCityStructuralRole(stair)).toBe("stair");
 	});
 
 	it("derives footprint classes from model bounds and height", () => {
@@ -57,6 +76,10 @@ describe("cityUnderstanding", () => {
 		expect(
 			summaries.find((summary) => summary.directory === "Walls")?.families,
 		).toContain("wall");
+		expect(
+			summaries.find((summary) => summary.directory === "Walls")
+				?.passabilityClasses,
+		).toContain("impassable");
 	});
 
 	it("produces a full understanding snapshot for downstream tooling", () => {
@@ -70,5 +93,6 @@ describe("cityUnderstanding", () => {
 		expect(snapshot.composites.length).toBeGreaterThan(0);
 		expect(snapshot.scenarios.length).toBeGreaterThan(0);
 		expect(summarizeCityModel(firstModel).summary).toContain(firstModel.family);
+		expect(summarizeCityModel(firstModel).passabilityClass).toBeTruthy();
 	});
 });

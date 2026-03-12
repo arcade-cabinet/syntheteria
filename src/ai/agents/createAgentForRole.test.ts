@@ -28,6 +28,10 @@ describe("createAgentForRole", () => {
 			entityId: "enemy-1",
 			role: "hostile_machine",
 			status: "executing_task",
+			profile: {
+				steeringProfile: "feral_quadruped",
+				navigationProfile: "sector_surface_standard",
+			},
 			task: {
 				id: "task-1",
 				kind: "pursue_entity",
@@ -53,6 +57,7 @@ describe("createAgentForRole", () => {
 		expect(agent).toBeInstanceOf(HostileMachineAgent);
 		expect(agent.status).toBe("executing_task");
 		expect(agent.maxSpeed).toBe(1.75);
+		expect(agent.steeringProfile).toBe("feral_quadruped");
 		expect(agent.task?.kind).toBe("pursue_entity");
 	});
 });

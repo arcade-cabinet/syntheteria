@@ -47,13 +47,16 @@ import {
 } from "../systems/weather";
 import { persistenceSystem } from "../world/persistenceSystem";
 import { poiSystem } from "../world/poiSystem";
-import { getRuntimeState, setRuntimeTick } from "../world/runtimeState";
+import {
+	getRuntimeState,
+	setRuntimeTick,
+	subscribeRuntimeState,
+} from "../world/runtimeState";
+import { getActiveWorldSession as getLoadedWorldSession } from "../world/session";
 import type { NearbyPoiContext } from "../world/snapshots";
 import {
-	getAllFragments,
-	type MapFragment,
 	updateDisplayOffsets,
-} from "./terrain";
+} from "../world/structuralSpace";
 import {
 	Building,
 	Identity,
@@ -63,6 +66,10 @@ import {
 	WorldPosition,
 } from "./traits";
 import { buildings, units, world } from "./world";
+import {
+	getStructuralFragments,
+	type StructuralFragment as MapFragment,
+} from "../world/structuralSpace";
 
 export interface GameSnapshot {
 	tick: number;
@@ -82,6 +89,7 @@ export interface GameSnapshot {
 	cityKitLabOpen: boolean;
 	nearbyPoiName: string | null;
 	nearbyPoi: NearbyPoiContext | null;
+	districtEvents: ReturnType<typeof getRuntimeState>["districtEvents"];
 	weather: WeatherSnapshot;
 }
 
@@ -121,7 +129,7 @@ function buildSnapshot(): GameSnapshot {
 		tick,
 		gameSpeed,
 		paused,
-		fragments: getAllFragments(),
+		fragments: getStructuralFragments(),
 		unitCount: playerCount,
 		enemyCount,
 		mergeEvents: lastMergeEvents,
@@ -135,6 +143,7 @@ function buildSnapshot(): GameSnapshot {
 		cityKitLabOpen: getRuntimeState().cityKitLabOpen,
 		nearbyPoiName: getRuntimeState().nearbyPoi?.name ?? null,
 		nearbyPoi: getRuntimeState().nearbyPoi,
+		districtEvents: getRuntimeState().districtEvents,
 		weather: getWeatherSnapshot(),
 	};
 }
@@ -169,8 +178,16 @@ function notify() {
 	}
 }
 
+subscribeRuntimeState(() => {
+	snapshot = null;
+	notify();
+});
+
 export function simulationTick() {
 	if (paused) {
+		return;
+	}
+	if (!getLoadedWorldSession()) {
 		return;
 	}
 

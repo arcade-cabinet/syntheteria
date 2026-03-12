@@ -1,9 +1,9 @@
 import { persistRuntimeWorldStateSync } from "../db/worldPersistence";
-import { getAllFragments } from "../ecs/terrain";
 import { getResources } from "../systems/resources";
 import { capturePersistableWorldEntities } from "./entityPersistence";
 import { getRuntimeState } from "./runtimeState";
 import { getActiveWorldSession } from "./session";
+import { getStructuralCellRecords, getStructuralFragments } from "./structuralSpace";
 
 const PERSIST_INTERVAL = 60;
 
@@ -17,24 +17,24 @@ export function persistenceSystem(tick: number) {
 		return;
 	}
 
-	const fragments = getAllFragments();
-	const tiles = fragments.flatMap((fragment) =>
-		Array.from(fragment.grid).map((tile) => ({
-			q: tile.q,
-			r: tile.r,
-			fog_state: tile.fog,
+	const fragments = getStructuralFragments();
+	const sectorCells = fragments.flatMap((fragment) =>
+		getStructuralCellRecords(fragment.id).map((cell) => ({
+			q: cell.q,
+			r: cell.r,
+			discovery_state: cell.discoveryState,
 		})),
 	);
 	const runtime = getRuntimeState();
 
 	persistRuntimeWorldStateSync({
 		saveGameId: session.saveGame.id,
-		worldMapId: session.worldMap.id,
+		ecumenopolisId: session.ecumenopolis.id,
 		tick,
 		activeScene: runtime.activeScene,
 		activeCityInstanceId: runtime.activeCityInstanceId,
 		resources: getResources(),
-		tiles,
+		sectorCells,
 		pointsOfInterest: session.pointsOfInterest.map((poi) => ({
 			id: poi.id,
 			discovered: poi.discovered,

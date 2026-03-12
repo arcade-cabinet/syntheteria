@@ -10,6 +10,7 @@ import {
 	formatCitySubcategoryLabel,
 	summarizeScenarioSet,
 } from "../catalog/cityUnderstanding";
+import { FLOOR_MATERIAL_PRESETS } from "../config/floorMaterialPresets";
 import type { CityFamily, CityPlacementType } from "../config/types";
 
 export interface CityKitLabFilterState {
@@ -40,6 +41,7 @@ export function getCityKitLabViewModel(filter: CityKitLabFilterState) {
 	return {
 		directorySummaries: buildCityDirectorySummaries(),
 		filterOptions: getCityKitLabFilterOptions(),
+		floorPresets: FLOOR_MATERIAL_PRESETS,
 		models: filterCityModels(filter),
 		composites: getCityComposites(),
 		scenarios: summarizeScenarioSet(),

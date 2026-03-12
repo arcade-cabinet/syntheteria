@@ -30,11 +30,11 @@ import radialConfig from "../config/radialMenu.json";
 /** Context passed to providers when the menu opens */
 export interface RadialOpenContext {
 	/** Type of thing under the pointer */
-	selectionType: "unit" | "building" | "empty_tile" | "resource_node" | "none";
-	/** Entity ID of the selected unit/building (null for tiles) */
+	selectionType: "unit" | "building" | "empty_sector" | "resource_node" | "none";
+	/** Entity ID of the selected unit/building (null for open sector space) */
 	targetEntityId: string | null;
-	/** Hex coordinates of the interaction point */
-	targetHex: { q: number; r: number } | null;
+	/** Sector coordinates of the interaction point */
+	targetSector: { q: number; r: number } | null;
 	/** Current faction of the selected entity */
 	targetFaction: string | null;
 }
@@ -322,6 +322,10 @@ function composeMenu(context: RadialOpenContext): {
 
 export function getRadialMenuState(): RadialMenuState {
 	return menuState;
+}
+
+export function getResolvedActionsForCategory(categoryId: string) {
+	return [...(resolvedActions.get(categoryId) ?? [])];
 }
 
 /**

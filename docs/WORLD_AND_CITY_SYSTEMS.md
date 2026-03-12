@@ -1,182 +1,126 @@
 # World And City Systems
 
-This document describes the current persistence-backed campaign structure that bridges the outdoor 4X world map and the now-operational city kit/runtime pipeline.
+This document describes Syntheteria’s intended spatial model.
 
-## 1. Campaign Model
+## 1. One Continuous Machine-World
+Syntheteria is a **single persistent ecumenopolis campaign space**.
 
-Each save now owns:
+It is not, in the intended final design:
+- a conventional outdoor wilderness map
+- plus a separate city-interior layer
 
-- a `save_games` row for immutable campaign setup
-- a `world_maps` row for the generated outdoor map header
-- `world_tiles` rows for every persisted outdoor hex
-- `world_points_of_interest` rows for macro landmarks
-- `city_instances` rows for linked interior locations
-- `campaign_states` for active scene, active city instance, and tick sync
-- `resource_states` for persistent material pools
-- `world_entities` for persistent units, buildings, and hybrid world actors
+Instead, it is:
+- one machine-urban world
+- divided into sectors, arcology shells, transit spaces, and breach zones
+- rendered and played at different scales without becoming fundamentally different worlds
 
-The outdoor world is generated once from `NewGameConfig`, persisted, and then reloaded on `New Game` and `Continue`.
+## 2. Sector Roles
+The major campaign locations should be treated as sector archetypes:
 
-The canonical shared world-domain contracts now live in:
+- **Command Arcology**
+- **Abyssal Extraction Ward**
+- **Archive Campus**
+- **Cult Wards**
+- **Gateway Spine**
+- **Breach Zone**
 
-- `src/world/contracts.ts`
-- `src/world/cityLifecycle.ts`
-- `src/world/snapshots.ts`
-- `src/world/poiSession.ts`
-- `src/world/locationContext.ts`
-- `src/world/citySiteActions.ts`
+These replace the old mental model of natural overworld geography plus detachable city scenes.
 
-That stack owns POI types, city lifecycle/state transitions, persisted world snapshot shapes, active session shapes, nearby-POI context, and session-level POI/city selectors. `src/db/worldPersistence.ts`, `src/world/session.ts`, ECS hydration, and world UI now consume those shared types instead of maintaining parallel record definitions.
+## 3. Operational Density
+Cities are no longer a separate mode category. Dense reclaimed machine-urban regions are simply higher-complexity parts of the same world.
 
-## 2. Outdoor World Responsibilities
+That means:
+- “city logic” becomes district / sector logic
+- operational interiors are still real
+- but they are part of the same campaign fabric
 
-The outdoor world map is responsible for:
+## 4. Spatial Contract
+The hidden logical contract may still use a square grid or similar placement structure for:
+- navigation
+- placement
+- validation
+- sockets
+- composites
 
-- biome and terrain-set distribution
-- fog/discovery persistence
-- POI discovery and interaction range
-- strategic movement and expansion framing
-- campaign-scale storm/climate identity
-- actor placement context for units, buildings, and future owned infrastructure
+But the visible representation should be driven by:
+- procedural floor and surfaces where helpful
+- structural GLB kit pieces
+- clear operational readability
 
-The current macro POIs are:
+Floor tile GLBs are optional. The gameplay contract is more important than one-to-one visible tiles.
 
-- `home_base`
-- `coast_mines`
-- `science_campus`
-- `northern_cult_site`
-- `deep_sea_gateway`
+Procedural floors should be zone-driven and material-driven:
+- core / command sectors can favor sealed concrete or painted service decks
+- fabrication / storage / power sectors can favor reinforced plate and industrial metal
+- corridors and transit spines can favor walkway / grid surfaces
 
-POI discovery is now driven by player unit proximity and persisted back to SQLite.
+## 5. Storm Relationship
+The storm remains omnipresent, but usually seen through:
+- domes
+- arcology shells
+- breaches
+- exposed superstructure
+- energy sinks and lightning capture systems
 
-## 2.1 Persistent World Actors
+This keeps the hypercane and wormhole visually central without requiring a natural-terrain overworld.
 
-World actors are no longer re-seeded procedurally on load. The save now stores:
+## 6. Infrastructure
+Infrastructure should read as embedded in the machine-world:
+- energy spines
+- relays
+- lift shafts
+- freight portals
+- subsurface or enclosed logistics
 
-- unit identity, faction, type, display name, position, speed, and components
-- building identity, type, power/operational state, and position
-- lightning-rod specialization state
-- navigation state for units
-- scene/location linkage for future interior actors
+Visible belts and exposed network lines may still be used where they improve readability, but they are not the primary long-term identity of the world.
 
-This means `Continue` restores the player's actual world footprint instead of recreating a fresh starter bot and rod on top of a persisted map.
+## 7. Progression
+The campaign should still preserve:
+- fragmented perception
+- map merging
+- earned strategic clarity
+- local unit attachment early
+- broader automation later
 
-## 3. Scene Transition Contract
+But that progression should happen within the ecumenopolis, not through a world/city split.
 
-The runtime now supports two scene modes:
+## 8. Current Implementation Rule
+Any existing code or docs that still assume:
+- outdoor hex-world as the primary target
+- separate city interiors as a coequal permanent mode
 
-- `world`
-- `city`
+should be treated as transitional implementation debt, not as the final design direction.
 
-Transitions are stored in `campaign_states` and mirrored in runtime state.
+The old terrain tileset ingestion path and generated terrain manifest are no longer part of the product architecture. Structural floors, procedural materials, and classified GLB structures are now the only spatial asset pipeline that should be expanded.
 
-Current transition rules:
+## 9. Naming Rule
+Public-facing runtime contracts should now prefer:
+- `ecumenopolis`
+- `sector`
+- `district`
+- `substation`
+- `anchor`
 
-- entering a surveyed or founded POI-linked city instance switches the active scene to `city`
-- returning from a city instance restores `world`
-- the active city instance id is persisted so `Continue` can restore the correct scene context
+and avoid exporting:
+- `terrain`
+- `biome`
+- `tile`
+- `overworld`
+- `city entry`
 
-This is the minimum viable contract for real world-to-city transitions. It avoids the Civilization-style city modal and keeps location changes grounded in persistent game state.
+unless the reference is explicitly historical.
+Local context now lives in anchored briefing bubbles and explicit site overlays opened by radial actions. Persistent side panels are no longer the intended owner of site interaction flow.
 
-## 4. City Instance Foundation
+## 10. Visual Validation Rule
+Ecumenopolis generation is not considered validated by type-safe contracts alone.
 
-Each city instance currently stores:
+The implementation must maintain screenshot-backed validation for:
+- a deterministic generated campaign overview
+- a closer command-arcology anchor-cluster view
+- a starting-sector inspection scene
+- readable robot placement for the starting chassis roster
+- AI-owned robot movement in the live ecumenopolis scene
+- readable anchored local-context bubbles
+- district overlays, substations, and embedded conduit traces
 
-- world linkage through POI or coordinates
-- a deterministic layout seed
-- a `generation_status`
-- a `state` (`latent`, `surveyed`, `founded`)
-
-The city runtime is no longer only a placeholder shell. It now uses:
-
-- copied GLBs under `assets/models/city`
-- generated previews under `assets/generated/city-previews`
-- generated baseline config under `src/config/generated/cityModelManifest.ts`
-- catalog, composite, grammar, and validation modules under `src/city`
-
-This gives us:
-
-- a persistence format
-- a scene transition target
-- a stable place to integrate real modular geometry now
-
-## 5. Square-Grid Assembly Contract
-
-The current city assembly contract is defined in code and backed by the real city kit:
-
-- `src/city/assemblyContract.ts`
-- `src/city/catalog/cityCatalog.ts`
-- `src/city/composites/cityComposites.ts`
-- `src/city/grammar/cityScenarios.ts`
-- `src/city/layoutPlan.ts`
-- `src/city/layoutValidation.ts`
-- `src/city/config/cityConfigValidation.ts`
-- `src/city/runtime/layoutResolution.ts`
-- `src/city/runtime/CityKitLab.tsx`
-
-It specifies:
-
-- fixed square cell size
-- grid width and height
-- entry cell
-- cell module categories
-- passability per cell
-
-Current placeholder module families:
-
-- `core`
-- `power`
-- `fabrication`
-- `storage`
-- `habitation`
-- `corridor`
-
-The city runtime now also includes:
-
-- a generated manifest for all 91 city GLBs
-- a rendered preview for each city model
-- an in-app City Kit Lab for full-kit visual inspection and composite review
-- a layout planner that assigns floor / structure / roof / prop / detail layers per cell
-- a validation pass that checks passable connectivity, room access doors, floor coverage, perimeter sealing, and door transition sanity
-- a config validation layer that checks manifest ids, composite references, and scenario layer compatibility
-- a deterministic layout-resolution layer that turns scenario placements into render-space positions, rotations, and spans
-- a city-understanding layer that derives snap classes, footprint classes, directory summaries, and composite/scenario summaries from the manifest
-- a city-kit-lab state layer that turns catalog filters and scenario/composite lists into a package-owned view model
-- a composite semantics validator that checks higher-order assemblies for floor anchors, enclosure intent, roof coverage, vertical circulation, and role-specific props
-- a GLB-backed city interior renderer instead of debug primitives
-
-The terrain tileset side now also has an explicit contract layer in `src/config/terrainAtlasContracts.ts` so the world hex atlases are not just trusted visually. That module validates:
-
-- tileset ids and tile ids are unique
-- image sizes divide cleanly into declared grid sizes
-- every tile row/column/index mapping is consistent
-- the canonical hex tile pixel size remains `96x83`
-- the atlas summary remains coherent across all ten biome tilesets
-
-This is still intentionally constrained compared to the eventual full city grammar, but it is no longer a fake city layer. The point now is to deepen the grammar and gameplay affordances without needing to revisit the asset/config pipeline.
-
-## 6. Near-Term Expansion
-
-The next layers to build on top of this structure are:
-
-- founded-city progression
-- resource node ownership and depletion
-- deeper square-grid city grammar rules
-- richer Quaternius module classification and snapping
-- world-to-city return points and local power/signal rules
-
-That work can now happen without redefining saves, world generation, or scene transitions again.
-
-## 7. AI Runtime Ownership
-
-Behavior execution is now owned by `src/ai`, not by ad hoc gameplay systems.
-
-Current AI-owned responsibilities include:
-
-- command-driven player movement as explicit AI tasks
-- hostile-machine pursuit and patrol selection
-- cultist task planning hooks
-- hacking approach / execute phase gating
-- persisted per-entity AI task and steering state
-
-Compatibility traits like `Navigation` still exist for rendering and legacy readers, but they are now derived from AI runtime state rather than acting as the primary behavior authoring surface.
+Those images should come from the same runtime render stack the player sees, not from a separate debugging mockup.

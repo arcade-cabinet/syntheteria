@@ -1,20 +1,24 @@
-import { Direction } from "honeycomb-grid";
-import { getAllFragments, getFragment, Tile, worldToHex } from "../ecs/terrain";
+import {
+	getNeighborSectorCells,
+	getPassableSectorCell,
+} from "../world/structuralSpace";
+import { worldToGrid } from "../world/sectorCoordinates";
 
 function heuristic(aq: number, ar: number, bq: number, br: number): number {
-	return (
-		(Math.abs(aq - bq) + Math.abs(aq + ar - bq - br) + Math.abs(ar - br)) / 2
-	);
+	return Math.max(Math.abs(aq - bq), Math.abs(ar - br));
 }
 
-const DIRECTIONS = [
-	Direction.NE,
-	Direction.E,
-	Direction.SE,
-	Direction.SW,
-	Direction.W,
-	Direction.NW,
-];
+type NavNode = {
+	q: number;
+	r: number;
+	g: number;
+	f: number;
+	parent: string | null;
+};
+
+function cellKey(q: number, r: number) {
+	return `${q},${r}`;
+}
 
 export function findNavPath(
 	startX: number,
@@ -23,63 +27,67 @@ export function findNavPath(
 	goalZ: number,
 	maxNodes = 5000,
 ): { q: number; r: number }[] {
-	const start = worldToHex(startX, startZ);
-	const goal = worldToHex(goalX, goalZ);
+	const start = worldToGrid(startX, startZ);
+	const goal = worldToGrid(goalX, goalZ);
 
-	const frags = getAllFragments();
-	if (frags.length === 0) return [];
+	const startCell = getPassableSectorCell(start.q, start.r);
+	const goalCell = getPassableSectorCell(goal.q, goal.r);
 
-	const grid = frags[0].grid;
-	const startHex = grid.getHex(start);
-	const goalHex = grid.getHex(goal);
-
-	if (!startHex || !goalHex) return [];
-
-	// A* Pathfinding over Hex Grid
-	interface Node {
-		hex: Tile;
-		g: number;
-		f: number;
-		parent: string | null;
+	if (!startCell || !goalCell) {
+		return [];
 	}
 
-	const open: Node[] = [];
-	const closedList = new Map<string, Node>();
+	const open: NavNode[] = [];
+	const closed = new Map<string, NavNode>();
+	open.push({
+		q: startCell.q,
+		r: startCell.r,
+		g: 0,
+		f: heuristic(startCell.q, startCell.r, goalCell.q, goalCell.r),
+		parent: null,
+	});
 
-	const h = heuristic(startHex.q, startHex.r, goalHex.q, goalHex.r);
-	open.push({ hex: startHex, g: 0, f: h, parent: null });
+	const goalKey = cellKey(goalCell.q, goalCell.r);
 
-	const goalKey = `${goalHex.q},${goalHex.r}`;
-
-	while (open.length > 0 && closedList.size < maxNodes) {
-		let bestI = 0;
-		for (let i = 1; i < open.length; i++) {
-			if (open[i].f < open[bestI].f) bestI = i;
+	while (open.length > 0 && closed.size < maxNodes) {
+		let bestIndex = 0;
+		for (let index = 1; index < open.length; index++) {
+			if (open[index].f < open[bestIndex].f) {
+				bestIndex = index;
+			}
 		}
-		const current = open.splice(bestI, 1)[0];
-		const currentKey = `${current.hex.q},${current.hex.r}`;
 
-		if (closedList.has(currentKey)) continue;
-		closedList.set(currentKey, current);
+		const current = open.splice(bestIndex, 1)[0];
+		const currentKey = cellKey(current.q, current.r);
 
+		if (closed.has(currentKey)) {
+			continue;
+		}
+
+		closed.set(currentKey, current);
 		if (currentKey === goalKey) {
-			return reconstructPath(closedList, currentKey);
+			return reconstructPath(closed, currentKey);
 		}
 
-		for (const dir of DIRECTIONS) {
-			const neighbor = grid.neighborOf(current.hex, dir, {
-				allowOutside: false,
+		for (const neighbor of getNeighborSectorCells(current)) {
+			if (!neighbor.passable) {
+				continue;
+			}
+
+			const neighborKey = cellKey(neighbor.q, neighbor.r);
+			if (closed.has(neighborKey)) {
+				continue;
+			}
+
+			const g = current.g + 1;
+			const f = g + heuristic(neighbor.q, neighbor.r, goalCell.q, goalCell.r);
+			open.push({
+				q: neighbor.q,
+				r: neighbor.r,
+				g,
+				f,
+				parent: currentKey,
 			});
-			if (!neighbor) continue;
-
-			const nKey = `${neighbor.q},${neighbor.r}`;
-			if (closedList.has(nKey)) continue;
-
-			if (neighbor.biome === "mountain" || neighbor.biome === "water") continue;
-
-			const g = current.g + 1; // cost is 1 per hex
-			const f = g + heuristic(neighbor.q, neighbor.r, goal.q, goal.r);
-			open.push({ hex: neighbor as Tile, g, f, parent: currentKey });
 		}
 	}
 
@@ -87,17 +95,18 @@ export function findNavPath(
 }
 
 function reconstructPath(
-	closed: Map<string, any>,
+	closed: Map<string, NavNode>,
 	goalKey: string,
 ): { q: number; r: number }[] {
 	const path: { q: number; r: number }[] = [];
 	let currentKey: string | null = goalKey;
 	while (currentKey) {
 		const node = closed.get(currentKey);
-		if (!node) break;
-		// Don't include the start hex in the path itself
+		if (!node) {
+			break;
+		}
 		if (node.parent !== null) {
-			path.unshift({ q: node.hex.q, r: node.hex.r });
+			path.unshift({ q: node.q, r: node.r });
 		}
 		currentKey = node.parent;
 	}

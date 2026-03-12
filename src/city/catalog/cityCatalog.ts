@@ -1,9 +1,11 @@
 import { cityModelManifest } from "../../config/generated/cityModelManifest";
 import { CITY_COMPOSITES } from "../composites/cityComposites";
+import { CITY_MODEL_SEMANTICS } from "../config/cityModelSemantics";
 import type {
 	CityCompositeDefinition,
 	CityFamily,
 	CityModelDefinition,
+	CityPassabilityEffect,
 	CityPlacementType,
 	CityZone,
 } from "../config/types";
@@ -11,13 +13,23 @@ import type {
 export interface CityCatalogFilter {
 	compositableOnly?: boolean;
 	family?: CityFamily | "all";
-	passabilityRole?: string | "all";
+	passabilityRole?: CityPassabilityEffect | "all";
 	placementType?: CityPlacementType | "all";
 	subcategory?: string | "all";
 	zone?: CityZone | "all";
 }
 
-export const CITY_MODELS = cityModelManifest.models as CityModelDefinition[];
+const GENERATED_CITY_MODELS = cityModelManifest.models as CityModelDefinition[];
+export const CITY_MODELS = GENERATED_CITY_MODELS.map((model) => {
+	const semantics = CITY_MODEL_SEMANTICS[model.id];
+	if (!semantics) {
+		throw new Error(`Missing authored semantics for city model ${model.id}.`);
+	}
+	return {
+		...model,
+		...semantics,
+	} satisfies CityModelDefinition;
+});
 
 export function getCityModelById(id: string) {
 	return CITY_MODELS.find((model) => model.id === id) ?? null;

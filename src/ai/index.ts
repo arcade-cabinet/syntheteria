@@ -48,7 +48,7 @@ export {
 	type PlannerDecision,
 	planAgentTask,
 } from "./goals/WorldPlanner";
-export { HexNavigationAdapter } from "./navigation/HexNavigationAdapter";
+export { SectorNavigationAdapter } from "./navigation/SectorNavigationAdapter";
 export type {
 	NavigationAdapter,
 	NavigationPathNode,

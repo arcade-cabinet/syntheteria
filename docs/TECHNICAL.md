@@ -1,85 +1,132 @@
 # Syntheteria - Technical Architecture & Core Formulas
 
 ## 1. Stack & Rationale
-- **Cross-Platform Framework:** Expo SDK (Latest), Metro (Bundler)
-- **World & Logic (ECS):** `koota` (Trait-based, strict typings, performant queries)
-- **UI & Styling:** NativeWind v4 + React Native Reusables (Radix-like primitives)
-- **Rendering:** React Three Fiber + Three.js + Drei (bridged via `expo-gl`)
-- **Audio:** Tone.js (Procedural synths and spatial ambient loops via `AmbienceManager`)
-- **Animation:** `animejs` (for ECS traits tweening) & `react-native-reanimated` (for 120fps UI threads)
-- **Build/Test:** Jest (replaces Vitest)
-- **Persistence (Stores):** Expo SQLite + Drizzle ORM (Separation of long-term retention from short-term ECS state)
+- **Cross-platform framework:** Expo SDK + Metro
+- **World & logic:** `koota`
+- **Rendering:** React Three Fiber + Three.js + Drei
+- **UI & styling:** NativeWind v4 + React Native components
+- **Persistence:** Expo SQLite + Drizzle ORM
+- **Animation:** `animejs` + `react-native-reanimated`
+- **Audio:** Tone.js
+- **Testing:** Jest + Playwright component / E2E coverage
 
-**Why this Stack?**
-Migrating to an Expo + Koota foundation provides true cross-platform capabilities (iOS, Android, Web) from a single codebase while offering a more rigorous ECS architecture. NativeWind and RN Reusables accelerate UI development, and Tone.js provides unmatched capabilities for our atmospheric, procedural audio needs. Expo SQLite combined with Drizzle ORM allows for robust, type-safe local data persistence, cleanly separating long-term saved game data from volatile, short-term ECS tick state.
+## 1.1 Platform Constraints
+- Touch-first remains a design constraint.
+- The game must remain readable on mobile and desktop.
+- Persistent campaign state belongs in SQLite, not long-lived runtime globals.
 
-## 1.1 Interaction And Platform Constraints
-- Touch-first interaction remains a design constraint even when desktop controls are supported.
-- UI targets should be sized for fingers and should not depend on hover-only affordances.
-- The runtime should be conscious of mid-range device performance, not just desktop/WebGL headroom.
-- Large campaign state must live in SQLite rather than volatile runtime globals.
+## 2. Canonical Runtime Shape
+Syntheteria’s long-term target is **one continuous sector-based ecumenopolis campaign space**.
 
-## 2. ECS Structure & Two-Loop Architecture (Koota)
-- **Entities & Traits:** Entities use strict Koota traits (e.g., `Transform`, `Velocity`, `Renderable`, `Signal`, `Hacking`) rather than loose property bags, enabling clean and type-safe systems.
-- **Simulation Tick:** Runs at fixed intervals to handle logic like storms, lightning, power networks, compute pools, and combat.
-- **Render Loop:** 60fps via `useFrame` for smooth visual interpolation. UI updates react to ECS changes rather than holding game state.
+This means the architecture should optimize for:
+- one persistent campaign world
+- sector generation and persistence
+- district- and facility-scale traversal inside that same world
+- no permanent reliance on a dual model of outdoor hex world plus separate city interior mode
 
-## 3. Fragmented Map System
-- **Chunks & Fragments:** Terrain is rendered per-chunk based on exploration state.
-- **Map Merge:** Systems detect when units from different fragments meet, calculate spatial offsets, and trigger merge logic.
+If transitional code still reflects the older split, it should be treated as migration debt, not as the target design.
+
+## 3. ECS Structure
+- Koota owns canonical gameplay state.
+- Systems own logic.
+- TS package layers own rules, contracts, generation, persistence, and AI interfaces.
+- TSX reads from those contracts and should not invent gameplay logic locally.
+
+## 4. Sector World Model
+The world is one persistent machine-urban environment composed of:
+- sectors
+- arcology shells
+- transit corridors
+- breach zones
+- exposed infrastructure
+- major POI sectors
+
+The old outdoor-biome-plus-city-interior conceptual split is superseded in design.
 
 ### Rendering Intent
-- Abstract chunks and detailed chunks are both first-class render states.
-- Fragment merging is not just a simulation event; it is a player-facing revelation of spatial truth.
-- Outdoor rendering should stay chunk-aware because fog, discovery, and future ownership are all spatially local concerns.
+- Fragmentation still matters.
+- Discovery still matters.
+- Strategic clarity should be earned.
+- Spatial representation should prioritize machine perception and sector readability.
 
-## 3.1 Persistent World Layer
-- **New Game Config:** `worldSeed`, `mapSize`, `difficulty`, `climateProfile`, and `stormProfile` are now first-class inputs to generation and persistence.
-- **Outdoor Persistence:** Generated world headers, tiles, POIs, city-instance seeds, campaign scene state, resource pools, and persisted world actors are stored in Expo SQLite tables and reloaded on `Continue`.
-- **Runtime Sync:** Fog state, discovered POIs, city-instance state, active scene, resource deltas, and world actor snapshots are periodically synchronized back into SQLite.
+## 5. Persistence
+SQLite remains the authoritative long-term state.
 
-## 3.2 Weather And Storm Runtime
-- **Config Ownership:** Weather and storm tunables live in `src/config/weather.json`; visual and gameplay systems should consume config, not scatter magic numbers.
-- **Systems:** `src/systems/weather.ts` owns the chronometer, wormhole day/night cycle, visibility multipliers, and storm-profile visual/gameplay state. `src/systems/lightning.ts` owns deterministic bolt scheduling and rod-capture timing.
-- **Render Separation:** `src/rendering/StormSky.tsx`, `src/rendering/StormLighting.tsx`, `src/rendering/StormParticles.tsx`, and `src/rendering/LightningSystem.tsx` are rendering consumers of system state, not simulation owners.
-- **Contract Rule:** TSX/renderers must not invent weather logic locally. They read snapshot/config state from systems and config only.
-- **Status:** The weather/storm stack is in active implementation. Core config and system ownership exist; some rendering polish and overlay/network layers remain in progress.
+Campaign saves should own:
+- campaign setup
+- sector map / topology state
+- POIs and progression
+- world actors
+- AI state
+- infrastructure state
+- faction state
+- current scene / camera / context where relevant
 
-## 4. Power & Signal Networks
-- **Power (BFS):** Lightning rods generate power based on storm intensity. Distributed via BFS to connected buildings/units.
-- **Signal (BFS):** Determines which units are within signal range. Disconnected units follow last orders and become vulnerable to hacking.
+The save model should support loading the campaign as one coherent machine-world, not as separately generated outdoor and city layers.
 
-## 4.1 World / City Transition Contract
-- **Scene Modes:** Runtime supports `world` and `city`.
-- **Transition State:** The active scene and active city instance id are persisted in `campaign_states`.
-- **City Foundation:** Interior scenes currently use a deterministic square-grid assembly contract as a placeholder for future Quaternius-driven authored modules.
-- **Actor Hydration:** Outdoor units/buildings now hydrate from `world_entities`, which keeps runtime ECS state aligned with saved campaign state instead of using hard-coded reseeding.
-- **Shared Snapshots:** `src/world/snapshots.ts` is now the canonical world/city persisted-session-runtime contract, replacing duplicate record shapes across session state, UI context, and ECS hydration.
+## 6. Weather And Storm Runtime
+The storm remains a core game system.
 
-## 4.2 AI Runtime Contract
-- **AI Package Boundary:** `src/ai` is the only valid package for Yuka-backed behavior runtime work.
-- **Ownership:** Koota owns canonical gameplay state, Yuka owns behavior execution runtime, and SQLite owns persisted AI/session state.
-- **Bridge:** Koota snapshots project into typed Syntheteria agents via `src/ai/bridge`, and write-back stays explicit and bounded.
-- **Navigation:** Behavior code must consume `src/ai/navigation` adapters instead of calling ad hoc path helpers directly.
-- **Persistence:** Saves serialize Syntheteria-defined AI state, not raw Yuka objects.
-- **Planning Workspace:** Architecture, audit, requirements, and test strategy live under `docs/plans/`.
+Weather systems should own:
+- wormhole cycle
+- storm intensity
+- visibility modifiers
+- lightning scheduling
+- breach / exposed-sector pressure
 
-## 5. Core Formulas
+Renderers consume system state. They do not invent weather logic.
 
-### Assembly & Validation
-- Valid Robot: `has_power_source AND has_controller AND (has_locomotion OR is_stationary)`
+## 7. Infrastructure
+Visible belts and overlay lines are no longer assumed to be the dominant long-term metaphor.
 
-### Hacking & Compute
-- Hack is feasible if: `has_signal_link AND has_technique AND available_compute >= hack_compute_cost`
-- `robot_compute_cost = sum(function.base_cost) × automation_multiplier`
-- `hack_compute_cost = target_complexity × technique_efficiency`
+Infrastructure should be modeled as:
+- embedded
+- subsurface
+- structural
+- readable where useful, abstract where not
 
-## 6. Architecture Mandates (The "No" List)
-- **NO Vite/Vitest:** Use Metro/Jest exclusively.
-- **NO Miniplex:** All ECS logic must use Koota traits and queries.
-- **NO Raw Web Audio:** All audio must route through Tone.js via an `AmbienceManager`.
-- **NO Raw CSS:** Use NativeWind and RN Reusables for UI styling.
+This means:
+- explicit above-ground lines should be optional visual aids, not foundational identity
+- transit relays, freight portals, lift shafts, and energy spines are preferable long-term metaphors
 
-## 7. Historical Notes
-- Older docs described a web-only Vite/Miniplex architecture. That implementation direction is obsolete.
-- The important parts to preserve from that earlier phase are the gameplay constraints: chunked fragmented maps, touch-aware UX, explicit persistence boundaries, and render/simulation separation.
+## 8. World / Sector Traversal
+The long-term design target is one campaign space, but it can still support:
+- local mode changes
+- sector entry / breach states
+- denser facility regions
+- different camera and interaction emphasis in different parts of the same world
+
+Those should be treated as variations of one world, not as a separate world/city dichotomy.
+
+## 9. AI Runtime Contract
+- `src/ai` is the only valid behavior-runtime package.
+- Koota owns canonical game state.
+- AI runtime owns task execution and steering.
+- persistence owns serialized AI state.
+
+Bot definitions should carry:
+- archetype
+- mark
+- speech profile
+- default AI role
+- steering profile
+- navigation profile
+
+Those values should meaningfully affect runtime behavior, not just exist as metadata.
+
+## 10. Architecture Mandates
+- No Vite / Vitest
+- No Miniplex
+- No raw CSS
+- No TSX-owned gameplay logic
+- No legacy compatibility layers preserved just because they used to exist
+
+## 11. Core Formulas
+### Assembly
+- `Valid Robot = has_power_source AND has_controller AND (has_locomotion OR is_stationary)`
+
+### Hacking
+- `Hack = Signal Link + Required Technique + Available Compute`
+
+### Progression
+- Chassis growth should use small archetype sets plus logarithmic Mark progression rather than a sprawling unit tree.

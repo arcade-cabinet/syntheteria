@@ -2,7 +2,6 @@ import { useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { issueMoveCommand } from "../ai";
-import { getFragment, worldToHex } from "../ecs/terrain";
 import type { Entity, UnitEntity } from "../ecs/traits";
 import {
 	Building,
@@ -24,6 +23,8 @@ import {
 	getRadialMenuState,
 	openRadialMenu,
 } from "../systems/radialMenu";
+import { worldToGrid } from "../world/sectorCoordinates";
+import { getStructuralFragment } from "../world/structuralSpace";
 
 /**
  * Handles unit selection and move commands.
@@ -58,7 +59,7 @@ function findEntityAtPoint(
 
 	// Check mobile units
 	for (const entity of units) {
-		const frag = getFragment(entity.get(MapFragment)!.fragmentId);
+		const frag = getStructuralFragment(entity.get(MapFragment)!.fragmentId);
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
 
@@ -74,7 +75,7 @@ function findEntityAtPoint(
 	// Check buildings (larger click target)
 	for (const entity of buildings) {
 		const frag = entity.get(MapFragment)!
-			? getFragment(entity.get(MapFragment)!.fragmentId)
+			? getStructuralFragment(entity.get(MapFragment)!.fragmentId)
 			: null;
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
@@ -93,7 +94,7 @@ function findEntityAtPoint(
 
 /** Issue a move command. Converts display-space target to real-world position. */
 function issueMoveTo(entity: UnitEntity, displayX: number, displayZ: number) {
-	const frag = getFragment(entity.get(MapFragment)!.fragmentId);
+	const frag = getStructuralFragment(entity.get(MapFragment)!.fragmentId);
 	const ox = frag?.displayOffset.x ?? 0;
 	const oz = frag?.displayOffset.z ?? 0;
 
@@ -115,7 +116,7 @@ function issueMoveTo(entity: UnitEntity, displayX: number, displayZ: number) {
 /** Build a RadialOpenContext from a 3D world point. */
 function buildRadialContext(point: THREE.Vector3): RadialOpenContext {
 	const entity = findEntityAtPoint(point);
-	const hex = worldToHex(point.x, point.z);
+	const sector = worldToGrid(point.x, point.z);
 
 	if (entity) {
 		const unitComp = entity.get(Unit);
@@ -125,15 +126,15 @@ function buildRadialContext(point: THREE.Vector3): RadialOpenContext {
 		return {
 			selectionType: unitComp ? "unit" : "building",
 			targetEntityId: identity?.id ?? null,
-			targetHex: hex,
+			targetSector: sector,
 			targetFaction: identity?.faction ?? null,
 		};
 	}
 
 	return {
-		selectionType: "empty_tile",
+		selectionType: "empty_sector",
 		targetEntityId: null,
-		targetHex: hex,
+		targetSector: sector,
 		targetFaction: null,
 	};
 }

@@ -4,7 +4,7 @@ type SaveGameRow = {
 	id: number;
 	name: string;
 	world_seed: number;
-	map_size: string;
+	sector_scale: string;
 	difficulty: string;
 	climate_profile: string;
 	storm_profile: string;
@@ -13,33 +13,57 @@ type SaveGameRow = {
 	playtime_seconds: number;
 };
 
-type WorldMapRow = {
+type EcumenopolisMapRow = {
 	id: number;
 	save_game_id: number;
 	width: number;
 	height: number;
-	map_size: string;
+	sector_scale: string;
 	climate_profile: string;
 	storm_profile: string;
-	spawn_q: number;
-	spawn_r: number;
+	spawn_sector_id: string;
+	spawn_anchor_key: string;
 	generated_at: number;
 };
 
-type WorldTileRow = {
+type SectorCellRow = {
 	id: number;
-	world_map_id: number;
+	ecumenopolis_id: number;
 	q: number;
 	r: number;
-	biome: string;
-	terrain_set_id: string;
-	fog_state: number;
+	structural_zone: string;
+	floor_preset_id: string;
+	discovery_state: number;
 	passable: number;
+	sector_archetype: string;
+	storm_exposure: "shielded" | "stressed" | "exposed";
+	impassable_class: "none" | "breach" | "sealed_power" | "structural_void";
+	anchor_key: string;
+};
+
+type SectorStructureRow = {
+	id: number;
+	ecumenopolis_id: number;
+	district_structure_id: string;
+	anchor_key: string;
+	q: number;
+	r: number;
+	model_id: string;
+	placement_layer: string;
+	edge: string | null;
+	rotation_quarter_turns: number;
+	offset_x: number;
+	offset_y: number;
+	offset_z: number;
+	target_span: number;
+	sector_archetype: string;
+	source: "seeded_district" | "boundary" | "landmark" | "constructed";
+	controller_faction: string | null;
 };
 
 type WorldPoiRow = {
 	id: number;
-	world_map_id: number;
+	ecumenopolis_id: number;
 	type: string;
 	name: string;
 	q: number;
@@ -49,7 +73,7 @@ type WorldPoiRow = {
 
 type CityInstanceRow = {
 	id: number;
-	world_map_id: number;
+	ecumenopolis_id: number;
 	poi_id: number | null;
 	name: string;
 	world_q: number;
@@ -85,6 +109,9 @@ type WorldEntityRow = {
 	scene_building_id: string | null;
 	faction: string;
 	unit_type: string | null;
+	bot_archetype_id: string | null;
+	mark_level: number | null;
+	speech_profile: string | null;
 	building_type: string | null;
 	display_name: string | null;
 	fragment_id: string | null;
@@ -108,8 +135,9 @@ export class FakeDatabase implements SyncDatabase {
 	public execCalls: string[] = [];
 	private nextId = 1;
 	private saveGames: SaveGameRow[] = [];
-	private worldMaps: WorldMapRow[] = [];
-	private worldTiles: WorldTileRow[] = [];
+	private ecumenopolisMaps: EcumenopolisMapRow[] = [];
+	private sectorCells: SectorCellRow[] = [];
+	private sectorStructures: SectorStructureRow[] = [];
 	private worldPois: WorldPoiRow[] = [];
 	private cityInstances: CityInstanceRow[] = [];
 	private campaignStates: CampaignStateRow[] = [];
@@ -122,7 +150,7 @@ export class FakeDatabase implements SyncDatabase {
 				"id",
 				"name",
 				"world_seed",
-				"map_size",
+				"sector_scale",
 				"difficulty",
 				"climate_profile",
 				"storm_profile",
@@ -132,42 +160,68 @@ export class FakeDatabase implements SyncDatabase {
 			],
 		],
 		[
-			"world_maps",
+			"ecumenopolis_maps",
 			[
 				"id",
 				"save_game_id",
 				"width",
 				"height",
-				"map_size",
+				"sector_scale",
 				"climate_profile",
 				"storm_profile",
-				"spawn_q",
-				"spawn_r",
+				"spawn_sector_id",
+				"spawn_anchor_key",
 				"generated_at",
 			],
 		],
 		[
-			"world_tiles",
+			"sector_cells",
 			[
 				"id",
-				"world_map_id",
+				"ecumenopolis_id",
 				"q",
 				"r",
-				"biome",
-				"terrain_set_id",
-				"fog_state",
+				"structural_zone",
+				"floor_preset_id",
+				"discovery_state",
 				"passable",
+				"sector_archetype",
+				"storm_exposure",
+				"impassable_class",
+				"anchor_key",
+			],
+		],
+		[
+			"sector_structures",
+			[
+				"id",
+				"ecumenopolis_id",
+				"district_structure_id",
+				"anchor_key",
+				"q",
+				"r",
+				"model_id",
+				"placement_layer",
+				"edge",
+				"rotation_quarter_turns",
+				"offset_x",
+				"offset_y",
+				"offset_z",
+				"target_span",
+				"sector_archetype",
+				"source",
+				"controller_faction",
 			],
 		],
 		[
 			"world_points_of_interest",
-			["id", "world_map_id", "type", "name", "q", "r", "discovered"],
+			["id", "ecumenopolis_id", "type", "name", "q", "r", "discovered"],
 		],
 		[
 			"city_instances",
 			[
 				"id",
-				"world_map_id",
+				"ecumenopolis_id",
 				"poi_id",
 				"name",
 				"world_q",
@@ -209,6 +263,9 @@ export class FakeDatabase implements SyncDatabase {
 				"scene_building_id",
 				"faction",
 				"unit_type",
+				"bot_archetype_id",
+				"mark_level",
+				"speech_profile",
 				"building_type",
 				"display_name",
 				"fragment_id",
@@ -257,24 +314,31 @@ export class FakeDatabase implements SyncDatabase {
 			return columns.map((name) => ({ name })) as T[];
 		}
 
-		if (source.includes("FROM world_tiles")) {
+		if (source.includes("FROM sector_cells")) {
 			const worldMapId = Number(params[0]);
-			return this.worldTiles
-				.filter((row) => row.world_map_id === worldMapId)
+			return this.sectorCells
+				.filter((row) => row.ecumenopolis_id === worldMapId)
 				.sort((a, b) => a.r - b.r || a.q - b.q) as T[];
 		}
 
 		if (source.includes("FROM world_points_of_interest")) {
 			const worldMapId = Number(params[0]);
 			return this.worldPois
-				.filter((row) => row.world_map_id === worldMapId)
+				.filter((row) => row.ecumenopolis_id === worldMapId)
 				.sort((a, b) => a.id - b.id) as T[];
+		}
+
+		if (source.includes("FROM sector_structures")) {
+			const worldMapId = Number(params[0]);
+			return this.sectorStructures
+				.filter((row) => row.ecumenopolis_id === worldMapId)
+				.sort((a, b) => a.q - b.q || a.r - b.r || a.id - b.id) as T[];
 		}
 
 		if (source.includes("FROM city_instances")) {
 			const worldMapId = Number(params[0]);
 			return this.cityInstances
-				.filter((row) => row.world_map_id === worldMapId)
+				.filter((row) => row.ecumenopolis_id === worldMapId)
 				.sort((a, b) => a.id - b.id) as T[];
 		}
 
@@ -355,11 +419,11 @@ export class FakeDatabase implements SyncDatabase {
 		}
 
 		if (
-			source.includes("FROM world_maps") &&
+			source.includes("FROM ecumenopolis_maps") &&
 			source.includes("WHERE save_game_id = ?")
 		) {
 			const saveGameId = Number(params[0]);
-			return (this.worldMaps.find((row) => row.save_game_id === saveGameId) ??
+			return (this.ecumenopolisMaps.find((row) => row.save_game_id === saveGameId) ??
 				null) as T | null;
 		}
 
@@ -372,7 +436,7 @@ export class FakeDatabase implements SyncDatabase {
 				id: this.nextId++,
 				name: String(params[0]),
 				world_seed: Number(params[1]),
-				map_size: String(params[2]),
+				sector_scale: String(params[2]),
 				difficulty: String(params[3]),
 				climate_profile: String(params[4]),
 				storm_profile: String(params[5]),
@@ -398,52 +462,65 @@ export class FakeDatabase implements SyncDatabase {
 			return { lastInsertRowId: saveGameId };
 		}
 
-		if (source.includes("DELETE FROM city_instances WHERE world_map_id IN")) {
+		if (source.includes("DELETE FROM city_instances WHERE ecumenopolis_id IN")) {
 			const saveGameId = Number(params[0]);
 			const worldMapIds = new Set(
-				this.worldMaps
+				this.ecumenopolisMaps
 					.filter((row) => row.save_game_id === saveGameId)
 					.map((row) => row.id),
 			);
 			this.cityInstances = this.cityInstances.filter(
-				(row) => !worldMapIds.has(row.world_map_id),
+				(row) => !worldMapIds.has(row.ecumenopolis_id),
+			);
+			return { lastInsertRowId: 0 };
+		}
+
+		if (source.includes("DELETE FROM sector_structures WHERE ecumenopolis_id IN")) {
+			const saveGameId = Number(params[0]);
+			const worldMapIds = new Set(
+				this.ecumenopolisMaps
+					.filter((row) => row.save_game_id === saveGameId)
+					.map((row) => row.id),
+			);
+			this.sectorStructures = this.sectorStructures.filter(
+				(row) => !worldMapIds.has(row.ecumenopolis_id),
 			);
 			return { lastInsertRowId: 0 };
 		}
 
 		if (
 			source.includes(
-				"DELETE FROM world_points_of_interest WHERE world_map_id IN",
+				"DELETE FROM world_points_of_interest WHERE ecumenopolis_id IN",
 			)
 		) {
 			const saveGameId = Number(params[0]);
 			const worldMapIds = new Set(
-				this.worldMaps
+				this.ecumenopolisMaps
 					.filter((row) => row.save_game_id === saveGameId)
 					.map((row) => row.id),
 			);
 			this.worldPois = this.worldPois.filter(
-				(row) => !worldMapIds.has(row.world_map_id),
+				(row) => !worldMapIds.has(row.ecumenopolis_id),
 			);
 			return { lastInsertRowId: 0 };
 		}
 
-		if (source.includes("DELETE FROM world_tiles WHERE world_map_id IN")) {
+		if (source.includes("DELETE FROM sector_cells WHERE ecumenopolis_id IN")) {
 			const saveGameId = Number(params[0]);
 			const worldMapIds = new Set(
-				this.worldMaps
+				this.ecumenopolisMaps
 					.filter((row) => row.save_game_id === saveGameId)
 					.map((row) => row.id),
 			);
-			this.worldTiles = this.worldTiles.filter(
-				(row) => !worldMapIds.has(row.world_map_id),
+			this.sectorCells = this.sectorCells.filter(
+				(row) => !worldMapIds.has(row.ecumenopolis_id),
 			);
 			return { lastInsertRowId: 0 };
 		}
 
-		if (source.includes("DELETE FROM world_maps WHERE save_game_id = ?")) {
+		if (source.includes("DELETE FROM ecumenopolis_maps WHERE save_game_id = ?")) {
 			const saveGameId = Number(params[0]);
-			this.worldMaps = this.worldMaps.filter(
+			this.ecumenopolisMaps = this.ecumenopolisMaps.filter(
 				(row) => row.save_game_id !== saveGameId,
 			);
 			return { lastInsertRowId: 0 };
@@ -457,42 +534,71 @@ export class FakeDatabase implements SyncDatabase {
 			return { lastInsertRowId: 0 };
 		}
 
-		if (source.includes("INSERT INTO world_maps")) {
-			const row: WorldMapRow = {
+		if (source.includes("INSERT INTO ecumenopolis_maps")) {
+			const row: EcumenopolisMapRow = {
 				id: this.nextId++,
 				save_game_id: Number(params[0]),
 				width: Number(params[1]),
 				height: Number(params[2]),
-				map_size: String(params[3]),
+				sector_scale: String(params[3]),
 				climate_profile: String(params[4]),
 				storm_profile: String(params[5]),
-				spawn_q: Number(params[6]),
-				spawn_r: Number(params[7]),
+				spawn_sector_id: String(params[6]),
+				spawn_anchor_key: String(params[7]),
 				generated_at: Number(params[8]),
 			};
-			this.worldMaps.push(row);
+			this.ecumenopolisMaps.push(row);
 			return { lastInsertRowId: row.id };
 		}
 
-		if (source.includes("INSERT INTO world_tiles")) {
-			const row: WorldTileRow = {
+		if (source.includes("INSERT INTO sector_cells")) {
+			const row: SectorCellRow = {
 				id: this.nextId++,
-				world_map_id: Number(params[0]),
+				ecumenopolis_id: Number(params[0]),
 				q: Number(params[1]),
 				r: Number(params[2]),
-				biome: String(params[3]),
-				terrain_set_id: String(params[4]),
-				fog_state: Number(params[5]),
+				structural_zone: String(params[3]),
+				floor_preset_id: String(params[4]),
+				discovery_state: Number(params[5]),
 				passable: Number(params[6]),
+				sector_archetype: String(params[7]),
+				storm_exposure: params[8] as SectorCellRow["storm_exposure"],
+				impassable_class: params[9] as SectorCellRow["impassable_class"],
+				anchor_key: String(params[10]),
 			};
-			this.worldTiles.push(row);
+			this.sectorCells.push(row);
+			return { lastInsertRowId: row.id };
+		}
+
+		if (source.includes("INSERT INTO sector_structures")) {
+			const row: SectorStructureRow = {
+				id: this.nextId++,
+				ecumenopolis_id: Number(params[0]),
+				district_structure_id: String(params[1]),
+				anchor_key: String(params[2]),
+				q: Number(params[3]),
+				r: Number(params[4]),
+				model_id: String(params[5]),
+				placement_layer: String(params[6]),
+				edge: params[7] == null ? null : String(params[7]),
+				rotation_quarter_turns: Number(params[8]),
+				offset_x: Number(params[9]),
+				offset_y: Number(params[10]),
+				offset_z: Number(params[11]),
+				target_span: Number(params[12]),
+				sector_archetype: String(params[13]),
+				source: params[14] as SectorStructureRow["source"],
+				controller_faction:
+					params[15] == null ? null : String(params[15]),
+			};
+			this.sectorStructures.push(row);
 			return { lastInsertRowId: row.id };
 		}
 
 		if (source.includes("INSERT INTO world_points_of_interest")) {
 			const row: WorldPoiRow = {
 				id: this.nextId++,
-				world_map_id: Number(params[0]),
+				ecumenopolis_id: Number(params[0]),
 				type: String(params[1]),
 				name: String(params[2]),
 				q: Number(params[3]),
@@ -506,7 +612,7 @@ export class FakeDatabase implements SyncDatabase {
 		if (source.includes("INSERT INTO city_instances")) {
 			const row: CityInstanceRow = {
 				id: this.nextId++,
-				world_map_id: Number(params[0]),
+				ecumenopolis_id: Number(params[0]),
 				poi_id: params[1] === null ? null : Number(params[1]),
 				name: String(params[2]),
 				world_q: Number(params[3]),
@@ -554,23 +660,26 @@ export class FakeDatabase implements SyncDatabase {
 				scene_building_id: params[3] == null ? null : String(params[3]),
 				faction: String(params[4]),
 				unit_type: params[5] == null ? null : String(params[5]),
-				building_type: params[6] == null ? null : String(params[6]),
-				display_name: params[7] == null ? null : String(params[7]),
-				fragment_id: params[8] == null ? null : String(params[8]),
-				x: Number(params[9]),
-				y: Number(params[10]),
-				z: Number(params[11]),
-				speed: params[12] == null ? null : Number(params[12]),
-				selected: Number(params[13]),
-				components_json: String(params[14]),
-				navigation_json: params[15] == null ? null : String(params[15]),
-				ai_role: params[16] == null ? null : String(params[16]),
-				ai_state_json: params[17] == null ? null : String(params[17]),
-				powered: params[18] == null ? null : Number(params[18]),
-				operational: params[19] == null ? null : Number(params[19]),
-				rod_capacity: params[20] == null ? null : Number(params[20]),
-				current_output: params[21] == null ? null : Number(params[21]),
-				protection_radius: params[22] == null ? null : Number(params[22]),
+				bot_archetype_id: params[6] == null ? null : String(params[6]),
+				mark_level: params[7] == null ? null : Number(params[7]),
+				speech_profile: params[8] == null ? null : String(params[8]),
+				building_type: params[9] == null ? null : String(params[9]),
+				display_name: params[10] == null ? null : String(params[10]),
+				fragment_id: params[11] == null ? null : String(params[11]),
+				x: Number(params[12]),
+				y: Number(params[13]),
+				z: Number(params[14]),
+				speed: params[15] == null ? null : Number(params[15]),
+				selected: Number(params[16]),
+				components_json: String(params[17]),
+				navigation_json: params[18] == null ? null : String(params[18]),
+				ai_role: params[19] == null ? null : String(params[19]),
+				ai_state_json: params[20] == null ? null : String(params[20]),
+				powered: params[21] == null ? null : Number(params[21]),
+				operational: params[22] == null ? null : Number(params[22]),
+				rod_capacity: params[23] == null ? null : Number(params[23]),
+				current_output: params[24] == null ? null : Number(params[24]),
+				protection_radius: params[25] == null ? null : Number(params[25]),
 			};
 			this.worldEntities.push(row);
 			return { lastInsertRowId: row.id };
@@ -603,15 +712,15 @@ export class FakeDatabase implements SyncDatabase {
 			return { lastInsertRowId: row?.id ?? 0 };
 		}
 
-		if (source.includes("UPDATE world_tiles SET fog_state = ?")) {
-			const row = this.worldTiles.find(
+		if (source.includes("UPDATE sector_cells SET discovery_state = ?")) {
+			const row = this.sectorCells.find(
 				(candidate) =>
-					candidate.world_map_id === Number(params[1]) &&
+					candidate.ecumenopolis_id === Number(params[1]) &&
 					candidate.q === Number(params[2]) &&
 					candidate.r === Number(params[3]),
 			);
 			if (row) {
-				row.fog_state = Number(params[0]);
+				row.discovery_state = Number(params[0]);
 			}
 			return { lastInsertRowId: row?.id ?? 0 };
 		}
@@ -648,11 +757,15 @@ export class FakeDatabase implements SyncDatabase {
 	}
 
 	getWorldMaps() {
-		return this.worldMaps;
+		return this.ecumenopolisMaps;
 	}
 
 	getWorldTiles() {
-		return this.worldTiles;
+		return this.sectorCells;
+	}
+
+	getSectorStructures() {
+		return this.sectorStructures;
 	}
 
 	getWorldPointsOfInterest() {

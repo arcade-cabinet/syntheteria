@@ -9,10 +9,10 @@ import Animated, {
 } from "react-native-reanimated";
 
 const LOADING_STAGES = [
-	"Encoding terrain lattice",
-	"Anchoring relay points",
-	"Seeding city infrastructure",
-	"Mapping storm corridors",
+	"Encoding sector lattice",
+	"Anchoring relay spines",
+	"Seeding structural districts",
+	"Mapping storm pressure corridors",
 	"Committing to distributed archive",
 ] as const;
 
@@ -48,7 +48,7 @@ export function LoadingOverlay({ label }: { label: string }) {
 		<View className="absolute inset-0 items-center justify-center bg-[#02050a]/82 px-4 md:px-6">
 			<View className="w-full max-w-[560px] rounded-[24px] md:rounded-[28px] border border-[#8be6ff]/20 bg-[#07111b]/94 px-4 py-5 md:px-6 md:py-6 shadow-2xl">
 				<Text className="font-mono text-[11px] uppercase tracking-[0.28em] text-[#8be6ff]">
-					World Generation
+					Campaign Initialization
 				</Text>
 				<Text className="mt-3 font-mono text-[16px] md:text-[20px] uppercase tracking-[0.12em] text-[#edfaff]">
 					{label}

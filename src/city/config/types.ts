@@ -30,6 +30,14 @@ export type CityPlacementType =
 	| "vertical"
 	| "composite";
 
+export type CityPassabilityEffect =
+	| "walkable"
+	| "blocking"
+	| "portal"
+	| "cover"
+	| "vertical_connector"
+	| "guidance";
+
 export interface CityModelDefinition {
 	id: string;
 	label: string;
@@ -49,7 +57,7 @@ export interface CityModelDefinition {
 	defaultRotation: number;
 	rotationSymmetry: 1 | 2 | 4;
 	pivotPolicy: string;
-	passabilityEffect: string;
+	passabilityEffect: CityPassabilityEffect;
 	zoneAffinity: CityZone[];
 	adjacencyBias: string[];
 	compositeEligibility: string[];

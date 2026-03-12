@@ -1,14 +1,4 @@
-import type { ResourcePool } from "../systems/resources";
-import type { NearbyPoiContext, SceneMode } from "./snapshots";
-
-type RuntimeState = {
-	activeCityInstanceId: number | null;
-	activeScene: SceneMode;
-	cityKitLabOpen: boolean;
-	currentTick: number;
-	nearbyPoi: NearbyPoiContext | null;
-	resources: ResourcePool;
-};
+import type { RuntimeState } from "./runtimeState.types";
 
 const listeners = new Set<() => void>();
 
@@ -16,7 +6,10 @@ let runtimeState: RuntimeState = {
 	activeCityInstanceId: null,
 	activeScene: "world",
 	cityKitLabOpen: false,
+	citySiteModalOpen: false,
+	citySiteModalContext: null,
 	currentTick: 0,
+	districtEvents: [],
 	nearbyPoi: null,
 	resources: {
 		scrapMetal: 0,
@@ -45,7 +38,10 @@ export function resetRuntimeState() {
 		activeCityInstanceId: null,
 		activeScene: "world",
 		cityKitLabOpen: false,
+		citySiteModalOpen: false,
+		citySiteModalContext: null,
 		currentTick: 0,
+		districtEvents: [],
 		nearbyPoi: null,
 		resources: {
 			scrapMetal: 0,
@@ -57,7 +53,7 @@ export function resetRuntimeState() {
 }
 
 export function setRuntimeScene(
-	activeScene: SceneMode,
+	activeScene: RuntimeState["activeScene"],
 	activeCityInstanceId: number | null,
 ) {
 	runtimeState = {
@@ -76,6 +72,18 @@ export function setCityKitLabOpen(cityKitLabOpen: boolean) {
 	notify();
 }
 
+export function setCitySiteModalOpen(
+	citySiteModalOpen: boolean,
+	citySiteModalContext: RuntimeState["citySiteModalContext"] = runtimeState.citySiteModalContext,
+) {
+	runtimeState = {
+		...runtimeState,
+		citySiteModalOpen,
+		citySiteModalContext: citySiteModalOpen ? citySiteModalContext : null,
+	};
+	notify();
+}
+
 export function setRuntimeTick(currentTick: number) {
 	runtimeState = {
 		...runtimeState,
@@ -83,7 +91,7 @@ export function setRuntimeTick(currentTick: number) {
 	};
 }
 
-export function setNearbyPoi(nearbyPoi: NearbyPoiContext | null) {
+export function setNearbyPoi(nearbyPoi: RuntimeState["nearbyPoi"]) {
 	runtimeState = {
 		...runtimeState,
 		nearbyPoi,
@@ -91,10 +99,27 @@ export function setNearbyPoi(nearbyPoi: NearbyPoiContext | null) {
 	notify();
 }
 
-export function setRuntimeResources(resources: ResourcePool) {
+export function setRuntimeResources(resources: RuntimeState["resources"]) {
 	runtimeState = {
 		...runtimeState,
 		resources: { ...resources },
+	};
+	notify();
+}
+
+export function pushDistrictEvent(
+	event: Omit<RuntimeState["districtEvents"][number], "id">,
+) {
+	const eventIndex = runtimeState.districtEvents.length;
+	runtimeState = {
+		...runtimeState,
+		districtEvents: [
+			{
+				...event,
+				id: `${event.operationId}:${event.tick}:${eventIndex}`,
+			},
+			...runtimeState.districtEvents,
+		].slice(0, 6),
 	};
 	notify();
 }

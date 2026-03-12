@@ -1,5 +1,5 @@
 {
-	"_comment": "Visual parameters for the three network overlay types: signal relay, power feed, belt route. All tunables here — renderers and systems read from this config.",
+	"_comment": "Visual parameters for the three infrastructure overlay types: signal relay, power feed, and embedded conduit route. All tunables here — renderers and systems read from this config.",
 
 	"signal": {
 		"_comment": "Thin emissive lines for information transmission between relays",
@@ -33,8 +33,8 @@
 		"_comment_color": "Amber #f6c56a for active power, dim amber for unpowered"
 	},
 
-	"belt": {
-		"_comment": "Chunky conveyor track for physical goods transport",
+	"conduit": {
+		"_comment": "Embedded conduit route for physical goods transport beneath the sector surface",
 		"thickness": 0.16,
 		"dashLength": 0.3,
 		"gapLength": 0.12,

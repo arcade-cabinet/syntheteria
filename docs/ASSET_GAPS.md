@@ -6,34 +6,39 @@ This document tracks which art and model categories are already sufficient for i
 
 Current confidence by area:
 
-- **World map hex terrain:** strong enough for production use in the current outdoor pipeline.
-- **City kit / modular interiors:** fully copied, audited, previewed, and operationalized for runtime/config work.
+- **Ecumenopolis structural kit:** strong enough for production use as the primary world language.
+- **Sector structural rendering:** procedurally rendered floors plus GLB structural modules are the correct target direction.
 - **Player/robot roster:** partially covered.
 - **Cultists / human antagonists:** missing.
 - **Storm / lightning / wormhole spectacle:** missing as a cohesive runtime-ready set.
 - **POI-specific landmark assets:** incomplete.
 
-## 1. World Map Terrain
+## 1. Ecumenopolis Structural World
 
 Status: **Sufficient for current implementation**
 
 What we have:
 
-- themed biome sheets under `assets/tilesets`
-- deterministic biome-to-tileset mapping
-- adjacency-aware world generation within and between terrain sets
+- 91 audited GLBs copied into `assets/models/city`
+- 91 rendered previews in `assets/generated/city-previews`
+- manifest-backed city model config in `src/config/generated/cityModelManifest.ts`
+- an in-app City Kit Lab for family and composite review
+- real GLB-backed structural rendering and procedurally renderable floors
 
 Assessment:
 
-- The current world-map hex tiles are sufficient for continued world-generation, AI, POI, and campaign work.
-- Terrain art quality may still improve later, but it is no longer a blocker.
+- The structural sci-fi kit is no longer just “city interior” support. It is the primary visual language for the reclaimed machine-world.
+- The key implementation direction is now procedural floors plus authored structural GLB pieces, not a dependence on visible floor-tile kitbash pieces.
+- The current floor-material source should come from curated presets based on `/Volumes/home/assets/2DPhotorealistic/MATERIAL/1K-JPG`, especially concrete, diamond-plate, walkway, and painted-metal families.
+- The remaining work is semantic curation, landmark interpretation, and higher-order sector composition.
 
 Open follow-ups:
 
-- validate special transition edges for unusual biome combinations as the world generator gets richer
-- add unique POI landmark visuals on top of terrain
+- stronger sector landmark composites by gameplay role
+- dome / canopy / breach / exterior-shell visual language
+- abyssal extraction, archive campus, cult ward, and gateway-specific structures
 
-## 2. City Modules (Quaternius / pending-integration/City)
+## 2. Structural Modules (Quaternius / pending-integration/City)
 
 Status: **Operationally sufficient for production-contract work**
 
@@ -47,9 +52,10 @@ What we have:
 
 Assessment:
 
-- The city kit is no longer a blocker for city-system implementation.
+- The kit is no longer a blocker for sector-system implementation.
 - The remaining work is semantic curation and higher-order grammar, not import or visibility.
-- The branch now has enough coverage to understand floors, walls, doors, roofs, columns, details, props, and stairs as actual runtime pieces.
+- The branch now has enough coverage to understand walls, doors, roofs, columns, details, props, and stairs as actual runtime pieces.
+- Visible floor GLBs should be treated as optional accents. Procedural floor rendering is the cleaner baseline.
 
 Still needed:
 
@@ -59,7 +65,7 @@ Still needed:
 
 ## 3. Robot / Machine Roster
 
-Status: **Partial**
+Status: **Partially sufficient, still needs silhouette expansion**
 
 Current local models in `assets/models`:
 
@@ -75,20 +81,43 @@ Current local models in `assets/models`:
 
 Current gameplay mapping confidence:
 
-- **Maintenance Bot:** acceptable current candidate
-- **Utility Drone:** acceptable current candidate
-- **Fabrication Unit:** acceptable temporary candidate, but should likely become a more grounded industrial fabrication chassis later
+- **Field Technician / scout line:** supported
+- **Relay hauler line:** supported
+- **Fabrication rig line:** supported
+- **Assault and defense chassis lines:** now materially supported by the in-repo model set
+- **Substation / founding heavy chassis:** partially supported through `MechaGolem` and `MobileStorageBot`
 - **Feral / rogue machine variants:** enough to begin enemy differentiation
 
 Open questions:
 
 - whether the current robots visually match the docs' tone of broken industrial machines awakening in a ruined city
-- whether fabrication and infrastructure units need more stationary / semi-stationary silhouettes
-- whether late-game or cult-controlled machine variants need a separate visual language
+- whether fabrication and infrastructure units need additional stationary / semi-stationary silhouettes
+- whether dedicated founding / substation-engineering silhouettes need stronger differentiation from combat heavies
+- whether cult-controlled machine variants need a more distinct visual language than the current hostile pool
+
+Validated nearby candidate packs on `/Volumes/home/assets`:
+
+- `/Volumes/home/assets/3DLowPoly/Characters/SciFi/Animated Mech Pack - March 2021`
+  - strong candidate for additional machine-faction chassis
+- `/Volumes/home/assets/3DLowPoly/Characters/SciFi/Animated Robot - Oct 2018`
+  - candidate for lighter utility / relay silhouettes
+- `/Volumes/home/assets/3DLowPoly/Characters/SciFi/SciFiCharacters-ZuhianTeiyu/CyberSoldier/CyberSoldier.glb`
+  - candidate for harsher rival-faction or cult-bound machine enforcement
+- `/Volumes/home/assets/3DLowPoly/Characters/Animated/Ultimate Animated Character Pack - Nov 2019/Worker_Male.glb`
+- `/Volumes/home/assets/3DLowPoly/Characters/Animated/Ultimate Animated Character Pack - Nov 2019/Worker_Female.glb`
+  - useful as baseline human worker silhouettes if we need salvage-camp or neutral-population bodies
+- `/Volumes/home/assets/3DLowPoly/Characters/Animated/KayKit_Adventurers_1.0_EXTRA/Engineer.glb`
+  - useful as a fallback engineer / technician silhouette if no better industrial human set is found
+
+Recommendation:
+
+- keep the current nine local robot chassis as the gameplay baseline
+- search for one clearer stationary fabrication silhouette and one more distinct substation-engineer silhouette before calling the machine roster fully final
+- keep any human imports stylistically secondary so machines remain the visual center of the game
 
 ## 4. Cultists / Human Enemies
 
-Status: **Missing**
+Status: **Partially researched, still missing a validated final set**
 
 Needed:
 
@@ -104,22 +133,65 @@ Why this matters:
 
 Priority: **Highest character-art gap**
 
-## 5. POI Landmark Assets
+Current candidate packs worth visual review:
 
-Status: **Incomplete**
+- `/Volumes/home/assets/3DLowPoly/Characters/Animated/Ultimate Animated Character Pack - Nov 2019/Soldier_Male.glb`
+- `/Volumes/home/assets/3DLowPoly/Characters/Animated/Ultimate Animated Character Pack - Nov 2019/Soldier_Female.glb`
+- `/Volumes/home/assets/3DLowPoly/Characters/Animated/Ultimate Modular Men - Feb 2022/Individual Characters/Casual_Hoodie.glb`
+- `/Volumes/home/assets/3DLowPoly/Characters/Animated/KayKit_Adventurers_1.0_EXTRA/Rogue_Hooded.glb`
+- `/Volumes/home/assets/3DLowPoly/Characters/Animated/KayKit_Adventurers_2.0_FREE/Rogue_Hooded.glb`
+- `/Volumes/home/assets/3DLowPoly/Characters/Animated/Animated Men Characters - Feb 2019`
+- `/Volumes/home/assets/3DLowPoly/Characters/Animated/Animated Women Characters - Feb 2019`
+- `/Volumes/home/assets/3DLowPoly/Characters/Animated/Posed Background Characters - Aug 2018`
+- `/Volumes/home/assets/3DLowPoly/GameKits/Cyberpunk/Cyberpunk Game Kit - July 2022/Enemies`
+- `/Volumes/home/assets/3DPSX/Characters/ChibiCharacters/merchant.glb`
+- `/Volumes/home/assets/3DPSX/Characters/ChibiCharacters/student.glb`
+
+Assessment:
+
+- the low-poly worker/soldier/hooded human candidates are the most promising for cult conversion
+- the PSX characters are useful only as a fallback stylistic branch, not as the preferred mainline cult direction
+- none of the currently identified candidates yet read as “storm cult lightning invoker” without additional kitbashing, recolor, or FX support
+
+## 5. Sector Landmark Assets
+
+Status: **Partially research-backed, still incomplete**
 
 Needed by named campaign locations:
 
-- home-base city landmark pieces
-- coast mine extraction / shoreline industry landmarks
-- science campus ruins and observatory-style structures
-- cult territory landmarks and ritual infrastructure
-- deep-sea gateway / launch-route staging landmarks
+- command-arcology landmark pieces
+- abyssal extraction / drowned freight / pressure-lock landmarks
+- archive campus ruins and observatory-style structures
+- cult-ward landmarks and ritual infrastructure
+- gateway-spine / ascension-route staging landmarks
 
 Why this matters:
 
 - The world generator now guarantees these macro POIs.
 - Without landmark assets, they remain mechanically real but visually under-authored.
+
+Current candidate packs worth integration review:
+
+- `/Volumes/home/assets/3DLowPoly/Assemblages/ModularBuildings/Modular Buildings/building-sample-tower-a.glb`
+- `/Volumes/home/assets/3DLowPoly/Assemblages/ModularBuildings/Modular Buildings/building-sample-tower-b.glb`
+- `/Volumes/home/assets/3DLowPoly/Assemblages/ModularBuildings/Modular Buildings/building-sample-tower-c.glb`
+- `/Volumes/home/assets/3DLowPoly/Assemblages/ModularBuildings/Modular Buildings/building-sample-tower-d.glb`
+- `/Volumes/home/assets/3DLowPoly/Vehicles/Cars/Racing Kit/radarEquipment.glb`
+- `/Volumes/home/assets/3DLowPoly/Assemblages/SciFiEnv/Ultimate Modular Sci-Fi - Feb 2021/Props_Base.glb`
+- `/Volumes/home/assets/3DLowPoly/Environment/Space/Space Station Kit`
+- `/Volumes/home/assets/3DLowPoly/Environment/Space/Sci-Fi Essentials Kit - Nov 2024`
+- `/Volumes/home/assets/3DLowPoly/Environment/Space/Ultimate Space Kit - March 2023`
+- `/Volumes/home/assets/3DLowPoly/Environment/Space/AlienBuildings`
+- `/Volumes/home/assets/3DLowPoly/GameKits/SciFi/Modular SciFi MegaKit - Sept 2024`
+- `/Volumes/home/assets/3DLowPoly/Environment/City/Building Kit`
+- `/Volumes/home/assets/3DLowPoly/Environment/City/City Kit - Commercial`
+
+Assessment:
+
+- the modular tower samples are promising for archive campus, relay spine, and gateway-spine skyline anchors
+- `radarEquipment.glb` is promising for relay / archive instrumentation
+- `Props_Base.glb` and the space-station/environment kits are promising for command-arcology and transit-node landmark dressing
+- we still need a stronger cult-ward landmark language than generic sci-fi infrastructure
 
 ## 6. FX / Atmosphere Assets
 
@@ -169,20 +241,20 @@ Assessment:
 
 Recommended next asset-search order:
 
-1. cultist / human enemy models
-2. POI landmark kits for science campus / coast mines / cult north
-3. better fabrication / infrastructure robot silhouettes if current bots prove too generic
+1. cultist / human enemy models with hooded / ritual / lightning-capable silhouettes
+2. archive-campus / gateway-spine / cult-ward landmark kits
+3. better stationary fabrication and substation-engineer machine silhouettes
 4. lightning / storm / wormhole VFX
-5. supplementary landmark assets only after the validated city grammar exposes real holes
+5. supplementary rival-faction machine silhouettes only after landmark and cult coverage improve
 
 ## 9. Current Recommendation
 
-Do not pause implementation waiting for more terrain or generic city pieces.
+Do not pause implementation waiting for more terrain or generic structural pieces.
 
 Do prioritize:
 
 - cultist models
-- POI landmark assets
+- sector landmark assets
 - validation of whether the current robot roster really matches the game’s lore and design tone
 
 Those are the highest-value asset searches for `pending-integration` next.

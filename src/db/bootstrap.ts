@@ -41,7 +41,7 @@ export function initializeDatabaseSync(
 			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 			name TEXT NOT NULL,
 			world_seed INTEGER NOT NULL DEFAULT 42,
-			map_size TEXT NOT NULL DEFAULT 'standard',
+			sector_scale TEXT NOT NULL DEFAULT 'standard',
 			difficulty TEXT NOT NULL DEFAULT 'standard',
 			climate_profile TEXT NOT NULL DEFAULT 'temperate',
 			storm_profile TEXT NOT NULL DEFAULT 'volatile',
@@ -50,33 +50,57 @@ export function initializeDatabaseSync(
 			playtime_seconds INTEGER NOT NULL DEFAULT 0
 		);
 
-		CREATE TABLE IF NOT EXISTS world_maps (
+		CREATE TABLE IF NOT EXISTS ecumenopolis_maps (
 			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 			save_game_id INTEGER NOT NULL REFERENCES save_games(id) ON DELETE CASCADE,
 			width INTEGER NOT NULL,
 			height INTEGER NOT NULL,
-			map_size TEXT NOT NULL,
+			sector_scale TEXT NOT NULL,
 			climate_profile TEXT NOT NULL,
 			storm_profile TEXT NOT NULL,
-			spawn_q INTEGER NOT NULL,
-			spawn_r INTEGER NOT NULL,
+			spawn_sector_id TEXT NOT NULL,
+			spawn_anchor_key TEXT NOT NULL,
 			generated_at INTEGER NOT NULL
 		);
 
-		CREATE TABLE IF NOT EXISTS world_tiles (
+		CREATE TABLE IF NOT EXISTS sector_cells (
 			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-			world_map_id INTEGER NOT NULL REFERENCES world_maps(id) ON DELETE CASCADE,
+			ecumenopolis_id INTEGER NOT NULL REFERENCES ecumenopolis_maps(id) ON DELETE CASCADE,
 			q INTEGER NOT NULL,
 			r INTEGER NOT NULL,
-			biome TEXT NOT NULL,
-			terrain_set_id TEXT NOT NULL,
-			fog_state INTEGER NOT NULL DEFAULT 0,
-			passable INTEGER NOT NULL DEFAULT 1
+			structural_zone TEXT NOT NULL,
+			floor_preset_id TEXT NOT NULL,
+			discovery_state INTEGER NOT NULL DEFAULT 0,
+			passable INTEGER NOT NULL DEFAULT 1,
+			sector_archetype TEXT NOT NULL DEFAULT 'service_plate',
+			storm_exposure TEXT NOT NULL DEFAULT 'shielded',
+			impassable_class TEXT NOT NULL DEFAULT 'none',
+			anchor_key TEXT NOT NULL DEFAULT '0,0'
+		);
+
+		CREATE TABLE IF NOT EXISTS sector_structures (
+			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+			ecumenopolis_id INTEGER NOT NULL REFERENCES ecumenopolis_maps(id) ON DELETE CASCADE,
+			district_structure_id TEXT NOT NULL,
+			anchor_key TEXT NOT NULL,
+			q INTEGER NOT NULL,
+			r INTEGER NOT NULL,
+			model_id TEXT NOT NULL,
+			placement_layer TEXT NOT NULL,
+			edge TEXT,
+			rotation_quarter_turns INTEGER NOT NULL DEFAULT 0,
+			offset_x REAL NOT NULL DEFAULT 0,
+			offset_y REAL NOT NULL DEFAULT 0,
+			offset_z REAL NOT NULL DEFAULT 0,
+			target_span REAL NOT NULL DEFAULT 1,
+			sector_archetype TEXT NOT NULL DEFAULT 'service_plate',
+			source TEXT NOT NULL DEFAULT 'seeded_district',
+			controller_faction TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS world_points_of_interest (
 			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-			world_map_id INTEGER NOT NULL REFERENCES world_maps(id) ON DELETE CASCADE,
+			ecumenopolis_id INTEGER NOT NULL REFERENCES ecumenopolis_maps(id) ON DELETE CASCADE,
 			type TEXT NOT NULL,
 			name TEXT NOT NULL,
 			q INTEGER NOT NULL,
@@ -86,7 +110,7 @@ export function initializeDatabaseSync(
 
 		CREATE TABLE IF NOT EXISTS city_instances (
 			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-			world_map_id INTEGER NOT NULL REFERENCES world_maps(id) ON DELETE CASCADE,
+			ecumenopolis_id INTEGER NOT NULL REFERENCES ecumenopolis_maps(id) ON DELETE CASCADE,
 			poi_id INTEGER REFERENCES world_points_of_interest(id) ON DELETE SET NULL,
 			name TEXT NOT NULL,
 			world_q INTEGER NOT NULL,
@@ -104,6 +128,9 @@ export function initializeDatabaseSync(
 			scene_building_id TEXT,
 			faction TEXT NOT NULL,
 			unit_type TEXT,
+			bot_archetype_id TEXT,
+			mark_level INTEGER,
+			speech_profile TEXT,
 			building_type TEXT,
 			display_name TEXT,
 			fragment_id TEXT,
@@ -159,6 +186,30 @@ export function initializeDatabaseSync(
 
 	addColumnIfMissing(
 		database,
+		"sector_cells",
+		"sector_archetype",
+		"TEXT NOT NULL DEFAULT 'service_plate'",
+	);
+	addColumnIfMissing(
+		database,
+		"sector_cells",
+		"storm_exposure",
+		"TEXT NOT NULL DEFAULT 'shielded'",
+	);
+	addColumnIfMissing(
+		database,
+		"sector_cells",
+		"impassable_class",
+		"TEXT NOT NULL DEFAULT 'none'",
+	);
+	addColumnIfMissing(
+		database,
+		"sector_cells",
+		"anchor_key",
+		"TEXT NOT NULL DEFAULT '0,0'",
+	);
+	addColumnIfMissing(
+		database,
 		"save_games",
 		"world_seed",
 		"INTEGER NOT NULL DEFAULT 42",
@@ -166,9 +217,14 @@ export function initializeDatabaseSync(
 	addColumnIfMissing(
 		database,
 		"save_games",
-		"map_size",
+		"sector_scale",
 		"TEXT NOT NULL DEFAULT 'standard'",
 	);
+	if (hasColumn(database, "save_games", "map_size")) {
+		database.execSync(
+			"UPDATE save_games SET sector_scale = COALESCE(sector_scale, map_size);",
+		);
+	}
 	addColumnIfMissing(
 		database,
 		"save_games",
@@ -180,6 +236,18 @@ export function initializeDatabaseSync(
 		"save_games",
 		"climate_profile",
 		"TEXT NOT NULL DEFAULT 'temperate'",
+	);
+	addColumnIfMissing(
+		database,
+		"sector_structures",
+		"district_structure_id",
+		"TEXT NOT NULL DEFAULT 'substation_core'",
+	);
+	addColumnIfMissing(
+		database,
+		"sector_structures",
+		"controller_faction",
+		"TEXT",
 	);
 	addColumnIfMissing(
 		database,
@@ -195,6 +263,17 @@ export function initializeDatabaseSync(
 	);
 	addColumnIfMissing(
 		database,
+		"ecumenopolis_maps",
+		"sector_scale",
+		"TEXT NOT NULL DEFAULT 'standard'",
+	);
+	if (hasColumn(database, "ecumenopolis_maps", "map_size")) {
+		database.execSync(
+			"UPDATE ecumenopolis_maps SET sector_scale = COALESCE(sector_scale, map_size);",
+		);
+	}
+	addColumnIfMissing(
+		database,
 		"world_entities",
 		"scene_location",
 		"TEXT NOT NULL DEFAULT 'world'",
@@ -207,6 +286,9 @@ export function initializeDatabaseSync(
 		"TEXT NOT NULL DEFAULT 'player'",
 	);
 	addColumnIfMissing(database, "world_entities", "unit_type", "TEXT");
+	addColumnIfMissing(database, "world_entities", "bot_archetype_id", "TEXT");
+	addColumnIfMissing(database, "world_entities", "mark_level", "INTEGER");
+	addColumnIfMissing(database, "world_entities", "speech_profile", "TEXT");
 	addColumnIfMissing(database, "world_entities", "building_type", "TEXT");
 	addColumnIfMissing(database, "world_entities", "display_name", "TEXT");
 	addColumnIfMissing(database, "world_entities", "fragment_id", "TEXT");

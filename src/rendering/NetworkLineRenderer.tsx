@@ -16,7 +16,7 @@ import {
  * Pure renderer — no game logic. Reads getNetworkOverlayState() and draws:
  * - Signal relay lines: thin emissive with animated pulse particles
  * - Power feed lines: medium emissive with glow intensity tied to throughput
- * - Belt route lines: chunky conveyor with animated dash pattern
+ * - Conduit route lines: embedded mint traces with animated flow pattern
  * - Junction nodes: emissive circles at multi-network intersections
  *
  * All visual parameters come from networks.json config.
@@ -37,9 +37,9 @@ function getCachedColor(key: string, rgb: number[]): THREE.Color {
 // --- Bezier curve helpers ---
 
 /**
- * Compute a quadratic bezier curve between two hex centers.
+ * Compute a quadratic bezier curve between two sector centers.
  * The control point is offset perpendicular to the line direction,
- * creating a slight curve through the hex center.
+ * creating a slight curve through the sector center.
  */
 function computeBezierPoints(
 	from: { x: number; z: number },
@@ -99,7 +99,7 @@ function SegmentLine({
 }) {
 	const lineRef = useRef<THREE.Line>(null);
 
-	const { geometry, material, yOffset, isBelt } = useMemo(() => {
+	const { geometry, material, yOffset, isConduit } = useMemo(() => {
 		const config = networksConfig[segment.type];
 		const controlOffset =
 			"bezierControlOffset" in config ? config.bezierControlOffset : 0.15;
@@ -130,15 +130,15 @@ function SegmentLine({
 			color = getCachedColor("power", networksConfig.power.color);
 		} else {
 			const factionColors =
-				networksConfig.belt.factionColors[
-					segment.faction as keyof typeof networksConfig.belt.factionColors
-				] ?? networksConfig.belt.factionColors.neutral;
-			color = getCachedColor(`belt_${segment.faction}`, factionColors);
+				networksConfig.conduit.factionColors[
+					segment.faction as keyof typeof networksConfig.conduit.factionColors
+				] ?? networksConfig.conduit.factionColors.neutral;
+			color = getCachedColor(`conduit_${segment.faction}`, factionColors);
 		}
 
-		// Belt lines use LineDashedMaterial for conveyor dash animation
+		// Conduit lines use LineDashedMaterial for embedded flow animation
 		let mat: THREE.LineBasicMaterial | THREE.LineDashedMaterial;
-		if (segment.type === "belt") {
+		if (segment.type === "conduit") {
 			geom.computeBoundingSphere();
 			// Compute line distances for dash pattern
 			const positions = geom.attributes.position;
@@ -163,8 +163,8 @@ function SegmentLine({
 				linewidth: 1,
 				transparent: true,
 				opacity: 0.9,
-				dashSize: networksConfig.belt.dashLength,
-				gapSize: networksConfig.belt.gapLength,
+				dashSize: networksConfig.conduit.dashLength,
+				gapSize: networksConfig.conduit.gapLength,
 			});
 		} else {
 			mat = new THREE.LineBasicMaterial({
@@ -179,7 +179,7 @@ function SegmentLine({
 			geometry: geom,
 			material: mat,
 			yOffset: yo,
-			isBelt: segment.type === "belt",
+			isConduit: segment.type === "conduit",
 		};
 	}, [
 		segment.from.x,
@@ -220,14 +220,14 @@ function SegmentLine({
 						elapsedTime * networksConfig.signal.pulseSpeed * Math.PI * 2,
 					);
 			material.opacity = pulse * 0.8;
-		} else if (segment.type === "belt" && isBelt) {
-			// Belt lines: animated dash offset for conveyor effect
+		} else if (segment.type === "conduit" && isConduit) {
+			// Conduit lines: animated dash offset for embedded flow effect
 			// dashOffset is a runtime property not in the TS declarations
 			const dashCycle =
-				networksConfig.belt.dashLength + networksConfig.belt.gapLength;
+				networksConfig.conduit.dashLength + networksConfig.conduit.gapLength;
 			// biome-ignore lint: dashOffset is a runtime property not in TS declarations
 			(material as unknown as { dashOffset: number }).dashOffset =
-				-(elapsedTime * networksConfig.belt.animationSpeed) % dashCycle;
+				-(elapsedTime * networksConfig.conduit.animationSpeed) % dashCycle;
 			material.opacity = 0.9;
 		}
 	});
@@ -281,10 +281,10 @@ function SegmentGlow({
 			color = getCachedColor("power", networksConfig.power.color);
 		} else {
 			const factionColors =
-				networksConfig.belt.factionColors[
-					segment.faction as keyof typeof networksConfig.belt.factionColors
-				] ?? networksConfig.belt.factionColors.neutral;
-			color = getCachedColor(`belt_${segment.faction}`, factionColors);
+				networksConfig.conduit.factionColors[
+					segment.faction as keyof typeof networksConfig.conduit.factionColors
+				] ?? networksConfig.conduit.factionColors.neutral;
+			color = getCachedColor(`conduit_${segment.faction}`, factionColors);
 		}
 
 		const mat = new THREE.LineBasicMaterial({

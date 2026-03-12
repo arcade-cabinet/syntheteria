@@ -1,7 +1,10 @@
 import type { AgentRole } from "../ai";
-import type { TerrainSetId } from "../config/terrainSetRules";
+import type {
+	BotArchetypeId,
+	BotSpeechProfile,
+	BotUnitType,
+} from "../bots";
 import type { SaveGameRecord } from "../db/saveGames";
-import type { Biome, FogState } from "../ecs/terrain";
 import type { UnitComponent } from "../ecs/traits";
 import type { ResourcePool } from "../systems/resources";
 import type { NewGameConfig } from "./config";
@@ -13,33 +16,57 @@ import type {
 
 export type SceneMode = "world" | "city";
 
-export interface WorldMapSnapshot {
+export interface EcumenopolisSnapshot {
 	id: number;
 	save_game_id: number;
 	width: number;
 	height: number;
-	map_size: string;
+	sector_scale: string;
 	climate_profile: NewGameConfig["climateProfile"];
 	storm_profile: NewGameConfig["stormProfile"];
-	spawn_q: number;
-	spawn_r: number;
+	spawn_sector_id: string;
+	spawn_anchor_key: string;
 	generated_at: number;
 }
 
-export interface WorldTileSnapshot {
+export interface SectorCellSnapshot {
 	id: number;
-	world_map_id: number;
+	ecumenopolis_id: number;
 	q: number;
 	r: number;
-	biome: Biome;
-	terrain_set_id: TerrainSetId;
-	fog_state: FogState;
+	structural_zone: string;
+	floor_preset_id: string;
+	discovery_state: number;
 	passable: number;
+	sector_archetype: string;
+	storm_exposure: "shielded" | "stressed" | "exposed";
+	impassable_class: "none" | "breach" | "sealed_power" | "structural_void";
+	anchor_key: string;
 }
 
-export interface PoiState {
+export interface SectorStructureSnapshot {
 	id: number;
-	world_map_id: number;
+	ecumenopolis_id: number;
+	district_structure_id: string;
+	anchor_key: string;
+	q: number;
+	r: number;
+	model_id: string;
+	placement_layer: string;
+	edge: string | null;
+	rotation_quarter_turns: number;
+	offset_x: number;
+	offset_y: number;
+	offset_z: number;
+	target_span: number;
+	sector_archetype: string;
+	source: "seeded_district" | "boundary" | "landmark" | "constructed";
+	controller_faction: string | null;
+}
+
+export interface SectorPoiSnapshot {
+	id: number;
+	ecumenopolis_id: number;
 	type: WorldPoiType;
 	name: string;
 	q: number;
@@ -49,7 +76,7 @@ export interface PoiState {
 
 export interface CityRuntimeSnapshot {
 	id: number;
-	world_map_id: number;
+	ecumenopolis_id: number;
 	poi_id: number | null;
 	name: string;
 	world_q: number;
@@ -84,7 +111,10 @@ export interface WorldEntitySnapshot {
 	scene_location: "world" | "interior";
 	scene_building_id: string | null;
 	faction: string;
-	unit_type: string | null;
+	unit_type: BotUnitType | null;
+	bot_archetype_id: BotArchetypeId | null;
+	mark_level: number | null;
+	speech_profile: BotSpeechProfile | null;
 	building_type: string | null;
 	display_name: string | null;
 	fragment_id: string | null;
@@ -109,7 +139,10 @@ export interface PersistableWorldEntity {
 	sceneLocation: "world" | "interior";
 	sceneBuildingId: string | null;
 	faction: string;
-	unitType: string | null;
+	unitType: BotUnitType | null;
+	botArchetypeId: BotArchetypeId | null;
+	markLevel: number | null;
+	speechProfile: BotSpeechProfile | null;
 	buildingType: string | null;
 	displayName: string | null;
 	fragmentId: string | null;
@@ -136,9 +169,10 @@ export interface PersistableWorldEntity {
 export interface WorldSessionSnapshot {
 	saveGame: SaveGameRecord;
 	config: NewGameConfig;
-	worldMap: WorldMapSnapshot;
-	tiles: WorldTileSnapshot[];
-	pointsOfInterest: PoiState[];
+	ecumenopolis: EcumenopolisSnapshot;
+	sectorCells: SectorCellSnapshot[];
+	sectorStructures: SectorStructureSnapshot[];
+	pointsOfInterest: SectorPoiSnapshot[];
 	cityInstances: CityRuntimeSnapshot[];
 	campaignState: CampaignStateSnapshot;
 	resourceState: ResourceStateSnapshot;
@@ -163,8 +197,9 @@ export function toWorldSessionSnapshot(
 	return {
 		saveGame: persistedWorld.saveGame,
 		config: persistedWorld.config,
-		worldMap: persistedWorld.worldMap,
-		tiles: persistedWorld.tiles,
+		ecumenopolis: persistedWorld.ecumenopolis,
+		sectorCells: persistedWorld.sectorCells,
+		sectorStructures: persistedWorld.sectorStructures,
 		pointsOfInterest: persistedWorld.pointsOfInterest,
 		cityInstances: persistedWorld.cityInstances,
 		campaignState: persistedWorld.campaignState,

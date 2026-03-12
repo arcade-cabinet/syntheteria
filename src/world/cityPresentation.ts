@@ -13,8 +13,8 @@ const PRESENTATION: Record<WorldPoiType, CityPurposePresentation> = {
 	home_base: {
 		badge: "Home Base",
 		enterLabel: "Enter Command Hub",
-		foundationLabel: "Already Founded",
-		role: "Primary relay and initial logistics nucleus.",
+		foundationLabel: "Substation Already Online",
+		role: "Primary relay and initial substation nucleus.",
 		summary:
 			"The home base is the first stable urban shell under your control. It anchors persistence, recovery, and future fabrication growth.",
 		surveyLabel: "Review Relay Shell",
@@ -22,7 +22,7 @@ const PRESENTATION: Record<WorldPoiType, CityPurposePresentation> = {
 	coast_mines: {
 		badge: "Coast Mines",
 		enterLabel: "Inspect Mining Block",
-		foundationLabel: "Found Mining Outpost",
+		foundationLabel: "Establish Mining Substation",
 		role: "Coastal extraction and salvage foothold.",
 		summary:
 			"These structures support shoreline extraction, cargo staging, and rugged industrial growth. They fit storage-heavy and utility-biased composites.",
@@ -31,7 +31,7 @@ const PRESENTATION: Record<WorldPoiType, CityPurposePresentation> = {
 	science_campus: {
 		badge: "Science Campus",
 		enterLabel: "Inspect Research Wing",
-		foundationLabel: "Found Research Campus",
+		foundationLabel: "Establish Research Substation",
 		role: "Compute-rich research and instrumentation enclave.",
 		summary:
 			"The science campus is suited to compute, signal, and fabrication-adjacent rooms. Its layouts should trend toward clean corridors and tower-like control spaces.",
@@ -66,9 +66,9 @@ export function describeCityState(state: CityInstanceState | undefined) {
 		case "latent":
 			return "Unsurveyed Shell";
 		case "surveyed":
-			return "Surveyed Interior";
+			return "Surveyed District";
 		case "founded":
-			return "Founded City";
+			return "Substation Online";
 		default:
 			return "Unknown State";
 	}

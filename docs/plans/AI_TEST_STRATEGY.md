@@ -80,12 +80,12 @@ Purpose:
 - prove adapter seams are stable before consumers depend on them
 
 Targets:
-- hex navigation adapter
+- sector navigation adapter
 - square-grid navigation adapter
 
 Assertions:
 - path contract shape is stable
-- world hex adapter delegates to current pathing system
+- sector adapter delegates to the structural campaign navigation system
 - square-grid adapter stays deterministic and extendable
 
 ### Future Acceptance Harness

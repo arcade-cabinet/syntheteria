@@ -26,6 +26,9 @@ This document preserves the older design decision log while keeping the main doc
 ## Questions That Need Periodic Revalidation
 
 - Component taxonomy and exact part list as fabrication broadens.
-- Cultist lightning combat feel once cultists are fully playable enemies.
-- World-map resource balance across map sizes and climate profiles.
-- How much city complexity is appropriate before transitions become too heavy for the intended pacing.
+- Cultist lightning combat feel once cultists are fully implemented as non-playable antagonists.
+- Sector resource balance across campaign scales and starting profiles.
+- How quickly the campaign map should become strategically coherent versus remain fragmentary and machine-perspective-driven.
+- How much of local context should live in anchored unit/site briefings versus persistent HUD overlays.
+- How much of the storm should be visible as exterior spectacle versus directly intruding into reclaimable sectors.
+- Which rival machine-faction differences should be systemic, and which should remain mainly environmental/doctrinal.

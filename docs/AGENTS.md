@@ -16,10 +16,10 @@ The Macro level focuses on cross-cutting architecture and transitioning from the
 The Meso level breaks down Macro goals into distinct system tasks using the new Koota architecture.
 - **Focus Areas:**
   - **AI Foundation:** Build Yuka-backed behavior through `src/ai` with explicit bridge, navigation, task, perception, and serialization boundaries before expanding downstream AI consumers.
-  - **Campaign Persistence:** Extend Expo SQLite + Drizzle-backed save state for world tiles, POIs, actors, city instances, and campaign deltas.
-  - **World Generation:** Continue improving deterministic biome, climate, storm, and POI generation using `NewGameConfig`.
-  - **World/City Transitions:** Build true scene transitions and city-instance loading instead of city modal abstractions.
-  - **City Assemblage:** Lock the square-grid assembly contract and then classify Quaternius modules against it.
+  - **Campaign Persistence:** Extend Expo SQLite + Drizzle-backed save state for sector maps, POIs, actors, infrastructure, faction state, and campaign deltas.
+  - **Sector Generation:** Replace the old outdoor-hex mental model with deterministic ecumenopolis sector generation driven by `NewGameConfig`.
+  - **Spatial Runtime:** Remove the permanent world/city split from the intended architecture and treat dense operational sectors as part of one campaign space.
+  - **Structural Assemblage:** Keep the square-grid assembly contract as a hidden structural/runtime layer and classify Quaternius modules against it.
   - **Strategic Systems:** Continue hacking, signal/compute, cult pressure, and combat as mechanics layered onto the persisted campaign model.
   - **Execution:** Execute via dedicated tickets. Each system needs Jest tests before integration.
 

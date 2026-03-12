@@ -1,6 +1,6 @@
 import buildingsConfig from "../config/buildings.json";
 import gameplayConfig from "../config/gameplay.json";
-import unitsConfig from "../config/units.json";
+import { getBotDefinition } from "../bots";
 import type { BuildingEntity, Entity } from "../ecs/traits";
 import {
 	Building,
@@ -87,9 +87,9 @@ function getBuildingPowerDemand(entity: BuildingEntity): number {
 }
 
 function getUnitPowerDemand(entity: Entity): number {
-	const type = entity.get(Unit)?.type as keyof typeof unitsConfig;
-	const config = unitsConfig[type];
-	if (!config) return 0;
+	const type = entity.get(Unit)?.type;
+	if (!type) return 0;
+	const config = getBotDefinition(type);
 
 	const baseDemand = config.powerDemand;
 	const movingBonus = entity.get(Navigation)?.moving

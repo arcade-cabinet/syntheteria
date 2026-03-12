@@ -1,10 +1,9 @@
 import buildingsConfig from "../config/buildings.json";
-import unitsConfig from "../config/units.json";
 import {
-	getFragment,
-	getTerrainHeight,
-	requirePrimaryFragment,
-} from "./terrain";
+	createBotUnitState,
+	getBotDefinition,
+	type BotUnitType,
+} from "../bots";
 import type { Entity, UnitComponent, UnitEntity } from "./traits";
 import {
 	AIController,
@@ -17,6 +16,11 @@ import {
 	WorldPosition,
 } from "./traits";
 import { world } from "./world";
+import {
+	getStructuralFragment,
+	getSurfaceHeightAtWorldPosition,
+	requirePrimaryStructuralFragment,
+} from "../world/structuralSpace";
 
 /**
  * Factory functions for spawning entities.
@@ -50,32 +54,32 @@ export function spawnUnit(options: {
 	x: number;
 	z: number;
 	fragmentId?: string;
-	type?: "maintenance_bot" | "utility_drone";
+	type?: BotUnitType;
 	displayName?: string;
 	speed?: number;
 	components: UnitComponent[];
 }): UnitEntity {
 	const type = options.type || "maintenance_bot";
-	const config = unitsConfig[type];
+	const config = getBotDefinition(type);
 
 	const {
 		x,
 		z,
-		displayName = config.displayName,
-		speed = config.speed,
+		displayName = config.label,
+		speed = config.baseSpeed,
 		components,
 	} = options;
 
 	// Create or reuse fragment
 	let fragment;
 	if (options.fragmentId) {
-		fragment = getFragment(options.fragmentId);
+		fragment = getStructuralFragment(options.fragmentId);
 		if (!fragment) throw new Error(`Fragment ${options.fragmentId} not found`);
 	} else {
-		fragment = requirePrimaryFragment();
+		fragment = requirePrimaryStructuralFragment();
 	}
 
-	const y = getTerrainHeight(x, z);
+	const y = getSurfaceHeightAtWorldPosition(x, z);
 
 	const entity = world.spawn(
 		AIController,
@@ -90,13 +94,13 @@ export function spawnUnit(options: {
 		faction: "player" as const,
 	});
 	entity.set(AIController, {
-		role: "player_unit",
+		role: config.defaultAiRole,
 		enabled: true,
 		stateJson: null,
 	});
 	entity.set(WorldPosition, { x, y, z });
 	entity.set(MapFragment, { fragmentId: fragment.id });
-	entity.set(Unit, { type, displayName, speed, selected: false, components });
+	entity.set(Unit, createBotUnitState({ unitType: type, displayName, speed, components }));
 	entity.set(Navigation, { path: [], pathIndex: 0, moving: false });
 
 	return entity as UnitEntity;
@@ -114,11 +118,11 @@ export function spawnFabricationUnit(options: {
 	displayName?: string;
 	components?: UnitComponent[];
 }): Entity {
-	const fragment = getFragment(options.fragmentId);
+	const fragment = getStructuralFragment(options.fragmentId);
 	if (!fragment) throw new Error(`Fragment ${options.fragmentId} not found`);
 
 	const config = buildingsConfig.fabrication_unit;
-	const y = getTerrainHeight(options.x, options.z);
+	const y = getSurfaceHeightAtWorldPosition(options.x, options.z);
 	const powered = options.powered ?? false;
 
 	const entity = world.spawn(
@@ -135,20 +139,22 @@ export function spawnFabricationUnit(options: {
 		faction: "player" as const,
 	});
 	entity.set(AIController, {
-		role: "player_unit",
+		role: getBotDefinition("fabrication_unit").defaultAiRole,
 		enabled: true,
 		stateJson: null,
 	});
 	entity.set(WorldPosition, { x: options.x, y, z: options.z });
 	entity.set(MapFragment, { fragmentId: options.fragmentId });
-	entity.set(Unit, {
-		type: "fabrication_unit" as const,
-		displayName: options.displayName ?? config.displayName,
-		speed: 0,
-		selected: false,
-		components:
-			options.components ?? (config.defaultComponents as UnitComponent[]),
-	});
+	entity.set(
+		Unit,
+		createBotUnitState({
+			unitType: "fabrication_unit",
+			displayName: options.displayName ?? config.displayName,
+			speed: 0,
+			components:
+				options.components ?? (config.defaultComponents as UnitComponent[]),
+		}),
+	);
 	entity.set(Navigation, { path: [], pathIndex: 0, moving: false });
 	entity.set(Building, {
 		type: "fabrication_unit",
@@ -166,11 +172,11 @@ export function spawnLightningRod(options: {
 	z: number;
 	fragmentId: string;
 }): Entity {
-	const fragment = getFragment(options.fragmentId);
+	const fragment = getStructuralFragment(options.fragmentId);
 	if (!fragment) throw new Error(`Fragment ${options.fragmentId} not found`);
 
 	const config = buildingsConfig.lightning_rod;
-	const y = getTerrainHeight(options.x, options.z);
+	const y = getSurfaceHeightAtWorldPosition(options.x, options.z);
 
 	const entity = world.spawn(
 		Identity,

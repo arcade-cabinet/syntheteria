@@ -2,10 +2,11 @@ import { seedToPhrase } from "../ecs/seed";
 import type {
 	ClimateProfile,
 	Difficulty,
-	MapSize,
+	SectorScale,
 	StormProfile,
 } from "../world/config";
 import { initializeDatabaseSync } from "./bootstrap";
+import { FakeDatabase } from "./fallbackDatabase";
 import { getDatabaseSync } from "./runtime";
 import type { SyncDatabase } from "./types";
 
@@ -13,7 +14,7 @@ export type SaveGameRecord = {
 	id: number;
 	name: string;
 	world_seed: number;
-	map_size: MapSize;
+	sector_scale: SectorScale;
 	difficulty: Difficulty;
 	climate_profile: ClimateProfile;
 	storm_profile: StormProfile;
@@ -22,6 +23,12 @@ export type SaveGameRecord = {
 	playtime_seconds: number;
 };
 
+function persistFallbackDatabase(database: SyncDatabase) {
+	if (database instanceof FakeDatabase) {
+		database.persistToStorage();
+	}
+}
+
 function selectLatestSaveGame(database: SyncDatabase) {
 	return database.getFirstSync<SaveGameRecord>(
 		`
@@ -29,7 +36,7 @@ function selectLatestSaveGame(database: SyncDatabase) {
 				id,
 				name,
 				world_seed,
-				map_size,
+				sector_scale,
 				difficulty,
 				climate_profile,
 				storm_profile,
@@ -50,7 +57,7 @@ function selectSaveGameById(database: SyncDatabase, saveGameId: number) {
 				id,
 				name,
 				world_seed,
-				map_size,
+				sector_scale,
 				difficulty,
 				climate_profile,
 				storm_profile,
@@ -84,13 +91,13 @@ export function getLatestSaveGameSync(
 export function createSaveGameSync(
 	{
 		worldSeed,
-		mapSize = "standard",
+		sectorScale = "standard",
 		difficulty = "standard",
 		climateProfile = "temperate",
 		stormProfile = "volatile",
 	}: {
 		worldSeed: number;
-		mapSize?: MapSize;
+		sectorScale?: SectorScale;
 		difficulty?: Difficulty;
 		climateProfile?: ClimateProfile;
 		stormProfile?: StormProfile;
@@ -106,7 +113,7 @@ export function createSaveGameSync(
 			INSERT INTO save_games (
 				name,
 				world_seed,
-				map_size,
+				sector_scale,
 				difficulty,
 				climate_profile,
 				storm_profile,
@@ -118,7 +125,7 @@ export function createSaveGameSync(
 		`,
 		name,
 		worldSeed,
-		mapSize,
+		sectorScale,
 		difficulty,
 		climateProfile,
 		stormProfile,
@@ -126,6 +133,7 @@ export function createSaveGameSync(
 		now,
 	);
 
+	persistFallbackDatabase(database);
 	return selectSaveGameById(database, result.lastInsertRowId);
 }
 
@@ -139,5 +147,6 @@ export function touchSaveGameSync(
 		Date.now(),
 		saveGameId,
 	);
+	persistFallbackDatabase(database);
 	return selectSaveGameById(database, saveGameId);
 }

@@ -8,10 +8,14 @@ import { resetResources, setResources } from "../systems/resources";
 import { hydratePersistedWorldEntities } from "../world/entityPersistence";
 import { resetRuntimeState, setRuntimeScene } from "../world/runtimeState";
 import type { PersistedWorldSnapshot } from "../world/snapshots";
+import {
+	type FogState,
+	loadStructuralFragment,
+	resetStructuralSpace,
+} from "../world/structuralSpace";
 import { resetCityLayout } from "./cityLayout";
 import { resetFactoryEntityIds } from "./factory";
 import { resetGameState } from "./gameState";
-import { loadTerrainFragment, resetTerrainState } from "./terrain";
 import { world } from "./world";
 
 function destroyAllEntities() {
@@ -22,7 +26,7 @@ function destroyAllEntities() {
 
 export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 	resetGameState();
-	resetTerrainState();
+	resetStructuralSpace();
 	resetCityLayout();
 	resetResources();
 	resetRuntimeState();
@@ -44,17 +48,20 @@ export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 		persistedWorld.campaignState.active_city_instance_id,
 	);
 
-	const fragment = loadTerrainFragment(
-		persistedWorld.tiles.map((tile) => ({
-			q: tile.q,
-			r: tile.r,
-			biome: tile.biome,
-			fog: tile.fog_state,
-			terrainSetId: tile.terrain_set_id,
-		})),
+	const fragment = loadStructuralFragment(
+		persistedWorld.sectorCells.map((cell) => {
+			return {
+				q: cell.q,
+				r: cell.r,
+				structuralZone: cell.structural_zone,
+				discoveryState: cell.discovery_state as FogState,
+				floorPresetId: cell.floor_preset_id,
+				passable: cell.passable === 1,
+			};
+		}),
 		{
-			width: persistedWorld.worldMap.width,
-			height: persistedWorld.worldMap.height,
+			width: persistedWorld.ecumenopolis.width,
+			height: persistedWorld.ecumenopolis.height,
 		},
 		"world_primary",
 	);

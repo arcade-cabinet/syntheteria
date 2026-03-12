@@ -7,8 +7,8 @@ import {
 	createNewGameConfig,
 	DIFFICULTY_LABELS,
 	type Difficulty,
-	MAP_SIZE_SPECS,
-	type MapSize,
+	SECTOR_SCALE_SPECS,
+	type SectorScale,
 	type NewGameConfig,
 	STORM_PROFILE_SPECS,
 	type StormProfile,
@@ -29,7 +29,7 @@ export function NewGameModal({
 		seedToPhrase(randomSeed()),
 	);
 	const [parseError, setParseError] = useState(false);
-	const [mapSize, setMapSize] = useState<MapSize>("standard");
+	const [sectorScale, setSectorScale] = useState<SectorScale>("standard");
 	const [difficulty, setDifficulty] = useState<Difficulty>("standard");
 	const [climateProfile, setClimateProfile] =
 		useState<ClimateProfile>("temperate");
@@ -42,7 +42,7 @@ export function NewGameModal({
 
 		const nextConfig = initialConfig ?? createNewGameConfig(randomSeed());
 		setPhraseInput(seedToPhrase(nextConfig.worldSeed));
-		setMapSize(nextConfig.mapSize);
+		setSectorScale(nextConfig.sectorScale);
 		setDifficulty(nextConfig.difficulty);
 		setClimateProfile(nextConfig.climateProfile);
 		setStormProfile(nextConfig.stormProfile);
@@ -62,7 +62,7 @@ export function NewGameModal({
 
 		onConfirm({
 			worldSeed: seed,
-			mapSize,
+			sectorScale,
 			difficulty,
 			climateProfile,
 			stormProfile,
@@ -82,9 +82,9 @@ export function NewGameModal({
 							Campaign Initialization
 						</Text>
 						<Text className="mt-2 font-mono text-[12px] md:text-[13px] leading-5 text-white/58">
-							Define the seed, terrain scale, and atmospheric pressures that
-							shape this world. Once committed, these parameters lock into the
-							campaign archive and drive all terrain generation.
+							Define the seed, sector scale, and atmospheric pressures that
+							shape this machine-world. Once committed, these parameters lock
+							into the campaign archive and drive all sector generation.
 						</Text>
 					</View>
 
@@ -134,23 +134,23 @@ export function NewGameModal({
 						<View className="gap-4 md:flex-row md:gap-5">
 							<View className="md:flex-1 rounded-[18px] md:rounded-[22px] border border-white/8 bg-[#08131a]/80 px-4 py-4">
 								<Text className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#90ddec]">
-									Map Size
+									Sector Scale
 								</Text>
 								<View className="mt-3 gap-3">
 									{(
-										Object.entries(MAP_SIZE_SPECS) as [
-											MapSize,
-											(typeof MAP_SIZE_SPECS)[MapSize],
-										][]
-									).map(([value, spec]) => (
-										<OptionCard
-											key={value}
-											label={spec.label}
-											description={spec.description}
-											meta={`${spec.width} x ${spec.height} hexes`}
-											selected={mapSize === value}
-											onPress={() => setMapSize(value)}
-										/>
+									Object.entries(SECTOR_SCALE_SPECS) as [
+										SectorScale,
+										(typeof SECTOR_SCALE_SPECS)[SectorScale],
+									][]
+								).map(([value, spec]) => (
+											<OptionCard
+												key={value}
+												label={spec.label}
+												description={spec.description}
+												meta={`${spec.width} x ${spec.height} sectors`}
+												selected={sectorScale === value}
+												onPress={() => setSectorScale(value)}
+											/>
 									))}
 								</View>
 							</View>
@@ -234,9 +234,9 @@ export function NewGameModal({
 
 					<View className="gap-3 md:flex-row md:items-center md:justify-between border-t border-white/8 bg-[#061019]/96 px-4 py-4 md:px-6 md:py-5">
 						<Text className="font-mono text-[11px] leading-5 text-white/42 md:max-w-[640px]">
-							These parameters are irreversible once the world is generated.
-							Terrain, relay anchors, and city seeds will be encoded into your
-							campaign archive.
+							These parameters are irreversible once the campaign space is
+							generated. Sector topology, relay anchors, and structural seeds
+							will be encoded into your campaign archive.
 						</Text>
 						<View className="flex-row gap-3">
 							<ActionButton label="Cancel" tone="ghost" onPress={onCancel} />

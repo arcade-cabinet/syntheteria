@@ -6,6 +6,8 @@ import {
 	getDeferredCitySubset,
 	getPlayableCitySubset,
 } from "./cityCatalog";
+import { cityModelManifest } from "../../config/generated/cityModelManifest";
+import { CITY_MODEL_SEMANTICS } from "../config/cityModelSemantics";
 
 describe("city catalog", () => {
 	it("covers the full copied city kit", () => {
@@ -13,6 +15,12 @@ describe("city catalog", () => {
 		expect(getCityCatalogSubcategories()).toEqual(
 			expect.arrayContaining(["Details", "Walls", "floor"]),
 		);
+	});
+
+	it("requires explicit authored semantics for every generated model id", () => {
+		const manifestIds = cityModelManifest.models.map((model) => model.id).sort();
+		const semanticIds = Object.keys(CITY_MODEL_SEMANTICS).sort();
+		expect(semanticIds).toEqual(manifestIds);
 	});
 
 	it("supports family and placement filtering", () => {

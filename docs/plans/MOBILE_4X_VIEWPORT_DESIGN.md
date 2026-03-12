@@ -1,4 +1,4 @@
-# Mobile 4X Viewport Design — Syntheteria
+# Mobile Ecumenopolis Viewport Design — Syntheteria
 
 ## The Problem
 
@@ -37,7 +37,7 @@ That leaves a *window* into the game world of roughly 215×450px — barely more
 ### Northgard Mobile (Cautionary Tale)
 - UI scaling options but still cluttered on phones
 - "Suits tablets much better" — reviewers
-- Strategy games with hex/territory grids need ~7-9 tiles visible minimum
+- Strategy games with territory-based spatial cells need ~7-9 readable structural cells visible minimum
 
 ## Design Principles for Syntheteria
 
@@ -52,47 +52,42 @@ At rest (nothing selected, no panel open), the game world should fill **100% of 
 
 **Everything else is contextual** — appears on interaction, dismissed by tapping the map.
 
-### 2. Default Zoom: The "7-Tile Rule"
+### 2. Default Zoom: The "7-Cell Rule"
 
-At default zoom on a phone in portrait, the player should see approximately **7 tiles across** the screen width. This is the sweet spot from both Polytopia and CivRev2:
-- Enough tiles for local tactical context (your city + 2-3 tiles of surroundings)
-- Each tile large enough to show its terrain type, any unit/building on it, and its ownership color
+At default zoom on a phone in portrait, the player should see approximately **7 structural cells across** the screen width. This is the sweet spot from both Polytopia and CivRev2:
+- Enough cells for local tactical context (your active sector + 2-3 cells of surroundings)
+- Each cell large enough to show its floor zone, any unit/structure on it, and its ownership color
 - Not so zoomed out that individual units become undifferentiated dots
 
 For Syntheteria's coordinate system:
-- Current world uses 3D units where terrain tiles are roughly 2 units wide
-- A 375px phone showing 7 tiles means each tile renders at ~53px — readable for a hex/square with a small icon
-- Min zoom (zoomed out): ~12 tiles across — strategic overview, unit dots
-- Max zoom (zoomed in): ~4 tiles across — individual unit detail, city interior-level
+- The campaign should use one structural-space measure rather than separate overworld and city scales
+- A 375px phone showing 7 cells means each cell renders at ~53px, readable for a square structural space with a small icon
+- Min zoom (zoomed out): ~12 cells across
+- Max zoom (zoomed in): ~4 cells across
 
 ### 3. Zoom Level Tiers (Not Continuous)
 
 Instead of smooth continuous zoom (which leads to awkward "between" states), use **snap-to zoom tiers** with smooth animation between them:
 
-| Tier | Name | Tiles Across (Phone) | What's Visible |
+| Tier | Name | Cells Across (Phone) | What's Visible |
 |------|------|---------------------|----------------|
-| 1 | Tactical | 4-5 | Unit models, building details, terrain features |
-| 2 | **Default** | 7-8 | Units as icons, buildings as silhouettes, terrain colors |
-| 3 | Strategic | 11-13 | Ownership colors, city icons, unit group indicators |
+| 1 | Tactical | 4-5 | Unit models, structure details, floor-zone features |
+| 2 | **Default** | 7-8 | Units as icons, structures as silhouettes, district colors |
+| 3 | Strategic | 11-13 | Ownership colors, district icons, unit group indicators |
 | 4 | World | 20+ | Full map overview (like minimap but interactive) |
 
 Pinch zoom snaps to nearest tier. Double-tap cycles to next tier. This prevents the "unrecognizable muddle" problem — at every tier, the visual language is designed for THAT distance.
 
-### 4. Contextual HUD — Bottom Sheet Pattern
+### 4. Contextual HUD — Lightweight Briefing Pattern
 
-When the player taps a unit, building, or tile, information appears as a **bottom sheet** that slides up from the bottom covering ~40% of screen height. The map scrolls up to keep the tapped element visible above the sheet.
+When the player taps a unit, building, or site, contextual information should prefer an anchored speech-bubble or site-brief metaphor first, escalating to a modal only for higher-commitment actions.
 
-Bottom sheet content:
-- Unit stats, components, orders
-- Building status, fabrication queue
-- Tile resources, POI information
+Context surface hierarchy:
+- anchored briefing bubble for local context
+- radial menu for actions
+- modal for commitment-heavy choices
 
-Dismissed by: swiping down, tapping the map, or tapping the X.
-
-This is the Polytopia pattern and it works because:
-- The map (the thing you're making decisions about) stays visible
-- Your thumb is already near the bottom of the screen
-- Complex info (fabrication recipes, repair options) gets room to breathe
+This keeps the playable space open while preserving clarity.
 
 ### 5. Resource Strip (Top Edge)
 
@@ -117,13 +112,13 @@ Replace the current multi-row TopBar with a **single-row resource strip**:
 - Total height: 36-40px including safe area padding
 - On desktop/tablet: expand to full TopBar with labels
 
-### 6. Tile Atlas Scaling
+### 6. Structural Cell Scaling
 
-When extracting tiles from the terrain atlas for rendering:
-- Each tile at the **default zoom tier** should resolve to approximately **48-56dp** on phone
-- At this size, a 2-color hex (terrain base + ownership tint) is readable
-- Center-placed models (buildings, units) should be **~60% of tile width** — large enough to identify type but not overflowing
-- City icons at strategic zoom should be **recognizable silhouettes** at ~20-24dp
+When rendering the structural-space campaign:
+- Each cell at the **default zoom tier** should resolve to approximately **48-56dp** on phone
+- At this size, a 2-tone floor plus a structure or unit silhouette must remain readable
+- Center-placed models should be **~60% of cell width** — large enough to identify type but not overflowing
+- District or substation icons at strategic zoom should be **recognizable silhouettes** at ~20-24dp
 
 On tablet, tiles naturally get more pixels, so the same 7-tile rule gives ~90dp tiles — room for more detail.
 
@@ -133,15 +128,15 @@ On tablet, tiles naturally get more pixels, so the same 7-tile rule gives ~90dp 
 |---------|---------------|--------|---------|
 | Resource bar | Icons only, 36px tall | Icons + short labels, 44px | Full TopBar with labels + sim controls |
 | Minimap | Hidden, toggle icon | Always visible, corner | Always visible, larger |
-| Selected info | Bottom sheet, 40% height | Side panel, 320px wide | Side panel, 358px wide |
-| Build toolbar | Bottom sheet, grid of icons | Right rail, compact | Right rail, full |
+| Local context | Anchored bubble or compact modal | Compact side/popup | Compact side/popup |
+| Build/actions | Radial + modal escalation | Radial + side affordance | Radial + side affordance |
 | Sim controls | In hamburger menu | Top-right panel | Top-right panel, always visible |
 | Default zoom | 7 tiles across | 9-10 tiles across | 12-14 tiles across |
 
 ## Implementation Priority
 
-1. **Resource strip** — replace TopBar on phone with compact single-row
-2. **Bottom sheet pattern** — move SelectedInfo, BuildToolbar, LocationPanel into bottom sheets on phone
+1. **Resource strip** — compact single-row top strip on phone
+2. **Anchored context surfaces** — local context should prefer speech bubbles / site briefs over persistent panels
 3. **Zoom tier system** — snap-to tiers with appropriate visual language per tier
 4. **Minimap toggle** — hidden by default on phone, expandable
 5. **Contextual sim controls** — behind hamburger on phone
@@ -150,8 +145,8 @@ On tablet, tiles naturally get more pixels, so the same 7-tile rule gives ~90dp 
 
 - **The Battle of Polytopia** — App Store, free. Study portrait mode HUD layout.
 - **Civilization Revolution 2** — App Store. Study tile presentation and zoom.
-- **Northgard** (mobile) — Study what NOT to do with hex territory on small screens.
-- **Hexonia** — Polytopia-inspired, good mobile hex presentation.
+- **Northgard** (mobile) — Study what NOT to do when persistent HUDs crowd the play space.
+- **Hexonia** — useful for clarity-at-distance lessons, not as a structural target.
 - **Unciv** — Open source Civ V on mobile, studies in making complex 4X work on phone.
 
 ## Sources

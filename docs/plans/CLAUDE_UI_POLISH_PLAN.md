@@ -4,7 +4,7 @@ This plan is the execution contract for Claude-driven UI and UX refinement work.
 
 ## Mission
 
-Bring every player-visible surface into alignment with the game’s actual identity, runtime contracts, and persistence-backed world/city structure.
+Bring every player-visible surface into alignment with the game’s actual identity, runtime contracts, and persistence-backed ecumenopolis sector structure.
 
 This is not a mockup pass. It is a real product pass.
 
@@ -24,16 +24,16 @@ Claude must stay aligned with:
 flowchart TD
     A["Brand / Experience Contract"] --> B["Entry Flow"]
     A --> C["World HUD"]
-    A --> D["World-City Interaction"]
+    A --> D["Sector Interaction"]
     A --> E["Developer Tooling Surfaces"]
     B --> F["Title Screen"]
     B --> G["New Game Modal"]
     B --> H["Settings + Loading"]
     C --> I["Top Bar"]
     C --> J["Selected Info / Notifications / Thought Overlay / Minimap"]
-    D --> K["Location Panel"]
-    D --> L["City Site Modal"]
-    D --> M["City Entry / Return Flow"]
+    D --> K["Anchored Site Briefings"]
+    D --> L["Site Modal"]
+    D --> M["Sector Entry / Return Flow"]
     E --> N["City Kit Lab"]
     F --> O["Component Tests"]
     G --> O
@@ -61,11 +61,11 @@ flowchart TD
 - `completed` Audit notifications and thought overlay so they feel diegetic and readable.
 - `completed` Audit minimap and build toolbar for coherence with the rest of the HUD.
 
-### 3. World / City Interaction Polish
-- `completed` Refine location panel so world-site context is unmistakable.
-- `completed` Refine city site modal for survey / found / enter / return clarity.
-- `completed` Ensure world-to-city transitions feel like campaign actions rather than navigation hacks.
-- `completed` Ensure city-state terminology stays aligned with `latent / surveyed / founded`.
+### 3. Sector Interaction Polish
+- `completed` Refine local site/context surfaces so sector-site context is unmistakable.
+- `completed` Refine site modal for survey / found / enter / return clarity.
+- `completed` Ensure local transitions feel like campaign actions rather than navigation hacks.
+- `completed` Ensure terminology stays aligned with the current campaign-state model.
 
 ### 4. City Tooling Surface Polish
 - `completed` Improve City Kit Lab readability, grouping, filter clarity, and comparison affordances.
@@ -97,11 +97,11 @@ For every meaningful chunk:
 ## Progress Log
 
 - 2026-03-11: Plan created. No Claude-owned UI polish work has been merged through this document yet.
-- 2026-03-11: Codex answered Claude's blocking questions in `docs/agent-to-agent/UI_REFINEMENT_ANSWERS.md`. Key decisions: preserve the cyan/mint split as intentional, replace dev-facing player copy with diegetic operational language, remove the tech-stack footer from the title experience, keep loading progress honest, use honest settings empty states, and treat 21st.dev as inspiration only.
-- 2026-03-11: Phase 0-3 executed. Design system foundation (HudPanel `signal` variant, HudButton `utility` variant), entry flow diegetic copy pass, settings honest states, loading overlay indeterminate sweep, world/city copy cleanup, semantic variant assignment across all HUD surfaces. Tests updated for TitleScreen, HudButton, LoadingOverlay.
-  - **Files changed:** `src/ui/components/HudPanel.tsx`, `src/ui/components/HudButton.tsx`, `src/ui/TitleScreen.tsx`, `src/ui/NewGameModal.tsx`, `src/ui/LoadingOverlay.tsx`, `src/ui/CitySiteModal.tsx`, `src/ui/panels/LocationPanel.tsx`, `src/ui/panels/SelectedInfo.tsx`, `src/ui/panels/BuildToolbar.tsx`
+- 2026-03-11: Codex answered Claude's blocking questions and canonicalized the decisions into `CLAUDE.md` and `docs/UI_BRAND_AND_EXPERIENCE.md`. Key decisions: preserve the cyan/mint split as intentional, replace dev-facing player copy with diegetic operational language, remove the tech-stack footer from the title experience, keep loading progress honest, use honest settings empty states, and treat 21st.dev as inspiration only.
+- 2026-03-11: Phase 0-3 executed. Design system foundation (HudPanel `signal` variant, HudButton `utility` variant), entry flow diegetic copy pass, settings honest states, loading overlay indeterminate sweep, sector/site copy cleanup, semantic variant assignment across all HUD surfaces. Tests updated for TitleScreen, HudButton, LoadingOverlay.
+  - **Files changed:** `src/ui/components/HudPanel.tsx`, `src/ui/components/HudButton.tsx`, `src/ui/TitleScreen.tsx`, `src/ui/NewGameModal.tsx`, `src/ui/LoadingOverlay.tsx`, `src/ui/CitySiteModal.tsx`, `src/ui/panels/SelectedInfo.tsx`, `src/ui/panels/BuildToolbar.tsx`
   - **Tests updated:** `tests/components/TitleScreen.spec.tsx`, `tests/components/HudButton.spec.tsx`
   - **Remaining:** City Kit Lab polish, focus/keyboard audit, motion audit, E2E updates, stale test cleanup
-- 2026-03-11: Phase 4-5 partial. Responsive pass across ALL player-facing surfaces. Every panel, modal, toolbar, and overlay now uses NativeWind `md:` breakpoints for phone→tablet→desktop. CityKitLab model grid dynamically computes card width from viewport (2-col phone, 3-col tablet, 4-col desktop). Touch targets ≥36-44px throughout. Minimap scales via `useWindowDimensions`. TopBar stacks on mobile. SelectedInfo/LocationPanel go full-width-minus-gutter on phone.
-  - **Files changed:** `src/ui/TitleScreen.tsx`, `src/ui/NewGameModal.tsx`, `src/ui/LoadingOverlay.tsx`, `src/ui/CitySiteModal.tsx`, `src/ui/panels/LocationPanel.tsx`, `src/ui/panels/SelectedInfo.tsx`, `src/ui/panels/BuildToolbar.tsx`, `src/ui/panels/TopBar.tsx`, `src/ui/panels/Minimap.tsx`, `src/ui/panels/ThoughtOverlay.tsx`, `src/city/runtime/CityKitLab.tsx`
+- 2026-03-11: Phase 4-5 partial. Responsive pass across ALL player-facing surfaces. Every panel, modal, toolbar, and overlay now uses NativeWind `md:` breakpoints for phone→tablet→desktop. CityKitLab model grid dynamically computes card width from viewport (2-col phone, 3-col tablet, 4-col desktop). Touch targets ≥36-44px throughout. Minimap scales via `useWindowDimensions`. TopBar stacks on mobile. Legacy side-panel surfaces were prepared for mobile collapse and later replacement by lighter anchored context surfaces.
+  - **Files changed:** `src/ui/TitleScreen.tsx`, `src/ui/NewGameModal.tsx`, `src/ui/LoadingOverlay.tsx`, `src/ui/CitySiteModal.tsx`, `src/ui/panels/SelectedInfo.tsx`, `src/ui/panels/BuildToolbar.tsx`, `src/ui/panels/TopBar.tsx`, `src/ui/panels/Minimap.tsx`, `src/ui/panels/ThoughtOverlay.tsx`, `src/city/runtime/CityKitLab.tsx`
   - **Remaining:** Focus/keyboard audit, motion audit, E2E updates, stale test cleanup, CityKitLab screenshot coverage

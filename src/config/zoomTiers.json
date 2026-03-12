@@ -3,7 +3,7 @@
 
 	"tiers": {
 		"tactical": {
-			"tilesAcross": 4.5,
+			"cellsAcross": 4.5,
 			"_comment": "Unit models, building details, terrain features, thick network lines with particles, resource markers with quantities",
 			"networkLineOpacity": 1.0,
 			"resourceMarkersVisible": true,
@@ -11,7 +11,7 @@
 			"unitDetail": "full"
 		},
 		"default": {
-			"tilesAcross": 7.5,
+			"cellsAcross": 7.5,
 			"_comment": "Units as icons, buildings as silhouettes, terrain colors, medium network lines with glow, small resource dots",
 			"networkLineOpacity": 0.85,
 			"resourceMarkersVisible": true,
@@ -19,7 +19,7 @@
 			"unitDetail": "icon"
 		},
 		"strategic": {
-			"tilesAcross": 12,
+			"cellsAcross": 12,
 			"_comment": "Ownership colors, city icons, unit group indicators, thin steady network lines, no resource markers",
 			"networkLineOpacity": 0.6,
 			"resourceMarkersVisible": false,
@@ -27,7 +27,7 @@
 			"unitDetail": "badge"
 		},
 		"world": {
-			"tilesAcross": 22,
+			"cellsAcross": 22,
 			"_comment": "Full map overview, city dots only, faint tracery lines, no units visible",
 			"networkLineOpacity": 0.3,
 			"resourceMarkersVisible": false,

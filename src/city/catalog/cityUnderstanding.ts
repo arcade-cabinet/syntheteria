@@ -2,6 +2,7 @@ import type {
 	CityCompositeDefinition,
 	CityFamily,
 	CityModelDefinition,
+	CityPassabilityEffect,
 	CityPlacementType,
 } from "../config/types";
 import { CITY_LAYOUT_SCENARIOS } from "../grammar/cityScenarios";
@@ -47,6 +48,25 @@ export type CitySnapClass =
 
 export type CityFootprintClass = "compact" | "medium" | "large" | "tower";
 
+export type CityPassabilityClass =
+	| "passable"
+	| "impassable"
+	| "transitional"
+	| "support"
+	| "vertical";
+
+export type CityStructuralRole =
+	| "surface"
+	| "barrier"
+	| "portal"
+	| "cover"
+	| "column"
+	| "stair"
+	| "roof"
+	| "detail"
+	| "prop"
+	| "utility";
+
 export interface CityModelUnderstanding {
 	id: string;
 	label: string;
@@ -54,6 +74,8 @@ export interface CityModelUnderstanding {
 	footprintClass: CityFootprintClass;
 	heightClass: "low" | "mid" | "tall";
 	snapClass: CitySnapClass;
+	passabilityClass: CityPassabilityClass;
+	structuralRole: CityStructuralRole;
 	composable: boolean;
 	rotationPolicy: "locked" | "opposed" | "quarter_turn";
 	summary: string;
@@ -64,6 +86,7 @@ export interface CityDirectorySummary {
 	modelCount: number;
 	families: CityFamily[];
 	composableCount: number;
+	passabilityClasses: CityPassabilityClass[];
 	snapClasses: CitySnapClass[];
 }
 
@@ -122,6 +145,58 @@ export function deriveCitySnapClass(model: CityModelDefinition): CitySnapClass {
 	return "floor_cell";
 }
 
+export function deriveCityPassabilityClass(
+	passabilityEffect: CityPassabilityEffect,
+): CityPassabilityClass {
+	switch (passabilityEffect) {
+		case "walkable":
+			return "passable";
+		case "portal":
+			return "transitional";
+		case "vertical_connector":
+			return "vertical";
+		case "cover":
+		case "guidance":
+			return "support";
+		case "blocking":
+		default:
+			return "impassable";
+	}
+}
+
+export function deriveCityStructuralRole(
+	model: Pick<CityModelDefinition, "family" | "passabilityEffect">,
+): CityStructuralRole {
+	if (model.family === "door" || model.passabilityEffect === "portal") {
+		return "portal";
+	}
+	if (model.family === "wall" || model.passabilityEffect === "blocking") {
+		return "barrier";
+	}
+	if (model.family === "column") {
+		return "column";
+	}
+	if (model.family === "stair" || model.passabilityEffect === "vertical_connector") {
+		return "stair";
+	}
+	if (model.family === "roof") {
+		return "roof";
+	}
+	if (model.family === "detail") {
+		return "detail";
+	}
+	if (model.family === "prop") {
+		return "prop";
+	}
+	if (model.family === "utility") {
+		return "utility";
+	}
+	if (model.passabilityEffect === "cover") {
+		return "cover";
+	}
+	return "surface";
+}
+
 export function deriveCityFootprintClass(
 	model: Pick<CityModelDefinition, "bounds" | "footprint">,
 ): CityFootprintClass {
@@ -148,6 +223,8 @@ export function summarizeCityModel(
 	model: CityModelDefinition,
 ): CityModelUnderstanding {
 	const snapClass = deriveCitySnapClass(model);
+	const passabilityClass = deriveCityPassabilityClass(model.passabilityEffect);
+	const structuralRole = deriveCityStructuralRole(model);
 	const footprintClass = deriveCityFootprintClass(model);
 	const height = Math.max(model.footprint.height, model.bounds.height);
 	const heightClass = height >= 3.5 ? "tall" : height >= 1.5 ? "mid" : "low";
@@ -171,9 +248,11 @@ export function summarizeCityModel(
 		footprintClass,
 		heightClass,
 		snapClass,
+		passabilityClass,
+		structuralRole,
 		composable,
 		rotationPolicy,
-		summary: `${model.family} in ${formatCitySubcategoryLabel(model.subcategory)} with ${snapClass} behavior and ${footprintClass} footprint.`,
+		summary: `${model.family} in ${formatCitySubcategoryLabel(model.subcategory)} with ${snapClass} behavior, ${passabilityClass} passability, and ${footprintClass} footprint.`,
 	};
 }
 
@@ -199,6 +278,9 @@ export function buildCityDirectorySummaries(
 				).sort(),
 				composableCount: understandings.filter((entry) => entry.composable)
 					.length,
+				passabilityClasses: Array.from(
+					new Set(understandings.map((entry) => entry.passabilityClass)),
+				).sort(),
 				snapClasses: Array.from(
 					new Set(understandings.map((entry) => entry.snapClass)),
 				).sort(),

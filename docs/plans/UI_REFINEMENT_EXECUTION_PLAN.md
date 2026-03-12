@@ -3,7 +3,7 @@
 **Author:** Claude (UI refinement track)
 **Date:** 2026-03-11
 **Status:** IN PROGRESS
-**Answers doc:** `docs/agent-to-agent/UI_REFINEMENT_ANSWERS.md`
+**Answers source:** canonicalized into `CLAUDE.md`, `docs/UI_BRAND_AND_EXPERIENCE.md`, and `docs/plans/CLAUDE_UI_POLISH_PLAN.md`
 **Parent plan:** `docs/plans/CLAUDE_UI_POLISH_PLAN.md`
 
 This plan converts the answered questions and brand contract into a concrete execution sequence. Each phase builds on the previous one. No sub-agents — all work is done in this session.
@@ -159,26 +159,19 @@ Changes:
 
 **Goal:** Location panel and city site modal convey campaign-weight actions with no dev language.
 
-### 3.1 Location Panel
-**File:** `src/ui/panels/LocationPanel.tsx`
-
-Changes:
-- Replace any remaining dev copy ("City interior runtime is active through the persistence-backed world/city contract")
-- Audit button labels for campaign clarity ("Open City Brief" / "Return" / "Open Site Brief")
-- Verify panel framing uses cyan (it's a briefing/signal surface)
-
-### 3.2 City Site Modal
+### 3.1 Anchored Site Briefing / Site Modal
 **File:** `src/ui/CitySiteModal.tsx`
 
 Changes:
-- Replace "Action Flow" section copy ("uses the same persistence-backed scene transition contract...")
+- Replace any remaining dev copy with diegetic sector-language
 - Audit survey/found/enter/return button hierarchy — these should feel like campaign decisions
 - Verify modal framing uses cyan (briefing surface)
-- Audit card layout (Site Role + City State side by side)
+- Audit card layout for local-site comprehension without consuming permanent gameplay area
+- Prefer anchored or lightweight local briefing metaphors over persistent panels wherever possible
 
 ### Tasks
-- `completed` Location panel copy + framing audit (done 2026-03-11)
-- `completed` City site modal copy + action hierarchy (done 2026-03-11)
+- `completed` Site-context copy + framing audit (done 2026-03-11)
+- `completed` City/site modal copy + action hierarchy (done 2026-03-11)
 
 ---
 
@@ -211,7 +204,7 @@ Changes:
 1. Phase 0 (design tokens) → foundation for everything
 2. Phase 1 (entry flow) → highest visual impact, first impression
 3. Phase 2 (HUD) → core gameplay surfaces
-4. Phase 3 (world/city) → campaign interaction surfaces
+4. Phase 3 (sector interaction) → campaign interaction surfaces
 5. Phase 4 (accessibility) → sweep across all touched surfaces
 6. Phase 5 (testing) → lock everything down
 

@@ -20,7 +20,7 @@ describe("world persistence", () => {
 		const database = new FakeDatabase();
 		const config = {
 			worldSeed: 42,
-			mapSize: "small" as const,
+			sectorScale: "small" as const,
 			difficulty: "hard" as const,
 			climateProfile: "wet" as const,
 			stormProfile: "cataclysmic" as const,
@@ -31,9 +31,18 @@ describe("world persistence", () => {
 		persistGeneratedWorldSync(saveGame!, config, generatedWorld, database);
 		const persisted = getPersistedWorldSync(saveGame!, database);
 
-		expect(persisted.worldMap.width).toBe(generatedWorld.map.width);
-		expect(persisted.worldMap.height).toBe(generatedWorld.map.height);
-		expect(persisted.tiles).toHaveLength(generatedWorld.tiles.length);
+		expect(persisted.ecumenopolis.width).toBe(
+			generatedWorld.ecumenopolis.width,
+		);
+		expect(persisted.ecumenopolis.height).toBe(
+			generatedWorld.ecumenopolis.height,
+		);
+		expect(persisted.sectorCells).toHaveLength(
+			generatedWorld.sectorCells.length,
+		);
+		expect(persisted.sectorStructures).toHaveLength(
+			generatedWorld.sectorStructures.length,
+		);
 		expect(persisted.pointsOfInterest).toHaveLength(
 			generatedWorld.pointsOfInterest.length,
 		);
@@ -45,16 +54,61 @@ describe("world persistence", () => {
 		).toBe(true);
 		expect(persisted.campaignState.active_scene).toBe("world");
 		expect(persisted.resourceState.scrap_metal).toBe(0);
-		expect(persisted.entities).toHaveLength(2);
-		expect(persisted.entities[0]?.entity_id).toBe("unit_0");
-		expect(persisted.entities[1]?.building_type).toBe("lightning_rod");
+		expect(persisted.entities).toHaveLength(10);
+		const unit = persisted.entities.find(
+			(entity) => entity.entity_id === "unit_0",
+		);
+		const hauler = persisted.entities.find(
+			(entity) => entity.bot_archetype_id === "relay_hauler",
+		);
+		const fabricator = persisted.entities.find(
+			(entity) => entity.bot_archetype_id === "fabrication_rig",
+		);
+		const engineer = persisted.entities.find(
+			(entity) => entity.bot_archetype_id === "substation_engineer",
+		);
+		const fighter = persisted.entities.find(
+			(entity) => entity.bot_archetype_id === "assault_strider",
+		);
+		const rod = persisted.entities.find(
+			(entity) => entity.building_type === "lightning_rod",
+		);
+		const rivalCluster = persisted.entities.filter(
+			(entity) => entity.faction === "rogue",
+		);
+		const cultCluster = persisted.entities.filter(
+			(entity) => entity.faction === "cultist",
+		);
+		expect(unit?.entity_id).toBe("unit_0");
+		expect(unit?.bot_archetype_id).toBe("field_technician");
+		expect(unit?.mark_level).toBe(1);
+		expect(unit?.speech_profile).toBe("mentor");
+		expect(unit?.selected).toBe(1);
+		expect(hauler?.unit_type).toBe("utility_drone");
+		expect(fabricator?.building_type).toBe("fabrication_unit");
+		expect(engineer?.unit_type).toBe("mecha_golem");
+		expect(fighter?.unit_type).toBe("field_fighter");
+		expect(rod?.building_type).toBe("lightning_rod");
+		expect(rivalCluster).toHaveLength(2);
+		expect(cultCluster).toHaveLength(2);
+		expect(
+			rivalCluster.every((entity) => entity.ai_role === "hostile_machine"),
+		).toBe(true);
+		expect(cultCluster.every((entity) => entity.ai_role === "cultist")).toBe(
+			true,
+		);
+		expect(
+			persisted.sectorStructures.some(
+				(structure) => structure.source === "landmark",
+			),
+		).toBe(true);
 	});
 
 	it("persists runtime campaign state updates", () => {
 		const database = new FakeDatabase();
 		const config = {
 			worldSeed: 42,
-			mapSize: "small" as const,
+			sectorScale: "small" as const,
 			difficulty: "hard" as const,
 			climateProfile: "wet" as const,
 			stormProfile: "cataclysmic" as const,
@@ -68,7 +122,7 @@ describe("world persistence", () => {
 		persistRuntimeWorldStateSync(
 			{
 				saveGameId: saveGame!.id,
-				worldMapId: persisted.worldMap.id,
+				ecumenopolisId: persisted.ecumenopolis.id,
 				tick: 120,
 				activeScene: "city",
 				activeCityInstanceId: persisted.cityInstances[0]?.id ?? null,
@@ -77,10 +131,10 @@ describe("world persistence", () => {
 					eWaste: 4,
 					intactComponents: 1,
 				},
-				tiles: persisted.tiles.slice(0, 2).map((tile, index) => ({
+				sectorCells: persisted.sectorCells.slice(0, 2).map((tile, index) => ({
 					q: tile.q,
 					r: tile.r,
-					fog_state: (index + 1) as 1 | 2,
+					discovery_state: (index + 1) as 1 | 2,
 				})),
 				pointsOfInterest: persisted.pointsOfInterest.slice(0, 1).map((poi) => ({
 					id: poi.id,
@@ -97,6 +151,9 @@ describe("world persistence", () => {
 						sceneBuildingId: null,
 						faction: "player",
 						unitType: "maintenance_bot",
+						botArchetypeId: "field_technician",
+						markLevel: 1,
+						speechProfile: "mentor",
 						buildingType: null,
 						displayName: "Maintenance Bot",
 						fragmentId: "world_primary",
@@ -126,7 +183,13 @@ describe("world persistence", () => {
 		expect(reloaded.pointsOfInterest[0]?.discovered).toBe(1);
 		expect(reloaded.cityInstances[0]?.state).toBe("surveyed");
 		expect(reloaded.entities).toHaveLength(1);
-		expect(reloaded.entities[0]?.x).toBe(4);
-		expect(reloaded.entities[0]?.selected).toBe(1);
+		const unit = reloaded.entities.find(
+			(entity) => entity.entity_id === "unit_0",
+		);
+		expect(unit?.x).toBe(4);
+		expect(unit?.selected).toBe(1);
+		expect(unit?.bot_archetype_id).toBe("field_technician");
+		expect(unit?.mark_level).toBe(1);
+		expect(unit?.speech_profile).toBe("mentor");
 	});
 });

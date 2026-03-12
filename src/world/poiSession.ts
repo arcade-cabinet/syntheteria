@@ -1,4 +1,5 @@
 import type { NearbyPoiContext, WorldSessionSnapshot } from "./snapshots";
+import { isFoundableCityPoiType } from "./contracts";
 
 export const POI_DISCOVERY_RADIUS = 8;
 export const POI_INTERACTION_RADIUS = 5;
@@ -46,6 +47,7 @@ export function findNearbyPoiContext(
 	interactionRadius = POI_INTERACTION_RADIUS,
 ): NearbyPoiContext | null {
 	let bestContext: NearbyPoiContext | null = null;
+	let bestActionableContext: NearbyPoiContext | null = null;
 
 	for (const poi of session.pointsOfInterest) {
 		const dx = poi.q - position.x;
@@ -66,7 +68,23 @@ export function findNearbyPoiContext(
 				poiType: poi.type,
 			};
 		}
+
+		const isActionable =
+			isFoundableCityPoiType(poi.type) && city != null && city.state !== "founded";
+		if (
+			isActionable &&
+			(!bestActionableContext || distance < bestActionableContext.distance)
+		) {
+			bestActionableContext = {
+				cityInstanceId: city?.id ?? null,
+				discovered: poi.discovered === 1,
+				distance,
+				name: poi.name,
+				poiId: poi.id,
+				poiType: poi.type,
+			};
+		}
 	}
 
-	return bestContext;
+	return bestActionableContext ?? bestContext;
 }

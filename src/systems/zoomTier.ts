@@ -1,5 +1,5 @@
 import zoomConfig from "../config/zoomTiers.json";
-import { HEX_SIZE } from "../ecs/terrain";
+import { SECTOR_LATTICE_SIZE } from "../world/sectorCoordinates";
 
 /**
  * Zoom Tier System
@@ -10,7 +10,7 @@ import { HEX_SIZE } from "../ecs/terrain";
  * Zoom tiers snap to predefined levels (tactical/default/strategic/world)
  * with smooth transitions between them (300ms lerp).
  *
- * The tier is computed from how many hex tiles are visible across the
+ * The tier is computed from how many structural cells are visible across the
  * viewport width at the current camera height.
  *
  * This is a PURE system — no rendering, no Three.js, no React.
@@ -39,8 +39,8 @@ export interface ZoomTierState {
 	unitDetail: "full" | "icon" | "badge" | "hidden";
 	/** Current camera height */
 	cameraHeight: number;
-	/** Tiles across viewport at current camera height */
-	tilesAcross: number;
+	/** Structural cells across viewport at current camera height */
+	cellsAcross: number;
 }
 
 // --- Module state ---
@@ -54,32 +54,32 @@ let viewportWidth = 375; // Default phone width in px
 // --- Tier boundary computation ---
 
 /**
- * Compute how many hex tiles are visible across the viewport
+ * Compute how many structural cells are visible across the viewport
  * at a given camera height, assuming perspective projection with fov=45.
  */
-function computeTilesAcross(height: number, fov: number = 45): number {
+function computeCellsAcross(height: number, fov: number = 45): number {
 	// Width of visible area at ground plane = 2 * height * tan(fov/2) * aspect
 	// For simplicity, approximate with a standard aspect ratio
 	const halfFovRad = ((fov / 2) * Math.PI) / 180;
 	const visibleWidth = 2 * height * Math.tan(halfFovRad);
-	const hexWidth = HEX_SIZE * 2; // Flat-top hex width = 2 * size
+	const hexWidth = SECTOR_LATTICE_SIZE * 2;
 	return visibleWidth / hexWidth;
 }
 
 /**
- * Determine which tier a given tilesAcross count maps to.
+ * Determine which tier a given cellsAcross count maps to.
  */
-function tierForTilesAcross(tiles: number): ZoomTierName {
+function tierForCellsAcross(cells: number): ZoomTierName {
 	const tiers = zoomConfig.tiers;
 
-	// Find the tier whose tilesAcross is closest
-	if (tiles <= (tiers.tactical.tilesAcross + tiers.default.tilesAcross) / 2) {
+	// Find the tier whose cell span is closest
+	if (cells <= (tiers.tactical.cellsAcross + tiers.default.cellsAcross) / 2) {
 		return "tactical";
 	}
-	if (tiles <= (tiers.default.tilesAcross + tiers.strategic.tilesAcross) / 2) {
+	if (cells <= (tiers.default.cellsAcross + tiers.strategic.cellsAcross) / 2) {
 		return "default";
 	}
-	if (tiles <= (tiers.strategic.tilesAcross + tiers.world.tilesAcross) / 2) {
+	if (cells <= (tiers.strategic.cellsAcross + tiers.world.cellsAcross) / 2) {
 		return "strategic";
 	}
 	return "world";
@@ -93,10 +93,10 @@ export function getTargetHeightForTier(
 	tier: ZoomTierName,
 	fov: number = 45,
 ): number {
-	const tilesAcross =
-		zoomConfig.tiers[tier].tilesAcross;
-	const hexWidth = HEX_SIZE * 2;
-	const visibleWidth = tilesAcross * hexWidth;
+	const cellsAcross =
+		zoomConfig.tiers[tier].cellsAcross;
+	const hexWidth = SECTOR_LATTICE_SIZE * 2;
+	const visibleWidth = cellsAcross * hexWidth;
 	const halfFovRad = ((fov / 2) * Math.PI) / 180;
 	return visibleWidth / (2 * Math.tan(halfFovRad));
 }
@@ -136,7 +136,7 @@ function buildState(): ZoomTierState {
 		structureDetail: tierConfig.structureDetail as ZoomTierState["structureDetail"],
 		unitDetail: tierConfig.unitDetail as ZoomTierState["unitDetail"],
 		cameraHeight,
-		tilesAcross: computeTilesAcross(cameraHeight),
+		cellsAcross: computeCellsAcross(cameraHeight),
 	};
 }
 
@@ -164,7 +164,7 @@ export function getNextCycleTier(): ZoomTierName {
 }
 
 /**
- * Set viewport width (for tiles-across computation on phone vs tablet).
+ * Set viewport width (for cell-span computation on phone vs tablet).
  */
 export function setViewportWidth(width: number) {
 	viewportWidth = width;
@@ -191,8 +191,8 @@ export function updateZoomTier(
 	deltaTime: number,
 ): ZoomTierName {
 	cameraHeight = newCameraHeight;
-	const tilesAcross = computeTilesAcross(cameraHeight);
-	const newTier = tierForTilesAcross(tilesAcross);
+	const cellsAcross = computeCellsAcross(cameraHeight);
+	const newTier = tierForCellsAcross(cellsAcross);
 
 	if (newTier !== currentTier) {
 		previousTier = currentTier;

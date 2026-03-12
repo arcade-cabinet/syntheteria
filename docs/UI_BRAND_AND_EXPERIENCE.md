@@ -175,8 +175,8 @@ The highest-priority polish targets right now are:
 - loading overlay
 - top bar
 - selected-unit info
-- location panel
 - city site modal
+- city site overlay
 - city entry / return flow
 - City Kit Lab readability and navigation
 

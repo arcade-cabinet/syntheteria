@@ -1,4 +1,5 @@
 import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import type { BotArchetypeId, BotSpeechProfile, BotUnitType } from "../bots";
 import {
 	DEFAULT_CITY_GENERATION_STATUS,
 	DEFAULT_CITY_INSTANCE_STATE,
@@ -11,7 +12,7 @@ export const saveGames = sqliteTable("save_games", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
 	name: text("name").notNull(),
 	worldSeed: integer("world_seed").notNull().default(42),
-	mapSize: text("map_size").notNull().default("standard"),
+	sectorScale: text("sector_scale").notNull().default("standard"),
 	difficulty: text("difficulty").notNull().default("standard"),
 	climateProfile: text("climate_profile").notNull().default("temperate"),
 	stormProfile: text("storm_profile").notNull().default("volatile"),
@@ -20,39 +21,65 @@ export const saveGames = sqliteTable("save_games", {
 	playtimeSeconds: integer("playtime_seconds").notNull().default(0),
 });
 
-export const worldMaps = sqliteTable("world_maps", {
+export const ecumenopolisMaps = sqliteTable("ecumenopolis_maps", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
 	saveGameId: integer("save_game_id")
 		.notNull()
 		.references(() => saveGames.id, { onDelete: "cascade" }),
 	width: integer("width").notNull(),
 	height: integer("height").notNull(),
-	mapSize: text("map_size").notNull(),
+	sectorScale: text("sector_scale").notNull(),
 	climateProfile: text("climate_profile").notNull(),
 	stormProfile: text("storm_profile").notNull(),
-	spawnQ: integer("spawn_q").notNull(),
-	spawnR: integer("spawn_r").notNull(),
+	spawnSectorId: text("spawn_sector_id").notNull(),
+	spawnAnchorKey: text("spawn_anchor_key").notNull(),
 	generatedAt: integer("generated_at", { mode: "timestamp" }).notNull(),
 });
 
-export const worldTiles = sqliteTable("world_tiles", {
+export const sectorCells = sqliteTable("sector_cells", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
-	worldMapId: integer("world_map_id")
+	ecumenopolisId: integer("ecumenopolis_id")
 		.notNull()
-		.references(() => worldMaps.id, { onDelete: "cascade" }),
+		.references(() => ecumenopolisMaps.id, { onDelete: "cascade" }),
 	q: integer("q").notNull(),
 	r: integer("r").notNull(),
-	biome: text("biome").notNull(),
-	terrainSetId: text("terrain_set_id").notNull(),
-	fogState: integer("fog_state").notNull().default(0),
+	structuralZone: text("structural_zone").notNull(),
+	floorPresetId: text("floor_preset_id").notNull(),
+	discoveryState: integer("discovery_state").notNull().default(0),
 	passable: integer("passable").notNull().default(1),
+	sectorArchetype: text("sector_archetype").notNull().default("service_plate"),
+	stormExposure: text("storm_exposure").notNull().default("shielded"),
+	impassableClass: text("impassable_class").notNull().default("none"),
+	anchorKey: text("anchor_key").notNull().default("0,0"),
+});
+
+export const sectorStructures = sqliteTable("sector_structures", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	ecumenopolisId: integer("ecumenopolis_id")
+		.notNull()
+		.references(() => ecumenopolisMaps.id, { onDelete: "cascade" }),
+	districtStructureId: text("district_structure_id").notNull(),
+	anchorKey: text("anchor_key").notNull(),
+	q: integer("q").notNull(),
+	r: integer("r").notNull(),
+	modelId: text("model_id").notNull(),
+	placementLayer: text("placement_layer").notNull(),
+	edge: text("edge"),
+	rotationQuarterTurns: integer("rotation_quarter_turns").notNull().default(0),
+	offsetX: real("offset_x").notNull().default(0),
+	offsetY: real("offset_y").notNull().default(0),
+	offsetZ: real("offset_z").notNull().default(0),
+	targetSpan: real("target_span").notNull().default(1),
+	sectorArchetype: text("sector_archetype").notNull().default("service_plate"),
+	source: text("source").notNull().default("seeded_district"),
+	controllerFaction: text("controller_faction"),
 });
 
 export const worldPointsOfInterest = sqliteTable("world_points_of_interest", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
-	worldMapId: integer("world_map_id")
+	ecumenopolisId: integer("ecumenopolis_id")
 		.notNull()
-		.references(() => worldMaps.id, { onDelete: "cascade" }),
+		.references(() => ecumenopolisMaps.id, { onDelete: "cascade" }),
 	type: text("type").notNull(),
 	name: text("name").notNull(),
 	q: integer("q").notNull(),
@@ -62,9 +89,9 @@ export const worldPointsOfInterest = sqliteTable("world_points_of_interest", {
 
 export const cityInstances = sqliteTable("city_instances", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
-	worldMapId: integer("world_map_id")
+	ecumenopolisId: integer("ecumenopolis_id")
 		.notNull()
-		.references(() => worldMaps.id, { onDelete: "cascade" }),
+		.references(() => ecumenopolisMaps.id, { onDelete: "cascade" }),
 	poiId: integer("poi_id").references(() => worldPointsOfInterest.id, {
 		onDelete: "set null",
 	}),
@@ -87,7 +114,10 @@ export const worldEntities = sqliteTable("world_entities", {
 	sceneLocation: text("scene_location").notNull().default("world"),
 	sceneBuildingId: text("scene_building_id"),
 	faction: text("faction").notNull(),
-	unitType: text("unit_type"),
+	unitType: text("unit_type").$type<BotUnitType | null>(),
+	botArchetypeId: text("bot_archetype_id").$type<BotArchetypeId | null>(),
+	markLevel: integer("mark_level"),
+	speechProfile: text("speech_profile").$type<BotSpeechProfile | null>(),
 	buildingType: text("building_type"),
 	displayName: text("display_name"),
 	fragmentId: text("fragment_id"),

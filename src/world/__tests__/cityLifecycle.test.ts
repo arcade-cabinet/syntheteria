@@ -51,7 +51,7 @@ describe("cityLifecycle", () => {
 	it("mutates persisted city records through canonical transitions", () => {
 		const city = {
 			id: 1,
-			world_map_id: 1,
+			ecumenopolis_id: 1,
 			poi_id: 1,
 			name: "Campus",
 			world_q: 0,

@@ -1,3 +1,4 @@
+import { getBotCommandProfile, isBotCategoryAllowed } from "../bots";
 import { setGameSpeed, togglePause } from "../ecs/gameState";
 import {
 	Building,
@@ -7,15 +8,21 @@ import {
 	WorldPosition,
 } from "../ecs/traits";
 import { buildings, units, world } from "../ecs/world";
+import { getCitySiteViewModel } from "../world/citySiteActions";
 import {
-	BUILDING_COSTS,
-	setActivePlacement,
-} from "./buildingPlacement";
+	enterCityInstance,
+	openCityKitLab,
+	returnToWorld,
+} from "../world/cityTransition";
+import { executeDistrictOperation } from "../world/districtOperations";
+import { foundCitySite, surveyCitySite } from "../world/poiActions";
+import { getRuntimeState, setCitySiteModalOpen } from "../world/runtimeState";
+import { getActiveWorldSession } from "../world/session";
+import { BUILDING_COSTS, setActivePlacement } from "./buildingPlacement";
 import { RECIPES, startFabrication } from "./fabrication";
 import { type RadialOpenContext, registerRadialProvider } from "./radialMenu";
 import { startRepair } from "./repair";
 import { getResources } from "./resources";
-import { openCityKitLab, returnToWorld } from "../world/cityTransition";
 
 /**
  * Radial Menu Action Providers
@@ -36,9 +43,52 @@ import { openCityKitLab, returnToWorld } from "../world/cityTransition";
 
 function findEntityById(id: string | null) {
 	if (!id) return null;
-	return (
-		world.entities.find((e) => e.get(Identity)?.id === id) ?? null
-	);
+	return world.entities.find((e) => e.get(Identity)?.id === id) ?? null;
+}
+
+function getSelectedBotProfile(ctx: RadialOpenContext) {
+	const entity = findEntityById(ctx.targetEntityId);
+	const unit = entity?.get(Unit);
+	return unit ? getBotCommandProfile(unit.type) : null;
+}
+
+function isSelectedBotCategoryAllowed(
+	ctx: RadialOpenContext,
+	categoryId: Parameters<typeof isBotCategoryAllowed>[1],
+) {
+	const entity = findEntityById(ctx.targetEntityId);
+	const unit = entity?.get(Unit);
+	if (!unit) {
+		return true;
+	}
+	return isBotCategoryAllowed(unit.type, categoryId);
+}
+
+function getActiveDistrictViewModel(mode: "world" | "city") {
+	const runtime = getRuntimeState();
+	const session = getActiveWorldSession();
+	if (!session) {
+		return null;
+	}
+	const context = runtime.citySiteModalContext ?? runtime.nearbyPoi;
+	if (!context) {
+		return null;
+	}
+	const city =
+		context.cityInstanceId == null
+			? null
+			: (session.cityInstances.find(
+					(candidate) => candidate.id === context.cityInstanceId,
+				) ?? null);
+	return {
+		context,
+		city,
+		viewModel: getCitySiteViewModel({
+			city,
+			context,
+			mode,
+		}),
+	};
 }
 
 // --- MOVEMENT category ---
@@ -55,6 +105,9 @@ registerRadialProvider({
 	getActions: (ctx: RadialOpenContext) => {
 		if (ctx.selectionType !== "unit") return [];
 		if (ctx.targetFaction !== "player") return [];
+		if (!isSelectedBotCategoryAllowed(ctx, "move")) return [];
+		const profile = getSelectedBotProfile(ctx);
+		if (!profile?.canMove) return [];
 
 		return [
 			{
@@ -65,19 +118,22 @@ registerRadialProvider({
 				enabled: true,
 				onExecute: () => {
 					// Movement is handled by the input system on next tap
-					// This just confirms the intent
 				},
 			},
-			{
-				id: "patrol",
-				label: "Patrol",
-				icon: "loop",
-				tone: "default",
-				enabled: true,
-				onExecute: () => {
-					// TODO: wire to patrol order system
-				},
-			},
+			...(profile.canPatrol
+				? [
+						{
+							id: "patrol",
+							label: "Patrol",
+							icon: "loop",
+							tone: "default",
+							enabled: true,
+							onExecute: () => {
+								// TODO: wire to patrol order system
+							},
+						},
+					]
+				: []),
 		];
 	},
 });
@@ -96,9 +152,13 @@ registerRadialProvider({
 	getActions: (ctx: RadialOpenContext) => {
 		if (ctx.selectionType !== "unit") return [];
 		if (ctx.targetFaction !== "player") return [];
+		if (!isSelectedBotCategoryAllowed(ctx, "combat")) return [];
+		const profile = getSelectedBotProfile(ctx);
+		if (!profile) return [];
 
-		return [
-			{
+		const actions = [];
+		if (profile.canAttack) {
+			actions.push({
 				id: "attack",
 				label: "Attack",
 				icon: "sword",
@@ -107,8 +167,10 @@ registerRadialProvider({
 				onExecute: () => {
 					// TODO: wire to attack order
 				},
-			},
-			{
+			});
+		}
+		if (profile.canHack) {
+			actions.push({
 				id: "hack",
 				label: "Hack",
 				icon: "signal",
@@ -117,8 +179,22 @@ registerRadialProvider({
 				onExecute: () => {
 					// TODO: wire to hacking system
 				},
-			},
-		];
+			});
+		}
+		if (profile.canFortify) {
+			actions.push({
+				id: "fortify",
+				label: "Fortify",
+				icon: "city",
+				tone: "power",
+				enabled: true,
+				onExecute: () => {
+					// TODO: wire to fortification orders
+				},
+			});
+		}
+
+		return actions;
 	},
 });
 
@@ -134,10 +210,19 @@ registerRadialProvider({
 		priority: 30,
 	},
 	getActions: (ctx: RadialOpenContext) => {
-		// Build actions available on empty tiles or when a unit is selected
+		// Build actions available on open sector space or when a unit is selected
+		if (ctx.selectionType !== "empty_sector" && ctx.selectionType !== "unit") {
+			return [];
+		}
+
+		const profile =
+			ctx.selectionType === "unit" ? getSelectedBotProfile(ctx) : null;
+		if (ctx.selectionType === "unit" && !profile) {
+			return [];
+		}
 		if (
-			ctx.selectionType !== "empty_tile" &&
-			ctx.selectionType !== "unit"
+			ctx.selectionType === "unit" &&
+			!isSelectedBotCategoryAllowed(ctx, "build")
 		) {
 			return [];
 		}
@@ -146,44 +231,63 @@ registerRadialProvider({
 		const actions = [];
 
 		// Lightning Rod
-		const rodCosts = BUILDING_COSTS.lightning_rod;
-		const canAffordRod = rodCosts.every(
-			(cost) => resources[cost.type] >= cost.amount,
-		);
-		actions.push({
-			id: "build_rod",
-			label: "Rod",
-			icon: "bolt",
-			tone: "power",
-			enabled: canAffordRod,
-			onExecute: () => setActivePlacement("lightning_rod"),
-		});
+		if (ctx.selectionType === "empty_sector" || profile?.canBuildRod) {
+			const rodCosts = BUILDING_COSTS.lightning_rod;
+			const canAffordRod = rodCosts.every(
+				(cost) => resources[cost.type] >= cost.amount,
+			);
+			actions.push({
+				id: "build_rod",
+				label: "Rod",
+				icon: "bolt",
+				tone: "power",
+				enabled: canAffordRod,
+				onExecute: () => setActivePlacement("lightning_rod"),
+			});
+		}
 
 		// Fabricator
-		const fabCosts = BUILDING_COSTS.fabrication_unit;
-		const canAffordFab = fabCosts.every(
-			(cost) => resources[cost.type] >= cost.amount,
-		);
-		actions.push({
-			id: "build_fab",
-			label: "Fabricator",
-			icon: "gear",
-			tone: "signal",
-			enabled: canAffordFab,
-			onExecute: () => setActivePlacement("fabrication_unit"),
-		});
+		if (ctx.selectionType === "empty_sector" || profile?.canBuildFabricator) {
+			const fabCosts = BUILDING_COSTS.fabrication_unit;
+			const canAffordFab = fabCosts.every(
+				(cost) => resources[cost.type] >= cost.amount,
+			);
+			actions.push({
+				id: "build_fab",
+				label: "Fabricator",
+				icon: "gear",
+				tone: "signal",
+				enabled: canAffordFab,
+				onExecute: () => setActivePlacement("fabrication_unit"),
+			});
+		}
 
 		// Signal Relay
-		actions.push({
-			id: "build_relay",
-			label: "Relay",
-			icon: "signal",
-			tone: "signal",
-			enabled: true,
-			onExecute: () => {
-				// TODO: wire to relay placement
-			},
-		});
+		if (ctx.selectionType === "empty_sector" || profile?.canBuildRelay) {
+			actions.push({
+				id: "build_relay",
+				label: "Relay",
+				icon: "signal",
+				tone: "signal",
+				enabled: true,
+				onExecute: () => {
+					// TODO: wire to relay placement
+				},
+			});
+		}
+
+		if (profile?.canEstablishSubstation) {
+			actions.push({
+				id: "build_substation",
+				label: "Establish",
+				icon: "city",
+				tone: "power",
+				enabled: true,
+				onExecute: () => {
+					setCitySiteModalOpen(true, getRuntimeState().nearbyPoi);
+				},
+			});
+		}
 
 		return actions;
 	},
@@ -201,6 +305,9 @@ registerRadialProvider({
 		priority: 40,
 	},
 	getActions: (ctx: RadialOpenContext) => {
+		const profile = getSelectedBotProfile(ctx);
+		if (!isSelectedBotCategoryAllowed(ctx, "repair")) return [];
+		if (!profile?.canRepair) return [];
 		const entity = findEntityById(ctx.targetEntityId);
 		if (!entity) return [];
 		if (ctx.targetFaction !== "player") return [];
@@ -262,6 +369,13 @@ registerRadialProvider({
 
 		const entity = findEntityById(ctx.targetEntityId);
 		if (!entity) return [];
+		const profile = entity.get(Unit)
+			? getBotCommandProfile(entity.get(Unit)!.type)
+			: null;
+		if (entity.get(Unit) && !isSelectedBotCategoryAllowed(ctx, "fabricate")) {
+			return [];
+		}
+		if (!profile?.canFabricate) return [];
 
 		const unit = entity.get(Unit);
 		const building = entity.get(Building);
@@ -357,21 +471,27 @@ registerRadialProvider({
 	},
 	getActions: (ctx: RadialOpenContext) => {
 		if (
-			ctx.selectionType !== "empty_tile" &&
+			ctx.selectionType !== "empty_sector" &&
 			ctx.selectionType !== "resource_node"
 		) {
-			return [];
+			if (!isSelectedBotCategoryAllowed(ctx, "survey")) {
+				return [];
+			}
+			const profile = getSelectedBotProfile(ctx);
+			if (!profile?.canSurvey) {
+				return [];
+			}
 		}
 
 		const actions = [
 			{
-				id: "survey_tile",
-				label: "Survey",
+				id: "brief_sector",
+				label: "Brief",
 				icon: "eye",
 				tone: "default",
 				enabled: true,
 				onExecute: () => {
-					// TODO: wire to exploration/survey system
+					setCitySiteModalOpen(true, getRuntimeState().nearbyPoi);
 				},
 			},
 		];
@@ -385,6 +505,124 @@ registerRadialProvider({
 				enabled: true,
 				onExecute: () => {
 					// TODO: wire to resource harvesting
+				},
+			});
+		}
+
+		return actions;
+	},
+});
+
+// --- DISTRICT category ---
+
+registerRadialProvider({
+	id: "district",
+	category: {
+		id: "district",
+		label: "District",
+		icon: "city",
+		tone: "signal",
+		priority: 55,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		const runtime = getRuntimeState();
+		const mode = runtime.activeScene === "city" ? "city" : "world";
+		if (
+			ctx.selectionType === "unit" &&
+			!isSelectedBotCategoryAllowed(ctx, "district")
+		) {
+			return [];
+		}
+		const active = getActiveDistrictViewModel(mode);
+		if (!active) {
+			return [];
+		}
+
+		const { city, context, viewModel } = active;
+		const actions = [
+			{
+				id: "district_brief",
+				label: "Brief",
+				icon: "eye",
+				tone: "signal",
+				enabled: true,
+				onExecute: () => setCitySiteModalOpen(true, context),
+			},
+		];
+
+		if (viewModel.canSurvey && city) {
+			actions.push({
+				id: "district_survey",
+				label: "Survey",
+				icon: "eye",
+				tone: "signal",
+				enabled: true,
+				onExecute: () => surveyCitySite(city.id),
+			});
+		}
+
+		if (viewModel.canFound && city) {
+			const profile =
+				ctx.selectionType === "unit" ? getSelectedBotProfile(ctx) : null;
+			const canEstablish =
+				ctx.selectionType !== "unit" ||
+				profile?.canEstablishSubstation === true;
+			actions.push({
+				id: "district_establish",
+				label: "Establish",
+				icon: "city",
+				tone: "power",
+				enabled: canEstablish,
+				onExecute: () => {
+					if (canEstablish) {
+						foundCitySite(city.id);
+					}
+				},
+			});
+		}
+
+		if (viewModel.canEnter && city && mode === "world") {
+			actions.push({
+				id: "district_enter",
+				label: "Enter",
+				icon: "arrow",
+				tone: "signal",
+				enabled: true,
+				onExecute: () => {
+					enterCityInstance(city.id);
+				},
+			});
+		}
+
+		if (mode === "city") {
+			actions.push({
+				id: "district_return",
+				label: "Return",
+				icon: "arrow",
+				tone: "default",
+				enabled: true,
+				onExecute: () => {
+					returnToWorld();
+				},
+			});
+		}
+
+		for (const operation of viewModel.operations.filter(
+			(candidate) => candidate.status === "available",
+		)) {
+			actions.push({
+				id: `district_operation_${operation.id}`,
+				label: operation.label,
+				icon: "gear",
+				tone: "signal",
+				enabled: true,
+				onExecute: () => {
+					executeDistrictOperation({
+						cityInstanceId: city?.id ?? null,
+						poiType: context.poiType,
+						state: city?.state ?? "latent",
+						operationId: operation.id,
+					});
 				},
 			});
 		}
@@ -409,6 +647,7 @@ registerRadialProvider({
 		// The radial menu will be opened with appropriate context
 		// by the city interior input handler
 		if (ctx.selectionType === "none") return [];
+		if (getRuntimeState().activeScene !== "city") return [];
 
 		return [
 			{
@@ -418,7 +657,7 @@ registerRadialProvider({
 				tone: "signal",
 				enabled: true,
 				onExecute: () => {
-					// TODO: wire to city brief modal
+					setCitySiteModalOpen(true, getRuntimeState().nearbyPoi);
 				},
 			},
 			{

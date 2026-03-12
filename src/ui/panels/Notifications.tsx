@@ -43,6 +43,26 @@ export function Notifications() {
 					</Text>
 				</View>
 			)}
+
+			{snap.districtEvents.slice(0, 2).map((event) => (
+				<View
+					key={event.id}
+					className="min-w-[280px] rounded-[20px] border border-[#8be6ff]/25 bg-[#08131a]/92 px-4 py-3 shadow-2xl"
+				>
+					<View className="flex-row items-center gap-2">
+						<MapIcon width={16} height={16} color="#8be6ff" />
+						<Text className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#8be6ff]">
+							District Action
+						</Text>
+					</View>
+					<Text className="mt-2 font-mono text-[13px] uppercase tracking-[0.08em] text-[#e4f9ff]">
+						{event.label}
+					</Text>
+					<Text className="mt-1 font-mono text-[11px] text-white/50">
+						{event.description}
+					</Text>
+				</View>
+			))}
 		</View>
 	);
 }

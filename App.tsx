@@ -4,11 +4,13 @@ import {
 	Component,
 	Suspense,
 	startTransition,
+	useEffectEvent,
 	useEffect,
 	useState,
 	useSyncExternalStore,
 } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import "./src/db";
 import { initializeDatabaseSync } from "./src/db/bootstrap";
 import {
 	createSaveGameSync,
@@ -27,16 +29,16 @@ import { TopDownCamera } from "./src/input/TopDownCamera";
 import { UnitInput } from "./src/input/UnitInput";
 import { CityInteriorRenderer } from "./src/rendering/CityInteriorRenderer";
 import { CityRenderer } from "./src/rendering/CityRenderer";
-import { GroundFog } from "./src/rendering/GroundFog";
 import { LandscapeProps } from "./src/rendering/LandscapeProps";
 import { LightningSystem } from "./src/rendering/LightningSystem";
 import { NetworkLineRenderer } from "./src/rendering/NetworkLineRenderer";
+import { StructuralFloorRenderer } from "./src/rendering/StructuralFloorRenderer";
 import { StormLighting } from "./src/rendering/StormLighting";
 import { StormParticles } from "./src/rendering/StormParticles";
 import { StormSky } from "./src/rendering/StormSky";
-import { TerrainRenderer } from "./src/rendering/TerrainRenderer";
 import { UnitRenderer } from "./src/rendering/UnitRenderer";
 import { GameUI } from "./src/ui/GameUI";
+import { LoadingOverlay } from "./src/ui/LoadingOverlay";
 import { TitleScreen } from "./src/ui/TitleScreen";
 import type { NewGameConfig } from "./src/world/config";
 import { generateWorldData } from "./src/world/generation";
@@ -80,10 +82,21 @@ class ErrorBoundary extends Component<
 	}
 }
 
+function SceneReadySignal({ onReady }: { onReady: () => void }) {
+	const notifyReady = useEffectEvent(onReady);
+
+	useEffect(() => {
+		notifyReady();
+	}, [notifyReady]);
+
+	return null;
+}
+
 export default function App() {
 	const [inGame, setInGame] = useState(false);
 	const [loadingLabel, setLoadingLabel] = useState("Hydrating world");
 	const [isLoading, setIsLoading] = useState(false);
+	const [sceneReady, setSceneReady] = useState(false);
 	const runtimeState = useSyncExternalStore(
 		subscribeRuntimeState,
 		getRuntimeState,
@@ -104,7 +117,7 @@ export default function App() {
 		} catch (_error) {
 			const generatedWorld = generateWorldData({
 				worldSeed: saveGame.world_seed,
-				mapSize: saveGame.map_size,
+				sectorScale: saveGame.sector_scale,
 				difficulty: saveGame.difficulty,
 				climateProfile: saveGame.climate_profile,
 				stormProfile: saveGame.storm_profile,
@@ -113,7 +126,7 @@ export default function App() {
 				saveGame,
 				{
 					worldSeed: saveGame.world_seed,
-					mapSize: saveGame.map_size,
+					sectorScale: saveGame.sector_scale,
 					difficulty: saveGame.difficulty,
 					climateProfile: saveGame.climate_profile,
 					stormProfile: saveGame.storm_profile,
@@ -134,6 +147,7 @@ export default function App() {
 	const handleNewGame = async (config: NewGameConfig) => {
 		setLoadingLabel("Generating persistent world");
 		setIsLoading(true);
+		setSceneReady(false);
 		await nextFrame();
 		try {
 			const saveGame = createSaveGameSync(config);
@@ -163,6 +177,7 @@ export default function App() {
 
 		setLoadingLabel("Loading latest save");
 		setIsLoading(true);
+		setSceneReady(false);
 		await nextFrame();
 		try {
 			touchSaveGameSync(saveGame.id);
@@ -205,22 +220,44 @@ export default function App() {
 									</mesh>
 								}
 							>
+								<SceneReadySignal
+									onReady={() => {
+										setSceneReady(true);
+									}}
+								/>
 								<color attach="background" args={["#030308"]} />
 
 								<TopDownCamera />
 								{runtimeState.activeScene === "world" ? (
 									<>
+										<ambientLight intensity={0.95} color={0x7c8ea8} />
+										<hemisphereLight
+											intensity={0.9}
+											color={0x7fb9ff}
+											groundColor={0x071119}
+										/>
+										<directionalLight
+											position={[8, 16, 10]}
+											intensity={1.45}
+											color={0x8be6ff}
+										/>
+										<directionalLight
+											position={[-8, 10, -6]}
+											intensity={0.7}
+											color={0xf6c56a}
+										/>
 										<StormSky />
 										<StormLighting />
 										<StormParticles />
 										<LightningSystem />
 										<UnitInput />
-										<TerrainRenderer />
+										<StructuralFloorRenderer />
 										<NetworkLineRenderer />
 										<LandscapeProps />
-										<CityRenderer />
+										<Suspense fallback={null}>
+											<CityRenderer />
+										</Suspense>
 										<UnitRenderer />
-										<GroundFog />
 									</>
 								) : (
 									<>
@@ -238,6 +275,22 @@ export default function App() {
 						</Canvas>
 					</ErrorBoundary>
 					<GameUI />
+					{!sceneReady ? (
+						<LoadingOverlay label="Stabilizing structural feed" />
+					) : (
+						<View
+							testID="game-scene-ready"
+							pointerEvents="none"
+							style={{
+								position: "absolute",
+								left: 0,
+								top: 0,
+								width: 2,
+								height: 2,
+								opacity: 0.01,
+							}}
+						/>
+					)}
 				</View>
 			)}
 		</View>

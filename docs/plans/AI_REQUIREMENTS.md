@@ -158,7 +158,7 @@ This document defines the formal requirements for the AI layer by downstream con
 ```mermaid
 flowchart TD
     Core["core<br/>deterministic runtime"] --> Bridge["bridge<br/>projection/write-back"]
-    Bridge --> Nav["navigation<br/>hex + square contracts"]
+    Bridge --> Nav["navigation<br/>sector + square contracts"]
     Bridge --> Tasks["tasks<br/>serializable work"]
     Tasks --> FSM["state-machines<br/>execution control"]
     Bridge --> Perception["perception<br/>world facts"]

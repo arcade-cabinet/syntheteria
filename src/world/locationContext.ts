@@ -3,13 +3,13 @@ import { getCityPurposePresentation } from "./cityPresentation";
 import type {
 	CityRuntimeSnapshot,
 	NearbyPoiContext,
-	PoiState,
+	SectorPoiSnapshot,
 	WorldSessionSnapshot,
 } from "./snapshots";
 
 export interface ActiveLocationContext {
 	activeCity: CityRuntimeSnapshot | null;
-	poi: PoiState | null;
+	poi: SectorPoiSnapshot | null;
 	presentation: CityPurposePresentation | null;
 }
 

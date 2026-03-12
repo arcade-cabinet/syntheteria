@@ -11,7 +11,7 @@ function createSession(): WorldSessionSnapshot {
 			id: 1,
 			name: "Session Test",
 			world_seed: 7,
-			map_size: "small",
+			sector_scale: "small",
 			difficulty: "standard",
 			climate_profile: "temperate",
 			storm_profile: "volatile",
@@ -21,28 +21,29 @@ function createSession(): WorldSessionSnapshot {
 		},
 		config: {
 			worldSeed: 7,
-			mapSize: "small",
+			sectorScale: "small",
 			difficulty: "standard",
 			climateProfile: "temperate",
 			stormProfile: "volatile",
 		},
-		worldMap: {
+		ecumenopolis: {
 			id: 1,
 			save_game_id: 1,
 			width: 20,
 			height: 20,
-			map_size: "small",
+			sector_scale: "small",
 			climate_profile: "temperate",
 			storm_profile: "volatile",
-			spawn_q: 0,
-			spawn_r: 0,
+			spawn_sector_id: "command_arcology",
+			spawn_anchor_key: "0,0",
 			generated_at: 0,
 		},
-		tiles: [],
+		sectorCells: [],
+		sectorStructures: [],
 		pointsOfInterest: [
 			{
 				id: 1,
-				world_map_id: 1,
+				ecumenopolis_id: 1,
 				type: "science_campus",
 				name: "Science Campus",
 				q: 2,
@@ -51,7 +52,7 @@ function createSession(): WorldSessionSnapshot {
 			},
 			{
 				id: 2,
-				world_map_id: 1,
+				ecumenopolis_id: 1,
 				type: "coast_mines",
 				name: "Coast Mines",
 				q: 10,
@@ -62,7 +63,7 @@ function createSession(): WorldSessionSnapshot {
 		cityInstances: [
 			{
 				id: 9,
-				world_map_id: 1,
+				ecumenopolis_id: 1,
 				poi_id: 1,
 				name: "Science Campus",
 				world_q: 2,
@@ -115,6 +116,38 @@ describe("poiSession", () => {
 			poiId: 1,
 			poiType: "science_campus",
 			discovered: true,
+		});
+	});
+
+	it("prefers the nearest actionable district over an already-online home shell", () => {
+		const session = createSession();
+		session.pointsOfInterest.unshift({
+			id: 3,
+			ecumenopolis_id: 1,
+			type: "home_base",
+			name: "Relay Home Base",
+			q: 0,
+			r: 0,
+			discovered: 1,
+		});
+		session.cityInstances.unshift({
+			id: 10,
+			ecumenopolis_id: 1,
+			poi_id: 3,
+			name: "Relay Home Base",
+			world_q: 0,
+			world_r: 0,
+			layout_seed: 7,
+			generation_status: "instanced",
+			state: "founded",
+		});
+		markDiscoveredPoisNearPosition(session, { x: 0, z: 0 });
+
+		expect(findNearbyPoiContext(session, { x: 0, z: 0 })).toMatchObject({
+			cityInstanceId: 9,
+			name: "Science Campus",
+			poiId: 1,
+			poiType: "science_campus",
 		});
 	});
 });

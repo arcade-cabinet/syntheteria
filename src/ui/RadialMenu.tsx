@@ -207,6 +207,7 @@ function PetalRing({
 							</>
 						)}
 						<SvgText
+							testID={`radial-petal-label-${petal.id}`}
 							x={labelPos.x}
 							y={labelPos.y + 1}
 							fill={
@@ -290,6 +291,7 @@ export function RadialMenu() {
 	return (
 		<View
 			{...panResponder.panHandlers}
+			testID="radial-menu"
 			className="absolute inset-0 pointer-events-auto"
 			style={{ zIndex: 100 }}
 		>

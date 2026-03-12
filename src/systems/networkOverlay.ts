@@ -6,14 +6,14 @@ import {
 	Signal,
 	WorldPosition,
 } from "../ecs/traits";
-import { hexToWorld, worldToHex } from "../ecs/terrain";
 import { buildings, lightningRods, units, world } from "../ecs/world";
+import { gridToWorld, worldToGrid } from "../world/sectorCoordinates";
 
 /**
  * Network Overlay System
  *
- * Reads ECS state (signal connectivity, power distribution, belt routes)
- * and computes the geometric representation of network lines between hex centers.
+ * Reads ECS state (signal connectivity, power distribution, conduit routes)
+ * and computes the geometric representation of infrastructure lines between sector centers.
  *
  * This is a PURE system — no rendering, no Three.js, no React.
  * The renderer reads getNetworkOverlayState() each frame.
@@ -21,15 +21,15 @@ import { buildings, lightningRods, units, world } from "../ecs/world";
  * Network types:
  * - Signal relay: thin cyan lines between connected relay nodes
  * - Power feed: amber lines from lightning rods to powered buildings
- * - Belt route: mint conveyor lines between fabrication endpoints
+ * - Conduit route: mint infrastructure traces between fabrication endpoints
  *
- * Lines route through hex centers using bezier curves. When multiple
- * networks share a hex edge, lines are offset perpendicular to avoid overlap.
+ * Lines route through sector centers using bezier curves. When multiple
+ * networks share a sector edge, lines are offset perpendicular to avoid overlap.
  */
 
 // --- Types ---
 
-export type NetworkType = "signal" | "power" | "belt";
+export type NetworkType = "signal" | "power" | "conduit";
 
 export type FactionId = "player" | "cultist" | "rogue" | "feral" | "wildlife";
 
@@ -38,9 +38,9 @@ export interface NetworkSegment {
 	id: string;
 	/** Network type determines visual style */
 	type: NetworkType;
-	/** Source hex center in world coordinates */
+	/** Source sector center in world coordinates */
 	from: { x: number; z: number };
-	/** Target hex center in world coordinates */
+	/** Target sector center in world coordinates */
 	to: { x: number; z: number };
 	/** Faction that owns this network segment */
 	faction: FactionId;
@@ -58,7 +58,7 @@ export interface JunctionNode {
 	faction: FactionId;
 	/** Number of networks meeting at this junction */
 	networkCount: number;
-	/** Whether a structure occupies this hex (dims junction) */
+	/** Whether a structure occupies this sector center (dims junction) */
 	hasStructure: boolean;
 }
 
@@ -81,7 +81,7 @@ let nextSegmentId = 0;
 
 // --- Edge key helpers ---
 
-/** Create a canonical key for a hex edge (order-independent) */
+/** Create a canonical key for a sector edge (order-independent) */
 function edgeKey(
 	q1: number,
 	r1: number,
@@ -94,7 +94,7 @@ function edgeKey(
 	return `${q2},${r2}-${q1},${r1}`;
 }
 
-/** Create a key for a hex position */
+/** Create a key for a sector position */
 function hexKey(q: number, r: number): string {
 	return `${q},${r}`;
 }
@@ -134,7 +134,7 @@ function buildSignalSegments(): NetworkSegment[] {
 	for (const entity of relayEntities) {
 		const pos = entity.get(WorldPosition)!;
 		const id = entity.get(Identity)!;
-		const hex = worldToHex(pos.x, pos.z);
+		const hex = worldToGrid(pos.x, pos.z);
 		const key = hexKey(hex.q, hex.r);
 
 		if (!hexRelays.has(key)) {
@@ -172,8 +172,8 @@ function buildSignalSegments(): NetworkSegment[] {
 				if (createdEdges.has(ek)) continue;
 				createdEdges.add(ek);
 
-				const fromWorld = hexToWorld(relay.q, relay.r);
-				const toWorld = hexToWorld(nq, nr);
+				const fromWorld = gridToWorld(relay.q, relay.r);
+				const toWorld = gridToWorld(nq, nr);
 
 				segments.push({
 					id: `sig_${nextSegmentId++}`,
@@ -198,7 +198,7 @@ function buildSignalSegments(): NetworkSegment[] {
 	for (const unit of connectedUnits) {
 		const unitPos = unit.get(WorldPosition)!;
 		const unitId = unit.get(Identity)!;
-		const unitHex = worldToHex(unitPos.x, unitPos.z);
+		const unitHex = worldToGrid(unitPos.x, unitPos.z);
 
 		// Find nearest relay of same faction
 		let nearestDist = Number.POSITIVE_INFINITY;
@@ -215,7 +215,7 @@ function buildSignalSegments(): NetworkSegment[] {
 
 			if (dist < nearestDist) {
 				nearestDist = dist;
-				const rHex = worldToHex(relayPos.x, relayPos.z);
+				const rHex = worldToGrid(relayPos.x, relayPos.z);
 				nearestRelayHex = rHex;
 			}
 		}
@@ -229,8 +229,8 @@ function buildSignalSegments(): NetworkSegment[] {
 			);
 			if (!createdEdges.has(ek)) {
 				createdEdges.add(ek);
-				const fromWorld = hexToWorld(unitHex.q, unitHex.r);
-				const toWorld = hexToWorld(
+				const fromWorld = gridToWorld(unitHex.q, unitHex.r);
+				const toWorld = gridToWorld(
 					nearestRelayHex.q,
 					nearestRelayHex.r,
 				);
@@ -262,7 +262,7 @@ function buildPowerSegments(): NetworkSegment[] {
 		const rodComp = rod.get(LightningRod);
 		if (!rodPos || !rodComp) continue;
 
-		const rodHex = worldToHex(rodPos.x, rodPos.z);
+		const rodHex = worldToGrid(rodPos.x, rodPos.z);
 		const radius = rodComp.protectionRadius || 10;
 
 		// Find powered buildings within rod range
@@ -280,7 +280,7 @@ function buildPowerSegments(): NetworkSegment[] {
 
 			if (dist > radius) continue;
 
-			const bldgHex = worldToHex(bldgPos.x, bldgPos.z);
+			const bldgHex = worldToGrid(bldgPos.x, bldgPos.z);
 			const ek = edgeKey(rodHex.q, rodHex.r, bldgHex.q, bldgHex.r);
 			if (createdEdges.has(ek)) continue;
 			createdEdges.add(ek);
@@ -291,8 +291,8 @@ function buildPowerSegments(): NetworkSegment[] {
 					? Math.min(1.0, rodComp.currentOutput / rodComp.rodCapacity)
 					: 0;
 
-			const fromWorld = hexToWorld(rodHex.q, rodHex.r);
-			const toWorld = hexToWorld(bldgHex.q, bldgHex.r);
+			const fromWorld = gridToWorld(rodHex.q, rodHex.r);
+			const toWorld = gridToWorld(bldgHex.q, bldgHex.r);
 
 			segments.push({
 				id: `pwr_${nextSegmentId++}`,
@@ -309,13 +309,13 @@ function buildPowerSegments(): NetworkSegment[] {
 	return segments;
 }
 
-// --- Belt network geometry ---
+// --- Conduit network geometry ---
 
-function buildBeltSegments(): NetworkSegment[] {
+function buildConduitSegments(): NetworkSegment[] {
 	const segments: NetworkSegment[] = [];
 	const createdEdges = new Set<string>();
 
-	// Belt routes connect fabrication units to resource sources or other fabricators
+	// Conduit routes connect fabrication units to nearby industrial nodes
 	// For now, connect any fabrication buildings that are within 2 hex distance
 	const fabBuildings = Array.from(buildings).filter(
 		(b) =>
@@ -329,8 +329,8 @@ function buildBeltSegments(): NetworkSegment[] {
 			const posB = fabBuildings[j].get(WorldPosition);
 			if (!posA || !posB) continue;
 
-			const hexA = worldToHex(posA.x, posA.z);
-			const hexB = worldToHex(posB.x, posB.z);
+			const hexA = worldToGrid(posA.x, posA.z);
+			const hexB = worldToGrid(posB.x, posB.z);
 
 			// Only connect nearby fabricators (within 3 hex distance)
 			const dq = Math.abs(hexA.q - hexB.q);
@@ -344,12 +344,12 @@ function buildBeltSegments(): NetworkSegment[] {
 			if (createdEdges.has(ek)) continue;
 			createdEdges.add(ek);
 
-			const fromWorld = hexToWorld(hexA.q, hexA.r);
-			const toWorld = hexToWorld(hexB.q, hexB.r);
+			const fromWorld = gridToWorld(hexA.q, hexA.r);
+			const toWorld = gridToWorld(hexB.q, hexB.r);
 
 			segments.push({
-				id: `belt_${nextSegmentId++}`,
-				type: "belt",
+				id: `conduit_${nextSegmentId++}`,
+				type: "conduit",
 				from: { x: fromWorld.x, z: fromWorld.z },
 				to: { x: toWorld.x, z: toWorld.z },
 				faction: "player",
@@ -365,16 +365,16 @@ function buildBeltSegments(): NetworkSegment[] {
 // --- Parallel offset assignment ---
 
 /**
- * Assign parallelIndex to segments sharing the same hex edge.
+ * Assign parallelIndex to segments sharing the same sector edge.
  * First network: centered (0), second: +1 offset, third: -1 offset.
  */
 function assignParallelOffsets(segments: NetworkSegment[]) {
 	const edgeSegments = new Map<string, NetworkSegment[]>();
 
 	for (const seg of segments) {
-		// Compute hex coords from world positions to get edge key
-		const fromHex = worldToHex(seg.from.x, seg.from.z);
-		const toHex = worldToHex(seg.to.x, seg.to.z);
+		// Compute sector coords from world positions to get edge key
+		const fromHex = worldToGrid(seg.from.x, seg.from.z);
+		const toHex = worldToGrid(seg.to.x, seg.to.z);
 		const ek = edgeKey(fromHex.q, fromHex.r, toHex.q, toHex.r);
 
 		if (!edgeSegments.has(ek)) {
@@ -386,11 +386,11 @@ function assignParallelOffsets(segments: NetworkSegment[]) {
 	const maxParallel = networksConfig.maxParallelPerEdge;
 
 	for (const [, segs] of edgeSegments) {
-		// Sort by type priority: signal=0, power=1, belt=2
+		// Sort by type priority: signal=0, power=1, conduit=2
 		const typePriority: Record<NetworkType, number> = {
 			signal: 0,
 			power: 1,
-			belt: 2,
+			conduit: 2,
 		};
 		segs.sort((a, b) => typePriority[a.type] - typePriority[b.type]);
 
@@ -405,7 +405,7 @@ function assignParallelOffsets(segments: NetworkSegment[]) {
 // --- Junction computation ---
 
 function buildJunctions(segments: NetworkSegment[]): JunctionNode[] {
-	// Count how many networks meet at each hex center
+	// Count how many networks meet at each sector center
 	const hexNetworks = new Map<
 		string,
 		{
@@ -418,11 +418,11 @@ function buildJunctions(segments: NetworkSegment[]): JunctionNode[] {
 
 	for (const seg of segments) {
 		for (const point of [seg.from, seg.to]) {
-			const hex = worldToHex(point.x, point.z);
+			const hex = worldToGrid(point.x, point.z);
 			const key = hexKey(hex.q, hex.r);
 
 			if (!hexNetworks.has(key)) {
-				const worldPos = hexToWorld(hex.q, hex.r);
+				const worldPos = gridToWorld(hex.q, hex.r);
 				hexNetworks.set(key, {
 					x: worldPos.x,
 					z: worldPos.z,
@@ -437,12 +437,12 @@ function buildJunctions(segments: NetworkSegment[]): JunctionNode[] {
 	// Only create junctions where 2+ different network types meet
 	const junctions: JunctionNode[] = [];
 
-	// Check which hexes have structures
+	// Check which sector cells have structures
 	const structureHexes = new Set<string>();
 	for (const building of buildings) {
 		const pos = building.get(WorldPosition);
 		if (!pos) continue;
-		const hex = worldToHex(pos.x, pos.z);
+		const hex = worldToGrid(pos.x, pos.z);
 		structureHexes.add(hexKey(hex.q, hex.r));
 	}
 
@@ -491,9 +491,9 @@ export function networkOverlaySystem(tick: number) {
 
 	const signalSegs = buildSignalSegments();
 	const powerSegs = buildPowerSegments();
-	const beltSegs = buildBeltSegments();
+	const conduitSegs = buildConduitSegments();
 
-	const allSegments = [...signalSegs, ...powerSegs, ...beltSegs];
+	const allSegments = [...signalSegs, ...powerSegs, ...conduitSegs];
 
 	assignParallelOffsets(allSegments);
 

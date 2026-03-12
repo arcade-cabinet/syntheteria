@@ -18,7 +18,7 @@ test.describe("title and new game flow surfaces", () => {
 		);
 
 		await expect(component).toContainText("Campaign Initialization");
-		await expect(component).toContainText("Map Size");
+		await expect(component).toContainText("Sector Scale");
 		await expect(component).toContainText("Climate Pattern");
 		await expect(component).toContainText("Storm Intensity");
 		await expect(component).toHaveScreenshot();
@@ -26,12 +26,21 @@ test.describe("title and new game flow surfaces", () => {
 
 	test("loading overlay renders world generation status", async ({ mount }) => {
 		const component = await mount(
-			<LoadingOverlay label="Encoding world" />,
+			<div
+				style={{
+					width: 1280,
+					height: 720,
+					position: "relative",
+					background: "#02050a",
+				}}
+			>
+				<LoadingOverlay label="Encoding world" />
+			</div>,
 		);
 
-		await expect(component).toContainText("World Generation");
+		await expect(component).toContainText("Campaign Initialization");
 		await expect(component).toContainText("Encoding world");
-		await expect(component).toContainText("Encoding terrain lattice");
+		await expect(component).toContainText("Encoding sector lattice");
 		await expect(component).toHaveScreenshot();
 	});
 });

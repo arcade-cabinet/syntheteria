@@ -1,5 +1,10 @@
 import { type Entity as KootaEntity, trait } from "koota";
 import type { AgentRole } from "../ai";
+import type {
+	BotArchetypeId,
+	BotSpeechProfile,
+	BotUnitType,
+} from "../bots";
 
 export type Entity = KootaEntity;
 export type UnitEntity = KootaEntity;
@@ -43,10 +48,10 @@ export const MapFragment = trait({ fragmentId: "" });
 
 // Unit (mobile robot)
 export const Unit = trait(() => ({
-	type: "maintenance_bot" as
-		| "maintenance_bot"
-		| "utility_drone"
-		| "fabrication_unit",
+	type: "maintenance_bot" as BotUnitType,
+	archetypeId: "field_technician" as BotArchetypeId,
+	markLevel: 1,
+	speechProfile: "mentor" as BotSpeechProfile,
 	displayName: "Unit",
 	speed: 0, // world units per second at 1x game speed
 	selected: false,

@@ -1,10 +1,10 @@
 import { useSyncExternalStore } from "react";
 import { Text, View, useWindowDimensions } from "react-native";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
-import { getWorldHalfExtents } from "../../ecs/terrain";
 import { Identity, WorldPosition } from "../../ecs/traits";
 import { buildings, units } from "../../ecs/world";
 import { MapIcon, RadarIcon } from "../icons";
+import { getWorldHalfExtents } from "../../world/sectorCoordinates";
 
 export function Minimap() {
 	useSyncExternalStore(subscribe, getSnapshot);
@@ -21,10 +21,10 @@ export function Minimap() {
 				<View className="flex-row items-center justify-between">
 					<View>
 						<Text className="font-mono text-[9px] md:text-[10px] uppercase tracking-[0.24em] text-white/45">
-							World Scan
+							Sector Scan
 						</Text>
 						<Text className="mt-0.5 md:mt-1 font-mono text-xs md:text-sm uppercase tracking-[0.14em] text-[#defef3]">
-							Minimap
+							Command Grid
 						</Text>
 					</View>
 					<View className="h-8 w-8 items-center justify-center rounded-2xl border border-white/8 bg-white/5">
@@ -74,7 +74,7 @@ export function Minimap() {
 					<View className="absolute bottom-2 left-2 flex-row items-center gap-1.5 rounded-full border border-white/8 bg-black/40 px-2 py-1">
 						<MapIcon width={12} height={12} color="#89d9ff" />
 						<Text className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/55">
-							Global
+							Network
 						</Text>
 					</View>
 				</View>

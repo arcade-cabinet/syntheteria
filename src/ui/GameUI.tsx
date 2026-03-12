@@ -4,8 +4,9 @@ import { CityKitLab } from "../city/runtime/CityKitLab";
 import { closeCityKitLab } from "../world/cityTransition";
 import { getRuntimeState, subscribeRuntimeState } from "../world/runtimeState";
 import "../systems/radialProviders"; // Register radial menu action providers at startup
+import { BriefingBubbleLayer } from "./BriefingBubbleLayer";
+import { CitySiteOverlay } from "./CitySiteOverlay";
 import { RadialMenu } from "./RadialMenu";
-import { LocationPanel } from "./panels/LocationPanel";
 import { Minimap } from "./panels/Minimap";
 import { Notifications } from "./panels/Notifications";
 import { ResponsiveTopBar } from "./panels/ResourceStrip";
@@ -22,7 +23,8 @@ import { ThoughtOverlay } from "./panels/ThoughtOverlay";
  * Persistent HUD elements:
  * - ResponsiveTopBar: resources, storm %, day counter, pause
  * - Notifications: combat alerts, merge events
- * - LocationPanel: world/city location context
+ * - BriefingBubbleLayer: anchored local context
+ * - CitySiteOverlay: explicit site/district briefings opened by radial actions
  * - Minimap: tactical overview
  * - ThoughtOverlay: AI narration
  * - RadialMenu: all contextual actions
@@ -34,7 +36,8 @@ export function GameUI() {
 		<View className="absolute inset-0 pointer-events-none">
 			<ResponsiveTopBar />
 			<Notifications />
-			<LocationPanel />
+			<BriefingBubbleLayer />
+			<CitySiteOverlay />
 			{runtime.activeScene === "world" && <Minimap />}
 			{runtime.cityKitLabOpen && <CityKitLab onClose={closeCityKitLab} />}
 			<ThoughtOverlay />

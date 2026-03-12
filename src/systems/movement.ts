@@ -1,4 +1,4 @@
-import { hexToWorld } from "../ecs/terrain";
+import { gridToWorld } from "../world/sectorCoordinates";
 import {
 	AIController,
 	Navigation,
@@ -20,7 +20,7 @@ export function movementSystem(delta: number, gameSpeed: number) {
 		}
 
 		const targetGridPosition = nav.path[nav.pathIndex];
-		const targetWorld = hexToWorld(targetGridPosition.q, targetGridPosition.r);
+		const targetWorld = gridToWorld(targetGridPosition.q, targetGridPosition.r);
 
 		const wp = entity.get(WorldPosition)!;
 		const step = entity.get(Unit)!.speed * delta * gameSpeed;

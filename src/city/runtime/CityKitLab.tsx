@@ -13,6 +13,7 @@ import type { CityFamily, CityPlacementType } from "../config/types";
 import {
 	createDefaultCityKitLabFilterState,
 	formatCitySubcategoryLabel,
+	type CityKitLabFilterState,
 	getCityKitLabViewModel,
 } from "./cityKitLabState";
 
@@ -72,9 +73,21 @@ function ModelCard({
 	);
 }
 
-export function CityKitLab({ onClose }: { onClose: () => void }) {
+export function CityKitLab({
+	initialFilterState,
+	onClose,
+}: {
+	initialFilterState?: Partial<CityKitLabFilterState>;
+	onClose: () => void;
+}) {
 	const { width } = useWindowDimensions();
-	const defaultFilterState = useMemo(createDefaultCityKitLabFilterState, []);
+	const defaultFilterState = useMemo(
+		() => ({
+			...createDefaultCityKitLabFilterState(),
+			...initialFilterState,
+		}),
+		[initialFilterState],
+	);
 	const [family, setFamily] = useState<CityFamily | "all">(
 		defaultFilterState.family,
 	);
@@ -89,7 +102,9 @@ export function CityKitLab({ onClose }: { onClose: () => void }) {
 	);
 	const {
 		composites,
+		directorySummaries,
 		filterOptions: { familyFilters, placementFilters, subcategories },
+		floorPresets,
 		models,
 		scenarios,
 	} = useMemo(
@@ -211,6 +226,56 @@ export function CityKitLab({ onClose }: { onClose: () => void }) {
 								</Text>
 								<Text className="mt-2 font-mono text-[10px] uppercase tracking-[0.12em] text-white/40">
 									{composite.parts.map((part) => part.modelId).join(" · ")}
+								</Text>
+							</View>
+						))}
+					</View>
+				</HudPanel>
+
+				<HudPanel
+					title="Directory Semantics"
+					eyebrow="Subdirectory Understanding"
+					variant="signal"
+				>
+					<View className="gap-3">
+						{directorySummaries.map((summary) => (
+							<View
+								key={summary.directory}
+								className="rounded-[20px] border border-white/8 bg-white/[0.03] p-4"
+							>
+								<Text className="font-mono text-[11px] uppercase tracking-[0.16em] text-[#89d9ff]">
+									{summary.directory}
+								</Text>
+								<Text className="mt-2 font-mono text-[11px] leading-5 text-white/55">
+									Families: {summary.families.join(", ")}
+								</Text>
+								<Text className="mt-2 font-mono text-[10px] uppercase tracking-[0.12em] text-white/40">
+									{`${summary.modelCount} models · passability ${summary.passabilityClasses.join(", ")}`}
+								</Text>
+							</View>
+						))}
+					</View>
+				</HudPanel>
+
+				<HudPanel
+					title="Floor Presets"
+					eyebrow="Procedural Surface Strategy"
+					variant="signal"
+				>
+					<View className="gap-3">
+						{floorPresets.map((preset) => (
+							<View
+								key={preset.id}
+								className="rounded-[20px] border border-white/8 bg-white/[0.03] p-4"
+							>
+								<Text className="font-mono text-[11px] uppercase tracking-[0.16em] text-[#89d9ff]">
+									{preset.label}
+								</Text>
+								<Text className="mt-2 font-mono text-[11px] leading-5 text-white/55">
+									{preset.useCases.join(" · ")}
+								</Text>
+								<Text className="mt-2 font-mono text-[10px] uppercase tracking-[0.12em] text-white/40">
+									{`${preset.baseFamily} · ${preset.zoneAffinity.join(", ")}`}
 								</Text>
 							</View>
 						))}

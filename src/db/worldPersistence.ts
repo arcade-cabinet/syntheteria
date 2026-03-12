@@ -1,6 +1,4 @@
 import type { AgentRole } from "../ai";
-import type { TerrainSetId } from "../config/terrainSetRules";
-import type { Biome, FogState } from "../ecs/terrain";
 import type { UnitComponent } from "../ecs/traits";
 import type { ResourcePool } from "../systems/resources";
 import type {
@@ -11,35 +9,46 @@ import type {
 import type { WorldPoiType } from "../world/contracts";
 import type {
 	GeneratedCityInstanceSeed,
-	GeneratedWorldData,
-	GeneratedWorldPointOfInterest,
-	GeneratedWorldTile,
+	GeneratedEcumenopolisData,
+	GeneratedSectorCell,
+	GeneratedSectorPointOfInterest,
 } from "../world/generation";
+import type { GeneratedSectorStructure } from "../world/sectorStructurePlan";
 import type {
 	CampaignStateSnapshot,
 	CityRuntimeSnapshot,
+	EcumenopolisSnapshot,
 	PersistableWorldEntity,
 	PersistedWorldSnapshot,
-	PoiState,
 	ResourceStateSnapshot,
+	SectorCellSnapshot,
+	SectorPoiSnapshot,
+	SectorStructureSnapshot,
 	WorldEntitySnapshot,
-	WorldMapSnapshot,
 	WorldSessionSnapshot,
-	WorldTileSnapshot,
 } from "../world/snapshots";
+import { createInitialCampaignEntities } from "../world/startingForces";
 import { initializeDatabaseSync } from "./bootstrap";
+import { FakeDatabase } from "./fallbackDatabase";
 import { getDatabaseSync, setDatabaseResolver } from "./runtime";
 import type { SaveGameRecord } from "./saveGames";
 import type { SyncDatabase } from "./types";
-export type WorldMapRecord = WorldMapSnapshot;
-export type WorldTileRecord = WorldTileSnapshot;
-export type WorldPointOfInterestRecord = PoiState;
+export type EcumenopolisRecord = EcumenopolisSnapshot;
+export type SectorCellRecord = SectorCellSnapshot;
+export type SectorStructureRecord = SectorStructureSnapshot;
+export type WorldPointOfInterestRecord = SectorPoiSnapshot;
 export type CityInstanceRecord = CityRuntimeSnapshot;
 export type CampaignStateRecord = CampaignStateSnapshot;
 export type ResourceStateRecord = ResourceStateSnapshot;
 export type WorldEntityRecord = WorldEntitySnapshot;
 export type PersistedWorldRecord = PersistedWorldSnapshot;
 export type ActiveWorldRecord = WorldSessionSnapshot;
+
+function persistFallbackDatabase(database: SyncDatabase) {
+	if (database instanceof FakeDatabase) {
+		database.persistToStorage();
+	}
+}
 
 export function setWorldPersistenceDatabaseResolver(
 	resolver: (() => SyncDatabase) | null,
@@ -48,20 +57,20 @@ export function setWorldPersistenceDatabaseResolver(
 }
 
 function selectWorldMapBySaveId(database: SyncDatabase, saveGameId: number) {
-	return database.getFirstSync<WorldMapRecord>(
+	return database.getFirstSync<EcumenopolisRecord>(
 		`
 			SELECT
 				id,
 				save_game_id,
 				width,
 				height,
-				map_size,
+				sector_scale,
 				climate_profile,
 				storm_profile,
-				spawn_q,
-				spawn_r,
+				spawn_sector_id,
+				spawn_anchor_key,
 				generated_at
-			FROM world_maps
+			FROM ecumenopolis_maps
 			WHERE save_game_id = ?
 		`,
 		saveGameId,
@@ -69,20 +78,53 @@ function selectWorldMapBySaveId(database: SyncDatabase, saveGameId: number) {
 }
 
 function selectWorldTiles(database: SyncDatabase, worldMapId: number) {
-	return database.getAllSync<WorldTileRecord>(
+	return database.getAllSync<SectorCellRecord>(
 		`
 			SELECT
 				id,
-				world_map_id,
+				ecumenopolis_id,
 				q,
 				r,
-				biome,
-				terrain_set_id,
-				fog_state,
-				passable
-			FROM world_tiles
-			WHERE world_map_id = ?
+				structural_zone,
+				floor_preset_id,
+				discovery_state,
+				passable,
+				sector_archetype,
+				storm_exposure,
+				impassable_class,
+				anchor_key
+			FROM sector_cells
+			WHERE ecumenopolis_id = ?
 			ORDER BY r ASC, q ASC
+		`,
+		worldMapId,
+	);
+}
+
+function selectSectorStructures(database: SyncDatabase, worldMapId: number) {
+	return database.getAllSync<SectorStructureRecord>(
+		`
+			SELECT
+				id,
+				ecumenopolis_id,
+				district_structure_id,
+				anchor_key,
+				q,
+				r,
+				model_id,
+				placement_layer,
+				edge,
+				rotation_quarter_turns,
+				offset_x,
+				offset_y,
+				offset_z,
+				target_span,
+				sector_archetype,
+				source,
+				controller_faction
+			FROM sector_structures
+			WHERE ecumenopolis_id = ?
+			ORDER BY q ASC, r ASC, id ASC
 		`,
 		worldMapId,
 	);
@@ -93,14 +135,14 @@ function selectPointsOfInterest(database: SyncDatabase, worldMapId: number) {
 		`
 			SELECT
 				id,
-				world_map_id,
+				ecumenopolis_id,
 				type,
 				name,
 				q,
 				r,
 				discovered
 			FROM world_points_of_interest
-			WHERE world_map_id = ?
+			WHERE ecumenopolis_id = ?
 			ORDER BY id ASC
 		`,
 		worldMapId,
@@ -112,7 +154,7 @@ function selectCityInstances(database: SyncDatabase, worldMapId: number) {
 		`
 			SELECT
 				id,
-				world_map_id,
+				ecumenopolis_id,
 				poi_id,
 				name,
 				world_q,
@@ -121,7 +163,7 @@ function selectCityInstances(database: SyncDatabase, worldMapId: number) {
 				generation_status,
 				state
 			FROM city_instances
-			WHERE world_map_id = ?
+			WHERE ecumenopolis_id = ?
 			ORDER BY id ASC
 		`,
 		worldMapId,
@@ -173,6 +215,9 @@ function selectWorldEntities(database: SyncDatabase, saveGameId: number) {
 				scene_building_id,
 				faction,
 				unit_type,
+				bot_archetype_id,
+				mark_level,
+				speech_profile,
 				building_type,
 				display_name,
 				fragment_id,
@@ -201,22 +246,26 @@ function selectWorldEntities(database: SyncDatabase, saveGameId: number) {
 export function persistGeneratedWorldSync(
 	saveGame: SaveGameRecord,
 	config: NewGameConfig,
-	generatedWorld: GeneratedWorldData,
+	generatedWorld: GeneratedEcumenopolisData,
 	database: SyncDatabase = getDatabaseSync(),
 ) {
 	initializeDatabaseSync(database);
 	const now = Date.now();
 
 	database.runSync(
-		"DELETE FROM city_instances WHERE world_map_id IN (SELECT id FROM world_maps WHERE save_game_id = ?)",
+		"DELETE FROM sector_structures WHERE ecumenopolis_id IN (SELECT id FROM ecumenopolis_maps WHERE save_game_id = ?)",
 		saveGame.id,
 	);
 	database.runSync(
-		"DELETE FROM world_points_of_interest WHERE world_map_id IN (SELECT id FROM world_maps WHERE save_game_id = ?)",
+		"DELETE FROM city_instances WHERE ecumenopolis_id IN (SELECT id FROM ecumenopolis_maps WHERE save_game_id = ?)",
 		saveGame.id,
 	);
 	database.runSync(
-		"DELETE FROM world_tiles WHERE world_map_id IN (SELECT id FROM world_maps WHERE save_game_id = ?)",
+		"DELETE FROM world_points_of_interest WHERE ecumenopolis_id IN (SELECT id FROM ecumenopolis_maps WHERE save_game_id = ?)",
+		saveGame.id,
+	);
+	database.runSync(
+		"DELETE FROM sector_cells WHERE ecumenopolis_id IN (SELECT id FROM ecumenopolis_maps WHERE save_game_id = ?)",
 		saveGame.id,
 	);
 	database.runSync(
@@ -224,40 +273,44 @@ export function persistGeneratedWorldSync(
 		saveGame.id,
 	);
 	database.runSync(
-		"DELETE FROM world_maps WHERE save_game_id = ?",
+		"DELETE FROM ecumenopolis_maps WHERE save_game_id = ?",
 		saveGame.id,
 	);
 
 	const worldMapInsert = database.runSync(
 		`
-			INSERT INTO world_maps (
+			INSERT INTO ecumenopolis_maps (
 				save_game_id,
 				width,
 				height,
-				map_size,
+				sector_scale,
 				climate_profile,
 				storm_profile,
-				spawn_q,
-				spawn_r,
+				spawn_sector_id,
+				spawn_anchor_key,
 				generated_at
 			)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`,
 		saveGame.id,
-		generatedWorld.map.width,
-		generatedWorld.map.height,
-		config.mapSize,
+		generatedWorld.ecumenopolis.width,
+		generatedWorld.ecumenopolis.height,
+		config.sectorScale,
 		config.climateProfile,
 		config.stormProfile,
-		generatedWorld.map.spawnQ,
-		generatedWorld.map.spawnR,
+		generatedWorld.ecumenopolis.spawnSectorId,
+		generatedWorld.ecumenopolis.spawnAnchorKey,
 		now,
 	);
 
 	const worldMapId = worldMapInsert.lastInsertRowId;
 
-	for (const tile of generatedWorld.tiles) {
+	for (const tile of generatedWorld.sectorCells) {
 		insertWorldTile(database, worldMapId, tile);
+	}
+
+	for (const structure of generatedWorld.sectorStructures) {
+		insertSectorStructure(database, worldMapId, structure);
 	}
 
 	const poiIds = new Map<WorldPoiType, number>();
@@ -279,9 +332,10 @@ export function persistGeneratedWorldSync(
 	ensureResourceStateSync(saveGame.id, database, now);
 	persistWorldEntitiesSync(
 		saveGame.id,
-		createInitialWorldEntities(generatedWorld),
+		createInitialCampaignEntities(generatedWorld),
 		database,
 	);
+	persistFallbackDatabase(database);
 
 	return selectWorldMapBySaveId(database, saveGame.id);
 }
@@ -348,67 +402,6 @@ function ensureResourceStateSync(
 	);
 }
 
-function createInitialWorldEntities(
-	generatedWorld: GeneratedWorldData,
-): PersistableWorldEntity[] {
-	return [
-		{
-			entityId: "unit_0",
-			sceneLocation: "world",
-			sceneBuildingId: null,
-			faction: "player",
-			unitType: "maintenance_bot",
-			buildingType: null,
-			displayName: "Maintenance Bot",
-			fragmentId: "world_primary",
-			x: generatedWorld.map.spawnQ,
-			y: 0,
-			z: generatedWorld.map.spawnR,
-			speed: 2,
-			selected: false,
-			components: [
-				{ name: "processor", functional: true, material: "electronic" },
-				{ name: "camera", functional: false, material: "electronic" },
-				{ name: "legs", functional: true, material: "metal" },
-				{ name: "arms", functional: true, material: "metal" },
-				{ name: "power_cell", functional: true, material: "electronic" },
-			],
-			navigation: { path: [], pathIndex: 0, moving: false },
-			aiRole: null,
-			aiStateJson: null,
-			powered: null,
-			operational: null,
-			rodCapacity: null,
-			currentOutput: null,
-			protectionRadius: null,
-		},
-		{
-			entityId: "bldg_1",
-			sceneLocation: "world",
-			sceneBuildingId: null,
-			faction: "player",
-			unitType: null,
-			buildingType: "lightning_rod",
-			displayName: "Lightning Rod",
-			fragmentId: "world_primary",
-			x: generatedWorld.map.spawnQ + 2,
-			y: 0,
-			z: generatedWorld.map.spawnR + 2,
-			speed: null,
-			selected: false,
-			components: [],
-			navigation: null,
-			aiRole: null,
-			aiStateJson: null,
-			powered: true,
-			operational: true,
-			rodCapacity: 12,
-			currentOutput: 4,
-			protectionRadius: 8,
-		},
-	];
-}
-
 function insertWorldEntity(
 	database: SyncDatabase,
 	saveGameId: number,
@@ -423,6 +416,9 @@ function insertWorldEntity(
 				scene_building_id,
 				faction,
 				unit_type,
+				bot_archetype_id,
+				mark_level,
+				speech_profile,
 				building_type,
 				display_name,
 				fragment_id,
@@ -441,7 +437,7 @@ function insertWorldEntity(
 				current_output,
 				protection_radius
 			)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`,
 		saveGameId,
 		entity.entityId,
@@ -449,6 +445,9 @@ function insertWorldEntity(
 		entity.sceneBuildingId,
 		entity.faction,
 		entity.unitType,
+		entity.botArchetypeId,
+		entity.markLevel,
+		entity.speechProfile,
 		entity.buildingType,
 		entity.displayName,
 		entity.fragmentId,
@@ -486,40 +485,94 @@ function persistWorldEntitiesSync(
 function insertWorldTile(
 	database: SyncDatabase,
 	worldMapId: number,
-	tile: GeneratedWorldTile,
+	tile: GeneratedSectorCell,
 ) {
 	return database.runSync(
 		`
-			INSERT INTO world_tiles (
-				world_map_id,
+			INSERT INTO sector_cells (
+				ecumenopolis_id,
 				q,
 				r,
-				biome,
-				terrain_set_id,
-				fog_state,
-				passable
+				structural_zone,
+				floor_preset_id,
+				discovery_state,
+				passable,
+				sector_archetype,
+				storm_exposure,
+				impassable_class,
+				anchor_key
 			)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`,
 		worldMapId,
 		tile.q,
 		tile.r,
-		tile.biome,
-		tile.terrainSetId,
-		tile.fog,
+		tile.structuralZone,
+		tile.floorPresetId,
+		tile.discoveryState,
 		tile.passable ? 1 : 0,
+		tile.sectorArchetype,
+		tile.stormExposure,
+		tile.impassableClass,
+		tile.anchorKey,
+	);
+}
+
+function insertSectorStructure(
+	database: SyncDatabase,
+	worldMapId: number,
+	structure: GeneratedSectorStructure,
+) {
+	return database.runSync(
+		`
+			INSERT INTO sector_structures (
+				ecumenopolis_id,
+				district_structure_id,
+				anchor_key,
+				q,
+				r,
+				model_id,
+				placement_layer,
+				edge,
+				rotation_quarter_turns,
+				offset_x,
+				offset_y,
+				offset_z,
+				target_span,
+				sector_archetype,
+				source,
+				controller_faction
+			)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`,
+		worldMapId,
+		structure.districtStructureId,
+		structure.anchorKey,
+		structure.q,
+		structure.r,
+		structure.modelId,
+		structure.placementLayer,
+		structure.edge,
+		structure.rotationQuarterTurns,
+		structure.offsetX,
+		structure.offsetY,
+		structure.offsetZ,
+		structure.targetSpan,
+		structure.sectorArchetype,
+		structure.source,
+		structure.controllerFaction,
 	);
 }
 
 function insertWorldPointOfInterest(
 	database: SyncDatabase,
 	worldMapId: number,
-	poi: GeneratedWorldPointOfInterest,
+	poi: GeneratedSectorPointOfInterest,
 ) {
 	return database.runSync(
 		`
 			INSERT INTO world_points_of_interest (
-				world_map_id,
+				ecumenopolis_id,
 				type,
 				name,
 				q,
@@ -546,7 +599,7 @@ function insertCityInstance(
 	return database.runSync(
 		`
 			INSERT INTO city_instances (
-				world_map_id,
+				ecumenopolis_id,
 				poi_id,
 				name,
 				world_q,
@@ -583,13 +636,14 @@ export function getPersistedWorldSync(
 		saveGame,
 		config: {
 			worldSeed: saveGame.world_seed,
-			mapSize: saveGame.map_size as NewGameConfig["mapSize"],
+			sectorScale: saveGame.sector_scale as NewGameConfig["sectorScale"],
 			difficulty: saveGame.difficulty as NewGameConfig["difficulty"],
 			climateProfile: saveGame.climate_profile as ClimateProfile,
 			stormProfile: saveGame.storm_profile as StormProfile,
 		},
-		worldMap,
-		tiles: selectWorldTiles(database, worldMap.id),
+		ecumenopolis: worldMap,
+		sectorCells: selectWorldTiles(database, worldMap.id),
+		sectorStructures: selectSectorStructures(database, worldMap.id),
 		pointsOfInterest: selectPointsOfInterest(database, worldMap.id),
 		cityInstances: selectCityInstances(database, worldMap.id),
 		campaignState:
@@ -605,23 +659,23 @@ export function getPersistedWorldSync(
 export function persistRuntimeWorldStateSync(
 	{
 		saveGameId,
-		worldMapId,
+		ecumenopolisId,
 		tick,
 		activeScene,
 		activeCityInstanceId,
 		resources,
-		tiles,
+		sectorCells,
 		pointsOfInterest,
 		cityInstances,
 		entities,
 	}: {
 		saveGameId: number;
-		worldMapId: number;
+		ecumenopolisId: number;
 		tick: number;
 		activeScene: "world" | "city";
 		activeCityInstanceId: number | null;
 		resources: ResourcePool;
-		tiles: Pick<WorldTileRecord, "q" | "r" | "fog_state">[];
+		sectorCells: Pick<SectorCellRecord, "q" | "r" | "discovery_state">[];
 		pointsOfInterest: Pick<WorldPointOfInterestRecord, "id" | "discovered">[];
 		cityInstances: Pick<CityInstanceRecord, "id" | "state">[];
 		entities: PersistableWorldEntity[];
@@ -657,11 +711,11 @@ export function persistRuntimeWorldStateSync(
 		saveGameId,
 	);
 
-	for (const tile of tiles) {
+	for (const tile of sectorCells) {
 		database.runSync(
-			"UPDATE world_tiles SET fog_state = ? WHERE world_map_id = ? AND q = ? AND r = ?",
-			tile.fog_state,
-			worldMapId,
+			"UPDATE sector_cells SET discovery_state = ? WHERE ecumenopolis_id = ? AND q = ? AND r = ?",
+			tile.discovery_state,
+			ecumenopolisId,
 			tile.q,
 			tile.r,
 		);
@@ -684,4 +738,5 @@ export function persistRuntimeWorldStateSync(
 	}
 
 	persistWorldEntitiesSync(saveGameId, entities, database);
+	persistFallbackDatabase(database);
 }

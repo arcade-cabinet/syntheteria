@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import { View } from "react-native";
 
 type SharedValue<T> = {
 	value: T;
@@ -28,12 +29,21 @@ function withSequence<T>(...values: T[]): T {
 	return values[values.length - 1];
 }
 
+function withRepeat<T>(
+	value: T,
+	_numberOfReps?: number,
+	_reverse?: boolean,
+): T {
+	return value;
+}
+
 function withDelay<T>(_delayMs: number, value: T): T {
 	return value;
 }
 
 const Animated = {
 	createAnimatedComponent,
+	View: createAnimatedComponent(View),
 };
 
 export default Animated;
@@ -42,6 +52,7 @@ export {
 	useAnimatedStyle,
 	useSharedValue,
 	withDelay,
+	withRepeat,
 	withSequence,
 	withSpring,
 	withTiming,

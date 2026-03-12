@@ -15,7 +15,7 @@ function createContext(poiType: NearbyPoiContext["poiType"]): NearbyPoiContext {
 function createCity(state: CityRuntimeSnapshot["state"]): CityRuntimeSnapshot {
 	return {
 		id: 9,
-		world_map_id: 1,
+		ecumenopolis_id: 1,
 		poi_id: 2,
 		name: "Test Site",
 		world_q: 3,
@@ -39,6 +39,16 @@ describe("citySiteActions", () => {
 			"found",
 		]);
 		expect(viewModel.cityStatus).toBe("Unsurveyed Shell");
+		expect(
+			viewModel.capabilities.map((capability) => capability.label),
+		).toContain("Research");
+		expect(viewModel.structures.map((structure) => structure.label)).toContain(
+			"Archive Cluster",
+		);
+		expect(viewModel.operations.map((operation) => operation.label)).toContain(
+			"Review Archive",
+		);
+		expect(viewModel.capabilitySummary).toContain("Latent structures");
 	});
 
 	it("offers enter and return inside founded city scenes", () => {
@@ -52,7 +62,14 @@ describe("citySiteActions", () => {
 			"enter",
 			"return",
 		]);
-		expect(viewModel.cityStatus).toBe("Founded City");
+		expect(viewModel.cityStatus).toBe("Substation Online");
+		expect(viewModel.structures.map((structure) => structure.label)).toContain(
+			"Substation Core",
+		);
+		expect(viewModel.operations.map((operation) => operation.label)).toContain(
+			"Capture Lightning",
+		);
+		expect(viewModel.capabilitySummary).toContain("Online district functions");
 	});
 
 	it("blocks founding for hostile sites", () => {
@@ -64,5 +81,7 @@ describe("citySiteActions", () => {
 
 		expect(viewModel.actions.map((action) => action.id)).toEqual(["enter"]);
 		expect(viewModel.presentation.foundationLabel).toBe("Cannot Found");
+		expect(viewModel.capabilities[0]?.status).toBe("hostile");
+		expect(viewModel.operations[0]?.status).toBe("hostile");
 	});
 });

@@ -1,10 +1,20 @@
-# Tile Overlay Composition — Syntheteria
+# Tile Overlay Composition — Historical Hex-World Note
 
 ## Context
 
-Syntheteria is not a traditional 4X with human opponents building roads between cities. The player is a machine intelligence. "Trade" is information exchange over signal relays. Physical goods move on high-speed belt networks, not roads. Both the player and opposing forces build their own colored traceries of connectivity across the hex map.
+This document describes the deleted hex-world composition model that existed before the ecumenopolis replacement was committed.
 
-This document defines how multiple visual layers compose on a single hex tile, how network lines route through tiles, and how we guarantee precise alignment at every zoom level.
+It is preserved only as historical reference for a few surviving readability ideas:
+- layered visual priority
+- infrastructure readability
+- unit-above-structure-above-ground z-order discipline
+
+The canonical spatial docs are now:
+- `docs/WORLD_AND_CITY_SYSTEMS.md`
+- `docs/INPUT_AND_INTERACTION.md`
+- `docs/plans/ECUMENOPOLIS_IMPLEMENTATION_CHECKLIST.md`
+
+Nothing in this file should be treated as the target product architecture.
 
 ## 1. The Hex as a Composition Surface
 

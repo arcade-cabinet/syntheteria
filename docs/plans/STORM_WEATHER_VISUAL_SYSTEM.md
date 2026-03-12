@@ -53,7 +53,7 @@ A GPU-instanced particle system covering the camera viewport.
 Three types of lightning, all sharing the same bolt geometry generator but differing in purpose:
 
 **Ambient distant strikes:**
-- Random bolts hitting the terrain 40-80 world units from camera
+- Random bolts hitting exposed superstructure or shell surfaces 40-80 world units from camera
 - Frequency: every 8-20 seconds (stable) → every 3-8 seconds (cataclysmic)
 - Brief white-blue flash on sky dome (already partially in StormSky shader)
 - Bolt geometry: segmented line with random displacement (Lichtenberg fractal, 6-10 segments)
@@ -99,14 +99,14 @@ This is static and wrong for a perpetual storm world. Needs:
 ### Layer 5: Ground-Level Weather Effects (new)
 
 **Mist/fog patches:**
-- Low-lying translucent planes at Y=0.1 scattered across terrain
+- Low-lying translucent planes at Y=0.1 scattered across floors, breach edges, and exposed service decks
 - Opacity scales with storm intensity
 - Slowly drift in wind direction
-- Stronger near water biomes
-- Add depth and break up the terrain flatness
+- Stronger near breach edges and exposed sectors
+- Add depth and break up floor flatness
 
 **Rain splash impacts (optional, performance-gated):**
-- Small circular ripple effects on terrain at random positions
+- Small circular ripple effects on exposed floor surfaces at random positions
 - Only visible at tactical zoom tier
 - GPU particle system, low priority
 
@@ -132,7 +132,7 @@ Each storm profile should look and feel different:
 <StormLighting stormIntensity={stormIntensity} />
 <StormParticles stormIntensity={stormIntensity} cameraPosition={cameraPos} />
 <LandscapeProps />  {/* also not wired — debris/rocks/trees */}
-<TerrainRenderer />
+<StructuralFloorRenderer />
 <CityRenderer />
 <UnitRenderer />
 <LightningSystem stormIntensity={stormIntensity} rods={rodPositions} />

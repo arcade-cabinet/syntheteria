@@ -2,8 +2,8 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import weatherConfig from "../config/weather.json";
-import { getWorldDimensions } from "../ecs/terrain";
 import { getStormIntensity } from "../systems/power";
+import { getWorldDimensions } from "../world/sectorCoordinates";
 
 /**
  * Ground Fog Renderer

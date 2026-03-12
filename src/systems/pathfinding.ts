@@ -1,4 +1,4 @@
-import { hexToWorld } from "../ecs/terrain";
+import { gridToWorld } from "../world/sectorCoordinates";
 import type { Vec3 } from "../ecs/traits";
 import { findNavPath } from "./navmesh";
 

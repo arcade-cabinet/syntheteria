@@ -7,16 +7,20 @@ This document is the single source of truth for how the player interacts with th
 
 ---
 
-## Core Principle: Radial Menu Is The Only Contextual Surface
+## Core Principle: Radial Menu Is The Only Contextual Action Surface
 
-All contextual actions (build, repair, fabricate, move, attack, hack, survey, city management) are accessed through a **composable dual-layer SVG radial menu**. There are no persistent bottom panels, no bottom sheets, no floating toolbars for actions.
+All contextual actions (build, repair, fabricate, move, attack, hack, survey, reclaim, sector operations) are accessed through a **composable dual-layer SVG radial menu**. There are no persistent bottom panels, no bottom sheets, no floating toolbars for actions.
 
 **Persistent HUD elements** (always visible):
 - `ResourceStrip` — top bar (resources, storm %, day, pause)
 - `Notifications` — combat alerts, merge events
-- `LocationPanel` — world/city location context
 - `Minimap` — tactical overview
 - `ThoughtOverlay` — AI narration
+
+**Contextual information surfaces** (on demand / in-world anchored):
+- bot speech bubbles / anchored site briefs
+- POI or sector callouts
+- modal briefings for high-commitment actions
 
 **Contextual HUD element** (on demand):
 - `RadialMenu` — ALL contextual actions
@@ -25,6 +29,8 @@ All contextual actions (build, repair, fabricate, move, attack, hack, survey, ci
 - `SelectedInfo` panel — replaced by radial menu
 - `BuildToolbar` — replaced by radial menu Build category
 - `BottomSheet` — deleted, radial menu replaces it entirely
+- `LocationPanel` as a primary action owner — superseded by anchored briefings and radial-owned actions
+- `TerrainRenderer` as the world ground substrate — replaced by structural floors plus GLB structure composition
 
 ---
 
@@ -94,8 +100,8 @@ registerRadialProvider({
 | 30 | Build | empty tile or unit | Lightning rod, fabricator, relay |
 | 35 | Fabricate | fabrication unit | Per-recipe actions |
 | 40 | Repair | damaged entity, player | Per-component repair |
-| 50 | Survey | empty tile, resource node | Survey, harvest |
-| 60 | City | city scene | Brief, return to world |
+| 50 | Survey | nearby site, unknown sector feature | Survey, inspect, reclaim |
+| 60 | Sector | sector site, district infrastructure | Brief, enter subsystem, transit |
 | 90 | System | always | Pause, speed, lab |
 
 ### Dual-Layer Behavior
@@ -145,9 +151,9 @@ No central action list to maintain. The menu composes dynamically at open time.
 
 ---
 
-## Network Overlay
+## Infrastructure Overlay
 
-Visual representation of signal, power, and belt networks as bezier curves between hex centers.
+Visual representation of signal, power, transit, and subsurface logistics links across the machine world.
 
 **Config**: `src/config/networks.json`
 **System**: `src/systems/networkOverlay.ts` (pure TS, sim tick)
@@ -157,9 +163,9 @@ Visual representation of signal, power, and belt networks as bezier curves betwe
 |---------|-------|-----------|
 | Signal relay | Cyan (player) / Red (cultist) | Pulsing opacity sine wave |
 | Power feed | Amber | Glow scales with throughput |
-| Belt route | Mint | Animated dash offset (conveyor) |
+| Transit / logistics conduit | Mint | Embedded directional sweep |
 
-Junction nodes appear as emissive circles where 2+ network types meet.
+The long-term target is not a field of exposed belts crossing terrain tiles. The visual language should imply embedded or subsurface machine infrastructure, with overlays only surfacing what the player needs to understand.
 
 ---
 
@@ -186,8 +192,8 @@ Instanced translucent planes at ground level for atmospheric depth.
 | `src/ui/GameUI.tsx` | Top-level HUD composition |
 | `src/config/radialMenu.json` | Radial visual config |
 | `src/config/zoomTiers.json` | Zoom tier thresholds + LOD params |
-| `src/config/networks.json` | Network overlay visual params |
+| `src/config/networks.json` | Infrastructure overlay visual params |
 | `src/systems/zoomTier.ts` | Zoom tier detection system |
-| `src/systems/networkOverlay.ts` | Network geometric computation |
-| `src/rendering/NetworkLineRenderer.tsx` | Network line renderer |
+| `src/systems/networkOverlay.ts` | Overlay geometric computation |
+| `src/rendering/NetworkLineRenderer.tsx` | Infrastructure line renderer |
 | `src/rendering/GroundFog.tsx` | Atmospheric fog renderer |

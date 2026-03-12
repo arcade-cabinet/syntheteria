@@ -46,9 +46,6 @@ importers:
       expo-status-bar:
         specifier: ~55.0.4
         version: 55.0.4(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
-      honeycomb-grid:
-        specifier: ^4.1.5
-        version: 4.1.5
       its-fine:
         specifier: ^2.0.0
         version: 2.0.0(@types/react@19.2.14)(react@19.2.0)
@@ -3045,10 +3042,6 @@ packages:
 
   hls.js@1.6.15:
     resolution: {integrity: sha512-E3a5VwgXimGHwpRGV+WxRTKeSp2DW5DI5MWv34ulL3t5UNmyJWCQ1KmLEHbYzcfThfXG8amBL+fCYPneGHC4VA==}
-
-  honeycomb-grid@4.1.5:
-    resolution: {integrity: sha512-VrnQwu5dHuzqK3wFhLD9EURmLSyEWb0teiHhDJq6WdK0MrFsEtKNYT1HLzXOLe2X1acU8Y9hhK7wWfIiGK1G5w==}
-    engines: {node: '>=16'}
 
   hosted-git-info@7.0.2:
     resolution: {integrity: sha512-puUZAUKT5m8Zzvs72XWy3HtvVbTWljRE66cP60bxJzAqf2DgICo7lYTY2IHUmLnNpjYvw5bvmoHvPc0QO2a62w==}
@@ -8032,8 +8025,6 @@ snapshots:
       hermes-estree: 0.33.3
 
   hls.js@1.6.15: {}
-
-  honeycomb-grid@4.1.5: {}
 
   hosted-git-info@7.0.2:
     dependencies:

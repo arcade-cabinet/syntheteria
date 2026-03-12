@@ -3,7 +3,6 @@ import { spawnFabricationUnit, spawnLightningRod } from "../ecs/factory";
 import { isWalkable } from "../ecs/terrain";
 import { Identity, MapFragment, WorldPosition } from "../ecs/traits";
 import { lightningRods, units } from "../ecs/world";
-import { buildNavGraph } from "./navmesh";
 import { getResources, type ResourcePool, spendResource } from "./resources";
 /**
  * Building placement state machine.
@@ -76,8 +75,8 @@ function isValidPlacement(x: number, z: number, type: PlaceableType): boolean {
 	if (type === "lightning_rod") {
 		for (const rod of lightningRods) {
 			if (!rod.get(WorldPosition)!) continue;
-			const dx = rod.get(WorldPosition)?.x - x;
-			const dz = rod.get(WorldPosition)?.z - z;
+			const dx = rod.get(WorldPosition)!.x - x;
+			const dz = rod.get(WorldPosition)!.z - z;
 			if (Math.sqrt(dx * dx + dz * dz) < MIN_ROD_SPACING) return false;
 		}
 	}
@@ -110,7 +109,7 @@ export function confirmPlacement(): boolean {
 	let fragmentId: string | null = null;
 	for (const unit of units) {
 		if (unit.get(Identity)?.faction === "player") {
-			fragmentId = unit.get(MapFragment)?.fragmentId;
+			fragmentId = unit.get(MapFragment)!.fragmentId;
 			break;
 		}
 	}
@@ -127,9 +126,6 @@ export function confirmPlacement(): boolean {
 			powered: false,
 		});
 	}
-
-	// Rebuild navmesh to account for new building
-	buildNavGraph();
 
 	// Reset placement mode
 	activePlacement = null;

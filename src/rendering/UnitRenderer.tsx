@@ -1,6 +1,10 @@
+import { Clone, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
+import { resolveAssetUri } from "../config/assetUri";
+import { modelAssets } from "../config/modelAssets";
+import unitsConfigJson from "../config/units.json";
 import { getFragment, getTerrainHeight } from "../ecs/terrain";
 import type { BuildingEntity, UnitEntity } from "../ecs/traits";
 import {
@@ -9,105 +13,57 @@ import {
 	hasCamera,
 	Identity,
 	MapFragment,
+	Rotation,
 	Unit,
 	WorldPosition,
 } from "../ecs/traits";
 import { buildings, units } from "../ecs/world";
 import {
-	/**
-	 * Renders all units and buildings at their displayed positions.
-	 * Maintenance bots: small box with optional arm/camera indicators.
-	 * Enemy bots: red-tinted variants.
-	 * Fabrication unit: larger structure with status glow.
-	 */
-
 	getActivePlacement,
 	getGhostPosition,
 } from "../systems/buildingPlacement";
 
-const COLOR_UNIT = 0x44aaff;
-const COLOR_ENEMY = 0xff3333;
-const COLOR_ENEMY_TREAD = 0x553322;
+const unitsConfig = unitsConfigJson as any;
+
 const COLOR_SELECTED = 0xffaa00;
-const COLOR_BROKEN = 0xff4444;
 const COLOR_BUILDING = 0x888888;
 const COLOR_BUILDING_UNPOWERED = 0x554444;
 const COLOR_FABRICATION = 0xaa8844;
+const COLOR_BROKEN = 0xff4444;
 
 function UnitMesh({ entity }: { entity: UnitEntity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const ringRef = useRef<THREE.Mesh>(null);
 
-	const entityHasCamera = hasCamera(entity);
-	const entityHasArms = hasArms(entity);
-	const isEnemy = entity.get(Identity)?.faction !== "player";
+	const unitType = entity.get(Unit)?.type || "maintenance_bot";
+	const config = unitsConfig[unitType] || unitsConfig["maintenance_bot"];
+	const modelPath = resolveAssetUri(modelAssets[config.model]);
+	const { scene } = useGLTF(modelPath);
 
 	useFrame(() => {
-		const frag = getFragment(entity.get(MapFragment)?.fragmentId);
+		const frag = entity.has(MapFragment)
+			? getFragment(entity.get(MapFragment)!.fragmentId)
+			: null;
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
 
 		if (groupRef.current) {
-			groupRef.current.position.set(
-				entity.get(WorldPosition)?.x + ox,
-				entity.get(WorldPosition)?.y,
-				entity.get(WorldPosition)?.z + oz,
-			);
+			const wp = entity.get(WorldPosition)!;
+			groupRef.current.position.set(wp.x + ox, wp.y, wp.z + oz);
+
+			const rot = entity.get(Rotation);
+			if (rot) {
+				groupRef.current.rotation.set(0, rot.y, 0);
+			}
 		}
 		if (ringRef.current) {
-			ringRef.current.visible = entity.get(Unit)?.selected;
+			ringRef.current.visible = entity.get(Unit)?.selected ?? false;
 		}
 	});
 
-	const bodyColor = entity.get(Unit)?.selected
-		? COLOR_SELECTED
-		: isEnemy
-			? COLOR_ENEMY
-			: COLOR_UNIT;
-
 	return (
 		<group ref={groupRef}>
-			{/* Body */}
-			<mesh position={[0, 0.5, 0]}>
-				<boxGeometry args={[0.5, 0.6, 0.4]} />
-				<meshLambertMaterial color={bodyColor} />
-			</mesh>
-
-			{/* Legs/treads */}
-			<mesh position={[0, 0.15, 0]}>
-				<boxGeometry args={[0.55, 0.2, 0.5]} />
-				<meshLambertMaterial color={isEnemy ? COLOR_ENEMY_TREAD : 0x335588} />
-			</mesh>
-
-			{/* Camera (top dome) — red if broken */}
-			<mesh position={[0, 0.9, 0.1]}>
-				<sphereGeometry args={[0.12, 8, 8]} />
-				<meshLambertMaterial
-					color={
-						entityHasCamera ? (isEnemy ? 0xff8800 : 0x00ff88) : COLOR_BROKEN
-					}
-					emissive={
-						entityHasCamera ? (isEnemy ? 0x441100 : 0x004422) : 0x440000
-					}
-				/>
-			</mesh>
-
-			{/* Left arm — red if broken */}
-			<mesh position={[-0.35, 0.45, 0]}>
-				<boxGeometry args={[0.1, 0.4, 0.1]} />
-				<meshLambertMaterial
-					color={entityHasArms ? (isEnemy ? 0xaa5544 : 0x6688aa) : COLOR_BROKEN}
-				/>
-			</mesh>
-
-			{/* Right arm */}
-			<mesh position={[0.35, 0.45, 0]}>
-				<boxGeometry args={[0.1, 0.4, 0.1]} />
-				<meshLambertMaterial
-					color={entityHasArms ? (isEnemy ? 0xaa5544 : 0x6688aa) : COLOR_BROKEN}
-				/>
-			</mesh>
-
+			<Clone object={scene} scale={config.scale || 1} />
 			{/* Selection ring */}
 			<mesh
 				ref={ringRef}
@@ -127,25 +83,24 @@ function BuildingMesh({ entity }: { entity: BuildingEntity }) {
 	const ringRef = useRef<THREE.Mesh>(null);
 
 	useFrame(() => {
-		const frag = entity.get(MapFragment)!
-			? getFragment(entity.get(MapFragment)?.fragmentId)
+		const frag = entity.has(MapFragment)
+			? getFragment(entity.get(MapFragment)!.fragmentId)
 			: null;
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
 
 		if (groupRef.current) {
 			groupRef.current.position.set(
-				entity.get(WorldPosition)?.x + ox,
-				entity.get(WorldPosition)?.y,
-				entity.get(WorldPosition)?.z + oz,
+				entity.get(WorldPosition)!.x + ox,
+				entity.get(WorldPosition)!.y,
+				entity.get(WorldPosition)!.z + oz,
 			);
 		}
 		if (ringRef.current) {
-			// Fabrication units are also units — use unit.selected if available
 			const selected = entity.get(Unit)!
 				? entity.get(Unit)?.selected
 				: entity.get(Building)?.selected;
-			ringRef.current.visible = selected;
+			ringRef.current.visible = selected ?? false;
 		}
 	});
 
@@ -155,7 +110,6 @@ function BuildingMesh({ entity }: { entity: BuildingEntity }) {
 
 	return (
 		<group ref={groupRef}>
-			{/* Base platform */}
 			<mesh position={[0, 0.15, 0]}>
 				<boxGeometry args={[1.6, 0.3, 1.6]} />
 				<meshLambertMaterial
@@ -191,17 +145,14 @@ function BuildingMesh({ entity }: { entity: BuildingEntity }) {
 
 			{isRod && (
 				<>
-					{/* Lightning rod pole */}
 					<mesh position={[0, 1.5, 0]}>
 						<cylinderGeometry args={[0.06, 0.1, 2.5, 6]} />
 						<meshLambertMaterial color={0x888899} />
 					</mesh>
-					{/* Rod tip */}
 					<mesh position={[0, 2.8, 0]}>
 						<coneGeometry args={[0.12, 0.4, 6]} />
 						<meshLambertMaterial color={0xaabb00} emissive={0x334400} />
 					</mesh>
-					{/* Protection radius indicator */}
 					<mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
 						<ringGeometry args={[7.5, 8, 32]} />
 						<meshBasicMaterial
@@ -214,7 +165,6 @@ function BuildingMesh({ entity }: { entity: BuildingEntity }) {
 				</>
 			)}
 
-			{/* Selection ring */}
 			<mesh
 				ref={ringRef}
 				rotation={[-Math.PI / 2, 0, 0]}
@@ -228,9 +178,6 @@ function BuildingMesh({ entity }: { entity: BuildingEntity }) {
 	);
 }
 
-/**
- * Ghost preview for building placement.
- */
 function GhostBuilding() {
 	const groupRef = useRef<THREE.Group>(null);
 

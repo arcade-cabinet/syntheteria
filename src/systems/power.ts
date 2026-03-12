@@ -10,6 +10,8 @@ import {
 	WorldPosition,
 } from "../ecs/traits";
 import { buildings, lightningRods, units } from "../ecs/world";
+import { getStormProfileSpec } from "../world/config";
+import { getActiveWorldSession } from "../world/session";
 
 /**
  * Power system — lightning rods capture storm energy and distribute it.
@@ -31,8 +33,11 @@ let stormPhase = 0;
  */
 function updateStormIntensity(tick: number) {
 	stormPhase = tick * 0.02;
-	const { baseStormIntensity, stormOscillation, stormSurgeMax } =
-		gameplayConfig.power;
+	const session = getActiveWorldSession();
+	const profile = session
+		? getStormProfileSpec(session.config.stormProfile)
+		: gameplayConfig.power;
+	const { baseStormIntensity, stormOscillation, stormSurgeMax } = profile;
 	// Base oscillation (slow sine wave)
 	const base =
 		baseStormIntensity + stormOscillation * Math.sin(stormPhase * 0.3);
@@ -51,7 +56,7 @@ export function getStormIntensity(): number {
 function getTotalPowerGeneration(): number {
 	let total = 0;
 	for (const rod of lightningRods) {
-		const output = rod.get(LightningRod)?.rodCapacity * stormIntensity;
+		const output = rod.get(LightningRod)!.rodCapacity * stormIntensity;
 		rod.get(LightningRod)!.currentOutput = output;
 		total += output;
 	}
@@ -116,8 +121,8 @@ function distributePower() {
 		for (const building of buildings) {
 			if (building.get(Building)?.type === "lightning_rod") continue;
 
-			const dx = building.get(WorldPosition)?.x - rx;
-			const dz = building.get(WorldPosition)?.z - rz;
+			const dx = building.get(WorldPosition)!.x - rx!;
+			const dz = building.get(WorldPosition)!.z - rz!;
 			const dist = Math.sqrt(dx * dx + dz * dz);
 
 			if (dist <= radius) {
@@ -146,6 +151,18 @@ let lastPowerSnapshot: PowerSnapshot = {
 
 export function getPowerSnapshot(): PowerSnapshot {
 	return lastPowerSnapshot;
+}
+
+export function resetPowerSystem() {
+	stormIntensity = 1.0;
+	stormPhase = 0;
+	lastPowerSnapshot = {
+		totalGeneration: 0,
+		totalDemand: 0,
+		stormIntensity: 1.0,
+		rodCount: 0,
+		poweredBuildingCount: 0,
+	};
 }
 
 /**

@@ -1,6 +1,7 @@
+import { cancelAgentTask, readAIState } from "../ai";
 import gameplayConfig from "../config/gameplay.json";
 import type { Entity } from "../ecs/traits";
-import { Hacking, Identity, Signal } from "../ecs/traits";
+import { Hacking, Identity, Signal, WorldPosition } from "../ecs/traits";
 import { world } from "../ecs/world";
 
 // Mock global compute capacity for now
@@ -20,6 +21,7 @@ export function hackingSystem() {
 
 	for (const entity of hackers) {
 		const hack = entity.get(Hacking)!;
+		const identity = entity.get(Identity);
 		if (!hack.targetId) continue;
 
 		const target = world
@@ -32,11 +34,35 @@ export function hackingSystem() {
 		) {
 			// Invalid or unhackable target — cancel
 			hack.targetId = null;
+			if (identity?.id) {
+				cancelAgentTask(identity.id);
+			}
+			hack.progress = 0;
 			continue;
 		}
 
 		if (!entity.get(Signal)?.connected) {
 			// Lost signal — hack paused
+			continue;
+		}
+
+		const aiState = readAIState(entity);
+		const targetPosition = target.get(WorldPosition);
+		const sourcePosition = entity.get(WorldPosition);
+		if (
+			!aiState ||
+			aiState.task?.kind !== "hack_target" ||
+			aiState.task.phase !== "execute" ||
+			!targetPosition ||
+			!sourcePosition
+		) {
+			continue;
+		}
+
+		const dx = targetPosition.x - sourcePosition.x;
+		const dz = targetPosition.z - sourcePosition.z;
+		const dist = Math.sqrt(dx * dx + dz * dz);
+		if (dist > 3) {
 			continue;
 		}
 
@@ -54,6 +80,9 @@ export function hackingSystem() {
 			target.get(Identity)!.faction = "player";
 			hack.targetId = null;
 			hack.progress = 0;
+			if (identity?.id) {
+				cancelAgentTask(identity.id);
+			}
 		}
 	}
 }

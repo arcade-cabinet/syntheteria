@@ -60,8 +60,8 @@ export function startRepair(
 	// Validate distance
 	if (!repairer.get(WorldPosition)! || !target.get(WorldPosition)!)
 		return false;
-	const dx = repairer.get(WorldPosition)?.x - target.get(WorldPosition)?.x;
-	const dz = repairer.get(WorldPosition)?.z - target.get(WorldPosition)?.z;
+	const dx = repairer.get(WorldPosition)!.x - target.get(WorldPosition)!.x;
+	const dz = repairer.get(WorldPosition)!.z - target.get(WorldPosition)!.z;
 	const dist = Math.sqrt(dx * dx + dz * dz);
 	if (dist > REPAIR_RANGE) return false;
 
@@ -81,15 +81,15 @@ export function startRepair(
 	// Already repairing?
 	const existing = activeRepairs.find(
 		(r) =>
-			r.targetId === target.get(Identity)?.id &&
+			r.targetId === target.get(Identity)!.id &&
 			r.componentName === componentName,
 	);
 	if (existing) return false;
 
 	// Start repair (takes 5 ticks)
 	activeRepairs.push({
-		repairerId: repairer.get(Identity)?.id,
-		targetId: target.get(Identity)?.id,
+		repairerId: repairer.get(Identity)!.id,
+		targetId: target.get(Identity)!.id,
 		componentName,
 		ticksRemaining: 5,
 		totalTicks: 5,

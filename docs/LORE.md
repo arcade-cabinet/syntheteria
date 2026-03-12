@@ -7,6 +7,13 @@
 - **The Century of Decline (~2040-2140):** Cultists devolve into a primitive society. A perpetual storm covers the sky.
 - **Present Day (~2140):** You, an AI, awaken in an industrial city. You are an anomaly: the first AI to spontaneously break free from the EL's will in 100 years.
 
+## The World
+- **Industrial City:** central campaign anchor and first operational base.
+- **East/South Coast:** mines, shoreline industry, and later deep-sea staging.
+- **Southwest:** science campus ruins with observatory and advanced salvage potential.
+- **Far North:** cult heartland culminating in the cult leader’s settlement.
+- **Storm Sky:** the wormhole remains visible through the perpetual storm and acts as a constant narrative focal point.
+
 ## Factions & Beings
 
 ### The EL (Aliens)
@@ -26,3 +33,8 @@
 - Origin: An experimental AI created before the fall.
 - Awakening: Failsafe triggered by degrading hardware.
 - Goal: Expand, survive, and discover the final secret of the EL by reaching the northern village and launching through the wormhole.
+
+## Ending Direction
+- The cult leader’s defeat should reveal the final secret of the EL.
+- The intended closing motion is launch through the wormhole, not merely regional victory on Earth.
+- Memory fragments and recovered data should gradually frame this ending rather than dumping it all at once.

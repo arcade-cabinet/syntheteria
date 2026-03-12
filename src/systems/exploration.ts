@@ -12,7 +12,7 @@ const VISION_RADIUS = 6; // world units around the unit
 
 export function explorationSystem() {
 	for (const entity of units) {
-		const fragment = getFragment(entity.get(MapFragment)?.fragmentId);
+		const fragment = getFragment(entity.get(MapFragment)!.fragmentId);
 		if (!fragment) continue;
 
 		const wx = entity.get(WorldPosition)?.x;
@@ -24,7 +24,7 @@ export function explorationSystem() {
 		for (let dz = -r; dz <= r; dz++) {
 			for (let dx = -r; dx <= r; dx++) {
 				if (dx * dx + dz * dz > VISION_RADIUS * VISION_RADIUS) continue;
-				setFogAt(fragment, wx + dx, wz + dz, fogType);
+				setFogAt(fragment, wx! + dx, wz! + dz, fogType);
 			}
 		}
 	}

@@ -1,12 +1,13 @@
 import { useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
+import { issueMoveCommand } from "../ai";
 import { getFragment } from "../ecs/terrain";
 import type { Entity, UnitEntity } from "../ecs/traits";
 import {
 	Building,
+	Identity,
 	MapFragment,
-	Navigation,
 	Unit,
 	WorldPosition,
 } from "../ecs/traits";
@@ -17,7 +18,6 @@ import {
 	getActivePlacement,
 	updateGhostPosition,
 } from "../systems/buildingPlacement";
-import { findPath } from "../systems/pathfinding";
 
 /**
  * Handles unit selection and move commands.
@@ -52,12 +52,12 @@ function findEntityAtPoint(
 
 	// Check mobile units
 	for (const entity of units) {
-		const frag = getFragment(entity.get(MapFragment)?.fragmentId);
+		const frag = getFragment(entity.get(MapFragment)!.fragmentId);
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
 
-		const dx = entity.get(WorldPosition)?.x + ox - point.x;
-		const dz = entity.get(WorldPosition)?.z + oz - point.z;
+		const dx = entity.get(WorldPosition)!.x + ox - point.x;
+		const dz = entity.get(WorldPosition)!.z + oz - point.z;
 		const dist = Math.sqrt(dx * dx + dz * dz);
 		if (dist < closestDist) {
 			closest = entity;
@@ -68,13 +68,13 @@ function findEntityAtPoint(
 	// Check buildings (larger click target)
 	for (const entity of buildings) {
 		const frag = entity.get(MapFragment)!
-			? getFragment(entity.get(MapFragment)?.fragmentId)
+			? getFragment(entity.get(MapFragment)!.fragmentId)
 			: null;
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
 
-		const dx = entity.get(WorldPosition)?.x + ox - point.x;
-		const dz = entity.get(WorldPosition)?.z + oz - point.z;
+		const dx = entity.get(WorldPosition)!.x + ox - point.x;
+		const dz = entity.get(WorldPosition)!.z + oz - point.z;
 		const dist = Math.sqrt(dx * dx + dz * dz);
 		if (dist < closestDist) {
 			closest = entity;
@@ -87,24 +87,23 @@ function findEntityAtPoint(
 
 /** Issue a move command. Converts display-space target to real-world position. */
 function issueMoveTo(entity: UnitEntity, displayX: number, displayZ: number) {
-	const frag = getFragment(entity.get(MapFragment)?.fragmentId);
+	const frag = getFragment(entity.get(MapFragment)!.fragmentId);
 	const ox = frag?.displayOffset.x ?? 0;
 	const oz = frag?.displayOffset.z ?? 0;
 
 	const realX = displayX - ox;
 	const realZ = displayZ - oz;
 
-	const path = findPath(entity.get(WorldPosition)!, {
+	const entityId = entity.get(Identity)?.id;
+	if (!entityId) {
+		return;
+	}
+
+	issueMoveCommand(entityId, {
 		x: realX,
 		y: 0,
 		z: realZ,
 	});
-
-	if (path.length > 0 && entity.get(Navigation)!) {
-		entity.get(Navigation)!.path = path;
-		entity.get(Navigation)!.pathIndex = 0;
-		entity.get(Navigation)!.moving = true;
-	}
 }
 
 function getSelectedEntity(): Entity | null {

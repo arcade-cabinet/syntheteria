@@ -1,108 +1,144 @@
-/**
- * Continuous procedural terrain and fog-of-war system.
- *
- * Terrain is a continuous heightfield — height can be sampled at any (x, z).
- * Fog is tracked per-fragment on a low-res grid for rendering visibility.
- * Fragments are groups of connected robots sharing fog data.
- *
- * Display offsets: fragments appear clustered together initially, then
- * gradually drift apart to their real positions as the map fills in.
- * When only one fragment remains, display matches reality.
- */
+import { defineHex, Grid, Orientation } from "honeycomb-grid";
+import type { TerrainSetId } from "../config/terrainSetRules";
+import { createNewGameConfig, type NewGameConfig } from "../world/config";
+import { generateWorldData } from "../world/generation";
 
-// World bounds (terrain extends from -HALF to +HALF on each axis)
-export const WORLD_SIZE = 200;
-export const WORLD_HALF = WORLD_SIZE / 2;
+export interface WorldDimensions {
+	width: number;
+	height: number;
+}
 
-// Fog grid resolution — one cell per world unit
-export const FOG_RES = WORLD_SIZE;
+// In Honeycomb, "dimensions" controls the hex radius.
+// Our current terrain art is flat-top (96x83), so the grid orientation must match.
+export const HEX_SIZE = 2;
 
 export type FogState = 0 | 1 | 2; // 0=unexplored, 1=abstract, 2=detailed
+export type Biome = "water" | "sand" | "dirt" | "grass" | "mountain";
+
+// Define our custom Tile class extending Honeycomb's Hex
+export class Tile extends defineHex({
+	dimensions: HEX_SIZE,
+	orientation: Orientation.FLAT,
+}) {
+	biome: Biome = "grass";
+	fog: FogState = 0;
+	terrainSetId: TerrainSetId = "emerald_fields_and_forests";
+}
 
 export interface MapFragment {
 	id: string;
-	fog: Uint8Array; // FOG_RES * FOG_RES, row-major
+	grid: Grid<Tile>;
 	mergedWith: Set<string>;
-	// Visual offset — displaces this fragment's terrain and units for rendering.
-	// Starts non-zero (clustered) and lerps toward (0,0) = real position.
 	displayOffset: { x: number; z: number };
 }
 
-// --- Procedural terrain ---
-
-/**
- * Seed-derived phase offsets that shift the terrain sinusoids.
- * Recomputed whenever the world seed changes so the terrain is unique per seed.
- */
-let _terrainPhase = [0, 1.3, 2.7];
-
-/**
- * Call this once after setting the world seed to update terrain generation.
- */
-export function initTerrainFromSeed(seed: number) {
-	// Derive three phase offsets from the seed using cheap bit mixing
-	const a = ((seed ^ 0xdeadbeef) >>> 0) / 0xffffffff;
-	const b = ((seed * 1664525 + 1013904223) >>> 0) / 0xffffffff;
-	const c = (((seed ^ (seed >>> 16)) * 0x45d9f3b) >>> 0) / 0xffffffff;
-	_terrainPhase = [a * Math.PI * 2, b * Math.PI * 2, c * Math.PI * 2];
+export interface TerrainTileRecord {
+	q: number;
+	r: number;
+	biome: Biome;
+	fog: FogState;
+	terrainSetId: TerrainSetId;
 }
-
-/**
- * Sample terrain height at any continuous world position.
- * Returns Y value (elevation). Phase offsets vary per world seed.
- */
-export function getTerrainHeight(x: number, z: number): number {
-	const wx = x * 0.08;
-	const wz = z * 0.08;
-	const [p0, p1, p2] = _terrainPhase;
-	const h =
-		0.5 +
-		0.3 * Math.sin(wx * 1.2 + wz * 0.8 + p0) +
-		0.15 * Math.sin(wx * 2.5 + wz * 1.7 + p1) +
-		0.05 * Math.sin(wx * 5.1 + wz * 4.3 + p2);
-	return Math.max(0, Math.min(1, h)) * 0.5; // 0–0.5 elevation
-}
-
-/**
- * Is the terrain walkable at this position?
- * Water (very low terrain) is impassable.
- */
-export function isWalkable(x: number, z: number): boolean {
-	const raw = getTerrainHeight(x, z) / 0.5; // undo the *0.5 scaling
-	return raw >= 0.15; // below 0.15 is water
-}
-
-/**
- * Walk cost multiplier at a position (for weighted A*).
- * 1.0 = normal, higher = harder, 0 = impassable.
- */
-export function getWalkCost(x: number, z: number): number {
-	const raw = getTerrainHeight(x, z) / 0.5;
-	if (raw < 0.15) return 0; // water
-	if (raw < 0.3) return 1.5; // rough
-	if (raw < 0.7) return 1.0; // normal
-	return 2.0; // steep
-}
-
-// --- Fragment (fog-of-war group) management ---
 
 const fragments = new Map<string, MapFragment>();
 let nextFragmentId = 0;
+let worldDimensions: WorldDimensions = { width: 40, height: 40 };
 
-function createFogGrid(): Uint8Array {
-	return new Uint8Array(FOG_RES * FOG_RES); // all zeros = unexplored
+export function hexToWorld(q: number, r: number) {
+	const tile = new Tile({ q, r });
+	// Honeycomb's x/y are 2D layout coordinates; in world space we map y onto z.
+	return { x: tile.x, y: 0, z: tile.y };
 }
 
-export function createFragment(): MapFragment {
-	const id = `frag_${nextFragmentId++}`;
+export function worldToHex(x: number, z: number) {
+	const frag = fragments.values().next().value;
+	if (frag) {
+		const hex = frag.grid.pointToHex({ x, y: z }, { allowOutside: true });
+		return { q: hex.q, r: hex.r };
+	}
+	const dummyGrid = new Grid(Tile);
+	const hex = dummyGrid.pointToHex({ x, y: z }, { allowOutside: true });
+	return { q: hex.q, r: hex.r };
+}
+
+export function isWalkable(x: number, z: number): boolean {
+	const frag = fragments.values().next().value;
+	if (!frag) return false;
+	const hex = worldToHex(x, z);
+	const tile = frag.grid.getHex(hex);
+	if (!tile) return false;
+	return tile.biome !== "water" && tile.biome !== "mountain";
+}
+
+export function getWalkCost(x: number, z: number): number {
+	const frag = fragments.values().next().value;
+	if (!frag) return 1.0;
+	const hex = worldToHex(x, z);
+	const tile = frag.grid.getHex(hex);
+	if (!tile) return 1.0;
+	const biome = tile.biome;
+	if (biome === "water" || biome === "mountain") return 0;
+	if (biome === "sand") return 1.5;
+	if (biome === "dirt") return 1.2;
+	if (biome === "grass") return 1.0;
+	return 1.0;
+}
+
+export function getWorldDimensions() {
+	return { ...worldDimensions };
+}
+
+export function getWorldHalfExtents() {
+	return {
+		x: worldDimensions.width / 2,
+		z: worldDimensions.height / 2,
+	};
+}
+
+function buildGridFromTiles(tiles: TerrainTileRecord[]) {
+	const hexes = tiles.map((tile) => {
+		const hex = new Tile({ q: tile.q, r: tile.r });
+		hex.biome = tile.biome;
+		hex.fog = tile.fog;
+		hex.terrainSetId = tile.terrainSetId;
+		return hex;
+	});
+	return new Grid(Tile, hexes);
+}
+
+export function loadTerrainFragment(
+	tiles: TerrainTileRecord[],
+	dimensions: WorldDimensions,
+	fragmentId?: string,
+): MapFragment {
+	resetTerrainState();
+	worldDimensions = { ...dimensions };
+
+	const id = fragmentId ?? `frag_${nextFragmentId++}`;
 	const fragment: MapFragment = {
 		id,
-		fog: createFogGrid(),
+		grid: buildGridFromTiles(tiles),
 		mergedWith: new Set(),
 		displayOffset: { x: 0, z: 0 },
 	};
+
 	fragments.set(id, fragment);
 	return fragment;
+}
+
+export function createFragment(config?: NewGameConfig): MapFragment {
+	if (fragments.size > 0) {
+		return fragments.values().next().value!;
+	}
+
+	const nextConfig =
+		config ??
+		createNewGameConfig(42, {
+			mapSize: "standard",
+			climateProfile: "temperate",
+		});
+	const generatedWorld = generateWorldData(nextConfig);
+	return loadTerrainFragment(generatedWorld.tiles, generatedWorld.map);
 }
 
 export function getFragment(id: string): MapFragment | undefined {
@@ -113,30 +149,38 @@ export function getAllFragments(): MapFragment[] {
 	return Array.from(fragments.values());
 }
 
+export function getPrimaryFragment(): MapFragment | undefined {
+	return fragments.values().next().value;
+}
+
+export function requirePrimaryFragment(): MapFragment {
+	const fragment = getPrimaryFragment();
+	if (!fragment) {
+		throw new Error("No terrain fragment is loaded.");
+	}
+	return fragment;
+}
+
 export function deleteFragment(id: string) {
 	fragments.delete(id);
 }
 
-// --- Display offset management ---
+export function resetTerrainState() {
+	fragments.clear();
+	nextFragmentId = 0;
+	worldDimensions = { width: 40, height: 40 };
+}
 
-// How fast offsets decay toward zero each tick (0.003 = ~0.3% per tick)
 const DRIFT_RATE = 0.003;
 
-/**
- * Set initial display offsets that cluster all fragments close together.
- * Call after spawning all initial units.
- * Pulls each fragment's center toward the centroid of all fragment centers,
- * so they appear within `radius` of each other.
- */
 export function clusterFragments(
 	fragmentCenters: Map<string, { x: number; z: number }>,
 	radius: number,
 ) {
 	if (fragmentCenters.size <= 1) return;
 
-	// Compute centroid of all fragment centers
-	let cx = 0;
-	let cz = 0;
+	let cx = 0,
+		cz = 0;
 	for (const center of fragmentCenters.values()) {
 		cx += center.x;
 		cz += center.z;
@@ -153,27 +197,20 @@ export function clusterFragments(
 		const dist = Math.sqrt(dx * dx + dz * dz);
 
 		if (dist > radius) {
-			// Pull toward centroid so the displayed center is within `radius`
 			const scale = radius / dist;
 			const displayX = cx + dx * scale;
 			const displayZ = cz + dz * scale;
 			frag.displayOffset.x = displayX - center.x;
 			frag.displayOffset.z = displayZ - center.z;
 		}
-		// If already within radius, no offset needed
 	}
 }
 
-/**
- * Lerp all fragment display offsets toward (0, 0) — real position.
- * Called once per sim tick.
- */
 export function updateDisplayOffsets() {
 	for (const frag of fragments.values()) {
 		frag.displayOffset.x *= 1 - DRIFT_RATE;
 		frag.displayOffset.z *= 1 - DRIFT_RATE;
 
-		// Snap to zero when very close
 		if (
 			Math.abs(frag.displayOffset.x) < 0.01 &&
 			Math.abs(frag.displayOffset.z) < 0.01
@@ -184,37 +221,29 @@ export function updateDisplayOffsets() {
 	}
 }
 
+export function getTerrainHeight(x: number, z: number): number {
+	return 0; // 2.5D game, no height variation
+}
+
 // --- Fog helpers ---
 
-/** Convert world position to fog grid index. Returns -1 if out of bounds. */
-export function worldToFogIndex(x: number, z: number): number {
-	const gx = Math.floor(x + WORLD_HALF);
-	const gz = Math.floor(z + WORLD_HALF);
-	if (gx < 0 || gx >= FOG_RES || gz < 0 || gz >= FOG_RES) return -1;
-	return gz * FOG_RES + gx;
-}
-
-/** Get fog state at a world position for a fragment. */
 export function getFogAt(
 	fragment: MapFragment,
-	x: number,
-	z: number,
+	q: number,
+	r: number,
 ): FogState {
-	const idx = worldToFogIndex(x, z);
-	if (idx < 0) return 0;
-	return fragment.fog[idx] as FogState;
+	const tile = fragment.grid.getHex({ q, r });
+	return tile ? tile.fog : 0;
 }
 
-/** Set fog state at a world position (only upgrades, never downgrades). */
 export function setFogAt(
 	fragment: MapFragment,
-	x: number,
-	z: number,
+	q: number,
+	r: number,
 	state: FogState,
 ) {
-	const idx = worldToFogIndex(x, z);
-	if (idx < 0) return;
-	if (fragment.fog[idx] < state) {
-		fragment.fog[idx] = state;
+	let tile = fragment.grid.getHex({ q, r });
+	if (tile && tile.fog < state) {
+		tile.fog = state;
 	}
 }

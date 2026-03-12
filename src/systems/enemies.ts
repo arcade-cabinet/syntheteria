@@ -1,8 +1,12 @@
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { gameplayRandom } from "../ecs/seed";
-import { createFragment, getTerrainHeight, isWalkable } from "../ecs/terrain";
-import type { UnitEntity, Vec3 } from "../ecs/traits";
 import {
+	getTerrainHeight,
+	isWalkable,
+	requirePrimaryFragment,
+} from "../ecs/terrain";
+import {
+	AIController,
 	Identity,
 	MapFragment,
 	Navigation,
@@ -10,7 +14,6 @@ import {
 	WorldPosition,
 } from "../ecs/traits";
 import { units, world } from "../ecs/world";
-import { findPath } from "./pathfinding";
 
 /**
  * Enemy system — feral machines that roam the city streets.
@@ -36,9 +39,6 @@ const SPAWN_ZONES = [
 // Player has no weapons initially and must avoid them.
 const MAX_ENEMIES = 3;
 const SPAWN_INTERVAL = 60; // ticks between spawn attempts (slower spawning)
-const PATROL_RANGE = 15;
-const AGGRO_RANGE = 6; // slightly shorter aggro range — gives player more room
-
 let spawnTimer = 40; // longer initial delay so player can orient
 
 // Track enemy entities by id
@@ -69,7 +69,7 @@ function spawnEnemy() {
 	const pos = findValidSpawn();
 	if (!pos) return;
 
-	const fragment = createFragment();
+	const fragment = requirePrimaryFragment();
 	const y = getTerrainHeight(pos.x, pos.z);
 	const id = `enemy_${nextEnemyId++}`;
 
@@ -78,12 +78,18 @@ function spawnEnemy() {
 	const hasArmsRoll = gameplayRandom() > 0.3;
 
 	const entity = world.spawn(
+		AIController,
 		Identity,
 		WorldPosition,
 		MapFragment,
 		Unit,
 		Navigation,
 	);
+	entity.set(AIController, {
+		role: "hostile_machine",
+		enabled: true,
+		stateJson: null,
+	});
 	entity.set(Identity, { id, faction: "feral" as const });
 	entity.set(WorldPosition, { x: pos.x, y, z: pos.z });
 	entity.set(MapFragment, { fragmentId: fragment.id });
@@ -105,44 +111,10 @@ function spawnEnemy() {
 }
 
 /**
- * Pick a random patrol target near the enemy's position.
- */
-function getPatrolTarget(from: Vec3): Vec3 | null {
-	for (let attempt = 0; attempt < 5; attempt++) {
-		const x = from.x + (gameplayRandom() - 0.5) * PATROL_RANGE * 2;
-		const z = from.z + (gameplayRandom() - 0.5) * PATROL_RANGE * 2;
-		if (isWalkable(x, z) && !isInsideBuilding(x, z)) {
-			return { x, y: 0, z };
-		}
-	}
-	return null;
-}
-
-/**
- * Find nearest player unit within aggro range.
- */
-function findNearestPlayerUnit(enemy: UnitEntity): UnitEntity | null {
-	let closest: UnitEntity | null = null;
-	let closestDist = AGGRO_RANGE;
-
-	for (const unit of units) {
-		if (unit.get(Identity)?.faction !== "player") continue;
-		const dx = unit.get(WorldPosition)?.x - enemy.get(WorldPosition)?.x;
-		const dz = unit.get(WorldPosition)?.z - enemy.get(WorldPosition)?.z;
-		const dist = Math.sqrt(dx * dx + dz * dz);
-		if (dist < closestDist) {
-			closest = unit;
-			closestDist = dist;
-		}
-	}
-	return closest;
-}
-
-/**
- * Enemy AI tick. Called once per sim tick.
- * - Spawns new enemies periodically
- * - Patrols idle enemies
- * - Aggros on nearby player units
+ * Enemy lifecycle tick.
+ *
+ * Intent and movement execution are handled by the Yuka-backed world AI
+ * service. This system is now responsible for spawn cadence only.
  */
 export function enemySystem() {
 	// Spawn check
@@ -151,41 +123,10 @@ export function enemySystem() {
 		spawnEnemy();
 		spawnTimer = SPAWN_INTERVAL;
 	}
+}
 
-	// AI for each enemy
-	for (const unit of units) {
-		if (unit.get(Identity)?.faction !== "feral") continue;
-
-		// If moving, let it continue
-		if (unit.get(Navigation)?.moving) continue;
-
-		// Check for nearby player units to aggro
-		const target = findNearestPlayerUnit(unit);
-		if (target) {
-			// Move toward player unit
-			const path = findPath(
-				unit.get(WorldPosition)!,
-				target.get(WorldPosition)!,
-			);
-			if (path.length > 0 && unit.get(Navigation)!) {
-				unit.get(Navigation)!.path = path;
-				unit.get(Navigation)!.pathIndex = 0;
-				unit.get(Navigation)!.moving = true;
-			}
-			continue;
-		}
-
-		// Patrol randomly (30% chance per tick when idle)
-		if (gameplayRandom() < 0.3) {
-			const patrolTarget = getPatrolTarget(unit.get(WorldPosition)!);
-			if (patrolTarget) {
-				const path = findPath(unit.get(WorldPosition)!, patrolTarget);
-				if (path.length > 0 && unit.get(Navigation)!) {
-					unit.get(Navigation)!.path = path;
-					unit.get(Navigation)!.pathIndex = 0;
-					unit.get(Navigation)!.moving = true;
-				}
-			}
-		}
-	}
+export function resetEnemyState() {
+	nextEnemyId = 0;
+	spawnTimer = 40;
+	enemyIds.clear();
 }

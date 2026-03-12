@@ -1,8 +1,13 @@
 import buildingsConfig from "../config/buildings.json";
 import unitsConfig from "../config/units.json";
-import { createFragment, getFragment, getTerrainHeight } from "./terrain";
+import {
+	getFragment,
+	getTerrainHeight,
+	requirePrimaryFragment,
+} from "./terrain";
 import type { Entity, UnitComponent, UnitEntity } from "./traits";
 import {
+	AIController,
 	Building,
 	Identity,
 	LightningRod,
@@ -18,6 +23,24 @@ import { world } from "./world";
  */
 
 let nextEntityId = 0;
+
+export function resetFactoryEntityIds() {
+	nextEntityId = 0;
+}
+
+export function registerExistingEntityId(id: string) {
+	const match = id.match(/_(\d+)$/);
+	if (!match) {
+		return;
+	}
+
+	const numericId = Number.parseInt(match[1], 10);
+	if (Number.isNaN(numericId)) {
+		return;
+	}
+
+	nextEntityId = Math.max(nextEntityId, numericId + 1);
+}
 
 /**
  * Spawn a maintenance bot at a world position.
@@ -49,12 +72,13 @@ export function spawnUnit(options: {
 		fragment = getFragment(options.fragmentId);
 		if (!fragment) throw new Error(`Fragment ${options.fragmentId} not found`);
 	} else {
-		fragment = createFragment();
+		fragment = requirePrimaryFragment();
 	}
 
 	const y = getTerrainHeight(x, z);
 
 	const entity = world.spawn(
+		AIController,
 		Identity,
 		WorldPosition,
 		MapFragment,
@@ -64,6 +88,11 @@ export function spawnUnit(options: {
 	entity.set(Identity, {
 		id: `unit_${nextEntityId++}`,
 		faction: "player" as const,
+	});
+	entity.set(AIController, {
+		role: "player_unit",
+		enabled: true,
+		stateJson: null,
 	});
 	entity.set(WorldPosition, { x, y, z });
 	entity.set(MapFragment, { fragmentId: fragment.id });
@@ -93,6 +122,7 @@ export function spawnFabricationUnit(options: {
 	const powered = options.powered ?? false;
 
 	const entity = world.spawn(
+		AIController,
 		Identity,
 		WorldPosition,
 		MapFragment,
@@ -103,6 +133,11 @@ export function spawnFabricationUnit(options: {
 	entity.set(Identity, {
 		id: `fab_${nextEntityId++}`,
 		faction: "player" as const,
+	});
+	entity.set(AIController, {
+		role: "player_unit",
+		enabled: true,
+		stateJson: null,
 	});
 	entity.set(WorldPosition, { x: options.x, y, z: options.z });
 	entity.set(MapFragment, { fragmentId: options.fragmentId });

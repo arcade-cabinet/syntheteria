@@ -1,3 +1,4 @@
+import { aiSystem } from "../ai";
 import {
 	type CombatEvent,
 	combatSystem,
@@ -12,6 +13,12 @@ import {
 } from "../systems/fabrication";
 import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge";
 import { hackingSystem } from "../systems/hacking";
+import { movementSystem } from "../systems/movement";
+import {
+	getActiveThought,
+	narrativeSystem,
+	type Thought,
+} from "../systems/narrative";
 import {
 	getPowerSnapshot,
 	type PowerSnapshot,
@@ -24,18 +31,23 @@ import {
 	resourceSystem,
 } from "../systems/resources";
 import { signalNetworkSystem } from "../systems/signalNetworkSystem";
+import { persistenceSystem } from "../world/persistenceSystem";
+import { poiSystem } from "../world/poiSystem";
+import { getRuntimeState, setRuntimeTick } from "../world/runtimeState";
 import {
 	getAllFragments,
 	type MapFragment,
 	updateDisplayOffsets,
 } from "./terrain";
-import { Identity } from "./traits";
-import { units } from "./world";
-
-/**
- * Global game state and simulation tick manager.
- * Bridges ECS mutable state to React via useSyncExternalStore.
- */
+import {
+	Building,
+	Identity,
+	MapFragment as MapFragmentTrait,
+	Narrative,
+	Unit,
+	WorldPosition,
+} from "./traits";
+import { buildings, units, world } from "./world";
 
 export interface GameSnapshot {
 	tick: number;
@@ -49,6 +61,10 @@ export interface GameSnapshot {
 	power: PowerSnapshot;
 	resources: ResourcePool;
 	fabricationJobs: FabricationJob[];
+	activeThought: Thought | null;
+	activeScene: "world" | "city";
+	activeCityInstanceId: number | null;
+	nearbyPoiName: string | null;
 }
 
 let tick = 0;
@@ -57,14 +73,32 @@ let paused = false;
 let lastMergeEvents: MergeEvent[] = [];
 const listeners = new Set<() => void>();
 let snapshot: GameSnapshot | null = null;
+const FIXED_SIM_STEP_SECONDS = 1 / 60;
 
 function buildSnapshot(): GameSnapshot {
 	let playerCount = 0;
 	let enemyCount = 0;
+
+	if (tick % 60 === 0) {
+		console.log("Total entities in world:", world.entities.length);
+		for (const e of world.entities) {
+			const traits = [];
+			if (e.has(Identity)) traits.push("Identity");
+			if (e.has(Unit)) traits.push("Unit");
+			if (e.has(Building)) traits.push("Building");
+			if (e.has(WorldPosition)) traits.push("WorldPosition");
+			if (e.has(MapFragmentTrait)) traits.push("MapFragment");
+			if (e.has(Narrative)) traits.push("Narrative");
+			console.log(`Entity ${e.id}: [${traits.join(", ")}]`);
+		}
+	}
+
 	for (const u of units) {
-		if (u.get(Identity)?.faction === "player") playerCount++;
+		const id = u.get(Identity);
+		if (id?.faction === "player") playerCount++;
 		else enemyCount++;
 	}
+
 	return {
 		tick,
 		gameSpeed,
@@ -77,57 +111,11 @@ function buildSnapshot(): GameSnapshot {
 		power: getPowerSnapshot(),
 		resources: getResources(),
 		fabricationJobs: getActiveJobs(),
+		activeThought: getActiveThought(),
+		activeScene: getRuntimeState().activeScene,
+		activeCityInstanceId: getRuntimeState().activeCityInstanceId,
+		nearbyPoiName: getRuntimeState().nearbyPoi?.name ?? null,
 	};
-}
-
-export function getGameSpeed(): number {
-	return paused ? 0 : gameSpeed;
-}
-
-export function setGameSpeed(speed: number) {
-	gameSpeed = Math.max(0.5, Math.min(4, speed));
-	snapshot = null;
-	notify();
-}
-
-export function togglePause() {
-	paused = !paused;
-	snapshot = null;
-	notify();
-}
-
-export function isPaused(): boolean {
-	return paused;
-}
-
-/**
- * Run one simulation tick. Called at fixed intervals adjusted by game speed.
- */
-export function simulationTick() {
-	if (paused) return;
-
-	tick++;
-
-	explorationSystem();
-	lastMergeEvents = fragmentMergeSystem();
-	powerSystem(tick);
-	signalNetworkSystem();
-	resourceSystem();
-	repairSystem();
-	fabricationSystem();
-	enemySystem();
-	combatSystem();
-	hackingSystem();
-	updateDisplayOffsets();
-
-	snapshot = null;
-	notify();
-}
-
-function notify() {
-	for (const listener of listeners) {
-		listener();
-	}
 }
 
 export function subscribe(listener: () => void): () => void {
@@ -140,4 +128,72 @@ export function getSnapshot(): GameSnapshot {
 		snapshot = buildSnapshot();
 	}
 	return snapshot;
+}
+
+export function setGameSpeed(speed: number) {
+	gameSpeed = speed;
+	snapshot = null;
+	notify();
+}
+
+export function togglePause() {
+	paused = !paused;
+	snapshot = null;
+	notify();
+}
+
+function notify() {
+	for (const listener of listeners) {
+		listener();
+	}
+}
+
+export function simulationTick() {
+	if (paused) {
+		return;
+	}
+
+	tick++;
+	setRuntimeTick(tick);
+
+	const delta = FIXED_SIM_STEP_SECONDS * gameSpeed;
+
+	enemySystem();
+	aiSystem(delta, tick);
+	movementSystem(delta, gameSpeed);
+	explorationSystem();
+	lastMergeEvents = fragmentMergeSystem();
+	powerSystem(tick);
+	signalNetworkSystem();
+	resourceSystem();
+	repairSystem();
+	fabricationSystem();
+	combatSystem();
+	hackingSystem();
+	narrativeSystem();
+	poiSystem();
+	persistenceSystem(tick);
+	updateDisplayOffsets();
+
+	snapshot = null;
+	notify();
+}
+
+export function resetGameState() {
+	tick = 0;
+	gameSpeed = 1.0;
+	paused = false;
+	lastMergeEvents = [];
+	snapshot = null;
+}
+
+const simulationInterval = setInterval(simulationTick, 1000 / 60);
+
+if (
+	typeof simulationInterval === "object" &&
+	simulationInterval !== null &&
+	"unref" in simulationInterval &&
+	typeof simulationInterval.unref === "function"
+) {
+	simulationInterval.unref();
 }

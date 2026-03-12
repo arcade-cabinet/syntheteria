@@ -1,304 +1,436 @@
-import { useEffect, useRef, useState } from "react";
-import { phraseToSeed, randomSeed, seedToPhrase } from "../ecs/seed";
-/**
- * Main title screen — "SYNTHETERIA" in large text with seed phrase and New Game.
- *
- * Every world has a three-word seed phrase (adj-adj-noun) derived from a
- * 32-bit numeric seed.  A random phrase is generated on first load.
- * The player can type a different phrase (or a raw number) to reproduce
- * a specific world — like entering a Minecraft seed.
- *
- * The phrase is passed to onNewGame() so App can set the world seed before
- * initialising the game.
- */
+import React, { useEffect, useState } from "react";
+import {
+	Image,
+	ImageBackground,
+	type ImageSourcePropType,
+	Pressable,
+	Text,
+	View,
+} from "react-native";
+import Animated, {
+	useAnimatedStyle,
+	useSharedValue,
+	withDelay,
+	withSequence,
+	withSpring,
+	withTiming,
+} from "react-native-reanimated";
+import backgroundImage from "../../assets/ui/background.png";
+import type { MenuButtonId } from "../config/uiMenuAssets";
+import { uiMenuAssets } from "../config/uiMenuAssets";
+import { getSaveGameCountSync } from "../db/saveGames";
+import type { NewGameConfig } from "../world/config";
+import {
+	DrizzleIcon,
+	ExpoIcon,
+	MapIcon,
+	ReactIcon,
+	ShardIcon,
+	TSIcon,
+} from "./icons";
+import { LoadingOverlay } from "./LoadingOverlay";
+import { NewGameModal } from "./NewGameModal";
+import { getTitleMenuLayout } from "./titleScreenModel";
+
+const titleBackground = backgroundImage as ImageSourcePropType;
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+type TitleScreenProps = {
+	onContinueGame: () => Promise<void> | void;
+	onNewGame: (config: NewGameConfig) => Promise<void> | void;
+	isLoading?: boolean;
+	loadingLabel?: string;
+	saveGameCountOverride?: number;
+	useBackgroundImage?: boolean;
+	useImageButtons?: boolean;
+	showDiagnosticHud?: boolean;
+};
+
+type MenuButtonSpec = {
+	id: MenuButtonId;
+	label: string;
+	meta: string;
+	onPress?: () => void;
+};
 
 export function TitleScreen({
+	onContinueGame,
 	onNewGame,
-}: {
-	onNewGame: (seed: number) => void;
-}) {
-	const [titleOpacity, setTitleOpacity] = useState(0);
-	const [menuOpacity, setMenuOpacity] = useState(0);
-	const [glitch, setGlitch] = useState(false);
-
-	// Seed state — one random seed at startup, shown as a phrase
-	const [phraseInput, setPhraseInput] = useState(() =>
-		seedToPhrase(randomSeed()),
+	isLoading = false,
+	loadingLabel = "Hydrating world",
+	saveGameCountOverride,
+	useBackgroundImage = true,
+	useImageButtons = true,
+	showDiagnosticHud = true,
+}: TitleScreenProps) {
+	const [saveGameCount, setSaveGameCount] = useState(
+		saveGameCountOverride ?? 0,
 	);
-	const [parseError, setParseError] = useState(false);
-	const inputRef = useRef<HTMLInputElement>(null);
+	const [showNewGameModal, setShowNewGameModal] = useState(false);
+	const [showSettings, setShowSettings] = useState(false);
+
+	const deckOpacity = useSharedValue(0);
+	const hudOpacity = useSharedValue(0);
+	const shimmer = useSharedValue(0);
 
 	useEffect(() => {
-		const t1 = setTimeout(() => setTitleOpacity(1), 200);
-		const t2 = setTimeout(() => setMenuOpacity(1), 1200);
-		return () => {
-			clearTimeout(t1);
-			clearTimeout(t2);
-		};
-	}, []);
-
-	// Periodic glitch effect on title
-	useEffect(() => {
-		const interval = setInterval(
-			() => {
-				setGlitch(true);
-				setTimeout(() => setGlitch(false), 100 + Math.random() * 150);
-			},
-			3000 + Math.random() * 4000,
-		);
-		return () => clearInterval(interval);
-	}, []);
-
-	const handleNewGame = () => {
-		const parsed = phraseToSeed(phraseInput);
-		if (parsed === null) {
-			setParseError(true);
-			inputRef.current?.focus();
-			return;
+		if (saveGameCountOverride === undefined) {
+			setSaveGameCount(getSaveGameCountSync());
+		} else {
+			setSaveGameCount(saveGameCountOverride);
 		}
-		setParseError(false);
-		onNewGame(parsed);
-	};
 
-	const handlePhraseChange = (val: string) => {
-		setPhraseInput(val);
-		setParseError(false);
-	};
+		deckOpacity.value = withDelay(180, withTiming(1, { duration: 900 }));
+		hudOpacity.value = withDelay(420, withTiming(1, { duration: 1100 }));
 
-	const shuffleSeed = () => {
-		const s = randomSeed();
-		setPhraseInput(seedToPhrase(s));
-		setParseError(false);
-	};
+		const pulse = setInterval(() => {
+			shimmer.value = withSequence(
+				withTiming(1, { duration: 420 }),
+				withTiming(0, { duration: 1600 }),
+			);
+		}, 4200);
 
-	return (
-		<div
-			style={{
-				position: "absolute",
-				inset: 0,
-				background: "#000",
-				display: "flex",
-				flexDirection: "column",
-				alignItems: "center",
-				justifyContent: "center",
-				zIndex: 200,
-			}}
-		>
-			{/* Scanline overlay */}
-			<div
-				style={{
-					position: "absolute",
-					inset: 0,
-					background:
-						"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,170,0.03) 2px, rgba(0,255,170,0.03) 4px)",
-					pointerEvents: "none",
+		return () => clearInterval(pulse);
+	}, [deckOpacity, hudOpacity, saveGameCountOverride, shimmer]);
+
+	const deckStyle = useAnimatedStyle(() => ({
+		opacity: deckOpacity.value,
+		transform: [{ translateY: (1 - deckOpacity.value) * -18 }],
+	}));
+
+	const hudStyle = useAnimatedStyle(() => ({
+		opacity: hudOpacity.value,
+	}));
+
+	const shimmerStyle = useAnimatedStyle(() => ({
+		opacity: shimmer.value * 0.35,
+	}));
+
+	const menuButtons: MenuButtonSpec[] = getTitleMenuLayout(saveGameCount).map(
+		(button) => ({
+			...button,
+			onPress:
+				button.id === "new_game"
+					? () => setShowNewGameModal(true)
+					: button.id === "load_game"
+						? () => {
+								void onContinueGame();
+							}
+						: () => setShowSettings(true),
+		}),
+	);
+
+	const content = (
+		<>
+			<View className="absolute inset-0 bg-[#02050b]/18" />
+			<View className="absolute inset-x-0 top-0 h-56 bg-[#03070d]/70" />
+			<View className="absolute inset-x-0 top-0 h-40 bg-[#09131f]/28" />
+
+			<Animated.View
+				style={[shimmerStyle]}
+				className="absolute left-0 top-0 h-32 w-full bg-[#7fe5ff]/10"
+			/>
+
+			<Animated.View style={deckStyle} className="px-4 pb-3 pt-safe">
+				<View className="mx-auto mt-4 w-full max-w-[1120px] items-center">
+					<View className="w-full rounded-[28px] border border-white/10 bg-[#07111b]/68 px-4 py-4 shadow-2xl">
+						<View className="items-center">
+							<Text className="font-mono text-[10px] uppercase tracking-[0.32em] text-[#95dff0]">
+								Stormfront Relay
+							</Text>
+							<Text className="mt-1 font-mono text-[11px] text-white/45">
+								Distributed machine consciousness emerging across a ruined world
+							</Text>
+						</View>
+
+						<View
+							className={`mt-5 flex-row items-start justify-center gap-3 ${
+								saveGameCount > 0 ? "flex-nowrap" : "max-w-[760px] self-center"
+							}`}
+						>
+							{menuButtons.map((button) => (
+								<HeroMenuButton
+									key={button.id}
+									buttonId={button.id}
+									label={button.label}
+									meta={button.meta}
+									onPress={button.onPress}
+									compact={saveGameCount === 0}
+									useImageAsset={useImageButtons}
+								/>
+							))}
+						</View>
+
+						<View className="mt-5 rounded-[24px] border border-[#8dd6e6]/18 bg-[#061018]/72 px-4 py-3">
+							<View className="flex-row items-center justify-between">
+								<View>
+									<Text className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#8ed7e8]">
+										Persistence Pipeline
+									</Text>
+									<Text className="mt-1 font-mono text-[11px] text-white/40">
+										Save metadata, world map, POIs, and city seeds now route
+										through Expo SQLite before scene load.
+									</Text>
+								</View>
+								<View className="rounded-full border border-white/8 bg-white/5 px-3 py-1">
+									<Text className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
+										Outdoor Generation Online
+									</Text>
+								</View>
+							</View>
+						</View>
+					</View>
+				</View>
+			</Animated.View>
+
+			{showDiagnosticHud && (
+				<Animated.View
+					style={hudStyle}
+					className="absolute bottom-12 left-0 w-full px-4"
+				>
+					<View className="mx-auto w-full max-w-[980px] flex-row items-end justify-between">
+						<View className="rounded-[22px] border border-white/8 bg-[#071018]/74 px-4 py-3">
+							<View className="flex-row items-center gap-3">
+								<StatusPill
+									label="World"
+									value="Perpetual Storm"
+									icon={<MapIcon width={14} height={14} color="#8ed7e8" />}
+								/>
+								<StatusPill
+									label="Directive"
+									value="Awaken // Connect // Rebuild"
+									icon={<ShardIcon width={14} height={14} color="#8ed7e8" />}
+								/>
+							</View>
+						</View>
+
+						<View className="items-end gap-3">
+							<View className="flex-row gap-3 opacity-35">
+								<ReactIcon width={18} height={18} color="#8ed7e8" />
+								<ExpoIcon width={18} height={18} color="#8ed7e8" />
+								<DrizzleIcon width={18} height={18} color="#8ed7e8" />
+								<TSIcon width={18} height={18} color="#8ed7e8" />
+							</View>
+							<Text className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/32">
+								v0.1.0 • persistent world foundation
+							</Text>
+						</View>
+					</View>
+				</Animated.View>
+			)}
+
+			<NewGameModal
+				visible={showNewGameModal}
+				onCancel={() => setShowNewGameModal(false)}
+				onConfirm={(config) => {
+					setShowNewGameModal(false);
+					void onNewGame(config);
 				}}
 			/>
 
-			{/* Title */}
-			<div
-				style={{
-					opacity: titleOpacity,
-					transition: "opacity 1.5s ease-in-out",
-					fontFamily: "'Courier New', monospace",
-					fontSize: "clamp(32px, 8vw, 72px)",
-					fontWeight: "bold",
-					letterSpacing: "0.3em",
-					color: "#00ffaa",
-					textShadow: glitch
-						? "3px 0 #ff0044, -3px 0 #0044ff, 0 0 40px rgba(0,255,170,0.6)"
-						: "0 0 40px rgba(0,255,170,0.4), 0 0 80px rgba(0,255,170,0.15), 0 0 2px #00ffaa",
-					transform: glitch
-						? `translate(${Math.random() * 4 - 2}px, ${Math.random() * 2 - 1}px)`
-						: "none",
-					userSelect: "none",
-					textAlign: "center",
-					padding: "0 16px",
-				}}
-			>
-				SYNTHETERIA
-			</div>
+			{showSettings && (
+				<SettingsOverlay onClose={() => setShowSettings(false)} />
+			)}
+			{isLoading && <LoadingOverlay label={loadingLabel} />}
+		</>
+	);
 
-			{/* Subtitle */}
-			<div
-				style={{
-					opacity: titleOpacity * 0.6,
-					transition: "opacity 2s ease-in-out",
-					fontFamily: "'Courier New', monospace",
-					fontSize: "clamp(11px, 2vw, 16px)",
-					color: "#00ffaa",
-					letterSpacing: "0.5em",
-					marginTop: "12px",
-					textShadow: "0 0 20px rgba(0,255,170,0.3)",
-					textAlign: "center",
-				}}
-			>
-				{"AWAKEN // CONNECT // REBUILD"}
-			</div>
-
-			{/* Menu */}
-			<div
-				style={{
-					marginTop: "clamp(32px, 6vh, 64px)",
-					opacity: menuOpacity,
-					transition: "opacity 1s ease-in-out",
-					display: "flex",
-					flexDirection: "column",
-					alignItems: "center",
-					gap: "12px",
-					width: "min(320px, 88vw)",
-				}}
-			>
-				{/* World seed input */}
-				<div style={{ width: "100%" }}>
-					<div
-						style={{
-							fontFamily: "'Courier New', monospace",
-							fontSize: "clamp(10px, 2.5vw, 12px)",
-							color: "rgba(0,255,170,0.5)",
-							letterSpacing: "0.2em",
-							marginBottom: "6px",
-							textAlign: "center",
-						}}
-					>
-						WORLD SEED
-					</div>
-					<div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-						<input
-							ref={inputRef}
-							value={phraseInput}
-							onChange={(e) => handlePhraseChange(e.target.value)}
-							onKeyDown={(e) => e.key === "Enter" && handleNewGame()}
-							spellCheck={false}
-							autoComplete="off"
-							style={{
-								flex: 1,
-								background: "rgba(0,255,170,0.05)",
-								border: parseError
-									? "1px solid #ff4444"
-									: "1px solid rgba(0,255,170,0.35)",
-								borderRadius: "4px",
-								color: parseError ? "#ff8866" : "#00ffaa",
-								fontFamily: "'Courier New', monospace",
-								fontSize: "clamp(12px, 3vw, 14px)",
-								padding: "8px 10px",
-								letterSpacing: "0.05em",
-								outline: "none",
-								width: "100%",
-								textAlign: "center",
-								caretColor: "#00ffaa",
-							}}
-							placeholder="hollow-bright-forge"
-						/>
-						{/* Shuffle button */}
-						<button
-							onClick={shuffleSeed}
-							title="Random seed"
-							style={{
-								background: "rgba(0,255,170,0.07)",
-								border: "1px solid rgba(0,255,170,0.3)",
-								borderRadius: "4px",
-								color: "#00ffaa",
-								fontFamily: "'Courier New', monospace",
-								fontSize: "16px",
-								padding: "8px 10px",
-								cursor: "pointer",
-								flexShrink: 0,
-								lineHeight: 1,
-							}}
-						>
-							⟳
-						</button>
-					</div>
-					{parseError && (
-						<div
-							style={{
-								color: "#ff6644",
-								fontFamily: "'Courier New', monospace",
-								fontSize: "11px",
-								marginTop: "4px",
-								textAlign: "center",
-							}}
-						>
-							unrecognised seed — use adj-adj-noun or a number
-						</div>
-					)}
-				</div>
-
-				<MenuButton label="NEW GAME" onClick={handleNewGame} primary />
-				<MenuButton label="CONTINUE" disabled />
-				<MenuButton label="SETTINGS" disabled />
-			</div>
-
-			{/* Version */}
-			<div
-				style={{
-					position: "absolute",
-					bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
-					fontFamily: "'Courier New', monospace",
-					fontSize: "11px",
-					color: "rgba(0,255,170,0.3)",
-					letterSpacing: "0.15em",
-				}}
-			>
-				v0.1.0 — PHASE 1 PROTOTYPE
-			</div>
-		</div>
+	return (
+		<View className="absolute inset-0 z-50 flex-1 bg-black">
+			{useBackgroundImage ? (
+				<ImageBackground
+					source={titleBackground}
+					resizeMode="cover"
+					className="flex-1"
+				>
+					{content}
+				</ImageBackground>
+			) : (
+				<View className="flex-1 bg-[#03070d]">{content}</View>
+			)}
+		</View>
 	);
 }
 
-function MenuButton({
+function HeroMenuButton({
+	buttonId,
 	label,
-	onClick,
-	primary,
-	disabled,
+	meta,
+	onPress,
+	compact = false,
+	useImageAsset = true,
 }: {
+	buttonId: MenuButtonId;
 	label: string;
-	onClick?: () => void;
-	primary?: boolean;
-	disabled?: boolean;
+	meta: string;
+	onPress?: () => void;
+	compact?: boolean;
+	useImageAsset?: boolean;
 }) {
-	const [hovered, setHovered] = useState(false);
+	const scale = useSharedValue(1);
+	const glow = useSharedValue(0.55);
+	const buttonSource = uiMenuAssets[buttonId].imageAsset as ImageSourcePropType;
+
+	const animatedStyle = useAnimatedStyle(() => ({
+		transform: [{ scale: scale.value }],
+	}));
+
+	const glowStyle = useAnimatedStyle(() => ({
+		opacity: glow.value,
+	}));
 
 	return (
-		<button
-			onClick={disabled ? undefined : onClick}
-			onMouseEnter={() => setHovered(true)}
-			onMouseLeave={() => setHovered(false)}
-			disabled={disabled}
-			style={{
-				background: disabled
-					? "transparent"
-					: hovered
-						? "rgba(0,255,170,0.15)"
-						: "transparent",
-				color: disabled ? "rgba(0,255,170,0.25)" : "#00ffaa",
-				border: disabled
-					? "1px solid rgba(0,255,170,0.15)"
-					: primary && hovered
-						? "1px solid #00ffaa"
-						: "1px solid rgba(0,255,170,0.4)",
-				borderRadius: "4px",
-				padding: "12px 0",
-				fontSize: "clamp(14px, 3.5vw, 16px)",
-				fontFamily: "'Courier New', monospace",
-				letterSpacing: "0.2em",
-				cursor: disabled ? "default" : "pointer",
-				width: "100%",
-				transition: "all 0.2s ease",
-				textShadow: disabled
-					? "none"
-					: hovered
-						? "0 0 10px rgba(0,255,170,0.5)"
-						: "none",
-				boxShadow:
-					primary && hovered
-						? "0 0 20px rgba(0,255,170,0.2), inset 0 0 20px rgba(0,255,170,0.05)"
-						: "none",
-				minHeight: "48px",
-			}}
+		<View
+			className={`${compact ? "w-[380px]" : "flex-1 max-w-[320px]"} items-center`}
 		>
-			{primary && !disabled ? `[ ${label} ]` : label}
-		</button>
+			<AnimatedPressable
+				onPress={onPress}
+				onHoverIn={() => {
+					scale.value = withSpring(1.03, { damping: 18, stiffness: 220 });
+					glow.value = withTiming(0.95, { duration: 160 });
+				}}
+				onHoverOut={() => {
+					scale.value = withSpring(1, { damping: 18, stiffness: 220 });
+					glow.value = withTiming(0.55, { duration: 220 });
+				}}
+				onPressIn={() => {
+					scale.value = withSpring(0.985, { damping: 20, stiffness: 260 });
+					glow.value = withTiming(1, { duration: 90 });
+				}}
+				onPressOut={() => {
+					scale.value = withSpring(1.02, { damping: 18, stiffness: 220 });
+					glow.value = withTiming(0.8, { duration: 180 });
+				}}
+				className="w-full items-center justify-center"
+				style={animatedStyle}
+			>
+				<Animated.View
+					pointerEvents="none"
+					style={glowStyle}
+					className="absolute inset-x-6 top-8 bottom-8 rounded-[28px] bg-[#7fe5ff]/20 blur-2xl"
+				/>
+				{useImageAsset ? (
+					<Image
+						source={buttonSource}
+						resizeMode="contain"
+						className={`${compact ? "h-[148px]" : "h-[128px]"} w-full`}
+					/>
+				) : (
+					<View className="w-full rounded-[28px] border border-[#8be6ff]/26 bg-[#0b1822]/88 px-5 py-6">
+						<View className="rounded-[20px] border border-white/8 bg-[#050c12]/82 px-4 py-5">
+							<Text className="font-mono text-[18px] uppercase tracking-[0.2em] text-[#ecfbff]">
+								{label}
+							</Text>
+							<Text className="mt-3 font-mono text-[11px] uppercase tracking-[0.16em] text-[#8fdcec]">
+								{meta}
+							</Text>
+						</View>
+					</View>
+				)}
+			</AnimatedPressable>
+			<Text className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[#8fdcec]">
+				{label} • {meta}
+			</Text>
+		</View>
+	);
+}
+
+function SettingsOverlay({ onClose }: { onClose: () => void }) {
+	return (
+		<View className="absolute inset-0 items-center justify-center bg-[#02050a]/68 px-4">
+			<View className="w-full max-w-[760px] rounded-[28px] border border-[#8be6ff]/18 bg-[#07111b]/94 px-6 py-6 shadow-2xl">
+				<Text className="font-mono text-[11px] uppercase tracking-[0.28em] text-[#8be6ff]">
+					Settings
+				</Text>
+				<Text className="mt-2 font-mono text-[13px] leading-5 text-white/52">
+					Display, audio, and input calibration live here. World generation
+					parameters are intentionally isolated to the New Game flow.
+				</Text>
+
+				<View className="mt-5 flex-row gap-4">
+					<SettingsCard
+						title="Display"
+						lines={[
+							"Render scale // Auto",
+							"UI contrast // High",
+							"Shimmer // Enabled",
+						]}
+					/>
+					<SettingsCard
+						title="Audio"
+						lines={[
+							"Master bus // 82%",
+							"Storm bed // 74%",
+							"Interface tones // 66%",
+						]}
+					/>
+					<SettingsCard
+						title="Input"
+						lines={[
+							"Pointer mode // Hybrid",
+							"Pan assist // Enabled",
+							"Zoom damping // Standard",
+						]}
+					/>
+				</View>
+
+				<View className="mt-5 flex-row justify-end">
+					<Pressable
+						onPress={onClose}
+						className="rounded-[16px] border border-[#8be6ff]/28 bg-[#0e2631] px-4 py-3"
+					>
+						<Text className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#e6f8ff]">
+							Close Settings
+						</Text>
+					</Pressable>
+				</View>
+			</View>
+		</View>
+	);
+}
+
+function SettingsCard({ title, lines }: { title: string; lines: string[] }) {
+	return (
+		<View className="flex-1 rounded-[20px] border border-white/8 bg-[#08131a]/80 px-4 py-4">
+			<Text className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#8ed7e8]">
+				{title}
+			</Text>
+			<View className="mt-3 gap-2">
+				{lines.map((line) => (
+					<Text
+						key={line}
+						className="font-mono text-[11px] leading-5 text-white/52"
+					>
+						{line}
+					</Text>
+				))}
+			</View>
+		</View>
+	);
+}
+
+function StatusPill({
+	label,
+	value,
+	icon,
+}: {
+	label: string;
+	value: string;
+	icon: React.ReactNode;
+}) {
+	return (
+		<View className="rounded-full border border-white/8 bg-[#08111a]/82 px-3 py-2">
+			<View className="flex-row items-center gap-2">
+				{icon}
+				<View>
+					<Text className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/35">
+						{label}
+					</Text>
+					<Text className="font-mono text-[10px] uppercase tracking-[0.08em] text-[#d8f5ff]">
+						{value}
+					</Text>
+				</View>
+			</View>
+		</View>
 	);
 }

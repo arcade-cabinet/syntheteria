@@ -1,4 +1,5 @@
 import { type Entity as KootaEntity, trait } from "koota";
+import type { AgentRole } from "../ai";
 
 export type Entity = KootaEntity;
 export type UnitEntity = KootaEntity;
@@ -22,7 +23,19 @@ export const Identity = trait({
 	faction: "player" as "player" | "cultist" | "rogue" | "feral" | "wildlife",
 });
 
-// Continuous 3D position (single source of truth)
+// Which scene the entity belongs to
+export const Scene = trait({
+	location: "world" as "world" | "interior",
+	buildingId: null as string | null, // If interior, which building
+});
+
+// Hex-grid logical position (Axial coordinates: q, r)
+export const GridPosition = trait({ q: 0, r: 0 });
+
+// Y-axis rotation (radians) for 3D model turning
+export const Rotation = trait({ y: 0 });
+
+// Continuous 3D position (single source of truth for rendering interpolation)
 export const WorldPosition = trait({ x: 0, y: 0, z: 0 });
 
 // Which map fragment this entity belongs to (for fog-of-war grouping)
@@ -40,11 +53,18 @@ export const Unit = trait(() => ({
 	components: [] as UnitComponent[],
 }));
 
-// Navigation — navmesh path as world-space waypoints
+// Navigation — hex-grid pathing
 export const Navigation = trait(() => ({
-	path: [] as Vec3[],
+	path: [] as { q: number; r: number }[],
 	pathIndex: 0,
 	moving: false,
+}));
+
+// AI ownership and persisted runtime state metadata
+export const AIController = trait(() => ({
+	role: "player_unit" as AgentRole,
+	enabled: true,
+	stateJson: null as string | null,
 }));
 
 // Building / facility
@@ -83,6 +103,14 @@ export const Hacking = trait({
 	progress: 0, // 0..1
 	computeCostPerTick: 0,
 });
+
+// Narrative and Onboarding state
+export const Narrative = trait(() => ({
+	consciousnessLevel: 0, // 0: Void, 1: Sensorium, 2: Self-Aware
+	unlockedThoughts: [] as string[],
+	completedTutorialSteps: [] as string[],
+	lastThoughtId: null as string | null,
+}));
 
 // --- Component helpers ---
 export function hasCamera(entity: Entity): boolean {

@@ -15,11 +15,13 @@ The Macro level focuses on cross-cutting architecture and transitioning from the
 ### 2. Meso Plan (System-Level Milestones)
 The Meso level breaks down Macro goals into distinct system tasks using the new Koota architecture.
 - **Focus Areas:**
-  - **Koota Trait Definitions:** Define strict traits (`Transform`, `Signal`, `Hacking`, etc.) to replace old interfaces.
-  - **System Migration:** Port `hacking.ts`, `signalNetworkSystem.ts`, and core loop logic into Koota systems.
-  - **Persistence Layer:** Setup Drizzle ORM schemas with Expo SQLite to serialize necessary game state (inventory, unlocks, map discovery) distinct from the ECS loop.
-  - **Audio/UI Hooks:** Implement Tone.js `AmbienceManager` (using a hidden WebView bridge for native if needed) and Reanimated UI transitions.
-- **Execution:** Execute via dedicated tickets. Each system needs Jest tests before integration.
+  - **AI Foundation:** Build Yuka-backed behavior through `src/ai` with explicit bridge, navigation, task, perception, and serialization boundaries before expanding downstream AI consumers.
+  - **Campaign Persistence:** Extend Expo SQLite + Drizzle-backed save state for world tiles, POIs, actors, city instances, and campaign deltas.
+  - **World Generation:** Continue improving deterministic biome, climate, storm, and POI generation using `NewGameConfig`.
+  - **World/City Transitions:** Build true scene transitions and city-instance loading instead of city modal abstractions.
+  - **City Assemblage:** Lock the square-grid assembly contract and then classify Quaternius modules against it.
+  - **Strategic Systems:** Continue hacking, signal/compute, cult pressure, and combat as mechanics layered onto the persisted campaign model.
+  - **Execution:** Execute via dedicated tickets. Each system needs Jest tests before integration.
 
 ### 3. Micro Plan (Atomic Implementation Steps)
 The Micro level deals with individual files, strict type-safety, and adhering to the "No" list constraints.

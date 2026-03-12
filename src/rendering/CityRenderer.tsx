@@ -18,7 +18,7 @@ import {
 
 	getAllFragments,
 	getTerrainHeight,
-	worldToFogIndex,
+	getFogAt,
 } from "../ecs/terrain";
 
 // Circuit-board color palette — dark metallic with cyan/green accents
@@ -43,12 +43,9 @@ const ACCENT_COLORS: Record<CityBuilding["type"], number> = {
  * Returns true if fog state >= 1 in any fragment.
  */
 function isRevealedAtPosition(x: number, z: number): boolean {
-	const fogIdx = worldToFogIndex(x, z);
-	if (fogIdx < 0) return false;
-
 	const fragments = getAllFragments();
 	for (const frag of fragments) {
-		if (frag.fog[fogIdx] >= 1) return true;
+		if (getFogAt(frag, x, z) >= 1) return true;
 	}
 	return false;
 }

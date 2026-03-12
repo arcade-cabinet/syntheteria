@@ -14,10 +14,10 @@ import {
 	 */
 
 	getAllFragments,
+	getFogAt,
 	getTerrainHeight,
+	getWorldHalfExtents,
 	isWalkable,
-	WORLD_HALF,
-	worldToFogIndex,
 } from "../ecs/terrain";
 
 // Simple seeded hash for deterministic placement
@@ -36,9 +36,10 @@ interface PropInstance {
 function generateProps(): PropInstance[] {
 	const props: PropInstance[] = [];
 	const STEP = 6; // check every 6 world units
+	const { x: worldHalfX, z: worldHalfZ } = getWorldHalfExtents();
 
-	for (let gz = -WORLD_HALF; gz < WORLD_HALF; gz += STEP) {
-		for (let gx = -WORLD_HALF; gx < WORLD_HALF; gx += STEP) {
+	for (let gz = -worldHalfZ; gz < worldHalfZ; gz += STEP) {
+		for (let gx = -worldHalfX; gx < worldHalfX; gx += STEP) {
 			const h = hash(gx, gz);
 
 			// Skip water, buildings, and sparse placement
@@ -210,16 +211,13 @@ function PropGroup({
 
 		for (let i = 0; i < instances.length; i++) {
 			const inst = instances[i];
-			const fogIdx = worldToFogIndex(inst.position[0], inst.position[2]);
 			let revealed = false;
 
-			if (fogIdx >= 0) {
-				const fragments = getAllFragments();
-				for (const frag of fragments) {
-					if (frag.fog[fogIdx] >= 1) {
-						revealed = true;
-						break;
-					}
+			const fragments = getAllFragments();
+			for (const frag of fragments) {
+				if (getFogAt(frag, inst.position[0], inst.position[2]) >= 1) {
+					revealed = true;
+					break;
 				}
 			}
 

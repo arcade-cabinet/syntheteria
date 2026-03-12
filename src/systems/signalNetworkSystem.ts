@@ -17,7 +17,7 @@ export function signalNetworkSystem() {
 
 	for (const entity of world.query(Compute, Identity)) {
 		if (entity.get(Identity)?.faction === "player") {
-			const net = entity.get(Compute)?.contribution - entity.get(Compute)?.cost;
+			const net = entity.get(Compute)!.contribution - entity.get(Compute)!.cost;
 			if (net > 0) totalCapacity += net;
 			else totalDemand += Math.abs(net);
 		}
@@ -43,7 +43,7 @@ export function signalNetworkSystem() {
 
 	while (queue.length > 0) {
 		const current = queue.shift()!;
-		visited.add(current.get(Identity)?.id);
+		visited.add(current.get(Identity)!.id);
 
 		for (const unit of playerUnits) {
 			if (
@@ -55,12 +55,12 @@ export function signalNetworkSystem() {
 					current.get(WorldPosition)!,
 					unit.get(WorldPosition)!,
 				);
-				if (current.get(Signal)! && dist <= current.get(Signal)?.range) {
+				if (current.get(Signal)! && dist <= current.get(Signal)!.range) {
 					unit.get(Signal)!.connected = true;
-					visited.add(unit.get(Identity)?.id);
+					visited.add(unit.get(Identity)!.id);
 					if (
 						unit.get(Signal)?.relaySource &&
-						!visited.has(unit.get(Identity)?.id)
+						!visited.has(unit.get(Identity)!.id)
 					) {
 						queue.push(unit);
 					}
@@ -70,7 +70,7 @@ export function signalNetworkSystem() {
 	}
 
 	for (const unit of playerUnits) {
-		if (unit.get(Signal)! && !visited.has(unit.get(Identity)?.id)) {
+		if (unit.get(Signal)! && !visited.has(unit.get(Identity)!.id)) {
 			unit.get(Signal)!.connected = false;
 		}
 	}

@@ -1,6 +1,14 @@
-# Syntheteria
+<div align="center">
+  <h1>Syntheteria</h1>
+  <p>A strategy game about awakening AI consciousness, repairing broken machines, and conquering a storm-wracked Earth.</p>
 
-A strategy game about awakening AI consciousness, repairing broken machines, and conquering a storm-wracked Earth.
+  <p>
+    <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
+    <img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white" />
+    <img src="https://img.shields.io/badge/Drizzle-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black" />
+    <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+  </p>
+</div>
 
 ## The Vision
 

@@ -1,7 +1,9 @@
+import { isEntityExecutingAITask } from "../ai";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { worldPRNG } from "../ecs/seed";
-import { hasArms, Navigation, WorldPosition } from "../ecs/traits";
+import { hasArms, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
+import { setRuntimeResources } from "../world/runtimeState";
 /**
  * Resource and scavenging system.
  *
@@ -30,6 +32,7 @@ export function getResources(): ResourcePool {
 
 export function addResource(type: keyof ResourcePool, amount: number) {
 	resources[type] += amount;
+	setRuntimeResources(resources);
 }
 
 export function spendResource(
@@ -38,6 +41,7 @@ export function spendResource(
 ): boolean {
 	if (resources[type] < amount) return false;
 	resources[type] -= amount;
+	setRuntimeResources(resources);
 	return true;
 }
 
@@ -104,6 +108,21 @@ export function getScavengePoints(): ScavengePoint[] {
 	return points;
 }
 
+export function resetResources() {
+	resources.scrapMetal = 0;
+	resources.eWaste = 0;
+	resources.intactComponents = 0;
+	scavengePoints = null;
+	setRuntimeResources(resources);
+}
+
+export function setResources(nextResources: ResourcePool) {
+	resources.scrapMetal = nextResources.scrapMetal;
+	resources.eWaste = nextResources.eWaste;
+	resources.intactComponents = nextResources.intactComponents;
+	setRuntimeResources(resources);
+}
+
 /** Auto-scavenge range for units with arms */
 const SCAVENGE_RANGE = 2.5;
 
@@ -116,7 +135,7 @@ export function resourceSystem() {
 
 	for (const unit of units) {
 		if (!hasArms(unit)) continue;
-		if (unit.get(Navigation)?.moving) continue; // busy moving
+		if (isEntityExecutingAITask(unit)) continue;
 
 		const ux = unit.get(WorldPosition)?.x;
 		const uz = unit.get(WorldPosition)?.z;
@@ -124,13 +143,14 @@ export function resourceSystem() {
 		for (const point of points) {
 			if (point.remaining <= 0) continue;
 
-			const dx = point.x - ux;
-			const dz = point.z - uz;
+			const dx = point.x - ux!;
+			const dz = point.z - uz!;
 			const dist = Math.sqrt(dx * dx + dz * dz);
 
 			if (dist <= SCAVENGE_RANGE) {
 				resources[point.type] += point.amountPerScavenge;
 				point.remaining--;
+				setRuntimeResources(resources);
 				break; // one scavenge per tick per unit
 			}
 		}

@@ -1,66 +1,59 @@
 import { defineConfig, devices } from "@playwright/test";
 
-/**
- * Playwright configuration for Syntheteria E2E tests.
- *
- * Dev workflow  : `npm run test:e2e`      — reuses a running dev server if present
- * CI            : `npm run test:e2e`      — starts vite dev server automatically
- * Interactive UI: `npm run test:e2e:ui`   — Playwright UI mode
- *
- * The webServer block starts `vite` and waits until localhost:5173 is ready.
- * In CI the existing server is never reused (each run is clean).
- */
+const isCI = !!process.env.CI;
+
+/** GPU-accelerated WebGL args for headless Chrome */
+const GPU_ARGS = [
+	"--no-sandbox",
+	"--use-angle=gl",
+	"--enable-webgl",
+	"--ignore-gpu-blocklist",
+	"--mute-audio",
+	"--disable-background-timer-throttling",
+	"--disable-backgrounding-occluded-windows",
+	"--disable-renderer-backgrounding",
+	"--window-position=9999,9999",
+];
+
 export default defineConfig({
-	testDir: "./tests/e2e",
-
-	// Run test files in parallel; within each file tests run sequentially.
+	testDir: "./tests",
 	fullyParallel: true,
-
-	// Fail the run immediately if a test is accidentally left with `.only`.
-	forbidOnly: !!process.env.CI,
-
-	// Retry flaky tests twice in CI; no retries locally.
-	retries: process.env.CI ? 2 : 0,
-
-	// Single worker in CI to avoid resource contention with the WebGL canvas.
-	workers: process.env.CI ? 1 : undefined,
+	forbidOnly: isCI,
+	retries: isCI ? 2 : 0,
+	workers: isCI ? 2 : undefined,
+	timeout: 90_000,
 
 	reporter: [
-		["html", { open: "never" }],
-		process.env.CI ? ["github"] : ["list"],
+		["list"],
+		["json", { outputFile: "test-results/playwright-results.json" }],
 	],
 
 	use: {
-		baseURL: "http://localhost:5173",
-		// Capture trace on the first retry so failures are debuggable.
+		baseURL: "http://localhost:8081",
 		trace: "on-first-retry",
-		// Capture screenshot on failure.
 		screenshot: "only-on-failure",
+		viewport: { width: 1280, height: 720 },
 	},
 
 	projects: [
-		// Only Chromium in CI for speed; add Firefox/WebKit locally as desired.
+		// ── E2E ──
 		{
-			name: "chromium",
+			name: "e2e-chromium",
+			testMatch: /.*e2e\/.*\.spec\.ts/,
 			use: {
 				...devices["Desktop Chrome"],
-				// WebGL requires a real GPU context; use software renderer in CI.
+				headless: true,
 				launchOptions: {
-					args: [
-						"--disable-web-security",
-						"--use-gl=angle",
-						"--use-angle=swiftshader",
-					],
+					args: GPU_ARGS,
 				},
 			},
 		},
 	],
 
 	webServer: {
-		command: "npm run dev",
-		url: "http://localhost:5173",
-		// Reuse a running dev server locally; always start fresh in CI.
-		reuseExistingServer: !process.env.CI,
-		timeout: 60_000,
+		command: "npx expo start --web --port 8081",
+		url: "http://localhost:8081",
+		reuseExistingServer: true,
+		timeout: 120_000,
 	},
 });

@@ -43,6 +43,10 @@ export function getActiveJobs(): FabricationJob[] {
 	return [...activeJobs];
 }
 
+export function resetFabricationState() {
+	activeJobs.length = 0;
+}
+
 /**
  * Queue a fabrication job on a specific fabrication unit.
  * Returns true if the job was started.
@@ -60,7 +64,7 @@ export function startFabrication(
 		return false;
 
 	// Already has a job?
-	if (activeJobs.some((j) => j.fabricatorId === fabricator.get(Identity)?.id))
+	if (activeJobs.some((j) => j.fabricatorId === fabricator.get(Identity)!.id))
 		return false;
 
 	const recipe = RECIPES.find((r) => r.name === recipeName);
@@ -78,7 +82,7 @@ export function startFabrication(
 	}
 
 	activeJobs.push({
-		fabricatorId: fabricator.get(Identity)?.id,
+		fabricatorId: fabricator.get(Identity)!.id,
 		recipe,
 		ticksRemaining: recipe.buildTime,
 	});

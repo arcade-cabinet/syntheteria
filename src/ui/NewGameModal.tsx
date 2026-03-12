@@ -229,8 +229,8 @@ export function NewGameModal({
 				<View className="flex-row items-center justify-between border-t border-white/8 bg-[#061019]/96 px-6 py-5">
 					<Text className="max-w-[640px] font-mono text-[11px] leading-5 text-white/42">
 						World generation now runs once per save and persists the outdoor
-						map, points of interest, and reserved city instances into SQLite before
-						the game scene loads.
+						map, points of interest, and reserved city instances into SQLite
+						before the game scene loads.
 					</Text>
 					<View className="flex-row gap-3">
 						<ActionButton label="Cancel" tone="ghost" onPress={onCancel} />

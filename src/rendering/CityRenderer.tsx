@@ -17,8 +17,8 @@ import {
 	 */
 
 	getAllFragments,
-	getTerrainHeight,
 	getFogAt,
+	getTerrainHeight,
 } from "../ecs/terrain";
 
 // Circuit-board color palette — dark metallic with cyan/green accents

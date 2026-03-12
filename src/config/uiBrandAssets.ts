@@ -1,4 +1,5 @@
 import backgroundImage from "../../assets/ui/background.png";
+import brandMarkImage from "../../assets/ui/mark.png";
 import logosAtlas from "../../assets/ui/logos.png";
 import type { AssetModule } from "./assetUri";
 
@@ -25,6 +26,12 @@ export const uiBrandAssets = {
 	background: {
 		id: "background",
 		imageAsset: backgroundImage,
+		width: 1536,
+		height: 1024,
+	},
+	mark: {
+		id: "mark",
+		imageAsset: brandMarkImage,
 		width: 1536,
 		height: 1024,
 	},

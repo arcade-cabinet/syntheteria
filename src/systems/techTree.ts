@@ -294,6 +294,77 @@ export function getEffectValue(
 }
 
 /**
+ * Get the active effect value for a given effect type and faction.
+ * Scans all researched techs and returns the cumulative effect.
+ *
+ * For multipliers (_multiplier suffix), returns the product of all matching effects.
+ * For additive bonuses (_bonus suffix), returns defaultValue + sum of bonuses.
+ * For reductions (_reduction suffix), returns 1 - sum of reductions (clamped to 0).
+ *
+ * Returns the effective value or the default if no tech provides it.
+ */
+export function getActiveEffect(
+	factionId: EconomyFactionId,
+	effectType: string,
+	defaultValue: number,
+): number {
+	const state = ensureState(factionId);
+	let result = defaultValue;
+	let found = false;
+
+	for (const techId of state.completedTechs) {
+		const tech = techMap.get(techId);
+		if (!tech) continue;
+
+		for (const effect of tech.effects) {
+			if (effect.type !== effectType) continue;
+
+			if (effectType.endsWith("_multiplier")) {
+				// Multiplicative: chain multipliers
+				if (!found) {
+					result = effect.value;
+					found = true;
+				} else {
+					result *= effect.value;
+				}
+			} else if (effectType.endsWith("_bonus")) {
+				// Additive: sum bonuses
+				if (!found) {
+					result = defaultValue + effect.value;
+					found = true;
+				} else {
+					result += effect.value;
+				}
+			} else if (effectType.endsWith("_reduction")) {
+				// Reduction: 1 - sum of reductions (clamped to 0)
+				if (!found) {
+					result = Math.max(0, 1 - effect.value);
+					found = true;
+				} else {
+					result = Math.max(0, result - effect.value);
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
+/**
+ * Get the total number of techs available.
+ */
+export function getTotalTechCount(): number {
+	return techMap.size;
+}
+
+/**
+ * Check if all techs have been researched by a faction.
+ */
+export function allTechsResearched(factionId: EconomyFactionId): boolean {
+	return ensureState(factionId).completedTechs.size >= getTotalTechCount();
+}
+
+/**
  * Reset tech tree state — call on new game.
  */
 export function resetTechTree() {

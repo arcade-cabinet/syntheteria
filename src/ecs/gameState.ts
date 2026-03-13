@@ -64,6 +64,10 @@ import {
 	type ResourcePool,
 	resourceSystem,
 } from "../systems/resources";
+import {
+	resetRivalEncounterState,
+	rivalEncounterSystem,
+} from "../systems/rivalEncounters";
 import { signalNetworkSystem } from "../systems/signalNetworkSystem";
 import {
 	resetTerritorySystem,
@@ -252,6 +256,7 @@ export function simulationTick() {
 	hackingSystem();
 	hackingCaptureSystem();
 	motorPoolUpgradeSystem();
+	rivalEncounterSystem(tick);
 	territorySystem();
 	narrativeSystem();
 	botSpeechSystem(tick, []);
@@ -283,6 +288,7 @@ export function resetGameState() {
 	resetLightningSystem();
 	resetNetworkOverlay();
 	resetHarvestSystem();
+	resetRivalEncounterState();
 	resetTerritorySystem();
 }
 

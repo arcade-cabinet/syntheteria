@@ -6,6 +6,7 @@ import { CultistAgent } from "./CultistAgent";
 import { HaulerAgent } from "./HaulerAgent";
 import { HostileMachineAgent } from "./HostileMachineAgent";
 import { PlayerUnitAgent } from "./PlayerUnitAgent";
+import { RivalScoutAgent } from "./RivalScoutAgent";
 import { SyntheteriaAgent } from "./SyntheteriaAgent";
 import type { AgentPersistenceState, AgentRole } from "./types";
 
@@ -42,6 +43,13 @@ export function createAgentForRole(
 			);
 		case "cultist":
 			return new CultistAgent(
+				entityId,
+				maxSpeed,
+				options?.steeringProfile,
+				options?.navigationProfile,
+			);
+		case "rival_scout":
+			return new RivalScoutAgent(
 				entityId,
 				maxSpeed,
 				options?.steeringProfile,

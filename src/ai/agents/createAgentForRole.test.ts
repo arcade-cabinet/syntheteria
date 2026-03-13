@@ -6,6 +6,7 @@ import {
 import { HaulerAgent } from "./HaulerAgent";
 import { HostileMachineAgent } from "./HostileMachineAgent";
 import { PlayerUnitAgent } from "./PlayerUnitAgent";
+import { RivalScoutAgent } from "./RivalScoutAgent";
 
 describe("createAgentForRole", () => {
 	it("creates typed wrappers for known roles", () => {
@@ -20,6 +21,9 @@ describe("createAgentForRole", () => {
 		);
 		expect(createAgentForRole("cultist", "cultist-1")).toBeInstanceOf(
 			CultistAgent,
+		);
+		expect(createAgentForRole("rival_scout", "scout-1")).toBeInstanceOf(
+			RivalScoutAgent,
 		);
 	});
 

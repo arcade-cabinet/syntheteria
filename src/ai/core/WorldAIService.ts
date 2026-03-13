@@ -2,10 +2,6 @@ import { FollowPathBehavior, Path, SeparationBehavior, Vector3 } from "yuka";
 import { getBotDefinition } from "../../bots";
 import { gameplayRandom } from "../../ecs/seed";
 import {
-	getSurfaceHeightAtWorldPosition,
-	isPassableAtWorldPosition,
-} from "../../world/structuralSpace";
-import {
 	AIController,
 	Hacking,
 	Identity,
@@ -19,21 +15,30 @@ import {
 } from "../../ecs/traits";
 import { world } from "../../ecs/world";
 import {
+	getStrengthContext,
+	isRivalFaction,
+	type RivalFaction,
+} from "../../systems/rivalEncounters";
+import { gridToWorld, worldToGrid } from "../../world/sectorCoordinates";
+import {
+	getSurfaceHeightAtWorldPosition,
+	isPassableAtWorldPosition,
+} from "../../world/structuralSpace";
+import {
 	createAgentForRole,
 	rehydrateAgentFromState,
 } from "../agents/createAgentForRole";
 import type { SyntheteriaAgent } from "../agents/SyntheteriaAgent";
 import type { AgentPersistenceState, AgentTaskState } from "../agents/types";
+import { NAVIGATION_TUNING, STEERING_TUNING } from "../config/behaviorProfiles";
 import { planAgentTask } from "../goals/WorldPlanner";
 import { SectorNavigationAdapter } from "../navigation/SectorNavigationAdapter";
 import { deserializeSingleAgentState } from "../serialization/AISerialization";
-import { NAVIGATION_TUNING, STEERING_TUNING } from "../config/behaviorProfiles";
 import {
 	deriveAnimationState,
 	setEntityAnimationState,
 } from "../steering/AnimationState";
 import { AIRuntime } from "./AIRuntime";
-import { gridToWorld, worldToGrid } from "../../world/sectorCoordinates";
 
 const AGGRO_RANGE = 6;
 const PATROL_RANGE = 15;
@@ -82,7 +87,7 @@ function getPatrolTarget(from: Vec3): Vec3 | null {
 
 function findNearestUnitByFaction(
 	origin: UnitEntity,
-	faction: "player" | "feral" | "cultist",
+	faction: string,
 	range: number,
 ) {
 	let closest: UnitEntity | null = null;
@@ -237,6 +242,19 @@ export class WorldAIService {
 			return;
 		}
 
+		// For rival scouts, widen detection range and pass strength context
+		const isScout = ai.role === "rival_scout";
+		const playerDetectRange = isScout ? AGGRO_RANGE * 3 : AGGRO_RANGE;
+
+		const strengthCtx =
+			isScout && isRivalFaction(entity.get(Identity)!.faction)
+				? getStrengthContext(
+						entity.get(Identity)!.faction as RivalFaction,
+						entity.get(WorldPosition)!.x,
+						entity.get(WorldPosition)!.z,
+					)
+				: undefined;
+
 		const plannerDecision = planAgentTask({
 			tick,
 			entity,
@@ -244,11 +262,13 @@ export class WorldAIService {
 			nearestPlayerTarget: findNearestUnitByFaction(
 				entity,
 				"player",
-				AGGRO_RANGE,
+				playerDetectRange,
 			),
 			nearestHostileTarget:
 				findNearestUnitByFaction(entity, "feral", AGGRO_RANGE * 2) ??
 				findNearestUnitByFaction(entity, "cultist", AGGRO_RANGE * 2),
+			scoutStrength: strengthCtx?.scoutStrength,
+			playerStrength: strengthCtx?.playerStrength,
 		});
 
 		if (plannerDecision?.task && plannerDecision.targetPosition) {
@@ -278,7 +298,7 @@ export class WorldAIService {
 		}
 
 		if (
-			ai.role === "hostile_machine" &&
+			(ai.role === "hostile_machine" || ai.role === "rival_scout") &&
 			!agent.task &&
 			gameplayRandom() < PATROL_CHANCE
 		) {

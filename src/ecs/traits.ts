@@ -1,10 +1,6 @@
 import { type Entity as KootaEntity, trait } from "koota";
 import type { AgentRole } from "../ai";
-import type {
-	BotArchetypeId,
-	BotSpeechProfile,
-	BotUnitType,
-} from "../bots";
+import type { BotArchetypeId, BotSpeechProfile, BotUnitType } from "../bots";
 
 export type Entity = KootaEntity;
 export type UnitEntity = KootaEntity;
@@ -25,7 +21,16 @@ export interface UnitComponent {
 // Identity
 export const Identity = trait({
 	id: "",
-	faction: "player" as "player" | "cultist" | "rogue" | "feral" | "wildlife",
+	faction: "player" as
+		| "player"
+		| "cultist"
+		| "rogue"
+		| "feral"
+		| "wildlife"
+		| "reclaimers"
+		| "volt_collective"
+		| "signal_choir"
+		| "iron_creed",
 });
 
 // Which scene the entity belongs to

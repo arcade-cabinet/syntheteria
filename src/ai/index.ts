@@ -6,6 +6,7 @@ export {
 export { HaulerAgent } from "./agents/HaulerAgent";
 export { HostileMachineAgent } from "./agents/HostileMachineAgent";
 export { PlayerUnitAgent } from "./agents/PlayerUnitAgent";
+export { RivalScoutAgent } from "./agents/RivalScoutAgent";
 export {
 	isSyntheteriaAgent,
 	SyntheteriaAgent,
@@ -48,12 +49,12 @@ export {
 	type PlannerDecision,
 	planAgentTask,
 } from "./goals/WorldPlanner";
-export { SectorNavigationAdapter } from "./navigation/SectorNavigationAdapter";
 export type {
 	NavigationAdapter,
 	NavigationPathNode,
 	NavigationPoint,
 } from "./navigation/NavigationAdapter";
+export { SectorNavigationAdapter } from "./navigation/SectorNavigationAdapter";
 export { SquareGridNavigationAdapter } from "./navigation/SquareGridNavigationAdapter";
 export {
 	createWorldFactSnapshot,
@@ -83,9 +84,9 @@ export {
 	applyArrive,
 	applyArriveWithSeparation,
 	applyFlee,
-	applySeparation,
 	applySeek,
 	applySeekWithSeparation,
+	applySeparation,
 	clearSteering,
 } from "./steering/SteeringComposer";
 export {

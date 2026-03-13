@@ -7,7 +7,8 @@ export type AgentRole =
 	| "player_unit"
 	| "hauler"
 	| "hostile_machine"
-	| "cultist";
+	| "cultist"
+	| "rival_scout";
 
 export type AgentStatus =
 	| "idle"

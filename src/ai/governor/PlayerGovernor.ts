@@ -56,6 +56,10 @@ import {
 	BUILDING_COSTS,
 	type PlacementCost,
 } from "../../systems/buildingPlacement";
+import { startBuildingConstruction } from "../../systems/constructionVisualization";
+import { spendFactionResource } from "../../systems/factionEconomy";
+import { spawnBuilding } from "../../ecs/factory";
+import { requirePrimaryStructuralFragment } from "../../world/structuralSpace";
 import { gameplayRandom } from "../../ecs/seed";
 import { issueMoveCommand } from "../core/WorldAIService";
 
@@ -607,11 +611,36 @@ export class PlayerGovernor {
 			);
 			const buildNeed = evaluateBuildNeeds(this.factionId, existingBuildings);
 			if (buildNeed) {
+				// Deduct resources from faction economy
+				const costs = BUILDING_COSTS[buildNeed.type];
+				if (costs) {
+					for (const cost of costs) {
+						spendFactionResource(this.factionId, cost.type, cost.amount);
+					}
+				}
+
+				// Spawn the building entity at the fabricator's position
+				const fragment = requirePrimaryStructuralFragment();
+				const entity = spawnBuilding({
+					x: unit.pos.x,
+					z: unit.pos.z,
+					fragmentId: fragment.id,
+					type: buildNeed.type,
+					powered: true,
+					faction: this.factionId,
+				});
+
+				// Start staged construction visualization
+				const placedId = entity.get(Identity)?.id;
+				if (placedId) {
+					startBuildingConstruction(placedId, buildNeed.type);
+				}
+
 				spendActionPoint(unit.entityId, 1);
 				return {
 					entityId: unit.entityId,
 					action: "build",
-					detail: `queuing ${buildNeed.label} construction`,
+					detail: `constructing ${buildNeed.label}`,
 				};
 			}
 		}

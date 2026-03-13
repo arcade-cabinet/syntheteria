@@ -24,10 +24,20 @@ jest.mock("../ecs/cityLayout", () => ({
 	isInsideBuilding: jest.fn(() => false),
 }));
 
+const mockSpawnedEntity = {
+	get: jest.fn((trait: string) => {
+		if (trait === "Identity") return { id: "bldg_test_0", faction: "player" };
+		return null;
+	}),
+};
 jest.mock("../ecs/factory", () => ({
-	spawnFabricationUnit: jest.fn(() => ({})),
-	spawnLightningRod: jest.fn(() => ({})),
-	spawnBuilding: jest.fn(() => ({})),
+	spawnFabricationUnit: jest.fn(() => mockSpawnedEntity),
+	spawnLightningRod: jest.fn(() => mockSpawnedEntity),
+	spawnBuilding: jest.fn(() => mockSpawnedEntity),
+}));
+
+jest.mock("./constructionVisualization", () => ({
+	startBuildingConstruction: jest.fn(),
 }));
 
 const mockIdentityGet = jest.fn();

@@ -17,6 +17,16 @@ jest.mock("./turnSystem", () => ({
 	registerEnvironmentPhaseHandler: (handler: (turnNumber: number) => void) => {
 		mockRegisteredEnvHandlers.push(handler);
 	},
+	subscribeTurnState: jest.fn(),
+	getTurnState: jest.fn(() => ({
+		turnNumber: 1,
+		phase: "player",
+		activeFaction: "player",
+	})),
+}));
+
+jest.mock("./turnPhaseEvents", () => ({
+	detectPhaseTransition: jest.fn(),
 }));
 
 jest.mock("./turnEventLog", () => ({
@@ -34,6 +44,53 @@ jest.mock("../ai/governor/factionGovernors", () => ({
 		mockGetGovernorForFaction(...args),
 }));
 
+const mockCultistIncursionSystem = jest.fn(() => ({
+	spawnEvents: [],
+	attackEvents: [],
+}));
+jest.mock("./cultistIncursion", () => ({
+	cultistIncursionSystem: () => mockCultistIncursionSystem(),
+}));
+
+const mockMotorPoolTurnTick = jest.fn();
+jest.mock("./motorPool", () => ({
+	motorPoolTurnTick: () => mockMotorPoolTurnTick(),
+}));
+
+const mockAdvanceConstructionTurn = jest.fn();
+jest.mock("./constructionVisualization", () => ({
+	advanceConstructionTurn: () => mockAdvanceConstructionTurn(),
+}));
+
+jest.mock("./aiActionVisualization", () => ({
+	initAIActionVisualization: jest.fn(),
+}));
+
+jest.mock("./markUpgrade", () => ({
+	markUpgradeTurnTick: jest.fn(),
+}));
+
+jest.mock("./techTree", () => ({
+	advanceResearch: jest.fn(() => null),
+}));
+
+jest.mock("./otterHologram", () => ({
+	triggerHologram: jest.fn(),
+}));
+
+jest.mock("./territorySystem", () => ({
+	forceRecalculate: jest.fn(),
+}));
+
+jest.mock("./victoryConditions", () => ({
+	checkVictoryConditions: jest.fn(() => null),
+}));
+
+jest.mock("./wormhole", () => ({
+	getWormholeState: jest.fn(() => null),
+	advanceWormholeStage: jest.fn(() => false),
+}));
+
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
@@ -42,6 +99,13 @@ beforeEach(() => {
 	mockRegisterFactionTurnHandler.mockClear();
 	mockGetGovernorForFaction.mockClear();
 	mockLogTurnEvent.mockClear();
+	mockCultistIncursionSystem.mockClear();
+	mockMotorPoolTurnTick.mockClear();
+	mockAdvanceConstructionTurn.mockClear();
+	mockCultistIncursionSystem.mockReturnValue({
+		spawnEvents: [],
+		attackEvents: [],
+	});
 	jest.resetModules();
 });
 

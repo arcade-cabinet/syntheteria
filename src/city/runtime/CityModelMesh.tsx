@@ -2,24 +2,17 @@ import { useGLTF } from "@react-three/drei";
 import { useMemo } from "react";
 import * as THREE from "three";
 import { resolveAssetUri } from "../../config/assetUri";
+import {
+	applyMaterialDefinition,
+	getCityFamilyMaterial,
+	MATERIAL_DEFINITIONS,
+} from "../../rendering/materials/MaterialFactory";
 import type { CityModelDefinition } from "../config/types";
 
 function fitScale(model: CityModelDefinition, targetSpan: number) {
 	const span = Math.max(model.bounds.width, model.bounds.depth, 0.25);
 	return (targetSpan / span) * model.defaultScale;
 }
-
-const FAMILY_COLORS: Record<CityModelDefinition["family"], number> = {
-	floor: 0x7f9bb2,
-	wall: 0x8fb0c4,
-	door: 0x9fdde2,
-	roof: 0x6f8a9c,
-	prop: 0xd4b27a,
-	detail: 0x7de3f0,
-	column: 0xa5b4c8,
-	stair: 0x9eb0bf,
-	utility: 0xc88d5f,
-};
 
 function normalizeCityMaterial(
 	material: THREE.Material,
@@ -29,12 +22,16 @@ function normalizeCityMaterial(
 		return;
 	}
 
-	const baseColor = new THREE.Color(FAMILY_COLORS[family]);
-	material.color = material.color.clone().lerp(baseColor, 0.35);
-	material.emissive = material.emissive.clone().lerp(baseColor, 0.08);
-	material.emissiveIntensity = family === "detail" || family === "door" ? 0.38 : 0.16;
-	material.roughness = Math.min(material.roughness ?? 0.9, 0.86);
-	material.metalness = Math.max(material.metalness ?? 0.15, 0.12);
+	const definition = getCityFamilyMaterial(family);
+	if (definition) {
+		applyMaterialDefinition(material, definition, 0.35);
+	} else {
+		// Fallback: use the city_wall definition as a safe default
+		const fallback = MATERIAL_DEFINITIONS.city_wall;
+		if (fallback) {
+			applyMaterialDefinition(material, fallback, 0.35);
+		}
+	}
 	material.side = THREE.DoubleSide;
 	material.needsUpdate = true;
 }

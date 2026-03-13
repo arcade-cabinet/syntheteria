@@ -43,8 +43,10 @@ import {
 } from "./radialMenu";
 import {
 	applyMarkUpgrade,
+	awardXP,
 	getUnitExperience,
 	getXPProgress,
+	type XPActionType,
 } from "./experience";
 import { startRepair } from "./repair";
 import { getResourcePoolForModel, isHarvestable } from "./resourcePools";
@@ -95,6 +97,15 @@ function isSelectedBotCategoryAllowed(
 		return true;
 	}
 	return isBotCategoryAllowed(unit.type, categoryId);
+}
+
+/** Award XP to a unit after it performs an action. */
+function awardXPToActor(entityId: string | null, action: XPActionType) {
+	if (!entityId) return;
+	const entity = findEntityById(entityId);
+	const unit = entity?.get(Unit);
+	if (!unit) return;
+	awardXP(entityId, unit.archetypeId, action, unit.markLevel);
 }
 
 function getActiveDistrictViewModel(mode: "world" | "city") {
@@ -213,6 +224,7 @@ registerRadialProvider({
 				onExecute: () => {
 					if (ctx.targetEntityId) {
 						spendActionPoint(ctx.targetEntityId, 1);
+						awardXPToActor(ctx.targetEntityId, "combat");
 					}
 					// TODO: wire to attack order
 				},
@@ -229,6 +241,7 @@ registerRadialProvider({
 				onExecute: () => {
 					if (ctx.targetEntityId) {
 						spendActionPoint(ctx.targetEntityId, 1);
+						awardXPToActor(ctx.targetEntityId, "hack");
 					}
 					// TODO: wire to hacking system
 				},
@@ -245,6 +258,7 @@ registerRadialProvider({
 				onExecute: () => {
 					if (ctx.targetEntityId) {
 						spendActionPoint(ctx.targetEntityId, 1);
+						awardXPToActor(ctx.targetEntityId, "fortify");
 					}
 					// TODO: wire to fortification orders
 				},
@@ -288,6 +302,7 @@ function makeBuildAction(
 		onExecute: () => {
 			if (ctx.selectionType === "unit" && ctx.targetEntityId) {
 				spendActionPoint(ctx.targetEntityId, 1);
+				awardXPToActor(ctx.targetEntityId, "build");
 			}
 			setActivePlacement(
 				buildingType as Parameters<typeof setActivePlacement>[0],
@@ -423,6 +438,7 @@ registerRadialProvider({
 				onExecute: () => {
 					if (ctx.targetEntityId) {
 						spendActionPoint(ctx.targetEntityId, 1);
+						awardXPToActor(ctx.targetEntityId, "found");
 					}
 					setCitySiteModalOpen(true, getRuntimeState().nearbyPoi);
 				},
@@ -495,6 +511,7 @@ registerRadialProvider({
 			onExecute: () => {
 				if (repairer && ctx.targetEntityId) {
 					spendActionPoint(ctx.targetEntityId, 1);
+					awardXPToActor(ctx.targetEntityId, "repair");
 					startRepair(repairer, entity, comp.name);
 				}
 			},
@@ -557,6 +574,7 @@ registerRadialProvider({
 				onExecute: () => {
 					if (ctx.targetEntityId) {
 						spendActionPoint(ctx.targetEntityId, 1);
+						awardXPToActor(ctx.targetEntityId, "build");
 					}
 					startFabrication(entity, recipe.name);
 				},
@@ -808,6 +826,7 @@ registerRadialProvider({
 				onExecute: () => {
 					if (ctx.targetEntityId) {
 						spendActionPoint(ctx.targetEntityId, 1);
+						awardXPToActor(ctx.targetEntityId, "harvest");
 						startHarvest(
 							ctx.targetEntityId,
 							structure.id,
@@ -981,6 +1000,7 @@ registerRadialProvider({
 				onExecute: () => {
 					if (ctx.selectionType === "unit" && ctx.targetEntityId) {
 						spendActionPoint(ctx.targetEntityId, 1);
+						awardXPToActor(ctx.targetEntityId, "survey");
 					}
 					surveyCitySite(city.id);
 				},
@@ -1009,6 +1029,7 @@ registerRadialProvider({
 					if (canEstablish) {
 						if (ctx.selectionType === "unit" && ctx.targetEntityId) {
 							spendActionPoint(ctx.targetEntityId, 1);
+							awardXPToActor(ctx.targetEntityId, "found");
 						}
 						foundCitySite(city.id);
 					}

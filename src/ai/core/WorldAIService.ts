@@ -1,4 +1,4 @@
-import { FollowPathBehavior, Path, Vector3 } from "yuka";
+import { FollowPathBehavior, Path, SeparationBehavior, Vector3 } from "yuka";
 import { getBotDefinition } from "../../bots";
 import { gameplayRandom } from "../../ecs/seed";
 import {
@@ -28,6 +28,10 @@ import { planAgentTask } from "../goals/WorldPlanner";
 import { SectorNavigationAdapter } from "../navigation/SectorNavigationAdapter";
 import { deserializeSingleAgentState } from "../serialization/AISerialization";
 import { NAVIGATION_TUNING, STEERING_TUNING } from "../config/behaviorProfiles";
+import {
+	deriveAnimationState,
+	setEntityAnimationState,
+} from "../steering/AnimationState";
 import { AIRuntime } from "./AIRuntime";
 import { gridToWorld, worldToGrid } from "../../world/sectorCoordinates";
 
@@ -35,6 +39,8 @@ const AGGRO_RANGE = 6;
 const PATROL_RANGE = 15;
 const PATROL_CHANCE = 0.12;
 const TARGET_REPATH_DISTANCE = 1.5;
+const SEPARATION_RADIUS = 1.5;
+const SEPARATION_WEIGHT = 0.8;
 type PathNode = { q: number; r: number };
 
 function distanceBetween(a: Vec3, b: Vec3) {
@@ -337,6 +343,13 @@ export class WorldAIService {
 			agent.steering.add(
 				new FollowPathBehavior(yukaPath, steeringTuning.arrivalTolerance),
 			);
+
+			// Collision avoidance — bots repel each other while moving
+			const separation = new SeparationBehavior();
+			separation.weight = SEPARATION_WEIGHT;
+			agent.neighborhoodRadius = SEPARATION_RADIUS;
+			agent.updateNeighborhood = true;
+			agent.steering.add(separation);
 		}
 	}
 
@@ -387,6 +400,14 @@ export class WorldAIService {
 		navigation.path = getPathPayload(payload);
 		navigation.pathIndex = 0;
 		navigation.moving = agent.status === "navigating";
+
+		// Derive and store animation state for the renderer
+		const animState = deriveAnimationState(
+			agent.status,
+			agent.task?.kind ?? null,
+			agent.velocity.length(),
+		);
+		setEntityAnimationState(identity.id, animState);
 
 		agent.memory.lastUpdatedTick = tick;
 		ai.stateJson = JSON.stringify(agent.toPersistenceState());

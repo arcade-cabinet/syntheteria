@@ -6,6 +6,10 @@ import {
 import "../systems/playtestBridge";
 import { resetCampaignStats, setCampaignStats } from "../systems/campaignStats";
 import { resetCombatState } from "../systems/combat";
+import {
+	resetFactionSpawning,
+	spawnRivalFactions,
+} from "../systems/factionSpawning";
 import { resetEnemyState } from "../systems/enemies";
 import { resetFabricationState } from "../systems/fabrication";
 import {
@@ -69,6 +73,7 @@ export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 	resetCampaignStats();
 	resetTurnEventLog();
 	resetVictorySystem();
+	resetFactionSpawning();
 	resetHarvestSystem();
 	destroyAllEntities();
 	setResources({
@@ -147,6 +152,11 @@ export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 		addUnitsToTurnState(rivalUnitIds, rivalMarkLevels);
 	}
 	initializeFactionGovernors();
+
+	// Spawn rival faction units (only on new game, not on load)
+	if (!persistedWorld.turnState) {
+		spawnRivalFactions();
+	}
 
 	// Rehydrate harvest state from save
 	if (persistedWorld.harvestState) {

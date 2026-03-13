@@ -26,7 +26,12 @@ export type TurnEventType =
 	| "unit_destroyed"
 	| "unit_captured"
 	| "environment"
-	| "ai_faction_turn";
+	| "ai_faction_turn"
+	| "cultist_spawn"
+	| "cultist_attack"
+	| "research_complete"
+	| "wormhole_stage"
+	| "victory";
 
 export interface TurnEvent {
 	type: TurnEventType;

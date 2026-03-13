@@ -4,6 +4,10 @@ import { worldPRNG } from "../ecs/seed";
 import { hasArms, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
 import { setRuntimeResources } from "../world/runtimeState";
+import {
+	trackResourceExpenditure,
+	trackResourceIncome,
+} from "./resourceDeltas";
 /**
  * Resource and scavenging system.
  *
@@ -71,6 +75,7 @@ export function getResources(): ResourcePool {
 
 export function addResource(type: keyof ResourcePool, amount: number) {
 	(resources[type] as number) = ((resources[type] as number) ?? 0) + amount;
+	trackResourceIncome(type, amount);
 	setRuntimeResources(resources);
 }
 
@@ -80,6 +85,7 @@ export function spendResource(
 ): boolean {
 	if (((resources[type] as number) ?? 0) < amount) return false;
 	(resources[type] as number) = ((resources[type] as number) ?? 0) - amount;
+	trackResourceExpenditure(type, amount);
 	setRuntimeResources(resources);
 	return true;
 }

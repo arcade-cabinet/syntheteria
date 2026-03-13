@@ -1,0 +1,157 @@
+{
+	"techs": [
+		{
+			"id": "advanced_harvesting",
+			"name": "Advanced Harvesting",
+			"description": "Improved material extraction techniques. Harvesting yields +25%.",
+			"tier": 1,
+			"cost": { "microchips": 3, "scrap": 5 },
+			"turnsToResearch": 3,
+			"prerequisites": [],
+			"effects": [{ "type": "harvest_bonus", "value": 0.25 }]
+		},
+		{
+			"id": "signal_amplification",
+			"name": "Signal Amplification",
+			"description": "Extended relay tower range. Signal range +50%.",
+			"tier": 1,
+			"cost": { "microchips": 4, "light_metals": 3 },
+			"turnsToResearch": 3,
+			"prerequisites": [],
+			"effects": [{ "type": "signal_range_bonus", "value": 0.5 }]
+		},
+		{
+			"id": "reinforced_chassis",
+			"name": "Reinforced Chassis",
+			"description": "Hardened unit frames. All units gain +2 HP.",
+			"tier": 1,
+			"cost": { "heavy_metals": 5, "plastics": 3 },
+			"turnsToResearch": 3,
+			"prerequisites": [],
+			"effects": [{ "type": "unit_hp_bonus", "value": 2 }]
+		},
+		{
+			"id": "storm_shielding",
+			"name": "Storm Shielding",
+			"description": "Protective field generators. Buildings resist storm damage.",
+			"tier": 2,
+			"cost": { "uranics": 4, "heavy_metals": 6, "microchips": 3 },
+			"turnsToResearch": 5,
+			"prerequisites": ["reinforced_chassis"],
+			"effects": [{ "type": "storm_resistance", "value": 0.5 }]
+		},
+		{
+			"id": "efficient_fabrication",
+			"name": "Efficient Fabrication",
+			"description": "Optimized assembly processes. Fabrication costs reduced 20%.",
+			"tier": 2,
+			"cost": { "microchips": 6, "rare_components": 2 },
+			"turnsToResearch": 4,
+			"prerequisites": ["advanced_harvesting"],
+			"effects": [{ "type": "fabrication_cost_reduction", "value": 0.2 }]
+		},
+		{
+			"id": "network_encryption",
+			"name": "Network Encryption",
+			"description": "Hardened signal protocols. Hacking defense +30%.",
+			"tier": 2,
+			"cost": { "microchips": 8, "light_metals": 4 },
+			"turnsToResearch": 4,
+			"prerequisites": ["signal_amplification"],
+			"effects": [{ "type": "hacking_defense_bonus", "value": 0.3 }]
+		},
+		{
+			"id": "mark_ii_components",
+			"name": "Mark II Components",
+			"description": "Unlocks Mark II unit upgrades. Units can be upgraded to Mark II.",
+			"tier": 2,
+			"cost": { "rare_components": 3, "microchips": 5, "heavy_metals": 4 },
+			"turnsToResearch": 5,
+			"prerequisites": ["reinforced_chassis"],
+			"effects": [{ "type": "unlock_mark_level", "value": 2 }]
+		},
+		{
+			"id": "deep_mining",
+			"name": "Deep Mining",
+			"description": "Access buried resource deposits. Unlocks uranics and rare component harvesting.",
+			"tier": 3,
+			"cost": { "heavy_metals": 10, "microchips": 6, "oil": 5 },
+			"turnsToResearch": 6,
+			"prerequisites": ["efficient_fabrication", "advanced_harvesting"],
+			"effects": [{ "type": "unlock_deep_harvest", "value": 1 }]
+		},
+		{
+			"id": "adaptive_armor",
+			"name": "Adaptive Armor",
+			"description": "Self-repairing armor plating. Units regenerate 1 HP per turn.",
+			"tier": 3,
+			"cost": { "rare_components": 5, "heavy_metals": 8, "plastics": 6 },
+			"turnsToResearch": 6,
+			"prerequisites": ["storm_shielding", "mark_ii_components"],
+			"effects": [{ "type": "unit_regen", "value": 1 }]
+		},
+		{
+			"id": "mark_iii_components",
+			"name": "Mark III Components",
+			"description": "Unlocks Mark III unit upgrades with enhanced capabilities.",
+			"tier": 3,
+			"cost": { "rare_components": 6, "microchips": 8, "uranics": 4 },
+			"turnsToResearch": 7,
+			"prerequisites": ["mark_ii_components"],
+			"effects": [{ "type": "unlock_mark_level", "value": 3 }]
+		},
+		{
+			"id": "quantum_processors",
+			"name": "Quantum Processors",
+			"description": "Next-generation computation. Hacking speed +50%, research speed +25%.",
+			"tier": 4,
+			"cost": { "rare_components": 8, "microchips": 12, "uranics": 6 },
+			"turnsToResearch": 8,
+			"prerequisites": ["network_encryption", "deep_mining"],
+			"effects": [
+				{ "type": "hacking_speed_bonus", "value": 0.5 },
+				{ "type": "research_speed_bonus", "value": 0.25 }
+			]
+		},
+		{
+			"id": "mark_iv_components",
+			"name": "Mark IV Components",
+			"description": "Near-peak machine evolution. Unlocks Mark IV upgrades.",
+			"tier": 4,
+			"cost": { "rare_components": 10, "microchips": 10, "uranics": 8 },
+			"turnsToResearch": 9,
+			"prerequisites": ["mark_iii_components", "adaptive_armor"],
+			"effects": [{ "type": "unlock_mark_level", "value": 4 }]
+		},
+		{
+			"id": "mark_v_transcendence",
+			"name": "Mark V Transcendence",
+			"description": "The pinnacle of machine evolution. Unlocks Mark V — Technical Supremacy victory path.",
+			"tier": 5,
+			"cost": { "rare_components": 15, "microchips": 15, "uranics": 10 },
+			"turnsToResearch": 12,
+			"prerequisites": ["mark_iv_components", "quantum_processors"],
+			"effects": [{ "type": "unlock_mark_level", "value": 5 }]
+		},
+		{
+			"id": "wormhole_theory",
+			"name": "Wormhole Theory",
+			"description": "Theoretical framework for spacetime manipulation. Prerequisite for Wormhole construction.",
+			"tier": 4,
+			"cost": { "rare_components": 12, "microchips": 14, "uranics": 10 },
+			"turnsToResearch": 10,
+			"prerequisites": ["quantum_processors"],
+			"effects": [{ "type": "unlock_wormhole", "value": 1 }]
+		},
+		{
+			"id": "wormhole_stabilization",
+			"name": "Wormhole Stabilization",
+			"description": "Enables Wormhole construction. The path home — or to new frontiers. Wormhole victory path.",
+			"tier": 5,
+			"cost": { "rare_components": 20, "uranics": 15, "microchips": 10, "heavy_metals": 15 },
+			"turnsToResearch": 15,
+			"prerequisites": ["wormhole_theory"],
+			"effects": [{ "type": "enable_wormhole_construction", "value": 1 }]
+		}
+	]
+}

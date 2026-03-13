@@ -1,3 +1,8 @@
+jest.mock("../../systems/factionSpawning", () => ({
+	spawnRivalFactions: jest.fn(),
+	resetFactionSpawning: jest.fn(),
+}));
+
 import { getTurnState, resetTurnSystem } from "../../systems/turnSystem";
 import type { PersistedWorldSnapshot } from "../../world/snapshots";
 import { initializeNewGame } from "../initialization";

@@ -177,6 +177,7 @@ export function spawnBuilding(options: {
 	fragmentId: string;
 	type: string;
 	powered?: boolean;
+	faction?: "player" | "cultist" | "rogue" | "feral" | "wildlife";
 }): Entity {
 	const fragment = getStructuralFragment(options.fragmentId);
 	if (!fragment) throw new Error(`Fragment ${options.fragmentId} not found`);
@@ -188,7 +189,7 @@ export function spawnBuilding(options: {
 	const entity = world.spawn(Identity, WorldPosition, MapFragment, Building);
 	entity.set(Identity, {
 		id: `bldg_${nextEntityId++}`,
-		faction: "player" as const,
+		faction: options.faction ?? ("player" as const),
 	});
 	entity.set(WorldPosition, { x: options.x, y, z: options.z });
 	entity.set(MapFragment, { fragmentId: options.fragmentId });

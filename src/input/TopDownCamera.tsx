@@ -2,6 +2,10 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import {
+	cancelCameraFocus,
+	updateCameraFocus,
+} from "../systems/cameraFocus";
+import {
 	getNextCycleTier,
 	getTargetHeightForTier,
 	updateZoomTier,
@@ -224,22 +228,53 @@ export function TopDownCamera() {
 		const k = keys.current;
 		const panAmount = PAN_SPEED * zoom.current * delta;
 
-		// Keyboard pan
-		if (k.has("w") || k.has("arrowup")) target.current.z -= panAmount;
-		if (k.has("s") || k.has("arrowdown")) target.current.z += panAmount;
-		if (k.has("a") || k.has("arrowleft")) target.current.x -= panAmount;
-		if (k.has("d") || k.has("arrowright")) target.current.x += panAmount;
+		// Manual input cancels any active camera focus
+		const hasManualInput =
+			k.has("w") ||
+			k.has("s") ||
+			k.has("a") ||
+			k.has("d") ||
+			k.has("arrowup") ||
+			k.has("arrowdown") ||
+			k.has("arrowleft") ||
+			k.has("arrowright") ||
+			mouseDrag.current !== null ||
+			touchState.current.isPanning;
 
-		// Touch momentum
-		velocity.current.x *= MOMENTUM_DECAY;
-		velocity.current.z *= MOMENTUM_DECAY;
-		if (
-			Math.abs(velocity.current.x) > 0.001 ||
-			Math.abs(velocity.current.z) > 0.001
-		) {
-			if (!touchState.current.isPanning) {
-				target.current.x += velocity.current.x;
-				target.current.z += velocity.current.z;
+		if (hasManualInput) {
+			cancelCameraFocus();
+		}
+
+		// Camera focus system (smooth pan-to-unit, AI action camera)
+		const focusResult = updateCameraFocus(
+			target.current.x,
+			target.current.z,
+			zoom.current,
+			delta,
+		);
+
+		if (focusResult) {
+			target.current.x = focusResult.x;
+			target.current.z = focusResult.z;
+			zoom.current = focusResult.zoom;
+		} else {
+			// Keyboard pan (only when no focus active)
+			if (k.has("w") || k.has("arrowup")) target.current.z -= panAmount;
+			if (k.has("s") || k.has("arrowdown")) target.current.z += panAmount;
+			if (k.has("a") || k.has("arrowleft")) target.current.x -= panAmount;
+			if (k.has("d") || k.has("arrowright")) target.current.x += panAmount;
+
+			// Touch momentum
+			velocity.current.x *= MOMENTUM_DECAY;
+			velocity.current.z *= MOMENTUM_DECAY;
+			if (
+				Math.abs(velocity.current.x) > 0.001 ||
+				Math.abs(velocity.current.z) > 0.001
+			) {
+				if (!touchState.current.isPanning) {
+					target.current.x += velocity.current.x;
+					target.current.z += velocity.current.z;
+				}
 			}
 		}
 

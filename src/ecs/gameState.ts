@@ -151,6 +151,17 @@ export function togglePause() {
 	notify();
 }
 
+export function setPaused(value: boolean) {
+	if (paused === value) return;
+	paused = value;
+	snapshot = null;
+	notify();
+}
+
+export function isPaused() {
+	return paused;
+}
+
 function notify() {
 	for (const listener of listeners) {
 		listener();
@@ -195,10 +206,19 @@ export function simulationTick() {
 	narrativeSystem();
 	poiSystem();
 	persistenceSystem(tick);
+	if (_audioTickFn) _audioTickFn();
 	updateDisplayOffsets();
 
 	snapshot = null;
 	notify();
+}
+
+// ─── Audio tick registration ─────────────────────────────────────────────────
+// Audio uses Tone.js (ESM-only), so we use a callback registration pattern
+// instead of a direct import to avoid breaking Jest's CJS transform chain.
+let _audioTickFn: (() => void) | null = null;
+export function registerAudioTick(fn: () => void) {
+	_audioTickFn = fn;
 }
 
 export function resetGameState() {

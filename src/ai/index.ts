@@ -73,6 +73,22 @@ export {
 	type StateTransitionMap,
 } from "./state-machines/LocalStateMachine";
 export {
+	type BotAnimationState,
+	clearEntityAnimationStates,
+	deriveAnimationState,
+	getEntityAnimationState,
+	setEntityAnimationState,
+} from "./steering/AnimationState";
+export {
+	applyArrive,
+	applyArriveWithSeparation,
+	applyFlee,
+	applySeparation,
+	applySeek,
+	applySeekWithSeparation,
+	clearSteering,
+} from "./steering/SteeringComposer";
+export {
 	STEERING_POLICIES,
 	type SteeringPolicy,
 } from "./steering/SteeringPolicies";

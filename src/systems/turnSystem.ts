@@ -13,6 +13,7 @@
  * still tick, but gameplay actions are gated by AP/MP.
  */
 
+import { finalizeTurnDeltas } from "./resourceDeltas";
 import { finalizeTurn, logTurnEvent } from "./turnEventLog";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -259,6 +260,9 @@ export function endPlayerTurn() {
 	for (const handler of environmentPhaseHandlers) {
 		handler(turnState.turnNumber);
 	}
+
+	// Snapshot resource deltas before resetting for new turn
+	finalizeTurnDeltas();
 
 	// Log turn_end and finalize the turn's event log
 	logTurnEvent("turn_end", null, "system", {

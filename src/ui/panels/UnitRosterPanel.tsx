@@ -1,8 +1,8 @@
 /**
  * UnitRosterPanel — shows all player units with role icon, name,
- * Mark level, AP/MP, and current activity status.
+ * Mark level, AP/MP, current activity, and grid location.
  *
- * Clicking a unit centers the camera on it.
+ * Clicking a unit centers the camera on it (when camera focus callback is set).
  */
 
 import { useSyncExternalStore } from "react";
@@ -17,10 +17,12 @@ import {
 	subscribeTurnState,
 	type UnitTurnState,
 } from "../../systems/turnSystem";
+import { requestCameraFocus } from "../../systems/cameraFocus";
 import {
 	BoxIcon,
 	EyeIcon,
 	HammerIcon,
+	MapIcon,
 	ShieldIcon,
 	SwordIcon,
 	WrenchIcon,
@@ -69,13 +71,23 @@ function toRoman(n: number): string {
 	return numerals[n - 1] ?? String(n);
 }
 
+const ACTIVITY_LABELS: Record<string, { label: string; color: string }> = {
+	SELECTED: { label: "Selected", color: "#8be6ff" },
+	HARVESTING: { label: "Harvesting", color: "#f6c56a" },
+	BUILDING: { label: "Building", color: "#f6c56a" },
+	MOVING: { label: "Moving", color: "#7ee7cb" },
+	ATTACKING: { label: "Attacking", color: "#ff8f8f" },
+	STATIONARY: { label: "Idle", color: "rgba(255, 255, 255, 0.4)" },
+	IDLE: { label: "Idle", color: "rgba(255, 255, 255, 0.4)" },
+};
+
 function getActivity(unit: {
 	selected: boolean;
 	speed: number;
 	type: BotUnitType;
 }): string {
 	if (unit.selected) return "SELECTED";
-	if (unit.speed === 0) return "STATIONARY";
+	if (unit.speed > 0) return "MOVING";
 	return "IDLE";
 }
 
@@ -108,11 +120,16 @@ function UnitRow({
 	const maxAp = unit.turnState?.maxActionPoints ?? 0;
 	const maxMp = unit.turnState?.maxMovementPoints ?? 0;
 	const isSpent = apRemaining === 0 && mpRemaining === 0;
+	const activityInfo = ACTIVITY_LABELS[unit.activity] ?? ACTIVITY_LABELS.IDLE;
+
+	const gridX = Math.round(unit.position.x);
+	const gridZ = Math.round(unit.position.z);
 
 	return (
 		<Pressable
 			onPress={() => onPress(unit.position)}
 			testID={`roster-unit-${unit.id}`}
+			accessibilityLabel={`${unit.displayName}, ${roleInfo.label}, Mark ${unit.markLevel}, ${activityInfo.label} at ${gridX},${gridZ}`}
 			style={{
 				flexDirection: "row",
 				alignItems: "center",
@@ -146,9 +163,15 @@ function UnitRow({
 				<IconComponent width={16} height={16} color={roleInfo.color} />
 			</View>
 
-			{/* Name + Mark */}
+			{/* Name + Mark + Activity + Location */}
 			<View style={{ flex: 1, gap: 2 }}>
-				<View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+				<View
+					style={{
+						flexDirection: "row",
+						alignItems: "center",
+						gap: 4,
+					}}
+				>
 					<Text
 						style={{
 							fontFamily: "monospace",
@@ -171,17 +194,48 @@ function UnitRow({
 						Mk{toRoman(unit.markLevel)}
 					</Text>
 				</View>
-				<Text
+				<View
 					style={{
-						fontFamily: "monospace",
-						fontSize: 9,
-						color: "rgba(255, 255, 255, 0.4)",
-						letterSpacing: 1,
-						textTransform: "uppercase",
+						flexDirection: "row",
+						alignItems: "center",
+						gap: 6,
 					}}
 				>
-					{unit.activity}
-				</Text>
+					<Text
+						style={{
+							fontFamily: "monospace",
+							fontSize: 9,
+							color: activityInfo.color,
+							letterSpacing: 1,
+							textTransform: "uppercase",
+						}}
+					>
+						{activityInfo.label}
+					</Text>
+					<View
+						style={{
+							flexDirection: "row",
+							alignItems: "center",
+							gap: 2,
+						}}
+					>
+						<MapIcon
+							width={8}
+							height={8}
+							color="rgba(255, 255, 255, 0.3)"
+						/>
+						<Text
+							style={{
+								fontFamily: "monospace",
+								fontSize: 8,
+								color: "rgba(255, 255, 255, 0.35)",
+								letterSpacing: 0.5,
+							}}
+						>
+							{gridX},{gridZ}
+						</Text>
+					</View>
+				</View>
 			</View>
 
 			{/* AP / MP */}
@@ -190,7 +244,10 @@ function UnitRow({
 					style={{
 						fontFamily: "monospace",
 						fontSize: 10,
-						color: apRemaining > 0 ? "#8be6ff" : "rgba(255,255,255,0.25)",
+						color:
+							apRemaining > 0
+								? "#8be6ff"
+								: "rgba(255,255,255,0.25)",
 						letterSpacing: 0.5,
 					}}
 				>
@@ -200,7 +257,10 @@ function UnitRow({
 					style={{
 						fontFamily: "monospace",
 						fontSize: 10,
-						color: mpRemaining > 0 ? "#7ee7cb" : "rgba(255,255,255,0.25)",
+						color:
+							mpRemaining > 0
+								? "#7ee7cb"
+								: "rgba(255,255,255,0.25)",
 						letterSpacing: 0.5,
 					}}
 				>
@@ -209,18 +269,6 @@ function UnitRow({
 			</View>
 		</Pressable>
 	);
-}
-
-// ─── Camera Control ──────────────────────────────────────────────────────────
-
-let cameraFocusCallback:
-	| ((pos: { x: number; y: number; z: number }) => void)
-	| null = null;
-
-export function setCameraFocusCallback(
-	cb: ((pos: { x: number; y: number; z: number }) => void) | null,
-) {
-	cameraFocusCallback = cb;
 }
 
 // ─── Main Panel ──────────────────────────────────────────────────────────────
@@ -253,9 +301,7 @@ export function UnitRosterPanel() {
 	}
 
 	const handleUnitPress = (pos: { x: number; y: number; z: number }) => {
-		if (cameraFocusCallback) {
-			cameraFocusCallback(pos);
-		}
+		requestCameraFocus(pos.x, pos.z, null, 0.5);
 	};
 
 	if (playerUnits.length === 0) {

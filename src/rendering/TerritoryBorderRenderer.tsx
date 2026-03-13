@@ -20,10 +20,10 @@ import {
 } from "../world/sectorCoordinates";
 
 const FACTION_BORDER_COLORS: Record<string, number> = {
-	player: 0x7ff7d4,
-	rogue: 0xffa36f,
-	cultist: 0xd987ff,
-	feral: 0xff6f6f,
+	player: 0x00cccc, // Cyan
+	rogue: 0xffaa44, // Amber — Reclaimers
+	cultist: 0xd987ff, // Purple — Signal Choir / Iron Creed
+	feral: 0x44cc44, // Green — Volt Collective
 };
 
 const BORDER_Y = 0.04;

@@ -23,6 +23,16 @@ import {
 	getRadialMenuState,
 	openRadialMenu,
 } from "../systems/radialMenu";
+import {
+	hideTooltip,
+	showBuildingTooltip,
+	showUnitTooltip,
+} from "../systems/tooltipSystem";
+import { getUnitTurnState } from "../systems/turnSystem";
+import {
+	deselectAll,
+	selectEntity,
+} from "../systems/unitSelection";
 import { worldToGrid } from "../world/sectorCoordinates";
 import { getStructuralFragment } from "../world/structuralSpace";
 
@@ -155,23 +165,6 @@ function getSelectedEntity(): Entity | null {
 	return null;
 }
 
-function deselectAll() {
-	for (const u of units) {
-		u.get(Unit)!.selected = false;
-	}
-	for (const b of buildings) {
-		b.get(Building)!.selected = false;
-	}
-}
-
-function isUnit(entity: Entity): boolean {
-	return !!entity.get(Unit);
-}
-
-function isBuilding(entity: Entity): boolean {
-	return !!entity.get(Building);
-}
-
 export function UnitInput() {
 	const { camera, gl } = useThree();
 	const touchStart = useRef<{ x: number; y: number; time: number } | null>(
@@ -205,15 +198,13 @@ export function UnitInput() {
 
 			if (entityAtPoint) {
 				// Tapped on a unit or building — select it (deselect others)
-				deselectAll();
-				if (isUnit(entityAtPoint)) {
-					entityAtPoint.get(Unit)!.selected = true;
-				} else if (isBuilding(entityAtPoint)) {
-					entityAtPoint.get(Building)!.selected = true;
-				}
-			} else if (currentlySelected && isUnit(currentlySelected)) {
+				selectEntity(entityAtPoint);
+			} else if (currentlySelected && currentlySelected.get(Unit)) {
 				// Tapped empty ground with a mobile unit selected — move there
 				issueMoveTo(currentlySelected, point.x, point.z);
+			} else {
+				// Tapped empty ground with nothing relevant — deselect
+				deselectAll();
 			}
 		},
 		[camera, gl],
@@ -234,6 +225,12 @@ export function UnitInput() {
 				closeRadialMenu();
 			}
 
+			// Auto-select the entity under the pointer for radial context
+			const entityAtPoint = findEntityAtPoint(point);
+			if (entityAtPoint) {
+				selectEntity(entityAtPoint);
+			}
+
 			const context = buildRadialContext(point);
 			openRadialMenu(clientX, clientY, context);
 		},
@@ -252,6 +249,12 @@ export function UnitInput() {
 
 			if (getRadialMenuState().open) {
 				closeRadialMenu();
+			}
+
+			// Auto-select the entity under the pointer for radial context
+			const entityAtPoint = findEntityAtPoint(point);
+			if (entityAtPoint) {
+				selectEntity(entityAtPoint);
 			}
 
 			const context = buildRadialContext(point);
@@ -368,17 +371,73 @@ export function UnitInput() {
 			touchStart.current = null;
 		};
 
-		// Mouse move for ghost building preview
+		// Mouse move for ghost building preview + path preview tracking + tooltips
 		const onMouseMove = (e: MouseEvent) => {
-			if (!getActivePlacement()) return;
-			const point = getWorldPointFromEvent(
-				e.clientX,
-				e.clientY,
-				camera,
-				gl.domElement,
-			);
-			if (point) {
-				updateGhostPosition(point.x, point.z);
+			// Store mouse position for PathPreviewRenderer
+			(canvas as any).__lastMouseEvent = {
+				clientX: e.clientX,
+				clientY: e.clientY,
+			};
+
+			if (getActivePlacement()) {
+				const point = getWorldPointFromEvent(
+					e.clientX,
+					e.clientY,
+					camera,
+					gl.domElement,
+				);
+				if (point) {
+					updateGhostPosition(point.x, point.z);
+				}
+				hideTooltip();
+				return;
+			}
+
+			// Tooltip on hover — find entity under cursor
+			if (!getRadialMenuState().open) {
+				const point = getWorldPointFromEvent(
+					e.clientX,
+					e.clientY,
+					camera,
+					gl.domElement,
+				);
+				if (point) {
+					const entity = findEntityAtPoint(point, 1.5);
+					if (entity) {
+						const identity = entity.get(Identity);
+						const unitComp = entity.get(Unit);
+						const buildingComp = entity.get(Building);
+						if (identity && unitComp) {
+							const functional = unitComp.components.filter((c) => c.functional).length;
+							showUnitTooltip(e.clientX, e.clientY, {
+								entityId: identity.id,
+								name: unitComp.displayName,
+								faction: identity.faction,
+								unitType: unitComp.type,
+								archetype: unitComp.archetypeId,
+								markLevel: unitComp.markLevel,
+								hpCurrent: functional,
+								hpMax: unitComp.components.length,
+								turnState: getUnitTurnState(identity.id) ?? null,
+								currentAction: unitComp.speed > 0 ? "Moving" : null,
+							});
+						} else if (identity && buildingComp) {
+							showBuildingTooltip(e.clientX, e.clientY, {
+								entityId: identity.id,
+								name: buildingComp.type.replace(/_/g, " "),
+								faction: identity.faction,
+								buildingType: buildingComp.type,
+								constructionStage: buildingComp.operational ? "Operational" : "Under Construction",
+								buildingOutput: null,
+								powered: buildingComp.powered,
+							});
+						}
+					} else {
+						hideTooltip();
+					}
+				} else {
+					hideTooltip();
+				}
 			}
 		};
 

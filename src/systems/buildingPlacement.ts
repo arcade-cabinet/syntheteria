@@ -4,6 +4,7 @@ import {
 	spawnLightningRod,
 	spawnBuilding,
 } from "../ecs/factory";
+import { startBuildingConstruction } from "./constructionVisualization";
 import {
 	Building,
 	Identity,
@@ -366,23 +367,30 @@ export function confirmPlacement(): boolean {
 	if (!fragmentId) return false;
 
 	// Place the building
+	let placedEntity;
 	if (activePlacement === "lightning_rod") {
-		spawnLightningRod({ x: ghostPosition.x, z: ghostPosition.z, fragmentId });
+		placedEntity = spawnLightningRod({ x: ghostPosition.x, z: ghostPosition.z, fragmentId });
 	} else if (activePlacement === "fabrication_unit") {
-		spawnFabricationUnit({
+		placedEntity = spawnFabricationUnit({
 			x: ghostPosition.x,
 			z: ghostPosition.z,
 			fragmentId,
 			powered: false,
 		});
 	} else {
-		spawnBuilding({
+		placedEntity = spawnBuilding({
 			x: ghostPosition.x,
 			z: ghostPosition.z,
 			fragmentId,
 			type: activePlacement,
 			powered: false,
 		});
+	}
+
+	// Start staged construction visualization (instant buildings skip automatically)
+	const placedId = placedEntity.get(Identity)?.id;
+	if (placedId) {
+		startBuildingConstruction(placedId, activePlacement);
 	}
 
 	// Reset placement mode

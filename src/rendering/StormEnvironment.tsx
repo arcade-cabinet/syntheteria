@@ -15,6 +15,7 @@ import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { getStormIntensity } from "../systems/power";
 import { getWormholeGlow } from "../systems/weather";
+import { getStormVisualProfile } from "./stormVisuals";
 
 /** Relative path to the HDRI — loaded via three's texture loader */
 const HDRI_PATH = "/assets/hdri/polyhaven/approaching_storm_1k.hdr";
@@ -66,9 +67,11 @@ export function StormEnvironment() {
 			ENV_INTENSITY_MIN +
 			wormholeGlow * (ENV_INTENSITY_MAX - ENV_INTENSITY_MIN);
 
-		// Storm surge adds a boost
+		// Storm surge adds a boost, amplified during surge profile
+		const profile = getStormVisualProfile(stormIntensity);
+		const surgeMultiplier = profile === "surge" ? 1.5 : 1.0;
 		const finalIntensity =
-			baseIntensity + stormIntensity * STORM_BOOST;
+			baseIntensity + stormIntensity * STORM_BOOST * surgeMultiplier;
 
 		scene.environmentIntensity = finalIntensity;
 	});

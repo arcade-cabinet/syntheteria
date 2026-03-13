@@ -169,11 +169,12 @@ export function StormParticles() {
 			getStormIntensity() *
 				(weather.stormVisuals.windSpeedStorm -
 					weather.stormVisuals.windSpeedBase);
-		material.uniforms.uRainAlphaBase.value =
-			weather.stormVisuals.rainAlphaBase;
+		material.uniforms.uRainAlphaBase.value = weather.stormVisuals.rainAlphaBase;
 		material.uniforms.uRainAlphaStorm.value =
 			weather.stormVisuals.rainAlphaStorm;
 	});
 
-	return <points geometry={geometry} material={material} frustumCulled={false} />;
+	return (
+		<points geometry={geometry} material={material} frustumCulled={false} />
+	);
 }

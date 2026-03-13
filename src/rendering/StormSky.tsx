@@ -3,6 +3,7 @@ import { useRef } from "react";
 import * as THREE from "three";
 import { getStormIntensity } from "../systems/power";
 import { getWeatherSnapshot, getWormholeGlow } from "../systems/weather";
+import { getLightningFrequency } from "./stormVisuals";
 
 /**
  * Perpetual hypercane sky dome with wormhole day/night cycle.
@@ -27,15 +28,17 @@ export function StormSky() {
 	useFrame(({ clock }) => {
 		if (materialRef.current) {
 			const weather = getWeatherSnapshot();
+			const intensity = getStormIntensity();
 			materialRef.current.uniforms.uTime.value = clock.getElapsedTime();
-			materialRef.current.uniforms.uStormIntensity.value =
-				getStormIntensity();
-			materialRef.current.uniforms.uWormholeGlow.value =
-				getWormholeGlow();
+			materialRef.current.uniforms.uStormIntensity.value = intensity;
+			materialRef.current.uniforms.uWormholeGlow.value = getWormholeGlow();
 			materialRef.current.uniforms.uCloudSpeed.value =
 				weather.stormVisuals.cloudSpeed;
 			materialRef.current.uniforms.uSkyTintShift.value =
 				weather.stormVisuals.skyTintShift;
+			// Lightning frequency from stormVisuals pure logic
+			materialRef.current.uniforms.uLightningFreq.value =
+				getLightningFrequency(intensity);
 		}
 	});
 
@@ -52,6 +55,7 @@ export function StormSky() {
 					uWormholeGlow: { value: 0.5 },
 					uCloudSpeed: { value: 0.08 },
 					uSkyTintShift: { value: 0.3 },
+					uLightningFreq: { value: 2 },
 				}}
 				vertexShader={`
           varying vec3 vPosition;
@@ -66,6 +70,7 @@ export function StormSky() {
           uniform float uWormholeGlow;
           uniform float uCloudSpeed;
           uniform float uSkyTintShift;
+          uniform float uLightningFreq;
           varying vec3 vPosition;
 
           float hash(vec2 p) {
@@ -153,8 +158,8 @@ export function StormSky() {
             }
             vec3 tendrilColor = vec3(0.2, 0.05, 0.35) * tendril * wg;
 
-            // Lightning flashes — frequency increases with intensity
-            float flashRate = 2.0 + si * 6.0;
+            // Lightning flashes — frequency from stormVisuals getLightningFrequency
+            float flashRate = max(1.0, uLightningFreq);
             float flash = step(0.994 - si * 0.004, hash(vec2(floor(uTime * flashRate), 0.0)));
             // Flash illuminates clouds in the direction of the strike
             float flashAngle = hash(vec2(floor(uTime * flashRate), 1.0)) * 6.28;

@@ -7,7 +7,6 @@ import "../systems/radialProviders"; // Register radial menu action providers at
 import { BriefingBubbleLayer } from "./BriefingBubbleLayer";
 import { CitySiteOverlay } from "./CitySiteOverlay";
 import { GameHUD } from "./panels/GameHUD";
-import { Minimap } from "./panels/Minimap";
 import { Notifications } from "./panels/Notifications";
 import { ThoughtOverlay } from "./panels/ThoughtOverlay";
 import { RadialMenu } from "./RadialMenu";
@@ -39,7 +38,6 @@ export function GameUI() {
 			{worldInteractive && <Notifications />}
 			{worldInteractive && <BriefingBubbleLayer />}
 			<CitySiteOverlay />
-			{runtime.activeScene === "world" && worldInteractive && <Minimap />}
 			{runtime.cityKitLabOpen && <CityKitLab onClose={closeCityKitLab} />}
 			<ThoughtOverlay />
 			<RadialMenu />

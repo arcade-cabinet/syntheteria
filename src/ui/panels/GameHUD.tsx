@@ -25,6 +25,11 @@ import {
 	togglePause,
 } from "../../ecs/gameState";
 import {
+	endPlayerTurn,
+	getTurnState,
+	subscribeTurnState,
+} from "../../systems/turnSystem";
+import {
 	BoltIcon,
 	DroneIcon,
 	PauseIcon,
@@ -113,7 +118,7 @@ function ResourcePanel({
 
 // ─── Speed Controls ──────────────────────────────────────────────────────────
 
-function SpeedControls({
+function _SpeedControls({
 	paused,
 	gameSpeed,
 	dayNumber,
@@ -260,20 +265,51 @@ export function GameHUD() {
 					/>
 				</View>
 
-				{/* Right: storm + speed */}
+				{/* Right: storm + turn controls */}
 				<View className="items-end" style={{ gap: 6 }}>
-					<ResourcePanel
-						label="Storm Pressure"
-						value={storm.label}
-						icon={<StormIcon width={16} height={16} color={stormTextColor} />}
-						borderColor={stormBorderColor}
-						textColor={stormTextColor}
-					/>
-					<SpeedControls
-						paused={snap.paused}
-						gameSpeed={snap.gameSpeed}
-						dayNumber={snap.weather.dayNumber}
-					/>
+					<View className="flex-row" style={{ gap: 6 }}>
+						<ResourcePanel
+							label="Storm Pressure"
+							value={storm.label}
+							icon={<StormIcon width={16} height={16} color={stormTextColor} />}
+							borderColor={stormBorderColor}
+							textColor={stormTextColor}
+						/>
+						<ResourcePanel
+							label="Turn"
+							value={`${snap.weather.dayNumber}`}
+							borderColor="rgba(176, 136, 216, 0.3)"
+							textColor="#d4b0ff"
+						/>
+					</View>
+					<Pressable
+						onPress={endPlayerTurn}
+						style={{
+							borderWidth: 1.5,
+							borderColor: "rgba(139, 230, 255, 0.5)",
+							borderRadius: 6,
+							backgroundColor: "rgba(139, 230, 255, 0.12)",
+							paddingHorizontal: 16,
+							paddingVertical: 10,
+							alignItems: "center",
+							...(Platform.OS === "web"
+								? ({ backdropFilter: "blur(8px)" } as Record<string, string>)
+								: {}),
+						}}
+					>
+						<Text
+							className="font-mono"
+							style={{
+								fontSize: 11,
+								letterSpacing: 3,
+								color: "#8be6ff",
+								fontWeight: "700",
+								textTransform: "uppercase",
+							}}
+						>
+							End Turn
+						</Text>
+					</Pressable>
 				</View>
 			</View>
 		</View>

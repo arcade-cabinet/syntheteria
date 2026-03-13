@@ -1,28 +1,43 @@
 /**
- * Instanced Building Renderer — high-performance instanced rendering
+ * Instanced Building Renderer — chunk-partitioned instanced rendering
  * for player-placed and AI-faction buildings.
  *
- * Instead of creating individual React components per building (N draw calls),
- * this renderer groups buildings by type and uses THREE.InstancedMesh to batch
- * all buildings of the same type into a single draw call.
+ * Instead of one global InstancedMesh with all buildings (which degrades
+ * with world size), this renderer creates one InstancedMesh per loaded
+ * chunk. When a chunk loads, a new buffer is allocated; when it unloads,
+ * the buffer is disposed (freeing GPU memory).
  *
- * This replaces the original BuildingRenderer approach for the building bodies.
- * Beacon rings are rendered with a separate shared instanced mesh.
+ * Total draw calls are bounded by loaded chunk count, not total structure
+ * count. Buildings are partitioned into chunk buckets by their world
+ * position using worldToChunk().
  *
- * Supports up to MAX_BUILDINGS_PER_TYPE instances per building type.
- * Includes frustum culling to skip offscreen buildings entirely.
+ * @dependencies chunkInstanceBuffers (pure partitioning logic)
+ * @dependencies chunkLoader (chunk lifecycle callbacks)
+ * @dependencies ecs/traits, ecs/world (building entity queries)
+ * @dependencies frustumCulling (camera-aware culling)
  */
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Building, Identity, WorldPosition } from "../ecs/traits";
 import { buildings } from "../ecs/world";
-import { isInFrustum, updateFrustum } from "../systems/frustumCulling";
-import { getSectorCell } from "../world/structuralSpace";
+import { isAABBInFrustum, updateFrustum } from "../systems/frustumCulling";
+import {
+	chunkKey,
+	getLoadedChunks,
+	setChunkCallbacks,
+} from "../world/chunkLoader";
+import type { ChunkCoord } from "../world/chunks";
 import { worldToGrid } from "../world/sectorCoordinates";
+import { getSectorCell } from "../world/structuralSpace";
+import {
+	type BuildingData,
+	ChunkBufferManager,
+	type ChunkBuildingBuffer,
+	MAX_INSTANCES_PER_CHUNK,
+} from "./chunkInstanceBuffers";
 
-const MAX_BUILDINGS_PER_TYPE = 256;
 const REBUILD_INTERVAL = 30; // frames between entity list refreshes
 
 const FACTION_COLORS: Record<string, THREE.Color> = {
@@ -46,16 +61,10 @@ const TYPE_COLORS: Record<string, THREE.Color> = {
 const DEFAULT_TYPE_COLOR = new THREE.Color(0x667788);
 const DEFAULT_FACTION_COLOR = new THREE.Color(0x8be6ff);
 
-interface BuildingData {
-	x: number;
-	y: number;
-	z: number;
-	faction: string;
-	buildingType: string;
-	operational: boolean;
-}
-
-function isBuildingVisible(pos: { x: number; z: number }, faction: string): boolean {
+function isBuildingVisible(
+	pos: { x: number; z: number },
+	faction: string,
+): boolean {
 	if (faction === "player") return true;
 	const grid = worldToGrid(pos.x, pos.z);
 	const cell = getSectorCell(grid.q, grid.r);
@@ -84,52 +93,49 @@ function collectBuildings(): BuildingData[] {
 	return result;
 }
 
-/**
- * Instanced mesh for building bodies — one box geometry shared
- * across all building types, colored per-instance.
- */
-function BuildingBodies({ data }: { data: BuildingData[] }) {
+// ---------------------------------------------------------------------------
+// Per-chunk instanced mesh for building bodies
+// ---------------------------------------------------------------------------
+
+function ChunkBuildingBodies({
+	buffer,
+	geometry,
+	material,
+}: {
+	buffer: ChunkBuildingBuffer;
+	geometry: THREE.BoxGeometry;
+	material: THREE.MeshStandardMaterial;
+}) {
 	const meshRef = useRef<THREE.InstancedMesh>(null);
 	const dummyMatrix = useMemo(() => new THREE.Matrix4(), []);
 	const tempColor = useMemo(() => new THREE.Color(), []);
-	const tempScale = useMemo(() => new THREE.Vector3(), []);
-
-	const { geometry, material } = useMemo(() => {
-		const geo = new THREE.BoxGeometry(0.8, 1.2, 0.8);
-		const mat = new THREE.MeshStandardMaterial({
-			roughness: 0.7,
-			metalness: 0.4,
-		});
-		return { geometry: geo, material: mat };
-	}, []);
 
 	useFrame(() => {
 		const mesh = meshRef.current;
 		if (!mesh) return;
 
+		// Skip entire chunk if its AABB is outside the frustum
+		const { bounds } = buffer;
+		if (!isAABBInFrustum(bounds.minX, bounds.minZ, bounds.maxX, bounds.maxZ)) {
+			if (mesh.count > 0) {
+				mesh.count = 0;
+				mesh.instanceMatrix.needsUpdate = true;
+			}
+			return;
+		}
+
 		let count = 0;
-		for (let i = 0; i < data.length && count < MAX_BUILDINGS_PER_TYPE; i++) {
-			const b = data[i];
+		for (const b of buffer.buildings) {
+			if (count >= MAX_INSTANCES_PER_CHUNK) break;
 
-			// Frustum cull
-			if (!isInFrustum(b.x, b.z)) continue;
-
-			// Position body 0.6 units above ground
 			dummyMatrix.makeTranslation(b.x, b.y + 0.6, b.z);
 			mesh.setMatrixAt(count, dummyMatrix);
 
-			// Color by type
 			const typeColor = TYPE_COLORS[b.buildingType] ?? DEFAULT_TYPE_COLOR;
 			tempColor.copy(typeColor);
 			mesh.setColorAt(count, tempColor);
 
 			count++;
-		}
-
-		// Hide unused instances
-		for (let i = count; i < mesh.count; i++) {
-			dummyMatrix.makeScale(0, 0, 0);
-			mesh.setMatrixAt(i, dummyMatrix);
 		}
 
 		mesh.count = count;
@@ -142,7 +148,7 @@ function BuildingBodies({ data }: { data: BuildingData[] }) {
 	return (
 		<instancedMesh
 			ref={meshRef}
-			args={[geometry, material, MAX_BUILDINGS_PER_TYPE]}
+			args={[geometry, material, MAX_INSTANCES_PER_CHUNK]}
 			frustumCulled={false}
 			castShadow
 			receiveShadow
@@ -150,11 +156,19 @@ function BuildingBodies({ data }: { data: BuildingData[] }) {
 	);
 }
 
-/**
- * Instanced mesh for beacon rings — flat ring at each building base,
- * colored by faction ownership.
- */
-function BeaconRings({ data }: { data: BuildingData[] }) {
+// ---------------------------------------------------------------------------
+// Per-chunk instanced mesh for beacon rings
+// ---------------------------------------------------------------------------
+
+function ChunkBeaconRings({
+	buffer,
+	geometry,
+	material,
+}: {
+	buffer: ChunkBuildingBuffer;
+	geometry: THREE.RingGeometry;
+	material: THREE.MeshBasicMaterial;
+}) {
 	const meshRef = useRef<THREE.InstancedMesh>(null);
 	const dummyMatrix = useMemo(() => new THREE.Matrix4(), []);
 	const tempColor = useMemo(() => new THREE.Color(), []);
@@ -164,46 +178,36 @@ function BeaconRings({ data }: { data: BuildingData[] }) {
 		return m;
 	}, []);
 
-	const { geometry, material } = useMemo(() => {
-		const geo = new THREE.RingGeometry(0.5, 0.65, 24);
-		const mat = new THREE.MeshBasicMaterial({
-			transparent: true,
-			opacity: 0.35,
-			side: THREE.DoubleSide,
-			depthWrite: false,
-		});
-		return { geometry: geo, material: mat };
-	}, []);
-
 	useFrame(({ clock }) => {
 		const mesh = meshRef.current;
 		if (!mesh) return;
+
+		// Skip entire chunk if its AABB is outside the frustum
+		const { bounds } = buffer;
+		if (!isAABBInFrustum(bounds.minX, bounds.minZ, bounds.maxX, bounds.maxZ)) {
+			if (mesh.count > 0) {
+				mesh.count = 0;
+				mesh.instanceMatrix.needsUpdate = true;
+			}
+			return;
+		}
 
 		const opacity = 0.3 + 0.1 * Math.sin(clock.elapsedTime * 2);
 		(mesh.material as THREE.MeshBasicMaterial).opacity = opacity;
 
 		let count = 0;
-		for (let i = 0; i < data.length && count < MAX_BUILDINGS_PER_TYPE; i++) {
-			const b = data[i];
+		for (const b of buffer.buildings) {
+			if (count >= MAX_INSTANCES_PER_CHUNK) break;
 
-			if (!isInFrustum(b.x, b.z)) continue;
-
-			// Position ring at base, rotated to lie flat
 			dummyMatrix.makeTranslation(b.x, b.y + 0.02, b.z);
 			dummyMatrix.multiply(rotationMatrix);
 			mesh.setMatrixAt(count, dummyMatrix);
 
-			// Color by faction
 			const factionColor = FACTION_COLORS[b.faction] ?? DEFAULT_FACTION_COLOR;
 			tempColor.copy(factionColor);
 			mesh.setColorAt(count, tempColor);
 
 			count++;
-		}
-
-		for (let i = count; i < mesh.count; i++) {
-			dummyMatrix.makeScale(0, 0, 0);
-			mesh.setMatrixAt(i, dummyMatrix);
 		}
 
 		mesh.count = count;
@@ -216,26 +220,89 @@ function BeaconRings({ data }: { data: BuildingData[] }) {
 	return (
 		<instancedMesh
 			ref={meshRef}
-			args={[geometry, material, MAX_BUILDINGS_PER_TYPE]}
+			args={[geometry, material, MAX_INSTANCES_PER_CHUNK]}
 			frustumCulled={false}
 		/>
 	);
 }
 
+// ---------------------------------------------------------------------------
+// Main chunk-partitioned renderer
+// ---------------------------------------------------------------------------
+
 /**
- * InstancedBuildingRenderer — replaces BuildingRenderer with instanced
- * meshes for much better performance at high building counts.
+ * InstancedBuildingRenderer — chunk-partitioned instanced meshes.
  *
- * Renders building bodies as colored boxes and beacon rings as faction-colored
- * rings. Updates the frustum each frame for camera-aware culling.
+ * One InstancedMesh per loaded chunk per visual layer (bodies + rings).
+ * Draw calls scale with loaded chunk count, not total building count.
+ * GPU memory is reclaimed when chunks unload.
  */
 export function InstancedBuildingRenderer() {
 	const frameCounter = useRef(0);
-	const dataRef = useRef<BuildingData[]>(collectBuildings());
 	const { camera } = useThree();
 
+	// Shared geometry + material (reused across all chunk meshes)
+	const bodyGeo = useMemo(() => new THREE.BoxGeometry(0.8, 1.2, 0.8), []);
+	const bodyMat = useMemo(
+		() =>
+			new THREE.MeshStandardMaterial({
+				roughness: 0.7,
+				metalness: 0.4,
+			}),
+		[],
+	);
+	const ringGeo = useMemo(() => new THREE.RingGeometry(0.5, 0.65, 24), []);
+	const ringMat = useMemo(
+		() =>
+			new THREE.MeshBasicMaterial({
+				transparent: true,
+				opacity: 0.35,
+				side: THREE.DoubleSide,
+				depthWrite: false,
+			}),
+		[],
+	);
+
+	// Chunk buffer manager — stable across renders
+	const managerRef = useRef<ChunkBufferManager | null>(null);
+	if (!managerRef.current) {
+		managerRef.current = new ChunkBufferManager();
+	}
+	const manager = managerRef.current;
+
+	// Trigger re-renders when chunk set changes
+	const [, setRevision] = useState(0);
+	const bumpRevision = useCallback(() => setRevision((r) => r + 1), []);
+
+	// Wire chunk callbacks on mount
+	useEffect(() => {
+		// Seed the manager with any already-loaded chunks
+		for (const [, chunk] of getLoadedChunks()) {
+			if (chunk.state === "ready" || chunk.state === "loading") {
+				manager.handleChunkLoad({ chunkX: chunk.chunkX, chunkZ: chunk.chunkZ });
+			}
+		}
+
+		manager.onBufferCreated = () => bumpRevision();
+		manager.onBufferRemoved = () => bumpRevision();
+
+		setChunkCallbacks(
+			(coord: ChunkCoord) => {
+				manager.handleChunkLoad(coord);
+			},
+			(coord: ChunkCoord) => {
+				manager.handleChunkUnload(coord);
+			},
+		);
+
+		return () => {
+			setChunkCallbacks(null, null);
+			manager.reset();
+		};
+	}, [manager, bumpRevision]);
+
+	// Per-frame: update frustum + periodically refresh buildings
 	useFrame(() => {
-		// Update frustum bounds from camera position
 		updateFrustum(
 			camera.position.x,
 			camera.position.z,
@@ -244,18 +311,33 @@ export function InstancedBuildingRenderer() {
 			(camera as THREE.PerspectiveCamera).aspect ?? 16 / 9,
 		);
 
-		// Refresh building list periodically
 		frameCounter.current++;
 		if (frameCounter.current >= REBUILD_INTERVAL) {
 			frameCounter.current = 0;
-			dataRef.current = collectBuildings();
+			const allBuildings = collectBuildings();
+			manager.updateBuildings(allBuildings);
 		}
 	});
 
+	// Render one instanced mesh pair per loaded chunk
+	const entries = Array.from(manager.getBuffers().entries());
+
 	return (
 		<>
-			<BuildingBodies data={dataRef.current} />
-			<BeaconRings data={dataRef.current} />
+			{entries.map(([key, buffer]) => (
+				<group key={key}>
+					<ChunkBuildingBodies
+						buffer={buffer}
+						geometry={bodyGeo}
+						material={bodyMat}
+					/>
+					<ChunkBeaconRings
+						buffer={buffer}
+						geometry={ringGeo}
+						material={ringMat}
+					/>
+				</group>
+			))}
 		</>
 	);
 }

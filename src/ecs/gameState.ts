@@ -60,6 +60,7 @@ import {
 	type ResourcePool,
 	resourceSystem,
 } from "../systems/resources";
+import { botSpeechSystem } from "../systems/botSpeech";
 import { signalNetworkSystem } from "../systems/signalNetworkSystem";
 import {
 	getWeatherSnapshot,
@@ -228,6 +229,7 @@ export function simulationTick() {
 	hackingSystem();
 	territorySystem();
 	narrativeSystem();
+	botSpeechSystem(tick, []);
 	poiSystem();
 	persistenceSystem(tick);
 	if (_audioTickFn) _audioTickFn();

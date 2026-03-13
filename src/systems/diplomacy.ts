@@ -99,19 +99,14 @@ function pairKey(a: string, b: string): string {
 export function getFactionProfile(
 	factionId: DiplomacyFactionId,
 ): FactionProfile {
-	return diplomacyConfig.factions[
-		factionId
-	] as FactionProfile;
+	return diplomacyConfig.factions[factionId] as FactionProfile;
 }
 
 export function getAllFactionProfiles(): Record<
 	DiplomacyFactionId,
 	FactionProfile
 > {
-	return diplomacyConfig.factions as Record<
-		DiplomacyFactionId,
-		FactionProfile
-	>;
+	return diplomacyConfig.factions as Record<DiplomacyFactionId, FactionProfile>;
 }
 
 // ─── Public API ──────────────────────────────────────────────────────────────
@@ -300,6 +295,202 @@ export function areAllied(factionA: string, factionB: string): boolean {
 	return getStandingLevel(factionA, factionB) === "allied";
 }
 
+// ─── Gameplay Consequences ────────────────────────────────────────────────────
+
+export interface TradeIncome {
+	factionId: string;
+	incomeShared: number;
+}
+
+export interface WarContestedCell {
+	q: number;
+	r: number;
+	contestingFaction: string;
+}
+
+let lastTradeIncomes: TradeIncome[] = [];
+let lastContestedCells: WarContestedCell[] = [];
+
+/**
+ * Calculate trade income from all trading/allied partners.
+ * Returns income shared from each partner based on their harvest output.
+ * Share percentage is config-driven via diplomacy.json tradeIncomeSharePercent.
+ */
+export function calculateTradeIncome(
+	factionHarvests: Map<string, number>,
+): TradeIncome[] {
+	const incomes: TradeIncome[] = [];
+	const sharePercent = (diplomacyConfig as Record<string, unknown>)
+		.tradeIncomeSharePercent as number;
+	const shareFraction = sharePercent / 100;
+
+	for (const [factionA, factionB] of allFactionPairs()) {
+		if (!areAllied(factionA, factionB)) continue;
+
+		const harvestA = factionHarvests.get(factionA) ?? 0;
+		const harvestB = factionHarvests.get(factionB) ?? 0;
+
+		if (harvestA > 0) {
+			incomes.push({
+				factionId: factionA,
+				incomeShared: Math.floor(harvestA * shareFraction),
+			});
+		}
+		if (harvestB > 0) {
+			incomes.push({
+				factionId: factionB,
+				incomeShared: Math.floor(harvestB * shareFraction),
+			});
+		}
+	}
+
+	lastTradeIncomes = incomes;
+	return incomes;
+}
+
+/**
+ * Get the last calculated trade incomes.
+ */
+export function getLastTradeIncomes(): TradeIncome[] {
+	return lastTradeIncomes;
+}
+
+/**
+ * Check if fog of war is shared with a faction via alliance.
+ * Config-driven via diplomacy.json allianceFogSharing.
+ */
+export function isFogSharedWith(factionA: string, factionB: string): boolean {
+	const fogEnabled = (diplomacyConfig as Record<string, unknown>)
+		.allianceFogSharing as boolean;
+	if (!fogEnabled) return false;
+	return areAllied(factionA, factionB);
+}
+
+/**
+ * Get all factions that share fog with a given faction (i.e. allies).
+ */
+export function getAlliedFactions(factionId: string): string[] {
+	const allies: string[] = [];
+	for (const df of ALL_DIPLOMACY_FACTIONS) {
+		if (df === factionId) continue;
+		if (areAllied(factionId, df)) {
+			allies.push(df);
+		}
+	}
+	return allies;
+}
+
+/**
+ * Calculate contested border cells during war.
+ * Player cells within warBorderContestRadius of enemy territory are contested.
+ */
+export function calculateContestedCells(
+	playerCells: Array<{ q: number; r: number }>,
+	factionCells: Map<string, Array<{ q: number; r: number }>>,
+	playerFaction: string,
+): WarContestedCell[] {
+	const contested: WarContestedCell[] = [];
+	const radius = (diplomacyConfig as Record<string, unknown>)
+		.warBorderContestRadius as number;
+
+	for (const [factionId, cells] of factionCells) {
+		if (!areAtWar(playerFaction, factionId)) continue;
+
+		for (const playerCell of playerCells) {
+			for (const enemyCell of cells) {
+				const dq = playerCell.q - enemyCell.q;
+				const dr = playerCell.r - enemyCell.r;
+				const dist = Math.abs(dq) + Math.abs(dr);
+				if (dist <= radius) {
+					contested.push({
+						q: playerCell.q,
+						r: playerCell.r,
+						contestingFaction: factionId,
+					});
+					break;
+				}
+			}
+		}
+	}
+
+	lastContestedCells = contested;
+	return contested;
+}
+
+/**
+ * Get the last calculated contested cells.
+ */
+export function getLastContestedCells(): WarContestedCell[] {
+	return lastContestedCells;
+}
+
+/**
+ * Apply standing break penalty to all factions when an agreement is broken.
+ * The broken-with faction receives double the penalty.
+ */
+export function applyBreakPenalty(
+	brokenFaction: string,
+	brokenWith: string,
+	turnNumber: number,
+	isAlliance: boolean,
+) {
+	const penalty = isAlliance
+		? ((diplomacyConfig as Record<string, unknown>)
+				.breakAlliancePenalty as number)
+		: ((diplomacyConfig as Record<string, unknown>)
+				.breakTradePenalty as number);
+
+	for (const df of ALL_DIPLOMACY_FACTIONS) {
+		if (df === brokenFaction) continue;
+		if (df === brokenWith) {
+			modifyStanding(
+				brokenFaction,
+				df,
+				penalty * 2,
+				turnNumber,
+				"agreement_broken",
+			);
+		} else {
+			modifyStanding(
+				brokenFaction,
+				df,
+				penalty,
+				turnNumber,
+				"agreement_broken",
+			);
+		}
+	}
+}
+
+/**
+ * Diplomacy system tick. Decays standing toward neutral over time.
+ * Decay rate is config-driven via diplomacy.json standingDecayPerTurn.
+ */
+export function diplomacySystemTick(turnNumber: number) {
+	const decay = (diplomacyConfig as Record<string, unknown>)
+		.standingDecayPerTurn as number;
+	if (!decay) return;
+
+	for (const [key, value] of standings) {
+		if (value > 0) {
+			standings.set(key, Math.max(0, value - decay));
+		} else if (value < 0) {
+			standings.set(key, Math.min(0, value + decay));
+		}
+	}
+}
+
+/** Helper: iterate all unique faction pairs */
+function allFactionPairs(): [string, string][] {
+	const pairs: [string, string][] = [];
+	for (let i = 0; i < ALL_DIPLOMACY_FACTIONS.length; i++) {
+		for (let j = i + 1; j < ALL_DIPLOMACY_FACTIONS.length; j++) {
+			pairs.push([ALL_DIPLOMACY_FACTIONS[i], ALL_DIPLOMACY_FACTIONS[j]]);
+		}
+	}
+	return pairs;
+}
+
 /**
  * Reset diplomacy state — call on new game.
  */
@@ -308,5 +499,7 @@ export function resetDiplomacy() {
 	pendingTrades.length = 0;
 	recentEvents.length = 0;
 	nextTradeId = 1;
+	lastTradeIncomes = [];
+	lastContestedCells = [];
 	notify();
 }

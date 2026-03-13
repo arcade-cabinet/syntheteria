@@ -1,17 +1,24 @@
+import diplomacyConfig from "../config/diplomacy.json";
 import {
-	acceptTrade,
 	ALL_DIPLOMACY_FACTIONS,
+	acceptTrade,
+	applyBreakPenalty,
 	applyDiplomacyEvent,
 	areAllied,
 	areAtWar,
+	calculateContestedCells,
+	calculateTradeIncome,
+	diplomacySystemTick,
 	expireTradeOffers,
 	getAllFactionProfiles,
+	getAlliedFactions,
 	getFactionProfile,
 	getPendingTrades,
 	getRecentEvents,
 	getStanding,
 	getStandingDisplay,
 	getStandingLevel,
+	isFogSharedWith,
 	modifyStanding,
 	proposeTrade,
 	rejectTrade,
@@ -202,5 +209,140 @@ describe("trade offers", () => {
 
 	test("acceptTrade returns false for nonexistent trade", () => {
 		expect(acceptTrade("fake_id", 1)).toBe(false);
+	});
+});
+
+describe("gameplay consequences — trade income", () => {
+	test("allied factions share config percentage of harvest", () => {
+		// Make reclaimers and volt_collective allied
+		modifyStanding("reclaimers", "volt_collective", 60, 1, "test");
+
+		const harvests = new Map([["reclaimers", 100]]);
+		const incomes = calculateTradeIncome(harvests);
+
+		const sharePercent = (diplomacyConfig as Record<string, unknown>)
+			.tradeIncomeSharePercent as number;
+		expect(incomes.length).toBeGreaterThan(0);
+		const reclaimerIncome = incomes.find((i) => i.factionId === "reclaimers");
+		expect(reclaimerIncome?.incomeShared).toBe(
+			Math.floor(100 * (sharePercent / 100)),
+		);
+	});
+
+	test("no income from non-allied factions", () => {
+		const harvests = new Map([["reclaimers", 100]]);
+		const incomes = calculateTradeIncome(harvests);
+		expect(incomes.length).toBe(0);
+	});
+});
+
+describe("gameplay consequences — alliance fog sharing", () => {
+	test("fog is shared between allied factions", () => {
+		expect(isFogSharedWith("player", "reclaimers")).toBe(false);
+
+		modifyStanding("player", "reclaimers", 60, 1, "test");
+		expect(isFogSharedWith("player", "reclaimers")).toBe(true);
+	});
+
+	test("fog is NOT shared with non-allied factions", () => {
+		modifyStanding("player", "reclaimers", 20, 1, "test");
+		expect(isFogSharedWith("player", "reclaimers")).toBe(false);
+	});
+
+	test("getAlliedFactions returns only allied factions", () => {
+		modifyStanding("player", "reclaimers", 60, 1, "test");
+		modifyStanding("player", "iron_creed", 20, 1, "test");
+
+		const allies = getAlliedFactions("player");
+		expect(allies).toContain("reclaimers");
+		expect(allies).not.toContain("iron_creed");
+	});
+});
+
+describe("gameplay consequences — war territory contestation", () => {
+	test("marks border cells as contested during war", () => {
+		modifyStanding("player", "iron_creed", -60, 1, "test");
+
+		const playerCells = [
+			{ q: 0, r: 0 },
+			{ q: 1, r: 0 },
+			{ q: 5, r: 5 },
+		];
+		const factionCells = new Map([["iron_creed", [{ q: 2, r: 0 }]]]);
+
+		const contested = calculateContestedCells(
+			playerCells,
+			factionCells,
+			"player",
+		);
+
+		const contestedCoords = contested.map((c) => `${c.q},${c.r}`);
+		// q=0,r=0 is dist 2 from q=2,r=0 -> within radius 3
+		expect(contestedCoords).toContain("0,0");
+		// q=1,r=0 is dist 1 from q=2,r=0 -> within radius 3
+		expect(contestedCoords).toContain("1,0");
+		// q=5,r=5 is dist 8 from q=2,r=0 -> NOT within radius 3
+		expect(contestedCoords).not.toContain("5,5");
+	});
+
+	test("no contested cells when not at war", () => {
+		modifyStanding("player", "iron_creed", 20, 1, "test");
+
+		const playerCells = [{ q: 0, r: 0 }];
+		const factionCells = new Map([["iron_creed", [{ q: 1, r: 0 }]]]);
+		const contested = calculateContestedCells(
+			playerCells,
+			factionCells,
+			"player",
+		);
+		expect(contested.length).toBe(0);
+	});
+});
+
+describe("gameplay consequences — reputation penalties", () => {
+	test("breaking trade penalizes standing with all factions", () => {
+		modifyStanding("player", "reclaimers", 40, 1, "test");
+		modifyStanding("player", "iron_creed", 30, 1, "test");
+
+		applyBreakPenalty("player", "reclaimers", 2, false);
+
+		const penalty = (diplomacyConfig as Record<string, unknown>)
+			.breakTradePenalty as number;
+		// reclaimers gets double penalty
+		expect(getStanding("player", "reclaimers")).toBe(40 + penalty * 2);
+		// iron_creed gets standard penalty
+		expect(getStanding("player", "iron_creed")).toBe(30 + penalty);
+	});
+
+	test("breaking alliance penalizes more severely", () => {
+		modifyStanding("player", "reclaimers", 60, 1, "test");
+
+		applyBreakPenalty("player", "reclaimers", 2, true);
+
+		const penalty = (diplomacyConfig as Record<string, unknown>)
+			.breakAlliancePenalty as number;
+		expect(getStanding("player", "reclaimers")).toBe(60 + penalty * 2);
+	});
+});
+
+describe("gameplay consequences — standing decay", () => {
+	test("decays positive standing toward zero", () => {
+		modifyStanding("player", "reclaimers", 10, 1, "test");
+
+		diplomacySystemTick(2);
+
+		const decay = (diplomacyConfig as Record<string, unknown>)
+			.standingDecayPerTurn as number;
+		expect(getStanding("player", "reclaimers")).toBe(10 - decay);
+	});
+
+	test("decays negative standing toward zero", () => {
+		modifyStanding("player", "reclaimers", -10, 1, "test");
+
+		diplomacySystemTick(2);
+
+		const decay = (diplomacyConfig as Record<string, unknown>)
+			.standingDecayPerTurn as number;
+		expect(getStanding("player", "reclaimers")).toBe(-10 + decay);
 	});
 });

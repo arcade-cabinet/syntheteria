@@ -1,17 +1,17 @@
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import * as THREE from "three";
 import { getCityModelById } from "../city/catalog/cityCatalog";
 import { CityModelMesh } from "../city/runtime/CityModelMesh";
 import { getSnapshot, subscribe } from "../ecs/gameState";
 import { Identity, Scene, Unit, WorldPosition } from "../ecs/traits";
 import { world } from "../ecs/world";
-import { getActiveWorldSession } from "../world/session";
-import type { WorldSessionSnapshot } from "../world/snapshots";
 import {
 	buildOverworldCityOverlayState,
 	type OverlayUnitPresence,
 } from "../world/overworldCityOverlay";
 import { gridToWorld } from "../world/sectorCoordinates";
+import { getActiveWorldSession } from "../world/session";
+import type { WorldSessionSnapshot } from "../world/snapshots";
 
 function edgeOffset(edge: string | null) {
 	switch (edge) {
@@ -38,6 +38,19 @@ function SectorStructureInstances({
 	useSyncExternalStore(subscribe, getSnapshot);
 	const session = providedSession ?? getActiveWorldSession();
 
+	// Fog of war: build a set of discovered cell keys so structures only
+	// render in areas the player has actually explored.
+	const discoveredCells = useMemo(() => {
+		if (!session) return new Set<string>();
+		const set = new Set<string>();
+		for (const cell of session.sectorCells) {
+			if (cell.discovery_state >= 1) {
+				set.add(`${cell.q},${cell.r}`);
+			}
+		}
+		return set;
+	}, [session?.sectorCells, session]);
+
 	if (!session) {
 		return null;
 	}
@@ -45,6 +58,10 @@ function SectorStructureInstances({
 	return (
 		<>
 			{session.sectorStructures.map((structure) => {
+				// Only render structures in discovered cells
+				if (!discoveredCells.has(`${structure.q},${structure.r}`)) {
+					return null;
+				}
 				const model = getCityModelById(structure.model_id);
 				if (!model) {
 					return null;
@@ -67,11 +84,7 @@ function SectorStructureInstances({
 							yBase + structure.offset_y,
 							worldPosition.z + structure.offset_z + edge.z,
 						]}
-						rotation={[
-							0,
-							(Math.PI / 2) * structure.rotation_quarter_turns,
-							0,
-						]}
+						rotation={[0, (Math.PI / 2) * structure.rotation_quarter_turns, 0]}
 					>
 						<CityModelMesh model={model} targetSpan={structure.target_span} />
 					</group>
@@ -88,12 +101,12 @@ function CityOverlayMarkers({
 	profile: "default" | "overview" | "ops";
 	session?: WorldSessionSnapshot | null;
 }) {
+	useSyncExternalStore(subscribe, getSnapshot);
+	const session = providedSession ?? getActiveWorldSession();
+
 	if (profile === "ops") {
 		return null;
 	}
-
-	useSyncExternalStore(subscribe, getSnapshot);
-	const session = providedSession ?? getActiveWorldSession();
 	const units: OverlayUnitPresence[] = Array.from(
 		world.query(Identity, Unit, WorldPosition),
 	).map((entity) => ({
@@ -125,7 +138,14 @@ function CityOverlayMarkers({
 					</mesh>
 					<mesh position={[0, marker.height, 0]}>
 						<cylinderGeometry
-							args={[marker.radius * 0.9, marker.radius * 0.96, 0.08, 18, 1, true]}
+							args={[
+								marker.radius * 0.9,
+								marker.radius * 0.96,
+								0.08,
+								18,
+								1,
+								true,
+							]}
 						/>
 						<meshStandardMaterial
 							color={0x20343a}
@@ -147,7 +167,10 @@ function CityOverlayMarkers({
 						const inner = marker.radius + index * 0.16;
 						const outer = inner + 0.05;
 						return (
-							<mesh key={`${marker.id}:ring:${index}`} rotation={[-Math.PI / 2, 0, 0]}>
+							<mesh
+								key={`${marker.id}:ring:${index}`}
+								rotation={[-Math.PI / 2, 0, 0]}
+							>
 								<ringGeometry args={[inner, outer, 28]} />
 								<meshBasicMaterial
 									color={marker.emissive}

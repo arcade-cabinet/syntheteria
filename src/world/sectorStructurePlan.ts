@@ -319,11 +319,11 @@ function getOverworldCandidatesForZone(zone: string): string[] {
 
 /**
  * Threshold (0..1) — fraction of non-POI anchors that receive an overworld
- * composite instead of a generic zone composite. Raised from 0.18 to 0.45
- * so the ecumenopolis feels like a real exploitable 4X world with varied
- * strategic structures scattered across sectors.
+ * composite instead of a generic zone composite. Kept at 0.18 so structures
+ * maintain compositional coherence via the adjacency scoring system rather
+ * than overwhelming the map with random scatter.
  */
-const OVERWORLD_SCATTER_CHANCE = 0.45;
+const OVERWORLD_SCATTER_CHANCE = 0.18;
 
 function getPoiCompositeTags(poiType: WorldPoiType) {
 	switch (poiType) {

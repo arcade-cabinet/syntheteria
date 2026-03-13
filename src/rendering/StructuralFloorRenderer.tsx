@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
-import { resolveAssetUri } from "../config/assetUri";
 import {
 	FLOOR_MATERIAL_PRESETS,
 	getDefaultFloorMaterialForZone,
 } from "../city/config/floorMaterialPresets";
-import { getActiveWorldSession } from "../world/session";
+import { resolveAssetUri } from "../config/assetUri";
 import { gridToWorld, SECTOR_LATTICE_SIZE } from "../world/sectorCoordinates";
+import { getActiveWorldSession } from "../world/session";
 import type { WorldSessionSnapshot } from "../world/snapshots";
 
 const FLOOR_COLORS: Record<string, number> = {
@@ -29,7 +29,30 @@ const FLOOR_ACCENTS: Record<string, number> = {
 	breach_exposed: 0xff8f8f,
 };
 
-const floorPresetById = new Map(FLOOR_MATERIAL_PRESETS.map((preset) => [preset.id, preset]));
+const floorPresetById = new Map(
+	FLOOR_MATERIAL_PRESETS.map((preset) => [preset.id, preset]),
+);
+
+/**
+ * Maps generation-assigned floorPresetIds to the material preset IDs
+ * that actually have textures. Without this mapping, textures never load
+ * because generation uses zone-semantic names (command_core, fabrication)
+ * while material presets use material-semantic names (command_concrete,
+ * fabrication_plate).
+ */
+const FLOOR_PRESET_TO_MATERIAL: Record<string, string> = {
+	command_core: "command_concrete",
+	corridor_transit: "service_walkway",
+	fabrication: "fabrication_plate",
+	storage: "fabrication_plate",
+	habitation: "painted_habitation",
+	power: "command_concrete",
+	breach_exposed: "service_walkway",
+};
+
+function resolveTexturePresetId(floorPresetId: string): string {
+	return FLOOR_PRESET_TO_MATERIAL[floorPresetId] ?? floorPresetId;
+}
 
 interface FloorTextureBundle {
 	map: THREE.Texture;
@@ -57,7 +80,7 @@ function StructuralCellMesh({
 	textures: FloorTextureBundle | null;
 }) {
 	const pos = gridToWorld(q, r);
-	const preset =
+	const _preset =
 		floorPresetById.get(floorPresetId) ??
 		getDefaultFloorMaterialForZone(
 			structuralZone === "command"
@@ -151,14 +174,8 @@ export function StructuralFloorRenderer({
 		() =>
 			Object.fromEntries(
 				FLOOR_MATERIAL_PRESETS.flatMap((preset) => [
-					[
-						`${preset.id}_map`,
-						resolveAssetUri(preset.textureSet.color),
-					],
-					[
-						`${preset.id}_normal`,
-						resolveAssetUri(preset.textureSet.normal),
-					],
+					[`${preset.id}_map`, resolveAssetUri(preset.textureSet.color)],
+					[`${preset.id}_normal`, resolveAssetUri(preset.textureSet.normal)],
 					[
 						`${preset.id}_roughness`,
 						resolveAssetUri(preset.textureSet.roughness),
@@ -169,7 +186,9 @@ export function StructuralFloorRenderer({
 					],
 					[
 						`${preset.id}_height`,
-						resolveAssetUri(preset.textureSet.height ?? preset.textureSet.color),
+						resolveAssetUri(
+							preset.textureSet.height ?? preset.textureSet.color,
+						),
 					],
 				]),
 			),
@@ -181,15 +200,12 @@ export function StructuralFloorRenderer({
 
 	const orderedCells = useMemo(
 		() =>
-			[...(session?.sectorCells ?? [])].sort((a, b) =>
-				a.r === b.r ? a.q - b.q : a.r - b.r,
-			),
+			[...(session?.sectorCells ?? [])]
+				// Fog of war: only render cells the player has discovered
+				.filter((cell) => cell.discovery_state >= 1)
+				.sort((a, b) => (a.r === b.r ? a.q - b.q : a.r - b.r)),
 		[session],
 	);
-
-	if (!session) {
-		return null;
-	}
 
 	useEffect(() => {
 		let cancelled = false;
@@ -250,8 +266,10 @@ export function StructuralFloorRenderer({
 					passable={cell.passable}
 					profile={profile}
 					textures={
-						texturesByPreset.get(cell.floor_preset_id) ??
-						texturesByPreset.get("command_core") ??
+						texturesByPreset.get(
+							resolveTexturePresetId(cell.floor_preset_id),
+						) ??
+						texturesByPreset.get("command_concrete") ??
 						null
 					}
 				/>

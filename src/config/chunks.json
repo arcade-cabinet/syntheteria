@@ -1,4 +1,6 @@
 {
 	"chunkSize": 8,
-	"cellWorldSize": 2
+	"cellWorldSize": 2,
+	"loadRadius": 3,
+	"unloadRadius": 5
 }

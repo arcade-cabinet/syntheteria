@@ -743,13 +743,21 @@ registerRadialProvider({
 						spendActionPoint(ctx.targetEntityId, 1);
 						const success = applyMarkUpgrade(ctx.targetEntityId);
 						if (success) {
-							// Update the ECS Unit trait's markLevel
-							unit.markLevel = upgradeCost.toMark;
+							// Update the ECS Unit trait's markLevel via entity.set()
+							// (static traits return copies from get(), so direct mutation won't persist)
+							const upgradeEntity = findEntityById(ctx.targetEntityId);
+							const currentUnit = upgradeEntity?.get(Unit);
+							if (upgradeEntity && currentUnit) {
+								upgradeEntity.set(Unit, {
+									...currentUnit,
+									markLevel: upgradeCost.toMark,
+								});
+							}
 							logTurnEvent(
 								"fabrication",
 								ctx.targetEntityId,
 								"player",
-								{ action: "mark_upgrade", newMark: unit.markLevel },
+								{ action: "mark_upgrade", newMark: upgradeCost.toMark },
 							);
 						}
 					}

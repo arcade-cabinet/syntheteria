@@ -99,7 +99,11 @@ export function applyHackedRole(entity: Entity): HackedBotRole {
 	if (!unit) return DEFAULT_HACKED_ROLE;
 
 	const role = getHackedBotRole(unit.type);
-	unit.speed = unit.speed * role.speedModifier;
+	// Use entity.set() since static traits return copies from get()
+	entity.set(Unit, {
+		...unit,
+		speed: unit.speed * role.speedModifier,
+	});
 	return role;
 }
 
@@ -161,20 +165,22 @@ export function hackingSystem() {
 		const identity = entity.get(Identity);
 		if (!hack.targetId) continue;
 
+		const currentTargetId = hack.targetId;
+
 		const target = world
 			.query(Identity)
-			.find((e) => e.get(Identity)?.id === hack.targetId);
+			.find((e) => e.get(Identity)?.id === currentTargetId);
 		if (
 			!target ||
 			target.get(Identity)?.faction === "player" ||
 			target.get(Identity)?.faction === "cultist"
 		) {
 			// Invalid or unhackable target — cancel
-			hack.targetId = null;
+			// Use entity.set() since static traits return copies from get()
+			entity.set(Hacking, { ...hack, targetId: null, progress: 0 });
 			if (identity?.id) {
 				cancelAgentTask(identity.id);
 			}
-			hack.progress = 0;
 			continue;
 		}
 
@@ -220,33 +226,41 @@ export function hackingSystem() {
 
 		// Progress hack — consumes compute
 		globalCompute.available -= hack.computeCostPerTick;
-		hack.progress += hack.computeCostPerTick / getHackDifficulty(target);
+		const newProgress =
+			hack.progress + hack.computeCostPerTick / getHackDifficulty(target);
 
-		if (hack.progress >= 1.0) {
+		if (newProgress >= 1.0) {
 			// Success — convert target to player faction
-			target.get(Identity)!.faction = "player";
+			const targetIdentity = target.get(Identity)!;
+			target.set(Identity, {
+				...targetIdentity,
+				faction: "player" as const,
+			});
 
 			// Apply hacked role (speed modifiers, etc.)
 			const role = applyHackedRole(target);
 
-			hack.targetId = null;
-			hack.progress = 0;
+			// Use entity.set() since static traits return copies from get()
+			entity.set(Hacking, { ...hack, targetId: null, progress: 0 });
 			if (identity?.id) {
 				cancelAgentTask(identity.id);
 			}
 
 			events.push({
 				hackerId: identity?.id ?? "",
-				targetId: target.get(Identity)!.id,
+				targetId: targetIdentity.id,
 				progress: 1.0,
 				completed: true,
 				capturedRole: role,
 			});
 		} else {
+			// Use entity.set() since static traits return copies from get()
+			entity.set(Hacking, { ...hack, progress: newProgress });
+
 			events.push({
 				hackerId: identity?.id ?? "",
 				targetId: target.get(Identity)!.id,
-				progress: hack.progress,
+				progress: newProgress,
 				completed: false,
 				capturedRole: null,
 			});

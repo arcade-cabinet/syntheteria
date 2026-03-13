@@ -382,8 +382,8 @@ export function canMotorPoolUpgradeMark(
 ): boolean {
 	const state = motorPools.get(motorPoolEntityId);
 	if (!state) return false;
-	const tierConfig = MOTOR_POOL_TIER_CONFIG[state.tier];
-	return targetMark <= tierConfig.maxMark + 1;
+	const tierMaxMark = getMaxMarkForTier(state.tier);
+	return targetMark <= tierMaxMark;
 }
 
 export function resetMotorPoolState() {

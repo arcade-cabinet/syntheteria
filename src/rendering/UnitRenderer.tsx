@@ -517,7 +517,7 @@ function UnitMesh({ entity }: { entity: UnitEntity }) {
 	const renderComponents = entity.get(Unit)?.components ?? [];
 	const markLevel =
 		faction === "player"
-			? Math.min(5, Math.max(1, renderComponents.length))
+			? (entity.get(Unit)?.markLevel ?? 1)
 			: 0;
 	const renderDamageRatio = getDamageRatio(renderComponents);
 	const renderDamageVisuals = getDamageVisuals(renderDamageRatio);

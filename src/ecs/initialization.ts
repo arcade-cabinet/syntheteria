@@ -3,6 +3,7 @@ import {
 	initializeFactionGovernors,
 	resetFactionGovernors,
 } from "../ai/governor/factionGovernors";
+import { validateAssetManifest } from "../config/assetValidation";
 import "../systems/playtestBridge";
 import { resetAICivilization } from "../systems/aiCivilization";
 import { resetCampaignStats, setCampaignStats } from "../systems/campaignStats";
@@ -63,6 +64,7 @@ function destroyAllEntities() {
 }
 
 export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
+	validateAssetManifest();
 	resetGameState();
 	resetStructuralSpace();
 	resetCityLayout();

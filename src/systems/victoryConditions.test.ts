@@ -1,16 +1,26 @@
+import victoryConfig from "../config/victory.json";
+import type { EconomyFactionId } from "./factionEconomy";
 import {
+	type AIFactionProgress,
+	checkAllVictoryConditions,
 	checkElimination,
 	checkSubjugation,
+	checkSubjugationConfig,
 	checkTechnicalSupremacy,
+	checkTechnicalSupremacyConfig,
 	checkVictoryConditions,
+	checkWormholeVictory,
 	countFactionUnits,
+	getStormEscalationMultiplier,
 	getVictoryCondition,
+	type PlayerProgress,
 	resetVictoryConditions,
+	resetVictoryState,
 	SUBJUGATION_THRESHOLD,
+	simulateTestGame,
 	TECH_SUPREMACY_MARK_LEVEL,
 	TECH_SUPREMACY_UNIT_COUNT,
 } from "./victoryConditions";
-import type { EconomyFactionId } from "./factionEconomy";
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
@@ -49,11 +59,7 @@ jest.mock("./factionEconomy", () => ({
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function makeUnitEntity(
-	id: string,
-	faction: string,
-	markLevel = 1,
-) {
+function makeUnitEntity(id: string, faction: string, markLevel = 1) {
 	return {
 		get: (trait: any) => {
 			const name = String(trait);
@@ -275,10 +281,7 @@ describe("checkElimination", () => {
 
 describe("checkVictoryConditions — integration", () => {
 	it("returns null when no victory condition met", () => {
-		setupUnits([
-			makeUnitEntity("p1", "player"),
-			makeUnitEntity("r1", "rogue"),
-		]);
+		setupUnits([makeUnitEntity("p1", "player"), makeUnitEntity("r1", "rogue")]);
 		setupTerritory([
 			{ q: 0, r: 0, owner: "player" },
 			{ q: 1, r: 0, owner: "rogue" },
@@ -306,10 +309,7 @@ describe("checkVictoryConditions — integration", () => {
 		expect(first).not.toBeNull();
 
 		// Add rogue units — victory should still be the same
-		setupUnits([
-			makeUnitEntity("p1", "player"),
-			makeUnitEntity("r1", "rogue"),
-		]);
+		setupUnits([makeUnitEntity("p1", "player"), makeUnitEntity("r1", "rogue")]);
 		const second = checkVictoryConditions();
 		expect(second).toBe(first);
 	});
@@ -353,5 +353,212 @@ describe("checkVictoryConditions — integration", () => {
 		expect(result).not.toBeNull();
 		expect(result!.winner).toBe("player");
 		expect(result!.type).toBe("elimination");
+	});
+});
+
+// ─── Config-Driven Victory Pacing Tests ──────────────────────────────────────
+
+jest.mock("../ecs/seed", () => {
+	let callIndex = 0;
+	return {
+		gameplayRandom: () => {
+			callIndex++;
+			return ((callIndex * 13 + 7) % 100) / 100;
+		},
+	};
+});
+
+const {
+	subjugation: subjugationCfg,
+	wormhole: wormholeCfg,
+	stormEscalation: stormCfg,
+	pacing: pacingCfg,
+} = victoryConfig;
+
+describe("config-driven victory conditions", () => {
+	beforeEach(() => {
+		resetVictoryState();
+	});
+
+	describe("subjugation threshold", () => {
+		it("requires >60% territory from config", () => {
+			const totalCells = pacingCfg.totalMapCells;
+			const requiredCells = Math.ceil(
+				(subjugationCfg.territoryPercent / 100) * totalCells,
+			);
+
+			expect(checkSubjugationConfig(requiredCells - 1, totalCells)).toBe(false);
+			expect(checkSubjugationConfig(requiredCells, totalCells)).toBe(true);
+		});
+
+		it("threshold is config-driven at 60%", () => {
+			expect(subjugationCfg.territoryPercent).toBe(60);
+		});
+
+		it("scales with total map cells", () => {
+			expect(checkSubjugationConfig(60, 100)).toBe(true);
+			expect(checkSubjugationConfig(59, 100)).toBe(false);
+			expect(checkSubjugationConfig(30, 50)).toBe(true);
+			expect(checkSubjugationConfig(29, 50)).toBe(false);
+		});
+	});
+
+	describe("technical supremacy", () => {
+		it("requires all Mark V and all techs", () => {
+			expect(checkTechnicalSupremacyConfig(true, true)).toBe(true);
+			expect(checkTechnicalSupremacyConfig(true, false)).toBe(false);
+			expect(checkTechnicalSupremacyConfig(false, true)).toBe(false);
+			expect(checkTechnicalSupremacyConfig(false, false)).toBe(false);
+		});
+	});
+
+	describe("wormhole victory", () => {
+		it("requires EL Crystals threshold from config", () => {
+			const required = wormholeCfg.elCrystalsRequired;
+			expect(required).toBe(10);
+
+			expect(checkWormholeVictory(required, true)).toBe(true);
+			expect(checkWormholeVictory(required - 1, true)).toBe(false);
+		});
+
+		it("requires reaching the wormhole", () => {
+			expect(checkWormholeVictory(wormholeCfg.elCrystalsRequired, false)).toBe(
+				false,
+			);
+		});
+	});
+
+	describe("storm escalation soft cap", () => {
+		it("returns 1.0 before soft cap turn", () => {
+			expect(getStormEscalationMultiplier(1)).toBe(1.0);
+			expect(getStormEscalationMultiplier(stormCfg.softCapTurn)).toBe(1.0);
+		});
+
+		it("escalates after soft cap turn", () => {
+			const afterCap = stormCfg.softCapTurn + 10;
+			const multiplier = getStormEscalationMultiplier(afterCap);
+			expect(multiplier).toBeGreaterThan(1.0);
+		});
+
+		it("soft cap is at turn 120 from config", () => {
+			expect(stormCfg.softCapTurn).toBe(120);
+		});
+
+		it("escalation increases linearly after cap", () => {
+			const t1 = stormCfg.softCapTurn + 5;
+			const t2 = stormCfg.softCapTurn + 10;
+			const m1 = getStormEscalationMultiplier(t1);
+			const m2 = getStormEscalationMultiplier(t2);
+			expect(m2).toBeGreaterThan(m1);
+		});
+
+		it("caps at max intensity", () => {
+			const veryLate = stormCfg.softCapTurn + 10000;
+			const multiplier = getStormEscalationMultiplier(veryLate);
+			expect(multiplier).toBe(stormCfg.maxIntensity);
+		});
+	});
+
+	describe("checkAllVictoryConditions", () => {
+		const makePlayer = (
+			overrides: Partial<PlayerProgress> = {},
+		): PlayerProgress => ({
+			territoryCells: 0,
+			totalMapCells: pacingCfg.totalMapCells,
+			allMarkV: false,
+			allTechsResearched: false,
+			elCrystals: 0,
+			reachedWormhole: false,
+			...overrides,
+		});
+
+		const makeAI = (
+			overrides: Partial<AIFactionProgress> = {},
+		): AIFactionProgress => ({
+			factionId: "reclaimers",
+			territoryCells: 0,
+			techsResearched: 0,
+			totalTechs: 8,
+			elCrystals: 0,
+			allMarkV: false,
+			reachedWormhole: false,
+			...overrides,
+		});
+
+		it("detects player subjugation victory", () => {
+			const totalCells = pacingCfg.totalMapCells;
+			const requiredCells = Math.ceil(
+				(subjugationCfg.territoryPercent / 100) * totalCells,
+			);
+			const result = checkAllVictoryConditions(
+				makePlayer({ territoryCells: requiredCells }),
+				[],
+				50,
+			);
+			expect(result.winner).toBe("player");
+			expect(result.victoryType).toBe("subjugation");
+		});
+
+		it("detects AI subjugation victory", () => {
+			const totalCells = pacingCfg.totalMapCells;
+			const requiredCells = Math.ceil(
+				(subjugationCfg.territoryPercent / 100) * totalCells,
+			);
+			const result = checkAllVictoryConditions(
+				makePlayer(),
+				[makeAI({ territoryCells: requiredCells })],
+				80,
+			);
+			expect(result.winner).toBe("reclaimers");
+			expect(result.victoryType).toBe("subjugation");
+		});
+
+		it("returns no victory when conditions unmet", () => {
+			const result = checkAllVictoryConditions(makePlayer(), [makeAI()], 10);
+			expect(result.winner).toBeNull();
+			expect(result.victoryType).toBe("none");
+		});
+
+		it("player wins before AI when both qualify same turn", () => {
+			const totalCells = pacingCfg.totalMapCells;
+			const requiredCells = Math.ceil(
+				(subjugationCfg.territoryPercent / 100) * totalCells,
+			);
+			const result = checkAllVictoryConditions(
+				makePlayer({ territoryCells: requiredCells }),
+				[makeAI({ territoryCells: requiredCells })],
+				100,
+			);
+			expect(result.winner).toBe("player");
+		});
+	});
+
+	describe("simulated test games — victory achievable in 80-150 turns", () => {
+		const totalMapCells = pacingCfg.totalMapCells;
+		const totalTechs = 8;
+
+		it("seed 42: victory achieved within target window", () => {
+			const result = simulateTestGame(42, 200, totalMapCells, totalTechs);
+			expect(result).not.toBeNull();
+			expect(result!.turn).toBeGreaterThanOrEqual(pacingCfg.targetMinTurns);
+			expect(result!.turn).toBeLessThanOrEqual(pacingCfg.targetMaxTurns);
+			expect(result!.winner).toBeTruthy();
+		});
+
+		it("seed 1337: victory achieved within target window", () => {
+			const result = simulateTestGame(1337, 200, totalMapCells, totalTechs);
+			expect(result).not.toBeNull();
+			expect(result!.turn).toBeGreaterThanOrEqual(pacingCfg.targetMinTurns);
+			expect(result!.turn).toBeLessThanOrEqual(pacingCfg.targetMaxTurns);
+			expect(result!.winner).toBeTruthy();
+		});
+
+		it("seed 99999: victory achieved within target window", () => {
+			const result = simulateTestGame(99999, 200, totalMapCells, totalTechs);
+			expect(result).not.toBeNull();
+			expect(result!.turn).toBeGreaterThanOrEqual(pacingCfg.targetMinTurns);
+			expect(result!.turn).toBeLessThanOrEqual(pacingCfg.targetMaxTurns);
+			expect(result!.winner).toBeTruthy();
+		});
 	});
 });

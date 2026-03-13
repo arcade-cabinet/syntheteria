@@ -54,8 +54,14 @@ export function subscribeToasts(listener: () => void): () => void {
 	return () => listeners.delete(listener);
 }
 
+let _visibleCache: Toast[] = [];
+let _visibleCacheSource: Toast[] = [];
+
 export function getVisibleToasts(): Toast[] {
-	return toasts.slice(0, MAX_VISIBLE);
+	if (toasts === _visibleCacheSource) return _visibleCache;
+	_visibleCacheSource = toasts;
+	_visibleCache = toasts.slice(0, MAX_VISIBLE);
+	return _visibleCache;
 }
 
 /**

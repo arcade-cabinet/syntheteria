@@ -30,6 +30,11 @@ import {
 } from "../systems/diplomacy";
 import { getTurnState, subscribeTurnState } from "../systems/turnSystem";
 
+// Stable snapshot getter (must not be an inline closure)
+function getPlayerReclaimersStanding() {
+	return getStanding("player", "reclaimers");
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function DiplomacyModal({
@@ -43,7 +48,7 @@ export function DiplomacyModal({
 	const fadeAnim = useRef(new Animated.Value(0)).current;
 
 	// Subscribe to diplomacy and turn state for re-renders
-	useSyncExternalStore(subscribeDiplomacy, () => getStanding("player", "reclaimers"));
+	useSyncExternalStore(subscribeDiplomacy, getPlayerReclaimersStanding);
 	const turn = useSyncExternalStore(subscribeTurnState, getTurnState);
 
 	useEffect(() => {

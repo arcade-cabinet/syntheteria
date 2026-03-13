@@ -100,6 +100,9 @@ importers:
       tone:
         specifier: ^15.1.22
         version: 15.1.22
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
       yuka:
         specifier: ^0.7.8
         version: 0.7.8

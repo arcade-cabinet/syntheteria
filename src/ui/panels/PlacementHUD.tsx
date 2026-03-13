@@ -25,29 +25,28 @@ import {
 import { getResources } from "../../systems/resources";
 import { subscribe } from "../../ecs/gameState";
 
-function getPlacementSnapshot() {
-	const type = getActivePlacement();
-	const ghost = getGhostPosition();
-	const resources = getResources();
-	return { type, ghost, resources };
+function getPlacementType() {
+	return getActivePlacement();
 }
 
 export function PlacementHUD() {
-	const snap = useSyncExternalStore(subscribe, getPlacementSnapshot);
+	const type = useSyncExternalStore(subscribe, getPlacementType);
 
-	if (!snap.type) return null;
+	if (!type) return null;
 
-	const costs = BUILDING_COSTS[snap.type] ?? [];
-	const hasRules = ADJACENCY_RULES[snap.type] !== undefined;
+	const ghost = getGhostPosition();
+	const resources = getResources();
+	const costs = BUILDING_COSTS[type] ?? [];
+	const hasRules = ADJACENCY_RULES[type] !== undefined;
 
 	// Compute adjacency bonuses if ghost is positioned
 	let bonuses: AdjacencyBonus[] = [];
-	if (snap.ghost && hasRules) {
-		bonuses = computeAdjacencyBonuses(snap.type, snap.ghost.x, snap.ghost.z);
+	if (ghost && hasRules) {
+		bonuses = computeAdjacencyBonuses(type, ghost.x, ghost.z);
 	}
 
 	const canAfford = costs.every(
-		(c) => (snap.resources[c.type] ?? 0) >= c.amount,
+		(c) => (resources[c.type] ?? 0) >= c.amount,
 	);
 
 	return (
@@ -68,7 +67,7 @@ export function PlacementHUD() {
 					width: "90%",
 					borderRadius: 14,
 					borderWidth: 1,
-					borderColor: snap.ghost?.valid
+					borderColor: ghost?.valid
 						? "rgba(111, 243, 200, 0.35)"
 						: "rgba(255, 120, 120, 0.35)",
 					backgroundColor: "rgba(7, 17, 23, 0.94)",
@@ -108,7 +107,7 @@ export function PlacementHUD() {
 								letterSpacing: 1,
 							}}
 						>
-							{snap.type.replace(/_/g, " ")}
+							{type.replace(/_/g, " ")}
 						</Text>
 					</View>
 
@@ -150,7 +149,7 @@ export function PlacementHUD() {
 				{/* Cost row */}
 				<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
 					{costs.map((c) => {
-						const have = snap.resources[c.type] ?? 0;
+						const have = resources[c.type] ?? 0;
 						const enough = have >= c.amount;
 						return (
 							<View
@@ -184,14 +183,14 @@ export function PlacementHUD() {
 				</View>
 
 				{/* Validity status */}
-				{snap.ghost && (
+				{ghost && (
 					<Text
 						testID="placement-status"
 						style={{
 							fontFamily: "monospace",
 							fontSize: 10,
 							letterSpacing: 1,
-							color: snap.ghost.valid && canAfford
+							color: ghost.valid && canAfford
 								? "#6ff3c8"
 								: "#ff8f8f",
 							textTransform: "uppercase",
@@ -200,7 +199,7 @@ export function PlacementHUD() {
 					>
 						{!canAfford
 							? "Insufficient resources"
-							: snap.ghost.valid
+							: ghost.valid
 								? "Valid placement — click to confirm"
 								: "Invalid position"}
 					</Text>

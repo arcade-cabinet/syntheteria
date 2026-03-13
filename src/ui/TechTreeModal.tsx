@@ -56,6 +56,16 @@ const STATUS_LABELS: Record<TechStatus, string> = {
 	unavailable: "Unavailable",
 };
 
+// ─── Stable snapshot getters (must not create new closures per render) ───────
+
+function getPlayerResearchState() {
+	return getFactionResearchState("player");
+}
+
+function getPlayerResearchProgress() {
+	return getResearchProgress("player");
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function TechTreeModal({
@@ -70,12 +80,12 @@ export function TechTreeModal({
 
 	const researchState = useSyncExternalStore(
 		subscribeTechTree,
-		() => getFactionResearchState("player"),
+		getPlayerResearchState,
 	);
 
 	const progress = useSyncExternalStore(
 		subscribeTechTree,
-		() => getResearchProgress("player"),
+		getPlayerResearchProgress,
 	);
 
 	useEffect(() => {

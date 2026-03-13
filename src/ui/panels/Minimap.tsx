@@ -8,12 +8,18 @@
  */
 
 import { useSyncExternalStore } from "react";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import { Identity, WorldPosition } from "../../ecs/traits";
 import { buildings, units } from "../../ecs/world";
-import { getAllCellOwnership, type TerritoryCell } from "../../systems/territorySystem";
-import { gridToWorld, getWorldHalfExtents } from "../../world/sectorCoordinates";
+import {
+	getAllCellOwnership,
+	type TerritoryCell,
+} from "../../systems/territorySystem";
+import {
+	getWorldHalfExtents,
+	gridToWorld,
+} from "../../world/sectorCoordinates";
 import { MapIcon, RadarIcon } from "../icons";
 
 /** Faction colors for territory on minimap */
@@ -28,9 +34,14 @@ export function Minimap() {
 	useSyncExternalStore(subscribe, getSnapshot);
 	const { width } = useWindowDimensions();
 
+	const { x: worldHalfX, z: worldHalfZ } = getWorldHalfExtents();
+
+	if (worldHalfX <= 0 && worldHalfZ <= 0) {
+		return null;
+	}
+
 	const size = width < 768 ? 112 : 154;
 	const half = size / 2;
-	const { x: worldHalfX, z: worldHalfZ } = getWorldHalfExtents();
 	const scale = (size * 0.45) / Math.max(worldHalfX, worldHalfZ, 1);
 
 	// Get territory cells for rendering

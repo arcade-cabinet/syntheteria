@@ -1,13 +1,15 @@
 {
 	"expo": {
 		"name": "Syntheteria",
-		"slug": "app",
+		"slug": "syntheteria",
 		"version": "1.0.0",
 		"orientation": "portrait",
 		"icon": "./assets/icon.png",
+		"scheme": "syntheteria",
 		"userInterfaceStyle": "light",
 		"ios": {
-			"supportsTablet": true
+			"supportsTablet": true,
+			"bundleIdentifier": "com.arcadecabinet.syntheteria"
 		},
 		"android": {
 			"adaptiveIcon": {
@@ -16,11 +18,30 @@
 				"backgroundImage": "./assets/android-icon-background.png",
 				"monochromeImage": "./assets/android-icon-monochrome.png"
 			},
+			"package": "com.arcadecabinet.syntheteria",
 			"predictiveBackGestureEnabled": false
 		},
 		"web": {
+			"bundler": "metro",
+			"output": "static",
 			"favicon": "./assets/favicon.png",
 			"title": "Syntheteria"
+		},
+		"plugins": [
+			[
+				"expo-router",
+				{
+					"headers": {
+						"Cross-Origin-Embedder-Policy": "credentialless",
+						"Cross-Origin-Opener-Policy": "same-origin"
+					}
+				}
+			],
+			"expo-sqlite",
+			"expo-asset"
+		],
+		"experiments": {
+			"typedRoutes": true
 		}
 	}
 }

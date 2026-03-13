@@ -1,4 +1,4 @@
-import { getCityComposites, CITY_MODELS } from "../city/catalog/cityCatalog";
+import { CITY_MODELS, getCityComposites } from "../city/catalog/cityCatalog";
 import type {
 	CityCompositeDefinition,
 	CityFamily,
@@ -10,7 +10,6 @@ import {
 	ECUMENOPOLIS_MODEL_ATLAS,
 	type ZoneType,
 } from "../config/ecumenopolisAtlas";
-import type { WorldPoiType } from "./contracts";
 import {
 	type AdjacencyContext,
 	getDetailCandidates,
@@ -20,6 +19,7 @@ import {
 	selectWallVariant,
 } from "./adjacencyValidation";
 import { getAvailableSlots } from "./constructionSystem";
+import type { WorldPoiType } from "./contracts";
 import { getDistrictStructures } from "./districtStructures";
 import type {
 	GeneratedSectorCell,
@@ -44,7 +44,11 @@ export interface GeneratedSectorStructure {
 	controllerFaction: string | null;
 }
 
-const EDGE_RULES: readonly { edge: CityEdgeDirection; dq: number; dr: number }[] = [
+const EDGE_RULES: readonly {
+	edge: CityEdgeDirection;
+	dq: number;
+	dr: number;
+}[] = [
 	{ edge: "north", dq: 0, dr: -1 },
 	{ edge: "east", dq: 1, dr: 0 },
 	{ edge: "south", dq: 0, dr: 1 },
@@ -79,8 +83,8 @@ function getZoneCandidates(zone: CityZone, families: CityFamily[]) {
 }
 
 function getAnyFamilyCandidates(families: CityFamily[]) {
-	return CITY_MODELS.filter((model) => families.includes(model.family)).sort((a, b) =>
-		a.id.localeCompare(b.id),
+	return CITY_MODELS.filter((model) => families.includes(model.family)).sort(
+		(a, b) => a.id.localeCompare(b.id),
 	);
 }
 
@@ -95,13 +99,13 @@ function getBoundaryFamilies(cell: GeneratedSectorCell) {
 }
 
 function parseAnchorKey(anchorKey: string) {
-	const [q, r] = anchorKey.split(",").map((value) => Number.parseInt(value, 10));
+	const [q, r] = anchorKey
+		.split(",")
+		.map((value) => Number.parseInt(value, 10));
 	return { q, r };
 }
 
-function getAnchorCells(
-	sectorCells: GeneratedSectorCell[],
-) {
+function getAnchorCells(sectorCells: GeneratedSectorCell[]) {
 	const anchors = new Map<string, GeneratedSectorCell[]>();
 	for (const cell of sectorCells) {
 		const group = anchors.get(cell.anchorKey);
@@ -205,14 +209,20 @@ function buildAdjacencyContext(
 	};
 }
 
-function chooseSupportModel(zone: string, seed: number, context?: AdjacencyContext) {
+function chooseSupportModel(
+	zone: string,
+	seed: number,
+	context?: AdjacencyContext,
+) {
 	const families = getSupportFamiliesForZone(zone);
 	const normalizedZone = normalizeZone(zone);
 
 	// Use atlas-based adjacency scoring when context is available
 	if (context) {
 		const atlasFamily = families.flatMap((f) =>
-			f === "detail" ? ["detail_signage", "detail_panel", "detail_pipework"] : [f],
+			f === "detail"
+				? ["detail_signage", "detail_panel", "detail_pipework"]
+				: [f],
 		);
 		const atlasCandidates = ECUMENOPOLIS_MODEL_ATLAS.filter(
 			(m) =>
@@ -307,8 +317,13 @@ function getOverworldCandidatesForZone(zone: string): string[] {
 	}
 }
 
-/** Threshold (0..1) — fraction of non-POI anchors that receive an overworld composite */
-const OVERWORLD_SCATTER_CHANCE = 0.18;
+/**
+ * Threshold (0..1) — fraction of non-POI anchors that receive an overworld
+ * composite instead of a generic zone composite. Raised from 0.18 to 0.45
+ * so the ecumenopolis feels like a real exploitable 4X world with varied
+ * strategic structures scattered across sectors.
+ */
+const OVERWORLD_SCATTER_CHANCE = 0.45;
 
 function getPoiCompositeTags(poiType: WorldPoiType) {
 	switch (poiType) {
@@ -363,7 +378,10 @@ function expandComposite(
 function getDistrictCompositePlacements(poiType: WorldPoiType) {
 	const structures = getDistrictStructures({
 		poiType,
-		state: poiType === "home_base" || poiType === "coast_mines" ? "founded" : "surveyed",
+		state:
+			poiType === "home_base" || poiType === "coast_mines"
+				? "founded"
+				: "surveyed",
 	});
 	// Use construction system slots for positioning instead of hardcoded offsets
 	const slots = getAvailableSlots(poiType, []);
@@ -381,7 +399,9 @@ export function generateSectorStructurePlan(args: {
 	pointsOfInterest: GeneratedSectorPointOfInterest[];
 }) {
 	const { worldSeed, sectorCells, pointsOfInterest } = args;
-	const cellsByKey = new Map(sectorCells.map((cell) => [cellKey(cell.q, cell.r), cell]));
+	const cellsByKey = new Map(
+		sectorCells.map((cell) => [cellKey(cell.q, cell.r), cell]),
+	);
 	const placements: GeneratedSectorStructure[] = [];
 	const anchorCells = getAnchorCells(sectorCells);
 	const poiByAnchor = new Map(
@@ -397,7 +417,9 @@ export function generateSectorStructurePlan(args: {
 
 		if (poi) {
 			const compositeCandidates = getPoiComposites(poi.type);
-			const byId = new Map(compositeCandidates.map((composite) => [composite.id, composite]));
+			const byId = new Map(
+				compositeCandidates.map((composite) => [composite.id, composite]),
+			);
 			for (const entry of getDistrictCompositePlacements(poi.type)) {
 				const composite =
 					byId.get(entry.compositeId) ??
@@ -428,7 +450,8 @@ export function generateSectorStructurePlan(args: {
 			scatterRoll < OVERWORLD_SCATTER_CHANCE && overworldCandidates.length > 0;
 
 		const compositeId = useOverworld
-			? pickDeterministic(overworldCandidates, hash(anchorSeed, 203)) ?? getCompositeIdForZone(dominantZone)
+			? (pickDeterministic(overworldCandidates, hash(anchorSeed, 203)) ??
+				getCompositeIdForZone(dominantZone))
 			: getCompositeIdForZone(dominantZone);
 
 		const genericComposite = getCityComposites().find(
@@ -451,11 +474,16 @@ export function generateSectorStructurePlan(args: {
 			? buildAdjacencyContext(primaryCell, cellsByKey)
 			: undefined;
 
-		const supportModel = chooseSupportModel(dominantZone, hash(anchorSeed, 611), anchorContext);
+		const supportModel = chooseSupportModel(
+			dominantZone,
+			hash(anchorSeed, 611),
+			anchorContext,
+		);
 		if (supportModel) {
 			placements.push({
 				districtStructureId:
-					supportModel.compositeEligibility[0] ?? getCompositeIdForZone(dominantZone),
+					supportModel.compositeEligibility[0] ??
+					getCompositeIdForZone(dominantZone),
 				anchorKey,
 				q: anchor.q,
 				r: anchor.r,
@@ -469,7 +497,12 @@ export function generateSectorStructurePlan(args: {
 				edge: null,
 				rotationQuarterTurns: (hash(anchorSeed, 901) % 4) as 0 | 1 | 2 | 3,
 				offsetX: 0,
-				offsetY: supportModel.family === "roof" ? 1.85 : supportModel.family === "detail" ? 0.18 : 0,
+				offsetY:
+					supportModel.family === "roof"
+						? 1.85
+						: supportModel.family === "detail"
+							? 0.18
+							: 0,
 				offsetZ: 0,
 				targetSpan:
 					supportModel.family === "detail"
@@ -507,7 +540,11 @@ export function generateSectorStructurePlan(args: {
 					modelId: detailModel.id,
 					placementLayer: "detail",
 					edge: null,
-					rotationQuarterTurns: (hash(anchorSeed, 550 + d) % 4) as 0 | 1 | 2 | 3,
+					rotationQuarterTurns: (hash(anchorSeed, 550 + d) % 4) as
+						| 0
+						| 1
+						| 2
+						| 3,
 					offsetX: ((hash(anchorSeed, 600 + d) % 5) - 2) * 0.3,
 					offsetY: 0.15 + (hash(anchorSeed, 650 + d) % 3) * 0.4,
 					offsetZ: ((hash(anchorSeed, 700 + d) % 5) - 2) * 0.3,
@@ -524,7 +561,9 @@ export function generateSectorStructurePlan(args: {
 		const baseSeed = hash(worldSeed, cell.q, cell.r);
 		const anchorKey = cell.anchorKey;
 		for (const rule of EDGE_RULES) {
-			const neighbor = cellsByKey.get(cellKey(cell.q + rule.dq, cell.r + rule.dr));
+			const neighbor = cellsByKey.get(
+				cellKey(cell.q + rule.dq, cell.r + rule.dr),
+			);
 			const boundary =
 				!neighbor ||
 				neighbor.passable !== cell.passable ||
@@ -535,7 +574,12 @@ export function generateSectorStructurePlan(args: {
 			}
 
 			const boundaryContext = buildAdjacencyContext(cell, cellsByKey);
-			const boundaryModel = chooseBoundaryModel(cell, rule.edge, hash(baseSeed, rule.dq, rule.dr), boundaryContext);
+			const boundaryModel = chooseBoundaryModel(
+				cell,
+				rule.edge,
+				hash(baseSeed, rule.dq, rule.dr),
+				boundaryContext,
+			);
 			if (!boundaryModel) {
 				continue;
 			}

@@ -32,7 +32,14 @@ export const CITY_MODELS = GENERATED_CITY_MODELS.map((model) => {
 });
 
 export function getCityModelById(id: string) {
-	return CITY_MODELS.find((model) => model.id === id) ?? null;
+	const model = CITY_MODELS.find((model) => model.id === id);
+	if (!model) {
+		throw new Error(
+			`getCityModelById: no city model found with id "${id}". ` +
+				`Check that the model is registered in the city model manifest.`,
+		);
+	}
+	return model;
 }
 
 export function getCityModelsByFamily(family: CityFamily) {

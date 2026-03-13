@@ -117,10 +117,7 @@ export function validateCityLayoutPlan(
 					cellY: cell.y,
 				});
 			}
-			const structureModel = structure
-				? getCityModelById(structure.assetId)
-				: null;
-			if (structureModel?.family === "door") {
+			if (structure && getCityModelById(structure.assetId).family === "door") {
 				hasDoor = true;
 				if (!neighbor?.passable) {
 					issues.push({

@@ -66,7 +66,13 @@ export function resolveCityPlacement(
 	scenario: CityLayoutScenario,
 	placement: CityLayoutScenario["placements"][number],
 ): ResolvedCityPlacement | null {
-	const model = getCityModelById(placement.modelId);
+	let model;
+	try {
+		model = getCityModelById(placement.modelId);
+	} catch {
+		// Model not in catalog — filter it out rather than crashing layout resolution
+		return null;
+	}
 	if (!model) {
 		return null;
 	}

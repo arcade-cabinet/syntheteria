@@ -28,9 +28,17 @@ export interface CityCompositeSemanticSummary {
 	propTags: string[];
 }
 
+function safeGetCityModel(modelId: string): CityModelDefinition | null {
+	try {
+		return getCityModelById(modelId);
+	} catch {
+		return null;
+	}
+}
+
 function getCompositeModels(composite: CityCompositeDefinition) {
 	return composite.parts
-		.map((part) => getCityModelById(part.modelId))
+		.map((part) => safeGetCityModel(part.modelId))
 		.filter((model): model is CityModelDefinition => model !== null);
 }
 
@@ -117,7 +125,14 @@ export function validateCompositeSemantics(
 				(composite.tags.includes("fabrication") &&
 					!composite.tags.includes("service"))) &&
 			!summary.propTags.some((tag) =>
-				["computer", "teleporter", "workshop", "console", "operator_prop", "teleport"].includes(tag),
+				[
+					"computer",
+					"teleporter",
+					"workshop",
+					"console",
+					"operator_prop",
+					"teleport",
+				].includes(tag),
 			)
 		) {
 			issues.push({

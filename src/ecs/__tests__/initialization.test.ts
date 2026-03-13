@@ -1,3 +1,16 @@
+jest.mock("expo-asset", () => ({
+	Asset: {
+		fromModule: (mod: string | number) => ({
+			uri: typeof mod === "string" ? mod : `/resolved/${mod}`,
+			localUri: null,
+		}),
+	},
+}));
+
+jest.mock("../../config/assetValidation", () => ({
+	validateAssetManifest: jest.fn(),
+}));
+
 jest.mock("../../systems/factionSpawning", () => ({
 	spawnRivalFactions: jest.fn(),
 	resetFactionSpawning: jest.fn(),

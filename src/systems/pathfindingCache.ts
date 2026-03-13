@@ -44,7 +44,12 @@ export function getBlockedCells(): Set<string> {
 			continue;
 		}
 
-		const model = getCityModelById(structure.model_id);
+		let model;
+		try {
+			model = getCityModelById(structure.model_id);
+		} catch {
+			continue;
+		}
 		if (model && model.passabilityEffect === "blocking") {
 			blocked.add(cellKey(structure.q, structure.r));
 		}

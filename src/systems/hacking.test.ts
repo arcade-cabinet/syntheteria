@@ -1,7 +1,7 @@
 import {
 	applyHackedRole,
-	getHackedBotRole,
 	getHackDifficulty,
+	getHackedBotRole,
 	getLastHackingEvents,
 	globalCompute,
 	HACKING_AP_COST,
@@ -117,6 +117,10 @@ function makeHacker(
 			const name = String(trait);
 			return data[name];
 		},
+		set: (trait: any, value: any) => {
+			const name = String(trait);
+			data[name] = value;
+		},
 	};
 }
 
@@ -143,6 +147,10 @@ function makeTarget(
 		get: (trait: any) => {
 			const name = String(trait);
 			return data[name];
+		},
+		set: (trait: any, value: any) => {
+			const name = String(trait);
+			data[name] = value;
 		},
 	};
 }
@@ -367,24 +375,24 @@ describe("hacked bot roles (task #26)", () => {
 
 	it("applyHackedRole adjusts unit speed", () => {
 		const entity = makeTarget("t1", "player", 0, 0, "feral_drone");
-		const unit = entity.get("Unit");
-		const originalSpeed = unit.speed;
+		const originalSpeed = entity.get("Unit").speed;
 
 		const role = applyHackedRole(entity as any);
 
+		const updatedUnit = entity.get("Unit");
 		expect(role.combatStyle).toBe("melee");
-		expect(unit.speed).toBe(originalSpeed * 1.3);
+		expect(updatedUnit.speed).toBe(originalSpeed * 1.3);
 	});
 
 	it("applyHackedRole for siege unit slows it down", () => {
 		const entity = makeTarget("t1", "player", 0, 0, "quadruped_tank");
-		const unit = entity.get("Unit");
-		const originalSpeed = unit.speed;
+		const originalSpeed = entity.get("Unit").speed;
 
 		const role = applyHackedRole(entity as any);
 
+		const updatedUnit = entity.get("Unit");
 		expect(role.combatStyle).toBe("siege");
-		expect(unit.speed).toBe(originalSpeed * 0.8);
+		expect(updatedUnit.speed).toBe(originalSpeed * 0.8);
 	});
 
 	it("capture event includes assigned role", () => {

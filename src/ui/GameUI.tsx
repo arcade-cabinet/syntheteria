@@ -1,8 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
-import { useSyncExternalStore } from "react";
+import {
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+	useSyncExternalStore,
+} from "react";
 import { View } from "react-native";
 import { CityKitLab } from "../city/runtime/CityKitLab";
-import { setPaused } from "../ecs/gameState";
+import {
+	getSnapshot,
+	registerAudioTick,
+	setPaused,
+	subscribe,
+} from "../ecs/gameState";
 import { setAutosaveNotify } from "../systems/autosave";
 import { installKeyboardShortcuts } from "../systems/keyboardShortcuts";
 import { pushToast } from "../systems/toastStore";
@@ -11,13 +21,16 @@ import { getRuntimeState, subscribeRuntimeState } from "../world/runtimeState";
 import "../systems/radialProviders"; // Register radial menu action providers at startup
 import "../systems/turnPhaseHandlers"; // Register AI faction + environment phase handlers
 import "../systems/autosave"; // Register autosave environment phase handler
-import { registerAudioTick } from "../ecs/gameState";
 import { audioSystemTick } from "../audio";
+
 registerAudioTick(audioSystemTick); // Wire audio event processing into game loop
+
 import { CitySiteOverlay } from "./CitySiteOverlay";
+import { DiplomacyModal } from "./DiplomacyModal";
+import { OtterHologramOverlay } from "./OtterHologramOverlay";
 import { PauseMenu } from "./PauseMenu";
-import { GameHUD } from "./panels/GameHUD";
 import { EntityTooltip } from "./panels/EntityTooltip";
+import { GameHUD } from "./panels/GameHUD";
 import { HarvestNotifications } from "./panels/HarvestNotifications";
 import { KeybindHints } from "./panels/KeybindHints";
 import { Notifications } from "./panels/Notifications";
@@ -26,10 +39,14 @@ import { SystemToasts } from "./panels/SystemToasts";
 import { ThoughtOverlay } from "./panels/ThoughtOverlay";
 import { ToastStack } from "./panels/ToastStack";
 import { TurnPhaseOverlay } from "./panels/TurnPhaseOverlay";
-import { DiplomacyModal } from "./DiplomacyModal";
-import { OtterHologramOverlay } from "./OtterHologramOverlay";
 import { RadialMenu } from "./RadialMenu";
 import { TechTreeModal } from "./TechTreeModal";
+import {
+	getLayerVisibility,
+	HUD_FADE_DURATION_MS,
+	nextPhase,
+	type UILayerPhase,
+} from "./uiLayerState";
 import { VictoryOverlay } from "./VictoryOverlay";
 
 /**
@@ -49,11 +66,41 @@ import { VictoryOverlay } from "./VictoryOverlay";
  * - RadialMenu: all contextual actions
  */
 export function GameUI({ onQuitToTitle }: { onQuitToTitle?: () => void }) {
+	const snap = useSyncExternalStore(subscribe, getSnapshot);
 	const runtime = useSyncExternalStore(subscribeRuntimeState, getRuntimeState);
 	const worldInteractive = runtime.currentTick > 0;
 	const [pauseOpen, setPauseOpen] = useState(false);
 	const [techTreeOpen, setTechTreeOpen] = useState(false);
 	const [diplomacyOpen, setDiplomacyOpen] = useState(false);
+
+	// ─── UI layer phase state machine (US-018) ──────────────────────────
+	const [phase, setPhase] = useState<UILayerPhase>("loading");
+	const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	// Transition: loading -> hud-entering when worldReady flips
+	useEffect(() => {
+		const next = nextPhase(phase, snap.worldReady);
+		if (next !== phase) {
+			setPhase(next);
+		}
+	}, [snap.worldReady, phase]);
+
+	// Transition: hud-entering -> hud-visible after fade duration
+	useEffect(() => {
+		if (phase === "hud-entering") {
+			fadeTimerRef.current = setTimeout(() => {
+				setPhase("hud-visible");
+			}, HUD_FADE_DURATION_MS);
+		}
+		return () => {
+			if (fadeTimerRef.current != null) {
+				clearTimeout(fadeTimerRef.current);
+				fadeTimerRef.current = null;
+			}
+		};
+	}, [phase]);
+
+	const visibility = getLayerVisibility(phase, snap.nearbyPoiName);
 
 	const handlePauseOpen = useCallback(() => {
 		setPauseOpen(true);
@@ -87,7 +134,10 @@ export function GameUI({ onQuitToTitle }: { onQuitToTitle?: () => void }) {
 	}, [handlePauseOpen]);
 
 	return (
-		<View className="absolute inset-0 pointer-events-none" testID="game-scene-ready">
+		<View
+			className="absolute inset-0 pointer-events-none"
+			testID="game-scene-ready"
+		>
 			<GameHUD
 				onPause={handlePauseOpen}
 				onTechTree={() => setTechTreeOpen(true)}
@@ -95,10 +145,10 @@ export function GameUI({ onQuitToTitle }: { onQuitToTitle?: () => void }) {
 			/>
 			{worldInteractive && <Notifications />}
 			{worldInteractive && <HarvestNotifications />}
-			<CitySiteOverlay />
+			{visibility.showLocationPanel && <CitySiteOverlay />}
 			{runtime.cityKitLabOpen && <CityKitLab onClose={closeCityKitLab} />}
 			<TurnPhaseOverlay />
-			<ThoughtOverlay />
+			{visibility.showThoughtOverlay && <ThoughtOverlay />}
 			<RadialMenu />
 			<EntityTooltip />
 			<PlacementHUD />

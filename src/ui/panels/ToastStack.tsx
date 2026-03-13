@@ -26,7 +26,13 @@ import { AlertIcon, BoltIcon, HammerIcon, MapIcon, WrenchIcon } from "../icons";
 
 const CATEGORY_STYLES: Record<
 	ToastCategory,
-	{ border: string; bg: string; label: string; labelColor: string; textColor: string }
+	{
+		border: string;
+		bg: string;
+		label: string;
+		labelColor: string;
+		textColor: string;
+	}
 > = {
 	combat: {
 		border: "rgba(255, 120, 120, 0.25)",

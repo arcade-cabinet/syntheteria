@@ -11,8 +11,7 @@
  * through the hamburger slide-out panel.
  */
 
-import { useState } from "react";
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import {
@@ -119,11 +118,7 @@ export function GameHUD({
 							<StormIcon
 								width={14}
 								height={14}
-								color={
-									snap.power.stormIntensity >= 0.6
-										? "#ff8f8f"
-										: "#f6c56a"
-								}
+								color={snap.power.stormIntensity >= 0.6 ? "#ff8f8f" : "#f6c56a"}
 							/>
 							<Text
 								className="font-mono"
@@ -131,9 +126,7 @@ export function GameHUD({
 									fontSize: 12,
 									fontWeight: "600",
 									color:
-										snap.power.stormIntensity >= 0.6
-											? "#ffd7d7"
-											: "#ffe9b0",
+										snap.power.stormIntensity >= 0.6 ? "#ffd7d7" : "#ffe9b0",
 									letterSpacing: 0.5,
 								}}
 							>
@@ -143,10 +136,7 @@ export function GameHUD({
 					</View>
 
 					{/* Right: Turn + End Turn + Hamburger */}
-					<View
-						className="flex-row items-center"
-						style={{ gap: 6 }}
-					>
+					<View className="flex-row items-center" style={{ gap: 6 }}>
 						{/* Turn counter */}
 						<View
 							style={{
@@ -226,9 +216,7 @@ export function GameHUD({
 								style={{
 									fontSize: 11,
 									letterSpacing: 3,
-									color: isPlayerPhase
-										? "#8be6ff"
-										: "rgba(139, 230, 255, 0.4)",
+									color: isPlayerPhase ? "#8be6ff" : "rgba(139, 230, 255, 0.4)",
 									fontWeight: "700",
 									textTransform: "uppercase",
 								}}
@@ -301,10 +289,7 @@ export function GameHUD({
 			</View>
 
 			{/* Slide-out detail panel */}
-			<SlideOutPanel
-				open={panelOpen}
-				onClose={() => setPanelOpen(false)}
-			/>
+			<SlideOutPanel open={panelOpen} onClose={() => setPanelOpen(false)} />
 		</>
 	);
 }

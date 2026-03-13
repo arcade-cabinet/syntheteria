@@ -8,7 +8,10 @@ import {
 	setRuntimeScene,
 } from "./runtimeState";
 import { getActiveWorldSession } from "./session";
-import { getStructuralCellRecords, getStructuralFragments } from "./structuralSpace";
+import {
+	getStructuralCellRecords,
+	getStructuralFragments,
+} from "./structuralSpace";
 
 export function syncActiveWorldSessionState() {
 	const session = getActiveWorldSession();

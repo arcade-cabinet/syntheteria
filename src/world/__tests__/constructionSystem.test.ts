@@ -1,12 +1,13 @@
+import type { ResourcePool } from "../../systems/resources";
 import { defaultResourcePool } from "../../systems/resources";
 import {
-	CONSTRUCTION_BLUEPRINTS,
 	advanceConstruction,
+	CONSTRUCTION_BLUEPRINTS,
 	canAffordStage,
 	deductStageCost,
+	getAllSlots,
 	getAvailableBlueprints,
 	getAvailableSlots,
-	getAllSlots,
 	getBlueprintForStructure,
 	getNextStageCost,
 	getRemainingCost,
@@ -14,7 +15,6 @@ import {
 	isConstructionComplete,
 	startConstruction,
 } from "../constructionSystem";
-import type { ResourcePool } from "../../systems/resources";
 
 describe("constructionSystem", () => {
 	describe("slot system", () => {
@@ -61,9 +61,7 @@ describe("constructionSystem", () => {
 			expect(blueprints.length).toBeGreaterThan(0);
 			expect(
 				blueprints.every(
-					(bp) =>
-						bp.slotTier === 0 &&
-						bp.prerequisiteCapabilities.length === 0,
+					(bp) => bp.slotTier === 0 && bp.prerequisiteCapabilities.length === 0,
 				),
 			).toBe(true);
 		});
@@ -103,7 +101,11 @@ describe("constructionSystem", () => {
 						intactComponents:
 							acc.intactComponents + stage.cost.intactComponents,
 					}),
-					defaultResourcePool({ scrapMetal: 0, eWaste: 0, intactComponents: 0 }),
+					defaultResourcePool({
+						scrapMetal: 0,
+						eWaste: 0,
+						intactComponents: 0,
+					}),
 				);
 				expect(bp.totalCost).toEqual(sum);
 			}
@@ -136,9 +138,7 @@ describe("constructionSystem", () => {
 			const stage0Cost = bp.stages[0]!.cost;
 			expect(after.scrapMetal).toBe(100 - stage0Cost.scrapMetal);
 			expect(after.eWaste).toBe(50 - stage0Cost.eWaste);
-			expect(after.intactComponents).toBe(
-				20 - stage0Cost.intactComponents,
-			);
+			expect(after.intactComponents).toBe(20 - stage0Cost.intactComponents);
 		});
 	});
 
@@ -229,9 +229,7 @@ describe("constructionSystem", () => {
 		});
 
 		it("returns null for unknown structure ID", () => {
-			const bp = getBlueprintForStructure(
-				"nonexistent" as any,
-			);
+			const bp = getBlueprintForStructure("nonexistent" as any);
 			expect(bp).toBeNull();
 		});
 	});

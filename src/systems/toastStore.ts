@@ -22,10 +22,7 @@ function notify() {
 	}
 }
 
-export function pushToast(
-	text: string,
-	tone: ToastMessage["tone"] = "info",
-) {
+export function pushToast(text: string, tone: ToastMessage["tone"] = "info") {
 	toasts = [
 		{ id: `toast_${nextId++}`, text, tone, createdAt: Date.now() },
 		...toasts,

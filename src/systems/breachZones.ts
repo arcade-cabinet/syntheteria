@@ -99,7 +99,11 @@ export function generateBreachZones(
 	// Pick every Nth cell to get even distribution
 	const stride = Math.max(1, Math.floor(sorted.length / targetCount));
 	const seedCells: GeneratedSectorCell[] = [];
-	for (let i = 0; i < sorted.length && seedCells.length < targetCount; i += stride) {
+	for (
+		let i = 0;
+		i < sorted.length && seedCells.length < targetCount;
+		i += stride
+	) {
 		seedCells.push(sorted[i]);
 	}
 

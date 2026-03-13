@@ -3,7 +3,10 @@ jest.mock("../index", () => ({
 	getWorldAIService: () => ({ runtime: { reset: jest.fn() } }),
 }));
 
-import { clearActiveWorldSession, setActiveWorldSession } from "../../world/session";
+import {
+	clearActiveWorldSession,
+	setActiveWorldSession,
+} from "../../world/session";
 import { SectorNavigationAdapter } from "./SectorNavigationAdapter";
 import { SquareGridNavigationAdapter } from "./SquareGridNavigationAdapter";
 

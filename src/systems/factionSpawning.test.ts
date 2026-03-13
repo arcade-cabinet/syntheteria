@@ -1,10 +1,10 @@
 import {
 	computeSpawnRegions,
 	findPassableCell,
+	getAllFactionSpawns,
+	getFactionUnitIds,
 	resetFactionSpawning,
 	spawnRivalFactions,
-	getFactionUnitIds,
-	getAllFactionSpawns,
 } from "./factionSpawning";
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
@@ -78,7 +78,11 @@ jest.mock("../ecs/seed", () => ({
 
 jest.mock("../world/sectorCoordinates", () => ({
 	getWorldDimensions: jest.fn(() => ({ width: 40, height: 40 })),
-	gridToWorld: jest.fn((q: number, r: number) => ({ x: q * 2, y: 0, z: r * 2 })),
+	gridToWorld: jest.fn((q: number, r: number) => ({
+		x: q * 2,
+		y: 0,
+		z: r * 2,
+	})),
 	SECTOR_LATTICE_SIZE: 2,
 }));
 
@@ -97,7 +101,11 @@ jest.mock("../world/structuralSpace", () => ({
 jest.mock("../ai/governor/factionGovernors", () => ({
 	RIVAL_FACTIONS: [
 		{ factionName: "reclaimers", economyId: "rogue", label: "Reclaimers" },
-		{ factionName: "volt_collective", economyId: "feral", label: "Volt Collective" },
+		{
+			factionName: "volt_collective",
+			economyId: "feral",
+			label: "Volt Collective",
+		},
 		{ factionName: "iron_creed", economyId: "cultist", label: "Iron Creed" },
 	],
 }));

@@ -10,17 +10,12 @@
  * footprint, the more cultist pressure it attracts.
  */
 
-import {
-	Building,
-	Identity,
-	Unit,
-	WorldPosition,
-} from "../ecs/traits";
+import { Building, Identity, Unit, WorldPosition } from "../ecs/traits";
 import { world } from "../ecs/world";
 import { worldToGrid } from "../world/sectorCoordinates";
 import {
-	type EconomyFactionId,
 	ALL_ECONOMY_FACTIONS,
+	type EconomyFactionId,
 	RIVAL_FACTIONS,
 } from "./factionEconomy";
 
@@ -99,7 +94,10 @@ function cellKey(q: number, r: number): string {
 /**
  * Intermediate accumulator: for each cell, track claim strength per faction.
  */
-type ClaimAccumulator = Map<string, Map<EconomyFactionId, { strength: number; q: number; r: number }>>;
+type ClaimAccumulator = Map<
+	string,
+	Map<EconomyFactionId, { strength: number; q: number; r: number }>
+>;
 
 function addClaims(
 	acc: ClaimAccumulator,
@@ -138,8 +136,14 @@ function computeBorderCells(
 ): Set<string> {
 	const borders = new Set<string>();
 	const offsets = [
-		[1, 0], [-1, 0], [0, 1], [0, -1],
-		[1, 1], [1, -1], [-1, 1], [-1, -1],
+		[1, 0],
+		[-1, 0],
+		[0, 1],
+		[0, -1],
+		[1, 1],
+		[1, -1],
+		[-1, 1],
+		[-1, -1],
 	];
 
 	for (const [key, cell] of ownership) {
@@ -355,7 +359,9 @@ export function getCultistEscalationFactor(): number {
 		if (faction === "cultist") continue;
 		totalNonCultistCells += getFactionTerritorySize(faction);
 	}
-	return CULTIST_PRESSURE_BASE + totalNonCultistCells * CULTIST_PRESSURE_PER_CELL;
+	return (
+		CULTIST_PRESSURE_BASE + totalNonCultistCells * CULTIST_PRESSURE_PER_CELL
+	);
 }
 
 /**

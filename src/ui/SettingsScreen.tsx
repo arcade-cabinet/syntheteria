@@ -114,11 +114,7 @@ export function SettingsScreen({ visible, onClose }: SettingsScreenProps) {
 							onChange={updateMaster}
 						/>
 						<VolumeSlider label="SFX" value={sfx} onChange={updateSfx} />
-						<VolumeSlider
-							label="Music"
-							value={music}
-							onChange={updateMusic}
-						/>
+						<VolumeSlider label="Music" value={music} onChange={updateMusic} />
 						<VolumeSlider
 							label="Ambient"
 							value={ambient}
@@ -145,12 +141,12 @@ export function SettingsScreen({ visible, onClose }: SettingsScreenProps) {
 					{/* Accessibility Section */}
 					<SettingsSection title="Accessibility">
 						<Text className="font-mono text-[11px] leading-5 text-white/48">
-							Touch targets meet 44px minimum. All interactive elements
-							include ARIA labels. Keyboard navigation is fully supported.
+							Touch targets meet 44px minimum. All interactive elements include
+							ARIA labels. Keyboard navigation is fully supported.
 						</Text>
 						<Text className="mt-2 font-mono text-[11px] leading-5 text-white/48">
-							Motion effects are restrained by default. Color-blind
-							friendly faction indicators use shape + color.
+							Motion effects are restrained by default. Color-blind friendly
+							faction indicators use shape + color.
 						</Text>
 					</SettingsSection>
 				</ScrollView>
@@ -243,7 +239,9 @@ function VolumeSlider({
 					accessibilityLabel={`Decrease ${label} volume`}
 					className="h-7 w-7 items-center justify-center rounded border border-white/10 bg-white/5"
 				>
-					<Text className="font-mono text-[12px] text-white/50">{"\u2212"}</Text>
+					<Text className="font-mono text-[12px] text-white/50">
+						{"\u2212"}
+					</Text>
 				</Pressable>
 				<Pressable
 					onPress={() => onChange(Math.min(1, value + 0.05))}
@@ -277,9 +275,7 @@ function KeybindRow({
 					{keyLabel}
 				</Text>
 			</View>
-			<Text className="font-mono text-[11px] text-white/48">
-				{description}
-			</Text>
+			<Text className="font-mono text-[11px] text-white/48">{description}</Text>
 		</View>
 	);
 }

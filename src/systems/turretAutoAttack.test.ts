@@ -1,6 +1,6 @@
 import {
-	turretAutoAttackTick,
 	resetTurretAutoAttack,
+	turretAutoAttackTick,
 } from "./turretAutoAttack";
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
@@ -39,8 +39,7 @@ jest.mock("../ecs/seed", () => ({
 
 jest.mock("./combat", () => ({
 	areFactionsHostile: jest.fn(
-		(a: string, b: string) =>
-			a !== b && a !== "wildlife" && b !== "wildlife",
+		(a: string, b: string) => a !== b && a !== "wildlife" && b !== "wildlife",
 	),
 }));
 
@@ -50,9 +49,7 @@ jest.mock("./turnSystem", () => ({
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function makeEntity(
-	traitData: Record<string, any>,
-) {
+function makeEntity(traitData: Record<string, any>) {
 	let destroyed = false;
 	return {
 		get: (trait: any) => {
@@ -67,7 +64,9 @@ function makeEntity(
 			return traitData[name];
 		},
 		has: () => true,
-		destroy: jest.fn(() => { destroyed = true; }),
+		destroy: jest.fn(() => {
+			destroyed = true;
+		}),
 		get isDestroyed() {
 			return destroyed;
 		},
@@ -83,7 +82,13 @@ function makeTurret(
 	operational = true,
 ) {
 	return makeEntity({
-		Building: { type: "defense_turret", powered, operational, selected: false, components: [] },
+		Building: {
+			type: "defense_turret",
+			powered,
+			operational,
+			selected: false,
+			components: [],
+		},
 		Identity: { id, faction },
 		WorldPosition: { x, y: 0, z },
 	});
@@ -102,7 +107,11 @@ function makeUnit(
 		{ name: "legs", functional: true, material: "metal" },
 	];
 	return makeEntity({
-		Unit: { type: "maintenance_bot", components: components ?? defaultComponents, selected: false },
+		Unit: {
+			type: "maintenance_bot",
+			components: components ?? defaultComponents,
+			selected: false,
+		},
 		Identity: { id, faction },
 		WorldPosition: { x, y: 0, z },
 	});
@@ -153,9 +162,7 @@ describe("turretAutoAttack", () => {
 	});
 
 	it("does not fire when not operational", () => {
-		mockBuildings.push(
-			makeTurret("turret_1", "player", 0, 0, true, false),
-		);
+		mockBuildings.push(makeTurret("turret_1", "player", 0, 0, true, false));
 		mockUnits.push(makeUnit("enemy_1", "rogue", 3, 0));
 
 		const events = turretAutoAttackTick();

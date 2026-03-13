@@ -13,9 +13,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef, useState } from "react";
 import * as THREE from "three";
-import { type CombatEvent, getLastCombatEvents } from "../systems/combat";
 import { Identity, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
+import { type CombatEvent, getLastCombatEvents } from "../systems/combat";
 import { pushEffect } from "./particles/effectEvents";
 
 interface FloatingText {

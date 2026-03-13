@@ -10,8 +10,8 @@
 import { useSyncExternalStore } from "react";
 import * as THREE from "three";
 import {
-	type HarvestYieldEvent,
 	getHarvestYieldEvents,
+	type HarvestYieldEvent,
 	subscribeHarvestEvents,
 } from "../systems/harvestEvents";
 import { HARVEST_RESOURCE_LABELS } from "../systems/resourcePools";

@@ -13,9 +13,15 @@ describe("createInitialCampaignEntities", () => {
 		const entities = createInitialCampaignEntities(generated);
 
 		expect(entities).toHaveLength(10);
-		expect(entities.filter((entity) => entity.faction === "player")).toHaveLength(6);
-		expect(entities.filter((entity) => entity.faction === "rogue")).toHaveLength(2);
-		expect(entities.filter((entity) => entity.faction === "cultist")).toHaveLength(2);
+		expect(
+			entities.filter((entity) => entity.faction === "player"),
+		).toHaveLength(6);
+		expect(
+			entities.filter((entity) => entity.faction === "rogue"),
+		).toHaveLength(2);
+		expect(
+			entities.filter((entity) => entity.faction === "cultist"),
+		).toHaveLength(2);
 		expect(
 			entities.some(
 				(entity) =>
@@ -27,7 +33,8 @@ describe("createInitialCampaignEntities", () => {
 		expect(
 			entities.some(
 				(entity) =>
-					entity.entityId === "bldg_5" && entity.buildingType === "lightning_rod",
+					entity.entityId === "bldg_5" &&
+					entity.buildingType === "lightning_rod",
 			),
 		).toBe(true);
 		expect(

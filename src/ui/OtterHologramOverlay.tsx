@@ -5,15 +5,14 @@
  * blue tint, slight transparency, and speech bubble text.
  */
 
-import { useEffect, useRef } from "react";
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import {
 	Animated,
 	Platform,
 	Pressable,
 	Text,
-	View,
 	useWindowDimensions,
+	View,
 } from "react-native";
 import {
 	dismissHologram,

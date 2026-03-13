@@ -88,7 +88,8 @@ function FragmentCrystal({
 		meshRef.current.rotation.x = Math.sin(elapsed * 0.3 + index) * 0.2;
 
 		// Bobbing
-		meshRef.current.position.y = 0.8 + Math.sin(elapsed * 0.8 + index * 2) * 0.15;
+		meshRef.current.position.y =
+			0.8 + Math.sin(elapsed * 0.8 + index * 2) * 0.15;
 
 		// Glow pulse
 		if (lightRef.current && !read) {

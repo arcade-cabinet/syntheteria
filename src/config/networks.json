@@ -22,7 +22,7 @@
 
 	"power": {
 		"_comment": "Medium emissive lines for power distribution from lightning rods",
-		"thickness": 0.10,
+		"thickness": 0.1,
 		"glowIntensityMin": 0.6,
 		"glowIntensityMax": 2.5,
 		"emissiveIntensity": 2.0,

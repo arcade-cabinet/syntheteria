@@ -22,7 +22,11 @@ export interface PauseMenuProps {
 	onQuitToTitle: () => void;
 }
 
-export function PauseMenu({ visible, onResume, onQuitToTitle }: PauseMenuProps) {
+export function PauseMenu({
+	visible,
+	onResume,
+	onQuitToTitle,
+}: PauseMenuProps) {
 	const resumeRef = useRef<View>(null);
 	const [saving, setSaving] = useState(false);
 	const [showSettings, setShowSettings] = useState(false);

@@ -61,8 +61,7 @@ export const BOT_TRACKS: Record<BotTrackId, UpgradeTrackDefinition> = {
 	founding: {
 		id: "founding",
 		label: "Founding",
-		description:
-			"Substation deployment and district establishment capacity.",
+		description: "Substation deployment and district establishment capacity.",
 		baseBonus: 0.05,
 		logarithmicFactor: 0.16,
 		primaryStats: ["substation setup", "hub initialization"],
@@ -128,11 +127,7 @@ export const BOT_ARCHETYPES: Record<BotArchetypeId, BotArchetypeDefinition> = {
 		availableTracks: ["mobility", "relay", "logistics", "surveying"],
 		loreRole:
 			"Distributed support craft intended for route service, recovery sweeps, and network stitching.",
-		startingUseCases: [
-			"resource hauling",
-			"relay extension",
-			"rapid scouting",
-		],
+		startingUseCases: ["resource hauling", "relay extension", "rapid scouting"],
 	},
 	fabrication_rig: {
 		id: "fabrication_rig",
@@ -226,7 +221,11 @@ export const BOT_ARCHETYPES: Record<BotArchetypeId, BotArchetypeDefinition> = {
 		availableTracks: ["mobility", "assault", "surveying"],
 		loreRole:
 			"Fragmented machines driven by decayed routines and external compulsion.",
-		startingUseCases: ["early hostile pressure", "hack target", "salvage source"],
+		startingUseCases: [
+			"early hostile pressure",
+			"hack target",
+			"salvage source",
+		],
 	},
 	cult_conduit: {
 		id: "cult_conduit",
@@ -291,7 +290,9 @@ export function getBotArchetypeDefinition(archetypeId: BotArchetypeId) {
 	return BOT_ARCHETYPES[archetypeId];
 }
 
-export function getDefaultBotIdentity(unitType: BotUnitType): BotIdentityProfile {
+export function getDefaultBotIdentity(
+	unitType: BotUnitType,
+): BotIdentityProfile {
 	const defaults = UNIT_TYPE_DEFAULTS[unitType];
 	return {
 		archetypeId: defaults.archetypeId,

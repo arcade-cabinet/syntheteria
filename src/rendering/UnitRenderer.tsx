@@ -516,9 +516,7 @@ function UnitMesh({ entity }: { entity: UnitEntity }) {
 	const showCultist = isCultistVisual(faction);
 	const renderComponents = entity.get(Unit)?.components ?? [];
 	const markLevel =
-		faction === "player"
-			? (entity.get(Unit)?.markLevel ?? 1)
-			: 0;
+		faction === "player" ? (entity.get(Unit)?.markLevel ?? 1) : 0;
 	const renderDamageRatio = getDamageRatio(renderComponents);
 	const renderDamageVisuals = getDamageVisuals(renderDamageRatio);
 

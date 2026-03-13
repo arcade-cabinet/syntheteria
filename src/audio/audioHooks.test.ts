@@ -121,20 +121,20 @@ jest.mock("./sfxLibrary", () => ({
 import { setMusicState as mockSetMusicState } from "./adaptiveMusic";
 import { updateStormIntensity as mockUpdateStormIntensity } from "./ambientSoundscape";
 import {
-	playAttackClang as mockPlayAttackClang,
-	playHitImpact as mockPlayHitImpact,
-	playComponentBreak as mockPlayComponentBreak,
-	playUnitDestroyed as mockPlayUnitDestroyed,
-	playHarvestGrind as mockPlayHarvestGrind,
-	playMaterialCollected as mockPlayMaterialCollected,
-	playConstructionHammer as mockPlayConstructionHammer,
-	playStageComplete as mockPlayStageComplete,
-	playBuildingComplete as mockPlayBuildingComplete,
-	playTurnStartChime as mockPlayTurnStartChime,
 	playAIPhaseDrone as mockPlayAIPhaseDrone,
-	playNewTurnFanfare as mockPlayNewTurnFanfare,
-	playCultistSpawn as mockPlayCultistSpawn,
+	playAttackClang as mockPlayAttackClang,
+	playBuildingComplete as mockPlayBuildingComplete,
+	playComponentBreak as mockPlayComponentBreak,
+	playConstructionHammer as mockPlayConstructionHammer,
 	playCultistAttack as mockPlayCultistAttack,
+	playCultistSpawn as mockPlayCultistSpawn,
+	playHarvestGrind as mockPlayHarvestGrind,
+	playHitImpact as mockPlayHitImpact,
+	playMaterialCollected as mockPlayMaterialCollected,
+	playNewTurnFanfare as mockPlayNewTurnFanfare,
+	playStageComplete as mockPlayStageComplete,
+	playTurnStartChime as mockPlayTurnStartChime,
+	playUnitDestroyed as mockPlayUnitDestroyed,
 } from "./sfxLibrary";
 
 // ─── Tests ───────────────────────────────────────────────────────────────────

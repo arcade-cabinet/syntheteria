@@ -13,10 +13,7 @@
 import { Identity, Unit, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
 import { requestCameraFocus } from "./cameraFocus";
-import {
-	subscribeTurnEvents,
-	type TurnEvent,
-} from "./turnPhaseEvents";
+import { subscribeTurnEvents, type TurnEvent } from "./turnPhaseEvents";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 

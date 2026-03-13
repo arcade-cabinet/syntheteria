@@ -5,21 +5,21 @@
  * Provides "Return to Title" button to reset and go back to title screen.
  */
 
-import { Pressable, Text, View } from "react-native";
 import { useSyncExternalStore } from "react";
+import { Pressable, Text, View } from "react-native";
+import { RIVAL_FACTIONS } from "../ai/governor/factionGovernors";
+import { ALL_ECONOMY_FACTIONS } from "../systems/factionEconomy";
+import { getFactionTerritorySize } from "../systems/territorySystem";
+import { getTurnState, subscribeTurnState } from "../systems/turnSystem";
 import {
+	countFactionUnits,
 	getVictoryCondition,
 	resetVictoryConditions,
 	type VictoryCondition,
 	type VictoryType,
 } from "../systems/victoryConditions";
-import { subscribeTurnState, getTurnState } from "../systems/turnSystem";
-import { countFactionUnits } from "../systems/victoryConditions";
-import { getFactionTerritorySize } from "../systems/territorySystem";
-import { ALL_ECONOMY_FACTIONS } from "../systems/factionEconomy";
-import { RIVAL_FACTIONS } from "../ai/governor/factionGovernors";
-import { HudPanel } from "./components/HudPanel";
 import { HudButton } from "./components/HudButton";
+import { HudPanel } from "./components/HudPanel";
 
 // ─── Faction Display Info ────────────────────────────────────────────────────
 
@@ -49,7 +49,10 @@ const FACTION_DISPLAY: Record<
 	},
 };
 
-const VICTORY_TYPE_LABELS: Record<VictoryType, { title: string; description: string }> = {
+const VICTORY_TYPE_LABELS: Record<
+	VictoryType,
+	{ title: string; description: string }
+> = {
 	subjugation: {
 		title: "Territorial Supremacy",
 		description: "Dominant control of the ecumenopolis surface achieved.",
@@ -160,9 +163,7 @@ export function VictoryOverlay({ onReturnToTitle }: VictoryOverlayProps) {
 							<View
 								key={s.factionId}
 								className={`flex-row items-center justify-between px-2 py-1 ${
-									s.factionId === victory.winner
-										? "rounded-lg bg-white/5"
-										: ""
+									s.factionId === victory.winner ? "rounded-lg bg-white/5" : ""
 								}`}
 							>
 								<Text

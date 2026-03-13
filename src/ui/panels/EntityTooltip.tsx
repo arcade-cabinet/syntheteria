@@ -8,7 +8,7 @@
  */
 
 import { useSyncExternalStore } from "react";
-import { Text, View, useWindowDimensions } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import {
 	getTooltipState,
 	subscribeTooltip,
@@ -18,9 +18,23 @@ import {
 const TOOLTIP_WIDTH = 220;
 const TOOLTIP_PADDING = 8;
 
-function StatRow({ label, value, color }: { label: string; value: string; color?: string }) {
+function StatRow({
+	label,
+	value,
+	color,
+}: {
+	label: string;
+	value: string;
+	color?: string;
+}) {
 	return (
-		<View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 2 }}>
+		<View
+			style={{
+				flexDirection: "row",
+				justifyContent: "space-between",
+				marginTop: 2,
+			}}
+		>
 			<Text
 				style={{
 					fontFamily: "monospace",
@@ -63,19 +77,31 @@ function UnitStats({ data }: { data: TooltipData }) {
 				<StatRow label="Mark" value={`Mk.${data.markLevel}`} color="#d4b0ff" />
 			)}
 			{data.hpMax > 0 && (
-				<StatRow label="HP" value={`${data.hpCurrent}/${data.hpMax}`} color={hpColor} />
+				<StatRow
+					label="HP"
+					value={`${data.hpCurrent}/${data.hpMax}`}
+					color={hpColor}
+				/>
 			)}
 			{data.turnState && (
 				<>
 					<StatRow
 						label="AP"
 						value={`${data.turnState.actionPoints}/${data.turnState.maxActionPoints}`}
-						color={data.turnState.actionPoints > 0 ? "#8be6ff" : "rgba(255,255,255,0.3)"}
+						color={
+							data.turnState.actionPoints > 0
+								? "#8be6ff"
+								: "rgba(255,255,255,0.3)"
+						}
 					/>
 					<StatRow
 						label="MP"
 						value={`${data.turnState.movementPoints}/${data.turnState.maxMovementPoints}`}
-						color={data.turnState.movementPoints > 0 ? "#8be6ff" : "rgba(255,255,255,0.3)"}
+						color={
+							data.turnState.movementPoints > 0
+								? "#8be6ff"
+								: "rgba(255,255,255,0.3)"
+						}
 					/>
 				</>
 			)}
@@ -84,7 +110,13 @@ function UnitStats({ data }: { data: TooltipData }) {
 			)}
 			{data.markLevel > 0 && (
 				<View style={{ marginTop: 4 }}>
-					<View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
+					<View
+						style={{
+							flexDirection: "row",
+							justifyContent: "space-between",
+							marginBottom: 2,
+						}}
+					>
 						<Text
 							style={{
 								fontFamily: "monospace",
@@ -163,7 +195,9 @@ function StructureStats({ data }: { data: TooltipData }) {
 			{data.harvestableResources.length > 0 && (
 				<StatRow
 					label="Resources"
-					value={data.harvestableResources.map((r) => r.replace(/_/g, " ")).join(", ")}
+					value={data.harvestableResources
+						.map((r) => r.replace(/_/g, " "))
+						.join(", ")}
 					color="#f6c56a"
 				/>
 			)}
@@ -233,7 +267,14 @@ export function EntityTooltip() {
 			}}
 		>
 			{/* Header */}
-			<View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
+			<View
+				style={{
+					flexDirection: "row",
+					alignItems: "center",
+					gap: 6,
+					marginBottom: 4,
+				}}
+			>
 				<Text
 					style={{
 						fontFamily: "monospace",

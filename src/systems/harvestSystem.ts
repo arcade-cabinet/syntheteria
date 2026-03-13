@@ -21,6 +21,7 @@
 
 import { Identity, Unit, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
+import { expireHarvestEvents, pushHarvestYield } from "./harvestEvents";
 import { queueThought } from "./narrative";
 import {
 	getResourcePoolForModel,
@@ -28,7 +29,6 @@ import {
 	isHarvestable,
 	rollHarvestYield,
 } from "./resourcePools";
-import { expireHarvestEvents, pushHarvestYield } from "./harvestEvents";
 import { addResource, type ResourcePool } from "./resources";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -221,12 +221,7 @@ export function harvestSystem(tick?: number) {
 			}
 
 			// Push a yield event for UI notification
-			pushHarvestYield(
-				harvest.targetX,
-				harvest.targetZ,
-				yields,
-				currentTick,
-			);
+			pushHarvestYield(harvest.targetX, harvest.targetZ, yields, currentTick);
 
 			// Mark structure as consumed
 			consumedStructureIds.add(harvest.structureId);

@@ -15,10 +15,7 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { getBreachZones } from "../systems/breachZones";
-import {
-	gridToWorld,
-	SECTOR_LATTICE_SIZE,
-} from "../world/sectorCoordinates";
+import { gridToWorld, SECTOR_LATTICE_SIZE } from "../world/sectorCoordinates";
 
 const CORRUPTION_COLOR = 0x1a0a1e;
 const RIFT_COLOR_PRIMARY = 0xff4466;
@@ -43,7 +40,11 @@ interface BreachCellData {
 }
 
 function hashCell(q: number, r: number): number {
-	return (Math.imul(q ^ 0x45d9f3b, 0x45d9f3b) ^ Math.imul(r ^ 0x119de1f3, 0x119de1f3)) >>> 0;
+	return (
+		(Math.imul(q ^ 0x45d9f3b, 0x45d9f3b) ^
+			Math.imul(r ^ 0x119de1f3, 0x119de1f3)) >>>
+		0
+	);
 }
 
 function collectBreachCells(): BreachCellData[] {
@@ -105,7 +106,8 @@ function RiftLines({ cells }: { cells: BreachCellData[] }) {
 			if (!mat) continue;
 			// Each rift pulses with a slight phase offset based on index
 			const phase = t * PULSE_SPEED + i * 0.4;
-			const pulse = PULSE_MIN + (PULSE_MAX - PULSE_MIN) * (0.5 + 0.5 * Math.sin(phase));
+			const pulse =
+				PULSE_MIN + (PULSE_MAX - PULSE_MIN) * (0.5 + 0.5 * Math.sin(phase));
 			mat.emissiveIntensity = pulse;
 			mat.opacity = 0.3 + pulse * 0.5;
 		}
@@ -133,7 +135,9 @@ function RiftLines({ cells }: { cells: BreachCellData[] }) {
 							materialRefs.current[i] = ref;
 						}}
 						color={cell.isPrimary ? RIFT_COLOR_PRIMARY : RIFT_COLOR_SECONDARY}
-						emissive={cell.isPrimary ? RIFT_COLOR_PRIMARY : RIFT_COLOR_SECONDARY}
+						emissive={
+							cell.isPrimary ? RIFT_COLOR_PRIMARY : RIFT_COLOR_SECONDARY
+						}
 						emissiveIntensity={0.4}
 						transparent
 						opacity={0.5}

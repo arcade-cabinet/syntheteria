@@ -7,8 +7,7 @@
  * Pointer events pass through so gameplay is not blocked.
  */
 
-import { useEffect, useRef, useState } from "react";
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Animated, Text, View } from "react-native";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import { AlertIcon, MapIcon } from "../icons";

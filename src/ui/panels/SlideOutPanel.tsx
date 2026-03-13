@@ -9,17 +9,16 @@
  * Dismissible by pressing the hamburger again or tapping the backdrop.
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import {
 	Animated,
 	Platform,
 	Pressable,
 	ScrollView,
 	Text,
-	View,
 	useWindowDimensions,
+	View,
 } from "react-native";
-import { useSyncExternalStore } from "react";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import { Identity, WorldPosition } from "../../ecs/traits";
 import { buildings, units } from "../../ecs/world";

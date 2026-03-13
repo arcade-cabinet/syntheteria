@@ -123,10 +123,7 @@ function BoltRenderer({
 	const [cr, cg, cb] = bolt.isRodCapture
 		? state.colors.rodCapture
 		: state.colors.ambient;
-	const baseColor = useMemo(
-		() => new THREE.Color(cr, cg, cb),
-		[cr, cg, cb],
-	);
+	const baseColor = useMemo(() => new THREE.Color(cr, cg, cb), [cr, cg, cb]);
 
 	const flashIntensity = bolt.isRodCapture
 		? state.flashIntensity.rodCapture

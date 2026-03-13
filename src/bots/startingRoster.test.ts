@@ -28,9 +28,7 @@ describe("startingRoster", () => {
 
 	it("includes the 5 canonical starting roles", () => {
 		const roster = createStartingRoster({ spawnQ: 10, spawnR: -4 });
-		const unitTypes = roster
-			.map((entity) => entity.unitType)
-			.filter(Boolean);
+		const unitTypes = roster.map((entity) => entity.unitType).filter(Boolean);
 
 		expect(unitTypes).toContain("maintenance_bot"); // Technician
 		expect(unitTypes).toContain("mecha_scout"); // Scout

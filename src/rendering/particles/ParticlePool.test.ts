@@ -1,4 +1,4 @@
-import { ParticlePool, type ParticleConfig } from "./ParticlePool";
+import { type ParticleConfig, ParticlePool } from "./ParticlePool";
 
 function makeConfig(overrides: Partial<ParticleConfig> = {}): ParticleConfig {
 	return {
@@ -82,7 +82,9 @@ describe("ParticlePool", () => {
 
 	it("advances position by velocity over time", () => {
 		const pool = new ParticlePool(4);
-		pool.emit(makeConfig({ x: 0, y: 10, z: 0, vx: 2, vy: 0, vz: 3, gravity: 0 }));
+		pool.emit(
+			makeConfig({ x: 0, y: 10, z: 0, vx: 2, vy: 0, vz: 3, gravity: 0 }),
+		);
 		pool.update(0.5);
 
 		expect(pool.posX[0]).toBeCloseTo(1.0); // 0 + 2*0.5
@@ -91,7 +93,9 @@ describe("ParticlePool", () => {
 
 	it("applies gravity to vertical velocity", () => {
 		const pool = new ParticlePool(4);
-		pool.emit(makeConfig({ x: 0, y: 10, z: 0, vx: 0, vy: 0, vz: 0, gravity: 1.0 }));
+		pool.emit(
+			makeConfig({ x: 0, y: 10, z: 0, vx: 0, vy: 0, vz: 0, gravity: 1.0 }),
+		);
 		pool.update(0.5);
 
 		// Gravity = -9.8, so after 0.5s: vy = 0 + (-9.8 * 1.0 * 0.5) = -4.9
@@ -102,7 +106,9 @@ describe("ParticlePool", () => {
 
 	it("bounces particles off floor (y=0)", () => {
 		const pool = new ParticlePool(4);
-		pool.emit(makeConfig({ x: 0, y: 0.1, z: 0, vx: 1, vy: -5, vz: 0, gravity: 0 }));
+		pool.emit(
+			makeConfig({ x: 0, y: 0.1, z: 0, vx: 1, vy: -5, vz: 0, gravity: 0 }),
+		);
 		pool.update(0.1);
 
 		// After 0.1s: y = 0.1 + (-5 * 0.1) = -0.4, clamped to 0
@@ -197,7 +203,18 @@ describe("ParticlePool", () => {
 
 	it("zero gravity particles float straight", () => {
 		const pool = new ParticlePool(4);
-		pool.emit(makeConfig({ x: 0, y: 1, z: 0, vx: 0, vy: 1, vz: 0, gravity: 0, lifetime: 5.0 }));
+		pool.emit(
+			makeConfig({
+				x: 0,
+				y: 1,
+				z: 0,
+				vx: 0,
+				vy: 1,
+				vz: 0,
+				gravity: 0,
+				lifetime: 5.0,
+			}),
+		);
 		pool.update(1.0);
 
 		// No gravity, so y should simply be 1 + 1*1 = 2

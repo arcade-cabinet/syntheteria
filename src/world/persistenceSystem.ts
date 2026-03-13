@@ -7,16 +7,22 @@ import {
 } from "../db/worldPersistence";
 import { getCampaignStats } from "../systems/campaignStats";
 import {
-	getAllFactionResources,
 	type EconomyFactionId,
+	getAllFactionResources,
 } from "../systems/factionEconomy";
-import { getActiveHarvests, getConsumedStructureIds } from "../systems/harvestSystem";
+import {
+	getActiveHarvests,
+	getConsumedStructureIds,
+} from "../systems/harvestSystem";
 import { getResources } from "../systems/resources";
 import { getTurnState } from "../systems/turnSystem";
 import { capturePersistableWorldEntities } from "./entityPersistence";
 import { getRuntimeState } from "./runtimeState";
 import { getActiveWorldSession } from "./session";
-import { getStructuralCellRecords, getStructuralFragments } from "./structuralSpace";
+import {
+	getStructuralCellRecords,
+	getStructuralFragments,
+} from "./structuralSpace";
 
 const PERSIST_INTERVAL = 60;
 

@@ -9,11 +9,7 @@ import {
 } from "../../ecs/gameState";
 import { openCityKitLab } from "../../world/cityTransition";
 import { HudButton } from "../components/HudButton";
-import {
-	BoltIcon,
-	ShardIcon,
-	StormIcon,
-} from "../icons";
+import { BoltIcon, ShardIcon, StormIcon } from "../icons";
 
 function StatChip({
 	label,

@@ -131,8 +131,7 @@ describe("breachZones", () => {
 			loadBreachZones(worldData.breachZones);
 			const zones = getBreachZonesNear(0, 0);
 			for (let i = 1; i < zones.length; i++) {
-				const prevDist =
-					zones[i - 1].centerQ ** 2 + zones[i - 1].centerR ** 2;
+				const prevDist = zones[i - 1].centerQ ** 2 + zones[i - 1].centerR ** 2;
 				const currDist = zones[i].centerQ ** 2 + zones[i].centerR ** 2;
 				expect(currDist).toBeGreaterThanOrEqual(prevDist);
 			}

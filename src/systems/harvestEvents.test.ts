@@ -22,7 +22,10 @@ describe("harvestEvents", () => {
 		expect(events[0].x).toBe(10);
 		expect(events[0].z).toBe(20);
 		expect(events[0].yields).toHaveLength(2);
-		expect(events[0].yields[0]).toEqual({ resource: "heavy_metals", amount: 3 });
+		expect(events[0].yields[0]).toEqual({
+			resource: "heavy_metals",
+			amount: 3,
+		});
 		expect(events[0].yields[1]).toEqual({ resource: "scrap", amount: 1 });
 		expect(events[0].createdAtTick).toBe(100);
 	});

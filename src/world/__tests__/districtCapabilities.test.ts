@@ -19,8 +19,12 @@ describe("districtCapabilities", () => {
 			"power_sink",
 			"defense",
 		]);
-		expect(capabilities.every((capability) => capability.status === "online")).toBe(true);
-		expect(summarizeDistrictCapabilities(capabilities)).toContain("Online district functions");
+		expect(
+			capabilities.every((capability) => capability.status === "online"),
+		).toBe(true);
+		expect(summarizeDistrictCapabilities(capabilities)).toContain(
+			"Online district functions",
+		);
 	});
 
 	it("marks cult districts as hostile instead of latent", () => {
@@ -29,7 +33,11 @@ describe("districtCapabilities", () => {
 			state: "surveyed",
 		});
 
-		expect(capabilities.every((capability) => capability.status === "hostile")).toBe(true);
-		expect(summarizeDistrictCapabilities(capabilities)).toContain("Hostile systems");
+		expect(
+			capabilities.every((capability) => capability.status === "hostile"),
+		).toBe(true);
+		expect(summarizeDistrictCapabilities(capabilities)).toContain(
+			"Hostile systems",
+		);
 	});
 });

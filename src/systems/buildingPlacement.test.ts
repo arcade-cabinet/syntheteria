@@ -1,8 +1,8 @@
 import {
+	_reset,
 	ADJACENCY_RADIUS,
 	ADJACENCY_RULES,
 	BUILDING_COSTS,
-	_reset,
 	cancelPlacement,
 	canUnitBuild,
 	computeAdjacencyBonuses,
@@ -11,9 +11,9 @@ import {
 	getActivePlacement,
 	getBuilderEntityId,
 	getGhostPosition,
+	type PlaceableType,
 	setActivePlacement,
 	updateGhostPosition,
-	type PlaceableType,
 } from "./buildingPlacement";
 
 // ---------------------------------------------------------------------------
@@ -61,15 +61,21 @@ const mockLightningRods: any[] = [];
 jest.mock("../ecs/world", () => ({
 	units: {
 		[Symbol.iterator]: () => mockUnits[Symbol.iterator](),
-		get length() { return mockUnits.length; },
+		get length() {
+			return mockUnits.length;
+		},
 	},
 	buildings: {
 		[Symbol.iterator]: () => mockBuildings[Symbol.iterator](),
-		get length() { return mockBuildings.length; },
+		get length() {
+			return mockBuildings.length;
+		},
 	},
 	lightningRods: {
 		[Symbol.iterator]: () => mockLightningRods[Symbol.iterator](),
-		get length() { return mockLightningRods.length; },
+		get length() {
+			return mockLightningRods.length;
+		},
 	},
 }));
 
@@ -103,7 +109,10 @@ function makeEntity(overrides: {
 	return {
 		get: (trait: string) => {
 			if (trait === "Identity")
-				return { id: overrides.id ?? "e1", faction: overrides.faction ?? "player" };
+				return {
+					id: overrides.id ?? "e1",
+					faction: overrides.faction ?? "player",
+				};
 			if (trait === "MapFragment")
 				return { fragmentId: overrides.fragmentId ?? "frag_0" };
 			if (trait === "WorldPosition")
@@ -266,7 +275,9 @@ describe("buildingPlacement", () => {
 		});
 
 		it("fails when resources are insufficient", () => {
-			mockUnits.push(makeEntity({ id: "unit_0", faction: "player", fragmentId: "frag_0" }));
+			mockUnits.push(
+				makeEntity({ id: "unit_0", faction: "player", fragmentId: "frag_0" }),
+			);
 			setActivePlacement("motor_pool");
 			updateGhostPosition(10, 10);
 			setResources({ ferrousScrap: 1 });
@@ -274,7 +285,9 @@ describe("buildingPlacement", () => {
 		});
 
 		it("succeeds with sufficient resources for motor_pool", () => {
-			mockUnits.push(makeEntity({ id: "unit_0", faction: "player", fragmentId: "frag_0" }));
+			mockUnits.push(
+				makeEntity({ id: "unit_0", faction: "player", fragmentId: "frag_0" }),
+			);
 			setResources({ ferrousScrap: 15, alloyStock: 8, siliconWafer: 4 });
 			setActivePlacement("motor_pool");
 			updateGhostPosition(10, 10);
@@ -283,7 +296,9 @@ describe("buildingPlacement", () => {
 		});
 
 		it("spends correct resources", () => {
-			mockUnits.push(makeEntity({ id: "unit_0", faction: "player", fragmentId: "frag_0" }));
+			mockUnits.push(
+				makeEntity({ id: "unit_0", faction: "player", fragmentId: "frag_0" }),
+			);
 			setResources({ ferrousScrap: 20, alloyStock: 10, siliconWafer: 5 });
 			setActivePlacement("motor_pool");
 			updateGhostPosition(10, 10);
@@ -307,7 +322,12 @@ describe("buildingPlacement", () => {
 
 		it("detects adjacent fabrication_unit for motor_pool", () => {
 			mockBuildings.push(
-				makeEntity({ id: "fab_0", buildingType: "fabrication_unit", x: 3, z: 0 }),
+				makeEntity({
+					id: "fab_0",
+					buildingType: "fabrication_unit",
+					x: 3,
+					z: 0,
+				}),
 			);
 			const bonuses = computeAdjacencyBonuses("motor_pool", 0, 0);
 			expect(bonuses).toHaveLength(1);
@@ -329,8 +349,18 @@ describe("buildingPlacement", () => {
 
 		it("does not duplicate same-type bonuses", () => {
 			mockBuildings.push(
-				makeEntity({ id: "fab_0", buildingType: "fabrication_unit", x: 2, z: 0 }),
-				makeEntity({ id: "fab_1", buildingType: "fabrication_unit", x: -2, z: 0 }),
+				makeEntity({
+					id: "fab_0",
+					buildingType: "fabrication_unit",
+					x: 2,
+					z: 0,
+				}),
+				makeEntity({
+					id: "fab_1",
+					buildingType: "fabrication_unit",
+					x: -2,
+					z: 0,
+				}),
 			);
 			const bonuses = computeAdjacencyBonuses("motor_pool", 0, 0);
 			expect(bonuses).toHaveLength(1);
@@ -338,7 +368,12 @@ describe("buildingPlacement", () => {
 
 		it("stacks different bonus types", () => {
 			mockBuildings.push(
-				makeEntity({ id: "fab_0", buildingType: "fabrication_unit", x: 2, z: 0 }),
+				makeEntity({
+					id: "fab_0",
+					buildingType: "fabrication_unit",
+					x: 2,
+					z: 0,
+				}),
 				makeEntity({ id: "ps_0", buildingType: "power_sink", x: 0, z: 2 }),
 				makeEntity({ id: "sh_0", buildingType: "storage_hub", x: -2, z: 0 }),
 			);
@@ -348,7 +383,12 @@ describe("buildingPlacement", () => {
 
 		it("computeAdjacencyMultiplier sums factors correctly", () => {
 			mockBuildings.push(
-				makeEntity({ id: "fab_0", buildingType: "fabrication_unit", x: 2, z: 0 }),
+				makeEntity({
+					id: "fab_0",
+					buildingType: "fabrication_unit",
+					x: 2,
+					z: 0,
+				}),
 				makeEntity({ id: "ps_0", buildingType: "power_sink", x: 0, z: 2 }),
 			);
 			// motor_pool: fabrication_unit=0.2, power_sink=0.15 → 1.35

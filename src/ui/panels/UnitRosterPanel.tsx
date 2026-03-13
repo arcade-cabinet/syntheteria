@@ -9,15 +9,15 @@ import { useSyncExternalStore } from "react";
 import { Pressable, Text, View } from "react-native";
 import { getBotDefinition } from "../../bots/definitions";
 import type { BotArchetypeId, BotUnitType } from "../../bots/types";
+import { getSnapshot, subscribe } from "../../ecs/gameState";
 import { Identity, Unit, WorldPosition } from "../../ecs/traits";
 import { units } from "../../ecs/world";
-import { subscribe, getSnapshot } from "../../ecs/gameState";
+import { requestCameraFocus } from "../../systems/cameraFocus";
 import {
 	getTurnState,
 	subscribeTurnState,
 	type UnitTurnState,
 } from "../../systems/turnSystem";
-import { requestCameraFocus } from "../../systems/cameraFocus";
 import {
 	BoxIcon,
 	EyeIcon,
@@ -67,7 +67,18 @@ const ROLE_ICONS: Record<
 
 function toRoman(n: number): string {
 	if (n <= 0 || n > 10) return String(n);
-	const numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+	const numerals = [
+		"I",
+		"II",
+		"III",
+		"IV",
+		"V",
+		"VI",
+		"VII",
+		"VIII",
+		"IX",
+		"X",
+	];
 	return numerals[n - 1] ?? String(n);
 }
 
@@ -219,11 +230,7 @@ function UnitRow({
 							gap: 2,
 						}}
 					>
-						<MapIcon
-							width={8}
-							height={8}
-							color="rgba(255, 255, 255, 0.3)"
-						/>
+						<MapIcon width={8} height={8} color="rgba(255, 255, 255, 0.3)" />
 						<Text
 							style={{
 								fontFamily: "monospace",
@@ -244,10 +251,7 @@ function UnitRow({
 					style={{
 						fontFamily: "monospace",
 						fontSize: 10,
-						color:
-							apRemaining > 0
-								? "#8be6ff"
-								: "rgba(255,255,255,0.25)",
+						color: apRemaining > 0 ? "#8be6ff" : "rgba(255,255,255,0.25)",
 						letterSpacing: 0.5,
 					}}
 				>
@@ -257,10 +261,7 @@ function UnitRow({
 					style={{
 						fontFamily: "monospace",
 						fontSize: 10,
-						color:
-							mpRemaining > 0
-								? "#7ee7cb"
-								: "rgba(255,255,255,0.25)",
+						color: mpRemaining > 0 ? "#7ee7cb" : "rgba(255,255,255,0.25)",
 						letterSpacing: 0.5,
 					}}
 				>

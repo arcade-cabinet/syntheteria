@@ -25,11 +25,15 @@ const mockBuildings: any[] = [];
 jest.mock("../ecs/world", () => ({
 	units: {
 		[Symbol.iterator]: () => mockUnits[Symbol.iterator](),
-		get length() { return mockUnits.length; },
+		get length() {
+			return mockUnits.length;
+		},
 	},
 	buildings: {
 		[Symbol.iterator]: () => mockBuildings[Symbol.iterator](),
-		get length() { return mockBuildings.length; },
+		get length() {
+			return mockBuildings.length;
+		},
 	},
 }));
 

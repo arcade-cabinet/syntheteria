@@ -25,7 +25,9 @@ describe("world generation", () => {
 
 		expect(small.ecumenopolis.width).toBeLessThan(large.ecumenopolis.width);
 		expect(small.sectorCells.length).toBeLessThan(large.sectorCells.length);
-		expect(small.sectorStructures.length).toBeLessThan(large.sectorStructures.length);
+		expect(small.sectorStructures.length).toBeLessThan(
+			large.sectorStructures.length,
+		);
 	});
 
 	it("guarantees key world POIs and reserved city seeds", () => {
@@ -145,10 +147,14 @@ describe("world generation", () => {
 		).toBe(true);
 		expect(world.sectorStructures.length).toBeGreaterThan(200);
 		expect(
-			world.sectorStructures.some((structure) => structure.source === "landmark"),
+			world.sectorStructures.some(
+				(structure) => structure.source === "landmark",
+			),
 		).toBe(true);
 		expect(
-			world.sectorStructures.some((structure) => structure.modelId.startsWith("walls_")),
+			world.sectorStructures.some((structure) =>
+				structure.modelId.startsWith("walls_"),
+			),
 		).toBe(true);
 		expect(
 			world.sectorStructures.some((structure) =>

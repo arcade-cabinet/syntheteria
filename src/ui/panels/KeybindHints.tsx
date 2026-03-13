@@ -5,7 +5,7 @@
  * Compact, semi-transparent, doesn't block gameplay.
  */
 
-import { Platform, Text, View, useWindowDimensions } from "react-native";
+import { Platform, Text, useWindowDimensions, View } from "react-native";
 
 function Hint({ keys, label }: { keys: string; label: string }) {
 	return (

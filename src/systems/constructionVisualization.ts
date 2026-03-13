@@ -41,41 +41,43 @@ export interface StageVisualConfig {
 	label: string;
 }
 
-export const STAGE_VISUAL_CONFIG: Record<ConstructionStageId, StageVisualConfig> =
-	{
-		foundation: {
-			progress: 0.25,
-			opacity: 0.4,
-			wireframe: true,
-			emissiveIntensity: 0.1,
-			tint: "#4a6670",
-			label: "Foundation",
-		},
-		shell: {
-			progress: 0.5,
-			opacity: 0.6,
-			wireframe: false,
-			emissiveIntensity: 0.15,
-			tint: "#5a7a8a",
-			label: "Shell",
-		},
-		interior: {
-			progress: 0.75,
-			opacity: 0.85,
-			wireframe: false,
-			emissiveIntensity: 0.2,
-			tint: "#7a9aaa",
-			label: "Interior",
-		},
-		operational: {
-			progress: 1.0,
-			opacity: 1.0,
-			wireframe: false,
-			emissiveIntensity: 0.0,
-			tint: "#ffffff",
-			label: "Operational",
-		},
-	};
+export const STAGE_VISUAL_CONFIG: Record<
+	ConstructionStageId,
+	StageVisualConfig
+> = {
+	foundation: {
+		progress: 0.25,
+		opacity: 0.4,
+		wireframe: true,
+		emissiveIntensity: 0.1,
+		tint: "#4a6670",
+		label: "Foundation",
+	},
+	shell: {
+		progress: 0.5,
+		opacity: 0.6,
+		wireframe: false,
+		emissiveIntensity: 0.15,
+		tint: "#5a7a8a",
+		label: "Shell",
+	},
+	interior: {
+		progress: 0.75,
+		opacity: 0.85,
+		wireframe: false,
+		emissiveIntensity: 0.2,
+		tint: "#7a9aaa",
+		label: "Interior",
+	},
+	operational: {
+		progress: 1.0,
+		opacity: 1.0,
+		wireframe: false,
+		emissiveIntensity: 0.0,
+		tint: "#ffffff",
+		label: "Operational",
+	},
+};
 
 // ---------------------------------------------------------------------------
 // Construction progress tracking per building entity
@@ -90,7 +92,10 @@ export interface BuildingConstructionState {
 }
 
 /** Turns required per stage for each building type */
-export const BUILDING_STAGE_TURNS: Record<string, Record<ConstructionStageId, number>> = {
+export const BUILDING_STAGE_TURNS: Record<
+	string,
+	Record<ConstructionStageId, number>
+> = {
 	lightning_rod: {
 		foundation: 0,
 		shell: 0,

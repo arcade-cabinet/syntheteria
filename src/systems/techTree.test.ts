@@ -3,9 +3,9 @@ import {
 	allTechsResearched,
 	cancelResearch,
 	canResearch,
+	getAccumulatedEffects,
 	getActiveEffect,
 	getAllTechs,
-	getAccumulatedEffects,
 	getEffectValue,
 	getFactionResearchState,
 	getResearchProgress,
@@ -184,9 +184,7 @@ describe("research progress", () => {
 		startResearch("player", "advanced_harvesting");
 		const tech = getTechById("advanced_harvesting")!;
 		advanceResearch("player");
-		expect(getResearchProgress("player")).toBeCloseTo(
-			1 / tech.turnsToResearch,
-		);
+		expect(getResearchProgress("player")).toBeCloseTo(1 / tech.turnsToResearch);
 	});
 });
 

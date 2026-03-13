@@ -39,20 +39,18 @@ export const STEERING_TUNING: Record<BotSteeringProfile, SteeringTuning> = {
 	},
 };
 
-export const NAVIGATION_TUNING: Record<
-	BotNavigationProfile,
-	NavigationTuning
-> = {
-	sector_surface_standard: {
-		mode: "ground_path",
-	},
-	sector_surface_heavy: {
-		mode: "ground_path",
-	},
-	sector_aerial: {
-		mode: "direct_line",
-	},
-	city_square_service: {
-		mode: "service_grid",
-	},
-};
+export const NAVIGATION_TUNING: Record<BotNavigationProfile, NavigationTuning> =
+	{
+		sector_surface_standard: {
+			mode: "ground_path",
+		},
+		sector_surface_heavy: {
+			mode: "ground_path",
+		},
+		sector_aerial: {
+			mode: "direct_line",
+		},
+		city_square_service: {
+			mode: "service_grid",
+		},
+	};

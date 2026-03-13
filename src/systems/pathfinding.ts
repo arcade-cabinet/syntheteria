@@ -18,7 +18,14 @@ export function findPathWithCost(
 	goal: Vec3,
 	unitId?: string,
 ): PathResult {
-	return findNavPathWithCost(start.x, start.z, goal.x, goal.z, undefined, unitId);
+	return findNavPathWithCost(
+		start.x,
+		start.z,
+		goal.x,
+		goal.z,
+		undefined,
+		unitId,
+	);
 }
 
 export function getReachableCells(

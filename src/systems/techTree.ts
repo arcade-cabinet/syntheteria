@@ -77,12 +77,12 @@ function ensureState(factionId: EconomyFactionId): FactionResearchState {
 // ─── Config Access ───────────────────────────────────────────────────────────
 
 const techMap = new Map<string, TechDefinition>();
-for (const tech of (techTreeConfig.techs as unknown as TechDefinition[])) {
+for (const tech of techTreeConfig.techs as unknown as TechDefinition[]) {
 	techMap.set(tech.id, tech);
 }
 
 export function getAllTechs(): TechDefinition[] {
-	return (techTreeConfig.techs as unknown as TechDefinition[]);
+	return techTreeConfig.techs as unknown as TechDefinition[];
 }
 
 export function getTechById(id: string): TechDefinition | undefined {
@@ -105,10 +105,7 @@ export function getFactionResearchState(
 /**
  * Check if a faction has completed a tech.
  */
-export function hasTech(
-	factionId: EconomyFactionId,
-	techId: string,
-): boolean {
+export function hasTech(factionId: EconomyFactionId, techId: string): boolean {
 	return ensureState(factionId).completedTechs.has(techId);
 }
 
@@ -212,9 +209,7 @@ export function cancelResearch(factionId: EconomyFactionId) {
  * Advance research by one turn. Called at end of each turn.
  * Returns the completed tech id if research finishes, or null.
  */
-export function advanceResearch(
-	factionId: EconomyFactionId,
-): string | null {
+export function advanceResearch(factionId: EconomyFactionId): string | null {
 	const state = ensureState(factionId);
 	if (!state.activeResearch) return null;
 

@@ -10,10 +10,7 @@ import type { Vec3 } from "../ecs/traits";
 import { showMovementToast } from "./movementFeedback";
 import { findPathWithCost, type PathResult } from "./pathfinding";
 import { invalidateUnitPathCache } from "./pathfindingCache";
-import {
-	getUnitTurnState,
-	spendMovementPoints,
-} from "./turnSystem";
+import { getUnitTurnState, spendMovementPoints } from "./turnSystem";
 
 export interface MoveCommandResult {
 	success: boolean;
@@ -36,7 +33,11 @@ export function tryMoveUnit(
 		return { success: false, reason: "no_turn_state" };
 	}
 
-	const pathResult = findPathWithCost(currentPosition, targetPosition, entityId);
+	const pathResult = findPathWithCost(
+		currentPosition,
+		targetPosition,
+		entityId,
+	);
 
 	if (!pathResult.valid) {
 		showMovementToast("No path available");

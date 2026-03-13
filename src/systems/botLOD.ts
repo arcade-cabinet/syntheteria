@@ -17,8 +17,8 @@
  * Renderers query getLODLevel() to decide which representation to use.
  */
 
-import { getZoomTierState, type ZoomTierState } from "./zoomTier";
 import { distanceSquaredToCamera } from "./frustumCulling";
+import { getZoomTierState, type ZoomTierState } from "./zoomTier";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

@@ -313,7 +313,10 @@ export function applyMaterialDefinition(
 	if (definition.emissive !== undefined) {
 		material.emissive = material.emissive
 			.clone()
-			.lerp(new THREE.Color(definition.emissive ?? 0x000000), blendFactor * 0.3);
+			.lerp(
+				new THREE.Color(definition.emissive ?? 0x000000),
+				blendFactor * 0.3,
+			);
 	}
 	material.emissiveIntensity =
 		definition.emissiveIntensity ?? material.emissiveIntensity;

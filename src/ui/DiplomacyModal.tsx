@@ -5,26 +5,25 @@
  * events, and pending trade offers.
  */
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import {
 	Animated,
 	Platform,
 	Pressable,
 	ScrollView,
 	Text,
-	View,
 	useWindowDimensions,
+	View,
 } from "react-native";
-import { useEffect, useRef } from "react";
 import {
-	type DiplomacyFactionId,
 	ALL_DIPLOMACY_FACTIONS,
+	acceptTrade,
+	type DiplomacyFactionId,
 	getFactionProfile,
-	getStanding,
-	getStandingDisplay,
 	getPendingTrades,
 	getRecentEvents,
-	acceptTrade,
+	getStanding,
+	getStandingDisplay,
 	rejectTrade,
 	subscribeDiplomacy,
 } from "../systems/diplomacy";
@@ -79,7 +78,11 @@ export function DiplomacyModal({
 		>
 			{/* Backdrop */}
 			<Pressable
-				style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.6)" }}
+				style={{
+					position: "absolute",
+					inset: 0,
+					backgroundColor: "rgba(0,0,0,0.6)",
+				}}
 				onPress={onClose}
 				accessibilityLabel="Close diplomacy"
 			/>
@@ -152,7 +155,13 @@ export function DiplomacyModal({
 							justifyContent: "center",
 						}}
 					>
-						<Text style={{ color: "#f6c56a", fontSize: 16, fontFamily: "monospace" }}>
+						<Text
+							style={{
+								color: "#f6c56a",
+								fontSize: 16,
+								fontFamily: "monospace",
+							}}
+						>
 							x
 						</Text>
 					</Pressable>
@@ -180,10 +189,7 @@ export function DiplomacyModal({
 
 						<View style={{ gap: 8 }}>
 							{ALL_DIPLOMACY_FACTIONS.map((factionId) => (
-								<FactionStandingCard
-									key={factionId}
-									factionId={factionId}
-								/>
+								<FactionStandingCard key={factionId} factionId={factionId} />
 							))}
 						</View>
 					</View>
@@ -227,7 +233,9 @@ export function DiplomacyModal({
 											Offer from {trade.from}
 										</Text>
 
-										<View style={{ flexDirection: "row", gap: 12, marginBottom: 8 }}>
+										<View
+											style={{ flexDirection: "row", gap: 12, marginBottom: 8 }}
+										>
 											<Pressable
 												onPress={() => acceptTrade(trade.id, turn.turnNumber)}
 												accessibilityLabel="Accept trade"
@@ -305,50 +313,53 @@ export function DiplomacyModal({
 							</Text>
 
 							<View style={{ gap: 4 }}>
-								{events.slice(-5).reverse().map((event, i) => (
-									<View
-										key={`${event.type}_${event.turnNumber}_${i}`}
-										style={{
-											flexDirection: "row",
-											alignItems: "center",
-											gap: 8,
-											paddingVertical: 4,
-										}}
-									>
+								{events
+									.slice(-5)
+									.reverse()
+									.map((event, i) => (
 										<View
+											key={`${event.type}_${event.turnNumber}_${i}`}
 											style={{
-												width: 6,
-												height: 6,
-												borderRadius: 3,
-												backgroundColor:
-													event.standingChange > 0 ? "#6ff3c8" : "#ff8f8f",
-											}}
-										/>
-										<Text
-											style={{
-												fontFamily: "monospace",
-												fontSize: 10,
-												color: "rgba(255,255,255,0.5)",
-												flex: 1,
+												flexDirection: "row",
+												alignItems: "center",
+												gap: 8,
+												paddingVertical: 4,
 											}}
 										>
-											Turn {event.turnNumber}: {event.type.replace(/_/g, " ")}{" "}
-											({event.factionA} / {event.factionB})
-										</Text>
-										<Text
-											style={{
-												fontFamily: "monospace",
-												fontSize: 10,
-												color:
-													event.standingChange > 0 ? "#6ff3c8" : "#ff8f8f",
-												fontWeight: "600",
-											}}
-										>
-											{event.standingChange > 0 ? "+" : ""}
-											{event.standingChange}
-										</Text>
-									</View>
-								))}
+											<View
+												style={{
+													width: 6,
+													height: 6,
+													borderRadius: 3,
+													backgroundColor:
+														event.standingChange > 0 ? "#6ff3c8" : "#ff8f8f",
+												}}
+											/>
+											<Text
+												style={{
+													fontFamily: "monospace",
+													fontSize: 10,
+													color: "rgba(255,255,255,0.5)",
+													flex: 1,
+												}}
+											>
+												Turn {event.turnNumber}: {event.type.replace(/_/g, " ")}{" "}
+												({event.factionA} / {event.factionB})
+											</Text>
+											<Text
+												style={{
+													fontFamily: "monospace",
+													fontSize: 10,
+													color:
+														event.standingChange > 0 ? "#6ff3c8" : "#ff8f8f",
+													fontWeight: "600",
+												}}
+											>
+												{event.standingChange > 0 ? "+" : ""}
+												{event.standingChange}
+											</Text>
+										</View>
+									))}
 							</View>
 						</View>
 					)}
@@ -360,11 +371,7 @@ export function DiplomacyModal({
 
 // ─── Faction Standing Card ───────────────────────────────────────────────────
 
-function FactionStandingCard({
-	factionId,
-}: {
-	factionId: DiplomacyFactionId;
-}) {
+function FactionStandingCard({ factionId }: { factionId: DiplomacyFactionId }) {
 	const profile = getFactionProfile(factionId);
 	const display = getStandingDisplay("player", factionId);
 
@@ -383,7 +390,13 @@ function FactionStandingCard({
 			accessibilityLabel={`${profile.displayName}: ${display.label} (${display.value})`}
 		>
 			{/* Faction name + standing label */}
-			<View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+			<View
+				style={{
+					flexDirection: "row",
+					justifyContent: "space-between",
+					alignItems: "center",
+				}}
+			>
 				<View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
 					<View
 						style={{

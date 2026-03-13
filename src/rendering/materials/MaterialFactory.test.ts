@@ -1,12 +1,12 @@
 import * as THREE from "three";
 import {
-	MATERIAL_DEFINITIONS,
 	_getMaterialCacheSize,
 	applyMaterialDefinition,
 	clearMaterialCache,
 	createMaterial,
 	getCityFamilyMaterial,
 	getMaterial,
+	MATERIAL_DEFINITIONS,
 } from "./MaterialFactory";
 
 beforeEach(() => {
@@ -16,7 +16,9 @@ beforeEach(() => {
 describe("MaterialFactory", () => {
 	describe("MATERIAL_DEFINITIONS", () => {
 		it("provides at least 10 built-in definitions", () => {
-			expect(Object.keys(MATERIAL_DEFINITIONS).length).toBeGreaterThanOrEqual(10);
+			expect(Object.keys(MATERIAL_DEFINITIONS).length).toBeGreaterThanOrEqual(
+				10,
+			);
 		});
 
 		it("every definition has required PBR fields", () => {

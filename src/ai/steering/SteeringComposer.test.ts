@@ -4,9 +4,9 @@ import {
 	applyArrive,
 	applyArriveWithSeparation,
 	applyFlee,
-	applySeparation,
 	applySeek,
 	applySeekWithSeparation,
+	applySeparation,
 	clearSteering,
 } from "./SteeringComposer";
 
@@ -29,9 +29,7 @@ describe("SteeringComposer", () => {
 			applySeek(agent, target);
 
 			expect(agent.steering.behaviors.length).toBe(1);
-			expect(agent.steering.behaviors[0].constructor.name).toBe(
-				"SeekBehavior",
-			);
+			expect(agent.steering.behaviors[0].constructor.name).toBe("SeekBehavior");
 		});
 	});
 
@@ -67,9 +65,7 @@ describe("SteeringComposer", () => {
 			applyFlee(agent, threat);
 
 			expect(agent.steering.behaviors.length).toBe(1);
-			expect(agent.steering.behaviors[0].constructor.name).toBe(
-				"FleeBehavior",
-			);
+			expect(agent.steering.behaviors[0].constructor.name).toBe("FleeBehavior");
 			// Flee policy boosts maxSpeed by 1.2x
 			expect(agent.maxSpeed).toBeCloseTo(originalSpeed * 1.2);
 		});
@@ -119,9 +115,7 @@ describe("SteeringComposer", () => {
 			applySeekWithSeparation(agent, new Vector3(10, 0, 10));
 
 			expect(agent.steering.behaviors.length).toBe(2);
-			const names = agent.steering.behaviors.map(
-				(b) => b.constructor.name,
-			);
+			const names = agent.steering.behaviors.map((b) => b.constructor.name);
 			expect(names).toContain("SeekBehavior");
 			expect(names).toContain("SeparationBehavior");
 		});
@@ -132,9 +126,7 @@ describe("SteeringComposer", () => {
 			applyArriveWithSeparation(agent, new Vector3(5, 0, 5));
 
 			expect(agent.steering.behaviors.length).toBe(2);
-			const names = agent.steering.behaviors.map(
-				(b) => b.constructor.name,
-			);
+			const names = agent.steering.behaviors.map((b) => b.constructor.name);
 			expect(names).toContain("ArriveBehavior");
 			expect(names).toContain("SeparationBehavior");
 		});

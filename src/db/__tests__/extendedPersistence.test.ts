@@ -1,3 +1,4 @@
+import { generateWorldData } from "../../world/generation";
 import { createSaveGameSync } from "../saveGames";
 import {
 	getPersistedWorldSync,
@@ -8,7 +9,6 @@ import {
 	persistTurnEventLogSync,
 	persistTurnStateSync,
 } from "../worldPersistence";
-import { generateWorldData } from "../../world/generation";
 import { FakeDatabase } from "./helpers/fakeDatabase";
 
 function setupSaveGame() {
@@ -52,12 +52,7 @@ describe("harvest state persistence", () => {
 			},
 		];
 
-		persistHarvestStateSync(
-			saveGame.id,
-			consumedIds,
-			activeHarvests,
-			database,
-		);
+		persistHarvestStateSync(saveGame.id, consumedIds, activeHarvests, database);
 
 		const reloaded = getPersistedWorldSync(saveGame, database);
 		expect(reloaded.harvestState).not.toBeNull();
@@ -152,14 +147,7 @@ describe("turn state persistence", () => {
 		const { database, saveGame } = setupSaveGame();
 
 		persistTurnStateSync(saveGame.id, 1, "player", "player", [], database);
-		persistTurnStateSync(
-			saveGame.id,
-			7,
-			"ai_faction",
-			"rogue",
-			[],
-			database,
-		);
+		persistTurnStateSync(saveGame.id, 7, "ai_faction", "rogue", [], database);
 
 		const reloaded = getPersistedWorldSync(saveGame, database);
 		expect(reloaded.turnState!.turn_number).toBe(7);
@@ -272,11 +260,7 @@ describe("campaign statistics persistence", () => {
 	it("updates existing statistics on re-persist", () => {
 		const { database, saveGame } = setupSaveGame();
 
-		persistCampaignStatisticsSync(
-			saveGame.id,
-			{ turnsElapsed: 1 },
-			database,
-		);
+		persistCampaignStatisticsSync(saveGame.id, { turnsElapsed: 1 }, database);
 		persistCampaignStatisticsSync(
 			saveGame.id,
 			{ turnsElapsed: 50, unitsBuilt: 10 },

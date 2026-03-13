@@ -21,7 +21,9 @@ describe("districtStructures", () => {
 		expect(structures.every((structure) => structure.status === "online")).toBe(
 			true,
 		);
-		expect(summarizeDistrictStructures(structures)).toContain("Online structures");
+		expect(summarizeDistrictStructures(structures)).toContain(
+			"Online structures",
+		);
 	});
 
 	it("builds hostile cult structure sets for cult wards", () => {
@@ -30,12 +32,14 @@ describe("districtStructures", () => {
 			state: "surveyed",
 		});
 
-		expect(structures.every((structure) => structure.status === "hostile")).toBe(
-			true,
-		);
+		expect(
+			structures.every((structure) => structure.status === "hostile"),
+		).toBe(true);
 		expect(structures.map((structure) => structure.id)).toContain(
 			"cult_incursion_structure",
 		);
-		expect(summarizeDistrictStructures(structures)).toContain("Hostile structures");
+		expect(summarizeDistrictStructures(structures)).toContain(
+			"Hostile structures",
+		);
 	});
 });

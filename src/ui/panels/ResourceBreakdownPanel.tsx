@@ -13,8 +13,8 @@ import { Text, View } from "react-native";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import {
 	getResourceDeltas,
-	subscribeResourceDeltas,
 	type ResourceDelta,
+	subscribeResourceDeltas,
 } from "../../systems/resourceDeltas";
 import type { ResourcePool } from "../../systems/resources";
 
@@ -106,10 +106,7 @@ function MaterialRow({ label, value, iconColor, delta }: MaterialRowProps) {
 					style={{
 						fontFamily: "monospace",
 						fontSize: 11,
-						color:
-							value > 0
-								? "#89d9ff"
-								: "rgba(255, 255, 255, 0.25)",
+						color: value > 0 ? "#89d9ff" : "rgba(255, 255, 255, 0.25)",
 						fontWeight: "600",
 						letterSpacing: 0.5,
 						minWidth: 28,

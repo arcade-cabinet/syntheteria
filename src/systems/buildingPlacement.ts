@@ -22,11 +22,10 @@
  */
 import { isInsideBuilding } from "../ecs/cityLayout";
 import {
+	spawnBuilding,
 	spawnFabricationUnit,
 	spawnLightningRod,
-	spawnBuilding,
 } from "../ecs/factory";
-import { startBuildingConstruction } from "./constructionVisualization";
 import {
 	Building,
 	Identity,
@@ -35,8 +34,9 @@ import {
 	WorldPosition,
 } from "../ecs/traits";
 import { buildings, lightningRods, units } from "../ecs/world";
-import { queueThought } from "./narrative";
 import { isPassableAtWorldPosition } from "../world/structuralSpace";
+import { startBuildingConstruction } from "./constructionVisualization";
+import { queueThought } from "./narrative";
 import { getResources, type ResourcePool, spendResource } from "./resources";
 
 export type PlaceableType =
@@ -258,10 +258,7 @@ export function computeAdjacencyMultiplier(
 // ---------------------------------------------------------------------------
 
 /** Bot types allowed to place buildings */
-const FABRICATOR_UNIT_TYPES = new Set([
-	"mecha_golem",
-	"fabrication_unit",
-]);
+const FABRICATOR_UNIT_TYPES = new Set(["mecha_golem", "fabrication_unit"]);
 
 /**
  * Check if the selected unit (by entity ID) is allowed to place buildings.
@@ -376,7 +373,11 @@ export function confirmPlacement(): boolean {
 	// Place the building
 	let placedEntity;
 	if (activePlacement === "lightning_rod") {
-		placedEntity = spawnLightningRod({ x: ghostPosition.x, z: ghostPosition.z, fragmentId });
+		placedEntity = spawnLightningRod({
+			x: ghostPosition.x,
+			z: ghostPosition.z,
+			fragmentId,
+		});
 	} else if (activePlacement === "fabrication_unit") {
 		placedEntity = spawnFabricationUnit({
 			x: ghostPosition.x,

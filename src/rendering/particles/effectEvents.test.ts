@@ -1,9 +1,9 @@
 import {
-	pushEffect,
-	drainEffects,
-	getEffectQueueLength,
 	clearEffects,
+	drainEffects,
 	type EffectEvent,
+	getEffectQueueLength,
+	pushEffect,
 } from "./effectEvents";
 
 describe("effectEvents", () => {

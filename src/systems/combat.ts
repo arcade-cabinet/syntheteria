@@ -152,7 +152,10 @@ function isGuardian(entity: UnitEntity): boolean {
 	const unitType = entity.get(Unit)?.type;
 	if (!unitType) return false;
 	const def = getBotDefinition(unitType as BotUnitType);
-	return def?.role === "guardian" && entity.get(Unit)!.components.some((c) => c.functional);
+	return (
+		def?.role === "guardian" &&
+		entity.get(Unit)!.components.some((c) => c.functional)
+	);
 }
 
 /**
@@ -178,7 +181,9 @@ export function findTauntTarget(
 		const candidateIdentity = candidate.get(Identity);
 		if (!candidateIdentity) continue;
 		if (candidateIdentity.id === attackerIdentity.id) continue;
-		if (!areFactionsHostile(attackerIdentity.faction, candidateIdentity.faction))
+		if (
+			!areFactionsHostile(attackerIdentity.faction, candidateIdentity.faction)
+		)
 			continue;
 		if (!isGuardian(candidate)) continue;
 
@@ -263,7 +268,7 @@ export function combatSystem() {
 			if (!trySpendAttackAP(attacker)) continue;
 
 			// Resolve final target (Guardian if in melee range, otherwise candidate)
-			const finalTarget = (dist <= MELEE_RANGE) ? target : candidate;
+			const finalTarget = dist <= MELEE_RANGE ? target : candidate;
 			const finalTargetIdentity = finalTarget.get(Identity)!;
 
 			// Attacker attacks target

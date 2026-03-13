@@ -1,5 +1,5 @@
-import type { DistrictCapabilityId } from "./districtCapabilities";
 import type { CityInstanceState, WorldPoiType } from "./contracts";
+import type { DistrictCapabilityId } from "./districtCapabilities";
 import type { SectorStructureSnapshot } from "./snapshots";
 
 export type DistrictStructureId =
@@ -41,7 +41,8 @@ export interface DistrictStructureDefinition {
 	capabilities: DistrictCapabilityId[];
 }
 
-export interface DistrictStructureViewModel extends DistrictStructureDefinition {
+export interface DistrictStructureViewModel
+	extends DistrictStructureDefinition {
 	status: "online" | "latent" | "hostile" | "locked";
 	source: "seeded_district" | "boundary" | "landmark" | "constructed";
 	controllerFaction: string | null;
@@ -241,14 +242,19 @@ function getStructureStatus(args: {
 	if (args.poiType === "deep_sea_gateway") {
 		return "locked" as const;
 	}
-	if (args.controllerFaction === "cult" || HOSTILE_POI_TYPES.includes(args.poiType)) {
+	if (
+		args.controllerFaction === "cult" ||
+		HOSTILE_POI_TYPES.includes(args.poiType)
+	) {
 		return "hostile" as const;
 	}
 	if (args.state === "founded") {
 		return "online" as const;
 	}
 	if (args.state === "surveyed") {
-		return args.source === "constructed" ? ("online" as const) : ("latent" as const);
+		return args.source === "constructed"
+			? ("online" as const)
+			: ("latent" as const);
 	}
 	return "latent" as const;
 }
@@ -289,7 +295,9 @@ export function getDistrictStructuresFromSnapshots(args: {
 
 	const fallbacks = defaultStructureIdsForPoi(args.poiType);
 	const resolvedIds =
-		keyed.size > 0 ? [...keyed.keys()] : [...fallbacks] as DistrictStructureId[];
+		keyed.size > 0
+			? [...keyed.keys()]
+			: ([...fallbacks] as DistrictStructureId[]);
 
 	return resolvedIds.map((id) => {
 		const definition = DISTRICT_STRUCTURE_DEFINITIONS[id];
@@ -314,21 +322,28 @@ export function summarizeDistrictStructures(
 	if (structures.length === 0) {
 		return "No district structures are classified for this site.";
 	}
-	const hostile = structures.filter((structure) => structure.status === "hostile");
+	const hostile = structures.filter(
+		(structure) => structure.status === "hostile",
+	);
 	if (hostile.length > 0) {
 		return `Hostile structures detected: ${hostile.map((structure) => structure.label).join(", ")}.`;
 	}
 	const constructed = structures.filter(
-		(structure) => structure.source === "constructed" && structure.status === "online",
+		(structure) =>
+			structure.source === "constructed" && structure.status === "online",
 	);
 	if (constructed.length > 0) {
 		return `Constructed district modules online: ${constructed.map((structure) => structure.label).join(", ")}.`;
 	}
-	const online = structures.filter((structure) => structure.status === "online");
+	const online = structures.filter(
+		(structure) => structure.status === "online",
+	);
 	if (online.length > 0) {
 		return `Online structures: ${online.map((structure) => structure.label).join(", ")}.`;
 	}
-	const locked = structures.filter((structure) => structure.status === "locked");
+	const locked = structures.filter(
+		(structure) => structure.status === "locked",
+	);
 	if (locked.length > 0) {
 		return `Reserved structures: ${locked.map((structure) => structure.label).join(", ")}.`;
 	}

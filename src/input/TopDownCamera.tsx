@@ -1,10 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import {
-	cancelCameraFocus,
-	updateCameraFocus,
-} from "../systems/cameraFocus";
+import { cancelCameraFocus, updateCameraFocus } from "../systems/cameraFocus";
 import {
 	getNextCycleTier,
 	getTargetHeightForTier,

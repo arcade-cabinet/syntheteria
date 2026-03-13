@@ -5,8 +5,7 @@
  * panel (bottom-right). Auto-purges expired toasts.
  */
 
-import { useEffect, useRef } from "react";
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { Animated, Text, View } from "react-native";
 import {
 	getToasts,
@@ -19,7 +18,10 @@ const TOAST_LIFETIME_MS = 4000;
 const FADE_IN_MS = 200;
 const FADE_OUT_MS = 300;
 
-const TONE_COLORS: Record<ToastMessage["tone"], { text: string; border: string }> = {
+const TONE_COLORS: Record<
+	ToastMessage["tone"],
+	{ text: string; border: string }
+> = {
 	info: { text: "#8be6ff", border: "rgba(139, 230, 255, 0.25)" },
 	success: { text: "#6ff3c8", border: "rgba(111, 243, 200, 0.25)" },
 	warn: { text: "#f6c56a", border: "rgba(246, 197, 106, 0.25)" },

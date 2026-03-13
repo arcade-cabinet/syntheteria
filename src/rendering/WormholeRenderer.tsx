@@ -13,9 +13,9 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
+	getWormholeProgress,
 	getWormholeState,
 	getWormholeVisualPhase,
-	getWormholeProgress,
 	subscribeWormhole,
 } from "../systems/wormhole";
 
@@ -68,8 +68,14 @@ export function WormholeRenderer() {
 			{phase !== "foundation" && <PortalFrame progress={progress} />}
 
 			{/* Vortex — visible from vortex phase onward */}
-			{(phase === "vortex" || phase === "stabilization" || phase === "complete") && (
-				<Vortex ref={vortexRef} progress={progress} complete={phase === "complete"} />
+			{(phase === "vortex" ||
+				phase === "stabilization" ||
+				phase === "complete") && (
+				<Vortex
+					ref={vortexRef}
+					progress={progress}
+					complete={phase === "complete"}
+				/>
 			)}
 
 			{/* Completion glow — only when done */}
@@ -80,7 +86,12 @@ export function WormholeRenderer() {
 
 // ─── Foundation Ring ─────────────────────────────────────────────────────────
 
-const FoundationRing = ({ progress }: { progress: number; ref?: React.Ref<THREE.Mesh> }) => {
+const FoundationRing = ({
+	progress,
+}: {
+	progress: number;
+	ref?: React.Ref<THREE.Mesh>;
+}) => {
 	const ringGeom = useMemo(
 		() => new THREE.RingGeometry(PORTAL_RADIUS - 0.3, PORTAL_RADIUS, 32),
 		[],

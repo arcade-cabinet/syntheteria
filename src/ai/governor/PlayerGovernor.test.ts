@@ -32,8 +32,10 @@ const mockTurnStates = new Map<
 >();
 
 let mockStartHarvestResult = true;
-const mockMoveCommands: Array<{ entityId: string; target: { x: number; y: number; z: number } }> =
-	[];
+const mockMoveCommands: Array<{
+	entityId: string;
+	target: { x: number; y: number; z: number };
+}> = [];
 const mockAPSpent: Array<{ entityId: string; cost: number }> = [];
 const mockMPSpent: Array<{ entityId: string; cost: number }> = [];
 
@@ -65,10 +67,16 @@ jest.mock("../../ecs/world", () => {
 			},
 		},
 		units: {
-			[Symbol.iterator]: () => mockUnits.map((entry) => createEntityAccessor(entry))[Symbol.iterator](),
+			[Symbol.iterator]: () =>
+				mockUnits
+					.map((entry) => createEntityAccessor(entry))
+					[Symbol.iterator](),
 		},
 		buildings: {
-			[Symbol.iterator]: () => mockBuildings.map((entry) => createEntityAccessor(entry))[Symbol.iterator](),
+			[Symbol.iterator]: () =>
+				mockBuildings
+					.map((entry) => createEntityAccessor(entry))
+					[Symbol.iterator](),
 		},
 	};
 });
@@ -193,7 +201,10 @@ jest.mock("../../ecs/seed", () => ({
 }));
 
 jest.mock("../core/WorldAIService", () => ({
-	issueMoveCommand: (entityId: string, target: { x: number; y: number; z: number }) => {
+	issueMoveCommand: (
+		entityId: string,
+		target: { x: number; y: number; z: number },
+	) => {
 		mockMoveCommands.push({ entityId, target });
 		return true;
 	},
@@ -222,7 +233,13 @@ function addUnit(
 	});
 }
 
-function addBuilding(id: string, faction: string, type: string, x: number, z: number) {
+function addBuilding(
+	id: string,
+	faction: string,
+	type: string,
+	x: number,
+	z: number,
+) {
 	mockBuildings.push({
 		Identity: { id, faction },
 		WorldPosition: { x, y: 0, z },

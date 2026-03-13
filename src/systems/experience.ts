@@ -16,8 +16,8 @@
  *   Mark 2 = 100 XP, Mark 3 = 250 XP, Mark 4 = 500 XP, etc.
  */
 
-import type { BotArchetypeId, BotRoleFamily } from "../bots/types";
 import { getBotArchetypeDefinition } from "../bots/archetypes";
+import type { BotArchetypeId, BotRoleFamily } from "../bots/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -194,7 +194,9 @@ export function applyMarkUpgrade(entityId: string): boolean {
 /**
  * Get a unit's XP state. Returns undefined if not tracked.
  */
-export function getUnitExperience(entityId: string): UnitExperience | undefined {
+export function getUnitExperience(
+	entityId: string,
+): UnitExperience | undefined {
 	return unitXP.get(entityId);
 }
 

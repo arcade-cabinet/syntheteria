@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from "react";
-import { CitySiteModal } from "./CitySiteModal";
 import { getActiveLocationContext } from "../world/locationContext";
-import { getActiveWorldSession } from "../world/session";
 import {
 	getRuntimeState,
 	setCitySiteModalOpen,
 	subscribeRuntimeState,
 } from "../world/runtimeState";
+import { getActiveWorldSession } from "../world/session";
+import { CitySiteModal } from "./CitySiteModal";
 
 export function CitySiteOverlay() {
 	const runtime = useSyncExternalStore(subscribeRuntimeState, getRuntimeState);

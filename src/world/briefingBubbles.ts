@@ -2,8 +2,8 @@ import { BOT_SPEECH_LABELS, getBotCommandProfile } from "../bots";
 import { Unit, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
 import { getActiveLocationContext } from "./locationContext";
-import type { WorldSessionSnapshot } from "./snapshots";
 import type { RuntimeState } from "./runtimeState.types";
+import type { WorldSessionSnapshot } from "./snapshots";
 
 export interface BriefingBubbleViewModel {
 	id: string;
@@ -15,7 +15,9 @@ export interface BriefingBubbleViewModel {
 }
 
 function getSelectedUnitBubble(): BriefingBubbleViewModel | null {
-	const selectedUnit = Array.from(units).find((unit) => unit.get(Unit)?.selected);
+	const selectedUnit = Array.from(units).find(
+		(unit) => unit.get(Unit)?.selected,
+	);
 	if (!selectedUnit) {
 		return null;
 	}

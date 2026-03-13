@@ -9,15 +9,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import {
-	getAllCellOwnership,
-	getCellOwner,
-} from "../systems/territorySystem";
 import type { EconomyFactionId } from "../systems/factionEconomy";
-import {
-	gridToWorld,
-	SECTOR_LATTICE_SIZE,
-} from "../world/sectorCoordinates";
+import { getAllCellOwnership, getCellOwner } from "../systems/territorySystem";
+import { gridToWorld, SECTOR_LATTICE_SIZE } from "../world/sectorCoordinates";
 
 const FACTION_BORDER_COLORS: Record<string, number> = {
 	player: 0x00cccc, // Cyan
@@ -60,10 +54,7 @@ function buildBorderGeometry(): FactionBorderGroup[] {
 		const worldPos = gridToWorld(cell.q, cell.r);
 
 		for (const edge of EDGE_DEFS) {
-			const neighborOwner = getCellOwner(
-				cell.q + edge.dq,
-				cell.r + edge.dr,
-			);
+			const neighborOwner = getCellOwner(cell.q + edge.dq, cell.r + edge.dr);
 			if (neighborOwner === cell.owner) continue;
 
 			let edges = edgesByFaction.get(cell.owner);

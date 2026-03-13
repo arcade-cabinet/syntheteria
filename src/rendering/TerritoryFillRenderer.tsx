@@ -20,10 +20,7 @@ import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import type { EconomyFactionId } from "../systems/factionEconomy";
 import { getAllCellOwnership } from "../systems/territorySystem";
-import {
-	gridToWorld,
-	SECTOR_LATTICE_SIZE,
-} from "../world/sectorCoordinates";
+import { gridToWorld, SECTOR_LATTICE_SIZE } from "../world/sectorCoordinates";
 
 const FACTION_FILL_COLORS: Record<string, number> = {
 	player: 0x00cccc, // Cyan
@@ -56,7 +53,10 @@ const _scale = new THREE.Vector3(
 
 function buildFillData(): FactionFillData[] {
 	const ownership = getAllCellOwnership();
-	const cellsByFaction = new Map<EconomyFactionId, { q: number; r: number }[]>();
+	const cellsByFaction = new Map<
+		EconomyFactionId,
+		{ q: number; r: number }[]
+	>();
 
 	for (const [, cell] of ownership) {
 		let cells = cellsByFaction.get(cell.owner);

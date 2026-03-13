@@ -43,7 +43,10 @@ describe("detectPhaseTransition", () => {
 		expect(events.length).toBe(1);
 		expect(events[0].type).toBe("phase_change");
 
-		const phaseChange = events[0] as Extract<TurnEvent, { type: "phase_change" }>;
+		const phaseChange = events[0] as Extract<
+			TurnEvent,
+			{ type: "phase_change" }
+		>;
 		expect(phaseChange.fromPhase).toBeNull(); // first call
 		expect(phaseChange.toPhase).toBe("player");
 	});

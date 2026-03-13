@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import {
-	DETAIL_PRESETS,
 	composeNormalMap,
 	composeNormalMapData,
+	DETAIL_PRESETS,
 } from "./NormalMapComposer";
 
 describe("NormalMapComposer", () => {

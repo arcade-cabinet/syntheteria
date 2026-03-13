@@ -61,7 +61,8 @@ export const SECTOR_SCALE_SPECS: Record<SectorScale, SectorScaleSpec> = {
 		width: 56,
 		height: 56,
 		label: "Large",
-		description: "Broader machine-world, slower expansion, wider sector variety.",
+		description:
+			"Broader machine-world, slower expansion, wider sector variety.",
 	},
 };
 

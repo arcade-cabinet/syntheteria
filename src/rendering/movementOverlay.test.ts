@@ -21,9 +21,9 @@ jest.mock("../city/catalog/cityCatalog", () => ({
 	getCityComposites: () => [],
 }));
 
-import { computeMovementOverlay } from "./movementOverlay";
 import { _resetPathfindingCache } from "../systems/pathfindingCache";
 import { setWorldDimensions } from "../world/sectorCoordinates";
+import { computeMovementOverlay } from "./movementOverlay";
 
 function makeCell(
 	q: number,

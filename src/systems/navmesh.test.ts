@@ -1,4 +1,8 @@
-import type { SectorCellSnapshot, SectorStructureSnapshot, WorldSessionSnapshot } from "../world/snapshots";
+import type {
+	SectorCellSnapshot,
+	SectorStructureSnapshot,
+	WorldSessionSnapshot,
+} from "../world/snapshots";
 
 // ── Mock world session ─────────────────────────────────────────────
 
@@ -30,9 +34,16 @@ jest.mock("../city/catalog/cityCatalog", () => ({
 	getCityComposites: () => [],
 }));
 
-import { findNavPath, findNavPathWithCost, findReachableCells } from "./navmesh";
-import { _resetPathfindingCache, invalidatePathCache } from "./pathfindingCache";
 import { setWorldDimensions } from "../world/sectorCoordinates";
+import {
+	findNavPath,
+	findNavPathWithCost,
+	findReachableCells,
+} from "./navmesh";
+import {
+	_resetPathfindingCache,
+	invalidatePathCache,
+} from "./pathfindingCache";
 
 // ── Test helpers ───────────────────────────────────────────────────
 
@@ -100,9 +111,7 @@ function buildGrid(
 	const impassableSet = new Set(
 		(opts?.impassable ?? []).map((c) => `${c.q},${c.r}`),
 	);
-	const breachSet = new Set(
-		(opts?.breach ?? []).map((c) => `${c.q},${c.r}`),
-	);
+	const breachSet = new Set((opts?.breach ?? []).map((c) => `${c.q},${c.r}`));
 
 	mockSectorCells.length = 0;
 	for (let q = 0; q < width; q++) {
@@ -186,9 +195,7 @@ describe("A* grid pathfinding", () => {
 
 			const result = findNavPathWithCost(0, 0, 4 * L, 0);
 			expect(result.valid).toBe(true);
-			const goesThrough2_0 = result.path.some(
-				(p) => p.q === 2 && p.r === 0,
-			);
+			const goesThrough2_0 = result.path.some((p) => p.q === 2 && p.r === 0);
 			expect(goesThrough2_0).toBe(false);
 		});
 
@@ -202,9 +209,7 @@ describe("A* grid pathfinding", () => {
 			const result = findNavPathWithCost(0, 0, 4 * L, 0);
 			expect(result.valid).toBe(true);
 			// Path can go through (2,0) since it's walkable
-			const goesThrough2_0 = result.path.some(
-				(p) => p.q === 2 && p.r === 0,
-			);
+			const goesThrough2_0 = result.path.some((p) => p.q === 2 && p.r === 0);
 			expect(goesThrough2_0).toBe(true);
 		});
 
@@ -219,9 +224,7 @@ describe("A* grid pathfinding", () => {
 
 			const result = findNavPathWithCost(0, 0, 4 * L, 0);
 			expect(result.valid).toBe(true);
-			const goesThrough2_0 = result.path.some(
-				(p) => p.q === 2 && p.r === 0,
-			);
+			const goesThrough2_0 = result.path.some((p) => p.q === 2 && p.r === 0);
 			expect(goesThrough2_0).toBe(true);
 		});
 
@@ -247,7 +250,13 @@ describe("A* grid pathfinding", () => {
 		});
 
 		it("reports higher cost for breach zone cells", () => {
-			buildGrid(5, 1, { breach: [{ q: 1, r: 0 }, { q: 2, r: 0 }, { q: 3, r: 0 }] });
+			buildGrid(5, 1, {
+				breach: [
+					{ q: 1, r: 0 },
+					{ q: 2, r: 0 },
+					{ q: 3, r: 0 },
+				],
+			});
 			const result = findNavPathWithCost(0, 0, 4 * L, 0);
 			expect(result.valid).toBe(true);
 			// Cells 1,2,3 are breach (cost 2 each), cell 4 is corridor (cost 1) = 7
@@ -257,7 +266,13 @@ describe("A* grid pathfinding", () => {
 		it("prefers cheaper route when available", () => {
 			// Direct path through breach zone is expensive,
 			// going around via row 1 (all corridor) is cheaper
-			buildGrid(5, 2, { breach: [{ q: 1, r: 0 }, { q: 2, r: 0 }, { q: 3, r: 0 }] });
+			buildGrid(5, 2, {
+				breach: [
+					{ q: 1, r: 0 },
+					{ q: 2, r: 0 },
+					{ q: 3, r: 0 },
+				],
+			});
 			const result = findNavPathWithCost(0, 0, 4 * L, 0);
 			expect(result.valid).toBe(true);
 			// The path should avoid breach cells if the detour is cheaper
@@ -291,12 +306,8 @@ describe("A* grid pathfinding", () => {
 			const second = findNavPathWithCost(0, 0, 4 * L, 0, undefined, "unit-1");
 			expect(second.valid).toBe(true);
 			// Path should differ — avoids the new wall
-			const firstGoesThrough = first.path.some(
-				(p) => p.q === 2 && p.r === 0,
-			);
-			const secondGoesThrough = second.path.some(
-				(p) => p.q === 2 && p.r === 0,
-			);
+			const firstGoesThrough = first.path.some((p) => p.q === 2 && p.r === 0);
+			const secondGoesThrough = second.path.some((p) => p.q === 2 && p.r === 0);
 			expect(firstGoesThrough).toBe(true);
 			expect(secondGoesThrough).toBe(false);
 		});
@@ -320,7 +331,12 @@ describe("A* grid pathfinding", () => {
 
 		it("mixed terrain accumulates costs correctly", () => {
 			// Path: corridor(0,0) -> breach(1,0) -> breach(2,0) -> corridor(3,0)
-			buildGrid(4, 1, { breach: [{ q: 1, r: 0 }, { q: 2, r: 0 }] });
+			buildGrid(4, 1, {
+				breach: [
+					{ q: 1, r: 0 },
+					{ q: 2, r: 0 },
+				],
+			});
 			const result = findNavPathWithCost(0, 0, 3 * L, 0);
 			expect(result.valid).toBe(true);
 			// 2 + 2 + 1 = 5
@@ -343,9 +359,7 @@ describe("A* grid pathfinding", () => {
 		it("uses default cost for unknown zone types", () => {
 			buildGrid(3, 1);
 			// Override a cell with an unknown floor preset
-			const unknownCell = mockSectorCells.find(
-				(c) => c.q === 1 && c.r === 0,
-			);
+			const unknownCell = mockSectorCells.find((c) => c.q === 1 && c.r === 0);
 			if (unknownCell) {
 				unknownCell.floor_preset_id = "unknown_zone_type";
 			}

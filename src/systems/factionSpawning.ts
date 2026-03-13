@@ -13,7 +13,13 @@
  * so the existing UnitRenderer will render them with faction-colored beacons.
  */
 
-import { createBotUnitState, getBotDefinition, type BotUnitType } from "../bots";
+import { RIVAL_FACTIONS } from "../ai/governor/factionGovernors";
+import {
+	type BotUnitType,
+	createBotUnitState,
+	getBotDefinition,
+} from "../bots";
+import { gameplayRandom } from "../ecs/seed";
 import {
 	AIController,
 	Identity,
@@ -23,7 +29,6 @@ import {
 	WorldPosition,
 } from "../ecs/traits";
 import { world } from "../ecs/world";
-import { gameplayRandom } from "../ecs/seed";
 import {
 	getWorldDimensions,
 	gridToWorld,
@@ -31,11 +36,10 @@ import {
 } from "../world/sectorCoordinates";
 import {
 	getSectorCell,
-	requirePrimaryStructuralFragment,
 	getSurfaceHeightAtWorldPosition,
+	requirePrimaryStructuralFragment,
 } from "../world/structuralSpace";
-import { RIVAL_FACTIONS } from "../ai/governor/factionGovernors";
-import { seedFactionResources, type EconomyFactionId } from "./factionEconomy";
+import { type EconomyFactionId, seedFactionResources } from "./factionEconomy";
 import { addUnitsToTurnState } from "./turnSystem";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -98,7 +102,10 @@ export function computeSpawnRegions(
 ): SpawnRegion[] {
 	const halfW = Math.floor(worldWidth / 2);
 	const halfH = Math.floor(worldHeight / 2);
-	const margin = Math.max(3, Math.floor(Math.min(worldWidth, worldHeight) * 0.15));
+	const margin = Math.max(
+		3,
+		Math.floor(Math.min(worldWidth, worldHeight) * 0.15),
+	);
 
 	// Place three rivals in NE, SW, NW quadrants (player is near center/SE)
 	return [
@@ -221,7 +228,11 @@ export function spawnRivalFactions(): Map<string, string[]> {
 				const targetQ = region.centerQ + jitterQ;
 				const targetR = region.centerR + jitterR;
 
-				const cell = findPassableCell(targetQ, targetR, SPAWN_SPREAD_RADIUS + 3);
+				const cell = findPassableCell(
+					targetQ,
+					targetR,
+					SPAWN_SPREAD_RADIUS + 3,
+				);
 				if (!cell) continue;
 
 				const worldPos = gridToWorld(cell.q, cell.r);

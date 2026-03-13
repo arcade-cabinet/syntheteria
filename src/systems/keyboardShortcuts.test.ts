@@ -45,15 +45,15 @@ jest.mock("./turnSystem", () => ({
 	endPlayerTurn: jest.fn(),
 }));
 
-import { getRadialMenuState, closeRadialMenu } from "./radialMenu";
-import { getActivePlacement, cancelPlacement } from "./buildingPlacement";
-import { getTurnState, endPlayerTurn } from "./turnSystem";
+import { cancelPlacement, getActivePlacement } from "./buildingPlacement";
 import {
 	_reset,
 	handleEndTurn,
 	handleEscape,
 	installKeyboardShortcuts,
 } from "./keyboardShortcuts";
+import { closeRadialMenu, getRadialMenuState } from "./radialMenu";
+import { endPlayerTurn, getTurnState } from "./turnSystem";
 
 const mockGetRadialMenuState = getRadialMenuState as jest.Mock;
 const mockGetActivePlacement = getActivePlacement as jest.Mock;

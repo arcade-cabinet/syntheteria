@@ -1,10 +1,10 @@
 import {
-	BOT_FABRICATION_RECIPES,
-	MOTOR_POOL_TIER_CONFIG,
-	MOTOR_POOL_UPGRADE_COSTS,
 	_reset,
+	BOT_FABRICATION_RECIPES,
 	getAllMotorPools,
 	getMotorPoolState,
+	MOTOR_POOL_TIER_CONFIG,
+	MOTOR_POOL_UPGRADE_COSTS,
 	motorPoolTurnTick,
 	queueBotFabrication,
 	registerMotorPool,
@@ -40,7 +40,9 @@ const mockBuildings: any[] = [];
 jest.mock("../ecs/world", () => ({
 	buildings: {
 		[Symbol.iterator]: () => mockBuildings[Symbol.iterator](),
-		get length() { return mockBuildings.length; },
+		get length() {
+			return mockBuildings.length;
+		},
 	},
 }));
 
@@ -58,7 +60,13 @@ jest.mock("./resources", () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeBuilding(id: string, type: string, powered: boolean, x: number, z: number) {
+function makeBuilding(
+	id: string,
+	type: string,
+	powered: boolean,
+	x: number,
+	z: number,
+) {
 	return {
 		get: (trait: string) => {
 			if (trait === "Identity") return { id };

@@ -1,7 +1,4 @@
-import {
-	generateBreachZones,
-	type BreachZone,
-} from "../systems/breachZones";
+import { type BreachZone, generateBreachZones } from "../systems/breachZones";
 import { createGeneratedCitySeed } from "./cityLifecycle";
 import {
 	getClimateProfileSpec,
@@ -14,8 +11,8 @@ import type {
 	WorldPoiType,
 } from "./contracts";
 import {
-	generateSectorStructurePlan,
 	type GeneratedSectorStructure,
+	generateSectorStructurePlan,
 } from "./sectorStructurePlan";
 
 export interface GeneratedSectorCell {
@@ -215,7 +212,9 @@ function getStructuralMetadata(surface: StructuralZoneDefinition) {
 			return {
 				sectorArchetype: "service_plate",
 				stormExposure: "stressed" as const,
-				impassableClass: surface.passable ? ("none" as const) : ("structural_void" as const),
+				impassableClass: surface.passable
+					? ("none" as const)
+					: ("structural_void" as const),
 			};
 	}
 }

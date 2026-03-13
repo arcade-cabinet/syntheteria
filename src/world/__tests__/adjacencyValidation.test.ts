@@ -14,7 +14,9 @@ import {
 	selectWallVariant,
 } from "../adjacencyValidation";
 
-function makeContext(overrides: Partial<AdjacencyContext> = {}): AdjacencyContext {
+function makeContext(
+	overrides: Partial<AdjacencyContext> = {},
+): AdjacencyContext {
 	return {
 		zone: "core",
 		neighbors: { north: null, east: null, south: null, west: null },
@@ -140,9 +142,7 @@ describe("adjacencyValidation", () => {
 			expect(ranked.length).toBeLessThanOrEqual(5);
 			expect(ranked.length).toBeGreaterThan(0);
 
-			const scores = ranked.map((m) =>
-				scoreModelPlacement(m, context),
-			);
+			const scores = ranked.map((m) => scoreModelPlacement(m, context));
 			for (let i = 1; i < scores.length; i++) {
 				expect(scores[i]!).toBeLessThanOrEqual(scores[i - 1]!);
 			}
@@ -153,9 +153,7 @@ describe("adjacencyValidation", () => {
 		it("returns a model from candidates", () => {
 			const context = makeContext({ zone: "fabrication" });
 			const candidates = ECUMENOPOLIS_MODEL_ATLAS.filter(
-				(m) =>
-					m.zoneAffinity.includes("fabrication") &&
-					m.family === "prop",
+				(m) => m.zoneAffinity.includes("fabrication") && m.family === "prop",
 			);
 			const selected = selectModelByAdjacency(candidates, context, 42);
 			expect(selected).not.toBeNull();
@@ -169,8 +167,8 @@ describe("adjacencyValidation", () => {
 
 		it("is deterministic with the same seed", () => {
 			const context = makeContext({ zone: "core" });
-			const candidates = ECUMENOPOLIS_MODEL_ATLAS.filter(
-				(m) => m.zoneAffinity.includes("core"),
+			const candidates = ECUMENOPOLIS_MODEL_ATLAS.filter((m) =>
+				m.zoneAffinity.includes("core"),
 			);
 			const a = selectModelByAdjacency(candidates, context, 42);
 			const b = selectModelByAdjacency(candidates, context, 42);
@@ -179,8 +177,8 @@ describe("adjacencyValidation", () => {
 
 		it("varies with different seeds", () => {
 			const context = makeContext({ zone: "core" });
-			const candidates = ECUMENOPOLIS_MODEL_ATLAS.filter(
-				(m) => m.zoneAffinity.includes("core"),
+			const candidates = ECUMENOPOLIS_MODEL_ATLAS.filter((m) =>
+				m.zoneAffinity.includes("core"),
 			);
 			const results = new Set<string>();
 			for (let seed = 0; seed < 10; seed++) {
@@ -194,9 +192,24 @@ describe("adjacencyValidation", () => {
 
 	describe("detail density", () => {
 		it("returns a rule for every defined zone", () => {
-			const zones: Array<"core" | "power" | "fabrication" | "storage" | "habitation" | "corridor" | "breach" | "cult_ruin"> = [
-				"core", "power", "fabrication", "storage",
-				"habitation", "corridor", "breach", "cult_ruin",
+			const zones: Array<
+				| "core"
+				| "power"
+				| "fabrication"
+				| "storage"
+				| "habitation"
+				| "corridor"
+				| "breach"
+				| "cult_ruin"
+			> = [
+				"core",
+				"power",
+				"fabrication",
+				"storage",
+				"habitation",
+				"corridor",
+				"breach",
+				"cult_ruin",
 			];
 			for (const zone of zones) {
 				const rule = getDetailDensityRule(zone);
@@ -234,9 +247,7 @@ describe("adjacencyValidation", () => {
 			const candidates = getDetailCandidates("fabrication", context);
 			expect(candidates.length).toBeGreaterThan(0);
 			expect(
-				candidates.every((c) =>
-					c.zoneAffinity.includes("fabrication"),
-				),
+				candidates.every((c) => c.zoneAffinity.includes("fabrication")),
 			).toBe(true);
 		});
 	});
@@ -290,9 +301,7 @@ describe("adjacencyValidation", () => {
 			const doorContext = makeContext({ hasPortalAccess: true });
 			const doorWalls = getWallCandidatesForContext(doorContext);
 			expect(doorWalls.length).toBeGreaterThan(0);
-			expect(
-				doorWalls.every((w) => w.family === "wall_door"),
-			).toBe(true);
+			expect(doorWalls.every((w) => w.family === "wall_door")).toBe(true);
 
 			const windowContext = makeContext({
 				zone: "core",
@@ -305,9 +314,7 @@ describe("adjacencyValidation", () => {
 			});
 			const windowWalls = getWallCandidatesForContext(windowContext);
 			expect(windowWalls.length).toBeGreaterThan(0);
-			expect(
-				windowWalls.every((w) => w.family === "wall_window"),
-			).toBe(true);
+			expect(windowWalls.every((w) => w.family === "wall_window")).toBe(true);
 		});
 	});
 });

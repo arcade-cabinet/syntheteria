@@ -19,10 +19,10 @@
 
 import type { EconomyFactionId } from "../../systems/factionEconomy";
 import {
-	registerAIFactionTurnHandler,
 	initializeTurnForUnits,
+	registerAIFactionTurnHandler,
 } from "../../systems/turnSystem";
-import { PlayerGovernor, type GovernorTurnResult } from "./PlayerGovernor";
+import { type GovernorTurnResult, PlayerGovernor } from "./PlayerGovernor";
 
 // ─── Faction Mapping ─────────────────────────────────────────────────────────
 

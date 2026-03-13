@@ -39,11 +39,7 @@ export const CITY_DIRECTORY_SEMANTICS: CityDirectorySemanticDefinition[] = [
 		directory: "Walls",
 		label: "Edge Structures",
 		role: "Barrier, portal, and window modules that define enclosed rooms, corridors, and transitions.",
-		primaryUse: [
-			"room sealing",
-			"door transitions",
-			"edge readability",
-		],
+		primaryUse: ["room sealing", "door transitions", "edge readability"],
 		defaultPassabilityExpectation: "impassable",
 	},
 ];
@@ -57,5 +53,7 @@ export function getCityDirectorySemantics(directory: string) {
 
 export function validateCityDirectoryCoverage() {
 	const summaries = buildCityDirectorySummaries();
-	return summaries.every((summary) => getCityDirectorySemantics(summary.directory));
+	return summaries.every((summary) =>
+		getCityDirectorySemantics(summary.directory),
+	);
 }

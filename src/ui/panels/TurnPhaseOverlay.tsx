@@ -235,8 +235,7 @@ export function TurnPhaseOverlay() {
 				if (toPhase === "ai_faction" && activeFaction) {
 					// Only show the first AI faction label, not all 4
 					if (activeFaction === "reclaimers") {
-						const color =
-							FACTION_COLORS[activeFaction] ?? "#f6c56a";
+						const color = FACTION_COLORS[activeFaction] ?? "#f6c56a";
 						const id = nextLabelId++;
 						setLabels((prev) => [
 							...prev,
@@ -259,10 +258,7 @@ export function TurnPhaseOverlay() {
 							subtext: "Storm, incursions, fabrication",
 						},
 					]);
-				} else if (
-					toPhase === "player" &&
-					event.fromPhase === "environment"
-				) {
+				} else if (toPhase === "player" && event.fromPhase === "environment") {
 					// Returning to player after full turn cycle
 					const id = nextLabelId++;
 					setLabels((prev) => [
@@ -276,10 +272,7 @@ export function TurnPhaseOverlay() {
 				}
 
 				// Border pulse on leaving player phase
-				if (
-					event.fromPhase === "player" &&
-					toPhase === "ai_faction"
-				) {
+				if (event.fromPhase === "player" && toPhase === "ai_faction") {
 					setPulseColor("#8be6ff");
 					setPulseActive(true);
 					setTimeout(() => setPulseActive(false), 700);

@@ -107,10 +107,7 @@ export function getPlacedFragments(): readonly PlacedFragment[] {
  * Check if a player unit is near any undiscovered fragments and discover them.
  * Returns newly discovered fragment IDs.
  */
-export function checkProximity(
-	unitX: number,
-	unitZ: number,
-): string[] {
+export function checkProximity(unitX: number, unitZ: number): string[] {
 	const radius = memoryFragmentsConfig.interactionRadius;
 	const radiusSq = radius * radius;
 	const newlyDiscovered: string[] = [];

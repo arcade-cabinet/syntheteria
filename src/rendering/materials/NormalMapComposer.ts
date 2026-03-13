@@ -111,7 +111,10 @@ function drawScratches(
 			if (px < 0 || px >= w || py < 0 || py >= h) break;
 			const idx = (py * w + px) * 4;
 			// Perturb normal along scratch direction
-			data[idx] = Math.max(0, data[idx]! - Math.round(scratchDepth * Math.abs(dx)));
+			data[idx] = Math.max(
+				0,
+				data[idx]! - Math.round(scratchDepth * Math.abs(dx)),
+			);
 			data[idx + 1] = Math.max(
 				0,
 				data[idx + 1]! - Math.round(scratchDepth * Math.abs(dy)),
@@ -147,7 +150,9 @@ function drawWear(
 				if (px < 0 || px >= w || py < 0 || py >= h) continue;
 
 				const falloff = 1 - dist / radius;
-				const perturbation = Math.round(wearStrength * falloff * (0.5 + rng() * 0.5));
+				const perturbation = Math.round(
+					wearStrength * falloff * (0.5 + rng() * 0.5),
+				);
 				const idx = (py * w + px) * 4;
 				data[idx] = Math.max(0, data[idx]! - perturbation);
 				data[idx + 1] = Math.max(0, data[idx + 1]! - perturbation);

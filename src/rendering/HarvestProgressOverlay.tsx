@@ -62,10 +62,7 @@ export function HarvestProgressOverlay() {
 	return (
 		<>
 			{harvests.map((harvest) => (
-				<HarvestBar
-					key={`harvest-${harvest.structureId}`}
-					harvest={harvest}
-				/>
+				<HarvestBar key={`harvest-${harvest.structureId}`} harvest={harvest} />
 			))}
 		</>
 	);

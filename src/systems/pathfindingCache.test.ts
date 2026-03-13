@@ -2,7 +2,12 @@ import type { PathResult } from "./navmesh";
 
 // ── Mock session and city catalog ──────────────────────────────────
 
-const mockStructures: { q: number; r: number; model_id: string; placement_layer: string }[] = [];
+const mockStructures: {
+	q: number;
+	r: number;
+	model_id: string;
+	placement_layer: string;
+}[] = [];
 const mockModelEffects = new Map<string, string>();
 
 jest.mock("../world/session", () => ({
@@ -20,13 +25,13 @@ jest.mock("../city/catalog/cityCatalog", () => ({
 }));
 
 import {
+	_resetPathfindingCache,
 	getBlockedCells,
 	getCachedPath,
-	setCachedPath,
+	getStructureGeneration,
 	invalidatePathCache,
 	invalidateUnitPathCache,
-	getStructureGeneration,
-	_resetPathfindingCache,
+	setCachedPath,
 } from "./pathfindingCache";
 
 beforeEach(() => {
@@ -118,7 +123,10 @@ describe("pathfindingCache", () => {
 
 	describe("path cache", () => {
 		const mockResult: PathResult = {
-			path: [{ q: 1, r: 0 }, { q: 2, r: 0 }],
+			path: [
+				{ q: 1, r: 0 },
+				{ q: 2, r: 0 },
+			],
 			cost: 2,
 			valid: true,
 		};

@@ -16,12 +16,12 @@
 
 import { Building, Identity, Unit } from "../ecs/traits";
 import { buildings, units } from "../ecs/world";
-import { getResources, spendResource } from "./resources";
 import {
 	canMotorPoolUpgradeMark,
 	getMarkUpgradeCost,
 	getMotorPoolState,
 } from "./motorPool";
+import { getResources, spendResource } from "./resources";
 
 // ---------------------------------------------------------------------------
 // Upgrade turn durations by target mark
@@ -81,7 +81,10 @@ export function canUpgradeUnit(
 
 	const targetMark = unitMark + 1;
 	if (!canMotorPoolUpgradeMark(motorPoolEntityId, targetMark)) {
-		return { possible: false, reason: `Motor Pool tier too low for Mark ${targetMark}` };
+		return {
+			possible: false,
+			reason: `Motor Pool tier too low for Mark ${targetMark}`,
+		};
 	}
 
 	const upgradeCost = getMarkUpgradeCost(unitMark);

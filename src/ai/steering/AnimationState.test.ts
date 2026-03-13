@@ -40,21 +40,21 @@ describe("AnimationState", () => {
 		});
 
 		it("returns attacking for attack_target task", () => {
-			expect(
-				deriveAnimationState("executing_task", "attack_target", 0),
-			).toBe("attacking");
+			expect(deriveAnimationState("executing_task", "attack_target", 0)).toBe(
+				"attacking",
+			);
 		});
 
 		it("returns attacking for hack_target task", () => {
-			expect(
-				deriveAnimationState("executing_task", "hack_target", 0),
-			).toBe("attacking");
+			expect(deriveAnimationState("executing_task", "hack_target", 0)).toBe(
+				"attacking",
+			);
 		});
 
 		it("returns building for build_structure task", () => {
-			expect(
-				deriveAnimationState("executing_task", "build_structure", 0),
-			).toBe("building");
+			expect(deriveAnimationState("executing_task", "build_structure", 0)).toBe(
+				"building",
+			);
 		});
 
 		it("returns building for repair_structure task", () => {
@@ -64,15 +64,15 @@ describe("AnimationState", () => {
 		});
 
 		it("returns idle for unknown task kinds", () => {
-			expect(
-				deriveAnimationState("executing_task", "unknown_task", 0),
-			).toBe("idle");
+			expect(deriveAnimationState("executing_task", "unknown_task", 0)).toBe(
+				"idle",
+			);
 		});
 
 		it("prioritizes walking when navigating even with a task", () => {
-			expect(
-				deriveAnimationState("navigating", "harvest", 2.0),
-			).toBe("walking");
+			expect(deriveAnimationState("navigating", "harvest", 2.0)).toBe(
+				"walking",
+			);
 		});
 	});
 

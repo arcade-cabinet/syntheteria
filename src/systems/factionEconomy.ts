@@ -13,10 +13,10 @@
  */
 
 import {
-	type ResourcePool,
 	addResource,
 	defaultResourcePool,
 	getResources,
+	type ResourcePool,
 	setResources,
 	spendResource,
 } from "./resources";
@@ -114,7 +114,9 @@ export function canFactionAfford(
 	costs: Array<{ type: keyof ResourcePool; amount: number }>,
 ): boolean {
 	const pool = getFactionResources(factionId);
-	return costs.every((cost) => ((pool[cost.type] as number) ?? 0) >= cost.amount);
+	return costs.every(
+		(cost) => ((pool[cost.type] as number) ?? 0) >= cost.amount,
+	);
 }
 
 /**
@@ -143,7 +145,8 @@ export function seedFactionResources(
 	const pool = ensurePool(factionId);
 	for (const key of Object.keys(resources) as (keyof ResourcePool)[]) {
 		if (key in resources) {
-			(pool[key] as number) = (resources[key] as number) ?? (pool[key] as number);
+			(pool[key] as number) =
+				(resources[key] as number) ?? (pool[key] as number);
 		}
 	}
 }

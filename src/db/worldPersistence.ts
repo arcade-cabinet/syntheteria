@@ -268,10 +268,7 @@ function selectFactionResourceStates(
 	);
 }
 
-function selectCampaignStatistics(
-	database: SyncDatabase,
-	saveGameId: number,
-) {
+function selectCampaignStatistics(database: SyncDatabase, saveGameId: number) {
 	return database.getFirstSync<CampaignStatisticsRecord>(
 		`
 			SELECT

@@ -13,19 +13,23 @@ describe("sectorStructurePlan", () => {
 		const second = generateWorldData(config).sectorStructures;
 
 		expect(second).toEqual(first);
-		expect(first.some((structure) => structure.modelId.startsWith("walls_"))).toBe(
-			true,
-		);
+		expect(
+			first.some((structure) => structure.modelId.startsWith("walls_")),
+		).toBe(true);
 		expect(
 			first.some((structure) => structure.modelId.startsWith("details_")),
 		).toBe(true);
 		expect(
 			first.some((structure) => structure.modelId.startsWith("props_")),
 		).toBe(true);
-		expect(first.some((structure) => structure.source === "boundary")).toBe(true);
+		expect(first.some((structure) => structure.source === "boundary")).toBe(
+			true,
+		);
 		expect(
 			first.some((structure) => structure.source === "seeded_district"),
 		).toBe(true);
-		expect(first.some((structure) => structure.source === "landmark")).toBe(true);
+		expect(first.some((structure) => structure.source === "landmark")).toBe(
+			true,
+		);
 	});
 });

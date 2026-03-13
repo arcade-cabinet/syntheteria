@@ -47,10 +47,7 @@ export function StormLighting() {
 				const surgeRange = 1.0 - surgeConfig.threshold;
 				const surgeFactor =
 					(stormIntensity - surgeConfig.threshold) / surgeRange;
-				_ambientColor.lerp(
-					_surgeTint,
-					surgeFactor * surgeConfig.blendStrength,
-				);
+				_ambientColor.lerp(_surgeTint, surgeFactor * surgeConfig.blendStrength);
 			}
 
 			ambientRef.current.color.copy(_ambientColor);

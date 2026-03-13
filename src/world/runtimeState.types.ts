@@ -1,6 +1,6 @@
 import type { ResourcePool } from "../systems/resources";
-import type { NearbyPoiContext, SceneMode } from "./snapshots";
 import type { DistrictOperationId } from "./districtOperations";
+import type { NearbyPoiContext, SceneMode } from "./snapshots";
 
 export interface DistrictOperationEvent {
 	id: string;

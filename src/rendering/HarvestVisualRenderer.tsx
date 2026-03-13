@@ -15,8 +15,8 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
 import {
-	getActiveHarvests,
 	type ActiveHarvest,
+	getActiveHarvests,
 } from "../systems/harvestSystem";
 import { pushEffect } from "./particles/effectEvents";
 
@@ -35,9 +35,7 @@ export function HarvestVisualRenderer() {
 
 		// Detect completed harvests (were known, now gone)
 		for (const [structureId, prev] of knownHarvests) {
-			const stillActive = harvests.some(
-				(h) => h.structureId === structureId,
-			);
+			const stillActive = harvests.some((h) => h.structureId === structureId);
 			if (!stillActive) {
 				// Harvest completed — emit completion burst
 				pushEffect({
@@ -61,8 +59,7 @@ export function HarvestVisualRenderer() {
 					x: harvest.targetX,
 					y: 0,
 					z: harvest.targetZ,
-					intensity:
-						1 - harvest.ticksRemaining / harvest.totalTicks,
+					intensity: 1 - harvest.ticksRemaining / harvest.totalTicks,
 				});
 			}
 		}

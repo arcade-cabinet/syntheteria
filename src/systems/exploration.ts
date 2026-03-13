@@ -29,7 +29,9 @@ const SCOUT_VISION_MULTIPLIER = 2;
  */
 export function getVisionRadius(unitType: string | null | undefined): number {
 	if (!unitType) return BASE_VISION_RADIUS;
-	const definition = getBotDefinition(unitType as Parameters<typeof getBotDefinition>[0]);
+	const definition = getBotDefinition(
+		unitType as Parameters<typeof getBotDefinition>[0],
+	);
 	if (definition?.role === "scout") {
 		return BASE_VISION_RADIUS * SCOUT_VISION_MULTIPLIER;
 	}

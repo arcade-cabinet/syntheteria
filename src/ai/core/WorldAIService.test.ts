@@ -1,3 +1,12 @@
+import {
+	AIController,
+	Identity,
+	MapFragment,
+	Navigation,
+	Unit,
+	WorldPosition,
+} from "../../ecs/traits";
+import { world } from "../../ecs/world";
 import { createNewGameConfig } from "../../world/config";
 import { generateWorldData } from "../../world/generation";
 import {
@@ -8,15 +17,6 @@ import {
 	createStructuralFragment,
 	resetStructuralSpace,
 } from "../../world/structuralSpace";
-import {
-	AIController,
-	Identity,
-	MapFragment,
-	Navigation,
-	Unit,
-	WorldPosition,
-} from "../../ecs/traits";
-import { world } from "../../ecs/world";
 import {
 	aiSystem,
 	getAgentState,
@@ -69,25 +69,27 @@ describe("WorldAIService", () => {
 				impassable_class: cell.impassableClass,
 				anchor_key: cell.anchorKey,
 			})),
-			sectorStructures: generatedWorld.sectorStructures.map((structure, index) => ({
-				id: index + 1,
-				ecumenopolis_id: 1,
-				district_structure_id: structure.districtStructureId,
-				anchor_key: structure.anchorKey,
-				q: structure.q,
-				r: structure.r,
-				model_id: structure.modelId,
-				placement_layer: structure.placementLayer,
-				edge: structure.edge,
-				rotation_quarter_turns: structure.rotationQuarterTurns,
-				offset_x: structure.offsetX,
-				offset_y: structure.offsetY,
-				offset_z: structure.offsetZ,
-				target_span: structure.targetSpan,
-				sector_archetype: structure.sectorArchetype,
-				source: structure.source,
-			controller_faction: structure.controllerFaction,
-			})),
+			sectorStructures: generatedWorld.sectorStructures.map(
+				(structure, index) => ({
+					id: index + 1,
+					ecumenopolis_id: 1,
+					district_structure_id: structure.districtStructureId,
+					anchor_key: structure.anchorKey,
+					q: structure.q,
+					r: structure.r,
+					model_id: structure.modelId,
+					placement_layer: structure.placementLayer,
+					edge: structure.edge,
+					rotation_quarter_turns: structure.rotationQuarterTurns,
+					offset_x: structure.offsetX,
+					offset_y: structure.offsetY,
+					offset_z: structure.offsetZ,
+					target_span: structure.targetSpan,
+					sector_archetype: structure.sectorArchetype,
+					source: structure.source,
+					controller_faction: structure.controllerFaction,
+				}),
+			),
 			pointsOfInterest: [],
 			cityInstances: [],
 			campaignState: {
@@ -162,4 +164,5 @@ describe("WorldAIService", () => {
 		expect(entity.get(AIController)?.stateJson).toContain("move_to_point");
 	});
 });
+
 import { createBotUnitState } from "../../bots";

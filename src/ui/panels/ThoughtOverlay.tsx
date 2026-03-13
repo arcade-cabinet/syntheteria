@@ -7,8 +7,7 @@
  * Pointer events pass through to the game scene when no thought is shown.
  */
 
-import { useEffect, useRef } from "react";
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { Animated, Pressable, Text, View } from "react-native";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import { dismissThought } from "../../systems/narrative";

@@ -1,9 +1,12 @@
 import {
 	_resetAudioEngine,
 	disposeAudio,
+	getAmbientOutput,
 	getAmbientVolumeLevel,
 	getMasterVolume,
+	getMusicOutput,
 	getMusicVolumeLevel,
+	getSfxOutput,
 	getSfxVolumeLevel,
 	initAudio,
 	isAudioInitialized,
@@ -11,9 +14,6 @@ import {
 	setMasterVolume,
 	setMusicVolume,
 	setSfxVolume,
-	getSfxOutput,
-	getMusicOutput,
-	getAmbientOutput,
 } from "./audioEngine";
 
 // ─── Mock Tone.js ────────────────────────────────────────────────────────────

@@ -5,8 +5,7 @@ import { setDatabaseResolver } from "./runtime";
 import * as schema from "./schema";
 
 const canUseSyncExpoSqlite =
-	typeof SharedArrayBuffer !== "undefined" &&
-	typeof window !== "undefined";
+	typeof SharedArrayBuffer !== "undefined" && typeof window !== "undefined";
 
 export const expoDb = canUseSyncExpoSqlite
 	? openDatabaseSync("syntheteria.db")

@@ -47,9 +47,9 @@ jest.mock("../systems/turnSystem", () => ({
 }));
 
 import {
-	type TurretAttackEvent,
 	getLastTurretEvents,
 	resetTurretAutoAttack,
+	type TurretAttackEvent,
 } from "../systems/turretAutoAttack";
 import { pushEffect } from "./particles/effectEvents";
 

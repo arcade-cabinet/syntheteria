@@ -148,7 +148,12 @@
 			"name": "Wormhole Stabilization",
 			"description": "Enables Wormhole construction. The path home — or to new frontiers. Wormhole victory path.",
 			"tier": 5,
-			"cost": { "rare_components": 20, "uranics": 15, "microchips": 10, "heavy_metals": 15 },
+			"cost": {
+				"rare_components": 20,
+				"uranics": 15,
+				"microchips": 10,
+				"heavy_metals": 15
+			},
 			"turnsToResearch": 15,
 			"prerequisites": ["wormhole_theory"],
 			"effects": [{ "type": "enable_wormhole_construction", "value": 1 }]

@@ -25,14 +25,21 @@ import {
 	computeAdjacencyBonuses,
 	setActivePlacement,
 } from "./buildingPlacement";
+import {
+	applyMarkUpgrade,
+	awardXP,
+	getUnitExperience,
+	getXPProgress,
+	type XPActionType,
+} from "./experience";
 import { RECIPES, startFabrication } from "./fabrication";
 import { isStructureConsumed, startHarvest } from "./harvestSystem";
 import {
 	BOT_FABRICATION_RECIPES,
-	MOTOR_POOL_TIER_CONFIG,
 	canMotorPoolUpgradeMark,
 	getMarkUpgradeCost,
 	getMotorPoolState,
+	MOTOR_POOL_TIER_CONFIG,
 	queueBotFabrication,
 	upgradeMotorPool,
 } from "./motorPool";
@@ -41,13 +48,6 @@ import {
 	type RadialOpenContext,
 	registerRadialProvider,
 } from "./radialMenu";
-import {
-	applyMarkUpgrade,
-	awardXP,
-	getUnitExperience,
-	getXPProgress,
-	type XPActionType,
-} from "./experience";
 import { startRepair } from "./repair";
 import { getResourcePoolForModel, isHarvestable } from "./resourcePools";
 import { getResources, spendResource } from "./resources";
@@ -340,10 +340,7 @@ registerRadialProvider({
 		}
 
 		// Restrict building to Fabricator-role bots (task #68)
-		if (
-			ctx.selectionType === "unit" &&
-			!canUnitBuild(ctx.targetEntityId)
-		) {
+		if (ctx.selectionType === "unit" && !canUnitBuild(ctx.targetEntityId)) {
 			return [];
 		}
 
@@ -357,8 +354,14 @@ registerRadialProvider({
 		// Lightning Rod
 		if (ctx.selectionType === "empty_sector" || profile?.canBuildRod) {
 			const action = makeBuildAction(
-				"build_rod", "Rod", "bolt", "power",
-				"lightning_rod", resources, unitHasAP, ctx,
+				"build_rod",
+				"Rod",
+				"bolt",
+				"power",
+				"lightning_rod",
+				resources,
+				unitHasAP,
+				ctx,
 			);
 			if (action) actions.push(action);
 		}
@@ -366,8 +369,14 @@ registerRadialProvider({
 		// Fabrication Unit
 		if (ctx.selectionType === "empty_sector" || profile?.canBuildFabricator) {
 			const action = makeBuildAction(
-				"build_fab", "Fabricator", "gear", "signal",
-				"fabrication_unit", resources, unitHasAP, ctx,
+				"build_fab",
+				"Fabricator",
+				"gear",
+				"signal",
+				"fabrication_unit",
+				resources,
+				unitHasAP,
+				ctx,
 			);
 			if (action) actions.push(action);
 		}
@@ -375,8 +384,14 @@ registerRadialProvider({
 		// Motor Pool
 		{
 			const action = makeBuildAction(
-				"build_motor_pool", "Motor Pool", "gear", "power",
-				"motor_pool", resources, unitHasAP, ctx,
+				"build_motor_pool",
+				"Motor Pool",
+				"gear",
+				"power",
+				"motor_pool",
+				resources,
+				unitHasAP,
+				ctx,
 			);
 			if (action) actions.push(action);
 		}
@@ -384,8 +399,14 @@ registerRadialProvider({
 		// Relay Tower
 		if (ctx.selectionType === "empty_sector" || profile?.canBuildRelay) {
 			const action = makeBuildAction(
-				"build_relay", "Relay", "signal", "signal",
-				"relay_tower", resources, unitHasAP, ctx,
+				"build_relay",
+				"Relay",
+				"signal",
+				"signal",
+				"relay_tower",
+				resources,
+				unitHasAP,
+				ctx,
 			);
 			if (action) actions.push(action);
 		}
@@ -393,8 +414,14 @@ registerRadialProvider({
 		// Defense Turret
 		{
 			const action = makeBuildAction(
-				"build_turret", "Turret", "sword", "combat",
-				"defense_turret", resources, unitHasAP, ctx,
+				"build_turret",
+				"Turret",
+				"sword",
+				"combat",
+				"defense_turret",
+				resources,
+				unitHasAP,
+				ctx,
 			);
 			if (action) actions.push(action);
 		}
@@ -402,8 +429,14 @@ registerRadialProvider({
 		// Power Sink
 		{
 			const action = makeBuildAction(
-				"build_power_sink", "Power Sink", "bolt", "power",
-				"power_sink", resources, unitHasAP, ctx,
+				"build_power_sink",
+				"Power Sink",
+				"bolt",
+				"power",
+				"power_sink",
+				resources,
+				unitHasAP,
+				ctx,
 			);
 			if (action) actions.push(action);
 		}
@@ -411,8 +444,14 @@ registerRadialProvider({
 		// Storage Hub
 		{
 			const action = makeBuildAction(
-				"build_storage", "Storage", "gear", "default",
-				"storage_hub", resources, unitHasAP, ctx,
+				"build_storage",
+				"Storage",
+				"gear",
+				"default",
+				"storage_hub",
+				resources,
+				unitHasAP,
+				ctx,
 			);
 			if (action) actions.push(action);
 		}
@@ -420,8 +459,14 @@ registerRadialProvider({
 		// Habitat Module
 		{
 			const action = makeBuildAction(
-				"build_habitat", "Habitat", "city", "signal",
-				"habitat_module", resources, unitHasAP, ctx,
+				"build_habitat",
+				"Habitat",
+				"city",
+				"signal",
+				"habitat_module",
+				resources,
+				unitHasAP,
+				ctx,
 			);
 			if (action) actions.push(action);
 		}
@@ -693,9 +738,7 @@ registerRadialProvider({
 			? getUnitExperience(ctx.targetEntityId)
 			: undefined;
 		const xpEligible = xpState?.upgradeEligible ?? false;
-		const progress = ctx.targetEntityId
-			? getXPProgress(ctx.targetEntityId)
-			: 0;
+		const progress = ctx.targetEntityId ? getXPProgress(ctx.targetEntityId) : 0;
 		const currentMark = xpState?.currentMark ?? unit.markLevel;
 
 		// Check resource cost for this Mark upgrade
@@ -753,12 +796,10 @@ registerRadialProvider({
 									markLevel: upgradeCost.toMark,
 								});
 							}
-							logTurnEvent(
-								"fabrication",
-								ctx.targetEntityId,
-								"player",
-								{ action: "mark_upgrade", newMark: upgradeCost.toMark },
-							);
+							logTurnEvent("fabrication", ctx.targetEntityId, "player", {
+								action: "mark_upgrade",
+								newMark: upgradeCost.toMark,
+							});
 						}
 					}
 				},

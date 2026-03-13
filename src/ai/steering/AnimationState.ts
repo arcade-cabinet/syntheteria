@@ -62,9 +62,7 @@ export function setEntityAnimationState(
 	entityAnimationStates.set(entityId, state);
 }
 
-export function getEntityAnimationState(
-	entityId: string,
-): BotAnimationState {
+export function getEntityAnimationState(entityId: string): BotAnimationState {
 	return entityAnimationStates.get(entityId) ?? "idle";
 }
 

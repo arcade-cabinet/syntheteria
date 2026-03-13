@@ -15,10 +15,8 @@ import { useRef, useState } from "react";
 import * as THREE from "three";
 import { Building, Identity, WorldPosition } from "../ecs/traits";
 import { buildings } from "../ecs/world";
-import {
-	getSectorCell,
-} from "../world/structuralSpace";
 import { worldToGrid } from "../world/sectorCoordinates";
+import { getSectorCell } from "../world/structuralSpace";
 
 const FACTION_BUILDING_COLORS: Record<string, number> = {
 	player: 0x00cccc, // Cyan
@@ -51,7 +49,10 @@ interface BuildingVisual {
 	operational: boolean;
 }
 
-function isBuildingVisibleToPlayer(pos: { x: number; z: number }, faction: string): boolean {
+function isBuildingVisibleToPlayer(
+	pos: { x: number; z: number },
+	faction: string,
+): boolean {
 	if (faction === "player") return true;
 	const grid = worldToGrid(pos.x, pos.z);
 	const cell = getSectorCell(grid.q, grid.r);
@@ -152,10 +153,7 @@ export function BuildingRenderer() {
 	return (
 		<>
 			{visuals.map((visual) => (
-				<BuildingMesh
-					key={visual.entityId}
-					visual={visual}
-				/>
+				<BuildingMesh key={visual.entityId} visual={visual} />
 			))}
 		</>
 	);

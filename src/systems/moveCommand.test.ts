@@ -144,7 +144,10 @@ describe("tryMoveUnit", () => {
 			activated: false,
 		});
 		const pathResult: PathResult = {
-			path: [{ q: 1, r: 0 }, { q: 2, r: 0 }],
+			path: [
+				{ q: 1, r: 0 },
+				{ q: 2, r: 0 },
+			],
 			cost: 2,
 			valid: true,
 		};

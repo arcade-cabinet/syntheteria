@@ -15,12 +15,12 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import {
-	type TurretAttackEvent,
-	getLastTurretEvents,
-} from "../systems/turretAutoAttack";
-import { Identity, WorldPosition, Building } from "../ecs/traits";
+import { Building, Identity, WorldPosition } from "../ecs/traits";
 import { buildings, units } from "../ecs/world";
+import {
+	getLastTurretEvents,
+	type TurretAttackEvent,
+} from "../systems/turretAutoAttack";
 import { pushEffect } from "./particles/effectEvents";
 
 // ─── Config ──────────────────────────────────────────────────────────────────

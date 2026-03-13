@@ -1,9 +1,9 @@
-import { registerExistingEntityId } from "../ecs/factory";
 import {
+	type BotUnitType,
 	getBotDefinition,
 	getDefaultBotIdentity,
-	type BotUnitType,
 } from "../bots";
+import { registerExistingEntityId } from "../ecs/factory";
 import {
 	AIController,
 	Building,
@@ -42,7 +42,9 @@ export function toWorldEntitySnapshots(
 		speed: entity.speed,
 		selected: entity.selected ? 1 : 0,
 		components_json: JSON.stringify(entity.components),
-		navigation_json: entity.navigation ? JSON.stringify(entity.navigation) : null,
+		navigation_json: entity.navigation
+			? JSON.stringify(entity.navigation)
+			: null,
 		ai_role: entity.aiRole,
 		ai_state_json: entity.aiStateJson,
 		powered:
@@ -77,16 +79,16 @@ export function capturePersistableWorldEntities(): PersistableWorldEntity[] {
 		const scene = entity.get(Scene);
 		const rod = entity.get(LightningRod);
 
-			persisted.push({
-				entityId: identity.id,
+		persisted.push({
+			entityId: identity.id,
 			sceneLocation: scene?.location ?? "world",
 			sceneBuildingId: scene?.buildingId ?? null,
-				faction: identity.faction,
-				unitType: unit?.type ?? null,
-				botArchetypeId: unit?.archetypeId ?? null,
-				markLevel: unit?.markLevel ?? null,
-				speechProfile: unit?.speechProfile ?? null,
-				buildingType: building?.type ?? null,
+			faction: identity.faction,
+			unitType: unit?.type ?? null,
+			botArchetypeId: unit?.archetypeId ?? null,
+			markLevel: unit?.markLevel ?? null,
+			speechProfile: unit?.speechProfile ?? null,
+			buildingType: building?.type ?? null,
 			displayName: unit?.displayName ?? null,
 			fragmentId: mapFragment?.fragmentId ?? null,
 			x: position.x,

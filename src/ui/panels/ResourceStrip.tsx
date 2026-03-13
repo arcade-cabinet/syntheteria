@@ -50,9 +50,7 @@ function CompactStat({
 
 	return (
 		<View className="flex-row items-center gap-1 px-1.5">
-			<View className="h-3.5 w-3.5 items-center justify-center">
-				{icon}
-			</View>
+			<View className="h-3.5 w-3.5 items-center justify-center">{icon}</View>
 			<Text className={`font-mono text-[11px] tracking-[0.08em] ${toneText}`}>
 				{value}
 			</Text>

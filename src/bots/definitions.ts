@@ -1,4 +1,5 @@
 import type { UnitComponent } from "../ecs/traits";
+import { getDefaultBotIdentity } from "./archetypes";
 import type {
 	BotDefinition,
 	BotIdentityProfile,
@@ -7,7 +8,6 @@ import type {
 	HostileBotRole,
 	PlayerBotRole,
 } from "./types";
-import { getDefaultBotIdentity } from "./archetypes";
 
 const BOT_DEFINITIONS: Record<BotUnitType, BotDefinition> = {
 	// ─── Player Roles (6) ────────────────────────────────────────────────

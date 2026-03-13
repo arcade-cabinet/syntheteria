@@ -1,20 +1,20 @@
+import * as campaignStats from "../../systems/campaignStats";
+import * as factionEconomy from "../../systems/factionEconomy";
+import * as harvestSystem from "../../systems/harvestSystem";
+import * as resources from "../../systems/resources";
+import * as turnSystem from "../../systems/turnSystem";
+import * as entityPersistence from "../../world/entityPersistence";
+import { generateWorldData } from "../../world/generation";
+import * as runtimeState from "../../world/runtimeState";
+import * as session from "../../world/session";
+import { saveAllStateSync } from "../saveAllState";
 import { createSaveGameSync } from "../saveGames";
 import {
 	getPersistedWorldSync,
 	persistGeneratedWorldSync,
+	setWorldPersistenceDatabaseResolver,
 } from "../worldPersistence";
-import { saveAllStateSync } from "../saveAllState";
-import { generateWorldData } from "../../world/generation";
 import { FakeDatabase } from "./helpers/fakeDatabase";
-import { setWorldPersistenceDatabaseResolver } from "../worldPersistence";
-import * as session from "../../world/session";
-import * as runtimeState from "../../world/runtimeState";
-import * as resources from "../../systems/resources";
-import * as turnSystem from "../../systems/turnSystem";
-import * as harvestSystem from "../../systems/harvestSystem";
-import * as factionEconomy from "../../systems/factionEconomy";
-import * as campaignStats from "../../systems/campaignStats";
-import * as entityPersistence from "../../world/entityPersistence";
 
 function setupSaveGame() {
 	const database = new FakeDatabase();
@@ -82,9 +82,11 @@ describe("saveAllStateSync", () => {
 		});
 
 		// Mock resources
-		jest.spyOn(resources, "getResources").mockReturnValue(
-			resources.defaultResourcePool({ scrapMetal: 50, eWaste: 25 }),
-		);
+		jest
+			.spyOn(resources, "getResources")
+			.mockReturnValue(
+				resources.defaultResourcePool({ scrapMetal: 50, eWaste: 25 }),
+			);
 
 		// Mock turn state
 		const unitStates = new Map();

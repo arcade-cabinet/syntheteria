@@ -34,7 +34,8 @@ interface DetailInstance {
 
 /** Deterministic hash for seeded placement */
 function detailHash(q: number, r: number, salt: number): number {
-	const h = Math.imul(q ^ 0x45d9f3b, 0x45d9f3b) ^ Math.imul(r ^ 0x119de1f3, salt);
+	const h =
+		Math.imul(q ^ 0x45d9f3b, 0x45d9f3b) ^ Math.imul(r ^ 0x119de1f3, salt);
 	return ((h >>> 0) % 10000) / 10000;
 }
 
@@ -152,7 +153,8 @@ const cylinderGeo = new THREE.CylinderGeometry(0.5, 0.5, 1, 6);
 const boxGeo = new THREE.BoxGeometry(1, 1, 1);
 
 function DetailMesh({ detail }: { detail: DetailInstance }) {
-	const geo = detail.type === "cable" || detail.type === "pylon" ? boxGeo : cylinderGeo;
+	const geo =
+		detail.type === "cable" || detail.type === "pylon" ? boxGeo : cylinderGeo;
 
 	return (
 		<mesh

@@ -241,7 +241,13 @@ export function EyeIcon(props: SvgProps) {
 				strokeWidth="1.8"
 				strokeLinejoin="round"
 			/>
-			<Circle cx="12" cy="12" r="3" stroke={iconStroke(props)} strokeWidth="1.8" />
+			<Circle
+				cx="12"
+				cy="12"
+				r="3"
+				stroke={iconStroke(props)}
+				strokeWidth="1.8"
+			/>
 		</Svg>
 	);
 }
@@ -308,7 +314,11 @@ export function BoxIcon(props: SvgProps) {
 				strokeWidth="1.8"
 				strokeLinejoin="round"
 			/>
-			<Path d="M12 22V12M12 12 3 7M12 12l9-5" stroke={iconStroke(props)} strokeWidth="1.8" />
+			<Path
+				d="M12 22V12M12 12 3 7M12 12l9-5"
+				stroke={iconStroke(props)}
+				strokeWidth="1.8"
+			/>
 		</Svg>
 	);
 }

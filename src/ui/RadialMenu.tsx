@@ -144,9 +144,10 @@ function RadialButton({
 					fontSize: 8,
 					fontFamily: "monospace",
 					letterSpacing: 1,
-					color: !petal.enabled && petal.disabledReason
-						? "rgba(255, 140, 140, 0.7)"
-						: colors.text,
+					color:
+						!petal.enabled && petal.disabledReason
+							? "rgba(255, 140, 140, 0.7)"
+							: colors.text,
 					textTransform: "uppercase",
 					marginTop: 2,
 					textAlign: "center",

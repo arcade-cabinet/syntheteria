@@ -19,22 +19,33 @@
  * and rival faction governors.
  */
 
+import { getBotCommandProfile } from "../../bots/commandProfiles";
+import { spawnBuilding } from "../../ecs/factory";
+import { gameplayRandom } from "../../ecs/seed";
 import {
 	Building,
 	Identity,
 	Unit,
-	WorldPosition,
 	type Vec3,
+	WorldPosition,
 } from "../../ecs/traits";
-import { units, buildings } from "../../ecs/world";
-import { world } from "../../ecs/world";
-import { worldToGrid, gridToWorld } from "../../world/sectorCoordinates";
-import { getBotCommandProfile } from "../../bots/commandProfiles";
+import { buildings, units, world } from "../../ecs/world";
+import {
+	BUILDING_COSTS,
+	type PlacementCost,
+} from "../../systems/buildingPlacement";
+import { startBuildingConstruction } from "../../systems/constructionVisualization";
+import type { EconomyFactionId } from "../../systems/factionEconomy";
+import {
+	getFactionResources,
+	spendFactionResource,
+} from "../../systems/factionEconomy";
 import { isStructureConsumed, startHarvest } from "../../systems/harvestSystem";
 import {
 	getResourcePoolForModel,
 	isHarvestable,
 } from "../../systems/resourcePools";
+import { getTensionsForDefender } from "../../systems/territorySystem";
 import {
 	getUnitTurnState,
 	hasActionPoints,
@@ -42,25 +53,13 @@ import {
 	spendActionPoint,
 	spendMovementPoints,
 } from "../../systems/turnSystem";
+import { gridToWorld, worldToGrid } from "../../world/sectorCoordinates";
 import { getActiveWorldSession } from "../../world/session";
 import {
 	type DiscoveryState,
 	getSectorCell,
+	requirePrimaryStructuralFragment,
 } from "../../world/structuralSpace";
-import {
-	getTensionsForDefender,
-} from "../../systems/territorySystem";
-import type { EconomyFactionId } from "../../systems/factionEconomy";
-import { getFactionResources } from "../../systems/factionEconomy";
-import {
-	BUILDING_COSTS,
-	type PlacementCost,
-} from "../../systems/buildingPlacement";
-import { startBuildingConstruction } from "../../systems/constructionVisualization";
-import { spendFactionResource } from "../../systems/factionEconomy";
-import { spawnBuilding } from "../../ecs/factory";
-import { requirePrimaryStructuralFragment } from "../../world/structuralSpace";
-import { gameplayRandom } from "../../ecs/seed";
 import { issueMoveCommand } from "../core/WorldAIService";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -223,7 +222,9 @@ function findDamagedAlliesNear(
 		}
 	}
 
-	damaged.sort((a, b) => b.brokenCount - a.brokenCount || a.distance - b.distance);
+	damaged.sort(
+		(a, b) => b.brokenCount - a.brokenCount || a.distance - b.distance,
+	);
 	return damaged;
 }
 
@@ -374,7 +375,9 @@ const BUILD_PRIORITY: Array<{
 		type: "lightning_rod",
 		label: "Lightning Rod",
 		evaluate: (existing) => {
-			const rodCount = existing.filter((b) => b.type === "lightning_rod").length;
+			const rodCount = existing.filter(
+				(b) => b.type === "lightning_rod",
+			).length;
 			// Always want at least 2 rods, diminishing returns after that
 			if (rodCount < 2) return 10;
 			if (rodCount < 4) return 3;
@@ -436,7 +439,8 @@ function evaluateBuildNeeds(
 		if (!costs) continue;
 
 		const canAfford = costs.every(
-			(cost: PlacementCost) => ((resources[cost.type] as number) ?? 0) >= cost.amount,
+			(cost: PlacementCost) =>
+				((resources[cost.type] as number) ?? 0) >= cost.amount,
 		);
 		if (!canAfford) continue;
 
@@ -659,7 +663,11 @@ export class PlayerGovernor {
 		entityId: string;
 		pos: Vec3;
 	}): GovernorDecision | null {
-		const hostiles = findHostilesNear(unit.pos, this.factionId, COMBAT_SCAN_RANGE);
+		const hostiles = findHostilesNear(
+			unit.pos,
+			this.factionId,
+			COMBAT_SCAN_RANGE,
+		);
 
 		if (hostiles.length > 0) {
 			const target = hostiles[0];
@@ -721,7 +729,11 @@ export class PlayerGovernor {
 		pos: Vec3;
 	}): GovernorDecision | null {
 		// Priority 1: Engage hostiles threatening our buildings
-		const hostiles = findHostilesNear(unit.pos, this.factionId, COMBAT_SCAN_RANGE);
+		const hostiles = findHostilesNear(
+			unit.pos,
+			this.factionId,
+			COMBAT_SCAN_RANGE,
+		);
 
 		if (hostiles.length > 0 && hasActionPoints(unit.entityId)) {
 			const target = hostiles[0];

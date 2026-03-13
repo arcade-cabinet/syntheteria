@@ -12,10 +12,7 @@ import * as THREE from "three";
 import { Identity, Unit, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
 import { getUnitTurnState } from "../systems/turnSystem";
-import {
-	gridToWorld,
-	SECTOR_LATTICE_SIZE,
-} from "../world/sectorCoordinates";
+import { gridToWorld, SECTOR_LATTICE_SIZE } from "../world/sectorCoordinates";
 import { computeMovementOverlay } from "./movementOverlay";
 
 const MAX_OVERLAY_INSTANCES = 512;

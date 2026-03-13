@@ -4,8 +4,12 @@
  * Tests the breach zone cell collection and visual property assignment.
  */
 
-import { getBreachZones, loadBreachZones, resetBreachZones } from "../systems/breachZones";
 import type { BreachZone } from "../systems/breachZones";
+import {
+	getBreachZones,
+	loadBreachZones,
+	resetBreachZones,
+} from "../systems/breachZones";
 
 beforeEach(() => {
 	resetBreachZones();

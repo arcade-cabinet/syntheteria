@@ -201,8 +201,7 @@ const BOT_COMMAND_PROFILES: Record<BotUnitType, BotCommandProfile> = {
 		preferredPreviewCategory: "combat",
 		roleBrief:
 			"Cult Mech — fast swarm attacker. When hacked, becomes a light melee specialist.",
-		tutorialPrompt:
-			"Hack this unit to convert it into a fast melee ally.",
+		tutorialPrompt: "Hack this unit to convert it into a fast melee ally.",
 		actionHighlights: ["attack", "swarm", "melee"],
 	},
 	mecha_trooper: {

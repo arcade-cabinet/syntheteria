@@ -206,7 +206,8 @@ describe("combatSystem — AP cost (task #21)", () => {
 		const feralInitiated = events.filter((e) => e.attackerId === "e1");
 		expect(feralInitiated.length).toBeGreaterThanOrEqual(0);
 		// p1 never appears as the first attacker in a combat exchange
-		const p1AsFirstAttacker = events.length > 0 && events[0].attackerId === "p1";
+		const p1AsFirstAttacker =
+			events.length > 0 && events[0].attackerId === "p1";
 		expect(p1AsFirstAttacker).toBe(false);
 	});
 
@@ -375,9 +376,7 @@ describe("Guardian taunt (task #45)", () => {
 			"player",
 			TAUNT_RADIUS + 1,
 			0,
-			[
-				{ name: "arms", functional: true, material: "metal" as const },
-			],
+			[{ name: "arms", functional: true, material: "metal" as const }],
 			"mecha_golem",
 		);
 

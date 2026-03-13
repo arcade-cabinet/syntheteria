@@ -1,9 +1,9 @@
 import { createNewGameConfig, type NewGameConfig } from "./config";
 import { generateWorldData } from "./generation";
 import {
+	type SectorWorldDimensions,
 	setWorldDimensions,
 	worldToGrid,
-	type SectorWorldDimensions,
 } from "./sectorCoordinates";
 import { requireActiveWorldSession } from "./session";
 import type { SectorCellSnapshot } from "./snapshots";
@@ -200,7 +200,9 @@ export function getDiscoveryAtWorldPosition(
 	z: number,
 ) {
 	const { q, r } = worldToGrid(x, z);
-	return requireFragmentCells(fragment.id).get(cellKey(q, r))?.discoveryState ?? 0;
+	return (
+		requireFragmentCells(fragment.id).get(cellKey(q, r))?.discoveryState ?? 0
+	);
 }
 
 export function setDiscoveryAtWorldPosition(

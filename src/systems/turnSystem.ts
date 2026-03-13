@@ -214,9 +214,17 @@ export function getUnitTurnState(entityId: string): UnitTurnState | undefined {
 // ─── AI Faction Turn Hooks ──────────────────────────────────────────────────
 
 /** Known AI factions — each takes a turn sequentially after the player. */
-const AI_FACTIONS = ["reclaimers", "volt_collective", "signal_choir", "iron_creed"];
+const AI_FACTIONS = [
+	"reclaimers",
+	"volt_collective",
+	"signal_choir",
+	"iron_creed",
+];
 
-export type AIFactionTurnHandler = (factionId: string, turnNumber: number) => void;
+export type AIFactionTurnHandler = (
+	factionId: string,
+	turnNumber: number,
+) => void;
 export type EnvironmentPhaseHandler = (turnNumber: number) => void;
 
 const aiFactionTurnHandlers: AIFactionTurnHandler[] = [];
@@ -233,7 +241,9 @@ export function registerAIFactionTurnHandler(handler: AIFactionTurnHandler) {
 /**
  * Register a handler that runs during the environment phase.
  */
-export function registerEnvironmentPhaseHandler(handler: EnvironmentPhaseHandler) {
+export function registerEnvironmentPhaseHandler(
+	handler: EnvironmentPhaseHandler,
+) {
 	environmentPhaseHandlers.push(handler);
 }
 

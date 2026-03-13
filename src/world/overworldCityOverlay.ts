@@ -1,12 +1,12 @@
 import type { Vec3 } from "../ecs/traits";
 import type { WorldPoiType } from "./contracts";
+import { getDistrictStructures } from "./districtStructures";
+import { gridToWorld, worldToGrid } from "./sectorCoordinates";
 import type {
 	CityRuntimeSnapshot,
 	SectorPoiSnapshot,
 	WorldSessionSnapshot,
 } from "./snapshots";
-import { getDistrictStructures } from "./districtStructures";
-import { gridToWorld, worldToGrid } from "./sectorCoordinates";
 
 export interface OverlayUnitPresence {
 	entityId: string;
@@ -60,9 +60,7 @@ function getPoiForCity(
 	session: WorldSessionSnapshot,
 	city: CityRuntimeSnapshot,
 ): SectorPoiSnapshot | null {
-	return (
-		session.pointsOfInterest.find((poi) => poi.id === city.poi_id) ?? null
-	);
+	return session.pointsOfInterest.find((poi) => poi.id === city.poi_id) ?? null;
 }
 
 function getCityRole(poiType: WorldPoiType): DistrictStackBlock["role"] {
@@ -146,7 +144,10 @@ function createCityBlocks(
 	poi: SectorPoiSnapshot,
 ): DistrictStackBlock[] {
 	const origin = gridToWorld(city.world_q, city.world_r);
-	const structures = getDistrictStructures({ poiType: poi.type, state: city.state });
+	const structures = getDistrictStructures({
+		poiType: poi.type,
+		state: city.state,
+	});
 	const blocks: DistrictStackBlock[] = [];
 	const seed = city.layout_seed;
 

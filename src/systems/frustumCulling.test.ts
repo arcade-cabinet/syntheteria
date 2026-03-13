@@ -76,9 +76,9 @@ describe("isAABBInFrustum", () => {
 		updateFrustum(0, 0, 20, 45, 1);
 		const bounds = getFrustumBounds();
 		// AABB that straddles the right edge
-		expect(
-			isAABBInFrustum(bounds.maxX - 1, -1, bounds.maxX + 10, 1),
-		).toBe(true);
+		expect(isAABBInFrustum(bounds.maxX - 1, -1, bounds.maxX + 10, 1)).toBe(
+			true,
+		);
 	});
 });
 

@@ -104,12 +104,12 @@ export function ActionRangeRenderer() {
 					hasPoints && (profile?.canHarvest ?? false);
 			}
 			if (attackRef.current) {
-				attackRef.current.visible =
-					hasPoints && (profile?.canAttack ?? false);
+				attackRef.current.visible = hasPoints && (profile?.canAttack ?? false);
 			}
 			if (buildRef.current) {
 				buildRef.current.visible =
-					hasPoints && (profile?.canBuildRod ?? profile?.canBuildFabricator ?? false);
+					hasPoints &&
+					(profile?.canBuildRod ?? profile?.canBuildFabricator ?? false);
 			}
 
 			found = true;
@@ -125,8 +125,16 @@ export function ActionRangeRenderer() {
 
 	return (
 		<group ref={groupRef}>
-			<RangeRing ringRef={harvestRef} color={COLOR_HARVEST} radius={HARVEST_RANGE} />
-			<RangeRing ringRef={attackRef} color={COLOR_ATTACK} radius={ATTACK_RANGE} />
+			<RangeRing
+				ringRef={harvestRef}
+				color={COLOR_HARVEST}
+				radius={HARVEST_RANGE}
+			/>
+			<RangeRing
+				ringRef={attackRef}
+				color={COLOR_ATTACK}
+				radius={ATTACK_RANGE}
+			/>
 			<RangeRing ringRef={buildRef} color={COLOR_BUILD} radius={BUILD_RANGE} />
 		</group>
 	);

@@ -1,14 +1,14 @@
 import { CITY_COMPOSITES } from "../../city/composites/cityComposites";
-import {
-	getDistrictStructureDefinition,
-	getDistrictStructureDefinitions,
-} from "../districtStructures";
+import { createNewGameConfig } from "../config";
 import {
 	CONSTRUCTION_BLUEPRINTS,
 	getBlueprintForStructure,
 	getVisiblePartIndices,
 } from "../constructionSystem";
-import { createNewGameConfig } from "../config";
+import {
+	getDistrictStructureDefinition,
+	getDistrictStructureDefinitions,
+} from "../districtStructures";
 import { generateWorldData } from "../generation";
 
 const OVERWORLD_COMPOSITE_IDS = [
@@ -146,9 +146,7 @@ describe("overworld composites", () => {
 		it("every blueprint partIndices reference valid composite parts", () => {
 			for (const id of OVERWORLD_COMPOSITE_IDS) {
 				const bp = getBlueprintForStructure(id)!;
-				const composite = CITY_COMPOSITES.find(
-					(c) => c.id === bp.compositeId,
-				)!;
+				const composite = CITY_COMPOSITES.find((c) => c.id === bp.compositeId)!;
 				const allIndices = bp.stages.flatMap((s) => s.partIndices);
 				for (const index of allIndices) {
 					expect(index).toBeLessThan(composite.parts.length);

@@ -67,12 +67,12 @@
 			"skyTintShift": 0.3,
 			"colorGrade": {
 				"darkCloud": [0.02, 0.012, 0.028],
-				"lightCloud": [0.10, 0.06, 0.11]
+				"lightCloud": [0.1, 0.06, 0.11]
 			}
 		},
 		"cataclysmic": {
 			"rainParticleCount": 2000,
-			"rainAlphaBase": 0.20,
+			"rainAlphaBase": 0.2,
 			"rainAlphaStorm": 0.35,
 			"windSpeedBase": 5.0,
 			"windSpeedStorm": 9.0,
@@ -86,7 +86,7 @@
 			"skyTintShift": 0.7,
 			"colorGrade": {
 				"darkCloud": [0.04, 0.01, 0.03],
-				"lightCloud": [0.14, 0.06, 0.10]
+				"lightCloud": [0.14, 0.06, 0.1]
 			}
 		}
 	},

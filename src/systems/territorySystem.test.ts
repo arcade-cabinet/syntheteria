@@ -68,12 +68,7 @@ jest.mock("../world/sectorCoordinates", () => ({
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function addUnit(
-	id: string,
-	faction: string,
-	x: number,
-	z: number,
-) {
+function addUnit(id: string, faction: string, x: number, z: number) {
 	mockUnits.push({
 		Identity: { id, faction },
 		WorldPosition: { x, y: 0, z },
@@ -81,12 +76,7 @@ function addUnit(
 	});
 }
 
-function addBuilding(
-	id: string,
-	faction: string,
-	x: number,
-	z: number,
-) {
+function addBuilding(id: string, faction: string, x: number, z: number) {
 	mockBuildings.push({
 		Identity: { id, faction },
 		WorldPosition: { x, y: 0, z },

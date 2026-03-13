@@ -1,19 +1,28 @@
+import { getCityPurposePresentation } from "../../world/cityPresentation";
+import type {
+	CityRuntimeSnapshot,
+	WorldSessionSnapshot,
+} from "../../world/snapshots";
 import {
 	buildBlankCityAssembly,
 	type CityAssemblyContract,
 	type CityModuleType,
 } from "../assemblyContract";
-import { buildCityLayoutPlan } from "../layoutPlan";
 import type { CityLayoutScenario } from "../config/types";
-import { getCityPurposePresentation } from "../../world/cityPresentation";
-import type { CityRuntimeSnapshot, WorldSessionSnapshot } from "../../world/snapshots";
+import { buildCityLayoutPlan } from "../layoutPlan";
 
 export interface CitySceneAnchor {
 	id: string;
 	label: string;
 	cellX: number;
 	cellY: number;
-	kind: "entry" | "command" | "power" | "fabrication" | "storage" | "habitation";
+	kind:
+		| "entry"
+		| "command"
+		| "power"
+		| "fabrication"
+		| "storage"
+		| "habitation";
 }
 
 export interface CitySceneContract {
@@ -55,13 +64,14 @@ function findFirstCell(contract: CityAssemblyContract, module: CityModuleType) {
 export function buildCitySceneContract(args: {
 	city: CityRuntimeSnapshot;
 	session: WorldSessionSnapshot;
-}) : CitySceneContract {
+}): CitySceneContract {
 	const { city, session } = args;
 	const contract = buildBlankCityAssembly(city.layout_seed);
 	const plan = buildCityLayoutPlan(city.layout_seed, contract);
 	const poi =
-		session.pointsOfInterest.find((candidate) => candidate.id === city.poi_id) ??
-		null;
+		session.pointsOfInterest.find(
+			(candidate) => candidate.id === city.poi_id,
+		) ?? null;
 	const presentation = poi
 		? getCityPurposePresentation(poi.type)
 		: {

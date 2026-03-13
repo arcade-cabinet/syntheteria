@@ -1,8 +1,8 @@
 import type { CityInstanceState, WorldPoiType } from "./contracts";
 import {
+	type DistrictStructureViewModel,
 	getDistrictStructures,
 	summarizeDistrictStructures,
-	type DistrictStructureViewModel,
 } from "./districtStructures";
 
 export type DistrictCapabilityId =
@@ -30,7 +30,10 @@ export interface DistrictCapabilityViewModel {
 
 const CAPABILITY_TEXT: Record<
 	DistrictCapabilityId,
-	{ label: string; descriptions: Record<DistrictCapabilityViewModel["status"], string> }
+	{
+		label: string;
+		descriptions: Record<DistrictCapabilityViewModel["status"], string>;
+	}
 > = {
 	fabrication: {
 		label: "Fabrication",
@@ -58,7 +61,8 @@ const CAPABILITY_TEXT: Record<
 		label: "Relay",
 		descriptions: {
 			online: "Signal relay coverage is active and extends command resilience.",
-			latent: "Relay channels can be brought online once the site is reclaimed.",
+			latent:
+				"Relay channels can be brought online once the site is reclaimed.",
 			hostile: "Relay channels are corrupted by hostile presence.",
 			locked: "Relay access is unavailable.",
 		},
@@ -92,7 +96,8 @@ const CAPABILITY_TEXT: Record<
 				"Collector hardware can absorb and route storm energy into local systems.",
 			latent:
 				"Collector hardware exists but remains disconnected from the district grid.",
-			hostile: "Storm capture hardware is corrupted or unsafe under hostile control.",
+			hostile:
+				"Storm capture hardware is corrupted or unsafe under hostile control.",
 			locked: "Storm capture remains unavailable.",
 		},
 	},
@@ -212,8 +217,9 @@ export function getDistrictCapabilities(args: {
 		new Set(
 			structures
 				.flatMap((structure) => structure.capabilities)
-				.filter((capabilityId): capabilityId is DistrictCapabilityId =>
-					capabilityId in CAPABILITY_TEXT,
+				.filter(
+					(capabilityId): capabilityId is DistrictCapabilityId =>
+						capabilityId in CAPABILITY_TEXT,
 				),
 		),
 	);
@@ -234,11 +240,21 @@ export function summarizeDistrictCapabilities(
 	capabilities: DistrictCapabilityViewModel[],
 	structures?: DistrictStructureViewModel[],
 ) {
-	const online = capabilities.filter((capability) => capability.status === "online");
-	const latent = capabilities.filter((capability) => capability.status === "latent");
-	const hostile = capabilities.filter((capability) => capability.status === "hostile");
-	const locked = capabilities.filter((capability) => capability.status === "locked");
-	const structureSummary = structures ? `${summarizeDistrictStructures(structures)} ` : "";
+	const online = capabilities.filter(
+		(capability) => capability.status === "online",
+	);
+	const latent = capabilities.filter(
+		(capability) => capability.status === "latent",
+	);
+	const hostile = capabilities.filter(
+		(capability) => capability.status === "hostile",
+	);
+	const locked = capabilities.filter(
+		(capability) => capability.status === "locked",
+	);
+	const structureSummary = structures
+		? `${summarizeDistrictStructures(structures)} `
+		: "";
 
 	if (hostile.length > 0) {
 		return `${structureSummary}Hostile systems dominate this district. Reclamation is blocked until combat pressure is resolved.`;
@@ -256,5 +272,7 @@ export function summarizeDistrictCapabilities(
 
 	return `${structureSummary}Latent district functions detected: ${latent
 		.map((capability) => capability.label)
-		.join(", ")}. Survey and reclamation will determine which structures come online first.`;
+		.join(
+			", ",
+		)}. Survey and reclamation will determine which structures come online first.`;
 }

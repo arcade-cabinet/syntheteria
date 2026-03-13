@@ -4,10 +4,10 @@ import * as THREE from "three";
 import networksConfig from "../config/networks.json";
 import {
 	type FactionId,
+	getNetworkOverlayState,
 	type JunctionNode,
 	type NetworkSegment,
 	type NetworkType,
-	getNetworkOverlayState,
 } from "../systems/networkOverlay";
 
 /**
@@ -122,10 +122,7 @@ function SegmentLine({
 				networksConfig.signal.factionColors[
 					segment.faction as keyof typeof networksConfig.signal.factionColors
 				] ?? networksConfig.signal.factionColors.neutral;
-			color = getCachedColor(
-				`signal_${segment.faction}`,
-				factionColors,
-			);
+			color = getCachedColor(`signal_${segment.faction}`, factionColors);
 		} else if (segment.type === "power") {
 			color = getCachedColor("power", networksConfig.power.color);
 		} else {
@@ -199,8 +196,7 @@ function SegmentLine({
 			// Power lines: glow intensity scales with throughput
 			const minGlow = networksConfig.power.glowIntensityMin;
 			const maxGlow = networksConfig.power.glowIntensityMax;
-			const intensity =
-				minGlow + segment.throughput * (maxGlow - minGlow);
+			const intensity = minGlow + segment.throughput * (maxGlow - minGlow);
 			material.opacity = 0.5 + segment.throughput * 0.4;
 
 			if (segment.throughput < 0.1) {
@@ -236,21 +232,12 @@ function SegmentLine({
 		return new THREE.Line(geometry, material as THREE.LineBasicMaterial);
 	}, [geometry, material]);
 
-	return (
-		<primitive
-			object={lineObj}
-			position={[0, yOffset, 0]}
-		/>
-	);
+	return <primitive object={lineObj} position={[0, yOffset, 0]} />;
 }
 
 // --- Glow pass for thicker appearance ---
 
-function SegmentGlow({
-	segment,
-}: {
-	segment: NetworkSegment;
-}) {
+function SegmentGlow({ segment }: { segment: NetworkSegment }) {
 	const { lineObj, yOffset } = useMemo(() => {
 		const config = networksConfig[segment.type];
 		const controlOffset =
@@ -273,10 +260,7 @@ function SegmentGlow({
 				networksConfig.signal.factionColors[
 					segment.faction as keyof typeof networksConfig.signal.factionColors
 				] ?? networksConfig.signal.factionColors.neutral;
-			color = getCachedColor(
-				`signal_${segment.faction}`,
-				factionColors,
-			);
+			color = getCachedColor(`signal_${segment.faction}`, factionColors);
 		} else if (segment.type === "power") {
 			color = getCachedColor("power", networksConfig.power.color);
 		} else {
@@ -308,12 +292,7 @@ function SegmentGlow({
 		segment.parallelIndex,
 	]);
 
-	return (
-		<primitive
-			object={lineObj}
-			position={[0, yOffset, 0]}
-		/>
-	);
+	return <primitive object={lineObj} position={[0, yOffset, 0]} />;
 }
 
 // --- Junction node component ---
@@ -335,10 +314,7 @@ function JunctionNodeRenderer({
 			networksConfig.signal.factionColors[
 				junction.faction as keyof typeof networksConfig.signal.factionColors
 			] ?? networksConfig.signal.factionColors.neutral;
-		const color = getCachedColor(
-			`junction_${junction.faction}`,
-			factionColors,
-		);
+		const color = getCachedColor(`junction_${junction.faction}`, factionColors);
 
 		return new THREE.MeshBasicMaterial({
 			color: color.clone(),

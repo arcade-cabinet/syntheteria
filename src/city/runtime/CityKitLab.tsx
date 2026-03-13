@@ -11,9 +11,9 @@ import { HudButton } from "../../ui/components/HudButton";
 import { HudPanel } from "../../ui/components/HudPanel";
 import type { CityFamily, CityPlacementType } from "../config/types";
 import {
+	type CityKitLabFilterState,
 	createDefaultCityKitLabFilterState,
 	formatCitySubcategoryLabel,
-	type CityKitLabFilterState,
 	getCityKitLabViewModel,
 } from "./cityKitLabState";
 

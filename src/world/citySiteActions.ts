@@ -17,8 +17,8 @@ import {
 	type DistrictStructureViewModel,
 	getDistrictStructuresFromSnapshots,
 } from "./districtStructures";
-import type { CityRuntimeSnapshot, NearbyPoiContext } from "./snapshots";
 import { getActiveWorldSession } from "./session";
+import type { CityRuntimeSnapshot, NearbyPoiContext } from "./snapshots";
 
 export interface CitySiteAction {
 	id: "survey" | "found" | "enter" | "return";

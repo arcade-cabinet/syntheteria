@@ -13,12 +13,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import {
-	getLastHackingEvents,
-	type HackingEvent,
-} from "../systems/hacking";
 import { Identity, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
+import { getLastHackingEvents, type HackingEvent } from "../systems/hacking";
 import { pushEffect } from "./particles/effectEvents";
 
 interface ActiveHackVisual {
@@ -103,11 +100,7 @@ function HackBeam({ hack }: { hack: ActiveHackVisual }) {
 			{/* Progress ring around target */}
 			<mesh
 				ref={ringRef}
-				position={[
-					hack.targetPos.x,
-					hack.targetPos.y - 0.5,
-					hack.targetPos.z,
-				]}
+				position={[hack.targetPos.x, hack.targetPos.y - 0.5, hack.targetPos.z]}
 				rotation={[-Math.PI / 2, 0, 0]}
 			>
 				<torusGeometry args={[0.7, 0.04, 8, 32, ringArc]} />
@@ -181,10 +174,7 @@ export function HackingBeamRenderer() {
 	return (
 		<>
 			{activeHacks.map((hack) => (
-				<HackBeam
-					key={`hack-${hack.hackerId}-${hack.targetId}`}
-					hack={hack}
-				/>
+				<HackBeam key={`hack-${hack.hackerId}-${hack.targetId}`} hack={hack} />
 			))}
 		</>
 	);

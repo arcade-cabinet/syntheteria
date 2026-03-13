@@ -362,22 +362,13 @@ export class FakeDatabase implements SyncDatabase {
 		],
 		[
 			"faction_resource_states",
-			[
-				"id",
-				"save_game_id",
-				"faction_id",
-				"resources_json",
-				"last_synced_at",
-			],
+			["id", "save_game_id", "faction_id", "resources_json", "last_synced_at"],
 		],
 		[
 			"campaign_statistics",
 			["id", "save_game_id", "stats_json", "last_synced_at"],
 		],
-		[
-			"turn_event_logs",
-			["id", "save_game_id", "turn_number", "events_json"],
-		],
+		["turn_event_logs", ["id", "save_game_id", "turn_number", "events_json"]],
 	]);
 
 	execSync(source: string): void {
@@ -515,8 +506,9 @@ export class FakeDatabase implements SyncDatabase {
 			source.includes("WHERE save_game_id = ?")
 		) {
 			const saveGameId = Number(params[0]);
-			return (this.ecumenopolisMaps.find((row) => row.save_game_id === saveGameId) ??
-				null) as T | null;
+			return (this.ecumenopolisMaps.find(
+				(row) => row.save_game_id === saveGameId,
+			) ?? null) as T | null;
 		}
 
 		if (
@@ -534,9 +526,8 @@ export class FakeDatabase implements SyncDatabase {
 			source.includes("WHERE save_game_id = ?")
 		) {
 			const saveGameId = Number(params[0]);
-			return (this.turnStates.find(
-				(row) => row.save_game_id === saveGameId,
-			) ?? null) as T | null;
+			return (this.turnStates.find((row) => row.save_game_id === saveGameId) ??
+				null) as T | null;
 		}
 
 		if (
@@ -584,7 +575,9 @@ export class FakeDatabase implements SyncDatabase {
 			return { lastInsertRowId: saveGameId };
 		}
 
-		if (source.includes("DELETE FROM city_instances WHERE ecumenopolis_id IN")) {
+		if (
+			source.includes("DELETE FROM city_instances WHERE ecumenopolis_id IN")
+		) {
 			const saveGameId = Number(params[0]);
 			const worldMapIds = new Set(
 				this.ecumenopolisMaps
@@ -597,7 +590,9 @@ export class FakeDatabase implements SyncDatabase {
 			return { lastInsertRowId: 0 };
 		}
 
-		if (source.includes("DELETE FROM sector_structures WHERE ecumenopolis_id IN")) {
+		if (
+			source.includes("DELETE FROM sector_structures WHERE ecumenopolis_id IN")
+		) {
 			const saveGameId = Number(params[0]);
 			const worldMapIds = new Set(
 				this.ecumenopolisMaps
@@ -640,7 +635,9 @@ export class FakeDatabase implements SyncDatabase {
 			return { lastInsertRowId: 0 };
 		}
 
-		if (source.includes("DELETE FROM ecumenopolis_maps WHERE save_game_id = ?")) {
+		if (
+			source.includes("DELETE FROM ecumenopolis_maps WHERE save_game_id = ?")
+		) {
 			const saveGameId = Number(params[0]);
 			this.ecumenopolisMaps = this.ecumenopolisMaps.filter(
 				(row) => row.save_game_id !== saveGameId,
@@ -710,8 +707,7 @@ export class FakeDatabase implements SyncDatabase {
 				target_span: Number(params[12]),
 				sector_archetype: String(params[13]),
 				source: params[14] as SectorStructureRow["source"],
-				controller_faction:
-					params[15] == null ? null : String(params[15]),
+				controller_faction: params[15] == null ? null : String(params[15]),
 			};
 			this.sectorStructures.push(row);
 			return { lastInsertRowId: row.id };
@@ -922,7 +918,11 @@ export class FakeDatabase implements SyncDatabase {
 		}
 
 		// ─── Faction Resource States ─────────────────────────────────────
-		if (source.includes("DELETE FROM faction_resource_states WHERE save_game_id = ?")) {
+		if (
+			source.includes(
+				"DELETE FROM faction_resource_states WHERE save_game_id = ?",
+			)
+		) {
 			const saveGameId = Number(params[0]);
 			this.factionResourceStates = this.factionResourceStates.filter(
 				(row) => row.save_game_id !== saveGameId,

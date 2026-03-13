@@ -1,5 +1,5 @@
-import type { PersistableWorldEntity } from "../world/snapshots";
 import { gridToWorld } from "../world/sectorCoordinates";
+import type { PersistableWorldEntity } from "../world/snapshots";
 import { getBotDefinition } from "./definitions";
 import type { BotArchetypeId, BotUnitType } from "./types";
 

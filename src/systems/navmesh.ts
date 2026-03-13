@@ -6,8 +6,8 @@ import {
 } from "../world/structuralSpace";
 import {
 	getBlockedCells,
-	invalidatePathCache,
 	getCachedPath,
+	invalidatePathCache,
 	setCachedPath,
 } from "./pathfindingCache";
 
@@ -131,14 +131,7 @@ export function findNavPathWithCost(
 		if (currentKey === goalKey) {
 			const result = reconstructPath(closed, currentKey);
 			if (unitId) {
-				setCachedPath(
-					unitId,
-					start.q,
-					start.r,
-					goal.q,
-					goal.r,
-					result,
-				);
+				setCachedPath(unitId, start.q, start.r, goal.q, goal.r, result);
 			}
 			return result;
 		}

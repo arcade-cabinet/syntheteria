@@ -1,7 +1,7 @@
 import { createStartingRoster } from "../bots";
-import type { PersistableWorldEntity } from "./snapshots";
 import type { GeneratedEcumenopolisData } from "./generation";
 import { gridToWorld } from "./sectorCoordinates";
+import type { PersistableWorldEntity } from "./snapshots";
 
 function parseSpawnAnchorKey(spawnAnchorKey: string) {
 	const [spawnQ, spawnR] = spawnAnchorKey

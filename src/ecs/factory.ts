@@ -1,9 +1,14 @@
-import buildingsConfig from "../config/buildings.json";
 import {
+	type BotUnitType,
 	createBotUnitState,
 	getBotDefinition,
-	type BotUnitType,
 } from "../bots";
+import buildingsConfig from "../config/buildings.json";
+import {
+	getStructuralFragment,
+	getSurfaceHeightAtWorldPosition,
+	requirePrimaryStructuralFragment,
+} from "../world/structuralSpace";
 import type { Entity, UnitComponent, UnitEntity } from "./traits";
 import {
 	AIController,
@@ -16,11 +21,6 @@ import {
 	WorldPosition,
 } from "./traits";
 import { world } from "./world";
-import {
-	getStructuralFragment,
-	getSurfaceHeightAtWorldPosition,
-	requirePrimaryStructuralFragment,
-} from "../world/structuralSpace";
 
 /**
  * Factory functions for spawning entities.
@@ -100,7 +100,10 @@ export function spawnUnit(options: {
 	});
 	entity.set(WorldPosition, { x, y, z });
 	entity.set(MapFragment, { fragmentId: fragment.id });
-	entity.set(Unit, createBotUnitState({ unitType: type, displayName, speed, components }));
+	entity.set(
+		Unit,
+		createBotUnitState({ unitType: type, displayName, speed, components }),
+	);
 	entity.set(Navigation, { path: [], pathIndex: 0, moving: false });
 
 	return entity as UnitEntity;
@@ -182,7 +185,8 @@ export function spawnBuilding(options: {
 	const fragment = getStructuralFragment(options.fragmentId);
 	if (!fragment) throw new Error(`Fragment ${options.fragmentId} not found`);
 
-	const buildingConfig = buildingsConfig[options.type as keyof typeof buildingsConfig];
+	const buildingConfig =
+		buildingsConfig[options.type as keyof typeof buildingsConfig];
 	const y = getSurfaceHeightAtWorldPosition(options.x, options.z);
 	const powered = options.powered ?? false;
 

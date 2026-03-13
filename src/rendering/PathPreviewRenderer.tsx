@@ -14,9 +14,7 @@ import * as THREE from "three";
 import { Identity, MapFragment, Unit, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
 import { previewClickToMove } from "../systems/clickToMove";
-import {
-	gridToWorld,
-} from "../world/sectorCoordinates";
+import { gridToWorld } from "../world/sectorCoordinates";
 import { getStructuralFragment } from "../world/structuralSpace";
 
 const COLOR_AFFORDABLE = new THREE.Color(0x00e5ff);

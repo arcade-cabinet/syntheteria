@@ -176,7 +176,10 @@ export function deriveCityStructuralRole(
 	if (model.family === "column") {
 		return "column";
 	}
-	if (model.family === "stair" || model.passabilityEffect === "vertical_connector") {
+	if (
+		model.family === "stair" ||
+		model.passabilityEffect === "vertical_connector"
+	) {
 		return "stair";
 	}
 	if (model.family === "roof") {

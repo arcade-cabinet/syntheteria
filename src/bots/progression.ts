@@ -45,7 +45,10 @@ export function resolveRoleMarkEffect(
 	markLevel: number,
 ): RoleMarkEffect {
 	const multiplier = getCanonicalMarkMultiplier(markLevel);
-	const ROLE_STATS: Record<PlayerBotRole, { stat: string; description: string }> = {
+	const ROLE_STATS: Record<
+		PlayerBotRole,
+		{ stat: string; description: string }
+	> = {
 		technician: {
 			stat: "repair speed",
 			description: `Repair speed x${multiplier.toFixed(1)}`,
@@ -92,7 +95,9 @@ export function getMarkMPBonus(markLevel: number): number {
 export function resolveMarkMultiplier(markLevel: number, trackId: BotTrackId) {
 	const track = BOT_TRACKS[trackId];
 	const safeMark = Math.max(1, markLevel);
-	return 1 + track.baseBonus + track.logarithmicFactor * Math.log2(safeMark + 1);
+	return (
+		1 + track.baseBonus + track.logarithmicFactor * Math.log2(safeMark + 1)
+	);
 }
 
 export function resolveTrackLevel(markLevel: number, trackLevel?: number) {

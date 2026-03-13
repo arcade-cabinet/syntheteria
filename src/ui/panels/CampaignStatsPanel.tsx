@@ -64,10 +64,7 @@ function StatRow({
 }
 
 export function CampaignStatsPanel() {
-	const stats = useSyncExternalStore(
-		subscribeCampaignStats,
-		getCampaignStats,
-	);
+	const stats = useSyncExternalStore(subscribeCampaignStats, getCampaignStats);
 
 	const explorationPct =
 		stats.totalCells > 0
@@ -82,7 +79,11 @@ export function CampaignStatsPanel() {
 				value={stats.structuresHarvested}
 				tone="amber"
 			/>
-			<StatRow label="Structures Built" value={stats.structuresBuilt} tone="amber" />
+			<StatRow
+				label="Structures Built"
+				value={stats.structuresBuilt}
+				tone="amber"
+			/>
 			<StatRow label="Area Explored" value={explorationPct} tone="cyan" />
 			<StatRow label="Units Built" value={stats.unitsBuilt} />
 			<StatRow label="Units Lost" value={stats.unitsLost} tone="red" />

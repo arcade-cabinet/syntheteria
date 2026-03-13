@@ -115,10 +115,7 @@ export function getTurnLog(turnNumber: number): TurnLog | undefined {
 /**
  * Rehydrate turn event log from persisted state.
  */
-export function rehydrateTurnEventLog(
-	turnNumber: number,
-	logs: TurnLog[],
-) {
+export function rehydrateTurnEventLog(turnNumber: number, logs: TurnLog[]) {
 	completedTurns.length = 0;
 	for (const log of logs) {
 		completedTurns.push(log);

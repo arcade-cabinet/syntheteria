@@ -13,17 +13,17 @@
 
 import { useSyncExternalStore } from "react";
 import { Pressable, Text, View } from "react-native";
+import { subscribe } from "../../ecs/gameState";
 import {
 	ADJACENCY_RULES,
+	type AdjacencyBonus,
 	BUILDING_COSTS,
 	cancelPlacement,
 	computeAdjacencyBonuses,
 	getActivePlacement,
 	getGhostPosition,
-	type AdjacencyBonus,
 } from "../../systems/buildingPlacement";
 import { getResources } from "../../systems/resources";
-import { subscribe } from "../../ecs/gameState";
 
 function getPlacementType() {
 	return getActivePlacement();
@@ -45,9 +45,7 @@ export function PlacementHUD() {
 		bonuses = computeAdjacencyBonuses(type, ghost.x, ghost.z);
 	}
 
-	const canAfford = costs.every(
-		(c) => (resources[c.type] ?? 0) >= c.amount,
-	);
+	const canAfford = costs.every((c) => (resources[c.type] ?? 0) >= c.amount);
 
 	return (
 		<View
@@ -147,7 +145,14 @@ export function PlacementHUD() {
 				</View>
 
 				{/* Cost row */}
-				<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
+				<View
+					style={{
+						flexDirection: "row",
+						flexWrap: "wrap",
+						gap: 8,
+						marginBottom: 6,
+					}}
+				>
 					{costs.map((c) => {
 						const have = resources[c.type] ?? 0;
 						const enough = have >= c.amount;
@@ -190,9 +195,7 @@ export function PlacementHUD() {
 							fontFamily: "monospace",
 							fontSize: 10,
 							letterSpacing: 1,
-							color: ghost.valid && canAfford
-								? "#6ff3c8"
-								: "#ff8f8f",
+							color: ghost.valid && canAfford ? "#6ff3c8" : "#ff8f8f",
 							textTransform: "uppercase",
 							marginBottom: bonuses.length > 0 ? 8 : 0,
 						}}

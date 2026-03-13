@@ -10,12 +10,7 @@
 
 import buildingsConfig from "../config/buildings.json";
 import { gameplayRandom } from "../ecs/seed";
-import {
-	Building,
-	Identity,
-	Unit,
-	WorldPosition,
-} from "../ecs/traits";
+import { Building, Identity, Unit, WorldPosition } from "../ecs/traits";
 import { buildings, units } from "../ecs/world";
 import { areFactionsHostile } from "./combat";
 import { registerEnvironmentPhaseHandler } from "./turnSystem";
@@ -88,13 +83,14 @@ export function turretAutoAttackTick(): TurretAttackEvent[] {
 		}
 
 		// Find nearest hostile unit within range
-		let nearestTarget: typeof allUnits[number] | null = null;
+		let nearestTarget: (typeof allUnits)[number] | null = null;
 		let nearestDist = Infinity;
 
 		for (const target of allUnits) {
 			const targetIdentity = target.get(Identity);
 			if (!targetIdentity) continue;
-			if (!areFactionsHostile(turretIdentity.faction, targetIdentity.faction)) continue;
+			if (!areFactionsHostile(turretIdentity.faction, targetIdentity.faction))
+				continue;
 
 			const targetPos = target.get(WorldPosition);
 			if (!targetPos) continue;
@@ -121,7 +117,8 @@ export function turretAutoAttackTick(): TurretAttackEvent[] {
 			const functional = targetUnit.components.filter((c) => c.functional);
 			if (functional.length === 0) break;
 
-			const victim = functional[Math.floor(gameplayRandom() * functional.length)]!;
+			const victim =
+				functional[Math.floor(gameplayRandom() * functional.length)]!;
 			victim.functional = false;
 			componentsDestroyed++;
 		}

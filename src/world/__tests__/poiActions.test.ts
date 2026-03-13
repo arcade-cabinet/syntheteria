@@ -1,9 +1,9 @@
 import { FakeDatabase } from "../../db/__tests__/helpers/fakeDatabase";
 import { initializeDatabaseSync } from "../../db/bootstrap";
 import { setWorldPersistenceDatabaseResolver } from "../../db/worldPersistence";
+import { foundCitySite, surveyCitySite } from "../poiActions";
 import { resetRuntimeState } from "../runtimeState";
 import { clearActiveWorldSession, setActiveWorldSession } from "../session";
-import { foundCitySite, surveyCitySite } from "../poiActions";
 
 describe("poiActions", () => {
 	const database = new FakeDatabase();

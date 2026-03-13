@@ -1,9 +1,9 @@
 import { cancelAgentTask, readAIState } from "../ai";
+import type { BotUnitType } from "../bots/types";
 import gameplayConfig from "../config/gameplay.json";
 import type { Entity } from "../ecs/traits";
 import { Hacking, Identity, Signal, Unit, WorldPosition } from "../ecs/traits";
 import { world } from "../ecs/world";
-import type { BotUnitType } from "../bots/types";
 import { getTurnState, hasActionPoints, spendActionPoint } from "./turnSystem";
 
 /**

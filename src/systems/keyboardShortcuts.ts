@@ -16,10 +16,10 @@
 import type { Entity } from "../ecs/traits";
 import { Identity, Unit } from "../ecs/traits";
 import { units } from "../ecs/world";
-import { closeRadialMenu, getRadialMenuState } from "./radialMenu";
 import { cancelPlacement, getActivePlacement } from "./buildingPlacement";
-import { selectEntity, deselectAll } from "./unitSelection";
+import { closeRadialMenu, getRadialMenuState } from "./radialMenu";
 import { endPlayerTurn, getTurnState } from "./turnSystem";
+import { deselectAll, selectEntity } from "./unitSelection";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -32,9 +32,24 @@ export interface KeyBinding {
 }
 
 export const KEY_BINDINGS: KeyBinding[] = [
-	{ key: "Tab", label: "Tab", description: "Cycle units", preventDefault: true },
-	{ key: "Enter", label: "Enter", description: "End turn", preventDefault: false },
-	{ key: "Escape", label: "Esc", description: "Cancel / Pause", preventDefault: false },
+	{
+		key: "Tab",
+		label: "Tab",
+		description: "Cycle units",
+		preventDefault: true,
+	},
+	{
+		key: "Enter",
+		label: "Enter",
+		description: "End turn",
+		preventDefault: false,
+	},
+	{
+		key: "Escape",
+		label: "Esc",
+		description: "Cancel / Pause",
+		preventDefault: false,
+	},
 	{ key: "1", label: "1", description: "Action slot 1", preventDefault: false },
 	{ key: "2", label: "2", description: "Action slot 2", preventDefault: false },
 	{ key: "3", label: "3", description: "Action slot 3", preventDefault: false },
@@ -61,7 +76,9 @@ function getPlayerUnits() {
 	return result;
 }
 
-function getCurrentSelectedIndex(playerUnits: Array<{ entity: Entity; id: string }>): number {
+function getCurrentSelectedIndex(
+	playerUnits: Array<{ entity: Entity; id: string }>,
+): number {
 	for (let i = 0; i < playerUnits.length; i++) {
 		const unit = playerUnits[i].entity.get(Unit);
 		if (unit?.selected) return i;

@@ -1,14 +1,14 @@
 import {
-	BUILDING_STAGE_TURNS,
-	STAGE_VISUAL_CONFIG,
 	_reset,
 	advanceConstructionTurn,
+	BUILDING_STAGE_TURNS,
 	getAllConstructionStates,
 	getBuildingConstructionState,
 	getConstructionOverlayData,
 	getConstructionProgress,
 	getConstructionVisualConfig,
 	isBuildingUnderConstruction,
+	STAGE_VISUAL_CONFIG,
 	startBuildingConstruction,
 } from "./constructionVisualization";
 
@@ -26,7 +26,9 @@ const mockBuildings: any[] = [];
 jest.mock("../ecs/world", () => ({
 	buildings: {
 		[Symbol.iterator]: () => mockBuildings[Symbol.iterator](),
-		get length() { return mockBuildings.length; },
+		get length() {
+			return mockBuildings.length;
+		},
 	},
 }));
 
@@ -85,7 +87,12 @@ describe("constructionVisualization", () => {
 		});
 
 		it("progress increases through stages", () => {
-			const stages = ["foundation", "shell", "interior", "operational"] as const;
+			const stages = [
+				"foundation",
+				"shell",
+				"interior",
+				"operational",
+			] as const;
 			for (let i = 1; i < stages.length; i++) {
 				expect(STAGE_VISUAL_CONFIG[stages[i]!].progress).toBeGreaterThan(
 					STAGE_VISUAL_CONFIG[stages[i - 1]!].progress,
@@ -101,12 +108,16 @@ describe("constructionVisualization", () => {
 
 		it("lightning_rod is instant (all zeros)", () => {
 			const turns = BUILDING_STAGE_TURNS.lightning_rod!;
-			expect(turns.foundation + turns.shell + turns.interior + turns.operational).toBe(0);
+			expect(
+				turns.foundation + turns.shell + turns.interior + turns.operational,
+			).toBe(0);
 		});
 
 		it("motor_pool takes 7 total turns", () => {
 			const turns = BUILDING_STAGE_TURNS.motor_pool!;
-			expect(turns.foundation + turns.shell + turns.interior + turns.operational).toBe(7);
+			expect(
+				turns.foundation + turns.shell + turns.interior + turns.operational,
+			).toBe(7);
 		});
 	});
 

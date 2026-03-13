@@ -8,7 +8,7 @@
  * Default interval: every 5 turns.
  */
 
-import { saveAllStateSync, type SaveAllResult } from "../db/saveAllState";
+import { type SaveAllResult, saveAllStateSync } from "../db/saveAllState";
 import { registerEnvironmentPhaseHandler } from "./turnSystem";
 
 // ─── Configuration ───────────────────────────────────────────────────────────

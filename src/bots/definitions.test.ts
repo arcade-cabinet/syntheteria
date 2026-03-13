@@ -33,7 +33,9 @@ describe("bot definitions", () => {
 		expect(getBotDefinition("mecha_golem").model).toBe("MechaGolem.glb");
 		expect(getBotDefinition("mecha_golem").role).toBe("guardian");
 
-		expect(getBotDefinition("utility_drone").model).toBe("MobileStorageBot.glb");
+		expect(getBotDefinition("utility_drone").model).toBe(
+			"MobileStorageBot.glb",
+		);
 		expect(getBotDefinition("utility_drone").role).toBe("hauler");
 	});
 

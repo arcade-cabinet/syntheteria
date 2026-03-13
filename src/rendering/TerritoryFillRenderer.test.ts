@@ -11,9 +11,7 @@ jest.mock("../systems/territorySystem", () => ({
 	getCellOwner: jest.fn(),
 }));
 
-import {
-	getAllCellOwnership,
-} from "../systems/territorySystem";
+import { getAllCellOwnership } from "../systems/territorySystem";
 
 const mockGetAllCellOwnership = getAllCellOwnership as jest.Mock;
 

@@ -293,8 +293,7 @@ export function selectWallVariant(
 	for (const nz of neighborZones) {
 		const isCompatible = compatiblePairs.some(
 			([a, b]) =>
-				(a === context.zone && b === nz) ||
-				(b === context.zone && a === nz),
+				(a === context.zone && b === nz) || (b === context.zone && a === nz),
 		);
 		if (isCompatible) {
 			return "window";

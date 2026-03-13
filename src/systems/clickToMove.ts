@@ -92,7 +92,11 @@ export function issueClickToMove(
 	}
 
 	// Compute path using A* pathfinding
-	const result = findPathWithCost(pos, { x: targetX, y: 0, z: targetZ }, identity.id);
+	const result = findPathWithCost(
+		pos,
+		{ x: targetX, y: 0, z: targetZ },
+		identity.id,
+	);
 	if (!result.valid || result.path.length === 0) {
 		return { ok: false, reason: "no_path" };
 	}
@@ -162,7 +166,11 @@ export function previewClickToMove(
 		};
 	}
 
-	const result = findPathWithCost(pos, { x: targetX, y: 0, z: targetZ }, identity.id);
+	const result = findPathWithCost(
+		pos,
+		{ x: targetX, y: 0, z: targetZ },
+		identity.id,
+	);
 	if (!result.valid) {
 		return {
 			path: [],

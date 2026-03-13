@@ -31,8 +31,8 @@ jest.mock("./turnEventLog", () => ({
 
 // Import the functions we need to mock — must be after jest.mock
 import {
-	initializeTurnForUnits,
 	getUnitTurnState,
+	initializeTurnForUnits,
 	resetTurnSystem,
 } from "./turnSystem";
 

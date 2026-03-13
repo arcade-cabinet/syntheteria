@@ -95,12 +95,7 @@ describe("adaptiveMusic", () => {
 		});
 
 		it("should support all music states", () => {
-			const states = [
-				"exploration",
-				"combat",
-				"cultist",
-				"expansion",
-			] as const;
+			const states = ["exploration", "combat", "cultist", "expansion"] as const;
 			for (const state of states) {
 				setMusicState(state);
 				expect(getMusicState()).toBe(state);

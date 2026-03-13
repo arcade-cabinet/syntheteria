@@ -32,6 +32,7 @@ import { getTurnState } from "../systems/turnSystem";
 import { capturePersistableWorldEntities } from "../world/entityPersistence";
 import { getRuntimeState } from "../world/runtimeState";
 import { getActiveWorldSession } from "../world/session";
+import { touchSaveGameSync } from "./saveGames";
 import {
 	persistCampaignStatisticsSync,
 	persistFactionResourceStatesSync,
@@ -39,7 +40,6 @@ import {
 	persistRuntimeWorldStateSync,
 	persistTurnStateSync,
 } from "./worldPersistence";
-import { touchSaveGameSync } from "./saveGames";
 
 export interface SaveAllResult {
 	success: boolean;

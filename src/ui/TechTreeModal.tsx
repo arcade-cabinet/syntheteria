@@ -5,30 +5,32 @@
  * by tier, with current research progress and available/locked status.
  */
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import {
 	Animated,
 	Platform,
 	Pressable,
 	ScrollView,
 	Text,
-	View,
 	useWindowDimensions,
+	View,
 } from "react-native";
-import { useEffect, useRef } from "react";
+import type { HarvestResource } from "../systems/resourcePools";
 import {
-	type TechDefinition,
-	type TechStatus,
+	HARVEST_RESOURCE_COLORS,
+	HARVEST_RESOURCE_LABELS,
+} from "../systems/resourcePools";
+import {
+	cancelResearch,
 	getAllTechs,
 	getFactionResearchState,
 	getResearchProgress,
 	getTechStatus,
 	startResearch,
-	cancelResearch,
 	subscribeTechTree,
+	type TechDefinition,
+	type TechStatus,
 } from "../systems/techTree";
-import { HARVEST_RESOURCE_COLORS, HARVEST_RESOURCE_LABELS } from "../systems/resourcePools";
-import type { HarvestResource } from "../systems/resourcePools";
 
 // ─── Tier Labels ─────────────────────────────────────────────────────────────
 
@@ -106,9 +108,7 @@ export function TechTreeModal({
 		tiers.set(tech.tier, tier);
 	}
 
-	const sortedTiers = Array.from(tiers.entries()).sort(
-		(a, b) => a[0] - b[0],
-	);
+	const sortedTiers = Array.from(tiers.entries()).sort((a, b) => a[0] - b[0]);
 
 	const panelWidth = Math.min(480, vw * 0.92);
 
@@ -126,7 +126,11 @@ export function TechTreeModal({
 		>
 			{/* Backdrop */}
 			<Pressable
-				style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.6)" }}
+				style={{
+					position: "absolute",
+					inset: 0,
+					backgroundColor: "rgba(0,0,0,0.6)",
+				}}
 				onPress={onClose}
 				accessibilityLabel="Close tech tree"
 			/>
@@ -243,7 +247,13 @@ export function TechTreeModal({
 							justifyContent: "center",
 						}}
 					>
-						<Text style={{ color: "#8be6ff", fontSize: 16, fontFamily: "monospace" }}>
+						<Text
+							style={{
+								color: "#8be6ff",
+								fontSize: 16,
+								fontFamily: "monospace",
+							}}
+						>
 							x
 						</Text>
 					</Pressable>
@@ -323,14 +333,16 @@ function TechCard({
 	return (
 		<Pressable
 			onPress={handlePress}
-			disabled={status === "locked" || status === "unavailable" || status === "completed"}
+			disabled={
+				status === "locked" ||
+				status === "unavailable" ||
+				status === "completed"
+			}
 			accessibilityLabel={`${tech.name}: ${STATUS_LABELS[status]}`}
 			accessibilityRole="button"
 			style={({ pressed }) => ({
 				borderWidth: 1,
-				borderColor: isActive
-					? "rgba(139, 230, 255, 0.4)"
-					: `${statusColor}33`,
+				borderColor: isActive ? "rgba(139, 230, 255, 0.4)" : `${statusColor}33`,
 				borderRadius: 8,
 				backgroundColor: pressed
 					? "rgba(255,255,255,0.05)"
@@ -342,7 +354,13 @@ function TechCard({
 			})}
 		>
 			{/* Header row */}
-			<View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+			<View
+				style={{
+					flexDirection: "row",
+					justifyContent: "space-between",
+					alignItems: "center",
+				}}
+			>
 				<Text
 					style={{
 						fontFamily: "monospace",
@@ -391,7 +409,9 @@ function TechCard({
 			</Text>
 
 			{/* Cost + Duration */}
-			<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+			<View
+				style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 }}
+			>
 				{Object.entries(tech.cost).map(([resource, amount]) => {
 					const color =
 						HARVEST_RESOURCE_COLORS[resource as HarvestResource] ?? "#888";

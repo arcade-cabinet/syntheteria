@@ -58,9 +58,7 @@ describe("database bootstrap", () => {
 			database.execCalls.some((sql) => sql.includes("ADD COLUMN world_seed")),
 		).toBe(true);
 		expect(
-			database.execCalls.some((sql) =>
-				sql.includes("ADD COLUMN sector_scale"),
-			),
+			database.execCalls.some((sql) => sql.includes("ADD COLUMN sector_scale")),
 		).toBe(true);
 		expect(
 			database.execCalls.some((sql) => sql.includes("ADD COLUMN difficulty")),

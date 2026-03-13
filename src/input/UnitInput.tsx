@@ -18,10 +18,10 @@ import {
 } from "../systems/buildingPlacement";
 import { tryMoveUnit } from "../systems/moveCommand";
 import {
-	type RadialOpenContext,
 	closeRadialMenu,
 	getRadialMenuState,
 	openRadialMenu,
+	type RadialOpenContext,
 } from "../systems/radialMenu";
 import {
 	hideTooltip,
@@ -29,10 +29,7 @@ import {
 	showUnitTooltip,
 } from "../systems/tooltipSystem";
 import { getUnitTurnState } from "../systems/turnSystem";
-import {
-	deselectAll,
-	selectEntity,
-} from "../systems/unitSelection";
+import { deselectAll, selectEntity } from "../systems/unitSelection";
 import { worldToGrid } from "../world/sectorCoordinates";
 import { getStructuralFragment } from "../world/structuralSpace";
 
@@ -408,7 +405,9 @@ export function UnitInput() {
 						const unitComp = entity.get(Unit);
 						const buildingComp = entity.get(Building);
 						if (identity && unitComp) {
-							const functional = unitComp.components.filter((c) => c.functional).length;
+							const functional = unitComp.components.filter(
+								(c) => c.functional,
+							).length;
 							showUnitTooltip(e.clientX, e.clientY, {
 								entityId: identity.id,
 								name: unitComp.displayName,
@@ -427,7 +426,9 @@ export function UnitInput() {
 								name: buildingComp.type.replace(/_/g, " "),
 								faction: identity.faction,
 								buildingType: buildingComp.type,
-								constructionStage: buildingComp.operational ? "Operational" : "Under Construction",
+								constructionStage: buildingComp.operational
+									? "Operational"
+									: "Under Construction",
 								buildingOutput: null,
 								powered: buildingComp.powered,
 							});

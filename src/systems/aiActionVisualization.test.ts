@@ -1,7 +1,7 @@
 import {
 	_resetAIActionVisualization,
-	clearAIActionIndicators,
 	cleanupStaleIndicators,
+	clearAIActionIndicators,
 	getAIActionIndicators,
 	showFactionActions,
 	subscribeAIActionIndicators,

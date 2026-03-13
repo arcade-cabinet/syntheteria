@@ -6,11 +6,11 @@ import { getRuntimeState, subscribeRuntimeState } from "../world/runtimeState";
 import "../systems/radialProviders"; // Register radial menu action providers at startup
 import { BriefingBubbleLayer } from "./BriefingBubbleLayer";
 import { CitySiteOverlay } from "./CitySiteOverlay";
-import { RadialMenu } from "./RadialMenu";
+import { GameHUD } from "./panels/GameHUD";
 import { Minimap } from "./panels/Minimap";
 import { Notifications } from "./panels/Notifications";
-import { ResponsiveTopBar } from "./panels/ResourceStrip";
 import { ThoughtOverlay } from "./panels/ThoughtOverlay";
+import { RadialMenu } from "./RadialMenu";
 
 /**
  * GameUI — top-level HUD composition.
@@ -35,7 +35,7 @@ export function GameUI() {
 
 	return (
 		<View className="absolute inset-0 pointer-events-none">
-			<ResponsiveTopBar />
+			<GameHUD />
 			{worldInteractive && <Notifications />}
 			{worldInteractive && <BriefingBubbleLayer />}
 			<CitySiteOverlay />

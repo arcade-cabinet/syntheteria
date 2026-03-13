@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
 import Animated, {
+	Easing,
 	useAnimatedStyle,
 	useSharedValue,
 	withRepeat,
@@ -17,90 +18,160 @@ const LOADING_STAGES = [
 ] as const;
 
 /**
- * Storm-translucent loading overlay.
+ * Full-screen diegetic loading overlay.
  *
- * When composited over the live 3D title scene, the reduced backdrop
- * opacity (50% instead of 82%) lets the storm clouds and lightning
- * bleed through — keeping the diegetic atmosphere alive during world
- * generation rather than cutting to a dead black screen.
+ * Inspired by the prompt designs: centered spinner ring, bold stage text,
+ * gradient progress bar, and staged sub-messages. Composites over the
+ * live storm scene with reduced backdrop opacity so lightning and cloud
+ * churn remain visible underneath.
  */
 export function LoadingOverlay({ label }: { label: string }) {
 	const [stageIndex, setStageIndex] = useState(0);
-	const sweep = useSharedValue(0);
-	const pulseGlow = useSharedValue(0.5);
+
+	// Spinner ring rotation
+	const spinRotation = useSharedValue(0);
+	// Progress bar sweep
+	const progressWidth = useSharedValue(0);
+	// Pulse glow
+	const pulseGlow = useSharedValue(0.4);
 
 	useEffect(() => {
-		sweep.value = withRepeat(
-			withSequence(
-				withTiming(1, { duration: 1400 }),
-				withTiming(0, { duration: 200 }),
-			),
+		// Continuous spinner
+		spinRotation.value = withRepeat(
+			withTiming(360, { duration: 2000, easing: Easing.linear }),
 			-1,
 			false,
 		);
 
-		// Subtle cyan glow pulse on the panel border
+		// Progress bar: grows in steps matching stage progression
+		progressWidth.value = withTiming(20, { duration: 800 });
+
+		// Glow pulse
 		pulseGlow.value = withRepeat(
 			withSequence(
-				withTiming(0.8, { duration: 2000 }),
-				withTiming(0.4, { duration: 2000 }),
+				withTiming(0.8, { duration: 1600 }),
+				withTiming(0.4, { duration: 1600 }),
 			),
 			-1,
 			true,
 		);
 
 		const interval = setInterval(() => {
-			setStageIndex((prev) =>
-				prev < LOADING_STAGES.length - 1 ? prev + 1 : prev,
-			);
+			setStageIndex((prev) => {
+				const next = Math.min(prev + 1, LOADING_STAGES.length - 1);
+				// Step progress bar forward
+				progressWidth.value = withTiming(
+					((next + 1) / LOADING_STAGES.length) * 100,
+					{ duration: 600 },
+				);
+				return next;
+			});
 		}, 2200);
 
 		return () => clearInterval(interval);
-	}, [sweep, pulseGlow]);
+	}, [spinRotation, progressWidth, pulseGlow]);
 
-	const sweepStyle = useAnimatedStyle(() => ({
-		width: `${sweep.value * 100}%`,
-		opacity: 0.6 + sweep.value * 0.4,
+	const spinStyle = useAnimatedStyle(() => ({
+		transform: [{ rotate: `${spinRotation.value}deg` }],
 	}));
 
-	const panelGlowStyle = useAnimatedStyle(() => ({
-		borderColor: `rgba(139, 230, 255, ${pulseGlow.value * 0.3})`,
+	const progressStyle = useAnimatedStyle(() => ({
+		width: `${progressWidth.value}%`,
+	}));
+
+	const glowStyle = useAnimatedStyle(() => ({
+		opacity: pulseGlow.value,
 	}));
 
 	return (
-		<View className="absolute inset-0 items-center justify-center bg-[#02050a]/50 px-4 md:px-6">
-			<Animated.View
-				style={panelGlowStyle}
-				className="w-full max-w-[560px] rounded-[24px] md:rounded-[28px] border bg-[#07111b]/92 px-4 py-5 md:px-6 md:py-6 shadow-2xl"
-			>
-				<Text className="font-mono text-[11px] uppercase tracking-[0.28em] text-[#8be6ff]">
-					Campaign Initialization
-				</Text>
-				<Text className="mt-3 font-mono text-[16px] md:text-[20px] uppercase tracking-[0.12em] text-[#edfaff]">
+		<View className="absolute inset-0 items-center justify-center bg-[#020307]/55">
+			<View className="items-center" style={{ maxWidth: 480, width: "100%" }}>
+				{/* Spinner ring */}
+				<Animated.View
+					style={[
+						spinStyle,
+						{
+							width: 80,
+							height: 80,
+							borderRadius: 40,
+							borderWidth: 3,
+							borderColor: "rgba(139, 230, 255, 0.2)",
+							borderTopColor: "#8be6ff",
+						},
+					]}
+				/>
+
+				{/* Main label */}
+				<Text
+					className="mt-8 font-mono text-center"
+					style={{
+						fontSize: Platform.select({ web: 28, default: 22 }),
+						letterSpacing: 4,
+						color: "#8be6ff",
+						textTransform: "uppercase",
+						textShadowColor: "rgba(139, 230, 255, 0.5)",
+						textShadowOffset: { width: 0, height: 0 },
+						textShadowRadius: 16,
+					}}
+				>
 					{label}
 				</Text>
-				<Text className="mt-3 font-mono text-[12px] leading-5 text-white/44">
-					{LOADING_STAGES[stageIndex]}
-				</Text>
-				<View className="mt-5 h-2 overflow-hidden rounded-full border border-[#8be6ff]/18 bg-[#061018]">
+
+				{/* Stage sub-text */}
+				<Animated.View style={glowStyle}>
+					<Text
+						className="mt-3 font-mono text-center"
+						style={{
+							fontSize: 11,
+							letterSpacing: 3,
+							color: "rgba(139, 230, 255, 0.55)",
+							textTransform: "uppercase",
+						}}
+					>
+						{LOADING_STAGES[stageIndex]}
+					</Text>
+				</Animated.View>
+
+				{/* Progress bar */}
+				<View
+					className="mt-6 overflow-hidden rounded-full"
+					style={{
+						width: "80%",
+						height: 6,
+						backgroundColor: "rgba(139, 230, 255, 0.08)",
+						borderWidth: 1,
+						borderColor: "rgba(139, 230, 255, 0.12)",
+						borderRadius: 3,
+					}}
+				>
 					<Animated.View
-						style={sweepStyle}
-						className="h-full rounded-full bg-[#7fe5ff]"
+						style={[
+							progressStyle,
+							{
+								height: "100%",
+								borderRadius: 3,
+							},
+						]}
+						className="bg-[#8be6ff]/70"
 					/>
 				</View>
 
-				{/* Stage progress dots */}
+				{/* Stage dots */}
 				<View className="mt-4 flex-row items-center justify-center gap-2">
-					{LOADING_STAGES.map((_, i) => (
+					{LOADING_STAGES.map((stage, i) => (
 						<View
-							key={LOADING_STAGES[i]}
-							className={`h-1.5 w-1.5 rounded-full ${
-								i <= stageIndex ? "bg-[#8be6ff]" : "bg-white/12"
-							}`}
+							key={stage}
+							style={{
+								width: 5,
+								height: 5,
+								borderRadius: 2.5,
+								backgroundColor:
+									i <= stageIndex ? "#8be6ff" : "rgba(255, 255, 255, 0.1)",
+							}}
 						/>
 					))}
 				</View>
-			</Animated.View>
+			</View>
 		</View>
 	);
 }

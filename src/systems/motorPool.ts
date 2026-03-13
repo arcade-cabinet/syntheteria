@@ -1,5 +1,5 @@
 /**
- * Motor Pool bot fabrication system.
+ * Motor Pool bot fabrication and Mark upgrade system.
  *
  * Motor Pools are buildings that fabricate new bots. Each Motor Pool has a
  * queue of fabrication jobs. The queue size depends on the Motor Pool's tier:
@@ -9,13 +9,25 @@
  *
  * Each job selects a bot type, deducts resources, and counts down over
  * multiple turns. When complete, a new bot spawns at the Motor Pool's position.
+ *
+ * Motor Pools also gate unit Mark upgrades. Units adjacent to a powered
+ * Motor Pool can be upgraded to higher Marks by spending resources,
+ * subject to tier restrictions (from upgrades.json).
  */
 
 import type { BotUnitType } from "../bots";
 import { getBotDefinition } from "../bots";
+import upgradesConfig from "../config/upgrades.json";
 import { spawnUnit } from "../ecs/factory";
-import { Building, Identity, MapFragment, WorldPosition } from "../ecs/traits";
-import { buildings } from "../ecs/world";
+import type { Entity } from "../ecs/traits";
+import {
+	Building,
+	Identity,
+	MapFragment,
+	Unit,
+	WorldPosition,
+} from "../ecs/traits";
+import { buildings, world } from "../ecs/world";
 import { getResources, type ResourcePool, spendResource } from "./resources";
 
 // ---------------------------------------------------------------------------
@@ -155,9 +167,7 @@ export interface MotorPoolJob {
 
 const motorPools: Map<string, MotorPoolState> = new Map();
 
-export function getMotorPoolState(
-	entityId: string,
-): MotorPoolState | null {
+export function getMotorPoolState(entityId: string): MotorPoolState | null {
 	return motorPools.get(entityId) ?? null;
 }
 
@@ -169,7 +179,10 @@ export function getAllMotorPools(): MotorPoolState[] {
  * Register a Motor Pool entity. Called when a motor_pool building becomes
  * operational.
  */
-export function registerMotorPool(entityId: string, tier: MotorPoolTier = "basic") {
+export function registerMotorPool(
+	entityId: string,
+	tier: MotorPoolTier = "basic",
+) {
 	if (motorPools.has(entityId)) return;
 	motorPools.set(entityId, {
 		motorPoolEntityId: entityId,
@@ -356,9 +369,7 @@ export const MARK_UPGRADE_COSTS: MarkUpgradeCost[] = [
 export function getMarkUpgradeCost(
 	currentMark: number,
 ): MarkUpgradeCost | null {
-	return (
-		MARK_UPGRADE_COSTS.find((c) => c.fromMark === currentMark) ?? null
-	);
+	return MARK_UPGRADE_COSTS.find((c) => c.fromMark === currentMark) ?? null;
 }
 
 /**
@@ -377,8 +388,300 @@ export function canMotorPoolUpgradeMark(
 
 export function resetMotorPoolState() {
 	motorPools.clear();
+	activeUpgradeJobs.length = 0;
 }
 
 export function _reset() {
 	motorPools.clear();
+	activeUpgradeJobs.length = 0;
+}
+
+// ---------------------------------------------------------------------------
+// Mark upgrade job system (tick-based, from upgrades.json)
+//
+// Units adjacent to a powered Motor Pool can be upgraded to higher Marks.
+// The upgrade takes a config-driven number of ticks and consumes resources.
+// If the Motor Pool loses power, the upgrade pauses (not cancelled).
+// If the unit is destroyed, the upgrade is cancelled.
+// ---------------------------------------------------------------------------
+
+export interface UpgradeJob {
+	unitId: string;
+	motorPoolId: string;
+	targetMark: number;
+	ticksRemaining: number;
+}
+
+const activeUpgradeJobs: UpgradeJob[] = [];
+
+export function getActiveUpgradeJobs(): UpgradeJob[] {
+	return [...activeUpgradeJobs];
+}
+
+/**
+ * Get the maximum Mark a Motor Pool tier can upgrade to (from upgrades.json).
+ */
+export function getMaxMarkForTier(tier: MotorPoolTier): number {
+	const tierConfig =
+		upgradesConfig.motorPoolTiers[
+			tier as keyof typeof upgradesConfig.motorPoolTiers
+		];
+	if (!tierConfig) {
+		throw new Error(`Unknown Motor Pool tier: ${tier}`);
+	}
+	return tierConfig.maxMark;
+}
+
+/**
+ * Get the resource cost for upgrading to a specific Mark level (from upgrades.json).
+ */
+export function getUpgradeCost(
+	targetMark: number,
+): Record<string, number> | null {
+	const costs =
+		upgradesConfig.markLevels.costs[
+			String(targetMark) as keyof typeof upgradesConfig.markLevels.costs
+		];
+	return costs ?? null;
+}
+
+/**
+ * Get the number of ticks required for an upgrade to a specific Mark.
+ */
+export function getUpgradeTicks(targetMark: number): number {
+	const ticks =
+		upgradesConfig.markLevels.upgradeTicks[
+			String(targetMark) as keyof typeof upgradesConfig.markLevels.upgradeTicks
+		];
+	if (ticks === undefined) {
+		throw new Error(`No upgrade duration for Mark ${targetMark}`);
+	}
+	return ticks;
+}
+
+/**
+ * Find Motor Pool buildings adjacent to a unit (within adjacencyRange).
+ * Only returns powered, operational Motor Pools.
+ */
+export function findAdjacentMotorPools(unitEntity: Entity): Entity[] {
+	const unitPos = unitEntity.get(WorldPosition);
+	if (!unitPos) return [];
+
+	const range = upgradesConfig.adjacencyRange;
+	const result: Entity[] = [];
+
+	for (const building of buildings) {
+		const bComp = building.get(Building);
+		if (!bComp || bComp.type !== "motor_pool") continue;
+		if (!bComp.powered || !bComp.operational) continue;
+
+		const bPos = building.get(WorldPosition);
+		if (!bPos) continue;
+
+		const dx = unitPos.x - bPos.x;
+		const dz = unitPos.z - bPos.z;
+		const dist = Math.sqrt(dx * dx + dz * dz);
+
+		if (dist <= range) {
+			result.push(building);
+		}
+	}
+
+	return result;
+}
+
+export interface UpgradeCheckResult {
+	canUpgrade: boolean;
+	reason: string | null;
+	targetMark: number;
+	cost: Record<string, number> | null;
+}
+
+/**
+ * Check whether a unit can be upgraded at a given Motor Pool.
+ * Returns detailed result with reason for failure if any.
+ */
+export function checkUpgradeEligibility(
+	unitEntity: Entity,
+	motorPoolEntity: Entity,
+): UpgradeCheckResult {
+	const unit = unitEntity.get(Unit);
+	if (!unit) {
+		return {
+			canUpgrade: false,
+			reason: "Not a unit",
+			targetMark: 0,
+			cost: null,
+		};
+	}
+
+	const currentMark = unit.markLevel;
+	const maxMark = upgradesConfig.markLevels.max;
+
+	if (currentMark >= maxMark) {
+		return {
+			canUpgrade: false,
+			reason: "Already at maximum Mark",
+			targetMark: currentMark,
+			cost: null,
+		};
+	}
+
+	const targetMark = currentMark + 1;
+
+	// Check Motor Pool tier via the registered state
+	const motorPoolId = motorPoolEntity.get(Identity)?.id;
+	if (!motorPoolId) {
+		return {
+			canUpgrade: false,
+			reason: "Not a Motor Pool",
+			targetMark,
+			cost: null,
+		};
+	}
+
+	const poolState = motorPools.get(motorPoolId);
+	if (!poolState) {
+		return {
+			canUpgrade: false,
+			reason: "Motor Pool not registered",
+			targetMark,
+			cost: null,
+		};
+	}
+
+	const tierMaxMark = getMaxMarkForTier(poolState.tier);
+	if (targetMark > tierMaxMark) {
+		return {
+			canUpgrade: false,
+			reason: `Motor Pool tier too low (${poolState.tier} supports up to Mark ${tierMaxMark})`,
+			targetMark,
+			cost: null,
+		};
+	}
+
+	// Check not already being upgraded
+	const unitId = unitEntity.get(Identity)?.id;
+	if (unitId && activeUpgradeJobs.some((job) => job.unitId === unitId)) {
+		return {
+			canUpgrade: false,
+			reason: "Upgrade already in progress",
+			targetMark,
+			cost: null,
+		};
+	}
+
+	const cost = getUpgradeCost(targetMark);
+	if (!cost) {
+		return {
+			canUpgrade: false,
+			reason: `No upgrade cost defined for Mark ${targetMark}`,
+			targetMark,
+			cost: null,
+		};
+	}
+
+	// Check resources
+	const pool = getResources();
+	for (const [resourceType, amount] of Object.entries(cost)) {
+		const available = pool[resourceType as keyof ResourcePool] ?? 0;
+		if (available < amount) {
+			return {
+				canUpgrade: false,
+				reason: `Insufficient resources (need ${amount} ${resourceType})`,
+				targetMark,
+				cost,
+			};
+		}
+	}
+
+	return { canUpgrade: true, reason: null, targetMark, cost };
+}
+
+/**
+ * Start a Mark upgrade for a unit at a Motor Pool.
+ * Returns true if the upgrade was started.
+ */
+export function startUpgrade(
+	unitEntity: Entity,
+	motorPoolEntity: Entity,
+): boolean {
+	const check = checkUpgradeEligibility(unitEntity, motorPoolEntity);
+	if (!check.canUpgrade || !check.cost) return false;
+
+	const unitId = unitEntity.get(Identity)?.id;
+	const motorPoolId = motorPoolEntity.get(Identity)?.id;
+	if (!unitId || !motorPoolId) return false;
+
+	// Deduct resources
+	for (const [resourceType, amount] of Object.entries(check.cost)) {
+		if (!spendResource(resourceType as keyof ResourcePool, amount)) {
+			return false;
+		}
+	}
+
+	const ticks = getUpgradeTicks(check.targetMark);
+	activeUpgradeJobs.push({
+		unitId,
+		motorPoolId,
+		targetMark: check.targetMark,
+		ticksRemaining: ticks,
+	});
+
+	return true;
+}
+
+/**
+ * Motor Pool upgrade system tick. Advances active upgrade jobs.
+ * Completed upgrades increment the unit's markLevel.
+ *
+ * If a Motor Pool loses power, the upgrade pauses (not cancelled).
+ * If a unit is destroyed, the upgrade is cancelled.
+ */
+export function motorPoolUpgradeSystem() {
+	for (let i = activeUpgradeJobs.length - 1; i >= 0; i--) {
+		const job = activeUpgradeJobs[i];
+
+		// Check Motor Pool is still powered
+		let motorPoolPowered = false;
+		for (const building of buildings) {
+			if (
+				building.get(Identity)?.id === job.motorPoolId &&
+				building.get(Building)?.powered
+			) {
+				motorPoolPowered = true;
+				break;
+			}
+		}
+
+		if (!motorPoolPowered) continue; // paused, not cancelled
+
+		// Check unit still exists (query Unit+Identity directly)
+		let unitEntity: Entity | null = null;
+		for (const unit of world.query(Unit, Identity)) {
+			if (unit.get(Identity)?.id === job.unitId) {
+				unitEntity = unit;
+				break;
+			}
+		}
+
+		if (!unitEntity) {
+			// Unit destroyed — cancel upgrade
+			activeUpgradeJobs.splice(i, 1);
+			continue;
+		}
+
+		job.ticksRemaining--;
+		if (job.ticksRemaining <= 0) {
+			// Upgrade complete — increment markLevel using entity.set()
+			const unit = unitEntity.get(Unit);
+			if (unit) {
+				unitEntity.set(Unit, {
+					...unit,
+					markLevel: job.targetMark,
+				});
+			}
+			activeUpgradeJobs.splice(i, 1);
+		}
+	}
 }

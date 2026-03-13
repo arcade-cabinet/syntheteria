@@ -41,6 +41,7 @@ import { governorSystem } from "../systems/governorSystem";
 import { hackingSystem } from "../systems/hacking";
 import { harvestSystem, resetHarvestSystem } from "../systems/harvestSystem";
 import { lightningSystem, resetLightningSystem } from "../systems/lightning";
+import { motorPoolUpgradeSystem } from "../systems/motorPool";
 import { movementSystem } from "../systems/movement";
 import {
 	getActiveThought,
@@ -229,6 +230,7 @@ export function simulationTick() {
 	fabricationSystem();
 	combatSystem();
 	hackingSystem();
+	motorPoolUpgradeSystem();
 	territorySystem();
 	narrativeSystem();
 	botSpeechSystem(tick, []);

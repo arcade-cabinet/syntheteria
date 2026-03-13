@@ -1,50 +1,48 @@
 # Syntheteria Documentation Index
 
-This is the central hub for the documentation of the Syntheteria project. The documentation has been refactored and consolidated for agentic efficiency and better readability.
+## Core Design
+| Document | Purpose |
+|----------|---------|
+| [GAME_DESIGN.md](GAME_DESIGN.md) | Vision, 4X pillars (eXplore/eXploit/eXpand/eXterminate), game phases, victory conditions |
+| [LORE.md](LORE.md) | Timeline, factions (EL, Cultists, Machine Consciousnesses), world physics, ending direction |
+| [TURN_AND_ECONOMY.md](TURN_AND_ECONOMY.md) | Turn-based system (AP/MP), urban mining economy, 8 material types, harvesting, Motor Pool |
+| [FACTION_AND_CAMPAIGN_MODEL.md](FACTION_AND_CAMPAIGN_MODEL.md) | Campaign structure, faction differentiation, cultist pressure model |
 
-## Core Documents
+## Technical
+| Document | Purpose |
+|----------|---------|
+| [TECHNICAL.md](TECHNICAL.md) | Stack, runtime shape, formulas, persistence, platform constraints |
+| [WORLD_AND_CITY_SYSTEMS.md](WORLD_AND_CITY_SYSTEMS.md) | Sector generation, district painting, structure placement, city interiors |
+| [BOT_ARCHETYPES.md](BOT_ARCHETYPES.md) | 9 bot models, archetype families, Mark progression, component system |
 
-- [Game Design](./GAME_DESIGN.md) - Consolidated design document including mechanics, components, combat, the fragmented map concept, the void awakening, resources, and open questions.
-- [Technical Architecture](./TECHNICAL.md) - Expo + Koota architecture, rendering/runtime loops, persistence boundaries, and core formulas.
-- [Lore](./LORE.md) - World history, the Cultists, the EL entities, and the story sequence of the player AI.
-- [World And City Systems](./WORLD_AND_CITY_SYSTEMS.md) - Canonical spatial model for the single continuous ecumenopolis campaign space.
-- [Faction And Campaign Model](./FACTION_AND_CAMPAIGN_MODEL.md) - Canonical machine-faction, cultist-antagonist, victory-path, and awakening-to-4X campaign structure.
-- [UI Brand And Experience](./UI_BRAND_AND_EXPERIENCE.md) - Canonical visual language, interaction tone, accessibility requirements, and player-surface standards.
-- [Bot Archetypes](./BOT_ARCHETYPES.md) - Canonical machine roster, Mark progression, upgrade tracks, and AI-facing chassis contracts.
-- [Asset Gaps](./ASSET_GAPS.md) - Current asset sufficiency, missing factions/POIs/VFX, and the next search targets for pending integration.
-- [Open Questions](./OPEN_QUESTIONS.md) - Preserved design decision log for unresolved and periodically revalidated questions.
+## UI & Interaction
+| Document | Purpose |
+|----------|---------|
+| [UI_BRAND_AND_EXPERIENCE.md](UI_BRAND_AND_EXPERIENCE.md) | Visual language, color palette, motion, typography, accessibility |
+| [INPUT_AND_INTERACTION.md](INPUT_AND_INTERACTION.md) | Touch/mouse input, radial menu, camera controls |
 
-## Agent Guidance
+## Agent Instructions
+| Document | Purpose |
+|----------|---------|
+| [AGENTS.md](AGENTS.md) | Macro/meso/micro development approaches, LLM mandates |
 
-- [Root Agent Plan](../AGENTS.md) - Overarching guidance, constraints, and immediate objectives for agents operating in the root of the repository.
-- [Agent Macro/Meso/Micro Plans](./AGENTS.md) - Specific, scoped plans (Macro milestones, Meso system tasks, Micro atomic patterns) for LLM implementations.
-- [Plans Workspace](./plans/WORLD_CITY_COMPLETION_PR_PLAN.md) - Active long-running branch plan for ecumenopolis completion, sector systems, world art/runtime integration, and test strategy.
-- [Ecumenopolis Implementation Checklist](./plans/ECUMENOPOLIS_IMPLEMENTATION_CHECKLIST.md) - Single execution checklist for the long-running replacement branch.
-- [Claude UI Polish Plan](./plans/CLAUDE_UI_POLISH_PLAN.md) - UI refinement, accessibility, testing, and progress-communication contract for Claude-led polish work.
-- [Spatial Replacement Audit](./SPATIAL_REPLACEMENT_AUDIT.md) - Historical implementation audit for the now-committed ecumenopolis replacement.
+## Plans & Design Explorations
+| Document | Purpose |
+|----------|---------|
+| [plans/VIEWPORT_CHUNK_PIVOT.md](plans/VIEWPORT_CHUNK_PIVOT.md) | Infinite chunk-based ecumenopolis, delta persistence, block building |
+| [plans/BOT_AND_ECONOMY_REDESIGN.md](plans/BOT_AND_ECONOMY_REDESIGN.md) | 6+3 bot redesign, urban mining materials, Motor Pool, Storm Gatherer |
+| [plans/STORM_WEATHER_VISUAL_SYSTEM.md](plans/STORM_WEATHER_VISUAL_SYSTEM.md) | Storm sky shader, wormhole day/night cycle, lightning |
+| [plans/CLAUDE_UI_POLISH_PLAN.md](plans/CLAUDE_UI_POLISH_PLAN.md) | UI polish execution contract |
+| [plans/AI_FOUNDATION_PLAN.md](plans/AI_FOUNDATION_PLAN.md) | Yuka AI bridge, navigation, behavior trees |
+| [plans/ECUMENOPOLIS_IMPLEMENTATION_CHECKLIST.md](plans/ECUMENOPOLIS_IMPLEMENTATION_CHECKLIST.md) | Sector generation implementation status |
+| [plans/ASSET_LIBRARY_REORGANIZATION.md](plans/ASSET_LIBRARY_REORGANIZATION.md) | Model catalog organization |
+| [plans/CITY_KIT_AUDIT.md](plans/CITY_KIT_AUDIT.md) | City model classification audit |
 
-## Implementation Progress
-
-| System | Status |
-|--------|--------|
-| Title screen & intro narration | **Done** |
-| Sector/world runtime direction | **In Progress** |
-| Structural-space replacement | **In Progress** |
-| Mobile/desktop input | **Done** |
-| Power (lightning rods + storm) | **Done** |
-| Resources & scavenging | **Done** |
-| Building placement | **Done** |
-| Fabrication (5 recipes) | **Done** |
-| Feral enemy AI | **Done** |
-| Component-based combat | **Done** |
-| Repair system | **Done** |
-| Hacking system | **In Progress** |
-| Cultist enemies | Pending |
-| Signal/compute network | Pending |
-| Save/load | **Done** |
-| Persistent ecumenopolis generation | **In Progress** |
-| POI discovery and district seeding | **In Progress** |
-| Persistent world actor hydration | **Done** |
-| Continuous ecumenopolis contract | **Done** |
-| Square-grid structural contract | **In Progress** |
-| Audio | Pending |
+## Other
+| Document | Purpose |
+|----------|---------|
+| [ASSET_GAPS.md](ASSET_GAPS.md) | Missing assets and model coverage |
+| [CITY_CONTRACTS.md](CITY_CONTRACTS.md) | City layout and assembly contracts |
+| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unresolved design questions |
+| [SPATIAL_REPLACEMENT_AUDIT.md](SPATIAL_REPLACEMENT_AUDIT.md) | Legacy spatial system replacement status |
+| [BRANCH_REVIEW_AND_REALIGNMENT.md](BRANCH_REVIEW_AND_REALIGNMENT.md) | Branch review notes |

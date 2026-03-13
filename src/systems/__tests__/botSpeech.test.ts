@@ -7,9 +7,16 @@ import {
 	canSpeak,
 	clearBubblesForEntity,
 	determineSpeechContext,
+	type EventSpeechBot,
+	filterNearbyEvents,
+	type GameEvent,
+	type GameEventType,
 	getActiveSpeechBubbles,
+	getEventVisionRadius,
+	processEventSpeech,
 	resetBotSpeechState,
 	type SpeechContext,
+	selectEventLine,
 	selectLine,
 	updateBubblePosition,
 	updateSpeechBubbleOpacities,
@@ -472,5 +479,459 @@ describe("3D rendering support", () => {
 		const remaining = getActiveSpeechBubbles();
 		expect(remaining).toHaveLength(1);
 		expect(remaining[0].entityId).toBe("clear_b");
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Event speech config validation
+// ---------------------------------------------------------------------------
+describe("event speech config", () => {
+	const eventTypes: GameEventType[] = [
+		"hostile_construction",
+		"enemy_scouts",
+		"taking_fire",
+		"target_down",
+		"storm_intensifying",
+		"lightning_close",
+	];
+
+	it("eventVisionRadius is a positive number", () => {
+		expect(speechProfilesConfig.eventVisionRadius).toBeGreaterThan(0);
+	});
+
+	it("every profile has all six event categories", () => {
+		for (const [, profileData] of Object.entries(
+			speechProfilesConfig.eventSpeech,
+		)) {
+			for (const evt of eventTypes) {
+				const lines = (profileData as Record<string, string[]>)[evt];
+				expect(lines).toBeDefined();
+				expect(lines.length).toBeGreaterThanOrEqual(8);
+			}
+		}
+	});
+
+	it("has event speech for all 7 profiles", () => {
+		const eventProfileKeys = Object.keys(speechProfilesConfig.eventSpeech);
+		expect(eventProfileKeys.sort()).toEqual([
+			"cult",
+			"fabricator",
+			"feral",
+			"mentor",
+			"quartermaster",
+			"scout",
+			"warden",
+		]);
+	});
+
+	it("getEventVisionRadius returns the config value", () => {
+		expect(getEventVisionRadius()).toBe(speechProfilesConfig.eventVisionRadius);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Event line selection
+// ---------------------------------------------------------------------------
+describe("event line selection", () => {
+	const archetypes: BotArchetype[] = [
+		"mentor",
+		"scout",
+		"quartermaster",
+		"fabricator",
+		"warden",
+		"feral",
+		"cult",
+	];
+
+	it.each(
+		archetypes,
+	)("selectEventLine returns a valid line for %s hostile_construction", (archetype) => {
+		const line = selectEventLine(archetype, "hostile_construction");
+		expect(line).not.toBeNull();
+		const profileData =
+			speechProfilesConfig.eventSpeech[
+				archetype as keyof typeof speechProfilesConfig.eventSpeech
+			];
+		expect(profileData.hostile_construction).toContain(line);
+	});
+
+	it.each(
+		archetypes,
+	)("selectEventLine returns a valid line for %s taking_fire", (archetype) => {
+		const line = selectEventLine(archetype, "taking_fire");
+		expect(line).not.toBeNull();
+		const profileData =
+			speechProfilesConfig.eventSpeech[
+				archetype as keyof typeof speechProfilesConfig.eventSpeech
+			];
+		expect(profileData.taking_fire).toContain(line);
+	});
+
+	it("returns null for unknown profile", () => {
+		const line = selectEventLine("nonexistent" as any, "taking_fire");
+		expect(line).toBeNull();
+	});
+
+	it("is deterministic with the same seed", () => {
+		initGameplayPRNG(123);
+		const line1 = selectEventLine("warden", "enemy_scouts");
+
+		initGameplayPRNG(123);
+		const line2 = selectEventLine("warden", "enemy_scouts");
+
+		expect(line1).toBe(line2);
+		expect(line1).not.toBeNull();
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Proximity filtering
+// ---------------------------------------------------------------------------
+describe("proximity filtering", () => {
+	const visionRadius = speechProfilesConfig.eventVisionRadius;
+
+	it("includes events within vision radius", () => {
+		const botPos = { x: 0, z: 0 };
+		const events: GameEvent[] = [
+			{
+				type: "hostile_construction",
+				position: { x: 5, z: 0 },
+			},
+		];
+		const nearby = filterNearbyEvents(botPos, events);
+		expect(nearby).toHaveLength(1);
+		expect(nearby[0].type).toBe("hostile_construction");
+	});
+
+	it("excludes events outside vision radius", () => {
+		const botPos = { x: 0, z: 0 };
+		const events: GameEvent[] = [
+			{
+				type: "hostile_construction",
+				position: { x: visionRadius + 10, z: 0 },
+			},
+		];
+		const nearby = filterNearbyEvents(botPos, events);
+		expect(nearby).toHaveLength(0);
+	});
+
+	it("includes events exactly at the vision radius boundary", () => {
+		const botPos = { x: 0, z: 0 };
+		const events: GameEvent[] = [
+			{
+				type: "enemy_scouts",
+				position: { x: visionRadius, z: 0 },
+			},
+		];
+		const nearby = filterNearbyEvents(botPos, events);
+		expect(nearby).toHaveLength(1);
+	});
+
+	it("sorts events by distance (closest first)", () => {
+		const botPos = { x: 0, z: 0 };
+		const events: GameEvent[] = [
+			{ type: "taking_fire", position: { x: 10, z: 0 } },
+			{ type: "enemy_scouts", position: { x: 3, z: 0 } },
+			{ type: "hostile_construction", position: { x: 7, z: 0 } },
+		];
+		const nearby = filterNearbyEvents(botPos, events);
+		expect(nearby).toHaveLength(3);
+		expect(nearby[0].type).toBe("enemy_scouts");
+		expect(nearby[1].type).toBe("hostile_construction");
+		expect(nearby[2].type).toBe("taking_fire");
+	});
+
+	it("filters using custom vision radius when provided", () => {
+		const botPos = { x: 0, z: 0 };
+		const events: GameEvent[] = [
+			{ type: "taking_fire", position: { x: 5, z: 0 } },
+			{ type: "enemy_scouts", position: { x: 3, z: 0 } },
+		];
+		// Custom radius smaller than default — only the closer event passes
+		const nearby = filterNearbyEvents(botPos, events, 4);
+		expect(nearby).toHaveLength(1);
+		expect(nearby[0].type).toBe("enemy_scouts");
+	});
+
+	it("computes 2D distance correctly (x,z plane)", () => {
+		const botPos = { x: 3, z: 4 };
+		// Distance from (3,4) to (0,0) = 5
+		const events: GameEvent[] = [
+			{ type: "taking_fire", position: { x: 0, z: 0 } },
+		];
+		// With radius 5 it should be included, with 4 excluded
+		expect(filterNearbyEvents(botPos, events, 5)).toHaveLength(1);
+		expect(filterNearbyEvents(botPos, events, 4)).toHaveLength(0);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Event-triggered speech generation
+// ---------------------------------------------------------------------------
+describe("event-triggered speech (processEventSpeech)", () => {
+	it("creates a bubble for a bot near an event", () => {
+		const bots: EventSpeechBot[] = [
+			{ entityId: "evt_bot_1", archetype: "scout", position: { x: 0, z: 0 } },
+		];
+		const events: GameEvent[] = [
+			{ type: "hostile_construction", position: { x: 5, z: 0 } },
+		];
+
+		processEventSpeech(0, bots, events);
+
+		const bubbles = getActiveSpeechBubbles();
+		expect(bubbles).toHaveLength(1);
+		expect(bubbles[0].entityId).toBe("evt_bot_1");
+		expect(
+			speechProfilesConfig.eventSpeech.scout.hostile_construction,
+		).toContain(bubbles[0].text);
+	});
+
+	it("does not create a bubble for a bot far from an event", () => {
+		const bots: EventSpeechBot[] = [
+			{
+				entityId: "evt_far_bot",
+				archetype: "warden",
+				position: { x: 0, z: 0 },
+			},
+		];
+		const events: GameEvent[] = [
+			{ type: "hostile_construction", position: { x: 100, z: 100 } },
+		];
+
+		processEventSpeech(0, bots, events);
+
+		expect(getActiveSpeechBubbles()).toHaveLength(0);
+	});
+
+	it("does nothing when no events are provided", () => {
+		const bots: EventSpeechBot[] = [
+			{
+				entityId: "evt_no_event",
+				archetype: "mentor",
+				position: { x: 0, z: 0 },
+			},
+		];
+
+		processEventSpeech(0, bots, []);
+
+		expect(getActiveSpeechBubbles()).toHaveLength(0);
+	});
+
+	it("respects cooldown for event-triggered speech", () => {
+		const bots: EventSpeechBot[] = [
+			{
+				entityId: "evt_cool_bot",
+				archetype: "fabricator",
+				position: { x: 0, z: 0 },
+			},
+		];
+		const events: GameEvent[] = [
+			{ type: "taking_fire", position: { x: 3, z: 0 } },
+		];
+
+		// First call: speech happens
+		processEventSpeech(0, bots, events);
+		expect(getActiveSpeechBubbles()).toHaveLength(1);
+
+		// Second call on next turn: blocked by cooldown
+		processEventSpeech(1, bots, events);
+		// Still only 1 bubble (the one from turn 0)
+		expect(getActiveSpeechBubbles()).toHaveLength(1);
+	});
+
+	it("processes multiple bots near different events", () => {
+		const bots: EventSpeechBot[] = [
+			{
+				entityId: "evt_multi_1",
+				archetype: "warden",
+				position: { x: 0, z: 0 },
+			},
+			{
+				entityId: "evt_multi_2",
+				archetype: "scout",
+				position: { x: 50, z: 50 },
+			},
+		];
+		const events: GameEvent[] = [
+			{ type: "hostile_construction", position: { x: 5, z: 0 } },
+			{ type: "enemy_scouts", position: { x: 52, z: 50 } },
+		];
+
+		processEventSpeech(0, bots, events);
+
+		const bubbles = getActiveSpeechBubbles();
+		expect(bubbles).toHaveLength(2);
+		const ids = bubbles.map((b) => b.entityId).sort();
+		expect(ids).toEqual(["evt_multi_1", "evt_multi_2"]);
+	});
+
+	it("sets bubble position to bot position", () => {
+		const bots: EventSpeechBot[] = [
+			{
+				entityId: "evt_pos_bot",
+				archetype: "mentor",
+				position: { x: 10, z: 20 },
+			},
+		];
+		const events: GameEvent[] = [
+			{ type: "storm_intensifying", position: { x: 12, z: 20 } },
+		];
+
+		processEventSpeech(0, bots, events);
+
+		const bubbles = getActiveSpeechBubbles();
+		expect(bubbles).toHaveLength(1);
+		expect(bubbles[0].position.x).toBe(10);
+		expect(bubbles[0].position.z).toBe(20);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Event priority (higher priority events override lower ones)
+// ---------------------------------------------------------------------------
+describe("event priority", () => {
+	it("taking_fire overrides hostile_construction", () => {
+		const bots: EventSpeechBot[] = [
+			{
+				entityId: "evt_pri_1",
+				archetype: "warden",
+				position: { x: 0, z: 0 },
+			},
+		];
+		const events: GameEvent[] = [
+			{ type: "hostile_construction", position: { x: 3, z: 0 } },
+			{ type: "taking_fire", position: { x: 5, z: 0 } },
+		];
+
+		processEventSpeech(0, bots, events);
+
+		const bubbles = getActiveSpeechBubbles();
+		expect(bubbles).toHaveLength(1);
+		// The line should come from the taking_fire pool, not hostile_construction
+		expect(speechProfilesConfig.eventSpeech.warden.taking_fire).toContain(
+			bubbles[0].text,
+		);
+	});
+
+	it("target_down overrides enemy_scouts", () => {
+		const bots: EventSpeechBot[] = [
+			{
+				entityId: "evt_pri_2",
+				archetype: "scout",
+				position: { x: 0, z: 0 },
+			},
+		];
+		const events: GameEvent[] = [
+			{ type: "enemy_scouts", position: { x: 3, z: 0 } },
+			{ type: "target_down", position: { x: 5, z: 0 } },
+		];
+
+		processEventSpeech(0, bots, events);
+
+		const bubbles = getActiveSpeechBubbles();
+		expect(bubbles).toHaveLength(1);
+		expect(speechProfilesConfig.eventSpeech.scout.target_down).toContain(
+			bubbles[0].text,
+		);
+	});
+
+	it("enemy_scouts overrides storm_intensifying", () => {
+		const bots: EventSpeechBot[] = [
+			{
+				entityId: "evt_pri_3",
+				archetype: "quartermaster",
+				position: { x: 0, z: 0 },
+			},
+		];
+		const events: GameEvent[] = [
+			{ type: "storm_intensifying", position: { x: 3, z: 0 } },
+			{ type: "enemy_scouts", position: { x: 5, z: 0 } },
+		];
+
+		processEventSpeech(0, bots, events);
+
+		const bubbles = getActiveSpeechBubbles();
+		expect(bubbles).toHaveLength(1);
+		expect(
+			speechProfilesConfig.eventSpeech.quartermaster.enemy_scouts,
+		).toContain(bubbles[0].text);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Profile-appropriate lines (defensive vs aggressive archetypes)
+// ---------------------------------------------------------------------------
+describe("archetype-appropriate event speech", () => {
+	it("warden speech for hostile_construction is defensive in tone", () => {
+		const lines = speechProfilesConfig.eventSpeech.warden.hostile_construction;
+		// Wardens should mention defense, perimeter, fortification
+		const defensiveTerms = [
+			"fortif",
+			"defensive",
+			"perimeter",
+			"reinforce",
+			"threat",
+			"walls",
+		];
+		const hasDefensiveTone = lines.some((line: string) =>
+			defensiveTerms.some((term) => line.toLowerCase().includes(term)),
+		);
+		expect(hasDefensiveTone).toBe(true);
+	});
+
+	it("scout speech for enemy_scouts is recon-oriented", () => {
+		const lines = speechProfilesConfig.eventSpeech.scout.enemy_scouts;
+		// Scouts should mention evading, dark, silent, repositioning
+		const reconTerms = [
+			"evad",
+			"dark",
+			"silent",
+			"repositioning",
+			"contact",
+			"counter",
+		];
+		const hasReconTone = lines.some((line: string) =>
+			reconTerms.some((term) => line.toLowerCase().includes(term)),
+		);
+		expect(hasReconTone).toBe(true);
+	});
+
+	it("feral speech uses uppercase aggressive style", () => {
+		const lines = speechProfilesConfig.eventSpeech.feral.taking_fire;
+		// Feral bots speak in all-caps
+		const allCaps = lines.every((line: string) => line === line.toUpperCase());
+		expect(allCaps).toBe(true);
+	});
+
+	it("cult speech references the EL or divine themes", () => {
+		const lines = speechProfilesConfig.eventSpeech.cult.hostile_construction;
+		const divineTerms = [
+			"el",
+			"divine",
+			"holy",
+			"heretic",
+			"sacred",
+			"blasphemy",
+		];
+		const hasDivineTone = lines.some((line: string) =>
+			divineTerms.some((term) => line.toLowerCase().includes(term)),
+		);
+		expect(hasDivineTone).toBe(true);
+	});
+
+	it("warden and scout give different lines for the same event", () => {
+		initGameplayPRNG(42);
+		const wardenLine = selectEventLine("warden", "taking_fire");
+		initGameplayPRNG(42);
+		const scoutLine = selectEventLine("scout", "taking_fire");
+
+		// Both should be valid non-null lines
+		expect(wardenLine).not.toBeNull();
+		expect(scoutLine).not.toBeNull();
+
+		// They draw from different pools so should differ
+		// (same seed, different line pools => different lines)
+		expect(wardenLine).not.toBe(scoutLine);
 	});
 });

@@ -4,11 +4,14 @@ import { getStormIntensity } from "./power";
 
 /**
  * Bot speech engine — selects in-character lines based on archetype, activity,
- * and world state.
+ * and world state. Supports both activity-based and event-triggered speech.
  *
  * Speech profiles are defined in config/speechProfiles.json. Lines are selected
  * using gameplayRandom (seeded PRNG) for deterministic replay. A configurable
  * cooldown prevents speech spam.
+ *
+ * Event-triggered speech: bots react to nearby game events (AI construction,
+ * combat, weather changes) with proximity-filtered, archetype-appropriate lines.
  */
 
 // ---------------------------------------------------------------------------
@@ -33,6 +36,15 @@ export type BotArchetype =
 	| "feral"
 	| "cult";
 
+/** Event types that trigger reactive bot speech */
+export type GameEventType =
+	| "hostile_construction"
+	| "enemy_scouts"
+	| "taking_fire"
+	| "target_down"
+	| "storm_intensifying"
+	| "lightning_close";
+
 export interface SpeechBubble {
 	entityId: string;
 	text: string;
@@ -50,6 +62,19 @@ export interface SpeechBubble {
 export interface WorldContext {
 	stormIntensity: number;
 	nearbyEnemyCount: number;
+}
+
+/** A game event with a world position, used for proximity filtering */
+export interface GameEvent {
+	type: GameEventType;
+	position: { x: number; z: number };
+}
+
+/** A bot with a position, archetype, and entity ID for event-triggered speech */
+export interface EventSpeechBot {
+	entityId: string;
+	archetype: BotArchetype;
+	position: { x: number; z: number };
 }
 
 // ---------------------------------------------------------------------------
@@ -149,6 +174,144 @@ export function selectLine(
 
 	const index = Math.floor(gameplayRandom() * lines.length);
 	return lines[index];
+}
+
+// ---------------------------------------------------------------------------
+// Event speech line selection
+// ---------------------------------------------------------------------------
+
+/**
+ * Get the vision radius for event-triggered speech from config.
+ */
+export function getEventVisionRadius(): number {
+	return speechProfilesConfig.eventVisionRadius;
+}
+
+/**
+ * Select a speech line for an event type from the given profile.
+ * Uses gameplayRandom for deterministic, seeded selection.
+ * Returns null if no lines exist for the profile/event pair.
+ */
+export function selectEventLine(
+	profile: SpeechProfile,
+	eventType: GameEventType,
+): string | null {
+	const profileData =
+		speechProfilesConfig.eventSpeech[
+			profile as keyof typeof speechProfilesConfig.eventSpeech
+		];
+	if (!profileData) return null;
+
+	const lines = profileData[eventType as keyof typeof profileData] as
+		| string[]
+		| undefined;
+	if (!lines || lines.length === 0) return null;
+
+	const index = Math.floor(gameplayRandom() * lines.length);
+	return lines[index];
+}
+
+// ---------------------------------------------------------------------------
+// Proximity filtering
+// ---------------------------------------------------------------------------
+
+/**
+ * Compute 2D distance between two positions (x, z plane).
+ */
+function distance2D(
+	a: { x: number; z: number },
+	b: { x: number; z: number },
+): number {
+	const dx = a.x - b.x;
+	const dz = a.z - b.z;
+	return Math.sqrt(dx * dx + dz * dz);
+}
+
+/**
+ * Filter game events to only those within vision radius of a bot.
+ * Returns events sorted by distance (closest first).
+ */
+export function filterNearbyEvents(
+	botPosition: { x: number; z: number },
+	events: GameEvent[],
+	visionRadius?: number,
+): GameEvent[] {
+	const radius = visionRadius ?? getEventVisionRadius();
+	return events
+		.filter((event) => distance2D(botPosition, event.position) <= radius)
+		.sort(
+			(a, b) =>
+				distance2D(botPosition, a.position) -
+				distance2D(botPosition, b.position),
+		);
+}
+
+// ---------------------------------------------------------------------------
+// Event-triggered speech tick
+// ---------------------------------------------------------------------------
+
+/**
+ * Process event-triggered speech for bots near game events.
+ *
+ * For each bot:
+ *  1. Check cooldown
+ *  2. Find nearby events within vision radius
+ *  3. Select the highest priority nearby event
+ *  4. Generate an archetype-appropriate speech line
+ *
+ * Event priority: taking_fire > target_down > enemy_scouts >
+ *   hostile_construction > lightning_close > storm_intensifying
+ */
+const EVENT_PRIORITY: GameEventType[] = [
+	"taking_fire",
+	"target_down",
+	"enemy_scouts",
+	"hostile_construction",
+	"lightning_close",
+	"storm_intensifying",
+];
+
+export function processEventSpeech(
+	currentTurn: number,
+	bots: EventSpeechBot[],
+	events: GameEvent[],
+): void {
+	if (events.length === 0) return;
+
+	for (const bot of bots) {
+		if (!canSpeak(bot.entityId, currentTurn)) continue;
+
+		const nearbyEvents = filterNearbyEvents(bot.position, events);
+		if (nearbyEvents.length === 0) continue;
+
+		// Pick the highest priority event among nearby ones
+		const nearbyTypes = new Set(nearbyEvents.map((e) => e.type));
+		let bestEvent: GameEventType | null = null;
+		for (const priority of EVENT_PRIORITY) {
+			if (nearbyTypes.has(priority)) {
+				bestEvent = priority;
+				break;
+			}
+		}
+		if (!bestEvent) continue;
+
+		const profile = ARCHETYPE_TO_PROFILE[bot.archetype];
+		const line = selectEventLine(profile, bestEvent);
+		if (line === null) continue;
+
+		const bubble: SpeechBubble = {
+			entityId: bot.entityId,
+			text: line,
+			expiresAtTurn: currentTurn + getBubbleDuration(),
+			position: { x: bot.position.x, y: 0, z: bot.position.z },
+			opacity: 0,
+			elapsed: 0,
+			displayDuration: DEFAULT_DISPLAY_SECONDS,
+		};
+
+		activeBubbles.set(bot.entityId, bubble);
+		lastSpeechTurn.set(bot.entityId, currentTurn);
+	}
 }
 
 // ---------------------------------------------------------------------------

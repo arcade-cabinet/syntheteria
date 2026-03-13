@@ -31,14 +31,15 @@ import { ThoughtOverlay } from "./panels/ThoughtOverlay";
  */
 export function GameUI() {
 	const runtime = useSyncExternalStore(subscribeRuntimeState, getRuntimeState);
+	const worldInteractive = runtime.currentTick > 0;
 
 	return (
 		<View className="absolute inset-0 pointer-events-none">
 			<ResponsiveTopBar />
-			<Notifications />
-			<BriefingBubbleLayer />
+			{worldInteractive && <Notifications />}
+			{worldInteractive && <BriefingBubbleLayer />}
 			<CitySiteOverlay />
-			{runtime.activeScene === "world" && <Minimap />}
+			{runtime.activeScene === "world" && worldInteractive && <Minimap />}
 			{runtime.cityKitLabOpen && <CityKitLab onClose={closeCityKitLab} />}
 			<ThoughtOverlay />
 			<RadialMenu />

@@ -27,7 +27,7 @@ export default defineConfig({
 		},
 		ctPort: 3100,
 		ctViteConfig: {
-			assetsInclude: ["**/*.glb", "**/*.gltf", "**/*.bin", "**/*.png"],
+			assetsInclude: ["**/*.glb", "**/*.gltf", "**/*.bin", "**/*.png", "**/*.webp"],
 			resolve: {
 				alias: [
 					{
@@ -42,6 +42,13 @@ export default defineConfig({
 						replacement: resolve(
 							__dirname,
 							"tests/components/mocks/react-native-reanimated.ts",
+						),
+					},
+					{
+						find: "expo-device",
+						replacement: resolve(
+							__dirname,
+							"tests/components/mocks/expo-device.ts",
 						),
 					},
 					{

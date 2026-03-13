@@ -1,0 +1,3303 @@
+{
+  "assessment_date": "2026-03-12",
+  "source": "blender_mcp_visual_assessment",
+  "city_kit": {
+    "root": [
+      {
+        "id": "column_1",
+        "name": "Column_1",
+        "dimensions": {
+          "width": 0.684,
+          "depth": 0.684,
+          "height": 4.463
+        },
+        "triangle_count": 60,
+        "material_count": 2,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "column",
+        "grid_unit": "1x1"
+      },
+      {
+        "id": "column_2",
+        "name": "Column_2",
+        "dimensions": {
+          "width": 0.684,
+          "depth": 0.684,
+          "height": 4.463
+        },
+        "triangle_count": 188,
+        "material_count": 2,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "column",
+        "grid_unit": "1x1"
+      },
+      {
+        "id": "column_3",
+        "name": "Column_3",
+        "dimensions": {
+          "width": 1.368,
+          "depth": 1.368,
+          "height": 4.463
+        },
+        "triangle_count": 758,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              1.0,
+              0.525,
+              0.113
+            ],
+            "metallic": 0.5,
+            "roughness": 0.21,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "column",
+        "grid_unit": "1x1"
+      },
+      {
+        "id": "column_slim",
+        "name": "Column_Slim",
+        "dimensions": {
+          "width": 0.629,
+          "depth": 0.693,
+          "height": 4.46
+        },
+        "triangle_count": 396,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Pipes",
+            "base_color": [
+              0.019,
+              0.019,
+              0.019
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "column",
+        "grid_unit": "1x1"
+      },
+      {
+        "id": "door_double",
+        "name": "Door_Double",
+        "dimensions": {
+          "width": 2.653,
+          "depth": 0.454,
+          "height": 2.791
+        },
+        "triangle_count": 1992,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 2,
+        "family": "door",
+        "grid_unit": "2x0.5"
+      },
+      {
+        "id": "door_single",
+        "name": "Door_Single",
+        "dimensions": {
+          "width": 1.673,
+          "depth": 0.451,
+          "height": 2.791
+        },
+        "triangle_count": 1400,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "door",
+        "grid_unit": "1x0.5"
+      },
+      {
+        "id": "floortile_basic",
+        "name": "FloorTile_Basic",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.093
+        },
+        "triangle_count": 388,
+        "material_count": 2,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "floor",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "floortile_basic2",
+        "name": "FloorTile_Basic2",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.093
+        },
+        "triangle_count": 570,
+        "material_count": 4,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "floor",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "floortile_corner",
+        "name": "FloorTile_Corner",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.062
+        },
+        "triangle_count": 360,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "floor",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "floortile_double_hallway",
+        "name": "FloorTile_Double_Hallway",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 2.0,
+          "height": 0.068
+        },
+        "triangle_count": 476,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "floor",
+        "grid_unit": "4x2"
+      },
+      {
+        "id": "floortile_empty",
+        "name": "FloorTile_Empty",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.077
+        },
+        "triangle_count": 68,
+        "material_count": 2,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "floor",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "floortile_innercorner",
+        "name": "FloorTile_InnerCorner",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.051
+        },
+        "triangle_count": 217,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "floor",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "floortile_side",
+        "name": "FloorTile_Side",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.068
+        },
+        "triangle_count": 238,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "floor",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "pipes",
+        "name": "Pipes",
+        "dimensions": {
+          "width": 3.508,
+          "depth": 0.128,
+          "height": 0.37
+        },
+        "triangle_count": 356,
+        "material_count": 1,
+        "materials": [
+          {
+            "name": "Pipes",
+            "base_color": [
+              0.019,
+              0.019,
+              0.019
+            ],
+            "metallic": 0.0,
+            "roughness": 0.69,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "utility",
+        "grid_unit": "2x1"
+      },
+      {
+        "id": "props_base",
+        "name": "Props_Base",
+        "dimensions": {
+          "width": 2.396,
+          "depth": 2.396,
+          "height": 0.32
+        },
+        "triangle_count": 556,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_capsule",
+        "name": "Props_Capsule",
+        "dimensions": {
+          "width": 0.869,
+          "depth": 0.869,
+          "height": 1.619
+        },
+        "triangle_count": 1260,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_chest",
+        "name": "Props_Chest",
+        "dimensions": {
+          "width": 1.288,
+          "depth": 0.808,
+          "height": 0.911
+        },
+        "triangle_count": 5024,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 2,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_computer",
+        "name": "Props_Computer",
+        "dimensions": {
+          "width": 0.58,
+          "depth": 0.644,
+          "height": 2.079
+        },
+        "triangle_count": 624,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_computersmall",
+        "name": "Props_ComputerSmall",
+        "dimensions": {
+          "width": 0.751,
+          "depth": 0.456,
+          "height": 1.538
+        },
+        "triangle_count": 624,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_containerfull",
+        "name": "Props_ContainerFull",
+        "dimensions": {
+          "width": 1.202,
+          "depth": 0.752,
+          "height": 0.582
+        },
+        "triangle_count": 4930,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_crate",
+        "name": "Props_Crate",
+        "dimensions": {
+          "width": 0.797,
+          "depth": 0.797,
+          "height": 0.806
+        },
+        "triangle_count": 2688,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_cratelong",
+        "name": "Props_CrateLong",
+        "dimensions": {
+          "width": 1.233,
+          "depth": 0.77,
+          "height": 0.77
+        },
+        "triangle_count": 3120,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_laser",
+        "name": "Props_Laser",
+        "dimensions": {
+          "width": 3.841,
+          "depth": 1.464,
+          "height": 1.291
+        },
+        "triangle_count": 1568,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_pod",
+        "name": "Props_Pod",
+        "dimensions": {
+          "width": 1.81,
+          "depth": 1.81,
+          "height": 3.612
+        },
+        "triangle_count": 2246,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Glass",
+            "base_color": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "metallic": 1.0,
+            "roughness": 1.0,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_shelf",
+        "name": "Props_Shelf",
+        "dimensions": {
+          "width": 1.789,
+          "depth": 0.811,
+          "height": 2.5
+        },
+        "triangle_count": 368,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_shelf_tall",
+        "name": "Props_Shelf_Tall",
+        "dimensions": {
+          "width": 2.057,
+          "depth": 0.811,
+          "height": 3.107
+        },
+        "triangle_count": 536,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_statue",
+        "name": "Props_Statue",
+        "dimensions": {
+          "width": 1.185,
+          "depth": 1.464,
+          "height": 2.61
+        },
+        "triangle_count": 1128,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_teleporter_1",
+        "name": "Props_Teleporter_1",
+        "dimensions": {
+          "width": 1.206,
+          "depth": 1.206,
+          "height": 0.905
+        },
+        "triangle_count": 688,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_teleporter_2",
+        "name": "Props_Teleporter_2",
+        "dimensions": {
+          "width": 1.206,
+          "depth": 1.206,
+          "height": 1.339
+        },
+        "triangle_count": 960,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_vessel",
+        "name": "Props_Vessel",
+        "dimensions": {
+          "width": 0.287,
+          "depth": 0.287,
+          "height": 0.771
+        },
+        "triangle_count": 332,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_vessel_short",
+        "name": "Props_Vessel_Short",
+        "dimensions": {
+          "width": 0.287,
+          "depth": 0.287,
+          "height": 0.538
+        },
+        "triangle_count": 252,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "props_vessel_tall",
+        "name": "Props_Vessel_Tall",
+        "dimensions": {
+          "width": 0.287,
+          "depth": 0.287,
+          "height": 1.023
+        },
+        "triangle_count": 316,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "prop",
+        "grid_unit": "varies"
+      },
+      {
+        "id": "rooftile_corner_pipes",
+        "name": "RoofTile_Corner_Pipes",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.115
+        },
+        "triangle_count": 490,
+        "material_count": 4,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "roof",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "rooftile_details",
+        "name": "RoofTile_Details",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.081
+        },
+        "triangle_count": 848,
+        "material_count": 4,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "roof",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "rooftile_empty",
+        "name": "RoofTile_Empty",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.077
+        },
+        "triangle_count": 68,
+        "material_count": 2,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "roof",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "rooftile_innercorner_pipes",
+        "name": "RoofTile_InnerCorner_Pipes",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.115
+        },
+        "triangle_count": 490,
+        "material_count": 4,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "roof",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "rooftile_orangevent",
+        "name": "RoofTile_OrangeVent",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.116
+        },
+        "triangle_count": 232,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "roof",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "rooftile_pipes1",
+        "name": "RoofTile_Pipes1",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.113
+        },
+        "triangle_count": 388,
+        "material_count": 4,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "roof",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "rooftile_pipes2",
+        "name": "RoofTile_Pipes2",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.115
+        },
+        "triangle_count": 900,
+        "material_count": 4,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "roof",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "rooftile_plate",
+        "name": "RoofTile_Plate",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.077
+        },
+        "triangle_count": 424,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "roof",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "rooftile_plate2",
+        "name": "RoofTile_Plate2",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.094
+        },
+        "triangle_count": 436,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "roof",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "rooftile_sides_pipes",
+        "name": "RoofTile_Sides_Pipes",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.113
+        },
+        "triangle_count": 308,
+        "material_count": 4,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "roof",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "rooftile_smallvents",
+        "name": "RoofTile_SmallVents",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.091
+        },
+        "triangle_count": 340,
+        "material_count": 5,
+        "materials": [
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkAccent",
+            "base_color": [
+              0.227,
+              0.123,
+              0.03
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "roof",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "rooftile_vents",
+        "name": "RoofTile_Vents",
+        "dimensions": {
+          "width": 2.0,
+          "depth": 2.0,
+          "height": 0.077
+        },
+        "triangle_count": 1622,
+        "material_count": 4,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Black",
+            "base_color": [
+              0.042,
+              0.042,
+              0.042
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "roof",
+        "grid_unit": "2x2"
+      },
+      {
+        "id": "staircase",
+        "name": "Staircase",
+        "dimensions": {
+          "width": 3.782,
+          "depth": 3.112,
+          "height": 1.454
+        },
+        "triangle_count": 312,
+        "material_count": 3,
+        "materials": [
+          {
+            "name": "Main",
+            "base_color": [
+              0.402,
+              0.402,
+              0.402
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "DarkGrey",
+            "base_color": [
+              0.24,
+              0.24,
+              0.24
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          },
+          {
+            "name": "Accent",
+            "base_color": [
+              0.56,
+              0.298,
+              0.067
+            ],
+            "metallic": 0.0,
+            "roughness": 0.5,
+            "has_texture": false
+          }
+        ],
+        "mesh_count": 1,
+        "family": "stair",
+        "grid_unit": "2x2"
+      }
+    ],
+    "details": [
+      {
+        "id": "details_details_arrow",
+        "name": "Details_Arrow",
+        "dimensions": {
+          "width": 0.36,
+          "depth": 0.049,
+          "height": 0.336
+        },
+        "triangle_count": 56,
+        "material_count": 1,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_arrow_2",
+        "name": "Details_Arrow_2",
+        "dimensions": {
+          "width": 0.367,
+          "depth": 0.073,
+          "height": 0.251
+        },
+        "triangle_count": 54,
+        "material_count": 1,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_basic_1",
+        "name": "Details_Basic_1",
+        "dimensions": {
+          "width": 0.27,
+          "depth": 0.05,
+          "height": 0.27
+        },
+        "triangle_count": 130,
+        "material_count": 2,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_basic_2",
+        "name": "Details_Basic_2",
+        "dimensions": {
+          "width": 0.27,
+          "depth": 0.052,
+          "height": 0.529
+        },
+        "triangle_count": 212,
+        "material_count": 2,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_basic_3",
+        "name": "Details_Basic_3",
+        "dimensions": {
+          "width": 0.31,
+          "depth": 0.041,
+          "height": 0.31
+        },
+        "triangle_count": 56,
+        "material_count": 1,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_basic_4",
+        "name": "Details_Basic_4",
+        "dimensions": {
+          "width": 0.679,
+          "depth": 0.068,
+          "height": 0.461
+        },
+        "triangle_count": 140,
+        "material_count": 2,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_cylinder",
+        "name": "Details_Cylinder",
+        "dimensions": {
+          "width": 0.43,
+          "depth": 0.191,
+          "height": 0.383
+        },
+        "triangle_count": 374,
+        "material_count": 2,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_cylinder_long",
+        "name": "Details_Cylinder_Long",
+        "dimensions": {
+          "width": 0.789,
+          "depth": 0.191,
+          "height": 0.383
+        },
+        "triangle_count": 374,
+        "material_count": 2,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_dots",
+        "name": "Details_Dots",
+        "dimensions": {
+          "width": 0.551,
+          "depth": 0.059,
+          "height": 0.223
+        },
+        "triangle_count": 378,
+        "material_count": 1,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_hexagon",
+        "name": "Details_Hexagon",
+        "dimensions": {
+          "width": 0.342,
+          "depth": 0.079,
+          "height": 0.394
+        },
+        "triangle_count": 56,
+        "material_count": 1,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_output",
+        "name": "Details_Output",
+        "dimensions": {
+          "width": 0.3,
+          "depth": 0.059,
+          "height": 0.297
+        },
+        "triangle_count": 316,
+        "material_count": 2,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_output_small",
+        "name": "Details_Output_Small",
+        "dimensions": {
+          "width": 0.158,
+          "depth": 0.054,
+          "height": 0.158
+        },
+        "triangle_count": 158,
+        "material_count": 1,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_pipes_long",
+        "name": "Details_Pipes_Long",
+        "dimensions": {
+          "width": 0.514,
+          "depth": 0.093,
+          "height": 1.585
+        },
+        "triangle_count": 498,
+        "material_count": 4,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_pipes_medium",
+        "name": "Details_Pipes_Medium",
+        "dimensions": {
+          "width": 0.514,
+          "depth": 0.093,
+          "height": 0.766
+        },
+        "triangle_count": 498,
+        "material_count": 4,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_pipes_small",
+        "name": "Details_Pipes_Small",
+        "dimensions": {
+          "width": 0.35,
+          "depth": 0.11,
+          "height": 0.246
+        },
+        "triangle_count": 498,
+        "material_count": 4,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_plate_details",
+        "name": "Details_Plate_Details",
+        "dimensions": {
+          "width": 0.62,
+          "depth": 0.032,
+          "height": 0.62
+        },
+        "triangle_count": 368,
+        "material_count": 3,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_plate_large",
+        "name": "Details_Plate_Large",
+        "dimensions": {
+          "width": 1.052,
+          "depth": 0.029,
+          "height": 1.076
+        },
+        "triangle_count": 356,
+        "material_count": 2,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_plate_long",
+        "name": "Details_Plate_Long",
+        "dimensions": {
+          "width": 1.052,
+          "depth": 0.029,
+          "height": 0.348
+        },
+        "triangle_count": 356,
+        "material_count": 2,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_plate_small",
+        "name": "Details_Plate_Small",
+        "dimensions": {
+          "width": 0.396,
+          "depth": 0.029,
+          "height": 0.347
+        },
+        "triangle_count": 300,
+        "material_count": 2,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_triangles",
+        "name": "Details_Triangles",
+        "dimensions": {
+          "width": 0.476,
+          "depth": 0.027,
+          "height": 0.161
+        },
+        "triangle_count": 24,
+        "material_count": 1,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_vent_1",
+        "name": "Details_Vent_1",
+        "dimensions": {
+          "width": 0.526,
+          "depth": 0.041,
+          "height": 0.31
+        },
+        "triangle_count": 164,
+        "material_count": 3,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_vent_2",
+        "name": "Details_Vent_2",
+        "dimensions": {
+          "width": 0.31,
+          "depth": 0.041,
+          "height": 0.31
+        },
+        "triangle_count": 136,
+        "material_count": 3,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_vent_3",
+        "name": "Details_Vent_3",
+        "dimensions": {
+          "width": 1.052,
+          "depth": 0.029,
+          "height": 0.224
+        },
+        "triangle_count": 540,
+        "material_count": 2,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_vent_4",
+        "name": "Details_Vent_4",
+        "dimensions": {
+          "width": 0.238,
+          "depth": 0.091,
+          "height": 0.375
+        },
+        "triangle_count": 630,
+        "material_count": 3,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_vent_5",
+        "name": "Details_Vent_5",
+        "dimensions": {
+          "width": 0.686,
+          "depth": 0.091,
+          "height": 0.375
+        },
+        "triangle_count": 630,
+        "material_count": 3,
+        "family": "detail"
+      },
+      {
+        "id": "details_details_x",
+        "name": "Details_X",
+        "dimensions": {
+          "width": 0.319,
+          "depth": 0.024,
+          "height": 0.319
+        },
+        "triangle_count": 44,
+        "material_count": 1,
+        "family": "detail"
+      }
+    ],
+    "walls": [
+      {
+        "id": "walls_doordoublelong_wall_sidea",
+        "name": "DoorDoubleLong_Wall_SideA",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 2.254,
+          "height": 4.437
+        },
+        "triangle_count": 326,
+        "material_count": 4,
+        "family": "wall"
+      },
+      {
+        "id": "walls_doordouble_wall_sidea",
+        "name": "DoorDouble_Wall_SideA",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 1.254,
+          "height": 4.437
+        },
+        "triangle_count": 326,
+        "material_count": 4,
+        "family": "wall"
+      },
+      {
+        "id": "walls_doordouble_wall_sideb",
+        "name": "DoorDouble_Wall_SideB",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 0.531,
+          "height": 4.431
+        },
+        "triangle_count": 196,
+        "material_count": 4,
+        "family": "wall"
+      },
+      {
+        "id": "walls_doorsinglelong_wall_sidea",
+        "name": "DoorSingleLong_Wall_SideA",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 2.254,
+          "height": 4.437
+        },
+        "triangle_count": 332,
+        "material_count": 4,
+        "family": "wall"
+      },
+      {
+        "id": "walls_doorsingle_wall_sidea",
+        "name": "DoorSingle_Wall_SideA",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 1.254,
+          "height": 4.437
+        },
+        "triangle_count": 332,
+        "material_count": 4,
+        "family": "wall"
+      },
+      {
+        "id": "walls_doorsingle_wall_sideb",
+        "name": "DoorSingle_Wall_SideB",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 0.531,
+          "height": 4.431
+        },
+        "triangle_count": 202,
+        "material_count": 4,
+        "family": "wall"
+      },
+      {
+        "id": "walls_longwindow_wall_sidea",
+        "name": "LongWindow_Wall_SideA",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 1.064,
+          "height": 4.431
+        },
+        "triangle_count": 332,
+        "material_count": 5,
+        "family": "wall"
+      },
+      {
+        "id": "walls_longwindow_wall_sideb",
+        "name": "LongWindow_Wall_SideB",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 0.536,
+          "height": 4.431
+        },
+        "triangle_count": 316,
+        "material_count": 5,
+        "family": "wall"
+      },
+      {
+        "id": "walls_smallwindows_wall_sidea",
+        "name": "SmallWindows_Wall_SideA",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 1.058,
+          "height": 4.431
+        },
+        "triangle_count": 794,
+        "material_count": 5,
+        "family": "wall"
+      },
+      {
+        "id": "walls_smallwindows_wall_sideb",
+        "name": "SmallWindows_Wall_SideB",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 0.526,
+          "height": 4.431
+        },
+        "triangle_count": 742,
+        "material_count": 5,
+        "family": "wall"
+      },
+      {
+        "id": "walls_threewindows_wall_sidea",
+        "name": "ThreeWindows_Wall_SideA",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 1.058,
+          "height": 4.431
+        },
+        "triangle_count": 794,
+        "material_count": 5,
+        "family": "wall"
+      },
+      {
+        "id": "walls_threewindows_wall_sideb",
+        "name": "ThreeWindows_Wall_SideB",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 0.526,
+          "height": 4.431
+        },
+        "triangle_count": 742,
+        "material_count": 5,
+        "family": "wall"
+      },
+      {
+        "id": "walls_wall_1",
+        "name": "Wall_1",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 0.545,
+          "height": 4.431
+        },
+        "triangle_count": 1088,
+        "material_count": 4,
+        "family": "wall"
+      },
+      {
+        "id": "walls_wall_2",
+        "name": "Wall_2",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 0.533,
+          "height": 4.431
+        },
+        "triangle_count": 2106,
+        "material_count": 6,
+        "family": "wall"
+      },
+      {
+        "id": "walls_wall_3",
+        "name": "Wall_3",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 0.523,
+          "height": 4.431
+        },
+        "triangle_count": 1148,
+        "material_count": 6,
+        "family": "wall"
+      },
+      {
+        "id": "walls_wall_4",
+        "name": "Wall_4",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 0.573,
+          "height": 4.431
+        },
+        "triangle_count": 1356,
+        "material_count": 4,
+        "family": "wall"
+      },
+      {
+        "id": "walls_wall_5",
+        "name": "Wall_5",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 0.528,
+          "height": 4.431
+        },
+        "triangle_count": 1414,
+        "material_count": 6,
+        "family": "wall"
+      },
+      {
+        "id": "walls_wall_empty",
+        "name": "Wall_Empty",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 0.499,
+          "height": 4.431
+        },
+        "triangle_count": 314,
+        "material_count": 4,
+        "family": "wall"
+      },
+      {
+        "id": "walls_window_wall_sidea",
+        "name": "Window_Wall_SideA",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 1.064,
+          "height": 4.431
+        },
+        "triangle_count": 332,
+        "material_count": 5,
+        "family": "wall"
+      },
+      {
+        "id": "walls_window_wall_sideb",
+        "name": "Window_Wall_SideB",
+        "dimensions": {
+          "width": 4.0,
+          "depth": 0.536,
+          "height": 4.431
+        },
+        "triangle_count": 316,
+        "material_count": 5,
+        "family": "wall"
+      }
+    ]
+  },
+  "robots": {
+    "player": [
+      {
+        "id": "companion_bot",
+        "name": "Companion-bot",
+        "dimensions": {
+          "width": 0.034,
+          "depth": 0.027,
+          "height": 0.086
+        },
+        "triangle_count": 7312,
+        "material_count": 1,
+        "has_armature": false,
+        "has_animation": false,
+        "native_scale": "centimeter",
+        "recommended_scale": 25
+      },
+      {
+        "id": "fieldfighter",
+        "name": "FieldFighter",
+        "dimensions": {
+          "width": 0.057,
+          "depth": 0.024,
+          "height": 0.089
+        },
+        "triangle_count": 14264,
+        "material_count": 1,
+        "has_armature": false,
+        "has_animation": false,
+        "native_scale": "centimeter",
+        "recommended_scale": 25
+      },
+      {
+        "id": "mecha01",
+        "name": "Mecha01",
+        "dimensions": {
+          "width": 0.057,
+          "depth": 0.06,
+          "height": 0.066
+        },
+        "triangle_count": 20904,
+        "material_count": 1,
+        "has_armature": false,
+        "has_animation": false,
+        "native_scale": "centimeter",
+        "recommended_scale": 25
+      },
+      {
+        "id": "reconbot",
+        "name": "ReconBot",
+        "dimensions": {
+          "width": 0.041,
+          "depth": 0.042,
+          "height": 0.089
+        },
+        "triangle_count": 13736,
+        "material_count": 1,
+        "has_armature": false,
+        "has_animation": false,
+        "native_scale": "centimeter",
+        "recommended_scale": 25
+      }
+    ],
+    "industrial": [
+      {
+        "id": "mechagolem",
+        "name": "MechaGolem",
+        "dimensions": {
+          "width": 0.078,
+          "depth": 0.06,
+          "height": 0.081
+        },
+        "triangle_count": 25112,
+        "material_count": 1,
+        "has_armature": false,
+        "has_animation": false,
+        "native_scale": "centimeter",
+        "recommended_scale": 25
+      },
+      {
+        "id": "mobilestoragebot",
+        "name": "MobileStorageBot",
+        "dimensions": {
+          "width": 0.075,
+          "depth": 0.051,
+          "height": 0.069
+        },
+        "triangle_count": 17616,
+        "material_count": 1,
+        "has_armature": false,
+        "has_animation": false,
+        "native_scale": "centimeter",
+        "recommended_scale": 25
+      }
+    ],
+    "hostile": [
+      {
+        "id": "arachnoid",
+        "name": "Arachnoid",
+        "dimensions": {
+          "width": 0.042,
+          "depth": 0.054,
+          "height": 0.058
+        },
+        "triangle_count": 10364,
+        "material_count": 1,
+        "has_armature": false,
+        "has_animation": false,
+        "native_scale": "centimeter",
+        "recommended_scale": 25
+      },
+      {
+        "id": "mechatrooper",
+        "name": "MechaTrooper",
+        "dimensions": {
+          "width": 0.078,
+          "depth": 0.048,
+          "height": 0.09
+        },
+        "triangle_count": 33076,
+        "material_count": 1,
+        "has_armature": false,
+        "has_animation": false,
+        "native_scale": "centimeter",
+        "recommended_scale": 25
+      },
+      {
+        "id": "quadrupedtank",
+        "name": "QuadrupedTank",
+        "dimensions": {
+          "width": 0.057,
+          "depth": 0.075,
+          "height": 0.084
+        },
+        "triangle_count": 26548,
+        "material_count": 1,
+        "has_armature": false,
+        "has_animation": false,
+        "native_scale": "centimeter",
+        "recommended_scale": 25
+      }
+    ]
+  },
+  "summary": {
+    "total_models": 100,
+    "city_models": 91,
+    "robot_models": 9,
+    "city_total_tris": 62399,
+    "robot_total_tris": 168932,
+    "unique_materials": 8,
+    "material_palette": {
+      "Main": "rgba(0.402, 0.402, 0.402) - structural shell",
+      "DarkGrey": "rgba(0.240, 0.240, 0.240) - secondary surfaces",
+      "Accent": "rgba(1.000, 0.525, 0.113) - power/data accent (amber)",
+      "DarkAccent": "rgba(0.227, 0.123, 0.030) - dark amber trim",
+      "Black": "rgba(0.042, 0.042, 0.042) - recesses",
+      "Light": "rgba(0.800, 0.800, 0.800) - metallic light panels",
+      "Glass": "rgba(1.000, 1.000, 1.000) - windows (full metallic)",
+      "Pipes": "rgba(0.019, 0.019, 0.019) - dark utility lines"
+    },
+    "grid_system": {
+      "floor_unit": "2m x 2m",
+      "wall_width": "4m",
+      "wall_height": "4.4m",
+      "column_height": "4.5m",
+      "roof_placement": "4.5m above floor",
+      "door_width_single": "1.7m",
+      "door_width_double": "2.7m"
+    },
+    "robot_scale_note": "Robot GLBs exported in centimeter scale. Multiply by 20-25 to match city kit meter scale."
+  }
+}

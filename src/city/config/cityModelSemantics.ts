@@ -178,7 +178,7 @@ export const CITY_MODEL_SEMANTICS: Record<
 		rotationSymmetry: 2,
 		pivotPolicy: "edge_center",
 		passabilityEffect: "portal",
-		zoneAffinity: ["corridor", "core", "fabrication", "storage", "habitation"],
+		zoneAffinity: ["corridor", "core", "fabrication", "storage", "habitation", "power"],
 		adjacencyBias: ["wall_edge", "transit_lane", "substation_core"],
 		compositeEligibility: ["relay_spine", "transit_node", "defensive_gate"],
 		tags: ["portal", "wide_door"],
@@ -401,7 +401,7 @@ export const CITY_MODEL_SEMANTICS: Record<
 			rotationSymmetry: 2,
 			pivotPolicy: "edge_center",
 			passabilityEffect: "portal",
-			zoneAffinity: ["corridor", "core", "fabrication", "storage", "habitation"],
+			zoneAffinity: ["corridor", "core", "fabrication", "storage", "habitation", "power"],
 			adjacencyBias: ["wall_edge", "door_frame", "sealed_room"],
 			compositeEligibility: [
 				"substation_core",

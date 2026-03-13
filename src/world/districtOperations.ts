@@ -180,7 +180,6 @@ export function getDistrictOperations(args: {
 		status: resolveOperationStatus({
 			poiType: args.poiType,
 			state: args.state,
-			structures,
 			requiredCapabilities: rule.requiredCapabilities,
 			requiredStructures: rule.requiredStructures,
 		}),

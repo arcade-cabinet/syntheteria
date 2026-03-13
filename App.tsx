@@ -67,13 +67,33 @@ class ErrorBoundary extends Component<
 				<View
 					style={{
 						flex: 1,
-						backgroundColor: "red",
+						backgroundColor: "#09131b",
 						justifyContent: "center",
 						alignItems: "center",
+						padding: 24,
 					}}
 				>
-					<Text style={{ color: "white" }}>
-						Render Error: {this.state.error?.message}
+					<Text
+						style={{
+							color: "#ff8f8f",
+							fontFamily: "monospace",
+							fontSize: 11,
+							letterSpacing: 2,
+							textTransform: "uppercase",
+							marginBottom: 8,
+						}}
+					>
+						Signal Lost
+					</Text>
+					<Text
+						style={{
+							color: "#edfaff",
+							fontFamily: "monospace",
+							fontSize: 14,
+							textAlign: "center",
+						}}
+					>
+						{this.state.error?.message}
 					</Text>
 				</View>
 			);
@@ -274,13 +294,12 @@ export default function App() {
 							</Suspense>
 						</Canvas>
 					</ErrorBoundary>
-					<GameUI />
+					{sceneReady && <GameUI />}
 					{!sceneReady ? (
 						<LoadingOverlay label="Stabilizing structural feed" />
 					) : (
 						<View
 							testID="game-scene-ready"
-							pointerEvents="none"
 							style={{
 								position: "absolute",
 								left: 0,
@@ -288,6 +307,7 @@ export default function App() {
 								width: 2,
 								height: 2,
 								opacity: 0.01,
+								pointerEvents: "none",
 							}}
 						/>
 					)}

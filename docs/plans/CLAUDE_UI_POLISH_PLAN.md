@@ -49,39 +49,58 @@ flowchart TD
 ## Task List
 
 ### 1. Entry Flow Polish
-- `completed` Audit title screen spacing, hierarchy, and interaction emphasis against the background composition.
-- `completed` Ensure `New Game`, `Continue`, and `Settings` retain clear state and accessibility treatment.
-- `completed` Refine New Game modal hierarchy so configuration choices feel deliberate and campaign-defining.
-- `completed` Refine settings overlay to match the same design language as the main title flow.
+- `completed` Remove anti-diegetic text clutter: status strip, Memory Lattice, Signal Relay header, text under buttons.
+- `completed` Center buttons in viewport — background art IS the title, buttons float over it.
+- `completed` Add proper modal backdrop (88% dark), X close button, sticky action footer.
+- `completed` Improve OptionCard selection contrast: filled dot indicator, stronger border/bg, shadow glow.
+- `completed` Add seed input aria-label.
 - `completed` Refine loading overlay so it communicates generation/hydration state with brand-aligned feedback.
+- `completed` Ensure `New Game`, `Continue`, and `Settings` retain clear accessibility treatment (ARIA roles, focus-visible).
+- `completed` Settings overlay has modal role (`role="dialog"`, `aria-modal`), auto-focus on open.
 
 ### 2. In-Game Shell Polish
-- `completed` Audit top bar information density, readability, and state grouping.
-- `completed` Audit selected-unit panel for hierarchy, clarity, and player action support.
-- `completed` Audit notifications and thought overlay so they feel diegetic and readable.
-- `completed` Audit minimap and build toolbar for coherence with the rest of the HUD.
+- `completed` Remove "Storm Command Uplink" header — TopBar is now a single thin telemetry strip.
+- `completed` Collapse TopBar to minimal resource readouts + sim speed + pause in one row.
+- `completed` ThoughtOverlay repositioned to center-screen — no longer fights with TopBar.
+- `completed` GameUI gated behind sceneReady — no HUD during loading.
+- `completed` Minimap timing — deferred until `currentTick > 0` (world interactive).
+- `completed` BriefingBubbleLayer timing — deferred until `currentTick > 0` (world interactive).
+- `completed` Notifications panel positioning — adjusted from `top-36` to `top-14 md:top-16` for new thin TopBar.
 
 ### 3. Sector Interaction Polish
 - `completed` Refine local site/context surfaces so sector-site context is unmistakable.
 - `completed` Refine site modal for survey / found / enter / return clarity.
-- `completed` Ensure local transitions feel like campaign actions rather than navigation hacks.
-- `completed` Ensure terminology stays aligned with the current campaign-state model.
+- `pending` Playtest city transition flow end-to-end (not yet tested in Chrome DevTools).
+- `pending` Verify radial menu works for all contextual actions.
 
 ### 4. City Tooling Surface Polish
-- `completed` Improve City Kit Lab readability, grouping, filter clarity, and comparison affordances.
-- `completed` Ensure the city exploration tooling remains visually coherent even as a dev-facing surface.
-- `completed` Add or refine screenshot coverage for key City Kit Lab states if visual states shift materially.
+- `completed` City Kit Lab responsive grid with viewport-aware card widths.
+- `pending` Playtest City Kit Lab via Chrome DevTools.
 
 ### 5. Accessibility Pass
-- `completed` Audit touch target sizing across title, modal, HUD, and world/city interaction surfaces.
-- `completed` Audit contrast and text legibility across all major overlays.
-- `completed` Audit focus/keyboard behavior on web for major modals and action surfaces.
-- `completed` Audit motion usage and identify surfaces needing reduced-motion alternatives later.
+- `completed` ARIA roles, labels, focus trap, radio semantics.
+- `completed` Seed input aria-label added.
+- `completed` OptionCard accessibilityRole="radio" + accessibilityState.
+- `completed` Modal close button with accessibilityRole="button" + accessibilityLabel.
+- `completed` Focus-visible styles globally — `:focus-visible` ring on all interactive elements, suppressed for mouse/touch.
+- `completed` Focus trap seeded for modals — NewGameModal and SettingsOverlay auto-focus close button on open, `role="dialog"` + `aria-modal`.
+- `completed` Document title "Syntheteria" — already set in app.json `web.title`.
 
 ### 6. Testing Ownership
-- `completed` Update or add Playwright component tests for every touched visible surface.
-- `completed` Update or add E2E flows when multi-step user journeys change.
-- `completed` Remove or rewrite stale tests that still describe old UI behavior.
+- `completed` assetUri.test.ts — 5 tests covering string passthrough, numeric expo-asset, web fallback.
+- `completed` TitleScreen.test.ts — 7 tests passing after title screen redesign.
+- `completed` 47/47 Jest suites, 186/186 tests passing.
+- `completed` Playwright component tests updated — 27/27 passing. Stale expectations fixed (CitySiteModal copy, EcumenopolisRadialBot district actions).
+- `completed` Snapshot updates for redesigned components (NewGameModal, CityKitLab, EcumenopolisWorld, etc.).
+- `pending` Update E2E onboarding flow screenshots (may drift from visual changes).
+
+### 7. Runtime Stability
+- `completed` Canvas crash fixed — assetUri.ts returns empty string fallback on web.
+- `completed` Simulation crash fixed — enemies.ts guards against missing structural fragments.
+- `completed` ErrorBoundary uses branded dark theme instead of alarm red.
+- `completed` Circular dependency in bots module broken.
+- `completed` Deprecation warnings addressed (pointerEvents moved to style).
+- `completed` Verbose entity logging in gameState.ts removed.
 
 ## Communication Rules
 
@@ -105,3 +124,20 @@ For every meaningful chunk:
 - 2026-03-11: Phase 4-5 partial. Responsive pass across ALL player-facing surfaces. Every panel, modal, toolbar, and overlay now uses NativeWind `md:` breakpoints for phone→tablet→desktop. CityKitLab model grid dynamically computes card width from viewport (2-col phone, 3-col tablet, 4-col desktop). Touch targets ≥36-44px throughout. Minimap scales via `useWindowDimensions`. TopBar stacks on mobile. Legacy side-panel surfaces were prepared for mobile collapse and later replacement by lighter anchored context surfaces.
   - **Files changed:** `src/ui/TitleScreen.tsx`, `src/ui/NewGameModal.tsx`, `src/ui/LoadingOverlay.tsx`, `src/ui/CitySiteModal.tsx`, `src/ui/panels/SelectedInfo.tsx`, `src/ui/panels/BuildToolbar.tsx`, `src/ui/panels/TopBar.tsx`, `src/ui/panels/Minimap.tsx`, `src/ui/panels/ThoughtOverlay.tsx`, `src/city/runtime/CityKitLab.tsx`
   - **Remaining:** Focus/keyboard audit, motion audit, E2E updates, stale test cleanup, CityKitLab screenshot coverage
+- 2026-03-12: Frontend playtest via Chrome DevTools MCP surfaced 20+ issues. Full report at `docs/plans/FRONTEND_PLAYTEST_REPORT.md`.
+- 2026-03-12: P0 crash fixes — `assetUri.ts` returns fallback on web (no more Canvas crash), `enemies.ts` guards against missing structural fragments (no more 989 console errors), `App.tsx` gates GameUI behind sceneReady (no more simultaneous UI layers), ErrorBoundary uses branded dark theme.
+- 2026-03-12: Title screen redesign — removed anti-diegetic text clutter (status strip, Memory Lattice, Signal Relay header, text under buttons). Buttons now centered in viewport over the background painting. Minimal version stamp bottom-right.
+- 2026-03-12: HUD redesign — removed "Storm Command Uplink" header. TopBar collapsed to single thin telemetry strip with resource readouts and sim controls. ThoughtOverlay repositioned to center-screen for clear narrative voice.
+- 2026-03-12: Modal improvements — New Game modal: stronger backdrop (88% dark), X close button with accessibility, sticky action footer always visible, radio selection indicators with glow/shadow, seed input aria-label.
+- 2026-03-12: Accessibility — ARIA roles/labels on buttons, images, radio groups, modal close. Dialog role on SettingsOverlay. accessibilityRole="radio" + accessibilityState on OptionCards.
+- 2026-03-12: Stability — circular dependency in bots/ broken, deprecation warnings addressed (pointerEvents moved to style), debug entity logging removed from gameState.ts.
+- 2026-03-12: Tests — 47/47 suites passing, 186/186 tests, zero TypeScript errors.
+  - **Files changed:** `App.tsx`, `src/config/assetUri.ts`, `src/config/assetUri.test.ts`, `src/systems/enemies.ts`, `src/ecs/gameState.ts`, `src/ui/TitleScreen.tsx`, `src/ui/NewGameModal.tsx`, `src/ui/panels/TopBar.tsx`, `src/ui/panels/ThoughtOverlay.tsx`, `src/ui/panels/ResourceStrip.tsx`
+  - **Remaining:** Focus-visible global styles, focus trap for modals, document title, Playwright component test updates for redesigned UI, E2E flow updates, minimap/briefing timing gates, city transition playtest
+- 2026-03-12: Accessibility completion — focus-visible CSS globally (`:focus-visible` ring + `:focus:not(:focus-visible)` suppression), `role="dialog"` + `aria-modal` on NewGameModal, auto-focus on dialog open for both NewGameModal and SettingsOverlay.
+- 2026-03-12: Timing gates — Minimap, BriefingBubbleLayer, and Notifications deferred until `currentTick > 0` (world must be ticking). Prevents HUD elements from flashing before world is interactive.
+- 2026-03-12: Notifications positioning — adjusted from `top-36` to `top-14 md:top-16` to sit below the new thin TopBar instead of the old two-row layout.
+- 2026-03-12: Playwright CT test fixes — 27/27 passing. Fixed stale expectations: CitySiteModal "Surveyed Interior" → "Surveyed District", "Found Research Campus" → "Establish Research Substation"; EcumenopolisRadialBot district actions updated to match new district operation roster. All snapshots regenerated.
+  - **Files changed:** `src/ui/GameUI.tsx`, `src/ui/NewGameModal.tsx`, `src/ui/TitleScreen.tsx`, `src/ui/panels/Notifications.tsx`, `global.css`, `tests/components/CitySiteModal.spec.tsx`, `tests/components/EcumenopolisRadialBot.spec.tsx`
+  - **Tests updated:** 27/27 Playwright CT, 47/47 Jest, 186/186 unit tests, 0 TS errors
+  - **Remaining:** E2E onboarding flow screenshots, Chrome DevTools playtest of city transitions and radial menu

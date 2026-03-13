@@ -1,10 +1,7 @@
 import type { PersistableWorldEntity } from "../world/snapshots";
 import { gridToWorld } from "../world/sectorCoordinates";
-import {
-	type BotArchetypeId,
-	type BotUnitType,
-	getBotDefinition,
-} from "./index";
+import { getBotDefinition } from "./definitions";
+import type { BotArchetypeId, BotUnitType } from "./types";
 
 type StartingBotSpec = {
 	id: string;

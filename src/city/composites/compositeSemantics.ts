@@ -64,8 +64,9 @@ export function validateCompositeSemantics(
 	const issues: CityCompositeSemanticIssue[] = [];
 
 	for (const composite of composites) {
+		const isOverworld = composite.tags.includes("overworld");
 		const summary = summarizeCompositeSemantics(composite);
-		if (!summary.hasFloor) {
+		if (!isOverworld && !summary.hasFloor) {
 			issues.push({
 				code: "missing_floor_anchor",
 				compositeId: composite.id,
@@ -73,6 +74,7 @@ export function validateCompositeSemantics(
 			});
 		}
 		if (
+			!isOverworld &&
 			(composite.tags.includes("tower") ||
 				composite.tags.includes("service") ||
 				composite.tags.includes("storage")) &&
@@ -84,7 +86,7 @@ export function validateCompositeSemantics(
 				message: `Composite ${composite.id} has no enclosing structural family.`,
 			});
 		}
-		if (!summary.hasRoof) {
+		if (!isOverworld && !summary.hasRoof) {
 			issues.push({
 				code: "missing_roof_cap",
 				compositeId: composite.id,
@@ -101,7 +103,7 @@ export function validateCompositeSemantics(
 		if (
 			composite.tags.includes("storage") &&
 			!summary.propTags.some((tag) =>
-				["container", "crate", "shelf"].includes(tag),
+				["container", "crate", "shelf", "cargo", "storage_prop"].includes(tag),
 			)
 		) {
 			issues.push({
@@ -115,7 +117,7 @@ export function validateCompositeSemantics(
 				(composite.tags.includes("fabrication") &&
 					!composite.tags.includes("service"))) &&
 			!summary.propTags.some((tag) =>
-				["computer", "teleporter", "workshop"].includes(tag),
+				["computer", "teleporter", "workshop", "console", "operator_prop", "teleport"].includes(tag),
 			)
 		) {
 			issues.push({

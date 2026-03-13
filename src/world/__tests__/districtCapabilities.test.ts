@@ -13,7 +13,9 @@ describe("districtCapabilities", () => {
 		expect(capabilities.map((capability) => capability.id)).toEqual([
 			"relay",
 			"fabrication",
+			"substation",
 			"storage",
+			"salvage",
 			"power_sink",
 			"defense",
 		]);

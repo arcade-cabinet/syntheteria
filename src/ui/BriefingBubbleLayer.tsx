@@ -124,10 +124,7 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		zIndex: 20,
 		elevation: 20,
-		shadowColor: "#000000",
-		shadowOpacity: 0.34,
-		shadowRadius: 24,
-		shadowOffset: { width: 0, height: 18 },
+		boxShadow: "0px 18px 24px rgba(0, 0, 0, 0.34)",
 	},
 	left: {
 		alignSelf: "flex-start",

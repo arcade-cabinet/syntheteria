@@ -136,6 +136,14 @@ function getCompositeIdForZone(zone: string) {
 			return "power_sink_array";
 		case "breach":
 			return "cult_incursion_structure";
+		case "resource":
+			return "resource_node";
+		case "salvage":
+			return "salvage_cache";
+		case "defense":
+			return "defensive_outpost";
+		case "logistics":
+			return "transit_depot";
 		case "transit":
 		default:
 			return "relay_spine";
@@ -273,18 +281,47 @@ function normalizeZone(zone: string): CityZone {
 	}
 }
 
+/**
+ * Returns overworld composite IDs that can scatter into a given zone.
+ * Used by the non-POI anchor path to occasionally place 4X strategic
+ * structures instead of standard city composites.
+ */
+function getOverworldCandidatesForZone(zone: string): string[] {
+	switch (zone) {
+		case "command":
+			return ["power_relay_station", "defensive_outpost"];
+		case "fabrication":
+			return ["pipe_junction", "resource_node"];
+		case "storage":
+			return ["salvage_cache", "pipe_junction"];
+		case "power":
+			return ["power_relay_station", "resource_node"];
+		case "breach":
+			return ["cult_breach_point", "salvage_cache"];
+		case "transit":
+			return ["transit_depot", "abandoned_hangar"];
+		case "habitation":
+			return ["abandoned_hangar", "defensive_outpost"];
+		default:
+			return ["salvage_cache", "abandoned_hangar"];
+	}
+}
+
+/** Threshold (0..1) — fraction of non-POI anchors that receive an overworld composite */
+const OVERWORLD_SCATTER_CHANCE = 0.18;
+
 function getPoiCompositeTags(poiType: WorldPoiType) {
 	switch (poiType) {
 		case "home_base":
-			return ["core", "service"];
+			return ["core", "service", "overworld", "relay"];
 		case "coast_mines":
-			return ["service", "transit", "power"];
+			return ["service", "transit", "power", "overworld", "industrial"];
 		case "science_campus":
-			return ["archive", "research", "tower"];
+			return ["archive", "research", "tower", "overworld", "exploration"];
 		case "northern_cult_site":
-			return ["hostile", "fortress"];
+			return ["hostile", "fortress", "overworld", "cult"];
 		case "deep_sea_gateway":
-			return ["transit", "power"];
+			return ["transit", "power", "overworld", "logistics"];
 	}
 }
 
@@ -384,8 +421,18 @@ export function generateSectorStructurePlan(args: {
 			continue;
 		}
 
+		// Occasionally scatter overworld composites at non-POI anchors
+		const scatterRoll = (hash(anchorSeed, 199) % 1000) / 1000;
+		const overworldCandidates = getOverworldCandidatesForZone(dominantZone);
+		const useOverworld =
+			scatterRoll < OVERWORLD_SCATTER_CHANCE && overworldCandidates.length > 0;
+
+		const compositeId = useOverworld
+			? pickDeterministic(overworldCandidates, hash(anchorSeed, 203)) ?? getCompositeIdForZone(dominantZone)
+			: getCompositeIdForZone(dominantZone);
+
 		const genericComposite = getCityComposites().find(
-			(composite) => composite.id === getCompositeIdForZone(dominantZone),
+			(composite) => composite.id === compositeId,
 		);
 		if (genericComposite) {
 			placements.push(

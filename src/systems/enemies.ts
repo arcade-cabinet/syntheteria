@@ -10,9 +10,9 @@ import {
 } from "../ecs/traits";
 import { units, world } from "../ecs/world";
 import {
+	getStructuralFragments,
 	getSurfaceHeightAtWorldPosition,
 	isPassableAtWorldPosition,
-	requirePrimaryStructuralFragment,
 } from "../world/structuralSpace";
 
 /**
@@ -69,7 +69,9 @@ function spawnEnemy() {
 	const pos = findValidSpawn();
 	if (!pos) return;
 
-	const fragment = requirePrimaryStructuralFragment();
+	const fragments = getStructuralFragments();
+	const fragment = fragments[0];
+	if (!fragment) return;
 	const y = getSurfaceHeightAtWorldPosition(pos.x, pos.z);
 	const id = `enemy_${nextEnemyId++}`;
 

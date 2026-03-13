@@ -7,15 +7,10 @@ import {
 	subscribe,
 	togglePause,
 } from "../../ecs/gameState";
-import { buildings } from "../../ecs/world";
 import { openCityKitLab } from "../../world/cityTransition";
 import { HudButton } from "../components/HudButton";
 import {
 	BoltIcon,
-	DroneIcon,
-	MapIcon,
-	PauseIcon,
-	PlayIcon,
 	ShardIcon,
 	StormIcon,
 } from "../icons";
@@ -31,147 +26,98 @@ function StatChip({
 	icon: React.ReactNode;
 	tone?: "mint" | "amber" | "crimson";
 }) {
-	const toneClass =
+	const toneText =
 		tone === "amber"
-			? "border-[#f6c56a]/24 bg-[#2b1d08]/75 text-[#ffe9b0]"
+			? "text-[#ffe9b0]"
 			: tone === "crimson"
-				? "border-[#ff8f8f]/24 bg-[#2b0f10]/75 text-[#ffd7d7]"
-				: "border-[#6ff3c8]/24 bg-[#0a1718]/78 text-[#d9fff3]";
+				? "text-[#ffd7d7]"
+				: "text-[#d9fff3]";
 
 	return (
-		<View className={`min-w-[88px] md:min-w-[112px] rounded-xl md:rounded-2xl border px-2 md:px-3 py-1.5 md:py-2 ${toneClass}`}>
-			<View className="flex-row items-center gap-1.5 md:gap-2">
-				<View className="h-4 w-4 md:h-5 md:w-5 items-center justify-center">{icon}</View>
-				<Text className="font-mono text-[9px] md:text-[10px] uppercase tracking-[0.14em] opacity-70">
-					{label}
-				</Text>
-			</View>
-			<Text className="mt-1 md:mt-2 font-mono text-sm md:text-base tracking-[0.12em]">
+		<View className="flex-row items-center gap-1.5 px-2">
+			<View className="h-3.5 w-3.5 items-center justify-center">{icon}</View>
+			<Text className="font-mono text-[9px] uppercase tracking-[0.12em] text-white/50">
+				{label}
+			</Text>
+			<Text className={`font-mono text-[12px] tracking-[0.08em] ${toneText}`}>
 				{value}
 			</Text>
 		</View>
 	);
 }
 
+/**
+ * TopBar — minimal telemetry strip for desktop/tablet.
+ *
+ * Design philosophy: the HUD should frame the experience, not compete with it.
+ * Resources, day counter, storm %, and sim controls in a single thin strip.
+ * No headers. No panels. The radial menu and speech bubbles handle everything else.
+ */
 export function TopBar() {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
-	const fragmentCount = snap.fragments.length;
-	const buildingCount = Array.from(buildings).length;
 
 	return (
 		<View className="absolute left-0 top-0 w-full pt-safe pointer-events-none">
-			<View className="mx-3 md:mx-4 mt-2 md:mt-3 gap-2 md:gap-3">
-				<View className="pointer-events-auto gap-2 md:flex-row md:items-start md:justify-between md:gap-4">
-					<View className="flex-row flex-wrap gap-2 md:max-w-[60%]">
-						<View className="rounded-[18px] md:rounded-[22px] border border-[#6ff3c8]/25 bg-[#071117]/90 px-3 md:px-4 py-2 md:py-3 shadow-2xl">
-							<Text className="font-mono text-[9px] md:text-[10px] uppercase tracking-[0.26em] text-[#7ee7cb]">
-								Synth Network
-							</Text>
-							<Text className="mt-0.5 md:mt-1 font-mono text-sm md:text-lg uppercase tracking-[0.18em] text-[#e2fff5]">
-								Storm Command Uplink
-							</Text>
-						</View>
-						<StatChip
-							label="Units"
-							value={snap.unitCount}
-							icon={<DroneIcon width={16} height={16} color="#7ee7cb" />}
-						/>
-						<StatChip
-							label="Structures"
-							value={buildingCount}
-							icon={<BoltIcon width={16} height={16} color="#f6c56a" />}
-							tone="amber"
-						/>
-						<StatChip
-							label="Fragments"
-							value={fragmentCount}
-							icon={<MapIcon width={16} height={16} color="#89d9ff" />}
-						/>
-						{snap.enemyCount > 0 && (
-							<StatChip
-								label="Hostiles"
-								value={snap.enemyCount}
-								icon={<ShardIcon width={16} height={16} color="#ff8f8f" />}
-								tone="crimson"
-							/>
-						)}
-					</View>
-
-					<View className="pointer-events-auto rounded-[18px] md:rounded-[22px] md:min-w-[248px] border border-white/10 bg-[#071117]/92 p-2 md:p-3 shadow-2xl">
-						<Text className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/45">
-							Sim Control
-						</Text>
-						<View className="mt-3 flex-row gap-2">
-							<HudButton
-								label="City Lab"
-								meta="inspect full module kit"
-								variant="secondary"
-								testID="topbar-city-lab"
-								onPress={openCityKitLab}
-								className="min-w-[112px]"
-							/>
-							{([0.5, 1, 2] as const).map((s) => (
-								<HudButton
-									key={s}
-									label={`${s}x`}
-									meta="clock rate"
-									active={snap.gameSpeed === s && !snap.paused}
-									onPress={() => setGameSpeed(s)}
-									className="flex-1"
-								/>
-							))}
-							<HudButton
-								label={snap.paused ? "Resume" : "Pause"}
-								meta={snap.paused ? "simulation halted" : "live simulation"}
-								active={snap.paused}
-								variant={snap.paused ? "secondary" : "primary"}
-								icon={
-									snap.paused ? (
-										<PlayIcon width={16} height={16} color="#89d9ff" />
-									) : (
-										<PauseIcon width={16} height={16} color="#7ee7cb" />
-									)
-								}
-								onPress={togglePause}
-								className="min-w-[122px]"
-							/>
-						</View>
-					</View>
-				</View>
-
-				<View className="pointer-events-auto flex-row flex-wrap gap-2">
+			<View className="pointer-events-auto mx-3 md:mx-4 mt-2 md:mt-3 flex-row items-center justify-between rounded-2xl bg-[#071117]/72 px-3 py-2 shadow-lg">
+				{/* Left: resource readouts */}
+				<View className="flex-row items-center gap-2">
 					<StatChip
-						label={`Day ${snap.weather.dayNumber}`}
+						label={`D${snap.weather.dayNumber}`}
 						value={snap.weather.phase.toUpperCase()}
-						icon={<StormIcon width={16} height={16} color="#b088d8" />}
+						icon={<StormIcon width={14} height={14} color="#b088d8" />}
 						tone="amber"
 					/>
 					<StatChip
 						label="Scrap"
 						value={snap.resources.scrapMetal}
-						icon={<ShardIcon width={16} height={16} color="#7ee7cb" />}
-					/>
-					<StatChip
-						label="E-Waste"
-						value={snap.resources.eWaste}
-						icon={<MapIcon width={16} height={16} color="#89d9ff" />}
+						icon={<ShardIcon width={14} height={14} color="#7ee7cb" />}
 					/>
 					<StatChip
 						label="Parts"
 						value={snap.resources.intactComponents}
-						icon={<BoltIcon width={16} height={16} color="#f6c56a" />}
+						icon={<BoltIcon width={14} height={14} color="#f6c56a" />}
 						tone="amber"
 					/>
 					<StatChip
 						label="Storm"
 						value={`${(snap.power.stormIntensity * 100).toFixed(0)}%`}
-						icon={<StormIcon width={16} height={16} color="#f6c56a" />}
+						icon={<StormIcon width={14} height={14} color="#f6c56a" />}
 						tone="amber"
 					/>
-					<StatChip
-						label="Power"
-						value={`${snap.power.totalGeneration.toFixed(0)} / ${snap.power.totalDemand.toFixed(0)}`}
-						icon={<BoltIcon width={16} height={16} color="#7ee7cb" />}
+					{snap.enemyCount > 0 && (
+						<StatChip
+							label="Hostile"
+							value={snap.enemyCount}
+							icon={<ShardIcon width={14} height={14} color="#ff8f8f" />}
+							tone="crimson"
+						/>
+					)}
+				</View>
+
+				{/* Right: sim speed + pause */}
+				<View className="flex-row items-center gap-1.5">
+					<HudButton
+						label="Lab"
+						meta="city kit"
+						variant="secondary"
+						testID="topbar-city-lab"
+						onPress={openCityKitLab}
+					/>
+					{([0.5, 1, 2] as const).map((s) => (
+						<HudButton
+							key={s}
+							label={`${s}x`}
+							meta="speed"
+							active={snap.gameSpeed === s && !snap.paused}
+							onPress={() => setGameSpeed(s)}
+						/>
+					))}
+					<HudButton
+						label={snap.paused ? "▶" : "⏸"}
+						meta={snap.paused ? "resume" : "pause"}
+						active={snap.paused}
+						variant={snap.paused ? "secondary" : "primary"}
+						onPress={togglePause}
 					/>
 				</View>
 			</View>

@@ -58,14 +58,9 @@ import {
 	updateDisplayOffsets,
 } from "../world/structuralSpace";
 import {
-	Building,
 	Identity,
-	MapFragment as MapFragmentTrait,
-	Narrative,
-	Unit,
-	WorldPosition,
 } from "./traits";
-import { buildings, units, world } from "./world";
+import { units } from "./world";
 import {
 	getStructuralFragments,
 	type StructuralFragment as MapFragment,
@@ -104,20 +99,6 @@ const FIXED_SIM_STEP_SECONDS = 1 / 60;
 function buildSnapshot(): GameSnapshot {
 	let playerCount = 0;
 	let enemyCount = 0;
-
-	if (tick % 60 === 0) {
-		console.log("Total entities in world:", world.entities.length);
-		for (const e of world.entities) {
-			const traits = [];
-			if (e.has(Identity)) traits.push("Identity");
-			if (e.has(Unit)) traits.push("Unit");
-			if (e.has(Building)) traits.push("Building");
-			if (e.has(WorldPosition)) traits.push("WorldPosition");
-			if (e.has(MapFragmentTrait)) traits.push("MapFragment");
-			if (e.has(Narrative)) traits.push("Narrative");
-			console.log(`Entity ${e.id}: [${traits.join(", ")}]`);
-		}
-	}
 
 	for (const u of units) {
 		const id = u.get(Identity);

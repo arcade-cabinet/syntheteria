@@ -133,6 +133,10 @@ test.describe("world and city onboarding", () => {
 		page,
 	}) => {
 		await page.goto("/");
+		// Wait for Reanimated fade-in animation to complete (~1.1s: 180ms delay + 900ms timing)
+		await expect(page.getByTestId("title-new_game")).toBeVisible({
+			timeout: 5000,
+		});
 		await expect(page).toHaveScreenshot("onboarding-title-screen.png", {
 			animations: "disabled",
 			maxDiffPixelRatio: 0.03,

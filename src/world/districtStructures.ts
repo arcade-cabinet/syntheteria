@@ -14,7 +14,15 @@ export type DistrictStructureId =
 	| "cult_incursion_structure"
 	| "motor_pool"
 	| "storm_collector"
-	| "transport_spine";
+	| "transport_spine"
+	| "power_relay_station"
+	| "pipe_junction"
+	| "defensive_outpost"
+	| "transit_depot"
+	| "salvage_cache"
+	| "resource_node"
+	| "abandoned_hangar"
+	| "cult_breach_point";
 
 export interface DistrictStructureDefinition {
 	id: DistrictStructureId;
@@ -27,7 +35,9 @@ export interface DistrictStructureDefinition {
 		| "defense"
 		| "power"
 		| "transit"
-		| "hostile";
+		| "hostile"
+		| "logistics"
+		| "exploration";
 	capabilities: DistrictCapabilityId[];
 }
 
@@ -125,6 +135,62 @@ const DISTRICT_STRUCTURE_DEFINITIONS: Record<
 		role: "transit",
 		capabilities: ["transit", "relay", "logistics"],
 	},
+	power_relay_station: {
+		id: "power_relay_station",
+		label: "Power Relay Station",
+		compositeId: "power_relay_station",
+		role: "power",
+		capabilities: ["power_sink", "relay"],
+	},
+	pipe_junction: {
+		id: "pipe_junction",
+		label: "Pipe Junction",
+		compositeId: "pipe_junction",
+		role: "industrial",
+		capabilities: ["fabrication", "storage"],
+	},
+	defensive_outpost: {
+		id: "defensive_outpost",
+		label: "Defensive Outpost",
+		compositeId: "defensive_outpost",
+		role: "defense",
+		capabilities: ["defense"],
+	},
+	transit_depot: {
+		id: "transit_depot",
+		label: "Transit Depot",
+		compositeId: "transit_depot",
+		role: "transit",
+		capabilities: ["transit", "logistics"],
+	},
+	salvage_cache: {
+		id: "salvage_cache",
+		label: "Salvage Cache",
+		compositeId: "salvage_cache",
+		role: "exploration",
+		capabilities: ["salvage", "storage"],
+	},
+	resource_node: {
+		id: "resource_node",
+		label: "Resource Node",
+		compositeId: "resource_node",
+		role: "industrial",
+		capabilities: ["fabrication", "power_sink"],
+	},
+	abandoned_hangar: {
+		id: "abandoned_hangar",
+		label: "Abandoned Hangar",
+		compositeId: "abandoned_hangar",
+		role: "exploration",
+		capabilities: ["salvage", "storage"],
+	},
+	cult_breach_point: {
+		id: "cult_breach_point",
+		label: "Cult Breach Point",
+		compositeId: "cult_breach_point",
+		role: "hostile",
+		capabilities: ["hostile_presence"],
+	},
 };
 
 function defaultStructureIdsForPoi(poiType: WorldPoiType) {
@@ -164,6 +230,8 @@ function defaultStructureIdsForPoi(poiType: WorldPoiType) {
 	}
 }
 
+const HOSTILE_POI_TYPES: readonly WorldPoiType[] = ["northern_cult_site"];
+
 function getStructureStatus(args: {
 	state: CityInstanceState;
 	controllerFaction: string | null;
@@ -173,7 +241,7 @@ function getStructureStatus(args: {
 	if (args.poiType === "deep_sea_gateway") {
 		return "locked" as const;
 	}
-	if (args.controllerFaction === "cult") {
+	if (args.controllerFaction === "cult" || HOSTILE_POI_TYPES.includes(args.poiType)) {
 		return "hostile" as const;
 	}
 	if (args.state === "founded") {

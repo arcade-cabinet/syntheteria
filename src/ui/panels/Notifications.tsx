@@ -7,7 +7,7 @@ export function Notifications() {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
 
 	return (
-		<View className="absolute right-safe top-36 mr-4 items-end gap-3 pointer-events-none">
+		<View className="absolute right-safe top-14 md:top-16 mr-4 items-end gap-3 pointer-events-none">
 			{snap.combatEvents.slice(0, 3).map((event, index) => (
 				<View
 					key={index}

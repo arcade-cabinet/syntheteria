@@ -44,6 +44,9 @@ describe("city catalog", () => {
 	it("keeps composite definitions bound to real model ids", () => {
 		const modelIds = new Set(CITY_MODELS.map((model) => model.id));
 		for (const composite of getCityComposites()) {
+			if (composite.tags.includes("overworld")) {
+				continue;
+			}
 			for (const part of composite.parts) {
 				expect(modelIds.has(part.modelId)).toBe(true);
 			}

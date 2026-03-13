@@ -242,7 +242,7 @@ export function RadialMenu() {
 		Animated.timing(scaleAnim, {
 			toValue: state.open ? 1 : 0,
 			duration: animationDuration,
-			useNativeDriver: true,
+			useNativeDriver: false,
 		}).start();
 	}, [state.open, scaleAnim]);
 
@@ -251,7 +251,7 @@ export function RadialMenu() {
 			toValue: state.outerRingOpen ? 1 : 0,
 			tension: 80,
 			friction: 10,
-			useNativeDriver: true,
+			useNativeDriver: false,
 		}).start();
 	}, [state.outerRingOpen, outerScaleAnim]);
 

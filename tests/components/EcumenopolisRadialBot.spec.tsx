@@ -12,7 +12,7 @@ const cases: Array<{
 		text: "Field Technician Chassis",
 		contains: [
 			"Visible categories: Move, Combat, Build, Survey, District, System",
-			"District actions: Brief, Enter, Fabricate Components",
+			"District actions: Brief, Enter, Stage Salvage, Extend Relay, Open Transit, Survey Gateway",
 			"Expanded actions: Brief",
 		],
 	},
@@ -21,7 +21,7 @@ const cases: Array<{
 		text: "Relay Hauler Drone",
 		contains: [
 			"Visible categories: Move, Build, Survey, District, System",
-			"District actions: Brief, Enter, Fabricate Components",
+			"District actions: Brief, Enter, Stage Salvage, Extend Relay, Open Transit, Survey Gateway",
 			"Expanded actions: Relay",
 		],
 	},
@@ -30,7 +30,7 @@ const cases: Array<{
 		text: "Fabrication Rig",
 		contains: [
 			"Visible categories: Fabricate, Survey, District, System",
-			"District actions: Brief, Enter, Fabricate Components",
+			"District actions: Brief, Enter, Stage Salvage, Extend Relay, Open Transit, Survey Gateway",
 			"Expanded actions: Camera Module, Arm Assembly, Leg Assembly, Power Cell, Power Supply",
 		],
 	},
@@ -39,7 +39,7 @@ const cases: Array<{
 		text: "Substation Engineer Hull",
 		contains: [
 			"Visible categories: Move, Combat, Build, Survey, District, System",
-			"District actions: Brief, Enter, Fabricate Components",
+			"District actions: Brief, Enter, Stage Salvage, Extend Relay, Open Transit, Survey Gateway",
 			"Expanded actions: Rod, Fabricator, Relay, Establish",
 		],
 	},
@@ -48,7 +48,7 @@ const cases: Array<{
 		text: "Assault Strider",
 		contains: [
 			"Visible categories: Move, Combat, Survey, District, System",
-			"District actions: Brief, Enter, Fabricate Components",
+			"District actions: Brief, Enter, Stage Salvage, Extend Relay, Open Transit, Survey Gateway",
 			"Expanded actions: Attack, Fortify",
 		],
 	},

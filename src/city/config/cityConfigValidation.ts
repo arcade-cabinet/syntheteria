@@ -152,10 +152,11 @@ export function validateCityComposites(
 			});
 		}
 
+		const isOverworld = composite.tags.includes("overworld");
 		const anchors = new Set<string>();
 
 		for (const part of composite.parts) {
-			if (!modelIds.has(part.modelId)) {
+			if (!isOverworld && !modelIds.has(part.modelId)) {
 				issues.push({
 					code: "unknown_model_reference",
 					message: `Composite ${composite.id} references unknown model ${part.modelId}.`,

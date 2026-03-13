@@ -30,8 +30,8 @@ test.describe("city site modal", () => {
 		);
 
 		await expect(component).toContainText("Science Campus");
-		await expect(component).toContainText("Surveyed Interior");
-		await expect(component).toContainText("Found Research Campus");
+		await expect(component).toContainText("Surveyed District");
+		await expect(component).toContainText("Establish Research Substation");
 		await expect(component).toContainText("Inspect Research Wing");
 		await expect(component).toHaveScreenshot();
 	});

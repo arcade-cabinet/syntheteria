@@ -17,7 +17,7 @@
 
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { getSaveGameCountSync } from "../db/saveGames";
 import type { NewGameConfig } from "../world/config";
 import { LoadingOverlay } from "./LoadingOverlay";
@@ -53,6 +53,12 @@ export function TitleScreen({
 
 	// Globe ecumenopolis growth: 0→1 over ~50 seconds
 	const [growth, setGrowth] = useState(0);
+
+	useEffect(() => {
+		if (Platform.OS === "web" && typeof document !== "undefined") {
+			document.title = "Syntheteria";
+		}
+	}, []);
 
 	useEffect(() => {
 		if (saveGameCountOverride === undefined) {
@@ -124,4 +130,3 @@ export function TitleScreen({
 		</View>
 	);
 }
-

@@ -106,7 +106,10 @@ export function HudButton({
 			onPressOut={handlePressOut}
 			disabled={disabled}
 			testID={testID}
-			className={`min-h-[52px] overflow-hidden rounded-[18px] border ${borderClass} ${bgClass} px-3 py-2 ${className}`}
+			role="button"
+			aria-label={meta ? `${label}: ${meta}` : label}
+			aria-disabled={disabled}
+			className={`min-h-[52px] overflow-hidden rounded-[18px] border ${borderClass} ${bgClass} px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7fe5ff] ${className}`}
 			style={animatedStyle}
 		>
 			<View className="absolute inset-0 rounded-[18px] border border-white/5" />

@@ -51,6 +51,8 @@ export function HudPanel({
 
 	return (
 		<View
+			role="region"
+			aria-label={title ?? eyebrow ?? "HUD panel"}
 			className={`overflow-hidden rounded-[22px] border ${tone.border} bg-[#081017]/88 shadow-2xl ${className}`}
 		>
 			<View className={`absolute inset-x-0 top-0 h-20 ${tone.glow}`} />

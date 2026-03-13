@@ -1,0 +1,19 @@
+{
+	"$schema": "zone-blending configuration — controls visual transitions between floor biomes",
+	"blendWidthFraction": 0.15,
+	"blendWidthFractionRange": [0.1, 0.2],
+	"innerStripRatio": 0.5,
+	"outerOpacity": 0.1,
+	"innerOpacity": 0.18,
+	"breachGlow": {
+		"enabled": true,
+		"color": "0xff4422",
+		"intensity": 0.6,
+		"pulseSpeed": 1.8,
+		"crackWidth": 0.06,
+		"crackOpacity": 0.35
+	},
+	"yOffsetOuter": 0.004,
+	"yOffsetInner": 0.005,
+	"yOffsetBreach": 0.007
+}

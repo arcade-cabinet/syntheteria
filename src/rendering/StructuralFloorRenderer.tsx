@@ -13,8 +13,15 @@ import {
 	getStructuralCellRecords,
 	requirePrimaryStructuralFragment,
 } from "../world/structuralSpace";
+import {
+	type BlendEdge,
+	computeBlendEdges,
+	computeBlendStripParams,
+	computeBreachStripParams,
+	type EdgeDirection,
+} from "./zoneBlendLogic";
 
-const FLOOR_COLORS: Record<string, number> = {
+export const FLOOR_COLORS: Record<string, number> = {
 	command_core: 0x5e7385,
 	corridor_transit: 0x71879b,
 	fabrication: 0x7a634a,
@@ -74,14 +81,133 @@ interface FloorTextureBundle {
 	displacementMap: THREE.Texture;
 }
 
-/** Directions for 4-connected grid neighbors: +x, -x, +z, -z */
-type EdgeDirection = "px" | "nx" | "pz" | "nz";
+// ---------------------------------------------------------------------------
+// Blend edge gradient shader — smooth alpha falloff from edge inward
+// ---------------------------------------------------------------------------
 
-interface BlendEdge {
-	direction: EdgeDirection;
-	neighborColor: number;
+/**
+ * Vertex shader for blend strips. Passes a normalized blend coordinate
+ * (0 at the cell edge, 1 at the strip's inner boundary) for smooth falloff.
+ */
+const blendStripVertexShader = `
+	varying float vBlendCoord;
+	attribute float blendCoord;
+
+	void main() {
+		vBlendCoord = blendCoord;
+		gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+	}
+`;
+
+/**
+ * Fragment shader for blend strips. Uses smoothstep for a soft gradient
+ * that fades from the neighbor color at the edge to transparent inward.
+ */
+const blendStripFragmentShader = `
+	uniform vec3 uColor;
+	uniform float uOpacity;
+
+	varying float vBlendCoord;
+
+	void main() {
+		// smoothstep falloff: full opacity at vBlendCoord=0 (edge),
+		// fading to 0 at vBlendCoord=1 (inner boundary)
+		float alpha = uOpacity * smoothstep(1.0, 0.0, vBlendCoord);
+		gl_FragColor = vec4(uColor, alpha);
+	}
+`;
+
+// ---------------------------------------------------------------------------
+// Breach glow/crack shader — pulsing emissive crack at zone boundary
+// ---------------------------------------------------------------------------
+
+const breachGlowVertexShader = `
+	varying vec2 vUv;
+	void main() {
+		vUv = uv;
+		gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+	}
+`;
+
+const breachGlowFragmentShader = `
+	uniform vec3 uGlowColor;
+	uniform float uIntensity;
+	uniform float uTime;
+	uniform float uPulseSpeed;
+	uniform float uCrackOpacity;
+
+	varying vec2 vUv;
+
+	void main() {
+		// Crack line: bright center, sharp falloff on edges
+		float crackDist = abs(vUv.y - 0.5) * 2.0;
+		float crackLine = 1.0 - smoothstep(0.0, 0.4, crackDist);
+
+		// Glow halo: wider, softer falloff
+		float glowHalo = 1.0 - smoothstep(0.0, 1.0, crackDist);
+		glowHalo *= 0.4;
+
+		// Pulse animation
+		float pulse = 0.7 + 0.3 * sin(uTime * uPulseSpeed);
+
+		// Procedural crack variation along the length
+		float variation = 0.8 + 0.2 * sin(vUv.x * 31.4 + uTime * 0.5);
+
+		float alpha = (crackLine * uCrackOpacity + glowHalo * uIntensity) * pulse * variation;
+		vec3 color = uGlowColor * (1.0 + crackLine * 0.5);
+
+		gl_FragColor = vec4(color, alpha);
+	}
+`;
+
+/**
+ * Creates a plane geometry with a blendCoord attribute that varies from
+ * 0 (at the cell edge) to 1 (at the inner boundary of the strip).
+ * The gradient direction depends on which edge direction we're rendering.
+ */
+function makeBlendPlaneGeometry(
+	sx: number,
+	sz: number,
+	direction: EdgeDirection,
+): THREE.PlaneGeometry {
+	const geo = new THREE.PlaneGeometry(sx, sz);
+	const posAttr = geo.getAttribute("position");
+	const count = posAttr.count;
+	const coords = new Float32Array(count);
+
+	for (let i = 0; i < count; i++) {
+		// PlaneGeometry lies in XY plane (before rotation), UV-like coords
+		const x = posAttr.getX(i);
+		const y = posAttr.getY(i);
+
+		let t: number;
+		if (direction === "px") {
+			// Strip depth is in the X direction (sx = depth after rotation)
+			// Edge is at +x side, inner at -x side
+			t = 1.0 - (x / sx + 0.5);
+		} else if (direction === "nx") {
+			// Edge is at -x side, inner at +x side
+			t = x / sx + 0.5;
+		} else if (direction === "pz") {
+			// For pz/nz, strip depth is in the Y direction (sz = depth)
+			// Edge is at +y side, inner at -y side
+			t = 1.0 - (y / sz + 0.5);
+		} else {
+			// nz: edge at -y, inner at +y
+			t = y / sz + 0.5;
+		}
+
+		coords[i] = Math.max(0, Math.min(1, t));
+	}
+
+	geo.setAttribute("blendCoord", new THREE.BufferAttribute(coords, 1));
+	return geo;
 }
 
+/**
+ * Soft gradient blend strip using a shader for smooth alpha interpolation.
+ * Replaces the old dual-mesh approach with a single draw call per edge.
+ */
 function BlendEdgeStrip({
 	direction,
 	neighborColor,
@@ -91,72 +217,92 @@ function BlendEdgeStrip({
 	neighborColor: number;
 	plateSize: number;
 }) {
-	const blendDepth = plateSize * 0.3;
-	const blendWidth = plateSize * 0.98;
-	let px = 0;
-	let pz = 0;
-	let sx = blendWidth;
-	let sz = blendDepth;
+	const params = computeBlendStripParams(direction, plateSize);
+	const { outer } = params;
 
-	if (direction === "px") {
-		px = plateSize / 2 - blendDepth / 2;
-		sx = blendDepth;
-		sz = blendWidth;
-	} else if (direction === "nx") {
-		px = -(plateSize / 2 - blendDepth / 2);
-		sx = blendDepth;
-		sz = blendWidth;
-	} else if (direction === "pz") {
-		pz = plateSize / 2 - blendDepth / 2;
-	} else {
-		pz = -(plateSize / 2 - blendDepth / 2);
-	}
+	const geometry = useMemo(
+		() => makeBlendPlaneGeometry(outer.sx, outer.sz, direction),
+		[outer.sx, outer.sz, direction],
+	);
 
-	// Inner strip: narrower, higher opacity for gradient falloff
-	const innerDepth = blendDepth * 0.5;
-	let ipx = 0;
-	let ipz = 0;
-	let isx = blendWidth;
-	let isz = innerDepth;
-	if (direction === "px") {
-		ipx = plateSize / 2 - innerDepth / 2;
-		isx = innerDepth;
-		isz = blendWidth;
-	} else if (direction === "nx") {
-		ipx = -(plateSize / 2 - innerDepth / 2);
-		isx = innerDepth;
-		isz = blendWidth;
-	} else if (direction === "pz") {
-		ipz = plateSize / 2 - innerDepth / 2;
-	} else {
-		ipz = -(plateSize / 2 - innerDepth / 2);
-	}
+	const uniforms = useMemo(
+		() => ({
+			uColor: { value: new THREE.Color(neighborColor) },
+			uOpacity: { value: params.innerOpacity },
+		}),
+		[neighborColor, params.innerOpacity],
+	);
 
 	return (
-		<group>
-			{/* Outer blend — wide, subtle */}
-			<mesh rotation={[-Math.PI / 2, 0, 0]} position={[px, 0.004, pz]}>
-				<planeGeometry args={[sx, sz]} />
-				<meshBasicMaterial
-					color={neighborColor}
-					transparent
-					opacity={0.08}
-					side={THREE.DoubleSide}
-					depthWrite={false}
-				/>
-			</mesh>
-			{/* Inner blend — narrow, stronger for gradient */}
-			<mesh rotation={[-Math.PI / 2, 0, 0]} position={[ipx, 0.005, ipz]}>
-				<planeGeometry args={[isx, isz]} />
-				<meshBasicMaterial
-					color={neighborColor}
-					transparent
-					opacity={0.14}
-					side={THREE.DoubleSide}
-					depthWrite={false}
-				/>
-			</mesh>
-		</group>
+		<mesh
+			rotation={[-Math.PI / 2, 0, 0]}
+			position={[outer.px, params.yOuter, outer.pz]}
+			geometry={geometry}
+		>
+			<shaderMaterial
+				uniforms={uniforms}
+				vertexShader={blendStripVertexShader}
+				fragmentShader={blendStripFragmentShader}
+				transparent
+				side={THREE.DoubleSide}
+				depthWrite={false}
+			/>
+		</mesh>
+	);
+}
+
+/**
+ * Breach boundary glow/crack effect. Renders a pulsing emissive crack
+ * with a wider glow halo, visually distinct from soft zone blends.
+ */
+function BreachEdgeStrip({
+	direction,
+	plateSize,
+}: {
+	direction: EdgeDirection;
+	plateSize: number;
+}) {
+	const params = computeBreachStripParams(direction, plateSize);
+	const materialRef = useRef<THREE.ShaderMaterial>(null);
+
+	const uniforms = useMemo(
+		() => ({
+			uGlowColor: { value: new THREE.Color(params.glowColor) },
+			uIntensity: { value: params.glowIntensity },
+			uTime: { value: 0 },
+			uPulseSpeed: { value: params.pulseSpeed },
+			uCrackOpacity: { value: params.crackOpacity },
+		}),
+		[
+			params.glowColor,
+			params.glowIntensity,
+			params.pulseSpeed,
+			params.crackOpacity,
+		],
+	);
+
+	useFrame(({ clock }) => {
+		if (materialRef.current) {
+			materialRef.current.uniforms.uTime.value = clock.getElapsedTime();
+		}
+	});
+
+	return (
+		<mesh
+			rotation={[-Math.PI / 2, 0, 0]}
+			position={[params.crack.px, params.yOffset, params.crack.pz]}
+		>
+			<planeGeometry args={[params.crack.sx, params.crack.sz]} />
+			<shaderMaterial
+				ref={materialRef}
+				uniforms={uniforms}
+				vertexShader={breachGlowVertexShader}
+				fragmentShader={breachGlowFragmentShader}
+				transparent
+				side={THREE.DoubleSide}
+				depthWrite={false}
+			/>
+		</mesh>
 	);
 }
 
@@ -212,7 +358,7 @@ function StructuralCellMesh({
 	const accentLength = plateWidth * 0.56;
 	const accentWidth = profile === "ops" ? 0.04 : 0.05;
 	const overlayOpacity =
-		profile === "overview" ? 0.12 : profile === "ops" ? 0.10 : 0.09;
+		profile === "overview" ? 0.12 : profile === "ops" ? 0.1 : 0.09;
 	const shellOpacity =
 		profile === "overview" ? 0.06 : profile === "ops" ? 0.04 : 0.05;
 	return (
@@ -262,15 +408,23 @@ function StructuralCellMesh({
 					depthWrite={false}
 				/>
 			</mesh>
-			{/* Zone transition blend edges */}
-			{blendEdges.map((edge) => (
-				<BlendEdgeStrip
-					key={edge.direction}
-					direction={edge.direction}
-					neighborColor={edge.neighborColor}
-					plateSize={plateWidth}
-				/>
-			))}
+			{/* Zone transition blend edges — shader-based gradient or breach glow */}
+			{blendEdges.map((edge) =>
+				edge.isBreach ? (
+					<BreachEdgeStrip
+						key={`breach_${edge.direction}`}
+						direction={edge.direction}
+						plateSize={plateWidth}
+					/>
+				) : (
+					<BlendEdgeStrip
+						key={edge.direction}
+						direction={edge.direction}
+						neighborColor={edge.neighborColor}
+						plateSize={plateWidth}
+					/>
+				),
+			)}
 		</group>
 	);
 }
@@ -480,7 +634,10 @@ export function StructuralFloorRenderer({
 		}
 
 		loadTextures().catch((err) => {
-			console.error("[StructuralFloorRenderer] Floor texture loading FAILED:", err);
+			console.error(
+				"[StructuralFloorRenderer] Floor texture loading FAILED:",
+				err,
+			);
 			throw err;
 		});
 
@@ -494,30 +651,21 @@ export function StructuralFloorRenderer({
 			{/* Dark backdrop plane that follows the camera — prevents void edges */}
 			<VoidFillFloor />
 			{orderedCells.map((cell) => {
-				const edges: BlendEdge[] = [];
-				const neighbors: [EdgeDirection, number, number][] = [
-					["px", cell.q + 1, cell.r],
-					["nx", cell.q - 1, cell.r],
-					["pz", cell.q, cell.r + 1],
-					["nz", cell.q, cell.r - 1],
-				];
-				for (const [dir, nq, nr] of neighbors) {
-					const neighbor = cellByCoord.get(`${nq},${nr}`);
-					if (
-						neighbor &&
-						neighbor.floor_preset_id !== cell.floor_preset_id
-					) {
-						const nColor =
-							FLOOR_COLORS[neighbor.floor_preset_id] ??
-							FLOOR_COLORS.command_core;
-						edges.push({ direction: dir, neighborColor: nColor });
-					}
-				}
+				const edges = computeBlendEdges(
+					cell,
+					cellByCoord as Map<
+						string,
+						{ q: number; r: number; floor_preset_id: string }
+					>,
+					FLOOR_COLORS,
+					FLOOR_COLORS.command_core,
+				);
 
 				const resolvedPresetId = resolveTexturePresetId(cell.floor_preset_id);
-				const cellTextures = texturesByPreset.size > 0
-					? texturesByPreset.get(resolvedPresetId) ?? null
-					: null;
+				const cellTextures =
+					texturesByPreset.size > 0
+						? (texturesByPreset.get(resolvedPresetId) ?? null)
+						: null;
 
 				// Fail hard if textures loaded but this preset is missing
 				if (texturesByPreset.size > 0 && !cellTextures) {

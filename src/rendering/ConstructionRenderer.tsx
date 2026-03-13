@@ -14,6 +14,8 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef, useState } from "react";
 import * as THREE from "three";
+import { Building, Identity, WorldPosition } from "../ecs/traits";
+import { buildings } from "../ecs/world";
 import {
 	type BuildingConstructionState,
 	type ConstructionStageId,
@@ -21,8 +23,7 @@ import {
 	getConstructionProgress,
 	STAGE_VISUAL_CONFIG,
 } from "../systems/constructionVisualization";
-import { Identity, WorldPosition, Building } from "../ecs/traits";
-import { buildings } from "../ecs/world";
+import { getSparkIntensity } from "./constructionVisuals";
 import { pushEffect } from "./particles/effectEvents";
 
 const BAR_WIDTH = 1.4;
@@ -86,8 +87,7 @@ function ConstructionOverlay({ visual }: { visual: ConstructionVisual }) {
 		if (matRef.current) {
 			// Pulse emissive during construction
 			matRef.current.emissiveIntensity =
-				config.emissiveIntensity +
-				0.05 * Math.sin(clock.elapsedTime * 3);
+				config.emissiveIntensity + 0.05 * Math.sin(clock.elapsedTime * 3);
 			matRef.current.opacity = config.opacity;
 		}
 	});
@@ -156,13 +156,16 @@ export function ConstructionRenderer() {
 
 			// Detect stage transitions for particle effects
 			const prevStage = prevStagesRef.current.get(state.entityId);
+			const progress = getConstructionProgress(state.entityId);
 			if (prevStage && prevStage !== state.currentStage) {
+				// Spark intensity from constructionVisuals pure logic
+				const sparkLevel = getSparkIntensity(progress);
 				pushEffect({
 					type: "construction_stage",
 					x: pos.x,
 					y: pos.y,
 					z: pos.z,
-					intensity: 0.7,
+					intensity: sparkLevel,
 				});
 			}
 

@@ -1,13 +1,21 @@
+import cultistConfig from "../config/cultists.json";
 import type { BreachZone } from "./breachZones";
 import { loadBreachZones, resetBreachZones } from "./breachZones";
 import {
 	callLightning,
+	countCultists,
 	cultistBehaviorTick,
+	getAvailableUnitTypes,
+	getBreachZoneMultiplier,
 	getEscalationFactor,
+	getEscalationTier,
+	getMaxCultists,
 	getSpawnInterval,
+	getTierSpawnInterval,
 	getWaveSize,
 	isWithinBreachFogSense,
 	resetCultistIncursion,
+	resetCultistIncursionState,
 	setTerritorySize,
 	spawnCultistWave,
 } from "./cultistIncursion";
@@ -257,6 +265,132 @@ describe("cultistIncursion", () => {
 		it("callLightning returns 0 when no targets are nearby", () => {
 			const damaged = callLightning("cultist_0", 10, -8);
 			expect(damaged).toBe(0);
+		});
+	});
+
+	describe("config-driven escalation tiers", () => {
+		const { escalation } = cultistConfig;
+
+		beforeEach(() => {
+			resetCultistIncursionState();
+		});
+
+		describe("getEscalationTier", () => {
+			it("returns tier 0 when territory is below first milestone", () => {
+				expect(getEscalationTier(0)).toBe(0);
+				expect(getEscalationTier(5)).toBe(0);
+				expect(getEscalationTier(9)).toBe(0);
+			});
+
+			it("returns tier 1 at first milestone", () => {
+				const firstMilestone = escalation.territoryMilestones[0];
+				expect(getEscalationTier(firstMilestone)).toBe(1);
+			});
+
+			it("returns tier 2 at second milestone", () => {
+				const secondMilestone = escalation.territoryMilestones[1];
+				expect(getEscalationTier(secondMilestone)).toBe(2);
+			});
+
+			it("returns tier 3 at third milestone", () => {
+				const thirdMilestone = escalation.territoryMilestones[2];
+				expect(getEscalationTier(thirdMilestone)).toBe(3);
+			});
+
+			it("returns tier 4 at fourth milestone", () => {
+				const fourthMilestone = escalation.territoryMilestones[3];
+				expect(getEscalationTier(fourthMilestone)).toBe(4);
+			});
+
+			it("escalation tiers match config milestone count", () => {
+				const maxTier = escalation.territoryMilestones.length;
+				expect(getEscalationTier(999)).toBe(maxTier);
+			});
+
+			it("milestones are read from config, not hardcoded", () => {
+				expect(escalation.territoryMilestones).toEqual([10, 25, 50, 100]);
+			});
+		});
+
+		describe("getTierSpawnInterval", () => {
+			it("returns baseline interval at tier 0", () => {
+				expect(getTierSpawnInterval(0)).toBe(escalation.spawnIntervals[0]);
+			});
+
+			it("returns faster interval at higher tiers", () => {
+				const tier0 = getTierSpawnInterval(0);
+				const tier2 = getTierSpawnInterval(2);
+				expect(tier2).toBeLessThan(tier0);
+			});
+
+			it("clamps to last entry for very high tiers", () => {
+				const lastInterval =
+					escalation.spawnIntervals[escalation.spawnIntervals.length - 1];
+				expect(getTierSpawnInterval(999)).toBe(lastInterval);
+			});
+		});
+
+		describe("getMaxCultists", () => {
+			it("returns low cap at tier 0", () => {
+				expect(getMaxCultists(0)).toBe(escalation.maxEnemiesPerTier[0]);
+			});
+
+			it("increases max enemies with tier", () => {
+				expect(getMaxCultists(2)).toBeGreaterThan(getMaxCultists(0));
+			});
+
+			it("clamps to last entry for very high tiers", () => {
+				const lastMax =
+					escalation.maxEnemiesPerTier[escalation.maxEnemiesPerTier.length - 1];
+				expect(getMaxCultists(999)).toBe(lastMax);
+			});
+		});
+
+		describe("getAvailableUnitTypes", () => {
+			it("returns only basic types at tier 0", () => {
+				const types = getAvailableUnitTypes(0);
+				expect(types).toEqual(escalation.tierUnitTypes[0]);
+				expect(types).toContain("cultist_drone");
+			});
+
+			it("unlocks more types at higher tiers", () => {
+				const tier0Types = getAvailableUnitTypes(0);
+				const tier3Types = getAvailableUnitTypes(3);
+				expect(tier3Types.length).toBeGreaterThan(tier0Types.length);
+			});
+
+			it("tier 4 unlocks all unit types including archon", () => {
+				const types = getAvailableUnitTypes(4);
+				expect(types).toContain("cultist_archon");
+			});
+		});
+
+		describe("getBreachZoneMultiplier", () => {
+			it("returns 1.0 when far from all breach zones", () => {
+				expect(getBreachZoneMultiplier(999, 999)).toBe(1.0);
+			});
+
+			it("returns reduced multiplier near a breach zone", () => {
+				const zone = cultistConfig.breachZones[0];
+				const multiplier = getBreachZoneMultiplier(zone.x, zone.z);
+				expect(multiplier).toBe(1.0 - escalation.breachZoneProximityBonus);
+				expect(multiplier).toBeLessThan(1.0);
+			});
+
+			it("breach zone radius is config-driven", () => {
+				const zone = cultistConfig.breachZones[0];
+				const outsideMultiplier = getBreachZoneMultiplier(
+					zone.x + escalation.breachZoneRadius + 1,
+					zone.z,
+				);
+				expect(outsideMultiplier).toBe(1.0);
+			});
+		});
+
+		describe("countCultists", () => {
+			it("counts cultist entities in the world", () => {
+				expect(countCultists()).toBe(0);
+			});
 		});
 	});
 });

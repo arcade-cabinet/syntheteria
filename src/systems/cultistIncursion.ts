@@ -15,6 +15,7 @@
  */
 
 import { createBotUnitState } from "../bots";
+import cultistConfig from "../config/cultists.json";
 import { gameplayRandom } from "../ecs/seed";
 import {
 	AIController,
@@ -27,7 +28,7 @@ import {
 } from "../ecs/traits";
 import { buildings, units, world } from "../ecs/world";
 import { gridToWorld } from "../world/sectorCoordinates";
-import { getBreachZones, type BreachZone } from "./breachZones";
+import { type BreachZone, getBreachZones } from "./breachZones";
 import { getTurnState } from "./turnSystem";
 import { getWeatherSnapshot } from "./weather";
 
@@ -86,6 +87,80 @@ let lastSpawnEvents: CultistSpawnEvent[] = [];
 let lastAttackEvents: CultistAttackEvent[] = [];
 let totalTerritorySize = 0;
 
+// ─── Config-Driven Escalation Tiers ──────────────────────────────────────────
+
+const { escalation: cultistEscalation, breachZones: configBreachZones } =
+	cultistConfig;
+
+/**
+ * Determine the current escalation tier based on player territory size.
+ * Returns a tier index (0 = baseline, 1..N = milestones reached).
+ * Territory milestones are config-driven via cultists.json.
+ */
+export function getEscalationTier(playerTerritoryCells: number): number {
+	let tier = 0;
+	for (const milestone of cultistEscalation.territoryMilestones) {
+		if (playerTerritoryCells >= milestone) {
+			tier++;
+		}
+	}
+	return tier;
+}
+
+/**
+ * Get the spawn interval for a given escalation tier.
+ * Higher tiers spawn more frequently (lower interval).
+ */
+export function getTierSpawnInterval(tier: number): number {
+	const clampedTier = Math.min(
+		tier,
+		cultistEscalation.spawnIntervals.length - 1,
+	);
+	return cultistEscalation.spawnIntervals[clampedTier];
+}
+
+/**
+ * Get the max cultist count for a given escalation tier.
+ */
+export function getMaxCultists(tier: number): number {
+	const clampedTier = Math.min(
+		tier,
+		cultistEscalation.maxEnemiesPerTier.length - 1,
+	);
+	return cultistEscalation.maxEnemiesPerTier[clampedTier];
+}
+
+/**
+ * Get available unit types for a given escalation tier.
+ */
+export function getAvailableUnitTypes(tier: number): string[] {
+	const clampedTier = Math.min(
+		tier,
+		cultistEscalation.tierUnitTypes.length - 1,
+	);
+	return cultistEscalation.tierUnitTypes[clampedTier];
+}
+
+/**
+ * Calculate proximity bonus: if spawn point is near a config breach zone,
+ * spawn interval is reduced by breachZoneProximityBonus fraction.
+ * Returns a multiplier (1.0 = no bonus, lower = faster spawning).
+ */
+export function getBreachZoneMultiplier(
+	spawnX: number,
+	spawnZ: number,
+): number {
+	for (const zone of configBreachZones) {
+		const dx = spawnX - zone.x;
+		const dz = spawnZ - zone.z;
+		const dist = Math.sqrt(dx * dx + dz * dz);
+		if (dist <= cultistEscalation.breachZoneRadius) {
+			return 1.0 - cultistEscalation.breachZoneProximityBonus;
+		}
+	}
+	return 1.0;
+}
+
 // ─── Escalation ───────────────────────────────────────────────────────────────
 
 /**
@@ -111,8 +186,7 @@ export function getEscalationFactor(): number {
 export function getSpawnInterval(): number {
 	const factor = getEscalationFactor();
 	return Math.round(
-		BASE_SPAWN_INTERVAL -
-			factor * (BASE_SPAWN_INTERVAL - MIN_SPAWN_INTERVAL),
+		BASE_SPAWN_INTERVAL - factor * (BASE_SPAWN_INTERVAL - MIN_SPAWN_INTERVAL),
 	);
 }
 
@@ -121,9 +195,7 @@ export function getSpawnInterval(): number {
  */
 export function getWaveSize(): number {
 	const factor = getEscalationFactor();
-	return Math.round(
-		BASE_WAVE_SIZE + factor * (MAX_WAVE_SIZE - BASE_WAVE_SIZE),
-	);
+	return Math.round(BASE_WAVE_SIZE + factor * (MAX_WAVE_SIZE - BASE_WAVE_SIZE));
 }
 
 /**
@@ -210,7 +282,7 @@ function getTierComponents(tier: CultistTier) {
 
 // ─── Counting ─────────────────────────────────────────────────────────────────
 
-function countCultists(): number {
+export function countCultists(): number {
 	let count = 0;
 	for (const unit of units) {
 		if (unit.get(Identity)?.faction === "cultist") count++;
@@ -309,10 +381,7 @@ export function spawnCultistWave(turnNumber: number): CultistSpawnEvent[] {
 	const currentCount = countCultists();
 	if (currentCount >= MAX_TOTAL_CULTISTS) return [];
 
-	const waveSize = Math.min(
-		getWaveSize(),
-		MAX_TOTAL_CULTISTS - currentCount,
-	);
+	const waveSize = Math.min(getWaveSize(), MAX_TOTAL_CULTISTS - currentCount);
 	const events: CultistSpawnEvent[] = [];
 
 	for (let i = 0; i < waveSize; i++) {
@@ -608,8 +677,7 @@ export function callLightning(
 		const functional = bld.components.filter((c) => c.functional);
 		if (functional.length === 0) continue;
 
-		const victim =
-			functional[Math.floor(gameplayRandom() * functional.length)];
+		const victim = functional[Math.floor(gameplayRandom() * functional.length)];
 		victim.functional = false;
 		damaged++;
 	}
@@ -632,8 +700,7 @@ export function callLightning(
 		const functional = unitData.components.filter((c) => c.functional);
 		if (functional.length === 0) continue;
 
-		const victim =
-			functional[Math.floor(gameplayRandom() * functional.length)];
+		const victim = functional[Math.floor(gameplayRandom() * functional.length)];
 		victim.functional = false;
 		damaged++;
 	}
@@ -728,4 +795,11 @@ export function resetCultistIncursion() {
 	lastSpawnEvents = [];
 	lastAttackEvents = [];
 	totalTerritorySize = 0;
+}
+
+/**
+ * Alias for resetCultistIncursion — used by escalation tier tests.
+ */
+export function resetCultistIncursionState() {
+	resetCultistIncursion();
 }

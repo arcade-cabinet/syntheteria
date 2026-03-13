@@ -1,0 +1,112 @@
+{
+	"escalation": {
+		"territoryMilestones": [10, 25, 50, 100],
+		"spawnIntervals": [120, 80, 50, 30, 20],
+		"maxEnemiesPerTier": [2, 4, 7, 12, 18],
+		"breachZoneProximityBonus": 0.5,
+		"breachZoneRadius": 15,
+		"tierUnitTypes": [
+			["cultist_drone"],
+			["cultist_drone", "cultist_zealot"],
+			["cultist_drone", "cultist_zealot", "cultist_shaman"],
+			["cultist_drone", "cultist_zealot", "cultist_shaman", "cultist_herald"],
+			[
+				"cultist_drone",
+				"cultist_zealot",
+				"cultist_shaman",
+				"cultist_herald",
+				"cultist_archon"
+			]
+		]
+	},
+	"breachZones": [
+		{ "x": 10, "z": -20 },
+		{ "x": -30, "z": 15 },
+		{ "x": 50, "z": 40 }
+	],
+	"unitStats": {
+		"cultist_drone": {
+			"displayName": "Cultist Drone",
+			"speed": 2.5,
+			"components": [
+				{
+					"name": "lightning_coil",
+					"functional": true,
+					"material": "electronic"
+				},
+				{ "name": "legs", "functional": true, "material": "metal" },
+				{ "name": "power_cell", "functional": true, "material": "electronic" }
+			]
+		},
+		"cultist_zealot": {
+			"displayName": "Cultist Zealot",
+			"speed": 3.0,
+			"components": [
+				{
+					"name": "lightning_coil",
+					"functional": true,
+					"material": "electronic"
+				},
+				{ "name": "arms", "functional": true, "material": "metal" },
+				{ "name": "legs", "functional": true, "material": "metal" },
+				{ "name": "power_cell", "functional": true, "material": "electronic" }
+			]
+		},
+		"cultist_shaman": {
+			"displayName": "Cultist Shaman",
+			"speed": 2.0,
+			"components": [
+				{
+					"name": "lightning_coil",
+					"functional": true,
+					"material": "electronic"
+				},
+				{
+					"name": "signal_amplifier",
+					"functional": true,
+					"material": "electronic"
+				},
+				{ "name": "arms", "functional": true, "material": "metal" },
+				{ "name": "legs", "functional": true, "material": "metal" },
+				{ "name": "power_cell", "functional": true, "material": "electronic" }
+			]
+		},
+		"cultist_herald": {
+			"displayName": "Cultist Herald",
+			"speed": 3.5,
+			"components": [
+				{
+					"name": "lightning_coil",
+					"functional": true,
+					"material": "electronic"
+				},
+				{ "name": "camera", "functional": true, "material": "electronic" },
+				{ "name": "arms", "functional": true, "material": "metal" },
+				{ "name": "legs", "functional": true, "material": "metal" },
+				{ "name": "power_cell", "functional": true, "material": "electronic" },
+				{ "name": "power_supply", "functional": true, "material": "electronic" }
+			]
+		},
+		"cultist_archon": {
+			"displayName": "Cultist Archon",
+			"speed": 2.0,
+			"components": [
+				{
+					"name": "lightning_coil",
+					"functional": true,
+					"material": "electronic"
+				},
+				{
+					"name": "signal_amplifier",
+					"functional": true,
+					"material": "electronic"
+				},
+				{ "name": "camera", "functional": true, "material": "electronic" },
+				{ "name": "arms", "functional": true, "material": "metal" },
+				{ "name": "legs", "functional": true, "material": "metal" },
+				{ "name": "power_cell", "functional": true, "material": "electronic" },
+				{ "name": "power_supply", "functional": true, "material": "electronic" }
+			]
+		}
+	}
+}

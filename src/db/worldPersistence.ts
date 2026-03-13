@@ -16,14 +16,19 @@ import type {
 import type { GeneratedSectorStructure } from "../world/sectorStructurePlan";
 import type {
 	CampaignStateSnapshot,
+	CampaignStatisticsSnapshot,
 	CityRuntimeSnapshot,
 	EcumenopolisSnapshot,
+	FactionResourceStateSnapshot,
+	HarvestStateSnapshot,
 	PersistableWorldEntity,
 	PersistedWorldSnapshot,
 	ResourceStateSnapshot,
 	SectorCellSnapshot,
 	SectorPoiSnapshot,
 	SectorStructureSnapshot,
+	TurnEventLogSnapshot,
+	TurnStateSnapshot,
 	WorldEntitySnapshot,
 	WorldSessionSnapshot,
 } from "../world/snapshots";
@@ -41,6 +46,11 @@ export type CityInstanceRecord = CityRuntimeSnapshot;
 export type CampaignStateRecord = CampaignStateSnapshot;
 export type ResourceStateRecord = ResourceStateSnapshot;
 export type WorldEntityRecord = WorldEntitySnapshot;
+export type HarvestStateRecord = HarvestStateSnapshot;
+export type TurnStateRecord = TurnStateSnapshot;
+export type FactionResourceStateRecord = FactionResourceStateSnapshot;
+export type CampaignStatisticsRecord = CampaignStatisticsSnapshot;
+export type TurnEventLogRecord = TurnEventLogSnapshot;
 export type PersistedWorldRecord = PersistedWorldSnapshot;
 export type ActiveWorldRecord = WorldSessionSnapshot;
 
@@ -198,6 +208,78 @@ function selectResourceState(database: SyncDatabase, saveGameId: number) {
 				intact_components,
 				last_synced_at
 			FROM resource_states
+			WHERE save_game_id = ?
+		`,
+		saveGameId,
+	);
+}
+
+function selectHarvestState(database: SyncDatabase, saveGameId: number) {
+	return database.getFirstSync<HarvestStateRecord>(
+		`
+			SELECT
+				id,
+				save_game_id,
+				consumed_structure_ids_json,
+				active_harvests_json,
+				last_synced_at
+			FROM harvest_states
+			WHERE save_game_id = ?
+		`,
+		saveGameId,
+	);
+}
+
+function selectTurnState(database: SyncDatabase, saveGameId: number) {
+	return database.getFirstSync<TurnStateRecord>(
+		`
+			SELECT
+				id,
+				save_game_id,
+				turn_number,
+				phase,
+				active_faction,
+				unit_states_json,
+				last_synced_at
+			FROM turn_states
+			WHERE save_game_id = ?
+		`,
+		saveGameId,
+	);
+}
+
+function selectFactionResourceStates(
+	database: SyncDatabase,
+	saveGameId: number,
+) {
+	return database.getAllSync<FactionResourceStateRecord>(
+		`
+			SELECT
+				id,
+				save_game_id,
+				faction_id,
+				resources_json,
+				last_synced_at
+			FROM faction_resource_states
+			WHERE save_game_id = ?
+			ORDER BY faction_id ASC
+		`,
+		saveGameId,
+	);
+}
+
+function selectCampaignStatistics(
+	database: SyncDatabase,
+	saveGameId: number,
+) {
+	return database.getFirstSync<CampaignStatisticsRecord>(
+		`
+			SELECT
+				id,
+				save_game_id,
+				stats_json,
+				last_synced_at
+			FROM campaign_statistics
 			WHERE save_game_id = ?
 		`,
 		saveGameId,
@@ -653,6 +735,10 @@ export function getPersistedWorldSync(
 			selectResourceState(database, saveGame.id) ??
 			ensureResourceStateSync(saveGame.id, database, Date.now())!,
 		entities: selectWorldEntities(database, saveGame.id),
+		harvestState: selectHarvestState(database, saveGame.id),
+		turnState: selectTurnState(database, saveGame.id),
+		factionResourceStates: selectFactionResourceStates(database, saveGame.id),
+		campaignStatistics: selectCampaignStatistics(database, saveGame.id),
 	};
 }
 
@@ -738,5 +824,177 @@ export function persistRuntimeWorldStateSync(
 	}
 
 	persistWorldEntitiesSync(saveGameId, entities, database);
+	persistFallbackDatabase(database);
+}
+
+export function persistHarvestStateSync(
+	saveGameId: number,
+	consumedStructureIds: number[],
+	activeHarvests: unknown[],
+	database: SyncDatabase = getDatabaseSync(),
+) {
+	initializeDatabaseSync(database);
+	const now = Date.now();
+	const consumedJson = JSON.stringify(consumedStructureIds);
+	const harvestsJson = JSON.stringify(activeHarvests);
+
+	const existing = selectHarvestState(database, saveGameId);
+	if (existing) {
+		database.runSync(
+			`
+				UPDATE harvest_states
+				SET consumed_structure_ids_json = ?, active_harvests_json = ?, last_synced_at = ?
+				WHERE save_game_id = ?
+			`,
+			consumedJson,
+			harvestsJson,
+			now,
+			saveGameId,
+		);
+	} else {
+		database.runSync(
+			`
+				INSERT INTO harvest_states (
+					save_game_id, consumed_structure_ids_json, active_harvests_json, last_synced_at
+				) VALUES (?, ?, ?, ?)
+			`,
+			saveGameId,
+			consumedJson,
+			harvestsJson,
+			now,
+		);
+	}
+	persistFallbackDatabase(database);
+}
+
+export function persistTurnStateSync(
+	saveGameId: number,
+	turnNumber: number,
+	phase: string,
+	activeFaction: string,
+	unitStates: unknown[],
+	database: SyncDatabase = getDatabaseSync(),
+) {
+	initializeDatabaseSync(database);
+	const now = Date.now();
+	const unitStatesJson = JSON.stringify(unitStates);
+
+	const existing = selectTurnState(database, saveGameId);
+	if (existing) {
+		database.runSync(
+			`
+				UPDATE turn_states
+				SET turn_number = ?, phase = ?, active_faction = ?, unit_states_json = ?, last_synced_at = ?
+				WHERE save_game_id = ?
+			`,
+			turnNumber,
+			phase,
+			activeFaction,
+			unitStatesJson,
+			now,
+			saveGameId,
+		);
+	} else {
+		database.runSync(
+			`
+				INSERT INTO turn_states (
+					save_game_id, turn_number, phase, active_faction, unit_states_json, last_synced_at
+				) VALUES (?, ?, ?, ?, ?, ?)
+			`,
+			saveGameId,
+			turnNumber,
+			phase,
+			activeFaction,
+			unitStatesJson,
+			now,
+		);
+	}
+	persistFallbackDatabase(database);
+}
+
+export function persistFactionResourceStatesSync(
+	saveGameId: number,
+	factionResources: Array<{
+		factionId: string;
+		resources: Record<string, number>;
+	}>,
+	database: SyncDatabase = getDatabaseSync(),
+) {
+	initializeDatabaseSync(database);
+	const now = Date.now();
+
+	database.runSync(
+		"DELETE FROM faction_resource_states WHERE save_game_id = ?",
+		saveGameId,
+	);
+	for (const entry of factionResources) {
+		database.runSync(
+			`
+				INSERT INTO faction_resource_states (
+					save_game_id, faction_id, resources_json, last_synced_at
+				) VALUES (?, ?, ?, ?)
+			`,
+			saveGameId,
+			entry.factionId,
+			JSON.stringify(entry.resources),
+			now,
+		);
+	}
+	persistFallbackDatabase(database);
+}
+
+export function persistCampaignStatisticsSync(
+	saveGameId: number,
+	stats: Record<string, unknown>,
+	database: SyncDatabase = getDatabaseSync(),
+) {
+	initializeDatabaseSync(database);
+	const now = Date.now();
+	const statsJson = JSON.stringify(stats);
+
+	const existing = selectCampaignStatistics(database, saveGameId);
+	if (existing) {
+		database.runSync(
+			`
+				UPDATE campaign_statistics
+				SET stats_json = ?, last_synced_at = ?
+				WHERE save_game_id = ?
+			`,
+			statsJson,
+			now,
+			saveGameId,
+		);
+	} else {
+		database.runSync(
+			`
+				INSERT INTO campaign_statistics (
+					save_game_id, stats_json, last_synced_at
+				) VALUES (?, ?, ?)
+			`,
+			saveGameId,
+			statsJson,
+			now,
+		);
+	}
+	persistFallbackDatabase(database);
+}
+
+export function persistTurnEventLogSync(
+	saveGameId: number,
+	turnNumber: number,
+	events: unknown[],
+	database: SyncDatabase = getDatabaseSync(),
+) {
+	initializeDatabaseSync(database);
+	database.runSync(
+		`
+			INSERT INTO turn_event_logs (
+				save_game_id, turn_number, events_json
+			) VALUES (?, ?, ?)
+		`,
+		saveGameId,
+		turnNumber,
+		JSON.stringify(events),
+	);
 	persistFallbackDatabase(database);
 }

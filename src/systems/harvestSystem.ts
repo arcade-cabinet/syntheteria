@@ -23,6 +23,7 @@ import {
 	isHarvestable,
 	rollHarvestYield,
 } from "./resourcePools";
+import { expireHarvestEvents, pushHarvestYield } from "./harvestEvents";
 import { addResource, type ResourcePool } from "./resources";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -128,6 +129,23 @@ export function resetHarvestSystem() {
 	consumedStructureIds.clear();
 }
 
+/**
+ * Rehydrate harvest state from a save — restores consumed IDs and active harvests.
+ */
+export function rehydrateHarvestState(
+	consumedIds: number[],
+	harvests: ActiveHarvest[],
+) {
+	consumedStructureIds.clear();
+	for (const id of consumedIds) {
+		consumedStructureIds.add(id);
+	}
+	activeHarvests.length = 0;
+	for (const h of harvests) {
+		activeHarvests.push(h);
+	}
+}
+
 // ─── Harvest Resource → ResourcePool Key Mapping ─────────────────────────────
 
 const HARVEST_TO_POOL_KEY: Record<HarvestResource, keyof ResourcePool> = {
@@ -146,9 +164,13 @@ const HARVEST_TO_POOL_KEY: Record<HarvestResource, keyof ResourcePool> = {
 /**
  * Harvest tick — called once per simulation frame.
  * Advances all active harvests, completes when timer reaches 0.
+ * @param tick - Current simulation tick (used for harvest yield event timestamps)
  */
-export function harvestSystem() {
-	const completed: number[] = [];
+export function harvestSystem(tick?: number) {
+	const currentTick = tick ?? 0;
+
+	// Expire old yield notifications
+	expireHarvestEvents(currentTick);
 
 	for (let i = activeHarvests.length - 1; i >= 0; i--) {
 		const harvest = activeHarvests[i];
@@ -192,9 +214,16 @@ export function harvestSystem() {
 				}
 			}
 
+			// Push a yield event for UI notification
+			pushHarvestYield(
+				harvest.targetX,
+				harvest.targetZ,
+				yields,
+				currentTick,
+			);
+
 			// Mark structure as consumed
 			consumedStructureIds.add(harvest.structureId);
-			completed.push(i);
 			activeHarvests.splice(i, 1);
 		}
 	}

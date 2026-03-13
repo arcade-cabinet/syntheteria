@@ -182,3 +182,55 @@ export const mapDiscovery = sqliteTable("map_discovery", {
 	chunkY: integer("chunk_y").notNull(),
 	discoveredState: text("discovered_state").notNull(), // 'unexplored', 'abstract', 'detailed'
 });
+
+export const harvestStates = sqliteTable("harvest_states", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	saveGameId: integer("save_game_id")
+		.notNull()
+		.references(() => saveGames.id, { onDelete: "cascade" }),
+	consumedStructureIdsJson: text("consumed_structure_ids_json")
+		.notNull()
+		.default("[]"),
+	activeHarvestsJson: text("active_harvests_json").notNull().default("[]"),
+	lastSyncedAt: integer("last_synced_at", { mode: "timestamp" }).notNull(),
+});
+
+export const turnStates = sqliteTable("turn_states", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	saveGameId: integer("save_game_id")
+		.notNull()
+		.references(() => saveGames.id, { onDelete: "cascade" }),
+	turnNumber: integer("turn_number").notNull().default(1),
+	phase: text("phase").notNull().default("player"),
+	activeFaction: text("active_faction").notNull().default("player"),
+	unitStatesJson: text("unit_states_json").notNull().default("[]"),
+	lastSyncedAt: integer("last_synced_at", { mode: "timestamp" }).notNull(),
+});
+
+export const factionResourceStates = sqliteTable("faction_resource_states", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	saveGameId: integer("save_game_id")
+		.notNull()
+		.references(() => saveGames.id, { onDelete: "cascade" }),
+	factionId: text("faction_id").notNull(),
+	resourcesJson: text("resources_json").notNull().default("{}"),
+	lastSyncedAt: integer("last_synced_at", { mode: "timestamp" }).notNull(),
+});
+
+export const campaignStatistics = sqliteTable("campaign_statistics", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	saveGameId: integer("save_game_id")
+		.notNull()
+		.references(() => saveGames.id, { onDelete: "cascade" }),
+	statsJson: text("stats_json").notNull().default("{}"),
+	lastSyncedAt: integer("last_synced_at", { mode: "timestamp" }).notNull(),
+});
+
+export const turnEventLogs = sqliteTable("turn_event_logs", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	saveGameId: integer("save_game_id")
+		.notNull()
+		.references(() => saveGames.id, { onDelete: "cascade" }),
+	turnNumber: integer("turn_number").notNull(),
+	eventsJson: text("events_json").notNull().default("[]"),
+});

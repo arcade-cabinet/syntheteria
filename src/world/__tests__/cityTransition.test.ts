@@ -48,6 +48,7 @@ describe("cityTransition", () => {
 				sectorCells: [],
 				sectorStructures: [],
 				pointsOfInterest: [],
+				breachZones: [],
 				cityInstances: [
 					{
 						poiType: "home_base",

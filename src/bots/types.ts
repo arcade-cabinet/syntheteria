@@ -9,6 +9,18 @@ export type BotUnitType =
 	| "mecha_golem"
 	| "quadruped_tank";
 
+/** The 6 player-fabricable roles from BOT_AND_ECONOMY_REDESIGN */
+export type PlayerBotRole =
+	| "technician"
+	| "scout"
+	| "striker"
+	| "fabricator"
+	| "guardian"
+	| "hauler";
+
+/** The 3 hostile bot roles (hackable into player service) */
+export type HostileBotRole = "cult_mech" | "rogue_sentinel" | "siege_engine";
+
 export type BotArchetypeId =
 	| "field_technician"
 	| "relay_hauler"
@@ -116,6 +128,10 @@ export interface BotDefinition {
 	defaultAiRole: "player_unit" | "hostile_machine" | "cultist";
 	steeringProfile: BotSteeringProfile;
 	navigationProfile: BotNavigationProfile;
+	/** Player role (6 roles) or hostile role (3 roles) */
+	role: PlayerBotRole | HostileBotRole;
+	/** What the Mark multiplier scales for this role */
+	markScaling: string;
 }
 
 export interface BotRuntimeProfile extends BotIdentityProfile {

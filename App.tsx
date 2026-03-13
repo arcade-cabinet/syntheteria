@@ -29,6 +29,7 @@ import { TopDownCamera } from "./src/input/TopDownCamera";
 import { UnitInput } from "./src/input/UnitInput";
 import { CityInteriorRenderer } from "./src/rendering/CityInteriorRenderer";
 import { CityRenderer } from "./src/rendering/CityRenderer";
+import { HarvestProgressOverlay } from "./src/rendering/HarvestProgressOverlay";
 import { LandscapeProps } from "./src/rendering/LandscapeProps";
 import { LightningSystem } from "./src/rendering/LightningSystem";
 import { NetworkLineRenderer } from "./src/rendering/NetworkLineRenderer";
@@ -277,6 +278,7 @@ export default function App() {
 										<Suspense fallback={null}>
 											<CityRenderer />
 										</Suspense>
+										<HarvestProgressOverlay />
 										<UnitRenderer />
 									</>
 								) : (

@@ -1,7 +1,6 @@
 import { useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
-import { issueMoveCommand } from "../ai";
 import type { Entity, UnitEntity } from "../ecs/traits";
 import {
 	Building,
@@ -17,6 +16,7 @@ import {
 	getActivePlacement,
 	updateGhostPosition,
 } from "../systems/buildingPlacement";
+import { tryMoveUnit } from "../systems/moveCommand";
 import {
 	type RadialOpenContext,
 	closeRadialMenu,
@@ -92,7 +92,7 @@ function findEntityAtPoint(
 	return closest;
 }
 
-/** Issue a move command. Converts display-space target to real-world position. */
+/** Issue a move command with MP cost check. Converts display-space target to real-world position. */
 function issueMoveTo(entity: UnitEntity, displayX: number, displayZ: number) {
 	const frag = getStructuralFragment(entity.get(MapFragment)!.fragmentId);
 	const ox = frag?.displayOffset.x ?? 0;
@@ -106,11 +106,12 @@ function issueMoveTo(entity: UnitEntity, displayX: number, displayZ: number) {
 		return;
 	}
 
-	issueMoveCommand(entityId, {
-		x: realX,
-		y: 0,
-		z: realZ,
-	});
+	const currentPos = entity.get(WorldPosition)!;
+	tryMoveUnit(
+		entityId,
+		{ x: currentPos.x, y: currentPos.y, z: currentPos.z },
+		{ x: realX, y: 0, z: realZ },
+	);
 }
 
 /** Build a RadialOpenContext from a 3D world point. */

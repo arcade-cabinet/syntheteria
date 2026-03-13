@@ -162,6 +162,46 @@ export interface PersistableWorldEntity {
 	protectionRadius: number | null;
 }
 
+export interface HarvestStateSnapshot {
+	id: number;
+	save_game_id: number;
+	consumed_structure_ids_json: string;
+	active_harvests_json: string;
+	last_synced_at: number;
+}
+
+export interface TurnStateSnapshot {
+	id: number;
+	save_game_id: number;
+	turn_number: number;
+	phase: string;
+	active_faction: string;
+	unit_states_json: string;
+	last_synced_at: number;
+}
+
+export interface FactionResourceStateSnapshot {
+	id: number;
+	save_game_id: number;
+	faction_id: string;
+	resources_json: string;
+	last_synced_at: number;
+}
+
+export interface CampaignStatisticsSnapshot {
+	id: number;
+	save_game_id: number;
+	stats_json: string;
+	last_synced_at: number;
+}
+
+export interface TurnEventLogSnapshot {
+	id: number;
+	save_game_id: number;
+	turn_number: number;
+	events_json: string;
+}
+
 export interface WorldSessionSnapshot {
 	saveGame: SaveGameRecord;
 	config: NewGameConfig;
@@ -176,6 +216,10 @@ export interface WorldSessionSnapshot {
 
 export interface PersistedWorldSnapshot extends WorldSessionSnapshot {
 	entities: WorldEntitySnapshot[];
+	harvestState: HarvestStateSnapshot | null;
+	turnState: TurnStateSnapshot | null;
+	factionResourceStates: FactionResourceStateSnapshot[];
+	campaignStatistics: CampaignStatisticsSnapshot | null;
 }
 
 export interface NearbyPoiContext {

@@ -51,6 +51,8 @@ export interface RadialAction {
 	icon: string;
 	tone: string;
 	enabled: boolean;
+	/** Reason the action is disabled (shown as tooltip on hover) */
+	disabledReason?: string;
 	/** Called when this action is selected */
 	onExecute: (context: RadialOpenContext) => void;
 }
@@ -82,6 +84,8 @@ export interface RadialPetal {
 	icon: string;
 	tone: string;
 	enabled: boolean;
+	/** Reason the action is disabled (shown as tooltip on hover) */
+	disabledReason?: string;
 	startAngle: number;
 	endAngle: number;
 	/** For inner ring: number of sub-actions. 0 = direct action. */
@@ -422,6 +426,7 @@ function expandOuterRing(innerIndex: number) {
 		icon: action.icon,
 		tone: action.tone,
 		enabled: action.enabled,
+		disabledReason: action.disabledReason,
 		startAngle: angles[i].startAngle,
 		endAngle: angles[i].endAngle,
 		childCount: 0,

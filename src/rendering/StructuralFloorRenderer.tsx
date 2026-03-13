@@ -62,6 +62,92 @@ interface FloorTextureBundle {
 	displacementMap: THREE.Texture;
 }
 
+/** Directions for 4-connected grid neighbors: +x, -x, +z, -z */
+type EdgeDirection = "px" | "nx" | "pz" | "nz";
+
+interface BlendEdge {
+	direction: EdgeDirection;
+	neighborColor: number;
+}
+
+function BlendEdgeStrip({
+	direction,
+	neighborColor,
+	plateSize,
+}: {
+	direction: EdgeDirection;
+	neighborColor: number;
+	plateSize: number;
+}) {
+	const blendDepth = plateSize * 0.3;
+	const blendWidth = plateSize * 0.98;
+	let px = 0;
+	let pz = 0;
+	let sx = blendWidth;
+	let sz = blendDepth;
+
+	if (direction === "px") {
+		px = plateSize / 2 - blendDepth / 2;
+		sx = blendDepth;
+		sz = blendWidth;
+	} else if (direction === "nx") {
+		px = -(plateSize / 2 - blendDepth / 2);
+		sx = blendDepth;
+		sz = blendWidth;
+	} else if (direction === "pz") {
+		pz = plateSize / 2 - blendDepth / 2;
+	} else {
+		pz = -(plateSize / 2 - blendDepth / 2);
+	}
+
+	// Inner strip: narrower, higher opacity for gradient falloff
+	const innerDepth = blendDepth * 0.5;
+	let ipx = 0;
+	let ipz = 0;
+	let isx = blendWidth;
+	let isz = innerDepth;
+	if (direction === "px") {
+		ipx = plateSize / 2 - innerDepth / 2;
+		isx = innerDepth;
+		isz = blendWidth;
+	} else if (direction === "nx") {
+		ipx = -(plateSize / 2 - innerDepth / 2);
+		isx = innerDepth;
+		isz = blendWidth;
+	} else if (direction === "pz") {
+		ipz = plateSize / 2 - innerDepth / 2;
+	} else {
+		ipz = -(plateSize / 2 - innerDepth / 2);
+	}
+
+	return (
+		<group>
+			{/* Outer blend — wide, subtle */}
+			<mesh rotation={[-Math.PI / 2, 0, 0]} position={[px, 0.004, pz]}>
+				<planeGeometry args={[sx, sz]} />
+				<meshBasicMaterial
+					color={neighborColor}
+					transparent
+					opacity={0.08}
+					side={THREE.DoubleSide}
+					depthWrite={false}
+				/>
+			</mesh>
+			{/* Inner blend — narrow, stronger for gradient */}
+			<mesh rotation={[-Math.PI / 2, 0, 0]} position={[ipx, 0.005, ipz]}>
+				<planeGeometry args={[isx, isz]} />
+				<meshBasicMaterial
+					color={neighborColor}
+					transparent
+					opacity={0.14}
+					side={THREE.DoubleSide}
+					depthWrite={false}
+				/>
+			</mesh>
+		</group>
+	);
+}
+
 function StructuralCellMesh({
 	q,
 	r,
@@ -70,6 +156,7 @@ function StructuralCellMesh({
 	passable,
 	profile,
 	textures,
+	blendEdges,
 }: {
 	q: number;
 	r: number;
@@ -78,6 +165,7 @@ function StructuralCellMesh({
 	passable: number;
 	profile: "default" | "overview" | "ops";
 	textures: FloorTextureBundle | null;
+	blendEdges: BlendEdge[];
 }) {
 	const pos = gridToWorld(q, r);
 	const _preset =
@@ -110,11 +198,11 @@ function StructuralCellMesh({
 	const plateWidth = SECTOR_LATTICE_SIZE;
 	const plateDepth = SECTOR_LATTICE_SIZE;
 	const accentLength = plateWidth * 0.56;
-	const accentWidth = profile === "ops" ? 0.08 : 0.1;
+	const accentWidth = profile === "ops" ? 0.04 : 0.05;
 	const overlayOpacity =
-		profile === "overview" ? 0.18 : profile === "ops" ? 0.16 : 0.15;
+		profile === "overview" ? 0.12 : profile === "ops" ? 0.10 : 0.09;
 	const shellOpacity =
-		profile === "overview" ? 0.08 : profile === "ops" ? 0.06 : 0.07;
+		profile === "overview" ? 0.06 : profile === "ops" ? 0.04 : 0.05;
 	return (
 		<group position={[pos.x, 0, pos.z]}>
 			<mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
@@ -126,8 +214,8 @@ function StructuralCellMesh({
 					side={THREE.DoubleSide}
 				/>
 			</mesh>
-			<mesh position={[0, -0.02, 0]} receiveShadow>
-				<boxGeometry args={[plateWidth, 0.12, plateDepth]} />
+			<mesh position={[0, -0.005, 0]} receiveShadow>
+				<boxGeometry args={[plateWidth, 0.02, plateDepth]} />
 				<meshStandardMaterial
 					color={color}
 					map={textures?.map ?? null}
@@ -142,22 +230,35 @@ function StructuralCellMesh({
 					metalness={0.08}
 				/>
 			</mesh>
-			<mesh position={[0, 0.035, 0]}>
-				<boxGeometry args={[accentLength, 0.01, accentWidth]} />
+			<mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.008, 0]}>
+				<planeGeometry args={[accentLength, accentWidth]} />
 				<meshBasicMaterial
 					color={accent}
 					transparent
 					opacity={passable ? overlayOpacity : overlayOpacity * 0.3}
+					side={THREE.DoubleSide}
+					depthWrite={false}
 				/>
 			</mesh>
-			<mesh position={[0, 0.031, 0]}>
-				<boxGeometry args={[accentWidth, 0.01, plateDepth * 0.52]} />
+			<mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0]}>
+				<planeGeometry args={[accentWidth, plateDepth * 0.52]} />
 				<meshBasicMaterial
 					color={accent}
 					transparent
 					opacity={passable ? overlayOpacity * 0.48 : overlayOpacity * 0.24}
+					side={THREE.DoubleSide}
+					depthWrite={false}
 				/>
 			</mesh>
+			{/* Zone transition blend edges */}
+			{blendEdges.map((edge) => (
+				<BlendEdgeStrip
+					key={edge.direction}
+					direction={edge.direction}
+					neighborColor={edge.neighborColor}
+					plateSize={plateWidth}
+				/>
+			))}
 		</group>
 	);
 }
@@ -206,6 +307,15 @@ export function StructuralFloorRenderer({
 				.sort((a, b) => (a.r === b.r ? a.q - b.q : a.r - b.r)),
 		[session],
 	);
+
+	/** Lookup cell by grid coordinate for zone blending */
+	const cellByCoord = useMemo(() => {
+		const map = new Map<string, (typeof orderedCells)[number]>();
+		for (const cell of orderedCells) {
+			map.set(`${cell.q},${cell.r}`, cell);
+		}
+		return map;
+	}, [orderedCells]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -256,24 +366,46 @@ export function StructuralFloorRenderer({
 
 	return (
 		<group>
-			{orderedCells.map((cell) => (
-				<StructuralCellMesh
-					key={`${cell.q},${cell.r}`}
-					q={cell.q}
-					r={cell.r}
-					floorPresetId={cell.floor_preset_id}
-					structuralZone={cell.structural_zone}
-					passable={cell.passable}
-					profile={profile}
-					textures={
-						texturesByPreset.get(
-							resolveTexturePresetId(cell.floor_preset_id),
-						) ??
-						texturesByPreset.get("command_concrete") ??
-						null
+			{orderedCells.map((cell) => {
+				const edges: BlendEdge[] = [];
+				const neighbors: [EdgeDirection, number, number][] = [
+					["px", cell.q + 1, cell.r],
+					["nx", cell.q - 1, cell.r],
+					["pz", cell.q, cell.r + 1],
+					["nz", cell.q, cell.r - 1],
+				];
+				for (const [dir, nq, nr] of neighbors) {
+					const neighbor = cellByCoord.get(`${nq},${nr}`);
+					if (
+						neighbor &&
+						neighbor.floor_preset_id !== cell.floor_preset_id
+					) {
+						const nColor =
+							FLOOR_COLORS[neighbor.floor_preset_id] ??
+							FLOOR_COLORS.command_core;
+						edges.push({ direction: dir, neighborColor: nColor });
 					}
-				/>
-			))}
+				}
+				return (
+					<StructuralCellMesh
+						key={`${cell.q},${cell.r}`}
+						q={cell.q}
+						r={cell.r}
+						floorPresetId={cell.floor_preset_id}
+						structuralZone={cell.structural_zone}
+						passable={cell.passable}
+						profile={profile}
+						textures={
+							texturesByPreset.get(
+								resolveTexturePresetId(cell.floor_preset_id),
+							) ??
+							texturesByPreset.get("command_concrete") ??
+							null
+						}
+						blendEdges={edges}
+					/>
+				);
+			})}
 		</group>
 	);
 }

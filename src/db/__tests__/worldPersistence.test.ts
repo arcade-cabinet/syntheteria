@@ -66,7 +66,7 @@ describe("world persistence", () => {
 			(entity) => entity.bot_archetype_id === "fabrication_rig",
 		);
 		const engineer = persisted.entities.find(
-			(entity) => entity.bot_archetype_id === "substation_engineer",
+			(entity) => entity.bot_archetype_id === "defense_sentry",
 		);
 		const fighter = persisted.entities.find(
 			(entity) => entity.bot_archetype_id === "assault_strider",
@@ -85,8 +85,8 @@ describe("world persistence", () => {
 		expect(unit?.mark_level).toBe(1);
 		expect(unit?.speech_profile).toBe("mentor");
 		expect(unit?.selected).toBe(1);
-		expect(hauler?.unit_type).toBe("utility_drone");
-		expect(fabricator?.building_type).toBe("fabrication_unit");
+		expect(hauler?.unit_type).toBe("mecha_scout");
+		expect(fabricator?.unit_type).toBe("fabrication_unit");
 		expect(engineer?.unit_type).toBe("mecha_golem");
 		expect(fighter?.unit_type).toBe("field_fighter");
 		expect(rod?.building_type).toBe("lightning_rod");

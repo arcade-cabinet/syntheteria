@@ -167,6 +167,42 @@ export function spawnFabricationUnit(options: {
 	return entity;
 }
 
+/**
+ * Spawn a generic building entity (motor_pool, relay_tower, defense_turret, etc.)
+ * These are non-unit buildings — no Unit trait, no AI, just Building + position.
+ */
+export function spawnBuilding(options: {
+	x: number;
+	z: number;
+	fragmentId: string;
+	type: string;
+	powered?: boolean;
+}): Entity {
+	const fragment = getStructuralFragment(options.fragmentId);
+	if (!fragment) throw new Error(`Fragment ${options.fragmentId} not found`);
+
+	const buildingConfig = buildingsConfig[options.type as keyof typeof buildingsConfig];
+	const y = getSurfaceHeightAtWorldPosition(options.x, options.z);
+	const powered = options.powered ?? false;
+
+	const entity = world.spawn(Identity, WorldPosition, MapFragment, Building);
+	entity.set(Identity, {
+		id: `bldg_${nextEntityId++}`,
+		faction: "player" as const,
+	});
+	entity.set(WorldPosition, { x: options.x, y, z: options.z });
+	entity.set(MapFragment, { fragmentId: options.fragmentId });
+	entity.set(Building, {
+		type: options.type,
+		powered,
+		operational: powered,
+		selected: false,
+		components: [],
+	});
+
+	return entity;
+}
+
 export function spawnLightningRod(options: {
 	x: number;
 	z: number;

@@ -270,20 +270,20 @@ const UNIT_TYPE_DEFAULTS: Record<
 		speechProfile: "warden",
 	},
 	mecha_scout: {
-		archetypeId: "field_technician",
+		archetypeId: "relay_hauler",
 		speechProfile: "scout",
 	},
 	mecha_trooper: {
-		archetypeId: "assault_strider",
-		speechProfile: "warden",
+		archetypeId: "cult_conduit",
+		speechProfile: "cult",
 	},
 	mecha_golem: {
-		archetypeId: "substation_engineer",
+		archetypeId: "defense_sentry",
 		speechProfile: "warden",
 	},
 	quadruped_tank: {
-		archetypeId: "defense_sentry",
-		speechProfile: "warden",
+		archetypeId: "feral_raider",
+		speechProfile: "feral",
 	},
 };
 

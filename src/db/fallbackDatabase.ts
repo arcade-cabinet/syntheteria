@@ -133,6 +133,46 @@ type WorldEntityRow = {
 	protection_radius: number | null;
 };
 
+type HarvestStateRow = {
+	id: number;
+	save_game_id: number;
+	consumed_structure_ids_json: string;
+	active_harvests_json: string;
+	last_synced_at: number;
+};
+
+type TurnStateRow = {
+	id: number;
+	save_game_id: number;
+	turn_number: number;
+	phase: string;
+	active_faction: string;
+	unit_states_json: string;
+	last_synced_at: number;
+};
+
+type FactionResourceStateRow = {
+	id: number;
+	save_game_id: number;
+	faction_id: string;
+	resources_json: string;
+	last_synced_at: number;
+};
+
+type CampaignStatisticsRow = {
+	id: number;
+	save_game_id: number;
+	stats_json: string;
+	last_synced_at: number;
+};
+
+type TurnEventLogRow = {
+	id: number;
+	save_game_id: number;
+	turn_number: number;
+	events_json: string;
+};
+
 export class FakeDatabase implements SyncDatabase {
 	public execCalls: string[] = [];
 	private nextId = 1;
@@ -145,6 +185,11 @@ export class FakeDatabase implements SyncDatabase {
 	private campaignStates: CampaignStateRow[] = [];
 	private resourceStates: ResourceStateRow[] = [];
 	private worldEntities: WorldEntityRow[] = [];
+	private harvestStates: HarvestStateRow[] = [];
+	private turnStates: TurnStateRow[] = [];
+	private factionResourceStates: FactionResourceStateRow[] = [];
+	private campaignStatistics: CampaignStatisticsRow[] = [];
+	private turnEventLogs: TurnEventLogRow[] = [];
 	private tableColumns = new Map<string, string[]>([
 		[
 			"save_games",
@@ -295,6 +340,46 @@ export class FakeDatabase implements SyncDatabase {
 			"map_discovery",
 			["id", "save_game_id", "chunk_x", "chunk_y", "discovered_state"],
 		],
+		[
+			"harvest_states",
+			[
+				"id",
+				"save_game_id",
+				"consumed_structure_ids_json",
+				"active_harvests_json",
+				"last_synced_at",
+			],
+		],
+		[
+			"turn_states",
+			[
+				"id",
+				"save_game_id",
+				"turn_number",
+				"phase",
+				"active_faction",
+				"unit_states_json",
+				"last_synced_at",
+			],
+		],
+		[
+			"faction_resource_states",
+			[
+				"id",
+				"save_game_id",
+				"faction_id",
+				"resources_json",
+				"last_synced_at",
+			],
+		],
+		[
+			"campaign_statistics",
+			["id", "save_game_id", "stats_json", "last_synced_at"],
+		],
+		[
+			"turn_event_logs",
+			["id", "save_game_id", "turn_number", "events_json"],
+		],
 	]);
 
 	constructor() {
@@ -322,6 +407,11 @@ export class FakeDatabase implements SyncDatabase {
 				campaignStates: CampaignStateRow[];
 				resourceStates: ResourceStateRow[];
 				worldEntities: WorldEntityRow[];
+				harvestStates?: HarvestStateRow[];
+				turnStates?: TurnStateRow[];
+				factionResourceStates?: FactionResourceStateRow[];
+				campaignStatistics?: CampaignStatisticsRow[];
+				turnEventLogs?: TurnEventLogRow[];
 				tableColumns: Array<[string, string[]]>;
 			};
 			this.nextId = snapshot.nextId;
@@ -334,6 +424,11 @@ export class FakeDatabase implements SyncDatabase {
 			this.campaignStates = snapshot.campaignStates;
 			this.resourceStates = snapshot.resourceStates;
 			this.worldEntities = snapshot.worldEntities;
+			this.harvestStates = snapshot.harvestStates ?? [];
+			this.turnStates = snapshot.turnStates ?? [];
+			this.factionResourceStates = snapshot.factionResourceStates ?? [];
+			this.campaignStatistics = snapshot.campaignStatistics ?? [];
+			this.turnEventLogs = snapshot.turnEventLogs ?? [];
 			this.tableColumns = new Map(snapshot.tableColumns);
 		} catch (_error) {
 			window.localStorage.removeItem(STORAGE_KEY);
@@ -357,6 +452,11 @@ export class FakeDatabase implements SyncDatabase {
 				campaignStates: this.campaignStates,
 				resourceStates: this.resourceStates,
 				worldEntities: this.worldEntities,
+				harvestStates: this.harvestStates,
+				turnStates: this.turnStates,
+				factionResourceStates: this.factionResourceStates,
+				campaignStatistics: this.campaignStatistics,
+				turnEventLogs: this.turnEventLogs,
 				tableColumns: Array.from(this.tableColumns.entries()),
 			}),
 		);
@@ -421,6 +521,13 @@ export class FakeDatabase implements SyncDatabase {
 			return this.worldEntities
 				.filter((row) => row.save_game_id === saveGameId)
 				.sort((a, b) => a.id - b.id) as T[];
+		}
+
+		if (source.includes("FROM faction_resource_states")) {
+			const saveGameId = Number(params[0]);
+			return this.factionResourceStates
+				.filter((row) => row.save_game_id === saveGameId)
+				.sort((a, b) => a.faction_id.localeCompare(b.faction_id)) as T[];
 		}
 
 		throw new Error(`Unsupported getAllSync query: ${source}`);
@@ -492,6 +599,36 @@ export class FakeDatabase implements SyncDatabase {
 			const saveGameId = Number(params[0]);
 			return (this.ecumenopolisMaps.find((row) => row.save_game_id === saveGameId) ??
 				null) as T | null;
+		}
+
+		if (
+			source.includes("FROM harvest_states") &&
+			source.includes("WHERE save_game_id = ?")
+		) {
+			const saveGameId = Number(params[0]);
+			return (this.harvestStates.find(
+				(row) => row.save_game_id === saveGameId,
+			) ?? null) as T | null;
+		}
+
+		if (
+			source.includes("FROM turn_states") &&
+			source.includes("WHERE save_game_id = ?")
+		) {
+			const saveGameId = Number(params[0]);
+			return (this.turnStates.find(
+				(row) => row.save_game_id === saveGameId,
+			) ?? null) as T | null;
+		}
+
+		if (
+			source.includes("FROM campaign_statistics") &&
+			source.includes("WHERE save_game_id = ?")
+		) {
+			const saveGameId = Number(params[0]);
+			return (this.campaignStatistics.find(
+				(row) => row.save_game_id === saveGameId,
+			) ?? null) as T | null;
 		}
 
 		throw new Error(`Unsupported getFirstSync query: ${source}`);
@@ -810,6 +947,116 @@ export class FakeDatabase implements SyncDatabase {
 				row.state = String(params[0]);
 			}
 			return { lastInsertRowId: row?.id ?? 0 };
+		}
+
+		// ─── Harvest States ──────────────────────────────────────────────
+		if (source.includes("INSERT INTO harvest_states")) {
+			const row: HarvestStateRow = {
+				id: this.nextId++,
+				save_game_id: Number(params[0]),
+				consumed_structure_ids_json: String(params[1]),
+				active_harvests_json: String(params[2]),
+				last_synced_at: Number(params[3]),
+			};
+			this.harvestStates.push(row);
+			return { lastInsertRowId: row.id };
+		}
+
+		if (source.includes("UPDATE harvest_states")) {
+			const row = this.harvestStates.find(
+				(candidate) => candidate.save_game_id === Number(params[3]),
+			);
+			if (row) {
+				row.consumed_structure_ids_json = String(params[0]);
+				row.active_harvests_json = String(params[1]);
+				row.last_synced_at = Number(params[2]);
+			}
+			return { lastInsertRowId: row?.id ?? 0 };
+		}
+
+		// ─── Turn States ─────────────────────────────────────────────────
+		if (source.includes("INSERT INTO turn_states")) {
+			const row: TurnStateRow = {
+				id: this.nextId++,
+				save_game_id: Number(params[0]),
+				turn_number: Number(params[1]),
+				phase: String(params[2]),
+				active_faction: String(params[3]),
+				unit_states_json: String(params[4]),
+				last_synced_at: Number(params[5]),
+			};
+			this.turnStates.push(row);
+			return { lastInsertRowId: row.id };
+		}
+
+		if (source.includes("UPDATE turn_states")) {
+			const row = this.turnStates.find(
+				(candidate) => candidate.save_game_id === Number(params[5]),
+			);
+			if (row) {
+				row.turn_number = Number(params[0]);
+				row.phase = String(params[1]);
+				row.active_faction = String(params[2]);
+				row.unit_states_json = String(params[3]);
+				row.last_synced_at = Number(params[4]);
+			}
+			return { lastInsertRowId: row?.id ?? 0 };
+		}
+
+		// ─── Faction Resource States ─────────────────────────────────────
+		if (source.includes("DELETE FROM faction_resource_states WHERE save_game_id = ?")) {
+			const saveGameId = Number(params[0]);
+			this.factionResourceStates = this.factionResourceStates.filter(
+				(row) => row.save_game_id !== saveGameId,
+			);
+			return { lastInsertRowId: 0 };
+		}
+
+		if (source.includes("INSERT INTO faction_resource_states")) {
+			const row: FactionResourceStateRow = {
+				id: this.nextId++,
+				save_game_id: Number(params[0]),
+				faction_id: String(params[1]),
+				resources_json: String(params[2]),
+				last_synced_at: Number(params[3]),
+			};
+			this.factionResourceStates.push(row);
+			return { lastInsertRowId: row.id };
+		}
+
+		// ─── Campaign Statistics ─────────────────────────────────────────
+		if (source.includes("INSERT INTO campaign_statistics")) {
+			const row: CampaignStatisticsRow = {
+				id: this.nextId++,
+				save_game_id: Number(params[0]),
+				stats_json: String(params[1]),
+				last_synced_at: Number(params[2]),
+			};
+			this.campaignStatistics.push(row);
+			return { lastInsertRowId: row.id };
+		}
+
+		if (source.includes("UPDATE campaign_statistics")) {
+			const row = this.campaignStatistics.find(
+				(candidate) => candidate.save_game_id === Number(params[2]),
+			);
+			if (row) {
+				row.stats_json = String(params[0]);
+				row.last_synced_at = Number(params[1]);
+			}
+			return { lastInsertRowId: row?.id ?? 0 };
+		}
+
+		// ─── Turn Event Logs ─────────────────────────────────────────────
+		if (source.includes("INSERT INTO turn_event_logs")) {
+			const row: TurnEventLogRow = {
+				id: this.nextId++,
+				save_game_id: Number(params[0]),
+				turn_number: Number(params[1]),
+				events_json: String(params[2]),
+			};
+			this.turnEventLogs.push(row);
+			return { lastInsertRowId: row.id };
 		}
 
 		throw new Error(`Unsupported runSync query: ${source}`);

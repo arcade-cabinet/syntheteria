@@ -137,21 +137,25 @@ function RadialButton({
 				{petal.icon}
 			</Text>
 
-			{/* Label */}
+			{/* Label or disabled reason */}
 			<Text
 				testID={`radial-petal-label-${petal.label.toLowerCase()}`}
 				style={{
 					fontSize: 8,
 					fontFamily: "monospace",
 					letterSpacing: 1,
-					color: colors.text,
+					color: !petal.enabled && petal.disabledReason
+						? "rgba(255, 140, 140, 0.7)"
+						: colors.text,
 					textTransform: "uppercase",
 					marginTop: 2,
 					textAlign: "center",
 				}}
 				numberOfLines={1}
 			>
-				{petal.label}
+				{!petal.enabled && petal.disabledReason && isHovered
+					? petal.disabledReason
+					: petal.label}
 			</Text>
 
 			{/* Child count badge */}

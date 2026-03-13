@@ -13,6 +13,8 @@
  * still tick, but gameplay actions are gated by AP/MP.
  */
 
+import { finalizeTurn, logTurnEvent } from "./turnEventLog";
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface UnitTurnState {
@@ -113,6 +115,30 @@ export function initializeTurnForUnits(
 }
 
 /**
+ * Add units to the existing turn state without replacing current entries.
+ * Used to register rival faction units alongside player units.
+ */
+export function addUnitsToTurnState(
+	unitIds: string[],
+	markLevels?: Map<string, number>,
+) {
+	for (const id of unitIds) {
+		const markLevel = markLevels?.get(id) ?? 1;
+		const markBonus = Math.floor(Math.log2(markLevel));
+
+		turnState.unitStates.set(id, {
+			entityId: id,
+			actionPoints: BASE_ACTION_POINTS + markBonus,
+			maxActionPoints: BASE_ACTION_POINTS + markBonus,
+			movementPoints: BASE_MOVEMENT_POINTS + markBonus,
+			maxMovementPoints: BASE_MOVEMENT_POINTS + markBonus,
+			activated: false,
+		});
+	}
+	notify();
+}
+
+/**
  * Spend an action point for a unit. Returns false if insufficient AP.
  */
 export function spendActionPoint(entityId: string, cost = 1): boolean {
@@ -170,22 +196,56 @@ export function getUnitTurnState(entityId: string): UnitTurnState | undefined {
 	return turnState.unitStates.get(entityId);
 }
 
+// ─── AI Faction Turn Hooks ──────────────────────────────────────────────────
+
+/** Known AI factions — each takes a turn sequentially after the player. */
+const AI_FACTIONS = ["reclaimers", "volt_collective", "signal_choir", "iron_creed"];
+
+export type AIFactionTurnHandler = (factionId: string, turnNumber: number) => void;
+export type EnvironmentPhaseHandler = (turnNumber: number) => void;
+
+const aiFactionTurnHandlers: AIFactionTurnHandler[] = [];
+const environmentPhaseHandlers: EnvironmentPhaseHandler[] = [];
+
 /**
- * End the player's turn. Triggers AI faction turns, then starts new turn.
+ * Register a handler that runs for each AI faction during their turn.
+ * Handlers are called sequentially per faction.
+ */
+export function registerAIFactionTurnHandler(handler: AIFactionTurnHandler) {
+	aiFactionTurnHandlers.push(handler);
+}
+
+/**
+ * Register a handler that runs during the environment phase.
+ */
+export function registerEnvironmentPhaseHandler(handler: EnvironmentPhaseHandler) {
+	environmentPhaseHandlers.push(handler);
+}
+
+/**
+ * End the player's turn. Triggers AI faction turns, then environment phase, then new turn.
  */
 export function endPlayerTurn() {
 	if (turnState.phase !== "player") return;
 
-	// AI faction phase (simplified — runs immediately for now)
+	// AI faction phase — each faction takes a sequential turn
 	turnState = {
 		...turnState,
 		phase: "ai_faction",
-		activeFaction: "rival_machine",
 	};
-	notify();
 
-	// TODO: AI faction actions would go here
-	// For now, skip straight to environment phase
+	for (const factionId of AI_FACTIONS) {
+		turnState = {
+			...turnState,
+			activeFaction: factionId,
+		};
+		notify();
+
+		// Run all registered AI turn handlers for this faction
+		for (const handler of aiFactionTurnHandlers) {
+			handler(factionId, turnState.turnNumber);
+		}
+	}
 
 	// Environment phase (storm, weather, cultist pressure)
 	turnState = {
@@ -194,6 +254,18 @@ export function endPlayerTurn() {
 		activeFaction: "environment",
 	};
 	notify();
+
+	// Run all registered environment phase handlers
+	for (const handler of environmentPhaseHandlers) {
+		handler(turnState.turnNumber);
+	}
+
+	// Log turn_end and finalize the turn's event log
+	logTurnEvent("turn_end", null, "system", {
+		turnNumber: turnState.turnNumber,
+		totalUnits: turnState.unitStates.size,
+	});
+	finalizeTurn();
 
 	// New turn
 	startNewTurn();
@@ -244,4 +316,28 @@ export function resetTurnSystem() {
 		unitStates: new Map(),
 		playerHasActions: true,
 	};
+}
+
+/**
+ * Rehydrate turn state from a save.
+ */
+export function rehydrateTurnState(saved: {
+	turnNumber: number;
+	phase: TurnPhase;
+	activeFaction: string;
+	unitStates: UnitTurnState[];
+}) {
+	const unitStates = new Map<string, UnitTurnState>();
+	for (const u of saved.unitStates) {
+		unitStates.set(u.entityId, { ...u });
+	}
+	turnState = {
+		turnNumber: saved.turnNumber,
+		phase: saved.phase,
+		activeFaction: saved.activeFaction,
+		unitStates,
+		playerHasActions: false,
+	};
+	updatePlayerHasActions();
+	notify();
 }

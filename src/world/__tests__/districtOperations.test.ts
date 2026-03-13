@@ -95,11 +95,13 @@ describe("districtOperations", () => {
 			eWaste: -1,
 			intactComponents: 2,
 		});
-		expect(getResources()).toEqual({
-			scrapMetal: 10,
-			eWaste: 6,
-			intactComponents: 3,
-		});
+		expect(getResources()).toEqual(
+			expect.objectContaining({
+				scrapMetal: 10,
+				eWaste: 6,
+				intactComponents: 3,
+			}),
+		);
 		expect(getRuntimeState().districtEvents[0]).toEqual(
 			expect.objectContaining({
 				cityInstanceId: 22,

@@ -21,6 +21,7 @@ import {
 	getActivePlacement,
 	getGhostPosition,
 } from "../systems/buildingPlacement";
+import { hasAnyPoints, getUnitTurnState } from "../systems/turnSystem";
 import {
 	getStructuralFragment,
 	getSurfaceHeightAtWorldPosition,
@@ -56,9 +57,19 @@ function normalizeUnitMaterial(
 	material.needsUpdate = true;
 }
 
+const SPENT_GRAY = new THREE.Color(0x666666);
+const GLOW_PULSE_SPEED = 2.5;
+const GLOW_PULSE_MIN = 0.3;
+const GLOW_PULSE_MAX = 1.0;
+const SPENT_OPACITY = 0.6;
+
 function UnitMesh({ entity }: { entity: UnitEntity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const ringRef = useRef<THREE.Mesh>(null);
+	const glowRingRef = useRef<THREE.Mesh>(null);
+	const glowMatRef = useRef<THREE.MeshStandardMaterial>(null);
+	const modelMaterialsRef = useRef<THREE.MeshStandardMaterial[]>([]);
+	const originalColorsRef = useRef<THREE.Color[]>([]);
 
 	const unitType = entity.get(Unit)?.type || "maintenance_bot";
 	const config = getBotDefinition(unitType);
@@ -76,6 +87,8 @@ function UnitMesh({ entity }: { entity: UnitEntity }) {
 		box.getCenter(center);
 		const clone = scene.clone(true) as THREE.Group;
 		clone.position.set(-center.x, -box.min.y, -center.z);
+		const materials: THREE.MeshStandardMaterial[] = [];
+		const origColors: THREE.Color[] = [];
 		clone.traverse((child) => {
 			if (!(child instanceof THREE.Mesh)) {
 				return;
@@ -87,6 +100,8 @@ function UnitMesh({ entity }: { entity: UnitEntity }) {
 					if (material instanceof THREE.MeshStandardMaterial) {
 						const next = material.clone();
 						normalizeUnitMaterial(next, beaconColor);
+						materials.push(next);
+						origColors.push(next.color.clone());
 						return next;
 					}
 					return material;
@@ -96,12 +111,16 @@ function UnitMesh({ entity }: { entity: UnitEntity }) {
 			if (child.material instanceof THREE.MeshStandardMaterial) {
 				child.material = child.material.clone();
 				normalizeUnitMaterial(child.material, beaconColor);
+				materials.push(child.material);
+				origColors.push(child.material.color.clone());
 			}
 		});
+		modelMaterialsRef.current = materials;
+		originalColorsRef.current = origColors;
 		return clone;
 	}, [beaconColor, scene]);
 
-	useFrame(() => {
+	useFrame(({ clock }) => {
 		const frag = entity.has(MapFragment)
 			? getStructuralFragment(entity.get(MapFragment)!.fragmentId)
 			: null;
@@ -119,6 +138,38 @@ function UnitMesh({ entity }: { entity: UnitEntity }) {
 		}
 		if (ringRef.current) {
 			ringRef.current.visible = entity.get(Unit)?.selected ?? false;
+		}
+
+		const entityId = entity.get(Identity)?.id ?? "";
+		const hasPoints = hasAnyPoints(entityId);
+
+		// Glow ring: visible when unit has remaining AP/MP, with pulse animation
+		if (glowRingRef.current && glowMatRef.current) {
+			glowRingRef.current.visible = hasPoints;
+			if (hasPoints) {
+				const pulse =
+					GLOW_PULSE_MIN +
+					(GLOW_PULSE_MAX - GLOW_PULSE_MIN) *
+						(0.5 + 0.5 * Math.sin(clock.elapsedTime * GLOW_PULSE_SPEED));
+				glowMatRef.current.emissiveIntensity = pulse;
+			}
+		}
+
+		// Dim spent units: lerp toward gray, reduce opacity
+		const mats = modelMaterialsRef.current;
+		const origColors = originalColorsRef.current;
+		for (let i = 0; i < mats.length; i++) {
+			const mat = mats[i]!;
+			const orig = origColors[i]!;
+			if (hasPoints) {
+				mat.color.copy(orig);
+				mat.opacity = 1.0;
+				mat.transparent = false;
+			} else {
+				mat.color.copy(orig).lerp(SPENT_GRAY, 0.55);
+				mat.opacity = SPENT_OPACITY;
+				mat.transparent = true;
+			}
 		}
 	});
 
@@ -159,6 +210,26 @@ function UnitMesh({ entity }: { entity: UnitEntity }) {
 			>
 				<ringGeometry args={[0.5, 0.65, 16]} />
 				<meshBasicMaterial color={COLOR_SELECTED} side={THREE.DoubleSide} />
+			</mesh>
+			{/* AP/MP glow ring — cyan emissive torus beneath the unit */}
+			<mesh
+				ref={glowRingRef}
+				rotation={[-Math.PI / 2, 0, 0]}
+				position={[0, 0.03, 0]}
+				visible={false}
+			>
+				<torusGeometry args={[0.55, 0.06, 8, 24]} />
+				<meshStandardMaterial
+					ref={glowMatRef}
+					color={0x00cccc}
+					emissive={0x00ffff}
+					emissiveIntensity={0.6}
+					roughness={0.3}
+					metalness={0.1}
+					transparent
+					opacity={0.7}
+					side={THREE.DoubleSide}
+				/>
 			</mesh>
 		</group>
 	);

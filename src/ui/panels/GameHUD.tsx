@@ -16,6 +16,7 @@
  *   red = danger/hostile
  */
 
+import { useState } from "react";
 import { useSyncExternalStore } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import {
@@ -32,11 +33,13 @@ import {
 import {
 	BoltIcon,
 	DroneIcon,
+	MenuIcon,
 	PauseIcon,
 	PlayIcon,
 	ShardIcon,
 	StormIcon,
 } from "../icons";
+import { SlideOutPanel } from "./SlideOutPanel";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -218,7 +221,10 @@ function _SpeedControls({
 
 export function GameHUD() {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
+	const turn = useSyncExternalStore(subscribeTurnState, getTurnState);
+	const [panelOpen, setPanelOpen] = useState(false);
 	const storm = stormLabel(snap.power.stormIntensity);
+	const isPlayerPhase = turn.phase === "player";
 
 	const stormBorderColor =
 		storm.tone === "crimson"
@@ -235,83 +241,128 @@ export function GameHUD() {
 				: "#d9fff3";
 
 	return (
-		<View className="absolute left-0 top-0 right-0 pointer-events-none pt-safe">
-			<View
-				className="pointer-events-auto mx-3 mt-2 flex-row items-start justify-between"
-				style={{ gap: 8 }}
-			>
-				{/* Left: resource panels */}
-				<View className="flex-row" style={{ gap: 8, flexWrap: "wrap" }}>
-					<ResourcePanel
-						label="Energy"
-						value={snap.power.totalGeneration}
-						icon={<BoltIcon width={16} height={16} color="#8be6ff" />}
-						borderColor="rgba(139, 230, 255, 0.3)"
-						textColor="#d0f4ff"
-					/>
-					<ResourcePanel
-						label="Materials"
-						value={snap.resources.scrapMetal}
-						icon={<ShardIcon width={16} height={16} color="#f6c56a" />}
-						borderColor="rgba(251, 191, 36, 0.3)"
-						textColor="#ffe9b0"
-					/>
-					<ResourcePanel
-						label="Units"
-						value={snap.unitCount}
-						icon={<DroneIcon width={16} height={16} color="#7ee7cb" />}
-						borderColor="rgba(126, 231, 203, 0.3)"
-						textColor="#d9fff3"
-					/>
-				</View>
-
-				{/* Right: storm + turn controls */}
-				<View className="items-end" style={{ gap: 6 }}>
-					<View className="flex-row" style={{ gap: 6 }}>
+		<>
+			<View className="absolute left-0 top-0 right-0 pointer-events-none pt-safe">
+				<View
+					className="pointer-events-auto mx-3 mt-2 flex-row items-start justify-between"
+					style={{ gap: 8 }}
+				>
+					{/* Left: resource panels */}
+					<View className="flex-row" style={{ gap: 8, flexWrap: "wrap" }}>
 						<ResourcePanel
-							label="Storm Pressure"
-							value={storm.label}
-							icon={<StormIcon width={16} height={16} color={stormTextColor} />}
-							borderColor={stormBorderColor}
-							textColor={stormTextColor}
+							label="Energy"
+							value={snap.power.totalGeneration}
+							icon={<BoltIcon width={16} height={16} color="#8be6ff" />}
+							borderColor="rgba(139, 230, 255, 0.3)"
+							textColor="#d0f4ff"
 						/>
 						<ResourcePanel
-							label="Turn"
-							value={`${snap.weather.dayNumber}`}
-							borderColor="rgba(176, 136, 216, 0.3)"
-							textColor="#d4b0ff"
+							label="Materials"
+							value={snap.resources.scrapMetal}
+							icon={<ShardIcon width={16} height={16} color="#f6c56a" />}
+							borderColor="rgba(251, 191, 36, 0.3)"
+							textColor="#ffe9b0"
+						/>
+						<ResourcePanel
+							label="Units"
+							value={snap.unitCount}
+							icon={<DroneIcon width={16} height={16} color="#7ee7cb" />}
+							borderColor="rgba(126, 231, 203, 0.3)"
+							textColor="#d9fff3"
 						/>
 					</View>
-					<Pressable
-						onPress={endPlayerTurn}
-						style={{
-							borderWidth: 1.5,
-							borderColor: "rgba(139, 230, 255, 0.5)",
-							borderRadius: 6,
-							backgroundColor: "rgba(139, 230, 255, 0.12)",
-							paddingHorizontal: 16,
-							paddingVertical: 10,
-							alignItems: "center",
-							...(Platform.OS === "web"
-								? ({ backdropFilter: "blur(8px)" } as Record<string, string>)
-								: {}),
-						}}
-					>
-						<Text
-							className="font-mono"
-							style={{
-								fontSize: 11,
-								letterSpacing: 3,
-								color: "#8be6ff",
-								fontWeight: "700",
-								textTransform: "uppercase",
-							}}
-						>
-							End Turn
-						</Text>
-					</Pressable>
+
+					{/* Right: storm + turn controls + hamburger */}
+					<View className="items-end" style={{ gap: 6 }}>
+						<View className="flex-row" style={{ gap: 6 }}>
+							<ResourcePanel
+								label="Storm Pressure"
+								value={storm.label}
+								icon={<StormIcon width={16} height={16} color={stormTextColor} />}
+								borderColor={stormBorderColor}
+								textColor={stormTextColor}
+							/>
+							<ResourcePanel
+								label="Turn"
+								value={`${turn.turnNumber}`}
+								borderColor="rgba(176, 136, 216, 0.3)"
+								textColor="#d4b0ff"
+							/>
+						</View>
+						<View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
+							<Pressable
+								onPress={endPlayerTurn}
+								disabled={!isPlayerPhase}
+								style={{
+									borderWidth: 1.5,
+									borderColor: isPlayerPhase
+										? "rgba(139, 230, 255, 0.5)"
+										: "rgba(139, 230, 255, 0.2)",
+									borderRadius: 6,
+									backgroundColor: isPlayerPhase
+										? "rgba(139, 230, 255, 0.12)"
+										: "rgba(139, 230, 255, 0.04)",
+									paddingHorizontal: 16,
+									paddingVertical: 10,
+									alignItems: "center",
+									opacity: isPlayerPhase ? 1 : 0.5,
+									...(Platform.OS === "web"
+										? ({ backdropFilter: "blur(8px)" } as Record<string, string>)
+										: {}),
+								}}
+							>
+								<Text
+									className="font-mono"
+									style={{
+										fontSize: 11,
+										letterSpacing: 3,
+										color: isPlayerPhase ? "#8be6ff" : "rgba(139, 230, 255, 0.4)",
+										fontWeight: "700",
+										textTransform: "uppercase",
+									}}
+								>
+									End Turn
+								</Text>
+							</Pressable>
+
+							{/* Hamburger menu button */}
+							<Pressable
+								testID="hamburger-menu-button"
+								onPress={() => setPanelOpen((prev) => !prev)}
+								accessibilityLabel="Open detail panel"
+								accessibilityRole="button"
+								style={({ pressed }) => ({
+									width: 44,
+									height: 44,
+									borderRadius: 6,
+									borderWidth: 1.5,
+									borderColor: panelOpen
+										? "rgba(139, 230, 255, 0.6)"
+										: "rgba(139, 230, 255, 0.3)",
+									backgroundColor: panelOpen
+										? "rgba(139, 230, 255, 0.18)"
+										: pressed
+											? "rgba(139, 230, 255, 0.1)"
+											: "rgba(7, 17, 23, 0.75)",
+									alignItems: "center",
+									justifyContent: "center",
+									...(Platform.OS === "web"
+										? ({ backdropFilter: "blur(8px)" } as Record<string, string>)
+										: {}),
+								})}
+							>
+								<MenuIcon width={20} height={20} color="#8be6ff" />
+							</Pressable>
+						</View>
+					</View>
 				</View>
 			</View>
-		</View>
+
+			{/* Slide-out detail panel */}
+			<SlideOutPanel
+				open={panelOpen}
+				onClose={() => setPanelOpen(false)}
+			/>
+		</>
 	);
 }

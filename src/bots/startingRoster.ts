@@ -59,6 +59,8 @@ export function createStartingRoster(args: {
 	const spawn = gridToWorld(spawnQ, spawnR);
 
 	return [
+		// ─── Starting Roster: 5 player bots (per BOT_AND_ECONOMY_REDESIGN) ──
+		// Technician (broken camera — tutorial repair target)
 		createStartingBotEntity({
 			id: "unit_0",
 			unitType: "maintenance_bot",
@@ -75,55 +77,25 @@ export function createStartingRoster(args: {
 				{ name: "power_cell", functional: true, material: "electronic" },
 			],
 		}),
+		// Scout
 		createStartingBotEntity({
 			id: "unit_1",
-			unitType: "utility_drone",
+			unitType: "mecha_scout",
 			archetypeId: "relay_hauler",
-			speechProfile: "quartermaster",
+			speechProfile: "scout",
 			x: spawn.x + 2,
 			z: spawn.z - 1,
 			components: [
 				{ name: "processor", functional: true, material: "electronic" },
 				{ name: "camera", functional: true, material: "electronic" },
-				{ name: "thrusters", functional: true, material: "metal" },
-				{ name: "cargo_bay", functional: true, material: "metal" },
-				{ name: "signal_array", functional: true, material: "electronic" },
+				{ name: "legs", functional: true, material: "metal" },
+				{ name: "sensor_array", functional: true, material: "electronic" },
+				{ name: "power_cell", functional: true, material: "electronic" },
 			],
 		}),
+		// Striker
 		createStartingBotEntity({
 			id: "unit_2",
-			unitType: "fabrication_unit",
-			archetypeId: "fabrication_rig",
-			speechProfile: "fabricator",
-			x: spawn.x - 2,
-			z: spawn.z + 1,
-			components: [
-				{ name: "processor", functional: true, material: "electronic" },
-				{ name: "manipulator_arm", functional: true, material: "metal" },
-				{ name: "fabricator_head", functional: true, material: "electronic" },
-				{ name: "power_core", functional: true, material: "electronic" },
-			],
-			buildingType: "fabrication_unit",
-			powered: true,
-			operational: true,
-		}),
-		createStartingBotEntity({
-			id: "unit_3",
-			unitType: "mecha_golem",
-			archetypeId: "substation_engineer",
-			speechProfile: "warden",
-			x: spawn.x + 1,
-			z: spawn.z + 2,
-			components: [
-				{ name: "processor", functional: true, material: "electronic" },
-				{ name: "stabilizers", functional: true, material: "metal" },
-				{ name: "arms", functional: true, material: "metal" },
-				{ name: "power_cell", functional: true, material: "electronic" },
-				{ name: "ground_anchor", functional: true, material: "metal" },
-			],
-		}),
-		createStartingBotEntity({
-			id: "unit_4",
 			unitType: "field_fighter",
 			archetypeId: "assault_strider",
 			speechProfile: "warden",
@@ -137,6 +109,39 @@ export function createStartingRoster(args: {
 				{ name: "power_cell", functional: true, material: "electronic" },
 			],
 		}),
+		// Fabricator
+		createStartingBotEntity({
+			id: "unit_3",
+			unitType: "fabrication_unit",
+			archetypeId: "fabrication_rig",
+			speechProfile: "fabricator",
+			x: spawn.x - 2,
+			z: spawn.z + 1,
+			components: [
+				{ name: "processor", functional: true, material: "electronic" },
+				{ name: "manipulator_arm", functional: true, material: "metal" },
+				{ name: "fabricator_head", functional: true, material: "electronic" },
+				{ name: "legs", functional: true, material: "metal" },
+				{ name: "power_core", functional: true, material: "electronic" },
+			],
+		}),
+		// Guardian
+		createStartingBotEntity({
+			id: "unit_4",
+			unitType: "mecha_golem",
+			archetypeId: "defense_sentry",
+			speechProfile: "warden",
+			x: spawn.x + 1,
+			z: spawn.z + 2,
+			components: [
+				{ name: "processor", functional: true, material: "electronic" },
+				{ name: "stabilizers", functional: true, material: "metal" },
+				{ name: "arms", functional: true, material: "metal" },
+				{ name: "armor_plating", functional: true, material: "metal" },
+				{ name: "power_cell", functional: true, material: "electronic" },
+			],
+		}),
+		// ─── Starting Building ───────────────────────────────────────────────
 		{
 			entityId: "bldg_5",
 			sceneLocation: "world",

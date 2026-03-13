@@ -1,3 +1,7 @@
+import {
+	generateBreachZones,
+	type BreachZone,
+} from "../systems/breachZones";
 import { createGeneratedCitySeed } from "./cityLifecycle";
 import {
 	getClimateProfileSpec,
@@ -58,6 +62,7 @@ export interface GeneratedEcumenopolisData {
 	pointsOfInterest: GeneratedSectorPointOfInterest[];
 	cityInstances: GeneratedCityInstanceSeed[];
 	sectorStructures: GeneratedSectorStructure[];
+	breachZones: BreachZone[];
 }
 
 type StructuralZoneDefinition = Pick<
@@ -747,7 +752,8 @@ export function generateWorldData(
 		pointsOfInterest,
 	});
 
-	return {
+	// Build the partial result so breach zone generation can reference it
+	const partialResult: GeneratedEcumenopolisData = {
 		ecumenopolis: {
 			width,
 			height,
@@ -758,5 +764,13 @@ export function generateWorldData(
 		pointsOfInterest,
 		cityInstances,
 		sectorStructures,
+		breachZones: [],
+	};
+
+	const breachZones = generateBreachZones(partialResult);
+
+	return {
+		...partialResult,
+		breachZones,
 	};
 }

@@ -44,6 +44,10 @@ import {
 	weatherSystem,
 } from "../systems/weather";
 import { persistenceSystem } from "../world/persistenceSystem";
+import {
+	resetTerritorySystem,
+	territorySystem,
+} from "../systems/territorySystem";
 import { poiSystem } from "../world/poiSystem";
 import {
 	getRuntimeState,
@@ -182,11 +186,12 @@ export function simulationTick() {
 	signalNetworkSystem();
 	networkOverlaySystem(tick);
 	resourceSystem();
-	harvestSystem();
+	harvestSystem(tick);
 	repairSystem();
 	fabricationSystem();
 	combatSystem();
 	hackingSystem();
+	territorySystem();
 	narrativeSystem();
 	poiSystem();
 	persistenceSystem(tick);
@@ -206,6 +211,7 @@ export function resetGameState() {
 	resetLightningSystem();
 	resetNetworkOverlay();
 	resetHarvestSystem();
+	resetTerritorySystem();
 }
 
 const simulationInterval = setInterval(simulationTick, 1000 / 60);

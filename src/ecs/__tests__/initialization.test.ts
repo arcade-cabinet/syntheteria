@@ -1,3 +1,4 @@
+import { getTurnState, resetTurnSystem } from "../../systems/turnSystem";
 import type { PersistedWorldSnapshot } from "../../world/snapshots";
 import { initializeNewGame } from "../initialization";
 import { Building, Identity, Unit, WorldPosition } from "../traits";
@@ -71,6 +72,10 @@ function createPersistedWorld(): PersistedWorldSnapshot {
 			intact_components: 0,
 			last_synced_at: 0,
 		},
+		harvestState: null,
+		turnState: null,
+		factionResourceStates: [],
+		campaignStatistics: null,
 		entities: [
 			{
 				id: 1,
@@ -139,6 +144,7 @@ describe("initializeNewGame", () => {
 		for (const entity of [...world.entities]) {
 			entity.destroy();
 		}
+		resetTurnSystem();
 	});
 
 	it("hydrates persisted world actors instead of reseeding defaults", () => {
@@ -151,5 +157,48 @@ describe("initializeNewGame", () => {
 		expect([...units][0]?.get(WorldPosition)?.z).toBe(2);
 		expect([...buildings][0]?.get(Identity)?.id).toBe("bldg_9");
 		expect([...buildings][0]?.get(Building)?.type).toBe("lightning_rod");
+	});
+
+	it("initializes turn state for player units on new game", () => {
+		initializeNewGame(createPersistedWorld());
+
+		const turnState = getTurnState();
+		expect(turnState.turnNumber).toBe(1);
+		expect(turnState.phase).toBe("player");
+		expect(turnState.unitStates.size).toBe(1);
+		expect(turnState.unitStates.has("unit_7")).toBe(true);
+
+		const unitTurn = turnState.unitStates.get("unit_7")!;
+		expect(unitTurn.actionPoints).toBe(2);
+		expect(unitTurn.movementPoints).toBe(3);
+	});
+
+	it("rehydrates saved turn state when present", () => {
+		const pw = createPersistedWorld();
+		pw.turnState = {
+			id: 1,
+			save_game_id: 1,
+			turn_number: 5,
+			phase: "player",
+			active_faction: "player",
+			unit_states_json: JSON.stringify([
+				{
+					entityId: "unit_7",
+					actionPoints: 1,
+					maxActionPoints: 2,
+					movementPoints: 0,
+					maxMovementPoints: 3,
+					activated: true,
+				},
+			]),
+			last_synced_at: 0,
+		};
+
+		initializeNewGame(pw);
+
+		const turnState = getTurnState();
+		expect(turnState.turnNumber).toBe(5);
+		expect(turnState.unitStates.get("unit_7")!.actionPoints).toBe(1);
+		expect(turnState.unitStates.get("unit_7")!.movementPoints).toBe(0);
 	});
 });

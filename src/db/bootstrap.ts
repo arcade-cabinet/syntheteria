@@ -182,6 +182,46 @@ export function initializeDatabaseSync(
 			chunk_y INTEGER NOT NULL,
 			discovered_state TEXT NOT NULL
 		);
+
+		CREATE TABLE IF NOT EXISTS harvest_states (
+			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+			save_game_id INTEGER NOT NULL REFERENCES save_games(id) ON DELETE CASCADE,
+			consumed_structure_ids_json TEXT NOT NULL DEFAULT '[]',
+			active_harvests_json TEXT NOT NULL DEFAULT '[]',
+			last_synced_at INTEGER NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS turn_states (
+			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+			save_game_id INTEGER NOT NULL REFERENCES save_games(id) ON DELETE CASCADE,
+			turn_number INTEGER NOT NULL DEFAULT 1,
+			phase TEXT NOT NULL DEFAULT 'player',
+			active_faction TEXT NOT NULL DEFAULT 'player',
+			unit_states_json TEXT NOT NULL DEFAULT '[]',
+			last_synced_at INTEGER NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS faction_resource_states (
+			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+			save_game_id INTEGER NOT NULL REFERENCES save_games(id) ON DELETE CASCADE,
+			faction_id TEXT NOT NULL,
+			resources_json TEXT NOT NULL DEFAULT '{}',
+			last_synced_at INTEGER NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS campaign_statistics (
+			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+			save_game_id INTEGER NOT NULL REFERENCES save_games(id) ON DELETE CASCADE,
+			stats_json TEXT NOT NULL DEFAULT '{}',
+			last_synced_at INTEGER NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS turn_event_logs (
+			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+			save_game_id INTEGER NOT NULL REFERENCES save_games(id) ON DELETE CASCADE,
+			turn_number INTEGER NOT NULL,
+			events_json TEXT NOT NULL DEFAULT '[]'
+		);
 	`);
 
 	addColumnIfMissing(

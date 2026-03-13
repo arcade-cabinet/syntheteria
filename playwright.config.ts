@@ -39,13 +39,28 @@ export default defineConfig({
 		// ── E2E ──
 		{
 			name: "e2e-chromium",
-			testMatch: /.*e2e\/.*\.spec\.ts/,
+			testMatch: /.*e2e\/(?!ai-playtest).*\.spec\.ts/,
 			use: {
 				...devices["Desktop Chrome"],
 				headless: true,
 				launchOptions: {
 					args: GPU_ARGS,
 				},
+			},
+		},
+		// ── 100-Turn Playtest (headed, long timeout) ──
+		{
+			name: "playtest",
+			testMatch: /.*e2e\/ai-playtest.*\.spec\.ts/,
+			timeout: 600_000,
+			retries: 0,
+			use: {
+				...devices["Desktop Chrome"],
+				headless: false,
+				launchOptions: {
+					args: GPU_ARGS.filter((a) => a !== "--window-position=9999,9999"),
+				},
+				video: "retain-on-failure",
 			},
 		},
 	],

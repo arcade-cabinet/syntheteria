@@ -49,6 +49,11 @@ yarn-error.*
 /playwright/.cache/
 /playwright/.auth/
 
+# Playtest report output (generated, not committed)
+tests/e2e/reports/screenshots/*.png
+tests/e2e/reports/playtest-report.html
+tests/e2e/reports/playtest-results.json
+
 # Local integration staging
 /pending-integration/
 

@@ -4,9 +4,11 @@ import { CityKitLab } from "../city/runtime/CityKitLab";
 import { closeCityKitLab } from "../world/cityTransition";
 import { getRuntimeState, subscribeRuntimeState } from "../world/runtimeState";
 import "../systems/radialProviders"; // Register radial menu action providers at startup
+import "../systems/turnPhaseHandlers"; // Register AI faction + environment phase handlers
 import { BriefingBubbleLayer } from "./BriefingBubbleLayer";
 import { CitySiteOverlay } from "./CitySiteOverlay";
 import { GameHUD } from "./panels/GameHUD";
+import { HarvestNotifications } from "./panels/HarvestNotifications";
 import { Notifications } from "./panels/Notifications";
 import { ThoughtOverlay } from "./panels/ThoughtOverlay";
 import { RadialMenu } from "./RadialMenu";
@@ -36,6 +38,7 @@ export function GameUI() {
 		<View className="absolute inset-0 pointer-events-none">
 			<GameHUD />
 			{worldInteractive && <Notifications />}
+			{worldInteractive && <HarvestNotifications />}
 			{worldInteractive && <BriefingBubbleLayer />}
 			<CitySiteOverlay />
 			{runtime.cityKitLabOpen && <CityKitLab onClose={closeCityKitLab} />}

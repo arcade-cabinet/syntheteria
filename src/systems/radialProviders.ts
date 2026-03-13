@@ -17,12 +17,45 @@ import {
 import { executeDistrictOperation } from "../world/districtOperations";
 import { foundCitySite, surveyCitySite } from "../world/poiActions";
 import { getRuntimeState, setCitySiteModalOpen } from "../world/runtimeState";
+import { gridToWorld } from "../world/sectorCoordinates";
 import { getActiveWorldSession } from "../world/session";
-import { BUILDING_COSTS, setActivePlacement } from "./buildingPlacement";
+import {
+	BUILDING_COSTS,
+	canUnitBuild,
+	computeAdjacencyBonuses,
+	setActivePlacement,
+} from "./buildingPlacement";
 import { RECIPES, startFabrication } from "./fabrication";
-import { type RadialOpenContext, registerRadialProvider } from "./radialMenu";
+import { isStructureConsumed, startHarvest } from "./harvestSystem";
+import {
+	BOT_FABRICATION_RECIPES,
+	MOTOR_POOL_TIER_CONFIG,
+	canMotorPoolUpgradeMark,
+	getMarkUpgradeCost,
+	getMotorPoolState,
+	queueBotFabrication,
+	upgradeMotorPool,
+} from "./motorPool";
+import {
+	type RadialAction,
+	type RadialOpenContext,
+	registerRadialProvider,
+} from "./radialMenu";
+import {
+	applyMarkUpgrade,
+	getUnitExperience,
+	getXPProgress,
+} from "./experience";
 import { startRepair } from "./repair";
-import { getResources } from "./resources";
+import { getResourcePoolForModel, isHarvestable } from "./resourcePools";
+import { getResources, spendResource } from "./resources";
+import { logTurnEvent } from "./turnEventLog";
+import {
+	hasActionPoints,
+	hasMovementPoints,
+	spendActionPoint,
+	spendMovementPoints,
+} from "./turnSystem";
 
 /**
  * Radial Menu Action Providers
@@ -109,15 +142,21 @@ registerRadialProvider({
 		const profile = getSelectedBotProfile(ctx);
 		if (!profile?.canMove) return [];
 
+		const unitHasMP = ctx.targetEntityId
+			? hasMovementPoints(ctx.targetEntityId)
+			: false;
+
 		return [
 			{
 				id: "move_to",
 				label: "Move",
 				icon: "arrow",
 				tone: "default",
-				enabled: true,
+				enabled: unitHasMP,
+				disabledReason: unitHasMP ? undefined : "No MP remaining",
 				onExecute: () => {
 					// Movement is handled by the input system on next tap
+					// MP is spent by the movement system when the move executes
 				},
 			},
 			...(profile.canPatrol
@@ -127,7 +166,8 @@ registerRadialProvider({
 							label: "Patrol",
 							icon: "loop",
 							tone: "default",
-							enabled: true,
+							enabled: unitHasMP,
+							disabledReason: unitHasMP ? undefined : "No MP remaining",
 							onExecute: () => {
 								// TODO: wire to patrol order system
 							},
@@ -156,6 +196,11 @@ registerRadialProvider({
 		const profile = getSelectedBotProfile(ctx);
 		if (!profile) return [];
 
+		const unitHasAP = ctx.targetEntityId
+			? hasActionPoints(ctx.targetEntityId)
+			: false;
+
+		const noApReason = unitHasAP ? undefined : "No AP remaining";
 		const actions = [];
 		if (profile.canAttack) {
 			actions.push({
@@ -163,8 +208,12 @@ registerRadialProvider({
 				label: "Attack",
 				icon: "sword",
 				tone: "combat",
-				enabled: true,
+				enabled: unitHasAP,
+				disabledReason: noApReason,
 				onExecute: () => {
+					if (ctx.targetEntityId) {
+						spendActionPoint(ctx.targetEntityId, 1);
+					}
 					// TODO: wire to attack order
 				},
 			});
@@ -175,8 +224,12 @@ registerRadialProvider({
 				label: "Hack",
 				icon: "signal",
 				tone: "signal",
-				enabled: true,
+				enabled: unitHasAP,
+				disabledReason: noApReason,
 				onExecute: () => {
+					if (ctx.targetEntityId) {
+						spendActionPoint(ctx.targetEntityId, 1);
+					}
 					// TODO: wire to hacking system
 				},
 			});
@@ -187,8 +240,12 @@ registerRadialProvider({
 				label: "Fortify",
 				icon: "city",
 				tone: "power",
-				enabled: true,
+				enabled: unitHasAP,
+				disabledReason: noApReason,
 				onExecute: () => {
+					if (ctx.targetEntityId) {
+						spendActionPoint(ctx.targetEntityId, 1);
+					}
 					// TODO: wire to fortification orders
 				},
 			});
@@ -199,6 +256,46 @@ registerRadialProvider({
 });
 
 // --- BUILD category ---
+
+/** Helper: check affordability and create a build action entry */
+function makeBuildAction(
+	id: string,
+	label: string,
+	icon: string,
+	tone: string,
+	buildingType: string,
+	resources: ReturnType<typeof getResources>,
+	unitHasAP: boolean,
+	ctx: RadialOpenContext,
+) {
+	const costs = BUILDING_COSTS[buildingType];
+	if (!costs) return null;
+	const canAfford = costs.every(
+		(cost) => (resources[cost.type] ?? 0) >= cost.amount,
+	);
+	const disabledReason = !unitHasAP
+		? "No AP remaining"
+		: !canAfford
+			? "Insufficient materials"
+			: undefined;
+	return {
+		id,
+		label,
+		icon,
+		tone,
+		enabled: canAfford && unitHasAP,
+		disabledReason,
+		onExecute: () => {
+			if (ctx.selectionType === "unit" && ctx.targetEntityId) {
+				spendActionPoint(ctx.targetEntityId, 1);
+			}
+			setActivePlacement(
+				buildingType as Parameters<typeof setActivePlacement>[0],
+				ctx.targetEntityId ?? undefined,
+			);
+		},
+	};
+}
 
 registerRadialProvider({
 	id: "build",
@@ -227,63 +324,106 @@ registerRadialProvider({
 			return [];
 		}
 
+		// Restrict building to Fabricator-role bots (task #68)
+		if (
+			ctx.selectionType === "unit" &&
+			!canUnitBuild(ctx.targetEntityId)
+		) {
+			return [];
+		}
+
 		const resources = getResources();
+		const unitHasAP =
+			ctx.selectionType === "unit" && ctx.targetEntityId
+				? hasActionPoints(ctx.targetEntityId)
+				: true;
 		const actions = [];
 
 		// Lightning Rod
 		if (ctx.selectionType === "empty_sector" || profile?.canBuildRod) {
-			const rodCosts = BUILDING_COSTS.lightning_rod;
-			const canAffordRod = rodCosts.every(
-				(cost) => (resources[cost.type] ?? 0) >= cost.amount,
+			const action = makeBuildAction(
+				"build_rod", "Rod", "bolt", "power",
+				"lightning_rod", resources, unitHasAP, ctx,
 			);
-			actions.push({
-				id: "build_rod",
-				label: "Rod",
-				icon: "bolt",
-				tone: "power",
-				enabled: canAffordRod,
-				onExecute: () => setActivePlacement("lightning_rod"),
-			});
+			if (action) actions.push(action);
 		}
 
-		// Fabricator
+		// Fabrication Unit
 		if (ctx.selectionType === "empty_sector" || profile?.canBuildFabricator) {
-			const fabCosts = BUILDING_COSTS.fabrication_unit;
-			const canAffordFab = fabCosts.every(
-				(cost) => (resources[cost.type] ?? 0) >= cost.amount,
+			const action = makeBuildAction(
+				"build_fab", "Fabricator", "gear", "signal",
+				"fabrication_unit", resources, unitHasAP, ctx,
 			);
-			actions.push({
-				id: "build_fab",
-				label: "Fabricator",
-				icon: "gear",
-				tone: "signal",
-				enabled: canAffordFab,
-				onExecute: () => setActivePlacement("fabrication_unit"),
-			});
+			if (action) actions.push(action);
 		}
 
-		// Signal Relay
+		// Motor Pool
+		{
+			const action = makeBuildAction(
+				"build_motor_pool", "Motor Pool", "gear", "power",
+				"motor_pool", resources, unitHasAP, ctx,
+			);
+			if (action) actions.push(action);
+		}
+
+		// Relay Tower
 		if (ctx.selectionType === "empty_sector" || profile?.canBuildRelay) {
-			actions.push({
-				id: "build_relay",
-				label: "Relay",
-				icon: "signal",
-				tone: "signal",
-				enabled: true,
-				onExecute: () => {
-					// TODO: wire to relay placement
-				},
-			});
+			const action = makeBuildAction(
+				"build_relay", "Relay", "signal", "signal",
+				"relay_tower", resources, unitHasAP, ctx,
+			);
+			if (action) actions.push(action);
 		}
 
+		// Defense Turret
+		{
+			const action = makeBuildAction(
+				"build_turret", "Turret", "sword", "combat",
+				"defense_turret", resources, unitHasAP, ctx,
+			);
+			if (action) actions.push(action);
+		}
+
+		// Power Sink
+		{
+			const action = makeBuildAction(
+				"build_power_sink", "Power Sink", "bolt", "power",
+				"power_sink", resources, unitHasAP, ctx,
+			);
+			if (action) actions.push(action);
+		}
+
+		// Storage Hub
+		{
+			const action = makeBuildAction(
+				"build_storage", "Storage", "gear", "default",
+				"storage_hub", resources, unitHasAP, ctx,
+			);
+			if (action) actions.push(action);
+		}
+
+		// Habitat Module
+		{
+			const action = makeBuildAction(
+				"build_habitat", "Habitat", "city", "signal",
+				"habitat_module", resources, unitHasAP, ctx,
+			);
+			if (action) actions.push(action);
+		}
+
+		// Establish Substation
 		if (profile?.canEstablishSubstation) {
 			actions.push({
 				id: "build_substation",
 				label: "Establish",
 				icon: "city",
 				tone: "power",
-				enabled: true,
+				enabled: unitHasAP,
+				disabledReason: unitHasAP ? undefined : "No AP remaining",
 				onExecute: () => {
+					if (ctx.targetEntityId) {
+						spendActionPoint(ctx.targetEntityId, 1);
+					}
 					setCitySiteModalOpen(true, getRuntimeState().nearbyPoi);
 				},
 			});
@@ -336,14 +476,25 @@ registerRadialProvider({
 			return Math.sqrt(dx * dx + dz * dz) < 3.0;
 		});
 
+		const unitHasAP = ctx.targetEntityId
+			? hasActionPoints(ctx.targetEntityId)
+			: false;
+		const repairDisabledReason = !unitHasAP
+			? "No AP remaining"
+			: !repairer
+				? "No repairer nearby"
+				: undefined;
+
 		return broken.map((comp) => ({
 			id: `repair_${comp.name}`,
 			label: comp.name.replace(/_/g, " "),
 			icon: "wrench",
 			tone: "power",
-			enabled: !!repairer,
+			enabled: !!repairer && unitHasAP,
+			disabledReason: repairDisabledReason,
 			onExecute: () => {
-				if (repairer) {
+				if (repairer && ctx.targetEntityId) {
+					spendActionPoint(ctx.targetEntityId, 1);
 					startRepair(repairer, entity, comp.name);
 				}
 			},
@@ -383,20 +534,297 @@ registerRadialProvider({
 		if (!building?.powered || !building.operational) return [];
 
 		const resources = getResources();
+		const unitHasAP = ctx.targetEntityId
+			? hasActionPoints(ctx.targetEntityId)
+			: false;
 
 		return RECIPES.map((recipe) => {
 			const canAfford = recipe.costs.every(
 				(cost) => (resources[cost.type] ?? 0) >= cost.amount,
 			);
+			const fabDisabledReason = !unitHasAP
+				? "No AP remaining"
+				: !canAfford
+					? "Insufficient materials"
+					: undefined;
 			return {
 				id: `fab_${recipe.name}`,
 				label: recipe.name.replace(/_/g, " "),
 				icon: "gear",
 				tone: "default",
-				enabled: canAfford,
-				onExecute: () => startFabrication(entity, recipe.name),
+				enabled: canAfford && unitHasAP,
+				disabledReason: fabDisabledReason,
+				onExecute: () => {
+					if (ctx.targetEntityId) {
+						spendActionPoint(ctx.targetEntityId, 1);
+					}
+					startFabrication(entity, recipe.name);
+				},
 			};
 		});
+	},
+});
+
+// --- MOTOR POOL category ---
+
+registerRadialProvider({
+	id: "motor_pool",
+	category: {
+		id: "motor_pool",
+		label: "Motor Pool",
+		icon: "gear",
+		tone: "power",
+		priority: 36,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (ctx.selectionType !== "building") return [];
+
+		const entity = findEntityById(ctx.targetEntityId);
+		if (!entity) return [];
+		const building = entity.get(Building);
+		if (!building || building.type !== "motor_pool") return [];
+		if (!building.powered || !building.operational) return [];
+
+		const entityId = ctx.targetEntityId;
+		if (!entityId) return [];
+
+		const poolState = getMotorPoolState(entityId);
+		if (!poolState) return [];
+
+		const tierConfig = MOTOR_POOL_TIER_CONFIG[poolState.tier];
+		const queueFull = poolState.queue.length >= tierConfig.maxQueue;
+		const resources = getResources();
+		const actions = [];
+
+		// Bot fabrication actions
+		for (const recipe of BOT_FABRICATION_RECIPES) {
+			const canAfford = recipe.costs.every(
+				(cost) => (resources[cost.type] ?? 0) >= cost.amount,
+			);
+			actions.push({
+				id: `mp_fab_${recipe.botType}`,
+				label: recipe.label,
+				icon: "gear",
+				tone: "power",
+				enabled: canAfford && !queueFull,
+				onExecute: () => queueBotFabrication(entityId, recipe.botType),
+			});
+		}
+
+		// Tier upgrade action
+		if (poolState.tier !== "elite") {
+			const nextTier = poolState.tier === "basic" ? "Advanced" : "Elite";
+			actions.push({
+				id: "mp_upgrade",
+				label: `Upgrade → ${nextTier}`,
+				icon: "bolt",
+				tone: "signal",
+				enabled: true,
+				onExecute: () => upgradeMotorPool(entityId),
+			});
+		}
+
+		return actions;
+	},
+});
+
+// --- MARK UPGRADE category (on units near Motor Pool) ---
+
+/** Maximum distance (in world units) for a unit to be in range of a Motor Pool */
+const MARK_UPGRADE_RANGE = 5.0;
+
+registerRadialProvider({
+	id: "mark_upgrade",
+	category: {
+		id: "upgrade",
+		label: "Upgrade",
+		icon: "bolt",
+		tone: "signal",
+		priority: 37,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (ctx.selectionType !== "unit") return [];
+		if (ctx.targetFaction !== "player") return [];
+
+		const entity = findEntityById(ctx.targetEntityId);
+		if (!entity) return [];
+		const unit = entity.get(Unit);
+		if (!unit) return [];
+		const entityPos = entity.get(WorldPosition);
+		if (!entityPos) return [];
+
+		// Check if there's a powered Motor Pool nearby
+		const nearbyMotorPool = Array.from(buildings).find((b) => {
+			const building = b.get(Building);
+			if (!building || building.type !== "motor_pool") return false;
+			if (!building.powered || !building.operational) return false;
+			if (b.get(Identity)?.faction !== "player") return false;
+			const bPos = b.get(WorldPosition);
+			if (!bPos) return false;
+			const dx = entityPos.x - bPos.x;
+			const dz = entityPos.z - bPos.z;
+			return Math.sqrt(dx * dx + dz * dz) <= MARK_UPGRADE_RANGE;
+		});
+
+		if (!nearbyMotorPool) return [];
+
+		const unitHasAP = ctx.targetEntityId
+			? hasActionPoints(ctx.targetEntityId)
+			: false;
+		const xpState = ctx.targetEntityId
+			? getUnitExperience(ctx.targetEntityId)
+			: undefined;
+		const xpEligible = xpState?.upgradeEligible ?? false;
+		const progress = ctx.targetEntityId
+			? getXPProgress(ctx.targetEntityId)
+			: 0;
+		const currentMark = xpState?.currentMark ?? unit.markLevel;
+
+		// Check resource cost for this Mark upgrade
+		const upgradeCost = getMarkUpgradeCost(currentMark);
+		const resources = getResources();
+		const canAfford = upgradeCost
+			? upgradeCost.costs.every(
+					(cost) => (resources[cost.type] ?? 0) >= cost.amount,
+				)
+			: false;
+
+		// Check Motor Pool tier allows this upgrade
+		const motorPoolId = nearbyMotorPool.get(Identity)?.id;
+		const tierAllows =
+			motorPoolId && upgradeCost
+				? canMotorPoolUpgradeMark(motorPoolId, upgradeCost.toMark)
+				: false;
+
+		const canUpgrade = xpEligible && canAfford && tierAllows;
+
+		const disabledReason = !unitHasAP
+			? "No AP remaining"
+			: !xpEligible
+				? `XP: ${Math.round(progress * 100)}% to Mark ${currentMark + 1}`
+				: !canAfford
+					? "Insufficient resources"
+					: !tierAllows
+						? "Motor Pool tier too low"
+						: undefined;
+
+		return [
+			{
+				id: "mark_upgrade",
+				label: `Mark ${currentMark} → ${currentMark + 1}`,
+				icon: "bolt",
+				tone: "signal",
+				enabled: canUpgrade && unitHasAP,
+				disabledReason,
+				onExecute: () => {
+					if (ctx.targetEntityId && canUpgrade && upgradeCost) {
+						// Spend resources
+						for (const cost of upgradeCost.costs) {
+							spendResource(cost.type, cost.amount);
+						}
+						spendActionPoint(ctx.targetEntityId, 1);
+						const success = applyMarkUpgrade(ctx.targetEntityId);
+						if (success) {
+							// Update the ECS Unit trait's markLevel
+							unit.markLevel = upgradeCost.toMark;
+							logTurnEvent(
+								"fabrication",
+								ctx.targetEntityId,
+								"player",
+								{ action: "mark_upgrade", newMark: unit.markLevel },
+							);
+						}
+					}
+				},
+			},
+		];
+	},
+});
+
+// --- HARVEST category ---
+
+/** Maximum distance (in world units) for a fabricator to reach a structure */
+const HARVEST_SCAN_RANGE = 4.0;
+
+registerRadialProvider({
+	id: "harvest",
+	category: {
+		id: "harvest",
+		label: "Harvest",
+		icon: "pickaxe",
+		tone: "power",
+		priority: 36,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		// Only available when a player unit is selected
+		if (ctx.selectionType !== "unit") return [];
+		if (ctx.targetFaction !== "player") return [];
+		if (!isSelectedBotCategoryAllowed(ctx, "harvest")) return [];
+		const profile = getSelectedBotProfile(ctx);
+		if (!profile?.canHarvest) return [];
+
+		// Find the selected entity and its position
+		const entity = findEntityById(ctx.targetEntityId);
+		if (!entity) return [];
+		const entityPos = entity.get(WorldPosition);
+		if (!entityPos) return [];
+
+		const unitHasAP = ctx.targetEntityId
+			? hasActionPoints(ctx.targetEntityId)
+			: false;
+
+		// Scan nearby structures within harvest range
+		const session = getActiveWorldSession();
+		if (!session) return [];
+
+		const actions = [];
+		for (const structure of session.sectorStructures) {
+			if (isStructureConsumed(structure.id)) continue;
+
+			// Get family from placement_layer (maps to resource pool family)
+			const family = structure.placement_layer;
+			if (!isHarvestable(family)) continue;
+
+			const worldPos = gridToWorld(structure.q, structure.r);
+			const dx = worldPos.x + structure.offset_x - entityPos.x;
+			const dz = worldPos.z + structure.offset_z - entityPos.z;
+			const dist = Math.sqrt(dx * dx + dz * dz);
+
+			if (dist > HARVEST_SCAN_RANGE) continue;
+
+			// Get resource pool for yield preview
+			const pool = getResourcePoolForModel(family, structure.model_id);
+			const yieldPreview = pool.yields
+				.map((y) => `${y.min}-${y.max} ${y.resource.replace(/_/g, " ")}`)
+				.join(", ");
+
+			actions.push({
+				id: `harvest_${structure.id}`,
+				label: `${pool.label}`,
+				icon: "pickaxe",
+				tone: "power",
+				enabled: unitHasAP,
+				disabledReason: unitHasAP ? undefined : "No AP remaining",
+				onExecute: () => {
+					if (ctx.targetEntityId) {
+						spendActionPoint(ctx.targetEntityId, 1);
+						startHarvest(
+							ctx.targetEntityId,
+							structure.id,
+							structure.model_id,
+							family,
+							worldPos.x + structure.offset_x,
+							worldPos.z + structure.offset_z,
+						);
+					}
+				},
+			});
+
+			// Limit to 6 nearby targets to keep the radial menu readable
+			if (actions.length >= 6) break;
+		}
+
+		return actions;
 	},
 });
 
@@ -496,19 +924,6 @@ registerRadialProvider({
 			},
 		];
 
-		if (ctx.selectionType === "resource_node") {
-			actions.push({
-				id: "harvest",
-				label: "Harvest",
-				icon: "pickaxe",
-				tone: "default",
-				enabled: true,
-				onExecute: () => {
-					// TODO: wire to resource harvesting
-				},
-			});
-		}
-
 		return actions;
 	},
 });
@@ -539,7 +954,7 @@ registerRadialProvider({
 		}
 
 		const { city, context, viewModel } = active;
-		const actions = [
+		const actions: RadialAction[] = [
 			{
 				id: "district_brief",
 				label: "Brief",
@@ -550,14 +965,25 @@ registerRadialProvider({
 			},
 		];
 
+		const unitHasAP =
+			ctx.selectionType === "unit" && ctx.targetEntityId
+				? hasActionPoints(ctx.targetEntityId)
+				: true;
+
 		if (viewModel.canSurvey && city) {
 			actions.push({
 				id: "district_survey",
 				label: "Survey",
 				icon: "eye",
 				tone: "signal",
-				enabled: true,
-				onExecute: () => surveyCitySite(city.id),
+				enabled: unitHasAP,
+				disabledReason: unitHasAP ? undefined : "No AP remaining",
+				onExecute: () => {
+					if (ctx.selectionType === "unit" && ctx.targetEntityId) {
+						spendActionPoint(ctx.targetEntityId, 1);
+					}
+					surveyCitySite(city.id);
+				},
 			});
 		}
 
@@ -567,14 +993,23 @@ registerRadialProvider({
 			const canEstablish =
 				ctx.selectionType !== "unit" ||
 				profile?.canEstablishSubstation === true;
+			const establishReason = !unitHasAP
+				? "No AP remaining"
+				: !canEstablish
+					? "Wrong unit role"
+					: undefined;
 			actions.push({
 				id: "district_establish",
 				label: "Establish",
 				icon: "city",
 				tone: "power",
-				enabled: canEstablish,
+				enabled: canEstablish && unitHasAP,
+				disabledReason: establishReason,
 				onExecute: () => {
 					if (canEstablish) {
+						if (ctx.selectionType === "unit" && ctx.targetEntityId) {
+							spendActionPoint(ctx.targetEntityId, 1);
+						}
 						foundCitySite(city.id);
 					}
 				},

@@ -4,15 +4,18 @@ import type {
 	BotIdentityProfile,
 	BotSpeechProfile,
 	BotUnitType,
+	HostileBotRole,
+	PlayerBotRole,
 } from "./types";
 import { getDefaultBotIdentity } from "./archetypes";
 
 const BOT_DEFINITIONS: Record<BotUnitType, BotDefinition> = {
+	// ─── Player Roles (6) ────────────────────────────────────────────────
 	maintenance_bot: {
 		unitType: "maintenance_bot",
-		label: "Field Technician Chassis",
+		label: "Technician",
 		description:
-			"Awakening-era repair and scouting frame used for the player's first coherent actions.",
+			"Awakening-era repair frame. Maintains, restores, and installs components on allied units.",
 		model: "Companion-bot.glb",
 		scale: 0.8,
 		baseSpeed: 3,
@@ -24,63 +27,33 @@ const BOT_DEFINITIONS: Record<BotUnitType, BotDefinition> = {
 		defaultAiRole: "player_unit",
 		steeringProfile: "biped_scout",
 		navigationProfile: "sector_surface_standard",
+		role: "technician",
+		markScaling: "repair speed",
 	},
-	utility_drone: {
-		unitType: "utility_drone",
-		label: "Relay Hauler Drone",
+	mecha_scout: {
+		unitType: "mecha_scout",
+		label: "Scout",
 		description:
-			"Rapid logistics and relay chassis for hauling, scouting, and route service.",
+			"Fast recon chassis for exploration, survey, and storm gathering at higher Marks.",
 		model: "ReconBot.glb",
-		scale: 1.2,
-		baseSpeed: 4,
-		powerDemand: 0.5,
-		movingPowerBonus: 0.3,
+		scale: 1.05,
+		baseSpeed: 3.8,
+		powerDemand: 0.7,
+		movingPowerBonus: 0.32,
 		archetypeId: "relay_hauler",
-		defaultSpeechProfile: "quartermaster",
+		defaultSpeechProfile: "scout",
 		startingFaction: "player",
 		defaultAiRole: "player_unit",
-		steeringProfile: "aerial_support",
-		navigationProfile: "sector_aerial",
-	},
-	fabrication_unit: {
-		unitType: "fabrication_unit",
-		label: "Fabrication Rig",
-		description:
-			"Industrial fabrication chassis that anchors local throughput and repair loops.",
-		model: "MobileStorageBot.glb",
-		scale: 1.8,
-		baseSpeed: 0,
-		powerDemand: 0,
-		movingPowerBonus: 0,
-		archetypeId: "fabrication_rig",
-		defaultSpeechProfile: "fabricator",
-		startingFaction: "player",
-		defaultAiRole: "player_unit",
-		steeringProfile: "stationary",
-		navigationProfile: "city_square_service",
-	},
-	feral_drone: {
-		unitType: "feral_drone",
-		label: "Feral Raider",
-		description:
-			"Degraded hostile quadruped used for early rogue-machine pressure and salvageable encounters.",
-		model: "Arachnoid.glb",
-		scale: 1.5,
-		baseSpeed: 3.5,
-		powerDemand: 0,
-		movingPowerBonus: 0,
-		archetypeId: "feral_raider",
-		defaultSpeechProfile: "feral",
-		startingFaction: "feral",
-		defaultAiRole: "hostile_machine",
-		steeringProfile: "feral_quadruped",
+		steeringProfile: "biped_scout",
 		navigationProfile: "sector_surface_standard",
+		role: "scout",
+		markScaling: "vision radius",
 	},
 	field_fighter: {
 		unitType: "field_fighter",
-		label: "Assault Strider",
+		label: "Striker",
 		description:
-			"Mobile combat chassis for breakthroughs, escort, and overworld strike tasks.",
+			"Melee combat chassis for breakthroughs, escort, and overworld strike pressure.",
 		model: "FieldFighter.glb",
 		scale: 1.15,
 		baseSpeed: 3.6,
@@ -92,74 +65,123 @@ const BOT_DEFINITIONS: Record<BotUnitType, BotDefinition> = {
 		defaultAiRole: "player_unit",
 		steeringProfile: "heavy_ground",
 		navigationProfile: "sector_surface_standard",
+		role: "striker",
+		markScaling: "melee damage",
 	},
-	mecha_scout: {
-		unitType: "mecha_scout",
-		label: "Survey Strider",
+	fabrication_unit: {
+		unitType: "fabrication_unit",
+		label: "Fabricator",
 		description:
-			"Advanced recon chassis for deeper map intelligence and faster contact discovery.",
+			"Mobile builder and harvester. Constructs structures and strips the ecumenopolis for materials.",
 		model: "Mecha01.glb",
 		scale: 1.05,
-		baseSpeed: 3.8,
-		powerDemand: 0.7,
-		movingPowerBonus: 0.32,
-		archetypeId: "field_technician",
-		defaultSpeechProfile: "scout",
-		startingFaction: "player",
-		defaultAiRole: "player_unit",
-		steeringProfile: "biped_scout",
-		navigationProfile: "sector_surface_standard",
-	},
-	mecha_trooper: {
-		unitType: "mecha_trooper",
-		label: "Storm Trooper Chassis",
-		description:
-			"Combat-oriented biped that can serve either player strike roles or cult-controlled machine enforcement.",
-		model: "MechaTrooper.glb",
-		scale: 1.2,
-		baseSpeed: 3.4,
-		powerDemand: 0.9,
-		movingPowerBonus: 0.3,
-		archetypeId: "assault_strider",
-		defaultSpeechProfile: "warden",
+		baseSpeed: 2.8,
+		powerDemand: 0.6,
+		movingPowerBonus: 0.2,
+		archetypeId: "fabrication_rig",
+		defaultSpeechProfile: "fabricator",
 		startingFaction: "player",
 		defaultAiRole: "player_unit",
 		steeringProfile: "heavy_ground",
 		navigationProfile: "sector_surface_standard",
+		role: "fabricator",
+		markScaling: "build/harvest speed",
 	},
 	mecha_golem: {
 		unitType: "mecha_golem",
-		label: "Substation Engineer Hull",
+		label: "Guardian",
 		description:
-			"Heavy groundworks chassis suited to substation deployment, reinforcement, and structural hardening.",
+			"Heavy defensive chassis for area denial, damage absorption, and settlement protection.",
 		model: "MechaGolem.glb",
 		scale: 1.35,
 		baseSpeed: 2.6,
 		powerDemand: 1.1,
 		movingPowerBonus: 0.2,
-		archetypeId: "substation_engineer",
-		defaultSpeechProfile: "warden",
-		startingFaction: "player",
-		defaultAiRole: "player_unit",
-		steeringProfile: "heavy_ground",
-		navigationProfile: "sector_surface_heavy",
-	},
-	quadruped_tank: {
-		unitType: "quadruped_tank",
-		label: "Defense Sentry",
-		description:
-			"Heavy quadruped defensive chassis for base protection and line holding.",
-		model: "QuadrupedTank.glb",
-		scale: 1.4,
-		baseSpeed: 2.8,
-		powerDemand: 1.2,
-		movingPowerBonus: 0.18,
 		archetypeId: "defense_sentry",
 		defaultSpeechProfile: "warden",
 		startingFaction: "player",
 		defaultAiRole: "player_unit",
 		steeringProfile: "heavy_ground",
 		navigationProfile: "sector_surface_heavy",
+		role: "guardian",
+		markScaling: "damage reduction",
+	},
+	utility_drone: {
+		unitType: "utility_drone",
+		label: "Hauler",
+		description:
+			"Logistics drone for resource transport, supply chain automation, and route service.",
+		model: "MobileStorageBot.glb",
+		scale: 1.2,
+		baseSpeed: 4,
+		powerDemand: 0.5,
+		movingPowerBonus: 0.3,
+		archetypeId: "relay_hauler",
+		defaultSpeechProfile: "quartermaster",
+		startingFaction: "player",
+		defaultAiRole: "player_unit",
+		steeringProfile: "aerial_support",
+		navigationProfile: "sector_aerial",
+		role: "hauler",
+		markScaling: "cargo capacity",
+	},
+	// ─── Hostile Roles (3) — hackable into player service ────────────────
+	feral_drone: {
+		unitType: "feral_drone",
+		label: "Cult Mech",
+		description:
+			"Fast swarm attacker controlled by cultists. When hacked, becomes a light melee specialist.",
+		model: "Arachnoid.glb",
+		scale: 1.5,
+		baseSpeed: 3.5,
+		powerDemand: 0,
+		movingPowerBonus: 0,
+		archetypeId: "feral_raider",
+		defaultSpeechProfile: "feral",
+		startingFaction: "feral",
+		defaultAiRole: "hostile_machine",
+		steeringProfile: "feral_quadruped",
+		navigationProfile: "sector_surface_standard",
+		role: "cult_mech",
+		markScaling: "swarm damage",
+	},
+	mecha_trooper: {
+		unitType: "mecha_trooper",
+		label: "Rogue Sentinel",
+		description:
+			"Patrol and guard chassis for AI-controlled zones. When hacked, becomes a ranged combat unit.",
+		model: "MechaTrooper.glb",
+		scale: 1.2,
+		baseSpeed: 3.4,
+		powerDemand: 0.9,
+		movingPowerBonus: 0.3,
+		archetypeId: "cult_conduit",
+		defaultSpeechProfile: "cult",
+		startingFaction: "rogue",
+		defaultAiRole: "hostile_machine",
+		steeringProfile: "heavy_ground",
+		navigationProfile: "sector_surface_standard",
+		role: "rogue_sentinel",
+		markScaling: "ranged damage",
+	},
+	quadruped_tank: {
+		unitType: "quadruped_tank",
+		label: "Siege Engine",
+		description:
+			"Heavy quadruped that attacks fortified positions. When hacked, deals massive structure damage.",
+		model: "QuadrupedTank.glb",
+		scale: 1.4,
+		baseSpeed: 2.8,
+		powerDemand: 1.2,
+		movingPowerBonus: 0.18,
+		archetypeId: "feral_raider",
+		defaultSpeechProfile: "feral",
+		startingFaction: "feral",
+		defaultAiRole: "hostile_machine",
+		steeringProfile: "heavy_ground",
+		navigationProfile: "sector_surface_heavy",
+		role: "siege_engine",
+		markScaling: "siege damage",
 	},
 };
 
@@ -179,6 +201,47 @@ export function getBotDefinition(unitType: BotUnitType) {
 
 export function getAllBotDefinitions() {
 	return Object.values(BOT_DEFINITIONS);
+}
+
+/** All 6 player-fabricable roles */
+export const PLAYER_ROLES: PlayerBotRole[] = [
+	"technician",
+	"scout",
+	"striker",
+	"fabricator",
+	"guardian",
+	"hauler",
+];
+
+/** All 3 hostile (hackable) roles */
+export const HOSTILE_ROLES: HostileBotRole[] = [
+	"cult_mech",
+	"rogue_sentinel",
+	"siege_engine",
+];
+
+export function getPlayerBotDefinitions() {
+	return Object.values(BOT_DEFINITIONS).filter((d) =>
+		PLAYER_ROLES.includes(d.role as PlayerBotRole),
+	);
+}
+
+export function getHostileBotDefinitions() {
+	return Object.values(BOT_DEFINITIONS).filter((d) =>
+		HOSTILE_ROLES.includes(d.role as HostileBotRole),
+	);
+}
+
+export function getBotDefinitionByRole(
+	role: PlayerBotRole | HostileBotRole,
+): BotDefinition | undefined {
+	return Object.values(BOT_DEFINITIONS).find((d) => d.role === role);
+}
+
+export function isPlayerRole(
+	role: PlayerBotRole | HostileBotRole,
+): role is PlayerBotRole {
+	return PLAYER_ROLES.includes(role as PlayerBotRole);
 }
 
 export function createBotUnitState(args: {

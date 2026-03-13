@@ -82,5 +82,12 @@ export function getFloorMaterialsForZone(zone: CityZone) {
 }
 
 export function getDefaultFloorMaterialForZone(zone: CityZone) {
-	return getFloorMaterialsForZone(zone)[0] ?? FLOOR_MATERIAL_PRESETS[0] ?? null;
+	const materials = getFloorMaterialsForZone(zone);
+	if (materials.length === 0) {
+		throw new Error(
+			`No floor material preset configured for zone "${zone}". ` +
+				`Add a preset with zoneAffinity including "${zone}" to FLOOR_MATERIAL_PRESETS.`,
+		);
+	}
+	return materials[0];
 }

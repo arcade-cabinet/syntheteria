@@ -1,0 +1,44 @@
+{
+	"$schema": "floor-texture configuration — zone type to texture path mapping",
+	"zones": {
+		"command_core": {
+			"label": "Command Core",
+			"textures": {
+				"color": "../../assets/materials/floors/command_core/color.jpg",
+				"normal": "../../assets/materials/floors/command_core/normal.jpg",
+				"roughness": "../../assets/materials/floors/command_core/roughness.jpg",
+				"ao": "../../assets/materials/floors/command_core/ao.jpg",
+				"height": "../../assets/materials/floors/command_core/height.jpg"
+			}
+		},
+		"fabrication": {
+			"label": "Fabrication",
+			"textures": {
+				"color": "../../assets/materials/floors/fabrication/color.jpg",
+				"normal": "../../assets/materials/floors/fabrication/normal.jpg",
+				"roughness": "../../assets/materials/floors/fabrication/roughness.jpg",
+				"ao": "../../assets/materials/floors/fabrication/ao.jpg",
+				"height": "../../assets/materials/floors/fabrication/height.jpg"
+			}
+		},
+		"corridor_transit": {
+			"label": "Corridor Transit",
+			"textures": {
+				"color": "../../assets/materials/floors/corridor_transit/color.jpg",
+				"normal": "../../assets/materials/floors/corridor_transit/normal.jpg",
+				"roughness": "../../assets/materials/floors/corridor_transit/roughness.jpg",
+				"height": "../../assets/materials/floors/corridor_transit/height.jpg"
+			}
+		},
+		"habitation": {
+			"label": "Habitation",
+			"textures": {
+				"color": "../../assets/materials/floors/habitation/color.jpg",
+				"normal": "../../assets/materials/floors/habitation/normal.jpg",
+				"roughness": "../../assets/materials/floors/habitation/roughness.jpg",
+				"ao": "../../assets/materials/floors/habitation/ao.jpg",
+				"height": "../../assets/materials/floors/habitation/height.jpg"
+			}
+		}
+	}
+}

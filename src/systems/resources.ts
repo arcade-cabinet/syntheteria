@@ -17,16 +17,17 @@ export interface ResourcePool {
 	scrapMetal: number;
 	eWaste: number;
 	intactComponents: number;
-	// Harvest resources — the Exploit pillar.
-	// Optional for backward compatibility with existing construction costs
-	// and test fixtures. Default to 0 via defaultResourcePool().
-	heavyMetals?: number;
-	lightMetals?: number;
-	uranics?: number;
-	plastics?: number;
-	oil?: number;
-	microchips?: number;
-	rareComponents?: number;
+	// Harvest resources — the Exploit pillar (urban mining).
+	// Named after real material science categories from the dead ecumenopolis.
+	// Optional for backward compatibility with existing construction costs.
+	ferrousScrap?: number; // Walls, columns, structural steel → chassis, armor
+	alloyStock?: number; // Props, equipment → sensors, light chassis
+	polymerSalvage?: number; // Pipes, insulation → wiring, seals
+	conductorWire?: number; // Electronics, terminals → circuits, relay
+	electrolyte?: number; // Vessels, batteries → power cells, fuel
+	siliconWafer?: number; // Computers, processors → AI cores, Mark upgrades
+	stormCharge?: number; // Lightning capture → power, energy weapons
+	elCrystal?: number; // Cultist breach zones → wormhole tech, endgame
 }
 
 // Global resource pool
@@ -34,13 +35,14 @@ const resources: ResourcePool = {
 	scrapMetal: 0,
 	eWaste: 0,
 	intactComponents: 0,
-	heavyMetals: 0,
-	lightMetals: 0,
-	uranics: 0,
-	plastics: 0,
-	oil: 0,
-	microchips: 0,
-	rareComponents: 0,
+	ferrousScrap: 0,
+	alloyStock: 0,
+	polymerSalvage: 0,
+	conductorWire: 0,
+	electrolyte: 0,
+	siliconWafer: 0,
+	stormCharge: 0,
+	elCrystal: 0,
 };
 
 /** Create a ResourcePool with all fields defaulting to 0 */
@@ -51,13 +53,14 @@ export function defaultResourcePool(
 		scrapMetal: 0,
 		eWaste: 0,
 		intactComponents: 0,
-		heavyMetals: 0,
-		lightMetals: 0,
-		uranics: 0,
-		plastics: 0,
-		oil: 0,
-		microchips: 0,
-		rareComponents: 0,
+		ferrousScrap: 0,
+		alloyStock: 0,
+		polymerSalvage: 0,
+		conductorWire: 0,
+		electrolyte: 0,
+		siliconWafer: 0,
+		stormCharge: 0,
+		elCrystal: 0,
 		...overrides,
 	};
 }
@@ -148,13 +151,14 @@ export function resetResources() {
 	resources.scrapMetal = 0;
 	resources.eWaste = 0;
 	resources.intactComponents = 0;
-	resources.heavyMetals = 0;
-	resources.lightMetals = 0;
-	resources.uranics = 0;
-	resources.plastics = 0;
-	resources.oil = 0;
-	resources.microchips = 0;
-	resources.rareComponents = 0;
+	resources.ferrousScrap = 0;
+	resources.alloyStock = 0;
+	resources.polymerSalvage = 0;
+	resources.conductorWire = 0;
+	resources.electrolyte = 0;
+	resources.siliconWafer = 0;
+	resources.stormCharge = 0;
+	resources.elCrystal = 0;
 	scavengePoints = null;
 	setRuntimeResources(resources);
 }

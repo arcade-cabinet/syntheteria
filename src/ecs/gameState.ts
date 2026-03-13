@@ -39,6 +39,7 @@ import {
 import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge";
 import { governorSystem } from "../systems/governorSystem";
 import { hackingSystem } from "../systems/hacking";
+import { hackingCaptureSystem } from "../systems/hackingSystem";
 import { harvestSystem, resetHarvestSystem } from "../systems/harvestSystem";
 import { lightningSystem, resetLightningSystem } from "../systems/lightning";
 import { motorPoolUpgradeSystem } from "../systems/motorPool";
@@ -230,6 +231,7 @@ export function simulationTick() {
 	fabricationSystem();
 	combatSystem();
 	hackingSystem();
+	hackingCaptureSystem();
 	motorPoolUpgradeSystem();
 	territorySystem();
 	narrativeSystem();

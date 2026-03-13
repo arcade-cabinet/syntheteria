@@ -49,7 +49,7 @@ let currentTier: ZoomTierName = "default";
 let previousTier: ZoomTierName = "default";
 let transitionProgress = 1.0; // 1.0 = transition complete
 let cameraHeight = 20;
-let viewportWidth = 375; // Default phone width in px
+let _viewportWidth = 375; // Default phone width in px
 
 // --- Tier boundary computation ---
 
@@ -93,8 +93,7 @@ export function getTargetHeightForTier(
 	tier: ZoomTierName,
 	fov: number = 45,
 ): number {
-	const cellsAcross =
-		zoomConfig.tiers[tier].cellsAcross;
+	const cellsAcross = zoomConfig.tiers[tier].cellsAcross;
 	const hexWidth = SECTOR_LATTICE_SIZE * 2;
 	const visibleWidth = cellsAcross * hexWidth;
 	const halfFovRad = ((fov / 2) * Math.PI) / 180;
@@ -133,7 +132,8 @@ function buildState(): ZoomTierState {
 			t,
 		),
 		resourceMarkersVisible: tierConfig.resourceMarkersVisible,
-		structureDetail: tierConfig.structureDetail as ZoomTierState["structureDetail"],
+		structureDetail:
+			tierConfig.structureDetail as ZoomTierState["structureDetail"],
 		unitDetail: tierConfig.unitDetail as ZoomTierState["unitDetail"],
 		cameraHeight,
 		cellsAcross: computeCellsAcross(cameraHeight),
@@ -167,7 +167,7 @@ export function getNextCycleTier(): ZoomTierName {
  * Set viewport width (for cell-span computation on phone vs tablet).
  */
 export function setViewportWidth(width: number) {
-	viewportWidth = width;
+	_viewportWidth = width;
 }
 
 /**

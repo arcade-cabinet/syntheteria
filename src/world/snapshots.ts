@@ -1,12 +1,8 @@
 import type { AgentRole } from "../ai";
-import type {
-	BotArchetypeId,
-	BotSpeechProfile,
-	BotUnitType,
-} from "../bots";
+import type { BotArchetypeId, BotSpeechProfile, BotUnitType } from "../bots";
 import type { SaveGameRecord } from "../db/saveGames";
 import type { UnitComponent } from "../ecs/traits";
-import type { ResourcePool } from "../systems/resources";
+import { defaultResourcePool, type ResourcePool } from "../systems/resources";
 import type { NewGameConfig } from "./config";
 import type {
 	CityGenerationStatus,
@@ -210,9 +206,9 @@ export function toWorldSessionSnapshot(
 export function createResourcePoolFromSnapshot(
 	resourceState: ResourceStateSnapshot,
 ): ResourcePool {
-	return {
+	return defaultResourcePool({
 		scrapMetal: resourceState.scrap_metal,
 		eWaste: resourceState.e_waste,
 		intactComponents: resourceState.intact_components,
-	};
+	});
 }

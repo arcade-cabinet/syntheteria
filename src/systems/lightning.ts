@@ -259,15 +259,15 @@ export function resetLightningSystem() {
  * Run lightning system. Called once per sim tick.
  * Must be called AFTER weatherSystem so storm visuals config is current.
  */
-export function lightningSystem(
-	tick: number,
-	stormIntensity: number,
-) {
+export function lightningSystem(tick: number, stormIntensity: number) {
 	currentSimTick = tick;
 
 	// Initialize next ambient time on first tick
 	if (nextAmbientTick === 0) {
-		nextAmbientTick = tick + TICKS_PER_SECOND * 2 + Math.floor(gameplayRandom() * TICKS_PER_SECOND * 3);
+		nextAmbientTick =
+			tick +
+			TICKS_PER_SECOND * 2 +
+			Math.floor(gameplayRandom() * TICKS_PER_SECOND * 3);
 	}
 
 	// Expire old bolts
@@ -303,9 +303,7 @@ export function lightningSystem(
 			const rod = rods[Math.floor(gameplayRandom() * rods.length)];
 			const wp = rod.get(WorldPosition);
 			if (wp) {
-				activeBolts.push(
-					createBolt(wp.x, wp.z, tick, true, wp.y + 2),
-				);
+				activeBolts.push(createBolt(wp.x, wp.z, tick, true, wp.y + 2));
 				lastRodCaptureTick = tick;
 			}
 		}

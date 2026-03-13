@@ -212,7 +212,7 @@ function FabList({ fabricator }: { fabricator: Entity }) {
 				) : (
 					RECIPES.map((recipe) => {
 						const canAfford = recipe.costs.every(
-							(cost) => snap.resources[cost.type] >= cost.amount,
+							(cost) => (snap.resources[cost.type] ?? 0) >= cost.amount,
 						);
 						return (
 							<HudButton

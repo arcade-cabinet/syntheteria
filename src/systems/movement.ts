@@ -1,4 +1,3 @@
-import { gridToWorld } from "../world/sectorCoordinates";
 import {
 	AIController,
 	Navigation,
@@ -7,6 +6,7 @@ import {
 	WorldPosition,
 } from "../ecs/traits";
 import { movingUnits } from "../ecs/world";
+import { gridToWorld } from "../world/sectorCoordinates";
 
 export function movementSystem(delta: number, gameSpeed: number) {
 	for (const entity of movingUnits) {

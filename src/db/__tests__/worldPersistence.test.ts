@@ -1,3 +1,4 @@
+import { defaultResourcePool } from "../../systems/resources";
 import { generateWorldData } from "../../world/generation";
 import { createSaveGameSync } from "../saveGames";
 import {

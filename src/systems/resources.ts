@@ -17,6 +17,16 @@ export interface ResourcePool {
 	scrapMetal: number;
 	eWaste: number;
 	intactComponents: number;
+	// Harvest resources — the Exploit pillar.
+	// Optional for backward compatibility with existing construction costs
+	// and test fixtures. Default to 0 via defaultResourcePool().
+	heavyMetals?: number;
+	lightMetals?: number;
+	uranics?: number;
+	plastics?: number;
+	oil?: number;
+	microchips?: number;
+	rareComponents?: number;
 }
 
 // Global resource pool
@@ -24,14 +34,40 @@ const resources: ResourcePool = {
 	scrapMetal: 0,
 	eWaste: 0,
 	intactComponents: 0,
+	heavyMetals: 0,
+	lightMetals: 0,
+	uranics: 0,
+	plastics: 0,
+	oil: 0,
+	microchips: 0,
+	rareComponents: 0,
 };
+
+/** Create a ResourcePool with all fields defaulting to 0 */
+export function defaultResourcePool(
+	overrides: Partial<ResourcePool> = {},
+): ResourcePool {
+	return {
+		scrapMetal: 0,
+		eWaste: 0,
+		intactComponents: 0,
+		heavyMetals: 0,
+		lightMetals: 0,
+		uranics: 0,
+		plastics: 0,
+		oil: 0,
+		microchips: 0,
+		rareComponents: 0,
+		...overrides,
+	};
+}
 
 export function getResources(): ResourcePool {
 	return { ...resources };
 }
 
 export function addResource(type: keyof ResourcePool, amount: number) {
-	resources[type] += amount;
+	(resources[type] as number) = ((resources[type] as number) ?? 0) + amount;
 	setRuntimeResources(resources);
 }
 
@@ -39,8 +75,8 @@ export function spendResource(
 	type: keyof ResourcePool,
 	amount: number,
 ): boolean {
-	if (resources[type] < amount) return false;
-	resources[type] -= amount;
+	if (((resources[type] as number) ?? 0) < amount) return false;
+	(resources[type] as number) = ((resources[type] as number) ?? 0) - amount;
 	setRuntimeResources(resources);
 	return true;
 }
@@ -112,14 +148,24 @@ export function resetResources() {
 	resources.scrapMetal = 0;
 	resources.eWaste = 0;
 	resources.intactComponents = 0;
+	resources.heavyMetals = 0;
+	resources.lightMetals = 0;
+	resources.uranics = 0;
+	resources.plastics = 0;
+	resources.oil = 0;
+	resources.microchips = 0;
+	resources.rareComponents = 0;
 	scavengePoints = null;
 	setRuntimeResources(resources);
 }
 
-export function setResources(nextResources: ResourcePool) {
-	resources.scrapMetal = nextResources.scrapMetal;
-	resources.eWaste = nextResources.eWaste;
-	resources.intactComponents = nextResources.intactComponents;
+export function setResources(nextResources: Partial<ResourcePool>) {
+	for (const key of Object.keys(resources) as (keyof ResourcePool)[]) {
+		if (key in nextResources) {
+			(resources[key] as number) =
+				(nextResources[key] as number) ?? (resources[key] as number);
+		}
+	}
 	setRuntimeResources(resources);
 }
 

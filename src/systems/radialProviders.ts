@@ -234,7 +234,7 @@ registerRadialProvider({
 		if (ctx.selectionType === "empty_sector" || profile?.canBuildRod) {
 			const rodCosts = BUILDING_COSTS.lightning_rod;
 			const canAffordRod = rodCosts.every(
-				(cost) => resources[cost.type] >= cost.amount,
+				(cost) => (resources[cost.type] ?? 0) >= cost.amount,
 			);
 			actions.push({
 				id: "build_rod",
@@ -250,7 +250,7 @@ registerRadialProvider({
 		if (ctx.selectionType === "empty_sector" || profile?.canBuildFabricator) {
 			const fabCosts = BUILDING_COSTS.fabrication_unit;
 			const canAffordFab = fabCosts.every(
-				(cost) => resources[cost.type] >= cost.amount,
+				(cost) => (resources[cost.type] ?? 0) >= cost.amount,
 			);
 			actions.push({
 				id: "build_fab",
@@ -386,7 +386,7 @@ registerRadialProvider({
 
 		return RECIPES.map((recipe) => {
 			const canAfford = recipe.costs.every(
-				(cost) => resources[cost.type] >= cost.amount,
+				(cost) => (resources[cost.type] ?? 0) >= cost.amount,
 			);
 			return {
 				id: `fab_${recipe.name}`,

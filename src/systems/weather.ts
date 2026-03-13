@@ -95,9 +95,9 @@ export interface StormVisualParams {
 
 function getPhase(t: number): TimeOfDayPhase {
 	// Dawn: 0.15-0.30, Day: 0.30-0.70, Dusk: 0.70-0.85, Night: 0.85-0.15
-	if (t >= 0.15 && t < 0.30) return "dawn";
-	if (t >= 0.30 && t < 0.70) return "day";
-	if (t >= 0.70 && t < 0.85) return "dusk";
+	if (t >= 0.15 && t < 0.3) return "dawn";
+	if (t >= 0.3 && t < 0.7) return "day";
+	if (t >= 0.7 && t < 0.85) return "dusk";
 	return "night";
 }
 
@@ -110,8 +110,7 @@ function getPhase(t: number): TimeOfDayPhase {
 function computeWormholeGlow(t: number): number {
 	// sin curve: 0 at midnight, 1 at noon
 	const raw = 0.5 + 0.5 * Math.sin((t - 0.25) * Math.PI * 2);
-	const { minGlowIntensity, maxGlowIntensity } =
-		weatherConfig.wormholeCycle;
+	const { minGlowIntensity, maxGlowIntensity } = weatherConfig.wormholeCycle;
 	return minGlowIntensity + raw * (maxGlowIntensity - minGlowIntensity);
 }
 
@@ -347,8 +346,7 @@ export function weatherSystem(
 	gameSpeed: number,
 	stormIntensity: number,
 ) {
-	const { ticksPerGameMinute, gameMinutesPerDay } =
-		weatherConfig.chronometer;
+	const { ticksPerGameMinute, gameMinutesPerDay } = weatherConfig.chronometer;
 
 	// Advance game clock — use tick delta to handle gaps (e.g. from pause/unpause)
 	const tickDelta = tick - lastProcessedTick;

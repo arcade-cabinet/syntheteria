@@ -1,8 +1,8 @@
+import { worldToGrid } from "../world/sectorCoordinates";
 import {
 	getNeighborSectorCells,
 	getPassableSectorCell,
 } from "../world/structuralSpace";
-import { worldToGrid } from "../world/sectorCoordinates";
 
 function heuristic(aq: number, ar: number, bq: number, br: number): number {
 	return Math.max(Math.abs(aq - bq), Math.abs(ar - br));

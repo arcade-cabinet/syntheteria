@@ -51,7 +51,7 @@ export function BuildToolbar() {
 						const isActive = active === type;
 						const costs = BUILDING_COSTS[type];
 						const canAfford = costs.every(
-							(cost) => snap.resources[cost.type] >= cost.amount,
+							(cost) => (snap.resources[cost.type] ?? 0) >= cost.amount,
 						);
 						const costMeta = costs
 							.map((cost) => `${cost.amount} ${cost.type}`)

@@ -82,12 +82,7 @@ let nextSegmentId = 0;
 // --- Edge key helpers ---
 
 /** Create a canonical key for a sector edge (order-independent) */
-function edgeKey(
-	q1: number,
-	r1: number,
-	q2: number,
-	r2: number,
-): string {
+function edgeKey(q1: number, r1: number, q2: number, r2: number): string {
 	if (q1 < q2 || (q1 === q2 && r1 < r2)) {
 		return `${q1},${r1}-${q2},${r2}`;
 	}
@@ -191,9 +186,7 @@ function buildSignalSegments(): NetworkSegment[] {
 	// Also connect non-relay connected units to their nearest relay within range
 	const connectedUnits = world
 		.query(Signal, WorldPosition, Identity)
-		.filter(
-			(e) => e.get(Signal)?.connected && !e.get(Signal)?.relaySource,
-		);
+		.filter((e) => e.get(Signal)?.connected && !e.get(Signal)?.relaySource);
 
 	for (const unit of connectedUnits) {
 		const unitPos = unit.get(WorldPosition)!;
@@ -230,10 +223,7 @@ function buildSignalSegments(): NetworkSegment[] {
 			if (!createdEdges.has(ek)) {
 				createdEdges.add(ek);
 				const fromWorld = gridToWorld(unitHex.q, unitHex.r);
-				const toWorld = gridToWorld(
-					nearestRelayHex.q,
-					nearestRelayHex.r,
-				);
+				const toWorld = gridToWorld(nearestRelayHex.q, nearestRelayHex.r);
 
 				segments.push({
 					id: `sig_${nextSegmentId++}`,

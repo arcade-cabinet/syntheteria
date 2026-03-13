@@ -2,8 +2,8 @@ import { isInsideBuilding } from "../ecs/cityLayout";
 import { spawnFabricationUnit, spawnLightningRod } from "../ecs/factory";
 import { Identity, MapFragment, WorldPosition } from "../ecs/traits";
 import { lightningRods, units } from "../ecs/world";
-import { getResources, type ResourcePool, spendResource } from "./resources";
 import { isPassableAtWorldPosition } from "../world/structuralSpace";
+import { getResources, type ResourcePool, spendResource } from "./resources";
 /**
  * Building placement state machine.
  *
@@ -97,7 +97,7 @@ export function confirmPlacement(): boolean {
 	// Check all costs can be paid before spending
 	const pool = getResources();
 	for (const cost of costs) {
-		if (pool[cost.type] < cost.amount) return false;
+		if ((pool[cost.type] ?? 0) < cost.amount) return false;
 	}
 
 	// Spend resources

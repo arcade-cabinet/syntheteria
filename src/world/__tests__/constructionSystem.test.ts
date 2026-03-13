@@ -1,3 +1,4 @@
+import { defaultResourcePool } from "../../systems/resources";
 import {
 	CONSTRUCTION_BLUEPRINTS,
 	advanceConstruction,
@@ -102,7 +103,7 @@ describe("constructionSystem", () => {
 						intactComponents:
 							acc.intactComponents + stage.cost.intactComponents,
 					}),
-					{ scrapMetal: 0, eWaste: 0, intactComponents: 0 },
+					defaultResourcePool({ scrapMetal: 0, eWaste: 0, intactComponents: 0 }),
 				);
 				expect(bp.totalCost).toEqual(sum);
 			}

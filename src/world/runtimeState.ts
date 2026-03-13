@@ -1,3 +1,4 @@
+import { defaultResourcePool } from "../systems/resources";
 import type { RuntimeState } from "./runtimeState.types";
 
 const listeners = new Set<() => void>();
@@ -11,11 +12,7 @@ let runtimeState: RuntimeState = {
 	currentTick: 0,
 	districtEvents: [],
 	nearbyPoi: null,
-	resources: {
-		scrapMetal: 0,
-		eWaste: 0,
-		intactComponents: 0,
-	},
+	resources: defaultResourcePool(),
 };
 
 function notify() {
@@ -43,11 +40,7 @@ export function resetRuntimeState() {
 		currentTick: 0,
 		districtEvents: [],
 		nearbyPoi: null,
-		resources: {
-			scrapMetal: 0,
-			eWaste: 0,
-			intactComponents: 0,
-		},
+		resources: defaultResourcePool(),
 	};
 	notify();
 }

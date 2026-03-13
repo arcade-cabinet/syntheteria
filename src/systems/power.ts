@@ -1,6 +1,6 @@
+import { getBotDefinition } from "../bots";
 import buildingsConfig from "../config/buildings.json";
 import gameplayConfig from "../config/gameplay.json";
-import { getBotDefinition } from "../bots";
 import type { BuildingEntity, Entity } from "../ecs/traits";
 import {
 	Building,

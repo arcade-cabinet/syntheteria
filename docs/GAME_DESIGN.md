@@ -10,40 +10,73 @@ The game should feel like it **grows into** strategic scale rather than starting
 ## 2. Setting & World Structure
 The game takes place inside the ruins of a storm-battered **ecumenopolis**: a world-spanning machine urbanism of arcology shells, industrial sectors, transit corridors, breach zones, exposed superstructure, and hardened infrastructure.
 
-This is not a natural overworld plus separate city interiors. It is one continuous campaign space composed of sector types.
+This is not a natural overworld plus separate city interiors. It is one continuous campaign space — and it is **limitless**. The ecumenopolis extends in every direction. There are no artificial map boundaries.
 
-Major campaign sectors:
+### Viewport-Driven Chunk Generation
+The world is generated deterministically by viewport using chunk-based procedural generation:
+- Each chunk is a square region of sector cells (e.g., 8×8 cells)
+- Chunks are generated from `worldSeed + chunkKey` — identical every time
+- The camera position determines which chunks are loaded
+- Only player modifications (deltas) are persisted — the baseline regenerates from seed
+- This creates an effectively infinite explorable ecumenopolis with minimal storage
 
+### Major Campaign Sectors (POI Types)
 - **Command Arcology:** Starting sector and first stable machine enclave.
-- **Coastal Extraction Sector:** Shoreline-adjacent salvage and materials district.
-- **Research Campus Sector:** Instrumentation, climate research, and story-rich ruins.
-- **Northern Cult Wards:** Hostile sectors with intense cult activity and storm pressure.
-- **Gateway / Abyssal Transit Sector:** Late-game route tied to the wormhole and alternate victory progression.
+- **Abyssal Extraction Ward:** Shoreline-adjacent salvage and materials district.
+- **Archive Campus:** Instrumentation, climate research, and story-rich ruins.
+- **Cult Wards:** Hostile sectors with intense cult activity and storm pressure. Cultists can appear ANYWHERE — they are story-driven barbarians, not territory-holding opponents.
+- **Gateway Spine:** Late-game route tied to the wormhole and alternate victory progression.
 
 ## 3. Game Phases
-1. **Awakening:** Reconnect scattered machines, merge fragments of perception, restore power, and recover fabrication.
-2. **Expansion:** Reclaim additional sectors, establish infrastructure, increase automation, and encounter rival machine consciousnesses.
+1. **Awakening:** Reconnect scattered machines, merge fragments of perception, restore power, and recover fabrication. The player starts with a handful of Mark I robots in a small illuminated pocket of the ecumenopolis, surrounded by darkness.
+2. **Expansion:** Explore outward, discover harvestable structures, accumulate resources, and establish infrastructure. The fog of war lifts as units explore.
 3. **Competition:** Contest territory, salvage, and strategic control against other machine factions while cult pressure escalates.
 4. **Resolution:** Achieve dominance, technical supremacy, or the wormhole / transcendence route.
 
-### Phase Endpoints
-- **Awakening endpoint:** The command arcology is functional, mobile units are online, and fabrication/power loops are working.
-- **Expansion endpoint:** Multiple sectors are reclaimed, automation has meaningfully increased, and the player can project power beyond the starting shell.
-- **Competition endpoint:** Rival machine factions are real strategic opponents and cult escalation materially affects the campaign.
-- **Resolution endpoint:** The player secures either machine supremacy or the wormhole-linked alternate win path.
+## 4. The 4X Pillars
 
-## 4. Exploration & Perception
-- **2.5D / 3D top-down:** The primary perspective remains top-down, but the game should preserve a quasi first-person feeling of machine discovery through sensing limits, fragmentary maps, and local context.
-- **Fragmented machine perception:** Each robot contributes its own map understanding.
-  - **Detailed maps:** Camera- and sensor-equipped robots.
-  - **Abstract maps:** Blind or degraded robots that infer structure rather than seeing it.
-- **Map merging:** Separate machine perspectives snap into one larger operational understanding when units reconnect.
-- **Earned strategic clarity:** The campaign should not begin fully readable. The player assembles the world before commanding it cleanly.
+### eXplore
+- **Fog of war** is the core exploration mechanic. The world starts dark.
+- Units with cameras reveal detailed maps; blind units reveal abstract maps.
+- Map merging: separate machine perspectives snap into one larger understanding.
+- Each new chunk generated reveals new structures, props, threats, and opportunities.
+- Exploration is how the player finds resources and story content.
+
+### eXploit
+Every structure and prop in the ecumenopolis is a **harvestable resource deposit**. The dead machine civilization's infrastructure IS the resource base.
+
+**Resource Types:**
+| Resource | Source | Use |
+|----------|--------|-----|
+| Heavy Metals | Walls, columns, structural beams | Armor, chassis, defensive structures |
+| Light Metals | Props, shelves, containers | Electronics, sensors, light components |
+| Uranics | Power infrastructure, reactors | Energy systems, power cells |
+| Plastics | Pipes, insulation, capsules | Wiring, seals, basic components |
+| Oil | Industrial machinery, engines | Lubricants, fuel cells, fabrication |
+| Microchips | Computers, terminals, control panels | AI cores, processors, upgrades |
+| Scrap | Any damaged/degraded structure | Universal low-quality material |
+| Rare Components | Intact equipment, research gear | Advanced fabrication, Mark upgrades |
+
+**Harvesting:** Select a structure → radial menu "Harvest" → yields resources over time → structure consumed. Each model family maps to a specific resource pool.
+
+### eXpand
+- **Base building** using harvested resources
+- Functional structures: fabricators, storage, relay towers, power sinks, defensive turrets
+- Multi-level construction on the block grid
+- Founded substations become forward operating bases
+- Network of signal relays extends command range
+
+### eXterminate
+- Cultist incursions are the primary hostile pressure
+- Rival machine consciousnesses contest the same resources
+- Combat emphasizes component breakage, not HP attrition
+- Hacking: `Signal Link + Required Technique + Sufficient Compute`
+- Humans are unhackable; machines can be turned
 
 ## 5. Resources & Materials
 - **Energy (local):** Drawn from the storm through lightning capture infrastructure.
 - **Compute (global):** Shared cognitive resource for coordination, hacking, and automation.
-- **Materials:** Recovered from structural scrap, extraction sectors, abyssal infrastructure, enemies, and derelict facilities.
+- **Harvest Resources (8 types):** Extracted from the ecumenopolis itself. See Exploit section above.
 
 ### Time Model
 - Flexible real-time with pause and speed controls.
@@ -51,80 +84,49 @@ Major campaign sectors:
 - Combat, hacking, and fragile exploration should tolerate slowed or paused decision-making.
 
 ## 6. Bots, Chassis, And Growth
-- The roster should be built from a **small number of archetypal chassis lines**, not a bloated conventional tech tree.
-- Progression should emphasize:
-  - **Mark-based advancement** (`Mark I`, `Mark II`, ...)
-  - salvage-dependent specialization
-  - component loadout and doctrine
-  - increasing automation
-- Core early and mid game archetypes should cover:
-  - technician / scout
-  - relay / hauler
-  - fabrication / industry
-  - expansion / founding
-  - assault / defense
+The roster is built from a **small number of archetypal chassis lines**, not a bloated tech tree.
+
+The player starts with **5 Mark I robots** — each with specific component loadouts and some with broken sensors. This is the intimate starting experience.
+
+### Progression
+- **Mark-based advancement** (`Mark I`, `Mark II`, `Mark III`)
+- Mark upgrades require Rare Components (harvested from research equipment)
+- Salvage-dependent specialization
+- Component loadout and doctrine
+- Increasing automation reduces micromanagement
+
+### Starting Roster
+1. **Field Technician** (mentor) — camera broken, legs+arms, close repair
+2. **Relay Hauler** (quartermaster) — thrusters+cargo, logistics
+3. **Fabrication Rig** (fabricator) — manipulator arms, builds things
+4. **Mecha Golem** (defender) — heavy chassis, defensive role
+5. **Utility Drone** (scout) — fast, sensors, early exploration
 
 ### Component System
-- Power Sources
-- Controllers
-- Motors
-- Locomotion
-- Sensors
-- Manipulation
-- Weapons
-- Communication
-- Utility
-
-### Dynamic Calculation
-- `Locomotion Power = Base Rate x Weight x Terrain x Speed`
-- `Compute Cost = Base Function Cost x Automation Multiplier`
+Power Sources, Controllers, Motors, Locomotion, Sensors, Manipulation, Weapons, Communication, Utility
 
 ## 7. Factions
 ### Machine Consciousnesses
-The primary competitive factions are **other machine consciousnesses**.
+The primary competitive factions are other machine consciousnesses. They differ by starting sector, salvage ecology, accessible part families, infrastructure affordances, and doctrine. They are NOT fantasy races.
 
-They should differ by:
-- starting sector
-- salvage ecology
-- accessible part families
-- infrastructure affordances
-- doctrine and automation style
+### Cultists of EL
+Cultists are NOT a symmetrical 4X faction. They are:
+- A persistent hostile pressure layer that can appear ANYWHERE
+- A narrative antagonist and progression gate
+- Story-driven barbarians, not territory holders
+- They call down lightning, resist weather, sense machine consciousness
+- Frequency and intensity scale with campaign progression
 
-They should **not** be framed as fantasy races or species.
+## 8. Victory Structure
+- **Subjugation / dominance** — control the ecumenopolis
+- **Technical supremacy** — achieve full automation and Mark progression
+- **Wormhole / transcendence** — ascend through the storm to the wormhole
 
-### Cultists
-Cultists are not a normal symmetrical 4X faction.
-
-They are:
-- a persistent hostile pressure layer
-- a narrative antagonist
-- a progression gate for the wormhole route
-
-They function more like an escalating barbarian-plus-story system than a peer empire template.
-
-## 8. Combat & Hacking
-- Combat should emphasize component breakage, degradation, and salvage consequences over simple HP attrition.
-- Humans are unhackable.
-- Machine enemies can be hacked.
-- Hacking should be infrastructure-dependent and spatially meaningful.
-
-### Hacking Rule
-`Hack = Signal Link + Required Technique + Sufficient Compute`
-
-Success turns the target machine to your side.
-
-## 9. Victory Structure
-The game should support at least three victory classes:
-
-- **Subjugation / dominance**
-- **Technical supremacy**
-- **Wormhole / transcendence victory**
-
-The cultist layer should gate or pressure the alternate wormhole route rather than merely serving as one more faction to conquer.
-
-## 10. Design Goals
+## 9. Design Goals
 - Preserve the feeling of growing from fragmented awareness into distributed machine dominance.
 - Keep the campaign space readable without making it instantly omniscient.
 - Support both intimate early micromanagement and earned late-game automation.
 - Make the storm feel like both an energy source and a strategic threat.
-- Make the ecumenopolis feel like a dead but reclaimable machine civilization, not a generic sci-fi tileset.
+- Make the ecumenopolis feel like a dead but reclaimable machine civilization full of harvestable resources.
+- Every structure is a potential resource deposit — the Exploit loop drives expansion.
+- No artificial map boundaries — the ecumenopolis is limitless.

@@ -30,7 +30,12 @@ import radialConfig from "../config/radialMenu.json";
 /** Context passed to providers when the menu opens */
 export interface RadialOpenContext {
 	/** Type of thing under the pointer */
-	selectionType: "unit" | "building" | "empty_sector" | "resource_node" | "none";
+	selectionType:
+		| "unit"
+		| "building"
+		| "empty_sector"
+		| "resource_node"
+		| "none";
 	/** Entity ID of the selected unit/building (null for open sector space) */
 	targetEntityId: string | null;
 	/** Sector coordinates of the interaction point */

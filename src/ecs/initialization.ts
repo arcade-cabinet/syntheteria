@@ -4,19 +4,22 @@ import {
 	resetFactionGovernors,
 } from "../ai/governor/factionGovernors";
 import "../systems/playtestBridge";
+import { resetAICivilization } from "../systems/aiCivilization";
 import { resetCampaignStats, setCampaignStats } from "../systems/campaignStats";
 import { resetCombatState } from "../systems/combat";
+import { resetEnemyState } from "../systems/enemies";
+import { resetFabricationState } from "../systems/fabrication";
+import { resetFactionActivityFeed } from "../systems/factionActivityFeed";
+import {
+	type EconomyFactionId,
+	resetFactionEconomy,
+	seedFactionResources,
+} from "../systems/factionEconomy";
 import {
 	resetFactionSpawning,
 	spawnRivalFactions,
 } from "../systems/factionSpawning";
-import { resetEnemyState } from "../systems/enemies";
-import { resetFabricationState } from "../systems/fabrication";
-import {
-	resetFactionEconomy,
-	seedFactionResources,
-	type EconomyFactionId,
-} from "../systems/factionEconomy";
+import { resetGovernorSystem } from "../systems/governorSystem";
 import {
 	type ActiveHarvest,
 	rehydrateHarvestState,
@@ -24,7 +27,11 @@ import {
 } from "../systems/harvestSystem";
 import { resetNarrativeState } from "../systems/narrative";
 import { resetPowerSystem } from "../systems/power";
-import { type ResourcePool, resetResources, setResources } from "../systems/resources";
+import {
+	type ResourcePool,
+	resetResources,
+	setResources,
+} from "../systems/resources";
 import { resetTurnEventLog } from "../systems/turnEventLog";
 import {
 	addUnitsToTurnState,
@@ -75,6 +82,9 @@ export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 	resetVictorySystem();
 	resetFactionSpawning();
 	resetHarvestSystem();
+	resetAICivilization();
+	resetFactionActivityFeed();
+	resetGovernorSystem();
 	destroyAllEntities();
 	setResources({
 		scrapMetal: persistedWorld.resourceState.scrap_metal,

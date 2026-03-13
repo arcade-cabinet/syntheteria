@@ -23,6 +23,7 @@
  *   radialProviders, playtestBridge, initialization
  */
 import { aiSystem } from "../ai";
+import { botSpeechSystem } from "../systems/botSpeech";
 import {
 	type CombatEvent,
 	combatSystem,
@@ -36,6 +37,7 @@ import {
 	getActiveJobs,
 } from "../systems/fabrication";
 import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge";
+import { governorSystem } from "../systems/governorSystem";
 import { hackingSystem } from "../systems/hacking";
 import { harvestSystem, resetHarvestSystem } from "../systems/harvestSystem";
 import { lightningSystem, resetLightningSystem } from "../systems/lightning";
@@ -60,8 +62,11 @@ import {
 	type ResourcePool,
 	resourceSystem,
 } from "../systems/resources";
-import { botSpeechSystem } from "../systems/botSpeech";
 import { signalNetworkSystem } from "../systems/signalNetworkSystem";
+import {
+	resetTerritorySystem,
+	territorySystem,
+} from "../systems/territorySystem";
 import {
 	getWeatherSnapshot,
 	resetWeatherSystem,
@@ -69,10 +74,6 @@ import {
 	weatherSystem,
 } from "../systems/weather";
 import { persistenceSystem } from "../world/persistenceSystem";
-import {
-	resetTerritorySystem,
-	territorySystem,
-} from "../systems/territorySystem";
 import { poiSystem } from "../world/poiSystem";
 import {
 	getRuntimeState,
@@ -213,6 +214,7 @@ export function simulationTick() {
 
 	enemySystem();
 	aiSystem(delta, tick);
+	governorSystem(tick);
 	movementSystem(delta, gameSpeed);
 	explorationSystem();
 	lastMergeEvents = fragmentMergeSystem();

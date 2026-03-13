@@ -24,6 +24,7 @@ import {
 	persistGeneratedWorldSync,
 } from "./src/db/worldPersistence";
 import { saveAllStateSync } from "./src/db/saveAllState";
+import { setWorldReady } from "./src/ecs/gameState";
 import { initializeNewGame } from "./src/ecs/initialization";
 import { initGameplayPRNG, setWorldSeed } from "./src/ecs/seed";
 import { clearActiveWorldSession } from "./src/world/session";
@@ -203,6 +204,7 @@ export default function App() {
 			const persistedWorld = getPersistedWorldSync(saveGame);
 
 			hydratePersistedWorld(persistedWorld);
+			setWorldReady(true);
 			startTransition(() => {
 				setInGame(true);
 				setIsLoading(false);
@@ -237,6 +239,7 @@ export default function App() {
 			touchSaveGameSync(saveGame.id);
 			const persistedWorld = ensurePersistedWorld(saveGame);
 			hydratePersistedWorld(persistedWorld);
+			setWorldReady(true);
 			startTransition(() => {
 				setInGame(true);
 				setIsLoading(false);

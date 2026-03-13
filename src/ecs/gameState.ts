@@ -96,6 +96,7 @@ export interface GameSnapshot {
 	tick: number;
 	gameSpeed: number;
 	paused: boolean;
+	worldReady: boolean;
 	fragments: MapFragment[];
 	unitCount: number;
 	enemyCount: number;
@@ -117,6 +118,7 @@ export interface GameSnapshot {
 let tick = 0;
 let gameSpeed = 1.0;
 let paused = false;
+let worldReady = false;
 let lastMergeEvents: MergeEvent[] = [];
 const listeners = new Set<() => void>();
 let snapshot: GameSnapshot | null = null;
@@ -136,6 +138,7 @@ function buildSnapshot(): GameSnapshot {
 		tick,
 		gameSpeed,
 		paused,
+		worldReady,
 		fragments: getStructuralFragments(),
 		unitCount: playerCount,
 		enemyCount,
@@ -190,6 +193,16 @@ export function isPaused() {
 	return paused;
 }
 
+export function isWorldReady(): boolean {
+	return worldReady;
+}
+
+export function setWorldReady(ready: boolean) {
+	worldReady = ready;
+	snapshot = null;
+	notify();
+}
+
 function notify() {
 	for (const listener of listeners) {
 		listener();
@@ -211,6 +224,12 @@ export function simulationTick() {
 
 	tick++;
 	setRuntimeTick(tick);
+
+	if (!worldReady) {
+		snapshot = null;
+		notify();
+		return;
+	}
 
 	const delta = FIXED_SIM_STEP_SECONDS * gameSpeed;
 
@@ -257,6 +276,7 @@ export function resetGameState() {
 	tick = 0;
 	gameSpeed = 1.0;
 	paused = false;
+	worldReady = false;
 	lastMergeEvents = [];
 	snapshot = null;
 	resetWeatherSystem();

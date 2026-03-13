@@ -35,7 +35,7 @@ export function GameUI() {
 	const worldInteractive = runtime.currentTick > 0;
 
 	return (
-		<View className="absolute inset-0 pointer-events-none">
+		<View className="absolute inset-0 pointer-events-none" testID="game-scene-ready">
 			<GameHUD />
 			{worldInteractive && <Notifications />}
 			{worldInteractive && <HarvestNotifications />}

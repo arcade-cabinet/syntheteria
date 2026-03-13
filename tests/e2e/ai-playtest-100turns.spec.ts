@@ -313,13 +313,13 @@ test.describe("100-turn AI playtest", () => {
 		// ── Phase 1: Boot and start new game ──
 
 		await clearPersistence(page);
-		await expect(page.getByText("SYNTHETERIA")).toBeVisible({
+		await expect(page.getByText("SYNTHETERIA").first()).toBeVisible({
 			timeout: 15_000,
 		});
 
 		// Capture the seed from the new game modal
-		await page.getByTestId("title-new_game").click();
-		await expect(page.getByText("Campaign Initialization")).toBeVisible();
+		await page.getByTestId("title-new_game").first().click();
+		await expect(page.getByText("Campaign Initialization").first()).toBeVisible();
 
 		// Read the seed phrase from the input
 		const seedInput = page.locator('input[class*="font-mono"]').first();
@@ -328,10 +328,10 @@ test.describe("100-turn AI playtest", () => {
 		}
 
 		// Confirm new game
-		await page.getByTestId("new-game-confirm").click();
+		await page.getByTestId("new-game-confirm").first().click();
 
-		// Wait for scene to be ready
-		await expect(page.getByTestId("game-scene-ready")).toBeVisible({
+		// Wait for scene to be ready (use first() to avoid strict mode with duplicate testIDs)
+		await expect(page.getByTestId("game-scene-ready").first()).toBeVisible({
 			timeout: 30_000,
 		});
 

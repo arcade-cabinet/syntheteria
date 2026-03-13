@@ -14,7 +14,6 @@ import "../systems/autosave"; // Register autosave environment phase handler
 import { registerAudioTick } from "../ecs/gameState";
 import { audioSystemTick } from "../audio";
 registerAudioTick(audioSystemTick); // Wire audio event processing into game loop
-import { BriefingBubbleLayer } from "./BriefingBubbleLayer";
 import { CitySiteOverlay } from "./CitySiteOverlay";
 import { PauseMenu } from "./PauseMenu";
 import { GameHUD } from "./panels/GameHUD";
@@ -27,7 +26,6 @@ import { SystemToasts } from "./panels/SystemToasts";
 import { ThoughtOverlay } from "./panels/ThoughtOverlay";
 import { ToastStack } from "./panels/ToastStack";
 import { TurnPhaseOverlay } from "./panels/TurnPhaseOverlay";
-import { TutorialOverlay } from "./panels/TutorialOverlay";
 import { DiplomacyModal } from "./DiplomacyModal";
 import { OtterHologramOverlay } from "./OtterHologramOverlay";
 import { RadialMenu } from "./RadialMenu";
@@ -45,7 +43,6 @@ import { VictoryOverlay } from "./VictoryOverlay";
  * Persistent HUD elements:
  * - ResponsiveTopBar: resources, storm %, day counter, pause
  * - Notifications: combat alerts, merge events
- * - BriefingBubbleLayer: anchored local context
  * - CitySiteOverlay: explicit site/district briefings opened by radial actions
  * - Minimap: tactical overview
  * - ThoughtOverlay: AI narration
@@ -98,7 +95,6 @@ export function GameUI({ onQuitToTitle }: { onQuitToTitle?: () => void }) {
 			/>
 			{worldInteractive && <Notifications />}
 			{worldInteractive && <HarvestNotifications />}
-			{worldInteractive && <BriefingBubbleLayer />}
 			<CitySiteOverlay />
 			{runtime.cityKitLabOpen && <CityKitLab onClose={closeCityKitLab} />}
 			<TurnPhaseOverlay />
@@ -106,7 +102,6 @@ export function GameUI({ onQuitToTitle }: { onQuitToTitle?: () => void }) {
 			<RadialMenu />
 			<EntityTooltip />
 			<PlacementHUD />
-			<TutorialOverlay />
 			<ToastStack />
 			<KeybindHints />
 			<SystemToasts />

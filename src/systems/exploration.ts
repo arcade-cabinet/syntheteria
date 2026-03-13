@@ -1,3 +1,17 @@
+/**
+ * @module exploration
+ *
+ * Fog-of-war revelation system. Each tick, reveals discovery cells around all units
+ * based on vision radius. Camera-equipped bots reveal "detailed" fog; others reveal
+ * "abstract". Scouts get 2x vision radius.
+ *
+ * @exports explorationSystem - Per-tick fog revelation
+ * @exports getVisionRadius - Compute vision radius for a unit type (scout bonus)
+ *
+ * @dependencies bots/definitions (getBotDefinition), ecs/traits, ecs/world,
+ *   world/structuralSpace (setDiscoveryAtWorldPosition)
+ * @consumers gameState (explorationSystem tick)
+ */
 import { getBotDefinition } from "../bots/definitions";
 import { hasCamera, MapFragment, Unit, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
@@ -6,14 +20,6 @@ import {
 	getStructuralFragment,
 	setDiscoveryAtWorldPosition,
 } from "../world/structuralSpace";
-
-/**
- * Exploration system: reveals fog around units based on distance.
- * Camera-equipped robots produce "detailed" fog; others produce "abstract".
- * Operates on the continuous fog grid in each fragment.
- *
- * Scouts get 2x vision radius per BOT_AND_ECONOMY_REDESIGN.
- */
 
 const BASE_VISION_RADIUS = 6; // world units around the unit
 const SCOUT_VISION_MULTIPLIER = 2;

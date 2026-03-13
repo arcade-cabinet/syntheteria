@@ -1,3 +1,24 @@
+/**
+ * @module resources
+ *
+ * Global resource pool (11 material types) and proximity-based scavenging system.
+ * Units with functional arms auto-scavenge nearby resource points each tick.
+ * Provides the add/spend API consumed by all economy systems.
+ *
+ * @exports ResourcePool - 11-field resource interface (scrapMetal through elCrystal)
+ * @exports getResources / addResource / spendResource - Read/mutate the global pool
+ * @exports defaultResourcePool - Factory for zero-initialized pools
+ * @exports ScavengePoint / getScavengePoints / resetScavengePoints - Scavenge point management
+ * @exports resourceSystem - Per-tick scavenging logic
+ * @exports resetResources / setResources - Reset and bulk-set for save/load
+ *
+ * @dependencies ai (isEntityExecutingAITask), ecs/cityLayout, ecs/seed (worldPRNG),
+ *   ecs/traits, ecs/world, world/runtimeState, resourceDeltas
+ * @consumers gameState, buildingPlacement, harvestSystem, combat, fabrication,
+ *   PlacementHUD, ResourceBreakdownPanel, ResourceStrip, TopBar, saveAllState,
+ *   worldPersistence, persistenceSystem, constructionSystem, districtOperations,
+ *   runtimeState, cityTransition, snapshots, initialization
+ */
 import { isEntityExecutingAITask } from "../ai";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { worldPRNG } from "../ecs/seed";
@@ -8,14 +29,6 @@ import {
 	trackResourceExpenditure,
 	trackResourceIncome,
 } from "./resourceDeltas";
-/**
- * Resource and scavenging system.
- *
- * Manages material resources gathered from the world:
- * - Scrap metal, e-waste, intact components
- * - Scavenge points scattered through the city
- * - Units with functional arms can scavenge nearby points
- */
 
 export interface ResourcePool {
 	scrapMetal: number;

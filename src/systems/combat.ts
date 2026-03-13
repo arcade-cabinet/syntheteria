@@ -1,3 +1,23 @@
+/**
+ * @module combat
+ *
+ * Component-based melee combat system with AP cost integration and Guardian taunt.
+ * Damage breaks random functional components rather than reducing HP; a unit with
+ * all components broken is destroyed and drops salvage. Supports faction-on-faction
+ * combat with a hostility matrix.
+ *
+ * @exports CombatEvent - Damage event record (attacker, target, component, destroyed)
+ * @exports combatSystem - Per-tick combat resolution
+ * @exports getLastCombatEvents / resetCombatState - Event access and reset
+ * @exports areFactionsHostile - Faction hostility check (wildlife neutral)
+ * @exports findTauntTarget - Guardian taunt target resolution
+ * @exports TAUNT_RADIUS / COMBAT_AP_COST - Combat constants
+ *
+ * @dependencies ai (cancelAgentTask), bots/definitions, ecs/seed (gameplayRandom),
+ *   ecs/traits, ecs/world, resources (addResource), turnSystem
+ * @consumers gameState (combatSystem tick + getLastCombatEvents), initialization,
+ *   audioHooks, CombatEffectsRenderer
+ */
 import { cancelAgentTask } from "../ai";
 import { getBotDefinition } from "../bots/definitions";
 import type { BotUnitType } from "../bots/types";
@@ -7,25 +27,6 @@ import { hasArms, Identity, Unit, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
 import { addResource } from "./resources";
 import { getTurnState, hasActionPoints, spendActionPoint } from "./turnSystem";
-
-/**
- * Combat system — component-based damage with AP cost.
- *
- * When hostile units are within melee range, they exchange damage.
- * Damage breaks random components rather than reducing HP.
- * A unit with all components broken is destroyed.
- *
- * Units with functional arms deal more damage.
- * Units without legs can't fight (immobile = vulnerable).
- *
- * Guardian taunt: Guardians draw enemy attacks within a radius.
- * Enemies prefer to target a nearby Guardian over other units.
- *
- * Turn integration:
- *   - Player units spend 1 AP per attack.
- *   - AI faction units attack freely during their turn phase.
- *   - Faction-on-faction: any faction attacks any hostile faction.
- */
 
 const MELEE_RANGE = 2.5;
 const ATTACK_CHANCE = 0.4; // chance per tick when in range

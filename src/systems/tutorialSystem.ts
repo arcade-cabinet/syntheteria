@@ -1,17 +1,19 @@
 /**
- * Tutorial System — guided onboarding for the first 3 turns.
+ * @module tutorialSystem
  *
- * Turn 1: "Select your Field Technician" -> "Click a nearby structure to harvest"
- * Turn 2: "Build a Lightning Rod for power" -> "End your turn"
- * Turn 3: "Explore the nearby sector" -> free play begins
+ * Guided 3-turn onboarding flow. Walks the player through select unit, harvest,
+ * build, end turn, and explore. Each step has instruction text and an optional
+ * world-space objective marker. Skippable at any time.
  *
- * Each step has:
- *   - instruction text
- *   - optional world-space target position for objective marker
- *   - completion condition checked each tick
+ * @exports TutorialStep / TutorialState - Step and state types
+ * @exports getCurrentStep / getTutorialState / getAllSteps - State access
+ * @exports completeCurrentStep / skipTutorial - Step progression
+ * @exports isStepCompleted - Completion check
+ * @exports subscribeTutorial - State change listener
+ * @exports _reset - Reset for new game
  *
- * Skip button available at any time.
- * Completed steps are tracked to avoid repeating.
+ * @dependencies turnSystem (getTurnState)
+ * @consumers TutorialOverlay
  */
 
 import { getTurnState } from "./turnSystem";
@@ -78,7 +80,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
 // ─── State ───────────────────────────────────────────────────────────────────
 
 let state: TutorialState = {
-	active: true,
+	active: false,
 	skipped: false,
 	currentStepIndex: 0,
 	completedSteps: [],

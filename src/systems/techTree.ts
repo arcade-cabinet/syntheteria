@@ -1,12 +1,21 @@
 /**
- * Tech Tree System — Research progression for all factions.
+ * @module techTree
  *
- * Each faction can research one technology at a time. Research takes
- * multiple turns and costs resources. Completed techs grant effects
- * that modify gameplay (harvest bonuses, mark level unlocks, etc.)
+ * Research progression DAG for all factions. Each faction researches one tech at a
+ * time over multiple turns. Completed techs grant typed effects (harvest bonuses,
+ * mark unlocks). Prerequisites form a directed acyclic graph loaded from config JSON.
  *
- * The tech tree is a directed acyclic graph — each tech has prerequisites
- * that must be completed before it can be researched.
+ * @exports TechDefinition / TechEffect / FactionResearchState - Core types
+ * @exports getAllTechs / getTechById - Config access
+ * @exports canResearch / startResearch / cancelResearch / advanceResearch - Research lifecycle
+ * @exports getTechStatus / getResearchProgress - Status queries for UI
+ * @exports hasTech / hasEffect / getEffectValue - Effect accumulation queries
+ * @exports getFactionResearchState / subscribeTechTree - State observation
+ * @exports resetTechTree - Reset for new game
+ *
+ * @dependencies config/techTree.json, factionEconomy (canFactionAfford, spendFactionResource),
+ *   resources (ResourcePool type)
+ * @consumers TechTreeModal, turnPhaseHandlers, wormhole
  */
 
 import techTreeConfig from "../config/techTree.json";

@@ -1,42 +1,38 @@
+import { Asset } from "expo-asset";
+
 export type AssetModule = string | number;
 
 /**
  * Resolve an asset module reference to a URI string.
  *
  * On native, Metro wraps image/model imports as numeric module IDs that need
- * expo-asset to resolve. On web, Metro *may* produce either a string URL or a
- * numeric ID depending on bundle configuration. When the expo-asset runtime is
- * unavailable (common on web), we fall back gracefully instead of crashing the
- * entire R3F Canvas.
+ * expo-asset to resolve. On web, Metro may produce either a string URL or a
+ * numeric ID depending on bundle configuration.
+ *
+ * This function MUST return a valid URI or throw — silent empty-string
+ * fallbacks cause invisible floors and other rendering failures.
  */
 export function resolveAssetUri(asset: AssetModule): string {
 	if (typeof asset === "string") {
+		if (asset.length === 0) {
+			throw new Error(
+				"resolveAssetUri received an empty string — asset import is misconfigured",
+			);
+		}
 		return asset;
 	}
 
-	// Try expo-asset resolution for numeric module IDs (native + some web configs)
-	try {
-		const localRequire = (
-			globalThis as typeof globalThis & {
-				require?: (specifier: string) => {
-					Asset: { fromModule: (mod: string | number) => { uri: string } };
-				};
-			}
-		).require;
-
-		if (localRequire) {
-			const resolvedUri = localRequire("expo-asset").Asset.fromModule(asset).uri;
-			if (typeof resolvedUri === "string" && resolvedUri.length > 0) {
-				return resolvedUri;
-			}
-		}
-	} catch {
-		// expo-asset not available or resolution failed — fall through to fallback
+	// Use expo-asset to resolve numeric module IDs (Metro's asset pipeline)
+	const resolved = Asset.fromModule(asset);
+	if (resolved.localUri) {
+		return resolved.localUri;
+	}
+	if (resolved.uri) {
+		return resolved.uri;
 	}
 
-	// On web without expo-asset, numeric IDs can't be resolved. Return empty
-	// string so THREE.TextureLoader gets a no-op source rather than crashing
-	// the Canvas. The floor renderer already handles missing textures with
-	// fallback solid colors.
-	return "";
+	throw new Error(
+		`resolveAssetUri: expo-asset could not resolve module ID ${asset}. ` +
+			`Check that the file exists and is listed in metro.config.js assetExts.`,
+	);
 }

@@ -11,6 +11,7 @@
 import type { Entity } from "../ecs/traits";
 import { Building, Identity, Unit, WorldPosition } from "../ecs/traits";
 import { buildings, units } from "../ecs/world";
+import { queueThought } from "./narrative";
 import { getUnitTurnState, type UnitTurnState } from "./turnSystem";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -128,6 +129,7 @@ export function selectEntity(entity: Entity) {
 	const unit = entity.get(Unit);
 	if (unit) {
 		unit.selected = true;
+		queueThought("first_selection");
 	}
 	const building = entity.get(Building);
 	if (building) {

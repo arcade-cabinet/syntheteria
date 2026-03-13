@@ -1,14 +1,20 @@
 /**
- * Victory Condition Detection
+ * @module victoryConditions
  *
- * Checks each turn whether any faction has met a win condition:
+ * Checks three win conditions each turn: Subjugation (60%+ territory), Technical
+ * Supremacy (3+ Mark V units), and Elimination (all rivals destroyed). Once a
+ * victory is detected it persists until game reset.
  *
- * 1. **Subjugation** — Control 60%+ of total claimed territory cells.
- * 2. **Technical Supremacy** — Have 3+ units at Mark V (markLevel >= 5).
- * 3. **Elimination** — All other factions have 0 units remaining.
+ * @exports VictoryType / VictoryCondition - Victory result types
+ * @exports checkVictoryConditions / getVictoryCondition - Detection and access
+ * @exports checkSubjugation / checkTechnicalSupremacy / checkElimination - Individual checks
+ * @exports countFactionUnits - ECS unit census by faction
+ * @exports SUBJUGATION_THRESHOLD / TECH_SUPREMACY_UNIT_COUNT / TECH_SUPREMACY_MARK_LEVEL - Constants
+ * @exports resetVictoryConditions - Reset for new game
  *
- * The system runs at the end of each turn (after all phases complete).
- * Once a victory is detected, it persists until the game is reset.
+ * @dependencies ecs/traits (Identity, Unit, WorldPosition), ecs/world,
+ *   factionEconomy (ALL_ECONOMY_FACTIONS), territorySystem, turnSystem
+ * @consumers turnPhaseHandlers, VictoryOverlay
  */
 
 import { Identity, Unit, WorldPosition } from "../ecs/traits";

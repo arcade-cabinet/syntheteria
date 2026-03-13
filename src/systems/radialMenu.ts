@@ -1,29 +1,23 @@
-import radialConfig from "../config/radialMenu.json";
-
 /**
- * Composable Dual-Layer Radial Menu System
+ * @module radialMenu
  *
- * Pure TS system — no React, no SVG, no rendering.
+ * Composable dual-layer radial context menu state machine. Pure TS — no React, no SVG.
+ * Systems register action providers via registerRadialProvider(); categories form the
+ * inner ring, actions within a category form the outer ring. Single-action categories
+ * execute directly. Replaces SelectedInfo, BuildToolbar, and BottomSheet.
  *
- * Architecture:
- * - Systems register ACTION PROVIDERS via registerRadialProvider()
- * - Each provider belongs to a CATEGORY (Build, Combat, System, etc.)
- * - Categories form the INNER RING
- * - When user selects a category, its actions form the OUTER RING
- *   centered around the selected inner petal
- * - Providers with a single action skip the outer ring (direct execute)
+ * @exports RadialOpenContext / RadialAction / RadialCategory / RadialActionProvider - Provider types
+ * @exports RadialPetal / RadialMenuState - Computed geometry and state for renderer
+ * @exports registerRadialProvider - Provider registration (call from system module scope)
+ * @exports openRadialMenu / closeRadialMenu / resetRadialMenu - Menu lifecycle
+ * @exports updateRadialHover / confirmRadialSelection - Pointer interaction
+ * @exports getRadialMenuState / getResolvedActionsForCategory - State access
+ * @exports hitTestRadial / getRadialGeometry - Hit testing and ring dimensions
  *
- * This is composable because:
- * - No system knows about any other system's actions
- * - The menu is populated dynamically at open time
- * - Providers can enable/disable actions based on ECS state
- * - Adding a new system's actions = one registerRadialProvider() call
- *
- * Dual-layer behavior:
- * - Inner ring: drag to a category and HOLD → outer ring appears
- * - Outer ring: continue dragging to specific action → release to execute
- * - If a category has only 1 action, it executes immediately on inner selection
+ * @dependencies config/radialMenu.json
+ * @consumers RadialMenu.tsx, UnitInput, keyboardShortcuts, radialProviders
  */
+import radialConfig from "../config/radialMenu.json";
 
 // --- Types ---
 

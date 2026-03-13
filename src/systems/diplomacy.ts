@@ -1,11 +1,21 @@
 /**
- * Diplomacy System — Inter-faction relations, trade, and alliances.
+ * @module diplomacy
  *
- * Each faction pair has a standing value (-100 to +100) that determines
- * their relationship: hostile, unfriendly, neutral, cordial, or allied.
+ * Inter-faction standing and trade system. Tracks pairwise standing values (-100 to +100)
+ * across 5 levels (hostile/unfriendly/neutral/cordial/allied). Standing changes from
+ * gameplay events. Supports trade offer lifecycle (propose/accept/reject/expire).
  *
- * Standing changes from gameplay events (combat, trade, territory
- * encroachment, hacking). Trade offers can be proposed and accepted/rejected.
+ * @exports DiplomacyFactionId / StandingLevel / FactionProfile / TradeOffer / DiplomacyEvent - Types
+ * @exports getStanding / getStandingLevel / getStandingDisplay - Standing queries
+ * @exports modifyStanding / applyDiplomacyEvent - Standing mutation
+ * @exports proposeTrade / acceptTrade / rejectTrade / expireTradeOffers - Trade lifecycle
+ * @exports areAtWar / areAllied - Relationship checks
+ * @exports getFactionProfile / getAllFactionProfiles - Config access
+ * @exports subscribeDiplomacy / getRecentEvents - Observation and event history
+ * @exports resetDiplomacy - Reset for new game
+ *
+ * @dependencies config/diplomacy.json, factionEconomy (EconomyFactionId), resourcePools (HarvestResource)
+ * @consumers DiplomacyModal
  */
 
 import diplomacyConfig from "../config/diplomacy.json";

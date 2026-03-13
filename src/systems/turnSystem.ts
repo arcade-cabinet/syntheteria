@@ -1,18 +1,32 @@
 /**
- * Turn System — Civilization-style turn-based gameplay.
+ * @module turnSystem
  *
- * Replaces the real-time simulation tick with a turn structure:
- *   1. Player turn: each unit gets Action Points (AP) and Movement Points (MP)
- *   2. Units with remaining AP/MP show an emissive glow ring
- *   3. Player performs actions until all AP/MP spent or clicks "End Turn"
- *   4. AI opponent factions take their turns sequentially
- *   5. New turn begins with refreshed AP/MP
+ * Civilization-style turn-based AP/MP system. Gates all gameplay actions (harvest,
+ * build, move, attack) behind per-unit Action Points and Movement Points that
+ * refresh each turn. Sequences player -> AI factions -> environment phases.
  *
- * The turn system coexists with the existing simulation tick —
- * systems that need continuous updates (weather, lightning, rendering)
- * still tick, but gameplay actions are gated by AP/MP.
+ * @exports TurnState / UnitTurnState / TurnPhase - Core state types
+ * @exports getTurnState / subscribeTurnState - Read and observe turn state
+ * @exports initializeTurnForUnits / addUnitsToTurnState - Set up unit AP/MP pools
+ * @exports spendActionPoint / spendMovementPoints - Consume AP/MP for actions
+ * @exports hasActionPoints / hasMovementPoints / hasAnyPoints - Point availability checks
+ * @exports getUnitTurnState - Per-unit state for rendering (glow rings)
+ * @exports endPlayerTurn - Trigger AI faction turns, environment phase, then new turn
+ * @exports registerAIFactionTurnHandler / registerEnvironmentPhaseHandler - Phase hooks
+ * @exports resetTurnSystem / rehydrateTurnState - Reset and save/load support
+ *
+ * @dependencies narrative (queueThought), resourceDeltas (finalizeTurnDeltas),
+ *   turnEventLog (finalizeTurn, logTurnEvent)
+ * @consumers combat, movement, clickToMove, moveCommand, hacking, harvestSystem,
+ *   unitSelection, victoryConditions, tutorialSystem, tooltipSystem, factionSpawning,
+ *   turnPhaseHandlers, turnPhaseEvents, autosave, keyboardShortcuts, radialProviders,
+ *   playtestBridge, DiplomacyModal, GameHUD, VictoryOverlay, GlowRingRenderer,
+ *   ActionRangeRenderer, MovementOverlayRenderer, UnitRosterPanel, UnitInput,
+ *   PlayerGovernor, factionGovernors, audioHooks, saveAllState, initialization,
+ *   persistenceSystem, cultistIncursion, turretAutoAttack, UnitRenderer
  */
 
+import { queueThought } from "./narrative";
 import { finalizeTurnDeltas } from "./resourceDeltas";
 import { finalizeTurn, logTurnEvent } from "./turnEventLog";
 
@@ -228,6 +242,8 @@ export function registerEnvironmentPhaseHandler(handler: EnvironmentPhaseHandler
  */
 export function endPlayerTurn() {
 	if (turnState.phase !== "player") return;
+
+	queueThought("turn_awareness");
 
 	// AI faction phase — each faction takes a sequential turn
 	turnState = {

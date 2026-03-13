@@ -8,6 +8,10 @@ import { resolveAssetUri } from "../config/assetUri";
 import { gridToWorld, SECTOR_LATTICE_SIZE } from "../world/sectorCoordinates";
 import { getActiveWorldSession } from "../world/session";
 import type { WorldSessionSnapshot } from "../world/snapshots";
+import {
+	getStructuralCellRecords,
+	requirePrimaryStructuralFragment,
+} from "../world/structuralSpace";
 
 const FLOOR_COLORS: Record<string, number> = {
 	command_core: 0x5e7385,
@@ -51,7 +55,14 @@ const FLOOR_PRESET_TO_MATERIAL: Record<string, string> = {
 };
 
 function resolveTexturePresetId(floorPresetId: string): string {
-	return FLOOR_PRESET_TO_MATERIAL[floorPresetId] ?? floorPresetId;
+	const resolved = FLOOR_PRESET_TO_MATERIAL[floorPresetId];
+	if (!resolved) {
+		throw new Error(
+			`FATAL: No texture mapping for floor preset "${floorPresetId}". ` +
+				`Add it to FLOOR_PRESET_TO_MATERIAL.`,
+		);
+	}
+	return resolved;
 }
 
 interface FloorTextureBundle {
@@ -299,13 +310,31 @@ export function StructuralFloorRenderer({
 		Map<string, FloorTextureBundle>
 	>(new Map());
 
+	// Read discovery state from structuralSpace (where explorationSystem writes)
+	// instead of the stale DB snapshot which never updates during gameplay.
+	const liveDiscovery = useMemo(() => {
+		try {
+			const fragment = requirePrimaryStructuralFragment();
+			const records = getStructuralCellRecords(fragment.id);
+			const map = new Map<string, number>();
+			for (const rec of records) {
+				map.set(`${rec.q},${rec.r}`, rec.discoveryState);
+			}
+			return map;
+		} catch {
+			return new Map<string, number>();
+		}
+	}, [session]);
+
 	const orderedCells = useMemo(
 		() =>
 			[...(session?.sectorCells ?? [])]
-				// Fog of war: only render cells the player has discovered
-				.filter((cell) => cell.discovery_state >= 1)
+				.filter((cell) => {
+					const live = liveDiscovery.get(`${cell.q},${cell.r}`);
+					return (live ?? cell.discovery_state) >= 1;
+				})
 				.sort((a, b) => (a.r === b.r ? a.q - b.q : a.r - b.r)),
-		[session],
+		[session, liveDiscovery],
 	);
 
 	/** Lookup cell by grid coordinate for zone blending */
@@ -327,9 +356,16 @@ export function StructuralFloorRenderer({
 				FLOOR_MATERIAL_PRESETS.map(async (preset) => {
 					const repeatX = preset.textureRepeat[0] ?? 1;
 					const repeatY = preset.textureRepeat[1] ?? 1;
+					const mapUri = presetTextureSources[`${preset.id}_map`];
+					if (!mapUri) {
+						throw new Error(
+							`FATAL: Floor texture for preset "${preset.id}" resolved to empty URI. ` +
+								`Asset pipeline is broken — check resolveAssetUri() and metro.config.js assetExts.`,
+						);
+					}
 					const [map, normalMap, roughnessMap, aoMap, displacementMap] =
 						await Promise.all([
-							loader.loadAsync(presetTextureSources[`${preset.id}_map`]!),
+							loader.loadAsync(mapUri),
 							loader.loadAsync(presetTextureSources[`${preset.id}_normal`]!),
 							loader.loadAsync(presetTextureSources[`${preset.id}_roughness`]!),
 							loader.loadAsync(presetTextureSources[`${preset.id}_ao`]!),
@@ -357,7 +393,10 @@ export function StructuralFloorRenderer({
 			}
 		}
 
-		void loadTextures();
+		loadTextures().catch((err) => {
+			console.error("[StructuralFloorRenderer] Floor texture loading FAILED:", err);
+			throw err;
+		});
 
 		return () => {
 			cancelled = true;
@@ -386,6 +425,21 @@ export function StructuralFloorRenderer({
 						edges.push({ direction: dir, neighborColor: nColor });
 					}
 				}
+
+				const resolvedPresetId = resolveTexturePresetId(cell.floor_preset_id);
+				const cellTextures = texturesByPreset.size > 0
+					? texturesByPreset.get(resolvedPresetId) ?? null
+					: null;
+
+				// Fail hard if textures loaded but this preset is missing
+				if (texturesByPreset.size > 0 && !cellTextures) {
+					throw new Error(
+						`FATAL: No texture bundle for floor preset "${cell.floor_preset_id}" ` +
+							`(resolved: "${resolvedPresetId}"). ` +
+							`Available: [${Array.from(texturesByPreset.keys()).join(", ")}]`,
+					);
+				}
+
 				return (
 					<StructuralCellMesh
 						key={`${cell.q},${cell.r}`}
@@ -395,13 +449,7 @@ export function StructuralFloorRenderer({
 						structuralZone={cell.structural_zone}
 						passable={cell.passable}
 						profile={profile}
-						textures={
-							texturesByPreset.get(
-								resolveTexturePresetId(cell.floor_preset_id),
-							) ??
-							texturesByPreset.get("command_concrete") ??
-							null
-						}
+						textures={cellTextures}
 						blendEdges={edges}
 					/>
 				);

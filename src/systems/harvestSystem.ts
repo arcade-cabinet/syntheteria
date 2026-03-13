@@ -1,22 +1,27 @@
 /**
- * Harvest System — The core Exploit mechanic.
+ * @module harvestSystem
  *
- * Fabricator bots harvest ecumenopolis structures for materials.
- * Each structure contains a resource pool based on its model family.
- * Harvesting takes time, yields materials, and consumes the structure.
+ * Core Exploit mechanic: Fabricator bots harvest ecumenopolis structures for materials.
+ * Manages the full harvest lifecycle from start through tick-down to yield deposit and
+ * structure consumption. The ecumenopolis itself is the resource base.
  *
- * Flow:
- *   1. Player selects Fabricator → Radial "Harvest" → clicks target structure
- *   2. Fabricator walks to structure (movement system)
- *   3. harvestSystem() ticks down the harvest timer each frame
- *   4. On completion: materials deposited, structure removed from session
+ * @exports ActiveHarvest - In-progress harvest state
+ * @exports startHarvest / cancelHarvest - Harvest lifecycle control
+ * @exports getActiveHarvests - Active harvest list for UI progress bars
+ * @exports isStructureConsumed / getConsumedStructureIds - Consumed structure tracking for renderers
+ * @exports harvestSystem - Per-tick harvest timer and completion logic
+ * @exports resetHarvestSystem / rehydrateHarvestState - Reset and save/load support
  *
- * This is the economic engine of the game — the ecumenopolis IS the
- * resource base. Every wall, column, pipe, and computer is material.
+ * @dependencies ecs/traits, ecs/world, narrative (queueThought), resourcePools,
+ *   harvestEvents, resources (addResource)
+ * @consumers gameState (harvestSystem tick), radialProviders, PlayerGovernor,
+ *   HarvestVisualRenderer, HarvestProgressOverlay, CityRenderer, audioHooks,
+ *   saveAllState, persistenceSystem, initialization
  */
 
 import { Identity, Unit, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
+import { queueThought } from "./narrative";
 import {
 	getResourcePoolForModel,
 	type HarvestResource,
@@ -87,6 +92,7 @@ export function startHarvest(
 		targetZ,
 	});
 
+	queueThought("harvest_instinct");
 	return true;
 }
 

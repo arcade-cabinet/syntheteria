@@ -1,41 +1,115 @@
-# Syntheteria Agent Guidelines
+---
+title: "Documentation Index"
+domain: meta
+status: canonical
+last_updated: 2026-03-13
+summary: "Navigation index for all Syntheteria documentation — start here after memory bank"
+---
 
-## Agent Architecture
-This repository uses LLM agents to orchestrate development tasks. The overarching mandate is adherence to our unified cross-platform Expo + Koota stack.
+# Syntheteria Documentation Index
 
-### 1. Macro Plan (Project-Wide Orchestration)
-The Macro level focuses on cross-cutting architecture and transitioning from the legacy Vite prototype to the definitive multi-platform build.
-- **Goal:** Complete the transition to Expo, Koota ECS, NativeWind, and Tone.js.
-- **Execution:**
-  - Scaffold and configure the Expo SDK environment with Metro and Jest.
-  - Migrate all legacy Miniplex state to Koota traits and queries.
-  - Bridge React Three Fiber via `expo-gl` for native support.
-  - Overhaul UI using React Native Reusables and NativeWind v4.
+> **Read `memory-bank/AGENTS.md` first** for session start protocol.
+> This file is the index. Domain docs are the detail.
 
-### 2. Meso Plan (System-Level Milestones)
-The Meso level breaks down Macro goals into distinct system tasks using the new Koota architecture.
-- **Focus Areas:**
-  - **AI Foundation:** Build Yuka-backed behavior through `src/ai` with explicit bridge, navigation, task, perception, and serialization boundaries before expanding downstream AI consumers.
-  - **Campaign Persistence:** Extend Expo SQLite + Drizzle-backed save state for sector maps, POIs, actors, infrastructure, faction state, and campaign deltas.
-  - **Sector Generation:** Replace the old outdoor-hex mental model with deterministic ecumenopolis sector generation driven by `NewGameConfig`.
-  - **Spatial Runtime:** Remove the permanent world/city split from the intended architecture and treat dense operational sectors as part of one campaign space.
-  - **Structural Assemblage:** Keep the square-grid assembly contract as a hidden structural/runtime layer and classify Quaternius modules against it.
-  - **Strategic Systems:** Continue hacking, signal/compute, cult pressure, and combat as mechanics layered onto the persisted campaign model.
-  - **Execution:** Execute via dedicated tickets. Each system needs Jest tests before integration.
+## Quick Start for Agents
 
-### 3. Micro Plan (Atomic Implementation Steps)
-The Micro level deals with individual files, strict type-safety, and adhering to the "No" list constraints.
-- **Workflow:**
-  - **Act:** Write focused Koota queries. Keep all game logic decoupled from UI components.
-  - **Validate:** Use `pnpm` commands for validation. Run `pnpm lint` for Biome checks, `pnpm lint:fix` or `pnpm lint:fix:unsafe` for autofixes when appropriate, and Jest tests for behavior changes.
-  - **Refactor:** Maintain DRY principles.
+1. Read [memory-bank/AGENTS.md](memory-bank/AGENTS.md) — session protocol
+2. Read [memory-bank/activeContext.md](memory-bank/activeContext.md) — what's happening now
+3. Read [memory-bank/progress.md](memory-bank/progress.md) — system status dashboard
+4. Read this file — find the domain docs relevant to your task
+5. Use `head -15 <file>` on any domain doc to read its frontmatter summary before committing to a full read
 
-## Using LLMs in this Repo
-1. **Context Window:** Provide `docs/TECHNICAL.md` to ensure agents understand the strict Expo + Koota architectural boundaries.
-2. **Atomic Commits:** Output changes in atomic chunks—one system, trait, or UI component at a time.
-3. **Tooling:** Prefer `pnpm` over `npm` or `yarn` for dependency management and script execution. Use Biome as the repository linter/formatter instead of ESLint.
-4. **Mandates:**
-   - **NO Vite/Vitest** -> Use Metro/Jest.
-   - **NO Miniplex** -> Use Koota.
-   - **NO Raw Web Audio** -> Use Tone.js.
-   - **NO Raw CSS** -> Use NativeWind / RN Reusables.
+## Frontmatter Convention
+
+Every document under `docs/` has YAML frontmatter:
+
+```yaml
+---
+title: "Document Title"
+domain: design | technical | interface | meta
+status: canonical | reference | archived
+last_updated: 2026-03-13
+summary: "One-line description — agent can decide relevance from this"
+depends_on: []
+planned_work: []
+---
+```
+
+## Domain Map
+
+### Memory Bank (`memory-bank/`)
+
+Executive summaries for session bootstrap. Read these FIRST.
+
+| File | Summary |
+|------|---------|
+| [AGENTS.md](memory-bank/AGENTS.md) | Session start/end protocol, update rules |
+| [projectbrief.md](memory-bank/projectbrief.md) | What is Syntheteria, non-negotiable requirements |
+| [productContext.md](memory-bank/productContext.md) | Why it exists, UX goals, target experience |
+| [activeContext.md](memory-bank/activeContext.md) | Current focus, recent changes, next steps |
+| [systemPatterns.md](memory-bank/systemPatterns.md) | Architecture patterns, ECS, game loop, AI stack |
+| [techContext.md](memory-bank/techContext.md) | Tech stack, build commands, constraints |
+| [progress.md](memory-bank/progress.md) | System status dashboard, known issues, metrics |
+
+### Design (`design/`)
+
+Game design — what the game IS. What the player experiences.
+
+| File | Summary |
+|------|---------|
+| [GAME_DESIGN.md](design/GAME_DESIGN.md) | Core vision, 4X pillars, game phases, progression |
+| [LORE.md](design/LORE.md) | 140-year timeline, Earth history, EL, cultists |
+| [FACTIONS.md](design/FACTIONS.md) | Campaign arc, 4 rival factions, cultist pressure, victory paths |
+| [ECONOMY.md](design/ECONOMY.md) | Turn system (AP/MP), 11 materials, harvest flow, Motor Pool |
+| [BOTS.md](design/BOTS.md) | 9 chassis, archetypes, Mark I-V, speech profiles |
+| [OPEN_QUESTIONS.md](design/OPEN_QUESTIONS.md) | Unresolved design decisions |
+
+### Technical (`technical/`)
+
+How the game is built. Architecture and implementation.
+
+| File | Summary |
+|------|---------|
+| [ARCHITECTURE.md](technical/ARCHITECTURE.md) | Stack, ECS structure, persistence, hard rules |
+| [WORLD_SYSTEMS.md](technical/WORLD_SYSTEMS.md) | Spatial model, sectors, chunk architecture, city contracts |
+| [AI_SYSTEMS.md](technical/AI_SYSTEMS.md) | GOAP governors, Yuka steering, NavMesh, AI packages |
+| [ASSETS.md](technical/ASSETS.md) | 91 city GLBs, 9 robot chassis, gaps, ingestion pipeline |
+| [RENDERING.md](technical/RENDERING.md) | 39 renderers, storm system, floor zones, performance |
+
+### Interface (`interface/`)
+
+Player-facing surfaces. Visual language and interaction model.
+
+| File | Summary |
+|------|---------|
+| [UI_DESIGN.md](interface/UI_DESIGN.md) | Brand identity, palette, mobile viewport, components, a11y |
+| [INPUT.md](interface/INPUT.md) | Radial menu (sole context surface), input mappings, zoom tiers |
+
+### Execution (`plans/`)
+
+| File | Summary |
+|------|---------|
+| [GAMEPLAN_1_0.md](plans/GAMEPLAN_1_0.md) | Comprehensive assessment + 6-phase roadmap (single source of truth for execution) |
+
+### Archive (`archive/`)
+
+Completed, obsolete, or superseded documents. Reference only — do not use for planning.
+
+## Which Doc Do I Read?
+
+| If your task involves... | Read |
+|--------------------------|------|
+| Core gameplay, 4X design | `design/GAME_DESIGN.md` |
+| World history, lore, setting | `design/LORE.md` |
+| Factions, campaign, victory | `design/FACTIONS.md` |
+| Resources, turns, economy, building | `design/ECONOMY.md` |
+| Bot types, marks, upgrades, speech | `design/BOTS.md` |
+| Tech stack, ECS, persistence, rules | `technical/ARCHITECTURE.md` |
+| World generation, chunks, spatial model | `technical/WORLD_SYSTEMS.md` |
+| AI behavior, GOAP, steering | `technical/AI_SYSTEMS.md` |
+| 3D models, textures, asset pipeline | `technical/ASSETS.md` |
+| Renderers, storm, floor, particles | `technical/RENDERING.md` |
+| UI layout, colors, components, a11y | `interface/UI_DESIGN.md` |
+| Input mapping, radial menu, zoom | `interface/INPUT.md` |
+| Current status, what to do next | `memory-bank/activeContext.md` |
+| What works / what's broken | `memory-bank/progress.md` |

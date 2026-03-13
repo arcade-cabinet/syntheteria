@@ -1,3 +1,27 @@
+/**
+ * @module gameState
+ *
+ * Core game loop and snapshot orchestrator. Runs a fixed 60fps simulation tick
+ * that sequences all gameplay systems and builds a unified GameSnapshot for UI consumption.
+ *
+ * @exports GameSnapshot - Composite state interface consumed by all UI panels
+ * @exports subscribe - Register a listener for snapshot changes
+ * @exports getSnapshot - Get the current lazily-built GameSnapshot
+ * @exports simulationTick - Execute one frame of the simulation pipeline
+ * @exports setGameSpeed - Adjust simulation speed multiplier
+ * @exports togglePause / setPaused / isPaused - Pause control
+ * @exports registerAudioTick - Callback registration for Tone.js audio tick (avoids ESM import)
+ * @exports resetGameState - Full reset for new game
+ *
+ * @dependencies ai, combat, enemies, exploration, fabrication, fragmentMerge, hacking,
+ *   harvestSystem, lightning, movement, narrative, networkOverlay, power, repair,
+ *   resources, signalNetworkSystem, weather, persistenceSystem, territorySystem,
+ *   poiSystem, runtimeState, session, structuralSpace, traits, world
+ * @consumers GameUI, GameHUD, TopBar, ResourceStrip, Notifications, ThoughtOverlay,
+ *   Minimap, PlacementHUD, ResourceBreakdownPanel, SelectedInfo, BuildToolbar,
+ *   SlideOutPanel, HarvestProgressOverlay, CityRenderer, UnitRosterPanel,
+ *   radialProviders, playtestBridge, initialization
+ */
 import { aiSystem } from "../ai";
 import {
 	type CombatEvent,

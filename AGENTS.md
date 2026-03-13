@@ -1,46 +1,144 @@
-# Root Agent Plan: Syntheteria Repository
+# Syntheteria — Multi-Agent Orchestration
 
-Welcome, Agent. You are operating in the Syntheteria repository. This document defines the overarching workflows and context paths to assist you in autonomously advancing the project.
+> **Session start**: Read this file, then follow the protocol in `docs/memory-bank/AGENTS.md`.
 
 ## Repository Layout
-- `src/`: The main Expo application source (React Three Fiber, Koota ECS, NativeWind UI).
-- `docs/`: Centralized game design, technical specs, lore, and agent-specific documentation.
-- `prototype/`: Superseded web tech demos.
 
-## Macro, Meso, and Micro Approaches
-Refer to `docs/AGENTS.md` for specific architectural approaches to macro, meso, and micro levels of development.
+```
+syntheteria/
+├── CLAUDE.md              # Claude Code behavior contract (Claude-specific)
+├── AGENTS.md              # THIS FILE — multi-agent orchestration
+├── src/                   # Expo application source
+│   ├── ecs/               # Koota ECS traits, game loop
+│   ├── systems/           # Game systems (pure logic, no TSX)
+│   ├── ai/                # AI: GOAP governors, Yuka steering, agents
+│   ├── rendering/         # R3F renderer components (39 total)
+│   ├── ui/                # React Native UI panels + HUD
+│   ├── world/             # World generation, spatial model, session
+│   ├── city/              # City config, runtime, kit lab
+│   ├── bots/              # Bot definitions, progression
+│   ├── config/            # Runtime config loaders + JSON
+│   ├── db/                # expo-sqlite + Drizzle persistence
+│   ├── audio/             # Tone.js spatial audio
+│   ├── input/             # Input manager + providers
+│   └── pathfinding/       # A* + NavMesh
+├── docs/                  # All documentation
+│   ├── AGENTS.md          # Documentation index (which doc to read)
+│   ├── memory-bank/       # Session context (Cline-style memory bank)
+│   ├── design/            # Game design docs (6 files)
+│   ├── technical/         # Architecture & implementation (5 files)
+│   ├── interface/         # UI & interaction (2 files)
+│   ├── plans/             # Execution roadmap (GAMEPLAN_1_0.md)
+│   └── archive/           # Completed/obsolete docs
+├── assets/                # UI images, models, textures
+├── config/                # Build config (metro, babel, tsconfig)
+└── tests/                 # E2E tests (Playwright)
+```
 
-## Core Directives for LLM Execution
-1. **Respect the Architecture:** Game state is handled via Koota ECS in `src/ecs`. Logic happens in `src/systems` and `src/world`. React components in `src/rendering` and `src/ui` should read from ECS/runtime state instead of owning simulation logic.
-2. **Run Tests:** Ensure any logic modification is validated. Jest covers unit/integration behavior and Playwright component tests cover critical rendered states.
-3. **Use the Right Context:** For gameplay rules, consult `docs/GAME_DESIGN.md`. For structural constraints, read `docs/TECHNICAL.md`. For economy and turns, read `docs/TURN_AND_ECONOMY.md`. For lore, read `docs/LORE.md`.
-4. **Use Repository Tooling:** This repository uses `pnpm` for package management and scripts. Use Biome for linting and autofix via `pnpm lint`, `pnpm lint:fix`, and `pnpm lint:fix:unsafe`.
-5. **Agent Action Loop:**
-   - **Plan:** Review the requested goal against `docs/AGENTS.md` (Meso/Micro plans).
-   - **Act:** Implement changes ensuring minimal blast radius.
-   - **Validate:** Run Biome, the TypeScript compiler, and relevant tests to confirm system stability.
+## Session Protocol
 
-## Immediate Objectives
-As of the current iteration, focus on:
-1. **Turn-based gameplay** — The game now uses Civ-style turns (AP/MP per unit, End Turn cycling). All gameplay actions must be gated by the turn system in `src/systems/turnSystem.ts`.
-2. **Harvest economy loop** — Structures are harvestable for urban mining materials (8 types). The harvest system in `src/systems/harvestSystem.ts` is wired into the game tick. Structures consumed by harvesting disappear from the renderer.
-3. **Fog of war** — Both floor and structure renderers filter by `discovery_state`. The game starts as an intimate illuminated island in darkness. New chunks reveal as units explore.
-4. **Bot role specialization** — 6 player bot types (Technician, Scout, Striker, Fabricator, Guardian, Hauler) + 3 hackable hostile bots. See `docs/plans/BOT_AND_ECONOMY_REDESIGN.md`.
-5. **UI clarity** — Thin top bar with resources + End Turn. Minimap moved to hamburger slide-out menu. Radial menu for all contextual actions. No clutter over the gameplay area.
-6. **Viewport-driven chunk generation** — Future migration from fixed-size maps to infinite deterministic chunks. See `docs/plans/VIEWPORT_CHUNK_PIVOT.md`.
+1. **Read `docs/memory-bank/AGENTS.md`** — mandatory session start/end protocol
+2. **Read `docs/memory-bank/activeContext.md`** — current focus and next steps
+3. **Read `docs/memory-bank/progress.md`** — what works, what's broken
+4. **Read `docs/AGENTS.md`** — find domain docs relevant to your task
+5. **Read relevant domain docs** — use `head -15` on frontmatter to decide
+
+## Core Directives
+
+### Architecture Rules
+
+| Rule | Detail |
+|------|--------|
+| **Koota owns game state** | ECS traits + systems. TSX reads, never writes. |
+| **Systems own logic** | Pure functions in `src/systems/`. No logic in TSX. |
+| **Config over code** | All tuning in JSON config files. Never hardcode constants. |
+| **Crash on missing assets** | `throw new Error()` — NEVER fallback, NEVER return null. |
+| **One source of truth** | Each data domain has exactly ONE authoritative store. |
+| **Test before integrate** | Jest tests required before wiring into game loop. |
+
+### Hard Bans
+
+| Banned | Use Instead |
+|--------|-------------|
+| Vite / Vitest | Metro / Jest |
+| Miniplex | Koota |
+| Raw Web Audio | Tone.js |
+| Raw CSS | NativeWind v4 |
+| Math.random() | gameplayRandom / scopedRNG |
+| `export default` | Named exports only |
+| npm / yarn | pnpm |
+| ESLint / Prettier | Biome |
+
+### Validation
+
+```bash
+pnpm lint          # Biome check
+pnpm lint:fix      # Biome autofix
+pnpm tsc           # TypeScript check (tsc --noEmit)
+pnpm test          # Jest (1,092 tests across 113 suites)
+pnpm test:e2e      # Playwright E2E
+```
+
+## Agent Roles
+
+### Registered Agents (`.claude/agents/`)
+
+| Agent | Scope | Key Domains |
+|-------|-------|-------------|
+| **systems-engineer** | ECS systems, game loop, Koota traits | `src/systems/`, `src/ecs/` |
+| **ai-engineer** | AI behavior, GOAP, steering, pathfinding | `src/ai/`, `src/systems/governor*` |
+| **frontend-designer** | UI panels, HUD, modals, mobile layout | `src/ui/`, `src/input/` |
+| **rendering-engineer** | R3F renderers, materials, shaders | `src/rendering/` |
+| **audio-engineer** | Spatial audio, SFX, adaptive music | `src/audio/` |
+| **config-docs** | Config files, documentation, CI | `docs/`, `config/`, `.github/` |
+
+### Merge Order (Multi-Agent)
+
+When agents work in parallel on isolated worktrees:
+
+1. **systems-engineer** first — foundational ECS changes
+2. **ai-engineer** second — depends on ECS types
+3. **rendering-engineer** third — depends on ECS + world state
+4. **frontend-designer** fourth — depends on system APIs
+5. **audio-engineer** fifth — depends on event system
+6. **config-docs** last — documents what changed
+
+### Worktree Protocol
+
+All parallel agent work uses git worktrees:
+1. Create worktree per agent: `.claude/worktrees/<agent>-<ticket>`
+2. Each agent works exclusively in its worktree
+3. Merge back one at a time to primary branch
+4. Never run two agents on same worktree
 
 ## Key System Files
+
 | System | File | Purpose |
 |--------|------|---------|
-| Turn System | `src/systems/turnSystem.ts` | AP/MP, turn phases, End Turn |
-| Harvest System | `src/systems/harvestSystem.ts` | Structure harvesting, resource deposits |
-| Resource Pools | `src/systems/resourcePools.ts` | Model family → material pool mapping |
-| Resources | `src/systems/resources.ts` | ResourcePool interface, add/spend |
-| Game Tick | `src/ecs/gameState.ts` | Simulation loop, system orchestration |
-| World Gen | `src/world/generation.ts` | Ecumenopolis sector generation |
-| Structure Plan | `src/world/sectorStructurePlan.ts` | Model placement via adjacency scoring |
-| Floor Renderer | `src/rendering/StructuralFloorRenderer.tsx` | PBR textured floors, fog of war |
-| City Renderer | `src/rendering/CityRenderer.tsx` | 3D structures, fog + harvest filtering |
-| Game HUD | `src/ui/panels/GameHUD.tsx` | Resources, turn counter, End Turn |
-| Radial Menu | `src/ui/RadialMenu.tsx` | Positioned circular buttons, actions |
-| Title Screen | `src/ui/TitleScreen.tsx` | Live 3D storm/globe diegetic title |
+| Game Loop | `src/ecs/gameState.ts` | 60fps tick, 21 systems, 8 phases |
+| Turn System | `src/systems/turnSystem.ts` | AP/MP per unit, turn phases |
+| Resources | `src/systems/resources.ts` | 11 material types, add/spend |
+| Harvest | `src/systems/harvestSystem.ts` | Structure → materials pipeline |
+| Building | `src/systems/buildingPlacement.ts` | 7 building types, adjacency |
+| Combat | `src/systems/combat.ts` | Component damage, formations |
+| Tech Tree | `src/systems/techTree.ts` | Research DAG, effects |
+| Diplomacy | `src/systems/diplomacy.ts` | Standing, trade, alliances |
+| Victory | `src/systems/victoryConditions.ts` | 3 win paths |
+| Exploration | `src/systems/exploration.ts` | Fog of war, vision radius |
+| World Gen | `src/world/generation.ts` | Procedural ecumenopolis |
+| Radial Menu | `src/systems/radialMenu.ts` | Context menu state |
+| Floor Render | `src/rendering/StructuralFloorRenderer.tsx` | PBR textured floors |
+| Game HUD | `src/ui/panels/GameHUD.tsx` | Top bar, resources, turn |
+| App Entry | `src/App.tsx` | Canvas, 39 renderers, game init |
+
+## Documentation Structure
+
+All docs live under `docs/`. See [docs/AGENTS.md](docs/AGENTS.md) for the full index.
+
+| Layer | Purpose | Files |
+|-------|---------|-------|
+| **Memory Bank** | Session bootstrap — read first | 7 files in `docs/memory-bank/` |
+| **Design** | What the game IS | 6 files in `docs/design/` |
+| **Technical** | How it's built | 5 files in `docs/technical/` |
+| **Interface** | Player-facing surfaces | 2 files in `docs/interface/` |
+| **Execution** | Roadmap | `docs/plans/GAMEPLAN_1_0.md` |

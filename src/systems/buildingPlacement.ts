@@ -1,3 +1,25 @@
+/**
+ * @module buildingPlacement
+ *
+ * Building placement state machine with ghost preview, validation, adjacency bonuses,
+ * and resource cost enforcement. Handles the full place-building flow from type selection
+ * through ghost positioning to final spawn and construction visualization.
+ *
+ * @exports PlaceableType - Union of all building type strings
+ * @exports BUILDING_COSTS - Resource costs per building type
+ * @exports ADJACENCY_RULES / ADJACENCY_RADIUS - Adjacency bonus configuration
+ * @exports computeAdjacencyBonuses / computeAdjacencyMultiplier - Bonus calculation
+ * @exports canUnitBuild - Check if a unit has the Fabricator role
+ * @exports getActivePlacement / setActivePlacement - Placement mode state
+ * @exports getGhostPosition / updateGhostPosition - Ghost preview position
+ * @exports confirmPlacement / cancelPlacement - Execute or abort placement
+ * @exports getBuilderEntityId - Active builder unit reference
+ *
+ * @dependencies ecs/cityLayout, ecs/factory, constructionVisualization, ecs/traits,
+ *   ecs/world, narrative (queueThought), structuralSpace, resources
+ * @consumers PlacementHUD, BuildToolbar, UnitRenderer, UnitInput, keyboardShortcuts,
+ *   radialProviders, PlayerGovernor
+ */
 import { isInsideBuilding } from "../ecs/cityLayout";
 import {
 	spawnFabricationUnit,
@@ -13,24 +35,9 @@ import {
 	WorldPosition,
 } from "../ecs/traits";
 import { buildings, lightningRods, units } from "../ecs/world";
+import { queueThought } from "./narrative";
 import { isPassableAtWorldPosition } from "../world/structuralSpace";
 import { getResources, type ResourcePool, spendResource } from "./resources";
-/**
- * Building placement state machine.
- *
- * Player selects a building type from the toolbar, then taps/clicks
- * on the ground to place it. Ghost preview shows valid/invalid position.
- *
- * Placement rules:
- * - Must be on passable structural ground (not breach void, not inside existing buildings)
- * - Must have enough resources
- * - Lightning rods need minimum spacing from other rods
- * - Only Fabricator-role bots (mecha_golem) can place buildings
- *
- * Adjacency bonuses:
- * - Complementary buildings placed within ADJACENCY_RADIUS grant bonuses
- * - Bonuses are computed at placement time and stored on the building
- */
 
 export type PlaceableType =
 	| "lightning_rod"
@@ -392,6 +399,8 @@ export function confirmPlacement(): boolean {
 	if (placedId) {
 		startBuildingConstruction(placedId, activePlacement);
 	}
+
+	queueThought("first_build");
 
 	// Reset placement mode
 	activePlacement = null;

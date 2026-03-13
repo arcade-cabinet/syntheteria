@@ -1,23 +1,26 @@
+/**
+ * @module weather
+ *
+ * Weather and chronometer system. Tracks the game-world clock and derives all
+ * weather state — ambient/directional lighting, visibility, power multipliers,
+ * storm visuals — from a sinusoidal wormhole glow cycle combined with storm intensity.
+ * Time of day 0.0 = midnight (dimmest), 0.5 = noon (brightest).
+ *
+ * @exports WeatherSnapshot / StormVisualParams / TimeOfDayPhase - State types
+ * @exports getWeatherSnapshot - Full weather state (updated each tick)
+ * @exports getTimeOfDay / getDayNumber / getWormholeGlow - Lightweight accessors
+ * @exports getTimeDisplayString - Formatted "Day N — PHASE" for UI
+ * @exports weatherSystem - Per-tick clock advance and snapshot rebuild
+ * @exports resetWeatherSystem - Reset for new game
+ *
+ * @dependencies config/weather.json, world/config (getStormProfileSpec),
+ *   world/session (getActiveWorldSession)
+ * @consumers gameState (weatherSystem tick + getWeatherSnapshot), audioHooks,
+ *   StormEnvironment, StormLighting, StormSky, StormParticles
+ */
 import weatherConfig from "../config/weather.json";
 import { getStormProfileSpec } from "../world/config";
 import { getActiveWorldSession } from "../world/session";
-
-/**
- * Weather & Chronometer System
- *
- * Tracks the game-world clock and derives all weather state from it.
- *
- * The sun is permanently occluded by the hypercane. The wormhole's energy
- * output cycle defines "day" and "night" — a smooth sinusoidal glow that
- * brightens (day) and dims (night) over a configurable game-time period.
- *
- * Storm intensity (from power.ts) combines with the day/night cycle and
- * storm profile to produce the complete weather state that renderers and
- * gameplay systems consume.
- *
- * Time of day: 0.0 = midnight (dimmest), 0.5 = noon (brightest)
- * Uses a sinusoidal curve so transitions are smooth, not abrupt.
- */
 
 // --- Chronometer State ---
 

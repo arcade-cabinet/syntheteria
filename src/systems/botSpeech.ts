@@ -37,6 +37,14 @@ export interface SpeechBubble {
 	entityId: string;
 	text: string;
 	expiresAtTurn: number;
+	/** World position for 3D rendering (updated via updateBubblePosition) */
+	position: { x: number; y: number; z: number };
+	/** Visual opacity 0-1 for fade in/out (updated via updateSpeechBubbleOpacities) */
+	opacity: number;
+	/** Elapsed time since spawn in seconds (for fade calculation) */
+	elapsed: number;
+	/** Total display duration in seconds (for fade calculation) */
+	displayDuration: number;
 }
 
 export interface WorldContext {
@@ -61,6 +69,12 @@ const ARCHETYPE_TO_PROFILE: Record<BotArchetype, SpeechProfile> = {
 // ---------------------------------------------------------------------------
 // Module state
 // ---------------------------------------------------------------------------
+
+/** Fade-in/out durations in seconds for 3D rendering */
+const FADE_IN_SECONDS = 0.3;
+const FADE_OUT_SECONDS = 0.5;
+/** Default display duration in seconds for 3D bubble rendering */
+const DEFAULT_DISPLAY_SECONDS = 3.0;
 
 /** Active speech bubbles, keyed by entityId */
 const activeBubbles = new Map<string, SpeechBubble>();
@@ -201,6 +215,10 @@ export function botSpeechSystem(
 			entityId: bot.entityId,
 			text: line,
 			expiresAtTurn: currentTurn + getBubbleDuration(),
+			position: { x: 0, y: 0, z: 0 },
+			opacity: 0,
+			elapsed: 0,
+			displayDuration: DEFAULT_DISPLAY_SECONDS,
 		};
 
 		activeBubbles.set(bot.entityId, bubble);
@@ -217,6 +235,44 @@ export function botSpeechSystem(
  */
 export function getActiveSpeechBubbles(): SpeechBubble[] {
 	return Array.from(activeBubbles.values());
+}
+
+/**
+ * Update the world position of all bubbles for a given entity.
+ * Call when the entity moves so the 3D speech bubble follows it.
+ */
+export function updateBubblePosition(
+	entityId: string,
+	position: { x: number; y: number; z: number },
+): void {
+	const bubble = activeBubbles.get(entityId);
+	if (bubble) {
+		bubble.position.x = position.x;
+		bubble.position.y = position.y;
+		bubble.position.z = position.z;
+	}
+}
+
+/**
+ * Update speech bubble opacities based on elapsed frame time.
+ * Called each render frame with delta in seconds. Handles fade-in/fade-out.
+ */
+export function updateSpeechBubbleOpacities(delta: number): void {
+	for (const bubble of activeBubbles.values()) {
+		bubble.elapsed += delta;
+
+		const fadeInProgress = Math.min(bubble.elapsed / FADE_IN_SECONDS, 1);
+		const remaining = bubble.displayDuration - bubble.elapsed;
+		const fadeOutProgress = Math.min(remaining / FADE_OUT_SECONDS, 1);
+		bubble.opacity = Math.max(0, Math.min(fadeInProgress, fadeOutProgress));
+	}
+}
+
+/**
+ * Remove all bubbles for a given entity.
+ */
+export function clearBubblesForEntity(entityId: string): void {
+	activeBubbles.delete(entityId);
 }
 
 /**

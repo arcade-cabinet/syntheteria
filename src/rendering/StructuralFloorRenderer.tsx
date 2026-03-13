@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
 	FLOOR_MATERIAL_PRESETS,
@@ -274,6 +275,91 @@ function StructuralCellMesh({
 	);
 }
 
+// ---------------------------------------------------------------------------
+// VoidFillFloor — camera-following dark plane that fills the viewport
+// ---------------------------------------------------------------------------
+
+/** Floor extends this far from the camera in each direction */
+const VOID_FLOOR_HALF_EXTENT = 200;
+
+/** Dark fog color for void regions beyond the structural cells */
+const VOID_FOG_COLOR = new THREE.Color(0x030508);
+
+/** Faint grid accent for the void floor */
+const VOID_GRID_COLOR = new THREE.Color(0x0a0e14);
+
+const voidFloorVertexShader = `
+	varying vec2 vWorldXZ;
+	void main() {
+		vec4 worldPos = modelMatrix * vec4(position, 1.0);
+		vWorldXZ = worldPos.xz;
+		gl_Position = projectionMatrix * viewMatrix * worldPos;
+	}
+`;
+
+const voidFloorFragmentShader = `
+	uniform vec3 uFogColor;
+	uniform vec3 uGridColor;
+
+	varying vec2 vWorldXZ;
+
+	void main() {
+		// Subtle grid lines at integer coordinates for visual grounding
+		vec2 grid = abs(fract(vWorldXZ * 0.25) - 0.5);
+		float gridLine = 1.0 - smoothstep(0.0, 0.04, min(grid.x, grid.y));
+		gridLine *= 0.08;
+
+		vec3 color = uFogColor + uGridColor * gridLine;
+		gl_FragColor = vec4(color, 1.0);
+	}
+`;
+
+/**
+ * Infinite-looking dark floor that follows the camera to prevent void edges.
+ * Sits below the structural cell meshes (y=-0.06) so it acts as a backdrop.
+ * Single draw call with a subtle grid shader.
+ */
+function VoidFillFloor() {
+	const meshRef = useRef<THREE.Mesh>(null);
+	const { camera } = useThree();
+
+	const uniforms = useMemo(
+		() => ({
+			uFogColor: { value: VOID_FOG_COLOR },
+			uGridColor: { value: VOID_GRID_COLOR },
+		}),
+		[],
+	);
+
+	useFrame(() => {
+		if (!meshRef.current) return;
+		// Keep the floor centered under the camera so it always extends
+		// beyond the frustum edges.
+		meshRef.current.position.x = camera.position.x;
+		meshRef.current.position.z = camera.position.z;
+	});
+
+	return (
+		<mesh
+			ref={meshRef}
+			rotation={[-Math.PI / 2, 0, 0]}
+			position={[0, -0.06, 0]}
+			frustumCulled={false}
+		>
+			<planeGeometry
+				args={[VOID_FLOOR_HALF_EXTENT * 2, VOID_FLOOR_HALF_EXTENT * 2]}
+			/>
+			<shaderMaterial
+				uniforms={uniforms}
+				vertexShader={voidFloorVertexShader}
+				fragmentShader={voidFloorFragmentShader}
+				side={THREE.DoubleSide}
+				depthWrite={false}
+			/>
+		</mesh>
+	);
+}
+
 export function StructuralFloorRenderer({
 	profile = "default",
 	session: providedSession,
@@ -405,6 +491,8 @@ export function StructuralFloorRenderer({
 
 	return (
 		<group>
+			{/* Dark backdrop plane that follows the camera — prevents void edges */}
+			<VoidFillFloor />
 			{orderedCells.map((cell) => {
 				const edges: BlendEdge[] = [];
 				const neighbors: [EdgeDirection, number, number][] = [

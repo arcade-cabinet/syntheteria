@@ -5,11 +5,14 @@ import {
 	type BotSpeechInput,
 	botSpeechSystem,
 	canSpeak,
+	clearBubblesForEntity,
 	determineSpeechContext,
 	getActiveSpeechBubbles,
 	resetBotSpeechState,
 	type SpeechContext,
 	selectLine,
+	updateBubblePosition,
+	updateSpeechBubbleOpacities,
 	type WorldContext,
 } from "../botSpeech";
 
@@ -369,5 +372,105 @@ describe("config-driven values", () => {
 			"scout",
 			"warden",
 		]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// 3D rendering support (position tracking, opacity fades)
+// ---------------------------------------------------------------------------
+describe("3D rendering support", () => {
+	const worldCtx: WorldContext = {
+		stormIntensity: 0.5,
+		nearbyEnemyCount: 0,
+	};
+
+	it("bubbles are created with default position and zero opacity", () => {
+		const bot: BotSpeechInput = {
+			entityId: "render_bot",
+			archetype: "scout",
+			activity: "idle",
+		};
+		botSpeechSystem(0, [bot], worldCtx);
+
+		const bubbles = getActiveSpeechBubbles();
+		expect(bubbles).toHaveLength(1);
+		expect(bubbles[0].position).toEqual({ x: 0, y: 0, z: 0 });
+		expect(bubbles[0].opacity).toBe(0);
+		expect(bubbles[0].elapsed).toBe(0);
+		expect(bubbles[0].displayDuration).toBeGreaterThan(0);
+	});
+
+	it("updateBubblePosition moves the bubble for a given entity", () => {
+		const bot: BotSpeechInput = {
+			entityId: "pos_bot",
+			archetype: "mentor",
+			activity: "movement",
+		};
+		botSpeechSystem(0, [bot], worldCtx);
+
+		updateBubblePosition("pos_bot", { x: 10, y: 1, z: 20 });
+
+		const bubbles = getActiveSpeechBubbles();
+		const bubble = bubbles.find((b) => b.entityId === "pos_bot");
+		expect(bubble).toBeDefined();
+		expect(bubble!.position).toEqual({ x: 10, y: 1, z: 20 });
+	});
+
+	it("updateBubblePosition does nothing for unknown entities", () => {
+		const bot: BotSpeechInput = {
+			entityId: "known_bot",
+			archetype: "scout",
+			activity: "idle",
+		};
+		botSpeechSystem(0, [bot], worldCtx);
+
+		// Should not throw
+		updateBubblePosition("unknown_bot", { x: 99, y: 99, z: 99 });
+
+		const bubbles = getActiveSpeechBubbles();
+		expect(bubbles[0].position).toEqual({ x: 0, y: 0, z: 0 });
+	});
+
+	it("updateSpeechBubbleOpacities fades in during first 0.3s", () => {
+		const bot: BotSpeechInput = {
+			entityId: "fade_bot",
+			archetype: "warden",
+			activity: "idle",
+		};
+		botSpeechSystem(0, [bot], worldCtx);
+
+		updateSpeechBubbleOpacities(0.15);
+
+		const bubbles = getActiveSpeechBubbles();
+		expect(bubbles[0].opacity).toBeCloseTo(0.5, 1);
+	});
+
+	it("updateSpeechBubbleOpacities reaches full opacity after fade-in", () => {
+		const bot: BotSpeechInput = {
+			entityId: "full_fade_bot",
+			archetype: "fabricator",
+			activity: "harvesting",
+		};
+		botSpeechSystem(0, [bot], worldCtx);
+
+		updateSpeechBubbleOpacities(0.3);
+
+		const bubbles = getActiveSpeechBubbles();
+		expect(bubbles[0].opacity).toBeCloseTo(1.0, 1);
+	});
+
+	it("clearBubblesForEntity removes only that entity", () => {
+		const bots: BotSpeechInput[] = [
+			{ entityId: "clear_a", archetype: "mentor", activity: "idle" },
+			{ entityId: "clear_b", archetype: "scout", activity: "idle" },
+		];
+		botSpeechSystem(0, bots, worldCtx);
+		expect(getActiveSpeechBubbles()).toHaveLength(2);
+
+		clearBubblesForEntity("clear_a");
+
+		const remaining = getActiveSpeechBubbles();
+		expect(remaining).toHaveLength(1);
+		expect(remaining[0].entityId).toBe("clear_b");
 	});
 });

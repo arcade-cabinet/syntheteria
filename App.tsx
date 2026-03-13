@@ -38,6 +38,7 @@ import { HarvestProgressOverlay } from "./src/rendering/HarvestProgressOverlay";
 import { LandscapeProps } from "./src/rendering/LandscapeProps";
 import { LightningSystem } from "./src/rendering/LightningSystem";
 import { NetworkLineRenderer } from "./src/rendering/NetworkLineRenderer";
+import { SpeechBubbleRenderer } from "./src/rendering/SpeechBubbleRenderer";
 import { StructuralFloorRenderer } from "./src/rendering/StructuralFloorRenderer";
 import { StormLighting } from "./src/rendering/StormLighting";
 import { StormParticles } from "./src/rendering/StormParticles";
@@ -316,6 +317,7 @@ export default function App() {
 										</Suspense>
 										<HarvestProgressOverlay />
 										<UnitRenderer />
+										<SpeechBubbleRenderer />
 										<GlowRingRenderer />
 										<CombatEffectsRenderer />
 										<HackingBeamRenderer />

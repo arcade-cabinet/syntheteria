@@ -16,13 +16,14 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { Identity, MapFragment, Unit, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
+import { getUnitTurnState, hasAnyPoints } from "../systems/turnSystem";
+import { getStructuralFragment } from "../world/structuralSpace";
 import {
-	getUnitTurnState,
-	hasAnyPoints,
-} from "../systems/turnSystem";
-import {
-	getStructuralFragment,
-} from "../world/structuralSpace";
+	CULTIST_AURA_COLOR,
+	getDamageRatio,
+	getDamageVisuals,
+	isCultistVisual,
+} from "./unitVisuals";
 
 const MAX_RINGS = 128;
 
@@ -30,6 +31,8 @@ const COLOR_READY = new THREE.Color(0x00ffff);
 const COLOR_PARTIAL = new THREE.Color(0x007799);
 const COLOR_SPENT = new THREE.Color(0x333333);
 const COLOR_SELECTED = new THREE.Color(0xffffff);
+const COLOR_FERAL = new THREE.Color(0xff8844);
+const COLOR_CULTIST = new THREE.Color(CULTIST_AURA_COLOR);
 
 const READY_RADIUS = 0.6;
 const SELECTED_RADIUS = 0.8;
@@ -103,29 +106,19 @@ export function GlowRingRenderer() {
 				radius = SELECTED_RADIUS;
 				color = COLOR_SELECTED;
 				const pulse =
-					0.6 +
-					0.4 *
-						Math.sin(
-							clock.elapsedTime * SELECTED_PULSE_SPEED,
-						);
+					0.6 + 0.4 * Math.sin(clock.elapsedTime * SELECTED_PULSE_SPEED);
 				pulseIntensity = pulse;
 			} else if (hasPoints && !hasPartialPoints) {
 				radius = READY_RADIUS;
 				color = COLOR_READY;
 				const pulse =
-					0.4 +
-					0.6 *
-						Math.sin(clock.elapsedTime * READY_PULSE_SPEED);
+					0.4 + 0.6 * Math.sin(clock.elapsedTime * READY_PULSE_SPEED);
 				pulseIntensity = pulse;
 			} else if (hasPartialPoints) {
 				radius = READY_RADIUS * 0.9;
 				color = COLOR_PARTIAL;
 				const pulse =
-					0.3 +
-					0.4 *
-						Math.sin(
-							clock.elapsedTime * PARTIAL_PULSE_SPEED,
-						);
+					0.3 + 0.4 * Math.sin(clock.elapsedTime * PARTIAL_PULSE_SPEED);
 				pulseIntensity = pulse;
 			} else {
 				radius = SPENT_RADIUS;
@@ -133,19 +126,30 @@ export function GlowRingRenderer() {
 				pulseIntensity = 0.15;
 			}
 
+			// Faction-specific ring color overrides
+			const faction = entity.get(Identity)?.faction ?? "player";
+			if (isCultistVisual(faction)) {
+				color = COLOR_CULTIST;
+				// Cultist rings pulse with eerie flicker
+				const cultPulse = 0.1 * Math.sin(clock.elapsedTime * 2.5);
+				pulseIntensity = Math.max(0.15, pulseIntensity + cultPulse);
+			} else if (faction === "feral") {
+				color = COLOR_FERAL;
+			}
+
+			// Health-driven opacity degradation via unitVisuals
+			const components = entity.get(Unit)?.components ?? [];
+			const damageRatio = getDamageRatio(components);
+			const damageVisuals = getDamageVisuals(damageRatio);
+			pulseIntensity *= damageVisuals.glowIntensity;
+
 			// Set transform
 			dummyMatrix.makeScale(radius, radius, radius);
-			dummyMatrix.setPosition(
-				wp.x + ox,
-				wp.y + 0.03,
-				wp.z + oz,
-			);
+			dummyMatrix.setPosition(wp.x + ox, wp.y + 0.03, wp.z + oz);
 			mesh.setMatrixAt(i, dummyMatrix);
 
 			// Set color with pulse
-			tempColor
-				.copy(color)
-				.multiplyScalar(Math.max(0.1, pulseIntensity));
+			tempColor.copy(color).multiplyScalar(Math.max(0.1, pulseIntensity));
 			mesh.setColorAt(i, tempColor);
 		}
 

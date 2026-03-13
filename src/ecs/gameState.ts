@@ -13,12 +13,18 @@ import {
 } from "../systems/fabrication";
 import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge";
 import { hackingSystem } from "../systems/hacking";
+import { harvestSystem, resetHarvestSystem } from "../systems/harvestSystem";
+import { lightningSystem, resetLightningSystem } from "../systems/lightning";
 import { movementSystem } from "../systems/movement";
 import {
 	getActiveThought,
 	narrativeSystem,
 	type Thought,
 } from "../systems/narrative";
+import {
+	networkOverlaySystem,
+	resetNetworkOverlay,
+} from "../systems/networkOverlay";
 import {
 	getPowerSnapshot,
 	type PowerSnapshot,
@@ -30,14 +36,6 @@ import {
 	type ResourcePool,
 	resourceSystem,
 } from "../systems/resources";
-import {
-	lightningSystem,
-	resetLightningSystem,
-} from "../systems/lightning";
-import {
-	networkOverlaySystem,
-	resetNetworkOverlay,
-} from "../systems/networkOverlay";
 import { signalNetworkSystem } from "../systems/signalNetworkSystem";
 import {
 	getWeatherSnapshot,
@@ -55,16 +53,12 @@ import {
 import { getActiveWorldSession as getLoadedWorldSession } from "../world/session";
 import type { NearbyPoiContext } from "../world/snapshots";
 import {
-	updateDisplayOffsets,
-} from "../world/structuralSpace";
-import {
-	Identity,
-} from "./traits";
-import { units } from "./world";
-import {
 	getStructuralFragments,
 	type StructuralFragment as MapFragment,
+	updateDisplayOffsets,
 } from "../world/structuralSpace";
+import { Identity } from "./traits";
+import { units } from "./world";
 
 export interface GameSnapshot {
 	tick: number;
@@ -188,6 +182,7 @@ export function simulationTick() {
 	signalNetworkSystem();
 	networkOverlaySystem(tick);
 	resourceSystem();
+	harvestSystem();
 	repairSystem();
 	fabricationSystem();
 	combatSystem();
@@ -210,6 +205,7 @@ export function resetGameState() {
 	resetWeatherSystem();
 	resetLightningSystem();
 	resetNetworkOverlay();
+	resetHarvestSystem();
 }
 
 const simulationInterval = setInterval(simulationTick, 1000 / 60);

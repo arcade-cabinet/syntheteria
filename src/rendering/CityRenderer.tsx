@@ -5,6 +5,7 @@ import { CityModelMesh } from "../city/runtime/CityModelMesh";
 import { getSnapshot, subscribe } from "../ecs/gameState";
 import { Identity, Scene, Unit, WorldPosition } from "../ecs/traits";
 import { world } from "../ecs/world";
+import { isStructureConsumed } from "../systems/harvestSystem";
 import {
 	buildOverworldCityOverlayState,
 	type OverlayUnitPresence,
@@ -60,6 +61,10 @@ function SectorStructureInstances({
 			{session.sectorStructures.map((structure) => {
 				// Only render structures in discovered cells
 				if (!discoveredCells.has(`${structure.q},${structure.r}`)) {
+					return null;
+				}
+				// Skip structures that have been harvested
+				if (isStructureConsumed(structure.id)) {
 					return null;
 				}
 				const model = getCityModelById(structure.model_id);

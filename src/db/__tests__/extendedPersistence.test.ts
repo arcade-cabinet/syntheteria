@@ -1,5 +1,6 @@
 import { generateWorldData } from "../../world/generation";
 import { createSaveGameSync } from "../saveGames";
+import { getDatabaseSync } from "../runtime";
 import {
 	getPersistedWorldSync,
 	persistCampaignStatisticsSync,
@@ -9,10 +10,9 @@ import {
 	persistTurnEventLogSync,
 	persistTurnStateSync,
 } from "../worldPersistence";
-import { FakeDatabase } from "./helpers/fakeDatabase";
 
 function setupSaveGame() {
-	const database = new FakeDatabase();
+	const database = getDatabaseSync();
 	const config = {
 		worldSeed: 42,
 		sectorScale: "small" as const,

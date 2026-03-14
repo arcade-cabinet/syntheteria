@@ -111,9 +111,9 @@ const CULTIST_GLITCH_SPEED = 3.5;
 const CULTIST_GLITCH_AMPLITUDE = 0.04;
 
 const SPENT_GRAY = new THREE.Color(0x666666);
-const GLOW_PULSE_SPEED = 2.5;
-const GLOW_PULSE_MIN = 0.3;
-const GLOW_PULSE_MAX = 1.0;
+const _GLOW_PULSE_SPEED = 2.5;
+const _GLOW_PULSE_MIN = 0.3;
+const _GLOW_PULSE_MAX = 1.0;
 const SPENT_OPACITY = 0.6;
 
 // ─── Visual movement interpolation ──────────────────────────────────────────
@@ -240,8 +240,8 @@ function UnitMesh({ entity }: { entity: UnitEntity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const modelGroupRef = useRef<THREE.Group>(null);
 	const ringRef = useRef<THREE.Mesh>(null);
-	const glowRingRef = useRef<THREE.Mesh>(null);
-	const glowMatRef = useRef<THREE.MeshStandardMaterial>(null);
+	const _glowRingRef = useRef<THREE.Mesh>(null);
+	const _glowMatRef = useRef<THREE.MeshStandardMaterial>(null);
 	const upgradeRef = useRef<THREE.Group>(null);
 	const upgradeMatRef = useRef<THREE.MeshStandardMaterial>(null);
 	const modelMaterialsRef = useRef<THREE.MeshStandardMaterial[]>([]);

@@ -29,7 +29,7 @@ const BEAM_LIFETIME = 0.8;
 const MUZZLE_FLASH_LIFETIME = 0.3;
 const BEAM_COLOR = 0xff3322;
 const MUZZLE_COLOR = 0xff6644;
-const BEAM_WIDTH = 0.04;
+const _BEAM_WIDTH = 0.04;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

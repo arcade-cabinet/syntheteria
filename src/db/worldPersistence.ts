@@ -13,7 +13,7 @@ import type {
 	GeneratedSectorCell,
 	GeneratedSectorPointOfInterest,
 } from "../world/generation";
-import type { GeneratedSectorStructure } from "../world/sectorStructurePlan";
+import type { GeneratedSectorStructure } from "../world/generation";
 import type {
 	CampaignStateSnapshot,
 	CampaignStatisticsSnapshot,
@@ -34,7 +34,6 @@ import type {
 } from "../world/snapshots";
 import { createInitialCampaignEntities } from "../world/startingForces";
 import { initializeDatabaseSync } from "./bootstrap";
-import { FakeDatabase } from "./fallbackDatabase";
 import { getDatabaseSync, setDatabaseResolver } from "./runtime";
 import type { SaveGameRecord } from "./saveGames";
 import type { SyncDatabase } from "./types";
@@ -53,12 +52,6 @@ export type CampaignStatisticsRecord = CampaignStatisticsSnapshot;
 export type TurnEventLogRecord = TurnEventLogSnapshot;
 export type PersistedWorldRecord = PersistedWorldSnapshot;
 export type ActiveWorldRecord = WorldSessionSnapshot;
-
-function persistFallbackDatabase(database: SyncDatabase) {
-	if (database instanceof FakeDatabase) {
-		database.persistToStorage();
-	}
-}
 
 export function setWorldPersistenceDatabaseResolver(
 	resolver: (() => SyncDatabase) | null,
@@ -215,19 +208,21 @@ function selectResourceState(database: SyncDatabase, saveGameId: number) {
 }
 
 function selectHarvestState(database: SyncDatabase, saveGameId: number) {
-	return database.getFirstSync<HarvestStateRecord>(
+	const row = database.getFirstSync<HarvestStateRecord & { consumed_floor_tiles_json?: string }>(
 		`
 			SELECT
 				id,
 				save_game_id,
 				consumed_structure_ids_json,
 				active_harvests_json,
+				COALESCE(consumed_floor_tiles_json, '[]') as consumed_floor_tiles_json,
 				last_synced_at
 			FROM harvest_states
 			WHERE save_game_id = ?
 		`,
 		saveGameId,
 	);
+	return row;
 }
 
 function selectTurnState(database: SyncDatabase, saveGameId: number) {
@@ -392,7 +387,7 @@ export function persistGeneratedWorldSync(
 		insertSectorStructure(database, worldMapId, structure);
 	}
 
-	const poiIds = new Map<WorldPoiType, number>();
+	const poiIds = new Map<string, number>();
 	for (const poi of generatedWorld.pointsOfInterest) {
 		const insert = insertWorldPointOfInterest(database, worldMapId, poi);
 		poiIds.set(poi.type, insert.lastInsertRowId);
@@ -414,7 +409,6 @@ export function persistGeneratedWorldSync(
 		createInitialCampaignEntities(generatedWorld),
 		database,
 	);
-	persistFallbackDatabase(database);
 
 	return selectWorldMapBySaveId(database, saveGame.id);
 }
@@ -821,7 +815,6 @@ export function persistRuntimeWorldStateSync(
 	}
 
 	persistWorldEntitiesSync(saveGameId, entities, database);
-	persistFallbackDatabase(database);
 }
 
 export function persistHarvestStateSync(
@@ -829,22 +822,25 @@ export function persistHarvestStateSync(
 	consumedStructureIds: number[],
 	activeHarvests: unknown[],
 	database: SyncDatabase = getDatabaseSync(),
+	consumedFloorTiles: string[] = [],
 ) {
 	initializeDatabaseSync(database);
 	const now = Date.now();
 	const consumedJson = JSON.stringify(consumedStructureIds);
 	const harvestsJson = JSON.stringify(activeHarvests);
+	const floorJson = JSON.stringify(consumedFloorTiles);
 
 	const existing = selectHarvestState(database, saveGameId);
 	if (existing) {
 		database.runSync(
 			`
 				UPDATE harvest_states
-				SET consumed_structure_ids_json = ?, active_harvests_json = ?, last_synced_at = ?
+				SET consumed_structure_ids_json = ?, active_harvests_json = ?, consumed_floor_tiles_json = ?, last_synced_at = ?
 				WHERE save_game_id = ?
 			`,
 			consumedJson,
 			harvestsJson,
+			floorJson,
 			now,
 			saveGameId,
 		);
@@ -852,16 +848,16 @@ export function persistHarvestStateSync(
 		database.runSync(
 			`
 				INSERT INTO harvest_states (
-					save_game_id, consumed_structure_ids_json, active_harvests_json, last_synced_at
-				) VALUES (?, ?, ?, ?)
+					save_game_id, consumed_structure_ids_json, active_harvests_json, consumed_floor_tiles_json, last_synced_at
+				) VALUES (?, ?, ?, ?, ?)
 			`,
 			saveGameId,
 			consumedJson,
 			harvestsJson,
+			floorJson,
 			now,
 		);
 	}
-	persistFallbackDatabase(database);
 }
 
 export function persistTurnStateSync(
@@ -906,7 +902,6 @@ export function persistTurnStateSync(
 			now,
 		);
 	}
-	persistFallbackDatabase(database);
 }
 
 export function persistFactionResourceStatesSync(
@@ -937,7 +932,6 @@ export function persistFactionResourceStatesSync(
 			now,
 		);
 	}
-	persistFallbackDatabase(database);
 }
 
 export function persistCampaignStatisticsSync(
@@ -973,7 +967,6 @@ export function persistCampaignStatisticsSync(
 			now,
 		);
 	}
-	persistFallbackDatabase(database);
 }
 
 export function persistTurnEventLogSync(
@@ -993,5 +986,4 @@ export function persistTurnEventLogSync(
 		turnNumber,
 		JSON.stringify(events),
 	);
-	persistFallbackDatabase(database);
 }

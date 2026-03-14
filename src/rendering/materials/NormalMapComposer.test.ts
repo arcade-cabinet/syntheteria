@@ -242,7 +242,7 @@ describe("NormalMapComposer", () => {
 		});
 
 		it("every preset has non-empty layers", () => {
-			for (const [name, preset] of Object.entries(DETAIL_PRESETS)) {
+			for (const [_name, preset] of Object.entries(DETAIL_PRESETS)) {
 				expect(preset.layers.length).toBeGreaterThan(0);
 			}
 		});

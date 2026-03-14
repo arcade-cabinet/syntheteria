@@ -97,7 +97,7 @@ function SegmentLine({
 	segment: NetworkSegment;
 	elapsedTime: number;
 }) {
-	const lineRef = useRef<THREE.Line>(null);
+	const _lineRef = useRef<THREE.Line>(null);
 
 	const { geometry, material, yOffset, isConduit } = useMemo(() => {
 		const config = networksConfig[segment.type];
@@ -186,6 +186,8 @@ function SegmentLine({
 		segment.type,
 		segment.faction,
 		segment.parallelIndex,
+		segment.from,
+		segment.to,
 	]);
 
 	// Animate material properties per frame
@@ -196,7 +198,7 @@ function SegmentLine({
 			// Power lines: glow intensity scales with throughput
 			const minGlow = networksConfig.power.glowIntensityMin;
 			const maxGlow = networksConfig.power.glowIntensityMax;
-			const intensity = minGlow + segment.throughput * (maxGlow - minGlow);
+			const _intensity = minGlow + segment.throughput * (maxGlow - minGlow);
 			material.opacity = 0.5 + segment.throughput * 0.4;
 
 			if (segment.throughput < 0.1) {
@@ -290,6 +292,8 @@ function SegmentGlow({ segment }: { segment: NetworkSegment }) {
 		segment.type,
 		segment.faction,
 		segment.parallelIndex,
+		segment.from,
+		segment.to,
 	]);
 
 	return <primitive object={lineObj} position={[0, yOffset, 0]} />;

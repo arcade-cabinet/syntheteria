@@ -104,7 +104,7 @@ const rainFragmentShader = `
 `;
 
 export function StormParticles() {
-	const materialRef = useRef<THREE.ShaderMaterial>(null);
+	const _materialRef = useRef<THREE.ShaderMaterial>(null);
 	const { camera } = useThree();
 
 	const geometry = useMemo(() => {

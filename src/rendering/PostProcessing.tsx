@@ -11,7 +11,7 @@
  */
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 
 /**
@@ -32,8 +32,7 @@ import * as THREE from "three";
  */
 
 export function PostProcessing() {
-	const { gl, scene, camera, size } = useThree();
-	const vignetteQuadRef = useRef<THREE.Mesh>(null);
+	const { gl } = useThree();
 
 	// Configure renderer for bloom-friendly output
 	useEffect(() => {

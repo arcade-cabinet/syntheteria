@@ -25,6 +25,7 @@ import {
 } from "../systems/factionEconomy";
 import {
 	getActiveHarvests,
+	getConsumedFloorTiles,
 	getConsumedStructureIds,
 } from "../systems/harvestSystem";
 import { getResources } from "../systems/resources";
@@ -106,10 +107,11 @@ export function saveAllStateSync(): SaveAllResult {
 			unitStatesArray,
 		);
 
-		// 3. Harvest state (consumed structures, active harvests)
+		// 3. Harvest state (consumed structures, active harvests, consumed floor tiles)
 		const consumedIds = Array.from(getConsumedStructureIds());
 		const activeHarvests = [...getActiveHarvests()];
-		persistHarvestStateSync(saveGameId, consumedIds, activeHarvests);
+		const consumedFloorTiles = Array.from(getConsumedFloorTiles());
+		persistHarvestStateSync(saveGameId, consumedIds, activeHarvests, undefined, consumedFloorTiles);
 
 		// 4. Per-faction resource pools
 		const allFactionResources = getAllFactionResources();

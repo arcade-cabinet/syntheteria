@@ -159,8 +159,8 @@ export function awardXP(
 	xp.currentXP += earned;
 
 	// Check if Mark threshold reached
-	const nextMarkThreshold = getMarkThreshold(xp.currentMark + 1);
-	const totalXPForCurrentMark = getMarkThreshold(xp.currentMark);
+	const _nextMarkThreshold = getMarkThreshold(xp.currentMark + 1);
+	const _totalXPForCurrentMark = getMarkThreshold(xp.currentMark);
 	const xpSinceCurrentMark = xp.currentXP;
 
 	if (xpSinceCurrentMark >= xp.xpToNextMark) {

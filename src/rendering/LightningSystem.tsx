@@ -118,12 +118,12 @@ function BoltRenderer({
 		state.afterglowDuration,
 	);
 
-	if (opacity <= 0) return null;
-
 	const [cr, cg, cb] = bolt.isRodCapture
 		? state.colors.rodCapture
 		: state.colors.ambient;
 	const baseColor = useMemo(() => new THREE.Color(cr, cg, cb), [cr, cg, cb]);
+
+	if (opacity <= 0) return null;
 
 	const flashIntensity = bolt.isRodCapture
 		? state.flashIntensity.rodCapture

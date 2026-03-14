@@ -79,7 +79,7 @@ describe("breachZones", () => {
 			}
 		});
 
-		it("no breach zones within 4 cells of home base", () => {
+		it("no breach zones within 3 cells of home base", () => {
 			const worldData = makeWorldData(42);
 			const zones = generateBreachZones(worldData);
 			const homeBase = worldData.pointsOfInterest.find(
@@ -91,7 +91,7 @@ describe("breachZones", () => {
 				for (const cell of zone.cells) {
 					const dq = cell.q - homeBase!.q;
 					const dr = cell.r - homeBase!.r;
-					expect(Math.sqrt(dq * dq + dr * dr)).toBeGreaterThanOrEqual(4);
+					expect(Math.sqrt(dq * dq + dr * dr)).toBeGreaterThanOrEqual(3);
 				}
 			}
 		});

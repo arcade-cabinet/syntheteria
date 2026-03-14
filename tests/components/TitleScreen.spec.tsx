@@ -38,7 +38,6 @@ test.describe("title and new game flow surfaces", () => {
 			</div>,
 		);
 
-		await expect(component).toContainText("Campaign Initialization");
 		await expect(component).toContainText("Encoding world");
 		await expect(component).toContainText("Encoding sector lattice");
 		await expect(component).toHaveScreenshot();

@@ -40,11 +40,11 @@ jest.mock("./constructionVisualization", () => ({
 	startBuildingConstruction: jest.fn(),
 }));
 
-const mockIdentityGet = jest.fn();
-const mockMapFragmentGet = jest.fn();
-const mockWorldPositionGet = jest.fn();
-const mockBuildingGet = jest.fn();
-const mockUnitGet = jest.fn();
+const _mockIdentityGet = jest.fn();
+const _mockMapFragmentGet = jest.fn();
+const _mockWorldPositionGet = jest.fn();
+const _mockBuildingGet = jest.fn();
+const _mockUnitGet = jest.fn();
 
 jest.mock("../ecs/traits", () => ({
 	Building: "Building",
@@ -200,7 +200,7 @@ describe("buildingPlacement", () => {
 		});
 
 		it("every cost entry references a valid resource type", () => {
-			for (const [type, costs] of Object.entries(BUILDING_COSTS)) {
+			for (const [_type, costs] of Object.entries(BUILDING_COSTS)) {
 				for (const cost of costs) {
 					expect(cost.amount).toBeGreaterThan(0);
 					expect(typeof cost.type).toBe("string");

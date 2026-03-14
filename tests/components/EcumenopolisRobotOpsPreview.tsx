@@ -1,20 +1,17 @@
 import { Canvas, useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useState } from "react";
-import { AssetLoadBeacon } from "./AssetLoadBeacon";
-import { getAnchorClusterFocus } from "./previewSceneFocus";
 import { aiSystem, issueMoveCommand, resetWorldAIService } from "../../src/ai";
 import { resetGameState } from "../../src/ecs/gameState";
-import {
-	Identity,
-	Unit,
-	WorldPosition,
-} from "../../src/ecs/traits";
+import { Identity, Unit, WorldPosition } from "../../src/ecs/traits";
 import { world } from "../../src/ecs/world";
 import { CityRenderer } from "../../src/rendering/CityRenderer";
 import { NetworkLineRenderer } from "../../src/rendering/NetworkLineRenderer";
 import { StructuralFloorRenderer } from "../../src/rendering/StructuralFloorRenderer";
 import { UnitRenderer } from "../../src/rendering/UnitRenderer";
-import { networkOverlaySystem, resetNetworkOverlay } from "../../src/systems/networkOverlay";
+import {
+	networkOverlaySystem,
+	resetNetworkOverlay,
+} from "../../src/systems/networkOverlay";
 import { BriefingBubbleLayer } from "../../src/ui/BriefingBubbleLayer";
 import { createNewGameConfig } from "../../src/world/config";
 import {
@@ -28,6 +25,7 @@ import {
 	setRuntimeScene,
 	setRuntimeTick,
 } from "../../src/world/runtimeState";
+import { gridToWorld } from "../../src/world/sectorCoordinates";
 import {
 	clearActiveWorldSession,
 	setActiveWorldSession,
@@ -41,7 +39,8 @@ import {
 	loadStructuralFragment,
 	resetStructuralSpace,
 } from "../../src/world/structuralSpace";
-import { gridToWorld } from "../../src/world/sectorCoordinates";
+import { AssetLoadBeacon } from "./AssetLoadBeacon";
+import { getAnchorClusterFocus } from "./previewSceneFocus";
 
 interface RosterMarker {
 	id: string;
@@ -104,7 +103,8 @@ function createPreviewSession(seed: number): PreviewWorldSession {
 			world_q: city.worldQ,
 			world_r: city.worldR,
 			layout_seed: city.layoutSeed,
-			generation_status: state === "latent" ? city.generationStatus : "instanced",
+			generation_status:
+				state === "latent" ? city.generationStatus : "instanced",
 			state,
 		};
 	});
@@ -199,10 +199,12 @@ export function EcumenopolisRobotOpsPreview({
 	const [ready, setReady] = useState(false);
 	const [sceneLoaded, setSceneLoaded] = useState(false);
 	const [legend, setLegend] = useState<string[]>([]);
-	const [cameraTarget, setCameraTarget] = useState<[number, number, number]>([0, 0, 0]);
-	const [cameraPosition, setCameraPosition] = useState<[number, number, number]>([
-		0.6, 10.8, 15.6,
+	const [cameraTarget, setCameraTarget] = useState<[number, number, number]>([
+		0, 0, 0,
 	]);
+	const [cameraPosition, setCameraPosition] = useState<
+		[number, number, number]
+	>([0.6, 10.8, 15.6]);
 	const [rosterMarkers, setRosterMarkers] = useState<RosterMarker[]>([]);
 
 	useEffect(() => {
@@ -236,49 +238,59 @@ export function EcumenopolisRobotOpsPreview({
 		setRuntimeScene("world", null);
 		setRuntimeTick(0);
 
-		const homeBase = session.pointsOfInterest.find((poi) => poi.type === "home_base")!;
-		const archiveCampus = session.pointsOfInterest.find((poi) => poi.type === "science_campus")!;
+		const homeBase = session.pointsOfInterest.find(
+			(poi) => poi.type === "home_base",
+		)!;
+		const archiveCampus = session.pointsOfInterest.find(
+			(poi) => poi.type === "science_campus",
+		)!;
 		const home = gridToWorld(homeBase.q, homeBase.r);
-		const archive = gridToWorld(archiveCampus.q, archiveCampus.r);
+		const _archive = gridToWorld(archiveCampus.q, archiveCampus.r);
 
 		hydratePersistedWorldEntities(
 			session.entities.filter(
-				(entity) => entity.faction === "player" && entity.scene_location === "world",
+				(entity) =>
+					entity.faction === "player" && entity.scene_location === "world",
 			),
 		);
 
 		const roster = Array.from(world.query(Identity, Unit, WorldPosition)).map(
 			(entity) => {
-			const unit = entity.get(Unit)!;
-			const position = entity.get(WorldPosition)!;
-			return {
-				id: entity.get(Identity)!.id,
-				unitType: unit.type,
-				position: [position.x, position.y, position.z] as const,
-				selected: unit.selected,
-			};
-		},
+				const unit = entity.get(Unit)!;
+				const position = entity.get(WorldPosition)!;
+				return {
+					id: entity.get(Identity)!.id,
+					unitType: unit.type,
+					position: [position.x, position.y, position.z] as const,
+					selected: unit.selected,
+				};
+			},
 		);
 		setRosterMarkers(
 			roster.map((member, index) => ({
 				id: member.id,
 				unitType: member.unitType,
-				position: [member.position[0], member.position[1], member.position[2]] as const,
-				color:
-					member.selected
-						? 0xffd166
-						: member.unitType === "utility_drone"
-							? 0x8be6ff
-							: member.unitType === "fabrication_unit"
-								? 0xf6c56a
-								: member.unitType === "mecha_golem"
-									? 0x6ff3c8
-									: 0xff8f8f,
+				position: [
+					member.position[0],
+					member.position[1],
+					member.position[2],
+				] as const,
+				color: member.selected
+					? 0xffd166
+					: member.unitType === "utility_drone"
+						? 0x8be6ff
+						: member.unitType === "fabrication_unit"
+							? 0xf6c56a
+							: member.unitType === "mecha_golem"
+								? 0x6ff3c8
+								: 0xff8f8f,
 			})),
 		);
 
 		setNearbyPoi({
-			cityInstanceId: session.cityInstances.find((city) => city.poi_id === archiveCampus.id)?.id ?? null,
+			cityInstanceId:
+				session.cityInstances.find((city) => city.poi_id === archiveCampus.id)
+					?.id ?? null,
 			discovered: true,
 			distance: mode === "movement" ? 3.6 : 2.1,
 			name: archiveCampus.name,
@@ -319,7 +331,7 @@ export function EcumenopolisRobotOpsPreview({
 						"Movement audit",
 						"Field Technician issued AI-owned move command toward Archive Campus",
 						"Selected unit should remain legible while in transit",
-				],
+					],
 		);
 		setReady(true);
 
@@ -341,7 +353,8 @@ export function EcumenopolisRobotOpsPreview({
 				width: 1400,
 				height: 900,
 				position: "relative",
-				background: "linear-gradient(180deg, #0f1d29 0%, #061019 58%, #03070d 100%)",
+				background:
+					"linear-gradient(180deg, #0f1d29 0%, #061019 58%, #03070d 100%)",
 				overflow: "hidden",
 			}}
 		>
@@ -359,8 +372,16 @@ export function EcumenopolisRobotOpsPreview({
 						<AssetLoadBeacon onLoaded={() => setSceneLoaded(true)} />
 						<ambientLight intensity={1.0} color={0x8394aa} />
 						<hemisphereLight args={[0x7fb9ff, 0x071119, 0.9]} />
-						<directionalLight position={[8, 16, 10]} intensity={1.7} color={0x8be6ff} />
-						<directionalLight position={[-8, 10, -6]} intensity={0.85} color={0xf6c56a} />
+						<directionalLight
+							position={[8, 16, 10]}
+							intensity={1.7}
+							color={0x8be6ff}
+						/>
+						<directionalLight
+							position={[-8, 10, -6]}
+							intensity={0.85}
+							color={0xf6c56a}
+						/>
 						<StructuralFloorRenderer profile="ops" session={session} />
 						<NetworkLineRenderer />
 						<Suspense fallback={null}>
@@ -369,35 +390,35 @@ export function EcumenopolisRobotOpsPreview({
 						<Suspense fallback={null}>
 							<UnitRenderer />
 						</Suspense>
-							{mode === "placement"
-								? rosterMarkers.map((marker) => (
-										<group
-											key={marker.id}
-											position={[
-												marker.position[0],
-												marker.position[1] + 0.1,
-												marker.position[2],
-											]}
-										>
-											<mesh position={[0, 1.15, 0]}>
-												<cylinderGeometry args={[0.04, 0.04, 2.3, 10]} />
-												<meshBasicMaterial
-													color={marker.color}
-													transparent
-													opacity={0.4}
-												/>
-											</mesh>
-											<mesh position={[0, 2.35, 0]}>
-												<sphereGeometry args={[0.1, 12, 12]} />
-												<meshBasicMaterial
-													color={marker.color}
-													transparent
-													opacity={0.95}
-												/>
-											</mesh>
-										</group>
-									))
-								: null}
+						{mode === "placement"
+							? rosterMarkers.map((marker) => (
+									<group
+										key={marker.id}
+										position={[
+											marker.position[0],
+											marker.position[1] + 0.1,
+											marker.position[2],
+										]}
+									>
+										<mesh position={[0, 1.15, 0]}>
+											<cylinderGeometry args={[0.04, 0.04, 2.3, 10]} />
+											<meshBasicMaterial
+												color={marker.color}
+												transparent
+												opacity={0.4}
+											/>
+										</mesh>
+										<mesh position={[0, 2.35, 0]}>
+											<sphereGeometry args={[0.1, 12, 12]} />
+											<meshBasicMaterial
+												color={marker.color}
+												transparent
+												opacity={0.95}
+											/>
+										</mesh>
+									</group>
+								))
+							: null}
 					</Canvas>
 					<BriefingBubbleLayer />
 					<div
@@ -411,7 +432,8 @@ export function EcumenopolisRobotOpsPreview({
 							background: "rgba(3,7,13,0.72)",
 							color: sceneLoaded ? "#6ff3c8" : "rgba(216,246,255,0.72)",
 							fontSize: 11,
-							fontFamily: "ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace",
+							fontFamily:
+								"ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace",
 							letterSpacing: "0.16em",
 							textTransform: "uppercase",
 						}}
@@ -449,7 +471,9 @@ export function EcumenopolisRobotOpsPreview({
 						<div style={{ marginTop: 10, fontSize: 13, color: "#ffffff" }}>
 							{legend[0]}
 						</div>
-						<div style={{ marginTop: 8, display: "grid", gap: 6, fontSize: 12 }}>
+						<div
+							style={{ marginTop: 8, display: "grid", gap: 6, fontSize: 12 }}
+						>
 							{legend.slice(1).map((line) => (
 								<div key={line} style={{ color: "rgba(216,246,255,0.72)" }}>
 									{line}

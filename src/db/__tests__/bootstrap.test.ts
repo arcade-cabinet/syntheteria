@@ -10,7 +10,7 @@ describe("database bootstrap", () => {
 
 		initializeDatabaseSync(database);
 
-		expect(database.execCalls).toHaveLength(1);
+		expect(database.execCalls.length).toBeGreaterThanOrEqual(1);
 		expect(database.execCalls[0]).toContain(
 			"CREATE TABLE IF NOT EXISTS save_games",
 		);
@@ -40,6 +40,9 @@ describe("database bootstrap", () => {
 		);
 		expect(database.execCalls[0]).toContain(
 			"CREATE TABLE IF NOT EXISTS map_discovery",
+		);
+		expect(database.execCalls[0]).toContain(
+			"CREATE TABLE IF NOT EXISTS game_config",
 		);
 	});
 
@@ -82,11 +85,13 @@ describe("database bootstrap", () => {
 		const database = new FakeDatabase();
 
 		initializeDatabaseSync(database);
+		const firstInitCount = database.execCalls.length;
 		initializeDatabaseSync(database);
-
-		expect(database.execCalls).toHaveLength(1);
+		expect(database.execCalls.length).toBe(firstInitCount); // idempotent
 		resetDatabaseBootstrapForTests(database);
 		initializeDatabaseSync(database);
-		expect(database.execCalls).toHaveLength(2);
+		// After reset, bootstrap runs again; FakeDatabase retains tableColumns so
+		// addColumnIfMissing is mostly no-op, but the schema block still executes
+		expect(database.execCalls.length).toBeGreaterThan(firstInitCount);
 	});
 });

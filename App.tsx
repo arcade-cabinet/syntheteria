@@ -4,14 +4,14 @@ import {
 	Component,
 	Suspense,
 	startTransition,
-	useEffectEvent,
 	useEffect,
+	useEffectEvent,
 	useState,
 	useSyncExternalStore,
 } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import "./src/db";
-import { initializeDatabaseSync } from "./src/db/bootstrap";
+import { saveAllStateSync } from "./src/db/saveAllState";
 import {
 	createSaveGameSync,
 	getLatestSaveGameSync,
@@ -23,46 +23,44 @@ import {
 	type PersistedWorldRecord,
 	persistGeneratedWorldSync,
 } from "./src/db/worldPersistence";
-import { saveAllStateSync } from "./src/db/saveAllState";
 import { setWorldReady } from "./src/ecs/gameState";
 import { initializeNewGame } from "./src/ecs/initialization";
 import { initGameplayPRNG, setWorldSeed } from "./src/ecs/seed";
-import { clearActiveWorldSession } from "./src/world/session";
 import { TopDownCamera } from "./src/input/TopDownCamera";
 import { UnitInput } from "./src/input/UnitInput";
+import { ActionRangeRenderer } from "./src/rendering/ActionRangeRenderer";
+import { BreachZoneRenderer } from "./src/rendering/BreachZoneRenderer";
 import { BuildingRenderer } from "./src/rendering/BuildingRenderer";
-import { InstancedBuildingRenderer } from "./src/rendering/InstancedBuildingRenderer";
 import { CityInteriorRenderer } from "./src/rendering/CityInteriorRenderer";
 import { CityRenderer } from "./src/rendering/CityRenderer";
-import { HarvestProgressOverlay } from "./src/rendering/HarvestProgressOverlay";
-import { LandscapeProps } from "./src/rendering/LandscapeProps";
-import { LightningSystem } from "./src/rendering/LightningSystem";
-import { NetworkLineRenderer } from "./src/rendering/NetworkLineRenderer";
-import { SpeechBubbleRenderer } from "./src/rendering/SpeechBubbleRenderer";
-import { StructuralFloorRenderer } from "./src/rendering/StructuralFloorRenderer";
-import { StormLighting } from "./src/rendering/StormLighting";
-import { StormParticles } from "./src/rendering/StormParticles";
-import { StormSky } from "./src/rendering/StormSky";
-import { ActionRangeRenderer } from "./src/rendering/ActionRangeRenderer";
-import { MemoryFragmentRenderer } from "./src/rendering/MemoryFragmentRenderer";
-import { MovementOverlayRenderer } from "./src/rendering/MovementOverlayRenderer";
-import { PathPreviewRenderer } from "./src/rendering/PathPreviewRenderer";
-import { PostProcessing } from "./src/rendering/PostProcessing";
-import { BreachZoneRenderer } from "./src/rendering/BreachZoneRenderer";
-import { ProceduralStructureDetails } from "./src/rendering/ProceduralStructureDetails";
-import { ShadowSystem } from "./src/rendering/ShadowSystem";
-import { StormEnvironment } from "./src/rendering/StormEnvironment";
-import { TerritoryBorderRenderer } from "./src/rendering/TerritoryBorderRenderer";
-import { TerritoryFillRenderer } from "./src/rendering/TerritoryFillRenderer";
-import { UnitRenderer } from "./src/rendering/UnitRenderer";
-import { WormholeRenderer } from "./src/rendering/WormholeRenderer";
 import { CombatEffectsRenderer } from "./src/rendering/CombatEffectsRenderer";
 import { ConstructionRenderer } from "./src/rendering/ConstructionRenderer";
 import { GlowRingRenderer } from "./src/rendering/GlowRingRenderer";
 import { HackingBeamRenderer } from "./src/rendering/HackingBeamRenderer";
+import { HarvestProgressOverlay } from "./src/rendering/HarvestProgressOverlay";
 import { HarvestVisualRenderer } from "./src/rendering/HarvestVisualRenderer";
-import { TurretAttackRenderer } from "./src/rendering/TurretAttackRenderer";
+import { InstancedBuildingRenderer } from "./src/rendering/InstancedBuildingRenderer";
+import { LandscapeProps } from "./src/rendering/LandscapeProps";
+import { LightningSystem } from "./src/rendering/LightningSystem";
+import { MemoryFragmentRenderer } from "./src/rendering/MemoryFragmentRenderer";
+import { MovementOverlayRenderer } from "./src/rendering/MovementOverlayRenderer";
+import { NetworkLineRenderer } from "./src/rendering/NetworkLineRenderer";
+import { PathPreviewRenderer } from "./src/rendering/PathPreviewRenderer";
+import { PostProcessing } from "./src/rendering/PostProcessing";
+import { ProceduralStructureDetails } from "./src/rendering/ProceduralStructureDetails";
 import { ParticleRenderer } from "./src/rendering/particles/ParticleRenderer";
+import { ShadowSystem } from "./src/rendering/ShadowSystem";
+import { SpeechBubbleRenderer } from "./src/rendering/SpeechBubbleRenderer";
+import { StormEnvironment } from "./src/rendering/StormEnvironment";
+import { StormLighting } from "./src/rendering/StormLighting";
+import { StormParticles } from "./src/rendering/StormParticles";
+import { StormSky } from "./src/rendering/StormSky";
+import { StructuralFloorRenderer } from "./src/rendering/StructuralFloorRenderer";
+import { TerritoryBorderRenderer } from "./src/rendering/TerritoryBorderRenderer";
+import { TerritoryFillRenderer } from "./src/rendering/TerritoryFillRenderer";
+import { TurretAttackRenderer } from "./src/rendering/TurretAttackRenderer";
+import { UnitRenderer } from "./src/rendering/UnitRenderer";
+import { WormholeRenderer } from "./src/rendering/WormholeRenderer";
 import { GameUI } from "./src/ui/GameUI";
 import { LoadingOverlay } from "./src/ui/LoadingOverlay";
 import { TitleScreen } from "./src/ui/TitleScreen";
@@ -72,7 +70,10 @@ import {
 	getRuntimeState,
 	subscribeRuntimeState,
 } from "./src/world/runtimeState";
-import { setActiveWorldSession } from "./src/world/session";
+import {
+	clearActiveWorldSession,
+	setActiveWorldSession,
+} from "./src/world/session";
 import { toWorldSessionSnapshot } from "./src/world/snapshots";
 import "./global.css";
 
@@ -133,7 +134,7 @@ function SceneReadySignal({ onReady }: { onReady: () => void }) {
 
 	useEffect(() => {
 		notifyReady();
-	}, [notifyReady]);
+	}, []);
 
 	return null;
 }
@@ -147,10 +148,6 @@ export default function App() {
 		subscribeRuntimeState,
 		getRuntimeState,
 	);
-
-	useEffect(() => {
-		initializeDatabaseSync();
-	}, []);
 
 	const nextFrame = () =>
 		new Promise<void>((resolve) => setTimeout(resolve, 0));

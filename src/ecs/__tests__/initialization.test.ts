@@ -22,6 +22,8 @@ import { initializeNewGame } from "../initialization";
 import { Building, Identity, Unit, WorldPosition } from "../traits";
 import { buildings, units, world } from "../world";
 
+// Uses test db from jest.setup.ts (createTestDb with schema + seed)
+
 function createPersistedWorld(): PersistedWorldSnapshot {
 	return {
 		saveGame: {

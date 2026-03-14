@@ -128,7 +128,7 @@ function buildRadialContext(point: THREE.Vector3): RadialOpenContext {
 
 	if (entity) {
 		const unitComp = entity.get(Unit);
-		const buildingComp = entity.get(Building);
+		const _buildingComp = entity.get(Building);
 		const identity = entity.get(Identity);
 
 		return {

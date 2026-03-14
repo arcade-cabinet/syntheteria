@@ -3,14 +3,12 @@ title: "World Systems"
 domain: technical
 status: canonical
 last_updated: 2026-03-13
-summary: "Unified ecumenopolis spatial model, sector archetypes, chunk architecture (designed, not yet implemented), city contracts"
+summary: "Unified ecumenopolis spatial model, chunk architecture (implemented in src/world/gen/), floor harvest and pit mining, world vs consumers"
 depends_on:
   - "ARCHITECTURE.md"
 planned_work:
-  - "Chunk boundary system"
-  - "Camera-driven chunk loading/unloading"
-  - "Delta persistence per chunk"
-  - "Fog of war per chunk"
+  - "Wire initWorldGrid into bootstrap as single source of truth"
+  - "Floor harvest resource pools and pit state"
 ---
 
 # World Systems
@@ -69,11 +67,20 @@ The hidden logical contract uses a square grid for navigation, placement, valida
 
 Floor tile GLBs are optional accents. Procedural floor rendering is the baseline.
 
+## World vs Consumers
+
+The **map** (gen + DB deltas) is the single source of truth. Consumers (POIs, bases, cultists, rivals, pathfinding, harvest, construction, fog) must NOT own map state — they only query via world API (`worldGrid`, `getTile`, `getChunk`).
+
+**Design vision:**
+- One ecumenopolis world map (no city/overworld split)
+- 4X mechanics: explore, exploit, expand, exterminate
+- Bases as expand targets; POIs as Civ 6 natural wonder-style features
+- Cultists = primary scripted antagonist; rival machines = secondary
+- No zones/districts as gameplay; floor materials drive appearance AND harvest
+
 ## Chunk Architecture
 
-> **STATUS: DESIGNED, NOT YET IMPLEMENTED**
->
-> The chunk system described below is the target architecture. Current implementation uses a fixed-size generated world. Migration to chunks is a planned workstream.
+> **STATUS: IMPLEMENTED** in `src/world/gen/` (chunkGen, worldGrid, persist, game_map_tiles, map_deltas)
 
 ### Core Concept
 
@@ -107,20 +114,29 @@ This yields an infinite world with minimal storage.
 
 ### Resource System (The Exploit Pillar)
 
-Every harvestable structure/prop in the ecumenopolis contains a defined resource pool:
+Every harvestable structure/prop **and floor tile** in the ecumenopolis contains a defined resource pool:
 
 | Resource | Source | Use |
 |---|---|---|
-| Heavy Metals | Walls, columns, structural beams | Armor, chassis, defensive structures |
+| Heavy Metals | Walls, columns, structural beams, **floor tiles (metal, concrete)** | Armor, chassis, defensive structures |
 | Light Metals | Props, shelves, containers | Electronics, sensors, light components |
 | Uranics | Power infrastructure, reactors | Energy systems, power cells |
 | Plastics | Pipes, insulation, capsules | Wiring, seals, basic components |
 | Oil | Industrial machinery, engines | Lubricants, fuel cells, fabrication |
 | Microchips | Computers, terminals, control panels | AI cores, processors, upgrades |
-| Scrap | Any damaged/degraded structure | Universal low-quality material |
+| Scrap | Any damaged/degraded structure, **harvested floors** | Universal low-quality material |
 | Rare Components | Intact equipment, research gear | Advanced fabrication, Mark upgrades |
 
-Structure-to-resource mapping is defined per model family in the city catalog config.
+Structure-to-resource mapping is defined per model family in the city catalog config. **Floor materials** have their own FLOOR_* resource pools (metal_panel → ferrousScrap + scrap; concrete_slab → heavy_metals + scrap).
+
+### Floor Harvest and Pit Mining
+
+**Floor tiles are harvestable.** The Fabricator bot can strip-mine floor tiles, creating **procedurally generated pits**. This prevents resource fatigue (metals, concrete are the most abundantly consumed).
+
+- **Strip mining**: Harvest a floor tile → yields materials (heavy_metals, scrap, etc.) → tile becomes a **pit**
+- **Undermaterials**: When a floor is harvested, the tile reveals an **undermaterial** layer (sand, soil, gravel) for deep digging. Source: `/Volumes/home/assets/2DPhotorealistic` (Textures/polyhaven, TERRAIN). Seeded in `game_config.undermaterials`; run `UNDERMATERIALS_SRC=/path pnpm tsx scripts/ingest-undermaterials.ts` to discover textures.
+- **Pit state**: Harvested floor → pit with undermaterial visible. Pit tiles are impassable (or require ramp/bridge)
+- **Deep dig** (optional extension): sand → subsoil → bedrock with diminishing returns
 
 ### Building System
 

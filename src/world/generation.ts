@@ -1,19 +1,37 @@
-import { type BreachZone, generateBreachZones } from "../systems/breachZones";
-import { createGeneratedCitySeed } from "./cityLifecycle";
-import {
-	getClimateProfileSpec,
-	getSectorScaleSpec,
-	type NewGameConfig,
-} from "./config";
-import type {
-	CityGenerationStatus,
-	CityInstanceState,
-	WorldPoiType,
-} from "./contracts";
-import {
-	type GeneratedSectorStructure,
-	generateSectorStructurePlan,
-} from "./sectorStructurePlan";
+/**
+ * World terrain generation — converts chunk-based terrain into sector cells.
+ *
+ * This module ONLY handles terrain. POIs, factions, and player state
+ * are separate systems that query the generated terrain.
+ */
+
+import { getDatabaseSync } from "../db/runtime";
+import type { NewGameConfig } from "./config";
+import { SECTOR_SCALE_SPECS } from "./config";
+import { generateChunk } from "./gen/chunkGen";
+import { CHUNK_SIZE, type MapTile } from "./gen/types";
+import { generateBreachZones, type BreachZone } from "../systems/breachZones";
+import { placeInitialPOIs, type GeneratedSectorPointOfInterest } from "./poiPlacement";
+import { seedCityInstances, type GeneratedCityInstanceSeed } from "./citySeeding";
+
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+export type { GeneratedSectorPointOfInterest } from "./poiPlacement";
+export type { GeneratedCityInstanceSeed } from "./citySeeding";
+
+export interface GeneratedEcumenopolisData {
+	ecumenopolis: {
+		width: number;
+		height: number;
+		spawnSectorId: string;
+		spawnAnchorKey: string;
+	};
+	sectorCells: GeneratedSectorCell[];
+	sectorStructures: GeneratedSectorStructure[];
+	pointsOfInterest: GeneratedSectorPointOfInterest[];
+	cityInstances: GeneratedCityInstanceSeed[];
+	breachZones: BreachZone[];
+}
 
 export interface GeneratedSectorCell {
 	q: number;
@@ -28,748 +46,152 @@ export interface GeneratedSectorCell {
 	anchorKey: string;
 }
 
-export interface GeneratedEcumenopolis {
-	width: number;
-	height: number;
-	spawnSectorId: string;
-	spawnAnchorKey: string;
-}
-
-export interface GeneratedSectorPointOfInterest {
-	type: WorldPoiType;
-	name: string;
+export interface GeneratedSectorStructure {
+	districtStructureId: string;
+	anchorKey: string;
 	q: number;
 	r: number;
-	discovered: boolean;
+	modelId: string;
+	placementLayer: string;
+	edge: string | null;
+	rotationQuarterTurns: number;
+	offsetX: number;
+	offsetY: number;
+	offsetZ: number;
+	targetSpan: number;
+	sectorArchetype: string;
+	source: "seeded_district" | "boundary" | "landmark" | "constructed";
+	controllerFaction: string | null;
 }
 
-export interface GeneratedCityInstanceSeed {
-	poiType: WorldPoiType;
-	name: string;
-	worldQ: number;
-	worldR: number;
-	layoutSeed: number;
-	state: CityInstanceState;
-	generationStatus: CityGenerationStatus;
+// ─── Zone Classification ────────────────────────────────────────────────────
+
+function classifyZone(tile: MapTile): string {
+	if (!tile.passable && tile.modelLayer === "structure") return "fabrication";
+	if (tile.modelLayer === "resource") return "storage";
+	if (tile.modelLayer === "prop") return "habitation";
+	if (tile.isBridge || tile.isRamp) return "transit";
+	return "corridor_transit";
 }
 
-export interface GeneratedEcumenopolisData {
-	ecumenopolis: GeneratedEcumenopolis;
-	sectorCells: GeneratedSectorCell[];
-	pointsOfInterest: GeneratedSectorPointOfInterest[];
-	cityInstances: GeneratedCityInstanceSeed[];
-	sectorStructures: GeneratedSectorStructure[];
-	breachZones: BreachZone[];
+function classifyArchetype(tile: MapTile): string {
+	if (tile.modelLayer === "resource") return "resource_zone";
+	if (tile.modelLayer === "structure" || tile.modelLayer === "support") return "industrial";
+	return "service_plate";
 }
 
-type StructuralZoneDefinition = Pick<
-	GeneratedSectorCell,
-	"structuralZone" | "floorPresetId" | "passable"
->;
+// ─── Terrain Generation ─────────────────────────────────────────────────────
 
-const NEIGHBOR_OFFSETS = [
-	[1, 0],
-	[0, -1],
-	[-1, 0],
-	[0, 1],
-	[1, 1],
-	[1, -1],
-	[-1, 1],
-	[-1, -1],
-] as const;
+/**
+ * Generate terrain cells from chunks. ONLY terrain — no POIs, no factions.
+ */
+function generateTerrain(
+	worldSeed: number,
+	gridWidth: number,
+	gridHeight: number,
+): { cells: GeneratedSectorCell[]; structures: GeneratedSectorStructure[] } {
+	const chunksX = Math.ceil(gridWidth / CHUNK_SIZE);
+	const chunksZ = Math.ceil(gridHeight / CHUNK_SIZE);
+	const cells: GeneratedSectorCell[] = [];
+	const structures: GeneratedSectorStructure[] = [];
+	let structId = 0;
 
-function createPurposeSeed(worldSeed: number, purpose: string) {
-	let hash = worldSeed >>> 0;
-	for (let index = 0; index < purpose.length; index++) {
-		hash = (Math.imul(hash, 31) + purpose.charCodeAt(index)) >>> 0;
-	}
-	return hash >>> 0;
-}
+	for (let cz = 0; cz < chunksZ; cz++) {
+		for (let cx = 0; cx < chunksX; cx++) {
+			const chunk = generateChunk(worldSeed, cx, cz, getDatabaseSync());
+			for (const tile of chunk.tiles) {
+				if (tile.x < 0 || tile.z < 0 || tile.x >= gridWidth || tile.z >= gridHeight) continue;
 
-function makePRNG(seed: number) {
-	let state = seed >>> 0;
-	return () => {
-		state |= 0;
-		state = (state + 0x6d2b79f5) | 0;
-		let t = Math.imul(state ^ (state >>> 15), 1 | state);
-		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-		return ((t ^ (t >>> 14)) >>> 0) / 0xffffffff;
-	};
-}
+				cells.push({
+					q: tile.x,
+					r: tile.z,
+					structuralZone: classifyZone(tile),
+					floorPresetId: tile.floorMaterial,
+					discoveryState: 0,
+					passable: tile.passable,
+					sectorArchetype: classifyArchetype(tile),
+					stormExposure: "shielded",
+					impassableClass: tile.passable ? "none" : "structural_void",
+					anchorKey: `${tile.x},${tile.z}`,
+				});
 
-function tileKey(q: number, r: number) {
-	return `${q},${r}`;
-}
-
-function hashCoordinates(q: number, r: number) {
-	const qHash = Math.imul(q ^ 0x45d9f3b, 0x45d9f3b);
-	const rHash = Math.imul(r ^ 0x119de1f3, 0x119de1f3);
-	return (qHash ^ rHash) >>> 0;
-}
-
-function centeredCoordinate(index: number, length: number) {
-	return index - Math.floor(length / 2);
-}
-
-function normalizeDistance(current: number, target: number, span: number) {
-	return Math.abs(current - target) / Math.max(1, span);
-}
-
-function euclideanDistance(
-	first: { q: number; r: number },
-	second: { q: number; r: number },
-) {
-	const dq = first.q - second.q;
-	const dr = first.r - second.r;
-	return Math.sqrt(dq * dq + dr * dr);
-}
-
-function classifySectorSurface(
-	elevation: number,
-	moisture: number,
-	climate: ReturnType<typeof getClimateProfileSpec>,
-) {
-	if (elevation < climate.waterLevel) {
-		return {
-			structuralZone: "breach",
-			floorPresetId: "breach_exposed",
-			passable: false,
-		};
-	}
-	if (elevation < climate.sandLevel) {
-		return {
-			structuralZone: "transit",
-			floorPresetId: "corridor_transit",
-			passable: true,
-		};
-	}
-	if (elevation > climate.mountainLevel) {
-		return {
-			structuralZone: "power",
-			floorPresetId: "power",
-			passable: false,
-		};
-	}
-	if (moisture > climate.grassMoistureLevel) {
-		return {
-			structuralZone: "command",
-			floorPresetId: "command_core",
-			passable: true,
-		};
-	}
-	return {
-		structuralZone: "fabrication",
-		floorPresetId: "fabrication",
-		passable: true,
-	};
-}
-
-function getStructuralMetadata(surface: StructuralZoneDefinition) {
-	switch (surface.structuralZone) {
-		case "breach":
-			return {
-				sectorArchetype: "breach_zone",
-				stormExposure: "exposed" as const,
-				impassableClass: "breach" as const,
-			};
-		case "power":
-			return {
-				sectorArchetype: "power_sink",
-				stormExposure: "stressed" as const,
-				impassableClass: "sealed_power" as const,
-			};
-		case "transit":
-			return {
-				sectorArchetype: "transit_corridor",
-				stormExposure: "shielded" as const,
-				impassableClass: "none" as const,
-			};
-		case "command":
-			return {
-				sectorArchetype: "command_plate",
-				stormExposure: "shielded" as const,
-				impassableClass: "none" as const,
-			};
-		case "fabrication":
-			return {
-				sectorArchetype: "fabrication_plate",
-				stormExposure: "stressed" as const,
-				impassableClass: "none" as const,
-			};
-		case "storage":
-			return {
-				sectorArchetype: "storage_plate",
-				stormExposure: "shielded" as const,
-				impassableClass: "none" as const,
-			};
-		case "habitation":
-			return {
-				sectorArchetype: "habitation_plate",
-				stormExposure: "shielded" as const,
-				impassableClass: "none" as const,
-			};
-		default:
-			return {
-				sectorArchetype: "service_plate",
-				stormExposure: "stressed" as const,
-				impassableClass: surface.passable
-					? ("none" as const)
-					: ("structural_void" as const),
-			};
-	}
-}
-
-function scoreZone(tile: GeneratedSectorCell, preferred: readonly string[]) {
-	const exactIndex = preferred.indexOf(tile.structuralZone);
-	if (exactIndex === -1) {
-		return -2;
-	}
-	return preferred.length - exactIndex;
-}
-
-function countNeighborZones(
-	tile: GeneratedSectorCell,
-	tilesByKey: Map<string, GeneratedSectorCell>,
-) {
-	const counts = new Map<string, number>();
-	for (const [dq, dr] of NEIGHBOR_OFFSETS) {
-		const neighbor = tilesByKey.get(tileKey(tile.q + dq, tile.r + dr));
-		if (!neighbor) {
-			continue;
-		}
-		counts.set(
-			neighbor.structuralZone,
-			(counts.get(neighbor.structuralZone) ?? 0) + 1,
-		);
-	}
-	return counts;
-}
-
-function findBestPoiTile(
-	sectorCells: GeneratedSectorCell[],
-	tilesByKey: Map<string, GeneratedSectorCell>,
-	usedKeys: Set<string>,
-	target: { q: number; r: number },
-	preferredZones: readonly string[],
-	requiredNeighborZone?: string,
-	maxDistanceFromTarget?: number,
-) {
-	let bestTile: GeneratedSectorCell | null = null;
-	let bestScore = Number.NEGATIVE_INFINITY;
-
-	for (const tile of sectorCells) {
-		if (usedKeys.has(tileKey(tile.q, tile.r))) {
-			continue;
-		}
-
-		const zoneScore = scoreZone(tile, preferredZones);
-		if (zoneScore < 0) {
-			continue;
-		}
-		if (
-			typeof maxDistanceFromTarget === "number" &&
-			euclideanDistance(tile, target) > maxDistanceFromTarget
-		) {
-			continue;
-		}
-
-		const neighborCounts = countNeighborZones(tile, tilesByKey);
-		if (
-			requiredNeighborZone &&
-			(neighborCounts.get(requiredNeighborZone) ?? 0) === 0
-		) {
-			continue;
-		}
-
-		const targetDistance =
-			normalizeDistance(tile.q, target.q, sectorCells.length) +
-			normalizeDistance(tile.r, target.r, sectorCells.length);
-		const adjacencyBonus =
-			requiredNeighborZone && neighborCounts.get(requiredNeighborZone)
-				? 1.5
-				: 0;
-		const passableBonus = tile.passable ? 0.6 : -1.2;
-		const score =
-			zoneScore * 4 + adjacencyBonus + passableBonus - targetDistance * 10;
-
-		if (score > bestScore) {
-			bestScore = score;
-			bestTile = tile;
-		}
-	}
-
-	if (!bestTile) {
-		throw new Error(
-			"Failed to place ecumenopolis POI with current sector rules.",
-		);
-	}
-
-	usedKeys.add(tileKey(bestTile.q, bestTile.r));
-	return bestTile;
-}
-
-function offsetTarget(
-	base: { q: number; r: number },
-	offset: { q: number; r: number },
-) {
-	return {
-		q: base.q + offset.q,
-		r: base.r + offset.r,
-	};
-}
-
-function applyStructuralSurface(
-	cell: GeneratedSectorCell,
-	surface: StructuralZoneDefinition,
-	discoveryState?: number,
-) {
-	cell.structuralZone = surface.structuralZone;
-	cell.floorPresetId = surface.floorPresetId;
-	cell.passable = surface.passable;
-	const metadata = getStructuralMetadata(surface);
-	cell.sectorArchetype = metadata.sectorArchetype;
-	cell.stormExposure = metadata.stormExposure;
-	cell.impassableClass = metadata.impassableClass;
-	if (typeof discoveryState === "number") {
-		cell.discoveryState = Math.max(cell.discoveryState, discoveryState);
-	}
-}
-
-function getDistrictSurface(
-	poiType: WorldPoiType,
-	distance: number,
-	seed: number,
-): StructuralZoneDefinition {
-	const variant = Math.floor((Math.abs(Math.sin(seed * 0.13)) * 1000) % 3);
-
-	switch (poiType) {
-		case "home_base":
-			if (distance <= 1.1) {
-				return {
-					structuralZone: "command",
-					floorPresetId: "command_core",
-					passable: true,
-				};
-			}
-			if (distance <= 2.2) {
-				return variant === 0
-					? {
-							structuralZone: "fabrication",
-							floorPresetId: "fabrication",
-							passable: true,
-						}
-					: {
-							structuralZone: "transit",
-							floorPresetId: "corridor_transit",
-							passable: true,
-						};
-			}
-			return variant === 0
-				? {
-						structuralZone: "storage",
-						floorPresetId: "storage",
-						passable: true,
-					}
-				: {
-						structuralZone: "habitation",
-						floorPresetId: "habitation",
-						passable: true,
-					};
-		case "coast_mines":
-			if (distance <= 1.1) {
-				return {
-					structuralZone: "fabrication",
-					floorPresetId: "fabrication",
-					passable: true,
-				};
-			}
-			if (distance <= 2.2) {
-				return variant === 0
-					? {
-							structuralZone: "storage",
-							floorPresetId: "storage",
-							passable: true,
-						}
-					: {
-							structuralZone: "transit",
-							floorPresetId: "corridor_transit",
-							passable: true,
-						};
-			}
-			return {
-				structuralZone: "power",
-				floorPresetId: "power",
-				passable: false,
-			};
-		case "science_campus":
-			if (distance <= 1.1) {
-				return {
-					structuralZone: "command",
-					floorPresetId: "command_core",
-					passable: true,
-				};
-			}
-			if (distance <= 2.2) {
-				return variant === 0
-					? {
-							structuralZone: "habitation",
-							floorPresetId: "habitation",
-							passable: true,
-						}
-					: {
-							structuralZone: "transit",
-							floorPresetId: "corridor_transit",
-							passable: true,
-						};
-			}
-			return {
-				structuralZone: "storage",
-				floorPresetId: "storage",
-				passable: true,
-			};
-		case "northern_cult_site":
-			if (distance <= 1.1) {
-				return {
-					structuralZone: "power",
-					floorPresetId: "power",
-					passable: false,
-				};
-			}
-			if (distance <= 2.2) {
-				return variant === 0
-					? {
-							structuralZone: "breach",
-							floorPresetId: "breach_exposed",
-							passable: false,
-						}
-					: {
-							structuralZone: "transit",
-							floorPresetId: "corridor_transit",
-							passable: true,
-						};
-			}
-			return {
-				structuralZone: "fabrication",
-				floorPresetId: "fabrication",
-				passable: true,
-			};
-		case "deep_sea_gateway":
-			if (distance <= 1.1) {
-				return {
-					structuralZone: "breach",
-					floorPresetId: "breach_exposed",
-					passable: false,
-				};
-			}
-			if (distance <= 2.2) {
-				return variant === 0
-					? {
-							structuralZone: "power",
-							floorPresetId: "power",
-							passable: false,
-						}
-					: {
-							structuralZone: "transit",
-							floorPresetId: "corridor_transit",
-							passable: true,
-						};
-			}
-			return {
-				structuralZone: "command",
-				floorPresetId: "command_core",
-				passable: true,
-			};
-	}
-}
-
-function paintDistrictArchetypes(
-	sectorCells: GeneratedSectorCell[],
-	pointsOfInterest: GeneratedSectorPointOfInterest[],
-) {
-	for (const cell of sectorCells) {
-		let nearestPoi: GeneratedSectorPointOfInterest | null = null;
-		let nearestDistance = Number.POSITIVE_INFINITY;
-
-		for (const poi of pointsOfInterest) {
-			const distance = euclideanDistance(cell, poi);
-			if (distance < nearestDistance) {
-				nearestDistance = distance;
-				nearestPoi = poi;
-			}
-		}
-
-		if (!nearestPoi || nearestDistance > 3.4) {
-			continue;
-		}
-
-		const seed = hashCoordinates(cell.q + nearestPoi.q, cell.r + nearestPoi.r);
-		applyStructuralSurface(
-			cell,
-			getDistrictSurface(nearestPoi.type, nearestDistance, seed),
-			nearestPoi.type === "home_base"
-				? nearestDistance <= 2.3
-					? 2
-					: 1
-				: nearestDistance <= 1.4 && nearestPoi.discovered
-					? 1
-					: undefined,
-		);
-	}
-}
-
-function snapAnchorCoordinate(value: number, stride: number) {
-	return Math.round(value / stride) * stride;
-}
-
-function assignDistrictAnchors(
-	sectorCells: GeneratedSectorCell[],
-	pointsOfInterest: GeneratedSectorPointOfInterest[],
-) {
-	const anchorStride = 3;
-
-	for (const cell of sectorCells) {
-		let nearestPoi: GeneratedSectorPointOfInterest | null = null;
-		let nearestDistance = Number.POSITIVE_INFINITY;
-
-		for (const poi of pointsOfInterest) {
-			const distance = euclideanDistance(cell, poi);
-			if (distance < nearestDistance) {
-				nearestDistance = distance;
-				nearestPoi = poi;
-			}
-		}
-
-		if (nearestPoi && nearestDistance <= 4.2) {
-			const localQ = snapAnchorCoordinate(cell.q - nearestPoi.q, anchorStride);
-			const localR = snapAnchorCoordinate(cell.r - nearestPoi.r, anchorStride);
-			cell.anchorKey = tileKey(nearestPoi.q + localQ, nearestPoi.r + localR);
-			continue;
-		}
-
-		cell.anchorKey = tileKey(
-			snapAnchorCoordinate(cell.q, anchorStride),
-			snapAnchorCoordinate(cell.r, anchorStride),
-		);
-	}
-}
-
-export function generateWorldData(
-	config: NewGameConfig,
-): GeneratedEcumenopolisData {
-	const size = getSectorScaleSpec(config.sectorScale);
-	const climate = getClimateProfileSpec(config.climateProfile);
-	const baseRng = makePRNG(createPurposeSeed(config.worldSeed, "ecumenopolis"));
-	const width = size.width;
-	const height = size.height;
-	const coordinates: { q: number; r: number }[] = [];
-
-	for (let row = 0; row < height; row++) {
-		for (let column = 0; column < width; column++) {
-			coordinates.push({
-				q: centeredCoordinate(column, width),
-				r: centeredCoordinate(row, height),
-			});
-		}
-	}
-
-	const noise = new Map<string, { elevation: number; moisture: number }>();
-	for (const { q, r } of coordinates) {
-		noise.set(tileKey(q, r), {
-			elevation: Math.min(1, Math.max(0, baseRng() + climate.elevationBias)),
-			moisture: Math.min(1, Math.max(0, baseRng() + climate.moistureBias)),
-		});
-	}
-
-	for (let step = 0; step < 3; step++) {
-		const nextNoise = new Map<
-			string,
-			{ elevation: number; moisture: number }
-		>();
-		for (const { q, r } of coordinates) {
-			const current = noise.get(tileKey(q, r));
-			if (!current) {
-				continue;
-			}
-
-			let sumElevation = current.elevation;
-			let sumMoisture = current.moisture;
-			let count = 1;
-
-			for (const [dq, dr] of NEIGHBOR_OFFSETS) {
-				const neighbor = noise.get(tileKey(q + dq, r + dr));
-				if (!neighbor) {
-					continue;
+				if (tile.modelId && tile.modelLayer) {
+					structures.push({
+						districtStructureId: `struct_${structId++}`,
+						anchorKey: `${tile.x},${tile.z}`,
+						q: tile.x,
+						r: tile.z,
+						modelId: tile.modelId,
+						placementLayer: tile.modelLayer,
+						edge: null,
+						rotationQuarterTurns: tile.rotation,
+						offsetX: 0, offsetY: 0, offsetZ: 0,
+						targetSpan: 1,
+						sectorArchetype: classifyArchetype(tile),
+						source: "seeded_district",
+						controllerFaction: null,
+					});
 				}
-				sumElevation += neighbor.elevation;
-				sumMoisture += neighbor.moisture;
-				count++;
 			}
-
-			nextNoise.set(tileKey(q, r), {
-				elevation: sumElevation / count,
-				moisture: sumMoisture / count,
-			});
-		}
-
-		for (const [key, value] of nextNoise) {
-			noise.set(key, value);
 		}
 	}
 
-	const sectorCells = coordinates.map<GeneratedSectorCell>(({ q, r }) => {
-		const sample = noise.get(tileKey(q, r));
-		if (!sample) {
-			throw new Error(`Missing noise sample for (${q}, ${r}).`);
-		}
+	return { cells, structures };
+}
 
-		const semantic = classifySectorSurface(
-			sample.elevation,
-			sample.moisture,
-			climate,
-		);
-		return {
-			q,
-			r,
-			structuralZone: semantic.structuralZone,
-			floorPresetId: semantic.floorPresetId,
-			discoveryState: 0,
-			passable: semantic.passable,
-			...getStructuralMetadata(semantic),
-			anchorKey: tileKey(q, r),
-		};
-	});
+// ─── Orchestrator ───────────────────────────────────────────────────────────
 
-	const tilesByKey = new Map<string, GeneratedSectorCell>();
-	for (const tile of sectorCells) {
-		tilesByKey.set(tileKey(tile.q, tile.r), tile);
+/**
+ * Generate world data. Orchestrates separate systems:
+ * 1. Terrain generation (chunks → sector cells)
+ * 2. POI placement (finds usable space on terrain, reads from config)
+ * 3. City seeding (creates city instances from POIs)
+ * 4. Discovery (reveals area around spawn)
+ * 5. Breach zones (structural fractures for hostile spawns)
+ */
+export function generateWorldData(config: NewGameConfig): GeneratedEcumenopolisData {
+	const scale = SECTOR_SCALE_SPECS[config.sectorScale];
+	const { width, height } = scale;
+
+	// 1. Terrain
+	const terrain = generateTerrain(config.worldSeed, width, height);
+
+	// 2. POIs — separate system, queries terrain for usable space
+	const pois = placeInitialPOIs(terrain.cells, width, height, config.worldSeed);
+
+	// 3. Cities — seeded from POIs
+	const cities = seedCityInstances(pois, config.worldSeed);
+
+	// 4. Discovery around spawn
+	const spawnQ = Math.floor(width / 2);
+	const spawnR = Math.floor(height / 2);
+	for (const cell of terrain.cells) {
+		const dist = Math.max(Math.abs(cell.q - spawnQ), Math.abs(cell.r - spawnR));
+		if (dist <= 5) cell.discoveryState = 2;
+		else if (dist <= 7) cell.discoveryState = 1;
 	}
 
-	const usedPoiKeys = new Set<string>();
-	const centerTarget = { q: 0, r: 0 };
-	const homeBaseTile = findBestPoiTile(
-		sectorCells,
-		tilesByKey,
-		usedPoiKeys,
-		centerTarget,
-		["command", "fabrication", "transit"],
-	);
-
-	const coastMinesTile = findBestPoiTile(
-		sectorCells,
-		tilesByKey,
-		usedPoiKeys,
-		offsetTarget(homeBaseTile, { q: 3, r: -2 }),
-		["transit", "fabrication", "command"],
-		undefined,
-		5,
-	);
-
-	const scienceCampusTile = findBestPoiTile(
-		sectorCells,
-		tilesByKey,
-		usedPoiKeys,
-		offsetTarget(homeBaseTile, { q: -4, r: 2 }),
-		["command", "fabrication"],
-		undefined,
-		5,
-	);
-
-	const northernCultTile = findBestPoiTile(
-		sectorCells,
-		tilesByKey,
-		usedPoiKeys,
-		{ q: 0, r: -Math.floor(height / 3) },
-		["power", "fabrication", "command"],
-	);
-
-	const deepSeaGatewayTile = findBestPoiTile(
-		sectorCells,
-		tilesByKey,
-		usedPoiKeys,
-		{ q: Math.floor(width / 3), r: Math.floor(height / 3) },
-		["breach", "transit", "power"],
-	);
-
-	const pointsOfInterest: GeneratedSectorPointOfInterest[] = [
-		{
-			type: "home_base",
-			name: "Command Arcology",
-			q: homeBaseTile.q,
-			r: homeBaseTile.r,
-			discovered: true,
-		},
-		{
-			type: "coast_mines",
-			name: "Abyssal Extraction Ward",
-			q: coastMinesTile.q,
-			r: coastMinesTile.r,
-			discovered: false,
-		},
-		{
-			type: "science_campus",
-			name: "Archive Campus",
-			q: scienceCampusTile.q,
-			r: scienceCampusTile.r,
-			discovered: false,
-		},
-		{
-			type: "northern_cult_site",
-			name: "Cult Wards",
-			q: northernCultTile.q,
-			r: northernCultTile.r,
-			discovered: false,
-		},
-		{
-			type: "deep_sea_gateway",
-			name: "Gateway Spine",
-			q: deepSeaGatewayTile.q,
-			r: deepSeaGatewayTile.r,
-			discovered: false,
-		},
-	];
-
-	paintDistrictArchetypes(sectorCells, pointsOfInterest);
-	assignDistrictAnchors(sectorCells, pointsOfInterest);
-
-	const cityInstances: GeneratedCityInstanceSeed[] = pointsOfInterest.map(
-		(poi) =>
-			createGeneratedCitySeed(
-				poi.type,
-				poi.name,
-				poi.q,
-				poi.r,
-				createPurposeSeed(
-					config.worldSeed,
-					`${poi.type}:${hashCoordinates(poi.q, poi.r)}`,
-				),
-			),
-	);
-
-	const sectorStructures = generateSectorStructurePlan({
-		worldSeed: config.worldSeed,
-		sectorCells,
-		pointsOfInterest,
-	});
-
-	// Build the partial result so breach zone generation can reference it
-	const partialResult: GeneratedEcumenopolisData = {
+	// 5. Breach zones — separate system, queries terrain + POIs for fracture points
+	const partialWorld = {
+		sectorCells: terrain.cells,
+		sectorStructures: terrain.structures,
+		pointsOfInterest: pois,
+		cityInstances: cities,
+		breachZones: [] as BreachZone[],
 		ecumenopolis: {
-			width,
-			height,
-			spawnSectorId: "command_arcology",
-			spawnAnchorKey: tileKey(homeBaseTile.q, homeBaseTile.r),
+			width, height,
+			spawnSectorId: `${spawnQ},${spawnR}`,
+			spawnAnchorKey: `${spawnQ},${spawnR}`,
 		},
-		sectorCells,
-		pointsOfInterest,
-		cityInstances,
-		sectorStructures,
-		breachZones: [],
 	};
-
-	const breachZones = generateBreachZones(partialResult);
+	const breachZones = generateBreachZones(partialWorld);
 
 	return {
-		...partialResult,
+		ecumenopolis: partialWorld.ecumenopolis,
+		sectorCells: terrain.cells,
+		sectorStructures: terrain.structures,
+		pointsOfInterest: pois,
+		cityInstances: cities,
 		breachZones,
 	};
 }

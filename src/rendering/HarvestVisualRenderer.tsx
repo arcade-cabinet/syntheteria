@@ -40,33 +40,44 @@ export function HarvestVisualRenderer() {
 				// Harvest completed — emit completion burst
 				pushEffect({
 					type: "harvest_complete",
-					x: prev.targetX,
+					x: prev.targetX ?? 0,
 					y: 0,
-					z: prev.targetZ,
+					z: prev.targetZ ?? 0,
 					intensity: 1.0,
 				});
 				knownHarvests.delete(structureId);
 			}
 		}
 
-		// Emit dissolve particles for active harvests
+		// Emit dissolve particles for active harvests (key by structureId or synthetic id for floor)
 		if (frameCountRef.current % PARTICLE_EMIT_INTERVAL === 0) {
 			for (const harvest of harvests) {
-				knownHarvests.set(harvest.structureId, { ...harvest });
+				const key =
+					harvest.structureId ??
+					harvest.targetX * 31 +
+						harvest.targetZ * 17 +
+						(harvest.level ?? 0) * 7;
+				knownHarvests.set(key, { ...harvest });
 
+				const x = harvest.targetX ?? 0;
+				const z = harvest.targetZ ?? 0;
 				pushEffect({
 					type: "harvest_tick",
-					x: harvest.targetX,
+					x,
 					y: 0,
-					z: harvest.targetZ,
-					intensity: 1 - harvest.ticksRemaining / harvest.totalTicks,
+					z,
+					intensity:
+						1 - (harvest.ticksRemaining ?? 0) / (harvest.totalTicks ?? 1),
 				});
 			}
 		}
 
 		// Update known harvests
 		for (const harvest of harvests) {
-			knownHarvests.set(harvest.structureId, { ...harvest });
+			const key =
+				harvest.structureId ??
+				harvest.targetX * 31 + harvest.targetZ * 17 + (harvest.level ?? 0) * 7;
+			knownHarvests.set(key, { ...harvest });
 		}
 	});
 

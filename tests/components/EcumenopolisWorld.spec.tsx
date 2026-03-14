@@ -76,10 +76,7 @@ test.describe("ecumenopolis world scene", () => {
 		await expect(component).toHaveScreenshot();
 	});
 
-	test("renders a hostile cult incursion cluster", async ({
-		mount,
-		page,
-	}) => {
+	test("renders a hostile cult incursion cluster", async ({ mount, page }) => {
 		const component = await mount(
 			<EcumenopolisWorldPreview view="cult-cluster" />,
 		);

@@ -45,10 +45,8 @@ export function CityModelMesh({
 }) {
 	const gltf = useGLTF(resolveAssetUri(model.sourceAsset));
 	const scene = Array.isArray(gltf) ? gltf[0]?.scene : gltf.scene;
-	if (!scene) {
-		return null;
-	}
 	const normalized = useMemo<THREE.Group | null>(() => {
+		if (!scene) return null;
 		const box = new THREE.Box3().setFromObject(scene);
 		const center = new THREE.Vector3();
 		box.getCenter(center);
@@ -77,7 +75,7 @@ export function CityModelMesh({
 			}
 		});
 		return clone;
-	}, [scene]);
+	}, [scene, model.family]);
 	if (!normalized) {
 		return null;
 	}

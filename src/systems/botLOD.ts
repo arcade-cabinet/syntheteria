@@ -140,7 +140,7 @@ function computeDistanceLOD(
 		previousLOD === "full" || previousLOD === "simplified"
 			? threshold + HYSTERESIS_SQ
 			: threshold;
-	const goingCloser = (threshold: number) =>
+	const _goingCloser = (threshold: number) =>
 		previousLOD === "hidden" || previousLOD === "icon"
 			? threshold - HYSTERESIS_SQ
 			: threshold;

@@ -1,19 +1,24 @@
 import { useEffect, useState } from "react";
 import { createBotUnitState } from "../../src/bots";
 import { resetGameState } from "../../src/ecs/gameState";
-import { Identity, MapFragment, Unit, WorldPosition } from "../../src/ecs/traits";
+import {
+	Identity,
+	MapFragment,
+	Unit,
+	WorldPosition,
+} from "../../src/ecs/traits";
 import { world } from "../../src/ecs/world";
 import { BriefingBubbleLayer } from "../../src/ui/BriefingBubbleLayer";
-import {
-	clearActiveWorldSession,
-	setActiveWorldSession,
-	type ActiveWorldSession,
-} from "../../src/world/session";
 import {
 	resetRuntimeState,
 	setNearbyPoi,
 	setRuntimeScene,
 } from "../../src/world/runtimeState";
+import {
+	type ActiveWorldSession,
+	clearActiveWorldSession,
+	setActiveWorldSession,
+} from "../../src/world/session";
 
 const baseSession: ActiveWorldSession = {
 	saveGame: {
@@ -135,7 +140,14 @@ export function BriefingBubblePreview() {
 	}, []);
 
 	return (
-		<div style={{ width: 1400, height: 900, position: "relative", background: "#02050a" }}>
+		<div
+			style={{
+				width: 1400,
+				height: 900,
+				position: "relative",
+				background: "#02050a",
+			}}
+		>
 			{ready ? <BriefingBubbleLayer /> : null}
 		</div>
 	);

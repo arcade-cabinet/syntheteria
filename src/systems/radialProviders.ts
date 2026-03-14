@@ -17,6 +17,7 @@ import {
 import { executeDistrictOperation } from "../world/districtOperations";
 import { foundCitySite, surveyCitySite } from "../world/poiActions";
 import { getRuntimeState, setCitySiteModalOpen } from "../world/runtimeState";
+import { getTile } from "../world/gen/worldGrid";
 import { gridToWorld } from "../world/sectorCoordinates";
 import { getActiveWorldSession } from "../world/session";
 import {
@@ -33,7 +34,7 @@ import {
 	type XPActionType,
 } from "./experience";
 import { RECIPES, startFabrication } from "./fabrication";
-import { isStructureConsumed, startHarvest } from "./harvestSystem";
+import { isFloorTileConsumed, isStructureConsumed, startFloorHarvest, startHarvest } from "./harvestSystem";
 import {
 	BOT_FABRICATION_RECIPES,
 	canMotorPoolUpgradeMark,
@@ -49,7 +50,7 @@ import {
 	registerRadialProvider,
 } from "./radialMenu";
 import { startRepair } from "./repair";
-import { getResourcePoolForModel, isHarvestable } from "./resourcePools";
+import { getResourcePoolForFloorMaterial, getResourcePoolForModel, isFloorHarvestable, isHarvestable } from "./resourcePools";
 import { getResources, spendResource } from "./resources";
 import { logTurnEvent } from "./turnEventLog";
 import {
@@ -840,11 +841,52 @@ registerRadialProvider({
 			? hasActionPoints(ctx.targetEntityId)
 			: false;
 
+		const actions: RadialAction[] = [];
+
+		// Floor harvest: if target sector has a harvestable floor tile
+		if (ctx.targetSector && ctx.targetEntityId) {
+			const tile = getTile(ctx.targetSector.q, ctx.targetSector.r, 0);
+			if (
+				tile &&
+				tile.passable &&
+				!tile.modelId &&
+				isFloorHarvestable(tile.floorMaterial) &&
+				!isFloorTileConsumed(ctx.targetSector.q, ctx.targetSector.r, 0)
+			) {
+				const worldPos = gridToWorld(ctx.targetSector.q, ctx.targetSector.r);
+				const dx = worldPos.x - entityPos.x;
+				const dz = worldPos.z - entityPos.z;
+				const dist = Math.sqrt(dx * dx + dz * dz);
+				if (dist <= HARVEST_SCAN_RANGE) {
+					const pool = getResourcePoolForFloorMaterial(tile.floorMaterial);
+					actions.push({
+						id: "harvest_floor",
+						label: pool.label,
+						icon: "pickaxe",
+						tone: "power",
+						enabled: unitHasAP,
+						disabledReason: unitHasAP ? undefined : "No AP remaining",
+						onExecute: () => {
+							if (ctx.targetEntityId) {
+								spendActionPoint(ctx.targetEntityId, 1);
+								awardXPToActor(ctx.targetEntityId, "harvest");
+								startFloorHarvest(
+									ctx.targetEntityId,
+									ctx.targetSector!.q,
+									ctx.targetSector!.r,
+									0,
+									tile.floorMaterial,
+								);
+							}
+						},
+					});
+				}
+			}
+		}
+
 		// Scan nearby structures within harvest range
 		const session = getActiveWorldSession();
-		if (!session) return [];
-
-		const actions = [];
+		if (session) {
 		for (const structure of session.sectorStructures) {
 			if (isStructureConsumed(structure.id)) continue;
 
@@ -861,7 +903,7 @@ registerRadialProvider({
 
 			// Get resource pool for yield preview
 			const pool = getResourcePoolForModel(family, structure.model_id);
-			const yieldPreview = pool.yields
+			const _yieldPreview = pool.yields
 				.map((y) => `${y.min}-${y.max} ${y.resource.replace(/_/g, " ")}`)
 				.join(", ");
 
@@ -890,6 +932,7 @@ registerRadialProvider({
 
 			// Limit to 6 nearby targets to keep the radial menu readable
 			if (actions.length >= 6) break;
+		}
 		}
 
 		return actions;
@@ -1038,7 +1081,7 @@ registerRadialProvider({
 				? hasActionPoints(ctx.targetEntityId)
 				: true;
 
-		if (viewModel.canSurvey && city) {
+		if (viewModel.actions.some((a) => a.id === "survey") && city) {
 			actions.push({
 				id: "district_survey",
 				label: "Survey",
@@ -1056,7 +1099,7 @@ registerRadialProvider({
 			});
 		}
 
-		if (viewModel.canFound && city) {
+		if (viewModel.actions.some((a) => a.id === "found") && city) {
 			const profile =
 				ctx.selectionType === "unit" ? getSelectedBotProfile(ctx) : null;
 			const canEstablish =
@@ -1086,7 +1129,7 @@ registerRadialProvider({
 			});
 		}
 
-		if (viewModel.canEnter && city && mode === "world") {
+		if (viewModel.actions.some((a) => a.id === "enter") && city && mode === "world") {
 			actions.push({
 				id: "district_enter",
 				label: "Enter",

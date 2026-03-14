@@ -30,7 +30,11 @@ export function getAnchorClusterFocus(
 		const anchor = gridToWorld(q, r);
 		return {
 			target: [anchor.x, 0.55, anchor.z] as [number, number, number],
-			position: [anchor.x + 4.8, 3.8, anchor.z + 5.6] as [number, number, number],
+			position: [anchor.x + 4.8, 3.8, anchor.z + 5.6] as [
+				number,
+				number,
+				number,
+			],
 		};
 	}
 

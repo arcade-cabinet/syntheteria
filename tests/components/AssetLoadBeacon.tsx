@@ -1,11 +1,7 @@
 import { useProgress } from "@react-three/drei";
 import { useEffect } from "react";
 
-export function AssetLoadBeacon({
-	onLoaded,
-}: {
-	onLoaded: () => void;
-}) {
+export function AssetLoadBeacon({ onLoaded }: { onLoaded: () => void }) {
 	const { active, loaded, total } = useProgress();
 
 	useEffect(() => {

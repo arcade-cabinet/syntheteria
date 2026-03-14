@@ -6,7 +6,6 @@ import type {
 	StormProfile,
 } from "../world/config";
 import { initializeDatabaseSync } from "./bootstrap";
-import { FakeDatabase } from "./fallbackDatabase";
 import { getDatabaseSync } from "./runtime";
 import type { SyncDatabase } from "./types";
 
@@ -23,11 +22,6 @@ export type SaveGameRecord = {
 	playtime_seconds: number;
 };
 
-function persistFallbackDatabase(database: SyncDatabase) {
-	if (database instanceof FakeDatabase) {
-		database.persistToStorage();
-	}
-}
 
 function selectLatestSaveGame(database: SyncDatabase) {
 	return database.getFirstSync<SaveGameRecord>(
@@ -133,7 +127,6 @@ export function createSaveGameSync(
 		now,
 	);
 
-	persistFallbackDatabase(database);
 	return selectSaveGameById(database, result.lastInsertRowId);
 }
 
@@ -147,6 +140,5 @@ export function touchSaveGameSync(
 		Date.now(),
 		saveGameId,
 	);
-	persistFallbackDatabase(database);
 	return selectSaveGameById(database, saveGameId);
 }

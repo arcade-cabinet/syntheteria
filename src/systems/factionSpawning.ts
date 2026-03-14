@@ -79,7 +79,7 @@ const RIVAL_STARTING_RESOURCES = {
 };
 
 /** Minimum distance (grid cells) between faction spawn centers */
-const MIN_FACTION_DISTANCE = 8;
+const _MIN_FACTION_DISTANCE = 8;
 
 /** Spread radius for unit placement around spawn center */
 const SPAWN_SPREAD_RADIUS = 3;

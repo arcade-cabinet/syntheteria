@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
+import { resetGameState } from "../../src/ecs/gameState";
 import { CitySiteOverlay } from "../../src/ui/CitySiteOverlay";
-import {
-	clearActiveWorldSession,
-	setActiveWorldSession,
-	type ActiveWorldSession,
-} from "../../src/world/session";
 import {
 	resetRuntimeState,
 	setCitySiteModalOpen,
 	setNearbyPoi,
 	setRuntimeScene,
 } from "../../src/world/runtimeState";
-import { resetGameState } from "../../src/ecs/gameState";
+import {
+	type ActiveWorldSession,
+	clearActiveWorldSession,
+	setActiveWorldSession,
+} from "../../src/world/session";
 
 const baseSession: ActiveWorldSession = {
 	saveGame: {
@@ -89,11 +89,7 @@ const baseSession: ActiveWorldSession = {
 	},
 };
 
-export function CitySiteOverlayPreview({
-	scene,
-}: {
-	scene: "world" | "city";
-}) {
+export function CitySiteOverlayPreview({ scene }: { scene: "world" | "city" }) {
 	const [ready, setReady] = useState(false);
 
 	useEffect(() => {

@@ -8,4 +8,5 @@ module.exports = {
 		"\\.(png|jpg|jpeg|webp|glb|gltf|bin)$":
 			"<rootDir>/src/testing/fileAssetMock.js",
 	},
+	setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
 };

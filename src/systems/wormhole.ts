@@ -26,7 +26,7 @@ import { hasTech } from "./techTree";
 const TOTAL_STAGES = 10;
 
 /** Resources required per construction stage */
-const STAGE_COSTS: Array<Record<string, number>> = [
+const STAGE_COSTS: Record<string, number>[] = [
 	{ uranics: 5, heavy_metals: 8 },
 	{ uranics: 5, heavy_metals: 8, microchips: 3 },
 	{ uranics: 8, heavy_metals: 6, microchips: 5 },

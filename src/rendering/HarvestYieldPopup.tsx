@@ -26,7 +26,7 @@ function YieldBillboard({ event }: { event: HarvestYieldEvent }) {
 	const lines = event.yields.map(
 		(y) => `+${y.amount} ${HARVEST_RESOURCE_LABELS[y.resource]}`,
 	);
-	const text = lines.join("\n");
+	const _text = lines.join("\n");
 
 	return (
 		<group position={[event.x, POPUP_Y, event.z]}>

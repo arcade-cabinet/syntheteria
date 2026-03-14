@@ -1,12 +1,27 @@
-import { createNewGameConfig, type NewGameConfig } from "./config";
-import { generateWorldData } from "./generation";
+/**
+ * Structural space — session-based cell storage + WorldGrid compatibility shim.
+ *
+ * This module serves two roles:
+ * 1. **Session cells** — stores zone metadata, discovery state, and passability
+ *    loaded from the DB snapshot. Used by persistence, fog-of-war, renderers.
+ * 2. **Spatial queries** — isPassableAtWorldPosition delegates to WorldGrid
+ *    for chunk-based procedural data.
+ *
+ * The fragment/discovery/cell-record infrastructure stays because the
+ * persistence and initialization systems load cells from WorldSessionSnapshot.
+ */
+
 import {
 	type SectorWorldDimensions,
 	setWorldDimensions,
 	worldToGrid,
 } from "./sectorCoordinates";
-import { requireActiveWorldSession } from "./session";
+import { getActiveWorldSession, requireActiveWorldSession } from "./session";
 import type { SectorCellSnapshot } from "./snapshots";
+import {
+	getTile as worldGridGetTile,
+	isPassableAtWorldPosition as worldGridIsPassable,
+} from "./gen/worldGrid";
 
 export type DiscoveryState = 0 | 1 | 2;
 export type FogState = DiscoveryState;
@@ -77,29 +92,26 @@ export function loadStructuralFragment(
 	return fragment;
 }
 
-export function createStructuralFragment(config?: NewGameConfig) {
+/**
+ * Create a default structural fragment for test/preview use.
+ * In production, fragments are loaded via loadStructuralFragment from a DB snapshot.
+ */
+export function createStructuralFragment() {
 	if (fragments.size > 0) {
 		return fragments.values().next().value!;
 	}
 
-	const nextConfig =
-		config ??
-		createNewGameConfig(42, {
-			sectorScale: "standard",
-			climateProfile: "temperate",
-		});
-	const generatedWorld = generateWorldData(nextConfig);
-	return loadStructuralFragment(
-		generatedWorld.sectorCells.map((cell) => ({
-			q: cell.q,
-			r: cell.r,
-			structuralZone: cell.structuralZone,
-			floorPresetId: cell.floorPresetId,
-			discoveryState: cell.discoveryState as DiscoveryState,
-			passable: cell.passable,
-		})),
-		generatedWorld.ecumenopolis,
-	);
+	// Create a minimal fragment with empty cells for test contexts
+	const id = `frag_${nextFragmentId++}`;
+	const fragment: StructuralFragment = {
+		id,
+		mergedWith: new Set(),
+		displayOffset: { x: 0, z: 0 },
+	};
+
+	fragments.set(id, fragment);
+	cellsByFragment.set(id, new Map());
+	return fragment;
 }
 
 export function getStructuralFragment(id: string) {
@@ -139,11 +151,35 @@ export function updateDisplayOffsets() {
 }
 
 export function getSectorCell(q: number, r: number) {
-	const session = requireActiveWorldSession();
-	return (
-		session.sectorCells.find((entry) => entry.q === q && entry.r === r) ?? null
-	);
+	const session = getActiveWorldSession();
+	if (session?.sectorCells) {
+		const cell = session.sectorCells.find((entry) => entry.q === q && entry.r === r);
+		if (cell) return cell;
+	}
+	// Fallback: worldGrid (chunk-based) when initialized
+	let tile;
+	try {
+		tile = worldGridGetTile(q, r, 0);
+	} catch {
+		return null;
+	}
+	if (!tile) return null;
+	return {
+		id: 0,
+		ecumenopolis_id: 0,
+		q,
+		r,
+		structural_zone: tile.modelLayer === "structure" ? "fabrication" : tile.modelLayer === "resource" ? "storage" : "corridor_transit",
+		floor_preset_id: tile.floorMaterial,
+		discovery_state: 2,
+		passable: tile.passable ? 1 : 0,
+		sector_archetype: tile.modelLayer ? "industrial" : "service_plate",
+		storm_exposure: "shielded" as const,
+		impassable_class: (tile.passable ? "none" : "structural_void") as "none" | "breach" | "sealed_power" | "structural_void",
+		anchor_key: `${q},${r}`,
+	} as import("./snapshots").SectorCellSnapshot;
 }
+
 
 export function requireSectorCell(q: number, r: number) {
 	const cell = getSectorCell(q, r);
@@ -184,10 +220,13 @@ export function getPassableSectorCell(q: number, r: number) {
 	return cell;
 }
 
+/**
+ * Check if a world position (meters) is passable.
+ * Delegates to WorldGrid's chunk-based data for ground truth,
+ * falls back to session cells if WorldGrid hasn't been initialized.
+ */
 export function isPassableAtWorldPosition(x: number, z: number) {
-	const { q, r } = worldToGrid(x, z);
-	const cell = getSectorCell(q, r);
-	return Boolean(cell?.passable);
+	return worldGridIsPassable(x, z);
 }
 
 export function getSurfaceHeightAtWorldPosition(_x: number, _z: number) {

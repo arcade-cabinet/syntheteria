@@ -223,6 +223,74 @@ const RESEARCH_EQUIPMENT_POOL: ResourcePool = {
 	],
 };
 
+// ─── Floor Material Pools (FLOOR_*) ───────────────────────────────────────────
+
+/** Floor material IDs from world gen (src/world/gen/types.ts FLOOR_MATERIALS) */
+export type FloorMaterialId =
+	| "metal_panel"
+	| "concrete_slab"
+	| "industrial_grating"
+	| "rusty_plating"
+	| "corroded_steel";
+
+const FLOOR_METAL_PANEL_POOL: ResourcePool = {
+	label: "Metal Panel Floor",
+	harvestDuration: 80,
+	consumedOnHarvest: true,
+	yields: [
+		{ resource: "heavy_metals", min: 2, max: 4 },
+		{ resource: "scrap", min: 1, max: 2 },
+	],
+};
+
+const FLOOR_CONCRETE_SLAB_POOL: ResourcePool = {
+	label: "Concrete Slab Floor",
+	harvestDuration: 90,
+	consumedOnHarvest: true,
+	yields: [
+		{ resource: "heavy_metals", min: 1, max: 2 },
+		{ resource: "scrap", min: 2, max: 3 },
+	],
+};
+
+const FLOOR_INDUSTRIAL_GRATING_POOL: ResourcePool = {
+	label: "Industrial Grating Floor",
+	harvestDuration: 70,
+	consumedOnHarvest: true,
+	yields: [
+		{ resource: "light_metals", min: 2, max: 3 },
+		{ resource: "scrap", min: 1, max: 2 },
+	],
+};
+
+const FLOOR_RUSTY_PLATING_POOL: ResourcePool = {
+	label: "Rusty Plating Floor",
+	harvestDuration: 60,
+	consumedOnHarvest: true,
+	yields: [
+		{ resource: "heavy_metals", min: 1, max: 2 },
+		{ resource: "scrap", min: 2, max: 4 },
+	],
+};
+
+const FLOOR_CORRODED_STEEL_POOL: ResourcePool = {
+	label: "Corroded Steel Floor",
+	harvestDuration: 50,
+	consumedOnHarvest: true,
+	yields: [
+		{ resource: "scrap", min: 2, max: 4 },
+		{ resource: "heavy_metals", min: 0, max: 1 },
+	],
+};
+
+const FLOOR_POOLS: Record<FloorMaterialId, ResourcePool> = {
+	metal_panel: FLOOR_METAL_PANEL_POOL,
+	concrete_slab: FLOOR_CONCRETE_SLAB_POOL,
+	industrial_grating: FLOOR_INDUSTRIAL_GRATING_POOL,
+	rusty_plating: FLOOR_RUSTY_PLATING_POOL,
+	corroded_steel: FLOOR_CORRODED_STEEL_POOL,
+};
+
 // ─── Lookup Functions ────────────────────────────────────────────────────────
 
 /**
@@ -321,8 +389,26 @@ export function rollHarvestYield(
 
 /**
  * Check if a structure family is harvestable.
- * Floor tiles are NOT harvestable — they're terrain.
+ * Structure families (wall, prop, etc.) are harvestable; floor is handled via floor harvest.
  */
 export function isHarvestable(family: string): boolean {
 	return family !== "floor";
+}
+
+/**
+ * Check if a floor material is harvestable (strip-mining).
+ */
+export function isFloorHarvestable(floorMaterial: string): boolean {
+	return floorMaterial in FLOOR_POOLS;
+}
+
+/**
+ * Get the resource pool for a floor material (strip-mining).
+ * Returns the default metal panel pool for unknown materials.
+ */
+export function getResourcePoolForFloorMaterial(
+	floorMaterial: string,
+): ResourcePool {
+	const pool = FLOOR_POOLS[floorMaterial as FloorMaterialId];
+	return pool ?? FLOOR_METAL_PANEL_POOL;
 }

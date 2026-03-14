@@ -564,7 +564,7 @@ export function StructuralFloorRenderer({
 		} catch {
 			return new Map<string, number>();
 		}
-	}, [session]);
+	}, []);
 
 	const orderedCells = useMemo(
 		() =>

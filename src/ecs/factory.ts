@@ -185,7 +185,7 @@ export function spawnBuilding(options: {
 	const fragment = getStructuralFragment(options.fragmentId);
 	if (!fragment) throw new Error(`Fragment ${options.fragmentId} not found`);
 
-	const buildingConfig =
+	const _buildingConfig =
 		buildingsConfig[options.type as keyof typeof buildingsConfig];
 	const y = getSurfaceHeightAtWorldPosition(options.x, options.z);
 	const powered = options.powered ?? false;

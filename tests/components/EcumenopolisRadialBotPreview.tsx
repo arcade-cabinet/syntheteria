@@ -1,7 +1,5 @@
 import { Canvas, useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useMemo, useState } from "react";
-import { AssetLoadBeacon } from "./AssetLoadBeacon";
-import { getAnchorClusterFocus } from "./previewSceneFocus";
 import {
 	type BotUnitType,
 	createBotUnitState,
@@ -26,6 +24,8 @@ import {
 	resetRadialMenu,
 	updateRadialHover,
 } from "../../src/systems/radialMenu";
+import { AssetLoadBeacon } from "./AssetLoadBeacon";
+import { getAnchorClusterFocus } from "./previewSceneFocus";
 import "../../src/systems/radialProviders";
 import { UnitRenderer } from "../../src/rendering/UnitRenderer";
 import { setResources } from "../../src/systems/resources";
@@ -191,10 +191,12 @@ export function EcumenopolisRadialBotPreview({
 	const [ready, setReady] = useState(false);
 	const [sceneLoaded, setSceneLoaded] = useState(false);
 	const [renderVersion, setRenderVersion] = useState(0);
-	const [cameraTarget, setCameraTarget] = useState<[number, number, number]>([0, 0, 0]);
-	const [cameraPosition, setCameraPosition] = useState<[number, number, number]>([
-		6, 8.5, 9,
+	const [cameraTarget, setCameraTarget] = useState<[number, number, number]>([
+		0, 0, 0,
 	]);
+	const [cameraPosition, setCameraPosition] = useState<
+		[number, number, number]
+	>([6, 8.5, 9]);
 	const [visibleCategories, setVisibleCategories] = useState<string[]>([]);
 	const [visibleActions, setVisibleActions] = useState<string[]>([]);
 	const [districtActions, setDistrictActions] = useState<string[]>([]);
@@ -375,7 +377,8 @@ export function EcumenopolisRadialBotPreview({
 							background: "rgba(3,7,13,0.72)",
 							color: sceneLoaded ? "#6ff3c8" : "rgba(216,246,255,0.72)",
 							fontSize: 11,
-							fontFamily: "ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace",
+							fontFamily:
+								"ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace",
 							letterSpacing: "0.16em",
 							textTransform: "uppercase",
 						}}

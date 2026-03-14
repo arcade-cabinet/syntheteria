@@ -25,10 +25,19 @@ import { expireHarvestEvents, pushHarvestYield } from "./harvestEvents";
 import { queueThought } from "./narrative";
 import {
 	getResourcePoolForModel,
+	getResourcePoolForFloorMaterial,
 	type HarvestResource,
 	isHarvestable,
+	isFloorHarvestable,
 	rollHarvestYield,
 } from "./resourcePools";
+import { getDatabaseSync } from "../db/runtime";
+import { CHUNK_SIZE } from "../world/gen/types";
+import { invalidateChunk } from "../world/gen/worldGrid";
+import { writeTileDelta } from "../world/gen/persist";
+import { tileKey3D } from "../world/gen/types";
+import { getActiveWorldSession } from "../world/session";
+import { getTurnState } from "./turnSystem";
 import { addResource, type ResourcePool } from "./resources";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -36,17 +45,23 @@ import { addResource, type ResourcePool } from "./resources";
 export interface ActiveHarvest {
 	/** Entity ID of the harvesting bot */
 	harvesterId: string;
-	/** Structure snapshot ID being harvested */
-	structureId: number;
-	/** Model ID for resource pool lookup */
-	modelId: string;
-	/** Model family for resource pool lookup */
-	modelFamily: string;
+	/** Structure snapshot ID (omit for floor harvest) */
+	structureId?: number;
+	/** Model ID for resource pool lookup (omit for floor harvest) */
+	modelId?: string;
+	/** Model family for resource pool lookup (omit for floor harvest) */
+	modelFamily?: string;
+	/** True when harvesting a floor tile (strip-mining) */
+	isFloorHarvest?: boolean;
+	/** Floor material ID (for floor harvest) */
+	floorMaterial?: string;
+	/** Elevation level (for floor harvest) */
+	level?: number;
 	/** Ticks remaining */
 	ticksRemaining: number;
 	/** Total ticks for this harvest */
 	totalTicks: number;
-	/** World position of the structure */
+	/** World position of the target */
 	targetX: number;
 	targetZ: number;
 }
@@ -55,6 +70,7 @@ export interface ActiveHarvest {
 
 const activeHarvests: ActiveHarvest[] = [];
 const consumedStructureIds = new Set<number>();
+const consumedFloorTiles = new Set<string>();
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
@@ -97,6 +113,42 @@ export function startHarvest(
 }
 
 /**
+ * Start a floor harvest (strip-mining). Fabricator harvests floor tile → pit.
+ */
+export function startFloorHarvest(
+	harvesterId: string,
+	tileX: number,
+	tileZ: number,
+	level: number,
+	floorMaterial: string,
+): boolean {
+	const key = tileKey3D(tileX, tileZ, level);
+	if (consumedFloorTiles.has(key)) return false;
+	if (activeHarvests.some((h) => h.isFloorHarvest && h.targetX === tileX && h.targetZ === tileZ && h.level === level))
+		return false;
+	if (activeHarvests.some((h) => h.harvesterId === harvesterId)) return false;
+
+	if (!isFloorHarvestable(floorMaterial)) return false;
+
+	const pool = getResourcePoolForFloorMaterial(floorMaterial);
+	const totalTicks = pool.harvestDuration;
+
+	activeHarvests.push({
+		harvesterId,
+		isFloorHarvest: true,
+		floorMaterial,
+		level,
+		ticksRemaining: totalTicks,
+		totalTicks,
+		targetX: tileX,
+		targetZ: tileZ,
+	});
+
+	queueThought("harvest_instinct");
+	return true;
+}
+
+/**
  * Cancel a harvest in progress.
  */
 export function cancelHarvest(harvesterId: string) {
@@ -128,11 +180,26 @@ export function getConsumedStructureIds(): ReadonlySet<number> {
 }
 
 /**
+ * Check if a floor tile has been consumed by strip-mining.
+ */
+export function isFloorTileConsumed(tileX: number, tileZ: number, level: number): boolean {
+	return consumedFloorTiles.has(tileKey3D(tileX, tileZ, level));
+}
+
+/**
+ * Get the set of consumed floor tile keys (for renderer/persistence).
+ */
+export function getConsumedFloorTiles(): ReadonlySet<string> {
+	return consumedFloorTiles;
+}
+
+/**
  * Reset harvest state — call on new game/load.
  */
 export function resetHarvestSystem() {
 	activeHarvests.length = 0;
 	consumedStructureIds.clear();
+	consumedFloorTiles.clear();
 }
 
 /**
@@ -141,10 +208,15 @@ export function resetHarvestSystem() {
 export function rehydrateHarvestState(
 	consumedIds: number[],
 	harvests: ActiveHarvest[],
+	consumedFloorKeys: string[] = [],
 ) {
 	consumedStructureIds.clear();
 	for (const id of consumedIds) {
 		consumedStructureIds.add(id);
+	}
+	consumedFloorTiles.clear();
+	for (const key of consumedFloorKeys) {
+		consumedFloorTiles.add(key);
 	}
 	activeHarvests.length = 0;
 	for (const h of harvests) {
@@ -203,14 +275,12 @@ export function harvestSystem(tick?: number) {
 
 		if (harvest.ticksRemaining <= 0) {
 			// Harvest complete — roll yield and deposit resources
-			const pool = getResourcePoolForModel(
-				harvest.modelFamily,
-				harvest.modelId,
-			);
-			const seed =
-				harvest.structureId * 31 +
-				harvest.modelId.length * 17 +
-				harvest.totalTicks;
+			const pool = harvest.isFloorHarvest
+				? getResourcePoolForFloorMaterial(harvest.floorMaterial!)
+				: getResourcePoolForModel(harvest.modelFamily!, harvest.modelId!);
+			const seed = harvest.isFloorHarvest
+				? harvest.targetX * 31 + harvest.targetZ * 17 + (harvest.level ?? 0) * 7 + harvest.totalTicks
+				: harvest.structureId! * 31 + harvest.modelId!.length * 17 + harvest.totalTicks;
 			const yields = rollHarvestYield(pool, seed);
 
 			for (const [resource, amount] of yields) {
@@ -223,8 +293,36 @@ export function harvestSystem(tick?: number) {
 			// Push a yield event for UI notification
 			pushHarvestYield(harvest.targetX, harvest.targetZ, yields, currentTick);
 
-			// Mark structure as consumed
-			consumedStructureIds.add(harvest.structureId);
+			// Mark as consumed
+			if (harvest.isFloorHarvest) {
+				consumedFloorTiles.add(tileKey3D(harvest.targetX, harvest.targetZ, harvest.level ?? 0));
+				// Persist pit state to SQLite
+				const session = getActiveWorldSession();
+				if (session) {
+					try {
+						const db = getDatabaseSync();
+						const turnNumber = getTurnState().turnNumber;
+						writeTileDelta(db, session.saveGame.id, {
+							tileX: harvest.targetX,
+							tileZ: harvest.targetZ,
+							level: harvest.level ?? 0,
+							changeType: "harvested",
+							newModelId: null,
+							newPassable: true,
+							controllerFaction: null,
+							resourceRemaining: null,
+							turnNumber,
+						});
+						const cx = Math.floor(harvest.targetX / CHUNK_SIZE);
+						const cz = Math.floor(harvest.targetZ / CHUNK_SIZE);
+						invalidateChunk(cx, cz);
+					} catch {
+						// DB may be unavailable (tests, headless)
+					}
+				}
+			} else {
+				consumedStructureIds.add(harvest.structureId!);
+			}
 			activeHarvests.splice(i, 1);
 		}
 	}

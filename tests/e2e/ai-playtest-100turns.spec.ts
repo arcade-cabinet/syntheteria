@@ -13,9 +13,9 @@
  * "End Turn" each turn.
  */
 
-import { expect, test, type Page } from "@playwright/test";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { expect, type Page, test } from "@playwright/test";
 import { generatePlaytestReport } from "./reports/report-generator";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -80,7 +80,7 @@ const SCREENSHOTS_DIR = path.resolve(REPORTS_DIR, "screenshots");
 const PLAYTEST_TIMEOUT = 600_000; // 10 minutes
 
 /** Time to wait for a single turn to advance. */
-const TURN_ADVANCE_TIMEOUT = 30_000; // 30 seconds per turn
+const _TURN_ADVANCE_TIMEOUT = 30_000; // 30 seconds per turn
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -134,7 +134,7 @@ async function dismissThoughts(page: Page, maxAttempts = 5) {
 }
 
 /** Read the current turn number from the game's turn system. */
-async function getTurnNumber(page: Page): Promise<number> {
+async function _getTurnNumber(page: Page): Promise<number> {
 	return page.evaluate(() => {
 		// Access the turn system module — available on window in dev builds
 		// or through the module system if exposed.
@@ -165,13 +165,20 @@ async function getTurnNumber(page: Page): Promise<number> {
 }
 
 /** Read the full game state snapshot from the browser. */
-async function captureGameState(page: Page): Promise<Omit<TurnSnapshot, "screenshotPath">> {
+async function captureGameState(
+	page: Page,
+): Promise<Omit<TurnSnapshot, "screenshotPath">> {
 	return page.evaluate(() => {
 		const w = window as unknown as Record<string, unknown>;
 
 		// Try exposed global snapshot function
 		if (typeof w.__syntheteria_getGameSnapshot === "function") {
-			return (w.__syntheteria_getGameSnapshot as () => Omit<TurnSnapshot, "screenshotPath">)();
+			return (
+				w.__syntheteria_getGameSnapshot as () => Omit<
+					TurnSnapshot,
+					"screenshotPath"
+				>
+			)();
 		}
 
 		// Fallback: return partial state with defaults
@@ -298,16 +305,12 @@ test.describe("100-turn AI playtest", () => {
 		// Collect console errors
 		page.on("console", (msg) => {
 			if (msg.type() === "error") {
-				results.errors.push(
-					`[console.error] ${msg.text().substring(0, 500)}`,
-				);
+				results.errors.push(`[console.error] ${msg.text().substring(0, 500)}`);
 			}
 		});
 
 		page.on("pageerror", (error) => {
-			results.errors.push(
-				`[pageerror] ${error.message.substring(0, 500)}`,
-			);
+			results.errors.push(`[pageerror] ${error.message.substring(0, 500)}`);
 		});
 
 		// ── Phase 1: Boot and start new game ──
@@ -319,7 +322,9 @@ test.describe("100-turn AI playtest", () => {
 
 		// Capture the seed from the new game modal
 		await page.getByTestId("title-new_game").first().click();
-		await expect(page.getByText("Campaign Initialization").first()).toBeVisible();
+		await expect(
+			page.getByText("Campaign Initialization").first(),
+		).toBeVisible();
 
 		// Read the seed phrase from the input
 		const seedInput = page.locator('input[class*="font-mono"]').first();
@@ -431,7 +436,9 @@ test.describe("100-turn AI playtest", () => {
 			const victory = await page.evaluate(() => {
 				const w = window as unknown as Record<string, unknown>;
 				if (typeof w.__syntheteria_getVictoryResult === "function") {
-					return (w.__syntheteria_getVictoryResult as () => VictoryResult | null)();
+					return (
+						w.__syntheteria_getVictoryResult as () => VictoryResult | null
+					)();
 				}
 				return null;
 			});
@@ -460,7 +467,9 @@ test.describe("100-turn AI playtest", () => {
 		results.campaignStats = await page.evaluate(() => {
 			const w = window as unknown as Record<string, unknown>;
 			if (typeof w.__syntheteria_getCampaignStats === "function") {
-				return (w.__syntheteria_getCampaignStats as () => Record<string, unknown>)();
+				return (
+					w.__syntheteria_getCampaignStats as () => Record<string, unknown>
+				)();
 			}
 			return null;
 		});
@@ -501,7 +510,9 @@ test.describe("100-turn AI playtest", () => {
 		expect(results.totalTurns).toBeGreaterThan(0);
 
 		// Should have captured screenshots
-		expect(results.snapshots.filter((s) => s.screenshotPath)).not.toHaveLength(0);
+		expect(results.snapshots.filter((s) => s.screenshotPath)).not.toHaveLength(
+			0,
+		);
 
 		// Report file should exist
 		expect(fs.existsSync(reportPath)).toBe(true);

@@ -7,7 +7,11 @@
 			"**",
 			"!playwright-report/**",
 			"!test-results/**",
-			"!coverage/**"
+			"!coverage/**",
+			"!tests/e2e/**",
+			"!tests/components/**",
+			"!tests/visual/**",
+			"!public/coi-serviceworker.js"
 		]
 	},
 	"formatter": { "enabled": true, "indentStyle": "tab" },
@@ -50,7 +54,11 @@
 			"!android/app/build/**",
 			"!playwright-report/**",
 			"!test-results/**",
-			"!coverage/**"
+			"!coverage/**",
+			"!tests/e2e/**",
+			"!tests/components/**",
+			"!tests/visual/**",
+			"!public/coi-serviceworker.js"
 		]
 	},
 	"javascript": {

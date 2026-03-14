@@ -234,3 +234,81 @@ export const turnEventLogs = sqliteTable("turn_event_logs", {
 	turnNumber: integer("turn_number").notNull(),
 	eventsJson: text("events_json").notNull().default("[]"),
 });
+
+// ─── Model Definitions ──────────────────────────────────────────────────────
+export const modelDefinitions = sqliteTable("model_definitions", {
+	id: text("id").primaryKey(),
+	category: text("category").notNull(),
+	family: text("family").notNull(),
+	displayName: text("display_name").notNull(),
+	assetPath: text("asset_path").notNull(),
+	boundsJson: text("bounds_json")
+		.notNull()
+		.default('{"width":1,"height":1,"depth":1}'),
+	gridFootprintJson: text("grid_footprint_json")
+		.notNull()
+		.default('{"width":1,"depth":1}'),
+	placementRulesJson: text("placement_rules_json").notNull().default("{}"),
+	interactionsJson: text("interactions_json").notNull().default("{}"),
+	renderingJson: text("rendering_json").notNull().default("{}"),
+	mechanicsJson: text("mechanics_json").notNull().default("{}"),
+	passable: integer("passable").notNull().default(1),
+	blocksSight: integer("blocks_sight").notNull().default(0),
+	initialPlacement: integer("initial_placement").notNull().default(0),
+	buildable: integer("buildable").notNull().default(0),
+	factionRestricted: text("faction_restricted"),
+	tags: text("tags").notNull().default("[]"),
+});
+
+// ─── Tile Definitions ───────────────────────────────────────────────────────
+export const tileDefinitions = sqliteTable("tile_definitions", {
+	id: text("id").primaryKey(),
+	zoneType: text("zone_type").notNull(),
+	textureSetJson: text("texture_set_json").notNull().default("{}"),
+	seamless: integer("seamless").notNull().default(1),
+	baseColorHex: text("base_color_hex").notNull().default("#808080"),
+	emissiveTintHex: text("emissive_tint_hex"),
+});
+
+// ─── Robot Definitions ──────────────────────────────────────────────────────
+export const robotDefinitions = sqliteTable("robot_definitions", {
+	id: text("id").primaryKey(),
+	chassisType: text("chassis_type").notNull(),
+	displayName: text("display_name").notNull(),
+	assetPath: text("asset_path").notNull(),
+	statsJson: text("stats_json").notNull().default("{}"),
+	abilitiesJson: text("abilities_json").notNull().default("[]"),
+});
+
+// ─── Game Map Tiles ─────────────────────────────────────────────────────────
+export const gameMapTiles = sqliteTable("game_map_tiles", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	saveGameId: integer("save_game_id").notNull(),
+	tileX: integer("tile_x").notNull(),
+	tileY: integer("tile_y").notNull(),
+	level: integer("level").notNull().default(0),
+	elevationY: real("elevation_y").notNull().default(0),
+	clearanceAbove: real("clearance_above").notNull().default(100),
+	zoneType: text("zone_type").notNull(),
+	tileDefinitionId: text("tile_definition_id"),
+	passable: integer("passable").notNull().default(1),
+	discoveryState: integer("discovery_state").notNull().default(0),
+	placedModelId: text("placed_model_id"),
+	placedModelRotation: integer("placed_model_rotation").notNull().default(0),
+	isRamp: integer("is_ramp").notNull().default(0),
+	isBridge: integer("is_bridge").notNull().default(0),
+	controllerFaction: text("controller_faction"),
+	resourceRemaining: integer("resource_remaining"),
+	deltaJson: text("delta_json"),
+});
+
+// ─── Map Deltas ─────────────────────────────────────────────────────────────
+export const mapDeltas = sqliteTable("map_deltas", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	saveGameId: integer("save_game_id").notNull(),
+	turnNumber: integer("turn_number").notNull(),
+	tileX: integer("tile_x").notNull(),
+	tileY: integer("tile_y").notNull(),
+	changeType: text("change_type").notNull(),
+	changeJson: text("change_json").notNull().default("{}"),
+});

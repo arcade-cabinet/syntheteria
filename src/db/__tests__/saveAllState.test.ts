@@ -9,15 +9,15 @@ import * as runtimeState from "../../world/runtimeState";
 import * as session from "../../world/session";
 import { saveAllStateSync } from "../saveAllState";
 import { createSaveGameSync } from "../saveGames";
+import { getDatabaseSync } from "../runtime";
 import {
 	getPersistedWorldSync,
 	persistGeneratedWorldSync,
 	setWorldPersistenceDatabaseResolver,
 } from "../worldPersistence";
-import { FakeDatabase } from "./helpers/fakeDatabase";
 
 function setupSaveGame() {
-	const database = new FakeDatabase();
+	const database = getDatabaseSync();
 	const config = {
 		worldSeed: 42,
 		sectorScale: "small" as const,
@@ -51,9 +51,6 @@ describe("saveAllStateSync", () => {
 
 	it("persists all runtime state in one call", () => {
 		const { database, saveGame, persisted } = setupSaveGame();
-
-		// Set up the database resolver so saveAllState uses our fake database
-		setWorldPersistenceDatabaseResolver(() => database);
 
 		// Mock the active session
 		jest.spyOn(session, "getActiveWorldSession").mockReturnValue({

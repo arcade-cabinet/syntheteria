@@ -293,7 +293,7 @@ export function motorPoolTurnTick(): void {
 		job.turnsRemaining--;
 		if (job.turnsRemaining <= 0) {
 			// Spawn the bot
-			const def = getBotDefinition(job.botType);
+			const _def = getBotDefinition(job.botType);
 			spawnUnit({
 				x: position.x + 2,
 				z: position.z + 2,

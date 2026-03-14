@@ -1,14 +1,15 @@
 import { Canvas, useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useState } from "react";
-import { AssetLoadBeacon } from "./AssetLoadBeacon";
-import { getAnchorClusterFocus } from "./previewSceneFocus";
 import { resetGameState } from "../../src/ecs/gameState";
 import { world } from "../../src/ecs/world";
 import { CityRenderer } from "../../src/rendering/CityRenderer";
 import { NetworkLineRenderer } from "../../src/rendering/NetworkLineRenderer";
 import { StructuralFloorRenderer } from "../../src/rendering/StructuralFloorRenderer";
 import { UnitRenderer } from "../../src/rendering/UnitRenderer";
-import { networkOverlaySystem, resetNetworkOverlay } from "../../src/systems/networkOverlay";
+import {
+	networkOverlaySystem,
+	resetNetworkOverlay,
+} from "../../src/systems/networkOverlay";
 import { BriefingBubbleLayer } from "../../src/ui/BriefingBubbleLayer";
 import { createNewGameConfig } from "../../src/world/config";
 import {
@@ -22,6 +23,7 @@ import {
 	setRuntimeScene,
 	setRuntimeTick,
 } from "../../src/world/runtimeState";
+import { gridToWorld } from "../../src/world/sectorCoordinates";
 import {
 	clearActiveWorldSession,
 	setActiveWorldSession,
@@ -35,7 +37,8 @@ import {
 	loadStructuralFragment,
 	resetStructuralSpace,
 } from "../../src/world/structuralSpace";
-import { gridToWorld } from "../../src/world/sectorCoordinates";
+import { AssetLoadBeacon } from "./AssetLoadBeacon";
+import { getAnchorClusterFocus } from "./previewSceneFocus";
 
 type PreviewWorldSession = WorldSessionSnapshot & {
 	entities: WorldEntitySnapshot[];
@@ -80,7 +83,8 @@ function createPreviewSession(seed: number): PreviewWorldSession {
 			world_q: city.worldQ,
 			world_r: city.worldR,
 			layout_seed: city.layoutSeed,
-			generation_status: state === "latent" ? city.generationStatus : "instanced",
+			generation_status:
+				state === "latent" ? city.generationStatus : "instanced",
 			state,
 		};
 	});
@@ -195,10 +199,12 @@ export function EcumenopolisWorldPreview({
 	const [ready, setReady] = useState(false);
 	const [sceneLoaded, setSceneLoaded] = useState(false);
 	const [session, setSession] = useState<PreviewWorldSession | null>(null);
-	const [cameraTarget, setCameraTarget] = useState<[number, number, number]>([0, 0, 0]);
-	const [cameraPosition, setCameraPosition] = useState<[number, number, number]>([
-		0, 18, 18,
+	const [cameraTarget, setCameraTarget] = useState<[number, number, number]>([
+		0, 0, 0,
 	]);
+	const [cameraPosition, setCameraPosition] = useState<
+		[number, number, number]
+	>([0, 18, 18]);
 
 	useEffect(() => {
 		setReady(false);
@@ -230,7 +236,9 @@ export function EcumenopolisWorldPreview({
 		setRuntimeScene("world", null);
 		setRuntimeTick(120);
 
-		const homeBase = session.pointsOfInterest.find((poi) => poi.type === "home_base")!;
+		const homeBase = session.pointsOfInterest.find(
+			(poi) => poi.type === "home_base",
+		)!;
 		const archiveCampus = session.pointsOfInterest.find(
 			(poi) => poi.type === "science_campus",
 		)!;
@@ -239,9 +247,13 @@ export function EcumenopolisWorldPreview({
 		const cultWard = session.pointsOfInterest.find(
 			(poi) => poi.type === "northern_cult_site",
 		)!;
-		const cultWorld = gridToWorld(cultWard.q, cultWard.r);
+		const _cultWorld = gridToWorld(cultWard.q, cultWard.r);
 		const homeFocus = getAnchorClusterFocus(session, homeBase.q, homeBase.r);
-		const archiveFocus = getAnchorClusterFocus(session, archiveCampus.q, archiveCampus.r);
+		const archiveFocus = getAnchorClusterFocus(
+			session,
+			archiveCampus.q,
+			archiveCampus.r,
+		);
 		const cultFocus = getAnchorClusterFocus(session, cultWard.q, cultWard.r);
 		setCameraTarget(
 			view === "overview"
@@ -279,7 +291,9 @@ export function EcumenopolisWorldPreview({
 		networkOverlaySystem(120);
 
 		setNearbyPoi({
-			cityInstanceId: session.cityInstances.find((city) => city.poi_id === archiveCampus.id)?.id ?? null,
+			cityInstanceId:
+				session.cityInstances.find((city) => city.poi_id === archiveCampus.id)
+					?.id ?? null,
 			discovered: true,
 			distance: 1.4,
 			name: archiveCampus.name,
@@ -304,7 +318,8 @@ export function EcumenopolisWorldPreview({
 				width: 1400,
 				height: 900,
 				position: "relative",
-				background: "linear-gradient(180deg, #10202c 0%, #07111a 55%, #03070d 100%)",
+				background:
+					"linear-gradient(180deg, #10202c 0%, #07111a 55%, #03070d 100%)",
 				overflow: "hidden",
 			}}
 		>
@@ -314,7 +329,8 @@ export function EcumenopolisWorldPreview({
 						style={{ position: "absolute", inset: 0 }}
 						camera={{
 							position: [...cameraPosition],
-							fov: view === "overview" ? 30 : view === "anchor-cluster" ? 34 : 38,
+							fov:
+								view === "overview" ? 30 : view === "anchor-cluster" ? 34 : 38,
 						}}
 					>
 						<color attach="background" args={["#03070d"]} />
@@ -359,7 +375,8 @@ export function EcumenopolisWorldPreview({
 							background: "rgba(3,7,13,0.72)",
 							color: sceneLoaded ? "#6ff3c8" : "rgba(216,246,255,0.72)",
 							fontSize: 11,
-							fontFamily: "ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace",
+							fontFamily:
+								"ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace",
 							letterSpacing: "0.16em",
 							textTransform: "uppercase",
 						}}
@@ -395,21 +412,28 @@ export function EcumenopolisWorldPreview({
 							>
 								Ecumenopolis Validation
 							</div>
-								<div style={{ marginTop: 10, fontSize: 13, color: "#ffffff" }}>
-									{view === "overview"
-										? "Generated Campaign Overview"
-										: view === "anchor-cluster"
-											? "Command Arcology Anchor Cluster"
-											: view === "player-substation"
-												? "Player Substation Cluster"
-												: view === "rival-cluster"
-													? "Rival Research Cluster"
-													: view === "cult-cluster"
-														? "Cult Incursion Cluster"
-														: "Starting Sector Inspection"}
-								</div>
-							<div style={{ marginTop: 6, fontSize: 12, color: "rgba(216,246,255,0.72)" }}>
-								Seed {session.config.worldSeed} · Sector scale {session.config.sectorScale}
+							<div style={{ marginTop: 10, fontSize: 13, color: "#ffffff" }}>
+								{view === "overview"
+									? "Generated Campaign Overview"
+									: view === "anchor-cluster"
+										? "Command Arcology Anchor Cluster"
+										: view === "player-substation"
+											? "Player Substation Cluster"
+											: view === "rival-cluster"
+												? "Rival Research Cluster"
+												: view === "cult-cluster"
+													? "Cult Incursion Cluster"
+													: "Starting Sector Inspection"}
+							</div>
+							<div
+								style={{
+									marginTop: 6,
+									fontSize: 12,
+									color: "rgba(216,246,255,0.72)",
+								}}
+							>
+								Seed {session.config.worldSeed} · Sector scale{" "}
+								{session.config.sectorScale}
 							</div>
 							<div
 								style={{
@@ -425,15 +449,17 @@ export function EcumenopolisWorldPreview({
 								<div>
 									Founded:{" "}
 									{
-										session.cityInstances.filter((city) => city.state === "founded")
-											.length
+										session.cityInstances.filter(
+											(city) => city.state === "founded",
+										).length
 									}
 								</div>
 								<div>
 									Surveyed:{" "}
 									{
-										session.cityInstances.filter((city) => city.state === "surveyed")
-											.length
+										session.cityInstances.filter(
+											(city) => city.state === "surveyed",
+										).length
 									}
 								</div>
 							</div>
@@ -448,7 +474,9 @@ export function EcumenopolisWorldPreview({
 							>
 								Visible Anchors
 							</div>
-							<div style={{ marginTop: 8, display: "grid", gap: 6, fontSize: 12 }}>
+							<div
+								style={{ marginTop: 8, display: "grid", gap: 6, fontSize: 12 }}
+							>
 								{session.pointsOfInterest.map((poi) => {
 									const city = session.cityInstances.find(
 										(candidate) => candidate.poi_id === poi.id,

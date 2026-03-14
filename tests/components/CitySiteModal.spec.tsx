@@ -67,6 +67,10 @@ test.describe("city site modal", () => {
 
 		await expect(component).toContainText("Operational Actions");
 		await expect(component).toContainText("Fabricate Components");
-		await expect(component.locator('[data-testid="city-site-operation-fabricate_components"]')).toBeVisible();
+		await expect(
+			component.locator(
+				'[data-testid="city-site-operation-fabricate_components"]',
+			),
+		).toBeVisible();
 	});
 });

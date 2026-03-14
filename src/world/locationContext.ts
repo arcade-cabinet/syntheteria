@@ -1,5 +1,6 @@
 import type { CityPurposePresentation } from "./cityPresentation";
 import { getCityPurposePresentation } from "./cityPresentation";
+import type { WorldPoiType } from "./contracts";
 import type {
 	CityRuntimeSnapshot,
 	NearbyPoiContext,
@@ -21,11 +22,18 @@ export function getActiveLocationContext(args: {
 }): ActiveLocationContext {
 	const { activeCityInstanceId, activeScene, nearbyPoi, session } = args;
 	if (!session) {
-		return {
-			activeCity: null,
-			poi: null,
-			presentation: null,
-		};
+		return { activeCity: null, poi: null, presentation: null };
+	}
+
+	function withPresentation(
+		activeCity: CityRuntimeSnapshot | null,
+		poi: SectorPoiSnapshot | null,
+	): ActiveLocationContext {
+		const presentation =
+			poi?.type != null
+				? getCityPurposePresentation(poi.type as WorldPoiType)
+				: null;
+		return { activeCity, poi, presentation };
 	}
 
 	if (activeScene === "city") {
@@ -37,19 +45,11 @@ export function getActiveLocationContext(args: {
 					(candidate) => candidate.id === activeCity.poi_id,
 				) ?? null)
 			: null;
-		return {
-			activeCity,
-			poi,
-			presentation: poi ? getCityPurposePresentation(poi.type) : null,
-		};
+		return withPresentation(activeCity, poi);
 	}
 
 	if (!nearbyPoi) {
-		return {
-			activeCity: null,
-			poi: null,
-			presentation: null,
-		};
+		return { activeCity: null, poi: null, presentation: null };
 	}
 
 	const poi =
@@ -63,9 +63,5 @@ export function getActiveLocationContext(args: {
 				) ?? null)
 			: null;
 
-	return {
-		activeCity,
-		poi,
-		presentation: poi ? getCityPurposePresentation(poi.type) : null,
-	};
+	return withPresentation(activeCity, poi);
 }

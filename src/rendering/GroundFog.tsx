@@ -85,7 +85,7 @@ export function GroundFog() {
 		material.opacity = Math.min(fogOpacity, 0.25);
 
 		const dummy = new THREE.Object3D();
-		const cameraX = camera.position.x;
+		const _cameraX = camera.position.x;
 		const cameraZ = camera.position.z;
 
 		for (let i = 0; i < patchData.length; i++) {

@@ -1,12 +1,12 @@
 import { defaultResourcePool } from "../../systems/resources";
 import { generateWorldData } from "../../world/generation";
 import { createSaveGameSync } from "../saveGames";
+import { getDatabaseSync } from "../runtime";
 import {
 	getPersistedWorldSync,
 	persistGeneratedWorldSync,
 	persistRuntimeWorldStateSync,
 } from "../worldPersistence";
-import { FakeDatabase } from "./helpers/fakeDatabase";
 
 describe("world persistence", () => {
 	beforeEach(() => {
@@ -18,7 +18,7 @@ describe("world persistence", () => {
 	});
 
 	it("persists and reloads generated world data", () => {
-		const database = new FakeDatabase();
+		const database = getDatabaseSync();
 		const config = {
 			worldSeed: 42,
 			sectorScale: "small" as const,
@@ -55,58 +55,25 @@ describe("world persistence", () => {
 		).toBe(true);
 		expect(persisted.campaignState.active_scene).toBe("world");
 		expect(persisted.resourceState.scrap_metal).toBe(0);
-		expect(persisted.entities).toHaveLength(10);
-		const unit = persisted.entities.find(
-			(entity) => entity.entity_id === "unit_0",
+		expect(persisted.entities).toHaveLength(2);
+		const bot0 = persisted.entities.find(
+			(entity) => entity.entity_id === "player_bot_0",
 		);
-		const hauler = persisted.entities.find(
-			(entity) => entity.bot_archetype_id === "relay_hauler",
+		const bot1 = persisted.entities.find(
+			(entity) => entity.entity_id === "player_bot_1",
 		);
-		const fabricator = persisted.entities.find(
-			(entity) => entity.bot_archetype_id === "fabrication_rig",
-		);
-		const engineer = persisted.entities.find(
-			(entity) => entity.bot_archetype_id === "defense_sentry",
-		);
-		const fighter = persisted.entities.find(
-			(entity) => entity.bot_archetype_id === "assault_strider",
-		);
-		const rod = persisted.entities.find(
-			(entity) => entity.building_type === "lightning_rod",
-		);
-		const rivalCluster = persisted.entities.filter(
-			(entity) => entity.faction === "rogue",
-		);
-		const cultCluster = persisted.entities.filter(
-			(entity) => entity.faction === "cultist",
-		);
-		expect(unit?.entity_id).toBe("unit_0");
-		expect(unit?.bot_archetype_id).toBe("field_technician");
-		expect(unit?.mark_level).toBe(1);
-		expect(unit?.speech_profile).toBe("mentor");
-		expect(unit?.selected).toBe(1);
-		expect(hauler?.unit_type).toBe("mecha_scout");
-		expect(fabricator?.unit_type).toBe("fabrication_unit");
-		expect(engineer?.unit_type).toBe("mecha_golem");
-		expect(fighter?.unit_type).toBe("field_fighter");
-		expect(rod?.building_type).toBe("lightning_rod");
-		expect(rivalCluster).toHaveLength(2);
-		expect(cultCluster).toHaveLength(2);
-		expect(
-			rivalCluster.every((entity) => entity.ai_role === "hostile_machine"),
-		).toBe(true);
-		expect(cultCluster.every((entity) => entity.ai_role === "cultist")).toBe(
-			true,
-		);
+		expect(bot0?.unit_type).toBe("maintenance_bot");
+		expect(bot1?.unit_type).toBe("mecha_scout");
+		expect(persisted.sectorStructures.length).toBeGreaterThan(0);
 		expect(
 			persisted.sectorStructures.some(
-				(structure) => structure.source === "landmark",
+				(s) => s.source === "seeded_district" || s.source === "landmark",
 			),
 		).toBe(true);
 	});
 
 	it("persists runtime campaign state updates", () => {
-		const database = new FakeDatabase();
+		const database = getDatabaseSync();
 		const config = {
 			worldSeed: 42,
 			sectorScale: "small" as const,

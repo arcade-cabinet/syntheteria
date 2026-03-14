@@ -89,8 +89,7 @@ function generateSvgChart(
 	const magnitude = Math.pow(10, Math.floor(Math.log10(maxValue || 1)));
 	maxValue = Math.ceil(maxValue / magnitude) * magnitude || 10;
 
-	const scaleX = (turn: number) =>
-		padding.left + (turn / maxTurn) * chartWidth;
+	const scaleX = (turn: number) => padding.left + (turn / maxTurn) * chartWidth;
 	const scaleY = (value: number) =>
 		padding.top + chartHeight - (value / maxValue) * chartHeight;
 
@@ -163,7 +162,10 @@ function formatDuration(ms: number): string {
 }
 
 function formatTimestamp(ms: number): string {
-	return new Date(ms).toISOString().replace("T", " ").replace(/\.\d+Z$/, " UTC");
+	return new Date(ms)
+		.toISOString()
+		.replace("T", " ")
+		.replace(/\.\d+Z$/, " UTC");
 }
 
 // ─── Report Generator ───────────────────────────────────────────────────────
@@ -266,9 +268,7 @@ export function generatePlaytestReport(results: PlaytestResults): string {
 	];
 
 	// Screenshots section
-	const screenshotSnapshots = results.snapshots.filter(
-		(s) => s.screenshotPath,
-	);
+	const screenshotSnapshots = results.snapshots.filter((s) => s.screenshotPath);
 
 	let screenshotsHtml = "";
 	if (screenshotSnapshots.length > 0) {
@@ -303,10 +303,7 @@ export function generatePlaytestReport(results: PlaytestResults): string {
 				<h2>ERROR LOG</h2>
 				<div class="error-list">
 					${results.errors
-						.map(
-							(e) =>
-								`<div class="error-entry">${escapeHtml(e)}</div>`,
-						)
+						.map((e) => `<div class="error-entry">${escapeHtml(e)}</div>`)
 						.join("")}
 				</div>
 			</div>
@@ -570,7 +567,9 @@ export function generatePlaytestReport(results: PlaytestResults): string {
 			</div>
 		</div>
 
-		${results.victoryResult ? `
+		${
+			results.victoryResult
+				? `
 		<div class="section" style="border-color:rgba(246,197,106,0.3)">
 			<h2 style="color:#f6c56a">VICTORY CONDITION</h2>
 			<table class="summary-table">
@@ -581,9 +580,13 @@ export function generatePlaytestReport(results: PlaytestResults): string {
 				</tbody>
 			</table>
 		</div>
-		` : ""}
+		`
+				: ""
+		}
 
-		${results.campaignStats ? `
+		${
+			results.campaignStats
+				? `
 		<div class="section">
 			<h2>CAMPAIGN STATISTICS</h2>
 			<table class="summary-table">
@@ -591,16 +594,22 @@ export function generatePlaytestReport(results: PlaytestResults): string {
 					${Object.entries(results.campaignStats)
 						.filter(([_, v]) => typeof v === "number" || typeof v === "string")
 						.map(([key, value]) => {
-							const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
+							const label = key
+								.replace(/([A-Z])/g, " $1")
+								.replace(/^./, (s) => s.toUpperCase());
 							return `<tr><td>${escapeHtml(label)}</td><td style="color:#8be6ff">${typeof value === "number" ? value : escapeHtml(String(value))}</td></tr>`;
 						})
 						.join("")}
 				</tbody>
 			</table>
 		</div>
-		` : ""}
+		`
+				: ""
+		}
 
-		${finalSnapshot ? `
+		${
+			finalSnapshot
+				? `
 		<div class="section">
 			<h2>FINAL STATE — TURN ${finalSnapshot.turnNumber}</h2>
 			<table class="summary-table">
@@ -628,7 +637,9 @@ export function generatePlaytestReport(results: PlaytestResults): string {
 				</tbody>
 			</table>
 		</div>
-		` : ""}
+		`
+				: ""
+		}
 
 		<div class="section">
 			<h2>RESOURCE TIMELINE</h2>
@@ -649,7 +660,9 @@ export function generatePlaytestReport(results: PlaytestResults): string {
 		${errorsHtml}
 		${eventLogHtml}
 
-		${results.crashed ? `
+		${
+			results.crashed
+				? `
 		<div class="section" style="border-color:rgba(255,80,80,0.3)">
 			<h2 style="color:#ff5050">CRASH REPORT</h2>
 			<div class="error-entry" style="font-size:14px">
@@ -659,7 +672,9 @@ export function generatePlaytestReport(results: PlaytestResults): string {
 				The game crashed at turn ${results.totalTurns}. Check the error log above for details.
 			</p>
 		</div>
-		` : ""}
+		`
+				: ""
+		}
 
 		<div class="footer">
 			SYNTHETERIA AUTOMATED PLAYTEST &middot; GENERATED ${formatTimestamp(Date.now())}

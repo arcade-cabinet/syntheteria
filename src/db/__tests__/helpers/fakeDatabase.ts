@@ -136,6 +136,7 @@ type HarvestStateRow = {
 	save_game_id: number;
 	consumed_structure_ids_json: string;
 	active_harvests_json: string;
+	consumed_floor_tiles_json: string;
 	last_synced_at: number;
 };
 
@@ -345,6 +346,7 @@ export class FakeDatabase implements SyncDatabase {
 				"save_game_id",
 				"consumed_structure_ids_json",
 				"active_harvests_json",
+				"consumed_floor_tiles_json",
 				"last_synced_at",
 			],
 		],
@@ -870,7 +872,8 @@ export class FakeDatabase implements SyncDatabase {
 				save_game_id: Number(params[0]),
 				consumed_structure_ids_json: String(params[1]),
 				active_harvests_json: String(params[2]),
-				last_synced_at: Number(params[3]),
+				consumed_floor_tiles_json: String(params[3] ?? "[]"),
+				last_synced_at: Number(params[4]),
 			};
 			this.harvestStates.push(row);
 			return { lastInsertRowId: row.id };
@@ -878,12 +881,13 @@ export class FakeDatabase implements SyncDatabase {
 
 		if (source.includes("UPDATE harvest_states")) {
 			const row = this.harvestStates.find(
-				(candidate) => candidate.save_game_id === Number(params[3]),
+				(candidate) => candidate.save_game_id === Number(params[4]),
 			);
 			if (row) {
 				row.consumed_structure_ids_json = String(params[0]);
 				row.active_harvests_json = String(params[1]);
-				row.last_synced_at = Number(params[2]);
+				row.consumed_floor_tiles_json = String(params[2] ?? "[]");
+				row.last_synced_at = Number(params[3]);
 			}
 			return { lastInsertRowId: row?.id ?? 0 };
 		}
@@ -975,6 +979,16 @@ export class FakeDatabase implements SyncDatabase {
 			};
 			this.turnEventLogs.push(row);
 			return { lastInsertRowId: row.id };
+		}
+
+		// ─── Game data seeder (INSERT OR REPLACE into definition tables) ─
+		if (
+			source.includes("INSERT OR REPLACE INTO model_definitions") ||
+			source.includes("INSERT OR REPLACE INTO tile_definitions") ||
+			source.includes("INSERT OR REPLACE INTO robot_definitions") ||
+			source.includes("INSERT OR REPLACE INTO game_config")
+		) {
+			return { lastInsertRowId: 0 };
 		}
 
 		throw new Error(`Unsupported runSync query: ${source}`);

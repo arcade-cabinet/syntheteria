@@ -7,9 +7,12 @@
 
 ## Current Focus
 
-- **33-story Ecumenopolis sprint COMPLETE** — all user stories implemented, tested, committed
-- **Code quality verified** — 135/135 test suites, 1605/1605 tests, 0 TS errors, 0 lint errors
-- **Branch `codex/ecumenopolis-fullscope`** — 53 commits, ready for PR to main
+- **Build-time foundation.db** — `pnpm db:build:foundation` generates `assets/db/foundation.db` with schema + all JSON config (models, tiles, robots, game_config); no fake/fallback DB
+- **Test db** — Jest uses `createTestDb()` (sql.js) with schema + seed; reserved `TEST_SEED` in `src/db/testConstants.ts` and `tests/testConstants.ts`
+- **JSON-in-SQLite foundation COMPLETE** — config and model definitions loaded into DB at bootstrap; world/gen read from SQLite
+- **WorldGrid wired** — `initWorldGrid(db, worldSeed, saveGameId)` called from `initializeNewGame`
+- **structuralSpace → worldGrid fallback** — `getSectorCell` falls back to worldGrid when cell not in session
+- **Floor harvest** — radial "Strip-mine floor", `writeTileDelta` on completion, `consumed_floor_tiles_json` persist/reload
 
 ---
 
@@ -54,11 +57,11 @@
 
 ## Next Steps (Prioritized)
 
-1. **Create PR** for `codex/ecumenopolis-fullscope` → `main`
-2. **Visual verification in browser** — launch game, confirm floor renders, speech bubbles appear, chunk loading works
-3. **Config-driven floor textures** — migrate `floorTextureAssets.ts` from `require()` to JSON manifest
-4. **City model manifest regeneration** — run `pnpm city:ingest` to fix manifest gaps
-5. **Integration test for chunk pipeline** — loader → discovery → delta → render chain
+1. **Ralph 1.0 execution** — Ralph-cursor set up at `ralph/`. PRD + prd.json at `ralph/projects/syntheteria-1-0/`. Run `./ralph/start.sh syntheteria-1-0` to execute 25 user stories. See `ralph/README.md`.
+2. **PIVOT: Remove Playwright** — Port E2E to **Maestro**; component tests to **RNTL** / **@react-three/test-renderer**. See [`docs/plans/PLAYWRIGHT_TO_MAESTRO_MIGRATION.md`](../plans/PLAYWRIGHT_TO_MAESTRO_MIGRATION.md).
+2. **Ingest undermaterials** — 2DPhotorealistic textures for pit interiors; config-driven floor materials
+3. **Create PR** for `codex/ecumenopolis-fullscope` → `main`
+4. **Config-driven floor textures** — migrate `floorTextureAssets.ts` from `require()` to JSON manifest
 
 ---
 
@@ -79,9 +82,9 @@
 
 | Item | Status | Risk |
 |------|--------|------|
+| Playwright | Deprecated; pivot to Maestro | E2E/CT coverage gap until migration complete |
 | Floor textures hardcoded | Not yet migrated | Architecture violation, but functional |
 | City model manifest gaps | `machine_generator` etc. missing | Tests mock around it; data integrity issue |
-| Visual verification | Not done | Jest tests pass but browser rendering unconfirmed |
 
 ---
 

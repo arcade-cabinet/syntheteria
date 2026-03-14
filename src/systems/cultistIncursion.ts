@@ -71,7 +71,7 @@ const CULTIST_AGGRO_RANGE = 15;
 /** Cultist weather damage reduction */
 const WEATHER_DAMAGE_REDUCTION = 0.5;
 /** Lightning call AP cost */
-const LIGHTNING_CALL_AP = 2;
+const _LIGHTNING_CALL_AP = 2;
 /** Lightning call area damage radius (grid cells) */
 const LIGHTNING_CALL_RADIUS = 3;
 /** Fog sense range from breach zones (grid cells) */

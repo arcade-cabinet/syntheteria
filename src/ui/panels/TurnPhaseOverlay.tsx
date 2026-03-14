@@ -19,7 +19,7 @@ import {
 
 // ─── Faction Display Names ──────────────────────────────────────────────────
 
-const FACTION_NAMES: Record<string, string> = {
+const _FACTION_NAMES: Record<string, string> = {
 	reclaimers: "Reclaimers",
 	volt_collective: "Volt Collective",
 	signal_choir: "Signal Choir",

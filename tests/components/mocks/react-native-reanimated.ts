@@ -41,6 +41,13 @@ function withDelay<T>(_delayMs: number, value: T): T {
 	return value;
 }
 
+const Easing = {
+	linear: (t: number) => t,
+	ease: (t: number) => t,
+	bezier: (_x1: number, _y1: number, _x2: number, _y2: number) => (t: number) => t,
+	inOut: (e: (t: number) => number) => (t: number) => e(t),
+};
+
 const Animated = {
 	createAnimatedComponent,
 	View: createAnimatedComponent(View),
@@ -49,6 +56,7 @@ const Animated = {
 export default Animated;
 export {
 	createAnimatedComponent,
+	Easing,
 	useAnimatedStyle,
 	useSharedValue,
 	withDelay,

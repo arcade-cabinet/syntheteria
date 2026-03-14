@@ -43,7 +43,9 @@ import {
 	type UnitTurnState,
 } from "../systems/turnSystem";
 import { resetVictorySystem } from "../systems/victorySystem";
+import { getDatabaseSync } from "../db/runtime";
 import { hydratePersistedWorldEntities } from "../world/entityPersistence";
+import { initWorldGrid } from "../world/gen/worldGrid";
 import { resetRuntimeState, setRuntimeScene } from "../world/runtimeState";
 import type { PersistedWorldSnapshot } from "../world/snapshots";
 import {
@@ -67,6 +69,13 @@ export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 	validateAssetManifest();
 	resetGameState();
 	resetStructuralSpace();
+
+	// Initialize WorldGrid for chunk-based map (reads config from SQLite)
+	initWorldGrid(
+		getDatabaseSync(),
+		persistedWorld.config.worldSeed,
+		persistedWorld.saveGame.id,
+	);
 	resetCityLayout();
 	resetResources();
 	resetRuntimeState();
@@ -178,7 +187,10 @@ export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 		const activeHarvests: ActiveHarvest[] = JSON.parse(
 			persistedWorld.harvestState.active_harvests_json,
 		);
-		rehydrateHarvestState(consumedIds, activeHarvests);
+		const consumedFloorKeys: string[] = JSON.parse(
+			persistedWorld.harvestState.consumed_floor_tiles_json ?? "[]",
+		);
+		rehydrateHarvestState(consumedIds, activeHarvests, consumedFloorKeys);
 	}
 
 	// Rehydrate per-faction resources from save

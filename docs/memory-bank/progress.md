@@ -15,7 +15,10 @@
 | Turn system | WORKS | `turnSystem.ts`, `turnPhaseHandlers.ts` | AP/MP per unit, player/AI/env phases |
 | End Turn flow | WORKS | `turnPhaseHandlers.ts` | End Turn button triggers phase cascade |
 | Resource pool | WORKS | `resources.ts` | 11 material types |
-| Harvest system | WORKS | `harvestSystem.ts` | Tick-based, consumes structures |
+| Harvest system | WORKS | `harvestSystem.ts`, `resourcePools.ts` | Tick-based, consumes structures; floor harvest (strip-mining) via FLOOR_* pools, `startFloorHarvest` |
+| JSON-in-SQLite | WORKS | `db/bootstrap.ts`, `db/seedGameData.ts`, `db/gameConfig.ts`, `db/modelDefinitions.ts` | Config and model definitions loaded at bootstrap; world/gen read from DB |
+| Foundation DB build | WORKS | `scripts/build-foundation-db.ts`, `db/sqljsAdapter.ts` | `pnpm db:build:foundation` generates assets/db/foundation.db; sql.js (no native deps) |
+| Test DB | WORKS | `db/testDb.ts`, `jest.setup.ts` | Real SQLite (sql.js) per test file; FakeDatabase removed from runtime |
 | Building placement | WORKS | `buildingPlacement.ts` | 7 types, cost-check, adjacency |
 | Fabrication queue | WORKS | `fabricationSystem.ts` | Motor Pool processes build orders |
 | Motor Pool | WORKS | `motorPool.ts` | Spawns fabricated units |

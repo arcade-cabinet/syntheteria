@@ -184,7 +184,7 @@ const Vortex = ({
 		[],
 	);
 
-	const intensity = complete ? 2.0 : 0.5 + progress * 1.5;
+	const _intensity = complete ? 2.0 : 0.5 + progress * 1.5;
 	const color = complete
 		? new THREE.Color(0.5, 0.8, 1.0)
 		: new THREE.Color(0.2, 0.4, 0.9);

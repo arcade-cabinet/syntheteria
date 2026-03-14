@@ -167,6 +167,7 @@ export interface HarvestStateSnapshot {
 	save_game_id: number;
 	consumed_structure_ids_json: string;
 	active_harvests_json: string;
+	consumed_floor_tiles_json?: string;
 	last_synced_at: number;
 }
 

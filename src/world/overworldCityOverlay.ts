@@ -75,6 +75,8 @@ function getCityRole(poiType: WorldPoiType): DistrictStackBlock["role"] {
 			return "fortress";
 		case "deep_sea_gateway":
 			return "gateway";
+		default:
+			return "industrial";
 	}
 }
 

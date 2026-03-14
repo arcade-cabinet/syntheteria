@@ -190,7 +190,7 @@ describe("combatSystem — AP cost (task #21)", () => {
 		// Player should not initiate any attack (p1 has 0 AP)
 		// However, p1 may still retaliate when attacked by e1 (retaliation is free)
 		// The feral unit e1 initiates, then p1 retaliates
-		const playerInitiated = events.filter(
+		const _playerInitiated = events.filter(
 			(e) =>
 				e.attackerId === "p1" &&
 				// Check that this is not a retaliation by ensuring

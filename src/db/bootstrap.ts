@@ -1,4 +1,5 @@
 import { getDatabaseSync } from "./runtime";
+import { seedGameDataSync } from "./seedGameData";
 import type { SyncDatabase } from "./types";
 
 const initializedDatabases = new WeakSet<object>();
@@ -222,6 +223,88 @@ export function initializeDatabaseSync(
 			turn_number INTEGER NOT NULL,
 			events_json TEXT NOT NULL DEFAULT '[]'
 		);
+
+		CREATE TABLE IF NOT EXISTS model_definitions (
+			id TEXT PRIMARY KEY NOT NULL,
+			category TEXT NOT NULL,
+			family TEXT NOT NULL,
+			display_name TEXT NOT NULL,
+			asset_path TEXT NOT NULL,
+			bounds_json TEXT NOT NULL DEFAULT '{"width":1,"height":1,"depth":1}',
+			grid_footprint_json TEXT NOT NULL DEFAULT '{"width":1,"depth":1}',
+			placement_rules_json TEXT NOT NULL DEFAULT '{}',
+			interactions_json TEXT NOT NULL DEFAULT '{}',
+			rendering_json TEXT NOT NULL DEFAULT '{}',
+			mechanics_json TEXT NOT NULL DEFAULT '{}',
+			passable INTEGER NOT NULL DEFAULT 1,
+			blocks_sight INTEGER NOT NULL DEFAULT 0,
+			initial_placement INTEGER NOT NULL DEFAULT 0,
+			buildable INTEGER NOT NULL DEFAULT 0,
+			faction_restricted TEXT,
+			tags TEXT NOT NULL DEFAULT '[]'
+		);
+
+		CREATE TABLE IF NOT EXISTS tile_definitions (
+			id TEXT PRIMARY KEY NOT NULL,
+			zone_type TEXT NOT NULL,
+			texture_set_json TEXT NOT NULL DEFAULT '{}',
+			seamless INTEGER NOT NULL DEFAULT 1,
+			base_color_hex TEXT NOT NULL DEFAULT '#808080',
+			emissive_tint_hex TEXT
+		);
+
+		CREATE TABLE IF NOT EXISTS robot_definitions (
+			id TEXT PRIMARY KEY NOT NULL,
+			chassis_type TEXT NOT NULL,
+			display_name TEXT NOT NULL,
+			asset_path TEXT NOT NULL,
+			stats_json TEXT NOT NULL DEFAULT '{}',
+			abilities_json TEXT NOT NULL DEFAULT '[]'
+		);
+
+		CREATE TABLE IF NOT EXISTS game_map_tiles (
+			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+			save_game_id INTEGER NOT NULL,
+			tile_x INTEGER NOT NULL,
+			tile_y INTEGER NOT NULL,
+			level INTEGER NOT NULL DEFAULT 0,
+			elevation_y REAL NOT NULL DEFAULT 0,
+			clearance_above REAL NOT NULL DEFAULT 100,
+			zone_type TEXT NOT NULL,
+			tile_definition_id TEXT,
+			passable INTEGER NOT NULL DEFAULT 1,
+			discovery_state INTEGER NOT NULL DEFAULT 0,
+			placed_model_id TEXT,
+			placed_model_rotation INTEGER NOT NULL DEFAULT 0,
+			is_ramp INTEGER NOT NULL DEFAULT 0,
+			is_bridge INTEGER NOT NULL DEFAULT 0,
+			controller_faction TEXT,
+			resource_remaining INTEGER,
+			delta_json TEXT
+		);
+
+		CREATE TABLE IF NOT EXISTS map_deltas (
+			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+			save_game_id INTEGER NOT NULL,
+			turn_number INTEGER NOT NULL,
+			tile_x INTEGER NOT NULL,
+			tile_y INTEGER NOT NULL,
+			change_type TEXT NOT NULL,
+			change_json TEXT NOT NULL DEFAULT '{}'
+		);
+
+		CREATE TABLE IF NOT EXISTS game_config (
+			key TEXT PRIMARY KEY NOT NULL,
+			value_json TEXT NOT NULL
+		);
+
+		CREATE UNIQUE INDEX IF NOT EXISTS idx_game_map_tiles_upsert ON game_map_tiles(save_game_id, tile_x, tile_y, level);
+		CREATE INDEX IF NOT EXISTS idx_game_map_tiles_save_coords ON game_map_tiles(save_game_id, tile_x, tile_y, level);
+		CREATE INDEX IF NOT EXISTS idx_game_map_tiles_save_zone ON game_map_tiles(save_game_id, zone_type);
+		CREATE INDEX IF NOT EXISTS idx_game_map_tiles_faction ON game_map_tiles(save_game_id, controller_faction);
+		CREATE INDEX IF NOT EXISTS idx_map_deltas_save_turn ON map_deltas(save_game_id, turn_number);
+		CREATE INDEX IF NOT EXISTS idx_map_deltas_save_coords ON map_deltas(save_game_id, tile_x, tile_y);
+		CREATE INDEX IF NOT EXISTS idx_model_definitions_category_family ON model_definitions(category, family);
 	`);
 
 	addColumnIfMissing(
@@ -312,6 +395,13 @@ export function initializeDatabaseSync(
 			"UPDATE ecumenopolis_maps SET sector_scale = COALESCE(sector_scale, map_size);",
 		);
 	}
+	// 2.5D elevation columns for game_map_tiles
+	addColumnIfMissing(database, "game_map_tiles", "level", "INTEGER NOT NULL DEFAULT 0");
+	addColumnIfMissing(database, "game_map_tiles", "elevation_y", "REAL NOT NULL DEFAULT 0");
+	addColumnIfMissing(database, "game_map_tiles", "clearance_above", "REAL NOT NULL DEFAULT 100");
+	addColumnIfMissing(database, "game_map_tiles", "is_ramp", "INTEGER NOT NULL DEFAULT 0");
+	addColumnIfMissing(database, "game_map_tiles", "is_bridge", "INTEGER NOT NULL DEFAULT 0");
+
 	addColumnIfMissing(
 		database,
 		"world_entities",
@@ -371,8 +461,17 @@ export function initializeDatabaseSync(
 	addColumnIfMissing(database, "world_entities", "rod_capacity", "REAL");
 	addColumnIfMissing(database, "world_entities", "current_output", "REAL");
 	addColumnIfMissing(database, "world_entities", "protection_radius", "REAL");
+	addColumnIfMissing(
+		database,
+		"harvest_states",
+		"consumed_floor_tiles_json",
+		"TEXT NOT NULL DEFAULT '[]'",
+	);
 
 	initializedDatabases.add(database as object);
+
+	// Seed static game data after tables are ready
+	seedGameDataSync(database);
 }
 
 export function resetDatabaseBootstrapForTests(database: SyncDatabase) {

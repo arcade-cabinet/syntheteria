@@ -228,6 +228,13 @@ function defaultStructureIdsForPoi(poiType: WorldPoiType) {
 			] as const;
 		case "deep_sea_gateway":
 			return ["transit_node", "relay_spine", "power_sink_array"] as const;
+		default:
+			return [
+				"substation_core",
+				"storage_block",
+				"power_sink_array",
+				"defensive_gate",
+			] as const;
 	}
 }
 
@@ -297,7 +304,7 @@ export function getDistrictStructuresFromSnapshots(args: {
 	const resolvedIds =
 		keyed.size > 0
 			? [...keyed.keys()]
-			: ([...fallbacks] as DistrictStructureId[]);
+			: (Array.from(fallbacks) as DistrictStructureId[]);
 
 	return resolvedIds.map((id) => {
 		const definition = DISTRICT_STRUCTURE_DEFINITIONS[id];

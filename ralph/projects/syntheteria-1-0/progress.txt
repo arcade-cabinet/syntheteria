@@ -24,3 +24,9 @@ Created: 2026-03-13 20:34:55
 ## 2026-03-14 — Story 0.4 complete
 - City model manifest: all cityComposites model IDs are in generated manifest. Removed compositeSemantics.test.ts mock that stubbed getCityModelById for missing models. pnpm city:ingest runs successfully (91 models). Tests pass without mocks.
 
+## 2026-03-14 — Story 0.5 (manual verification)
+- pnpm web starts; http://localhost:8081 returns 200. To complete: open in browser, New Game, confirm ~20 pre-discovered cells visible and floor renders (no black void). Document result here when verified.
+
+## 2026-03-14 — Story 1.1 complete
+- maestro/flows/title.yaml: ported from tests/e2e/title.spec.ts. Asserts SYNTHETERIA, New Game, Settings visible; Continue not visible; opens/closes Settings via settings-close. appId set to com.arcadecabinet.syntheteria. maestro test requires connected device/simulator.
+

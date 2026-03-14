@@ -118,6 +118,27 @@ describe("floorTextures.json config", () => {
 		}
 	});
 
+	it("all JSON texture keys resolve to asset entries for each zone", () => {
+		const requiredKeys = ["color", "normal", "roughness"] as const;
+		for (const zoneId of floorZoneIds) {
+			const zoneConfig = Object.entries(floorTexturesConfig.zones).find(
+				([id]) => id === zoneId,
+			)?.[1];
+			expect(zoneConfig).toBeDefined();
+			const assetSet = floorTextureAssets[zoneId];
+			for (const key of requiredKeys) {
+				expect(zoneConfig!.textures[key]).toBeDefined();
+				expect(assetSet[key]).toBeDefined();
+			}
+			const textures = zoneConfig!.textures as Record<string, string>;
+			for (const key of ["ao", "height"]) {
+				if (key in textures && textures[key]) {
+					expect(assetSet[key as keyof typeof assetSet]).toBeDefined();
+				}
+			}
+		}
+	});
+
 	it("all texture assets resolve to valid URIs via resolveAssetUri", () => {
 		for (const zoneId of floorZoneIds) {
 			const textureSet = floorTextureAssets[zoneId];

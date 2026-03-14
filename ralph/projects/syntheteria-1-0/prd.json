@@ -47,7 +47,7 @@
 			],
 			"acceptance": "Zero require() for floor textures. All from JSON. pnpm tsc, lint, test pass.",
 			"priority": 3,
-			"passes": false,
+			"passes": true,
 			"notes": ""
 		},
 		{

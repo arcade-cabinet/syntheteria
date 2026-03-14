@@ -13,3 +13,8 @@ Created: 2026-03-13 20:34:55
 - Fixed pre-existing tsc: WorldPoiType coast_mines, ActiveLocationContext.presentation, HarvestVisualRenderer map key, districtStructures default return, getCityRole default.
 - pnpm tsc, pnpm lint, pnpm test all pass (2433 tests).
 
+## 2026-03-14 — Story 0.2 complete
+- Fail-hard asset audit: getCityFamilyMaterial now throws for unknown family (was returning null). CityModelMesh no longer falls back to city_wall when definition missing.
+- failHardAssets.test.ts: 3 paths — resolveAssetUri(""), getCityModelById("nonexistent_..."), getCityFamilyMaterial("nonexistent_family"). MaterialFactory.test.ts updated for throw.
+- pnpm tsc, pnpm test pass. (Lint has pre-existing noCommonJs/unused in other files.)
+

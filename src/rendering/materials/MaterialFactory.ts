@@ -290,11 +290,16 @@ export function getMaterial(id: string): THREE.MeshStandardMaterial | null {
  * Get the MaterialDefinition for a city model family so that
  * CityModelMesh can tint loaded GLBs consistently.
  */
-export function getCityFamilyMaterial(
-	family: string,
-): MaterialDefinition | null {
+export function getCityFamilyMaterial(family: string): MaterialDefinition {
 	const key = `city_${family}`;
-	return MATERIAL_DEFINITIONS[key] ?? null;
+	const def = MATERIAL_DEFINITIONS[key];
+	if (def == null) {
+		throw new Error(
+			`getCityFamilyMaterial: no material definition for family "${family}" (key: "${key}"). ` +
+				`Available: [${Object.keys(MATERIAL_DEFINITIONS).join(", ")}]`,
+		);
+	}
+	return def;
 }
 
 /**

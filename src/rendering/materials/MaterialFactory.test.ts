@@ -108,8 +108,10 @@ describe("MaterialFactory", () => {
 			}
 		});
 
-		it("returns null for unknown family", () => {
-			expect(getCityFamilyMaterial("nonexistent")).toBeNull();
+		it("throws for unknown family (fail-hard)", () => {
+			expect(() => getCityFamilyMaterial("nonexistent")).toThrow(
+				/getCityFamilyMaterial: no material definition for family "nonexistent"/,
+			);
 		});
 	});
 

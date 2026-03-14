@@ -5,7 +5,6 @@ import { resolveAssetUri } from "../../config/assetUri";
 import {
 	applyMaterialDefinition,
 	getCityFamilyMaterial,
-	MATERIAL_DEFINITIONS,
 } from "../../rendering/materials/MaterialFactory";
 import type { CityModelDefinition } from "../config/types";
 
@@ -23,15 +22,7 @@ function normalizeCityMaterial(
 	}
 
 	const definition = getCityFamilyMaterial(family);
-	if (definition) {
-		applyMaterialDefinition(material, definition, 0.35);
-	} else {
-		// Fallback: use the city_wall definition as a safe default
-		const fallback = MATERIAL_DEFINITIONS.city_wall;
-		if (fallback) {
-			applyMaterialDefinition(material, fallback, 0.35);
-		}
-	}
+	applyMaterialDefinition(material, definition, 0.35);
 	material.side = THREE.DoubleSide;
 	material.needsUpdate = true;
 }

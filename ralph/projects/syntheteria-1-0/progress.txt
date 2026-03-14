@@ -7,3 +7,9 @@ Created: 2026-03-13 20:34:55
 - Run: ./ralph/convert.sh syntheteria-1-0
 - Then: ./ralph/start.sh syntheteria-1-0
 
+## 2026-03-14 — Story 0.1 complete
+- Removed Playwright (packages, configs, playwright/ dir). Excluded tests/e2e, tests/components, tests/visual from tsc and biome; specs kept for Maestro/RNTL port.
+- Added maestro/ with config.yaml, flows/, README (Maestro CLI install).
+- Fixed pre-existing tsc: WorldPoiType coast_mines, ActiveLocationContext.presentation, HarvestVisualRenderer map key, districtStructures default return, getCityRole default.
+- pnpm tsc, pnpm lint, pnpm test all pass (2433 tests).
+

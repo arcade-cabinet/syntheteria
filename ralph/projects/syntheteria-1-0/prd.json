@@ -62,7 +62,7 @@
 			],
 			"acceptance": "city:ingest produces complete manifest. No missing model IDs. Tests pass without model mocks.",
 			"priority": 4,
-			"passes": false,
+			"passes": true,
 			"notes": ""
 		},
 		{

@@ -1,24 +1,3 @@
-jest.mock("../catalog/cityCatalog", () => {
-	const actual = jest.requireActual("../catalog/cityCatalog");
-	return {
-		...actual,
-		getCityModelById: (id: string) => {
-			try {
-				return actual.getCityModelById(id);
-			} catch {
-				// Return a stub for models not in the manifest (e.g. machine_generator)
-				return {
-					id,
-					label: id,
-					families: ["industrial" as const],
-					tags: ["prop"],
-					footprint: { x: 1, z: 1 },
-				};
-			}
-		},
-	};
-});
-
 import { CITY_COMPOSITES } from "./cityComposites";
 import {
 	summarizeCompositeSemantics,

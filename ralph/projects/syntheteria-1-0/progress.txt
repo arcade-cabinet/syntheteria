@@ -21,3 +21,6 @@ Created: 2026-03-13 20:34:55
 ## 2026-03-14 — Story 0.3 complete
 - Floor textures: floorTextures.json already in use; added floorTextures.types.ts (FloorTexturesConfig, FloorZoneEntry, FloorZoneTexturePaths). floorTextureAssets imports JSON and uses typed config. floorMaterialPresets consumes floorTextureAssets (no require()). Test added: all JSON texture keys resolve to asset entries. pnpm tsc, pnpm test pass.
 
+## 2026-03-14 — Story 0.4 complete
+- City model manifest: all cityComposites model IDs are in generated manifest. Removed compositeSemantics.test.ts mock that stubbed getCityModelById for missing models. pnpm city:ingest runs successfully (91 models). Tests pass without mocks.
+

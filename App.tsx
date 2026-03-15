@@ -9,7 +9,8 @@ import {
 	useState,
 	useSyncExternalStore,
 } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
+import { USE_WEBGPU_WEB } from "./src/config/rendering";
 import "./src/db";
 import { saveAllStateSync } from "./src/db/saveAllState";
 import {
@@ -31,6 +32,7 @@ import { UnitInput } from "./src/input/UnitInput";
 import { ActionRangeRenderer } from "./src/rendering/ActionRangeRenderer";
 import { BreachZoneRenderer } from "./src/rendering/BreachZoneRenderer";
 import { BuildingRenderer } from "./src/rendering/BuildingRenderer";
+import { ChunkLoaderSync } from "./src/rendering/ChunkLoaderSync";
 import { CityInteriorRenderer } from "./src/rendering/CityInteriorRenderer";
 import { CityRenderer } from "./src/rendering/CityRenderer";
 import { CombatEffectsRenderer } from "./src/rendering/CombatEffectsRenderer";
@@ -44,6 +46,7 @@ import { LandscapeProps } from "./src/rendering/LandscapeProps";
 import { LightningSystem } from "./src/rendering/LightningSystem";
 import { MemoryFragmentRenderer } from "./src/rendering/MemoryFragmentRenderer";
 import { MovementOverlayRenderer } from "./src/rendering/MovementOverlayRenderer";
+import { useNativeCameraPanHandlers } from "./src/rendering/NativeCameraController";
 import { NetworkLineRenderer } from "./src/rendering/NetworkLineRenderer";
 import { PathPreviewRenderer } from "./src/rendering/PathPreviewRenderer";
 import { PostProcessing } from "./src/rendering/PostProcessing";
@@ -148,6 +151,21 @@ export default function App() {
 		subscribeRuntimeState,
 		getRuntimeState,
 	);
+	const _nativeCameraPanHandlers = useNativeCameraPanHandlers();
+
+	useEffect(() => {
+		if (Platform.OS === "web" && typeof document !== "undefined") {
+			document.title = "Syntheteria";
+		}
+	}, []);
+
+	// Native Filament path: no R3F SceneReadySignal, so mark scene ready after mount
+	useEffect(() => {
+		if (inGame && Platform.OS !== "web") {
+			const t = setTimeout(() => setSceneReady(true), 150);
+			return () => clearTimeout(t);
+		}
+	}, [inGame]);
 
 	const nextFrame = () =>
 		new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -259,13 +277,28 @@ export default function App() {
 					onContinueGame={handleContinueGame}
 					onNewGame={handleNewGame}
 				/>
-			) : (
+			) : Platform.OS === "web" ? (
 				<View style={StyleSheet.absoluteFill}>
 					<ErrorBoundary>
 						<Canvas
 							style={StyleSheet.absoluteFill}
 							shadows
 							camera={{ position: [0, 20, 20], fov: 45 }}
+							{...(USE_WEBGPU_WEB && {
+								// R3F accepts async gl; types expect sync — cast for WebGPU path
+								gl: (async (defaultProps: {
+									canvas: HTMLCanvasElement | OffscreenCanvas;
+								}) => {
+									const { WebGPURenderer } = await import("three/webgpu");
+									const renderer = new WebGPURenderer({
+										canvas: defaultProps.canvas as HTMLCanvasElement,
+										antialias: true,
+										alpha: true,
+									});
+									await renderer.init();
+									return renderer;
+								}) as import("@react-three/fiber").GLProps,
+							})}
 						>
 							<Suspense
 								fallback={
@@ -306,6 +339,7 @@ export default function App() {
 										<StormParticles />
 										<LightningSystem />
 										<UnitInput />
+										<ChunkLoaderSync />
 										<StructuralFloorRenderer />
 										<NetworkLineRenderer />
 										<LandscapeProps />
@@ -361,13 +395,25 @@ export default function App() {
 								position: "absolute",
 								left: 0,
 								top: 0,
-								width: 2,
-								height: 2,
-								opacity: 0.01,
+								right: 0,
+								bottom: 0,
 								pointerEvents: "none",
 							}}
 						/>
 					)}
+				</View>
+			) : (
+				<View
+					style={[
+						StyleSheet.absoluteFill,
+						{ justifyContent: "center", alignItems: "center", padding: 24 },
+					]}
+				>
+					<Text style={{ color: "#8be6ff", fontSize: 14, textAlign: "center" }}>
+						R3F-only build. Use pnpm dev (web) or pnpm cap:ios / cap:android
+						(Capacitor).
+					</Text>
+					{sceneReady && <GameUI onQuitToTitle={handleQuitToTitle} />}
 				</View>
 			)}
 		</View>

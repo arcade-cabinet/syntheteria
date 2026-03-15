@@ -2,7 +2,7 @@
 title: "Rendering"
 domain: technical
 status: canonical
-last_updated: 2026-03-13
+last_updated: 2026-03-14
 summary: "39 R3F renderers — storm system, floor zones, instanced structures, particles, post-processing"
 depends_on:
   - "ARCHITECTURE.md"
@@ -12,6 +12,8 @@ planned_work:
   - "Storm/wormhole VFX coherence"
   - "Construction animation stages"
 ---
+
+> **Future backends:** WebGPU (web) and Filament (mobile) are the target solutions. See [RENDERING_BACKENDS.md](RENDERING_BACKENDS.md) for architecture and migration path.
 
 # Rendering
 

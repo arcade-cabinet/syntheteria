@@ -3,6 +3,8 @@
 > System-level status dashboard. Answers: what works, what's broken, what's missing.
 > Updated when system status changes. See [GAMEPLAN_1_0.md](../plans/GAMEPLAN_1_0.md) for full audit.
 
+**Migration (Phases 1–8 done):** **Capacitor + Vite + R3F** is the primary stack. `pnpm dev` / `pnpm build` run Vite; `src/main.tsx` → sql.js DB → `AppVite` + `GameSceneR3F` + `GameHUDDom`. Assets in `public/assets/`; Capacitor SQLite adapter in `db/capacitorDb.ts`; Vitest for `*.vitest.ts`. Filament and scene snapshot removed (R3F-only). Expo/RN deps retained for legacy Jest; primary build is Vite only. Plan: [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION.md).
+
 ---
 
 ## System Status
@@ -51,7 +53,7 @@
 | Signal network | WORKS | `signalNetwork.ts` | Relay connections |
 | Wormhole | WORKS | `wormhole.ts` | Endgame portal |
 | Chunk math | WORKS | `chunks.ts` | worldToChunk, chunkToSeed, adjacency, bounds (US-027) |
-| Chunk loader | WORKS | `chunkLoader.ts` | Camera-driven load/unload, Chebyshev distance (US-029) |
+| Chunk loader | WORKS | `chunkLoader.ts`, `ChunkLoaderSync.tsx` | Camera-driven load/unload via ChunkLoaderSync in App (US-029, 4.1) |
 | Chunk discovery | WORKS | `chunkDiscovery.ts` | Per-chunk fog of war with cache round-trip (US-030) |
 | Chunk deltas | WORKS | `chunkDelta.ts` | Delta persistence, versioned serialization (US-031) |
 | Zone blending | WORKS | `zoneBlendLogic.ts` | Smoothstep gradients + breach crack shader (US-026) |
@@ -114,19 +116,20 @@
 | SpeechBubbleRenderer | WORKS | Billboarded CanvasTexture panels above entities (US-019) |
 | ShadowSystem, StormEnvironment, PostProcessing | WORKS | Lighting & effects |
 
+**Rendering:** R3F-only. Web: WebGPU (or WebGL via env) in one `<Canvas>` (`GameSceneR3F`). Native: same build via Capacitor (`pnpm cap:ios` / `cap:android`). No Filament; no scene snapshot. Camera: `TopDownCamera` → `cameraStateStore`. See [RENDERING_BACKENDS.md](../technical/RENDERING_BACKENDS.md).
+
 ---
 
 ## What Doesn't Work Right
 
-### Floor Textures Are Hardcoded
-- `src/config/floorTextureAssets.ts` uses ES module `require()` instead of config-driven JSON
-- Model assets already use the correct pattern (JSON manifest + `resolveAssetUri()`)
-- Violates config-driven architecture mandate
+### Floor Textures — Hybrid Config
+- `floorTextures.json` defines zone structure; `floorTextureAssets.ts` imports JSON and uses static ESM imports for texture assets (Metro requires static imports for images)
+- Adding a new zone requires: 1) entry in floorTextures.json, 2) static import + mapping in floorTextureAssets.ts
+- Partially config-driven; full runtime resolution would need different asset pipeline
 
-### City Model Manifest Gaps
-- `machine_generator` and other model IDs referenced in `cityComposites.ts` are not in the generated manifest
-- Tests work around this with mocks, but the data integrity issue remains
-- Run `pnpm city:ingest` to regenerate manifest from GLB source files
+### City Model Manifest
+- PRD 0.4 completed: `pnpm city:ingest` produces manifest; `machine_generator` etc. in modelDefinitions.json
+- Some tests still mock `getCityModelById` for isolation (navmesh, pathfindingCache, ProceduralStructureDetails) — not due to missing models
 
 ---
 
@@ -134,17 +137,19 @@
 
 | Feature | Impact | Notes |
 |---------|--------|-------|
-| Config-driven floor textures | Architecture violation — can't evolve without code changes | Floor texture assets use `require()` |
-| City model manifest completeness | Tests need mocks for missing models | Re-run ingest pipeline |
-| Chunk streaming → rendering integration | Chunk math + loader + delta exist, per-chunk InstancedMesh exists, but not wired to live camera | All building blocks complete, needs integration glue |
-| Visual verification in browser | Most systems tested only via Jest, not visually confirmed | Playwright E2E covers boot + HUD, not full visual |
+| Maestro E2E (native) | Flows require Capacitor build | `pnpm build && pnpm cap:sync` then run **both** iOS and Android. Web: `pnpm dev`, `MAESTRO_WEB_URL=http://localhost:5173`; see [MAESTRO_PLAYTESTING.md](../plans/MAESTRO_PLAYTESTING.md) |
+| Visual verification in browser | Jest-only for most systems | Maestro flows + manual verify |
+
+**Remaining work (with dependencies):** See [docs/plans/TASK_LIST.md](../plans/TASK_LIST.md) for the full list (docs, E2E, assets commit, verification, PR).
+
+**Nice-to-haves:** See [docs/plans/NICE_TO_HAVES.md](../plans/NICE_TO_HAVES.md) for optional items (floor texture resolution, undermaterials, storm tuning, etc.).
 
 ---
 
 ## Known Issues & Risks
 
-1. **Duplicate hacking tests** — both `src/systems/hacking.test.ts` (19 tests) and `src/systems/__tests__/hackingSystem.test.ts` (35 tests) exist with overlapping coverage
-2. **Biome false positives** — 2 remaining biome warnings are `noCommonJs` false positives in Jest mock factories
+1. **Hacking tests** — hacking.test.ts (hacking.ts core) and hackingSystem.test.ts (hackingSystem.ts capture) test different modules; scope documented in file headers. No consolidation needed.
+2. **Biome** — 0 errors, 0 warnings; test/setup files have noCommonJs disabled via override
 3. **Koota static trait semantics** — `entity.get()` returns copies, must use `entity.set()` for mutations. 5 instances fixed (US-028), but pattern may recur.
 
 ---
@@ -155,11 +160,11 @@
 |----------|-------|
 | Total `.ts`/`.tsx` files | 417 |
 | Source files (non-test) | 279 |
-| Test files | 135 |
-| Test suites | 135 |
-| Individual tests | 1,605 |
+| Test files | 127 |
+| Test suites | 127 |
+| Individual tests | 2,431 |
 | TypeScript errors | 0 |
-| Biome lint errors | 0 (2 false-positive warnings) |
+| Biome lint | 0 errors, 0 warnings (full clean 2026-03-14) |
 | Renderer components | 39+ |
 | Game systems (ticked/frame) | 21+ |
 | JSON config files | 23 |
@@ -173,7 +178,7 @@
 |-------|-------|--------|
 | Phase 0 | Verify & Stabilize — make what exists work | **SUBSTANTIALLY COMPLETE** — worldReady gate, UI sequencing, asset validation, floor fix |
 | Phase 1 | Visible AI & Emergent Narrative | **COMPLETE** — rival encounters, bot speech events, speech bubble renderer |
-| Phase 2 | Config-Driven Asset Pipeline | **PARTIAL** — unified asset resolution (US-020), validation (US-024); floor textures still hardcoded |
+| Phase 2 | Config-Driven Asset Pipeline | **PARTIAL** — unified asset resolution (US-020), validation (US-024); floor textures hybrid (floorTextures.json + static imports) |
 | Phase 3 | World Architecture — chunk streaming | **COMPLETE** — chunk math, loader, discovery, deltas, per-chunk instancing all implemented |
 | Phase 4 | Visual Polish | **PARTIAL** — zone blending, void fill floor, speech bubbles; storm/wormhole VFX coherence remains |
 | Phase 5 | Gameplay Depth | **COMPLETE** — Mark upgrades (radial), hacking capture, diplomacy consequences, victory pacing |

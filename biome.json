@@ -11,7 +11,8 @@
 			"!tests/e2e/**",
 			"!tests/components/**",
 			"!tests/visual/**",
-			"!public/coi-serviceworker.js"
+			"!assets/coi-serviceworker.js",
+			"!public/assets/coi-serviceworker.js"
 		]
 	},
 	"formatter": { "enabled": true, "indentStyle": "tab" },
@@ -58,7 +59,8 @@
 			"!tests/e2e/**",
 			"!tests/components/**",
 			"!tests/visual/**",
-			"!public/coi-serviceworker.js"
+			"!assets/coi-serviceworker.js",
+			"!public/assets/coi-serviceworker.js"
 		]
 	},
 	"javascript": {
@@ -225,7 +227,18 @@
 				}
 			}
 		},
-		{ "includes": ["*.web.*"] }
+		{ "includes": ["*.web.*"] },
+		{
+			"includes": [
+				"**/*.test.ts",
+				"**/*.test.tsx",
+				"**/__tests__/**",
+				"jest.setup*.ts"
+			],
+			"linter": {
+				"rules": { "style": { "noCommonJs": "off" } }
+			}
+		}
 	],
 	"assist": {
 		"enabled": null,

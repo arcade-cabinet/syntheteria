@@ -11,7 +11,7 @@ You awaken in a void. You reach outward and discover damaged machines — mainte
 ## The 4X Pillars
 
 - **eXplore:** Fog of war is the core exploration mechanic. The world starts dark. Units with cameras reveal detailed maps; blind units reveal abstract maps. The ecumenopolis is limitless — viewport-driven chunk generation from `worldSeed + chunkKey` creates an effectively infinite explorable space.
-- **eXploit:** Every structure and prop in the ecumenopolis is a harvestable resource deposit. The dead machine civilization's infrastructure IS the resource base. 8 resource types: Heavy Metals, Light Metals, Uranics, Plastics, Oil, Microchips, Scrap, Rare Components.
+- **eXploit:** Every structure and prop in the ecumenopolis is a harvestable resource deposit. The dead machine civilization's infrastructure IS the resource base. 11 material types (see Economy doc): heavy/light metals, uranics, plastics, e-waste, intact components, scrap metal, and others defined in config.
 - **eXpand:** Base building using harvested resources — fabricators, storage, relay towers, power sinks, defensive turrets. Founded substations become forward operating bases. Signal relay networks extend command range.
 - **eXterminate:** Cultist incursions are the primary hostile pressure. Rival machine consciousnesses contest the same resources. Combat emphasizes component breakage, not HP attrition. Hacking: `Signal Link + Required Technique + Sufficient Compute`.
 

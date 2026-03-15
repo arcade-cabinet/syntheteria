@@ -14,6 +14,17 @@ planned_work:
 
 # Assets
 
+## Asset resolution and registry
+
+- **Canonical location:** All static assets live in **`public/assets/`** (e.g. `public/assets/ui/`, `public/assets/models/`, `public/assets/coi-serviceworker.js`). Root `assets` is a **symlink** to `public/assets` so existing imports (`../../../assets/...`) and Metro/Vite resolve correctly. Vite serves these at `/assets/...`. All previously root-level `assets/` contents were moved into `public/assets/`; the symlink preserves backward compatibility. To **commit** the move: `git add public/assets assets`, then stage any deletions of old `assets/*` paths (`git add -u` or `git add -u assets/`); see [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION.md) Phase 5.
+- **Central registry:** `src/config/assetsRegistry.ts` is the single entry point. It re-exports `resolveAssetUri`, `AssetModule`, and the domain registries. Resolve at use site with `resolveAssetUri(asset)`.
+- **Expo (legacy):** `resolveAssetUri()` in `src/config/assetUri.ts` uses `Asset.fromModule()` for Metro. **Vite:** Uses stubbed resolution and bundled/imported assets; static paths (e.g. HDRI) use `/assets/...`.
+
+### Audio and video (SDK 55)
+
+- **expo-av is deprecated** in Expo SDK 55. Use **expo-audio** for audio playback and **expo-video** for video if you need Expo-backed media.
+- This app uses **Tone.js** for all game audio (SFX, ambient, adaptive music) in `src/audio/`. Do not add `expo-av`. If we ever need Expo-backed playback (e.g. system sounds or video), add `expo-audio` or `expo-video` instead.
+
 ## Confidence Summary
 
 | Area | Status |

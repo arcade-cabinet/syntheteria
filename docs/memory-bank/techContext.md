@@ -11,14 +11,14 @@
 | Persistence | expo-sqlite + Drizzle ORM | SQLite is authoritative persistence |
 | Animation | animejs + react-native-reanimated | |
 | Audio | Tone.js | Spatial audio, procedural SFX, adaptive music |
-| Testing | Jest + ts-jest (unit/component), Playwright (E2E) | Migrated from Vitest |
+| Testing | Jest + ts-jest (unit/component), Maestro (E2E) | Playwright deprecated; E2E in maestro/flows/ |
 | Formatting | Biome | Tabs, double quotes, sorted imports |
 | Physics | Rapier | Decoupled via callbacks — never import directly in systems |
 
 ## Codebase Scale
 
 - ~375 source files (.ts/.tsx)
-- ~113 test suites, ~1,092 tests (all passing)
+- 127 test suites, 2,431 tests (all passing)
 - 23+ JSON config files in `src/config/`
 - Zero TypeScript errors on `tsc --noEmit`
 
@@ -36,9 +36,8 @@ src/
     components/ # Shared primitives (HudButton, HudPanel)
     panels/     # TopBar, Notifications, ThoughtOverlay, Minimap, ResourceStrip
   utils/        # Helpers, RNG, math
-tests/
-  components/   # Jest component tests
-  e2e/          # Playwright E2E tests
+tests/          # Jest unit + component tests
+maestro/        # Maestro E2E flows (YAML); Playwright deprecated
 docs/           # Design docs, plans, contracts
 config/         # Top-level config JSONs
 assets/
@@ -73,26 +72,30 @@ Metro wraps modules in CJS `__d()` factories, so `import.meta` throws SyntaxErro
 ## Build & Run
 
 ```bash
-# Install dependencies
-npm install
+# Install dependencies (use pnpm per AGENTS.md)
+pnpm install
 
-# Development (web)
-npx expo start --web
+# Development (web) — primary
+pnpm dev
+# Vite serves on http://localhost:5173
 
-# Development (native)
+# Legacy Expo (optional, for Jest)
+pnpm web
 npx expo start
 
 # Run tests
-npx jest
+pnpm test
 
 # Type check
-npx tsc --noEmit
+pnpm tsc
 
-# Format
-npx biome check --apply .
+# Lint
+pnpm lint
+pnpm lint:fix
 
-# E2E tests
-npx playwright test
+# E2E (Maestro — requires dev build or web at MAESTRO_WEB_URL / config/e2e.json)
+maestro test maestro/
+# Web flow only: maestro test maestro/flows/title-web.yaml
 ```
 
 ## Persistence Model
@@ -113,7 +116,7 @@ Runtime state lives in Koota ECS. The save model loads the campaign as one coher
 
 - Jest + ts-jest for unit and component tests
 - `tsconfig.test.json` with CJS mode for Jest compatibility
-- Playwright for E2E (18 tests across 6 phases)
+- Maestro for E2E (YAML flows in maestro/flows/); Playwright deprecated
 - Tests MUST import expected values from JSON/config source of truth — never hardcode
 - `jest.mock` for ECS queries (mock Koota queries as plain arrays)
 - Variables prefixed with `mock` can be referenced in `jest.mock` factories
@@ -123,7 +126,7 @@ Runtime state lives in Koota ECS. The save model loads the campaign as one coher
 ## CI/CD
 
 GitHub Actions pipeline runs:
-- `tsc --noEmit` — type checking
-- `npx jest` — full test suite
-- `npx biome check` — formatting/linting
-- Playwright E2E on push to main
+- `pnpm tsc` — type checking
+- `pnpm test` — full test suite (Jest)
+- `pnpm lint` — Biome formatting/linting
+- E2E: Maestro flows (optional; require dev build or Maestro Cloud). See docs/plans/MAESTRO_PLAYTESTING.md.

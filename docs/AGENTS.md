@@ -2,7 +2,7 @@
 title: "Documentation Index"
 domain: meta
 status: canonical
-last_updated: 2026-03-13
+last_updated: 2026-03-14
 summary: "Navigation index for all Syntheteria documentation — start here after memory bank"
 ---
 
@@ -28,7 +28,7 @@ Every document under `docs/` has YAML frontmatter:
 title: "Document Title"
 domain: design | technical | interface | meta
 status: canonical | reference | archived
-last_updated: 2026-03-13
+last_updated: 2026-03-14
 summary: "One-line description — agent can decide relevance from this"
 depends_on: []
 planned_work: []
@@ -75,6 +75,7 @@ How the game is built. Architecture and implementation.
 | [AI_SYSTEMS.md](technical/AI_SYSTEMS.md) | GOAP governors, Yuka steering, NavMesh, AI packages |
 | [ASSETS.md](technical/ASSETS.md) | 91 city GLBs, 9 robot chassis, gaps, ingestion pipeline |
 | [RENDERING.md](technical/RENDERING.md) | 39 renderers, storm system, floor zones, performance |
+| [RENDERING_BACKENDS.md](technical/RENDERING_BACKENDS.md) | WebGPU (web) + Filament (mobile) target architecture, abstraction, migration |
 
 ### Interface (`interface/`)
 
@@ -90,6 +91,13 @@ Player-facing surfaces. Visual language and interaction model.
 | File | Summary |
 |------|---------|
 | [GAMEPLAN_1_0.md](plans/GAMEPLAN_1_0.md) | Comprehensive assessment + 6-phase roadmap (single source of truth for execution) |
+| [EXPO_TO_CAPACITOR_MIGRATION.md](plans/EXPO_TO_CAPACITOR_MIGRATION.md) | **Migration plan:** Expo/RN/Filament → Capacitor + Vite + R3F only; assets in public; @capacitor-community/sqlite |
+| [PLAYWRIGHT_TO_MAESTRO_MIGRATION.md](plans/PLAYWRIGHT_TO_MAESTRO_MIGRATION.md) | E2E pivot: Maestro + RNTL + @react-three/test-renderer |
+| [MAESTRO_PLAYTESTING.md](plans/MAESTRO_PLAYTESTING.md) | How to run Maestro flows, web vs native, verification status |
+| [COMPREHENSIVE_AUDIT_2026-03.md](plans/COMPREHENSIVE_AUDIT_2026-03.md) | Full codebase vs docs/PRD/GAMEPLAN audit |
+| [NICE_TO_HAVES.md](plans/NICE_TO_HAVES.md) | Consolidated optional, P2, and deferred items |
+| [PR_CHECKLIST.md](plans/PR_CHECKLIST.md) | Checklist for creating and merging the 1.0 PR |
+| [TASK_LIST.md](plans/TASK_LIST.md) | **Remaining work** with dependencies (docs, E2E, assets commit, verification, PR) |
 
 ### Archive (`archive/`)
 
@@ -113,3 +121,5 @@ Completed, obsolete, or superseded documents. Reference only — do not use for 
 | Input mapping, radial menu, zoom | `interface/INPUT.md` |
 | Current status, what to do next | `memory-bank/activeContext.md` |
 | What works / what's broken | `memory-bank/progress.md` |
+| E2E testing, Maestro flows, web vs native | `plans/MAESTRO_PLAYTESTING.md` |
+| Migrating off Expo/RN to Capacitor + Vite + R3F | `plans/EXPO_TO_CAPACITOR_MIGRATION.md` |

@@ -41,19 +41,22 @@ docs/AGENTS.md                     — master index of all domain docs
 ```
 
 ### Step 4: Task-Relevant Domain Docs
-Based on your task, read the relevant domain docs. Use frontmatter or the first 15 lines (`head -15`) to decide relevance before reading the full file. Key domain docs:
+Based on your task, read the relevant domain docs. Use frontmatter or the first 15 lines (`head -15`) to decide relevance before reading the full file. **Canonical paths** (see `docs/AGENTS.md` for full index):
 
-- **Game design:** `docs/GAME_DESIGN.md`
-- **Economy/turns:** `docs/TURN_AND_ECONOMY.md`
-- **World/city systems:** `docs/WORLD_AND_CITY_SYSTEMS.md`
-- **UI/brand:** `docs/UI_BRAND_AND_EXPERIENCE.md`
-- **Lore:** `docs/LORE.md`
-- **Technical architecture:** `docs/TECHNICAL.md`
-- **City contracts:** `docs/CITY_CONTRACTS.md`
-- **Input/interaction:** `docs/INPUT_AND_INTERACTION.md`
+- **Game design:** `docs/design/GAME_DESIGN.md`
+- **Economy/turns:** `docs/design/ECONOMY.md`
+- **World/systems:** `docs/technical/WORLD_SYSTEMS.md`
+- **UI/brand:** `docs/interface/UI_DESIGN.md`
+- **Lore:** `docs/design/LORE.md`
+- **Technical architecture:** `docs/technical/ARCHITECTURE.md`
+- **Input/interaction:** `docs/interface/INPUT.md`
+- **Factions/campaign:** `docs/design/FACTIONS.md`
+- **Bots/archetypes:** `docs/design/BOTS.md`
+- **Assets/pipeline:** `docs/technical/ASSETS.md`
+- **Rendering:** `docs/technical/RENDERING.md`
 - **Design subdomain:** `docs/design/`
-- **Interface subdomain:** `docs/interface/`
 - **Technical subdomain:** `docs/technical/`
+- **Interface subdomain:** `docs/interface/`
 - **Plans:** `docs/plans/`
 
 ---

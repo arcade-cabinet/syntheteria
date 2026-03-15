@@ -18,12 +18,12 @@ planned_work:
 |---|---|---|
 | Cross-platform framework | Expo SDK + Metro | Single codebase targeting web, iOS, Android; Metro handles native module resolution |
 | World & logic | Koota ECS | Canonical gameplay state; entity/component/system with trait-based queries |
-| Rendering | React Three Fiber + Three.js + Drei | Declarative 3D in React; Drei for camera controls, loaders, helpers |
+| Rendering | React Three Fiber + Three.js + Drei | Declarative 3D in React; Drei for camera controls, loaders, helpers. Target backends: WebGPU (web), Filament (mobile) — see [RENDERING_BACKENDS.md](RENDERING_BACKENDS.md). |
 | UI & styling | NativeWind v4 + React Native components | Tailwind-like utility classes that compile to RN StyleSheet |
 | Persistence | Expo SQLite + Drizzle ORM | Local-first campaign saves; typed schema with migrations |
 | Animation | animejs + react-native-reanimated | UI motion (reanimated) and procedural tweens (animejs) |
 | Audio | Tone.js | Spatial audio, procedural SFX, adaptive music layers |
-| Testing | Jest + Playwright | Jest for unit/component; Playwright for E2E browser tests |
+| Testing | Jest + Maestro | Jest for unit/component; Maestro for E2E (flows in maestro/flows/) |
 
 ## Platform Constraints
 

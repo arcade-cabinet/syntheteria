@@ -5,8 +5,23 @@
 
 ---
 
+## Strategic direction: Capacitor + Vite + R3F
+
+We are **migrating off Expo/React Native/Filament**. The only path that has consistently worked is **R3F on the web**. The target stack is:
+
+- **Capacitor** — wrap a web app for iOS/Android (no React Native).
+- **Vite** — replace Metro.
+- **R3F only** — no Filament, no expo-gl; one 3D path.
+- **Assets in `public/`** — no expo-asset; static files served at root.
+- **@capacitor-community/sqlite** — replace expo-sqlite for persistence ([plugin](https://github.com/capacitor-community/sqlite)).
+
+Full plan: [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION.md). Execute in phases (scaffold → game logic → R3F scene → DB adapter → assets → UI → tests → cleanup).
+
+---
+
 ## Current Focus
 
+- **Capacitor + Vite migration (Phases 1–8 done)** — Primary build: `pnpm dev` / `pnpm build`. Entry: `src/main.tsx` → `createTestDb()` → `AppVite` (DOM title + game, `GameSceneR3F`, `GameHUDDom`). Capacitor SQLite adapter in `db/capacitorDb.ts`; assets in `public/assets/`; Vitest (`pnpm test:vitest`, `*.vitest.ts`). Filament and scene snapshot removed (R3F-only). Expo/RN deps retained for legacy Jest.
 - **Build-time foundation.db** — `pnpm db:build:foundation` generates `assets/db/foundation.db` with schema + all JSON config (models, tiles, robots, game_config); no fake/fallback DB
 - **Test db** — Jest uses `createTestDb()` (sql.js) with schema + seed; reserved `TEST_SEED` in `src/db/testConstants.ts` and `tests/testConstants.ts`
 - **JSON-in-SQLite foundation COMPLETE** — config and model definitions loaded into DB at bootstrap; world/gen read from SQLite
@@ -55,13 +70,21 @@
 
 ---
 
+## Rendering (R3F-only)
+
+- **Single path:** One `<Canvas>` in `GameSceneR3F.tsx` (entry: `src/main.tsx` → AppVite). Web: WebGPU when `USE_WEBGPU_WEB`, else WebGL. Native: same build via Capacitor (`pnpm cap:ios` / `cap:android`); no Filament, no scene snapshot.
+- **Camera:** `TopDownCamera` syncs to `cameraStateStore`. All 39 renderers (floor, units, storm, territory, etc.) are R3F components in the same scene.
+- **Doc:** [RENDERING_BACKENDS.md](../technical/RENDERING_BACKENDS.md) — R3F-only; Filament and scene contract removed.
+
+---
+
 ## Next Steps (Prioritized)
 
-1. **Ralph 1.0 execution** — Ralph-cursor set up at `ralph/`. PRD + prd.json at `ralph/projects/syntheteria-1-0/`. Run `./ralph/start.sh syntheteria-1-0` to execute 25 user stories. See `ralph/README.md`.
-2. **PIVOT: Remove Playwright** — Port E2E to **Maestro**; component tests to **RNTL** / **@react-three/test-renderer**. See [`docs/plans/PLAYWRIGHT_TO_MAESTRO_MIGRATION.md`](../plans/PLAYWRIGHT_TO_MAESTRO_MIGRATION.md).
-2. **Ingest undermaterials** — 2DPhotorealistic textures for pit interiors; config-driven floor materials
-3. **Create PR** for `codex/ecumenopolis-fullscope` → `main`
-4. **Config-driven floor textures** — migrate `floorTextureAssets.ts` from `require()` to JSON manifest
+1. **Task list** — See [docs/plans/TASK_LIST.md](../plans/TASK_LIST.md) for remaining work with dependencies (docs, E2E, assets commit, verification, PR).
+2. **Ralph 1.0 PRD** — All 25 stories marked complete; manual verification (0.5, 0.6) and PR (5.3) remain for maintainer.
+3. **Create PR** — `codex/ecumenopolis-fullscope` → `main` when TASK_LIST T8 passes; update GAMEPLAN_1_0 and progress.md on PR.
+4. **Maestro E2E** — Native: `pnpm build` + `pnpm cap:sync`, then run **both** iOS and Android. Web: `pnpm dev`, `MAESTRO_WEB_URL=http://localhost:5173`, run `title-web.yaml`. See [MAESTRO_PLAYTESTING.md](../plans/MAESTRO_PLAYTESTING.md).
+5. **Nice-to-haves** — See [NICE_TO_HAVES.md](../plans/NICE_TO_HAVES.md).
 
 ---
 
@@ -82,9 +105,9 @@
 
 | Item | Status | Risk |
 |------|--------|------|
-| Playwright | Deprecated; pivot to Maestro | E2E/CT coverage gap until migration complete |
-| Floor textures hardcoded | Not yet migrated | Architecture violation, but functional |
-| City model manifest gaps | `machine_generator` etc. missing | Tests mock around it; data integrity issue |
+| Playwright | Deprecated; Maestro in place | E2E requires dev build or web flow |
+| Floor textures | floorTextures.json + static imports | Partially config-driven; Metro limits |
+| City model manifest | PRD 0.4 complete | modelDefinitions has machine_generator |
 
 ---
 
@@ -102,10 +125,97 @@
 
 ## Session Log
 
+### 2026-03-13 — Phase 8 complete: Filament removed, plan done
+- **Filament + scene snapshot removed:** Deleted `FilamentSceneView.tsx`, `FilamentSceneView.web.tsx`, `NativeSceneComposer.tsx`, `SceneComposer.tsx`, `sceneContract.ts`, `sceneSnapshotStore.ts`, `sceneSnapshotBuilder.ts`, `rendering/backends/filament.ts`. `cameraStateStore.ts` kept with local `SceneCamera` type (used by `TopDownCamera`).
+- **App.tsx:** Removed Filament/SceneComposer imports and usage; native branch shows placeholder (use web or Capacitor).
+- **package.json:** Removed `react-native-filament` and `patchedDependencies`; lockfile updated.
+- **Docs:** RENDERING_BACKENDS.md (R3F-only, Filament removed); EXPO_TO_CAPACITOR_MIGRATION.md (Phase 8 done); progress.md, activeContext.md, AGENTS.md updated. Primary build: Vite only; Expo/RN deps retained for legacy Jest.
+- **Verification:** `pnpm test:vitest` (12), `pnpm test` (128 suites, 2435 tests), `pnpm build` pass.
+
+### 2026-03-14 — Finish everything: fog patch, docs, progress
+- **Fog patch:** Created via `pnpm patch` + edit + `pnpm patch-commit`. `patches/react-native-filament@1.9.0.patch` adds `setFogOptions` to RNFViewWrapper (cpp) and View types; `pnpm install` applies it. Native rebuild required for fog to take effect.
+- **RENDERING_BACKENDS.md:** "Practical next steps" updated to "Implemented (sky, fog, instancing)" with current status; remaining: createDebugCubeWireframe, shared line/quad renderable.
+- **progress.md:** Rendering backends bullet updated with sky/fog/instancing and patch reference.
+
+### 2026-03-14 — Full parity: territory border, path preview, hacking beam
+- **sceneContract:** DrawHackingBeam (from, to, progress) added.
+- **sceneSnapshotBuilder:** buildTerritoryBorderDraws (getAllCellOwnership + getCellOwner + EDGE_DEFS), buildPathPreviewDraws(pointerWorld) via previewClickToMove, buildHackingBeamDraws (getLastHackingEvents). buildSceneSnapshot(camera, session, pointerWorld?) — path preview when pointerWorld provided.
+- **FilamentSceneView:** Territory border (line pipeline), path preview (when in snapshot), hacking beams (DebugBox segment per beam). 128 suites, 2435 tests pass.
+
+### 2026-03-14 — Full parity: breach, wormhole, construction, range circles
+- **sceneContract:** DrawBreachCell, DrawWormhole, DrawConstructionOverlay added (DrawRangeCircle removed; range emitted as DrawLineSegment closed loops).
+- **sceneSnapshotBuilder:** buildBreachDraws (getBreachZones), buildWormholeDraw (getWormholeState, getWormholeVisualPhase), buildConstructionOverlayDraws (getConstructionOverlayData), buildRangeCircleDraws (selected player unit → 3 closed line loops with circlePoints). All merged into snapshot.
+- **FilamentSceneView:** Renders breach (flat DebugBox per cell), wormhole (DebugBox at position), construction (DebugBox per overlay). Line segments now iterate consecutive point pairs (so range circles render as full loops). 128 suites, 2435 tests pass.
+
+### 2026-03-14 — Full web/native parity: floor, territory, network, sky
+- **sceneContract.ts:** Added `DrawFloorCell`, `DrawTerritoryCell`, `DrawLineSegment`, `DrawSky`; extended `DrawItem` union.
+- **sceneSnapshotBuilder.ts:** `buildFloorDraws()` (getStructuralFragments + getStructuralCellRecords), `buildTerritoryDraws()` (getAllCellOwnership), `buildNetworkDraws()` (getNetworkOverlayState), `buildSkyDraw()` (getWeatherSnapshot). All merged into snapshot; no optional/placeholder path.
+- **FilamentSceneView.tsx:** Renders floor cells as Model floortile_basic, territory as floortile_empty, line segments as DebugBox (midpoint, rotation, halfExtent). useMemo for floor/territory sources moved before early return (hooks rule). Sky data in snapshot; Skybox omitted (needs texture; lights carry weather).
+- **RENDERING_BACKENDS.md, activeContext:** Updated to state full parity done.
+
+### 2026-03-14 — Building parity: zero placeholders
+- **buildingModelMap.ts:** New config mapping each placeable building type to a city catalog model ID (column_slim, props_computer, props_containerfull, etc.). No `building_*` placeholders.
+- **sceneSnapshotBuilder:** Buildings emit real city model IDs via `getBuildingModelId()`; skip only if type not in map.
+- **buildingModelMap.test.ts:** Tests that every placeable type maps to a valid city model; no placeholder keys.
+- **RENDERING_BACKENDS.md, activeContext:** Updated to reflect building parity. Full parity (floor, territory, network, storm, particles) requires new Draw types and Filament rendering — documented as remaining.
+
+### 2026-03-14 — Rendering backends doc: Native done & remaining
+- **RENDERING_BACKENDS.md:** Added "Native Filament — Done & Remaining": camera (pan, pinch, double-tap), model resolution (robots + structures), and optional remaining (DrawMeshInstanced/DrawParticles in contract only; building_* skipped; instancing/particles would need producer + Filament APIs). Test suite 127 suites / 2431 tests pass.
+
+### 2026-03-14 — Native double-tap camera reset
+- **NativeCameraController:** Double-tap (two taps within 400ms, no pan/pinch) resets camera to default (position [0,20,20], target [0,0,0]). `hasMovedRef` and `lastTapTimeRef` track tap vs gesture. progress.md rendering backends note updated (structure resolution + double-tap).
+
+### 2026-03-14 — Filament structure models (city GLBs on native)
+- **FilamentSceneView:** Added `resolveModelSource(modelId)`: resolve robot GLBs from `modelAssets`; else resolve sector structure `model_id` via `getCityModelById()` (city catalog `sourceAsset`). Unresolvable IDs (e.g. `building_*`) skip render. Sector structures now draw on native Filament. Lint, tsc, 127 suites / 2431 tests pass.
+- **RENDERING_BACKENDS.md:** Phase 3 row updated to mention structure/city model resolution.
+
+### 2026-03-14 — Native Filament camera pan + pinch zoom
+- **NativeCameraController.tsx:** Switched to raw touch events (onTouchStart/Move/End). Single-finger pan; two-finger pinch zoom (scale from distance ratio, clamped 8–120) plus two-finger pan from center delta. Hook returns `{ onTouchStart, onTouchMove, onTouchEnd }`; no PanResponder. Lint + tsc + full test suite (127 suites, 2431 tests) pass.
+- **App.tsx:** Native branch View uses `{...nativeCameraPanHandlers}`; same as before, now includes pinch.
+
+### 2026-03-14 — All errors and warnings fixed
+- **Lint:** Biome override for test/setup files (`noCommonJs` off); unused vars prefixed with `_`; removed ineffective suppression in NetworkLineRenderer; ResourceStrip require() has biome-ignore. **pnpm lint: 0 errors, 0 warnings.** tsc and full test suite pass.
+
+### 2026-03-14 — Pushing forward (continued)
+- **PR_CHECKLIST.md:** New doc (docs/plans/PR_CHECKLIST.md) — before opening PR, PR description, on merge, manual verification. Linked from docs/AGENTS.md.
+- **ralph progress.txt:** Appended entry for docs/Maestro/PR checklist batch.
+- **Lint:** pnpm lint had 13 errors (format/sort); fixed in "Production burst" entry above. tsc and test pass.
+
+### 2026-03-14 — Pushing forward
+- **Phase 2 wording:** progress.md Execution Roadmap — "floor textures still hardcoded" → "floor textures hybrid (floorTextures.json + static imports)".
+- **Maestro:** Added `onboarding-web.yaml` (url: localhost:8081). maestro/README and MAESTRO_PLAYTESTING updated (five flows; web run instructions).
+- **NICE_TO_HAVES:** Focus-visible item marked Addressed (HudButton + modals have role/labels).
+- **Verification:** pnpm tsc + pnpm test pass (127 suites, 2,431 tests).
+
+### 2026-03-14 — Nice-to-haves addressed
+- **NICE_TO_HAVES.md:** New consolidated doc (docs/plans/NICE_TO_HAVES.md) listing all optional, P2, deferred items from progress, GAMEPLAN, activeContext, domain docs. Each item has source, status, action.
+- **Hacking tests:** Added file-header scope: hacking.test.ts → hacking.ts (core); hackingSystem.test.ts → hackingSystem.ts (capture). progress.md "duplicate" note updated to "scope documented; no consolidation needed."
+- **progress.md:** "What's Missing" simplified; link to NICE_TO_HAVES.md for optional items.
+- **activeContext, docs/AGENTS.md:** Reference NICE_TO_HAVES.
+
+### 2026-03-14 — Comprehensive audit (codebase vs docs/PRD/GAMEPLAN)
+- **PRD:** All 25 stories verified against code. 0.5, 0.6 manual; 5.3 PR for maintainer. Rest implemented.
+- **GAMEPLAN:** §3.2 Floor textures → "Partially config-driven" (floorTextures.json + static imports). §4 "What's Missing" updated: 4.1 PARTIAL, 4.2–4.3 IMPLEMENTED (speech, chunks), 4.4 PARTIAL (cultist visuals), 4.6–4.7 IMPLEMENTED (Mark upgrade, cultist escalation). "The Bad" items 3 and 5 updated (chunk streaming done, bot speech exists). StructuralFloorRenderer link fixed to ../../src/rendering/.
+- **progress.md:** Floor textures → "Hybrid config"; City model → PRD 0.4 complete. "What's Missing" softened.
+- **activeContext Blocked/At Risk:** Updated to reflect current state.
+- **COMPREHENSIVE_AUDIT_2026-03.md:** New doc; PRD table, GAMEPLAN fixes, docs consistency. Linked from docs/AGENTS.md.
+- **README.md:** Quick Start (pnpm, pnpm web, Koota); Project Status table updated for 1.0.
+- **package.json:** Added `tsc` script for `pnpm tsc`.
+
+### 2026-03-14 — Docs review & Maestro playtesting
+- **Docs:** Corrected `docs/memory-bank/AGENTS.md` Step 4 domain doc paths to `design/`, `technical/`, `interface/`. Updated `docs/plans/GAMEPLAN_1_0.md` canonical table and **fixed four broken in-body links**. Updated `progress.md` (127 suites, 2,431 tests; Chunk loader + ChunkLoaderSync). `docs/AGENTS.md` last_updated 2026-03-14; "Which Doc" row for E2E → MAESTRO_PLAYTESTING.
+- **techContext.md:** Testing stack → Maestro (E2E); test counts 127 suites / 2,431; Build & Run → pnpm, Maestro commands; Testing Conventions & CI/CD → Maestro. Project structure: tests/ + maestro/.
+- **projectbrief.md:** eXploit pillar 8 → 11 material types (match ECONOMY).
+- **Root AGENTS.md:** Validation block 127 suites, 2,431 tests; E2E → Maestro.
+- **Maestro:** Native flows need installed app; web flows use MAESTRO_WEB_URL / config/e2e.json (no hardcoded ports). README + MAESTRO_PLAYTESTING: config and flow selector audit.
+- **GAMEPLAN_1_0:** Intro and "The Good" metrics updated to 127 suites / 2,431 tests; Appendix C file counts updated; E2E row → Maestro flows.
+- **ARCHITECTURE.md:** Testing row → Jest + Maestro.
+- **CLAUDE.md:** Test roots updated to current layout (unit/system, UI __tests__, maestro E2E).
+
 ### 2026-03-13 — Ecumenopolis Full-Scope Sprint
 - Executed 33 user stories via DAG-based parallel agents with worktree isolation
 - 5 depth levels processed as parallel waves
 - Fixed 4 failing tests (ESM boundary mocks, city model manifest gaps)
 - Auto-formatted 172 files with biome (239 → 0 errors)
 - Updated progress.md and activeContext.md to reflect current state
-- Final: 53 commits, 135 test suites, 1605 tests, 0 TS errors
+- Final: 53 commits, 127 test suites, 2,431 tests, 0 TS errors

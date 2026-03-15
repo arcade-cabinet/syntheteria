@@ -28,16 +28,8 @@ function addColumnIfMissing(
 	}
 }
 
-export function initializeDatabaseSync(
-	database: SyncDatabase = getDatabaseSync(),
-) {
-	if (initializedDatabases.has(database as object)) {
-		return;
-	}
-
-	database.execSync(`
-		PRAGMA journal_mode = WAL;
-
+/** Raw DDL for schema (no PRAGMA). Used by Capacitor bootstrap. */
+export const BOOTSTRAP_DDL = `
 		CREATE TABLE IF NOT EXISTS save_games (
 			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 			name TEXT NOT NULL,
@@ -305,7 +297,16 @@ export function initializeDatabaseSync(
 		CREATE INDEX IF NOT EXISTS idx_map_deltas_save_turn ON map_deltas(save_game_id, turn_number);
 		CREATE INDEX IF NOT EXISTS idx_map_deltas_save_coords ON map_deltas(save_game_id, tile_x, tile_y);
 		CREATE INDEX IF NOT EXISTS idx_model_definitions_category_family ON model_definitions(category, family);
-	`);
+	`;
+
+export function initializeDatabaseSync(
+	database: SyncDatabase = getDatabaseSync(),
+) {
+	if (initializedDatabases.has(database as object)) {
+		return;
+	}
+
+	database.execSync(`PRAGMA journal_mode = WAL;${BOOTSTRAP_DDL}`);
 
 	addColumnIfMissing(
 		database,
@@ -396,11 +397,36 @@ export function initializeDatabaseSync(
 		);
 	}
 	// 2.5D elevation columns for game_map_tiles
-	addColumnIfMissing(database, "game_map_tiles", "level", "INTEGER NOT NULL DEFAULT 0");
-	addColumnIfMissing(database, "game_map_tiles", "elevation_y", "REAL NOT NULL DEFAULT 0");
-	addColumnIfMissing(database, "game_map_tiles", "clearance_above", "REAL NOT NULL DEFAULT 100");
-	addColumnIfMissing(database, "game_map_tiles", "is_ramp", "INTEGER NOT NULL DEFAULT 0");
-	addColumnIfMissing(database, "game_map_tiles", "is_bridge", "INTEGER NOT NULL DEFAULT 0");
+	addColumnIfMissing(
+		database,
+		"game_map_tiles",
+		"level",
+		"INTEGER NOT NULL DEFAULT 0",
+	);
+	addColumnIfMissing(
+		database,
+		"game_map_tiles",
+		"elevation_y",
+		"REAL NOT NULL DEFAULT 0",
+	);
+	addColumnIfMissing(
+		database,
+		"game_map_tiles",
+		"clearance_above",
+		"REAL NOT NULL DEFAULT 100",
+	);
+	addColumnIfMissing(
+		database,
+		"game_map_tiles",
+		"is_ramp",
+		"INTEGER NOT NULL DEFAULT 0",
+	);
+	addColumnIfMissing(
+		database,
+		"game_map_tiles",
+		"is_bridge",
+		"INTEGER NOT NULL DEFAULT 0",
+	);
 
 	addColumnIfMissing(
 		database,

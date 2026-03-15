@@ -2,7 +2,7 @@
 
 > **This document is the single source of truth.** It consolidates all 20 planning documents
 > in `docs/plans/`, all 16 canonical design documents in `docs/`, and the results of a
-> full codebase audit (375 source files, 113 test suites, 1,092 tests).
+> full codebase audit (375+ source files, 127 test suites, 2,431 tests).
 >
 > **Date**: 2026-03-13
 > **Branch**: `codex/ecumenopolis-fullscope`
@@ -33,8 +33,8 @@
 
 The codebase is **real**. This is not a prototype or a placeholder. There are:
 
-- **375 TypeScript source files** (262 source + 113 test)
-- **113 test suites, 1,092 tests — ALL PASSING**
+- **375+ TypeScript source files** (source + test)
+- **127 test suites, 2,431 tests — ALL PASSING**
 - **Zero TypeScript errors** on `tsc --noEmit`
 - **39 renderer components** mounted in a real R3F Canvas
 - **21 game systems** ticking every frame in a real game loop
@@ -46,28 +46,22 @@ The codebase is **real**. This is not a prototype or a placeholder. There are:
 
 ### The Bad
 
-Despite 1,092 passing tests and 375 source files, **the game still renders as a black void
+Despite 2,431 passing tests and 375+ source files, **the game still renders as a black void
 on first launch**. The gap between "tests pass" and "player sees a game" is the core problem:
 
 1. **Dual data store bug** — The floor renderer reads `discovery_state` from a stale DB
    snapshot while the exploration system writes to a separate in-memory store
    (`structuralSpace`). Fix was implemented this session but NOT yet visually verified.
 
-2. **Hardcoded texture imports** — Floor textures use ES module `require()` calls in
-   `src/config/floorTextureAssets.ts` instead of being config-driven like models. This
-   means the asset pipeline can't evolve without code changes.
+2. **Floor texture pipeline** — `floorTextures.json` defines zone structure; `floorTextureAssets.ts` uses static ESM imports for Metro bundling. Adding zones requires JSON + TS mapping. Partially config-driven (see §3.2).
 
-3. **No chunk streaming** — The world is a fixed grid generated at new-game time. There
-   is no viewport-driven chunk loading/unloading despite `VIEWPORT_CHUNK_PIVOT.md`
-   describing this as foundational architecture.
+3. **Chunk streaming** — Implemented (US-027–US-032, ChunkLoaderSync). Camera-driven load/unload. Per-chunk InstancedBuildingRenderer. Fixed grid still playable; chunk architecture in place.
 
 4. **AI factions exist but don't visibly compete** — GOAP governors produce data mutations
    but the player doesn't see rival factions building, expanding, or threatening. The AI
    is a background simulation, not a visible opponent.
 
-5. **No organic narrative** — The narrative system fires scripted thoughts at predetermined
-   triggers. Bots don't "say things" organically during gameplay. There are no speech
-   bubbles, no emergent personality, no reason to care about individual units.
+5. **Narrative** — SpeechBubbleRenderer + botSpeech (US-019, US-025) provide emergent bot dialogue. Thought system remains patron AI monologue. Bots say things based on events (harvest, combat, etc.).
 
 6. **20 planning documents** that contradict each other on priorities, completion status,
    and architectural direction.
@@ -87,9 +81,7 @@ The cycle keeps repeating because:
   fallbacks have hidden real bugs for months. The floor renderer returning null textures
   instead of crashing is why the black void wasn't caught earlier.
 
-- Config-driven architecture is specified in design docs but not followed in
-  implementation. Textures are hardcoded imports. Building costs are inline constants.
-  Asset paths are scattered across multiple files instead of living in JSON configs.
+- Config-driven architecture: models use JSON + resolveAssetUri; floor textures use floorTextures.json + static imports (Metro). Building costs and other tuning increasingly in JSON configs.
 
 ---
 
@@ -207,21 +199,16 @@ filtered out → black void.
 **Remaining risk**: Fix has NOT been visually verified in browser. The ~20 pre-discovered
 cells near home_base should render immediately on new game start.
 
-**Reference**: [`src/rendering/StructuralFloorRenderer.tsx`](../rendering/StructuralFloorRenderer.tsx)
+**Reference**: [`src/rendering/StructuralFloorRenderer.tsx`](../../src/rendering/StructuralFloorRenderer.tsx)
 
-### 3.2 Floor Textures Are Hardcoded
+### 3.2 Floor Textures — Partially Config-Driven
 
-**Problem**: Floor texture assets are imported via ES module `require()` in
-`src/config/floorTextureAssets.ts` instead of being config-driven like model assets
-(which use JSON manifests and `resolveAssetUri()`).
+**Current state**: `floorTextures.json` defines zone structure; `floorTextureAssets.ts` imports the JSON and uses static ESM imports for texture assets (Metro requires static imports for image bundling). Zone labels and structure are config-driven; adding a new zone requires both a JSON entry and a TS mapping.
 
-**Impact**: Can't add/change floor textures without code changes. Violates the config-driven
-architecture mandated in [`TECHNICAL.md`](../TECHNICAL.md).
-
-**Fix needed**: Move floor texture definitions to JSON config (like `cityModelManifest.ts`
-does for models). Use `resolveAssetUri()` for texture paths.
+**Impact**: Adding zones requires code changes. Less severe than before — JSON config exists and drives zone structure. Full runtime resolution would need a different asset pipeline (e.g. resolveAssetUri for textures if Metro supports it).
 
 **Reference**: [`src/config/floorTextureAssets.ts`](../../src/config/floorTextureAssets.ts),
+[`src/config/floorTextures.json`](../../src/config/floorTextures.json),
 [`src/city/config/floorMaterialPresets.ts`](../../src/city/config/floorMaterialPresets.ts)
 
 ### 3.3 AI Factions Are Invisible
@@ -266,7 +253,7 @@ at new-game time. There is no:
 - Infinite exploration
 
 **Impact**: World size is fixed. Performance degrades with world size. Can't implement the
-"limitless ecumenopolis" described in [`GAME_DESIGN.md`](../GAME_DESIGN.md).
+"limitless ecumenopolis" described in [design/GAME_DESIGN.md](../design/GAME_DESIGN.md).
 
 **Status**: Architecture designed (VIEWPORT_CHUNK_PIVOT.md), zero code exists.
 
@@ -276,27 +263,21 @@ at new-game time. There is no:
 
 These have NO code, NO tests, and are NOT wired into anything.
 
-### 4.1 Config-Driven Asset Pipeline
+### 4.1 Config-Driven Asset Pipeline (PARTIAL)
 
-The design docs mandate config-driven everything, but textures are hardcoded imports.
-The model asset pipeline (JSON manifest → `resolveAssetUri()` → GLB loading) works well.
-Floor textures don't use it.
+Models use JSON manifest + `resolveAssetUri()`. Floor textures: `floorTextures.json` defines zones; `floorTextureAssets.ts` uses static ESM imports for Metro bundling. Partially config-driven. Full runtime texture resolution would need different pipeline.
 
-### 4.2 Bot Speech Bubbles
+### 4.2 Bot Speech (IMPLEMENTED)
 
-No system exists for bots to produce contextual, emergent dialogue. The thought system
-is a monologue from the patron AI, not dialogue from individual units.
+SpeechBubbleRenderer (US-019) and botSpeech (US-025) exist: 6 event types, proximity filtering, archetype lines. Bubbles billboard above entities. Thought system remains patron AI monologue; bot speech is emergent.
 
-### 4.3 Chunk-Based World Streaming
+### 4.3 Chunk-Based World Streaming (IMPLEMENTED)
 
-Zero implementation. The viewport chunk architecture from `VIEWPORT_CHUNK_PIVOT.md` has
-not been started. Tasks #81-86 in the task list are all `pending`.
+Chunk math, loader, discovery, deltas, per-chunk InstancedBuildingRenderer, ChunkLoaderSync — all implemented (US-027 through US-032, PRD 4.1). Viewport-driven loading wired to camera.
 
-### 4.4 Cultist Visual Identity
+### 4.4 Cultist Visual Identity (PARTIAL — PRD 2.1)
 
-[`ASSET_GAPS.md`](../ASSET_GAPS.md) identifies cultist/human enemy models as the
-**HIGHEST priority gap**. No cultist-specific models exist. Cultist units use generic
-hostile bot models.
+unitVisuals.json: cultist tint, emissive, auraColor. UnitRenderer + GlowRingRenderer use getCultistVisualConfig(). Visually distinct. Cultist-specific 3D models remain a gap (ASSETS.md).
 
 ### 4.5 Storm/Lightning/Wormhole VFX Coherence
 
@@ -304,16 +285,13 @@ Individual renderers exist (StormSky, LightningSystem, WormholeRenderer) but the
 form a cohesive visual spectacle. The wormhole at the hypercane eye should be a
 persistent environmental presence, not just an endgame structure.
 
-### 4.6 Mark Upgrade Flow
+### 4.6 Mark Upgrade Flow (IMPLEMENTED — PRD 2.3)
 
-Mark progression multipliers exist in config but the player-facing upgrade flow (select
-unit at Motor Pool → spend resources → upgrade Mark level) has no UI and no radial
-menu integration.
+Radial "Upgrade" when unit adjacent to Motor Pool. getMarkUpgradeCost from upgrades.json. Tier gates (Basic→II, Elite→V). motorPool.test.ts covers costs and gates.
 
-### 4.7 Cultist Escalation
+### 4.7 Cultist Escalation (IMPLEMENTED — PRD 2.5)
 
-Cultists should escalate in response to player expansion. Currently cultist spawns are
-time-based, not reactive.
+cultists.json: territoryMilestones, spawnIntervals, maxEnemiesPerTier. getEscalationTier, getTierSpawnInterval. cultistIncursion.test.ts covers scaling.
 
 ---
 
@@ -404,15 +382,11 @@ Do NOT use them for planning or implementation decisions.
 
 ### 7.1 Config-Driven Assets (CRITICAL)
 
-**Current state**: Models use JSON manifest (`cityModelManifest.ts`) + `resolveAssetUri()`.
-Floor textures use hardcoded ES module imports in `floorTextureAssets.ts`.
+**Current state**: Models use JSON manifest + `resolveAssetUri()`. Floor textures: `floorTextures.json` for zone structure; `floorTextureAssets.ts` uses static ESM imports (Metro requirement). Zone structure is config-driven; asset mapping is code.
 
-**Target state**: ALL asset references (models, textures, audio, UI images) resolved
-through a unified config-driven pipeline. JSON defines what assets exist. Runtime
-resolves paths. Missing assets crash hard — NEVER fallback.
+**Target state** (stretch): Full runtime texture resolution if Metro supports it. Current state is acceptable for 1.0.
 
-**Files to change**:
-- `src/config/floorTextureAssets.ts` → replace with JSON config
+**Files**: `floorTextures.json` exists; `floorTextureAssets.ts` bridges JSON config to bundled assets.
 - `src/city/config/floorMaterialPresets.ts` → consume JSON config
 - `src/rendering/StructuralFloorRenderer.tsx` → already uses `resolveAssetUri()` for texture loading
 
@@ -523,7 +497,7 @@ It's required for the "infinite ecumenopolis" vision but not for a fun 1.0.
 | 4.5 | **Zone transition blending** — soft blends between floor biomes | P2 | `StructuralFloorRenderer.tsx` (blend edges exist, tune) |
 
 **Exit criteria**: The game looks like the industrial machine-consciousness aesthetic
-described in [`UI_BRAND_AND_EXPERIENCE.md`](../UI_BRAND_AND_EXPERIENCE.md).
+described in [interface/UI_DESIGN.md](../interface/UI_DESIGN.md).
 
 ### Phase 5: Gameplay Depth
 > Make the game strategic.
@@ -545,29 +519,28 @@ with meaningful strategic decisions throughout.
 
 ### Canonical Design Documents (AUTHORITATIVE)
 
-These documents define what the game IS. Implementation must align with them.
+These documents define what the game IS. Implementation must align with them. Paths are under `docs/`; see [docs/AGENTS.md](../AGENTS.md) for the full index.
 
 | Document | Domain | Key Content |
 |----------|--------|-------------|
-| [`docs/GAME_DESIGN.md`](../GAME_DESIGN.md) | Core vision | 4X pillars, progression, factions, victory |
-| [`docs/TECHNICAL.md`](../TECHNICAL.md) | Architecture | Tech stack mandates, platform constraints, core formulas |
-| [`docs/LORE.md`](../LORE.md) | World context | 140-year timeline, Earth history, faction origins |
-| [`docs/WORLD_AND_CITY_SYSTEMS.md`](../WORLD_AND_CITY_SYSTEMS.md) | Spatial model | Unified ecumenopolis, sector types, no outdoor/city split |
-| [`docs/UI_BRAND_AND_EXPERIENCE.md`](../UI_BRAND_AND_EXPERIENCE.md) | Visual language | Industrial aesthetic, color palette, component requirements |
-| [`docs/INPUT_AND_INTERACTION.md`](../INPUT_AND_INTERACTION.md) | Interaction model | Radial menu as sole contextual surface, input mappings |
-| [`docs/CITY_CONTRACTS.md`](../CITY_CONTRACTS.md) | Spatial contracts | Package structure, snapshot types, coordination guidance |
-| [`docs/ASSET_GAPS.md`](../ASSET_GAPS.md) | Asset coverage | 91 structural GLBs, 9 robot chassis, priority gaps |
-| [`docs/BOT_ARCHETYPES.md`](../BOT_ARCHETYPES.md) | Unit design | 6 player roles, 3 hostile types, role mechanics |
-| [`docs/FACTION_AND_CAMPAIGN_MODEL.md`](../FACTION_AND_CAMPAIGN_MODEL.md) | Faction design | 4 rival factions, campaign structure |
-| [`docs/TURN_AND_ECONOMY.md`](../TURN_AND_ECONOMY.md) | Economy/turns | AP/MP system, resource flow, building costs |
-| [`docs/OPEN_QUESTIONS.md`](../OPEN_QUESTIONS.md) | Unresolved decisions | Open design questions requiring answers |
+| [design/GAME_DESIGN.md](../design/GAME_DESIGN.md) | Core vision | 4X pillars, progression, factions, victory |
+| [technical/ARCHITECTURE.md](../technical/ARCHITECTURE.md) | Architecture | Tech stack mandates, platform constraints, core formulas |
+| [design/LORE.md](../design/LORE.md) | World context | 140-year timeline, Earth history, faction origins |
+| [technical/WORLD_SYSTEMS.md](../technical/WORLD_SYSTEMS.md) | Spatial model | Unified ecumenopolis, sector types, no outdoor/city split |
+| [interface/UI_DESIGN.md](../interface/UI_DESIGN.md) | Visual language | Industrial aesthetic, color palette, component requirements |
+| [interface/INPUT.md](../interface/INPUT.md) | Interaction model | Radial menu as sole contextual surface, input mappings |
+| [design/FACTIONS.md](../design/FACTIONS.md) | Faction design | 4 rival factions, campaign structure |
+| [design/ECONOMY.md](../design/ECONOMY.md) | Economy/turns | AP/MP system, resource flow, building costs |
+| [design/BOTS.md](../design/BOTS.md) | Unit design | 9 chassis, archetypes, Mark I–V, speech |
+| [technical/ASSETS.md](../technical/ASSETS.md) | Asset pipeline | Structural GLBs, robot chassis, ingestion |
+| [technical/RENDERING.md](../technical/RENDERING.md) | Rendering | 39 renderers, storm, floor zones |
+| [design/OPEN_QUESTIONS.md](../design/OPEN_QUESTIONS.md) | Unresolved decisions | Open design questions requiring answers |
 
 ### Reference Documents
 
 | Document | Purpose |
 |----------|---------|
-| [`docs/INDEX.md`](../INDEX.md) | Document navigation map |
-| [`docs/AGENTS.md`](../AGENTS.md) | Agent definitions and team structure |
+| [AGENTS.md](../AGENTS.md) | Documentation index and agent session protocol |
 
 ---
 
@@ -659,7 +632,7 @@ bug is the canonical example of what happens when this rule is violated.
 | `src/config/assetUri.test.ts` | Asset URI resolution |
 | `src/db/__tests__/saveGames.test.ts` | Save slot CRUD |
 | `src/db/__tests__/bootstrap.test.ts` | Database schema |
-| `tests/e2e/systems-verification.spec.ts` | Full E2E (18 Playwright tests) |
+| `maestro/flows/*.yaml` | E2E (Maestro: title, title-web, onboarding, ai-playtest) |
 
 ---
 
@@ -667,11 +640,11 @@ bug is the canonical example of what happens when this rule is violated.
 
 | Category | Count |
 |----------|-------|
-| Total `.ts`/`.tsx` files | 375 |
-| Source files | 262 |
-| Test files | 113 |
-| Test suites | 113 |
-| Individual tests | 1,092 |
+| Total `.ts`/`.tsx` files | 417+ |
+| Source files (non-test) | 279+ |
+| Test files | 127 |
+| Test suites | 127 |
+| Individual tests | 2,431 |
 | TypeScript errors | 0 |
 | Renderer components | 39 |
 | Game systems (ticked per frame) | 21 |

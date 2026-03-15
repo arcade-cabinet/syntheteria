@@ -5,9 +5,12 @@
  * near the harvested location showing what materials were gained.
  * Uses brand amber for resource names, cyan for amounts.
  * Auto-dismissed when the event expires (3 seconds).
+ *
+ * Subscribes to harvestEvents via useState + useEffect (replaces
+ * useSyncExternalStore for this non-Koota event store).
  */
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import * as THREE from "three";
 import {
 	getHarvestYieldEvents,
@@ -48,7 +51,14 @@ function YieldBillboard({ event }: { event: HarvestYieldEvent }) {
 }
 
 export function HarvestYieldPopup() {
-	const events = useSyncExternalStore(subscribeHarvestEvents, getSnapshotFn);
+	const [events, setEvents] = useState<HarvestYieldEvent[]>(getSnapshotFn);
+
+	useEffect(() => {
+		const unsub = subscribeHarvestEvents(() => {
+			setEvents(getSnapshotFn());
+		});
+		return unsub;
+	}, []);
 
 	if (events.length === 0) return null;
 

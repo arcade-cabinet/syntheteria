@@ -1,10 +1,9 @@
-import { useMemo, useSyncExternalStore } from "react";
+import { useQuery } from "koota/react";
+import { useMemo } from "react";
 import * as THREE from "three";
 import { getCityModelById } from "../city/catalog/cityCatalog";
 import { CityModelMesh } from "../city/runtime/CityModelMesh";
-import { getSnapshot, subscribe } from "../ecs/gameState";
-import { Identity, Scene, Unit, WorldPosition } from "../ecs/traits";
-import { world } from "../ecs/world";
+import { HarvestOp, Identity, Scene, Unit, WorldPosition } from "../ecs/traits";
 import { isStructureConsumed } from "../systems/harvestSystem";
 import {
 	buildOverworldCityOverlayState,
@@ -36,7 +35,8 @@ function SectorStructureInstances({
 	profile: "default" | "overview" | "ops";
 	session?: WorldSessionSnapshot | null;
 }) {
-	useSyncExternalStore(subscribe, getSnapshot);
+	// Re-render when HarvestOp entities change (structure consumed → re-filter list)
+	useQuery(HarvestOp);
 	const session = providedSession ?? getActiveWorldSession();
 
 	// Fog of war: build a set of discovered cell keys so structures only
@@ -106,15 +106,14 @@ function CityOverlayMarkers({
 	profile: "default" | "overview" | "ops";
 	session?: WorldSessionSnapshot | null;
 }) {
-	useSyncExternalStore(subscribe, getSnapshot);
+	// Re-render when unit positions change via Koota
+	const unitEntities = useQuery(Unit, WorldPosition, Identity);
 	const session = providedSession ?? getActiveWorldSession();
 
 	if (profile === "ops") {
 		return null;
 	}
-	const units: OverlayUnitPresence[] = Array.from(
-		world.query(Identity, Unit, WorldPosition),
-	).map((entity) => ({
+	const units: OverlayUnitPresence[] = unitEntities.map((entity) => ({
 		entityId: entity.get(Identity)!.id,
 		sceneLocation: entity.get(Scene)?.location ?? "world",
 		position: { ...entity.get(WorldPosition)! },

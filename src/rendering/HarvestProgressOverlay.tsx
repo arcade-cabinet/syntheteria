@@ -3,16 +3,15 @@
  *
  * Renders a billboard progress bar above each actively-harvested structure.
  * Uses brand amber color for the bar fill (harvest = infrastructure/fabrication).
- * Reads from getActiveHarvests() each frame.
+ *
+ * Uses useQuery(HarvestOp) — reacts to Koota entity changes automatically.
+ * Position/timing data is looked up via getHarvestExtras(harvesterId).
  */
 
-import { useSyncExternalStore } from "react";
+import { useQuery } from "koota/react";
 import * as THREE from "three";
-import { getSnapshot, subscribe } from "../ecs/gameState";
-import {
-	type ActiveHarvest,
-	getActiveHarvests,
-} from "../systems/harvestSystem";
+import { HarvestOp } from "../ecs/traits";
+import { getHarvestExtras } from "../systems/harvestSystem";
 
 const BAR_WIDTH = 1.2;
 const BAR_HEIGHT = 0.1;
@@ -21,12 +20,21 @@ const BAR_Y_OFFSET = 2.2;
 const BG_COLOR = new THREE.Color(0x1a1a1a);
 const FILL_COLOR = new THREE.Color(0xf6c56a); // Brand amber
 
-function HarvestBar({ harvest }: { harvest: ActiveHarvest }) {
-	const progress = 1 - harvest.ticksRemaining / harvest.totalTicks;
+function HarvestBar({
+	harvesterId,
+	ticksRemaining,
+}: {
+	harvesterId: string;
+	ticksRemaining: number;
+}) {
+	const extras = getHarvestExtras(harvesterId);
+	if (!extras) return null;
+
+	const progress = 1 - ticksRemaining / extras.totalTicks;
 	const fillWidth = BAR_WIDTH * Math.max(0.01, progress);
 
 	return (
-		<group position={[harvest.targetX, BAR_Y_OFFSET, harvest.targetZ]}>
+		<group position={[extras.targetX, BAR_Y_OFFSET, extras.targetZ]}>
 			{/* Billboard rotation handled by lookAt in useFrame — simplified: always face up */}
 			{/* Background bar */}
 			<mesh position={[0, 0, 0]}>
@@ -53,17 +61,23 @@ function HarvestBar({ harvest }: { harvest: ActiveHarvest }) {
 }
 
 export function HarvestProgressOverlay() {
-	// Re-render on each game tick to track progress
-	useSyncExternalStore(subscribe, getSnapshot);
-	const harvests = getActiveHarvests();
+	const harvestEntities = useQuery(HarvestOp);
 
-	if (harvests.length === 0) return null;
+	if (harvestEntities.length === 0) return null;
 
 	return (
 		<>
-			{harvests.map((harvest) => (
-				<HarvestBar key={`harvest-${harvest.structureId}`} harvest={harvest} />
-			))}
+			{harvestEntities.map((entity) => {
+				const op = entity.get(HarvestOp);
+				if (!op) return null;
+				return (
+					<HarvestBar
+						key={`harvest-${op.harvesterId}`}
+						harvesterId={op.harvesterId}
+						ticksRemaining={op.ticksRemaining}
+					/>
+				);
+			})}
 		</>
 	);
 }

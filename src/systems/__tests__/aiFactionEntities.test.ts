@@ -1,4 +1,4 @@
-import { AIFactionTrait } from "../../ecs/traits";
+import { AIFaction } from "../../ecs/traits";
 import { world } from "../../ecs/world";
 
 import {
@@ -16,9 +16,9 @@ afterEach(() => {
 describe("AIFaction Koota entities (T18)", () => {
 	it("initAIFactionEntities spawns 4 faction entities", () => {
 		initAIFactionEntities();
-		const entities = Array.from(world.query(AIFactionTrait));
+		const entities = Array.from(world.query(AIFaction));
 		expect(entities).toHaveLength(4);
-		const ids = entities.map((e) => e.get(AIFactionTrait)!.factionId);
+		const ids = entities.map((e) => e.get(AIFaction)!.factionId);
 		expect(ids).toContain("reclaimers");
 		expect(ids).toContain("volt_collective");
 		expect(ids).toContain("signal_choir");

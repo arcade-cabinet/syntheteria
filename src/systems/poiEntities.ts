@@ -1,12 +1,12 @@
 /**
- * POI entity management — spawns POITrait Koota entities from persisted
+ * POI entity management — spawns POI Koota entities from persisted
  * SectorPoiSnapshot data loaded at world initialization.
  *
- * Provides reactive access to POI state via useQuery(POITrait) in renderers
+ * Provides reactive access to POI state via useQuery(POI) in renderers
  * and UI components. Called once in initializeNewGame after world DB load.
  */
 
-import { POITrait } from "../ecs/traits";
+import { POI } from "../ecs/traits";
 import { pois, world } from "../ecs/world";
 import type { SectorPoiSnapshot } from "../world/snapshots";
 
@@ -18,7 +18,7 @@ const _poiIndex = new Map<number, ReturnType<typeof world.spawn>>();
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 /**
- * Spawn POITrait entities from persisted snapshots.
+ * Spawn POI entities from persisted snapshots.
  * Destroys any existing POI entities first (idempotent).
  */
 export function spawnPOIEntities(snapshots: SectorPoiSnapshot[]): void {
@@ -26,8 +26,8 @@ export function spawnPOIEntities(snapshots: SectorPoiSnapshot[]): void {
 	clearPOIEntities();
 
 	for (const snap of snapshots) {
-		const entity = world.spawn(POITrait);
-		entity.set(POITrait, {
+		const entity = world.spawn(POI);
+		entity.set(POI, {
 			q: snap.q,
 			r: snap.r,
 			poiType: snap.type,
@@ -39,7 +39,7 @@ export function spawnPOIEntities(snapshots: SectorPoiSnapshot[]): void {
 }
 
 /**
- * Destroy all POITrait entities and clear the index.
+ * Destroy all POI entities and clear the index.
  * Called on reset/new game.
  */
 export function clearPOIEntities(): void {

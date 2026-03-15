@@ -213,7 +213,7 @@ export const HarvestOp = trait({
 	harvestType: "structure" as "structure" | "floor",
 });
 
-export const POITrait = trait({
+export const POI = trait({
 	q: 0,
 	r: 0,
 	poiType: "",
@@ -221,7 +221,7 @@ export const POITrait = trait({
 	discovered: false,
 });
 
-export const AIFactionTrait = trait({
+export const AIFaction = trait({
 	factionId: "" as string,
 	phase: "dormant" as string,
 	ticksUntilDecision: 0,

@@ -1,5 +1,5 @@
 import {
-	AIFactionTrait,
+	AIFaction,
 	AnimationState,
 	BotLOD,
 	ChunkDiscovery,
@@ -9,7 +9,7 @@ import {
 	FactionStanding,
 	FloorCell,
 	HarvestOp,
-	POITrait,
+	POI,
 	ResourcePool,
 	SpeechBubble,
 	TerritoryCell,
@@ -25,8 +25,8 @@ afterEach(() => {
 	for (const e of world.query(TurnStateKoota)) e.destroy();
 	for (const e of world.query(SpeechBubble)) e.destroy();
 	for (const e of world.query(HarvestOp)) e.destroy();
-	for (const e of world.query(POITrait)) e.destroy();
-	for (const e of world.query(AIFactionTrait)) e.destroy();
+	for (const e of world.query(POI)) e.destroy();
+	for (const e of world.query(AIFaction)) e.destroy();
 	for (const e of world.query(FactionResearch)) e.destroy();
 	for (const e of world.query(FactionStanding)) e.destroy();
 	for (const e of world.query(FactionResourcePool)) e.destroy();
@@ -103,9 +103,9 @@ test("HarvestOp defaults harvestType to structure", () => {
 	e.destroy();
 });
 
-test("AIFactionTrait defaults", () => {
-	const e = world.spawn(AIFactionTrait);
-	const af = e.get(AIFactionTrait)!;
+test("AIFaction defaults", () => {
+	const e = world.spawn(AIFaction);
+	const af = e.get(AIFaction)!;
 	expect(af.phase).toBe("dormant");
 	expect(af.ticksUntilDecision).toBe(0);
 	e.destroy();

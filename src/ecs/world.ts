@@ -1,7 +1,7 @@
 import { createWorld } from "koota";
 import type { Entity } from "./traits";
 import {
-	AIFactionTrait,
+	AIFaction,
 	Building,
 	ChunkDiscovery,
 	FactionResearch,
@@ -12,7 +12,7 @@ import {
 	LightningRod,
 	MapFragment,
 	Navigation,
-	POITrait,
+	POI,
 	SpeechBubble,
 	TerritoryCell,
 	Unit,
@@ -73,8 +73,8 @@ export const territoryCells = createLiveQuery(() => world.query(TerritoryCell));
 export const floorCells = createLiveQuery(() => world.query(FloorCell));
 export const speechBubbles = createLiveQuery(() => world.query(SpeechBubble));
 export const harvestOps = createLiveQuery(() => world.query(HarvestOp));
-export const pois = createLiveQuery(() => world.query(POITrait));
-export const aiFactions = createLiveQuery(() => world.query(AIFactionTrait));
+export const pois = createLiveQuery(() => world.query(POI));
+export const aiFactions = createLiveQuery(() => world.query(AIFaction));
 export const factionResearchEntities = createLiveQuery(() =>
 	world.query(FactionResearch),
 );

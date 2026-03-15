@@ -26,7 +26,7 @@ const FACTION_IDS = [
 function makeFactionEntities() {
 	return FACTION_IDS.map((factionId) => ({
 		get: (trait: unknown) => {
-			if (trait === "AIFactionTrait") {
+			if (trait === "AIFaction") {
 				return { factionId, phase: "dormant", ticksUntilDecision: 0 };
 			}
 			return undefined;
@@ -81,7 +81,7 @@ jest.mock("../../ecs/seed", () => ({
 
 jest.mock("../../ecs/traits", () => ({
 	AIController: "AIController",
-	AIFactionTrait: "AIFactionTrait",
+	AIFaction: "AIFaction",
 	Building: "Building",
 	Identity: "Identity",
 	LightningRod: "LightningRod",

@@ -8,14 +8,17 @@ import {
 	type PlaceableType,
 	setActivePlacement,
 } from "../../systems/buildingPlacement";
+import { useResourcePool } from "../hooks/useResourcePool";
 import { HudButton } from "../components/HudButton";
 import { BoltIcon, FactoryIcon } from "../icons";
 
 type BuildableType = Exclude<PlaceableType, null>;
 
 export function BuildToolbar() {
+	// Subscribe to game ticks so getActivePlacement() stays current.
+	useSyncExternalStore(subscribe, getSnapshot);
 	const active = getActivePlacement();
-	const snap = useSyncExternalStore(subscribe, getSnapshot);
+	const resources = useResourcePool();
 
 	const items: Array<{
 		type: BuildableType;
@@ -51,7 +54,9 @@ export function BuildToolbar() {
 						const isActive = active === type;
 						const costs = BUILDING_COSTS[type];
 						const canAfford = costs.every(
-							(cost) => (snap.resources[cost.type] ?? 0) >= cost.amount,
+							(cost) =>
+								((resources as Record<string, number>)[cost.type] ?? 0) >=
+								cost.amount,
 						);
 						const costMeta = costs
 							.map((cost) => `${cost.amount} ${cost.type}`)

@@ -1,26 +1,26 @@
 /**
  * T16: POI as Koota entities
  *
- * Verifies that spawnPOIEntities creates POITrait entities from snapshots,
+ * Verifies that spawnPOIEntities creates POI entities from snapshots,
  * clearPOIEntities destroys them, and a second call to spawnPOIEntities
  * replaces the previous set.
  */
 
-import { POITrait } from "../../ecs/traits";
+import { POI } from "../../ecs/traits";
 import { world } from "../../ecs/world";
 import { clearPOIEntities, spawnPOIEntities } from "../poiEntities";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function queryPOIs() {
-	return Array.from(world.query(POITrait));
+	return Array.from(world.query(POI));
 }
 
 // ── Lifecycle ────────────────────────────────────────────────────────────────
 
 afterEach(() => {
 	clearPOIEntities();
-	for (const e of world.query(POITrait)) {
+	for (const e of world.query(POI)) {
 		if (e.isAlive()) e.destroy();
 	}
 });
@@ -63,7 +63,7 @@ test("spawned POI entity has correct field values", () => {
 			discovered: 1,
 		},
 	]);
-	const poi = queryPOIs()[0].get(POITrait)!;
+	const poi = queryPOIs()[0].get(POI)!;
 	expect(poi.q).toBe(4);
 	expect(poi.r).toBe(8);
 	expect(poi.poiType).toBe("faction_outpost");
@@ -83,7 +83,7 @@ test("discovered: 0 maps to false", () => {
 			discovered: 0,
 		},
 	]);
-	expect(queryPOIs()[0].get(POITrait)!.discovered).toBe(false);
+	expect(queryPOIs()[0].get(POI)!.discovered).toBe(false);
 });
 
 test("clearPOIEntities destroys all entities", () => {
@@ -138,7 +138,7 @@ test("calling spawnPOIEntities twice replaces previous set", () => {
 		},
 	]);
 	expect(queryPOIs().length).toBe(1);
-	expect(queryPOIs()[0].get(POITrait)!.name).toBe("New");
+	expect(queryPOIs()[0].get(POI)!.name).toBe("New");
 });
 
 test("spawnPOIEntities with empty array clears all", () => {

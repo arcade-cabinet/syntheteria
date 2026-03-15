@@ -4,13 +4,16 @@
  * Renders colored line segments at the edges of faction-controlled territory.
  * Each faction gets its own emissive color. Only border edges (where a faction
  * cell is adjacent to unclaimed or rival territory) are drawn.
+ *
+ * Uses useQuery(TerritoryCell) — reacts to Koota entity changes automatically.
+ * No useFrame poll needed.
  */
 
-import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useQuery } from "koota/react";
+import { useMemo } from "react";
 import * as THREE from "three";
+import { TerritoryCell } from "../ecs/traits";
 import type { EconomyFactionId } from "../systems/factionEconomy";
-import { getAllCellOwnership, getCellOwner } from "../systems/territorySystem";
 import { gridToWorld, SECTOR_LATTICE_SIZE } from "../world/sectorCoordinates";
 
 const FACTION_BORDER_COLORS: Record<string, number> = {
@@ -46,21 +49,40 @@ interface FactionBorderGroup {
 	color: number;
 }
 
-function buildBorderGeometry(): FactionBorderGroup[] {
-	const ownership = getAllCellOwnership();
+function buildBorderGeometry(
+	cellEntities: readonly {
+		get: (
+			t: typeof TerritoryCell,
+		) => { q: number; r: number; owner: string; strength: number } | undefined;
+	}[],
+): FactionBorderGroup[] {
+	// Build a local lookup map for neighbor queries
+	const ownerMap = new Map<string, EconomyFactionId>();
+	for (const entity of cellEntities) {
+		const c = entity.get(TerritoryCell);
+		if (!c) continue;
+		ownerMap.set(`${c.q},${c.r}`, c.owner as EconomyFactionId);
+	}
+
 	const edgesByFaction = new Map<EconomyFactionId, number[]>();
 
-	for (const [, cell] of ownership) {
+	for (const entity of cellEntities) {
+		const cell = entity.get(TerritoryCell);
+		if (!cell) continue;
+
 		const worldPos = gridToWorld(cell.q, cell.r);
+		const owner = cell.owner as EconomyFactionId;
 
 		for (const edge of EDGE_DEFS) {
-			const neighborOwner = getCellOwner(cell.q + edge.dq, cell.r + edge.dr);
-			if (neighborOwner === cell.owner) continue;
+			const neighborOwner = ownerMap.get(
+				`${cell.q + edge.dq},${cell.r + edge.dr}`,
+			);
+			if (neighborOwner === owner) continue;
 
-			let edges = edgesByFaction.get(cell.owner);
+			let edges = edgesByFaction.get(owner);
 			if (!edges) {
 				edges = [];
-				edgesByFaction.set(cell.owner, edges);
+				edgesByFaction.set(owner, edges);
 			}
 
 			const half = SECTOR_LATTICE_SIZE;
@@ -114,31 +136,19 @@ function FactionBorderLines({
 
 /**
  * Renders faction territory borders as colored line segments.
- * Rebuilds geometry periodically (every 60 frames) since territory
- * only recalculates every RECALC_INTERVAL ticks anyway.
+ * Reacts to TerritoryCell Koota entity changes via useQuery — no poll needed.
  */
 export function TerritoryBorderRenderer() {
-	const groupsRef = useRef<FactionBorderGroup[]>([]);
-	const frameCounter = useRef(0);
-	const versionRef = useRef(0);
+	const cellEntities = useQuery(TerritoryCell);
 
-	useFrame(() => {
-		frameCounter.current++;
-		if (frameCounter.current >= 60) {
-			frameCounter.current = 0;
-			groupsRef.current = buildBorderGeometry();
-			versionRef.current++;
-		}
-	});
-
-	// Initial build
-	if (groupsRef.current.length === 0) {
-		groupsRef.current = buildBorderGeometry();
-	}
+	const groups = useMemo(
+		() => buildBorderGeometry(cellEntities),
+		[cellEntities],
+	);
 
 	return (
 		<>
-			{groupsRef.current.map((group) => (
+			{groups.map((group) => (
 				<FactionBorderLines
 					key={group.faction}
 					positions={group.positions}

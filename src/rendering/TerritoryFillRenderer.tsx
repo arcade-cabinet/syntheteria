@@ -11,15 +11,15 @@
  * - cultist: purple
  *
  * Uses instanced rendering — one instanced mesh per faction, with a
- * flat plane per cell. Rebuilds every 60 frames (territory recalcs
- * every RECALC_INTERVAL ticks anyway).
+ * flat plane per cell. Reacts to TerritoryCell Koota entity changes
+ * via useQuery — no useFrame poll needed.
  */
 
-import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef, useState } from "react";
+import { useQuery } from "koota/react";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { TerritoryCell } from "../ecs/traits";
 import type { EconomyFactionId } from "../systems/factionEconomy";
-import { getAllCellOwnership } from "../systems/territorySystem";
 import { gridToWorld, SECTOR_LATTICE_SIZE } from "../world/sectorCoordinates";
 
 const FACTION_FILL_COLORS: Record<string, number> = {
@@ -31,7 +31,6 @@ const FACTION_FILL_COLORS: Record<string, number> = {
 
 const FILL_Y = 0.015;
 const FILL_OPACITY = 0.08;
-const REBUILD_INTERVAL = 60;
 
 interface FactionFillData {
 	faction: EconomyFactionId;
@@ -51,18 +50,22 @@ const _scale = new THREE.Vector3(
 	1,
 );
 
-function buildFillData(): FactionFillData[] {
-	const ownership = getAllCellOwnership();
+type CellEntity = ReturnType<typeof useQuery>[number];
+
+function buildFillData(cellEntities: readonly CellEntity[]): FactionFillData[] {
 	const cellsByFaction = new Map<
 		EconomyFactionId,
 		{ q: number; r: number }[]
 	>();
 
-	for (const [, cell] of ownership) {
-		let cells = cellsByFaction.get(cell.owner);
+	for (const entity of cellEntities) {
+		const cell = entity.get(TerritoryCell);
+		if (!cell) continue;
+		const owner = cell.owner as EconomyFactionId;
+		let cells = cellsByFaction.get(owner);
 		if (!cells) {
 			cells = [];
-			cellsByFaction.set(cell.owner, cells);
+			cellsByFaction.set(owner, cells);
 		}
 		cells.push({ q: cell.q, r: cell.r });
 	}
@@ -108,20 +111,6 @@ function FactionFillInstances({
 		mesh.count = count;
 	}, [matrices, count]);
 
-	// Also set on first mount
-	useFrame(() => {
-		if (!meshRef.current) return;
-		if (meshRef.current.count !== count) {
-			const mesh = meshRef.current;
-			for (let i = 0; i < count; i++) {
-				_matrix.fromArray(matrices, i * 16);
-				mesh.setMatrixAt(i, _matrix);
-			}
-			mesh.instanceMatrix.needsUpdate = true;
-			mesh.count = count;
-		}
-	});
-
 	if (count === 0) return null;
 
 	return (
@@ -144,21 +133,12 @@ function FactionFillInstances({
 
 /**
  * Renders faction territory as translucent colored overlays on owned cells.
- * Rebuilds every 60 frames to stay in sync with territory recalculation.
+ * Reacts to TerritoryCell Koota entity changes via useQuery — no poll needed.
  */
 export function TerritoryFillRenderer() {
-	const [fillData, setFillData] = useState<FactionFillData[]>(() =>
-		buildFillData(),
-	);
-	const frameCounter = useRef(0);
+	const cellEntities = useQuery(TerritoryCell);
 
-	useFrame(() => {
-		frameCounter.current++;
-		if (frameCounter.current >= REBUILD_INTERVAL) {
-			frameCounter.current = 0;
-			setFillData(buildFillData());
-		}
-	});
+	const fillData = useMemo(() => buildFillData(cellEntities), [cellEntities]);
 
 	return (
 		<>

@@ -1075,7 +1075,7 @@ export function rehydrateW3TraitsSync(
 		// Lazy require to avoid loading factionEconomy → resources → ai at module init
 		// (which would prevent jest.mock("session") from working in tests).
 		const { initFactionResourcePools, addFactionResourceKoota } =
-			// eslint-disable-next-line @typescript-eslint/no-require-imports
+			// biome-ignore lint/style/noCommonJs: lazy require for jest.mock isolation
 			require("../systems/factionEconomy") as typeof import("../systems/factionEconomy");
 		const factionIds = factionRows.map((r) => r.faction_id);
 		initFactionResourcePools(factionIds);

@@ -14,11 +14,8 @@
 import { useState, useSyncExternalStore } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
-import {
-	endPlayerTurn,
-	getTurnState,
-	subscribeTurnState,
-} from "../../systems/turnSystem";
+import { endPlayerTurn } from "../../systems/turnSystem";
+import { useTurnState } from "../hooks/useTurnState";
 import { BoltIcon, MenuIcon, PauseIcon, StormIcon } from "../icons";
 import { SlideOutPanel } from "./SlideOutPanel";
 
@@ -34,7 +31,7 @@ export function GameHUD({
 	onDiplomacy?: () => void;
 }) {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
-	const turn = useSyncExternalStore(subscribeTurnState, getTurnState);
+	const turn = useTurnState();
 	const [panelOpen, setPanelOpen] = useState(false);
 	const isPlayerPhase = turn.phase === "player";
 

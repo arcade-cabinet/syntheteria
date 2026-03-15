@@ -12,8 +12,16 @@ vi.mock("../../ecs/gameState", () => ({
 	subscribe: (_listener: () => void) => () => {},
 }));
 
-vi.mock("../../systems/turnSystem", () => ({
-	getTurnState: () => ({ turnNumber: 42, phase: "player" }),
+vi.mock("../hooks/useTurnState", () => ({
+	useTurnState: () => ({
+		turnNumber: 42,
+		phase: "player",
+		activeFaction: "player",
+	}),
+}));
+
+vi.mock("../hooks/useResourcePool", () => ({
+	useResourcePool: () => ({ scrapMetal: 100, eWaste: 0, intactComponents: 5 }),
 }));
 
 describe("GameHUDDom", () => {

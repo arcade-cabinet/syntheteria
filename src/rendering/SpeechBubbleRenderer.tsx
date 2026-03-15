@@ -4,16 +4,16 @@
  * Billboards above units in 3D. Dark panel with cyan text and thin border.
  * Fades in/out over 2-3s. Uses CanvasTexture for crisp text rendering
  * without font loading overhead.
+ *
+ * Uses useQuery(SpeechBubble) — reacts to Koota entity changes automatically.
+ * Opacity is managed by tickSpeechBubbles (tick-based fade).
  */
 
 import { useFrame } from "@react-three/fiber";
+import { useQuery } from "koota/react";
 import { useRef } from "react";
 import * as THREE from "three";
-import {
-	getActiveSpeechBubbles,
-	type SpeechBubble,
-	updateSpeechBubbleOpacities,
-} from "../systems/botSpeech";
+import { SpeechBubble } from "../ecs/traits";
 
 const BUBBLE_Y_OFFSET = 2.5;
 const CANVAS_WIDTH = 256;
@@ -56,8 +56,17 @@ function createBubbleTexture(text: string): THREE.CanvasTexture {
 	return texture;
 }
 
+interface BubbleData {
+	entityId: string;
+	text: string;
+	wx: number;
+	wy: number;
+	wz: number;
+	opacity: number;
+}
+
 /** Single speech bubble mesh — billboard that always faces camera */
-function BubbleMesh({ bubble }: { bubble: SpeechBubble }) {
+function BubbleMesh({ bubble }: { bubble: BubbleData }) {
 	const meshRef = useRef<THREE.Mesh>(null);
 	const materialRef = useRef<THREE.MeshBasicMaterial>(null);
 	const textureRef = useRef<THREE.CanvasTexture | null>(null);
@@ -72,13 +81,13 @@ function BubbleMesh({ bubble }: { bubble: SpeechBubble }) {
 
 		// Billboard: position above entity and face camera
 		meshRef.current.position.set(
-			bubble.position.x,
-			bubble.position.y + BUBBLE_Y_OFFSET,
-			bubble.position.z,
+			bubble.wx,
+			bubble.wy + BUBBLE_Y_OFFSET,
+			bubble.wz,
 		);
 		meshRef.current.quaternion.copy(camera.quaternion);
 
-		// Fade opacity
+		// Fade opacity (set by tickSpeechBubbles)
 		materialRef.current.opacity = bubble.opacity;
 		materialRef.current.visible = bubble.opacity > 0.01;
 	});
@@ -106,20 +115,27 @@ function BubbleMesh({ bubble }: { bubble: SpeechBubble }) {
  * Mount inside the R3F Canvas alongside other world-scene renderers.
  */
 export function SpeechBubbleRenderer() {
-	const bubblesRef = useRef<readonly SpeechBubble[]>([]);
-
-	useFrame((_, delta) => {
-		updateSpeechBubbleOpacities(delta);
-		bubblesRef.current = getActiveSpeechBubbles();
-	});
-
-	const bubbles = getActiveSpeechBubbles();
+	const bubbleEntities = useQuery(SpeechBubble);
 
 	return (
 		<>
-			{bubbles.map((bubble) => (
-				<BubbleMesh key={bubble.entityId} bubble={bubble} />
-			))}
+			{bubbleEntities.map((entity) => {
+				const b = entity.get(SpeechBubble);
+				if (!b) return null;
+				return (
+					<BubbleMesh
+						key={b.entityId}
+						bubble={{
+							entityId: b.entityId,
+							text: b.text,
+							wx: b.wx,
+							wy: b.wy,
+							wz: b.wz,
+							opacity: b.opacity,
+						}}
+					/>
+				);
+			})}
 		</>
 	);
 }

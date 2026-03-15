@@ -11,6 +11,7 @@
  * @exports ScavengePoint / getScavengePoints / resetScavengePoints - Scavenge point management
  * @exports resourceSystem - Per-tick scavenging logic
  * @exports resetResources / setResources - Reset and bulk-set for save/load
+ * @exports initResourcePoolEntity / getResourcePoolEntity - Koota entity for reactive UI
  *
  * @dependencies ai (isEntityExecutingAITask), ecs/cityLayout, ecs/seed (worldPRNG),
  *   ecs/traits, ecs/world, world/runtimeState, resourceDeltas
@@ -22,8 +23,13 @@
 import { isEntityExecutingAITask } from "../ai";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { worldPRNG } from "../ecs/seed";
-import { hasArms, WorldPosition } from "../ecs/traits";
-import { units } from "../ecs/world";
+import type { Entity } from "../ecs/traits";
+import {
+	hasArms,
+	ResourcePool as ResourcePoolTrait,
+	WorldPosition,
+} from "../ecs/traits";
+import { units, world } from "../ecs/world";
 import { setRuntimeResources } from "../world/runtimeState";
 import {
 	trackResourceExpenditure,
@@ -62,6 +68,55 @@ const resources: ResourcePool = {
 	elCrystal: 0,
 };
 
+// ─── Koota entity (reactive mirror for useTrait) ──────────────────────────────
+
+let _resourcePoolEntity: Entity | null = null;
+
+/**
+ * Spawn (or reset) the ResourcePool Koota entity.
+ * Call from initializeNewGame() so UI can reactively read resources via useTrait.
+ */
+export function initResourcePoolEntity(): void {
+	if (_resourcePoolEntity && _resourcePoolEntity.isAlive())
+		_resourcePoolEntity.destroy();
+	_resourcePoolEntity = world.spawn(ResourcePoolTrait);
+	_resourcePoolEntity.set(ResourcePoolTrait, {
+		scrapMetal: resources.scrapMetal,
+		eWaste: resources.eWaste,
+		intactComponents: resources.intactComponents,
+		refinedAlloys: 0,
+		powerCells: 0,
+		circuitry: 0,
+		opticalFiber: 0,
+		nanoComposites: 0,
+		quantumCores: 0,
+		biomimeticPolymers: 0,
+		darkMatter: 0,
+	});
+}
+
+/**
+ * Return the live ResourcePool entity.
+ * Throws if initResourcePoolEntity() has not been called.
+ */
+export function getResourcePoolEntity(): Entity {
+	if (!_resourcePoolEntity)
+		throw new Error("ResourcePool entity not initialized");
+	return _resourcePoolEntity;
+}
+
+/** Sync the entity's reactive fields from the current module-level pool. */
+function syncEntityFromPool(): void {
+	if (!_resourcePoolEntity || !_resourcePoolEntity.isAlive()) return;
+	const cur = _resourcePoolEntity.get(ResourcePoolTrait)!;
+	_resourcePoolEntity.set(ResourcePoolTrait, {
+		...cur,
+		scrapMetal: resources.scrapMetal,
+		eWaste: resources.eWaste,
+		intactComponents: resources.intactComponents,
+	});
+}
+
 /** Create a ResourcePool with all fields defaulting to 0 */
 export function defaultResourcePool(
 	overrides: Partial<ResourcePool> = {},
@@ -90,6 +145,7 @@ export function addResource(type: keyof ResourcePool, amount: number) {
 	(resources[type] as number) = ((resources[type] as number) ?? 0) + amount;
 	trackResourceIncome(type, amount);
 	setRuntimeResources(resources);
+	syncEntityFromPool();
 }
 
 export function spendResource(
@@ -100,6 +156,7 @@ export function spendResource(
 	(resources[type] as number) = ((resources[type] as number) ?? 0) - amount;
 	trackResourceExpenditure(type, amount);
 	setRuntimeResources(resources);
+	syncEntityFromPool();
 	return true;
 }
 
@@ -113,16 +170,7 @@ export interface ScavengePoint {
 	amountPerScavenge: number;
 }
 
-let scavengePoints: ScavengePoint[] | null = null;
-
-/** Reset cached scavenge points — call when the world seed changes. */
-export function resetScavengePoints() {
-	scavengePoints = null;
-}
-
-export function getScavengePoints(): ScavengePoint[] {
-	if (scavengePoints) return scavengePoints;
-
+function generateScavengePoints(): ScavengePoint[] {
 	const rng = worldPRNG("resources");
 	const points: ScavengePoint[] = [];
 
@@ -162,8 +210,20 @@ export function getScavengePoints(): ScavengePoint[] {
 		}
 	}
 
-	scavengePoints = points;
 	return points;
+}
+
+/** Active scavenge points for the current game session. */
+let activeScavengePoints: ScavengePoint[] = generateScavengePoints();
+
+/** Reset scavenge points — call on new game. */
+export function resetScavengePoints() {
+	activeScavengePoints = generateScavengePoints();
+}
+
+/** Return the current scavenge points for this game session. */
+export function getScavengePoints(): ScavengePoint[] {
+	return activeScavengePoints;
 }
 
 export function resetResources() {
@@ -178,8 +238,9 @@ export function resetResources() {
 	resources.siliconWafer = 0;
 	resources.stormCharge = 0;
 	resources.elCrystal = 0;
-	scavengePoints = null;
+	resetScavengePoints();
 	setRuntimeResources(resources);
+	syncEntityFromPool();
 }
 
 export function setResources(nextResources: Partial<ResourcePool>) {
@@ -190,6 +251,7 @@ export function setResources(nextResources: Partial<ResourcePool>) {
 		}
 	}
 	setRuntimeResources(resources);
+	syncEntityFromPool();
 }
 
 /** Auto-scavenge range for units with arms */
@@ -220,6 +282,7 @@ export function resourceSystem() {
 				resources[point.type] += point.amountPerScavenge;
 				point.remaining--;
 				setRuntimeResources(resources);
+				syncEntityFromPool();
 				break; // one scavenge per tick per unit
 			}
 		}

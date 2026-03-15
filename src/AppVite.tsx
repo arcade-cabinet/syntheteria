@@ -3,6 +3,8 @@
  * No React Native; no Filament. Phase 6 will add full DOM UI (GameUI, TitleScreen).
  */
 import { startTransition, useState } from "react";
+import { WorldProvider } from "koota/react";
+import { world } from "./ecs/world";
 import { saveAllStateSync } from "./db/saveAllState";
 import {
 	createSaveGameSync,
@@ -67,7 +69,7 @@ function hydratePersistedWorld(persistedWorld: PersistedWorldRecord) {
 	initializeNewGame(persistedWorld);
 }
 
-export function App() {
+function AppInner() {
 	const [inGame, setInGame] = useState(false);
 	const [loadingLabel, setLoadingLabel] = useState("Hydrating world");
 	const [isLoading, setIsLoading] = useState(false);
@@ -213,5 +215,13 @@ export function App() {
 				</div>
 			)}
 		</div>
+	);
+}
+
+export function App() {
+	return (
+		<WorldProvider world={world}>
+			<AppInner />
+		</WorldProvider>
 	);
 }

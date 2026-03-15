@@ -9,6 +9,7 @@ import {
 } from "../../ecs/gameState";
 import { openCityKitLab } from "../../world/cityTransition";
 import { HudButton } from "../components/HudButton";
+import { useResourcePool } from "../hooks/useResourcePool";
 import { BoltIcon, ShardIcon, StormIcon } from "../icons";
 
 function StatChip({
@@ -48,9 +49,13 @@ function StatChip({
  * Design philosophy: the HUD should frame the experience, not compete with it.
  * Resources, day counter, storm %, and sim controls in a single thin strip.
  * No headers. No panels. The radial menu and speech bubbles handle everything else.
+ *
+ * Resource values are read via useResourcePool() (Koota entity, reactive) rather
+ * than the full gameState snapshot, so resource mutations trigger targeted re-renders.
  */
 export function TopBar() {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
+	const resources = useResourcePool();
 
 	return (
 		<View className="absolute left-0 top-0 w-full pt-safe pointer-events-none">
@@ -65,12 +70,12 @@ export function TopBar() {
 					/>
 					<StatChip
 						label="Scrap"
-						value={snap.resources.scrapMetal}
+						value={resources.scrapMetal}
 						icon={<ShardIcon width={14} height={14} color="#7ee7cb" />}
 					/>
 					<StatChip
 						label="Parts"
-						value={snap.resources.intactComponents}
+						value={resources.intactComponents}
 						icon={<BoltIcon width={14} height={14} color="#f6c56a" />}
 						tone="amber"
 					/>

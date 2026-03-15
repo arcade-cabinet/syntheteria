@@ -1,7 +1,5 @@
 import type { AgentRole } from "../ai";
 import type { UnitComponent } from "../ecs/traits";
-import { ChunkDiscovery, FactionResourcePool } from "../ecs/traits";
-import { chunkDiscoveries, factionResourcePools } from "../ecs/world";
 import {
 	addFactionResourceKoota,
 	initFactionResourcePools,
@@ -999,67 +997,55 @@ export function persistTurnEventLogSync(
 
 // ─── T26: W3 trait persistence ────────────────────────────────────────────────
 
-/** Entity shape for FactionResourcePool serialization. */
+/** Minimal entity interface used for DI in serializeW3TraitsSync. */
 type FactionResourceEntity = {
 	get: (
-		t: typeof FactionResourcePool,
+		t?: unknown,
 	) => { factionId: string; resourcesJson: string } | undefined;
 };
 
-/** Entity shape for ChunkDiscovery serialization. */
 type ChunkDiscoveryEntity = {
 	get: (
-		t: typeof ChunkDiscovery,
+		t?: unknown,
 	) => { chunkX: number; chunkZ: number; discoveryLevel: string } | undefined;
 };
 
 /**
- * Serialize W3 Koota traits to SQLite.
- * - FactionResourcePool entities → faction_resource_states
- * - ChunkDiscovery entities → map_discovery
+ * Serialize W3 Koota trait entities to SQLite.
+ * Accepts DI-injected entity arrays for testability; in production pass the
+ * live query iterables (factionResourcePools, chunkDiscoveries) from world.ts.
  *
- * @param poolEntities  Iterable of FactionResourcePool entities (default: live query).
- * @param chunkEntities Iterable of ChunkDiscovery entities (default: live query).
- * These parameters exist for test injection; production callers omit them.
+ * - faction_resource_states: written only when poolEntities is non-empty.
+ * - map_discovery: always deleted and re-inserted from chunkEntities.
  */
 export function serializeW3TraitsSync(
 	saveGameId: number,
-	database: SyncDatabase = getDatabaseSync(),
-	poolEntities?: Iterable<FactionResourceEntity>,
-	chunkEntities?: Iterable<ChunkDiscoveryEntity>,
+	database: SyncDatabase,
+	poolEntities: readonly FactionResourceEntity[],
+	chunkEntities: readonly ChunkDiscoveryEntity[],
 ): void {
 	initializeDatabaseSync(database);
 
-	// Production callers omit poolEntities/chunkEntities — the static live
-	// queries are used. Test callers pass their own mock iterables via these
-	// optional parameters to avoid the captured-binding limitation in Jest.
-	const pools = poolEntities ?? factionResourcePools;
-	const chunks = chunkEntities ?? chunkDiscoveries;
-
-	// FactionResourcePool → faction_resource_states
-	const factionResources: Array<{
-		factionId: string;
-		resources: Record<string, number>;
-	}> = [];
-	for (const e of pools) {
-		const pool = e.get(FactionResourcePool);
-		if (!pool) continue;
-		factionResources.push({
-			factionId: pool.factionId,
-			resources: JSON.parse(pool.resourcesJson) as Record<string, number>,
-		});
-	}
-	if (factionResources.length > 0) {
+	if (poolEntities.length > 0) {
+		const factionResources = poolEntities
+			.map((e) => e.get())
+			.filter(
+				(d): d is { factionId: string; resourcesJson: string } =>
+					d !== undefined,
+			)
+			.map((d) => ({
+				factionId: d.factionId,
+				resources: JSON.parse(d.resourcesJson) as Record<string, number>,
+			}));
 		persistFactionResourceStatesSync(saveGameId, factionResources, database);
 	}
 
-	// ChunkDiscovery → map_discovery (replace strategy)
 	database.runSync(
 		"DELETE FROM map_discovery WHERE save_game_id = ?",
 		saveGameId,
 	);
-	for (const e of chunks) {
-		const chunk = e.get(ChunkDiscovery);
+	for (const e of chunkEntities) {
+		const chunk = e.get();
 		if (!chunk) continue;
 		database.runSync(
 			"INSERT INTO map_discovery (save_game_id, chunk_x, chunk_y, discovered_state) VALUES (?, ?, ?, ?)",
@@ -1072,9 +1058,8 @@ export function serializeW3TraitsSync(
 }
 
 /**
- * Rehydrate W3 Koota traits from SQLite on load.
- * - faction_resource_states → FactionResourcePool entities
- * - map_discovery → ChunkDiscovery entities
+ * Rehydrate W3 Koota trait entities from SQLite rows.
+ * Calls factionEconomy and chunkDiscovery helpers to spawn Koota entities.
  */
 export function rehydrateW3TraitsSync(
 	saveGameId: number,
@@ -1082,10 +1067,16 @@ export function rehydrateW3TraitsSync(
 ): void {
 	initializeDatabaseSync(database);
 
-	// faction_resource_states → FactionResourcePool
-	const factionRows = selectFactionResourceStates(database, saveGameId);
-	const factionIds = factionRows.map((r) => r.faction_id);
-	if (factionIds.length > 0) {
+	const factionRows = database.getAllSync<{
+		faction_id: string;
+		resources_json: string;
+	}>(
+		"SELECT faction_id, resources_json FROM faction_resource_states WHERE save_game_id = ?",
+		saveGameId,
+	);
+
+	if (factionRows.length > 0) {
+		const factionIds = factionRows.map((r) => r.faction_id);
 		initFactionResourcePools(factionIds);
 		for (const row of factionRows) {
 			const resources = JSON.parse(row.resources_json) as Record<
@@ -1098,7 +1089,6 @@ export function rehydrateW3TraitsSync(
 		}
 	}
 
-	// map_discovery → ChunkDiscovery
 	const chunkRows = database.getAllSync<{
 		chunk_x: number;
 		chunk_y: number;
@@ -1107,6 +1097,7 @@ export function rehydrateW3TraitsSync(
 		"SELECT chunk_x, chunk_y, discovered_state FROM map_discovery WHERE save_game_id = ?",
 		saveGameId,
 	);
+
 	for (const row of chunkRows) {
 		loadChunkDiscovery(
 			row.chunk_x,

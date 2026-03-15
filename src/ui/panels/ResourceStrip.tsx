@@ -1,14 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
-import {
-	getSnapshot,
-	setGameSpeed,
-	subscribe,
-	togglePause,
-} from "../../ecs/gameState";
-import { buildings } from "../../ecs/world";
-import { openCityKitLab } from "../../world/cityTransition";
-import { HudButton } from "../components/HudButton";
+import { getSnapshot, subscribe, togglePause } from "../../ecs/gameState";
+import { useResourcePool } from "../hooks/useResourcePool";
 import {
 	BoltIcon,
 	DroneIcon,
@@ -28,6 +21,9 @@ import {
  * On tablet/desktop, the full TopBar is shown instead.
  *
  * Design reference: MOBILE_4X_VIEWPORT_DESIGN.md §5
+ *
+ * Resource values are read via useResourcePool() (Koota entity, reactive) rather
+ * than the full gameState snapshot, so resource mutations trigger targeted re-renders.
  */
 
 const PHONE_BREAKPOINT = 768;
@@ -60,6 +56,7 @@ function CompactStat({
 
 function MobileResourceStrip() {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
+	const resources = useResourcePool();
 
 	return (
 		<View className="absolute left-0 top-0 w-full pt-safe pointer-events-none">
@@ -70,15 +67,15 @@ function MobileResourceStrip() {
 						icon={<DroneIcon width={14} height={14} color="#7ee7cb" />}
 					/>
 					<CompactStat
-						value={snap.resources.scrapMetal}
+						value={resources.scrapMetal}
 						icon={<ShardIcon width={14} height={14} color="#7ee7cb" />}
 					/>
 					<CompactStat
-						value={snap.resources.eWaste}
+						value={resources.eWaste}
 						icon={<MapIcon width={14} height={14} color="#89d9ff" />}
 					/>
 					<CompactStat
-						value={snap.resources.intactComponents}
+						value={resources.intactComponents}
 						icon={<BoltIcon width={14} height={14} color="#f6c56a" />}
 						tone="amber"
 					/>

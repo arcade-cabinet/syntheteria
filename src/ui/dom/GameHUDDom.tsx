@@ -1,10 +1,14 @@
 /**
  * Minimal DOM Game HUD for Vite/Capacitor (no React Native).
  * Shows turn, resources, storm, and Quit. Full HUD is in panels/GameHUD (RN).
+ *
+ * Resource values are read via useResourcePool() (Koota entity, reactive) rather
+ * than the full gameState snapshot, so resource mutations trigger targeted re-renders.
  */
 import { useSyncExternalStore } from "react";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import { getTurnState } from "../../systems/turnSystem";
+import { useResourcePool } from "../hooks/useResourcePool";
 
 const panelStyle: React.CSSProperties = {
 	position: "absolute",
@@ -44,6 +48,7 @@ const btnStyle: React.CSSProperties = {
 export function GameHUDDom({ onQuit }: { onQuit: () => void }) {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
 	const turn = getTurnState();
+	const resources = useResourcePool();
 
 	return (
 		<div style={panelStyle}>
@@ -80,7 +85,7 @@ export function GameHUDDom({ onQuit }: { onQuit: () => void }) {
 					>
 						Scrap
 					</span>
-					<span style={{ color: "#7ee7cb" }}>{snap.resources.scrapMetal}</span>
+					<span style={{ color: "#7ee7cb" }}>{resources.scrapMetal}</span>
 				</div>
 				<div style={chipStyle}>
 					<span

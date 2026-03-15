@@ -6,6 +6,10 @@
  *
  * Uses the brand palette: amber for material labels, cyan for values,
  * green for income, red for expenditure.
+ *
+ * Scavenge resources (scrapMetal, eWaste, intactComponents) are read via
+ * useResourcePool() (Koota entity, reactive). Harvest resources read from
+ * snap.resources until the entity mirrors all 11 fields.
  */
 
 import { useSyncExternalStore } from "react";
@@ -17,6 +21,7 @@ import {
 	subscribeResourceDeltas,
 } from "../../systems/resourceDeltas";
 import type { ResourcePool } from "../../systems/resources";
+import { useResourcePool } from "../hooks/useResourcePool";
 
 interface MaterialRowProps {
 	label: string;
@@ -154,9 +159,9 @@ const URBAN_MINING_ROWS: {
 	{ key: "elCrystal", label: "EL Crystal", iconColor: "#d4a0ff" },
 ];
 
-/** Legacy scavenge resources */
+/** Legacy scavenge resources — mirrored in the Koota ResourcePool entity */
 const SCAVENGE_ROWS: {
-	key: keyof ResourcePool;
+	key: "scrapMetal" | "eWaste" | "intactComponents";
 	label: string;
 	iconColor: string;
 }[] = [
@@ -166,7 +171,10 @@ const SCAVENGE_ROWS: {
 ];
 
 export function ResourceBreakdownPanel() {
+	// Full snapshot for harvest resources (not yet in Koota entity)
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
+	// Koota entity for scavenge resources — reactive without snapshot polling
+	const entityResources = useResourcePool();
 	const deltas = useSyncExternalStore(
 		subscribeResourceDeltas,
 		getResourceDeltas,
@@ -204,7 +212,7 @@ export function ResourceBreakdownPanel() {
 				<MaterialRow
 					key={mat.key}
 					label={mat.label}
-					value={(res[mat.key] as number) ?? 0}
+					value={entityResources[mat.key]}
 					iconColor={mat.iconColor}
 					delta={deltas?.[mat.key]}
 				/>

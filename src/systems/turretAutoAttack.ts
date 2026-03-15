@@ -38,19 +38,20 @@ export interface TurretAttackEvent {
 
 let lastTurretEvents: TurretAttackEvent[] = [];
 
-/** Per-turret cooldown tracker: entityId -> turns remaining */
-const turretCooldowns = new Map<string, number>();
-
 export function getLastTurretEvents(): readonly TurretAttackEvent[] {
 	return lastTurretEvents;
 }
 
 export function resetTurretAutoAttack() {
 	lastTurretEvents = [];
-	turretCooldowns.clear();
+	currentTick = 0;
+	// Building.cooldownExpiresAtTick is reset when new Building entities are spawned
 }
 
 // ─── Core Logic ──────────────────────────────────────────────────────────────
+
+/** Current tick counter — incremented each time turretAutoAttackTick is called. */
+let currentTick = 0;
 
 /**
  * Run turret auto-attack for all operational defense turrets.
@@ -59,6 +60,8 @@ export function resetTurretAutoAttack() {
 export function turretAutoAttackTick(): TurretAttackEvent[] {
 	const stats = TURRET_STATS;
 	const events: TurretAttackEvent[] = [];
+
+	currentTick++;
 
 	const allUnits = Array.from(units);
 
@@ -75,12 +78,8 @@ export function turretAutoAttackTick(): TurretAttackEvent[] {
 		const turretPos = turret.get(WorldPosition);
 		if (!turretPos) continue;
 
-		// Check cooldown
-		const cooldownRemaining = turretCooldowns.get(turretIdentity.id) ?? 0;
-		if (cooldownRemaining > 0) {
-			turretCooldowns.set(turretIdentity.id, cooldownRemaining - 1);
-			continue;
-		}
+		// Check cooldown via Building trait
+		if (building.cooldownExpiresAtTick >= currentTick) continue;
 
 		// Find nearest hostile unit within range
 		let nearestTarget: (typeof allUnits)[number] | null = null;
@@ -134,8 +133,11 @@ export function turretAutoAttackTick(): TurretAttackEvent[] {
 			targetKilled,
 		});
 
-		// Set cooldown
-		turretCooldowns.set(turretIdentity.id, stats.attackCooldown);
+		// Set cooldown on Building trait
+		turret.set(Building, {
+			...building,
+			cooldownExpiresAtTick: currentTick + stats.attackCooldown,
+		});
 
 		// Destroy killed unit
 		if (targetKilled) {

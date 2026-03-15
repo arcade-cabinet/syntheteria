@@ -84,6 +84,7 @@ export const Building = trait(() => ({
 	operational: false,
 	selected: false,
 	components: [] as UnitComponent[],
+	cooldownExpiresAtTick: 0,
 }));
 
 // Lightning rod specialization
@@ -273,4 +274,6 @@ export const AnimationState = trait({
 	blendWeight: 1,
 });
 
-export const BotLOD = trait({ level: "full" as "full" | "simple" | "hidden" });
+export const BotLOD = trait({
+	level: "full" as "full" | "simplified" | "icon" | "hidden",
+});

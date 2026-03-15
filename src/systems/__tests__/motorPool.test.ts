@@ -59,6 +59,7 @@ function spawnMotorPool(opts: {
 		operational: opts.powered ?? true,
 		selected: false,
 		components: [],
+		cooldownExpiresAtTick: 0,
 	});
 	// Register in the Motor Pool state map
 	registerMotorPool(entityId, opts.tier);

@@ -63,7 +63,19 @@ function makeEntity(traitData: Record<string, any>) {
 			}
 			return traitData[name];
 		},
+		set: (trait: any, value: any) => {
+			const name =
+				typeof trait === "function" ? trait.name || trait.toString() : trait;
+			for (const key of Object.keys(traitData)) {
+				if (String(name).includes(key) || String(trait).includes(key)) {
+					traitData[key] = value;
+					return;
+				}
+			}
+			traitData[name] = value;
+		},
 		has: () => true,
+		isAlive: jest.fn(() => true),
 		destroy: jest.fn(() => {
 			destroyed = true;
 		}),

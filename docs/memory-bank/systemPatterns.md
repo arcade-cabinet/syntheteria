@@ -20,13 +20,20 @@ JSON Config  -->  Systems (logic)  -->  Koota ECS (state)  -->  TSX (rendering)
 
 ## ECS Pattern (Koota)
 
-Koota replaced Miniplex as the ECS runtime. Key patterns:
+Koota is the ECS runtime. Key patterns:
 
-- Traits define component schemas
-- Queries filter entities by trait composition
-- Systems iterate queries each frame
-- `_reset()` functions on module-level Map state for test cleanup
+- Traits define component schemas (`src/ecs/traits.ts`)
+- Queries filter entities by trait composition (`world.query(Trait, ...)`)
+- Live queries in `world.ts` exposed as named exports (`units`, `buildings`, `territoryCells`, etc.)
+- React renderers use `useQuery(Trait)` or `useTrait(entity, Trait)` for reactive updates
+- `_reset()` functions on remaining module-level Maps for test cleanup
 - Tests mock Koota queries as plain arrays via `jest.mock`
+
+**Migration status (W0–W5 complete):**
+- All rendering traits on entities: `FloorCell`, `TerritoryCell`, `SpeechBubble`, `HarvestOp`, `POI`, `AIFaction`, `UnitTurnState`, `Experience`, `AnimationState`, `BotLOD`
+- All reactive UI hooks use `useTrait`/`useQuery`: `useResourcePool`, `useTurnState`, territory/floor renderers
+- Persistence traits: `FactionResourcePool`, `FactionResearch`, `FactionStanding`, `ChunkDiscovery` (serialized in worldPersistence.ts)
+- Remaining Maps are legitimate: entity indexes (`_xxxIndex`), listener sets, primary system state not appropriate for ECS (turn state, territory cell ownership, construction tracking)
 
 ## System Tick Architecture
 
@@ -159,7 +166,7 @@ Strict separation enforced across the codebase:
 
 ## Module Pattern
 
-Module-level Map state is the lightweight store pattern:
+Module-level Map state remains for systems where ECS entities would be overhead:
 
 ```typescript
 const _state = new Map<string, FactionState>();
@@ -167,6 +174,9 @@ const _state = new Map<string, FactionState>();
 export function getFactionState(id: string) { return _state.get(id); }
 export function _reset() { _state.clear(); } // For test cleanup
 ```
+
+For rendering-reactive state, prefer Koota entities + `useQuery` / `useTrait` hooks.
+Entity indexes (`_xxxIndex`) coexist with system Maps — they're the bridge between string IDs and Koota entity handles.
 
 ## Testing Patterns
 

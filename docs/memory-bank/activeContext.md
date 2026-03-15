@@ -39,6 +39,14 @@ Full plan: [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION
 
 ---
 
+## Recent Changes (2026-03-15 session 2)
+
+- **Koota migration W0–W5 complete** — Full audit of all migration tasks; confirmed W4 (T29/T30/T31/T32 — Experience, AnimationState, BotLOD, turret cooldown) and W1/W2 tasks (T4–T11, T13–T17) were already done in prior sessions. Marked ~20 tasks completed, 5 deleted (T23/T24/T25/T28/T33 not applicable given actual system architecture).
+- **W5 T38** — Renamed `POITrait` → `POI` and `AIFactionTrait` → `AIFaction` across traits.ts, world.ts, all consumers and tests. `TurnStateKoota` kept (would conflict with `TurnState` interface in turnSystem.ts).
+- **W5 T35/T39 audit** — All remaining module-level Maps are legitimate: entity indexes, listener sets, or primary system state not appropriate for ECS. No zombie Maps from migration.
+- **BuildToolbar.tsx** — Now reads resources via `useResourcePool()` (Koota) instead of `snap.resources` (GameSnapshot). Retains snapshot subscription as re-render trigger for `getActivePlacement()`.
+- **systemPatterns.md** — Updated ECS Pattern and Module Pattern sections to reflect completed migration state.
+
 ## Recent Changes (2026-03-15)
 
 - **Docs aligned** — All agentic docs, docs/, and memory bank updated: Vite + Capacitor SQLite + session sql.js, `pnpm verify`, Playwright CT/E2E (headed; CI uses `xvfb-run -a`), path to done, IS_THE_GAME_DONE first in flow. Root AGENTS.md, CLAUDE.md, docs/AGENTS.md, techContext.md, ARCHITECTURE.md, RENDERING_BACKENDS.md, systemPatterns.md aligned.

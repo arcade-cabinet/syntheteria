@@ -21,8 +21,8 @@ import { HARVEST_RESOURCE_LABELS } from "../systems/resourcePools";
 
 const POPUP_Y = 2.8;
 
-function getSnapshotFn() {
-	return getHarvestYieldEvents();
+function getSnapshotFn(): HarvestYieldEvent[] {
+	return [...getHarvestYieldEvents()];
 }
 
 function YieldBillboard({ event }: { event: HarvestYieldEvent }) {

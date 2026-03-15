@@ -1,9 +1,5 @@
 import type { AgentRole } from "../ai";
 import type { UnitComponent } from "../ecs/traits";
-import {
-	addFactionResourceKoota,
-	initFactionResourcePools,
-} from "../systems/factionEconomy";
 import type { ResourcePool } from "../systems/resources";
 import { loadChunkDiscovery } from "../world/chunkDiscovery";
 import type {
@@ -1076,6 +1072,11 @@ export function rehydrateW3TraitsSync(
 	);
 
 	if (factionRows.length > 0) {
+		// Lazy require to avoid loading factionEconomy → resources → ai at module init
+		// (which would prevent jest.mock("session") from working in tests).
+		const { initFactionResourcePools, addFactionResourceKoota } =
+			// eslint-disable-next-line @typescript-eslint/no-require-imports
+			require("../systems/factionEconomy") as typeof import("../systems/factionEconomy");
 		const factionIds = factionRows.map((r) => r.faction_id);
 		initFactionResourcePools(factionIds);
 		for (const row of factionRows) {

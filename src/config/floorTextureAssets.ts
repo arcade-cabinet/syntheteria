@@ -31,8 +31,8 @@ import HabitationHeight from "../../assets/materials/floors/habitation/height.jp
 import HabitationNormal from "../../assets/materials/floors/habitation/normal.jpg";
 import HabitationRoughness from "../../assets/materials/floors/habitation/roughness.jpg";
 import type { AssetModule } from "./assetUri";
-import type { FloorTexturesConfig } from "./floorTextures.types";
 import floorTexturesConfigJson from "./floorTextures.json";
+import type { FloorTexturesConfig } from "./floorTextures.types";
 
 const floorTexturesConfig = floorTexturesConfigJson as FloorTexturesConfig;
 

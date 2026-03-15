@@ -1,11 +1,18 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+	useSyncExternalStore,
+} from "react";
 import * as THREE from "three";
 import {
 	FLOOR_MATERIAL_PRESETS,
 	getDefaultFloorMaterialForZone,
 } from "../city/config/floorMaterialPresets";
 import { resolveAssetUri } from "../config/assetUri";
+import { getSnapshot, subscribe } from "../ecs/gameState";
 import { gridToWorld, SECTOR_LATTICE_SIZE } from "../world/sectorCoordinates";
 import { getActiveWorldSession } from "../world/session";
 import type { WorldSessionSnapshot } from "../world/snapshots";
@@ -522,6 +529,12 @@ export function StructuralFloorRenderer({
 	session?: WorldSessionSnapshot | null;
 }) {
 	const session = providedSession ?? getActiveWorldSession();
+	// Re-render when game state updates (each tick) so discovery updates from exploration are visible
+	const gameSnapshot = useSyncExternalStore(
+		subscribe,
+		getSnapshot,
+		getSnapshot,
+	);
 	const presetTextureSources = useMemo(
 		() =>
 			Object.fromEntries(
@@ -550,8 +563,8 @@ export function StructuralFloorRenderer({
 		Map<string, FloorTextureBundle>
 	>(new Map());
 
-	// Read discovery state from structuralSpace (where explorationSystem writes)
-	// instead of the stale DB snapshot which never updates during gameplay.
+	// Read discovery state from structuralSpace (where explorationSystem writes).
+	// Re-read when game tick changes so exploration updates become visible (single source of truth).
 	const liveDiscovery = useMemo(() => {
 		try {
 			const fragment = requirePrimaryStructuralFragment();
@@ -564,7 +577,7 @@ export function StructuralFloorRenderer({
 		} catch {
 			return new Map<string, number>();
 		}
-	}, []);
+	}, [gameSnapshot.tick]);
 
 	const orderedCells = useMemo(
 		() =>

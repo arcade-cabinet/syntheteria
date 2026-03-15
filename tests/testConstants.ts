@@ -5,8 +5,8 @@
  * All counts and enumerations are derived from config JSON, never hardcoded.
  */
 
-import modelManifest from "../src/config/modelDefinitions.json";
 import chunksConfig from "../src/config/chunks.json";
+import modelManifest from "../src/config/modelDefinitions.json";
 
 // ─── Deterministic Seed ─────────────────────────────────────────────────────
 
@@ -37,8 +37,7 @@ export const VALID_CATEGORIES = [
 
 export const CATEGORY_COUNTS: Record<string, number> = {};
 for (const model of modelManifest.models) {
-	CATEGORY_COUNTS[model.category] =
-		(CATEGORY_COUNTS[model.category] ?? 0) + 1;
+	CATEGORY_COUNTS[model.category] = (CATEGORY_COUNTS[model.category] ?? 0) + 1;
 }
 
 export const EXPECTED_CATEGORIES = [

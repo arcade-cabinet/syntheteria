@@ -15,9 +15,9 @@ import {
 	returnToWorld,
 } from "../world/cityTransition";
 import { executeDistrictOperation } from "../world/districtOperations";
+import { getTile } from "../world/gen/worldGrid";
 import { foundCitySite, surveyCitySite } from "../world/poiActions";
 import { getRuntimeState, setCitySiteModalOpen } from "../world/runtimeState";
-import { getTile } from "../world/gen/worldGrid";
 import { gridToWorld } from "../world/sectorCoordinates";
 import { getActiveWorldSession } from "../world/session";
 import {
@@ -34,7 +34,17 @@ import {
 	type XPActionType,
 } from "./experience";
 import { RECIPES, startFabrication } from "./fabrication";
-import { isFloorTileConsumed, isStructureConsumed, startFloorHarvest, startHarvest } from "./harvestSystem";
+import {
+	checkHackEligibility,
+	HACK_RANGE,
+	initiateHack,
+} from "./hackingSystem";
+import {
+	isFloorTileConsumed,
+	isStructureConsumed,
+	startFloorHarvest,
+	startHarvest,
+} from "./harvestSystem";
 import {
 	BOT_FABRICATION_RECIPES,
 	canMotorPoolUpgradeMark,
@@ -50,7 +60,12 @@ import {
 	registerRadialProvider,
 } from "./radialMenu";
 import { startRepair } from "./repair";
-import { getResourcePoolForFloorMaterial, getResourcePoolForModel, isFloorHarvestable, isHarvestable } from "./resourcePools";
+import {
+	getResourcePoolForFloorMaterial,
+	getResourcePoolForModel,
+	isFloorHarvestable,
+	isHarvestable,
+} from "./resourcePools";
 import { getResources, spendResource } from "./resources";
 import { logTurnEvent } from "./turnEventLog";
 import {
@@ -59,6 +74,7 @@ import {
 	spendActionPoint,
 	spendMovementPoints,
 } from "./turnSystem";
+import { getSelectedUnitInfo } from "./unitSelection";
 
 /**
  * Radial Menu Action Providers
@@ -267,6 +283,63 @@ registerRadialProvider({
 		}
 
 		return actions;
+	},
+});
+
+// --- HACK CAPTURE category (when right-clicking a hostile unit) ---
+
+registerRadialProvider({
+	id: "hack_capture",
+	category: {
+		id: "hack_capture",
+		label: "Capture",
+		icon: "signal",
+		tone: "signal",
+		priority: 21,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (ctx.selectionType !== "unit" || !ctx.targetEntityId) return [];
+		if (ctx.targetFaction === "player" || ctx.targetFaction === "cultist")
+			return [];
+
+		const targetEntity = findEntityById(ctx.targetEntityId);
+		if (!targetEntity) return [];
+
+		const selected = getSelectedUnitInfo();
+		if (!selected || selected.type !== "unit" || selected.faction !== "player")
+			return [];
+
+		const hackerEntity = findEntityById(selected.entityId);
+		if (!hackerEntity) return [];
+
+		const hackerPos = hackerEntity.get(WorldPosition);
+		const targetPos = targetEntity.get(WorldPosition);
+		if (!hackerPos || !targetPos) return [];
+		const dx = hackerPos.x - targetPos.x;
+		const dz = hackerPos.z - targetPos.z;
+		if (Math.sqrt(dx * dx + dz * dz) > HACK_RANGE) return [];
+
+		const check = checkHackEligibility(hackerEntity, targetEntity);
+		if (!check.canHack) return [];
+
+		const unitHasAP = hasActionPoints(selected.entityId);
+		return [
+			{
+				id: "hack",
+				label: "Hack",
+				icon: "signal",
+				tone: "signal",
+				enabled: unitHasAP,
+				disabledReason: unitHasAP ? undefined : "No AP remaining",
+				onExecute: () => {
+					if (unitHasAP) {
+						spendActionPoint(selected.entityId, 1);
+						initiateHack(hackerEntity, targetEntity);
+						awardXPToActor(selected.entityId, "hack");
+					}
+				},
+			},
+		];
 	},
 });
 
@@ -887,52 +960,52 @@ registerRadialProvider({
 		// Scan nearby structures within harvest range
 		const session = getActiveWorldSession();
 		if (session) {
-		for (const structure of session.sectorStructures) {
-			if (isStructureConsumed(structure.id)) continue;
+			for (const structure of session.sectorStructures) {
+				if (isStructureConsumed(structure.id)) continue;
 
-			// Get family from placement_layer (maps to resource pool family)
-			const family = structure.placement_layer;
-			if (!isHarvestable(family)) continue;
+				// Get family from placement_layer (maps to resource pool family)
+				const family = structure.placement_layer;
+				if (!isHarvestable(family)) continue;
 
-			const worldPos = gridToWorld(structure.q, structure.r);
-			const dx = worldPos.x + structure.offset_x - entityPos.x;
-			const dz = worldPos.z + structure.offset_z - entityPos.z;
-			const dist = Math.sqrt(dx * dx + dz * dz);
+				const worldPos = gridToWorld(structure.q, structure.r);
+				const dx = worldPos.x + structure.offset_x - entityPos.x;
+				const dz = worldPos.z + structure.offset_z - entityPos.z;
+				const dist = Math.sqrt(dx * dx + dz * dz);
 
-			if (dist > HARVEST_SCAN_RANGE) continue;
+				if (dist > HARVEST_SCAN_RANGE) continue;
 
-			// Get resource pool for yield preview
-			const pool = getResourcePoolForModel(family, structure.model_id);
-			const _yieldPreview = pool.yields
-				.map((y) => `${y.min}-${y.max} ${y.resource.replace(/_/g, " ")}`)
-				.join(", ");
+				// Get resource pool for yield preview
+				const pool = getResourcePoolForModel(family, structure.model_id);
+				const _yieldPreview = pool.yields
+					.map((y) => `${y.min}-${y.max} ${y.resource.replace(/_/g, " ")}`)
+					.join(", ");
 
-			actions.push({
-				id: `harvest_${structure.id}`,
-				label: `${pool.label}`,
-				icon: "pickaxe",
-				tone: "power",
-				enabled: unitHasAP,
-				disabledReason: unitHasAP ? undefined : "No AP remaining",
-				onExecute: () => {
-					if (ctx.targetEntityId) {
-						spendActionPoint(ctx.targetEntityId, 1);
-						awardXPToActor(ctx.targetEntityId, "harvest");
-						startHarvest(
-							ctx.targetEntityId,
-							structure.id,
-							structure.model_id,
-							family,
-							worldPos.x + structure.offset_x,
-							worldPos.z + structure.offset_z,
-						);
-					}
-				},
-			});
+				actions.push({
+					id: `harvest_${structure.id}`,
+					label: `${pool.label}`,
+					icon: "pickaxe",
+					tone: "power",
+					enabled: unitHasAP,
+					disabledReason: unitHasAP ? undefined : "No AP remaining",
+					onExecute: () => {
+						if (ctx.targetEntityId) {
+							spendActionPoint(ctx.targetEntityId, 1);
+							awardXPToActor(ctx.targetEntityId, "harvest");
+							startHarvest(
+								ctx.targetEntityId,
+								structure.id,
+								structure.model_id,
+								family,
+								worldPos.x + structure.offset_x,
+								worldPos.z + structure.offset_z,
+							);
+						}
+					},
+				});
 
-			// Limit to 6 nearby targets to keep the radial menu readable
-			if (actions.length >= 6) break;
-		}
+				// Limit to 6 nearby targets to keep the radial menu readable
+				if (actions.length >= 6) break;
+			}
 		}
 
 		return actions;
@@ -1129,7 +1202,11 @@ registerRadialProvider({
 			});
 		}
 
-		if (viewModel.actions.some((a) => a.id === "enter") && city && mode === "world") {
+		if (
+			viewModel.actions.some((a) => a.id === "enter") &&
+			city &&
+			mode === "world"
+		) {
 			actions.push({
 				id: "district_enter",
 				label: "Enter",

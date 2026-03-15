@@ -51,8 +51,7 @@ export function getModelDefinitionsFromDb(db: SyncDatabase): ModelEntry[] {
 				harvest?: { yields?: unknown[] };
 			};
 			const yields = mechanics?.harvest?.yields;
-			hasHarvest =
-				Array.isArray(yields) && yields.length > 0;
+			hasHarvest = Array.isArray(yields) && yields.length > 0;
 		} catch {
 			// keep false
 		}

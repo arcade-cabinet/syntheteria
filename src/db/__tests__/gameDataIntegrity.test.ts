@@ -6,6 +6,12 @@
  * the JSON source of truth.
  */
 
+import {
+	CATEGORY_COUNTS,
+	EXPECTED_MODEL_COUNT,
+	TEST_SEED,
+	VALID_CATEGORIES,
+} from "../../../tests/testConstants";
 import modelManifest from "../../config/modelDefinitions.json";
 import { WORLD_POI_TYPES } from "../../world/contracts";
 import {
@@ -13,12 +19,6 @@ import {
 	resetDatabaseBootstrapForTests,
 } from "../bootstrap";
 import { FakeDatabase } from "./helpers/fakeDatabase";
-import {
-	EXPECTED_MODEL_COUNT,
-	CATEGORY_COUNTS,
-	VALID_CATEGORIES,
-	TEST_SEED,
-} from "../../../tests/testConstants";
 
 const MODELS = modelManifest.models;
 
@@ -26,7 +26,7 @@ const MODELS = modelManifest.models;
 // Helper: seed model definitions into the FakeDatabase
 // ---------------------------------------------------------------------------
 
-function seedModelDefinitions(db: FakeDatabase) {
+function _seedModelDefinitions(db: FakeDatabase) {
 	// The FakeDatabase doesn't natively support model_definitions INSERT,
 	// so we extend it to track inserts via execSync SQL parsing.
 	// Instead, we test the contract: if a real DB were seeded with these

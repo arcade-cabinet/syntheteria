@@ -62,6 +62,7 @@ Game design — what the game IS. What the player experiences.
 | [FACTIONS.md](design/FACTIONS.md) | Campaign arc, 4 rival factions, cultist pressure, victory paths |
 | [ECONOMY.md](design/ECONOMY.md) | Turn system (AP/MP), 11 materials, harvest flow, Motor Pool |
 | [BOTS.md](design/BOTS.md) | 9 chassis, archetypes, Mark I-V, speech profiles |
+| [DIEGETIC_METAPHORS.md](design/DIEGETIC_METAPHORS.md) | In-world UI, machine language, diegetic copy — explore further |
 | [OPEN_QUESTIONS.md](design/OPEN_QUESTIONS.md) | Unresolved design decisions |
 
 ### Technical (`technical/`)
@@ -90,6 +91,8 @@ Player-facing surfaces. Visual language and interaction model.
 
 | File | Summary |
 |------|---------|
+| [IS_THE_GAME_DONE.md](plans/IS_THE_GAME_DONE.md) | **Is the game DONE?** — Single checklist (manual 0.5/0.6, CI, PR). Always think this first. |
+| [PRIORITIZATION.md](plans/PRIORITIZATION.md) | **What to do next** — P0/P1/P2/P3 by 4X fun and player journey (Awakening → Resolution) |
 | [GAMEPLAN_1_0.md](plans/GAMEPLAN_1_0.md) | Comprehensive assessment + 6-phase roadmap (single source of truth for execution) |
 | [EXPO_TO_CAPACITOR_MIGRATION.md](plans/EXPO_TO_CAPACITOR_MIGRATION.md) | **Migration plan:** Expo/RN/Filament → Capacitor + Vite + R3F only; assets in public; @capacitor-community/sqlite |
 | [PLAYWRIGHT_TO_MAESTRO_MIGRATION.md](plans/PLAYWRIGHT_TO_MAESTRO_MIGRATION.md) | E2E pivot: Maestro + RNTL + @react-three/test-renderer |
@@ -98,6 +101,7 @@ Player-facing surfaces. Visual language and interaction model.
 | [NICE_TO_HAVES.md](plans/NICE_TO_HAVES.md) | Consolidated optional, P2, and deferred items |
 | [PR_CHECKLIST.md](plans/PR_CHECKLIST.md) | Checklist for creating and merging the 1.0 PR |
 | [TASK_LIST.md](plans/TASK_LIST.md) | **Remaining work** with dependencies (docs, E2E, assets commit, verification, PR) |
+| [COMPREHENSIVE_TEST_COVERAGE.md](plans/COMPREHENSIVE_TEST_COVERAGE.md) | Scenario matrix — test all different possible scenarios (unit, component, E2E) |
 
 ### Archive (`archive/`)
 

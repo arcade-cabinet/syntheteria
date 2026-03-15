@@ -16,60 +16,59 @@
 // ─── Types (consumers need these for type annotations) ──────────────────────
 
 export type {
-	MapTile,
-	MapChunk,
-	TileDelta,
 	FloorMaterial,
+	MapChunk,
+	MapTile,
+	TileDelta,
 } from "./types";
 
 export {
-	TILE_SIZE,
 	CHUNK_SIZE,
-	LEVEL_HEIGHTS,
-	LEVEL_STEP,
-	MAX_LEVEL,
-	ROBOT_CLEARANCE,
-	MAX_BRIDGE_SPAN,
-	FLOOR_MATERIALS,
-	tileKey,
-	tileKey3D,
 	chunkKey,
-	tileToChunk,
 	chunkOrigin,
 	chunkTileIndex,
+	FLOOR_MATERIALS,
 	FOUR_DIRS,
+	LEVEL_HEIGHTS,
+	LEVEL_STEP,
+	MAX_BRIDGE_SPAN,
+	MAX_LEVEL,
+	ROBOT_CLEARANCE,
+	TILE_SIZE,
+	tileKey,
+	tileKey3D,
+	tileToChunk,
 } from "./types";
 
 // ─── WorldGrid (THE public API) ─────────────────────────────────────────────
 
+export type { PathResult } from "./worldGrid";
 export {
-	// Lifecycle
-	initWorldGrid,
-	resetWorldGrid,
+	// Pathfinding
+	findPath,
 	// Chunk management
 	getChunk,
-	updateFocus,
 	getLoadedChunks,
-	invalidateChunk,
+	getNeighbors,
+	getPassableNeighbors,
+	getReachable,
 	// Tile queries
 	getTile,
 	getTileAnyLevel,
+	// Lifecycle
+	initWorldGrid,
+	invalidateChunk,
 	isPassable,
-	getNeighbors,
-	getPassableNeighbors,
-	// Coordinate conversion
-	worldToTile,
-	tileToWorld,
-	// Pathfinding
-	findPath,
-	getReachable,
 	// Compatibility
 	isPassableAtWorldPosition,
+	resetWorldGrid,
+	tileToWorld,
+	updateFocus,
+	// Coordinate conversion
+	worldToTile,
 } from "./worldGrid";
-
-export type { PathResult } from "./worldGrid";
 
 // ─── Lower-level (for advanced consumers like save/load) ────────────────────
 
 export { generateChunk } from "./chunkGen";
-export { writeTileDelta, loadChunkDeltas, getWorldSeed } from "./persist";
+export { getWorldSeed, loadChunkDeltas, writeTileDelta } from "./persist";

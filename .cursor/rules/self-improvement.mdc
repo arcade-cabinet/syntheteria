@@ -1,0 +1,64 @@
+---
+description: Continuously improve Cursor rules from emerging code patterns and best practices
+globs: **/*
+alwaysApply: true
+---
+# Self-Improvement Rules
+
+Based on [Sashido's self-improving rules](https://www.sashido.io/en/blog/cursor-self-improving-rules). Use this to analyze the codebase over time, learn from recurring patterns, and recommend or evolve new rules.
+
+## Rule Improvement Triggers
+
+- New code patterns not covered by existing rules
+- Repeated similar implementations across files
+- Common error patterns that could be prevented
+- New libraries or tools used consistently
+- Emerging best practices in the codebase
+
+## Analysis Process
+
+- Compare new code with existing rules
+- Identify patterns that should be standardized
+- Check for consistent error handling (e.g. fail-hard vs silent fallback)
+- Align with [AGENTS.md](AGENTS.md) and [docs/technical/](docs/technical/)
+
+## Rule Updates
+
+### Add New Rules When
+
+- A new technology/pattern is used in 3+ files
+- Common bugs could be prevented by a rule
+- Code reviews or playtests repeatedly mention the same feedback
+- New security or performance patterns emerge
+
+### Modify Existing Rules When
+
+- Better examples exist in the codebase
+- Additional edge cases are discovered
+- Related rules or docs have been updated
+- Implementation details have changed
+
+### Example Pattern Recognition
+
+When you see repeated patterns (e.g. resource checks, ECS queries, radial actions), consider adding or updating a rule in `.cursor/rules/` so future sessions stay consistent.
+
+### Rule Quality Checks
+
+- Rules should be actionable and specific
+- Examples should come from actual project code when possible
+- References should point at current paths and docs
+- Patterns should match [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md) directives
+
+## Continuous Improvement
+
+- Monitor [docs/memory-bank/progress.md](docs/memory-bank/progress.md) and [activeContext.md](docs/memory-bank/activeContext.md) for recurring issues
+- Update rules after major refactors (world/gen, db, rendering)
+- Cross-reference related rules and design docs
+- Document deprecations and migration paths when rules change
+
+## Rule Deprecation
+
+- Mark outdated patterns as deprecated at the top of the rule
+- Remove or archive rules that no longer apply
+- Update references that pointed at deprecated rules
+- Follow [cursor-rules.mdc](.cursor/rules/cursor-rules.mdc) for structure

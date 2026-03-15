@@ -46,7 +46,14 @@ export interface MapTile {
 	/** Model placed on this tile, or null if empty floor */
 	modelId: string | null;
 	/** What kind of placement */
-	modelLayer: "structure" | "resource" | "prop" | "bridge" | "ramp" | "support" | null;
+	modelLayer:
+		| "structure"
+		| "resource"
+		| "prop"
+		| "bridge"
+		| "ramp"
+		| "support"
+		| null;
 	/** Quarter-turn rotation of placed model (0-3) */
 	rotation: 0 | 1 | 2 | 3;
 	/** Is this tile walkable? Derived from model passability + level logic */
@@ -75,7 +82,12 @@ export interface TileDelta {
 	tileZ: number;
 	level: number;
 	/** What changed */
-	changeType: "harvested" | "built" | "destroyed" | "faction_change" | "resource_depleted";
+	changeType:
+		| "harvested"
+		| "built"
+		| "destroyed"
+		| "faction_change"
+		| "resource_depleted";
 	/** The new state after the change */
 	newModelId: string | null;
 	newPassable: boolean | null;
@@ -132,5 +144,8 @@ export function chunkTileIndex(localX: number, localZ: number): number {
 }
 
 export const FOUR_DIRS: readonly [number, number][] = [
-	[0, -1], [1, 0], [0, 1], [-1, 0],
+	[0, -1],
+	[1, 0],
+	[0, 1],
+	[-1, 0],
 ];

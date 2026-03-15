@@ -1,24 +1,23 @@
 /**
  * Vite + Capacitor entry. R3F-only game; no Expo/RN.
- * Inits in-memory DB (sql.js) then mounts the app.
- * When running in Capacitor native shell, also inits Capacitor SQLite and runs schema there for future persistence.
+ * Uses Capacitor SQLite for persistence (web: IndexedDB, native: SQLite).
+ * Session runs on an in-memory sql.js DB synced to/from Capacitor on save/load.
  */
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./AppVite";
 import { setDatabaseResolver } from "./db/runtime";
-import { createTestDb } from "./db/testDb";
-import { isCapacitorNative } from "./platform";
+import {
+	createSessionDbSync,
+	initCapacitorDbForVite,
+} from "./db/viteCapacitorSession";
 import "@root/global.css";
 
 async function init() {
-	if (isCapacitorNative) {
-		const { initCapacitorDb } = await import("./db/capacitorDb");
-		const { runBootstrapCapacitor } = await import("./db/capacitorBootstrap");
-		await initCapacitorDb();
-		await runBootstrapCapacitor();
-	}
-	const db = await createTestDb();
+	// Capacitor SQLite: web (IndexedDB) and native. Schema + persistence.
+	await initCapacitorDbForVite();
+	// Session DB (sync API): in-memory sql.js, bootstrapped and seeded.
+	const db = await createSessionDbSync();
 	setDatabaseResolver(() => db);
 
 	const rootEl = document.getElementById("root");

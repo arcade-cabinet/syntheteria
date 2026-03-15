@@ -12,16 +12,16 @@
  */
 
 import {
+	getTile as worldGridGetTile,
+	isPassableAtWorldPosition as worldGridIsPassable,
+} from "./gen/worldGrid";
+import {
 	type SectorWorldDimensions,
 	setWorldDimensions,
 	worldToGrid,
 } from "./sectorCoordinates";
 import { getActiveWorldSession, requireActiveWorldSession } from "./session";
 import type { SectorCellSnapshot } from "./snapshots";
-import {
-	getTile as worldGridGetTile,
-	isPassableAtWorldPosition as worldGridIsPassable,
-} from "./gen/worldGrid";
 
 export type DiscoveryState = 0 | 1 | 2;
 export type FogState = DiscoveryState;
@@ -153,7 +153,9 @@ export function updateDisplayOffsets() {
 export function getSectorCell(q: number, r: number) {
 	const session = getActiveWorldSession();
 	if (session?.sectorCells) {
-		const cell = session.sectorCells.find((entry) => entry.q === q && entry.r === r);
+		const cell = session.sectorCells.find(
+			(entry) => entry.q === q && entry.r === r,
+		);
 		if (cell) return cell;
 	}
 	// Fallback: worldGrid (chunk-based) when initialized
@@ -169,17 +171,25 @@ export function getSectorCell(q: number, r: number) {
 		ecumenopolis_id: 0,
 		q,
 		r,
-		structural_zone: tile.modelLayer === "structure" ? "fabrication" : tile.modelLayer === "resource" ? "storage" : "corridor_transit",
+		structural_zone:
+			tile.modelLayer === "structure"
+				? "fabrication"
+				: tile.modelLayer === "resource"
+					? "storage"
+					: "corridor_transit",
 		floor_preset_id: tile.floorMaterial,
 		discovery_state: 2,
 		passable: tile.passable ? 1 : 0,
 		sector_archetype: tile.modelLayer ? "industrial" : "service_plate",
 		storm_exposure: "shielded" as const,
-		impassable_class: (tile.passable ? "none" : "structural_void") as "none" | "breach" | "sealed_power" | "structural_void",
+		impassable_class: (tile.passable ? "none" : "structural_void") as
+			| "none"
+			| "breach"
+			| "sealed_power"
+			| "structural_void",
 		anchor_key: `${q},${r}`,
 	} as import("./snapshots").SectorCellSnapshot;
 }
-
 
 export function requireSectorCell(q: number, r: number) {
 	const cell = getSectorCell(q, r);

@@ -172,7 +172,12 @@ function applyDeltas(
 		const localX = worldX - chunk.cx * CHUNK_SIZE;
 		const localZ = worldZ - chunk.cz * CHUNK_SIZE;
 
-		if (localX < 0 || localX >= CHUNK_SIZE || localZ < 0 || localZ >= CHUNK_SIZE) {
+		if (
+			localX < 0 ||
+			localX >= CHUNK_SIZE ||
+			localZ < 0 ||
+			localZ >= CHUNK_SIZE
+		) {
 			continue; // Delta outside this chunk
 		}
 

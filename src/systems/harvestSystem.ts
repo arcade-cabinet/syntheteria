@@ -19,26 +19,25 @@
  *   saveAllState, persistenceSystem, initialization
  */
 
+import { getDatabaseSync } from "../db/runtime";
 import { Identity, Unit, WorldPosition } from "../ecs/traits";
 import { units } from "../ecs/world";
+import { writeTileDelta } from "../world/gen/persist";
+import { CHUNK_SIZE, tileKey3D } from "../world/gen/types";
+import { invalidateChunk } from "../world/gen/worldGrid";
+import { getActiveWorldSession } from "../world/session";
 import { expireHarvestEvents, pushHarvestYield } from "./harvestEvents";
 import { queueThought } from "./narrative";
 import {
-	getResourcePoolForModel,
 	getResourcePoolForFloorMaterial,
+	getResourcePoolForModel,
 	type HarvestResource,
-	isHarvestable,
 	isFloorHarvestable,
+	isHarvestable,
 	rollHarvestYield,
 } from "./resourcePools";
-import { getDatabaseSync } from "../db/runtime";
-import { CHUNK_SIZE } from "../world/gen/types";
-import { invalidateChunk } from "../world/gen/worldGrid";
-import { writeTileDelta } from "../world/gen/persist";
-import { tileKey3D } from "../world/gen/types";
-import { getActiveWorldSession } from "../world/session";
-import { getTurnState } from "./turnSystem";
 import { addResource, type ResourcePool } from "./resources";
+import { getTurnState } from "./turnSystem";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -124,7 +123,15 @@ export function startFloorHarvest(
 ): boolean {
 	const key = tileKey3D(tileX, tileZ, level);
 	if (consumedFloorTiles.has(key)) return false;
-	if (activeHarvests.some((h) => h.isFloorHarvest && h.targetX === tileX && h.targetZ === tileZ && h.level === level))
+	if (
+		activeHarvests.some(
+			(h) =>
+				h.isFloorHarvest &&
+				h.targetX === tileX &&
+				h.targetZ === tileZ &&
+				h.level === level,
+		)
+	)
 		return false;
 	if (activeHarvests.some((h) => h.harvesterId === harvesterId)) return false;
 
@@ -182,7 +189,11 @@ export function getConsumedStructureIds(): ReadonlySet<number> {
 /**
  * Check if a floor tile has been consumed by strip-mining.
  */
-export function isFloorTileConsumed(tileX: number, tileZ: number, level: number): boolean {
+export function isFloorTileConsumed(
+	tileX: number,
+	tileZ: number,
+	level: number,
+): boolean {
 	return consumedFloorTiles.has(tileKey3D(tileX, tileZ, level));
 }
 
@@ -279,8 +290,13 @@ export function harvestSystem(tick?: number) {
 				? getResourcePoolForFloorMaterial(harvest.floorMaterial!)
 				: getResourcePoolForModel(harvest.modelFamily!, harvest.modelId!);
 			const seed = harvest.isFloorHarvest
-				? harvest.targetX * 31 + harvest.targetZ * 17 + (harvest.level ?? 0) * 7 + harvest.totalTicks
-				: harvest.structureId! * 31 + harvest.modelId!.length * 17 + harvest.totalTicks;
+				? harvest.targetX * 31 +
+					harvest.targetZ * 17 +
+					(harvest.level ?? 0) * 7 +
+					harvest.totalTicks
+				: harvest.structureId! * 31 +
+					harvest.modelId!.length * 17 +
+					harvest.totalTicks;
 			const yields = rollHarvestYield(pool, seed);
 
 			for (const [resource, amount] of yields) {
@@ -295,7 +311,9 @@ export function harvestSystem(tick?: number) {
 
 			// Mark as consumed
 			if (harvest.isFloorHarvest) {
-				consumedFloorTiles.add(tileKey3D(harvest.targetX, harvest.targetZ, harvest.level ?? 0));
+				consumedFloorTiles.add(
+					tileKey3D(harvest.targetX, harvest.targetZ, harvest.level ?? 0),
+				);
 				// Persist pit state to SQLite
 				const session = getActiveWorldSession();
 				if (session) {

@@ -38,6 +38,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# coverage
+coverage/
+
 # generated native folders
 /ios
 /android
@@ -61,12 +64,14 @@ tests/e2e/reports/playtest-results.json
 # Visual test output (manual-review screenshots, generated per run)
 tests/visual/screenshots/*.png
 
+# E2E local config (copy from config/e2e.example.json)
+config/e2e.json
+
 # Local integration staging
 /pending-integration/
 
 # Local task-orchestration scratch data
 /.ralph-tui/
 
-# Nested clone / agent scratch (do not commit)
+# Nested clone (do not commit)
 /syntheteria/
-.claude/

@@ -112,7 +112,9 @@ export function canPlaceBridge(
 	bridgeLevel: number,
 	groundObstacleHeight: number,
 ): boolean {
-	return bridgeClearance(bridgeLevel, groundObstacleHeight) >= BRIDGE_MIN_CLEARANCE;
+	return (
+		bridgeClearance(bridgeLevel, groundObstacleHeight) >= BRIDGE_MIN_CLEARANCE
+	);
 }
 
 // ─── Ramp Calculations ──────────────────────────────────────────────────────
@@ -175,15 +177,17 @@ export function deriveElevationProfile(model: {
 		model.family === "platform" || model.id.startsWith("platform_");
 	const isMonorailTrack =
 		model.id.startsWith("monorail_track_") && !model.id.includes("support");
-	const isRamp =
-		model.id.includes("slope") || model.id.includes("ramp");
+	const isRamp = model.id.includes("slope") || model.id.includes("ramp");
 
 	// Bridges: platforms and monorail tracks
 	const supportsBridging = isPlatformFamily || isMonorailTrack;
 
 	// Bridge span: based on model footprint width (in tiles)
 	const bridgeSpan = supportsBridging
-		? Math.max(1, Math.ceil(Math.max(model.bounds.width, model.bounds.depth) / TILE_SIZE))
+		? Math.max(
+				1,
+				Math.ceil(Math.max(model.bounds.width, model.bounds.depth) / TILE_SIZE),
+			)
 		: 0;
 
 	// Can a robot pass underneath? Only if the model is tall enough or elevated
@@ -195,7 +199,8 @@ export function deriveElevationProfile(model: {
 
 	// Models shorter than robot clearance that are passable can be walked over
 	// Models taller than robot clearance on the ground block passage
-	const canPassUnderneath = supportsBridging && clearanceProvided >= ROBOT_CLEARANCE_MIN;
+	const canPassUnderneath =
+		supportsBridging && clearanceProvided >= ROBOT_CLEARANCE_MIN;
 
 	// Level range: most models are ground-only, platforms can go higher
 	const maxLevel = supportsBridging ? MAX_LEVEL : model.passable ? 0 : 1;

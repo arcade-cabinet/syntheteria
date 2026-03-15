@@ -1,8 +1,9 @@
 /**
- * Hacking capture system tests (US-009).
+ * Hacking capture system tests (US-009) — hackingSystem.ts.
  *
- * Tests: hack success, failure (broken link), compute check, faction conversion.
- * Adapted for main branch Unit trait shape (markLevel, archetypeId, speechProfile).
+ * Tests: initiateHack, hackingCaptureSystem, checkHackEligibility, faction conversion,
+ * broken link failure, compute check. For core hacking.ts (hackingSystem tick, difficulty,
+ * signal range), see ../hacking.test.ts.
  */
 
 import gameplayConfig from "../../config/gameplay.json";

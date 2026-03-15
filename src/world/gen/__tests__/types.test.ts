@@ -2,24 +2,24 @@
  * Tests for types.ts helper functions and constants.
  */
 
+import chunksConfig from "../../../config/chunks.json";
 import {
 	CHUNK_SIZE,
-	TILE_SIZE,
-	LEVEL_HEIGHTS,
-	LEVEL_STEP,
-	MAX_LEVEL,
-	ROBOT_CLEARANCE,
-	MAX_BRIDGE_SPAN,
-	FLOOR_MATERIALS,
-	tileKey,
-	tileKey3D,
 	chunkKey,
-	tileToChunk,
 	chunkOrigin,
 	chunkTileIndex,
+	FLOOR_MATERIALS,
 	FOUR_DIRS,
+	LEVEL_HEIGHTS,
+	LEVEL_STEP,
+	MAX_BRIDGE_SPAN,
+	MAX_LEVEL,
+	ROBOT_CLEARANCE,
+	TILE_SIZE,
+	tileKey,
+	tileKey3D,
+	tileToChunk,
 } from "../types";
-import chunksConfig from "../../../config/chunks.json";
 
 describe("grid constants", () => {
 	it("TILE_SIZE matches chunks.json cellWorldSize", () => {
@@ -86,7 +86,10 @@ describe("tileToChunk", () => {
 	});
 
 	it("maps last tile in chunk to same chunk", () => {
-		expect(tileToChunk(CHUNK_SIZE - 1, CHUNK_SIZE - 1)).toEqual({ cx: 0, cz: 0 });
+		expect(tileToChunk(CHUNK_SIZE - 1, CHUNK_SIZE - 1)).toEqual({
+			cx: 0,
+			cz: 0,
+		});
 	});
 
 	it("maps first tile of next chunk correctly", () => {

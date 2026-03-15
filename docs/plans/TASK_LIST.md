@@ -3,7 +3,7 @@
 > Single source of remaining work. Tasks can depend on others; complete dependencies first.
 > Style: [agent teams](https://code.claude.com/docs/en/agent-teams) — shared task list, dependencies block claiming.
 
-**Last updated:** 2026-03-14
+**Last updated:** 2026-03-15
 
 ---
 
@@ -28,6 +28,14 @@
 | **T7** | **Maestro E2E: Run native** — Build with `pnpm build` + `pnpm cap:sync`, run `maestro test --platform ios` and `maestro test --platform android`. | T2 | Pending | Requires dev build on devices. |
 | **T8** | **Verification** — `pnpm lint`, `pnpm tsc`, `pnpm test`, `pnpm test:vitest`. | T1–T4 | Done | — |
 | **T9** | **Create PR** — Branch → `main` when ready. See docs/plans/PR_DESCRIPTION.md. | T8 | Ready | Maintainer |
+
+---
+
+## Ownership (session 2026-03-15)
+
+- **Coverage:** New unit tests added per COMPREHENSIVE_TEST_COVERAGE.md: `turnSystem.test.ts` (rehydrateTurnState: restore phase/activeFaction, load-into-different-phase, playerHasActions); `saveGames.test.ts` (no save: count 0, latest null). Coverage doc updated to mark these covered.
+- **Playwright CT:** Build fixed (RN/reanimated/svg stubs, assetsInclude glb). DiegeticChip spec: 3 tests pass. Full CT suite (34 tests) runs; some specs exercise heavy app deps and may be slow or need further stubs — DOM-only components (e.g. DiegeticChip) are the stable CT surface.
+- **Next:** Run full `pnpm test:ct` to completion and fix or skip any failing specs; add more Jest tests for remaining coverage gaps (harvest floor, chunk round-trip, etc.); Maestro web selector/timing if E2E is required.
 
 ---
 

@@ -2,8 +2,8 @@
  * @jest-environment node
  */
 import {
-	isFloorHarvestable,
 	getResourcePoolForFloorMaterial,
+	isFloorHarvestable,
 	rollHarvestYield,
 } from "./resourcePools";
 
@@ -28,7 +28,9 @@ describe("resourcePools", () => {
 			const metal = getResourcePoolForFloorMaterial("metal_panel");
 			expect(metal.label).toBe("Metal Panel Floor");
 			expect(metal.harvestDuration).toBe(80);
-			expect(metal.yields.some((y) => y.resource === "heavy_metals")).toBe(true);
+			expect(metal.yields.some((y) => y.resource === "heavy_metals")).toBe(
+				true,
+			);
 
 			const concrete = getResourcePoolForFloorMaterial("concrete_slab");
 			expect(concrete.label).toBe("Concrete Slab Floor");
@@ -48,7 +50,7 @@ describe("resourcePools", () => {
 			const pool = getResourcePoolForFloorMaterial("metal_panel");
 			const yields = rollHarvestYield(pool, 12345);
 			expect(yields.size).toBeGreaterThan(0);
-			for (const [resource, amount] of yields) {
+			for (const [_resource, amount] of yields) {
 				expect(amount).toBeGreaterThan(0);
 			}
 		});

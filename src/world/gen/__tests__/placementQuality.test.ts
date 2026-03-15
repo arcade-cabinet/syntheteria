@@ -10,17 +10,17 @@
  * 7. Columns appear at structure endpoints/intersections
  */
 
-import { createTestDb } from "../../../db/testDb";
-import { getModelDefinitionsFromDb } from "../../../db/modelDefinitions";
 import { TEST_SEED } from "../../../../tests/testConstants";
-import { generateChunk, _test } from "../chunkGen";
-import { CHUNK_SIZE, FOUR_DIRS, chunkTileIndex } from "../types";
+import { getModelDefinitionsFromDb } from "../../../db/modelDefinitions";
+import { createTestDb } from "../../../db/testDb";
+import { _test, generateChunk } from "../chunkGen";
 import type { MapTile } from "../types";
+import { CHUNK_SIZE, chunkTileIndex, FOUR_DIRS } from "../types";
 
 let testDb: Awaited<ReturnType<typeof createTestDb>>;
 let wallPool: ReturnType<typeof _test.buildModelPools>["wallPool"];
 let columnPool: ReturnType<typeof _test.buildModelPools>["columnPool"];
-let pipePool: ReturnType<typeof _test.buildModelPools>["pipePool"];
+let _pipePool: ReturnType<typeof _test.buildModelPools>["pipePool"];
 let resourcePool: ReturnType<typeof _test.buildModelPools>["resourcePool"];
 
 beforeAll(async () => {
@@ -28,7 +28,7 @@ beforeAll(async () => {
 	const pools = _test.buildModelPools(getModelDefinitionsFromDb(testDb));
 	wallPool = pools.wallPool;
 	columnPool = pools.columnPool;
-	pipePool = pools.pipePool;
+	_pipePool = pools.pipePool;
 	resourcePool = pools.resourcePool;
 });
 
@@ -51,7 +51,8 @@ describe("structure connectivity", () => {
 
 				for (let i = 0; i < chunk.tiles.length; i++) {
 					const tile = chunk.tiles[i]!;
-					if (tile.modelLayer !== "structure" && tile.modelLayer !== "support") continue;
+					if (tile.modelLayer !== "structure" && tile.modelLayer !== "support")
+						continue;
 
 					totalStructures++;
 					const lx = i % CHUNK_SIZE;
@@ -60,7 +61,11 @@ describe("structure connectivity", () => {
 					let hasStructureNeighbor = false;
 					for (const [dx, dz] of FOUR_DIRS) {
 						const n = tileAt(chunk.tiles, lx + dx, lz + dz);
-						if (n && !n.passable && (n.modelLayer === "structure" || n.modelLayer === "support")) {
+						if (
+							n &&
+							!n.passable &&
+							(n.modelLayer === "structure" || n.modelLayer === "support")
+						) {
 							hasStructureNeighbor = true;
 							break;
 						}
@@ -73,8 +78,9 @@ describe("structure connectivity", () => {
 
 		// At least 60% of structures should be adjacent to another structure
 		// (accounts for endpoint columns and gap-punching)
-		const connectivity = totalStructures > 0 ? connectedStructures / totalStructures : 1;
-		expect(connectivity).toBeGreaterThanOrEqual(0.50);
+		const connectivity =
+			totalStructures > 0 ? connectedStructures / totalStructures : 1;
+		expect(connectivity).toBeGreaterThanOrEqual(0.5);
 	});
 
 	it("no single-tile isolated structures (island wall with no neighbors)", () => {
@@ -94,7 +100,13 @@ describe("structure connectivity", () => {
 					const lz = Math.floor(i / CHUNK_SIZE);
 
 					// Edge tiles might connect to adjacent chunk — skip them
-					if (lx === 0 || lx === CHUNK_SIZE - 1 || lz === 0 || lz === CHUNK_SIZE - 1) continue;
+					if (
+						lx === 0 ||
+						lx === CHUNK_SIZE - 1 ||
+						lz === 0 ||
+						lz === CHUNK_SIZE - 1
+					)
+						continue;
 
 					let anyAdjacentStructure = false;
 					for (const [dx, dz] of FOUR_DIRS) {
@@ -137,7 +149,10 @@ describe("wall run coherence", () => {
 					const lz = Math.floor(i / CHUNK_SIZE);
 
 					// Check east and south neighbors
-					for (const [dx, dz] of [[1, 0], [0, 1]] as const) {
+					for (const [dx, dz] of [
+						[1, 0],
+						[0, 1],
+					] as const) {
 						const n = tileAt(chunk.tiles, lx + dx, lz + dz);
 						if (n?.modelId && wallIds.has(n.modelId)) {
 							wallPairs++;
@@ -232,7 +247,7 @@ describe("resource cluster quality", () => {
 		// At least 40% of resources should be adjacent to another resource
 		// (cluster placement creates groups of 2-4)
 		if (totalResources > 0) {
-			expect(clustered / totalResources).toBeGreaterThanOrEqual(0.30);
+			expect(clustered / totalResources).toBeGreaterThanOrEqual(0.3);
 		}
 	});
 
@@ -258,7 +273,10 @@ describe("resource cluster quality", () => {
 					const lz = Math.floor(i / CHUNK_SIZE);
 					const family = modelFamilyMap.get(tile.modelId);
 
-					for (const [dx, dz] of [[1, 0], [0, 1]] as const) {
+					for (const [dx, dz] of [
+						[1, 0],
+						[0, 1],
+					] as const) {
 						const n = tileAt(chunk.tiles, lx + dx, lz + dz);
 						if (n?.modelLayer === "resource" && n.modelId) {
 							adjacentResourcePairs++;
@@ -272,7 +290,9 @@ describe("resource cluster quality", () => {
 
 		// At least 50% of adjacent resource pairs should be same family
 		if (adjacentResourcePairs > 0) {
-			expect(sameFamilyPairs / adjacentResourcePairs).toBeGreaterThanOrEqual(0.40);
+			expect(sameFamilyPairs / adjacentResourcePairs).toBeGreaterThanOrEqual(
+				0.4,
+			);
 		}
 	});
 });

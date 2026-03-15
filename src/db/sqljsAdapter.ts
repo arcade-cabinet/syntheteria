@@ -6,7 +6,10 @@
 import type { SyncDatabase, SyncRunResult } from "./types";
 
 export interface SqlJsDatabase {
-	run(sql: string, params?: unknown[] | Record<string, unknown>): void | unknown;
+	run(
+		sql: string,
+		params?: unknown[] | Record<string, unknown>,
+	): void | unknown;
 	exec(sql: string): Array<{ columns: string[]; values: unknown[][] }>;
 	prepare(sql: string): {
 		bind(params?: unknown[] | Record<string, unknown>): void;

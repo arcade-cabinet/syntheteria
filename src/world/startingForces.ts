@@ -5,9 +5,9 @@
  * Reads unit config from config/units.json.
  */
 
-import type { PersistableWorldEntity } from "./snapshots";
 import type { GeneratedEcumenopolisData } from "./generation";
 import { SECTOR_LATTICE_SIZE } from "./sectorCoordinates";
+import type { PersistableWorldEntity } from "./snapshots";
 
 /**
  * Create the initial set of entities for a new campaign.

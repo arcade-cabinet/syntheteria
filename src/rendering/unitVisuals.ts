@@ -1,21 +1,12 @@
 /**
  * Pure logic for unit visual properties.
  *
- * Badge colors map Mark levels (I–V) to distinct colors.
- * Damage ratio drives visual degradation (desaturation, glow reduction).
- * Cultist identity provides distinct tint for cultist-faction units.
- *
+ * Badge colors, damage visuals, and cultist identity are config-driven (unitVisuals.json).
  * All functions are pure — no side effects, no ECS reads.
  */
 
-/** Mark level badge colors: I=white, II=green, III=blue, IV=purple, V=gold */
-export const MARK_BADGE_COLORS: Record<number, number> = {
-	1: 0xffffff, // white
-	2: 0x44ff44, // green
-	3: 0x4488ff, // blue
-	4: 0xaa44ff, // purple
-	5: 0xffd700, // gold
-};
+import { parseHexColor, unitVisualsConfig } from "../config/unitVisuals";
+import type { UnitVisualsCultistResolved } from "../config/unitVisuals.types";
 
 /** Roman numeral labels for Mark levels */
 export const MARK_LABELS: Record<number, string> = {
@@ -26,22 +17,42 @@ export const MARK_LABELS: Record<number, string> = {
 	5: "V",
 };
 
-/** Cultist faction visual tint (red-purple) */
-export const CULTIST_TINT = 0xcc2255;
-
-/** Cultist emissive glow color */
-export const CULTIST_EMISSIVE = 0x660022;
-
-/** Cultist aura particle color */
-export const CULTIST_AURA_COLOR = 0xff2266;
+/** Resolved cultist config with hex strings parsed to numbers (cached) */
+let cachedCultist: UnitVisualsCultistResolved | null = null;
 
 /**
- * Get the badge color for a given Mark level.
+ * Get cultist visual config with parsed hex colors. Used by UnitRenderer for tint/aura.
+ */
+export function getCultistVisualConfig(): UnitVisualsCultistResolved {
+	if (cachedCultist) return cachedCultist;
+	const c = unitVisualsConfig.cultist;
+	cachedCultist = {
+		tint: parseHexColor(c.tint),
+		emissive: parseHexColor(c.emissive),
+		materialEmissive: parseHexColor(c.materialEmissive),
+		auraColor: parseHexColor(c.auraColor),
+		materialLerpColor: parseHexColor(c.materialLerpColor),
+		materialLerpAmount: c.materialLerpAmount,
+		emissiveIntensity: c.emissiveIntensity,
+		roughnessMax: c.roughnessMax,
+		metalnessMin: c.metalnessMin,
+		auraRingInner: c.auraRingInner,
+		auraRingOuter: c.auraRingOuter,
+		auraOpacityBase: c.auraOpacityBase,
+		auraOpacityPulseAmplitude: c.auraOpacityPulseAmplitude,
+		auraPulseSpeed: c.auraPulseSpeed,
+	};
+	return cachedCultist;
+}
+
+/**
+ * Get the badge color for a given Mark level (from config).
  * Returns null for invalid levels (<=0 or >5).
  */
 export function getBadgeColor(markLevel: number): number | null {
 	if (markLevel < 1 || markLevel > 5) return null;
-	return MARK_BADGE_COLORS[markLevel] ?? null;
+	const hex = unitVisualsConfig.markBadgeColors[String(markLevel)];
+	return hex != null ? parseHexColor(hex) : null;
 }
 
 /**
@@ -73,11 +84,9 @@ export function isCultistVisual(faction: string): boolean {
 }
 
 /**
- * Get visual degradation parameters based on damage ratio.
- * - opacity: 1.0 at 0 damage, 0.5 at full damage
- * - glowIntensity: 1.0 at 0 damage, 0.1 at full damage
- * - desaturation: 0.0 at 0 damage, 0.8 at full damage
- * - sparking: true when damage ratio >= 0.5
+ * Get visual degradation parameters based on damage ratio (from config).
+ * - opacity, glowIntensity, desaturation driven by damageVisuals config
+ * - sparking when damage ratio >= sparkingThreshold
  */
 export function getDamageVisuals(damageRatio: number): {
 	opacity: number;
@@ -85,11 +94,14 @@ export function getDamageVisuals(damageRatio: number): {
 	desaturation: number;
 	sparking: boolean;
 } {
+	const d = unitVisualsConfig.damageVisuals;
 	const clamped = Math.max(0, Math.min(1, damageRatio));
+	const opacityRange = 1.0 - d.opacityMin;
+	const glowRange = 1.0 - d.glowIntensityMin;
 	return {
-		opacity: 1.0 - clamped * 0.5,
-		glowIntensity: 1.0 - clamped * 0.9,
-		desaturation: clamped * 0.8,
-		sparking: clamped >= 0.5,
+		opacity: 1.0 - clamped * opacityRange,
+		glowIntensity: 1.0 - clamped * glowRange,
+		desaturation: clamped * d.desaturationMax,
+		sparking: clamped >= d.sparkingThreshold,
 	};
 }

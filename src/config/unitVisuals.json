@@ -1,0 +1,31 @@
+{
+	"cultist": {
+		"tint": "0xcc2255",
+		"emissive": "0x660022",
+		"materialEmissive": "0x8822aa",
+		"auraColor": "0xff2266",
+		"materialLerpColor": "0x1a0a1e",
+		"materialLerpAmount": 0.65,
+		"emissiveIntensity": 0.35,
+		"roughnessMax": 0.7,
+		"metalnessMin": 0.3,
+		"auraRingInner": 0.6,
+		"auraRingOuter": 0.8,
+		"auraOpacityBase": 0.2,
+		"auraOpacityPulseAmplitude": 0.1,
+		"auraPulseSpeed": 2.0
+	},
+	"markBadgeColors": {
+		"1": "0xffffff",
+		"2": "0x44ff44",
+		"3": "0x4488ff",
+		"4": "0xaa44ff",
+		"5": "0xffd700"
+	},
+	"damageVisuals": {
+		"sparkingThreshold": 0.5,
+		"opacityMin": 0.5,
+		"glowIntensityMin": 0.1,
+		"desaturationMax": 0.8
+	}
+}

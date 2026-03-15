@@ -61,7 +61,7 @@ finalConfig.resolver.resolveRequest = (context, moduleName, platform) => {
 // Enable cross-origin isolation for expo-sqlite OPFS backend (SharedArrayBuffer + Atomics.wait)
 // Required for web platform — browsers block SharedArrayBuffer without COEP/COOP headers.
 // This middleware handles the dev server; app.json expo-router plugin handles static export;
-// public/coi-serviceworker.js handles GitHub Pages (which can't set custom response headers).
+// assets/coi-serviceworker.js (repo root assets/, no public/) handles GitHub Pages (which can't set custom response headers).
 finalConfig.server = {
 	...finalConfig.server,
 	enhanceMiddleware: (middleware) => {

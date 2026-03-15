@@ -32,3 +32,10 @@ test("HudButton renders disabled state", async ({ mount }) => {
 	await expect(component).toContainText("LOCKED");
 	await expect(component).toHaveScreenshot();
 });
+
+test("HudButton renders End Turn for turn phase", async ({ mount }) => {
+	const component = await mount(
+		<HudButton label="End Turn" onPress={() => {}} />,
+	);
+	await expect(component).toContainText("End Turn");
+});

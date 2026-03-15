@@ -119,6 +119,7 @@ export function ResponsiveTopBar() {
 
 	// On tablet/desktop, delegate to the full TopBar
 	// Import is deferred to avoid circular deps
+	// biome-ignore lint/style/noCommonJs: deferred require to avoid circular TopBar deps
 	const { TopBar } = require("./TopBar");
 	return <TopBar />;
 }

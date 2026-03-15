@@ -20,8 +20,9 @@ export default function Root({ children }: PropsWithChildren) {
 				<ScrollViewStyleReset />
 
 				{/* Enable SharedArrayBuffer on hosts without custom header support (e.g. GitHub Pages).
-				    Required for expo-sqlite OPFS backend which uses SharedArrayBuffer + Atomics.wait() */}
-				<script src="/coi-serviceworker.js" />
+				    Required for expo-sqlite OPFS backend which uses SharedArrayBuffer + Atomics.wait().
+				    File lives at repo root in assets/ (no public/ directory). */}
+				<script src="/assets/coi-serviceworker.js" />
 			</head>
 			<body>{children}</body>
 		</html>

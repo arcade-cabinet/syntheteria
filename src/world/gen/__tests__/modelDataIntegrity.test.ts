@@ -8,14 +8,41 @@
 import modelManifest from "../../../config/modelDefinitions.json";
 import { FLOOR_MATERIALS } from "../types";
 
-type RawModel = (typeof modelManifest.models)[number];
+type _RawModel = (typeof modelManifest.models)[number];
 
 const VALID_FAMILIES = [
-	"column", "detail", "door", "floor", "pipe", "prop", "roof", "stair",
-	"wall", "fence", "sign", "turret", "barricade", "gate", "collectible",
-	"resource", "terrain", "structure", "computer", "container", "conveyor",
-	"antenna", "cable", "support", "generator", "monorail", "vehicle",
-	"lamp", "robot_hostile", "robot_industrial", "robot_player", "vent",
+	"column",
+	"detail",
+	"door",
+	"floor",
+	"pipe",
+	"prop",
+	"roof",
+	"stair",
+	"wall",
+	"fence",
+	"sign",
+	"turret",
+	"barricade",
+	"gate",
+	"collectible",
+	"resource",
+	"terrain",
+	"structure",
+	"computer",
+	"container",
+	"conveyor",
+	"antenna",
+	"cable",
+	"support",
+	"generator",
+	"monorail",
+	"vehicle",
+	"lamp",
+	"robot_hostile",
+	"robot_industrial",
+	"robot_player",
+	"vent",
 	"platform",
 ];
 
@@ -132,7 +159,7 @@ describe("harvest yields", () => {
 
 		// Each family should have at most 2 yield patterns
 		// (allows for size variants like small_rock vs large_rock)
-		for (const [family, patterns] of familyYields) {
+		for (const [_family, patterns] of familyYields) {
 			expect(patterns.size).toBeLessThanOrEqual(3);
 		}
 	});

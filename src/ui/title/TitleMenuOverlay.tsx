@@ -77,6 +77,7 @@ function SyntheteriaTitleLogo() {
 
 	return (
 		<View
+			testID="title-logo"
 			className="absolute items-center justify-center"
 			style={{
 				top: "38%",

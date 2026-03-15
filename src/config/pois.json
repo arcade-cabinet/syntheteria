@@ -52,5 +52,10 @@
 	],
 	"discoveryRadius": 5,
 	"discoveryFringeRadius": 2,
-	"foundableTypes": ["home_base", "resource_depot", "research_site", "science_campus"]
+	"foundableTypes": [
+		"home_base",
+		"resource_depot",
+		"research_site",
+		"science_campus"
+	]
 }

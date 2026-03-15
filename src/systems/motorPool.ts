@@ -322,54 +322,27 @@ export interface MarkUpgradeCost {
 	costs: { type: keyof ResourcePool; amount: number }[];
 }
 
-export const MARK_UPGRADE_COSTS: MarkUpgradeCost[] = [
-	{
-		fromMark: 1,
-		toMark: 2,
-		costs: [
-			{ type: "ferrousScrap", amount: 10 },
-			{ type: "siliconWafer", amount: 4 },
-		],
-	},
-	{
-		fromMark: 2,
-		toMark: 3,
-		costs: [
-			{ type: "ferrousScrap", amount: 20 },
-			{ type: "siliconWafer", amount: 8 },
-			{ type: "conductorWire", amount: 6 },
-		],
-	},
-	{
-		fromMark: 3,
-		toMark: 4,
-		costs: [
-			{ type: "ferrousScrap", amount: 30 },
-			{ type: "siliconWafer", amount: 12 },
-			{ type: "conductorWire", amount: 10 },
-			{ type: "elCrystal", amount: 2 },
-		],
-	},
-	{
-		fromMark: 4,
-		toMark: 5,
-		costs: [
-			{ type: "ferrousScrap", amount: 50 },
-			{ type: "siliconWafer", amount: 20 },
-			{ type: "conductorWire", amount: 16 },
-			{ type: "elCrystal", amount: 6 },
-		],
-	},
-];
-
 /**
- * Get the cost to upgrade a unit from its current Mark to the next.
+ * Get the cost to upgrade a unit from its current Mark to the next (from upgrades.json).
  * Returns null if no upgrade path exists.
  */
 export function getMarkUpgradeCost(
 	currentMark: number,
 ): MarkUpgradeCost | null {
-	return MARK_UPGRADE_COSTS.find((c) => c.fromMark === currentMark) ?? null;
+	const toMark = currentMark + 1;
+	const raw =
+		upgradesConfig.markLevels.costs[
+			String(toMark) as keyof typeof upgradesConfig.markLevels.costs
+		];
+	if (!raw || typeof raw !== "object") return null;
+	const costs: { type: keyof ResourcePool; amount: number }[] = [];
+	for (const [type, amount] of Object.entries(raw)) {
+		if (typeof amount === "number" && amount > 0) {
+			costs.push({ type: type as keyof ResourcePool, amount });
+		}
+	}
+	if (costs.length === 0) return null;
+	return { fromMark: currentMark, toMark, costs };
 }
 
 /**

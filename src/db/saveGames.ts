@@ -22,7 +22,6 @@ export type SaveGameRecord = {
 	playtime_seconds: number;
 };
 
-
 function selectLatestSaveGame(database: SyncDatabase) {
 	return database.getFirstSync<SaveGameRecord>(
 		`

@@ -12,10 +12,11 @@
  * Output: Updates game_config.undermaterials in SQLite (or writes JSON for manual merge).
  */
 
-import { readdirSync, existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-const SRC = process.env.UNDERMATERIALS_SRC ?? "/Volumes/home/assets/2DPhotorealistic";
+const SRC =
+	process.env.UNDERMATERIALS_SRC ?? "/Volumes/home/assets/2DPhotorealistic";
 
 interface UndermaterialDef {
 	id: string;
@@ -34,8 +35,14 @@ function discoverTextures(dir: string, prefix: string): UndermaterialDef[] {
 			if (e.isDirectory()) {
 				results.push(...discoverTextures(fullPath, relPath));
 			} else if (/\.(jpg|jpeg|png|webp)$/i.test(e.name)) {
-				const id = e.name.replace(/\.[^.]+$/, "").replace(/\s+/g, "_").toLowerCase();
-				results.push({ id: `${prefix.replace(/\//g, "_")}_${id}`, texturePath: relPath });
+				const id = e.name
+					.replace(/\.[^.]+$/, "")
+					.replace(/\s+/g, "_")
+					.toLowerCase();
+				results.push({
+					id: `${prefix.replace(/\//g, "_")}_${id}`,
+					texturePath: relPath,
+				});
 			}
 		}
 	} catch {

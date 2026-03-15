@@ -22,7 +22,10 @@ export type FloorMaterial =
 /**
  * Get parsed JSON from game_config by key.
  */
-export function getGameConfigFromDb<T>(db: SyncDatabase, key: string): T | null {
+export function getGameConfigFromDb<T>(
+	db: SyncDatabase,
+	key: string,
+): T | null {
 	const row = db.getFirstSync<{ value_json: string }>(
 		"SELECT value_json FROM game_config WHERE key = ?",
 		key,

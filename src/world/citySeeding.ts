@@ -47,6 +47,7 @@ export function seedCityInstances(
 		worldR: poi.r,
 		layoutSeed: Math.floor(rng() * 0xffffffff) ^ worldSeed,
 		generationStatus: DEFAULT_CITY_GENERATION_STATUS,
-		state: poi.type === "home_base" ? ("founded" as const) : ("latent" as const),
+		state:
+			poi.type === "home_base" ? ("founded" as const) : ("latent" as const),
 	}));
 }

@@ -12,8 +12,8 @@ import type {
 	GeneratedEcumenopolisData,
 	GeneratedSectorCell,
 	GeneratedSectorPointOfInterest,
+	GeneratedSectorStructure,
 } from "../world/generation";
-import type { GeneratedSectorStructure } from "../world/generation";
 import type {
 	CampaignStateSnapshot,
 	CampaignStatisticsSnapshot,
@@ -208,7 +208,9 @@ function selectResourceState(database: SyncDatabase, saveGameId: number) {
 }
 
 function selectHarvestState(database: SyncDatabase, saveGameId: number) {
-	const row = database.getFirstSync<HarvestStateRecord & { consumed_floor_tiles_json?: string }>(
+	const row = database.getFirstSync<
+		HarvestStateRecord & { consumed_floor_tiles_json?: string }
+	>(
 		`
 			SELECT
 				id,

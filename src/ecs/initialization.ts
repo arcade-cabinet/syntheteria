@@ -5,6 +5,7 @@ import {
 } from "../ai/governor/factionGovernors";
 import { validateAssetManifest } from "../config/assetValidation";
 import "../systems/playtestBridge";
+import { getDatabaseSync } from "../db/runtime";
 import { resetAICivilization } from "../systems/aiCivilization";
 import { resetCampaignStats, setCampaignStats } from "../systems/campaignStats";
 import { resetCombatState } from "../systems/combat";
@@ -43,7 +44,6 @@ import {
 	type UnitTurnState,
 } from "../systems/turnSystem";
 import { resetVictorySystem } from "../systems/victorySystem";
-import { getDatabaseSync } from "../db/runtime";
 import { hydratePersistedWorldEntities } from "../world/entityPersistence";
 import { initWorldGrid } from "../world/gen/worldGrid";
 import { resetRuntimeState, setRuntimeScene } from "../world/runtimeState";

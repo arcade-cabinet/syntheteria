@@ -8,6 +8,7 @@ import {
 	initializeTurnForUnits,
 	registerAIFactionTurnHandler,
 	registerEnvironmentPhaseHandler,
+	rehydrateTurnState,
 	resetTurnSystem,
 	spendActionPoint,
 	spendMovementPoints,
@@ -334,5 +335,82 @@ describe("resetTurnSystem", () => {
 		expect(state.activeFaction).toBe("player");
 		expect(state.unitStates.size).toBe(0);
 		expect(state.playerHasActions).toBe(true);
+	});
+});
+
+describe("rehydrateTurnState", () => {
+	it("restores turn number, phase, activeFaction and unit states", () => {
+		rehydrateTurnState({
+			turnNumber: 5,
+			phase: "player",
+			activeFaction: "player",
+			unitStates: [
+				{
+					entityId: "u1",
+					actionPoints: 1,
+					maxActionPoints: 2,
+					movementPoints: 2,
+					maxMovementPoints: 3,
+					activated: true,
+				},
+			],
+		});
+
+		const state = getTurnState();
+		expect(state.turnNumber).toBe(5);
+		expect(state.phase).toBe("player");
+		expect(state.activeFaction).toBe("player");
+		expect(state.unitStates.size).toBe(1);
+		expect(state.unitStates.get("u1")?.actionPoints).toBe(1);
+		expect(state.playerHasActions).toBe(true);
+	});
+
+	it("restores load-into-different-phase (e.g. ai_faction or environment)", () => {
+		rehydrateTurnState({
+			turnNumber: 3,
+			phase: "ai_faction",
+			activeFaction: "volt_collective",
+			unitStates: [
+				{
+					entityId: "player_1",
+					actionPoints: 0,
+					maxActionPoints: 2,
+					movementPoints: 0,
+					maxMovementPoints: 3,
+					activated: true,
+				},
+			],
+		});
+
+		const state = getTurnState();
+		expect(state.turnNumber).toBe(3);
+		expect(state.phase).toBe("ai_faction");
+		expect(state.activeFaction).toBe("volt_collective");
+		expect(state.unitStates.get("player_1")?.actionPoints).toBe(0);
+		expect(state.playerHasActions).toBe(false);
+	});
+
+	it("recalculates playerHasActions after rehydrate", () => {
+		rehydrateTurnState({
+			turnNumber: 1,
+			phase: "player",
+			activeFaction: "player",
+			unitStates: [
+				{
+					entityId: "u1",
+					actionPoints: 2,
+					maxActionPoints: 2,
+					movementPoints: 3,
+					maxMovementPoints: 3,
+					activated: false,
+				},
+			],
+		});
+
+		expect(getTurnState().playerHasActions).toBe(true);
+
+		spendActionPoint("u1", 2);
+		spendMovementPoints("u1", 3);
+		expect(getTurnState().playerHasActions).toBe(false);
 	});
 });

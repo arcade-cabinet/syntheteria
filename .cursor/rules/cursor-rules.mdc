@@ -1,0 +1,100 @@
+---
+description: How to add or edit Cursor rules in this project
+globs:
+alwaysApply: false
+---
+# Cursor Rules Management Guide
+
+Based on [Sashido's self-improving rules](https://www.sashido.io/en/blog/cursor-self-improving-rules). Use this file to teach Cursor how to process, format, and locate other rules.
+
+## Rule Structure Format
+
+Every cursor rule must follow this metadata and content structure:
+
+````markdown
+---
+description: Short description of the rule's purpose
+globs: optional/path/pattern/**/*
+alwaysApply: false
+---
+# Rule Title
+
+Main content explaining the rule with markdown formatting.
+
+1. Step-by-step instructions
+2. Code examples
+3. Guidelines
+````
+
+## File Organization
+
+### Required Location
+
+All cursor rule files **must** be placed in:
+
+```
+PROJECT_ROOT/.cursor/rules/
+```
+
+### Directory Structure
+
+```
+syntheteria/
+├── .cursor/
+│   └── rules/
+│       ├── cursor-rules.mdc      # This file
+│       ├── self-improvement.mdc
+│       ├── prd-yolo-execution.mdc
+│       └── your-rule-name.mdc
+├── AGENTS.md
+├── docs/
+└── src/
+```
+
+### Naming Conventions
+
+- Use **kebab-case** for all filenames
+- Always use **.mdc** extension
+- Make names **descriptive** of the rule's purpose
+- Examples: `typescript-style.mdc`, `ecs-patterns.mdc`, `radial-menu.mdc`
+
+## Content Guidelines
+
+### Writing Effective Rules
+
+1. **Be specific and actionable** — Provide clear instructions
+2. **Include code examples** — Show both good and bad practices
+3. **Reference existing files** — Use `@filename` or path references
+4. **Keep it focused** — One rule per concern/pattern
+5. **Add context** — Explain why the rule exists
+
+### Project-Specific Conventions
+
+- **Systems own logic** — Pure functions in `src/systems/`; no logic in TSX
+- **Config over code** — Tuning in JSON under `src/config/` or `config/`
+- **Named exports only** — No `export default`
+- **Crash on missing assets** — Never silent fallback; see [AGENTS.md](AGENTS.md)
+
+## Rule Categories
+
+- **Meta**: `cursor-rules.mdc`, `self-improvement.mdc`
+- **Execution**: `prd-yolo-execution.mdc` (long-running YOLO execution; source of truth = Ralph PRD in ralph/projects/syntheteria-1-0/)
+- **Code style**: TypeScript, React Native / R3F, ECS patterns
+- **Architecture**: `docs/technical/`, `docs/design/`
+
+## Best Practices
+
+### Rule Creation Checklist
+
+- [ ] File placed in `.cursor/rules/`
+- [ ] Filename uses kebab-case with `.mdc` extension
+- [ ] Includes proper frontmatter (description, globs, alwaysApply)
+- [ ] Contains clear title and sections
+- [ ] References relevant project files or docs when useful
+- [ ] Follows [cursor-rules.mdc](.cursor/rules/cursor-rules.mdc) structure
+
+### Maintenance
+
+- **Review regularly** — Keep rules in sync with codebase and docs
+- **Cross-reference** — Link related rules and `docs/AGENTS.md`
+- **Update after refactors** — When structure or patterns change, update rules

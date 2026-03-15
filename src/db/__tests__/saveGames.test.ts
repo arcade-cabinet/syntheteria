@@ -15,6 +15,12 @@ describe("save game persistence", () => {
 		jest.restoreAllMocks();
 	});
 
+	it("returns 0 when no save exists (missing save / empty slot)", () => {
+		const database = new FakeDatabase();
+		expect(getSaveGameCountSync(database)).toBe(0);
+		expect(getLatestSaveGameSync(database)).toBeNull();
+	});
+
 	it("creates and counts save games", () => {
 		const database = new FakeDatabase();
 

@@ -41,9 +41,10 @@ If Claude changes a visible flow, it must:
 3. Not leave stale tests that describe old UI
 
 Test roots:
-- Component tests: `tests/components/`
-- Browser E2E: `tests/e2e/`
-- System tests: `src/systems/__tests__/`
+- Unit/system tests: `src/**/__tests__/*.test.ts`
+- UI component tests: `src/ui/__tests__/` (RNTL)
+- Legacy component tests: `tests/components/` (if any remain)
+- E2E: `maestro/flows/*.yaml` (Maestro; run on both iOS and Android: `maestro test --platform ios maestro/`, `maestro test --platform android maestro/`; web: `maestro test maestro/flows/title-web.yaml`)
 
 ### Brand Assets In Repo
 

@@ -1,6 +1,6 @@
 /**
- * Run schema DDL in Capacitor SQLite. Call after initCapacitorDb() when on native.
- * Session still uses sql.js (createTestDb); this ensures the native DB has the schema for future persistence.
+ * Run schema DDL in Capacitor SQLite. Call after initCapacitorDb() (Vite web + native).
+ * Session uses in-memory sql.js; this ensures Capacitor has the schema for persistence.
  */
 
 import { BOOTSTRAP_DDL } from "./bootstrap";

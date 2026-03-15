@@ -3,7 +3,12 @@
 	"compilerOptions": {
 		"strict": true
 	},
-	"exclude": ["tests/e2e", "tests/components", "tests/visual"],
+	"exclude": [
+		"tests/e2e",
+		"tests/components",
+		"tests/visual",
+		"playwright.e2e.config.ts"
+	],
 	"include": [
 		"**/*.ts",
 		"**/*.tsx",

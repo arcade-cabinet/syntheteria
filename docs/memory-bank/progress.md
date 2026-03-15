@@ -3,7 +3,15 @@
 > System-level status dashboard. Answers: what works, what's broken, what's missing.
 > Updated when system status changes. See [GAMEPLAN_1_0.md](../plans/GAMEPLAN_1_0.md) for full audit.
 
-**Migration (Phases 1–8 done):** **Capacitor + Vite + R3F** is the primary stack. `pnpm dev` / `pnpm build` run Vite; `src/main.tsx` → sql.js DB → `AppVite` + `GameSceneR3F` + `GameHUDDom`. Assets in `public/assets/`; Capacitor SQLite adapter in `db/capacitorDb.ts`; Vitest for `*.vitest.ts`. Filament and scene snapshot removed (R3F-only). Expo/RN deps retained for legacy Jest; primary build is Vite only. Plan: [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION.md).
+---
+
+## Is the game DONE?
+
+**No.** Always ask this first. See **[IS_THE_GAME_DONE.md](../plans/IS_THE_GAME_DONE.md)** for the checklist and **path to done**. Run `pnpm verify` (lint + tsc + test + test:ct). Until manual 0.5/0.6 are run and documented and the PR is merged, the game is not done.
+
+---
+
+**Migration (Phases 1–8 done):** **Capacitor + Vite + R3F** is the primary stack. `pnpm dev` / `pnpm build` run Vite; `src/main.tsx` → Capacitor SQLite (init + schema) → session DB (sql.js) → `AppVite` + `GameSceneR3F` + `GameHUDDom`. Run `pnpm verify` for CI. Assets in `public/`; sql.js WASM at `public/sql-wasm.wasm`. Plan: [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION.md).
 
 ---
 
@@ -90,6 +98,14 @@
 | Diplomacy modal | WORKS | `DiplomacyModal.tsx` | Faction relations with trade/alliance/war UI |
 | Victory overlay | WORKS | `VictoryOverlay.tsx` | Endgame announcement with stats |
 
+### Testing
+
+| Layer | Status | Command / Location | Notes |
+|--------|--------|-------------------|-------|
+| Jest (unit/integration) | WORKS | `pnpm test` | 1,092+ tests; sql.js test DB |
+| Playwright CT (component) | WORKS | `pnpm test:ct` | Isolated React components in browser; RN/reanimated/svg stubbed; DiegeticChip and other specs under `tests/components/` |
+| E2E (Maestro) | Partial | See MAESTRO_PLAYTESTING.md | Web flow attempted; New Game assert failed (timing/selector) |
+
 ### Rendering (39+ components in GameScene)
 
 | Renderer | Status | Notes |
@@ -106,7 +122,7 @@
 | ParticleRenderer | WORKS | Spark, smoke, dust, energy |
 | TerritoryBorderRenderer, TerritoryFillRenderer | WORKS | Faction shading |
 | BreachZoneRenderer | WORKS | Cultist rifts |
-| StructuralFloorRenderer | WORKS | Live discovery from structuralSpace + VoidFillFloor (US-021) |
+| StructuralFloorRenderer | WORKS | Live discovery from structuralSpace + VoidFillFloor (US-021); subscribes to game state and re-reads discovery each tick so fog updates are visible |
 | NetworkLineRenderer | WORKS | Signal network beams |
 | CityRenderer | WORKS | City site portals |
 | MemoryFragmentRenderer | WORKS | Lore markers |

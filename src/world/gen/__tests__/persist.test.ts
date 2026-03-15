@@ -5,13 +5,18 @@
  * Chunk generation requires a seeded DB (model_definitions, game_config).
  */
 
-import { createTestDb } from "../../../db/testDb";
 import { TEST_SEED } from "../../../../tests/testConstants";
-import { writeTileDelta, loadChunkDeltas, loadChunk, getWorldSeed } from "../persist";
-import { generateChunk } from "../chunkGen";
-import { CHUNK_SIZE } from "../types";
-import type { TileDelta } from "../types";
+import { createTestDb } from "../../../db/testDb";
 import type { SyncDatabase, SyncRunResult } from "../../../db/types";
+import { generateChunk } from "../chunkGen";
+import {
+	getWorldSeed,
+	loadChunk,
+	loadChunkDeltas,
+	writeTileDelta,
+} from "../persist";
+import type { TileDelta } from "../types";
+import { CHUNK_SIZE } from "../types";
 
 let seededDb: Awaited<ReturnType<typeof createTestDb>>;
 
@@ -21,7 +26,12 @@ beforeAll(async () => {
 
 /** Wraps seededDb and overrides getAllSync for map_deltas to inject custom rows */
 function dbWithDeltaOverride(
-	deltaRows: Array<{ tile_x: number; tile_y: number; change_type: string; change_json: string }>,
+	deltaRows: Array<{
+		tile_x: number;
+		tile_y: number;
+		change_type: string;
+		change_json: string;
+	}>,
 ): SyncDatabase {
 	return {
 		...seededDb,
@@ -80,7 +90,9 @@ function createMockDb() {
 			return { lastInsertRowId: ++insertId } as SyncRunResult;
 		}),
 		getAllSync: jest.fn(() => deltaRows) as SyncDatabase["getAllSync"],
-		getFirstSync: jest.fn(() => ({ world_seed: TEST_SEED })) as SyncDatabase["getFirstSync"],
+		getFirstSync: jest.fn(() => ({
+			world_seed: TEST_SEED,
+		})) as SyncDatabase["getFirstSync"],
 	};
 
 	return { db, deltaRows, tileRows };
@@ -359,7 +371,12 @@ describe("delta round-trip", () => {
 		);
 		if (!emptyTile) return;
 
-		const deltaRows: Array<{ tile_x: number; tile_y: number; change_type: string; change_json: string }> = [];
+		const deltaRows: Array<{
+			tile_x: number;
+			tile_y: number;
+			change_type: string;
+			change_json: string;
+		}> = [];
 		const captureDb: SyncDatabase = {
 			execSync: seededDb.execSync.bind(seededDb),
 			getAllSync: seededDb.getAllSync.bind(seededDb),

@@ -19,12 +19,17 @@ The memory bank is the **executive summary layer** for Syntheteria. It gives any
 
 ## Session Start Protocol (MANDATORY)
 
-Every agent **must** read the memory bank before doing any work. Follow this order:
+Every agent **must** read the memory bank before doing any work. **Always think: is the game DONE?** Follow this order:
+
+### Step 0: Is the game DONE?
+```
+docs/plans/IS_THE_GAME_DONE.md     — single checklist: manual 0.5/0.6, CI, PR. Answer: NO until all checked.
+```
 
 ### Step 1: Current State (read first — these change most often)
 ```
-docs/memory-bank/activeContext.md   — what's happening RIGHT NOW
-docs/memory-bank/progress.md       — what works, what doesn't
+docs/memory-bank/activeContext.md   — what's happening RIGHT NOW (includes "Is the game DONE?")
+docs/memory-bank/progress.md       — what works, what doesn't (includes "Is the game DONE?")
 ```
 
 ### Step 2: Project Foundation

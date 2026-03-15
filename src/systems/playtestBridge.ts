@@ -14,6 +14,7 @@ import {
 	registerFactionTurnHandler,
 	setAutoPlayMode,
 } from "../ai/governor/factionGovernors";
+import { saveAllStateSync } from "../db/saveAllState";
 import { getSnapshot } from "../ecs/gameState";
 import { getCampaignStats } from "./campaignStats";
 import { getCompletedTurnLogs } from "./turnEventLog";
@@ -31,6 +32,7 @@ declare global {
 		__syntheteria_enableAutoPlay?: (() => void) | null;
 		__syntheteria_autoPlayOneTurn?: () => void;
 		__syntheteria_endTurn?: () => void;
+		__syntheteria_saveGame?: () => void;
 	}
 }
 
@@ -100,6 +102,10 @@ function registerBridge() {
 		const turnNumber = getTurnState().turnNumber;
 		executePlayerAutoTurn(turnNumber);
 		endPlayerTurn();
+	};
+
+	window.__syntheteria_saveGame = () => {
+		saveAllStateSync();
 	};
 }
 

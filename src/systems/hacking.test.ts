@@ -1,3 +1,7 @@
+/**
+ * Tests for hacking.ts — core hacking system (compute, difficulty, signal range, tick progression).
+ * For capture flow (initiateHack, faction conversion), see __tests__/hackingSystem.test.ts.
+ */
 import {
 	applyHackedRole,
 	getHackDifficulty,

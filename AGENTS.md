@@ -2,6 +2,8 @@
 
 > **Session start**: Read this file, then follow the protocol in `docs/memory-bank/AGENTS.md`.
 
+**Vite/Capacitor migration (Phases 1–8 done):** Primary build is **Vite** (`pnpm dev`, `pnpm build`). Entry: `src/main.tsx` → in-memory DB (sql.js) → `AppVite.tsx` (R3F scene + DOM UI). **Capacitor** wraps the same build (`pnpm cap:sync`, `pnpm cap:ios`/`cap:android`). R3F-only; Filament and scene snapshot removed. Capacitor SQLite adapter in `src/db/capacitorDb.ts`; persistence still uses sql.js until wired. **Expo/RN** deps remain for legacy Jest; new features target the Vite path. Plan: [docs/plans/EXPO_TO_CAPACITOR_MIGRATION.md](docs/plans/EXPO_TO_CAPACITOR_MIGRATION.md).
+
 ## Repository Layout
 
 ```
@@ -55,12 +57,13 @@ syntheteria/
 | **Crash on missing assets** | `throw new Error()` — NEVER fallback, NEVER return null. |
 | **One source of truth** | Each data domain has exactly ONE authoritative store. |
 | **Test before integrate** | Jest tests required before wiring into game loop. |
+| **Assets** | Canonical: **`public/assets/`**. Root `assets` is a symlink to `public/assets`. Vite serves at `/assets/...`. Legacy Expo: `resolveAssetUri()`. |
 
 ### Hard Bans
 
 | Banned | Use Instead |
 |--------|-------------|
-| Vite / Vitest | Metro / Jest |
+| (Vite/Vitest now used for primary build; Jest retained for existing tests) | — |
 | Miniplex | Koota |
 | Raw Web Audio | Tone.js |
 | Raw CSS | NativeWind v4 |
@@ -75,9 +78,13 @@ syntheteria/
 pnpm lint          # Biome check
 pnpm lint:fix      # Biome autofix
 pnpm tsc           # TypeScript check (tsc --noEmit)
-pnpm test          # Jest (1,092 tests across 113 suites)
-pnpm test:e2e      # Playwright E2E
+pnpm dev           # Vite dev server (primary)
+pnpm build         # Vite build
+pnpm test:vitest   # Vitest (*.vitest.ts)
+pnpm test          # Jest (existing suites)
 ```
+
+E2E: `maestro test maestro/` (native; use `--platform ios` or `--platform android`); web: `maestro test maestro/flows/title-web.yaml`.
 
 ## Agent Roles
 

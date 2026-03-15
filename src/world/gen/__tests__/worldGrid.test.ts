@@ -7,29 +7,29 @@
  * Chunk generation requires a seeded DB (model_definitions, game_config).
  */
 
-import { createTestDb } from "../../../db/testDb";
 import { TEST_SEED } from "../../../../tests/testConstants";
-import {
-	initWorldGrid,
-	resetWorldGrid,
-	getChunk,
-	updateFocus,
-	getLoadedChunks,
-	invalidateChunk,
-	getTile,
-	getTileAnyLevel,
-	isPassable,
-	getNeighbors,
-	getPassableNeighbors,
-	worldToTile,
-	tileToWorld,
-	findPath,
-	getReachable,
-	isPassableAtWorldPosition,
-	_test,
-} from "../worldGrid";
+import { createTestDb } from "../../../db/testDb";
 import { generateChunk } from "../chunkGen";
 import { CHUNK_SIZE, TILE_SIZE } from "../types";
+import {
+	_test,
+	findPath,
+	getChunk,
+	getLoadedChunks,
+	getNeighbors,
+	getPassableNeighbors,
+	getReachable,
+	getTile,
+	getTileAnyLevel,
+	initWorldGrid,
+	invalidateChunk,
+	isPassable,
+	isPassableAtWorldPosition,
+	resetWorldGrid,
+	tileToWorld,
+	updateFocus,
+	worldToTile,
+} from "../worldGrid";
 
 let testDb: Awaited<ReturnType<typeof createTestDb>>;
 
@@ -99,7 +99,7 @@ describe("chunk management", () => {
 
 	it("updateFocus evicts distant chunks", () => {
 		updateFocus(0, 0);
-		const countBefore = _test.getChunkCache().size;
+		const _countBefore = _test.getChunkCache().size;
 
 		// Move focus far away
 		updateFocus(200 * TILE_SIZE, 200 * TILE_SIZE);
@@ -222,7 +222,9 @@ describe("findPath", () => {
 	it("finds path between two passable tiles", () => {
 		// Find two passable tiles in chunk (0,0)
 		const chunk = getChunk(0, 0);
-		const passableTiles = chunk.tiles.filter((t) => t.passable && t.level === 0);
+		const passableTiles = chunk.tiles.filter(
+			(t) => t.passable && t.level === 0,
+		);
 
 		if (passableTiles.length < 2) return; // Shouldn't happen with 70% min
 
@@ -263,7 +265,14 @@ describe("findPath", () => {
 
 		if (!blocked) return;
 
-		const result = findPath(start.x, start.z, 0, blocked.x, blocked.z, blocked.level);
+		const result = findPath(
+			start.x,
+			start.z,
+			0,
+			blocked.x,
+			blocked.z,
+			blocked.level,
+		);
 		expect(result.valid).toBe(false);
 	});
 
@@ -273,8 +282,12 @@ describe("findPath", () => {
 		if (passable.length < 2) return;
 
 		const result = findPath(
-			passable[0]!.x, passable[0]!.z, 0,
-			passable[1]!.x, passable[1]!.z, 0,
+			passable[0]!.x,
+			passable[0]!.z,
+			0,
+			passable[1]!.x,
+			passable[1]!.z,
+			0,
 		);
 
 		if (result.valid) {

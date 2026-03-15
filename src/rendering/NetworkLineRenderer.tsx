@@ -223,7 +223,6 @@ function SegmentLine({
 			// dashOffset is a runtime property not in the TS declarations
 			const dashCycle =
 				networksConfig.conduit.dashLength + networksConfig.conduit.gapLength;
-			// biome-ignore lint: dashOffset is a runtime property not in TS declarations
 			(material as unknown as { dashOffset: number }).dashOffset =
 				-(elapsedTime * networksConfig.conduit.animationSpeed) % dashCycle;
 			material.opacity = 0.9;

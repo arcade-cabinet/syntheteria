@@ -9,9 +9,11 @@ import upgradesConfig from "../../config/upgrades.json";
 import { Building, Identity, Unit, WorldPosition } from "../../ecs/traits";
 import { world } from "../../ecs/world";
 import {
+	canMotorPoolUpgradeMark,
 	checkUpgradeEligibility,
 	findAdjacentMotorPools,
 	getActiveUpgradeJobs,
+	getMarkUpgradeCost,
 	getMaxMarkForTier,
 	getUpgradeCost,
 	motorPoolUpgradeSystem,
@@ -98,6 +100,47 @@ describe("Motor Pool upgrade system", () => {
 		it("returns null for invalid mark levels", () => {
 			expect(getUpgradeCost(1)).toBeNull();
 			expect(getUpgradeCost(6)).toBeNull();
+		});
+	});
+
+	describe("getMarkUpgradeCost", () => {
+		it("returns config-driven cost from current mark to next", () => {
+			const cost1to2 = getMarkUpgradeCost(1);
+			expect(cost1to2).not.toBeNull();
+			expect(cost1to2?.fromMark).toBe(1);
+			expect(cost1to2?.toMark).toBe(2);
+			expect(cost1to2?.costs).toEqual(
+				expect.arrayContaining([
+					{ type: "scrapMetal", amount: 6 },
+					{ type: "eWaste", amount: 3 },
+					{ type: "intactComponents", amount: 1 },
+				]),
+			);
+		});
+
+		it("returns null for mark 5 (no next level)", () => {
+			expect(getMarkUpgradeCost(5)).toBeNull();
+		});
+
+		it("returns null for invalid current mark", () => {
+			expect(getMarkUpgradeCost(0)).toBeNull();
+			expect(getMarkUpgradeCost(6)).toBeNull();
+		});
+	});
+
+	describe("canMotorPoolUpgradeMark", () => {
+		it("allows Basic pool to upgrade to Mark II only", () => {
+			const mp = spawnMotorPool({ x: 0, z: 0, tier: "basic" });
+			const id = mp.get(Identity)?.id!;
+			expect(canMotorPoolUpgradeMark(id, 2)).toBe(true);
+			expect(canMotorPoolUpgradeMark(id, 3)).toBe(false);
+		});
+
+		it("allows Elite pool to upgrade to Mark V", () => {
+			const mp = spawnMotorPool({ x: 0, z: 0, tier: "elite" });
+			const id = mp.get(Identity)?.id!;
+			expect(canMotorPoolUpgradeMark(id, 2)).toBe(true);
+			expect(canMotorPoolUpgradeMark(id, 5)).toBe(true);
 		});
 	});
 

@@ -7,9 +7,9 @@ import * as entityPersistence from "../../world/entityPersistence";
 import { generateWorldData } from "../../world/generation";
 import * as runtimeState from "../../world/runtimeState";
 import * as session from "../../world/session";
+import { getDatabaseSync } from "../runtime";
 import { saveAllStateSync } from "../saveAllState";
 import { createSaveGameSync } from "../saveGames";
-import { getDatabaseSync } from "../runtime";
 import {
 	getPersistedWorldSync,
 	persistGeneratedWorldSync,

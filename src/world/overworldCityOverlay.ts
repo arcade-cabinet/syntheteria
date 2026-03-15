@@ -107,7 +107,7 @@ function getStateMultiplier(city: CityRuntimeSnapshot) {
 	}
 }
 
-function getBaseBlockCount(poiType: WorldPoiType, city: CityRuntimeSnapshot) {
+function _getBaseBlockCount(poiType: WorldPoiType, city: CityRuntimeSnapshot) {
 	const multiplier = getStateMultiplier(city);
 	const base =
 		poiType === "home_base"

@@ -1,6 +1,6 @@
 import { generateWorldData } from "../../world/generation";
-import { createSaveGameSync } from "../saveGames";
 import { getDatabaseSync } from "../runtime";
+import { createSaveGameSync } from "../saveGames";
 import {
 	getPersistedWorldSync,
 	persistCampaignStatisticsSync,

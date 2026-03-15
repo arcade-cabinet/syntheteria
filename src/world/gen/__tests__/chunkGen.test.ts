@@ -5,12 +5,16 @@
  * Model definitions and floor materials come from SQLite (seeded at bootstrap).
  */
 
-import { createTestDb } from "../../../db/testDb";
-import { getModelDefinitionsFromDb } from "../../../db/modelDefinitions";
 import { TEST_SEED } from "../../../../tests/testConstants";
-import { generateChunk, _test } from "../chunkGen";
-import { CHUNK_SIZE as GEN_CHUNK_SIZE, LEVEL_HEIGHTS, MAX_BRIDGE_SPAN } from "../types";
 import modelManifest from "../../../config/modelDefinitions.json";
+import { getModelDefinitionsFromDb } from "../../../db/modelDefinitions";
+import { createTestDb } from "../../../db/testDb";
+import { _test, generateChunk } from "../chunkGen";
+import {
+	CHUNK_SIZE as GEN_CHUNK_SIZE,
+	LEVEL_HEIGHTS,
+	MAX_BRIDGE_SPAN,
+} from "../types";
 
 const { mulberry32, hashChunkCoords, buildModelPools } = _test;
 
@@ -230,7 +234,7 @@ describe("generateChunk", () => {
 // ─── Walkability Tests ───────────────────────────────────────────────────────
 
 describe("walkability enforcement", () => {
-	const db = seededDb;
+	const _db = seededDb;
 
 	it("guarantees ≥70% passable tiles per chunk", () => {
 		// Test across 25 different chunks to cover variance
@@ -239,7 +243,7 @@ describe("walkability enforcement", () => {
 				const chunk = generateChunk(TEST_SEED, cx, cz, seededDb);
 				const passable = chunk.tiles.filter((t) => t.passable).length;
 				const ratio = passable / chunk.tiles.length;
-				expect(ratio).toBeGreaterThanOrEqual(0.70);
+				expect(ratio).toBeGreaterThanOrEqual(0.7);
 			}
 		}
 	});
@@ -272,7 +276,7 @@ describe("walkability enforcement", () => {
 // ─── Bridge & Elevation Tests ────────────────────────────────────────────────
 
 describe("bridge constraints", () => {
-	const db = seededDb;
+	const _db = seededDb;
 
 	it("bridge tiles are at level 1 with correct elevationY", () => {
 		// Generate many chunks to find bridges
@@ -341,7 +345,7 @@ describe("bridge constraints", () => {
 // ─── Tile Layer Integrity ────────────────────────────────────────────────────
 
 describe("tile layer integrity", () => {
-	const db = seededDb;
+	const _db = seededDb;
 
 	it("every placed model has a valid modelLayer", () => {
 		const validLayers = new Set([
@@ -411,7 +415,7 @@ describe("tile layer integrity", () => {
 // ─── Resource Placement Tests ────────────────────────────────────────────────
 
 describe("resource placement", () => {
-	const db = seededDb;
+	const _db = seededDb;
 
 	it("every resource tile has at least one walkable neighbor within chunk", () => {
 		const chunk = generateChunk(TEST_SEED, 0, 0, seededDb);
@@ -424,7 +428,12 @@ describe("resource placement", () => {
 			const lz = Math.floor(i / GEN_CHUNK_SIZE);
 			let hasWalkableNeighbor = false;
 
-			for (const [dx, dz] of [[0, -1], [1, 0], [0, 1], [-1, 0]] as const) {
+			for (const [dx, dz] of [
+				[0, -1],
+				[1, 0],
+				[0, 1],
+				[-1, 0],
+			] as const) {
 				const nx = lx + dx;
 				const nz = lz + dz;
 				if (nx >= 0 && nx < GEN_CHUNK_SIZE && nz >= 0 && nz < GEN_CHUNK_SIZE) {
@@ -437,7 +446,11 @@ describe("resource placement", () => {
 			}
 
 			// Edge tiles may have walkable neighbors in adjacent chunks
-			const isEdge = lx === 0 || lx === GEN_CHUNK_SIZE - 1 || lz === 0 || lz === GEN_CHUNK_SIZE - 1;
+			const isEdge =
+				lx === 0 ||
+				lx === GEN_CHUNK_SIZE - 1 ||
+				lz === 0 ||
+				lz === GEN_CHUNK_SIZE - 1;
 			if (!isEdge) {
 				expect(hasWalkableNeighbor).toBe(true);
 			}
@@ -448,7 +461,7 @@ describe("resource placement", () => {
 // ─── Negative Coordinates & Edge Cases ───────────────────────────────────────
 
 describe("edge cases", () => {
-	const db = seededDb;
+	const _db = seededDb;
 
 	it("handles chunk at (0, 0)", () => {
 		const chunk = generateChunk(TEST_SEED, 0, 0, seededDb);
@@ -469,7 +482,7 @@ describe("edge cases", () => {
 		const chunk = generateChunk(TEST_SEED, 1000, 1000, seededDb);
 		expect(chunk.tiles.length).toBe(GEN_CHUNK_SIZE * GEN_CHUNK_SIZE);
 		const passable = chunk.tiles.filter((t) => t.passable).length;
-		expect(passable / chunk.tiles.length).toBeGreaterThanOrEqual(0.70);
+		expect(passable / chunk.tiles.length).toBeGreaterThanOrEqual(0.7);
 	});
 
 	it("seed 0 works", () => {

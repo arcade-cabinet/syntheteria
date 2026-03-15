@@ -4,15 +4,22 @@
  */
 
 import initSqlJs from "sql.js";
-import { createSyncDatabase, type SqlJsDatabase } from "./sqljsAdapter";
 import { initializeDatabaseSync } from "./bootstrap";
+import { createSyncDatabase, type SqlJsDatabase } from "./sqljsAdapter";
 import type { SyncDatabase } from "./types";
 
 let sqlJsModule: Awaited<ReturnType<typeof initSqlJs>> | null = null;
 
+/** In browser, sql.js loads WASM from same origin; point to public copy so Vite/dev serves it. */
+function getLocateFile(): ((file: string) => string) | undefined {
+	if (typeof window === "undefined") return undefined;
+	return (file: string) => `/${file}`;
+}
+
 async function getSqlJs() {
 	if (!sqlJsModule) {
-		sqlJsModule = await initSqlJs();
+		const locateFile = getLocateFile();
+		sqlJsModule = await initSqlJs(locateFile ? { locateFile } : undefined);
 	}
 	return sqlJsModule;
 }

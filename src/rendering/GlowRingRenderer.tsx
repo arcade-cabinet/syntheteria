@@ -19,7 +19,7 @@ import { units } from "../ecs/world";
 import { getUnitTurnState, hasAnyPoints } from "../systems/turnSystem";
 import { getStructuralFragment } from "../world/structuralSpace";
 import {
-	CULTIST_AURA_COLOR,
+	getCultistVisualConfig,
 	getDamageRatio,
 	getDamageVisuals,
 	isCultistVisual,
@@ -32,7 +32,7 @@ const COLOR_PARTIAL = new THREE.Color(0x007799);
 const COLOR_SPENT = new THREE.Color(0x333333);
 const COLOR_SELECTED = new THREE.Color(0xffffff);
 const COLOR_FERAL = new THREE.Color(0xff8844);
-const COLOR_CULTIST = new THREE.Color(CULTIST_AURA_COLOR);
+const COLOR_CULTIST = new THREE.Color(getCultistVisualConfig().auraColor);
 
 const READY_RADIUS = 0.6;
 const SELECTED_RADIUS = 0.8;

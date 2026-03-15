@@ -1,6 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { setCameraState } from "../rendering/cameraStateStore";
 import { cancelCameraFocus, updateCameraFocus } from "../systems/cameraFocus";
 import {
 	getNextCycleTier,
@@ -298,6 +299,16 @@ export function TopDownCamera() {
 			target.current.z + zoom.current * 0.6,
 		);
 		camera.lookAt(target.current);
+
+		// Sync to camera store for scene snapshot (Filament path)
+		const persp = camera as import("three").PerspectiveCamera;
+		setCameraState({
+			position: [camera.position.x, camera.position.y, camera.position.z],
+			target: [target.current.x, 0, target.current.z],
+			fov: persp.fov,
+			near: persp.near,
+			far: persp.far,
+		});
 	});
 
 	return null;

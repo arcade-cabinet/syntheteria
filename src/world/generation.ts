@@ -6,18 +6,24 @@
  */
 
 import { getDatabaseSync } from "../db/runtime";
+import { type BreachZone, generateBreachZones } from "../systems/breachZones";
+import {
+	type GeneratedCityInstanceSeed,
+	seedCityInstances,
+} from "./citySeeding";
 import type { NewGameConfig } from "./config";
 import { SECTOR_SCALE_SPECS } from "./config";
 import { generateChunk } from "./gen/chunkGen";
 import { CHUNK_SIZE, type MapTile } from "./gen/types";
-import { generateBreachZones, type BreachZone } from "../systems/breachZones";
-import { placeInitialPOIs, type GeneratedSectorPointOfInterest } from "./poiPlacement";
-import { seedCityInstances, type GeneratedCityInstanceSeed } from "./citySeeding";
+import {
+	type GeneratedSectorPointOfInterest,
+	placeInitialPOIs,
+} from "./poiPlacement";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-export type { GeneratedSectorPointOfInterest } from "./poiPlacement";
 export type { GeneratedCityInstanceSeed } from "./citySeeding";
+export type { GeneratedSectorPointOfInterest } from "./poiPlacement";
 
 export interface GeneratedEcumenopolisData {
 	ecumenopolis: {
@@ -76,7 +82,8 @@ function classifyZone(tile: MapTile): string {
 
 function classifyArchetype(tile: MapTile): string {
 	if (tile.modelLayer === "resource") return "resource_zone";
-	if (tile.modelLayer === "structure" || tile.modelLayer === "support") return "industrial";
+	if (tile.modelLayer === "structure" || tile.modelLayer === "support")
+		return "industrial";
 	return "service_plate";
 }
 
@@ -100,7 +107,13 @@ function generateTerrain(
 		for (let cx = 0; cx < chunksX; cx++) {
 			const chunk = generateChunk(worldSeed, cx, cz, getDatabaseSync());
 			for (const tile of chunk.tiles) {
-				if (tile.x < 0 || tile.z < 0 || tile.x >= gridWidth || tile.z >= gridHeight) continue;
+				if (
+					tile.x < 0 ||
+					tile.z < 0 ||
+					tile.x >= gridWidth ||
+					tile.z >= gridHeight
+				)
+					continue;
 
 				cells.push({
 					q: tile.x,
@@ -125,7 +138,9 @@ function generateTerrain(
 						placementLayer: tile.modelLayer,
 						edge: null,
 						rotationQuarterTurns: tile.rotation,
-						offsetX: 0, offsetY: 0, offsetZ: 0,
+						offsetX: 0,
+						offsetY: 0,
+						offsetZ: 0,
 						targetSpan: 1,
 						sectorArchetype: classifyArchetype(tile),
 						source: "seeded_district",
@@ -149,7 +164,9 @@ function generateTerrain(
  * 4. Discovery (reveals area around spawn)
  * 5. Breach zones (structural fractures for hostile spawns)
  */
-export function generateWorldData(config: NewGameConfig): GeneratedEcumenopolisData {
+export function generateWorldData(
+	config: NewGameConfig,
+): GeneratedEcumenopolisData {
 	const scale = SECTOR_SCALE_SPECS[config.sectorScale];
 	const { width, height } = scale;
 
@@ -179,7 +196,8 @@ export function generateWorldData(config: NewGameConfig): GeneratedEcumenopolisD
 		cityInstances: cities,
 		breachZones: [] as BreachZone[],
 		ecumenopolis: {
-			width, height,
+			width,
+			height,
 			spawnSectorId: `${spawnQ},${spawnR}`,
 			spawnAnchorKey: `${spawnQ},${spawnR}`,
 		},

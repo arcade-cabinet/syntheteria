@@ -5,6 +5,12 @@
 
 ---
 
+## Is the game DONE?
+
+**No.** Always think this first. Done = manual 0.5 (floor visible), 0.6 (radial, turn, save/load) run and documented + PR merged. Checklist: [IS_THE_GAME_DONE.md](../plans/IS_THE_GAME_DONE.md).
+
+---
+
 ## Strategic direction: Capacitor + Vite + R3F
 
 We are **migrating off Expo/React Native/Filament**. The only path that has consistently worked is **R3F on the web**. The target stack is:
@@ -21,7 +27,9 @@ Full plan: [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION
 
 ## Current Focus
 
-- **Capacitor + Vite migration (Phases 1–8 done)** — Primary build: `pnpm dev` / `pnpm build`. Entry: `src/main.tsx` → `createTestDb()` → `AppVite` (DOM title + game, `GameSceneR3F`, `GameHUDDom`). Capacitor SQLite adapter in `db/capacitorDb.ts`; assets in `public/assets/`; Vitest (`pnpm test:vitest`, `*.vitest.ts`). Filament and scene snapshot removed (R3F-only). Expo/RN deps retained for legacy Jest.
+- **Prioritization owned** — [PRIORITIZATION.md](../plans/PRIORITIZATION.md) is the single source for "what next." Tiers: P0 (journey blockers), P1 (fun multipliers by phase: Awakening → Expansion → Competition → Resolution), P2 (depth, tests), P3 (nice to have). Grounded in 4X pillars, player journey, and design goals.
+- **Ownership (everything)** — Test coverage, Playwright CT, docs, and PR readiness are owned in-session. Delivered: new unit tests (turn rehydrate, save no-save), coverage doc updated, TASK_LIST ownership section, prioritization framework, this context.
+- **Capacitor + Vite migration (Phases 1–8 done)** — Primary build: `pnpm dev` / `pnpm build`. Entry: `src/main.tsx` → `initCapacitorDbForVite()` (Capacitor SQLite, web IndexedDB + native) → `createSessionDbSync()` (sql.js in-memory) → `AppVite` (DOM title + game, `GameSceneR3F`, `GameHUDDom`). Persistence: Capacitor SQLite; session: sql.js. Run `pnpm verify` for lint + tsc + test + test:ct.
 - **Build-time foundation.db** — `pnpm db:build:foundation` generates `assets/db/foundation.db` with schema + all JSON config (models, tiles, robots, game_config); no fake/fallback DB
 - **Test db** — Jest uses `createTestDb()` (sql.js) with schema + seed; reserved `TEST_SEED` in `src/db/testConstants.ts` and `tests/testConstants.ts`
 - **JSON-in-SQLite foundation COMPLETE** — config and model definitions loaded into DB at bootstrap; world/gen read from SQLite
@@ -30,6 +38,21 @@ Full plan: [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION
 - **Floor harvest** — radial "Strip-mine floor", `writeTileDelta` on completion, `consumed_floor_tiles_json` persist/reload
 
 ---
+
+## Recent Changes (2026-03-15)
+
+- **P0 floor discovery:** StructuralFloorRenderer now subscribes to game state (`useSyncExternalStore(subscribe, getSnapshot, getSnapshot)`) and re-reads `liveDiscovery` from structuralSpace when `gameSnapshot.tick` changes, so exploration-driven discovery updates are visible every tick (single source of truth).
+- **P2 harvest→resources test:** harvestSystem.test.ts — new test "harvest completion adds resources to pool (Exploit pillar — resources visible)" asserts addResource called with valid type and amount after floor harvest completes.
+- **Own everything** — Unit tests: `turnSystem.test.ts` — rehydrateTurnState (restore phase/activeFaction, load-into-different-phase, playerHasActions). `saveGames.test.ts` — no-save edge (getSaveGameCountSync 0, getLatestSaveGameSync null). COMPREHENSIVE_TEST_COVERAGE.md updated (turn rehydrate, save/load, missing save). TASK_LIST: ownership section added; next steps for CT full run, coverage gaps, Maestro.
+- **Playwright component testing (CT)** — `pnpm test:ct` runs isolated React component tests in browser. Stubs: react-native (dir + codegenNativeComponent), react-native-reanimated (useSharedValue, withSpring, Easing, etc.), RN (Image, PanResponder, Touchable, processColor, findNodeHandle, PixelRatio). assetsInclude glb. **DiegeticChip** CT: 3 tests pass.
+- **Docs** — DIEGETIC_METAPHORS.md links fixed; docs/AGENTS.md index; COMPREHENSIVE_TEST_COVERAGE.md and Game HUD row updated.
+
+## Next Steps
+
+- **Path to done:** See [IS_THE_GAME_DONE.md](../plans/IS_THE_GAME_DONE.md). 1) `pnpm verify` green. 2) `pnpm test:e2e` (app must boot: Capacitor + sql.js WASM at `/sql-wasm.wasm`). 3) Manual 0.5 (floor visible). 4) Manual 0.6 (radial, turn, save/load). 5) PR merged.
+- **Use [PRIORITIZATION.md](../plans/PRIORITIZATION.md) for what to do next.** P0 (journey blockers) first, then P1 by journey phase. P2 (depth, tests). P3 = NICE_TO_HAVES.
+- Maestro web: adjust selector or wait if E2E required (P2).
+- PR: `gh pr create` when branch is pushed (T9).
 
 ## Recent Changes (2026-03-13)
 

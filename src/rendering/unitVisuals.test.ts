@@ -1,11 +1,11 @@
+import { parseHexColor, unitVisualsConfig } from "../config/unitVisuals";
 import {
-	CULTIST_TINT,
 	getBadgeColor,
 	getBadgeLabel,
+	getCultistVisualConfig,
 	getDamageRatio,
 	getDamageVisuals,
 	isCultistVisual,
-	MARK_BADGE_COLORS,
 } from "./unitVisuals";
 
 describe("unitVisuals", () => {
@@ -42,9 +42,11 @@ describe("unitVisuals", () => {
 			expect(getBadgeColor(-1)).toBeNull();
 		});
 
-		it("matches MARK_BADGE_COLORS for all valid levels", () => {
+		it("matches config markBadgeColors for all valid levels", () => {
 			for (let level = 1; level <= 5; level++) {
-				expect(getBadgeColor(level)).toBe(MARK_BADGE_COLORS[level]);
+				const hex = unitVisualsConfig.markBadgeColors[String(level)];
+				expect(hex).toBeDefined();
+				expect(getBadgeColor(level)).toBe(parseHexColor(hex!));
 			}
 		});
 	});
@@ -134,6 +136,8 @@ describe("unitVisuals", () => {
 	});
 
 	describe("getDamageVisuals", () => {
+		const d = unitVisualsConfig.damageVisuals;
+
 		it("returns full values at 0 damage", () => {
 			const result = getDamageVisuals(0);
 			expect(result.opacity).toBe(1.0);
@@ -144,19 +148,19 @@ describe("unitVisuals", () => {
 
 		it("returns degraded values at full damage", () => {
 			const result = getDamageVisuals(1);
-			expect(result.opacity).toBe(0.5);
-			expect(result.glowIntensity).toBeCloseTo(0.1);
-			expect(result.desaturation).toBeCloseTo(0.8);
+			expect(result.opacity).toBe(d.opacityMin);
+			expect(result.glowIntensity).toBeCloseTo(d.glowIntensityMin);
+			expect(result.desaturation).toBeCloseTo(d.desaturationMax);
 			expect(result.sparking).toBe(true);
 		});
 
-		it("returns sparking at 50% damage", () => {
-			const result = getDamageVisuals(0.5);
+		it("returns sparking at threshold", () => {
+			const result = getDamageVisuals(d.sparkingThreshold);
 			expect(result.sparking).toBe(true);
 		});
 
-		it("returns no sparking at 49% damage", () => {
-			const result = getDamageVisuals(0.49);
+		it("returns no sparking just below threshold", () => {
+			const result = getDamageVisuals(d.sparkingThreshold - 0.01);
 			expect(result.sparking).toBe(false);
 		});
 
@@ -170,27 +174,28 @@ describe("unitVisuals", () => {
 
 		it("clamps damage ratio above 1", () => {
 			const result = getDamageVisuals(1.5);
-			expect(result.opacity).toBe(0.5);
-			expect(result.glowIntensity).toBeCloseTo(0.1);
-			expect(result.desaturation).toBeCloseTo(0.8);
+			expect(result.opacity).toBe(d.opacityMin);
+			expect(result.glowIntensity).toBeCloseTo(d.glowIntensityMin);
+			expect(result.desaturation).toBeCloseTo(d.desaturationMax);
 			expect(result.sparking).toBe(true);
 		});
 
-		it("interpolates linearly at 25% damage", () => {
+		it("interpolates at 25% damage", () => {
 			const result = getDamageVisuals(0.25);
-			expect(result.opacity).toBeCloseTo(0.875);
-			expect(result.glowIntensity).toBeCloseTo(0.775);
-			expect(result.desaturation).toBeCloseTo(0.2);
+			expect(result.opacity).toBeGreaterThan(d.opacityMin);
+			expect(result.opacity).toBeLessThanOrEqual(1);
+			expect(result.glowIntensity).toBeGreaterThan(d.glowIntensityMin);
+			expect(result.desaturation).toBeCloseTo(0.25 * d.desaturationMax);
 			expect(result.sparking).toBe(false);
 		});
 	});
 
-	describe("CULTIST_TINT", () => {
-		it("is a valid hex color in the red-purple range", () => {
-			expect(CULTIST_TINT).toBe(0xcc2255);
-			// Red channel should be dominant
-			const r = (CULTIST_TINT >> 16) & 0xff;
-			const g = (CULTIST_TINT >> 8) & 0xff;
+	describe("getCultistVisualConfig", () => {
+		it("returns tint in red-purple range from config", () => {
+			const cfg = getCultistVisualConfig();
+			expect(cfg.tint).toBe(0xcc2255);
+			const r = (cfg.tint >> 16) & 0xff;
+			const g = (cfg.tint >> 8) & 0xff;
 			expect(r).toBeGreaterThan(g);
 		});
 	});

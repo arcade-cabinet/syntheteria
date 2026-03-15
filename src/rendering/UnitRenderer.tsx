@@ -33,10 +33,9 @@ import {
 	getSurfaceHeightAtWorldPosition,
 } from "../world/structuralSpace";
 import {
-	CULTIST_AURA_COLOR,
-	CULTIST_EMISSIVE,
 	getBadgeColor,
 	getBadgeLabel,
+	getCultistVisualConfig,
 	getDamageRatio,
 	getDamageVisuals,
 	isCultistVisual,
@@ -88,21 +87,21 @@ function normalizeUnitMaterial(material: THREE.Material, beaconColor: number) {
 }
 
 /**
- * Cultist-specific material treatment — dark purple/red corruption tones.
- * Heavier emissive, darker base, more metallic to look corrupted.
+ * Cultist-specific material treatment — config-driven (unitVisuals.json).
+ * Dark base, emissive glow, metallic/roughness from config.
  */
 function normalizeCultistMaterial(material: THREE.Material) {
 	if (!(material instanceof THREE.MeshStandardMaterial)) {
 		return;
 	}
-
-	// Dark corrupted base — purple-black
-	material.color = material.color.clone().lerp(new THREE.Color(0x1a0a1e), 0.65);
-	// Strong purple-red emissive glow
-	material.emissive = new THREE.Color(0x8822aa);
-	material.emissiveIntensity = 0.35;
-	material.roughness = Math.min(material.roughness ?? 0.92, 0.7);
-	material.metalness = Math.max(material.metalness ?? 0.1, 0.3);
+	const cfg = getCultistVisualConfig();
+	material.color = material.color
+		.clone()
+		.lerp(new THREE.Color(cfg.materialLerpColor), cfg.materialLerpAmount);
+	material.emissive = new THREE.Color(cfg.materialEmissive);
+	material.emissiveIntensity = cfg.emissiveIntensity;
+	material.roughness = Math.min(material.roughness ?? 0.92, cfg.roughnessMax);
+	material.metalness = Math.max(material.metalness ?? 0.1, cfg.metalnessMin);
 	material.side = THREE.DoubleSide;
 	material.needsUpdate = true;
 }
@@ -178,23 +177,27 @@ function DamageSparks() {
 	);
 }
 
-/** Cultist aura ring -- glowing ground ring for cultist/rogue faction */
+/** Cultist aura ring — config-driven size and color (unitVisuals.json) */
 function CultistAura() {
 	const ringRef = useRef<THREE.Mesh>(null);
+	const cfg = getCultistVisualConfig();
 
 	useFrame(({ clock }) => {
 		if (!ringRef.current) return;
 		const mat = ringRef.current.material as THREE.MeshBasicMaterial;
-		mat.opacity = 0.15 + 0.1 * Math.sin(clock.getElapsedTime() * 2.0);
+		mat.opacity =
+			cfg.auraOpacityBase +
+			cfg.auraOpacityPulseAmplitude *
+				Math.sin(clock.getElapsedTime() * cfg.auraPulseSpeed);
 	});
 
 	return (
 		<mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
-			<ringGeometry args={[0.6, 0.8, 24]} />
+			<ringGeometry args={[cfg.auraRingInner, cfg.auraRingOuter, 24]} />
 			<meshBasicMaterial
-				color={CULTIST_AURA_COLOR}
+				color={cfg.auraColor}
 				transparent
-				opacity={0.2}
+				opacity={cfg.auraOpacityBase}
 				side={THREE.DoubleSide}
 				depthWrite={false}
 			/>
@@ -472,10 +475,11 @@ function UnitMesh({ entity }: { entity: UnitEntity }) {
 			}
 		}
 
-		// Cultist emissive overlay from unitVisuals constants
+		// Cultist emissive overlay from config (unitVisuals.json)
 		if (isCultist) {
+			const cultistEmissive = getCultistVisualConfig().materialEmissive;
 			for (const mat of mats) {
-				mat.emissive = new THREE.Color(CULTIST_EMISSIVE);
+				mat.emissive = new THREE.Color(cultistEmissive);
 			}
 		}
 

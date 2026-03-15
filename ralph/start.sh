@@ -11,12 +11,15 @@ source "$SCRIPT_DIR/lib/circuit_breaker.sh"
 source "$SCRIPT_DIR/lib/response_analyzer.sh"
 
 # Configuration
-# Use Cursor Agent instead of Claude CLI
+# Use Cursor Agent instead of Claude CLI (cursor-agent or agent in PATH)
 # --print: enables non-interactive mode with file editing capabilities
 # --force: allows shell commands (npm, git, etc.) required by Ralph
-# Ensure agent is in PATH
 export PATH="$HOME/.local/bin:$PATH"
-CLAUDE_CMD="agent --print --force"
+if command -v cursor-agent &>/dev/null; then
+    CLAUDE_CMD="cursor-agent --print --force"
+else
+    CLAUDE_CMD="agent --print --force"
+fi
 
 # Use gtimeout on macOS (from brew install coreutils), timeout on Linux
 if command -v gtimeout &>/dev/null; then

@@ -18,12 +18,12 @@ import type { SyncDatabase } from "../../db/types";
 import { loadChunk } from "./persist";
 import {
 	CHUNK_SIZE,
-	FOUR_DIRS,
-	TILE_SIZE,
-	type MapChunk,
-	type MapTile,
 	chunkKey,
 	chunkTileIndex,
+	FOUR_DIRS,
+	type MapChunk,
+	type MapTile,
+	TILE_SIZE,
 	tileKey,
 	tileToChunk,
 } from "./types";
@@ -174,7 +174,12 @@ export function getTile(x: number, z: number, level = 0): MapTile | null {
 	const localX = x - cx * CHUNK_SIZE;
 	const localZ = z - cz * CHUNK_SIZE;
 
-	if (localX < 0 || localX >= CHUNK_SIZE || localZ < 0 || localZ >= CHUNK_SIZE) {
+	if (
+		localX < 0 ||
+		localX >= CHUNK_SIZE ||
+		localZ < 0 ||
+		localZ >= CHUNK_SIZE
+	) {
 		return null;
 	}
 
@@ -197,7 +202,12 @@ export function getTileAnyLevel(x: number, z: number): MapTile | null {
 	const localX = x - cx * CHUNK_SIZE;
 	const localZ = z - cz * CHUNK_SIZE;
 
-	if (localX < 0 || localX >= CHUNK_SIZE || localZ < 0 || localZ >= CHUNK_SIZE) {
+	if (
+		localX < 0 ||
+		localX >= CHUNK_SIZE ||
+		localZ < 0 ||
+		localZ >= CHUNK_SIZE
+	) {
 		return null;
 	}
 
@@ -229,7 +239,11 @@ export function getNeighbors(x: number, z: number, level = 0): MapTile[] {
  * Get passable neighbors — the ones a robot can actually walk to.
  * Includes same-level walkable tiles and ramp connections to adjacent levels.
  */
-export function getPassableNeighbors(x: number, z: number, level = 0): MapTile[] {
+export function getPassableNeighbors(
+	x: number,
+	z: number,
+	level = 0,
+): MapTile[] {
 	const results: MapTile[] = [];
 
 	for (const [dx, dz] of FOUR_DIRS) {
@@ -273,7 +287,10 @@ export function getPassableNeighbors(x: number, z: number, level = 0): MapTile[]
 /**
  * Convert world position (meters) to tile grid coordinates.
  */
-export function worldToTile(worldX: number, worldZ: number): { x: number; z: number } {
+export function worldToTile(
+	worldX: number,
+	worldZ: number,
+): { x: number; z: number } {
 	return {
 		x: Math.floor(worldX / TILE_SIZE),
 		z: Math.floor(worldZ / TILE_SIZE),
@@ -283,7 +300,10 @@ export function worldToTile(worldX: number, worldZ: number): { x: number; z: num
 /**
  * Convert tile grid coordinates to world center position (meters).
  */
-export function tileToWorld(x: number, z: number): { worldX: number; worldZ: number } {
+export function tileToWorld(
+	x: number,
+	z: number,
+): { worldX: number; worldZ: number } {
 	return {
 		worldX: x * TILE_SIZE + TILE_SIZE / 2,
 		worldZ: z * TILE_SIZE + TILE_SIZE / 2,
@@ -432,7 +452,10 @@ export function getReachable(
 	fromLevel: number,
 	maxCost: number,
 ): Map<string, { x: number; z: number; level: number; cost: number }> {
-	const visited = new Map<string, { x: number; z: number; level: number; cost: number }>();
+	const visited = new Map<
+		string,
+		{ x: number; z: number; level: number; cost: number }
+	>();
 
 	if (!isPassable(fromX, fromZ, fromLevel)) {
 		return visited;
@@ -481,7 +504,10 @@ export function getReachable(
  * Check if a world position (meters) is passable.
  * Drop-in replacement for structuralSpace.isPassableAtWorldPosition().
  */
-export function isPassableAtWorldPosition(worldX: number, worldZ: number): boolean {
+export function isPassableAtWorldPosition(
+	worldX: number,
+	worldZ: number,
+): boolean {
 	const { x, z } = worldToTile(worldX, worldZ);
 	// Check ground level first, then any level
 	if (isPassable(x, z, 0)) return true;

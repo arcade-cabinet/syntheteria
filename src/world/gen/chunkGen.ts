@@ -26,17 +26,20 @@
  */
 
 import { getFloorMaterials } from "../../db/gameConfig";
-import { getModelDefinitionsFromDb, type ModelEntry } from "../../db/modelDefinitions";
+import {
+	getModelDefinitionsFromDb,
+	type ModelEntry,
+} from "../../db/modelDefinitions";
 import type { SyncDatabase } from "../../db/types";
 import {
 	CHUNK_SIZE,
+	chunkTileIndex,
+	type FloorMaterial,
 	FOUR_DIRS,
 	LEVEL_HEIGHTS,
 	MAX_BRIDGE_SPAN,
-	type FloorMaterial,
 	type MapChunk,
 	type MapTile,
-	chunkTileIndex,
 } from "./types";
 
 // ─── PRNG ────────────────────────────────────────────────────────────────────
@@ -54,9 +57,9 @@ function mulberry32(seed: number): () => number {
 
 function hashChunkCoords(worldSeed: number, cx: number, cz: number): number {
 	let h = worldSeed >>> 0;
-	h = (Math.imul(h ^ (cx * 374761393), 668265263) + (cz * 2654435769)) >>> 0;
-	h = (Math.imul(h ^ (h >>> 15), 2246822519)) >>> 0;
-	h = (Math.imul(h ^ (h >>> 13), 3266489917)) >>> 0;
+	h = (Math.imul(h ^ (cx * 374761393), 668265263) + cz * 2654435769) >>> 0;
+	h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0;
+	h = Math.imul(h ^ (h >>> 13), 3266489917) >>> 0;
 	return (h ^ (h >>> 16)) >>> 0;
 }
 
@@ -77,7 +80,9 @@ function shuffled<T>(arr: readonly T[], rng: () => number): T[] {
 
 function buildModelPools(allModels: ModelEntry[]) {
 	const wallPool = allModels.filter((m) => m.family === "wall" && !m.passable);
-	const columnPool = allModels.filter((m) => m.family === "column" && !m.passable);
+	const columnPool = allModels.filter(
+		(m) => m.family === "column" && !m.passable,
+	);
 	const pipePool = allModels.filter((m) => m.family === "pipe" && !m.passable);
 	const barrierPool = allModels.filter(
 		(m) => ["barricade", "fence"].includes(m.family) && !m.passable,
@@ -89,7 +94,15 @@ function buildModelPools(allModels: ModelEntry[]) {
 		(m) =>
 			!m.passable &&
 			!m.hasHarvest &&
-			["wall", "column", "structure", "support", "pipe", "barricade", "fence"].includes(m.family),
+			[
+				"wall",
+				"column",
+				"structure",
+				"support",
+				"pipe",
+				"barricade",
+				"fence",
+			].includes(m.family),
 	);
 	const containerPool = allModels.filter(
 		(m) => m.hasHarvest && !m.passable && m.family === "container",
@@ -107,9 +120,16 @@ function buildModelPools(allModels: ModelEntry[]) {
 		(m) =>
 			m.hasHarvest &&
 			!m.passable &&
-			["wall", "column", "pipe", "barricade", "fence", "antenna", "prop", "computer"].includes(
-				m.family,
-			),
+			[
+				"wall",
+				"column",
+				"pipe",
+				"barricade",
+				"fence",
+				"antenna",
+				"prop",
+				"computer",
+			].includes(m.family),
 	);
 	const resourcePool = allModels.filter((m) => m.hasHarvest && !m.passable);
 	const resourceFamilies: { pool: ModelEntry[]; weight: number }[] = [
@@ -122,13 +142,24 @@ function buildModelPools(allModels: ModelEntry[]) {
 	const propPool = allModels.filter(
 		(m) =>
 			m.passable &&
-			["detail", "floor", "cable", "vent", "conveyor", "sign", "collectible", "terrain"].includes(
-				m.family,
-			),
+			[
+				"detail",
+				"floor",
+				"cable",
+				"vent",
+				"conveyor",
+				"sign",
+				"collectible",
+				"terrain",
+			].includes(m.family),
 	);
-	const detailProps = propPool.filter((m) => m.family === "detail" || m.family === "sign");
+	const detailProps = propPool.filter(
+		(m) => m.family === "detail" || m.family === "sign",
+	);
 	const ventProps = propPool.filter((m) => m.family === "vent");
-	const cableProps = propPool.filter((m) => ["cable", "conveyor"].includes(m.family));
+	const cableProps = propPool.filter((m) =>
+		["cable", "conveyor"].includes(m.family),
+	);
 	const floorProps = propPool.filter((m) =>
 		["floor", "terrain", "collectible"].includes(m.family),
 	);
@@ -172,7 +203,7 @@ function isEmpty(tiles: MapTile[], lx: number, lz: number): boolean {
 	return t !== null && t.passable && t.modelId === null;
 }
 
-function isStructure(tiles: MapTile[], lx: number, lz: number): boolean {
+function _isStructure(tiles: MapTile[], lx: number, lz: number): boolean {
 	const t = tileAt(tiles, lx, lz);
 	return t !== null && !t.passable && t.modelLayer === "structure";
 }
@@ -224,7 +255,13 @@ export function generateChunk(
 	const materials: FloorMaterial[] =
 		floorMaterials.length > 0
 			? (floorMaterials as FloorMaterial[])
-			: (["metal_panel", "concrete_slab", "industrial_grating", "rusty_plating", "corroded_steel"] as FloorMaterial[]);
+			: ([
+					"metal_panel",
+					"concrete_slab",
+					"industrial_grating",
+					"rusty_plating",
+					"corroded_steel",
+				] as FloorMaterial[]);
 
 	const chunkSeed = hashChunkCoords(worldSeed, cx, cz);
 	const rng = mulberry32(chunkSeed);
@@ -354,7 +391,9 @@ function growStructureRuns(
 			const [dx, dz] = usedDirs[r]!;
 			const runLen = 2 + Math.floor(rng() * 4); // 2-5 tiles
 			const wallVariant =
-				wallPool.length > 0 ? pickRandom(wallPool, rng) : pickRandom(structurePool, rng);
+				wallPool.length > 0
+					? pickRandom(wallPool, rng)
+					: pickRandom(structurePool, rng);
 			const rotation = directionToRotation(dx, dz);
 
 			// Grow the run
@@ -415,7 +454,7 @@ function growStructureRuns(
 
 	// Fill a few remaining random spots to hit ~20% target
 	// But only adjacent to existing structures (grow the ranges)
-	const targetStructures = Math.ceil(CHUNK_SIZE * CHUNK_SIZE * 0.20);
+	const targetStructures = Math.ceil(CHUNK_SIZE * CHUNK_SIZE * 0.2);
 	let structureCount = tiles.filter((t) => !t.passable).length;
 
 	if (structureCount < targetStructures) {
@@ -434,7 +473,14 @@ function growStructureRuns(
 			const lz = Math.floor(idx / CHUNK_SIZE);
 
 			// Only place if adjacent to existing structure (grow the range)
-			if (countNeighbors(tiles, lx, lz, (n) => !n.passable && n.modelLayer === "structure") > 0) {
+			if (
+				countNeighbors(
+					tiles,
+					lx,
+					lz,
+					(n) => !n.passable && n.modelLayer === "structure",
+				) > 0
+			) {
 				// Pick family matching the adjacent structure
 				const model =
 					barrierPool.length > 0 && rng() < 0.3
@@ -445,7 +491,7 @@ function growStructureRuns(
 				t.modelId = model.id;
 				t.modelLayer = "structure";
 				t.passable = false;
-				t.rotation = (Math.floor(rng() * 4)) as 0 | 1 | 2 | 3;
+				t.rotation = Math.floor(rng() * 4) as 0 | 1 | 2 | 3;
 				structureCount++;
 			}
 		}
@@ -530,7 +576,9 @@ function placeResourceClusters(
 			if (!isEmpty(tiles, lx, lz)) continue;
 			const idx = chunkTileIndex(lx, lz);
 
-			if (countNeighbors(tiles, lx, lz, (t) => t.modelLayer === "structure") > 0) {
+			if (
+				countNeighbors(tiles, lx, lz, (t) => t.modelLayer === "structure") > 0
+			) {
 				structureAdjacent.push(idx);
 			} else {
 				openField.push(idx);
@@ -569,9 +617,10 @@ function placeResourceClusters(
 
 		// Pick 1-2 model variants from this family
 		const primaryModel = pickRandom(chosenFamily.pool, rng);
-		const secondaryModel = chosenFamily.pool.length > 1 && rng() < 0.3
-			? pickRandom(chosenFamily.pool, rng)
-			: primaryModel;
+		const secondaryModel =
+			chosenFamily.pool.length > 1 && rng() < 0.3
+				? pickRandom(chosenFamily.pool, rng)
+				: primaryModel;
 
 		// Grow cluster: 2-4 adjacent tiles
 		const clusterSize = 2 + Math.floor(rng() * 3);
@@ -579,7 +628,11 @@ function placeResourceClusters(
 		usedTiles.add(seedIdx);
 
 		// BFS outward from seed to find adjacent empty tiles
-		for (let attempt = 0; attempt < clusterSize * 3 && clusterTiles.length < clusterSize; attempt++) {
+		for (
+			let attempt = 0;
+			attempt < clusterSize * 3 && clusterTiles.length < clusterSize;
+			attempt++
+		) {
 			const parent = clusterTiles[Math.floor(rng() * clusterTiles.length)]!;
 			const px = parent % CHUNK_SIZE;
 			const pz = Math.floor(parent / CHUNK_SIZE);
@@ -593,9 +646,9 @@ function placeResourceClusters(
 			if (!isEmpty(tiles, nx, nz)) continue;
 
 			// Must have at least 1 walkable neighbor that's NOT in this cluster
-			const walkableNonCluster = countNeighbors(tiles, nx, nz, (t) =>
-				t.passable && t.modelId === null,
-			) - 1; // -1 for the parent we came from
+			const walkableNonCluster =
+				countNeighbors(tiles, nx, nz, (t) => t.passable && t.modelId === null) -
+				1; // -1 for the parent we came from
 			if (walkableNonCluster < 1) continue;
 
 			clusterTiles.push(nIdx);
@@ -616,7 +669,11 @@ function placeResourceClusters(
 				const nz = lz + ddz;
 				if (!isInBounds(nx, nz)) continue;
 				const nIdx = chunkTileIndex(nx, nz);
-				if (!clusterSet.has(nIdx) && tiles[nIdx]!.passable && tiles[nIdx]!.modelLayer !== "resource") {
+				if (
+					!clusterSet.has(nIdx) &&
+					tiles[nIdx]!.passable &&
+					tiles[nIdx]!.modelLayer !== "resource"
+				) {
 					hasWalkable = true;
 					break;
 				}
@@ -627,7 +684,7 @@ function placeResourceClusters(
 			tiles[idx]!.modelId = model.id;
 			tiles[idx]!.modelLayer = "resource";
 			tiles[idx]!.passable = false;
-			tiles[idx]!.rotation = (Math.floor(rng() * 4)) as 0 | 1 | 2 | 3;
+			tiles[idx]!.rotation = Math.floor(rng() * 4) as 0 | 1 | 2 | 3;
 			resourceCount++;
 		}
 	}
@@ -673,7 +730,11 @@ function placeBridges(
 					const nz = lz + dz;
 					if (isInBounds(nx, nz)) {
 						const nIdx = chunkTileIndex(nx, nz);
-						if (!tiles[nIdx]!.passable && tiles[nIdx]!.modelLayer === "structure" && rng() < 0.5) {
+						if (
+							!tiles[nIdx]!.passable &&
+							tiles[nIdx]!.modelLayer === "structure" &&
+							rng() < 0.5
+						) {
 							tiles[nIdx]!.modelId = pickRandom(supportPool, rng).id;
 							tiles[nIdx]!.modelLayer = "support";
 						}
@@ -747,7 +808,15 @@ function placeContextualProps(
 	rng: () => number,
 	pools: ModelPools,
 ): void {
-	const { propPool, wallPool, pipePool, detailProps, ventProps, cableProps, floorProps } = pools;
+	const {
+		propPool,
+		wallPool,
+		pipePool,
+		detailProps,
+		ventProps,
+		cableProps,
+		floorProps,
+	} = pools;
 	if (propPool.length === 0) return;
 
 	for (let lz = 0; lz < CHUNK_SIZE; lz++) {
@@ -777,8 +846,13 @@ function placeContextualProps(
 			}
 
 			// Check if in a corridor (structure on 2+ sides)
-			const structNeighborCount = countNeighbors(tiles, lx, lz,
-				(t) => !t.passable && (t.modelLayer === "structure" || t.modelLayer === "support"),
+			const structNeighborCount = countNeighbors(
+				tiles,
+				lx,
+				lz,
+				(t) =>
+					!t.passable &&
+					(t.modelLayer === "structure" || t.modelLayer === "support"),
 			);
 			inCorridor = structNeighborCount >= 2;
 
@@ -793,9 +867,15 @@ function placeContextualProps(
 				model = pickRandom(ventProps, rng);
 			} else if (inCorridor && cableProps.length > 0 && rng() < 0.2) {
 				model = pickRandom(cableProps, rng);
-			} else if (!nearWall && !nearPipe && !inCorridor && floorProps.length > 0 && rng() < 0.05) {
+			} else if (
+				!nearWall &&
+				!nearPipe &&
+				!inCorridor &&
+				floorProps.length > 0 &&
+				rng() < 0.05
+			) {
 				model = pickRandom(floorProps, rng);
-				rotation = (Math.floor(rng() * 4)) as 0 | 1 | 2 | 3;
+				rotation = Math.floor(rng() * 4) as 0 | 1 | 2 | 3;
 			}
 
 			if (model) {
@@ -813,7 +893,7 @@ function placeContextualProps(
 function enforceWalkability(tiles: MapTile[], _rng: () => number): void {
 	const total = tiles.length;
 	let walkable = tiles.filter((t) => t.passable).length;
-	const targetWalkable = Math.ceil(total * 0.70);
+	const targetWalkable = Math.ceil(total * 0.7);
 
 	if (walkable >= targetWalkable) return;
 
@@ -825,7 +905,12 @@ function enforceWalkability(tiles: MapTile[], _rng: () => number): void {
 		if (!tile.passable && tile.modelLayer === "structure") {
 			const lx = i % CHUNK_SIZE;
 			const lz = Math.floor(i / CHUNK_SIZE);
-			const impassableNeighbors = countNeighbors(tiles, lx, lz, (t) => !t.passable);
+			const impassableNeighbors = countNeighbors(
+				tiles,
+				lx,
+				lz,
+				(t) => !t.passable,
+			);
 			removeCandidates.push({ idx: i, neighborScore: impassableNeighbors });
 		}
 	}

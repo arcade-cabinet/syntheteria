@@ -7,14 +7,14 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import modelManifest from "../modelDefinitions.json";
 import {
+	ASSET_BASE_PATH,
+	EXPECTED_CATEGORIES,
 	EXPECTED_MODEL_COUNT,
 	TILE_SIZE_METERS,
 	VALID_CATEGORIES,
-	EXPECTED_CATEGORIES,
-	ASSET_BASE_PATH,
 } from "../../../tests/testConstants";
+import modelManifest from "../modelDefinitions.json";
 
 const MODELS = modelManifest.models;
 const PROJECT_ROOT = path.resolve(__dirname, "../../..");
@@ -46,39 +46,38 @@ describe("model definitions completeness", () => {
 // ---------------------------------------------------------------------------
 
 describe("model definitions required fields", () => {
-	it.each(MODELS.map((m) => [m.id, m]))(
-		"%s has all required fields",
-		(_id, model) => {
-			expect(typeof model.id).toBe("string");
-			expect(model.id.length).toBeGreaterThan(0);
-			expect(typeof model.displayName).toBe("string");
-			expect(model.displayName.length).toBeGreaterThan(0);
-			expect(typeof model.category).toBe("string");
-			expect(typeof model.family).toBe("string");
-			expect(typeof model.assetPath).toBe("string");
-			expect(model.assetPath.length).toBeGreaterThan(0);
+	it.each(
+		MODELS.map((m) => [m.id, m]),
+	)("%s has all required fields", (_id, model) => {
+		expect(typeof model.id).toBe("string");
+		expect(model.id.length).toBeGreaterThan(0);
+		expect(typeof model.displayName).toBe("string");
+		expect(model.displayName.length).toBeGreaterThan(0);
+		expect(typeof model.category).toBe("string");
+		expect(typeof model.family).toBe("string");
+		expect(typeof model.assetPath).toBe("string");
+		expect(model.assetPath.length).toBeGreaterThan(0);
 
-			// Bounds must be non-negative; flat items (doors, platforms) may have
-			// one zero dimension but at least two must be positive.
-			expect(model.bounds).toBeDefined();
-			expect(model.bounds.width).toBeGreaterThanOrEqual(0);
-			expect(model.bounds.height).toBeGreaterThanOrEqual(0);
-			expect(model.bounds.depth).toBeGreaterThanOrEqual(0);
-			const positiveDims = [
-				model.bounds.width,
-				model.bounds.height,
-				model.bounds.depth,
-			].filter((d) => d > 0).length;
-			expect(positiveDims).toBeGreaterThanOrEqual(2);
+		// Bounds must be non-negative; flat items (doors, platforms) may have
+		// one zero dimension but at least two must be positive.
+		expect(model.bounds).toBeDefined();
+		expect(model.bounds.width).toBeGreaterThanOrEqual(0);
+		expect(model.bounds.height).toBeGreaterThanOrEqual(0);
+		expect(model.bounds.depth).toBeGreaterThanOrEqual(0);
+		const positiveDims = [
+			model.bounds.width,
+			model.bounds.height,
+			model.bounds.depth,
+		].filter((d) => d > 0).length;
+		expect(positiveDims).toBeGreaterThanOrEqual(2);
 
-			// Grid footprint must be positive integers
-			expect(model.gridFootprint).toBeDefined();
-			expect(model.gridFootprint.width).toBeGreaterThanOrEqual(1);
-			expect(model.gridFootprint.depth).toBeGreaterThanOrEqual(1);
-			expect(Number.isInteger(model.gridFootprint.width)).toBe(true);
-			expect(Number.isInteger(model.gridFootprint.depth)).toBe(true);
-		},
-	);
+		// Grid footprint must be positive integers
+		expect(model.gridFootprint).toBeDefined();
+		expect(model.gridFootprint.width).toBeGreaterThanOrEqual(1);
+		expect(model.gridFootprint.depth).toBeGreaterThanOrEqual(1);
+		expect(Number.isInteger(model.gridFootprint.width)).toBe(true);
+		expect(Number.isInteger(model.gridFootprint.depth)).toBe(true);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -86,13 +85,12 @@ describe("model definitions required fields", () => {
 // ---------------------------------------------------------------------------
 
 describe("model definitions asset paths", () => {
-	it.each(MODELS.map((m) => [m.id, m.assetPath]))(
-		"%s asset exists on disk at %s",
-		(_id, assetPath) => {
-			const fullPath = path.join(PROJECT_ROOT, ASSET_BASE_PATH, assetPath);
-			expect(fs.existsSync(fullPath)).toBe(true);
-		},
-	);
+	it.each(
+		MODELS.map((m) => [m.id, m.assetPath]),
+	)("%s asset exists on disk at %s", (_id, assetPath) => {
+		const fullPath = path.join(PROJECT_ROOT, ASSET_BASE_PATH, assetPath);
+		expect(fs.existsSync(fullPath)).toBe(true);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -100,12 +98,11 @@ describe("model definitions asset paths", () => {
 // ---------------------------------------------------------------------------
 
 describe("model definitions category validity", () => {
-	it.each(MODELS.map((m) => [m.id, m.category]))(
-		"%s has valid category %s",
-		(_id, category) => {
-			expect(EXPECTED_CATEGORIES).toContain(category);
-		},
-	);
+	it.each(
+		MODELS.map((m) => [m.id, m.category]),
+	)("%s has valid category %s", (_id, category) => {
+		expect(EXPECTED_CATEGORIES).toContain(category);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -181,21 +178,20 @@ describe("model definitions economy rules", () => {
 // ---------------------------------------------------------------------------
 
 describe("model definitions grid footprint consistency", () => {
-	it.each(MODELS.map((m) => [m.id, m]))(
-		"%s footprint matches bounds / tileSize (ceil)",
-		(_id, model) => {
-			const expectedWidth = Math.max(
-				1,
-				Math.ceil(model.bounds.width / TILE_SIZE_METERS),
-			);
-			const expectedDepth = Math.max(
-				1,
-				Math.ceil(model.bounds.depth / TILE_SIZE_METERS),
-			);
-			expect(model.gridFootprint.width).toBe(expectedWidth);
-			expect(model.gridFootprint.depth).toBe(expectedDepth);
-		},
-	);
+	it.each(
+		MODELS.map((m) => [m.id, m]),
+	)("%s footprint matches bounds / tileSize (ceil)", (_id, model) => {
+		const expectedWidth = Math.max(
+			1,
+			Math.ceil(model.bounds.width / TILE_SIZE_METERS),
+		);
+		const expectedDepth = Math.max(
+			1,
+			Math.ceil(model.bounds.depth / TILE_SIZE_METERS),
+		);
+		expect(model.gridFootprint.width).toBe(expectedWidth);
+		expect(model.gridFootprint.depth).toBe(expectedDepth);
+	});
 });
 
 // ---------------------------------------------------------------------------

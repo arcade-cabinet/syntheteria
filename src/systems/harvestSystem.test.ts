@@ -2,12 +2,12 @@
  * @jest-environment node
  */
 import {
-	startFloorHarvest,
-	isFloorTileConsumed,
-	getConsumedFloorTiles,
-	resetHarvestSystem,
-	harvestSystem,
 	getActiveHarvests,
+	getConsumedFloorTiles,
+	harvestSystem,
+	isFloorTileConsumed,
+	resetHarvestSystem,
+	startFloorHarvest,
 } from "./harvestSystem";
 
 // Mock dependencies
@@ -89,6 +89,21 @@ describe("harvestSystem", () => {
 			expect(getConsumedFloorTiles().has("5,5,0")).toBe(true);
 			expect(mockAddResource).toHaveBeenCalled();
 			expect(mockPushHarvestYield).toHaveBeenCalled();
+		});
+
+		it("harvest completion adds resources to pool (Exploit pillar — resources visible)", () => {
+			startFloorHarvest("fabricator_1", 5, 5, 0, "metal_panel");
+			const harvest = getActiveHarvests()[0];
+			const totalTicks = harvest?.totalTicks ?? 80;
+			for (let t = 0; t < totalTicks; t++) harvestSystem(t);
+
+			expect(mockAddResource).toHaveBeenCalled();
+			const calls = mockAddResource.mock.calls as [string, number][];
+			expect(calls.length).toBeGreaterThan(0);
+			for (const [type, amount] of calls) {
+				expect(typeof type).toBe("string");
+				expect(amount).toBeGreaterThan(0);
+			}
 		});
 	});
 

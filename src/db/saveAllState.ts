@@ -111,7 +111,13 @@ export function saveAllStateSync(): SaveAllResult {
 		const consumedIds = Array.from(getConsumedStructureIds());
 		const activeHarvests = [...getActiveHarvests()];
 		const consumedFloorTiles = Array.from(getConsumedFloorTiles());
-		persistHarvestStateSync(saveGameId, consumedIds, activeHarvests, undefined, consumedFloorTiles);
+		persistHarvestStateSync(
+			saveGameId,
+			consumedIds,
+			activeHarvests,
+			undefined,
+			consumedFloorTiles,
+		);
 
 		// 4. Per-faction resource pools
 		const allFactionResources = getAllFactionResources();

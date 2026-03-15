@@ -165,8 +165,7 @@ export function seedGameDataSync(database: SyncDatabase): void {
 // ─── Game config (chunks, floor materials) ──────────────────────────────────
 
 function seedGameConfig(database: SyncDatabase): void {
-	const stmt =
-		`INSERT OR REPLACE INTO game_config (key, value_json) VALUES (?, ?)`;
+	const stmt = `INSERT OR REPLACE INTO game_config (key, value_json) VALUES (?, ?)`;
 
 	database.runSync(stmt, "chunks", JSON.stringify(chunksConfig));
 	database.runSync(
@@ -290,7 +289,7 @@ function seedRobotDefinitions(database: SyncDatabase): void {
 
 	for (const robot of robotModels) {
 		const unitKey = ROBOT_TO_UNIT_KEY[robot.id] ?? null;
-		const unitStats = unitKey ? units[unitKey] ?? null : null;
+		const unitStats = unitKey ? (units[unitKey] ?? null) : null;
 
 		const chassisType = robot.family.replace("robot_", "");
 

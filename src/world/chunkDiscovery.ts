@@ -17,6 +17,8 @@
  */
 
 import chunksConfig from "../config/chunks.json";
+import { ChunkDiscovery } from "../ecs/traits";
+import { world } from "../ecs/world";
 import { worldToChunk } from "./chunks";
 
 // ---------------------------------------------------------------------------
@@ -241,4 +243,42 @@ export function revealVision(
 export function resetChunkDiscovery(): void {
 	activeChunks.clear();
 	cache.clear();
+	// Also destroy any Koota ChunkDiscovery entities
+	for (const e of _chunkEntityIndex.values()) {
+		if (e.isAlive()) e.destroy();
+	}
+	_chunkEntityIndex.clear();
+}
+
+// ─── T22: ChunkDiscovery Koota entities ──────────────────────────────────────
+
+const _chunkEntityIndex = new Map<string, ReturnType<typeof world.spawn>>();
+
+/**
+ * Spawn (or update) a ChunkDiscovery entity for a chunk.
+ * If the entity already exists, updates its discoveryLevel.
+ */
+export function loadChunkDiscovery(
+	chunkX: number,
+	chunkZ: number,
+	discoveryLevel: "unexplored" | "abstract" | "full",
+): void {
+	const key = chunkKey(chunkX, chunkZ);
+	let entity = _chunkEntityIndex.get(key);
+	if (!entity || !entity.isAlive()) {
+		entity = world.spawn(ChunkDiscovery);
+		_chunkEntityIndex.set(key, entity);
+	}
+	entity.set(ChunkDiscovery, { chunkX, chunkZ, discoveryLevel });
+}
+
+/**
+ * Destroy the ChunkDiscovery entity for a chunk (called on unload).
+ * Safe to call on non-existent chunks.
+ */
+export function unloadChunk(chunkX: number, chunkZ: number): void {
+	const key = chunkKey(chunkX, chunkZ);
+	const entity = _chunkEntityIndex.get(key);
+	if (entity?.isAlive()) entity.destroy();
+	_chunkEntityIndex.delete(key);
 }

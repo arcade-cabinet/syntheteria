@@ -28,6 +28,7 @@ import {
 	resetHarvestSystem,
 } from "../systems/harvestSystem";
 import { resetNarrativeState } from "../systems/narrative";
+import { clearPOIEntities, spawnPOIEntities } from "../systems/poiEntities";
 import { resetPowerSystem } from "../systems/power";
 import {
 	type ResourcePool,
@@ -96,6 +97,7 @@ export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 	resetAICivilization();
 	resetFactionActivityFeed();
 	resetGovernorSystem();
+	clearPOIEntities();
 	destroyAllEntities();
 	setResources({
 		scrapMetal: persistedWorld.resourceState.scrap_metal,
@@ -132,6 +134,9 @@ export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 	}
 
 	hydratePersistedWorldEntities(persistedWorld.entities);
+
+	// Spawn POI Koota entities for reactive UI/renderer access
+	spawnPOIEntities(persistedWorld.pointsOfInterest);
 
 	// Initialize turn system — restore from save or create fresh
 	resetTurnSystem();

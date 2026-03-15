@@ -14,6 +14,7 @@ import factionsConfig from "../config/factions.json";
 import { gameplayRandom } from "../ecs/seed";
 import {
 	AIController,
+	AIFactionTrait,
 	Building,
 	Identity,
 	MapFragment,
@@ -185,6 +186,7 @@ export function aiFactionBuild(
 		operational: true,
 		selected: false,
 		components: [],
+		cooldownExpiresAtTick: 0,
 	});
 
 	state.buildingCount++;
@@ -375,6 +377,47 @@ export function aiFactionDeployScout(
 	return true;
 }
 
+// --- Koota entity index (T18) ---
+
+const _aiFactionIndex = new Map<string, ReturnType<typeof world.spawn>>();
+
+/**
+ * Spawn one AIFactionTrait entity per faction. Call once during game init.
+ * Idempotent — skips factions that already have an entity.
+ */
+export function initAIFactionEntities(): void {
+	for (const factionId of FACTION_IDS) {
+		const existing = _aiFactionIndex.get(factionId);
+		if (existing?.isAlive()) continue;
+		const e = world.spawn(AIFactionTrait);
+		e.set(AIFactionTrait, {
+			factionId,
+			phase: "dormant",
+			ticksUntilDecision: 0,
+		});
+		_aiFactionIndex.set(factionId, e);
+	}
+}
+
+/**
+ * Return the AIFactionTrait data for a faction, or null if not spawned.
+ */
+export function getAIFaction(
+	factionId: string,
+): ReturnType<ReturnType<typeof world.spawn>["get"]> | null {
+	return _aiFactionIndex.get(factionId)?.get(AIFactionTrait) ?? null;
+}
+
+/**
+ * Update the phase field on an AI faction's Koota entity.
+ */
+export function setAIFactionPhase(factionId: string, phase: string): void {
+	const entity = _aiFactionIndex.get(factionId);
+	if (!entity) return;
+	const cur = entity.get(AIFactionTrait)!;
+	entity.set(AIFactionTrait, { ...cur, phase });
+}
+
 // --- Reset ---
 
 export function resetAICivilization(): void {
@@ -382,4 +425,8 @@ export function resetAICivilization(): void {
 	constructionEvents = [];
 	territoryChangeEvents = [];
 	harvestEvents = [];
+	for (const entity of _aiFactionIndex.values()) {
+		if (entity.isAlive()) entity.destroy();
+	}
+	_aiFactionIndex.clear();
 }

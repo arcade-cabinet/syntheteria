@@ -1,6 +1,13 @@
 import type { AgentRole } from "../ai";
 import type { UnitComponent } from "../ecs/traits";
+import { ChunkDiscovery, FactionResourcePool } from "../ecs/traits";
+import { chunkDiscoveries, factionResourcePools } from "../ecs/world";
+import {
+	addFactionResourceKoota,
+	initFactionResourcePools,
+} from "../systems/factionEconomy";
 import type { ResourcePool } from "../systems/resources";
+import { loadChunkDiscovery } from "../world/chunkDiscovery";
 import type {
 	ClimateProfile,
 	NewGameConfig,
@@ -988,4 +995,123 @@ export function persistTurnEventLogSync(
 		turnNumber,
 		JSON.stringify(events),
 	);
+}
+
+// ─── T26: W3 trait persistence ────────────────────────────────────────────────
+
+/** Entity shape for FactionResourcePool serialization. */
+type FactionResourceEntity = {
+	get: (
+		t: typeof FactionResourcePool,
+	) => { factionId: string; resourcesJson: string } | undefined;
+};
+
+/** Entity shape for ChunkDiscovery serialization. */
+type ChunkDiscoveryEntity = {
+	get: (
+		t: typeof ChunkDiscovery,
+	) => { chunkX: number; chunkZ: number; discoveryLevel: string } | undefined;
+};
+
+/**
+ * Serialize W3 Koota traits to SQLite.
+ * - FactionResourcePool entities → faction_resource_states
+ * - ChunkDiscovery entities → map_discovery
+ *
+ * @param poolEntities  Iterable of FactionResourcePool entities (default: live query).
+ * @param chunkEntities Iterable of ChunkDiscovery entities (default: live query).
+ * These parameters exist for test injection; production callers omit them.
+ */
+export function serializeW3TraitsSync(
+	saveGameId: number,
+	database: SyncDatabase = getDatabaseSync(),
+	poolEntities?: Iterable<FactionResourceEntity>,
+	chunkEntities?: Iterable<ChunkDiscoveryEntity>,
+): void {
+	initializeDatabaseSync(database);
+
+	// Production callers omit poolEntities/chunkEntities — the static live
+	// queries are used. Test callers pass their own mock iterables via these
+	// optional parameters to avoid the captured-binding limitation in Jest.
+	const pools = poolEntities ?? factionResourcePools;
+	const chunks = chunkEntities ?? chunkDiscoveries;
+
+	// FactionResourcePool → faction_resource_states
+	const factionResources: Array<{
+		factionId: string;
+		resources: Record<string, number>;
+	}> = [];
+	for (const e of pools) {
+		const pool = e.get(FactionResourcePool);
+		if (!pool) continue;
+		factionResources.push({
+			factionId: pool.factionId,
+			resources: JSON.parse(pool.resourcesJson) as Record<string, number>,
+		});
+	}
+	if (factionResources.length > 0) {
+		persistFactionResourceStatesSync(saveGameId, factionResources, database);
+	}
+
+	// ChunkDiscovery → map_discovery (replace strategy)
+	database.runSync(
+		"DELETE FROM map_discovery WHERE save_game_id = ?",
+		saveGameId,
+	);
+	for (const e of chunks) {
+		const chunk = e.get(ChunkDiscovery);
+		if (!chunk) continue;
+		database.runSync(
+			"INSERT INTO map_discovery (save_game_id, chunk_x, chunk_y, discovered_state) VALUES (?, ?, ?, ?)",
+			saveGameId,
+			chunk.chunkX,
+			chunk.chunkZ,
+			chunk.discoveryLevel,
+		);
+	}
+}
+
+/**
+ * Rehydrate W3 Koota traits from SQLite on load.
+ * - faction_resource_states → FactionResourcePool entities
+ * - map_discovery → ChunkDiscovery entities
+ */
+export function rehydrateW3TraitsSync(
+	saveGameId: number,
+	database: SyncDatabase = getDatabaseSync(),
+): void {
+	initializeDatabaseSync(database);
+
+	// faction_resource_states → FactionResourcePool
+	const factionRows = selectFactionResourceStates(database, saveGameId);
+	const factionIds = factionRows.map((r) => r.faction_id);
+	if (factionIds.length > 0) {
+		initFactionResourcePools(factionIds);
+		for (const row of factionRows) {
+			const resources = JSON.parse(row.resources_json) as Record<
+				string,
+				number
+			>;
+			for (const [type, amount] of Object.entries(resources)) {
+				addFactionResourceKoota(row.faction_id, type, amount);
+			}
+		}
+	}
+
+	// map_discovery → ChunkDiscovery
+	const chunkRows = database.getAllSync<{
+		chunk_x: number;
+		chunk_y: number;
+		discovered_state: string;
+	}>(
+		"SELECT chunk_x, chunk_y, discovered_state FROM map_discovery WHERE save_game_id = ?",
+		saveGameId,
+	);
+	for (const row of chunkRows) {
+		loadChunkDiscovery(
+			row.chunk_x,
+			row.chunk_y,
+			row.discovered_state as "unexplored" | "abstract" | "full",
+		);
+	}
 }

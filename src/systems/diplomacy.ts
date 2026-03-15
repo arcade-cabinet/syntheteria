@@ -19,6 +19,8 @@
  */
 
 import diplomacyConfig from "../config/diplomacy.json";
+import { FactionStanding } from "../ecs/traits";
+import { world } from "../ecs/world";
 import type { EconomyFactionId } from "./factionEconomy";
 import type { HarvestResource } from "./resourcePools";
 
@@ -501,5 +503,67 @@ export function resetDiplomacy() {
 	nextTradeId = 1;
 	lastTradeIncomes = [];
 	lastContestedCells = [];
+	_standingIndex.clear();
 	notify();
+}
+
+// ─── Koota entity index (T20) ─────────────────────────────────────────────────
+
+const _standingIndex = new Map<string, ReturnType<typeof world.spawn>>();
+
+function standingKey(factionA: string, factionB: string) {
+	return `${factionA}→${factionB}`;
+}
+
+/**
+ * Spawn FactionStanding entities for all ordered (a→b) pairs in the given list.
+ * Idempotent — skips pairs with a live entity already.
+ */
+export function initFactionStandings(factionIds: string[]): void {
+	for (const a of factionIds) {
+		for (const b of factionIds) {
+			if (a === b) continue;
+			const key = standingKey(a, b);
+			const existing = _standingIndex.get(key);
+			if (existing?.isAlive()) continue;
+			const e = world.spawn(FactionStanding);
+			e.set(FactionStanding, {
+				factionId: a as EconomyFactionId,
+				targetFactionId: b as EconomyFactionId,
+				standing: 0,
+				atWar: false,
+				allied: false,
+				tradingWith: false,
+			});
+			_standingIndex.set(key, e);
+		}
+	}
+}
+
+/**
+ * Return the standing value between two factions via Koota entity.
+ * Returns 0 if no entity exists for the pair.
+ */
+export function getStandingTrait(factionA: string, factionB: string): number {
+	return (
+		_standingIndex.get(standingKey(factionA, factionB))?.get(FactionStanding)
+			?.standing ?? 0
+	);
+}
+
+/**
+ * Adjust the standing between two factions, clamping to [-100, 100].
+ */
+export function modifyStandingTrait(
+	factionA: string,
+	factionB: string,
+	delta: number,
+): void {
+	const entity = _standingIndex.get(standingKey(factionA, factionB));
+	if (!entity?.isAlive()) return;
+	const cur = entity.get(FactionStanding)!;
+	entity.set(FactionStanding, {
+		...cur,
+		standing: Math.max(-100, Math.min(100, cur.standing + delta)),
+	});
 }

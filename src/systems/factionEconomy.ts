@@ -12,6 +12,8 @@
  * "rogue", "cultist", "feral" are the three rival machine civilizations.
  */
 
+import { FactionResourcePool } from "../ecs/traits";
+import { world } from "../ecs/world";
 import {
 	addResource,
 	defaultResourcePool,
@@ -156,4 +158,78 @@ export function seedFactionResources(
  */
 export function resetFactionEconomy() {
 	factionPools.clear();
+	cleanupPoolIndex();
+}
+
+// ─── Koota entity index (T21) ─────────────────────────────────────────────────
+
+const _poolIndex = new Map<string, ReturnType<typeof world.spawn>>();
+/** Mirror cache: kept in sync with the entity for test-compatibility. */
+const _resourceCache = new Map<string, Record<string, number>>();
+
+/**
+ * Spawn one FactionResourcePool entity per faction ID.
+ * Call once during game init (or load) for each AI faction.
+ */
+export function initFactionResourcePools(factionIds: string[]): void {
+	for (const factionId of factionIds) {
+		const existing = _poolIndex.get(factionId);
+		if (existing?.isAlive()) continue;
+		const e = world.spawn(FactionResourcePool);
+		e.set(FactionResourcePool, { factionId, resourcesJson: "{}" });
+		_poolIndex.set(factionId, e);
+		_resourceCache.set(factionId, {});
+	}
+}
+
+/**
+ * Return the resource map for a faction as a plain Record.
+ * Reads from the mirror cache (kept in sync by addFactionResourceKoota).
+ * Returns an empty object if the faction has no Koota entity.
+ */
+export function getFactionResourcesKoota(
+	factionId: string,
+): Record<string, number> {
+	// Primary: read from entity if alive
+	const entity = _poolIndex.get(factionId);
+	if (entity?.isAlive()) {
+		const data = entity.get(FactionResourcePool);
+		if (data) return JSON.parse(data.resourcesJson) as Record<string, number>;
+	}
+	// Fallback: mirror cache (used in tests where entity is a mock)
+	return { ...(_resourceCache.get(factionId) ?? {}) };
+}
+
+/**
+ * Accumulate `amount` of `type` into a faction's Koota resource pool.
+ * Also updates the mirror cache so getFactionResourcesKoota works in tests.
+ * No-op if the faction has no entity (initFactionResourcePools not called).
+ */
+export function addFactionResourceKoota(
+	factionId: string,
+	type: string,
+	amount: number,
+): void {
+	const entity = _poolIndex.get(factionId);
+	if (!entity) return;
+	// Update mirror cache first (works regardless of entity mock state)
+	const cached = _resourceCache.get(factionId) ?? {};
+	cached[type] = (cached[type] ?? 0) + amount;
+	_resourceCache.set(factionId, cached);
+	// Update Koota entity (may be no-op in test mocks)
+	const cur = entity.get(FactionResourcePool);
+	if (cur) {
+		entity.set(FactionResourcePool, {
+			...cur,
+			resourcesJson: JSON.stringify(cached),
+		});
+	}
+}
+
+function cleanupPoolIndex(): void {
+	for (const entity of _poolIndex.values()) {
+		if (entity.isAlive()) entity.destroy();
+	}
+	_poolIndex.clear();
+	_resourceCache.clear();
 }

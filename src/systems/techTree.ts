@@ -19,6 +19,8 @@
  */
 
 import techTreeConfig from "../config/techTree.json";
+import { FactionResearch } from "../ecs/traits";
+import { world } from "../ecs/world";
 import type { EconomyFactionId } from "./factionEconomy";
 import { canFactionAfford, spendFactionResource } from "./factionEconomy";
 import type { ResourcePool } from "./resources";
@@ -365,4 +367,51 @@ export function allTechsResearched(factionId: EconomyFactionId): boolean {
 export function resetTechTree() {
 	factionResearch.clear();
 	notify();
+}
+
+// ─── T19: FactionResearch Koota entities ─────────────────────────────────────
+
+const _researchIndex = new Map<string, ReturnType<typeof world.spawn>>();
+
+/**
+ * Spawn one FactionResearch entity per faction ID.
+ * Idempotent — skips factions that already have an entity.
+ */
+export function initFactionResearchEntities(factionIds: string[]): void {
+	for (const factionId of factionIds) {
+		const existing = _researchIndex.get(factionId);
+		if (existing?.isAlive()) continue;
+		const e = world.spawn(FactionResearch);
+		e.set(FactionResearch, {
+			factionId,
+			activeResearchId: null,
+			turnsCompleted: 0,
+			completedTechsJson: "[]",
+		});
+		_researchIndex.set(factionId, e);
+	}
+}
+
+/**
+ * Return the list of completed tech IDs for a faction.
+ * Returns an empty array for unknown factions.
+ */
+export function getCompletedTechs(factionId: string): string[] {
+	const data = _researchIndex.get(factionId)?.get(FactionResearch);
+	return data ? (JSON.parse(data.completedTechsJson) as string[]) : [];
+}
+
+/**
+ * Mark a tech as completed for a faction, appending to completedTechsJson.
+ */
+export function completeResearch(factionId: string, techId: string): void {
+	const entity = _researchIndex.get(factionId);
+	if (!entity) return;
+	const cur = entity.get(FactionResearch)!;
+	const techs = JSON.parse(cur.completedTechsJson) as string[];
+	if (!techs.includes(techId)) techs.push(techId);
+	entity.set(FactionResearch, {
+		...cur,
+		completedTechsJson: JSON.stringify(techs),
+	});
 }

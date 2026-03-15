@@ -9,8 +9,13 @@
  *
  * The fragment/discovery/cell-record infrastructure stays because the
  * persistence and initialization systems load cells from WorldSessionSnapshot.
+ *
+ * W2 migration: FloorCell Koota entities are spawned alongside the Map store
+ * so that R3F renderers can use useQuery(FloorCell) instead of polling.
  */
 
+import { FloorCell } from "../ecs/traits";
+import { world } from "../ecs/world";
 import {
 	getTile as worldGridGetTile,
 	isPassableAtWorldPosition as worldGridIsPassable,
@@ -59,6 +64,79 @@ function cellKey(q: number, r: number) {
 	return `${q},${r}`;
 }
 
+// ─── W2: FloorCell Koota entity index ────────────────────────────────────────
+
+type FloorCellEntity = ReturnType<typeof world.spawn>;
+const _floorCellIndex = new Map<string, FloorCellEntity>();
+
+function floorCellKey(q: number, r: number, fragmentId: string) {
+	return `${q},${r},${fragmentId}`;
+}
+
+/**
+ * Spawn (or update) FloorCell Koota entities from an array of cell records.
+ * Called by loadStructuralFragment so renderers can use useQuery(FloorCell).
+ */
+export function spawnFloorCells(
+	cells: Array<{
+		q: number;
+		r: number;
+		fragmentId: string;
+		structuralZone: string;
+		floorPresetId: string;
+		discoveryState: number;
+		passable: boolean;
+	}>,
+): void {
+	for (const cell of cells) {
+		const key = floorCellKey(cell.q, cell.r, cell.fragmentId);
+		let entity = _floorCellIndex.get(key);
+		if (!entity || !entity.isAlive()) {
+			entity = world.spawn(FloorCell);
+			_floorCellIndex.set(key, entity);
+		}
+		entity.set(FloorCell, { ...cell });
+	}
+}
+
+/**
+ * Get the FloorCell entity for a given grid position and fragment.
+ */
+export function getFloorCellEntity(
+	q: number,
+	r: number,
+	fragmentId: string,
+): FloorCellEntity | undefined {
+	return _floorCellIndex.get(floorCellKey(q, r, fragmentId));
+}
+
+/**
+ * Update the discoveryState on the FloorCell entity for a given position.
+ */
+export function setFloorCellDiscovery(
+	q: number,
+	r: number,
+	fragmentId: string,
+	state: number,
+): void {
+	const entity = getFloorCellEntity(q, r, fragmentId);
+	if (!entity || !entity.isAlive()) return;
+	const cur = entity.get(FloorCell);
+	if (!cur) return;
+	entity.set(FloorCell, { ...cur, discoveryState: state });
+}
+
+/**
+ * Destroy all FloorCell entities and clear the index.
+ * Called by resetStructuralSpace().
+ */
+export function resetFloorCellEntities(): void {
+	for (const e of _floorCellIndex.values()) {
+		if (e.isAlive()) e.destroy();
+	}
+	_floorCellIndex.clear();
+}
+
 function requireFragmentCells(fragmentId: string) {
 	const cells = cellsByFragment.get(fragmentId);
 	if (!cells) {
@@ -89,6 +167,20 @@ export function loadStructuralFragment(
 
 	fragments.set(id, fragment);
 	cellsByFragment.set(id, keyedCells);
+
+	// W2: spawn FloorCell Koota entities so renderers can use useQuery(FloorCell)
+	spawnFloorCells(
+		cells.map((cell) => ({
+			q: cell.q,
+			r: cell.r,
+			fragmentId: id,
+			structuralZone: cell.structuralZone,
+			floorPresetId: cell.floorPresetId,
+			discoveryState: cell.discoveryState,
+			passable: cell.passable,
+		})),
+	);
+
 	return fragment;
 }
 
@@ -134,6 +226,8 @@ export function resetStructuralSpace() {
 	fragments.clear();
 	cellsByFragment.clear();
 	nextFragmentId = 0;
+	// W2: also reset Koota FloorCell entities
+	resetFloorCellEntities();
 }
 
 export function updateDisplayOffsets() {
@@ -264,6 +358,8 @@ export function setDiscoveryAtWorldPosition(
 	const record = requireFragmentCells(fragment.id).get(cellKey(q, r));
 	if (record && record.discoveryState < state) {
 		record.discoveryState = state;
+		// W2: keep FloorCell entity in sync so renderers react via useQuery
+		setFloorCellDiscovery(q, r, fragment.id, state);
 	}
 }
 

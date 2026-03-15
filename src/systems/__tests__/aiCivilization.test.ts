@@ -1,5 +1,8 @@
 const mockSpawn = jest.fn(() => ({
 	set: jest.fn(),
+	get: jest.fn(),
+	isAlive: jest.fn(() => true),
+	destroy: jest.fn(),
 }));
 
 jest.mock("../../ecs/world", () => ({
@@ -82,7 +85,12 @@ describe("aiCivilization", () => {
 		resetAICivilization();
 		resetFactionActivityFeed();
 		mockSpawn.mockClear();
-		mockSpawn.mockReturnValue({ set: jest.fn() });
+		mockSpawn.mockReturnValue({
+			set: jest.fn(),
+			get: jest.fn(),
+			isAlive: jest.fn(() => true),
+			destroy: jest.fn(),
+		});
 		initializeAIFactions();
 	});
 

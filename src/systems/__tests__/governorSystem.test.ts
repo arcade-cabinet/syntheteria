@@ -1,6 +1,54 @@
 const mockSpawn = jest.fn(() => ({
 	set: jest.fn(),
+	get: jest.fn(),
+	isAlive: jest.fn(() => true),
+	destroy: jest.fn(),
 }));
+
+const emptyLiveQuery = {
+	[Symbol.iterator]: function* () {},
+	filter: () => [],
+	find: () => undefined,
+	get length() {
+		return 0;
+	},
+	map: () => [],
+	toArray: () => [],
+};
+
+const FACTION_IDS = [
+	"reclaimers",
+	"volt_collective",
+	"signal_choir",
+	"iron_creed",
+] as const;
+
+function makeFactionEntities() {
+	return FACTION_IDS.map((factionId) => ({
+		get: (trait: unknown) => {
+			if (trait === "AIFactionTrait") {
+				return { factionId, phase: "dormant", ticksUntilDecision: 0 };
+			}
+			return undefined;
+		},
+		set: jest.fn(),
+		isAlive: jest.fn(() => true),
+		destroy: jest.fn(),
+	}));
+}
+
+const mockAiFactions = {
+	[Symbol.iterator]: function* () {
+		yield* makeFactionEntities();
+	},
+	filter: () => [],
+	find: () => undefined,
+	get length() {
+		return 4;
+	},
+	map: () => [],
+	toArray: () => makeFactionEntities(),
+};
 
 jest.mock("../../ecs/world", () => ({
 	world: {
@@ -8,26 +56,9 @@ jest.mock("../../ecs/world", () => ({
 		entities: [],
 		query: jest.fn(() => []),
 	},
-	units: {
-		[Symbol.iterator]: function* () {},
-		filter: () => [],
-		find: () => undefined,
-		get length() {
-			return 0;
-		},
-		map: () => [],
-		toArray: () => [],
-	},
-	buildings: {
-		[Symbol.iterator]: function* () {},
-		filter: () => [],
-		find: () => undefined,
-		get length() {
-			return 0;
-		},
-		map: () => [],
-		toArray: () => [],
-	},
+	units: emptyLiveQuery,
+	buildings: emptyLiveQuery,
+	aiFactions: mockAiFactions,
 }));
 
 jest.mock("../../world/sectorCoordinates", () => ({
@@ -50,6 +81,7 @@ jest.mock("../../ecs/seed", () => ({
 
 jest.mock("../../ecs/traits", () => ({
 	AIController: "AIController",
+	AIFactionTrait: "AIFactionTrait",
 	Building: "Building",
 	Identity: "Identity",
 	LightningRod: "LightningRod",
@@ -81,7 +113,12 @@ describe("governorSystem", () => {
 		resetFactionActivityFeed();
 		resetGovernorSystem();
 		mockSpawn.mockClear();
-		mockSpawn.mockReturnValue({ set: jest.fn() });
+		mockSpawn.mockReturnValue({
+			set: jest.fn(),
+			get: jest.fn(),
+			isAlive: jest.fn(() => true),
+			destroy: jest.fn(),
+		});
 	});
 
 	it("does nothing before initialization", () => {

@@ -1,25 +1,16 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import {
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-	useSyncExternalStore,
-} from "react";
+import { useQuery } from "koota/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
 	FLOOR_MATERIAL_PRESETS,
 	getDefaultFloorMaterialForZone,
 } from "../city/config/floorMaterialPresets";
 import { resolveAssetUri } from "../config/assetUri";
-import { getSnapshot, subscribe } from "../ecs/gameState";
+import { FloorCell } from "../ecs/traits";
 import { gridToWorld, SECTOR_LATTICE_SIZE } from "../world/sectorCoordinates";
 import { getActiveWorldSession } from "../world/session";
 import type { WorldSessionSnapshot } from "../world/snapshots";
-import {
-	getStructuralCellRecords,
-	requirePrimaryStructuralFragment,
-} from "../world/structuralSpace";
 import {
 	type BlendEdge,
 	computeBlendEdges,
@@ -529,12 +520,8 @@ export function StructuralFloorRenderer({
 	session?: WorldSessionSnapshot | null;
 }) {
 	const session = providedSession ?? getActiveWorldSession();
-	// Re-render when game state updates (each tick) so discovery updates from exploration are visible
-	const gameSnapshot = useSyncExternalStore(
-		subscribe,
-		getSnapshot,
-		getSnapshot,
-	);
+	// W2: useQuery(FloorCell) — reactive to discovery state changes, no tick hack
+	const floorCellEntities = useQuery(FloorCell);
 	const presetTextureSources = useMemo(
 		() =>
 			Object.fromEntries(
@@ -563,21 +550,16 @@ export function StructuralFloorRenderer({
 		Map<string, FloorTextureBundle>
 	>(new Map());
 
-	// Read discovery state from structuralSpace (where explorationSystem writes).
-	// Re-read when game tick changes so exploration updates become visible (single source of truth).
+	// W2: Build discovery map from Koota FloorCell entities (reactive — rerenders
+	// whenever any FloorCell.discoveryState changes via setDiscoveryAtWorldPosition).
 	const liveDiscovery = useMemo(() => {
-		try {
-			const fragment = requirePrimaryStructuralFragment();
-			const records = getStructuralCellRecords(fragment.id);
-			const map = new Map<string, number>();
-			for (const rec of records) {
-				map.set(`${rec.q},${rec.r}`, rec.discoveryState);
-			}
-			return map;
-		} catch {
-			return new Map<string, number>();
+		const m = new Map<string, number>();
+		for (const e of floorCellEntities) {
+			const c = e.get(FloorCell);
+			if (c) m.set(`${c.q},${c.r}`, c.discoveryState);
 		}
-	}, [gameSnapshot.tick]);
+		return m;
+	}, [floorCellEntities]);
 
 	const orderedCells = useMemo(
 		() =>

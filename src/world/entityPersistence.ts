@@ -204,6 +204,7 @@ export function hydratePersistedWorldEntities(records: WorldEntitySnapshot[]) {
 				operational: record.operational === 1,
 				selected: record.selected === 1,
 				components: record.unit_type ? [] : JSON.parse(record.components_json),
+				cooldownExpiresAtTick: 0,
 			});
 		}
 

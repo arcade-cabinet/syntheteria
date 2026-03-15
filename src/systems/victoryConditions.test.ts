@@ -41,6 +41,17 @@ jest.mock("../ecs/world", () => ({
 			return mockWorldQueryResults.get(key) ?? [];
 		},
 	},
+	// W3 migration: territoryCells live query — default empty for tests
+	territoryCells: {
+		[Symbol.iterator]: function* () {},
+		filter: () => [],
+		find: () => undefined,
+		get length() {
+			return 0;
+		},
+		map: () => [],
+		toArray: () => [],
+	},
 }));
 
 jest.mock("./territorySystem", () => ({

@@ -32,6 +32,7 @@ jest.mock("../ai", () => ({
 
 jest.mock("../ecs/seed", () => ({
 	gameplayRandom: jest.fn(() => 0.2),
+	worldPRNG: jest.fn(() => () => 0.2),
 }));
 
 jest.mock("../world/runtimeState", () => ({

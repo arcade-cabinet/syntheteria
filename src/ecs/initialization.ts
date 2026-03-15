@@ -28,9 +28,9 @@ import {
 	resetHarvestSystem,
 } from "../systems/harvestSystem";
 import { resetNarrativeState } from "../systems/narrative";
-import { clearPOIEntities, spawnPOIEntities } from "../systems/poiEntities";
 import { resetPowerSystem } from "../systems/power";
 import {
+	initResourcePoolEntity,
 	type ResourcePool,
 	resetResources,
 	setResources,
@@ -39,6 +39,7 @@ import { resetTurnEventLog } from "../systems/turnEventLog";
 import {
 	addUnitsToTurnState,
 	initializeTurnForUnits,
+	initTurnStateEntity,
 	rehydrateTurnState,
 	resetTurnSystem,
 	type TurnPhase,
@@ -97,13 +98,13 @@ export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 	resetAICivilization();
 	resetFactionActivityFeed();
 	resetGovernorSystem();
-	clearPOIEntities();
 	destroyAllEntities();
 	setResources({
 		scrapMetal: persistedWorld.resourceState.scrap_metal,
 		eWaste: persistedWorld.resourceState.e_waste,
 		intactComponents: persistedWorld.resourceState.intact_components,
 	});
+	initResourcePoolEntity();
 	setRuntimeScene(
 		persistedWorld.campaignState.active_scene,
 		persistedWorld.campaignState.active_city_instance_id,
@@ -135,9 +136,6 @@ export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 
 	hydratePersistedWorldEntities(persistedWorld.entities);
 
-	// Spawn POI Koota entities for reactive UI/renderer access
-	spawnPOIEntities(persistedWorld.pointsOfInterest);
-
 	// Initialize turn system — restore from save or create fresh
 	resetTurnSystem();
 	if (persistedWorld.turnState) {
@@ -162,6 +160,8 @@ export function initializeNewGame(persistedWorld: PersistedWorldSnapshot) {
 		}
 		initializeTurnForUnits(playerUnitIds, markLevels);
 	}
+	// Spawn Koota TurnStateKoota entity for reactive UI after state is established
+	initTurnStateEntity();
 
 	// Initialize rival faction units' AP/MP and create governor instances
 	const rivalUnitIds: string[] = [];

@@ -7,6 +7,7 @@
  *
  * @exports TurnState / UnitTurnState / TurnPhase - Core state types
  * @exports getTurnState / subscribeTurnState - Read and observe turn state
+ * @exports initTurnStateEntity / getTurnStateEntity - Koota entity for reactive UI
  * @exports initializeTurnForUnits / addUnitsToTurnState - Set up unit AP/MP pools
  * @exports spendActionPoint / spendMovementPoints - Consume AP/MP for actions
  * @exports hasActionPoints / hasMovementPoints / hasAnyPoints - Point availability checks
@@ -26,6 +27,9 @@
  *   persistenceSystem, cultistIncursion, turretAutoAttack, UnitRenderer
  */
 
+import type { Entity } from "../ecs/traits";
+import { TurnStateKoota } from "../ecs/traits";
+import { world } from "../ecs/world";
 import { queueThought } from "./narrative";
 import { finalizeTurnDeltas } from "./resourceDeltas";
 import { finalizeTurn, logTurnEvent } from "./turnEventLog";
@@ -80,7 +84,47 @@ let turnState: TurnState = {
 
 const listeners = new Set<() => void>();
 
+// ─── Koota entity (reactive mirror for useTrait) ──────────────────────────────
+
+let _turnStateEntity: Entity | null = null;
+
+/**
+ * Spawn (or reset) the TurnStateKoota entity.
+ * Call from initializeNewGame() so UI can reactively read turn state via useTrait.
+ */
+export function initTurnStateEntity(): void {
+	if (_turnStateEntity && _turnStateEntity.isAlive())
+		_turnStateEntity.destroy();
+	_turnStateEntity = world.spawn(TurnStateKoota);
+	_turnStateEntity.set(TurnStateKoota, {
+		turnNumber: turnState.turnNumber,
+		phase: turnState.phase,
+		activeFaction: turnState.activeFaction,
+	});
+}
+
+/**
+ * Return the live TurnStateKoota entity.
+ * Throws if initTurnStateEntity() has not been called.
+ */
+export function getTurnStateEntity(): Entity {
+	if (!_turnStateEntity)
+		throw new Error("TurnStateKoota entity not initialized");
+	return _turnStateEntity;
+}
+
+/** Sync the entity's reactive fields from the current module-level turn state. */
+function syncEntityFromTurnState(): void {
+	if (!_turnStateEntity || !_turnStateEntity.isAlive()) return;
+	_turnStateEntity.set(TurnStateKoota, {
+		turnNumber: turnState.turnNumber,
+		phase: turnState.phase,
+		activeFaction: turnState.activeFaction,
+	});
+}
+
 function notify() {
+	syncEntityFromTurnState();
 	for (const listener of listeners) {
 		listener();
 	}

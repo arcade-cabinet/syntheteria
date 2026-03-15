@@ -1,4 +1,12 @@
 import {
+	Experience,
+	Identity,
+	MapFragment,
+	Unit,
+	WorldPosition,
+} from "../ecs/traits";
+import { world } from "../ecs/world";
+import {
 	applyMarkUpgrade,
 	awardXP,
 	calculateXPForAction,
@@ -14,8 +22,34 @@ import {
 	serializeExperience,
 } from "./experience";
 
-beforeEach(() => {
-	resetExperience();
+// Helper to spawn a minimal unit entity with Experience trait for tests
+function spawnTestUnit(id: string) {
+	const entity = world.spawn(
+		Identity,
+		Unit,
+		WorldPosition,
+		MapFragment,
+		Experience,
+	);
+	entity.set(Identity, { id, faction: "player" });
+	entity.set(WorldPosition, { x: 0, y: 0, z: 0 });
+	entity.set(MapFragment, { fragmentId: "test" });
+	entity.set(Unit, {
+		type: "maintenance_bot",
+		archetypeId: "fabrication_rig",
+		markLevel: 1,
+		speechProfile: "mentor",
+		displayName: "Test Bot",
+		speed: 1,
+		selected: false,
+		components: [],
+	});
+	entity.set(Experience, { xp: 0, level: 1, killCount: 0, harvestCount: 0 });
+	return entity;
+}
+
+afterEach(() => {
+	for (const e of world.query(Experience)) e.destroy();
 });
 
 describe("Mark thresholds", () => {
@@ -74,7 +108,8 @@ describe("XP calculation", () => {
 });
 
 describe("XP accumulation", () => {
-	it("awards XP and tracks per unit", () => {
+	it("awards XP and tracks per unit via entity trait", () => {
+		spawnTestUnit("u1");
 		const result = awardXP("u1", "fabrication_rig", "harvest");
 		expect(result.xpEarned).toBe(10);
 		expect(result.upgradeEligible).toBe(false);
@@ -86,6 +121,7 @@ describe("XP accumulation", () => {
 	});
 
 	it("accumulates XP across multiple actions", () => {
+		spawnTestUnit("u1");
 		for (let i = 0; i < 5; i++) {
 			awardXP("u1", "fabrication_rig", "harvest");
 		}
@@ -93,6 +129,7 @@ describe("XP accumulation", () => {
 	});
 
 	it("becomes upgrade-eligible when XP reaches threshold", () => {
+		spawnTestUnit("u1");
 		// Mark 1 → Mark 2 needs 100 XP, at 10 per action = 10 actions
 		for (let i = 0; i < 10; i++) {
 			awardXP("u1", "fabrication_rig", "harvest");
@@ -103,6 +140,7 @@ describe("XP accumulation", () => {
 
 describe("Mark upgrades", () => {
 	it("applies upgrade when eligible", () => {
+		spawnTestUnit("u1");
 		// Grant enough XP for Mark 2
 		for (let i = 0; i < 10; i++) {
 			awardXP("u1", "fabrication_rig", "harvest");
@@ -112,11 +150,13 @@ describe("Mark upgrades", () => {
 	});
 
 	it("fails when not eligible", () => {
+		spawnTestUnit("u1");
 		awardXP("u1", "fabrication_rig", "harvest"); // only 10 XP
 		expect(applyMarkUpgrade("u1")).toBe(false);
 	});
 
 	it("carries over excess XP after upgrade", () => {
+		spawnTestUnit("u1");
 		// Grant 110 XP (10 more than threshold)
 		for (let i = 0; i < 11; i++) {
 			awardXP("u1", "fabrication_rig", "harvest");
@@ -125,19 +165,33 @@ describe("Mark upgrades", () => {
 		expect(getUnitExperience("u1")!.currentXP).toBe(10);
 	});
 
-	it("fails for untracked unit", () => {
+	it("fails for untracked unit (no entity in world)", () => {
 		expect(applyMarkUpgrade("nonexistent")).toBe(false);
 	});
 });
 
 describe("query functions", () => {
 	it("getAllUnitExperience returns all tracked units", () => {
+		spawnTestUnit("u1");
+		const e2 = spawnTestUnit("u2");
+		e2.set(Unit, {
+			type: "maintenance_bot",
+			archetypeId: "assault_strider",
+			markLevel: 1,
+			speechProfile: "mentor",
+			displayName: "Striker",
+			speed: 1,
+			selected: false,
+			components: [],
+		});
 		awardXP("u1", "fabrication_rig", "harvest");
 		awardXP("u2", "assault_strider", "combat");
 		expect(getAllUnitExperience()).toHaveLength(2);
 	});
 
 	it("getUpgradeEligibleUnits filters correctly", () => {
+		spawnTestUnit("u1");
+		spawnTestUnit("u2");
 		// u1 gets enough XP
 		for (let i = 0; i < 10; i++) {
 			awardXP("u1", "fabrication_rig", "harvest");
@@ -151,6 +205,7 @@ describe("query functions", () => {
 	});
 
 	it("getXPProgress returns fraction [0, 1]", () => {
+		spawnTestUnit("u1");
 		awardXP("u1", "fabrication_rig", "harvest"); // 10 of 100
 		expect(getXPProgress("u1")).toBeCloseTo(0.1);
 
@@ -166,14 +221,29 @@ describe("query functions", () => {
 	});
 });
 
+describe("resetExperience", () => {
+	it("resets all unit XP to 0 level 1", () => {
+		spawnTestUnit("u1");
+		awardXP("u1", "fabrication_rig", "harvest");
+		expect(getUnitExperience("u1")!.currentXP).toBe(10);
+
+		resetExperience();
+		expect(getUnitExperience("u1")!.currentXP).toBe(0);
+		expect(getUnitExperience("u1")!.currentMark).toBe(1);
+	});
+});
+
 describe("serialization", () => {
 	it("round-trips XP state through serialize/rehydrate", () => {
+		spawnTestUnit("u1");
+		spawnTestUnit("u2");
 		awardXP("u1", "fabrication_rig", "harvest");
 		awardXP("u2", "assault_strider", "combat");
 
 		const serialized = serializeExperience();
 		resetExperience();
-		expect(getAllUnitExperience()).toHaveLength(0);
+		// After reset all XP should be 0
+		expect(getUnitExperience("u1")!.currentXP).toBe(0);
 
 		rehydrateExperience(serialized);
 		expect(getAllUnitExperience()).toHaveLength(2);

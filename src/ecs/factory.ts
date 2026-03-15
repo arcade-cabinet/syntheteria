@@ -12,12 +12,16 @@ import {
 import type { Entity, UnitComponent, UnitEntity } from "./traits";
 import {
 	AIController,
+	AnimationState,
+	BotLOD,
 	Building,
+	Experience,
 	Identity,
 	LightningRod,
 	MapFragment,
 	Navigation,
 	Unit,
+	UnitTurnState,
 	WorldPosition,
 } from "./traits";
 import { world } from "./world";
@@ -88,6 +92,10 @@ export function spawnUnit(options: {
 		MapFragment,
 		Unit,
 		Navigation,
+		Experience,
+		AnimationState,
+		BotLOD,
+		UnitTurnState,
 	);
 	entity.set(Identity, {
 		id: `unit_${nextEntityId++}`,
@@ -105,6 +113,14 @@ export function spawnUnit(options: {
 		createBotUnitState({ unitType: type, displayName, speed, components }),
 	);
 	entity.set(Navigation, { path: [], pathIndex: 0, moving: false });
+	entity.set(Experience, { xp: 0, level: 1, killCount: 0, harvestCount: 0 });
+	entity.set(AnimationState, { clipName: "", playhead: 0, blendWeight: 1 });
+	entity.set(BotLOD, { level: "full" });
+	entity.set(UnitTurnState, {
+		apRemaining: 0,
+		mpRemaining: 0,
+		hasActed: false,
+	});
 
 	return entity as UnitEntity;
 }
@@ -136,6 +152,10 @@ export function spawnFabricationUnit(options: {
 		Unit,
 		Navigation,
 		Building,
+		Experience,
+		AnimationState,
+		BotLOD,
+		UnitTurnState,
 	);
 	entity.set(Identity, {
 		id: `fab_${nextEntityId++}`,
@@ -165,6 +185,15 @@ export function spawnFabricationUnit(options: {
 		operational: powered,
 		selected: false,
 		components: [],
+		cooldownExpiresAtTick: 0,
+	});
+	entity.set(Experience, { xp: 0, level: 1, killCount: 0, harvestCount: 0 });
+	entity.set(AnimationState, { clipName: "", playhead: 0, blendWeight: 1 });
+	entity.set(BotLOD, { level: "full" });
+	entity.set(UnitTurnState, {
+		apRemaining: 0,
+		mpRemaining: 0,
+		hasActed: false,
 	});
 
 	return entity;
@@ -203,6 +232,7 @@ export function spawnBuilding(options: {
 		operational: powered,
 		selected: false,
 		components: [],
+		cooldownExpiresAtTick: 0,
 	});
 
 	return entity;
@@ -238,6 +268,7 @@ export function spawnLightningRod(options: {
 		operational: true,
 		selected: false,
 		components: [],
+		cooldownExpiresAtTick: 0,
 	});
 	entity.set(LightningRod, {
 		rodCapacity: config.rodCapacity,

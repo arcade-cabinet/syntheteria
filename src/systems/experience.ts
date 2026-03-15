@@ -18,6 +18,9 @@
 
 import { getBotArchetypeDefinition } from "../bots/archetypes";
 import type { BotArchetypeId, BotRoleFamily } from "../bots/types";
+import type { Entity } from "../ecs/traits";
+import { Experience, Identity, Unit } from "../ecs/traits";
+import { units } from "../ecs/world";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -66,9 +69,14 @@ const ROLE_ACTIONS: Record<BotRoleFamily, XPActionType[]> = {
 	hostile: ["combat", "breach"],
 };
 
-// ─── State ────────────────────────────────────────────────────────────────────
+// ─── Entity lookup ────────────────────────────────────────────────────────────
 
-const unitXP = new Map<string, UnitExperience>();
+function findUnitById(id: string): Entity | null {
+	for (const e of units) {
+		if (e.get(Identity)?.id === id) return e;
+	}
+	return null;
+}
 
 // ─── XP Calculations ──────────────────────────────────────────────────────────
 
@@ -120,26 +128,22 @@ export function calculateXPForAction(
 // ─── Unit XP Management ───────────────────────────────────────────────────────
 
 /**
- * Initialize or get a unit's XP state.
+ * Build a UnitExperience view from a Koota entity's Experience trait.
  */
-function ensureUnitXP(
-	entityId: string,
+function buildUnitExperience(
+	entity: Entity,
 	archetypeId: BotArchetypeId,
-	currentMark = 1,
 ): UnitExperience {
-	let xp = unitXP.get(entityId);
-	if (!xp) {
-		xp = {
-			entityId,
-			archetypeId,
-			currentXP: 0,
-			currentMark: Math.max(1, currentMark),
-			xpToNextMark: getXPForNextMark(currentMark),
-			upgradeEligible: false,
-		};
-		unitXP.set(entityId, xp);
-	}
-	return xp;
+	const trait = entity.get(Experience)!;
+	const xpToNextMark = getXPForNextMark(trait.level);
+	return {
+		entityId: entity.get(Identity)!.id,
+		archetypeId,
+		currentXP: trait.xp,
+		currentMark: trait.level,
+		xpToNextMark,
+		upgradeEligible: trait.xp >= xpToNextMark,
+	};
 }
 
 /**
@@ -153,25 +157,27 @@ export function awardXP(
 	currentMark = 1,
 	bonusMultiplier = 1,
 ): { xpEarned: number; upgradeEligible: boolean; newMark: number } {
-	const xp = ensureUnitXP(entityId, archetypeId, currentMark);
+	const entity = findUnitById(entityId);
 	const earned = calculateXPForAction(archetypeId, action, bonusMultiplier);
 
-	xp.currentXP += earned;
-
-	// Check if Mark threshold reached
-	const _nextMarkThreshold = getMarkThreshold(xp.currentMark + 1);
-	const _totalXPForCurrentMark = getMarkThreshold(xp.currentMark);
-	const xpSinceCurrentMark = xp.currentXP;
-
-	if (xpSinceCurrentMark >= xp.xpToNextMark) {
-		xp.upgradeEligible = true;
+	if (!entity) {
+		// Entity not yet in Koota world (e.g. test setup) — no-op
+		return { xpEarned: earned, upgradeEligible: false, newMark: currentMark };
 	}
 
-	return {
-		xpEarned: earned,
-		upgradeEligible: xp.upgradeEligible,
-		newMark: xp.currentMark,
-	};
+	const cur = entity.get(Experience);
+	if (!cur) {
+		return { xpEarned: earned, upgradeEligible: false, newMark: currentMark };
+	}
+
+	const newXp = cur.xp + earned;
+	const newLevel = cur.level > 0 ? cur.level : Math.max(1, currentMark);
+	entity.set(Experience, { ...cur, xp: newXp, level: newLevel });
+
+	const xpToNextMark = getXPForNextMark(newLevel);
+	const upgradeEligible = newXp >= xpToNextMark;
+
+	return { xpEarned: earned, upgradeEligible, newMark: newLevel };
 }
 
 /**
@@ -179,14 +185,20 @@ export function awardXP(
  * Returns false if the unit is not eligible.
  */
 export function applyMarkUpgrade(entityId: string): boolean {
-	const xp = unitXP.get(entityId);
-	if (!xp || !xp.upgradeEligible) return false;
+	const entity = findUnitById(entityId);
+	if (!entity) return false;
 
-	// Carry over excess XP
-	xp.currentXP -= xp.xpToNextMark;
-	xp.currentMark++;
-	xp.xpToNextMark = getXPForNextMark(xp.currentMark);
-	xp.upgradeEligible = xp.currentXP >= xp.xpToNextMark;
+	const cur = entity.get(Experience);
+	if (!cur) return false;
+
+	const xpToNextMark = getXPForNextMark(cur.level);
+	if (cur.xp < xpToNextMark) return false;
+
+	entity.set(Experience, {
+		...cur,
+		xp: cur.xp - xpToNextMark,
+		level: cur.level + 1,
+	});
 
 	return true;
 }
@@ -197,39 +209,69 @@ export function applyMarkUpgrade(entityId: string): boolean {
 export function getUnitExperience(
 	entityId: string,
 ): UnitExperience | undefined {
-	return unitXP.get(entityId);
+	const entity = findUnitById(entityId);
+	if (!entity) return undefined;
+
+	const trait = entity.get(Experience);
+	if (!trait) return undefined;
+
+	const archetypeId = (entity.get(Unit)?.archetypeId ??
+		"field_technician") as BotArchetypeId;
+	return buildUnitExperience(entity, archetypeId);
 }
 
 /**
  * Get all tracked unit XP states.
  */
 export function getAllUnitExperience(): readonly UnitExperience[] {
-	return Array.from(unitXP.values());
+	const result: UnitExperience[] = [];
+	for (const entity of units) {
+		const trait = entity.get(Experience);
+		if (!trait) continue;
+		const archetypeId = (entity.get(Unit)?.archetypeId ??
+			"field_technician") as BotArchetypeId;
+		result.push(buildUnitExperience(entity, archetypeId));
+	}
+	return result;
 }
 
 /**
  * Get all units that are eligible for Mark upgrade.
  */
 export function getUpgradeEligibleUnits(): readonly UnitExperience[] {
-	return Array.from(unitXP.values()).filter((xp) => xp.upgradeEligible);
+	return getAllUnitExperience().filter((xp) => xp.upgradeEligible);
 }
 
 /**
  * Get XP progress as a fraction [0, 1] for UI display.
  */
 export function getXPProgress(entityId: string): number {
-	const xp = unitXP.get(entityId);
-	if (!xp || xp.xpToNextMark === 0) return 0;
-	return Math.min(1, xp.currentXP / xp.xpToNextMark);
+	const entity = findUnitById(entityId);
+	if (!entity) return 0;
+
+	const trait = entity.get(Experience);
+	if (!trait) return 0;
+
+	const xpToNextMark = getXPForNextMark(trait.level);
+	if (xpToNextMark === 0) return 0;
+	return Math.min(1, trait.xp / xpToNextMark);
 }
 
 /**
  * Rehydrate XP state from persisted data.
+ * Sets Experience trait on unit entities by matching entityId.
  */
 export function rehydrateExperience(states: UnitExperience[]) {
-	unitXP.clear();
 	for (const state of states) {
-		unitXP.set(state.entityId, { ...state });
+		const entity = findUnitById(state.entityId);
+		if (!entity) continue;
+		const cur = entity.get(Experience);
+		if (!cur) continue;
+		entity.set(Experience, {
+			...cur,
+			xp: state.currentXP,
+			level: state.currentMark,
+		});
 	}
 }
 
@@ -237,12 +279,23 @@ export function rehydrateExperience(states: UnitExperience[]) {
  * Serialize XP state for persistence.
  */
 export function serializeExperience(): UnitExperience[] {
-	return Array.from(unitXP.values());
+	return getAllUnitExperience() as UnitExperience[];
 }
 
 /**
  * Reset all XP state — call on new game.
+ * Resets Experience trait on all unit entities to defaults.
  */
 export function resetExperience() {
-	unitXP.clear();
+	for (const entity of units) {
+		const cur = entity.get(Experience);
+		if (!cur) continue;
+		entity.set(Experience, {
+			...cur,
+			xp: 0,
+			level: 1,
+			killCount: 0,
+			harvestCount: 0,
+		});
+	}
 }

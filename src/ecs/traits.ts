@@ -178,7 +178,12 @@ export const TurnStateKoota = trait({
 });
 
 // Collections
-export const TerritoryCell = trait({ q: 0, r: 0, owner: "" as string, strength: 0 });
+export const TerritoryCell = trait({
+	q: 0,
+	r: 0,
+	owner: "" as string,
+	strength: 0,
+});
 
 export const FloorCell = trait({
 	q: 0,
@@ -249,10 +254,23 @@ export const ChunkDiscovery = trait({
 });
 
 // Per-unit traits
-export const UnitTurnState = trait({ apRemaining: 0, mpRemaining: 0, hasActed: false });
+export const UnitTurnState = trait({
+	apRemaining: 0,
+	mpRemaining: 0,
+	hasActed: false,
+});
 
-export const Experience = trait({ xp: 0, level: 1, killCount: 0, harvestCount: 0 });
+export const Experience = trait({
+	xp: 0,
+	level: 1,
+	killCount: 0,
+	harvestCount: 0,
+});
 
-export const AnimationState = trait({ clipName: "", playhead: 0, blendWeight: 1 });
+export const AnimationState = trait({
+	clipName: "",
+	playhead: 0,
+	blendWeight: 1,
+});
 
 export const BotLOD = trait({ level: "full" as "full" | "simple" | "hidden" });

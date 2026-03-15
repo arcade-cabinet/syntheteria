@@ -1,10 +1,20 @@
 import { createWorld } from "koota";
 import type { Entity } from "./traits";
 import {
+	AIFactionTrait,
 	Building,
+	ChunkDiscovery,
+	FactionResearch,
+	FactionResourcePool,
+	FactionStanding,
+	FloorCell,
+	HarvestOp,
 	LightningRod,
 	MapFragment,
 	Navigation,
+	POITrait,
+	SpeechBubble,
+	TerritoryCell,
 	Unit,
 	WorldPosition,
 } from "./traits";
@@ -56,4 +66,24 @@ export const buildings = createLiveQuery(() =>
 );
 export const lightningRods = createLiveQuery(() =>
 	world.query(LightningRod, Building, WorldPosition),
+);
+
+// ==== W0: Queries for new migration traits ====
+export const territoryCells = createLiveQuery(() => world.query(TerritoryCell));
+export const floorCells = createLiveQuery(() => world.query(FloorCell));
+export const speechBubbles = createLiveQuery(() => world.query(SpeechBubble));
+export const harvestOps = createLiveQuery(() => world.query(HarvestOp));
+export const pois = createLiveQuery(() => world.query(POITrait));
+export const aiFactions = createLiveQuery(() => world.query(AIFactionTrait));
+export const factionResearchEntities = createLiveQuery(() =>
+	world.query(FactionResearch),
+);
+export const factionStandings = createLiveQuery(() =>
+	world.query(FactionStanding),
+);
+export const factionResourcePools = createLiveQuery(() =>
+	world.query(FactionResourcePool),
+);
+export const chunkDiscoveries = createLiveQuery(() =>
+	world.query(ChunkDiscovery),
 );

@@ -2,9 +2,9 @@
  * Vite/Capacitor app: R3F-only game with minimal DOM shell.
  * No React Native; no Filament. Phase 6 will add full DOM UI (GameUI, TitleScreen).
  */
-import { startTransition, useState } from "react";
+
 import { WorldProvider } from "koota/react";
-import { world } from "./ecs/world";
+import { startTransition, useState } from "react";
 import { saveAllStateSync } from "./db/saveAllState";
 import {
 	createSaveGameSync,
@@ -20,6 +20,7 @@ import {
 import { setWorldReady } from "./ecs/gameState";
 import { initializeNewGame } from "./ecs/initialization";
 import { initGameplayPRNG, setWorldSeed } from "./ecs/seed";
+import { world } from "./ecs/world";
 import { GameSceneR3F } from "./GameSceneR3F";
 import { GameHUDDom } from "./ui/dom/GameHUDDom";
 import type { NewGameConfig } from "./world/config";

@@ -213,16 +213,19 @@ function generateScavengePoints(): ScavengePoint[] {
 	return points;
 }
 
-/** Active scavenge points for the current game session. */
-let activeScavengePoints: ScavengePoint[] = generateScavengePoints();
+/** Active scavenge points — lazily initialized to avoid worldPRNG at module load. */
+let activeScavengePoints: ScavengePoint[] | null = null;
 
 /** Reset scavenge points — call on new game. */
 export function resetScavengePoints() {
 	activeScavengePoints = generateScavengePoints();
 }
 
-/** Return the current scavenge points for this game session. */
+/** Return the current scavenge points, generating lazily on first access. */
 export function getScavengePoints(): ScavengePoint[] {
+	if (!activeScavengePoints) {
+		activeScavengePoints = generateScavengePoints();
+	}
 	return activeScavengePoints;
 }
 

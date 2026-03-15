@@ -15,8 +15,14 @@
  *
  * This is a PURE system — no rendering, no Three.js, no React.
  * Renderers query getLODLevel() to decide which representation to use.
+ *
+ * LOD state is persisted on the BotLOD Koota trait on each unit entity.
+ * The module-level entityLODCache Map has been removed.
  */
 
+import type { Entity } from "../ecs/traits";
+import { BotLOD, Identity } from "../ecs/traits";
+import { units } from "../ecs/world";
 import { distanceSquaredToCamera } from "./frustumCulling";
 import { getZoomTierState, type ZoomTierState } from "./zoomTier";
 
@@ -38,9 +44,14 @@ const ICON_TO_HIDDEN_SQ = 120 * 120; // 120 world units
 // ─── Hysteresis band (prevents flickering at boundaries) ────────────────────
 const HYSTERESIS_SQ = 3 * 3; // 3 unit band
 
-// ─── Per-entity LOD cache ───────────────────────────────────────────────────
+// ─── Entity lookup helper ───────────────────────────────────────────────────
 
-const entityLODCache = new Map<string, BotLODLevel>();
+function findUnitById(id: string): Entity | null {
+	for (const e of units) {
+		if (e.get(Identity)?.id === id) return e;
+	}
+	return null;
+}
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
@@ -49,8 +60,9 @@ const entityLODCache = new Map<string, BotLODLevel>();
  *
  * Considers both the zoom tier (which may override to a simpler level)
  * and the distance from the camera (for within-tier refinement).
+ * Previous LOD for hysteresis is read from the entity's BotLOD trait.
  *
- * @param entityId - Entity identifier for hysteresis caching
+ * @param entityId - Entity identifier for hysteresis
  * @param worldX - Bot world X position
  * @param worldZ - Bot world Z position
  * @returns The LOD level to use for rendering
@@ -61,19 +73,24 @@ export function getLODLevel(
 	worldZ: number,
 ): BotLODLevel {
 	const zoomState = getZoomTierState();
-	const previousLOD = entityLODCache.get(entityId) ?? "full";
+	const entity = findUnitById(entityId);
+	const previousLOD = entity?.get(BotLOD)?.level ?? "full";
 
 	// Zoom tier can force a maximum detail level
 	const maxDetail = zoomTierToMaxLOD(zoomState);
 
 	// Distance-based LOD
 	const distSq = distanceSquaredToCamera(worldX, worldZ);
-	let distanceLOD = computeDistanceLOD(distSq, previousLOD);
+	const distanceLOD = computeDistanceLOD(distSq, previousLOD);
 
 	// Use the coarser of zoom-tier and distance LOD
 	const finalLOD = coarsest(distanceLOD, maxDetail);
 
-	entityLODCache.set(entityId, finalLOD);
+	if (entity) {
+		const cur = entity.get(BotLOD);
+		if (cur) entity.set(BotLOD, { ...cur, level: finalLOD });
+	}
+
 	return finalLOD;
 }
 
@@ -92,10 +109,14 @@ export function getLODLevelStateless(
 }
 
 /**
- * Reset LOD cache — call on new game or camera teleport.
+ * Reset LOD — resets BotLOD trait to "full" on all unit entities.
+ * Call on new game or camera teleport.
  */
 export function resetBotLOD(): void {
-	entityLODCache.clear();
+	for (const entity of units) {
+		const cur = entity.get(BotLOD);
+		if (cur) entity.set(BotLOD, { ...cur, level: "full" });
+	}
 }
 
 /**
@@ -108,7 +129,8 @@ export function getLODStats(): Record<BotLODLevel, number> {
 		icon: 0,
 		hidden: 0,
 	};
-	for (const level of entityLODCache.values()) {
+	for (const entity of units) {
+		const level = entity.get(BotLOD)?.level ?? "full";
 		stats[level]++;
 	}
 	return stats;

@@ -1,5 +1,7 @@
 import speechProfilesConfig from "../config/speechProfiles.json";
 import { gameplayRandom } from "../ecs/seed";
+import { SpeechBubble as SpeechBubbleTrait } from "../ecs/traits";
+import { speechBubbles, world } from "../ecs/world";
 import { getStormIntensity } from "./power";
 
 /**
@@ -444,4 +446,68 @@ export function clearBubblesForEntity(entityId: string): void {
 export function resetBotSpeechState(): void {
 	activeBubbles.clear();
 	lastSpeechTurn.clear();
+	// Also destroy all SpeechBubble Koota entities
+	for (const e of Array.from(speechBubbles)) {
+		if (e.isAlive()) e.destroy();
+	}
+}
+
+// ---------------------------------------------------------------------------
+// W2: SpeechBubble Koota entity API
+// ---------------------------------------------------------------------------
+
+/**
+ * Spawn (or replace) a SpeechBubble Koota entity for a bot.
+ * If an entity already exists for the given entityId it is destroyed first.
+ * Called by botSpeechSystem and processEventSpeech when a new line is selected.
+ */
+export function spawnSpeechBubble(
+	entityId: string,
+	text: string,
+	expiresAtTick: number,
+	wx: number,
+	wy: number,
+	wz: number,
+): void {
+	// Destroy any existing bubble for this entity
+	for (const e of Array.from(speechBubbles)) {
+		if (e.get(SpeechBubbleTrait)?.entityId === entityId) {
+			e.destroy();
+			break;
+		}
+	}
+	const entity = world.spawn(SpeechBubbleTrait);
+	entity.set(SpeechBubbleTrait, {
+		entityId,
+		text,
+		expiresAtTick,
+		opacity: 1,
+		wx,
+		wy,
+		wz,
+	});
+}
+
+/**
+ * Tick all SpeechBubble entities: destroy expired ones, fade near-expiry ones.
+ * FADE_TICKS controls how many ticks before expiry the bubble starts to fade.
+ */
+const FADE_TICKS = 10;
+
+export function tickSpeechBubbles(currentTick: number): void {
+	for (const e of Array.from(speechBubbles)) {
+		const b = e.get(SpeechBubbleTrait);
+		if (!b) continue;
+		if (b.expiresAtTick <= currentTick) {
+			e.destroy();
+		} else {
+			const remaining = b.expiresAtTick - currentTick;
+			if (remaining < FADE_TICKS) {
+				e.set(SpeechBubbleTrait, {
+					...b,
+					opacity: remaining / FADE_TICKS,
+				});
+			}
+		}
+	}
 }

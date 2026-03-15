@@ -2,7 +2,7 @@
 
 > **Session start**: Read this file, then follow the protocol in `docs/memory-bank/AGENTS.md`.
 
-**Vite/Capacitor migration (Phases 1–8 done):** Primary build is **Vite** (`pnpm dev`, `pnpm build`). Entry: `src/main.tsx` → in-memory DB (sql.js) → `AppVite.tsx` (R3F scene + DOM UI). **Capacitor** wraps the same build (`pnpm cap:sync`, `pnpm cap:ios`/`cap:android`). R3F-only; Filament and scene snapshot removed. Capacitor SQLite adapter in `src/db/capacitorDb.ts`; persistence still uses sql.js until wired. **Expo/RN** deps remain for legacy Jest; new features target the Vite path. Plan: [docs/plans/EXPO_TO_CAPACITOR_MIGRATION.md](docs/plans/EXPO_TO_CAPACITOR_MIGRATION.md).
+**Vite/Capacitor migration (Phases 1–8 done):** Primary build is **Vite** (`pnpm dev`, `pnpm build`). Entry: `src/main.tsx` → **Capacitor SQLite** (init + schema) → **session DB** (sql.js in-memory) → `AppVite.tsx` (R3F scene + DOM UI). **Capacitor** wraps the same build (`pnpm cap:sync`, `pnpm cap:ios`/`cap:android`). R3F-only; Filament and scene snapshot removed. Persistence: Capacitor SQLite (web IndexedDB, native SQLite); session: sql.js. **Expo/RN** deps remain for legacy Jest; new features target the Vite path. Plan: [docs/plans/EXPO_TO_CAPACITOR_MIGRATION.md](docs/plans/EXPO_TO_CAPACITOR_MIGRATION.md).
 
 ## Repository Layout
 
@@ -20,7 +20,7 @@ syntheteria/
 │   ├── city/              # City config, runtime, kit lab
 │   ├── bots/              # Bot definitions, progression
 │   ├── config/            # Runtime config loaders + JSON
-│   ├── db/                # expo-sqlite + Drizzle persistence
+│   ├── db/                # Capacitor SQLite + sql.js session; Drizzle schema
 │   ├── audio/             # Tone.js spatial audio
 │   ├── input/             # Input manager + providers
 │   └── pathfinding/       # A* + NavMesh
@@ -34,7 +34,7 @@ syntheteria/
 │   └── archive/           # Completed/obsolete docs
 ├── assets/                # UI images, models, textures
 ├── config/                # Build config (metro, babel, tsconfig)
-└── tests/                 # E2E tests (Playwright)
+└── tests/                 # Playwright CT (tests/components/), E2E (tests/e2e/)
 ```
 
 ## Session Protocol
@@ -75,16 +75,19 @@ syntheteria/
 ### Validation
 
 ```bash
+pnpm verify        # Full CI: lint + tsc + test + test:ct
 pnpm lint          # Biome check
 pnpm lint:fix      # Biome autofix
 pnpm tsc           # TypeScript check (tsc --noEmit)
 pnpm dev           # Vite dev server (primary)
 pnpm build         # Vite build
+pnpm test          # Jest (unit + component)
+pnpm test:ct       # Playwright component tests (headed; tests/components/)
+pnpm test:e2e      # Playwright E2E (headed; tests/e2e/; CI uses xvfb-run)
 pnpm test:vitest   # Vitest (*.vitest.ts)
-pnpm test          # Jest (existing suites)
 ```
 
-E2E: `maestro test maestro/` (native; use `--platform ios` or `--platform android`); web: `maestro test maestro/flows/title-web.yaml`.
+Playwright runs **headed** (`headless: false`); in CI, `xvfb-run -a` provides a virtual display. Done checklist: [docs/plans/IS_THE_GAME_DONE.md](docs/plans/IS_THE_GAME_DONE.md).
 
 ## Agent Roles
 
@@ -135,8 +138,9 @@ All parallel agent work uses git worktrees:
 | World Gen | `src/world/generation.ts` | Procedural ecumenopolis |
 | Radial Menu | `src/systems/radialMenu.ts` | Context menu state |
 | Floor Render | `src/rendering/StructuralFloorRenderer.tsx` | PBR textured floors |
-| Game HUD | `src/ui/panels/GameHUD.tsx` | Top bar, resources, turn |
-| App Entry | `src/App.tsx` | Canvas, 39 renderers, game init |
+| Game HUD | `src/ui/panels/GameHUD.tsx` (RN), `src/ui/dom/GameHUDDom.tsx` (Vite) | Top bar, resources, turn |
+| App Entry (Vite) | `src/main.tsx` → `AppVite.tsx` | Capacitor SQLite + session DB, R3F scene, DOM HUD |
+| App Entry (Expo) | `App.tsx` | Legacy Expo/RN path; 39 renderers |
 
 ## Documentation Structure
 

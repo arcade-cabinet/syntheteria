@@ -70,8 +70,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run E2E tests
-        run: pnpm exec playwright test --project=e2e-chromium
+      - name: Run E2E tests (headed via xvfb-run)
+        run: xvfb-run -a pnpm exec playwright test -c playwright.e2e.config.ts
         env:
           CI: true
 

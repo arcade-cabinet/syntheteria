@@ -7,10 +7,11 @@
 
 1. Read `AGENTS.md` — multi-agent orchestration, architecture rules, hard bans
 2. Read `docs/memory-bank/AGENTS.md` — session protocol
-3. Read `docs/memory-bank/activeContext.md` — current focus, recent changes, next steps
-4. Read `docs/memory-bank/progress.md` — system status dashboard
-5. Read `docs/AGENTS.md` — find domain docs relevant to your task
-6. Confirm: "I have read the memory bank and understand current project state."
+3. Read `docs/plans/IS_THE_GAME_DONE.md` — is the game DONE? Path to done.
+4. Read `docs/memory-bank/activeContext.md` — current focus, recent changes, next steps
+5. Read `docs/memory-bank/progress.md` — system status dashboard
+6. Read `docs/AGENTS.md` — find domain docs relevant to your task
+7. Confirm: "I have read the memory bank and understand current project state."
 
 ## Claude-Specific Behavior
 
@@ -41,10 +42,12 @@ If Claude changes a visible flow, it must:
 3. Not leave stale tests that describe old UI
 
 Test roots:
-- Unit/system tests: `src/**/__tests__/*.test.ts`
-- UI component tests: `src/ui/__tests__/` (RNTL)
-- Legacy component tests: `tests/components/` (if any remain)
-- E2E: `maestro/flows/*.yaml` (Maestro; run on both iOS and Android: `maestro test --platform ios maestro/`, `maestro test --platform android maestro/`; web: `maestro test maestro/flows/title-web.yaml`)
+- Unit/system tests: `src/**/__tests__/*.test.ts` (Jest)
+- UI component tests: `src/ui/__tests__/` (Jest/RNTL)
+- Playwright CT: `tests/components/*.spec.tsx` — `pnpm test:ct` (headed)
+- Playwright E2E: `tests/e2e/*.spec.ts` — `pnpm test:e2e` (headed; CI uses `xvfb-run -a`)
+- Vitest: `*.vitest.ts` — `pnpm test:vitest`
+- Full CI: `pnpm verify` (lint + tsc + test + test:ct)
 
 ### Brand Assets In Repo
 
@@ -88,8 +91,11 @@ See `docs/AGENTS.md` for the complete index with summaries.
 | Domain | Location | What's There |
 |--------|----------|-------------|
 | Memory bank | `docs/memory-bank/` | Session context, status, patterns |
+| **Done checklist** | `docs/plans/IS_THE_GAME_DONE.md` | Is the game DONE? Path to done, verify, E2E/CT |
+| Prioritization | `docs/plans/PRIORITIZATION.md` | P0/P1/P2/P3, what to do next |
 | Game design | `docs/design/` | Vision, lore, factions, economy, bots |
 | Technical | `docs/technical/` | Architecture, world, AI, assets, rendering |
 | Interface | `docs/interface/` | UI design, input model |
-| Execution | `docs/plans/GAMEPLAN_1_0.md` | 6-phase roadmap |
+| Execution | `docs/plans/` | GAMEPLAN_1_0, PR_CHECKLIST, TASK_LIST, PR_DESCRIPTION |
+| Test coverage | `docs/plans/COMPREHENSIVE_TEST_COVERAGE.md` | Scenario matrix, done-checklist verification |
 | Archive | `docs/archive/` | Old plans (reference only) |

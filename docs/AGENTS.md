@@ -2,7 +2,7 @@
 title: "Documentation Index"
 domain: meta
 status: canonical
-last_updated: 2026-03-14
+last_updated: 2026-03-15
 summary: "Navigation index for all Syntheteria documentation — start here after memory bank"
 ---
 
@@ -14,10 +14,11 @@ summary: "Navigation index for all Syntheteria documentation — start here afte
 ## Quick Start for Agents
 
 1. Read [memory-bank/AGENTS.md](memory-bank/AGENTS.md) — session protocol
-2. Read [memory-bank/activeContext.md](memory-bank/activeContext.md) — what's happening now
-3. Read [memory-bank/progress.md](memory-bank/progress.md) — system status dashboard
-4. Read this file — find the domain docs relevant to your task
-5. Use `head -15 <file>` on any domain doc to read its frontmatter summary before committing to a full read
+2. Read [plans/IS_THE_GAME_DONE.md](plans/IS_THE_GAME_DONE.md) — is the game DONE? Path to done
+3. Read [memory-bank/activeContext.md](memory-bank/activeContext.md) — what's happening now
+4. Read [memory-bank/progress.md](memory-bank/progress.md) — system status dashboard
+5. Read this file — find the domain docs relevant to your task
+6. Use `head -15 <file>` on any domain doc to read its frontmatter summary before committing to a full read
 
 ## Frontmatter Convention
 
@@ -28,7 +29,7 @@ Every document under `docs/` has YAML frontmatter:
 title: "Document Title"
 domain: design | technical | interface | meta
 status: canonical | reference | archived
-last_updated: 2026-03-14
+last_updated: 2026-03-15
 summary: "One-line description — agent can decide relevance from this"
 depends_on: []
 planned_work: []
@@ -76,7 +77,7 @@ How the game is built. Architecture and implementation.
 | [AI_SYSTEMS.md](technical/AI_SYSTEMS.md) | GOAP governors, Yuka steering, NavMesh, AI packages |
 | [ASSETS.md](technical/ASSETS.md) | 91 city GLBs, 9 robot chassis, gaps, ingestion pipeline |
 | [RENDERING.md](technical/RENDERING.md) | 39 renderers, storm system, floor zones, performance |
-| [RENDERING_BACKENDS.md](technical/RENDERING_BACKENDS.md) | WebGPU (web) + Filament (mobile) target architecture, abstraction, migration |
+| [RENDERING_BACKENDS.md](technical/RENDERING_BACKENDS.md) | Current: R3F only (web + Capacitor). Target: WebGPU (web), Filament (mobile). |
 
 ### Interface (`interface/`)
 
@@ -101,7 +102,8 @@ Player-facing surfaces. Visual language and interaction model.
 | [NICE_TO_HAVES.md](plans/NICE_TO_HAVES.md) | Consolidated optional, P2, and deferred items |
 | [PR_CHECKLIST.md](plans/PR_CHECKLIST.md) | Checklist for creating and merging the 1.0 PR |
 | [TASK_LIST.md](plans/TASK_LIST.md) | **Remaining work** with dependencies (docs, E2E, assets commit, verification, PR) |
-| [COMPREHENSIVE_TEST_COVERAGE.md](plans/COMPREHENSIVE_TEST_COVERAGE.md) | Scenario matrix — test all different possible scenarios (unit, component, E2E) |
+| [COMPREHENSIVE_TEST_COVERAGE.md](plans/COMPREHENSIVE_TEST_COVERAGE.md) | Scenario matrix; done-checklist verification (CT + E2E with GOAP) |
+| [PR_DESCRIPTION.md](plans/PR_DESCRIPTION.md) | Template for the 1.0 PR description |
 
 ### Archive (`archive/`)
 
@@ -125,5 +127,6 @@ Completed, obsolete, or superseded documents. Reference only — do not use for 
 | Input mapping, radial menu, zoom | `interface/INPUT.md` |
 | Current status, what to do next | `memory-bank/activeContext.md` |
 | What works / what's broken | `memory-bank/progress.md` |
-| E2E testing, Maestro flows, web vs native | `plans/MAESTRO_PLAYTESTING.md` |
+| E2E testing, Playwright (headed, xvfb in CI), done-checklist | `plans/IS_THE_GAME_DONE.md`, `tests/e2e/` |
+| Maestro flows (legacy), web vs native | `plans/MAESTRO_PLAYTESTING.md` |
 | Migrating off Expo/RN to Capacitor + Vite + R3F | `plans/EXPO_TO_CAPACITOR_MIGRATION.md` |

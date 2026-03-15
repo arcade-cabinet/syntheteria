@@ -41,6 +41,8 @@ Full plan: [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION
 
 ## Recent Changes (2026-03-15)
 
+- **Docs aligned** — All agentic docs, docs/, and memory bank updated: Vite + Capacitor SQLite + session sql.js, `pnpm verify`, Playwright CT/E2E (headed; CI uses `xvfb-run -a`), path to done, IS_THE_GAME_DONE first in flow. Root AGENTS.md, CLAUDE.md, docs/AGENTS.md, techContext.md, ARCHITECTURE.md, RENDERING_BACKENDS.md, systemPatterns.md aligned.
+- **Playwright headed + xvfb** — CT and E2E configs use `headless: false`. CI runs E2E with `xvfb-run -a` (xvfb preinstalled on ubuntu-latest).
 - **P0 floor discovery:** StructuralFloorRenderer now subscribes to game state (`useSyncExternalStore(subscribe, getSnapshot, getSnapshot)`) and re-reads `liveDiscovery` from structuralSpace when `gameSnapshot.tick` changes, so exploration-driven discovery updates are visible every tick (single source of truth).
 - **P2 harvest→resources test:** harvestSystem.test.ts — new test "harvest completion adds resources to pool (Exploit pillar — resources visible)" asserts addResource called with valid type and amount after floor harvest completes.
 - **Own everything** — Unit tests: `turnSystem.test.ts` — rehydrateTurnState (restore phase/activeFaction, load-into-different-phase, playerHasActions). `saveGames.test.ts` — no-save edge (getSaveGameCountSync 0, getLatestSaveGameSync null). COMPREHENSIVE_TEST_COVERAGE.md updated (turn rehydrate, save/load, missing save). TASK_LIST: ownership section added; next steps for CT full run, coverage gaps, Maestro.

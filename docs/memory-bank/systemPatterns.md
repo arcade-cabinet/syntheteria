@@ -15,7 +15,7 @@ JSON Config  -->  Systems (logic)  -->  Koota ECS (state)  -->  TSX (rendering)
 - **Systems** own all logic — 21 systems tick per frame in `gameState.ts`
 - **TSX** reads from contracts and renders — TSX must NOT invent gameplay logic
 - **JSON config** drives all tuning — 23+ config files in `src/config/`
-- **SQLite** is authoritative persistence; runtime state is Koota ECS
+- **Persistence:** Capacitor SQLite (schema, web IndexedDB / native SQLite) + in-memory sql.js session (sync API). Runtime state is Koota ECS.
 - **No dual data stores** — ONE source of truth per data domain
 
 ## ECS Pattern (Koota)

@@ -2,8 +2,8 @@
 title: "Architecture"
 domain: technical
 status: canonical
-last_updated: 2026-03-13
-summary: "Tech stack (Expo/Metro, Koota ECS, R3F, NativeWind), ECS structure, persistence model, hard rules"
+last_updated: 2026-03-15
+summary: "Tech stack (Vite/Capacitor, Koota ECS, R3F, Capacitor SQLite + sql.js session), ECS structure, persistence, hard rules"
 depends_on: []
 planned_work:
   - "Config-driven asset pipeline — all assets via JSON + resolveAssetUri()"
@@ -16,21 +16,22 @@ planned_work:
 
 | Layer | Technology | Why |
 |---|---|---|
-| Cross-platform framework | Expo SDK + Metro | Single codebase targeting web, iOS, Android; Metro handles native module resolution |
+| Build & native wrap | Vite + Capacitor | Primary build: Vite. Entry: `src/main.tsx` → Capacitor SQLite → session DB → AppVite. Capacitor wraps same build for iOS/Android. |
 | World & logic | Koota ECS | Canonical gameplay state; entity/component/system with trait-based queries |
-| Rendering | React Three Fiber + Three.js + Drei | Declarative 3D in React; Drei for camera controls, loaders, helpers. Target backends: WebGPU (web), Filament (mobile) — see [RENDERING_BACKENDS.md](RENDERING_BACKENDS.md). |
-| UI & styling | NativeWind v4 + React Native components | Tailwind-like utility classes that compile to RN StyleSheet |
-| Persistence | Expo SQLite + Drizzle ORM | Local-first campaign saves; typed schema with migrations |
-| Animation | animejs + react-native-reanimated | UI motion (reanimated) and procedural tweens (animejs) |
-| Audio | Tone.js | Spatial audio, procedural SFX, adaptive music layers |
-| Testing | Jest + Maestro | Jest for unit/component; Maestro for E2E (flows in maestro/flows/) |
+| Rendering | React Three Fiber + Three.js + Drei | R3F only (web + Capacitor). Future: WebGPU (web), Filament (mobile) — see [RENDERING_BACKENDS.md](RENDERING_BACKENDS.md). |
+| UI (Vite) | DOM (AppVite, GameHUDDom) | Minimal DOM for title, HUD, no RN in primary path. |
+| UI (legacy) | NativeWind v4 + React Native | Expo/RN path retained for legacy tests and optional build. |
+| Persistence | Capacitor SQLite + sql.js session + Drizzle | Capacitor: web IndexedDB, native SQLite (schema). Session: in-memory sql.js (sync API). Drizzle schema. |
+| Animation | animejs + react-native-reanimated | UI motion and procedural tweens |
+| Audio | Tone.js | Spatial audio, procedural SFX, adaptive music |
+| Testing | Jest + Playwright + Vitest | Jest: unit/component. Playwright CT + E2E (headed; CI uses xvfb-run). Vitest: *.vitest.ts. |
 
 ## Platform Constraints
 
 - Touch-first remains a design constraint. Every interaction must work with fingers.
 - The game must remain readable on mobile and desktop viewports.
 - Persistent campaign state belongs in SQLite, not long-lived runtime globals.
-- Metro wraps modules in CJS `__d()` factories — any npm package using `import.meta` in ESM will break. Use `unstable_conditionNames: ['react-native', 'browser', 'require', 'default']` in metro.config.js to force CJS builds.
+- Vite is the primary bundler. Metro/Expo retained for legacy Jest and optional Expo build. For Metro, `import.meta` in ESM packages can break; use `unstable_conditionNames` in metro.config.js if needed.
 
 ## ECS Structure
 
@@ -93,7 +94,7 @@ These are non-negotiable architectural constraints:
 
 | Rule | Rationale |
 |---|---|
-| **No Vite / Vitest** | Metro is the bundler. Jest is the test runner. Vite was removed. |
+| **Vite is primary** | Primary build: Vite (`pnpm dev`, `pnpm build`). Jest for existing tests; Playwright for CT/E2E; Vitest for *.vitest.ts. |
 | **No Miniplex** | Koota is the ECS. Miniplex was fully migrated away. |
 | **No raw CSS** | NativeWind v4 owns all styling. No `.css` files, no inline `style` objects for layout. |
 | **No TSX-owned gameplay logic** | Gameplay logic lives in systems and TS package layers. TSX reads and renders. |

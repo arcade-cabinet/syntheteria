@@ -4,129 +4,102 @@
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Framework | Expo SDK + Metro | NOT Vite. Metro web uses CJS wrappers. |
-| ECS | Koota | Migrated from Miniplex. Koota owns canonical gameplay state. |
-| Rendering | React Three Fiber + Three.js + Drei | 39 R3F renderer components in GameScene |
-| UI / Styling | NativeWind v4 + React Native components | Touch-first, responsive |
-| Persistence | expo-sqlite + Drizzle ORM | SQLite is authoritative persistence |
-| Animation | animejs + react-native-reanimated | |
-| Audio | Tone.js | Spatial audio, procedural SFX, adaptive music |
-| Testing | Jest + ts-jest (unit/component), Maestro (E2E) | Playwright deprecated; E2E in maestro/flows/ |
-| Formatting | Biome | Tabs, double quotes, sorted imports |
-| Physics | Rapier | Decoupled via callbacks — never import directly in systems |
+| **Build** | Vite | Primary. `pnpm dev`, `pnpm build`. Entry: `src/main.tsx`. |
+| **Native wrap** | Capacitor | Same Vite build; `pnpm cap:sync`, `cap:ios`/`cap:android`. |
+| **ECS** | Koota | Canonical gameplay state. Migrated from Miniplex. |
+| **Rendering** | React Three Fiber + Three.js + Drei | R3F only (no Filament in primary path). 39 renderer components. |
+| **UI (Vite)** | DOM + inline styles | `AppVite.tsx`, `GameHUDDom.tsx`, DOM title. |
+| **UI (Expo/RN)** | NativeWind v4 + React Native | Legacy; `GameHUD.tsx`, `TitleScreen.tsx`. |
+| **Persistence** | Capacitor SQLite + sql.js session | Capacitor: web IndexedDB, native SQLite. Session: in-memory sql.js (sync API). `db/viteCapacitorSession.ts`, `db/capacitorDb.ts`. |
+| **Schema** | Drizzle ORM | Typed schema; bootstrap + seed in `db/bootstrap.ts`, `db/seedGameData.ts`. |
+| **Audio** | Tone.js | Spatial audio, procedural SFX, adaptive music. |
+| **Testing** | Jest + Playwright + Vitest | Jest: unit/component. Playwright CT: `tests/components/` (headed). Playwright E2E: `tests/e2e/` (headed; CI uses `xvfb-run -a`). Vitest: `*.vitest.ts`. |
+| **Lint/format** | Biome | Tabs, double quotes, sorted imports. |
+| **Physics** | Rapier | Decoupled via callbacks. |
 
 ## Codebase Scale
 
-- ~375 source files (.ts/.tsx)
-- 127 test suites, 2,431 tests (all passing)
-- 23+ JSON config files in `src/config/`
-- Zero TypeScript errors on `tsc --noEmit`
+- ~375+ source files (.ts/.tsx)
+- Jest suites in `src/**/__tests__/`; Playwright CT in `tests/components/`; E2E in `tests/e2e/`
+- JSON config in `src/config/`; sql.js WASM at `public/sql-wasm.wasm` for session DB
 
 ## Project Structure
 
 ```
 src/
-  ai/           # GOAP governors, Yuka steering, NavMesh, bot brains
-  city/         # City runtime, CityKitLab
-  config/       # JSON config files + type-safe loader (config/index.ts)
-  ecs/          # Koota traits, world setup
-  rendering/    # R3F renderer components (39 total)
-  systems/      # 21 game systems (tick per frame in gameState.ts)
-  ui/           # React components — panels, modals, HUD, radial menu
-    components/ # Shared primitives (HudButton, HudPanel)
-    panels/     # TopBar, Notifications, ThoughtOverlay, Minimap, ResourceStrip
-  utils/        # Helpers, RNG, math
-tests/          # Jest unit + component tests
-maestro/        # Maestro E2E flows (YAML); Playwright deprecated
-docs/           # Design docs, plans, contracts
-config/         # Top-level config JSONs
-assets/
-  ui/           # Brand assets (background.png, mark.png, buttons/)
+  main.tsx          # Vite entry: Capacitor SQLite init → session DB → AppVite
+  AppVite.tsx       # Vite app: DOM title + GameSceneR3F + GameHUDDom
+  GameSceneR3F.tsx  # R3F scene (single 3D path)
+  ai/               # GOAP governors, Yuka steering, NavMesh
+  city/             # City runtime, CityKitLab
+  config/           # JSON config + loaders
+  db/               # Capacitor SQLite, sql.js session, bootstrap, schema
+    viteCapacitorSession.ts  # initCapacitorDbForVite, createSessionDbSync
+    capacitorDb.ts          # Async Capacitor API
+    testDb.ts               # sql.js in-memory (session + Jest)
+  ecs/              # Koota traits, game loop
+  rendering/        # R3F renderers
+  systems/          # Game systems (pure logic)
+  ui/               # RN panels + dom/ (GameHUDDom, DiegeticChip)
+tests/
+  components/       # Playwright CT (*.spec.tsx)
+  e2e/              # Playwright E2E (*.spec.ts); done-checklist.spec.ts
+docs/               # memory-bank, design, technical, interface, plans
+public/             # Static assets; sql-wasm.wasm for sql.js
 ```
 
 ## Key Dependencies
 
-- `koota` — ECS runtime (replaces Miniplex)
-- `@react-three/fiber` + `@react-three/drei` — R3F rendering
-- `three` — 3D engine
-- `expo-sqlite` — persistence
-- `drizzle-orm` — SQL query builder
-- `tone` — audio engine
-- `yuka` — AI steering behaviors + NavMesh
-- `nativewind` — Tailwind for React Native
-- `animejs` — animation
-- `nipplejs` — mobile joystick input
+- `koota` — ECS
+- `@react-three/fiber`, `@react-three/drei`, `three` — R3F
+- `@capacitor-community/sqlite`, `@capacitor/core` — persistence (web + native)
+- `sql.js` — in-memory session DB (sync API)
+- `drizzle-orm` — schema
+- `tone` — audio
+- `yuka` — steering, NavMesh
+- `playwright`, `@playwright/test` — CT and E2E (headed)
 
 ## Platform Constraints
 
-- **Touch-first:** All interactions must work on mobile. Radial menu (long-press) replaces right-click context menus.
-- **Metro bundler:** Uses CJS module wrappers. ESM-only packages (e.g., zustand v5 using `import.meta.env`) require `unstable_conditionNames: ['react-native', 'browser', 'require', 'default']` in metro.config.js.
-- **No Vite/Vitest:** Removed. Jest + ts-jest with tsconfig.test.json (CJS mode) is the test runner.
-- **No Miniplex:** Fully migrated to Koota.
-- **No raw CSS:** NativeWind v4 only.
-
-## Metro ESM Workaround
-
-Metro wraps modules in CJS `__d()` factories, so `import.meta` throws SyntaxError. Any npm package using `import.meta` in its ESM build will break. The fix is `unstable_conditionNames` in metro.config.js to force CJS resolution.
+- **Touch-first:** Interactions must work on mobile. Radial menu (long-press) for context.
+- **Vite is primary.** Metro/Expo retained for legacy Jest and optional Expo build.
+- **Playwright runs headed** (`headless: false`). On CI (no display), use `xvfb-run -a` (xvfb is preinstalled on ubuntu-latest).
 
 ## Build & Run
 
 ```bash
-# Install dependencies (use pnpm per AGENTS.md)
 pnpm install
-
-# Development (web) — primary
-pnpm dev
-# Vite serves on http://localhost:5173
-
-# Legacy Expo (optional, for Jest)
-pnpm web
-npx expo start
-
-# Run tests
-pnpm test
-
-# Type check
-pnpm tsc
-
-# Lint
-pnpm lint
-pnpm lint:fix
-
-# E2E (Maestro — requires dev build or web at MAESTRO_WEB_URL / config/e2e.json)
-maestro test maestro/
-# Web flow only: maestro test maestro/flows/title-web.yaml
+pnpm dev              # Vite dev server (http://localhost:5173)
+pnpm build            # Vite build
+pnpm verify           # Full CI: lint + tsc + test + test:ct
+pnpm lint             # Biome check
+pnpm lint:fix         # Biome autofix
+pnpm tsc              # TypeScript check
+pnpm test             # Jest (unit + component)
+pnpm test:ct          # Playwright component tests (headed)
+pnpm test:e2e         # Playwright E2E (headed; start dev server first or use webServer in config)
+pnpm test:vitest      # Vitest (*.vitest.ts)
 ```
 
 ## Persistence Model
 
-SQLite is the authoritative long-term state store. Campaign saves own:
-- Campaign setup and seed
-- Sector map / topology state
-- POIs and progression
-- World actors (bot positions, health, components)
-- AI state (governor plans, faction state)
-- Infrastructure state
-- Faction state
-- Current scene / camera / context
-
-Runtime state lives in Koota ECS. The save model loads the campaign as one coherent machine-world.
+- **Capacitor SQLite:** Schema and persistence (web: IndexedDB; native: SQLite). Initialized first in `main.tsx`.
+- **Session DB (sql.js):** In-memory, sync API. Bootstrap + seed. All runtime reads/writes go through `getDatabaseSync()`.
+- Campaign saves: seed, sector map, POIs, world entities, AI state, turn state, discovery, etc. See `db/worldPersistence.ts`, `db/saveAllState.ts`.
 
 ## Testing Conventions
 
-- Jest + ts-jest for unit and component tests
-- `tsconfig.test.json` with CJS mode for Jest compatibility
-- Maestro for E2E (YAML flows in maestro/flows/); Playwright deprecated
-- Tests MUST import expected values from JSON/config source of truth — never hardcode
-- `jest.mock` for ECS queries (mock Koota queries as plain arrays)
-- Variables prefixed with `mock` can be referenced in `jest.mock` factories
-- Mock all R3F renderers in smoke tests to avoid ESM parse errors from `three/examples/jsm/*`
-- Module-level Map state uses `_reset()` for test cleanup
+- **Jest:** Unit and component tests in `src/**/__tests__/`. Use `createTestDb()` for DB tests. Mock R3F/ECS as needed.
+- **Playwright CT:** Isolated components in `tests/components/*.spec.tsx`. Headed. Stubs for react-native, expo-asset, etc. in `playwright-ct.config.ts`.
+- **Playwright E2E:** Full app in `tests/e2e/`. Headed; CI runs with `xvfb-run -a`. Config: `playwright.e2e.config.ts`.
+- **Vitest:** `*.vitest.ts` for Vite-side unit tests.
+- Tests MUST use config/JSON as source of truth where applicable. Use `gameplayRandom` / `scopedRNG` for determinism.
 
 ## CI/CD
 
-GitHub Actions pipeline runs:
-- `pnpm tsc` — type checking
-- `pnpm test` — full test suite (Jest)
-- `pnpm lint` — Biome formatting/linting
-- E2E: Maestro flows (optional; require dev build or Maestro Cloud). See docs/plans/MAESTRO_PLAYTESTING.md.
+GitHub Actions (`.github/workflows/ci.yml`):
+
+- **Quality job:** checkout → pnpm install → lint → tsc → test (Jest) → build:web
+- **E2E job:** checkout → pnpm install → Playwright install chromium → **xvfb-run -a** playwright test -c playwright.e2e.config.ts → upload report
+
+Done checklist and path to done: [docs/plans/IS_THE_GAME_DONE.md](../plans/IS_THE_GAME_DONE.md).

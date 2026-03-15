@@ -2,8 +2,8 @@
 title: "Rendering Backends — R3F Only (Web + Capacitor)"
 domain: technical
 status: canonical
-last_updated: 2026-03-13
-summary: "Single backend: R3F + Three.js on web; Capacitor wraps the same build for native."
+last_updated: 2026-03-15
+summary: "Current: R3F + Three.js only (web and Capacitor). Future: WebGPU (web), Filament (mobile)."
 depends_on:
   - "RENDERING.md"
   - "ARCHITECTURE.md"
@@ -25,10 +25,11 @@ Introducing the **split early** avoids locking the 39 existing renderers and all
 
 ## Current State
 
-- **Web:** React Three Fiber (R3F) + Three.js **WebGL** renderer inside a single `<Canvas>` in `App.tsx` / game scene.
-- **Native:** Same R3F + Three.js stack, rendered via **expo-gl** (OpenGL ES). No WebGPU on native; no Filament yet.
+- **Primary (Vite):** React Three Fiber (R3F) + Three.js **WebGL** inside a single `<Canvas>` in `GameSceneR3F.tsx`, mounted from `AppVite.tsx`. Entry: `src/main.tsx`.
+- **Capacitor:** Same Vite build; no separate native renderer. R3F only.
+- **Legacy (Expo):** `App.tsx` still has R3F + expo-gl path for optional Expo build.
 
-All 39 renderers (storm, floor, structures, units, particles, etc.) are R3F components that depend on Three.js types and the current WebGL renderer.
+All 39 renderers are R3F components. WebGPU and Filament are **future** targets (see below).
 
 ## Target Architecture
 

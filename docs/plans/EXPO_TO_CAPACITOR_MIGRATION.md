@@ -1,6 +1,6 @@
 # Migration: Expo/React Native → Capacitor + Vite + R3F
 
-**Status:** Phases 1–8 done. Primary build is Vite + Capacitor + R3F only.
+**Status:** Phases 1–8 done. Primary build is Vite + Capacitor + R3F only. **Current entry:** `src/main.tsx` → `initCapacitorDbForVite()` (Capacitor SQLite) → `createSessionDbSync()` (sql.js in-memory) → AppVite. See `db/viteCapacitorSession.ts`.
 
 - **Phase 1:** Vite + Capacitor + R3F + Tailwind scaffold.
 - **Phase 2:** Platform shim (`src/platform.ts`), `rendering.ts` uses `isWebPlatform`; game logic framework-agnostic.

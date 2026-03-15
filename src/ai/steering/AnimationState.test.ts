@@ -1,15 +1,53 @@
 import {
+	AnimationState as AnimationStateTrait,
+	Identity,
+	MapFragment,
+	Unit,
+	WorldPosition,
+} from "../../ecs/traits";
+import { world } from "../../ecs/world";
+import {
 	clearEntityAnimationStates,
 	deriveAnimationState,
 	getEntityAnimationState,
 	setEntityAnimationState,
 } from "./AnimationState";
 
-describe("AnimationState", () => {
-	afterEach(() => {
-		clearEntityAnimationStates();
+// Helper: spawn a minimal unit entity with AnimationState trait for tests
+function spawnTestUnit(id: string) {
+	const entity = world.spawn(
+		Identity,
+		Unit,
+		WorldPosition,
+		MapFragment,
+		AnimationStateTrait,
+	);
+	entity.set(Identity, { id, faction: "player" });
+	entity.set(WorldPosition, { x: 0, y: 0, z: 0 });
+	entity.set(MapFragment, { fragmentId: "test" });
+	entity.set(Unit, {
+		type: "maintenance_bot",
+		archetypeId: "field_technician",
+		markLevel: 1,
+		speechProfile: "mentor",
+		displayName: "Test Bot",
+		speed: 1,
+		selected: false,
+		components: [],
 	});
+	entity.set(AnimationStateTrait, {
+		clipName: "",
+		playhead: 0,
+		blendWeight: 1,
+	});
+	return entity;
+}
 
+afterEach(() => {
+	for (const e of world.query(AnimationStateTrait)) e.destroy();
+});
+
+describe("AnimationState", () => {
 	describe("deriveAnimationState", () => {
 		it("returns walking when navigating", () => {
 			expect(deriveAnimationState("navigating", null, 0)).toBe("walking");
@@ -76,23 +114,27 @@ describe("AnimationState", () => {
 		});
 	});
 
-	describe("entity animation state store", () => {
-		it("returns idle for unknown entities", () => {
+	describe("entity animation state store (Koota trait-backed)", () => {
+		it("returns idle for unknown entities (not in world)", () => {
 			expect(getEntityAnimationState("unknown-entity")).toBe("idle");
 		});
 
-		it("stores and retrieves animation state", () => {
+		it("stores and retrieves animation state via entity trait", () => {
+			spawnTestUnit("bot-1");
 			setEntityAnimationState("bot-1", "walking");
 			expect(getEntityAnimationState("bot-1")).toBe("walking");
 		});
 
 		it("overwrites previous state", () => {
+			spawnTestUnit("bot-1");
 			setEntityAnimationState("bot-1", "walking");
 			setEntityAnimationState("bot-1", "harvesting");
 			expect(getEntityAnimationState("bot-1")).toBe("harvesting");
 		});
 
 		it("clears all states", () => {
+			spawnTestUnit("bot-1");
+			spawnTestUnit("bot-2");
 			setEntityAnimationState("bot-1", "walking");
 			setEntityAnimationState("bot-2", "attacking");
 			clearEntityAnimationStates();
@@ -101,6 +143,9 @@ describe("AnimationState", () => {
 		});
 
 		it("tracks multiple entities independently", () => {
+			spawnTestUnit("bot-1");
+			spawnTestUnit("bot-2");
+			spawnTestUnit("bot-3");
 			setEntityAnimationState("bot-1", "walking");
 			setEntityAnimationState("bot-2", "harvesting");
 			setEntityAnimationState("bot-3", "building");

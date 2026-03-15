@@ -10,7 +10,13 @@
  * footprint, the more cultist pressure it attracts.
  */
 
-import { Building, Identity, Unit, WorldPosition } from "../ecs/traits";
+import {
+	Building,
+	Identity,
+	TerritoryCell as TerritoryCellTrait,
+	Unit,
+	WorldPosition,
+} from "../ecs/traits";
 import { world } from "../ecs/world";
 import { worldToGrid } from "../world/sectorCoordinates";
 import {
@@ -84,6 +90,54 @@ let currentTensions: TerritoryTension[] = [];
 
 /** Tick counter for periodic recalculation */
 let ticksSinceRecalc = RECALC_INTERVAL;
+
+// ─── W2: TerritoryCell Koota entity index ────────────────────────────────────
+
+type TerritoryCellEntity = ReturnType<typeof world.spawn>;
+const _territoryCellIndex = new Map<string, TerritoryCellEntity>();
+
+function tcKey(q: number, r: number) {
+	return `${q},${r}`;
+}
+
+/**
+ * Spawn (or update) a TerritoryCell Koota entity for a grid cell.
+ * Called after recalculate() so renderers can use useQuery(TerritoryCell).
+ */
+export function spawnTerritoryCell(
+	q: number,
+	r: number,
+	owner: string,
+	strength: number,
+): void {
+	const key = tcKey(q, r);
+	let entity = _territoryCellIndex.get(key);
+	if (!entity || !entity.isAlive()) {
+		entity = world.spawn(TerritoryCellTrait);
+		_territoryCellIndex.set(key, entity);
+	}
+	entity.set(TerritoryCellTrait, { q, r, owner, strength });
+}
+
+/**
+ * Get the owner faction for a grid cell via Koota entity lookup.
+ */
+export function getTerritoryOwner(q: number, r: number): string | null {
+	return (
+		_territoryCellIndex.get(tcKey(q, r))?.get(TerritoryCellTrait)?.owner ?? null
+	);
+}
+
+/**
+ * Destroy all TerritoryCell entities and clear the index.
+ * Called by resetTerritorySystem().
+ */
+export function clearTerritoryCells(): void {
+	for (const e of _territoryCellIndex.values()) {
+		if (e.isAlive()) e.destroy();
+	}
+	_territoryCellIndex.clear();
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -199,6 +253,7 @@ function recalculate() {
 	}
 
 	// Resolve ownership: strongest claim wins, ties go to first faction
+	clearTerritoryCells();
 	cellOwnership.clear();
 	for (const [key, factionClaims] of acc) {
 		let bestFaction: EconomyFactionId | null = null;
@@ -222,6 +277,7 @@ function recalculate() {
 				owner: bestFaction,
 				strength: bestStrength,
 			});
+			spawnTerritoryCell(bestQ, bestR, bestFaction, bestStrength);
 		}
 	}
 
@@ -395,6 +451,7 @@ export function isInFactionTerritory(
  * Reset territory state — call on new game.
  */
 export function resetTerritorySystem() {
+	clearTerritoryCells();
 	cellOwnership.clear();
 	factionStats.clear();
 	currentTensions = [];

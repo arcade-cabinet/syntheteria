@@ -27,6 +27,18 @@ interface MockEntity {
 const mockUnits: MockEntity[] = [];
 const mockBuildings: MockEntity[] = [];
 
+function makeMockEntity() {
+	const data: Record<string, unknown> = {};
+	return {
+		isAlive: jest.fn(() => true),
+		destroy: jest.fn(),
+		set: jest.fn((_trait: unknown, value: unknown) => {
+			data["__trait"] = value;
+		}),
+		get: jest.fn((_trait: unknown) => data["__trait"] ?? null),
+	};
+}
+
 jest.mock("../ecs/world", () => ({
 	world: {
 		query: (...traits: unknown[]) => {
@@ -49,6 +61,7 @@ jest.mock("../ecs/world", () => ({
 				},
 			}));
 		},
+		spawn: jest.fn(() => makeMockEntity()),
 	},
 }));
 
@@ -57,6 +70,7 @@ jest.mock("../ecs/traits", () => ({
 	Building: { name: "Building" },
 	WorldPosition: { name: "WorldPosition" },
 	Identity: { name: "Identity" },
+	TerritoryCell: { name: "TerritoryCell" },
 }));
 
 jest.mock("../world/sectorCoordinates", () => ({

@@ -25,16 +25,58 @@ jest.mock("./harvestEvents", () => ({
 jest.mock("./narrative", () => ({
 	queueThought: (...args: unknown[]) => mockQueueThought(...args),
 }));
-jest.mock("../ecs/world", () => ({
-	units: [
-		{
-			get: () => ({ id: "fabricator_1", x: 5, y: 0, z: 5 }),
-		},
-	],
+jest.mock("./turnSystem", () => ({
+	getTurnState: jest.fn(() => ({ turnNumber: 0 })),
 }));
+
+// Minimal Koota entity stub — used by spawnHarvestOpEntity helpers
+function makeMockEntity() {
+	const data: Record<string, unknown> = {};
+	return {
+		isAlive: jest.fn(() => true),
+		destroy: jest.fn(),
+		set: jest.fn((_trait: unknown, value: unknown) => {
+			Object.assign(data, value as object);
+		}),
+		get: jest.fn(() => data),
+	};
+}
+
+jest.mock("../ecs/world", () => {
+	const mockUnit = { get: () => ({ id: "fabricator_1", x: 5, y: 0, z: 5 }) };
+	const harvestOpEntities: ReturnType<typeof makeMockEntity>[] = [];
+	return {
+		units: [mockUnit],
+		world: {
+			spawn: jest.fn(() => {
+				const e = makeMockEntity();
+				harvestOpEntities.push(e);
+				return e;
+			}),
+			query: jest.fn(() => harvestOpEntities.filter((e) => e.isAlive())),
+		},
+		harvestOps: {
+			[Symbol.iterator]: () =>
+				harvestOpEntities.filter((e) => e.isAlive())[Symbol.iterator](),
+		},
+	};
+});
+
 jest.mock("../ecs/traits", () => ({
 	Identity: { id: "Identity" },
 	WorldPosition: "WorldPosition",
+	HarvestOp: { name: "HarvestOp" },
+}));
+
+jest.mock("../db/runtime", () => ({ getDatabaseSync: jest.fn() }));
+jest.mock("../world/session", () => ({
+	getActiveWorldSession: jest.fn(() => null),
+}));
+jest.mock("../world/gen/persist", () => ({ writeTileDelta: jest.fn() }));
+jest.mock("../world/gen/worldGrid", () => ({ invalidateChunk: jest.fn() }));
+jest.mock("../world/gen/types", () => ({
+	tileKey3D: (x: number, z: number, l: number) => `${x},${z},${l}`,
+	CHUNK_SIZE: 16,
 }));
 
 describe("harvestSystem", () => {

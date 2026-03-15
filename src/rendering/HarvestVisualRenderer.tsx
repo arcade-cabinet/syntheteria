@@ -6,78 +6,102 @@
  *   - The target structure shows dissolve particles (amber sparks rising)
  *   - On completion: material cubes float up and dissipate
  *
- * Reads from getActiveHarvests() and pushes particle effects via effectEvents.
- * This renderer emits harvest_tick particles each frame for active harvests,
- * and harvest_complete bursts when a harvest finishes.
+ * Uses useQuery(HarvestOp) — reacts to Koota entity changes automatically.
+ * Particle emission runs in useFrame (inherently frame-rate tied).
+ * Position/timing data is looked up via getHarvestExtras(harvesterId).
  */
 
 import { useFrame } from "@react-three/fiber";
+import { useQuery } from "koota/react";
 import { useRef } from "react";
-import * as THREE from "three";
-import {
-	type ActiveHarvest,
-	getActiveHarvests,
-} from "../systems/harvestSystem";
+import { HarvestOp } from "../ecs/traits";
+import { getHarvestExtras } from "../systems/harvestSystem";
 import { pushEffect } from "./particles/effectEvents";
 
 /** How often to emit dissolve particles (every N frames) */
 const PARTICLE_EMIT_INTERVAL = 8;
 
 /** Track which harvests we've seen to detect completions */
-const knownHarvests = new Map<number, ActiveHarvest>();
+interface HarvestSnapshot {
+	structureKey: number;
+	targetX: number;
+	targetZ: number;
+}
+const knownHarvests = new Map<string, HarvestSnapshot>();
 
 export function HarvestVisualRenderer() {
 	const frameCountRef = useRef(0);
+	const harvestEntities = useQuery(HarvestOp);
 
 	useFrame(() => {
 		frameCountRef.current++;
-		const harvests = getActiveHarvests();
+
+		// Build a set of current harvesterIds for completion detection
+		const currentIds = new Set(
+			harvestEntities.map((e) => e.get(HarvestOp)?.harvesterId ?? ""),
+		);
 
 		// Detect completed harvests (were known, now gone)
-		for (const [structureId, prev] of knownHarvests) {
-			const stillActive = harvests.some((h) => h.structureId === structureId);
-			if (!stillActive) {
+		for (const [harvesterId, snap] of knownHarvests) {
+			if (!currentIds.has(harvesterId)) {
 				// Harvest completed — emit completion burst
 				pushEffect({
 					type: "harvest_complete",
-					x: prev.targetX ?? 0,
+					x: snap.targetX,
 					y: 0,
-					z: prev.targetZ ?? 0,
+					z: snap.targetZ,
 					intensity: 1.0,
 				});
-				knownHarvests.delete(structureId);
+				knownHarvests.delete(harvesterId);
 			}
 		}
 
-		// Emit dissolve particles for active harvests (key by structureId or synthetic id for floor)
+		// Emit dissolve particles for active harvests
 		if (frameCountRef.current % PARTICLE_EMIT_INTERVAL === 0) {
-			for (const harvest of harvests) {
-				const key =
-					harvest.structureId ??
-					harvest.targetX * 31 +
-						harvest.targetZ * 17 +
-						(harvest.level ?? 0) * 7;
-				knownHarvests.set(key, { ...harvest });
+			for (const entity of harvestEntities) {
+				const op = entity.get(HarvestOp);
+				if (!op) continue;
+				const extras = getHarvestExtras(op.harvesterId);
+				if (!extras) continue;
 
-				const x = harvest.targetX ?? 0;
-				const z = harvest.targetZ ?? 0;
+				const structureKey =
+					op.structureId !== 0
+						? op.structureId
+						: extras.targetX * 31 +
+							extras.targetZ * 17 +
+							(extras.level ?? 0) * 7;
+
+				knownHarvests.set(op.harvesterId, {
+					structureKey,
+					targetX: extras.targetX,
+					targetZ: extras.targetZ,
+				});
+
 				pushEffect({
 					type: "harvest_tick",
-					x,
+					x: extras.targetX,
 					y: 0,
-					z,
-					intensity:
-						1 - (harvest.ticksRemaining ?? 0) / (harvest.totalTicks ?? 1),
+					z: extras.targetZ,
+					intensity: 1 - op.ticksRemaining / (extras.totalTicks || 1),
 				});
 			}
 		}
 
-		// Update known harvests
-		for (const harvest of harvests) {
-			const key =
-				harvest.structureId ??
-				harvest.targetX * 31 + harvest.targetZ * 17 + (harvest.level ?? 0) * 7;
-			knownHarvests.set(key, { ...harvest });
+		// Update known harvests for next frame's completion detection
+		for (const entity of harvestEntities) {
+			const op = entity.get(HarvestOp);
+			if (!op) continue;
+			const extras = getHarvestExtras(op.harvesterId);
+			if (!extras) continue;
+			const structureKey =
+				op.structureId !== 0
+					? op.structureId
+					: extras.targetX * 31 + extras.targetZ * 17 + (extras.level ?? 0) * 7;
+			knownHarvests.set(op.harvesterId, {
+				structureKey,
+				targetX: extras.targetX,
+				targetZ: extras.targetZ,
+			});
 		}
 	});
 

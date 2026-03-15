@@ -20,8 +20,13 @@
  */
 
 import { getDatabaseSync } from "../db/runtime";
-import { Identity, Unit, WorldPosition } from "../ecs/traits";
-import { units } from "../ecs/world";
+import type { Entity } from "../ecs/traits";
+import {
+	HarvestOp as HarvestOpTrait,
+	Identity,
+	WorldPosition,
+} from "../ecs/traits";
+import { harvestOps, units, world } from "../ecs/world";
 import { writeTileDelta } from "../world/gen/persist";
 import { CHUNK_SIZE, tileKey3D } from "../world/gen/types";
 import { invalidateChunk } from "../world/gen/worldGrid";
@@ -71,6 +76,48 @@ const activeHarvests: ActiveHarvest[] = [];
 const consumedStructureIds = new Set<number>();
 const consumedFloorTiles = new Set<string>();
 
+// W2: Koota entity index — keyed by harvesterId
+const _harvestOpIndex = new Map<string, Entity>();
+
+// ─── W2: Koota entity helpers ─────────────────────────────────────────────────
+
+function spawnHarvestOpEntity(
+	harvesterId: string,
+	structureId: number,
+	ticksRemaining: number,
+	harvestType: "structure" | "floor",
+): void {
+	// Destroy any existing entity for this harvester
+	const existing = _harvestOpIndex.get(harvesterId);
+	if (existing?.isAlive()) existing.destroy();
+
+	const entity = world.spawn(HarvestOpTrait);
+	entity.set(HarvestOpTrait, {
+		harvesterId,
+		structureId,
+		ticksRemaining,
+		harvestType,
+	});
+	_harvestOpIndex.set(harvesterId, entity);
+}
+
+function destroyHarvestOpEntity(harvesterId: string): void {
+	const entity = _harvestOpIndex.get(harvesterId);
+	if (entity?.isAlive()) entity.destroy();
+	_harvestOpIndex.delete(harvesterId);
+}
+
+function updateHarvestOpTicks(
+	harvesterId: string,
+	ticksRemaining: number,
+): void {
+	const entity = _harvestOpIndex.get(harvesterId);
+	if (!entity?.isAlive()) return;
+	const cur = entity.get(HarvestOpTrait);
+	if (!cur) return;
+	entity.set(HarvestOpTrait, { ...cur, ticksRemaining });
+}
+
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 /**
@@ -106,6 +153,8 @@ export function startHarvest(
 		targetX,
 		targetZ,
 	});
+
+	spawnHarvestOpEntity(harvesterId, structureId, totalTicks, "structure");
 
 	queueThought("harvest_instinct");
 	return true;
@@ -151,6 +200,8 @@ export function startFloorHarvest(
 		targetZ: tileZ,
 	});
 
+	spawnHarvestOpEntity(harvesterId, 0, totalTicks, "floor");
+
 	queueThought("harvest_instinct");
 	return true;
 }
@@ -163,6 +214,7 @@ export function cancelHarvest(harvesterId: string) {
 	if (index >= 0) {
 		activeHarvests.splice(index, 1);
 	}
+	destroyHarvestOpEntity(harvesterId);
 }
 
 /**
@@ -170,6 +222,16 @@ export function cancelHarvest(harvesterId: string) {
  */
 export function getActiveHarvests(): readonly ActiveHarvest[] {
 	return activeHarvests;
+}
+
+/**
+ * Get harvest position/timing data for a bot by harvesterId.
+ * Used by HarvestVisualRenderer to get fields not stored in the Koota entity.
+ */
+export function getHarvestExtras(
+	harvesterId: string,
+): ActiveHarvest | undefined {
+	return activeHarvests.find((h) => h.harvesterId === harvesterId);
 }
 
 /**
@@ -208,6 +270,11 @@ export function getConsumedFloorTiles(): ReadonlySet<string> {
  * Reset harvest state — call on new game/load.
  */
 export function resetHarvestSystem() {
+	// Destroy all HarvestOp Koota entities
+	for (const e of Array.from(harvestOps)) {
+		if (e.isAlive()) e.destroy();
+	}
+	_harvestOpIndex.clear();
 	activeHarvests.length = 0;
 	consumedStructureIds.clear();
 	consumedFloorTiles.clear();
@@ -232,6 +299,13 @@ export function rehydrateHarvestState(
 	activeHarvests.length = 0;
 	for (const h of harvests) {
 		activeHarvests.push(h);
+		const harvestType = h.isFloorHarvest ? "floor" : ("structure" as const);
+		spawnHarvestOpEntity(
+			h.harvesterId,
+			h.structureId ?? 0,
+			h.ticksRemaining,
+			harvestType,
+		);
 	}
 }
 
@@ -270,6 +344,7 @@ export function harvestSystem(tick?: number) {
 		);
 		if (!harvester) {
 			activeHarvests.splice(i, 1);
+			destroyHarvestOpEntity(harvest.harvesterId);
 			continue;
 		}
 
@@ -283,6 +358,7 @@ export function harvestSystem(tick?: number) {
 		}
 
 		harvest.ticksRemaining--;
+		updateHarvestOpTicks(harvest.harvesterId, harvest.ticksRemaining);
 
 		if (harvest.ticksRemaining <= 0) {
 			// Harvest complete — roll yield and deposit resources
@@ -341,6 +417,7 @@ export function harvestSystem(tick?: number) {
 			} else {
 				consumedStructureIds.add(harvest.structureId!);
 			}
+			destroyHarvestOpEntity(harvest.harvesterId);
 			activeHarvests.splice(i, 1);
 		}
 	}

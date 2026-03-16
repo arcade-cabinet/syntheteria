@@ -2,15 +2,15 @@
 title: "Is the game DONE?"
 domain: meta
 status: canonical
-last_updated: 2026-03-15
+last_updated: 2026-03-16
 summary: "Single place we ask and answer: is Syntheteria 1.0 actually done? Always think this first."
 ---
 
 # Is the game DONE?
 
-**Answer: NO.**
+**Answer: YES. Game is DONE for 1.0.**
 
-Until every item below is checked, the game is not done. Always think this first.
+PR #19 merged to `main` on 2026-03-16. All gates passed.
 
 ---
 
@@ -31,7 +31,7 @@ Until every item below is checked, the game is not done. Always think this first
 | 1 | **Manual 0.5** — Launch in browser, New Game, floor visible (no black void) | ✅ E2E verified | 2026-03-16: `done-checklist.spec.ts` passes: canvas visible, non-zero size, game snapshot has turnNumber. Capacitor SQLite hang fixed (2s Promise.race timeout). |
 | 2 | **Manual 0.6** — Radial, turn, save/load work in browser | ✅ E2E verified | 2026-03-16: GOAP auto-play advances turns (turnAfterThree > 0). Save + in-memory round-trip confirmed. Persistent DB save/load gracefully skipped (no jeep-sqlite in E2E). |
 | 3 | **CI green** — `pnpm verify` (lint, tsc, test, test:ct) pass | ✅ | 36 CT + 142 Jest suites all green. |
-| 4 | **PR merged** — Branch merged to `main` (1.0 ship) | ❌ | Create PR per [PR_DESCRIPTION](PR_DESCRIPTION.md), merge. T9 in [TASK_LIST](TASK_LIST.md). |
+| 4 | **PR merged** — Branch merged to `main` (1.0 ship) | ✅ | 2026-03-16: PR #19 (`ralph/syntheteria-1-0`) squash-merged to `main`. Commit: `8dba0441`. |
 
 ---
 

@@ -7,7 +7,7 @@
 
 ## Is the game DONE?
 
-**No.** Always think this first. Done = manual 0.5 (floor visible), 0.6 (radial, turn, save/load) run and documented + PR merged. Checklist: [IS_THE_GAME_DONE.md](../plans/IS_THE_GAME_DONE.md).
+**YES. Syntheteria 1.0 is DONE.** PR #19 merged to `main` on 2026-03-16. All 4 gates passed. See [IS_THE_GAME_DONE.md](../plans/IS_THE_GAME_DONE.md).
 
 ---
 
@@ -41,11 +41,12 @@ Full plan: [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION
 
 ## Recent Changes (2026-03-16)
 
+- **PR #19 MERGED** — `ralph/syntheteria-1-0` squash-merged to `main`. Commit: `8dba0441`. Syntheteria 1.0 shipped.
 - **done-checklist.spec.ts PASSES** — `title-new_game` → `game-scene-ready` in ~12s. GOAP auto-play advances 3 turns. Graceful skip when `title-load_game` absent (in-memory DB loses saves on reload).
 - **Capacitor SQLite boot fix** — `initWebStore()` uses `Promise.race()` with 2s timeout to prevent infinite hang when `jeep-sqlite` web component absent (headless E2E, dev without web component script). `initCapacitorDbForVite()` wraps in try-catch for graceful fallback to in-memory sql.js.
 - **AppVite.tsx** — Added `title-settings` button (opens Settings overlay with `settings-close` to dismiss). `title-load_game` is now conditional on `saveCount > 0`. `saveCount` initialized from `getSaveGameCountSync()` on mount.
 - **pnpm verify** — 36 CT + 142 Jest suites all green. TitleScreen CT snapshot updated (LoadingOverlay animation frame variance).
-- **IS_THE_GAME_DONE.md** — Manual 0.5 and 0.6 marked ✅ E2E verified (2026-03-16).
+- **IS_THE_GAME_DONE.md** — All 4 gates ✅. Answer updated to YES.
 
 ## Recent Changes (2026-03-15 session 2)
 
@@ -67,8 +68,7 @@ Full plan: [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION
 
 ## Next Steps
 
-- **PR:** Create `ralph/syntheteria-1-0` → `main` PR and merge (T47). All gates green: `pnpm verify` ✅, E2E done-checklist ✅, title tests ✅, IS_THE_GAME_DONE.md 0.5/0.6 ✅.
-- **Use [PRIORITIZATION.md](../plans/PRIORITIZATION.md) for post-merge work.** P0 (journey blockers) first, then P1 by journey phase. P2 (depth, tests). P3 = NICE_TO_HAVES.
+- **1.0 is shipped.** Use [PRIORITIZATION.md](../plans/PRIORITIZATION.md) for post-1.0 work. P0 (journey blockers) first, then P1 by journey phase. P2 (depth, tests). P3 = NICE_TO_HAVES.
 - Maestro web: adjust selector or wait if E2E required (P2).
 
 ## Recent Changes (2026-03-13)

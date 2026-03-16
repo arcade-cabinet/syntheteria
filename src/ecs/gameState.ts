@@ -1,4 +1,29 @@
+/**
+ * @module gameState
+ *
+ * Core game loop and snapshot orchestrator. Runs a fixed 60fps simulation tick
+ * that sequences all gameplay systems and builds a unified GameSnapshot for UI consumption.
+ *
+ * @exports GameSnapshot - Composite state interface consumed by all UI panels
+ * @exports subscribe - Register a listener for snapshot changes
+ * @exports getSnapshot - Get the current lazily-built GameSnapshot
+ * @exports simulationTick - Execute one frame of the simulation pipeline
+ * @exports setGameSpeed - Adjust simulation speed multiplier
+ * @exports togglePause / setPaused / isPaused - Pause control
+ * @exports registerAudioTick - Callback registration for Tone.js audio tick (avoids ESM import)
+ * @exports resetGameState - Full reset for new game
+ *
+ * @dependencies ai, combat, enemies, exploration, fabrication, fragmentMerge, hacking,
+ *   harvestSystem, lightning, movement, narrative, networkOverlay, power, repair,
+ *   resources, signalNetworkSystem, weather, persistenceSystem, territorySystem,
+ *   poiSystem, runtimeState, session, structuralSpace, traits, world
+ * @consumers GameUI, GameHUD, TopBar, ResourceStrip, Notifications, ThoughtOverlay,
+ *   Minimap, PlacementHUD, ResourceBreakdownPanel, SelectedInfo, BuildToolbar,
+ *   SlideOutPanel, HarvestProgressOverlay, CityRenderer, UnitRosterPanel,
+ *   radialProviders, playtestBridge, initialization
+ */
 import { aiSystem } from "../ai";
+import { botSpeechSystem } from "../systems/botSpeech";
 import {
 	type CombatEvent,
 	combatSystem,
@@ -12,13 +37,22 @@ import {
 	getActiveJobs,
 } from "../systems/fabrication";
 import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge";
+import { governorSystem } from "../systems/governorSystem";
 import { hackingSystem } from "../systems/hacking";
+import { hackingCaptureSystem } from "../systems/hackingSystem";
+import { harvestSystem, resetHarvestSystem } from "../systems/harvestSystem";
+import { lightningSystem, resetLightningSystem } from "../systems/lightning";
+import { motorPoolUpgradeSystem } from "../systems/motorPool";
 import { movementSystem } from "../systems/movement";
 import {
 	getActiveThought,
 	narrativeSystem,
 	type Thought,
 } from "../systems/narrative";
+import {
+	networkOverlaySystem,
+	resetNetworkOverlay,
+} from "../systems/networkOverlay";
 import {
 	getPowerSnapshot,
 	type PowerSnapshot,
@@ -30,29 +64,43 @@ import {
 	type ResourcePool,
 	resourceSystem,
 } from "../systems/resources";
+import {
+	resetRivalEncounterState,
+	rivalEncounterSystem,
+} from "../systems/rivalEncounters";
 import { signalNetworkSystem } from "../systems/signalNetworkSystem";
+import {
+	resetTerritorySystem,
+	territorySystem,
+} from "../systems/territorySystem";
+import {
+	getWeatherSnapshot,
+	resetWeatherSystem,
+	type WeatherSnapshot,
+	weatherSystem,
+} from "../systems/weather";
 import { persistenceSystem } from "../world/persistenceSystem";
 import { poiSystem } from "../world/poiSystem";
-import { getRuntimeState, setRuntimeTick } from "../world/runtimeState";
 import {
-	getAllFragments,
-	type MapFragment,
+	getRuntimeState,
+	setRuntimeTick,
+	subscribeRuntimeState,
+} from "../world/runtimeState";
+import { getActiveWorldSession as getLoadedWorldSession } from "../world/session";
+import type { NearbyPoiContext } from "../world/snapshots";
+import {
+	getStructuralFragments,
+	type StructuralFragment as MapFragment,
 	updateDisplayOffsets,
-} from "./terrain";
-import {
-	Building,
-	Identity,
-	MapFragment as MapFragmentTrait,
-	Narrative,
-	Unit,
-	WorldPosition,
-} from "./traits";
-import { buildings, units, world } from "./world";
+} from "../world/structuralSpace";
+import { Identity } from "./traits";
+import { units } from "./world";
 
 export interface GameSnapshot {
 	tick: number;
 	gameSpeed: number;
 	paused: boolean;
+	worldReady: boolean;
 	fragments: MapFragment[];
 	unitCount: number;
 	enemyCount: number;
@@ -64,12 +112,16 @@ export interface GameSnapshot {
 	activeThought: Thought | null;
 	activeScene: "world" | "city";
 	activeCityInstanceId: number | null;
+	cityKitLabOpen: boolean;
 	nearbyPoiName: string | null;
+	nearbyPoi: NearbyPoiContext | null;
+	weather: WeatherSnapshot;
 }
 
 let tick = 0;
 let gameSpeed = 1.0;
 let paused = false;
+let worldReady = false;
 let lastMergeEvents: MergeEvent[] = [];
 const listeners = new Set<() => void>();
 let snapshot: GameSnapshot | null = null;
@@ -78,20 +130,6 @@ const FIXED_SIM_STEP_SECONDS = 1 / 60;
 function buildSnapshot(): GameSnapshot {
 	let playerCount = 0;
 	let enemyCount = 0;
-
-	if (tick % 60 === 0) {
-		console.log("Total entities in world:", world.entities.length);
-		for (const e of world.entities) {
-			const traits = [];
-			if (e.has(Identity)) traits.push("Identity");
-			if (e.has(Unit)) traits.push("Unit");
-			if (e.has(Building)) traits.push("Building");
-			if (e.has(WorldPosition)) traits.push("WorldPosition");
-			if (e.has(MapFragmentTrait)) traits.push("MapFragment");
-			if (e.has(Narrative)) traits.push("Narrative");
-			console.log(`Entity ${e.id}: [${traits.join(", ")}]`);
-		}
-	}
 
 	for (const u of units) {
 		const id = u.get(Identity);
@@ -103,7 +141,8 @@ function buildSnapshot(): GameSnapshot {
 		tick,
 		gameSpeed,
 		paused,
-		fragments: getAllFragments(),
+		worldReady,
+		fragments: getStructuralFragments(),
 		unitCount: playerCount,
 		enemyCount,
 		mergeEvents: lastMergeEvents,
@@ -114,7 +153,10 @@ function buildSnapshot(): GameSnapshot {
 		activeThought: getActiveThought(),
 		activeScene: getRuntimeState().activeScene,
 		activeCityInstanceId: getRuntimeState().activeCityInstanceId,
+		cityKitLabOpen: getRuntimeState().cityKitLabOpen,
 		nearbyPoiName: getRuntimeState().nearbyPoi?.name ?? null,
+		nearbyPoi: getRuntimeState().nearbyPoi,
+		weather: getWeatherSnapshot(),
 	};
 }
 
@@ -142,49 +184,110 @@ export function togglePause() {
 	notify();
 }
 
+export function setPaused(value: boolean) {
+	if (paused === value) return;
+	paused = value;
+	snapshot = null;
+	notify();
+}
+
+export function isPaused() {
+	return paused;
+}
+
+export function isWorldReady(): boolean {
+	return worldReady;
+}
+
+export function setWorldReady(ready: boolean) {
+	worldReady = ready;
+	snapshot = null;
+	notify();
+}
+
 function notify() {
 	for (const listener of listeners) {
 		listener();
 	}
 }
 
+subscribeRuntimeState(() => {
+	snapshot = null;
+	notify();
+});
+
 export function simulationTick() {
 	if (paused) {
+		return;
+	}
+	if (!getLoadedWorldSession()) {
 		return;
 	}
 
 	tick++;
 	setRuntimeTick(tick);
 
+	if (!worldReady) {
+		snapshot = null;
+		notify();
+		return;
+	}
+
 	const delta = FIXED_SIM_STEP_SECONDS * gameSpeed;
 
 	enemySystem();
 	aiSystem(delta, tick);
+	governorSystem(tick);
 	movementSystem(delta, gameSpeed);
 	explorationSystem();
 	lastMergeEvents = fragmentMergeSystem();
 	powerSystem(tick);
+	weatherSystem(tick, gameSpeed, getPowerSnapshot().stormIntensity);
+	lightningSystem(tick, getPowerSnapshot().stormIntensity);
 	signalNetworkSystem();
+	networkOverlaySystem(tick);
 	resourceSystem();
+	harvestSystem(tick);
 	repairSystem();
 	fabricationSystem();
 	combatSystem();
 	hackingSystem();
+	hackingCaptureSystem();
+	motorPoolUpgradeSystem();
+	rivalEncounterSystem(tick);
+	territorySystem();
 	narrativeSystem();
+	botSpeechSystem(tick, []);
 	poiSystem();
 	persistenceSystem(tick);
+	if (_audioTickFn) _audioTickFn();
 	updateDisplayOffsets();
 
 	snapshot = null;
 	notify();
 }
 
+// ─── Audio tick registration ─────────────────────────────────────────────────
+// Audio uses Tone.js (ESM-only), so we use a callback registration pattern
+// instead of a direct import to avoid breaking Jest's CJS transform chain.
+let _audioTickFn: (() => void) | null = null;
+export function registerAudioTick(fn: () => void) {
+	_audioTickFn = fn;
+}
+
 export function resetGameState() {
 	tick = 0;
 	gameSpeed = 1.0;
 	paused = false;
+	worldReady = false;
 	lastMergeEvents = [];
 	snapshot = null;
+	resetWeatherSystem();
+	resetLightningSystem();
+	resetNetworkOverlay();
+	resetHarvestSystem();
+	resetRivalEncounterState();
+	resetTerritorySystem();
 }
 
 const simulationInterval = setInterval(simulationTick, 1000 / 60);

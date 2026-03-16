@@ -1,0 +1,45 @@
+# Maestro flow: Onboarding (web)
+# Same as onboarding.yaml but launches URL. Set MAESTRO_WEB_URL (or config/e2e.json webUrl).
+# Run: scripts/run-maestro-e2e.sh --web or maestro test -e MAESTRO_WEB_URL=<url> maestro/flows/onboarding-web.yaml
+url: "${MAESTRO_WEB_URL}"
+---
+- launchApp:
+    clearState: true
+- assertVisible: "SYNTHETERIA"
+- assertVisible: "New Game"
+- tapOn: "New Game"
+- assertVisible: "Campaign Initialization"
+- tapOn:
+    id: "new-game-confirm"
+- extendedWaitUntil:
+    visible:
+      id: "game-scene-ready"
+    timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: "briefing-bubble-selected-unit"
+    timeout: 15000
+- longPressOn:
+    point: "50%,45%"
+- extendedWaitUntil:
+    visible:
+      id: "radial-menu"
+    timeout: 10000
+- assertVisible:
+    id: "radial-petal-label-move"
+- assertVisible:
+    id: "radial-petal-label-survey"
+- tapOn:
+    point: "5%,5%"
+- extendedWaitUntil:
+    visible:
+      id: "briefing-bubble-nearby-site"
+    timeout: 15000
+- tapOn:
+    id: "briefing-bubble-nearby-site"
+- extendedWaitUntil:
+    visible:
+      id: "city-site-close"
+    timeout: 5000
+- tapOn:
+    id: "city-site-close"

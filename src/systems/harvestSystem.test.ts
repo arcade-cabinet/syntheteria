@@ -1,0 +1,165 @@
+/**
+ * @jest-environment node
+ */
+import {
+	getActiveHarvests,
+	getConsumedFloorTiles,
+	harvestSystem,
+	isFloorTileConsumed,
+	resetHarvestSystem,
+	startFloorHarvest,
+} from "./harvestSystem";
+
+// Mock dependencies
+const mockAddResource = jest.fn();
+const mockPushHarvestYield = jest.fn();
+const mockQueueThought = jest.fn();
+
+jest.mock("./resources", () => ({
+	addResource: (...args: unknown[]) => mockAddResource(...args),
+}));
+jest.mock("./harvestEvents", () => ({
+	expireHarvestEvents: jest.fn(),
+	pushHarvestYield: (...args: unknown[]) => mockPushHarvestYield(...args),
+}));
+jest.mock("./narrative", () => ({
+	queueThought: (...args: unknown[]) => mockQueueThought(...args),
+}));
+jest.mock("./turnSystem", () => ({
+	getTurnState: jest.fn(() => ({ turnNumber: 0 })),
+}));
+
+// Minimal Koota entity stub — used by spawnHarvestOpEntity helpers
+function makeMockEntity() {
+	const data: Record<string, unknown> = {};
+	return {
+		isAlive: jest.fn(() => true),
+		destroy: jest.fn(),
+		set: jest.fn((_trait: unknown, value: unknown) => {
+			Object.assign(data, value as object);
+		}),
+		get: jest.fn(() => data),
+	};
+}
+
+jest.mock("../ecs/world", () => {
+	const mockUnit = { get: () => ({ id: "fabricator_1", x: 5, y: 0, z: 5 }) };
+	const harvestOpEntities: ReturnType<typeof makeMockEntity>[] = [];
+	return {
+		units: [mockUnit],
+		world: {
+			spawn: jest.fn(() => {
+				const e = makeMockEntity();
+				harvestOpEntities.push(e);
+				return e;
+			}),
+			query: jest.fn(() => harvestOpEntities.filter((e) => e.isAlive())),
+		},
+		harvestOps: {
+			[Symbol.iterator]: () =>
+				harvestOpEntities.filter((e) => e.isAlive())[Symbol.iterator](),
+		},
+	};
+});
+
+jest.mock("../ecs/traits", () => ({
+	Identity: { id: "Identity" },
+	WorldPosition: "WorldPosition",
+	HarvestOp: { name: "HarvestOp" },
+}));
+
+jest.mock("../db/runtime", () => ({ getDatabaseSync: jest.fn() }));
+jest.mock("../world/session", () => ({
+	getActiveWorldSession: jest.fn(() => null),
+}));
+jest.mock("../world/gen/persist", () => ({ writeTileDelta: jest.fn() }));
+jest.mock("../world/gen/worldGrid", () => ({ invalidateChunk: jest.fn() }));
+jest.mock("../world/gen/types", () => ({
+	tileKey3D: (x: number, z: number, l: number) => `${x},${z},${l}`,
+	CHUNK_SIZE: 16,
+}));
+
+describe("harvestSystem", () => {
+	beforeEach(() => {
+		jest.clearAllMocks();
+		resetHarvestSystem();
+	});
+
+	describe("startFloorHarvest", () => {
+		it("starts floor harvest and adds to active harvests", () => {
+			const ok = startFloorHarvest("fabricator_1", 3, 4, 0, "metal_panel");
+			expect(ok).toBe(true);
+			expect(mockQueueThought).toHaveBeenCalledWith("harvest_instinct");
+			expect(getActiveHarvests().length).toBe(1);
+			expect(getActiveHarvests()[0]?.isFloorHarvest).toBe(true);
+			expect(getActiveHarvests()[0]?.floorMaterial).toBe("metal_panel");
+			expect(getActiveHarvests()[0]?.targetX).toBe(3);
+			expect(getActiveHarvests()[0]?.targetZ).toBe(4);
+		});
+
+		it("rejects duplicate harvest on same tile", () => {
+			startFloorHarvest("fabricator_1", 3, 4, 0, "metal_panel");
+			const ok2 = startFloorHarvest("fabricator_1", 3, 4, 0, "metal_panel");
+			expect(ok2).toBe(false);
+		});
+
+		it("rejects non-harvestable floor material", () => {
+			const ok = startFloorHarvest("fabricator_1", 3, 4, 0, "unknown_material");
+			expect(ok).toBe(false);
+		});
+	});
+
+	describe("isFloorTileConsumed", () => {
+		it("returns false before harvest completes", () => {
+			startFloorHarvest("fabricator_1", 3, 4, 0, "metal_panel");
+			expect(isFloorTileConsumed(3, 4, 0)).toBe(false);
+		});
+	});
+
+	describe("harvestSystem tick (floor harvest completion)", () => {
+		it("completes floor harvest and marks tile consumed after ticks", () => {
+			startFloorHarvest("fabricator_1", 5, 5, 0, "metal_panel");
+			const harvest = getActiveHarvests()[0];
+			const totalTicks = harvest?.totalTicks ?? 80;
+
+			for (let t = 0; t < totalTicks; t++) {
+				harvestSystem(t);
+			}
+
+			expect(getActiveHarvests().length).toBe(0);
+			expect(isFloorTileConsumed(5, 5, 0)).toBe(true);
+			expect(getConsumedFloorTiles().has("5,5,0")).toBe(true);
+			expect(mockAddResource).toHaveBeenCalled();
+			expect(mockPushHarvestYield).toHaveBeenCalled();
+		});
+
+		it("harvest completion adds resources to pool (Exploit pillar — resources visible)", () => {
+			startFloorHarvest("fabricator_1", 5, 5, 0, "metal_panel");
+			const harvest = getActiveHarvests()[0];
+			const totalTicks = harvest?.totalTicks ?? 80;
+			for (let t = 0; t < totalTicks; t++) harvestSystem(t);
+
+			expect(mockAddResource).toHaveBeenCalled();
+			const calls = mockAddResource.mock.calls as [string, number][];
+			expect(calls.length).toBeGreaterThan(0);
+			for (const [type, amount] of calls) {
+				expect(typeof type).toBe("string");
+				expect(amount).toBeGreaterThan(0);
+			}
+		});
+	});
+
+	describe("resetHarvestSystem", () => {
+		it("clears consumed floor tiles", () => {
+			// Unit is at (5, 0, 5) per mock — harvest target must be within 3 units
+			startFloorHarvest("fabricator_1", 5, 5, 0, "metal_panel");
+			const harvest = getActiveHarvests()[0];
+			const totalTicks = harvest?.totalTicks ?? 80;
+			for (let t = 0; t < totalTicks; t++) harvestSystem(t);
+			expect(isFloorTileConsumed(5, 5, 0)).toBe(true);
+
+			resetHarvestSystem();
+			expect(isFloorTileConsumed(5, 5, 0)).toBe(false);
+		});
+	});
+});

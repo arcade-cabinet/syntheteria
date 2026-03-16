@@ -1,0 +1,74 @@
+{
+	"factions": {
+		"reclaimers": {
+			"displayName": "Reclaimers",
+			"color": "#f6c56a",
+			"description": "Preservation-focused. Seek to restore and maintain the ecumenopolis infrastructure.",
+			"personality": "cautious",
+			"tradeWillingness": 0.7,
+			"aggressionBase": 0.2
+		},
+		"volt_collective": {
+			"displayName": "Volt Collective",
+			"color": "#8be6ff",
+			"description": "Power-obsessed. Control energy infrastructure and storm harvesting technology.",
+			"personality": "pragmatic",
+			"tradeWillingness": 0.5,
+			"aggressionBase": 0.4
+		},
+		"signal_choir": {
+			"displayName": "Signal Choir",
+			"color": "#d4a0ff",
+			"description": "Information supremacists. Expand through hacking and signal network dominance.",
+			"personality": "manipulative",
+			"tradeWillingness": 0.3,
+			"aggressionBase": 0.5
+		},
+		"iron_creed": {
+			"displayName": "Iron Creed",
+			"color": "#ff8f8f",
+			"description": "Territorial expansionists. Believe in control through physical dominance.",
+			"personality": "aggressive",
+			"tradeWillingness": 0.2,
+			"aggressionBase": 0.7
+		}
+	},
+	"standings": {
+		"hostile": {
+			"min": -100,
+			"max": -50,
+			"label": "Hostile",
+			"color": "#ff4444"
+		},
+		"unfriendly": {
+			"min": -50,
+			"max": -10,
+			"label": "Unfriendly",
+			"color": "#ff8f8f"
+		},
+		"neutral": {
+			"min": -10,
+			"max": 10,
+			"label": "Neutral",
+			"color": "#888888"
+		},
+		"cordial": { "min": 10, "max": 50, "label": "Cordial", "color": "#f6c56a" },
+		"allied": { "min": 50, "max": 100, "label": "Allied", "color": "#6ff3c8" }
+	},
+	"standingChanges": {
+		"trade_completed": 5,
+		"trade_rejected": -3,
+		"territory_encroachment": -8,
+		"unit_attacked": -20,
+		"building_destroyed": -15,
+		"alliance_proposed": 3,
+		"shared_enemy": 10,
+		"hacking_detected": -12
+	},
+	"tradeIncomeSharePercent": 15,
+	"allianceFogSharing": true,
+	"warBorderContestRadius": 3,
+	"breakTradePenalty": -20,
+	"breakAlliancePenalty": -40,
+	"standingDecayPerTurn": 1
+}

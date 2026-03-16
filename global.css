@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Focus-visible ring for keyboard navigation — all interactive elements */
+:focus-visible {
+	outline: 2px solid #8be6ff;
+	outline-offset: 2px;
+}
+
+/* Suppress focus ring for mouse/touch interactions */
+:focus:not(:focus-visible) {
+	outline: none;
+}

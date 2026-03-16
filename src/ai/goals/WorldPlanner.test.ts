@@ -9,6 +9,7 @@ import { world } from "../../ecs/world";
 import { CultistAgent } from "../agents/CultistAgent";
 import { HostileMachineAgent } from "../agents/HostileMachineAgent";
 import { PlayerUnitAgent } from "../agents/PlayerUnitAgent";
+import { RivalScoutAgent } from "../agents/RivalScoutAgent";
 import { planAgentTask } from "./WorldPlanner";
 
 function createMockEntity({
@@ -18,7 +19,7 @@ function createMockEntity({
 	signalConnected = true,
 	targetId = null,
 }: {
-	faction: "player" | "feral" | "cultist";
+	faction: string;
 	id: string;
 	position: { x: number; y: number; z: number };
 	signalConnected?: boolean;
@@ -127,5 +128,91 @@ describe("planAgentTask", () => {
 		expect(decision?.task?.phase).toBe("approach");
 		expect(decision?.task?.payload.targetEntityId).toBe("feral-9");
 		expect(decision?.targetPosition).toEqual({ x: 6, y: 0, z: 0 });
+	});
+
+	it("plans rival scout patrol toward player when no threat assessment needed", () => {
+		const scout = createMockEntity({
+			faction: "reclaimers",
+			id: "scout-1",
+			position: { x: 30, y: 0, z: 30 },
+		});
+		const player = createMockEntity({
+			faction: "player",
+			id: "player-far",
+			position: { x: 10, y: 0, z: 10 },
+		});
+		const decision = planAgentTask({
+			tick: 700,
+			entity: scout,
+			agent: new RivalScoutAgent("scout-1"),
+			nearestPlayerTarget: player,
+		});
+
+		expect(decision?.task?.kind).toBe("move_to_point");
+		expect(decision?.task?.payload.scouting).toBe(true);
+	});
+
+	it("plans rival scout retreat when outmatched", () => {
+		const scout = createMockEntity({
+			faction: "volt_collective",
+			id: "scout-2",
+			position: { x: 10, y: 0, z: 10 },
+		});
+		const player = createMockEntity({
+			faction: "player",
+			id: "player-strong",
+			position: { x: 12, y: 0, z: 10 },
+		});
+		const decision = planAgentTask({
+			tick: 800,
+			entity: scout,
+			agent: new RivalScoutAgent("scout-2"),
+			nearestPlayerTarget: player,
+			scoutStrength: 1,
+			playerStrength: 3, // 1/3 = 0.33 < 0.6 threshold
+		});
+
+		expect(decision?.task?.kind).toBe("move_to_point");
+		expect(decision?.task?.payload.retreating).toBe(true);
+	});
+
+	it("plans rival scout engage when has numerical advantage", () => {
+		const scout = createMockEntity({
+			faction: "iron_creed",
+			id: "scout-3",
+			position: { x: 10, y: 0, z: 10 },
+		});
+		const player = createMockEntity({
+			faction: "player",
+			id: "player-weak",
+			position: { x: 12, y: 0, z: 10 },
+		});
+		const decision = planAgentTask({
+			tick: 900,
+			entity: scout,
+			agent: new RivalScoutAgent("scout-3"),
+			nearestPlayerTarget: player,
+			scoutStrength: 3,
+			playerStrength: 1, // 3/1 = 3.0 >= 1.5 threshold
+		});
+
+		expect(decision?.task?.kind).toBe("move_to_entity");
+		expect(decision?.task?.payload.targetEntityId).toBe("player-weak");
+	});
+
+	it("returns null for rival scout with no nearby player target", () => {
+		const scout = createMockEntity({
+			faction: "signal_choir",
+			id: "scout-4",
+			position: { x: 50, y: 0, z: 50 },
+		});
+		const decision = planAgentTask({
+			tick: 700,
+			entity: scout,
+			agent: new RivalScoutAgent("scout-4"),
+			nearestPlayerTarget: null,
+		});
+
+		expect(decision).toBeNull();
 	});
 });

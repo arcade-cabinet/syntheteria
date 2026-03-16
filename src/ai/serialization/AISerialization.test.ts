@@ -12,6 +12,10 @@ describe("AISerialization", () => {
 			entityId: "hauler-1",
 			role: "hauler",
 			status: "executing_task",
+			profile: {
+				steeringProfile: "aerial_support",
+				navigationProfile: "sector_aerial",
+			},
 			task: {
 				id: "task-1",
 				kind: "service_route",

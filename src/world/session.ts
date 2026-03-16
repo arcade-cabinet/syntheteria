@@ -1,28 +1,10 @@
-import type { SaveGameRecord } from "../db/saveGames";
-import type {
-	CampaignStateRecord,
-	CityInstanceRecord,
-	ResourceStateRecord,
-	WorldMapRecord,
-	WorldPointOfInterestRecord,
-	WorldTileRecord,
-} from "../db/worldPersistence";
-import type { NewGameConfig } from "./config";
+import type { WorldSessionSnapshot } from "./snapshots";
 
-export interface ActiveWorldSession {
-	saveGame: SaveGameRecord;
-	config: NewGameConfig;
-	worldMap: WorldMapRecord;
-	tiles: WorldTileRecord[];
-	pointsOfInterest: WorldPointOfInterestRecord[];
-	cityInstances: CityInstanceRecord[];
-	campaignState: CampaignStateRecord;
-	resourceState: ResourceStateRecord;
-}
+export type ActiveWorldSession = WorldSessionSnapshot;
 
-let activeWorldSession: ActiveWorldSession | null = null;
+let activeWorldSession: WorldSessionSnapshot | null = null;
 
-export function setActiveWorldSession(session: ActiveWorldSession) {
+export function setActiveWorldSession(session: WorldSessionSnapshot) {
 	activeWorldSession = session;
 }
 

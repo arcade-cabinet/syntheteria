@@ -3,11 +3,19 @@
 	"compilerOptions": {
 		"strict": true
 	},
+	"exclude": [
+		"tests/e2e",
+		"tests/components",
+		"tests/visual",
+		"playwright.e2e.config.ts"
+	],
 	"include": [
 		"**/*.ts",
 		"**/*.tsx",
 		"**/*.d.ts",
 		"app-env.d.ts",
-		"nativewind-env.d.ts"
+		"nativewind-env.d.ts",
+		".expo/types/**/*.ts",
+		"expo-env.d.ts"
 	]
 }

@@ -1,8 +1,14 @@
+import type {
+	BotNavigationProfile,
+	BotSteeringProfile,
+} from "../../bots/types";
+
 export type AgentRole =
 	| "player_unit"
 	| "hauler"
 	| "hostile_machine"
-	| "cultist";
+	| "cultist"
+	| "rival_scout";
 
 export type AgentStatus =
 	| "idle"
@@ -35,6 +41,10 @@ export interface AgentPersistenceState {
 	entityId: string;
 	role: AgentRole;
 	status: AgentStatus;
+	profile: {
+		steeringProfile: BotSteeringProfile;
+		navigationProfile: BotNavigationProfile;
+	};
 	task: AgentTaskState | null;
 	steering: AgentSteeringState;
 	memory: AgentMemoryState;

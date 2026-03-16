@@ -7,5 +7,19 @@
 	},
 	"hacking": {
 		"baseDifficulty": 10
+	},
+	"rivalEncounters": {
+		"minSpawnTick": 600,
+		"spawnIntervalTicks": 300,
+		"maxActiveScouts": 4,
+		"scoutSpeed": 1.8,
+		"fogEdgeDetectionRadius": 8,
+		"retreatThresholdRatio": 0.6,
+		"engageThresholdRatio": 1.5,
+		"scoutVisionRadius": 5,
+		"borderPatrolRadius": 12,
+		"firstContactCooldownTicks": 120,
+		"factions": ["reclaimers", "volt_collective", "signal_choir", "iron_creed"],
+		"spawnDistanceFromPlayer": 35
 	}
 }

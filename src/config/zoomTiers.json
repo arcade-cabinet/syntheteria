@@ -1,0 +1,49 @@
+{
+	"_comment": "Snap-to zoom tiers for mobile 4X viewport. Tiers define visual LOD transitions.",
+
+	"tiers": {
+		"tactical": {
+			"cellsAcross": 4.5,
+			"_comment": "Unit models, building details, terrain features, thick network lines with particles, resource markers with quantities",
+			"networkLineOpacity": 1.0,
+			"resourceMarkersVisible": true,
+			"structureDetail": "full",
+			"unitDetail": "full"
+		},
+		"default": {
+			"cellsAcross": 7.5,
+			"_comment": "Units as icons, buildings as silhouettes, terrain colors, medium network lines with glow, small resource dots",
+			"networkLineOpacity": 0.85,
+			"resourceMarkersVisible": true,
+			"structureDetail": "silhouette",
+			"unitDetail": "icon"
+		},
+		"strategic": {
+			"cellsAcross": 12,
+			"_comment": "Ownership colors, city icons, unit group indicators, thin steady network lines, no resource markers",
+			"networkLineOpacity": 0.6,
+			"resourceMarkersVisible": false,
+			"structureDetail": "icon",
+			"unitDetail": "badge"
+		},
+		"world": {
+			"cellsAcross": 22,
+			"_comment": "Full map overview, city dots only, faint tracery lines, no units visible",
+			"networkLineOpacity": 0.3,
+			"resourceMarkersVisible": false,
+			"structureDetail": "dot",
+			"unitDetail": "hidden"
+		}
+	},
+
+	"transitionDuration": 0.3,
+	"_comment_transitionDuration": "Seconds for smooth lerp between zoom tier boundaries",
+
+	"snapThreshold": 0.15,
+	"_comment_snapThreshold": "Fraction of tier range — if camera is within this fraction of a tier boundary, snap to that tier",
+
+	"doubleTapCycleOrder": ["tactical", "default", "strategic", "world"],
+
+	"minScreenTileWidth": 1,
+	"_comment_minScreenTileWidth": "Minimum 1px screen-space width for network lines at any zoom"
+}

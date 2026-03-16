@@ -1,0 +1,61 @@
+{
+	"pointsOfInterest": [
+		{
+			"type": "home_base",
+			"name": "Command Nexus",
+			"relativeQ": 0.5,
+			"relativeR": 0.5,
+			"discoveredAtStart": true
+		},
+		{
+			"type": "resource_depot",
+			"name": "Salvage Yard",
+			"relativeQ": 0.2,
+			"relativeR": 0.3,
+			"discoveredAtStart": false
+		},
+		{
+			"type": "research_site",
+			"name": "Signal Lab",
+			"relativeQ": 0.75,
+			"relativeR": 0.25,
+			"discoveredAtStart": false
+		},
+		{
+			"type": "faction_outpost",
+			"name": "Iron Creed Outpost",
+			"relativeQ": 0.8,
+			"relativeR": 0.7,
+			"discoveredAtStart": false
+		},
+		{
+			"type": "ruin",
+			"name": "Collapsed Sector",
+			"relativeQ": 0.3,
+			"relativeR": 0.8,
+			"discoveredAtStart": false
+		},
+		{
+			"type": "northern_cult_site",
+			"name": "Fracture Rift",
+			"relativeQ": 0.15,
+			"relativeR": 0.15,
+			"discoveredAtStart": false
+		},
+		{
+			"type": "deep_sea_gateway",
+			"name": "Sunken Conduit",
+			"relativeQ": 0.9,
+			"relativeR": 0.9,
+			"discoveredAtStart": false
+		}
+	],
+	"discoveryRadius": 5,
+	"discoveryFringeRadius": 2,
+	"foundableTypes": [
+		"home_base",
+		"resource_depot",
+		"research_site",
+		"science_campus"
+	]
+}

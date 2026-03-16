@@ -1,0 +1,26 @@
+# Maestro flow: 100-turn AI playtest
+# Ported from tests/e2e/ai-playtest-100turns.spec.ts
+# Long timeout: run with maestro test --env TIMEOUT=600000 or set in config.
+# Requires: dev build + connected device. clearState for fresh game.
+appId: com.arcadecabinet.syntheteria
+---
+- launchApp:
+    clearState: true
+- assertVisible: "SYNTHETERIA"
+- tapOn: "New Game"
+- assertVisible: "Campaign Initialization"
+- tapOn:
+    id: "new-game-confirm"
+- extendedWaitUntil:
+    visible:
+      id: "game-scene-ready"
+    timeout: 20000
+- assertNotVisible: "Render Error"
+- repeat:
+    times: 100
+    commands:
+      - tapOn: "End Turn"
+      - waitForAnimationToEnd:
+          timeout: 2000
+- assertVisible:
+    id: "game-scene-ready"

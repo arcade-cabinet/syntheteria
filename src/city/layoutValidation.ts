@@ -1,65 +1,42 @@
 import type { CityAssemblyContract, CityCell } from "./assemblyContract";
+import { getCityModelById } from "./catalog/cityCatalog";
+import type { CityLayoutIssueDefinition } from "./config/types";
 import { type CityLayoutPlan, getPlacementsForCell } from "./layoutPlan";
-import { type EdgeDirection, getCityAssetById } from "./moduleCatalog";
+import {
+	cityCellKey,
+	EDGE_DIRECTIONS,
+	getCityCell,
+	getCityNeighbor,
+} from "./topology";
 
-export interface CityLayoutIssue {
-	code:
-		| "entry_not_passable"
-		| "disconnected_passable_cell"
-		| "missing_floor"
-		| "missing_perimeter_structure"
-		| "room_missing_access"
-		| "prop_on_corridor"
-		| "roof_on_passable_cell";
-	message: string;
-	cellX?: number;
-	cellY?: number;
-}
-
-const EDGE_DELTAS: Record<EdgeDirection, { dx: number; dy: number }> = {
-	north: { dx: 0, dy: -1 },
-	east: { dx: 1, dy: 0 },
-	south: { dx: 0, dy: 1 },
-	west: { dx: -1, dy: 0 },
-};
-
-function getCell(contract: CityAssemblyContract, x: number, y: number) {
-	return contract.cells.find((cell) => cell.x === x && cell.y === y) ?? null;
-}
-
-function getNeighbor(
-	cell: CityCell,
-	contract: CityAssemblyContract,
-	edge: EdgeDirection,
-) {
-	const delta = EDGE_DELTAS[edge];
-	return getCell(contract, cell.x + delta.dx, cell.y + delta.dy);
-}
+export interface CityLayoutIssue extends CityLayoutIssueDefinition {}
 
 function bfsReachablePassableCells(contract: CityAssemblyContract) {
-	const entry = getCell(contract, contract.entryCell.x, contract.entryCell.y);
+	const entry = getCityCell(
+		contract,
+		contract.entryCell.x,
+		contract.entryCell.y,
+	);
 	if (!entry?.passable) {
 		return new Set<string>();
 	}
-
 	const visited = new Set<string>();
 	const queue = [entry];
 
 	while (queue.length > 0) {
 		const current = queue.shift()!;
-		const key = `${current.x},${current.y}`;
+		const key = cityCellKey(current.x, current.y);
 		if (visited.has(key)) {
 			continue;
 		}
 		visited.add(key);
-		for (const edge of Object.keys(EDGE_DELTAS) as EdgeDirection[]) {
-			const neighbor = getNeighbor(current, contract, edge);
+		for (const edge of EDGE_DIRECTIONS) {
+			const neighbor = getCityNeighbor(current, contract, edge);
 			if (neighbor?.passable) {
 				queue.push(neighbor);
 			}
 		}
 	}
-
 	return visited;
 }
 
@@ -67,98 +44,106 @@ export function validateCityLayoutPlan(
 	plan: CityLayoutPlan,
 ): CityLayoutIssue[] {
 	const issues: CityLayoutIssue[] = [];
-	const { contract } = plan;
-	const entry = getCell(contract, contract.entryCell.x, contract.entryCell.y);
-
+	const entry = getCityCell(
+		plan.contract,
+		plan.contract.entryCell.x,
+		plan.contract.entryCell.y,
+	);
 	if (!entry?.passable) {
 		issues.push({
 			code: "entry_not_passable",
 			message: "The city entry cell must remain passable.",
-			cellX: contract.entryCell.x,
-			cellY: contract.entryCell.y,
+			cellX: plan.contract.entryCell.x,
+			cellY: plan.contract.entryCell.y,
 		});
 	}
 
-	const reachable = bfsReachablePassableCells(contract);
-
-	for (const cell of contract.cells) {
-		const floorPlacements = getPlacementsForCell(plan, cell.x, cell.y, "floor");
-		if (floorPlacements.length === 0) {
+	const reachable = bfsReachablePassableCells(plan.contract);
+	for (const cell of plan.contract.cells) {
+		if (getPlacementsForCell(plan, cell.x, cell.y, "floor").length === 0) {
 			issues.push({
 				code: "missing_floor",
-				message: "Every city cell must have a floor placement.",
+				message: "Every city cell requires a floor placement.",
 				cellX: cell.x,
 				cellY: cell.y,
 			});
 		}
-
-		const props = getPlacementsForCell(plan, cell.x, cell.y, "prop");
-		if (cell.passable && props.length > 0) {
+		if (
+			cell.passable &&
+			getPlacementsForCell(plan, cell.x, cell.y, "prop").length > 0
+		) {
 			issues.push({
 				code: "prop_on_corridor",
-				message: "Passable cells should not be obstructed by room props.",
+				message:
+					"Passable circulation cells should not contain blocking props.",
 				cellX: cell.x,
 				cellY: cell.y,
 			});
 		}
-
-		const roofs = getPlacementsForCell(plan, cell.x, cell.y, "roof");
-		if (cell.passable && roofs.length > 0) {
+		if (
+			cell.passable &&
+			getPlacementsForCell(plan, cell.x, cell.y, "roof").length > 0
+		) {
 			issues.push({
 				code: "roof_on_passable_cell",
-				message: "Corridor and entry cells should not receive roof closures.",
+				message: "Open circulation cells should not receive roof closures.",
 				cellX: cell.x,
 				cellY: cell.y,
 			});
 		}
-
 		if (cell.passable && !reachable.has(`${cell.x},${cell.y}`)) {
 			issues.push({
 				code: "disconnected_passable_cell",
-				message: "Passable cells must remain connected to the entry path.",
+				message: "All passable cells must remain connected to the entry path.",
 				cellX: cell.x,
 				cellY: cell.y,
 			});
 		}
 
-		let hasAccessDoor = false;
-		for (const edge of Object.keys(EDGE_DELTAS) as EdgeDirection[]) {
-			const structure = getPlacementsForCell(plan, cell.x, cell.y).find(
-				(placement) =>
-					placement.layer === "structure" && placement.edge === edge,
-			);
-			const neighbor = getNeighbor(cell, contract, edge);
+		let hasDoor = false;
+		for (const edge of EDGE_DIRECTIONS) {
+			const structure = getPlacementsForCell(
+				plan,
+				cell.x,
+				cell.y,
+				"structure",
+			).find((placement) => placement.edge === edge);
+			const neighbor = getCityNeighbor(cell, plan.contract, edge);
 			if (!neighbor && !structure) {
 				issues.push({
 					code: "missing_perimeter_structure",
-					message: "Exterior edges must be sealed with a structure placement.",
+					message: "Exterior edges must be sealed with a wall or door asset.",
 					cellX: cell.x,
 					cellY: cell.y,
 				});
 			}
-			if (
-				structure &&
-				getCityAssetById(structure.assetId)?.family === "door" &&
-				neighbor?.passable
-			) {
-				hasAccessDoor = true;
+			if (structure && getCityModelById(structure.assetId).family === "door") {
+				hasDoor = true;
+				if (!neighbor?.passable) {
+					issues.push({
+						code: "invalid_door_transition",
+						message:
+							"Doors must connect enclosed cells to passable circulation.",
+						cellX: cell.x,
+						cellY: cell.y,
+					});
+				}
 			}
 		}
 
 		if (!cell.passable) {
-			const touchesPassable = (
-				Object.keys(EDGE_DELTAS) as EdgeDirection[]
-			).some((edge) => getNeighbor(cell, contract, edge)?.passable);
-			if (touchesPassable && !hasAccessDoor) {
+			const touchesPassable = EDGE_DIRECTIONS.some(
+				(edge) => getCityNeighbor(cell, plan.contract, edge)?.passable,
+			);
+			if (touchesPassable && !hasDoor) {
 				issues.push({
 					code: "room_missing_access",
-					message: "Every enclosed room touching circulation must have a door.",
+					message: "Enclosed rooms touching circulation must have a door.",
 					cellX: cell.x,
 					cellY: cell.y,
 				});
 			}
 		}
 	}
-
 	return issues;
 }

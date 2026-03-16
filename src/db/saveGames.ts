@@ -2,7 +2,7 @@ import { seedToPhrase } from "../ecs/seed";
 import type {
 	ClimateProfile,
 	Difficulty,
-	MapSize,
+	SectorScale,
 	StormProfile,
 } from "../world/config";
 import { initializeDatabaseSync } from "./bootstrap";
@@ -13,7 +13,7 @@ export type SaveGameRecord = {
 	id: number;
 	name: string;
 	world_seed: number;
-	map_size: MapSize;
+	sector_scale: SectorScale;
 	difficulty: Difficulty;
 	climate_profile: ClimateProfile;
 	storm_profile: StormProfile;
@@ -29,7 +29,7 @@ function selectLatestSaveGame(database: SyncDatabase) {
 				id,
 				name,
 				world_seed,
-				map_size,
+				sector_scale,
 				difficulty,
 				climate_profile,
 				storm_profile,
@@ -50,7 +50,7 @@ function selectSaveGameById(database: SyncDatabase, saveGameId: number) {
 				id,
 				name,
 				world_seed,
-				map_size,
+				sector_scale,
 				difficulty,
 				climate_profile,
 				storm_profile,
@@ -84,13 +84,13 @@ export function getLatestSaveGameSync(
 export function createSaveGameSync(
 	{
 		worldSeed,
-		mapSize = "standard",
+		sectorScale = "standard",
 		difficulty = "standard",
 		climateProfile = "temperate",
 		stormProfile = "volatile",
 	}: {
 		worldSeed: number;
-		mapSize?: MapSize;
+		sectorScale?: SectorScale;
 		difficulty?: Difficulty;
 		climateProfile?: ClimateProfile;
 		stormProfile?: StormProfile;
@@ -106,7 +106,7 @@ export function createSaveGameSync(
 			INSERT INTO save_games (
 				name,
 				world_seed,
-				map_size,
+				sector_scale,
 				difficulty,
 				climate_profile,
 				storm_profile,
@@ -118,7 +118,7 @@ export function createSaveGameSync(
 		`,
 		name,
 		worldSeed,
-		mapSize,
+		sectorScale,
 		difficulty,
 		climateProfile,
 		stormProfile,

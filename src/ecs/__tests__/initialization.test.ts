@@ -1,15 +1,36 @@
-import type { PersistedWorldRecord } from "../../db/worldPersistence";
+jest.mock("expo-asset", () => ({
+	Asset: {
+		fromModule: (mod: string | number) => ({
+			uri: typeof mod === "string" ? mod : `/resolved/${mod}`,
+			localUri: null,
+		}),
+	},
+}));
+
+jest.mock("../../config/assetValidation", () => ({
+	validateAssetManifest: jest.fn(),
+}));
+
+jest.mock("../../systems/factionSpawning", () => ({
+	spawnRivalFactions: jest.fn(),
+	resetFactionSpawning: jest.fn(),
+}));
+
+import { getTurnState, resetTurnSystem } from "../../systems/turnSystem";
+import type { PersistedWorldSnapshot } from "../../world/snapshots";
 import { initializeNewGame } from "../initialization";
 import { Building, Identity, Unit, WorldPosition } from "../traits";
 import { buildings, units, world } from "../world";
 
-function createPersistedWorld(): PersistedWorldRecord {
+// Uses test db from jest.setup.ts (createTestDb with schema + seed)
+
+function createPersistedWorld(): PersistedWorldSnapshot {
 	return {
 		saveGame: {
 			id: 1,
 			name: "Network Test",
 			world_seed: 42,
-			map_size: "small",
+			sector_scale: "small",
 			difficulty: "standard",
 			climate_profile: "temperate",
 			storm_profile: "volatile",
@@ -19,35 +40,40 @@ function createPersistedWorld(): PersistedWorldRecord {
 		},
 		config: {
 			worldSeed: 42,
-			mapSize: "small",
+			sectorScale: "small",
 			difficulty: "standard",
 			climateProfile: "temperate",
 			stormProfile: "volatile",
 		},
-		worldMap: {
+		ecumenopolis: {
 			id: 1,
 			save_game_id: 1,
 			width: 6,
 			height: 6,
-			map_size: "small",
+			sector_scale: "small",
 			climate_profile: "temperate",
 			storm_profile: "volatile",
-			spawn_q: 0,
-			spawn_r: 0,
+			spawn_sector_id: "command_arcology",
+			spawn_anchor_key: "0,0",
 			generated_at: 0,
 		},
-		tiles: [
+		sectorCells: [
 			{
 				id: 1,
-				world_map_id: 1,
+				ecumenopolis_id: 1,
 				q: 0,
 				r: 0,
-				biome: "grass",
-				terrain_set_id: "emerald_fields_and_forests",
-				fog_state: 0,
+				structural_zone: "command",
+				floor_preset_id: "command_core",
+				discovery_state: 0,
 				passable: 1,
+				sector_archetype: "command_plate",
+				storm_exposure: "shielded",
+				impassable_class: "none",
+				anchor_key: "0,0",
 			},
 		],
+		sectorStructures: [],
 		pointsOfInterest: [],
 		cityInstances: [],
 		campaignState: {
@@ -66,6 +92,10 @@ function createPersistedWorld(): PersistedWorldRecord {
 			intact_components: 0,
 			last_synced_at: 0,
 		},
+		harvestState: null,
+		turnState: null,
+		factionResourceStates: [],
+		campaignStatistics: null,
 		entities: [
 			{
 				id: 1,
@@ -75,6 +105,9 @@ function createPersistedWorld(): PersistedWorldRecord {
 				scene_building_id: null,
 				faction: "player",
 				unit_type: "maintenance_bot",
+				bot_archetype_id: "field_technician",
+				mark_level: 1,
+				speech_profile: "mentor",
 				building_type: null,
 				display_name: "Scout",
 				fragment_id: "world_primary",
@@ -101,6 +134,9 @@ function createPersistedWorld(): PersistedWorldRecord {
 				scene_building_id: null,
 				faction: "player",
 				unit_type: null,
+				bot_archetype_id: null,
+				mark_level: null,
+				speech_profile: null,
 				building_type: "lightning_rod",
 				display_name: "Rod",
 				fragment_id: "world_primary",
@@ -128,6 +164,7 @@ describe("initializeNewGame", () => {
 		for (const entity of [...world.entities]) {
 			entity.destroy();
 		}
+		resetTurnSystem();
 	});
 
 	it("hydrates persisted world actors instead of reseeding defaults", () => {
@@ -140,5 +177,48 @@ describe("initializeNewGame", () => {
 		expect([...units][0]?.get(WorldPosition)?.z).toBe(2);
 		expect([...buildings][0]?.get(Identity)?.id).toBe("bldg_9");
 		expect([...buildings][0]?.get(Building)?.type).toBe("lightning_rod");
+	});
+
+	it("initializes turn state for player units on new game", () => {
+		initializeNewGame(createPersistedWorld());
+
+		const turnState = getTurnState();
+		expect(turnState.turnNumber).toBe(1);
+		expect(turnState.phase).toBe("player");
+		expect(turnState.unitStates.size).toBe(1);
+		expect(turnState.unitStates.has("unit_7")).toBe(true);
+
+		const unitTurn = turnState.unitStates.get("unit_7")!;
+		expect(unitTurn.actionPoints).toBe(2);
+		expect(unitTurn.movementPoints).toBe(3);
+	});
+
+	it("rehydrates saved turn state when present", () => {
+		const pw = createPersistedWorld();
+		pw.turnState = {
+			id: 1,
+			save_game_id: 1,
+			turn_number: 5,
+			phase: "player",
+			active_faction: "player",
+			unit_states_json: JSON.stringify([
+				{
+					entityId: "unit_7",
+					actionPoints: 1,
+					maxActionPoints: 2,
+					movementPoints: 0,
+					maxMovementPoints: 3,
+					activated: true,
+				},
+			]),
+			last_synced_at: 0,
+		};
+
+		initializeNewGame(pw);
+
+		const turnState = getTurnState();
+		expect(turnState.turnNumber).toBe(5);
+		expect(turnState.unitStates.get("unit_7")!.actionPoints).toBe(1);
+		expect(turnState.unitStates.get("unit_7")!.movementPoints).toBe(0);
 	});
 });

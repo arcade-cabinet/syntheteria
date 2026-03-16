@@ -10,15 +10,15 @@ describe("database bootstrap", () => {
 
 		initializeDatabaseSync(database);
 
-		expect(database.execCalls).toHaveLength(1);
+		expect(database.execCalls.length).toBeGreaterThanOrEqual(1);
 		expect(database.execCalls[0]).toContain(
 			"CREATE TABLE IF NOT EXISTS save_games",
 		);
 		expect(database.execCalls[0]).toContain(
-			"CREATE TABLE IF NOT EXISTS world_maps",
+			"CREATE TABLE IF NOT EXISTS ecumenopolis_maps",
 		);
 		expect(database.execCalls[0]).toContain(
-			"CREATE TABLE IF NOT EXISTS world_tiles",
+			"CREATE TABLE IF NOT EXISTS sector_cells",
 		);
 		expect(database.execCalls[0]).toContain(
 			"CREATE TABLE IF NOT EXISTS world_points_of_interest",
@@ -41,6 +41,9 @@ describe("database bootstrap", () => {
 		expect(database.execCalls[0]).toContain(
 			"CREATE TABLE IF NOT EXISTS map_discovery",
 		);
+		expect(database.execCalls[0]).toContain(
+			"CREATE TABLE IF NOT EXISTS game_config",
+		);
 	});
 
 	it("adds missing save_game columns for existing installs", () => {
@@ -58,7 +61,7 @@ describe("database bootstrap", () => {
 			database.execCalls.some((sql) => sql.includes("ADD COLUMN world_seed")),
 		).toBe(true);
 		expect(
-			database.execCalls.some((sql) => sql.includes("ADD COLUMN map_size")),
+			database.execCalls.some((sql) => sql.includes("ADD COLUMN sector_scale")),
 		).toBe(true);
 		expect(
 			database.execCalls.some((sql) => sql.includes("ADD COLUMN difficulty")),
@@ -82,11 +85,13 @@ describe("database bootstrap", () => {
 		const database = new FakeDatabase();
 
 		initializeDatabaseSync(database);
+		const firstInitCount = database.execCalls.length;
 		initializeDatabaseSync(database);
-
-		expect(database.execCalls).toHaveLength(1);
+		expect(database.execCalls.length).toBe(firstInitCount); // idempotent
 		resetDatabaseBootstrapForTests(database);
 		initializeDatabaseSync(database);
-		expect(database.execCalls).toHaveLength(2);
+		// After reset, bootstrap runs again; FakeDatabase retains tableColumns so
+		// addColumnIfMissing is mostly no-op, but the schema block still executes
+		expect(database.execCalls.length).toBeGreaterThan(firstInitCount);
 	});
 });

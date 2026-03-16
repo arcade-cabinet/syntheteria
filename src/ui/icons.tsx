@@ -230,6 +230,126 @@ export function RadarIcon(props: SvgProps) {
 	);
 }
 
+// ─── Unit Role Icons ─────────────────────────────────────────────────────────
+
+export function EyeIcon(props: SvgProps) {
+	return (
+		<Svg viewBox="0 0 24 24" fill="none" {...props}>
+			<Path
+				d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7Z"
+				stroke={iconStroke(props)}
+				strokeWidth="1.8"
+				strokeLinejoin="round"
+			/>
+			<Circle
+				cx="12"
+				cy="12"
+				r="3"
+				stroke={iconStroke(props)}
+				strokeWidth="1.8"
+			/>
+		</Svg>
+	);
+}
+
+export function SwordIcon(props: SvgProps) {
+	return (
+		<Svg viewBox="0 0 24 24" fill="none" {...props}>
+			<Path
+				d="M14.5 3.5 20 2l-1.5 5.5-3 3L10 16l-2.5-.5L7 13l5.5-5.5 2-4Z"
+				stroke={iconStroke(props)}
+				strokeWidth="1.8"
+				strokeLinejoin="round"
+			/>
+			<Path
+				d="m4 20 3-3M7 17l3 3M4 20l3 3"
+				stroke={iconStroke(props)}
+				strokeWidth="1.8"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			/>
+		</Svg>
+	);
+}
+
+export function HammerIcon(props: SvgProps) {
+	return (
+		<Svg viewBox="0 0 24 24" fill="none" {...props}>
+			<Path
+				d="M6 15 15 6l3 3-9 9-3-3Z"
+				stroke={iconStroke(props)}
+				strokeWidth="1.8"
+				strokeLinejoin="round"
+			/>
+			<Path
+				d="M15 6l2-2 4 4-2 2"
+				stroke={iconStroke(props)}
+				strokeWidth="1.8"
+				strokeLinejoin="round"
+			/>
+			<Path d="M3 21l3-6 3 3-6 3Z" fill={iconStroke(props)} />
+		</Svg>
+	);
+}
+
+export function ShieldIcon(props: SvgProps) {
+	return (
+		<Svg viewBox="0 0 24 24" fill="none" {...props}>
+			<Path
+				d="M12 3 4 7v5c0 4.4 3.5 8.5 8 10 4.5-1.5 8-5.6 8-10V7l-8-4Z"
+				stroke={iconStroke(props)}
+				strokeWidth="1.8"
+				strokeLinejoin="round"
+			/>
+		</Svg>
+	);
+}
+
+export function BoxIcon(props: SvgProps) {
+	return (
+		<Svg viewBox="0 0 24 24" fill="none" {...props}>
+			<Path
+				d="M12 2 3 7v10l9 5 9-5V7l-9-5Z"
+				stroke={iconStroke(props)}
+				strokeWidth="1.8"
+				strokeLinejoin="round"
+			/>
+			<Path
+				d="M12 22V12M12 12 3 7M12 12l9-5"
+				stroke={iconStroke(props)}
+				strokeWidth="1.8"
+			/>
+		</Svg>
+	);
+}
+
+export function MenuIcon(props: SvgProps) {
+	return (
+		<Svg viewBox="0 0 24 24" fill="none" {...props}>
+			<Path
+				d="M4 6h16M4 12h16M4 18h16"
+				stroke={iconStroke(props)}
+				strokeWidth="2"
+				strokeLinecap="round"
+			/>
+		</Svg>
+	);
+}
+
+export function ChevronRightIcon(props: SvgProps) {
+	return (
+		<Svg viewBox="0 0 24 24" fill="none" {...props}>
+			<Path
+				d="M9 6l6 6-6 6"
+				stroke={iconStroke(props)}
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			/>
+		</Svg>
+	);
+}
+
 export function ShardIcon(props: SvgProps) {
 	return (
 		<Svg viewBox="0 0 24 24" fill="none" {...props}>

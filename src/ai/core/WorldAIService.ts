@@ -1,6 +1,6 @@
-import { FollowPathBehavior, Path, Vector3 } from "yuka";
+import { FollowPathBehavior, Path, SeparationBehavior, Vector3 } from "yuka";
+import { getBotDefinition } from "../../bots";
 import { gameplayRandom } from "../../ecs/seed";
-import { getTerrainHeight, hexToWorld, isWalkable } from "../../ecs/terrain";
 import {
 	AIController,
 	Hacking,
@@ -15,22 +15,37 @@ import {
 } from "../../ecs/traits";
 import { world } from "../../ecs/world";
 import {
+	getStrengthContext,
+	isRivalFaction,
+	type RivalFaction,
+} from "../../systems/rivalEncounters";
+import { gridToWorld, worldToGrid } from "../../world/sectorCoordinates";
+import {
+	getSurfaceHeightAtWorldPosition,
+	isPassableAtWorldPosition,
+} from "../../world/structuralSpace";
+import {
 	createAgentForRole,
 	rehydrateAgentFromState,
 } from "../agents/createAgentForRole";
 import type { SyntheteriaAgent } from "../agents/SyntheteriaAgent";
 import type { AgentPersistenceState, AgentTaskState } from "../agents/types";
+import { NAVIGATION_TUNING, STEERING_TUNING } from "../config/behaviorProfiles";
 import { planAgentTask } from "../goals/WorldPlanner";
-import { HexNavigationAdapter } from "../navigation/HexNavigationAdapter";
+import { SectorNavigationAdapter } from "../navigation/SectorNavigationAdapter";
 import { deserializeSingleAgentState } from "../serialization/AISerialization";
+import {
+	deriveAnimationState,
+	setEntityAnimationState,
+} from "../steering/AnimationState";
 import { AIRuntime } from "./AIRuntime";
 
 const AGGRO_RANGE = 6;
 const PATROL_RANGE = 15;
 const PATROL_CHANCE = 0.12;
 const TARGET_REPATH_DISTANCE = 1.5;
-const ARRIVAL_TOLERANCE = 0.45;
-
+const SEPARATION_RADIUS = 1.5;
+const SEPARATION_WEIGHT = 0.8;
 type PathNode = { q: number; r: number };
 
 function distanceBetween(a: Vec3, b: Vec3) {
@@ -63,8 +78,8 @@ function getPatrolTarget(from: Vec3): Vec3 | null {
 	for (let attempt = 0; attempt < 5; attempt++) {
 		const x = from.x + (gameplayRandom() - 0.5) * PATROL_RANGE * 2;
 		const z = from.z + (gameplayRandom() - 0.5) * PATROL_RANGE * 2;
-		if (isWalkable(x, z)) {
-			return { x, y: getTerrainHeight(x, z), z };
+		if (isPassableAtWorldPosition(x, z)) {
+			return { x, y: getSurfaceHeightAtWorldPosition(x, z), z };
 		}
 	}
 	return null;
@@ -72,7 +87,7 @@ function getPatrolTarget(from: Vec3): Vec3 | null {
 
 function findNearestUnitByFaction(
 	origin: UnitEntity,
-	faction: "player" | "feral" | "cultist",
+	faction: string,
 	range: number,
 ) {
 	let closest: UnitEntity | null = null;
@@ -98,7 +113,7 @@ function findNearestUnitByFaction(
 
 export class WorldAIService {
 	readonly runtime = new AIRuntime();
-	private readonly navigation = new HexNavigationAdapter();
+	private readonly navigation = new SectorNavigationAdapter();
 
 	reset() {
 		this.runtime.reset();
@@ -181,17 +196,27 @@ export class WorldAIService {
 		const unit = entity.get(Unit)!;
 		const position = entity.get(WorldPosition)!;
 		const existing = this.runtime.registry.get(identity.id);
+		const botDefinition = getBotDefinition(unit.type);
 		if (existing) {
 			existing.position.set(position.x, position.y, position.z);
 			existing.maxSpeed = unit.speed;
+			existing.steeringProfile = botDefinition.steeringProfile;
+			existing.navigationProfile = botDefinition.navigationProfile;
+			existing.applyBehaviorProfile();
 			return existing;
 		}
 
 		const agent = ai.stateJson
 			? rehydrateAgentFromState(deserializeSingleAgentState(ai.stateJson))
-			: createAgentForRole(ai.role, identity.id, unit.speed);
+			: createAgentForRole(ai.role, identity.id, unit.speed, {
+					steeringProfile: botDefinition.steeringProfile,
+					navigationProfile: botDefinition.navigationProfile,
+				});
 		agent.position.set(position.x, position.y, position.z);
 		agent.maxSpeed = unit.speed;
+		agent.steeringProfile = botDefinition.steeringProfile;
+		agent.navigationProfile = botDefinition.navigationProfile;
+		agent.applyBehaviorProfile();
 
 		if (agent.task) {
 			this.applyTaskSteering(agent);
@@ -217,6 +242,19 @@ export class WorldAIService {
 			return;
 		}
 
+		// For rival scouts, widen detection range and pass strength context
+		const isScout = ai.role === "rival_scout";
+		const playerDetectRange = isScout ? AGGRO_RANGE * 3 : AGGRO_RANGE;
+
+		const strengthCtx =
+			isScout && isRivalFaction(entity.get(Identity)!.faction)
+				? getStrengthContext(
+						entity.get(Identity)!.faction as RivalFaction,
+						entity.get(WorldPosition)!.x,
+						entity.get(WorldPosition)!.z,
+					)
+				: undefined;
+
 		const plannerDecision = planAgentTask({
 			tick,
 			entity,
@@ -224,11 +262,13 @@ export class WorldAIService {
 			nearestPlayerTarget: findNearestUnitByFaction(
 				entity,
 				"player",
-				AGGRO_RANGE,
+				playerDetectRange,
 			),
 			nearestHostileTarget:
 				findNearestUnitByFaction(entity, "feral", AGGRO_RANGE * 2) ??
 				findNearestUnitByFaction(entity, "cultist", AGGRO_RANGE * 2),
+			scoutStrength: strengthCtx?.scoutStrength,
+			playerStrength: strengthCtx?.playerStrength,
 		});
 
 		if (plannerDecision?.task && plannerDecision.targetPosition) {
@@ -258,7 +298,7 @@ export class WorldAIService {
 		}
 
 		if (
-			ai.role === "hostile_machine" &&
+			(ai.role === "hostile_machine" || ai.role === "rival_scout") &&
 			!agent.task &&
 			gameplayRandom() < PATROL_CHANCE
 		) {
@@ -284,7 +324,11 @@ export class WorldAIService {
 		to: Vec3,
 		task: AgentTaskState,
 	) {
-		const pathNodes = this.navigation.findPath(from, to);
+		const navigationTuning = NAVIGATION_TUNING[agent.navigationProfile];
+		const pathNodes =
+			navigationTuning.mode === "direct_line"
+				? [worldToGrid(to.x, to.z)]
+				: this.navigation.findPath(from, to);
 		const payloadPath = pathNodes.map((node) => ({ q: node.q, r: node.r }));
 		agent.setTask({
 			...task,
@@ -304,18 +348,28 @@ export class WorldAIService {
 	private applyTaskSteering(agent: SyntheteriaAgent) {
 		const payload = clonePayloadRecord(agent.task?.payload);
 		const pathNodes = getPathPayload(payload);
+		const steeringTuning = STEERING_TUNING[agent.steeringProfile];
 		agent.steering.clear();
 
 		const yukaPath = new Path();
 		yukaPath.loop = false;
 		yukaPath.add(agent.position.clone());
 		for (const node of pathNodes) {
-			const worldPoint = hexToWorld(node.q, node.r);
+			const worldPoint = gridToWorld(node.q, node.r);
 			yukaPath.add(new Vector3(worldPoint.x, worldPoint.y, worldPoint.z));
 		}
 
 		if (pathNodes.length > 0) {
-			agent.steering.add(new FollowPathBehavior(yukaPath, ARRIVAL_TOLERANCE));
+			agent.steering.add(
+				new FollowPathBehavior(yukaPath, steeringTuning.arrivalTolerance),
+			);
+
+			// Collision avoidance — bots repel each other while moving
+			const separation = new SeparationBehavior();
+			separation.weight = SEPARATION_WEIGHT;
+			agent.neighborhoodRadius = SEPARATION_RADIUS;
+			agent.updateNeighborhood = true;
+			agent.steering.add(separation);
 		}
 	}
 
@@ -342,7 +396,8 @@ export class WorldAIService {
 		if (
 			agent.task &&
 			destination &&
-			distanceBetween(worldPosition, destination) <= ARRIVAL_TOLERANCE
+			distanceBetween(worldPosition, destination) <=
+				STEERING_TUNING[agent.steeringProfile].arrivalTolerance
 		) {
 			agent.steering.clear();
 			if (agent.task.kind === "hack_target") {
@@ -365,6 +420,14 @@ export class WorldAIService {
 		navigation.path = getPathPayload(payload);
 		navigation.pathIndex = 0;
 		navigation.moving = agent.status === "navigating";
+
+		// Derive and store animation state for the renderer
+		const animState = deriveAnimationState(
+			agent.status,
+			agent.task?.kind ?? null,
+			agent.velocity.length(),
+		);
+		setEntityAnimationState(identity.id, animState);
 
 		agent.memory.lastUpdatedTick = tick;
 		ai.stateJson = JSON.stringify(agent.toPersistenceState());

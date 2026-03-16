@@ -1,37 +1,17 @@
-import type { ResourcePool } from "../systems/resources";
-import type { WorldPoiType } from "./generation";
-
-export type SceneMode = "world" | "city";
-
-export interface NearbyPoiContext {
-	cityInstanceId: number | null;
-	discovered: boolean;
-	distance: number;
-	name: string;
-	poiId: number;
-	poiType: WorldPoiType;
-}
-
-type RuntimeState = {
-	activeCityInstanceId: number | null;
-	activeScene: SceneMode;
-	currentTick: number;
-	nearbyPoi: NearbyPoiContext | null;
-	resources: ResourcePool;
-};
+import { defaultResourcePool } from "../systems/resources";
+import type { RuntimeState } from "./runtimeState.types";
 
 const listeners = new Set<() => void>();
 
 let runtimeState: RuntimeState = {
 	activeCityInstanceId: null,
 	activeScene: "world",
+	cityKitLabOpen: false,
+	citySiteModalOpen: false,
+	citySiteModalContext: null,
 	currentTick: 0,
 	nearbyPoi: null,
-	resources: {
-		scrapMetal: 0,
-		eWaste: 0,
-		intactComponents: 0,
-	},
+	resources: defaultResourcePool(),
 };
 
 function notify() {
@@ -53,25 +33,44 @@ export function resetRuntimeState() {
 	runtimeState = {
 		activeCityInstanceId: null,
 		activeScene: "world",
+		cityKitLabOpen: false,
+		citySiteModalOpen: false,
+		citySiteModalContext: null,
 		currentTick: 0,
 		nearbyPoi: null,
-		resources: {
-			scrapMetal: 0,
-			eWaste: 0,
-			intactComponents: 0,
-		},
+		resources: defaultResourcePool(),
 	};
 	notify();
 }
 
 export function setRuntimeScene(
-	activeScene: SceneMode,
+	activeScene: RuntimeState["activeScene"],
 	activeCityInstanceId: number | null,
 ) {
 	runtimeState = {
 		...runtimeState,
 		activeScene,
 		activeCityInstanceId,
+	};
+	notify();
+}
+
+export function setCityKitLabOpen(cityKitLabOpen: boolean) {
+	runtimeState = {
+		...runtimeState,
+		cityKitLabOpen,
+	};
+	notify();
+}
+
+export function setCitySiteModalOpen(
+	citySiteModalOpen: boolean,
+	citySiteModalContext: RuntimeState["citySiteModalContext"] = runtimeState.citySiteModalContext,
+) {
+	runtimeState = {
+		...runtimeState,
+		citySiteModalOpen,
+		citySiteModalContext: citySiteModalOpen ? citySiteModalContext : null,
 	};
 	notify();
 }
@@ -83,7 +82,7 @@ export function setRuntimeTick(currentTick: number) {
 	};
 }
 
-export function setNearbyPoi(nearbyPoi: NearbyPoiContext | null) {
+export function setNearbyPoi(nearbyPoi: RuntimeState["nearbyPoi"]) {
 	runtimeState = {
 		...runtimeState,
 		nearbyPoi,
@@ -91,7 +90,7 @@ export function setNearbyPoi(nearbyPoi: NearbyPoiContext | null) {
 	notify();
 }
 
-export function setRuntimeResources(resources: ResourcePool) {
+export function setRuntimeResources(resources: RuntimeState["resources"]) {
 	runtimeState = {
 		...runtimeState,
 		resources: { ...resources },

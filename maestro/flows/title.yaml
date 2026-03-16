@@ -1,0 +1,20 @@
+# Maestro flow: Title screen
+# Ported from tests/e2e/title.spec.ts
+# Requires: dev build (iOS/Android) or run against web URL via Maestro Cloud/CLI env.
+# Run with: maestro test maestro/ (or maestro test flows/title.yaml)
+#
+# For native: set appId to your Expo applicationId (e.g. from app.json).
+# For web: use Maestro's URL launch if available, or run in simulator with web bundle.
+appId: com.arcadecabinet.syntheteria
+---
+- launchApp
+- assertVisible: "SYNTHETERIA"
+- assertVisible: "New Game"
+- assertVisible: "Settings"
+- assertNotVisible: "Continue"
+- tapOn: "Settings"
+- assertVisible: "Settings"
+- tapOn:
+    id: "settings-close"
+  # Alternative if id not resolved: tapOn: "Close settings"
+- assertNotVisible: "System Calibration"

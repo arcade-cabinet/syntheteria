@@ -4,38 +4,13 @@ import {
 	type CityCell,
 	type CityModuleType,
 } from "./assemblyContract";
+import type { CityModulePlacement, CityPlacementLayer } from "./config/types";
 import { type EdgeDirection, getCityAssetsForZone } from "./moduleCatalog";
-
-export type CityPlacementLayer =
-	| "floor"
-	| "structure"
-	| "roof"
-	| "prop"
-	| "detail";
-
-export interface CityModulePlacement {
-	assetId: string;
-	cellX: number;
-	cellY: number;
-	layer: CityPlacementLayer;
-	edge?: EdgeDirection;
-	rotationQuarterTurns: 0 | 1 | 2 | 3;
-}
+import { EDGE_DELTAS, EDGE_DIRECTIONS } from "./topology";
 
 export interface CityLayoutPlan {
 	contract: CityAssemblyContract;
 	placements: CityModulePlacement[];
-}
-
-const EDGE_DELTAS: Record<EdgeDirection, { dx: number; dy: number }> = {
-	north: { dx: 0, dy: -1 },
-	east: { dx: 1, dy: 0 },
-	south: { dx: 0, dy: 1 },
-	west: { dx: -1, dy: 0 },
-};
-
-function cellKey(x: number, y: number) {
-	return `${x},${y}`;
 }
 
 function hashSeed(seed: number, x: number, y: number, salt: number) {
@@ -51,9 +26,9 @@ function chooseAssetId(
 	if (candidates.length === 0) {
 		return null;
 	}
-	const index =
-		hashSeed(seed, cell.x, cell.y, family.length + 17) % candidates.length;
-	return candidates[index]?.id ?? null;
+	return candidates[
+		hashSeed(seed, cell.x, cell.y, family.length + 17) % candidates.length
+	]?.id;
 }
 
 function getNeighbor(
@@ -68,24 +43,20 @@ function getNeighbor(
 	);
 }
 
-function getPreferredDoorEdge(
+function preferredDoorEdge(
 	contract: CityAssemblyContract,
 	cell: CityCell,
 	seed: number,
 ) {
-	const candidates = (Object.keys(EDGE_DELTAS) as EdgeDirection[]).filter(
-		(edge) => {
-			const neighbor = getNeighbor(contract, cell.x, cell.y, edge);
-			return Boolean(neighbor?.passable);
-		},
+	const candidates = EDGE_DIRECTIONS.filter((edge) =>
+		Boolean(getNeighbor(contract, cell.x, cell.y, edge)?.passable),
 	);
-
 	if (candidates.length === 0) {
 		return null;
 	}
-
-	const index = hashSeed(seed, cell.x, cell.y, 97) % candidates.length;
-	return candidates[index] ?? null;
+	return (
+		candidates[hashSeed(seed, cell.x, cell.y, 97) % candidates.length] ?? null
+	);
 }
 
 function rotationForEdge(edge: EdgeDirection): 0 | 1 | 2 | 3 {
@@ -106,12 +77,11 @@ export function buildCityLayoutPlan(
 	contract: CityAssemblyContract = buildBlankCityAssembly(seed),
 ): CityLayoutPlan {
 	const placements: CityModulePlacement[] = [];
-	const doorEdgeByCell = new Map<string, EdgeDirection>();
 
 	for (const cell of contract.cells) {
 		const floorAssetId =
 			chooseAssetId(seed, cell, "floor") ??
-			getCityAssetsForZone("core", "floor")[0]?.id;
+			getCityAssetsForZone("core" as CityModuleType, "floor")[0]?.id;
 		if (floorAssetId) {
 			placements.push({
 				assetId: floorAssetId,
@@ -133,72 +103,48 @@ export function buildCityLayoutPlan(
 					rotationQuarterTurns: 0,
 				});
 			}
-
-			const propAssetId = chooseAssetId(seed, cell, "prop");
-			if (propAssetId) {
-				placements.push({
-					assetId: propAssetId,
-					cellX: cell.x,
-					cellY: cell.y,
-					layer: "prop",
-					rotationQuarterTurns: (hashSeed(seed, cell.x, cell.y, 53) % 4) as
-						| 0
-						| 1
-						| 2
-						| 3,
-				});
-			}
-		} else {
-			const detailAssetId = chooseAssetId(seed, cell, "detail");
-			if (detailAssetId && hashSeed(seed, cell.x, cell.y, 29) % 3 === 0) {
-				placements.push({
-					assetId: detailAssetId,
-					cellX: cell.x,
-					cellY: cell.y,
-					layer: "detail",
-					rotationQuarterTurns: (hashSeed(seed, cell.x, cell.y, 71) % 4) as
-						| 0
-						| 1
-						| 2
-						| 3,
-				});
-			}
 		}
 
-		if (!cell.passable) {
-			const doorEdge = getPreferredDoorEdge(contract, cell, seed);
-			if (doorEdge) {
-				doorEdgeByCell.set(cellKey(cell.x, cell.y), doorEdge);
-			}
+		const roomAccentFamily = cell.passable ? "detail" : "prop";
+		const roomAccentAsset = chooseAssetId(seed, cell, roomAccentFamily);
+		if (roomAccentAsset && hashSeed(seed, cell.x, cell.y, 53) % 2 === 0) {
+			placements.push({
+				assetId: roomAccentAsset,
+				cellX: cell.x,
+				cellY: cell.y,
+				layer: cell.passable ? "detail" : "prop",
+				rotationQuarterTurns: (hashSeed(seed, cell.x, cell.y, 71) % 4) as
+					| 0
+					| 1
+					| 2
+					| 3,
+			});
 		}
 	}
 
 	for (const cell of contract.cells) {
-		for (const edge of Object.keys(EDGE_DELTAS) as EdgeDirection[]) {
+		const doorEdge = !cell.passable
+			? preferredDoorEdge(contract, cell, seed)
+			: null;
+		for (const edge of EDGE_DIRECTIONS) {
 			const neighbor = getNeighbor(contract, cell.x, cell.y, edge);
-			const isBoundary = !neighbor;
-			const requiresStructure =
-				isBoundary || Boolean(neighbor && neighbor.passable !== cell.passable);
-
-			if (!requiresStructure) {
+			const needsStructure =
+				!neighbor || Boolean(neighbor.passable !== cell.passable);
+			if (!needsStructure) {
 				continue;
 			}
-
 			if (cell.passable && neighbor && !neighbor.passable) {
 				continue;
 			}
 
-			const useDoor =
-				doorEdgeByCell.get(cellKey(cell.x, cell.y)) === edge &&
-				!cell.passable &&
-				Boolean(neighbor?.passable);
-			const assetId = useDoor
-				? chooseAssetId(seed, cell, "door")
-				: chooseAssetId(seed, cell, "wall");
+			const family =
+				doorEdge === edge && !cell.passable && neighbor?.passable
+					? "door"
+					: "wall";
+			const assetId = chooseAssetId(seed, cell, family);
 			if (!assetId) {
 				continue;
 			}
-
 			placements.push({
 				assetId,
 				cellX: cell.x,
@@ -210,10 +156,7 @@ export function buildCityLayoutPlan(
 		}
 	}
 
-	return {
-		contract,
-		placements,
-	};
+	return { contract, placements };
 }
 
 export function getPlacementsForCell(

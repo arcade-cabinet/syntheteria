@@ -20,6 +20,10 @@ export interface PlannerContext {
 	agent: SyntheteriaAgent;
 	nearestPlayerTarget?: RuntimeUnitEntity | null;
 	nearestHostileTarget?: RuntimeUnitEntity | null;
+	/** Nearby scout strength for rival_scout retreat/engage decisions */
+	scoutStrength?: number;
+	/** Nearby player strength for rival_scout retreat/engage decisions */
+	playerStrength?: number;
 }
 
 export interface PlannerDecision {
@@ -117,6 +121,82 @@ export function planAgentTask(context: PlannerContext): PlannerDecision | null {
 				{
 					targetEntityId: target.get(Identity)?.id ?? null,
 					targetPosition: { ...targetPosition },
+				},
+			),
+			targetPosition,
+		};
+	}
+
+	if (context.agent.role === "rival_scout") {
+		// Rival scouts patrol toward player territory. If a player is nearby,
+		// they assess force balance and either retreat or engage.
+		const target = context.nearestPlayerTarget;
+		if (!target) {
+			return null;
+		}
+		const targetPosition = target.get(WorldPosition)!;
+		const selfPosition = context.entity.get(WorldPosition)!;
+		const dx = targetPosition.x - selfPosition.x;
+		const dz = targetPosition.z - selfPosition.z;
+		const dist = Math.sqrt(dx * dx + dz * dz);
+
+		// If player is within detection range, evaluate strength
+		if (dist <= 12) {
+			const scoutStrength = context.scoutStrength ?? 1;
+			const playerStrength = context.playerStrength ?? 1;
+			const ratio = scoutStrength / Math.max(playerStrength, 1);
+
+			// Outmatched: retreat away from player
+			if (ratio < 0.6) {
+				const retreatDist = 15;
+				const norm = Math.max(dist, 0.01);
+				const retreatX = selfPosition.x - (dx / norm) * retreatDist;
+				const retreatZ = selfPosition.z - (dz / norm) * retreatDist;
+				const retreatPosition = {
+					x: retreatX,
+					y: selfPosition.y,
+					z: retreatZ,
+				};
+				return {
+					task: createMoveTask(
+						`scout-retreat:${context.agent.entityId}`,
+						"move_to_point",
+						context.tick,
+						{
+							targetPosition: { ...retreatPosition },
+							retreating: true,
+						},
+					),
+					targetPosition: retreatPosition,
+				};
+			}
+
+			// Numerical advantage: engage
+			if (ratio >= 1.5) {
+				return {
+					task: createMoveTask(
+						`scout-engage:${context.agent.entityId}`,
+						"move_to_entity",
+						context.tick,
+						{
+							targetEntityId: target.get(Identity)?.id ?? null,
+							targetPosition: { ...targetPosition },
+						},
+					),
+					targetPosition,
+				};
+			}
+		}
+
+		// Default: patrol toward player territory border
+		return {
+			task: createMoveTask(
+				`scout-patrol:${context.agent.entityId}`,
+				"move_to_point",
+				context.tick,
+				{
+					targetPosition: { ...targetPosition },
+					scouting: true,
 				},
 			),
 			targetPosition,

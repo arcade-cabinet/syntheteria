@@ -23,6 +23,10 @@ describe("KootaYukaBridge", () => {
 			entityId: "player-1",
 			role: "player_unit",
 			status: "idle",
+			profile: {
+				steeringProfile: "biped_scout",
+				navigationProfile: "sector_surface_standard",
+			},
 			task: null,
 			steering: {
 				behavior: null,
@@ -44,6 +48,10 @@ describe("KootaYukaBridge", () => {
 			entityId: "player-1",
 			role: "hauler",
 			status: "executing_task",
+			profile: {
+				steeringProfile: "aerial_support",
+				navigationProfile: "sector_aerial",
+			},
 			task: {
 				id: "route-1",
 				kind: "service_route",
@@ -74,6 +82,10 @@ describe("KootaYukaBridge", () => {
 				entityId: "player-1",
 				role: "player_unit",
 				status: "navigating",
+				profile: {
+					steeringProfile: "biped_scout",
+					navigationProfile: "sector_surface_standard",
+				},
 				task: {
 					id: "task-1",
 					kind: "travel_to_poi",

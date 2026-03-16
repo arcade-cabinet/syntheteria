@@ -38,9 +38,16 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# coverage
+coverage/
+
 # generated native folders
 /ios
 /android
+
+# Ralph (ralph-cursor)
+/ralph/projects/*/logs/
+/ralph/projects/*/status.json
 
 # Playwright
 /test-results/
@@ -49,8 +56,22 @@ yarn-error.*
 /playwright/.cache/
 /playwright/.auth/
 
+# Playtest report output (generated, not committed)
+tests/e2e/reports/screenshots/*.png
+tests/e2e/reports/playtest-report.html
+tests/e2e/reports/playtest-results.json
+
+# Visual test output (manual-review screenshots, generated per run)
+tests/visual/screenshots/*.png
+
+# E2E local config (copy from config/e2e.example.json)
+config/e2e.json
+
 # Local integration staging
 /pending-integration/
 
 # Local task-orchestration scratch data
 /.ralph-tui/
+
+# Nested clone (do not commit)
+/syntheteria/

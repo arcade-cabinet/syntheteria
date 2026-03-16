@@ -4,20 +4,6 @@ import {
 	describeCityState,
 	getCityPurposePresentation,
 } from "./cityPresentation";
-import {
-	type DistrictCapabilityViewModel,
-	getDistrictCapabilities,
-	summarizeDistrictCapabilities,
-} from "./districtCapabilities";
-import {
-	type DistrictOperationViewModel,
-	getDistrictOperations,
-} from "./districtOperations";
-import {
-	type DistrictStructureViewModel,
-	getDistrictStructuresFromSnapshots,
-} from "./districtStructures";
-import { getActiveWorldSession } from "./session";
 import type { CityRuntimeSnapshot, NearbyPoiContext } from "./snapshots";
 
 export interface CitySiteAction {
@@ -30,10 +16,6 @@ export interface CitySiteAction {
 export interface CitySiteViewModel {
 	actionFlowSummary: string;
 	actions: CitySiteAction[];
-	capabilities: DistrictCapabilityViewModel[];
-	capabilitySummary: string;
-	operations: DistrictOperationViewModel[];
-	structures: DistrictStructureViewModel[];
 	canEnter: boolean;
 	canFound: boolean;
 	canSurvey: boolean;
@@ -52,28 +34,6 @@ export function getCitySiteViewModel(args: {
 	const canSurvey = city?.state === "latent";
 	const canFound = city ? canFoundCitySite(context.poiType, city.state) : false;
 	const canEnter = city ? canEnterCitySite(city.state) : false;
-	const session = getActiveWorldSession();
-	const persistedStructures = city
-		? (session?.sectorStructures ?? []).filter(
-				(structure) =>
-					structure.anchor_key === `${city.world_q},${city.world_r}`,
-			)
-		: [];
-	const structures = getDistrictStructuresFromSnapshots({
-		poiType: context.poiType,
-		state: city?.state ?? "latent",
-		structures: persistedStructures,
-	});
-	const capabilities = getDistrictCapabilities({
-		poiType: context.poiType,
-		state: city?.state ?? "latent",
-		structures,
-	});
-	const operations = getDistrictOperations({
-		poiType: context.poiType,
-		state: city?.state ?? "latent",
-		structures,
-	});
 	const actions: CitySiteAction[] = [];
 
 	if (canSurvey) {
@@ -88,7 +48,7 @@ export function getCitySiteViewModel(args: {
 		actions.push({
 			id: "found",
 			label: presentation.foundationLabel,
-			meta: "establish substation and claim district capability",
+			meta: "establish substation and claim site",
 			variant: "primary",
 		});
 	}
@@ -111,10 +71,6 @@ export function getCitySiteViewModel(args: {
 
 	return {
 		presentation,
-		structures,
-		capabilities,
-		operations,
-		capabilitySummary: summarizeDistrictCapabilities(capabilities, structures),
 		canSurvey,
 		canFound,
 		canEnter,
@@ -123,7 +79,7 @@ export function getCitySiteViewModel(args: {
 			? `Layout seed ${city.layout_seed} · ${city.generation_status}`
 			: "No linked city instance.",
 		actionFlowSummary:
-			"Surveying commits a readable district layout to the archive. Establishing a substation upgrades the site into a controlled operational node. Entering transfers command relay into the denser district interior.",
+			"Surveying commits the site layout to the archive. Establishing a substation claims the site as an operational node. Entering transfers command relay into the site interior.",
 		actions,
 	};
 }

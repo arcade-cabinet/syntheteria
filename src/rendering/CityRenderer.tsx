@@ -1,7 +1,7 @@
 import { useQuery } from "koota/react";
 import { useMemo } from "react";
 import * as THREE from "three";
-import { getCityModelById } from "../city/catalog/cityCatalog";
+import { findCityModelById } from "../city/catalog/cityCatalog";
 import { CityModelMesh } from "../city/runtime/CityModelMesh";
 import { HarvestOp, Identity, Scene, Unit, WorldPosition } from "../ecs/traits";
 import { isStructureConsumed } from "../systems/harvestSystem";
@@ -67,7 +67,7 @@ function SectorStructureInstances({
 				if (isStructureConsumed(structure.id)) {
 					return null;
 				}
-				const model = getCityModelById(structure.model_id);
+				const model = findCityModelById(structure.model_id);
 				if (!model) {
 					return null;
 				}

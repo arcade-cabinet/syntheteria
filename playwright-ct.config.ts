@@ -17,7 +17,11 @@ export default defineConfig({
 	use: {
 		ctViteConfig: {
 			plugins: [react()],
-			assetsInclude: ["**/*.glb", "**/*.gltf"],
+			assetsInclude: ["**/*.glb", "**/*.gltf", "**/*.wasm"],
+			optimizeDeps: {
+				// Prevent Vite from bundling sql.js — it must load WASM at runtime.
+				exclude: ["sql.js"],
+			},
 			resolve: {
 				alias: {
 					"@": path.resolve(__dirname, "./src"),
@@ -31,6 +35,10 @@ export default defineConfig({
 					"react-native-reanimated": path.resolve(
 						__dirname,
 						"./src/stubs/react-native-reanimated.ts",
+					),
+					"react-native-svg": path.resolve(
+						__dirname,
+						"./src/stubs/react-native-svg.ts",
 					),
 				},
 			},

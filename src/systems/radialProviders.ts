@@ -14,7 +14,6 @@ import {
 	openCityKitLab,
 	returnToWorld,
 } from "../world/cityTransition";
-import { executeDistrictOperation } from "../world/districtOperations";
 import { getTile } from "../world/gen/worldGrid";
 import { foundCitySite, surveyCitySite } from "../world/poiActions";
 import { getRuntimeState, setCitySiteModalOpen } from "../world/runtimeState";
@@ -123,33 +122,6 @@ function awardXPToActor(entityId: string | null, action: XPActionType) {
 	const unit = entity?.get(Unit);
 	if (!unit) return;
 	awardXP(entityId, unit.archetypeId, action, unit.markLevel);
-}
-
-function getActiveDistrictViewModel(mode: "world" | "city") {
-	const runtime = getRuntimeState();
-	const session = getActiveWorldSession();
-	if (!session) {
-		return null;
-	}
-	const context = runtime.citySiteModalContext ?? runtime.nearbyPoi;
-	if (!context) {
-		return null;
-	}
-	const city =
-		context.cityInstanceId == null
-			? null
-			: (session.cityInstances.find(
-					(candidate) => candidate.id === context.cityInstanceId,
-				) ?? null);
-	return {
-		context,
-		city,
-		viewModel: getCitySiteViewModel({
-			city,
-			context,
-			mode,
-		}),
-	};
 }
 
 // --- MOVEMENT category ---
@@ -1095,7 +1067,12 @@ registerRadialProvider({
 			}
 		}
 
-		const actions = [
+		const runtime = getRuntimeState();
+		const session = getActiveWorldSession();
+		const mode = runtime.activeScene === "city" ? "city" : "world";
+		const context = runtime.citySiteModalContext ?? runtime.nearbyPoi;
+
+		const actions: RadialAction[] = [
 			{
 				id: "brief_sector",
 				label: "Brief",
@@ -1103,52 +1080,23 @@ registerRadialProvider({
 				tone: "default",
 				enabled: true,
 				onExecute: () => {
-					setCitySiteModalOpen(true, getRuntimeState().nearbyPoi);
+					setCitySiteModalOpen(true, runtime.nearbyPoi);
 				},
 			},
 		];
 
-		return actions;
-	},
-});
-
-// --- DISTRICT category ---
-
-registerRadialProvider({
-	id: "district",
-	category: {
-		id: "district",
-		label: "District",
-		icon: "city",
-		tone: "signal",
-		priority: 55,
-	},
-	getActions: (ctx: RadialOpenContext) => {
-		const runtime = getRuntimeState();
-		const mode = runtime.activeScene === "city" ? "city" : "world";
-		if (
-			ctx.selectionType === "unit" &&
-			!isSelectedBotCategoryAllowed(ctx, "district")
-		) {
-			return [];
-		}
-		const active = getActiveDistrictViewModel(mode);
-		if (!active) {
-			return [];
+		if (!context || !session) {
+			return actions;
 		}
 
-		const { city, context, viewModel } = active;
-		const actions: RadialAction[] = [
-			{
-				id: "district_brief",
-				label: "Brief",
-				icon: "eye",
-				tone: "signal",
-				enabled: true,
-				onExecute: () => setCitySiteModalOpen(true, context),
-			},
-		];
+		const city =
+			context.cityInstanceId == null
+				? null
+				: (session.cityInstances.find(
+						(candidate) => candidate.id === context.cityInstanceId,
+					) ?? null);
 
+		const viewModel = getCitySiteViewModel({ city, context, mode });
 		const unitHasAP =
 			ctx.selectionType === "unit" && ctx.targetEntityId
 				? hasActionPoints(ctx.targetEntityId)
@@ -1156,10 +1104,10 @@ registerRadialProvider({
 
 		if (viewModel.actions.some((a) => a.id === "survey") && city) {
 			actions.push({
-				id: "district_survey",
+				id: "site_survey",
 				label: "Survey",
 				icon: "eye",
-				tone: "signal",
+				tone: "default",
 				enabled: unitHasAP,
 				disabledReason: unitHasAP ? undefined : "No AP remaining",
 				onExecute: () => {
@@ -1184,7 +1132,7 @@ registerRadialProvider({
 					? "Wrong unit role"
 					: undefined;
 			actions.push({
-				id: "district_establish",
+				id: "site_establish",
 				label: "Establish",
 				icon: "city",
 				tone: "power",
@@ -1208,7 +1156,7 @@ registerRadialProvider({
 			mode === "world"
 		) {
 			actions.push({
-				id: "district_enter",
+				id: "site_enter",
 				label: "Enter",
 				icon: "arrow",
 				tone: "signal",
@@ -1221,33 +1169,13 @@ registerRadialProvider({
 
 		if (mode === "city") {
 			actions.push({
-				id: "district_return",
+				id: "site_return",
 				label: "Return",
 				icon: "arrow",
 				tone: "default",
 				enabled: true,
 				onExecute: () => {
 					returnToWorld();
-				},
-			});
-		}
-
-		for (const operation of viewModel.operations.filter(
-			(candidate) => candidate.status === "available",
-		)) {
-			actions.push({
-				id: `district_operation_${operation.id}`,
-				label: operation.label,
-				icon: "gear",
-				tone: "signal",
-				enabled: true,
-				onExecute: () => {
-					executeDistrictOperation({
-						cityInstanceId: city?.id ?? null,
-						poiType: context.poiType,
-						state: city?.state ?? "latent",
-						operationId: operation.id,
-					});
 				},
 			});
 		}

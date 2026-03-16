@@ -18,7 +18,7 @@ const FADE_OUT_MS = 300;
 
 interface ToastEntry {
 	key: string;
-	type: "combat" | "merge" | "district";
+	type: "combat" | "merge";
 	title: string;
 	body: string;
 	iconColor: string;
@@ -152,27 +152,10 @@ export function Notifications() {
 			}
 		}
 
-		for (let i = 0; i < Math.min(snap.districtEvents.length, 2); i++) {
-			const event = snap.districtEvents[i];
-			const key = `district-${event.id}`;
-			if (!seenKeysRef.current.has(key)) {
-				seenKeysRef.current.add(key);
-				newToasts.push({
-					key,
-					type: "district",
-					title: "District",
-					body: event.label,
-					iconColor: "#8be6ff",
-					borderColor: "rgba(139, 230, 255, 0.2)",
-					createdAt: now,
-				});
-			}
-		}
-
 		if (newToasts.length > 0) {
 			setToasts((prev) => [...newToasts, ...prev].slice(0, 4));
 		}
-	}, [snap.combatEvents, snap.mergeEvents, snap.districtEvents]);
+	}, [snap.combatEvents, snap.mergeEvents]);
 
 	// Purge expired toasts
 	useEffect(() => {

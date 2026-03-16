@@ -8,8 +8,8 @@ import {
 	type PlaceableType,
 	setActivePlacement,
 } from "../../systems/buildingPlacement";
-import { useResourcePool } from "../hooks/useResourcePool";
 import { HudButton } from "../components/HudButton";
+import { useResourcePool } from "../hooks/useResourcePool";
 import { BoltIcon, FactoryIcon } from "../icons";
 
 type BuildableType = Exclude<PlaceableType, null>;

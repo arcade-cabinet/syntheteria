@@ -202,7 +202,6 @@ export function EcumenopolisRadialBotPreview({
 	>([6, 8.5, 9]);
 	const [visibleCategories, setVisibleCategories] = useState<string[]>([]);
 	const [visibleActions, setVisibleActions] = useState<string[]>([]);
-	const [districtActions, setDistrictActions] = useState<string[]>([]);
 	const commandProfile = useMemo(
 		() => getBotCommandProfile(unitType),
 		[unitType],
@@ -314,9 +313,6 @@ export function EcumenopolisRadialBotPreview({
 			getResolvedActionsForCategory(
 				commandProfile.preferredPreviewCategory,
 			).map((action) => action.label),
-		);
-		setDistrictActions(
-			getResolvedActionsForCategory("district").map((action) => action.label),
 		);
 
 		setRenderVersion((value) => value + 1);
@@ -439,9 +435,6 @@ export function EcumenopolisRadialBotPreview({
 							</div>
 							<div style={{ color: "rgba(216,246,255,0.72)" }}>
 								Visible categories: {visibleCategories.join(", ")}
-							</div>
-							<div style={{ color: "rgba(216,246,255,0.72)" }}>
-								District actions: {districtActions.join(", ")}
 							</div>
 							<div style={{ color: "rgba(216,246,255,0.72)" }}>
 								Expanded actions: {visibleActions.join(", ")}

@@ -115,7 +115,6 @@ export interface GameSnapshot {
 	cityKitLabOpen: boolean;
 	nearbyPoiName: string | null;
 	nearbyPoi: NearbyPoiContext | null;
-	districtEvents: ReturnType<typeof getRuntimeState>["districtEvents"];
 	weather: WeatherSnapshot;
 }
 
@@ -157,7 +156,6 @@ function buildSnapshot(): GameSnapshot {
 		cityKitLabOpen: getRuntimeState().cityKitLabOpen,
 		nearbyPoiName: getRuntimeState().nearbyPoi?.name ?? null,
 		nearbyPoi: getRuntimeState().nearbyPoi,
-		districtEvents: getRuntimeState().districtEvents,
 		weather: getWeatherSnapshot(),
 	};
 }

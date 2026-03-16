@@ -27,6 +27,12 @@ export const FLOOR_COLORS: Record<string, number> = {
 	power: 0x62658a,
 	habitation: 0x5a7f8f,
 	breach_exposed: 0x50545f,
+	// FloorMaterial values from world gen
+	metal_panel: 0x6a7b89,
+	concrete_slab: 0x5c6e7a,
+	industrial_grating: 0x687880,
+	rusty_plating: 0x7a6048,
+	corroded_steel: 0x607060,
 };
 
 const FLOOR_ACCENTS: Record<string, number> = {
@@ -37,6 +43,12 @@ const FLOOR_ACCENTS: Record<string, number> = {
 	power: 0x88a7ff,
 	habitation: 0x7ed6e5,
 	breach_exposed: 0xff8f8f,
+	// FloorMaterial values from world gen
+	metal_panel: 0x8be6ff,
+	concrete_slab: 0x6ff3c8,
+	industrial_grating: 0x8be6ff,
+	rusty_plating: 0xc59d69,
+	corroded_steel: 0x9fc8a0,
 };
 
 const floorPresetById = new Map(
@@ -58,6 +70,12 @@ const FLOOR_PRESET_TO_MATERIAL: Record<string, string> = {
 	habitation: "painted_habitation",
 	power: "command_concrete",
 	breach_exposed: "service_walkway",
+	// FloorMaterial values from world gen (material-semantic names)
+	metal_panel: "fabrication_plate",
+	concrete_slab: "command_concrete",
+	industrial_grating: "service_walkway",
+	rusty_plating: "fabrication_plate",
+	corroded_steel: "service_walkway",
 };
 
 function resolveTexturePresetId(floorPresetId: string): string {

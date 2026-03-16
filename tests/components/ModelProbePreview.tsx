@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { getCityModelById } from "../../src/city/catalog/cityCatalog";
 import { CityModelMesh } from "../../src/city/runtime/CityModelMesh";
 
-const wallModel = getCityModelById("wall_1");
+const wallModel = getCityModelById("walls_wall_1");
 const columnModel = getCityModelById("column_1");
 const doorModel = getCityModelById("door_single");
 

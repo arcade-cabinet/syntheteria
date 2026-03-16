@@ -9,9 +9,9 @@ test.describe("ecumenopolis world scene", () => {
 		const component = await mount(<EcumenopolisWorldPreview view="overview" />);
 
 		await expect(component).toContainText("Ecumenopolis Validation");
-		await expect(component).toContainText("Field Technician");
-		await expect(component).toContainText("Command Arcology");
-		await expect(component).toContainText("Archive Campus");
+		await expect(component).toContainText("Research Site");
+		await expect(component).toContainText("Command Nexus");
+		await expect(component).toContainText("Signal Lab");
 		await expect(component).toContainText("Scene Loaded", { timeout: 20000 });
 		await expect(component).toHaveScreenshot();
 	});
@@ -25,9 +25,9 @@ test.describe("ecumenopolis world scene", () => {
 		);
 
 		await expect(component).toContainText("Ecumenopolis Validation");
-		await expect(component).toContainText("Mentor Relay");
-		await expect(component).toContainText("Command Arcology");
-		await expect(component).toContainText("Abyssal Extraction Ward");
+		await expect(component).toContainText("Research Site");
+		await expect(component).toContainText("Command Nexus");
+		await expect(component).toContainText("Salvage Yard");
 		await expect(component).toContainText("Scene Loaded", { timeout: 20000 });
 		await expect(component).toHaveScreenshot();
 	});
@@ -42,8 +42,8 @@ test.describe("ecumenopolis world scene", () => {
 
 		await expect(component).toContainText("Ecumenopolis Validation");
 		await expect(component).toContainText("Command Arcology Anchor Cluster");
-		await expect(component).toContainText("Command Arcology");
-		await expect(component).toContainText("Archive Campus");
+		await expect(component).toContainText("Command Nexus");
+		await expect(component).toContainText("Signal Lab");
 		await expect(component).toContainText("Scene Loaded", { timeout: 20000 });
 		await expect(component).toHaveScreenshot();
 	});
@@ -57,12 +57,12 @@ test.describe("ecumenopolis world scene", () => {
 		);
 
 		await expect(component).toContainText("Player Substation Cluster");
-		await expect(component).toContainText("Command Arcology");
+		await expect(component).toContainText("Command Nexus");
 		await expect(component).toContainText("Scene Loaded", { timeout: 20000 });
 		await expect(component).toHaveScreenshot();
 	});
 
-	test("renders a rival machine cluster around the archive campus", async ({
+	test("renders a rival machine cluster around the research site", async ({
 		mount,
 		page,
 	}) => {
@@ -71,7 +71,7 @@ test.describe("ecumenopolis world scene", () => {
 		);
 
 		await expect(component).toContainText("Rival Research Cluster");
-		await expect(component).toContainText("Archive Campus");
+		await expect(component).toContainText("Signal Lab");
 		await expect(component).toContainText("Scene Loaded", { timeout: 20000 });
 		await expect(component).toHaveScreenshot();
 	});
@@ -82,7 +82,7 @@ test.describe("ecumenopolis world scene", () => {
 		);
 
 		await expect(component).toContainText("Cult Incursion Cluster");
-		await expect(component).toContainText("Cult Wards");
+		await expect(component).toContainText("Fracture Rift");
 		await expect(component).toContainText("Scene Loaded", { timeout: 20000 });
 		await expect(component).toHaveScreenshot();
 	});

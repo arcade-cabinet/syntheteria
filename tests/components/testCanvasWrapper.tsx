@@ -48,9 +48,6 @@ function OrthoRig({
 			camera.lookAt(...lookAt);
 			camera.updateProjectionMatrix();
 		}
-		// Render exactly one frame so the screenshot captures a stable image.
-		// The Canvas frameloop is set to "demand" so we must trigger manually.
-		gl.render(gl.domElement as unknown as THREE.Scene, camera);
 	}, [camera, gl, position, lookAt, zoom]);
 
 	return null;

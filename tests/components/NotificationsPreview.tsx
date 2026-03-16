@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { resetGameState } from "../../src/ecs/gameState";
 import { setResources } from "../../src/systems/resources";
 import { Notifications } from "../../src/ui/panels/Notifications";
-import { executeDistrictOperation } from "../../src/world/districtOperations";
 import {
 	resetRuntimeState,
 	setRuntimeTick,
@@ -82,12 +81,6 @@ export function NotificationsPreview() {
 			intactComponents: 2,
 		});
 		setRuntimeTick(240);
-		executeDistrictOperation({
-			cityInstanceId: 17,
-			poiType: "home_base",
-			state: "founded",
-			operationId: "fabricate_components",
-		});
 		setReady(true);
 
 		return () => {

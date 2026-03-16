@@ -1,4 +1,5 @@
 import { Canvas, useThree } from "@react-three/fiber";
+import { WorldProvider } from "koota/react";
 import { Suspense, useEffect, useState } from "react";
 import { resetGameState } from "../../src/ecs/gameState";
 import { world } from "../../src/ecs/world";
@@ -70,7 +71,7 @@ function createPreviewSession(seed: number): PreviewWorldSession {
 				? "founded"
 				: city.poiType === "coast_mines"
 					? "founded"
-					: city.poiType === "science_campus"
+					: city.poiType === "research_site"
 						? "surveyed"
 						: city.poiType === "deep_sea_gateway"
 							? "surveyed"
@@ -239,15 +240,15 @@ export function EcumenopolisWorldPreview({
 		const homeBase = session.pointsOfInterest.find(
 			(poi) => poi.type === "home_base",
 		)!;
-		const archiveCampus = session.pointsOfInterest.find(
-			(poi) => poi.type === "science_campus",
-		)!;
+		const archiveCampus =
+			session.pointsOfInterest.find((poi) => poi.type === "research_site") ??
+			homeBase;
 		const homeBaseWorld = gridToWorld(homeBase.q, homeBase.r);
 		const archiveWorld = gridToWorld(archiveCampus.q, archiveCampus.r);
-		const cultWard = session.pointsOfInterest.find(
-			(poi) => poi.type === "northern_cult_site",
-		)!;
-		const _cultWorld = gridToWorld(cultWard.q, cultWard.r);
+		const cultWard =
+			session.pointsOfInterest.find(
+				(poi) => poi.type === "northern_cult_site",
+			) ?? homeBase;
 		const homeFocus = getAnchorClusterFocus(session, homeBase.q, homeBase.r);
 		const archiveFocus = getAnchorClusterFocus(
 			session,
@@ -325,7 +326,8 @@ export function EcumenopolisWorldPreview({
 		>
 			{ready ? (
 				<>
-					<Canvas
+					<WorldProvider world={world}>
+						<Canvas
 						style={{ position: "absolute", inset: 0 }}
 						camera={{
 							position: [...cameraPosition],
@@ -362,7 +364,8 @@ export function EcumenopolisWorldPreview({
 						<Suspense fallback={null}>
 							<UnitRenderer />
 						</Suspense>
-					</Canvas>
+						</Canvas>
+					</WorldProvider>
 					<BriefingBubbleLayer />
 					<div
 						style={{

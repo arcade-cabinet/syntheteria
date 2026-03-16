@@ -1,6 +1,5 @@
 import type { Vec3 } from "../ecs/traits";
 import type { WorldPoiType } from "./contracts";
-import { getDistrictStructures } from "./districtStructures";
 import { gridToWorld, worldToGrid } from "./sectorCoordinates";
 import type {
 	CityRuntimeSnapshot,
@@ -141,50 +140,27 @@ function getBlockHeight(
 }
 
 function createCityBlocks(
-	session: WorldSessionSnapshot,
+	_session: WorldSessionSnapshot,
 	city: CityRuntimeSnapshot,
 	poi: SectorPoiSnapshot,
 ): DistrictStackBlock[] {
 	const origin = gridToWorld(city.world_q, city.world_r);
-	const structures = getDistrictStructures({
-		poiType: poi.type,
-		state: city.state,
-	});
+	const blockCount = _getBaseBlockCount(poi.type, city);
+	const role = getCityRole(poi.type);
+	const palette = getCityPalette(role);
 	const blocks: DistrictStackBlock[] = [];
 	const seed = city.layout_seed;
 
-	for (let index = 0; index < structures.length; index++) {
-		const structure = structures[index]!;
-		const role =
-			structure.role === "hostile"
-				? "fortress"
-				: structure.role === "power" || structure.role === "transit"
-					? "industrial"
-					: structure.role === "defense"
-						? "fortress"
-						: structure.role === "research"
-							? "research"
-							: structure.role === "core"
-								? "core"
-								: getCityRole(poi.type);
-		const palette = getCityPalette(role);
+	for (let index = 0; index < blockCount; index++) {
+		const baseHeight = getBlockHeight(poi.type, city, index, seed);
 		const ring = 0.18 + hash(seed, index + 11) * 0.62;
 		const angle = hash(seed, index + 37) * Math.PI * 2;
-		const towerBias =
-			structure.role === "research" || structure.id === "substation_core"
-				? 1.65
-				: 1;
-		const baseHeight = getBlockHeight(poi.type, city, index, seed) * towerBias;
-		const width =
-			(structure.role === "transit" ? 0.28 : 0.18) +
-			hash(seed, index + 101) * 0.22;
-		const depth =
-			(structure.role === "defense" ? 0.26 : 0.18) +
-			hash(seed, index + 151) * 0.22;
+		const width = 0.18 + hash(seed, index + 101) * 0.22;
+		const depth = 0.18 + hash(seed, index + 151) * 0.22;
 		const x = origin.x + Math.cos(angle) * ring;
 		const z = origin.z + Math.sin(angle) * ring;
 		blocks.push({
-			id: `${city.id}:block:${structure.id}`,
+			id: `${city.id}:block:${index}`,
 			districtId: city.id,
 			role,
 			position: { x, y: baseHeight / 2 + 0.08, z },

@@ -25,7 +25,7 @@ const cases: Array<{
 		displayName: "Fabricator",
 		preferredCategory: "Preferred category: build",
 		allowedCategories:
-			"Allowed categories: move, build, fabricate, harvest, district, survey, system",
+			"Allowed categories: move, build, fabricate, harvest, survey, system",
 	},
 	{
 		unitType: "mecha_golem",

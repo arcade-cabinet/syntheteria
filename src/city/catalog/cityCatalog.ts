@@ -42,6 +42,11 @@ export function getCityModelById(id: string) {
 	return model;
 }
 
+/** Soft lookup — returns undefined instead of throwing for models not in the manifest. */
+export function findCityModelById(id: string): CityModelDefinition | undefined {
+	return CITY_MODELS.find((model) => model.id === id);
+}
+
 export function getCityModelsByFamily(family: CityFamily) {
 	return CITY_MODELS.filter((model) => model.family === family);
 }

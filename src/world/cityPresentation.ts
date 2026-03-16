@@ -98,7 +98,7 @@ export function describeCityState(state: CityInstanceState | undefined) {
 		case "latent":
 			return "Unsurveyed Shell";
 		case "surveyed":
-			return "Surveyed District";
+			return "Surveyed Base";
 		case "founded":
 			return "Substation Online";
 		default:

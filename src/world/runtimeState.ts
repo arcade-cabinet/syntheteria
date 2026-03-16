@@ -10,7 +10,6 @@ let runtimeState: RuntimeState = {
 	citySiteModalOpen: false,
 	citySiteModalContext: null,
 	currentTick: 0,
-	districtEvents: [],
 	nearbyPoi: null,
 	resources: defaultResourcePool(),
 };
@@ -38,7 +37,6 @@ export function resetRuntimeState() {
 		citySiteModalOpen: false,
 		citySiteModalContext: null,
 		currentTick: 0,
-		districtEvents: [],
 		nearbyPoi: null,
 		resources: defaultResourcePool(),
 	};
@@ -96,23 +94,6 @@ export function setRuntimeResources(resources: RuntimeState["resources"]) {
 	runtimeState = {
 		...runtimeState,
 		resources: { ...resources },
-	};
-	notify();
-}
-
-export function pushDistrictEvent(
-	event: Omit<RuntimeState["districtEvents"][number], "id">,
-) {
-	const eventIndex = runtimeState.districtEvents.length;
-	runtimeState = {
-		...runtimeState,
-		districtEvents: [
-			{
-				...event,
-				id: `${event.operationId}:${event.tick}:${eventIndex}`,
-			},
-			...runtimeState.districtEvents,
-		].slice(0, 6),
 	};
 	notify();
 }

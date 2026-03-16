@@ -7,6 +7,7 @@
  * the StructuralFloorRenderer and CityRenderer can read their data.
  */
 import { Canvas, useThree } from "@react-three/fiber";
+import { WorldProvider } from "koota/react";
 import { Suspense, useEffect, useState } from "react";
 import * as THREE from "three";
 import { resetGameState } from "../../src/ecs/gameState";
@@ -225,7 +226,8 @@ export function WorldOverviewPreview() {
 		>
 			{ready && session ? (
 				<>
-					<Canvas
+					<WorldProvider world={world}>
+						<Canvas
 						style={{ position: "absolute", inset: 0 }}
 						camera={{
 							position: [centerX, 50, centerZ + 35],
@@ -253,7 +255,8 @@ export function WorldOverviewPreview() {
 						<Suspense fallback={null}>
 							<CityRenderer profile="overview" session={session} />
 						</Suspense>
-					</Canvas>
+						</Canvas>
+					</WorldProvider>
 					<div
 						data-testid="canvas-status"
 						style={{

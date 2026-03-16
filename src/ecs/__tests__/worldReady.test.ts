@@ -139,7 +139,6 @@ jest.mock("../../world/runtimeState", () => ({
 		activeCityInstanceId: null,
 		cityKitLabOpen: false,
 		nearbyPoi: null,
-		districtEvents: [],
 		currentTick: 0,
 	}),
 	setRuntimeTick: jest.fn(),

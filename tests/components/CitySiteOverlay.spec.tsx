@@ -9,12 +9,7 @@ test.describe("city site overlay", () => {
 
 		await expect(component).toContainText("Science Campus");
 		await expect(component).toContainText("Action Flow");
-		await expect(component).toContainText("District Structures");
-		await expect(component).toContainText("District Functions");
-		await expect(component).toContainText("Operational Actions");
-		await expect(component).toContainText("Research");
-		await expect(component).toContainText("Archive Cluster");
-		await expect(component).toContainText("Review Archive");
+		await expect(component).toContainText("Surveying commits the site layout");
 		await expect(component.getByTestId("city-site-enter")).toBeVisible();
 	});
 

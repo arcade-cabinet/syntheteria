@@ -4,7 +4,6 @@ export type BotRadialCategoryId =
 	| "move"
 	| "combat"
 	| "build"
-	| "district"
 	| "repair"
 	| "fabricate"
 	| "harvest"
@@ -60,7 +59,7 @@ const BOT_COMMAND_PROFILES: Record<BotUnitType, BotCommandProfile> = {
 	},
 	mecha_scout: {
 		unitType: "mecha_scout",
-		allowedCategories: ["move", "survey", "district", "system"],
+		allowedCategories: ["move", "survey", "system"],
 		canMove: true,
 		canPatrol: true,
 		canAttack: false,
@@ -111,7 +110,6 @@ const BOT_COMMAND_PROFILES: Record<BotUnitType, BotCommandProfile> = {
 			"build",
 			"fabricate",
 			"harvest",
-			"district",
 			"survey",
 			"system",
 		],

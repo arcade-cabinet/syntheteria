@@ -73,7 +73,6 @@ describe("saveAllStateSync", () => {
 			cityKitLabOpen: false,
 			citySiteModalOpen: false,
 			citySiteModalContext: null,
-			districtEvents: [],
 			nearbyPoi: null,
 			resources: resources.defaultResourcePool(),
 		});

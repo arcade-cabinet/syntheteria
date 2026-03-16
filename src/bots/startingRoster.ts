@@ -141,7 +141,7 @@ export function createStartingRoster(args: {
 				{ name: "power_cell", functional: true, material: "electronic" },
 			],
 		}),
-		// ─── Starting Building ───────────────────────────────────────────────
+		// ─── Starting Buildings ──────────────────────────────────────────────
 		{
 			entityId: "bldg_5",
 			sceneLocation: "world",
@@ -168,6 +168,34 @@ export function createStartingRoster(args: {
 			rodCapacity: 12,
 			currentOutput: 4,
 			protectionRadius: 8,
+		},
+		// Motor Pool — key Expand structure; fabricates new bots
+		{
+			entityId: "bldg_6",
+			sceneLocation: "world",
+			sceneBuildingId: null,
+			faction: "player",
+			unitType: null,
+			botArchetypeId: null,
+			markLevel: null,
+			speechProfile: null,
+			buildingType: "motor_pool",
+			displayName: "Motor Pool",
+			fragmentId: "world_primary",
+			x: spawn.x - 3,
+			y: 0,
+			z: spawn.z - 1,
+			speed: null,
+			selected: false,
+			components: [],
+			navigation: null,
+			aiRole: null,
+			aiStateJson: null,
+			powered: true,
+			operational: true,
+			rodCapacity: null,
+			currentOutput: null,
+			protectionRadius: null,
 		},
 	];
 }

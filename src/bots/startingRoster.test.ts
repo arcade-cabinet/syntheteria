@@ -4,12 +4,24 @@ describe("startingRoster", () => {
 	it("spawns the 5-unit starting roster per BOT_AND_ECONOMY_REDESIGN", () => {
 		const roster = createStartingRoster({ spawnQ: 10, spawnR: -4 });
 
-		// 5 units + 1 lightning rod building = 6 entities
-		expect(roster).toHaveLength(6);
+		// 5 units + lightning_rod + motor_pool = 7 entities
+		expect(roster).toHaveLength(7);
 		expect(roster.filter((entity) => entity.unitType !== null)).toHaveLength(5);
 		expect(
 			roster.filter((entity) => entity.buildingType !== null),
-		).toHaveLength(1);
+		).toHaveLength(2);
+	});
+
+	it("includes a motor pool building", () => {
+		const roster = createStartingRoster({ spawnQ: 10, spawnR: -4 });
+		const motorPool = roster.find((e) => e.buildingType === "motor_pool");
+		expect(motorPool).toMatchObject({
+			powered: true,
+			operational: true,
+			rodCapacity: null,
+			currentOutput: null,
+			protectionRadius: null,
+		});
 	});
 
 	it("starts with Technician selected and camera broken", () => {

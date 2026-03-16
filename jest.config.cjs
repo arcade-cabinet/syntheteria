@@ -9,7 +9,11 @@ module.exports = {
 				"^.+\\.tsx?$": ["ts-jest", { tsconfig: { jsx: "react-jsx" } }],
 			},
 			testMatch: ["**/src/**/*.test.ts", "**/src/**/*.test.tsx"],
-			testPathIgnorePatterns: ["/node_modules/", "/src/ui/__tests__/"],
+			testPathIgnorePatterns: [
+				"/node_modules/",
+				"/src/ui/__tests__/",
+				"/.claude/worktrees/",
+			],
 			moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
 			moduleNameMapper: {
 				"\\.(png|jpg|jpeg|webp|glb|gltf|bin)$":

@@ -11,10 +11,20 @@ import type { SyncDatabase } from "./types";
 /**
  * Initialize Capacitor SQLite for the Vite app (web and native).
  * Call once before creating the session DB.
+ * Fails gracefully when jeep-sqlite web component is absent (E2E headless
+ * Chromium, dev without the web component script) — session uses in-memory
+ * sql.js only.
  */
 export async function initCapacitorDbForVite(): Promise<void> {
-	await initCapacitorDb();
-	await runBootstrapCapacitor();
+	try {
+		await initCapacitorDb();
+		await runBootstrapCapacitor();
+	} catch (err) {
+		console.warn(
+			"[Capacitor SQLite] Persistence layer unavailable — session will use in-memory DB only.",
+			err,
+		);
+	}
 }
 
 /**

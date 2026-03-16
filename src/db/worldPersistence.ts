@@ -1,4 +1,5 @@
 import type { AgentRole } from "../ai";
+import { createStartingRoster } from "../bots/startingRoster";
 import type { UnitComponent } from "../ecs/traits";
 import type { ResourcePool } from "../systems/resources";
 import { loadChunkDiscovery } from "../world/chunkDiscovery";
@@ -33,7 +34,6 @@ import type {
 	WorldEntitySnapshot,
 	WorldSessionSnapshot,
 } from "../world/snapshots";
-import { createInitialCampaignEntities } from "../world/startingForces";
 import { initializeDatabaseSync } from "./bootstrap";
 import { getDatabaseSync, setDatabaseResolver } from "./runtime";
 import type { SaveGameRecord } from "./saveGames";
@@ -409,7 +409,10 @@ export function persistGeneratedWorldSync(
 	ensureResourceStateSync(saveGame.id, database, now);
 	persistWorldEntitiesSync(
 		saveGame.id,
-		createInitialCampaignEntities(generatedWorld),
+		createStartingRoster({
+			spawnQ: Math.floor(generatedWorld.ecumenopolis.width / 2),
+			spawnR: Math.floor(generatedWorld.ecumenopolis.height / 2),
+		}),
 		database,
 	);
 
@@ -466,7 +469,7 @@ function ensureResourceStateSync(
 				intact_components,
 				last_synced_at
 			)
-			VALUES (?, 0, 0, 0, ?)
+			VALUES (?, 30, 15, 0, ?)
 		`,
 		saveGameId,
 		now,

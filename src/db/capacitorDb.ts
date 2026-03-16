@@ -17,12 +17,18 @@ let connectionOpen = false;
 /**
  * Initialize the web store (required on web before createConnection).
  * No-op on native.
+ * Uses a 2 s timeout because `customElements.whenDefined('jeep-sqlite')`
+ * inside the Capacitor web plugin never resolves when the jeep-sqlite web
+ * component is absent — without the timeout the app hangs forever.
  */
 export async function initWebStore(): Promise<void> {
+	const timeout = new Promise<void>((_, reject) =>
+		setTimeout(() => reject(new Error("jeep-sqlite not available")), 2000),
+	);
 	try {
-		await CapacitorSQLite.initWebStore();
+		await Promise.race([CapacitorSQLite.initWebStore(), timeout]);
 	} catch {
-		// Not on web or plugin not available
+		// Not on web or plugin not available — proceed without web store
 	}
 }
 

@@ -12,7 +12,8 @@
 			"!tests/components/**",
 			"!tests/visual/**",
 			"!assets/coi-serviceworker.js",
-			"!public/assets/coi-serviceworker.js"
+			"!public/assets/coi-serviceworker.js",
+			"!.claude/worktrees/**"
 		]
 	},
 	"formatter": { "enabled": true, "indentStyle": "tab" },
@@ -60,7 +61,8 @@
 			"!tests/components/**",
 			"!tests/visual/**",
 			"!assets/coi-serviceworker.js",
-			"!public/assets/coi-serviceworker.js"
+			"!public/assets/coi-serviceworker.js",
+			"!.claude/worktrees/**"
 		]
 	},
 	"javascript": {

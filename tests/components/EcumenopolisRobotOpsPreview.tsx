@@ -35,7 +35,7 @@ import type {
 	WorldEntitySnapshot,
 	WorldSessionSnapshot,
 } from "../../src/world/snapshots";
-import { createInitialCampaignEntities } from "../../src/world/startingForces";
+import { createStartingRoster } from "../../src/bots/startingRoster";
 import {
 	loadStructuralFragment,
 	resetStructuralSpace,
@@ -76,7 +76,10 @@ function createPreviewSession(seed: number): PreviewWorldSession {
 		stormProfile: "volatile",
 	});
 	const generated = generateWorldData(config);
-	const startingEntities = createInitialCampaignEntities(generated);
+	const startingEntities = createStartingRoster({
+		spawnQ: Math.floor(generated.ecumenopolis.width / 2),
+		spawnR: Math.floor(generated.ecumenopolis.height / 2),
+	});
 	const pointsOfInterest = generated.pointsOfInterest.map((poi, index) => ({
 		id: index + 1,
 		ecumenopolis_id: 1,

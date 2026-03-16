@@ -54,16 +54,19 @@ describe("world persistence", () => {
 			persisted.pointsOfInterest.some((poi) => poi.type === "home_base"),
 		).toBe(true);
 		expect(persisted.campaignState.active_scene).toBe("world");
-		expect(persisted.resourceState.scrap_metal).toBe(0);
-		expect(persisted.entities).toHaveLength(2);
-		const bot0 = persisted.entities.find(
-			(entity) => entity.entity_id === "player_bot_0",
+		expect(persisted.resourceState.scrap_metal).toBe(30);
+		expect(persisted.resourceState.e_waste).toBe(15);
+		// 5 bots + lightning_rod + motor_pool = 7 starting entities
+		expect(persisted.entities).toHaveLength(7);
+		expect(
+			persisted.entities.some((e) => e.unit_type === "maintenance_bot"),
+		).toBe(true);
+		expect(persisted.entities.some((e) => e.unit_type === "mecha_scout")).toBe(
+			true,
 		);
-		const bot1 = persisted.entities.find(
-			(entity) => entity.entity_id === "player_bot_1",
-		);
-		expect(bot0?.unit_type).toBe("maintenance_bot");
-		expect(bot1?.unit_type).toBe("mecha_scout");
+		expect(
+			persisted.entities.some((e) => e.building_type === "motor_pool"),
+		).toBe(true);
 		expect(persisted.sectorStructures.length).toBeGreaterThan(0);
 		expect(
 			persisted.sectorStructures.some(

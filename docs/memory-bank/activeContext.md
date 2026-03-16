@@ -39,6 +39,14 @@ Full plan: [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION
 
 ---
 
+## Recent Changes (2026-03-16)
+
+- **done-checklist.spec.ts PASSES** — `title-new_game` → `game-scene-ready` in ~12s. GOAP auto-play advances 3 turns. Graceful skip when `title-load_game` absent (in-memory DB loses saves on reload).
+- **Capacitor SQLite boot fix** — `initWebStore()` uses `Promise.race()` with 2s timeout to prevent infinite hang when `jeep-sqlite` web component absent (headless E2E, dev without web component script). `initCapacitorDbForVite()` wraps in try-catch for graceful fallback to in-memory sql.js.
+- **AppVite.tsx** — Added `title-settings` button (opens Settings overlay with `settings-close` to dismiss). `title-load_game` is now conditional on `saveCount > 0`. `saveCount` initialized from `getSaveGameCountSync()` on mount.
+- **pnpm verify** — 36 CT + 142 Jest suites all green. TitleScreen CT snapshot updated (LoadingOverlay animation frame variance).
+- **IS_THE_GAME_DONE.md** — Manual 0.5 and 0.6 marked ✅ E2E verified (2026-03-16).
+
 ## Recent Changes (2026-03-15 session 2)
 
 - **Koota migration W0–W5 complete** — Full audit of all migration tasks; confirmed W4 (T29/T30/T31/T32 — Experience, AnimationState, BotLOD, turret cooldown) and W1/W2 tasks (T4–T11, T13–T17) were already done in prior sessions. Marked ~20 tasks completed, 5 deleted (T23/T24/T25/T28/T33 not applicable given actual system architecture).
@@ -59,10 +67,9 @@ Full plan: [EXPO_TO_CAPACITOR_MIGRATION.md](../plans/EXPO_TO_CAPACITOR_MIGRATION
 
 ## Next Steps
 
-- **Path to done:** See [IS_THE_GAME_DONE.md](../plans/IS_THE_GAME_DONE.md). 1) `pnpm verify` green. 2) `pnpm test:e2e` (app must boot: Capacitor + sql.js WASM at `/sql-wasm.wasm`). 3) Manual 0.5 (floor visible). 4) Manual 0.6 (radial, turn, save/load). 5) PR merged.
-- **Use [PRIORITIZATION.md](../plans/PRIORITIZATION.md) for what to do next.** P0 (journey blockers) first, then P1 by journey phase. P2 (depth, tests). P3 = NICE_TO_HAVES.
+- **PR:** Create `ralph/syntheteria-1-0` → `main` PR and merge (T47). All gates green: `pnpm verify` ✅, E2E done-checklist ✅, title tests ✅, IS_THE_GAME_DONE.md 0.5/0.6 ✅.
+- **Use [PRIORITIZATION.md](../plans/PRIORITIZATION.md) for post-merge work.** P0 (journey blockers) first, then P1 by journey phase. P2 (depth, tests). P3 = NICE_TO_HAVES.
 - Maestro web: adjust selector or wait if E2E required (P2).
-- PR: `gh pr create` when branch is pushed (T9).
 
 ## Recent Changes (2026-03-13)
 

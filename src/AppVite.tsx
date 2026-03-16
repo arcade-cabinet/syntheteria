@@ -9,6 +9,7 @@ import { saveAllStateSync } from "./db/saveAllState";
 import {
 	createSaveGameSync,
 	getLatestSaveGameSync,
+	getSaveGameCountSync,
 	type SaveGameRecord,
 	touchSaveGameSync,
 } from "./db/saveGames";
@@ -75,6 +76,14 @@ function AppInner() {
 	const [loadingLabel, setLoadingLabel] = useState("Hydrating world");
 	const [isLoading, setIsLoading] = useState(false);
 	const [sceneReady, setSceneReady] = useState(false);
+	const [saveCount, setSaveCount] = useState(() => {
+		try {
+			return getSaveGameCountSync();
+		} catch {
+			return 0;
+		}
+	});
+	const [showSettings, setShowSettings] = useState(false);
 
 	const handleNewGame = async (config: NewGameConfig) => {
 		setLoadingLabel("Generating persistent world");
@@ -91,6 +100,7 @@ function AppInner() {
 			hydratePersistedWorld(persistedWorld);
 			setWorldReady(true);
 			startTransition(() => {
+				setSaveCount((c) => c + 1);
 				setInGame(true);
 				setIsLoading(false);
 			});
@@ -170,22 +180,89 @@ function AppInner() {
 						>
 							New Game
 						</button>
+						{saveCount > 0 && (
+							<button
+								type="button"
+								data-testid="title-load_game"
+								onClick={handleContinueGame}
+								style={{
+									padding: "12px 24px",
+									fontSize: 16,
+									background: "#1a3a4a",
+									color: "#8be6ff",
+									border: "1px solid #2a5a6a",
+									borderRadius: 4,
+									cursor: "pointer",
+								}}
+							>
+								Continue
+							</button>
+						)}
 						<button
 							type="button"
-							data-testid="title-load_game"
-							onClick={handleContinueGame}
+							data-testid="title-settings"
+							onClick={() => setShowSettings(true)}
 							style={{
 								padding: "12px 24px",
 								fontSize: 16,
-								background: "#1a3a4a",
+								background: "#111820",
 								color: "#8be6ff",
 								border: "1px solid #2a5a6a",
 								borderRadius: 4,
 								cursor: "pointer",
 							}}
 						>
-							Continue
+							Options
 						</button>
+					</div>
+				)}
+				{showSettings && (
+					<div
+						style={{
+							position: "fixed",
+							inset: 0,
+							background: "rgba(0,0,0,0.72)",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+						}}
+					>
+						<div
+							style={{
+								background: "#0a1520",
+								border: "1px solid #2a5a6a",
+								borderRadius: 12,
+								padding: 32,
+								minWidth: 320,
+								color: "#edfaff",
+								fontFamily: "system-ui, sans-serif",
+							}}
+						>
+							<div
+								style={{
+									fontSize: 18,
+									letterSpacing: 2,
+									marginBottom: 24,
+								}}
+							>
+								Settings
+							</div>
+							<button
+								type="button"
+								data-testid="settings-close"
+								onClick={() => setShowSettings(false)}
+								style={{
+									padding: "8px 20px",
+									background: "#1a3a4a",
+									color: "#8be6ff",
+									border: "1px solid #2a5a6a",
+									borderRadius: 4,
+									cursor: "pointer",
+								}}
+							>
+								Close
+							</button>
+						</div>
 					</div>
 				)}
 			</div>

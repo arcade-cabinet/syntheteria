@@ -44,7 +44,7 @@ jobs:
         run: pnpm exec jest --runInBand
 
       - name: Build web export
-        run: pnpm run build:web
+        run: pnpm build
 
   e2e:
     name: E2E Tests (Playwright)

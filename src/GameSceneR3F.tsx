@@ -142,21 +142,27 @@ export function GameSceneR3F({ onSceneReady }: { onSceneReady: () => void }) {
 			style={{ position: "absolute", inset: 0 }}
 			shadows
 			camera={{ position: [0, 20, 20], fov: 45 }}
-			{...(USE_WEBGPU_WEB && {
-				gl: (async (defaultProps: {
-					canvas: HTMLCanvasElement | OffscreenCanvas;
-				}) => {
-					const { WebGPURenderer } = await import("three/webgpu");
-					const renderer = new WebGPURenderer({
-						canvas: defaultProps.canvas as HTMLCanvasElement,
-						antialias: true,
-						alpha: true,
-					});
-					await renderer.init();
-					return renderer;
-				}) as import("@react-three/fiber").GLProps,
-			})}
+			{...(USE_WEBGPU_WEB
+				? {
+						gl: (async (defaultProps: {
+							canvas: HTMLCanvasElement | OffscreenCanvas;
+						}) => {
+							const { WebGPURenderer } = await import("three/webgpu");
+							const renderer = new WebGPURenderer({
+								canvas: defaultProps.canvas as HTMLCanvasElement,
+								antialias: true,
+								alpha: false,
+							});
+							await renderer.init();
+							return renderer;
+						}) as import("@react-three/fiber").GLProps,
+					}
+				: { gl: { alpha: false } })}
 		>
+			{/* Background color must be outside Suspense so scene.background is set
+			    immediately — even while GLBs are loading. Inside Suspense it unmounts
+			    during loading, leaving scene.background=null and the canvas transparent. */}
+			<color attach="background" args={["#030308"]} />
 			<Suspense
 				fallback={
 					<mesh>
@@ -166,7 +172,6 @@ export function GameSceneR3F({ onSceneReady }: { onSceneReady: () => void }) {
 				}
 			>
 				<SceneReadySignal onReady={onSceneReady} />
-				<color attach="background" args={["#030308"]} />
 				<TopDownCamera />
 				{activeScene === "world" ? <WorldScene /> : <CityInteriorScene />}
 			</Suspense>

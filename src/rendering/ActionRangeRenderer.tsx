@@ -22,7 +22,6 @@ import { getStructuralFragment } from "../world/structuralSpace";
 
 const HARVEST_RANGE = 4.0;
 const ATTACK_RANGE = 3.0;
-const _HACK_RANGE = 6.0;
 const BUILD_RANGE = 2.5;
 
 const COLOR_HARVEST = new THREE.Color(0xf6c56a);

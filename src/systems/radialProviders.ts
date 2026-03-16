@@ -1,5 +1,7 @@
+import { issueMoveCommand } from "../ai";
 import { getBotCommandProfile, isBotCategoryAllowed } from "../bots";
 import { setGameSpeed, togglePause } from "../ecs/gameState";
+import { gameplayRandom } from "../ecs/seed";
 import {
 	Building,
 	Identity,
@@ -25,6 +27,7 @@ import {
 	computeAdjacencyBonuses,
 	setActivePlacement,
 } from "./buildingPlacement";
+import { areFactionsHostile } from "./combat";
 import {
 	applyMarkUpgrade,
 	awardXP,
@@ -66,6 +69,7 @@ import {
 	isHarvestable,
 } from "./resourcePools";
 import { getResources, spendResource } from "./resources";
+import { pushToast } from "./toastNotifications";
 import { logTurnEvent } from "./turnEventLog";
 import {
 	hasActionPoints,
@@ -169,7 +173,22 @@ registerRadialProvider({
 							enabled: unitHasMP,
 							disabledReason: unitHasMP ? undefined : "No MP remaining",
 							onExecute: () => {
-								// TODO: wire to patrol order system
+								const entity = findEntityById(ctx.targetEntityId ?? null);
+								if (!entity || !ctx.targetEntityId) return;
+								if (!hasMovementPoints(ctx.targetEntityId)) {
+									pushToast("system", "No MP", "No movement points to patrol");
+									return;
+								}
+								const pos = entity.get(WorldPosition);
+								if (!pos) return;
+								// Move to a random point within patrol radius
+								const angle = gameplayRandom() * Math.PI * 2;
+								const dist = 4 + gameplayRandom() * 6;
+								issueMoveCommand(ctx.targetEntityId, {
+									x: pos.x + Math.cos(angle) * dist,
+									y: pos.y,
+									z: pos.z + Math.sin(angle) * dist,
+								});
 							},
 						},
 					]
@@ -211,11 +230,52 @@ registerRadialProvider({
 				enabled: unitHasAP,
 				disabledReason: noApReason,
 				onExecute: () => {
-					if (ctx.targetEntityId) {
-						spendActionPoint(ctx.targetEntityId, 1);
-						awardXPToActor(ctx.targetEntityId, "combat");
+					const entity = findEntityById(ctx.targetEntityId ?? null);
+					if (!entity || !ctx.targetEntityId) return;
+					const pos = entity.get(WorldPosition);
+					const identity = entity.get(Identity);
+					if (!pos || !identity) return;
+					// Find nearest hostile unit
+					let nearestPos: { x: number; y: number; z: number } | null = null;
+					let nearestDist = Infinity;
+					for (const candidate of units) {
+						const cId = candidate.get(Identity);
+						if (!cId || !areFactionsHostile(identity.faction, cId.faction))
+							continue;
+						const cPos = candidate.get(WorldPosition);
+						if (!cPos) continue;
+						const dx = cPos.x - pos.x;
+						const dz = cPos.z - pos.z;
+						const d = Math.sqrt(dx * dx + dz * dz);
+						if (d < nearestDist) {
+							nearestDist = d;
+							nearestPos = { x: cPos.x, y: cPos.y, z: cPos.z };
+						}
 					}
-					// TODO: wire to attack order
+					if (!nearestPos) {
+						pushToast("combat", "No target", "No hostiles nearby to engage");
+						return;
+					}
+					// Already adjacent — combat auto-resolves each tick when in melee range
+					if (nearestDist <= 2.5) {
+						pushToast(
+							"combat",
+							"Engaging",
+							"Attacking — hold position to continue",
+						);
+						return;
+					}
+					// Move toward nearest hostile; combat auto-resolves once adjacent
+					if (hasMovementPoints(ctx.targetEntityId)) {
+						issueMoveCommand(ctx.targetEntityId, nearestPos);
+						awardXPToActor(ctx.targetEntityId, "combat");
+					} else {
+						pushToast(
+							"combat",
+							"No MP",
+							"No movement points to close on target",
+						);
+					}
 				},
 			});
 		}
@@ -228,11 +288,33 @@ registerRadialProvider({
 				enabled: unitHasAP,
 				disabledReason: noApReason,
 				onExecute: () => {
-					if (ctx.targetEntityId) {
-						spendActionPoint(ctx.targetEntityId, 1);
-						awardXPToActor(ctx.targetEntityId, "hack");
+					const hackerEntity = findEntityById(ctx.targetEntityId ?? null);
+					if (!hackerEntity || !ctx.targetEntityId) return;
+					if (!hasActionPoints(ctx.targetEntityId)) return;
+					const hackerPos = hackerEntity.get(WorldPosition);
+					if (!hackerPos) return;
+					// Find the nearest hackable hostile within HACK_RANGE
+					for (const candidate of units) {
+						const cId = candidate.get(Identity);
+						if (!cId || cId.faction === "player") continue;
+						const cPos = candidate.get(WorldPosition);
+						if (!cPos) continue;
+						const dx = cPos.x - hackerPos.x;
+						const dz = cPos.z - hackerPos.z;
+						if (Math.sqrt(dx * dx + dz * dz) > HACK_RANGE) continue;
+						const check = checkHackEligibility(hackerEntity, candidate);
+						if (!check.canHack) continue;
+						if (initiateHack(hackerEntity, candidate)) {
+							spendActionPoint(ctx.targetEntityId, 1);
+							awardXPToActor(ctx.targetEntityId, "hack");
+						}
+						return;
 					}
-					// TODO: wire to hacking system
+					pushToast(
+						"system",
+						"No hack target",
+						`No hackable units within ${HACK_RANGE}m`,
+					);
 				},
 			});
 		}
@@ -245,11 +327,14 @@ registerRadialProvider({
 				enabled: unitHasAP,
 				disabledReason: noApReason,
 				onExecute: () => {
-					if (ctx.targetEntityId) {
-						spendActionPoint(ctx.targetEntityId, 1);
-						awardXPToActor(ctx.targetEntityId, "fortify");
-					}
-					// TODO: wire to fortification orders
+					if (!ctx.targetEntityId) return;
+					// Spend AP to signal commitment; the combat system will apply
+					// the taunt mechanic automatically while the unit holds position.
+					spendActionPoint(ctx.targetEntityId, 1);
+					awardXPToActor(ctx.targetEntityId, "fortify");
+					logTurnEvent("combat", ctx.targetEntityId, "player", {
+						message: "Unit holds position — taunt active",
+					});
 				},
 			});
 		}

@@ -27,12 +27,12 @@ export default defineConfig({
 			},
 		},
 	],
-	webServer: process.env.CI
-		? undefined
-		: {
-				command: "pnpm dev",
-				url: "http://localhost:5173",
-				reuseExistingServer: !process.env.CI,
-				timeout: 60_000,
-			},
+	webServer: {
+		command: process.env.CI
+			? "pnpm build && pnpm exec vite preview --port 5173"
+			: "pnpm dev",
+		url: "http://localhost:5173",
+		reuseExistingServer: !process.env.CI,
+		timeout: process.env.CI ? 120_000 : 60_000,
+	},
 });

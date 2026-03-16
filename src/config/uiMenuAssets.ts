@@ -1,6 +1,6 @@
-import loadGameButton from "../../assets/ui/buttons/load_game.webp";
-import newGameButton from "../../assets/ui/buttons/new_game.webp";
-import settingsButton from "../../assets/ui/buttons/settings.webp";
+import loadGameButton from "../../assets/ui/buttons/load_game.webp?url";
+import newGameButton from "../../assets/ui/buttons/new_game.webp?url";
+import settingsButton from "../../assets/ui/buttons/settings.webp?url";
 import type { AssetModule } from "./assetUri";
 
 export type MenuButtonId = "new_game" | "load_game" | "settings";

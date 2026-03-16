@@ -11,25 +11,25 @@
  * 3. Place texture files in assets/materials/floors/<zone>/
  */
 
-import CommandAO from "../../assets/materials/floors/command_core/ao.jpg";
-import CommandColor from "../../assets/materials/floors/command_core/color.jpg";
-import CommandHeight from "../../assets/materials/floors/command_core/height.jpg";
-import CommandNormal from "../../assets/materials/floors/command_core/normal.jpg";
-import CommandRoughness from "../../assets/materials/floors/command_core/roughness.jpg";
-import CorridorColor from "../../assets/materials/floors/corridor_transit/color.jpg";
-import CorridorHeight from "../../assets/materials/floors/corridor_transit/height.jpg";
-import CorridorNormal from "../../assets/materials/floors/corridor_transit/normal.jpg";
-import CorridorRoughness from "../../assets/materials/floors/corridor_transit/roughness.jpg";
-import FabricationAO from "../../assets/materials/floors/fabrication/ao.jpg";
-import FabricationColor from "../../assets/materials/floors/fabrication/color.jpg";
-import FabricationHeight from "../../assets/materials/floors/fabrication/height.jpg";
-import FabricationNormal from "../../assets/materials/floors/fabrication/normal.jpg";
-import FabricationRoughness from "../../assets/materials/floors/fabrication/roughness.jpg";
-import HabitationAO from "../../assets/materials/floors/habitation/ao.jpg";
-import HabitationColor from "../../assets/materials/floors/habitation/color.jpg";
-import HabitationHeight from "../../assets/materials/floors/habitation/height.jpg";
-import HabitationNormal from "../../assets/materials/floors/habitation/normal.jpg";
-import HabitationRoughness from "../../assets/materials/floors/habitation/roughness.jpg";
+import CommandAO from "../../assets/materials/floors/command_core/ao.jpg?url";
+import CommandColor from "../../assets/materials/floors/command_core/color.jpg?url";
+import CommandHeight from "../../assets/materials/floors/command_core/height.jpg?url";
+import CommandNormal from "../../assets/materials/floors/command_core/normal.jpg?url";
+import CommandRoughness from "../../assets/materials/floors/command_core/roughness.jpg?url";
+import CorridorColor from "../../assets/materials/floors/corridor_transit/color.jpg?url";
+import CorridorHeight from "../../assets/materials/floors/corridor_transit/height.jpg?url";
+import CorridorNormal from "../../assets/materials/floors/corridor_transit/normal.jpg?url";
+import CorridorRoughness from "../../assets/materials/floors/corridor_transit/roughness.jpg?url";
+import FabricationAO from "../../assets/materials/floors/fabrication/ao.jpg?url";
+import FabricationColor from "../../assets/materials/floors/fabrication/color.jpg?url";
+import FabricationHeight from "../../assets/materials/floors/fabrication/height.jpg?url";
+import FabricationNormal from "../../assets/materials/floors/fabrication/normal.jpg?url";
+import FabricationRoughness from "../../assets/materials/floors/fabrication/roughness.jpg?url";
+import HabitationAO from "../../assets/materials/floors/habitation/ao.jpg?url";
+import HabitationColor from "../../assets/materials/floors/habitation/color.jpg?url";
+import HabitationHeight from "../../assets/materials/floors/habitation/height.jpg?url";
+import HabitationNormal from "../../assets/materials/floors/habitation/normal.jpg?url";
+import HabitationRoughness from "../../assets/materials/floors/habitation/roughness.jpg?url";
 import type { AssetModule } from "./assetUri";
 import floorTexturesConfigJson from "./floorTextures.json";
 import type { FloorTexturesConfig } from "./floorTextures.types";

@@ -1,6 +1,6 @@
-import backgroundImage from "../../assets/ui/background.png";
-import logosAtlas from "../../assets/ui/logos.png";
-import brandMarkImage from "../../assets/ui/mark.png";
+import backgroundImage from "../../assets/ui/background.png?url";
+import logosAtlas from "../../assets/ui/logos.png?url";
+import brandMarkImage from "../../assets/ui/mark.png?url";
 import type { AssetModule } from "./assetUri";
 
 export interface AtlasRegion {

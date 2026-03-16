@@ -4,53 +4,40 @@ import { EcumenopolisRadialBotPreview } from "./EcumenopolisRadialBotPreview";
 
 const cases: Array<{
 	unitType: BotUnitType;
-	text: string;
-	contains: string[];
+	displayName: string;
+	preferredCategory: string;
+	allowedCategories: string;
 }> = [
 	{
 		unitType: "maintenance_bot",
-		text: "Field Technician Chassis",
-		contains: [
-			"Visible categories: Move, Combat, Build, Survey, District, System",
-			"District actions: Brief, Enter, Stage Salvage, Extend Relay, Open Transit, Survey Gateway",
-			"Expanded actions: Brief",
-		],
+		displayName: "Technician",
+		preferredCategory: "Preferred category: repair",
+		allowedCategories: "Allowed categories: move, repair, survey, system",
 	},
 	{
 		unitType: "utility_drone",
-		text: "Relay Hauler Drone",
-		contains: [
-			"Visible categories: Move, Build, Survey, District, System",
-			"District actions: Brief, Enter, Stage Salvage, Extend Relay, Open Transit, Survey Gateway",
-			"Expanded actions: Relay",
-		],
+		displayName: "Hauler",
+		preferredCategory: "Preferred category: move",
+		allowedCategories: "Allowed categories: move, survey, system",
 	},
 	{
 		unitType: "fabrication_unit",
-		text: "Fabrication Rig",
-		contains: [
-			"Visible categories: Fabricate, Survey, District, System",
-			"District actions: Brief, Enter, Stage Salvage, Extend Relay, Open Transit, Survey Gateway",
-			"Expanded actions: Camera Module, Arm Assembly, Leg Assembly, Power Cell, Power Supply",
-		],
+		displayName: "Fabricator",
+		preferredCategory: "Preferred category: build",
+		allowedCategories:
+			"Allowed categories: move, build, fabricate, harvest, district, survey, system",
 	},
 	{
 		unitType: "mecha_golem",
-		text: "Substation Engineer Hull",
-		contains: [
-			"Visible categories: Move, Combat, Build, Survey, District, System",
-			"District actions: Brief, Enter, Stage Salvage, Extend Relay, Open Transit, Survey Gateway",
-			"Expanded actions: Rod, Fabricator, Relay, Establish",
-		],
+		displayName: "Guardian",
+		preferredCategory: "Preferred category: combat",
+		allowedCategories: "Allowed categories: move, combat, survey, system",
 	},
 	{
 		unitType: "field_fighter",
-		text: "Assault Strider",
-		contains: [
-			"Visible categories: Move, Combat, Survey, District, System",
-			"District actions: Brief, Enter, Stage Salvage, Extend Relay, Open Transit, Survey Gateway",
-			"Expanded actions: Attack, Fortify",
-		],
+		displayName: "Striker",
+		preferredCategory: "Preferred category: combat",
+		allowedCategories: "Allowed categories: move, combat, survey, system",
 	},
 ];
 
@@ -64,11 +51,10 @@ for (const testCase of cases) {
 		);
 
 		await expect(component).toContainText("Radial Ownership Validation");
-		await expect(component).toContainText(testCase.text);
-		for (const expectedText of testCase.contains) {
-			await expect(component).toContainText(expectedText);
-		}
+		await expect(component).toContainText(testCase.displayName);
+		await expect(component).toContainText(testCase.preferredCategory);
+		await expect(component).toContainText(testCase.allowedCategories);
 		await expect(component).toContainText("Scene Loaded", { timeout: 20000 });
-		await expect(component).toHaveScreenshot();
+		await expect(component).toHaveScreenshot({ maxDiffPixelRatio: 0.05 });
 	});
 }

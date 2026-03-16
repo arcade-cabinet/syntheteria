@@ -1,4 +1,5 @@
 import { Canvas, useThree } from "@react-three/fiber";
+import { WorldProvider } from "koota/react";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import {
 	type BotUnitType,
@@ -31,8 +32,10 @@ import { UnitRenderer } from "../../src/rendering/UnitRenderer";
 import { setResources } from "../../src/systems/resources";
 import { BriefingBubbleLayer } from "../../src/ui/BriefingBubbleLayer";
 import { RadialMenu } from "../../src/ui/RadialMenu";
+import { getDatabaseSync } from "../../src/db/runtime";
 import { createNewGameConfig } from "../../src/world/config";
 import { generateWorldData } from "../../src/world/generation";
+import { initWorldGrid, resetWorldGrid } from "../../src/world/gen";
 import {
 	resetRuntimeState,
 	setNearbyPoi,
@@ -284,6 +287,8 @@ export function EcumenopolisRadialBotPreview({
 			poiType: session.pointsOfInterest[0]?.type ?? "home_base",
 		});
 
+		initWorldGrid(getDatabaseSync(), session.saveGame.world_seed, session.saveGame.id);
+
 		const centerX = 980;
 		const centerY = 430;
 		openRadialMenu(centerX, centerY, {
@@ -320,6 +325,7 @@ export function EcumenopolisRadialBotPreview({
 		return () => {
 			entity.destroy();
 			resetRadialMenu();
+			resetWorldGrid();
 			clearActiveWorldSession();
 			resetRuntimeState();
 			resetStructuralSpace();
@@ -341,29 +347,31 @@ export function EcumenopolisRadialBotPreview({
 		>
 			{ready ? (
 				<>
-					<Canvas
-						key={renderVersion}
-						style={{ position: "absolute", inset: 0 }}
-						camera={{ position: [...cameraPosition], fov: 34 }}
-					>
-						<color attach="background" args={["#03070d"]} />
-						<PreviewCameraRig target={cameraTarget} />
-						<AssetLoadBeacon onLoaded={() => setSceneLoaded(true)} />
-						<ambientLight intensity={1.0} color={0x8394aa} />
-						<hemisphereLight args={[0x7fb9ff, 0x071119, 0.9]} />
-						<directionalLight
-							position={[8, 16, 10]}
-							intensity={1.7}
-							color={0x8be6ff}
-						/>
-						<StructuralFloorRenderer profile="ops" session={session} />
-						<Suspense fallback={null}>
-							<CityRenderer profile="ops" session={session} />
-						</Suspense>
-						<Suspense fallback={null}>
-							<UnitRenderer />
-						</Suspense>
-					</Canvas>
+					<WorldProvider world={world}>
+						<Canvas
+							key={renderVersion}
+							style={{ position: "absolute", inset: 0 }}
+							camera={{ position: [...cameraPosition], fov: 34 }}
+						>
+							<color attach="background" args={["#03070d"]} />
+							<PreviewCameraRig target={cameraTarget} />
+							<AssetLoadBeacon onLoaded={() => setSceneLoaded(true)} />
+							<ambientLight intensity={1.0} color={0x8394aa} />
+							<hemisphereLight args={[0x7fb9ff, 0x071119, 0.9]} />
+							<directionalLight
+								position={[8, 16, 10]}
+								intensity={1.7}
+								color={0x8be6ff}
+							/>
+							<StructuralFloorRenderer profile="ops" session={session} />
+							<Suspense fallback={null}>
+								<CityRenderer profile="ops" session={session} />
+							</Suspense>
+							<Suspense fallback={null}>
+								<UnitRenderer />
+							</Suspense>
+						</Canvas>
+					</WorldProvider>
 					<BriefingBubbleLayer />
 					<RadialMenu key={`radial-${renderVersion}`} />
 					<div

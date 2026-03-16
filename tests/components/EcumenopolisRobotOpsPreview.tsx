@@ -1,4 +1,5 @@
 import { Canvas, useThree } from "@react-three/fiber";
+import { WorldProvider } from "koota/react";
 import { Suspense, useEffect, useState } from "react";
 import { aiSystem, issueMoveCommand, resetWorldAIService } from "../../src/ai";
 import { resetGameState } from "../../src/ecs/gameState";
@@ -90,7 +91,7 @@ function createPreviewSession(seed: number): PreviewWorldSession {
 		const state =
 			city.poiType === "home_base"
 				? "founded"
-				: city.poiType === "science_campus"
+				: city.poiType === "research_site"
 					? "surveyed"
 					: city.poiType === "coast_mines"
 						? "founded"
@@ -241,11 +242,10 @@ export function EcumenopolisRobotOpsPreview({
 		const homeBase = session.pointsOfInterest.find(
 			(poi) => poi.type === "home_base",
 		)!;
-		const archiveCampus = session.pointsOfInterest.find(
-			(poi) => poi.type === "science_campus",
-		)!;
+		const archiveCampus =
+			session.pointsOfInterest.find((poi) => poi.type === "research_site") ??
+			homeBase;
 		const home = gridToWorld(homeBase.q, homeBase.r);
-		const _archive = gridToWorld(archiveCampus.q, archiveCampus.r);
 
 		hydratePersistedWorldEntities(
 			session.entities.filter(
@@ -360,6 +360,7 @@ export function EcumenopolisRobotOpsPreview({
 		>
 			{ready ? (
 				<>
+					<WorldProvider world={world}>
 					<Canvas
 						style={{ position: "absolute", inset: 0 }}
 						camera={{
@@ -420,6 +421,7 @@ export function EcumenopolisRobotOpsPreview({
 								))
 							: null}
 					</Canvas>
+					</WorldProvider>
 					<BriefingBubbleLayer />
 					<div
 						style={{

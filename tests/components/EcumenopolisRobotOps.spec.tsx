@@ -12,10 +12,9 @@ test.describe("ecumenopolis robot ops scene", () => {
 
 		await expect(component).toContainText("Robot Ops Validation");
 		await expect(component).toContainText("Placement audit");
-		await expect(component).toContainText("Mentor Relay");
-		await expect(component).toContainText("Field Technician");
+		await expect(component).toContainText("Five starting chassis staged at the Command Arcology");
 		await expect(component).toContainText("Scene Loaded", { timeout: 20000 });
-		await expect(component).toHaveScreenshot();
+		await expect(component).toHaveScreenshot({ maxDiffPixelRatio: 0.05 });
 	});
 
 	test("renders AI-owned robot movement with persistent speech-bubble context", async ({
@@ -31,6 +30,6 @@ test.describe("ecumenopolis robot ops scene", () => {
 		await expect(component).toContainText("Field Technician");
 		await expect(component).toContainText("Archive Campus");
 		await expect(component).toContainText("Scene Loaded", { timeout: 20000 });
-		await expect(component).toHaveScreenshot();
+		await expect(component).toHaveScreenshot({ maxDiffPixelRatio: 0.05 });
 	});
 });

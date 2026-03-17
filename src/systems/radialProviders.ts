@@ -293,23 +293,30 @@ registerRadialProvider({
 					if (!hasActionPoints(ctx.targetEntityId)) return;
 					const hackerPos = hackerEntity.get(WorldPosition);
 					if (!hackerPos) return;
-					// Find the nearest hackable hostile within HACK_RANGE
-					for (const candidate of units) {
-						const cId = candidate.get(Identity);
-						if (!cId || cId.faction === "player") continue;
-						const cPos = candidate.get(WorldPosition);
-						if (!cPos) continue;
-						const dx = cPos.x - hackerPos.x;
-						const dz = cPos.z - hackerPos.z;
-						if (Math.sqrt(dx * dx + dz * dz) > HACK_RANGE) continue;
-						const check = checkHackEligibility(hackerEntity, candidate);
-						if (!check.canHack) continue;
-						if (initiateHack(hackerEntity, candidate)) {
-							spendActionPoint(ctx.targetEntityId, 1);
-							awardXPToActor(ctx.targetEntityId, "hack");
-						}
-						return;
+				// Find the nearest hackable hostile within HACK_RANGE
+				let nearestHackable: typeof candidate | null = null;
+				let nearestDist = Infinity;
+				for (const candidate of units) {
+					const cId = candidate.get(Identity);
+					if (!cId || cId.faction === "player") continue;
+					const cPos = candidate.get(WorldPosition);
+					if (!cPos) continue;
+					const dx = cPos.x - hackerPos.x;
+					const dz = cPos.z - hackerPos.z;
+					const dist = Math.sqrt(dx * dx + dz * dz);
+					if (dist > HACK_RANGE) continue;
+					const check = checkHackEligibility(hackerEntity, candidate);
+					if (!check.canHack) continue;
+					if (dist < nearestDist) {
+						nearestDist = dist;
+						nearestHackable = candidate;
 					}
+				}
+				if (nearestHackable && initiateHack(hackerEntity, nearestHackable)) {
+					spendActionPoint(ctx.targetEntityId, 1);
+					awardXPToActor(ctx.targetEntityId, "hack");
+					return;
+				}
 					pushToast(
 						"system",
 						"No hack target",

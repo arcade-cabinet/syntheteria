@@ -256,6 +256,8 @@ registerRadialProvider({
 						pushToast("combat", "No target", "No hostiles nearby to engage");
 						return;
 					}
+					// We found a valid hostile target; spending an action point for this attack order
+					spendActionPoint(ctx.targetEntityId);
 					// Already adjacent — combat auto-resolves each tick when in melee range
 					if (nearestDist <= 2.5) {
 						pushToast(

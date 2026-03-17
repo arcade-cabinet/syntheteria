@@ -12,7 +12,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { getStormIntensity } from "../systems/power";
 import { getWormholeGlow } from "../systems/weather";
 import { getStormVisualProfile } from "./stormVisuals";
@@ -38,7 +38,7 @@ export function StormEnvironment() {
 		const pmremGenerator = new THREE.PMREMGenerator(gl);
 		pmremGenerator.compileEquirectangularShader();
 
-		const loader = new HDRLoader();
+		const loader = new RGBELoader();
 		loader.load(HDRI_PATH, (texture) => {
 			const envMap = pmremGenerator.fromEquirectangular(texture).texture;
 			scene.environment = envMap;

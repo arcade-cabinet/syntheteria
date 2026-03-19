@@ -8,17 +8,25 @@
 
 The **full gameplay loop** with resource economy, combat, AI GOAP, salvage, cultist escalation,
 specialization tracks, tech tree, victory conditions, diplomacy, territory, floor mining,
-6-layer rendering pipeline, PBR texture atlas, fog of war, cylindrical curvature, save/load,
-and audio is complete.
+sphere world geometry, globe-based rendering pipeline, PBR texture atlas, fog of war,
+title-to-game cinematic, save/load, and audio is complete.
 
 ```
-pnpm verify  →  vitest suites + CT pass + 0 TypeScript errors + 0 Biome errors
+pnpm verify  →  126 vitest suites (2239 tests) + 0 TypeScript errors + 0 Biome errors
 ```
 
 ### What Works
 
 | System | Status |
 |--------|--------|
+| Sphere world geometry (buildSphereGeometry, tileToSpherePos, sphereRadius) | DONE |
+| SphereOrbitCamera (orbit around sphere center, WASD rotates globe) | DONE |
+| Sphere model placement (units/buildings/salvage tangent to sphere normal) | DONE |
+| Sphere fog of war (dedicated GLSL shaders, BFS on sphere surface) | DONE |
+| Globe.tsx — ONE persistent Canvas across all phases | DONE |
+| Title-to-game cinematic (globe growth 0.3→1, camera zoom to surface) | DONE |
+| Persistent storm effects (StormClouds, Hypercane, Lightning in ALL phases) | DONE |
+| Cutaway clip plane (CutawayClipPlane.tsx + cutawayStore.ts) | WIP |
 | Fixed-size board generator (seeded FNV-1a + mulberry32) | DONE |
 | 9 terrain substrates (FloorType) with PBR atlas shader | DONE |
 | 13-material resource taxonomy (ResourceMaterial) | DONE |
@@ -27,12 +35,9 @@ pnpm verify  →  vitest suites + CT pass + 0 TypeScript errors + 0 Biome errors
 | Bridge/tunnel depth stacking (data + rendering) | DONE |
 | Labyrinth generator (Rooms-and-Mazes, seeded) | DONE |
 | BSP city layout (walls, corridors, doorways, 5 district zones) | DONE |
-| Abyssal zones (bridges, platforms, docks) | DONE |
 | Connectivity guarantee (flood-fill + corridor punching) | DONE |
-| Weight-class traversal (scouts walk grating at 2 AP) | DONE |
 | PBR texture atlas (8 AmbientCG packs, 5 atlas maps) | DONE |
-| Grating cutout (discard in shader for abyssal transparency) | DONE |
-| Koota ECS world init, traits, 40+ systems | DONE |
+| Koota ECS world init, traits, 42 systems | DONE |
 | 9 robot archetypes + spawn functions | DONE |
 | 14 specialization tracks across 6 classes | DONE |
 | Garage modal (two-step fabrication: Class → Track) | DONE |
@@ -50,23 +55,16 @@ pnpm verify  →  vitest suites + CT pass + 0 TypeScript errors + 0 Biome errors
 | Yuka GOAP AI with fuzzy logic, faction personalities, NavGraph A* | DONE |
 | Cultist spawning (breach zones, 3 escalation stages, per-sect GOAP) | DONE |
 | Cult mutation system (4-tier time-based: buffs → abilities → aberrant) | DONE |
-| Cult POI spawning at game start | DONE |
-| Cult structure spawning (altars, shelters, corruption nodes) | DONE |
-| Corruption spreading (from corruption nodes) | DONE |
 | 15 faction building definitions (TypeScript const with build costs) | DONE |
 | 6 cult structure definitions | DONE |
 | 10 salvage type definitions with yield tables + GLB model mappings | DONE |
 | Building placement action (radial → select → cost check → place) | DONE |
 | Building power systems (all building types have active gameplay effects) | DONE |
 | Salvage prop placement in mapgen | DONE |
-| Instanced GLB renderer for salvage props and buildings | DONE |
+| Instanced GLB rendering for salvage, buildings, structures | DONE |
 | Radial menu (dual-ring state machine, SVG renderer, per-class action providers) | DONE |
-| Per-class action definitions (unique action sets per robot class) | DONE |
-| Depth renderer (bridge platforms, columns, void planes) | DONE |
-| Mined pit renderer (visible pits from floor mining) | DONE |
+| Unified terrain renderer (replaced DepthRenderer + MinedPitRenderer) | DONE |
 | HUD (turn, AP, resource counters for 13 materials) | DONE |
-| Orbital illuminator (fixed zenith sun under dome) | DONE |
-| Isometric camera (CivRev2-style, fixed angle, WASD pan) | DONE |
 | Storm dome (3 GLSL layers: storm, wormhole, illuminator) | DONE |
 | GLSL shader extraction (vite-plugin-glsl #include) | DONE |
 | SQLite schema + migrations + GameRepo CRUD | DONE |
@@ -75,12 +73,9 @@ pnpm verify  →  vitest suites + CT pass + 0 TypeScript errors + 0 Biome errors
 | Settings modal (audio, keybindings, accessibility) | DONE |
 | Board input (click-to-select, click-to-move, click-to-attack) | DONE |
 | Robot GLB model loading (9 robot GLBs from asset library) | DONE |
-| Fog of war (per-unit scan radius) | DONE |
-| 6-layer rendering pipeline (grid, height, biomes, platforms, salvage, robots) | DONE |
-| Cylindrical board curvature (CivRev2-style) | DONE |
+| Fog of war (per-unit scan radius, flat + sphere GLSL) | DONE |
 | Seamless biome patterns (toroidal tiling) | DONE |
-| Toroidal camera panning | DONE |
-| 3D title text | DONE |
+| 3D title text + globe animation | DONE |
 | Fatal error modal | DONE |
 | Procedural walls/columns | DONE |
 | Storm power grid (transmitters → power boxes → consumers) | DONE |
@@ -104,24 +99,38 @@ pnpm verify  →  vitest suites + CT pass + 0 TypeScript errors + 0 Biome errors
 | Tutorial system | DONE |
 | Memory fragments (lore discovery) | DONE |
 | Speech profiles + bubbles (faction persona dialogue) | DONE |
-| Observer mode (AI-vs-AI spectator) | DONE |
-| Dev console controls | DONE |
 | Minimap with territory visualization | DONE |
 | Audio (Tone.js synth pooling, SFX, ambient storm loop) | DONE |
-| Campaign stats | DONE |
-| Analytics collector | DONE |
+| Campaign stats + analytics collector | DONE |
 | 360 GLB models from 3 asset packs | DONE |
-| E2E Playwright tests (AI-vs-AI playtests) | DONE |
+| 11 TypeScript config definition files | DONE |
+| Combat effects (floating damage, combat flash) | DONE |
+| Path visualization | DONE |
+| Unit status bars (HP/AP above units) | DONE |
+| Particle system (sparkles on wormhole, power nodes, EL crystals) | DONE |
+| Tech tree overlay (full DAG visualization) | DONE |
+| Diplomacy overlay (faction standings panel) | DONE |
+| Unit roster overlay (all player units with quick-jump) | DONE |
+| Alert bar (off-screen event alerts) | DONE |
+| Game outcome overlay (victory/defeat) | DONE |
+| Pause menu | DONE |
+| Hover tracker + entity tooltip | DONE |
 
 ### What's Missing
 
 | Gap | Impact |
 |-----|--------|
-| Unified depth renderer | Visual polish — BiomeRenderer + DepthRenderer + MinedPitRenderer should merge |
-| Fog gradient | Visual polish — hard cutoff instead of radiating gradient |
-| Storm dome tuning | Visual polish — hypercane + wormhole atmosphere |
+| Delete flat board code (GHOST, CURVE_STRENGTH) | Cleanup — legacy code in boardGeometry.ts |
+| Delete GameScreen.tsx | Cleanup — superseded by Globe.tsx |
+| LOD system | Visual — procedural shader at far zoom, PBR at close |
+| Strategic zoom | Visual — seamless surface-to-globe zoom |
+| Cutaway dollhouse zoom | Visual — descend through layers (WIP) |
+| Volumetric fog | Visual — haze at scan range edge instead of hard cutoff |
+| Infrastructure renderer | Content — 48 unused GLB models |
+| Robot idle animations | Content — 6 faction bots need rigging |
 | Signal relay control limits | Gameplay — relay towers don't limit unit control range |
-| 4 failing test suites | Low — 2171 tests pass, 4 suites have issues |
+| Observer mode with sphere camera | Gameplay — AI-vs-AI auto-play on sphere |
+| Touch controls | Platform — pinch zoom on mobile/tablet |
 
 ---
 
@@ -149,20 +158,11 @@ pnpm verify  →  vitest suites + CT pass + 0 TypeScript errors + 0 Biome errors
 - [x] **3.2** — Building definitions (15 faction structures)
 - [x] **3.3** — Instanced GLB renderer for salvage props and buildings
 - [x] **3.4** — Robot GLB model loading
-- [x] **3.5** — Depth renderer
+- [x] **3.5** — Unified terrain renderer
 - [x] **3.6** — Cult structure definitions (6 types)
 - [x] **3.7** — Salvage type definitions (10 types)
 - [x] **3.8** — Fog of war
-- [x] **3.9** — 6-layer rendering pipeline
-- [x] **3.10** — Cylindrical board curvature
-- [x] **3.11** — Seamless biome patterns
-- [x] **3.12** — Toroidal camera panning
-- [x] **3.13** — 3D title text
-- [x] **3.14** — Fatal error modal
-- [x] **3.15** — Procedural walls/columns
-- [x] **3.16** — Building placement ACTION
-- [x] **3.17** — PBR texture atlas (AmbientCG)
-- [x] **3.18** — Grating cutout (shader discard)
+- [x] **3.9** — PBR texture atlas (AmbientCG)
 
 ---
 
@@ -195,7 +195,6 @@ pnpm verify  →  vitest suites + CT pass + 0 TypeScript errors + 0 Biome errors
 - [x] Bot speech profiles + speech bubbles
 - [x] Tech tree / research (27 techs, 5 tiers)
 - [x] Wormhole victory (20-turn stabilizer project)
-- [x] Observer mode (AI-vs-AI spectator)
 - [x] Territory system (faction tile painting)
 - [x] Population cap
 - [x] Experience system + mark progression
@@ -221,18 +220,43 @@ pnpm verify  →  vitest suites + CT pass + 0 TypeScript errors + 0 Biome errors
 
 ---
 
-## Phase 8 — Visual Polish (NEXT)
+## Phase 8 — Sphere World (DONE)
 
-- [ ] **8.1** — Unified depth layer refactor (merge BiomeRenderer + DepthRenderer + MinedPitRenderer)
-- [ ] **8.2** — Fog of war radiating gradient (not hard cutoff)
-- [ ] **8.3** — Storm dome atmosphere (hypercane + wormhole-is-the-eye)
-- [ ] **8.4** — Visual polish screenshots at 3 zoom levels
+- [x] **8.1** — `buildSphereGeometry()` — map tile grid onto SphereGeometry
+- [x] **8.2** — SphereOrbitCamera — orbit around sphere center
+- [x] **8.3** — Sphere model placement — units/buildings/salvage tangent to sphere
+- [x] **8.4** — Sphere raycasting — click on sphere → tile coordinates
+- [x] **8.5** — Title → game transition — globe growth cinematic
+- [x] **8.6** — Globe.tsx — ONE persistent Canvas across all phases
+- [x] **8.7** — Persistent storm effects (title storms → game sky)
+- [x] **8.8** — Sphere fog of war GLSL shaders
+- [x] **8.9** — Adjacency/pathfinding on sphere surface
+- [x] **8.10** — Highlight renderer on sphere — reachable tiles glow on curved surface
+- [x] **8.11** — Sphere-surface model orientation — all models tangent to sphere normal
 
 ---
 
-## Phase 9 — Low Priority
+## Phase 9 — Sphere Polish + Cleanup (NEXT)
+
+- [ ] **9.1** — Delete flat board code (GHOST, CURVE_STRENGTH, buildBoardGeometry)
+- [ ] **9.2** — Delete GameScreen.tsx (superseded by Globe.tsx)
+- [ ] **9.3** — LOD system (procedural shader at far zoom, PBR atlas at close zoom)
+- [ ] **9.4** — Strategic zoom (seamless surface-to-globe, Supreme Commander style)
+- [ ] **9.5** — Cutaway dollhouse zoom (descend through layers instead of into ceiling)
+- [ ] **9.6** — Volumetric fog (haze at scan range edge, not hard cutoff)
+- [ ] **9.7** — Infrastructure renderer (48 unused GLB models)
+
+---
+
+## Phase 10 — Low Priority
 
 - [ ] Signal relay control limits (relay towers limit unit control range)
-- [ ] Fix 4 failing test suites
+- [ ] Observer mode with sphere camera (AI-vs-AI auto-play)
+- [ ] Touch controls (pinch zoom on mobile/tablet)
+- [ ] Robot idle animations (6 faction bots need rigging + idle loops)
+- [ ] LOD generation (batch Blender decimation for distant models)
+- [ ] Victory/defeat cinematics (7 victory paths need visual payoff)
+- [ ] Wormhole project visual (20-turn build at north pole)
 - [ ] Paper playtesting at turn 1/10/100/1000
-- [ ] Radial menu completeness audit
+- [ ] Full balance pass (economy, combat, AI tuning)
+- [ ] 100-turn AI-vs-AI playtest

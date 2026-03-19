@@ -120,6 +120,10 @@ export function isInSignalRange(
 export function runSignalNetwork(world: World): void {
 	const coverage = buildCoverageMap(world);
 
+	// No penalty if no relay towers exist — you can't be "out of range"
+	// when there's no signal network at all.
+	if (coverage.size === 0) return;
+
 	for (const e of world.query(UnitPos, UnitStats)) {
 		const pos = e.get(UnitPos);
 		const stats = e.get(UnitStats);

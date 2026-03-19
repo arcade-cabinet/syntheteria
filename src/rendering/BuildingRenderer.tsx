@@ -8,6 +8,7 @@
 import { Clone, Sparkles, useGLTF } from "@react-three/drei";
 import type { World } from "koota";
 import { Suspense, useMemo } from "react";
+import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import { Building, type BuildingType } from "../ecs/traits/building";
@@ -179,17 +180,19 @@ export function BuildingRenderer({ world, useSphere, boardWidth, boardHeight }: 
 	return (
 		<>
 			{instances.map((inst) => (
-				<Suspense key={`${inst.tileX},${inst.tileZ}`} fallback={null}>
-					<BuildingModel
-						url={inst.url}
-						tileX={inst.tileX}
-						tileZ={inst.tileZ}
-						sparkle={inst.sparkle}
-						useSphere={useSphere}
-						boardWidth={boardWidth}
-						boardHeight={boardHeight}
-					/>
-				</Suspense>
+				<ModelErrorBoundary key={`${inst.tileX},${inst.tileZ}`} name={inst.url}>
+					<Suspense fallback={null}>
+						<BuildingModel
+							url={inst.url}
+							tileX={inst.tileX}
+							tileZ={inst.tileZ}
+							sparkle={inst.sparkle}
+							useSphere={useSphere}
+							boardWidth={boardWidth}
+							boardHeight={boardHeight}
+						/>
+					</Suspense>
+				</ModelErrorBoundary>
 			))}
 		</>
 	);

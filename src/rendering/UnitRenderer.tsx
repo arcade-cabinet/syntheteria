@@ -15,6 +15,7 @@ import { Clone, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type { World } from "koota";
 import { Suspense, useEffect, useMemo, useRef } from "react";
+import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import { playSfx } from "../audio/sfx";
@@ -430,43 +431,45 @@ export function UnitRenderer({ world, useSphere, boardWidth, boardHeight }: Unit
 				const markScale = u.markLevel >= 5 ? 1.15 : 1.0;
 
 				return (
-					<Suspense key={u.eid} fallback={<UnitBox x={u.tileX} z={u.tileZ} color={u.color} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />}>
-						<UnitModel url={u.url} x={u.tileX} z={u.tileZ} factionColor={u.color} markScale={markScale} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
-						{u.ap > 0 && (
-							<ReadinessRing
-								x={u.tileX}
-								z={u.tileZ}
-								ap={u.ap}
-								maxAp={u.maxAp}
-								useSphere={useSphere}
-								boardWidth={boardWidth}
-								boardHeight={boardHeight}
-							/>
-						)}
-						{/* Mark III+: Faction-color accent glow */}
-						{u.markLevel >= 3 && (
-							<MarkAccentGlow
-								x={u.tileX}
-								z={u.tileZ}
-								factionColor={u.color}
-								markLevel={u.markLevel}
-								useSphere={useSphere}
-								boardWidth={boardWidth}
-								boardHeight={boardHeight}
-							/>
-						)}
-						{/* Mark IV+: Orbiting particle trail */}
-						{u.markLevel >= 4 && (
-							<MarkParticleTrail
-								x={u.tileX}
-								z={u.tileZ}
-								factionColor={u.color}
-								useSphere={useSphere}
-								boardWidth={boardWidth}
-								boardHeight={boardHeight}
-							/>
-						)}
-					</Suspense>
+					<ModelErrorBoundary key={u.eid} name={u.url}>
+						<Suspense fallback={<UnitBox x={u.tileX} z={u.tileZ} color={u.color} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />}>
+							<UnitModel url={u.url} x={u.tileX} z={u.tileZ} factionColor={u.color} markScale={markScale} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+							{u.ap > 0 && (
+								<ReadinessRing
+									x={u.tileX}
+									z={u.tileZ}
+									ap={u.ap}
+									maxAp={u.maxAp}
+									useSphere={useSphere}
+									boardWidth={boardWidth}
+									boardHeight={boardHeight}
+								/>
+							)}
+							{/* Mark III+: Faction-color accent glow */}
+							{u.markLevel >= 3 && (
+								<MarkAccentGlow
+									x={u.tileX}
+									z={u.tileZ}
+									factionColor={u.color}
+									markLevel={u.markLevel}
+									useSphere={useSphere}
+									boardWidth={boardWidth}
+									boardHeight={boardHeight}
+								/>
+							)}
+							{/* Mark IV+: Orbiting particle trail */}
+							{u.markLevel >= 4 && (
+								<MarkParticleTrail
+									x={u.tileX}
+									z={u.tileZ}
+									factionColor={u.color}
+									useSphere={useSphere}
+									boardWidth={boardWidth}
+									boardHeight={boardHeight}
+								/>
+							)}
+						</Suspense>
+					</ModelErrorBoundary>
 				);
 			})}
 		</>

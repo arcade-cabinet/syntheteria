@@ -30,6 +30,7 @@ import { UnifiedTerrainRenderer } from "../rendering/UnifiedTerrainRenderer";
 import { FogOfWarRenderer } from "../rendering/FogOfWarRenderer";
 import { FragmentRenderer } from "../rendering/FragmentRenderer";
 import { InfrastructureRenderer } from "../rendering/InfrastructureRenderer";
+import { LodGlobe } from "../rendering/LodGlobe";
 import { StructureRenderer } from "../rendering/StructureRenderer";
 import { SalvageRenderer } from "../rendering/SalvageRenderer";
 import { BuildingRenderer } from "../rendering/BuildingRenderer";
@@ -397,6 +398,7 @@ function GameScene({
 			/>
 			<CutawayClipPlane />
 
+			{board && <LodGlobe boardWidth={board.config.width} boardHeight={board.config.height} />}
 			{board && <BoardRenderer board={board} dayAngle={dayAngle} season={season} />}
 			{board && <BiomeRenderer board={board} dayAngle={dayAngle} season={season} />}
 			{board && <UnifiedTerrainRenderer board={board} world={world ?? undefined} turn={turn} />}
@@ -454,6 +456,16 @@ export function Globe({
 			}}
 			gl={{ alpha: false }}
 			shadows={phase === "playing" ? { type: THREE.PCFShadowMap } : undefined}
+			onCreated={({ gl }) => {
+				const canvas = gl.domElement;
+				canvas.addEventListener("webglcontextlost", (e) => {
+					e.preventDefault();
+					console.warn("[Globe] WebGL context lost — attempting restore");
+				});
+				canvas.addEventListener("webglcontextrestored", () => {
+					console.warn("[Globe] WebGL context restored");
+				});
+			}}
 		>
 			{phase === "playing" && (
 				<fogExp2 attach="fog" args={["#2a2535", 0.006]} />

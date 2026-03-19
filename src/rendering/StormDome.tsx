@@ -30,6 +30,8 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { type StormProfile, STORM_PROFILE_SPECS } from "../world/config";
 import { STORM_VISUAL_PARAMS, WORMHOLE_CYCLE } from "../config/weatherDefs";
+import { getWormholeProjectState } from "../ecs/systems/wormholeProject";
+import { WORMHOLE_PROJECT_TURNS } from "../config/gameDefaults";
 
 // ---------------------------------------------------------------------------
 // Vertex shader
@@ -71,6 +73,9 @@ const DOME_FRAG = /* glsl */ `
   uniform float uWormholeGlowMax;
   uniform vec3  uWormholeColorDay;
   uniform vec3  uWormholeColorNight;
+
+  // Wormhole project progress [0, 1] — 0=inactive, 1=completed
+  uniform float uWormholeProgress;
 
   varying vec3 vPosition;
   varying vec3 vNormal;
@@ -164,8 +169,9 @@ const DOME_FRAG = /* glsl */ `
   vec4 wormholeLayer(vec3 pos) {
     float zenith  = length(pos.xz);
 
-    // Vortex radius expands with storm intensity
-    float baseRadius = 0.30 + 0.08 * uStormIntensity;
+    // Vortex radius expands with storm intensity AND wormhole project progress
+    float progressExpand = uWormholeProgress * 0.25; // up to 0.25 extra radius
+    float baseRadius = 0.30 + 0.08 * uStormIntensity + progressExpand;
     float wRadius = baseRadius + 0.06 * sin(uTime * 0.45);
 
     // Core glow — bright at centre, fading outward
@@ -189,23 +195,35 @@ const DOME_FRAG = /* glsl */ `
     float pulse = 0.5 + 0.5 * sin(uTime * 0.65);
     float stormPeak = 0.5 + 0.5 * cos((uSeason - 0.75) * TWO_PI);
 
-    // Wormhole glow intensity driven by storm intensity (not day/night).
+    // Wormhole glow intensity driven by storm intensity AND project progress.
     // Stronger storms = brighter, more visible wormhole through the eye.
+    // Active project progressively intensifies the vortex.
     float stormFactor = clamp(uStormIntensity, 0.0, 1.0);
-    float glowIntensity = mix(uWormholeGlowMin, uWormholeGlowMax, stormFactor);
+    float progressBoost = 1.0 + uWormholeProgress * 2.0; // up to 3x at completion
+    float glowIntensity = mix(uWormholeGlowMin, uWormholeGlowMax, stormFactor) * progressBoost;
     vec3 wormholeColor = mix(uWormholeColorNight, uWormholeColorDay, stormFactor);
+
+    // At high progress, shift color toward bright white-violet (transcendence)
+    wormholeColor = mix(wormholeColor, vec3(0.8, 0.6, 1.0), uWormholeProgress * 0.5);
 
     // Multi-colored vortex: storm-intensity-tinted core + arms
     // Boosted brightness — wormhole should be the most dramatic sky feature
     vec3 coreColor = wormholeColor * glow * (0.6 + 0.4 * pulse) * glowIntensity * 2.5;
     vec3 armColor  = wormholeColor * 0.8 * arms;
-    vec3 rimColor  = vec3(0.25, 0.50, 0.85) * smoothstep(wRadius * 1.5, wRadius * 0.8, zenith) * 0.6;
+    float rimIntensity = 0.6 + uWormholeProgress * 1.4; // rim glows brighter with progress
+    vec3 rimColor  = vec3(0.25, 0.50, 0.85) * smoothstep(wRadius * 1.5, wRadius * 0.8, zenith) * rimIntensity;
 
     // Hot white core at very center — brightest point in the sky
-    float hotCore = smoothstep(0.12, 0.0, zenith);
+    // Expands with project progress
+    float coreRadius = 0.12 + uWormholeProgress * 0.08;
+    float hotCore = smoothstep(coreRadius, 0.0, zenith);
     vec3 hotWhite = vec3(1.2, 1.0, 1.4) * hotCore * glowIntensity * 1.5;
 
-    vec3 color = (coreColor + armColor + rimColor + hotWhite) * (0.65 + 0.35 * stormPeak);
+    // Completion flash — when progress hits 1.0, dramatic bright burst
+    float completionFlash = smoothstep(0.95, 1.0, uWormholeProgress);
+    vec3 flashColor = vec3(1.5, 1.3, 2.0) * completionFlash * glow * 3.0;
+
+    vec3 color = (coreColor + armColor + rimColor + hotWhite + flashColor) * (0.65 + 0.35 * stormPeak);
 
     // Only visible above horizon line
     float vis = smoothstep(-0.05, 0.15, pos.y);
@@ -334,6 +352,8 @@ export function StormDome({
 			uWormholeColorNight: {
 				value: new THREE.Vector3(...WORMHOLE_CYCLE.glowColor.night),
 			},
+			// Wormhole project progress
+			uWormholeProgress: { value: 0 },
 		}),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[],
@@ -360,6 +380,17 @@ export function StormDome({
 		uniforms.uStormIntensity.value =
 			profileSpec.baseStormIntensity +
 			profileSpec.stormOscillation * Math.sin(state.clock.elapsedTime * 0.15);
+
+		// Wormhole project progress — read from module state
+		const whState = getWormholeProjectState();
+		if (whState.status === "building") {
+			uniforms.uWormholeProgress.value =
+				1 - whState.turnsRemaining / WORMHOLE_PROJECT_TURNS;
+		} else if (whState.status === "completed") {
+			uniforms.uWormholeProgress.value = 1.0;
+		} else {
+			uniforms.uWormholeProgress.value = 0;
+		}
 	});
 
 	return (

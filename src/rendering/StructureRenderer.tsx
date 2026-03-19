@@ -19,6 +19,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import { TILE_SIZE_M } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
 import { seedToFloat } from "../ecs/terrain/cluster";
@@ -38,7 +39,7 @@ import {
 	getColumnPositions,
 	getInteriorTiles,
 	getStructuralEdges,
-} from "./ProceduralStructureRenderer";
+} from "./structureHelpers";
 import { sphereModelPlacement, sphereModelPlacementWithRotation, worldToTileCoords } from "./spherePlacement";
 import { buildExploredSet } from "./tileVisibility";
 
@@ -494,24 +495,32 @@ export function StructureRenderer({ board, world, useSphere, boardWidth, boardHe
 	return (
 		<>
 			{instances.walls.map((w) => (
-				<Suspense key={w.key} fallback={null}>
-					<WallModel url={w.url} wx={w.wx} wz={w.wz} rotation={w.rotation} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
-				</Suspense>
+				<ModelErrorBoundary key={w.key} name={w.url}>
+					<Suspense fallback={null}>
+						<WallModel url={w.url} wx={w.wx} wz={w.wz} rotation={w.rotation} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+					</Suspense>
+				</ModelErrorBoundary>
 			))}
 			{instances.columns.map((c) => (
-				<Suspense key={c.key} fallback={null}>
-					<ColumnModel url={c.url} wx={c.wx} wz={c.wz} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
-				</Suspense>
+				<ModelErrorBoundary key={c.key} name={c.url}>
+					<Suspense fallback={null}>
+						<ColumnModel url={c.url} wx={c.wx} wz={c.wz} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+					</Suspense>
+				</ModelErrorBoundary>
 			))}
 			{instances.staircases.map((s) => (
-				<Suspense key={s.key} fallback={null}>
-					<StaircaseModel url={s.url} wx={s.wx} wz={s.wz} rotation={s.rotation} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
-				</Suspense>
+				<ModelErrorBoundary key={s.key} name={s.url}>
+					<Suspense fallback={null}>
+						<StaircaseModel url={s.url} wx={s.wx} wz={s.wz} rotation={s.rotation} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+					</Suspense>
+				</ModelErrorBoundary>
 			))}
 			{instances.roofs.map((r) => (
-				<Suspense key={r.key} fallback={null}>
-					<RoofModel url={r.url} wx={r.wx} wz={r.wz} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
-				</Suspense>
+				<ModelErrorBoundary key={r.key} name={r.url}>
+					<Suspense fallback={null}>
+						<RoofModel url={r.url} wx={r.wx} wz={r.wz} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+					</Suspense>
+				</ModelErrorBoundary>
 			))}
 		</>
 	);

@@ -29,8 +29,9 @@ void main() {
 
 	float vis = texture2D(uVisibility, tileUV).r;
 
-	// Fog color: dark industrial haze (warm-neutral, not blue)
-	vec3 baseFog = vec3(0.07, 0.06, 0.06);
+	// Storm atmosphere haze — purple-grey matching the dome palette
+	vec3 deepFog  = vec3(0.08, 0.06, 0.12);  // dark violet for close fog
+	vec3 stormFog = vec3(0.16, 0.12, 0.22);  // lighter purple for distant haze
 
 	// Use sphere world position for noise sampling — gives organic 3D variation
 	vec2 noiseCoord = vWorldPos.xz * 0.15;
@@ -38,14 +39,16 @@ void main() {
 	float n2 = valueNoise(noiseCoord * 1.7 + 42.0);
 	float noise = n1 * 0.6 + n2 * 0.4;
 
-	// Modulate fog color with subtle warm variation
-	vec3 fogTint = mix(baseFog, vec3(0.04, 0.03, 0.03), noise * 0.5);
+	// Blend between deep and storm fog based on visibility gradient
+	// More visible = more storm-colored (distant haze), less visible = darker
+	vec3 fogTint = mix(deepFog, stormFog, vis * 0.8 + noise * 0.2);
 
 	float fogAlpha = 1.0 - vis;
 
 	// Add noise variation to alpha for organic edges
-	fogAlpha += (noise - 0.5) * 0.06;
+	fogAlpha += (noise - 0.5) * 0.08;
 	fogAlpha = clamp(fogAlpha, 0.0, 1.0);
 
-	gl_FragColor = vec4(fogTint, fogAlpha * 0.60);
+	// Cap alpha so structures fade into haze rather than disappearing
+	gl_FragColor = vec4(fogTint, fogAlpha * 0.55);
 }

@@ -1,10 +1,7 @@
 /**
  * FogOfWarRenderer — Layer 5: semi-transparent dark fog over unexplored tiles.
  *
- * Supports two geometry modes:
- *   - Flat (legacy): buildBoardGeometry with cylindrical curvature
- *   - Sphere: buildSphereGeometry with equirectangular projection
- *
+ * Renders on the sphere surface using equirectangular projection.
  * Visibility is driven by a DataTexture where each texel's R channel
  * encodes exploration state: 0 = fully fogged, 255 = fully explored.
  * Player units reveal tiles within their scanRange on placement and
@@ -15,19 +12,15 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
 import { UnitFaction, UnitPos, UnitStats } from "../ecs/traits/unit";
-import { buildBoardGeometry, buildSphereGeometry } from "./boardGeometry";
-import FRAG from "./glsl/fogOfWarFrag.glsl";
-import VERT from "./glsl/fogOfWarVert.glsl";
+import { buildSphereGeometry } from "./boardGeometry";
 import SPHERE_FRAG from "./glsl/fogOfWarSphereFrag.glsl";
 import SPHERE_VERT from "./glsl/fogOfWarSphereVert.glsl";
 
 type FogOfWarRendererProps = {
 	board: GeneratedBoard;
 	world: World;
-	useSphere?: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -41,7 +34,6 @@ type FogOfWarRendererProps = {
 function createVisibilityTexture(
 	width: number,
 	height: number,
-	wrapLongitude = false,
 ): THREE.DataTexture {
 	const data = new Uint8Array(width * height * 4);
 	// RGBA — all 0 = fully fogged
@@ -54,8 +46,8 @@ function createVisibilityTexture(
 	);
 	tex.magFilter = THREE.LinearFilter;
 	tex.minFilter = THREE.LinearFilter;
-	// On sphere, longitude wraps east-west so S axis needs RepeatWrapping
-	tex.wrapS = wrapLongitude ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
+	// Longitude wraps east-west on sphere so S axis needs RepeatWrapping
+	tex.wrapS = THREE.RepeatWrapping;
 	tex.wrapT = THREE.ClampToEdgeWrapping;
 	tex.needsUpdate = true;
 	return tex;
@@ -228,30 +220,6 @@ export function updateVisibility(
 // Material
 // ---------------------------------------------------------------------------
 
-function makeFogMaterial(
-	boardCenterX: number,
-	boardCenterZ: number,
-	boardWidth: number,
-	boardHeight: number,
-	visibilityTexture: THREE.DataTexture,
-): THREE.ShaderMaterial {
-	return new THREE.ShaderMaterial({
-		uniforms: {
-			uVisibility: { value: visibilityTexture },
-			uBoardSize: { value: new THREE.Vector2(boardWidth, boardHeight) },
-			uTileSize: { value: TILE_SIZE_M },
-			uBoardCenter: { value: new THREE.Vector2(boardCenterX, boardCenterZ) },
-			uCurve: { value: 0.0008 },
-			uBoardWidth: { value: boardWidth * TILE_SIZE_M },
-		},
-		vertexShader: VERT,
-		fragmentShader: FRAG,
-		transparent: true,
-		depthWrite: false,
-		side: THREE.FrontSide,
-	});
-}
-
 function makeSphereFogMaterial(
 	boardWidth: number,
 	boardHeight: number,
@@ -274,7 +242,7 @@ function makeSphereFogMaterial(
 // Component
 // ---------------------------------------------------------------------------
 
-export function FogOfWarRenderer({ board, world, useSphere }: FogOfWarRendererProps) {
+export function FogOfWarRenderer({ board, world }: FogOfWarRendererProps) {
 	const { scene } = useThree();
 	const meshRef = useRef<THREE.Mesh | null>(null);
 	const textureRef = useRef<THREE.DataTexture | null>(null);
@@ -282,35 +250,19 @@ export function FogOfWarRenderer({ board, world, useSphere }: FogOfWarRendererPr
 	const lastRevealKeyRef = useRef("");
 
 	const { width, height } = board.config;
-	const boardCenterX = Math.floor(width / 2) * TILE_SIZE_M;
-	const boardCenterZ = Math.floor(height / 2) * TILE_SIZE_M;
-	const boardWidth = width * TILE_SIZE_M;
 
 	// Build geometry, texture, material, and mesh
 	useEffect(() => {
-		const visTex = createVisibilityTexture(width, height, !!useSphere);
+		const visTex = createVisibilityTexture(width, height);
 		textureRef.current = visTex;
 
-		let material: THREE.ShaderMaterial;
-		let geometry: THREE.BufferGeometry;
-
-		if (useSphere) {
-			material = makeSphereFogMaterial(width, height, visTex);
-			geometry = buildSphereGeometry(board);
-		} else {
-			material = makeFogMaterial(boardCenterX, boardCenterZ, width, height, visTex);
-			material.uniforms.uBoardWidth.value = boardWidth;
-			geometry = buildBoardGeometry(board);
-		}
+		const material = makeSphereFogMaterial(width, height, visTex);
 		materialRef.current = material;
 
+		const geometry = buildSphereGeometry(board);
 		const mesh = new THREE.Mesh(geometry, material);
-		if (useSphere) {
-			// Scale slightly outward so fog sits just above terrain surface
-			mesh.scale.setScalar(1.001);
-		} else {
-			mesh.position.y = 0.002; // above biome layer, below structures (flat only)
-		}
+		// Scale slightly outward so fog sits just above terrain surface
+		mesh.scale.setScalar(1.001);
 		mesh.renderOrder = 10; // ensure fog renders after terrain
 		scene.add(mesh);
 		meshRef.current = mesh;
@@ -327,7 +279,7 @@ export function FogOfWarRenderer({ board, world, useSphere }: FogOfWarRendererPr
 			textureRef.current = null;
 			materialRef.current = null;
 		};
-	}, [board, world, scene, boardCenterX, boardCenterZ, boardWidth, width, height, useSphere]);
+	}, [board, world, scene, width, height]);
 
 	// Update visibility every frame when player unit positions change.
 	// Uses useFrame instead of setInterval for immediate fog reveal on movement.

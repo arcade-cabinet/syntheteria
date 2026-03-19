@@ -24,16 +24,18 @@ The game should feel like it **grows into** strategic scale rather than starting
 
 ---
 
-## 2. World Model: The Fixed Board
+## 2. World Model: The Sphere World
 
-**Syntheteria is future Earth.** The ecumenopolis. The game grid is a bounded square region of
-that planet's surface — every tile is human infrastructure that became machine infrastructure that
-became ruins. The planet curvature of the board is Earth's curvature.
+**Syntheteria is future Earth.** The ecumenopolis. The game grid wraps around a sphere — the planet
+itself. Every tile is human infrastructure that became machine infrastructure that became ruins.
+The curvature is real: the board IS the planet surface.
 
-Syntheteria uses a **CivRev2-style fixed-board 4X**. The world is a bounded square grid.
+Syntheteria uses a **fixed-board 4X on a sphere**. The tile grid maps onto the sphere via
+equirectangular projection (`tileToSpherePos()`).
 
-- The grid IS a sector of the ecumenopolis. There is no overworld + base modal split.
+- The grid IS the ecumenopolis surface. There is no overworld + base modal split.
 - All factions, cultists, and the player occupy the **same coordinate space**.
+- **Tiles are GPS coordinates** — each (x,z) is a database record, `explored` is the topmost gatekeeper.
 - **Salvage props on tiles are the PRIMARY resource source** — ancient dead-world debris (containers,
   terminals, vessels, machinery, debris) that players break down for materials.
 - **Floor mining is the BACKSTOP** — when salvage is scarce, strip the floor for basic materials.
@@ -43,6 +45,32 @@ Syntheteria uses a **CivRev2-style fixed-board 4X**. The world is a bounded squa
 
 The board is generated deterministically from a seed. Three preset scales:
 **Small** 44x44 (~1,936 tiles), **Standard** 64x64 (~4,096 tiles), **Large** 96x96 (~9,216 tiles).
+
+### Sphere World Architecture
+
+The game world is rendered as a 3D sphere, not a flat board:
+
+- **Globe.tsx** is the ONE persistent R3F Canvas — renders across ALL phases (title → setup → generating → playing)
+- **Title scene:** Animated globe with storm clouds, hypercane, lightning — zooms to surface when generating
+- **Game scene:** Board rendered on sphere surface, all models tangent to sphere normal
+- **Camera:** Full 3D orbit around sphere center. WASD rotates the globe. Scroll zooms. Pan disabled.
+- **Raycasting:** Click on sphere → `spherePosToTile()` → tile coordinates
+- **No minimap needed:** The sphere IS the minimap at full zoom
+
+### Full 3D Camera
+
+The camera orbits the sphere center at (0,0,0):
+- **Surface zoom** (1.15x radius): tactical view, individual tiles visible
+- **District zoom** (1.8x radius, default): see a city-block-sized area
+- **Planet zoom** (4x radius): see the entire sphere
+- **Polar clamped** to avoid singularities at poles
+- **No pan** — orbiting IS navigation. The world rotates under the camera.
+
+### Cutaway Zoom
+
+When zooming close to the surface, the camera descends through structural layers rather than
+crashing into ceilings. `CutawayClipPlane.tsx` clips geometry above the camera for dollhouse-style
+interior views.
 
 ### Terrain Substrates (9 types)
 
@@ -62,13 +90,14 @@ The board surface is procedurally generated with 9 ecumenopolis substrate types:
 
 ### Visual Framing
 
-The board is viewed top-down (fixed isometric camera, CivRev2-style). The atmosphere is a dead
-machine civilization under permanent storm:
+The atmosphere is a dead machine civilization under permanent storm. The player is INSIDE the dome:
 
+- **Persistent storm sky** — StormClouds, Hypercane, LightningEffect render in ALL phases (title storms become game sky)
 - **Storm dome** — BackSide sky sphere with 3 GLSL layers (storm clouds, wormhole, orbital illuminator)
 - **Day/night cycle** — driven by turn counter via chronometry system (12 turns/day, 48 turns/year)
 - **Elevation stacking** — bridges at Y=0.4m with support columns and void planes beneath
-- **Exponential fog** — hides board edge, creates depth toward storm horizon
+- **Sphere fog of war** — dedicated GLSL shaders for fog on curved surface (BFS distance)
+- **Exponential fog** — creates depth toward storm horizon
 
 ---
 

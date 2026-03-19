@@ -1,6 +1,6 @@
 # Syntheteria — Architecture
 
-> Technical reference for the ground-up rewrite on `ralph/syntheteria-1-0`.
+> Technical reference for the ground-up rewrite on `docs/syntheteria-1-0-done`.
 
 ---
 
@@ -9,15 +9,16 @@
 | Layer | Technology |
 |-------|-----------|
 | Bundler | **Vite** (`pnpm dev`, `pnpm build`) |
-| Renderer | **R3F** — one `<Canvas>` in `GameScreen.tsx` |
+| Renderer | **R3F** — one persistent `<Canvas>` in `Globe.tsx` |
 | ECS | **Koota** — all game state as typed traits |
+| AI | **Yuka** — GOAP goal evaluation, fuzzy logic, NavGraph A* |
 | Persistence | **sql.js** — pure JS SQLite, no wasm needed |
 | Testing | **Vitest** (`*.vitest.ts` files) |
 | Lint/format | **Biome** (tabs, double quotes, sorted imports) |
 | TypeScript | Strict mode, 0 errors required |
 | GLSL | Extracted to `.glsl` files with `vite-plugin-glsl` `#include` directives |
 
-**Entry:** `src/main.tsx` — DOM bootstrap + `Root` component (screen state machine)
+**Entry:** `src/main.tsx` — DOM bootstrap + `Root` component (phase state machine)
 
 ---
 
@@ -28,9 +29,23 @@ syntheteria/
 ├── AGENTS.md                  # Multi-agent orchestration (READ FIRST)
 ├── CLAUDE.md                  # Claude Code contract
 ├── src/
-│   ├── main.tsx               # Entry: DOM bootstrap + Root (landing → generating → game)
+│   ├── main.tsx               # Entry: DOM bootstrap + Root (title → setup → generating → playing)
 │   ├── board/                 # Fixed-size deterministic board generator
-│   ├── camera/                # IsometricCamera (CivRev2-style fixed-angle)
+│   │   ├── generator.ts       # generateBoard(config) — seeded noise, resource scatter
+│   │   ├── adjacency.ts       # BFS reachability, A* pathfinding
+│   │   ├── grid.ts            # GridApi — addressable interface
+│   │   ├── depth.ts           # Bridge/tunnel span generation
+│   │   ├── noise.ts           # FNV-1a + mulberry32 PRNG
+│   │   ├── cityLayout.ts      # BSP city layout (walls, corridors, districts)
+│   │   ├── connectivity.ts    # Flood-fill + corridor punching
+│   │   ├── labyrinth*.ts      # Rooms-and-Mazes generator (4 files)
+│   │   └── types.ts           # Elevation, TileData, BoardConfig, GeneratedBoard
+│   ├── camera/
+│   │   ├── IsometricCamera.tsx # Flat-board CivRev2-style PAN camera
+│   │   ├── SphereOrbitCamera.tsx # Sphere world orbit camera
+│   │   ├── cameraStore.ts     # Global camera controls registry
+│   │   ├── cutawayStore.ts    # Cutaway clip plane state
+│   │   └── types.ts           # CameraControls interface
 │   ├── ecs/
 │   │   ├── traits/            # board, tile, unit, faction, resource, building, salvage, cult
 │   │   ├── terrain/           # FloorType, FLOOR_DEFS, ResourceMaterial, GLSL shaders
@@ -41,23 +56,66 @@ syntheteria/
 │   │   ├── resources/         # 10 salvage types with yield tables
 │   │   ├── narrative/         # speechProfiles — faction persona dialogue
 │   │   └── systems/           # 40+ systems (movement, combat, economy, AI, cult, etc.)
-│   ├── ai/                    # Yuka GOAP, fuzzy logic, NavGraph, track selection
+│   ├── ai/                    # Yuka GOAP AI
+│   │   ├── agents/            # SyntheteriaAgent.ts — agent entity
+│   │   ├── fuzzy/             # situationModule.ts — fuzzy logic assessment
+│   │   ├── goals/             # evaluators.ts — GOAP goal evaluation
+│   │   ├── navigation/        # boardNavGraph.ts — NavGraph pathfinding
+│   │   ├── perception/        # factionMemory.ts — perception memory
+│   │   ├── runtime/           # AIRuntime.ts — runtime orchestration
+│   │   ├── triggers/          # territoryTrigger.ts — territory response
+│   │   ├── trackSelection.ts  # Per-faction specialization preferences
+│   │   └── yukaAiTurnSystem.ts # Per-turn AI execution
 │   ├── systems/               # radialMenu state machine, radialProviders
-│   ├── audio/                 # Tone.js synth pooling, SFX, ambient storm loop
+│   ├── audio/                 # audioEngine, sfx (Tone.js), ambience (storm loop)
 │   ├── db/                    # SQLite schema + GameRepo (sql.js adapter)
 │   ├── rendering/
 │   │   ├── BoardRenderer.tsx  # Merged BufferGeometry, PBR atlas shader
-│   │   ├── DepthRenderer.tsx  # Bridge platforms, support columns, void planes
-│   │   ├── MinedPitRenderer.tsx # Visible pits from floor mining
-│   │   ├── HighlightRenderer.tsx
+│   │   ├── BiomeRenderer.tsx  # Biome-specific terrain visuals
+│   │   ├── UnifiedTerrainRenderer.tsx # Unified depth layers (bridge/pit/terrain)
+│   │   ├── HighlightRenderer.tsx # Emissive overlay from TileHighlight
 │   │   ├── UnitRenderer.tsx   # GLB models, faction colors, lerped movement
+│   │   ├── BuildingRenderer.tsx # Building GLBs, fog-gated
+│   │   ├── SalvageRenderer.tsx # Salvage GLBs
+│   │   ├── StructureRenderer.tsx # Wall/column rendering
+│   │   ├── ProceduralStructureRenderer.tsx # Procedural geometry
+│   │   ├── FogOfWarRenderer.tsx # Per-unit scan radius fog
+│   │   ├── TerritoryOverlayRenderer.tsx # Faction territory colors
+│   │   ├── PathRenderer.tsx   # Pathfinding visualization
+│   │   ├── CombatEffectsRenderer.tsx # Damage text + combat flash
+│   │   ├── FragmentRenderer.tsx # Memory fragment objects
+│   │   ├── SpeechBubbleRenderer.tsx # In-world speech bubbles
+│   │   ├── UnitStatusBars.tsx # HP/AP bars above units
+│   │   ├── CutawayClipPlane.tsx # Dollhouse zoom clipping
 │   │   ├── StormDome.tsx      # BackSide sky sphere with storm + wormhole + illuminator GLSL
-│   │   └── sky/chronometry.ts # Turn→time math (day/night cycle, seasons)
+│   │   ├── boardGeometry.ts   # Flat board + sphere geometry builders
+│   │   ├── spherePlacement.ts # Model position + orientation on sphere surface
+│   │   ├── modelPaths.ts      # GLB model path resolution
+│   │   ├── tileVisibility.ts  # Fog-gated visibility
+│   │   ├── particles/         # ParticlePool, ParticleRenderer, effectEvents
+│   │   ├── globe/             # Title screen: GlobeWithCities, Hypercane, StormClouds, Lightning, shaders
+│   │   ├── sky/               # chronometry.ts — turn→time (day/night, seasons)
+│   │   ├── labyrinth/         # wallClassification.ts
+│   │   └── glsl/              # GLSL shaders: fogOfWar (flat+sphere), height
 │   ├── input/                 # BoardInput (click-to-select, click-to-move, click-to-attack)
 │   ├── ui/
-│   │   ├── landing/           # LandingScreen, NewGameModal, SettingsModal, TitleMenuScene
-│   │   └── game/              # GameScreen, HUD, RadialMenu, GarageModal, info panels
-│   ├── config/                # gameDefaults.ts, techTreeDefs.ts
+│   │   ├── Globe.tsx          # ONE persistent R3F Canvas across all phases
+│   │   ├── FatalErrorModal.tsx # Error recovery UI
+│   │   ├── icons.tsx          # UI icon components
+│   │   ├── landing/           # LandingScreen, NewGameModal, SettingsModal, title/
+│   │   └── game/              # HUD, RadialMenu, GarageModal, overlays, panels (26 files)
+│   ├── config/                # 11 definition files (all TypeScript const objects)
+│   │   ├── gameDefaults.ts    # All tunables: tile size, AP, camera, board sizes, faction colors
+│   │   ├── techTreeDefs.ts    # 27 techs in 5 tiers
+│   │   ├── buildingDefs.ts    # Building type definitions
+│   │   ├── diplomacyDefs.ts   # Diplomacy thresholds and rules
+│   │   ├── factionAiDefs.ts   # AI faction personality parameters
+│   │   ├── movementDefs.ts    # Movement cost definitions
+│   │   ├── narrativeDefs.ts   # Narrative/lore definitions
+│   │   ├── poiDefs.ts         # Point of interest definitions
+│   │   ├── recipeDefs.ts      # Synthesis recipe definitions
+│   │   ├── upgradeDefs.ts     # Upgrade path definitions
+│   │   └── weatherDefs.ts     # Storm/weather parameters
 │   └── world/                 # Config wiring, world initialization
 ├── docs/
 │   ├── GAME_DESIGN.md         # Vision, lore, world model, economy, bots, factions
@@ -86,6 +144,14 @@ Fixed-size deterministic board. No infinite chunk streaming.
 | `adjacency.ts` | `tileNeighbors()`, `reachableTiles()` (BFS), `shortestPath()` (A*) |
 | `grid.ts` | `createGridApi(board)` — addressable API for all placement + display systems |
 | `depth.ts` | `generateDepthLayer()` — bridge/tunnel span generation |
+| `cityLayout.ts` | BSP city layout — walls, corridors, doorways, 5 district zones |
+| `connectivity.ts` | Flood-fill + corridor punching — connectivity guarantee |
+| `labyrinthGenerator.ts` | Rooms-and-Mazes generator (main entry) |
+| `labyrinthMaze.ts` | Maze corridor generation |
+| `labyrinthAbyssal.ts` | Abyssal zone generation |
+| `labyrinthFeatures.ts` | Feature placement |
+| `labyrinthConnectivity.ts` | Labyrinth connectivity |
+| `labyrinth.ts` | Core labyrinth types |
 
 **GridApi** is the only public interface into board state outside `board/`. Never access `board.tiles[][]` directly.
 
@@ -101,6 +167,7 @@ All game state lives as typed traits on Koota entities.
 |------|---------|
 | `world.ts` | `createWorld()` + `WorldType` export |
 | `init.ts` | `initWorldFromBoard(world, board)` — tiles, resources, factions, robots |
+| `seed.ts` | Seed phrase ↔ numeric seed conversion |
 
 #### Traits (`ecs/traits/`)
 
@@ -122,7 +189,7 @@ All game state lives as typed traits on Koota entities.
 | `types.ts` | `FloorType` (9 substrates), `ResourceMaterial` (13 materials), `FLOOR_DEFS` |
 | `traits.ts` | `TileFloor` — floorType, mineable, hardness, resourceType, resourceAmount |
 | `cluster.ts` | JS mirror of GLSL cluster math — `floorTypeForTile()`, `tileFloorProps()` |
-| `floorShader.ts` | `makeFloorShaderMaterial(seed)` — PBR atlas shader (5 AmbientCG atlas maps: color, normal, roughness, metalness, opacity) |
+| `floorShader.ts` | `makeFloorShaderMaterial(seed)` — PBR atlas shader (5 AmbientCG atlas maps) |
 | `glsl/` | Extracted GLSL shader files: `floorVert.glsl`, `floorFrag.glsl`, `common.glsl`, `patterns/*.glsl` |
 
 **9 terrain substrates** (FloorType):
@@ -158,41 +225,7 @@ All game state lives as typed traits on Koota entities.
 
 #### Systems (`ecs/systems/`)
 
-| File | Purpose |
-|------|---------|
-| `movementSystem.ts` | Lerp `UnitMove.progress` → set `UnitPos`, deduct AP |
-| `highlightSystem.ts` | BFS reachable → `TileHighlight` emissive/color/reason |
-| `turnSystem.ts` | Clear highlights, refresh AP, increment `Board.turn`, run AI + environment phases |
-| `attackSystem.ts` | `resolveAttacks(world)` — damage = attack - defense (min 1), destroy at 0 HP |
-| `harvestSystem.ts` | `harvestSystem(world)` — tick-down active harvests, yield resources on complete; `startHarvest()` |
-| `resourceSystem.ts` | `getPlayerResources()`, `addResources()`, `spendResources()`, `canAfford()` — per-faction ResourcePool |
-| `aiTurnSystem.ts` | `runAiTurns(world, board)` — greedy AI moves toward player, attacks on adjacency |
-| `cultistSystem.ts` | `checkCultistSpawn()` — breach zones, 3 escalation stages, per-sect GOAP, POI spawning |
-| `cultMutation.ts` | `tickCultMutations(world)` — 4-tier time-based mutation: stat buffs → abilities → aberrant |
-| `floorMiningSystem.ts` | `floorMiningSystem(world)` — strip-mine tiles, DAISY pattern, deep mining tech +50% |
-| `specializationSystem.ts` | `runSpecializationPassives(world)` — aura effects: regen, scan boost, attack/defense buff |
-| `victorySystem.ts` | `checkVictoryConditions(world)` — 7 victory paths + elimination defeat + forced endgame |
-| `territorySystem.ts` | `computeTerritory(world)` — faction tile painting, percentage tracking |
-| `populationSystem.ts` | Population cap enforcement based on outpost count |
-| `resourceRenewalSystem.ts` | Resource deposit regeneration over time |
-| `experienceSystem.ts` | XP tracking, mark level progression, harvest/combat XP awards |
-| `researchSystem.ts` | Tech tree progression, research labs accumulate points |
-| `upgradeSystem.ts` | Mark level upgrades, stat improvements |
-| `diplomacySystem.ts` | Granular standings (-100 to +100), trade, reputation |
-| `hackingSystem.ts` | Hack enemy units/buildings, convert to faction |
-| `buildSystem.ts` | Building placement from radial menu |
-| `buildingPlacement.ts` | Adjacency and cost validation for placement |
-| `fogRevealSystem.ts` | Per-unit scan radius fog reveal |
-| `toastNotifications.ts` | In-game toast notification system |
-| `turnEventLog.ts` | Per-turn event history recording |
-| `tutorialSystem.ts` | First-time player tutorial guidance |
-| `memoryFragments.ts` | Lore fragment discovery system |
-| `resourceDeltaSystem.ts` | Income/expense tracking per material |
-| `campaignStats.ts` | Cross-game statistics tracking |
-| `speechTriggers.ts` | Context-sensitive dialogue triggers |
-| `speechBubbleStore.ts` | Speech bubble state management |
-| `turnSummary.ts` | End-of-turn summary generation |
-| `wormholeProject.ts` | 20-turn wormhole stabilizer construction |
+42 systems. See `docs/memory-bank/progress.md` for the complete list with status and file paths.
 
 #### Other ECS packages
 
@@ -219,6 +252,7 @@ All game state lives as typed traits on Koota entities.
 | `migrations.ts` | Run pending schema migrations |
 | `adapter.ts` | `SqliteAdapter` interface + `createSqlJsAdapter()` |
 | `gameRepo.ts` | `GameRepo`: `createGame`, `saveTiles`, `listGames`, `getGame`, `loadTiles` |
+| `serialize.ts` | World state ↔ DB serialization |
 | `types.ts` | `GameRecord`, `GameSummary`, `TileRecord`, `UnitRecord` |
 
 SQLite is **non-fatal**: DB failures don't crash the game — ECS runs in memory.
@@ -228,28 +262,52 @@ SQLite is **non-fatal**: DB failures don't crash the game — ECS runs in memory
 | File | Purpose |
 |------|---------|
 | `BoardRenderer.tsx` | Merged `BufferGeometry` (single draw call), PBR atlas shader |
-| `DepthRenderer.tsx` | Bridge platforms at Y=0.4m, support columns, under-bridge void planes |
-| `MinedPitRenderer.tsx` | Visible pits from floor mining operations |
+| `BiomeRenderer.tsx` | Biome-specific terrain visuals |
+| `UnifiedTerrainRenderer.tsx` | Unified depth layers — replaced DepthRenderer + MinedPitRenderer |
 | `HighlightRenderer.tsx` | Thin emissive plane pool per tile from `TileHighlight` |
 | `UnitRenderer.tsx` | GLB models from asset library, lerped on `UnitMove`, faction colors |
+| `BuildingRenderer.tsx` | Building GLBs, fog-gated |
+| `SalvageRenderer.tsx` | Salvage prop GLBs |
+| `StructureRenderer.tsx` | Wall/column structural rendering |
+| `ProceduralStructureRenderer.tsx` | Procedural geometry for structures |
+| `FogOfWarRenderer.tsx` | Per-unit scan radius fog (flat + sphere GLSL variants) |
+| `TerritoryOverlayRenderer.tsx` | Faction territory color overlay |
+| `PathRenderer.tsx` | Pathfinding line visualization |
+| `CombatEffectsRenderer.tsx` | Floating damage numbers + combat flash |
+| `FragmentRenderer.tsx` | Memory fragment glowing objects |
+| `SpeechBubbleRenderer.tsx` | In-world speech bubble rendering |
+| `UnitStatusBars.tsx` | HP/AP status bars above units |
+| `CutawayClipPlane.tsx` | Dollhouse zoom clipping plane |
 | `StormDome.tsx` | BackSide sphere with 3 GLSL layers (storm / wormhole / illuminator disc) |
+| `boardGeometry.ts` | Both flat (legacy) and sphere geometry builders |
+| `spherePlacement.ts` | Model position + orientation on sphere surface |
+| `modelPaths.ts` | GLB model path resolution |
+| `tileVisibility.ts` | Fog-gated visibility checks |
+| `particles/` | ParticlePool + ParticleRenderer + effectEvents |
+| `globe/` | Title screen: GlobeWithCities, Hypercane, StormClouds, Lightning, TitleText, shaders |
 | `sky/chronometry.ts` | `turnToChronometry(turn)` — day/night cycle + seasons from turn counter |
+| `labyrinth/wallClassification.ts` | Wall type classification |
+| `glsl/` | GLSL shaders: fogOfWar (flat + sphere variants), height shaders |
 
 ### `src/ai/` — Yuka GOAP AI
 
 | File | Purpose |
 |------|---------|
-| `yukaAiTurnSystem.ts` | Yuka Think/GoalEvaluator for AI faction turns |
-| `fuzzyModule.ts` | Fuzzy logic situation assessment |
-| `factionMemory.ts` | Perception memory for sighted units |
-| `boardNavGraph.ts` | NavGraph pathfinding for AI |
-| `territoryTrigger.ts` | Territory change response system |
+| `yukaAiTurnSystem.ts` | Per-turn AI faction execution |
 | `trackSelection.ts` | AI faction track preferences for fabrication |
+| `agents/SyntheteriaAgent.ts` | Yuka agent entity definition |
+| `fuzzy/situationModule.ts` | Fuzzy logic situation assessment |
+| `goals/evaluators.ts` | GOAP goal evaluation |
+| `navigation/boardNavGraph.ts` | NavGraph pathfinding for AI |
+| `perception/factionMemory.ts` | Perception memory for sighted units |
+| `runtime/AIRuntime.ts` | AI runtime orchestration |
+| `triggers/territoryTrigger.ts` | Territory change response system |
 
 ### `src/audio/` — Sound
 
 | File | Purpose |
 |------|---------|
+| `audioEngine.ts` | Core audio system |
 | `sfx.ts` | Tone.js synth pooling + SFX playback |
 | `ambience.ts` | Continuous ambient storm loop |
 
@@ -257,7 +315,10 @@ SQLite is **non-fatal**: DB failures don't crash the game — ECS runs in memory
 
 | File | Purpose |
 |------|---------|
-| `IsometricCamera.tsx` | Fixed-angle CivRev2 camera: `enableRotate=false`, FOV=45, WASD pan |
+| `IsometricCamera.tsx` | Flat-board CivRev2 camera: `enableRotate=false`, FOV=45, WASD pan |
+| `SphereOrbitCamera.tsx` | Sphere orbit camera: orbit around (0,0,0), polar clamped, WASD rotates globe |
+| `cameraStore.ts` | Global camera controls registry (for Minimap click-to-pan etc.) |
+| `cutawayStore.ts` | Cutaway clip plane state management |
 | `types.ts` | `CameraControls` interface: panTo/snapTo/setZoom/reset |
 
 ### `src/input/` — Input Handling
@@ -270,41 +331,70 @@ SQLite is **non-fatal**: DB failures don't crash the game — ECS runs in memory
 
 | File | Purpose |
 |------|---------|
+| `Globe.tsx` | **ONE persistent R3F Canvas** — renders across all phases (title/setup/generating/playing) |
+| `FatalErrorModal.tsx` | Error recovery modal |
+| `icons.tsx` | UI icon components |
 | `ui/landing/LandingScreen.tsx` | Title, New Game button, Continue (when saves exist), Settings |
 | `ui/landing/NewGameModal.tsx` | SectorScale presets, seed phrases, difficulty/climate/storm options, faction setup |
 | `ui/landing/SettingsModal.tsx` | Audio sliders, keybindings reference, accessibility |
-| `ui/landing/title/TitleMenuScene.tsx` | 3D title screen scene |
-| `ui/game/GameScreen.tsx` | R3F Canvas with all renderers + input + RadialMenu |
+| `ui/landing/title/` | Title menu scene components |
+| `ui/game/GameScreen.tsx` | **LEGACY** — old separate Canvas, superseded by Globe.tsx |
 | `ui/game/HUD.tsx` | Turn counter, resource counters (13-material), AP display, End Turn button |
 | `ui/game/RadialMenu.tsx` | SVG renderer for dual-ring radial context menu |
 | `ui/game/GarageModal.tsx` | Two-step fabrication: Classification → Specialization track |
+| `ui/game/TechTreeOverlay.tsx` | Full 27-tech DAG with research progress |
+| `ui/game/DiplomacyOverlay.tsx` | Faction standings panel |
+| `ui/game/UnitRosterOverlay.tsx` | All player units with quick-jump |
+| `ui/game/TurnSummaryPanel.tsx` | End-of-turn recap |
+| `ui/game/AlertBar.tsx` | Off-screen event alerts |
+| `ui/game/TutorialOverlay.tsx` | 5-step guided onboarding |
 
 All player-visible elements carry `data-testid` attributes for component tests and E2E.
 
 ### `src/config/` — Tunables
 
+11 definition files — all TypeScript `const` objects (never JSON):
+
 | File | Purpose |
 |------|---------|
 | `gameDefaults.ts` | All tunables: tile size, AP, camera, board sizes, faction colors, unit dims |
-| `techTreeDefs.ts` | 27 techs in 5 tiers — 15 base + 12 track-gating (TypeScript const) |
+| `techTreeDefs.ts` | 27 techs in 5 tiers — 15 base + 12 track-gating |
+| `buildingDefs.ts` | Building type definitions |
+| `diplomacyDefs.ts` | Diplomacy thresholds and rules |
+| `factionAiDefs.ts` | AI faction personality parameters |
+| `movementDefs.ts` | Movement cost definitions |
+| `narrativeDefs.ts` | Narrative/lore definitions |
+| `poiDefs.ts` | Point of interest definitions |
+| `recipeDefs.ts` | Synthesis recipe definitions |
+| `upgradeDefs.ts` | Upgrade path definitions |
+| `weatherDefs.ts` | Storm/weather parameters |
 
-**Rule:** No magic numbers in system or rendering code. All tunables in `gameDefaults.ts`.
+**Rule:** No magic numbers in system or rendering code. All tunables in config files.
 
 ---
 
-## Screen State Machine (`main.tsx`)
+## Phase State Machine (`main.tsx`)
 
 ```
-"landing"
-  ↓ user clicks New Game
-  ↓ (brief "generating" phase)
-"game"     ← generateBoard + createWorld + initWorldFromBoard + DB write
+"title"       → Globe rotates, title text, storms, far camera (DOM: title buttons)
+    ↓ user clicks New Game
+"setup"       → Globe visible behind modal (DOM: NewGameModal overlay)
+    ↓ user submits config
+"generating"  → Globe growth animation, camera zooms to surface
+    ↓ growth complete
+"playing"     → Game renderers, game HUD, all overlays
 ```
 
-`Root` in `main.tsx` owns the phase state. `landing/` and `game/` subpackages are isolated —
-neither knows the other exists. `main.tsx` is the only place both are imported.
+`Root` in `main.tsx` owns the phase state. `Globe.tsx` (`src/ui/Globe.tsx`) is the ONE persistent
+`<Canvas>` that renders across all phases. Title scene components are visible in non-playing phases;
+game renderers activate in the playing phase.
 
-`GameScreen` receives `board`, `world`, and `gameId`. All renderers + input mount inside the R3F Canvas.
+Landing DOM overlays (`LandingScreen`, `NewGameModal`) layer on top of the Canvas.
+Game DOM overlays (`HUD`, `GarageModal`, etc.) layer on top during the playing phase.
+
+**UI Architecture Rule:**
+- **Overlay UI** (HUD, modals, panels) = DOM-based, layered on Canvas
+- **Diegetic UI** (speech bubbles, status bars, particles) = in-Canvas R3F components
 
 ### `window.__syntheteria` Debug Bridge
 
@@ -312,13 +402,62 @@ neither knows the other exists. `main.tsx` is the only place both are imported.
 
 ```ts
 window.__syntheteria = {
-  phase: "landing" | "generating" | "game",
+  phase: "title" | "setup" | "generating" | "playing",
   turn: number,
   playerAp: number,
   selectedUnitId: number | null,
   getWorld: () => WorldType | null,
 };
 ```
+
+---
+
+## Sphere World Architecture
+
+### Geometry (`boardGeometry.ts`)
+
+The board geometry module contains BOTH flat and sphere implementations:
+
+**Flat board (legacy, to be deleted):**
+- `buildBoardGeometry()` — merged BufferGeometry with CURVE_STRENGTH cosine curvature
+- `GHOST = 30` — extra tile rows rendered beyond board edge for seamless wrapping
+- `CURVE_STRENGTH = 0.0008` — cosine-based vertex displacement
+
+**Sphere world (current):**
+- `buildSphereGeometry(board)` — maps tile grid onto SphereGeometry via equirectangular projection
+- `sphereRadius(W, H)` — computes sphere radius from board dimensions
+- `tileToSpherePos(x, z, W, H, R)` — converts tile grid coords to 3D sphere surface position
+- `spherePosToTile(pos, W, H, R)` — inverse: 3D position → tile coords (for raycasting)
+
+### Model Placement (`spherePlacement.ts`)
+
+All 3D models (units, buildings, salvage, structures) are placed on the sphere surface:
+- Position: `tileToSpherePos()` + optional Y offset along normal
+- Orientation: quaternion rotating local Y-up to sphere outward normal
+- `sphereModelPlacementWithRotation()` adds additional Y-axis rotation for directional models
+
+### Camera (`SphereOrbitCamera.tsx`)
+
+- OrbitControls centered at (0,0,0) — the sphere center
+- Left drag = orbit (rotate azimuth + polar)
+- Scroll = zoom (change orbit distance)
+- WASD = orbit via keyboard
+- Pan DISABLED — the world rotates, not the camera target
+- Polar angle clamped to avoid pole singularities
+- Zoom bounds: 1.15x radius (surface) to 4x radius (full planet)
+
+### Fog of War on Sphere
+
+Dedicated GLSL shaders for sphere-surface fog:
+- `fogOfWarSphereVert.glsl` — vertex shader
+- `fogOfWarSphereFrag.glsl` — fragment shader
+- BFS distance computed on sphere surface
+
+### Tile = GPS Coordinate
+
+Each (x,z) tile is a GPS database record. The `explored` flag is the topmost gatekeeper:
+- Unexplored tiles: no data revealed, fog shader active
+- Explored tiles: terrain, resources, buildings visible
 
 ---
 
@@ -401,7 +540,7 @@ events         -- id, game_id, turn, type, payload (JSON)
 
 ## Test Strategy
 
-**124 test suites, 2171 tests. 0 TypeScript errors. Vitest-only.**
+**126 test suites, 2239 tests. 0 TypeScript errors. Vitest-only.**
 
 Run: `pnpm test:vitest` (unit) | `pnpm test:ct` (browser CT) | `pnpm verify` (full gate)
 
@@ -412,7 +551,7 @@ Run: `pnpm test:vitest` (unit) | `pnpm test:ct` (browser CT) | `pnpm verify` (fu
 | `board/__tests__/depth.vitest.ts` | Bridge/tunnel span generation |
 | `board/__tests__/grid.vitest.ts` | GridApi CRUD |
 | `board/__tests__/noise.vitest.ts` | seededRng determinism/range, noise2D |
-| `camera/__tests__/camera.vitest.ts` | IsometricCamera: FOV=45, angle, CameraControls API |
+| `camera/__tests__/camera.vitest.ts` | Camera: FOV, angle, CameraControls API |
 | `ecs/__tests__/traits.vitest.ts` | Koota trait defaults, world lifecycle |
 | `ecs/__tests__/movementSystem.vitest.ts` | movementSystem lerp + completion |
 | `ecs/__tests__/highlightSystem.vitest.ts` | BFS highlight + clear |
@@ -421,21 +560,15 @@ Run: `pnpm test:vitest` (unit) | `pnpm test:ct` (browser CT) | `pnpm verify` (fu
 | `ecs/__tests__/robots.vitest.ts` | 9 robot spawn functions |
 | `ecs/__tests__/factions.vitest.ts` | FACTION_DEFINITIONS, CULT_DEFINITIONS, relations |
 | `ecs/__tests__/init.vitest.ts` | initWorldFromBoard: Board, tiles, ResourceDeposit, factions, robots |
-| `ecs/terrain/__tests__/elevationSampler.vitest.ts` | ELEV_Y, tileElevY, sampleElevation |
-| `ecs/terrain/__tests__/floorShader.vitest.ts` | ShaderMaterial factory, uniforms |
-| `ecs/systems/__tests__/aiTurnSystem.vitest.ts` | AI faction movement + attack |
-| `ecs/systems/__tests__/attackSystem.vitest.ts` | Damage calc, destruction at 0 HP |
-| `ecs/systems/__tests__/harvestSystem.vitest.ts` | Tick-down, yield, depletion |
-| `ecs/systems/__tests__/resourceSystem.vitest.ts` | ResourcePool CRUD, canAfford |
-| `ecs/systems/__tests__/cultistSystem.vitest.ts` | Breach zones, escalation, spawn cap |
-| `ecs/systems/__tests__/turnSystem.vitest.ts` | Turn advance, full multi-phase |
+| `ecs/terrain/__tests__/*.vitest.ts` | Elevation, floor shader, cluster math |
+| `ecs/systems/__tests__/*.vitest.ts` | All 42 systems |
 | `db/__tests__/gameRepo.vitest.ts` | GameRepo CRUD, round-trip |
-| `ui/__tests__/HUD.vitest.tsx` | Turn/AP/resource display, End Turn callback |
-| `ui/__tests__/NewGameModal.vitest.tsx` | Form defaults, seed, submit, cancel |
-| `ui/__tests__/LandingScreen.vitest.tsx` | Title, New Game modal, Continue, save list |
+| `ui/__tests__/*.vitest.tsx` | HUD, NewGameModal, LandingScreen |
 | `systems/__tests__/radialMenu.vitest.ts` | Dual-ring state machine, hit testing, providers |
-| `rendering/__tests__/DepthRenderer.vitest.ts` | Bridge geometry, column positions, void planes |
-| `rendering/sky/__tests__/chronometry.vitest.ts` | Turn→time, sun direction/color |
+| `rendering/__tests__/*.vitest.ts` | Renderers, chronometry |
+| `ai/__tests__/*.vitest.ts` | AI systems |
+| `config/__tests__/*.vitest.ts` | Config definitions |
+| `world/__tests__/*.vitest.ts` | World config |
 
 ---
 
@@ -457,7 +590,7 @@ Run: `pnpm test:vitest` (unit) | `pnpm test:ct` (browser CT) | `pnpm verify` (fu
 ### Shader
 
 GLSL shaders in `src/ecs/terrain/glsl/`:
-- `floorVert.glsl` — vertex shader with elevation + cylindrical curvature
+- `floorVert.glsl` — vertex shader with elevation
 - `floorFrag.glsl` — fragment shader samples atlas by floorType index, applies PBR lighting
 - `common.glsl` — shared noise functions
 - `patterns/` — per-substrate surface shaders
@@ -475,23 +608,6 @@ Uniforms: `uColorAtlas`, `uNormalAtlas`, `uRoughnessAtlas`, `uMetalnessAtlas`, `
 `uSeed`, `uBoardCenter`, `uCurve`, `uSunDir`, `uSunColor`, `fogColor`, `fogDensity`.
 
 Fixed zenith sun — perpetual harsh artificial daylight under the dome (no day/night orbit).
-
----
-
-## Depth Stacking
-
-Bridges and tunnels are the mountain-pass mechanic. **DepthRenderer is implemented.**
-
-```
-Elevation  World Y   Rendered as
-   -1       n/a      Void pit (handled by abyssal_platform shader)
-    0        0.0m    Standard ground
-   +1       +0.4m    Bridge — platform boxes + support columns + void planes
-   +2       +0.8m    Elevated structure tier
-```
-
-DepthRenderer produces 3 merged geometries per board (single draw call each):
-bridge platform boxes, support columns (cylinders), and dark void planes at Y=0 beneath bridges.
 
 ---
 
@@ -535,73 +651,6 @@ Each track defines: `trackId`, `robotClass`, `label`, `description`, `gateTechId
 ### Tech Gates
 
 12 track techs (2 per class: gate + v2 upgrade) added to `techTreeDefs.ts`, bringing total to 27 techs.
-
----
-
-## Cult Mutation System
-
-Time-based mutation for cult units. Cult mechs grow stronger the longer they survive.
-
-### Tiers (`cultMutation.ts`)
-
-| Tier | Turns Alive | Effect |
-|------|-------------|--------|
-| 0 | 0-5 | Base stats |
-| 1 | 6-10 | ONE random stat buff (speed +2 MP / armor +3 DEF / damage +2 ATK) |
-| 2 | 11-20 | SECOND stat buff (different from tier 1) + special ability (regen / area_attack / fear_aura) |
-| 3 | 21+ | ABERRANT — +2 to ALL stats (HP, ATK, DEF, MP), mini-boss threat |
-
-### Design
-
-- Buff selection is **seeded-deterministic** — same `mutationSeed` always produces same buffs
-- Regen ability heals 1 HP/turn
-- Aberrant tier triggers turn event log notification
-- `getMutationXPMultiplier()` rewards 1.5x XP for killing aberrant mechs
-
----
-
-## Floor Mining System
-
-Strip-mine tiles for foundation-tier materials — the backstop economy when salvage props are consumed.
-
-### Flow (`floorMiningSystem.ts`)
-
-1. Player selects worker unit adjacent to mineable tile
-2. `startFloorMining()` adds `UnitMine` trait with `ticksRemaining = FloorDef.hardness`
-3. Each turn, `floorMiningSystem()` decrements ticks
-4. On completion: yield resources, mark tile as mined (`mineable → false`)
-5. Tile elevation drops to -1 (creates visible pit via `MinedPitRenderer`)
-6. Deep mining tech bonus: +50% yield if `deep_mining` tech researched
-
-### DAISY Pattern
-
-Mining creates visible pits by setting tile elevation to -1. `MinedPitRenderer.tsx` renders the pit geometry. This makes strip-mining visually impactful and permanent — mined tiles cannot be mined again.
-
----
-
-## Cult Escalation System
-
-Three-stage cult behavior that scales with game progression.
-
-### Stages (`cultistSystem.ts`)
-
-| Stage | Tier | Behavior |
-|-------|------|----------|
-| Wanderer | 0-1 | Random movement near patrol center, flee from enemies, fight only when cornered |
-| War Party | 2-3 | Coordinated groups, chase enemies, target territory edges, sect-specific tactics |
-| Assault | 4+ | Direct attacks on faction buildings and units, charge with damage bonus |
-
-### Per-Sect Behaviors (`SectBias`)
-
-| Sect | Patrol | Target | Attack | Style |
-|------|--------|--------|--------|-------|
-| Static Remnants | Tight (0.75x) | Nearest | Base | Territorial — defend POIs |
-| Null Monks | Wide (1.5x) | Isolated units | Base | Ambush — spread corruption |
-| Lost Signal | Normal | Nearest | +1 damage | Berserker — skip wanderer stage, charge buildings |
-
-### POI Spawning
-
-At game start, 3-6 cult POIs are placed on `collapsed_zone`/`dust_district` terrain, away from center and edges. Each POI gets a breach altar + initial cult mech guard + human shelter.
 
 ---
 

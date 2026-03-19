@@ -546,6 +546,9 @@ function Root() {
 		}
 	}, []);
 
+	// Observer auto-orbit: cycle through factions each turn
+	const observerFactionIdx = useRef(0);
+
 	const handleEndTurn = useCallback(() => {
 		if (!session) return;
 		playSfx("turn_advance");
@@ -554,8 +557,8 @@ function Root() {
 		setTurn(currentTurn);
 		setPlayerAp(readPlayerAp(session.world));
 
+		const cam = getCameraControls();
 		if (!isObserverMode) {
-			const cam = getCameraControls();
 			if (cam) {
 				let sumX = 0;
 				let sumZ = 0;
@@ -572,6 +575,30 @@ function Root() {
 				if (count > 0) {
 					cam.panTo((sumX / count) * TILE_SIZE_M, (sumZ / count) * TILE_SIZE_M);
 				}
+			}
+		} else if (cam) {
+			// Observer mode: auto-orbit to follow each faction in rotation
+			const factionUnits = new Map<string, { sumX: number; sumZ: number; count: number }>();
+			for (const e of session.world.query(UnitPos, UnitFaction)) {
+				const f = e.get(UnitFaction);
+				const p = e.get(UnitPos);
+				if (!f || !p || !f.factionId) continue;
+				const entry = factionUnits.get(f.factionId) ?? { sumX: 0, sumZ: 0, count: 0 };
+				entry.sumX += p.tileX;
+				entry.sumZ += p.tileZ;
+				entry.count++;
+				factionUnits.set(f.factionId, entry);
+			}
+			const factionIds = Array.from(factionUnits.keys());
+			if (factionIds.length > 0) {
+				const idx = observerFactionIdx.current % factionIds.length;
+				const fid = factionIds[idx]!;
+				const entry = factionUnits.get(fid)!;
+				cam.panTo(
+					(entry.sumX / entry.count) * TILE_SIZE_M,
+					(entry.sumZ / entry.count) * TILE_SIZE_M,
+				);
+				observerFactionIdx.current = idx + 1;
 			}
 		}
 

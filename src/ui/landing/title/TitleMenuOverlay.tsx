@@ -165,19 +165,25 @@ export function TitleMenuOverlay({
 	const isWide = vw >= 768;
 	const bezelHeight = Math.min(vh * 0.3, 200);
 
-	// Wrap button handlers to init audio on first user gesture (browser autoplay policy)
+	// Wrap button handlers to init audio on first user gesture (browser autoplay policy).
+	// Audio is non-fatal — catch errors so the game still works without sound.
+	const initAudioSafe = useCallback(() => {
+		initAudio().then(startAmbience).catch((err) => {
+			console.warn("[audio] Init failed (non-fatal):", err);
+		});
+	}, []);
 	const handleNewGame = useCallback(() => {
-		initAudio().then(startAmbience);
+		initAudioSafe();
 		onNewGame();
-	}, [onNewGame]);
+	}, [onNewGame, initAudioSafe]);
 	const handleContinue = useCallback(() => {
-		initAudio().then(startAmbience);
+		initAudioSafe();
 		onContinueGame();
-	}, [onContinueGame]);
+	}, [onContinueGame, initAudioSafe]);
 	const handleSettings = useCallback(() => {
-		initAudio().then(startAmbience);
+		initAudioSafe();
 		onSettings();
-	}, [onSettings]);
+	}, [onSettings, initAudioSafe]);
 
 	// Staggered entrance animation
 	useEffect(() => {

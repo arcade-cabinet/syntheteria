@@ -18,6 +18,7 @@
 import { Clone, useGLTF } from "@react-three/drei";
 import type { World } from "koota";
 import { Suspense, useEffect, useMemo, useRef } from "react";
+import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
@@ -319,14 +320,16 @@ export function InfrastructureRenderer({ board, world }: InfrastructureRendererP
 	return (
 		<>
 			{instances.map((inst) => (
-				<Suspense key={inst.key} fallback={null}>
-					<InfraModel
-						url={inst.url}
-						wx={inst.wx}
-						wz={inst.wz}
-						rotation={inst.rotation}
-					/>
-				</Suspense>
+				<ModelErrorBoundary key={inst.key} name={inst.url}>
+					<Suspense fallback={null}>
+						<InfraModel
+							url={inst.url}
+							wx={inst.wx}
+							wz={inst.wz}
+							rotation={inst.rotation}
+						/>
+					</Suspense>
+				</ModelErrorBoundary>
 			))}
 		</>
 	);

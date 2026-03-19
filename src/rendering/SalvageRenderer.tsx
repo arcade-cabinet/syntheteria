@@ -9,6 +9,7 @@
 import { Clone, Sparkles, useGLTF } from "@react-three/drei";
 import type { World } from "koota";
 import { Suspense, useMemo } from "react";
+import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import { SalvageProp, type SalvageType } from "../ecs/traits/salvage";
@@ -145,17 +146,19 @@ export function SalvageRenderer({ world, useSphere, boardWidth, boardHeight }: S
 	return (
 		<>
 			{instances.map((inst) => (
-				<Suspense key={`${inst.tileX},${inst.tileZ}`} fallback={null}>
-					<SalvageModel
-						url={inst.url}
-						tileX={inst.tileX}
-						tileZ={inst.tileZ}
-						hasCyanSparkle={inst.hasCyanSparkle}
-						useSphere={useSphere}
-						boardWidth={boardWidth}
-						boardHeight={boardHeight}
-					/>
-				</Suspense>
+				<ModelErrorBoundary key={`${inst.tileX},${inst.tileZ}`} name={inst.url}>
+					<Suspense fallback={null}>
+						<SalvageModel
+							url={inst.url}
+							tileX={inst.tileX}
+							tileZ={inst.tileZ}
+							hasCyanSparkle={inst.hasCyanSparkle}
+							useSphere={useSphere}
+							boardWidth={boardWidth}
+							boardHeight={boardHeight}
+						/>
+					</Suspense>
+				</ModelErrorBoundary>
 			))}
 		</>
 	);

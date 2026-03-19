@@ -7,7 +7,7 @@
 
 ## What This Is
 
-A **fixed-board 4X strategy game** on future Earth (the ecumenopolis). Ground-up rewrite on `ralph/syntheteria-1-0`.
+A **sphere-world 4X strategy game** on future Earth (the ecumenopolis). Ground-up rewrite on `docs/syntheteria-1-0-done`.
 The old infinite-map ecumenopolis game is in `pending/` (excluded from tsconfig + biome).
 
 **Primary build:** `pnpm dev` (Vite). **Tests:** `pnpm test:vitest`. **Lint + tsc:** `pnpm verify`.
@@ -20,10 +20,10 @@ The old infinite-map ecumenopolis game is in `pending/` (excluded from tsconfig 
 syntheteria/
 ├── CLAUDE.md                  # Claude Code behavior contract
 ├── AGENTS.md                  # THIS FILE — multi-agent orchestration
-├── src/
-│   ├── main.tsx               # Entry + Root: screen state machine (landing → generating → game)
-│   ├── board/                 # Fixed-size deterministic board generator
-│   ├── camera/                # IsometricCamera (CivRev2-style)
+├── src/                       # 344 source files
+│   ├── main.tsx               # Entry + Root: phase state machine (title → setup → generating → playing)
+│   ├── board/                 # Fixed-size deterministic board generator (14 files)
+│   ├── camera/                # IsometricCamera (legacy) + SphereOrbitCamera (sphere world)
 │   ├── ecs/
 │   │   ├── traits/            # board, tile, unit, faction, resource, building, salvage, cult
 │   │   ├── terrain/           # FloorType (9 substrates), ResourceMaterial (13 types), GLSL shaders
@@ -31,17 +31,18 @@ syntheteria/
 │   │   ├── factions/          # 5 factions + 3 cults, relations
 │   │   ├── buildings/         # 15 faction buildings + 6 cult structures
 │   │   ├── resources/         # 10 salvage types with yield tables
-│   │   └── systems/           # 40+ systems (movement, combat, economy, AI, cult, specialization, etc.)
-│   ├── ai/                    # Yuka GOAP, fuzzy logic, NavGraph, track selection
+│   │   └── systems/           # 42 systems (movement, combat, economy, AI, cult, specialization, etc.)
+│   ├── ai/                    # Yuka GOAP: agents/, fuzzy/, goals/, navigation/, perception/, runtime/, triggers/
 │   ├── systems/               # radialMenu state machine, radialProviders
-│   ├── audio/                 # Tone.js synth pooling, SFX, ambient storm
+│   ├── audio/                 # audioEngine, sfx (Tone.js), ambience (storm loop)
 │   ├── db/                    # SQLite schema + GameRepo (sql.js adapter)
-│   ├── rendering/             # BoardRenderer, DepthRenderer, UnitRenderer, StormDome, MinedPitRenderer
+│   ├── rendering/             # 20+ renderers, sphere placement, globe/, particles/, sky/, glsl/
 │   ├── input/                 # BoardInput (click-to-select/move/attack)
 │   ├── ui/
-│   │   ├── landing/           # LandingScreen, NewGameModal, SettingsModal, TitleMenuScene
-│   │   └── game/              # GameScreen, HUD, RadialMenu, GarageModal, info panels
-│   ├── config/                # gameDefaults.ts, techTreeDefs.ts
+│   │   ├── Globe.tsx          # ONE persistent R3F Canvas across all phases (primary scene container)
+│   │   ├── landing/           # LandingScreen, NewGameModal, SettingsModal, title/
+│   │   └── game/              # HUD, RadialMenu, GarageModal, overlays, panels (26 files)
+│   ├── config/                # 11 TypeScript const definition files (gameDefaults, techTree, etc.)
 │   └── world/                 # Config wiring, world initialization
 ├── docs/
 │   ├── AGENTS.md              # Documentation index (what to read for each task)
@@ -77,13 +78,16 @@ Every agent session must:
 |------|--------|
 | No JSON for game data | All models/factions/robots/buildings are TypeScript `const` objects |
 | Systems accept `world` param | Never use world singleton — enables clean test isolation |
-| All tunables in `gameDefaults.ts` | No magic numbers in system or rendering code |
+| All tunables in config files | No magic numbers in system or rendering code (11 config files) |
 | `pending/` is permanent | Nothing from there gets resurrected |
 | SQLite is non-fatal | DB failures don't crash — ECS runs in memory |
 | ECS `.get()` returns undefined | Always null-guard: `const x = e.get(Trait); if (!x) continue;` |
 | No `world.entity(id)` in Koota | Rebuild `Map<id, Entity>` per-operation when needed |
 | Salvage = primary resource | Floor mining is the backstop, not the main economy |
 | Storm = power grid | Storm transmitters tap the perpetual storm for power |
+| Tiles = GPS coordinates | Each (x,z) is a DB record, `explored` is topmost gatekeeper |
+| Globe.tsx = ONE Canvas | Single persistent R3F Canvas across all phases |
+| Overlay vs diegetic UI | Overlay (HUD, modals) = DOM. Diegetic (speech, status bars) = in-Canvas |
 
 ---
 
@@ -96,9 +100,9 @@ Agents for this codebase:
 | `board-agent` | `src/board/` | Board gen, noise, adjacency, GridApi, depth stacking |
 | `ecs-agent` | `src/ecs/` | Traits, systems, robots, factions, buildings, salvage, resources |
 | `db-agent` | `src/db/` | Schema, migrations, GameRepo, sql.js adapter |
-| `rendering-agent` | `src/rendering/` | BoardRenderer, DepthRenderer, UnitRenderer, StormDome, future GLB |
-| `ui-agent` | `src/ui/`, `src/input/`, `src/systems/` | Landing, modals, HUD, RadialMenu, BoardInput |
-| `integration-agent` | `src/main.tsx`, `src/ui/game/GameScreen.tsx` | Wire packages together |
+| `rendering-agent` | `src/rendering/` | Renderers, sphere geometry, globe/, particles/, GLSL |
+| `ui-agent` | `src/ui/`, `src/input/`, `src/systems/` | Globe.tsx, landing, game overlays, HUD, BoardInput |
+| `integration-agent` | `src/main.tsx`, `src/ui/Globe.tsx` | Wire packages together, phase transitions |
 
 ---
 
@@ -108,7 +112,7 @@ Agents for this codebase:
 pnpm dev                 # Vite dev server (http://localhost:5173)
 pnpm dev --host          # Expose on LAN
 pnpm build               # Production build
-pnpm test:vitest         # Run all Vitest suites (~125 suites, 2219 tests)
+pnpm test:vitest         # Run all Vitest suites (126 suites, 2239 tests)
 pnpm tsc                 # TypeScript check (pnpm tsc --noEmit)
 pnpm lint                # Biome lint + format check
 pnpm verify              # lint + tsc + test (all gates)
@@ -122,5 +126,5 @@ pnpm verify              # lint + tsc + test (all gates)
 pnpm verify — all gates must pass
   Biome lint: 0 errors, 0 warnings
   TypeScript: 0 errors
-  Vitest: all suites passing
+  Vitest: 126 suites, 2239 tests passing
 ```

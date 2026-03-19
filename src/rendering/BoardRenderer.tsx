@@ -25,7 +25,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
-import { buildBoardGeometry } from "./boardGeometry";
+import { buildSphereGeometry } from "./boardGeometry";
 import { makeHeightMaterial, updateHeightChronometry } from "./heightMaterial";
 
 type BoardRendererProps = {
@@ -65,7 +65,7 @@ export function BoardRenderer({
 	}, [dayAngle, season]);
 
 	useEffect(() => {
-		const geometry = buildBoardGeometry(board);
+		const geometry = buildSphereGeometry(board);
 		const mesh = new THREE.Mesh(geometry, materialRef.current);
 		mesh.receiveShadow = true;
 		scene.add(mesh);

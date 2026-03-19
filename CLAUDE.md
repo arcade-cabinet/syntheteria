@@ -45,10 +45,15 @@ Test roots (all Vitest — no Jest in this project):
 ### UI Source Map (ground-up rewrite)
 
 Key player-visible files:
+- Globe (ONE Canvas): `src/ui/Globe.tsx` — persistent across all phases
 - Title/Landing: `src/ui/landing/LandingScreen.tsx`, `NewGameModal.tsx`
-- Game: `src/ui/game/GameScreen.tsx`, `src/ui/game/HUD.tsx`
-- Input: `src/input/BoardInput.tsx`, `src/input/TopDownCamera.tsx`
+- Game HUD: `src/ui/game/HUD.tsx`, `src/ui/game/RadialMenu.tsx`, `src/ui/game/GarageModal.tsx`
+- Overlays: `src/ui/game/TechTreeOverlay.tsx`, `DiplomacyOverlay.tsx`, `UnitRosterOverlay.tsx`
+- Input: `src/input/BoardInput.tsx`
+- Camera: `src/camera/SphereOrbitCamera.tsx`, `src/camera/IsometricCamera.tsx`
 - Renderers: `src/rendering/BoardRenderer.tsx`, `HighlightRenderer.tsx`, `UnitRenderer.tsx`
+- Sphere: `src/rendering/boardGeometry.ts`, `src/rendering/spherePlacement.ts`
+- Globe title: `src/rendering/globe/` (GlobeWithCities, Hypercane, StormClouds, Lightning)
 
 ### What Claude Should Prefer
 

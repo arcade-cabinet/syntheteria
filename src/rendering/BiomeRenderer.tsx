@@ -2,12 +2,9 @@
  * BiomeRenderer — Layer 2: biome surface textures painted on top of the
  * height mesh (Layer 1).
  *
- * Uses the same geometry as BoardRenderer (shared buildBoardGeometry) but
- * a different ShaderMaterial — the procedural floor shader from
+ * Uses the same sphere geometry as BoardRenderer but a different
+ * ShaderMaterial — the procedural floor shader from
  * src/ecs/terrain/floorShader.ts with alpha blending enabled.
- *
- * Positioned at Y=0.001 to avoid z-fighting with the height mesh.
- * transparent + depthWrite:false ensures proper layering.
  */
 
 import { useThree } from "@react-three/fiber";
@@ -19,7 +16,7 @@ import {
 	makeFloorShaderMaterial,
 	updateFloorShaderChronometry,
 } from "../ecs/terrain/floorShader";
-import { buildBoardGeometry, buildSphereGeometry } from "./boardGeometry";
+import { buildSphereGeometry } from "./boardGeometry";
 
 type BiomeRendererProps = {
 	board: GeneratedBoard;
@@ -27,15 +24,12 @@ type BiomeRendererProps = {
 	dayAngle?: number;
 	/** Orbital year progress [0, 1] — from chronometry.turnToChronometry(). */
 	season?: number;
-	/** When true, project the board onto a sphere instead of a flat plane. */
-	useSphere?: boolean;
 };
 
 export function BiomeRenderer({
 	board,
 	dayAngle = 0.8,
 	season = 0,
-	useSphere = false,
 }: BiomeRendererProps) {
 	const { scene } = useThree();
 	const meshRef = useRef<THREE.Mesh | null>(null);
@@ -50,7 +44,7 @@ export function BiomeRenderer({
 		),
 	);
 
-	// Set boardWidth for cylindrical curvature calculation
+	// Set boardWidth for shader uniform
 	useEffect(() => {
 		materialRef.current.uniforms.uBoardWidth.value = boardWidth;
 	}, [boardWidth]);
@@ -61,13 +55,8 @@ export function BiomeRenderer({
 	}, [dayAngle, season]);
 
 	useEffect(() => {
-		const geometry = useSphere
-			? buildSphereGeometry(board)
-			: buildBoardGeometry(board);
+		const geometry = buildSphereGeometry(board);
 		const mesh = new THREE.Mesh(geometry, materialRef.current);
-		if (!useSphere) {
-			mesh.position.y = 0.001; // tiny offset to avoid z-fighting with height mesh
-		}
 		mesh.receiveShadow = true;
 		scene.add(mesh);
 		meshRef.current = mesh;
@@ -77,7 +66,7 @@ export function BiomeRenderer({
 			geometry.dispose();
 			meshRef.current = null;
 		};
-	}, [board, scene, useSphere]);
+	}, [board, scene]);
 
 	useEffect(() => {
 		return () => {

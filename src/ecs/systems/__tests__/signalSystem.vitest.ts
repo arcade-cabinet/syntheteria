@@ -95,22 +95,36 @@ describe("runSignalNetwork", () => {
 		expect(isInSignalRange(world, 10, 0)).toBe(false);
 	});
 
-	it("unit outside signal range has halved scanRange", () => {
+	it("unit outside signal range has halved scanRange and -1 AP", () => {
 		spawnRelay(world, 0, 0, 3, true);
 		const unit = spawnUnit(world, 50, 50, 8);
 
 		runSignalNetwork(world);
 
 		expect(unit.get(UnitStats)!.scanRange).toBe(4);
+		expect(unit.get(UnitStats)!.ap).toBe(2); // 3 - 1 = 2
 	});
 
-	it("unit inside signal range keeps full scanRange", () => {
+	it("unit inside signal range keeps full scanRange and AP", () => {
 		spawnRelay(world, 5, 5, 3, true);
 		const unit = spawnUnit(world, 5, 5, 8);
 
 		runSignalNetwork(world);
 
 		expect(unit.get(UnitStats)!.scanRange).toBe(8);
+		expect(unit.get(UnitStats)!.ap).toBe(3); // unchanged
+	});
+
+	it("AP penalty clamps at 0 for units with 0 AP", () => {
+		spawnRelay(world, 0, 0, 3, true);
+		const unit = world.spawn(
+			UnitPos({ tileX: 50, tileZ: 50 }),
+			UnitStats({ hp: 10, maxHp: 10, ap: 0, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+		);
+
+		runSignalNetwork(world);
+
+		expect(unit.get(UnitStats)!.ap).toBe(0); // max(0, 0-1) = 0
 	});
 
 	it("isInSignalRange returns correct values for edge cases", () => {

@@ -2,8 +2,8 @@
  * Performance audit — vertex count + model instances at max density.
  *
  * Computes geometry budgets for the largest supported board (128x128)
- * with GHOST=40 and current density settings. Asserts upper bounds
- * to catch regressions that would tank frame rate.
+ * on a sphere. Asserts upper bounds to catch regressions that would
+ * tank frame rate.
  *
  * This is an analytical test — no WebGL context needed. It computes
  * the same numbers the renderers would produce from board data.
@@ -13,15 +13,14 @@ import { createWorld } from "koota";
 import { describe, expect, it } from "vitest";
 import { generateBoard } from "../generator";
 import type { BoardConfig } from "../types";
-import { GHOST, SEGS } from "../../rendering/boardGeometry";
+import { SEGS } from "../../rendering/boardGeometry";
 import { isPassableFloor } from "../../ecs/terrain/types";
-import { SalvageProp } from "../../ecs/traits/salvage";
 import { placeSalvageProps } from "../../ecs/systems/salvagePlacement";
 import {
 	getStructuralEdges,
 	getColumnPositions,
 	getInteriorTiles,
-} from "../../rendering/ProceduralStructureRenderer";
+} from "../../rendering/structureHelpers";
 
 // ─── Board configs ───────────────────────────────────────────────────────────
 
@@ -34,18 +33,18 @@ const MAX_BOARD: BoardConfig = { width: 128, height: 128, seed: "perf-audit-max"
 // ─── Budget limits ───────────────────────────────────────────────────────────
 
 /**
- * Board geometry vertex budget.
+ * Board geometry vertex budget (sphere — no GHOST tiles).
  *
- * Formula: renderTiles = (W + 2*GHOST) * (H + 2*GHOST)
+ * Formula: renderTiles = W * H (sphere has no ghost tiles)
  *          vertsPerTile = (SEGS+1)^2
  *          totalVerts = renderTiles * vertsPerTile
  *
- * 128x128 + GHOST=40: (128+80)*(128+80) = 208*208 = 43264 tiles * 16 verts = 692K
- * Two layers (Board + Biome) share geometry, so 692K total.
+ * 128x128: 16384 tiles * 16 verts = 262K
+ * Two layers (Board + Biome) each build their own geometry.
  *
- * Budget: 750K vertices for board mesh (comfortable headroom).
+ * Budget: 300K vertices for board mesh (comfortable headroom).
  */
-const BOARD_VERTEX_BUDGET = 750_000;
+const BOARD_VERTEX_BUDGET = 300_000;
 
 /**
  * Salvage model instance budget.
@@ -79,11 +78,9 @@ const STRUCTURE_VERTEX_BUDGET = 700_000;
 
 describe("performance audit", () => {
 	it("board geometry stays within vertex budget", () => {
-		// Compute analytically — same formula as boardGeometry.ts
+		// Sphere: no ghost tiles, just W*H
 		for (const config of [STANDARD, MAX_BOARD]) {
-			const renderW = config.width + 2 * GHOST;
-			const renderH = config.height + 2 * GHOST;
-			const renderTiles = renderW * renderH;
+			const renderTiles = config.width * config.height;
 			const vertsPerTile = (SEGS + 1) * (SEGS + 1);
 			const totalVerts = renderTiles * vertsPerTile;
 
@@ -160,13 +157,11 @@ describe("performance audit", () => {
 		const columns = getColumnPositions(board);
 		const interior = getInteriorTiles(board);
 
-		const renderW = MAX_BOARD.width + 2 * GHOST;
-		const renderH = MAX_BOARD.height + 2 * GHOST;
-		const boardVerts = renderW * renderH * (SEGS + 1) * (SEGS + 1);
+		const boardVerts = MAX_BOARD.width * MAX_BOARD.height * (SEGS + 1) * (SEGS + 1);
 
 		// This test always passes — it just logs the metrics for human review
 		console.log(`\n=== PERFORMANCE AUDIT (${MAX_BOARD.width}x${MAX_BOARD.height}) ===`);
-		console.log(`Board geometry: ${boardVerts.toLocaleString()} vertices (GHOST=${GHOST}, SEGS=${SEGS})`);
+		console.log(`Board geometry: ${boardVerts.toLocaleString()} vertices (sphere, SEGS=${SEGS})`);
 		console.log(`Total tiles: ${total.toLocaleString()}`);
 		console.log(`  Structural: ${structural} (${((structural / total) * 100).toFixed(1)}%)`);
 		console.log(`  Passable: ${passable} (${((passable / total) * 100).toFixed(1)}%)`);

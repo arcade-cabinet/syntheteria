@@ -30,8 +30,8 @@ export interface TurnContext {
 	buildOptions: BuildOption[];
 	/** Existing building count for the faction this turn. */
 	factionBuildingCount: number;
-	/** Whether the faction has a motor pool (can fabricate units). */
-	hasMotorPool: boolean;
+	/** Number of motor pools the faction has (for fabrication throughput). */
+	motorPoolCount: number;
 	/** Number of non-depleted deposits on the entire board. */
 	totalDeposits: number;
 	/** Current game turn (1-based). */
@@ -61,7 +61,7 @@ let _ctx: TurnContext = {
 	aggressionMult: 1,
 	buildOptions: [],
 	factionBuildingCount: 0,
-	hasMotorPool: false,
+	motorPoolCount: 0,
 	totalDeposits: 0,
 	currentTurn: 1,
 	rememberedEnemies: [],
@@ -341,8 +341,8 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 
 		// Higher desire when faction has few buildings — saturates at 20 not 8
 		const buildingBonus = Math.max(0, 1 - _ctx.factionBuildingCount / 20);
-		// Strong desire if no motor pool — can't fabricate units without one
-		const motorPoolBonus = _ctx.hasMotorPool ? 0 : 0.5;
+		// Strong desire if fewer than 2 motor pools — need fabrication throughput
+		const motorPoolBonus = _ctx.motorPoolCount < 2 ? 0.5 - _ctx.motorPoolCount * 0.25 : 0;
 		// Time ramp: AI should build more as game progresses
 		const timeRamp = Math.min(1, _ctx.currentTurn / 20);
 

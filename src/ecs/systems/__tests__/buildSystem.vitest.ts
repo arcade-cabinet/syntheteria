@@ -184,7 +184,7 @@ describe("buildSystem", () => {
 
 			const buildings = world.query(Building);
 			expect(buildings[0].has(BotFabricator)).toBe(true);
-			expect(buildings[0].get(BotFabricator)!.fabricationSlots).toBe(1);
+			expect(buildings[0].get(BotFabricator)!.fabricationSlots).toBe(2);
 		});
 
 		it("deducts resources after placement", () => {

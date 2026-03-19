@@ -60,7 +60,7 @@ function setCtx(overrides: Partial<TurnContext> = {}): void {
 		aggressionMult: 1,
 		buildOptions: [],
 		factionBuildingCount: 0,
-		hasMotorPool: false,
+		motorPoolCount: 0,
 		totalDeposits: 0,
 		currentTurn: 1,
 		rememberedEnemies: [],
@@ -357,14 +357,14 @@ describe("BuildEvaluator", () => {
 		const agent = makeAgent();
 		setCtx({
 			buildOptions: [{ buildingType: "motor_pool", tileX: 2, tileZ: 2 }],
-			hasMotorPool: false,
+			motorPoolCount: 0,
 			factionBuildingCount: 2,
 		});
 		const noMotorPool = evaluator.calculateDesirability(agent);
 
 		setCtx({
 			buildOptions: [{ buildingType: "storage_hub", tileX: 2, tileZ: 2 }],
-			hasMotorPool: true,
+			motorPoolCount: 2,
 			factionBuildingCount: 2,
 		});
 		const withMotorPool = evaluator.calculateDesirability(agent);

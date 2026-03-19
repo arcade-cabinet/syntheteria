@@ -264,9 +264,9 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		// ── Build context: buildings, affordability, placement ──────────
 		const factionBuildings = getFactionBuildings(world, factionId);
 		const factionBuildingCount = factionBuildings.length;
-		const hasMotorPool = factionBuildings.some(
+		const motorPoolCount = factionBuildings.filter(
 			(b) => b.buildingType === "motor_pool",
-		);
+		).length;
 		const occupiedTiles = new Set(
 			factionBuildings.map((b) => `${b.tileX},${b.tileZ}`),
 		);
@@ -329,7 +329,7 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			aggressionMult: effectiveAggressionMult,
 			buildOptions,
 			factionBuildingCount,
-			hasMotorPool,
+			motorPoolCount,
 			totalDeposits: deposits.length,
 			currentTurn,
 			rememberedEnemies,

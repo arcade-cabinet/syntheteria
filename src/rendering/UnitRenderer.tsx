@@ -67,6 +67,8 @@ function UnitModel({
 	z,
 	factionColor,
 	markScale,
+	isSelected,
+	isCult,
 	useSphere,
 	boardWidth,
 	boardHeight,
@@ -76,18 +78,20 @@ function UnitModel({
 	z: number;
 	factionColor: number;
 	markScale: number;
+	isSelected?: boolean;
+	isCult?: boolean;
 	useSphere?: boolean;
 	boardWidth?: number;
 	boardHeight?: number;
 }) {
 	const { scene } = useGLTF(url);
 	const groupRef = useRef<THREE.Group>(null);
+	const cloneRef = useRef<THREE.Group>(null);
 
 	const { scale, yOffset } = useMemo(() => {
 		const box = new THREE.Box3().setFromObject(scene);
 		const size = box.getSize(new THREE.Vector3());
 		const maxExtent = Math.max(size.x, size.y, size.z);
-		// Fill ~90% of tile so robots are prominent on the board
 		const s = maxExtent > 0 ? (TILE_SIZE_M * 1.4) / maxExtent : 1;
 		return { scale: s * markScale, yOffset: -box.min.y * s * markScale };
 	}, [scene, markScale]);
@@ -99,11 +103,40 @@ function UnitModel({
 		}
 	}, [factionColor]);
 
+	// Wall-E style procedural animation — bounce + wiggle, no Blender needed
+	useFrame((state) => {
+		if (!cloneRef.current) return;
+		const t = state.clock.elapsedTime;
+		// Unique phase offset per unit so they don't all bob in sync
+		const phase = (x * 13.7 + z * 7.3) % (Math.PI * 2);
+
+		if (isCult) {
+			// Cult units: erratic jitter — unsettling, alien movement
+			const jitterY = Math.sin(t * 8 + phase) * 0.03 + Math.sin(t * 13 + phase * 2) * 0.02;
+			const jitterRot = Math.sin(t * 6 + phase) * 0.05;
+			cloneRef.current.position.y += jitterY;
+			cloneRef.current.rotation.z = jitterRot;
+		} else if (isSelected) {
+			// Selected: faster, more energetic bob — "ready for orders"
+			const bob = Math.sin(t * 4 + phase) * 0.06;
+			const wiggle = Math.sin(t * 3 + phase) * 0.03;
+			cloneRef.current.position.y += bob;
+			cloneRef.current.rotation.y += wiggle;
+		} else {
+			// Idle: gentle bob — alive, breathing, Wall-E style
+			const bob = Math.sin(t * 1.5 + phase) * 0.03;
+			const tilt = Math.sin(t * 0.8 + phase * 0.5) * 0.015;
+			cloneRef.current.position.y += bob;
+			cloneRef.current.rotation.z = tilt;
+		}
+	});
+
 	if (useSphere && boardWidth && boardHeight) {
 		const sp = sphereModelPlacement(x, z, boardWidth, boardHeight, yOffset + 0.1);
 		return (
 			<group ref={groupRef}>
 				<Clone
+					ref={cloneRef}
 					object={scene}
 					position={sp.position}
 					quaternion={sp.quaternion}
@@ -117,6 +150,7 @@ function UnitModel({
 	return (
 		<group ref={groupRef}>
 			<Clone
+				ref={cloneRef}
 				object={scene}
 				position={[x * TILE_SIZE_M, yOffset + 0.1, z * TILE_SIZE_M]}
 				scale={scale}
@@ -433,7 +467,7 @@ export function UnitRenderer({ world, useSphere, boardWidth, boardHeight }: Unit
 				return (
 					<ModelErrorBoundary key={u.eid} name={u.url}>
 						<Suspense fallback={<UnitBox x={u.tileX} z={u.tileZ} color={u.color} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />}>
-							<UnitModel url={u.url} x={u.tileX} z={u.tileZ} factionColor={u.color} markScale={markScale} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+							<UnitModel url={u.url} x={u.tileX} z={u.tileZ} factionColor={u.color} markScale={markScale} isCult={u.factionId.startsWith("static_") || u.factionId.startsWith("null_") || u.factionId.startsWith("lost_")} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
 							{u.ap > 0 && (
 								<ReadinessRing
 									x={u.tileX}

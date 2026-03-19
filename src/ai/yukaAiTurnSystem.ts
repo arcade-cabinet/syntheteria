@@ -786,9 +786,12 @@ function getNearestEnemyDist(
 
 /** Building types the AI is allowed to construct (excludes wormhole_stabilizer). */
 const AI_BUILDABLE: BuildingType[] = [
-	"motor_pool",
-	"storage_hub",
 	"storm_transmitter",
+	"motor_pool",
+	"synthesizer",
+	"research_lab",
+	"outpost",
+	"storage_hub",
 	"defense_turret",
 	"relay_tower",
 	"outpost",
@@ -847,6 +850,7 @@ function computeBuildOptions(
 	const MAX_PER_TYPE: Record<string, number> = {
 		storm_transmitter: 2,
 		motor_pool: 3,
+		synthesizer: 2,
 		research_lab: 1,
 		outpost: 5,
 		storage_hub: 2,

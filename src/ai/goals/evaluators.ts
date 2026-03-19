@@ -496,6 +496,7 @@ export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 const BUILD_PRIORITY: string[] = [
 	"storm_transmitter",
 	"motor_pool",
+	"synthesizer",
 	"research_lab",
 	"outpost",
 	"storage_hub",

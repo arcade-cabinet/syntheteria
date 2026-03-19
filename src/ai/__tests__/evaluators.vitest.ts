@@ -70,6 +70,7 @@ function setCtx(overrides: Partial<TurnContext> = {}): void {
 		popCap: 12,
 		cultThreats: [],
 		factionAllies: [],
+		enemyHeadings: new Map(),
 		...overrides,
 	});
 }

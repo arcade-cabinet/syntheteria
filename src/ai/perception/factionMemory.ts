@@ -88,6 +88,11 @@ export class FactionMemory {
 		this.records.delete(entityId);
 	}
 
+	/** Get a specific entity's sighting record, or undefined if not tracked. */
+	getRecord(entityId: number): SightingRecord | undefined {
+		return this.records.get(entityId);
+	}
+
 	/**
 	 * Get all valid (not yet expired) sighting records.
 	 * Includes both currently visible and remembered-but-not-visible.

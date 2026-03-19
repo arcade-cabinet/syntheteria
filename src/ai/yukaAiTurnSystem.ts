@@ -73,7 +73,14 @@ import {
 	resetFactionFSMs,
 } from "./fsm/FactionFSM";
 import { AIRuntime } from "./runtime/AIRuntime";
+import { getUnitTaskQueue } from "./tasks/UnitTaskQueue";
+import { resetAllTaskQueues } from "./tasks/UnitTaskQueue";
 import { pickAITrack, pickAITrackVersion } from "./trackSelection";
+import {
+	checkCorruptionTriggers,
+	checkFactionContact,
+	resetCorruptionTriggers,
+} from "./triggers/corruptionTrigger";
 import { resetAllTerritoryTrackers } from "./triggers/territoryTrigger";
 
 // ---------------------------------------------------------------------------
@@ -89,6 +96,8 @@ export function resetAIRuntime(): void {
 	resetAllFactionMemories();
 	resetAllTerritoryTrackers();
 	resetFactionFSMs();
+	resetAllTaskQueues();
+	resetCorruptionTriggers();
 	clearNavGraphCache();
 }
 
@@ -341,6 +350,19 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			factionAllies.push({ x: s.tileX, z: s.tileZ });
 		}
 
+		// Compute enemy headings from perception memory (previous → current position)
+		const enemyHeadings = new Map<number, { dx: number; dz: number }>();
+		for (const enemy of factionEnemies) {
+			const remembered = factionMem.getRecord(enemy.entityId);
+			if (remembered && remembered.turnSeen < currentTurn) {
+				const dx = enemy.x - remembered.tileX;
+				const dz = enemy.z - remembered.tileZ;
+				if (dx !== 0 || dz !== 0) {
+					enemyHeadings.set(enemy.entityId, { dx, dz });
+				}
+			}
+		}
+
 		// Set context for this faction's evaluators
 		setTurnContext({
 			enemies: factionEnemies,
@@ -360,6 +382,7 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			popCap,
 			cultThreats,
 			factionAllies,
+			enemyHeadings,
 		});
 
 		// ── Faction FSM: macro strategy bias overrides ──────────────
@@ -394,25 +417,39 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		for (const snap of factionSnapshots) {
 			const agent = _runtime.getOrCreateAgent(snap);
 
-			// Save original biases, apply FSM overrides
-			const origBiases: number[] = [];
-			for (let i = 0; i < agent.brain.evaluators.length; i++) {
-				const ev = agent.brain.evaluators[i];
-				origBiases.push(ev.characterBias);
-				const biasKey = evalBiasMap[i] ?? "idle";
-				ev.characterBias *= fsmBias[biasKey];
+			// TaskQueue bypass: if unit has an active compound task, skip GOAP
+			const taskQueue = getUnitTaskQueue(snap.entityId);
+			if (taskQueue) {
+				const taskAction = taskQueue.getAction(snap.tileX, snap.tileZ);
+				if (taskAction) {
+					agent.decidedAction = taskAction;
+				} else {
+					// Queue completed or aborted — fall through to GOAP
+					agent.decidedAction = null;
+				}
 			}
 
-			agent.arbitrate();
+			if (!agent.decidedAction) {
+				// Save original biases, apply FSM overrides
+				const origBiases: number[] = [];
+				for (let i = 0; i < agent.brain.evaluators.length; i++) {
+					const ev = agent.brain.evaluators[i];
+					origBiases.push(ev.characterBias);
+					const biasKey = evalBiasMap[i] ?? "idle";
+					ev.characterBias *= fsmBias[biasKey];
+				}
 
-			// Restore original biases so they stay stable across turns
-			for (let i = 0; i < agent.brain.evaluators.length; i++) {
-				agent.brain.evaluators[i].characterBias = origBiases[i];
-			}
+				agent.arbitrate();
 
-			// Diagnostic logging — shows which evaluator won for each unit
-			if (isAIDiagnosticsEnabled()) {
-				logEvaluatorChoice(agent, agent.brain.evaluators);
+				// Restore original biases so they stay stable across turns
+				for (let i = 0; i < agent.brain.evaluators.length; i++) {
+					agent.brain.evaluators[i].characterBias = origBiases[i];
+				}
+
+				// Diagnostic logging — shows which evaluator won for each unit
+				if (isAIDiagnosticsEnabled()) {
+					logEvaluatorChoice(agent, agent.brain.evaluators);
+				}
 			}
 
 			const entity = entityById.get(snap.entityId);
@@ -497,6 +534,10 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 
 	// ── Step 6b: AI fabrication — queue units at idle motor pools ────────
 	runAiFabrication(world, [...agentsByFaction.keys()]);
+
+	// ── Step 6c: Trigger checks — corruption zones + faction contact ────
+	checkCorruptionTriggers(world, currentTurn);
+	checkFactionContact(world, currentTurn);
 
 	// ── Step 7: Refresh AI AP ───────────────────────────────────────────
 	for (const e of world.query(UnitFaction, UnitStats)) {

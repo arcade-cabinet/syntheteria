@@ -16,6 +16,10 @@ import {
 	computeEvadeDesirability,
 	computeFleeDirection,
 } from "../steering/evasionSteering";
+import {
+	computeInterceptTarget,
+	shouldUsePursuit,
+} from "../steering/pursuitSteering";
 
 // Context injected before arbitration — shared mutable state per faction turn
 export interface BuildOption {
@@ -59,6 +63,8 @@ export interface TurnContext {
 	cultThreats: Array<{ x: number; z: number }>;
 	/** Positions of friendly faction units (for local force ratio). */
 	factionAllies: Array<{ x: number; z: number }>;
+	/** Enemy headings derived from perception memory (entity ID → heading vector). */
+	enemyHeadings: Map<number, { dx: number; dz: number }>;
 }
 
 let _ctx: TurnContext = {
@@ -79,6 +85,7 @@ let _ctx: TurnContext = {
 	popCap: 12,
 	cultThreats: [],
 	factionAllies: [],
+	enemyHeadings: new Map(),
 };
 
 export function setTurnContext(ctx: TurnContext): void {
@@ -166,7 +173,7 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
-		let bestTarget: { x: number; z: number } | null = null;
+		let bestEnemy: { entityId: number; x: number; z: number } | null = null;
 		let bestDist = Infinity;
 
 		// Prefer currently visible enemies
@@ -176,27 +183,59 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			if (dist <= agent.attackRange) continue;
 			if (dist < bestDist) {
 				bestDist = dist;
-				bestTarget = { x: enemy.x, z: enemy.z };
+				bestEnemy = enemy;
 			}
 		}
 
 		// Fall back to remembered enemies if no visible targets
-		if (!bestTarget) {
+		if (!bestEnemy) {
 			for (const enemy of _ctx.rememberedEnemies) {
 				const dist = manhattan(agent.tileX, agent.tileZ, enemy.x, enemy.z);
 				if (dist < bestDist) {
 					bestDist = dist;
-					bestTarget = { x: enemy.x, z: enemy.z };
+					bestEnemy = enemy;
 				}
 			}
 		}
 
-		if (bestTarget) {
-			agent.decidedAction = {
-				type: "move",
-				toX: bestTarget.x,
-				toZ: bestTarget.z,
-			};
+		if (bestEnemy) {
+			// Check if pursuit intercept is beneficial
+			const heading = _ctx.enemyHeadings.get(bestEnemy.entityId);
+			const hdx = heading?.dx ?? 0;
+			const hdz = heading?.dz ?? 0;
+
+			if (
+				shouldUsePursuit(
+					agent.tileX,
+					agent.tileZ,
+					bestEnemy.x,
+					bestEnemy.z,
+					hdx,
+					hdz,
+				)
+			) {
+				const intercept = computeInterceptTarget(
+					agent.tileX,
+					agent.tileZ,
+					bestEnemy.x,
+					bestEnemy.z,
+					hdx,
+					hdz,
+					_ctx.boardSize.width,
+					_ctx.boardSize.height,
+				);
+				agent.decidedAction = {
+					type: "move",
+					toX: intercept.x,
+					toZ: intercept.z,
+				};
+			} else {
+				agent.decidedAction = {
+					type: "move",
+					toX: bestEnemy.x,
+					toZ: bestEnemy.z,
+				};
+			}
 		}
 	}
 }

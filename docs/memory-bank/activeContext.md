@@ -6,7 +6,7 @@
 
 ## Current State (2026-03-18)
 
-**2239 tests, 126 suites (all passing), 0 TypeScript errors. 344 source files.**
+**2239 tests, 131 suites (all passing), 0 TypeScript errors. 344 source files.**
 
 The game is a playable turn-based 4X with:
 - **Globe-based rendering** — ONE persistent R3F Canvas (`Globe.tsx`) across all phases (title → setup → generating → playing)
@@ -63,7 +63,6 @@ Both flat and sphere geometry co-exist:
 
 ### Cameras
 
-- `IsometricCamera` — flat-board CivRev2-style PAN camera (currently used in playing phase by Globe.tsx)
 - `SphereOrbitCamera` — orbit around sphere center, WASD rotates globe, scroll zooms, pan disabled
 
 ### Sphere Model Placement (`spherePlacement.ts`)
@@ -85,9 +84,8 @@ Both flat and sphere geometry co-exist:
 
 ## Next Steps
 
-- **SPHERE-10**: Delete flat board code — boardGeometry cosine hack, GHOST, CURVE_STRENGTH
-- **SPHERE-6**: LOD system — procedural shader at far zoom, PBR atlas at close zoom
-- **3D-GAP-9**: Strategic zoom — seamless surface-to-globe zoom (Supreme Commander style)
-- **3D-GAP-11**: Cutaway dollhouse zoom — descend through layers instead of into ceiling
-- **3D-GAP-6**: Fog of war as volumetric haze — storm atmosphere at scan range edge
-- **POLISH-9**: Delete dead code — GameScreen.tsx, old renderers, unused files
+All core systems complete. Remaining work is deployment and polish:
+
+- **Deploy concern**: Production bundle is 324MB (GLB models + JS chunks). Consider CDN for GLBs, code-split sql.js, lazy-load Three.js/R3F.
+- **Accepted tech debt**: `pending/` directory (252MB quarantined reference code) remains in working tree — excluded from tsconfig + biome.
+- **Polish**: Power conduit visualization, building preview ghost, idle robot animations (Blender rigging).

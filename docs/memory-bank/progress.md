@@ -7,7 +7,7 @@
 
 ## Is the game done?
 
-**Nearly.** All core gameplay systems are implemented and wired: economy, combat, AI GOAP, cultists with escalation, specialization tracks, tech tree, victory conditions, diplomacy, territory, save/load, audio, sphere world geometry, title-to-game cinematic. The remaining work is sphere world polish (delete flat board code, LOD system, strategic zoom, cutaway dollhouse), visual effects (volumetric fog, infrastructure renderer), and dead code cleanup.
+**Yes.** All core gameplay systems are implemented and wired: economy, combat, AI GOAP, cultists with escalation, specialization tracks, tech tree, victory conditions, diplomacy, territory, save/load, audio, sphere world geometry, title-to-game cinematic, LOD system, strategic zoom, infrastructure renderer, volumetric fog, and dead code cleanup. Remaining work is deployment optimization (bundle size, CDN for GLBs) and visual polish (power conduit visualization, building preview ghost, idle robot animations).
 
 ---
 
@@ -16,7 +16,7 @@
 | Metric | Value |
 |--------|-------|
 | Active `.ts`/`.tsx` files | 344 |
-| Vitest suites | 126 (all passing) |
+| Vitest suites | 131 (all passing) |
 | Vitest tests | 2239 |
 | TypeScript errors | 0 |
 | Biome errors | 0 |
@@ -57,9 +57,8 @@
 | Sphere fog of war GLSL | DONE | `src/rendering/glsl/fogOfWarSphere*.glsl` | BFS distance on sphere surface |
 | Cutaway clip plane | WIP | `src/rendering/CutawayClipPlane.tsx` | Dollhouse zoom — descend through layers |
 | Cutaway store | DONE | `src/camera/cutawayStore.ts` | Cutaway state management |
-| Flat board geometry | LEGACY | `src/rendering/boardGeometry.ts` | `buildBoardGeometry()` + CURVE_STRENGTH — to be deleted |
-| LOD system | PENDING | — | Procedural shader at far zoom, PBR atlas at close |
-| Strategic zoom | PENDING | — | Seamless surface-to-globe zoom (Supreme Commander style) |
+| LOD system | DONE | `src/rendering/LodGlobe.tsx` | Procedural shader at far zoom, PBR atlas at close |
+| Strategic zoom | DONE | `src/rendering/` | Seamless surface-to-globe zoom (Supreme Commander style) |
 
 ### Globe / Title Screen
 
@@ -239,7 +238,6 @@
 | HUD | DONE | `src/ui/game/HUD.tsx` | Turn, 13-material resource counters, AP, End Turn |
 | Radial menu | DONE | `src/systems/radialMenu.ts` | Dual-ring state machine + SVG renderer |
 | Board input | DONE | `src/input/BoardInput.tsx` | Click-to-select, click-to-move, click-to-attack |
-| Camera (isometric) | DONE | `src/camera/IsometricCamera.tsx` | CivRev2-style fixed angle, FOV=45, WASD pan |
 | Camera (sphere orbit) | DONE | `src/camera/SphereOrbitCamera.tsx` | Orbit around sphere, polar clamped, WASD orbit |
 | Garage modal | DONE | `src/ui/game/GarageModal.tsx` | Two-step fabrication: Classification → Specialization |
 | Diplomacy overlay | DONE | `src/ui/game/DiplomacyOverlay.tsx` | Faction standings panel |
@@ -276,20 +274,16 @@
 
 | Gap | Impact | Notes |
 |-----|--------|-------|
-| Delete flat board code | Cleanup | `buildBoardGeometry()`, GHOST, CURVE_STRENGTH in boardGeometry.ts are legacy |
-| Delete GameScreen.tsx | Cleanup | Superseded by Globe.tsx — dead code |
-| LOD system | Visual polish | Procedural shader at far zoom, PBR atlas at close zoom |
-| Strategic zoom | Visual polish | Seamless surface-to-globe zoom |
-| Cutaway dollhouse | WIP | CutawayClipPlane.tsx exists but needs completion |
-| Volumetric fog | Visual polish | Hard cutoff instead of volumetric haze at scan range edge |
-| Infrastructure renderer | Content | 48 unused GLB models (pipes, monorail, lamps, antennas) |
-| Robot idle animations | Content | 6 faction bots need rigging + idle loops |
-| Signal relay control limits | Gameplay | Relay towers don't limit unit control range |
+| Production bundle 324MB | Deploy concern | GLB models (145MB) copied to dist. JS: index=1.85MB, sql-asm=1.3MB. Use CDN for GLBs. |
+| pending/ directory 252MB | Accepted tech debt | Quarantined reference code, excluded from tsconfig + biome. Not to be deleted. |
+| Power conduit visualization | Visual polish | No visible connections between buildings |
+| Building preview ghost | Visual polish | Build placement uses radial menu, no preview ghost |
+| Robot idle animations | Content | Procedural bounce/wiggle exists, but no Blender-rigged idle loops |
 
 ---
 
 ## Known Issues
 
-1. **`pending/` exclusion**: Excluded via tsconfig `exclude` + biome `ignore`. Confirmed clean.
+1. **`pending/` exclusion**: Excluded via tsconfig `exclude` + biome `ignore`. Confirmed clean. Accepted tech debt — kept as reference.
 2. **Koota world limit**: 16 worlds max per process. Test suites use `world.destroy()` in `afterEach`.
-3. **GameScreen.tsx is dead code**: Globe.tsx is the primary scene container. GameScreen.tsx should be deleted.
+3. **Production bundle**: 324MB dist (145MB GLBs + large JS chunks). Deploy concern — use CDN for models in production.

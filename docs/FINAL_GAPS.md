@@ -9,14 +9,14 @@
 
 | Check | Result |
 |-------|--------|
-| TypeScript (`npx tsc --noEmit`) | **4 ERRORS** in `src/ecs/__tests__/elevationMovement.vitest.ts` |
-| Vitest (`pnpm test:vitest`) | **2 FAILURES** in `labyrinthPlatforms.vitest.ts` (130 suites total, 129 passing) |
-| Biome lint (`pnpm lint`) | **383 errors, 75 warnings** (mostly auto-fixable formatting + import ordering) |
-| Production build (`pnpm build`) | **SUCCEEDS** but 324MB dist, 2 chunks > 500KB |
-| TODO/FIXME/HACK/XXX in source | **1** — `attackSystem.ts:134` TODO: add miss sfx |
-| Stale "dome" references | **3** in comments only (CultDomeRenderer is lore-correct) |
-| Dead code | **IsometricCamera** unused, `pending/` quarantined (252MB) |
-| Doc accuracy | **Stale test counts** in AGENTS.md, activeContext.md, progress.md |
+| TypeScript (`npx tsc --noEmit`) | **0 ERRORS** (fixed: #101) |
+| Vitest (`pnpm test:vitest`) | **131 suites, 2239 tests, 0 failures** (fixed: #102) |
+| Biome lint (`pnpm lint`) | **0 errors** (fixed: #103) |
+| Production build (`pnpm build`) | **SUCCEEDS** — 324MB dist (deploy concern, not code fix — #108) |
+| TODO/FIXME/HACK/XXX in source | **0** (fixed: #107 — added attack_miss SFX) |
+| Stale "dome" references | **0 stale** — CultDomeRenderer is lore-correct, all others fixed (#106) |
+| Dead code | **IsometricCamera deleted** (#105). `pending/` = accepted tech debt (#110). |
+| Doc accuracy | **Updated** — 131 suites, 2239 tests in all docs (#109, #99) |
 
 ---
 
@@ -230,21 +230,21 @@ These areas were checked and confirmed functional:
 
 ## Complete Fix Priority List
 
-| # | Priority | Issue | Task ID |
-|---|----------|-------|---------|
-| 1 | P0 | TS errors: elevationMovement test passes TileData instead of number | #101 |
-| 2 | P0 | Test failure: labyrinthPlatforms elevated tiles on walls | #102 |
-| 3 | P0 | Biome lint: 383 errors (auto-fixable) | #103 |
-| 4 | P1 | Keyboard shortcuts Tab/Enter/Z not implemented | #104 |
-| 5 | P1 | Movement system elevation/ramp handling incomplete | #98 |
-| 6 | P1 | 3D pathfinding through depth layers incomplete | #82 |
-| 7 | P2 | Delete IsometricCamera dead code | #105 |
-| 8 | P2 | Update stale doc test counts | #109 |
-| 9 | P2 | Fix stale "dome" comment in test | #106 |
-| 10 | P2 | TODO in attackSystem.ts (miss SFX) | #107 |
-| 11 | P3 | Production bundle 324MB | #108 |
-| 12 | P3 | pending/ directory 252MB in working tree | #110 |
-| 13 | P3 | PauseMenu comment says "Save Game" | — |
+| # | Priority | Issue | Task ID | Status |
+|---|----------|-------|---------|--------|
+| 1 | P0 | TS errors: elevationMovement test passes TileData instead of number | #101 | FIXED |
+| 2 | P0 | Test failure: labyrinthPlatforms elevated tiles on walls | #102 | FIXED |
+| 3 | P0 | Biome lint: 383 errors (auto-fixable) | #103 | FIXED |
+| 4 | P1 | Keyboard shortcuts Tab/Enter/Z not implemented | #104 | FIXED |
+| 5 | P1 | Movement system elevation/ramp handling incomplete | #98 | FIXED |
+| 6 | P1 | 3D pathfinding through depth layers incomplete | #82 | FIXED |
+| 7 | P2 | Delete IsometricCamera dead code | #105 | FIXED |
+| 8 | P2 | Update stale doc test counts | #109 | FIXED |
+| 9 | P2 | Fix stale "dome" comment in test | #106 | FIXED |
+| 10 | P2 | TODO in attackSystem.ts (miss SFX) | #107 | FIXED |
+| 11 | P3 | Production bundle 324MB | #108 | ACCEPTED (deploy concern) |
+| 12 | P3 | pending/ directory 252MB in working tree | #110 | ACCEPTED (tech debt) |
+| 13 | P3 | PauseMenu comment says "Save Game" | — | COSMETIC |
 
 ---
 

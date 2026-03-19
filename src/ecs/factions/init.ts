@@ -44,12 +44,12 @@ export function initFactions(
 		const basePool = isPlayer
 			? { scrap_metal: 10, ferrous_scrap: 5, conductor_wire: 2 }
 			: {
-					scrap_metal: 20,
-					ferrous_scrap: 10,
-					alloy_stock: 5,
-					conductor_wire: 3,
-					polymer_salvage: 3,
-					silicon_wafer: 1,
+					scrap_metal: 30,
+					ferrous_scrap: 15,
+					alloy_stock: 8,
+					conductor_wire: 6,
+					polymer_salvage: 5,
+					silicon_wafer: 2,
 				};
 
 		const poolInit = isPlayer

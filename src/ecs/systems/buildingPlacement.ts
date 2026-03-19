@@ -2,7 +2,8 @@
  * Place starter buildings for each faction at world init.
  *
  * Uses terrain-affinity spawn centers computed by computeSpawnCenters().
- * Each faction gets a storm_transmitter + storage_hub near their spawn.
+ * Each faction gets a storm_transmitter + motor_pool + storage_hub near their spawn.
+ * The motor_pool is essential — without it, factions cannot fabricate replacement units.
  */
 
 import type { World } from "koota";
@@ -11,6 +12,7 @@ import { BUILDING_DEFS } from "../buildings/definitions";
 import { FACTION_DEFINITIONS } from "../factions/definitions";
 import { getSpawnCenters } from "../robots/placement";
 import {
+	BotFabricator,
 	Building,
 	type BuildingType,
 	PowerGrid,
@@ -81,12 +83,25 @@ function spawnBuilding(
 			}),
 		);
 	}
+
+	if (def.fabricationSlots > 0) {
+		entity.add(
+			BotFabricator({
+				fabricationSlots: def.fabricationSlots,
+				queueSize: 0,
+			}),
+		);
+	}
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 /**
- * Place starter buildings (storage_hub + storm_transmitter) for each faction.
+ * Place starter buildings for each faction:
+ *   1. storm_transmitter — power source (must be first for coverage)
+ *   2. motor_pool — unit fabrication (critical: without this, faction dies)
+ *   3. storage_hub — resource storage
+ *
  * Uses spawn centers from the terrain-affinity system.
  */
 export function placeStarterBuildings(
@@ -135,6 +150,24 @@ export function placeStarterBuildings(
 				transmitterTile.z,
 			);
 			occupied.add(`${transmitterTile.x},${transmitterTile.z}`);
+		}
+
+		// Place motor_pool nearby (within transmitter radius — needs power)
+		const motorPoolTile = findPassableNear(
+			center.x,
+			center.z,
+			board,
+			occupied,
+		);
+		if (motorPoolTile) {
+			spawnBuilding(
+				world,
+				"motor_pool",
+				factionId,
+				motorPoolTile.x,
+				motorPoolTile.z,
+			);
+			occupied.add(`${motorPoolTile.x},${motorPoolTile.z}`);
 		}
 
 		// Place storage_hub nearby

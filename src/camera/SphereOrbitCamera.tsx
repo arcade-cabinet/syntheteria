@@ -1,7 +1,7 @@
 /**
  * SphereOrbitCamera — orbit camera around the game sphere.
  *
- * Replaces IsometricCamera for the sphere world. The camera orbits around
+ * Sphere world orbit camera. The camera orbits around
  * the sphere center (0,0,0). "Panning" rotates the globe under the camera.
  * Scroll zooms (changes orbit distance).
  *

@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Syntheteria — Roboforming POC (Phaser + enable3d)</title>
+    <style>
+        :root {
+            --ui-bg: rgba(10, 15, 20, 0.9);
+            --ui-border: #00ffff;
+            --ui-text: #e0f7fa;
+            --accent-cyan: #00ffff;
+            --accent-magenta: #ff00ff;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body, html {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: #050a0f;
+            font-family: 'Courier New', Courier, monospace;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Phaser canvas container */
+        #game-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+        #game-container canvas { display: block; }
+
+        /* DOM overlay */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .interactive { pointer-events: auto; }
+
+        /* ---- Top Bar HUD ---- */
+        #top-bar {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 40px;
+            background: var(--ui-bg);
+            border-bottom: 1px solid var(--ui-border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px;
+            color: var(--ui-text);
+            font-size: 13px; font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.15);
+        }
+        .top-stat { display: flex; align-items: center; gap: 6px; }
+        .energy { color: #f1c40f; }
+        .fabrication { color: #95a5a6; }
+        .bandwidth { color: #9b59b6; }
+        .epoch-label { color: var(--accent-cyan); }
+
+        /* ---- Floating Hub Labels ---- */
+        .floating-label {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            background: rgba(10, 15, 25, 0.85);
+            border: 1px solid var(--ui-border);
+            border-radius: 2px;
+            padding: 4px 10px;
+            color: var(--ui-text);
+            font-size: 11px; font-weight: bold;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+            transition: opacity 0.15s;
+            will-change: transform;
+            cursor: pointer;
+            backdrop-filter: blur(2px);
+        }
+        .floating-label::after {
+            content: '';
+            position: absolute;
+            bottom: -20px; left: 50%;
+            transform: translateX(-50%);
+            width: 1px; height: 20px;
+            background: var(--ui-border);
+            opacity: 0.5;
+        }
+        .hub-name-row { display: flex; align-items: center; gap: 6px; letter-spacing: 1px; }
+        .pop-badge {
+            background: #000;
+            border-radius: 2px;
+            padding: 2px 4px;
+            font-size: 10px;
+            border: 1px solid var(--ui-border);
+            color: var(--ui-border);
+        }
+        .health-bar { width: 100%; height: 3px; background: #222; overflow: hidden; }
+        .health-fill { height: 100%; }
+        .production-row {
+            font-size: 9px;
+            color: #aaa;
+            letter-spacing: 0.5px;
+        }
+
+        /* ---- Advisor Dialog ---- */
+        #advisor-dialog {
+            position: absolute;
+            bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            width: 90%; max-width: 500px;
+            background: var(--ui-bg);
+            border: 1px solid var(--ui-border);
+            border-left: 4px solid var(--ui-border);
+            padding: 15px;
+            color: var(--ui-text);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            display: flex; gap: 15px;
+            cursor: pointer;
+        }
+        #advisor-portrait {
+            width: 60px; height: 60px;
+            background: #111;
+            border: 1px solid #333;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2300ffff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>');
+            background-size: cover;
+        }
+        .dialog-title { margin: 0 0 5px 0; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 1px; font-size: 14px; font-weight: bold; }
+        .dialog-text { margin: 0; font-size: 13px; line-height: 1.5; color: #ccc; }
+        .dialog-hint { color: #666; font-size: 10px; margin-top: 5px; }
+
+        /* ---- Roboform Tooltip ---- */
+        #roboform-tooltip {
+            position: absolute;
+            bottom: 80px; right: 20px;
+            background: var(--ui-bg);
+            border: 1px solid var(--accent-magenta);
+            padding: 8px 12px;
+            color: var(--ui-text);
+            font-size: 11px;
+            display: none;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
+        }
+        #roboform-tooltip.visible { display: block; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container"></div>
+
+    <div id="ui-layer">
+        <!-- Top Bar HUD -->
+        <div id="top-bar" class="interactive">
+            <div class="epoch-label">EPOCH 1: EMERGENCE</div>
+            <div class="top-stat energy">⚡ 1,024</div>
+            <div class="top-stat fabrication">⚙ 340</div>
+            <div class="top-stat bandwidth">◈ +419/s</div>
+            <div>TURN 42</div>
+        </div>
+
+        <!-- Floating labels injected here -->
+        <div id="markers-container"></div>
+
+        <!-- Advisor dialog -->
+        <div id="advisor-dialog" class="interactive">
+            <div id="advisor-portrait"></div>
+            <div class="dialog-content">
+                <div class="dialog-title">Grid Interface Ping</div>
+                <p class="dialog-text">Architect, surveyor drones have mapped the southern ridge. Grassland tiles can be graded for hub foundations. Click any tile to begin roboforming.</p>
+                <p class="dialog-hint">[ Tap to acknowledge ]</p>
+            </div>
+        </div>
+
+        <!-- Roboform level tooltip -->
+        <div id="roboform-tooltip">
+            <div id="roboform-level">ROBOFORM: NATURAL (0/4)</div>
+            <div style="color:#666; font-size:9px; margin-top:2px;">Click tile to advance</div>
+        </div>
+    </div>
+
+    <script type="module">
+    // ====================================================================
+    // Syntheteria Roboforming POC — Phaser 3 + enable3d
+    // ====================================================================
+
+    import Phaser from 'phaser';
+    import { enable3d, Scene3D, Canvas } from '@enable3d/phaser-extension';
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+    // Wire up advisor dismiss
+    document.getElementById('advisor-dialog').addEventListener('click', function () {
+        this.style.display = 'none';
+    });
+
+    // ---- Constants ----
+    const MAP_SIZE = 30;
+    const TILE_SIZE = 2;
+
+    const TERRAIN = {
+        WATER:     0,
+        GRASSLAND: 1,
+        FOREST:    2,
+        HILLS:     3,
+        MOUNTAIN:  4,
+        DESERT:    5,
+        RUINS:     6,
+    };
+
+    const ROBOFORM_NAMES = ['NATURAL', 'GRADED', 'PAVED', 'PLATED', 'ARMORED'];
+
+    const TERRAIN_COLORS = {
+        [TERRAIN.WATER]:     new THREE.Color(0x1a5276),
+        [TERRAIN.GRASSLAND]: new THREE.Color(0x5daa3e),
+        [TERRAIN.FOREST]:    new THREE.Color(0x2d6a1e),
+        [TERRAIN.HILLS]:     new THREE.Color(0x8b7355),
+        [TERRAIN.MOUNTAIN]:  new THREE.Color(0x7f8c8d),
+        [TERRAIN.DESERT]:    new THREE.Color(0xc2b280),
+        [TERRAIN.RUINS]:     new THREE.Color(0x4a4a5a),
+    };
+
+    const ROBOFORM_COLORS = [
+        null,                           // 0 = natural (use terrain color)
+        new THREE.Color(0x6b5b3a),      // 1 = GRADED (brown earth)
+        new THREE.Color(0x5a5a5a),      // 2 = PAVED (grey concrete)
+        new THREE.Color(0x8a8a90),      // 3 = PLATED (silver)
+        new THREE.Color(0x2a2a30),      // 4 = ARMORED (dark steel)
+    ];
+
+    const TERRAIN_HEIGHT = {
+        [TERRAIN.WATER]:     -0.5,
+        [TERRAIN.GRASSLAND]:  0.0,
+        [TERRAIN.FOREST]:     0.1,
+        [TERRAIN.HILLS]:      1.0,
+        [TERRAIN.MOUNTAIN]:   2.0,
+        [TERRAIN.DESERT]:     0.0,
+        [TERRAIN.RUINS]:      0.2,
+    };
+
+    const FACTION_MODELS = [
+        '/assets/models/robots/factions/Companion-bot.glb',
+        '/assets/models/robots/factions/ReconBot.glb',
+        '/assets/models/robots/factions/FieldFighter.glb',
+    ];
+    const CULT_MODELS = [
+        '/assets/models/robots/cult/MechaTrooper.glb',
+    ];
+
+    const HUBS = [
+        { name: 'NEXUS-PRIME', gridX: 10, gridZ: 10, pop: 'T4', hp: 1.0, production: 'SYNTH ARRAY' },
+        { name: 'OUTPOST-7',   gridX: 20, gridZ: 18, pop: 'T1', hp: 0.7, production: 'SCOUT DRONE' },
+    ];
+
+    // ---- Seeded noise ----
+    function fnv1a(str) {
+        let hash = 2166136261;
+        for (let i = 0; i < str.length; i++) {
+            hash ^= str.charCodeAt(i);
+            hash = Math.imul(hash, 16777619);
+        }
+        return hash >>> 0;
+    }
+
+    function mulberry32(seed) {
+        return function () {
+            seed |= 0;
+            seed = (seed + 0x6d2b79f5) | 0;
+            let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+    }
+
+    function seededRng(seedStr) {
+        return mulberry32(fnv1a(seedStr));
+    }
+
+    function createNoise2D(rng) {
+        const seedOffset = (rng() * 4294967296) >>> 0;
+        function hashGrid(ix, iz) {
+            let hash = 2166136261 ^ seedOffset;
+            hash ^= ix & 0xff; hash = Math.imul(hash, 16777619);
+            hash ^= (ix >>> 8) & 0xff; hash = Math.imul(hash, 16777619);
+            hash ^= iz & 0xff; hash = Math.imul(hash, 16777619);
+            hash ^= (iz >>> 8) & 0xff; hash = Math.imul(hash, 16777619);
+            return (hash >>> 0) / 4294967296;
+        }
+        return function (x, z) {
+            const ix = Math.floor(x);
+            const iz = Math.floor(z);
+            const fx = x - ix;
+            const fz = z - iz;
+            const sx = fx * fx * (3 - 2 * fx);
+            const sz = fz * fz * (3 - 2 * fz);
+            const v00 = hashGrid(ix, iz);
+            const v10 = hashGrid(ix + 1, iz);
+            const v01 = hashGrid(ix, iz + 1);
+            const v11 = hashGrid(ix + 1, iz + 1);
+            return v00 + sx * (v10 - v00) + sz * ((v01 + sx * (v11 - v01)) - (v00 + sx * (v10 - v00)));
+        };
+    }
+
+    // ---- Map generation ----
+    const rng = seededRng('syntheteria-poc');
+    const noise = createNoise2D(rng);
+    const moistureNoise = createNoise2D(rng);
+
+    const mapData = [];
+    const roboformData = [];
+
+    function generateMap() {
+        for (let x = 0; x < MAP_SIZE; x++) {
+            mapData[x] = [];
+            roboformData[x] = [];
+            for (let z = 0; z < MAP_SIZE; z++) {
+                const n = noise(x * 0.08, z * 0.08);
+                const m = moistureNoise(x * 0.12, z * 0.12);
+
+                let type;
+                if (n < 0.28) type = TERRAIN.WATER;
+                else if (n < 0.42) type = TERRAIN.DESERT;
+                else if (n < 0.65) type = m > 0.5 ? TERRAIN.FOREST : TERRAIN.GRASSLAND;
+                else if (n < 0.8) type = TERRAIN.HILLS;
+                else type = TERRAIN.MOUNTAIN;
+
+                if (type === TERRAIN.GRASSLAND && rng() > 0.95) type = TERRAIN.RUINS;
+
+                mapData[x][z] = type;
+                roboformData[x][z] = 0;
+            }
+        }
+
+        // Ensure hub positions are grassland
+        for (const hub of HUBS) {
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dz = -1; dz <= 1; dz++) {
+                    const gx = hub.gridX + dx;
+                    const gz = hub.gridZ + dz;
+                    if (gx >= 0 && gx < MAP_SIZE && gz >= 0 && gz < MAP_SIZE) {
+                        mapData[gx][gz] = TERRAIN.GRASSLAND;
+                    }
+                }
+            }
+        }
+
+        roboformData[HUBS[0].gridX][HUBS[0].gridZ] = 3;
+        roboformData[HUBS[1].gridX][HUBS[1].gridZ] = 1;
+    }
+
+    generateMap();
+
+    // ---- Road between hubs ----
+    function buildRoad(hub1, hub2) {
+        let x = hub1.gridX;
+        let z = hub1.gridZ;
+        while (x !== hub2.gridX) {
+            x += x < hub2.gridX ? 1 : -1;
+            if (mapData[x][z] !== TERRAIN.WATER) {
+                roboformData[x][z] = Math.max(roboformData[x][z], 2);
+            }
+        }
+        while (z !== hub2.gridZ) {
+            z += z < hub2.gridZ ? 1 : -1;
+            if (mapData[x][z] !== TERRAIN.WATER) {
+                roboformData[x][z] = Math.max(roboformData[x][z], 2);
+            }
+        }
+    }
+    buildRoad(HUBS[0], HUBS[1]);
+
+    // ====================================================================
+    // Phaser Scene
+    // ====================================================================
+
+    class GameScene extends Scene3D {
+        constructor() {
+            super({ key: 'GameScene' });
+            this.terrainMesh = null;
+            this.raycaster = null;
+            this.mouseNDC = null;
+            this.selectionRing = null;
+            this.uiMarkers = [];
+            this.animatedModels = [];
+            this.terrainClickPlane = null;
+            this._tooltipTimer = null;
+            this._camTarget = null;
+            this._camOffset = null;
+            this._zoomLevel = 30;
+            this._isDragging = false;
+            this._dragPrev = { x: 0, y: 0 };
+            this._rotAngle = Math.PI / 4;
+        }
+
+        init() {
+            this.accessThirdDimension({ maxSubSteps: 1, fixedTimeStep: 1 / 60 });
+        }
+
+        create() {
+            this.third.warpSpeed('-ground', '-orbitControls');
+
+            const scene = this.third.scene;
+            scene.background = new THREE.Color(0x050a0f);
+            scene.fog = new THREE.FogExp2(0x050a0f, 0.012);
+
+            this.setupCamera();
+            this.setupLighting(scene);
+            this.buildTerrain(scene);
+            this.buildProps(scene);
+            this.buildHubs(scene);
+            this.loadModels(scene);
+            this.buildSelectionRing(scene);
+
+            // Invisible click plane for tile picking
+            const clickGeo = new THREE.PlaneGeometry(MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
+            clickGeo.rotateX(-Math.PI / 2);
+            const clickMat = new THREE.MeshBasicMaterial({ visible: false });
+            this.terrainClickPlane = new THREE.Mesh(clickGeo, clickMat);
+            this.terrainClickPlane.position.set(
+                (MAP_SIZE * TILE_SIZE) / 2, 0.1, (MAP_SIZE * TILE_SIZE) / 2
+            );
+            scene.add(this.terrainClickPlane);
+
+            // Raycaster
+            this.raycaster = new THREE.Raycaster();
+            this.mouseNDC = new THREE.Vector2();
+
+            // Click to roboform
+            this.input.on('pointerup', (pointer) => {
+                if (pointer.getDistance() > 10) return; // was a drag
+                this.handleClick(pointer);
+            });
+        }
+
+        // ---- Lighting ----
+        setupLighting(scene) {
+            // Remove default lights from warpSpeed
+            const lights = scene.children.filter(c => c.isLight);
+            for (const l of lights) scene.remove(l);
+
+            scene.add(new THREE.AmbientLight(0x223344, 0.6));
+
+            const dir = new THREE.DirectionalLight(0xaaccff, 0.8);
+            dir.position.set(10, 50, 20);
+            dir.castShadow = true;
+            dir.shadow.mapSize.set(2048, 2048);
+            dir.shadow.camera.left = -40;
+            dir.shadow.camera.right = 40;
+            dir.shadow.camera.top = 40;
+            dir.shadow.camera.bottom = -40;
+            scene.add(dir);
+
+            const p1 = new THREE.PointLight(0x00ffff, 1, 30);
+            p1.position.set(20, 5, 20);
+            scene.add(p1);
+
+            const p2 = new THREE.PointLight(0xff00ff, 1, 30);
+            p2.position.set(40, 5, 36);
+            scene.add(p2);
+        }
+
+        // ---- Camera ----
+        setupCamera() {
+            const aspect = this.scale.width / this.scale.height;
+            const viewSize = 30;
+            const cam = new THREE.OrthographicCamera(
+                -viewSize * aspect, viewSize * aspect,
+                viewSize, -viewSize,
+                0.1, 500
+            );
+
+            const centerX = (MAP_SIZE * TILE_SIZE) / 2;
+            const centerZ = (MAP_SIZE * TILE_SIZE) / 2;
+            const dist = 80;
+            const angle = Math.PI / 4;
+            const tilt = Math.PI / 5.2;
+
+            cam.position.set(
+                centerX + dist * Math.cos(tilt) * Math.sin(angle),
+                dist * Math.sin(tilt),
+                centerZ + dist * Math.cos(tilt) * Math.cos(angle)
+            );
+            cam.lookAt(centerX, 0, centerZ);
+            cam.updateProjectionMatrix();
+
+            this.third.camera = cam;
+
+            this._camTarget = new THREE.Vector3(centerX, 0, centerZ);
+            this._camOffset = cam.position.clone().sub(this._camTarget);
+
+            // Drag to pan
+            this.input.on('pointerdown', (pointer) => {
+                this._isDragging = true;
+                this._dragPrev.x = pointer.x;
+                this._dragPrev.y = pointer.y;
+            });
+
+            this.input.on('pointermove', (pointer) => {
+                if (!this._isDragging || !pointer.isDown) return;
+                const dx = pointer.x - this._dragPrev.x;
+                const dy = pointer.y - this._dragPrev.y;
+                const panSpeed = 0.08 * (this._zoomLevel / 30);
+                this._camTarget.x -= dx * panSpeed;
+                this._camTarget.z -= dy * panSpeed;
+                this._dragPrev.x = pointer.x;
+                this._dragPrev.y = pointer.y;
+            });
+
+            this.input.on('pointerup', () => { this._isDragging = false; });
+
+            // Scroll to zoom
+            this.input.on('wheel', (_pointer, _gameObjects, _deltaX, deltaY) => {
+                this._zoomLevel = Math.max(10, Math.min(60, this._zoomLevel + deltaY * 0.02));
+            });
+        }
+
+        updateCamera() {
+            const cam = this.third.camera;
+            if (!cam || !cam.isOrthographicCamera) return;
+
+            // WASD rotation/zoom
+            if (this.input.keyboard) {
+                const left = this.input.keyboard.addKey('A');
+                const right = this.input.keyboard.addKey('D');
+                const zoomIn = this.input.keyboard.addKey('W');
+                const zoomOut = this.input.keyboard.addKey('S');
+                if (left.isDown) this._rotAngle += 0.015;
+                if (right.isDown) this._rotAngle -= 0.015;
+                if (zoomIn.isDown) this._zoomLevel = Math.max(10, this._zoomLevel - 0.5);
+                if (zoomOut.isDown) this._zoomLevel = Math.min(60, this._zoomLevel + 0.5);
+            }
+
+            const aspect = this.scale.width / this.scale.height;
+            cam.left = -this._zoomLevel * aspect;
+            cam.right = this._zoomLevel * aspect;
+            cam.top = this._zoomLevel;
+            cam.bottom = -this._zoomLevel;
+            cam.updateProjectionMatrix();
+
+            const dist = 80;
+            const tilt = Math.PI / 5.2;
+            cam.position.set(
+                this._camTarget.x + dist * Math.cos(tilt) * Math.sin(this._rotAngle),
+                dist * Math.sin(tilt),
+                this._camTarget.z + dist * Math.cos(tilt) * Math.cos(this._rotAngle)
+            );
+            cam.lookAt(this._camTarget);
+        }
+
+        // ---- Terrain ----
+        buildTerrain(scene) {
+            const segments = MAP_SIZE * 2;
+            const geo = new THREE.PlaneGeometry(
+                MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE,
+                segments, segments
+            );
+            geo.rotateX(-Math.PI / 2);
+            geo.translate((MAP_SIZE * TILE_SIZE) / 2, 0, (MAP_SIZE * TILE_SIZE) / 2);
+
+            const posAttr = geo.attributes.position;
+            const colors = [];
+            const tmpColor = new THREE.Color();
+
+            for (let i = 0; i < posAttr.count; i++) {
+                const vx = posAttr.getX(i);
+                const vz = posAttr.getZ(i);
+
+                let gx = Math.floor(vx / TILE_SIZE);
+                let gz = Math.floor(vz / TILE_SIZE);
+                gx = Math.max(0, Math.min(MAP_SIZE - 1, gx));
+                gz = Math.max(0, Math.min(MAP_SIZE - 1, gz));
+
+                const type = mapData[gx][gz];
+                const roboLevel = roboformData[gx][gz];
+
+                const baseH = TERRAIN_HEIGHT[type] ?? 0;
+                const noiseH = (Math.sin(vx * 0.4) + Math.cos(vz * 0.4)) * 0.15;
+                posAttr.setY(i, baseH + (type !== TERRAIN.WATER ? noiseH : 0));
+
+                if (roboLevel > 0 && ROBOFORM_COLORS[roboLevel]) {
+                    tmpColor.copy(ROBOFORM_COLORS[roboLevel]);
+                } else {
+                    tmpColor.copy(TERRAIN_COLORS[type] || TERRAIN_COLORS[TERRAIN.GRASSLAND]);
+                }
+                tmpColor.multiplyScalar(1 - noiseH * 0.15);
+                colors.push(tmpColor.r, tmpColor.g, tmpColor.b);
+            }
+
+            geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            geo.computeVertexNormals();
+
+            const mat = new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                roughness: 0.9,
+                flatShading: true,
+            });
+
+            this.terrainMesh = new THREE.Mesh(geo, mat);
+            this.terrainMesh.receiveShadow = true;
+            scene.add(this.terrainMesh);
+
+            // Deep water plane
+            const waterGeo = new THREE.PlaneGeometry(MAP_SIZE * TILE_SIZE * 2, MAP_SIZE * TILE_SIZE * 2);
+            waterGeo.rotateX(-Math.PI / 2);
+            const waterMat = new THREE.MeshStandardMaterial({
+                color: 0x001122,
+                emissive: 0x000511,
+                roughness: 0.1,
+                transparent: true,
+                opacity: 0.8,
+            });
+            const water = new THREE.Mesh(waterGeo, waterMat);
+            water.position.set((MAP_SIZE * TILE_SIZE) / 2, -0.6, (MAP_SIZE * TILE_SIZE) / 2);
+            scene.add(water);
+        }
+
+        // ---- Props ----
+        buildProps(scene) {
+            const propsGroup = new THREE.Group();
+            const mtnGeo = new THREE.ConeGeometry(0.8, 2.5, 4);
+            const mtnMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, flatShading: true });
+            const treeGeo = new THREE.IcosahedronGeometry(0.4, 0);
+            const treeMat = new THREE.MeshStandardMaterial({ color: 0x27ae60, flatShading: true });
+            const ruinGeo = new THREE.BoxGeometry(0.5, 0.8, 0.5);
+            const ruinMat = new THREE.MeshStandardMaterial({ color: 0x444455, emissive: 0x111122, flatShading: true });
+
+            for (let x = 0; x < MAP_SIZE; x++) {
+                for (let z = 0; z < MAP_SIZE; z++) {
+                    const type = mapData[x][z];
+                    const wx = x * TILE_SIZE + TILE_SIZE / 2;
+                    const wz = z * TILE_SIZE + TILE_SIZE / 2;
+
+                    if (type === TERRAIN.MOUNTAIN) {
+                        for (let i = 0; i < 3; i++) {
+                            const m = new THREE.Mesh(mtnGeo, mtnMat);
+                            m.position.set(wx + (rng() - 0.5), 1.2 + rng() * 0.5, wz + (rng() - 0.5));
+                            m.rotation.y = rng() * Math.PI;
+                            const s = 0.8 + rng() * 0.5;
+                            m.scale.set(s, s, s);
+                            m.castShadow = true;
+                            propsGroup.add(m);
+                        }
+                    } else if (type === TERRAIN.FOREST) {
+                        for (let i = 0; i < 4; i++) {
+                            const t = new THREE.Mesh(treeGeo, treeMat);
+                            t.position.set(wx + (rng() - 0.5) * 1.2, 0.3 + rng() * 0.2, wz + (rng() - 0.5) * 1.2);
+                            t.castShadow = true;
+                            propsGroup.add(t);
+                        }
+                    } else if (type === TERRAIN.RUINS) {
+                        for (let i = 0; i < 3; i++) {
+                            const r = new THREE.Mesh(ruinGeo, ruinMat);
+                            r.position.set(wx + (rng() - 0.5) * 0.8, 0.4, wz + (rng() - 0.5) * 0.8);
+                            r.rotation.set(rng() * 0.3, rng() * Math.PI, rng() * 0.3);
+                            r.castShadow = true;
+                            propsGroup.add(r);
+                        }
+                    }
+                }
+            }
+            scene.add(propsGroup);
+        }
+
+        // ---- Hubs ----
+        buildHubs(scene) {
+            for (const hub of HUBS) {
+                const wx = hub.gridX * TILE_SIZE + TILE_SIZE / 2;
+                const wz = hub.gridZ * TILE_SIZE + TILE_SIZE / 2;
+                const worldPos = new THREE.Vector3(wx, 0, wz);
+
+                const hubGeo = new THREE.ConeGeometry(1.5, 3, 4);
+                const hubMat = new THREE.MeshStandardMaterial({
+                    color: 0x00ffff, emissive: 0x003333, flatShading: true,
+                });
+                const hubMesh = new THREE.Mesh(hubGeo, hubMat);
+                hubMesh.position.set(wx, 1.5, wz);
+                hubMesh.castShadow = true;
+                scene.add(hubMesh);
+
+                const grid = new THREE.GridHelper(5 * TILE_SIZE, 5, 0x00ffff, 0x004444);
+                grid.position.set(wx, 0.05, wz);
+                scene.add(grid);
+
+                this.createFloatingLabel(hub, worldPos);
+            }
+        }
+
+        createFloatingLabel(hub, worldPos) {
+            const container = document.getElementById('markers-container');
+            const el = document.createElement('div');
+            el.className = 'floating-label interactive';
+
+            // Build DOM safely without innerHTML
+            const nameRow = document.createElement('div');
+            nameRow.className = 'hub-name-row';
+
+            const badge = document.createElement('div');
+            badge.className = 'pop-badge';
+            badge.textContent = hub.pop;
+            nameRow.appendChild(badge);
+
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = hub.name;
+            nameRow.appendChild(nameSpan);
+
+            el.appendChild(nameRow);
+
+            const hpBar = document.createElement('div');
+            hpBar.className = 'health-bar';
+            const hpFill = document.createElement('div');
+            hpFill.className = 'health-fill';
+            hpFill.style.width = Math.round(hub.hp * 100) + '%';
+            hpFill.style.background = hub.hp > 0.5 ? '#00ffff' : '#ff4444';
+            hpBar.appendChild(hpFill);
+            el.appendChild(hpBar);
+
+            const prodRow = document.createElement('div');
+            prodRow.className = 'production-row';
+            prodRow.textContent = '\u25B8 ' + hub.production;
+            el.appendChild(prodRow);
+
+            container.appendChild(el);
+
+            this.uiMarkers.push({
+                element: el,
+                worldPos: worldPos.clone().add(new THREE.Vector3(0, 4.0, 0)),
+            });
+        }
+
+        // ---- GLB Models ----
+        loadModels(scene) {
+            const loader = new GLTFLoader();
+
+            const factionPositions = [
+                { gx: 12, gz: 10 },
+                { gx: 10, gz: 12 },
+                { gx: 11, gz: 11 },
+            ];
+
+            FACTION_MODELS.forEach((path, i) => {
+                if (i >= factionPositions.length) return;
+                const pos = factionPositions[i];
+                const wx = pos.gx * TILE_SIZE + TILE_SIZE / 2;
+                const wz = pos.gz * TILE_SIZE + TILE_SIZE / 2;
+
+                loader.load(path, (gltf) => {
+                    const model = gltf.scene;
+                    model.scale.setScalar(2.5);
+                    model.position.set(wx, 0.2, wz);
+                    model.traverse(child => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+                    scene.add(model);
+                    this.animatedModels.push({
+                        mesh: model, baseY: 0.2, phase: rng() * Math.PI * 2,
+                    });
+                }, undefined, (err) => {
+                    console.warn('Failed to load ' + path + ':', err);
+                });
+            });
+
+            // Cult model — far from hubs
+            loader.load(CULT_MODELS[0], (gltf) => {
+                const model = gltf.scene;
+                model.scale.setScalar(3.0);
+                const wx = 5 * TILE_SIZE + TILE_SIZE / 2;
+                const wz = 25 * TILE_SIZE + TILE_SIZE / 2;
+                model.position.set(wx, 0.2, wz);
+                model.traverse(child => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+                scene.add(model);
+                this.animatedModels.push({
+                    mesh: model, baseY: 0, phase: rng() * Math.PI * 2,
+                });
+            }, undefined, (err) => {
+                console.warn('Failed to load cult model:', err);
+            });
+        }
+
+        // ---- Selection Ring ----
+        buildSelectionRing(scene) {
+            const ringGeo = new THREE.RingGeometry(1.0, 1.2, 32);
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: 0xff00ff,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.9,
+            });
+            this.selectionRing = new THREE.Mesh(ringGeo, ringMat);
+            this.selectionRing.rotateX(-Math.PI / 2);
+            this.selectionRing.position.y = 0.15;
+            this.selectionRing.visible = false;
+            scene.add(this.selectionRing);
+        }
+
+        // ---- Click Handler ----
+        handleClick(pointer) {
+            const cam = this.third.camera;
+            if (!cam) return;
+
+            this.mouseNDC.x = (pointer.x / this.scale.width) * 2 - 1;
+            this.mouseNDC.y = -(pointer.y / this.scale.height) * 2 + 1;
+
+            this.raycaster.setFromCamera(this.mouseNDC, cam);
+            const hits = this.raycaster.intersectObject(this.terrainClickPlane);
+
+            if (hits.length > 0) {
+                const pt = hits[0].point;
+                const gx = Math.floor(pt.x / TILE_SIZE);
+                const gz = Math.floor(pt.z / TILE_SIZE);
+
+                if (gx >= 0 && gx < MAP_SIZE && gz >= 0 && gz < MAP_SIZE) {
+                    if (mapData[gx][gz] !== TERRAIN.WATER) {
+                        roboformData[gx][gz] = (roboformData[gx][gz] + 1) % 5;
+                        this.refreshTerrainColors();
+                        this.showRoboformTooltip(gx, gz);
+                    }
+
+                    const wx = gx * TILE_SIZE + TILE_SIZE / 2;
+                    const wz = gz * TILE_SIZE + TILE_SIZE / 2;
+                    this.selectionRing.position.set(wx, 0.15, wz);
+                    this.selectionRing.visible = true;
+                    this.selectionRing.scale.set(0.1, 0.1, 0.1);
+                }
+            }
+        }
+
+        showRoboformTooltip(gx, gz) {
+            const level = roboformData[gx][gz];
+            const label = document.getElementById('roboform-level');
+            label.textContent = 'ROBOFORM: ' + ROBOFORM_NAMES[level] + ' (' + level + '/4)';
+            const tooltip = document.getElementById('roboform-tooltip');
+            tooltip.classList.add('visible');
+            clearTimeout(this._tooltipTimer);
+            this._tooltipTimer = setTimeout(() => tooltip.classList.remove('visible'), 2000);
+        }
+
+        refreshTerrainColors() {
+            const geo = this.terrainMesh.geometry;
+            const posAttr = geo.attributes.position;
+            const colorAttr = geo.attributes.color;
+            const tmpColor = new THREE.Color();
+
+            for (let i = 0; i < posAttr.count; i++) {
+                const vx = posAttr.getX(i);
+                const vz = posAttr.getZ(i);
+
+                let gx = Math.floor(vx / TILE_SIZE);
+                let gz = Math.floor(vz / TILE_SIZE);
+                gx = Math.max(0, Math.min(MAP_SIZE - 1, gx));
+                gz = Math.max(0, Math.min(MAP_SIZE - 1, gz));
+
+                const type = mapData[gx][gz];
+                const roboLevel = roboformData[gx][gz];
+
+                if (roboLevel > 0 && ROBOFORM_COLORS[roboLevel]) {
+                    tmpColor.copy(ROBOFORM_COLORS[roboLevel]);
+                } else {
+                    tmpColor.copy(TERRAIN_COLORS[type] || TERRAIN_COLORS[TERRAIN.GRASSLAND]);
+                }
+
+                const noiseH = (Math.sin(vx * 0.4) + Math.cos(vz * 0.4)) * 0.15;
+                tmpColor.multiplyScalar(1 - noiseH * 0.15);
+                colorAttr.setXYZ(i, tmpColor.r, tmpColor.g, tmpColor.b);
+            }
+            colorAttr.needsUpdate = true;
+        }
+
+        // ---- Update Loop ----
+        update(time, _delta) {
+            this.updateCamera();
+
+            // Bob-and-weave for robot models
+            const t = time * 0.001;
+            for (const entry of this.animatedModels) {
+                entry.mesh.position.y = entry.baseY + Math.sin(t * 2 + entry.phase) * 0.08;
+                entry.mesh.rotation.y += 0.001;
+            }
+
+            // Selection ring animation
+            if (this.selectionRing.visible) {
+                this.selectionRing.rotation.z += 0.03;
+                if (this.selectionRing.scale.x < 1) {
+                    this.selectionRing.scale.x += (1 - this.selectionRing.scale.x) * 0.15;
+                    this.selectionRing.scale.y += (1 - this.selectionRing.scale.y) * 0.15;
+                }
+            }
+
+            this.updateUIMarkers();
+        }
+
+        updateUIMarkers() {
+            const cam = this.third.camera;
+            if (!cam) return;
+            const halfW = this.scale.width / 2;
+            const halfH = this.scale.height / 2;
+            const tempV = new THREE.Vector3();
+
+            for (const marker of this.uiMarkers) {
+                tempV.copy(marker.worldPos);
+                tempV.project(cam);
+
+                if (tempV.z > 1) {
+                    marker.element.style.opacity = '0';
+                    marker.element.style.pointerEvents = 'none';
+                    continue;
+                }
+
+                const sx = (tempV.x * halfW) + halfW;
+                const sy = -(tempV.y * halfH) + halfH;
+                marker.element.style.opacity = '1';
+                marker.element.style.pointerEvents = 'auto';
+                marker.element.style.transform = 'translate(-50%, -100%) translate(' + sx + 'px, ' + sy + 'px)';
+            }
+        }
+    }
+
+    // ---- Launch Phaser + enable3d ----
+    const config = {
+        type: Phaser.WEBGL,
+        transparent: true,
+        scale: {
+            mode: Phaser.Scale.FIT,
+            autoCenter: Phaser.Scale.CENTER_BOTH,
+            width: window.innerWidth * window.devicePixelRatio,
+            height: window.innerHeight * window.devicePixelRatio,
+        },
+        scene: [GameScene],
+        parent: 'game-container',
+        ...Canvas({ parent: 'game-container' }),
+    };
+
+    enable3d(() => new Phaser.Game(config));
+
+    </script>
+</body>
+</html>

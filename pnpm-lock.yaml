@@ -14,6 +14,9 @@ importers:
       '@capacitor/core':
         specifier: ^8.2.0
         version: 8.2.0
+      '@enable3d/phaser-extension':
+        specifier: ^0.26.1
+        version: 0.26.1(@types/matter-js@0.17.6)(@types/three@0.183.1)(matter-js@0.17.1)(phaser@3.90.0)(poly-decomp@0.3.0)(three@0.183.2)
       '@react-three/drei':
         specifier: ^10.7.7
         version: 10.7.7(2b8814ee1049152db49b8415770810a9)
@@ -26,6 +29,9 @@ importers:
       lucide-react:
         specifier: ^0.577.0
         version: 0.577.0(react@19.2.0)
+      phaser:
+        specifier: ^3.90.0
+        version: 3.90.0
       react:
         specifier: 19.2.0
         version: 19.2.0
@@ -816,6 +822,37 @@ packages:
 
   '@emnapi/runtime@1.8.1':
     resolution: {integrity: sha512-mehfKSMWjjNol8659Z8KxEMrdSJDDot5SXMq00dM8BN4o+CLNXQ0xH2V7EchNHV4RmbZLmmPdEaXZc5H2FXmDg==}
+
+  '@enable3d/ammo-physics@0.26.1':
+    resolution: {integrity: sha512-3LRndxRBJ2VPbKfg2tCGXNm0oMbLBKzglotvGwlosfFVW9xHyxOcu/507jD/8lOtwUKYWHTP5h0Peeoo6uzpZA==}
+    peerDependencies:
+      '@types/three': 0.171.0
+      three: 0.171.0
+
+  '@enable3d/common@0.26.1':
+    resolution: {integrity: sha512-S1mvq3R71LYgdTE5PG6/sKvCjhv8yODQTtJYick5sdVvBEA8IlwTevl5gmBNzI04sCoBvaUepE34WWsL95bRQA==}
+
+  '@enable3d/phaser-extension@0.26.1':
+    resolution: {integrity: sha512-joZr7iIaqFECjw1HL9ADJ65QvwVWf3+gOoyTs+knun4BQ4rRI4r1iCzNh1U5HhBkKGAzMZJgJ7/uWPG93Z5dNg==}
+    peerDependencies:
+      '@types/three': 0.171.0
+      phaser: ^3.55.2
+      three: 0.171.0
+
+  '@enable3d/three-graphics@0.26.1':
+    resolution: {integrity: sha512-s7RuKUVZeelI6PW5G8eLjFFm7Wsp03t15ISDdTQFRKf4jk9jZW9U6cX9/fuVKDjfIGfTMB2b2izOUpo1ft6EUA==}
+    peerDependencies:
+      '@types/matter-js': 0.17.6
+      '@types/three': 0.171.0
+      matter-js: 0.17.1
+      poly-decomp: ^0.3.0
+      three: 0.171.0
+
+  '@enable3d/three-wrapper@0.26.1':
+    resolution: {integrity: sha512-evzptJ99LIymOIQFk//l6lgMa8VJ0tgUn+q7OS5ycR1vbqmcuAs7M80m5UIdVcEg+5Ef1Gsy4sPEV3JWbhJP7A==}
+    peerDependencies:
+      '@types/three': 0.171.0
+      three: 0.171.0
 
   '@esbuild/aix-ppc64@0.25.12':
     resolution: {integrity: sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA==}
@@ -2236,6 +2273,9 @@ packages:
   '@types/istanbul-reports@3.0.4':
     resolution: {integrity: sha512-pk2B1NWalF9toCRu6gjBzR69syFjP4Od8WRAX+0mmf9lAjCRicLOWc+ZrxZHx/0XRjotgkF9t6iaMJ+aXcOdZQ==}
 
+  '@types/matter-js@0.17.6':
+    resolution: {integrity: sha512-i6WLNuM7/89SLqO2aOyaUkom9tc3B/qo4ekh7BD99xQ8+wOVVZO0F4RzKNYZCaFwr+xp3pK3oIb6sSVjLpz+pA==}
+
   '@types/node@25.4.0':
     resolution: {integrity: sha512-9wLpoeWuBlcbBpOY3XmzSTG3oscB6xjBEEtn+pYXTfhyXhIxC5FsBer2KTopBlvKEiW9l13po9fq+SJY/5lkhw==}
 
@@ -2345,6 +2385,16 @@ packages:
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
+
+  '@yandeu/events@0.0.5':
+    resolution: {integrity: sha512-TUkghSGu0ThcEyAP50WHU/vdQkpt9EZyotjZzG8KirR+VI5o7Rp5wabcGru62JNy+awMR8Voy+kFzhNkC/1E6A==}
+
+  '@yandeu/events@0.0.7':
+    resolution: {integrity: sha512-l78u4CooPw/WlN3H15bhOpims+gAsAkxbcjDn1GZ5oa+h9wqg+pBBzZos38xDeqKW/UVgPMkurVDPrf7JhhmTA==}
+    engines: {node: '>=18.2'}
+
+  '@yandeu/tap@0.0.3':
+    resolution: {integrity: sha512-GIStEHmboHVbs6ghcRxkO5NVdZtRCsf1mkKI0gvzc21uj5qGlGSCD/Eaax98/c6Mu9+n2lkTYbTwuBbg2vzuQw==}
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -2949,6 +2999,9 @@ packages:
   event-target-shim@5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
+
+  eventemitter3@5.0.4:
+    resolution: {integrity: sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==}
 
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
@@ -3810,6 +3863,9 @@ packages:
   marky@1.3.0:
     resolution: {integrity: sha512-ocnPZQLNpvbedwTy9kNrQEsknEfgvcLMvOtz3sFeWApDq1MXH1TqkCIx58xlpESsfwQOnuBO9beyQuNGzVvuhQ==}
 
+  matter-js@0.17.1:
+    resolution: {integrity: sha512-pSquoENJgvSAlQGcA0s5UkmEohGXZaUww2g3B6qG87x0iEcVf+aigMXn5UkFPdnh6w3B+C4vXSLaYqhHwKrOLA==}
+
   mdn-data@2.27.1:
     resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
 
@@ -4183,6 +4239,9 @@ packages:
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
 
+  phaser@3.90.0:
+    resolution: {integrity: sha512-/cziz/5ZIn02uDkC9RzN8VF9x3Gs3XdFFf9nkiMEQT3p7hQlWuyjy4QWosU802qqno2YSLn2BfqwOKLv/sSVfQ==}
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -4227,6 +4286,9 @@ packages:
   pngjs@7.0.0:
     resolution: {integrity: sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==}
     engines: {node: '>=14.19.0'}
+
+  poly-decomp@0.3.0:
+    resolution: {integrity: sha512-hWeBxGzPYiybmI4548Fca7Up/0k1qS5+79cVHI9+H33dKya5YNb9hxl0ZnDaDgvrZSuYFBhkCK/HOnqN7gefkQ==}
 
   postcss-import@15.1.0:
     resolution: {integrity: sha512-hpr+J05B2FVYUAXHeK1YyI267J/dDDhMU6B6civm8hSY1jYJnBXxzKDKDswzJmtLHryrjhnDjqqp/49t8FALew==}
@@ -4841,6 +4903,12 @@ packages:
 
   thenify@3.3.1:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
+
+  three-csg-ts@3.2.0:
+    resolution: {integrity: sha512-oTYg8kdal6qgHDbso/6VzA12Udf2ic2uXhf0XlJzuSP+Gs0OUR5gTHSZ7GotAE+M/QcVlw41eOwiWZVnJG5/8w==}
+    peerDependencies:
+      '@types/three': '>= 0.154.0'
+      three: '>= 0.154.0'
 
   three-mesh-bvh@0.8.3:
     resolution: {integrity: sha512-4G5lBaF+g2auKX3P0yqx+MJC6oVt6sB5k+CchS6Ob0qvH0YIhuUk1eYr7ktsIpY+albCqE80/FVQGV190PmiAg==}
@@ -6163,6 +6231,56 @@ snapshots:
     dependencies:
       tslib: 2.8.1
     optional: true
+
+  '@enable3d/ammo-physics@0.26.1(@types/three@0.183.1)(three@0.183.2)':
+    dependencies:
+      '@enable3d/common': 0.26.1(@types/three@0.183.1)(three@0.183.2)
+      '@enable3d/three-wrapper': 0.26.1(@types/three@0.183.1)(three@0.183.2)
+      '@types/three': 0.183.1
+      '@yandeu/events': 0.0.7
+      three: 0.183.2
+
+  '@enable3d/common@0.26.1(@types/three@0.183.1)(three@0.183.2)':
+    dependencies:
+      '@enable3d/three-wrapper': 0.26.1(@types/three@0.183.1)(three@0.183.2)
+      '@yandeu/events': 0.0.7
+    transitivePeerDependencies:
+      - '@types/three'
+      - three
+
+  '@enable3d/phaser-extension@0.26.1(@types/matter-js@0.17.6)(@types/three@0.183.1)(matter-js@0.17.1)(phaser@3.90.0)(poly-decomp@0.3.0)(three@0.183.2)':
+    dependencies:
+      '@enable3d/ammo-physics': 0.26.1(@types/three@0.183.1)(three@0.183.2)
+      '@enable3d/common': 0.26.1(@types/three@0.183.1)(three@0.183.2)
+      '@enable3d/three-graphics': 0.26.1(@types/matter-js@0.17.6)(@types/three@0.183.1)(matter-js@0.17.1)(poly-decomp@0.3.0)(three@0.183.2)
+      '@enable3d/three-wrapper': 0.26.1(@types/three@0.183.1)(three@0.183.2)
+      '@types/three': 0.183.1
+      '@yandeu/events': 0.0.7
+      phaser: 3.90.0
+      three: 0.183.2
+    transitivePeerDependencies:
+      - '@types/matter-js'
+      - matter-js
+      - poly-decomp
+
+  '@enable3d/three-graphics@0.26.1(@types/matter-js@0.17.6)(@types/three@0.183.1)(matter-js@0.17.1)(poly-decomp@0.3.0)(three@0.183.2)':
+    dependencies:
+      '@enable3d/ammo-physics': 0.26.1(@types/three@0.183.1)(three@0.183.2)
+      '@enable3d/common': 0.26.1(@types/three@0.183.1)(three@0.183.2)
+      '@enable3d/three-wrapper': 0.26.1(@types/three@0.183.1)(three@0.183.2)
+      '@types/matter-js': 0.17.6
+      '@types/three': 0.183.1
+      '@yandeu/events': 0.0.7
+      '@yandeu/tap': 0.0.3
+      matter-js: 0.17.1
+      poly-decomp: 0.3.0
+      three: 0.183.2
+      three-csg-ts: 3.2.0(@types/three@0.183.1)(three@0.183.2)
+
+  '@enable3d/three-wrapper@0.26.1(@types/three@0.183.1)(three@0.183.2)':
+    dependencies:
+      '@types/three': 0.183.1
+      three: 0.183.2
 
   '@esbuild/aix-ppc64@0.25.12':
     optional: true
@@ -7776,6 +7894,8 @@ snapshots:
       '@types/istanbul-lib-report': 3.0.3
     optional: true
 
+  '@types/matter-js@0.17.6': {}
+
   '@types/node@25.4.0':
     dependencies:
       undici-types: 7.18.2
@@ -7926,6 +8046,14 @@ snapshots:
 
   '@xmldom/xmldom@0.8.11':
     optional: true
+
+  '@yandeu/events@0.0.5': {}
+
+  '@yandeu/events@0.0.7': {}
+
+  '@yandeu/tap@0.0.3':
+    dependencies:
+      '@yandeu/events': 0.0.5
 
   abort-controller@3.0.0:
     dependencies:
@@ -8682,6 +8810,8 @@ snapshots:
 
   event-target-shim@5.0.1:
     optional: true
+
+  eventemitter3@5.0.4: {}
 
   execa@5.1.1:
     dependencies:
@@ -9863,6 +9993,8 @@ snapshots:
   marky@1.3.0:
     optional: true
 
+  matter-js@0.17.1: {}
+
   mdn-data@2.27.1: {}
 
   memoize-one@5.2.1:
@@ -10493,6 +10625,10 @@ snapshots:
 
   pathe@2.0.3: {}
 
+  phaser@3.90.0:
+    dependencies:
+      eventemitter3: 5.0.4
+
   picocolors@1.1.1: {}
 
   picomatch@2.3.1: {}
@@ -10527,6 +10663,8 @@ snapshots:
     optional: true
 
   pngjs@7.0.0: {}
+
+  poly-decomp@0.3.0: {}
 
   postcss-import@15.1.0(postcss@8.4.49):
     dependencies:
@@ -11326,6 +11464,11 @@ snapshots:
   thenify@3.3.1:
     dependencies:
       any-promise: 1.3.0
+
+  three-csg-ts@3.2.0(@types/three@0.183.1)(three@0.183.2):
+    dependencies:
+      '@types/three': 0.183.1
+      three: 0.183.2
 
   three-mesh-bvh@0.8.3(three@0.183.2):
     dependencies:

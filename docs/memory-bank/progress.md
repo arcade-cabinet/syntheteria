@@ -7,7 +7,7 @@
 
 ## Is the game done?
 
-**Yes.** All core gameplay systems are implemented and wired: economy, combat, AI GOAP, cultists with escalation, specialization tracks, tech tree, victory conditions, diplomacy, territory, save/load, audio, sphere world geometry, title-to-game cinematic, LOD system, strategic zoom, infrastructure renderer, volumetric fog, and dead code cleanup. Remaining work is deployment optimization (bundle size, CDN for GLBs) and visual polish (power conduit visualization, building preview ghost, idle robot animations).
+**Gameplay systems: yes. Rendering: pivoting.** All core gameplay systems are implemented and wired: economy, combat, AI GOAP, cultists with escalation, specialization tracks, tech tree, victory conditions, diplomacy, territory, save/load, audio. The rendering stack is pivoting from R3F to **Phaser + enable3d** (validated via POC). Package restructuring is in progress before the rendering overhaul begins. See `docs/RENDERING_VISION.md` for the full rendering design target.
 
 ---
 
@@ -194,6 +194,10 @@
 
 | System | Status | Key Files | Notes |
 |--------|--------|-----------|-------|
+| **Phaser + enable3d stack** | VALIDATED | `poc-roboforming.html` | POC proved vertex colors + flat shading + lighting = CivRev2-tier visuals |
+| **Rendering vision doc** | DONE | `docs/RENDERING_VISION.md` | All POC findings, gaps, and design targets |
+| **POC artifacts** | REFERENCE | `poc-roboforming.html`, `poc.html`, `poc_real_world.html`, `poc-isometric.html` | Prototype files — not production code |
+| **New deps** | ADDED | `package.json` | `phaser@3.90.0`, `@enable3d/phaser-extension@0.26.1` |
 | Sphere placement | DONE | `src/rendering/spherePlacement.ts` | Model position + orientation on sphere surface |
 | Board geometry | DONE | `src/rendering/boardGeometry.ts` | Both flat (legacy) and sphere geometry |
 | Depth layer stack | DONE | `src/rendering/depthLayerStack.ts` | Depth stacking utilities |
@@ -284,11 +288,13 @@
 
 | Gap | Impact | Notes |
 |-----|--------|-------|
+| Rendering stack migration | Major | R3F → Phaser + enable3d. POC validated, migration not started. Package restructuring first. |
+| Terrain blending | Visual | Hard tile boundaries. Need vertex color edge interpolation. See `docs/RENDERING_VISION.md`. |
+| Forest canopy | Visual | Scattered trees → need canopy blob mesh. See `docs/RENDERING_VISION.md`. |
+| Elevation drama | Visual | Smooth noise → need chunky discrete platforms. See `docs/RENDERING_VISION.md`. |
+| Ocean layers | Visual | Need open ocean + grid-covered metallic grating. See `docs/RENDERING_VISION.md`. |
 | Production bundle 324MB | Deploy concern | GLB models (145MB) copied to dist. JS: index=1.85MB, sql-asm=1.3MB. Use CDN for GLBs. |
 | pending/ directory 252MB | Accepted tech debt | Quarantined reference code, excluded from tsconfig + biome. Not to be deleted. |
-| Power conduit visualization | Visual polish | No visible connections between buildings |
-| Building preview ghost | Visual polish | Build placement uses radial menu, no preview ghost |
-| Robot idle animations | Content | Procedural bounce/wiggle exists, but no Blender-rigged idle loops |
 
 ---
 

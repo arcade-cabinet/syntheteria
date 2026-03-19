@@ -26,10 +26,12 @@
 	"dependencies": {
 		"@capacitor-community/sqlite": "^8",
 		"@capacitor/core": "^8.2.0",
+		"@enable3d/phaser-extension": "^0.26.1",
 		"@react-three/drei": "^10.7.7",
 		"@react-three/fiber": "^9.5.0",
 		"koota": "^0.6.5",
 		"lucide-react": "^0.577.0",
+		"phaser": "^3.90.0",
 		"react": "19.2.0",
 		"three": "^0.183.2",
 		"tone": "^15.1.22",

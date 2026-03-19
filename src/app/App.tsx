@@ -31,6 +31,7 @@ import {
 } from "../systems";
 import { UnitFaction, UnitPos } from "../traits";
 import { Globe } from "../ui/Globe";
+import { GameBoard } from "./GameBoard";
 // --- Game DOM overlays ---
 import { AlertBar } from "../ui/game/AlertBar";
 import { DiplomacyOverlay } from "../ui/game/DiplomacyOverlay";
@@ -383,21 +384,35 @@ export function App() {
 				background: "#030308",
 			}}
 		>
-			{/* ONE persistent Canvas — always rendered */}
-			<Globe
-				phase={phase}
-				config={session?.config}
-				board={session?.board}
-				world={session?.world}
-				selectedUnitId={selectedUnitId}
-				onSelect={setSelectedUnitId}
-				onSceneReady={() => setSceneReady(true)}
-				onTransitionComplete={handleTransitionComplete}
-				turn={turn}
-				focusTileX={session?.spawnTile?.x}
-				focusTileZ={session?.spawnTile?.z}
-				stormProfile={session?.newGameConfig?.stormProfile}
-			/>
+			{/* Globe: title/setup/generating phases (R3F landing animation) */}
+			{phase !== "playing" && (
+				<Globe
+					phase={phase}
+					config={session?.config}
+					board={session?.board}
+					world={session?.world}
+					selectedUnitId={selectedUnitId}
+					onSelect={setSelectedUnitId}
+					onSceneReady={() => setSceneReady(true)}
+					onTransitionComplete={handleTransitionComplete}
+					turn={turn}
+					focusTileX={session?.spawnTile?.x}
+					focusTileZ={session?.spawnTile?.z}
+					stormProfile={session?.newGameConfig?.stormProfile}
+				/>
+			)}
+
+			{/* GameBoard: playing phase (Phaser + enable3d) */}
+			{phase === "playing" && session && (
+				<GameBoard
+					session={session}
+					onSceneReady={() => setSceneReady(true)}
+					onTileClick={(x, z) => {
+						// TODO: wire to radial menu / move system
+					}}
+					onUnitSelect={setSelectedUnitId}
+				/>
+			)}
 
 			{/* Title / Setup: landing screen */}
 			{(phase === "title" ||

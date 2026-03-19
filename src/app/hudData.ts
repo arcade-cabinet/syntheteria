@@ -11,8 +11,7 @@ import { PLAYER_MAX_AP } from "../config/gameDefaults";
 import { FUSION_RECIPES, SynthesisQueue } from "../systems/synthesisSystem";
 import { FabricationJob } from "../systems/fabricationSystem";
 import { getResearchState } from "../systems/researchSystem";
-import { Building } from "../traits/building";
-import { UnitFaction, UnitStats } from "../traits/unit";
+import { Building, UnitFaction, UnitStats } from "../traits";
 import type { CurrentResearch, ProductionQueueItem } from "../ui/game/HUD";
 
 /** Read current AP for the first player unit found. */

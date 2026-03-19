@@ -6,16 +6,16 @@
  */
 
 import type { WorldType } from "../create-world";
-import { Building } from "../traits/building";
-import { Faction } from "../traits/faction";
-import { ResourcePool } from "../traits/resource";
 import {
+	Building,
+	Faction,
+	ResourcePool,
 	UnitFaction,
 	UnitMove,
 	UnitPos,
 	UnitStats,
 	UnitVisual,
-} from "../traits/unit";
+} from "../traits";
 import { getCombatKills } from "../systems/campaignStats";
 import { getPlayerResources } from "../systems/resourceSystem";
 import { computeTerritory } from "../systems/territorySystem";

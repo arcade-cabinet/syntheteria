@@ -79,3 +79,4 @@ config/e2e.json
 
 # Brainstorming companion cache
 .superpowers/
+.claude/

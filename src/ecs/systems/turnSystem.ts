@@ -54,6 +54,11 @@ export function advanceTurn(world: World, board: GeneratedBoard, opts?: { observ
 	// Phase 5: New turn — refresh player AP, clear highlights, increment
 	clearHighlights(world);
 	refreshPlayerAp(world);
+
+	// Phase 5.5: Signal penalty — reduce AP for units outside relay coverage.
+	// Must run AFTER refreshPlayerAp so the -1 AP is not overwritten.
+	runSignalNetwork(world);
+
 	incrementTurn(world);
 
 	// Phase 6: Check victory/defeat conditions
@@ -96,7 +101,7 @@ function runEnvironmentPhase(world: World, board: GeneratedBoard): void {
 	floorMiningSystem(world);
 	runPowerGrid(world);
 	runResourceRenewal(world);
-	runSignalNetwork(world);
+	// Signal network moved to phase 5.5 (after AP refresh) so AP penalty sticks
 	runRepairs(world);
 	runSynthesis(world);
 	runResearch(world);

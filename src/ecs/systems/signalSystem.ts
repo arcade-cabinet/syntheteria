@@ -4,7 +4,7 @@
  * Relay towers (powered buildings with SignalNode) broadcast coverage
  * to tiles within their range. Coverage chains: if relay A covers relay B's
  * tile, B extends coverage from its own position. Units outside signal
- * coverage have their scanRange halved.
+ * coverage have their scanRange halved and lose 1 AP.
  */
 
 import type { World } from "koota";
@@ -127,10 +127,11 @@ export function runSignalNetwork(world: World): void {
 
 		const key = `${pos.tileX},${pos.tileZ}`;
 		if (!coverage.has(key)) {
-			// Outside signal range: halve scanRange (rounded down)
+			// Outside signal range: halve scanRange and reduce AP by 1
 			const halved = Math.floor(stats.scanRange / 2);
-			if (stats.scanRange !== halved) {
-				e.set(UnitStats, { ...stats, scanRange: halved });
+			const penalizedAp = Math.max(0, stats.ap - 1);
+			if (stats.scanRange !== halved || stats.ap !== penalizedAp) {
+				e.set(UnitStats, { ...stats, scanRange: halved, ap: penalizedAp });
 			}
 		}
 	}

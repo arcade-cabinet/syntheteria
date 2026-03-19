@@ -557,6 +557,13 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 
 		if (!best) best = _ctx.buildOptions[0];
 
+		// Remove the selected option from the shared list so other agents
+		// on the same faction don't also build the same thing this turn
+		if (best) {
+			const idx = _ctx.buildOptions.indexOf(best);
+			if (idx >= 0) _ctx.buildOptions.splice(idx, 1);
+		}
+
 		if (best) {
 			const dist = manhattan(agent.tileX, agent.tileZ, best.tileX, best.tileZ);
 			if (dist <= 3) {

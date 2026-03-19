@@ -1,21 +1,22 @@
 /**
- * CombatEffectsRenderer — shows floating damage text and combat flashes.
+ * CombatEffectsRenderer — combat visual feedback.
  *
- * Reads from the combat system's event queue each frame.
- * For each CombatEvent:
+ * Each frame, queries entities with CombatResult traits and:
  *   - Pushes particle effects (sparks, destruction) via effectEvents
- *   - Renders floating 3D text showing component damage
- *   - Shows "DESTROYED" label on unit death
+ *   - Renders floating damage text that billboards toward camera
+ *   - Shows flash on hit, "DESTROYED" label on kills
+ *   - Decrements framesRemaining; removes CombatResult when expired
  *
- * Text uses billboard sprites that float upward and fade.
+ * Adapted from pending/rendering/CombatEffectsRenderer.tsx — rewired to
+ * current ECS (UnitPos + CombatResult instead of old Identity/WorldPosition/combat).
  */
 
 import { useFrame } from "@react-three/fiber";
+import type { World } from "koota";
 import { useRef, useState } from "react";
 import * as THREE from "three";
-import { Identity, WorldPosition } from "../ecs/traits";
-import { units } from "../ecs/world";
-import { type CombatEvent, getLastCombatEvents } from "../systems/combat";
+import { TILE_SIZE_M } from "../config/gameDefaults";
+import { CombatResult, UnitPos } from "../ecs/traits/unit";
 import { pushEffect } from "./particles/effectEvents";
 
 interface FloatingText {
@@ -35,18 +36,6 @@ const DESTROY_LIFETIME = 2.0;
 const FLOAT_SPEED = 1.5;
 
 let nextTextId = 0;
-
-function findUnitPosition(
-	entityId: string,
-): { x: number; y: number; z: number } | null {
-	for (const entity of units) {
-		if (entity.get(Identity)?.id === entityId) {
-			const pos = entity.get(WorldPosition);
-			if (pos) return { x: pos.x, y: pos.y, z: pos.z };
-		}
-	}
-	return null;
-}
 
 function FloatingDamageText({ text }: { text: FloatingText }) {
 	const meshRef = useRef<THREE.Mesh>(null);
@@ -92,74 +81,64 @@ function FloatingDamageText({ text }: { text: FloatingText }) {
 	);
 }
 
-export function CombatEffectsRenderer() {
+export function CombatEffectsRenderer({ world }: { world: World }) {
 	const [texts, setTexts] = useState<FloatingText[]>([]);
-	const prevEventsRef = useRef<CombatEvent[]>([]);
+	const processedRef = useRef(new Set<number>());
 
 	useFrame(() => {
-		const events = getLastCombatEvents();
+		const newTexts: FloatingText[] = [];
 
-		// Only process new events (avoid re-processing same tick)
-		if (events !== prevEventsRef.current && events.length > 0) {
-			prevEventsRef.current = events;
+		for (const entity of world.query(CombatResult, UnitPos)) {
+			const result = entity.get(CombatResult);
+			const pos = entity.get(UnitPos);
+			if (!result || !pos) continue;
 
-			const newTexts: FloatingText[] = [];
+			const eid = entity.id();
+			const worldX = pos.tileX * TILE_SIZE_M;
+			const worldZ = pos.tileZ * TILE_SIZE_M;
 
-			for (const event of events) {
-				// Find target position for effects
-				const targetPos = findUnitPosition(event.targetId);
-				if (!targetPos) continue;
+			// Only spawn effects on the first frame of a CombatResult
+			if (!processedRef.current.has(eid)) {
+				processedRef.current.add(eid);
 
 				// Push particle effects
 				pushEffect({
-					type: "combat_hit",
-					x: targetPos.x,
-					y: targetPos.y,
-					z: targetPos.z,
+					type: result.kind === "destroyed" ? "combat_destroy" : "combat_hit",
+					x: worldX,
+					y: 0.5,
+					z: worldZ,
 					color: 0xff4444,
-					intensity: 0.8,
+					intensity: result.kind === "destroyed" ? 1.0 : 0.8,
 				});
 
 				// Floating damage text
+				const label = result.kind === "destroyed"
+					? "DESTROYED"
+					: `-${result.damage}`;
 				newTexts.push({
 					id: nextTextId++,
-					text: event.componentDamaged.toUpperCase(),
-					x: targetPos.x + (Math.random() - 0.5) * 0.5,
-					y: targetPos.y,
-					z: targetPos.z + (Math.random() - 0.5) * 0.5,
+					text: label,
+					x: worldX + (Math.random() - 0.5) * 0.5,
+					y: 0.5,
+					z: worldZ + (Math.random() - 0.5) * 0.5,
 					age: 0,
-					lifetime: TEXT_LIFETIME,
-					color: 0xff6644,
-					isDestroy: false,
+					lifetime: result.kind === "destroyed" ? DESTROY_LIFETIME : TEXT_LIFETIME,
+					color: result.kind === "destroyed" ? 0xff2222 : 0xff6644,
+					isDestroy: result.kind === "destroyed",
 				});
-
-				if (event.targetDestroyed) {
-					// Destruction explosion
-					pushEffect({
-						type: "combat_destroy",
-						x: targetPos.x,
-						y: targetPos.y,
-						z: targetPos.z,
-						intensity: 1.0,
-					});
-
-					newTexts.push({
-						id: nextTextId++,
-						text: "DESTROYED",
-						x: targetPos.x,
-						y: targetPos.y + 0.5,
-						z: targetPos.z,
-						age: 0,
-						lifetime: DESTROY_LIFETIME,
-						color: 0xff2222,
-						isDestroy: true,
-					});
-				}
 			}
 
-			if (newTexts.length > 0) {
-				setTexts((prev) => [...prev, ...newTexts]);
+			// Decrement timer
+			if (result.framesRemaining <= 1) {
+				processedRef.current.delete(eid);
+				entity.remove(CombatResult);
+			} else {
+				entity.set(CombatResult, { ...result, framesRemaining: result.framesRemaining - 1 });
 			}
+		}
+
+		if (newTexts.length > 0) {
+			setTexts((prev) => [...prev, ...newTexts]);
 		}
 
 		// Remove expired texts

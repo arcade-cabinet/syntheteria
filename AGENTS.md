@@ -1,155 +1,126 @@
 # Syntheteria — Multi-Agent Orchestration
 
-> **Session start**: Read this file, then follow the protocol in `docs/memory-bank/AGENTS.md`.
+> **Session start**: Read this file, then `docs/memory-bank/activeContext.md`.
+> **NEVER reference `pending/`** — it is the old game, quarantined permanently.
 
-**Vite/Capacitor migration (Phases 1–8 done):** Primary build is **Vite** (`pnpm dev`, `pnpm build`). Entry: `src/main.tsx` → **Capacitor SQLite** (init + schema) → **session DB** (sql.js in-memory) → `AppVite.tsx` (R3F scene + DOM UI). **Capacitor** wraps the same build (`pnpm cap:sync`, `pnpm cap:ios`/`cap:android`). R3F-only; Filament and scene snapshot removed. Persistence: Capacitor SQLite (web IndexedDB, native SQLite); session: sql.js. **Expo/RN** deps remain for legacy Jest; new features target the Vite path. Plan: [docs/plans/EXPO_TO_CAPACITOR_MIGRATION.md](docs/plans/EXPO_TO_CAPACITOR_MIGRATION.md).
+---
+
+## What This Is
+
+A **fixed-board 4X strategy game** on future Earth (the ecumenopolis). Ground-up rewrite on `ralph/syntheteria-1-0`.
+The old infinite-map ecumenopolis game is in `pending/` (excluded from tsconfig + biome).
+
+**Primary build:** `pnpm dev` (Vite). **Tests:** `pnpm test:vitest`. **Lint + tsc:** `pnpm verify`.
+
+---
 
 ## Repository Layout
 
 ```
 syntheteria/
-├── CLAUDE.md              # Claude Code behavior contract (Claude-specific)
-├── AGENTS.md              # THIS FILE — multi-agent orchestration
-├── src/                   # Expo application source
-│   ├── ecs/               # Koota ECS traits, game loop
-│   ├── systems/           # Game systems (pure logic, no TSX)
-│   ├── ai/                # AI: GOAP governors, Yuka steering, agents
-│   ├── rendering/         # R3F renderer components (39 total)
-│   ├── ui/                # React Native UI panels + HUD
-│   ├── world/             # World generation, spatial model, session
-│   ├── city/              # City config, runtime, kit lab
-│   ├── bots/              # Bot definitions, progression
-│   ├── config/            # Runtime config loaders + JSON
-│   ├── db/                # Capacitor SQLite + sql.js session; Drizzle schema
-│   ├── audio/             # Tone.js spatial audio
-│   ├── input/             # Input manager + providers
-│   └── pathfinding/       # A* + NavMesh
-├── docs/                  # All documentation
-│   ├── AGENTS.md          # Documentation index (which doc to read)
-│   ├── memory-bank/       # Session context (Cline-style memory bank)
-│   ├── design/            # Game design docs (6 files)
-│   ├── technical/         # Architecture & implementation (5 files)
-│   ├── interface/         # UI & interaction (2 files)
-│   ├── plans/             # Execution roadmap (GAMEPLAN_1_0.md)
-│   └── archive/           # Completed/obsolete docs
-├── assets/                # UI images, models, textures
-├── config/                # Build config (metro, babel, tsconfig)
-└── tests/                 # Playwright CT (tests/components/), E2E (tests/e2e/)
+├── CLAUDE.md                  # Claude Code behavior contract
+├── AGENTS.md                  # THIS FILE — multi-agent orchestration
+├── src/
+│   ├── main.tsx               # Entry + Root: screen state machine (landing → generating → game)
+│   ├── board/                 # Fixed-size deterministic board generator
+│   ├── camera/                # IsometricCamera (CivRev2-style)
+│   ├── ecs/
+│   │   ├── traits/            # board, tile, unit, faction, resource, building, salvage, cult
+│   │   ├── terrain/           # FloorType (9 substrates), ResourceMaterial (13 types), GLSL shaders
+│   │   ├── robots/            # 9 archetypes, placement flags, marks, specializations (14 tracks)
+│   │   ├── factions/          # 5 factions + 3 cults, relations
+│   │   ├── buildings/         # 15 faction buildings + 6 cult structures
+│   │   ├── resources/         # 10 salvage types with yield tables
+│   │   └── systems/           # 40+ systems (movement, combat, economy, AI, cult, specialization, etc.)
+│   ├── ai/                    # Yuka GOAP, fuzzy logic, NavGraph, track selection
+│   ├── systems/               # radialMenu state machine, radialProviders
+│   ├── audio/                 # Tone.js synth pooling, SFX, ambient storm
+│   ├── db/                    # SQLite schema + GameRepo (sql.js adapter)
+│   ├── rendering/             # BoardRenderer, DepthRenderer, UnitRenderer, StormDome, MinedPitRenderer
+│   ├── input/                 # BoardInput (click-to-select/move/attack)
+│   ├── ui/
+│   │   ├── landing/           # LandingScreen, NewGameModal, SettingsModal, TitleMenuScene
+│   │   └── game/              # GameScreen, HUD, RadialMenu, GarageModal, info panels
+│   ├── config/                # gameDefaults.ts, techTreeDefs.ts
+│   └── world/                 # Config wiring, world initialization
+├── docs/
+│   ├── AGENTS.md              # Documentation index (what to read for each task)
+│   ├── ARCHITECTURE.md        # Tech stack, all packages, ECS patterns, test strategy
+│   ├── GAME_DESIGN.md         # Vision, lore, world model, economy, bots, factions
+│   ├── ROADMAP.md             # Foundation status, what's next
+│   └── memory-bank/           # Session context — read these every session
+│       ├── activeContext.md   # CURRENT focus, recent changes, what's next
+│       └── progress.md        # System status dashboard
+├── public/
+│   ├── assets/models/         # 360 curated GLB models
+│   └── assets/textures/       # PBR atlas textures (AmbientCG)
+├── pending/                   # OLD GAME — quarantined, never touch
+└── tests/                     # Playwright E2E + Vitest browser CT
 ```
+
+---
 
 ## Session Protocol
 
-1. **Read `docs/memory-bank/AGENTS.md`** — mandatory session start/end protocol
-2. **Read `docs/memory-bank/activeContext.md`** — current focus and next steps
-3. **Read `docs/memory-bank/progress.md`** — what works, what's broken
-4. **Read `docs/AGENTS.md`** — find domain docs relevant to your task
-5. **Read relevant domain docs** — use `head -15` on frontmatter to decide
+Every agent session must:
+1. Read `docs/memory-bank/activeContext.md` — current focus and state
+2. Read `docs/memory-bank/progress.md` — what works and what doesn't
+3. Check `docs/ARCHITECTURE.md` — if your task involves design or ECS patterns
+4. Run `pnpm test:vitest` — verify all tests pass before starting
+5. **Never** read or reference anything in `pending/`
 
-## Core Directives
+---
 
-### Architecture Rules
+## Architecture Rules
 
 | Rule | Detail |
 |------|--------|
-| **Koota owns game state** | ECS traits + systems. TSX reads, never writes. |
-| **Systems own logic** | Pure functions in `src/systems/`. No logic in TSX. |
-| **Config over code** | All tuning in JSON config files. Never hardcode constants. |
-| **Crash on missing assets** | `throw new Error()` — NEVER fallback, NEVER return null. |
-| **One source of truth** | Each data domain has exactly ONE authoritative store. |
-| **Test before integrate** | Jest tests required before wiring into game loop. |
-| **Assets** | Canonical: **`public/assets/`**. Root `assets` is a symlink to `public/assets`. Vite serves at `/assets/...`. Legacy Expo: `resolveAssetUri()`. |
+| No JSON for game data | All models/factions/robots/buildings are TypeScript `const` objects |
+| Systems accept `world` param | Never use world singleton — enables clean test isolation |
+| All tunables in `gameDefaults.ts` | No magic numbers in system or rendering code |
+| `pending/` is permanent | Nothing from there gets resurrected |
+| SQLite is non-fatal | DB failures don't crash — ECS runs in memory |
+| ECS `.get()` returns undefined | Always null-guard: `const x = e.get(Trait); if (!x) continue;` |
+| No `world.entity(id)` in Koota | Rebuild `Map<id, Entity>` per-operation when needed |
+| Salvage = primary resource | Floor mining is the backstop, not the main economy |
+| Storm = power grid | Storm transmitters tap the perpetual storm for power |
 
-### Hard Bans
+---
 
-| Banned | Use Instead |
-|--------|-------------|
-| (Vite/Vitest now used for primary build; Jest retained for existing tests) | — |
-| Miniplex | Koota |
-| Raw Web Audio | Tone.js |
-| Raw CSS | NativeWind v4 |
-| Math.random() | gameplayRandom / scopedRNG |
-| `export default` | Named exports only |
-| npm / yarn | pnpm |
-| ESLint / Prettier | Biome |
+## Agent Team
 
-### Validation
+Agents for this codebase:
+
+| Agent | Domain | When to use |
+|-------|--------|-------------|
+| `board-agent` | `src/board/` | Board gen, noise, adjacency, GridApi, depth stacking |
+| `ecs-agent` | `src/ecs/` | Traits, systems, robots, factions, buildings, salvage, resources |
+| `db-agent` | `src/db/` | Schema, migrations, GameRepo, sql.js adapter |
+| `rendering-agent` | `src/rendering/` | BoardRenderer, DepthRenderer, UnitRenderer, StormDome, future GLB |
+| `ui-agent` | `src/ui/`, `src/input/`, `src/systems/` | Landing, modals, HUD, RadialMenu, BoardInput |
+| `integration-agent` | `src/main.tsx`, `src/ui/game/GameScreen.tsx` | Wire packages together |
+
+---
+
+## Common Commands
 
 ```bash
-pnpm verify        # Full CI: lint + tsc + test + test:ct
-pnpm lint          # Biome check
-pnpm lint:fix      # Biome autofix
-pnpm tsc           # TypeScript check (tsc --noEmit)
-pnpm dev           # Vite dev server (primary)
-pnpm build         # Vite build
-pnpm test          # Jest (unit + component)
-pnpm test:ct       # Playwright component tests (headed; tests/components/)
-pnpm test:e2e      # Playwright E2E (headed; tests/e2e/; CI uses xvfb-run)
-pnpm test:vitest   # Vitest (*.vitest.ts)
+pnpm dev                 # Vite dev server (http://localhost:5173)
+pnpm dev --host          # Expose on LAN
+pnpm build               # Production build
+pnpm test:vitest         # Run all Vitest suites (~124 suites, 2171 tests)
+pnpm tsc                 # TypeScript check (pnpm tsc --noEmit)
+pnpm lint                # Biome lint + format check
+pnpm verify              # lint + tsc + test (all gates)
 ```
 
-Playwright runs **headed** (`headless: false`); in CI, `xvfb-run -a` provides a virtual display. Done checklist: [docs/plans/IS_THE_GAME_DONE.md](docs/plans/IS_THE_GAME_DONE.md).
+---
 
-## Agent Roles
+## Validation (before any PR or merge)
 
-### Registered Agents (`.claude/agents/`)
-
-| Agent | Scope | Key Domains |
-|-------|-------|-------------|
-| **systems-engineer** | ECS systems, game loop, Koota traits | `src/systems/`, `src/ecs/` |
-| **ai-engineer** | AI behavior, GOAP, steering, pathfinding | `src/ai/`, `src/systems/governor*` |
-| **frontend-designer** | UI panels, HUD, modals, mobile layout | `src/ui/`, `src/input/` |
-| **rendering-engineer** | R3F renderers, materials, shaders | `src/rendering/` |
-| **audio-engineer** | Spatial audio, SFX, adaptive music | `src/audio/` |
-| **config-docs** | Config files, documentation, CI | `docs/`, `config/`, `.github/` |
-
-### Merge Order (Multi-Agent)
-
-When agents work in parallel on isolated worktrees:
-
-1. **systems-engineer** first — foundational ECS changes
-2. **ai-engineer** second — depends on ECS types
-3. **rendering-engineer** third — depends on ECS + world state
-4. **frontend-designer** fourth — depends on system APIs
-5. **audio-engineer** fifth — depends on event system
-6. **config-docs** last — documents what changed
-
-### Worktree Protocol
-
-All parallel agent work uses git worktrees:
-1. Create worktree per agent: `.claude/worktrees/<agent>-<ticket>`
-2. Each agent works exclusively in its worktree
-3. Merge back one at a time to primary branch
-4. Never run two agents on same worktree
-
-## Key System Files
-
-| System | File | Purpose |
-|--------|------|---------|
-| Game Loop | `src/ecs/gameState.ts` | 60fps tick, 21 systems, 8 phases |
-| Turn System | `src/systems/turnSystem.ts` | AP/MP per unit, turn phases |
-| Resources | `src/systems/resources.ts` | 11 material types, add/spend |
-| Harvest | `src/systems/harvestSystem.ts` | Structure → materials pipeline |
-| Building | `src/systems/buildingPlacement.ts` | 7 building types, adjacency |
-| Combat | `src/systems/combat.ts` | Component damage, formations |
-| Tech Tree | `src/systems/techTree.ts` | Research DAG, effects |
-| Diplomacy | `src/systems/diplomacy.ts` | Standing, trade, alliances |
-| Victory | `src/systems/victoryConditions.ts` | 3 win paths |
-| Exploration | `src/systems/exploration.ts` | Fog of war, vision radius |
-| World Gen | `src/world/generation.ts` | Procedural ecumenopolis |
-| Radial Menu | `src/systems/radialMenu.ts` | Context menu state |
-| Floor Render | `src/rendering/StructuralFloorRenderer.tsx` | PBR textured floors |
-| Game HUD | `src/ui/panels/GameHUD.tsx` (RN), `src/ui/dom/GameHUDDom.tsx` (Vite) | Top bar, resources, turn |
-| App Entry (Vite) | `src/main.tsx` → `AppVite.tsx` | Capacitor SQLite + session DB, R3F scene, DOM HUD |
-| App Entry (Expo) | `App.tsx` | Legacy Expo/RN path; 39 renderers |
-
-## Documentation Structure
-
-All docs live under `docs/`. See [docs/AGENTS.md](docs/AGENTS.md) for the full index.
-
-| Layer | Purpose | Files |
-|-------|---------|-------|
-| **Memory Bank** | Session bootstrap — read first | 7 files in `docs/memory-bank/` |
-| **Design** | What the game IS | 6 files in `docs/design/` |
-| **Technical** | How it's built | 5 files in `docs/technical/` |
-| **Interface** | Player-facing surfaces | 2 files in `docs/interface/` |
-| **Execution** | Roadmap | `docs/plans/GAMEPLAN_1_0.md` |
+```
+pnpm verify — all gates must pass
+  Biome lint: 0 errors, 0 warnings
+  TypeScript: 0 errors
+  Vitest: all suites passing
+```

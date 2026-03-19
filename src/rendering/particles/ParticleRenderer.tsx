@@ -9,8 +9,11 @@
  * Brand colors:
  * - Cyan (#00ffff) = player/tech/hacking
  * - Amber (#f6c56a) = infrastructure/power/fabrication
- * - Red (#ff4444) = threat/damage
+ * - Restrained red (#cc4444) = threat/damage
  * - White (#ffffff) = flashes/impacts
+ *
+ * Ported from pending/rendering/particles/ParticleRenderer.tsx — depends only on
+ * effectEvents + ParticlePool (both in this directory).
  */
 
 import { useFrame } from "@react-three/fiber";
@@ -24,7 +27,7 @@ const MAX_PARTICLES = 2048;
 /** Color constants matching brand palette */
 const COLOR_CYAN = { r: 0, g: 1, b: 1 };
 const COLOR_AMBER = { r: 0.965, g: 0.773, b: 0.416 };
-const COLOR_RED = { r: 1, g: 0.267, b: 0.267 };
+const COLOR_RED = { r: 0.8, g: 0.267, b: 0.267 };
 const COLOR_WHITE = { r: 1, g: 1, b: 1 };
 const COLOR_GRAY = { r: 0.5, g: 0.5, b: 0.5 };
 

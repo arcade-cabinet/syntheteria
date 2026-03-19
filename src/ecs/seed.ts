@@ -2,7 +2,7 @@
  * World seed management and deterministic PRNG.
  *
  * A world seed is a 32-bit integer that drives ALL randomness in the game —
- * terrain height, city layout, scavenge point placement, and enemy spawns.
+ * terrain height, structure layout, scavenge point placement, and enemy spawns.
  * The same seed always produces the exact same world, like Minecraft.
  *
  * Seeds are shown to the player as memorable three-word phrases:
@@ -222,8 +222,8 @@ export function getWorldSeed(): number {
  * Different systems use different offsets so they don't interfere.
  *
  * Usage:
- *   const rng = worldPRNG("city");
- *   const x = rng(); // deterministic for this seed + "city"
+ *   const rng = worldPRNG("structure");
+ *   const x = rng(); // deterministic for this seed + "structure"
  */
 export function worldPRNG(purpose: string): () => number {
 	// Hash purpose string into an offset

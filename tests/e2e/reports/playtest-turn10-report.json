@@ -1,0 +1,38 @@
+{
+  "testName": "10-turn AI game milestone assessment",
+  "seed": "playtest-4v4-cult",
+  "mapSize": "small (44x44)",
+  "timestamp": "2026-03-18T00:00:00Z",
+  "result": "PASS — game runs 10 turns without crash",
+
+  "milestoneChecks": {
+    "anyFactionHarvested": { "result": false, "note": "No faction gained resources beyond starting values (15 player, 35 AI). Harvesting system exists but units don't auto-harvest." },
+    "anyBuildingBuilt": { "result": false, "note": "Still 6 starter buildings. AI doesn't build structures yet — GOAP goals may need build actions." },
+    "combatOccurred": { "result": false, "note": "No combat kills, no HP loss. Factions are far apart on 44x44 map and move slowly." },
+    "cultUnitsSpawned": { "result": true, "count": 6, "note": "static_remnants grew from 0 to 6 cult_infantry units over 10 turns. Breach zones active." },
+    "factionsInDifferentTerritories": { "result": true, "note": "Territory % non-zero for all factions: player 1.5%, volt 3.7%, signal 3.6%, iron 3.8%, cult 1.7%" },
+    "noJsErrors": { "result": true }
+  },
+
+  "factionTrajectory": {
+    "player": { "units": [6,6,6,6,6,6,6,6,6,6], "finalTerritory": 1.55 },
+    "volt_collective": { "units": [4,4,4,4,4,4,4,4,4,4], "finalTerritory": 3.67 },
+    "signal_choir": { "units": [4,4,4,4,4,4,4,4,4,4], "finalTerritory": 3.56 },
+    "iron_creed": { "units": [4,4,4,4,4,4,4,4,4,4], "finalTerritory": 3.77 },
+    "static_remnants": { "units": [0,0,1,1,1,3,3,3,6,6], "finalTerritory": 1.70 }
+  },
+
+  "totalUnitsOverTime": [18, 18, 19, 19, 19, 21, 21, 21, 24, 24],
+  "totalBuildingsOverTime": [6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+
+  "balanceObservations": [
+    "Player starts with 6 units but 0 buildings — AI factions start with 4 units + 2 buildings each. This gives AI resource advantage (35 vs 15 starting resources).",
+    "AI units move each turn but don't harvest, build, or attack proactively. GOAP goals focus on movement toward player.",
+    "Cult spawning works correctly — breach zones spawn cult_infantry on ~3-turn cadence.",
+    "Territory slowly expands as units move — no tile claiming mechanic beyond proximity.",
+    "No faction engaged in combat in 10 turns. Small map but labyrinth walls create long pathfinding routes.",
+    "Resources are static — no income or production. Economy loop needs harvesting + building activation."
+  ],
+
+  "screenshotPath": "screenshots/turn10-milestone.png"
+}

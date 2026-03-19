@@ -1,141 +1,156 @@
 /**
- * SpeechBubbleRenderer — R3F renderer for bot speech bubbles.
+ * SpeechBubbleRenderer — billboard speech text above units.
  *
- * Billboards above units in 3D. Dark panel with cyan text and thin border.
- * Fades in/out over 2-3s. Uses CanvasTexture for crisp text rendering
- * without font loading overhead.
+ * Renders faction-colored text bubbles above units that have active speech.
+ * Speech is driven by the speechBubbleStore pub/sub — game systems trigger
+ * speech during combat, harvest, and diplomacy events.
  *
- * Uses useQuery(SpeechBubble) — reacts to Koota entity changes automatically.
- * Opacity is managed by tickSpeechBubbles (tick-based fade).
+ * Uses drei <Html> for crisp CSS text that billboards toward the camera.
+ * Positioned above status bars (Y offset = 3.0 vs bars at 2.2).
  */
 
+import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useQuery } from "koota/react";
-import { useRef } from "react";
-import * as THREE from "three";
-import { SpeechBubble } from "../ecs/traits";
+import type { World } from "koota";
+import { useRef, useState } from "react";
+import { TILE_SIZE_M } from "../board/grid";
+import { UnitFaction, UnitMove, UnitPos } from "../ecs/traits/unit";
+import { getActiveSpeech } from "../ecs/systems/speechBubbleStore";
+import type { ActiveSpeech } from "../ecs/systems/speechBubbleStore";
+import { FACTION_COLORS } from "./modelPaths";
 
-const BUBBLE_Y_OFFSET = 2.5;
-const CANVAS_WIDTH = 256;
-const CANVAS_HEIGHT = 64;
+// ─── Constants ──────────────────────────────────────────────────────────────
 
-/** Shared offscreen canvas for rendering bubble text to texture */
-function createBubbleTexture(text: string): THREE.CanvasTexture {
-	const canvas = document.createElement("canvas");
-	canvas.width = CANVAS_WIDTH;
-	canvas.height = CANVAS_HEIGHT;
-	const ctx = canvas.getContext("2d")!;
+/** Height offset above unit — above the status bars. */
+const SPEECH_Y_OFFSET = 3.0;
 
-	// Dark panel background
-	ctx.fillStyle = "rgba(8, 12, 20, 0.92)";
-	ctx.beginPath();
-	ctx.roundRect(2, 2, CANVAS_WIDTH - 4, CANVAS_HEIGHT - 4, 6);
-	ctx.fill();
+/** Max characters per line before wrapping. */
+const MAX_LINE_WIDTH = 28;
 
-	// Cyan border
-	ctx.strokeStyle = "rgba(0, 220, 255, 0.7)";
-	ctx.lineWidth = 1.5;
-	ctx.beginPath();
-	ctx.roundRect(2, 2, CANVAS_WIDTH - 4, CANVAS_HEIGHT - 4, 6);
-	ctx.stroke();
+// ─── Faction color helpers ──────────────────────────────────────────────────
 
-	// Cyan text
-	ctx.fillStyle = "#00ddff";
-	ctx.font = "bold 16px monospace";
-	ctx.textAlign = "center";
-	ctx.textBaseline = "middle";
-
-	// Truncate long text
-	const maxChars = 28;
-	const displayText =
-		text.length > maxChars ? `${text.slice(0, maxChars - 1)}…` : text;
-	ctx.fillText(displayText, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-
-	const texture = new THREE.CanvasTexture(canvas);
-	texture.needsUpdate = true;
-	return texture;
+function factionHex(factionId: string): string {
+	const num = FACTION_COLORS[factionId] ?? 0x888888;
+	return `#${num.toString(16).padStart(6, "0")}`;
 }
+
+// ─── Single speech bubble ───────────────────────────────────────────────────
 
 interface BubbleData {
-	entityId: string;
+	entityId: number;
+	worldX: number;
+	worldZ: number;
 	text: string;
-	wx: number;
-	wy: number;
-	wz: number;
-	opacity: number;
+	factionId: string;
+	/** 0→1 progress through bubble lifetime, for fade-out. */
+	age: number;
 }
 
-/** Single speech bubble mesh — billboard that always faces camera */
-function BubbleMesh({ bubble }: { bubble: BubbleData }) {
-	const meshRef = useRef<THREE.Mesh>(null);
-	const materialRef = useRef<THREE.MeshBasicMaterial>(null);
-	const textureRef = useRef<THREE.CanvasTexture | null>(null);
-
-	// Lazily create texture (only once per bubble text)
-	if (!textureRef.current) {
-		textureRef.current = createBubbleTexture(bubble.text);
-	}
-
-	useFrame(({ camera }) => {
-		if (!meshRef.current || !materialRef.current) return;
-
-		// Billboard: position above entity and face camera
-		meshRef.current.position.set(
-			bubble.wx,
-			bubble.wy + BUBBLE_Y_OFFSET,
-			bubble.wz,
-		);
-		meshRef.current.quaternion.copy(camera.quaternion);
-
-		// Fade opacity (set by tickSpeechBubbles)
-		materialRef.current.opacity = bubble.opacity;
-		materialRef.current.visible = bubble.opacity > 0.01;
-	});
-
-	const aspectRatio = CANVAS_WIDTH / CANVAS_HEIGHT;
-	const height = 0.6;
-	const width = height * aspectRatio;
+function SpeechBubble({ data }: { data: BubbleData }) {
+	const color = factionHex(data.factionId);
+	// Fade out in the last 30% of lifetime
+	const opacity = data.age > 0.7 ? 1 - (data.age - 0.7) / 0.3 : 1;
 
 	return (
-		<mesh ref={meshRef}>
-			<planeGeometry args={[width, height]} />
-			<meshBasicMaterial
-				ref={materialRef}
-				map={textureRef.current}
-				transparent
-				depthWrite={false}
-				opacity={0}
-			/>
-		</mesh>
+		<Html
+			position={[data.worldX, SPEECH_Y_OFFSET, data.worldZ]}
+			center
+			sprite
+			style={{ pointerEvents: "none", userSelect: "none" }}
+		>
+			<div
+				style={{
+					maxWidth: MAX_LINE_WIDTH + "ch",
+					padding: "3px 6px",
+					background: "rgba(3, 3, 8, 0.75)",
+					border: `1px solid ${color}40`,
+					borderRadius: 3,
+					color,
+					fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+					fontSize: 9,
+					letterSpacing: "0.05em",
+					textTransform: "uppercase",
+					lineHeight: 1.3,
+					textAlign: "center",
+					opacity,
+					transition: "opacity 0.3s ease",
+					whiteSpace: "pre-wrap",
+					wordBreak: "break-word",
+				}}
+			>
+				{data.text}
+			</div>
+		</Html>
 	);
 }
 
-/**
- * Renders all active speech bubbles as billboarded text panels.
- * Mount inside the R3F Canvas alongside other world-scene renderers.
- */
-export function SpeechBubbleRenderer() {
-	const bubbleEntities = useQuery(SpeechBubble);
+// ─── Main renderer ──────────────────────────────────────────────────────────
+
+type SpeechBubbleRendererProps = {
+	world: World;
+};
+
+export function SpeechBubbleRenderer({ world }: SpeechBubbleRendererProps) {
+	const [bubbles, setBubbles] = useState<BubbleData[]>([]);
+	const lastUpdate = useRef(0);
+
+	useFrame((state) => {
+		const now = state.clock.elapsedTime;
+		if (now - lastUpdate.current < 0.15) return;
+		lastUpdate.current = now;
+
+		const active = getActiveSpeech();
+		if (active.length === 0) {
+			if (bubbles.length > 0) setBubbles([]);
+			return;
+		}
+
+		// Build entity position map from ECS
+		const posMap = new Map<number, { x: number; z: number }>();
+		for (const entity of world.query(UnitPos, UnitFaction)) {
+			const pos = entity.get(UnitPos);
+			if (!pos) continue;
+
+			let wx = pos.tileX * TILE_SIZE_M;
+			let wz = pos.tileZ * TILE_SIZE_M;
+			if (entity.has(UnitMove)) {
+				const move = entity.get(UnitMove);
+				if (move) {
+					const t = move.progress;
+					wx = (move.fromX + (move.toX - move.fromX) * t) * TILE_SIZE_M;
+					wz = (move.fromZ + (move.toZ - move.fromZ) * t) * TILE_SIZE_M;
+				}
+			}
+			posMap.set(entity.id(), { x: wx, z: wz });
+		}
+
+		const realNow = Date.now();
+		const DURATION_MS = 3000; // matches SPEECH_BUBBLE_DURATION_TURNS * 1000
+		const result: BubbleData[] = [];
+
+		for (const speech of active) {
+			const pos = posMap.get(speech.entityId);
+			if (!pos) continue;
+
+			const age = Math.min(1, (realNow - speech.startedAt) / DURATION_MS);
+			result.push({
+				entityId: speech.entityId,
+				worldX: pos.x,
+				worldZ: pos.z,
+				text: speech.text,
+				factionId: speech.factionId,
+				age,
+			});
+		}
+
+		setBubbles(result);
+	});
 
 	return (
 		<>
-			{bubbleEntities.map((entity) => {
-				const b = entity.get(SpeechBubble);
-				if (!b) return null;
-				return (
-					<BubbleMesh
-						key={b.entityId}
-						bubble={{
-							entityId: b.entityId,
-							text: b.text,
-							wx: b.wx,
-							wy: b.wy,
-							wz: b.wz,
-							opacity: b.opacity,
-						}}
-					/>
-				);
-			})}
+			{bubbles.map((b) => (
+				<SpeechBubble key={b.entityId} data={b} />
+			))}
 		</>
 	);
 }

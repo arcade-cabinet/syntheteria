@@ -1,0 +1,394 @@
+/**
+ * Globe — the ONE persistent R3F Canvas component.
+ *
+ * Always visible across all phases. Contains:
+ *   - Title scene (globe, storms, lightning, title text) in title/setup/generating
+ *   - Game scene (board, units, buildings, fog) in playing
+ *
+ * Phase transitions:
+ *   "title"      — Globe rotates slowly, title text visible, far orbit camera
+ *   "setup"      — Same as title (globe visible behind setup modal)
+ *   "generating" — Globe growth animation 0.3→1, title text fades out
+ *   "playing"    — Game renderers active, title scene hidden
+ */
+
+import { Canvas, useFrame } from "@react-three/fiber";
+import { Environment, PerspectiveCamera, Text } from "@react-three/drei";
+import type { World } from "koota";
+import { Suspense, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import * as THREE from "three";
+import type { BoardConfig, GeneratedBoard } from "../board/types";
+import { IsometricCamera } from "../camera";
+import { TILE_SIZE_M } from "../config/gameDefaults";
+import { resolveAttacks } from "../ecs/systems/attackSystem";
+import { BoardInput } from "../input/BoardInput";
+import { BiomeRenderer } from "../rendering/BiomeRenderer";
+import { BoardRenderer } from "../rendering/BoardRenderer";
+import { CombatEffectsRenderer } from "../rendering/CombatEffectsRenderer";
+import { UnifiedTerrainRenderer } from "../rendering/UnifiedTerrainRenderer";
+import { FogOfWarRenderer } from "../rendering/FogOfWarRenderer";
+import { StructureRenderer } from "../rendering/StructureRenderer";
+import { SalvageRenderer } from "../rendering/SalvageRenderer";
+import { BuildingRenderer } from "../rendering/BuildingRenderer";
+import { HighlightRenderer } from "../rendering/HighlightRenderer";
+import { ParticleRenderer } from "../rendering/particles/ParticleRenderer";
+import { TerritoryOverlayRenderer } from "../rendering/TerritoryOverlayRenderer";
+import { StormDome } from "../rendering/StormDome";
+import { turnToChronometry } from "../rendering/sky/chronometry";
+import type { StormProfile } from "../world/config";
+import { UnitRenderer } from "../rendering/UnitRenderer";
+import { SpeechBubbleRenderer } from "../rendering/SpeechBubbleRenderer";
+import { UnitStatusBars } from "../rendering/UnitStatusBars";
+import { HoverTracker } from "./game/HoverTracker";
+import { Hypercane, LightningEffect, StormClouds } from "../rendering/globe";
+import {
+	globeFragmentShader,
+	globeVertexShader,
+} from "../rendering/globe/shaders";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export type GlobePhase = "title" | "setup" | "generating" | "playing";
+
+export interface GlobeProps {
+	phase: GlobePhase;
+	config?: BoardConfig;
+	board?: GeneratedBoard;
+	world?: World;
+	selectedUnitId?: number | null;
+	onSelect?: (id: number | null) => void;
+	onSceneReady?: () => void;
+	turn?: number;
+	focusTileX?: number;
+	focusTileZ?: number;
+	stormProfile?: StormProfile;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function SceneLoop({ world }: { world: World }) {
+	useFrame(() => {
+		resolveAttacks(world);
+	});
+	return null;
+}
+
+function SceneReadySignal({ onReady }: { onReady: () => void }) {
+	const notifyReady = useEffectEvent(onReady);
+	useEffect(() => {
+		notifyReady();
+	}, []);
+	return null;
+}
+
+// ─── Animated Globe (title phases only) ──────────────────────────────────────
+// Animates growth via useFrame + direct uniform writes (no React state needed).
+
+function AnimatedGlobe({ phase }: { phase: GlobePhase }) {
+	const meshRef = useRef<THREE.Mesh>(null);
+	const growthRef = useRef(0.3);
+
+	const uniforms = useMemo(
+		() => ({
+			uTime: { value: 0 },
+			uGrowth: { value: 0.3 },
+		}),
+		[],
+	);
+
+	useFrame((state, delta) => {
+		if (phase === "generating") {
+			growthRef.current = Math.min(1, growthRef.current + delta * 0.35);
+		} else {
+			growthRef.current = 0.3;
+		}
+
+		if (meshRef.current) {
+			uniforms.uTime.value = state.clock.elapsedTime;
+			uniforms.uGrowth.value = growthRef.current;
+			meshRef.current.rotation.y = state.clock.elapsedTime * 0.1;
+		}
+	});
+
+	return (
+		<mesh ref={meshRef}>
+			<sphereGeometry args={[2.5, 64, 64]} />
+			<shaderMaterial
+				vertexShader={globeVertexShader}
+				fragmentShader={globeFragmentShader}
+				uniforms={uniforms}
+			/>
+		</mesh>
+	);
+}
+
+// ─── Animated Title Text (fades out during generating) ───────────────────────
+// Uses direct material opacity writes via useFrame.
+
+function AnimatedTitleText({ phase }: { phase: GlobePhase }) {
+	const [ready, setReady] = useState(false);
+	const groupRef = useRef<THREE.Group>(null);
+	const opacityRef = useRef(1);
+	const materialsRef = useRef<THREE.MeshBasicMaterial[]>([]);
+
+	useFrame((state, delta) => {
+		if (groupRef.current) {
+			groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.06;
+		}
+
+		// Animate opacity
+		if (phase === "generating") {
+			opacityRef.current = Math.max(0, opacityRef.current - delta * 0.5);
+		} else {
+			opacityRef.current = Math.min(1, opacityRef.current + delta * 2);
+		}
+
+		// Apply to all registered materials
+		for (const mat of materialsRef.current) {
+			mat.opacity = opacityRef.current;
+		}
+	});
+
+	const title = "SYNTHETERIA";
+	const subtitle = "MACHINE CONSCIOUSNESS AWAKENS";
+	const radius = 3.0;
+	const titleArc = Math.PI * 0.55;
+	const subArc = Math.PI * 0.50;
+
+	// Collect material refs
+	const registerMaterial = (mat: THREE.MeshBasicMaterial | null) => {
+		if (mat && !materialsRef.current.includes(mat)) {
+			materialsRef.current.push(mat);
+		}
+	};
+
+	return (
+		<group ref={groupRef} visible={ready}>
+			{title.split("").map((char, i) => {
+				const angle = -titleArc / 2 + (i / (title.length - 1)) * titleArc;
+				const x = Math.sin(angle) * radius;
+				const z = Math.cos(angle) * radius;
+				return (
+					<Text
+						key={`t${i}`}
+						position={[x, 0.3, z]}
+						rotation={[0, angle, 0]}
+						fontSize={0.55}
+						anchorX="center"
+						anchorY="middle"
+						renderOrder={10}
+						outlineWidth={0.015}
+						outlineColor="#3a6a8a"
+						onSync={i === 0 ? () => setReady(true) : undefined}
+					>
+						{char}
+						<meshBasicMaterial
+							ref={registerMaterial}
+							color="#aaeeff"
+							toneMapped={false}
+							depthTest={false}
+							transparent
+						/>
+					</Text>
+				);
+			})}
+
+			{subtitle.split("").map((char, i) => {
+				const angle = -subArc / 2 + (i / (subtitle.length - 1)) * subArc;
+				const x = Math.sin(angle) * radius;
+				const z = Math.cos(angle) * radius;
+				return (
+					<Text
+						key={`s${i}`}
+						position={[x, -0.25, z]}
+						rotation={[0, angle, 0]}
+						fontSize={0.12}
+						anchorX="center"
+						anchorY="middle"
+						renderOrder={10}
+					>
+						{char}
+						<meshBasicMaterial
+							ref={registerMaterial}
+							color="#8be6ff"
+							toneMapped={false}
+							depthTest={false}
+							transparent
+						/>
+					</Text>
+				);
+			})}
+		</group>
+	);
+}
+
+// ─── Title Scene ──────────────────────────────────────────────────────────────
+
+function TitleScene({ phase }: { phase: GlobePhase }) {
+	return (
+		<>
+			<PerspectiveCamera makeDefault position={[0, 0, 10]} />
+			<ambientLight intensity={0.15} />
+			<pointLight position={[10, 10, 10]} intensity={0.4} color="#8be6ff" />
+			<pointLight position={[-8, -4, -8]} intensity={0.2} color="#350a55" />
+
+			<StormClouds radius={8} />
+			<LightningEffect />
+			<AnimatedGlobe phase={phase} />
+			<AnimatedTitleText phase={phase} />
+			<Hypercane />
+		</>
+	);
+}
+
+// ─── Game Scene ───────────────────────────────────────────────────────────────
+
+function GameScene({
+	board,
+	world,
+	selectedUnitId,
+	onSelect,
+	onSceneReady,
+	turn = 1,
+	focusTileX,
+	focusTileZ,
+	stormProfile = "stable",
+}: {
+	board?: GeneratedBoard;
+	world?: World;
+	selectedUnitId?: number | null;
+	onSelect?: (id: number | null) => void;
+	onSceneReady?: () => void;
+	turn?: number;
+	focusTileX?: number;
+	focusTileZ?: number;
+	stormProfile?: StormProfile;
+}) {
+	const { dayAngle, season } = turnToChronometry(turn);
+
+	const cameraFocusX = board
+		? (focusTileX ?? Math.floor(board.config.width / 2)) * TILE_SIZE_M
+		: 0;
+	const cameraFocusZ = board
+		? (focusTileZ ?? Math.floor(board.config.height / 2)) * TILE_SIZE_M
+		: 0;
+
+	return (
+		<>
+			{onSceneReady && <SceneReadySignal onReady={onSceneReady} />}
+
+			<ambientLight intensity={1.2} color={0xf0e8e0} />
+			<hemisphereLight
+				intensity={0.8}
+				color={0xfff4e8}
+				groundColor={0x504840}
+			/>
+			<directionalLight
+				position={[0, 100, 0]}
+				intensity={3.0}
+				color={0xfff8f0}
+				castShadow
+				shadow-mapSize={[2048, 2048]}
+				shadow-camera-near={0.5}
+				shadow-camera-far={400}
+				shadow-camera-left={-80}
+				shadow-camera-right={80}
+				shadow-camera-top={80}
+				shadow-camera-bottom={-80}
+			/>
+
+			<Environment files="/assets/textures/storm_sky.exr" background />
+
+			<StormDome
+				centerX={board ? Math.floor(board.config.width / 2) * TILE_SIZE_M : 0}
+				centerZ={board ? Math.floor(board.config.height / 2) * TILE_SIZE_M : 0}
+				dayAngle={dayAngle}
+				season={season}
+				stormProfile={stormProfile}
+			/>
+
+			<IsometricCamera
+				initialX={cameraFocusX}
+				initialZ={cameraFocusZ}
+				boardWidth={board ? board.config.width * TILE_SIZE_M : undefined}
+				boardHeight={board ? board.config.height * TILE_SIZE_M : undefined}
+			/>
+
+			{board && <BoardRenderer board={board} dayAngle={dayAngle} season={season} />}
+			{board && <BiomeRenderer board={board} dayAngle={dayAngle} season={season} />}
+			{board && <UnifiedTerrainRenderer board={board} world={world ?? undefined} turn={turn} />}
+			{board && <StructureRenderer board={board} world={world ?? undefined} />}
+
+			{world && <SalvageRenderer world={world} />}
+			{world && <BuildingRenderer world={world} />}
+			{world && board && <TerritoryOverlayRenderer board={board} world={world} />}
+			{world && board && <FogOfWarRenderer world={world} board={board} />}
+
+			{world && <SceneLoop world={world} />}
+			{world && <HighlightRenderer world={world} />}
+			{world && <UnitRenderer world={world} />}
+			{world && board && onSelect && (
+				<BoardInput
+					world={world}
+					board={board}
+					selectedId={selectedUnitId}
+					onSelect={onSelect}
+				/>
+			)}
+			{world && board && <HoverTracker world={world} board={board} />}
+			{world && <CombatEffectsRenderer world={world} />}
+			{world && <UnitStatusBars world={world} selectedUnitId={selectedUnitId} />}
+			{world && <SpeechBubbleRenderer world={world} />}
+			<ParticleRenderer />
+		</>
+	);
+}
+
+// ─── Globe Component ─────────────────────────────────────────────────────────
+
+export function Globe({
+	phase,
+	board,
+	world,
+	selectedUnitId,
+	onSelect,
+	onSceneReady,
+	turn = 1,
+	focusTileX,
+	focusTileZ,
+	stormProfile,
+}: GlobeProps) {
+	return (
+		<Canvas
+			style={{
+				position: "absolute",
+				inset: 0,
+				background: phase === "playing" ? "#2a2535" : "#030308",
+			}}
+			gl={{ alpha: false }}
+			shadows={phase === "playing" ? { type: THREE.PCFShadowMap } : undefined}
+		>
+			{phase === "playing" && (
+				<fogExp2 attach="fog" args={["#2a2535", 0.006]} />
+			)}
+
+			<Suspense fallback={null}>
+				{phase !== "playing" && <TitleScene phase={phase} />}
+
+				{phase === "playing" && (
+					<GameScene
+						board={board}
+						world={world}
+						selectedUnitId={selectedUnitId}
+						onSelect={onSelect}
+						onSceneReady={onSceneReady}
+						turn={turn}
+						focusTileX={focusTileX}
+						focusTileZ={focusTileZ}
+						stormProfile={stormProfile}
+					/>
+				)}
+			</Suspense>
+		</Canvas>
+	);
+}

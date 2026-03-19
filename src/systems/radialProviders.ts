@@ -1,1225 +1,1478 @@
-import { getBotCommandProfile, isBotCategoryAllowed } from "../bots";
-import { setGameSpeed, togglePause } from "../ecs/gameState";
-import {
-	Building,
-	Identity,
-	LightningRod,
-	Unit,
-	WorldPosition,
-} from "../ecs/traits";
-import { buildings, units, world } from "../ecs/world";
-import { getCitySiteViewModel } from "../world/citySiteActions";
-import {
-	enterCityInstance,
-	openCityKitLab,
-	returnToWorld,
-} from "../world/cityTransition";
-import { getTile } from "../world/gen/worldGrid";
-import { foundCitySite, surveyCitySite } from "../world/poiActions";
-import { getRuntimeState, setCitySiteModalOpen } from "../world/runtimeState";
-import { gridToWorld } from "../world/sectorCoordinates";
-import { getActiveWorldSession } from "../world/session";
-import {
-	BUILDING_COSTS,
-	canUnitBuild,
-	computeAdjacencyBonuses,
-	setActivePlacement,
-} from "./buildingPlacement";
-import {
-	applyMarkUpgrade,
-	awardXP,
-	getUnitExperience,
-	getXPProgress,
-	type XPActionType,
-} from "./experience";
-import { RECIPES, startFabrication } from "./fabrication";
-import {
-	checkHackEligibility,
-	HACK_RANGE,
-	initiateHack,
-} from "./hackingSystem";
-import {
-	isFloorTileConsumed,
-	isStructureConsumed,
-	startFloorHarvest,
-	startHarvest,
-} from "./harvestSystem";
-import {
-	BOT_FABRICATION_RECIPES,
-	canMotorPoolUpgradeMark,
-	getMarkUpgradeCost,
-	getMotorPoolState,
-	MOTOR_POOL_TIER_CONFIG,
-	queueBotFabrication,
-	upgradeMotorPool,
-} from "./motorPool";
-import {
-	type RadialAction,
-	type RadialOpenContext,
-	registerRadialProvider,
-} from "./radialMenu";
-import { startRepair } from "./repair";
-import {
-	getResourcePoolForFloorMaterial,
-	getResourcePoolForModel,
-	isFloorHarvestable,
-	isHarvestable,
-} from "./resourcePools";
-import { getResources, spendResource } from "./resources";
-import { logTurnEvent } from "./turnEventLog";
-import {
-	hasActionPoints,
-	hasMovementPoints,
-	spendActionPoint,
-	spendMovementPoints,
-} from "./turnSystem";
-import { getSelectedUnitInfo } from "./unitSelection";
-
 /**
- * Radial Menu Action Providers
+ * Radial Menu Action Providers — class-specific action sets.
  *
- * Each game system registers what actions it contributes to the radial menu.
- * Providers are grouped by CATEGORY (inner ring). Each provider's getActions()
- * returns available actions (outer ring) based on current game state.
+ * Each provider registers itself at module scope. Import this file once
+ * at startup to wire all providers into the radial menu system.
  *
- * This file is imported once at startup. Systems that want to register
- * providers can either do it here centrally, or call registerRadialProvider()
- * from their own module scope.
+ * Per task #45: each robot class has DISTINCT radial actions that make
+ * each unit feel different to control. Actions are filtered based on
+ * the selected unit's robotClass from UnitStats.
  *
- * Works for BOTH world and city scenes — providers check context to decide
- * which actions are relevant.
+ * Providers:
+ *   1.  Move — "Move Here" (scout, infantry, cavalry only)
+ *   2.  Harvest — "Harvest" (worker only)
+ *   3.  Attack — class-specific attack (melee, ranged, charge, flank)
+ *   4.  Build — "Build" (worker only, on empty sector)
+ *   5.  Fabricate — "Fabricate" (on motor pool building)
+ *   6.  Synthesize — "Synthesize" (on synthesizer building)
+ *   7.  Upgrade — "Upgrade" (on maintenance bay building)
+ *   8.  Diplomacy — "Declare War" / "Propose Alliance" (on non-player units)
+ *   9.  Stage — "Stage" (ranged, support, worker — staging classes)
+ *   10. Class-specific utility/combat actions (per classActions.ts)
  */
+import type { RadialOpenContext } from "./radialMenu";
+import { registerRadialProvider } from "./radialMenu";
+import type { World } from "koota";
+import type { BuildingType } from "../ecs/traits/building";
+import { Building, BotFabricator, Powered } from "../ecs/traits/building";
+import { BUILDING_DEFS } from "../ecs/buildings/definitions";
+import { canAfford } from "../ecs/systems/resourceSystem";
+import { startBuildPlacement } from "../ecs/systems/buildSystem";
+import { startHarvest } from "../ecs/systems/harvestSystem";
+import {
+	queueFabrication,
+	ROBOT_COSTS,
+} from "../ecs/systems/fabricationSystem";
+import { canSpawnUnit } from "../ecs/systems/populationSystem";
+import {
+	queueSynthesis,
+	FUSION_RECIPES,
+	SynthesisQueue,
+} from "../ecs/systems/synthesisSystem";
+import { clearHighlights } from "../ecs/systems/highlightSystem";
+import { playSfx } from "../audio/sfx";
+import {
+	UnitAttack,
+	UnitFaction,
+	UnitMove,
+	UnitPos,
+	UnitStats,
+} from "../ecs/traits/unit";
+import { ResourceDeposit } from "../ecs/traits/resource";
+import { createGridApi } from "../board/grid";
+import type { GeneratedBoard } from "../board/types";
+import type { RobotClass } from "../ecs/robots/types";
+import type { BotMark } from "../ecs/robots/marks";
+import { MARK_DEFS } from "../ecs/robots/marks";
+import { applyMark, getMaxTier, hasMark } from "../ecs/systems/upgradeSystem";
+import { declareWar, getDiplomacyPersonality, proposeAlliance } from "../ecs/systems/diplomacySystem";
+import { getRelation } from "../ecs/factions/relations";
+import { Board } from "../ecs/traits/board";
+import { UnitUpgrade } from "../ecs/traits/unit";
+import { hasClassAction } from "../ecs/robots/classActions";
 
-// --- Helper: find entity by ID ---
+/** World ref set by BoardInput so providers can query ECS state. */
+let _worldRef: World | null = null;
+let _selectedUnitId: number | null = null;
+let _boardRef: GeneratedBoard | null = null;
 
-function findEntityById(id: string | null) {
-	if (!id) return null;
-	return world.entities.find((e) => e.get(Identity)?.id === id) ?? null;
+export function setBuildProviderWorld(world: World): void {
+	_worldRef = world;
 }
 
-function getSelectedBotProfile(ctx: RadialOpenContext) {
-	const entity = findEntityById(ctx.targetEntityId);
-	const unit = entity?.get(Unit);
-	return unit ? getBotCommandProfile(unit.type) : null;
+export function setProviderSelectedUnit(id: number | null): void {
+	_selectedUnitId = id;
 }
 
-function isSelectedBotCategoryAllowed(
-	ctx: RadialOpenContext,
-	categoryId: Parameters<typeof isBotCategoryAllowed>[1],
-) {
-	const entity = findEntityById(ctx.targetEntityId);
-	const unit = entity?.get(Unit);
-	if (!unit) {
-		return true;
+export function setProviderBoard(board: GeneratedBoard): void {
+	_boardRef = board;
+}
+
+/** Find the selected player unit and return its entity + stats. */
+function getSelectedPlayerUnit() {
+	if (!_worldRef || _selectedUnitId == null) return null;
+	for (const e of _worldRef.query(UnitPos, UnitStats, UnitFaction)) {
+		if (e.id() === _selectedUnitId) {
+			const faction = e.get(UnitFaction);
+			if (!faction || faction.factionId !== "player") return null;
+			return e;
+		}
 	}
-	return isBotCategoryAllowed(unit.type, categoryId);
+	return null;
 }
 
-/** Award XP to a unit after it performs an action. */
-function awardXPToActor(entityId: string | null, action: XPActionType) {
-	if (!entityId) return;
-	const entity = findEntityById(entityId);
-	const unit = entity?.get(Unit);
-	if (!unit) return;
-	awardXP(entityId, unit.archetypeId, action, unit.markLevel);
-}
-
-// --- MOVEMENT category ---
+// --- MOVE provider ---
 
 registerRadialProvider({
-	id: "movement",
+	id: "move",
 	category: {
 		id: "move",
 		label: "Move",
-		icon: "arrow",
-		tone: "default",
-		priority: 10,
+		icon: "\u2192",
+		tone: "neutral",
+		priority: 1,
 	},
 	getActions: (ctx: RadialOpenContext) => {
-		if (ctx.selectionType !== "unit") return [];
-		if (ctx.targetFaction !== "player") return [];
-		if (!isSelectedBotCategoryAllowed(ctx, "move")) return [];
-		const profile = getSelectedBotProfile(ctx);
-		if (!profile?.canMove) return [];
+		if (!ctx.targetSector) return [];
 
-		const unitHasMP = ctx.targetEntityId
-			? hasMovementPoints(ctx.targetEntityId)
-			: false;
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+
+		const pos = unitEntity.get(UnitPos);
+		const stats = unitEntity.get(UnitStats);
+		if (!pos || !stats) return [];
+
+		// Only classes with "move" action (not staging classes)
+		if (!hasClassAction(stats.robotClass as RobotClass, "move")) return [];
+		if (stats.mp < 1) return [];
+
+		const world = _worldRef!;
+
+		// Check reachability
+		const targetX = ctx.targetSector.q;
+		const targetZ = ctx.targetSector.r;
+
+		// Same tile = no move needed
+		if (targetX === pos.tileX && targetZ === pos.tileZ) return [];
+
+		let reachable = false;
+		if (_boardRef) {
+			const gridApi = createGridApi(_boardRef);
+			const reachableSet = gridApi.reachable(pos.tileX, pos.tileZ, stats.mp);
+			reachable = reachableSet.has(`${targetX},${targetZ}`);
+		}
 
 		return [
 			{
-				id: "move_to",
-				label: "Move",
-				icon: "arrow",
-				tone: "default",
-				enabled: unitHasMP,
-				disabledReason: unitHasMP ? undefined : "No MP remaining",
+				id: "move_here",
+				label: "Move Here",
+				icon: "\u2192",
+				tone: "neutral",
+				enabled: reachable,
+				disabledReason: reachable ? undefined : "Out of range",
 				onExecute: () => {
-					// Movement is handled by the input system on next tap
-					// MP is spent by the movement system when the move executes
-				},
-			},
-			...(profile.canPatrol
-				? [
-						{
-							id: "patrol",
-							label: "Patrol",
-							icon: "loop",
-							tone: "default",
-							enabled: unitHasMP,
-							disabledReason: unitHasMP ? undefined : "No MP remaining",
-							onExecute: () => {
-								// TODO: wire to patrol order system
-							},
-						},
-					]
-				: []),
-		];
-	},
-});
-
-// --- COMBAT category ---
-
-registerRadialProvider({
-	id: "combat",
-	category: {
-		id: "combat",
-		label: "Combat",
-		icon: "sword",
-		tone: "combat",
-		priority: 20,
-	},
-	getActions: (ctx: RadialOpenContext) => {
-		if (ctx.selectionType !== "unit") return [];
-		if (ctx.targetFaction !== "player") return [];
-		if (!isSelectedBotCategoryAllowed(ctx, "combat")) return [];
-		const profile = getSelectedBotProfile(ctx);
-		if (!profile) return [];
-
-		const unitHasAP = ctx.targetEntityId
-			? hasActionPoints(ctx.targetEntityId)
-			: false;
-
-		const noApReason = unitHasAP ? undefined : "No AP remaining";
-		const actions = [];
-		if (profile.canAttack) {
-			actions.push({
-				id: "attack",
-				label: "Attack",
-				icon: "sword",
-				tone: "combat",
-				enabled: unitHasAP,
-				disabledReason: noApReason,
-				onExecute: () => {
-					if (ctx.targetEntityId) {
-						spendActionPoint(ctx.targetEntityId, 1);
-						awardXPToActor(ctx.targetEntityId, "combat");
-					}
-					// TODO: wire to attack order
-				},
-			});
-		}
-		if (profile.canHack) {
-			actions.push({
-				id: "hack",
-				label: "Hack",
-				icon: "signal",
-				tone: "signal",
-				enabled: unitHasAP,
-				disabledReason: noApReason,
-				onExecute: () => {
-					if (ctx.targetEntityId) {
-						spendActionPoint(ctx.targetEntityId, 1);
-						awardXPToActor(ctx.targetEntityId, "hack");
-					}
-					// TODO: wire to hacking system
-				},
-			});
-		}
-		if (profile.canFortify) {
-			actions.push({
-				id: "fortify",
-				label: "Fortify",
-				icon: "city",
-				tone: "power",
-				enabled: unitHasAP,
-				disabledReason: noApReason,
-				onExecute: () => {
-					if (ctx.targetEntityId) {
-						spendActionPoint(ctx.targetEntityId, 1);
-						awardXPToActor(ctx.targetEntityId, "fortify");
-					}
-					// TODO: wire to fortification orders
-				},
-			});
-		}
-
-		return actions;
-	},
-});
-
-// --- HACK CAPTURE category (when right-clicking a hostile unit) ---
-
-registerRadialProvider({
-	id: "hack_capture",
-	category: {
-		id: "hack_capture",
-		label: "Capture",
-		icon: "signal",
-		tone: "signal",
-		priority: 21,
-	},
-	getActions: (ctx: RadialOpenContext) => {
-		if (ctx.selectionType !== "unit" || !ctx.targetEntityId) return [];
-		if (ctx.targetFaction === "player" || ctx.targetFaction === "cultist")
-			return [];
-
-		const targetEntity = findEntityById(ctx.targetEntityId);
-		if (!targetEntity) return [];
-
-		const selected = getSelectedUnitInfo();
-		if (!selected || selected.type !== "unit" || selected.faction !== "player")
-			return [];
-
-		const hackerEntity = findEntityById(selected.entityId);
-		if (!hackerEntity) return [];
-
-		const hackerPos = hackerEntity.get(WorldPosition);
-		const targetPos = targetEntity.get(WorldPosition);
-		if (!hackerPos || !targetPos) return [];
-		const dx = hackerPos.x - targetPos.x;
-		const dz = hackerPos.z - targetPos.z;
-		if (Math.sqrt(dx * dx + dz * dz) > HACK_RANGE) return [];
-
-		const check = checkHackEligibility(hackerEntity, targetEntity);
-		if (!check.canHack) return [];
-
-		const unitHasAP = hasActionPoints(selected.entityId);
-		return [
-			{
-				id: "hack",
-				label: "Hack",
-				icon: "signal",
-				tone: "signal",
-				enabled: unitHasAP,
-				disabledReason: unitHasAP ? undefined : "No AP remaining",
-				onExecute: () => {
-					if (unitHasAP) {
-						spendActionPoint(selected.entityId, 1);
-						initiateHack(hackerEntity, targetEntity);
-						awardXPToActor(selected.entityId, "hack");
-					}
+					if (!unitEntity) return;
+					const currentPos = unitEntity.get(UnitPos);
+					if (!currentPos) return;
+					playSfx("unit_move");
+					unitEntity.add(
+						UnitMove({
+							fromX: currentPos.tileX,
+							fromZ: currentPos.tileZ,
+							toX: targetX,
+							toZ: targetZ,
+							progress: 0,
+							mpCost: 1,
+						}),
+					);
+					clearHighlights(world);
 				},
 			},
 		];
 	},
 });
 
-// --- BUILD category ---
-
-/** Helper: check affordability and create a build action entry */
-function makeBuildAction(
-	id: string,
-	label: string,
-	icon: string,
-	tone: string,
-	buildingType: string,
-	resources: ReturnType<typeof getResources>,
-	unitHasAP: boolean,
-	ctx: RadialOpenContext,
-) {
-	const costs = BUILDING_COSTS[buildingType];
-	if (!costs) return null;
-	const canAfford = costs.every(
-		(cost) => (resources[cost.type] ?? 0) >= cost.amount,
-	);
-	const disabledReason = !unitHasAP
-		? "No AP remaining"
-		: !canAfford
-			? "Insufficient materials"
-			: undefined;
-	return {
-		id,
-		label,
-		icon,
-		tone,
-		enabled: canAfford && unitHasAP,
-		disabledReason,
-		onExecute: () => {
-			if (ctx.selectionType === "unit" && ctx.targetEntityId) {
-				spendActionPoint(ctx.targetEntityId, 1);
-				awardXPToActor(ctx.targetEntityId, "build");
-			}
-			setActivePlacement(
-				buildingType as Parameters<typeof setActivePlacement>[0],
-				ctx.targetEntityId ?? undefined,
-			);
-		},
-	};
-}
-
-registerRadialProvider({
-	id: "build",
-	category: {
-		id: "build",
-		label: "Build",
-		icon: "gear",
-		tone: "default",
-		priority: 30,
-	},
-	getActions: (ctx: RadialOpenContext) => {
-		// Build actions available on open sector space or when a unit is selected
-		if (ctx.selectionType !== "empty_sector" && ctx.selectionType !== "unit") {
-			return [];
-		}
-
-		const profile =
-			ctx.selectionType === "unit" ? getSelectedBotProfile(ctx) : null;
-		if (ctx.selectionType === "unit" && !profile) {
-			return [];
-		}
-		if (
-			ctx.selectionType === "unit" &&
-			!isSelectedBotCategoryAllowed(ctx, "build")
-		) {
-			return [];
-		}
-
-		// Restrict building to Fabricator-role bots (task #68)
-		if (ctx.selectionType === "unit" && !canUnitBuild(ctx.targetEntityId)) {
-			return [];
-		}
-
-		const resources = getResources();
-		const unitHasAP =
-			ctx.selectionType === "unit" && ctx.targetEntityId
-				? hasActionPoints(ctx.targetEntityId)
-				: true;
-		const actions = [];
-
-		// Lightning Rod
-		if (ctx.selectionType === "empty_sector" || profile?.canBuildRod) {
-			const action = makeBuildAction(
-				"build_rod",
-				"Rod",
-				"bolt",
-				"power",
-				"lightning_rod",
-				resources,
-				unitHasAP,
-				ctx,
-			);
-			if (action) actions.push(action);
-		}
-
-		// Fabrication Unit
-		if (ctx.selectionType === "empty_sector" || profile?.canBuildFabricator) {
-			const action = makeBuildAction(
-				"build_fab",
-				"Fabricator",
-				"gear",
-				"signal",
-				"fabrication_unit",
-				resources,
-				unitHasAP,
-				ctx,
-			);
-			if (action) actions.push(action);
-		}
-
-		// Motor Pool
-		{
-			const action = makeBuildAction(
-				"build_motor_pool",
-				"Motor Pool",
-				"gear",
-				"power",
-				"motor_pool",
-				resources,
-				unitHasAP,
-				ctx,
-			);
-			if (action) actions.push(action);
-		}
-
-		// Relay Tower
-		if (ctx.selectionType === "empty_sector" || profile?.canBuildRelay) {
-			const action = makeBuildAction(
-				"build_relay",
-				"Relay",
-				"signal",
-				"signal",
-				"relay_tower",
-				resources,
-				unitHasAP,
-				ctx,
-			);
-			if (action) actions.push(action);
-		}
-
-		// Defense Turret
-		{
-			const action = makeBuildAction(
-				"build_turret",
-				"Turret",
-				"sword",
-				"combat",
-				"defense_turret",
-				resources,
-				unitHasAP,
-				ctx,
-			);
-			if (action) actions.push(action);
-		}
-
-		// Power Sink
-		{
-			const action = makeBuildAction(
-				"build_power_sink",
-				"Power Sink",
-				"bolt",
-				"power",
-				"power_sink",
-				resources,
-				unitHasAP,
-				ctx,
-			);
-			if (action) actions.push(action);
-		}
-
-		// Storage Hub
-		{
-			const action = makeBuildAction(
-				"build_storage",
-				"Storage",
-				"gear",
-				"default",
-				"storage_hub",
-				resources,
-				unitHasAP,
-				ctx,
-			);
-			if (action) actions.push(action);
-		}
-
-		// Habitat Module
-		{
-			const action = makeBuildAction(
-				"build_habitat",
-				"Habitat",
-				"city",
-				"signal",
-				"habitat_module",
-				resources,
-				unitHasAP,
-				ctx,
-			);
-			if (action) actions.push(action);
-		}
-
-		// Establish Substation
-		if (profile?.canEstablishSubstation) {
-			actions.push({
-				id: "build_substation",
-				label: "Establish",
-				icon: "city",
-				tone: "power",
-				enabled: unitHasAP,
-				disabledReason: unitHasAP ? undefined : "No AP remaining",
-				onExecute: () => {
-					if (ctx.targetEntityId) {
-						spendActionPoint(ctx.targetEntityId, 1);
-						awardXPToActor(ctx.targetEntityId, "found");
-					}
-					setCitySiteModalOpen(true, getRuntimeState().nearbyPoi);
-				},
-			});
-		}
-
-		return actions;
-	},
-});
-
-// --- REPAIR category ---
-
-registerRadialProvider({
-	id: "repair",
-	category: {
-		id: "repair",
-		label: "Repair",
-		icon: "wrench",
-		tone: "power",
-		priority: 40,
-	},
-	getActions: (ctx: RadialOpenContext) => {
-		const profile = getSelectedBotProfile(ctx);
-		if (!isSelectedBotCategoryAllowed(ctx, "repair")) return [];
-		if (!profile?.canRepair) return [];
-		const entity = findEntityById(ctx.targetEntityId);
-		if (!entity) return [];
-		if (ctx.targetFaction !== "player") return [];
-
-		// Get broken components
-		const unitComp = entity.get(Unit);
-		const buildingComp = entity.get(Building);
-		const components = unitComp?.components ?? buildingComp?.components ?? [];
-		const broken = components.filter((c) => !c.functional);
-
-		if (broken.length === 0) return [];
-
-		// Find nearest repair drone
-		const repairer = Array.from(units).find((u) => {
-			if (u.get(Identity)?.id === ctx.targetEntityId) return false;
-			if (u.get(Identity)?.faction !== "player") return false;
-			const hasArms = u
-				.get(Unit)
-				?.components.some((c) => c.name === "arms" && c.functional);
-			if (!hasArms) return false;
-			const uPos = u.get(WorldPosition);
-			const ePos = entity.get(WorldPosition);
-			if (!uPos || !ePos) return false;
-			const dx = uPos.x - ePos.x;
-			const dz = uPos.z - ePos.z;
-			return Math.sqrt(dx * dx + dz * dz) < 3.0;
-		});
-
-		const unitHasAP = ctx.targetEntityId
-			? hasActionPoints(ctx.targetEntityId)
-			: false;
-		const repairDisabledReason = !unitHasAP
-			? "No AP remaining"
-			: !repairer
-				? "No repairer nearby"
-				: undefined;
-
-		return broken.map((comp) => ({
-			id: `repair_${comp.name}`,
-			label: comp.name.replace(/_/g, " "),
-			icon: "wrench",
-			tone: "power",
-			enabled: !!repairer && unitHasAP,
-			disabledReason: repairDisabledReason,
-			onExecute: () => {
-				if (repairer && ctx.targetEntityId) {
-					spendActionPoint(ctx.targetEntityId, 1);
-					awardXPToActor(ctx.targetEntityId, "repair");
-					startRepair(repairer, entity, comp.name);
-				}
-			},
-		}));
-	},
-});
-
-// --- FABRICATION category ---
-
-registerRadialProvider({
-	id: "fabrication",
-	category: {
-		id: "fabricate",
-		label: "Fabricate",
-		icon: "gear",
-		tone: "default",
-		priority: 35,
-	},
-	getActions: (ctx: RadialOpenContext) => {
-		if (ctx.selectionType !== "unit" && ctx.selectionType !== "building") {
-			return [];
-		}
-
-		const entity = findEntityById(ctx.targetEntityId);
-		if (!entity) return [];
-		const profile = entity.get(Unit)
-			? getBotCommandProfile(entity.get(Unit)!.type)
-			: null;
-		if (entity.get(Unit) && !isSelectedBotCategoryAllowed(ctx, "fabricate")) {
-			return [];
-		}
-		if (!profile?.canFabricate) return [];
-
-		const unit = entity.get(Unit);
-		const building = entity.get(Building);
-		if (!unit || unit.type !== "fabrication_unit") return [];
-		if (!building?.powered || !building.operational) return [];
-
-		const resources = getResources();
-		const unitHasAP = ctx.targetEntityId
-			? hasActionPoints(ctx.targetEntityId)
-			: false;
-
-		return RECIPES.map((recipe) => {
-			const canAfford = recipe.costs.every(
-				(cost) => (resources[cost.type] ?? 0) >= cost.amount,
-			);
-			const fabDisabledReason = !unitHasAP
-				? "No AP remaining"
-				: !canAfford
-					? "Insufficient materials"
-					: undefined;
-			return {
-				id: `fab_${recipe.name}`,
-				label: recipe.name.replace(/_/g, " "),
-				icon: "gear",
-				tone: "default",
-				enabled: canAfford && unitHasAP,
-				disabledReason: fabDisabledReason,
-				onExecute: () => {
-					if (ctx.targetEntityId) {
-						spendActionPoint(ctx.targetEntityId, 1);
-						awardXPToActor(ctx.targetEntityId, "build");
-					}
-					startFabrication(entity, recipe.name);
-				},
-			};
-		});
-	},
-});
-
-// --- MOTOR POOL category ---
-
-registerRadialProvider({
-	id: "motor_pool",
-	category: {
-		id: "motor_pool",
-		label: "Motor Pool",
-		icon: "gear",
-		tone: "power",
-		priority: 36,
-	},
-	getActions: (ctx: RadialOpenContext) => {
-		if (ctx.selectionType !== "building") return [];
-
-		const entity = findEntityById(ctx.targetEntityId);
-		if (!entity) return [];
-		const building = entity.get(Building);
-		if (!building || building.type !== "motor_pool") return [];
-		if (!building.powered || !building.operational) return [];
-
-		const entityId = ctx.targetEntityId;
-		if (!entityId) return [];
-
-		const poolState = getMotorPoolState(entityId);
-		if (!poolState) return [];
-
-		const tierConfig = MOTOR_POOL_TIER_CONFIG[poolState.tier];
-		const queueFull = poolState.queue.length >= tierConfig.maxQueue;
-		const resources = getResources();
-		const actions = [];
-
-		// Bot fabrication actions
-		for (const recipe of BOT_FABRICATION_RECIPES) {
-			const canAfford = recipe.costs.every(
-				(cost) => (resources[cost.type] ?? 0) >= cost.amount,
-			);
-			actions.push({
-				id: `mp_fab_${recipe.botType}`,
-				label: recipe.label,
-				icon: "gear",
-				tone: "power",
-				enabled: canAfford && !queueFull,
-				onExecute: () => queueBotFabrication(entityId, recipe.botType),
-			});
-		}
-
-		// Tier upgrade action
-		if (poolState.tier !== "elite") {
-			const nextTier = poolState.tier === "basic" ? "Advanced" : "Elite";
-			actions.push({
-				id: "mp_upgrade",
-				label: `Upgrade → ${nextTier}`,
-				icon: "bolt",
-				tone: "signal",
-				enabled: true,
-				onExecute: () => upgradeMotorPool(entityId),
-			});
-		}
-
-		return actions;
-	},
-});
-
-// --- MARK UPGRADE category (on units near Motor Pool) ---
-
-/** Maximum distance (in world units) for a unit to be in range of a Motor Pool */
-const MARK_UPGRADE_RANGE = 5.0;
-
-registerRadialProvider({
-	id: "mark_upgrade",
-	category: {
-		id: "upgrade",
-		label: "Upgrade",
-		icon: "bolt",
-		tone: "signal",
-		priority: 37,
-	},
-	getActions: (ctx: RadialOpenContext) => {
-		if (ctx.selectionType !== "unit") return [];
-		if (ctx.targetFaction !== "player") return [];
-
-		const entity = findEntityById(ctx.targetEntityId);
-		if (!entity) return [];
-		const unit = entity.get(Unit);
-		if (!unit) return [];
-		const entityPos = entity.get(WorldPosition);
-		if (!entityPos) return [];
-
-		// Check if there's a powered Motor Pool nearby
-		const nearbyMotorPool = Array.from(buildings).find((b) => {
-			const building = b.get(Building);
-			if (!building || building.type !== "motor_pool") return false;
-			if (!building.powered || !building.operational) return false;
-			if (b.get(Identity)?.faction !== "player") return false;
-			const bPos = b.get(WorldPosition);
-			if (!bPos) return false;
-			const dx = entityPos.x - bPos.x;
-			const dz = entityPos.z - bPos.z;
-			return Math.sqrt(dx * dx + dz * dz) <= MARK_UPGRADE_RANGE;
-		});
-
-		if (!nearbyMotorPool) return [];
-
-		const unitHasAP = ctx.targetEntityId
-			? hasActionPoints(ctx.targetEntityId)
-			: false;
-		const xpState = ctx.targetEntityId
-			? getUnitExperience(ctx.targetEntityId)
-			: undefined;
-		const xpEligible = xpState?.upgradeEligible ?? false;
-		const progress = ctx.targetEntityId ? getXPProgress(ctx.targetEntityId) : 0;
-		const currentMark = xpState?.currentMark ?? unit.markLevel;
-
-		// Check resource cost for this Mark upgrade
-		const upgradeCost = getMarkUpgradeCost(currentMark);
-		const resources = getResources();
-		const canAfford = upgradeCost
-			? upgradeCost.costs.every(
-					(cost) => (resources[cost.type] ?? 0) >= cost.amount,
-				)
-			: false;
-
-		// Check Motor Pool tier allows this upgrade
-		const motorPoolId = nearbyMotorPool.get(Identity)?.id;
-		const tierAllows =
-			motorPoolId && upgradeCost
-				? canMotorPoolUpgradeMark(motorPoolId, upgradeCost.toMark)
-				: false;
-
-		const canUpgrade = xpEligible && canAfford && tierAllows;
-
-		const disabledReason = !unitHasAP
-			? "No AP remaining"
-			: !xpEligible
-				? `XP: ${Math.round(progress * 100)}% to Mark ${currentMark + 1}`
-				: !canAfford
-					? "Insufficient resources"
-					: !tierAllows
-						? "Motor Pool tier too low"
-						: undefined;
-
-		return [
-			{
-				id: "mark_upgrade",
-				label: `Mark ${currentMark} → ${currentMark + 1}`,
-				icon: "bolt",
-				tone: "signal",
-				enabled: canUpgrade && unitHasAP,
-				disabledReason,
-				onExecute: () => {
-					if (ctx.targetEntityId && canUpgrade && upgradeCost) {
-						// Spend resources
-						for (const cost of upgradeCost.costs) {
-							spendResource(cost.type, cost.amount);
-						}
-						spendActionPoint(ctx.targetEntityId, 1);
-						const success = applyMarkUpgrade(ctx.targetEntityId);
-						if (success) {
-							// Update the ECS Unit trait's markLevel via entity.set()
-							// (static traits return copies from get(), so direct mutation won't persist)
-							const upgradeEntity = findEntityById(ctx.targetEntityId);
-							const currentUnit = upgradeEntity?.get(Unit);
-							if (upgradeEntity && currentUnit) {
-								upgradeEntity.set(Unit, {
-									...currentUnit,
-									markLevel: upgradeCost.toMark,
-								});
-							}
-							logTurnEvent("fabrication", ctx.targetEntityId, "player", {
-								action: "mark_upgrade",
-								newMark: upgradeCost.toMark,
-							});
-						}
-					}
-				},
-			},
-		];
-	},
-});
-
-// --- HARVEST category ---
-
-/** Maximum distance (in world units) for a fabricator to reach a structure */
-const HARVEST_SCAN_RANGE = 4.0;
+// --- HARVEST provider ---
 
 registerRadialProvider({
 	id: "harvest",
 	category: {
 		id: "harvest",
 		label: "Harvest",
-		icon: "pickaxe",
-		tone: "power",
-		priority: 36,
+		icon: "\u26cf",
+		tone: "harvest",
+		priority: 2,
 	},
 	getActions: (ctx: RadialOpenContext) => {
-		// Only available when a player unit is selected
+		if (ctx.selectionType !== "resource_node") return [];
+		if (!_worldRef || _selectedUnitId == null) return [];
+		if (!ctx.targetEntityId) return [];
+
+		// Only workers can harvest
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const unitStats = unitEntity.get(UnitStats);
+		if (!unitStats || !hasClassAction(unitStats.robotClass as RobotClass, "harvest")) return [];
+
+		const world = _worldRef;
+		const unitId = _selectedUnitId;
+		const depositId = Number(ctx.targetEntityId);
+
+		// Verify the deposit exists and is not depleted
+		let depositExists = false;
+		for (const e of world.query(ResourceDeposit)) {
+			if (e.id() === depositId) {
+				const dep = e.get(ResourceDeposit);
+				if (dep && !dep.depleted) depositExists = true;
+				break;
+			}
+		}
+		if (!depositExists) return [];
+
+		return [
+			{
+				id: "harvest",
+				label: "Harvest",
+				icon: "\u26cf",
+				tone: "harvest",
+				enabled: true,
+				onExecute: () => {
+					const success = startHarvest(world, unitId, depositId);
+					if (success) {
+						clearHighlights(world);
+					}
+				},
+			},
+		];
+	},
+});
+
+// --- ATTACK provider ---
+
+registerRadialProvider({
+	id: "attack",
+	category: {
+		id: "attack",
+		label: "Attack",
+		icon: "\u2694",
+		tone: "hostile",
+		priority: 3,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (ctx.selectionType !== "unit") return [];
+		if (ctx.targetFaction === "player") return [];
+		if (!_worldRef || _selectedUnitId == null) return [];
+		if (!ctx.targetEntityId) return [];
+
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+
+		const stats = unitEntity.get(UnitStats);
+		const pos = unitEntity.get(UnitPos);
+		if (!stats || !pos || stats.ap < 1) return [];
+
+		const world = _worldRef;
+		const targetId = Number(ctx.targetEntityId);
+
+		// Determine attack type from class actions
+		const robotClass = stats.robotClass as RobotClass;
+		const attackAction = ["attack_melee", "attack_ranged", "charge", "flank"]
+			.map(id => ({ id, has: hasClassAction(robotClass, id) }))
+			.filter(a => a.has);
+		if (attackAction.length === 0) return [];
+
+		// Check staging requirement for ranged attack
+		if (hasClassAction(robotClass, "attack_ranged") && !stats.staged) return [];
+
+		// Check target distance
+		let targetPos = null;
+		for (const e of world.query(UnitPos, UnitFaction)) {
+			if (e.id() === targetId) {
+				targetPos = e.get(UnitPos);
+				break;
+			}
+		}
+		if (!targetPos) return [];
+
+		const dist =
+			Math.abs(pos.tileX - targetPos.tileX) +
+			Math.abs(pos.tileZ - targetPos.tileZ);
+
+		// Use class-specific range (melee=1, ranged=2-4)
+		const attackRange = stats.attackRange || 1;
+		const inRange = dist <= attackRange;
+
+		// Pick the appropriate attack label/icon based on class
+		let attackLabel = "Attack";
+		let attackIcon = "\u2694";
+		if (hasClassAction(robotClass, "attack_ranged")) {
+			attackLabel = "Attack (Ranged)";
+			attackIcon = "\uD83C\uDFF9";
+		}
+
+		return [
+			{
+				id: "attack",
+				label: attackLabel,
+				icon: attackIcon,
+				tone: "hostile",
+				enabled: inRange,
+				disabledReason: inRange ? undefined : "Out of range",
+				onExecute: () => {
+					if (!unitEntity) return;
+					playSfx("attack_hit");
+					unitEntity.add(
+						UnitAttack({ targetEntityId: targetId, damage: stats.attack || 2 }),
+					);
+					const newStats = unitEntity.get(UnitStats);
+					if (newStats) {
+						unitEntity.set(UnitStats, {
+							...newStats,
+							ap: Math.max(0, newStats.ap - 1),
+						});
+					}
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- BUILD provider ---
+
+registerRadialProvider({
+	id: "build",
+	category: {
+		id: "build",
+		label: "Build",
+		icon: "\uD83D\uDD27",
+		tone: "construct",
+		priority: 4,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (ctx.selectionType !== "empty_sector") return [];
+		if (!_worldRef) return [];
+
+		// Only workers can build
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const unitStats = unitEntity.get(UnitStats);
+		if (!unitStats || !hasClassAction(unitStats.robotClass as RobotClass, "build")) return [];
+
+		const world = _worldRef;
+
+		return (Object.keys(BUILDING_DEFS) as BuildingType[]).map((type) => {
+			const def = BUILDING_DEFS[type];
+			const affordable = canAfford(world, "player", def.buildCost);
+			return {
+				id: `build_${type}`,
+				label: def.displayName,
+				icon: "\uD83D\uDD27",
+				tone: "construct",
+				enabled: affordable,
+				disabledReason: affordable ? undefined : "Not enough resources",
+				onExecute: () => {
+					startBuildPlacement(world, type);
+				},
+			};
+		});
+	},
+});
+
+// --- FABRICATE provider ---
+
+registerRadialProvider({
+	id: "fabricate",
+	category: {
+		id: "fabricate",
+		label: "Fabricate",
+		icon: "\u2699",
+		tone: "construct",
+		priority: 5,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (ctx.selectionType !== "building") return [];
+		if (!_worldRef || !ctx.targetEntityId) return [];
+		if (ctx.targetFaction !== "player") return [];
+
+		const world = _worldRef;
+		const buildingId = Number(ctx.targetEntityId);
+
+		// Find the building entity and verify it's a motor pool with fabricator
+		let motorPoolEntity = null;
+		for (const e of world.query(Building, BotFabricator)) {
+			if (e.id() === buildingId) {
+				motorPoolEntity = e;
+				break;
+			}
+		}
+		if (!motorPoolEntity) return [];
+
+		const b = motorPoolEntity.get(Building);
+		if (!b || b.buildingType !== "motor_pool") return [];
+
+		const isPowered = motorPoolEntity.has(Powered);
+		const fab = motorPoolEntity.get(BotFabricator);
+		const slotsFull = fab ? fab.queueSize >= fab.fabricationSlots : true;
+		const atPopCap = !canSpawnUnit(world, "player");
+
+		return (Object.keys(ROBOT_COSTS) as RobotClass[]).map((robotClass) => {
+			const cost = ROBOT_COSTS[robotClass];
+			const affordable = canAfford(world, "player", cost.materials);
+			const enabled = isPowered && !slotsFull && affordable && !atPopCap;
+
+			let disabledReason: string | undefined;
+			if (!isPowered) disabledReason = "No power";
+			else if (atPopCap) disabledReason = "Population cap reached";
+			else if (slotsFull) disabledReason = "Queue full";
+			else if (!affordable) disabledReason = "Not enough resources";
+
+			return {
+				id: `fab_${robotClass}`,
+				label: `${robotClass.replace(/_/g, " ")} (${cost.buildTime}t)`,
+				icon: "\u2699",
+				tone: "construct",
+				enabled,
+				disabledReason,
+				onExecute: () => {
+					if (!motorPoolEntity) return;
+					const result = queueFabrication(world, motorPoolEntity, robotClass);
+					if (result.ok) {
+						playSfx("build_complete");
+						clearHighlights(world);
+					}
+				},
+			};
+		});
+	},
+});
+
+// --- SYNTHESIZE provider ---
+
+registerRadialProvider({
+	id: "synthesize",
+	category: {
+		id: "synthesize",
+		label: "Synthesize",
+		icon: "\u2697",
+		tone: "construct",
+		priority: 6,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (ctx.selectionType !== "building") return [];
+		if (!_worldRef || !ctx.targetEntityId) return [];
+		if (ctx.targetFaction !== "player") return [];
+
+		const world = _worldRef;
+		const buildingId = Number(ctx.targetEntityId);
+
+		// Find the building entity and verify it's a powered synthesizer
+		let synthEntity = null;
+		for (const e of world.query(Building, Powered)) {
+			if (e.id() === buildingId) {
+				synthEntity = e;
+				break;
+			}
+		}
+		if (!synthEntity) return [];
+
+		const b = synthEntity.get(Building);
+		if (!b || b.buildingType !== "synthesizer") return [];
+
+		const hasQueue = synthEntity.has(SynthesisQueue);
+
+		return FUSION_RECIPES.map((recipe) => {
+			const affordable = canAfford(world, "player", recipe.inputs);
+			const enabled = !hasQueue && affordable;
+
+			let disabledReason: string | undefined;
+			if (hasQueue) disabledReason = "Already synthesizing";
+			else if (!affordable) disabledReason = "Not enough resources";
+
+			return {
+				id: `synth_${recipe.id}`,
+				label: recipe.label,
+				icon: "\u2697",
+				tone: "construct",
+				enabled,
+				disabledReason,
+				onExecute: () => {
+					const success = queueSynthesis(world, buildingId, recipe.id);
+					if (success) {
+						playSfx("build_complete");
+						clearHighlights(world);
+					}
+				},
+			};
+		});
+	},
+});
+
+// --- UPGRADE provider ---
+
+registerRadialProvider({
+	id: "upgrade",
+	category: {
+		id: "upgrade",
+		label: "Upgrade",
+		icon: "\u2B06",
+		tone: "construct",
+		priority: 7,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (ctx.selectionType !== "building") return [];
+		if (!_worldRef || !ctx.targetEntityId) return [];
+		if (ctx.targetFaction !== "player") return [];
+		if (_selectedUnitId == null) return [];
+
+		const world = _worldRef;
+		const bayId = Number(ctx.targetEntityId);
+		const unitId = _selectedUnitId;
+
+		// Verify it's a powered maintenance bay
+		let bayEntity = null;
+		for (const e of world.query(Building, Powered)) {
+			if (e.id() === bayId) {
+				bayEntity = e;
+				break;
+			}
+		}
+		if (!bayEntity) return [];
+
+		const b = bayEntity.get(Building);
+		if (!b || b.buildingType !== "maintenance_bay") return [];
+
+		// Find the selected player unit and check adjacency
+		let unitEntity = null;
+		for (const e of world.query(UnitPos, UnitStats, UnitFaction)) {
+			if (e.id() === unitId) {
+				unitEntity = e;
+				break;
+			}
+		}
+		if (!unitEntity) return [];
+
+		const unitFaction = unitEntity.get(UnitFaction);
+		if (!unitFaction || unitFaction.factionId !== "player") return [];
+
+		const unitPos = unitEntity.get(UnitPos)!;
+		const dist = Math.abs(unitPos.tileX - b.tileX) + Math.abs(unitPos.tileZ - b.tileZ);
+		if (dist > 1) return [];
+
+		const maxTier = getMaxTier(world, "player");
+		const upgrade = unitEntity.get(UnitUpgrade);
+		const currentMarks = upgrade?.marks ?? "";
+
+		return (Object.keys(MARK_DEFS) as BotMark[]).map((mark) => {
+			const def = MARK_DEFS[mark];
+			const alreadyHas = hasMark(currentMarks, mark);
+			const tierLocked = def.minTier > maxTier;
+			const affordable = canAfford(world, "player", def.cost);
+			const enabled = !alreadyHas && !tierLocked && affordable;
+
+			let disabledReason: string | undefined;
+			if (alreadyHas) disabledReason = "Already applied";
+			else if (tierLocked) disabledReason = `Needs tier ${def.minTier} (build research lab)`;
+			else if (!affordable) disabledReason = "Not enough resources";
+
+			return {
+				id: `mark_${mark}`,
+				label: def.label,
+				icon: "\u2B06",
+				tone: "construct",
+				enabled,
+				disabledReason,
+				onExecute: () => {
+					applyMark(world, unitId, bayId, mark);
+					clearHighlights(world);
+				},
+			};
+		});
+	},
+});
+
+// --- DIPLOMACY provider ---
+
+function readTurn(world: World): number {
+	for (const e of world.query(Board)) {
+		const b = e.get(Board);
+		if (b) return b.turn;
+	}
+	return 1;
+}
+
+registerRadialProvider({
+	id: "diplomacy",
+	category: {
+		id: "diplomacy",
+		label: "Diplomacy",
+		icon: "\uD83E\uDD1D",
+		tone: "neutral",
+		priority: 8,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		// Only show on non-player units
+		if (ctx.selectionType !== "unit") return [];
+		if (!ctx.targetFaction || ctx.targetFaction === "player") return [];
+		if (!_worldRef) return [];
+
+		const world = _worldRef;
+		const targetFaction = ctx.targetFaction;
+
+		const relation = getRelation(world, "player", targetFaction);
+		const personality = getDiplomacyPersonality(targetFaction);
+		const turn = readTurn(world);
+
+		const actions: Array<{
+			id: string;
+			label: string;
+			icon: string;
+			tone: string;
+			enabled: boolean;
+			disabledReason?: string;
+			onExecute: () => void;
+		}> = [];
+
+		if (relation !== "hostile") {
+			// Can declare war if not already hostile
+			actions.push({
+				id: "declare_war",
+				label: "Declare War",
+				icon: "\u2694",
+				tone: "hostile",
+				enabled: true,
+				onExecute: () => {
+					declareWar(world, "player", targetFaction, turn);
+					playSfx("attack_hit");
+					clearHighlights(world);
+				},
+			});
+		}
+
+		if (relation === "neutral") {
+			// Can propose alliance if neutral
+			const canAlly = personality?.acceptsAlliance ?? false;
+			actions.push({
+				id: "propose_alliance",
+				label: "Propose Alliance",
+				icon: "\uD83E\uDD1D",
+				tone: "neutral",
+				enabled: canAlly,
+				disabledReason: canAlly ? undefined : "This faction refuses alliances",
+				onExecute: () => {
+					const accepted = proposeAlliance(world, "player", targetFaction, turn);
+					if (accepted) {
+						playSfx("build_complete");
+					}
+					clearHighlights(world);
+				},
+			});
+		}
+
+		return actions;
+	},
+});
+
+// --- STAGE provider (ranged, support, worker) ---
+
+registerRadialProvider({
+	id: "stage",
+	category: {
+		id: "stage",
+		label: "Stage",
+		icon: "\u23F9",
+		tone: "neutral",
+		priority: 0, // Show first — staging is prerequisite for other actions
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		if (!stats) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "stage")) return [];
+		if (stats.staged) return []; // Already staged
+
+		const world = _worldRef!;
+
+		return [
+			{
+				id: "stage",
+				label: "Stage",
+				icon: "\u23F9",
+				tone: "neutral",
+				enabled: true,
+				onExecute: () => {
+					const cur = unitEntity.get(UnitStats);
+					if (cur) {
+						unitEntity.set(UnitStats, { ...cur, staged: true });
+					}
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- FORTIFY provider (infantry) ---
+
+registerRadialProvider({
+	id: "fortify",
+	category: {
+		id: "class_combat",
+		label: "Tactics",
+		icon: "\uD83D\uDEE1",
+		tone: "neutral",
+		priority: 3,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		if (!stats || stats.ap < 1) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "fortify")) return [];
+
+		const world = _worldRef!;
+
+		return [
+			{
+				id: "fortify",
+				label: "Fortify",
+				icon: "\uD83D\uDEE1",
+				tone: "neutral",
+				enabled: true,
+				onExecute: () => {
+					const cur = unitEntity.get(UnitStats);
+					if (cur) {
+						unitEntity.set(UnitStats, {
+							...cur,
+							defense: cur.defense + 2,
+							ap: Math.max(0, cur.ap - 1),
+						});
+					}
+					playSfx("build_complete");
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- GUARD provider (infantry) ---
+
+registerRadialProvider({
+	id: "guard",
+	category: {
+		id: "class_combat",
+		label: "Tactics",
+		icon: "\uD83D\uDEE1",
+		tone: "neutral",
+		priority: 3,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		if (!stats || stats.ap < 1) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "guard")) return [];
+
+		const world = _worldRef!;
+
+		return [
+			{
+				id: "guard",
+				label: "Guard",
+				icon: "\u2693",
+				tone: "neutral",
+				enabled: true,
+				onExecute: () => {
+					const cur = unitEntity.get(UnitStats);
+					if (cur) {
+						unitEntity.set(UnitStats, {
+							...cur,
+							ap: Math.max(0, cur.ap - 1),
+						});
+					}
+					playSfx("build_complete");
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- CHARGE provider (cavalry) ---
+
+registerRadialProvider({
+	id: "charge",
+	category: {
+		id: "class_combat",
+		label: "Tactics",
+		icon: "\uD83D\uDEE1",
+		tone: "neutral",
+		priority: 3,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (ctx.selectionType !== "unit") return [];
+		if (ctx.targetFaction === "player") return [];
+		if (!ctx.targetEntityId) return [];
+
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		const pos = unitEntity.get(UnitPos);
+		if (!stats || !pos || stats.ap < 1) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "charge")) return [];
+
+		const world = _worldRef!;
+		const targetId = Number(ctx.targetEntityId);
+
+		let targetPos = null;
+		for (const e of world.query(UnitPos, UnitFaction)) {
+			if (e.id() === targetId) {
+				targetPos = e.get(UnitPos);
+				break;
+			}
+		}
+		if (!targetPos) return [];
+
+		const dist = Math.abs(pos.tileX - targetPos.tileX) + Math.abs(pos.tileZ - targetPos.tileZ);
+		const inRange = dist >= 2 && dist <= 3;
+
+		return [
+			{
+				id: "charge",
+				label: "Charge",
+				icon: "\u26A1",
+				tone: "hostile",
+				enabled: inRange,
+				disabledReason: inRange ? undefined : dist < 2 ? "Too close to charge" : "Out of charge range",
+				onExecute: () => {
+					if (!unitEntity) return;
+					playSfx("attack_hit");
+					// Charge does +2 bonus damage
+					unitEntity.add(
+						UnitAttack({ targetEntityId: targetId, damage: (stats.attack || 2) + 2 }),
+					);
+					const cur = unitEntity.get(UnitStats);
+					if (cur) {
+						unitEntity.set(UnitStats, { ...cur, ap: Math.max(0, cur.ap - 1) });
+					}
+					// Move to adjacent tile
+					unitEntity.add(
+						UnitMove({
+							fromX: pos.tileX,
+							fromZ: pos.tileZ,
+							toX: targetPos!.tileX,
+							toZ: targetPos!.tileZ,
+							progress: 0,
+							mpCost: 0, // Charge doesn't cost MP
+						}),
+					);
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- FLANK provider (cavalry) ---
+
+registerRadialProvider({
+	id: "flank",
+	category: {
+		id: "class_combat",
+		label: "Tactics",
+		icon: "\uD83D\uDEE1",
+		tone: "neutral",
+		priority: 3,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (ctx.selectionType !== "unit") return [];
+		if (ctx.targetFaction === "player") return [];
+		if (!ctx.targetEntityId) return [];
+
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		const pos = unitEntity.get(UnitPos);
+		if (!stats || !pos || stats.ap < 1) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "flank")) return [];
+
+		const world = _worldRef!;
+		const targetId = Number(ctx.targetEntityId);
+
+		let targetPos = null;
+		for (const e of world.query(UnitPos, UnitFaction)) {
+			if (e.id() === targetId) {
+				targetPos = e.get(UnitPos);
+				break;
+			}
+		}
+		if (!targetPos) return [];
+
+		const dist = Math.abs(pos.tileX - targetPos.tileX) + Math.abs(pos.tileZ - targetPos.tileZ);
+
+		return [
+			{
+				id: "flank",
+				label: "Flank",
+				icon: "\u21B7",
+				tone: "hostile",
+				enabled: dist <= 1,
+				disabledReason: dist > 1 ? "Not adjacent" : undefined,
+				onExecute: () => {
+					if (!unitEntity) return;
+					playSfx("attack_hit");
+					// Flank does +3 bonus damage
+					unitEntity.add(
+						UnitAttack({ targetEntityId: targetId, damage: (stats.attack || 2) + 3 }),
+					);
+					const cur = unitEntity.get(UnitStats);
+					if (cur) {
+						unitEntity.set(UnitStats, { ...cur, ap: Math.max(0, cur.ap - 1) });
+					}
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- REVEAL provider (scout) ---
+
+registerRadialProvider({
+	id: "reveal",
+	category: {
+		id: "class_utility",
+		label: "Utility",
+		icon: "\uD83D\uDC41",
+		tone: "neutral",
+		priority: 9,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		if (!stats || stats.ap < 1) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "reveal")) return [];
+
+		const world = _worldRef!;
+
+		return [
+			{
+				id: "reveal",
+				label: "Reveal",
+				icon: "\uD83D\uDC41",
+				tone: "neutral",
+				enabled: true,
+				onExecute: () => {
+					const cur = unitEntity.get(UnitStats);
+					if (cur) {
+						unitEntity.set(UnitStats, { ...cur, ap: Math.max(0, cur.ap - 1) });
+					}
+					playSfx("build_complete");
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- SIGNAL provider (scout) ---
+
+registerRadialProvider({
+	id: "signal",
+	category: {
+		id: "class_utility",
+		label: "Utility",
+		icon: "\uD83D\uDC41",
+		tone: "neutral",
+		priority: 9,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (ctx.selectionType !== "unit") return [];
+		if (ctx.targetFaction === "player") return [];
+		if (!ctx.targetEntityId) return [];
+
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		const pos = unitEntity.get(UnitPos);
+		if (!stats || !pos || stats.ap < 1) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "signal")) return [];
+
+		const world = _worldRef!;
+		const targetId = Number(ctx.targetEntityId);
+
+		let targetPos = null;
+		for (const e of world.query(UnitPos, UnitFaction)) {
+			if (e.id() === targetId) {
+				targetPos = e.get(UnitPos);
+				break;
+			}
+		}
+		if (!targetPos) return [];
+
+		const dist = Math.abs(pos.tileX - targetPos.tileX) + Math.abs(pos.tileZ - targetPos.tileZ);
+		const inRange = dist <= 4;
+
+		return [
+			{
+				id: "signal",
+				label: "Signal Target",
+				icon: "\uD83D\uDCE1",
+				tone: "neutral",
+				enabled: inRange,
+				disabledReason: inRange ? undefined : "Out of signal range",
+				onExecute: () => {
+					const cur = unitEntity.get(UnitStats);
+					if (cur) {
+						unitEntity.set(UnitStats, { ...cur, ap: Math.max(0, cur.ap - 1) });
+					}
+					playSfx("build_complete");
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- OVERWATCH provider (ranged) ---
+
+registerRadialProvider({
+	id: "overwatch",
+	category: {
+		id: "class_combat",
+		label: "Tactics",
+		icon: "\uD83D\uDEE1",
+		tone: "neutral",
+		priority: 3,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		if (!stats || stats.ap < 1) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "overwatch")) return [];
+
+		// Must be staged
+		if (!stats.staged) return [];
+
+		const world = _worldRef!;
+
+		return [
+			{
+				id: "overwatch",
+				label: "Overwatch",
+				icon: "\uD83D\uDD2D",
+				tone: "hostile",
+				enabled: true,
+				onExecute: () => {
+					const cur = unitEntity.get(UnitStats);
+					if (cur) {
+						unitEntity.set(UnitStats, { ...cur, ap: Math.max(0, cur.ap - 1) });
+					}
+					playSfx("build_complete");
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- RETREAT provider (cavalry) ---
+
+registerRadialProvider({
+	id: "retreat",
+	category: {
+		id: "move",
+		label: "Move",
+		icon: "\u2192",
+		tone: "neutral",
+		priority: 1,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (!ctx.targetSector) return [];
+
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		const pos = unitEntity.get(UnitPos);
+		if (!stats || !pos) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "retreat")) return [];
+		if (stats.mp < 1) return [];
+
+		const world = _worldRef!;
+		const targetX = ctx.targetSector.q;
+		const targetZ = ctx.targetSector.r;
+
+		if (targetX === pos.tileX && targetZ === pos.tileZ) return [];
+
+		let reachable = false;
+		if (_boardRef) {
+			const gridApi = createGridApi(_boardRef);
+			const reachableSet = gridApi.reachable(pos.tileX, pos.tileZ, Math.min(2, stats.mp));
+			reachable = reachableSet.has(`${targetX},${targetZ}`);
+		}
+
+		return [
+			{
+				id: "retreat",
+				label: "Retreat",
+				icon: "\u2190",
+				tone: "neutral",
+				enabled: reachable,
+				disabledReason: reachable ? undefined : "Out of range",
+				onExecute: () => {
+					playSfx("unit_move");
+					unitEntity.add(
+						UnitMove({
+							fromX: pos.tileX,
+							fromZ: pos.tileZ,
+							toX: targetX,
+							toZ: targetZ,
+							progress: 0,
+							mpCost: 1,
+						}),
+					);
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- RELOCATE provider (ranged) ---
+
+registerRadialProvider({
+	id: "relocate",
+	category: {
+		id: "move",
+		label: "Move",
+		icon: "\u2192",
+		tone: "neutral",
+		priority: 1,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (!ctx.targetSector) return [];
+
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		const pos = unitEntity.get(UnitPos);
+		if (!stats || !pos) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "relocate")) return [];
+		// Must be staged to relocate
+		if (!stats.staged) return [];
+
+		const targetX = ctx.targetSector.q;
+		const targetZ = ctx.targetSector.r;
+		if (targetX === pos.tileX && targetZ === pos.tileZ) return [];
+
+		const dist = Math.abs(targetX - pos.tileX) + Math.abs(targetZ - pos.tileZ);
+		const inRange = dist <= 1;
+
+		const world = _worldRef!;
+
+		return [
+			{
+				id: "relocate",
+				label: "Relocate",
+				icon: "\u21C4",
+				tone: "neutral",
+				enabled: inRange,
+				disabledReason: inRange ? undefined : "Max 1 tile",
+				onExecute: () => {
+					playSfx("unit_move");
+					unitEntity.add(
+						UnitMove({
+							fromX: pos.tileX,
+							fromZ: pos.tileZ,
+							toX: targetX,
+							toZ: targetZ,
+							progress: 0,
+							mpCost: 0, // Relocate doesn't cost MP
+						}),
+					);
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- REPAIR provider (support) ---
+
+registerRadialProvider({
+	id: "repair",
+	category: {
+		id: "class_utility",
+		label: "Utility",
+		icon: "\uD83D\uDC41",
+		tone: "neutral",
+		priority: 9,
+	},
+	getActions: (ctx: RadialOpenContext) => {
 		if (ctx.selectionType !== "unit") return [];
 		if (ctx.targetFaction !== "player") return [];
-		if (!isSelectedBotCategoryAllowed(ctx, "harvest")) return [];
-		const profile = getSelectedBotProfile(ctx);
-		if (!profile?.canHarvest) return [];
+		if (!ctx.targetEntityId) return [];
 
-		// Find the selected entity and its position
-		const entity = findEntityById(ctx.targetEntityId);
-		if (!entity) return [];
-		const entityPos = entity.get(WorldPosition);
-		if (!entityPos) return [];
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		const pos = unitEntity.get(UnitPos);
+		if (!stats || !pos || stats.ap < 1) return [];
 
-		const unitHasAP = ctx.targetEntityId
-			? hasActionPoints(ctx.targetEntityId)
-			: false;
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "repair")) return [];
+		if (!stats.staged) return [];
 
-		const actions: RadialAction[] = [];
+		const world = _worldRef!;
+		const targetId = Number(ctx.targetEntityId);
 
-		// Floor harvest: if target sector has a harvestable floor tile
-		if (ctx.targetSector && ctx.targetEntityId) {
-			const tile = getTile(ctx.targetSector.q, ctx.targetSector.r, 0);
-			if (
-				tile &&
-				tile.passable &&
-				!tile.modelId &&
-				isFloorHarvestable(tile.floorMaterial) &&
-				!isFloorTileConsumed(ctx.targetSector.q, ctx.targetSector.r, 0)
-			) {
-				const worldPos = gridToWorld(ctx.targetSector.q, ctx.targetSector.r);
-				const dx = worldPos.x - entityPos.x;
-				const dz = worldPos.z - entityPos.z;
-				const dist = Math.sqrt(dx * dx + dz * dz);
-				if (dist <= HARVEST_SCAN_RANGE) {
-					const pool = getResourcePoolForFloorMaterial(tile.floorMaterial);
-					actions.push({
-						id: "harvest_floor",
-						label: pool.label,
-						icon: "pickaxe",
-						tone: "power",
-						enabled: unitHasAP,
-						disabledReason: unitHasAP ? undefined : "No AP remaining",
-						onExecute: () => {
-							if (ctx.targetEntityId) {
-								spendActionPoint(ctx.targetEntityId, 1);
-								awardXPToActor(ctx.targetEntityId, "harvest");
-								startFloorHarvest(
-									ctx.targetEntityId,
-									ctx.targetSector!.q,
-									ctx.targetSector!.r,
-									0,
-									tile.floorMaterial,
-								);
-							}
-						},
+		// Can't repair self
+		if (targetId === _selectedUnitId) return [];
+
+		let targetEntity = null;
+		for (const e of world.query(UnitPos, UnitStats, UnitFaction)) {
+			if (e.id() === targetId) {
+				targetEntity = e;
+				break;
+			}
+		}
+		if (!targetEntity) return [];
+
+		const targetPos = targetEntity.get(UnitPos)!;
+		const targetStats = targetEntity.get(UnitStats)!;
+		const dist = Math.abs(pos.tileX - targetPos.tileX) + Math.abs(pos.tileZ - targetPos.tileZ);
+
+		// Already at max HP
+		if (targetStats.hp >= targetStats.maxHp) return [];
+
+		return [
+			{
+				id: "repair",
+				label: "Repair",
+				icon: "\uD83D\uDD27",
+				tone: "neutral",
+				enabled: dist <= 1,
+				disabledReason: dist > 1 ? "Not adjacent" : undefined,
+				onExecute: () => {
+					// Heal 3 HP
+					const cur = targetEntity!.get(UnitStats)!;
+					targetEntity!.set(UnitStats, {
+						...cur,
+						hp: Math.min(cur.maxHp, cur.hp + 3),
 					});
-				}
-			}
-		}
-
-		// Scan nearby structures within harvest range
-		const session = getActiveWorldSession();
-		if (session) {
-			for (const structure of session.sectorStructures) {
-				if (isStructureConsumed(structure.id)) continue;
-
-				// Get family from placement_layer (maps to resource pool family)
-				const family = structure.placement_layer;
-				if (!isHarvestable(family)) continue;
-
-				const worldPos = gridToWorld(structure.q, structure.r);
-				const dx = worldPos.x + structure.offset_x - entityPos.x;
-				const dz = worldPos.z + structure.offset_z - entityPos.z;
-				const dist = Math.sqrt(dx * dx + dz * dz);
-
-				if (dist > HARVEST_SCAN_RANGE) continue;
-
-				// Get resource pool for yield preview
-				const pool = getResourcePoolForModel(family, structure.model_id);
-				const _yieldPreview = pool.yields
-					.map((y) => `${y.min}-${y.max} ${y.resource.replace(/_/g, " ")}`)
-					.join(", ");
-
-				actions.push({
-					id: `harvest_${structure.id}`,
-					label: `${pool.label}`,
-					icon: "pickaxe",
-					tone: "power",
-					enabled: unitHasAP,
-					disabledReason: unitHasAP ? undefined : "No AP remaining",
-					onExecute: () => {
-						if (ctx.targetEntityId) {
-							spendActionPoint(ctx.targetEntityId, 1);
-							awardXPToActor(ctx.targetEntityId, "harvest");
-							startHarvest(
-								ctx.targetEntityId,
-								structure.id,
-								structure.model_id,
-								family,
-								worldPos.x + structure.offset_x,
-								worldPos.z + structure.offset_z,
-							);
-						}
-					},
-				});
-
-				// Limit to 6 nearby targets to keep the radial menu readable
-				if (actions.length >= 6) break;
-			}
-		}
-
-		return actions;
-	},
-});
-
-// --- SYSTEM category (sim controls) ---
-
-registerRadialProvider({
-	id: "sim_control",
-	category: {
-		id: "system",
-		label: "System",
-		icon: "gear",
-		tone: "default",
-		priority: 90,
-	},
-	getActions: () => {
-		// System actions are always available
-		return [
-			{
-				id: "pause_toggle",
-				label: "Pause",
-				icon: "pause",
-				tone: "default",
-				enabled: true,
-				onExecute: () => togglePause(),
-			},
-			{
-				id: "speed_05x",
-				label: "0.5x",
-				icon: "slow",
-				tone: "default",
-				enabled: true,
-				onExecute: () => setGameSpeed(0.5),
-			},
-			{
-				id: "speed_1x",
-				label: "1x",
-				icon: "normal",
-				tone: "default",
-				enabled: true,
-				onExecute: () => setGameSpeed(1),
-			},
-			{
-				id: "speed_2x",
-				label: "2x",
-				icon: "fast",
-				tone: "power",
-				enabled: true,
-				onExecute: () => setGameSpeed(2),
-			},
-			{
-				id: "city_lab",
-				label: "Lab",
-				icon: "city",
-				tone: "signal",
-				enabled: true,
-				onExecute: () => openCityKitLab(),
+					const myStats = unitEntity.get(UnitStats);
+					if (myStats) {
+						unitEntity.set(UnitStats, { ...myStats, ap: Math.max(0, myStats.ap - 1) });
+					}
+					playSfx("build_complete");
+					clearHighlights(world);
+				},
 			},
 		];
 	},
 });
 
-// --- SURVEY category ---
+// --- BUFF provider (support) ---
 
 registerRadialProvider({
-	id: "survey",
+	id: "buff",
 	category: {
-		id: "survey",
-		label: "Survey",
-		icon: "eye",
-		tone: "default",
-		priority: 50,
+		id: "class_utility",
+		label: "Utility",
+		icon: "\uD83D\uDC41",
+		tone: "neutral",
+		priority: 9,
 	},
 	getActions: (ctx: RadialOpenContext) => {
-		if (
-			ctx.selectionType !== "empty_sector" &&
-			ctx.selectionType !== "resource_node"
-		) {
-			if (!isSelectedBotCategoryAllowed(ctx, "survey")) {
-				return [];
+		if (ctx.selectionType !== "unit") return [];
+		if (ctx.targetFaction !== "player") return [];
+		if (!ctx.targetEntityId) return [];
+
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		const pos = unitEntity.get(UnitPos);
+		if (!stats || !pos || stats.ap < 1) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "buff")) return [];
+		if (!stats.staged) return [];
+
+		const world = _worldRef!;
+		const targetId = Number(ctx.targetEntityId);
+
+		if (targetId === _selectedUnitId) return [];
+
+		let targetPos = null;
+		for (const e of world.query(UnitPos, UnitFaction)) {
+			if (e.id() === targetId) {
+				targetPos = e.get(UnitPos);
+				break;
 			}
-			const profile = getSelectedBotProfile(ctx);
-			if (!profile?.canSurvey) {
-				return [];
-			}
 		}
+		if (!targetPos) return [];
 
-		const runtime = getRuntimeState();
-		const session = getActiveWorldSession();
-		const mode = runtime.activeScene === "city" ? "city" : "world";
-		const context = runtime.citySiteModalContext ?? runtime.nearbyPoi;
-
-		const actions: RadialAction[] = [
-			{
-				id: "brief_sector",
-				label: "Brief",
-				icon: "eye",
-				tone: "default",
-				enabled: true,
-				onExecute: () => {
-					setCitySiteModalOpen(true, runtime.nearbyPoi);
-				},
-			},
-		];
-
-		if (!context || !session) {
-			return actions;
-		}
-
-		const city =
-			context.cityInstanceId == null
-				? null
-				: (session.cityInstances.find(
-						(candidate) => candidate.id === context.cityInstanceId,
-					) ?? null);
-
-		const viewModel = getCitySiteViewModel({ city, context, mode });
-		const unitHasAP =
-			ctx.selectionType === "unit" && ctx.targetEntityId
-				? hasActionPoints(ctx.targetEntityId)
-				: true;
-
-		if (viewModel.actions.some((a) => a.id === "survey") && city) {
-			actions.push({
-				id: "site_survey",
-				label: "Survey",
-				icon: "eye",
-				tone: "default",
-				enabled: unitHasAP,
-				disabledReason: unitHasAP ? undefined : "No AP remaining",
-				onExecute: () => {
-					if (ctx.selectionType === "unit" && ctx.targetEntityId) {
-						spendActionPoint(ctx.targetEntityId, 1);
-						awardXPToActor(ctx.targetEntityId, "survey");
-					}
-					surveyCitySite(city.id);
-				},
-			});
-		}
-
-		if (viewModel.actions.some((a) => a.id === "found") && city) {
-			const profile =
-				ctx.selectionType === "unit" ? getSelectedBotProfile(ctx) : null;
-			const canEstablish =
-				ctx.selectionType !== "unit" ||
-				profile?.canEstablishSubstation === true;
-			const establishReason = !unitHasAP
-				? "No AP remaining"
-				: !canEstablish
-					? "Wrong unit role"
-					: undefined;
-			actions.push({
-				id: "site_establish",
-				label: "Establish",
-				icon: "city",
-				tone: "power",
-				enabled: canEstablish && unitHasAP,
-				disabledReason: establishReason,
-				onExecute: () => {
-					if (canEstablish) {
-						if (ctx.selectionType === "unit" && ctx.targetEntityId) {
-							spendActionPoint(ctx.targetEntityId, 1);
-							awardXPToActor(ctx.targetEntityId, "found");
-						}
-						foundCitySite(city.id);
-					}
-				},
-			});
-		}
-
-		if (
-			viewModel.actions.some((a) => a.id === "enter") &&
-			city &&
-			mode === "world"
-		) {
-			actions.push({
-				id: "site_enter",
-				label: "Enter",
-				icon: "arrow",
-				tone: "signal",
-				enabled: true,
-				onExecute: () => {
-					enterCityInstance(city.id);
-				},
-			});
-		}
-
-		if (mode === "city") {
-			actions.push({
-				id: "site_return",
-				label: "Return",
-				icon: "arrow",
-				tone: "default",
-				enabled: true,
-				onExecute: () => {
-					returnToWorld();
-				},
-			});
-		}
-
-		return actions;
-	},
-});
-
-// --- CITY INTERIOR category (for city scene) ---
-
-registerRadialProvider({
-	id: "city_interior",
-	category: {
-		id: "city",
-		label: "City",
-		icon: "city",
-		tone: "signal",
-		priority: 60,
-	},
-	getActions: (ctx: RadialOpenContext) => {
-		// Only available in city scene contexts
-		// The radial menu will be opened with appropriate context
-		// by the city interior input handler
-		if (ctx.selectionType === "none") return [];
-		if (getRuntimeState().activeScene !== "city") return [];
+		const dist = Math.abs(pos.tileX - targetPos.tileX) + Math.abs(pos.tileZ - targetPos.tileZ);
 
 		return [
 			{
-				id: "city_brief",
-				label: "Brief",
-				icon: "eye",
-				tone: "signal",
-				enabled: true,
+				id: "buff",
+				label: "Buff",
+				icon: "\u2B06",
+				tone: "neutral",
+				enabled: dist <= 1,
+				disabledReason: dist > 1 ? "Not adjacent" : undefined,
 				onExecute: () => {
-					setCitySiteModalOpen(true, getRuntimeState().nearbyPoi);
+					const cur = unitEntity.get(UnitStats);
+					if (cur) {
+						unitEntity.set(UnitStats, { ...cur, ap: Math.max(0, cur.ap - 1) });
+					}
+					playSfx("build_complete");
+					clearHighlights(world);
 				},
 			},
+		];
+	},
+});
+
+// --- DEPLOY BEACON provider (support) ---
+
+registerRadialProvider({
+	id: "deploy_beacon",
+	category: {
+		id: "class_utility",
+		label: "Utility",
+		icon: "\uD83D\uDC41",
+		tone: "neutral",
+		priority: 9,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		if (!stats || stats.ap < 1) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "deploy_beacon")) return [];
+		if (!stats.staged) return [];
+
+		const world = _worldRef!;
+
+		return [
 			{
-				id: "return_world",
-				label: "Return",
-				icon: "arrow",
-				tone: "default",
+				id: "deploy_beacon",
+				label: "Deploy Beacon",
+				icon: "\uD83D\uDCE1",
+				tone: "neutral",
 				enabled: true,
-				onExecute: () => returnToWorld(),
+				onExecute: () => {
+					const cur = unitEntity.get(UnitStats);
+					if (cur) {
+						unitEntity.set(UnitStats, { ...cur, ap: Math.max(0, cur.ap - 1) });
+					}
+					playSfx("build_complete");
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- SALVAGE provider (worker) ---
+
+registerRadialProvider({
+	id: "salvage",
+	category: {
+		id: "harvest",
+		label: "Harvest",
+		icon: "\u26cf",
+		tone: "harvest",
+		priority: 2,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		if (ctx.selectionType !== "building") return [];
+		if (ctx.targetFaction !== "player") return [];
+		if (!ctx.targetEntityId) return [];
+
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		const pos = unitEntity.get(UnitPos);
+		if (!stats || !pos || stats.ap < 1) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "salvage")) return [];
+		if (!stats.staged) return [];
+
+		const world = _worldRef!;
+		const buildingId = Number(ctx.targetEntityId);
+
+		// Find the building and check adjacency
+		let buildingEntity = null;
+		for (const e of world.query(Building)) {
+			if (e.id() === buildingId) {
+				buildingEntity = e;
+				break;
+			}
+		}
+		if (!buildingEntity) return [];
+
+		const b = buildingEntity.get(Building)!;
+		const dist = Math.abs(pos.tileX - b.tileX) + Math.abs(pos.tileZ - b.tileZ);
+
+		return [
+			{
+				id: "salvage",
+				label: "Salvage",
+				icon: "\u267B",
+				tone: "harvest",
+				enabled: dist <= 1,
+				disabledReason: dist > 1 ? "Not adjacent" : undefined,
+				onExecute: () => {
+					const cur = unitEntity.get(UnitStats);
+					if (cur) {
+						unitEntity.set(UnitStats, { ...cur, ap: Math.max(0, cur.ap - 1) });
+					}
+					playSfx("build_complete");
+					clearHighlights(world);
+				},
+			},
+		];
+	},
+});
+
+// --- PROSPECT provider (worker) ---
+
+registerRadialProvider({
+	id: "prospect",
+	category: {
+		id: "class_utility",
+		label: "Utility",
+		icon: "\uD83D\uDC41",
+		tone: "neutral",
+		priority: 9,
+	},
+	getActions: (ctx: RadialOpenContext) => {
+		const unitEntity = getSelectedPlayerUnit();
+		if (!unitEntity) return [];
+		const stats = unitEntity.get(UnitStats);
+		if (!stats || stats.ap < 1) return [];
+
+		const robotClass = stats.robotClass as RobotClass;
+		if (!hasClassAction(robotClass, "prospect")) return [];
+		if (!stats.staged) return [];
+
+		const world = _worldRef!;
+
+		return [
+			{
+				id: "prospect",
+				label: "Prospect",
+				icon: "\uD83D\uDD0D",
+				tone: "neutral",
+				enabled: true,
+				onExecute: () => {
+					const cur = unitEntity.get(UnitStats);
+					if (cur) {
+						unitEntity.set(UnitStats, { ...cur, ap: Math.max(0, cur.ap - 1) });
+					}
+					playSfx("build_complete");
+					clearHighlights(world);
+				},
 			},
 		];
 	},

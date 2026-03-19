@@ -1,0 +1,123 @@
+/**
+ * Points of Interest definitions — named locations placed on the map.
+ *
+ * Converted from pending/config/pois.json to TypeScript const objects.
+ *
+ * POIs are fixed landmarks placed relative to the board dimensions.
+ * Each has a type (home_base, resource_depot, etc.), a human-readable name,
+ * and relative coordinates (0-1 range) that scale to any board size.
+ *
+ * Some POIs are discovered at game start, others must be explored.
+ */
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+export type POIType =
+	| "home_base"
+	| "resource_depot"
+	| "research_site"
+	| "faction_outpost"
+	| "ruin"
+	| "northern_cult_site"
+	| "deep_sea_gateway"
+	| "science_campus";
+
+export interface POIDef {
+	readonly type: POIType;
+	readonly name: string;
+	/** X position as fraction of board width [0, 1]. */
+	readonly relativeX: number;
+	/** Z position as fraction of board height [0, 1]. */
+	readonly relativeZ: number;
+	/** Whether this POI is visible from the start. */
+	readonly discoveredAtStart: boolean;
+}
+
+// ─── Configuration ───────────────────────────────────────────────────────────
+
+/** Manhattan-distance tile radius for discovering a POI. */
+export const POI_DISCOVERY_RADIUS = 5;
+
+/** Additional fringe radius for "almost discovered" visual hints. */
+export const POI_DISCOVERY_FRINGE_RADIUS = 2;
+
+/** POI types that can be founded by the player as new bases. */
+export const FOUNDABLE_POI_TYPES: readonly POIType[] = [
+	"home_base",
+	"resource_depot",
+	"research_site",
+	"science_campus",
+] as const;
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+export const POI_DEFINITIONS: readonly POIDef[] = [
+	{
+		type: "home_base",
+		name: "Command Nexus",
+		relativeX: 0.5,
+		relativeZ: 0.5,
+		discoveredAtStart: true,
+	},
+	{
+		type: "resource_depot",
+		name: "Salvage Yard",
+		relativeX: 0.2,
+		relativeZ: 0.3,
+		discoveredAtStart: false,
+	},
+	{
+		type: "research_site",
+		name: "Signal Lab",
+		relativeX: 0.75,
+		relativeZ: 0.25,
+		discoveredAtStart: false,
+	},
+	{
+		type: "faction_outpost",
+		name: "Iron Creed Outpost",
+		relativeX: 0.8,
+		relativeZ: 0.7,
+		discoveredAtStart: false,
+	},
+	{
+		type: "ruin",
+		name: "Collapsed Sector",
+		relativeX: 0.3,
+		relativeZ: 0.8,
+		discoveredAtStart: false,
+	},
+	{
+		type: "northern_cult_site",
+		name: "Fracture Rift",
+		relativeX: 0.15,
+		relativeZ: 0.15,
+		discoveredAtStart: false,
+	},
+	{
+		type: "deep_sea_gateway",
+		name: "Sunken Conduit",
+		relativeX: 0.9,
+		relativeZ: 0.9,
+		discoveredAtStart: false,
+	},
+] as const;
+
+/** Fast lookup by POI type. */
+export const POI_BY_TYPE: ReadonlyMap<POIType, POIDef> = new Map(
+	POI_DEFINITIONS.map((p) => [p.type, p]),
+);
+
+/**
+ * Convert relative POI coordinates to tile coordinates for a given board size.
+ */
+export function poiToTile(
+	poi: POIDef,
+	boardWidth: number,
+	boardHeight: number,
+): { x: number; z: number } {
+	return {
+		x: Math.floor(poi.relativeX * boardWidth),
+		z: Math.floor(poi.relativeZ * boardHeight),
+	};
+}

@@ -5,6 +5,7 @@
 		"ignoreUnknown": true,
 		"includes": [
 			"**",
+			"!pending/**",
 			"!playwright-report/**",
 			"!test-results/**",
 			"!coverage/**",
@@ -239,6 +240,16 @@
 			],
 			"linter": {
 				"rules": { "style": { "noCommonJs": "off" } }
+			}
+		},
+		{
+			"includes": ["src/testing/**/*.js"],
+			"javascript": { "globals": ["jest"] },
+			"linter": {
+				"rules": {
+					"correctness": { "noUndeclaredVariables": "off" },
+					"style": { "noCommonJs": "off" }
+				}
 			}
 		}
 	],

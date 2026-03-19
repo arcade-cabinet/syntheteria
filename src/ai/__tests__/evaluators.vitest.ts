@@ -66,6 +66,8 @@ function setCtx(overrides: Partial<TurnContext> = {}): void {
 		rememberedEnemies: [],
 		factionCenter: { x: 8, z: 8 },
 		mineableTiles: [],
+		unitCount: 4,
+		popCap: 12,
 		...overrides,
 	});
 }

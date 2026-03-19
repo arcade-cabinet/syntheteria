@@ -2,8 +2,8 @@
  * Place starter buildings for each faction at world init.
  *
  * Uses terrain-affinity spawn centers computed by computeSpawnCenters().
- * Each faction gets a storm_transmitter + motor_pool + storage_hub near their spawn.
- * The motor_pool is essential — without it, factions cannot fabricate replacement units.
+ * Each faction gets storm_transmitter + motor_pool + outpost + storage_hub near spawn.
+ * The motor_pool enables fabrication; the outpost raises pop cap by 4.
  */
 
 import type { World } from "koota";
@@ -100,7 +100,8 @@ function spawnBuilding(
  * Place starter buildings for each faction:
  *   1. storm_transmitter — power source (must be first for coverage)
  *   2. motor_pool — unit fabrication (critical: without this, faction dies)
- *   3. storage_hub — resource storage
+ *   3. outpost — raises pop cap by 4 (12 base + 4 = 16 slots at start)
+ *   4. storage_hub — resource storage
  *
  * Uses spawn centers from the terrain-affinity system.
  */
@@ -168,6 +169,19 @@ export function placeStarterBuildings(
 				motorPoolTile.z,
 			);
 			occupied.add(`${motorPoolTile.x},${motorPoolTile.z}`);
+		}
+
+		// Place outpost nearby (raises pop cap by 4)
+		const outpostTile = findPassableNear(center.x, center.z, board, occupied);
+		if (outpostTile) {
+			spawnBuilding(
+				world,
+				"outpost",
+				factionId,
+				outpostTile.x,
+				outpostTile.z,
+			);
+			occupied.add(`${outpostTile.x},${outpostTile.z}`);
 		}
 
 		// Place storage_hub nearby

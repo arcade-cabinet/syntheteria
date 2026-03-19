@@ -47,6 +47,10 @@ export interface TurnContext {
 	factionCenter: { x: number; z: number };
 	/** Mineable tiles near faction units (for floor mining backstop). */
 	mineableTiles: Array<{ x: number; z: number; material: string }>;
+	/** Current unit count for this faction. */
+	unitCount: number;
+	/** Population cap for this faction (base + outposts + power plants). */
+	popCap: number;
 }
 
 let _ctx: TurnContext = {
@@ -63,6 +67,8 @@ let _ctx: TurnContext = {
 	rememberedEnemies: [],
 	factionCenter: { x: 8, z: 8 },
 	mineableTiles: [],
+	unitCount: 0,
+	popCap: 12,
 };
 
 export function setTurnContext(ctx: TurnContext): void {
@@ -347,12 +353,22 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
+		// When near pop cap (>= 80%), outpost gets top priority to raise the ceiling
+		const nearPopCap =
+			_ctx.popCap > 0 && _ctx.unitCount >= _ctx.popCap * 0.8;
+
 		let best: BuildOption | null = null;
 		let bestPriority = BUILD_PRIORITY.length;
 
 		for (const opt of _ctx.buildOptions) {
-			const idx = BUILD_PRIORITY.indexOf(opt.buildingType);
-			const priority = idx >= 0 ? idx : BUILD_PRIORITY.length;
+			let priority: number;
+			if (nearPopCap && opt.buildingType === "outpost") {
+				// Outpost jumps to top priority when near pop cap
+				priority = -1;
+			} else {
+				const idx = BUILD_PRIORITY.indexOf(opt.buildingType);
+				priority = idx >= 0 ? idx : BUILD_PRIORITY.length;
+			}
 			if (priority < bestPriority) {
 				bestPriority = priority;
 				best = opt;

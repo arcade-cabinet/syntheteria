@@ -20,6 +20,7 @@ import { getRelation } from "../ecs/factions/relations";
 import { TRACK_REGISTRY } from "../ecs/robots/specializations/trackRegistry";
 import type { RobotClass } from "../ecs/robots/types";
 import { queueFabrication } from "../ecs/systems/fabricationSystem";
+import { getPopCap, getPopulation } from "../ecs/systems/populationSystem";
 import { getResearchState } from "../ecs/systems/researchSystem";
 import { canAfford, spendResources } from "../ecs/systems/resourceSystem";
 import { TileFloor } from "../ecs/terrain/traits";
@@ -315,6 +316,10 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			navGraph.wrapX,
 		);
 
+		// Population data for build priority decisions
+		const unitCount = getPopulation(world, factionId);
+		const popCap = getPopCap(world, factionId);
+
 		// Set context for this faction's evaluators
 		setTurnContext({
 			enemies: factionEnemies,
@@ -330,6 +335,8 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			rememberedEnemies,
 			factionCenter,
 			mineableTiles,
+			unitCount,
+			popCap,
 		});
 
 		// Arbitrate each agent in this faction

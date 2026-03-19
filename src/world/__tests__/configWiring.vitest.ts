@@ -362,9 +362,9 @@ describe("difficulty affects resources and AI aggression", () => {
 					const f = e.get(Faction);
 					const r = e.get(ResourcePool);
 					if (f && !f.isPlayer && r) {
-						expect(r.scrap_metal).toBe(20);
-						expect(r.ferrous_scrap).toBe(10);
-						expect(r.alloy_stock).toBe(5);
+						expect(r.scrap_metal).toBe(30);
+						expect(r.ferrous_scrap).toBe(15);
+						expect(r.alloy_stock).toBe(8);
 					}
 				}
 			}

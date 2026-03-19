@@ -17,7 +17,7 @@ import { Building, Powered } from "../traits/building";
 import { UnitFaction, UnitPos } from "../traits/unit";
 
 /** Every faction starts with this cap before any buildings. */
-export const BASE_POP_CAP = 6;
+export const BASE_POP_CAP = 12;
 /** Each powered outpost adds this many slots. */
 export const POP_PER_OUTPOST = 4;
 /** Each powered power plant adds this many slots. */

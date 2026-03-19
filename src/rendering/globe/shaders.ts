@@ -5,6 +5,9 @@
  * Kept as a separate module so both title and game rendering can import.
  */
 
+// NOTE: These shaders are originally defined in ui/landing/title/shaders.ts.
+// We re-export from there so that both title and game rendering can import
+// through the rendering package index.
 export {
 	globeFragmentShader,
 	globeVertexShader,

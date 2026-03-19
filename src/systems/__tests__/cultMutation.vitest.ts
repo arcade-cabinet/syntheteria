@@ -1,8 +1,7 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { CULT_INFANTRY_DEFAULTS } from "../../robots/CultMechs";
-import { CultMutation } from "../../traits/cult";
-import { UnitFaction, UnitStats } from "../../traits/unit";
+import { CultMutation, UnitFaction, UnitStats } from "../../traits";
 import {
 	computeTier,
 	getMutationXPMultiplier,

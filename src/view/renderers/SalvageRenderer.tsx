@@ -12,7 +12,7 @@ import type { World } from "koota";
 import { type ReactNode, Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../../board/grid";
-import { SalvageProp, type SalvageType } from "../../traits/salvage";
+import { SalvageProp, type SalvageType } from "../../traits";
 import { ModelErrorBoundary } from "../ModelErrorBoundary";
 import { getAllSalvageModelUrls, resolveSalvageModelUrl } from "../../rendering/modelPaths";
 import { sphereModelPlacement } from "../../rendering/spherePlacement";

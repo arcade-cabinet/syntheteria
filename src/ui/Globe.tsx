@@ -29,38 +29,42 @@ import {
 	useState,
 } from "react";
 import * as THREE from "three";
-import type { BoardConfig, GeneratedBoard } from "../board/types";
+import type { BoardConfig, GeneratedBoard } from "../board";
 import { SphereOrbitCamera } from "../camera";
 import { resolveAttacks } from "../systems";
-import { BoardInput } from "../input/BoardInput";
-import { BiomeRenderer } from "../view/renderers/BiomeRenderer";
-import { BuildingRenderer } from "../view/renderers/BuildingRenderer";
-import { CombatEffectsRenderer } from "../view/effects/CombatEffectsRenderer";
-import { CultDomeRenderer } from "../view/renderers/CultDomeRenderer";
-import { CutawayClipPlane } from "../view/renderers/CutawayClipPlane";
-import { FogOfWarRenderer } from "../view/overlays/FogOfWarRenderer";
-import { FragmentRenderer } from "../view/renderers/FragmentRenderer";
-import { Hypercane, LightningEffect, StormClouds } from "../view/globe";
-import { cinematicState } from "../rendering/globe/cinematicState";
+import { BoardInput } from "../input";
 import {
+	BiomeRenderer,
+	BuildingRenderer,
+	CombatEffectsRenderer,
+	CultDomeRenderer,
+	CutawayClipPlane,
+	FogOfWarRenderer,
+	FragmentRenderer,
+	Hypercane,
+	LightningEffect,
+	StormClouds,
+	HighlightRenderer,
+	IlluminatorRenderer,
+	InfrastructureRenderer,
+	LodGlobe,
+	PathRenderer,
+	ParticleRenderer,
+	SalvageRenderer,
+	SpeechBubbleRenderer,
+	StormSky,
+	StructureRenderer,
+	TerritoryOverlayRenderer,
+	UnifiedTerrainRenderer,
+	UnitRenderer,
+	UnitStatusBars,
+} from "../view";
+import {
+	cinematicState,
 	globeFragmentShader,
 	globeVertexShader,
-} from "../rendering/globe/shaders";
-import { HighlightRenderer } from "../view/overlays/HighlightRenderer";
-import { IlluminatorRenderer } from "../view/renderers/IlluminatorRenderer";
-import { InfrastructureRenderer } from "../view/renderers/InfrastructureRenderer";
-import { LodGlobe } from "../view/renderers/LodGlobe";
-import { PathRenderer } from "../view/overlays/PathRenderer";
-import { ParticleRenderer } from "../view/effects/ParticleRenderer";
-import { SalvageRenderer } from "../view/renderers/SalvageRenderer";
-import { SpeechBubbleRenderer } from "../view/effects/SpeechBubbleRenderer";
-import { StormSky } from "../view/renderers/StormSky";
-import { StructureRenderer } from "../view/renderers/StructureRenderer";
-import { turnToChronometry } from "../rendering/sky/chronometry";
-import { TerritoryOverlayRenderer } from "../view/overlays/TerritoryOverlayRenderer";
-import { UnifiedTerrainRenderer } from "../view/renderers/UnifiedTerrainRenderer";
-import { UnitRenderer } from "../view/renderers/UnitRenderer";
-import { UnitStatusBars } from "../view/UnitStatusBars";
+	turnToChronometry,
+} from "../rendering";
 import type { StormProfile } from "../world/config";
 import { HoverTracker } from "./game/HoverTracker";
 

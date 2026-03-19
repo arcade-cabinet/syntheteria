@@ -7,9 +7,9 @@
  * and performance tests.
  */
 
-import { TILE_SIZE_M } from "../board/grid";
-import type { GeneratedBoard } from "../board/types";
-import { seedToFloat } from "../terrain/cluster";
+import { TILE_SIZE_M } from "../board";
+import type { GeneratedBoard } from "../board";
+import { seedToFloat } from "../terrain";
 import { isTileExplored } from "./tileVisibility";
 
 // ---------------------------------------------------------------------------

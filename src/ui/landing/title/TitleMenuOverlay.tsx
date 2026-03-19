@@ -14,8 +14,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { startAmbience } from "../../../audio/ambience";
-import { initAudio } from "../../../audio/audioEngine";
+import { startAmbience, initAudio } from "../../../audio";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

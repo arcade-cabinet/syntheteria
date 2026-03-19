@@ -4,8 +4,7 @@
 
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CultStructure } from "../../traits/cult";
-import { UnitFaction, UnitPos } from "../../traits/unit";
+import { CultStructure, UnitFaction, UnitPos } from "../../traits";
 import {
 	checkCorruptionTriggers,
 	checkFactionContact,

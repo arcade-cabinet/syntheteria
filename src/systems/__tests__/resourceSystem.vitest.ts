@@ -1,7 +1,6 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import { Faction } from "../../traits/faction";
-import { ResourcePool } from "../../traits/resource";
+import { Faction, ResourcePool } from "../../traits";
 import {
 	addResources,
 	canAfford,

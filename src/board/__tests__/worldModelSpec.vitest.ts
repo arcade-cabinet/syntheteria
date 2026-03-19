@@ -23,7 +23,7 @@ import {
 	isPassableFloor,
 	type ResourceMaterial,
 } from "../../terrain/types";
-import type { SalvageType } from "../../traits/salvage";
+import type { SalvageType } from "../../traits";
 import { SECTOR_SCALE_SPECS } from "../../world/config";
 import { isPassableFor, movementCost } from "../adjacency";
 import { generateDepthLayer } from "../depth";

@@ -20,18 +20,18 @@ import {
 	type FloorType,
 	type ResourceMaterial,
 } from "../../terrain/types";
-import { Board } from "../../traits/board";
 import {
+	Board,
 	Building,
 	Powered,
 	PowerGrid,
 	SignalNode,
 	StorageCapacity,
-} from "../../traits/building";
-import { Faction } from "../../traits/faction";
-import { ResourceDeposit, ResourcePool } from "../../traits/resource";
-import { Tile, TileHighlight } from "../../traits/tile";
-import {
+	Faction,
+	ResourceDeposit,
+	ResourcePool,
+	Tile,
+	TileHighlight,
 	UnitAttack,
 	UnitFaction,
 	UnitHarvest,
@@ -39,7 +39,7 @@ import {
 	UnitStats,
 	UnitVisual,
 	UnitXP,
-} from "../../traits/unit";
+} from "../../traits";
 import { resolveAttacks } from "../attackSystem";
 import { harvestSystem, startHarvest } from "../harvestSystem";
 import { runPowerGrid } from "../powerSystem";

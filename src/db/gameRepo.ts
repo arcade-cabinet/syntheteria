@@ -1,4 +1,4 @@
-import { randomUUID } from "../lib/uuid";
+import { randomUUID } from "../lib";
 import type { SqliteAdapter } from "./adapter";
 import type {
 	BuildingRecord,

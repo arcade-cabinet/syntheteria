@@ -7,7 +7,7 @@ import {
 	placeRobots,
 	type SimpleBoardInfo,
 } from "../placement";
-import { UnitFaction, UnitPos } from "../../traits/unit";
+import { UnitFaction, UnitPos } from "../../traits";
 
 function makeBoard(width: number, height: number): SimpleBoardInfo {
 	return {

@@ -6,17 +6,17 @@
  */
 
 import type { World } from "koota";
-import { SUPPORT_DEFAULTS } from "../robots/BuilderBot";
-import { CAVALRY_DEFAULTS } from "../robots/CavalryBot";
 import {
+	SUPPORT_DEFAULTS,
+	CAVALRY_DEFAULTS,
 	CULT_CAVALRY_DEFAULTS,
 	CULT_INFANTRY_DEFAULTS,
 	CULT_RANGED_DEFAULTS,
-} from "../robots/CultMechs";
-import { RANGED_DEFAULTS } from "../robots/GuardBot";
-import { WORKER_DEFAULTS } from "../robots/HarvesterBot";
-import { SCOUT_DEFAULTS } from "../robots/ScoutBot";
-import { INFANTRY_DEFAULTS } from "../robots/SentinelBot";
+	RANGED_DEFAULTS,
+	WORKER_DEFAULTS,
+	SCOUT_DEFAULTS,
+	INFANTRY_DEFAULTS,
+} from "../robots";
 import {
 	Board,
 	Building,

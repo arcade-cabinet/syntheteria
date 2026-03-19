@@ -9,8 +9,8 @@
  * boardToDepthLayers converts a GeneratedBoard into the stack.
  */
 
-import type { GeneratedBoard } from "../board/types";
-import { FLOOR_INDEX_MAP } from "../terrain/types";
+import type { GeneratedBoard } from "../board";
+import { FLOOR_INDEX_MAP } from "../terrain";
 import {
 	createDepthMappedLayer,
 	type DepthMappedLayer,

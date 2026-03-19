@@ -10,9 +10,9 @@
 
 import type { World } from "koota";
 import { useEffect, useMemo, useState } from "react";
-import { FACTION_COLORS_CSS } from "../../config/gameDefaults";
-import { FACTION_DEFINITIONS } from "../../factions/definitions";
-import { getRelation, type RelationType } from "../../factions/relations";
+import { FACTION_COLORS_CSS } from "../../config";
+import { FACTION_DEFINITIONS } from "../../factions";
+import { getRelation, type RelationType } from "../../factions";
 import {
 	type DiplomacyEvent,
 	declareWar,
@@ -22,7 +22,7 @@ import {
 	proposeAlliance,
 	subscribeDiplomacy,
 } from "../../systems";
-import { Board } from "../../traits/board";
+import { Board } from "../../traits";
 
 type DiplomacyOverlayProps = {
 	world: World;

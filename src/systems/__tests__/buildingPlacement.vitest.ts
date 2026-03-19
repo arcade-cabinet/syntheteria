@@ -6,7 +6,7 @@ import {
 	computeSpawnCenters,
 	type SimpleBoardInfo,
 } from "../../robots/placement";
-import { Building, PowerGrid, StorageCapacity } from "../../traits/building";
+import { Building, PowerGrid, StorageCapacity } from "../../traits";
 import { placeStarterBuildings } from "../buildingPlacement";
 
 function makeTile(x: number, z: number, passable = true): TileData {

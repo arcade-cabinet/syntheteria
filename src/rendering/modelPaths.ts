@@ -5,10 +5,9 @@
  * No hardcoded maps in renderers — everything flows through here.
  */
 
-import { FACTION_COLORS as GAME_FACTION_COLORS } from "../config/gameDefaults";
-import { CULT_STRUCTURE_DEFS } from "../buildings/cultStructures";
-import { BUILDING_DEFS } from "../buildings/definitions";
-import { SALVAGE_DEFS } from "../resources/salvageTypes";
+import { FACTION_COLORS as GAME_FACTION_COLORS } from "../config";
+import { CULT_STRUCTURE_DEFS, BUILDING_DEFS } from "../buildings";
+import { SALVAGE_DEFS } from "../resources";
 
 const MODEL_BASE = "/assets/models/";
 

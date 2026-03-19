@@ -8,8 +8,8 @@
  */
 
 import { useEffect, useRef } from "react";
-import { TILE_SIZE_M } from "../board/grid";
-import { getCameraControls } from "../camera/cameraStore";
+import { TILE_SIZE_M } from "../board";
+import { getCameraControls } from "../camera";
 import { UnitFaction, UnitPos } from "../traits";
 import type { Phase, GameSession } from "./types";
 

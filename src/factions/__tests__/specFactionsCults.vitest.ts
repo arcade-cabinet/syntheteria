@@ -21,7 +21,7 @@ import { CULT_DEFINITIONS } from "../cults";
 import { FACTION_DEFINITIONS } from "../definitions";
 import { getRelation, isHostile, setRelation } from "../relations";
 import type { CultDef, FactionDef } from "../types";
-import { FactionRelation } from "../../traits/faction";
+import { FactionRelation } from "../../traits";
 
 describe("SPEC: Section 8 — Factions + Cults", () => {
 	let world: ReturnType<typeof createWorld>;

@@ -17,8 +17,8 @@
  * Same seed = identical output.
  */
 
-import { floorTypeForTile } from "../terrain/cluster";
-import { FLOOR_DEFS, type FloorType } from "../terrain/types";
+import { floorTypeForTile } from "../terrain";
+import { FLOOR_DEFS, type FloorType } from "../terrain";
 import { CLIMATE_PROFILE_SPECS } from "../world/config";
 import { generateLabyrinth, generateRooms } from "./labyrinth";
 import { applyAbyssalZones, type ProtectedZone } from "./labyrinthAbyssal";

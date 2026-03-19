@@ -8,8 +8,8 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { getCameraControls } from "../../camera/cameraStore";
-import { TILE_SIZE_M } from "../../config/gameDefaults";
+import { getCameraControls } from "../../camera";
+import { TILE_SIZE_M } from "../../config";
 
 // ─── Alert Channel (module-level, same pattern as toastNotifications) ────────
 

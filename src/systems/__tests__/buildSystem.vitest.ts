@@ -9,9 +9,9 @@ import {
 	SignalNode,
 	StorageCapacity,
 	TurretStats,
-} from "../../traits/building";
-import { Faction } from "../../traits/faction";
-import { ResourcePool } from "../../traits/resource";
+	Faction,
+	ResourcePool,
+} from "../../traits";
 import {
 	_resetBuildSystem,
 	cancelBuildPlacement,

@@ -1,15 +1,15 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { Board } from "../../traits/board";
-import { CultStructure } from "../../traits/cult";
 import {
+	Board,
+	CultStructure,
 	UnitFaction,
 	UnitMove,
 	UnitPos,
 	UnitStats,
 	UnitVisual,
-} from "../../traits/unit";
+} from "../../traits";
 import { resolveAllMoves } from "../aiTurnSystem";
 import {
 	_reset,

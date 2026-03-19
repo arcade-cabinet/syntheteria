@@ -11,8 +11,8 @@
  * Reference: journal.stuffwithstuff.com/2014/12/21/rooms-and-mazes/
  */
 
-import { FACTION_DEFINITIONS } from "../factions/definitions";
-import type { FloorType } from "../terrain/types";
+import { FACTION_DEFINITIONS } from "../factions";
+import type { FloorType } from "../terrain";
 import { seededRng } from "./noise";
 import type { BoardConfig, Elevation, GeneratedBoard, TileData } from "./types";
 

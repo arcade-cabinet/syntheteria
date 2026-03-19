@@ -1,7 +1,7 @@
 import { createWorld } from "koota";
 import { afterEach, describe, expect, it } from "vitest";
 import type { RobotClass } from "../../robots/types";
-import { UnitFaction, UnitPos, UnitStats, UnitXP } from "../../traits/unit";
+import { UnitFaction, UnitPos, UnitStats, UnitXP } from "../../traits";
 import {
 	applyMarkUpgrade,
 	awardXP,

@@ -6,8 +6,7 @@
  */
 
 import type { WorldType } from "../create-world";
-import { TECH_BY_ID } from "../config/techTreeDefs";
-import { PLAYER_MAX_AP } from "../config/gameDefaults";
+import { TECH_BY_ID, PLAYER_MAX_AP } from "../config";
 import {
 	FUSION_RECIPES,
 	SynthesisQueue,
@@ -15,7 +14,7 @@ import {
 	getResearchState,
 } from "../systems";
 import { Building, UnitFaction, UnitStats } from "../traits";
-import type { CurrentResearch, ProductionQueueItem } from "../ui/game/HUD";
+import type { CurrentResearch, ProductionQueueItem } from "../ui";
 
 /** Read current AP for the first player unit found. */
 export function readPlayerAp(world: WorldType): number {

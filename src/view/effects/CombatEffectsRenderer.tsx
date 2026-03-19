@@ -16,7 +16,7 @@ import type { World } from "koota";
 import { useRef, useState } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../../config/gameDefaults";
-import { CombatResult, UnitPos } from "../../traits/unit";
+import { CombatResult, UnitPos } from "../../traits";
 import { pushEffect } from "../../rendering/particles/effectEvents";
 
 interface FloatingText {

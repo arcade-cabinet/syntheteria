@@ -17,7 +17,7 @@ import * as THREE from "three";
 import { ELEVATION_STEP_M, TILE_SIZE_M } from "../../board/grid";
 import type { GeneratedBoard } from "../../board/types";
 import { TileFloor } from "../../terrain/traits";
-import { Tile } from "../../traits/tile";
+import { Tile } from "../../traits";
 import { boardToDepthLayers } from "../../rendering/depthLayerStack";
 import {
 	applyTargetedDig,

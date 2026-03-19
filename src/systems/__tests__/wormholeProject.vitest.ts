@@ -1,9 +1,7 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { WORMHOLE_PROJECT_TURNS } from "../../config/gameDefaults";
-import { Board } from "../../traits/board";
-import { Building } from "../../traits/building";
-import { Faction } from "../../traits/faction";
+import { Board, Building, Faction } from "../../traits";
 import { ResearchState } from "../researchSystem";
 import {
 	_resetWormholeProject,

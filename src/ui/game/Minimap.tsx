@@ -8,15 +8,13 @@
 
 import type { World } from "koota";
 import { useCallback, useEffect, useRef } from "react";
-import { TILE_SIZE_M } from "../../board/grid";
-import type { GeneratedBoard } from "../../board/types";
-import { getCameraControls } from "../../camera/cameraStore";
-import { FACTION_COLORS } from "../../config/gameDefaults";
-import { getRelation } from "../../factions/relations";
+import { TILE_SIZE_M } from "../../board";
+import type { GeneratedBoard } from "../../board";
+import { getCameraControls } from "../../camera";
+import { FACTION_COLORS } from "../../config";
+import { getRelation } from "../../factions";
 import { computeTerritory } from "../../systems";
-import { Building } from "../../traits/building";
-import { Tile } from "../../traits/tile";
-import { UnitFaction, UnitPos } from "../../traits/unit";
+import { Building, Tile, UnitFaction, UnitPos } from "../../traits";
 
 const SIZE = 150;
 

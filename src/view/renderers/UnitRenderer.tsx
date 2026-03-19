@@ -26,7 +26,7 @@ import {
 	UnitStats,
 	UnitVisual,
 	UnitXP,
-} from "../../traits/unit";
+} from "../../traits";
 import { ModelErrorBoundary } from "../ModelErrorBoundary";
 import {
 	FACTION_COLORS,

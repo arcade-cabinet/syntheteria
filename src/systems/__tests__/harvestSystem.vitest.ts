@@ -1,8 +1,13 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import { Faction } from "../../traits/faction";
-import { ResourceDeposit, ResourcePool } from "../../traits/resource";
-import { UnitFaction, UnitHarvest, UnitStats } from "../../traits/unit";
+import {
+	Faction,
+	ResourceDeposit,
+	ResourcePool,
+	UnitFaction,
+	UnitHarvest,
+	UnitStats,
+} from "../../traits";
 import { harvestSystem, startHarvest } from "../harvestSystem";
 
 describe("harvestSystem", () => {

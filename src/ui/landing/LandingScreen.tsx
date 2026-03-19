@@ -8,7 +8,7 @@
  */
 
 import { useState } from "react";
-import type { GameSummary } from "../../db/types";
+import type { GameSummary } from "../../db";
 import type { NewGameConfig } from "../../world/config";
 import { NewGameModal } from "./NewGameModal";
 import { SettingsModal } from "./SettingsModal";

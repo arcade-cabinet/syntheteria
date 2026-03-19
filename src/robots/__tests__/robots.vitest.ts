@@ -9,7 +9,7 @@ import { MARK_EFFECTS } from "../marks";
 import { buildPlacementFlags } from "../placement";
 import { SCOUT_DEFAULTS, spawnScout } from "../ScoutBot";
 import { INFANTRY_DEFAULTS, spawnInfantry } from "../SentinelBot";
-import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../../traits/unit";
+import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../../traits";
 
 describe("robot spawning", () => {
 	let world: ReturnType<typeof createWorld>;

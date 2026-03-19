@@ -1,8 +1,13 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { Board } from "../../traits/board";
-import { UnitAttack, UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
+import {
+	Board,
+	UnitAttack,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+} from "../../traits";
 import { advanceTurn, getCurrentTurn } from "../turnSystem";
 
 /** Build a W×H board where every tile is passable and flat. */

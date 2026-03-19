@@ -10,7 +10,7 @@
 
 import type { World } from "koota";
 import { useMemo, useState } from "react";
-import { TECH_BY_ID, TECH_TREE, type TechDef } from "../../config/techTreeDefs";
+import { TECH_BY_ID, TECH_TREE, type TechDef } from "../../config";
 import {
 	cancelResearch,
 	getAvailableTechs,

@@ -1,6 +1,6 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Building, Powered, PowerGrid } from "../../traits/building";
+import { Building, Powered, PowerGrid } from "../../traits";
 import { isPowered, runPowerGrid } from "../powerSystem";
 
 function spawnBuilding(

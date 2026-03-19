@@ -15,7 +15,7 @@
  * Works with any board that uses structural_mass — BSP or labyrinth.
  */
 
-import type { GeneratedBoard } from "../../board/types";
+import type { GeneratedBoard } from "../../board";
 
 // ---------------------------------------------------------------------------
 // Types

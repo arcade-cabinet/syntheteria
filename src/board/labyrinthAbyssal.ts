@@ -21,8 +21,8 @@
  * All randomness via seededRng(seed + "_abyssal"). Deterministic.
  */
 
-import { TILE_SIZE_M } from "../config/gameDefaults";
-import { geographyValue, seedToFloat } from "../terrain/cluster";
+import { TILE_SIZE_M } from "../config";
+import { geographyValue, seedToFloat } from "../terrain";
 import { seededRng } from "./noise";
 import type { Elevation, TileData } from "./types";
 

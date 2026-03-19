@@ -4,8 +4,7 @@ import { generateBoard } from "../../board/generator";
 import type { BoardConfig } from "../../board/types";
 import { TECH_TREE } from "../../config/techTreeDefs";
 import { initWorldFromBoard } from "../../init-world";
-import { Building } from "../../traits/building";
-import { Faction } from "../../traits/faction";
+import { Building, Faction } from "../../traits";
 import { ResearchState } from "../researchSystem";
 import {
 	finalizeTurnDeltas,

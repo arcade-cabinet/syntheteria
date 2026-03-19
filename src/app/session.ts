@@ -6,11 +6,11 @@
  */
 
 import { createWorld } from "koota";
-import type { BoardConfig, GeneratedBoard } from "../board/types";
-import { generateBoard } from "../board/generator";
+import type { BoardConfig, GeneratedBoard } from "../board";
+import { generateBoard } from "../board";
 import type { WorldType } from "../create-world";
-import { GameRepo } from "../db/gameRepo";
 import {
+	GameRepo,
 	applyBuildings,
 	applyExplored,
 	applyResources,
@@ -20,12 +20,12 @@ import {
 	serializeExplored,
 	serializeResources,
 	serializeUnits,
-} from "../db/serialize";
-import { FACTION_DEFINITIONS } from "../factions/definitions";
+} from "../db";
+import { FACTION_DEFINITIONS } from "../factions";
 import { initWorldFromBoard } from "../init-world";
-import { randomUUID } from "../lib/uuid";
-import { setPlayerFactionColor } from "../rendering/modelPaths";
-import { getSpawnCenters } from "../robots/placement";
+import { randomUUID } from "../lib";
+import { setPlayerFactionColor } from "../rendering";
+import { getSpawnCenters } from "../robots";
 import { seedToPhrase } from "../seed";
 import {
 	collectCampaignStats,

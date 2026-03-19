@@ -1,9 +1,16 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { BotFabricator, Building, Powered } from "../../traits/building";
-import { Faction } from "../../traits/faction";
-import { ResourcePool } from "../../traits/resource";
-import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../../traits/unit";
+import {
+	BotFabricator,
+	Building,
+	Powered,
+	Faction,
+	ResourcePool,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+	UnitVisual,
+} from "../../traits";
 import { FabricationJob, queueFabrication } from "../fabricationSystem";
 import {
 	BASE_POP_CAP,

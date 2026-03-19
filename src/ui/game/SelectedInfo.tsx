@@ -12,8 +12,8 @@
 
 import type { World } from "koota";
 import { useEffect, useState } from "react";
-import { FACTION_COLORS_CSS } from "../../config/gameDefaults";
-import { type BotMark, MARK_DEFS } from "../../robots/marks";
+import { FACTION_COLORS_CSS } from "../../config";
+import { type BotMark, MARK_DEFS } from "../../robots";
 import {
 	getXPForNextMark,
 	getXPProgress,
@@ -25,7 +25,7 @@ import {
 	UnitUpgrade,
 	UnitVisual,
 	UnitXP,
-} from "../../traits/unit";
+} from "../../traits";
 
 interface SelectedUnitData {
 	entityId: number;

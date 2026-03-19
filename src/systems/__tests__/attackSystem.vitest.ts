@@ -6,7 +6,7 @@ import {
 	UnitFaction,
 	UnitPos,
 	UnitStats,
-} from "../../traits/unit";
+} from "../../traits";
 import { resolveAttacks } from "../attackSystem";
 
 describe("attackSystem", () => {

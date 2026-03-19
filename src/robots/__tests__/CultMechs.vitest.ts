@@ -1,6 +1,6 @@
 import { createWorld } from "koota";
 import { describe, expect, it } from "vitest";
-import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../../traits/unit";
+import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../../traits";
 import {
 	CULT_ARCHON_DEFAULTS,
 	CULT_CAVALRY_DEFAULTS,

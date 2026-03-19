@@ -2,9 +2,9 @@
  * Shared types for the app layer.
  */
 
-import type { BoardConfig, GeneratedBoard } from "../board/types";
+import type { BoardConfig, GeneratedBoard } from "../board";
 import type { WorldType } from "../create-world";
-import type { GlobePhase } from "../ui/Globe";
+import type { GlobePhase } from "../ui";
 import type { NewGameConfig } from "../world/config";
 
 export type Phase = GlobePhase;

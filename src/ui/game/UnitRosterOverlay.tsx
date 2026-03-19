@@ -11,10 +11,9 @@
 
 import type { World } from "koota";
 import { useEffect, useMemo, useState } from "react";
-import { getCameraControls } from "../../camera/cameraStore";
-import { TILE_SIZE_M } from "../../config/gameDefaults";
-import { TRACK_REGISTRY } from "../../robots/specializations/trackRegistry";
-import type { RobotClass } from "../../robots/types";
+import { getCameraControls } from "../../camera";
+import { TILE_SIZE_M } from "../../config";
+import { TRACK_REGISTRY, type RobotClass } from "../../robots";
 import {
 	UnitFaction,
 	UnitPos,
@@ -22,7 +21,7 @@ import {
 	UnitStats,
 	UnitVisual,
 	UnitXP,
-} from "../../traits/unit";
+} from "../../traits";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

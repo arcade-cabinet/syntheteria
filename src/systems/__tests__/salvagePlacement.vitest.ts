@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
 import { SALVAGE_DEFS } from "../../resources/salvageTypes";
 import type { FloorType } from "../../terrain/types";
-import { SalvageProp } from "../../traits/salvage";
+import { SalvageProp } from "../../traits";
 import { placeSalvageProps, TERRAIN_SALVAGE } from "../salvagePlacement";
 
 function makeTile(

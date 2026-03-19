@@ -15,10 +15,14 @@ import { resetAIRuntime } from "../../ai/yukaAiTurnSystem";
 import { generateBoard } from "../../board/generator";
 import type { GeneratedBoard } from "../../board/types";
 import { initWorldFromBoard } from "../../init-world";
-import { Building } from "../../traits/building";
-import { Faction } from "../../traits/faction";
-import { ResourcePool } from "../../traits/resource";
-import { UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
+import {
+	Building,
+	Faction,
+	ResourcePool,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+} from "../../traits";
 import { computeTerritory } from "../territorySystem";
 import { advanceTurn } from "../turnSystem";
 

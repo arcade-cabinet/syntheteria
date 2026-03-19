@@ -15,3 +15,10 @@ export {
 	useFatalErrors,
 	FatalErrorGate,
 } from "./FatalErrorModal";
+
+// --- Alerts ---
+export { pushAlert } from "./game/AlertBar";
+export type { AlertCategory, GameAlert } from "./game/AlertBar";
+
+// --- HUD types ---
+export type { CurrentResearch, ProductionQueueItem } from "./game/HUD";

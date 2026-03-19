@@ -5,7 +5,7 @@ import {
 	awardXP,
 	getMarkThreshold,
 } from "../../systems";
-import { UnitFaction, UnitPos, UnitStats, UnitXP } from "../../traits/unit";
+import { UnitFaction, UnitPos, UnitStats, UnitXP } from "../../traits";
 import {
 	getMarkSpecEffectValue,
 	getMarkSpecializations,

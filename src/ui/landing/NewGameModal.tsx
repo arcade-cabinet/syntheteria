@@ -11,7 +11,7 @@
  */
 
 import { useRef, useState } from "react";
-import { FACTION_DEFINITIONS } from "../../factions/definitions";
+import { FACTION_DEFINITIONS } from "../../factions";
 import { phraseToSeed, randomSeed, seedToPhrase } from "../../seed";
 import {
 	CLIMATE_PROFILE_SPECS,

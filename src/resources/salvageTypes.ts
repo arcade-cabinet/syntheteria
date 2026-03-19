@@ -9,7 +9,7 @@
  * harvest data, mapped to our 13-material ResourceMaterial taxonomy.
  */
 
-import type { ResourceMaterial } from "../terrain/types";
+import type { ResourceMaterial } from "../terrain";
 import type { SalvageType } from "../traits";
 
 export interface YieldRange {

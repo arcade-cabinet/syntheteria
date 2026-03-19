@@ -7,9 +7,13 @@ import {
 	setRelation,
 	setStanding,
 } from "../../factions/relations";
-import { FactionRelation } from "../../traits/faction";
-import { Tile } from "../../traits/tile";
-import { UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
+import {
+	FactionRelation,
+	Tile,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+} from "../../traits";
 import {
 	_resetDiplomacy,
 	applyBreakPenalty,

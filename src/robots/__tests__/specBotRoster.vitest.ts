@@ -20,7 +20,7 @@ import {
 	UnitStats,
 	UnitVisual,
 	UnitXP,
-} from "../../traits/unit";
+} from "../../traits";
 import {
 	CAVALRY_DEFAULTS,
 	INFANTRY_DEFAULTS,

@@ -24,19 +24,19 @@
 
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Board } from "../../traits/board";
 import {
+	Board,
 	BotFabricator,
 	Building,
 	Powered,
 	PowerGrid,
 	SignalNode,
 	TurretStats,
-} from "../../traits/building";
-import { Faction } from "../../traits/faction";
-import { ResourceDeposit, ResourcePool } from "../../traits/resource";
-import { Tile, TileHighlight } from "../../traits/tile";
-import {
+	Faction,
+	ResourceDeposit,
+	ResourcePool,
+	Tile,
+	TileHighlight,
 	UnitAttack,
 	UnitFaction,
 	UnitHarvest,
@@ -45,7 +45,7 @@ import {
 	UnitStats,
 	UnitVisual,
 	UnitXP,
-} from "../../traits/unit";
+} from "../../traits";
 import { resolveAttacks } from "../attackSystem";
 import {
 	FabricationJob,

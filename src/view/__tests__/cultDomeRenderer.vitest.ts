@@ -1,6 +1,6 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { CultStructure } from "../../traits/cult";
+import { CultStructure } from "../../traits";
 import {
 	buildCultDomeData,
 	type CultDomeData,

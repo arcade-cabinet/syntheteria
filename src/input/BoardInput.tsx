@@ -14,10 +14,9 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { Entity, World } from "koota";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { playSfx } from "../audio/sfx";
-import { shortestPath } from "../board/adjacency";
-import { createGridApi } from "../board/grid";
-import type { GeneratedBoard } from "../board/types";
+import { playSfx } from "../audio";
+import { shortestPath, createGridApi } from "../board";
+import type { GeneratedBoard } from "../board";
 import {
 	cancelBuildPlacement,
 	confirmBuildPlacement,
@@ -26,17 +25,17 @@ import {
 	highlightPlacementTile,
 	highlightReachableTiles,
 } from "../systems";
-import { Building } from "../traits/building";
-import { ResourceDeposit } from "../traits/resource";
 import {
+	Building,
+	ResourceDeposit,
 	UnitAttack,
 	UnitFaction,
 	UnitMove,
 	UnitPos,
 	UnitStats,
-} from "../traits/unit";
-import { spherePosToTile, sphereRadius } from "../rendering/boardGeometry";
-import { clearPreviewPath, setPreviewPath } from "../view/overlays/PathRenderer";
+} from "../traits";
+import { spherePosToTile, sphereRadius } from "../rendering";
+import { clearPreviewPath, setPreviewPath } from "../view";
 import {
 	closeRadialMenu,
 	confirmRadialSelection,

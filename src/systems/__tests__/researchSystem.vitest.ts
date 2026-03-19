@@ -1,8 +1,7 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TECH_BY_ID, TECH_TREE } from "../../config/techTreeDefs";
-import { Building, Powered } from "../../traits/building";
-import { Faction } from "../../traits/faction";
+import { Building, Powered, Faction } from "../../traits";
 import {
 	cancelResearch,
 	countResearchLabs,

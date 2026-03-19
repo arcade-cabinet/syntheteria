@@ -4,7 +4,7 @@ import {
 	clearHighlights,
 	highlightReachableTiles,
 } from "../highlightSystem";
-import { Tile, TileHighlight } from "../../traits/tile";
+import { Tile, TileHighlight } from "../../traits";
 
 function spawn3x3Grid(world: ReturnType<typeof createWorld>) {
 	for (let x = 0; x < 3; x++) {

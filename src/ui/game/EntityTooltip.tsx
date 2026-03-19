@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { FACTION_COLORS_CSS } from "../../config/gameDefaults";
+import { FACTION_COLORS_CSS } from "../../config";
 import {
 	getHoverState,
 	type HoverState,

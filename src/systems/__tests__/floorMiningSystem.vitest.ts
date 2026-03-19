@@ -1,17 +1,17 @@
 import { createWorld, type World } from "koota";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TileFloor } from "../../terrain/traits";
-import { Faction } from "../../traits/faction";
-import { ResourcePool } from "../../traits/resource";
-import { Tile } from "../../traits/tile";
 import {
+	Faction,
+	ResourcePool,
+	Tile,
 	UnitFaction,
 	UnitMine,
 	UnitPos,
 	UnitStats,
 	UnitVisual,
 	UnitXP,
-} from "../../traits/unit";
+} from "../../traits";
 import { floorMiningSystem, startFloorMining } from "../floorMiningSystem";
 import { ResearchState } from "../researchSystem";
 

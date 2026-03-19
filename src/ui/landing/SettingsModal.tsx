@@ -16,7 +16,7 @@ import {
 	setMasterVolume,
 	setMusicVolume,
 	setSfxVolume,
-} from "../../audio/audioEngine";
+} from "../../audio";
 
 // ─── Static keybinding reference ─────────────────────────────────────────────
 

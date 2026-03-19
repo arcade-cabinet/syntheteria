@@ -8,22 +8,23 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { createGridApi } from "../../board/grid";
-import type { GeneratedBoard } from "../../board/types";
-import { BUILDING_DEFS } from "../../buildings/definitions";
-import { SALVAGE_DEFS } from "../../resources/salvageTypes";
+import { createGridApi } from "../../board";
+import type { GeneratedBoard } from "../../board";
+import { BUILDING_DEFS } from "../../buildings";
+import { SALVAGE_DEFS } from "../../resources";
 import { computeTerritory } from "../../systems";
-import { FLOOR_DEFS, type FloorType } from "../../terrain/types";
-import { Building, Powered } from "../../traits/building";
-import { ResourceDeposit } from "../../traits/resource";
-import { SalvageProp } from "../../traits/salvage";
-import { Tile } from "../../traits/tile";
+import { FLOOR_DEFS, type FloorType } from "../../terrain";
 import {
+	Building,
+	Powered,
+	ResourceDeposit,
+	SalvageProp,
+	Tile,
 	UnitFaction,
 	UnitPos,
 	UnitStats,
 	UnitVisual,
-} from "../../traits/unit";
+} from "../../traits";
 import {
 	clearHoverState,
 	type HoverBuildingInfo,

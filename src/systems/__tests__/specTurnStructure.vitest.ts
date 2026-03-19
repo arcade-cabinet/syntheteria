@@ -20,8 +20,13 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { Board } from "../../traits/board";
-import { UnitAttack, UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
+import {
+	Board,
+	UnitAttack,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+} from "../../traits";
 import { advanceTurn, getCurrentTurn } from "../turnSystem";
 
 function makeBoard(width: number, height: number): GeneratedBoard {

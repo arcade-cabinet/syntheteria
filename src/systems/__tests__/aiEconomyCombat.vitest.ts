@@ -12,17 +12,18 @@ import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import { resetAIRuntime, runYukaAiTurns } from "../../ai/yukaAiTurnSystem";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { Board } from "../../traits/board";
-import { Faction } from "../../traits/faction";
-import { ResourceDeposit, ResourcePool } from "../../traits/resource";
 import {
+	Board,
+	Faction,
+	ResourceDeposit,
+	ResourcePool,
 	UnitAttack,
 	UnitFaction,
 	UnitHarvest,
 	UnitMove,
 	UnitPos,
 	UnitStats,
-} from "../../traits/unit";
+} from "../../traits";
 import { resolveAllMoves } from "../aiTurnSystem";
 import { resolveAttacks } from "../attackSystem";
 import { harvestSystem } from "../harvestSystem";

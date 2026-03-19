@@ -8,14 +8,14 @@
  */
 
 import type { World } from "koota";
-import { TECH_BY_ID } from "../../config/techTreeDefs";
+import { TECH_BY_ID } from "../../config";
 import {
 	FabricationJob,
 	getResearchState,
 	FUSION_RECIPES,
 	SynthesisQueue,
 } from "../../systems";
-import { Building } from "../../traits/building";
+import { Building } from "../../traits";
 
 export interface PendingItem {
 	label: string;

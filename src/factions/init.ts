@@ -1,5 +1,5 @@
 import type { World } from "koota";
-import { PLAYER_UNIT_COLOR } from "../config/gameDefaults";
+import { PLAYER_UNIT_COLOR } from "../config";
 import type { Difficulty, FactionSlot } from "../world/config";
 import { ResearchState } from "../systems";
 import { Faction, ResourcePool } from "../traits";

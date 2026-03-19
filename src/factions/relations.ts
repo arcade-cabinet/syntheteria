@@ -1,5 +1,5 @@
 import type { World } from "koota";
-import { STANDING_THRESHOLDS } from "../config/gameDefaults";
+import { STANDING_THRESHOLDS } from "../config";
 import { FactionRelation } from "../traits";
 
 export type RelationType = "ally" | "neutral" | "hostile";

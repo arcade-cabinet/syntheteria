@@ -1,8 +1,7 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import { movementSystem } from "../movementSystem";
-import { Tile, TileHighlight } from "../../traits/tile";
-import { UnitMove, UnitPos, UnitStats } from "../../traits/unit";
+import { Tile, TileHighlight, UnitMove, UnitPos, UnitStats } from "../../traits";
 
 describe("movementSystem", () => {
 	let world: ReturnType<typeof createWorld>;

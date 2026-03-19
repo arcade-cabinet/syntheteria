@@ -1,7 +1,6 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Building } from "../../traits/building";
-import { UnitFaction, UnitPos } from "../../traits/unit";
+import { Building, UnitFaction, UnitPos } from "../../traits";
 import { computeTerritory, getTerritoryPercent } from "../territorySystem";
 
 describe("territorySystem", () => {

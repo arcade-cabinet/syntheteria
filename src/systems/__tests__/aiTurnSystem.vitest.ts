@@ -1,14 +1,14 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { ResourceDeposit } from "../../traits/resource";
 import {
+	ResourceDeposit,
 	UnitAttack,
 	UnitFaction,
 	UnitMove,
 	UnitPos,
 	UnitStats,
-} from "../../traits/unit";
+} from "../../traits";
 import {
 	type AiUnit,
 	FACTION_PERSONALITY,

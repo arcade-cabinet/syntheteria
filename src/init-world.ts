@@ -9,20 +9,20 @@
  */
 
 import type { World } from "koota";
-import type { GeneratedBoard } from "./board/types";
+import type { GeneratedBoard } from "./board";
 import type {
 	ClimateProfile,
 	Difficulty,
 	FactionSlot,
 	StormProfile,
 } from "./world/config";
-import { initFactions } from "./factions/init";
+import { initFactions } from "./factions";
 import {
 	buildPlacementFlags,
 	computeSpawnCenters,
 	placeRobots,
 	type SimpleBoardInfo,
-} from "./robots/placement";
+} from "./robots";
 import {
 	placeStarterBuildings,
 	revealFog,

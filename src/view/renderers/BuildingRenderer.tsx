@@ -11,8 +11,12 @@ import type { World } from "koota";
 import { type ReactNode, Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../../board/grid";
-import { Building, type BuildingType } from "../../traits/building";
-import { CultStructure, type CultStructureType } from "../../traits/cult";
+import {
+	Building,
+	type BuildingType,
+	CultStructure,
+	type CultStructureType,
+} from "../../traits";
 import { ModelErrorBoundary } from "../ModelErrorBoundary";
 import { getAllBuildingModelUrls, resolveBuildingModelUrl } from "../../rendering/modelPaths";
 import { sphereModelPlacement } from "../../rendering/spherePlacement";

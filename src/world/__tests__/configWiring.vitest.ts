@@ -10,15 +10,15 @@ import {
 	getStormCultistParams,
 } from "../../systems";
 import { floorTypeForTile } from "../../terrain/cluster";
-import { Board } from "../../traits/board";
-import { Faction } from "../../traits/faction";
-import { ResourcePool } from "../../traits/resource";
 import {
+	Board,
+	Faction,
+	ResourcePool,
 	UnitAttack,
 	UnitFaction,
 	UnitPos,
 	UnitStats,
-} from "../../traits/unit";
+} from "../../traits";
 import type { ClimateProfile, Difficulty, StormProfile } from "../config";
 import { CLIMATE_PROFILE_SPECS } from "../config";
 

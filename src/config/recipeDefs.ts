@@ -9,7 +9,7 @@
  * that can be installed on units to restore broken components.
  */
 
-import type { ResourceMaterial } from "../terrain/types";
+import type { ResourceMaterial } from "../terrain";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 

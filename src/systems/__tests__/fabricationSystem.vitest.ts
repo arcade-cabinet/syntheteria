@@ -1,9 +1,15 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { BotFabricator, Building, Powered } from "../../traits/building";
-import { Faction } from "../../traits/faction";
-import { ResourcePool } from "../../traits/resource";
-import { UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
+import {
+	BotFabricator,
+	Building,
+	Powered,
+	Faction,
+	ResourcePool,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+} from "../../traits";
 import {
 	FabricationJob,
 	queueFabrication,

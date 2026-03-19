@@ -24,17 +24,19 @@ import {
 	getTracksForClass,
 	TRACK_REGISTRY,
 } from "../../robots/specializations/trackRegistry";
-import { BotFabricator, Building, Powered } from "../../traits/building";
-import { Faction } from "../../traits/faction";
-import { ResourcePool } from "../../traits/resource";
 import {
+	BotFabricator,
+	Building,
+	Powered,
+	Faction,
+	ResourcePool,
 	UnitFaction,
 	UnitPos,
 	UnitSpecialization,
 	UnitStats,
 	UnitVisual,
 	UnitXP,
-} from "../../traits/unit";
+} from "../../traits";
 import {
 	FabricationJob,
 	queueFabrication,

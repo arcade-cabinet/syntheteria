@@ -1,15 +1,16 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import { Building } from "../../traits/building";
-import { Faction } from "../../traits/faction";
-import { ResourcePool } from "../../traits/resource";
-import { Tile, TileHighlight } from "../../traits/tile";
 import {
+	Building,
+	Faction,
+	ResourcePool,
+	Tile,
+	TileHighlight,
 	UnitFaction,
 	UnitPos,
 	UnitStats,
 	UnitVisual,
-} from "../../traits/unit";
+} from "../../traits";
 import {
 	applyBuildings,
 	applyExplored,

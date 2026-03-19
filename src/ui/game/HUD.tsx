@@ -13,7 +13,7 @@ import {
 	VICTORY_ECONOMIC_TOTAL,
 	VICTORY_RESEARCH_POINTS,
 	VICTORY_SURVIVAL_TURNS,
-} from "../../config/gameDefaults";
+} from "../../config";
 import type { VictoryProgress } from "../../systems";
 
 export interface ProductionQueueItem {

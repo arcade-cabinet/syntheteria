@@ -1,7 +1,12 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Building, Powered } from "../../traits/building";
-import { UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
+import {
+	Building,
+	Powered,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+} from "../../traits";
 import { runRepairs } from "../repairSystem";
 
 describe("runRepairs", () => {

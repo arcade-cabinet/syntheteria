@@ -12,7 +12,7 @@ import type { World } from "koota";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { ELEVATION_STEP_M, TILE_SIZE_M } from "../../board/grid";
-import { Tile, TileHighlight } from "../../traits/tile";
+import { Tile, TileHighlight } from "../../traits";
 import { sphereModelPlacement } from "../../rendering/spherePlacement";
 
 type HighlightRendererProps = {

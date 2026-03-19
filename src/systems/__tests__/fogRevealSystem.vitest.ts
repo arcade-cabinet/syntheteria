@@ -1,6 +1,6 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import { Tile, TileHighlight } from "../../traits/tile";
+import { Tile, TileHighlight } from "../../traits";
 import { revealFog } from "../fogRevealSystem";
 
 describe("fogRevealSystem", () => {

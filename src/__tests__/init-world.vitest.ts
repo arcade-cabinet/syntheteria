@@ -4,11 +4,14 @@ import { afterEach, describe, expect, it } from "vitest";
 import { generateBoard } from "../board/generator";
 import { FACTION_DEFINITIONS } from "../factions/definitions";
 import { initWorldFromBoard } from "../init-world";
-import { Board } from "../traits/board";
-import { Faction } from "../traits/faction";
-import { ResourceDeposit } from "../traits/resource";
-import { Tile, TileHighlight } from "../traits/tile";
-import { UnitFaction } from "../traits/unit";
+import {
+	Board,
+	Faction,
+	ResourceDeposit,
+	Tile,
+	TileHighlight,
+	UnitFaction,
+} from "../traits";
 
 describe("initWorldFromBoard", () => {
 	let world: World;

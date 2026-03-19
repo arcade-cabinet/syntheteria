@@ -7,7 +7,7 @@
 
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
-import { FatalErrorGate } from "./ui/FatalErrorModal";
+import { FatalErrorGate } from "./ui";
 import "@root/global.css";
 
 if (import.meta.hot) {

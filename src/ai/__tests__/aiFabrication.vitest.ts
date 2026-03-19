@@ -15,21 +15,19 @@ import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
 import { BUILDING_DEFS } from "../../buildings/definitions";
-import { Faction } from "../../traits/faction";
-import { ResourcePool } from "../../traits/resource";
 import {
+	Faction,
+	ResourcePool,
 	BotFabricator,
 	Building,
 	type BuildingType,
 	Powered,
 	PowerGrid,
-} from "../../traits/building";
-import { Board } from "../../traits/board";
-import {
+	Board,
 	UnitFaction,
 	UnitPos,
 	UnitStats,
-} from "../../traits/unit";
+} from "../../traits";
 import { FabricationJob, queueFabrication, ROBOT_COSTS, runPowerGrid } from "../../systems";
 import { resetAIRuntime, runYukaAiTurns } from "../yukaAiTurnSystem";
 

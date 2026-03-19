@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { FACTION_COLORS_CSS } from "../../config/gameDefaults";
+import { FACTION_COLORS_CSS } from "../../config";
 import { subscribeTurnPhaseEvents, type TurnEvent } from "./turnPhaseEvents";
 
 // ─── Phase Label ─────────────────────────────────────────────────────────────

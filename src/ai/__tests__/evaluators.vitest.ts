@@ -68,6 +68,8 @@ function setCtx(overrides: Partial<TurnContext> = {}): void {
 		mineableTiles: [],
 		unitCount: 4,
 		popCap: 12,
+		cultThreats: [],
+		factionAllies: [],
 		...overrides,
 	});
 }

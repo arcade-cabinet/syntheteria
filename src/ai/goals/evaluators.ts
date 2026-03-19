@@ -12,6 +12,10 @@
 
 import { GoalEvaluator } from "yuka";
 import type { SyntheteriaAgent } from "../agents/SyntheteriaAgent";
+import {
+	computeEvadeDesirability,
+	computeFleeDirection,
+} from "../steering/evasionSteering";
 
 // Context injected before arbitration — shared mutable state per faction turn
 export interface BuildOption {
@@ -51,6 +55,10 @@ export interface TurnContext {
 	unitCount: number;
 	/** Population cap for this faction (base + outposts + power plants). */
 	popCap: number;
+	/** Positions of cult units on the board (for evasion calculations). */
+	cultThreats: Array<{ x: number; z: number }>;
+	/** Positions of friendly faction units (for local force ratio). */
+	factionAllies: Array<{ x: number; z: number }>;
 }
 
 let _ctx: TurnContext = {
@@ -69,6 +77,8 @@ let _ctx: TurnContext = {
 	mineableTiles: [],
 	unitCount: 0,
 	popCap: 12,
+	cultThreats: [],
+	factionAllies: [],
 };
 
 export function setTurnContext(ctx: TurnContext): void {
@@ -564,6 +574,53 @@ export class FloorMineEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 }
 
 // ---------------------------------------------------------------------------
+// Evade Evaluator — flee when outnumbered by cult
+// ---------------------------------------------------------------------------
+
+export class EvadeEvaluator extends GoalEvaluator<SyntheteriaAgent> {
+	calculateDesirability(agent: SyntheteriaAgent): number {
+		if (_ctx.cultThreats.length === 0) return 0;
+
+		return computeEvadeDesirability(
+			agent.tileX,
+			agent.tileZ,
+			agent.hp,
+			10, // maxHp — use UnitStats.maxHp if available via agent
+			agent.scanRange,
+			_ctx.cultThreats,
+			_ctx.factionAllies,
+		);
+	}
+
+	setGoal(agent: SyntheteriaAgent): void {
+		const fleeDir = computeFleeDirection(
+			agent.tileX,
+			agent.tileZ,
+			_ctx.cultThreats,
+			agent.scanRange,
+		);
+
+		if (fleeDir.dx === 0 && fleeDir.dz === 0) {
+			agent.decidedAction = { type: "idle" };
+			return;
+		}
+
+		// Move 3-5 tiles in the flee direction
+		const fleeDistance = 4;
+		const targetX = Math.round(agent.tileX + fleeDir.dx * fleeDistance);
+		const targetZ = Math.round(agent.tileZ + fleeDir.dz * fleeDistance);
+
+		// Clamp to board bounds
+		const { width, height } = _ctx.boardSize;
+		agent.decidedAction = {
+			type: "move",
+			toX: Math.max(0, Math.min(width - 1, targetX)),
+			toZ: Math.max(0, Math.min(height - 1, targetZ)),
+		};
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Idle/Defend Evaluator — baseline fallback
 // ---------------------------------------------------------------------------
 
@@ -610,6 +667,7 @@ export function logEvaluatorChoice(
 		"Build",
 		"Scout",
 		"FloorMine",
+		"Evade",
 		"Idle",
 	];
 	const scores: string[] = [];

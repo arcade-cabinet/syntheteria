@@ -67,6 +67,11 @@ import {
 	resetAllFactionMemories,
 	updateFactionPerception,
 } from "./perception/factionMemory";
+import {
+	type FactionBiasOverride,
+	getFactionFSM,
+	resetFactionFSMs,
+} from "./fsm/FactionFSM";
 import { AIRuntime } from "./runtime/AIRuntime";
 import { pickAITrack, pickAITrackVersion } from "./trackSelection";
 import { resetAllTerritoryTrackers } from "./triggers/territoryTrigger";
@@ -83,6 +88,7 @@ export function resetAIRuntime(): void {
 	_runtime = new AIRuntime();
 	resetAllFactionMemories();
 	resetAllTerritoryTrackers();
+	resetFactionFSMs();
 	clearNavGraphCache();
 }
 
@@ -320,6 +326,21 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		const unitCount = getPopulation(world, factionId);
 		const popCap = getPopCap(world, factionId);
 
+		// Cult threat positions (for EvadeEvaluator)
+		const cultThreats: Array<{ x: number; z: number }> = [];
+		const factionAllies: Array<{ x: number; z: number }> = [];
+		for (const e of enemies) {
+			if (isCultFactionId(e.factionId)) {
+				cultThreats.push({ x: e.x, z: e.z });
+			} else if (e.factionId === factionId) {
+				factionAllies.push({ x: e.x, z: e.z });
+			}
+		}
+		// Also add own faction snapshots as allies
+		for (const s of factionSnapshots) {
+			factionAllies.push({ x: s.tileX, z: s.tileZ });
+		}
+
 		// Set context for this faction's evaluators
 		setTurnContext({
 			enemies: factionEnemies,
@@ -337,12 +358,57 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			mineableTiles,
 			unitCount,
 			popCap,
+			cultThreats,
+			factionAllies,
+		});
+
+		// ── Faction FSM: macro strategy bias overrides ──────────────
+		const nearbyThreats = countNearbyThreats(
+			factionBuildings,
+			[...factionEnemies, ...cultThreats.map((c) => ({ ...c, entityId: 0, factionId: "" }))],
+		);
+		const enemyFactionContacted =
+			factionEnemies.some((e) => !isCultFactionId(e.factionId)) ||
+			rememberedEnemies.some((e) => !isCultFactionId(e.factionId));
+
+		const fsm = getFactionFSM(factionId);
+		const fsmBias = fsm.update({
+			currentTurn,
+			unitCount,
+			popCap,
+			nearbyThreats,
+			enemyFactionContacted,
+			territoryPct: 0, // Territory tracking is opt-in
+			buildingCount: factionBuildingCount,
+			motorPoolCount,
 		});
 
 		// Arbitrate each agent in this faction
+		// Evaluators are added in order: attack, chase, harvest, expand, build, scout, floorMine, evade, idle
+		// Map FSM bias keys to evaluator indices (floorMine uses harvest bias)
+		const evalBiasMap = [
+			"attack", "chase", "harvest", "expand",
+			"build", "scout", "harvest", "evade", "idle",
+		] as const;
+
 		for (const snap of factionSnapshots) {
 			const agent = _runtime.getOrCreateAgent(snap);
+
+			// Save original biases, apply FSM overrides
+			const origBiases: number[] = [];
+			for (let i = 0; i < agent.brain.evaluators.length; i++) {
+				const ev = agent.brain.evaluators[i];
+				origBiases.push(ev.characterBias);
+				const biasKey = evalBiasMap[i] ?? "idle";
+				ev.characterBias *= fsmBias[biasKey];
+			}
+
 			agent.arbitrate();
+
+			// Restore original biases so they stay stable across turns
+			for (let i = 0; i < agent.brain.evaluators.length; i++) {
+				agent.brain.evaluators[i].characterBias = origBiases[i];
+			}
 
 			// Diagnostic logging — shows which evaluator won for each unit
 			if (isAIDiagnosticsEnabled()) {
@@ -717,6 +783,28 @@ const CULT_FACTION_IDS = new Set([
 
 function isCultFactionId(factionId: string): boolean {
 	return CULT_FACTION_IDS.has(factionId);
+}
+
+// ---------------------------------------------------------------------------
+// FSM helpers
+// ---------------------------------------------------------------------------
+
+/** Count enemy/cult units within 5 tiles of any faction building. */
+function countNearbyThreats(
+	factionBuildings: Array<{ tileX: number; tileZ: number }>,
+	threats: Array<{ x: number; z: number }>,
+): number {
+	let count = 0;
+	for (const t of threats) {
+		for (const b of factionBuildings) {
+			const dist = Math.abs(t.x - b.tileX) + Math.abs(t.z - b.tileZ);
+			if (dist <= 5) {
+				count++;
+				break; // Count each threat once even if near multiple buildings
+			}
+		}
+	}
+	return count;
 }
 
 // ---------------------------------------------------------------------------

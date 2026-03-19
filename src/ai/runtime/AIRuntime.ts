@@ -17,6 +17,7 @@ import {
 	AttackEvaluator,
 	BuildEvaluator,
 	ChaseEnemyEvaluator,
+	EvadeEvaluator,
 	ExpandEvaluator,
 	FloorMineEvaluator,
 	HarvestEvaluator,
@@ -35,6 +36,7 @@ interface PersonalityBias {
 	expand: number;
 	build: number;
 	scout: number;
+	evade: number;
 	idle: number;
 	reactiveOnly: boolean;
 }
@@ -62,6 +64,7 @@ function personalityToBias(personality: {
 		expand: norm(personality.expansionPriority),
 		build: Math.max(norm(personality.harvestPriority), 0.6), // All factions build — floor at 0.6
 		scout: norm(personality.expansionPriority) * 0.85, // Scout correlates with expansion
+		evade: norm(personality.defensePriority) * 0.9, // Defensive factions evade more readily
 		idle: norm(personality.defensePriority) * 0.5, // Defensive factions idle more
 		reactiveOnly: personality.reactiveOnly,
 	};
@@ -199,6 +202,10 @@ export class AIRuntime {
 		// Floor mining bias correlates with harvest priority (backstop economy)
 		const floorMineEval = new FloorMineEvaluator(bias.harvest * 0.7);
 		agent.addEvaluator(floorMineEval);
+
+		// Evasion — flee when outnumbered by cult units
+		const evadeEval = new EvadeEvaluator(bias.evade);
+		agent.addEvaluator(evadeEval);
 
 		const idleEval = new IdleEvaluator(bias.idle);
 		agent.addEvaluator(idleEval);

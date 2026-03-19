@@ -1,4 +1,6 @@
 import type { World } from "koota";
+import { pickFlockingTile } from "../../ai/steering/flockingSteering";
+import type { TilePos } from "../../ai/steering/flockingSteering";
 import { playSfx } from "../../audio/sfx";
 import { shortestPath, tileNeighbors } from "../../board/adjacency";
 import type { GeneratedBoard } from "../../board/types";
@@ -458,6 +460,16 @@ export function runCultPatrols(world: World, board: GeneratedBoard): void {
 		}
 	}
 
+	// Collect all cult unit positions for flocking neighbor lookup
+	const cultPositions: TilePos[] = [];
+	for (const e of world.query(UnitPos, UnitFaction)) {
+		const f = e.get(UnitFaction);
+		const p = e.get(UnitPos);
+		if (f && p && isCultFaction(f.factionId)) {
+			cultPositions.push({ x: p.tileX, z: p.tileZ });
+		}
+	}
+
 	// Process each cult unit
 	for (const e of world.query(UnitPos, UnitFaction, UnitStats)) {
 		const f = e.get(UnitFaction);
@@ -466,6 +478,13 @@ export function runCultPatrols(world: World, board: GeneratedBoard): void {
 		if (!f || !pos || !stats) continue;
 		if (!isCultFaction(f.factionId)) continue;
 		if (stats.mp <= 0 && stats.ap <= 0) continue;
+
+		// Build flocking neighbors: other cult units within 6 tiles
+		const flockNeighbors = cultPositions.filter(
+			(p) =>
+				(p.x !== pos.tileX || p.z !== pos.tileZ) &&
+				Math.abs(p.x - pos.tileX) + Math.abs(p.z - pos.tileZ) <= 6,
+		);
 
 		// Find nearest patrol center
 		let nearestCenter = patrolCenters[0];
@@ -544,6 +563,7 @@ export function runCultPatrols(world: World, board: GeneratedBoard): void {
 				effectivePatrolRadius,
 				board,
 				world,
+				flockNeighbors,
 			);
 		} else if (effectiveStage === "war_party") {
 			runWarPartyBehavior(
@@ -559,6 +579,7 @@ export function runCultPatrols(world: World, board: GeneratedBoard): void {
 				bias,
 				board,
 				world,
+				flockNeighbors,
 			);
 		} else {
 			runAssaultBehavior(
@@ -570,6 +591,7 @@ export function runCultPatrols(world: World, board: GeneratedBoard): void {
 				buildingPositions,
 				bias,
 				board,
+				flockNeighbors,
 			);
 		}
 	}
@@ -590,6 +612,7 @@ function runWandererBehavior(
 	effectivePatrolRadius: number,
 	board: GeneratedBoard,
 	world: World,
+	flockNeighbors: TilePos[] = [],
 ): void {
 	// Attack only if cornered (enemy in attack range AND no escape path)
 	if (nearestEnemy && nearestEnemyDist <= stats.attackRange) {
@@ -668,17 +691,38 @@ function runWandererBehavior(
 		return;
 	}
 
-	// Random wander within patrol radius
+	// Flocking wander within patrol radius
 	if (!e.has(UnitMove)) {
 		const neighbors = tileNeighbors(pos.tileX, pos.tileZ, board);
 		if (neighbors.length > 0) {
-			const boardTurn = readTurn(world);
-			const idx = (e.id() * 7 + boardTurn * 13) % neighbors.length;
-			const candidate = neighbors[idx];
-			const candidateDist =
-				Math.abs(candidate.x - nearestCenter.x) +
-				Math.abs(candidate.z - nearestCenter.z);
-			if (candidateDist <= effectivePatrolRadius) {
+			// Filter candidates to those within patrol radius
+			const validNeighbors = neighbors.filter((n) => {
+				const dist =
+					Math.abs(n.x - nearestCenter.x) +
+					Math.abs(n.z - nearestCenter.z);
+				return dist <= effectivePatrolRadius;
+			});
+
+			if (validNeighbors.length > 0) {
+				// Use flocking to pick tile — goal direction toward patrol center
+				const goalDx = nearestCenter.x - pos.tileX;
+				const goalDz = nearestCenter.z - pos.tileZ;
+				const goalLen = Math.sqrt(goalDx * goalDx + goalDz * goalDz);
+				const goalDir =
+					goalLen > 0
+						? { dx: goalDx / goalLen, dz: goalDz / goalLen }
+						: undefined;
+
+				const flockTile = pickFlockingTile(
+					{ x: pos.tileX, z: pos.tileZ },
+					{ x: 0, z: 0 },
+					flockNeighbors,
+					validNeighbors,
+					goalDir,
+					0.5, // Low goal weight — wanderers mostly flock
+				);
+
+				const candidate = flockTile ?? validNeighbors[0];
 				e.add(
 					UnitMove({
 						fromX: pos.tileX,
@@ -711,6 +755,7 @@ function runWarPartyBehavior(
 	bias: SectBias,
 	board: GeneratedBoard,
 	world: World,
+	flockNeighbors: TilePos[] = [],
 ): void {
 	// Priority 1: attack if enemy in attack range (with sect damage bonus)
 	if (nearestEnemy && nearestEnemyDist <= stats.attackRange) {
@@ -725,14 +770,113 @@ function runWarPartyBehavior(
 		return;
 	}
 
-	// Priority 2: chase enemy if within scan range
+	// Priority 2: chase enemy if within scan range (with flocking)
 	if (nearestEnemy) {
 		if (!e.has(UnitMove)) {
+			const neighbors = tileNeighbors(pos.tileX, pos.tileZ, board);
+			const goalDx = nearestEnemy.x - pos.tileX;
+			const goalDz = nearestEnemy.z - pos.tileZ;
+			const goalLen = Math.sqrt(goalDx * goalDx + goalDz * goalDz);
+			const goalDir =
+				goalLen > 0
+					? { dx: goalDx / goalLen, dz: goalDz / goalLen }
+					: undefined;
+
+			const flockTile = pickFlockingTile(
+				{ x: pos.tileX, z: pos.tileZ },
+				{ x: 0, z: 0 },
+				flockNeighbors,
+				neighbors,
+				goalDir,
+				2.0, // Strong goal weight — war parties prioritize pursuit
+			);
+
+			if (flockTile) {
+				e.add(
+					UnitMove({
+						fromX: pos.tileX,
+						fromZ: pos.tileZ,
+						toX: flockTile.x,
+						toZ: flockTile.z,
+						progress: 0,
+						mpCost: 1,
+					}),
+				);
+			} else {
+				// Fallback to pathfinding
+				const path = shortestPath(
+					pos.tileX,
+					pos.tileZ,
+					nearestEnemy.x,
+					nearestEnemy.z,
+					board,
+				);
+				if (path.length >= 2) {
+					const next = path[1];
+					e.add(
+						UnitMove({
+							fromX: pos.tileX,
+							fromZ: pos.tileZ,
+							toX: next.x,
+							toZ: next.z,
+							progress: 0,
+							mpCost: 1,
+						}),
+					);
+				}
+			}
+		}
+		return;
+	}
+
+	// Priority 3: move toward nearest enemy cluster with flocking
+	if (allEnemies.length > 0 && !e.has(UnitMove)) {
+		let closestEnemy = allEnemies[0];
+		let closestDist = Number.POSITIVE_INFINITY;
+		for (const enemy of allEnemies) {
+			const dist =
+				Math.abs(pos.tileX - enemy.x) + Math.abs(pos.tileZ - enemy.z);
+			if (dist < closestDist) {
+				closestDist = dist;
+				closestEnemy = enemy;
+			}
+		}
+
+		const neighbors = tileNeighbors(pos.tileX, pos.tileZ, board);
+		const goalDx = closestEnemy.x - pos.tileX;
+		const goalDz = closestEnemy.z - pos.tileZ;
+		const goalLen = Math.sqrt(goalDx * goalDx + goalDz * goalDz);
+		const goalDir =
+			goalLen > 0
+				? { dx: goalDx / goalLen, dz: goalDz / goalLen }
+				: undefined;
+
+		const flockTile = pickFlockingTile(
+			{ x: pos.tileX, z: pos.tileZ },
+			{ x: 0, z: 0 },
+			flockNeighbors,
+			neighbors,
+			goalDir,
+			2.0,
+		);
+
+		if (flockTile) {
+			e.add(
+				UnitMove({
+					fromX: pos.tileX,
+					fromZ: pos.tileZ,
+					toX: flockTile.x,
+					toZ: flockTile.z,
+					progress: 0,
+					mpCost: 1,
+				}),
+			);
+		} else {
 			const path = shortestPath(
 				pos.tileX,
 				pos.tileZ,
-				nearestEnemy.x,
-				nearestEnemy.z,
+				closestEnemy.x,
+				closestEnemy.z,
 				board,
 			);
 			if (path.length >= 2) {
@@ -748,42 +892,6 @@ function runWarPartyBehavior(
 					}),
 				);
 			}
-		}
-		return;
-	}
-
-	// Priority 3: move toward nearest enemy cluster (territory edge targeting)
-	// Find the closest enemy overall and move toward them (even if outside scan range)
-	if (allEnemies.length > 0 && !e.has(UnitMove)) {
-		let closestEnemy = allEnemies[0];
-		let closestDist = Number.POSITIVE_INFINITY;
-		for (const enemy of allEnemies) {
-			const dist =
-				Math.abs(pos.tileX - enemy.x) + Math.abs(pos.tileZ - enemy.z);
-			if (dist < closestDist) {
-				closestDist = dist;
-				closestEnemy = enemy;
-			}
-		}
-		const path = shortestPath(
-			pos.tileX,
-			pos.tileZ,
-			closestEnemy.x,
-			closestEnemy.z,
-			board,
-		);
-		if (path.length >= 2) {
-			const next = path[1];
-			e.add(
-				UnitMove({
-					fromX: pos.tileX,
-					fromZ: pos.tileZ,
-					toX: next.x,
-					toZ: next.z,
-					progress: 0,
-					mpCost: 1,
-				}),
-			);
 		}
 		return;
 	}
@@ -818,13 +926,21 @@ function runWarPartyBehavior(
 	if (!e.has(UnitMove)) {
 		const neighbors = tileNeighbors(pos.tileX, pos.tileZ, board);
 		if (neighbors.length > 0) {
-			const boardTurn = readTurn(world);
-			const idx = (e.id() * 7 + boardTurn * 13) % neighbors.length;
-			const candidate = neighbors[idx];
-			const candidateDist =
-				Math.abs(candidate.x - nearestCenter.x) +
-				Math.abs(candidate.z - nearestCenter.z);
-			if (candidateDist <= effectivePatrolRadius) {
+			const validNeighbors = neighbors.filter((n) => {
+				const dist =
+					Math.abs(n.x - nearestCenter.x) +
+					Math.abs(n.z - nearestCenter.z);
+				return dist <= effectivePatrolRadius;
+			});
+
+			if (validNeighbors.length > 0) {
+				const flockTile = pickFlockingTile(
+					{ x: pos.tileX, z: pos.tileZ },
+					{ x: 0, z: 0 },
+					flockNeighbors,
+					validNeighbors,
+				);
+				const candidate = flockTile ?? validNeighbors[0];
 				e.add(
 					UnitMove({
 						fromX: pos.tileX,
@@ -853,6 +969,7 @@ function runAssaultBehavior(
 	buildings: Array<{ x: number; z: number; entityId: number }>,
 	bias: SectBias,
 	board: GeneratedBoard,
+	flockNeighbors: TilePos[] = [],
 ): void {
 	// Priority 1: attack if enemy in attack range (with sect damage bonus)
 	if (nearestEnemy && nearestEnemyDist <= stats.attackRange) {
@@ -867,14 +984,111 @@ function runAssaultBehavior(
 		return;
 	}
 
-	// Priority 2: chase enemy unit if within scan range
+	// Priority 2: chase enemy unit if within scan range (with flocking)
 	if (nearestEnemy && nearestEnemyDist <= stats.scanRange) {
 		if (!e.has(UnitMove)) {
+			const neighbors = tileNeighbors(pos.tileX, pos.tileZ, board);
+			const goalDx = nearestEnemy.x - pos.tileX;
+			const goalDz = nearestEnemy.z - pos.tileZ;
+			const goalLen = Math.sqrt(goalDx * goalDx + goalDz * goalDz);
+			const goalDir =
+				goalLen > 0
+					? { dx: goalDx / goalLen, dz: goalDz / goalLen }
+					: undefined;
+
+			const flockTile = pickFlockingTile(
+				{ x: pos.tileX, z: pos.tileZ },
+				{ x: 0, z: 0 },
+				flockNeighbors,
+				neighbors,
+				goalDir,
+				3.0, // Very strong goal weight in assault — converge on target
+			);
+
+			if (flockTile) {
+				e.add(
+					UnitMove({
+						fromX: pos.tileX,
+						fromZ: pos.tileZ,
+						toX: flockTile.x,
+						toZ: flockTile.z,
+						progress: 0,
+						mpCost: 1,
+					}),
+				);
+			} else {
+				const path = shortestPath(
+					pos.tileX,
+					pos.tileZ,
+					nearestEnemy.x,
+					nearestEnemy.z,
+					board,
+				);
+				if (path.length >= 2) {
+					const next = path[1];
+					e.add(
+						UnitMove({
+							fromX: pos.tileX,
+							fromZ: pos.tileZ,
+							toX: next.x,
+							toZ: next.z,
+							progress: 0,
+							mpCost: 1,
+						}),
+					);
+				}
+			}
+		}
+		return;
+	}
+
+	// Priority 3: charge toward nearest faction building (with flocking)
+	if (buildings.length > 0 && !e.has(UnitMove)) {
+		let closestBuilding = buildings[0];
+		let closestDist = Number.POSITIVE_INFINITY;
+		for (const bldg of buildings) {
+			const dist = Math.abs(pos.tileX - bldg.x) + Math.abs(pos.tileZ - bldg.z);
+			if (dist < closestDist) {
+				closestDist = dist;
+				closestBuilding = bldg;
+			}
+		}
+
+		const neighbors = tileNeighbors(pos.tileX, pos.tileZ, board);
+		const goalDx = closestBuilding.x - pos.tileX;
+		const goalDz = closestBuilding.z - pos.tileZ;
+		const goalLen = Math.sqrt(goalDx * goalDx + goalDz * goalDz);
+		const goalDir =
+			goalLen > 0
+				? { dx: goalDx / goalLen, dz: goalDz / goalLen }
+				: undefined;
+
+		const flockTile = pickFlockingTile(
+			{ x: pos.tileX, z: pos.tileZ },
+			{ x: 0, z: 0 },
+			flockNeighbors,
+			neighbors,
+			goalDir,
+			3.0,
+		);
+
+		if (flockTile) {
+			e.add(
+				UnitMove({
+					fromX: pos.tileX,
+					fromZ: pos.tileZ,
+					toX: flockTile.x,
+					toZ: flockTile.z,
+					progress: 0,
+					mpCost: 1,
+				}),
+			);
+		} else {
 			const path = shortestPath(
 				pos.tileX,
 				pos.tileZ,
-				nearestEnemy.x,
-				nearestEnemy.z,
+				closestBuilding.x,
+				closestBuilding.z,
 				board,
 			);
 			if (path.length >= 2) {
@@ -890,40 +1104,6 @@ function runAssaultBehavior(
 					}),
 				);
 			}
-		}
-		return;
-	}
-
-	// Priority 3: charge toward nearest faction building
-	if (buildings.length > 0 && !e.has(UnitMove)) {
-		let closestBuilding = buildings[0];
-		let closestDist = Number.POSITIVE_INFINITY;
-		for (const bldg of buildings) {
-			const dist = Math.abs(pos.tileX - bldg.x) + Math.abs(pos.tileZ - bldg.z);
-			if (dist < closestDist) {
-				closestDist = dist;
-				closestBuilding = bldg;
-			}
-		}
-		const path = shortestPath(
-			pos.tileX,
-			pos.tileZ,
-			closestBuilding.x,
-			closestBuilding.z,
-			board,
-		);
-		if (path.length >= 2) {
-			const next = path[1];
-			e.add(
-				UnitMove({
-					fromX: pos.tileX,
-					fromZ: pos.tileZ,
-					toX: next.x,
-					toZ: next.z,
-					progress: 0,
-					mpCost: 1,
-				}),
-			);
 		}
 		return;
 	}

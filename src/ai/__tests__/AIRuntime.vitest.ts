@@ -93,10 +93,10 @@ describe("AIRuntime", () => {
 		expect(runtime.size).toBe(0);
 	});
 
-	it("agents have 8 evaluators", () => {
+	it("agents have 9 evaluators", () => {
 		const agent = runtime.getOrCreateAgent(makeSnap());
-		// Brain should have all 8 evaluators: Attack, Chase, Harvest, Expand, Build, Scout, FloorMine, Idle
-		expect(agent.brain.evaluators.length).toBe(8);
+		// Brain should have all 9 evaluators: Attack, Chase, Harvest, Expand, Build, Scout, FloorMine, Evade, Idle
+		expect(agent.brain.evaluators.length).toBe(9);
 	});
 
 	it("unknown faction gets default personality", () => {
@@ -104,7 +104,7 @@ describe("AIRuntime", () => {
 			makeSnap({ factionId: "static_remnants" }),
 		);
 		// Should not throw, uses DEFAULT_PERSONALITY
-		expect(agent.brain.evaluators.length).toBe(8);
+		expect(agent.brain.evaluators.length).toBe(9);
 	});
 });
 

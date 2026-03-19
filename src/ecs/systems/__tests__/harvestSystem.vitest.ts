@@ -103,10 +103,10 @@ describe("harvestSystem", () => {
 		// UnitHarvest removed on completion
 		expect(unit.has(UnitHarvest)).toBe(false);
 
-		// Resources increased (yield is 1-3)
+		// Resources increased (yield is 2-5)
 		const pool = factionEntity.get(ResourcePool);
-		expect(pool?.scrap_metal).toBeGreaterThan(10);
-		expect(pool?.scrap_metal).toBeLessThanOrEqual(13);
+		expect(pool?.scrap_metal).toBeGreaterThanOrEqual(12);
+		expect(pool?.scrap_metal).toBeLessThanOrEqual(15);
 	});
 
 	it("deposit amount decreases after harvest", () => {

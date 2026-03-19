@@ -30,13 +30,13 @@ export const FUSION_RECIPES: readonly FusionRecipe[] = [
 		id: "alloy_fusion",
 		label: "Alloy Fusion",
 		inputs: { ferrous_scrap: 3, conductor_wire: 2 },
-		outputs: { alloy_stock: 1 },
+		outputs: { alloy_stock: 2 },
 	},
 	{
 		id: "polymer_reclamation",
 		label: "Polymer Reclamation",
 		inputs: { scrap_metal: 2, conductor_wire: 1 },
-		outputs: { polymer_salvage: 1 },
+		outputs: { polymer_salvage: 2 },
 	},
 	{
 		id: "wafer_fabrication",

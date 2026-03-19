@@ -29,6 +29,7 @@ import { advanceTurn } from "../turnSystem";
 interface TurnSnapshot {
 	turn: number;
 	buildingsByFaction: Record<string, number>;
+	buildingTypesByFaction: Record<string, Record<string, number>>;
 	totalBuildings: number;
 	unitsByFaction: Record<string, number>;
 	totalUnits: number;
@@ -41,8 +42,9 @@ function snapshot(
 	board: GeneratedBoard,
 	turn: number,
 ): TurnSnapshot {
-	// Buildings per faction
+	// Buildings per faction + type breakdown
 	const buildingsByFaction: Record<string, number> = {};
+	const buildingTypesByFaction: Record<string, Record<string, number>> = {};
 	let totalBuildings = 0;
 	for (const e of world.query(Building)) {
 		const b = e.get(Building);
@@ -50,6 +52,9 @@ function snapshot(
 		buildingsByFaction[b.factionId] =
 			(buildingsByFaction[b.factionId] ?? 0) + 1;
 		totalBuildings++;
+		if (!buildingTypesByFaction[b.factionId]) buildingTypesByFaction[b.factionId] = {};
+		buildingTypesByFaction[b.factionId][b.buildingType] =
+			(buildingTypesByFaction[b.factionId][b.buildingType] ?? 0) + 1;
 	}
 
 	// Units per faction
@@ -100,6 +105,7 @@ function snapshot(
 	return {
 		turn,
 		buildingsByFaction,
+		buildingTypesByFaction,
 		totalBuildings,
 		unitsByFaction,
 		totalUnits,
@@ -173,6 +179,11 @@ describe("50-turn AI-vs-AI balance playtest", () => {
 			console.log(
 				`  Buildings: ${s.totalBuildings} ${JSON.stringify(s.buildingsByFaction)}`,
 			);
+			if (s.turn > 0) {
+				for (const [fid, types] of Object.entries(s.buildingTypesByFaction)) {
+					console.log(`    ${fid}: ${JSON.stringify(types)}`);
+				}
+			}
 			console.log(
 				`  Units: ${s.totalUnits} ${JSON.stringify(s.unitsByFaction)}`,
 			);

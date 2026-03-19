@@ -96,7 +96,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { ferrous_scrap: 6, alloy_stock: 3, silicon_wafer: 1 },
+		buildCost: { ferrous_scrap: 6, alloy_stock: 3, conductor_wire: 2 },
 		buildTime: 10,
 	},
 	relay_tower: {
@@ -130,7 +130,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 3,
 		turretRange: 8,
 		turretCooldown: 2,
-		buildCost: { ferrous_scrap: 4, alloy_stock: 2, silicon_wafer: 1 },
+		buildCost: { ferrous_scrap: 4, alloy_stock: 2 },
 		buildTime: 6,
 	},
 	storage_hub: {
@@ -203,7 +203,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { alloy_stock: 6, silicon_wafer: 4, conductor_wire: 2 },
+		buildCost: { alloy_stock: 4, silicon_wafer: 2, conductor_wire: 2 },
 		buildTime: 12,
 	},
 	resource_refinery: {
@@ -220,8 +220,8 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { polymer_salvage: 4, alloy_stock: 3, conductor_wire: 2 },
-		buildTime: 8,
+		buildCost: { ferrous_scrap: 5, polymer_salvage: 3 },
+		buildTime: 6,
 	},
 	solar_array: {
 		displayName: "Solar Array",
@@ -271,7 +271,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { ferrous_scrap: 4, alloy_stock: 2 },
+		buildCost: { ferrous_scrap: 4, polymer_salvage: 2 },
 		buildTime: 5,
 	},
 	wormhole_stabilizer: {

@@ -14,7 +14,7 @@
 import { Clone, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type { World } from "koota";
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { playSfx } from "../audio/sfx";
 import { ELEVATION_STEP_M, TILE_SIZE_M } from "../board/grid";
@@ -43,26 +43,8 @@ for (const url of getAllRobotModelUrls()) {
 
 // ─── Single unit model ───────────────────────────────────────────────────────
 
-/** Faction emissive tint strength — subtle enough to preserve model textures. */
-const FACTION_TINT_INTENSITY = 0.35;
-
-function applyFactionTint(root: THREE.Object3D, factionColor: number) {
-	const tint = new THREE.Color(factionColor);
-	root.traverse((child) => {
-		if (!(child instanceof THREE.Mesh)) return;
-		const mat = child.material;
-		if (
-			mat instanceof THREE.MeshStandardMaterial ||
-			mat instanceof THREE.MeshPhysicalMaterial
-		) {
-			// Clone material so we don't mutate the cached GLB original
-			const cloned = mat.clone();
-			cloned.emissive.copy(tint);
-			cloned.emissiveIntensity = FACTION_TINT_INTENSITY;
-			child.material = cloned;
-		}
-	});
-}
+// Faction tint REMOVED — models render with their original textures.
+// Faction identity is shown via the translucent ground disc (FactionDisc).
 
 function UnitModel({
 	url,
@@ -100,13 +82,6 @@ function UnitModel({
 		const s = maxExtent > 0 ? (TILE_SIZE_M * 1.4) / maxExtent : 1;
 		return { scale: s * markScale, yOffset: -box.min.y * s * markScale };
 	}, [scene, markScale]);
-
-	// Apply faction color tint after Clone mounts
-	useEffect(() => {
-		if (groupRef.current) {
-			applyFactionTint(groupRef.current, factionColor);
-		}
-	}, [factionColor]);
 
 	// Wall-E style procedural animation — bounce + wiggle, no Blender needed
 	useFrame((state) => {
@@ -209,75 +184,142 @@ function UnitBox({
 	);
 }
 
-// ─── Readiness ring — emissive CYAN ring under units with AP remaining ──────
+// ─── Faction disc — translucent emissive circle under each unit ──────────────
 //
-// Diegetic palette (GAME_DESIGN.md Section 9):
-//   Cyan = signal, focus, selection, intelligence glow, machine cognition
-//   The readiness ring is uniform cyan for ALL factions — it represents
-//   machine operational status, not faction identity.
+// Shows faction color as a glowing ground disc. Visible on hover/select.
+// HP segments at the top arc, specialty bar at the bottom arc.
+// Always-visible at low opacity; full opacity + HP bars on hover/select.
 
-/** Ring radius as fraction of tile. Slightly larger than the unit footprint. */
-const RING_OUTER_RADIUS = TILE_SIZE_M * 0.55;
-const RING_INNER_RADIUS = TILE_SIZE_M * 0.45;
-const RING_Y = 0.05; // just above terrain surface — renderOrder ensures visibility
+const DISC_RADIUS = TILE_SIZE_M * 0.6;
+const DISC_Y = 0.04; // just above terrain surface
 
-/** Diegetic cyan — machine cognition / readiness. */
-const READINESS_CYAN = 0x00ccff;
+/** HP bar color — green when healthy, red when critical. */
+const HP_HIGH = 0x44ff88;
+const HP_LOW = 0xff4444;
 
-function ReadinessRing({
+/**
+ * Faction identity disc with HP indicator.
+ * - Always visible at low opacity (faction identification at a glance)
+ * - Brightens on selection with HP segments shown
+ */
+function FactionDisc({
 	x,
 	z,
-	ap,
-	maxAp,
+	factionColor,
+	hp,
+	maxHp,
+	isSelected,
 	useSphere,
 	boardWidth,
 	boardHeight,
 }: {
 	x: number;
 	z: number;
-	ap: number;
-	maxAp: number;
+	factionColor: number;
+	hp: number;
+	maxHp: number;
+	isSelected?: boolean;
 	useSphere?: boolean;
 	boardWidth?: number;
 	boardHeight?: number;
 }) {
-	const meshRef = useRef<THREE.Mesh>(null);
+	const discRef = useRef<THREE.Mesh>(null);
+	const hpRef = useRef<THREE.Mesh>(null);
 
-	// Pulse animation — subtle breathing effect
+	// HP ratio determines arc coverage and color
+	const hpRatio = maxHp > 0 ? hp / maxHp : 1;
+	// HP arc: full circle at top, shrinks as HP drops
+	const hpArc = hpRatio * Math.PI * 2;
+	const hpColor = hpRatio > 0.5 ? HP_HIGH : HP_LOW;
+
+	// Animate opacity — low idle glow, brighter when selected
 	useFrame((state) => {
-		if (!meshRef.current) return;
-		const mat = meshRef.current.material as THREE.MeshStandardMaterial;
-		const pulse = 0.4 + Math.sin(state.clock.elapsedTime * 2.5) * 0.15;
-		mat.opacity = pulse;
-		// Brighter when full AP, dimmer when partially spent
-		mat.emissiveIntensity = maxAp > 0 ? 0.6 + (ap / maxAp) * 0.8 : 0.6;
+		if (!discRef.current) return;
+		const mat = discRef.current.material as THREE.MeshStandardMaterial;
+		const t = state.clock.elapsedTime;
+		const pulse = Math.sin(t * 2) * 0.05;
+
+		if (isSelected) {
+			mat.opacity = 0.5 + pulse;
+			mat.emissiveIntensity = 1.2;
+		} else {
+			mat.opacity = 0.2 + pulse;
+			mat.emissiveIntensity = 0.6;
+		}
+
+		// HP ring always visible when selected
+		if (hpRef.current) {
+			const hpMat = hpRef.current.material as THREE.MeshStandardMaterial;
+			hpMat.opacity = isSelected ? 0.8 : 0;
+		}
 	});
 
 	const sp =
 		useSphere && boardWidth && boardHeight
-			? sphereModelPlacement(x, z, boardWidth, boardHeight, RING_Y)
+			? sphereModelPlacement(x, z, boardWidth, boardHeight, DISC_Y)
 			: null;
 
+	const pos: [number, number, number] = sp
+		? sp.position
+		: [x * TILE_SIZE_M, DISC_Y, z * TILE_SIZE_M];
+	const quat = sp ? sp.quaternion : undefined;
+	const rot: [number, number, number] | undefined = sp
+		? undefined
+		: [-Math.PI / 2, 0, 0];
+
 	return (
-		<mesh
-			ref={meshRef}
-			position={sp ? sp.position : [x * TILE_SIZE_M, RING_Y, z * TILE_SIZE_M]}
-			quaternion={sp ? sp.quaternion : undefined}
-			rotation={sp ? undefined : [-Math.PI / 2, 0, 0]}
-			renderOrder={10}
-		>
-			<ringGeometry args={[RING_INNER_RADIUS, RING_OUTER_RADIUS, 32]} />
-			<meshStandardMaterial
-				color={0x000000}
-				emissive={READINESS_CYAN}
-				emissiveIntensity={1.5}
-				transparent
-				opacity={0.6}
-				depthWrite={false}
-				depthTest={false}
-				side={THREE.DoubleSide}
-			/>
-		</mesh>
+		<group>
+			{/* Base faction disc — translucent circle with faction color */}
+			<mesh
+				ref={discRef}
+				position={pos}
+				quaternion={quat}
+				rotation={rot}
+				renderOrder={10}
+			>
+				<circleGeometry args={[DISC_RADIUS, 32]} />
+				<meshStandardMaterial
+					color={0x000000}
+					emissive={factionColor}
+					emissiveIntensity={0.6}
+					transparent
+					opacity={0.2}
+					depthWrite={false}
+					depthTest={false}
+					side={THREE.DoubleSide}
+				/>
+			</mesh>
+
+			{/* HP arc — top half, shrinks as HP drops, green→red */}
+			<mesh
+				ref={hpRef}
+				position={pos}
+				quaternion={quat}
+				rotation={rot}
+				renderOrder={11}
+			>
+				<ringGeometry
+					args={[
+						DISC_RADIUS * 0.85,
+						DISC_RADIUS * 0.95,
+						24,
+						1,
+						Math.PI / 2 - hpArc / 2, // start at top, centered
+						hpArc,
+					]}
+				/>
+				<meshStandardMaterial
+					color={0x000000}
+					emissive={hpColor}
+					emissiveIntensity={1.5}
+					transparent
+					opacity={0}
+					depthWrite={false}
+					depthTest={false}
+					side={THREE.DoubleSide}
+				/>
+			</mesh>
+		</group>
 	);
 }
 
@@ -428,6 +470,7 @@ function MarkParticleTrail({
 
 type UnitRendererProps = {
 	world: World;
+	selectedUnitId?: number | null;
 	useSphere?: boolean;
 	boardWidth?: number;
 	boardHeight?: number;
@@ -445,12 +488,16 @@ interface UnitSnapshot {
 	/** Current AP — drives readiness glow ring. */
 	ap: number;
 	maxAp: number;
+	/** Current HP — drives faction disc HP arc. */
+	hp: number;
+	maxHp: number;
 	/** Mark level 1-5 — drives visual effects at III+. */
 	markLevel: number;
 }
 
 export function UnitRenderer({
 	world,
+	selectedUnitId,
 	useSphere,
 	boardWidth,
 	boardHeight,
@@ -509,10 +556,12 @@ export function UnitRenderer({
 				}
 			}
 
-			// Read AP for readiness glow
+			// Read AP and HP for faction disc
 			const stats = entity.get(UnitStats);
 			const ap = stats?.ap ?? 0;
 			const maxAp = stats?.maxAp ?? 0;
+			const hp = stats?.hp ?? 10;
+			const maxHp = stats?.maxHp ?? 10;
 
 			// Read mark level for visual effects
 			let markLevel = 1;
@@ -531,6 +580,8 @@ export function UnitRenderer({
 				color: FACTION_COLORS[faction.factionId] ?? 0x888888,
 				ap,
 				maxAp,
+				hp,
+				maxHp,
 				markLevel,
 			});
 		}
@@ -577,17 +628,17 @@ export function UnitRenderer({
 								boardWidth={boardWidth}
 								boardHeight={boardHeight}
 							/>
-							{u.ap > 0 && (
-								<ReadinessRing
-									x={u.tileX}
-									z={u.tileZ}
-									ap={u.ap}
-									maxAp={u.maxAp}
-									useSphere={useSphere}
-									boardWidth={boardWidth}
-									boardHeight={boardHeight}
-								/>
-							)}
+							<FactionDisc
+								x={u.tileX}
+								z={u.tileZ}
+								factionColor={u.color}
+								hp={u.hp}
+								maxHp={u.maxHp}
+								isSelected={u.eid === selectedUnitId}
+								useSphere={useSphere}
+								boardWidth={boardWidth}
+								boardHeight={boardHeight}
+							/>
 							{/* Mark III+: Faction-color accent glow */}
 							{u.markLevel >= 3 && (
 								<MarkAccentGlow

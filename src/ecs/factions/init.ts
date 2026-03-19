@@ -1,4 +1,5 @@
 import type { World } from "koota";
+import { PLAYER_UNIT_COLOR } from "../../config/gameDefaults";
 import type { Difficulty, FactionSlot } from "../../world/config";
 import { ResearchState } from "../systems/researchSystem";
 import { Faction } from "../traits/faction";
@@ -45,11 +46,11 @@ export function initFactions(
 			? { scrap_metal: 10, ferrous_scrap: 5, conductor_wire: 2 }
 			: {
 					scrap_metal: 30,
-					ferrous_scrap: 15,
-					alloy_stock: 8,
-					conductor_wire: 6,
-					polymer_salvage: 5,
-					silicon_wafer: 2,
+					ferrous_scrap: 30,
+					alloy_stock: 12,
+					conductor_wire: 12,
+					polymer_salvage: 8,
+					silicon_wafer: 4,
 				};
 
 		const poolInit = isPlayer

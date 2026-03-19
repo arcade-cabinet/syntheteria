@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ecumenopolis 4X Viewport</title>
+    <style>
+        :root {
+            --ui-bg: rgba(10, 15, 20, 0.9);
+            --ui-border: #00ffff; /* Cyberpunk Cyan */
+            --ui-text: #e0f7fa;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', Courier, monospace; /* Tech feel */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .interactive {
+            pointer-events: auto;
+        }
+
+        /* Top Bar */
+        #top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: var(--ui-bg);
+            border-bottom: 1px solid var(--ui-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            box-sizing: border-box;
+            color: var(--ui-text);
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.15);
+            text-transform: uppercase;
+        }
+
+        .top-stat { display: flex; align-items: center; gap: 8px; }
+        .energy { color: #f1c40f; }
+        .data { color: #9b59b6; }
+        .durasteel { color: #95a5a6; }
+
+        /* Floating Sector Labels */
+        .floating-label {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            background: rgba(10, 15, 25, 0.85);
+            border: 1px solid var(--ui-border);
+            border-radius: 2px;
+            padding: 4px 10px;
+            color: var(--ui-text);
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+            transition: opacity 0.2s;
+            will-change: transform;
+            cursor: pointer;
+            backdrop-filter: blur(2px);
+        }
+        
+        .floating-label::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 20px;
+            background: var(--ui-border);
+            opacity: 0.5;
+        }
+
+        .city-name-row { display: flex; align-items: center; gap: 6px; letter-spacing: 1px; }
+
+        .pop-badge {
+            background: #000;
+            border-radius: 2px;
+            padding: 2px 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            border: 1px solid var(--ui-border);
+            color: var(--ui-border);
+        }
+
+        .health-bar {
+            width: 100%;
+            height: 3px;
+            background: #222;
+            overflow: hidden;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: var(--ui-border);
+            width: 80%;
+        }
+
+        #advisor-dialog {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            background: var(--ui-bg);
+            border: 1px solid var(--ui-border);
+            border-left: 4px solid var(--ui-border);
+            padding: 15px;
+            color: var(--ui-text);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            display: flex;
+            gap: 15px;
+            cursor: pointer;
+        }
+
+        #advisor-portrait {
+            width: 60px;
+            height: 60px;
+            background: #111;
+            border: 1px solid #333;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2300ffff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>');
+            background-size: cover;
+        }
+
+        .dialog-content h4 { margin: 0 0 5px 0; color: var(--ui-border); text-transform: uppercase; letter-spacing: 1px;}
+        .dialog-content p { margin: 0; font-size: 13px; line-height: 1.5; color: #ccc;}
+
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <canvas id="game-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div id="top-bar" class="interactive">
+            <div>CYCLE 42.1</div>
+            <div class="top-stat energy">⚡ 1,024</div>
+            <div class="top-stat durasteel">🏗️ WALL TIER 3</div>
+            <div class="top-stat data">💾 +419TB/s</div>
+        </div>
+
+        <div id="markers-container"></div>
+
+        <div id="advisor-dialog" class="interactive" onclick="this.style.display='none'">
+            <div id="advisor-portrait"></div>
+            <div class="dialog-content">
+                <h4>Grid Interface Ping</h4>
+                <p>Architect, our scouters have breached a new durasteel corridor. We can harvest these superstructure walls to extract Raw Durasteel and High-Density Alloys.</p>
+                <p style="color:#666; font-size: 10px; margin-top:5px;">[ Tap to acknowledge ]</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS & GLOBALS ---
+        const MAP_SIZE = 40; 
+        const TILE_SIZE = 2; 
+        
+        // Revised Biomes/Structures
+        const TILE = {
+            OCEAN_GRATING: 0,
+            FLOOR_CONCRETE: 1,
+            FLOOR_ASPHALT: 2,
+            WALL_DURASTEEL: 3, // Standard impassable resource
+            WALL_ALLOY: 4      // High-value impassable resource (glows)
+        };
+
+        let scene, camera, renderer;
+        let mapData = [];
+        let uiMarkers = []; 
+        let interactableMeshes = [];
+        let knownRooms = []; // Store rooms to spawn entities
+        
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let selectionRing;
+
+        const input = {
+            isDragging: false,
+            hasDragged: false,
+            previousPosition: { x: 0, y: 0 },
+            velocity: { x: 0, y: 0 }
+        };
+
+        init();
+        animate();
+
+        function init() {
+            const canvas = document.getElementById('game-canvas');
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color('#050a0f'); 
+            scene.fog = new THREE.FogExp2('#050a0f', 0.012); 
+
+            // Camera Setup - Slightly higher pitch to see over the tall labyrinth walls
+            camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.set(MAP_SIZE, 45, MAP_SIZE + 35);
+            camera.lookAt(MAP_SIZE, 0, MAP_SIZE);
+
+            // Lighting - Moody Cyberpunk
+            const ambientLight = new THREE.AmbientLight(0x223344, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xaaccff, 0.8);
+            dirLight.position.set(10, 50, 20);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            dirLight.shadow.camera.left = -40;
+            dirLight.shadow.camera.right = 40;
+            dirLight.shadow.camera.top = 40;
+            dirLight.shadow.camera.bottom = -40;
+            scene.add(dirLight);
+
+            // Add some colorful point lights for the ecumenopolis feel
+            const pLight1 = new THREE.PointLight(0x00ffff, 1, 30);
+            pLight1.position.set(20, 5, 20);
+            scene.add(pLight1);
+            
+            const pLight2 = new THREE.PointLight(0xff00ff, 1, 30);
+            pLight2.position.set(60, 5, 60);
+            scene.add(pLight2);
+
+            generateLabyrinthMap();
+            buildCityscape();
+            populateEntities();
+            createSelectionRing();
+
+            setupInput(canvas);
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // --- LABYRINTH MAP GENERATION (Room & Corridor Carving) ---
+        function generateLabyrinthMap() {
+            // 1. Initialize entire map as Ocean Grating
+            for (let x = 0; x < MAP_SIZE; x++) {
+                mapData[x] = [];
+                for (let z = 0; z < MAP_SIZE; z++) {
+                    mapData[x][z] = TILE.OCEAN_GRATING;
+                }
+            }
+
+            // 2. Define two main landmass bounds separated by a gap (the central ocean grate)
+            const leftMass = { xMin: 2, xMax: 16, zMin: 2, zMax: MAP_SIZE - 2 };
+            const rightMass = { xMin: 24, xMax: MAP_SIZE - 2, zMin: 2, zMax: MAP_SIZE - 2 };
+
+            // 3. Fill landmasses with Solid Walls (Resources)
+            const fillSolid = (bounds) => {
+                for (let x = bounds.xMin; x <= bounds.xMax; x++) {
+                    for (let z = bounds.zMin; z <= bounds.zMax; z++) {
+                        // 10% chance to be a high-yield alloy node
+                        mapData[x][z] = Math.random() > 0.9 ? TILE.WALL_ALLOY : TILE.WALL_DURASTEEL;
+                    }
+                }
+            };
+            fillSolid(leftMass);
+            fillSolid(rightMass);
+
+            // 4. Carve Rooms & Corridors Algorithm
+            const carveLandmass = (bounds) => {
+                let localRooms = [];
+                const numRooms = 8;
+                
+                // Carve Rooms
+                for (let i = 0; i < numRooms; i++) {
+                    const roomW = Math.floor(Math.random() * 4) + 3; // 3 to 6
+                    const roomH = Math.floor(Math.random() * 4) + 3;
+                    const roomX = Math.floor(Math.random() * (bounds.xMax - bounds.xMin - roomW)) + bounds.xMin;
+                    const roomZ = Math.floor(Math.random() * (bounds.zMax - bounds.zMin - roomH)) + bounds.zMin;
+                    
+                    localRooms.push({ cx: Math.floor(roomX + roomW/2), cz: Math.floor(roomZ + roomH/2) });
+
+                    for (let x = roomX; x < roomX + roomW; x++) {
+                        for (let z = roomZ; z < roomZ + roomH; z++) {
+                            mapData[x][z] = TILE.FLOOR_CONCRETE;
+                        }
+                    }
+                }
+
+                // Carve Corridors to connect rooms (Guarantees playability)
+                for (let i = 0; i < localRooms.length - 1; i++) {
+                    const r1 = localRooms[i];
+                    const r2 = localRooms[i+1];
+                    
+                    // Horizontal then vertical carve
+                    const minX = Math.min(r1.cx, r2.cx);
+                    const maxX = Math.max(r1.cx, r2.cx);
+                    for(let x = minX; x <= maxX; x++) mapData[x][r1.cz] = TILE.FLOOR_ASPHALT;
+                    
+                    const minZ = Math.min(r1.cz, r2.cz);
+                    const maxZ = Math.max(r1.cz, r2.cz);
+                    for(let z = minZ; z <= maxZ; z++) mapData[r2.cx][z] = TILE.FLOOR_ASPHALT;
+                }
+                
+                knownRooms = knownRooms.concat(localRooms);
+            };
+
+            carveLandmass(leftMass);
+            carveLandmass(rightMass);
+
+            // 5. Connect the two landmasses across the grating
+            // Find a room on the left and right near the edges
+            const bridgeZ = Math.floor(MAP_SIZE / 2);
+            for(let x = leftMass.xMax - 2; x <= rightMass.xMin + 2; x++) {
+                // If it's over the grating gap, it remains Grating but we treat it as passable path
+                // For visual purposes, we'll leave the mapData as Grating, but we know it's the bridge.
+                // To make a distinct visual "bridge", let's carve a concrete path over it.
+                if(mapData[x][bridgeZ] === TILE.OCEAN_GRATING) {
+                    mapData[x][bridgeZ] = TILE.FLOOR_CONCRETE; 
+                } else if (mapData[x][bridgeZ] !== TILE.FLOOR_CONCRETE) {
+                    mapData[x][bridgeZ] = TILE.FLOOR_ASPHALT; // Drill through walls
+                }
+            }
+        }
+
+        // --- VISUAL GENERATION (The Ecumenopolis) ---
+        function buildCityscape() {
+            // Group for performance
+            const staticGeomGroup = new THREE.Group();
+
+            // Materials
+            const matConcrete = new THREE.MeshStandardMaterial({ color: 0x3a404a, roughness: 0.9 });
+            const matAsphalt = new THREE.MeshStandardMaterial({ color: 0x1f2329, roughness: 0.8 });
+            const matDurasteel = new THREE.MeshStandardMaterial({ color: 0x1c2833, roughness: 0.5, metalness: 0.6, flatShading: true });
+            
+            const matAlloy = new THREE.MeshStandardMaterial({ 
+                color: 0x00ffff, 
+                emissive: 0x005555,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+
+            // 1. Render Floors and Walls tile by tile
+            for (let x = 0; x < MAP_SIZE; x++) {
+                for (let z = 0; z < MAP_SIZE; z++) {
+                    const type = mapData[x][z];
+                    const worldX = x * TILE_SIZE + (TILE_SIZE / 2);
+                    const worldZ = z * TILE_SIZE + (TILE_SIZE / 2);
+
+                    if (type === TILE.FLOOR_CONCRETE || type === TILE.FLOOR_ASPHALT) {
+                        // Passable Floor Tile
+                        const floorGeo = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
+                        floorGeo.rotateX(-Math.PI / 2);
+                        const floorMesh = new THREE.Mesh(floorGeo, type === TILE.FLOOR_CONCRETE ? matConcrete : matAsphalt);
+                        floorMesh.position.set(worldX, 0, worldZ);
+                        floorMesh.receiveShadow = true;
+                        staticGeomGroup.add(floorMesh);
+                    } 
+                    else if (type === TILE.WALL_DURASTEEL || type === TILE.WALL_ALLOY) {
+                        // Impassable Resource Wall/Building
+                        // Variable height to look like city blocks
+                        const height = (Math.random() * 3) + 2; 
+                        
+                        const boxGeo = new THREE.BoxGeometry(TILE_SIZE, height, TILE_SIZE);
+                        const wallMesh = new THREE.Mesh(boxGeo, type === TILE.WALL_ALLOY ? matAlloy : matDurasteel);
+                        
+                        wallMesh.position.set(worldX, height / 2, worldZ);
+                        wallMesh.castShadow = true;
+                        wallMesh.receiveShadow = true;
+                        
+                        // Add some greeble to the top to look like roofs
+                        if (Math.random() > 0.5 && type === TILE.WALL_DURASTEEL) {
+                            const roofFeatureGeo = new THREE.BoxGeometry(TILE_SIZE*0.5, 0.5, TILE_SIZE*0.5);
+                            const roofFeature = new THREE.Mesh(roofFeatureGeo, matConcrete);
+                            roofFeature.position.set(worldX, height + 0.25, worldZ);
+                            staticGeomGroup.add(roofFeature);
+                        }
+
+                        staticGeomGroup.add(wallMesh);
+                    }
+                }
+            }
+
+            scene.add(staticGeomGroup);
+
+            // 2. The Grating and Deep Ocean
+            createOceanGrating();
+        }
+
+        function createOceanGrating() {
+            // Create a procedural grating texture using Canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; 
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            
+            // Transparent background
+            ctx.clearRect(0, 0, 128, 128);
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#445566';
+            ctx.lineWidth = 6;
+            
+            // Crosshatch
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(128, 128);
+            ctx.moveTo(128, 0); ctx.lineTo(0, 128);
+            // Border
+            ctx.strokeRect(0,0,128,128);
+            ctx.stroke();
+
+            const gratingTex = new THREE.CanvasTexture(canvas);
+            gratingTex.wrapS = THREE.RepeatWrapping;
+            gratingTex.wrapT = THREE.RepeatWrapping;
+            gratingTex.repeat.set(MAP_SIZE, MAP_SIZE); // Repeat across map
+
+            // The Grating Plane (Y = 0)
+            const gratingGeo = new THREE.PlaneGeometry(MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
+            gratingGeo.rotateX(-Math.PI / 2);
+            gratingGeo.translate((MAP_SIZE * TILE_SIZE)/2, 0, (MAP_SIZE * TILE_SIZE)/2);
+            
+            const gratingMat = new THREE.MeshStandardMaterial({ 
+                map: gratingTex, 
+                transparent: true,
+                alphaTest: 0.1, // Discard transparent pixels for shadows
+                metalness: 0.8,
+                roughness: 0.4
+            });
+            const gratingMesh = new THREE.Mesh(gratingGeo, gratingMat);
+            gratingMesh.receiveShadow = true;
+            gratingMesh.castShadow = true; // Grating casts shadows onto ocean!
+            scene.add(gratingMesh);
+
+            // The Deep Ocean Plane (Y = -5)
+            // Seen through the grating holes
+            const oceanGeo = new THREE.PlaneGeometry(MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
+            oceanGeo.rotateX(-Math.PI / 2);
+            oceanGeo.translate((MAP_SIZE * TILE_SIZE)/2, -5, (MAP_SIZE * TILE_SIZE)/2);
+            
+            const oceanMat = new THREE.MeshStandardMaterial({ 
+                color: 0x001122, 
+                emissive: 0x000511,
+                roughness: 0.1,
+                metalness: 0.1
+            });
+            const oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
+            oceanMesh.receiveShadow = true;
+            scene.add(oceanMesh);
+            
+            // Ocean lighting - Deep blue pointlights underneath
+            const underLight1 = new THREE.PointLight(0x0044aa, 2, 40);
+            underLight1.position.set(20, -2, 20);
+            scene.add(underLight1);
+        }
+
+        // --- UNITS & CITY HUBS ---
+        function populateEntities() {
+            if(knownRooms.length < 2) return;
+
+            // Pick a room for the central Hub (City equivalent)
+            const hubRoom = knownRooms[0];
+            const hubWorldPos = new THREE.Vector3(
+                hubRoom.cx * TILE_SIZE + (TILE_SIZE / 2),
+                0,
+                hubRoom.cz * TILE_SIZE + (TILE_SIZE / 2)
+            );
+
+            // Hub Mesh (Sci-Fi pyramid/core)
+            const hubGeo = new THREE.ConeGeometry(1.5, 3, 4);
+            const hubMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x003333, flatShading: true });
+            const hubMesh = new THREE.Mesh(hubGeo, hubMat);
+            hubMesh.position.copy(hubWorldPos);
+            hubMesh.position.y = 1.5;
+            hubMesh.castShadow = true;
+            hubMesh.userData = { type: 'city', name: 'NEXUS-PRIME' }; 
+            scene.add(hubMesh);
+
+            // Invisible click box
+            const clickBoxGeo = new THREE.BoxGeometry(3, 4, 3);
+            const clickBoxMat = new THREE.MeshBasicMaterial({visible: false});
+            const hubClickBox = new THREE.Mesh(clickBoxGeo, clickBoxMat);
+            hubClickBox.position.copy(hubWorldPos);
+            hubClickBox.position.y = 2;
+            hubClickBox.userData = hubMesh.userData;
+            scene.add(hubClickBox);
+            interactableMeshes.push(hubClickBox);
+
+            createFloatingLabel("NEXUS-PRIME", "T4", hubWorldPos, true);
+
+            // Pick another room for a Mobile Unit (Hovertank equivalent)
+            const unitRoom = knownRooms[1];
+            const unitWorldPos = new THREE.Vector3(
+                unitRoom.cx * TILE_SIZE + (TILE_SIZE / 2),
+                0.5, // Hovering slightly
+                unitRoom.cz * TILE_SIZE + (TILE_SIZE / 2)
+            );
+
+            const unitGroup = new THREE.Group();
+            
+            // Hovertank Chassis
+            const bodyGeo = new THREE.BoxGeometry(1.2, 0.4, 1.8);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x445566 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.castShadow = true;
+            unitGroup.add(body);
+
+            // Turret/Cannon
+            const turretGeo = new THREE.BoxGeometry(0.6, 0.4, 0.6);
+            const turret = new THREE.Mesh(turretGeo, matAlloy = new THREE.MeshStandardMaterial({color: 0xff3333}));
+            turret.position.set(0, 0.4, 0.2);
+            unitGroup.add(turret);
+
+            unitGroup.position.copy(unitWorldPos);
+            unitGroup.rotation.y = Math.PI / 6;
+            scene.add(unitGroup);
+
+            const unitClickBox = new THREE.Mesh(clickBoxGeo, clickBoxMat);
+            unitClickBox.position.copy(unitWorldPos);
+            unitClickBox.userData = { type: 'unit', name: 'EXCAVATOR' };
+            scene.add(unitClickBox);
+            interactableMeshes.push(unitClickBox);
+
+            createFloatingLabel("EXCAVATOR-X9", "LV1", unitWorldPos, false);
+            
+            // Draw a subtle "territory" grid around Nexus
+            createTerritoryGrid(hubRoom.cx, hubRoom.cz);
+        }
+
+        function createTerritoryGrid(cx, cz) {
+            const size = 3; // radius
+            const gridGeo = new THREE.GridHelper((size*2+1)*TILE_SIZE, size*2+1, 0x00ffff, 0x004444);
+            gridGeo.position.set(cx * TILE_SIZE + TILE_SIZE/2, 0.05, cz * TILE_SIZE + TILE_SIZE/2);
+            scene.add(gridGeo);
+        }
+
+        function createSelectionRing() {
+            const ringGeo = new THREE.RingGeometry(1.0, 1.2, 32);
+            const ringMat = new THREE.MeshBasicMaterial({ 
+                color: 0xff00ff, 
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.9
+            });
+            selectionRing = new THREE.Mesh(ringGeo, ringMat);
+            selectionRing.rotateX(-Math.PI / 2);
+            selectionRing.position.y = 0.1;
+            selectionRing.visible = false;
+            scene.add(selectionRing);
+        }
+
+        function createFloatingLabel(name, tier, worldPosition, isHub) {
+            const container = document.getElementById('markers-container');
+            const el = document.createElement('div');
+            el.className = 'floating-label interactive';
+            
+            el.innerHTML = `
+                <div class="city-name-row">
+                    <div class="pop-badge">${tier}</div>
+                    <span>${name}</span>
+                </div>
+                ${isHub ? `
+                <div class="health-bar">
+                    <div class="health-fill" style="width: 100%; background: #00ffff;"></div>
+                </div>` : `
+                <div class="health-bar">
+                    <div class="health-fill" style="width: 70%; background: #ff00ff;"></div>
+                </div>
+                `}
+            `;
+            
+            el.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                selectEntityAtPosition(worldPosition);
+            });
+
+            container.appendChild(el);
+
+            uiMarkers.push({
+                element: el,
+                worldPos: worldPosition.clone().add(new THREE.Vector3(0, 3.5, 0)) 
+            });
+        }
+
+        // --- CONTROLS & RAYCASTING ---
+        function setupInput(canvas) {
+            canvas.addEventListener('pointerdown', (e) => {
+                input.isDragging = true;
+                input.hasDragged = false;
+                input.previousPosition.x = e.clientX;
+                input.previousPosition.y = e.clientY;
+                input.velocity.x = 0;
+                input.velocity.y = 0;
+            });
+
+            canvas.addEventListener('pointermove', (e) => {
+                if (!input.isDragging) return;
+
+                const deltaX = e.clientX - input.previousPosition.x;
+                const deltaY = e.clientY - input.previousPosition.y;
+
+                if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) input.hasDragged = true;
+
+                const panSpeed = 0.06;
+                camera.position.x -= deltaX * panSpeed;
+                camera.position.z -= deltaY * panSpeed;
+
+                input.velocity.x = deltaX;
+                input.velocity.y = deltaY;
+
+                input.previousPosition.x = e.clientX;
+                input.previousPosition.y = e.clientY;
+            });
+
+            const onPointerUp = (e) => {
+                input.isDragging = false;
+                if (!input.hasDragged && e.type === 'pointerup') {
+                    handleTap(e.clientX, e.clientY);
+                }
+            };
+
+            canvas.addEventListener('pointerup', onPointerUp);
+            canvas.addEventListener('pointerleave', onPointerUp);
+            
+            canvas.addEventListener('wheel', (e) => {
+                const zoomSpeed = 0.03;
+                camera.translateZ(e.deltaY * zoomSpeed);
+                if (camera.position.y < 15) camera.position.y = 15;
+                if (camera.position.y > 80) camera.position.y = 80;
+            });
+        }
+
+        function handleTap(clientX, clientY) {
+            mouse.x = (clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(interactableMeshes);
+
+            if (intersects.length > 0) {
+                selectEntityAtPosition(intersects[0].object.position);
+            } else {
+                selectionRing.visible = false;
+            }
+        }
+
+        function selectEntityAtPosition(pos) {
+            selectionRing.position.set(pos.x, 0.1, pos.z);
+            selectionRing.visible = true;
+            selectionRing.scale.set(0.1, 0.1, 0.1);
+        }
+
+        // --- RENDER LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!input.isDragging && (Math.abs(input.velocity.x) > 0.1 || Math.abs(input.velocity.y) > 0.1)) {
+                camera.position.x -= input.velocity.x * 0.05;
+                camera.position.z -= input.velocity.y * 0.05;
+                input.velocity.x *= 0.85;
+                input.velocity.y *= 0.85;
+            }
+
+            if (selectionRing.visible) {
+                selectionRing.rotation.z += 0.03; 
+                if (selectionRing.scale.x < 1) {
+                    selectionRing.scale.x += (1 - selectionRing.scale.x) * 0.2;
+                    selectionRing.scale.y += (1 - selectionRing.scale.y) * 0.2;
+                }
+            }
+
+            renderer.render(scene, camera);
+            updateUIMarkers();
+        }
+
+        function updateUIMarkers() {
+            const halfWidth = window.innerWidth / 2;
+            const halfHeight = window.innerHeight / 2;
+            const tempV = new THREE.Vector3();
+
+            uiMarkers.forEach(marker => {
+                tempV.copy(marker.worldPos);
+                tempV.project(camera);
+
+                if (tempV.z > 1) {
+                    marker.element.style.opacity = '0';
+                    marker.element.style.pointerEvents = 'none';
+                    return;
+                }
+
+                const x = (tempV.x * halfWidth) + halfWidth;
+                const y = -(tempV.y * halfHeight) + halfHeight;
+
+                marker.element.style.opacity = '1';
+                marker.element.style.pointerEvents = 'auto';
+                marker.element.style.transform = `translate(-50%, -100%) translate(${x}px, ${y}px)`;
+            });
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+</html>

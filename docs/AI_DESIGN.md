@@ -151,12 +151,23 @@ Biases are mapped to 0.2-1.0 range via `norm(v) = 0.2 + (v/3) * 0.8`. Iron Creed
 - 22 buildings (up from 16)
 - BUT: still only 11 units in 1000 turns
 
-### 10x 100-Turn Pattern Analysis
+### 10x 100-Turn Pattern Analysis (pre-economy-chain fix)
 - Units peak at 28 (turn ~10) then decline to 20-21
 - Buildings stuck at 22 after turn ~10
 - Territory peaks at 7.5% then drops to 6.7%
 - Zero faction-vs-faction combat kills
 - Complete stagnation after turn 20
+
+### 50-Turn Playtest #3 (with economy chain + tuning fixes)
+- Buildings: 20→38 by turn 10 (18 new buildings, all factions building)
+- Units: 16→39 at turn 10 (fabrication throughput)
+- All factions build research_lab, defense_turret, relay_tower, motor_pool #2
+- Iron Creed builds 11 buildings including motor_pool #3 and outpost #3
+- Reclaimers/Volt/Signal each build 9 buildings (4 new types)
+- Economy self-sustaining: resources at 158 by turn 50 (growing, not draining)
+- Harvest yield boosted (2-5 per harvest), synthesis output doubled (2 alloy/polymer per recipe)
+- Resource renewals: synthesizer +1 scrap/turn, resource_refinery +2 ferrous/turn
+- Fabrication throttled to 1 unit/motor pool/turn to preserve building resources
 
 ### Target Metrics (per faction at turn 100)
 - 10+ units (growing, not declining)
@@ -201,6 +212,10 @@ Biases are mapped to 0.2-1.0 range via `norm(v) = 0.2 + (v/3) * 0.8`. Iron Creed
 - [x] BuildEvaluator plans resource gathering chain (**DONE** — priority order, time ramp, motor pool bonus)
 - [x] AttackEvaluator initiates combat when not outnumbered (**DONE** — 0.95 floor for adjacent)
 - [ ] "Always productive" guarantee — no idle for 2+ consecutive turns
+- [x] Synthesizer in starters (**DONE** — every faction starts with synthesizer)
+- [x] Auto-building system (**DONE** — runAiBuilding post-GOAP, dynamic priority, build cooldown)
+- [x] Auto-synthesis system (**DONE** — runAiSynthesis queues recipes on idle synthesizers with resource reserves)
+- [x] Economy chain unblocked (**DONE** — harvest → synthesize → build research_lab cycle works)
 
 ### High Priority
 - [ ] Wider faction personality spread (1-5 range, not 1-3)
@@ -208,6 +223,7 @@ Biases are mapped to 0.2-1.0 range via `norm(v) = 0.2 + (v/3) * 0.8`. Iron Creed
 - [x] Multi-base expansion (send workers far to found new outposts) (**DONE** — ExpandEvaluator worker dispatch)
 - [x] Motor pools should NEVER be idle (**DONE** — runAiFabrication fills ALL open slots)
 - [ ] Wormhole project should be started at turn 100+ by strongest faction
+- [ ] Harvest rate tuning — mid-game resource recovery too slow, buildings plateau after initial burst
 
 ### Medium Priority
 - [x] WanderBehavior for cult wanderer stage (**DONE** — `wanderSteering.ts`)

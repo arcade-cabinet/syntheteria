@@ -28,6 +28,11 @@ import {
 	queueResearch,
 } from "../ecs/systems/researchSystem";
 import { canAfford, spendResources } from "../ecs/systems/resourceSystem";
+import {
+	FUSION_RECIPES,
+	SynthesisQueue,
+	queueSynthesis,
+} from "../ecs/systems/synthesisSystem";
 import { TileFloor } from "../ecs/terrain/traits";
 import type { ResourceMaterial } from "../ecs/terrain/types";
 import { Board } from "../ecs/traits/board";
@@ -104,6 +109,9 @@ import {
 
 let _runtime = new AIRuntime();
 
+/** Track consecutive idle turns per agent entity id. */
+const _idleStreak = new Map<number, number>();
+
 /** Reset the AI runtime (call on new game). */
 export function resetAIRuntime(): void {
 	_runtime.clear();
@@ -116,6 +124,8 @@ export function resetAIRuntime(): void {
 	clearNavGraphCache();
 	resetInfluenceMaps();
 	resetDiplomaticAi();
+	_idleStreak.clear();
+	_lastBuildTurn.clear();
 }
 
 /** Get the current runtime (for testing). */
@@ -299,6 +309,13 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		const motorPoolCount = factionBuildings.filter(
 			(b) => b.buildingType === "motor_pool",
 		).length;
+
+		// Count existing buildings per type for dynamic build priority
+		const existingBuildingTypes: Record<string, number> = {};
+		for (const b of factionBuildings) {
+			existingBuildingTypes[b.buildingType] =
+				(existingBuildingTypes[b.buildingType] ?? 0) + 1;
+		}
 		const occupiedTiles = new Set(
 			factionBuildings.map((b) => `${b.tileX},${b.tileZ}`),
 		);
@@ -440,6 +457,7 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			enemyUnits,
 			factionTerritoryCount,
 			isStrongestFaction,
+			existingBuildingTypes,
 		});
 
 		// ── Faction FSM: macro strategy bias overrides ──────────────
@@ -530,6 +548,52 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 				}
 			}
 
+			// ── Idle-break: guarantee no unit idles 2+ consecutive turns ──
+			if (agent.decidedAction?.type === "idle") {
+				const prev = _idleStreak.get(snap.entityId) ?? 0;
+				_idleStreak.set(snap.entityId, prev + 1);
+
+				if (prev + 1 >= 2) {
+					// Override idle with a productive fallback
+					if (deposits.length > 0) {
+						// Move toward nearest deposit
+						let bestDist = Infinity;
+						let bestX = boardCenter.x;
+						let bestZ = boardCenter.z;
+						for (const d of deposits) {
+							const dist = sphereManhattan(
+								snap.tileX, snap.tileZ, d.x, d.z,
+								board.config.width, navGraph.wrapX,
+							);
+							if (dist < bestDist) {
+								bestDist = dist;
+								bestX = d.x;
+								bestZ = d.z;
+							}
+						}
+						agent.decidedAction = { type: "move", toX: bestX, toZ: bestZ };
+					} else if (factionCenter) {
+						// Expand: move 5 tiles outward from faction center
+						const dx = snap.tileX - factionCenter.x;
+						const dz = snap.tileZ - factionCenter.z;
+						const len = Math.sqrt(dx * dx + dz * dz) || 1;
+						const expandX = Math.round(snap.tileX + (dx / len) * 5);
+						const expandZ = Math.round(snap.tileZ + (dz / len) * 5);
+						agent.decidedAction = {
+							type: "move",
+							toX: Math.max(0, Math.min(board.config.width - 1, expandX)),
+							toZ: Math.max(0, Math.min(board.config.height - 1, expandZ)),
+						};
+					} else {
+						// Scout toward board center
+						agent.decidedAction = { type: "move", toX: boardCenter.x, toZ: boardCenter.z };
+					}
+					_idleStreak.set(snap.entityId, 0);
+				}
+			} else {
+				_idleStreak.set(snap.entityId, 0);
+			}
+
 			// ── Formation overlay: followers snap to offset positions ──
 			// If this unit is a follower in a formation and its decided action
 			// is "move", redirect it to its formation offset position instead.
@@ -617,8 +681,8 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 						entity.add(
 							UnitHarvest({
 								depositEntityId: action.depositEntityId,
-								ticksRemaining: 3,
-								totalTicks: 3,
+								ticksRemaining: 2,
+								totalTicks: 2,
 								targetX: action.targetX,
 								targetZ: action.targetZ,
 							}),
@@ -663,17 +727,23 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		}
 	}
 
-	// ── Step 6b: AI research — queue tech research when labs are idle ────
+	// ── Step 6b: AI building — construct missing critical infrastructure ──
+	runAiBuilding(world, [...agentsByFaction.keys()], board);
+
+	// ── Step 6c: AI synthesis — queue conversions at idle synthesizers ───
+	runAiSynthesis(world, [...agentsByFaction.keys()]);
+
+	// ── Step 6d: AI research — queue tech research when labs are idle ────
 	runAiResearch(world, [...agentsByFaction.keys()]);
 
-	// ── Step 6c: AI fabrication — queue units at idle motor pools ────────
+	// ── Step 6e: AI fabrication — queue units at idle motor pools ────────
 	runAiFabrication(world, [...agentsByFaction.keys()]);
 
-	// ── Step 6d: Trigger checks — corruption zones + faction contact ────
+	// ── Step 6f: Trigger checks — corruption zones + faction contact ────
 	checkCorruptionTriggers(world, currentTurn);
 	checkFactionContact(world, currentTurn);
 
-	// ── Step 6e: Diplomatic AI — alliance/war decisions per faction ──────
+	// ── Step 6g: Diplomatic AI — alliance/war decisions per faction ──────
 	runAiDiplomacy(world, [...agentsByFaction.keys()], agentsByFaction, currentTurn);
 
 	// ── Step 7: Refresh AI AP ───────────────────────────────────────────
@@ -794,9 +864,8 @@ const AI_BUILDABLE: BuildingType[] = [
 	"storage_hub",
 	"defense_turret",
 	"relay_tower",
-	"outpost",
 	"power_box",
-	"research_lab",
+	"resource_refinery",
 ];
 
 interface FactionBuildingInfo {
@@ -826,7 +895,8 @@ function getFactionBuildings(
 
 /**
  * Compute which buildings the AI can afford and where to place them.
- * Finds a passable, unoccupied tile near the faction's units.
+ * Searches near existing faction buildings first (infrastructure cluster),
+ * then falls back to near units.
  */
 function computeBuildOptions(
 	world: World,
@@ -858,6 +928,15 @@ function computeBuildOptions(
 		relay_tower: 2,
 	};
 
+	// Collect faction building positions for placement search
+	const factionBuildingPositions: Array<{ x: number; z: number }> = [];
+	for (const e of world.query(Building)) {
+		const b = e.get(Building);
+		if (b && b.factionId === factionId) {
+			factionBuildingPositions.push({ x: b.tileX, z: b.tileZ });
+		}
+	}
+
 	for (const type of AI_BUILDABLE) {
 		const def = BUILDING_DEFS[type];
 		// Skip if already at max count for this type
@@ -866,8 +945,15 @@ function computeBuildOptions(
 		if (current >= max) continue;
 		if (!canAfford(world, factionId, def.buildCost)) continue;
 
-		// Find a placement tile near one of this faction's units
-		const tile = findBuildTileNearUnits(units, board, occupiedTiles, wrapX);
+		// Search near existing buildings first, then near units
+		const tile =
+			findBuildTileNear(factionBuildingPositions, board, occupiedTiles, wrapX) ??
+			findBuildTileNear(
+				units.map((u) => ({ x: u.tileX, z: u.tileZ })),
+				board,
+				occupiedTiles,
+				wrapX,
+			);
 		if (tile) {
 			options.push({
 				buildingType: type,
@@ -880,23 +966,24 @@ function computeBuildOptions(
 	return options;
 }
 
-/** Find a passable, unoccupied tile near any of the faction's units. */
-function findBuildTileNearUnits(
-	units: AgentSnapshot[],
+/** Find a passable, unoccupied tile near any of the given anchor positions. */
+function findBuildTileNear(
+	anchors: Array<{ x: number; z: number }>,
 	board: GeneratedBoard,
 	occupied: Set<string>,
 	wrapX = false,
 ): { x: number; z: number } | null {
 	const { width, height } = board.config;
 
-	for (const unit of units) {
-		// Search in expanding radius around this unit
-		for (let r = 1; r <= 3; r++) {
+	for (const anchor of anchors) {
+		// Search in expanding radius — up to 12 tiles out (matches transmitter
+		// powerRadius) to handle tight labyrinth corridors where nearby tiles
+		// are occupied by starter buildings/units
+		for (let r = 1; r <= 12; r++) {
 			for (let dx = -r; dx <= r; dx++) {
 				for (let dz = -r; dz <= r; dz++) {
-					let x = unit.tileX + dx;
-					const z = unit.tileZ + dz;
-					// Wrap X on sphere (longitude wraps east-west)
+					let x = anchor.x + dx;
+					const z = anchor.z + dz;
 					if (wrapX) x = ((x % width) + width) % width;
 					if (x < 0 || z < 0 || x >= width || z >= height) continue;
 					const key = `${x},${z}`;
@@ -1061,6 +1148,138 @@ function findMineableTilesNearUnits(
 }
 
 // ---------------------------------------------------------------------------
+// AI Building — automatic infrastructure construction
+// ---------------------------------------------------------------------------
+
+/**
+ * Infrastructure priority for automatic building.
+ * Unlike the evaluator-driven Build (which competes with harvest/scout/etc),
+ * this runs unconditionally after GOAP — one building per faction per turn
+ * if affordable and below cap.
+ *
+ * Priority is dynamic: missing critical buildings come first.
+ */
+/** Track last build turn per faction to space out construction. */
+const _lastBuildTurn = new Map<string, number>();
+
+function runAiBuilding(
+	world: World,
+	factionIds: string[],
+	board: GeneratedBoard,
+): void {
+	// Read current turn
+	let currentTurn = 1;
+	for (const e of world.query(Board)) {
+		const b = e.get(Board);
+		if (b) { currentTurn = b.turn; break; }
+	}
+
+	for (const factionId of factionIds) {
+		if (factionId === "player") continue;
+		if (isCultFactionId(factionId)) continue;
+
+		// Space out building: one building every 2 turns to balance growth with income
+		const lastTurn = _lastBuildTurn.get(factionId) ?? 0;
+		if (currentTurn - lastTurn < 2 && currentTurn > 1) continue;
+
+		// Count existing buildings per type
+		const existing: Record<string, number> = {};
+		const buildingPositions: Array<{ x: number; z: number }> = [];
+		for (const e of world.query(Building)) {
+			const b = e.get(Building);
+			if (b && b.factionId === factionId) {
+				existing[b.buildingType] = (existing[b.buildingType] ?? 0) + 1;
+				buildingPositions.push({ x: b.tileX, z: b.tileZ });
+			}
+		}
+
+		// Build the occupied set
+		const occupiedTiles = new Set<string>();
+		for (const e of world.query(Building)) {
+			const b = e.get(Building);
+			if (b) occupiedTiles.add(`${b.tileX},${b.tileZ}`);
+		}
+
+		// Dynamic priority: missing critical buildings first
+		const priority = dynamicAiBuildOrder(existing);
+
+		const MAX_PER_TYPE: Record<string, number> = {
+			storm_transmitter: 2,
+			motor_pool: 3,
+			synthesizer: 2,
+			research_lab: 1,
+			outpost: 5,
+			storage_hub: 2,
+			defense_turret: 4,
+			relay_tower: 2,
+			power_box: 3,
+			resource_refinery: 2,
+		};
+
+		for (const type of priority) {
+			const def = BUILDING_DEFS[type as BuildingType];
+			if (!def) continue;
+
+			const current = existing[type] ?? 0;
+			const max = MAX_PER_TYPE[type] ?? 3;
+			if (current >= max) continue;
+			if (!canAfford(world, factionId, def.buildCost)) continue;
+
+			// Find placement tile near existing buildings
+			const tile = findBuildTileNear(
+				buildingPositions,
+				board,
+				occupiedTiles,
+				false,
+			);
+			if (!tile) continue;
+
+			executeAiBuild(world, factionId, type as BuildingType, tile.x, tile.z);
+			_lastBuildTurn.set(factionId, currentTurn);
+			break; // One building per faction per turn
+		}
+	}
+}
+
+/**
+ * Dynamic build order based on what the faction is missing.
+ * Critical gaps jump to the front; then growth buildings cycle.
+ */
+function dynamicAiBuildOrder(existing: Record<string, number>): string[] {
+	const order: string[] = [];
+
+	// Critical infrastructure gaps — these unlock the economy chain
+	if ((existing["synthesizer"] ?? 0) === 0) order.push("synthesizer");
+	if ((existing["motor_pool"] ?? 0) === 0) order.push("motor_pool");
+	if ((existing["storm_transmitter"] ?? 0) === 0) order.push("storm_transmitter");
+	if ((existing["research_lab"] ?? 0) === 0) order.push("research_lab");
+
+	// Second motor pool for throughput
+	if ((existing["motor_pool"] ?? 0) < 2) order.push("motor_pool");
+
+	// Resource refinery = renewable ferrous_scrap income (+2/turn)
+	if ((existing["resource_refinery"] ?? 0) === 0) order.push("resource_refinery");
+
+	// Growth cycle — outposts increase pop cap, turrets defend, then more infrastructure
+	order.push(
+		"outpost",
+		"defense_turret",
+		"motor_pool",
+		"synthesizer",
+		"outpost",
+		"storage_hub",
+		"storm_transmitter",
+		"relay_tower",
+		"power_box",
+		"resource_refinery",
+		"outpost",
+		"defense_turret",
+	);
+
+	return order;
+}
+
+// ---------------------------------------------------------------------------
 // AI Research — pick and queue tech research per faction personality
 // ---------------------------------------------------------------------------
 
@@ -1150,6 +1369,92 @@ function runAiResearch(world: World, factionIds: string[]): void {
 }
 
 // ---------------------------------------------------------------------------
+// AI Synthesis — auto-queue conversions on idle powered synthesizers
+// ---------------------------------------------------------------------------
+
+/**
+ * Synthesis priority: produce the refined materials most needed for
+ * upcoming builds. alloy_stock unlocks motor_pool and research_lab.
+ * polymer_salvage unlocks storage_hub. silicon_wafer unlocks research_lab.
+ */
+const SYNTHESIS_PRIORITY: readonly string[] = [
+	"alloy_fusion",        // ferrous_scrap → alloy_stock (most needed)
+	"polymer_reclamation", // scrap_metal → polymer_salvage
+	"wafer_fabrication",   // e_waste → silicon_wafer
+	"storm_capacitor",     // ferrous_scrap → storm_charge
+	"crystal_synthesis",   // silicon_wafer → el_crystal (late game)
+];
+
+/**
+ * For each AI faction, find powered synthesizers with no active queue
+ * and start the highest-priority affordable recipe.
+ *
+ * IMPORTANT: Only synthesize when the faction has EXCESS raw materials.
+ * Reserve enough for at least one cheap building (power_box = ferrous:2 + conductor:1).
+ * Without this reservation, synthesis eats all raw materials and the faction
+ * can't afford any buildings.
+ */
+function runAiSynthesis(world: World, factionIds: string[]): void {
+	// Resource floor: keep at least this much of each material in reserve
+	// so buildings can be afforded. Values match the most expensive single-material
+	// requirement across common buildings.
+	const RESERVE: Partial<Record<string, number>> = {
+		ferrous_scrap: 8,
+		conductor_wire: 6,
+		scrap_metal: 4,
+		polymer_salvage: 5,
+		alloy_stock: 4,
+	};
+
+	for (const factionId of factionIds) {
+		if (factionId === "player") continue;
+		if (isCultFactionId(factionId)) continue;
+
+		// Check faction resource levels — only synthesize if above reserve
+		let pool: Record<string, number> | null = null;
+		for (const e of world.query(Faction, ResourcePool)) {
+			const f = e.get(Faction);
+			if (f?.id !== factionId) continue;
+			const r = e.get(ResourcePool);
+			if (r) pool = r as unknown as Record<string, number>;
+			break;
+		}
+		if (!pool) continue;
+
+		// Find idle powered synthesizers for this faction
+		for (const e of world.query(Building, Powered)) {
+			const b = e.get(Building);
+			if (!b || b.factionId !== factionId) continue;
+			if (b.buildingType !== "synthesizer") continue;
+			if (e.has(SynthesisQueue)) continue; // Already converting
+
+			// Try each recipe in priority order
+			for (const recipeId of SYNTHESIS_PRIORITY) {
+				const recipe = FUSION_RECIPES.find((r) => r.id === recipeId);
+				if (!recipe) continue;
+
+				// Check canAfford AND that spending won't drop below reserve
+				if (!canAfford(world, factionId, recipe.inputs)) continue;
+
+				let belowReserve = false;
+				for (const [mat, amount] of Object.entries(recipe.inputs)) {
+					const current = (pool[mat] as number) ?? 0;
+					const reserve = RESERVE[mat] ?? 0;
+					if (current - (amount ?? 0) < reserve) {
+						belowReserve = true;
+						break;
+					}
+				}
+				if (belowReserve) continue;
+
+				queueSynthesis(world, e.id(), recipeId);
+				break; // One recipe per synthesizer per turn
+			}
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
 // AI Fabrication — queue units at idle motor pools using pickAITrack
 // ---------------------------------------------------------------------------
 
@@ -1224,14 +1529,14 @@ function runAiFabrication(world: World, factionIds: string[]): void {
 		// Dynamic priority based on current composition
 		const fabPriority = computeFabPriority(world, factionId);
 
-		// Find powered motor pools with open slots — fill ALL open slots
+		// Find powered motor pools with open slots.
+		// Limit to 1 unit per motor pool per turn to preserve resources for building.
 		for (const e of world.query(Building, BotFabricator, Powered)) {
 			const b = e.get(Building);
 			const fab = e.get(BotFabricator);
 			if (!b || !fab || b.factionId !== factionId) continue;
 
-			// Fill every open slot, not just one
-			let openSlots = fab.fabricationSlots - fab.queueSize;
+			let openSlots = Math.min(1, fab.fabricationSlots - fab.queueSize);
 			while (openSlots > 0) {
 				let queued = false;
 				// Pick a robot class in priority order

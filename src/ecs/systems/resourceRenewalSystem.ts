@@ -26,6 +26,8 @@ export const RENEWAL_YIELDS: Partial<
 	storm_transmitter: { material: "storm_charge", amount: 1 },
 	geothermal_tap: { material: "thermal_fluid", amount: 1 },
 	solar_array: { material: "electrolyte", amount: 1 },
+	resource_refinery: { material: "ferrous_scrap", amount: 2 },
+	synthesizer: { material: "scrap_metal", amount: 1 },
 };
 
 /**

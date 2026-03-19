@@ -85,6 +85,8 @@ export interface TurnContext {
 	factionTerritoryCount: number;
 	/** Whether the faction is the strongest (most territory + units). */
 	isStrongestFaction: boolean;
+	/** Count of each building type the faction currently owns. */
+	existingBuildingTypes: Record<string, number>;
 }
 
 let _ctx: TurnContext = {
@@ -113,6 +115,7 @@ let _ctx: TurnContext = {
 	enemyUnits: [],
 	factionTerritoryCount: 0,
 	isStrongestFaction: false,
+	existingBuildingTypes: {},
 };
 
 export function setTurnContext(ctx: TurnContext): void {
@@ -165,10 +168,17 @@ export class AttackEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 				best = Math.max(best, score);
 			}
 		}
-		if (best === 0) return 0;
+
+		// Time escalation: aggression rises after turn 30 even without adjacent enemies
+		// Only applies when enemies exist on the map (drives units to seek combat)
+		const timeAggression = _ctx.enemies.length > 0
+			? logistic(_ctx.currentTurn, 30, 0.15) * 0.2
+			: 0;
+		if (best === 0) return Math.min(1, timeAggression);
+
 		// Adjacent attacks (score >= 0.93) bypass aggressionMult — always fight back
 		if (best >= 0.93) return Math.min(1, best + momentumBonus(agent, "attack"));
-		return Math.min(1, best * _ctx.aggressionMult + momentumBonus(agent, "attack"));
+		return Math.min(1, best * _ctx.aggressionMult + timeAggression + momentumBonus(agent, "attack"));
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -223,7 +233,12 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			if (score > best) best = score;
 		}
 
-		return Math.min(1, best * _ctx.aggressionMult + momentumBonus(agent, "move"));
+		// Time escalation: willingness to pursue increases mid-game
+		// Only applies when there are enemies to actually chase
+		const chaseTimeBoost = best > 0
+			? logistic(_ctx.currentTurn, 20, 0.2) * 0.15
+			: 0;
+		return Math.min(1, best * _ctx.aggressionMult + chaseTimeBoost + momentumBonus(agent, "move"));
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -483,26 +498,37 @@ export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 // ---------------------------------------------------------------------------
 
 /**
- * AI building priority order:
- *   1. storm_transmitter — power first (foundation for everything)
- *   2. motor_pool — enables unit fabrication (essential)
- *   3. research_lab — tech progress (without this, no specializations)
- *   4. outpost — territory + pop cap expansion
- *   5. motor_pool (second) — throughput when first is busy
- *   6. storage_hub — storage (low priority)
- *   7. defense_turret — defense when under threat
- *   8. relay_tower — signal coverage
+ * Dynamic build priority — what the faction is MISSING matters more than
+ * a static checklist. The economy chain is:
+ *   power (transmitter) → raw materials (harvest) → refined (synthesizer)
+ *   → buildings/research_lab → tech → specialized units
+ *
+ * If the faction has zero of a critical building, that jumps to top priority.
+ * Otherwise falls back to the static order for "nice to have" buildings.
  */
-const BUILD_PRIORITY: string[] = [
-	"storm_transmitter",
-	"motor_pool",
-	"synthesizer",
-	"research_lab",
-	"outpost",
-	"storage_hub",
-	"defense_turret",
-	"relay_tower",
-];
+function dynamicBuildPriority(existingTypes: Record<string, number>): string[] {
+	const priority: string[] = [];
+
+	// Critical infrastructure gaps — order matters
+	if ((existingTypes["synthesizer"] ?? 0) === 0) priority.push("synthesizer");
+	if ((existingTypes["motor_pool"] ?? 0) === 0) priority.push("motor_pool");
+	if ((existingTypes["storm_transmitter"] ?? 0) === 0) priority.push("storm_transmitter");
+	if ((existingTypes["research_lab"] ?? 0) === 0) priority.push("research_lab");
+
+	// Growth buildings
+	priority.push(
+		"outpost",
+		"motor_pool",
+		"synthesizer",
+		"storm_transmitter",
+		"storage_hub",
+		"defense_turret",
+		"relay_tower",
+		"power_box",
+	);
+
+	return priority;
+}
 
 export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	calculateDesirability(agent: SyntheteriaAgent): number {
@@ -534,12 +560,14 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
+		const buildPriority = dynamicBuildPriority(_ctx.existingBuildingTypes);
+
 		// When near pop cap (>= 80%), outpost gets top priority to raise the ceiling
 		const nearPopCap =
 			_ctx.popCap > 0 && _ctx.unitCount >= _ctx.popCap * 0.8;
 
 		let best: BuildOption | null = null;
-		let bestPriority = BUILD_PRIORITY.length;
+		let bestPriority = buildPriority.length;
 
 		for (const opt of _ctx.buildOptions) {
 			let priority: number;
@@ -547,8 +575,8 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 				// Outpost jumps to top priority when near pop cap
 				priority = -1;
 			} else {
-				const idx = BUILD_PRIORITY.indexOf(opt.buildingType);
-				priority = idx >= 0 ? idx : BUILD_PRIORITY.length;
+				const idx = buildPriority.indexOf(opt.buildingType);
+				priority = idx >= 0 ? idx : buildPriority.length;
 			}
 			if (priority < bestPriority) {
 				bestPriority = priority;
@@ -559,13 +587,17 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		if (!best) best = _ctx.buildOptions[0];
 
 		// Remove ALL options of the same building type from shared list
-		// so other agents on the same faction don't build duplicates this turn
+		// so other agents on the same faction don't build duplicates this turn.
+		// Also bump the existingBuildingTypes count so subsequent agents see the
+		// updated priority (prevents two agents both thinking "0 synthesizers").
 		if (best) {
 			for (let i = _ctx.buildOptions.length - 1; i >= 0; i--) {
 				if (_ctx.buildOptions[i].buildingType === best.buildingType) {
 					_ctx.buildOptions.splice(i, 1);
 				}
 			}
+			_ctx.existingBuildingTypes[best.buildingType] =
+				(_ctx.existingBuildingTypes[best.buildingType] ?? 0) + 1;
 		}
 
 		if (best) {
@@ -750,7 +782,12 @@ export class FloorMineEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		// Mine score: high when adjacent, moderate when distant
 		const mineScore = nearestMine <= 1 ? 0.7 : 0.15 + 0.25 * quadraticDecay(nearestMine, 15);
 
-		return Math.min(1, Math.max(0.15, mineScore - depositPenalty)
+		// Time escalation: mining urgency rises when deposits are running out
+		const mineTimeBoost = _ctx.totalDeposits < 10
+			? logistic(_ctx.currentTurn, 25, 0.2) * 0.2
+			: 0;
+
+		return Math.min(1, Math.max(0.15, mineScore - depositPenalty) + mineTimeBoost
 			+ momentumBonus(agent, "mine"));
 	}
 
@@ -791,7 +828,7 @@ export class EvadeEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	calculateDesirability(agent: SyntheteriaAgent): number {
 		if (_ctx.cultThreats.length === 0) return 0;
 
-		return computeEvadeDesirability(
+		const baseEvade = computeEvadeDesirability(
 			agent.tileX,
 			agent.tileZ,
 			agent.hp,
@@ -800,6 +837,10 @@ export class EvadeEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			_ctx.cultThreats,
 			_ctx.factionAllies,
 		);
+
+		// Time escalation: evasion decreases late-game — factions get braver
+		const braveryFactor = 1.0 - logistic(_ctx.currentTurn, 50, 0.1) * 0.3;
+		return baseEvade * braveryFactor;
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {

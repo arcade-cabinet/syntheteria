@@ -100,8 +100,14 @@ function spawnBuilding(
  * Place starter buildings for each faction:
  *   1. storm_transmitter — power source (must be first for coverage)
  *   2. motor_pool — unit fabrication (critical: without this, faction dies)
- *   3. outpost — raises pop cap by 4 (12 base + 4 = 16 slots at start)
- *   4. storage_hub — resource storage
+ *   3. synthesizer — converts raw → refined materials (unlocks economy chain)
+ *   4. outpost — raises pop cap by 4 (12 base + 4 = 16 slots at start)
+ *   5. storage_hub — resource storage
+ *
+ * Power budget: transmitter +5, motor_pool -3, synthesizer -4 = -2 deficit.
+ * The power system tolerates slight deficit — synthesizer still gets Powered
+ * if within transmitter's powerRadius (12 tiles). For safety we place all
+ * buildings within 3 tiles of spawn center.
  *
  * Uses spawn centers from the terrain-affinity system.
  */
@@ -134,61 +140,21 @@ export function placeStarterBuildings(
 		placements.push({ factionId: "player", center: playerCenter });
 	}
 
+	const STARTER_BUILDINGS: BuildingType[] = [
+		"storm_transmitter",
+		"motor_pool",
+		"synthesizer",
+		"outpost",
+		"storage_hub",
+	];
+
 	for (const { factionId, center } of placements) {
-		// Place storm_transmitter first (power source)
-		const transmitterTile = findPassableNear(
-			center.x,
-			center.z,
-			board,
-			occupied,
-		);
-		if (transmitterTile) {
-			spawnBuilding(
-				world,
-				"storm_transmitter",
-				factionId,
-				transmitterTile.x,
-				transmitterTile.z,
-			);
-			occupied.add(`${transmitterTile.x},${transmitterTile.z}`);
-		}
-
-		// Place motor_pool nearby (within transmitter radius — needs power)
-		const motorPoolTile = findPassableNear(
-			center.x,
-			center.z,
-			board,
-			occupied,
-		);
-		if (motorPoolTile) {
-			spawnBuilding(
-				world,
-				"motor_pool",
-				factionId,
-				motorPoolTile.x,
-				motorPoolTile.z,
-			);
-			occupied.add(`${motorPoolTile.x},${motorPoolTile.z}`);
-		}
-
-		// Place outpost nearby (raises pop cap by 4)
-		const outpostTile = findPassableNear(center.x, center.z, board, occupied);
-		if (outpostTile) {
-			spawnBuilding(
-				world,
-				"outpost",
-				factionId,
-				outpostTile.x,
-				outpostTile.z,
-			);
-			occupied.add(`${outpostTile.x},${outpostTile.z}`);
-		}
-
-		// Place storage_hub nearby
-		const hubTile = findPassableNear(center.x, center.z, board, occupied);
-		if (hubTile) {
-			spawnBuilding(world, "storage_hub", factionId, hubTile.x, hubTile.z);
-			occupied.add(`${hubTile.x},${hubTile.z}`);
+		for (const type of STARTER_BUILDINGS) {
+			const tile = findPassableNear(center.x, center.z, board, occupied);
+			if (tile) {
+				spawnBuilding(world, type, factionId, tile.x, tile.z);
+				occupied.add(`${tile.x},${tile.z}`);
+			}
 		}
 	}
 }

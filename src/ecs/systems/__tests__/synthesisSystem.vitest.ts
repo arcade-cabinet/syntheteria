@@ -213,7 +213,7 @@ describe("synthesisSystem", () => {
 			// Turn 3: 1 -> 0, complete
 			runSynthesis(world);
 			expect(synth.has(SynthesisQueue)).toBe(false);
-			expect(faction.get(ResourcePool)?.alloy_stock).toBe(1);
+			expect(faction.get(ResourcePool)?.alloy_stock).toBe(2);
 		});
 
 		it("does not process on unpowered synthesizer", () => {
@@ -250,7 +250,7 @@ describe("synthesisSystem", () => {
 			runSynthesis(world);
 
 			const pool = faction.get(ResourcePool);
-			expect(pool?.polymer_salvage).toBe(1);
+			expect(pool?.polymer_salvage).toBe(2);
 			expect(pool?.scrap_metal).toBe(8); // 10 - 2
 			expect(pool?.conductor_wire).toBe(4); // 5 - 1
 		});
@@ -280,7 +280,7 @@ describe("synthesisSystem", () => {
 			// Turn 4: tick 1 -> 0, complete
 			runSynthesis(world);
 			expect(synth.has(SynthesisQueue)).toBe(false);
-			expect(faction.get(ResourcePool)?.alloy_stock).toBe(1);
+			expect(faction.get(ResourcePool)?.alloy_stock).toBe(2);
 		});
 
 		it("removes SynthesisQueue after completion", () => {

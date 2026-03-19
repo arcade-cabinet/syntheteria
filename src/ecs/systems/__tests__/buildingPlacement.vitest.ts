@@ -64,11 +64,11 @@ describe("placeStarterBuildings", () => {
 		placeStarterBuildings(world, board);
 
 		const buildings = world.query(Building);
-		// Each faction gets 4 buildings (storm_transmitter + motor_pool + outpost + storage_hub)
-		expect(buildings.length).toBe(FACTION_DEFINITIONS.length * 4);
+		// Each faction gets 5 buildings (storm_transmitter + motor_pool + synthesizer + outpost + storage_hub)
+		expect(buildings.length).toBe(FACTION_DEFINITIONS.length * 5);
 	});
 
-	it("each faction gets a storm_transmitter, motor_pool, outpost, and storage_hub", () => {
+	it("each faction gets a storm_transmitter, motor_pool, synthesizer, outpost, and storage_hub", () => {
 		const board = makePassableBoard(30, 30);
 		placeStarterBuildings(world, board);
 
@@ -77,11 +77,12 @@ describe("placeStarterBuildings", () => {
 				.query(Building)
 				.filter((e) => e.get(Building)!.factionId === faction.id);
 
-			expect(factionBuildings.length).toBe(4);
+			expect(factionBuildings.length).toBe(5);
 
 			const types = factionBuildings.map((e) => e.get(Building)!.buildingType);
 			expect(types).toContain("storm_transmitter");
 			expect(types).toContain("motor_pool");
+			expect(types).toContain("synthesizer");
 			expect(types).toContain("outpost");
 			expect(types).toContain("storage_hub");
 		}

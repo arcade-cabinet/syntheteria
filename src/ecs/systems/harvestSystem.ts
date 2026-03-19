@@ -43,8 +43,8 @@ export function harvestSystem(world: World): void {
 			const deposit = dep.get(ResourceDeposit);
 			if (!deposit || deposit.depleted) break;
 
-			// Yield 1-3 units of the deposit's material
-			const yieldAmount = 1 + Math.floor(Math.random() * 3);
+			// Yield 2-5 units of the deposit's material
+			const yieldAmount = 2 + Math.floor(Math.random() * 4);
 			addResources(
 				world,
 				faction.factionId,

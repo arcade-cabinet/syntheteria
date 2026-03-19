@@ -639,6 +639,7 @@ function GameScene({
 			{world && bw && bh && (
 				<UnitRenderer
 					world={world}
+					selectedUnitId={selectedUnitId}
 					useSphere
 					boardWidth={bw}
 					boardHeight={bh}

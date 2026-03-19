@@ -79,6 +79,7 @@ function setCtx(overrides: Partial<TurnContext> = {}): void {
 		enemyUnits: [],
 		factionTerritoryCount: 0,
 		isStrongestFaction: false,
+		existingBuildingTypes: {},
 		...overrides,
 	});
 }
@@ -90,10 +91,11 @@ function setCtx(overrides: Partial<TurnContext> = {}): void {
 describe("AttackEvaluator", () => {
 	const evaluator = new AttackEvaluator(1.0);
 
-	it("returns 0 when no enemies in range", () => {
+	it("returns near-zero when enemies exist but none in range (early game)", () => {
 		const agent = makeAgent({ attackRange: 1 });
 		setCtx({ enemies: [{ entityId: 99, x: 5, z: 5, factionId: "player" }] });
-		expect(evaluator.calculateDesirability(agent)).toBe(0);
+		// Time escalation provides a tiny base even without adjacent targets
+		expect(evaluator.calculateDesirability(agent)).toBeLessThan(0.01);
 	});
 
 	it("returns high score when enemy is adjacent", () => {

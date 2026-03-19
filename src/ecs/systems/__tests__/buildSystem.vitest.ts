@@ -175,7 +175,7 @@ describe("buildSystem", () => {
 			spawnPlayerFaction({
 				ferrous_scrap: 10,
 				alloy_stock: 10,
-				silicon_wafer: 10,
+				conductor_wire: 10,
 			});
 			startBuildPlacement(world, "motor_pool");
 

@@ -92,7 +92,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		storageCapacity: 0,
 		signalRange: 0,
 		signalStrength: 0,
-		fabricationSlots: 1,
+		fabricationSlots: 2,
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,

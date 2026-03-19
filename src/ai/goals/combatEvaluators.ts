@@ -16,10 +16,10 @@ import {
 } from "../steering/pursuitSteering";
 import {
 	getTurnContext,
-	manhattan,
-	quadraticDecay,
 	logistic,
+	manhattan,
 	momentumBonus,
+	quadraticDecay,
 } from "./turnContext";
 
 // ---------------------------------------------------------------------------
@@ -37,21 +37,26 @@ export class AttackEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			if (dist <= agent.attackRange) {
 				// Smooth quadratic decay: closer = higher score
 				// Adjacent (dist<=1) → 0.95, at max range → ~0.85
-				const score = 0.85 + 0.10 * quadraticDecay(dist, Math.max(agent.attackRange, 1));
+				const score =
+					0.85 + 0.1 * quadraticDecay(dist, Math.max(agent.attackRange, 1));
 				best = Math.max(best, score);
 			}
 		}
 
 		// Time escalation: aggression rises after turn 30 even without adjacent enemies
 		// Only applies when enemies exist on the map (drives units to seek combat)
-		const timeAggression = _ctx.enemies.length > 0
-			? logistic(_ctx.currentTurn, 30, 0.15) * 0.2
-			: 0;
+		const timeAggression =
+			_ctx.enemies.length > 0 ? logistic(_ctx.currentTurn, 30, 0.15) * 0.2 : 0;
 		if (best === 0) return Math.min(1, timeAggression);
 
 		// Adjacent attacks (score >= 0.93) bypass aggressionMult — always fight back
 		if (best >= 0.93) return Math.min(1, best + momentumBonus(agent, "attack"));
-		return Math.min(1, best * _ctx.aggressionMult + timeAggression + momentumBonus(agent, "attack"));
+		return Math.min(
+			1,
+			best * _ctx.aggressionMult +
+				timeAggression +
+				momentumBonus(agent, "attack"),
+		);
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -110,10 +115,14 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 
 		// Time escalation: willingness to pursue increases mid-game
 		// Only applies when there are enemies to actually chase
-		const chaseTimeBoost = best > 0
-			? logistic(_ctx.currentTurn, 20, 0.2) * 0.15
-			: 0;
-		return Math.min(1, best * _ctx.aggressionMult + chaseTimeBoost + momentumBonus(agent, "move"));
+		const chaseTimeBoost =
+			best > 0 ? logistic(_ctx.currentTurn, 20, 0.2) * 0.15 : 0;
+		return Math.min(
+			1,
+			best * _ctx.aggressionMult +
+				chaseTimeBoost +
+				momentumBonus(agent, "move"),
+		);
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {

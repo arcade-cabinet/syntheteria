@@ -17,6 +17,7 @@ vi.mock("../../ui/game/AlertBar", () => ({
 }));
 
 import { pushAlert } from "../../ui/game/AlertBar";
+
 const mockPushAlert = vi.mocked(pushAlert);
 
 describe("checkCorruptionTriggers", () => {
@@ -41,11 +42,13 @@ describe("checkCorruptionTriggers", () => {
 	it("detects unit entering corruption zone", () => {
 		world.spawn(
 			CultStructure({
-				tileX: 5, tileZ: 5,
+				tileX: 5,
+				tileZ: 5,
 				corruptionRadius: 3,
 				structureType: "breach_altar",
 				modelId: "altar",
-				hp: 40, maxHp: 40,
+				hp: 40,
+				maxHp: 40,
 				spawnsUnits: false,
 				spawnInterval: 0,
 			}),
@@ -64,11 +67,13 @@ describe("checkCorruptionTriggers", () => {
 	it("does not alert for units outside corruption radius", () => {
 		world.spawn(
 			CultStructure({
-				tileX: 5, tileZ: 5,
+				tileX: 5,
+				tileZ: 5,
 				corruptionRadius: 3,
 				structureType: "breach_altar",
 				modelId: "altar",
-				hp: 40, maxHp: 40,
+				hp: 40,
+				maxHp: 40,
 				spawnsUnits: false,
 				spawnInterval: 0,
 			}),
@@ -85,11 +90,13 @@ describe("checkCorruptionTriggers", () => {
 	it("does not double-alert same unit for same POI", () => {
 		world.spawn(
 			CultStructure({
-				tileX: 5, tileZ: 5,
+				tileX: 5,
+				tileZ: 5,
 				corruptionRadius: 3,
 				structureType: "breach_altar",
 				modelId: "altar",
-				hp: 40, maxHp: 40,
+				hp: 40,
+				maxHp: 40,
 				spawnsUnits: false,
 				spawnInterval: 0,
 			}),
@@ -107,11 +114,13 @@ describe("checkCorruptionTriggers", () => {
 	it("fires player alert for player faction units", () => {
 		world.spawn(
 			CultStructure({
-				tileX: 5, tileZ: 5,
+				tileX: 5,
+				tileZ: 5,
 				corruptionRadius: 3,
 				structureType: "breach_altar",
 				modelId: "altar",
-				hp: 40, maxHp: 40,
+				hp: 40,
+				maxHp: 40,
 				spawnsUnits: false,
 				spawnInterval: 0,
 			}),
@@ -125,18 +134,21 @@ describe("checkCorruptionTriggers", () => {
 		expect(mockPushAlert).toHaveBeenCalledWith(
 			"cult",
 			"CORRUPTION ZONE DETECTED",
-			5, 5,
+			5,
+			5,
 		);
 	});
 
 	it("does NOT fire alert for AI faction units (no UI)", () => {
 		world.spawn(
 			CultStructure({
-				tileX: 5, tileZ: 5,
+				tileX: 5,
+				tileZ: 5,
 				corruptionRadius: 3,
 				structureType: "breach_altar",
 				modelId: "altar",
-				hp: 40, maxHp: 40,
+				hp: 40,
+				maxHp: 40,
 				spawnsUnits: false,
 				spawnInterval: 0,
 			}),
@@ -153,11 +165,13 @@ describe("checkCorruptionTriggers", () => {
 	it("ignores cult faction units", () => {
 		world.spawn(
 			CultStructure({
-				tileX: 5, tileZ: 5,
+				tileX: 5,
+				tileZ: 5,
 				corruptionRadius: 3,
 				structureType: "breach_altar",
 				modelId: "altar",
-				hp: 40, maxHp: 40,
+				hp: 40,
+				maxHp: 40,
 				spawnsUnits: false,
 				spawnInterval: 0,
 			}),
@@ -174,11 +188,13 @@ describe("checkCorruptionTriggers", () => {
 	it("resetCorruptionTriggers allows re-alerting", () => {
 		world.spawn(
 			CultStructure({
-				tileX: 5, tileZ: 5,
+				tileX: 5,
+				tileZ: 5,
 				corruptionRadius: 3,
 				structureType: "breach_altar",
 				modelId: "altar",
-				hp: 40, maxHp: 40,
+				hp: 40,
+				maxHp: 40,
 				spawnsUnits: false,
 				spawnInterval: 0,
 			}),
@@ -292,7 +308,8 @@ describe("checkFactionContact", () => {
 		expect(mockPushAlert).toHaveBeenCalledWith(
 			"diplomacy",
 			"First contact: iron creed",
-			8, 5,
+			8,
+			5,
 		);
 	});
 });

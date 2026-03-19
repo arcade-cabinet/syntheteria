@@ -81,7 +81,7 @@ function floodFillRegions(
 
 			// New region — BFS flood fill
 			nextRegion++;
-			const stack: Array<[number, number]> = [[x, z]];
+			const stack: [number, number][] = [[x, z]];
 			regionMap[z]![x] = nextRegion;
 
 			while (stack.length > 0) {

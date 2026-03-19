@@ -9,7 +9,6 @@
 
 import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
-import { pushTurnEvent } from "../ui/game/turnEvents";
 import {
 	Building,
 	Powered,
@@ -18,6 +17,7 @@ import {
 	UnitPos,
 	UnitStats,
 } from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
 
 function manhattanDist(ax: number, az: number, bx: number, bz: number): number {
 	return Math.abs(ax - bx) + Math.abs(az - bz);

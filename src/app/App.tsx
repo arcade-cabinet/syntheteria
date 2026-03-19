@@ -15,42 +15,22 @@ import { createSqlJsAdapter } from "../db/adapter";
 import { GameRepo } from "../db/gameRepo";
 import { runMigrations } from "../db/migrations";
 import type { GameSummary } from "../db/types";
+import type { GameOutcome } from "../systems";
 import {
+	_resetVictory,
+	advanceTurn,
+	collectTurnSummary,
+	getCurrentTurn,
+	getGameOutcome,
 	getPlayerResources,
 	getPopCap,
 	getPopulation,
-	advanceTurn,
-	getCurrentTurn,
-	getGameOutcome,
-	_resetVictory,
 	getVictoryProgress,
-	collectTurnSummary,
-	resetTurnSummary,
 	pushToast,
+	resetTurnSummary,
 } from "../systems";
-import type { GameOutcome } from "../systems";
 import { UnitFaction, UnitPos } from "../traits";
-import {
-	collectPendingItems,
-} from "../ui/game/PendingCompletions";
 import { Globe } from "../ui/Globe";
-import { getPlayerFactionId } from "../world/config";
-import type { NewGameConfig } from "../world/config";
-import {
-	createNewGame,
-	loadGame,
-	saveGame,
-} from "./session";
-import {
-	installDebugBridge,
-} from "./debug";
-import {
-	readPlayerAp,
-	getProductionQueue,
-	getCurrentResearchForHUD,
-} from "./hudData";
-import type { Phase, GameSession } from "./types";
-
 // --- Game DOM overlays ---
 import { AlertBar } from "../ui/game/AlertBar";
 import { DiplomacyOverlay } from "../ui/game/DiplomacyOverlay";
@@ -61,7 +41,10 @@ import { HUD } from "../ui/game/HUD";
 import { KeybindHints } from "../ui/game/KeybindHints";
 import { Minimap } from "../ui/game/Minimap";
 import { PauseMenu } from "../ui/game/PauseMenu";
-import { PendingCompletions } from "../ui/game/PendingCompletions";
+import {
+	collectPendingItems,
+	PendingCompletions,
+} from "../ui/game/PendingCompletions";
 import { RadialMenu } from "../ui/game/RadialMenu";
 import { SelectedInfo } from "../ui/game/SelectedInfo";
 import { SystemToasts } from "../ui/game/SystemToasts";
@@ -73,9 +56,19 @@ import { TurnSummaryPanel } from "../ui/game/TurnSummaryPanel";
 import { TutorialOverlay } from "../ui/game/TutorialOverlay";
 import { UnitRosterOverlay } from "../ui/game/UnitRosterOverlay";
 import { LandingScreen } from "../ui/landing/LandingScreen";
+import type { NewGameConfig } from "../world/config";
+import { getPlayerFactionId } from "../world/config";
 import { CommandBar } from "./CommandBar";
-import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
+import { installDebugBridge } from "./debug";
 import { hmrState } from "./hmrState";
+import {
+	getCurrentResearchForHUD,
+	getProductionQueue,
+	readPlayerAp,
+} from "./hudData";
+import { createNewGame, loadGame, saveGame } from "./session";
+import type { GameSession, Phase } from "./types";
+import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -102,7 +95,9 @@ export function App() {
 		result: "playing",
 	});
 	const [savedGames, setSavedGames] = useState<GameSummary[]>([]);
-	const [isObserverMode, _setIsObserverMode] = useState(hmrState.isObserverMode);
+	const [isObserverMode, _setIsObserverMode] = useState(
+		hmrState.isObserverMode,
+	);
 	const [observerSpeed, _setObserverSpeed] = useState(hmrState.observerSpeed);
 	const [paused, setPaused] = useState(false);
 	const [showTechTree, setShowTechTree] = useState(false);
@@ -163,7 +158,9 @@ export function App() {
 			}
 		}
 		void init();
-		return () => { cancelled = true; };
+		return () => {
+			cancelled = true;
+		};
 	}, []);
 
 	// Save on tab close
@@ -176,41 +173,50 @@ export function App() {
 	}, [doSave]);
 
 	// ─── Start / Load ────────────────────────────────────────────────────
-	const handleStartGame = useCallback(async (cfg: NewGameConfig) => {
-		setPhase("generating");
-		const s = await createNewGame(cfg, repoRef.current);
-		if (repoRef.current) setSavedGames(await repoRef.current.listGames());
-		setGameOutcome({ result: "playing" });
-		setSession(s);
-		setTurn(1);
-		setPlayerAp(readPlayerAp(s.world));
-		setSceneReady(false);
-		setIsObserverMode(getPlayerFactionId(cfg) === null);
-		setObserverSpeed(1);
-	}, [setPhase, setSession, setTurn, setIsObserverMode, setObserverSpeed]);
-
-	const handleLoadGame = useCallback(async (gameId: string) => {
-		const repo = repoRef.current;
-		if (!repo) return;
-		setPhase("generating");
-		try {
-			const s = await loadGame(gameId, repo);
-			if (!s) { setPhase("title"); return; }
+	const handleStartGame = useCallback(
+		async (cfg: NewGameConfig) => {
+			setPhase("generating");
+			const s = await createNewGame(cfg, repoRef.current);
+			if (repoRef.current) setSavedGames(await repoRef.current.listGames());
 			setGameOutcome({ result: "playing" });
 			setSession(s);
-			setTurn(getCurrentTurn(s.world));
+			setTurn(1);
 			setPlayerAp(readPlayerAp(s.world));
 			setSceneReady(false);
-			const hasPlayer = s.newGameConfig
-				? s.newGameConfig.factions?.some((f) => f.role === "player") ?? true
-				: true;
-			setIsObserverMode(!hasPlayer);
+			setIsObserverMode(getPlayerFactionId(cfg) === null);
 			setObserverSpeed(1);
-		} catch (err) {
-			console.warn("[app] Load game failed:", err);
-			setPhase("title");
-		}
-	}, [setPhase, setSession, setTurn, setIsObserverMode, setObserverSpeed]);
+		},
+		[setPhase, setSession, setTurn, setIsObserverMode, setObserverSpeed],
+	);
+
+	const handleLoadGame = useCallback(
+		async (gameId: string) => {
+			const repo = repoRef.current;
+			if (!repo) return;
+			setPhase("generating");
+			try {
+				const s = await loadGame(gameId, repo);
+				if (!s) {
+					setPhase("title");
+					return;
+				}
+				setGameOutcome({ result: "playing" });
+				setSession(s);
+				setTurn(getCurrentTurn(s.world));
+				setPlayerAp(readPlayerAp(s.world));
+				setSceneReady(false);
+				const hasPlayer = s.newGameConfig
+					? (s.newGameConfig.factions?.some((f) => f.role === "player") ?? true)
+					: true;
+				setIsObserverMode(!hasPlayer);
+				setObserverSpeed(1);
+			} catch (err) {
+				console.warn("[app] Load game failed:", err);
+				setPhase("title");
+			}
+		},
+		[setPhase, setSession, setTurn, setIsObserverMode, setObserverSpeed],
+	);
 
 	// ─── End turn ────────────────────────────────────────────────────────
 	const observerFactionIdx = useRef(0);
@@ -227,23 +233,37 @@ export function App() {
 		const cam = getCameraControls();
 		if (cam) {
 			if (!isObserverMode) {
-				let sumX = 0, sumZ = 0, count = 0;
+				let sumX = 0,
+					sumZ = 0,
+					count = 0;
 				for (const e of session.world.query(UnitPos, UnitFaction)) {
 					const f = e.get(UnitFaction);
 					if (!f || (f.factionId !== "player" && f.factionId !== "")) continue;
 					const p = e.get(UnitPos);
 					if (!p) continue;
-					sumX += p.tileX; sumZ += p.tileZ; count++;
+					sumX += p.tileX;
+					sumZ += p.tileZ;
+					count++;
 				}
-				if (count > 0) cam.panTo((sumX / count) * TILE_SIZE_M, (sumZ / count) * TILE_SIZE_M);
+				if (count > 0)
+					cam.panTo((sumX / count) * TILE_SIZE_M, (sumZ / count) * TILE_SIZE_M);
 			} else {
-				const factionUnits = new Map<string, { sumX: number; sumZ: number; count: number }>();
+				const factionUnits = new Map<
+					string,
+					{ sumX: number; sumZ: number; count: number }
+				>();
 				for (const e of session.world.query(UnitPos, UnitFaction)) {
 					const f = e.get(UnitFaction);
 					const p = e.get(UnitPos);
 					if (!f || !p || !f.factionId) continue;
-					const entry = factionUnits.get(f.factionId) ?? { sumX: 0, sumZ: 0, count: 0 };
-					entry.sumX += p.tileX; entry.sumZ += p.tileZ; entry.count++;
+					const entry = factionUnits.get(f.factionId) ?? {
+						sumX: 0,
+						sumZ: 0,
+						count: 0,
+					};
+					entry.sumX += p.tileX;
+					entry.sumZ += p.tileZ;
+					entry.count++;
 					factionUnits.set(f.factionId, entry);
 				}
 				const factionIds = Array.from(factionUnits.keys());
@@ -251,21 +271,32 @@ export function App() {
 					const idx = observerFactionIdx.current % factionIds.length;
 					const fid = factionIds[idx]!;
 					const entry = factionUnits.get(fid)!;
-					cam.panTo((entry.sumX / entry.count) * TILE_SIZE_M, (entry.sumZ / entry.count) * TILE_SIZE_M);
+					cam.panTo(
+						(entry.sumX / entry.count) * TILE_SIZE_M,
+						(entry.sumZ / entry.count) * TILE_SIZE_M,
+					);
 					observerFactionIdx.current = idx + 1;
 				}
 			}
 		}
 
-		const { milestones } = collectTurnSummary(session.world, session.board, currentTurn);
-		for (const m of milestones) pushToast("system", m.factionName, m.message, 5000);
+		const { milestones } = collectTurnSummary(
+			session.world,
+			session.board,
+			currentTurn,
+		);
+		for (const m of milestones)
+			pushToast("system", m.factionName, m.message, 5000);
 
 		const outcome = getGameOutcome();
 		setGameOutcome(outcome);
 		if (outcome.result === "victory") playSfx("victory");
 		else if (outcome.result === "defeat") playSfx("defeat");
 
-		if (currentTurn % AUTO_SAVE_INTERVAL === 0 || outcome.result !== "playing") {
+		if (
+			currentTurn % AUTO_SAVE_INTERVAL === 0 ||
+			outcome.result !== "playing"
+		) {
 			void doSave();
 		}
 	}, [session, doSave, isObserverMode, setTurn]);
@@ -289,11 +320,24 @@ export function App() {
 
 	// Observer auto-advance
 	useEffect(() => {
-		if (!isObserverMode || !session || !sceneReady || gameOutcome.result !== "playing") return;
+		if (
+			!isObserverMode ||
+			!session ||
+			!sceneReady ||
+			gameOutcome.result !== "playing"
+		)
+			return;
 		const ms = 2000 / observerSpeed;
 		const id = setInterval(() => handleEndTurn(), ms);
 		return () => clearInterval(id);
-	}, [isObserverMode, observerSpeed, session, sceneReady, gameOutcome.result, handleEndTurn]);
+	}, [
+		isObserverMode,
+		observerSpeed,
+		session,
+		sceneReady,
+		gameOutcome.result,
+		handleEndTurn,
+	]);
 
 	// Keyboard shortcuts
 	useKeyboardShortcuts({
@@ -332,7 +376,12 @@ export function App() {
 	return (
 		<div
 			data-testid="app-root"
-			style={{ width: "100vw", height: "100vh", overflow: "hidden", background: "#030308" }}
+			style={{
+				width: "100vw",
+				height: "100vh",
+				overflow: "hidden",
+				background: "#030308",
+			}}
 		>
 			{/* ONE persistent Canvas — always rendered */}
 			<Globe
@@ -351,7 +400,9 @@ export function App() {
 			/>
 
 			{/* Title / Setup: landing screen */}
-			{(phase === "title" || phase === "setup" || (phase === "playing" && !sceneReady)) && (
+			{(phase === "title" ||
+				phase === "setup" ||
+				(phase === "playing" && !sceneReady)) && (
 				<LandingScreen
 					onStartGame={handleStartGame}
 					onLoadGame={handleLoadGame}
@@ -361,12 +412,20 @@ export function App() {
 
 			{/* Generating overlay */}
 			{phase === "generating" && (
-				<div style={{
-					position: "absolute", inset: 0, display: "flex", alignItems: "center",
-					justifyContent: "center", fontFamily: "ui-monospace, monospace",
-					color: "rgba(139,230,255,0.6)", fontSize: 13, letterSpacing: "0.2em",
-					pointerEvents: "none",
-				}}>
+				<div
+					style={{
+						position: "absolute",
+						inset: 0,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						fontFamily: "ui-monospace, monospace",
+						color: "rgba(139,230,255,0.6)",
+						fontSize: 13,
+						letterSpacing: "0.2em",
+						pointerEvents: "none",
+					}}
+				>
 					GENERATING...
 				</div>
 			)}
@@ -407,35 +466,64 @@ export function App() {
 			)}
 
 			{gameActive && showTechTree && (
-				<TechTreeOverlay world={session.world} factionId="player" onClose={() => setShowTechTree(false)} />
+				<TechTreeOverlay
+					world={session.world}
+					factionId="player"
+					onClose={() => setShowTechTree(false)}
+				/>
 			)}
 			{gameActive && showGarage && (
-				<GarageModal world={session.world} factionId="player" onClose={() => setShowGarage(false)} />
+				<GarageModal
+					world={session.world}
+					factionId="player"
+					onClose={() => setShowGarage(false)}
+				/>
 			)}
 			{gameActive && showRoster && (
-				<UnitRosterOverlay world={session.world} factionId="player" onClose={() => setShowRoster(false)}
-					onSelectUnit={(id) => { setSelectedUnitId(id); setShowRoster(false); }}
+				<UnitRosterOverlay
+					world={session.world}
+					factionId="player"
+					onClose={() => setShowRoster(false)}
+					onSelectUnit={(id) => {
+						setSelectedUnitId(id);
+						setShowRoster(false);
+					}}
 				/>
 			)}
 			{gameActive && showDiplomacy && (
-				<DiplomacyOverlay world={session.world} factionId="player" onClose={() => setShowDiplomacy(false)} />
+				<DiplomacyOverlay
+					world={session.world}
+					factionId="player"
+					onClose={() => setShowDiplomacy(false)}
+				/>
 			)}
 
 			{gameActive && <AlertBar />}
-			{gameActive && !isObserverMode && <PendingCompletions items={collectPendingItems(session.world)} />}
+			{gameActive && !isObserverMode && (
+				<PendingCompletions items={collectPendingItems(session.world)} />
+			)}
 			{gameActive && !isObserverMode && <TurnSummaryPanel />}
 			{gameActive && (
-				<PauseMenu visible={paused} onResume={() => setPaused(false)}
-					onSave={() => void doSave()} onQuitToTitle={handleReturnToMenu}
+				<PauseMenu
+					visible={paused}
+					onResume={() => setPaused(false)}
+					onSave={() => void doSave()}
+					onQuitToTitle={handleReturnToMenu}
 				/>
 			)}
 			{gameActive && gameOutcome.result !== "playing" && (
-				<GameOutcomeOverlay outcome={gameOutcome} turn={turn} onReturnToMenu={handleReturnToMenu} />
+				<GameOutcomeOverlay
+					outcome={gameOutcome}
+					turn={turn}
+					onReturnToMenu={handleReturnToMenu}
+				/>
 			)}
 			{gameActive && (
 				<>
 					<TurnLog />
-					{session.world && session.board && <Minimap world={session.world} board={session.board} />}
+					{session.world && session.board && (
+						<Minimap world={session.world} board={session.board} />
+					)}
 					<RadialMenu />
 					<KeybindHints />
 					<SystemToasts />
@@ -443,7 +531,12 @@ export function App() {
 					<TurnPhaseOverlay />
 					<TutorialOverlay turn={turn} />
 					<EntityTooltip />
-					{session.world && <SelectedInfo world={session.world} selectedUnitId={selectedUnitId ?? null} />}
+					{session.world && (
+						<SelectedInfo
+							world={session.world}
+							selectedUnitId={selectedUnitId ?? null}
+						/>
+					)}
 				</>
 			)}
 		</div>

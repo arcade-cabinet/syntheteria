@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-	FORMATION_MIN_UNITS,
-	FORMATION_RADIUS,
 	computeFormationOffsets,
 	detectFormations,
+	FORMATION_MIN_UNITS,
+	FORMATION_RADIUS,
+	type FormationUnit,
 	getFormationTarget,
 	isFormationLeader,
-	type FormationUnit,
 } from "../formationSteering";
 
 // ---------------------------------------------------------------------------

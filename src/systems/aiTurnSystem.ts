@@ -1,8 +1,6 @@
 import type { World } from "koota";
 import { shortestPath } from "../board/adjacency";
 import type { GeneratedBoard } from "../board/types";
-import { pushTurnEvent } from "../ui/game/turnEvents";
-import type { Difficulty } from "../world/config";
 import { getRelation } from "../factions/relations";
 import {
 	Board,
@@ -14,6 +12,8 @@ import {
 	UnitPos,
 	UnitStats,
 } from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
+import type { Difficulty } from "../world/config";
 
 // ---------------------------------------------------------------------------
 // Layer 1: Faction Personality — static strategic priorities per faction

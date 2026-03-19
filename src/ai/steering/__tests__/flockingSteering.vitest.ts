@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	computeFlockingForce,
-	pickFlockingTile,
-} from "../flockingSteering";
+import { computeFlockingForce, pickFlockingTile } from "../flockingSteering";
 
 describe("computeFlockingForce", () => {
 	it("returns zero when no neighbors", () => {
@@ -13,39 +10,29 @@ describe("computeFlockingForce", () => {
 
 	it("separation pushes away from nearby neighbor", () => {
 		// Neighbor directly to the right — separation should push left (negative dx)
-		const force = computeFlockingForce(
-			{ x: 5, z: 5 },
-			{ x: 1, z: 0 },
-			[{ x: 6, z: 5 }],
-		);
+		const force = computeFlockingForce({ x: 5, z: 5 }, { x: 1, z: 0 }, [
+			{ x: 6, z: 5 },
+		]);
 		// The combined force should have a negative dx component (pushed away from x=6)
 		expect(force.dx).toBeLessThan(0);
 	});
 
 	it("produces non-zero force with distant neighbors", () => {
 		// Two neighbors far to the right — force should be non-zero
-		const force = computeFlockingForce(
-			{ x: 0, z: 5 },
-			{ x: 1, z: 0 },
-			[
-				{ x: 5, z: 5 },
-				{ x: 6, z: 5 },
-			],
-		);
+		const force = computeFlockingForce({ x: 0, z: 5 }, { x: 1, z: 0 }, [
+			{ x: 5, z: 5 },
+			{ x: 6, z: 5 },
+		]);
 		const mag = Math.abs(force.dx) + Math.abs(force.dz);
 		expect(mag).toBeGreaterThan(0);
 	});
 
 	it("returns non-zero for multiple spread neighbors", () => {
-		const force = computeFlockingForce(
-			{ x: 5, z: 5 },
-			{ x: 0, z: 1 },
-			[
-				{ x: 3, z: 3 },
-				{ x: 7, z: 3 },
-				{ x: 5, z: 7 },
-			],
-		);
+		const force = computeFlockingForce({ x: 5, z: 5 }, { x: 0, z: 1 }, [
+			{ x: 3, z: 3 },
+			{ x: 7, z: 3 },
+			{ x: 5, z: 7 },
+		]);
 		// With 3 neighbors, force should not be zero
 		const mag = Math.abs(force.dx) + Math.abs(force.dz);
 		expect(mag).toBeGreaterThan(0);
@@ -61,12 +48,7 @@ describe("pickFlockingTile", () => {
 	];
 
 	it("returns null for empty candidates", () => {
-		const result = pickFlockingTile(
-			{ x: 5, z: 5 },
-			{ x: 0, z: 0 },
-			[],
-			[],
-		);
+		const result = pickFlockingTile({ x: 5, z: 5 }, { x: 0, z: 0 }, [], []);
 		expect(result).toBeNull();
 	});
 

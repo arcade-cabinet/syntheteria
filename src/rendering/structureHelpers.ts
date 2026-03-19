@@ -7,8 +7,8 @@
  * and performance tests.
  */
 
-import { TILE_SIZE_M } from "../board";
 import type { GeneratedBoard } from "../board";
+import { TILE_SIZE_M } from "../board";
 import { seedToFloat } from "../terrain";
 import { isTileExplored } from "./tileVisibility";
 

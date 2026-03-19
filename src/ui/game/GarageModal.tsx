@@ -12,14 +12,14 @@ import type { World } from "koota";
 import { useMemo, useState } from "react";
 import {
 	getTracksForClass,
-	type TrackEntry,
 	type RobotClass,
+	type TrackEntry,
 } from "../../robots";
 import {
+	isTechResearched,
 	type QueueResult,
 	queueFabrication,
 	ROBOT_COSTS,
-	isTechResearched,
 } from "../../systems";
 import { BotFabricator, Building, Powered } from "../../traits";
 

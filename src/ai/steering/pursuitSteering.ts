@@ -42,8 +42,7 @@ export function computeInterceptTarget(
 	}
 
 	// Distance between chaser and target (manhattan)
-	const dist =
-		Math.abs(chaserX - targetX) + Math.abs(chaserZ - targetZ);
+	const dist = Math.abs(chaserX - targetX) + Math.abs(chaserZ - targetZ);
 
 	// Look-ahead time: proportional to distance
 	// At dist=1, predict 1 turn ahead; at dist=10, predict 3 turns
@@ -80,8 +79,7 @@ export function shouldUsePursuit(
 ): boolean {
 	if (targetHeadingX === 0 && targetHeadingZ === 0) return false;
 
-	const dist =
-		Math.abs(chaserX - targetX) + Math.abs(chaserZ - targetZ);
+	const dist = Math.abs(chaserX - targetX) + Math.abs(chaserZ - targetZ);
 	if (dist <= 2) return false; // Close enough to seek directly
 
 	// Check if target is moving away from chaser

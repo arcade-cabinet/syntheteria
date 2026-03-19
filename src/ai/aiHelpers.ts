@@ -15,9 +15,9 @@ import {
 	Faction,
 	ResourcePool,
 	Tile,
+	UnitFaction,
 	UnitMove,
 	UnitPos,
-	UnitFaction,
 	UnitStats,
 } from "../traits";
 import type { Difficulty } from "../world/config";
@@ -98,7 +98,10 @@ export function getFactionBuildings(
  * Get a normalized resource score (0-100) for a faction.
  * Based on total stockpile across all resource types.
  */
-export function getFactionResourceScore(world: World, factionId: string): number {
+export function getFactionResourceScore(
+	world: World,
+	factionId: string,
+): number {
 	for (const e of world.query(Faction, ResourcePool)) {
 		const f = e.get(Faction);
 		const r = e.get(ResourcePool);

@@ -18,14 +18,11 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board";
 import type { GeneratedBoard } from "../../board";
+import { TILE_SIZE_M } from "../../board";
 import { FACTION_COLORS } from "../../config";
-import {
-	computeTerritory,
-	type TerritorySnapshot,
-} from "../../systems";
 import { buildExploredSet } from "../../rendering";
+import { computeTerritory, type TerritorySnapshot } from "../../systems";
 
 type TerritoryOverlayRendererProps = {
 	board: GeneratedBoard;
@@ -157,7 +154,7 @@ function collectBoundaryEdges(
 	boardHeight: number,
 ): BoundaryEdge[] {
 	const edges: BoundaryEdge[] = [];
-	const half = TILE_SIZE_M / 2;
+	const _half = TILE_SIZE_M / 2;
 
 	for (const [key, info] of territory.tiles) {
 		if (!explored.has(key)) continue;
@@ -366,7 +363,7 @@ export function TerritoryOverlayRenderer({
 			textureRef.current = null;
 			removeBoundaryStrips();
 		};
-	}, [board, world, scene, width, height]);
+	}, [world, scene, width, height, removeBoundaryStrips, updateBoundaryStrips]);
 
 	function removeBoundaryStrips() {
 		if (stripMeshRef.current) {

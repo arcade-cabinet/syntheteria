@@ -6,26 +6,24 @@
 
 // --- App root ---
 export { App } from "./App";
-
-// --- Session lifecycle ---
-export { createNewGame, loadGame, saveGame } from "./session";
-
+// --- UI components ---
+export { CommandBar } from "./CommandBar";
+export type { DebugBridge, DebugBridgeContext } from "./debug";
 // --- Debug bridge ---
 export { installDebugBridge } from "./debug";
-export type { DebugBridge, DebugBridgeContext } from "./debug";
-
-// --- HUD data readers ---
-export { readPlayerAp, getProductionQueue, getCurrentResearchForHUD } from "./hudData";
+export type { HmrState } from "./hmrState";
 
 // --- HMR ---
 export { hmrState } from "./hmrState";
-export type { HmrState } from "./hmrState";
-
+// --- HUD data readers ---
+export {
+	getCurrentResearchForHUD,
+	getProductionQueue,
+	readPlayerAp,
+} from "./hudData";
+// --- Session lifecycle ---
+export { createNewGame, loadGame, saveGame } from "./session";
+// --- Types ---
+export type { GameSession, Phase } from "./types";
 // --- Keyboard ---
 export { useKeyboardShortcuts } from "./useKeyboardShortcuts";
-
-// --- UI components ---
-export { CommandBar } from "./CommandBar";
-
-// --- Types ---
-export type { Phase, GameSession } from "./types";

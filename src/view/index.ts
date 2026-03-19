@@ -2,6 +2,29 @@
 // All React Three Fiber renderer components. Imports from rendering/ (pure TS)
 // and traits/ (ECS queries). No logic here — just presentation.
 
+// Effects
+export { CombatEffectsRenderer } from "./effects/CombatEffectsRenderer";
+export { ParticleRenderer } from "./effects/ParticleRenderer";
+export { SpeechBubbleRenderer } from "./effects/SpeechBubbleRenderer";
+// Globe (title scene)
+export {
+	GlobeWithCities,
+	Hypercane,
+	LightningEffect,
+	StormClouds,
+	TitleText,
+} from "./globe";
+// Shared
+export { ModelErrorBoundary } from "./ModelErrorBoundary";
+// Overlays
+export { FogOfWarRenderer } from "./overlays/FogOfWarRenderer";
+export { HighlightRenderer } from "./overlays/HighlightRenderer";
+export {
+	clearPreviewPath,
+	PathRenderer,
+	setPreviewPath,
+} from "./overlays/PathRenderer";
+export { TerritoryOverlayRenderer } from "./overlays/TerritoryOverlayRenderer";
 // Renderers
 export { BiomeRenderer } from "./renderers/BiomeRenderer";
 export { BoardRenderer } from "./renderers/BoardRenderer";
@@ -17,31 +40,4 @@ export { StormSky } from "./renderers/StormSky";
 export { StructureRenderer } from "./renderers/StructureRenderer";
 export { UnifiedTerrainRenderer } from "./renderers/UnifiedTerrainRenderer";
 export { UnitRenderer } from "./renderers/UnitRenderer";
-
-// Overlays
-export { FogOfWarRenderer } from "./overlays/FogOfWarRenderer";
-export { HighlightRenderer } from "./overlays/HighlightRenderer";
-export {
-	PathRenderer,
-	setPreviewPath,
-	clearPreviewPath,
-} from "./overlays/PathRenderer";
-export { TerritoryOverlayRenderer } from "./overlays/TerritoryOverlayRenderer";
-
-// Effects
-export { CombatEffectsRenderer } from "./effects/CombatEffectsRenderer";
-export { ParticleRenderer } from "./effects/ParticleRenderer";
-export { SpeechBubbleRenderer } from "./effects/SpeechBubbleRenderer";
-
-// Shared
-export { ModelErrorBoundary } from "./ModelErrorBoundary";
 export { UnitStatusBars } from "./UnitStatusBars";
-
-// Globe (title scene)
-export {
-	GlobeWithCities,
-	Hypercane,
-	LightningEffect,
-	StormClouds,
-	TitleText,
-} from "./globe";

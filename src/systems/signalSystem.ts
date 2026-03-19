@@ -12,7 +12,12 @@ import { Building, Powered, SignalNode, UnitPos, UnitStats } from "../traits";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function manhattanDist(ax: number, az: number, bx: number, bz: number): number {
+function _manhattanDist(
+	ax: number,
+	az: number,
+	bx: number,
+	bz: number,
+): number {
 	return Math.abs(ax - bx) + Math.abs(az - bz);
 }
 

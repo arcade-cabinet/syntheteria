@@ -1,5 +1,6 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
+import { UnitFaction, UnitPos } from "../../traits";
 import {
 	buildPlacementFlags,
 	computeSpawnCenters,
@@ -7,7 +8,6 @@ import {
 	placeRobots,
 	type SimpleBoardInfo,
 } from "../placement";
-import { UnitFaction, UnitPos } from "../../traits";
 
 function makeBoard(width: number, height: number): SimpleBoardInfo {
 	return {

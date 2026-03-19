@@ -17,11 +17,11 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { CULT_STRUCTURE_DEFS } from "../../buildings/cultStructures";
+import { FactionRelation } from "../../traits";
 import { CULT_DEFINITIONS } from "../cults";
 import { FACTION_DEFINITIONS } from "../definitions";
 import { getRelation, isHostile, setRelation } from "../relations";
 import type { CultDef, FactionDef } from "../types";
-import { FactionRelation } from "../../traits";
 
 describe("SPEC: Section 8 — Factions + Cults", () => {
 	let world: ReturnType<typeof createWorld>;

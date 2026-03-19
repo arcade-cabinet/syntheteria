@@ -4,7 +4,7 @@
  * Keeps game state alive across Vite hot-reloads during development.
  */
 
-import type { Phase, GameSession } from "./types";
+import type { GameSession, Phase } from "./types";
 
 export interface HmrState {
 	phase: Phase;

@@ -14,15 +14,15 @@ import {
 	CULT_FINAL_ASSAULT_MULTIPLIER,
 	CULT_FINAL_ASSAULT_TURN,
 } from "../config/gameDefaults";
-import { pushTurnEvent } from "../ui/game/turnEvents";
+import type { CultMechType } from "../robots/CultMechs";
 import {
 	CULT_MAX_ENEMIES_PER_TIER,
 	CULT_TIER_UNIT_TYPES,
 	getEscalationTier,
 	spawnCultMechByType,
 } from "../robots/CultMechs";
-import type { CultMechType } from "../robots/CultMechs";
 import { CultStructure, UnitFaction } from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
 import {
 	altarZones,
 	BASE_SPAWN_INTERVAL,
@@ -35,8 +35,8 @@ import {
 	MAX_ESCALATION_TERRITORY,
 	MIN_SPAWN_INTERVAL,
 	readStormProfile,
-	setBreachZones,
 	STORM_CULTIST_PARAMS,
+	setBreachZones,
 } from "./cultConstants";
 import { cleanupDestroyedStructures } from "./cultCorruption";
 import { pushToast } from "./toastNotifications";
@@ -55,8 +55,7 @@ export function initBreachZones(board: GeneratedBoard): void {
 	}
 	for (let z = 0; z < height; z += 8) {
 		if (board.tiles[z]?.[0]?.passable) zones.push({ x: 0, z });
-		if (board.tiles[z]?.[width - 1]?.passable)
-			zones.push({ x: width - 1, z });
+		if (board.tiles[z]?.[width - 1]?.passable) zones.push({ x: width - 1, z });
 	}
 	setBreachZones(zones);
 }

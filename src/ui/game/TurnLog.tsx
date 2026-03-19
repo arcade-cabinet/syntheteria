@@ -55,7 +55,7 @@ export function TurnLog() {
 	useEffect(() => {
 		const el = scrollRef.current;
 		if (el) el.scrollTop = el.scrollHeight;
-	}, [events.length]);
+	}, []);
 
 	if (events.length === 0) return null;
 

@@ -21,14 +21,16 @@ describe("computeWanderDirection", () => {
 		resetWanderState();
 		const d2 = computeWanderDirection(1, 5, 5, 1, 0, 200);
 		// Very unlikely to be identical with different seeds
-		const same = Math.abs(d1.dx - d2.dx) < 0.001 && Math.abs(d1.dz - d2.dz) < 0.001;
+		const same =
+			Math.abs(d1.dx - d2.dx) < 0.001 && Math.abs(d1.dz - d2.dz) < 0.001;
 		expect(same).toBe(false);
 	});
 
 	it("produces different directions for different unit IDs", () => {
 		const d1 = computeWanderDirection(1, 5, 5, 0, 0, 100);
 		const d2 = computeWanderDirection(2, 5, 5, 0, 0, 100);
-		const same = Math.abs(d1.dx - d2.dx) < 0.001 && Math.abs(d1.dz - d2.dz) < 0.001;
+		const same =
+			Math.abs(d1.dx - d2.dx) < 0.001 && Math.abs(d1.dz - d2.dz) < 0.001;
 		expect(same).toBe(false);
 	});
 
@@ -42,7 +44,8 @@ describe("computeWanderDirection", () => {
 		const d1 = computeWanderDirection(1, 5, 5, 1, 0, 100);
 		const d2 = computeWanderDirection(1, 5, 5, 1, 0, 200);
 		// Second call jitters the persistent target — direction should shift
-		const same = Math.abs(d1.dx - d2.dx) < 0.001 && Math.abs(d1.dz - d2.dz) < 0.001;
+		const same =
+			Math.abs(d1.dx - d2.dx) < 0.001 && Math.abs(d1.dz - d2.dz) < 0.001;
 		expect(same).toBe(false);
 	});
 });
@@ -57,21 +60,42 @@ describe("pickWanderTile", () => {
 
 	it("returns null for empty candidates", () => {
 		const result = pickWanderTile(
-			1, { x: 5, z: 5 }, 0, 0, [], { x: 5, z: 5 }, 4, 100,
+			1,
+			{ x: 5, z: 5 },
+			0,
+			0,
+			[],
+			{ x: 5, z: 5 },
+			4,
+			100,
 		);
 		expect(result).toBeNull();
 	});
 
 	it("returns the single candidate when only one exists", () => {
 		const result = pickWanderTile(
-			1, { x: 5, z: 5 }, 0, 0, [{ x: 6, z: 5 }], { x: 5, z: 5 }, 4, 100,
+			1,
+			{ x: 5, z: 5 },
+			0,
+			0,
+			[{ x: 6, z: 5 }],
+			{ x: 5, z: 5 },
+			4,
+			100,
 		);
 		expect(result).toEqual({ x: 6, z: 5 });
 	});
 
 	it("picks a valid candidate tile", () => {
 		const result = pickWanderTile(
-			1, { x: 5, z: 5 }, 1, 0, candidates, { x: 5, z: 5 }, 4, 100,
+			1,
+			{ x: 5, z: 5 },
+			1,
+			0,
+			candidates,
+			{ x: 5, z: 5 },
+			4,
+			100,
 		);
 		expect(result).not.toBeNull();
 		expect(candidates).toContainEqual(result);
@@ -84,7 +108,14 @@ describe("pickWanderTile", () => {
 			{ x: 7, z: 5 }, // closer to center
 		];
 		const result = pickWanderTile(
-			1, { x: 8, z: 5 }, 1, 0, farCandidates, { x: 3, z: 5 }, 4, 100,
+			1,
+			{ x: 8, z: 5 },
+			1,
+			0,
+			farCandidates,
+			{ x: 3, z: 5 },
+			4,
+			100,
 		);
 		// When at distance 5 from center (radius 4), strong bias toward center
 		expect(result).toEqual({ x: 7, z: 5 });
@@ -94,14 +125,27 @@ describe("pickWanderTile", () => {
 		const positions = new Set<string>();
 		// Vary heading directions across iterations to test full wander diversity
 		const headings = [
-			[1, 0], [0, 1], [-1, 0], [0, -1],
-			[1, 1], [-1, 1], [1, -1], [-1, -1],
+			[1, 0],
+			[0, 1],
+			[-1, 0],
+			[0, -1],
+			[1, 1],
+			[-1, 1],
+			[1, -1],
+			[-1, -1],
 		];
 		for (let turn = 0; turn < 20; turn++) {
 			resetWanderState();
 			const [hx, hz] = headings[turn % headings.length];
 			const result = pickWanderTile(
-				turn, { x: 5, z: 5 }, hx, hz, candidates, { x: 5, z: 5 }, 10, turn * 31,
+				turn,
+				{ x: 5, z: 5 },
+				hx,
+				hz,
+				candidates,
+				{ x: 5, z: 5 },
+				10,
+				turn * 31,
 			);
 			if (result) positions.add(`${result.x},${result.z}`);
 		}

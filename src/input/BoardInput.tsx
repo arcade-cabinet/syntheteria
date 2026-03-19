@@ -15,15 +15,23 @@ import type { Entity, World } from "koota";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { playSfx } from "../audio";
-import { shortestPath, createGridApi } from "../board";
 import type { GeneratedBoard } from "../board";
+import { createGridApi, shortestPath } from "../board";
+import { spherePosToTile, sphereRadius } from "../rendering";
 import {
 	cancelBuildPlacement,
-	confirmBuildPlacement,
-	isInBuildPlacementMode,
 	clearHighlights,
+	closeRadialMenu,
+	confirmBuildPlacement,
+	confirmRadialSelection,
+	getRadialMenuState,
 	highlightPlacementTile,
 	highlightReachableTiles,
+	isInBuildPlacementMode,
+	openRadialMenu,
+	setBuildProviderWorld,
+	setProviderBoard,
+	setProviderSelectedUnit,
 } from "../systems";
 import {
 	Building,
@@ -34,17 +42,7 @@ import {
 	UnitPos,
 	UnitStats,
 } from "../traits";
-import { spherePosToTile, sphereRadius } from "../rendering";
 import { clearPreviewPath, setPreviewPath } from "../view";
-import {
-	closeRadialMenu,
-	confirmRadialSelection,
-	getRadialMenuState,
-	openRadialMenu,
-	setBuildProviderWorld,
-	setProviderBoard,
-	setProviderSelectedUnit,
-} from "../systems";
 // Import providers so they register at module scope
 import "../systems/radial";
 

@@ -211,7 +211,7 @@ describe("buildSphereGeometry", () => {
 		const geo = buildSphereGeometry(board);
 		const pos = geo.getAttribute("position");
 		const norm = geo.getAttribute("normal");
-		const R = sphereRadius(8, 8);
+		const _R = sphereRadius(8, 8);
 
 		for (let i = 0; i < pos.count; i++) {
 			const px = pos.getX(i);

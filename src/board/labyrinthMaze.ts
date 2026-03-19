@@ -50,7 +50,7 @@ function inBounds(
 	return x >= 0 && x < width && z >= 0 && z < height;
 }
 
-function isOdd(n: number): boolean {
+function _isOdd(n: number): boolean {
 	return (n & 1) === 1;
 }
 

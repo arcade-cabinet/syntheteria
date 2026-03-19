@@ -17,34 +17,34 @@ import { playSfx } from "../audio";
 import type { GeneratedBoard } from "../board";
 import { BUILDING_DEFS } from "../buildings";
 import { getRelation } from "../factions";
-import { TRACK_REGISTRY, type RobotClass } from "../robots";
+import { type RobotClass, TRACK_REGISTRY } from "../robots";
 import {
-	queueFabrication,
+	canAfford,
+	countResearchLabs,
+	FUSION_RECIPES,
+	getAvailableTechs,
 	getPopCap,
 	getPopulation,
-	countResearchLabs,
-	getAvailableTechs,
 	getResearchState,
+	queueFabrication,
 	queueResearch,
-	canAfford,
-	spendResources,
-	FUSION_RECIPES,
-	SynthesisQueue,
 	queueSynthesis,
+	SynthesisQueue,
+	spendResources,
 } from "../systems";
-import { TileFloor } from "../terrain";
 import type { ResourceMaterial } from "../terrain";
+import { TileFloor } from "../terrain";
 import {
 	Board,
 	BotFabricator,
 	Building,
 	type BuildingType,
+	Faction,
 	Powered,
 	PowerGrid,
-	StorageCapacity,
-	Faction,
 	ResourceDeposit,
 	ResourcePool,
+	StorageCapacity,
 	Tile,
 	UnitAttack,
 	UnitFaction,
@@ -56,6 +56,33 @@ import {
 } from "../traits";
 import type { Difficulty } from "../world/config";
 import type { AgentSnapshot } from "./agents/SyntheteriaAgent";
+import {
+	_lastBuildTurn,
+	computeBuildOptions,
+	executeAiBuild,
+	runAiBuilding,
+} from "./aiBuilding";
+import { runAiDiplomacy } from "./aiDiplomacy";
+import { runAiFabrication } from "./aiFabrication";
+import {
+	countNearbyThreats,
+	DIFFICULTY_AGGRESSION_MULT,
+	findMineableTilesNearUnits,
+	findTileFloorAt,
+	getFactionBuildings,
+	getFactionResourceScore,
+	getNearestEnemyDist,
+	isCultFactionId,
+	moveToward,
+	readDifficulty,
+} from "./aiHelpers";
+import { runAiResearch } from "./aiResearch";
+import { runAiSynthesis } from "./aiSynthesis";
+import {
+	type FactionBiasOverride,
+	getFactionFSM,
+	resetFactionFSMs,
+} from "./fsm/FactionFSM";
 import { assessSituationFuzzy } from "./fuzzy/situationModule";
 import {
 	type BuildOption,
@@ -75,14 +102,27 @@ import {
 	resetAllFactionMemories,
 	updateFactionPerception,
 } from "./perception/factionMemory";
+import { type CombatUnit, evaluateLocalCombat } from "./planning/combatEval";
 import {
-	type FactionBiasOverride,
-	getFactionFSM,
-	resetFactionFSMs,
-} from "./fsm/FactionFSM";
+	type DiplomaticContext,
+	decideDiplomacy,
+	executeDiplomacy,
+	resetDiplomaticAi,
+} from "./planning/diplomaticAi";
+import {
+	getFactionInfluenceMap,
+	getTopTiles,
+	resetInfluenceMaps,
+} from "./planning/influenceMap";
 import { AIRuntime } from "./runtime/AIRuntime";
-import { getUnitTaskQueue } from "./tasks/UnitTaskQueue";
-import { resetAllTaskQueues } from "./tasks/UnitTaskQueue";
+import {
+	detectFormations,
+	type FormationUnit,
+	getFormationTarget,
+	isFormationLeader,
+} from "./steering/formationSteering";
+import type { UnitInfo } from "./steering/interposeSteering";
+import { getUnitTaskQueue, resetAllTaskQueues } from "./tasks/UnitTaskQueue";
 import { pickAITrack, pickAITrackVersion } from "./trackSelection";
 import {
 	checkCorruptionTriggers,
@@ -90,33 +130,6 @@ import {
 	resetCorruptionTriggers,
 } from "./triggers/corruptionTrigger";
 import { resetAllTerritoryTrackers } from "./triggers/territoryTrigger";
-import { resetInfluenceMaps, getFactionInfluenceMap, getTopTiles } from "./planning/influenceMap";
-import { evaluateLocalCombat, type CombatUnit } from "./planning/combatEval";
-import { decideDiplomacy, executeDiplomacy, resetDiplomaticAi, type DiplomaticContext } from "./planning/diplomaticAi";
-import type { UnitInfo } from "./steering/interposeSteering";
-import {
-	detectFormations,
-	getFormationTarget,
-	isFormationLeader,
-	type FormationUnit,
-} from "./steering/formationSteering";
-import {
-	isCultFactionId,
-	DIFFICULTY_AGGRESSION_MULT,
-	readDifficulty,
-	getFactionBuildings,
-	getFactionResourceScore,
-	getNearestEnemyDist,
-	countNearbyThreats,
-	findMineableTilesNearUnits,
-	findTileFloorAt,
-	moveToward,
-} from "./aiHelpers";
-import { computeBuildOptions, executeAiBuild, runAiBuilding, _lastBuildTurn } from "./aiBuilding";
-import { runAiResearch } from "./aiResearch";
-import { runAiSynthesis } from "./aiSynthesis";
-import { runAiFabrication } from "./aiFabrication";
-import { runAiDiplomacy } from "./aiDiplomacy";
 
 // ---------------------------------------------------------------------------
 // Module-level runtime — persists across turns within a game session
@@ -402,25 +415,51 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		const researchedTechCount = researchState?.researchedTechs.length ?? 0;
 
 		// Interpose context — detailed ally/enemy info for support units
-		const allyUnits: Array<{ entityId: number; x: number; z: number; hp: number; factionId: string }> = [];
+		const allyUnits: Array<{
+			entityId: number;
+			x: number;
+			z: number;
+			hp: number;
+			factionId: string;
+		}> = [];
 		for (const s of factionSnapshots) {
-			allyUnits.push({ entityId: s.entityId, x: s.tileX, z: s.tileZ, hp: s.hp, factionId });
+			allyUnits.push({
+				entityId: s.entityId,
+				x: s.tileX,
+				z: s.tileZ,
+				hp: s.hp,
+				factionId,
+			});
 		}
-		const enemyUnits: Array<{ entityId: number; x: number; z: number; hp: number; factionId: string }> = [];
+		const enemyUnits: Array<{
+			entityId: number;
+			x: number;
+			z: number;
+			hp: number;
+			factionId: string;
+		}> = [];
 		for (const e of factionEnemies) {
 			// Get HP from ECS for detailed enemy info
 			const entity = entityById.get(e.entityId);
 			const stats = entity?.get(UnitStats);
-			enemyUnits.push({ entityId: e.entityId, x: e.x, z: e.z, hp: stats?.hp ?? 10, factionId: e.factionId });
+			enemyUnits.push({
+				entityId: e.entityId,
+				x: e.x,
+				z: e.z,
+				hp: stats?.hp ?? 10,
+				factionId: e.factionId,
+			});
 		}
 
 		// Wormhole context — territory count and strongest faction detection
 		const factionTerritoryCount = factionBuildings.length + unitCount;
 		// Determine if this is the strongest faction (compare against all other factions)
 		let isStrongestFaction = true;
-		for (const [otherId, otherSnaps] of agentsByFaction) {
+		for (const [otherId, _otherSnaps] of agentsByFaction) {
 			if (otherId === factionId) continue;
-			const otherStrength = getPopulation(world, otherId) + getFactionBuildings(world, otherId).length;
+			const otherStrength =
+				getPopulation(world, otherId) +
+				getFactionBuildings(world, otherId).length;
 			if (otherStrength > factionTerritoryCount) {
 				isStrongestFaction = false;
 				break;
@@ -458,10 +497,10 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		});
 
 		// ── Faction FSM: macro strategy bias overrides ──────────────
-		const nearbyThreats = countNearbyThreats(
-			factionBuildings,
-			[...factionEnemies, ...cultThreats.map((c) => ({ ...c, entityId: 0, factionId: "" }))],
-		);
+		const nearbyThreats = countNearbyThreats(factionBuildings, [
+			...factionEnemies,
+			...cultThreats.map((c) => ({ ...c, entityId: 0, factionId: "" })),
+		]);
 		const enemyFactionContacted =
 			factionEnemies.some((e) => !isCultFactionId(e.factionId)) ||
 			rememberedEnemies.some((e) => !isCultFactionId(e.factionId));
@@ -492,8 +531,18 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		// Evaluators are added in order: attack, chase, harvest, expand, build, research, scout, floorMine, evade, interpose, wormhole, idle
 		// Map FSM bias keys to evaluator indices (research uses build bias, floorMine uses harvest bias)
 		const evalBiasMap = [
-			"attack", "chase", "harvest", "expand",
-			"build", "build", "scout", "harvest", "evade", "evade", "expand", "idle",
+			"attack",
+			"chase",
+			"harvest",
+			"expand",
+			"build",
+			"build",
+			"scout",
+			"harvest",
+			"evade",
+			"evade",
+			"expand",
+			"idle",
 		] as const;
 
 		for (const snap of factionSnapshots) {
@@ -559,8 +608,12 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 						let bestZ = boardCenter.z;
 						for (const d of deposits) {
 							const dist = sphereManhattan(
-								snap.tileX, snap.tileZ, d.x, d.z,
-								board.config.width, navGraph.wrapX,
+								snap.tileX,
+								snap.tileZ,
+								d.x,
+								d.z,
+								board.config.width,
+								navGraph.wrapX,
 							);
 							if (dist < bestDist) {
 								bestDist = dist;
@@ -583,7 +636,11 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 						};
 					} else {
 						// Scout toward board center
-						agent.decidedAction = { type: "move", toX: boardCenter.x, toZ: boardCenter.z };
+						agent.decidedAction = {
+							type: "move",
+							toX: boardCenter.x,
+							toZ: boardCenter.z,
+						};
 					}
 					_idleStreak.set(snap.entityId, 0);
 				}
@@ -741,7 +798,12 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 	checkFactionContact(world, currentTurn);
 
 	// ── Step 6g: Diplomatic AI — alliance/war decisions per faction ──────
-	runAiDiplomacy(world, [...agentsByFaction.keys()], agentsByFaction, currentTurn);
+	runAiDiplomacy(
+		world,
+		[...agentsByFaction.keys()],
+		agentsByFaction,
+		currentTurn,
+	);
 
 	// ── Step 7: Refresh AI AP ───────────────────────────────────────────
 	for (const e of world.query(UnitFaction, UnitStats)) {

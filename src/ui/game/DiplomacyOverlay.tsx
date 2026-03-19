@@ -11,8 +11,11 @@
 import type { World } from "koota";
 import { useEffect, useMemo, useState } from "react";
 import { FACTION_COLORS_CSS } from "../../config";
-import { FACTION_DEFINITIONS } from "../../factions";
-import { getRelation, type RelationType } from "../../factions";
+import {
+	FACTION_DEFINITIONS,
+	getRelation,
+	type RelationType,
+} from "../../factions";
 import {
 	type DiplomacyEvent,
 	declareWar,

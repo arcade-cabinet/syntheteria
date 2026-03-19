@@ -1,10 +1,7 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-	clearHighlights,
-	highlightReachableTiles,
-} from "../highlightSystem";
 import { Tile, TileHighlight } from "../../traits";
+import { clearHighlights, highlightReachableTiles } from "../highlightSystem";
 
 function spawn3x3Grid(world: ReturnType<typeof createWorld>) {
 	for (let x = 0; x < 3; x++) {

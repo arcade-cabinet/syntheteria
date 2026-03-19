@@ -13,7 +13,6 @@
 
 import { trait, type World } from "koota";
 import { playSfx } from "../audio/sfx";
-import { pushTurnEvent } from "../ui/game/turnEvents";
 import { TRACK_REGISTRY } from "../robots/specializations/trackRegistry";
 import type { RobotClass } from "../robots/types";
 import type { ResourceMaterial } from "../terrain/types";
@@ -27,6 +26,7 @@ import {
 	UnitStats,
 	UnitVisual,
 } from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
 import { canSpawnUnit } from "./populationSystem";
 import { canAfford, spendResources } from "./resourceSystem";
 

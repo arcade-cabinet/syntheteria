@@ -59,7 +59,8 @@ export function findInterposeTarget(
 
 	for (const ally of allies) {
 		// Skip self
-		const distToAlly = Math.abs(supportX - ally.x) + Math.abs(supportZ - ally.z);
+		const distToAlly =
+			Math.abs(supportX - ally.x) + Math.abs(supportZ - ally.z);
 		if (distToAlly === 0) continue;
 		if (distToAlly > scanRange) continue;
 
@@ -101,10 +102,7 @@ export function findInterposeTarget(
  * Like Yuka's InterposeBehavior, we find the point between the two
  * entities where the support unit should position itself.
  */
-export function computeInterposePoint(
-	ally: TilePos,
-	threat: TilePos,
-): TilePos {
+export function computeInterposePoint(ally: TilePos, threat: TilePos): TilePos {
 	return {
 		x: Math.round((ally.x + threat.x) / 2),
 		z: Math.round((ally.z + threat.z) / 2),
@@ -157,7 +155,8 @@ export function pickInterposeTile(
 		const dot = (tdx / tLen) * dirX + (tdz / tLen) * dirZ;
 
 		// Bonus for being close to the midpoint itself
-		const distToMid = Math.abs(tile.x - midpoint.x) + Math.abs(tile.z - midpoint.z);
+		const distToMid =
+			Math.abs(tile.x - midpoint.x) + Math.abs(tile.z - midpoint.z);
 		const midBonus = 1 / (1 + distToMid);
 
 		const score = dot + midBonus * 0.5;

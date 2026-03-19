@@ -22,8 +22,8 @@ import {
 	CULT_TERRAIN,
 	INITIAL_POI_COUNT_MAX,
 	INITIAL_POI_COUNT_MIN,
-	poisInitialized,
 	poiPositions,
+	poisInitialized,
 	setPoisInitialized,
 } from "./cultConstants";
 

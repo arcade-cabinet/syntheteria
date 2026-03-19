@@ -7,34 +7,33 @@
  *   - contextSpeech.ts — CONTEXT_SPEECH data (ambient/contextual dialogue)
  */
 
-// Re-export types and config
-export type {
-	SpeechProfileId,
-	EventSpeechTrigger,
-	ContextSpeechTrigger,
-} from "./speechTypes";
-export {
-	SPEECH_COOLDOWN_TURNS,
-	SPEECH_BUBBLE_DURATION_TURNS,
-	EVENT_VISION_RADIUS,
-} from "./speechTypes";
-
+export { CONTEXT_SPEECH } from "./contextSpeech";
 // Re-export speech data
 export { EVENT_SPEECH } from "./eventSpeech";
-export { CONTEXT_SPEECH } from "./contextSpeech";
+// Re-export types and config
+export type {
+	ContextSpeechTrigger,
+	EventSpeechTrigger,
+	SpeechProfileId,
+} from "./speechTypes";
+export {
+	EVENT_VISION_RADIUS,
+	SPEECH_BUBBLE_DURATION_TURNS,
+	SPEECH_COOLDOWN_TURNS,
+} from "./speechTypes";
 
 // ---------------------------------------------------------------------------
 // Internal imports for helpers below
 // ---------------------------------------------------------------------------
 
+import { gameplayRandom } from "../seed";
+import { CONTEXT_SPEECH } from "./contextSpeech";
+import { EVENT_SPEECH } from "./eventSpeech";
 import type {
 	ContextSpeechTrigger,
 	EventSpeechTrigger,
 	SpeechProfileId,
 } from "./speechTypes";
-import { EVENT_SPEECH } from "./eventSpeech";
-import { CONTEXT_SPEECH } from "./contextSpeech";
-import { gameplayRandom } from "../seed";
 
 // ---------------------------------------------------------------------------
 // Persona → Profile mapping

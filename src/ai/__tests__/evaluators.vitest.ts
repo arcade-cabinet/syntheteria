@@ -610,13 +610,21 @@ describe("ResearchEvaluator", () => {
 
 	it("returns high score when lab exists and not researching", () => {
 		const agent = makeAgent();
-		setCtx({ hasResearchLab: true, isResearching: false, researchedTechCount: 0 });
+		setCtx({
+			hasResearchLab: true,
+			isResearching: false,
+			researchedTechCount: 0,
+		});
 		expect(evaluator.calculateDesirability(agent)).toBe(0.95);
 	});
 
 	it("returns slightly lower score when some techs already researched", () => {
 		const agent = makeAgent();
-		setCtx({ hasResearchLab: true, isResearching: false, researchedTechCount: 3 });
+		setCtx({
+			hasResearchLab: true,
+			isResearching: false,
+			researchedTechCount: 3,
+		});
 		const score = evaluator.calculateDesirability(agent);
 		// Quadratic decay: 3 of 15 techs researched → still high but below 0.95
 		expect(score).toBeLessThan(0.95);

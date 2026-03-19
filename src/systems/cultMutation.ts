@@ -1,7 +1,7 @@
 import type { World } from "koota";
 import { seededRng } from "../board/noise";
-import { pushTurnEvent } from "../ui/game/turnEvents";
 import { CultMutation, UnitFaction, UnitStats } from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
 
 // ---------------------------------------------------------------------------
 // Mutation tier thresholds (turnsAlive boundaries)

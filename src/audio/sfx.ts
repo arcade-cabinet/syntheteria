@@ -211,7 +211,13 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 	unit_move: (e) => {
 		const synth = e.synth as ToneNs.Synth;
 		synth.triggerAttackRelease("E4", "16n");
-		setTimeout(() => { try { synth.triggerAttackRelease("G4", "16n"); } catch { /* skip */ } }, 80);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("G4", "16n");
+			} catch {
+				/* skip */
+			}
+		}, 80);
 		return 400;
 	},
 
@@ -231,16 +237,40 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 	harvest_complete: (e) => {
 		const synth = e.synth as ToneNs.Synth;
 		synth.triggerAttackRelease("E5", "16n");
-		setTimeout(() => { try { synth.triggerAttackRelease("G5", "16n"); } catch { /* skip */ } }, 100);
-		setTimeout(() => { try { synth.triggerAttackRelease("B5", "16n"); } catch { /* skip */ } }, 200);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("G5", "16n");
+			} catch {
+				/* skip */
+			}
+		}, 100);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("B5", "16n");
+			} catch {
+				/* skip */
+			}
+		}, 200);
 		return 500;
 	},
 
 	build_complete: (e) => {
 		const synth = e.synth as ToneNs.Synth;
 		synth.triggerAttackRelease("C4", "8n");
-		setTimeout(() => { try { synth.triggerAttackRelease("E4", "8n"); } catch { /* skip */ } }, 120);
-		setTimeout(() => { try { synth.triggerAttackRelease("G4", "8n"); } catch { /* skip */ } }, 240);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("E4", "8n");
+			} catch {
+				/* skip */
+			}
+		}, 120);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("G4", "8n");
+			} catch {
+				/* skip */
+			}
+		}, 240);
 		return 640;
 	},
 
@@ -257,18 +287,33 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 	victory: (e) => {
 		const synth = e.synth as ToneNs.PolySynth;
 		synth.triggerAttackRelease(["C4", "E4", "G4"], "4n");
-		setTimeout(
-			() => { try { synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "2n"); } catch { /* skip */ } },
-			400,
-		);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "2n");
+			} catch {
+				/* skip */
+			}
+		}, 400);
 		return 1900;
 	},
 
 	defeat: (e) => {
 		const synth = e.synth as ToneNs.Synth;
 		synth.triggerAttackRelease("C3", "4n");
-		setTimeout(() => { try { synth.triggerAttackRelease("B2", "4n"); } catch { /* skip */ } }, 400);
-		setTimeout(() => { try { synth.triggerAttackRelease("Bb2", "2n"); } catch { /* skip */ } }, 800);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("B2", "4n");
+			} catch {
+				/* skip */
+			}
+		}, 400);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("Bb2", "2n");
+			} catch {
+				/* skip */
+			}
+		}, 800);
 		return 2300;
 	},
 };

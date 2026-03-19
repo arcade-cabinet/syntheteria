@@ -12,11 +12,15 @@ import type { World } from "koota";
 import { type ReactNode, Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../../board";
+import {
+	buildExploredSet,
+	getAllSalvageModelUrls,
+	isTileExplored,
+	resolveSalvageModelUrl,
+	sphereModelPlacement,
+} from "../../rendering";
 import { SalvageProp, type SalvageType } from "../../traits";
 import { ModelErrorBoundary } from "../ModelErrorBoundary";
-import { getAllSalvageModelUrls, resolveSalvageModelUrl } from "../../rendering";
-import { sphereModelPlacement } from "../../rendering";
-import { buildExploredSet, isTileExplored } from "../../rendering";
 
 // Lazy preload to avoid circular dep at module init
 let _salvagePreloaded = false;

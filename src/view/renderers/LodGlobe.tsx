@@ -17,8 +17,11 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { sphereRadius } from "../../rendering";
-import { globeFragmentShader, globeVertexShader } from "../../rendering";
+import {
+	globeFragmentShader,
+	globeVertexShader,
+	sphereRadius,
+} from "../../rendering";
 
 // ── LOD distance thresholds ──────────────────────────────────────────────────
 // Expressed as multiples of the sphere radius.
@@ -41,7 +44,7 @@ function getLodFragmentShader(): string {
 		);
 		_lodFragmentShaderFull = lodFragmentShader.replace(
 			"uniform float uGrowth;",
-		"uniform float uGrowth;\n  uniform float uOpacity;",
+			"uniform float uGrowth;\n  uniform float uOpacity;",
 		);
 	}
 	return _lodFragmentShaderFull;

@@ -5,8 +5,8 @@
  */
 
 import type { World } from "koota";
-import { pushTurnEvent } from "../ui/game/turnEvents";
 import { CultStructure } from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
 import { altarZones, corruptedTiles } from "./cultConstants";
 
 // ---------------------------------------------------------------------------

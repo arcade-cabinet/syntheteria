@@ -23,12 +23,16 @@ Visual gaps identified (documented in `docs/RENDERING_VISION.md`):
 - Elevation drama (smooth noise → need chunky discrete platforms)
 - Ocean layers (open ocean + grid-covered metallic grating)
 
-### Codebase Restructuring In Progress
+### Codebase Restructuring COMPLETE
 
-Package structure refactoring underway per `AGENTS.md`:
-- All packages must have `index.ts` with public API exports
-- Import from package index, never deep into internals
-- `view/` split from `rendering/` (R3F components vs pure logic)
+Package structure fully aligned to Koota best practices:
+- **All packages have `index.ts`** with public API exports
+- **Zero deep import violations** — all 367 converted to barrel imports
+- **main.tsx split** — 1253 → 28 LOC, app shell in `src/app/` (App.tsx, CommandBar, useKeyboardShortcuts, hmrState)
+- **Top 5 largest files split** — cultistSystem (1397→37+6 files), radialProviders (→8 files in radial/), evaluators (1022→34+5 files), speechProfiles (1017→104+3 files), yukaAiTurnSystem (1684→755+6 files)
+- **Circular deps fixed** — lazy init for module-scope model preloads, direct type imports for cross-package types
+- **Koota patterns documented** — `docs/KOOTA_PATTERNS.md` (world, traits, systems, actions, frameloop, React hooks)
+- **Pending/ assessed** — 80% salvageable for world/city separation (see `project_pending_salvage.md` memory)
 
 ### Gameplay Systems (Complete from prior work)
 
@@ -68,16 +72,13 @@ The prior R3F stack used `Globe.tsx` as a single persistent `<Canvas>` with sphe
 
 ## Next Steps
 
-Pivot from labyrinth underground to 4X overworld. Rendering stack validated — now restructure codebase before rendering overhaul.
+**Codebase restructuring COMPLETE.** Package structure is solid. Ready for Phaser + enable3d pivot.
 
-1. **Continue package restructuring** — ensure all packages have `index.ts`, imports go through package index, `view/` separated from `rendering/`
-2. **Document rendering vision** — DONE → `docs/RENDERING_VISION.md`
-3. **Defer rendering overhaul** — don't start Phaser + enable3d migration until package structure is solid
-4. **Address visual gaps** (when rendering overhaul begins):
-   - Terrain blending (vertex color edge interpolation)
-   - Forest canopy (blob mesh)
-   - Elevation drama (discrete platforms)
-   - Ocean layers (open ocean + metallic grating)
-   - Roboforming progression (5-level vertex color transitions)
+1. **Create comprehensive Phaser pivot implementation plan** — the roadmap for the rendering migration
+2. **Consolidate data packages into src/config/** — buildings/, resources/, factions/, terrain/, narrative/ are pure data definitions
+3. **Port world/city separation from pending/** — Tier 1: bots, snapshots, config, generation. Tier 2: city catalog, transitions. Tier 3: AI split, radial menu
+4. **Begin Phaser + enable3d migration** — follow the implementation plan
+5. **Visual gaps** (during rendering overhaul):
+   - Terrain blending, forest canopy, elevation drama, ocean layers, roboforming progression
 
 **Accepted tech debt**: `pending/` directory (252MB quarantined reference code) remains in working tree — excluded from tsconfig + biome.

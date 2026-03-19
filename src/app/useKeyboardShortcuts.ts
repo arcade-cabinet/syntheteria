@@ -11,7 +11,7 @@ import { useEffect, useRef } from "react";
 import { TILE_SIZE_M } from "../board";
 import { getCameraControls } from "../camera";
 import { UnitFaction, UnitPos } from "../traits";
-import type { Phase, GameSession } from "./types";
+import type { GameSession, Phase } from "./types";
 
 interface KeyboardShortcutsConfig {
 	phase: Phase;
@@ -43,7 +43,9 @@ export function useKeyboardShortcuts({
 
 		const isTyping = (e: KeyboardEvent) => {
 			const t = e.target as HTMLElement;
-			return t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable;
+			return (
+				t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable
+			);
 		};
 
 		const handler = (e: KeyboardEvent) => {
@@ -67,14 +69,19 @@ export function useKeyboardShortcuts({
 				}
 				if (playerUnits.length === 0) return;
 				playerUnits.sort((a, b) => a - b);
-				const currentIdx = selectedUnitId != null ? playerUnits.indexOf(selectedUnitId) : -1;
+				const currentIdx =
+					selectedUnitId != null ? playerUnits.indexOf(selectedUnitId) : -1;
 				const nextIdx = (currentIdx + 1) % playerUnits.length;
 				const nextId = playerUnits[nextIdx]!;
 				setSelectedUnitId(nextId);
 				for (const ent of s.world.query(UnitPos, UnitFaction)) {
 					if (ent.id() === nextId) {
 						const p = ent.get(UnitPos);
-						if (p) getCameraControls()?.panTo(p.tileX * TILE_SIZE_M, p.tileZ * TILE_SIZE_M);
+						if (p)
+							getCameraControls()?.panTo(
+								p.tileX * TILE_SIZE_M,
+								p.tileZ * TILE_SIZE_M,
+							);
 						break;
 					}
 				}
@@ -106,5 +113,14 @@ export function useKeyboardShortcuts({
 
 		window.addEventListener("keydown", handler);
 		return () => window.removeEventListener("keydown", handler);
-	}, [phase, sceneReady, paused, selectedUnitId, handleEndTurn, setSelectedUnitId, sessionRef, setPaused]);
+	}, [
+		phase,
+		sceneReady,
+		paused,
+		selectedUnitId,
+		handleEndTurn,
+		setSelectedUnitId,
+		sessionRef,
+		setPaused,
+	]);
 }

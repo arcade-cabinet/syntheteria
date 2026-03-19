@@ -5,13 +5,13 @@
  * The app shell calls them each frame/turn to feed the HUD component.
  */
 
+import { PLAYER_MAX_AP, TECH_BY_ID } from "../config";
 import type { WorldType } from "../create-world";
-import { TECH_BY_ID, PLAYER_MAX_AP } from "../config";
 import {
-	FUSION_RECIPES,
-	SynthesisQueue,
 	FabricationJob,
+	FUSION_RECIPES,
 	getResearchState,
+	SynthesisQueue,
 } from "../systems";
 import { Building, UnitFaction, UnitStats } from "../traits";
 import type { CurrentResearch, ProductionQueueItem } from "../ui";
@@ -56,7 +56,9 @@ export function getProductionQueue(world: WorldType): ProductionQueueItem[] {
 }
 
 /** Get current research progress for HUD display. */
-export function getCurrentResearchForHUD(world: WorldType): CurrentResearch | null {
+export function getCurrentResearchForHUD(
+	world: WorldType,
+): CurrentResearch | null {
 	const state = getResearchState(world, "player");
 	if (!state || !state.currentTechId) return null;
 	const tech = TECH_BY_ID.get(state.currentTechId);

@@ -143,9 +143,9 @@ function findAbyssalRegions(
 	tiles: TileData[][],
 	w: number,
 	h: number,
-): Array<Array<[number, number]>> {
+): [number, number][][] {
 	const visited = new Set<string>();
-	const regions: Array<Array<[number, number]>> = [];
+	const regions: [number, number][][] = [];
 
 	for (let z = 0; z < h; z++) {
 		for (let x = 0; x < w; x++) {
@@ -154,8 +154,8 @@ function findAbyssalRegions(
 			if (visited.has(key)) continue;
 
 			// BFS flood fill
-			const region: Array<[number, number]> = [];
-			const stack: Array<[number, number]> = [[x, z]];
+			const region: [number, number][] = [];
+			const stack: [number, number][] = [[x, z]];
 			visited.add(key);
 
 			while (stack.length > 0) {
@@ -191,7 +191,7 @@ function placePlatformIslands(
 	tiles: TileData[][],
 	w: number,
 	h: number,
-	regions: Array<Array<[number, number]>>,
+	regions: [number, number][][],
 	rng: () => number,
 ): number {
 	let placed = 0;

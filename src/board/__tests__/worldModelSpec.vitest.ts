@@ -292,7 +292,7 @@ describe("Section 2 — Salvage props are PRIMARY resource source", () => {
 	});
 
 	it("every salvage type has at least one GLB model ID", () => {
-		for (const [type, def] of Object.entries(SALVAGE_DEFS)) {
+		for (const [_type, def] of Object.entries(SALVAGE_DEFS)) {
 			expect(def.models.length).toBeGreaterThanOrEqual(1);
 		}
 	});
@@ -325,7 +325,7 @@ describe("Section 2 — Floor mining is the backstop", () => {
 	});
 
 	it("every mineable floor has a non-null resourceMaterial", () => {
-		for (const [name, def] of Object.entries(FLOOR_DEFS)) {
+		for (const [_name, def] of Object.entries(FLOOR_DEFS)) {
 			if (def.mineable) {
 				expect(def.resourceMaterial).not.toBeNull();
 			}
@@ -333,7 +333,7 @@ describe("Section 2 — Floor mining is the backstop", () => {
 	});
 
 	it("every mineable floor has resourceAmount[min] > 0", () => {
-		for (const [name, def] of Object.entries(FLOOR_DEFS)) {
+		for (const [_name, def] of Object.entries(FLOOR_DEFS)) {
 			if (def.mineable) {
 				expect(def.resourceAmount[0]).toBeGreaterThan(0);
 			}

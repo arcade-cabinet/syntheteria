@@ -22,7 +22,7 @@ const MIN_ROOM_AREA = 16; // 4x4
 const PLATFORM_FRACTION = 0.45;
 
 /** Minimum tiles to leave un-elevated per room (ensures ramp access). */
-const MIN_GROUND_BORDER = 1;
+const _MIN_GROUND_BORDER = 1;
 
 /** Player start protection radius — never elevate within this many tiles of center. */
 const PLAYER_START_RADIUS = 4;

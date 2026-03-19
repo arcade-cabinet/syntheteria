@@ -19,7 +19,13 @@ const BUTTONS: { label: string; key: PanelKey }[] = [
 	{ label: "Diplomacy", key: "diplomacy" },
 ];
 
-export function CommandBar({ showTechTree, showGarage, showRoster, showDiplomacy, onToggle }: CommandBarProps) {
+export function CommandBar({
+	showTechTree,
+	showGarage,
+	showRoster,
+	showDiplomacy,
+	onToggle,
+}: CommandBarProps) {
 	const activeMap: Record<PanelKey, boolean> = {
 		techTree: showTechTree,
 		garage: showGarage,

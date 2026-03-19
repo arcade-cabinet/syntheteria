@@ -29,6 +29,7 @@ import type { World } from "koota";
 import { useRef, useState } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board";
+import { FACTION_COLORS, isUnitDetected } from "../rendering";
 import {
 	UnitFaction,
 	UnitHarvest,
@@ -37,7 +38,6 @@ import {
 	UnitStats,
 	UnitVisual,
 } from "../traits";
-import { FACTION_COLORS, isUnitDetected } from "../rendering";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -46,7 +46,7 @@ import { FACTION_COLORS, isUnitDetected } from "../rendering";
 /** Height offset above unit position (world units). */
 const BAR_Y_OFFSET = 2.2;
 /** Distance in tiles beyond which bars fade out. */
-const FADE_START_TILES = 12;
+const _FADE_START_TILES = 12;
 const FADE_END_TILES = 18;
 
 // ---------------------------------------------------------------------------
@@ -65,7 +65,7 @@ function hpColor(pct: number): string {
 	return DIEGETIC_RED;
 }
 
-function factionHex(factionId: string): string {
+function _factionHex(factionId: string): string {
 	const num = FACTION_COLORS[factionId] ?? 0x888888;
 	return `#${num.toString(16).padStart(6, "0")}`;
 }

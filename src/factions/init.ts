@@ -1,8 +1,8 @@
 import type { World } from "koota";
 import { PLAYER_UNIT_COLOR } from "../config";
-import type { Difficulty, FactionSlot } from "../world/config";
 import { ResearchState } from "../systems";
 import { Faction, ResourcePool } from "../traits";
+import type { Difficulty, FactionSlot } from "../world/config";
 import { FACTION_DEFINITIONS } from "./definitions";
 
 /** Resource multiplier per difficulty for player starter resources. */

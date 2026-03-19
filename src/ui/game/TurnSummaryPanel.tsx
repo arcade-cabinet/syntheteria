@@ -92,6 +92,14 @@ export function TurnSummaryPanel() {
 	const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const fadeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+	const dismiss = useCallback(() => {
+		setOpacity(0);
+		setTimeout(() => {
+			setVisible(false);
+			clearTurnSummary();
+		}, FADE_OUT_MS);
+	}, []);
+
 	// Show when summary appears — always show so player knows the turn advanced
 	useEffect(() => {
 		if (summary) {
@@ -107,15 +115,7 @@ export function TurnSummaryPanel() {
 			if (dismissTimer.current) clearTimeout(dismissTimer.current);
 			if (fadeTimer.current) clearTimeout(fadeTimer.current);
 		};
-	}, [summary]);
-
-	const dismiss = useCallback(() => {
-		setOpacity(0);
-		setTimeout(() => {
-			setVisible(false);
-			clearTurnSummary();
-		}, FADE_OUT_MS);
-	}, []);
+	}, [dismiss, summary]);
 
 	const handleClick = useCallback(() => {
 		if (dismissTimer.current) clearTimeout(dismissTimer.current);

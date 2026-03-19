@@ -95,7 +95,7 @@ describe("SPEC: Section 6 — Turn Structure", () => {
 				}),
 				UnitFaction({ factionId: "reclaimers" }),
 			);
-			const attacker = world.spawn(
+			const _attacker = world.spawn(
 				UnitPos({ tileX: 0, tileZ: 0 }),
 				UnitStats({
 					hp: 10,

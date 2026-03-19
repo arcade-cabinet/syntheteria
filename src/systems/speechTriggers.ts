@@ -10,10 +10,7 @@
  */
 
 import type { World } from "koota";
-import type {
-	ContextSpeechTrigger,
-	EventSpeechTrigger,
-} from "../narrative";
+import type { ContextSpeechTrigger, EventSpeechTrigger } from "../narrative";
 import {
 	getContextSpeechByPersona,
 	getEventSpeechByPersona,

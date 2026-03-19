@@ -55,7 +55,7 @@ export interface CombatEvalResult {
  * Compute army strength as sum of (attack * HP) for each unit.
  * Defense adds a 10% bonus per point (effective HP multiplier).
  */
-export function computeArmyStrength(units: ReadonlyArray<CombatUnit>): number {
+export function computeArmyStrength(units: readonly CombatUnit[]): number {
 	let strength = 0;
 	for (const u of units) {
 		const effectiveHp = u.hp * (1 + u.defense * 0.1);
@@ -69,7 +69,7 @@ export function computeArmyStrength(units: ReadonlyArray<CombatUnit>): number {
  * Used for local tactical decisions (should THIS unit engage?).
  */
 export function computeLocalStrength(
-	units: ReadonlyArray<CombatUnit>,
+	units: readonly CombatUnit[],
 	centerX: number,
 	centerZ: number,
 ): number {
@@ -96,8 +96,8 @@ export function computeLocalStrength(
  * @returns CombatEvalResult with decision and strength data
  */
 export function evaluateCombat(
-	myUnits: ReadonlyArray<CombatUnit>,
-	enemyUnits: ReadonlyArray<CombatUnit>,
+	myUnits: readonly CombatUnit[],
+	enemyUnits: readonly CombatUnit[],
 ): CombatEvalResult {
 	const myStrength = computeArmyStrength(myUnits);
 	const enemyStrength = computeArmyStrength(enemyUnits);
@@ -133,8 +133,8 @@ export function evaluateCombat(
 export function evaluateLocalCombat(
 	unitX: number,
 	unitZ: number,
-	allFriendlies: ReadonlyArray<CombatUnit>,
-	allEnemies: ReadonlyArray<CombatUnit>,
+	allFriendlies: readonly CombatUnit[],
+	allEnemies: readonly CombatUnit[],
 ): CombatEvalResult {
 	const myStrength = computeLocalStrength(allFriendlies, unitX, unitZ);
 	const enemyStrength = computeLocalStrength(allEnemies, unitX, unitZ);

@@ -31,8 +31,14 @@ import {
 import * as THREE from "three";
 import type { BoardConfig, GeneratedBoard } from "../board";
 import { SphereOrbitCamera } from "../camera";
-import { resolveAttacks } from "../systems";
 import { BoardInput } from "../input";
+import {
+	cinematicState,
+	globeFragmentShader,
+	globeVertexShader,
+	turnToChronometry,
+} from "../rendering";
+import { resolveAttacks } from "../systems";
 import {
 	BiomeRenderer,
 	BuildingRenderer,
@@ -41,17 +47,17 @@ import {
 	CutawayClipPlane,
 	FogOfWarRenderer,
 	FragmentRenderer,
-	Hypercane,
-	LightningEffect,
-	StormClouds,
 	HighlightRenderer,
+	Hypercane,
 	IlluminatorRenderer,
 	InfrastructureRenderer,
+	LightningEffect,
 	LodGlobe,
-	PathRenderer,
 	ParticleRenderer,
+	PathRenderer,
 	SalvageRenderer,
 	SpeechBubbleRenderer,
+	StormClouds,
 	StormSky,
 	StructureRenderer,
 	TerritoryOverlayRenderer,
@@ -59,12 +65,6 @@ import {
 	UnitRenderer,
 	UnitStatusBars,
 } from "../view";
-import {
-	cinematicState,
-	globeFragmentShader,
-	globeVertexShader,
-	turnToChronometry,
-} from "../rendering";
 import type { StormProfile } from "../world/config";
 import { HoverTracker } from "./game/HoverTracker";
 

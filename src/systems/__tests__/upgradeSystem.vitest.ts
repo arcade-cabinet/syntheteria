@@ -2,8 +2,8 @@ import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	Building,
-	Powered,
 	Faction,
+	Powered,
 	ResourcePool,
 	UnitFaction,
 	UnitPos,

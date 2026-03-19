@@ -12,8 +12,8 @@
  *   "research_tech"    → [build research lab, start research, wait for completion]
  */
 
-import type { FactionStateId } from "../fsm/FactionFSM";
 import type { DecidedAction } from "../agents/SyntheteriaAgent";
+import type { FactionStateId } from "../fsm/FactionFSM";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -147,8 +147,7 @@ const EXPAND_TERRITORY: HTNGoal = {
 				let best = quadrants[0];
 				let bestDist = 0;
 				for (const q of quadrants) {
-					const dist =
-						Math.abs(fc.x - q.x) + Math.abs(fc.z - q.z);
+					const dist = Math.abs(fc.x - q.x) + Math.abs(fc.z - q.z);
 					if (dist > bestDist) {
 						bestDist = dist;
 						best = q;
@@ -261,9 +260,7 @@ export function planForState(
 	ctx: HTNContext,
 ): HTNStep[] {
 	// Find all goals that match the current FSM state
-	const candidates = ALL_GOALS.filter((g) =>
-		g.fsmStates.includes(fsmState),
-	);
+	const candidates = ALL_GOALS.filter((g) => g.fsmStates.includes(fsmState));
 
 	if (candidates.length === 0) return [];
 
@@ -308,4 +305,10 @@ export function htnDecide(
 }
 
 // Re-export for testing
-export { ALL_GOALS, GROW_ECONOMY, EXPAND_TERRITORY, ATTACK_ENEMY, RESEARCH_TECH };
+export {
+	ALL_GOALS,
+	GROW_ECONOMY,
+	EXPAND_TERRITORY,
+	ATTACK_ENEMY,
+	RESEARCH_TECH,
+};

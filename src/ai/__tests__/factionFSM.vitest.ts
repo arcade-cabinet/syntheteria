@@ -15,7 +15,9 @@ import {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeCtx(overrides: Partial<FactionStateContext> = {}): FactionStateContext {
+function makeCtx(
+	overrides: Partial<FactionStateContext> = {},
+): FactionStateContext {
 	return {
 		currentTurn: 1,
 		unitCount: 6,
@@ -68,11 +70,15 @@ describe("FactionFSM", () => {
 		expect(fsm.currentStateId).toBe("EXPAND");
 
 		// Not enough conditions yet
-		fsm.update(makeCtx({ currentTurn: 39, unitCount: 10, enemyFactionContacted: true }));
+		fsm.update(
+			makeCtx({ currentTurn: 39, unitCount: 10, enemyFactionContacted: true }),
+		);
 		expect(fsm.currentStateId).toBe("EXPAND");
 
 		// All conditions met: turn 40+, enemy contacted, units > 8
-		fsm.update(makeCtx({ currentTurn: 40, unitCount: 10, enemyFactionContacted: true }));
+		fsm.update(
+			makeCtx({ currentTurn: 40, unitCount: 10, enemyFactionContacted: true }),
+		);
 		expect(fsm.currentStateId).toBe("ATTACK");
 	});
 
@@ -100,19 +106,23 @@ describe("FactionFSM", () => {
 		expect(fsm.currentStateId).toBe("FORTIFY");
 
 		// Threats gone, can attack
-		fsm.update(makeCtx({
-			nearbyThreats: 0,
-			unitCount: 8,
-			currentTurn: 50,
-			enemyFactionContacted: true,
-		}));
+		fsm.update(
+			makeCtx({
+				nearbyThreats: 0,
+				unitCount: 8,
+				currentTurn: 50,
+				enemyFactionContacted: true,
+			}),
+		);
 		expect(fsm.currentStateId).toBe("ATTACK");
 	});
 
 	it("ATTACK → RETREAT when units < 3", () => {
 		// Get to ATTACK
 		fsm.update(makeCtx({ currentTurn: 15 })); // → EXPAND
-		fsm.update(makeCtx({ currentTurn: 45, unitCount: 10, enemyFactionContacted: true })); // → ATTACK
+		fsm.update(
+			makeCtx({ currentTurn: 45, unitCount: 10, enemyFactionContacted: true }),
+		); // → ATTACK
 		expect(fsm.currentStateId).toBe("ATTACK");
 
 		fsm.update(makeCtx({ currentTurn: 50, unitCount: 2 }));
@@ -121,7 +131,9 @@ describe("FactionFSM", () => {
 
 	it("ATTACK → EXPAND when units drop to 5", () => {
 		fsm.update(makeCtx({ currentTurn: 15 }));
-		fsm.update(makeCtx({ currentTurn: 45, unitCount: 10, enemyFactionContacted: true }));
+		fsm.update(
+			makeCtx({ currentTurn: 45, unitCount: 10, enemyFactionContacted: true }),
+		);
 		expect(fsm.currentStateId).toBe("ATTACK");
 
 		fsm.update(makeCtx({ currentTurn: 50, unitCount: 5 }));

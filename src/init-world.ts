@@ -10,12 +10,6 @@
 
 import type { World } from "koota";
 import type { GeneratedBoard } from "./board";
-import type {
-	ClimateProfile,
-	Difficulty,
-	FactionSlot,
-	StormProfile,
-} from "./world/config";
 import { initFactions } from "./factions";
 import {
 	buildPlacementFlags,
@@ -24,16 +18,22 @@ import {
 	type SimpleBoardInfo,
 } from "./robots";
 import {
+	placeSalvageProps,
 	placeStarterBuildings,
 	revealFog,
 	runPowerGrid,
-	placeSalvageProps,
 } from "./systems";
 import { TileFloor, tileFloorProps } from "./terrain";
 import { Board } from "./traits/board";
 import { ResourceDeposit } from "./traits/resource";
 import { Tile, TileHighlight } from "./traits/tile";
 import { UnitPos, UnitStats } from "./traits/unit";
+import type {
+	ClimateProfile,
+	Difficulty,
+	FactionSlot,
+	StormProfile,
+} from "./world/config";
 
 export interface InitOptions {
 	climateProfile?: ClimateProfile;

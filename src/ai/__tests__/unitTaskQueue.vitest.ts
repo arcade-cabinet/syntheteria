@@ -4,13 +4,13 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import {
-	UnitTaskQueue,
+	clearUnitTaskQueue,
 	createHarvestAndReturnTask,
 	createScoutPatrolTask,
 	getUnitTaskQueue,
-	setUnitTaskQueue,
-	clearUnitTaskQueue,
 	resetAllTaskQueues,
+	setUnitTaskQueue,
+	UnitTaskQueue,
 } from "../tasks/UnitTaskQueue";
 
 describe("UnitTaskQueue", () => {
@@ -55,7 +55,8 @@ describe("UnitTaskQueue", () => {
 		const q = new UnitTaskQueue([
 			{
 				type: "harvest",
-				targetX: 5, targetZ: 5,
+				targetX: 5,
+				targetZ: 5,
 				depositEntityId: 42,
 				maxTurns: 5,
 				turnsElapsed: 0,
@@ -81,7 +82,8 @@ describe("UnitTaskQueue", () => {
 		const q = new UnitTaskQueue([
 			{
 				type: "build",
-				targetX: 3, targetZ: 3,
+				targetX: 3,
+				targetZ: 3,
 				buildingType: "storage_hub",
 				maxTurns: 5,
 				turnsElapsed: 0,
@@ -101,7 +103,8 @@ describe("UnitTaskQueue", () => {
 		const q = new UnitTaskQueue([
 			{
 				type: "mine",
-				targetX: 7, targetZ: 7,
+				targetX: 7,
+				targetZ: 7,
 				maxTurns: 5,
 				turnsElapsed: 0,
 			},
@@ -212,12 +215,24 @@ describe("task queue registry", () => {
 	});
 
 	it("resetAllTaskQueues clears everything", () => {
-		setUnitTaskQueue(1, new UnitTaskQueue([
-			{ type: "move", targetX: 5, targetZ: 5, maxTurns: 10, turnsElapsed: 0 },
-		]));
-		setUnitTaskQueue(2, new UnitTaskQueue([
-			{ type: "move", targetX: 10, targetZ: 10, maxTurns: 10, turnsElapsed: 0 },
-		]));
+		setUnitTaskQueue(
+			1,
+			new UnitTaskQueue([
+				{ type: "move", targetX: 5, targetZ: 5, maxTurns: 10, turnsElapsed: 0 },
+			]),
+		);
+		setUnitTaskQueue(
+			2,
+			new UnitTaskQueue([
+				{
+					type: "move",
+					targetX: 10,
+					targetZ: 10,
+					maxTurns: 10,
+					turnsElapsed: 0,
+				},
+			]),
+		);
 		resetAllTaskQueues();
 		expect(getUnitTaskQueue(1)).toBe(null);
 		expect(getUnitTaskQueue(2)).toBe(null);

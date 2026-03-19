@@ -4,26 +4,26 @@
  * New-game configuration types and defaults.
  */
 
-export {
-	DEFAULT_NEW_GAME_CONFIG,
-	SECTOR_SCALE_SPECS,
-	DIFFICULTY_LABELS,
-	CLIMATE_PROFILE_SPECS,
-	STORM_PROFILE_SPECS,
-	createNewGameConfig,
-	getPlayerFactionId,
-	getSectorScaleSpec,
-	getClimateProfileSpec,
-	getStormProfileSpec,
-} from "./config";
 export type {
-	SectorScale,
-	Difficulty,
 	ClimateProfile,
-	StormProfile,
+	ClimateProfileSpec,
+	Difficulty,
 	FactionSlot,
 	NewGameConfig,
+	SectorScale,
 	SectorScaleSpec,
-	ClimateProfileSpec,
+	StormProfile,
 	StormProfileSpec,
+} from "./config";
+export {
+	CLIMATE_PROFILE_SPECS,
+	createNewGameConfig,
+	DEFAULT_NEW_GAME_CONFIG,
+	DIFFICULTY_LABELS,
+	getClimateProfileSpec,
+	getPlayerFactionId,
+	getSectorScaleSpec,
+	getStormProfileSpec,
+	SECTOR_SCALE_SPECS,
+	STORM_PROFILE_SPECS,
 } from "./config";

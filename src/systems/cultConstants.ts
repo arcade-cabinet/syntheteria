@@ -8,8 +8,8 @@
 
 import type { World } from "koota";
 import { resetWanderState } from "../ai/steering/wanderSteering";
-import type { StormProfile } from "../world/config";
 import { Board } from "../traits";
+import type { StormProfile } from "../world/config";
 
 // ---------------------------------------------------------------------------
 // Constants

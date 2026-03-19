@@ -14,22 +14,22 @@ import { useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { ELEVATION_STEP_M, TILE_SIZE_M } from "../../board";
 import type { GeneratedBoard } from "../../board";
-import { TileFloor } from "../../terrain";
-import { Tile } from "../../traits";
+import { ELEVATION_STEP_M, TILE_SIZE_M } from "../../board";
 import {
 	applyTargetedDig,
 	boardToDepthLayers,
+	buildExploredSet,
 	buildLayerGeometry,
 	type EdgeDirection,
 	type FloorQuad,
+	isTileExplored,
 	type RampQuad,
 	type VoidPlane,
 	type WallQuad,
-	buildExploredSet,
-	isTileExplored,
 } from "../../rendering";
+import { TileFloor } from "../../terrain";
+import { Tile } from "../../traits";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -652,7 +652,7 @@ export function UnifiedTerrainRenderer({
 			}
 			meshesRef.current = [];
 		};
-	}, [board, world, turn, scene]);
+	}, [board, world, scene]);
 
 	return null;
 }

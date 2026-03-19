@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	BotFabricator,
 	Building,
-	Powered,
 	Faction,
+	Powered,
 	ResourcePool,
 	UnitFaction,
 	UnitPos,

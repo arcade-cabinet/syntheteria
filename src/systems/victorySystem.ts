@@ -274,7 +274,7 @@ function getCurrentTurnForVictory(world: World): number {
 	return 1;
 }
 
-function isCultFaction(factionId: string): boolean {
+function _isCultFaction(factionId: string): boolean {
 	return (CULT_FACTIONS as readonly string[]).includes(factionId);
 }
 

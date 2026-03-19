@@ -5,12 +5,12 @@ import { BUILDING_DEFS } from "../../buildings/definitions";
 import {
 	BotFabricator,
 	Building,
+	Faction,
 	PowerGrid,
+	ResourcePool,
 	SignalNode,
 	StorageCapacity,
 	TurretStats,
-	Faction,
-	ResourcePool,
 } from "../../traits";
 import {
 	_resetBuildSystem,

@@ -12,15 +12,19 @@ import { type ReactNode, Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../../board";
 import {
+	buildExploredSet,
+	getAllBuildingModelUrls,
+	isTileExplored,
+	resolveBuildingModelUrl,
+	sphereModelPlacement,
+} from "../../rendering";
+import {
 	Building,
 	type BuildingType,
 	CultStructure,
 	type CultStructureType,
 } from "../../traits";
 import { ModelErrorBoundary } from "../ModelErrorBoundary";
-import { getAllBuildingModelUrls, resolveBuildingModelUrl } from "../../rendering";
-import { sphereModelPlacement } from "../../rendering";
-import { buildExploredSet, isTileExplored } from "../../rendering";
 
 // Preload all building + cult models (lazy to avoid circular dep at module init)
 let _preloaded = false;

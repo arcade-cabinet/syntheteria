@@ -6,17 +6,14 @@
  */
 
 import type { World } from "koota";
-import { TRACK_REGISTRY, type RobotClass } from "../robots";
-import {
-	queueFabrication,
-	getResearchState,
-} from "../systems";
+import { type RobotClass, TRACK_REGISTRY } from "../robots";
+import { getResearchState, queueFabrication } from "../systems";
 import {
 	BotFabricator,
 	Building,
 	Powered,
-	UnitPos,
 	UnitFaction,
+	UnitPos,
 	UnitStats,
 } from "../traits";
 import { isCultFactionId } from "./aiHelpers";
@@ -119,7 +116,11 @@ export function runAiFabrication(world: World, factionIds: string[]): void {
 						researched,
 						gateTechIds,
 					);
-					const trackVersion = pickAITrackVersion(trackId, researched, v2TechIds);
+					const trackVersion = pickAITrackVersion(
+						trackId,
+						researched,
+						v2TechIds,
+					);
 
 					const result = queueFabrication(
 						world,
@@ -134,7 +135,8 @@ export function runAiFabrication(world: World, factionIds: string[]): void {
 						break;
 					}
 					// If can't afford this class, try the next
-					if (result.ok === false && result.reason === "cannot_afford") continue;
+					if (result.ok === false && result.reason === "cannot_afford")
+						continue;
 					// If pop cap, stop entirely
 					if (result.ok === false && result.reason === "pop_cap") {
 						openSlots = 0;

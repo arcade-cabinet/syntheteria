@@ -1,22 +1,20 @@
 import { describe, expect, it } from "vitest";
 import {
+	ATTACK_THRESHOLD,
+	type CombatUnit,
 	computeArmyStrength,
 	computeLocalStrength,
 	evaluateCombat,
 	evaluateLocalCombat,
-	ATTACK_THRESHOLD,
-	RETREAT_THRESHOLD,
 	LOCAL_FORCE_RADIUS,
-	type CombatUnit,
+	RETREAT_THRESHOLD,
 } from "../planning/combatEval";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeUnit(
-	overrides: Partial<CombatUnit> = {},
-): CombatUnit {
+function makeUnit(overrides: Partial<CombatUnit> = {}): CombatUnit {
 	return {
 		x: 0,
 		z: 0,
@@ -122,7 +120,7 @@ describe("evaluateCombat", () => {
 	it("returns hold when roughly even", () => {
 		const my = [makeUnit({ attack: 3, hp: 10 })];
 		const enemy = [makeUnit({ attack: 4, hp: 10 })];
-		const result = evaluateCombat(my, enemy);
+		const _result = evaluateCombat(my, enemy);
 		// ratio = 30/40 = 0.75 > ATTACK_THRESHOLD(0.7) → actually attack
 		// Let's use a tighter matchup
 		const my2 = [makeUnit({ attack: 3, hp: 8 })];

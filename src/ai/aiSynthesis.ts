@@ -10,15 +10,10 @@ import type { World } from "koota";
 import {
 	canAfford,
 	FUSION_RECIPES,
-	SynthesisQueue,
 	queueSynthesis,
+	SynthesisQueue,
 } from "../systems";
-import {
-	Building,
-	Faction,
-	Powered,
-	ResourcePool,
-} from "../traits";
+import { Building, Faction, Powered, ResourcePool } from "../traits";
 import { isCultFactionId } from "./aiHelpers";
 
 // ---------------------------------------------------------------------------
@@ -31,11 +26,11 @@ import { isCultFactionId } from "./aiHelpers";
  * polymer_salvage unlocks storage_hub. silicon_wafer unlocks research_lab.
  */
 const SYNTHESIS_PRIORITY: readonly string[] = [
-	"alloy_fusion",        // ferrous_scrap -> alloy_stock (most needed)
+	"alloy_fusion", // ferrous_scrap -> alloy_stock (most needed)
 	"polymer_reclamation", // scrap_metal -> polymer_salvage
-	"wafer_fabrication",   // e_waste -> silicon_wafer
-	"storm_capacitor",     // ferrous_scrap -> storm_charge
-	"crystal_synthesis",   // silicon_wafer -> el_crystal (late game)
+	"wafer_fabrication", // e_waste -> silicon_wafer
+	"storm_capacitor", // ferrous_scrap -> storm_charge
+	"crystal_synthesis", // silicon_wafer -> el_crystal (late game)
 ];
 
 // Resource floor: keep at least this much of each material in reserve

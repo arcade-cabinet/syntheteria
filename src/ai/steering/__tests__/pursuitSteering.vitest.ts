@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	computeInterceptTarget,
-	shouldUsePursuit,
-} from "../pursuitSteering";
+import { computeInterceptTarget, shouldUsePursuit } from "../pursuitSteering";
 
 describe("computeInterceptTarget", () => {
 	it("returns current position when target is stationary", () => {

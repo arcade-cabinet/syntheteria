@@ -4,10 +4,10 @@ import { generateBoard } from "../../board/generator";
 import type { BoardConfig, GeneratedBoard, TileData } from "../../board/types";
 import { initFactions } from "../../factions/init";
 import {
-	runAiTurns,
 	_resetCultist as _reset,
 	checkCultistSpawn,
 	getStormCultistParams,
+	runAiTurns,
 } from "../../systems";
 import { floorTypeForTile } from "../../terrain/cluster";
 import {

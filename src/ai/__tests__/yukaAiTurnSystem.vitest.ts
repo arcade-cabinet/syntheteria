@@ -515,7 +515,7 @@ describe("Yuka AI turn system", () => {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function aiUnit_didNotMoveToward(
+function _aiUnit_didNotMoveToward(
 	entity: ReturnType<ReturnType<typeof createWorld>["spawn"]>,
 	targetX: number,
 	targetZ: number,

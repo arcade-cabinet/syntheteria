@@ -56,7 +56,8 @@ function snapshot(
 		buildingsByFaction[b.factionId] =
 			(buildingsByFaction[b.factionId] ?? 0) + 1;
 		totalBuildings++;
-		if (!buildingTypesByFaction[b.factionId]) buildingTypesByFaction[b.factionId] = {};
+		if (!buildingTypesByFaction[b.factionId])
+			buildingTypesByFaction[b.factionId] = {};
 		buildingTypesByFaction[b.factionId][b.buildingType] =
 			(buildingTypesByFaction[b.factionId][b.buildingType] ?? 0) + 1;
 	}

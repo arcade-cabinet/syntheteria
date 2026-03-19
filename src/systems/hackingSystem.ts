@@ -20,18 +20,18 @@
 import type { World } from "koota";
 import { trait } from "koota";
 import { playSfx } from "../audio/sfx";
-import { pushTurnEvent } from "../ui/game/turnEvents";
 import type { RobotClass } from "../robots/types";
 import {
 	Building,
-	Powered,
 	Faction,
+	Powered,
 	ResourcePool,
 	UnitFaction,
 	UnitPos,
 	UnitStats,
 	UnitVisual,
 } from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
 import {
 	getHackedBotRole,
 	HACKING_AP_COST,
@@ -71,7 +71,7 @@ const DISABLE_DURATION_TURNS = 3;
 const STEAL_AMOUNT = 5;
 
 /** Robot classes that can hack (support units). */
-const HACKER_MODEL_IDS = new Set(["support"]);
+const _HACKER_MODEL_IDS = new Set(["support"]);
 
 /** Difficulty multiplier for unit capture vs building hacks. */
 const UNIT_CAPTURE_DIFFICULTY = 6;

@@ -13,7 +13,7 @@ import type { World } from "koota";
 import { useEffect, useMemo, useState } from "react";
 import { getCameraControls } from "../../camera";
 import { TILE_SIZE_M } from "../../config";
-import { TRACK_REGISTRY, type RobotClass } from "../../robots";
+import { type RobotClass, TRACK_REGISTRY } from "../../robots";
 import {
 	UnitFaction,
 	UnitPos,

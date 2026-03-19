@@ -16,8 +16,8 @@ import type { World } from "koota";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../../board";
-import { CultStructure } from "../../traits";
 import { sphereModelPlacement } from "../../rendering";
+import { CultStructure } from "../../traits";
 
 // ---------------------------------------------------------------------------
 // Sect dome colors

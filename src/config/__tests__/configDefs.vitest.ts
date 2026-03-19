@@ -70,7 +70,7 @@ describe("diplomacy config", () => {
 	});
 
 	it("standing changes are all non-zero", () => {
-		for (const [action, delta] of Object.entries(STANDING_CHANGES)) {
+		for (const [_action, delta] of Object.entries(STANDING_CHANGES)) {
 			expect(delta).not.toBe(0);
 		}
 	});

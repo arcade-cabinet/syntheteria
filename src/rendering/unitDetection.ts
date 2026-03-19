@@ -18,7 +18,7 @@ export interface Scanner {
 export function isUnitDetected(
 	tileX: number,
 	tileZ: number,
-	scanners: ReadonlyArray<Scanner>,
+	scanners: readonly Scanner[],
 ): boolean {
 	for (const s of scanners) {
 		const dist = Math.abs(tileX - s.x) + Math.abs(tileZ - s.z);

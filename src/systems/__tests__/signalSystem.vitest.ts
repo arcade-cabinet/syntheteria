@@ -1,6 +1,12 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Building, Powered, SignalNode, UnitPos, UnitStats } from "../../traits";
+import {
+	Building,
+	Powered,
+	SignalNode,
+	UnitPos,
+	UnitStats,
+} from "../../traits";
 import { isInSignalRange, runSignalNetwork } from "../signalSystem";
 
 function spawnRelay(

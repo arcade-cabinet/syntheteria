@@ -99,7 +99,7 @@ export function FragmentRenderer() {
 		return subscribeMemoryFragments(() => setTick((t) => t + 1));
 	}, []);
 
-	const fragments = useMemo(() => getPlacedFragments(), [setTick]);
+	const fragments = useMemo(() => getPlacedFragments(), []);
 
 	if (fragments.length === 0) return null;
 

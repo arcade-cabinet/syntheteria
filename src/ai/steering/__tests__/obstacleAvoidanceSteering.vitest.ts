@@ -23,7 +23,9 @@ function makeBoard(
 				x,
 				z,
 				passable: !wallSet.has(`${x},${z}`),
-				floorType: wallSet.has(`${x},${z}`) ? "structural_mass" : "dust_district",
+				floorType: wallSet.has(`${x},${z}`)
+					? "structural_mass"
+					: "dust_district",
 				elevation: 0,
 				resourceMaterial: null,
 				resourceAmount: 0,

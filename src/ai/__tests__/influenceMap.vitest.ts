@@ -1,25 +1,21 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import type { GeneratedBoard, TileData } from "../../board/types";
 import {
 	computeInfluenceMap,
 	findHighValueTile,
-	getTopTiles,
-	needsRefresh,
 	getFactionInfluenceMap,
-	resetInfluenceMaps,
+	getTopTiles,
 	type InfluenceInput,
 	type InfluenceMap,
+	needsRefresh,
+	resetInfluenceMaps,
 } from "../planning/influenceMap";
-import type { GeneratedBoard, TileData } from "../../board/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeTile(
-	x: number,
-	z: number,
-	passable = true,
-): TileData {
+function makeTile(x: number, z: number, passable = true): TileData {
 	return {
 		x,
 		z,
@@ -31,7 +27,11 @@ function makeTile(
 	};
 }
 
-function makeBoard(width: number, height: number, impassable: Array<[number, number]> = []): GeneratedBoard {
+function makeBoard(
+	width: number,
+	height: number,
+	impassable: [number, number][] = [],
+): GeneratedBoard {
 	const impassableSet = new Set(impassable.map(([x, z]) => `${x},${z}`));
 	const tiles: TileData[][] = [];
 	for (let z = 0; z < height; z++) {
@@ -88,7 +88,9 @@ describe("computeInfluenceMap", () => {
 
 		const nearDeposit = map.cells[3][4]; // adjacent
 		const farFromDeposit = map.cells[9][9]; // far away
-		expect(nearDeposit.resourceScore).toBeGreaterThan(farFromDeposit.resourceScore);
+		expect(nearDeposit.resourceScore).toBeGreaterThan(
+			farFromDeposit.resourceScore,
+		);
 	});
 
 	it("tiles near enemies have higher threatScore", () => {
@@ -105,7 +107,10 @@ describe("computeInfluenceMap", () => {
 		const board = makeBoard(10, 10);
 		// Same resource but one location has enemy nearby
 		const input = makeInput({
-			deposits: [{ x: 3, z: 3 }, { x: 7, z: 7 }],
+			deposits: [
+				{ x: 3, z: 3 },
+				{ x: 7, z: 7 },
+			],
 			enemies: [{ x: 3, z: 4 }],
 		});
 		const map = computeInfluenceMap(board, input, 1);
@@ -129,8 +134,14 @@ describe("computeInfluenceMap", () => {
 	it("chokepoints (2 or fewer neighbors) have high chokeScore", () => {
 		// Create a narrow corridor
 		const board = makeBoard(5, 5, [
-			[0, 1], [1, 1], [3, 1], [4, 1], // wall with gap at (2,1)
-			[0, 3], [1, 3], [3, 3], [4, 3], // wall with gap at (2,3)
+			[0, 1],
+			[1, 1],
+			[3, 1],
+			[4, 1], // wall with gap at (2,1)
+			[0, 3],
+			[1, 3],
+			[3, 3],
+			[4, 3], // wall with gap at (2,3)
 		]);
 		const map = computeInfluenceMap(board, makeInput(), 1);
 
@@ -167,7 +178,12 @@ describe("findHighValueTile", () => {
 	});
 
 	it("returns null for fully impassable region", () => {
-		const board = makeBoard(5, 5, [[1, 1], [2, 1], [1, 2], [2, 2]]);
+		const board = makeBoard(5, 5, [
+			[1, 1],
+			[2, 1],
+			[1, 2],
+			[2, 2],
+		]);
 		const map = computeInfluenceMap(board, makeInput(), 1);
 		const result = findHighValueTile(map, 1, 1, 2, 2);
 		expect(result).toBeNull();
@@ -186,7 +202,10 @@ describe("getTopTiles", () => {
 	it("returns requested number of tiles sorted by value", () => {
 		const board = makeBoard(10, 10);
 		const input = makeInput({
-			deposits: [{ x: 2, z: 2 }, { x: 8, z: 8 }],
+			deposits: [
+				{ x: 2, z: 2 },
+				{ x: 8, z: 8 },
+			],
 		});
 		const map = computeInfluenceMap(board, input, 1);
 
@@ -199,7 +218,11 @@ describe("getTopTiles", () => {
 	});
 
 	it("returns fewer tiles if not enough positive-value tiles exist", () => {
-		const board = makeBoard(2, 2, [[0, 0], [1, 0], [0, 1]]); // only (1,1) passable
+		const board = makeBoard(2, 2, [
+			[0, 0],
+			[1, 0],
+			[0, 1],
+		]); // only (1,1) passable
 		const map = computeInfluenceMap(board, makeInput(), 1);
 		const top = getTopTiles(map, 10);
 		expect(top.length).toBeLessThanOrEqual(1);

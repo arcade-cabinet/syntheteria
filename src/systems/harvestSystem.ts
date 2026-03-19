@@ -1,6 +1,5 @@
 import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
-import { pushTurnEvent } from "../ui/game/turnEvents";
 import type { RobotClass } from "../robots/types";
 import type { ResourceMaterial } from "../terrain/types";
 import {
@@ -11,6 +10,7 @@ import {
 	UnitVisual,
 	UnitXP,
 } from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
 import { awardXP, recordHarvest } from "./experienceSystem";
 import { trackIncome } from "./resourceDeltaSystem";
 import { addResources } from "./resourceSystem";

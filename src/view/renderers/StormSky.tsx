@@ -28,8 +28,11 @@ import { Sparkles } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { WORMHOLE_PROJECT_TURNS } from "../../config";
-import { STORM_VISUAL_PARAMS, WORMHOLE_CYCLE } from "../../config";
+import {
+	STORM_VISUAL_PARAMS,
+	WORMHOLE_CYCLE,
+	WORMHOLE_PROJECT_TURNS,
+} from "../../config";
 import { getWormholeProjectState } from "../../systems";
 import { STORM_PROFILE_SPECS, type StormProfile } from "../../world/config";
 
@@ -358,7 +361,16 @@ export function StormSky({
 			uWormholeProgress: { value: 0 },
 		}),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[],
+		[
+			dayAngle,
+			season,
+			stormParams.cloudDetailScale,
+			stormParams.cloudSpeed,
+			stormParams.fogDensity,
+			stormParams.lightningIntervalMax,
+			stormParams.lightningIntervalMin,
+			stormParams.skyTintShift,
+		],
 	);
 
 	useFrame((state) => {

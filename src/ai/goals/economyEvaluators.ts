@@ -9,10 +9,10 @@ import type { SyntheteriaAgent } from "../agents/SyntheteriaAgent";
 import {
 	type BuildOption,
 	getTurnContext,
-	manhattan,
-	quadraticDecay,
 	logistic,
+	manhattan,
 	momentumBonus,
+	quadraticDecay,
 } from "./turnContext";
 
 // ---------------------------------------------------------------------------
@@ -99,7 +99,8 @@ function dynamicBuildPriority(existingTypes: Record<string, number>): string[] {
 	// Critical infrastructure gaps — order matters
 	if ((existingTypes["synthesizer"] ?? 0) === 0) priority.push("synthesizer");
 	if ((existingTypes["motor_pool"] ?? 0) === 0) priority.push("motor_pool");
-	if ((existingTypes["storm_transmitter"] ?? 0) === 0) priority.push("storm_transmitter");
+	if ((existingTypes["storm_transmitter"] ?? 0) === 0)
+		priority.push("storm_transmitter");
 	if ((existingTypes["research_lab"] ?? 0) === 0) priority.push("research_lab");
 
 	// Growth buildings
@@ -125,9 +126,10 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		// Smooth saturation curve: fewer buildings -> higher desire
 		const buildingBonus = quadraticDecay(_ctx.factionBuildingCount, 30);
 		// Logistic motor pool urgency: 0 pools -> 0.5 bonus, 1 -> 0.25, 2+ -> ~0
-		const motorPoolBonus = _ctx.motorPoolCount < 2
-			? 0.5 * quadraticDecay(_ctx.motorPoolCount, 2)
-			: 0;
+		const motorPoolBonus =
+			_ctx.motorPoolCount < 2
+				? 0.5 * quadraticDecay(_ctx.motorPoolCount, 2)
+				: 0;
 		// Smooth time ramp via logistic — centered at turn 10
 		const timeRamp = logistic(_ctx.currentTurn, 10, 0.3);
 
@@ -135,16 +137,24 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			// Can afford something — high desire with smooth components
 			return Math.min(
 				1,
-				0.55 + buildingBonus * 0.3 + motorPoolBonus + timeRamp * 0.15
-					+ momentumBonus(agent, "build"),
+				0.55 +
+					buildingBonus * 0.3 +
+					motorPoolBonus +
+					timeRamp * 0.15 +
+					momentumBonus(agent, "build"),
 			);
 		}
 
 		// Can't afford anything yet — maintain moderate desire if the faction
 		// has infrastructure (drives units to harvest toward building goals)
 		if (_ctx.factionBuildingCount === 0 && _ctx.motorPoolCount === 0) return 0;
-		return Math.min(1, 0.2 + buildingBonus * 0.15 + motorPoolBonus * 0.5
-			+ momentumBonus(agent, "build"));
+		return Math.min(
+			1,
+			0.2 +
+				buildingBonus * 0.15 +
+				motorPoolBonus * 0.5 +
+				momentumBonus(agent, "build"),
+		);
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -152,8 +162,7 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		const buildPriority = dynamicBuildPriority(_ctx.existingBuildingTypes);
 
 		// When near pop cap (>= 80%), outpost gets top priority to raise the ceiling
-		const nearPopCap =
-			_ctx.popCap > 0 && _ctx.unitCount >= _ctx.popCap * 0.8;
+		const nearPopCap = _ctx.popCap > 0 && _ctx.unitCount >= _ctx.popCap * 0.8;
 
 		let best: BuildOption | null = null;
 		let bestPriority = buildPriority.length;
@@ -234,20 +243,25 @@ export class FloorMineEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 
 		// If salvage deposits are close, floor mining is less appealing
 		// Smooth curve: deposit at dist 0 -> 0.1 score, deposit far -> full mining score
-		const depositPenalty = nearestDeposit <= agent.scanRange * 2
-			? 0.6 * quadraticDecay(nearestDeposit, agent.scanRange * 2)
-			: 0;
+		const depositPenalty =
+			nearestDeposit <= agent.scanRange * 2
+				? 0.6 * quadraticDecay(nearestDeposit, agent.scanRange * 2)
+				: 0;
 
 		// Mine score: high when adjacent, moderate when distant
-		const mineScore = nearestMine <= 1 ? 0.7 : 0.15 + 0.25 * quadraticDecay(nearestMine, 15);
+		const mineScore =
+			nearestMine <= 1 ? 0.7 : 0.15 + 0.25 * quadraticDecay(nearestMine, 15);
 
 		// Time escalation: mining urgency rises when deposits are running out
-		const mineTimeBoost = _ctx.totalDeposits < 10
-			? logistic(_ctx.currentTurn, 25, 0.2) * 0.2
-			: 0;
+		const mineTimeBoost =
+			_ctx.totalDeposits < 10 ? logistic(_ctx.currentTurn, 25, 0.2) * 0.2 : 0;
 
-		return Math.min(1, Math.max(0.15, mineScore - depositPenalty) + mineTimeBoost
-			+ momentumBonus(agent, "mine"));
+		return Math.min(
+			1,
+			Math.max(0.15, mineScore - depositPenalty) +
+				mineTimeBoost +
+				momentumBonus(agent, "mine"),
+		);
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {

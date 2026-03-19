@@ -5,11 +5,7 @@
  */
 
 import type { World } from "koota";
-import {
-	getAvailableTechs,
-	getResearchState,
-	queueResearch,
-} from "../systems";
+import { getAvailableTechs, getResearchState, queueResearch } from "../systems";
 import { isCultFactionId } from "./aiHelpers";
 
 // ---------------------------------------------------------------------------

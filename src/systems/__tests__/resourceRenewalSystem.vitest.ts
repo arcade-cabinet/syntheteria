@@ -1,6 +1,6 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Building, Powered, Faction, ResourcePool } from "../../traits";
+import { Building, Faction, Powered, ResourcePool } from "../../traits";
 import { RENEWAL_YIELDS, runResourceRenewal } from "../resourceRenewalSystem";
 
 describe("resourceRenewalSystem", () => {

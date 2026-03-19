@@ -8,8 +8,8 @@
 
 import type { World } from "koota";
 import { useCallback, useEffect, useRef } from "react";
-import { TILE_SIZE_M } from "../../board";
 import type { GeneratedBoard } from "../../board";
+import { TILE_SIZE_M } from "../../board";
 import { getCameraControls } from "../../camera";
 import { FACTION_COLORS } from "../../config";
 import { getRelation } from "../../factions";

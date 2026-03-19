@@ -11,14 +11,14 @@
  */
 
 import type { World } from "koota";
-import type { FactionStateId } from "../fsm/FactionFSM";
-import {
-	proposeAlliance,
-	declareWar,
-	getStandingLevel,
-	getDiplomacyPersonality,
-} from "../../systems";
 import { getRelation } from "../../factions";
+import {
+	declareWar,
+	getDiplomacyPersonality,
+	getStandingLevel,
+	proposeAlliance,
+} from "../../systems";
+import type { FactionStateId } from "../fsm/FactionFSM";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -213,8 +213,7 @@ function findAllianceTarget(
 
 		const standingLevel = getStandingLevel(world, ctx.factionId, otherId);
 		// Don't propose if unfriendly or hostile standing
-		if (standingLevel === "hostile" || standingLevel === "unfriendly")
-			continue;
+		if (standingLevel === "hostile" || standingLevel === "unfriendly") continue;
 
 		const theirUnits = ctx.factionUnitCounts.get(otherId) ?? 0;
 

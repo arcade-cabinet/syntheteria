@@ -12,6 +12,7 @@
 			"!tests/e2e/**",
 			"!tests/components/**",
 			"!tests/visual/**",
+			"!poc*.html",
 			"!assets/coi-serviceworker.js",
 			"!public/assets/coi-serviceworker.js",
 			"!.claude/worktrees/**"

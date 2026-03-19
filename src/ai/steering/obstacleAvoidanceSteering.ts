@@ -30,11 +30,7 @@ const AVOIDANCE_WEIGHT = 2.0;
 /**
  * Check if a tile is an obstacle (impassable or structural_mass wall).
  */
-function isObstacle(
-	x: number,
-	z: number,
-	board: GeneratedBoard,
-): boolean {
+function isObstacle(x: number, z: number, board: GeneratedBoard): boolean {
 	const { width, height } = board.config;
 	if (x < 0 || z < 0 || x >= width || z >= height) return true;
 	const tile = board.tiles[z]?.[x];
@@ -199,7 +195,12 @@ export function pickAvoidanceTile(
 
 		// Penalty for tiles adjacent to obstacles (prefer open tiles)
 		let adjObstacles = 0;
-		const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+		const dirs = [
+			[-1, 0],
+			[1, 0],
+			[0, -1],
+			[0, 1],
+		];
 		for (const [ddx, ddz] of dirs) {
 			if (isObstacle(tile.x + ddx, tile.z + ddz, board)) {
 				adjObstacles++;

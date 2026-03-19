@@ -7,9 +7,9 @@
 
 export { Board } from "./board";
 export {
+	BotFabricator,
 	Building,
 	type BuildingType,
-	BotFabricator,
 	Powered,
 	PowerGrid,
 	SignalNode,

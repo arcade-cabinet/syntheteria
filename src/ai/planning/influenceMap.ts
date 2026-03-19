@@ -124,7 +124,10 @@ export function computeInfluenceMap(
 				}
 			}
 			// Normalize to 0-1 range
-			resourceScore = Math.min(1, resourceScore / Math.max(1, input.deposits.length * 0.3));
+			resourceScore = Math.min(
+				1,
+				resourceScore / Math.max(1, input.deposits.length * 0.3),
+			);
 
 			// Enemy threat — sum of inverse distances to enemies
 			let threatScore = 0;
@@ -134,7 +137,10 @@ export function computeInfluenceMap(
 					threatScore += 1 - dist / THREAT_INFLUENCE_RADIUS;
 				}
 			}
-			threatScore = Math.min(1, threatScore / Math.max(1, input.enemies.length * 0.2));
+			threatScore = Math.min(
+				1,
+				threatScore / Math.max(1, input.enemies.length * 0.2),
+			);
 
 			// Friendly force projection — tiles near friendlies are safer
 			let friendlyScore = 0;
@@ -170,7 +176,13 @@ export function computeInfluenceMap(
 				chokeScore * WEIGHTS.choke +
 				friendlyScore * WEIGHTS.friendly;
 
-			row.push({ value, resourceScore, threatScore, frontierScore, chokeScore });
+			row.push({
+				value,
+				resourceScore,
+				threatScore,
+				frontierScore,
+				chokeScore,
+			});
 		}
 		cells.push(row);
 	}

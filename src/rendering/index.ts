@@ -7,115 +7,37 @@
 
 // --- Sphere geometry ---
 export {
+	buildSphereGeometry,
 	SEGS,
+	spherePosToTile,
 	sphereRadius,
 	tileToSpherePos,
-	spherePosToTile,
-	buildSphereGeometry,
 } from "./boardGeometry";
-
-// --- Sphere placement ---
-export {
-	sphereModelPlacement,
-	sphereModelPlacementWithRotation,
-	worldToTileCoords,
-} from "./spherePlacement";
+export type { DepthLayerStack } from "./depthLayerStack";
 
 // --- Depth layers ---
-export { createDepthLayerStack, boardToDepthLayers } from "./depthLayerStack";
-export type { DepthLayerStack } from "./depthLayerStack";
-export {
-	STRUCTURAL_ATLAS_INDEX,
-	GRAVEL_ATLAS_INDEX,
-	GRATING_ATLAS_INDEX,
-	VOID_ATLAS_INDEX,
-	createDepthMappedLayer,
-	classifyEdges,
-	buildLayerGeometry,
-	applyTargetedDig,
-} from "./depthMappedLayer";
+export { boardToDepthLayers, createDepthLayerStack } from "./depthLayerStack";
 export type {
+	DepthMappedLayer,
 	EdgeDirection,
 	EdgeType,
 	FloorQuad,
-	RampQuad,
-	WallQuad,
-	VoidPlane,
 	LayerGeometryResult,
-	DepthMappedLayer,
+	RampQuad,
+	VoidPlane,
+	WallQuad,
 } from "./depthMappedLayer";
-
-// --- Materials ---
-export { makeHeightMaterial, updateHeightChronometry } from "./heightMaterial";
-
-// --- Model paths ---
 export {
-	INFRA_PIPE_MODELS,
-	INFRA_SUPPORT_MODELS,
-	INFRA_GATEWAY_MODELS,
-	INFRA_MONORAIL_MODELS,
-	INFRA_TUNNEL_MODELS,
-	INFRA_ANTENNA_MODELS,
-	INFRA_LIGHT_MODELS,
-	INFRA_POWER_MODELS,
-	INFRA_LANDING_MODELS,
-	INFRA_DECON_MODEL,
-	getAllInfraModelUrls,
-	BUILDING_BASEMODULE_MODELS,
-	BUILDING_CARGODEPOT_MODELS,
-	BUILDING_COLONY_MODELS,
-	BUILDING_PRODUCTION_MODELS,
-	DEFENSE_TURRET_MODELS,
-	DEFENSE_BARRIER_MODELS,
-	DEFENSE_GATE_MODELS,
-	DEFENSE_MISC_MODELS,
-	LOGISTICS_CARGO_MODELS,
-	LOGISTICS_DOOR_MODELS,
-	STRUCTURE_WALL_MODELS,
-	STRUCTURE_WINDOW_WALL_MODELS,
-	STRUCTURE_DOOR_WALL_MODELS,
-	STRUCTURE_DOOR_MODELS,
-	STRUCTURE_COLUMN_MODELS,
-	STRUCTURE_FLOOR_MODELS,
-	STRUCTURE_FLOOR_SIDE_MODELS,
-	STRUCTURE_FLOOR_CORNER_MODELS,
-	STRUCTURE_FLOOR_HALLWAY_MODELS,
-	STRUCTURE_ROOF_MODELS,
-	STRUCTURE_ROOF_CORNER_MODELS,
-	STRUCTURE_DETAIL_MODELS,
-	STRUCTURE_PIPES_MODEL,
-	STRUCTURE_STAIRCASE_MODEL,
-	resolveStructureModelUrl,
-	getAllStructureModelUrls,
-	FACTION_COLORS as MODEL_FACTION_COLORS,
-	setPlayerFactionColor,
-	resolveSalvageModelUrl,
-	resolveBuildingModelUrl,
-	resolveRobotModelUrl,
-	getAllSalvageModelUrls,
-	getAllBuildingModelUrls,
-	getAllRobotModelUrls,
-} from "./modelPaths";
-
-// --- Structure helpers ---
-export {
-	getStructuralEdges,
-	getColumnPositions,
-	getInteriorTiles,
-	wallHeight,
-} from "./structureHelpers";
-export type { StructuralEdge, ColumnPosition } from "./structureHelpers";
-
-// --- Tile visibility ---
-export { buildExploredSet, isTileExplored } from "./tileVisibility";
-
-// --- Unit detection ---
-export { isUnitDetected } from "./unitDetection";
-export type { Scanner } from "./unitDetection";
-
-// --- Faction colors (unaliased for view/ consumers) ---
-export { FACTION_COLORS } from "./modelPaths";
-
+	applyTargetedDig,
+	buildLayerGeometry,
+	classifyEdges,
+	createDepthMappedLayer,
+	GRATING_ATLAS_INDEX,
+	GRAVEL_ATLAS_INDEX,
+	STRUCTURAL_ATLAS_INDEX,
+	VOID_ATLAS_INDEX,
+} from "./depthMappedLayer";
+export { cinematicState } from "./globe/cinematicState";
 // --- Globe shaders ---
 export {
 	globeFragmentShader,
@@ -127,18 +49,90 @@ export {
 	stormFragmentShader,
 	stormVertexShader,
 } from "./globe/shaders";
-export { cinematicState } from "./globe/cinematicState";
-
-// --- Sky chronometry ---
-export { turnToChronometry } from "./sky/chronometry";
-export type { Chronometry } from "./sky/chronometry";
-
-// --- Particles ---
-export { pushEffect, drainEffects, clearEffects, getEffectQueueLength } from "./particles/effectEvents";
-export type { EffectType, EffectEvent } from "./particles/effectEvents";
-export { ParticlePool } from "./particles/ParticlePool";
-export type { ParticleConfig } from "./particles/ParticlePool";
-
 // --- GLSL shaders (raw) ---
 export { default as fogOfWarSphereFrag } from "./glsl/fogOfWarSphereFrag.glsl";
 export { default as fogOfWarSphereVert } from "./glsl/fogOfWarSphereVert.glsl";
+// --- Materials ---
+export { makeHeightMaterial, updateHeightChronometry } from "./heightMaterial";
+// --- Model paths ---
+// --- Faction colors (unaliased for view/ consumers) ---
+export {
+	BUILDING_BASEMODULE_MODELS,
+	BUILDING_CARGODEPOT_MODELS,
+	BUILDING_COLONY_MODELS,
+	BUILDING_PRODUCTION_MODELS,
+	DEFENSE_BARRIER_MODELS,
+	DEFENSE_GATE_MODELS,
+	DEFENSE_MISC_MODELS,
+	DEFENSE_TURRET_MODELS,
+	FACTION_COLORS as MODEL_FACTION_COLORS,
+	FACTION_COLORS,
+	getAllBuildingModelUrls,
+	getAllInfraModelUrls,
+	getAllRobotModelUrls,
+	getAllSalvageModelUrls,
+	getAllStructureModelUrls,
+	INFRA_ANTENNA_MODELS,
+	INFRA_DECON_MODEL,
+	INFRA_GATEWAY_MODELS,
+	INFRA_LANDING_MODELS,
+	INFRA_LIGHT_MODELS,
+	INFRA_MONORAIL_MODELS,
+	INFRA_PIPE_MODELS,
+	INFRA_POWER_MODELS,
+	INFRA_SUPPORT_MODELS,
+	INFRA_TUNNEL_MODELS,
+	LOGISTICS_CARGO_MODELS,
+	LOGISTICS_DOOR_MODELS,
+	resolveBuildingModelUrl,
+	resolveRobotModelUrl,
+	resolveSalvageModelUrl,
+	resolveStructureModelUrl,
+	STRUCTURE_COLUMN_MODELS,
+	STRUCTURE_DETAIL_MODELS,
+	STRUCTURE_DOOR_MODELS,
+	STRUCTURE_DOOR_WALL_MODELS,
+	STRUCTURE_FLOOR_CORNER_MODELS,
+	STRUCTURE_FLOOR_HALLWAY_MODELS,
+	STRUCTURE_FLOOR_MODELS,
+	STRUCTURE_FLOOR_SIDE_MODELS,
+	STRUCTURE_PIPES_MODEL,
+	STRUCTURE_ROOF_CORNER_MODELS,
+	STRUCTURE_ROOF_MODELS,
+	STRUCTURE_STAIRCASE_MODEL,
+	STRUCTURE_WALL_MODELS,
+	STRUCTURE_WINDOW_WALL_MODELS,
+	setPlayerFactionColor,
+} from "./modelPaths";
+export type { EffectEvent, EffectType } from "./particles/effectEvents";
+// --- Particles ---
+export {
+	clearEffects,
+	drainEffects,
+	getEffectQueueLength,
+	pushEffect,
+} from "./particles/effectEvents";
+export type { ParticleConfig } from "./particles/ParticlePool";
+export { ParticlePool } from "./particles/ParticlePool";
+export type { Chronometry } from "./sky/chronometry";
+// --- Sky chronometry ---
+export { turnToChronometry } from "./sky/chronometry";
+// --- Sphere placement ---
+export {
+	sphereModelPlacement,
+	sphereModelPlacementWithRotation,
+	worldToTileCoords,
+} from "./spherePlacement";
+export type { ColumnPosition, StructuralEdge } from "./structureHelpers";
+// --- Structure helpers ---
+export {
+	getColumnPositions,
+	getInteriorTiles,
+	getStructuralEdges,
+	wallHeight,
+} from "./structureHelpers";
+// --- Tile visibility ---
+export { buildExploredSet, isTileExplored } from "./tileVisibility";
+export type { Scanner } from "./unitDetection";
+// --- Unit detection ---
+export { isUnitDetected } from "./unitDetection";

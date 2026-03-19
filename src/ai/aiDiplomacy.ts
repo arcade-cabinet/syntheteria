@@ -7,12 +7,12 @@
 
 import type { World } from "koota";
 import type { AgentSnapshot } from "./agents/SyntheteriaAgent";
-import { isCultFactionId, countFactionTerritory } from "./aiHelpers";
+import { countFactionTerritory, isCultFactionId } from "./aiHelpers";
 import { getFactionFSM } from "./fsm/FactionFSM";
 import {
+	type DiplomaticContext,
 	decideDiplomacy,
 	executeDiplomacy,
-	type DiplomaticContext,
 } from "./planning/diplomaticAi";
 
 // ---------------------------------------------------------------------------

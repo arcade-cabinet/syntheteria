@@ -17,7 +17,7 @@ function makeConfig(seed: string, size = 44): BoardConfig {
 	return { width: size, height: size, seed, difficulty: "normal" };
 }
 
-function countByElevation(tiles: TileData[][]): Map<number, number> {
+function _countByElevation(tiles: TileData[][]): Map<number, number> {
 	const counts = new Map<number, number>();
 	for (const row of tiles) {
 		for (const t of row) {
@@ -27,7 +27,7 @@ function countByElevation(tiles: TileData[][]): Map<number, number> {
 	return counts;
 }
 
-function getPassableTiles(tiles: TileData[][]): TileData[] {
+function _getPassableTiles(tiles: TileData[][]): TileData[] {
 	const result: TileData[] = [];
 	for (const row of tiles) {
 		for (const t of row) {

@@ -292,7 +292,7 @@ export const MARK_EFFECTS: Record<
 	BotMark,
 	{ hp?: number; ap?: number; mp?: number; scanRange?: number }
 > = Object.fromEntries(
-	(Object.entries(MARK_DEFS) as Array<[BotMark, MarkDef]>).map(([k, v]) => [
+	(Object.entries(MARK_DEFS) as [BotMark, MarkDef][]).map(([k, v]) => [
 		k,
 		v.effects,
 	]),

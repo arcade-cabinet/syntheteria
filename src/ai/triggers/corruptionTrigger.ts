@@ -30,7 +30,9 @@ function alertKey(entityId: number, poiX: number, poiZ: number): string {
 }
 
 function contactKey(factionA: string, factionB: string): string {
-	return factionA < factionB ? `${factionA}:${factionB}` : `${factionB}:${factionA}`;
+	return factionA < factionB
+		? `${factionA}:${factionB}`
+		: `${factionB}:${factionA}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,8 +81,7 @@ export function checkCorruptionTriggers(
 		if (isCultFaction(faction.factionId)) continue;
 
 		for (const poi of pois) {
-			const dist =
-				Math.abs(pos.tileX - poi.x) + Math.abs(pos.tileZ - poi.z);
+			const dist = Math.abs(pos.tileX - poi.x) + Math.abs(pos.tileZ - poi.z);
 			if (dist > poi.radius) continue;
 
 			const key = alertKey(e.id(), poi.x, poi.z);
@@ -90,12 +91,7 @@ export function checkCorruptionTriggers(
 
 			// Fire alert for player faction only (others don't need UI alerts)
 			if (faction.factionId === "player") {
-				pushAlert(
-					"cult",
-					"CORRUPTION ZONE DETECTED",
-					poi.x,
-					poi.z,
-				);
+				pushAlert("cult", "CORRUPTION ZONE DETECTED", poi.x, poi.z);
 			}
 
 			events.push({
@@ -151,8 +147,7 @@ export function checkFactionContact(
 			const key = contactKey(a.factionId, b.factionId);
 			if (_contactedPairs.has(key)) continue;
 
-			const dist =
-				Math.abs(a.tileX - b.tileX) + Math.abs(a.tileZ - b.tileZ);
+			const dist = Math.abs(a.tileX - b.tileX) + Math.abs(a.tileZ - b.tileZ);
 			// Contact range: 8 tiles (roughly scan range)
 			if (dist > 8) continue;
 

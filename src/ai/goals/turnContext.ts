@@ -5,8 +5,8 @@
  * The context is set once per faction turn via `setTurnContext()`.
  */
 
-import type { UnitInfo } from "../steering/interposeSteering";
 import type { SyntheteriaAgent } from "../agents/SyntheteriaAgent";
+import type { UnitInfo } from "../steering/interposeSteering";
 
 // Context injected before arbitration — shared mutable state per faction turn
 export interface BuildOption {
@@ -111,7 +111,12 @@ export function getTurnContext(): TurnContext {
 // Response curve helpers — smooth scoring, no if/else thresholds
 // ---------------------------------------------------------------------------
 
-export function manhattan(ax: number, az: number, bx: number, bz: number): number {
+export function manhattan(
+	ax: number,
+	az: number,
+	bx: number,
+	bz: number,
+): number {
 	return Math.abs(ax - bx) + Math.abs(az - bz);
 }
 
@@ -130,7 +135,10 @@ export function quadraticDecay(dist: number, maxDist: number): number {
  * Momentum bonus: +0.1 if the agent's last action matches the given type.
  * Encourages units to finish what they started. NEVER applies to idle.
  */
-export function momentumBonus(agent: SyntheteriaAgent, actionType: string): number {
+export function momentumBonus(
+	agent: SyntheteriaAgent,
+	actionType: string,
+): number {
 	if (actionType === "idle") return 0;
 	return agent.lastActionType === actionType ? 0.1 : 0;
 }

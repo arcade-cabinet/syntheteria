@@ -70,8 +70,6 @@ describe("src/camera index exports", () => {
 
 	it("does NOT export IsometricCamera (deleted)", async () => {
 		const mod = await import("../index");
-		expect(
-			(mod as Record<string, unknown>).IsometricCamera,
-		).toBeUndefined();
+		expect((mod as Record<string, unknown>).IsometricCamera).toBeUndefined();
 	});
 });

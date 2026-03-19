@@ -27,8 +27,8 @@ import {
 import {
 	BotFabricator,
 	Building,
-	Powered,
 	Faction,
+	Powered,
 	ResourcePool,
 	UnitFaction,
 	UnitPos,

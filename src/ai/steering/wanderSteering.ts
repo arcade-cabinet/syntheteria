@@ -151,15 +151,17 @@ export function pickWanderTile(
 
 	// Check if we're near the edge of patrol radius — bias toward center
 	const distToCenter =
-		Math.abs(unitPos.x - patrolCenter.x) +
-		Math.abs(unitPos.z - patrolCenter.z);
+		Math.abs(unitPos.x - patrolCenter.x) + Math.abs(unitPos.z - patrolCenter.z);
 
 	let finalDx = wander.dx;
 	let finalDz = wander.dz;
 
 	if (distToCenter > patrolRadius * 0.7) {
 		// Blend in a return-to-center bias proportional to how far out we are
-		const overshoot = Math.min(1, (distToCenter - patrolRadius * 0.7) / (patrolRadius * 0.3));
+		const overshoot = Math.min(
+			1,
+			(distToCenter - patrolRadius * 0.7) / (patrolRadius * 0.3),
+		);
 		const toCenterX = patrolCenter.x - unitPos.x;
 		const toCenterZ = patrolCenter.z - unitPos.z;
 		const tcLen = Math.sqrt(toCenterX * toCenterX + toCenterZ * toCenterZ);

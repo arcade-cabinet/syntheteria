@@ -319,7 +319,7 @@ describe("classActions", () => {
 		});
 
 		it("all actions have non-empty labels and descriptions", () => {
-			for (const [cls, actions] of Object.entries(CLASS_ACTIONS)) {
+			for (const [_cls, actions] of Object.entries(CLASS_ACTIONS)) {
 				for (const a of actions) {
 					expect(a.label.length).toBeGreaterThan(0);
 					expect(a.description.length).toBeGreaterThan(0);

@@ -20,8 +20,8 @@
 import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
 import { WORMHOLE_PROJECT_TURNS } from "../config/gameDefaults";
-import { pushTurnEvent } from "../ui/game/turnEvents";
 import { Board, Building } from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
 import { isTechResearched } from "./researchSystem";
 import { pushToast } from "./toastNotifications";
 

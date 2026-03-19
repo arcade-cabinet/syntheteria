@@ -16,19 +16,24 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
 import { BUILDING_DEFS } from "../../buildings/definitions";
 import {
-	Faction,
-	ResourcePool,
+	FabricationJob,
+	queueFabrication,
+	ROBOT_COSTS,
+	runPowerGrid,
+} from "../../systems";
+import {
+	Board,
 	BotFabricator,
 	Building,
 	type BuildingType,
+	Faction,
 	Powered,
 	PowerGrid,
-	Board,
+	ResourcePool,
 	UnitFaction,
 	UnitPos,
 	UnitStats,
 } from "../../traits";
-import { FabricationJob, queueFabrication, ROBOT_COSTS, runPowerGrid } from "../../systems";
 import { resetAIRuntime, runYukaAiTurns } from "../yukaAiTurnSystem";
 
 // ---------------------------------------------------------------------------
@@ -255,9 +260,12 @@ describe("AI fabrication chain", () => {
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "reclaimers" }),
 			UnitStats({
-				hp: 10, maxHp: 10,
-				ap: 3, maxAp: 3,
-				mp: 3, maxMp: 3,
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				mp: 3,
+				maxMp: 3,
 				scanRange: 4,
 				attackRange: 1,
 				attack: 2,
@@ -287,7 +295,9 @@ describe("AI fabrication chain", () => {
 	});
 
 	it("starter buildings include a motor_pool for each faction", async () => {
-		const { placeStarterBuildings } = await import("../../systems/buildingPlacement");
+		const { placeStarterBuildings } = await import(
+			"../../systems/buildingPlacement"
+		);
 		const { computeSpawnCenters } = await import("../../robots/placement");
 
 		const board = makeBoard(32, 32);
@@ -300,10 +310,7 @@ describe("AI fabrication chain", () => {
 			isPassable: () => true,
 			getFloorType: () => "durasteel_span" as const,
 		};
-		computeSpawnCenters(boardInfo, null, [
-			"reclaimers",
-			"volt_collective",
-		]);
+		computeSpawnCenters(boardInfo, null, ["reclaimers", "volt_collective"]);
 
 		placeStarterBuildings(world, board);
 		runPowerGrid(world);

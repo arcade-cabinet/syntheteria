@@ -1,10 +1,10 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
+import { Faction } from "../../traits";
 import { CULT_DEFINITIONS } from "../cults";
 import { FACTION_DEFINITIONS } from "../definitions";
 import { initFactions } from "../init";
 import { getRelation, isHostile, setRelation } from "../relations";
-import { Faction } from "../../traits";
 
 describe("FACTION_DEFINITIONS", () => {
 	it("has 4 entries (no hardcoded player faction)", () => {

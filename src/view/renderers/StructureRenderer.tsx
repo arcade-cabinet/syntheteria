@@ -18,12 +18,15 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { type ReactNode, Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board";
 import type { GeneratedBoard } from "../../board";
-import { seedToFloat } from "../../terrain";
-import { ModelErrorBoundary } from "../ModelErrorBoundary";
+import { TILE_SIZE_M } from "../../board";
 import {
+	buildExploredSet,
+	type ColumnPosition,
 	getAllStructureModelUrls,
+	getColumnPositions,
+	getInteriorTiles,
+	getStructuralEdges,
 	resolveStructureModelUrl,
 	STRUCTURE_COLUMN_MODELS,
 	STRUCTURE_ROOF_CORNER_MODELS,
@@ -31,20 +34,13 @@ import {
 	STRUCTURE_STAIRCASE_MODEL,
 	STRUCTURE_WALL_MODELS,
 	STRUCTURE_WINDOW_WALL_MODELS,
-} from "../../rendering";
-import {
+	type StructuralEdge,
 	sphereModelPlacement,
 	sphereModelPlacementWithRotation,
 	worldToTileCoords,
 } from "../../rendering";
-import {
-	type ColumnPosition,
-	getColumnPositions,
-	getInteriorTiles,
-	getStructuralEdges,
-	type StructuralEdge,
-} from "../../rendering";
-import { buildExploredSet } from "../../rendering";
+import { seedToFloat } from "../../terrain";
+import { ModelErrorBoundary } from "../ModelErrorBoundary";
 
 // Lazy preload to avoid circular dep at module init
 let _structurePreloaded = false;

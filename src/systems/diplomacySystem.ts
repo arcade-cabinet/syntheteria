@@ -41,7 +41,7 @@ import {
 	setRelation,
 	setStanding,
 } from "../factions/relations";
-import { UnitFaction, UnitPos, UnitStats, FactionRelation } from "../traits";
+import { FactionRelation, UnitFaction, UnitPos, UnitStats } from "../traits";
 import { revealFog } from "./fogRevealSystem";
 import { pushToast } from "./toastNotifications";
 
@@ -562,7 +562,6 @@ export function getDiplomacyPersonality(
 ): DiplomacyPersonality | null {
 	return DIPLOMACY_PERSONALITY[factionId] ?? null;
 }
-
 
 /** Reset module state — for tests. */
 export function _resetDiplomacy(): void {

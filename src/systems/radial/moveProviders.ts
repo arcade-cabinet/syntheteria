@@ -13,7 +13,11 @@ import { clearHighlights } from "../../systems/highlightSystem";
 import { UnitMove, UnitPos, UnitStats } from "../../traits";
 import type { RadialOpenContext } from "../radialMenu";
 import { registerRadialProvider } from "../radialMenu";
-import { getBoardRef, getSelectedPlayerUnit, getWorldRef } from "./providerState";
+import {
+	getBoardRef,
+	getSelectedPlayerUnit,
+	getWorldRef,
+} from "./providerState";
 
 // --- MOVE provider ---
 

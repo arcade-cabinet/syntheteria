@@ -9,10 +9,7 @@ import type { World } from "koota";
 import { playSfx } from "../audio";
 import type { GeneratedBoard } from "../board";
 import { BUILDING_DEFS } from "../buildings";
-import {
-	canAfford,
-	spendResources,
-} from "../systems";
+import { canAfford, spendResources } from "../systems";
 import type { ResourceMaterial } from "../terrain";
 import {
 	Board,
@@ -23,11 +20,8 @@ import {
 	StorageCapacity,
 } from "../traits";
 import type { AgentSnapshot } from "./agents/SyntheteriaAgent";
+import { getFactionBuildings, isCultFactionId } from "./aiHelpers";
 import type { BuildOption } from "./goals/evaluators";
-import {
-	isCultFactionId,
-	getFactionBuildings,
-} from "./aiHelpers";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -85,7 +79,8 @@ export function computeBuildOptions(
 	for (const e of world.query(Building)) {
 		const b = e.get(Building);
 		if (b && b.factionId === factionId) {
-			existingCounts[b.buildingType] = (existingCounts[b.buildingType] || 0) + 1;
+			existingCounts[b.buildingType] =
+				(existingCounts[b.buildingType] || 0) + 1;
 		}
 	}
 
@@ -108,7 +103,12 @@ export function computeBuildOptions(
 
 		// Search near existing buildings first, then near units
 		const tile =
-			findBuildTileNear(factionBuildingPositions, board, occupiedTiles, wrapX) ??
+			findBuildTileNear(
+				factionBuildingPositions,
+				board,
+				occupiedTiles,
+				wrapX,
+			) ??
 			findBuildTileNear(
 				units.map((u) => ({ x: u.tileX, z: u.tileZ })),
 				board,
@@ -257,7 +257,10 @@ export function runAiBuilding(
 	let currentTurn = 1;
 	for (const e of world.query(Board)) {
 		const b = e.get(Board);
-		if (b) { currentTurn = b.turn; break; }
+		if (b) {
+			currentTurn = b.turn;
+			break;
+		}
 	}
 
 	for (const factionId of factionIds) {
@@ -318,20 +321,24 @@ export function runAiBuilding(
  * Dynamic build order based on what the faction is missing.
  * Critical gaps jump to the front; then growth buildings cycle.
  */
-export function dynamicAiBuildOrder(existing: Record<string, number>): string[] {
+export function dynamicAiBuildOrder(
+	existing: Record<string, number>,
+): string[] {
 	const order: string[] = [];
 
 	// Critical infrastructure gaps -- these unlock the economy chain
 	if ((existing["synthesizer"] ?? 0) === 0) order.push("synthesizer");
 	if ((existing["motor_pool"] ?? 0) === 0) order.push("motor_pool");
-	if ((existing["storm_transmitter"] ?? 0) === 0) order.push("storm_transmitter");
+	if ((existing["storm_transmitter"] ?? 0) === 0)
+		order.push("storm_transmitter");
 	if ((existing["research_lab"] ?? 0) === 0) order.push("research_lab");
 
 	// Second motor pool for throughput
 	if ((existing["motor_pool"] ?? 0) < 2) order.push("motor_pool");
 
 	// Resource refinery = renewable ferrous_scrap income (+2/turn)
-	if ((existing["resource_refinery"] ?? 0) === 0) order.push("resource_refinery");
+	if ((existing["resource_refinery"] ?? 0) === 0)
+		order.push("resource_refinery");
 
 	// Growth cycle -- outposts increase pop cap, turrets defend, then more infrastructure
 	order.push(

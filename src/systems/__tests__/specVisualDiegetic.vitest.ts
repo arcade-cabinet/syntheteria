@@ -55,7 +55,7 @@ describe("SPEC: Section 9 — Visual & Diegetic Language", () => {
 			// Extract RGB components — should be green-heavy
 			const r = (PLAYER_UNIT_COLOR >> 16) & 0xff;
 			const g = (PLAYER_UNIT_COLOR >> 8) & 0xff;
-			const b = PLAYER_UNIT_COLOR & 0xff;
+			const _b = PLAYER_UNIT_COLOR & 0xff;
 			expect(g).toBeGreaterThan(r); // Green dominates
 		});
 	});
@@ -130,7 +130,7 @@ describe("SPEC: Section 9 — Visual & Diegetic Language", () => {
 		});
 
 		it("single-action categories execute directly on inner ring click", () => {
-			let executed = false;
+			let _executed = false;
 			const provider: RadialActionProvider = {
 				id: "single_provider",
 				category: {
@@ -148,7 +148,7 @@ describe("SPEC: Section 9 — Visual & Diegetic Language", () => {
 						tone: "mint",
 						enabled: true,
 						onExecute: () => {
-							executed = true;
+							_executed = true;
 						},
 					},
 				],

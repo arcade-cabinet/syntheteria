@@ -9,15 +9,15 @@ import { GoalEvaluator } from "yuka";
 import type { SyntheteriaAgent } from "../agents/SyntheteriaAgent";
 import {
 	computeInterposeDesirability,
-	findInterposeTarget,
 	computeInterposePoint,
+	findInterposeTarget,
 } from "../steering/interposeSteering";
 import {
 	getTurnContext,
-	manhattan,
-	quadraticDecay,
 	logistic,
+	manhattan,
 	momentumBonus,
+	quadraticDecay,
 } from "./turnContext";
 
 // ---------------------------------------------------------------------------
@@ -32,10 +32,13 @@ export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		const timeScore = 0.5 + 0.4 * logistic(_ctx.currentTurn, 10, 0.3);
 
 		// If faction hasn't expanded recently (no buildings growing), escalate
-		const stagnationBonus = _ctx.factionBuildingCount < 4 && _ctx.currentTurn > 15
-			? 0.1 : 0;
+		const stagnationBonus =
+			_ctx.factionBuildingCount < 4 && _ctx.currentTurn > 15 ? 0.1 : 0;
 
-		return Math.min(1, timeScore + stagnationBonus + momentumBonus(agent, "move"));
+		return Math.min(
+			1,
+			timeScore + stagnationBonus + momentumBonus(agent, "move"),
+		);
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -132,7 +135,10 @@ export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			let bestD = 0;
 			for (const q of quadrants) {
 				const d = manhattan(agent.tileX, agent.tileZ, q.x, q.z);
-				if (d > bestD) { bestD = d; best = q; }
+				if (d > bestD) {
+					bestD = d;
+					best = q;
+				}
 			}
 			agent.decidedAction = {
 				type: "move",

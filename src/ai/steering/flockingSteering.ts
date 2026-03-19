@@ -15,8 +15,8 @@ import {
 	AlignmentBehavior,
 	CohesionBehavior,
 	SeparationBehavior,
-	Vehicle,
 	Vector3,
+	Vehicle,
 } from "yuka";
 
 // ---------------------------------------------------------------------------

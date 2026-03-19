@@ -19,6 +19,13 @@ import * as THREE from "three";
 import { playSfx } from "../../audio";
 import { ELEVATION_STEP_M, TILE_SIZE_M } from "../../board";
 import {
+	FACTION_COLORS,
+	getAllRobotModelUrls,
+	isUnitDetected,
+	resolveRobotModelUrl,
+	sphereModelPlacement,
+} from "../../rendering";
+import {
 	UnitAttack,
 	UnitFaction,
 	UnitMove,
@@ -28,13 +35,6 @@ import {
 	UnitXP,
 } from "../../traits";
 import { ModelErrorBoundary } from "../ModelErrorBoundary";
-import {
-	FACTION_COLORS,
-	getAllRobotModelUrls,
-	resolveRobotModelUrl,
-} from "../../rendering";
-import { sphereModelPlacement } from "../../rendering";
-import { isUnitDetected } from "../../rendering";
 
 // Lazy preload to avoid circular dep at module init
 let _robotPreloaded = false;

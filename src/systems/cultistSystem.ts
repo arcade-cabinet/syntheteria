@@ -10,28 +10,23 @@
  *   - cultCorruption.ts — corruption spread, structure cleanup
  */
 
+export type { StormCultistParams } from "./cultConstants";
 // --- Constants & state ---
 export {
-	getStormCultistParams,
-	getCorruptedTiles,
-	getBreachZones,
-	getAltarZones,
 	_reset,
+	getAltarZones,
+	getBreachZones,
+	getCorruptedTiles,
+	getStormCultistParams,
 } from "./cultConstants";
-export type { StormCultistParams } from "./cultConstants";
-
-// --- Escalation ---
-export { getEscalationStage, SECT_BIASES } from "./cultEscalation";
-export type { EscalationStage, SectBias } from "./cultEscalation";
-
-// --- POI ---
-export { initCultPOIs, getPOIPositions } from "./cultPOI";
-
-// --- Spawning ---
-export { initBreachZones, checkCultistSpawn } from "./cultSpawning";
-
-// --- Patrols ---
-export { runCultPatrols } from "./cultPatrols";
-
 // --- Corruption ---
 export { cleanupDestroyedStructures, spreadCorruption } from "./cultCorruption";
+export type { EscalationStage, SectBias } from "./cultEscalation";
+// --- Escalation ---
+export { getEscalationStage, SECT_BIASES } from "./cultEscalation";
+// --- Patrols ---
+export { runCultPatrols } from "./cultPatrols";
+// --- POI ---
+export { getPOIPositions, initCultPOIs } from "./cultPOI";
+// --- Spawning ---
+export { checkCultistSpawn, initBreachZones } from "./cultSpawning";

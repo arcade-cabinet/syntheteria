@@ -19,12 +19,7 @@ import type { DecidedAction } from "../agents/SyntheteriaAgent";
 // Task step types
 // ---------------------------------------------------------------------------
 
-export type TaskStepType =
-	| "move"
-	| "harvest"
-	| "build"
-	| "mine"
-	| "idle";
+export type TaskStepType = "move" | "harvest" | "build" | "mine" | "idle";
 
 export interface TaskStep {
 	type: TaskStepType;
@@ -80,10 +75,7 @@ export class UnitTaskQueue {
 	 * Produce the DecidedAction for the current step.
 	 * Returns null if the queue is done.
 	 */
-	getAction(
-		unitX: number,
-		unitZ: number,
-	): DecidedAction | null {
+	getAction(unitX: number, unitZ: number): DecidedAction | null {
 		const step = this.currentStep();
 		if (!step) return null;
 

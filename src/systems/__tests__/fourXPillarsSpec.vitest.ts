@@ -23,13 +23,13 @@ import {
 import {
 	Board,
 	Building,
+	Faction,
 	Powered,
 	PowerGrid,
-	SignalNode,
-	StorageCapacity,
-	Faction,
 	ResourceDeposit,
 	ResourcePool,
+	SignalNode,
+	StorageCapacity,
 	Tile,
 	TileHighlight,
 	UnitAttack,
@@ -61,7 +61,7 @@ function spawnPlayerFaction(world: ReturnType<typeof createWorld>) {
 	);
 }
 
-function spawnAiFaction(world: ReturnType<typeof createWorld>, id: string) {
+function _spawnAiFaction(world: ReturnType<typeof createWorld>, id: string) {
 	return world.spawn(
 		Faction({
 			id,
@@ -382,7 +382,7 @@ describe("Section 5 — eXpand", () => {
 	});
 
 	it("every building has a build cost with at least one resource", () => {
-		for (const [type, def] of Object.entries(BUILDING_DEFS)) {
+		for (const [_type, def] of Object.entries(BUILDING_DEFS)) {
 			const costEntries = Object.entries(def.buildCost).filter(
 				([, v]) => v! > 0,
 			);

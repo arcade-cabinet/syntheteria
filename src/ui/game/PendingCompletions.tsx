@@ -11,8 +11,8 @@ import type { World } from "koota";
 import { TECH_BY_ID } from "../../config";
 import {
 	FabricationJob,
-	getResearchState,
 	FUSION_RECIPES,
+	getResearchState,
 	SynthesisQueue,
 } from "../../systems";
 import { Building } from "../../traits";

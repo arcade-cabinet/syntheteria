@@ -1,9 +1,5 @@
 import { trait } from "koota";
-import type {
-	ClimateProfile,
-	Difficulty,
-	StormProfile,
-} from "../world/config";
+import type { ClimateProfile, Difficulty, StormProfile } from "../world/config";
 
 export const Board = trait({
 	width: 0,

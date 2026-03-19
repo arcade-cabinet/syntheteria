@@ -18,8 +18,8 @@
 // Re-export public API from providerState
 export {
 	setBuildProviderWorld,
-	setProviderSelectedUnit,
 	setProviderBoard,
+	setProviderSelectedUnit,
 } from "./providerState";
 
 // Side-effect imports — each file registers its providers at module scope

@@ -325,13 +325,13 @@ describe("resetAllXP", () => {
 
 describe("config validation", () => {
 	it("every role family has at least one aligned action", () => {
-		for (const [family, actions] of Object.entries(ROLE_ACTIONS)) {
+		for (const [_family, actions] of Object.entries(ROLE_ACTIONS)) {
 			expect(actions.length).toBeGreaterThan(0);
 		}
 	});
 
 	it("every robot class maps to a valid role family", () => {
-		for (const [cls, family] of Object.entries(CLASS_ROLE)) {
+		for (const [_cls, family] of Object.entries(CLASS_ROLE)) {
 			expect(ROLE_ACTIONS[family as keyof typeof ROLE_ACTIONS]).toBeDefined();
 		}
 	});

@@ -5,8 +5,8 @@
  * No hardcoded maps in renderers — everything flows through here.
  */
 
+import { BUILDING_DEFS, CULT_STRUCTURE_DEFS } from "../buildings";
 import { FACTION_COLORS as GAME_FACTION_COLORS } from "../config";
-import { CULT_STRUCTURE_DEFS, BUILDING_DEFS } from "../buildings";
 import { SALVAGE_DEFS } from "../resources";
 
 const MODEL_BASE = "/assets/models/";
@@ -91,7 +91,7 @@ for (const [type, def] of Object.entries(SALVAGE_DEFS)) {
 
 /** buildingType → full URL built from BUILDING_DEFS.assetPath */
 const BUILDING_URLS: Record<string, string> = {};
-for (const [type, def] of Object.entries(BUILDING_DEFS)) {
+for (const [_type, def] of Object.entries(BUILDING_DEFS)) {
 	BUILDING_URLS[def.modelId] = MODEL_BASE + def.assetPath;
 }
 

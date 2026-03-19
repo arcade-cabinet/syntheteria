@@ -1,5 +1,6 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
+import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../../traits";
 import { CAVALRY_DEFAULTS, spawnCavalry } from "../CavalryBot";
 import { CULT_INFANTRY_DEFAULTS, spawnCultInfantry } from "../CultMechs";
 import { RANGED_DEFAULTS, spawnRanged } from "../GuardBot";
@@ -9,7 +10,6 @@ import { MARK_EFFECTS } from "../marks";
 import { buildPlacementFlags } from "../placement";
 import { SCOUT_DEFAULTS, spawnScout } from "../ScoutBot";
 import { INFANTRY_DEFAULTS, spawnInfantry } from "../SentinelBot";
-import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../../traits";
 
 describe("robot spawning", () => {
 	let world: ReturnType<typeof createWorld>;

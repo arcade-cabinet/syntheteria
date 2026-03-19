@@ -15,7 +15,6 @@
 
 import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
-import { pushTurnEvent } from "../ui/game/turnEvents";
 import type { BotMark } from "../robots/marks";
 import { MARK_DEFS } from "../robots/marks";
 import type { ResourceMaterial } from "../terrain/types";
@@ -28,6 +27,7 @@ import {
 	UnitUpgrade,
 	UnitVisual,
 } from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
 import { canAfford, spendResources } from "./resourceSystem";
 
 // ─── Tier computation ──────────────────────────────────────────────────────

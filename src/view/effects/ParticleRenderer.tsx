@@ -19,7 +19,12 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { drainEffects, type EffectEvent, type ParticleConfig, ParticlePool } from "../../rendering";
+import {
+	drainEffects,
+	type EffectEvent,
+	type ParticleConfig,
+	ParticlePool,
+} from "../../rendering";
 
 const MAX_PARTICLES = 2048;
 

@@ -7,8 +7,8 @@
  */
 
 import type { World } from "koota";
-import { pickFlockingTile } from "../ai/steering/flockingSteering";
 import type { TilePos } from "../ai/steering/flockingSteering";
+import { pickFlockingTile } from "../ai/steering/flockingSteering";
 import { shortestPath, tileNeighbors } from "../board/adjacency";
 import type { GeneratedBoard } from "../board/types";
 import { UnitAttack, UnitMove } from "../traits";
@@ -123,9 +123,7 @@ export function runWarPartyBehavior(
 		const goalDz = closestEnemy.z - pos.tileZ;
 		const goalLen = Math.sqrt(goalDx * goalDx + goalDz * goalDz);
 		const goalDir =
-			goalLen > 0
-				? { dx: goalDx / goalLen, dz: goalDz / goalLen }
-				: undefined;
+			goalLen > 0 ? { dx: goalDx / goalLen, dz: goalDz / goalLen } : undefined;
 
 		const flockTile = pickFlockingTile(
 			{ x: pos.tileX, z: pos.tileZ },
@@ -204,8 +202,7 @@ export function runWarPartyBehavior(
 		if (neighbors.length > 0) {
 			const validNeighbors = neighbors.filter((n) => {
 				const dist =
-					Math.abs(n.x - nearestCenter.x) +
-					Math.abs(n.z - nearestCenter.z);
+					Math.abs(n.x - nearestCenter.x) + Math.abs(n.z - nearestCenter.z);
 				return dist <= effectivePatrolRadius;
 			});
 
@@ -335,9 +332,7 @@ export function runAssaultBehavior(
 		const goalDz = closestBuilding.z - pos.tileZ;
 		const goalLen = Math.sqrt(goalDx * goalDx + goalDz * goalDz);
 		const goalDir =
-			goalLen > 0
-				? { dx: goalDx / goalLen, dz: goalDz / goalLen }
-				: undefined;
+			goalLen > 0 ? { dx: goalDx / goalLen, dz: goalDz / goalLen } : undefined;
 
 		const flockTile = pickFlockingTile(
 			{ x: pos.tileX, z: pos.tileZ },

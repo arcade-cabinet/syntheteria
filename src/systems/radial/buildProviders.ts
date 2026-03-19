@@ -12,10 +12,7 @@ import type { BotMark } from "../../robots/marks";
 import { MARK_DEFS } from "../../robots/marks";
 import type { RobotClass } from "../../robots/types";
 import { startBuildPlacement } from "../../systems/buildSystem";
-import {
-	queueFabrication,
-	ROBOT_COSTS,
-} from "../../systems/fabricationSystem";
+import { queueFabrication, ROBOT_COSTS } from "../../systems/fabricationSystem";
 import { clearHighlights } from "../../systems/highlightSystem";
 import { canSpawnUnit } from "../../systems/populationSystem";
 import { canAfford } from "../../systems/resourceSystem";
@@ -26,9 +23,9 @@ import {
 } from "../../systems/synthesisSystem";
 import { applyMark, getMaxTier, hasMark } from "../../systems/upgradeSystem";
 import {
-	type BuildingType,
 	BotFabricator,
 	Building,
+	type BuildingType,
 	Powered,
 	UnitFaction,
 	UnitPos,
@@ -37,7 +34,11 @@ import {
 } from "../../traits";
 import type { RadialOpenContext } from "../radialMenu";
 import { registerRadialProvider } from "../radialMenu";
-import { getSelectedPlayerUnit, getSelectedUnitId, getWorldRef } from "./providerState";
+import {
+	getSelectedPlayerUnit,
+	getSelectedUnitId,
+	getWorldRef,
+} from "./providerState";
 
 // --- BUILD provider ---
 

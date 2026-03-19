@@ -11,9 +11,9 @@
 import type { World } from "koota";
 import { trait } from "koota";
 import { playSfx } from "../audio/sfx";
-import { pushTurnEvent } from "../ui/game/turnEvents";
 import type { ResourceMaterial } from "../terrain/types";
 import { Building, Powered } from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
 import { addResources, canAfford, spendResources } from "./resourceSystem";
 
 // ─── Recipes ────────────────────────────────────────────────────────────────

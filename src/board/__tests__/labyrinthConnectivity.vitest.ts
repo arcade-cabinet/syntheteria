@@ -67,7 +67,7 @@ function floodFillCount(
 ): number {
 	if (!tiles[startZ]?.[startX]?.passable) return 0;
 	const visited = new Set<string>();
-	const stack: Array<[number, number]> = [[startX, startZ]];
+	const stack: [number, number][] = [[startX, startZ]];
 	visited.add(`${startX},${startZ}`);
 
 	while (stack.length > 0) {

@@ -169,7 +169,7 @@ describe("getTrackSpecializations", () => {
 	});
 
 	it("v2 mode replaces Mark III and IV with upgraded versions", () => {
-		const base = getTrackSpecializations("pathfinder", 5, false);
+		const _base = getTrackSpecializations("pathfinder", 5, false);
 		const v2 = getTrackSpecializations("pathfinder", 5, true);
 
 		// Same count — v2 replaces, doesn't add

@@ -12,7 +12,7 @@ import type { World } from "koota";
 import type { GeneratedBoard } from "../board/types";
 import { TECH_BY_ID } from "../config/techTreeDefs";
 import type { ResourceMaterial } from "../terrain/types";
-import { Building, Powered, Faction } from "../traits";
+import { Building, Faction, Powered } from "../traits";
 import { FabricationJob } from "./fabricationSystem";
 import { getResearchState } from "./researchSystem";
 import {

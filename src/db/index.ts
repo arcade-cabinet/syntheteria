@@ -4,9 +4,9 @@
  * SQLite persistence — schema, migrations, serialization, and game repository.
  */
 
+export type { SqliteAdapter } from "./adapter";
 // --- Adapter ---
 export { createSqlJsAdapter } from "./adapter";
-export type { SqliteAdapter } from "./adapter";
 
 // --- Repository ---
 export { GameRepo } from "./gameRepo";
@@ -16,50 +16,50 @@ export { runMigrations } from "./migrations";
 
 // --- Schema ---
 export {
+	ALL_CREATE_STATEMENTS,
 	SCHEMA_VERSION,
-	SQL_CREATE_META,
-	SQL_CREATE_GAMES,
-	SQL_CREATE_TILES,
-	SQL_CREATE_TILE_RESOURCES,
-	SQL_CREATE_UNITS,
 	SQL_CREATE_BUILDINGS,
+	SQL_CREATE_CAMPAIGN_STATISTICS,
 	SQL_CREATE_EVENTS,
 	SQL_CREATE_EXPLORED,
-	SQL_CREATE_RESOURCES,
-	SQL_CREATE_CAMPAIGN_STATISTICS,
-	SQL_CREATE_TURN_EVENT_LOGS,
 	SQL_CREATE_FACTION_RESOURCE_SNAPSHOTS,
+	SQL_CREATE_GAMES,
+	SQL_CREATE_META,
+	SQL_CREATE_RESOURCES,
+	SQL_CREATE_TILE_RESOURCES,
+	SQL_CREATE_TILES,
+	SQL_CREATE_TURN_EVENT_LOGS,
 	SQL_CREATE_TURN_SNAPSHOTS,
-	ALL_CREATE_STATEMENTS,
+	SQL_CREATE_UNITS,
 } from "./schema";
 
 // --- Serialization ---
 export {
-	serializeUnits,
+	applyBuildings,
+	applyExplored,
+	applyResources,
+	applyTurn,
+	applyUnits,
 	serializeBuildings,
 	serializeExplored,
 	serializeResources,
-	applyUnits,
-	applyBuildings,
-	applyExplored,
-	applyTurn,
-	applyResources,
+	serializeUnits,
 } from "./serialize";
 
 // --- Types ---
 export type {
-	GameRecord,
-	TileRecord,
-	TileResourceRecord,
-	UnitRecord,
 	BuildingRecord,
-	ExploredRecord,
-	ResourceRecord,
-	EventRecord,
-	GameSummary,
 	CampaignStatisticsRecord,
-	TurnEventLogRecord,
+	EventRecord,
+	ExploredRecord,
 	FactionResourceSnapshotRecord,
 	FactionSnapshotData,
+	GameRecord,
+	GameSummary,
+	ResourceRecord,
+	TileRecord,
+	TileResourceRecord,
+	TurnEventLogRecord,
 	TurnSnapshotRecord,
+	UnitRecord,
 } from "./types";

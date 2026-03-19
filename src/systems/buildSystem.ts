@@ -16,9 +16,9 @@ import { playSfx } from "../audio/sfx";
 import { BUILDING_DEFS } from "../buildings/definitions";
 import type { ResourceMaterial } from "../terrain/types";
 import {
-	type BuildingType,
 	BotFabricator,
 	Building,
+	type BuildingType,
 	PowerGrid,
 	SignalNode,
 	StorageCapacity,

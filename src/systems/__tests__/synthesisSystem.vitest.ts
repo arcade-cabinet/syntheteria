@@ -1,6 +1,12 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Building, Powered, PowerGrid, Faction, ResourcePool } from "../../traits";
+import {
+	Building,
+	Faction,
+	Powered,
+	PowerGrid,
+	ResourcePool,
+} from "../../traits";
 import {
 	FUSION_RECIPES,
 	queueSynthesis,

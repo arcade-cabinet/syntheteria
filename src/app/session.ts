@@ -10,12 +10,12 @@ import type { BoardConfig, GeneratedBoard } from "../board";
 import { generateBoard } from "../board";
 import type { WorldType } from "../create-world";
 import {
-	GameRepo,
 	applyBuildings,
 	applyExplored,
 	applyResources,
 	applyTurn,
 	applyUnits,
+	GameRepo,
 	serializeBuildings,
 	serializeExplored,
 	serializeResources,
@@ -28,19 +28,19 @@ import { setPlayerFactionColor } from "../rendering";
 import { getSpawnCenters } from "../robots";
 import { seedToPhrase } from "../seed";
 import {
+	_resetTutorial,
+	_resetVictory,
 	collectCampaignStats,
 	collectFactionResources,
 	collectTurnSnapshot,
+	getCompletedTurnLogs,
+	getCurrentTurn,
 	rehydrateCampaignStats,
+	rehydrateTurnEventLog,
 	resetCampaignStats,
 	resetResourceDeltas,
-	getCompletedTurnLogs,
-	rehydrateTurnEventLog,
 	resetTurnEventLog,
 	resetTurnSummary,
-	getCurrentTurn,
-	_resetTutorial,
-	_resetVictory,
 } from "../systems";
 import type {
 	ClimateProfile,
@@ -141,7 +141,8 @@ export async function loadGame(
 	const record = await repo.getGame(gameId);
 	if (!record) return null;
 
-	const climateProfile = (record.climateProfile || "temperate") as ClimateProfile;
+	const climateProfile = (record.climateProfile ||
+		"temperate") as ClimateProfile;
 	const stormProfile = (record.stormProfile || "volatile") as StormProfile;
 	const gameDifficulty = (record.gameDifficulty || "standard") as Difficulty;
 
@@ -149,7 +150,9 @@ export async function loadGame(
 	try {
 		const parsed = JSON.parse(record.factionSlots);
 		if (Array.isArray(parsed) && parsed.length > 0) factionSlots = parsed;
-	} catch { /* use defaults */ }
+	} catch {
+		/* use defaults */
+	}
 
 	const playerFid = factionSlots?.find((s) => s.role === "player")?.factionId;
 	if (playerFid) {
@@ -188,8 +191,11 @@ export async function loadGame(
 	// Rehydrate campaign stats
 	const savedStats = await repo.loadCampaignStats(gameId);
 	if (savedStats) {
-		try { rehydrateCampaignStats(JSON.parse(savedStats.statsJson)); }
-		catch { /* non-fatal */ }
+		try {
+			rehydrateCampaignStats(JSON.parse(savedStats.statsJson));
+		} catch {
+			/* non-fatal */
+		}
 	} else {
 		resetCampaignStats();
 	}
@@ -203,7 +209,9 @@ export async function loadGame(
 				events: JSON.parse(l.eventsJson),
 			}));
 			rehydrateTurnEventLog(record.turn, logs);
-		} catch { /* non-fatal */ }
+		} catch {
+			/* non-fatal */
+		}
 	} else {
 		resetTurnEventLog();
 	}

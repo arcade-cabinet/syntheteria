@@ -14,10 +14,7 @@ import type { World } from "koota";
 import { useEffect, useState } from "react";
 import { FACTION_COLORS_CSS } from "../../config";
 import { type BotMark, MARK_DEFS } from "../../robots";
-import {
-	getXPForNextMark,
-	getXPProgress,
-} from "../../systems";
+import { getXPForNextMark, getXPProgress } from "../../systems";
 import {
 	UnitFaction,
 	UnitPos,

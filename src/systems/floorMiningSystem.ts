@@ -15,7 +15,6 @@
 
 import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
-import { pushTurnEvent } from "../ui/game/turnEvents";
 import type { RobotClass } from "../robots/types";
 import { TileFloor } from "../terrain/traits";
 import type { ResourceMaterial } from "../terrain/types";
@@ -29,6 +28,7 @@ import {
 	UnitVisual,
 	UnitXP,
 } from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
 import { awardXP, recordHarvest } from "./experienceSystem";
 import { isTechResearched } from "./researchSystem";
 import { trackIncome } from "./resourceDeltaSystem";

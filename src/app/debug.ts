@@ -6,6 +6,13 @@
  */
 
 import type { WorldType } from "../create-world";
+import type { GameOutcome } from "../systems";
+import {
+	computeTerritory,
+	getCombatKills,
+	getGameOutcome,
+	getPlayerResources,
+} from "../systems";
 import {
 	Building,
 	Faction,
@@ -16,13 +23,6 @@ import {
 	UnitStats,
 	UnitVisual,
 } from "../traits";
-import {
-	getCombatKills,
-	getPlayerResources,
-	computeTerritory,
-	getGameOutcome,
-} from "../systems";
-import type { GameOutcome } from "../systems";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -67,7 +67,10 @@ export interface DebugBridge {
 	advanceNTurns: (n: number) => void;
 	getUnits: () => UnitInfo[];
 	getBuildings: () => BuildingInfo[];
-	getTerritoryMap: () => Record<string, { factionId: string; contested: boolean }>;
+	getTerritoryMap: () => Record<
+		string,
+		{ factionId: string; contested: boolean }
+	>;
 	setObserverSpeed: (speed: number) => void;
 	getResources: () => Record<string, number> | null;
 	getFactionStats: () => FactionStats[];
@@ -115,13 +118,24 @@ export function installDebugBridge(ctx: DebugBridgeContext): void {
 				if (e.id() === entityId) {
 					const pos = e.get(UnitPos);
 					if (!pos) return;
-					e.add(UnitMove({ fromX: pos.tileX, fromZ: pos.tileZ, toX, toZ, progress: 0, mpCost: 1 }));
+					e.add(
+						UnitMove({
+							fromX: pos.tileX,
+							fromZ: pos.tileZ,
+							toX,
+							toZ,
+							progress: 0,
+							mpCost: 1,
+						}),
+					);
 					return;
 				}
 			}
 		},
 		endTurn: ctx.endTurn,
-		advanceNTurns: (n) => { for (let i = 0; i < n; i++) ctx.endTurn(); },
+		advanceNTurns: (n) => {
+			for (let i = 0; i < n; i++) ctx.endTurn();
+		},
 		getUnits: () => {
 			const world = w();
 			if (!world) return [];
@@ -132,7 +146,15 @@ export function installDebugBridge(ctx: DebugBridgeContext): void {
 				const stats = e.get(UnitStats);
 				const vis = e.has(UnitVisual) ? e.get(UnitVisual) : null;
 				if (!pos || !fac || !stats) continue;
-				units.push({ entityId: e.id(), tileX: pos.tileX, tileZ: pos.tileZ, factionId: fac.factionId, hp: stats.hp, ap: stats.ap, modelId: vis?.modelId ?? "" });
+				units.push({
+					entityId: e.id(),
+					tileX: pos.tileX,
+					tileZ: pos.tileZ,
+					factionId: fac.factionId,
+					hp: stats.hp,
+					ap: stats.ap,
+					modelId: vis?.modelId ?? "",
+				});
 			}
 			return units;
 		},
@@ -143,7 +165,12 @@ export function installDebugBridge(ctx: DebugBridgeContext): void {
 			for (const e of world.query(Building)) {
 				const b = e.get(Building);
 				if (!b) continue;
-				buildings.push({ tileX: b.tileX, tileZ: b.tileZ, factionId: b.factionId, buildingType: b.buildingType });
+				buildings.push({
+					tileX: b.tileX,
+					tileZ: b.tileZ,
+					factionId: b.factionId,
+					buildingType: b.buildingType,
+				});
 			}
 			return buildings;
 		},
@@ -164,7 +191,11 @@ export function installDebugBridge(ctx: DebugBridgeContext): void {
 		getFactionStats: () => {
 			const world = w();
 			if (!world) return [];
-			const territory = computeTerritory(world, ctx.boardWidth, ctx.boardHeight);
+			const territory = computeTerritory(
+				world,
+				ctx.boardWidth,
+				ctx.boardHeight,
+			);
 			const fMap = new Map<string, { units: number; hp: number }>();
 			for (const e of world.query(UnitPos, UnitFaction, UnitStats)) {
 				const fac = e.get(UnitFaction);
@@ -187,7 +218,9 @@ export function installDebugBridge(ctx: DebugBridgeContext): void {
 				const pool = e.get(ResourcePool);
 				if (!f || !pool) continue;
 				let total = 0;
-				for (const val of Object.values(pool)) { if (typeof val === "number") total += val; }
+				for (const val of Object.values(pool)) {
+					if (typeof val === "number") total += val;
+				}
 				rMap.set(f.id, total);
 			}
 			const allFactions = new Set<string>();
@@ -203,7 +236,10 @@ export function installDebugBridge(ctx: DebugBridgeContext): void {
 					unitCount: u.units,
 					totalHp: u.hp,
 					buildingCount: bMap.get(fid) ?? 0,
-					territoryPercent: territory.totalTiles > 0 ? ((territory.counts.get(fid) ?? 0) / territory.totalTiles) * 100 : 0,
+					territoryPercent:
+						territory.totalTiles > 0
+							? ((territory.counts.get(fid) ?? 0) / territory.totalTiles) * 100
+							: 0,
 					totalResources: rMap.get(fid) ?? 0,
 					combatKills: killMap.get(fid) ?? 0,
 				});

@@ -28,7 +28,7 @@ function makeConfig(
 }
 
 /** Count tiles matching a predicate. */
-function countTiles(
+function _countTiles(
 	tiles: TileData[][],
 	pred: (t: TileData) => boolean,
 ): number {

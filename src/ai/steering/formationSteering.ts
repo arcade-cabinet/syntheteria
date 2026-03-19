@@ -171,9 +171,7 @@ export function getFormationTarget(
 	goalZ: number,
 ): TilePos | null {
 	for (const group of formations) {
-		const followerIdx = group.followers.findIndex(
-			(f) => f.entityId === unitId,
-		);
+		const followerIdx = group.followers.findIndex((f) => f.entityId === unitId);
 		if (followerIdx === -1) continue;
 
 		const offsets = computeFormationOffsets(

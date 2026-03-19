@@ -115,12 +115,12 @@ export function collectTurnSnapshot(
 		if (!f?.id || !pool) continue;
 
 		const resourceTotals: Record<string, number> = {};
-		let total = 0;
+		let _total = 0;
 		for (const key of RESOURCE_KEYS) {
 			const val = pool[key];
 			if (val > 0) {
 				resourceTotals[key] = val;
-				total += val;
+				_total += val;
 			}
 		}
 

@@ -1,10 +1,6 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-	applyMarkUpgrade,
-	awardXP,
-	getMarkThreshold,
-} from "../../systems";
+import { applyMarkUpgrade, awardXP, getMarkThreshold } from "../../systems";
 import { UnitFaction, UnitPos, UnitStats, UnitXP } from "../../traits";
 import {
 	getMarkSpecEffectValue,

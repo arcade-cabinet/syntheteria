@@ -92,15 +92,7 @@ describe("computeEvadeDesirability", () => {
 	});
 
 	it("returns 0 when threats are out of range", () => {
-		const d = computeEvadeDesirability(
-			5,
-			5,
-			10,
-			10,
-			4,
-			[{ x: 20, z: 20 }],
-			[],
-		);
+		const d = computeEvadeDesirability(5, 5, 10, 10, 4, [{ x: 20, z: 20 }], []);
 		expect(d).toBe(0);
 	});
 

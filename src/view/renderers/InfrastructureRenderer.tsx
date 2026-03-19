@@ -20,11 +20,10 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { type ReactNode, Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board";
 import type { GeneratedBoard } from "../../board";
-import { seedToFloat } from "../../terrain";
-import { ModelErrorBoundary } from "../ModelErrorBoundary";
+import { TILE_SIZE_M } from "../../board";
 import {
+	buildExploredSet,
 	getAllInfraModelUrls,
 	INFRA_ANTENNA_MODELS,
 	INFRA_GATEWAY_MODELS,
@@ -33,7 +32,8 @@ import {
 	INFRA_POWER_MODELS,
 	INFRA_SUPPORT_MODELS,
 } from "../../rendering";
-import { buildExploredSet } from "../../rendering";
+import { seedToFloat } from "../../terrain";
+import { ModelErrorBoundary } from "../ModelErrorBoundary";
 
 // Lazy preload to avoid circular dep at module init
 let _infraPreloaded = false;

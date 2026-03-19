@@ -4,33 +4,32 @@
  * Deterministic labyrinth board generation and tile grid utilities.
  */
 
-// --- Generator ---
-export { generateBoard } from "./generator";
-export { generateLabyrinthBoard } from "./labyrinthGenerator";
-
 // --- Adjacency & pathfinding ---
 export {
 	isPassableFor,
 	movementCost,
-	tileNeighbors,
 	reachableTiles,
 	shortestPath,
+	tileNeighbors,
 } from "./adjacency";
-
-// --- Grid ---
-export { TILE_SIZE_M, ELEVATION_STEP_M, createGridApi } from "./grid";
+// --- Generator ---
+export { generateBoard } from "./generator";
 export type { GridApi } from "./grid";
 
+// --- Grid ---
+export { createGridApi, ELEVATION_STEP_M, TILE_SIZE_M } from "./grid";
+export { generateLabyrinthBoard } from "./labyrinthGenerator";
+
 // --- Noise ---
-export { seededRng, createNoise2D, simplexNoise2D } from "./noise";
+export { createNoise2D, seededRng, simplexNoise2D } from "./noise";
 
 // --- Types ---
 export type {
-	FloorType,
-	ResourceMaterial,
-	Elevation,
-	WeightClass,
-	TileData,
 	BoardConfig,
+	Elevation,
+	FloorType,
 	GeneratedBoard,
+	ResourceMaterial,
+	TileData,
+	WeightClass,
 } from "./types";

@@ -321,8 +321,7 @@ function runWandererBehavior(
 			// Filter candidates to those within patrol radius
 			const validNeighbors = neighbors.filter((n) => {
 				const dist =
-					Math.abs(n.x - nearestCenter.x) +
-					Math.abs(n.z - nearestCenter.z);
+					Math.abs(n.x - nearestCenter.x) + Math.abs(n.z - nearestCenter.z);
 				return dist <= effectivePatrolRadius;
 			});
 
@@ -354,4 +353,3 @@ function runWandererBehavior(
 		}
 	}
 }
-

@@ -4,27 +4,26 @@
  * Creates and returns a Phaser.Game instance that mounts into the provided
  * container element. Uses enable3d for Three.js integration via Scene3D.
  *
- * This is the ONLY file that creates a Phaser.Game. React calls this from
- * a useEffect in GameBoard.tsx. No React dependency in this file.
+ * Communication with React is via EventBus (not registry callbacks).
+ * Board data is passed via Phaser registry for scene access.
+ *
+ * No React dependency in this file.
  */
 
 import Phaser from "phaser";
 import { Canvas, enable3d } from "@enable3d/phaser-extension";
-import { WorldScene } from "./scenes/WorldScene";
 import type { World } from "koota";
-import type { GeneratedBoard } from "../board";
-import type { BoardConfig } from "../board";
+import type { BoardConfig, GeneratedBoard } from "../board";
+import { WorldScene } from "./scenes/WorldScene";
 
 // ---------------------------------------------------------------------------
-// Game config shared with scenes via Phaser registry
+// Board config — passed to scenes via Phaser registry
 // ---------------------------------------------------------------------------
 
 export interface GameBoardConfig {
 	world: World;
 	board: GeneratedBoard;
 	boardConfig: BoardConfig;
-	onTileClick?: (tileX: number, tileZ: number) => void;
-	onUnitSelect?: (entityId: number | null) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -63,21 +62,9 @@ export function createGame(
 
 	const game = gameRef.current!;
 
-	// Phaser registry is the bridge between React and Phaser scenes.
-	// Scenes read from registry; React writes to registry.
+	// Pass board data to scenes via Phaser registry.
+	// Scenes access via this.registry.get("boardConfig").
 	game.registry.set("boardConfig", boardConfig);
 
 	return game;
-}
-
-/**
- * Update the board config in a running game (e.g., after turn advance).
- * Scenes read this from registry each frame.
- */
-export function updateGameConfig(
-	game: Phaser.Game,
-	config: Partial<GameBoardConfig>,
-): void {
-	const current = game.registry.get("boardConfig") as GameBoardConfig;
-	game.registry.set("boardConfig", { ...current, ...config });
 }

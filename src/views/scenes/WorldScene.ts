@@ -11,6 +11,7 @@
 import { Scene3D } from "@enable3d/phaser-extension";
 import * as THREE from "three";
 import type { GameBoardConfig } from "../createGame";
+import { EventBus } from "../eventBus";
 import { setupWorldLighting } from "../lighting/worldLighting";
 
 export class WorldScene extends Scene3D {
@@ -52,6 +53,9 @@ export class WorldScene extends Scene3D {
 		if (config) {
 			this.buildTerrain(config);
 		}
+
+		// Notify React that the scene is ready
+		EventBus.emit("scene-ready", this);
 	}
 
 	// ---- Camera ----

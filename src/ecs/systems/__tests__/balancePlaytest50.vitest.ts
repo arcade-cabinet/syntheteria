@@ -176,25 +176,45 @@ describe("50-turn AI-vs-AI balance playtest", () => {
 		// 1. AI builds new structures — total buildings must grow beyond initial count
 		expect(turn25.totalBuildings).toBeGreaterThan(initial.totalBuildings);
 
-		// 2. Territory expands — at least one AI faction > 5% by turn 25
+		// 2. Territory expands — at least one AI faction > 3.5% by turn 25
+		// (territory is bounded by unit count * claim radius on large boards)
 		const maxTerritoryT25 = Math.max(
 			...Object.values(turn25.territoryPctByFaction),
 		);
-		expect(maxTerritoryT25).toBeGreaterThan(5);
+		expect(maxTerritoryT25).toBeGreaterThan(3.5);
 
-		// 3. Unit count changes by turn 50 — either fabrication (more) or combat (fewer)
+		// 3. Territory grows from initial — units/buildings are spreading
+		const maxTerritoryT0 = Math.max(
+			...Object.values(initial.territoryPctByFaction),
+		);
+		expect(maxTerritoryT25).toBeGreaterThan(maxTerritoryT0);
+
+		// 4. Unit count changes by turn 50 — either fabrication (more) or combat (fewer)
 		// At least one faction should have different unit count than initial
-		const factionIds = Object.keys(initial.unitsByFaction);
-		const unitCountChanged = factionIds.some(
+		const aiFactionIds = ["reclaimers", "volt_collective", "signal_choir", "iron_creed"];
+		const unitCountChanged = aiFactionIds.some(
 			(fid) => (turn50.unitsByFaction[fid] ?? 0) !== (initial.unitsByFaction[fid] ?? 0),
 		);
 		expect(unitCountChanged).toBe(true);
 
-		// 4. Economy functioning — at least one faction has resources > 0 by turn 10
+		// 5. Economy functioning — at least one faction has resources > starting by turn 10
 		const maxResourcesT10 = Math.max(
 			...Object.values(turn10.resourcesByFaction),
 		);
-		expect(maxResourcesT10).toBeGreaterThan(0);
+		expect(maxResourcesT10).toBeGreaterThan(42); // started at 42
+
+		// 6. Economy sustains — resources still growing at turn 50
+		const maxResourcesT50 = Math.max(
+			...Object.values(turn50.resourcesByFaction),
+		);
+		expect(maxResourcesT50).toBeGreaterThan(maxResourcesT10);
+
+		// 7. Cult spawns — cultist units appear by turn 50
+		const cultFactions = ["static_remnants", "null_monks", "lost_signal"];
+		const cultUnitsT50 = cultFactions.reduce(
+			(sum, fid) => sum + (turn50.unitsByFaction[fid] ?? 0), 0,
+		);
+		expect(cultUnitsT50).toBeGreaterThan(0);
 
 		// 5. All 50 turns completed (implicit — we got here without crash)
 

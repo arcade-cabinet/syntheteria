@@ -38,7 +38,7 @@ import {
 	UnitStats,
 } from "../traits/unit";
 import { spherePosToTile, sphereRadius } from "../rendering/boardGeometry";
-import { clearPreviewPath, setPreviewPath } from "../rendering/PathRenderer";
+import { clearPreviewPath, setPreviewPath } from "../view/overlays/PathRenderer";
 import {
 	closeRadialMenu,
 	confirmRadialSelection,

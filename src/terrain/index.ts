@@ -11,4 +11,4 @@ export {
 } from "./floorShader";
 export { TileFloor } from "./traits";
 export type { FloorDef, FloorType, ResourceMaterial } from "./types";
-export { FLOOR_DEFS, isPassableFloor } from "./types";
+export { FLOOR_DEFS, FLOOR_INDEX_MAP, isPassableFloor } from "./types";

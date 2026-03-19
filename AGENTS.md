@@ -56,8 +56,9 @@ src/
 ├── audio/              # Tone.js SFX + ambience
 ├── camera/             # Camera controllers
 ├── db/                 # SQLite schema + GameRepo
-├── rendering/          # Pure TS: geometry, placement, materials (no TSX)
-├── ui/                 # React components: Globe, landing/, game/ overlays
+├── rendering/          # Pure TS: geometry, placement, materials, model paths (no TSX)
+├── view/               # R3F renderer components: renderers/, effects/, overlays/, globe/
+├── ui/                 # React DOM components: Globe, landing/, game/ overlays
 ├── input/              # Board interaction (click, drag, select)
 ├── world/              # Config wiring
 ├── lib/                # Shared utilities

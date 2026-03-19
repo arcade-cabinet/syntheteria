@@ -194,36 +194,46 @@
 
 | System | Status | Key Files | Notes |
 |--------|--------|-----------|-------|
-| Board renderer | DONE | `src/rendering/BoardRenderer.tsx` | Merged BufferGeometry, PBR atlas shader |
-| Biome renderer | DONE | `src/rendering/BiomeRenderer.tsx` | Biome-specific terrain visuals |
-| Unified terrain | DONE | `src/rendering/UnifiedTerrainRenderer.tsx` | Unified depth layers (replaced DepthRenderer + MinedPitRenderer) |
-| Highlight renderer | DONE | `src/rendering/HighlightRenderer.tsx` | Emissive plane pool from TileHighlight |
-| Unit renderer | DONE | `src/rendering/UnitRenderer.tsx` | GLB models, faction colors, lerped movement |
-| Building renderer | DONE | `src/rendering/BuildingRenderer.tsx` | Building GLBs rendered, fog-gated |
-| Salvage renderer | DONE | `src/rendering/SalvageRenderer.tsx` | Salvage GLBs with rendering |
-| Structure renderer | DONE | `src/rendering/StructureRenderer.tsx` | Wall/column/structural rendering |
-| Procedural structures | DONE | `src/rendering/ProceduralStructureRenderer.tsx` | Procedural geometry for structures |
-| Storm sky | DONE | `src/rendering/StormSky.tsx` | 3 GLSL layers: storm, wormhole, illuminator |
-| Fog of war | DONE | `src/rendering/FogOfWarRenderer.tsx` | Per-unit scan radius fog (flat + sphere GLSL) |
-| Territory overlay | DONE | `src/rendering/TerritoryOverlayRenderer.tsx` | Faction-colored territory visualization |
-| Path renderer | DONE | `src/rendering/PathRenderer.tsx` | Pathfinding visualization |
-| Combat effects | DONE | `src/rendering/CombatEffectsRenderer.tsx` | Floating damage text + combat flash |
-| Fragment renderer | DONE | `src/rendering/FragmentRenderer.tsx` | Memory fragment objects |
-| Speech bubbles | DONE | `src/rendering/SpeechBubbleRenderer.tsx` | In-world speech bubbles |
-| Unit status bars | DONE | `src/rendering/UnitStatusBars.tsx` | HP/AP bars above units |
-| Particle system | DONE | `src/rendering/particles/` | ParticlePool, ParticleRenderer, effect events |
 | Sphere placement | DONE | `src/rendering/spherePlacement.ts` | Model position + orientation on sphere surface |
-| Cutaway clip plane | WIP | `src/rendering/CutawayClipPlane.tsx` | Dollhouse zoom clipping |
 | Board geometry | DONE | `src/rendering/boardGeometry.ts` | Both flat (legacy) and sphere geometry |
 | Depth layer stack | DONE | `src/rendering/depthLayerStack.ts` | Depth stacking utilities |
 | Depth mapped layer | DONE | `src/rendering/depthMappedLayer.ts` | Mapped layer utilities |
 | Height material | DONE | `src/rendering/heightMaterial.ts` | Height-based material |
 | Model paths | DONE | `src/rendering/modelPaths.ts` | GLB model path resolution |
 | Tile visibility | DONE | `src/rendering/tileVisibility.ts` | Fog-gated tile visibility |
-| Chronometry | DONE | `src/rendering/sky/chronometry.ts` | Turn→time (day/night + seasons) |
+| Chronometry | DONE | `src/rendering/sky/chronometry.ts` | Turn to time (day/night + seasons) |
 | Wall classification | DONE | `src/rendering/labyrinth/wallClassification.ts` | Wall type identification |
 | GLSL shaders | DONE | `src/rendering/glsl/` | fogOfWar (flat+sphere), height shaders |
-| Globe renderers | DONE | `src/rendering/globe/` | GlobeWithCities, Hypercane, StormClouds, Lightning, TitleText, shaders |
+| Globe shaders | DONE | `src/rendering/globe/shaders.ts` | Globe vertex/fragment shaders |
+
+### View (R3F Components)
+
+| System | Status | Key Files | Notes |
+|--------|--------|-----------|-------|
+| Board renderer | DONE | `src/view/renderers/BoardRenderer.tsx` | Merged BufferGeometry, PBR atlas shader |
+| Biome renderer | DONE | `src/view/renderers/BiomeRenderer.tsx` | Biome-specific terrain visuals |
+| Unified terrain | DONE | `src/view/renderers/UnifiedTerrainRenderer.tsx` | Unified depth layers |
+| Unit renderer | DONE | `src/view/renderers/UnitRenderer.tsx` | GLB models, faction colors, lerped movement |
+| Building renderer | DONE | `src/view/renderers/BuildingRenderer.tsx` | Building GLBs rendered, fog-gated |
+| Salvage renderer | DONE | `src/view/renderers/SalvageRenderer.tsx` | Salvage GLBs with rendering |
+| Structure renderer | DONE | `src/view/renderers/StructureRenderer.tsx` | Wall/column/structural rendering |
+| Storm sky | DONE | `src/view/renderers/StormSky.tsx` | 3 GLSL layers: storm, wormhole, illuminator |
+| LOD globe | DONE | `src/view/renderers/LodGlobe.tsx` | Procedural shader at far zoom |
+| Illuminator | DONE | `src/view/renderers/IlluminatorRenderer.tsx` | Light orb placement |
+| Infrastructure | DONE | `src/view/renderers/InfrastructureRenderer.tsx` | Pipes, supports, gateways |
+| Cult domes | DONE | `src/view/renderers/CultDomeRenderer.tsx` | Translucent hemisphere shields |
+| Fragment renderer | DONE | `src/view/renderers/FragmentRenderer.tsx` | Memory fragment objects |
+| Cutaway clip plane | WIP | `src/view/renderers/CutawayClipPlane.tsx` | Dollhouse zoom clipping |
+| Highlight renderer | DONE | `src/view/overlays/HighlightRenderer.tsx` | Emissive plane pool |
+| Fog of war | DONE | `src/view/overlays/FogOfWarRenderer.tsx` | Per-unit scan radius fog |
+| Territory overlay | DONE | `src/view/overlays/TerritoryOverlayRenderer.tsx` | Faction-colored territory |
+| Path renderer | DONE | `src/view/overlays/PathRenderer.tsx` | Pathfinding visualization |
+| Combat effects | DONE | `src/view/effects/CombatEffectsRenderer.tsx` | Floating damage text + flash |
+| Speech bubbles | DONE | `src/view/effects/SpeechBubbleRenderer.tsx` | In-world speech bubbles |
+| Particle system | DONE | `src/view/effects/ParticleRenderer.tsx` | Points-based particle rendering |
+| Unit status bars | DONE | `src/view/UnitStatusBars.tsx` | HP/AP bars above units |
+| Model error boundary | DONE | `src/view/ModelErrorBoundary.tsx` | GLB loading fallback |
+| Globe renderers | DONE | `src/view/globe/` | GlobeWithCities, Hypercane, StormClouds, Lightning, TitleText |
 
 ### UI / Input
 

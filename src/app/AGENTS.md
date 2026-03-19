@@ -1,27 +1,28 @@
 # app/
 
-Application shell — session lifecycle, debug bridge, HUD data, and the root React component.
+App shell — session lifecycle (new/load/save), debug bridge, and HUD data readers.
 
 ## Rules
-- **Thin orchestration** — app/ composes packages, it doesn't implement game logic
-- **Import from package indexes** — `from "../traits"` not `from "../traits/building"`
-- **No ECS queries in React components** — use hudData.ts functions instead
-- **Session operations are async** — create/save/load return Promises
+- **Session functions are async** — `createNewGame`, `loadGame`, `saveGame` return promises
+- **Debug bridge is dev-only** — `installDebugBridge()` exposes internals on `window`
+- **HUD data readers are pure** — read ECS state, return plain objects for React
+- **No React components** — app/ is logic only, UI lives in `ui/`
 
 ## Public API
-- `createNewGame(config, repo)` → `GameSession`
-- `loadGame(gameId, repo)` → `GameSession | null`
-- `saveGame(session, repo)` → void
-- `installDebugBridge(ctx)` → void (Playwright E2E)
-- `readPlayerAp(world)` → number
-- `getProductionQueue(world)` → `ProductionQueueItem[]`
-- `getCurrentResearchForHUD(world)` → `CurrentResearch | null`
+- `createNewGame(config)` — create a new game session
+- `loadGame(gameId)` — load a saved game
+- `saveGame(session)` — persist current game to SQLite
+- `installDebugBridge(ctx)` — attach debug tools to window (dev mode)
+- `readPlayerAp(world)` — current player action points
+- `getProductionQueue(world)` — fabrication queue for HUD
+- `getCurrentResearchForHUD(world)` — active research for HUD
+- `Phase` — app phase type (`title | setup | generating | playing`)
+- `GameSession` — runtime session interface
 
 ## Files
 | File | Purpose |
 |------|---------|
-| types.ts | GameSession, Phase types |
-| session.ts | create/save/load game (pure async, no React) |
-| debug.ts | Playwright debug bridge (window.__syntheteria) |
-| hudData.ts | Read-only ECS queries for HUD display |
-| App.tsx | Root React component (thin shell) — TODO |
+| session.ts | New game, load, save lifecycle |
+| debug.ts | Debug bridge for dev console |
+| hudData.ts | HUD data reader functions |
+| types.ts | Phase, GameSession types |

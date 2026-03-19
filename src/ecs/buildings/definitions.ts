@@ -79,8 +79,8 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { alloy_stock: 4, silicon_wafer: 2, conductor_wire: 2 },
-		buildTime: 8,
+		buildCost: { ferrous_scrap: 4, conductor_wire: 2 },
+		buildTime: 6,
 	},
 	motor_pool: {
 		displayName: "Motor Pool",

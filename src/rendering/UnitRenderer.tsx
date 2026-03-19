@@ -17,7 +17,7 @@ import type { World } from "koota";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../board/grid";
+import { TILE_SIZE_M, ELEVATION_STEP_M } from "../board/grid";
 import { playSfx } from "../audio/sfx";
 import {
 	UnitAttack,
@@ -65,6 +65,7 @@ function UnitModel({
 	url,
 	x,
 	z,
+	elevationY = 0,
 	factionColor,
 	markScale,
 	isSelected,
@@ -76,6 +77,7 @@ function UnitModel({
 	url: string;
 	x: number;
 	z: number;
+	elevationY?: number;
 	factionColor: number;
 	markScale: number;
 	isSelected?: boolean;
@@ -132,7 +134,7 @@ function UnitModel({
 	});
 
 	if (useSphere && boardWidth && boardHeight) {
-		const sp = sphereModelPlacement(x, z, boardWidth, boardHeight, yOffset + 0.1);
+		const sp = sphereModelPlacement(x, z, boardWidth, boardHeight, yOffset + elevationY + 0.1);
 		return (
 			<group ref={groupRef}>
 				<Clone
@@ -152,7 +154,7 @@ function UnitModel({
 			<Clone
 				ref={cloneRef}
 				object={scene}
-				position={[x * TILE_SIZE_M, yOffset + 0.1, z * TILE_SIZE_M]}
+				position={[x * TILE_SIZE_M, yOffset + elevationY + 0.1, z * TILE_SIZE_M]}
 				scale={scale}
 				castShadow
 			/>
@@ -382,6 +384,8 @@ interface UnitSnapshot {
 	eid: number;
 	tileX: number;
 	tileZ: number;
+	/** World-space Y offset from tile elevation (interpolated during ramp traversal). */
+	elevationY: number;
 	factionId: string;
 	url: string;
 	color: number;
@@ -425,15 +429,20 @@ export function UnitRenderer({ world, useSphere, boardWidth, boardHeight }: Unit
 			// Scan range gate — hide enemy units not within any player unit's scan range
 			if (faction.factionId !== "player" && faction.factionId !== "" && !isUnitDetected(pos.tileX, pos.tileZ, playerScanners)) continue;
 
-			// Use move destination if in motion
+			// Use move destination if in motion — interpolate X, Z, and elevation Y
 			let x = pos.tileX;
 			let z = pos.tileZ;
+			let elevationY = 0;
 			if (entity.has(UnitMove)) {
 				const move = entity.get(UnitMove);
 				if (move) {
 					const t = move.progress;
 					x = move.fromX + (move.toX - move.fromX) * t;
 					z = move.fromZ + (move.toZ - move.fromZ) * t;
+					// Interpolate Y based on elevation difference between source and destination
+					const fromY = move.fromElevation * ELEVATION_STEP_M;
+					const toY = move.toElevation * ELEVATION_STEP_M;
+					elevationY = fromY + (toY - fromY) * t;
 				}
 			}
 
@@ -453,6 +462,7 @@ export function UnitRenderer({ world, useSphere, boardWidth, boardHeight }: Unit
 				eid: entity.id(),
 				tileX: x,
 				tileZ: z,
+				elevationY,
 				factionId: faction.factionId,
 				url: resolveRobotModelUrl(visual.modelId),
 				color: FACTION_COLORS[faction.factionId] ?? 0x888888,
@@ -477,7 +487,7 @@ export function UnitRenderer({ world, useSphere, boardWidth, boardHeight }: Unit
 				return (
 					<ModelErrorBoundary key={u.eid} name={u.url}>
 						<Suspense fallback={<UnitBox x={u.tileX} z={u.tileZ} color={u.color} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />}>
-							<UnitModel url={u.url} x={u.tileX} z={u.tileZ} factionColor={u.color} markScale={markScale} isCult={u.factionId.startsWith("static_") || u.factionId.startsWith("null_") || u.factionId.startsWith("lost_")} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+							<UnitModel url={u.url} x={u.tileX} z={u.tileZ} elevationY={u.elevationY} factionColor={u.color} markScale={markScale} isCult={u.factionId.startsWith("static_") || u.factionId.startsWith("null_") || u.factionId.startsWith("lost_")} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
 							{u.ap > 0 && (
 								<ReadinessRing
 									x={u.tileX}

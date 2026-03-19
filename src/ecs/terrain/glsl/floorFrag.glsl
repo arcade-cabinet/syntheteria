@@ -29,7 +29,7 @@ vec2 atlasUV(vec2 worldXZ, float cellIndex) {
   vec2 cellUV = fract(worldXZ * 0.0625);
   // Map into atlas cell
   vec2 cellOrigin = vec2(col, row) / 3.0;
-  float inset = 0.002;
+  float inset = 0.005;
   vec2 cellSize = vec2(1.0 / 3.0);
   return cellOrigin + inset + cellUV * (cellSize - 2.0 * inset);
 }
@@ -45,8 +45,8 @@ vec3 applyPBR(vec3 albedo, vec3 N, float roughness, float metalness) {
   // Diffuse (non-metallic)
   vec3 diffuse = albedo * (1.0 - metalness);
 
-  // Industrial dome — bright artificial overhead lighting
-  // This is a sealed ecumenopolis with artificial sun on the dome ceiling
+  // Industrial lighting — bright artificial overhead illumination
+  // Perpetual storm sky with scattered illuminator orbs
   // Moderate ambient so individual texture colors remain distinct at game zoom
   vec3 skyTint    = vec3(0.92, 0.88, 0.82);
   vec3 groundTint = vec3(0.30, 0.28, 0.24);
@@ -59,9 +59,9 @@ vec3 applyPBR(vec3 albedo, vec3 N, float roughness, float metalness) {
   vec3 viewDir = vec3(0.0, 1.0, 0.0);
   vec3 halfVec = normalize(uSunDir + viewDir);
   float spec = pow(max(dot(n, halfVec), 0.0), mix(8.0, 128.0, 1.0 - roughness));
-  vec3 specular = F0 * spec * uSunColor * 0.8;
+  vec3 specular = F0 * spec * uSunColor * 0.5;
 
-  // Strong sun contribution — artificial illuminator at dome zenith
+  // Strong sun contribution — zenith sky light
   vec3 lit = diffuse * (ambient + hemi + uSunColor * ndotl * 1.4) + specular;
 
   // Reinhard tone-map — lower denominator preserves more brightness

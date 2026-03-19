@@ -1,5 +1,6 @@
 import type { World } from "koota";
 import { UnitMove, UnitPos, UnitStats } from "../traits/unit";
+import { revealFog } from "./fogRevealSystem";
 
 const MOVE_SPEED = 4.0; // tiles per second
 
@@ -22,6 +23,9 @@ export function movementSystem(world: World, deltaSeconds: number): void {
 				movesUsed: stats.movesUsed + 1,
 			});
 			entity.remove(UnitMove);
+
+			// Reveal fog around new position — storm interference clears as sensors scan
+			revealFog(world, move.toX, move.toZ, stats.scanRange);
 		}
 	}
 }

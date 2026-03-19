@@ -74,7 +74,10 @@ export function buildNavGraph(board: GeneratedBoard, useSphere = true): NavGraph
 		}
 	}
 
-	// Add edges for each passable neighbor
+	// Add edges for each passable neighbor.
+	// Vertical edges: only connect tiles with elevation difference <= 1 (ramp).
+	// Tiles with elevation difference > 1 (cliff) are not traversable.
+	// Ramp traversal adds +1 cost on top of the base movement cost.
 	for (let z = 0; z < height; z++) {
 		for (let x = 0; x < width; x++) {
 			const tile = board.tiles[z][x];
@@ -96,8 +99,15 @@ export function buildNavGraph(board: GeneratedBoard, useSphere = true): NavGraph
 				const neighbor = board.tiles[nz][nx];
 				if (!isPassableFor(neighbor)) continue;
 
+				// Depth layer gating: only connect if elevation difference <= 1
+				const elevDiff = Math.abs(tile.elevation - neighbor.elevation);
+				if (elevDiff > 1) continue;
+
 				const toIdx = tileIndex(nx, nz, width);
-				const cost = movementCost(neighbor);
+				const baseCost = movementCost(neighbor);
+				// Uphill ramp traversal costs +1 extra movement; downhill is free
+				const isUphill = neighbor.elevation > tile.elevation;
+				const cost = isUphill ? baseCost + 1 : baseCost;
 				graph.addEdge(new Edge(fromIdx, toIdx, cost));
 			}
 		}

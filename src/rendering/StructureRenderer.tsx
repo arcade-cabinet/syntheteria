@@ -16,7 +16,7 @@
 import { Clone, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { type ReactNode, Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import { TILE_SIZE_M } from "../board/grid";
@@ -474,6 +474,21 @@ type StructureRendererProps = {
 	boardHeight?: number;
 };
 
+/** Camera distance beyond which structure models are hidden to save GPU. */
+const STRUCTURE_CULL_DISTANCE = 60;
+
+function StructureCullGroup({ children }: { children: ReactNode }) {
+	const groupRef = useRef<THREE.Group>(null);
+	const camera = useThree((s) => s.camera);
+
+	useFrame(() => {
+		if (!groupRef.current) return;
+		groupRef.current.visible = camera.position.length() < STRUCTURE_CULL_DISTANCE;
+	});
+
+	return <group ref={groupRef}>{children}</group>;
+}
+
 export function StructureRenderer({ board, world, useSphere, boardWidth, boardHeight }: StructureRendererProps) {
 	const instances = useMemo(() => {
 		const explored = world ? buildExploredSet(world) : undefined;
@@ -492,7 +507,7 @@ export function StructureRenderer({ board, world, useSphere, boardWidth, boardHe
 	}, [board, world]);
 
 	return (
-		<>
+		<StructureCullGroup>
 			{instances.walls.map((w) => (
 				<ModelErrorBoundary key={w.key} name={w.url}>
 					<Suspense fallback={null}>
@@ -521,6 +536,6 @@ export function StructureRenderer({ board, world, useSphere, boardWidth, boardHe
 					</Suspense>
 				</ModelErrorBoundary>
 			))}
-		</>
+		</StructureCullGroup>
 	);
 }

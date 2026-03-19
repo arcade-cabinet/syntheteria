@@ -88,8 +88,8 @@ describe("movementSystem", () => {
 		expect(e.get(UnitPos)!.tileX).toBe(1);
 	});
 
-	it("movement does not change tile explored state (all tiles start explored)", () => {
-		// Spawn tiles in a small grid — all start explored
+	it("movement completion reveals tiles within scan range via fog system", () => {
+		// Spawn tiles in a small grid — all start unexplored (default)
 		for (let z = 0; z < 5; z++) {
 			for (let x = 0; x < 5; x++) {
 				world.spawn(
@@ -107,10 +107,14 @@ describe("movementSystem", () => {
 
 		movementSystem(world, 1.0);
 
-		// All tiles remain explored
+		// Tiles near destination (2,2) within scanRange=2 are explored
+		// Tiles far from destination remain unexplored
 		for (const entity of world.query(Tile)) {
 			const tile = entity.get(Tile)!;
-			expect(tile.explored).toBe(true);
+			const dist = Math.abs(tile.x - 2) + Math.abs(tile.z - 2);
+			if (dist <= 2) {
+				expect(tile.explored).toBe(true);
+			}
 		}
 	});
 
@@ -126,7 +130,7 @@ describe("movementSystem", () => {
 		expect(e.get(UnitStats)!.movesUsed).toBe(1);
 	});
 
-	it("tiles remain explored during partial move progress", () => {
+	it("tiles remain unexplored during partial move progress (fog not yet cleared)", () => {
 		world.spawn(
 			Tile({ x: 1, z: 0, elevation: 0, passable: true }),
 			TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
@@ -138,12 +142,14 @@ describe("movementSystem", () => {
 			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4 }),
 		);
 
+		// Partial move — revealFog hasn't fired yet
 		movementSystem(world, 0.1);
 
 		for (const entity of world.query(Tile)) {
 			const tile = entity.get(Tile)!;
-			expect(tile.explored).toBe(true);
-			expect(tile.visibility).toBe(1);
+			// Tile stays at default (unexplored) until move completes
+			expect(tile.explored).toBe(false);
+			expect(tile.visibility).toBe(0);
 		}
 	});
 });

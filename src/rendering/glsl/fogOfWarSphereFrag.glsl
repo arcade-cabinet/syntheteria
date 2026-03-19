@@ -29,9 +29,9 @@ void main() {
 
 	float vis = texture2D(uVisibility, tileUV).r;
 
-	// Storm atmosphere haze — purple-grey matching the dome palette
-	vec3 deepFog  = vec3(0.08, 0.06, 0.12);  // dark violet for close fog
-	vec3 stormFog = vec3(0.16, 0.12, 0.22);  // lighter purple for distant haze
+	// Storm interference haze — purple-violet matching the hypercane palette
+	vec3 deepFog  = vec3(0.10, 0.06, 0.16);  // dark violet — dense storm interference
+	vec3 stormFog = vec3(0.20, 0.12, 0.28);  // lighter purple — distant storm haze
 
 	// Use sphere world position for noise sampling — gives organic 3D variation
 	vec2 noiseCoord = vWorldPos.xz * 0.15;
@@ -49,6 +49,6 @@ void main() {
 	fogAlpha += (noise - 0.5) * 0.08;
 	fogAlpha = clamp(fogAlpha, 0.0, 1.0);
 
-	// Cap alpha so structures fade into haze rather than disappearing
-	gl_FragColor = vec4(fogTint, fogAlpha * 0.55);
+	// Cap alpha — storm interference is a translucent haze, not total blackout
+	gl_FragColor = vec4(fogTint, fogAlpha * 0.50);
 }

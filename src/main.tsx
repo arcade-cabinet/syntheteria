@@ -883,6 +883,10 @@ function Root() {
 						zIndex: 40,
 						pointerEvents: "auto",
 						fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+						background: "rgba(3,3,8,0.7)",
+						padding: "6px 10px",
+						borderRadius: 8,
+						backdropFilter: "blur(6px)",
 					}}
 				>
 					{([

@@ -6,6 +6,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { cinematicState } from "./cinematicState";
 import { hypercaneFragmentShader, hypercaneVertexShader } from "./shaders";
 
 export function Hypercane() {
@@ -20,8 +21,9 @@ export function Hypercane() {
 
 	useFrame((state) => {
 		if (meshRef.current) {
+			const intensity = cinematicState.wormholeIntensity;
 			uniforms.uTime.value = state.clock.elapsedTime;
-			meshRef.current.rotation.y = state.clock.elapsedTime * 0.3;
+			meshRef.current.rotation.y = state.clock.elapsedTime * 0.3 * intensity;
 		}
 	});
 

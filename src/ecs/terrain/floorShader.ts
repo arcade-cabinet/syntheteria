@@ -16,7 +16,7 @@ import { seedToFloat } from "./cluster";
 import FRAG from "./glsl/floorFrag.glsl";
 import VERT from "./glsl/floorVert.glsl";
 
-/** Fixed zenith sun — perpetual harsh artificial daylight under the dome. */
+/** Fixed zenith sun — perpetual harsh artificial daylight under the storm. */
 const ZENITH_SUN_DIR = new THREE.Vector3(0.05, 0.98, 0.05).normalize();
 const ZENITH_SUN_COLOR = new THREE.Color(1.0, 0.97, 0.92);
 

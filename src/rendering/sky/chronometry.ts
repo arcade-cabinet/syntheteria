@@ -1,11 +1,11 @@
 /**
  * Chronometry — turn-to-time conversion for Syntheteria (future Earth).
  *
- * The orbital illuminator (artificial sun) circles the ecumenopolis dome
+ * The orbital illuminator (artificial sun) circles the ecumenopolis
  * on a controlled schedule. One "day" = 12 game turns. One "year" = 48 turns
  * (4 seasons × 12 turns each).
  *
- * Both the sky dome and the floor lighting system consume these values:
+ * Both the sky and the floor lighting system consume these values:
  *   - dayAngle  → illuminator azimuth position [0, 2π]
  *   - season    → orbital year progress [0, 1]
  *
@@ -45,7 +45,7 @@ export function turnToChronometry(turn: number): Chronometry {
 }
 
 // ---------------------------------------------------------------------------
-// Illuminator position helpers (shared between dome and floor shader)
+// Illuminator position helpers (shared between sky and floor shader)
 // ---------------------------------------------------------------------------
 
 /**

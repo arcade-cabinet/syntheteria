@@ -153,4 +153,41 @@ describe("boardNavGraph", () => {
 			// The path might go around through z=1 row
 		});
 	});
+
+	describe("depth layer / ramp traversal", () => {
+		it("connects tiles with elevation difference of 1 (ramp)", () => {
+			const board = makeBoard(4, 1);
+			// Elevation: 0, 0, 1, 1
+			board.tiles[0][2].elevation = 1;
+			board.tiles[0][3].elevation = 1;
+			const navGraph = buildNavGraph(board, false);
+			const path = yukaShortestPath(0, 0, 3, 0, navGraph);
+			expect(path.length).toBe(4);
+			expect(path[0]).toEqual({ x: 0, z: 0 });
+			expect(path[3]).toEqual({ x: 3, z: 0 });
+		});
+
+		it("blocks tiles with elevation difference > 1 (cliff)", () => {
+			const board = makeBoard(4, 1);
+			// Elevation: 0, 0, 2, 2 — difference of 2 between tile 1 and 2
+			board.tiles[0][2].elevation = 2;
+			board.tiles[0][3].elevation = 2;
+			const navGraph = buildNavGraph(board, false);
+			const path = yukaShortestPath(0, 0, 3, 0, navGraph);
+			// Should be empty — no path across a cliff
+			expect(path).toHaveLength(0);
+		});
+
+		it("ramp traversal costs extra movement", () => {
+			const board = makeBoard(4, 1);
+			// Elevation: 0, 1, 1, 1 — ramp at tile 0→1
+			board.tiles[0][1].elevation = 1;
+			board.tiles[0][2].elevation = 1;
+			board.tiles[0][3].elevation = 1;
+			const navGraph = buildNavGraph(board, false);
+			const path = yukaShortestPath(0, 0, 3, 0, navGraph);
+			expect(path.length).toBe(4);
+			// Path exists, but the ramp edge (0,0)→(1,0) costs 2 instead of 1
+		});
+	});
 });

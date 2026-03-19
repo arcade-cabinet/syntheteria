@@ -6,6 +6,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { cinematicState } from "./cinematicState";
 import { stormFragmentShader, stormVertexShader } from "./shaders";
 
 export function StormClouds({ radius = 8 }: { radius?: number }) {
@@ -22,8 +23,9 @@ export function StormClouds({ radius = 8 }: { radius?: number }) {
 
 	useFrame((state) => {
 		if (meshRef.current) {
-			uniforms.uTime.value = state.clock.elapsedTime;
-			meshRef.current.rotation.y = state.clock.elapsedTime * 0.02;
+			const speed = cinematicState.stormSpeed;
+			uniforms.uTime.value = state.clock.elapsedTime * speed;
+			meshRef.current.rotation.y = state.clock.elapsedTime * 0.02 * speed;
 		}
 	});
 

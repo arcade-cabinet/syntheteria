@@ -8,7 +8,12 @@
  * Phase transitions:
  *   "title"      — Globe rotates slowly, title text visible, far orbit camera
  *   "setup"      — Same as title (globe visible behind setup modal)
- *   "generating" — Globe growth animation 0.3→1, title text fades out
+ *   "generating" — 7-second diegetic cinematic:
+ *                   Phase 1 (0-1.5s):  Lattice spreads (uGrowth 0.3->0.7)
+ *                   Phase 2 (1.5-3s):  Storm intensifies, lightning doubles
+ *                   Phase 3 (3-4.5s):  Wormhole opens, uGrowth->1.0, bright flash
+ *                   Phase 4 (4.5-6s):  Camera zooms orbit->surface, title gone
+ *                   Phase 5 (6-7s):    Transition complete, game phase begins
  *   "playing"    — Game renderers active, title scene hidden
  */
 
@@ -26,6 +31,7 @@ import { CombatEffectsRenderer } from "../rendering/CombatEffectsRenderer";
 import { CultDomeRenderer } from "../rendering/CultDomeRenderer";
 import { CutawayClipPlane } from "../rendering/CutawayClipPlane";
 import { UnifiedTerrainRenderer } from "../rendering/UnifiedTerrainRenderer";
+import { FogOfWarRenderer } from "../rendering/FogOfWarRenderer";
 import { FragmentRenderer } from "../rendering/FragmentRenderer";
 import { IlluminatorRenderer } from "../rendering/IlluminatorRenderer";
 import { InfrastructureRenderer } from "../rendering/InfrastructureRenderer";
@@ -45,6 +51,7 @@ import { SpeechBubbleRenderer } from "../rendering/SpeechBubbleRenderer";
 import { UnitStatusBars } from "../rendering/UnitStatusBars";
 import { HoverTracker } from "./game/HoverTracker";
 import { Hypercane, LightningEffect, StormClouds } from "../rendering/globe";
+import { cinematicState } from "../rendering/globe/cinematicState";
 import {
 	globeFragmentShader,
 	globeVertexShader,
@@ -86,20 +93,76 @@ function SceneReadySignal({ onReady }: { onReady: () => void }) {
 	return null;
 }
 
+// ─── Cinematic Timeline ──────────────────────────────────────────────────────
+// 5-phase, 7-second diegetic transition when "generating" begins.
+//
+// Phase 1 (0–1.5s):  Lattice spreads across globe (uGrowth 0.3→0.7)
+// Phase 2 (1.5–3s):  Storm intensifies — clouds faster, lightning doubles
+// Phase 3 (3–4.5s):  Wormhole opens — hypercane spins up, uGrowth 0.9→1.0, flash
+// Phase 4 (4.5–6s):  Camera zooms from orbit to surface, title text fully faded
+// Phase 5 (6–7s):    "GENERATING..." overlay fades, game phase begins
+
+const CINEMATIC_DURATION = 7;
+
+// cinematicState is imported from rendering/globe/cinematicState.ts
+// Written here by TitleScene's useFrame, read by storm effect components each frame.
+
+/** Compute cinematic beat parameters from elapsed time [0, CINEMATIC_DURATION]. */
+function cinematicBeat(t: number) {
+	// Clamp to [0, duration]
+	const ct = Math.max(0, Math.min(t, CINEMATIC_DURATION));
+
+	// uGrowth: 0.3→0.7 (0–1.5s), 0.7→0.9 (1.5–3s), 0.9→1.0 (3–4.5s), hold 1.0
+	let growth: number;
+	if (ct < 1.5) {
+		growth = 0.3 + (0.4 * ct) / 1.5; // 0.3 → 0.7
+	} else if (ct < 3) {
+		growth = 0.7 + (0.2 * (ct - 1.5)) / 1.5; // 0.7 → 0.9
+	} else if (ct < 4.5) {
+		growth = 0.9 + (0.1 * (ct - 3)) / 1.5; // 0.9 → 1.0
+	} else {
+		growth = 1.0;
+	}
+
+	// Storm cloud speed multiplier: 1→1 (0–1.5s), ramp 1→2.5 (1.5–3s), hold 2.5
+	const stormSpeed = ct < 1.5 ? 1 : ct < 3 ? 1 + (1.5 * (ct - 1.5)) / 1.5 : 2.5;
+
+	// Lightning frequency multiplier: 1 (0–1.5s), 2 (1.5–3s+)
+	const lightningFreq = ct < 1.5 ? 1 : 2;
+
+	// Wormhole/hypercane intensity: 1 (0–3s), ramp 1→3 (3–4.5s), hold 3
+	const wormholeIntensity = ct < 3 ? 1 : ct < 4.5 ? 1 + (2 * (ct - 3)) / 1.5 : 3;
+
+	// Camera zoom: hold orbit (0–4.5s), zoom (4.5–6s), hold surface (6+)
+	// Returns 0→1 zoom progress
+	const zoomProgress = ct < 4.5 ? 0 : ct < 6 ? (ct - 4.5) / 1.5 : 1;
+
+	// Title text opacity: hold 1 (0–1.5s), fade 1→0 (1.5–4.5s)
+	const titleOpacity = ct < 1.5 ? 1 : ct < 4.5 ? 1 - (ct - 1.5) / 3 : 0;
+
+	// Flash intensity: spike at growth=1.0 moment (~4.5s), decay quickly
+	let flash = 0;
+	if (ct >= 4.3 && ct < 5.5) {
+		// Peak at 4.5s, sharp rise then exponential decay
+		const ft = ct - 4.5;
+		if (ft < 0) flash = Math.max(0, 1 - Math.abs(ft) * 5);
+		else flash = Math.exp(-ft * 4);
+	}
+
+	return { growth, stormSpeed, lightningFreq, wormholeIntensity, zoomProgress, titleOpacity, flash };
+}
+
 // ─── Animated Globe (title phases only) ──────────────────────────────────────
 // Animates growth via useFrame + direct uniform writes (no React state needed).
 
 function AnimatedGlobe({
 	phase,
-	onGrowthComplete,
+	cinematicTime,
 }: {
 	phase: GlobePhase;
-	onGrowthComplete?: () => void;
+	cinematicTime: React.RefObject<number>;
 }) {
 	const meshRef = useRef<THREE.Mesh>(null);
-	const growthRef = useRef(0.3);
-	const firedRef = useRef(false);
-	const onComplete = useEffectEvent(onGrowthComplete ?? (() => {}));
 
 	const uniforms = useMemo(
 		() => ({
@@ -109,22 +172,14 @@ function AnimatedGlobe({
 		[],
 	);
 
-	useFrame((state, delta) => {
-		if (phase === "generating") {
-			growthRef.current = Math.min(1, growthRef.current + delta * 0.14);
-			// Fire callback once growth completes
-			if (growthRef.current >= 1 && !firedRef.current) {
-				firedRef.current = true;
-				onComplete();
-			}
-		} else {
-			growthRef.current = 0.3;
-			firedRef.current = false;
-		}
+	useFrame((state) => {
+		const growth = phase === "generating"
+			? cinematicBeat(cinematicTime.current).growth
+			: 0.3;
 
 		if (meshRef.current) {
 			uniforms.uTime.value = state.clock.elapsedTime;
-			uniforms.uGrowth.value = growthRef.current;
+			uniforms.uGrowth.value = growth;
 			meshRef.current.rotation.y = state.clock.elapsedTime * 0.1;
 		}
 	});
@@ -141,10 +196,65 @@ function AnimatedGlobe({
 	);
 }
 
+// ─── Cinematic Flash Overlay ─────────────────────────────────────────────────
+// Full-screen additive flash at the wormhole-opens moment (uGrowth hits 1.0).
+
+function CinematicFlash({
+	phase,
+	cinematicTime,
+}: {
+	phase: GlobePhase;
+	cinematicTime: React.RefObject<number>;
+}) {
+	const meshRef = useRef<THREE.Mesh>(null);
+
+	const uniforms = useMemo(
+		() => ({
+			uFlash: { value: 0 },
+		}),
+		[],
+	);
+
+	useFrame(() => {
+		if (!meshRef.current) return;
+		const flash = phase === "generating"
+			? cinematicBeat(cinematicTime.current).flash
+			: 0;
+		uniforms.uFlash.value = flash;
+		meshRef.current.visible = flash > 0.01;
+	});
+
+	return (
+		<mesh ref={meshRef} renderOrder={999} visible={false}>
+			<planeGeometry args={[100, 100]} />
+			<shaderMaterial
+				uniforms={uniforms}
+				vertexShader={`void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`}
+				fragmentShader={`
+					uniform float uFlash;
+					void main() {
+						gl_FragColor = vec4(0.85, 0.75, 1.0, uFlash * 0.8);
+					}
+				`}
+				transparent
+				depthTest={false}
+				depthWrite={false}
+				blending={THREE.AdditiveBlending}
+			/>
+		</mesh>
+	);
+}
+
 // ─── Animated Title Text (fades out during generating) ───────────────────────
 // Uses direct material opacity writes via useFrame.
 
-function AnimatedTitleText({ phase }: { phase: GlobePhase }) {
+function AnimatedTitleText({
+	phase,
+	cinematicTime,
+}: {
+	phase: GlobePhase;
+	cinematicTime: React.RefObject<number>;
+}) {
 	const [ready, setReady] = useState(false);
 	const groupRef = useRef<THREE.Group>(null);
 	const opacityRef = useRef(1);
@@ -155,9 +265,9 @@ function AnimatedTitleText({ phase }: { phase: GlobePhase }) {
 			groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.06;
 		}
 
-		// Animate opacity
+		// Animate opacity — cinematic-driven during generating, instant restore otherwise
 		if (phase === "generating") {
-			opacityRef.current = Math.max(0, opacityRef.current - delta * 0.3);
+			opacityRef.current = cinematicBeat(cinematicTime.current).titleOpacity;
 		} else {
 			opacityRef.current = Math.min(1, opacityRef.current + delta * 2);
 		}
@@ -247,20 +357,24 @@ function AnimatedTitleText({ phase }: { phase: GlobePhase }) {
 const TITLE_CAM_Z = 10;
 /** Near distance at end of generating zoom (just above globe surface). */
 const SURFACE_CAM_Z = 3.5;
-/** Zoom speed — matches ~5s growth rate so camera arrives when growth=1. */
-const ZOOM_SPEED = 0.14;
 
-function TitleCamera({ phase }: { phase: GlobePhase }) {
+function TitleCamera({
+	phase,
+	cinematicTime,
+}: {
+	phase: GlobePhase;
+	cinematicTime: React.RefObject<number>;
+}) {
 	const camRef = useRef<THREE.PerspectiveCamera>(null);
 	const zRef = useRef(TITLE_CAM_Z);
 
-	useFrame((_, delta) => {
+	useFrame(() => {
 		if (!camRef.current) return;
 		if (phase === "generating") {
-			// Ease toward surface
-			const target = SURFACE_CAM_Z;
-			const t = 1 - Math.pow(0.15, delta * ZOOM_SPEED * 3);
-			zRef.current = zRef.current + (target - zRef.current) * t;
+			const { zoomProgress } = cinematicBeat(cinematicTime.current);
+			// Ease-out cubic for smooth zoom
+			const eased = 1 - Math.pow(1 - zoomProgress, 3);
+			zRef.current = TITLE_CAM_Z + (SURFACE_CAM_Z - TITLE_CAM_Z) * eased;
 		} else {
 			// Snap back to far orbit
 			zRef.current = TITLE_CAM_Z;
@@ -276,19 +390,52 @@ function TitleCamera({ phase }: { phase: GlobePhase }) {
 function TitleScene({
 	phase,
 	onTransitionComplete,
+	cinematicTime,
 }: {
 	phase: GlobePhase;
 	onTransitionComplete?: () => void;
+	cinematicTime: React.RefObject<number>;
 }) {
+	const firedRef = useRef(false);
+	const onComplete = useEffectEvent(onTransitionComplete ?? (() => {}));
+
+	// Accumulate cinematic elapsed time during "generating"
+	useFrame((_, delta) => {
+		if (phase === "generating") {
+			cinematicTime.current = Math.min(
+				CINEMATIC_DURATION,
+				cinematicTime.current + delta,
+			);
+			// Update module-level cinematic state for storm effects
+			const beat = cinematicBeat(cinematicTime.current);
+			cinematicState.stormSpeed = beat.stormSpeed;
+			cinematicState.lightningFreq = beat.lightningFreq;
+			cinematicState.wormholeIntensity = beat.wormholeIntensity;
+			// Fire transition callback once cinematic completes
+			if (cinematicTime.current >= CINEMATIC_DURATION && !firedRef.current) {
+				firedRef.current = true;
+				onComplete();
+			}
+		} else {
+			cinematicTime.current = 0;
+			firedRef.current = false;
+			// Reset storm state
+			cinematicState.stormSpeed = 1;
+			cinematicState.lightningFreq = 1;
+			cinematicState.wormholeIntensity = 1;
+		}
+	});
+
 	return (
 		<>
-			<TitleCamera phase={phase} />
+			<TitleCamera phase={phase} cinematicTime={cinematicTime} />
 			<ambientLight intensity={0.15} />
 			<pointLight position={[10, 10, 10]} intensity={0.4} color="#8be6ff" />
 			<pointLight position={[-8, -4, -8]} intensity={0.2} color="#350a55" />
 
-			<AnimatedGlobe phase={phase} onGrowthComplete={onTransitionComplete} />
-			<AnimatedTitleText phase={phase} />
+			<AnimatedGlobe phase={phase} cinematicTime={cinematicTime} />
+			<AnimatedTitleText phase={phase} cinematicTime={cinematicTime} />
+			<CinematicFlash phase={phase} cinematicTime={cinematicTime} />
 		</>
 	);
 }
@@ -357,10 +504,10 @@ function GameScene({
 		<>
 			{onSceneReady && <SceneReadySignal onReady={onSceneReady} />}
 
-			{/* Storm-filtered ambient — dim baseline, illuminator orbs provide local light */}
-			<ambientLight intensity={0.6} color={0xe8dcd0} />
+			{/* Storm-filtered ambient — readable baseline, illuminator orbs add extra pools of light */}
+			<ambientLight intensity={0.8} color={0xe8dcd0} />
 			<hemisphereLight
-				intensity={0.4}
+				intensity={0.5}
 				color={0xd0c8c0}
 				groundColor={0x302820}
 			/>
@@ -409,6 +556,7 @@ function GameScene({
 			{board && bw && bh && <IlluminatorRenderer board={board} boardWidth={bw} boardHeight={bh} />}
 			<FragmentRenderer />
 			{world && board && <TerritoryOverlayRenderer board={board} world={world} />}
+			{world && board && <FogOfWarRenderer world={world} board={board} />}
 
 			{world && <SceneLoop world={world} />}
 			{world && bw && bh && <HighlightRenderer world={world} useSphere boardWidth={bw} boardHeight={bh} />}
@@ -447,6 +595,8 @@ export function Globe({
 	focusTileZ,
 	stormProfile,
 }: GlobeProps) {
+	const cinematicTime = useRef(0);
+
 	return (
 		<Canvas
 			style={{
@@ -472,7 +622,13 @@ export function Globe({
 			)}
 
 			<Suspense fallback={null}>
-				{phase !== "playing" && <TitleScene phase={phase} onTransitionComplete={onTransitionComplete} />}
+				{phase !== "playing" && (
+					<TitleScene
+						phase={phase}
+						onTransitionComplete={onTransitionComplete}
+						cinematicTime={cinematicTime}
+					/>
+				)}
 
 				{phase === "playing" && (
 					<GameScene

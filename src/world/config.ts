@@ -89,7 +89,7 @@ export const CLIMATE_PROFILE_SPECS: Record<ClimateProfile, ClimateProfileSpec> =
 	{
 		temperate: {
 			label: "Coastal",
-			description: "Shoreline sector. Ecumenopolis meets sealed ocean along one margin.",
+			description: "Shoreline sector. Ecumenopolis meets ocean zones along one margin.",
 			waterLevel: 0.35,
 			sandLevel: 0.45,
 			mountainLevel: 0.7,

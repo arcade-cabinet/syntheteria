@@ -92,7 +92,7 @@ describe("makeFloorShaderMaterial", () => {
 	});
 
 	it("uSunDir is fixed at near-zenith (perpetual daylight — no day/night cycle)", () => {
-		// Under the dome, lighting is fixed. dayAngle is ignored for board lighting.
+		// Under the storm, lighting is fixed. dayAngle is ignored for board lighting.
 		const m1 = makeFloorShaderMaterial("seed", 0, 0);
 		const m2 = makeFloorShaderMaterial("seed", 0, 0);
 		const dir1 = m1.uniforms.uSunDir.value as THREE.Vector3;

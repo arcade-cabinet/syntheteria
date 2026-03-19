@@ -16,8 +16,9 @@
  */
 
 import { Clone, useGLTF } from "@react-three/drei";
+import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { type ReactNode, Suspense, useEffect, useMemo, useRef } from "react";
 import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
@@ -303,6 +304,25 @@ function InfraModel({ url, wx, wz, rotation }: { url: string; wx: number; wz: nu
 }
 
 // ---------------------------------------------------------------------------
+// Distance culling
+// ---------------------------------------------------------------------------
+
+/** Camera distance beyond which infrastructure detail is hidden to save GPU. */
+const INFRA_CULL_DISTANCE = 40;
+
+function InfraCullGroup({ children }: { children: ReactNode }) {
+	const groupRef = useRef<THREE.Group>(null);
+	const camera = useThree((s) => s.camera);
+
+	useFrame(() => {
+		if (!groupRef.current) return;
+		groupRef.current.visible = camera.position.length() < INFRA_CULL_DISTANCE;
+	});
+
+	return <group ref={groupRef}>{children}</group>;
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -318,7 +338,7 @@ export function InfrastructureRenderer({ board, world }: InfrastructureRendererP
 	}, [board, world]);
 
 	return (
-		<>
+		<InfraCullGroup>
 			{instances.map((inst) => (
 				<ModelErrorBoundary key={inst.key} name={inst.url}>
 					<Suspense fallback={null}>
@@ -331,6 +351,6 @@ export function InfrastructureRenderer({ board, world }: InfrastructureRendererP
 					</Suspense>
 				</ModelErrorBoundary>
 			))}
-		</>
+		</InfraCullGroup>
 	);
 }

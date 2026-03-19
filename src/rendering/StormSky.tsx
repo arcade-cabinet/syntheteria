@@ -287,7 +287,7 @@ const SKY_FRAG = /* glsl */ `
 
     // Alpha fade near horizon — wide atmospheric blend where sky meets board sphere.
     // pos.y < 0 is below equator; fade over a broad band to avoid hard geometric edges.
-    float horizonFade = smoothstep(-0.15, 0.30, pos.y);
+    float horizonFade = smoothstep(-0.30, 0.50, pos.y);
 
     gl_FragColor = vec4(color, horizonFade);
   }

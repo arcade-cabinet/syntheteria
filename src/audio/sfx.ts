@@ -32,6 +32,7 @@ export type SfxName =
 	| "unit_select"
 	| "unit_move"
 	| "attack_hit"
+	| "attack_miss"
 	| "harvest_complete"
 	| "build_complete"
 	| "turn_advance"
@@ -92,6 +93,13 @@ function createPooledSynth(
 				envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.05 },
 			}).connect(output);
 			return { synth: noise, secondary: synth, busy: false };
+		}
+		case "attack_miss": {
+			const noise = new T.NoiseSynth({
+				noise: { type: "brown" },
+				envelope: { attack: 0.005, decay: 0.08, sustain: 0, release: 0.05 },
+			}).connect(output);
+			return { synth: noise, busy: false };
 		}
 		case "harvest_complete":
 			return {
@@ -213,6 +221,11 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 			(e.secondary as ToneNs.Synth).triggerAttackRelease("C3", "16n");
 		}
 		return 400;
+	},
+
+	attack_miss: (e) => {
+		(e.synth as ToneNs.NoiseSynth).triggerAttackRelease("32n");
+		return 200;
 	},
 
 	harvest_complete: (e) => {

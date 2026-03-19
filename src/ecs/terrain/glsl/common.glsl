@@ -32,7 +32,7 @@ uniform vec3 uSunColor;
 vec3 applyLighting(vec3 color, vec3 N) {
   vec3 n = normalize(N);
   float ndotl = max(dot(n, uSunDir), 0.0);
-  // Industrial dome overhead: warm bounce off ceiling, warm concrete floor
+  // Industrial storm overhead: warm bounce off cloud layer, warm concrete floor
   vec3 skyTint    = vec3(0.82, 0.78, 0.72);
   vec3 groundTint = vec3(0.22, 0.20, 0.18);
   vec3 hemi = mix(groundTint, skyTint, n.y * 0.5 + 0.5) * 0.5;

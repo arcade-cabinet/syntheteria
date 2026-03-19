@@ -14,13 +14,24 @@ export function isPassableFor(tile: TileData, weightClass: WeightClass = "medium
 	return true;
 }
 
-/** Returns the movement cost for the given tile and weight class. */
-export function movementCost(tile: TileData, weightClass: WeightClass = "medium"): number {
-	if (tile.floorType === "abyssal_platform" && weightClass === "light") return 2;
-	return 1;
+/**
+ * Returns the movement cost for entering the given tile.
+ * When sourceElevation is provided, going UPHILL (destination higher than source)
+ * adds +1 per elevation level. Downhill is free (gravity assists).
+ */
+export function movementCost(tile: TileData, weightClass: WeightClass = "medium", sourceElevation?: number): number {
+	let cost = 1;
+	if (tile.floorType === "abyssal_platform" && weightClass === "light") cost = 2;
+	// Uphill cost: +1 per elevation level gained
+	if (sourceElevation !== undefined && tile.elevation > sourceElevation) {
+		cost += tile.elevation - sourceElevation;
+	}
+	return cost;
 }
 
-/** Returns the up to 4 passable neighbors (N/S/E/W) of tile at (x,z). */
+/** Returns the up to 4 passable neighbors (N/S/E/W) of tile at (x,z).
+ *  Respects depth layers: only connects tiles with elevation difference <= 1 (ramp).
+ *  Cliffs (elevation diff > 1) block traversal. */
 export function tileNeighbors(
 	x: number,
 	z: number,
@@ -28,6 +39,8 @@ export function tileNeighbors(
 	weightClass?: WeightClass,
 ): TileData[] {
 	const { width, height } = board.config;
+	const sourceTile = board.tiles[z]?.[x];
+	if (!sourceTile) return [];
 	const neighbors: TileData[] = [];
 
 	for (const [dx, dz] of DIRECTIONS) {
@@ -35,9 +48,10 @@ export function tileNeighbors(
 		const nz = z + dz;
 		if (nx < 0 || nx >= width || nz < 0 || nz >= height) continue;
 		const tile = board.tiles[nz][nx];
-		if (weightClass !== undefined ? isPassableFor(tile, weightClass) : tile.passable) {
-			neighbors.push(tile);
-		}
+		if (weightClass !== undefined ? !isPassableFor(tile, weightClass) : !tile.passable) continue;
+		// Depth layer gating: only traverse ramps (elevation diff <= 1), not cliffs
+		if (Math.abs(sourceTile.elevation - tile.elevation) > 1) continue;
+		neighbors.push(tile);
 	}
 
 	return neighbors;
@@ -73,10 +87,13 @@ export function reachableTiles(
 		const [cx, cz, cost] = queue.shift()!;
 		if (cost >= maxSteps) continue;
 
+		const sourceTile = board.tiles[cz]?.[cx];
 		const neighbors = tileNeighbors(cx, cz, board, weightClass);
 		for (const neighbor of neighbors) {
 			const key = `${neighbor.x},${neighbor.z}`;
-			const stepCost = weightClass !== undefined ? movementCost(neighbor, weightClass) : 1;
+			const stepCost = weightClass !== undefined
+				? movementCost(neighbor, weightClass, sourceTile?.elevation)
+				: movementCost(neighbor, "medium", sourceTile?.elevation);
 			const newCost = cost + stepCost;
 			if (newCost > maxSteps) continue;
 			const prevCost = costMap.get(key);
@@ -152,12 +169,14 @@ export function shortestPath(
 		}
 
 		openSet.delete(currentKey);
+		const currentTile = board.tiles[current.z][current.x];
 		const neighbors = tileNeighbors(current.x, current.z, board);
 
 		for (const neighbor of neighbors) {
 			const neighborKey = `${neighbor.x},${neighbor.z}`;
+			const stepCost = movementCost(neighbor, "medium", currentTile.elevation);
 			const tentativeG =
-				(gScore.get(currentKey) ?? Number.POSITIVE_INFINITY) + 1;
+				(gScore.get(currentKey) ?? Number.POSITIVE_INFINITY) + stepCost;
 
 			if (tentativeG < (gScore.get(neighborKey) ?? Number.POSITIVE_INFINITY)) {
 				cameFrom.set(neighborKey, currentKey);

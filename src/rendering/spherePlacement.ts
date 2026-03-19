@@ -12,6 +12,7 @@ import { tileToSpherePos, sphereRadius } from "./boardGeometry";
 
 const _up = new THREE.Vector3(0, 1, 0);
 const _normal = new THREE.Vector3();
+const _fallbackAxis = new THREE.Vector3(0, 0, 1);
 
 /**
  * Compute the 3D position and orientation quaternion for a model
@@ -44,7 +45,15 @@ export function sphereModelPlacement(
 	const pz = pos.z + _normal.z * yOffset;
 
 	// Quaternion: rotate from default Y-up to sphere normal
-	const q = new THREE.Quaternion().setFromUnitVectors(_up, _normal);
+	// Handle degenerate cases: normal near Y-up (identity) or near -Y-up (180° flip)
+	const dot = _up.dot(_normal);
+	let q: THREE.Quaternion;
+	if (dot < -0.9999) {
+		// Near south pole — 180° rotation around Z axis
+		q = new THREE.Quaternion().setFromAxisAngle(_fallbackAxis, Math.PI);
+	} else {
+		q = new THREE.Quaternion().setFromUnitVectors(_up, _normal);
+	}
 
 	return {
 		position: [px, py, pz],
@@ -75,8 +84,11 @@ export function sphereModelPlacementWithRotation(
 	const py = pos.y + _normal.y * yOffset;
 	const pz = pos.z + _normal.z * yOffset;
 
-	// First: align Y-up to sphere normal
-	const qSurface = new THREE.Quaternion().setFromUnitVectors(_up, _normal);
+	// First: align Y-up to sphere normal (handle degenerate near-pole cases)
+	const dot = _up.dot(_normal);
+	const qSurface = dot < -0.9999
+		? new THREE.Quaternion().setFromAxisAngle(_fallbackAxis, Math.PI)
+		: new THREE.Quaternion().setFromUnitVectors(_up, _normal);
 	// Then: apply Y-axis rotation in the model's local frame
 	const qYaw = new THREE.Quaternion().setFromAxisAngle(_normal, yRotation);
 	const q = qYaw.multiply(qSurface);

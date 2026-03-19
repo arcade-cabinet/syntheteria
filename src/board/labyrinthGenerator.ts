@@ -11,6 +11,7 @@
  *   Phase 4: Dead end pruning + bridges/tunnels + column markers
  *   Phase 5: Abyssal zones + platform connective tissue
  *   Phase 6: Zone floor assignment + resource scatter + player start
+ *   Phase 7: Multi-level platform generation (elevated tiles + ramps)
  *
  * All random decisions use seededRng with phase-specific suffixes.
  * Same seed = identical output.
@@ -25,6 +26,7 @@ import { growingTreeMazeFill } from "./labyrinthMaze";
 import { connectRegions } from "./labyrinthConnectivity";
 import { applyLabyrinthFeatures } from "./labyrinthFeatures";
 import { applyAbyssalZones, type ProtectedZone } from "./labyrinthAbyssal";
+import { applyMultiLevelPlatforms } from "./labyrinthPlatforms";
 import type { BoardConfig, GeneratedBoard, TileData } from "./types";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -89,6 +91,9 @@ export function generateLabyrinthBoard(config: BoardConfig): GeneratedBoard {
 	// ── Phase 6: Zone floor assignment + resource scatter ────────────────
 	applyZoneFloors(tiles, width, height, seed, climate);
 	scatterResources(tiles, width, height, seed);
+
+	// ── Phase 7: Multi-level platforms ───────────────────────────────────
+	applyMultiLevelPlatforms(tiles, width, height, seed);
 
 	// ── Force player start tile at center — always passable ground ───────
 	forcePlayerStart(tiles, centerX, centerZ, width, height);

@@ -14,7 +14,7 @@ import VERT from "./glsl/heightVert.glsl";
 
 /**
  * Fixed zenith sun direction — perpetual harsh artificial daylight.
- * Robots under the dome don't do day/night. Sun is always near-zenith.
+ * Robots under the storm don't do day/night. Sun is always near-zenith.
  */
 const ZENITH_SUN_DIR = new THREE.Vector3(0.05, 0.98, 0.05).normalize();
 const ZENITH_SUN_COLOR = new THREE.Color(1.0, 0.97, 0.92);

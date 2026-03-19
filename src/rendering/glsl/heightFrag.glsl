@@ -45,7 +45,7 @@ void main() {
   vec3 elevatedColor = vec3(0.42, 0.44, 0.50); // blue-grey steel
   baseColor = mix(baseColor, elevatedColor, heightProxy * 0.6);
 
-  // Bright directional lighting — perpetual artificial daylight from dome zenith
+  // Bright directional lighting — perpetual artificial daylight from sky zenith
   float NdotL = max(dot(normalize(vWorldNormal), normalize(uSunDir)), 0.0);
   vec3 lit = baseColor * (0.90 + 0.40 * NdotL);
   // Reinhard tone-map: low burn to keep floor textures clearly readable

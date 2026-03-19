@@ -6,6 +6,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { cinematicState } from "./cinematicState";
 import { lightningFragmentShader, lightningVertexShader } from "./shaders";
 
 export function LightningEffect() {
@@ -27,8 +28,9 @@ export function LightningEffect() {
 	useFrame((state) => {
 		uniforms.uTime.value = state.clock.elapsedTime;
 
-		// Random bolt triggering — ~3% chance per frame
-		if (Math.random() > 0.97) {
+		// Random bolt triggering — ~3% chance per frame, scaled by cinematic frequency
+		const threshold = 1 - 0.03 * cinematicState.lightningFreq;
+		if (Math.random() > threshold) {
 			flashRef.current = 1;
 			const angle = Math.random() * Math.PI * 2;
 			const radius = 0.6 + Math.random() * 0.3;

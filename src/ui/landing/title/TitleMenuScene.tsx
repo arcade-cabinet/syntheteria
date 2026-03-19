@@ -27,7 +27,7 @@ import {
 	stormVertexShader,
 } from "./shaders";
 
-// ─── Storm Cloud Dome ────────────────────────────────────────────────────────
+// ─── Storm Cloud Sky ─────────────────────────────────────────────────────────
 
 function StormClouds({ radius = 8 }: { radius?: number }) {
 	const meshRef = useRef<THREE.Mesh>(null);

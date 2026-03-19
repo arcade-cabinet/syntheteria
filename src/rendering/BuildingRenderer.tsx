@@ -6,8 +6,9 @@
  */
 
 import { Clone, Sparkles, useGLTF } from "@react-three/drei";
+import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
-import { Suspense, useMemo } from "react";
+import { type ReactNode, Suspense, useMemo, useRef } from "react";
 import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
@@ -124,6 +125,23 @@ function BuildingModel({
 	);
 }
 
+// ─── Distance culling ─────────────────────────────────────────────────────────
+
+/** Camera distance beyond which building models are hidden to save GPU. */
+const BUILDING_CULL_DISTANCE = 70;
+
+function BuildingCullGroup({ children }: { children: ReactNode }) {
+	const groupRef = useRef<THREE.Group>(null);
+	const camera = useThree((s) => s.camera);
+
+	useFrame(() => {
+		if (!groupRef.current) return;
+		groupRef.current.visible = camera.position.length() < BUILDING_CULL_DISTANCE;
+	});
+
+	return <group ref={groupRef}>{children}</group>;
+}
+
 // ─── Main renderer ───────────────────────────────────────────────────────────
 
 type BuildingRendererProps = {
@@ -178,7 +196,7 @@ export function BuildingRenderer({ world, useSphere, boardWidth, boardHeight }: 
 	}, [world]);
 
 	return (
-		<>
+		<BuildingCullGroup>
 			{instances.map((inst) => (
 				<ModelErrorBoundary key={`${inst.tileX},${inst.tileZ}`} name={inst.url}>
 					<Suspense fallback={null}>
@@ -194,6 +212,6 @@ export function BuildingRenderer({ world, useSphere, boardWidth, boardHeight }: 
 					</Suspense>
 				</ModelErrorBoundary>
 			))}
-		</>
+		</BuildingCullGroup>
 	);
 }

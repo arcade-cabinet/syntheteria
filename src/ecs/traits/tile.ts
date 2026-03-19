@@ -7,10 +7,10 @@ export const Tile = trait({
 	z: 0,
 	elevation: 0 as Elevation,
 	passable: true,
-	/** Tile is always explored from turn 1 — terrain is fully visible. */
-	explored: true,
-	/** Visibility [0-1]. All tiles start at 1.0 — no fog of war on terrain. */
-	visibility: 1,
+	/** Whether tile terrain has been revealed by sensor scan. */
+	explored: false,
+	/** Visibility [0-1]. Storm interference hides unexplored terrain. */
+	visibility: 0,
 });
 
 export const TileHighlight = trait({

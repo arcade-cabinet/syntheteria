@@ -9,7 +9,7 @@
  *   Layer 1 (height):   Geometry with bilinearly-interpolated tile elevation
  *                        as a per-vertex attribute. Vertex shader displaces Y.
  *                        Smooth blending between adjacent tile heights = organic
- *                        terrain (hills dome up, pits bowl down, flat areas flat).
+ *                        terrain (hills rise up, pits bowl down, flat areas flat).
  *
  *   Layer 2 (texture):  Fragment shader blends biome patterns with smoothstep
  *                        transitions — no hard colour edges at type boundaries.

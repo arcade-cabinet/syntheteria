@@ -9,6 +9,10 @@ export const UnitMove = trait({
 	toZ: 0,
 	progress: 0.0,
 	mpCost: 1,
+	/** Source tile elevation for Y interpolation during movement. */
+	fromElevation: 0,
+	/** Destination tile elevation for Y interpolation during movement. */
+	toElevation: 0,
 });
 
 export const UnitFaction = trait({ factionId: "" });

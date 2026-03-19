@@ -19,12 +19,14 @@ import {
 	type SimpleBoardInfo,
 } from "./robots/placement";
 import { placeStarterBuildings } from "./systems/buildingPlacement";
+import { revealFog } from "./systems/fogRevealSystem";
 import { runPowerGrid } from "./systems/powerSystem";
 import { placeSalvageProps } from "./systems/salvagePlacement";
 import { tileFloorProps, TileFloor } from "./terrain";
 import { Board } from "./traits/board";
 import { ResourceDeposit } from "./traits/resource";
 import { Tile, TileHighlight } from "./traits/tile";
+import { UnitPos, UnitStats } from "./traits/unit";
 
 
 export interface InitOptions {
@@ -106,6 +108,12 @@ export function initWorldFromBoard(world: World, board: GeneratedBoard, opts: In
 	// Initial power grid — transmitters power buildings at CYCLE 1
 	runPowerGrid(world);
 
-	// All tiles start explored — no fog of war on terrain.
-	// Enemy units are hidden by scan range proximity, not tile explored state.
+	// Initial fog reveal — each faction's units clear storm interference around spawn
+	for (const entity of world.query(UnitPos, UnitStats)) {
+		const pos = entity.get(UnitPos);
+		const stats = entity.get(UnitStats);
+		if (pos && stats) {
+			revealFog(world, pos.tileX, pos.tileZ, stats.scanRange);
+		}
+	}
 }

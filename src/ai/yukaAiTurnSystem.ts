@@ -835,8 +835,31 @@ function computeBuildOptions(
 ): BuildOption[] {
 	const options: BuildOption[] = [];
 
+	// Count existing buildings per type for this faction
+	const existingCounts: Record<string, number> = {};
+	for (const e of world.query(Building)) {
+		const b = e.get(Building);
+		if (b && b.factionId === factionId) {
+			existingCounts[b.buildingType] = (existingCounts[b.buildingType] || 0) + 1;
+		}
+	}
+	// Max allowed per building type — prevents duplicate spam
+	const MAX_PER_TYPE: Record<string, number> = {
+		storm_transmitter: 2,
+		motor_pool: 3,
+		research_lab: 1,
+		outpost: 5,
+		storage_hub: 2,
+		defense_turret: 4,
+		relay_tower: 2,
+	};
+
 	for (const type of AI_BUILDABLE) {
 		const def = BUILDING_DEFS[type];
+		// Skip if already at max count for this type
+		const current = existingCounts[type] || 0;
+		const max = MAX_PER_TYPE[type] ?? 3;
+		if (current >= max) continue;
 		if (!canAfford(world, factionId, def.buildCost)) continue;
 
 		// Find a placement tile near one of this faction's units

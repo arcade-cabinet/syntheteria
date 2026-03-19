@@ -7,6 +7,7 @@ import {
 	ExpandEvaluator,
 	HarvestEvaluator,
 	IdleEvaluator,
+	ResearchEvaluator,
 	ScoutEvaluator,
 	setTurnContext,
 	type TurnContext,
@@ -71,6 +72,9 @@ function setCtx(overrides: Partial<TurnContext> = {}): void {
 		cultThreats: [],
 		factionAllies: [],
 		enemyHeadings: new Map(),
+		hasResearchLab: false,
+		isResearching: false,
+		researchedTechCount: 0,
 		...overrides,
 	});
 }
@@ -117,16 +121,17 @@ describe("AttackEvaluator", () => {
 		}
 	});
 
-	it("aggressionMult scales desirability", () => {
-		const agent = makeAgent({ attackRange: 1 });
+	it("aggressionMult scales desirability for non-adjacent enemies", () => {
+		// Adjacent enemies (dist=1) bypass aggressionMult — test with dist=2 ranged unit
+		const agent = makeAgent({ attackRange: 3 });
 		setCtx({
-			enemies: [{ entityId: 99, x: 1, z: 0, factionId: "player" }],
+			enemies: [{ entityId: 99, x: 2, z: 0, factionId: "player" }],
 			aggressionMult: 0.5,
 		});
 		const lowAggression = evaluator.calculateDesirability(agent);
 
 		setCtx({
-			enemies: [{ entityId: 99, x: 1, z: 0, factionId: "player" }],
+			enemies: [{ entityId: 99, x: 2, z: 0, factionId: "player" }],
 			aggressionMult: 2,
 		});
 		const highAggression = evaluator.calculateDesirability(agent);
@@ -218,16 +223,19 @@ describe("HarvestEvaluator", () => {
 		expect(evaluator.calculateDesirability(agent)).toBe(0);
 	});
 
-	it("scores nearby deposits", () => {
+	it("scores nearby deposits highly", () => {
 		const agent = makeAgent({ scanRange: 4 });
-		setCtx({ deposits: [{ entityId: 50, x: 2, z: 0 }] });
-		expect(evaluator.calculateDesirability(agent)).toBeGreaterThan(0);
+		setCtx({ deposits: [{ entityId: 50, x: 2, z: 0 }], totalDeposits: 1 });
+		expect(evaluator.calculateDesirability(agent)).toBeGreaterThan(0.5);
 	});
 
-	it("ignores deposits beyond 2x scanRange", () => {
+	it("still scores distant deposits (reduced)", () => {
 		const agent = makeAgent({ scanRange: 4 });
-		setCtx({ deposits: [{ entityId: 50, x: 15, z: 15 }] });
-		expect(evaluator.calculateDesirability(agent)).toBe(0);
+		setCtx({ deposits: [{ entityId: 50, x: 15, z: 15 }], totalDeposits: 1 });
+		// Distant deposits still get a score (at least 0.15 floor)
+		const score = evaluator.calculateDesirability(agent);
+		expect(score).toBeGreaterThan(0);
+		expect(score).toBeLessThan(0.5);
 	});
 
 	it("setGoal harvests adjacent deposit", () => {
@@ -307,9 +315,45 @@ describe("ExpandEvaluator", () => {
 		evaluator.setGoal(agent);
 		expect(agent.decidedAction!.type).toBe("move");
 		if (agent.decidedAction!.type === "move") {
-			// Agent is at (5,5), faction center is (3,3) → move toward (10,10)
-			expect(agent.decidedAction!.toX).toBe(10);
-			expect(agent.decidedAction!.toZ).toBe(10);
+			// Agent is at (5,5), faction center is (3,3) → pushes 10 tiles outward → (15,15)
+			expect(agent.decidedAction!.toX).toBe(15);
+			expect(agent.decidedAction!.toZ).toBe(15);
+		}
+	});
+
+	it("setGoal sends workers far from center when faction has 6+ units", () => {
+		const agent = makeAgent({ tileX: 5, tileZ: 5, attack: 0 }); // worker (attack=0)
+		setCtx({
+			rememberedEnemies: [],
+			factionCenter: { x: 5, z: 5 },
+			boardSize: { width: 44, height: 44 },
+			unitCount: 8,
+		});
+		evaluator.setGoal(agent);
+		expect(agent.decidedAction!.type).toBe("move");
+		if (agent.decidedAction!.type === "move") {
+			// Should target a distant point (at least 15 tiles from center)
+			const dist =
+				Math.abs(agent.decidedAction!.toX - 5) +
+				Math.abs(agent.decidedAction!.toZ - 5);
+			expect(dist).toBeGreaterThanOrEqual(15);
+		}
+	});
+
+	it("setGoal does not send combat units far for expansion", () => {
+		const agent = makeAgent({ tileX: 5, tileZ: 5, attack: 3 }); // combat unit
+		setCtx({
+			rememberedEnemies: [],
+			factionCenter: { x: 5, z: 5 },
+			boardSize: { width: 44, height: 44 },
+			unitCount: 8,
+		});
+		evaluator.setGoal(agent);
+		expect(agent.decidedAction!.type).toBe("move");
+		// Combat units should just push outward from center, not 15+ tiles
+		if (agent.decidedAction!.type === "move") {
+			// Should move toward board center since at faction center
+			expect(agent.decidedAction!.toX).not.toBeUndefined();
 		}
 	});
 });
@@ -321,10 +365,10 @@ describe("ExpandEvaluator", () => {
 describe("IdleEvaluator", () => {
 	const evaluator = new IdleEvaluator(1.0);
 
-	it("returns a low constant desirability", () => {
+	it("returns a near-zero constant desirability", () => {
 		const agent = makeAgent();
 		setCtx();
-		expect(evaluator.calculateDesirability(agent)).toBe(0.3);
+		expect(evaluator.calculateDesirability(agent)).toBe(0.05);
 	});
 
 	it("setGoal sets idle action", () => {
@@ -341,10 +385,19 @@ describe("IdleEvaluator", () => {
 describe("BuildEvaluator", () => {
 	const evaluator = new BuildEvaluator(1.0);
 
-	it("returns 0 when no build options available", () => {
+	it("returns 0 when no build options and no existing buildings", () => {
 		const agent = makeAgent();
-		setCtx({ buildOptions: [] });
+		setCtx({ buildOptions: [], factionBuildingCount: 0, motorPoolCount: 0 });
 		expect(evaluator.calculateDesirability(agent)).toBe(0);
+	});
+
+	it("returns moderate score when no build options but has existing buildings", () => {
+		const agent = makeAgent();
+		setCtx({ buildOptions: [], factionBuildingCount: 3, motorPoolCount: 0 });
+		// Maintains build desire to drive resource harvesting
+		const score = evaluator.calculateDesirability(agent);
+		expect(score).toBeGreaterThan(0);
+		expect(score).toBeLessThan(0.6);
 	});
 
 	it("returns positive score when build options exist", () => {
@@ -398,6 +451,36 @@ describe("BuildEvaluator", () => {
 		});
 		evaluator.setGoal(agent);
 		expect(agent.decidedAction!.type).toBe("move");
+	});
+
+	it("setGoal picks motor_pool over storage_hub by priority", () => {
+		const agent = makeAgent({ tileX: 2, tileZ: 2 });
+		setCtx({
+			buildOptions: [
+				{ buildingType: "storage_hub", tileX: 3, tileZ: 2 },
+				{ buildingType: "motor_pool", tileX: 4, tileZ: 2 },
+			],
+		});
+		evaluator.setGoal(agent);
+		expect(agent.decidedAction!.type).toBe("build");
+		if (agent.decidedAction!.type === "build") {
+			expect(agent.decidedAction!.buildingType).toBe("motor_pool");
+		}
+	});
+
+	it("setGoal picks research_lab over outpost by priority", () => {
+		const agent = makeAgent({ tileX: 2, tileZ: 2 });
+		setCtx({
+			buildOptions: [
+				{ buildingType: "outpost", tileX: 3, tileZ: 2 },
+				{ buildingType: "research_lab", tileX: 4, tileZ: 2 },
+			],
+		});
+		evaluator.setGoal(agent);
+		expect(agent.decidedAction!.type).toBe("build");
+		if (agent.decidedAction!.type === "build") {
+			expect(agent.decidedAction!.buildingType).toBe("research_lab");
+		}
 	});
 });
 
@@ -498,6 +581,38 @@ describe("ScoutEvaluator", () => {
 });
 
 // ---------------------------------------------------------------------------
+// ResearchEvaluator
+// ---------------------------------------------------------------------------
+
+describe("ResearchEvaluator", () => {
+	const evaluator = new ResearchEvaluator(1.0);
+
+	it("returns 0 when no research lab exists", () => {
+		const agent = makeAgent();
+		setCtx({ hasResearchLab: false, isResearching: false });
+		expect(evaluator.calculateDesirability(agent)).toBe(0);
+	});
+
+	it("returns 0 when already researching", () => {
+		const agent = makeAgent();
+		setCtx({ hasResearchLab: true, isResearching: true });
+		expect(evaluator.calculateDesirability(agent)).toBe(0);
+	});
+
+	it("returns high score when lab exists and not researching", () => {
+		const agent = makeAgent();
+		setCtx({ hasResearchLab: true, isResearching: false, researchedTechCount: 0 });
+		expect(evaluator.calculateDesirability(agent)).toBe(0.95);
+	});
+
+	it("returns slightly lower score when some techs already researched", () => {
+		const agent = makeAgent();
+		setCtx({ hasResearchLab: true, isResearching: false, researchedTechCount: 3 });
+		expect(evaluator.calculateDesirability(agent)).toBe(0.8);
+	});
+});
+
+// ---------------------------------------------------------------------------
 // Full brain arbitration
 // ---------------------------------------------------------------------------
 
@@ -533,6 +648,7 @@ describe("Think brain arbitration", () => {
 		setCtx({
 			enemies: [{ entityId: 99, x: 15, z: 15, factionId: "player" }],
 			deposits: [{ entityId: 50, x: 1, z: 0 }],
+			totalDeposits: 1,
 		});
 
 		agent.arbitrate();

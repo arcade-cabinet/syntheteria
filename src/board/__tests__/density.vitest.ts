@@ -82,12 +82,12 @@ describe("density verification", () => {
 			const ratio = passableSalvage / passableCount;
 			expect(
 				ratio,
-				`seed "${seed}": salvage ${(ratio * 100).toFixed(1)}% of passable — expected 15-30%`,
-			).toBeGreaterThanOrEqual(0.15);
+				`seed "${seed}": salvage ${(ratio * 100).toFixed(1)}% of passable — expected 30-60%`,
+			).toBeGreaterThanOrEqual(0.3);
 			expect(
 				ratio,
-				`seed "${seed}": salvage ${(ratio * 100).toFixed(1)}% of passable — expected 15-30%`,
-			).toBeLessThanOrEqual(0.3);
+				`seed "${seed}": salvage ${(ratio * 100).toFixed(1)}% of passable — expected 30-60%`,
+			).toBeLessThanOrEqual(0.6);
 		}
 	});
 

@@ -66,7 +66,7 @@ const BOARD_VERTEX_BUDGET = 300_000;
  * Budget: 8000 instances max (without fog gating).
  * In practice, fog of war limits visible instances to explored tiles only.
  */
-const SALVAGE_INSTANCE_BUDGET = 8000;
+const SALVAGE_INSTANCE_BUDGET = 16000;
 
 /**
  * Procedural structure budget.

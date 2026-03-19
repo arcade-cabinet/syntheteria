@@ -65,6 +65,12 @@ export interface TurnContext {
 	factionAllies: Array<{ x: number; z: number }>;
 	/** Enemy headings derived from perception memory (entity ID → heading vector). */
 	enemyHeadings: Map<number, { dx: number; dz: number }>;
+	/** Whether the faction has a research lab. */
+	hasResearchLab: boolean;
+	/** Whether the faction is currently researching a tech. */
+	isResearching: boolean;
+	/** Number of techs already researched by this faction. */
+	researchedTechCount: number;
 }
 
 let _ctx: TurnContext = {
@@ -86,6 +92,9 @@ let _ctx: TurnContext = {
 	cultThreats: [],
 	factionAllies: [],
 	enemyHeadings: new Map(),
+	hasResearchLab: false,
+	isResearching: false,
+	researchedTechCount: 0,
 };
 
 export function setTurnContext(ctx: TurnContext): void {
@@ -108,11 +117,19 @@ export class AttackEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		for (const enemy of _ctx.enemies) {
 			const dist = manhattan(agent.tileX, agent.tileZ, enemy.x, enemy.z);
 			if (dist <= agent.attackRange) {
-				// In range — high desirability, closer = better
-				const score = 0.9 + (1 - dist / Math.max(agent.attackRange, 1)) * 0.1;
-				if (score > best) best = score;
+				// In range — very high desirability so attack ALWAYS wins over idle/expand
+				// Adjacent enemies (dist <= 1) get near-maximum score regardless of aggression
+				if (dist <= 1) {
+					// Adjacent: always attack — hard floor of 0.95 ignores aggressionMult
+					best = Math.max(best, 0.95);
+				} else {
+					const score = 0.85 + (1 - dist / Math.max(agent.attackRange, 1)) * 0.1;
+					if (score > best) best = score;
+				}
 			}
 		}
+		// Adjacent attacks bypass aggressionMult — they ALWAYS happen
+		if (best >= 0.95) return best;
 		return best * _ctx.aggressionMult;
 	}
 
@@ -246,26 +263,34 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 
 export class HarvestEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	calculateDesirability(agent: SyntheteriaAgent): number {
+		if (_ctx.totalDeposits === 0) return 0;
+
 		let best = 0;
 		for (const dep of _ctx.deposits) {
 			const dist = manhattan(agent.tileX, agent.tileZ, dep.x, dep.z);
-			if (dist > agent.scanRange * 2) continue;
-			// Adjacent deposits are highly desirable; score tapers with distance
-			const score =
-				dist <= 1
-					? 0.95
-					: Math.max(0, 0.85 * (1 - dist / (agent.scanRange * 2)));
-			if (score > best) best = score;
+			if (dist <= 1) {
+				// Adjacent — highest desirability
+				best = Math.max(best, 0.95);
+			} else if (dist <= agent.scanRange * 2) {
+				// Nearby — high desirability, tapers with distance
+				const score = 0.85 * (1 - dist / (agent.scanRange * 2));
+				best = Math.max(best, score);
+			} else {
+				// Distant deposit — still worth going after (reduced score)
+				// This prevents the AI from giving up when nearby deposits are depleted
+				const score = Math.max(0.15, 0.5 * (1 - dist / 60));
+				best = Math.max(best, score);
+			}
 		}
 		return best;
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
+		// Search ALL deposits, not just nearby ones — find closest on entire board
 		let bestDep: (typeof _ctx.deposits)[0] | null = null;
 		let bestDist = Infinity;
 		for (const dep of _ctx.deposits) {
 			const dist = manhattan(agent.tileX, agent.tileZ, dep.x, dep.z);
-			if (dist > agent.scanRange * 2) continue;
 			if (dist < bestDist) {
 				bestDist = dist;
 				bestDep = dep;
@@ -281,7 +306,7 @@ export class HarvestEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 					targetZ: bestDep.z,
 				};
 			} else {
-				// Move toward deposit
+				// Move toward deposit (even if far away)
 				agent.decidedAction = {
 					type: "move",
 					toX: bestDep.x,
@@ -328,7 +353,42 @@ export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			}
 		}
 
-		// Priority 2: Move away from faction center toward frontier
+		// Priority 2: Multi-base expansion — workers with enough resources
+		// should head far from faction center to found outposts
+		const isWorkerLike = agent.attack === 0;
+		const hasEnoughUnits = _ctx.unitCount >= 6;
+		if (isWorkerLike && hasEnoughUnits) {
+			const { width, height } = _ctx.boardSize;
+			const fc = _ctx.factionCenter;
+			// Pick a target at least 15 tiles from faction center
+			const candidates = [
+				{ x: Math.floor(width * 0.2), z: Math.floor(height * 0.2) },
+				{ x: Math.floor(width * 0.8), z: Math.floor(height * 0.2) },
+				{ x: Math.floor(width * 0.2), z: Math.floor(height * 0.8) },
+				{ x: Math.floor(width * 0.8), z: Math.floor(height * 0.8) },
+				{ x: Math.floor(width * 0.5), z: Math.floor(height * 0.2) },
+				{ x: Math.floor(width * 0.5), z: Math.floor(height * 0.8) },
+			];
+			let bestCandidate = candidates[0];
+			let bestDist = 0;
+			for (const c of candidates) {
+				const distFromCenter = manhattan(fc.x, fc.z, c.x, c.z);
+				if (distFromCenter > bestDist) {
+					bestDist = distFromCenter;
+					bestCandidate = c;
+				}
+			}
+			if (bestDist >= 15) {
+				agent.decidedAction = {
+					type: "move",
+					toX: bestCandidate.x,
+					toZ: bestCandidate.z,
+				};
+				return;
+			}
+		}
+
+		// Priority 3: Move away from faction center toward frontier
 		const { width, height } = _ctx.boardSize;
 		const fc = _ctx.factionCenter;
 		// Direction vector from faction center outward through this unit
@@ -337,14 +397,14 @@ export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		const len = Math.abs(dx) + Math.abs(dz);
 
 		if (len > 0) {
-			// Push further in the same direction, clamped to board
+			// Push much further (10 tiles) to spread across the map
 			const targetX = Math.max(
 				0,
-				Math.min(width - 1, agent.tileX + Math.sign(dx) * 5),
+				Math.min(width - 1, agent.tileX + Math.sign(dx) * 10),
 			);
 			const targetZ = Math.max(
 				0,
-				Math.min(height - 1, agent.tileZ + Math.sign(dz) * 5),
+				Math.min(height - 1, agent.tileZ + Math.sign(dz) * 10),
 			);
 			agent.decidedAction = {
 				type: "move",
@@ -352,11 +412,24 @@ export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 				toZ: targetZ,
 			};
 		} else {
-			// Unit is exactly at faction center — move toward board center
+			// Unit is exactly at faction center — pick a distant board quadrant
+			const quadrants = [
+				{ x: Math.floor(width * 0.2), z: Math.floor(height * 0.2) },
+				{ x: Math.floor(width * 0.8), z: Math.floor(height * 0.2) },
+				{ x: Math.floor(width * 0.2), z: Math.floor(height * 0.8) },
+				{ x: Math.floor(width * 0.8), z: Math.floor(height * 0.8) },
+			];
+			// Pick furthest from current position
+			let best = quadrants[0];
+			let bestD = 0;
+			for (const q of quadrants) {
+				const d = manhattan(agent.tileX, agent.tileZ, q.x, q.z);
+				if (d > bestD) { bestD = d; best = q; }
+			}
 			agent.decidedAction = {
 				type: "move",
-				toX: _ctx.boardCenter.x,
-				toZ: _ctx.boardCenter.z,
+				toX: best.x,
+				toZ: best.z,
 			};
 		}
 	}
@@ -369,36 +442,48 @@ export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 /**
  * AI building priority order:
  *   1. storm_transmitter — power first (foundation for everything)
- *   2. storage_hub — increases resource capacity for stockpiling
- *   3. motor_pool — enables unit fabrication (needs silicon_wafer from salvage)
- *   4. outpost — cheap territorial expansion
- *   5. defense_turret — territorial defense
- *   6. relay_tower — signal coverage
+ *   2. motor_pool — enables unit fabrication (essential)
+ *   3. research_lab — tech progress (without this, no specializations)
+ *   4. outpost — territory + pop cap expansion
+ *   5. motor_pool (second) — throughput when first is busy
+ *   6. storage_hub — storage (low priority)
+ *   7. defense_turret — defense when under threat
+ *   8. relay_tower — signal coverage
  */
 const BUILD_PRIORITY: string[] = [
 	"storm_transmitter",
-	"storage_hub",
 	"motor_pool",
+	"research_lab",
 	"outpost",
+	"storage_hub",
 	"defense_turret",
 	"relay_tower",
 ];
 
 export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	calculateDesirability(_agent: SyntheteriaAgent): number {
-		if (_ctx.buildOptions.length === 0) return 0;
+		const hasBuildOptions = _ctx.buildOptions.length > 0;
 
-		// Higher desire when faction has few buildings — saturates at 20 not 8
-		const buildingBonus = Math.max(0, 1 - _ctx.factionBuildingCount / 20);
+		// Higher desire when faction has few buildings — saturates at 30
+		const buildingBonus = Math.max(0, 1 - _ctx.factionBuildingCount / 30);
 		// Strong desire if fewer than 2 motor pools — need fabrication throughput
 		const motorPoolBonus = _ctx.motorPoolCount < 2 ? 0.5 - _ctx.motorPoolCount * 0.25 : 0;
 		// Time ramp: AI should build more as game progresses
 		const timeRamp = Math.min(1, _ctx.currentTurn / 20);
 
-		return Math.min(
-			1,
-			0.45 + buildingBonus * 0.35 + motorPoolBonus + timeRamp * 0.15,
-		);
+		if (hasBuildOptions) {
+			// Can afford something — high desire
+			return Math.min(
+				1,
+				0.55 + buildingBonus * 0.3 + motorPoolBonus + timeRamp * 0.15,
+			);
+		}
+
+		// Can't afford anything yet — maintain moderate desire if the faction
+		// has infrastructure (drives units to harvest toward building goals)
+		// but return 0 if no buildings exist (nothing to build toward yet)
+		if (_ctx.factionBuildingCount === 0 && _ctx.motorPoolCount === 0) return 0;
+		return Math.min(1, 0.2 + buildingBonus * 0.15 + motorPoolBonus * 0.5);
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -443,6 +528,28 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 				};
 			}
 		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Research Evaluator — queue tech research when a lab exists and idle
+// ---------------------------------------------------------------------------
+
+export class ResearchEvaluator extends GoalEvaluator<SyntheteriaAgent> {
+	calculateDesirability(_agent: SyntheteriaAgent): number {
+		// No lab → can't research
+		if (!_ctx.hasResearchLab) return 0;
+		// Already researching → no action needed
+		if (_ctx.isResearching) return 0;
+		// Lab exists, no active research → high priority
+		// More urgent early game when no techs yet
+		const urgency = _ctx.researchedTechCount === 0 ? 0.95 : 0.8;
+		return urgency;
+	}
+
+	setGoal(agent: SyntheteriaAgent): void {
+		// Signal to the turn system that this faction needs to pick a tech
+		agent.decidedAction = { type: "idle" };
 	}
 }
 
@@ -665,8 +772,9 @@ export class EvadeEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 
 export class IdleEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	calculateDesirability(_agent: SyntheteriaAgent): number {
-		// Baseline score — defensive factions (high idle bias) stay put more
-		return 0.3;
+		// Near-zero fallback — idle should NEVER win when any productive action
+		// is possible. Only wins when every other evaluator returns 0.
+		return 0.05;
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -704,6 +812,7 @@ export function logEvaluatorChoice(
 		"Harvest",
 		"Expand",
 		"Build",
+		"Research",
 		"Scout",
 		"FloorMine",
 		"Evade",

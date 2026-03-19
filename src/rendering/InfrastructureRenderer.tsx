@@ -47,15 +47,15 @@ const MODEL_BASE = "/assets/models/";
 // ---------------------------------------------------------------------------
 
 /** Fraction of eligible corridor-edge tiles that get a pipe. */
-const PIPE_DENSITY = 0.25;
+const PIPE_DENSITY = 0.5;
 /** Fraction of intersections that get a lamp. */
-const LAMP_DENSITY = 0.4;
+const LAMP_DENSITY = 0.7;
 /** Fraction of long-corridor tiles that get a support. */
-const SUPPORT_DENSITY = 0.15;
+const SUPPORT_DENSITY = 0.3;
 /** Fraction of boundary structural tiles that get an antenna/power prop. */
-const ANTENNA_DENSITY = 0.08;
+const ANTENNA_DENSITY = 0.16;
 /** Fraction of doorway tiles that get a gateway prop. */
-const GATEWAY_DENSITY = 0.3;
+const GATEWAY_DENSITY = 0.6;
 
 // ---------------------------------------------------------------------------
 // Deterministic model picker

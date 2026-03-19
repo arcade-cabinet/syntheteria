@@ -21,7 +21,12 @@ import { TRACK_REGISTRY } from "../ecs/robots/specializations/trackRegistry";
 import type { RobotClass } from "../ecs/robots/types";
 import { queueFabrication } from "../ecs/systems/fabricationSystem";
 import { getPopCap, getPopulation } from "../ecs/systems/populationSystem";
-import { getResearchState } from "../ecs/systems/researchSystem";
+import {
+	countResearchLabs,
+	getAvailableTechs,
+	getResearchState,
+	queueResearch,
+} from "../ecs/systems/researchSystem";
 import { canAfford, spendResources } from "../ecs/systems/resourceSystem";
 import { TileFloor } from "../ecs/terrain/traits";
 import type { ResourceMaterial } from "../ecs/terrain/types";
@@ -363,6 +368,13 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			}
 		}
 
+		// Research context
+		const researchLabCount = countResearchLabs(world, factionId);
+		const researchState = getResearchState(world, factionId);
+		const hasResearchLab = researchLabCount > 0;
+		const isResearching = !!researchState?.currentTechId;
+		const researchedTechCount = researchState?.researchedTechs.length ?? 0;
+
 		// Set context for this faction's evaluators
 		setTurnContext({
 			enemies: factionEnemies,
@@ -383,6 +395,9 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			cultThreats,
 			factionAllies,
 			enemyHeadings,
+			hasResearchLab,
+			isResearching,
+			researchedTechCount,
 		});
 
 		// ── Faction FSM: macro strategy bias overrides ──────────────
@@ -407,11 +422,11 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		});
 
 		// Arbitrate each agent in this faction
-		// Evaluators are added in order: attack, chase, harvest, expand, build, scout, floorMine, evade, idle
-		// Map FSM bias keys to evaluator indices (floorMine uses harvest bias)
+		// Evaluators are added in order: attack, chase, harvest, expand, build, research, scout, floorMine, evade, idle
+		// Map FSM bias keys to evaluator indices (research uses build bias, floorMine uses harvest bias)
 		const evalBiasMap = [
 			"attack", "chase", "harvest", "expand",
-			"build", "scout", "harvest", "evade", "idle",
+			"build", "build", "scout", "harvest", "evade", "idle",
 		] as const;
 
 		for (const snap of factionSnapshots) {
@@ -532,10 +547,13 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		}
 	}
 
-	// ── Step 6b: AI fabrication — queue units at idle motor pools ────────
+	// ── Step 6b: AI research — queue tech research when labs are idle ────
+	runAiResearch(world, [...agentsByFaction.keys()]);
+
+	// ── Step 6c: AI fabrication — queue units at idle motor pools ────────
 	runAiFabrication(world, [...agentsByFaction.keys()]);
 
-	// ── Step 6c: Trigger checks — corruption zones + faction contact ────
+	// ── Step 6d: Trigger checks — corruption zones + faction contact ────
 	checkCorruptionTriggers(world, currentTurn);
 	checkFactionContact(world, currentTurn);
 
@@ -656,6 +674,7 @@ const AI_BUILDABLE: BuildingType[] = [
 	"relay_tower",
 	"outpost",
 	"power_box",
+	"research_lab",
 ];
 
 interface FactionBuildingInfo {
@@ -896,22 +915,148 @@ function findMineableTilesNearUnits(
 }
 
 // ---------------------------------------------------------------------------
+// AI Research — pick and queue tech research per faction personality
+// ---------------------------------------------------------------------------
+
+/**
+ * Faction-specific tech priority lists. AI picks the first available tech
+ * from its faction's preferred order, falling back to any available tech.
+ */
+const FACTION_TECH_PRIORITY: Record<string, readonly string[]> = {
+	reclaimers: [
+		"advanced_harvesting",
+		"efficient_fabrication",
+		"mark_ii_components",
+		"deep_mining",
+		"reinforced_chassis",
+		"mark_iii_components",
+		"signal_amplification",
+	],
+	volt_collective: [
+		"signal_amplification",
+		"network_encryption",
+		"reinforced_chassis",
+		"mark_ii_components",
+		"advanced_harvesting",
+		"efficient_fabrication",
+		"quantum_processors",
+	],
+	signal_choir: [
+		"signal_amplification",
+		"reinforced_chassis",
+		"mark_ii_components",
+		"advanced_harvesting",
+		"storm_shielding",
+		"mark_iii_components",
+		"network_encryption",
+	],
+	iron_creed: [
+		"reinforced_chassis",
+		"storm_shielding",
+		"mark_ii_components",
+		"advanced_harvesting",
+		"efficient_fabrication",
+		"mark_iii_components",
+		"adaptive_armor",
+	],
+};
+
+/**
+ * For each AI faction with a research lab but no active research,
+ * pick a tech from the faction's preference list and start researching.
+ */
+function runAiResearch(world: World, factionIds: string[]): void {
+	for (const factionId of factionIds) {
+		if (factionId === "player") continue;
+		if (isCultFactionId(factionId)) continue;
+
+		const state = getResearchState(world, factionId);
+		if (!state) continue;
+		// Already researching — nothing to do
+		if (state.currentTechId) continue;
+		// No research lab — can't research
+		if (state.labCount === 0) continue;
+
+		const available = getAvailableTechs(world, factionId);
+		if (available.length === 0) continue;
+
+		const availableIds = new Set(available.map((t) => t.id));
+
+		// Try faction-specific priority first
+		const priorities = FACTION_TECH_PRIORITY[factionId];
+		if (priorities) {
+			for (const techId of priorities) {
+				if (availableIds.has(techId)) {
+					queueResearch(world, factionId, techId);
+					break;
+				}
+			}
+		}
+
+		// Check if we queued something — re-read state
+		const afterState = getResearchState(world, factionId);
+		if (afterState?.currentTechId) continue;
+
+		// Fallback: pick the first available tech (lowest tier first)
+		const sorted = [...available].sort((a, b) => a.tier - b.tier);
+		queueResearch(world, factionId, sorted[0].id);
+	}
+}
+
+// ---------------------------------------------------------------------------
 // AI Fabrication — queue units at idle motor pools using pickAITrack
 // ---------------------------------------------------------------------------
 
-/** Priority order for AI fabrication. */
-const AI_FAB_PRIORITY: RobotClass[] = [
-	"worker",
-	"scout",
-	"infantry",
-	"cavalry",
-	"ranged",
-	"support",
-];
+/**
+ * Compute fabrication priority based on current faction composition.
+ * Workers and scouts come first if count is low, then military units.
+ */
+function computeFabPriority(
+	world: World,
+	factionId: string,
+): RobotClass[] {
+	// Count existing units by class
+	const counts: Record<string, number> = {
+		worker: 0,
+		scout: 0,
+		infantry: 0,
+		cavalry: 0,
+		ranged: 0,
+		support: 0,
+	};
+	for (const e of world.query(UnitPos, UnitFaction, UnitStats)) {
+		const f = e.get(UnitFaction);
+		const v = e.get(UnitStats);
+		if (!f || f.factionId !== factionId || !v) continue;
+		// Determine class from attack/defense/scanRange
+		// Workers have 0 attack, scouts have high scanRange
+		if (v.attack === 0) counts.worker++;
+		else if (v.scanRange >= 6) counts.scout++;
+		else if (v.mp >= 4) counts.cavalry++;
+		else if (v.attackRange >= 2 || v.attack >= 4) counts.ranged++;
+		else if (v.attack >= 2) counts.infantry++;
+		else counts.support++;
+	}
+
+	const priority: RobotClass[] = [];
+
+	// Workers first if < 2
+	if (counts.worker < 2) priority.push("worker");
+	// Scouts if < 2
+	if (counts.scout < 2) priority.push("scout");
+	// Then military
+	priority.push("infantry", "cavalry", "ranged", "support");
+	// Finally workers/scouts if already have enough
+	if (counts.worker >= 2) priority.push("worker");
+	if (counts.scout >= 2) priority.push("scout");
+
+	return priority;
+}
 
 /**
  * For each AI faction, find powered motor pools with open slots and queue
- * a unit using faction track preferences via pickAITrack.
+ * units. NEVER leave a motor pool idle when resources are available.
+ * Fills ALL available slots, not just one per turn.
  */
 function runAiFabrication(world: World, factionIds: string[]): void {
 	// Build gate and v2 tech maps from the track registry
@@ -930,31 +1075,54 @@ function runAiFabrication(world: World, factionIds: string[]): void {
 		const researchState = getResearchState(world, factionId);
 		const researched = new Set(researchState?.researchedTechs ?? []);
 
-		// Find powered motor pools with open slots
+		// Dynamic priority based on current composition
+		const fabPriority = computeFabPriority(world, factionId);
+
+		// Find powered motor pools with open slots — fill ALL open slots
 		for (const e of world.query(Building, BotFabricator, Powered)) {
 			const b = e.get(Building);
 			const fab = e.get(BotFabricator);
 			if (!b || !fab || b.factionId !== factionId) continue;
-			if (fab.queueSize >= fab.fabricationSlots) continue;
 
-			// Pick a robot class in priority order
-			for (const robotClass of AI_FAB_PRIORITY) {
-				const trackId = pickAITrack(
-					factionId,
-					robotClass,
-					researched,
-					gateTechIds,
-				);
-				const trackVersion = pickAITrackVersion(trackId, researched, v2TechIds);
+			// Fill every open slot, not just one
+			let openSlots = fab.fabricationSlots - fab.queueSize;
+			while (openSlots > 0) {
+				let queued = false;
+				// Pick a robot class in priority order
+				for (const robotClass of fabPriority) {
+					const trackId = pickAITrack(
+						factionId,
+						robotClass,
+						researched,
+						gateTechIds,
+					);
+					const trackVersion = pickAITrackVersion(trackId, researched, v2TechIds);
 
-				const result = queueFabrication(
-					world,
-					e,
-					robotClass,
-					trackId,
-					trackVersion,
-				);
-				if (result.ok) break; // One unit per motor pool per turn
+					const result = queueFabrication(
+						world,
+						e,
+						robotClass,
+						trackId,
+						trackVersion,
+					);
+					if (result.ok) {
+						queued = true;
+						openSlots--;
+						break;
+					}
+					// If can't afford this class, try the next
+					if (result.ok === false && result.reason === "cannot_afford") continue;
+					// If pop cap, stop entirely
+					if (result.ok === false && result.reason === "pop_cap") {
+						openSlots = 0;
+						break;
+					}
+					// Other failures (not_powered, queue_full) — stop this pool
+					openSlots = 0;
+					break;
+				}
+				// If nothing was queued in this pass, stop trying
+				if (!queued) break;
 			}
 		}
 	}

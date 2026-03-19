@@ -22,6 +22,7 @@ import {
 	FloorMineEvaluator,
 	HarvestEvaluator,
 	IdleEvaluator,
+	ResearchEvaluator,
 	ScoutEvaluator,
 } from "../goals/evaluators";
 
@@ -195,6 +196,10 @@ export class AIRuntime {
 
 		const buildEval = new BuildEvaluator(bias.build);
 		agent.addEvaluator(buildEval);
+
+		// Research — all factions should research, bias from build priority
+		const researchEval = new ResearchEvaluator(bias.build);
+		agent.addEvaluator(researchEval);
 
 		const scoutEval = new ScoutEvaluator(bias.scout);
 		agent.addEvaluator(scoutEval);

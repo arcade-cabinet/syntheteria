@@ -159,7 +159,7 @@ function pickModel(
 	return models[idx]!;
 }
 
-/** ~20% of wall edges get a windowed variant for variety. */
+/** ~35% of wall edges get a windowed variant for variety. */
 function isWindowWall(
 	seed: string,
 	x: number,
@@ -167,7 +167,7 @@ function isWindowWall(
 	edge: string,
 ): boolean {
 	const hash = seedToFloat(seed + edge + String(x * 13 + z * 7));
-	return hash < 0.2;
+	return hash < 0.35;
 }
 
 // ---------------------------------------------------------------------------

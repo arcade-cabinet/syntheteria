@@ -105,12 +105,14 @@ const EXPLORE_STATE: FactionState = {
 const EXPAND_STATE: FactionState = {
 	getBias: () => ({
 		...NEUTRAL_BIAS,
-		build: 1.6,
-		expand: 1.5,
-		harvest: 1.3,
-		scout: 1.2,
-		attack: 0.6,
-		idle: 0.3,
+		build: 1.8,
+		expand: 1.6,
+		harvest: 1.5,
+		scout: 1.4,
+		attack: 1.3,
+		chase: 1.3,
+		evade: 1.0,
+		idle: 0.1, // Idle must NEVER win in EXPAND — all productive actions dominate
 	}),
 	checkTransition(ctx) {
 		if (ctx.unitCount < 3) return "RETREAT";

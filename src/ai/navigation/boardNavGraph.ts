@@ -59,7 +59,7 @@ export interface NavGraphResult {
  * When useSphere=true, the X axis wraps (tileX=0 ↔ tileX=width-1) to support
  * east-west traversal on the sphere's equirectangular projection.
  */
-export function buildNavGraph(board: GeneratedBoard, useSphere = false): NavGraphResult {
+export function buildNavGraph(board: GeneratedBoard, useSphere = true): NavGraphResult {
 	const { width, height } = board.config;
 	const graph = new Graph();
 
@@ -212,7 +212,7 @@ let _cachedBoardSeed: string | null = null;
  * Get or build the NavGraph for the given board.
  * Cached by board seed — only rebuilds when the board changes.
  */
-export function getOrBuildNavGraph(board: GeneratedBoard, useSphere = false): NavGraphResult {
+export function getOrBuildNavGraph(board: GeneratedBoard, useSphere = true): NavGraphResult {
 	const key = `${board.config.seed}_${board.config.width}_${board.config.height}_${useSphere}`;
 	if (_cachedNavGraph && _cachedBoardSeed === key) {
 		return _cachedNavGraph;

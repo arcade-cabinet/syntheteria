@@ -285,9 +285,11 @@ const DOME_FRAG = /* glsl */ `
     color += vortex.rgb;
     color += sun.rgb;
 
-    // StormDome IS the sky — fully opaque background.
-    // Storm, wormhole, and illuminator are composited over the void base.
-    gl_FragColor = vec4(color, 1.0);
+    // Alpha fade near horizon — smooth transition where storm dome meets board sphere.
+    // pos.y < 0 is below equator; fade out between -0.05 and 0.15 for atmospheric blend.
+    float horizonFade = smoothstep(-0.05, 0.15, pos.y);
+
+    gl_FragColor = vec4(color, horizonFade);
   }
 `;
 
@@ -401,12 +403,13 @@ export function StormDome({
 				renderOrder={-1000}
 				frustumCulled={false}
 			>
-				<sphereGeometry args={[radius, 64, 48]} />
+				<sphereGeometry args={[radius, 128, 96]} />
 				<shaderMaterial
 					vertexShader={DOME_VERT}
 					fragmentShader={DOME_FRAG}
 					uniforms={uniforms}
 					side={THREE.BackSide}
+					transparent
 					depthTest={false}
 					depthWrite={false}
 				/>

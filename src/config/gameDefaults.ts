@@ -33,7 +33,7 @@ export const SELECT_EMISSIVE = 1.0;
 export const HIGHLIGHT_COLOR = 0x00ffaa;
 
 /** How many tiles the player faction starts with visibility into. */
-export const INITIAL_SCAN_RANGE = 10;
+export const INITIAL_SCAN_RANGE = 14;
 
 // ---------------------------------------------------------------------------
 // Unit mesh dimensions

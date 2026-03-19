@@ -322,12 +322,14 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	calculateDesirability(_agent: SyntheteriaAgent): number {
 		if (_ctx.buildOptions.length === 0) return 0;
 
-		// Higher desire when faction has few buildings
-		const buildingBonus = Math.max(0, 1 - _ctx.factionBuildingCount / 8);
+		// Higher desire when faction has few buildings — saturates at 20 not 8
+		const buildingBonus = Math.max(0, 1 - _ctx.factionBuildingCount / 20);
 		// Strong desire if no motor pool — can't fabricate units without one
-		const motorPoolBonus = _ctx.hasMotorPool ? 0 : 0.4;
+		const motorPoolBonus = _ctx.hasMotorPool ? 0 : 0.5;
+		// Time ramp: AI should build more as game progresses
+		const timeRamp = Math.min(1, _ctx.currentTurn / 20);
 
-		return Math.min(1, 0.3 + buildingBonus * 0.4 + motorPoolBonus);
+		return Math.min(1, 0.45 + buildingBonus * 0.35 + motorPoolBonus + timeRamp * 0.15);
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {

@@ -982,7 +982,7 @@ function Root() {
 				/>
 			)}
 
-			{/* Game DOM overlays that were outside GameScreen's Canvas */}
+			{/* Game DOM overlays rendered outside the Globe Canvas */}
 			{gameActive && (
 				<>
 					<TurnLog />

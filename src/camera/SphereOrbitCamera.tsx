@@ -44,7 +44,7 @@ export const FOV = 45;
  * MAX_ZOOM: far enough to see the whole planet.
  */
 export const MIN_ZOOM_FACTOR = 1.15; // 1.15x sphere radius = surface level
-export const MAX_ZOOM_FACTOR = 4.0;  // 4x sphere radius = full planet view
+export const MAX_ZOOM_FACTOR = 5.5;  // 5.5x sphere radius = full planet in viewport (strategic zoom)
 
 /** Default zoom: 1.8x radius — see a district-sized area. */
 export const DEFAULT_ZOOM_FACTOR = 1.8;

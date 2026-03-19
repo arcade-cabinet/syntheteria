@@ -18,7 +18,7 @@ import type { World } from "koota";
 import { Suspense, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import type { BoardConfig, GeneratedBoard } from "../board/types";
-import { IsometricCamera } from "../camera";
+import { SphereOrbitCamera } from "../camera";
 import { TILE_SIZE_M } from "../config/gameDefaults";
 import { resolveAttacks } from "../ecs/systems/attackSystem";
 import { BoardInput } from "../input/BoardInput";
@@ -351,12 +351,8 @@ function GameScene({
 }) {
 	const { dayAngle, season } = turnToChronometry(turn);
 
-	const cameraFocusX = board
-		? (focusTileX ?? Math.floor(board.config.width / 2)) * TILE_SIZE_M
-		: 0;
-	const cameraFocusZ = board
-		? (focusTileZ ?? Math.floor(board.config.height / 2)) * TILE_SIZE_M
-		: 0;
+	const bw = board?.config.width;
+	const bh = board?.config.height;
 
 	return (
 		<>
@@ -390,37 +386,40 @@ function GameScene({
 				stormProfile={stormProfile}
 			/>
 
-			<IsometricCamera
-				initialX={cameraFocusX}
-				initialZ={cameraFocusZ}
-				boardWidth={board ? board.config.width * TILE_SIZE_M : undefined}
-				boardHeight={board ? board.config.height * TILE_SIZE_M : undefined}
-			/>
+			{board && (
+				<SphereOrbitCamera
+					initialTileX={focusTileX ?? Math.floor(board.config.width / 2)}
+					initialTileZ={focusTileZ ?? Math.floor(board.config.height / 2)}
+					boardWidth={board.config.width}
+					boardHeight={board.config.height}
+				/>
+			)}
 			<CutawayClipPlane />
 
 			{board && <LodGlobe boardWidth={board.config.width} boardHeight={board.config.height} />}
 			{board && <BoardRenderer board={board} dayAngle={dayAngle} season={season} />}
 			{board && <BiomeRenderer board={board} dayAngle={dayAngle} season={season} />}
 			{board && <UnifiedTerrainRenderer board={board} world={world ?? undefined} turn={turn} />}
-			{board && <StructureRenderer board={board} world={world ?? undefined} />}
+			{board && <StructureRenderer board={board} world={world ?? undefined} useSphere boardWidth={bw} boardHeight={bh} />}
 			{board && <InfrastructureRenderer board={board} world={world ?? undefined} />}
 
-			{world && <SalvageRenderer world={world} />}
-			{world && <BuildingRenderer world={world} />}
+			{world && bw && bh && <SalvageRenderer world={world} useSphere boardWidth={bw} boardHeight={bh} />}
+			{world && bw && bh && <BuildingRenderer world={world} useSphere boardWidth={bw} boardHeight={bh} />}
 			<FragmentRenderer />
 			{world && board && <TerritoryOverlayRenderer board={board} world={world} />}
 			{world && board && <FogOfWarRenderer world={world} board={board} />}
 
 			{world && <SceneLoop world={world} />}
-			{world && <HighlightRenderer world={world} />}
+			{world && bw && bh && <HighlightRenderer world={world} useSphere boardWidth={bw} boardHeight={bh} />}
 			<PathRenderer />
-			{world && <UnitRenderer world={world} />}
+			{world && bw && bh && <UnitRenderer world={world} useSphere boardWidth={bw} boardHeight={bh} />}
 			{world && board && onSelect && (
 				<BoardInput
 					world={world}
 					board={board}
 					selectedId={selectedUnitId}
 					onSelect={onSelect}
+					useSphere
 				/>
 			)}
 			{world && board && <HoverTracker world={world} board={board} />}

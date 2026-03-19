@@ -101,8 +101,9 @@ describe("boardNavGraph", () => {
 
 		it("finds path around wall", () => {
 			// Wall at x=2, gap at z=0
+			// useSphere=false: disable X-wrapping so the wall forces a detour
 			const board = makeBoardWithWall(6, 4, 2);
-			const navGraph = buildNavGraph(board);
+			const navGraph = buildNavGraph(board, false);
 			const path = yukaShortestPath(0, 2, 4, 2, navGraph);
 			// Must go through gap at (2,0)
 			expect(path.length).toBeGreaterThan(4); // Not a straight line

@@ -52,8 +52,8 @@ vec3 applyPBR(vec3 albedo, vec3 N, float roughness, float metalness) {
   vec3 groundTint = vec3(0.30, 0.28, 0.24);
   vec3 hemi = mix(groundTint, skyTint, n.y * 0.5 + 0.5) * 0.5;
 
-  // Reduced ambient to preserve per-cell color contrast between atlas textures
-  vec3 ambient = vec3(0.38, 0.36, 0.34);
+  // Ambient lifted so floor textures are clearly visible at game zoom
+  vec3 ambient = vec3(0.50, 0.48, 0.46);
 
   // Specular (Blinn-Phong for perf)
   vec3 viewDir = vec3(0.0, 1.0, 0.0);

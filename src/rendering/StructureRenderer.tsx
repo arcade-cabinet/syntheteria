@@ -2,10 +2,9 @@
  * StructureRenderer — Layer 3: instanced GLB models for walls, columns,
  * doors, and staircases at structural_mass tile boundaries.
  *
- * Replaces ProceduralStructureRenderer's merged box/cylinder geometry
- * with real GLB models from structures/ for visual quality.
+ * Uses GLB models from structures/ for visual quality.
  *
- * Uses the same placement logic:
+ * Placement logic:
  *   - Walls on structural edges (where structural_mass meets non-structural)
  *   - Columns at corners shared by 2+ structural tiles
  *   - Doors at BSP block doorway gaps

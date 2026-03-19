@@ -92,7 +92,7 @@ export function BoardInput({
 	board,
 	selectedId,
 	onSelect,
-	useSphere = false,
+	useSphere = true,
 }: BoardInputProps) {
 	const { camera, gl } = useThree();
 	const gridApi = useMemo(() => createGridApi(board), [board]);

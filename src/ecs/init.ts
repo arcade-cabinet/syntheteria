@@ -108,12 +108,19 @@ export function initWorldFromBoard(world: World, board: GeneratedBoard, opts: In
 	runPowerGrid(world);
 
 	// Initial fog reveal — player units reveal tiles around starting positions
+	// AI factions also get a small pre-explored radius so the board isn't 90% fogged
 	for (const entity of world.query(UnitPos, UnitFaction, UnitStats)) {
 		const faction = entity.get(UnitFaction);
-		if (!faction || faction.factionId !== "player") continue;
+		if (!faction) continue;
 		const pos = entity.get(UnitPos);
 		const stats = entity.get(UnitStats);
 		if (!pos || !stats) continue;
-		revealFog(world, pos.tileX, pos.tileZ, stats.scanRange);
+
+		if (faction.factionId === "player" || faction.factionId === "") {
+			revealFog(world, pos.tileX, pos.tileZ, stats.scanRange);
+		} else {
+			// AI factions: reveal a small 3-tile radius around their spawns
+			revealFog(world, pos.tileX, pos.tileZ, 3);
+		}
 	}
 }

@@ -47,9 +47,9 @@ void main() {
 
   // Bright directional lighting — perpetual artificial daylight from dome zenith
   float NdotL = max(dot(normalize(vWorldNormal), normalize(uSunDir)), 0.0);
-  vec3 lit = baseColor * (0.70 + 0.50 * NdotL);
-  // Reinhard tone-map: high burn preserves midtones, only compresses highlights
-  vec3 color = lit / (lit + vec3(1.6));
+  vec3 lit = baseColor * (0.90 + 0.40 * NdotL);
+  // Reinhard tone-map: low burn to keep floor textures clearly readable
+  vec3 color = lit / (lit + vec3(0.9));
 
   gl_FragColor = vec4(color, 1.0);
 

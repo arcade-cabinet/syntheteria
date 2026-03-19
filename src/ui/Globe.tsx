@@ -23,10 +23,11 @@ import { resolveAttacks } from "../ecs/systems/attackSystem";
 import { BoardInput } from "../input/BoardInput";
 import { BiomeRenderer } from "../rendering/BiomeRenderer";
 import { CombatEffectsRenderer } from "../rendering/CombatEffectsRenderer";
+import { CultDomeRenderer } from "../rendering/CultDomeRenderer";
 import { CutawayClipPlane } from "../rendering/CutawayClipPlane";
 import { UnifiedTerrainRenderer } from "../rendering/UnifiedTerrainRenderer";
-import { FogOfWarRenderer } from "../rendering/FogOfWarRenderer";
 import { FragmentRenderer } from "../rendering/FragmentRenderer";
+import { IlluminatorRenderer } from "../rendering/IlluminatorRenderer";
 import { InfrastructureRenderer } from "../rendering/InfrastructureRenderer";
 import { LodGlobe } from "../rendering/LodGlobe";
 import { StructureRenderer } from "../rendering/StructureRenderer";
@@ -36,7 +37,7 @@ import { HighlightRenderer } from "../rendering/HighlightRenderer";
 import { ParticleRenderer } from "../rendering/particles/ParticleRenderer";
 import { TerritoryOverlayRenderer } from "../rendering/TerritoryOverlayRenderer";
 import { PathRenderer } from "../rendering/PathRenderer";
-import { StormDome } from "../rendering/StormDome";
+import { StormSky } from "../rendering/StormSky";
 import { turnToChronometry } from "../rendering/sky/chronometry";
 import type { StormProfile } from "../world/config";
 import { UnitRenderer } from "../rendering/UnitRenderer";
@@ -356,16 +357,18 @@ function GameScene({
 		<>
 			{onSceneReady && <SceneReadySignal onReady={onSceneReady} />}
 
-			<ambientLight intensity={1.2} color={0xf0e8e0} />
+			{/* Storm-filtered ambient — dim baseline, illuminator orbs provide local light */}
+			<ambientLight intensity={0.6} color={0xe8dcd0} />
 			<hemisphereLight
-				intensity={0.8}
-				color={0xfff4e8}
-				groundColor={0x504840}
+				intensity={0.4}
+				color={0xd0c8c0}
+				groundColor={0x302820}
 			/>
+			{/* Wormhole eye zenith glow — faint directional from the eye column */}
 			<directionalLight
 				position={[0, 100, 0]}
-				intensity={3.0}
-				color={0xfff8f0}
+				intensity={1.0}
+				color={0xd8d0e8}
 				castShadow
 				shadow-mapSize={[2048, 2048]}
 				shadow-camera-near={0.5}
@@ -376,7 +379,7 @@ function GameScene({
 				shadow-camera-bottom={-80}
 			/>
 
-			<StormDome
+			<StormSky
 				centerX={0}
 				centerZ={0}
 				dayAngle={dayAngle}
@@ -402,9 +405,10 @@ function GameScene({
 
 			{world && bw && bh && <SalvageRenderer world={world} useSphere boardWidth={bw} boardHeight={bh} />}
 			{world && bw && bh && <BuildingRenderer world={world} useSphere boardWidth={bw} boardHeight={bh} />}
+			{world && bw && bh && <CultDomeRenderer world={world} boardWidth={bw} boardHeight={bh} />}
+			{board && bw && bh && <IlluminatorRenderer board={board} boardWidth={bw} boardHeight={bh} />}
 			<FragmentRenderer />
 			{world && board && <TerritoryOverlayRenderer board={board} world={world} />}
-			{world && board && <FogOfWarRenderer world={world} board={board} />}
 
 			{world && <SceneLoop world={world} />}
 			{world && bw && bh && <HighlightRenderer world={world} useSphere boardWidth={bw} boardHeight={bh} />}

@@ -46,7 +46,7 @@
 | Systems | `src/ecs/systems/` | movement, highlight, turn, attack, harvest, resource, AI, cultist |
 | Radial menu | `src/systems/` | radialMenu state machine, providers |
 | DB | `src/db/` | SQLite schema, GameRepo, sql.js adapter |
-| Rendering | `src/rendering/` | Board, Depth, Highlight, Unit, StormDome, chronometry |
+| Rendering | `src/rendering/` | Board, Depth, Highlight, Unit, StormSky, chronometry |
 | Input | `src/input/` | BoardInput (select/move/attack) |
 | UI | `src/ui/` | Landing, NewGameModal, Settings, GameScreen, HUD, RadialMenu |
 | Config | `src/config/` | gameDefaults.ts |

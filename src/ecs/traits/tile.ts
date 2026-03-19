@@ -7,10 +7,10 @@ export const Tile = trait({
 	z: 0,
 	elevation: 0 as Elevation,
 	passable: true,
-	/** Fog of war — has this cell been explored? Top-level gate for all rendering. */
-	explored: false,
-	/** Fog fringe visibility [0-1] for smooth gradient bleeding at exploration edges. */
-	visibility: 0,
+	/** Tile is always explored from turn 1 — terrain is fully visible. */
+	explored: true,
+	/** Visibility [0-1]. All tiles start at 1.0 — no fog of war on terrain. */
+	visibility: 1,
 });
 
 export const TileHighlight = trait({

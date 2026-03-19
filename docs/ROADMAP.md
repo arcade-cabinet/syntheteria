@@ -65,7 +65,7 @@ pnpm verify  →  126 vitest suites (2239 tests) + 0 TypeScript errors + 0 Biome
 | Radial menu (dual-ring state machine, SVG renderer, per-class action providers) | DONE |
 | Unified terrain renderer (replaced DepthRenderer + MinedPitRenderer) | DONE |
 | HUD (turn, AP, resource counters for 13 materials) | DONE |
-| Storm dome (3 GLSL layers: storm, wormhole, illuminator) | DONE |
+| Storm sky (3 GLSL layers: storm, wormhole, illuminator) | DONE |
 | GLSL shader extraction (vite-plugin-glsl #include) | DONE |
 | SQLite schema + migrations + GameRepo CRUD | DONE |
 | Save/Load (fixed for BSP generator, unit identity, auto-save) | DONE |
@@ -181,7 +181,7 @@ pnpm verify  →  126 vitest suites (2239 tests) + 0 TypeScript errors + 0 Biome
 ## Phase 5 — Victory + Polish (DONE)
 
 - [x] **5.1** — Victory conditions (7 paths + elimination defeat + forced endgame)
-- [x] **5.2** — Background pass (StormDome tuning)
+- [x] **5.2** — Background pass (StormSky tuning)
 - [x] **5.3** — E2E Playwright tests
 - [x] **5.4** — Visual QA screenshot review
 

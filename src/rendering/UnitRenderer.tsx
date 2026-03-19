@@ -34,7 +34,7 @@ import {
 	resolveRobotModelUrl,
 } from "./modelPaths";
 import { sphereModelPlacement } from "./spherePlacement";
-import { buildExploredSet, isTileExplored } from "./tileVisibility";
+import { isUnitDetected } from "./unitDetection";
 
 // Preload all robot models
 for (const url of getAllRobotModelUrls()) {
@@ -403,7 +403,17 @@ export function UnitRenderer({ world, useSphere, boardWidth, boardHeight }: Unit
 		if (now - lastUpdate.current < 0.2) return;
 		lastUpdate.current = now;
 
-		const explored = buildExploredSet(world);
+		// Collect player unit positions + scan ranges for unit detection
+		const playerScanners: Array<{ x: number; z: number; range: number }> = [];
+		for (const e of world.query(UnitPos, UnitFaction, UnitStats)) {
+			const f = e.get(UnitFaction);
+			if (!f || (f.factionId !== "player" && f.factionId !== "")) continue;
+			const p = e.get(UnitPos);
+			const s = e.get(UnitStats);
+			if (!p || !s) continue;
+			playerScanners.push({ x: p.tileX, z: p.tileZ, range: s.scanRange });
+		}
+
 		const units: UnitSnapshot[] = [];
 
 		for (const entity of world.query(UnitPos, UnitFaction, UnitVisual)) {
@@ -412,8 +422,8 @@ export function UnitRenderer({ world, useSphere, boardWidth, boardHeight }: Unit
 			const visual = entity.get(UnitVisual);
 			if (!pos || !faction || !visual) continue;
 
-			// Fog gate — hide enemy units on unexplored tiles
-			if (faction.factionId !== "player" && !isTileExplored(explored, pos.tileX, pos.tileZ)) continue;
+			// Scan range gate — hide enemy units not within any player unit's scan range
+			if (faction.factionId !== "player" && faction.factionId !== "" && !isUnitDetected(pos.tileX, pos.tileZ, playerScanners)) continue;
 
 			// Use move destination if in motion
 			let x = pos.tileX;

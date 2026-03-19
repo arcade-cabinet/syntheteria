@@ -38,7 +38,7 @@ import {
 	UnitVisual,
 } from "../ecs/traits/unit";
 import { FACTION_COLORS } from "./modelPaths";
-import { buildExploredSet, isTileExplored } from "./tileVisibility";
+import { isUnitDetected } from "./unitDetection";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -197,7 +197,17 @@ export function UnitStatusBars({ world, selectedUnitId }: UnitStatusBarsProps) {
 		if (now - lastUpdate.current < 0.25) return;
 		lastUpdate.current = now;
 
-		const explored = buildExploredSet(world);
+		// Collect player scanners for unit detection
+		const playerScanners: Array<{ x: number; z: number; range: number }> = [];
+		for (const e of world.query(UnitPos, UnitFaction, UnitStats)) {
+			const f = e.get(UnitFaction);
+			if (!f || (f.factionId !== "player" && f.factionId !== "")) continue;
+			const p = e.get(UnitPos);
+			const s = e.get(UnitStats);
+			if (!p || !s) continue;
+			playerScanners.push({ x: p.tileX, z: p.tileZ, range: s.scanRange });
+		}
+
 		const camPos = camera.position;
 		const result: UnitBarData[] = [];
 
@@ -207,10 +217,11 @@ export function UnitStatusBars({ world, selectedUnitId }: UnitStatusBarsProps) {
 			const stats = entity.get(UnitStats);
 			if (!pos || !faction || !stats) continue;
 
-			// Fog gate
+			// Scan range gate — hide enemy unit bars when not detected
 			if (
 				faction.factionId !== "player" &&
-				!isTileExplored(explored, pos.tileX, pos.tileZ)
+				faction.factionId !== "" &&
+				!isUnitDetected(pos.tileX, pos.tileZ, playerScanners)
 			)
 				continue;
 

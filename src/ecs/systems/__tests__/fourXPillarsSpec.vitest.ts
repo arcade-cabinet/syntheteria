@@ -33,7 +33,6 @@ import {
 	StorageCapacity,
 } from "../../traits/building";
 import { Board } from "../../traits/board";
-import { revealFog } from "../fogRevealSystem";
 import { harvestSystem, startHarvest } from "../harvestSystem";
 import { addResources, canAfford, spendResources } from "../resourceSystem";
 import { resolveAttacks } from "../attackSystem";
@@ -69,7 +68,7 @@ function spawnTileGrid(world: ReturnType<typeof createWorld>, size: number) {
 	for (let z = 0; z < size; z++) {
 		for (let x = 0; x < size; x++) {
 			world.spawn(
-				Tile({ x, z, elevation: 0, passable: true, explored: false, visibility: 0 }),
+				Tile({ x, z, elevation: 0, passable: true, explored: true, visibility: 1 }),
 				TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
 			);
 		}
@@ -90,90 +89,26 @@ describe("Section 5 — eXplore", () => {
 		world.destroy();
 	});
 
-	it("fog of war starts dark — all tiles unexplored with visibility=0", () => {
+	it("all tiles start explored with full visibility — no fog of war on terrain", () => {
 		spawnTileGrid(world, 8);
 
-		let unexploredCount = 0;
+		let exploredCount = 0;
 		for (const e of world.query(Tile)) {
 			const t = e.get(Tile);
 			if (!t) continue;
-			expect(t.explored).toBe(false);
-			expect(t.visibility).toBe(0);
-			unexploredCount++;
+			expect(t.explored).toBe(true);
+			expect(t.visibility).toBe(1);
+			exploredCount++;
 		}
-		expect(unexploredCount).toBe(64);
+		expect(exploredCount).toBe(64);
 	});
 
-	it("revealFog sets tiles within scanRange to explored=true, visibility=1.0", () => {
-		spawnTileGrid(world, 10);
-		const scanRange = 3;
-
-		revealFog(world, 5, 5, scanRange);
-
-		let fullyRevealed = 0;
-		for (const e of world.query(Tile)) {
-			const t = e.get(Tile);
-			if (!t) continue;
-			const dist = Math.abs(t.x - 5) + Math.abs(t.z - 5);
-			if (dist <= scanRange) {
-				expect(t.explored).toBe(true);
-				expect(t.visibility).toBe(1.0);
-				fullyRevealed++;
-			}
-		}
-		expect(fullyRevealed).toBeGreaterThan(0);
-	});
-
-	it("fog gradient: fringe tiles (scanRange+1, scanRange+2) get partial visibility", () => {
-		spawnTileGrid(world, 12);
-		const scanRange = 3;
-
-		revealFog(world, 5, 5, scanRange);
-
-		const fringeTiles: Array<{ dist: number; vis: number }> = [];
-		for (const e of world.query(Tile)) {
-			const t = e.get(Tile);
-			if (!t) continue;
-			const dist = Math.abs(t.x - 5) + Math.abs(t.z - 5);
-			if (dist === scanRange + 1 || dist === scanRange + 2) {
-				if (t.visibility > 0) {
-					fringeTiles.push({ dist, vis: t.visibility });
-				}
-			}
-		}
-
-		// Fringe tiles should have partial visibility (not 0, not 1)
-		expect(fringeTiles.length).toBeGreaterThan(0);
-		for (const ft of fringeTiles) {
-			expect(ft.vis).toBeGreaterThan(0);
-			expect(ft.vis).toBeLessThan(1.0);
-		}
-	});
-
-	it("visibility never decreases (never re-fogs explored tiles)", () => {
-		spawnTileGrid(world, 10);
-
-		// Reveal from one position
-		revealFog(world, 3, 3, 2);
-
-		// Record all visibility values
-		const visMapBefore = new Map<string, number>();
-		for (const e of world.query(Tile)) {
-			const t = e.get(Tile);
-			if (!t) continue;
-			visMapBefore.set(`${t.x},${t.z}`, t.visibility);
-		}
-
-		// Reveal from a different position
-		revealFog(world, 7, 7, 2);
-
-		// Verify no tile's visibility decreased
-		for (const e of world.query(Tile)) {
-			const t = e.get(Tile);
-			if (!t) continue;
-			const before = visMapBefore.get(`${t.x},${t.z}`) ?? 0;
-			expect(t.visibility).toBeGreaterThanOrEqual(before);
-		}
+	it("enemy units are hidden by scan range, not tile exploration", async () => {
+		// The actual detection is in unitDetection.ts — tested separately.
+		const { isUnitDetected } = await import("../../../rendering/unitDetection");
+		const scanners = [{ x: 5, z: 5, range: 3 }];
+		expect(isUnitDetected(6, 5, scanners)).toBe(true);
+		expect(isUnitDetected(10, 10, scanners)).toBe(false);
 	});
 });
 

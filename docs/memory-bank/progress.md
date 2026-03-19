@@ -204,7 +204,7 @@
 | Salvage renderer | DONE | `src/rendering/SalvageRenderer.tsx` | Salvage GLBs with rendering |
 | Structure renderer | DONE | `src/rendering/StructureRenderer.tsx` | Wall/column/structural rendering |
 | Procedural structures | DONE | `src/rendering/ProceduralStructureRenderer.tsx` | Procedural geometry for structures |
-| Storm dome | DONE | `src/rendering/StormDome.tsx` | 3 GLSL layers: storm, wormhole, illuminator |
+| Storm sky | DONE | `src/rendering/StormSky.tsx` | 3 GLSL layers: storm, wormhole, illuminator |
 | Fog of war | DONE | `src/rendering/FogOfWarRenderer.tsx` | Per-unit scan radius fog (flat + sphere GLSL) |
 | Territory overlay | DONE | `src/rendering/TerritoryOverlayRenderer.tsx` | Faction-colored territory visualization |
 | Path renderer | DONE | `src/rendering/PathRenderer.tsx` | Pathfinding visualization |

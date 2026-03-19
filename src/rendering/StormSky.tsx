@@ -1,25 +1,25 @@
 /**
- * StormDome — game-world sky system.
+ * StormSky — game-world sky system.
  *
  * A BackSide sphere (r=300) that encloses the entire game board.
  * Three visually independent layers composited in one draw call:
  *
  *   L1 Storm clouds  — FBM bands at mid-sky latitudes, profile-driven intensity
  *   L2 Wormhole      — hurricane vortex at the zenith (machine anomaly)
- *   L3 Illuminator   — fixed zenith glow; warm-white industrial dome light
+ *   L3 Illuminator   — fixed zenith glow; warm-white industrial sky light
  *
  * Storm profile (stable / volatile / cataclysmic) drives cloud speed, density,
  * detail scale, lightning frequency, and sky tint via weatherDefs.ts.
  *
  * Wormhole glow intensity driven by storm intensity — the wormhole is
  * visible through the storm eye but is NOT a light source for the board.
- * Interior lighting comes from the fixed dome zenith illuminator.
+ * Interior lighting comes from the fixed zenith illuminator.
  *
  * Seasonal progression:
  *   uSeason    [0, 1]  — 0=spring, 0.25=summer, 0.5=autumn, 0.75=winter
  *
  * Architecture note:
- *   The dome is a structural container; the storm, wormhole, and illuminator
+ *   The sky sphere is a visual container; the storm, wormhole, and illuminator
  *   are distinct systems co-rendered here for a single draw call.
  *   See src/rendering/sky/chronometry.ts for the turn→time-of-day math.
  */
@@ -37,7 +37,7 @@ import { WORMHOLE_PROJECT_TURNS } from "../config/gameDefaults";
 // Vertex shader
 // ---------------------------------------------------------------------------
 
-const DOME_VERT = /* glsl */ `
+const SKY_VERT = /* glsl */ `
   varying vec3 vPosition;
   varying vec3 vNormal;
 
@@ -52,7 +52,7 @@ const DOME_VERT = /* glsl */ `
 // Fragment shader — three composited layers
 // ---------------------------------------------------------------------------
 
-const DOME_FRAG = /* glsl */ `
+const SKY_FRAG = /* glsl */ `
   precision mediump float;
 
   uniform float uTime;
@@ -109,7 +109,7 @@ const DOME_FRAG = /* glsl */ `
 
   // ── L1: Storm cloud bands ──────────────────────────────────────────────────
   //
-  // FBM storm covers the entire sky dome with visible cloud structures.
+  // FBM storm covers the entire sky sphere with visible cloud structures.
   // Storm intensity peaks in winter (uSeason ≈ 0.75).
   // Cloud speed, detail, and density driven by storm profile.
 
@@ -160,11 +160,11 @@ const DOME_FRAG = /* glsl */ `
 
   // ── L2: Wormhole / hypercane eye at zenith ──────────────────────────────────
   //
-  // Dramatic vortex at the top of the dome — the "eye" of the permanent
+  // Dramatic vortex at the top of the sky — the "eye" of the permanent
   // hypercane that defines Syntheteria's sky. Spiral arms + pulsing core.
   // Glow intensity driven by storm intensity — the wormhole is visible
   // through the storm eye above but is NOT a light source for the board.
-  // Interior lighting comes from the artificial dome sun (scene directional light).
+  // Interior lighting comes from the artificial sky sun (scene directional light).
 
   vec4 wormholeLayer(vec3 pos) {
     float zenith  = length(pos.xz);
@@ -231,10 +231,10 @@ const DOME_FRAG = /* glsl */ `
     return vec4(color * vis, alpha);
   }
 
-  // ── L3: Zenith illuminator (fixed dome light) ──────────────────────────────
+  // ── L3: Zenith illuminator (fixed sky light) ──────────────────────────────
   //
   // No external sun — the sky is a permanent hypercane. Interior lighting
-  // comes from a fixed industrial array at the dome zenith, powered by
+  // comes from a fixed industrial array at the sky zenith, powered by
   // storm energy. Warm-white glow, no orbit, no seasonal elevation change.
   // The scene directional light handles actual board illumination.
 
@@ -285,7 +285,7 @@ const DOME_FRAG = /* glsl */ `
     color += vortex.rgb;
     color += sun.rgb;
 
-    // Alpha fade near horizon — wide atmospheric blend where dome meets board sphere.
+    // Alpha fade near horizon — wide atmospheric blend where sky meets board sphere.
     // pos.y < 0 is below equator; fade over a broad band to avoid hard geometric edges.
     float horizonFade = smoothstep(-0.15, 0.30, pos.y);
 
@@ -297,7 +297,7 @@ const DOME_FRAG = /* glsl */ `
 // Component
 // ---------------------------------------------------------------------------
 
-type StormDomeProps = {
+type StormSkyProps = {
 	/** XZ centre of the game board in world space. */
 	centerX?: number;
 	centerZ?: number;
@@ -305,7 +305,7 @@ type StormDomeProps = {
 	radius?: number;
 	/**
 	 * Day angle [0, 2π] — reserved for future use.
-	 * Illuminator is now fixed at dome zenith (no orbit).
+	 * Illuminator is now fixed at sky zenith (no orbit).
 	 */
 	dayAngle?: number;
 	/**
@@ -320,14 +320,14 @@ type StormDomeProps = {
 	stormProfile?: StormProfile;
 };
 
-export function StormDome({
+export function StormSky({
 	centerX = 0,
 	centerZ = 0,
 	radius = 300,
 	dayAngle = 0.8, // reserved — illuminator is now fixed at zenith
 	season = 0,
 	stormProfile = "stable",
-}: StormDomeProps) {
+}: StormSkyProps) {
 	const meshRef = useRef<THREE.Mesh>(null);
 
 	const stormParams = STORM_VISUAL_PARAMS[stormProfile];
@@ -405,8 +405,8 @@ export function StormDome({
 			>
 				<sphereGeometry args={[radius, 128, 96]} />
 				<shaderMaterial
-					vertexShader={DOME_VERT}
-					fragmentShader={DOME_FRAG}
+					vertexShader={SKY_VERT}
+					fragmentShader={SKY_FRAG}
 					uniforms={uniforms}
 					side={THREE.BackSide}
 					transparent

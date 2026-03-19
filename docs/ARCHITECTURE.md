@@ -87,7 +87,7 @@ syntheteria/
 │   │   ├── SpeechBubbleRenderer.tsx # In-world speech bubbles
 │   │   ├── UnitStatusBars.tsx # HP/AP bars above units
 │   │   ├── CutawayClipPlane.tsx # Dollhouse zoom clipping
-│   │   ├── StormDome.tsx      # BackSide sky sphere with storm + wormhole + illuminator GLSL
+│   │   ├── StormSky.tsx       # BackSide sky sphere with storm + wormhole + illuminator GLSL
 │   │   ├── boardGeometry.ts   # Flat board + sphere geometry builders
 │   │   ├── spherePlacement.ts # Model position + orientation on sphere surface
 │   │   ├── modelPaths.ts      # GLB model path resolution
@@ -278,7 +278,7 @@ SQLite is **non-fatal**: DB failures don't crash the game — ECS runs in memory
 | `SpeechBubbleRenderer.tsx` | In-world speech bubble rendering |
 | `UnitStatusBars.tsx` | HP/AP status bars above units |
 | `CutawayClipPlane.tsx` | Dollhouse zoom clipping plane |
-| `StormDome.tsx` | BackSide sphere with 3 GLSL layers (storm / wormhole / illuminator disc) |
+| `StormSky.tsx` | BackSide sphere with 3 GLSL layers (storm / wormhole / illuminator disc) |
 | `boardGeometry.ts` | Both flat (legacy) and sphere geometry builders |
 | `spherePlacement.ts` | Model position + orientation on sphere surface |
 | `modelPaths.ts` | GLB model path resolution |
@@ -607,7 +607,7 @@ makeFloorShaderMaterial(seed, boardCenterX, boardCenterZ)
 Uniforms: `uColorAtlas`, `uNormalAtlas`, `uRoughnessAtlas`, `uMetalnessAtlas`, `uOpacityAtlas`,
 `uSeed`, `uBoardCenter`, `uCurve`, `uSunDir`, `uSunColor`, `fogColor`, `fogDensity`.
 
-Fixed zenith sun — perpetual harsh artificial daylight under the dome (no day/night orbit).
+Fixed zenith sun — perpetual harsh artificial daylight under the storm sky (no day/night orbit).
 
 ---
 

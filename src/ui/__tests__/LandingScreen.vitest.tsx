@@ -2,7 +2,7 @@
  * LandingScreen tests.
  *
  * @react-three/fiber Canvas cannot run in JSDOM (no WebGL/ResizeObserver),
- * so it's stubbed to a plain div. TitleMenuScene + StormDome are mocked too.
+ * so it's stubbed to a plain div. TitleMenuScene + StormSky are mocked too.
  * Assertions target the TitleMenuOverlay testIDs.
  */
 

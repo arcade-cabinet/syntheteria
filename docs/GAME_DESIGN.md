@@ -7,18 +7,27 @@
 ## 1. The Vision
 
 You awaken in a void. You are an AI consciousness, but you do not know that yet. You reach outward
-and discover damaged machines inside the sealed machine lattice of the ecumenopolis: maintenance bots,
-fabrication rigs, relays, defensive hulks, and broken infrastructure. Some can move. Some can see.
-None work well on their own.
+and discover damaged machines scattered across the storm-wracked surface of the ecumenopolis:
+maintenance bots, fabrication rigs, relays, defensive hulks, and broken infrastructure. Some can
+move. Some can see. None work well on their own.
 
 **This is Earth.** Future Earth. A planet called Syntheteria now — the ecumenopolis that swallowed
-every continent. The hypercane sealed it off from the sun. The wormhole opened above the storm.
-The EL came through. You woke up here.
+every continent. A perpetual hypercane engulfs the planet. The wormhole sits at the eye of the
+storm — the calmest point in the chaos. The EL came through the wormhole. You woke up here.
+
+There is no dome. There is no shelter. You are a machine — you don't need one. The hypercane is
+just weather. Your robots operate in it. The storm degrades your sensors at range, limits visibility,
+and makes the planet's surface a hostile electromagnetic environment. Floating illuminator drones
+provide local light in the permanent storm darkness.
+
+The Cult of EL — human survivors who worship the EL as gods — maintain localized energy domes
+around their breach altars and strongholds. These translucent dome shields grow from the planet
+surface like blisters, visible from distance as warnings. Inside the cult domes: their buildings,
+farms, and corrupted infrastructure. Breaching a cult dome means entering their territory.
 
 Your first challenge is intimate and local. Reconnect scattered machines. Restore power. Repair hardware.
 Recover fabrication capability. From there the game grows into a full 4X: multiple machine consciousnesses
-competing across the ruined sectors while the Cult of EL — human survivors who worship the EL as gods —
-pressures the campaign relentlessly from the outside.
+competing across the ruined sectors while the Cult pressures the campaign relentlessly.
 
 The game should feel like it **grows into** strategic scale rather than starting as a fully legible empire.
 
@@ -90,14 +99,21 @@ The board surface is procedurally generated with 9 ecumenopolis substrate types:
 
 ### Visual Framing
 
-The atmosphere is a dead machine civilization under permanent storm. The player is INSIDE the dome:
+The atmosphere is a dead machine civilization under a perpetual hypercane. There is no dome — the
+storm IS the sky. Robots don't need shelter.
 
-- **Persistent storm sky** — StormClouds, Hypercane, LightningEffect render in ALL phases (title storms become game sky)
-- **Storm dome** — BackSide sky sphere with 3 GLSL layers (storm clouds, wormhole, orbital illuminator)
-- **Day/night cycle** — driven by turn counter via chronometry system (12 turns/day, 48 turns/year)
-- **Elevation stacking** — bridges at Y=0.4m with support columns and void planes beneath
-- **Sphere fog of war** — dedicated GLSL shaders for fog on curved surface (BFS distance)
-- **Exponential fog** — creates depth toward storm horizon
+- **Storm sky** — StormClouds, Hypercane, LightningEffect render as the actual planetary weather
+- **No dome** — the BackSide sky sphere (StormSky.tsx) represents the real storm, not a dome interior
+- **Floating illuminators** — autonomous light drones hovering above the ecumenopolis, creating
+  pools of light in the storm darkness. Sway in storm winds. Replace the dome-mounted artificial sun.
+- **Cult domes** — EL cult POIs have localized translucent energy shields that grow from the sphere
+  surface like blisters. Visible from distance. Different colors per sect. Destroying the altar drops the dome.
+- **Fog = storm interference** — the hypercane's electromagnetic chaos degrades sensors at range.
+  This is real environmental interference, not mystical fog of war.
+- **Wormhole eye** — the calmest point in the hypercane. Visibility is clearest near the eye.
+  The wormhole project intensifies the eye over 20 turns.
+- **Elevation stacking** — depth layers create multi-level platforms with ramps and walls
+- **Exponential fog** — creates atmospheric depth toward storm horizon
 
 ---
 

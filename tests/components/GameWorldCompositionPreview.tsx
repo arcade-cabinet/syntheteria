@@ -1,5 +1,5 @@
 /**
- * Preview: full game-world composition — all terrain layers + sky dome.
+ * Preview: full game-world composition — all terrain layers + storm sky.
  *
  * This is the integration scene: all active visual layers composited together
  * on a single canvas, matching the actual GameScreen setup.
@@ -8,7 +8,7 @@
  *   L0  Grid data    — 16×16 fixed-seed board (data only, no geometry)
  *   L1  Height mesh  — bilinear elevation interpolation (vertex displacement)
  *   L2  Biome tex    — smoothstep-blended metal / concrete / gravel (fragment)
- *   L3  StormDome    — BackSide sky sphere with FBM storm + wormhole GLSL
+ *   L3  StormSky     — BackSide sky sphere with FBM storm + wormhole GLSL
  *       FogExp2      — exponential horizon fog (hides board edge, adds depth)
  *
  * Individual layer isolation previews:
@@ -20,7 +20,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import type { Elevation, GeneratedBoard, TileData } from "../../src/board/types";
 import { BoardRenderer } from "../../src/rendering/BoardRenderer";
-import { StormDome } from "../../src/rendering/StormDome";
+import { StormSky } from "../../src/rendering/StormSky";
 
 // ---------------------------------------------------------------------------
 // Test board — elevation variation to exercise both L1 and L2 together
@@ -138,8 +138,8 @@ export function GameWorldCompositionPreview({ seed = "default" }: Props) {
 					groundColor={0x030810}
 				/>
 
-				{/* L3: Storm sky dome — BackSide sphere, radius 300 */}
-				<StormDome centerX={boardCX} centerZ={boardCZ} />
+				{/* L3: Storm sky — BackSide sphere, radius 300 */}
+				<StormSky centerX={boardCX} centerZ={boardCZ} />
 
 				{/* L1 + L2: floor geometry — height displacement + biome fragment shader */}
 				<BoardRenderer board={board} />
@@ -163,7 +163,7 @@ export function GameWorldCompositionPreview({ seed = "default" }: Props) {
 			>
 				<div>L1: Height mesh (bilinear)</div>
 				<div>L2: Biome textures (smoothstep)</div>
-				<div>L3: StormDome (BackSide)</div>
+				<div>L3: StormSky (BackSide)</div>
 				<div style={{ color: "#6ff3c8", marginTop: 6 }}>FogExp2: horizon</div>
 				<div style={{ color: "#aaa", marginTop: 4 }}>
 					seed: {seed}

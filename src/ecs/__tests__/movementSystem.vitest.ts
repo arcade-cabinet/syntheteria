@@ -88,12 +88,12 @@ describe("movementSystem", () => {
 		expect(e.get(UnitPos)!.tileX).toBe(1);
 	});
 
-	it("reveals fog around destination tile on move completion", () => {
-		// Spawn tiles in a small grid
+	it("movement does not change tile explored state (all tiles start explored)", () => {
+		// Spawn tiles in a small grid — all start explored
 		for (let z = 0; z < 5; z++) {
 			for (let x = 0; x < 5; x++) {
 				world.spawn(
-					Tile({ x, z, elevation: 0, passable: true, explored: false, visibility: 0 }),
+					Tile({ x, z, elevation: 0, passable: true }),
 					TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
 				);
 			}
@@ -105,28 +105,13 @@ describe("movementSystem", () => {
 			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 2 }),
 		);
 
-		// Complete the move
 		movementSystem(world, 1.0);
 
-		// Tile at destination (2,2) should be explored
-		let destExplored = false;
+		// All tiles remain explored
 		for (const entity of world.query(Tile)) {
 			const tile = entity.get(Tile)!;
-			if (tile.x === 2 && tile.z === 2) {
-				destExplored = tile.explored;
-			}
+			expect(tile.explored).toBe(true);
 		}
-		expect(destExplored).toBe(true);
-
-		// Tile within scanRange (2,1) — dist=1 — should be explored
-		let nearbyExplored = false;
-		for (const entity of world.query(Tile)) {
-			const tile = entity.get(Tile)!;
-			if (tile.x === 2 && tile.z === 1) {
-				nearbyExplored = tile.explored;
-			}
-		}
-		expect(nearbyExplored).toBe(true);
 	});
 
 	it("increments movesUsed on move completion", () => {
@@ -141,9 +126,9 @@ describe("movementSystem", () => {
 		expect(e.get(UnitStats)!.movesUsed).toBe(1);
 	});
 
-	it("does not reveal fog while move is still in progress", () => {
+	it("tiles remain explored during partial move progress", () => {
 		world.spawn(
-			Tile({ x: 1, z: 0, elevation: 0, passable: true, explored: false, visibility: 0 }),
+			Tile({ x: 1, z: 0, elevation: 0, passable: true }),
 			TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
 		);
 
@@ -153,13 +138,12 @@ describe("movementSystem", () => {
 			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4 }),
 		);
 
-		// Only partial progress
 		movementSystem(world, 0.1);
 
 		for (const entity of world.query(Tile)) {
 			const tile = entity.get(Tile)!;
-			expect(tile.explored).toBe(false);
-			expect(tile.visibility).toBe(0);
+			expect(tile.explored).toBe(true);
+			expect(tile.visibility).toBe(1);
 		}
 	});
 });

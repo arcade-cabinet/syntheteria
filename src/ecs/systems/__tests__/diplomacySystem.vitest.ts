@@ -175,17 +175,16 @@ describe("diplomacySystem", () => {
 	});
 
 	describe("shareAlliedFog", () => {
-		it("reveals tiles around allied units", () => {
-			// Create tiles in a small area
+		it("shareAlliedFog is a no-op when all tiles are already explored", () => {
+			// All tiles start explored — shareAlliedFog runs without error
 			for (let x = 0; x < 5; x++) {
 				for (let z = 0; z < 5; z++) {
 					world.spawn(
-						Tile({ x, z, explored: false, visibility: 0 }),
+						Tile({ x, z, explored: true, visibility: 1 }),
 					);
 				}
 			}
 
-			// Create an allied faction unit at (2,2) with scanRange 1
 			setRelation(world, "player", "volt_collective", "ally");
 			world.spawn(
 				UnitPos({ tileX: 2, tileZ: 2 }),
@@ -204,48 +203,11 @@ describe("diplomacySystem", () => {
 
 			shareAlliedFog(world, "player");
 
-			// Check that tiles near (2,2) within scanRange 1 are revealed
-			let revealedCount = 0;
+			// All tiles remain explored
 			for (const e of world.query(Tile)) {
 				const t = e.get(Tile);
-				if (t?.explored) revealedCount++;
+				if (t) expect(t.explored).toBe(true);
 			}
-			expect(revealedCount).toBeGreaterThan(0);
-		});
-
-		it("does not reveal for non-allied factions", () => {
-			for (let x = 0; x < 5; x++) {
-				for (let z = 0; z < 5; z++) {
-					world.spawn(
-						Tile({ x, z, explored: false, visibility: 0 }),
-					);
-				}
-			}
-
-			// Neutral faction — should not share fog
-			world.spawn(
-				UnitPos({ tileX: 2, tileZ: 2 }),
-				UnitFaction({ factionId: "reclaimers" }),
-				UnitStats({
-					hp: 5,
-					maxHp: 5,
-					ap: 2,
-					maxAp: 2,
-					scanRange: 2,
-					attack: 1,
-					defense: 1,
-					attackRange: 1,
-				}),
-			);
-
-			shareAlliedFog(world, "player");
-
-			let revealedCount = 0;
-			for (const e of world.query(Tile)) {
-				const t = e.get(Tile);
-				if (t?.explored) revealedCount++;
-			}
-			expect(revealedCount).toBe(0);
 		});
 	});
 

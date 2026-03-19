@@ -49,7 +49,6 @@ import {
 import { resolveAttacks } from "../attackSystem";
 import { harvestSystem, startHarvest } from "../harvestSystem";
 import { movementSystem } from "../movementSystem";
-import { revealFog } from "../fogRevealSystem";
 import { runPowerGrid } from "../powerSystem";
 import { runTurrets } from "../turretSystem";
 import { runRepairs } from "../repairSystem";
@@ -80,7 +79,7 @@ function spawnTileGrid(world: ReturnType<typeof createWorld>, size: number) {
 	for (let z = 0; z < size; z++) {
 		for (let x = 0; x < size; x++) {
 			world.spawn(
-				Tile({ x, z, elevation: 0, passable: true, explored: false, visibility: 0 }),
+				Tile({ x, z, elevation: 0, passable: true, explored: true, visibility: 1 }),
 				TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
 			);
 		}
@@ -270,47 +269,20 @@ describe("movementSystem — behavior", () => {
 });
 
 // =============================================================================
-// 4. fogRevealSystem
+// 4. terrain visibility (tiles always explored — no fog of war on terrain)
 // =============================================================================
 
-describe("fogRevealSystem — behavior", () => {
+describe("terrain visibility — all tiles explored from turn 1", () => {
 	let world: ReturnType<typeof createWorld>;
 	beforeEach(() => { world = createWorld(); spawnTileGrid(world, 12); });
 	afterEach(() => { world.destroy(); });
 
-	it("revealFog marks tiles within scanRange as explored", () => {
-		revealFog(world, 5, 5, 3);
-
-		let exploredCount = 0;
+	it("all tiles start explored with full visibility", () => {
 		for (const e of world.query(Tile)) {
 			const t = e.get(Tile);
 			if (!t) continue;
-			const dist = Math.abs(t.x - 5) + Math.abs(t.z - 5);
-			if (dist <= 3) {
-				expect(t.explored).toBe(true);
-				expect(t.visibility).toBe(1.0);
-				exploredCount++;
-			}
-		}
-		expect(exploredCount).toBeGreaterThan(0);
-	});
-
-	it("fringe tiles get partial visibility (gradient, not hard cutoff)", () => {
-		revealFog(world, 5, 5, 2);
-
-		const fringeTiles: number[] = [];
-		for (const e of world.query(Tile)) {
-			const t = e.get(Tile);
-			if (!t) continue;
-			const dist = Math.abs(t.x - 5) + Math.abs(t.z - 5);
-			if (dist === 3 && t.visibility > 0) {
-				fringeTiles.push(t.visibility);
-			}
-		}
-		expect(fringeTiles.length).toBeGreaterThan(0);
-		for (const v of fringeTiles) {
-			expect(v).toBeLessThan(1.0);
-			expect(v).toBeGreaterThan(0);
+			expect(t.explored).toBe(true);
+			expect(t.visibility).toBe(1);
 		}
 	});
 });

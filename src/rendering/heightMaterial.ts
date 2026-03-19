@@ -5,7 +5,7 @@
  * lighting (perpetual daylight — near-zenith artificial sun), and fog.
  * No biome patterns — those belong to Layer 2.
  *
- * Board lighting is decoupled from the day/night orbit (StormDome keeps it).
+ * Board lighting is decoupled from the day/night orbit (StormSky keeps it).
  */
 
 import * as THREE from "three";

@@ -90,8 +90,8 @@ const EXPLORE_STATE: FactionState = {
 		scout: 1.8,
 		expand: 1.4,
 		harvest: 1.2,
-		attack: 0.4,
-		chase: 0.4,
+		attack: 0.8,
+		chase: 0.6,
 		idle: 0.3,
 	}),
 	checkTransition(ctx) {

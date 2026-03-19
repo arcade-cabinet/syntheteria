@@ -75,6 +75,10 @@ function setCtx(overrides: Partial<TurnContext> = {}): void {
 		hasResearchLab: false,
 		isResearching: false,
 		researchedTechCount: 0,
+		allyUnits: [],
+		enemyUnits: [],
+		factionTerritoryCount: 0,
+		isStrongestFaction: false,
 		...overrides,
 	});
 }
@@ -232,10 +236,10 @@ describe("HarvestEvaluator", () => {
 	it("still scores distant deposits (reduced)", () => {
 		const agent = makeAgent({ scanRange: 4 });
 		setCtx({ deposits: [{ entityId: 50, x: 15, z: 15 }], totalDeposits: 1 });
-		// Distant deposits still get a score (at least 0.15 floor)
+		// Distant deposits still get a score (quadratic decay, floor 0.15)
 		const score = evaluator.calculateDesirability(agent);
 		expect(score).toBeGreaterThan(0);
-		expect(score).toBeLessThan(0.5);
+		expect(score).toBeLessThan(0.85);
 	});
 
 	it("setGoal harvests adjacent deposit", () => {
@@ -267,8 +271,8 @@ describe("ExpandEvaluator", () => {
 		const agent = makeAgent({ tileX: 0, tileZ: 0 });
 		setCtx({ currentTurn: 1 });
 		const score = evaluator.calculateDesirability(agent);
-		// 0.5 + 0.4 * min(1, 1/20) = 0.5 + 0.4 * 0.05 = 0.52
-		expect(score).toBeCloseTo(0.52, 2);
+		// Logistic ramp centered at turn 10: ~0.525 at turn 1
+		expect(score).toBeCloseTo(0.525, 1);
 	});
 
 	it("returns higher score as turns progress", () => {
@@ -282,11 +286,13 @@ describe("ExpandEvaluator", () => {
 		expect(lateScore).toBeGreaterThan(earlyScore);
 	});
 
-	it("caps at 0.9 by turn 20", () => {
+	it("approaches cap by turn 20", () => {
 		const agent = makeAgent({ tileX: 0, tileZ: 0 });
 		setCtx({ currentTurn: 20 });
 		const score = evaluator.calculateDesirability(agent);
-		expect(score).toBe(0.9);
+		// Logistic curve approaches but doesn't hit 0.9 exactly at turn 20
+		expect(score).toBeGreaterThan(0.85);
+		expect(score).toBeLessThanOrEqual(1);
 	});
 
 	it("setGoal targets remembered enemies when available", () => {
@@ -491,7 +497,7 @@ describe("BuildEvaluator", () => {
 describe("ScoutEvaluator", () => {
 	const evaluator = new ScoutEvaluator(1.0);
 
-	it("returns 0 when deposits exist nearby and enemies are known", () => {
+	it("returns near-zero when deposits exist nearby and enemies are known", () => {
 		const agent = makeAgent({ scanRange: 4 });
 		setCtx({
 			deposits: [{ entityId: 50, x: 2, z: 0 }],
@@ -499,7 +505,8 @@ describe("ScoutEvaluator", () => {
 			currentTurn: 1,
 			enemies: [{ entityId: 99, x: 20, z: 20, factionId: "player" }],
 		});
-		expect(evaluator.calculateDesirability(agent)).toBe(0);
+		// Logistic time boost adds a tiny nonzero value even at turn 1
+		expect(evaluator.calculateDesirability(agent)).toBeLessThan(0.05);
 	});
 
 	it("returns nonzero when deposits nearby but turn > 10 and no enemies found", () => {
@@ -608,7 +615,10 @@ describe("ResearchEvaluator", () => {
 	it("returns slightly lower score when some techs already researched", () => {
 		const agent = makeAgent();
 		setCtx({ hasResearchLab: true, isResearching: false, researchedTechCount: 3 });
-		expect(evaluator.calculateDesirability(agent)).toBe(0.8);
+		const score = evaluator.calculateDesirability(agent);
+		// Quadratic decay: 3 of 15 techs researched → still high but below 0.95
+		expect(score).toBeLessThan(0.95);
+		expect(score).toBeGreaterThan(0.8);
 	});
 });
 

@@ -211,7 +211,7 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 	unit_move: (e) => {
 		const synth = e.synth as ToneNs.Synth;
 		synth.triggerAttackRelease("E4", "16n");
-		setTimeout(() => synth.triggerAttackRelease("G4", "16n"), 80);
+		setTimeout(() => { try { synth.triggerAttackRelease("G4", "16n"); } catch { /* skip */ } }, 80);
 		return 400;
 	},
 
@@ -231,16 +231,16 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 	harvest_complete: (e) => {
 		const synth = e.synth as ToneNs.Synth;
 		synth.triggerAttackRelease("E5", "16n");
-		setTimeout(() => synth.triggerAttackRelease("G5", "16n"), 100);
-		setTimeout(() => synth.triggerAttackRelease("B5", "16n"), 200);
+		setTimeout(() => { try { synth.triggerAttackRelease("G5", "16n"); } catch { /* skip */ } }, 100);
+		setTimeout(() => { try { synth.triggerAttackRelease("B5", "16n"); } catch { /* skip */ } }, 200);
 		return 500;
 	},
 
 	build_complete: (e) => {
 		const synth = e.synth as ToneNs.Synth;
 		synth.triggerAttackRelease("C4", "8n");
-		setTimeout(() => synth.triggerAttackRelease("E4", "8n"), 120);
-		setTimeout(() => synth.triggerAttackRelease("G4", "8n"), 240);
+		setTimeout(() => { try { synth.triggerAttackRelease("E4", "8n"); } catch { /* skip */ } }, 120);
+		setTimeout(() => { try { synth.triggerAttackRelease("G4", "8n"); } catch { /* skip */ } }, 240);
 		return 640;
 	},
 
@@ -258,7 +258,7 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		const synth = e.synth as ToneNs.PolySynth;
 		synth.triggerAttackRelease(["C4", "E4", "G4"], "4n");
 		setTimeout(
-			() => synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "2n"),
+			() => { try { synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "2n"); } catch { /* skip */ } },
 			400,
 		);
 		return 1900;
@@ -267,11 +267,17 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 	defeat: (e) => {
 		const synth = e.synth as ToneNs.Synth;
 		synth.triggerAttackRelease("C3", "4n");
-		setTimeout(() => synth.triggerAttackRelease("B2", "4n"), 400);
-		setTimeout(() => synth.triggerAttackRelease("Bb2", "2n"), 800);
+		setTimeout(() => { try { synth.triggerAttackRelease("B2", "4n"); } catch { /* skip */ } }, 400);
+		setTimeout(() => { try { synth.triggerAttackRelease("Bb2", "2n"); } catch { /* skip */ } }, 800);
 		return 2300;
 	},
 };
+
+// ─── Rate limiter ───────────────────────────────────────────────────────────
+
+/** Minimum interval (ms) between plays of the same SfxName. */
+const MIN_PLAY_INTERVAL_MS = 50;
+const lastPlayTime = new Map<SfxName, number>();
 
 // ─── Public API ─────────────────────────────────────────────────────────────
 
@@ -283,6 +289,12 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 export function playSfx(name: SfxName): void {
 	const output = getSfxOutput();
 	if (!output) return;
+
+	// Rate limiter: skip if same SFX played less than 50ms ago
+	const now = performance.now();
+	const last = lastPlayTime.get(name) ?? 0;
+	if (now - last < MIN_PLAY_INTERVAL_MS) return;
+	lastPlayTime.set(name, now);
 
 	ensureTone().then((T) => {
 		if (!T) return;
@@ -318,4 +330,5 @@ export function disposeSfxPools(): void {
 	}
 	pools.clear();
 	activeCount.clear();
+	lastPlayTime.clear();
 }

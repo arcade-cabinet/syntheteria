@@ -45,27 +45,24 @@ src/ai/
 
 Each evaluator returns a desirability score [0, 1]. Think.arbitrate() picks the highest.
 
-| # | Evaluator | Role | Current Issue |
-|---|-----------|------|---------------|
-| 1 | **IdleEvaluator** | Fallback when nothing to do | Score too high — wins after turn 20 |
-| 2 | **AttackEvaluator** | Engage adjacent enemies | Too conservative — never initiates |
-| 3 | **ChaseEnemyEvaluator** | Pursue remembered enemies | Works but rarely triggers |
-| 4 | **HarvestEvaluator** | Harvest nearby salvage | Drops to 0 when deposits depleted |
-| 5 | **ExpandEvaluator** | Move to unclaimed territory | Stagnates after initial expansion |
-| 6 | **BuildEvaluator** | Place buildings | Stops when resources don't match |
-| 7 | **ScoutEvaluator** | Explore unknown areas | Works but limited range |
-| 8 | **FloorMineEvaluator** | Strip-mine floor tiles | Works |
-| 9 | **EvadeEvaluator** | Flee when outnumbered | NEW — needs tuning |
-| 10 | **ResearchEvaluator** | Start tech research | NEW — needs verification |
+| # | Evaluator | Role | Status |
+|---|-----------|------|--------|
+| 1 | **IdleEvaluator** | Fallback when nothing to do | FIXED — score 0.05, absolute fallback |
+| 2 | **AttackEvaluator** | Engage adjacent enemies | FIXED — 0.95 floor for adjacent, bypasses aggressionMult |
+| 3 | **ChaseEnemyEvaluator** | Pursue remembered enemies | DONE — uses perception memory + pursuit intercept |
+| 4 | **HarvestEvaluator** | Harvest nearby salvage | FIXED — seeks distant deposits, never gives up |
+| 5 | **ExpandEvaluator** | Move to unclaimed territory | FIXED — pushes 10 tiles outward, multi-base expansion |
+| 6 | **BuildEvaluator** | Place buildings | FIXED — priority order, motor pool bonus, time ramp |
+| 7 | **ScoutEvaluator** | Explore unknown areas | DONE — quadrant exploration, enemy discovery boost |
+| 8 | **FloorMineEvaluator** | Strip-mine floor tiles | DONE — backstop economy when salvage scarce |
+| 9 | **EvadeEvaluator** | Flee when outnumbered | DONE — HP-weighted, local force ratio |
+| 10 | **ResearchEvaluator** | Start tech research | DONE — auto-queues per faction tech priority |
 
-### Known Problems (from 10x 100-turn playtests)
+### Remaining Issues
 
-1. **IdleEvaluator dominates after turn 20** — all other evaluators drop below idle's score
-2. **HarvestEvaluator gives up** when nearby deposits are depleted instead of seeking further
-3. **BuildEvaluator uses binary resource check** — if you don't have exact materials, score = 0
-4. **ExpandEvaluator stalls** at ~7% territory — doesn't push units far enough
-5. **AttackEvaluator never initiates** — zero faction-vs-faction combat in 100 turns
-6. **No "always productive" guarantee** — units idle for 80+ turns in a row
+1. **FSM RETREAT suppresses attack** — with < 3 units, attack bias drops to 0.3x which can let harvest win even with adjacent enemies
+2. **Stagnation after turn 20** — evaluator scores plateau; need time-based escalation on ALL evaluators
+3. **No "always productive" guarantee** — idle still possible for multiple consecutive turns when all evaluators return low scores
 
 ---
 
@@ -85,8 +82,8 @@ EXPLORE (turns 1-10) → EXPAND (turns 10+) → FORTIFY (threat) → ATTACK (tur
 | ATTACK | attack 1.8x, chase 1.6x, idle 0.2x | Turn 40+, enemy contacted, 8+ units |
 | RETREAT | evade 2.0x, attack 0.3x | Units < 3 |
 
-### Issue: FSM states apply multipliers but base evaluator scores are too low
-The multipliers amplify scores that are already near-zero. 1.6x × 0.05 = 0.08 — still loses to idle at 0.15.
+### Status: Implemented and active
+FSM multipliers now amplify meaningful base scores (evaluator floors raised). Idle is 0.05 so multiplying it by 1.2x still keeps it below all productive evaluators. RETREAT state's 0.3x attack bias can suppress combat when the faction has < 3 units — this is intentional but may be too conservative.
 
 ---
 
@@ -96,9 +93,9 @@ The multipliers amplify scores that are already near-zero. 1.6x × 0.05 = 0.08 �
 - **Cult Flocking** (AlignmentBehavior + CohesionBehavior + SeparationBehavior) — cult units swarm
 - **Faction Evasion** (EvadeBehavior) — flee when outnumbered, HP-weighted
 - **Pursuit Intercept** (PursuitBehavior) — predict enemy movement, intercept
+- **WanderBehavior** — random patrol for cult wanderer stage (`wanderSteering.ts`)
 
 ### Not Yet Implemented (available in Yuka)
-- **WanderBehavior** — random patrol for cult wanderer stage
 - **ObstacleAvoidanceBehavior** — navigate around walls smoothly
 - **FollowPathBehavior** — follow A* paths with smoothing
 - **InterposeBehavior** — get between attacker and ally (support units)
@@ -115,8 +112,8 @@ The multipliers amplify scores that are already near-zero. 1.6x × 0.05 = 0.08 �
 | Signal Choir | 1 | 2 | 3 | 3 | 2 | 1 | Expansionist — scout + expand |
 | Iron Creed | 1 | 1 | 1 | 2 | 3 | 2 | Aggressive — attack focused |
 
-### Issue: Bias values are too close
-All biases are 1-3, making personalities barely distinguishable. Iron Creed (attack=3) is only 1.5x more aggressive than Reclaimers (attack=1) with the 0.5+bias*0.3 formula. Need wider spread.
+### Status
+Biases are mapped to 0.2-1.0 range via `norm(v) = 0.2 + (v/3) * 0.8`. Iron Creed attack bias = 1.0, Reclaimers = 0.73. Combined with FSM multipliers, personalities produce measurably different behavior (verified in differentiation tests). Still uses 1-3 scale — widening to 1-5 would increase spread further.
 
 ---
 
@@ -198,22 +195,22 @@ All biases are 1-3, making personalities barely distinguishable. Iron Creed (att
 ## 9. TODO — Next Steps
 
 ### Critical (blocks fun gameplay)
-- [ ] Fix IdleEvaluator dominance — score 0.05, never competitive
-- [ ] Add time-based escalation to ALL evaluators
-- [ ] HarvestEvaluator seeks further when nearby depleted
-- [ ] BuildEvaluator plans resource gathering chain
-- [ ] AttackEvaluator initiates combat when not outnumbered
+- [x] Fix IdleEvaluator dominance — score 0.05, absolute fallback (**DONE**)
+- [ ] Add time-based escalation to ALL evaluators (ExpandEvaluator has time ramp, others need it)
+- [x] HarvestEvaluator seeks further when nearby depleted (**DONE** — searches entire board)
+- [x] BuildEvaluator plans resource gathering chain (**DONE** — priority order, time ramp, motor pool bonus)
+- [x] AttackEvaluator initiates combat when not outnumbered (**DONE** — 0.95 floor for adjacent)
 - [ ] "Always productive" guarantee — no idle for 2+ consecutive turns
 
 ### High Priority
 - [ ] Wider faction personality spread (1-5 range, not 1-3)
-- [ ] Research tech automatically when lab exists
-- [ ] Multi-base expansion (send workers far to found new outposts)
-- [ ] Motor pools should NEVER be idle
+- [x] Research tech automatically when lab exists (**DONE** — ResearchEvaluator + runAiResearch per faction priority)
+- [x] Multi-base expansion (send workers far to found new outposts) (**DONE** — ExpandEvaluator worker dispatch)
+- [x] Motor pools should NEVER be idle (**DONE** — runAiFabrication fills ALL open slots)
 - [ ] Wormhole project should be started at turn 100+ by strongest faction
 
 ### Medium Priority
-- [ ] WanderBehavior for cult wanderer stage
+- [x] WanderBehavior for cult wanderer stage (**DONE** — `wanderSteering.ts`)
 - [ ] ObstacleAvoidanceBehavior for smooth movement
 - [ ] InterposeBehavior for support units
 - [ ] Formation movement for faction armies

@@ -87,6 +87,16 @@ import {
 	resetCorruptionTriggers,
 } from "./triggers/corruptionTrigger";
 import { resetAllTerritoryTrackers } from "./triggers/territoryTrigger";
+import { resetInfluenceMaps, getFactionInfluenceMap, getTopTiles } from "./planning/influenceMap";
+import { evaluateLocalCombat, type CombatUnit } from "./planning/combatEval";
+import { decideDiplomacy, executeDiplomacy, resetDiplomaticAi, type DiplomaticContext } from "./planning/diplomaticAi";
+import type { UnitInfo } from "./steering/interposeSteering";
+import {
+	detectFormations,
+	getFormationTarget,
+	isFormationLeader,
+	type FormationUnit,
+} from "./steering/formationSteering";
 
 // ---------------------------------------------------------------------------
 // Module-level runtime — persists across turns within a game session
@@ -104,6 +114,8 @@ export function resetAIRuntime(): void {
 	resetAllTaskQueues();
 	resetCorruptionTriggers();
 	clearNavGraphCache();
+	resetInfluenceMaps();
+	resetDiplomaticAi();
 }
 
 /** Get the current runtime (for testing). */
@@ -375,6 +387,32 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		const isResearching = !!researchState?.currentTechId;
 		const researchedTechCount = researchState?.researchedTechs.length ?? 0;
 
+		// Interpose context — detailed ally/enemy info for support units
+		const allyUnits: Array<{ entityId: number; x: number; z: number; hp: number; factionId: string }> = [];
+		for (const s of factionSnapshots) {
+			allyUnits.push({ entityId: s.entityId, x: s.tileX, z: s.tileZ, hp: s.hp, factionId });
+		}
+		const enemyUnits: Array<{ entityId: number; x: number; z: number; hp: number; factionId: string }> = [];
+		for (const e of factionEnemies) {
+			// Get HP from ECS for detailed enemy info
+			const entity = entityById.get(e.entityId);
+			const stats = entity?.get(UnitStats);
+			enemyUnits.push({ entityId: e.entityId, x: e.x, z: e.z, hp: stats?.hp ?? 10, factionId: e.factionId });
+		}
+
+		// Wormhole context — territory count and strongest faction detection
+		const factionTerritoryCount = factionBuildings.length + unitCount;
+		// Determine if this is the strongest faction (compare against all other factions)
+		let isStrongestFaction = true;
+		for (const [otherId, otherSnaps] of agentsByFaction) {
+			if (otherId === factionId) continue;
+			const otherStrength = getPopulation(world, otherId) + getFactionBuildings(world, otherId).length;
+			if (otherStrength > factionTerritoryCount) {
+				isStrongestFaction = false;
+				break;
+			}
+		}
+
 		// Set context for this faction's evaluators
 		setTurnContext({
 			enemies: factionEnemies,
@@ -398,6 +436,10 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			hasResearchLab,
 			isResearching,
 			researchedTechCount,
+			allyUnits,
+			enemyUnits,
+			factionTerritoryCount,
+			isStrongestFaction,
 		});
 
 		// ── Faction FSM: macro strategy bias overrides ──────────────
@@ -421,12 +463,22 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			motorPoolCount,
 		});
 
+		// ── Formation detection: group nearby units for offset pursuit ──
+		const formationUnits: FormationUnit[] = factionSnapshots.map((s) => ({
+			entityId: s.entityId,
+			x: s.tileX,
+			z: s.tileZ,
+			attack: s.attack,
+			factionId,
+		}));
+		const formations = detectFormations(formationUnits);
+
 		// Arbitrate each agent in this faction
-		// Evaluators are added in order: attack, chase, harvest, expand, build, research, scout, floorMine, evade, idle
+		// Evaluators are added in order: attack, chase, harvest, expand, build, research, scout, floorMine, evade, interpose, wormhole, idle
 		// Map FSM bias keys to evaluator indices (research uses build bias, floorMine uses harvest bias)
 		const evalBiasMap = [
 			"attack", "chase", "harvest", "expand",
-			"build", "build", "scout", "harvest", "evade", "idle",
+			"build", "build", "scout", "harvest", "evade", "evade", "expand", "idle",
 		] as const;
 
 		for (const snap of factionSnapshots) {
@@ -445,13 +497,24 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			}
 
 			if (!agent.decidedAction) {
+				// Check if any enemy is adjacent (dist <= 1) — adjacent attacks
+				// must bypass FSM bias suppression so units always fight back
+				const hasAdjacentEnemy = factionEnemies.some(
+					(e) => Math.abs(e.x - snap.tileX) + Math.abs(e.z - snap.tileZ) <= 1,
+				);
+
 				// Save original biases, apply FSM overrides
 				const origBiases: number[] = [];
 				for (let i = 0; i < agent.brain.evaluators.length; i++) {
 					const ev = agent.brain.evaluators[i];
 					origBiases.push(ev.characterBias);
 					const biasKey = evalBiasMap[i] ?? "idle";
-					ev.characterBias *= fsmBias[biasKey];
+					let fsmMult = fsmBias[biasKey];
+					// Attack evaluator (index 0): floor FSM mult at 1.0 when adjacent enemy
+					if (i === 0 && hasAdjacentEnemy) {
+						fsmMult = Math.max(fsmMult, 1.0);
+					}
+					ev.characterBias *= fsmMult;
 				}
 
 				agent.arbitrate();
@@ -465,6 +528,59 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 				if (isAIDiagnosticsEnabled()) {
 					logEvaluatorChoice(agent, agent.brain.evaluators);
 				}
+			}
+
+			// ── Formation overlay: followers snap to offset positions ──
+			// If this unit is a follower in a formation and its decided action
+			// is "move", redirect it to its formation offset position instead.
+			if (
+				agent.decidedAction?.type === "move" &&
+				!isFormationLeader(snap.entityId, formations)
+			) {
+				const leaderSnap = formations.find((g) =>
+					g.followers.some((f) => f.entityId === snap.entityId),
+				);
+				if (leaderSnap) {
+					// Use the leader's decided move target as the formation goal
+					const leaderAgent = _runtime.getOrCreateAgent(
+						factionSnapshots.find(
+							(s) => s.entityId === leaderSnap.leader.entityId,
+						) ?? snap,
+					);
+					const goalX =
+						leaderAgent.decidedAction?.type === "move"
+							? leaderAgent.decidedAction.toX
+							: leaderSnap.leader.x;
+					const goalZ =
+						leaderAgent.decidedAction?.type === "move"
+							? leaderAgent.decidedAction.toZ
+							: leaderSnap.leader.z;
+
+					const formationTarget = getFormationTarget(
+						snap.entityId,
+						formations,
+						goalX,
+						goalZ,
+					);
+					if (formationTarget) {
+						agent.decidedAction = {
+							type: "move",
+							toX: Math.max(
+								0,
+								Math.min(board.config.width - 1, formationTarget.x),
+							),
+							toZ: Math.max(
+								0,
+								Math.min(board.config.height - 1, formationTarget.z),
+							),
+						};
+					}
+				}
+			}
+
+			// Track last action for momentum bonus next turn
+			if (agent.decidedAction) {
+				agent.lastActionType = agent.decidedAction.type;
 			}
 
 			const entity = entityById.get(snap.entityId);
@@ -556,6 +672,9 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 	// ── Step 6d: Trigger checks — corruption zones + faction contact ────
 	checkCorruptionTriggers(world, currentTurn);
 	checkFactionContact(world, currentTurn);
+
+	// ── Step 6e: Diplomatic AI — alliance/war decisions per faction ──────
+	runAiDiplomacy(world, [...agentsByFaction.keys()], agentsByFaction, currentTurn);
 
 	// ── Step 7: Refresh AI AP ───────────────────────────────────────────
 	for (const e of world.query(UnitFaction, UnitStats)) {
@@ -1146,4 +1265,89 @@ function findTileFloorAt(
 		}
 	}
 	return null;
+}
+
+// ---------------------------------------------------------------------------
+// Territory counting
+// ---------------------------------------------------------------------------
+
+/** Count territory tiles for a faction (building positions + outpost influence). */
+function countFactionTerritory(world: World, factionId: string): number {
+	let count = 0;
+	for (const e of world.query(Building)) {
+		const b = e.get(Building);
+		if (b && b.factionId === factionId) count++;
+	}
+	return count;
+}
+
+/** Check if a faction is the strongest (most units + buildings). */
+function checkIsStrongest(
+	factionId: string,
+	agentsByFaction: Map<string, AgentSnapshot[]>,
+	world: World,
+): boolean {
+	const myStrength =
+		(agentsByFaction.get(factionId)?.length ?? 0) +
+		countFactionTerritory(world, factionId);
+
+	for (const [otherId] of agentsByFaction) {
+		if (otherId === factionId) continue;
+		const otherStrength =
+			(agentsByFaction.get(otherId)?.length ?? 0) +
+			countFactionTerritory(world, otherId);
+		if (otherStrength > myStrength) return false;
+	}
+	return true;
+}
+
+// ---------------------------------------------------------------------------
+// AI Diplomacy — alliance/war decisions per faction
+// ---------------------------------------------------------------------------
+
+/** Personality aggression values (mirrored from AIRuntime FACTION_PERSONALITY, 1-5 scale). */
+const FACTION_AGGRESSION: Record<string, number> = {
+	reclaimers: 2,
+	volt_collective: 1,
+	signal_choir: 4,
+	iron_creed: 5,
+};
+
+/**
+ * Run diplomatic AI for each AI faction.
+ * Decides whether to propose alliances or declare war based on FSM state.
+ */
+function runAiDiplomacy(
+	world: World,
+	factionIds: string[],
+	agentsByFaction: Map<string, AgentSnapshot[]>,
+	currentTurn: number,
+): void {
+	// Build unit/building counts for all factions
+	const factionUnitCounts = new Map<string, number>();
+	const factionBuildingCounts = new Map<string, number>();
+	for (const fId of factionIds) {
+		factionUnitCounts.set(fId, agentsByFaction.get(fId)?.length ?? 0);
+		factionBuildingCounts.set(fId, countFactionTerritory(world, fId));
+	}
+
+	const aiFactionIds = factionIds.filter(
+		(f) => f !== "player" && !isCultFactionId(f),
+	);
+
+	for (const factionId of aiFactionIds) {
+		const fsm = getFactionFSM(factionId);
+		const ctx: DiplomaticContext = {
+			factionId,
+			currentTurn,
+			fsmState: fsm.currentStateId,
+			factionUnitCounts,
+			factionBuildingCounts,
+			otherFactionIds: aiFactionIds,
+			aggression: FACTION_AGGRESSION[factionId] ?? 2,
+		};
+
+		const decision = decideDiplomacy(world, ctx);
+		executeDiplomacy(world, decision, factionId, currentTurn);
+	}
 }

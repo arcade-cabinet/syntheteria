@@ -46,6 +46,9 @@ export class SyntheteriaAgent extends Vehicle {
 	// Result of brain arbitration — what this agent decided to do
 	decidedAction: DecidedAction | null = null;
 
+	// Last action type from previous turn — used for momentum bonus
+	lastActionType: string | null = null;
+
 	constructor(entityId: number, factionId: string) {
 		super();
 		this.entityId = entityId;

@@ -22,8 +22,10 @@ import {
 	FloorMineEvaluator,
 	HarvestEvaluator,
 	IdleEvaluator,
+	InterposeEvaluator,
 	ResearchEvaluator,
 	ScoutEvaluator,
+	WormholeEvaluator,
 } from "../goals/evaluators";
 
 // ---------------------------------------------------------------------------
@@ -43,8 +45,13 @@ interface PersonalityBias {
 }
 
 /**
- * Map from FACTION_PERSONALITY values (1-3 scale) to Yuka characterBias
+ * Map from FACTION_PERSONALITY values (1-5 scale) to Yuka characterBias
  * values (0-1 scale, multiplied against desirability in Think.arbitrate).
+ *
+ * The wider 1-5 scale creates DRAMATICALLY different faction behaviors:
+ * - 1 = 0.2 bias (nearly ignores this evaluator)
+ * - 3 = 0.52 (moderate, baseline)
+ * - 5 = 1.0 (maximum weight, always wins ties)
  *
  * Higher characterBias = stronger preference for that evaluator winning.
  */
@@ -55,8 +62,8 @@ function personalityToBias(personality: {
 	defensePriority: number;
 	reactiveOnly: boolean;
 }): PersonalityBias {
-	// Normalize 1-3 scale to 0.3-1.0 characterBias range
-	const norm = (v: number) => 0.2 + (v / 3) * 0.8;
+	// Normalize 1-5 scale to 0.2-1.0 characterBias range
+	const norm = (v: number) => 0.2 + ((v - 1) / 4) * 0.8;
 
 	return {
 		attack: norm(personality.aggression),
@@ -85,39 +92,39 @@ const FACTION_PERSONALITY: Record<
 > = {
 	reclaimers: {
 		aggression: 2,
-		harvestPriority: 3,
-		expansionPriority: 2,
+		harvestPriority: 5,
+		expansionPriority: 3,
 		defensePriority: 1,
 		reactiveOnly: false,
 	},
 	volt_collective: {
 		aggression: 1,
-		harvestPriority: 2,
+		harvestPriority: 3,
 		expansionPriority: 1,
-		defensePriority: 3,
+		defensePriority: 5,
 		reactiveOnly: true,
 	},
 	signal_choir: {
-		aggression: 3,
+		aggression: 4,
 		harvestPriority: 1,
-		expansionPriority: 3,
+		expansionPriority: 5,
 		defensePriority: 1,
 		reactiveOnly: false,
 	},
 	iron_creed: {
-		aggression: 3,
+		aggression: 5,
 		harvestPriority: 1,
-		expansionPriority: 2,
+		expansionPriority: 3,
 		defensePriority: 2,
 		reactiveOnly: false,
 	},
 };
 
 const DEFAULT_PERSONALITY = {
-	aggression: 2,
-	harvestPriority: 1,
-	expansionPriority: 1,
-	defensePriority: 1,
+	aggression: 3,
+	harvestPriority: 3,
+	expansionPriority: 3,
+	defensePriority: 3,
 	reactiveOnly: false,
 };
 
@@ -211,6 +218,14 @@ export class AIRuntime {
 		// Evasion — flee when outnumbered by cult units
 		const evadeEval = new EvadeEvaluator(bias.evade);
 		agent.addEvaluator(evadeEval);
+
+		// Interpose — support units shield threatened allies
+		const interposeEval = new InterposeEvaluator(bias.evade * 0.8);
+		agent.addEvaluator(interposeEval);
+
+		// Wormhole — endgame victory pursuit (strongest faction after turn 100)
+		const wormholeEval = new WormholeEvaluator(bias.expand * 0.5);
+		agent.addEvaluator(wormholeEval);
 
 		const idleEval = new IdleEvaluator(bias.idle);
 		agent.addEvaluator(idleEval);

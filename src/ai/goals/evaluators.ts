@@ -17,6 +17,12 @@ import {
 	computeFleeDirection,
 } from "../steering/evasionSteering";
 import {
+	computeInterposeDesirability,
+	findInterposeTarget,
+	computeInterposePoint,
+	type UnitInfo,
+} from "../steering/interposeSteering";
+import {
 	computeInterceptTarget,
 	shouldUsePursuit,
 } from "../steering/pursuitSteering";
@@ -71,6 +77,14 @@ export interface TurnContext {
 	isResearching: boolean;
 	/** Number of techs already researched by this faction. */
 	researchedTechCount: number;
+	/** Detailed ally info for interpose (support units). */
+	allyUnits: UnitInfo[];
+	/** Detailed enemy info for interpose (support units). */
+	enemyUnits: UnitInfo[];
+	/** Faction's total territory tile count (for wormhole evaluator). */
+	factionTerritoryCount: number;
+	/** Whether the faction is the strongest (most territory + units). */
+	isStrongestFaction: boolean;
 }
 
 let _ctx: TurnContext = {
@@ -95,6 +109,10 @@ let _ctx: TurnContext = {
 	hasResearchLab: false,
 	isResearching: false,
 	researchedTechCount: 0,
+	allyUnits: [],
+	enemyUnits: [],
+	factionTerritoryCount: 0,
+	isStrongestFaction: false,
 };
 
 export function setTurnContext(ctx: TurnContext): void {
@@ -103,6 +121,30 @@ export function setTurnContext(ctx: TurnContext): void {
 
 function manhattan(ax: number, az: number, bx: number, bz: number): number {
 	return Math.abs(ax - bx) + Math.abs(az - bz);
+}
+
+// ---------------------------------------------------------------------------
+// Response curve helpers — smooth scoring, no if/else thresholds
+// ---------------------------------------------------------------------------
+
+/** Logistic curve: smooth ramp from 0 to 1, centered at midpoint. k controls steepness. */
+function logistic(x: number, midpoint: number, k = 1): number {
+	return 1 / (1 + Math.exp(-k * (x - midpoint)));
+}
+
+/** Quadratic decay: 1.0 at dist=0, 0 at dist=maxDist, never negative. */
+function quadraticDecay(dist: number, maxDist: number): number {
+	const t = Math.min(1, dist / maxDist);
+	return Math.max(0, 1 - t * t);
+}
+
+/**
+ * Momentum bonus: +0.1 if the agent's last action matches the given type.
+ * Encourages units to finish what they started. NEVER applies to idle.
+ */
+function momentumBonus(agent: SyntheteriaAgent, actionType: string): number {
+	if (actionType === "idle") return 0;
+	return agent.lastActionType === actionType ? 0.1 : 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -117,20 +159,16 @@ export class AttackEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		for (const enemy of _ctx.enemies) {
 			const dist = manhattan(agent.tileX, agent.tileZ, enemy.x, enemy.z);
 			if (dist <= agent.attackRange) {
-				// In range — very high desirability so attack ALWAYS wins over idle/expand
-				// Adjacent enemies (dist <= 1) get near-maximum score regardless of aggression
-				if (dist <= 1) {
-					// Adjacent: always attack — hard floor of 0.95 ignores aggressionMult
-					best = Math.max(best, 0.95);
-				} else {
-					const score = 0.85 + (1 - dist / Math.max(agent.attackRange, 1)) * 0.1;
-					if (score > best) best = score;
-				}
+				// Smooth quadratic decay: closer = higher score
+				// Adjacent (dist<=1) → 0.95, at max range → ~0.85
+				const score = 0.85 + 0.10 * quadraticDecay(dist, Math.max(agent.attackRange, 1));
+				best = Math.max(best, score);
 			}
 		}
-		// Adjacent attacks bypass aggressionMult — they ALWAYS happen
-		if (best >= 0.95) return best;
-		return best * _ctx.aggressionMult;
+		if (best === 0) return 0;
+		// Adjacent attacks (score >= 0.93) bypass aggressionMult — always fight back
+		if (best >= 0.93) return Math.min(1, best + momentumBonus(agent, "attack"));
+		return Math.min(1, best * _ctx.aggressionMult + momentumBonus(agent, "attack"));
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -167,26 +205,25 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 
 		let best = 0;
 
-		// Check currently visible enemies
+		// Check currently visible enemies — smooth quadratic decay over distance
 		for (const enemy of _ctx.enemies) {
 			const dist = manhattan(agent.tileX, agent.tileZ, enemy.x, enemy.z);
 			if (this.reactiveOnly && dist > agent.scanRange) continue;
 			// Already in attack range — AttackEvaluator handles it
 			if (dist <= agent.attackRange) continue;
 
-			const proximityScore = Math.max(0, 1 - dist / 30);
-			if (proximityScore > best) best = proximityScore;
+			const score = quadraticDecay(dist, 30);
+			if (score > best) best = score;
 		}
 
-		// Also consider remembered enemies (stale intel) at reduced weight
+		// Also consider remembered enemies (stale intel) — wider range, damped
 		for (const enemy of _ctx.rememberedEnemies) {
 			const dist = manhattan(agent.tileX, agent.tileZ, enemy.x, enemy.z);
-			// Remembered positions are less reliable — use wider range, lower score
-			const proximityScore = Math.max(0, 1 - dist / 40) * 0.6;
-			if (proximityScore > best) best = proximityScore;
+			const score = quadraticDecay(dist, 40) * 0.6;
+			if (score > best) best = score;
 		}
 
-		return best * _ctx.aggressionMult;
+		return Math.min(1, best * _ctx.aggressionMult + momentumBonus(agent, "move"));
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -271,18 +308,21 @@ export class HarvestEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			if (dist <= 1) {
 				// Adjacent — highest desirability
 				best = Math.max(best, 0.95);
-			} else if (dist <= agent.scanRange * 2) {
-				// Nearby — high desirability, tapers with distance
-				const score = 0.85 * (1 - dist / (agent.scanRange * 2));
-				best = Math.max(best, score);
 			} else {
-				// Distant deposit — still worth going after (reduced score)
-				// This prevents the AI from giving up when nearby deposits are depleted
-				const score = Math.max(0.15, 0.5 * (1 - dist / 60));
+				// Smooth decay over distance, floor at 0.15 so AI always has
+				// motivation to seek deposits anywhere on the board
+				const score = Math.max(0.15, 0.85 * quadraticDecay(dist, 50));
 				best = Math.max(best, score);
 			}
 		}
-		return best;
+
+		// Time escalation: if no nearby deposits and it's been a while, urgency rises
+		if (best < 0.5 && _ctx.currentTurn > 10) {
+			const escalation = Math.min(0.15, (_ctx.currentTurn - 10) / 200);
+			best = Math.min(1, best + escalation);
+		}
+
+		return Math.min(1, best + momentumBonus(agent, "harvest"));
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -322,13 +362,16 @@ export class HarvestEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 // ---------------------------------------------------------------------------
 
 export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
-	calculateDesirability(_agent: SyntheteriaAgent): number {
-		// Time-based escalation: desire to expand grows over the first 20 turns
-		// Higher floor (0.5) so scouts push outward from turn 1
-		const timeRamp = Math.min(1, _ctx.currentTurn / 20);
-		const base = 0.5 + 0.4 * timeRamp;
+	calculateDesirability(agent: SyntheteriaAgent): number {
+		// Logistic time ramp: smooth curve from 0.5 early to 0.9 late
+		// Centered at turn 10, steepness 0.3 — gradual, not a cliff
+		const timeScore = 0.5 + 0.4 * logistic(_ctx.currentTurn, 10, 0.3);
 
-		return Math.min(1, base);
+		// If faction hasn't expanded recently (no buildings growing), escalate
+		const stagnationBonus = _ctx.factionBuildingCount < 4 && _ctx.currentTurn > 15
+			? 0.1 : 0;
+
+		return Math.min(1, timeScore + stagnationBonus + momentumBonus(agent, "move"));
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -461,29 +504,32 @@ const BUILD_PRIORITY: string[] = [
 ];
 
 export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
-	calculateDesirability(_agent: SyntheteriaAgent): number {
+	calculateDesirability(agent: SyntheteriaAgent): number {
 		const hasBuildOptions = _ctx.buildOptions.length > 0;
 
-		// Higher desire when faction has few buildings — saturates at 30
-		const buildingBonus = Math.max(0, 1 - _ctx.factionBuildingCount / 30);
-		// Strong desire if fewer than 2 motor pools — need fabrication throughput
-		const motorPoolBonus = _ctx.motorPoolCount < 2 ? 0.5 - _ctx.motorPoolCount * 0.25 : 0;
-		// Time ramp: AI should build more as game progresses
-		const timeRamp = Math.min(1, _ctx.currentTurn / 20);
+		// Smooth saturation curve: fewer buildings → higher desire
+		const buildingBonus = quadraticDecay(_ctx.factionBuildingCount, 30);
+		// Logistic motor pool urgency: 0 pools → 0.5 bonus, 1 → 0.25, 2+ → ~0
+		const motorPoolBonus = _ctx.motorPoolCount < 2
+			? 0.5 * quadraticDecay(_ctx.motorPoolCount, 2)
+			: 0;
+		// Smooth time ramp via logistic — centered at turn 10
+		const timeRamp = logistic(_ctx.currentTurn, 10, 0.3);
 
 		if (hasBuildOptions) {
-			// Can afford something — high desire
+			// Can afford something — high desire with smooth components
 			return Math.min(
 				1,
-				0.55 + buildingBonus * 0.3 + motorPoolBonus + timeRamp * 0.15,
+				0.55 + buildingBonus * 0.3 + motorPoolBonus + timeRamp * 0.15
+					+ momentumBonus(agent, "build"),
 			);
 		}
 
 		// Can't afford anything yet — maintain moderate desire if the faction
 		// has infrastructure (drives units to harvest toward building goals)
-		// but return 0 if no buildings exist (nothing to build toward yet)
 		if (_ctx.factionBuildingCount === 0 && _ctx.motorPoolCount === 0) return 0;
-		return Math.min(1, 0.2 + buildingBonus * 0.15 + motorPoolBonus * 0.5);
+		return Math.min(1, 0.2 + buildingBonus * 0.15 + motorPoolBonus * 0.5
+			+ momentumBonus(agent, "build"));
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -542,9 +588,9 @@ export class ResearchEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		// Already researching → no action needed
 		if (_ctx.isResearching) return 0;
 		// Lab exists, no active research → high priority
-		// More urgent early game when no techs yet
-		const urgency = _ctx.researchedTechCount === 0 ? 0.95 : 0.8;
-		return urgency;
+		// Smooth decay: urgency decreases as more techs are researched
+		// 0 techs → 0.95, 3 techs → ~0.75, 10 techs → ~0.5
+		return Math.max(0.4, 0.95 * quadraticDecay(_ctx.researchedTechCount, 15));
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -564,27 +610,28 @@ export class ScoutEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 				manhattan(agent.tileX, agent.tileZ, d.x, d.z) <= agent.scanRange * 2,
 		).length;
 
-		// After turn 10, scouting becomes relevant even if deposits are nearby
-		// — factions need to discover other factions, not just harvest
-		const timeBoost =
-			_ctx.currentTurn > 10 ? Math.min(0.4, (_ctx.currentTurn - 10) / 50) : 0;
+		// Smooth time escalation via logistic — scouting becomes important mid-game
+		const timeBoost = 0.4 * logistic(_ctx.currentTurn, 15, 0.2);
 
-		// No enemies ever encountered — need to find them
+		// No enemies ever encountered — urgency to find them
 		const noEnemiesBoost =
 			_ctx.enemies.length === 0 && _ctx.rememberedEnemies.length === 0
 				? 0.3
 				: 0;
 
+		let base: number;
 		if (nearbyCount > 0) {
-			// Even with nearby deposits, scout if time has passed and no enemies found
-			return Math.min(1, timeBoost + noEnemiesBoost);
+			// Deposits nearby — scouting only if time-driven or no enemies found
+			base = timeBoost + noEnemiesBoost;
+		} else if (_ctx.totalDeposits === 0) {
+			// No deposits anywhere — light scouting
+			base = 0.15 + timeBoost + noEnemiesBoost;
+		} else {
+			// No nearby deposits but some exist on the board — go find them
+			base = 0.6 + timeBoost + noEnemiesBoost;
 		}
 
-		if (_ctx.totalDeposits === 0)
-			return Math.min(1, 0.1 + timeBoost + noEnemiesBoost);
-
-		// No nearby deposits but some exist on the board — go find them
-		return Math.min(1, 0.6 + timeBoost + noEnemiesBoost);
+		return Math.min(1, base + momentumBonus(agent, "move"));
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -669,25 +716,31 @@ export class FloorMineEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	calculateDesirability(agent: SyntheteriaAgent): number {
 		if (_ctx.mineableTiles.length === 0) return 0;
 
-		// Only desirable when no salvage deposits are nearby
-		const nearbyDeposits = _ctx.deposits.filter(
-			(d) =>
-				manhattan(agent.tileX, agent.tileZ, d.x, d.z) <= agent.scanRange * 2,
-		).length;
+		// Smooth proximity check: how close is the nearest mineable tile?
+		let nearestMine = Infinity;
+		for (const t of _ctx.mineableTiles) {
+			const d = manhattan(agent.tileX, agent.tileZ, t.x, t.z);
+			if (d < nearestMine) nearestMine = d;
+		}
 
-		// If salvage exists nearby, prefer harvesting over mining
-		if (nearbyDeposits > 0) return 0.1;
+		// Smooth proximity check for deposits (prefer harvesting over mining)
+		let nearestDeposit = Infinity;
+		for (const d of _ctx.deposits) {
+			const dist = manhattan(agent.tileX, agent.tileZ, d.x, d.z);
+			if (dist < nearestDeposit) nearestDeposit = dist;
+		}
 
-		// No nearby salvage — floor mining becomes relevant
-		const nearbyMineable = _ctx.mineableTiles.filter(
-			(t) => manhattan(agent.tileX, agent.tileZ, t.x, t.z) <= 1,
-		).length;
+		// If salvage deposits are close, floor mining is less appealing
+		// Smooth curve: deposit at dist 0 → 0.1 score, deposit far → full mining score
+		const depositPenalty = nearestDeposit <= agent.scanRange * 2
+			? 0.6 * quadraticDecay(nearestDeposit, agent.scanRange * 2)
+			: 0;
 
-		// Adjacent mineable tile — high desirability
-		if (nearbyMineable > 0) return 0.7;
+		// Mine score: high when adjacent, moderate when distant
+		const mineScore = nearestMine <= 1 ? 0.7 : 0.15 + 0.25 * quadraticDecay(nearestMine, 15);
 
-		// Mineable tiles exist but not adjacent — moderate desire to move there
-		return 0.4;
+		return Math.min(1, Math.max(0.15, mineScore - depositPenalty)
+			+ momentumBonus(agent, "mine"));
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -767,6 +820,79 @@ export class EvadeEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 }
 
 // ---------------------------------------------------------------------------
+// Interpose Evaluator — support units shield threatened allies
+// ---------------------------------------------------------------------------
+
+export class InterposeEvaluator extends GoalEvaluator<SyntheteriaAgent> {
+	calculateDesirability(agent: SyntheteriaAgent): number {
+		// Only support-class units interpose (attack === 0 or low attack with defense > 0)
+		// Support units have attack <= 1 and defense > 0 typically
+		if (agent.attack > 2) return 0;
+
+		return computeInterposeDesirability(
+			agent.tileX,
+			agent.tileZ,
+			agent.scanRange,
+			_ctx.allyUnits,
+			_ctx.enemyUnits,
+		);
+	}
+
+	setGoal(agent: SyntheteriaAgent): void {
+		const target = findInterposeTarget(
+			agent.tileX,
+			agent.tileZ,
+			agent.scanRange,
+			_ctx.allyUnits,
+			_ctx.enemyUnits,
+		);
+		if (!target) {
+			agent.decidedAction = { type: "idle" };
+			return;
+		}
+
+		const midpoint = computeInterposePoint(
+			{ x: target.ally.x, z: target.ally.z },
+			{ x: target.threat.x, z: target.threat.z },
+		);
+
+		agent.decidedAction = {
+			type: "move",
+			toX: midpoint.x,
+			toZ: midpoint.z,
+		};
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Wormhole Evaluator — strongest faction pursues wormhole victory after turn 100
+// ---------------------------------------------------------------------------
+
+export class WormholeEvaluator extends GoalEvaluator<SyntheteriaAgent> {
+	calculateDesirability(_agent: SyntheteriaAgent): number {
+		// Only active after turn 100
+		if (_ctx.currentTurn < 100) return 0;
+		// Only the strongest faction pursues wormhole
+		if (!_ctx.isStrongestFaction) return 0;
+		// Need enough territory and units to justify endgame push
+		if (_ctx.unitCount < 10) return 0;
+		// High desirability — this is an endgame victory condition
+		// Ramps up: turn 100 → 0.3, turn 200 → 0.6, turn 300+ → 0.9
+		const turnRamp = Math.min(1, (_ctx.currentTurn - 100) / 200);
+		return 0.3 + turnRamp * 0.6;
+	}
+
+	setGoal(agent: SyntheteriaAgent): void {
+		// Move toward board center (wormhole stabilizer must be placed near center)
+		agent.decidedAction = {
+			type: "move",
+			toX: _ctx.boardCenter.x,
+			toZ: _ctx.boardCenter.z,
+		};
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Idle/Defend Evaluator — baseline fallback
 // ---------------------------------------------------------------------------
 
@@ -816,6 +942,8 @@ export function logEvaluatorChoice(
 		"Scout",
 		"FloorMine",
 		"Evade",
+		"Interpose",
+		"Wormhole",
 		"Idle",
 	];
 	const scores: string[] = [];

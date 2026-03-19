@@ -93,10 +93,10 @@ describe("AIRuntime", () => {
 		expect(runtime.size).toBe(0);
 	});
 
-	it("agents have 10 evaluators", () => {
+	it("agents have 12 evaluators", () => {
 		const agent = runtime.getOrCreateAgent(makeSnap());
-		// Brain should have all 10 evaluators: Attack, Chase, Harvest, Expand, Build, Research, Scout, FloorMine, Evade, Idle
-		expect(agent.brain.evaluators.length).toBe(10);
+		// Brain should have all 12 evaluators: Attack, Chase, Harvest, Expand, Build, Research, Scout, FloorMine, Evade, Interpose, Wormhole, Idle
+		expect(agent.brain.evaluators.length).toBe(12);
 	});
 
 	it("unknown faction gets default personality", () => {
@@ -104,27 +104,50 @@ describe("AIRuntime", () => {
 			makeSnap({ factionId: "static_remnants" }),
 		);
 		// Should not throw, uses DEFAULT_PERSONALITY
-		expect(agent.brain.evaluators.length).toBe(10);
+		expect(agent.brain.evaluators.length).toBe(12);
 	});
 });
 
-describe("personalityToBias", () => {
-	it("maps aggression 1 to low attack bias", () => {
+describe("personalityToBias (1-5 scale)", () => {
+	it("maps aggression 1 to lowest attack bias (0.2)", () => {
 		const bias = personalityToBias({ ...DEFAULT_PERSONALITY, aggression: 1 });
-		expect(bias.attack).toBeCloseTo(0.467, 1);
+		expect(bias.attack).toBeCloseTo(0.2, 2);
 	});
 
-	it("maps aggression 3 to high attack bias", () => {
+	it("maps aggression 3 to mid attack bias (0.6)", () => {
 		const bias = personalityToBias({ ...DEFAULT_PERSONALITY, aggression: 3 });
-		expect(bias.attack).toBeCloseTo(1.0, 1);
+		expect(bias.attack).toBeCloseTo(0.6, 2);
 	});
 
-	it("maps harvestPriority 3 to high harvest bias", () => {
+	it("maps aggression 5 to maximum attack bias (1.0)", () => {
+		const bias = personalityToBias({ ...DEFAULT_PERSONALITY, aggression: 5 });
+		expect(bias.attack).toBeCloseTo(1.0, 2);
+	});
+
+	it("maps harvestPriority 5 to max harvest bias (1.0)", () => {
 		const bias = personalityToBias({
 			...DEFAULT_PERSONALITY,
-			harvestPriority: 3,
+			harvestPriority: 5,
 		});
-		expect(bias.harvest).toBeCloseTo(1.0, 1);
+		expect(bias.harvest).toBeCloseTo(1.0, 2);
+	});
+
+	it("maps harvestPriority 1 to lowest harvest bias (0.2)", () => {
+		const bias = personalityToBias({
+			...DEFAULT_PERSONALITY,
+			harvestPriority: 1,
+		});
+		expect(bias.harvest).toBeCloseTo(0.2, 2);
+	});
+
+	it("iron_creed attack=5 produces dramatically high attack bias", () => {
+		const bias = personalityToBias(FACTION_PERSONALITY.iron_creed);
+		expect(bias.attack).toBeCloseTo(1.0, 2);
+	});
+
+	it("reclaimers harvest=5 produces dramatically high harvest bias", () => {
+		const bias = personalityToBias(FACTION_PERSONALITY.reclaimers);
+		expect(bias.harvest).toBeCloseTo(1.0, 2);
 	});
 
 	it("reactiveOnly is preserved", () => {
@@ -142,7 +165,7 @@ describe("personalityToBias", () => {
 	});
 });
 
-describe("FACTION_PERSONALITY", () => {
+describe("FACTION_PERSONALITY (1-5 scale)", () => {
 	it("has entries for all four factions", () => {
 		expect(FACTION_PERSONALITY.reclaimers).toBeDefined();
 		expect(FACTION_PERSONALITY.volt_collective).toBeDefined();
@@ -154,11 +177,28 @@ describe("FACTION_PERSONALITY", () => {
 		expect(FACTION_PERSONALITY.volt_collective.reactiveOnly).toBe(true);
 	});
 
-	it("signal_choir has highest aggression", () => {
-		expect(FACTION_PERSONALITY.signal_choir.aggression).toBe(3);
+	it("iron_creed has highest aggression (5)", () => {
+		expect(FACTION_PERSONALITY.iron_creed.aggression).toBe(5);
 	});
 
-	it("reclaimers have highest harvestPriority", () => {
-		expect(FACTION_PERSONALITY.reclaimers.harvestPriority).toBe(3);
+	it("reclaimers have highest harvestPriority (5)", () => {
+		expect(FACTION_PERSONALITY.reclaimers.harvestPriority).toBe(5);
+	});
+
+	it("signal_choir has highest expansionPriority (5)", () => {
+		expect(FACTION_PERSONALITY.signal_choir.expansionPriority).toBe(5);
+	});
+
+	it("volt_collective has highest defensePriority (5)", () => {
+		expect(FACTION_PERSONALITY.volt_collective.defensePriority).toBe(5);
+	});
+
+	it("personalities create dramatically different bias profiles", () => {
+		const rBias = personalityToBias(FACTION_PERSONALITY.reclaimers);
+		const iBias = personalityToBias(FACTION_PERSONALITY.iron_creed);
+		// Reclaimers harvest >> Iron Creed harvest
+		expect(rBias.harvest - iBias.harvest).toBeGreaterThan(0.5);
+		// Iron Creed attack >> Reclaimers attack
+		expect(iBias.attack - rBias.attack).toBeGreaterThan(0.5);
 	});
 });

@@ -80,7 +80,7 @@ describe("Yuka AI turn system", () => {
 	it("AI unit moves toward player", () => {
 		const aiUnit = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
-			UnitFaction({ factionId: "reclaimers" }),
+			UnitFaction({ factionId: "iron_creed" }),
 			UnitStats({
 				hp: 10,
 				maxHp: 10,

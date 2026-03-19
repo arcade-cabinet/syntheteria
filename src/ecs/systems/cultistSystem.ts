@@ -1,6 +1,7 @@
 import type { World } from "koota";
 import { pickFlockingTile } from "../../ai/steering/flockingSteering";
 import type { TilePos } from "../../ai/steering/flockingSteering";
+import { pickWanderTile, resetWanderState } from "../../ai/steering/wanderSteering";
 import { playSfx } from "../../audio/sfx";
 import { shortestPath, tileNeighbors } from "../../board/adjacency";
 import type { GeneratedBoard } from "../../board/types";
@@ -691,7 +692,7 @@ function runWandererBehavior(
 		return;
 	}
 
-	// Flocking wander within patrol radius
+	// Wander within patrol radius — organic meandering via WanderBehavior
 	if (!e.has(UnitMove)) {
 		const neighbors = tileNeighbors(pos.tileX, pos.tileZ, board);
 		if (neighbors.length > 0) {
@@ -704,25 +705,19 @@ function runWandererBehavior(
 			});
 
 			if (validNeighbors.length > 0) {
-				// Use flocking to pick tile — goal direction toward patrol center
-				const goalDx = nearestCenter.x - pos.tileX;
-				const goalDz = nearestCenter.z - pos.tileZ;
-				const goalLen = Math.sqrt(goalDx * goalDx + goalDz * goalDz);
-				const goalDir =
-					goalLen > 0
-						? { dx: goalDx / goalLen, dz: goalDz / goalLen }
-						: undefined;
-
-				const flockTile = pickFlockingTile(
+				// Use WanderBehavior for organic meandering instead of basic flocking
+				const wanderTile = pickWanderTile(
+					e.id(),
 					{ x: pos.tileX, z: pos.tileZ },
-					{ x: 0, z: 0 },
-					flockNeighbors,
+					0, // heading X — wanderers have no persistent heading
+					0, // heading Z
 					validNeighbors,
-					goalDir,
-					0.5, // Low goal weight — wanderers mostly flock
+					nearestCenter,
+					effectivePatrolRadius,
+					readTurn(world) * 31 + e.id() * 7,
 				);
 
-				const candidate = flockTile ?? validNeighbors[0];
+				const candidate = wanderTile ?? validNeighbors[0];
 				e.add(
 					UnitMove({
 						fromX: pos.tileX,
@@ -1398,4 +1393,5 @@ export function _reset(): void {
 	corruptedTiles.clear();
 	poiPositions = [];
 	poisInitialized = false;
+	resetWanderState();
 }

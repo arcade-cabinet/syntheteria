@@ -14,7 +14,7 @@
 import { Clone, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type { World } from "koota";
-import { Suspense, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import { playSfx } from "../audio/sfx";
@@ -32,6 +32,7 @@ import {
 	getAllRobotModelUrls,
 	resolveRobotModelUrl,
 } from "./modelPaths";
+import { sphereModelPlacement } from "./spherePlacement";
 import { buildExploredSet, isTileExplored } from "./tileVisibility";
 
 // Preload all robot models
@@ -41,20 +42,45 @@ for (const url of getAllRobotModelUrls()) {
 
 // ─── Single unit model ───────────────────────────────────────────────────────
 
+/** Faction emissive tint strength — subtle enough to preserve model textures. */
+const FACTION_TINT_INTENSITY = 0.35;
+
+function applyFactionTint(root: THREE.Object3D, factionColor: number) {
+	const tint = new THREE.Color(factionColor);
+	root.traverse((child) => {
+		if (!(child instanceof THREE.Mesh)) return;
+		const mat = child.material;
+		if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial) {
+			// Clone material so we don't mutate the cached GLB original
+			const cloned = mat.clone();
+			cloned.emissive.copy(tint);
+			cloned.emissiveIntensity = FACTION_TINT_INTENSITY;
+			child.material = cloned;
+		}
+	});
+}
+
 function UnitModel({
 	url,
 	x,
 	z,
 	factionColor,
 	markScale,
+	useSphere,
+	boardWidth,
+	boardHeight,
 }: {
 	url: string;
 	x: number;
 	z: number;
 	factionColor: number;
 	markScale: number;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
 }) {
 	const { scene } = useGLTF(url);
+	const groupRef = useRef<THREE.Group>(null);
 
 	const { scale, yOffset } = useMemo(() => {
 		const box = new THREE.Box3().setFromObject(scene);
@@ -65,21 +91,48 @@ function UnitModel({
 		return { scale: s * markScale, yOffset: -box.min.y * s * markScale };
 	}, [scene, markScale]);
 
+	// Apply faction color tint after Clone mounts
+	useEffect(() => {
+		if (groupRef.current) {
+			applyFactionTint(groupRef.current, factionColor);
+		}
+	}, [factionColor]);
+
+	if (useSphere && boardWidth && boardHeight) {
+		const sp = sphereModelPlacement(x, z, boardWidth, boardHeight, yOffset + 0.1);
+		return (
+			<group ref={groupRef}>
+				<Clone
+					object={scene}
+					position={sp.position}
+					quaternion={sp.quaternion}
+					scale={scale}
+					castShadow
+				/>
+			</group>
+		);
+	}
+
 	return (
-		<Clone
-			object={scene}
-			position={[x * TILE_SIZE_M, yOffset + 0.1, z * TILE_SIZE_M]}
-			scale={scale}
-			castShadow
-		/>
+		<group ref={groupRef}>
+			<Clone
+				object={scene}
+				position={[x * TILE_SIZE_M, yOffset + 0.1, z * TILE_SIZE_M]}
+				scale={scale}
+				castShadow
+			/>
+		</group>
 	);
 }
 
 // ─── Fallback box mesh for units when GLB fails ─────────────────────────────
 
-function UnitBox({ x, z, color }: { x: number; z: number; color: number }) {
+function UnitBox({ x, z, color, useSphere, boardWidth, boardHeight }: { x: number; z: number; color: number; useSphere?: boolean; boardWidth?: number; boardHeight?: number }) {
+	const pos: [number, number, number] = useSphere && boardWidth && boardHeight
+		? sphereModelPlacement(x, z, boardWidth, boardHeight, 0.5).position
+		: [x * TILE_SIZE_M, 0.5, z * TILE_SIZE_M];
 	return (
-		<mesh position={[x * TILE_SIZE_M, 0.5, z * TILE_SIZE_M]} castShadow>
+		<mesh position={pos} castShadow>
 			<boxGeometry args={[0.8, 1.0, 0.8]} />
 			<meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.3} />
 		</mesh>
@@ -94,9 +147,9 @@ function UnitBox({ x, z, color }: { x: number; z: number; color: number }) {
 //   machine operational status, not faction identity.
 
 /** Ring radius as fraction of tile. Slightly larger than the unit footprint. */
-const RING_OUTER_RADIUS = TILE_SIZE_M * 0.45;
-const RING_INNER_RADIUS = TILE_SIZE_M * 0.38;
-const RING_Y = 0.15; // above terrain surface after elevation displacement
+const RING_OUTER_RADIUS = TILE_SIZE_M * 0.55;
+const RING_INNER_RADIUS = TILE_SIZE_M * 0.45;
+const RING_Y = 0.05; // just above terrain surface — renderOrder ensures visibility
 
 /** Diegetic cyan — machine cognition / readiness. */
 const READINESS_CYAN = 0x00ccff;
@@ -106,11 +159,17 @@ function ReadinessRing({
 	z,
 	ap,
 	maxAp,
+	useSphere,
+	boardWidth,
+	boardHeight,
 }: {
 	x: number;
 	z: number;
 	ap: number;
 	maxAp: number;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
 }) {
 	const meshRef = useRef<THREE.Mesh>(null);
 
@@ -124,20 +183,27 @@ function ReadinessRing({
 		mat.emissiveIntensity = maxAp > 0 ? 0.6 + (ap / maxAp) * 0.8 : 0.6;
 	});
 
+	const sp = useSphere && boardWidth && boardHeight
+		? sphereModelPlacement(x, z, boardWidth, boardHeight, RING_Y)
+		: null;
+
 	return (
 		<mesh
 			ref={meshRef}
-			position={[x * TILE_SIZE_M, RING_Y, z * TILE_SIZE_M]}
-			rotation={[-Math.PI / 2, 0, 0]}
+			position={sp ? sp.position : [x * TILE_SIZE_M, RING_Y, z * TILE_SIZE_M]}
+			quaternion={sp ? sp.quaternion : undefined}
+			rotation={sp ? undefined : [-Math.PI / 2, 0, 0]}
+			renderOrder={10}
 		>
 			<ringGeometry args={[RING_INNER_RADIUS, RING_OUTER_RADIUS, 32]} />
 			<meshStandardMaterial
 				color={0x000000}
 				emissive={READINESS_CYAN}
-				emissiveIntensity={1.0}
+				emissiveIntensity={1.5}
 				transparent
-				opacity={0.5}
+				opacity={0.6}
 				depthWrite={false}
+				depthTest={false}
 				side={THREE.DoubleSide}
 			/>
 		</mesh>
@@ -151,18 +217,28 @@ function MarkAccentGlow({
 	z,
 	factionColor,
 	markLevel,
+	useSphere,
+	boardWidth,
+	boardHeight,
 }: {
 	x: number;
 	z: number;
 	factionColor: number;
 	markLevel: number;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
 }) {
 	// Intensity increases at Mark V
 	const intensity = markLevel >= 5 ? 2.5 : 1.5;
 
+	const pos: [number, number, number] = useSphere && boardWidth && boardHeight
+		? sphereModelPlacement(x, z, boardWidth, boardHeight, 1.2).position
+		: [x * TILE_SIZE_M, 1.2, z * TILE_SIZE_M];
+
 	return (
 		<pointLight
-			position={[x * TILE_SIZE_M, 1.2, z * TILE_SIZE_M]}
+			position={pos}
 			color={factionColor}
 			intensity={intensity}
 			distance={TILE_SIZE_M * 2.5}
@@ -189,10 +265,16 @@ function MarkParticleTrail({
 	x,
 	z,
 	factionColor,
+	useSphere,
+	boardWidth,
+	boardHeight,
 }: {
 	x: number;
 	z: number;
 	factionColor: number;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
 }) {
 	const pointsRef = useRef<THREE.Points>(null);
 	const geo = useParticleGeometry();
@@ -201,16 +283,39 @@ function MarkParticleTrail({
 		if (!pointsRef.current) return;
 		const t = state.clock.elapsedTime;
 		const positions = geo.attributes.position!.array as Float32Array;
-		const cx = x * TILE_SIZE_M;
-		const cz = z * TILE_SIZE_M;
 
-		for (let i = 0; i < PARTICLE_COUNT; i++) {
-			const angle = (i / PARTICLE_COUNT) * Math.PI * 2 + t * 1.2;
-			const radius = TILE_SIZE_M * 0.5;
-			const yBob = 0.8 + Math.sin(t * 2 + i * 1.3) * 0.3;
-			positions[i * 3] = cx + Math.cos(angle) * radius;
-			positions[i * 3 + 1] = yBob;
-			positions[i * 3 + 2] = cz + Math.sin(angle) * radius;
+		if (useSphere && boardWidth && boardHeight) {
+			// On sphere: orbit particles around the sphere-surface center point
+			const center = sphereModelPlacement(x, z, boardWidth, boardHeight, 0).position;
+			const normal = new THREE.Vector3(...center).normalize();
+			// Build tangent frame on sphere surface
+			const tangent = new THREE.Vector3(-normal.z, 0, normal.x).normalize();
+			if (tangent.lengthSq() < 0.001) tangent.set(1, 0, 0);
+			const bitangent = new THREE.Vector3().crossVectors(normal, tangent);
+
+			for (let i = 0; i < PARTICLE_COUNT; i++) {
+				const angle = (i / PARTICLE_COUNT) * Math.PI * 2 + t * 1.2;
+				const orbitR = TILE_SIZE_M * 0.5;
+				const heightOffset = 0.8 + Math.sin(t * 2 + i * 1.3) * 0.3;
+				const px = center[0] + tangent.x * Math.cos(angle) * orbitR + bitangent.x * Math.sin(angle) * orbitR + normal.x * heightOffset;
+				const py = center[1] + tangent.y * Math.cos(angle) * orbitR + bitangent.y * Math.sin(angle) * orbitR + normal.y * heightOffset;
+				const pz = center[2] + tangent.z * Math.cos(angle) * orbitR + bitangent.z * Math.sin(angle) * orbitR + normal.z * heightOffset;
+				positions[i * 3] = px;
+				positions[i * 3 + 1] = py;
+				positions[i * 3 + 2] = pz;
+			}
+		} else {
+			const cx = x * TILE_SIZE_M;
+			const cz = z * TILE_SIZE_M;
+
+			for (let i = 0; i < PARTICLE_COUNT; i++) {
+				const angle = (i / PARTICLE_COUNT) * Math.PI * 2 + t * 1.2;
+				const radius = TILE_SIZE_M * 0.5;
+				const yBob = 0.8 + Math.sin(t * 2 + i * 1.3) * 0.3;
+				positions[i * 3] = cx + Math.cos(angle) * radius;
+				positions[i * 3 + 1] = yBob;
+				positions[i * 3 + 2] = cz + Math.sin(angle) * radius;
+			}
 		}
 		geo.attributes.position!.needsUpdate = true;
 	});
@@ -233,6 +338,9 @@ function MarkParticleTrail({
 
 type UnitRendererProps = {
 	world: World;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
 };
 
 interface UnitSnapshot {
@@ -249,7 +357,7 @@ interface UnitSnapshot {
 	markLevel: number;
 }
 
-export function UnitRenderer({ world }: UnitRendererProps) {
+export function UnitRenderer({ world, useSphere, boardWidth, boardHeight }: UnitRendererProps) {
 	// Rebuild unit list each frame would be expensive — rebuild on key changes
 	// For now, rebuild every 200ms (units don't move that often in turn-based)
 	const unitsRef = useRef<UnitSnapshot[]>([]);
@@ -322,14 +430,17 @@ export function UnitRenderer({ world }: UnitRendererProps) {
 				const markScale = u.markLevel >= 5 ? 1.15 : 1.0;
 
 				return (
-					<Suspense key={u.eid} fallback={<UnitBox x={u.tileX} z={u.tileZ} color={u.color} />}>
-						<UnitModel url={u.url} x={u.tileX} z={u.tileZ} factionColor={u.color} markScale={markScale} />
+					<Suspense key={u.eid} fallback={<UnitBox x={u.tileX} z={u.tileZ} color={u.color} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />}>
+						<UnitModel url={u.url} x={u.tileX} z={u.tileZ} factionColor={u.color} markScale={markScale} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
 						{u.ap > 0 && (
 							<ReadinessRing
 								x={u.tileX}
 								z={u.tileZ}
 								ap={u.ap}
 								maxAp={u.maxAp}
+								useSphere={useSphere}
+								boardWidth={boardWidth}
+								boardHeight={boardHeight}
 							/>
 						)}
 						{/* Mark III+: Faction-color accent glow */}
@@ -339,6 +450,9 @@ export function UnitRenderer({ world }: UnitRendererProps) {
 								z={u.tileZ}
 								factionColor={u.color}
 								markLevel={u.markLevel}
+								useSphere={useSphere}
+								boardWidth={boardWidth}
+								boardHeight={boardHeight}
 							/>
 						)}
 						{/* Mark IV+: Orbiting particle trail */}
@@ -347,6 +461,9 @@ export function UnitRenderer({ world }: UnitRendererProps) {
 								x={u.tileX}
 								z={u.tileZ}
 								factionColor={u.color}
+								useSphere={useSphere}
+								boardWidth={boardWidth}
+								boardHeight={boardHeight}
 							/>
 						)}
 					</Suspense>

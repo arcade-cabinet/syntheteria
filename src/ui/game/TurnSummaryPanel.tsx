@@ -85,15 +85,16 @@ export function TurnSummaryPanel() {
 	const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const fadeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	// Show when summary appears
+	// Show when summary appears — always show so player knows the turn advanced
 	useEffect(() => {
-		if (summary && hasContent(summary)) {
+		if (summary) {
 			setVisible(true);
 			setOpacity(0);
 			// Fade in
 			fadeTimer.current = setTimeout(() => setOpacity(1), 16);
-			// Auto-dismiss
-			dismissTimer.current = setTimeout(() => dismiss(), AUTO_DISMISS_MS);
+			// Auto-dismiss (shorter if no content)
+			const duration = hasContent(summary) ? AUTO_DISMISS_MS : 2500;
+			dismissTimer.current = setTimeout(() => dismiss(), duration);
 		}
 		return () => {
 			if (dismissTimer.current) clearTimeout(dismissTimer.current);
@@ -218,6 +219,13 @@ export function TurnSummaryPanel() {
 							{p} completes
 						</div>
 					))}
+				</div>
+			)}
+
+			{/* No content fallback */}
+			{!hasContent(summary) && (
+				<div style={{ ...ENTRY_STYLE, color: NEUTRAL_COLOR, textAlign: "center" }}>
+					Systems nominal. No activity.
 				</div>
 			)}
 

@@ -48,6 +48,9 @@ import {
 	setProviderSelectedUnit,
 } from "../systems/radialProviders";
 import { playSfx } from "../audio/sfx";
+import { sphereRadius, spherePosToTile } from "../rendering/boardGeometry";
+import { setPreviewPath, clearPreviewPath } from "../rendering/PathRenderer";
+import { shortestPath } from "../board/adjacency";
 import "../systems/radialProviders";
 
 type BoardInputProps = {
@@ -56,16 +59,48 @@ type BoardInputProps = {
 	/** Koota entity numeric ID of the currently selected unit, or null. */
 	selectedId?: number | null;
 	onSelect: (entityId: number | null) => void;
+	/** When true, raycast against the sphere instead of the ground plane. */
+	useSphere?: boolean;
 };
+
+/**
+ * Analytic ray-sphere intersection.
+ * Returns the nearest intersection point, or null if the ray misses.
+ */
+function raySphereIntersect(
+	ray: THREE.Ray,
+	center: THREE.Vector3,
+	radius: number,
+	target: THREE.Vector3,
+): THREE.Vector3 | null {
+	const oc = new THREE.Vector3().subVectors(ray.origin, center);
+	const a = ray.direction.dot(ray.direction);
+	const b = 2 * oc.dot(ray.direction);
+	const c = oc.dot(oc) - radius * radius;
+	const disc = b * b - 4 * a * c;
+	if (disc < 0) return null;
+	const sqrtDisc = Math.sqrt(disc);
+	let t = (-b - sqrtDisc) / (2 * a);
+	if (t < 0) t = (-b + sqrtDisc) / (2 * a);
+	if (t < 0) return null;
+	target.copy(ray.direction).multiplyScalar(t).add(ray.origin);
+	return target;
+}
 
 export function BoardInput({
 	world,
 	board,
 	selectedId,
 	onSelect,
+	useSphere = false,
 }: BoardInputProps) {
 	const { camera, gl } = useThree();
 	const gridApi = useMemo(() => createGridApi(board), [board]);
+	const R = useMemo(
+		() => sphereRadius(board.config.width, board.config.height),
+		[board.config.width, board.config.height],
+	);
+	const sphereCenter = useRef(new THREE.Vector3(0, 0, 0));
 
 	// Wire world and board refs so radial providers can query ECS state
 	useEffect(() => {
@@ -83,6 +118,39 @@ export function BoardInput({
 	const hitPoint = useRef(new THREE.Vector3());
 	const pointerRef = useRef({ x: 0, y: 0 });
 	const clickedRef = useRef(false);
+
+	/**
+	 * Raycast to either the ground plane (flat board) or the sphere,
+	 * returning the tile coordinate if hit. Returns null on miss.
+	 */
+	const raycastToTile = (): { x: number; z: number } | null => {
+		raycaster.current.setFromCamera(
+			pointerRef.current as THREE.Vector2,
+			camera,
+		);
+		if (useSphere) {
+			const hit = raySphereIntersect(
+				raycaster.current.ray,
+				sphereCenter.current,
+				R,
+				hitPoint.current,
+			);
+			if (!hit) return null;
+			const result = spherePosToTile(
+				hitPoint.current,
+				board.config.width,
+				board.config.height,
+				R,
+			);
+			return result;
+		}
+		const planeHit = raycaster.current.ray.intersectPlane(
+			groundPlane.current,
+			hitPoint.current,
+		);
+		if (!planeHit) return null;
+		return gridApi.worldToTile(hitPoint.current.x, hitPoint.current.z);
+	};
 
 	// Map from entity ID -> Entity, rebuilt each frame a click is processed
 	const entityById = useRef(new Map<number, Entity>());
@@ -169,25 +237,54 @@ export function BoardInput({
 		};
 	}, [gl, world]);
 
+	const lastPathTileRef = useRef("");
+
 	useFrame(() => {
+		// --- Path preview: show A* path when hovering reachable tiles ---
+		if (selectedId != null && !isInBuildPlacementMode()) {
+			const hoverTile = raycastToTile();
+			const hoverKey = hoverTile ? `${hoverTile.x},${hoverTile.z}` : "";
+			if (hoverKey !== lastPathTileRef.current) {
+				lastPathTileRef.current = hoverKey;
+				if (hoverTile) {
+					// Find the selected unit's position
+					let unitX = -1;
+					let unitZ = -1;
+					for (const e of world.query(UnitPos, UnitFaction)) {
+						if (e.id() === selectedId) {
+							const p = e.get(UnitPos);
+							if (p) { unitX = p.tileX; unitZ = p.tileZ; }
+							break;
+						}
+					}
+					if (unitX >= 0 && (hoverTile.x !== unitX || hoverTile.z !== unitZ)) {
+						const path = shortestPath(unitX, unitZ, hoverTile.x, hoverTile.z, board);
+						if (path.length >= 2) {
+							setPreviewPath(path.map((t) => ({
+								tileX: t.x,
+								tileZ: t.z,
+								elevation: t.elevation,
+							})));
+						} else {
+							clearPreviewPath();
+						}
+					} else {
+						clearPreviewPath();
+					}
+				} else {
+					clearPreviewPath();
+				}
+			}
+		} else if (lastPathTileRef.current !== "") {
+			lastPathTileRef.current = "";
+			clearPreviewPath();
+		}
+
 		// --- Build placement mode: highlight hovered tile ---
 		if (isInBuildPlacementMode()) {
-			raycaster.current.setFromCamera(
-				pointerRef.current as THREE.Vector2,
-				camera,
-			);
-			const hoverHit = raycaster.current.ray.intersectPlane(
-				groundPlane.current,
-				hitPoint.current,
-			);
-			if (hoverHit) {
-				const hoverTile = gridApi.worldToTile(
-					hitPoint.current.x,
-					hitPoint.current.z,
-				);
-				if (hoverTile) {
-					highlightPlacementTile(world, hoverTile.x, hoverTile.z);
-				}
+			const hoverTile = raycastToTile();
+			if (hoverTile) {
+				highlightPlacementTile(world, hoverTile.x, hoverTile.z);
 			}
 		}
 
@@ -201,82 +298,69 @@ export function BoardInput({
 				return;
 			}
 
-			raycaster.current.setFromCamera(
-				pointerRef.current as THREE.Vector2,
-				camera,
-			);
-			const didHit = raycaster.current.ray.intersectPlane(
-				groundPlane.current,
-				hitPoint.current,
-			);
-			if (didHit) {
-				const tile = gridApi.worldToTile(
-					hitPoint.current.x,
-					hitPoint.current.z,
-				);
-				if (tile) {
-					// Determine what's at this tile
-					let selectionType:
-						| "unit"
-						| "empty_sector"
-						| "resource_node"
-						| "building"
-						| "none" = "empty_sector";
-					let targetEntityId: string | null = null;
-					let targetFaction: string | null = null;
+			const tile = raycastToTile();
+			if (tile) {
+				// Determine what's at this tile
+				let selectionType:
+					| "unit"
+					| "empty_sector"
+					| "resource_node"
+					| "building"
+					| "none" = "empty_sector";
+				let targetEntityId: string | null = null;
+				let targetFaction: string | null = null;
 
-					for (const e of world.query(UnitPos, UnitFaction)) {
-						const p = e.get(UnitPos);
-						const f = e.get(UnitFaction);
-						if (p && f && p.tileX === tile.x && p.tileZ === tile.z) {
-							selectionType = "unit";
+				for (const e of world.query(UnitPos, UnitFaction)) {
+					const p = e.get(UnitPos);
+					const f = e.get(UnitFaction);
+					if (p && f && p.tileX === tile.x && p.tileZ === tile.z) {
+						selectionType = "unit";
+						targetEntityId = String(e.id());
+						targetFaction = f.factionId;
+						break;
+					}
+				}
+
+				// Check for resource deposit if no unit found
+				if (selectionType === "empty_sector") {
+					for (const e of world.query(ResourceDeposit)) {
+						const dep = e.get(ResourceDeposit);
+						if (
+							dep &&
+							!dep.depleted &&
+							dep.tileX === tile.x &&
+							dep.tileZ === tile.z
+						) {
+							selectionType = "resource_node";
 							targetEntityId = String(e.id());
-							targetFaction = f.factionId;
 							break;
 						}
 					}
-
-					// Check for resource deposit if no unit found
-					if (selectionType === "empty_sector") {
-						for (const e of world.query(ResourceDeposit)) {
-							const dep = e.get(ResourceDeposit);
-							if (
-								dep &&
-								!dep.depleted &&
-								dep.tileX === tile.x &&
-								dep.tileZ === tile.z
-							) {
-								selectionType = "resource_node";
-								targetEntityId = String(e.id());
-								break;
-							}
-						}
-					}
-
-					// Check for building if still empty
-					if (selectionType === "empty_sector") {
-						for (const e of world.query(Building)) {
-							const b = e.get(Building);
-							if (
-								b &&
-								b.tileX === tile.x &&
-								b.tileZ === tile.z
-							) {
-								selectionType = "building";
-								targetEntityId = String(e.id());
-								targetFaction = b.factionId;
-								break;
-							}
-						}
-					}
-
-					openRadialMenu(lastScreenRef.current.x, lastScreenRef.current.y, {
-						selectionType,
-						targetEntityId,
-						targetSector: { q: tile.x, r: tile.z },
-						targetFaction,
-					});
 				}
+
+				// Check for building if still empty
+				if (selectionType === "empty_sector") {
+					for (const e of world.query(Building)) {
+						const b = e.get(Building);
+						if (
+							b &&
+							b.tileX === tile.x &&
+							b.tileZ === tile.z
+						) {
+							selectionType = "building";
+							targetEntityId = String(e.id());
+							targetFaction = b.factionId;
+							break;
+						}
+					}
+				}
+
+				openRadialMenu(lastScreenRef.current.x, lastScreenRef.current.y, {
+					selectionType,
+					targetEntityId,
+					targetSector: { q: tile.x, r: tile.z },
+					targetFaction,
+				});
 			}
 		}
 
@@ -284,22 +368,11 @@ export function BoardInput({
 		if (!clickedRef.current) return;
 		clickedRef.current = false;
 
-		// Raycast to ground plane
-		raycaster.current.setFromCamera(
-			pointerRef.current as THREE.Vector2,
-			camera,
-		);
-		const didHit = raycaster.current.ray.intersectPlane(
-			groundPlane.current,
-			hitPoint.current,
-		);
-		if (!didHit) return;
+		// Raycast to ground plane or sphere
+		const clickTile = raycastToTile();
+		if (!clickTile) return;
 
-		// Convert world position to tile coordinate
-		const tile = gridApi.worldToTile(hitPoint.current.x, hitPoint.current.z);
-		if (!tile) return;
-
-		const { x, z } = tile;
+		const { x, z } = clickTile;
 
 		// --- Build placement mode: confirm placement on click ---
 		if (isInBuildPlacementMode()) {
@@ -322,6 +395,7 @@ export function BoardInput({
 			const selectedEntity = map.get(selectedId);
 			if (!selectedEntity) {
 				clearHighlights(world);
+				clearPreviewPath();
 				onSelect(null);
 				return;
 			}
@@ -330,6 +404,7 @@ export function BoardInput({
 			const stats = selectedEntity.get(UnitStats);
 			if (!pos || !stats) {
 				clearHighlights(world);
+				clearPreviewPath();
 				onSelect(null);
 				return;
 			}
@@ -337,6 +412,7 @@ export function BoardInput({
 			// Same tile as selected unit -> deselect
 			if (x === pos.tileX && z === pos.tileZ) {
 				clearHighlights(world);
+				clearPreviewPath();
 				onSelect(null);
 				return;
 			}
@@ -361,6 +437,7 @@ export function BoardInput({
 							});
 						}
 						clearHighlights(world);
+						clearPreviewPath();
 						onSelect(null);
 						return;
 					}
@@ -385,10 +462,12 @@ export function BoardInput({
 					}),
 				);
 				clearHighlights(world);
+				clearPreviewPath();
 				onSelect(null);
 			} else {
 				// Clicked non-reachable tile -> deselect
 				clearHighlights(world);
+				clearPreviewPath();
 				onSelect(null);
 			}
 		} else {

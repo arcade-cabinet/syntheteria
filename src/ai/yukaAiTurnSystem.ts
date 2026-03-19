@@ -53,9 +53,16 @@ import {
 	getOrBuildNavGraph,
 	yukaShortestPath,
 	clearNavGraphCache,
+	sphereManhattan,
 } from "./navigation/boardNavGraph";
 import { resetAllTerritoryTrackers } from "./triggers/territoryTrigger";
 import { AIRuntime } from "./runtime/AIRuntime";
+import { queueFabrication } from "../ecs/systems/fabricationSystem";
+import { getResearchState } from "../ecs/systems/researchSystem";
+import { TRACK_REGISTRY } from "../ecs/robots/specializations/trackRegistry";
+import { pickAITrack, pickAITrackVersion } from "./trackSelection";
+import { Powered } from "../ecs/traits/building";
+import type { RobotClass } from "../ecs/robots/types";
 
 // ---------------------------------------------------------------------------
 // Module-level runtime — persists across turns within a game session
@@ -225,7 +232,9 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 
 		// ── Fuzzy scoring: modulate aggression with situation ────────
 		const factionResources = getFactionResourceScore(world, factionId);
-		const nearestEnemyDist = getNearestEnemyDist(factionSnapshots, factionEnemies);
+		const nearestEnemyDist = getNearestEnemyDist(
+			factionSnapshots, factionEnemies, board.config.width, navGraph.wrapX,
+		);
 		const territoryPct = 0; // Territory tracking is opt-in, default 0
 		const fuzzyScores = assessSituationFuzzy(
 			factionResources,
@@ -259,6 +268,7 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			factionSnapshots,
 			board,
 			occupiedTiles,
+			navGraph.wrapX,
 		);
 
 		// Compute faction center (centroid of owned units)
@@ -285,7 +295,9 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			}));
 
 		// Scan for mineable tiles near faction units
-		const mineableTiles = findMineableTilesNearUnits(world, factionSnapshots);
+		const mineableTiles = findMineableTilesNearUnits(
+			world, factionSnapshots, board.config.width, navGraph.wrapX,
+		);
 
 		// Set context for this faction's evaluators
 		setTurnContext({
@@ -390,6 +402,9 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		}
 	}
 
+	// ── Step 6b: AI fabrication — queue units at idle motor pools ────────
+	runAiFabrication(world, [...agentsByFaction.keys()]);
+
 	// ── Step 7: Refresh AI AP ───────────────────────────────────────────
 	for (const e of world.query(UnitFaction, UnitStats)) {
 		const faction = e.get(UnitFaction);
@@ -468,17 +483,21 @@ function getFactionResourceScore(world: World, factionId: string): number {
 
 /**
  * Get Manhattan distance to nearest enemy from any faction unit.
+ * Sphere-aware: wraps X axis when wrapX is true.
  */
 function getNearestEnemyDist(
 	myUnits: AgentSnapshot[],
 	enemies: TurnContext["enemies"],
+	boardWidth = 0,
+	wrapX = false,
 ): number {
 	if (myUnits.length === 0 || enemies.length === 0) return 30;
 	let minDist = 30;
 	for (const unit of myUnits) {
 		for (const enemy of enemies) {
-			const dist =
-				Math.abs(unit.tileX - enemy.x) + Math.abs(unit.tileZ - enemy.z);
+			const dist = sphereManhattan(
+				unit.tileX, unit.tileZ, enemy.x, enemy.z, boardWidth, wrapX,
+			);
 			if (dist < minDist) minDist = dist;
 		}
 	}
@@ -535,6 +554,7 @@ function computeBuildOptions(
 	units: AgentSnapshot[],
 	board: GeneratedBoard,
 	occupiedTiles: Set<string>,
+	wrapX = false,
 ): BuildOption[] {
 	const options: BuildOption[] = [];
 
@@ -543,7 +563,7 @@ function computeBuildOptions(
 		if (!canAfford(world, factionId, def.buildCost)) continue;
 
 		// Find a placement tile near one of this faction's units
-		const tile = findBuildTileNearUnits(units, board, occupiedTiles);
+		const tile = findBuildTileNearUnits(units, board, occupiedTiles, wrapX);
 		if (tile) {
 			options.push({
 				buildingType: type,
@@ -561,6 +581,7 @@ function findBuildTileNearUnits(
 	units: AgentSnapshot[],
 	board: GeneratedBoard,
 	occupied: Set<string>,
+	wrapX = false,
 ): { x: number; z: number } | null {
 	const { width, height } = board.config;
 
@@ -569,8 +590,10 @@ function findBuildTileNearUnits(
 		for (let r = 1; r <= 3; r++) {
 			for (let dx = -r; dx <= r; dx++) {
 				for (let dz = -r; dz <= r; dz++) {
-					const x = unit.tileX + dx;
+					let x = unit.tileX + dx;
 					const z = unit.tileZ + dz;
+					// Wrap X on sphere (longitude wraps east-west)
+					if (wrapX) x = ((x % width) + width) % width;
 					if (x < 0 || z < 0 || x >= width || z >= height) continue;
 					const key = `${x},${z}`;
 					if (occupied.has(key)) continue;
@@ -664,6 +687,8 @@ function isCultFactionId(factionId: string): boolean {
 function findMineableTilesNearUnits(
 	world: World,
 	units: AgentSnapshot[],
+	boardWidth = 0,
+	wrapX = false,
 ): Array<{ x: number; z: number; material: string }> {
 	const results: Array<{ x: number; z: number; material: string }> = [];
 	const seen = new Set<string>();
@@ -678,7 +703,9 @@ function findMineableTilesNearUnits(
 
 		// Check if any faction unit is within scan range * 2
 		for (const unit of units) {
-			const dist = Math.abs(unit.tileX - tile.x) + Math.abs(unit.tileZ - tile.z);
+			const dist = sphereManhattan(
+				unit.tileX, unit.tileZ, tile.x, tile.z, boardWidth, wrapX,
+			);
 			if (dist <= unit.scanRange * 2) {
 				results.push({ x: tile.x, z: tile.z, material: floor.resourceMaterial });
 				seen.add(key);
@@ -688,6 +715,60 @@ function findMineableTilesNearUnits(
 	}
 
 	return results;
+}
+
+// ---------------------------------------------------------------------------
+// AI Fabrication — queue units at idle motor pools using pickAITrack
+// ---------------------------------------------------------------------------
+
+/** Priority order for AI fabrication. */
+const AI_FAB_PRIORITY: RobotClass[] = [
+	"worker",
+	"scout",
+	"infantry",
+	"cavalry",
+	"ranged",
+	"support",
+];
+
+/**
+ * For each AI faction, find powered motor pools with open slots and queue
+ * a unit using faction track preferences via pickAITrack.
+ */
+function runAiFabrication(world: World, factionIds: string[]): void {
+	// Build gate and v2 tech maps from the track registry
+	const gateTechIds = new Map<string, string>();
+	const v2TechIds = new Map<string, string>();
+	for (const [trackId, entry] of TRACK_REGISTRY) {
+		gateTechIds.set(trackId, entry.gateTechId);
+		if (entry.v2TechId) v2TechIds.set(trackId, entry.v2TechId);
+	}
+
+	for (const factionId of factionIds) {
+		if (factionId === "player") continue;
+		if (isCultFactionId(factionId)) continue;
+
+		// Get researched techs for this faction
+		const researchState = getResearchState(world, factionId);
+		const researched = new Set(researchState?.researchedTechs ?? []);
+
+		// Find powered motor pools with open slots
+		for (const e of world.query(Building, BotFabricator, Powered)) {
+			const b = e.get(Building);
+			const fab = e.get(BotFabricator);
+			if (!b || !fab || b.factionId !== factionId) continue;
+			if (fab.queueSize >= fab.fabricationSlots) continue;
+
+			// Pick a robot class in priority order
+			for (const robotClass of AI_FAB_PRIORITY) {
+				const trackId = pickAITrack(factionId, robotClass, researched, gateTechIds);
+				const trackVersion = pickAITrackVersion(trackId, researched, v2TechIds);
+
+				const result = queueFabrication(world, e, robotClass, trackId, trackVersion);
+				if (result.ok) break; // One unit per motor pool per turn
+			}
+		}
+	}
 }
 
 /** Find TileFloor data at a specific coordinate. */

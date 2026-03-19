@@ -21,14 +21,14 @@ describe("HUD", () => {
 		expect(screen.getByTestId("turn-display").textContent).toBe("CYCLE 5");
 	});
 
-	it('renders "AP 3 / 3" when ap=3, maxAp=3', () => {
+	it('renders "CYC 3 / 3" when ap=3, maxAp=3', () => {
 		render(<HUD {...defaultProps} />);
-		expect(screen.getByTestId("ap-display").textContent).toBe("AP 3 / 3");
+		expect(screen.getByTestId("ap-display").textContent).toBe("CYC 3 / 3");
 	});
 
-	it('renders "AP 0 / 3" when ap=0, maxAp=3', () => {
+	it('renders "CYC 0 / 3" when ap=0, maxAp=3', () => {
 		render(<HUD {...defaultProps} ap={0} />);
-		expect(screen.getByTestId("ap-display").textContent).toBe("AP 0 / 3");
+		expect(screen.getByTestId("ap-display").textContent).toBe("CYC 0 / 3");
 	});
 
 	it("Advance button is present", () => {

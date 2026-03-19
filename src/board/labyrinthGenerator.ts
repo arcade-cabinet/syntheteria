@@ -16,7 +16,7 @@
  * Same seed = identical output.
  */
 
-import { FLOOR_DEFS } from "../ecs/terrain/types";
+import { FLOOR_DEFS, type FloorType } from "../ecs/terrain/types";
 import { floorTypeForTile } from "../ecs/terrain/cluster";
 import { CLIMATE_PROFILE_SPECS } from "../world/config";
 import { seededRng } from "./noise";
@@ -99,14 +99,29 @@ export function generateLabyrinthBoard(config: BoardConfig): GeneratedBoard {
 // ─── Phase 6a: Zone floor assignment ────────────────────────────────────────
 
 /**
+ * District floor types used as fallbacks when geography noise returns
+ * structural_mass or abyssal_platform (non-passable types). Weighted
+ * to produce distinct visual zones across the labyrinth.
+ */
+const DISTRICT_FLOORS: FloorType[] = [
+	"durasteel_span",
+	"collapsed_zone",
+	"dust_district",
+	"bio_district",
+	"aerostructure",
+];
+
+/**
  * Assign zone-specific floor types to corridor tiles based on geography noise.
  * Room tiles already have their floor type from Phase 1 (room.floorType).
  * Corridors carved in Phase 2 are transit_deck — we vary them using
  * cluster noise for visual district variety across the board.
  *
- * 85% of corridors get noise-driven zone floors (durasteel, collapsed, dust,
- * bio, aerostructure). Only 15% stay as transit_deck for contrast.
- * This creates distinct visual districts across the labyrinth.
+ * 90% of corridors get noise-driven zone floors. Only 10% stay as
+ * transit_deck for contrast. When noise returns a non-passable type
+ * (structural_mass, abyssal_platform, void_pit), we pick a district
+ * floor deterministically from the tile position so corridors always
+ * get variety.
  */
 function applyZoneFloors(
 	tiles: TileData[][],
@@ -122,21 +137,24 @@ function applyZoneFloors(
 			const tile = tiles[z]![x]!;
 
 			// Only reassign corridor tiles (transit_deck from maze fill)
-			// Leave room floors, structural_mass, abyssal, etc. alone
+			// Leave room floors, structural_mass walls, abyssal, etc. alone
 			if (tile.floorType !== "transit_deck") continue;
 			if (!tile.passable) continue;
 
-			// 85% of corridors get noise-driven zone floors for visual variety.
-			// The remaining 15% stay as transit_deck for contrast.
-			if (rng() < 0.85) {
+			// 90% of corridors get zone floors for visual variety.
+			// The remaining 10% stay as transit_deck for contrast.
+			if (rng() < 0.90) {
 				const noiseFloor = floorTypeForTile(x, z, 0, seed);
-				// Only use passable floor types from noise
 				if (
 					noiseFloor !== "void_pit" &&
 					noiseFloor !== "structural_mass" &&
 					noiseFloor !== "abyssal_platform"
 				) {
 					tile.floorType = noiseFloor;
+				} else {
+					// Geography noise returned a non-passable type — pick a
+					// district floor deterministically from tile position
+					tile.floorType = DISTRICT_FLOORS[(x * 7 + z * 13) % DISTRICT_FLOORS.length]!;
 				}
 			}
 		}

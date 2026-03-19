@@ -16,16 +16,17 @@ import type { World } from "koota";
 import * as THREE from "three";
 import type { GeneratedBoard } from "../board/types";
 import { TILE_SIZE_M, ELEVATION_STEP_M } from "../board/grid";
-import { FLOOR_INDEX_MAP } from "../ecs/terrain/types";
 import { TileFloor } from "../ecs/terrain/traits";
 import { Tile } from "../ecs/traits/tile";
 import { boardToDepthLayers } from "./depthLayerStack";
 import {
 	buildLayerGeometry,
-	applyDaisyDig,
 	applyTargetedDig,
-	GRATING_ATLAS_INDEX,
-	type DepthMappedLayer,
+	type FloorQuad,
+	type RampQuad,
+	type WallQuad,
+	type VoidPlane,
+	type EdgeDirection,
 } from "./depthMappedLayer";
 import { buildExploredSet, isTileExplored } from "./tileVisibility";
 
@@ -36,7 +37,6 @@ import { buildExploredSet, isTileExplored } from "./tileVisibility";
 const BRIDGE_THICKNESS = 0.05;
 const COLUMN_RADIUS = 0.05;
 const COLUMN_SEGMENTS = 6;
-const ABYSSAL_VOID_Y = -0.5;
 
 // ---------------------------------------------------------------------------
 // Materials
@@ -83,26 +83,7 @@ function makeVoidMaterial(): THREE.MeshStandardMaterial {
 	});
 }
 
-function makeAbyssalVoidMaterial(): THREE.MeshStandardMaterial {
-	return new THREE.MeshStandardMaterial({
-		color: 0x020210,
-		emissive: 0x010108,
-		emissiveIntensity: 0.2,
-		metalness: 0.9,
-		roughness: 0.3,
-	});
-}
-
-function makePitFloorMaterial(): THREE.MeshStandardMaterial {
-	return new THREE.MeshStandardMaterial({
-		color: 0x2a2420,
-		roughness: 0.95,
-		metalness: 0.2,
-		side: THREE.DoubleSide,
-	});
-}
-
-function makePitWallMaterial(): THREE.MeshStandardMaterial {
+function makeWallMaterial(): THREE.MeshStandardMaterial {
 	return new THREE.MeshStandardMaterial({
 		color: 0x1e1a16,
 		roughness: 0.9,
@@ -112,102 +93,94 @@ function makePitWallMaterial(): THREE.MeshStandardMaterial {
 }
 
 // ---------------------------------------------------------------------------
-// Geometry builders for Three.js rendering from DepthMappedLayer
+// Direction → rotation/offset mapping for ramps and walls
 // ---------------------------------------------------------------------------
 
-/**
- * Build Three.js geometry for bridge platforms, support columns,
- * void planes, abyssal void, ramps, and mined pits from the depth layer stack.
- */
-function buildUnifiedGeometry(
-	board: GeneratedBoard,
-	world?: World,
-): {
-	bridge: THREE.BufferGeometry;
-	columns: THREE.BufferGeometry;
-	voidPlanes: THREE.BufferGeometry;
-	abyssalVoid: THREE.BufferGeometry;
-	ramps: THREE.BufferGeometry;
-	pitFloors: THREE.BufferGeometry;
-	pitWalls: THREE.BufferGeometry;
-} {
-	const { width, height } = board.config;
-	const explored = world ? buildExploredSet(world) : undefined;
+const DIRECTION_ROTY: Record<EdgeDirection, number> = {
+	south: 0,
+	north: Math.PI,
+	east: -Math.PI / 2,
+	west: Math.PI / 2,
+};
 
-	// Scan for different tile types
-	const bridgeTiles: Array<{ x: number; z: number }> = [];
-	const abyssalTiles: Array<{ x: number; z: number }> = [];
-	const minedTiles: Array<{ x: number; z: number }> = [];
+const DIRECTION_OFFSET: Record<EdgeDirection, { dx: number; dz: number }> = {
+	north: { dx: 0, dz: -1 },
+	south: { dx: 0, dz: 1 },
+	east: { dx: 1, dz: 0 },
+	west: { dx: -1, dz: 0 },
+};
 
-	for (let z = 0; z < height; z++) {
-		for (let x = 0; x < width; x++) {
-			if (explored && !isTileExplored(explored, x, z)) continue;
-			const tile = board.tiles[z][x];
-			if (tile.elevation === 1) {
-				bridgeTiles.push({ x, z });
-			} else if (tile.elevation === -1) {
-				abyssalTiles.push({ x, z });
-			}
-		}
-	}
+// ---------------------------------------------------------------------------
+// Geometry builders from depth layer descriptors
+// ---------------------------------------------------------------------------
 
-	// Collect mined tiles from ECS
-	if (world) {
-		for (const entity of world.query(Tile, TileFloor)) {
-			const tile = entity.get(Tile);
-			const floor = entity.get(TileFloor);
-			if (!tile || !floor || !floor.mined) continue;
-			if (explored && !isTileExplored(explored, tile.x, tile.z)) continue;
-			minedTiles.push({ x: tile.x, z: tile.z });
-		}
-	}
-
-	// Build bridge platform geometry
-	const bridgeGeo = buildBridgePlatforms(bridgeTiles);
-	const columnGeo = buildColumns(bridgeTiles);
-	const voidGeo = buildVoidPlanes(bridgeTiles);
-	const abyssalGeo = buildAbyssalVoid(abyssalTiles);
-	const rampGeo = buildRamps(board, explored);
-	const { pitFloors, pitWalls } = buildMinedPits(minedTiles);
-
-	return {
-		bridge: bridgeGeo,
-		columns: columnGeo,
-		voidPlanes: voidGeo,
-		abyssalVoid: abyssalGeo,
-		ramps: rampGeo,
-		pitFloors,
-		pitWalls,
-	};
-}
-
-function buildBridgePlatforms(
-	tiles: Array<{ x: number; z: number }>,
+function buildFloorGeometry(
+	floorQuads: FloorQuad[],
+	explored?: Set<string>,
 ): THREE.BufferGeometry {
-	if (tiles.length === 0) return new THREE.BufferGeometry();
-	const template = new THREE.BoxGeometry(TILE_SIZE_M, BRIDGE_THICKNESS, TILE_SIZE_M);
+	const filtered = explored
+		? floorQuads.filter((q) => isTileExplored(explored, q.x, q.z))
+		: floorQuads;
+
+	if (filtered.length === 0) return new THREE.BufferGeometry();
+
+	const template = new THREE.PlaneGeometry(TILE_SIZE_M, TILE_SIZE_M);
+	template.rotateX(-Math.PI / 2);
+
 	const merged = mergeTranslated(
 		template,
-		tiles.map((t) => ({
-			x: t.x * TILE_SIZE_M,
-			y: ELEVATION_STEP_M,
-			z: t.z * TILE_SIZE_M,
+		filtered.map((q) => ({
+			x: q.x * TILE_SIZE_M,
+			y: q.worldY * ELEVATION_STEP_M,
+			z: q.z * TILE_SIZE_M,
 		})),
 	);
 	template.dispose();
 	return merged;
 }
 
-function buildColumns(
-	tiles: Array<{ x: number; z: number }>,
+function buildElevatedFloorGeometry(
+	floorQuads: FloorQuad[],
+	explored?: Set<string>,
 ): THREE.BufferGeometry {
-	if (tiles.length === 0) return new THREE.BufferGeometry();
+	const filtered = explored
+		? floorQuads.filter((q) => isTileExplored(explored, q.x, q.z))
+		: floorQuads;
+
+	if (filtered.length === 0) return new THREE.BufferGeometry();
+
+	const template = new THREE.BoxGeometry(TILE_SIZE_M, BRIDGE_THICKNESS, TILE_SIZE_M);
+
+	const merged = mergeTranslated(
+		template,
+		filtered.map((q) => ({
+			x: q.x * TILE_SIZE_M,
+			y: q.worldY * ELEVATION_STEP_M,
+			z: q.z * TILE_SIZE_M,
+		})),
+	);
+	template.dispose();
+	return merged;
+}
+
+function buildColumnGeometry(
+	floorQuads: FloorQuad[],
+	baseY: number,
+	explored?: Set<string>,
+): THREE.BufferGeometry {
+	const filtered = explored
+		? floorQuads.filter((q) => isTileExplored(explored, q.x, q.z))
+		: floorQuads;
+
+	if (filtered.length === 0) return new THREE.BufferGeometry();
+
 	const half = TILE_SIZE_M / 2;
 	const posSet = new Set<string>();
 	const positions: Array<{ x: number; z: number }> = [];
-	for (const t of tiles) {
-		const cx = t.x * TILE_SIZE_M;
-		const cz = t.z * TILE_SIZE_M;
+
+	for (const q of filtered) {
+		const cx = q.x * TILE_SIZE_M;
+		const cz = q.z * TILE_SIZE_M;
 		for (const corner of [
 			{ x: cx - half, z: cz - half },
 			{ x: cx + half, z: cz - half },
@@ -221,8 +194,12 @@ function buildColumns(
 			}
 		}
 	}
-	const colH = ELEVATION_STEP_M;
+
+	const colH = baseY * ELEVATION_STEP_M;
+	if (colH <= 0) return new THREE.BufferGeometry();
+
 	const template = new THREE.CylinderGeometry(COLUMN_RADIUS, COLUMN_RADIUS, colH, COLUMN_SEGMENTS);
+
 	const merged = mergeTranslated(
 		template,
 		positions.map((p) => ({ x: p.x, y: colH / 2, z: p.z })),
@@ -231,84 +208,24 @@ function buildColumns(
 	return merged;
 }
 
-function buildVoidPlanes(
-	tiles: Array<{ x: number; z: number }>,
-): THREE.BufferGeometry {
-	if (tiles.length === 0) return new THREE.BufferGeometry();
-	const template = new THREE.PlaneGeometry(TILE_SIZE_M, TILE_SIZE_M);
-	template.rotateX(-Math.PI / 2);
-	const merged = mergeTranslated(
-		template,
-		tiles.map((t) => ({ x: t.x * TILE_SIZE_M, y: 0.01, z: t.z * TILE_SIZE_M })),
-	);
-	template.dispose();
-	return merged;
-}
-
-function buildAbyssalVoid(
-	tiles: Array<{ x: number; z: number }>,
-): THREE.BufferGeometry {
-	if (tiles.length === 0) return new THREE.BufferGeometry();
-	const template = new THREE.PlaneGeometry(TILE_SIZE_M, TILE_SIZE_M);
-	template.rotateX(-Math.PI / 2);
-	const merged = mergeTranslated(
-		template,
-		tiles.map((t) => ({ x: t.x * TILE_SIZE_M, y: ABYSSAL_VOID_Y, z: t.z * TILE_SIZE_M })),
-	);
-	template.dispose();
-	return merged;
-}
-
-function buildRamps(
-	board: GeneratedBoard,
+function buildRampGeometryFromQuads(
+	rampQuads: RampQuad[],
+	baseY: number,
 	explored?: Set<string>,
 ): THREE.BufferGeometry {
-	const { width, height } = board.config;
-	const edges: Array<{ wx: number; wz: number; dx: number; dz: number }> = [];
-	const seen = new Set<string>();
-	const DIRECTIONS: [number, number][] = [[0, -1], [0, 1], [1, 0], [-1, 0]];
+	const filtered = explored
+		? rampQuads.filter((q) => isTileExplored(explored, q.x, q.z))
+		: rampQuads;
 
-	for (let z = 0; z < height; z++) {
-		for (let x = 0; x < width; x++) {
-			const tile = board.tiles[z][x];
-			if (!tile.passable) continue;
-			if (explored && !isTileExplored(explored, x, z)) continue;
-			if (tile.elevation !== 0) continue;
-			for (const [dx, dz] of DIRECTIONS) {
-				const nx = x + dx;
-				const nz = z + dz;
-				if (nx < 0 || nx >= width || nz < 0 || nz >= height) continue;
-				const neighbor = board.tiles[nz][nx];
-				if (!neighbor.passable || neighbor.elevation !== 1) continue;
-				if (explored && !isTileExplored(explored, nx, nz)) continue;
-				const key = `${Math.min(x, nx)},${Math.min(z, nz)}-${Math.max(x, nx)},${Math.max(z, nz)}`;
-				if (seen.has(key)) continue;
-				seen.add(key);
-				edges.push({
-					wx: (x + nx) * 0.5 * TILE_SIZE_M,
-					wz: (z + nz) * 0.5 * TILE_SIZE_M,
-					dx,
-					dz,
-				});
-			}
-		}
-	}
-
-	if (edges.length === 0) return new THREE.BufferGeometry();
+	if (filtered.length === 0) return new THREE.BufferGeometry();
 
 	const rampWidth = TILE_SIZE_M;
 	const rampDepth = TILE_SIZE_M * 0.5;
+	const rampHeight = ELEVATION_STEP_M;
 	const template = new THREE.BoxGeometry(rampWidth, BRIDGE_THICKNESS, rampDepth);
-	const angle = Math.atan2(ELEVATION_STEP_M, rampDepth);
+	const angle = Math.atan2(rampHeight, rampDepth);
 	template.rotateX(-angle);
-	template.translate(0, ELEVATION_STEP_M / 2, 0);
-
-	const angleMap: Record<string, number> = {
-		"0,1": 0,
-		"0,-1": Math.PI,
-		"1,0": -Math.PI / 2,
-		"-1,0": Math.PI / 2,
-	};
+	template.translate(0, rampHeight / 2, 0);
 
 	const posAttr = template.getAttribute("position") as THREE.BufferAttribute;
 	const normAttr = template.getAttribute("normal") as THREE.BufferAttribute;
@@ -316,7 +233,7 @@ function buildRamps(
 	const idxAttr = template.getIndex();
 	const vpCount = posAttr.count;
 	const triCount = idxAttr ? idxAttr.count : 0;
-	const total = edges.length;
+	const total = filtered.length;
 
 	const outPos = new Float32Array(total * vpCount * 3);
 	const outNorm = new Float32Array(total * vpCount * 3);
@@ -328,11 +245,19 @@ function buildRamps(
 	const tempVec = new THREE.Vector3();
 
 	for (let i = 0; i < total; i++) {
-		const edge = edges[i];
-		const yRot = angleMap[`${edge.dx},${edge.dz}`] ?? 0;
+		const ramp = filtered[i];
+		const off = DIRECTION_OFFSET[ramp.direction];
+		// Position at the midpoint between the deep cell and its neighbor
+		const wx = (ramp.x + off.dx * 0.5) * TILE_SIZE_M;
+		const wz = (ramp.z + off.dz * 0.5) * TILE_SIZE_M;
+		// Base world Y is depth of the deeper cell
+		const wy = (baseY + (ramp.x === ramp.x ? layer0DepthForRamp(ramp) : 0)) * ELEVATION_STEP_M;
+
+		const yRot = DIRECTION_ROTY[ramp.direction];
 		mat4.makeRotationY(yRot);
-		mat4.setPosition(edge.wx, 0, edge.wz);
+		mat4.setPosition(wx, wy, wz);
 		normalMat.getNormalMatrix(mat4);
+
 		const vBase = i * vpCount;
 		for (let v = 0; v < vpCount; v++) {
 			tempVec.set(posAttr.getX(v), posAttr.getY(v), posAttr.getZ(v));
@@ -367,71 +292,154 @@ function buildRamps(
 	return geo;
 }
 
-const PIT_DEPTH = 0.6;
+/** Ramp descriptor is from the deeper cell, depth is always negative. */
+function layer0DepthForRamp(_ramp: RampQuad): number {
+	return 0; // Ramps on layer 0 sit at ground level; depth offset is in the worldY
+}
 
-function buildMinedPits(
-	tiles: Array<{ x: number; z: number }>,
-): { pitFloors: THREE.BufferGeometry; pitWalls: THREE.BufferGeometry } {
-	if (tiles.length === 0) {
-		return {
-			pitFloors: new THREE.BufferGeometry(),
-			pitWalls: new THREE.BufferGeometry(),
-		};
-	}
+function buildWallGeometryFromQuads(
+	wallQuads: WallQuad[],
+	baseY: number,
+	explored?: Set<string>,
+): THREE.BufferGeometry {
+	const filtered = explored
+		? wallQuads.filter((q) => isTileExplored(explored, q.x, q.z))
+		: wallQuads;
 
-	// Pit floors
-	const floorTemplate = new THREE.PlaneGeometry(TILE_SIZE_M, TILE_SIZE_M);
-	floorTemplate.rotateX(-Math.PI / 2);
-	const pitFloors = mergeTranslated(
-		floorTemplate,
-		tiles.map((t) => ({ x: t.x * TILE_SIZE_M, y: -PIT_DEPTH, z: t.z * TILE_SIZE_M })),
-	);
-	floorTemplate.dispose();
-
-	// Pit walls — only on exposed edges
-	const minedSet = new Set<string>();
-	for (const t of tiles) minedSet.add(`${t.x},${t.z}`);
+	if (filtered.length === 0) return new THREE.BufferGeometry();
 
 	const half = TILE_SIZE_M / 2;
-	const wallDirs = [
-		{ dx: 0, dz: -1, rotY: 0, offsetX: 0, offsetZ: -half },
-		{ dx: 0, dz: 1, rotY: Math.PI, offsetX: 0, offsetZ: half },
-		{ dx: 1, dz: 0, rotY: -Math.PI / 2, offsetX: half, offsetZ: 0 },
-		{ dx: -1, dz: 0, rotY: Math.PI / 2, offsetX: -half, offsetZ: 0 },
-	];
 
-	const wallTemplate = new THREE.PlaneGeometry(TILE_SIZE_M, PIT_DEPTH);
-	wallTemplate.translate(0, -PIT_DEPTH / 2, 0);
+	const wallPositions: Array<{ x: number; y: number; z: number; rotY: number; h: number }> = [];
+	for (const wall of filtered) {
+		const cx = wall.x * TILE_SIZE_M;
+		const cz = wall.z * TILE_SIZE_M;
+		const wallH = wall.depthDiff * ELEVATION_STEP_M;
+		const off = DIRECTION_OFFSET[wall.direction];
 
-	const wallPositions: Array<{ x: number; y: number; z: number; rotY: number }> = [];
-	for (const tile of tiles) {
-		const cx = tile.x * TILE_SIZE_M;
-		const cz = tile.z * TILE_SIZE_M;
-		for (const dir of wallDirs) {
-			if (!minedSet.has(`${tile.x + dir.dx},${tile.z + dir.dz}`)) {
-				wallPositions.push({
-					x: cx + dir.offsetX,
-					y: 0,
-					z: cz + dir.offsetZ,
-					rotY: dir.rotY,
-				});
-			}
-		}
+		wallPositions.push({
+			x: cx + off.dx * half,
+			y: baseY * ELEVATION_STEP_M,
+			z: cz + off.dz * half,
+			rotY: DIRECTION_ROTY[wall.direction],
+			h: wallH,
+		});
 	}
 
-	let pitWalls: THREE.BufferGeometry;
-	if (wallPositions.length > 0) {
-		pitWalls = mergeTranslatedRotated(wallTemplate, wallPositions);
-	} else {
-		pitWalls = new THREE.BufferGeometry();
-	}
-	wallTemplate.dispose();
+	// Build each wall with its specific height
+	const geometries: THREE.BufferGeometry[] = [];
+	for (const wp of wallPositions) {
+		const wallGeo = new THREE.PlaneGeometry(TILE_SIZE_M, wp.h);
+		wallGeo.translate(0, -wp.h / 2, 0);
 
-	return { pitFloors, pitWalls };
+		const mat4 = new THREE.Matrix4();
+		mat4.makeRotationY(wp.rotY);
+		mat4.setPosition(wp.x, wp.y, wp.z);
+		wallGeo.applyMatrix4(mat4);
+		geometries.push(wallGeo);
+	}
+
+	if (geometries.length === 0) return new THREE.BufferGeometry();
+
+	// Merge all wall geometries
+	const merged = mergeGeometries(geometries);
+	for (const g of geometries) g.dispose();
+	return merged;
+}
+
+function buildVoidGeometryFromQuads(
+	voidPlanes: VoidPlane[],
+	explored?: Set<string>,
+): THREE.BufferGeometry {
+	const filtered = explored
+		? voidPlanes.filter((q) => isTileExplored(explored, q.x, q.z))
+		: voidPlanes;
+
+	if (filtered.length === 0) return new THREE.BufferGeometry();
+
+	const template = new THREE.PlaneGeometry(TILE_SIZE_M, TILE_SIZE_M);
+	template.rotateX(-Math.PI / 2);
+
+	const merged = mergeTranslated(
+		template,
+		filtered.map((v) => ({
+			x: v.x * TILE_SIZE_M,
+			y: v.worldY * ELEVATION_STEP_M,
+			z: v.z * TILE_SIZE_M,
+		})),
+	);
+	template.dispose();
+	return merged;
 }
 
 // ---------------------------------------------------------------------------
-// Merge helpers (same as in the old renderers)
+// Build from depth layer stack
+// ---------------------------------------------------------------------------
+
+function buildFromDepthLayers(
+	board: GeneratedBoard,
+	world?: World,
+): {
+	floors: THREE.BufferGeometry;
+	elevatedFloors: THREE.BufferGeometry;
+	columns: THREE.BufferGeometry;
+	ramps: THREE.BufferGeometry;
+	walls: THREE.BufferGeometry;
+	voidPlanes: THREE.BufferGeometry;
+} {
+	const explored = world ? buildExploredSet(world) : undefined;
+	const stack = boardToDepthLayers(board);
+
+	// Apply mining from ECS state — mined tiles get depth -1 and gravel texture
+	if (world && stack.layerCount > 0) {
+		const layer0 = stack.getLayer(0);
+		for (const entity of world.query(Tile, TileFloor)) {
+			const tile = entity.get(Tile);
+			const floor = entity.get(TileFloor);
+			if (!tile || !floor || !floor.mined) continue;
+			applyTargetedDig(layer0, tile.x, tile.z);
+		}
+	}
+
+	// Collect geometry from all layers
+	const allFloors: FloorQuad[] = [];
+	const allElevatedFloors: FloorQuad[] = [];
+	const allRamps: RampQuad[] = [];
+	const allWalls: WallQuad[] = [];
+	const allVoids: VoidPlane[] = [];
+
+	let elevatedBaseY = 0;
+
+	for (let i = 0; i < stack.layerCount; i++) {
+		const layer = stack.getLayer(i);
+		const geo = buildLayerGeometry(layer);
+
+		if (layer.baseY === 0) {
+			// Ground layer — floor quads rendered as flat planes
+			allFloors.push(...geo.floorQuads);
+		} else {
+			// Elevated layer — floor quads rendered as box platforms
+			allElevatedFloors.push(...geo.floorQuads);
+			elevatedBaseY = layer.baseY;
+		}
+
+		allRamps.push(...geo.rampQuads);
+		allWalls.push(...geo.wallQuads);
+		allVoids.push(...geo.voidPlanes);
+	}
+
+	return {
+		floors: buildFloorGeometry(allFloors, explored),
+		elevatedFloors: buildElevatedFloorGeometry(allElevatedFloors, explored),
+		columns: buildColumnGeometry(allElevatedFloors, elevatedBaseY || 1, explored),
+		ramps: buildRampGeometryFromQuads(allRamps, 0, explored),
+		walls: buildWallGeometryFromQuads(allWalls, 0, explored),
+		voidPlanes: buildVoidGeometryFromQuads(allVoids, explored),
+	};
+}
+
+// ---------------------------------------------------------------------------
+// Merge helpers
 // ---------------------------------------------------------------------------
 
 function mergeTranslated(
@@ -483,54 +491,55 @@ function mergeTranslated(
 	return geo;
 }
 
-function mergeTranslatedRotated(
-	template: THREE.BufferGeometry,
-	positions: Array<{ x: number; y: number; z: number; rotY: number }>,
+function mergeGeometries(
+	geometries: THREE.BufferGeometry[],
 ): THREE.BufferGeometry {
-	const posAttr = template.getAttribute("position") as THREE.BufferAttribute;
-	const normAttr = template.getAttribute("normal") as THREE.BufferAttribute;
-	const idxAttr = template.getIndex();
-	const vpCount = posAttr.count;
-	const triCount = idxAttr ? idxAttr.count : 0;
-	const total = positions.length;
+	if (geometries.length === 0) return new THREE.BufferGeometry();
 
-	const outPos = new Float32Array(total * vpCount * 3);
-	const outNorm = new Float32Array(total * vpCount * 3);
-	const outIdx = new Uint32Array(total * triCount);
+	let totalVerts = 0;
+	let totalIndices = 0;
+	for (const g of geometries) {
+		const pos = g.getAttribute("position") as THREE.BufferAttribute;
+		totalVerts += pos.count;
+		const idx = g.getIndex();
+		totalIndices += idx ? idx.count : 0;
+	}
 
-	const mat4 = new THREE.Matrix4();
-	const normalMat = new THREE.Matrix3();
-	const tempVec = new THREE.Vector3();
+	const outPos = new Float32Array(totalVerts * 3);
+	const outNorm = new Float32Array(totalVerts * 3);
+	const outIdx = new Uint32Array(totalIndices);
 
-	for (let i = 0; i < total; i++) {
-		const { x, y, z, rotY } = positions[i];
-		mat4.makeRotationY(rotY);
-		mat4.setPosition(x, y, z);
-		normalMat.getNormalMatrix(mat4);
-		const vBase = i * vpCount;
-		for (let v = 0; v < vpCount; v++) {
-			const off = (vBase + v) * 3;
-			tempVec.set(posAttr.getX(v), posAttr.getY(v), posAttr.getZ(v));
-			tempVec.applyMatrix4(mat4);
-			outPos[off] = tempVec.x;
-			outPos[off + 1] = tempVec.y;
-			outPos[off + 2] = tempVec.z;
-			tempVec.set(normAttr.getX(v), normAttr.getY(v), normAttr.getZ(v));
-			tempVec.applyMatrix3(normalMat).normalize();
-			outNorm[off] = tempVec.x;
-			outNorm[off + 1] = tempVec.y;
-			outNorm[off + 2] = tempVec.z;
+	let vertOffset = 0;
+	let idxOffset = 0;
+	for (const g of geometries) {
+		const pos = g.getAttribute("position") as THREE.BufferAttribute;
+		const norm = g.getAttribute("normal") as THREE.BufferAttribute;
+		const idx = g.getIndex();
+
+		for (let v = 0; v < pos.count; v++) {
+			const off = (vertOffset + v) * 3;
+			outPos[off] = pos.getX(v);
+			outPos[off + 1] = pos.getY(v);
+			outPos[off + 2] = pos.getZ(v);
+			outNorm[off] = norm.getX(v);
+			outNorm[off + 1] = norm.getY(v);
+			outNorm[off + 2] = norm.getZ(v);
 		}
-		if (idxAttr) {
-			const iOff = i * triCount;
-			for (let j = 0; j < triCount; j++) outIdx[iOff + j] = idxAttr.getX(j) + vBase;
+
+		if (idx) {
+			for (let i = 0; i < idx.count; i++) {
+				outIdx[idxOffset + i] = idx.getX(i) + vertOffset;
+			}
+			idxOffset += idx.count;
 		}
+
+		vertOffset += pos.count;
 	}
 
 	const geo = new THREE.BufferGeometry();
 	geo.setAttribute("position", new THREE.BufferAttribute(outPos, 3));
 	geo.setAttribute("normal", new THREE.BufferAttribute(outNorm, 3));
-	if (triCount > 0) geo.setIndex(new THREE.BufferAttribute(outIdx, 1));
+	if (totalIndices > 0) geo.setIndex(new THREE.BufferAttribute(outIdx, 1));
 	return geo;
 }
 
@@ -560,46 +569,40 @@ export function UnifiedTerrainRenderer({
 			(m.material as THREE.Material).dispose();
 		}
 
-		const geoms = buildUnifiedGeometry(board, world);
+		const geoms = buildFromDepthLayers(board, world);
 
 		const bridgeMat = makeBridgeMaterial();
 		const columnMat = makeColumnMaterial();
 		const voidMat = makeVoidMaterial();
-		const abyssalMat = makeAbyssalVoidMaterial();
-		const pitFloorMat = makePitFloorMaterial();
-		const pitWallMat = makePitWallMaterial();
+		const wallMat = makeWallMaterial();
 
-		const bridgeMesh = new THREE.Mesh(geoms.bridge, bridgeMat);
-		bridgeMesh.receiveShadow = true;
-		bridgeMesh.castShadow = true;
+		const floorMesh = new THREE.Mesh(geoms.floors, bridgeMat);
+		floorMesh.receiveShadow = true;
+
+		const elevatedMesh = new THREE.Mesh(geoms.elevatedFloors, bridgeMat);
+		elevatedMesh.receiveShadow = true;
+		elevatedMesh.castShadow = true;
 
 		const columnMesh = new THREE.Mesh(geoms.columns, columnMat);
 		columnMesh.castShadow = true;
-
-		const voidMesh = new THREE.Mesh(geoms.voidPlanes, voidMat);
-
-		const abyssalMesh = new THREE.Mesh(geoms.abyssalVoid, abyssalMat);
-		abyssalMesh.receiveShadow = true;
 
 		const rampMesh = new THREE.Mesh(geoms.ramps, bridgeMat);
 		rampMesh.receiveShadow = true;
 		rampMesh.castShadow = true;
 
-		const pitFloorMesh = new THREE.Mesh(geoms.pitFloors, pitFloorMat);
-		pitFloorMesh.receiveShadow = true;
+		const wallMesh = new THREE.Mesh(geoms.walls, wallMat);
+		wallMesh.receiveShadow = true;
+		wallMesh.castShadow = true;
 
-		const pitWallMesh = new THREE.Mesh(geoms.pitWalls, pitWallMat);
-		pitWallMesh.receiveShadow = true;
-		pitWallMesh.castShadow = true;
+		const voidMesh = new THREE.Mesh(geoms.voidPlanes, voidMat);
 
 		const meshes = [
-			bridgeMesh,
+			floorMesh,
+			elevatedMesh,
 			columnMesh,
-			voidMesh,
-			abyssalMesh,
 			rampMesh,
-			pitFloorMesh,
-			pitWallMesh,
+			wallMesh,
+			voidMesh,
 		];
 		for (const m of meshes) scene.add(m);
 		meshesRef.current = meshes;

@@ -19,7 +19,7 @@ import {
 	makeFloorShaderMaterial,
 	updateFloorShaderChronometry,
 } from "../ecs/terrain/floorShader";
-import { buildBoardGeometry } from "./boardGeometry";
+import { buildBoardGeometry, buildSphereGeometry } from "./boardGeometry";
 
 type BiomeRendererProps = {
 	board: GeneratedBoard;
@@ -27,12 +27,15 @@ type BiomeRendererProps = {
 	dayAngle?: number;
 	/** Orbital year progress [0, 1] — from chronometry.turnToChronometry(). */
 	season?: number;
+	/** When true, project the board onto a sphere instead of a flat plane. */
+	useSphere?: boolean;
 };
 
 export function BiomeRenderer({
 	board,
 	dayAngle = 0.8,
 	season = 0,
+	useSphere = false,
 }: BiomeRendererProps) {
 	const { scene } = useThree();
 	const meshRef = useRef<THREE.Mesh | null>(null);
@@ -58,9 +61,13 @@ export function BiomeRenderer({
 	}, [dayAngle, season]);
 
 	useEffect(() => {
-		const geometry = buildBoardGeometry(board);
+		const geometry = useSphere
+			? buildSphereGeometry(board)
+			: buildBoardGeometry(board);
 		const mesh = new THREE.Mesh(geometry, materialRef.current);
-		mesh.position.y = 0.001; // tiny offset to avoid z-fighting with height mesh
+		if (!useSphere) {
+			mesh.position.y = 0.001; // tiny offset to avoid z-fighting with height mesh
+		}
 		mesh.receiveShadow = true;
 		scene.add(mesh);
 		meshRef.current = mesh;
@@ -70,7 +77,7 @@ export function BiomeRenderer({
 			geometry.dispose();
 			meshRef.current = null;
 		};
-	}, [board, scene]);
+	}, [board, scene, useSphere]);
 
 	useEffect(() => {
 		return () => {

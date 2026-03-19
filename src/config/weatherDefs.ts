@@ -128,11 +128,11 @@ export const STORM_VISUAL_PARAMS: Record<StormProfile, StormVisualParams> = {
  * The wormhole IS the sun. Its glow cycle defines day/night.
  */
 export const WORMHOLE_CYCLE = {
-	minGlowIntensity: 0.15,
-	maxGlowIntensity: 1.0,
+	minGlowIntensity: 0.4,
+	maxGlowIntensity: 1.8,
 	glowColor: {
-		day: [0.35, 0.1, 0.55] as const,
-		night: [0.08, 0.02, 0.12] as const,
+		day: [0.55, 0.18, 0.85] as const,
+		night: [0.15, 0.05, 0.25] as const,
 	},
 	ambientLight: {
 		dayIntensity: 0.45,

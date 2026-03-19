@@ -133,22 +133,23 @@ const DOME_FRAG = /* glsl */ `
 
     // Season-tinted colours: cold blue in winter, slightly warmer in summer
     // uSkyTintShift pushes towards colder, more dramatic tones
+    // Boosted contrast — brighter highlights against darker voids
     float warmth = 0.5 + 0.5 * sin(uSeason * TWO_PI); // peaks at summer
     warmth *= (1.0 - uSkyTintShift); // storm profile dampens warmth
-    vec3 dark  = mix(vec3(0.08, 0.10, 0.18), vec3(0.10, 0.12, 0.20), warmth);
-    vec3 lit   = mix(vec3(0.20, 0.25, 0.45), vec3(0.24, 0.28, 0.38), warmth);
+    vec3 dark  = mix(vec3(0.06, 0.07, 0.14), vec3(0.08, 0.09, 0.16), warmth);
+    vec3 lit   = mix(vec3(0.30, 0.35, 0.60), vec3(0.34, 0.38, 0.52), warmth);
     vec3 color = mix(dark, lit, s1);
 
-    // Lightning flashes — more frequent with shorter intervals
+    // Lightning flashes — bright enough to illuminate the surface below
     // Use noise threshold modulated by profile lightning frequency
     float flashThreshold = mix(0.90, 0.70, uStormIntensity);
-    float flash = step(flashThreshold, s2) * step(0.70, density) * 0.25;
+    float flash = step(flashThreshold, s2) * step(0.60, density) * 0.8;
     // Cataclysmic storms get brighter, more purple-tinged lightning
-    vec3 flashColor = mix(vec3(0.25, 0.30, 0.55), vec3(0.40, 0.25, 0.65), uSkyTintShift);
+    vec3 flashColor = mix(vec3(0.50, 0.55, 0.90), vec3(0.70, 0.45, 1.0), uSkyTintShift);
     color += flashColor * flash;
 
     float fresnel = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 2.0);
-    float alpha   = density * (0.55 + fresnel * 0.35);
+    float alpha   = density * (0.70 + fresnel * 0.30);
     return vec4(color, alpha);
   }
 
@@ -195,15 +196,20 @@ const DOME_FRAG = /* glsl */ `
     vec3 wormholeColor = mix(uWormholeColorNight, uWormholeColorDay, stormFactor);
 
     // Multi-colored vortex: storm-intensity-tinted core + arms
-    vec3 coreColor = wormholeColor * glow * (0.5 + 0.5 * pulse) * glowIntensity;
-    vec3 armColor  = wormholeColor * 0.5 * arms;
-    vec3 rimColor  = vec3(0.15, 0.35, 0.65) * smoothstep(wRadius * 1.5, wRadius * 0.8, zenith) * 0.4;
+    // Boosted brightness — wormhole should be the most dramatic sky feature
+    vec3 coreColor = wormholeColor * glow * (0.6 + 0.4 * pulse) * glowIntensity * 2.5;
+    vec3 armColor  = wormholeColor * 0.8 * arms;
+    vec3 rimColor  = vec3(0.25, 0.50, 0.85) * smoothstep(wRadius * 1.5, wRadius * 0.8, zenith) * 0.6;
 
-    vec3 color = (coreColor + armColor + rimColor) * (0.65 + 0.35 * stormPeak);
+    // Hot white core at very center — brightest point in the sky
+    float hotCore = smoothstep(0.12, 0.0, zenith);
+    vec3 hotWhite = vec3(1.2, 1.0, 1.4) * hotCore * glowIntensity * 1.5;
+
+    vec3 color = (coreColor + armColor + rimColor + hotWhite) * (0.65 + 0.35 * stormPeak);
 
     // Only visible above horizon line
     float vis = smoothstep(-0.05, 0.15, pos.y);
-    float alpha = max(glow, arms * 0.7) * vis * 0.90;
+    float alpha = max(glow, arms * 0.7) * vis * 0.95;
     return vec4(color * vis, alpha);
   }
 
@@ -261,10 +267,9 @@ const DOME_FRAG = /* glsl */ `
     color += vortex.rgb;
     color += sun.rgb;
 
-    // Semi-transparent overlay on HDRI sky — clouds, wormhole, illuminator
-    // are painted over the Environment background. Alpha = cloud coverage.
-    float alpha = clamp(storm.a * 0.85 + max(vortex.a, 0.0) * 0.9 + sun.a * 0.7, 0.0, 0.95);
-    gl_FragColor = vec4(color, alpha);
+    // StormDome IS the sky — fully opaque background.
+    // Storm, wormhole, and illuminator are composited over the void base.
+    gl_FragColor = vec4(color, 1.0);
   }
 `;
 
@@ -371,7 +376,6 @@ export function StormDome({
 					fragmentShader={DOME_FRAG}
 					uniforms={uniforms}
 					side={THREE.BackSide}
-					transparent
 					depthTest={false}
 					depthWrite={false}
 				/>
@@ -379,13 +383,13 @@ export function StormDome({
 
 			{/* Wormhole eye sparkles — purple/violet particles at zenith */}
 			<Sparkles
-				count={40}
-				scale={[30, 15, 30]}
+				count={60}
+				scale={[40, 20, 40]}
 				position={[centerX, radius * 0.85, centerZ]}
-				size={4}
-				speed={0.6}
-				color="#9944ff"
-				opacity={0.7}
+				size={6}
+				speed={0.8}
+				color="#bb66ff"
+				opacity={0.85}
 			/>
 		</>
 	);

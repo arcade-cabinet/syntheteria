@@ -13,7 +13,7 @@
  */
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, PerspectiveCamera, Text } from "@react-three/drei";
+import { PerspectiveCamera, Text } from "@react-three/drei";
 import type { World } from "koota";
 import { Suspense, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -25,14 +25,18 @@ import { BoardInput } from "../input/BoardInput";
 import { BiomeRenderer } from "../rendering/BiomeRenderer";
 import { BoardRenderer } from "../rendering/BoardRenderer";
 import { CombatEffectsRenderer } from "../rendering/CombatEffectsRenderer";
+import { CutawayClipPlane } from "../rendering/CutawayClipPlane";
 import { UnifiedTerrainRenderer } from "../rendering/UnifiedTerrainRenderer";
 import { FogOfWarRenderer } from "../rendering/FogOfWarRenderer";
+import { FragmentRenderer } from "../rendering/FragmentRenderer";
+import { InfrastructureRenderer } from "../rendering/InfrastructureRenderer";
 import { StructureRenderer } from "../rendering/StructureRenderer";
 import { SalvageRenderer } from "../rendering/SalvageRenderer";
 import { BuildingRenderer } from "../rendering/BuildingRenderer";
 import { HighlightRenderer } from "../rendering/HighlightRenderer";
 import { ParticleRenderer } from "../rendering/particles/ParticleRenderer";
 import { TerritoryOverlayRenderer } from "../rendering/TerritoryOverlayRenderer";
+import { PathRenderer } from "../rendering/PathRenderer";
 import { StormDome } from "../rendering/StormDome";
 import { turnToChronometry } from "../rendering/sky/chronometry";
 import type { StormProfile } from "../world/config";
@@ -58,6 +62,7 @@ export interface GlobeProps {
 	selectedUnitId?: number | null;
 	onSelect?: (id: number | null) => void;
 	onSceneReady?: () => void;
+	onTransitionComplete?: () => void;
 	turn?: number;
 	focusTileX?: number;
 	focusTileZ?: number;
@@ -84,9 +89,17 @@ function SceneReadySignal({ onReady }: { onReady: () => void }) {
 // ─── Animated Globe (title phases only) ──────────────────────────────────────
 // Animates growth via useFrame + direct uniform writes (no React state needed).
 
-function AnimatedGlobe({ phase }: { phase: GlobePhase }) {
+function AnimatedGlobe({
+	phase,
+	onGrowthComplete,
+}: {
+	phase: GlobePhase;
+	onGrowthComplete?: () => void;
+}) {
 	const meshRef = useRef<THREE.Mesh>(null);
 	const growthRef = useRef(0.3);
+	const firedRef = useRef(false);
+	const onComplete = useEffectEvent(onGrowthComplete ?? (() => {}));
 
 	const uniforms = useMemo(
 		() => ({
@@ -98,9 +111,15 @@ function AnimatedGlobe({ phase }: { phase: GlobePhase }) {
 
 	useFrame((state, delta) => {
 		if (phase === "generating") {
-			growthRef.current = Math.min(1, growthRef.current + delta * 0.35);
+			growthRef.current = Math.min(1, growthRef.current + delta * 0.14);
+			// Fire callback once growth completes
+			if (growthRef.current >= 1 && !firedRef.current) {
+				firedRef.current = true;
+				onComplete();
+			}
 		} else {
 			growthRef.current = 0.3;
+			firedRef.current = false;
 		}
 
 		if (meshRef.current) {
@@ -138,7 +157,7 @@ function AnimatedTitleText({ phase }: { phase: GlobePhase }) {
 
 		// Animate opacity
 		if (phase === "generating") {
-			opacityRef.current = Math.max(0, opacityRef.current - delta * 0.5);
+			opacityRef.current = Math.max(0, opacityRef.current - delta * 0.3);
 		} else {
 			opacityRef.current = Math.min(1, opacityRef.current + delta * 2);
 		}
@@ -222,22 +241,87 @@ function AnimatedTitleText({ phase }: { phase: GlobePhase }) {
 	);
 }
 
+// ─── Title Camera — zooms toward globe surface during generating ─────────────
+
+/** Far orbit distance (title/setup). */
+const TITLE_CAM_Z = 10;
+/** Near distance at end of generating zoom (just above globe surface). */
+const SURFACE_CAM_Z = 3.5;
+/** Zoom speed — matches ~5s growth rate so camera arrives when growth=1. */
+const ZOOM_SPEED = 0.14;
+
+function TitleCamera({ phase }: { phase: GlobePhase }) {
+	const camRef = useRef<THREE.PerspectiveCamera>(null);
+	const zRef = useRef(TITLE_CAM_Z);
+
+	useFrame((_, delta) => {
+		if (!camRef.current) return;
+		if (phase === "generating") {
+			// Ease toward surface
+			const target = SURFACE_CAM_Z;
+			const t = 1 - Math.pow(0.15, delta * ZOOM_SPEED * 3);
+			zRef.current = zRef.current + (target - zRef.current) * t;
+		} else {
+			// Snap back to far orbit
+			zRef.current = TITLE_CAM_Z;
+		}
+		camRef.current.position.z = zRef.current;
+	});
+
+	return <PerspectiveCamera ref={camRef} makeDefault position={[0, 0, TITLE_CAM_Z]} />;
+}
+
 // ─── Title Scene ──────────────────────────────────────────────────────────────
 
-function TitleScene({ phase }: { phase: GlobePhase }) {
+function TitleScene({
+	phase,
+	onTransitionComplete,
+}: {
+	phase: GlobePhase;
+	onTransitionComplete?: () => void;
+}) {
 	return (
 		<>
-			<PerspectiveCamera makeDefault position={[0, 0, 10]} />
+			<TitleCamera phase={phase} />
 			<ambientLight intensity={0.15} />
 			<pointLight position={[10, 10, 10]} intensity={0.4} color="#8be6ff" />
 			<pointLight position={[-8, -4, -8]} intensity={0.2} color="#350a55" />
 
-			<StormClouds radius={8} />
-			<LightningEffect />
-			<AnimatedGlobe phase={phase} />
+			<AnimatedGlobe phase={phase} onGrowthComplete={onTransitionComplete} />
 			<AnimatedTitleText phase={phase} />
-			<Hypercane />
 		</>
+	);
+}
+
+// ─── Persistent Storm Effects ─────────────────────────────────────────────────
+// StormClouds, Hypercane, and LightningEffect render in ALL phases.
+// During title/setup/generating: small scale centered at origin (around the globe).
+// During playing: scaled up and centered at board center, forming the sky interior.
+
+/** Scale factor to enlarge title storm effects to game-world sky size. */
+const STORM_SKY_SCALE = 30;
+/** StormClouds radius during playing — comfortably outside the board sphere. */
+const GAME_STORM_RADIUS = 250;
+
+function PersistentStormEffects({
+	phase,
+	boardCenterX = 0,
+	boardCenterZ = 0,
+}: {
+	phase: GlobePhase;
+	boardCenterX?: number;
+	boardCenterZ?: number;
+}) {
+	const isPlaying = phase === "playing";
+	return (
+		<group
+			position={isPlaying ? [boardCenterX, 0, boardCenterZ] : [0, 0, 0]}
+			scale={isPlaying ? STORM_SKY_SCALE : 1}
+		>
+			<StormClouds radius={isPlaying ? GAME_STORM_RADIUS / STORM_SKY_SCALE : 8} />
+			<LightningEffect />
+			<Hypercane />
+		</group>
 	);
 }
 
@@ -297,8 +381,6 @@ function GameScene({
 				shadow-camera-bottom={-80}
 			/>
 
-			<Environment files="/assets/textures/storm_sky.exr" background />
-
 			<StormDome
 				centerX={board ? Math.floor(board.config.width / 2) * TILE_SIZE_M : 0}
 				centerZ={board ? Math.floor(board.config.height / 2) * TILE_SIZE_M : 0}
@@ -313,19 +395,23 @@ function GameScene({
 				boardWidth={board ? board.config.width * TILE_SIZE_M : undefined}
 				boardHeight={board ? board.config.height * TILE_SIZE_M : undefined}
 			/>
+			<CutawayClipPlane />
 
 			{board && <BoardRenderer board={board} dayAngle={dayAngle} season={season} />}
 			{board && <BiomeRenderer board={board} dayAngle={dayAngle} season={season} />}
 			{board && <UnifiedTerrainRenderer board={board} world={world ?? undefined} turn={turn} />}
 			{board && <StructureRenderer board={board} world={world ?? undefined} />}
+			{board && <InfrastructureRenderer board={board} world={world ?? undefined} />}
 
 			{world && <SalvageRenderer world={world} />}
 			{world && <BuildingRenderer world={world} />}
+			<FragmentRenderer />
 			{world && board && <TerritoryOverlayRenderer board={board} world={world} />}
 			{world && board && <FogOfWarRenderer world={world} board={board} />}
 
 			{world && <SceneLoop world={world} />}
 			{world && <HighlightRenderer world={world} />}
+			<PathRenderer />
 			{world && <UnitRenderer world={world} />}
 			{world && board && onSelect && (
 				<BoardInput
@@ -353,6 +439,7 @@ export function Globe({
 	selectedUnitId,
 	onSelect,
 	onSceneReady,
+	onTransitionComplete,
 	turn = 1,
 	focusTileX,
 	focusTileZ,
@@ -373,7 +460,7 @@ export function Globe({
 			)}
 
 			<Suspense fallback={null}>
-				{phase !== "playing" && <TitleScene phase={phase} />}
+				{phase !== "playing" && <TitleScene phase={phase} onTransitionComplete={onTransitionComplete} />}
 
 				{phase === "playing" && (
 					<GameScene
@@ -388,6 +475,13 @@ export function Globe({
 						stormProfile={stormProfile}
 					/>
 				)}
+
+				{/* Storm effects render in ALL phases — they ARE the sky */}
+				<PersistentStormEffects
+					phase={phase}
+					boardCenterX={board ? Math.floor(board.config.width / 2) * TILE_SIZE_M : 0}
+					boardCenterZ={board ? Math.floor(board.config.height / 2) * TILE_SIZE_M : 0}
+				/>
 			</Suspense>
 		</Canvas>
 	);

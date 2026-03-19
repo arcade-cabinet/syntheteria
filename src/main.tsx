@@ -84,8 +84,14 @@ import { SystemToasts } from "./ui/game/SystemToasts";
 import { ToastStack } from "./ui/game/ToastStack";
 import { TurnPhaseOverlay } from "./ui/game/TurnPhaseOverlay";
 import { TutorialOverlay } from "./ui/game/TutorialOverlay";
+import { _resetTutorial } from "./ecs/systems/tutorialSystem";
 import { EntityTooltip } from "./ui/game/EntityTooltip";
 import { SelectedInfo } from "./ui/game/SelectedInfo";
+import { TechTreeOverlay } from "./ui/game/TechTreeOverlay";
+import { GarageModal } from "./ui/game/GarageModal";
+import { UnitRosterOverlay } from "./ui/game/UnitRosterOverlay";
+import { DiplomacyOverlay } from "./ui/game/DiplomacyOverlay";
+import { AlertBar } from "./ui/game/AlertBar";
 import "@root/global.css";
 
 // ---------------------------------------------------------------------------
@@ -276,6 +282,10 @@ function Root() {
 	const [isObserverMode, _setIsObserverMode] = useState(hmrState.isObserverMode);
 	const [observerSpeed, _setObserverSpeed] = useState(hmrState.observerSpeed);
 	const [paused, setPaused] = useState(false);
+	const [showTechTree, setShowTechTree] = useState(false);
+	const [showGarage, setShowGarage] = useState(false);
+	const [showRoster, setShowRoster] = useState(false);
+	const [showDiplomacy, setShowDiplomacy] = useState(false);
 	const repoRef = useRef<GameRepo | null>(null);
 	const sessionRef = useRef<GameSession | null>(null);
 	sessionRef.current = session;
@@ -428,6 +438,7 @@ function Root() {
 		resetTurnEventLog();
 		resetResourceDeltas();
 		resetTurnSummary();
+		_resetTutorial();
 		setGameOutcome({ result: "playing" });
 		setSession({ config: boardConfig, gameId, board, world, newGameConfig: newGameCfg, spawnTile });
 		setTurn(1);
@@ -435,7 +446,7 @@ function Root() {
 		setSceneReady(false);
 		setIsObserverMode(getPlayerFactionId(newGameCfg) === null);
 		setObserverSpeed(1);
-		setPhase("playing");
+		// Phase stays "generating" — Globe animation drives the transition via onTransitionComplete
 	}, []);
 
 	const handleLoadGame = useCallback(async (gameId: string) => {
@@ -528,7 +539,7 @@ function Root() {
 			const hasPlayer = factionSlots?.some((s) => s.role === "player") ?? true;
 			setIsObserverMode(!hasPlayer);
 			setObserverSpeed(1);
-			setPhase("playing");
+			// Phase stays "generating" — Globe animation drives the transition via onTransitionComplete
 		} catch (err) {
 			console.warn("[main] Load game failed:", err);
 			setPhase("title");
@@ -578,6 +589,13 @@ function Root() {
 			void saveGame();
 		}
 	}, [session, saveGame, isObserverMode]);
+
+	// Globe growth animation completed — transition from "generating" to "playing"
+	const handleTransitionComplete = useCallback(() => {
+		if (hmrState.phase === "generating") {
+			setPhase("playing");
+		}
+	}, [setPhase]);
 
 	const handleReturnToMenu = useCallback(() => {
 		_resetVictory();
@@ -768,6 +786,7 @@ function Root() {
 				selectedUnitId={selectedUnitId}
 				onSelect={setSelectedUnitId}
 				onSceneReady={() => setSceneReady(true)}
+				onTransitionComplete={handleTransitionComplete}
 				turn={turn}
 				focusTileX={session?.spawnTile?.x}
 				focusTileZ={session?.spawnTile?.z}
@@ -822,6 +841,94 @@ function Root() {
 					currentResearch={getCurrentResearchForHUD(session.world)}
 				/>
 			)}
+
+			{/* Command bar — RESEARCH / GARAGE / ROSTER buttons */}
+			{gameActive && !isObserverMode && (
+				<div
+					data-testid="command-bar"
+					style={{
+						position: "absolute",
+						top: 12,
+						left: "50%",
+						transform: "translateX(-50%)",
+						display: "flex",
+						gap: 6,
+						zIndex: 40,
+						pointerEvents: "auto",
+						fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+					}}
+				>
+					{([
+						{ label: "Research", key: "techTree", active: showTechTree, set: setShowTechTree },
+						{ label: "Garage", key: "garage", active: showGarage, set: setShowGarage },
+						{ label: "Roster", key: "roster", active: showRoster, set: setShowRoster },
+						{ label: "Diplomacy", key: "diplomacy", active: showDiplomacy, set: setShowDiplomacy },
+					] as const).map(({ label, key, active, set }) => (
+						<button
+							key={key}
+							type="button"
+							data-testid={`cmd-${key}`}
+							onClick={() => {
+								setShowTechTree(false);
+								setShowGarage(false);
+								setShowRoster(false);
+								setShowDiplomacy(false);
+								if (!active) set(true);
+							}}
+							style={{
+								padding: "6px 14px",
+								background: active ? "rgba(139,230,255,0.12)" : "rgba(3,3,8,0.7)",
+								border: `1px solid ${active ? "rgba(139,230,255,0.5)" : "rgba(139,230,255,0.2)"}`,
+								borderRadius: 5,
+								color: active ? "#8be6ff" : "rgba(139,230,255,0.6)",
+								fontSize: 10,
+								letterSpacing: "0.18em",
+								textTransform: "uppercase",
+								cursor: "pointer",
+								fontFamily: "inherit",
+							}}
+						>
+							{label}
+						</button>
+					))}
+				</div>
+			)}
+
+			{/* Full-screen overlays */}
+			{gameActive && showTechTree && (
+				<TechTreeOverlay
+					world={session.world}
+					factionId="player"
+					onClose={() => setShowTechTree(false)}
+				/>
+			)}
+			{gameActive && showGarage && (
+				<GarageModal
+					world={session.world}
+					factionId="player"
+					onClose={() => setShowGarage(false)}
+				/>
+			)}
+			{gameActive && showRoster && (
+				<UnitRosterOverlay
+					world={session.world}
+					factionId="player"
+					onClose={() => setShowRoster(false)}
+					onSelectUnit={(id) => {
+						setSelectedUnitId(id);
+						setShowRoster(false);
+					}}
+				/>
+			)}
+			{gameActive && showDiplomacy && (
+				<DiplomacyOverlay
+					world={session.world}
+					factionId="player"
+					onClose={() => setShowDiplomacy(false)}
+				/>
+			)}
+
+			{gameActive && <AlertBar />}
 
 			{gameActive && !isObserverMode && (
 				<PendingCompletions items={collectPendingItems(session.world)} />

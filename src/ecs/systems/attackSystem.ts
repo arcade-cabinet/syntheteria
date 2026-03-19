@@ -2,7 +2,9 @@ import type { World } from "koota";
 import { playSfx } from "../../audio/sfx";
 import { pushTurnEvent } from "../../ui/game/turnEvents";
 import type { RobotClass } from "../robots/types";
+import { TileFloor } from "../terrain";
 import { Board } from "../traits/board";
+import { Tile } from "../traits/tile";
 import { CombatResult, UnitAttack, UnitFaction, UnitPos, UnitStats, UnitVisual, UnitXP } from "../traits/unit";
 import { recordCombatEngagement, recordCombatKill } from "./campaignStats";
 import { recordAggression } from "./diplomacySystem";
@@ -17,6 +19,63 @@ const COUNTER_DAMAGE_RATIO = 0.5;
 
 function manhattanDist(ax: number, az: number, bx: number, bz: number): number {
 	return Math.abs(ax - bx) + Math.abs(az - bz);
+}
+
+// ---------------------------------------------------------------------------
+// Line of sight — Bresenham line walk checking for structural_mass walls
+// ---------------------------------------------------------------------------
+
+/** Cached set of "x,z" keys for tiles that block LOS. Rebuilt once per turn. */
+let wallTileCache: Set<string> | null = null;
+let wallCacheTurn = -1;
+
+function getWallTiles(world: World, currentTurn: number): Set<string> {
+	if (wallTileCache && wallCacheTurn === currentTurn) return wallTileCache;
+	const walls = new Set<string>();
+	for (const entity of world.query(Tile, TileFloor)) {
+		const floor = entity.get(TileFloor);
+		if (floor?.floorType === "structural_mass") {
+			const tile = entity.get(Tile);
+			if (tile) walls.add(`${tile.x},${tile.z}`);
+		}
+	}
+	wallTileCache = walls;
+	wallCacheTurn = currentTurn;
+	return walls;
+}
+
+/**
+ * Bresenham line-of-sight check. Returns true if no structural_mass tile
+ * lies on the line between (ax,az) and (bx,bz), excluding the endpoints.
+ * Melee attacks (range 1) always have LOS — caller should skip for range 1.
+ */
+function hasLineOfSight(
+	ax: number, az: number,
+	bx: number, bz: number,
+	walls: Set<string>,
+): boolean {
+	let x0 = ax;
+	let z0 = az;
+	const x1 = bx;
+	const z1 = bz;
+
+	const dx = Math.abs(x1 - x0);
+	const dz = Math.abs(z1 - z0);
+	const sx = x0 < x1 ? 1 : -1;
+	const sz = z0 < z1 ? 1 : -1;
+	let err = dx - dz;
+
+	while (true) {
+		// Skip start and end points — only check intermediate tiles
+		if ((x0 !== ax || z0 !== az) && (x0 !== bx || z0 !== bz)) {
+			if (walls.has(`${x0},${z0}`)) return false;
+		}
+		if (x0 === x1 && z0 === z1) break;
+		const e2 = 2 * err;
+		if (e2 > -dz) { err -= dz; x0 += sx; }
+		if (e2 < dx) { err += dx; z0 += sz; }
+	}
+	return true;
 }
 
 /**
@@ -60,6 +119,21 @@ export function resolveAttacks(world: World): void {
 				if (dist > attackerStats.attackRange) {
 					pushTurnEvent("Attack failed — target out of range");
 					break;
+				}
+
+				// LOS check — walls block ranged attacks (melee at range 1 always has LOS)
+				if (attackerStats.attackRange > 1) {
+					const turn = readCurrentTurn(world);
+					const walls = getWallTiles(world, turn);
+					if (!hasLineOfSight(
+						attackerPos.tileX, attackerPos.tileZ,
+						targetPos.tileX, targetPos.tileZ,
+						walls,
+					)) {
+						pushTurnEvent("Attack failed — no line of sight");
+						playSfx("attack_hit"); // TODO: add miss sfx
+						break;
+					}
 				}
 			}
 
@@ -112,7 +186,18 @@ export function resolveAttacks(world: World): void {
 						attackerPos.tileX,
 						attackerPos.tileZ,
 					);
-					if (counterDist <= targetStats.attackRange && targetStats.attack > 0) {
+					// LOS check for ranged counterattacks
+					let counterLos = true;
+					if (targetStats.attackRange > 1) {
+						const cTurn = readCurrentTurn(world);
+						const cWalls = getWallTiles(world, cTurn);
+						counterLos = hasLineOfSight(
+							targetPos.tileX, targetPos.tileZ,
+							attackerPos.tileX, attackerPos.tileZ,
+							cWalls,
+						);
+					}
+					if (counterDist <= targetStats.attackRange && targetStats.attack > 0 && counterLos) {
 						const counterDamage = Math.max(
 							MIN_DAMAGE,
 							Math.floor(targetStats.attack * COUNTER_DAMAGE_RATIO) - attackerStats.defense,

@@ -3,6 +3,8 @@
  *
  * Queries the ECS world each frame for entities with TileHighlight.emissive > 0,
  * and maintains a pool of thin plane meshes positioned above the tile surface.
+ *
+ * Supports both flat board and sphere placement via useSphere prop.
  */
 
 import { useFrame, useThree } from "@react-three/fiber";
@@ -11,9 +13,13 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { ELEVATION_STEP_M, TILE_SIZE_M } from "../board/grid";
 import { Tile, TileHighlight } from "../ecs/traits/tile";
+import { sphereModelPlacement } from "./spherePlacement";
 
 type HighlightRendererProps = {
 	world: World;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
 };
 
 const HIGHLIGHT_Y_OFFSET = 0.02;
@@ -34,7 +40,7 @@ function makeHighlightMesh(): THREE.Mesh {
 	return new THREE.Mesh(geometry, material);
 }
 
-export function HighlightRenderer({ world }: HighlightRendererProps) {
+export function HighlightRenderer({ world, useSphere, boardWidth, boardHeight }: HighlightRendererProps) {
 	const { scene } = useThree();
 	const poolRef = useRef<Map<string, THREE.Mesh>>(new Map());
 
@@ -71,10 +77,20 @@ export function HighlightRenderer({ world }: HighlightRendererProps) {
 				pool.set(key, mesh);
 			}
 
-			const wx = tile.x * TILE_SIZE_M;
-			const wy = tile.elevation * ELEVATION_STEP_M + HIGHLIGHT_Y_OFFSET;
-			const wz = tile.z * TILE_SIZE_M;
-			mesh.position.set(wx, wy, wz);
+			if (useSphere && boardWidth && boardHeight) {
+				// Sphere placement: position on curved surface with tangent orientation
+				const yOff = tile.elevation * ELEVATION_STEP_M + HIGHLIGHT_Y_OFFSET;
+				const sp = sphereModelPlacement(tile.x, tile.z, boardWidth, boardHeight, yOff);
+				mesh.position.set(sp.position[0], sp.position[1], sp.position[2]);
+				mesh.quaternion.set(sp.quaternion[0], sp.quaternion[1], sp.quaternion[2], sp.quaternion[3]);
+			} else {
+				// Flat board placement
+				const wx = tile.x * TILE_SIZE_M;
+				const wy = tile.elevation * ELEVATION_STEP_M + HIGHLIGHT_Y_OFFSET;
+				const wz = tile.z * TILE_SIZE_M;
+				mesh.position.set(wx, wy, wz);
+				mesh.quaternion.identity();
+			}
 
 			const mat = mesh.material as THREE.MeshStandardMaterial;
 			mat.emissive.setHex(highlight.color);

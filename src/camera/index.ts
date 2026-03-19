@@ -1,11 +1,12 @@
 /**
- * src/camera — Civ Rev 2-style fixed-angle diorama camera subpackage.
+ * src/camera — game camera subpackage.
  *
- * Drop IsometricCamera into any R3F Canvas.
+ * IsometricCamera: legacy flat-board PAN camera (CivRev2 style).
+ * SphereOrbitCamera: sphere world orbit camera (Planetary Annihilation style).
+ *
  * Use CameraControls (via controlsRef) for programmatic moves (panTo, snapTo, etc.)
- *
- * Reference: docs/Grok-Civilization_Revolution_2_Visual_Recreation.md
  */
 
 export { IsometricCamera } from "./IsometricCamera";
+export { SphereOrbitCamera } from "./SphereOrbitCamera";
 export type { CameraControls } from "./types";

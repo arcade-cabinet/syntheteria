@@ -76,7 +76,7 @@ export function KeybindHints() {
 			}}
 		>
 			<Hint keys="Tab" label="Cycle units" />
-			<Hint keys="Enter" label="End turn" />
+			<Hint keys="Enter" label="Advance" />
 			<Hint keys="Esc" label="Cancel" />
 			<Hint keys="WASD" label="Pan camera" />
 			<Hint keys="Z" label="Zoom" />

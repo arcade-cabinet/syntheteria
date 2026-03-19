@@ -1,4 +1,5 @@
 attribute float elevation;
+attribute float floorIndex;
 
 uniform vec2  uBoardCenter;
 uniform float uCurve;
@@ -6,6 +7,7 @@ uniform float uBoardWidth;
 
 varying vec2  vWorldXZ;
 varying vec3  vWorldNormal;
+varying float vFloorIndex;
 
 // Three.js fog support
 #include <fog_pars_vertex>
@@ -19,6 +21,7 @@ void main() {
 
   vWorldXZ    = worldPos.xz;
   vWorldNormal = normalize(mat3(modelMatrix) * normal);
+  vFloorIndex  = floorIndex;
 
   vec4 mvPosition = viewMatrix * worldPos;
 

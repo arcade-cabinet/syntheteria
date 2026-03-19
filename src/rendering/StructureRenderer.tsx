@@ -15,6 +15,7 @@
  */
 
 import { Clone, useGLTF } from "@react-three/drei";
+import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -25,6 +26,8 @@ import {
 	getAllStructureModelUrls,
 	resolveStructureModelUrl,
 	STRUCTURE_COLUMN_MODELS,
+	STRUCTURE_ROOF_CORNER_MODELS,
+	STRUCTURE_ROOF_MODELS,
 	STRUCTURE_STAIRCASE_MODEL,
 	STRUCTURE_WALL_MODELS,
 	STRUCTURE_WINDOW_WALL_MODELS,
@@ -33,8 +36,10 @@ import {
 	type ColumnPosition,
 	type StructuralEdge,
 	getColumnPositions,
+	getInteriorTiles,
 	getStructuralEdges,
 } from "./ProceduralStructureRenderer";
+import { sphereModelPlacement, sphereModelPlacementWithRotation, worldToTileCoords } from "./spherePlacement";
 import { buildExploredSet } from "./tileVisibility";
 
 // Preload all structure models
@@ -237,10 +242,46 @@ function computeStaircaseInstances(
 }
 
 // ---------------------------------------------------------------------------
+// Roof instances — placed atop structural_mass tiles
+// ---------------------------------------------------------------------------
+
+/** Camera distance above which roofs are visible. Below this, roofs are hidden
+ *  so the player can see into building interiors at surface level. */
+const ROOF_SHOW_DISTANCE = 55;
+
+/** Roof tile height — placed at the top of walls. */
+const ROOF_Y = 2.8;
+
+interface RoofInstance {
+	url: string;
+	wx: number;
+	wz: number;
+	key: string;
+}
+
+function computeRoofInstances(
+	board: GeneratedBoard,
+	seed: string,
+	explored?: Set<string>,
+): RoofInstance[] {
+	const interiorTiles = getInteriorTiles(board, explored);
+	const allRoofs = [...STRUCTURE_ROOF_MODELS, ...STRUCTURE_ROOF_CORNER_MODELS];
+	return interiorTiles.map((tile) => {
+		const modelPath = pickModel(allRoofs, seed, tile.x, tile.z);
+		return {
+			url: resolveStructureModelUrl(modelPath),
+			wx: tile.x * TILE_SIZE_M,
+			wz: tile.z * TILE_SIZE_M,
+			key: `roof-${tile.x}-${tile.z}`,
+		};
+	});
+}
+
+// ---------------------------------------------------------------------------
 // GLB model components
 // ---------------------------------------------------------------------------
 
-function WallModel({ url, wx, wz, rotation }: { url: string; wx: number; wz: number; rotation: number }) {
+function WallModel({ url, wx, wz, rotation, useSphere, boardWidth, boardHeight }: { url: string; wx: number; wz: number; rotation: number; useSphere?: boolean; boardWidth?: number; boardHeight?: number }) {
 	const { scene } = useGLTF(url);
 	const ref = useRef<THREE.Group>(null);
 
@@ -256,6 +297,22 @@ function WallModel({ url, wx, wz, rotation }: { url: string; wx: number; wz: num
 		if (ref.current) applyIndustrialMaterials(ref.current);
 	}, []);
 
+	if (useSphere && boardWidth && boardHeight) {
+		const tile = worldToTileCoords(wx, wz, TILE_SIZE_M);
+		const sp = sphereModelPlacementWithRotation(tile.tileX, tile.tileZ, boardWidth, boardHeight, rotation, yOffset);
+		return (
+			<Clone
+				ref={ref}
+				object={scene}
+				position={sp.position}
+				quaternion={sp.quaternion}
+				scale={scale}
+				castShadow
+				receiveShadow
+			/>
+		);
+	}
+
 	return (
 		<Clone
 			ref={ref}
@@ -269,7 +326,7 @@ function WallModel({ url, wx, wz, rotation }: { url: string; wx: number; wz: num
 	);
 }
 
-function ColumnModel({ url, wx, wz }: { url: string; wx: number; wz: number }) {
+function ColumnModel({ url, wx, wz, useSphere, boardWidth, boardHeight }: { url: string; wx: number; wz: number; useSphere?: boolean; boardWidth?: number; boardHeight?: number }) {
 	const { scene } = useGLTF(url);
 	const ref = useRef<THREE.Group>(null);
 
@@ -285,6 +342,21 @@ function ColumnModel({ url, wx, wz }: { url: string; wx: number; wz: number }) {
 		if (ref.current) applyIndustrialMaterials(ref.current);
 	}, []);
 
+	if (useSphere && boardWidth && boardHeight) {
+		const tile = worldToTileCoords(wx, wz, TILE_SIZE_M);
+		const sp = sphereModelPlacement(tile.tileX, tile.tileZ, boardWidth, boardHeight, yOffset);
+		return (
+			<Clone
+				ref={ref}
+				object={scene}
+				position={sp.position}
+				quaternion={sp.quaternion}
+				scale={scale}
+				castShadow
+			/>
+		);
+	}
+
 	return (
 		<Clone
 			ref={ref}
@@ -296,7 +368,7 @@ function ColumnModel({ url, wx, wz }: { url: string; wx: number; wz: number }) {
 	);
 }
 
-function StaircaseModel({ url, wx, wz, rotation }: { url: string; wx: number; wz: number; rotation: number }) {
+function StaircaseModel({ url, wx, wz, rotation, useSphere, boardWidth, boardHeight }: { url: string; wx: number; wz: number; rotation: number; useSphere?: boolean; boardWidth?: number; boardHeight?: number }) {
 	const { scene } = useGLTF(url);
 	const ref = useRef<THREE.Group>(null);
 
@@ -312,6 +384,22 @@ function StaircaseModel({ url, wx, wz, rotation }: { url: string; wx: number; wz
 		if (ref.current) applyIndustrialMaterials(ref.current);
 	}, []);
 
+	if (useSphere && boardWidth && boardHeight) {
+		const tile = worldToTileCoords(wx, wz, TILE_SIZE_M);
+		const sp = sphereModelPlacementWithRotation(tile.tileX, tile.tileZ, boardWidth, boardHeight, rotation, yOffset);
+		return (
+			<Clone
+				ref={ref}
+				object={scene}
+				position={sp.position}
+				quaternion={sp.quaternion}
+				scale={scale}
+				castShadow
+				receiveShadow
+			/>
+		);
+	}
+
 	return (
 		<Clone
 			ref={ref}
@@ -325,6 +413,55 @@ function StaircaseModel({ url, wx, wz, rotation }: { url: string; wx: number; wz
 	);
 }
 
+function RoofModel({ url, wx, wz, useSphere, boardWidth, boardHeight }: { url: string; wx: number; wz: number; useSphere?: boolean; boardWidth?: number; boardHeight?: number }) {
+	const { scene } = useGLTF(url);
+	const ref = useRef<THREE.Group>(null);
+	const camera = useThree((s) => s.camera);
+
+	const { scale, yOffset } = useMemo(() => {
+		const box = new THREE.Box3().setFromObject(scene);
+		const size = box.getSize(new THREE.Vector3());
+		const s = TILE_SIZE_M / (size.x || 1);
+		return { scale: s, yOffset: -box.min.y * s + ROOF_Y };
+	}, [scene]);
+
+	useEffect(() => {
+		if (ref.current) applyIndustrialMaterials(ref.current);
+	}, []);
+
+	// Toggle visibility based on camera distance — hide roofs at close zoom
+	useFrame(() => {
+		if (!ref.current) return;
+		const camDist = camera.position.length();
+		ref.current.visible = camDist > ROOF_SHOW_DISTANCE;
+	});
+
+	if (useSphere && boardWidth && boardHeight) {
+		const tile = worldToTileCoords(wx, wz, TILE_SIZE_M);
+		const sp = sphereModelPlacement(tile.tileX, tile.tileZ, boardWidth, boardHeight, yOffset);
+		return (
+			<Clone
+				ref={ref}
+				object={scene}
+				position={sp.position}
+				quaternion={sp.quaternion}
+				scale={scale}
+				receiveShadow
+			/>
+		);
+	}
+
+	return (
+		<Clone
+			ref={ref}
+			object={scene}
+			position={[wx, yOffset, wz]}
+			scale={scale}
+			receiveShadow
+		/>
+	);
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -332,9 +469,12 @@ function StaircaseModel({ url, wx, wz, rotation }: { url: string; wx: number; wz
 type StructureRendererProps = {
 	board: GeneratedBoard;
 	world?: World;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
 };
 
-export function StructureRenderer({ board, world }: StructureRendererProps) {
+export function StructureRenderer({ board, world, useSphere, boardWidth, boardHeight }: StructureRendererProps) {
 	const instances = useMemo(() => {
 		const explored = world ? buildExploredSet(world) : undefined;
 		const seed = board.config.seed;
@@ -347,6 +487,7 @@ export function StructureRenderer({ board, world }: StructureRendererProps) {
 			walls: computeWallInstances(edges, seed),
 			columns: computeColumnInstances(columns, seed),
 			staircases: computeStaircaseInstances(ramps),
+			roofs: computeRoofInstances(board, seed, explored),
 		};
 	}, [board, world]);
 
@@ -354,17 +495,22 @@ export function StructureRenderer({ board, world }: StructureRendererProps) {
 		<>
 			{instances.walls.map((w) => (
 				<Suspense key={w.key} fallback={null}>
-					<WallModel url={w.url} wx={w.wx} wz={w.wz} rotation={w.rotation} />
+					<WallModel url={w.url} wx={w.wx} wz={w.wz} rotation={w.rotation} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
 				</Suspense>
 			))}
 			{instances.columns.map((c) => (
 				<Suspense key={c.key} fallback={null}>
-					<ColumnModel url={c.url} wx={c.wx} wz={c.wz} />
+					<ColumnModel url={c.url} wx={c.wx} wz={c.wz} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
 				</Suspense>
 			))}
 			{instances.staircases.map((s) => (
 				<Suspense key={s.key} fallback={null}>
-					<StaircaseModel url={s.url} wx={s.wx} wz={s.wz} rotation={s.rotation} />
+					<StaircaseModel url={s.url} wx={s.wx} wz={s.wz} rotation={s.rotation} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+				</Suspense>
+			))}
+			{instances.roofs.map((r) => (
+				<Suspense key={r.key} fallback={null}>
+					<RoofModel url={r.url} wx={r.wx} wz={r.wz} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
 				</Suspense>
 			))}
 		</>

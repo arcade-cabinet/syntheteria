@@ -1,8 +1,9 @@
 /**
  * FogOfWarRenderer — Layer 5: semi-transparent dark fog over unexplored tiles.
  *
- * Uses the same geometry as the board (buildBoardGeometry) with matching
- * cylindrical curvature so the fog hugs the terrain surface exactly.
+ * Supports two geometry modes:
+ *   - Flat (legacy): buildBoardGeometry with cylindrical curvature
+ *   - Sphere: buildSphereGeometry with equirectangular projection
  *
  * Visibility is driven by a DataTexture where each texel's R channel
  * encodes exploration state: 0 = fully fogged, 255 = fully explored.
@@ -17,13 +18,16 @@ import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
 import { UnitFaction, UnitPos, UnitStats } from "../ecs/traits/unit";
-import { buildBoardGeometry } from "./boardGeometry";
+import { buildBoardGeometry, buildSphereGeometry } from "./boardGeometry";
 import FRAG from "./glsl/fogOfWarFrag.glsl";
 import VERT from "./glsl/fogOfWarVert.glsl";
+import SPHERE_FRAG from "./glsl/fogOfWarSphereFrag.glsl";
+import SPHERE_VERT from "./glsl/fogOfWarSphereVert.glsl";
 
 type FogOfWarRendererProps = {
 	board: GeneratedBoard;
 	world: World;
+	useSphere?: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -37,6 +41,7 @@ type FogOfWarRendererProps = {
 function createVisibilityTexture(
 	width: number,
 	height: number,
+	wrapLongitude = false,
 ): THREE.DataTexture {
 	const data = new Uint8Array(width * height * 4);
 	// RGBA — all 0 = fully fogged
@@ -49,7 +54,8 @@ function createVisibilityTexture(
 	);
 	tex.magFilter = THREE.LinearFilter;
 	tex.minFilter = THREE.LinearFilter;
-	tex.wrapS = THREE.ClampToEdgeWrapping;
+	// On sphere, longitude wraps east-west so S axis needs RepeatWrapping
+	tex.wrapS = wrapLongitude ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
 	tex.wrapT = THREE.ClampToEdgeWrapping;
 	tex.needsUpdate = true;
 	return tex;
@@ -59,29 +65,36 @@ function createVisibilityTexture(
  * Gradient visibility by distance from nearest explored tile.
  * Returns a 0–255 visibility value for the given BFS distance.
  *
- * Distance bands (from explored edge):
+ * Gentle falloff so fog fades gradually over a wide area:
  *   0       → 255 (explored tile itself — handled before calling this)
- *   1–3     → 153–102 (40–60% fog → 60–40% visible)
- *   4–8     → 102–38  (60–85% fog → 40–15% visible)
- *   8+      → 0       (100% fog)
+ *   1–4     → 178–102 (30–60% fog → 70–40% visible)
+ *   5–12    → 102–38  (60–85% fog → 40–15% visible)
+ *   13–16   → 38–15   (85–94% fog → minimal ambient glow)
+ *   16+     → 15      (floor — never fully black, 6% visibility remains)
  */
 export function gradientVisForDistance(dist: number): number {
 	if (dist <= 0) return 255;
-	if (dist <= 3) {
-		// Linear interpolation: dist 1 → 153, dist 3 → 102
-		const t = (dist - 1) / 2; // 0 at dist=1, 1 at dist=3
-		return Math.round(153 - t * 51);
+	if (dist <= 4) {
+		// Linear interpolation: dist 1 → 178, dist 4 → 102
+		const t = (dist - 1) / 3;
+		return Math.round(178 - t * 76);
 	}
-	if (dist <= 8) {
-		// Linear interpolation: dist 4 → 102, dist 8 → 38
-		const t = (dist - 4) / 4; // 0 at dist=4, 1 at dist=8
+	if (dist <= 12) {
+		// Linear interpolation: dist 5 → 102, dist 12 → 38
+		const t = (dist - 5) / 7;
 		return Math.round(102 - t * 64);
 	}
-	return 0;
+	if (dist <= 16) {
+		// Linear interpolation: dist 13 → 38, dist 16 → 15
+		const t = (dist - 13) / 3;
+		return Math.round(38 - t * 23);
+	}
+	// Never fully black — minimal ambient glow everywhere
+	return 15;
 }
 
 /** Maximum BFS distance for fog gradient expansion. */
-export const MAX_GRADIENT_DIST = 8;
+export const MAX_GRADIENT_DIST = 16;
 
 /**
  * Update visibility texture from current ECS state.
@@ -239,11 +252,29 @@ function makeFogMaterial(
 	});
 }
 
+function makeSphereFogMaterial(
+	boardWidth: number,
+	boardHeight: number,
+	visibilityTexture: THREE.DataTexture,
+): THREE.ShaderMaterial {
+	return new THREE.ShaderMaterial({
+		uniforms: {
+			uVisibility: { value: visibilityTexture },
+			uBoardSize: { value: new THREE.Vector2(boardWidth, boardHeight) },
+		},
+		vertexShader: SPHERE_VERT,
+		fragmentShader: SPHERE_FRAG,
+		transparent: true,
+		depthWrite: false,
+		side: THREE.FrontSide,
+	});
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function FogOfWarRenderer({ board, world }: FogOfWarRendererProps) {
+export function FogOfWarRenderer({ board, world, useSphere }: FogOfWarRendererProps) {
 	const { scene } = useThree();
 	const meshRef = useRef<THREE.Mesh | null>(null);
 	const textureRef = useRef<THREE.DataTexture | null>(null);
@@ -257,24 +288,29 @@ export function FogOfWarRenderer({ board, world }: FogOfWarRendererProps) {
 
 	// Build geometry, texture, material, and mesh
 	useEffect(() => {
-		const visTex = createVisibilityTexture(width, height);
+		const visTex = createVisibilityTexture(width, height, !!useSphere);
 		textureRef.current = visTex;
 
-		const material = makeFogMaterial(
-			boardCenterX,
-			boardCenterZ,
-			width,
-			height,
-			visTex,
-		);
+		let material: THREE.ShaderMaterial;
+		let geometry: THREE.BufferGeometry;
+
+		if (useSphere) {
+			material = makeSphereFogMaterial(width, height, visTex);
+			geometry = buildSphereGeometry(board);
+		} else {
+			material = makeFogMaterial(boardCenterX, boardCenterZ, width, height, visTex);
+			material.uniforms.uBoardWidth.value = boardWidth;
+			geometry = buildBoardGeometry(board);
+		}
 		materialRef.current = material;
 
-		// Set boardWidth for curvature
-		material.uniforms.uBoardWidth.value = boardWidth;
-
-		const geometry = buildBoardGeometry(board);
 		const mesh = new THREE.Mesh(geometry, material);
-		mesh.position.y = 0.002; // above biome layer, below structures
+		if (useSphere) {
+			// Scale slightly outward so fog sits just above terrain surface
+			mesh.scale.setScalar(1.001);
+		} else {
+			mesh.position.y = 0.002; // above biome layer, below structures (flat only)
+		}
 		mesh.renderOrder = 10; // ensure fog renders after terrain
 		scene.add(mesh);
 		meshRef.current = mesh;
@@ -291,7 +327,7 @@ export function FogOfWarRenderer({ board, world }: FogOfWarRendererProps) {
 			textureRef.current = null;
 			materialRef.current = null;
 		};
-	}, [board, world, scene, boardCenterX, boardCenterZ, boardWidth, width, height]);
+	}, [board, world, scene, boardCenterX, boardCenterZ, boardWidth, width, height, useSphere]);
 
 	// Update visibility every frame when player unit positions change.
 	// Uses useFrame instead of setInterval for immediate fog reveal on movement.

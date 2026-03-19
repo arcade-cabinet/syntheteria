@@ -33,14 +33,17 @@ import { BoardInput } from "../../input/BoardInput";
 import { BiomeRenderer } from "../../rendering/BiomeRenderer";
 import { BoardRenderer } from "../../rendering/BoardRenderer";
 import { CombatEffectsRenderer } from "../../rendering/CombatEffectsRenderer";
+import { CutawayClipPlane } from "../../rendering/CutawayClipPlane";
 import { UnifiedTerrainRenderer } from "../../rendering/UnifiedTerrainRenderer";
 import { FogOfWarRenderer } from "../../rendering/FogOfWarRenderer";
+import { InfrastructureRenderer } from "../../rendering/InfrastructureRenderer";
 import { StructureRenderer } from "../../rendering/StructureRenderer";
 import { SalvageRenderer } from "../../rendering/SalvageRenderer";
 import { BuildingRenderer } from "../../rendering/BuildingRenderer";
 import { HighlightRenderer } from "../../rendering/HighlightRenderer";
 import { ParticleRenderer } from "../../rendering/particles/ParticleRenderer";
 import { TerritoryOverlayRenderer } from "../../rendering/TerritoryOverlayRenderer";
+import { PathRenderer } from "../../rendering/PathRenderer";
 import { StormDome } from "../../rendering/StormDome";
 import { turnToChronometry } from "../../rendering/sky/chronometry";
 import type { StormProfile } from "../../world/config";
@@ -173,6 +176,7 @@ export function GameScreen({
 					boardWidth={board ? board.config.width * TILE_SIZE_M : undefined}
 					boardHeight={board ? board.config.height * TILE_SIZE_M : undefined}
 				/>
+				<CutawayClipPlane />
 
 				{/* Floor — Layer 1 (height) then Layer 2 (biome textures) */}
 				{board && (
@@ -187,6 +191,9 @@ export function GameScreen({
 
 				{/* Layer 3 — GLB wall, column, and staircase models at structural_mass clusters */}
 				{board && <StructureRenderer board={board} world={world ?? undefined} />}
+
+				{/* Layer 3b — infrastructure scatter (pipes, lamps, supports, antennas) */}
+				{board && <InfrastructureRenderer board={board} world={world ?? undefined} />}
 
 				{/* Layer 4 — salvage props (instanced GLB models) */}
 				{world && <SalvageRenderer world={world} />}
@@ -203,6 +210,7 @@ export function GameScreen({
 				{/* ECS overlays and input — only when world is available */}
 				{world && <SceneLoop world={world} />}
 				{world && <HighlightRenderer world={world} />}
+				<PathRenderer />
 				{world && <UnitRenderer world={world} />}
 				{world && board && onSelect && (
 					<BoardInput

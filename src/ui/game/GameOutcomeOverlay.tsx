@@ -106,7 +106,7 @@ export function GameOutcomeOverlay({
 					cursor: "pointer",
 				}}
 			>
-				Return to Menu
+				Disconnect
 			</button>
 		</div>
 	);

@@ -6,11 +6,18 @@
 
 ## Current State (2026-03-18)
 
-**2171 tests, 124 suites (120 passing, 4 failing), 0 TypeScript errors.**
+**2239 tests, 126 suites (all passing), 0 TypeScript errors. 344 source files.**
 
 The game is a playable turn-based 4X with:
-- **BSP city generator** with labyrinth maze corridors, abyssal zones, bridges
+- **Globe-based rendering** — ONE persistent R3F Canvas (`Globe.tsx`) across all phases (title → setup → generating → playing)
+- **Sphere world** — `buildSphereGeometry()`, `tileToSpherePos()`, `SphereOrbitCamera` (orbit around sphere center)
+- **Sphere model placement** — all models snap to sphere surface normal via `spherePlacement.ts`
+- **Sphere fog of war** — dedicated GLSL shaders (`fogOfWarSphereFrag.glsl`, `fogOfWarSphereVert.glsl`)
+- **Title-to-game cinematic** — animated globe growth (0.3→1), title text fade, camera zoom to surface
+- **Persistent storm effects** — StormClouds, Hypercane, LightningEffect render in ALL phases (title storms become game sky)
+- **Unified terrain renderer** — `UnifiedTerrainRenderer.tsx` replaces old DepthRenderer + MinedPitRenderer
 - **PBR texture atlas** (8 AmbientCG packs, 5 atlas maps, atlas-sampling GLSL shader)
+- **Cutaway clip plane** — `CutawayClipPlane.tsx` + `cutawayStore.ts` for dollhouse zoom
 - **15 faction buildings** + 6 cult structures + 10 salvage types
 - **Specialization system** — 14 tracks across 6 robot classes, Garage modal, AI track selection
 - **27-tech research tree** (15 base + 12 track-gating techs across 5 tiers)
@@ -26,72 +33,61 @@ The game is a playable turn-based 4X with:
 - **Save/Load** — fixed for BSP generator, unit identity persistence, manual save, auto-save
 - **360 GLB models** from 3 asset packs (sci-fi blends, Space Colony, KayKit)
 - **Audio** — Tone.js synth pooling, ambient storm loop, SFX
+- **11 config definition files** — gameDefaults, techTree, buildings, diplomacy, factionAi, movement, narrative, poi, recipe, upgrade, weather
 
 **Pending/ is READ-ONLY REFERENCE** — valuable for design patterns and game data, but most code is incompatible (real-time hex-grid architecture vs our turn-based square-grid). Port DATA (configs, narrative text), not CODE.
 
 ---
 
-## What Was Built This Session
+## Architecture: Globe-Based Rendering
 
-### Specialization System (Complete)
-- 6 track definition files (`src/ecs/robots/specializations/`)
-- 14 tracks: pathfinder/infiltrator (scout), vanguard/shock_trooper (infantry), flanker/interceptor (cavalry), sniper/suppressor (ranged), field_medic/signal_booster/war_caller (support), deep_miner/fabricator/salvager (worker)
-- Track registry (`trackRegistry.ts`) — single source of truth for all tracks
-- Garage modal (`GarageModal.tsx`) — two-step fabrication: Classification → Specialization
-- Specialization passives runtime (`specializationSystem.ts`) — aura effects applied per turn
-- AI track selection (`src/ai/trackSelection.ts`) — per-faction preferences
-- 12 track-gating techs wired into tech tree (27 total techs)
-- Victory: Technical Supremacy checks Mark V of all 6 faction robot classes
+The game uses a **single persistent `<Canvas>`** via `Globe.tsx` (`src/ui/Globe.tsx`). This replaces the old separate Canvas approach in `GameScreen.tsx`.
 
-### Cult Mutations (Complete)
-- Time-based 4-tier mutation system (`cultMutation.ts`)
-- Tier 1 (turn 6): one stat buff (speed/armor/damage)
-- Tier 2 (turn 11): second buff + special ability (regen/area_attack/fear_aura)
-- Tier 3 (turn 21): Aberrant — +2 to ALL stats, mini-boss threat
-- Seeded-deterministic buff selection
+### Phase State Machine (from `main.tsx`)
 
-### Floor Mining (Complete)
-- Strip-mine tiles for foundation materials (`floorMiningSystem.ts`)
-- DAISY pattern: mine adjacent tiles, create visible pits (elevation → -1)
-- Deep mining tech bonus: +50% yield
-- MinedPitRenderer for visual pit geometry
+```
+"title"      → Globe rotates slowly, title text visible, far orbit camera
+"setup"      → Globe visible behind NewGameModal overlay
+"generating" → Globe growth animation (0.3→1), title text fades, camera zooms to surface
+"playing"    → Game renderers active, title scene hidden, HUD + overlays
+```
 
-### Cult Escalation (Complete)
-- 3 stages: wanderer (flee), war_party (coordinate), assault (charge buildings)
-- Per-sect behaviors: Static Remnants (defend POIs), Null Monks (ambush isolated), Lost Signal (berserker)
-- POI spawning at game start on abandoned terrain
-- Structure-based altar spawning + corruption spread
-- Final assault mode after turn 300
+### Sphere Geometry (`boardGeometry.ts`)
 
-### Other Gaps Fixed
-- Deep mining tech yield multiplier
-- `bio_processor` replaced with `resource_refinery` (machines don't eat)
-- `bio_farm` added as cult structure
-- `abyssal_relic` salvage type yields `el_crystal`
-- Robot placement: min 2-tile spread, 10-tile search radius
+Both flat and sphere geometry co-exist:
+- `buildBoardGeometry()` — flat board with CURVE_STRENGTH cosine curvature + GHOST tile border
+- `buildSphereGeometry()` — maps tile grid onto a SphereGeometry via equirectangular projection
+- `tileToSpherePos(x, z, W, H, R)` — grid coords → 3D sphere position
+- `sphereRadius(W, H)` — board dimensions → sphere radius
+- `spherePosToTile()` — inverse: 3D sphere position → tile coords (for raycasting)
+
+### Cameras
+
+- `IsometricCamera` — flat-board CivRev2-style PAN camera (currently used in playing phase by Globe.tsx)
+- `SphereOrbitCamera` — orbit around sphere center, WASD rotates globe, scroll zooms, pan disabled
+
+### Sphere Model Placement (`spherePlacement.ts`)
+
+- `sphereModelPlacement(tileX, tileZ, W, H, yOffset)` — position + quaternion for any model on sphere surface
+- `sphereModelPlacementWithRotation()` — adds Y-axis rotation (for directional models like walls)
+- Models are oriented so local Y-up aligns with sphere outward normal
 
 ---
 
-## Architecture
-
-- R3F + Three.js + **Koota ECS** + Vite
-- **Yuka** for AI GOAP (Think/GoalEvaluator/FuzzyModule/NavGraph)
-- **AmbientCG** PBR textures via atlas shader (5 atlas maps)
-- **3 asset packs**: sci-fi blends (structures), Space Colony (buildings), KayKit (modules)
-- **Tests**: Vitest JSDOM (2171 tests, 124 suites), Playwright E2E (AI-vs-AI playtests)
-
 ## Key Rules
 - ECS systems accept `world: World` param — never singleton
-- No JSON configs — TypeScript const objects only
+- No JSON configs — TypeScript const objects only (11 config files in `src/config/`)
 - All generation seeded-deterministic
 - pending/ is reference-only — port data, not code
 - Check pending/ BEFORE building from scratch
+- Tiles are GPS coordinates — each (x,z) is a database record, `explored` is the topmost gatekeeper
+- Overlay UI (HUD, modals) is DOM-based; diegetic UI (speech bubbles, status bars) is in-canvas
 
 ## Next Steps
 
-- **Unified depth layer refactor** — replace BiomeRenderer + DepthRenderer + MinedPitRenderer with single unified renderer
-- **#53**: Fog of war radiating gradient (not hard cutoff)
-- **#54**: Storm dome atmosphere (hypercane + wormhole-is-the-eye)
-- **#63**: Signal relay control limits (low priority)
-- **#39**: Visual polish with Chrome DevTools screenshots
-- Fix 4 failing test suites
+- **SPHERE-10**: Delete flat board code — boardGeometry cosine hack, GHOST, CURVE_STRENGTH
+- **SPHERE-6**: LOD system — procedural shader at far zoom, PBR atlas at close zoom
+- **3D-GAP-9**: Strategic zoom — seamless surface-to-globe zoom (Supreme Commander style)
+- **3D-GAP-11**: Cutaway dollhouse zoom — descend through layers instead of into ceiling
+- **3D-GAP-6**: Fog of war as volumetric haze — storm atmosphere at scan range edge
+- **POLISH-9**: Delete dead code — GameScreen.tsx, old renderers, unused files

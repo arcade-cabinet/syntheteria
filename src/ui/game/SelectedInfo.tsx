@@ -122,7 +122,7 @@ function ApPips({ ap, maxAp }: { ap: number; maxAp: number }) {
 	return (
 		<div style={{ marginTop: 6 }}>
 			<div style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>
-				Action Points
+				Cycles
 			</div>
 			<div style={{ display: "flex", gap: 4 }}>
 				{Array.from({ length: maxAp }).map((_, i) => (
@@ -155,7 +155,7 @@ function XpBar({ xp, markLevel }: { xp: number; markLevel: number }) {
 					Mark {markLabel}
 				</span>
 				<span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)" }}>
-					{xp}/{xpToNext} XP
+					{xp}/{xpToNext} EXP
 				</span>
 			</div>
 			<div
@@ -259,8 +259,8 @@ export function SelectedInfo({ world, selectedUnitId }: { world: World; selected
 					gap: 3,
 				}}
 			>
-				<StatRow label="Attack" value={data.attack} color="#ff8f8f" />
-				<StatRow label="Defense" value={data.defense} color="#8be6ff" />
+				<StatRow label="Power" value={data.attack} color="#ff8f8f" />
+				<StatRow label="Armor" value={data.defense} color="#8be6ff" />
 				<StatRow label="Range" value={data.attackRange} color="rgba(255,255,255,0.7)" />
 				<StatRow label="Scan" value={data.scanRange} color="rgba(255,255,255,0.7)" />
 				<StatRow label="Class" value={formatName(data.weightClass)} color="rgba(255,255,255,0.6)" />

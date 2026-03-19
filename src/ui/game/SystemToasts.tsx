@@ -110,6 +110,7 @@ export function SystemToasts() {
 				flexDirection: "column",
 				alignItems: "flex-start",
 				pointerEvents: "none",
+				zIndex: 60,
 			}}
 		>
 			{toasts.map((toast) => (

@@ -13,6 +13,7 @@ import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import { SalvageProp, type SalvageType } from "../ecs/traits/salvage";
 import { getAllSalvageModelUrls, resolveSalvageModelUrl } from "./modelPaths";
+import { sphereModelPlacement } from "./spherePlacement";
 import { buildExploredSet, isTileExplored } from "./tileVisibility";
 
 // Preload all known salvage models
@@ -27,11 +28,17 @@ function SalvageModel({
 	tileX,
 	tileZ,
 	hasCyanSparkle,
+	useSphere,
+	boardWidth,
+	boardHeight,
 }: {
 	url: string;
 	tileX: number;
 	tileZ: number;
 	hasCyanSparkle: boolean;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
 }) {
 	const { scene } = useGLTF(url);
 
@@ -42,6 +49,34 @@ function SalvageModel({
 		const s = maxExtent > 0 ? (TILE_SIZE_M * 0.8) / maxExtent : 1;
 		return { scale: s, yOffset: -box.min.y * s };
 	}, [scene]);
+
+	if (useSphere && boardWidth && boardHeight) {
+		const sp = sphereModelPlacement(tileX, tileZ, boardWidth, boardHeight, yOffset);
+		const sparklePos: [number, number, number] = sphereModelPlacement(tileX, tileZ, boardWidth, boardHeight, yOffset + TILE_SIZE_M * 0.3).position;
+		return (
+			<>
+				<Clone
+					object={scene}
+					position={sp.position}
+					quaternion={sp.quaternion}
+					scale={scale}
+					castShadow
+					receiveShadow
+				/>
+				{hasCyanSparkle && (
+					<Sparkles
+						count={20}
+						scale={[TILE_SIZE_M * 0.6, TILE_SIZE_M * 0.8, TILE_SIZE_M * 0.6]}
+						position={sparklePos}
+						size={2.5}
+						speed={0.4}
+						color="#44ddff"
+						opacity={0.7}
+					/>
+				)}
+			</>
+		);
+	}
 
 	const worldX = tileX * TILE_SIZE_M;
 	const worldZ = tileZ * TILE_SIZE_M;
@@ -74,9 +109,12 @@ function SalvageModel({
 
 type SalvageRendererProps = {
 	world: World;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
 };
 
-export function SalvageRenderer({ world }: SalvageRendererProps) {
+export function SalvageRenderer({ world, useSphere, boardWidth, boardHeight }: SalvageRendererProps) {
 	const instances = useMemo(() => {
 		const explored = buildExploredSet(world);
 		const result: Array<{
@@ -113,6 +151,9 @@ export function SalvageRenderer({ world }: SalvageRendererProps) {
 						tileX={inst.tileX}
 						tileZ={inst.tileZ}
 						hasCyanSparkle={inst.hasCyanSparkle}
+						useSphere={useSphere}
+						boardWidth={boardWidth}
+						boardHeight={boardHeight}
 					/>
 				</Suspense>
 			))}

@@ -7,7 +7,7 @@
 
 ## Is the game done?
 
-**Nearly.** All core gameplay systems are implemented and wired: economy, combat, AI GOAP, cultists with escalation, specialization tracks, tech tree, victory conditions, diplomacy, territory, save/load, audio. The remaining work is visual polish (unified depth renderer, fog gradient, storm dome tuning) and fixing 4 failing test suites.
+**Nearly.** All core gameplay systems are implemented and wired: economy, combat, AI GOAP, cultists with escalation, specialization tracks, tech tree, victory conditions, diplomacy, territory, save/load, audio. The remaining work is visual polish (unified depth renderer, fog gradient, storm dome tuning) and wiring AI track selection into runtime.
 
 ---
 
@@ -16,8 +16,8 @@
 | Metric | Value |
 |--------|-------|
 | Active `.ts`/`.tsx` files | ~338 |
-| Vitest suites | 124 (120 passing, 4 failing) |
-| Vitest tests | 2171 |
+| Vitest suites | 125 (all passing) |
+| Vitest tests | 2219 |
 | TypeScript errors | 0 |
 | Biome errors | 0 |
 | GLB models in public/ | 360 |
@@ -111,7 +111,7 @@
 | Support tracks | DONE | `src/ecs/robots/specializations/supportTracks.ts` | Field Medic + Signal Booster + War Caller |
 | Worker tracks | DONE | `src/ecs/robots/specializations/workerTracks.ts` | Deep Miner + Fabricator + Salvager |
 | Per-class actions | DONE | `src/ecs/robots/classActions.ts` | Unique action sets per class + track actions |
-| AI track selection | DONE | `src/ai/trackSelection.ts` | Per-faction track preferences |
+| AI track selection | DEFINED | `src/ai/trackSelection.ts` | Per-faction preferences — tested but not wired into aiTurnSystem runtime |
 | Garage modal | DONE | `src/ui/game/GarageModal.tsx` | Two-step fabrication UI |
 | Mark progression | DONE | `src/ecs/robots/marks.ts` | Mark I-V with specialization abilities |
 
@@ -210,7 +210,6 @@
 
 | Gap | Impact | Notes |
 |-----|--------|-------|
-| 4 failing test suites | Low | Need investigation — 2171 tests pass |
 | Unified depth renderer | Visual polish | BiomeRenderer + DepthRenderer + MinedPitRenderer should merge |
 | Fog gradient | Visual polish | Hard cutoff instead of radiating gradient |
 | Storm dome tuning | Visual polish | Hypercane + wormhole atmosphere |
@@ -222,4 +221,3 @@
 
 1. **`pending/` exclusion**: Excluded via tsconfig `exclude` + biome `ignore`. Confirmed clean.
 2. **Koota world limit**: 16 worlds max per process. Test suites use `world.destroy()` in `afterEach`.
-3. **4 failing test suites**: Need investigation — all 2171 tests pass but 4 suite-level failures.

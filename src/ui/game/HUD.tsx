@@ -249,7 +249,7 @@ export function HUD({ turn, ap, maxAp, onEndTurn, onSave, resources, productionQ
 					data-testid="ap-display"
 					style={{ fontSize: 13, letterSpacing: "0.1em" }}
 				>
-					AP {ap} / {maxAp}
+					CYC {ap} / {maxAp}
 				</span>
 			)}
 			{onSave && (

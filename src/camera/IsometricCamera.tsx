@@ -30,6 +30,7 @@ import {
 } from "react";
 import * as THREE from "three";
 import { registerCameraControls, unregisterCameraControls } from "./cameraStore";
+import { updateCutaway } from "./cutawayStore";
 import type { CameraControls } from "./types";
 
 // ── Camera constants ──────────────────────────────────────────────────────────
@@ -261,6 +262,9 @@ export function IsometricCamera({
 				ctrl.update();
 			}
 		}
+
+		// ── Cutaway dollhouse — update clipping based on zoom level ──
+		updateCutaway(camera.position.distanceTo(ctrl.target));
 
 		// ── Toroidal wrap — keep target coordinates within board bounds ──
 		// Runs unconditionally: wraps after WASD, mouse drag, or programmatic pan.

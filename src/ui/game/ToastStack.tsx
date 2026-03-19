@@ -59,7 +59,7 @@ const CATEGORY_STYLES: Record<
 	turn: {
 		border: "rgba(176, 136, 216, 0.25)",
 		bg: "rgba(16, 12, 22, 0.92)",
-		label: "Turn",
+		label: "Cycle",
 		labelColor: "#d4b0ff",
 		textColor: "#ebe0ff",
 	},
@@ -120,6 +120,7 @@ export function ToastStack() {
 				display: "flex",
 				flexDirection: "column",
 				pointerEvents: "none",
+				zIndex: 60,
 			}}
 		>
 			{toasts.map((toast) => {

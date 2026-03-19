@@ -47,13 +47,13 @@ vec3 applyPBR(vec3 albedo, vec3 N, float roughness, float metalness) {
 
   // Industrial dome — bright artificial overhead lighting
   // This is a sealed ecumenopolis with artificial sun on the dome ceiling
-  // It should feel like a well-lit industrial facility, NOT a dark cave
+  // Moderate ambient so individual texture colors remain distinct at game zoom
   vec3 skyTint    = vec3(0.92, 0.88, 0.82);
-  vec3 groundTint = vec3(0.35, 0.32, 0.28);
-  vec3 hemi = mix(groundTint, skyTint, n.y * 0.5 + 0.5) * 0.6;
+  vec3 groundTint = vec3(0.30, 0.28, 0.24);
+  vec3 hemi = mix(groundTint, skyTint, n.y * 0.5 + 0.5) * 0.5;
 
-  // Strong ambient — dome interior is bathed in reflected artificial light
-  vec3 ambient = vec3(0.55, 0.52, 0.48);
+  // Reduced ambient to preserve per-cell color contrast between atlas textures
+  vec3 ambient = vec3(0.38, 0.36, 0.34);
 
   // Specular (Blinn-Phong for perf)
   vec3 viewDir = vec3(0.0, 1.0, 0.0);

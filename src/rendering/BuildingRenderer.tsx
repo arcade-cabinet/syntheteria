@@ -13,6 +13,7 @@ import { TILE_SIZE_M } from "../board/grid";
 import { Building, type BuildingType } from "../ecs/traits/building";
 import { CultStructure, type CultStructureType } from "../ecs/traits/cult";
 import { getAllBuildingModelUrls, resolveBuildingModelUrl } from "./modelPaths";
+import { sphereModelPlacement } from "./spherePlacement";
 import { buildExploredSet, isTileExplored } from "./tileVisibility";
 
 // Preload all building + cult models
@@ -45,11 +46,17 @@ function BuildingModel({
 	tileX,
 	tileZ,
 	sparkle,
+	useSphere,
+	boardWidth,
+	boardHeight,
 }: {
 	url: string;
 	tileX: number;
 	tileZ: number;
 	sparkle: SparkleStyle;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
 }) {
 	const { scene } = useGLTF(url);
 
@@ -60,6 +67,34 @@ function BuildingModel({
 		const s = maxExtent > 0 ? (TILE_SIZE_M * 0.9) / maxExtent : 1;
 		return { scale: s, yOffset: -box.min.y * s };
 	}, [scene]);
+
+	if (useSphere && boardWidth && boardHeight) {
+		const sp = sphereModelPlacement(tileX, tileZ, boardWidth, boardHeight, yOffset);
+		const sparklePos: [number, number, number] = sphereModelPlacement(tileX, tileZ, boardWidth, boardHeight, yOffset + TILE_SIZE_M * 0.5).position;
+		return (
+			<>
+				<Clone
+					object={scene}
+					position={sp.position}
+					quaternion={sp.quaternion}
+					scale={scale}
+					castShadow
+					receiveShadow
+				/>
+				{sparkle && (
+					<Sparkles
+						count={SPARKLE_CONFIG[sparkle].count}
+						scale={[TILE_SIZE_M * 0.8, TILE_SIZE_M * 1.2, TILE_SIZE_M * 0.8]}
+						position={sparklePos}
+						size={SPARKLE_CONFIG[sparkle].size}
+						speed={SPARKLE_CONFIG[sparkle].speed}
+						color={SPARKLE_CONFIG[sparkle].color}
+						opacity={0.8}
+					/>
+				)}
+			</>
+		);
+	}
 
 	const worldX = tileX * TILE_SIZE_M;
 	const worldZ = tileZ * TILE_SIZE_M;
@@ -92,9 +127,12 @@ function BuildingModel({
 
 type BuildingRendererProps = {
 	world: World;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
 };
 
-export function BuildingRenderer({ world }: BuildingRendererProps) {
+export function BuildingRenderer({ world, useSphere, boardWidth, boardHeight }: BuildingRendererProps) {
 	const instances = useMemo(() => {
 		const explored = buildExploredSet(world);
 		const result: Array<{
@@ -147,6 +185,9 @@ export function BuildingRenderer({ world }: BuildingRendererProps) {
 						tileX={inst.tileX}
 						tileZ={inst.tileZ}
 						sparkle={inst.sparkle}
+						useSphere={useSphere}
+						boardWidth={boardWidth}
+						boardHeight={boardHeight}
 					/>
 				</Suspense>
 			))}

@@ -47,14 +47,19 @@ export interface NavGraphResult {
 	graph: Graph;
 	width: number;
 	height: number;
+	/** When true, X-axis wraps (longitude on sphere). */
+	wrapX: boolean;
 }
 
 /**
  * Build a Yuka Graph from a GeneratedBoard.
  * Each passable tile becomes a Node; each valid neighbor connection becomes an Edge
  * with cost = movementCost(destination tile).
+ *
+ * When useSphere=true, the X axis wraps (tileX=0 ↔ tileX=width-1) to support
+ * east-west traversal on the sphere's equirectangular projection.
  */
-export function buildNavGraph(board: GeneratedBoard): NavGraphResult {
+export function buildNavGraph(board: GeneratedBoard, useSphere = false): NavGraphResult {
 	const { width, height } = board.config;
 	const graph = new Graph();
 
@@ -78,8 +83,14 @@ export function buildNavGraph(board: GeneratedBoard): NavGraphResult {
 			const fromIdx = tileIndex(x, z, width);
 
 			for (const [dx, dz] of DIRECTIONS) {
-				const nx = x + dx;
+				let nx = x + dx;
 				const nz = z + dz;
+
+				// Sphere wrapping: X axis wraps around (longitude)
+				if (useSphere) {
+					nx = ((nx % width) + width) % width;
+				}
+
 				if (nx < 0 || nx >= width || nz < 0 || nz >= height) continue;
 
 				const neighbor = board.tiles[nz][nx];
@@ -92,7 +103,7 @@ export function buildNavGraph(board: GeneratedBoard): NavGraphResult {
 		}
 	}
 
-	return { graph, width, height };
+	return { graph, width, height, wrapX: useSphere };
 }
 
 /**
@@ -135,12 +146,17 @@ export function updateTileCost(
  * Custom heuristic using Manhattan distance for our grid.
  * Yuka's default uses Euclidean on node positions, but our nodes
  * don't have 3D positions — they're indexed by tile coordinates.
+ *
+ * When wrapX=true, the X-axis distance accounts for east-west wrapping
+ * (shortest path may cross the board edge on a sphere).
  */
 class ManhattanHeuristic {
 	private width: number;
+	private wrapX: boolean;
 
-	constructor(width: number) {
+	constructor(width: number, wrapX = false) {
 		this.width = width;
+		this.wrapX = wrapX;
 	}
 
 	calculate(_graph: Graph, source: number, target: number): number {
@@ -148,7 +164,12 @@ class ManhattanHeuristic {
 		const sz = Math.floor(source / this.width);
 		const tx = target % this.width;
 		const tz = Math.floor(target / this.width);
-		return Math.abs(sx - tx) + Math.abs(sz - tz);
+
+		let dx = Math.abs(sx - tx);
+		if (this.wrapX) {
+			dx = Math.min(dx, this.width - dx);
+		}
+		return dx + Math.abs(sz - tz);
 	}
 }
 
@@ -172,7 +193,7 @@ export function yukaShortestPath(
 	}
 
 	const astar = new AStar(graph, sourceIdx, targetIdx);
-	astar.heuristic = new ManhattanHeuristic(width);
+	astar.heuristic = new ManhattanHeuristic(width, navGraph.wrapX);
 	astar.search();
 
 	if (!astar.found) return [];
@@ -191,12 +212,12 @@ let _cachedBoardSeed: string | null = null;
  * Get or build the NavGraph for the given board.
  * Cached by board seed — only rebuilds when the board changes.
  */
-export function getOrBuildNavGraph(board: GeneratedBoard): NavGraphResult {
-	const key = `${board.config.seed}_${board.config.width}_${board.config.height}`;
+export function getOrBuildNavGraph(board: GeneratedBoard, useSphere = false): NavGraphResult {
+	const key = `${board.config.seed}_${board.config.width}_${board.config.height}_${useSphere}`;
 	if (_cachedNavGraph && _cachedBoardSeed === key) {
 		return _cachedNavGraph;
 	}
-	_cachedNavGraph = buildNavGraph(board);
+	_cachedNavGraph = buildNavGraph(board, useSphere);
 	_cachedBoardSeed = key;
 	return _cachedNavGraph;
 }
@@ -205,6 +226,27 @@ export function getOrBuildNavGraph(board: GeneratedBoard): NavGraphResult {
 export function clearNavGraphCache(): void {
 	_cachedNavGraph = null;
 	_cachedBoardSeed = null;
+}
+
+// ---------------------------------------------------------------------------
+// Sphere-aware Manhattan distance
+// ---------------------------------------------------------------------------
+
+/**
+ * Manhattan distance between two tiles, optionally wrapping X for sphere.
+ * When wrapX=true, the horizontal distance is min(|dx|, width - |dx|).
+ */
+export function sphereManhattan(
+	ax: number,
+	az: number,
+	bx: number,
+	bz: number,
+	width: number,
+	wrapX = false,
+): number {
+	let dx = Math.abs(ax - bx);
+	if (wrapX) dx = Math.min(dx, width - dx);
+	return dx + Math.abs(az - bz);
 }
 
 // Re-export for convenience

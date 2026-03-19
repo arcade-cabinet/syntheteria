@@ -108,7 +108,7 @@ Agents for this codebase:
 pnpm dev                 # Vite dev server (http://localhost:5173)
 pnpm dev --host          # Expose on LAN
 pnpm build               # Production build
-pnpm test:vitest         # Run all Vitest suites (~124 suites, 2171 tests)
+pnpm test:vitest         # Run all Vitest suites (~125 suites, 2219 tests)
 pnpm tsc                 # TypeScript check (pnpm tsc --noEmit)
 pnpm lint                # Biome lint + format check
 pnpm verify              # lint + tsc + test (all gates)

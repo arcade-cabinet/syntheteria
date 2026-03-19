@@ -20,6 +20,7 @@ import {
 } from "./robots/placement";
 import { placeStarterBuildings } from "./systems/buildingPlacement";
 import { revealFog } from "./systems/fogRevealSystem";
+import { runPowerGrid } from "./systems/powerSystem";
 import { placeSalvageProps } from "./systems/salvagePlacement";
 import { tileFloorProps, TileFloor } from "./terrain";
 import { Board } from "./traits/board";
@@ -102,6 +103,9 @@ export function initWorldFromBoard(world: World, board: GeneratedBoard, opts: In
 	// Robot placement
 	const flags = buildPlacementFlags(playerFactionId, activeFactionIds);
 	placeRobots(world, flags, boardInfo);
+
+	// Initial power grid — transmitters power buildings at CYCLE 1
+	runPowerGrid(world);
 
 	// Initial fog reveal — player units reveal tiles around starting positions
 	for (const entity of world.query(UnitPos, UnitFaction, UnitStats)) {

@@ -13,6 +13,7 @@ import * as THREE from "three";
 import type { GameBoardConfig } from "../createGame";
 import { EventBus } from "../eventBus";
 import { setupWorldLighting } from "../lighting/worldLighting";
+import { buildTerrainMesh } from "../renderers/terrainRenderer";
 
 export class WorldScene extends Scene3D {
 	private _camTarget = new THREE.Vector3();
@@ -168,11 +169,15 @@ export class WorldScene extends Scene3D {
 
 	// ---- Terrain ----
 
-	private buildTerrain(_config: GameBoardConfig): void {
-		// TODO: Build vertex-colored terrain mesh from board data
-		// For now, placeholder grid to verify the pipeline works
-		const gridHelper = new THREE.GridHelper(60, 30, 0x004444, 0x002222);
-		this.third.scene.add(gridHelper);
+	private buildTerrain(config: GameBoardConfig): void {
+		const terrainGroup = buildTerrainMesh(config.board);
+		this.third.scene.add(terrainGroup);
+
+		// Center camera on board
+		const { width, height } = config.boardConfig;
+		const centerX = (width * 2) / 2; // TILE_SIZE = 2
+		const centerZ = (height * 2) / 2;
+		this._camTarget.set(centerX, 0, centerZ);
 	}
 
 	// ---- Update Loop ----

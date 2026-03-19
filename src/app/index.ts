@@ -1,8 +1,11 @@
 /**
  * @package app
  *
- * App shell — session lifecycle, debug bridge, and HUD data readers.
+ * App shell — React root, session lifecycle, debug bridge, HUD data, keyboard shortcuts.
  */
+
+// --- App root ---
+export { App } from "./App";
 
 // --- Session lifecycle ---
 export { createNewGame, loadGame, saveGame } from "./session";
@@ -13,6 +16,16 @@ export type { DebugBridge, DebugBridgeContext } from "./debug";
 
 // --- HUD data readers ---
 export { readPlayerAp, getProductionQueue, getCurrentResearchForHUD } from "./hudData";
+
+// --- HMR ---
+export { hmrState } from "./hmrState";
+export type { HmrState } from "./hmrState";
+
+// --- Keyboard ---
+export { useKeyboardShortcuts } from "./useKeyboardShortcuts";
+
+// --- UI components ---
+export { CommandBar } from "./CommandBar";
 
 // --- Types ---
 export type { Phase, GameSession } from "./types";

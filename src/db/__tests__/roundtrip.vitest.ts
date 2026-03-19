@@ -8,16 +8,16 @@
 
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Building } from "../../ecs/traits/building";
-import { Faction } from "../../ecs/traits/faction";
-import { ResourcePool } from "../../ecs/traits/resource";
-import { Tile, TileHighlight } from "../../ecs/traits/tile";
+import { Building } from "../../traits/building";
+import { Faction } from "../../traits/faction";
+import { ResourcePool } from "../../traits/resource";
+import { Tile, TileHighlight } from "../../traits/tile";
 import {
 	UnitFaction,
 	UnitPos,
 	UnitStats,
 	UnitVisual,
-} from "../../ecs/traits/unit";
+} from "../../traits/unit";
 import type { SqliteAdapter } from "../adapter";
 import { createSqlJsAdapter } from "../adapter";
 import { GameRepo } from "../gameRepo";

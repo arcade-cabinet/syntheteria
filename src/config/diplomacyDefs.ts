@@ -2,7 +2,7 @@
  * Diplomacy configuration — standings, standing changes, trade parameters.
  *
  * Converted from pending/config/diplomacy.json to TypeScript const objects.
- * Enriches the relations system (src/ecs/factions/relations.ts) with
+ * Enriches the relations system (src/factions/relations.ts) with
  * numeric standings that determine ally/neutral/hostile thresholds.
  *
  * Standing score ranges from -100 (blood enemies) to +100 (best allies).

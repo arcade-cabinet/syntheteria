@@ -6,7 +6,7 @@
  * These define HOW each AI faction behaves: their strategic biases
  * (build vs expand vs harvest vs scout), starting unit count, and
  * expansion limits. Visual identity (color, persona) lives in
- * src/ecs/factions/definitions.ts — this file is purely AI behavior.
+ * src/factions/definitions.ts — this file is purely AI behavior.
  */
 
 // ─── Types ──────────────────────────────────────────────────────────────────

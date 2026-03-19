@@ -15,27 +15,27 @@
 import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
 import type { GeneratedBoard } from "../board/types";
-import { BUILDING_DEFS } from "../ecs/buildings/definitions";
-import { getRelation } from "../ecs/factions/relations";
-import { TRACK_REGISTRY } from "../ecs/robots/specializations/trackRegistry";
-import type { RobotClass } from "../ecs/robots/types";
-import { queueFabrication } from "../ecs/systems/fabricationSystem";
-import { getPopCap, getPopulation } from "../ecs/systems/populationSystem";
+import { BUILDING_DEFS } from "../buildings/definitions";
+import { getRelation } from "../factions/relations";
+import { TRACK_REGISTRY } from "../robots/specializations/trackRegistry";
+import type { RobotClass } from "../robots/types";
+import { queueFabrication } from "../systems/fabricationSystem";
+import { getPopCap, getPopulation } from "../systems/populationSystem";
 import {
 	countResearchLabs,
 	getAvailableTechs,
 	getResearchState,
 	queueResearch,
-} from "../ecs/systems/researchSystem";
-import { canAfford, spendResources } from "../ecs/systems/resourceSystem";
+} from "../systems/researchSystem";
+import { canAfford, spendResources } from "../systems/resourceSystem";
 import {
 	FUSION_RECIPES,
 	SynthesisQueue,
 	queueSynthesis,
-} from "../ecs/systems/synthesisSystem";
-import { TileFloor } from "../ecs/terrain/traits";
-import type { ResourceMaterial } from "../ecs/terrain/types";
-import { Board } from "../ecs/traits/board";
+} from "../systems/synthesisSystem";
+import { TileFloor } from "../terrain/traits";
+import type { ResourceMaterial } from "../terrain/types";
+import { Board } from "../traits/board";
 import {
 	BotFabricator,
 	Building,
@@ -43,10 +43,10 @@ import {
 	Powered,
 	PowerGrid,
 	StorageCapacity,
-} from "../ecs/traits/building";
-import { Faction } from "../ecs/traits/faction";
-import { ResourceDeposit, ResourcePool } from "../ecs/traits/resource";
-import { Tile } from "../ecs/traits/tile";
+} from "../traits/building";
+import { Faction } from "../traits/faction";
+import { ResourceDeposit, ResourcePool } from "../traits/resource";
+import { Tile } from "../traits/tile";
 import {
 	UnitAttack,
 	UnitFaction,
@@ -55,7 +55,7 @@ import {
 	UnitMove,
 	UnitPos,
 	UnitStats,
-} from "../ecs/traits/unit";
+} from "../traits/unit";
 import type { Difficulty } from "../world/config";
 import type { AgentSnapshot } from "./agents/SyntheteriaAgent";
 import { assessSituationFuzzy } from "./fuzzy/situationModule";

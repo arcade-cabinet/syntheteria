@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { FLOOR_INDEX_MAP } from "../../ecs/terrain/types";
+import { FLOOR_INDEX_MAP } from "../../terrain/types";
 import { boardToDepthLayers, createDepthLayerStack } from "../depthLayerStack";
 import {
 	buildLayerGeometry,

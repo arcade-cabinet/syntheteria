@@ -22,21 +22,21 @@ import {
 	cancelBuildPlacement,
 	confirmBuildPlacement,
 	isInBuildPlacementMode,
-} from "../ecs/systems/buildSystem";
+} from "../systems/buildSystem";
 import {
 	clearHighlights,
 	highlightPlacementTile,
 	highlightReachableTiles,
-} from "../ecs/systems/highlightSystem";
-import { Building } from "../ecs/traits/building";
-import { ResourceDeposit } from "../ecs/traits/resource";
+} from "../systems/highlightSystem";
+import { Building } from "../traits/building";
+import { ResourceDeposit } from "../traits/resource";
 import {
 	UnitAttack,
 	UnitFaction,
 	UnitMove,
 	UnitPos,
 	UnitStats,
-} from "../ecs/traits/unit";
+} from "../traits/unit";
 import { spherePosToTile, sphereRadius } from "../rendering/boardGeometry";
 import { clearPreviewPath, setPreviewPath } from "../rendering/PathRenderer";
 import {

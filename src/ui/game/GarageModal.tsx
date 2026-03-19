@@ -13,15 +13,15 @@ import { useMemo, useState } from "react";
 import {
 	getTracksForClass,
 	type TrackEntry,
-} from "../../ecs/robots/specializations/trackRegistry";
-import type { RobotClass } from "../../ecs/robots/types";
+} from "../../robots/specializations/trackRegistry";
+import type { RobotClass } from "../../robots/types";
 import {
 	type QueueResult,
 	queueFabrication,
 	ROBOT_COSTS,
-} from "../../ecs/systems/fabricationSystem";
-import { isTechResearched } from "../../ecs/systems/researchSystem";
-import { BotFabricator, Building, Powered } from "../../ecs/traits/building";
+} from "../../systems/fabricationSystem";
+import { isTechResearched } from "../../systems/researchSystem";
+import { BotFabricator, Building, Powered } from "../../traits/building";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 

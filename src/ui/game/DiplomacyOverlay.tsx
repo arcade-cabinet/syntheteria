@@ -11,8 +11,8 @@
 import type { World } from "koota";
 import { useEffect, useMemo, useState } from "react";
 import { FACTION_COLORS_CSS } from "../../config/gameDefaults";
-import { FACTION_DEFINITIONS } from "../../ecs/factions/definitions";
-import { getRelation, type RelationType } from "../../ecs/factions/relations";
+import { FACTION_DEFINITIONS } from "../../factions/definitions";
+import { getRelation, type RelationType } from "../../factions/relations";
 import {
 	type DiplomacyEvent,
 	declareWar,
@@ -21,8 +21,8 @@ import {
 	getStandingDisplay,
 	proposeAlliance,
 	subscribeDiplomacy,
-} from "../../ecs/systems/diplomacySystem";
-import { Board } from "../../ecs/traits/board";
+} from "../../systems/diplomacySystem";
+import { Board } from "../../traits/board";
 
 type DiplomacyOverlayProps = {
 	world: World;

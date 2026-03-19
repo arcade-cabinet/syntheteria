@@ -35,57 +35,57 @@ import {
 	serializeUnits,
 } from "./db/serialize";
 import type { GameSummary } from "./db/types";
-import { BUILDING_DEFS } from "./ecs/buildings/definitions";
-import { FACTION_DEFINITIONS } from "./ecs/factions/definitions";
-import { initWorldFromBoard } from "./ecs/init";
-import { getSpawnCenters } from "./ecs/robots/placement";
-import { seedToPhrase } from "./ecs/seed";
+import { BUILDING_DEFS } from "./buildings/definitions";
+import { FACTION_DEFINITIONS } from "./factions/definitions";
+import { initWorldFromBoard } from "./init-world";
+import { getSpawnCenters } from "./robots/placement";
+import { seedToPhrase } from "./seed";
 import {
 	collectCampaignStats,
 	collectFactionResources,
 	collectTurnSnapshot,
-} from "./ecs/systems/analyticsCollector";
+} from "./systems/analyticsCollector";
 import {
 	getCombatKills,
 	rehydrateCampaignStats,
 	resetCampaignStats,
-} from "./ecs/systems/campaignStats";
-import { FabricationJob, ROBOT_COSTS } from "./ecs/systems/fabricationSystem";
-import { getPopCap, getPopulation } from "./ecs/systems/populationSystem";
-import { getResearchState } from "./ecs/systems/researchSystem";
-import { resetResourceDeltas } from "./ecs/systems/resourceDeltaSystem";
-import { getPlayerResources } from "./ecs/systems/resourceSystem";
-import { FUSION_RECIPES, SynthesisQueue } from "./ecs/systems/synthesisSystem";
-import { computeTerritory } from "./ecs/systems/territorySystem";
-import { pushToast } from "./ecs/systems/toastNotifications";
+} from "./systems/campaignStats";
+import { FabricationJob, ROBOT_COSTS } from "./systems/fabricationSystem";
+import { getPopCap, getPopulation } from "./systems/populationSystem";
+import { getResearchState } from "./systems/researchSystem";
+import { resetResourceDeltas } from "./systems/resourceDeltaSystem";
+import { getPlayerResources } from "./systems/resourceSystem";
+import { FUSION_RECIPES, SynthesisQueue } from "./systems/synthesisSystem";
+import { computeTerritory } from "./systems/territorySystem";
+import { pushToast } from "./systems/toastNotifications";
 import {
 	getCompletedTurnLogs,
 	rehydrateTurnEventLog,
 	resetTurnEventLog,
-} from "./ecs/systems/turnEventLog";
+} from "./systems/turnEventLog";
 import {
 	collectTurnSummary,
 	resetTurnSummary,
-} from "./ecs/systems/turnSummary";
+} from "./systems/turnSummary";
 import {
 	advanceTurn,
 	getCurrentTurn,
 	getGameOutcome,
-} from "./ecs/systems/turnSystem";
-import { _resetTutorial } from "./ecs/systems/tutorialSystem";
-import type { GameOutcome } from "./ecs/systems/victorySystem";
-import { _resetVictory, getVictoryProgress } from "./ecs/systems/victorySystem";
-import { Building } from "./ecs/traits/building";
-import { Faction } from "./ecs/traits/faction";
-import { ResourcePool } from "./ecs/traits/resource";
+} from "./systems/turnSystem";
+import { _resetTutorial } from "./systems/tutorialSystem";
+import type { GameOutcome } from "./systems/victorySystem";
+import { _resetVictory, getVictoryProgress } from "./systems/victorySystem";
+import { Building } from "./traits/building";
+import { Faction } from "./traits/faction";
+import { ResourcePool } from "./traits/resource";
 import {
 	UnitFaction,
 	UnitMove,
 	UnitPos,
 	UnitStats,
 	UnitVisual,
-} from "./ecs/traits/unit";
-import type { WorldType } from "./ecs/world";
+} from "./traits/unit";
+import type { WorldType } from "./create-world";
 import { randomUUID } from "./lib/uuid";
 import { setPlayerFactionColor } from "./rendering/modelPaths";
 import { Globe, type GlobePhase } from "./ui/Globe";

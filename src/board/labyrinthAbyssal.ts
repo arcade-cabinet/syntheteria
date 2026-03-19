@@ -22,7 +22,7 @@
  */
 
 import { TILE_SIZE_M } from "../config/gameDefaults";
-import { geographyValue, seedToFloat } from "../ecs/terrain/cluster";
+import { geographyValue, seedToFloat } from "../terrain/cluster";
 import { seededRng } from "./noise";
 import type { Elevation, TileData } from "./types";
 

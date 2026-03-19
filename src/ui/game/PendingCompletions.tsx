@@ -9,13 +9,13 @@
 
 import type { World } from "koota";
 import { TECH_BY_ID } from "../../config/techTreeDefs";
-import { FabricationJob } from "../../ecs/systems/fabricationSystem";
-import { getResearchState } from "../../ecs/systems/researchSystem";
+import { FabricationJob } from "../../systems/fabricationSystem";
+import { getResearchState } from "../../systems/researchSystem";
 import {
 	FUSION_RECIPES,
 	SynthesisQueue,
-} from "../../ecs/systems/synthesisSystem";
-import { Building } from "../../ecs/traits/building";
+} from "../../systems/synthesisSystem";
+import { Building } from "../../traits/building";
 
 export interface PendingItem {
 	label: string;

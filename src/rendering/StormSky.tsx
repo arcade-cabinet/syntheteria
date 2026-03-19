@@ -30,7 +30,7 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { WORMHOLE_PROJECT_TURNS } from "../config/gameDefaults";
 import { STORM_VISUAL_PARAMS, WORMHOLE_CYCLE } from "../config/weatherDefs";
-import { getWormholeProjectState } from "../ecs/systems/wormholeProject";
+import { getWormholeProjectState } from "../systems/wormholeProject";
 import { STORM_PROFILE_SPECS, type StormProfile } from "../world/config";
 
 // ---------------------------------------------------------------------------

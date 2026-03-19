@@ -16,7 +16,7 @@ import type { World } from "koota";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
-import { CultStructure } from "../ecs/traits/cult";
+import { CultStructure } from "../traits/cult";
 import { sphereModelPlacement } from "./spherePlacement";
 
 // ---------------------------------------------------------------------------

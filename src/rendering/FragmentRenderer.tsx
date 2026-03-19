@@ -17,7 +17,7 @@ import {
 	getPlacedFragments,
 	type PlacedFragment,
 	subscribeMemoryFragments,
-} from "../ecs/systems/memoryFragments";
+} from "../systems/memoryFragments";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

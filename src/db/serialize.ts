@@ -6,29 +6,29 @@
  */
 
 import type { World } from "koota";
-import { SUPPORT_DEFAULTS } from "../ecs/robots/BuilderBot";
-import { CAVALRY_DEFAULTS } from "../ecs/robots/CavalryBot";
+import { SUPPORT_DEFAULTS } from "../robots/BuilderBot";
+import { CAVALRY_DEFAULTS } from "../robots/CavalryBot";
 import {
 	CULT_CAVALRY_DEFAULTS,
 	CULT_INFANTRY_DEFAULTS,
 	CULT_RANGED_DEFAULTS,
-} from "../ecs/robots/CultMechs";
-import { RANGED_DEFAULTS } from "../ecs/robots/GuardBot";
-import { WORKER_DEFAULTS } from "../ecs/robots/HarvesterBot";
-import { SCOUT_DEFAULTS } from "../ecs/robots/ScoutBot";
-import { INFANTRY_DEFAULTS } from "../ecs/robots/SentinelBot";
-import { Board } from "../ecs/traits/board";
-import { Building } from "../ecs/traits/building";
-import { Faction } from "../ecs/traits/faction";
-import { ResourcePool } from "../ecs/traits/resource";
-import { Tile } from "../ecs/traits/tile";
+} from "../robots/CultMechs";
+import { RANGED_DEFAULTS } from "../robots/GuardBot";
+import { WORKER_DEFAULTS } from "../robots/HarvesterBot";
+import { SCOUT_DEFAULTS } from "../robots/ScoutBot";
+import { INFANTRY_DEFAULTS } from "../robots/SentinelBot";
+import { Board } from "../traits/board";
+import { Building } from "../traits/building";
+import { Faction } from "../traits/faction";
+import { ResourcePool } from "../traits/resource";
+import { Tile } from "../traits/tile";
 import {
 	UnitFaction,
 	UnitPos,
 	UnitSpecialization,
 	UnitStats,
 	UnitVisual,
-} from "../ecs/traits/unit";
+} from "../traits/unit";
 import type {
 	BuildingRecord,
 	ExploredRecord,

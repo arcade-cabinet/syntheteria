@@ -11,8 +11,8 @@
 
 import { createWorld } from "koota";
 import { describe, expect, it } from "vitest";
-import { placeSalvageProps } from "../../ecs/systems/salvagePlacement";
-import { isPassableFloor } from "../../ecs/terrain/types";
+import { placeSalvageProps } from "../../systems/salvagePlacement";
+import { isPassableFloor } from "../../terrain/types";
 import { SEGS } from "../../rendering/boardGeometry";
 import {
 	getColumnPositions,

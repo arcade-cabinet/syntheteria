@@ -31,7 +31,7 @@ import {
 import * as THREE from "three";
 import type { BoardConfig, GeneratedBoard } from "../board/types";
 import { SphereOrbitCamera } from "../camera";
-import { resolveAttacks } from "../ecs/systems/attackSystem";
+import { resolveAttacks } from "../systems/attackSystem";
 import { BoardInput } from "../input/BoardInput";
 import { BiomeRenderer } from "../rendering/BiomeRenderer";
 import { BuildingRenderer } from "../rendering/BuildingRenderer";

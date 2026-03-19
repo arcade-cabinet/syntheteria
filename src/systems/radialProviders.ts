@@ -25,36 +25,36 @@ import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
 import { createGridApi } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
-import { BUILDING_DEFS } from "../ecs/buildings/definitions";
-import { getRelation } from "../ecs/factions/relations";
-import { hasClassAction } from "../ecs/robots/classActions";
-import type { BotMark } from "../ecs/robots/marks";
-import { MARK_DEFS } from "../ecs/robots/marks";
-import type { RobotClass } from "../ecs/robots/types";
-import { startBuildPlacement } from "../ecs/systems/buildSystem";
+import { BUILDING_DEFS } from "../buildings/definitions";
+import { getRelation } from "../factions/relations";
+import { hasClassAction } from "../robots/classActions";
+import type { BotMark } from "../robots/marks";
+import { MARK_DEFS } from "../robots/marks";
+import type { RobotClass } from "../robots/types";
+import { startBuildPlacement } from "../systems/buildSystem";
 import {
 	declareWar,
 	getDiplomacyPersonality,
 	proposeAlliance,
-} from "../ecs/systems/diplomacySystem";
+} from "../systems/diplomacySystem";
 import {
 	queueFabrication,
 	ROBOT_COSTS,
-} from "../ecs/systems/fabricationSystem";
-import { startHarvest } from "../ecs/systems/harvestSystem";
-import { clearHighlights } from "../ecs/systems/highlightSystem";
-import { canSpawnUnit } from "../ecs/systems/populationSystem";
-import { canAfford } from "../ecs/systems/resourceSystem";
+} from "../systems/fabricationSystem";
+import { startHarvest } from "../systems/harvestSystem";
+import { clearHighlights } from "../systems/highlightSystem";
+import { canSpawnUnit } from "../systems/populationSystem";
+import { canAfford } from "../systems/resourceSystem";
 import {
 	FUSION_RECIPES,
 	queueSynthesis,
 	SynthesisQueue,
-} from "../ecs/systems/synthesisSystem";
-import { applyMark, getMaxTier, hasMark } from "../ecs/systems/upgradeSystem";
-import { Board } from "../ecs/traits/board";
-import type { BuildingType } from "../ecs/traits/building";
-import { BotFabricator, Building, Powered } from "../ecs/traits/building";
-import { ResourceDeposit } from "../ecs/traits/resource";
+} from "../systems/synthesisSystem";
+import { applyMark, getMaxTier, hasMark } from "../systems/upgradeSystem";
+import { Board } from "../traits/board";
+import type { BuildingType } from "../traits/building";
+import { BotFabricator, Building, Powered } from "../traits/building";
+import { ResourceDeposit } from "../traits/resource";
 import {
 	UnitAttack,
 	UnitFaction,
@@ -62,7 +62,7 @@ import {
 	UnitPos,
 	UnitStats,
 	UnitUpgrade,
-} from "../ecs/traits/unit";
+} from "../traits/unit";
 import type { RadialOpenContext } from "./radialMenu";
 import { registerRadialProvider } from "./radialMenu";
 

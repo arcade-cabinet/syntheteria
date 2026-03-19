@@ -14,24 +14,24 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { BUILDING_DEFS } from "../../ecs/buildings/definitions";
-import { Faction } from "../../ecs/traits/faction";
-import { ResourcePool } from "../../ecs/traits/resource";
+import { BUILDING_DEFS } from "../../buildings/definitions";
+import { Faction } from "../../traits/faction";
+import { ResourcePool } from "../../traits/resource";
 import {
 	BotFabricator,
 	Building,
 	type BuildingType,
 	Powered,
 	PowerGrid,
-} from "../../ecs/traits/building";
-import { Board } from "../../ecs/traits/board";
+} from "../../traits/building";
+import { Board } from "../../traits/board";
 import {
 	UnitFaction,
 	UnitPos,
 	UnitStats,
-} from "../../ecs/traits/unit";
-import { FabricationJob, queueFabrication, ROBOT_COSTS } from "../../ecs/systems/fabricationSystem";
-import { runPowerGrid } from "../../ecs/systems/powerSystem";
+} from "../../traits/unit";
+import { FabricationJob, queueFabrication, ROBOT_COSTS } from "../../systems/fabricationSystem";
+import { runPowerGrid } from "../../systems/powerSystem";
 import { resetAIRuntime, runYukaAiTurns } from "../yukaAiTurnSystem";
 
 // ---------------------------------------------------------------------------
@@ -290,8 +290,8 @@ describe("AI fabrication chain", () => {
 	});
 
 	it("starter buildings include a motor_pool for each faction", async () => {
-		const { placeStarterBuildings } = await import("../../ecs/systems/buildingPlacement");
-		const { computeSpawnCenters } = await import("../../ecs/robots/placement");
+		const { placeStarterBuildings } = await import("../../systems/buildingPlacement");
+		const { computeSpawnCenters } = await import("../../robots/placement");
 
 		const board = makeBoard(32, 32);
 

@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { FACTION_DEFINITIONS } from "../../ecs/factions/definitions";
+import { FACTION_DEFINITIONS } from "../../factions/definitions";
 import { generateLabyrinth, generateRooms, type Room } from "../labyrinth";
 import type { BoardConfig, TileData } from "../types";
 

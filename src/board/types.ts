@@ -1,4 +1,4 @@
-import type { FloorType, ResourceMaterial } from "../ecs/terrain/types";
+import type { FloorType, ResourceMaterial } from "../terrain/types";
 import type { ClimateProfile } from "../world/config";
 
 export type { FloorType, ResourceMaterial };

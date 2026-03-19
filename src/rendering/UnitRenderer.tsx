@@ -26,7 +26,7 @@ import {
 	UnitStats,
 	UnitVisual,
 	UnitXP,
-} from "../ecs/traits/unit";
+} from "../traits/unit";
 import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import {
 	FACTION_COLORS,

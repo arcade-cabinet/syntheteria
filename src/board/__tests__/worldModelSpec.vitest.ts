@@ -16,14 +16,14 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { SALVAGE_DEFS } from "../../ecs/resources/salvageTypes";
+import { SALVAGE_DEFS } from "../../resources/salvageTypes";
 import {
 	FLOOR_DEFS,
 	type FloorType,
 	isPassableFloor,
 	type ResourceMaterial,
-} from "../../ecs/terrain/types";
-import type { SalvageType } from "../../ecs/traits/salvage";
+} from "../../terrain/types";
+import type { SalvageType } from "../../traits/salvage";
 import { SECTOR_SCALE_SPECS } from "../../world/config";
 import { isPassableFor, movementCost } from "../adjacency";
 import { generateDepthLayer } from "../depth";

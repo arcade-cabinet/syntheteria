@@ -20,7 +20,7 @@ import { type ReactNode, Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
-import { seedToFloat } from "../ecs/terrain/cluster";
+import { seedToFloat } from "../terrain/cluster";
 import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import {
 	getAllStructureModelUrls,

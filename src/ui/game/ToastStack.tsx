@@ -22,7 +22,7 @@ import {
 	getVisibleToasts,
 	subscribeToasts,
 	type ToastCategory,
-} from "../../ecs/systems/toastNotifications";
+} from "../../systems/toastNotifications";
 import { AlertIcon, BoltIcon, HammerIcon, MapIcon, WrenchIcon } from "../icons";
 
 const CATEGORY_STYLES: Record<

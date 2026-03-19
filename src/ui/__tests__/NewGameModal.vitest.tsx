@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { phraseToSeed } from "../../ecs/seed";
+import { phraseToSeed } from "../../seed";
 import { SECTOR_SCALE_SPECS } from "../../world/config";
 import { NewGameModal } from "../landing/NewGameModal";
 

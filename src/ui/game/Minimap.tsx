@@ -12,11 +12,11 @@ import { TILE_SIZE_M } from "../../board/grid";
 import type { GeneratedBoard } from "../../board/types";
 import { getCameraControls } from "../../camera/cameraStore";
 import { FACTION_COLORS } from "../../config/gameDefaults";
-import { getRelation } from "../../ecs/factions/relations";
-import { computeTerritory } from "../../ecs/systems/territorySystem";
-import { Building } from "../../ecs/traits/building";
-import { Tile } from "../../ecs/traits/tile";
-import { UnitFaction, UnitPos } from "../../ecs/traits/unit";
+import { getRelation } from "../../factions/relations";
+import { computeTerritory } from "../../systems/territorySystem";
+import { Building } from "../../traits/building";
+import { Tile } from "../../traits/tile";
+import { UnitFaction, UnitPos } from "../../traits/unit";
 
 const SIZE = 150;
 

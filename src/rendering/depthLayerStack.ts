@@ -10,7 +10,7 @@
  */
 
 import type { GeneratedBoard } from "../board/types";
-import { FLOOR_INDEX_MAP } from "../ecs/terrain/types";
+import { FLOOR_INDEX_MAP } from "../terrain/types";
 import {
 	createDepthMappedLayer,
 	type DepthMappedLayer,

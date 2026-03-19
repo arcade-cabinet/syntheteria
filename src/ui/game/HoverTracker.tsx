@@ -10,20 +10,20 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { createGridApi } from "../../board/grid";
 import type { GeneratedBoard } from "../../board/types";
-import { BUILDING_DEFS } from "../../ecs/buildings/definitions";
-import { SALVAGE_DEFS } from "../../ecs/resources/salvageTypes";
-import { computeTerritory } from "../../ecs/systems/territorySystem";
-import { FLOOR_DEFS, type FloorType } from "../../ecs/terrain/types";
-import { Building, Powered } from "../../ecs/traits/building";
-import { ResourceDeposit } from "../../ecs/traits/resource";
-import { SalvageProp } from "../../ecs/traits/salvage";
-import { Tile } from "../../ecs/traits/tile";
+import { BUILDING_DEFS } from "../../buildings/definitions";
+import { SALVAGE_DEFS } from "../../resources/salvageTypes";
+import { computeTerritory } from "../../systems/territorySystem";
+import { FLOOR_DEFS, type FloorType } from "../../terrain/types";
+import { Building, Powered } from "../../traits/building";
+import { ResourceDeposit } from "../../traits/resource";
+import { SalvageProp } from "../../traits/salvage";
+import { Tile } from "../../traits/tile";
 import {
 	UnitFaction,
 	UnitPos,
 	UnitStats,
 	UnitVisual,
-} from "../../ecs/traits/unit";
+} from "../../traits/unit";
 import {
 	clearHoverState,
 	type HoverBuildingInfo,

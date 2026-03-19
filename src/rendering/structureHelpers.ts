@@ -9,7 +9,7 @@
 
 import { TILE_SIZE_M } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
-import { seedToFloat } from "../ecs/terrain/cluster";
+import { seedToFloat } from "../terrain/cluster";
 import { isTileExplored } from "./tileVisibility";
 
 // ---------------------------------------------------------------------------

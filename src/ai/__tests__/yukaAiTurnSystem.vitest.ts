@@ -1,8 +1,8 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { Board } from "../../ecs/traits/board";
-import { ResourceDeposit } from "../../ecs/traits/resource";
+import { Board } from "../../traits/board";
+import { ResourceDeposit } from "../../traits/resource";
 import {
 	UnitAttack,
 	UnitFaction,
@@ -10,7 +10,7 @@ import {
 	UnitMove,
 	UnitPos,
 	UnitStats,
-} from "../../ecs/traits/unit";
+} from "../../traits/unit";
 import type { Difficulty, StormProfile } from "../../world/config";
 import {
 	getAIRuntime,

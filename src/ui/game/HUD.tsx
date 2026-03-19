@@ -14,7 +14,7 @@ import {
 	VICTORY_RESEARCH_POINTS,
 	VICTORY_SURVIVAL_TURNS,
 } from "../../config/gameDefaults";
-import type { VictoryProgress } from "../../ecs/systems/victorySystem";
+import type { VictoryProgress } from "../../systems/victorySystem";
 
 export interface ProductionQueueItem {
 	building: string;

@@ -13,7 +13,7 @@ import type { World } from "koota";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import type { GeneratedBoard } from "../board/types";
-import { UnitFaction, UnitPos, UnitStats } from "../ecs/traits/unit";
+import { UnitFaction, UnitPos, UnitStats } from "../traits/unit";
 import { buildSphereGeometry } from "./boardGeometry";
 import SPHERE_FRAG from "./glsl/fogOfWarSphereFrag.glsl";
 import SPHERE_VERT from "./glsl/fogOfWarSphereVert.glsl";

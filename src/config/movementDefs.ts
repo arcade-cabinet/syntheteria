@@ -13,7 +13,7 @@
  * Example: Scout (2 × 3 = 6 cells), Infantry (1 × 2 = 2 cells).
  */
 
-import type { RobotClass } from "../ecs/robots/types";
+import type { RobotClass } from "../robots/types";
 
 export interface MovementProfile {
 	/** How many separate move commands per turn. */

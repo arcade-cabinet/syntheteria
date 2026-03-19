@@ -17,8 +17,8 @@ import {
 	declareWar,
 	getStandingLevel,
 	getDiplomacyPersonality,
-} from "../../ecs/systems/diplomacySystem";
-import { getRelation } from "../../ecs/factions/relations";
+} from "../../systems/diplomacySystem";
+import { getRelation } from "../../factions/relations";
 
 // ---------------------------------------------------------------------------
 // Types

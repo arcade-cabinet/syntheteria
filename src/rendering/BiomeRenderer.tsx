@@ -4,7 +4,7 @@
  *
  * Uses the same sphere geometry as BoardRenderer but a different
  * ShaderMaterial — the procedural floor shader from
- * src/ecs/terrain/floorShader.ts with alpha blending enabled.
+ * src/terrain/floorShader.ts with alpha blending enabled.
  */
 
 import { useThree } from "@react-three/fiber";
@@ -15,7 +15,7 @@ import type { GeneratedBoard } from "../board/types";
 import {
 	makeFloorShaderMaterial,
 	updateFloorShaderChronometry,
-} from "../ecs/terrain/floorShader";
+} from "../terrain/floorShader";
 import { buildSphereGeometry } from "./boardGeometry";
 
 type BiomeRendererProps = {

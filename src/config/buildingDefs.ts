@@ -8,11 +8,11 @@
  * and default components. The building placement system reads these
  * to configure the ECS traits when a building is placed.
  *
- * Note: BuildingType is defined in src/ecs/traits/building.ts.
+ * Note: BuildingType is defined in src/traits/building.ts.
  * This file provides the DATA for each type, not the trait definitions.
  */
 
-import type { BuildingType } from "../ecs/traits/building";
+import type { BuildingType } from "../traits/building";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 

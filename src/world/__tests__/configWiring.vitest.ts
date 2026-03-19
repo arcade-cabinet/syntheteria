@@ -2,23 +2,23 @@ import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import { generateBoard } from "../../board/generator";
 import type { BoardConfig, GeneratedBoard, TileData } from "../../board/types";
-import { initFactions } from "../../ecs/factions/init";
-import { runAiTurns } from "../../ecs/systems/aiTurnSystem";
+import { initFactions } from "../../factions/init";
+import { runAiTurns } from "../../systems/aiTurnSystem";
 import {
 	_reset,
 	checkCultistSpawn,
 	getStormCultistParams,
-} from "../../ecs/systems/cultistSystem";
-import { floorTypeForTile } from "../../ecs/terrain/cluster";
-import { Board } from "../../ecs/traits/board";
-import { Faction } from "../../ecs/traits/faction";
-import { ResourcePool } from "../../ecs/traits/resource";
+} from "../../systems/cultistSystem";
+import { floorTypeForTile } from "../../terrain/cluster";
+import { Board } from "../../traits/board";
+import { Faction } from "../../traits/faction";
+import { ResourcePool } from "../../traits/resource";
 import {
 	UnitAttack,
 	UnitFaction,
 	UnitPos,
 	UnitStats,
-} from "../../ecs/traits/unit";
+} from "../../traits/unit";
 import type { ClimateProfile, Difficulty, StormProfile } from "../config";
 import { CLIMATE_PROFILE_SPECS } from "../config";
 

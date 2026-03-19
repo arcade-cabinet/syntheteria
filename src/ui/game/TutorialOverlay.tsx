@@ -18,7 +18,7 @@ import {
 	getTutorialState,
 	skipTutorial,
 	subscribeTutorial,
-} from "../../ecs/systems/tutorialSystem";
+} from "../../systems/tutorialSystem";
 
 export function TutorialOverlay({ turn }: { turn: number }) {
 	const state = useSyncExternalStore(subscribeTutorial, getTutorialState);

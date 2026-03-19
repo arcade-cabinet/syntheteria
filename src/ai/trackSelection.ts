@@ -6,7 +6,7 @@
  * preferred track per robot class, with fallbacks.
  */
 
-import type { RobotClass } from "../ecs/robots/types";
+import type { RobotClass } from "../robots/types";
 
 // ─── Faction Track Preferences ──────────────────────────────────────────────
 

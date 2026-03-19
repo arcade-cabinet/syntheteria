@@ -11,8 +11,8 @@
  */
 
 import { useRef, useState } from "react";
-import { FACTION_DEFINITIONS } from "../../ecs/factions/definitions";
-import { phraseToSeed, randomSeed, seedToPhrase } from "../../ecs/seed";
+import { FACTION_DEFINITIONS } from "../../factions/definitions";
+import { phraseToSeed, randomSeed, seedToPhrase } from "../../seed";
 import {
 	CLIMATE_PROFILE_SPECS,
 	type ClimateProfile,

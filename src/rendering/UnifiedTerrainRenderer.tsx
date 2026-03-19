@@ -16,8 +16,8 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { ELEVATION_STEP_M, TILE_SIZE_M } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
-import { TileFloor } from "../ecs/terrain/traits";
-import { Tile } from "../ecs/traits/tile";
+import { TileFloor } from "../terrain/traits";
+import { Tile } from "../traits/tile";
 import { boardToDepthLayers } from "./depthLayerStack";
 import {
 	applyTargetedDig,

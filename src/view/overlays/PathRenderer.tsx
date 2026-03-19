@@ -13,8 +13,8 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board/grid";
-import { ELEVATION_STEP_M } from "../../config/gameDefaults";
+import { TILE_SIZE_M } from "../../board";
+import { ELEVATION_STEP_M } from "../../config";
 
 // ---------------------------------------------------------------------------
 // Path state store (module-level, same pattern as hoverState)

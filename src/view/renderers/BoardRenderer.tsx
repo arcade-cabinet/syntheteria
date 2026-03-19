@@ -23,10 +23,10 @@
 import { useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board/grid";
-import type { GeneratedBoard } from "../../board/types";
-import { buildSphereGeometry } from "../../rendering/boardGeometry";
-import { makeHeightMaterial, updateHeightChronometry } from "../../rendering/heightMaterial";
+import { TILE_SIZE_M } from "../../board";
+import type { GeneratedBoard } from "../../board";
+import { buildSphereGeometry } from "../../rendering";
+import { makeHeightMaterial, updateHeightChronometry } from "../../rendering";
 
 type BoardRendererProps = {
 	board: GeneratedBoard;

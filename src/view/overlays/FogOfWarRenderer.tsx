@@ -12,11 +12,9 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import type { GeneratedBoard } from "../../board/types";
+import type { GeneratedBoard } from "../../board";
 import { UnitFaction, UnitPos, UnitStats } from "../../traits";
-import { buildSphereGeometry } from "../../rendering/boardGeometry";
-import SPHERE_FRAG from "../../rendering/glsl/fogOfWarSphereFrag.glsl";
-import SPHERE_VERT from "../../rendering/glsl/fogOfWarSphereVert.glsl";
+import { buildSphereGeometry, fogOfWarSphereFrag as SPHERE_FRAG, fogOfWarSphereVert as SPHERE_VERT } from "../../rendering";
 
 type FogOfWarRendererProps = {
 	board: GeneratedBoard;

@@ -94,7 +94,7 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 | populationSystem.ts | Population cap + counting |
 | powerSystem.ts | Power grid simulation |
 | radialMenu.ts | Radial menu state machine |
-| radialProviders.ts | Radial menu action providers |
+| radial/ | Radial menu action providers (split by domain) |
 | repairSystem.ts | Unit repair |
 | researchSystem.ts | Tech research queue |
 | resourceDeltaSystem.ts | Per-turn income/expenditure tracking |

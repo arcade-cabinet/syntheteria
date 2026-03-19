@@ -28,8 +28,8 @@ import { Sparkles } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { WORMHOLE_PROJECT_TURNS } from "../../config/gameDefaults";
-import { STORM_VISUAL_PARAMS, WORMHOLE_CYCLE } from "../../config/weatherDefs";
+import { WORMHOLE_PROJECT_TURNS } from "../../config";
+import { STORM_VISUAL_PARAMS, WORMHOLE_CYCLE } from "../../config";
 import { getWormholeProjectState } from "../../systems";
 import { STORM_PROFILE_SPECS, type StormProfile } from "../../world/config";
 

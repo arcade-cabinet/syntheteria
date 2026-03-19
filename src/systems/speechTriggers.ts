@@ -13,11 +13,11 @@ import type { World } from "koota";
 import type {
 	ContextSpeechTrigger,
 	EventSpeechTrigger,
-} from "../narrative/speechProfiles";
+} from "../narrative";
 import {
 	getContextSpeechByPersona,
 	getEventSpeechByPersona,
-} from "../narrative/speechProfiles";
+} from "../narrative";
 import { Faction } from "../traits";
 import { triggerSpeech } from "./speechBubbleStore";
 

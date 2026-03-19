@@ -46,7 +46,7 @@ import {
 	setProviderSelectedUnit,
 } from "../systems";
 // Import providers so they register at module scope
-import "../systems/radialProviders";
+import "../systems/radial";
 
 type BoardInputProps = {
 	world: World;

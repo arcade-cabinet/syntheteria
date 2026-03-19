@@ -13,7 +13,7 @@
 
 import type { World } from "koota";
 import { CultStructure, UnitFaction, UnitPos } from "../../traits";
-import { pushAlert } from "../../ui/game/AlertBar";
+import { pushAlert } from "../../ui";
 
 // ---------------------------------------------------------------------------
 // Corruption zone tracking

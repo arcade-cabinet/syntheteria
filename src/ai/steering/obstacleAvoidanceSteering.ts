@@ -10,7 +10,7 @@
  * navigate around obstacles by preferring tiles with clear forward paths.
  */
 
-import type { GeneratedBoard } from "../../board/types";
+import type { GeneratedBoard } from "../../board";
 import type { TilePos } from "./flockingSteering";
 
 // ---------------------------------------------------------------------------

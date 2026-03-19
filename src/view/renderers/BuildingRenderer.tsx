@@ -10,7 +10,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { type ReactNode, Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board/grid";
+import { TILE_SIZE_M } from "../../board";
 import {
 	Building,
 	type BuildingType,
@@ -18,13 +18,18 @@ import {
 	type CultStructureType,
 } from "../../traits";
 import { ModelErrorBoundary } from "../ModelErrorBoundary";
-import { getAllBuildingModelUrls, resolveBuildingModelUrl } from "../../rendering/modelPaths";
-import { sphereModelPlacement } from "../../rendering/spherePlacement";
-import { buildExploredSet, isTileExplored } from "../../rendering/tileVisibility";
+import { getAllBuildingModelUrls, resolveBuildingModelUrl } from "../../rendering";
+import { sphereModelPlacement } from "../../rendering";
+import { buildExploredSet, isTileExplored } from "../../rendering";
 
-// Preload all building + cult models
-for (const url of getAllBuildingModelUrls()) {
-	useGLTF.preload(url);
+// Preload all building + cult models (lazy to avoid circular dep at module init)
+let _preloaded = false;
+function ensureBuildingModelsPreloaded() {
+	if (_preloaded) return;
+	_preloaded = true;
+	for (const url of getAllBuildingModelUrls()) {
+		useGLTF.preload(url);
+	}
 }
 
 // ─── Sparkle configs per building/structure type ─────────────────────────────
@@ -174,6 +179,7 @@ export function BuildingRenderer({
 	boardWidth,
 	boardHeight,
 }: BuildingRendererProps) {
+	ensureBuildingModelsPreloaded();
 	const instances = useMemo(() => {
 		const explored = buildExploredSet(world);
 		const result: Array<{

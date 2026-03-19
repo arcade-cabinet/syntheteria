@@ -6,8 +6,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { cinematicState } from "../../rendering/globe/cinematicState";
-import { stormFragmentShader, stormVertexShader } from "../../rendering/globe/shaders";
+import { cinematicState, stormFragmentShader, stormVertexShader } from "../../rendering";
 
 export function StormClouds({ radius = 8 }: { radius?: number }) {
 	const meshRef = useRef<THREE.Mesh>(null);

@@ -20,9 +20,9 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { type ReactNode, Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board/grid";
-import type { GeneratedBoard } from "../../board/types";
-import { seedToFloat } from "../../terrain/cluster";
+import { TILE_SIZE_M } from "../../board";
+import type { GeneratedBoard } from "../../board";
+import { seedToFloat } from "../../terrain";
 import { ModelErrorBoundary } from "../ModelErrorBoundary";
 import {
 	getAllInfraModelUrls,
@@ -32,12 +32,17 @@ import {
 	INFRA_PIPE_MODELS,
 	INFRA_POWER_MODELS,
 	INFRA_SUPPORT_MODELS,
-} from "../../rendering/modelPaths";
-import { buildExploredSet } from "../../rendering/tileVisibility";
+} from "../../rendering";
+import { buildExploredSet } from "../../rendering";
 
-// Preload all infrastructure models
-for (const url of getAllInfraModelUrls()) {
-	useGLTF.preload(url);
+// Lazy preload to avoid circular dep at module init
+let _infraPreloaded = false;
+function ensureInfraModelsPreloaded() {
+	if (_infraPreloaded) return;
+	_infraPreloaded = true;
+	for (const url of getAllInfraModelUrls()) {
+		useGLTF.preload(url);
+	}
 }
 
 const MODEL_BASE = "/assets/models/";
@@ -377,6 +382,7 @@ export function InfrastructureRenderer({
 	board,
 	world,
 }: InfrastructureRendererProps) {
+	ensureInfraModelsPreloaded();
 	const instances = useMemo(() => {
 		const explored = world ? buildExploredSet(world) : undefined;
 		return computeInfraInstances(board, explored);

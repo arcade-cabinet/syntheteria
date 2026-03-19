@@ -14,7 +14,7 @@
  * @exports getRadialMenuState / getResolvedActionsForCategory - State access
  * @exports hitTestRadial / getRadialGeometry - Hit testing and ring dimensions
  *
- * @consumers RadialMenu.tsx, BoardInput, radialProviders
+ * @consumers RadialMenu.tsx, BoardInput, radial/
  */
 
 const radialConfig = {

@@ -8,7 +8,7 @@
  * Adjacency range determines how close a unit must be to a bay.
  */
 
-import type { ResourceMaterial } from "../terrain";
+import type { ResourceMaterial } from "../terrain/types";
 
 // ─── Mark Level Costs ───────────────────────────────────────────────────────
 

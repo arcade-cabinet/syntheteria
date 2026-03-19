@@ -16,8 +16,8 @@ import { useFrame } from "@react-three/fiber";
 import type { World } from "koota";
 import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { playSfx } from "../../audio/sfx";
-import { ELEVATION_STEP_M, TILE_SIZE_M } from "../../board/grid";
+import { playSfx } from "../../audio";
+import { ELEVATION_STEP_M, TILE_SIZE_M } from "../../board";
 import {
 	UnitAttack,
 	UnitFaction,
@@ -32,13 +32,18 @@ import {
 	FACTION_COLORS,
 	getAllRobotModelUrls,
 	resolveRobotModelUrl,
-} from "../../rendering/modelPaths";
-import { sphereModelPlacement } from "../../rendering/spherePlacement";
-import { isUnitDetected } from "../../rendering/unitDetection";
+} from "../../rendering";
+import { sphereModelPlacement } from "../../rendering";
+import { isUnitDetected } from "../../rendering";
 
-// Preload all robot models
-for (const url of getAllRobotModelUrls()) {
-	useGLTF.preload(url);
+// Lazy preload to avoid circular dep at module init
+let _robotPreloaded = false;
+function ensureRobotModelsPreloaded() {
+	if (_robotPreloaded) return;
+	_robotPreloaded = true;
+	for (const url of getAllRobotModelUrls()) {
+		useGLTF.preload(url);
+	}
 }
 
 // ─── Single unit model ───────────────────────────────────────────────────────
@@ -502,6 +507,7 @@ export function UnitRenderer({
 	boardWidth,
 	boardHeight,
 }: UnitRendererProps) {
+	ensureRobotModelsPreloaded();
 	// Rebuild unit list each frame would be expensive — rebuild on key changes
 	// For now, rebuild every 200ms (units don't move that often in turn-based)
 	const unitsRef = useRef<UnitSnapshot[]>([]);

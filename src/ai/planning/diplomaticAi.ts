@@ -18,7 +18,7 @@ import {
 	getStandingLevel,
 	getDiplomacyPersonality,
 } from "../../systems";
-import { getRelation } from "../../factions/relations";
+import { getRelation } from "../../factions";
 
 // ---------------------------------------------------------------------------
 // Types

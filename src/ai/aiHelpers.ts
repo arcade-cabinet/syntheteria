@@ -6,8 +6,8 @@
  */
 
 import type { World } from "koota";
-import type { GeneratedBoard } from "../board/types";
-import { TileFloor } from "../terrain/traits";
+import type { GeneratedBoard } from "../board";
+import { TileFloor } from "../terrain";
 import {
 	Board,
 	Building,

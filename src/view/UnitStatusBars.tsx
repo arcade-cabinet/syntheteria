@@ -28,7 +28,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { useRef, useState } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../board/grid";
+import { TILE_SIZE_M } from "../board";
 import {
 	UnitFaction,
 	UnitHarvest,
@@ -37,8 +37,7 @@ import {
 	UnitStats,
 	UnitVisual,
 } from "../traits";
-import { FACTION_COLORS } from "../rendering/modelPaths";
-import { isUnitDetected } from "../rendering/unitDetection";
+import { FACTION_COLORS, isUnitDetected } from "../rendering";
 
 // ---------------------------------------------------------------------------
 // Constants

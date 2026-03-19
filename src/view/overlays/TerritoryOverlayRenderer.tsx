@@ -18,14 +18,14 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board/grid";
-import type { GeneratedBoard } from "../../board/types";
-import { FACTION_COLORS } from "../../config/gameDefaults";
+import { TILE_SIZE_M } from "../../board";
+import type { GeneratedBoard } from "../../board";
+import { FACTION_COLORS } from "../../config";
 import {
 	computeTerritory,
 	type TerritorySnapshot,
 } from "../../systems";
-import { buildExploredSet } from "../../rendering/tileVisibility";
+import { buildExploredSet } from "../../rendering";
 
 type TerritoryOverlayRendererProps = {
 	board: GeneratedBoard;

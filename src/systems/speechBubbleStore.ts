@@ -14,7 +14,7 @@
 import {
 	SPEECH_BUBBLE_DURATION_TURNS,
 	SPEECH_COOLDOWN_TURNS,
-} from "../narrative/speechProfiles";
+} from "../narrative";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 

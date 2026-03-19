@@ -11,7 +11,7 @@ import { Sparkles } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board/grid";
+import { TILE_SIZE_M } from "../../board";
 import {
 	FRAGMENT_CONFIG,
 	getPlacedFragments,
@@ -23,8 +23,16 @@ import {
 
 const CRYSTAL_SIZE = TILE_SIZE_M * 0.15;
 const CRYSTAL_Y = TILE_SIZE_M * 0.3;
-const [glowR, glowG, glowB] = FRAGMENT_CONFIG.glowColor;
-const GLOW_COLOR = new THREE.Color(glowR, glowG, glowB);
+
+// Lazy init to avoid circular dependency at module scope
+let _glowColor: THREE.Color | null = null;
+function getGlowColor(): THREE.Color {
+	if (!_glowColor) {
+		const [r, g, b] = FRAGMENT_CONFIG.glowColor;
+		_glowColor = new THREE.Color(r, g, b);
+	}
+	return _glowColor;
+}
 
 // ─── Single Fragment Mesh ─────────────────────────────────────────────────────
 
@@ -60,7 +68,7 @@ function FragmentCrystal({ fragment }: { fragment: PlacedFragment }) {
 				<meshStandardMaterial
 					ref={matRef}
 					color={0x112233}
-					emissive={GLOW_COLOR}
+					emissive={getGlowColor()}
 					emissiveIntensity={FRAGMENT_CONFIG.glowIntensity}
 					transparent
 					opacity={fragment.read ? 0.4 : 0.85}
@@ -74,7 +82,7 @@ function FragmentCrystal({ fragment }: { fragment: PlacedFragment }) {
 					position={[0, CRYSTAL_Y, 0]}
 					size={2}
 					speed={0.3}
-					color={`#${GLOW_COLOR.getHexString()}`}
+					color={`#${getGlowColor().getHexString()}`}
 					opacity={fragment.discovered ? 0.9 : 0.5}
 				/>
 			)}

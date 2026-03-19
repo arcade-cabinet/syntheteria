@@ -18,9 +18,9 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { type ReactNode, Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board/grid";
-import type { GeneratedBoard } from "../../board/types";
-import { seedToFloat } from "../../terrain/cluster";
+import { TILE_SIZE_M } from "../../board";
+import type { GeneratedBoard } from "../../board";
+import { seedToFloat } from "../../terrain";
 import { ModelErrorBoundary } from "../ModelErrorBoundary";
 import {
 	getAllStructureModelUrls,
@@ -31,24 +31,29 @@ import {
 	STRUCTURE_STAIRCASE_MODEL,
 	STRUCTURE_WALL_MODELS,
 	STRUCTURE_WINDOW_WALL_MODELS,
-} from "../../rendering/modelPaths";
+} from "../../rendering";
 import {
 	sphereModelPlacement,
 	sphereModelPlacementWithRotation,
 	worldToTileCoords,
-} from "../../rendering/spherePlacement";
+} from "../../rendering";
 import {
 	type ColumnPosition,
 	getColumnPositions,
 	getInteriorTiles,
 	getStructuralEdges,
 	type StructuralEdge,
-} from "../../rendering/structureHelpers";
-import { buildExploredSet } from "../../rendering/tileVisibility";
+} from "../../rendering";
+import { buildExploredSet } from "../../rendering";
 
-// Preload all structure models
-for (const url of getAllStructureModelUrls()) {
-	useGLTF.preload(url);
+// Lazy preload to avoid circular dep at module init
+let _structurePreloaded = false;
+function ensureStructureModelsPreloaded() {
+	if (_structurePreloaded) return;
+	_structurePreloaded = true;
+	for (const url of getAllStructureModelUrls()) {
+		useGLTF.preload(url);
+	}
 }
 
 /**
@@ -611,6 +616,7 @@ export function StructureRenderer({
 	boardWidth,
 	boardHeight,
 }: StructureRendererProps) {
+	ensureStructureModelsPreloaded();
 	const instances = useMemo(() => {
 		const explored = world ? buildExploredSet(world) : undefined;
 		const seed = board.config.seed;

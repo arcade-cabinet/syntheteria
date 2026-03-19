@@ -11,16 +11,21 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { type ReactNode, Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board/grid";
+import { TILE_SIZE_M } from "../../board";
 import { SalvageProp, type SalvageType } from "../../traits";
 import { ModelErrorBoundary } from "../ModelErrorBoundary";
-import { getAllSalvageModelUrls, resolveSalvageModelUrl } from "../../rendering/modelPaths";
-import { sphereModelPlacement } from "../../rendering/spherePlacement";
-import { buildExploredSet, isTileExplored } from "../../rendering/tileVisibility";
+import { getAllSalvageModelUrls, resolveSalvageModelUrl } from "../../rendering";
+import { sphereModelPlacement } from "../../rendering";
+import { buildExploredSet, isTileExplored } from "../../rendering";
 
-// Preload all known salvage models
-for (const url of getAllSalvageModelUrls()) {
-	useGLTF.preload(url);
+// Lazy preload to avoid circular dep at module init
+let _salvagePreloaded = false;
+function ensureSalvageModelsPreloaded() {
+	if (_salvagePreloaded) return;
+	_salvagePreloaded = true;
+	for (const url of getAllSalvageModelUrls()) {
+		useGLTF.preload(url);
+	}
 }
 
 // ─── Single salvage model instance ───────────────────────────────────────────
@@ -151,6 +156,7 @@ export function SalvageRenderer({
 	boardWidth,
 	boardHeight,
 }: SalvageRendererProps) {
+	ensureSalvageModelsPreloaded();
 	const instances = useMemo(() => {
 		const explored = buildExploredSet(world);
 		const result: Array<{

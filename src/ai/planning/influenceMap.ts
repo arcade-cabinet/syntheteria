@@ -13,7 +13,7 @@
  * Updated every 10 turns for performance.
  */
 
-import type { GeneratedBoard, TileData } from "../../board/types";
+import type { GeneratedBoard, TileData } from "../../board";
 
 // ---------------------------------------------------------------------------
 // Types

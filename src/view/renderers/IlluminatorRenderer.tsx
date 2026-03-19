@@ -14,8 +14,8 @@ import { useFrame } from "@react-three/fiber";
 import type { World } from "koota";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import type { GeneratedBoard } from "../../board/types";
-import { sphereModelPlacement } from "../../rendering/spherePlacement";
+import type { GeneratedBoard } from "../../board";
+import { sphereModelPlacement } from "../../rendering";
 
 // ---------------------------------------------------------------------------
 // Constants

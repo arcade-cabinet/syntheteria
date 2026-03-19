@@ -17,8 +17,8 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { sphereRadius } from "../../rendering/boardGeometry";
-import { globeFragmentShader, globeVertexShader } from "../../rendering/globe/shaders";
+import { sphereRadius } from "../../rendering";
+import { globeFragmentShader, globeVertexShader } from "../../rendering";
 
 // ── LOD distance thresholds ──────────────────────────────────────────────────
 // Expressed as multiples of the sphere radius.
@@ -31,19 +31,21 @@ const LOD_NEAR_FACTOR = 1.6;
 const LOD_FAR_FACTOR = 2.8;
 
 // ── Modified globe fragment shader with alpha support ────────────────────────
-// The original globeFragmentShader outputs vec4(color, 1.0).
-// We replace the last line to use uOpacity for crossfading.
-
-const lodFragmentShader = globeFragmentShader.replace(
-	"gl_FragColor = vec4(color, 1.0);",
-	`gl_FragColor = vec4(color, uOpacity);`,
-);
-
-// Inject uOpacity uniform declaration after existing uniforms
-const lodFragmentShaderFull = lodFragmentShader.replace(
-	"uniform float uGrowth;",
-	"uniform float uGrowth;\n  uniform float uOpacity;",
-);
+// Lazy init to avoid circular dep at module scope
+let _lodFragmentShaderFull: string | null = null;
+function getLodFragmentShader(): string {
+	if (!_lodFragmentShaderFull) {
+		const lodFragmentShader = globeFragmentShader.replace(
+			"gl_FragColor = vec4(color, 1.0);",
+			`gl_FragColor = vec4(color, uOpacity);`,
+		);
+		_lodFragmentShaderFull = lodFragmentShader.replace(
+			"uniform float uGrowth;",
+		"uniform float uGrowth;\n  uniform float uOpacity;",
+		);
+	}
+	return _lodFragmentShaderFull;
+}
 
 type LodGlobeProps = {
 	boardWidth: number;
@@ -102,7 +104,7 @@ export function LodGlobe({ boardWidth, boardHeight }: LodGlobeProps) {
 			<sphereGeometry args={[R * 0.999, segments, segments]} />
 			<shaderMaterial
 				vertexShader={globeVertexShader}
-				fragmentShader={lodFragmentShaderFull}
+				fragmentShader={getLodFragmentShader()}
 				uniforms={uniforms}
 				transparent
 				depthWrite={false}

@@ -13,11 +13,11 @@ import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type { World } from "koota";
 import { useRef, useState } from "react";
-import { TILE_SIZE_M } from "../../board/grid";
+import { TILE_SIZE_M } from "../../board";
 import type { ActiveSpeech } from "../../systems";
 import { getActiveSpeech } from "../../systems";
 import { UnitFaction, UnitMove, UnitPos } from "../../traits";
-import { FACTION_COLORS } from "../../rendering/modelPaths";
+import { FACTION_COLORS } from "../../rendering";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 

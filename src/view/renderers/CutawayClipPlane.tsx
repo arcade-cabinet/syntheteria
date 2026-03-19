@@ -7,7 +7,7 @@
 
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect } from "react";
-import { getCutawayPlane } from "../../camera/cutawayStore";
+import { getCutawayPlane } from "../../camera";
 
 export function CutawayClipPlane() {
 	const gl = useThree((s) => s.gl);

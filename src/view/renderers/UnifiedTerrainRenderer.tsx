@@ -14,21 +14,22 @@ import { useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { ELEVATION_STEP_M, TILE_SIZE_M } from "../../board/grid";
-import type { GeneratedBoard } from "../../board/types";
-import { TileFloor } from "../../terrain/traits";
+import { ELEVATION_STEP_M, TILE_SIZE_M } from "../../board";
+import type { GeneratedBoard } from "../../board";
+import { TileFloor } from "../../terrain";
 import { Tile } from "../../traits";
-import { boardToDepthLayers } from "../../rendering/depthLayerStack";
 import {
 	applyTargetedDig,
+	boardToDepthLayers,
 	buildLayerGeometry,
 	type EdgeDirection,
 	type FloorQuad,
 	type RampQuad,
 	type VoidPlane,
 	type WallQuad,
-} from "../../rendering/depthMappedLayer";
-import { buildExploredSet, isTileExplored } from "../../rendering/tileVisibility";
+	buildExploredSet,
+	isTileExplored,
+} from "../../rendering";
 
 // ---------------------------------------------------------------------------
 // Constants

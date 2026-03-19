@@ -12,8 +12,8 @@
  */
 
 import { AStar, Edge, Graph, Node } from "yuka";
-import { isPassableFor, movementCost } from "../../board/adjacency";
-import type { GeneratedBoard, TileData } from "../../board/types";
+import { isPassableFor, movementCost } from "../../board";
+import type { GeneratedBoard, TileData } from "../../board";
 
 // ---------------------------------------------------------------------------
 // Helpers

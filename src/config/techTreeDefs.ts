@@ -240,14 +240,12 @@ const BASE_TECHS: readonly TechDef[] = [
 // Track specialization techs — imported from the 6 class track files
 // ---------------------------------------------------------------------------
 
-import {
-	CAVALRY_TRACK_TECHS,
-	INFANTRY_TRACK_TECHS,
-	RANGED_SPEC_TECHS,
-	SCOUT_TRACK_TECHS,
-	SUPPORT_TRACK_TECHS,
-	WORKER_TRACK_TECHS,
-} from "../robots";
+import { SCOUT_TRACK_TECHS } from "../robots/specializations/scoutTracks";
+import { INFANTRY_TRACK_TECHS } from "../robots/specializations/infantryTracks";
+import { CAVALRY_TRACK_TECHS } from "../robots/specializations/cavalryTracks";
+import { RANGED_SPEC_TECHS } from "../robots/specializations/rangedTracks";
+import { SUPPORT_TRACK_TECHS } from "../robots/specializations/supportTracks";
+import { WORKER_TRACK_TECHS } from "../robots/specializations/workerTracks";
 
 /** All track techs merged from the 6 class specialization files. */
 const TRACK_TECHS: readonly TechDef[] = [

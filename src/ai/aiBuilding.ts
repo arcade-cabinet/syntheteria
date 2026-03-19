@@ -6,14 +6,14 @@
  */
 
 import type { World } from "koota";
-import { playSfx } from "../audio/sfx";
-import type { GeneratedBoard } from "../board/types";
-import { BUILDING_DEFS } from "../buildings/definitions";
+import { playSfx } from "../audio";
+import type { GeneratedBoard } from "../board";
+import { BUILDING_DEFS } from "../buildings";
 import {
 	canAfford,
 	spendResources,
 } from "../systems";
-import type { ResourceMaterial } from "../terrain/types";
+import type { ResourceMaterial } from "../terrain";
 import {
 	Board,
 	BotFabricator,

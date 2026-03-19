@@ -32,6 +32,7 @@ export {
 	createDepthMappedLayer,
 	classifyEdges,
 	buildLayerGeometry,
+	applyTargetedDig,
 } from "./depthMappedLayer";
 export type {
 	EdgeDirection,

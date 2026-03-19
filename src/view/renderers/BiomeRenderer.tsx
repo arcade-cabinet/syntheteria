@@ -10,13 +10,13 @@
 import { useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board/grid";
-import type { GeneratedBoard } from "../../board/types";
+import { TILE_SIZE_M } from "../../board";
+import type { GeneratedBoard } from "../../board";
 import {
 	makeFloorShaderMaterial,
 	updateFloorShaderChronometry,
-} from "../../terrain/floorShader";
-import { buildSphereGeometry } from "../../rendering/boardGeometry";
+} from "../../terrain";
+import { buildSphereGeometry } from "../../rendering";
 
 type BiomeRendererProps = {
 	board: GeneratedBoard;

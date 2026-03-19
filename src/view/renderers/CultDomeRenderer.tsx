@@ -15,9 +15,9 @@ import { useFrame } from "@react-three/fiber";
 import type { World } from "koota";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../board/grid";
+import { TILE_SIZE_M } from "../../board";
 import { CultStructure } from "../../traits";
-import { sphereModelPlacement } from "../../rendering/spherePlacement";
+import { sphereModelPlacement } from "../../rendering";
 
 // ---------------------------------------------------------------------------
 // Sect dome colors

@@ -12,7 +12,7 @@
  * This file provides the DATA for each type, not the trait definitions.
  */
 
-import type { BuildingType } from "../traits";
+import type { BuildingType } from "../traits/building";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 

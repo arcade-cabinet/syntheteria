@@ -15,9 +15,9 @@ import { useFrame } from "@react-three/fiber";
 import type { World } from "koota";
 import { useRef, useState } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../config/gameDefaults";
+import { TILE_SIZE_M } from "../../config";
 import { CombatResult, UnitPos } from "../../traits";
-import { pushEffect } from "../../rendering/particles/effectEvents";
+import { pushEffect } from "../../rendering";
 
 interface FloatingText {
 	id: number;

@@ -6,8 +6,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { cinematicState } from "../../rendering/globe/cinematicState";
-import { lightningFragmentShader, lightningVertexShader } from "../../rendering/globe/shaders";
+import { cinematicState, lightningFragmentShader, lightningVertexShader } from "../../rendering";
 
 export function LightningEffect() {
 	const _meshRef = useRef<THREE.Mesh>(null);

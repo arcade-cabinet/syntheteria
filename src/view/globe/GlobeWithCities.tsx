@@ -6,7 +6,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { globeFragmentShader, globeVertexShader } from "../../rendering/globe/shaders";
+import { globeFragmentShader, globeVertexShader } from "../../rendering";
 
 export function GlobeWithCities({ growth = 0 }: { growth?: number }) {
 	const meshRef = useRef<THREE.Mesh>(null);

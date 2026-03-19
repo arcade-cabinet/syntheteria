@@ -6,8 +6,7 @@
  */
 
 import type { World } from "koota";
-import { TRACK_REGISTRY } from "../robots/specializations/trackRegistry";
-import type { RobotClass } from "../robots/types";
+import { TRACK_REGISTRY, type RobotClass } from "../robots";
 import {
 	queueFabrication,
 	getResearchState,

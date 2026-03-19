@@ -8,8 +8,8 @@
  * Kept separate from BoardRenderer so it can be unit-tested in JSDOM.
  */
 
-import { TILE_SIZE_M } from "../board/grid";
-import type { Elevation, GeneratedBoard } from "../board/types";
+import { TILE_SIZE_M } from "../board";
+import type { Elevation, GeneratedBoard } from "../board";
 
 // ---------------------------------------------------------------------------
 // Elevation → world-space Y (metres)

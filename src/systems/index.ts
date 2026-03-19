@@ -239,7 +239,7 @@ export {
 	setBuildProviderWorld,
 	setProviderSelectedUnit,
 	setProviderBoard,
-} from "./radialProviders";
+} from "./radial";
 
 // --- Repair ---
 export { runRepairs } from "./repairSystem";

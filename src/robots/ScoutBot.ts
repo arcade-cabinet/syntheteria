@@ -1,5 +1,5 @@
 import type { World } from "koota";
-import { MOVEMENT_PROFILES } from "../config/movementDefs";
+import { MOVEMENT_PROFILES } from "../config";
 import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../traits";
 
 /** Scout — fast recon, high AP and scan range, fragile. ReconBot.glb */

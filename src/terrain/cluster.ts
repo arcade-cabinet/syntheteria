@@ -10,8 +10,8 @@
  *   geographyValue — low-frequency large-scale geography (former ocean basins)
  */
 
-import type { Elevation } from "../board/types";
-import { TILE_SIZE_M } from "../config/gameDefaults";
+import type { Elevation } from "../board";
+import { TILE_SIZE_M } from "../config";
 import type { FloorType } from "./types";
 import { FLOOR_DEFS } from "./types";
 

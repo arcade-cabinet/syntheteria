@@ -6,7 +6,7 @@
  * Single source of truth consumed by fabrication, AI, UI, and save/load.
  */
 
-import type { TechDef } from "../../config/techTreeDefs";
+import type { TechDef } from "../../config";
 import type { ClassActionDef } from "../classActions";
 import type { RobotClass } from "../types";
 import {

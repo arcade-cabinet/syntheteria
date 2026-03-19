@@ -1,4 +1,4 @@
-import type { ResourceMaterial } from "../terrain/types";
+import type { ResourceMaterial } from "../terrain";
 import type { RobotClass } from "./types";
 
 export type BotMark =

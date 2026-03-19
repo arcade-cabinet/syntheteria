@@ -11,7 +11,7 @@
  *   attackRange 3, weightClass "heavy", actions: Stage/Attack(2-4)/Overwatch/Relocate
  */
 
-import type { TechDef, TechEffectType } from "../../config/techTreeDefs";
+import type { TechDef, TechEffectType } from "../../config";
 import type { ClassActionDef } from "../classActions";
 import type { MarkSpecialization } from "../marks";
 

@@ -11,7 +11,7 @@
  * Design reference: GAME_DESIGN.md S7 (Bot Roster), task #51.
  */
 
-import type { TechDef } from "../../config/techTreeDefs";
+import type { TechDef } from "../../config";
 import type { ClassActionDef } from "../classActions";
 import type { MarkSpecialization } from "../marks";
 

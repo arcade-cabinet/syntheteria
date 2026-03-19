@@ -7,57 +7,83 @@
 
 ## What This Is
 
-A **sphere-world 4X strategy game** on future Earth (the ecumenopolis). Ground-up rewrite on `docs/syntheteria-1-0-done`.
-The old infinite-map ecumenopolis game is in `pending/` (excluded from tsconfig + biome).
+An **epoch-based 4X strategy game** on Earth. You BUILD the ecumenopolis as climate deteriorates toward an inevitable hypercane. CivRev2-style isometric presentation. Globe is landing page only.
 
 **Primary build:** `pnpm dev` (Vite). **Tests:** `pnpm test:vitest`. **Lint + tsc:** `pnpm verify`.
 
 ---
 
-## Repository Layout
+## Package Structure (MANDATORY)
+
+Every directory under `src/` is a **self-contained package** following these rules:
+
+### Rules
+
+1. **Logic in `.ts`, presentation in `.tsx`, shaders in `.glsl`** — never mix
+2. **Every package has `index.ts`** — exports ONLY the public API
+3. **Consumers import from the package, NEVER from internal files**
+   - Good: `import { Building } from "../traits"`
+   - Bad: `import { Building } from "../traits/building"`
+4. **Tests colocated in `__tests__/`** inside their owning package
+5. **No cross-cutting deep imports** — packages communicate through their public APIs
+6. **Systems accept `world: World` param** — never use a world singleton
+7. **Config is data, not code** — all tunables in `src/config/`, never hardcoded
+
+### File Size Limits
+
+| Threshold | Action |
+|-----------|--------|
+| > 300 LOC | Consider splitting into submodules |
+| > 500 LOC | Must split — create subpackage with own `index.ts` |
+| > 1000 LOC | Absolute max — if you see this, stop and refactor |
+
+### Package Map
 
 ```
-syntheteria/
-├── CLAUDE.md                  # Claude Code behavior contract
-├── AGENTS.md                  # THIS FILE — multi-agent orchestration
-├── src/                       # 344 source files
-│   ├── main.tsx               # Entry + Root: phase state machine (title → setup → generating → playing)
-│   ├── board/                 # Fixed-size deterministic board generator (14 files)
-│   ├── camera/                # SphereOrbitCamera (sphere world)
-│   ├── ecs/
-│   │   ├── traits/            # board, tile, unit, faction, resource, building, salvage, cult
-│   │   ├── terrain/           # FloorType (9 substrates), ResourceMaterial (13 types), GLSL shaders
-│   │   ├── robots/            # 9 archetypes, placement flags, marks, specializations (14 tracks)
-│   │   ├── factions/          # 5 factions + 3 cults, relations
-│   │   ├── buildings/         # 15 faction buildings + 6 cult structures
-│   │   ├── resources/         # 10 salvage types with yield tables
-│   │   └── systems/           # 42 systems (movement, combat, economy, AI, cult, specialization, etc.)
-│   ├── ai/                    # Yuka GOAP: agents/, fuzzy/, goals/, navigation/, perception/, runtime/, triggers/
-│   ├── systems/               # radialMenu state machine, radialProviders
-│   ├── audio/                 # audioEngine, sfx (Tone.js), ambience (storm loop)
-│   ├── db/                    # SQLite schema + GameRepo (sql.js adapter)
-│   ├── rendering/             # 20+ renderers, sphere placement, globe/, particles/, sky/, glsl/
-│   ├── input/                 # BoardInput (click-to-select/move/attack)
-│   ├── ui/
-│   │   ├── Globe.tsx          # ONE persistent R3F Canvas across all phases (primary scene container)
-│   │   ├── landing/           # LandingScreen, NewGameModal, SettingsModal, title/
-│   │   └── game/              # HUD, RadialMenu, GarageModal, overlays, panels (26 files)
-│   ├── config/                # 11 TypeScript const definition files (gameDefaults, techTree, etc.)
-│   └── world/                 # Config wiring, world initialization
-├── docs/
-│   ├── AGENTS.md              # Documentation index (what to read for each task)
-│   ├── ARCHITECTURE.md        # Tech stack, all packages, ECS patterns, test strategy
-│   ├── GAME_DESIGN.md         # Vision, lore, world model, economy, bots, factions
-│   ├── ROADMAP.md             # Foundation status, what's next
-│   └── memory-bank/           # Session context — read these every session
-│       ├── activeContext.md   # CURRENT focus, recent changes, what's next
-│       └── progress.md        # System status dashboard
-├── public/
-│   ├── assets/models/         # 360 curated GLB models
-│   └── assets/textures/       # PBR atlas textures (AmbientCG)
-├── pending/                   # OLD GAME — quarantined, never touch
-└── tests/                     # Playwright E2E + Vitest browser CT
+src/
+├── app/                # App shell — session lifecycle, debug bridge, HUD data
+├── traits/             # ALL Koota trait definitions
+├── systems/            # ALL Koota systems (one per file)
+├── ai/                 # Yuka GOAP: agents/, fsm/, goals/, navigation/, steering/
+├── board/              # Labyrinth generator, tile grid, adjacency
+├── buildings/          # Building definitions + cult structures
+├── factions/           # Faction definitions, init, relations
+├── robots/             # Archetypes, placement, specializations
+├── terrain/            # Floor types, elevation, GLSL shaders
+├── resources/          # Salvage type definitions
+├── narrative/          # Speech profiles
+├── config/             # 11 game data files (tunables, tech tree, recipes, etc.)
+├── audio/              # Tone.js SFX + ambience
+├── camera/             # Camera controllers
+├── db/                 # SQLite schema + GameRepo
+├── rendering/          # Pure TS: geometry, placement, materials (no TSX)
+├── ui/                 # React components: Globe, landing/, game/ overlays
+├── input/              # Board interaction (click, drag, select)
+├── world/              # Config wiring
+├── lib/                # Shared utilities
+├── types/              # Shared type declarations
+├── init-world.ts       # World initialization from board
+├── create-world.ts     # Koota world factory
+├── seed.ts             # Seed phrase generation
+└── main.tsx            # Entry point (thin — delegates to app/)
 ```
+
+---
+
+## Architecture Rules
+
+| Rule | Detail |
+|------|--------|
+| No JSON for game data | All config is TypeScript `const` objects in `src/config/` |
+| Systems accept `world` param | Never use world singleton — enables test isolation |
+| All tunables in config files | No magic numbers in systems or renderers |
+| `pending/` is permanent quarantine | Nothing gets resurrected from it |
+| SQLite is non-fatal | DB failures don't crash — ECS runs in memory |
+| ECS `.get()` returns undefined | Always null-guard: `if (!x) continue;` |
+| No `world.entity(id)` in Koota | Use `Map<id, Entity>` per-operation when needed |
+| Package index exports only | No deep imports across package boundaries |
+| Robots use procedural animation | Bob-and-weave Wall-E style in code, NOT Blender rigging |
+| No faction tint on models | Models render with original textures, faction shown via ground disc |
 
 ---
 
@@ -66,43 +92,20 @@ syntheteria/
 Every agent session must:
 1. Read `docs/memory-bank/activeContext.md` — current focus and state
 2. Read `docs/memory-bank/progress.md` — what works and what doesn't
-3. Check `docs/ARCHITECTURE.md` — if your task involves design or ECS patterns
+3. Check this file — package structure rules above
 4. Run `pnpm test:vitest` — verify all tests pass before starting
 5. **Never** read or reference anything in `pending/`
 
 ---
 
-## Architecture Rules
+## Koota Patterns (from official examples)
 
-| Rule | Detail |
-|------|--------|
-| No JSON for game data | All models/factions/robots/buildings are TypeScript `const` objects |
-| Systems accept `world` param | Never use world singleton — enables clean test isolation |
-| All tunables in config files | No magic numbers in system or rendering code (11 config files) |
-| `pending/` is permanent | Nothing from there gets resurrected |
-| SQLite is non-fatal | DB failures don't crash — ECS runs in memory |
-| ECS `.get()` returns undefined | Always null-guard: `const x = e.get(Trait); if (!x) continue;` |
-| No `world.entity(id)` in Koota | Rebuild `Map<id, Entity>` per-operation when needed |
-| Salvage = primary resource | Floor mining is the backstop, not the main economy |
-| Storm = power grid | Storm transmitters tap the perpetual storm for power |
-| Tiles = GPS coordinates | Each (x,z) is a DB record, `explored` is topmost gatekeeper |
-| Globe.tsx = ONE Canvas | Single persistent R3F Canvas across all phases |
-| Overlay vs diegetic UI | Overlay (HUD, modals) = DOM. Diegetic (speech, status bars) = in-Canvas |
+Follow the patterns from [koota examples](https://github.com/pmndrs/koota/tree/main/examples):
 
----
-
-## Agent Team
-
-Agents for this codebase:
-
-| Agent | Domain | When to use |
-|-------|--------|-------------|
-| `board-agent` | `src/board/` | Board gen, noise, adjacency, GridApi, depth stacking |
-| `ecs-agent` | `src/ecs/` | Traits, systems, robots, factions, buildings, salvage, resources |
-| `db-agent` | `src/db/` | Schema, migrations, GameRepo, sql.js adapter |
-| `rendering-agent` | `src/rendering/` | Renderers, sphere geometry, globe/, particles/, GLSL |
-| `ui-agent` | `src/ui/`, `src/input/`, `src/systems/` | Globe.tsx, landing, game overlays, HUD, BoardInput |
-| `integration-agent` | `src/main.tsx`, `src/ui/Globe.tsx` | Wire packages together, phase transitions |
+- **Traits** — defined in `src/traits/`, one file per domain, all re-exported via `index.ts`
+- **Systems** — one system per file in `src/systems/`, pure functions accepting `(world: World)`
+- **Actions** — imperative world mutations (spawn, destroy, modify) in dedicated files
+- **Sim/View split** — simulation (traits/systems) is completely decoupled from rendering (view)
 
 ---
 
@@ -110,21 +113,20 @@ Agents for this codebase:
 
 ```bash
 pnpm dev                 # Vite dev server (http://localhost:5173)
-pnpm dev --host          # Expose on LAN
 pnpm build               # Production build
-pnpm test:vitest         # Run all Vitest suites (131 suites, 2239 tests)
-pnpm tsc                 # TypeScript check (pnpm tsc --noEmit)
+pnpm test:vitest         # Run all Vitest suites
+pnpm tsc                 # TypeScript check
 pnpm lint                # Biome lint + format check
 pnpm verify              # lint + tsc + test (all gates)
 ```
 
 ---
 
-## Validation (before any PR or merge)
+## Validation (before any commit)
 
 ```
 pnpm verify — all gates must pass
-  Biome lint: 0 errors, 0 warnings
+  Biome lint: 0 errors
   TypeScript: 0 errors
-  Vitest: 131 suites, 2239 tests passing
+  Vitest: 143 suites, 2440 tests passing
 ```

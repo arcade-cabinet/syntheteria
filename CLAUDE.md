@@ -1,84 +1,98 @@
 # Syntheteria — Claude Code Contract
 
-> **MANDATORY**: Before doing ANY work, read `AGENTS.md` (root), then follow the session
-> protocol in `docs/memory-bank/AGENTS.md`. This ensures you have current project context.
+> **MANDATORY**: Before doing ANY work, read `AGENTS.md` (root) for package structure rules.
 
 ## Session Start Checklist
 
-1. Read `AGENTS.md` — multi-agent orchestration, architecture rules, hard bans
-2. Read `docs/memory-bank/AGENTS.md` — session protocol
-3. Read `docs/memory-bank/activeContext.md` — current focus, recent changes, next steps
-4. Read `docs/memory-bank/progress.md` — system status dashboard
-5. Confirm: "I have read the memory bank and understand current project state."
+1. Read `AGENTS.md` — package structure, architecture rules, hard bans
+2. Read `docs/memory-bank/activeContext.md` — current focus, recent changes, next steps
+3. Read `docs/memory-bank/progress.md` — system status dashboard
+4. Confirm: "I have read the memory bank and understand current project state."
+
+## Package Structure Standards (ENFORCED)
+
+These are NOT suggestions. Every file must follow them.
+
+### Import Rules
+
+```typescript
+// CORRECT — import from package index
+import { Building, Powered } from "../traits";
+import { advanceTurn } from "../systems";
+import { generateBoard } from "../board";
+
+// WRONG — deep import into package internals
+import { Building } from "../traits/building";
+import { advanceTurn } from "../systems/turnSystem";
+import { generateBoard } from "../board/generator";
+```
+
+### File Organization
+
+| Concern | File type | Location |
+|---------|-----------|----------|
+| Game logic | `.ts` | `src/systems/`, domain packages |
+| Trait definitions | `.ts` | `src/traits/` |
+| React components | `.tsx` | `src/ui/`, `src/app/` |
+| Shaders | `.glsl` | `src/terrain/glsl/`, `src/rendering/glsl/` |
+| Config/data | `.ts` | `src/config/` |
+| Tests | `.vitest.ts` | `__tests__/` inside owning package |
+
+### Every Package Must Have
+
+1. `index.ts` — public API exports only
+2. `__tests__/` — colocated tests
+3. Clear single responsibility
+4. < 500 LOC per file (300 preferred)
 
 ## Claude-Specific Behavior
-
-### .claude/ Directory
-
-```
-.claude/
-├── settings.json          # PostToolUse hook for typecheck on Edit/Write
-├── agents/                # 6 specialized agent definitions
-└── commands/              # Slash commands
-```
 
 ### Progress Communication
 
 1. **Update `docs/memory-bank/activeContext.md`** after significant work
 2. **Update `docs/memory-bank/progress.md`** if system status changed
-3. **Update relevant domain doc** if design/architecture changed
-4. Never leave stale context — if you changed something, update the docs
+3. Never leave stale context — if you changed something, update the docs
 
 ### Testing Ownership
 
 If Claude changes a visible flow, it must:
 1. Update or add Vitest coverage for the touched system
-2. Not leave stale tests that describe old UI
+2. Tests live in `__tests__/` inside the package that owns the code
 
-Test roots (all Vitest — no Jest in this project):
-- Unit/system: `src/**/__tests__/*.vitest.{ts,tsx}` — `pnpm test:vitest`
-- UI component: `src/ui/__tests__/*.vitest.tsx` — `pnpm test:vitest`
-- Playwright CT (browser): `tests/components/*.browser.test.tsx` — `pnpm test:ct`
-- Playwright E2E: `tests/e2e/*.spec.ts` — `pnpm test:e2e`
-- Full gate: `pnpm verify` (lint + tsc + test:vitest + test:ct)
-
-### UI Source Map (ground-up rewrite)
-
-Key player-visible files:
-- Globe (ONE Canvas): `src/ui/Globe.tsx` — persistent across all phases
-- Title/Landing: `src/ui/landing/LandingScreen.tsx`, `NewGameModal.tsx`
-- Game HUD: `src/ui/game/HUD.tsx`, `src/ui/game/RadialMenu.tsx`, `src/ui/game/GarageModal.tsx`
-- Overlays: `src/ui/game/TechTreeOverlay.tsx`, `DiplomacyOverlay.tsx`, `UnitRosterOverlay.tsx`
-- Input: `src/input/BoardInput.tsx`
-- Camera: `src/camera/SphereOrbitCamera.tsx`, `src/camera/IsometricCamera.tsx`
-- Renderers: `src/rendering/BoardRenderer.tsx`, `HighlightRenderer.tsx`, `UnitRenderer.tsx`
-- Sphere: `src/rendering/boardGeometry.ts`, `src/rendering/spherePlacement.ts`
-- Globe title: `src/rendering/globe/` (GlobeWithCities, Hypercane, StormClouds, Lightning)
+Test commands:
+- `pnpm test:vitest` — all Vitest suites
+- `pnpm test:ct` — Playwright component tests
+- `pnpm test:e2e` — Playwright E2E
+- `pnpm verify` — lint + tsc + test (all gates)
 
 ### What Claude Should Prefer
 
-- Real UI flows over mockups
-- `gameDefaults.ts` tunables over hardcoded values
-- TypeScript `const` objects over JSON configs
-- ECS traits over module-level state
-- Systems that accept `world` param over world singleton import
+- Package index imports over deep file imports
+- Pure TS logic over TSX for non-visual code
+- `src/config/` tunables over hardcoded values
+- Systems that accept `world: World` param
 - One source of truth per data domain
+- Procedural animation (Wall-E bob-and-weave) over Blender rigging
+- CivRev2-style DOM labels over in-canvas text
+- Isometric perspective camera over sphere orbit
 
 ### What Claude Should Avoid
 
-- Referencing anything in `pending/` except as read-only reference
-- Adding magic numbers to systems or renderers
+- Deep imports across package boundaries
+- TSX files outside `src/ui/` and `src/app/`
+- Files over 500 LOC without splitting
+- Referencing anything in `pending/`
 - Using `world.entity(id)` — Koota has no such API
 - Silent fallbacks that hide bugs
-- Infinite grid / chunk streaming architecture — we use fixed board
-- Sectors, cities, or modal city screens — base building is on the world map
+- Faction tint on robot models (models render with original textures)
 
 ## Documentation
 
 | Domain | Location |
 |--------|----------|
-| Game design, lore, factions, bots, economy, UI | `docs/GAME_DESIGN.md` |
-| Tech stack, packages, ECS patterns, tests | `docs/ARCHITECTURE.md` |
-| What to build next, porting from `pending/` | `docs/ROADMAP.md` |
+| Package structure, architecture rules | `AGENTS.md` |
+| Game design, lore, factions, economy | `docs/GAME_DESIGN.md` |
+| Tech stack, packages, tests | `docs/ARCHITECTURE.md` |
+| AI systems | `docs/AI_DESIGN.md` |
 | Current focus and session state | `docs/memory-bank/activeContext.md` |
 | System status dashboard | `docs/memory-bank/progress.md` |

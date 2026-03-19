@@ -15,7 +15,7 @@
 
 import { createWorld } from "koota";
 import { describe, expect, it } from "vitest";
-import { placeSalvageProps } from "../../systems/salvagePlacement";
+import { placeSalvageProps } from "../../systems";
 import { isPassableFloor } from "../../terrain/types";
 import { SalvageProp } from "../../traits/salvage";
 import { generateBoard } from "../generator";

@@ -15,8 +15,7 @@ import { playSfx } from "../audio/sfx";
 import type { TechDef, TechEffectType } from "../config/techTreeDefs";
 import { TECH_BY_ID, TECH_TREE } from "../config/techTreeDefs";
 import { pushTurnEvent } from "../ui/game/turnEvents";
-import { Building, Powered } from "../traits/building";
-import { Faction } from "../traits/faction";
+import { Building, Powered, Faction } from "../traits";
 import { pushToast } from "./toastNotifications";
 
 // ─── Research State Trait ────────────────────────────────────────────────────

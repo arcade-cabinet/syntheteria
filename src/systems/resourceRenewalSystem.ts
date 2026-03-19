@@ -15,8 +15,7 @@
 
 import type { World } from "koota";
 import type { ResourceMaterial } from "../terrain/types";
-import type { BuildingType } from "../traits/building";
-import { Building, Powered } from "../traits/building";
+import { type BuildingType, Building, Powered } from "../traits";
 import { addResources } from "./resourceSystem";
 
 /** Which building types generate which resource, and how much per turn. */

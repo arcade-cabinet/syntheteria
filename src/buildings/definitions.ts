@@ -10,7 +10,7 @@
  */
 
 import type { ResourceMaterial } from "../terrain/types";
-import type { BuildingType } from "../traits/building";
+import type { BuildingType } from "../traits";
 
 export interface BuildingDef {
 	readonly displayName: string;

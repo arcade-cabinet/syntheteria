@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getCameraControls } from "../../camera/cameraStore";
-import type { GameOutcome } from "../../systems/victorySystem";
+import type { GameOutcome } from "../../systems";
 
 type GameOutcomeOverlayProps = {
 	outcome: GameOutcome;

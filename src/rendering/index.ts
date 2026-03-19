@@ -111,3 +111,33 @@ export { buildExploredSet, isTileExplored } from "./tileVisibility";
 // --- Unit detection ---
 export { isUnitDetected } from "./unitDetection";
 export type { Scanner } from "./unitDetection";
+
+// --- Faction colors (unaliased for view/ consumers) ---
+export { FACTION_COLORS } from "./modelPaths";
+
+// --- Globe shaders ---
+export {
+	globeFragmentShader,
+	globeVertexShader,
+	hypercaneFragmentShader,
+	hypercaneVertexShader,
+	lightningFragmentShader,
+	lightningVertexShader,
+	stormFragmentShader,
+	stormVertexShader,
+} from "./globe/shaders";
+export { cinematicState } from "./globe/cinematicState";
+
+// --- Sky chronometry ---
+export { turnToChronometry } from "./sky/chronometry";
+export type { Chronometry } from "./sky/chronometry";
+
+// --- Particles ---
+export { pushEffect, drainEffects, clearEffects, getEffectQueueLength } from "./particles/effectEvents";
+export type { EffectType, EffectEvent } from "./particles/effectEvents";
+export { ParticlePool } from "./particles/ParticlePool";
+export type { ParticleConfig } from "./particles/ParticlePool";
+
+// --- GLSL shaders (raw) ---
+export { default as fogOfWarSphereFrag } from "./glsl/fogOfWarSphereFrag.glsl";
+export { default as fogOfWarSphereVert } from "./glsl/fogOfWarSphereVert.glsl";

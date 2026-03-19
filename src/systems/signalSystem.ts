@@ -8,8 +8,7 @@
  */
 
 import type { World } from "koota";
-import { Building, Powered, SignalNode } from "../traits/building";
-import { UnitPos, UnitStats } from "../traits/unit";
+import { Building, Powered, SignalNode, UnitPos, UnitStats } from "../traits";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

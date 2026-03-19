@@ -4,16 +4,16 @@ import type { GeneratedBoard } from "../board/types";
 import { pushTurnEvent } from "../ui/game/turnEvents";
 import type { Difficulty } from "../world/config";
 import { getRelation } from "../factions/relations";
-import { Board } from "../traits/board";
-import { ResourceDeposit } from "../traits/resource";
 import {
+	Board,
+	ResourceDeposit,
 	UnitAttack,
 	UnitFaction,
 	UnitHarvest,
 	UnitMove,
 	UnitPos,
 	UnitStats,
-} from "../traits/unit";
+} from "../traits";
 
 // ---------------------------------------------------------------------------
 // Layer 1: Faction Personality — static strategic priorities per faction

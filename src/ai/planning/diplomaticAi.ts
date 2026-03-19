@@ -17,7 +17,7 @@ import {
 	declareWar,
 	getStandingLevel,
 	getDiplomacyPersonality,
-} from "../../systems/diplomacySystem";
+} from "../../systems";
 import { getRelation } from "../../factions/relations";
 
 // ---------------------------------------------------------------------------

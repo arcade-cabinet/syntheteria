@@ -3,9 +3,9 @@ import { playSfx } from "../audio/sfx";
 import { pushTurnEvent } from "../ui/game/turnEvents";
 import type { RobotClass } from "../robots/types";
 import { TileFloor } from "../terrain";
-import { Board } from "../traits/board";
-import { Tile } from "../traits/tile";
 import {
+	Board,
+	Tile,
 	CombatResult,
 	UnitAttack,
 	UnitFaction,
@@ -13,7 +13,7 @@ import {
 	UnitStats,
 	UnitVisual,
 	UnitXP,
-} from "../traits/unit";
+} from "../traits";
 import { recordCombatEngagement, recordCombatKill } from "./campaignStats";
 import { recordAggression } from "./diplomacySystem";
 import { awardXP, recordKill } from "./experienceSystem";

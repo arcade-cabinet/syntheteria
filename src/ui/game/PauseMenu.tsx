@@ -17,7 +17,7 @@ import {
 	type FragmentDefinition,
 	getFragmentProgress,
 	getReadFragments,
-} from "../../systems/memoryFragments";
+} from "../../systems";
 import { pushToast } from "./toastStore";
 
 export interface PauseMenuProps {

@@ -9,12 +9,12 @@
 
 import type { World } from "koota";
 import { TECH_BY_ID } from "../../config/techTreeDefs";
-import { FabricationJob } from "../../systems/fabricationSystem";
-import { getResearchState } from "../../systems/researchSystem";
 import {
+	FabricationJob,
+	getResearchState,
 	FUSION_RECIPES,
 	SynthesisQueue,
-} from "../../systems/synthesisSystem";
+} from "../../systems";
 import { Building } from "../../traits/building";
 
 export interface PendingItem {

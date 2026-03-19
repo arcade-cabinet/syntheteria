@@ -1,7 +1,6 @@
 import type { World } from "koota";
 import type { ResourceMaterial } from "../terrain/types";
-import { Faction } from "../traits/faction";
-import { ResourcePool } from "../traits/resource";
+import { Faction, ResourcePool } from "../traits";
 
 /** Get the ResourcePool values for the player faction. */
 export function getPlayerResources(

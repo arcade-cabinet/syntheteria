@@ -1,6 +1,6 @@
 import type { World } from "koota";
 import { MOVEMENT_PROFILES } from "../config/movementDefs";
-import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../traits/unit";
+import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../traits";
 
 /** Worker — builds bases, harvests resources. MobileStorageBot.glb */
 export const WORKER_DEFAULTS = {

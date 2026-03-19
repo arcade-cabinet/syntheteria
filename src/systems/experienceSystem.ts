@@ -30,7 +30,7 @@ import {
 	UnitStats,
 	UnitVisual,
 	UnitXP,
-} from "../traits/unit";
+} from "../traits";
 import { pushToast } from "./toastNotifications";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

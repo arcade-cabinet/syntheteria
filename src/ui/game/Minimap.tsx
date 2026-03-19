@@ -13,7 +13,7 @@ import type { GeneratedBoard } from "../../board/types";
 import { getCameraControls } from "../../camera/cameraStore";
 import { FACTION_COLORS } from "../../config/gameDefaults";
 import { getRelation } from "../../factions/relations";
-import { computeTerritory } from "../../systems/territorySystem";
+import { computeTerritory } from "../../systems";
 import { Building } from "../../traits/building";
 import { Tile } from "../../traits/tile";
 import { UnitFaction, UnitPos } from "../../traits/unit";

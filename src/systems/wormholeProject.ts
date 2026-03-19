@@ -21,8 +21,7 @@ import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
 import { WORMHOLE_PROJECT_TURNS } from "../config/gameDefaults";
 import { pushTurnEvent } from "../ui/game/turnEvents";
-import { Board } from "../traits/board";
-import { Building } from "../traits/building";
+import { Board, Building } from "../traits";
 import { isTechResearched } from "./researchSystem";
 import { pushToast } from "./toastNotifications";
 

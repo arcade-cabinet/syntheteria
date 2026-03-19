@@ -17,7 +17,7 @@ import {
 	type BuildingType,
 	PowerGrid,
 	StorageCapacity,
-} from "../traits/building";
+} from "../traits";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

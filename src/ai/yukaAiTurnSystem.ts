@@ -19,35 +19,34 @@ import { BUILDING_DEFS } from "../buildings/definitions";
 import { getRelation } from "../factions/relations";
 import { TRACK_REGISTRY } from "../robots/specializations/trackRegistry";
 import type { RobotClass } from "../robots/types";
-import { queueFabrication } from "../systems/fabricationSystem";
-import { getPopCap, getPopulation } from "../systems/populationSystem";
 import {
+	queueFabrication,
+	getPopCap,
+	getPopulation,
 	countResearchLabs,
 	getAvailableTechs,
 	getResearchState,
 	queueResearch,
-} from "../systems/researchSystem";
-import { canAfford, spendResources } from "../systems/resourceSystem";
-import {
+	canAfford,
+	spendResources,
 	FUSION_RECIPES,
 	SynthesisQueue,
 	queueSynthesis,
-} from "../systems/synthesisSystem";
+} from "../systems";
 import { TileFloor } from "../terrain/traits";
 import type { ResourceMaterial } from "../terrain/types";
-import { Board } from "../traits/board";
 import {
+	Board,
 	BotFabricator,
 	Building,
 	type BuildingType,
 	Powered,
 	PowerGrid,
 	StorageCapacity,
-} from "../traits/building";
-import { Faction } from "../traits/faction";
-import { ResourceDeposit, ResourcePool } from "../traits/resource";
-import { Tile } from "../traits/tile";
-import {
+	Faction,
+	ResourceDeposit,
+	ResourcePool,
+	Tile,
 	UnitAttack,
 	UnitFaction,
 	UnitHarvest,
@@ -55,7 +54,7 @@ import {
 	UnitMove,
 	UnitPos,
 	UnitStats,
-} from "../traits/unit";
+} from "../traits";
 import type { Difficulty } from "../world/config";
 import type { AgentSnapshot } from "./agents/SyntheteriaAgent";
 import { assessSituationFuzzy } from "./fuzzy/situationModule";

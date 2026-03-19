@@ -16,7 +16,7 @@ import {
 	UnitSpecialization,
 	UnitStats,
 	UnitXP,
-} from "../traits/unit";
+} from "../traits";
 
 // ─── Passive effect handlers ────────────────────────────────────────────────
 

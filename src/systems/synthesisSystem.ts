@@ -13,7 +13,7 @@ import { trait } from "koota";
 import { playSfx } from "../audio/sfx";
 import { pushTurnEvent } from "../ui/game/turnEvents";
 import type { ResourceMaterial } from "../terrain/types";
-import { Building, Powered } from "../traits/building";
+import { Building, Powered } from "../traits";
 import { addResources, canAfford, spendResources } from "./resourceSystem";
 
 // ─── Recipes ────────────────────────────────────────────────────────────────

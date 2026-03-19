@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { generateBoard } from "../../board/generator";
 import type { BoardConfig, GeneratedBoard, TileData } from "../../board/types";
 import { initFactions } from "../../factions/init";
-import { runAiTurns } from "../../systems/aiTurnSystem";
 import {
-	_reset,
+	runAiTurns,
+	_resetCultist as _reset,
 	checkCultistSpawn,
 	getStormCultistParams,
-} from "../../systems/cultistSystem";
+} from "../../systems";
 import { floorTypeForTile } from "../../terrain/cluster";
 import { Board } from "../../traits/board";
 import { Faction } from "../../traits/faction";

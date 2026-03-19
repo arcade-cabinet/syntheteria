@@ -4,7 +4,7 @@ import {
 	applyMarkUpgrade,
 	awardXP,
 	getMarkThreshold,
-} from "../../systems/experienceSystem";
+} from "../../systems";
 import { UnitFaction, UnitPos, UnitStats, UnitXP } from "../../traits/unit";
 import {
 	getMarkSpecEffectValue,

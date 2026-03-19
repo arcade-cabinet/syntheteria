@@ -17,18 +17,18 @@ import { RANGED_DEFAULTS } from "../robots/GuardBot";
 import { WORKER_DEFAULTS } from "../robots/HarvesterBot";
 import { SCOUT_DEFAULTS } from "../robots/ScoutBot";
 import { INFANTRY_DEFAULTS } from "../robots/SentinelBot";
-import { Board } from "../traits/board";
-import { Building } from "../traits/building";
-import { Faction } from "../traits/faction";
-import { ResourcePool } from "../traits/resource";
-import { Tile } from "../traits/tile";
 import {
+	Board,
+	Building,
+	Faction,
+	ResourcePool,
+	Tile,
 	UnitFaction,
 	UnitPos,
 	UnitSpecialization,
 	UnitStats,
 	UnitVisual,
-} from "../traits/unit";
+} from "../traits";
 import type {
 	BuildingRecord,
 	ExploredRecord,

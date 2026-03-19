@@ -36,7 +36,7 @@ import {
 	UnitPos,
 	UnitStats,
 	UnitVisual,
-} from "../traits/unit";
+} from "../traits";
 import { FACTION_COLORS } from "../rendering/modelPaths";
 import { isUnitDetected } from "../rendering/unitDetection";
 

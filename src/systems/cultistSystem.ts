@@ -21,16 +21,16 @@ import {
 	spawnCultMechByType,
 	spawnCultRanged,
 } from "../robots/CultMechs";
-import { Board } from "../traits/board";
-import { Building } from "../traits/building";
-import { CultStructure } from "../traits/cult";
 import {
+	Board,
+	Building,
+	CultStructure,
 	UnitAttack,
 	UnitFaction,
 	UnitMove,
 	UnitPos,
 	UnitStats,
-} from "../traits/unit";
+} from "../traits";
 import { pushToast } from "./toastNotifications";
 
 // ---------------------------------------------------------------------------

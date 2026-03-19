@@ -1,6 +1,11 @@
 import type { World } from "koota";
-import { CultMutation } from "../traits/cult";
-import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../traits/unit";
+import {
+	CultMutation,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+	UnitVisual,
+} from "../traits";
 
 // ---------------------------------------------------------------------------
 // Unit type ID — used for tier-based spawning in cultistSystem

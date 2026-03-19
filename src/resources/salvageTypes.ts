@@ -10,7 +10,7 @@
  */
 
 import type { ResourceMaterial } from "../terrain/types";
-import type { SalvageType } from "../traits/salvage";
+import type { SalvageType } from "../traits";
 
 export interface YieldRange {
 	readonly min: number;

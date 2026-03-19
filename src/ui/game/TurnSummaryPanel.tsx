@@ -24,7 +24,7 @@ import {
 	getTurnSummary,
 	subscribeTurnSummary,
 	type TurnSummaryData,
-} from "../../systems/turnSummary";
+} from "../../systems";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 

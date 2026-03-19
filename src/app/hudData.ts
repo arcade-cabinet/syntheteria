@@ -8,9 +8,12 @@
 import type { WorldType } from "../create-world";
 import { TECH_BY_ID } from "../config/techTreeDefs";
 import { PLAYER_MAX_AP } from "../config/gameDefaults";
-import { FUSION_RECIPES, SynthesisQueue } from "../systems/synthesisSystem";
-import { FabricationJob } from "../systems/fabricationSystem";
-import { getResearchState } from "../systems/researchSystem";
+import {
+	FUSION_RECIPES,
+	SynthesisQueue,
+	FabricationJob,
+	getResearchState,
+} from "../systems";
 import { Building, UnitFaction, UnitStats } from "../traits";
 import type { CurrentResearch, ProductionQueueItem } from "../ui/game/HUD";
 

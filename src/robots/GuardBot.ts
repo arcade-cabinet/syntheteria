@@ -1,6 +1,6 @@
 import type { World } from "koota";
 import { MOVEMENT_PROFILES } from "../config/movementDefs";
-import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../traits/unit";
+import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../traits";
 
 /** Ranged — standoff fire, tanky, slow. QuadrupedTank.glb */
 export const RANGED_DEFAULTS = {

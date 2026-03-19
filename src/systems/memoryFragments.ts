@@ -13,7 +13,7 @@
  */
 
 import type { World } from "koota";
-import { UnitFaction, UnitPos } from "../traits/unit";
+import { UnitFaction, UnitPos } from "../traits";
 import { pushToast } from "./toastNotifications";
 
 // ─── Types ───────────────────────────────────────────────────────────────────

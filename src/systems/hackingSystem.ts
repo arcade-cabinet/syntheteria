@@ -22,10 +22,16 @@ import { trait } from "koota";
 import { playSfx } from "../audio/sfx";
 import { pushTurnEvent } from "../ui/game/turnEvents";
 import type { RobotClass } from "../robots/types";
-import { Building, Powered } from "../traits/building";
-import { Faction } from "../traits/faction";
-import { ResourcePool } from "../traits/resource";
-import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../traits/unit";
+import {
+	Building,
+	Powered,
+	Faction,
+	ResourcePool,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+	UnitVisual,
+} from "../traits";
 import {
 	getHackedBotRole,
 	HACKING_AP_COST,

@@ -85,3 +85,11 @@ export {
 	getAllTrackTechs,
 } from "./specializations/trackRegistry";
 export type { TrackEntry } from "./specializations/trackRegistry";
+
+// --- Specialization track techs (consumed by config/techTreeDefs) ---
+export { CAVALRY_TRACK_TECHS } from "./specializations/cavalryTracks";
+export { INFANTRY_TRACK_TECHS } from "./specializations/infantryTracks";
+export { RANGED_SPEC_TECHS } from "./specializations/rangedTracks";
+export { SCOUT_TRACK_TECHS } from "./specializations/scoutTracks";
+export { SUPPORT_TRACK_TECHS } from "./specializations/supportTracks";
+export { WORKER_TRACK_TECHS } from "./specializations/workerTracks";

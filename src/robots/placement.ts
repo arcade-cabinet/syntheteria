@@ -1,6 +1,6 @@
 import type { World } from "koota";
 import { FACTION_DEFINITIONS } from "../factions/definitions";
-import { UnitPos } from "../traits/unit";
+import { UnitPos } from "../traits";
 import { spawnSupport } from "./BuilderBot";
 import { spawnCavalry } from "./CavalryBot";
 import {

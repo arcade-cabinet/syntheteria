@@ -19,8 +19,7 @@ import type { GeneratedBoard } from "../board/types";
 import { SALVAGE_DEFS } from "../resources/salvageTypes";
 import { makePRNG } from "../seed";
 import type { FloorType } from "../terrain/types";
-import type { SalvageType } from "../traits/salvage";
-import { SalvageProp } from "../traits/salvage";
+import { SalvageProp, type SalvageType } from "../traits";
 
 // ─── Scatter config ─────────────────────────────────────────────────────────
 

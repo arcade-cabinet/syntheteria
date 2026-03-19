@@ -1,6 +1,6 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import { FabricationJob } from "../../../systems/fabricationSystem";
+import { FabricationJob } from "../../../systems";
 import { collectPendingItems } from "../PendingCompletions";
 
 describe("collectPendingItems", () => {

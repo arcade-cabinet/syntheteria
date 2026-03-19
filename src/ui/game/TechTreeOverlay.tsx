@@ -16,7 +16,7 @@ import {
 	getAvailableTechs,
 	getResearchState,
 	queueResearch,
-} from "../../systems/researchSystem";
+} from "../../systems";
 
 type TechTreeOverlayProps = {
 	world: World;

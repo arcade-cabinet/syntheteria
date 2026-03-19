@@ -24,7 +24,7 @@ import { FACTION_COLORS } from "../../config/gameDefaults";
 import {
 	computeTerritory,
 	type TerritorySnapshot,
-} from "../../systems/territorySystem";
+} from "../../systems";
 import { buildExploredSet } from "../../rendering/tileVisibility";
 
 type TerritoryOverlayRendererProps = {

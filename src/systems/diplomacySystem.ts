@@ -41,7 +41,7 @@ import {
 	setRelation,
 	setStanding,
 } from "../factions/relations";
-import { UnitFaction, UnitPos, UnitStats } from "../traits/unit";
+import { UnitFaction, UnitPos, UnitStats, FactionRelation } from "../traits";
 import { revealFog } from "./fogRevealSystem";
 import { pushToast } from "./toastNotifications";
 
@@ -563,8 +563,6 @@ export function getDiplomacyPersonality(
 	return DIPLOMACY_PERSONALITY[factionId] ?? null;
 }
 
-// Need to import the trait for standing decay iteration
-import { FactionRelation } from "../traits/faction";
 
 /** Reset module state — for tests. */
 export function _resetDiplomacy(): void {

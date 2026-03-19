@@ -1,6 +1,6 @@
 import type { World } from "koota";
 import { MOVEMENT_PROFILES } from "../config/movementDefs";
-import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../traits/unit";
+import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../traits";
 
 /** Infantry — balanced frontline fighter. FieldFighter.glb */
 export const INFANTRY_DEFAULTS = {

@@ -20,15 +20,15 @@ import type { RobotClass } from "../robots/types";
 import { TileFloor } from "../terrain/traits";
 import type { ResourceMaterial } from "../terrain/types";
 import { FLOOR_DEFS } from "../terrain/types";
-import { Tile } from "../traits/tile";
 import {
+	Tile,
 	UnitFaction,
 	UnitMine,
 	UnitPos,
 	UnitStats,
 	UnitVisual,
 	UnitXP,
-} from "../traits/unit";
+} from "../traits";
 import { awardXP, recordHarvest } from "./experienceSystem";
 import { isTechResearched } from "./researchSystem";
 import { trackIncome } from "./resourceDeltaSystem";

@@ -12,7 +12,7 @@ import { createGridApi } from "../../board/grid";
 import type { GeneratedBoard } from "../../board/types";
 import { BUILDING_DEFS } from "../../buildings/definitions";
 import { SALVAGE_DEFS } from "../../resources/salvageTypes";
-import { computeTerritory } from "../../systems/territorySystem";
+import { computeTerritory } from "../../systems";
 import { FLOOR_DEFS, type FloorType } from "../../terrain/types";
 import { Building, Powered } from "../../traits/building";
 import { ResourceDeposit } from "../../traits/resource";

@@ -9,7 +9,7 @@
  */
 
 import type { World } from "koota";
-import { Building, Powered, PowerGrid } from "../traits/building";
+import { Building, Powered, PowerGrid } from "../traits";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

@@ -3,14 +3,14 @@ import { playSfx } from "../audio/sfx";
 import { pushTurnEvent } from "../ui/game/turnEvents";
 import type { RobotClass } from "../robots/types";
 import type { ResourceMaterial } from "../terrain/types";
-import { ResourceDeposit } from "../traits/resource";
 import {
+	ResourceDeposit,
 	UnitFaction,
 	UnitHarvest,
 	UnitStats,
 	UnitVisual,
 	UnitXP,
-} from "../traits/unit";
+} from "../traits";
 import { awardXP, recordHarvest } from "./experienceSystem";
 import { trackIncome } from "./resourceDeltaSystem";
 import { addResources } from "./resourceSystem";

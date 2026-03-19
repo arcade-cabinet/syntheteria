@@ -25,11 +25,15 @@ import {
 	VICTORY_RESEARCH_POINTS,
 	VICTORY_SURVIVAL_TURNS,
 } from "../config/gameDefaults";
-import { Board } from "../traits/board";
-import { Building } from "../traits/building";
-import { Faction } from "../traits/faction";
-import { ResourcePool } from "../traits/resource";
-import { UnitFaction, UnitStats, UnitXP } from "../traits/unit";
+import {
+	Board,
+	Building,
+	Faction,
+	ResourcePool,
+	UnitFaction,
+	UnitStats,
+	UnitXP,
+} from "../traits";
 import { isTechResearched } from "./researchSystem";
 import { computeTerritory, getTerritoryPercent } from "./territorySystem";
 import { getWormholeProjectState } from "./wormholeProject";

@@ -21,7 +21,7 @@ import {
 	getStandingDisplay,
 	proposeAlliance,
 	subscribeDiplomacy,
-} from "../../systems/diplomacySystem";
+} from "../../systems";
 import { Board } from "../../traits/board";
 
 type DiplomacyOverlayProps = {

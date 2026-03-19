@@ -18,7 +18,7 @@ import {
 	getContextSpeechByPersona,
 	getEventSpeechByPersona,
 } from "../narrative/speechProfiles";
-import { Faction } from "../traits/faction";
+import { Faction } from "../traits";
 import { triggerSpeech } from "./speechBubbleStore";
 
 // ─── Persona lookup ─────────────────────────────────────────────────────────

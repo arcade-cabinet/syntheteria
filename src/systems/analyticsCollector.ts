@@ -11,10 +11,13 @@
 
 import type { World } from "koota";
 import type { FactionSnapshotData } from "../db/types";
-import { Building } from "../traits/building";
-import { Faction } from "../traits/faction";
-import { ResourcePool } from "../traits/resource";
-import { UnitFaction, UnitStats } from "../traits/unit";
+import {
+	Building,
+	Faction,
+	ResourcePool,
+	UnitFaction,
+	UnitStats,
+} from "../traits";
 import type { CampaignStats } from "./campaignStats";
 import { serializeCampaignStats } from "./campaignStats";
 

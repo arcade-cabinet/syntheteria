@@ -23,10 +23,12 @@ import {
 	placeRobots,
 	type SimpleBoardInfo,
 } from "./robots/placement";
-import { placeStarterBuildings } from "./systems/buildingPlacement";
-import { revealFog } from "./systems/fogRevealSystem";
-import { runPowerGrid } from "./systems/powerSystem";
-import { placeSalvageProps } from "./systems/salvagePlacement";
+import {
+	placeStarterBuildings,
+	revealFog,
+	runPowerGrid,
+	placeSalvageProps,
+} from "./systems";
 import { TileFloor, tileFloorProps } from "./terrain";
 import { Board } from "./traits/board";
 import { ResourceDeposit } from "./traits/resource";

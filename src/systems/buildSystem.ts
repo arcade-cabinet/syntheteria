@@ -15,15 +15,15 @@ import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
 import { BUILDING_DEFS } from "../buildings/definitions";
 import type { ResourceMaterial } from "../terrain/types";
-import type { BuildingType } from "../traits/building";
 import {
+	type BuildingType,
 	BotFabricator,
 	Building,
 	PowerGrid,
 	SignalNode,
 	StorageCapacity,
 	TurretStats,
-} from "../traits/building";
+} from "../traits";
 import { canAfford, spendResources } from "./resourceSystem";
 import {
 	canStartWormholeProject,

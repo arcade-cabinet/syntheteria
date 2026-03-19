@@ -1,6 +1,5 @@
 import type { World } from "koota";
-import { Tile, TileHighlight } from "../traits/tile";
-import { UnitFaction, UnitPos } from "../traits/unit";
+import { Tile, TileHighlight, UnitFaction, UnitPos } from "../traits";
 
 export function clearHighlights(world: World): void {
 	for (const e of world.query(TileHighlight)) {

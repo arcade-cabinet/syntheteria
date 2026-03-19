@@ -10,7 +10,7 @@
  */
 
 import type { World } from "koota";
-import { Tile } from "../traits/tile";
+import { Tile } from "../traits";
 
 /** Fringe visibility values by distance past scanRange. */
 const FRINGE_VISIBILITY: readonly number[] = [0.7, 0.4];

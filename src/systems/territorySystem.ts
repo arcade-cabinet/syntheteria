@@ -11,8 +11,7 @@ import {
 	TERRITORY_BUILDING_RADIUS,
 	TERRITORY_UNIT_RADIUS,
 } from "../config/gameDefaults";
-import { Building } from "../traits/building";
-import { UnitFaction, UnitPos } from "../traits/unit";
+import { Building, UnitFaction, UnitPos } from "../traits";
 
 export interface TileTerritory {
 	factionId: string;

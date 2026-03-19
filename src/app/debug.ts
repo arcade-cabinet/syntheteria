@@ -16,11 +16,13 @@ import {
 	UnitStats,
 	UnitVisual,
 } from "../traits";
-import { getCombatKills } from "../systems/campaignStats";
-import { getPlayerResources } from "../systems/resourceSystem";
-import { computeTerritory } from "../systems/territorySystem";
-import { getGameOutcome } from "../systems/turnSystem";
-import type { GameOutcome } from "../systems/victorySystem";
+import {
+	getCombatKills,
+	getPlayerResources,
+	computeTerritory,
+	getGameOutcome,
+} from "../systems";
+import type { GameOutcome } from "../systems";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 

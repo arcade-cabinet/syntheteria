@@ -31,21 +31,17 @@ import {
 	collectCampaignStats,
 	collectFactionResources,
 	collectTurnSnapshot,
-} from "../systems/analyticsCollector";
-import {
 	rehydrateCampaignStats,
 	resetCampaignStats,
-} from "../systems/campaignStats";
-import { resetResourceDeltas } from "../systems/resourceDeltaSystem";
-import {
+	resetResourceDeltas,
 	getCompletedTurnLogs,
 	rehydrateTurnEventLog,
 	resetTurnEventLog,
-} from "../systems/turnEventLog";
-import { resetTurnSummary } from "../systems/turnSummary";
-import { getCurrentTurn } from "../systems/turnSystem";
-import { _resetTutorial } from "../systems/tutorialSystem";
-import { _resetVictory } from "../systems/victorySystem";
+	resetTurnSummary,
+	getCurrentTurn,
+	_resetTutorial,
+	_resetVictory,
+} from "../systems";
 import type {
 	ClimateProfile,
 	Difficulty,

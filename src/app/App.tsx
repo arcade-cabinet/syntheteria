@@ -15,21 +15,21 @@ import { createSqlJsAdapter } from "../db/adapter";
 import { GameRepo } from "../db/gameRepo";
 import { runMigrations } from "../db/migrations";
 import type { GameSummary } from "../db/types";
-import { getPlayerResources } from "../systems/resourceSystem";
-import { getPopCap, getPopulation } from "../systems/populationSystem";
 import {
+	getPlayerResources,
+	getPopCap,
+	getPopulation,
 	advanceTurn,
 	getCurrentTurn,
 	getGameOutcome,
-} from "../systems/turnSystem";
-import type { GameOutcome } from "../systems/victorySystem";
-import { _resetVictory, getVictoryProgress } from "../systems/victorySystem";
-import { UnitFaction, UnitPos } from "../traits";
-import {
+	_resetVictory,
+	getVictoryProgress,
 	collectTurnSummary,
 	resetTurnSummary,
-} from "../systems/turnSummary";
-import { pushToast } from "../systems/toastNotifications";
+	pushToast,
+} from "../systems";
+import type { GameOutcome } from "../systems";
+import { UnitFaction, UnitPos } from "../traits";
 import {
 	collectPendingItems,
 } from "../ui/game/PendingCompletions";

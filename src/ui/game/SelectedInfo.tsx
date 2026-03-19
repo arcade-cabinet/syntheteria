@@ -17,7 +17,7 @@ import { type BotMark, MARK_DEFS } from "../../robots/marks";
 import {
 	getXPForNextMark,
 	getXPProgress,
-} from "../../systems/experienceSystem";
+} from "../../systems";
 import {
 	UnitFaction,
 	UnitPos,

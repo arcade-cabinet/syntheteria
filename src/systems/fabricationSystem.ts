@@ -17,14 +17,16 @@ import { pushTurnEvent } from "../ui/game/turnEvents";
 import { TRACK_REGISTRY } from "../robots/specializations/trackRegistry";
 import type { RobotClass } from "../robots/types";
 import type { ResourceMaterial } from "../terrain/types";
-import { BotFabricator, Building, Powered } from "../traits/building";
 import {
+	BotFabricator,
+	Building,
+	Powered,
 	UnitFaction,
 	UnitPos,
 	UnitSpecialization,
 	UnitStats,
 	UnitVisual,
-} from "../traits/unit";
+} from "../traits";
 import { canSpawnUnit } from "./populationSystem";
 import { canAfford, spendResources } from "./resourceSystem";
 

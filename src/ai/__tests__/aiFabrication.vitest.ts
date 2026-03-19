@@ -30,8 +30,7 @@ import {
 	UnitPos,
 	UnitStats,
 } from "../../traits/unit";
-import { FabricationJob, queueFabrication, ROBOT_COSTS } from "../../systems/fabricationSystem";
-import { runPowerGrid } from "../../systems/powerSystem";
+import { FabricationJob, queueFabrication, ROBOT_COSTS, runPowerGrid } from "../../systems";
 import { resetAIRuntime, runYukaAiTurns } from "../yukaAiTurnSystem";
 
 // ---------------------------------------------------------------------------

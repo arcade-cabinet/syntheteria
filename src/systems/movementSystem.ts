@@ -1,5 +1,5 @@
 import type { World } from "koota";
-import { UnitMove, UnitPos, UnitStats } from "../traits/unit";
+import { UnitMove, UnitPos, UnitStats } from "../traits";
 import { revealFog } from "./fogRevealSystem";
 
 const MOVE_SPEED = 4.0; // tiles per second

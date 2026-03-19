@@ -22,12 +22,10 @@ import {
 	cancelBuildPlacement,
 	confirmBuildPlacement,
 	isInBuildPlacementMode,
-} from "../systems/buildSystem";
-import {
 	clearHighlights,
 	highlightPlacementTile,
 	highlightReachableTiles,
-} from "../systems/highlightSystem";
+} from "../systems";
 import { Building } from "../traits/building";
 import { ResourceDeposit } from "../traits/resource";
 import {
@@ -44,13 +42,11 @@ import {
 	confirmRadialSelection,
 	getRadialMenuState,
 	openRadialMenu,
-} from "../systems/radialMenu";
-// Import providers so they register at module scope
-import {
 	setBuildProviderWorld,
 	setProviderBoard,
 	setProviderSelectedUnit,
-} from "../systems/radialProviders";
+} from "../systems";
+// Import providers so they register at module scope
 import "../systems/radialProviders";
 
 type BoardInputProps = {

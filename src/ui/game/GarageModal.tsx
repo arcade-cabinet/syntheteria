@@ -19,8 +19,8 @@ import {
 	type QueueResult,
 	queueFabrication,
 	ROBOT_COSTS,
-} from "../../systems/fabricationSystem";
-import { isTechResearched } from "../../systems/researchSystem";
+	isTechResearched,
+} from "../../systems";
 import { BotFabricator, Building, Powered } from "../../traits/building";
 
 // ─── Constants ───────────────────────────────────────────────────────────────

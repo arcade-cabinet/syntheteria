@@ -19,14 +19,15 @@ import { pushTurnEvent } from "../ui/game/turnEvents";
 import type { BotMark } from "../robots/marks";
 import { MARK_DEFS } from "../robots/marks";
 import type { ResourceMaterial } from "../terrain/types";
-import { Building, Powered } from "../traits/building";
 import {
+	Building,
+	Powered,
 	UnitFaction,
 	UnitPos,
 	UnitStats,
 	UnitUpgrade,
 	UnitVisual,
-} from "../traits/unit";
+} from "../traits";
 import { canAfford, spendResources } from "./resourceSystem";
 
 // ─── Tier computation ──────────────────────────────────────────────────────

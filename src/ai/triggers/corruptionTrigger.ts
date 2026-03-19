@@ -12,8 +12,7 @@
  */
 
 import type { World } from "koota";
-import { CultStructure } from "../../traits/cult";
-import { UnitFaction, UnitPos } from "../../traits/unit";
+import { CultStructure, UnitFaction, UnitPos } from "../../traits";
 import { pushAlert } from "../../ui/game/AlertBar";
 
 // ---------------------------------------------------------------------------

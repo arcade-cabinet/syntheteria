@@ -13,8 +13,7 @@
  */
 
 import type { World } from "koota";
-import { Building, Powered } from "../traits/building";
-import { UnitFaction, UnitPos } from "../traits/unit";
+import { Building, Powered, UnitFaction, UnitPos } from "../traits";
 
 /** Every faction starts with this cap before any buildings. */
 export const BASE_POP_CAP = 12;

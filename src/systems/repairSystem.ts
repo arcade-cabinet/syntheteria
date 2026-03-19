@@ -6,8 +6,13 @@
  */
 
 import type { World } from "koota";
-import { Building, Powered } from "../traits/building";
-import { UnitFaction, UnitPos, UnitStats } from "../traits/unit";
+import {
+	Building,
+	Powered,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+} from "../traits";
 
 const REPAIR_RANGE = 2;
 const REPAIR_AMOUNT = 2;

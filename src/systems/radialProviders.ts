@@ -51,18 +51,20 @@ import {
 	SynthesisQueue,
 } from "../systems/synthesisSystem";
 import { applyMark, getMaxTier, hasMark } from "../systems/upgradeSystem";
-import { Board } from "../traits/board";
-import type { BuildingType } from "../traits/building";
-import { BotFabricator, Building, Powered } from "../traits/building";
-import { ResourceDeposit } from "../traits/resource";
 import {
+	Board,
+	type BuildingType,
+	BotFabricator,
+	Building,
+	Powered,
+	ResourceDeposit,
 	UnitAttack,
 	UnitFaction,
 	UnitMove,
 	UnitPos,
 	UnitStats,
 	UnitUpgrade,
-} from "../traits/unit";
+} from "../traits";
 import type { RadialOpenContext } from "./radialMenu";
 import { registerRadialProvider } from "./radialMenu";
 

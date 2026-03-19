@@ -37,6 +37,11 @@ export {
 	setCampaignStats,
 } from "./campaignStats";
 export type { CampaignStats } from "./campaignStats";
+export {
+	rehydrateCampaignStats,
+	resetCampaignStats,
+	serializeCampaignStats,
+} from "./campaignStats";
 
 // --- Combat ---
 export { resolveAttacks } from "./attackSystem";
@@ -382,7 +387,7 @@ export {
 	_resetVictory,
 	_getTechPoints,
 } from "./victorySystem";
-export type { VictoryReason, VictoryProgress } from "./victorySystem";
+export type { VictoryReason, VictoryProgress, GameOutcome } from "./victorySystem";
 
 // --- Wormhole Project ---
 export {

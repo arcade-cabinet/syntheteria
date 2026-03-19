@@ -10,7 +10,6 @@ export const TILE_SIZE_M = 2.0;
 /** World Y offset per elevation level (bridge/tunnel height step). */
 export const ELEVATION_STEP_M = 0.4;
 
-
 /** Default difficulty setting. */
 export const DEFAULT_DIFFICULTY = "normal" as const;
 
@@ -55,10 +54,10 @@ export const DEFAULT_AI_UNIT_COLOR = 0xff4444;
 export const FACTION_COLORS: Record<string, number> = {
 	player: PLAYER_UNIT_COLOR,
 	"": PLAYER_UNIT_COLOR,
-	reclaimers: 0xff8844,       // Orange
-	volt_collective: 0xffcc00,  // Yellow
-	signal_choir: 0xaa44ff,     // Purple
-	iron_creed: 0xff4444,       // Red
+	reclaimers: 0xff8844, // Orange
+	volt_collective: 0xffcc00, // Yellow
+	signal_choir: 0xaa44ff, // Purple
+	iron_creed: 0xff4444, // Red
 };
 
 /** CSS-string versions for UI components. Derived from FACTION_COLORS. */
@@ -88,7 +87,6 @@ export const CAMERA_FOV = 45;
 // ---------------------------------------------------------------------------
 // New Game options
 // ---------------------------------------------------------------------------
-
 
 /** Valid difficulty options. */
 export const DIFFICULTIES = ["easy", "normal", "hard"] as const;

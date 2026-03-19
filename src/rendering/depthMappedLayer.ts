@@ -202,7 +202,9 @@ export function classifyEdges(layer: DepthMappedLayer): EdgeType[] {
 // Geometry builder
 // ---------------------------------------------------------------------------
 
-export function buildLayerGeometry(layer: DepthMappedLayer): LayerGeometryResult {
+export function buildLayerGeometry(
+	layer: DepthMappedLayer,
+): LayerGeometryResult {
 	const floorQuads: FloorQuad[] = [];
 	const voidPlanes: VoidPlane[] = [];
 	const { width, height, baseY } = layer;

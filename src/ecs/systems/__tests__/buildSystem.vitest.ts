@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { TileData } from "../../../board/types";
 import { BUILDING_DEFS } from "../../buildings/definitions";
 import {
-	Building,
 	BotFabricator,
+	Building,
 	PowerGrid,
 	SignalNode,
 	StorageCapacity,

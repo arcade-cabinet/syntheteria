@@ -8,9 +8,9 @@
 import { describe, expect, it } from "vitest";
 import { generateBoard } from "../generator";
 import { generateLabyrinth } from "../labyrinth";
-import { growingTreeMazeFill } from "../labyrinthMaze";
 import { connectRegions, isFullyConnected } from "../labyrinthConnectivity";
 import { applyLabyrinthFeatures } from "../labyrinthFeatures";
+import { growingTreeMazeFill } from "../labyrinthMaze";
 import { seededRng } from "../noise";
 import type { BoardConfig, TileData } from "../types";
 
@@ -61,7 +61,12 @@ function countPassable(tiles: TileData[][]): number {
 describe("labyrinth diagnostic — phase-by-phase", () => {
 	const seed = "diag-test-1";
 	const size = 33; // odd size for clean odd-coordinate grid
-	const config: BoardConfig = { width: size, height: size, seed, difficulty: "normal" };
+	const config: BoardConfig = {
+		width: size,
+		height: size,
+		seed,
+		difficulty: "normal",
+	};
 
 	it("Phase 1: rooms are carved into solid grid", () => {
 		const board = generateLabyrinth(config);
@@ -70,7 +75,9 @@ describe("labyrinth diagnostic — phase-by-phase", () => {
 
 		console.log("\n=== Phase 1: Room Placement ===");
 		console.log(asciiMap(board.tiles));
-		console.log(`Passable: ${passable}/${total} (${((passable / total) * 100).toFixed(1)}%)`);
+		console.log(
+			`Passable: ${passable}/${total} (${((passable / total) * 100).toFixed(1)}%)`,
+		);
 		console.log("Floor types:", countByType(board.tiles));
 
 		// Rooms should exist
@@ -90,7 +97,9 @@ describe("labyrinth diagnostic — phase-by-phase", () => {
 
 		console.log("\n=== Phase 2: After Maze Fill ===");
 		console.log(asciiMap(board.tiles));
-		console.log(`Before maze: ${passableBefore}, After: ${passableAfter}, Carved: ${carved}`);
+		console.log(
+			`Before maze: ${passableBefore}, After: ${passableAfter}, Carved: ${carved}`,
+		);
 		console.log("Floor types:", countByType(board.tiles));
 
 		// Maze should have carved substantial corridors
@@ -110,7 +119,9 @@ describe("labyrinth diagnostic — phase-by-phase", () => {
 
 		console.log("\n=== Phase 3: After Connectivity ===");
 		console.log(asciiMap(board.tiles));
-		console.log(`Regions: ${result.regionCount}, Spanning: ${result.spanningConnectors}, Loops: ${result.loopConnectors}`);
+		console.log(
+			`Regions: ${result.regionCount}, Spanning: ${result.spanningConnectors}, Loops: ${result.loopConnectors}`,
+		);
 		console.log(`Passable before: ${passableBefore}, after: ${passableAfter}`);
 
 		expect(isFullyConnected(board.tiles, size, size)).toBe(true);
@@ -126,11 +137,17 @@ describe("labyrinth diagnostic — phase-by-phase", () => {
 		const result = applyLabyrinthFeatures(board.tiles, size, size, seed);
 		const passableAfter = countPassable(board.tiles);
 
-		console.log("\n=== Phase 4: After Features (dead end pruning + bridges + tunnels) ===");
+		console.log(
+			"\n=== Phase 4: After Features (dead end pruning + bridges + tunnels) ===",
+		);
 		console.log(asciiMap(board.tiles));
-		console.log(`Dead ends filled: ${result.deadEndsFilled}, Bridges: ${result.bridgesPlaced}, Tunnels: ${result.tunnelsPunched}`);
+		console.log(
+			`Dead ends filled: ${result.deadEndsFilled}, Bridges: ${result.bridgesPlaced}, Tunnels: ${result.tunnelsPunched}`,
+		);
 		console.log(`Passable before: ${passableBefore}, after: ${passableAfter}`);
-		console.log(`Corridors lost: ${passableBefore - passableAfter} (${(((passableBefore - passableAfter) / passableBefore) * 100).toFixed(1)}%)`);
+		console.log(
+			`Corridors lost: ${passableBefore - passableAfter} (${(((passableBefore - passableAfter) / passableBefore) * 100).toFixed(1)}%)`,
+		);
 		console.log("Floor types:", countByType(board.tiles));
 
 		// CRITICAL: dead end pruning should not remove more than 50% of passable tiles
@@ -155,7 +172,9 @@ describe("labyrinth diagnostic — phase-by-phase", () => {
 
 		console.log("\n=== Full Pipeline: Final Board ===");
 		console.log(asciiMap(board.tiles));
-		console.log(`Passable: ${passable}/${total} (${((passable / total) * 100).toFixed(1)}%)`);
+		console.log(
+			`Passable: ${passable}/${total} (${((passable / total) * 100).toFixed(1)}%)`,
+		);
 		console.log("Floor types:", countByType(board.tiles));
 
 		// The final board should have a good mix of walls and passable space
@@ -182,7 +201,9 @@ describe("labyrinth diagnostic — phase-by-phase", () => {
 			}
 		}
 
-		console.log(`Corridor-like tiles (2 passable neighbors): ${corridorTileCount}`);
+		console.log(
+			`Corridor-like tiles (2 passable neighbors): ${corridorTileCount}`,
+		);
 		expect(corridorTileCount).toBeGreaterThan(20);
 	});
 });
@@ -194,7 +215,12 @@ describe("labyrinth diagnostic — phase-by-phase", () => {
 describe("odd-coordinate grid alignment with board sizes", () => {
 	for (const size of [16, 32, 44, 64]) {
 		it(`size ${size}: maze fills correctly despite even board size`, () => {
-			const config: BoardConfig = { width: size, height: size, seed: `align-${size}`, difficulty: "normal" };
+			const config: BoardConfig = {
+				width: size,
+				height: size,
+				seed: `align-${size}`,
+				difficulty: "normal",
+			};
 			const board = generateLabyrinth(config);
 			const mazeRng = seededRng(`align-${size}_maze`);
 			const carved = growingTreeMazeFill(board.tiles, size, size, mazeRng);
@@ -209,7 +235,9 @@ describe("odd-coordinate grid alignment with board sizes", () => {
 				}
 			}
 
-			console.log(`Size ${size}: ${carvedOddCells}/${oddCells} odd cells carved, total carved: ${carved}`);
+			console.log(
+				`Size ${size}: ${carvedOddCells}/${oddCells} odd cells carved, total carved: ${carved}`,
+			);
 
 			// All odd cells should be either room cells or maze cells (all passable)
 			expect(carvedOddCells).toBe(oddCells);
@@ -223,23 +251,38 @@ describe("odd-coordinate grid alignment with board sizes", () => {
 
 describe("dead end pruning severity", () => {
 	it("measures how much pruning removes at default board size 32x32", () => {
-		const config: BoardConfig = { width: 32, height: 32, seed: "prune-severity", difficulty: "normal" };
+		const config: BoardConfig = {
+			width: 32,
+			height: 32,
+			seed: "prune-severity",
+			difficulty: "normal",
+		};
 		const board = generateLabyrinth(config);
 		const mazeRng = seededRng("prune-severity_maze");
 		growingTreeMazeFill(board.tiles, 32, 32, mazeRng);
 		connectRegions(board.tiles, 32, 32, "prune-severity");
 
 		const passableBefore = countPassable(board.tiles);
-		const result = applyLabyrinthFeatures(board.tiles, 32, 32, "prune-severity");
+		const result = applyLabyrinthFeatures(
+			board.tiles,
+			32,
+			32,
+			"prune-severity",
+		);
 		const passableAfter = countPassable(board.tiles);
-		const lossPercent = ((passableBefore - passableAfter) / passableBefore) * 100;
+		const lossPercent =
+			((passableBefore - passableAfter) / passableBefore) * 100;
 
-		console.log(`\n32x32 pruning: ${result.deadEndsFilled} dead ends filled (${lossPercent.toFixed(1)}% of passable tiles lost)`);
+		console.log(
+			`\n32x32 pruning: ${result.deadEndsFilled} dead ends filled (${lossPercent.toFixed(1)}% of passable tiles lost)`,
+		);
 		console.log(asciiMap(board.tiles));
 
 		// This is the KEY diagnostic — if >60% is pruned, the maze is collapsing
 		if (lossPercent > 60) {
-			console.error("WARNING: Dead end pruning is too aggressive — corridors are being collapsed!");
+			console.error(
+				"WARNING: Dead end pruning is too aggressive — corridors are being collapsed!",
+			);
 		}
 
 		expect(lossPercent).toBeLessThan(70);

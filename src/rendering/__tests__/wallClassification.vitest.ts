@@ -225,10 +225,22 @@ describe("corner classification", () => {
 
 	it("all 4 corner orientations produce distinct rotations", () => {
 		const configs = [
-			[{ x: 2, z: 1 }, { x: 3, z: 2 }], // N+E
-			[{ x: 3, z: 2 }, { x: 2, z: 3 }], // E+S
-			[{ x: 2, z: 3 }, { x: 1, z: 2 }], // S+W
-			[{ x: 2, z: 1 }, { x: 1, z: 2 }], // N+W
+			[
+				{ x: 2, z: 1 },
+				{ x: 3, z: 2 },
+			], // N+E
+			[
+				{ x: 3, z: 2 },
+				{ x: 2, z: 3 },
+			], // E+S
+			[
+				{ x: 2, z: 3 },
+				{ x: 1, z: 2 },
+			], // S+W
+			[
+				{ x: 2, z: 1 },
+				{ x: 1, z: 2 },
+			], // N+W
 		];
 
 		const rotations: number[] = [];
@@ -273,10 +285,26 @@ describe("t_junction classification", () => {
 
 	it("all 4 T-junction orientations produce distinct rotations", () => {
 		const configs = [
-			[{ x: 2, z: 1 }, { x: 3, z: 2 }, { x: 2, z: 3 }], // N+E+S
-			[{ x: 3, z: 2 }, { x: 2, z: 3 }, { x: 1, z: 2 }], // E+S+W
-			[{ x: 2, z: 1 }, { x: 2, z: 3 }, { x: 1, z: 2 }], // N+S+W
-			[{ x: 2, z: 1 }, { x: 3, z: 2 }, { x: 1, z: 2 }], // N+E+W
+			[
+				{ x: 2, z: 1 },
+				{ x: 3, z: 2 },
+				{ x: 2, z: 3 },
+			], // N+E+S
+			[
+				{ x: 3, z: 2 },
+				{ x: 2, z: 3 },
+				{ x: 1, z: 2 },
+			], // E+S+W
+			[
+				{ x: 2, z: 1 },
+				{ x: 2, z: 3 },
+				{ x: 1, z: 2 },
+			], // N+S+W
+			[
+				{ x: 2, z: 1 },
+				{ x: 3, z: 2 },
+				{ x: 1, z: 2 },
+			], // N+E+W
 		];
 
 		const rotations: number[] = [];
@@ -456,7 +484,14 @@ describe("classifyAllWalls", () => {
 describe("countByShape", () => {
 	it("returns all zeros for empty input", () => {
 		const counts = countByShape([]);
-		for (const shape of ["isolated", "dead_end", "straight", "corner", "t_junction", "crossroad"] as WallShape[]) {
+		for (const shape of [
+			"isolated",
+			"dead_end",
+			"straight",
+			"corner",
+			"t_junction",
+			"crossroad",
+		] as WallShape[]) {
 			expect(counts[shape]).toBe(0);
 		}
 	});

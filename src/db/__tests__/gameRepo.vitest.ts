@@ -270,9 +270,24 @@ describe("Faction Resource Snapshots", () => {
 		const res1 = { scrap_metal: 10, ferrous_scrap: 5 };
 		const res2 = { scrap_metal: 20, alloy_stock: 3 };
 
-		await repo.saveFactionResourceSnapshot(gameId, 1, "player", JSON.stringify(res1));
-		await repo.saveFactionResourceSnapshot(gameId, 1, "enemy", JSON.stringify(res2));
-		await repo.saveFactionResourceSnapshot(gameId, 2, "player", JSON.stringify({ scrap_metal: 15 }));
+		await repo.saveFactionResourceSnapshot(
+			gameId,
+			1,
+			"player",
+			JSON.stringify(res1),
+		);
+		await repo.saveFactionResourceSnapshot(
+			gameId,
+			1,
+			"enemy",
+			JSON.stringify(res2),
+		);
+		await repo.saveFactionResourceSnapshot(
+			gameId,
+			2,
+			"player",
+			JSON.stringify({ scrap_metal: 15 }),
+		);
 
 		const all = await repo.loadFactionResourceSnapshots(gameId);
 		expect(all).toHaveLength(3);
@@ -290,7 +305,10 @@ describe("Faction Resource Snapshots", () => {
 		await repo.saveFactionResourceSnapshot(gameId, 1, "enemy", "{}");
 		await repo.saveFactionResourceSnapshot(gameId, 2, "player", "{}");
 
-		const playerOnly = await repo.loadFactionResourceSnapshots(gameId, "player");
+		const playerOnly = await repo.loadFactionResourceSnapshots(
+			gameId,
+			"player",
+		);
 		expect(playerOnly).toHaveLength(2);
 		expect(playerOnly.every((s) => s.factionId === "player")).toBe(true);
 	});
@@ -299,8 +317,26 @@ describe("Faction Resource Snapshots", () => {
 describe("Turn Snapshots", () => {
 	it("saveTurnSnapshot + loadTurnSnapshots round-trip", async () => {
 		const gameId = await repo.createGame("seed", 8, 8, "normal");
-		const snap1 = { factions: [{ factionId: "player", unitCount: 3, buildingCount: 2, territoryPercent: 15 }] };
-		const snap2 = { factions: [{ factionId: "player", unitCount: 5, buildingCount: 4, territoryPercent: 25 }] };
+		const snap1 = {
+			factions: [
+				{
+					factionId: "player",
+					unitCount: 3,
+					buildingCount: 2,
+					territoryPercent: 15,
+				},
+			],
+		};
+		const snap2 = {
+			factions: [
+				{
+					factionId: "player",
+					unitCount: 5,
+					buildingCount: 4,
+					territoryPercent: 25,
+				},
+			],
+		};
 
 		await repo.saveTurnSnapshot(gameId, 1, JSON.stringify(snap1));
 		await repo.saveTurnSnapshot(gameId, 2, JSON.stringify(snap2));

@@ -80,12 +80,16 @@ export const FACTION_AI_BIASES: Record<string, FactionAiBias> = {
 } as const;
 
 /** All faction IDs with AI bias definitions. */
-export const FACTION_AI_IDS = Object.keys(FACTION_AI_BIASES) as readonly string[];
+export const FACTION_AI_IDS = Object.keys(
+	FACTION_AI_BIASES,
+) as readonly string[];
 
 /**
  * Get the dominant behavior for a faction (highest bias value).
  */
-export function getDominantBias(factionId: string): "build" | "expand" | "harvest" | "scout" | null {
+export function getDominantBias(
+	factionId: string,
+): "build" | "expand" | "harvest" | "scout" | null {
 	const bias = FACTION_AI_BIASES[factionId];
 	if (!bias) return null;
 

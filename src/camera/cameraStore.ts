@@ -1,7 +1,7 @@
 /**
  * cameraStore — module-level camera controls registration.
  *
- * The IsometricCamera registers itself here on mount so external
+ * The active camera registers itself here on mount so external
  * components (Minimap, etc.) can call panTo without R3F context.
  */
 

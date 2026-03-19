@@ -24,7 +24,8 @@ export function TitleText({ opacity = 1 }: TitleTextProps) {
 	// Gentle oscillation — subtle bob, NOT rotation (text stays camera-facing)
 	useFrame((state) => {
 		if (groupRef.current) {
-			groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.06;
+			groupRef.current.position.y =
+				Math.sin(state.clock.elapsedTime * 0.4) * 0.06;
 		}
 	});
 
@@ -32,7 +33,7 @@ export function TitleText({ opacity = 1 }: TitleTextProps) {
 	const subtitle = "MACHINE CONSCIOUSNESS AWAKENS";
 	const radius = 3.0; // above globe surface (r=2.5)
 	const titleArc = Math.PI * 0.55; // ~100° arc
-	const subArc = Math.PI * 0.50; // ~90° arc
+	const subArc = Math.PI * 0.5; // ~90° arc
 
 	const visible = ready && opacity > 0;
 

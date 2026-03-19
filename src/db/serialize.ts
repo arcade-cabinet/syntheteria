@@ -6,19 +6,29 @@
  */
 
 import type { World } from "koota";
+import { SUPPORT_DEFAULTS } from "../ecs/robots/BuilderBot";
 import { CAVALRY_DEFAULTS } from "../ecs/robots/CavalryBot";
-import { CULT_CAVALRY_DEFAULTS, CULT_INFANTRY_DEFAULTS, CULT_RANGED_DEFAULTS } from "../ecs/robots/CultMechs";
+import {
+	CULT_CAVALRY_DEFAULTS,
+	CULT_INFANTRY_DEFAULTS,
+	CULT_RANGED_DEFAULTS,
+} from "../ecs/robots/CultMechs";
 import { RANGED_DEFAULTS } from "../ecs/robots/GuardBot";
 import { WORKER_DEFAULTS } from "../ecs/robots/HarvesterBot";
 import { SCOUT_DEFAULTS } from "../ecs/robots/ScoutBot";
 import { INFANTRY_DEFAULTS } from "../ecs/robots/SentinelBot";
-import { SUPPORT_DEFAULTS } from "../ecs/robots/BuilderBot";
 import { Board } from "../ecs/traits/board";
 import { Building } from "../ecs/traits/building";
 import { Faction } from "../ecs/traits/faction";
 import { ResourcePool } from "../ecs/traits/resource";
 import { Tile } from "../ecs/traits/tile";
-import { UnitFaction, UnitPos, UnitSpecialization, UnitStats, UnitVisual } from "../ecs/traits/unit";
+import {
+	UnitFaction,
+	UnitPos,
+	UnitSpecialization,
+	UnitStats,
+	UnitVisual,
+} from "../ecs/traits/unit";
 import type {
 	BuildingRecord,
 	ExploredRecord,
@@ -27,7 +37,16 @@ import type {
 } from "./types";
 
 /** Lookup table: modelId → default static stats for that robot class. */
-const MODEL_STATS: Record<string, { attack: number; defense: number; attackRange: number; scanRange: number; weightClass: string }> = {
+const MODEL_STATS: Record<
+	string,
+	{
+		attack: number;
+		defense: number;
+		attackRange: number;
+		scanRange: number;
+		weightClass: string;
+	}
+> = {
 	scout: SCOUT_DEFAULTS.stats,
 	infantry: INFANTRY_DEFAULTS.stats,
 	cavalry: CAVALRY_DEFAULTS.stats,
@@ -51,7 +70,9 @@ export function serializeUnits(world: World, gameId: string): UnitRecord[] {
 		const faction = entity.get(UnitFaction);
 		const stats = entity.get(UnitStats);
 		const visual = entity.has(UnitVisual) ? entity.get(UnitVisual) : null;
-		const spec = entity.has(UnitSpecialization) ? entity.get(UnitSpecialization) : null;
+		const spec = entity.has(UnitSpecialization)
+			? entity.get(UnitSpecialization)
+			: null;
 		if (!pos || !faction || !stats) continue;
 		records.push({
 			id: String(entity.id()),
@@ -179,17 +200,22 @@ export function applyUnits(world: World, records: UnitRecord[]): void {
 				attack: defaults?.attack ?? 2,
 				defense: defaults?.defense ?? 0,
 				attackRange: defaults?.attackRange ?? 1,
-				weightClass: (defaults?.weightClass ?? "medium") as "light" | "medium" | "heavy",
+				weightClass: (defaults?.weightClass ?? "medium") as
+					| "light"
+					| "medium"
+					| "heavy",
 			}),
 			UnitVisual({ modelId: record.modelId, scale: 1.0, facingAngle: 0 }),
 		);
 
 		// Restore specialization if present
 		if (record.trackId) {
-			unit.add(UnitSpecialization({
-				trackId: record.trackId,
-				trackVersion: record.trackVersion ?? 1,
-			}));
+			unit.add(
+				UnitSpecialization({
+					trackId: record.trackId,
+					trackVersion: record.trackVersion ?? 1,
+				}),
+			);
 		}
 	}
 }
@@ -200,9 +226,7 @@ export function applyUnits(world: World, records: UnitRecord[]): void {
  */
 export function applyBuildings(world: World, records: BuildingRecord[]): void {
 	// Index by tile position since building entity IDs may differ between sessions
-	const recordByPos = new Map(
-		records.map((r) => [`${r.tileX},${r.tileZ}`, r]),
-	);
+	const recordByPos = new Map(records.map((r) => [`${r.tileX},${r.tileZ}`, r]));
 
 	for (const entity of world.query(Building)) {
 		const b = entity.get(Building);
@@ -222,9 +246,7 @@ export function applyBuildings(world: World, records: BuildingRecord[]): void {
  * Apply saved exploration state onto Tile entities.
  */
 export function applyExplored(world: World, records: ExploredRecord[]): void {
-	const byPos = new Map(
-		records.map((r) => [`${r.tileX},${r.tileZ}`, r]),
-	);
+	const byPos = new Map(records.map((r) => [`${r.tileX},${r.tileZ}`, r]));
 
 	for (const entity of world.query(Tile)) {
 		const tile = entity.get(Tile);

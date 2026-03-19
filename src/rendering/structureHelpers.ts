@@ -7,8 +7,8 @@
  * and performance tests.
  */
 
-import type { GeneratedBoard } from "../board/types";
 import { TILE_SIZE_M } from "../board/grid";
+import type { GeneratedBoard } from "../board/types";
 import { seedToFloat } from "../ecs/terrain/cluster";
 import { isTileExplored } from "./tileVisibility";
 
@@ -39,7 +39,10 @@ export interface StructuralEdge {
  * structural_mass (or is out of bounds).
  * When explored set is provided, skip unexplored tiles.
  */
-export function getStructuralEdges(board: GeneratedBoard, explored?: Set<string>): StructuralEdge[] {
+export function getStructuralEdges(
+	board: GeneratedBoard,
+	explored?: Set<string>,
+): StructuralEdge[] {
 	const { width, height } = board.config;
 	const edges: StructuralEdge[] = [];
 
@@ -75,7 +78,10 @@ export interface ColumnPosition {
  *   (cx-1, cz-1), (cx, cz-1), (cx-1, cz), (cx, cz)
  * in tile-grid space.
  */
-export function getColumnPositions(board: GeneratedBoard, explored?: Set<string>): ColumnPosition[] {
+export function getColumnPositions(
+	board: GeneratedBoard,
+	explored?: Set<string>,
+): ColumnPosition[] {
 	const { width, height } = board.config;
 	const positions: ColumnPosition[] = [];
 

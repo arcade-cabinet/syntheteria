@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
+import { TECH_BY_ID } from "../../../config/techTreeDefs";
+import { RANGED_DEFAULTS } from "../GuardBot";
+import type { RangedTrack } from "../specializations/rangedTracks";
 import {
-	RANGED_TRACKS,
-	RANGED_SPEC_TECHS,
+	applyTrackStatMods,
 	getRangedTrack,
 	getRangedTrackActions,
+	getRangedTrackEffectValue,
 	getRangedTrackSpecs,
 	hasRangedTrackEffect,
-	getRangedTrackEffectValue,
-	applyTrackStatMods,
+	RANGED_SPEC_TECHS,
+	RANGED_TRACKS,
 } from "../specializations/rangedTracks";
-import type { RangedTrack } from "../specializations/rangedTracks";
-import { RANGED_DEFAULTS } from "../GuardBot";
-import { TECH_BY_ID } from "../../../config/techTreeDefs";
 
 // ─── Track Structure ─────────────────────────────────────────────────────────
 
@@ -51,13 +51,15 @@ describe("rangedTracks — structure", () => {
 	it("all actions have unique IDs within each track", () => {
 		for (const id of TRACKS) {
 			const actions = RANGED_TRACKS[id].actions;
-			const ids = actions.map(a => a.id);
+			const ids = actions.map((a) => a.id);
 			expect(new Set(ids).size).toBe(ids.length);
 		}
 	});
 
 	it("no action ID collides between tracks", () => {
-		const allIds = Object.values(RANGED_TRACKS).flatMap(t => t.actions.map(a => a.id));
+		const allIds = Object.values(RANGED_TRACKS).flatMap((t) =>
+			t.actions.map((a) => a.id),
+		);
 		expect(new Set(allIds).size).toBe(allIds.length);
 	});
 
@@ -217,14 +219,14 @@ describe("rangedTracks — tech tree", () => {
 	});
 
 	it("precision_targeting is tier 2 and requires mark_ii_components + signal_amplification", () => {
-		const tech = RANGED_SPEC_TECHS.find(t => t.id === "precision_targeting")!;
+		const tech = RANGED_SPEC_TECHS.find((t) => t.id === "precision_targeting")!;
 		expect(tech.tier).toBe(2);
 		expect(tech.prerequisites).toContain("mark_ii_components");
 		expect(tech.prerequisites).toContain("signal_amplification");
 	});
 
 	it("area_suppression is tier 2 and requires mark_ii_components + reinforced_chassis", () => {
-		const tech = RANGED_SPEC_TECHS.find(t => t.id === "area_suppression")!;
+		const tech = RANGED_SPEC_TECHS.find((t) => t.id === "area_suppression")!;
 		expect(tech.tier).toBe(2);
 		expect(tech.prerequisites).toContain("mark_ii_components");
 		expect(tech.prerequisites).toContain("reinforced_chassis");
@@ -296,13 +298,21 @@ describe("rangedTracks — helpers", () => {
 	});
 
 	it("getRangedTrackEffectValue returns correct values", () => {
-		expect(getRangedTrackEffectValue("sniper", 3, "sniper_range_bonus")).toBe(1);
-		expect(getRangedTrackEffectValue("sniper", 4, "sniper_armor_pierce")).toBe(2);
-		expect(getRangedTrackEffectValue("suppressor", 5, "suppressor_barrage_free")).toBe(1);
+		expect(getRangedTrackEffectValue("sniper", 3, "sniper_range_bonus")).toBe(
+			1,
+		);
+		expect(getRangedTrackEffectValue("sniper", 4, "sniper_armor_pierce")).toBe(
+			2,
+		);
+		expect(
+			getRangedTrackEffectValue("suppressor", 5, "suppressor_barrage_free"),
+		).toBe(1);
 	});
 
 	it("getRangedTrackEffectValue returns 0 for no match", () => {
-		expect(getRangedTrackEffectValue("sniper", 2, "sniper_range_bonus")).toBe(0);
+		expect(getRangedTrackEffectValue("sniper", 2, "sniper_range_bonus")).toBe(
+			0,
+		);
 		expect(getRangedTrackEffectValue("suppressor", 3, "nonexistent")).toBe(0);
 	});
 });
@@ -369,7 +379,9 @@ describe("rangedTracks — applyTrackStatMods", () => {
 describe("rangedTracks — design consistency", () => {
 	it("both tracks require mark_ii_components (tier 2 unlock)", () => {
 		expect(RANGED_TRACKS.sniper.requiredTech).toContain("mark_ii_components");
-		expect(RANGED_TRACKS.suppressor.requiredTech).toContain("mark_ii_components");
+		expect(RANGED_TRACKS.suppressor.requiredTech).toContain(
+			"mark_ii_components",
+		);
 	});
 
 	it("sniper is glass cannon — defense decreases", () => {
@@ -384,14 +396,22 @@ describe("rangedTracks — design consistency", () => {
 	});
 
 	it("sniper actions have longer range than suppressor actions", () => {
-		const sniperMaxRange = Math.max(...RANGED_TRACKS.sniper.actions.map(a => a.maxRange));
-		const supMaxRange = Math.max(...RANGED_TRACKS.suppressor.actions.map(a => a.maxRange));
+		const sniperMaxRange = Math.max(
+			...RANGED_TRACKS.sniper.actions.map((a) => a.maxRange),
+		);
+		const supMaxRange = Math.max(
+			...RANGED_TRACKS.suppressor.actions.map((a) => a.maxRange),
+		);
 		expect(sniperMaxRange).toBeGreaterThan(supMaxRange);
 	});
 
 	it("specialization is permanent — tracks have distinct effect type prefixes", () => {
-		const sniperEffects = RANGED_TRACKS.sniper.markSpecializations.map(s => s.effectType);
-		const supEffects = RANGED_TRACKS.suppressor.markSpecializations.map(s => s.effectType);
+		const sniperEffects = RANGED_TRACKS.sniper.markSpecializations.map(
+			(s) => s.effectType,
+		);
+		const supEffects = RANGED_TRACKS.suppressor.markSpecializations.map(
+			(s) => s.effectType,
+		);
 		for (const e of sniperEffects) {
 			expect(e.startsWith("sniper_")).toBe(true);
 		}

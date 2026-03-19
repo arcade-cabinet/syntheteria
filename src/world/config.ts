@@ -89,7 +89,8 @@ export const CLIMATE_PROFILE_SPECS: Record<ClimateProfile, ClimateProfileSpec> =
 	{
 		temperate: {
 			label: "Coastal",
-			description: "Shoreline sector. Ecumenopolis meets ocean zones along one margin.",
+			description:
+				"Shoreline sector. Ecumenopolis meets ocean zones along one margin.",
 			waterLevel: 0.35,
 			sandLevel: 0.45,
 			mountainLevel: 0.7,
@@ -99,7 +100,8 @@ export const CLIMATE_PROFILE_SPECS: Record<ClimateProfile, ClimateProfileSpec> =
 		},
 		wet: {
 			label: "Archipelago",
-			description: "Island megastructures scattered across abyssal platform grating.",
+			description:
+				"Island megastructures scattered across abyssal platform grating.",
 			waterLevel: 0.55,
 			sandLevel: 0.5,
 			mountainLevel: 0.74,
@@ -109,7 +111,8 @@ export const CLIMATE_PROFILE_SPECS: Record<ClimateProfile, ClimateProfileSpec> =
 		},
 		arid: {
 			label: "Inland",
-			description: "Deep continental coverage. Vast unbroken ecumenopolis, minimal abyssal zones.",
+			description:
+				"Deep continental coverage. Vast unbroken ecumenopolis, minimal abyssal zones.",
 			waterLevel: 0.15,
 			sandLevel: 0.58,
 			mountainLevel: 0.72,
@@ -119,7 +122,8 @@ export const CLIMATE_PROFILE_SPECS: Record<ClimateProfile, ClimateProfileSpec> =
 		},
 		frozen: {
 			label: "Strait",
-			description: "Twin landmasses divided by a deep ocean channel under steel grating.",
+			description:
+				"Twin landmasses divided by a deep ocean channel under steel grating.",
 			waterLevel: 0.45,
 			sandLevel: 0.46,
 			mountainLevel: 0.64,
@@ -146,7 +150,8 @@ export const STORM_PROFILE_SPECS: Record<StormProfile, StormProfileSpec> = {
 	},
 	cataclysmic: {
 		label: "Catastrophic",
-		description: "Violent hypercane arcs and sustained infrastructure collapse.",
+		description:
+			"Violent hypercane arcs and sustained infrastructure collapse.",
 		baseStormIntensity: 0.92,
 		stormOscillation: 0.28,
 		stormSurgeMax: 0.42,

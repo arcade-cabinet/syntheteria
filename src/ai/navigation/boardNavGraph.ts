@@ -11,9 +11,9 @@
  * - Graph is built once per board and updated incrementally
  */
 
-import { Graph, Node, Edge, AStar } from "yuka";
-import type { GeneratedBoard, TileData } from "../../board/types";
+import { AStar, Edge, Graph, Node } from "yuka";
 import { isPassableFor, movementCost } from "../../board/adjacency";
+import type { GeneratedBoard, TileData } from "../../board/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -32,10 +32,7 @@ function tileIndex(x: number, z: number, width: number): number {
 }
 
 /** Convert flat index back to (x, z). */
-function indexToTile(
-	index: number,
-	width: number,
-): { x: number; z: number } {
+function indexToTile(index: number, width: number): { x: number; z: number } {
 	return { x: index % width, z: Math.floor(index / width) };
 }
 
@@ -59,7 +56,10 @@ export interface NavGraphResult {
  * When useSphere=true, the X axis wraps (tileX=0 ↔ tileX=width-1) to support
  * east-west traversal on the sphere's equirectangular projection.
  */
-export function buildNavGraph(board: GeneratedBoard, useSphere = true): NavGraphResult {
+export function buildNavGraph(
+	board: GeneratedBoard,
+	useSphere = true,
+): NavGraphResult {
 	const { width, height } = board.config;
 	const graph = new Graph();
 
@@ -222,7 +222,10 @@ let _cachedBoardSeed: string | null = null;
  * Get or build the NavGraph for the given board.
  * Cached by board seed — only rebuilds when the board changes.
  */
-export function getOrBuildNavGraph(board: GeneratedBoard, useSphere = true): NavGraphResult {
+export function getOrBuildNavGraph(
+	board: GeneratedBoard,
+	useSphere = true,
+): NavGraphResult {
 	const key = `${board.config.seed}_${board.config.width}_${board.config.height}_${useSphere}`;
 	if (_cachedNavGraph && _cachedBoardSeed === key) {
 		return _cachedNavGraph;

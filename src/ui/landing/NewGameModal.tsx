@@ -15,13 +15,13 @@ import { FACTION_DEFINITIONS } from "../../ecs/factions/definitions";
 import { phraseToSeed, randomSeed, seedToPhrase } from "../../ecs/seed";
 import {
 	CLIMATE_PROFILE_SPECS,
+	type ClimateProfile,
 	DEFAULT_NEW_GAME_CONFIG,
 	DIFFICULTY_LABELS,
-	SECTOR_SCALE_SPECS,
-	type ClimateProfile,
 	type Difficulty,
 	type FactionSlot,
 	type NewGameConfig,
+	SECTOR_SCALE_SPECS,
 	type SectorScale,
 } from "../../world/config";
 
@@ -140,7 +140,11 @@ export function NewGameModal({ onStart, onCancel }: NewGameModalProps) {
 		<div
 			data-testid="new-game-modal"
 			className="absolute inset-0 flex items-center justify-center"
-			style={{ backgroundColor: "rgba(2, 5, 10, 0.88)", zIndex: 20, pointerEvents: "auto" }}
+			style={{
+				backgroundColor: "rgba(2, 5, 10, 0.88)",
+				zIndex: 20,
+				pointerEvents: "auto",
+			}}
 			role="dialog"
 			aria-label="Initialize Sector"
 			aria-modal={true}
@@ -170,7 +174,6 @@ export function NewGameModal({ onStart, onCancel }: NewGameModalProps) {
 				{/* ── Scrollable body ─────────────────────────────────────── */}
 				<div className="flex-1 overflow-y-auto">
 					<div className="px-5 py-5 flex flex-col gap-5">
-
 						{/* ── Sector Scale ─────────────────────────────── */}
 						<Section title="Sector Scale">
 							<div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
@@ -253,27 +256,27 @@ export function NewGameModal({ onStart, onCancel }: NewGameModalProps) {
 						{/* ── Sector Geography ─────────────────────────── */}
 						<Section title="Sector Geography">
 							<div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
-								{(
-									Object.keys(CLIMATE_PROFILE_SPECS) as ClimateProfile[]
-								).map((cp) => {
-									const spec = CLIMATE_PROFILE_SPECS[cp];
-									return (
-										<OptionCard
-											key={cp}
-											testId={`climate-${cp}`}
-											selected={climateProfile === cp}
-											onClick={() => setClimateProfile(cp)}
-											flex="1 1 40%"
-										>
-											<span className="text-[12px] text-[#8be6ff]">
-												{spec.label}
-											</span>
-											<span className="text-[10px] text-white/36 mt-1 leading-4">
-												{spec.description}
-											</span>
-										</OptionCard>
-									);
-								})}
+								{(Object.keys(CLIMATE_PROFILE_SPECS) as ClimateProfile[]).map(
+									(cp) => {
+										const spec = CLIMATE_PROFILE_SPECS[cp];
+										return (
+											<OptionCard
+												key={cp}
+												testId={`climate-${cp}`}
+												selected={climateProfile === cp}
+												onClick={() => setClimateProfile(cp)}
+												flex="1 1 40%"
+											>
+												<span className="text-[12px] text-[#8be6ff]">
+													{spec.label}
+												</span>
+												<span className="text-[10px] text-white/36 mt-1 leading-4">
+													{spec.description}
+												</span>
+											</OptionCard>
+										);
+									},
+								)}
 							</div>
 						</Section>
 
@@ -352,7 +355,9 @@ export function NewGameModal({ onStart, onCancel }: NewGameModalProps) {
 															: "rgba(255,255,255,0.5)",
 														backgroundColor: "transparent",
 													}}
-													title={isOff ? "Click to enable (AI)" : "Click to disable"}
+													title={
+														isOff ? "Click to enable (AI)" : "Click to disable"
+													}
 												>
 													{isOff ? "OFF" : "AI"}
 												</button>

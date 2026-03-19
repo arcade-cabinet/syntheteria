@@ -12,9 +12,9 @@
  * Design reference: GAME_DESIGN.md S7 (Bot Roster), task #54.
  */
 
-import type { MarkSpecialization } from "../marks";
-import type { ClassActionDef } from "../classActions";
 import type { TechDef } from "../../../config/techTreeDefs";
+import type { ClassActionDef } from "../classActions";
+import type { MarkSpecialization } from "../marks";
 
 // ─── Track IDs ───────────────────────────────────────────────────────────────
 
@@ -40,7 +40,8 @@ export const FIELD_MEDIC_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 2 as 3, // Mark II — cast to satisfy base type, runtime uses 2
 		effectType: "triage_protocols",
 		effectValue: 3,
-		description: "Repair action restores 3 HP instead of 2. Can repair self for 1 AP.",
+		description:
+			"Repair action restores 3 HP instead of 2. Can repair self for 1 AP.",
 	},
 	{
 		track: "field_medic",
@@ -56,7 +57,8 @@ export const FIELD_MEDIC_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "emergency_stabilize",
 		effectValue: 1,
-		description: "When an adjacent friendly unit would be destroyed, it survives at 1 HP once per battle. Costs 2 AP to activate.",
+		description:
+			"When an adjacent friendly unit would be destroyed, it survives at 1 HP once per battle. Costs 2 AP to activate.",
 	},
 	{
 		track: "field_medic",
@@ -64,7 +66,8 @@ export const FIELD_MEDIC_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 5,
 		effectType: "chassis_revival",
 		effectValue: 1,
-		description: "Can rebuild a destroyed friendly unit on an adjacent tile at 50% HP. Costs all AP + scrap_metal resources.",
+		description:
+			"Can rebuild a destroyed friendly unit on an adjacent tile at 50% HP. Costs all AP + scrap_metal resources.",
 	},
 ] as const;
 
@@ -81,7 +84,8 @@ export const SIGNAL_BOOSTER_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 2 as 3, // Mark II
 		effectType: "relay_amplifier",
 		effectValue: 3,
-		description: "Extends scan range of all friendly units within 3 tiles by +2.",
+		description:
+			"Extends scan range of all friendly units within 3 tiles by +2.",
 	},
 	{
 		track: "signal_booster",
@@ -97,7 +101,8 @@ export const SIGNAL_BOOSTER_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "signal_jam",
 		effectValue: 3,
-		description: "Enemy units within 3 tiles lose 3 scan range. Their fog re-covers explored tiles near this unit.",
+		description:
+			"Enemy units within 3 tiles lose 3 scan range. Their fog re-covers explored tiles near this unit.",
 	},
 	{
 		track: "signal_booster",
@@ -105,7 +110,8 @@ export const SIGNAL_BOOSTER_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 5,
 		effectType: "omniscient_relay",
 		effectValue: 1,
-		description: "All friendly units share vision. Enemy movements within faction territory are permanently visible.",
+		description:
+			"All friendly units share vision. Enemy movements within faction territory are permanently visible.",
 	},
 ] as const;
 
@@ -122,7 +128,8 @@ export const WAR_CALLER_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 2 as 3, // Mark II
 		effectType: "tactical_directive",
 		effectValue: 1,
-		description: "Adjacent friendly units gain +1 attack. Stacks with buff action.",
+		description:
+			"Adjacent friendly units gain +1 attack. Stacks with buff action.",
 	},
 	{
 		track: "war_caller",
@@ -130,7 +137,8 @@ export const WAR_CALLER_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "disruption_wave",
 		effectValue: 1,
-		description: "Active ability: enemies within 2 tiles lose 1 AP next turn. Costs 1 AP, 2-turn cooldown.",
+		description:
+			"Active ability: enemies within 2 tiles lose 1 AP next turn. Costs 1 AP, 2-turn cooldown.",
 	},
 	{
 		track: "war_caller",
@@ -138,7 +146,8 @@ export const WAR_CALLER_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "coordination_matrix",
 		effectValue: 2,
-		description: "All friendly units within 3 tiles gain +1 attack and +1 defense. Does not require staging.",
+		description:
+			"All friendly units within 3 tiles gain +1 attack and +1 defense. Does not require staging.",
 	},
 	{
 		track: "war_caller",
@@ -146,7 +155,8 @@ export const WAR_CALLER_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 5,
 		effectType: "supreme_command",
 		effectValue: 1,
-		description: "All friendly units on the board gain +1 AP per turn. The War Caller's buff action affects all units within 3 tiles.",
+		description:
+			"All friendly units on the board gain +1 AP per turn. The War Caller's buff action affects all units within 3 tiles.",
 	},
 ] as const;
 
@@ -162,7 +172,8 @@ export const FIELD_MEDIC_V2_UPGRADES: readonly TrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "nanite_regen",
 		effectValue: 2,
-		description: "Replaces Regeneration Aura. All friendly units within 2 tiles regenerate 2 HP per turn.",
+		description:
+			"Replaces Regeneration Aura. All friendly units within 2 tiles regenerate 2 HP per turn.",
 	},
 	{
 		track: "field_medic",
@@ -170,7 +181,8 @@ export const FIELD_MEDIC_V2_UPGRADES: readonly TrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "failsafe_override",
 		effectValue: 2,
-		description: "Replaces Emergency Stabilizer. Saves up to 2 adjacent friendlies from destruction per battle. Triggers automatically (no AP cost).",
+		description:
+			"Replaces Emergency Stabilizer. Saves up to 2 adjacent friendlies from destruction per battle. Triggers automatically (no AP cost).",
 	},
 ] as const;
 
@@ -181,7 +193,8 @@ export const SIGNAL_BOOSTER_V2_UPGRADES: readonly TrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "quantum_counter_stealth",
 		effectValue: 6,
-		description: "Replaces Counter-Stealth Array. Reveals stealthed enemies within 6 tiles. Revealed enemies take +2 damage from all sources for 1 turn.",
+		description:
+			"Replaces Counter-Stealth Array. Reveals stealthed enemies within 6 tiles. Revealed enemies take +2 damage from all sources for 1 turn.",
 	},
 	{
 		track: "signal_booster",
@@ -189,7 +202,8 @@ export const SIGNAL_BOOSTER_V2_UPGRADES: readonly TrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "blackout_pulse",
 		effectValue: 4,
-		description: "Replaces Signal Jammer. Enemy units within 4 tiles lose all scan range for 1 turn. Buildings in range are disabled.",
+		description:
+			"Replaces Signal Jammer. Enemy units within 4 tiles lose all scan range for 1 turn. Buildings in range are disabled.",
 	},
 ] as const;
 
@@ -200,7 +214,8 @@ export const WAR_CALLER_V2_UPGRADES: readonly TrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "overcharge_wave",
 		effectValue: 2,
-		description: "Replaces Disruption Wave. Enemies within 3 tiles lose 1 AP AND 1 attack next turn. Friendly units gain +1 MP for 1 turn.",
+		description:
+			"Replaces Disruption Wave. Enemies within 3 tiles lose 1 AP AND 1 attack next turn. Friendly units gain +1 MP for 1 turn.",
 	},
 	{
 		track: "war_caller",
@@ -208,33 +223,40 @@ export const WAR_CALLER_V2_UPGRADES: readonly TrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "tactical_supremacy",
 		effectValue: 3,
-		description: "Replaces Coordination Matrix. All friendly units within 4 tiles gain +2 attack, +2 defense, and +1 MP.",
+		description:
+			"Replaces Coordination Matrix. All friendly units within 4 tiles gain +2 attack, +2 defense, and +1 MP.",
 	},
 ] as const;
 
 // ─── Combined Track Map ──────────────────────────────────────────────────────
 
-export const SUPPORT_TRACKS: Record<SupportTrack, {
-	readonly label: string;
-	readonly description: string;
-	readonly specializations: readonly TrackSpecialization[];
-	readonly v2Upgrades: readonly TrackSpecialization[];
-}> = {
+export const SUPPORT_TRACKS: Record<
+	SupportTrack,
+	{
+		readonly label: string;
+		readonly description: string;
+		readonly specializations: readonly TrackSpecialization[];
+		readonly v2Upgrades: readonly TrackSpecialization[];
+	}
+> = {
 	field_medic: {
 		label: "Field Medic",
-		description: "Healing and restoration. Better repair, regeneration aura, emergency revival, and chassis reconstruction.",
+		description:
+			"Healing and restoration. Better repair, regeneration aura, emergency revival, and chassis reconstruction.",
 		specializations: FIELD_MEDIC_SPECIALIZATIONS,
 		v2Upgrades: FIELD_MEDIC_V2_UPGRADES,
 	},
 	signal_booster: {
 		label: "Signal Booster",
-		description: "Intel and relay warfare. Scan extension, counter-stealth, signal jamming, and fog piercing.",
+		description:
+			"Intel and relay warfare. Scan extension, counter-stealth, signal jamming, and fog piercing.",
 		specializations: SIGNAL_BOOSTER_SPECIALIZATIONS,
 		v2Upgrades: SIGNAL_BOOSTER_V2_UPGRADES,
 	},
 	war_caller: {
 		label: "War Caller",
-		description: "Combat support and coordination. Buff allies, debuff enemies, and tactical superiority.",
+		description:
+			"Combat support and coordination. Buff allies, debuff enemies, and tactical superiority.",
 		specializations: WAR_CALLER_SPECIALIZATIONS,
 		v2Upgrades: WAR_CALLER_V2_UPGRADES,
 	},
@@ -274,7 +296,8 @@ export const FIELD_MEDIC_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: false,
 		requiresFriendly: false,
 		cooldown: 5,
-		description: "Rebuild a destroyed friendly unit on an adjacent tile at 50% HP",
+		description:
+			"Rebuild a destroyed friendly unit on an adjacent tile at 50% HP",
 	},
 ];
 
@@ -294,7 +317,8 @@ export const SIGNAL_BOOSTER_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: false,
 		requiresFriendly: false,
 		cooldown: 1,
-		description: "Reveal stealthed units within scan range and extend ally vision",
+		description:
+			"Reveal stealthed units within scan range and extend ally vision",
 	},
 	{
 		id: "jam_signal",
@@ -310,7 +334,8 @@ export const SIGNAL_BOOSTER_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: false,
 		requiresFriendly: false,
 		cooldown: 2,
-		description: "Reduce enemy scan range within 3 tiles. Re-cover their fog near this unit.",
+		description:
+			"Reduce enemy scan range within 3 tiles. Re-cover their fog near this unit.",
 	},
 ];
 
@@ -346,7 +371,8 @@ export const WAR_CALLER_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: false,
 		requiresFriendly: false,
 		cooldown: 2,
-		description: "All friendly units within 3 tiles gain +1 attack and +1 defense for 2 turns",
+		description:
+			"All friendly units within 3 tiles gain +1 attack and +1 defense for 2 turns",
 	},
 ];
 
@@ -358,7 +384,8 @@ export const SUPPORT_TRACK_TECHS: readonly TechDef[] = [
 	{
 		id: "advanced_support_protocols",
 		name: "Advanced Support Protocols",
-		description: "Enhanced support chassis firmware. Unlocks Field Medic, Signal Booster, and War Caller specializations at the Garage.",
+		description:
+			"Enhanced support chassis firmware. Unlocks Field Medic, Signal Booster, and War Caller specializations at the Garage.",
 		tier: 2,
 		cost: { silicon_wafer: 4, polymer_salvage: 3, conductor_wire: 2 },
 		turnsToResearch: 4,
@@ -368,7 +395,8 @@ export const SUPPORT_TRACK_TECHS: readonly TechDef[] = [
 	{
 		id: "transcendent_support_matrix",
 		name: "Transcendent Support Matrix",
-		description: "Quantum-linked support arrays. Upgrades Field Medic to v2 (Nanite Swarm), Signal Booster to v2 (Quantum Resonance), and War Caller to v2 (Overcharge Protocol).",
+		description:
+			"Quantum-linked support arrays. Upgrades Field Medic to v2 (Nanite Swarm), Signal Booster to v2 (Quantum Resonance), and War Caller to v2 (Overcharge Protocol).",
 		tier: 4,
 		cost: { intact_components: 7, silicon_wafer: 9, storm_charge: 5 },
 		turnsToResearch: 8,
@@ -392,28 +420,30 @@ export function getTrackSpecializations(
 	const base = trackDef.specializations;
 
 	if (!useV2) {
-		return base.filter(s => effectiveMarkLevel(s) <= markLevel);
+		return base.filter((s) => effectiveMarkLevel(s) <= markLevel);
 	}
 
 	// v2: replace base Mark III/IV with upgraded versions
 	const v2 = trackDef.v2Upgrades;
-	const v2MarkLevels = new Set(v2.map(u => u.markLevel));
+	const v2MarkLevels = new Set(v2.map((u) => u.markLevel));
 
-	const merged = [
-		...base.filter(s => !v2MarkLevels.has(s.markLevel)),
-		...v2,
-	];
-	return merged.filter(s => effectiveMarkLevel(s) <= markLevel);
+	const merged = [...base.filter((s) => !v2MarkLevels.has(s.markLevel)), ...v2];
+	return merged.filter((s) => effectiveMarkLevel(s) <= markLevel);
 }
 
 /**
  * Get the actions unlocked by a support track.
  */
-export function getTrackActions(track: SupportTrack): readonly ClassActionDef[] {
+export function getTrackActions(
+	track: SupportTrack,
+): readonly ClassActionDef[] {
 	switch (track) {
-		case "field_medic": return FIELD_MEDIC_ACTIONS;
-		case "signal_booster": return SIGNAL_BOOSTER_ACTIONS;
-		case "war_caller": return WAR_CALLER_ACTIONS;
+		case "field_medic":
+			return FIELD_MEDIC_ACTIONS;
+		case "signal_booster":
+			return SIGNAL_BOOSTER_ACTIONS;
+		case "war_caller":
+			return WAR_CALLER_ACTIONS;
 	}
 }
 

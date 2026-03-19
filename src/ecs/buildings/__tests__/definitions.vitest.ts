@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { BUILDING_DEFS } from "../definitions";
 import type { BuildingType } from "../../traits/building";
+import { BUILDING_DEFS } from "../definitions";
 
 const ALL_BUILDING_TYPES: BuildingType[] = [
 	"storm_transmitter",
@@ -131,7 +131,9 @@ describe("BUILDING_DEFS", () => {
 
 	describe("resource_refinery", () => {
 		it("has storageCapacity > 0", () => {
-			expect(BUILDING_DEFS.resource_refinery.storageCapacity).toBeGreaterThan(0);
+			expect(BUILDING_DEFS.resource_refinery.storageCapacity).toBeGreaterThan(
+				0,
+			);
 		});
 	});
 

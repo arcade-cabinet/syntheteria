@@ -97,8 +97,8 @@ export function spherePosToTile(
 	// Invert the projection:
 	// lon = ((tileX + 0.5) / W) * 2*PI → tileX = lon * W / (2*PI) - 0.5
 	// lat = PI/2 - ((tileZ + 0.5) / H) * PI → tileZ = (PI/2 - lat) * H / PI - 0.5
-	const tileX = Math.round(lon * boardWidth / (Math.PI * 2) - 0.5);
-	const tileZ = Math.round((Math.PI / 2 - lat) * boardHeight / Math.PI - 0.5);
+	const tileX = Math.round((lon * boardWidth) / (Math.PI * 2) - 0.5);
+	const tileZ = Math.round(((Math.PI / 2 - lat) * boardHeight) / Math.PI - 0.5);
 
 	return {
 		x: Math.max(0, Math.min(boardWidth - 1, tileX)),
@@ -120,7 +120,9 @@ export function spherePosToTile(
  *   elevation — bilinear interpolation of tile elevations (radial offset)
  *   floorIndex — atlas cell index for the tile's FloorType
  */
-export function buildSphereGeometry(board: GeneratedBoard): THREE.BufferGeometry {
+export function buildSphereGeometry(
+	board: GeneratedBoard,
+): THREE.BufferGeometry {
 	const { width, height } = board.config;
 	const R = sphereRadius(width, height);
 
@@ -135,12 +137,12 @@ export function buildSphereGeometry(board: GeneratedBoard): THREE.BufferGeometry
 	const floorIndices = new Float32Array(totalTiles * vertsPerTile);
 	const idxs = new Uint32Array(totalTiles * trisPerTile * 3);
 
-	let vi = 0;  // vertex position write index
-	let ni = 0;  // normal write index
-	let ui = 0;  // uv write index
-	let ei = 0;  // elevation write index
+	let vi = 0; // vertex position write index
+	let ni = 0; // normal write index
+	let ui = 0; // uv write index
+	let ei = 0; // elevation write index
 	let fii = 0; // floorIndex write index
-	let ii = 0;  // index buffer write index
+	let ii = 0; // index buffer write index
 
 	for (let tz = 0; tz < height; tz++) {
 		for (let tx = 0; tx < width; tx++) {
@@ -217,7 +219,10 @@ export function buildSphereGeometry(board: GeneratedBoard): THREE.BufferGeometry
 	geometry.setAttribute("normal", new THREE.BufferAttribute(normals, 3));
 	geometry.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
 	geometry.setAttribute("elevation", new THREE.BufferAttribute(elevations, 1));
-	geometry.setAttribute("floorIndex", new THREE.BufferAttribute(floorIndices, 1));
+	geometry.setAttribute(
+		"floorIndex",
+		new THREE.BufferAttribute(floorIndices, 1),
+	);
 	geometry.setIndex(new THREE.BufferAttribute(idxs, 1));
 
 	return geometry;

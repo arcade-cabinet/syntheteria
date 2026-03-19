@@ -10,9 +10,9 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { TileData } from "../types";
 import { connectRegions, isFullyConnected } from "../labyrinthConnectivity";
-import { initSolidGrid, carveRoom } from "../labyrinthMaze";
+import { carveRoom, initSolidGrid } from "../labyrinthMaze";
+import type { TileData } from "../types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -72,7 +72,12 @@ function floodFillCount(
 
 	while (stack.length > 0) {
 		const [cx, cz] = stack.pop()!;
-		for (const [dx, dz] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+		for (const [dx, dz] of [
+			[0, -1],
+			[1, 0],
+			[0, 1],
+			[-1, 0],
+		]) {
 			const nx = cx + dx!;
 			const nz = cz + dz!;
 			const key = `${nx},${nz}`;

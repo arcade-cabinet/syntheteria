@@ -19,7 +19,18 @@ export type CultMechType =
 
 /** Cult Infantry — armored trooper mech. MechaTrooper.glb */
 export const CULT_INFANTRY_DEFAULTS = {
-	stats: { hp: 12, maxHp: 12, ap: 2, maxAp: 2, mp: 2, maxMp: 2, scanRange: 3, attack: 4, defense: 2, attackRange: 1 },
+	stats: {
+		hp: 12,
+		maxHp: 12,
+		ap: 2,
+		maxAp: 2,
+		mp: 2,
+		maxMp: 2,
+		scanRange: 3,
+		attack: 4,
+		defense: 2,
+		attackRange: 1,
+	},
 	visual: { modelId: "cult_infantry", scale: 1.0, facingAngle: 0 },
 } as const;
 
@@ -34,9 +45,19 @@ export function spawnCultInfantry(
 		UnitStats({ ...CULT_INFANTRY_DEFAULTS.stats }),
 		UnitVisual({ ...CULT_INFANTRY_DEFAULTS.visual }),
 		UnitFaction({ factionId }),
-		CultMutation({ turnsAlive: 0, mutationTier: 0, mutationSeed: 0, specialAbility: "" }),
+		CultMutation({
+			turnsAlive: 0,
+			mutationTier: 0,
+			mutationSeed: 0,
+			specialAbility: "",
+		}),
 	);
-	e.set(CultMutation, { turnsAlive: 0, mutationTier: 0, mutationSeed: e.id(), specialAbility: "" });
+	e.set(CultMutation, {
+		turnsAlive: 0,
+		mutationTier: 0,
+		mutationSeed: e.id(),
+		specialAbility: "",
+	});
 	return e;
 }
 
@@ -46,7 +67,18 @@ export function spawnCultInfantry(
 
 /** Cult Ranged — industrial golem, ranged fire. MechaGolem.glb */
 export const CULT_RANGED_DEFAULTS = {
-	stats: { hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 2, maxMp: 2, scanRange: 5, attack: 5, defense: 1, attackRange: 2 },
+	stats: {
+		hp: 10,
+		maxHp: 10,
+		ap: 2,
+		maxAp: 2,
+		mp: 2,
+		maxMp: 2,
+		scanRange: 5,
+		attack: 5,
+		defense: 1,
+		attackRange: 2,
+	},
 	visual: { modelId: "cult_ranged", scale: 1.0, facingAngle: 0 },
 } as const;
 
@@ -61,9 +93,19 @@ export function spawnCultRanged(
 		UnitStats({ ...CULT_RANGED_DEFAULTS.stats }),
 		UnitVisual({ ...CULT_RANGED_DEFAULTS.visual }),
 		UnitFaction({ factionId }),
-		CultMutation({ turnsAlive: 0, mutationTier: 0, mutationSeed: 0, specialAbility: "" }),
+		CultMutation({
+			turnsAlive: 0,
+			mutationTier: 0,
+			mutationSeed: 0,
+			specialAbility: "",
+		}),
 	);
-	e.set(CultMutation, { turnsAlive: 0, mutationTier: 0, mutationSeed: e.id(), specialAbility: "" });
+	e.set(CultMutation, {
+		turnsAlive: 0,
+		mutationTier: 0,
+		mutationSeed: e.id(),
+		specialAbility: "",
+	});
 	return e;
 }
 
@@ -72,7 +114,18 @@ export function spawnCultRanged(
 // ---------------------------------------------------------------------------
 
 export const CULT_SHAMAN_DEFAULTS = {
-	stats: { hp: 8, maxHp: 8, ap: 2, maxAp: 2, mp: 2, maxMp: 2, scanRange: 6, attack: 3, defense: 1, attackRange: 2 },
+	stats: {
+		hp: 8,
+		maxHp: 8,
+		ap: 2,
+		maxAp: 2,
+		mp: 2,
+		maxMp: 2,
+		scanRange: 6,
+		attack: 3,
+		defense: 1,
+		attackRange: 2,
+	},
 	visual: { modelId: "cult_shaman", scale: 1.0, facingAngle: 0 },
 } as const;
 
@@ -87,9 +140,19 @@ export function spawnCultShaman(
 		UnitStats({ ...CULT_SHAMAN_DEFAULTS.stats }),
 		UnitVisual({ ...CULT_SHAMAN_DEFAULTS.visual }),
 		UnitFaction({ factionId }),
-		CultMutation({ turnsAlive: 0, mutationTier: 0, mutationSeed: 0, specialAbility: "" }),
+		CultMutation({
+			turnsAlive: 0,
+			mutationTier: 0,
+			mutationSeed: 0,
+			specialAbility: "",
+		}),
 	);
-	e.set(CultMutation, { turnsAlive: 0, mutationTier: 0, mutationSeed: e.id(), specialAbility: "" });
+	e.set(CultMutation, {
+		turnsAlive: 0,
+		mutationTier: 0,
+		mutationSeed: e.id(),
+		specialAbility: "",
+	});
 	return e;
 }
 
@@ -99,7 +162,18 @@ export function spawnCultShaman(
 
 /** Cult Cavalry — fast strike bipedal mech. Mecha01.glb */
 export const CULT_CAVALRY_DEFAULTS = {
-	stats: { hp: 8, maxHp: 8, ap: 2, maxAp: 2, mp: 4, maxMp: 4, scanRange: 4, attack: 3, defense: 1, attackRange: 1 },
+	stats: {
+		hp: 8,
+		maxHp: 8,
+		ap: 2,
+		maxAp: 2,
+		mp: 4,
+		maxMp: 4,
+		scanRange: 4,
+		attack: 3,
+		defense: 1,
+		attackRange: 1,
+	},
 	visual: { modelId: "cult_cavalry", scale: 1.0, facingAngle: 0 },
 } as const;
 
@@ -114,9 +188,19 @@ export function spawnCultCavalry(
 		UnitStats({ ...CULT_CAVALRY_DEFAULTS.stats }),
 		UnitVisual({ ...CULT_CAVALRY_DEFAULTS.visual }),
 		UnitFaction({ factionId }),
-		CultMutation({ turnsAlive: 0, mutationTier: 0, mutationSeed: 0, specialAbility: "" }),
+		CultMutation({
+			turnsAlive: 0,
+			mutationTier: 0,
+			mutationSeed: 0,
+			specialAbility: "",
+		}),
 	);
-	e.set(CultMutation, { turnsAlive: 0, mutationTier: 0, mutationSeed: e.id(), specialAbility: "" });
+	e.set(CultMutation, {
+		turnsAlive: 0,
+		mutationTier: 0,
+		mutationSeed: e.id(),
+		specialAbility: "",
+	});
 	return e;
 }
 
@@ -125,7 +209,18 @@ export function spawnCultCavalry(
 // ---------------------------------------------------------------------------
 
 export const CULT_ARCHON_DEFAULTS = {
-	stats: { hp: 20, maxHp: 20, ap: 3, maxAp: 3, mp: 3, maxMp: 3, scanRange: 7, attack: 6, defense: 3, attackRange: 2 },
+	stats: {
+		hp: 20,
+		maxHp: 20,
+		ap: 3,
+		maxAp: 3,
+		mp: 3,
+		maxMp: 3,
+		scanRange: 7,
+		attack: 6,
+		defense: 3,
+		attackRange: 2,
+	},
 	visual: { modelId: "cult_archon", scale: 1.2, facingAngle: 0 },
 } as const;
 
@@ -140,9 +235,19 @@ export function spawnCultArchon(
 		UnitStats({ ...CULT_ARCHON_DEFAULTS.stats }),
 		UnitVisual({ ...CULT_ARCHON_DEFAULTS.visual }),
 		UnitFaction({ factionId }),
-		CultMutation({ turnsAlive: 0, mutationTier: 0, mutationSeed: 0, specialAbility: "" }),
+		CultMutation({
+			turnsAlive: 0,
+			mutationTier: 0,
+			mutationSeed: 0,
+			specialAbility: "",
+		}),
 	);
-	e.set(CultMutation, { turnsAlive: 0, mutationTier: 0, mutationSeed: e.id(), specialAbility: "" });
+	e.set(CultMutation, {
+		turnsAlive: 0,
+		mutationTier: 0,
+		mutationSeed: e.id(),
+		specialAbility: "",
+	});
 	return e;
 }
 
@@ -166,7 +271,13 @@ export const CULT_TIER_UNIT_TYPES: readonly (readonly CultMechType[])[] = [
 	["cultist_drone", "cultist_zealot"],
 	["cultist_drone", "cultist_zealot", "cultist_shaman"],
 	["cultist_drone", "cultist_zealot", "cultist_shaman", "cultist_herald"],
-	["cultist_drone", "cultist_zealot", "cultist_shaman", "cultist_herald", "cultist_archon"],
+	[
+		"cultist_drone",
+		"cultist_zealot",
+		"cultist_shaman",
+		"cultist_herald",
+		"cultist_archon",
+	],
 ] as const;
 
 /** Max enemies allowed per escalation tier. */

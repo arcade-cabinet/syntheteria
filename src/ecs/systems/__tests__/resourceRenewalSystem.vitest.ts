@@ -3,10 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Building, Powered } from "../../traits/building";
 import { Faction } from "../../traits/faction";
 import { ResourcePool } from "../../traits/resource";
-import {
-	RENEWAL_YIELDS,
-	runResourceRenewal,
-} from "../resourceRenewalSystem";
+import { RENEWAL_YIELDS, runResourceRenewal } from "../resourceRenewalSystem";
 
 describe("resourceRenewalSystem", () => {
 	let world: ReturnType<typeof createWorld>;
@@ -45,11 +42,7 @@ describe("resourceRenewalSystem", () => {
 		world.destroy();
 	});
 
-	function spawnBuilding(
-		type: string,
-		factionId: string,
-		powered: boolean,
-	) {
+	function spawnBuilding(type: string, factionId: string, powered: boolean) {
 		const e = world.spawn(
 			Building({
 				tileX: 5,

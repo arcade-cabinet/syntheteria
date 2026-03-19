@@ -3,7 +3,13 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Building, Powered } from "../../traits/building";
 import { Faction } from "../../traits/faction";
 import { ResourcePool } from "../../traits/resource";
-import { UnitFaction, UnitPos, UnitStats, UnitUpgrade, UnitVisual } from "../../traits/unit";
+import {
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+	UnitUpgrade,
+	UnitVisual,
+} from "../../traits/unit";
 import { applyMark, getMaxTier, hasMark, parseMarks } from "../upgradeSystem";
 
 describe("upgradeSystem", () => {
@@ -118,7 +124,9 @@ describe("upgradeSystem", () => {
 		});
 
 		it("returns true when mark is present", () => {
-			expect(hasMark("reinforced_hull,swift_treads", "swift_treads")).toBe(true);
+			expect(hasMark("reinforced_hull,swift_treads", "swift_treads")).toBe(
+				true,
+			);
 		});
 
 		it("returns false when mark is absent", () => {
@@ -330,7 +338,16 @@ describe("upgradeSystem", () => {
 		it("rejects non-player units", () => {
 			const unit = world.spawn(
 				UnitPos({ tileX: 5, tileZ: 5 }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0, attackRange: 1 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 3,
+					maxAp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+					attackRange: 1,
+				}),
 				UnitFaction({ factionId: "reclaimers" }),
 			);
 			const bay = spawnMaintenanceBay(5, 6);
@@ -360,7 +377,12 @@ describe("upgradeSystem", () => {
 			);
 			synthEntity.add(Powered);
 
-			const result = applyMark(world, unit.id(), synthEntity.id(), "reinforced_hull");
+			const result = applyMark(
+				world,
+				unit.id(),
+				synthEntity.id(),
+				"reinforced_hull",
+			);
 			expect(result).toEqual({ ok: false, reason: "no_bay" });
 		});
 	});

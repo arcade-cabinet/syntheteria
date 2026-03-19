@@ -16,9 +16,9 @@
 
 import type { World } from "koota";
 import type { GeneratedBoard } from "../../board/types";
-import type { FloorType } from "../terrain/types";
 import { SALVAGE_DEFS } from "../resources/salvageTypes";
 import { makePRNG } from "../seed";
+import type { FloorType } from "../terrain/types";
 import type { SalvageType } from "../traits/salvage";
 import { SalvageProp } from "../traits/salvage";
 
@@ -31,7 +31,7 @@ interface TerrainSalvageConfig {
 
 const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
 	structural_mass: {
-		rate: 0.30,
+		rate: 0.3,
 		weights: [
 			["machinery", 0.4],
 			["terminal", 0.3],
@@ -91,7 +91,7 @@ const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
 		],
 	},
 	abyssal_platform: {
-		rate: 0.10,
+		rate: 0.1,
 		weights: [
 			["vessel", 0.5],
 			["debris", 0.3],
@@ -146,10 +146,7 @@ function pickSalvageType(
  * Scatter salvage props across the board based on terrain type.
  * Returns the number of salvage entities spawned.
  */
-export function placeSalvageProps(
-	world: World,
-	board: GeneratedBoard,
-): number {
+export function placeSalvageProps(world: World, board: GeneratedBoard): number {
 	const { width, height, seed } = board.config;
 	let count = 0;
 

@@ -6,8 +6,8 @@ import { ResourcePool } from "../../traits/resource";
 import { UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
 import {
 	FabricationJob,
-	ROBOT_COSTS,
 	queueFabrication,
+	ROBOT_COSTS,
 	runFabrication,
 } from "../fabricationSystem";
 

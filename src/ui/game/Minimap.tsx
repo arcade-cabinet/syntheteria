@@ -8,15 +8,15 @@
 
 import type { World } from "koota";
 import { useCallback, useEffect, useRef } from "react";
-import type { GeneratedBoard } from "../../board/types";
 import { TILE_SIZE_M } from "../../board/grid";
+import type { GeneratedBoard } from "../../board/types";
 import { getCameraControls } from "../../camera/cameraStore";
 import { FACTION_COLORS } from "../../config/gameDefaults";
 import { getRelation } from "../../ecs/factions/relations";
 import { computeTerritory } from "../../ecs/systems/territorySystem";
+import { Building } from "../../ecs/traits/building";
 import { Tile } from "../../ecs/traits/tile";
 import { UnitFaction, UnitPos } from "../../ecs/traits/unit";
-import { Building } from "../../ecs/traits/building";
 
 const SIZE = 150;
 
@@ -182,7 +182,9 @@ export function Minimap({ world, board }: MinimapProps) {
 	useEffect(() => {
 		draw();
 		intervalRef.current = setInterval(draw, 500);
-		return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+		return () => {
+			if (intervalRef.current) clearInterval(intervalRef.current);
+		};
 	}, [draw]);
 
 	const handleClick = useCallback(

@@ -23,17 +23,6 @@
 
 import type { World } from "koota";
 import {
-	getRelation,
-	getStanding,
-	modifyStanding,
-	setRelation,
-	setStanding,
-	type RelationType,
-} from "../factions/relations";
-import { pushToast } from "./toastNotifications";
-import { UnitFaction, UnitPos, UnitStats } from "../traits/unit";
-import { revealFog } from "./fogRevealSystem";
-import {
 	BREAK_ALLIANCE_PENALTY,
 	BREAK_TRADE_PENALTY,
 	DIPLOMACY_BACKSTAB_DELAY,
@@ -44,6 +33,17 @@ import {
 	STANDING_THRESHOLDS,
 	TRADE_INCOME_SHARE_PERCENT,
 } from "../../config/gameDefaults";
+import {
+	getRelation,
+	getStanding,
+	modifyStanding,
+	type RelationType,
+	setRelation,
+	setStanding,
+} from "../factions/relations";
+import { UnitFaction, UnitPos, UnitStats } from "../traits/unit";
+import { revealFog } from "./fogRevealSystem";
+import { pushToast } from "./toastNotifications";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -78,8 +78,16 @@ export interface DiplomacyPersonality {
 
 const DIPLOMACY_PERSONALITY: Record<string, DiplomacyPersonality> = {
 	reclaimers: { acceptsAlliance: true, willBackstab: false, backstabDelay: 0 },
-	volt_collective: { acceptsAlliance: true, willBackstab: false, backstabDelay: 0 },
-	signal_choir: { acceptsAlliance: true, willBackstab: true, backstabDelay: DIPLOMACY_BACKSTAB_DELAY },
+	volt_collective: {
+		acceptsAlliance: true,
+		willBackstab: false,
+		backstabDelay: 0,
+	},
+	signal_choir: {
+		acceptsAlliance: true,
+		willBackstab: true,
+		backstabDelay: DIPLOMACY_BACKSTAB_DELAY,
+	},
 	iron_creed: { acceptsAlliance: false, willBackstab: false, backstabDelay: 0 },
 };
 
@@ -158,7 +166,13 @@ function recordDiplomacyEvent(
 	delta: number,
 ) {
 	modifyStanding(world, factionA, factionB, delta);
-	recentEvents.push({ type, factionA, factionB, turnNumber, standingChange: delta });
+	recentEvents.push({
+		type,
+		factionA,
+		factionB,
+		turnNumber,
+		standingChange: delta,
+	});
 	if (recentEvents.length > MAX_RECENT_EVENTS) {
 		recentEvents.shift();
 	}
@@ -214,7 +228,13 @@ export function recordAggression(
 	const current = getRelation(world, attackerFaction, defenderFaction);
 	if (current === "ally") {
 		// Breaking an alliance — apply break penalty to ALL factions
-		applyBreakPenalty(world, attackerFaction, defenderFaction, currentTurn, true);
+		applyBreakPenalty(
+			world,
+			attackerFaction,
+			defenderFaction,
+			currentTurn,
+			true,
+		);
 		// Force hostile regardless of what the penalty math produced
 		setRelation(world, attackerFaction, defenderFaction, "hostile");
 		setStanding(world, attackerFaction, defenderFaction, -60);
@@ -247,7 +267,10 @@ export function recordAggression(
 				(r.factionA === attackerFaction && r.factionB === defenderFaction) ||
 				(r.factionA === defenderFaction && r.factionB === attackerFaction)
 			) {
-				const newStanding = Math.max(-100, r.standing + STANDING_CHANGES.unit_attacked);
+				const newStanding = Math.max(
+					-100,
+					r.standing + STANDING_CHANGES.unit_attacked,
+				);
 				e.set(FactionRelation, { ...r, standing: newStanding });
 				break;
 			}
@@ -278,7 +301,11 @@ export function proposeAlliance(
 	allianceFormedTurn.set(key, currentTurn);
 
 	const factionLabel = aiFaction.replace(/_/g, " ").toUpperCase();
-	pushToast("system", `${factionLabel}: ALLIANCE FORMED`, "SHARED FOG AND TRADE ACTIVE");
+	pushToast(
+		"system",
+		`${factionLabel}: ALLIANCE FORMED`,
+		"SHARED FOG AND TRADE ACTIVE",
+	);
 
 	// Small standing boost with the proposed faction
 	recentEvents.push({
@@ -306,7 +333,13 @@ export function declareWar(
 	const currentRelation = getRelation(world, attackerFaction, defenderFaction);
 	if (currentRelation === "ally") {
 		// Breaking alliance — apply penalty
-		applyBreakPenalty(world, attackerFaction, defenderFaction, currentTurn, true);
+		applyBreakPenalty(
+			world,
+			attackerFaction,
+			defenderFaction,
+			currentTurn,
+			true,
+		);
 	} else {
 		setStanding(world, attackerFaction, defenderFaction, -60);
 	}
@@ -455,18 +488,32 @@ export function runDiplomacy(
 					const aPersonality = DIPLOMACY_PERSONALITY[a];
 					const bPersonality = DIPLOMACY_PERSONALITY[b];
 
-					if (aPersonality?.willBackstab && currentTurn - formed >= aPersonality.backstabDelay) {
+					if (
+						aPersonality?.willBackstab &&
+						currentTurn - formed >= aPersonality.backstabDelay
+					) {
 						setRelation(world, a, b, "hostile");
 						setStanding(world, a, b, -60);
 						allianceFormedTurn.delete(key);
 						lastAggressionTurn.set(key, currentTurn);
-						pushToast("combat", `${a.replace(/_/g, " ").toUpperCase()}: ALLIANCE BROKEN`, "BACKSTAB DETECTED");
-					} else if (bPersonality?.willBackstab && currentTurn - formed >= bPersonality.backstabDelay) {
+						pushToast(
+							"combat",
+							`${a.replace(/_/g, " ").toUpperCase()}: ALLIANCE BROKEN`,
+							"BACKSTAB DETECTED",
+						);
+					} else if (
+						bPersonality?.willBackstab &&
+						currentTurn - formed >= bPersonality.backstabDelay
+					) {
 						setRelation(world, a, b, "hostile");
 						setStanding(world, a, b, -60);
 						allianceFormedTurn.delete(key);
 						lastAggressionTurn.set(key, currentTurn);
-						pushToast("combat", `${b.replace(/_/g, " ").toUpperCase()}: ALLIANCE BROKEN`, "BACKSTAB DETECTED");
+						pushToast(
+							"combat",
+							`${b.replace(/_/g, " ").toUpperCase()}: ALLIANCE BROKEN`,
+							"BACKSTAB DETECTED",
+						);
 					}
 				}
 			}
@@ -499,14 +546,20 @@ export function shareAlliedFog(world: World, playerFaction: string): void {
 /**
  * Check if two factions are allies.
  */
-export function isAlly(world: World, factionA: string, factionB: string): boolean {
+export function isAlly(
+	world: World,
+	factionA: string,
+	factionB: string,
+): boolean {
 	return getRelation(world, factionA, factionB) === "ally";
 }
 
 /**
  * Get the diplomacy personality for an AI faction.
  */
-export function getDiplomacyPersonality(factionId: string): DiplomacyPersonality | null {
+export function getDiplomacyPersonality(
+	factionId: string,
+): DiplomacyPersonality | null {
 	return DIPLOMACY_PERSONALITY[factionId] ?? null;
 }
 

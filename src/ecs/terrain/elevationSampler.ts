@@ -9,8 +9,7 @@
  */
 
 import { TILE_SIZE_M } from "../../board/grid";
-import type { GeneratedBoard } from "../../board/types";
-import type { Elevation } from "../../board/types";
+import type { Elevation, GeneratedBoard } from "../../board/types";
 
 // ---------------------------------------------------------------------------
 // Elevation → world-space Y (metres)

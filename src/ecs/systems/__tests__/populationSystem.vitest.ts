@@ -1,18 +1,18 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Building, BotFabricator, Powered } from "../../traits/building";
+import { BotFabricator, Building, Powered } from "../../traits/building";
 import { Faction } from "../../traits/faction";
 import { ResourcePool } from "../../traits/resource";
 import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../../traits/unit";
+import { FabricationJob, queueFabrication } from "../fabricationSystem";
 import {
 	BASE_POP_CAP,
-	POP_PER_OUTPOST,
-	POP_PER_POWER_PLANT,
+	canSpawnUnit,
 	getPopCap,
 	getPopulation,
-	canSpawnUnit,
+	POP_PER_OUTPOST,
+	POP_PER_POWER_PLANT,
 } from "../populationSystem";
-import { queueFabrication, FabricationJob } from "../fabricationSystem";
 
 describe("populationSystem", () => {
 	let world: ReturnType<typeof createWorld>;
@@ -54,13 +54,26 @@ describe("populationSystem", () => {
 	function spawnUnit(factionId: string, tileX = 0, tileZ = 0) {
 		return world.spawn(
 			UnitPos({ tileX, tileZ }),
-			UnitStats({ hp: 5, maxHp: 5, ap: 3, maxAp: 3, scanRange: 4, attack: 1, defense: 0, attackRange: 1 }),
+			UnitStats({
+				hp: 5,
+				maxHp: 5,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 1,
+				defense: 0,
+				attackRange: 1,
+			}),
 			UnitVisual({ modelId: "scout", scale: 1.0, facingAngle: 0 }),
 			UnitFaction({ factionId }),
 		);
 	}
 
-	function spawnBuilding(type: "outpost" | "power_plant", factionId: string, powered: boolean) {
+	function spawnBuilding(
+		type: "outpost" | "power_plant",
+		factionId: string,
+		powered: boolean,
+	) {
 		const e = world.spawn(
 			Building({
 				tileX: 10,
@@ -121,13 +134,17 @@ describe("populationSystem", () => {
 			spawnBuilding("outpost", "player", true);
 			spawnBuilding("outpost", "player", true);
 
-			expect(getPopCap(world, "player")).toBe(BASE_POP_CAP + 2 * POP_PER_OUTPOST);
+			expect(getPopCap(world, "player")).toBe(
+				BASE_POP_CAP + 2 * POP_PER_OUTPOST,
+			);
 		});
 
 		it("adds POP_PER_POWER_PLANT for each powered power plant", () => {
 			spawnBuilding("power_plant", "player", true);
 
-			expect(getPopCap(world, "player")).toBe(BASE_POP_CAP + POP_PER_POWER_PLANT);
+			expect(getPopCap(world, "player")).toBe(
+				BASE_POP_CAP + POP_PER_POWER_PLANT,
+			);
 		});
 
 		it("combines outposts and power plants", () => {
@@ -150,7 +167,9 @@ describe("populationSystem", () => {
 			spawnBuilding("outpost", "iron_creed", true);
 
 			expect(getPopCap(world, "player")).toBe(BASE_POP_CAP);
-			expect(getPopCap(world, "iron_creed")).toBe(BASE_POP_CAP + POP_PER_OUTPOST);
+			expect(getPopCap(world, "iron_creed")).toBe(
+				BASE_POP_CAP + POP_PER_OUTPOST,
+			);
 		});
 	});
 

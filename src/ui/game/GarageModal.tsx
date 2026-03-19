@@ -8,25 +8,60 @@
  * Diegetic vocabulary: CLASSIFICATION MATRIX, CONFIGURATION PROTOCOL.
  */
 
-import { useState, useMemo } from "react";
 import type { World } from "koota";
+import { useMemo, useState } from "react";
+import {
+	getTracksForClass,
+	type TrackEntry,
+} from "../../ecs/robots/specializations/trackRegistry";
 import type { RobotClass } from "../../ecs/robots/types";
-import { ROBOT_COSTS, queueFabrication, type QueueResult } from "../../ecs/systems/fabricationSystem";
-import { getTracksForClass, type TrackEntry } from "../../ecs/robots/specializations/trackRegistry";
+import {
+	type QueueResult,
+	queueFabrication,
+	ROBOT_COSTS,
+} from "../../ecs/systems/fabricationSystem";
 import { isTechResearched } from "../../ecs/systems/researchSystem";
-import { Building, BotFabricator, Powered } from "../../ecs/traits/building";
+import { BotFabricator, Building, Powered } from "../../ecs/traits/building";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const FACTION_CLASSES: RobotClass[] = ["scout", "infantry", "cavalry", "ranged", "support", "worker"];
+const FACTION_CLASSES: RobotClass[] = [
+	"scout",
+	"infantry",
+	"cavalry",
+	"ranged",
+	"support",
+	"worker",
+];
 
 const CLASS_INFO: Record<RobotClass, { label: string; description: string }> = {
-	scout: { label: "Scout", description: "Fast recon unit. High MP, low HP. Clears fog, maps terrain." },
-	infantry: { label: "Infantry", description: "Frontline combatant. Balanced HP/attack. Holds ground." },
-	cavalry: { label: "Cavalry", description: "Flanking striker. High MP, moderate attack. Hit and run." },
-	ranged: { label: "Ranged", description: "Siege platform. High attack/defense, low MP. Engages at distance." },
-	support: { label: "Support", description: "Force multiplier. Heals, boosts signals, calls reinforcements." },
-	worker: { label: "Worker", description: "Economy backbone. Harvests resources, fabricates, builds structures." },
+	scout: {
+		label: "Scout",
+		description: "Fast recon unit. High MP, low HP. Clears fog, maps terrain.",
+	},
+	infantry: {
+		label: "Infantry",
+		description: "Frontline combatant. Balanced HP/attack. Holds ground.",
+	},
+	cavalry: {
+		label: "Cavalry",
+		description: "Flanking striker. High MP, moderate attack. Hit and run.",
+	},
+	ranged: {
+		label: "Ranged",
+		description:
+			"Siege platform. High attack/defense, low MP. Engages at distance.",
+	},
+	support: {
+		label: "Support",
+		description:
+			"Force multiplier. Heals, boosts signals, calls reinforcements.",
+	},
+	worker: {
+		label: "Worker",
+		description:
+			"Economy backbone. Harvests resources, fabricates, builds structures.",
+	},
 	cult_infantry: { label: "Cult Infantry", description: "" },
 	cult_ranged: { label: "Cult Ranged", description: "" },
 	cult_cavalry: { label: "Cult Cavalry", description: "" },
@@ -74,7 +109,10 @@ export function GarageModal({ world, factionId, onClose }: GarageModalProps) {
 	const v2Tracks = useMemo(() => {
 		const set = new Set<string>();
 		for (const track of tracks) {
-			if (track.v2TechId && isTechResearched(world, factionId, track.v2TechId)) {
+			if (
+				track.v2TechId &&
+				isTechResearched(world, factionId, track.v2TechId)
+			) {
 				set.add(track.trackId);
 			}
 		}
@@ -83,8 +121,15 @@ export function GarageModal({ world, factionId, onClose }: GarageModalProps) {
 
 	function handleFabricate() {
 		if (!selectedClass || !motorPool) return;
-		const trackVersion: 1 | 2 = selectedTrack && v2Tracks.has(selectedTrack) ? 2 : 1;
-		const res = queueFabrication(world, motorPool, selectedClass, selectedTrack, trackVersion);
+		const trackVersion: 1 | 2 =
+			selectedTrack && v2Tracks.has(selectedTrack) ? 2 : 1;
+		const res = queueFabrication(
+			world,
+			motorPool,
+			selectedClass,
+			selectedTrack,
+			trackVersion,
+		);
 		setResult(res);
 		if (res.ok) {
 			// Reset after successful queue
@@ -192,12 +237,19 @@ export function GarageModal({ world, factionId, onClose }: GarageModalProps) {
 								fontSize: 12,
 							}}
 						>
-							No powered motor pool available. Build and power a motor pool to fabricate units.
+							No powered motor pool available. Build and power a motor pool to
+							fabricate units.
 						</div>
 					)}
 
 					{motorPool && !selectedClass && (
-						<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+						<div
+							style={{
+								display: "grid",
+								gridTemplateColumns: "1fr 1fr",
+								gap: 12,
+							}}
+						>
 							{FACTION_CLASSES.map((cls) => {
 								const info = CLASS_INFO[cls];
 								const robotCost = ROBOT_COSTS[cls];
@@ -220,13 +272,21 @@ export function GarageModal({ world, factionId, onClose }: GarageModalProps) {
 											transition: "border-color 0.15s",
 										}}
 										onMouseEnter={(e) => {
-											(e.currentTarget as HTMLElement).style.borderColor = "rgba(139, 230, 255, 0.45)";
+											(e.currentTarget as HTMLElement).style.borderColor =
+												"rgba(139, 230, 255, 0.45)";
 										}}
 										onMouseLeave={(e) => {
-											(e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)";
+											(e.currentTarget as HTMLElement).style.borderColor =
+												"rgba(255,255,255,0.08)";
 										}}
 									>
-										<span style={{ fontSize: 13, color: "#8be6ff", fontWeight: 600 }}>
+										<span
+											style={{
+												fontSize: 13,
+												color: "#8be6ff",
+												fontWeight: 600,
+											}}
+										>
 											{info.label}
 										</span>
 										<span
@@ -293,10 +353,18 @@ export function GarageModal({ world, factionId, onClose }: GarageModalProps) {
 									marginBottom: 16,
 								}}
 							>
-								<div style={{ fontSize: 14, color: "#8be6ff", fontWeight: 700 }}>
+								<div
+									style={{ fontSize: 14, color: "#8be6ff", fontWeight: 700 }}
+								>
 									{CLASS_INFO[selectedClass].label}
 								</div>
-								<div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>
+								<div
+									style={{
+										fontSize: 10,
+										color: "rgba(255,255,255,0.45)",
+										marginTop: 4,
+									}}
+								>
 									{CLASS_INFO[selectedClass].description}
 								</div>
 								{cost && (
@@ -344,13 +412,18 @@ export function GarageModal({ world, factionId, onClose }: GarageModalProps) {
 									padding: "10px 14px",
 									borderRadius: 10,
 									border: `1px solid ${selectedTrack === "" ? "rgba(139, 230, 255, 0.45)" : "rgba(255,255,255,0.08)"}`,
-									background: selectedTrack === "" ? "rgba(139, 230, 255, 0.07)" : "rgba(255,255,255,0.02)",
+									background:
+										selectedTrack === ""
+											? "rgba(139, 230, 255, 0.07)"
+											: "rgba(255,255,255,0.02)",
 									cursor: "pointer",
 									marginBottom: 8,
 									fontFamily: "inherit",
 								}}
 							>
-								<span style={{ fontSize: 11, color: "#8be6ff" }}>Unspecialized</span>
+								<span style={{ fontSize: 11, color: "#8be6ff" }}>
+									Unspecialized
+								</span>
 								<span
 									style={{
 										display: "block",
@@ -381,14 +454,18 @@ export function GarageModal({ world, factionId, onClose }: GarageModalProps) {
 											padding: "10px 14px",
 											borderRadius: 10,
 											border: `1px solid ${isSelected ? "rgba(139, 230, 255, 0.45)" : "rgba(255,255,255,0.08)"}`,
-											background: isSelected ? "rgba(139, 230, 255, 0.07)" : "rgba(255,255,255,0.02)",
+											background: isSelected
+												? "rgba(139, 230, 255, 0.07)"
+												: "rgba(255,255,255,0.02)",
 											cursor: unlocked ? "pointer" : "default",
 											opacity: unlocked ? 1 : 0.4,
 											marginBottom: 8,
 											fontFamily: "inherit",
 										}}
 									>
-										<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+										<div
+											style={{ display: "flex", alignItems: "center", gap: 8 }}
+										>
 											<span style={{ fontSize: 11, color: "#8be6ff" }}>
 												{track.label}
 											</span>

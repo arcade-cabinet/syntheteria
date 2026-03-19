@@ -21,7 +21,10 @@ import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
 import { FACTION_COLORS } from "../config/gameDefaults";
-import { computeTerritory, type TerritorySnapshot } from "../ecs/systems/territorySystem";
+import {
+	computeTerritory,
+	type TerritorySnapshot,
+} from "../ecs/systems/territorySystem";
 import { buildExploredSet } from "./tileVisibility";
 
 type TerritoryOverlayRendererProps = {
@@ -33,7 +36,7 @@ type TerritoryOverlayRendererProps = {
 const TEXELS_PER_TILE = 2;
 
 /** Opacity of territory tint overlay [0-1]. */
-const TERRITORY_OPACITY = 0.10;
+const TERRITORY_OPACITY = 0.1;
 
 /** Contested stripe opacity. */
 const CONTESTED_OPACITY = 0.08;
@@ -51,11 +54,7 @@ const STRIP_EMISSIVE = 2.0;
 const STRIP_OPACITY = 0.85;
 
 function hexToRgb(hex: number): [number, number, number] {
-	return [
-		(hex >> 16) & 0xff,
-		(hex >> 8) & 0xff,
-		hex & 0xff,
-	];
+	return [(hex >> 16) & 0xff, (hex >> 8) & 0xff, hex & 0xff];
 }
 
 function createTerritoryTexture(
@@ -190,8 +189,12 @@ function collectBoundaryEdges(
 				const neighborColor = FACTION_COLORS[neighborFaction];
 				if (neighborColor != null && neighborColor !== factionColor) {
 					// Offset slightly so both strips are visible
-					const offsetX = horizontal ? 0 : (dx > 0 ? STRIP_WIDTH : -STRIP_WIDTH);
-					const offsetZ = horizontal ? (dz > 0 ? STRIP_WIDTH : -STRIP_WIDTH) : 0;
+					const offsetX = horizontal ? 0 : dx > 0 ? STRIP_WIDTH : -STRIP_WIDTH;
+					const offsetZ = horizontal
+						? dz > 0
+							? STRIP_WIDTH
+							: -STRIP_WIDTH
+						: 0;
 					edges.push({
 						wx: wx + offsetX,
 						wz: wz + offsetZ,
@@ -235,25 +238,41 @@ function buildBoundaryStripGeometry(
 
 		if (edge.horizontal) {
 			// Strip along X axis
-			x0 = edge.wx - halfLen; z0 = edge.wz - halfW;
-			x1 = edge.wx + halfLen; z1 = edge.wz - halfW;
-			x2 = edge.wx + halfLen; z2 = edge.wz + halfW;
-			x3 = edge.wx - halfLen; z3 = edge.wz + halfW;
+			x0 = edge.wx - halfLen;
+			z0 = edge.wz - halfW;
+			x1 = edge.wx + halfLen;
+			z1 = edge.wz - halfW;
+			x2 = edge.wx + halfLen;
+			z2 = edge.wz + halfW;
+			x3 = edge.wx - halfLen;
+			z3 = edge.wz + halfW;
 		} else {
 			// Strip along Z axis
-			x0 = edge.wx - halfW; z0 = edge.wz - halfLen;
-			x1 = edge.wx + halfW; z1 = edge.wz - halfLen;
-			x2 = edge.wx + halfW; z2 = edge.wz + halfLen;
-			x3 = edge.wx - halfW; z3 = edge.wz + halfLen;
+			x0 = edge.wx - halfW;
+			z0 = edge.wz - halfLen;
+			x1 = edge.wx + halfW;
+			z1 = edge.wz - halfLen;
+			x2 = edge.wx + halfW;
+			z2 = edge.wz + halfLen;
+			x3 = edge.wx - halfW;
+			z3 = edge.wz + halfLen;
 		}
 
 		const vBase = i * vertsPerStrip;
 		const pOff = vBase * 3;
 
-		positions[pOff] = x0; positions[pOff + 1] = STRIP_Y; positions[pOff + 2] = z0;
-		positions[pOff + 3] = x1; positions[pOff + 4] = STRIP_Y; positions[pOff + 5] = z1;
-		positions[pOff + 6] = x2; positions[pOff + 7] = STRIP_Y; positions[pOff + 8] = z2;
-		positions[pOff + 9] = x3; positions[pOff + 10] = STRIP_Y; positions[pOff + 11] = z3;
+		positions[pOff] = x0;
+		positions[pOff + 1] = STRIP_Y;
+		positions[pOff + 2] = z0;
+		positions[pOff + 3] = x1;
+		positions[pOff + 4] = STRIP_Y;
+		positions[pOff + 5] = z1;
+		positions[pOff + 6] = x2;
+		positions[pOff + 7] = STRIP_Y;
+		positions[pOff + 8] = z2;
+		positions[pOff + 9] = x3;
+		positions[pOff + 10] = STRIP_Y;
+		positions[pOff + 11] = z3;
 
 		// Normals — all pointing up
 		for (let v = 0; v < vertsPerStrip; v++) {
@@ -292,7 +311,10 @@ function buildBoundaryStripGeometry(
 // Component
 // ---------------------------------------------------------------------------
 
-export function TerritoryOverlayRenderer({ board, world }: TerritoryOverlayRendererProps) {
+export function TerritoryOverlayRenderer({
+	board,
+	world,
+}: TerritoryOverlayRendererProps) {
 	const { scene } = useThree();
 	const meshRef = useRef<THREE.Mesh | null>(null);
 	const textureRef = useRef<THREE.DataTexture | null>(null);
@@ -355,7 +377,10 @@ export function TerritoryOverlayRenderer({ board, world }: TerritoryOverlayRende
 		}
 	}
 
-	function updateBoundaryStrips(territory: TerritorySnapshot, explored: Set<string>) {
+	function updateBoundaryStrips(
+		territory: TerritorySnapshot,
+		explored: Set<string>,
+	) {
 		removeBoundaryStrips();
 
 		const edges = collectBoundaryEdges(territory, explored, width, height);

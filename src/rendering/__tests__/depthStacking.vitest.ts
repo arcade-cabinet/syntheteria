@@ -13,12 +13,10 @@
 
 import { describe, expect, it } from "vitest";
 import {
-	createDepthMappedLayer,
-} from "../depthMappedLayer";
-import {
 	createDepthLayerStack,
 	type DepthLayerStack,
 } from "../depthLayerStack";
+import { createDepthMappedLayer } from "../depthMappedLayer";
 
 describe("layer stacking", () => {
 	it("two layers do not interfere with each other's depth maps", () => {
@@ -45,7 +43,7 @@ describe("layer stacking", () => {
 		const layer1 = createDepthMappedLayer(5, 5, 1);
 
 		// Layer 1 platform with ramp-down at edge
-		layer1.setDepth(2, 2, 0);  // platform surface
+		layer1.setDepth(2, 2, 0); // platform surface
 		layer1.setDepth(2, 3, -1); // ramp down at south edge
 
 		stack.addLayer(layer0);
@@ -97,12 +95,12 @@ describe("layer stacking", () => {
 		// Abyssal zone on layer 0
 		for (let x = 1; x <= 3; x++) {
 			layer0.setDepth(x, 2, -2); // deep void
-			layer0.setBiome(x, 2, 7);  // grating texture
+			layer0.setBiome(x, 2, 7); // grating texture
 		}
 
 		// Bridge strip on layer 1 crossing over
 		layer1.setDepth(1, 2, -1); // ramp down at west end
-		layer1.setDepth(2, 2, 0);  // bridge surface
+		layer1.setDepth(2, 2, 0); // bridge surface
 		layer1.setDepth(3, 2, -1); // ramp down at east end
 
 		stack.addLayer(layer0);
@@ -183,7 +181,7 @@ describe("layer stacking", () => {
 		const layer1 = createDepthMappedLayer(5, 5, 2); // baseY=2, not 1
 
 		// For layer1 to ramp down to layer0, it needs depth = -2
-		layer1.setDepth(2, 2, 0);  // surface at worldY=2
+		layer1.setDepth(2, 2, 0); // surface at worldY=2
 		layer1.setDepth(2, 3, -2); // ramp endpoint at worldY=0
 
 		stack.addLayer(layer0);

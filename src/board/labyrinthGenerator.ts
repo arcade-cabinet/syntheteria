@@ -17,16 +17,16 @@
  * Same seed = identical output.
  */
 
-import { FLOOR_DEFS, type FloorType } from "../ecs/terrain/types";
 import { floorTypeForTile } from "../ecs/terrain/cluster";
+import { FLOOR_DEFS, type FloorType } from "../ecs/terrain/types";
 import { CLIMATE_PROFILE_SPECS } from "../world/config";
-import { seededRng } from "./noise";
 import { generateLabyrinth, generateRooms } from "./labyrinth";
-import { growingTreeMazeFill } from "./labyrinthMaze";
+import { applyAbyssalZones, type ProtectedZone } from "./labyrinthAbyssal";
 import { connectRegions } from "./labyrinthConnectivity";
 import { applyLabyrinthFeatures } from "./labyrinthFeatures";
-import { applyAbyssalZones, type ProtectedZone } from "./labyrinthAbyssal";
+import { growingTreeMazeFill } from "./labyrinthMaze";
 import { applyMultiLevelPlatforms } from "./labyrinthPlatforms";
+import { seededRng } from "./noise";
 import type { BoardConfig, GeneratedBoard, TileData } from "./types";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -36,8 +36,8 @@ import type { BoardConfig, GeneratedBoard, TileData } from "./types";
  * Backstop deposits — survival-level basics when no buildings are in range.
  */
 const SCATTER_RATE: Record<string, number> = {
-	structural_mass: 0.70,
-	abyssal_platform: 0.20,
+	structural_mass: 0.7,
+	abyssal_platform: 0.2,
 	durasteel_span: 0.08,
 	transit_deck: 0.08,
 	collapsed_zone: 0.15,
@@ -148,7 +148,7 @@ function applyZoneFloors(
 
 			// 90% of corridors get zone floors for visual variety.
 			// The remaining 10% stay as transit_deck for contrast.
-			if (rng() < 0.90) {
+			if (rng() < 0.9) {
 				const noiseFloor = floorTypeForTile(x, z, 0, seed);
 				if (
 					noiseFloor !== "void_pit" &&
@@ -159,7 +159,8 @@ function applyZoneFloors(
 				} else {
 					// Geography noise returned a non-passable type — pick a
 					// district floor deterministically from tile position
-					tile.floorType = DISTRICT_FLOORS[(x * 7 + z * 13) % DISTRICT_FLOORS.length]!;
+					tile.floorType =
+						DISTRICT_FLOORS[(x * 7 + z * 13) % DISTRICT_FLOORS.length]!;
 				}
 			}
 		}

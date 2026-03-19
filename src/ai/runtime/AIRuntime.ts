@@ -10,8 +10,8 @@
 
 import { EntityManager } from "yuka";
 import {
-	SyntheteriaAgent,
 	type AgentSnapshot,
+	SyntheteriaAgent,
 } from "../agents/SyntheteriaAgent";
 import {
 	AttackEvaluator,
@@ -170,10 +170,7 @@ export class AIRuntime {
 	// -----------------------------------------------------------------------
 
 	private createAgent(snapshot: AgentSnapshot): SyntheteriaAgent {
-		const agent = new SyntheteriaAgent(
-			snapshot.entityId,
-			snapshot.factionId,
-		);
+		const agent = new SyntheteriaAgent(snapshot.entityId, snapshot.factionId);
 
 		const personality =
 			FACTION_PERSONALITY[snapshot.factionId] ?? DEFAULT_PERSONALITY;

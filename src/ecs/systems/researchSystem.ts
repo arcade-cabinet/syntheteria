@@ -15,9 +15,9 @@ import { playSfx } from "../../audio/sfx";
 import type { TechDef, TechEffectType } from "../../config/techTreeDefs";
 import { TECH_BY_ID, TECH_TREE } from "../../config/techTreeDefs";
 import { pushTurnEvent } from "../../ui/game/turnEvents";
-import { pushToast } from "./toastNotifications";
 import { Building, Powered } from "../traits/building";
 import { Faction } from "../traits/faction";
+import { pushToast } from "./toastNotifications";
 
 // ─── Research State Trait ────────────────────────────────────────────────────
 
@@ -43,7 +43,10 @@ function parseResearched(str: string): string[] {
 	return str.split(",");
 }
 
-function hasResearched(state: { researchedTechs: string }, techId: string): boolean {
+function hasResearched(
+	state: { researchedTechs: string },
+	techId: string,
+): boolean {
 	return parseResearched(state.researchedTechs).includes(techId);
 }
 
@@ -70,7 +73,12 @@ export function countResearchLabs(world: World, factionId: string): number {
 export function getResearchState(
 	world: World,
 	factionId: string,
-): { researchedTechs: string[]; currentTechId: string; progressPoints: number; labCount: number } | null {
+): {
+	researchedTechs: string[];
+	currentTechId: string;
+	progressPoints: number;
+	labCount: number;
+} | null {
 	for (const e of world.query(Faction, ResearchState)) {
 		const f = e.get(Faction);
 		if (f?.id === factionId) {
@@ -104,7 +112,11 @@ export function getAvailableTechs(world: World, factionId: string): TechDef[] {
 /**
  * Check if a tech has been researched by a faction.
  */
-export function isTechResearched(world: World, factionId: string, techId: string): boolean {
+export function isTechResearched(
+	world: World,
+	factionId: string,
+	techId: string,
+): boolean {
 	for (const e of world.query(Faction, ResearchState)) {
 		const f = e.get(Faction);
 		if (f?.id !== factionId) continue;
@@ -118,7 +130,11 @@ export function isTechResearched(world: World, factionId: string, techId: string
 /**
  * Check if a faction has a specific tech effect active.
  */
-export function hasTechEffect(world: World, factionId: string, effectType: TechEffectType): boolean {
+export function hasTechEffect(
+	world: World,
+	factionId: string,
+	effectType: TechEffectType,
+): boolean {
 	for (const e of world.query(Faction, ResearchState)) {
 		const f = e.get(Faction);
 		if (f?.id !== factionId) continue;
@@ -136,7 +152,11 @@ export function hasTechEffect(world: World, factionId: string, effectType: TechE
 /**
  * Get the total value of a specific tech effect across all researched techs.
  */
-export function getTechEffectValue(world: World, factionId: string, effectType: TechEffectType): number {
+export function getTechEffectValue(
+	world: World,
+	factionId: string,
+	effectType: TechEffectType,
+): number {
 	let total = 0;
 	for (const e of world.query(Faction, ResearchState)) {
 		const f = e.get(Faction);
@@ -159,7 +179,15 @@ export function getTechEffectValue(world: World, factionId: string, effectType: 
 
 export type QueueResearchResult =
 	| { ok: true }
-	| { ok: false; reason: "no_faction" | "already_researching" | "already_researched" | "prerequisites_not_met" | "no_such_tech" };
+	| {
+			ok: false;
+			reason:
+				| "no_faction"
+				| "already_researching"
+				| "already_researched"
+				| "prerequisites_not_met"
+				| "no_such_tech";
+	  };
 
 /**
  * Queue a tech for research. Only one tech can be researched at a time.
@@ -179,7 +207,8 @@ export function queueResearch(
 		if (!rs) continue;
 
 		if (rs.currentTechId) return { ok: false, reason: "already_researching" };
-		if (hasResearched(rs, techId)) return { ok: false, reason: "already_researched" };
+		if (hasResearched(rs, techId))
+			return { ok: false, reason: "already_researched" };
 
 		// Check prerequisites
 		const researched = parseResearched(rs.researchedTechs);

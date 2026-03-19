@@ -8,14 +8,14 @@
  * Diegetic vocabulary: RESEARCH PROTOCOLS.
  */
 
-import { useState, useMemo } from "react";
 import type { World } from "koota";
-import { TECH_TREE, TECH_BY_ID, type TechDef } from "../../config/techTreeDefs";
+import { useMemo, useState } from "react";
+import { TECH_BY_ID, TECH_TREE, type TechDef } from "../../config/techTreeDefs";
 import {
-	getResearchState,
-	getAvailableTechs,
-	queueResearch,
 	cancelResearch,
+	getAvailableTechs,
+	getResearchState,
+	queueResearch,
 } from "../../ecs/systems/researchSystem";
 
 type TechTreeOverlayProps = {
@@ -35,7 +35,11 @@ const NODE_GAP_X = 16;
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function TechTreeOverlay({ world, factionId, onClose }: TechTreeOverlayProps) {
+export function TechTreeOverlay({
+	world,
+	factionId,
+	onClose,
+}: TechTreeOverlayProps) {
 	const [, setTick] = useState(0);
 	const refresh = () => setTick((t) => t + 1);
 
@@ -64,7 +68,8 @@ export function TechTreeOverlay({ world, factionId, onClose }: TechTreeOverlayPr
 		const positions = new Map<string, { x: number; y: number }>();
 		for (let tier = 1; tier <= 5; tier++) {
 			const techs = tiers.get(tier) ?? [];
-			const totalWidth = techs.length * NODE_W + (techs.length - 1) * NODE_GAP_X;
+			const totalWidth =
+				techs.length * NODE_W + (techs.length - 1) * NODE_GAP_X;
 			const startX = -totalWidth / 2;
 			const y = (tier - 1) * TIER_GAP_Y;
 			for (let i = 0; i < techs.length; i++) {
@@ -133,8 +138,11 @@ export function TechTreeOverlay({ world, factionId, onClose }: TechTreeOverlayPr
 					Research Protocols
 				</span>
 				{currentTechId && (
-					<span style={{ fontSize: 10, color: "#b088d8", letterSpacing: "0.1em" }}>
-						RESEARCHING: {TECH_BY_ID.get(currentTechId)?.name.toUpperCase()} ({progressPoints}/{TECH_BY_ID.get(currentTechId)?.turnsToResearch})
+					<span
+						style={{ fontSize: 10, color: "#b088d8", letterSpacing: "0.1em" }}
+					>
+						RESEARCHING: {TECH_BY_ID.get(currentTechId)?.name.toUpperCase()} (
+						{progressPoints}/{TECH_BY_ID.get(currentTechId)?.turnsToResearch})
 						<button
 							type="button"
 							onClick={handleCancel}
@@ -190,7 +198,8 @@ export function TechTreeOverlay({ world, factionId, onClose }: TechTreeOverlayPr
 							const from = nodePositions.get(prereqId);
 							const to = nodePositions.get(tech.id);
 							if (!from || !to) return null;
-							const bothDone = researched.has(prereqId) && researched.has(tech.id);
+							const bothDone =
+								researched.has(prereqId) && researched.has(tech.id);
 							const fromDone = researched.has(prereqId);
 							return (
 								<line
@@ -283,7 +292,13 @@ export function TechTreeOverlay({ world, factionId, onClose }: TechTreeOverlayPr
 										>
 											{tech.name}
 											{isDone && (
-												<span style={{ marginLeft: 6, fontSize: 8, color: "#7ee7cb" }}>
+												<span
+													style={{
+														marginLeft: 6,
+														fontSize: 8,
+														color: "#7ee7cb",
+													}}
+												>
 													DONE
 												</span>
 											)}
@@ -303,12 +318,26 @@ export function TechTreeOverlay({ world, factionId, onClose }: TechTreeOverlayPr
 											{tech.description}
 										</div>
 									</div>
-									<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-										<span style={{ fontSize: 8, color: "rgba(255,255,255,0.3)" }}>
+									<div
+										style={{
+											display: "flex",
+											justifyContent: "space-between",
+											alignItems: "center",
+										}}
+									>
+										<span
+											style={{ fontSize: 8, color: "rgba(255,255,255,0.3)" }}
+										>
 											T{tech.tier} | {tech.turnsToResearch}t
 										</span>
 										{isActive && (
-											<div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+											<div
+												style={{
+													display: "flex",
+													alignItems: "center",
+													gap: 3,
+												}}
+											>
 												<div
 													style={{
 														width: 40,

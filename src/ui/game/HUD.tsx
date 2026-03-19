@@ -8,13 +8,13 @@
  * Diegetic vocabulary: CYCLE (not turn), SYNC (not save), ADVANCE (not end turn).
  */
 
-import type { VictoryProgress } from "../../ecs/systems/victorySystem";
 import {
 	VICTORY_DOMINATION_PERCENT,
 	VICTORY_ECONOMIC_TOTAL,
 	VICTORY_RESEARCH_POINTS,
 	VICTORY_SURVIVAL_TURNS,
 } from "../../config/gameDefaults";
+import type { VictoryProgress } from "../../ecs/systems/victorySystem";
 
 export interface ProductionQueueItem {
 	building: string;
@@ -71,7 +71,15 @@ const PROGRESS_BAR_BG: React.CSSProperties = {
 	flex: 1,
 };
 
-function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
+function ProgressBar({
+	value,
+	max,
+	color,
+}: {
+	value: number;
+	max: number;
+	color: string;
+}) {
 	const pct = Math.min(100, (value / max) * 100);
 	return (
 		<div style={PROGRESS_BAR_BG}>
@@ -90,7 +98,22 @@ function ProgressBar({ value, max, color }: { value: number; max: number; color:
 
 const OBSERVER_SPEEDS = [1, 2, 5, 10] as const;
 
-export function HUD({ turn, ap, maxAp, onEndTurn, onSave, resources, productionQueue, victoryProgress, population, popCap, isObserverMode, observerSpeed, onSetObserverSpeed, currentResearch }: HUDProps) {
+export function HUD({
+	turn,
+	ap,
+	maxAp,
+	onEndTurn,
+	onSave,
+	resources,
+	productionQueue,
+	victoryProgress,
+	population,
+	popCap,
+	isObserverMode,
+	observerSpeed,
+	onSetObserverSpeed,
+	currentResearch,
+}: HUDProps) {
 	const nonZero = resources
 		? Object.entries(resources).filter(([, v]) => v > 0)
 		: [];
@@ -210,7 +233,14 @@ export function HUD({ turn, ap, maxAp, onEndTurn, onSave, resources, productionQ
 						alignItems: "center",
 					}}
 				>
-					<div style={{ display: "flex", alignItems: "center", gap: 3, minWidth: 60 }}>
+					<div
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 3,
+							minWidth: 60,
+						}}
+					>
 						<span>DOM</span>
 						<ProgressBar
 							value={victoryProgress.territoryPercent}
@@ -218,7 +248,14 @@ export function HUD({ turn, ap, maxAp, onEndTurn, onSave, resources, productionQ
 							color="#7ee7cb"
 						/>
 					</div>
-					<div style={{ display: "flex", alignItems: "center", gap: 3, minWidth: 60 }}>
+					<div
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 3,
+							minWidth: 60,
+						}}
+					>
 						<span>RES</span>
 						<ProgressBar
 							value={victoryProgress.techPoints}
@@ -226,7 +263,14 @@ export function HUD({ turn, ap, maxAp, onEndTurn, onSave, resources, productionQ
 							color="#8be6ff"
 						/>
 					</div>
-					<div style={{ display: "flex", alignItems: "center", gap: 3, minWidth: 60 }}>
+					<div
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 3,
+							minWidth: 60,
+						}}
+					>
 						<span>ECO</span>
 						<ProgressBar
 							value={victoryProgress.totalResources}
@@ -234,7 +278,14 @@ export function HUD({ turn, ap, maxAp, onEndTurn, onSave, resources, productionQ
 							color="#f6c56a"
 						/>
 					</div>
-					<div style={{ display: "flex", alignItems: "center", gap: 3, minWidth: 60 }}>
+					<div
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 3,
+							minWidth: 60,
+						}}
+					>
 						<span>SRV</span>
 						<ProgressBar
 							value={victoryProgress.currentTurn}
@@ -301,10 +352,14 @@ export function HUD({ turn, ap, maxAp, onEndTurn, onSave, resources, productionQ
 							onClick={() => onSetObserverSpeed?.(speed)}
 							style={{
 								padding: "4px 8px",
-								background: observerSpeed === speed ? "rgba(139,230,255,0.2)" : "transparent",
+								background:
+									observerSpeed === speed
+										? "rgba(139,230,255,0.2)"
+										: "transparent",
 								border: `1px solid rgba(139,230,255,${observerSpeed === speed ? 0.6 : 0.2})`,
 								borderRadius: 3,
-								color: observerSpeed === speed ? "#8be6ff" : "rgba(139,230,255,0.4)",
+								color:
+									observerSpeed === speed ? "#8be6ff" : "rgba(139,230,255,0.4)",
 								fontFamily: "inherit",
 								fontSize: 10,
 								cursor: "pointer",

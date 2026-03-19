@@ -31,22 +31,34 @@ describe("victorySystem", () => {
 	});
 
 	it("returns 'playing' when player and AI units both exist", () => {
-		world.spawn(UnitFaction({ factionId: "player" }), UnitPos({ tileX: 0, tileZ: 0 }));
-		world.spawn(UnitFaction({ factionId: "reclaimers" }), UnitPos({ tileX: 5, tileZ: 5 }));
+		world.spawn(
+			UnitFaction({ factionId: "player" }),
+			UnitPos({ tileX: 0, tileZ: 0 }),
+		);
+		world.spawn(
+			UnitFaction({ factionId: "reclaimers" }),
+			UnitPos({ tileX: 5, tileZ: 5 }),
+		);
 
 		const outcome = checkVictoryConditions(world);
 		expect(outcome.result).toBe("playing");
 	});
 
 	it("returns defeat when no player units remain", () => {
-		world.spawn(UnitFaction({ factionId: "reclaimers" }), UnitPos({ tileX: 5, tileZ: 5 }));
+		world.spawn(
+			UnitFaction({ factionId: "reclaimers" }),
+			UnitPos({ tileX: 5, tileZ: 5 }),
+		);
 
 		const outcome = checkVictoryConditions(world);
 		expect(outcome).toEqual({ result: "defeat", reason: "elimination" });
 	});
 
 	it("defeat takes priority when no player and no AI exist", () => {
-		world.spawn(UnitFaction({ factionId: "null_monks" }), UnitPos({ tileX: 3, tileZ: 3 }));
+		world.spawn(
+			UnitFaction({ factionId: "null_monks" }),
+			UnitPos({ tileX: 3, tileZ: 3 }),
+		);
 
 		const outcome = checkVictoryConditions(world);
 		expect(outcome).toEqual({ result: "defeat", reason: "elimination" });
@@ -54,9 +66,22 @@ describe("victorySystem", () => {
 
 	describe("research victory", () => {
 		it("accumulates tech points from research labs", () => {
-			world.spawn(UnitFaction({ factionId: "player" }), UnitPos({ tileX: 0, tileZ: 0 }));
-			world.spawn(UnitFaction({ factionId: "reclaimers" }), UnitPos({ tileX: 15, tileZ: 15 }));
-			world.spawn(Building({ tileX: 1, tileZ: 1, factionId: "player", buildingType: "research_lab" }));
+			world.spawn(
+				UnitFaction({ factionId: "player" }),
+				UnitPos({ tileX: 0, tileZ: 0 }),
+			);
+			world.spawn(
+				UnitFaction({ factionId: "reclaimers" }),
+				UnitPos({ tileX: 15, tileZ: 15 }),
+			);
+			world.spawn(
+				Building({
+					tileX: 1,
+					tileZ: 1,
+					factionId: "player",
+					buildingType: "research_lab",
+				}),
+			);
 
 			checkVictoryConditions(world);
 			expect(_getTechPoints()).toBe(1);
@@ -66,10 +91,23 @@ describe("victorySystem", () => {
 		});
 
 		it("does not trigger research victory without enough labs or points", () => {
-			world.spawn(UnitFaction({ factionId: "player" }), UnitPos({ tileX: 0, tileZ: 0 }));
-			world.spawn(UnitFaction({ factionId: "reclaimers" }), UnitPos({ tileX: 15, tileZ: 15 }));
+			world.spawn(
+				UnitFaction({ factionId: "player" }),
+				UnitPos({ tileX: 0, tileZ: 0 }),
+			);
+			world.spawn(
+				UnitFaction({ factionId: "reclaimers" }),
+				UnitPos({ tileX: 15, tileZ: 15 }),
+			);
 			// Only 1 lab — need 3
-			world.spawn(Building({ tileX: 1, tileZ: 1, factionId: "player", buildingType: "research_lab" }));
+			world.spawn(
+				Building({
+					tileX: 1,
+					tileZ: 1,
+					factionId: "player",
+					buildingType: "research_lab",
+				}),
+			);
 
 			for (let i = 0; i < 50; i++) {
 				const outcome = checkVictoryConditions(world);
@@ -80,11 +118,21 @@ describe("victorySystem", () => {
 
 	describe("economic victory", () => {
 		it("triggers when total resources >= 500", () => {
-			world.spawn(UnitFaction({ factionId: "player" }), UnitPos({ tileX: 0, tileZ: 0 }));
-			world.spawn(UnitFaction({ factionId: "reclaimers" }), UnitPos({ tileX: 15, tileZ: 15 }));
+			world.spawn(
+				UnitFaction({ factionId: "player" }),
+				UnitPos({ tileX: 0, tileZ: 0 }),
+			);
+			world.spawn(
+				UnitFaction({ factionId: "reclaimers" }),
+				UnitPos({ tileX: 15, tileZ: 15 }),
+			);
 			world.spawn(
 				Faction({ id: "player", displayName: "Player", isPlayer: true }),
-				ResourcePool({ ferrous_scrap: 200, alloy_stock: 200, polymer_salvage: 100 }),
+				ResourcePool({
+					ferrous_scrap: 200,
+					alloy_stock: 200,
+					polymer_salvage: 100,
+				}),
 			);
 
 			const outcome = checkVictoryConditions(world);
@@ -92,8 +140,14 @@ describe("victorySystem", () => {
 		});
 
 		it("does not trigger when resources < 500", () => {
-			world.spawn(UnitFaction({ factionId: "player" }), UnitPos({ tileX: 0, tileZ: 0 }));
-			world.spawn(UnitFaction({ factionId: "reclaimers" }), UnitPos({ tileX: 15, tileZ: 15 }));
+			world.spawn(
+				UnitFaction({ factionId: "player" }),
+				UnitPos({ tileX: 0, tileZ: 0 }),
+			);
+			world.spawn(
+				UnitFaction({ factionId: "reclaimers" }),
+				UnitPos({ tileX: 15, tileZ: 15 }),
+			);
 			world.spawn(
 				Faction({ id: "player", displayName: "Player", isPlayer: true }),
 				ResourcePool({ ferrous_scrap: 100 }),
@@ -111,8 +165,14 @@ describe("victorySystem", () => {
 			world.spawn(
 				Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 200 }),
 			);
-			world.spawn(UnitFaction({ factionId: "player" }), UnitPos({ tileX: 0, tileZ: 0 }));
-			world.spawn(UnitFaction({ factionId: "reclaimers" }), UnitPos({ tileX: 15, tileZ: 15 }));
+			world.spawn(
+				UnitFaction({ factionId: "player" }),
+				UnitPos({ tileX: 0, tileZ: 0 }),
+			);
+			world.spawn(
+				UnitFaction({ factionId: "reclaimers" }),
+				UnitPos({ tileX: 15, tileZ: 15 }),
+			);
 
 			const outcome = checkVictoryConditions(world);
 			expect(outcome).toEqual({ result: "victory", reason: "survival" });
@@ -124,8 +184,14 @@ describe("victorySystem", () => {
 			world.spawn(
 				Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 199 }),
 			);
-			world.spawn(UnitFaction({ factionId: "player" }), UnitPos({ tileX: 0, tileZ: 0 }));
-			world.spawn(UnitFaction({ factionId: "reclaimers" }), UnitPos({ tileX: 15, tileZ: 15 }));
+			world.spawn(
+				UnitFaction({ factionId: "player" }),
+				UnitPos({ tileX: 0, tileZ: 0 }),
+			);
+			world.spawn(
+				UnitFaction({ factionId: "reclaimers" }),
+				UnitPos({ tileX: 15, tileZ: 15 }),
+			);
 
 			const outcome = checkVictoryConditions(world);
 			expect(outcome.result).toBe("playing");
@@ -134,7 +200,10 @@ describe("victorySystem", () => {
 
 	describe("victoryProgress", () => {
 		it("returns progress snapshot", () => {
-			world.spawn(UnitFaction({ factionId: "player" }), UnitPos({ tileX: 5, tileZ: 5 }));
+			world.spawn(
+				UnitFaction({ factionId: "player" }),
+				UnitPos({ tileX: 5, tileZ: 5 }),
+			);
 			world.spawn(
 				Faction({ id: "player", displayName: "Player", isPlayer: true }),
 				ResourcePool({ ferrous_scrap: 50 }),
@@ -150,26 +219,51 @@ describe("victorySystem", () => {
 	});
 
 	describe("technical supremacy", () => {
-		const FACTION_CLASSES = ["scout", "infantry", "cavalry", "ranged", "support", "worker"] as const;
+		const FACTION_CLASSES = [
+			"scout",
+			"infantry",
+			"cavalry",
+			"ranged",
+			"support",
+			"worker",
+		] as const;
 
-		function spawnMarkVUnit(w: ReturnType<typeof createWorld>, robotClass: string, factionId = "player") {
+		function spawnMarkVUnit(
+			w: ReturnType<typeof createWorld>,
+			robotClass: string,
+			factionId = "player",
+		) {
 			w.spawn(
 				UnitFaction({ factionId }),
 				UnitPos({ tileX: 0, tileZ: 0 }),
-				UnitStats({ robotClass: robotClass as import("../../robots/types").RobotClass }),
+				UnitStats({
+					robotClass: robotClass as import("../../robots/types").RobotClass,
+				}),
 				UnitXP({ xp: 0, markLevel: 5, killCount: 0, harvestCount: 0 }),
 			);
 		}
 
-		function setFactionResearch(w: ReturnType<typeof createWorld>, factionId: string, techs: string) {
+		function setFactionResearch(
+			w: ReturnType<typeof createWorld>,
+			factionId: string,
+			techs: string,
+		) {
 			w.spawn(
 				Faction({ id: factionId }),
-				ResearchState({ researchedTechs: techs, currentTechId: "", progressPoints: 0 }),
+				ResearchState({
+					researchedTechs: techs,
+					currentTechId: "",
+					progressPoints: 0,
+				}),
 			);
 		}
 
 		it("returns false without mark_v_transcendence researched", () => {
-			setFactionResearch(world, "player", "reinforced_chassis,mark_ii_components");
+			setFactionResearch(
+				world,
+				"player",
+				"reinforced_chassis,mark_ii_components",
+			);
 			for (const cls of FACTION_CLASSES) spawnMarkVUnit(world, cls);
 			expect(checkTechnicalSupremacy(world, "player")).toBe(false);
 		});
@@ -189,7 +283,9 @@ describe("victorySystem", () => {
 				world.spawn(
 					UnitFaction({ factionId: "player" }),
 					UnitPos({ tileX: 0, tileZ: 0 }),
-					UnitStats({ robotClass: cls as import("../../robots/types").RobotClass }),
+					UnitStats({
+						robotClass: cls as import("../../robots/types").RobotClass,
+					}),
 					UnitXP({ xp: 0, markLevel: 4, killCount: 0, harvestCount: 0 }),
 				);
 			}
@@ -204,7 +300,8 @@ describe("victorySystem", () => {
 
 		it("does not count other faction's Mark V units", () => {
 			setFactionResearch(world, "player", "mark_v_transcendence");
-			for (const cls of FACTION_CLASSES) spawnMarkVUnit(world, cls, "reclaimers");
+			for (const cls of FACTION_CLASSES)
+				spawnMarkVUnit(world, cls, "reclaimers");
 			expect(checkTechnicalSupremacy(world, "player")).toBe(false);
 		});
 	});

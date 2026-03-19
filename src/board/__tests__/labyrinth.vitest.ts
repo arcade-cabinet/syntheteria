@@ -6,8 +6,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { generateLabyrinth, generateRooms, type Room } from "../labyrinth";
 import { FACTION_DEFINITIONS } from "../../ecs/factions/definitions";
+import { generateLabyrinth, generateRooms, type Room } from "../labyrinth";
 import type { BoardConfig, TileData } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -130,7 +130,10 @@ describe("faction start rooms", () => {
 		const rooms = generateRooms(48, 48, "all-factions");
 		for (const faction of FACTION_DEFINITIONS) {
 			const room = rooms.find((r) => r.tag === faction.id);
-			expect(room, `faction ${faction.id} should have a start room`).toBeDefined();
+			expect(
+				room,
+				`faction ${faction.id} should have a start room`,
+			).toBeDefined();
 			expect(room!.kind).toBe("faction_start");
 		}
 	});

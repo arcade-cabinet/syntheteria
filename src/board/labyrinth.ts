@@ -11,8 +11,8 @@
  * Reference: journal.stuffwithstuff.com/2014/12/21/rooms-and-mazes/
  */
 
-import type { FloorType } from "../ecs/terrain/types";
 import { FACTION_DEFINITIONS } from "../ecs/factions/definitions";
+import type { FloorType } from "../ecs/terrain/types";
 import { seededRng } from "./noise";
 import type { BoardConfig, Elevation, GeneratedBoard, TileData } from "./types";
 
@@ -148,7 +148,12 @@ function placeRoomNear(
 	const startZ = targetZ - Math.floor(roomH / 2);
 
 	if (
-		canPlaceRoom({ x: startX, z: startZ, w: roomW, h: roomH }, existingRooms, width, height)
+		canPlaceRoom(
+			{ x: startX, z: startZ, w: roomW, h: roomH },
+			existingRooms,
+			width,
+			height,
+		)
 	) {
 		return { x: startX, z: startZ };
 	}
@@ -164,7 +169,12 @@ function placeRoomNear(
 				const x = startX + dx;
 				const z = startZ + dz;
 				if (
-					canPlaceRoom({ x, z, w: roomW, h: roomH }, existingRooms, width, height)
+					canPlaceRoom(
+						{ x, z, w: roomW, h: roomH },
+						existingRooms,
+						width,
+						height,
+					)
 				) {
 					return { x, z };
 				}
@@ -191,7 +201,9 @@ function placeRoomRandom(
 		const x = 1 + Math.floor(rng() * (width - roomW - 2));
 		const z = 1 + Math.floor(rng() * (height - roomH - 2));
 
-		if (canPlaceRoom({ x, z, w: roomW, h: roomH }, existingRooms, width, height)) {
+		if (
+			canPlaceRoom({ x, z, w: roomW, h: roomH }, existingRooms, width, height)
+		) {
 			return { x, z };
 		}
 	}
@@ -208,9 +220,7 @@ function placeRoomRandom(
  * - Everything else is structural_mass (walls)
  * - Rooms are NOT connected (Phase 2 adds maze corridors)
  */
-export function generateLabyrinth(
-	config: BoardConfig,
-): GeneratedBoard {
+export function generateLabyrinth(config: BoardConfig): GeneratedBoard {
 	const { width, height, seed } = config;
 	const rng = seededRng(seed + "_labyrinth");
 
@@ -235,7 +245,8 @@ export function generateLabyrinth(
 	const rooms: Room[] = [];
 
 	// ── Place player start room at center ─────────────────────────────────
-	const playerSize = FACTION_MIN + Math.floor(rng() * (FACTION_MAX - FACTION_MIN + 1));
+	const playerSize =
+		FACTION_MIN + Math.floor(rng() * (FACTION_MAX - FACTION_MIN + 1));
 	const playerPos = placeRoomNear(
 		Math.floor(width / 2),
 		Math.floor(height / 2),
@@ -261,9 +272,11 @@ export function generateLabyrinth(
 	// ── Place AI faction start rooms at corners ───────────────────────────
 	for (let i = 0; i < FACTION_DEFINITIONS.length; i++) {
 		const faction = FACTION_DEFINITIONS[i]!;
-		const size = FACTION_MIN + Math.floor(rng() * (FACTION_MAX - FACTION_MIN + 1));
+		const size =
+			FACTION_MIN + Math.floor(rng() * (FACTION_MAX - FACTION_MIN + 1));
 		const { cx, cz } = startZonePosition(faction.startZone, width, height);
-		const floorType = AFFINITY_FLOOR[faction.terrainAffinity] ?? "durasteel_span";
+		const floorType =
+			AFFINITY_FLOOR[faction.terrainAffinity] ?? "durasteel_span";
 
 		const pos = placeRoomNear(cx, cz, size, size, rooms, width, height, rng);
 		if (pos) {
@@ -281,9 +294,20 @@ export function generateLabyrinth(
 
 	// ── Place cult POI rooms (3 sects × 1 room each) ─────────────────────
 	// Cults spawn in dust/abandoned areas — place them away from faction starts
-	const cultFloors: FloorType[] = ["dust_district", "collapsed_zone", "dust_district"];
+	const cultFloors: FloorType[] = [
+		"dust_district",
+		"collapsed_zone",
+		"dust_district",
+	];
 	for (let i = 0; i < 3; i++) {
-		const pos = placeRoomRandom(CULT_SIZE, CULT_SIZE, rooms, width, height, rng);
+		const pos = placeRoomRandom(
+			CULT_SIZE,
+			CULT_SIZE,
+			rooms,
+			width,
+			height,
+			rng,
+		);
 		if (pos) {
 			rooms.push({
 				x: pos.x,
@@ -357,7 +381,8 @@ export function generateRooms(
 	const rooms: Room[] = [];
 
 	// Player start
-	const playerSize = FACTION_MIN + Math.floor(rng() * (FACTION_MAX - FACTION_MIN + 1));
+	const playerSize =
+		FACTION_MIN + Math.floor(rng() * (FACTION_MAX - FACTION_MIN + 1));
 	const playerPos = placeRoomNear(
 		Math.floor(width / 2),
 		Math.floor(height / 2),
@@ -383,9 +408,11 @@ export function generateRooms(
 	// AI faction starts
 	for (let i = 0; i < FACTION_DEFINITIONS.length; i++) {
 		const faction = FACTION_DEFINITIONS[i]!;
-		const size = FACTION_MIN + Math.floor(rng() * (FACTION_MAX - FACTION_MIN + 1));
+		const size =
+			FACTION_MIN + Math.floor(rng() * (FACTION_MAX - FACTION_MIN + 1));
 		const { cx, cz } = startZonePosition(faction.startZone, width, height);
-		const floorType = AFFINITY_FLOOR[faction.terrainAffinity] ?? "durasteel_span";
+		const floorType =
+			AFFINITY_FLOOR[faction.terrainAffinity] ?? "durasteel_span";
 
 		const pos = placeRoomNear(cx, cz, size, size, rooms, width, height, rng);
 		if (pos) {
@@ -402,9 +429,20 @@ export function generateRooms(
 	}
 
 	// Cult POIs
-	const cultFloors: FloorType[] = ["dust_district", "collapsed_zone", "dust_district"];
+	const cultFloors: FloorType[] = [
+		"dust_district",
+		"collapsed_zone",
+		"dust_district",
+	];
 	for (let i = 0; i < 3; i++) {
-		const pos = placeRoomRandom(CULT_SIZE, CULT_SIZE, rooms, width, height, rng);
+		const pos = placeRoomRandom(
+			CULT_SIZE,
+			CULT_SIZE,
+			rooms,
+			width,
+			height,
+			rng,
+		);
 		if (pos) {
 			rooms.push({
 				x: pos.x,

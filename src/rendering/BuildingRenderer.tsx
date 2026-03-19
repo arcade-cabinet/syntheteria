@@ -9,11 +9,11 @@ import { Clone, Sparkles, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { type ReactNode, Suspense, useMemo, useRef } from "react";
-import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import { Building, type BuildingType } from "../ecs/traits/building";
 import { CultStructure, type CultStructureType } from "../ecs/traits/cult";
+import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import { getAllBuildingModelUrls, resolveBuildingModelUrl } from "./modelPaths";
 import { sphereModelPlacement } from "./spherePlacement";
 import { buildExploredSet, isTileExplored } from "./tileVisibility";
@@ -71,8 +71,20 @@ function BuildingModel({
 	}, [scene]);
 
 	if (useSphere && boardWidth && boardHeight) {
-		const sp = sphereModelPlacement(tileX, tileZ, boardWidth, boardHeight, yOffset);
-		const sparklePos: [number, number, number] = sphereModelPlacement(tileX, tileZ, boardWidth, boardHeight, yOffset + TILE_SIZE_M * 0.5).position;
+		const sp = sphereModelPlacement(
+			tileX,
+			tileZ,
+			boardWidth,
+			boardHeight,
+			yOffset,
+		);
+		const sparklePos: [number, number, number] = sphereModelPlacement(
+			tileX,
+			tileZ,
+			boardWidth,
+			boardHeight,
+			yOffset + TILE_SIZE_M * 0.5,
+		).position;
 		return (
 			<>
 				<Clone
@@ -136,7 +148,8 @@ function BuildingCullGroup({ children }: { children: ReactNode }) {
 
 	useFrame(() => {
 		if (!groupRef.current) return;
-		groupRef.current.visible = camera.position.length() < BUILDING_CULL_DISTANCE;
+		groupRef.current.visible =
+			camera.position.length() < BUILDING_CULL_DISTANCE;
 	});
 
 	return <group ref={groupRef}>{children}</group>;
@@ -151,7 +164,12 @@ type BuildingRendererProps = {
 	boardHeight?: number;
 };
 
-export function BuildingRenderer({ world, useSphere, boardWidth, boardHeight }: BuildingRendererProps) {
+export function BuildingRenderer({
+	world,
+	useSphere,
+	boardWidth,
+	boardHeight,
+}: BuildingRendererProps) {
 	const instances = useMemo(() => {
 		const explored = buildExploredSet(world);
 		const result: Array<{

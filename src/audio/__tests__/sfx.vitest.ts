@@ -32,8 +32,15 @@ describe("sfx module", () => {
 	it("playSfx accepts all valid SfxName values without throwing", async () => {
 		const mod = await import("../sfx");
 		const names: SfxName[] = [
-			"unit_select", "unit_move", "attack_hit", "harvest_complete",
-			"build_complete", "turn_advance", "cultist_spawn", "victory", "defeat",
+			"unit_select",
+			"unit_move",
+			"attack_hit",
+			"harvest_complete",
+			"build_complete",
+			"turn_advance",
+			"cultist_spawn",
+			"victory",
+			"defeat",
 		];
 		for (const name of names) {
 			expect(() => mod.playSfx(name)).not.toThrow();

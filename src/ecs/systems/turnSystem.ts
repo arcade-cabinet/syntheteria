@@ -1,39 +1,47 @@
 import type { World } from "koota";
+import { runYukaAiTurns } from "../../ai/yukaAiTurnSystem";
 import type { GeneratedBoard } from "../../board/types";
 import { setCurrentTurn } from "../../ui/game/turnEvents";
 import { Board } from "../traits/board";
 import { Faction } from "../traits/faction";
 import { UnitFaction, UnitStats } from "../traits/unit";
 import { resolveAllMoves } from "./aiTurnSystem";
-import { runYukaAiTurns } from "../../ai/yukaAiTurnSystem";
 import { resolveAttacks } from "./attackSystem";
-import { floorMiningSystem } from "./floorMiningSystem";
-import { harvestSystem } from "./harvestSystem";
-import { checkCultistSpawn, runCultPatrols, spreadCorruption } from "./cultistSystem";
+import { recordTurnEnd } from "./campaignStats";
+import {
+	checkCultistSpawn,
+	runCultPatrols,
+	spreadCorruption,
+} from "./cultistSystem";
+import { tickCultMutations } from "./cultMutation";
 import { runDiplomacy, shareAlliedFog } from "./diplomacySystem";
-import { clearHighlights } from "./highlightSystem";
 import { runFabrication } from "./fabricationSystem";
+import { floorMiningSystem } from "./floorMiningSystem";
+import { runHackProgress } from "./hackingSystem";
+import { harvestSystem } from "./harvestSystem";
+import { clearHighlights } from "./highlightSystem";
+import { checkAllFragmentProximity } from "./memoryFragments";
 import { runPowerGrid } from "./powerSystem";
 import { runRepairs } from "./repairSystem";
+import { runResearch } from "./researchSystem";
+import { finalizeTurnDeltas } from "./resourceDeltaSystem";
 import { runResourceRenewal } from "./resourceRenewalSystem";
 import { runSignalNetwork } from "./signalSystem";
-import { runResearch } from "./researchSystem";
-import { runSynthesis } from "./synthesisSystem";
-import { runTurrets } from "./turretSystem";
-import { runHackProgress } from "./hackingSystem";
-import { type GameOutcome, checkVictoryConditions } from "./victorySystem";
-import { tickWormholeProject } from "./wormholeProject";
-import { recordTurnEnd } from "./campaignStats";
-import { finalizeTurn } from "./turnEventLog";
-import { tickCultMutations } from "./cultMutation";
-import { checkAllFragmentProximity } from "./memoryFragments";
-import { finalizeTurnDeltas } from "./resourceDeltaSystem";
 import { runSpecializationPassives } from "./specializationSystem";
+import { runSynthesis } from "./synthesisSystem";
+import { finalizeTurn } from "./turnEventLog";
+import { runTurrets } from "./turretSystem";
+import { checkVictoryConditions, type GameOutcome } from "./victorySystem";
+import { tickWormholeProject } from "./wormholeProject";
 
 /** Last outcome computed by advanceTurn. */
 let lastOutcome: GameOutcome = { result: "playing" };
 
-export function advanceTurn(world: World, board: GeneratedBoard, opts?: { observerMode?: boolean }): void {
+export function advanceTurn(
+	world: World,
+	board: GeneratedBoard,
+	opts?: { observerMode?: boolean },
+): void {
 	// Phase 1: Resolve pending player attacks
 	resolveAttacks(world);
 
@@ -62,7 +70,9 @@ export function advanceTurn(world: World, board: GeneratedBoard, opts?: { observ
 	incrementTurn(world);
 
 	// Phase 6: Check victory/defeat conditions
-	lastOutcome = checkVictoryConditions(world, { observerMode: opts?.observerMode });
+	lastOutcome = checkVictoryConditions(world, {
+		observerMode: opts?.observerMode,
+	});
 }
 
 export function getGameOutcome(): GameOutcome {

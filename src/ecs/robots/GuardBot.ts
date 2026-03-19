@@ -5,9 +5,18 @@ import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../traits/unit";
 /** Ranged — standoff fire, tanky, slow. QuadrupedTank.glb */
 export const RANGED_DEFAULTS = {
 	stats: {
-		hp: 12, maxHp: 12, ap: 2, maxAp: 2, mp: 1, maxMp: 1,
-		scanRange: 6, attack: 4, defense: 2, attackRange: 3,
-		weightClass: "heavy" as const, robotClass: "ranged" as const,
+		hp: 12,
+		maxHp: 12,
+		ap: 2,
+		maxAp: 2,
+		mp: 1,
+		maxMp: 1,
+		scanRange: 6,
+		attack: 4,
+		defense: 2,
+		attackRange: 3,
+		weightClass: "heavy" as const,
+		robotClass: "ranged" as const,
 		...MOVEMENT_PROFILES.ranged,
 	},
 	visual: { modelId: "ranged", scale: 1.0, facingAngle: 0 },

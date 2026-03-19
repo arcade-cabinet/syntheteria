@@ -124,10 +124,18 @@ function buildPathGeometry(path: PathPoint[]): THREE.BufferGeometry | null {
 		const pOff = vBase * 3;
 
 		// 4 vertices of the quad: from-left, from-right, to-right, to-left
-		positions[pOff] = fx + px; positions[pOff + 1] = fy; positions[pOff + 2] = fz + pz;
-		positions[pOff + 3] = fx - px; positions[pOff + 4] = fy; positions[pOff + 5] = fz - pz;
-		positions[pOff + 6] = tx - px; positions[pOff + 7] = ty; positions[pOff + 8] = tz - pz;
-		positions[pOff + 9] = tx + px; positions[pOff + 10] = ty; positions[pOff + 11] = tz + pz;
+		positions[pOff] = fx + px;
+		positions[pOff + 1] = fy;
+		positions[pOff + 2] = fz + pz;
+		positions[pOff + 3] = fx - px;
+		positions[pOff + 4] = fy;
+		positions[pOff + 5] = fz - pz;
+		positions[pOff + 6] = tx - px;
+		positions[pOff + 7] = ty;
+		positions[pOff + 8] = tz - pz;
+		positions[pOff + 9] = tx + px;
+		positions[pOff + 10] = ty;
+		positions[pOff + 11] = tz + pz;
 
 		// Normals — all pointing up
 		for (let v = 0; v < 4; v++) {

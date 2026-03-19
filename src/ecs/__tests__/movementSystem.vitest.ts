@@ -15,7 +15,15 @@ describe("movementSystem", () => {
 		const e = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitMove({ fromX: 0, fromZ: 0, toX: 1, toZ: 0, progress: 0, mpCost: 1 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+			}),
 		);
 
 		movementSystem(world, 0.1);
@@ -29,7 +37,15 @@ describe("movementSystem", () => {
 		const e = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitMove({ fromX: 0, fromZ: 0, toX: 3, toZ: 5, progress: 0, mpCost: 1 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+			}),
 		);
 
 		// 1.0 seconds at speed 4 = progress 4.0, clamped to 1.0
@@ -45,7 +61,15 @@ describe("movementSystem", () => {
 		const e = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitMove({ fromX: 0, fromZ: 0, toX: 1, toZ: 0, progress: 0, mpCost: 2 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+			}),
 		);
 
 		movementSystem(world, 1.0);
@@ -58,7 +82,15 @@ describe("movementSystem", () => {
 		const e = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitMove({ fromX: 0, fromZ: 0, toX: 1, toZ: 0, progress: 0, mpCost: 5 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 2, maxMp: 3, scanRange: 4 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 2,
+				maxMp: 3,
+				scanRange: 4,
+			}),
 		);
 
 		movementSystem(world, 1.0);
@@ -78,7 +110,15 @@ describe("movementSystem", () => {
 				progress: 0.9,
 				mpCost: 1,
 			}),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+			}),
 		);
 
 		// 0.9 + (0.5 * 4) = 2.9, clamp to 1.0 → complete
@@ -102,7 +142,15 @@ describe("movementSystem", () => {
 		world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitMove({ fromX: 0, fromZ: 0, toX: 2, toZ: 2, progress: 0, mpCost: 1 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 2,
+			}),
 		);
 
 		movementSystem(world, 1.0);
@@ -122,7 +170,16 @@ describe("movementSystem", () => {
 		const e = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitMove({ fromX: 0, fromZ: 0, toX: 1, toZ: 0, progress: 0, mpCost: 1 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, movesUsed: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+				movesUsed: 0,
+			}),
 		);
 
 		movementSystem(world, 1.0);
@@ -139,7 +196,15 @@ describe("movementSystem", () => {
 		world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitMove({ fromX: 0, fromZ: 0, toX: 1, toZ: 0, progress: 0, mpCost: 1 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+			}),
 		);
 
 		// Partial move — revealFog hasn't fired yet

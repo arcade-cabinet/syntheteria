@@ -46,7 +46,8 @@ export const FACTION_DEFINITIONS: readonly FactionDef[] = [
 		startZone: "corner_se",
 		terrainAffinity: "bio_district",
 		aggression: 3,
-		description: "Hive-mind signal network. Expands aggressively into all sectors.",
+		description:
+			"Hive-mind signal network. Expands aggressively into all sectors.",
 	},
 	{
 		id: "iron_creed",

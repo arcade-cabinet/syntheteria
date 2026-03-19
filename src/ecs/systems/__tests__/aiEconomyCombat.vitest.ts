@@ -10,8 +10,8 @@
 
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { GeneratedBoard, TileData } from "../../../board/types";
 import { resetAIRuntime, runYukaAiTurns } from "../../../ai/yukaAiTurnSystem";
+import type { GeneratedBoard, TileData } from "../../../board/types";
 import { Board } from "../../traits/board";
 import { Faction } from "../../traits/faction";
 import { ResourceDeposit, ResourcePool } from "../../traits/resource";
@@ -23,10 +23,10 @@ import {
 	UnitPos,
 	UnitStats,
 } from "../../traits/unit";
+import { resolveAllMoves } from "../aiTurnSystem";
 import { resolveAttacks } from "../attackSystem";
 import { harvestSystem } from "../harvestSystem";
 import { addResources } from "../resourceSystem";
-import { resolveAllMoves } from "../aiTurnSystem";
 import { advanceTurn } from "../turnSystem";
 
 // ---------------------------------------------------------------------------
@@ -61,10 +61,7 @@ function spawnFaction(
 	id: string,
 	isPlayer = false,
 ): void {
-	world.spawn(
-		Faction({ id, displayName: id, isPlayer }),
-		ResourcePool(),
-	);
+	world.spawn(Faction({ id, displayName: id, isPlayer }), ResourcePool());
 }
 
 // ---------------------------------------------------------------------------
@@ -144,7 +141,15 @@ describe("AI economy — harvestSystem in turn pipeline", () => {
 		world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
 			UnitFaction({ factionId: "reclaimers" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 2,
+			}),
 		);
 
 		// Deposit next to AI unit
@@ -190,7 +195,15 @@ describe("AI economy — harvestSystem in turn pipeline", () => {
 		const aiUnit = world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
 			UnitFaction({ factionId: "reclaimers" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 2,
+			}),
 		);
 
 		world.spawn(
@@ -280,12 +293,29 @@ describe("combat — attack resolution before move resolution", () => {
 		const attacker = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "iron_creed" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 5, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 5,
+				defense: 0,
+			}),
 		);
 		const target = world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 1 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 1,
+			}),
 		);
 
 		// Queue attack
@@ -302,12 +332,29 @@ describe("combat — attack resolution before move resolution", () => {
 		const attacker = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "signal_choir" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 6, attackRange: 3, attack: 4, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 6,
+				attackRange: 3,
+				attack: 4,
+				defense: 0,
+			}),
 		);
 		const target = world.spawn(
 			UnitPos({ tileX: 3, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		// Queue ranged attack at distance 3
@@ -323,12 +370,29 @@ describe("combat — attack resolution before move resolution", () => {
 		const attacker = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "iron_creed" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 5, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 5,
+				defense: 0,
+			}),
 		);
 		const target = world.spawn(
 			UnitPos({ tileX: 3, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		// Queue melee attack on target at distance 3 (out of range 1)
@@ -426,7 +490,15 @@ describe("combat — attack resolution before move resolution", () => {
 		const target = world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		// Patch the attack to point at the real target
@@ -446,12 +518,30 @@ describe("combat — attack resolution before move resolution", () => {
 		const attacker = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "iron_creed" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 3, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 3,
+				defense: 0,
+			}),
 		);
 		const target = world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 4, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 4,
+				defense: 0,
+			}),
 		);
 
 		attacker.add(UnitAttack({ targetEntityId: target.id(), damage: 3 }));
@@ -468,12 +558,29 @@ describe("combat — attack resolution before move resolution", () => {
 		const attacker = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "iron_creed" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 15, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 15,
+				defense: 0,
+			}),
 		);
 		const target = world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 5, maxHp: 5, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 5,
+				maxHp: 5,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		attacker.add(UnitAttack({ targetEntityId: target.id(), damage: 15 }));
@@ -513,7 +620,15 @@ describe("combat — attack resolution before move resolution", () => {
 		world.spawn(
 			UnitPos({ tileX: 5, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		const board = makeBoard(16, 16);

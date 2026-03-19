@@ -23,7 +23,7 @@ syntheteria/
 ├── src/                       # 344 source files
 │   ├── main.tsx               # Entry + Root: phase state machine (title → setup → generating → playing)
 │   ├── board/                 # Fixed-size deterministic board generator (14 files)
-│   ├── camera/                # IsometricCamera (legacy) + SphereOrbitCamera (sphere world)
+│   ├── camera/                # SphereOrbitCamera (sphere world)
 │   ├── ecs/
 │   │   ├── traits/            # board, tile, unit, faction, resource, building, salvage, cult
 │   │   ├── terrain/           # FloorType (9 substrates), ResourceMaterial (13 types), GLSL shaders
@@ -112,7 +112,7 @@ Agents for this codebase:
 pnpm dev                 # Vite dev server (http://localhost:5173)
 pnpm dev --host          # Expose on LAN
 pnpm build               # Production build
-pnpm test:vitest         # Run all Vitest suites (126 suites, 2239 tests)
+pnpm test:vitest         # Run all Vitest suites (131 suites, 2239 tests)
 pnpm tsc                 # TypeScript check (pnpm tsc --noEmit)
 pnpm lint                # Biome lint + format check
 pnpm verify              # lint + tsc + test (all gates)
@@ -126,5 +126,5 @@ pnpm verify              # lint + tsc + test (all gates)
 pnpm verify — all gates must pass
   Biome lint: 0 errors, 0 warnings
   TypeScript: 0 errors
-  Vitest: 126 suites, 2239 tests passing
+  Vitest: 131 suites, 2239 tests passing
 ```

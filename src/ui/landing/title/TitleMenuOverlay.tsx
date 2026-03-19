@@ -168,9 +168,11 @@ export function TitleMenuOverlay({
 	// Wrap button handlers to init audio on first user gesture (browser autoplay policy).
 	// Audio is non-fatal — catch errors so the game still works without sound.
 	const initAudioSafe = useCallback(() => {
-		initAudio().then(startAmbience).catch((err) => {
-			console.warn("[audio] Init failed (non-fatal):", err);
-		});
+		initAudio()
+			.then(startAmbience)
+			.catch((err) => {
+				console.warn("[audio] Init failed (non-fatal):", err);
+			});
 	}, []);
 	const handleNewGame = useCallback(() => {
 		initAudioSafe();

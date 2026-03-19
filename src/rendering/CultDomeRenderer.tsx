@@ -15,8 +15,8 @@ import { useFrame } from "@react-three/fiber";
 import type { World } from "koota";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { CultStructure } from "../ecs/traits/cult";
 import { TILE_SIZE_M } from "../board/grid";
+import { CultStructure } from "../ecs/traits/cult";
 import { sphereModelPlacement } from "./spherePlacement";
 
 // ---------------------------------------------------------------------------
@@ -24,9 +24,9 @@ import { sphereModelPlacement } from "./spherePlacement";
 // ---------------------------------------------------------------------------
 
 export const SECT_DOME_COLORS: Record<string, THREE.Color> = {
-	static_remnants: new THREE.Color(0.8, 0.15, 0.1),   // red/crimson
-	null_monks: new THREE.Color(0.55, 0.15, 0.75),       // purple/violet
-	lost_signal: new THREE.Color(0.1, 0.7, 0.55),        // green/teal
+	static_remnants: new THREE.Color(0.8, 0.15, 0.1), // red/crimson
+	null_monks: new THREE.Color(0.55, 0.15, 0.75), // purple/violet
+	lost_signal: new THREE.Color(0.1, 0.7, 0.55), // green/teal
 };
 
 const DEFAULT_DOME_COLOR = new THREE.Color(0.5, 0.2, 0.2);
@@ -145,7 +145,13 @@ function CultDome({
 	const meshRef = useRef<THREE.Mesh>(null);
 
 	const { position, quaternion } = useMemo(() => {
-		return sphereModelPlacement(data.tileX, data.tileZ, boardWidth, boardHeight, 0);
+		return sphereModelPlacement(
+			data.tileX,
+			data.tileZ,
+			boardWidth,
+			boardHeight,
+			0,
+		);
 	}, [data.tileX, data.tileZ, boardWidth, boardHeight]);
 
 	const color = SECT_DOME_COLORS[data.sect] ?? DEFAULT_DOME_COLOR;
@@ -171,7 +177,9 @@ function CultDome({
 			quaternion={quaternion}
 			renderOrder={5}
 		>
-			<sphereGeometry args={[domeRadius, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+			<sphereGeometry
+				args={[domeRadius, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]}
+			/>
 			<shaderMaterial
 				vertexShader={DOME_VERT}
 				fragmentShader={DOME_FRAG}
@@ -194,7 +202,11 @@ export interface CultDomeRendererProps {
 	boardHeight: number;
 }
 
-export function CultDomeRenderer({ world, boardWidth, boardHeight }: CultDomeRendererProps) {
+export function CultDomeRenderer({
+	world,
+	boardWidth,
+	boardHeight,
+}: CultDomeRendererProps) {
 	const domesRef = useRef<CultDomeData[]>([]);
 	const lastUpdate = useRef(0);
 

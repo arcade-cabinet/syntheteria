@@ -10,7 +10,10 @@
  */
 
 import type { World } from "koota";
-import type { ContextSpeechTrigger, EventSpeechTrigger } from "../narrative/speechProfiles";
+import type {
+	ContextSpeechTrigger,
+	EventSpeechTrigger,
+} from "../narrative/speechProfiles";
 import {
 	getContextSpeechByPersona,
 	getEventSpeechByPersona,
@@ -32,21 +35,33 @@ function lookupPersona(world: World, factionId: string): string {
 // ─── Trigger functions for game systems ─────────────────────────────────────
 
 /** Trigger combat speech for a unit. Called from attackSystem. */
-export function triggerCombatSpeech(world: World, entityId: number, factionId: string): void {
+export function triggerCombatSpeech(
+	world: World,
+	entityId: number,
+	factionId: string,
+): void {
 	const persona = lookupPersona(world, factionId);
 	const line = getContextSpeechByPersona(persona, "combat");
 	triggerSpeech(entityId, factionId, line);
 }
 
 /** Trigger harvest speech for a unit. Called from harvestSystem. */
-export function triggerHarvestSpeech(world: World, entityId: number, factionId: string): void {
+export function triggerHarvestSpeech(
+	world: World,
+	entityId: number,
+	factionId: string,
+): void {
 	const persona = lookupPersona(world, factionId);
 	const line = getContextSpeechByPersona(persona, "harvesting");
 	triggerSpeech(entityId, factionId, line);
 }
 
 /** Trigger discovery speech for a unit. Called from memoryFragments. */
-export function triggerDiscoverySpeech(world: World, entityId: number, factionId: string): void {
+export function triggerDiscoverySpeech(
+	world: World,
+	entityId: number,
+	factionId: string,
+): void {
 	const persona = lookupPersona(world, factionId);
 	const line = getContextSpeechByPersona(persona, "discovery");
 	triggerSpeech(entityId, factionId, line);

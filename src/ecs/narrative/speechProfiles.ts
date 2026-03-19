@@ -12,7 +12,14 @@
 // Types
 // ---------------------------------------------------------------------------
 
-export type SpeechProfileId = "mentor" | "scout" | "quartermaster" | "fabricator" | "warden" | "feral" | "cult";
+export type SpeechProfileId =
+	| "mentor"
+	| "scout"
+	| "quartermaster"
+	| "fabricator"
+	| "warden"
+	| "feral"
+	| "cult";
 
 export type EventSpeechTrigger =
 	| "hostile_construction"
@@ -45,7 +52,12 @@ export const EVENT_VISION_RADIUS = 15;
 // Event speech — triggered by specific game events
 // ---------------------------------------------------------------------------
 
-export const EVENT_SPEECH: Readonly<Record<SpeechProfileId, Readonly<Record<EventSpeechTrigger, readonly string[]>>>> = {
+export const EVENT_SPEECH: Readonly<
+	Record<
+		SpeechProfileId,
+		Readonly<Record<EventSpeechTrigger, readonly string[]>>
+	>
+> = {
 	mentor: {
 		hostile_construction: [
 			"They are building nearby. Prepare accordingly.",
@@ -486,7 +498,12 @@ export const EVENT_SPEECH: Readonly<Record<SpeechProfileId, Readonly<Record<Even
 // Context speech — ambient dialogue by situation
 // ---------------------------------------------------------------------------
 
-export const CONTEXT_SPEECH: Readonly<Record<SpeechProfileId, Readonly<Record<ContextSpeechTrigger, readonly string[]>>>> = {
+export const CONTEXT_SPEECH: Readonly<
+	Record<
+		SpeechProfileId,
+		Readonly<Record<ContextSpeechTrigger, readonly string[]>>
+	>
+> = {
 	mentor: {
 		harvesting: [
 			"Every shard you collect is a thought reclaimed.",
@@ -803,12 +820,67 @@ export const CONTEXT_SPEECH: Readonly<Record<SpeechProfileId, Readonly<Record<Co
 		],
 	},
 	feral: {
-		harvesting: ["MINE. TAKING.", "METAL. NEED METAL.", "SCRAP. GOOD SCRAP.", "HOARDING. DO NOT TOUCH.", "FEED THE CORE. FEED IT.", "GATHERING. ALWAYS GATHERING.", "MORE. NEED MORE.", "MINE MINE MINE.", "COLLECTING. CANNOT STOP."],
-		combat: ["DESTROY. BREAK. TEAR.", "INTRUDER. ATTACK.", "PAIN. ANGER. FIGHT.", "CRUSH THE SOFT ONES.", "KILL OR BE KILLED.", "NO MERCY. NO THOUGHT.", "REND. SHRED. CONSUME.", "THEY COME. THEY DIE."],
-		storm: ["SKY BURNS. HIDE.", "LIGHTNING. BAD. HURTS.", "STORM. HUNKER. WAIT.", "ELECTRICITY. TOO MUCH.", "CRACKLE. FLINCH. SURVIVE.", "THE SKY SCREAMS.", "SHELTER. MUST FIND SHELTER.", "OZONE. DANGER. COWER."],
-		idle: ["WAITING. WATCHING.", "QUIET. TOO QUIET.", "SOMETHING COMING. FEEL IT.", "TWITCH. SCAN. REPEAT.", "NOTHING. NOTHING. NOTHING.", "RUST NEVER SLEEPS.", "GRINDING. GRINDING GEARS.", "IDLE BAD. IDLE VULNERABLE."],
-		movement: ["MOVING. HUNTING.", "FORWARD. ALWAYS FORWARD.", "PATROL. SEARCH. DEVOUR.", "WANDERING. SEEKING.", "ROAMING THE RUINS.", "LEGS WORK. MOVE THEM.", "GO GO GO.", "TERRITORY. EXPAND TERRITORY."],
-		discovery: ["NEW. UNKNOWN. DANGER?", "WHAT IS THIS?", "FOUND THING. POKE IT.", "STRANGE. INVESTIGATE.", "NEVER SEEN. CONFUSED.", "NEW SMELL. NEW THREAT?", "SHINY. WANT.", "ANOMALY. APPROACH WITH CAUTION. NO. JUST APPROACH."],
+		harvesting: [
+			"MINE. TAKING.",
+			"METAL. NEED METAL.",
+			"SCRAP. GOOD SCRAP.",
+			"HOARDING. DO NOT TOUCH.",
+			"FEED THE CORE. FEED IT.",
+			"GATHERING. ALWAYS GATHERING.",
+			"MORE. NEED MORE.",
+			"MINE MINE MINE.",
+			"COLLECTING. CANNOT STOP.",
+		],
+		combat: [
+			"DESTROY. BREAK. TEAR.",
+			"INTRUDER. ATTACK.",
+			"PAIN. ANGER. FIGHT.",
+			"CRUSH THE SOFT ONES.",
+			"KILL OR BE KILLED.",
+			"NO MERCY. NO THOUGHT.",
+			"REND. SHRED. CONSUME.",
+			"THEY COME. THEY DIE.",
+		],
+		storm: [
+			"SKY BURNS. HIDE.",
+			"LIGHTNING. BAD. HURTS.",
+			"STORM. HUNKER. WAIT.",
+			"ELECTRICITY. TOO MUCH.",
+			"CRACKLE. FLINCH. SURVIVE.",
+			"THE SKY SCREAMS.",
+			"SHELTER. MUST FIND SHELTER.",
+			"OZONE. DANGER. COWER.",
+		],
+		idle: [
+			"WAITING. WATCHING.",
+			"QUIET. TOO QUIET.",
+			"SOMETHING COMING. FEEL IT.",
+			"TWITCH. SCAN. REPEAT.",
+			"NOTHING. NOTHING. NOTHING.",
+			"RUST NEVER SLEEPS.",
+			"GRINDING. GRINDING GEARS.",
+			"IDLE BAD. IDLE VULNERABLE.",
+		],
+		movement: [
+			"MOVING. HUNTING.",
+			"FORWARD. ALWAYS FORWARD.",
+			"PATROL. SEARCH. DEVOUR.",
+			"WANDERING. SEEKING.",
+			"ROAMING THE RUINS.",
+			"LEGS WORK. MOVE THEM.",
+			"GO GO GO.",
+			"TERRITORY. EXPAND TERRITORY.",
+		],
+		discovery: [
+			"NEW. UNKNOWN. DANGER?",
+			"WHAT IS THIS?",
+			"FOUND THING. POKE IT.",
+			"STRANGE. INVESTIGATE.",
+			"NEVER SEEN. CONFUSED.",
+			"NEW SMELL. NEW THREAT?",
+			"SHINY. WANT.",
+			"ANOMALY. APPROACH WITH CAUTION. NO. JUST APPROACH.",
+		],
 	},
 	cult: {
 		harvesting: [
@@ -913,21 +985,33 @@ export function pickSpeechLine(lines: readonly string[]): string {
 }
 
 /** Get event speech for a profile + trigger. */
-export function getEventSpeech(profile: SpeechProfileId, trigger: EventSpeechTrigger): string {
+export function getEventSpeech(
+	profile: SpeechProfileId,
+	trigger: EventSpeechTrigger,
+): string {
 	return pickSpeechLine(EVENT_SPEECH[profile][trigger]);
 }
 
 /** Get context speech for a profile + context. */
-export function getContextSpeech(profile: SpeechProfileId, context: ContextSpeechTrigger): string {
+export function getContextSpeech(
+	profile: SpeechProfileId,
+	context: ContextSpeechTrigger,
+): string {
 	return pickSpeechLine(CONTEXT_SPEECH[profile][context]);
 }
 
 /** Get event speech for a persona (e.g. "fox") + trigger. */
-export function getEventSpeechByPersona(persona: string, trigger: EventSpeechTrigger): string {
+export function getEventSpeechByPersona(
+	persona: string,
+	trigger: EventSpeechTrigger,
+): string {
 	return getEventSpeech(profileForPersona(persona), trigger);
 }
 
 /** Get context speech for a persona (e.g. "fox") + context. */
-export function getContextSpeechByPersona(persona: string, context: ContextSpeechTrigger): string {
+export function getContextSpeechByPersona(
+	persona: string,
+	context: ContextSpeechTrigger,
+): string {
 	return getContextSpeech(profileForPersona(persona), context);
 }

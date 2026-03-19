@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { generateBoard } from "../generator";
 import { ensureConnectivity } from "../connectivity";
+import { generateBoard } from "../generator";
 import type { TileData } from "../types";
 
 /**

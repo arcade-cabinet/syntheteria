@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
-import type { TileData } from "../types";
-import { applyLabyrinthFeatures } from "../labyrinthFeatures";
 import type { ColumnMarker } from "../labyrinthFeatures";
+import { applyLabyrinthFeatures } from "../labyrinthFeatures";
+import type { TileData } from "../types";
 
 // ─── Test helpers ───────────────────────────────────────────────────────────
 
 /** Create a tile grid from a string map. '#' = structural_mass, '.' = transit_deck */
-function gridFromMap(map: string[]): { tiles: TileData[][]; w: number; h: number } {
+function gridFromMap(map: string[]): {
+	tiles: TileData[][];
+	w: number;
+	h: number;
+} {
 	const h = map.length;
 	const w = map[0]!.length;
 	const tiles: TileData[][] = [];
@@ -39,12 +43,21 @@ function countDeadEnds(tiles: TileData[][], w: number, h: number): number {
 		for (let x = 0; x < w; x++) {
 			if (!tiles[z]![x]!.passable) continue;
 			let walls = 0;
-			for (const [dx, dz] of [[0, -1], [1, 0], [0, 1], [-1, 0]] as const) {
+			for (const [dx, dz] of [
+				[0, -1],
+				[1, 0],
+				[0, 1],
+				[-1, 0],
+			] as const) {
 				const nx = x + dx;
 				const nz = z + dz;
-				if (nx < 0 || nx >= w || nz < 0 || nz >= h) { walls++; continue; }
+				if (nx < 0 || nx >= w || nz < 0 || nz >= h) {
+					walls++;
+					continue;
+				}
 				const t = tiles[nz]![nx]!;
-				if (t.floorType === "structural_mass" || t.floorType === "void_pit") walls++;
+				if (t.floorType === "structural_mass" || t.floorType === "void_pit")
+					walls++;
 			}
 			if (walls >= 3) count++;
 		}
@@ -161,8 +174,23 @@ describe("bridge placement", () => {
 		// Two horizontal corridors connected by vertical corridors on both sides,
 		// separated by a wall row in the middle with many bridge candidates.
 		let bridgeFound = false;
-		for (const seed of ["b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8", "b9", "b10"]) {
-			const { tiles: t, w: tw, h: th } = gridFromMap([
+		for (const seed of [
+			"b1",
+			"b2",
+			"b3",
+			"b4",
+			"b5",
+			"b6",
+			"b7",
+			"b8",
+			"b9",
+			"b10",
+		]) {
+			const {
+				tiles: t,
+				w: tw,
+				h: th,
+			} = gridFromMap([
 				"##########",
 				"#........#",
 				"#.######.#",
@@ -203,7 +231,10 @@ describe("bridge placement", () => {
 		const bridges: [number, number][] = [];
 		for (let z = 0; z < h; z++) {
 			for (let x = 0; x < w; x++) {
-				if (tiles[z]![x]!.floorType === "durasteel_span" && tiles[z]![x]!.elevation === 1) {
+				if (
+					tiles[z]![x]!.floorType === "durasteel_span" &&
+					tiles[z]![x]!.elevation === 1
+				) {
 					bridges.push([x, z]);
 				}
 			}
@@ -212,7 +243,12 @@ describe("bridge placement", () => {
 		// No two bridges should be cardinal neighbors
 		const bridgeSet = new Set(bridges.map(([x, z]) => `${x},${z}`));
 		for (const [bx, bz] of bridges) {
-			for (const [dx, dz] of [[0, -1], [1, 0], [0, 1], [-1, 0]] as const) {
+			for (const [dx, dz] of [
+				[0, -1],
+				[1, 0],
+				[0, 1],
+				[-1, 0],
+			] as const) {
 				expect(bridgeSet.has(`${bx + dx},${bz + dz}`)).toBe(false);
 			}
 		}
@@ -233,8 +269,23 @@ describe("tunnel placement", () => {
 		]);
 
 		let tunnelFound = false;
-		for (const seed of ["t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9", "t10"]) {
-			const { tiles: t, w: tw, h: th } = gridFromMap([
+		for (const seed of [
+			"t1",
+			"t2",
+			"t3",
+			"t4",
+			"t5",
+			"t6",
+			"t7",
+			"t8",
+			"t9",
+			"t10",
+		]) {
+			const {
+				tiles: t,
+				w: tw,
+				h: th,
+			} = gridFromMap([
 				"...........",
 				"...........",
 				"###########",
@@ -292,7 +343,11 @@ describe("tunnel placement", () => {
 		const tunnels: [number, number][] = [];
 		for (let z = 0; z < h; z++) {
 			for (let x = 0; x < w; x++) {
-				if (tiles[z]![x]!.floorType === "transit_deck" && z === 2 && tiles[z]![x]!.passable) {
+				if (
+					tiles[z]![x]!.floorType === "transit_deck" &&
+					z === 2 &&
+					tiles[z]![x]!.passable
+				) {
 					tunnels.push([x, z]);
 				}
 			}
@@ -300,7 +355,12 @@ describe("tunnel placement", () => {
 
 		const tunnelSet = new Set(tunnels.map(([x, z]) => `${x},${z}`));
 		for (const [tx, tz] of tunnels) {
-			for (const [dx, dz] of [[0, -1], [1, 0], [0, 1], [-1, 0]] as const) {
+			for (const [dx, dz] of [
+				[0, -1],
+				[1, 0],
+				[0, 1],
+				[-1, 0],
+			] as const) {
 				expect(tunnelSet.has(`${tx + dx},${tz + dz}`)).toBe(false);
 			}
 		}
@@ -311,11 +371,7 @@ describe("tunnel placement", () => {
 
 describe("column markers", () => {
 	it("marks L-corners", () => {
-		const { tiles, w, h } = gridFromMap([
-			"##.",
-			"#..",
-			"...",
-		]);
+		const { tiles, w, h } = gridFromMap(["##.", "#..", "..."]);
 
 		const result = applyLabyrinthFeatures(tiles, w, h, "col-L");
 		const lMarkers = result.columnMarkers.filter((m) => m.type === "L");
@@ -326,11 +382,7 @@ describe("column markers", () => {
 	});
 
 	it("marks T-junctions", () => {
-		const { tiles, w, h } = gridFromMap([
-			".#.",
-			"###",
-			".#.",
-		]);
+		const { tiles, w, h } = gridFromMap([".#.", "###", ".#."]);
 
 		const result = applyLabyrinthFeatures(tiles, w, h, "col-T");
 		// Center (1,1) has 4 wall neighbors → X
@@ -384,15 +436,16 @@ describe("column markers", () => {
 
 describe("seed determinism", () => {
 	it("produces identical results for the same seed", () => {
-		const makeGrid = () => gridFromMap([
-			"##########",
-			"#........#",
-			"##.####.##",
-			"#........#",
-			"##.####.##",
-			"#........#",
-			"##########",
-		]);
+		const makeGrid = () =>
+			gridFromMap([
+				"##########",
+				"#........#",
+				"##.####.##",
+				"#........#",
+				"##.####.##",
+				"#........#",
+				"##########",
+			]);
 
 		const { tiles: t1, w, h } = makeGrid();
 		const r1 = applyLabyrinthFeatures(t1, w, h, "det-seed");
@@ -418,19 +471,20 @@ describe("seed determinism", () => {
 	it("produces different results for different seeds", () => {
 		// Ring corridors connected by walls — survives dead-end pruning, has many
 		// bridge/tunnel candidates across different wall segments.
-		const makeGrid = () => gridFromMap([
-			"####################",
-			"#..................#",
-			"#.####.####.####.#.#",
-			"#..................#",
-			"#.####.####.####.#.#",
-			"#..................#",
-			"#.####.####.####.#.#",
-			"#..................#",
-			"#.####.####.####.#.#",
-			"#..................#",
-			"####################",
-		]);
+		const makeGrid = () =>
+			gridFromMap([
+				"####################",
+				"#..................#",
+				"#.####.####.####.#.#",
+				"#..................#",
+				"#.####.####.####.#.#",
+				"#..................#",
+				"#.####.####.####.#.#",
+				"#..................#",
+				"#.####.####.####.#.#",
+				"#..................#",
+				"####################",
+			]);
 
 		const { tiles: t1, w, h } = makeGrid();
 		const r1 = applyLabyrinthFeatures(t1, w, h, "seed-A");
@@ -440,10 +494,11 @@ describe("seed determinism", () => {
 
 		// With enough candidates, different seeds should produce at least one
 		// different bridge/tunnel placement or different column markers
-		const anyDiff = r1.bridgesPlaced !== r2.bridgesPlaced
-			|| r1.tunnelsPunched !== r2.tunnelsPunched
-			|| r1.columnMarkers.length !== r2.columnMarkers.length
-			|| (() => {
+		const anyDiff =
+			r1.bridgesPlaced !== r2.bridgesPlaced ||
+			r1.tunnelsPunched !== r2.tunnelsPunched ||
+			r1.columnMarkers.length !== r2.columnMarkers.length ||
+			(() => {
 				for (let z = 0; z < h; z++) {
 					for (let x = 0; x < w; x++) {
 						if (t1[z]![x]!.floorType !== t2[z]![x]!.floorType) return true;

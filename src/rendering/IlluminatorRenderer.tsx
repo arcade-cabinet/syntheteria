@@ -59,7 +59,10 @@ interface IlluminatorPos {
 function selectIlluminatorPositions(board: GeneratedBoard): IlluminatorPos[] {
 	const { width, height } = board.config;
 	const intersections: IlluminatorPos[] = [];
-	const spacing = Math.max(4, Math.floor(Math.sqrt((width * height) / MAX_ILLUMINATORS)));
+	const spacing = Math.max(
+		4,
+		Math.floor(Math.sqrt((width * height) / MAX_ILLUMINATORS)),
+	);
 
 	for (let z = 0; z < height; z++) {
 		for (let x = 0; x < width; x++) {
@@ -85,7 +88,8 @@ function selectIlluminatorPositions(board: GeneratedBoard): IlluminatorPos[] {
 	for (const pos of intersections) {
 		if (selected.length >= MAX_ILLUMINATORS) break;
 		const tooClose = selected.some(
-			(s) => Math.abs(s.tileX - pos.tileX) + Math.abs(s.tileZ - pos.tileZ) < spacing,
+			(s) =>
+				Math.abs(s.tileX - pos.tileX) + Math.abs(s.tileZ - pos.tileZ) < spacing,
 		);
 		if (!tooClose) selected.push(pos);
 	}
@@ -129,7 +133,13 @@ function IlluminatorOrb({
 	const groupRef = useRef<THREE.Group>(null);
 
 	const { position, quaternion } = useMemo(() => {
-		return sphereModelPlacement(tileX, tileZ, boardWidth, boardHeight, HOVER_HEIGHT);
+		return sphereModelPlacement(
+			tileX,
+			tileZ,
+			boardWidth,
+			boardHeight,
+			HOVER_HEIGHT,
+		);
 	}, [tileX, tileZ, boardWidth, boardHeight]);
 
 	// Phase offset per orb for variety
@@ -138,7 +148,9 @@ function IlluminatorOrb({
 	useFrame((state) => {
 		if (!groupRef.current) return;
 		// Sway in Y (local up on sphere = along normal, but group is already oriented)
-		const sway = Math.sin(state.clock.elapsedTime * SWAY_FREQ + phaseOffset) * SWAY_AMPLITUDE;
+		const sway =
+			Math.sin(state.clock.elapsedTime * SWAY_FREQ + phaseOffset) *
+			SWAY_AMPLITUDE;
 		groupRef.current.position.set(position[0], position[1] + sway, position[2]);
 	});
 
@@ -185,7 +197,11 @@ export interface IlluminatorRendererProps {
 	boardHeight: number;
 }
 
-export function IlluminatorRenderer({ board, boardWidth, boardHeight }: IlluminatorRendererProps) {
+export function IlluminatorRenderer({
+	board,
+	boardWidth,
+	boardHeight,
+}: IlluminatorRendererProps) {
 	const positions = useMemo(() => selectIlluminatorPositions(board), [board]);
 
 	return (

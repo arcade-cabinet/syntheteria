@@ -11,9 +11,9 @@
  * Design reference: GAME_DESIGN.md S7 (Bot Roster), task #52.
  */
 
-import type { MarkSpecialization } from "../marks";
-import type { ClassActionDef } from "../classActions";
 import type { TechDef } from "../../../config/techTreeDefs";
+import type { ClassActionDef } from "../classActions";
+import type { MarkSpecialization } from "../marks";
 
 // ─── Track IDs ───────────────────────────────────────────────────────────────
 
@@ -41,7 +41,8 @@ export const FLANKER_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 2 as 3, // Mark II — cast to satisfy base type, runtime uses 2
 		effectType: "side_arc_bonus",
 		effectValue: 2,
-		description: "Attacks from side tiles deal +2 damage. Flank action bonus increased to +5 from rear.",
+		description:
+			"Attacks from side tiles deal +2 damage. Flank action bonus increased to +5 from rear.",
 	},
 	{
 		track: "flanker",
@@ -49,7 +50,8 @@ export const FLANKER_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "terrain_ambush",
 		effectValue: 3,
-		description: "Charge from elevated or corridor terrain deals +3 bonus damage. No counterattack on ambush charges.",
+		description:
+			"Charge from elevated or corridor terrain deals +3 bonus damage. No counterattack on ambush charges.",
 	},
 	{
 		track: "flanker",
@@ -57,7 +59,8 @@ export const FLANKER_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "encirclement",
 		effectValue: 2,
-		description: "+2 damage per friendly unit adjacent to target. Max +6 bonus with 3 allies surrounding.",
+		description:
+			"+2 damage per friendly unit adjacent to target. Max +6 bonus with 3 allies surrounding.",
 	},
 	{
 		track: "flanker",
@@ -65,7 +68,8 @@ export const FLANKER_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 5,
 		effectType: "predator_instinct",
 		effectValue: 1,
-		description: "After any kill, immediately gain a free Charge action. Flanking attacks ignore target defense entirely.",
+		description:
+			"After any kill, immediately gain a free Charge action. Flanking attacks ignore target defense entirely.",
 	},
 ] as const;
 
@@ -83,7 +87,8 @@ export const INTERCEPTOR_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 2 as 3, // Mark II
 		effectType: "reactive_pounce",
 		effectValue: 2,
-		description: "When an enemy moves within 2 tiles, may immediately move adjacent and attack (once per turn).",
+		description:
+			"When an enemy moves within 2 tiles, may immediately move adjacent and attack (once per turn).",
 	},
 	{
 		track: "interceptor",
@@ -91,7 +96,8 @@ export const INTERCEPTOR_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "corridor_denial",
 		effectValue: 2,
-		description: "Enemies within 2 tiles pay +2 MP to move. Does not stack with other Interceptors.",
+		description:
+			"Enemies within 2 tiles pay +2 MP to move. Does not stack with other Interceptors.",
 	},
 	{
 		track: "interceptor",
@@ -99,7 +105,8 @@ export const INTERCEPTOR_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "threat_projection",
 		effectValue: 3,
-		description: "Extends threat zone to 3 tiles. Enemies entering threat zone lose 1 AP for that turn.",
+		description:
+			"Extends threat zone to 3 tiles. Enemies entering threat zone lose 1 AP for that turn.",
 	},
 	{
 		track: "interceptor",
@@ -107,7 +114,8 @@ export const INTERCEPTOR_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		markLevel: 5,
 		effectType: "warden_aura",
 		effectValue: 1,
-		description: "Reactive Pounce triggers unlimited times per turn. Enemies in threat zone cannot Retreat or use free-movement abilities.",
+		description:
+			"Reactive Pounce triggers unlimited times per turn. Enemies in threat zone cannot Retreat or use free-movement abilities.",
 	},
 ] as const;
 
@@ -123,7 +131,8 @@ export const FLANKER_V2_UPGRADES: readonly TrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "phantom_ambush",
 		effectValue: 5,
-		description: "Replaces Terrain Ambush. Charge from any tile deals +5 damage. Ambush attacks are invisible to enemies until damage resolves.",
+		description:
+			"Replaces Terrain Ambush. Charge from any tile deals +5 damage. Ambush attacks are invisible to enemies until damage resolves.",
 	},
 	{
 		track: "flanker",
@@ -131,7 +140,8 @@ export const FLANKER_V2_UPGRADES: readonly TrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "coordinated_slaughter",
 		effectValue: 3,
-		description: "Replaces Encirclement. +3 damage per friendly unit within 2 tiles of target (not just adjacent). All surrounding allies also deal +1 bonus damage to the same target until next turn.",
+		description:
+			"Replaces Encirclement. +3 damage per friendly unit within 2 tiles of target (not just adjacent). All surrounding allies also deal +1 bonus damage to the same target until next turn.",
 	},
 ] as const;
 
@@ -142,7 +152,8 @@ export const INTERCEPTOR_V2_UPGRADES: readonly TrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "gravity_well",
 		effectValue: 3,
-		description: "Replaces Corridor Denial. Enemies within 3 tiles pay +3 MP to move. Enemies that end movement in the zone are Pinned (cannot move next turn).",
+		description:
+			"Replaces Corridor Denial. Enemies within 3 tiles pay +3 MP to move. Enemies that end movement in the zone are Pinned (cannot move next turn).",
 	},
 	{
 		track: "interceptor",
@@ -150,27 +161,33 @@ export const INTERCEPTOR_V2_UPGRADES: readonly TrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "kill_box",
 		effectValue: 4,
-		description: "Replaces Threat Projection. Threat zone extends to 4 tiles. Enemies entering the zone take 2 immediate damage and lose 1 AP.",
+		description:
+			"Replaces Threat Projection. Threat zone extends to 4 tiles. Enemies entering the zone take 2 immediate damage and lose 1 AP.",
 	},
 ] as const;
 
 // ─── Combined Track Map ──────────────────────────────────────────────────────
 
-export const CAVALRY_TRACKS: Record<CavalryTrack, {
-	readonly label: string;
-	readonly description: string;
-	readonly specializations: readonly TrackSpecialization[];
-	readonly v2Upgrades: readonly TrackSpecialization[];
-}> = {
+export const CAVALRY_TRACKS: Record<
+	CavalryTrack,
+	{
+		readonly label: string;
+		readonly description: string;
+		readonly specializations: readonly TrackSpecialization[];
+		readonly v2Upgrades: readonly TrackSpecialization[];
+	}
+> = {
 	flanker: {
 		label: "Flanker",
-		description: "Positional combat. Side/rear attack bonuses, terrain ambush charges, and encirclement warfare.",
+		description:
+			"Positional combat. Side/rear attack bonuses, terrain ambush charges, and encirclement warfare.",
 		specializations: FLANKER_SPECIALIZATIONS,
 		v2Upgrades: FLANKER_V2_UPGRADES,
 	},
 	interceptor: {
 		label: "Interceptor",
-		description: "Reaction and denial. Attacks of opportunity, movement disruption, and area lockdown.",
+		description:
+			"Reaction and denial. Attacks of opportunity, movement disruption, and area lockdown.",
 		specializations: INTERCEPTOR_SPECIALIZATIONS,
 		v2Upgrades: INTERCEPTOR_V2_UPGRADES,
 	},
@@ -194,7 +211,8 @@ export const FLANKER_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: true,
 		requiresFriendly: false,
 		cooldown: 0,
-		description: "Charge with terrain bonus damage — no counterattack if from elevation or corridor",
+		description:
+			"Charge with terrain bonus damage — no counterattack if from elevation or corridor",
 	},
 	{
 		id: "surround",
@@ -210,7 +228,8 @@ export const FLANKER_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: true,
 		requiresFriendly: false,
 		cooldown: 1,
-		description: "Encirclement attack — bonus damage per friendly unit near the target",
+		description:
+			"Encirclement attack — bonus damage per friendly unit near the target",
 	},
 ];
 
@@ -230,7 +249,8 @@ export const INTERCEPTOR_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: true,
 		requiresFriendly: false,
 		cooldown: 1,
-		description: "Leap to an enemy within 2 tiles and attack — can trigger as reaction",
+		description:
+			"Leap to an enemy within 2 tiles and attack — can trigger as reaction",
 	},
 	{
 		id: "lockdown",
@@ -246,7 +266,8 @@ export const INTERCEPTOR_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: false,
 		requiresFriendly: false,
 		cooldown: 2,
-		description: "Activate threat zone — enemies moving nearby pay extra MP and lose AP",
+		description:
+			"Activate threat zone — enemies moving nearby pay extra MP and lose AP",
 	},
 ];
 
@@ -258,7 +279,8 @@ export const CAVALRY_TRACK_TECHS: readonly TechDef[] = [
 	{
 		id: "arachnoid_motor_suite",
 		name: "Arachnoid Motor Suite",
-		description: "Articulated limb actuators for cavalry chassis. Unlocks Flanker and Interceptor specializations at the Garage.",
+		description:
+			"Articulated limb actuators for cavalry chassis. Unlocks Flanker and Interceptor specializations at the Garage.",
 		tier: 2,
 		cost: { alloy_stock: 5, polymer_salvage: 3, ferrous_scrap: 2 },
 		turnsToResearch: 4,
@@ -268,7 +290,8 @@ export const CAVALRY_TRACK_TECHS: readonly TechDef[] = [
 	{
 		id: "predator_reflex_core",
 		name: "Predator Reflex Core",
-		description: "Neural-reactive combat processors. Upgrades Flanker to v2 (Phantom Ambush) and Interceptor to v2 (Gravity Well).",
+		description:
+			"Neural-reactive combat processors. Upgrades Flanker to v2 (Phantom Ambush) and Interceptor to v2 (Gravity Well).",
 		tier: 4,
 		cost: { intact_components: 8, alloy_stock: 10, storm_charge: 5 },
 		turnsToResearch: 8,
@@ -292,24 +315,23 @@ export function getTrackSpecializations(
 	const base = trackDef.specializations;
 
 	if (!useV2) {
-		return base.filter(s => effectiveMarkLevel(s) <= markLevel);
+		return base.filter((s) => effectiveMarkLevel(s) <= markLevel);
 	}
 
 	// v2: replace base Mark III/IV with upgraded versions
 	const v2 = trackDef.v2Upgrades;
-	const v2MarkLevels = new Set(v2.map(u => u.markLevel));
+	const v2MarkLevels = new Set(v2.map((u) => u.markLevel));
 
-	const merged = [
-		...base.filter(s => !v2MarkLevels.has(s.markLevel)),
-		...v2,
-	];
-	return merged.filter(s => effectiveMarkLevel(s) <= markLevel);
+	const merged = [...base.filter((s) => !v2MarkLevels.has(s.markLevel)), ...v2];
+	return merged.filter((s) => effectiveMarkLevel(s) <= markLevel);
 }
 
 /**
  * Get the actions unlocked by a cavalry track.
  */
-export function getTrackActions(track: CavalryTrack): readonly ClassActionDef[] {
+export function getTrackActions(
+	track: CavalryTrack,
+): readonly ClassActionDef[] {
 	return track === "flanker" ? FLANKER_ACTIONS : INTERCEPTOR_ACTIONS;
 }
 
@@ -319,7 +341,10 @@ export function getTrackActions(track: CavalryTrack): readonly ClassActionDef[] 
  */
 function effectiveMarkLevel(spec: TrackSpecialization): number {
 	// Mark II specs have markLevel cast as 3 but effectType identifies them
-	if (spec.effectType === "side_arc_bonus" || spec.effectType === "reactive_pounce") {
+	if (
+		spec.effectType === "side_arc_bonus" ||
+		spec.effectType === "reactive_pounce"
+	) {
 		return 2;
 	}
 	return spec.markLevel;

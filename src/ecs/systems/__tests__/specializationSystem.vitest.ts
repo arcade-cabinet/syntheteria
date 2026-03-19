@@ -12,8 +12,21 @@
  * - Tech tree merge
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createWorld, type World } from "koota";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { pickAITrack, pickAITrackVersion } from "../../../ai/trackSelection";
+import { TECH_BY_ID, TECH_TREE } from "../../../config/techTreeDefs";
+import { applyUnits, serializeUnits } from "../../../db/serialize";
+import { getActionsForUnit } from "../../robots/classActions";
+import {
+	getAllTrackTechs,
+	getSpecializedActions,
+	getTracksForClass,
+	TRACK_REGISTRY,
+} from "../../robots/specializations/trackRegistry";
+import { BotFabricator, Building, Powered } from "../../traits/building";
+import { Faction } from "../../traits/faction";
+import { ResourcePool } from "../../traits/resource";
 import {
 	UnitFaction,
 	UnitPos,
@@ -22,20 +35,12 @@ import {
 	UnitVisual,
 	UnitXP,
 } from "../../traits/unit";
-import { Building, BotFabricator, Powered } from "../../traits/building";
-import { Faction } from "../../traits/faction";
-import { ResourcePool } from "../../traits/resource";
 import {
 	FabricationJob,
 	queueFabrication,
 	runFabrication,
 } from "../fabricationSystem";
-import { TECH_TREE, TECH_BY_ID } from "../../../config/techTreeDefs";
-import { TRACK_REGISTRY, getTracksForClass, getSpecializedActions, getAllTrackTechs } from "../../robots/specializations/trackRegistry";
-import { getActionsForUnit } from "../../robots/classActions";
 import { runSpecializationPassives } from "../specializationSystem";
-import { serializeUnits, applyUnits } from "../../../db/serialize";
-import { pickAITrack, pickAITrackVersion } from "../../../ai/trackSelection";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -43,7 +48,12 @@ let world: World;
 
 function seedResources(factionId: string) {
 	world.spawn(
-		Faction({ id: factionId, displayName: factionId, color: 0xffffff, isPlayer: false }),
+		Faction({
+			id: factionId,
+			displayName: factionId,
+			color: 0xffffff,
+			isPlayer: false,
+		}),
 		ResourcePool({
 			scrap_metal: 100,
 			ferrous_scrap: 100,
@@ -92,7 +102,17 @@ describe("UnitSpecialization trait", () => {
 	it("can be added to a unit entity", () => {
 		const e = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 			UnitFaction({ factionId: "player" }),
 			UnitSpecialization({ trackId: "pathfinder", trackVersion: 1 }),
 		);
@@ -166,13 +186,13 @@ describe("Tech Tree Merge", () => {
 	});
 
 	it("has no duplicate tech IDs", () => {
-		const ids = TECH_TREE.map(t => t.id);
+		const ids = TECH_TREE.map((t) => t.id);
 		const unique = new Set(ids);
 		expect(unique.size).toBe(ids.length);
 	});
 
 	it("all track tech prerequisites reference existing techs", () => {
-		const allIds = new Set(TECH_TREE.map(t => t.id));
+		const allIds = new Set(TECH_TREE.map((t) => t.id));
 		const trackTechs = getAllTrackTechs();
 		for (const tech of trackTechs) {
 			for (const prereq of tech.prerequisites) {
@@ -216,7 +236,7 @@ describe("Specialization-aware fabrication", () => {
 		const units = [...world.query(UnitPos, UnitFaction, UnitStats)];
 		expect(units.length).toBeGreaterThanOrEqual(1);
 
-		const specialized = units.find(u => u.has(UnitSpecialization));
+		const specialized = units.find((u) => u.has(UnitSpecialization));
 		expect(specialized).toBeTruthy();
 		const spec = specialized!.get(UnitSpecialization)!;
 		expect(spec.trackId).toBe("infiltrator");
@@ -237,7 +257,10 @@ describe("Specialization-aware fabrication", () => {
 		runFabrication(world);
 
 		const units = [...world.query(UnitPos, UnitFaction, UnitStats)];
-		const hasSpec = units.some(u => u.has(UnitSpecialization) && u.get(UnitSpecialization)!.trackId !== "");
+		const hasSpec = units.some(
+			(u) =>
+				u.has(UnitSpecialization) && u.get(UnitSpecialization)!.trackId !== "",
+		);
 		expect(hasSpec).toBe(false);
 	});
 });
@@ -250,17 +273,17 @@ describe("Track-specific actions", () => {
 		expect(withTrack.length).toBeGreaterThan(baseOnly.length);
 
 		// Track actions should be present
-		const hasSwep = withTrack.some(a => a.id === "sweep_reveal");
+		const hasSwep = withTrack.some((a) => a.id === "sweep_reveal");
 		expect(hasSwep).toBe(true);
 
 		// Base actions still present
-		const hasMove = withTrack.some(a => a.id === "move");
+		const hasMove = withTrack.some((a) => a.id === "move");
 		expect(hasMove).toBe(true);
 	});
 
 	it("returns base actions only when trackId is empty", () => {
 		const actions = getActionsForUnit("infantry", "");
-		const hasRush = actions.some(a => a.id === "rush");
+		const hasRush = actions.some((a) => a.id === "rush");
 		expect(hasRush).toBe(false);
 	});
 });
@@ -271,7 +294,17 @@ describe("Specialization passives runtime", () => {
 		world.spawn(
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 7, maxHp: 7, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 1, defense: 0 }),
+			UnitStats({
+				hp: 7,
+				maxHp: 7,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+				attack: 1,
+				defense: 0,
+			}),
 			UnitSpecialization({ trackId: "field_medic", trackVersion: 1 }),
 			UnitXP({ xp: 0, markLevel: 3, killCount: 0, harvestCount: 0 }),
 		);
@@ -280,7 +313,17 @@ describe("Specialization passives runtime", () => {
 		const ally = world.spawn(
 			UnitPos({ tileX: 5, tileZ: 6 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 5, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 5,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runSpecializationPassives(world);
@@ -293,7 +336,17 @@ describe("Specialization passives runtime", () => {
 		world.spawn(
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 7, maxHp: 7, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 1, defense: 0 }),
+			UnitStats({
+				hp: 7,
+				maxHp: 7,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+				attack: 1,
+				defense: 0,
+			}),
 			UnitSpecialization({ trackId: "field_medic", trackVersion: 1 }),
 			UnitXP({ xp: 0, markLevel: 3, killCount: 0, harvestCount: 0 }),
 		);
@@ -301,7 +354,17 @@ describe("Specialization passives runtime", () => {
 		const enemy = world.spawn(
 			UnitPos({ tileX: 5, tileZ: 6 }),
 			UnitFaction({ factionId: "reclaimers" }),
-			UnitStats({ hp: 5, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 5,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runSpecializationPassives(world);
@@ -314,7 +377,17 @@ describe("Specialization passives runtime", () => {
 		world.spawn(
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 7, maxHp: 7, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 1, defense: 0 }),
+			UnitStats({
+				hp: 7,
+				maxHp: 7,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+				attack: 1,
+				defense: 0,
+			}),
 			UnitSpecialization({ trackId: "signal_booster", trackVersion: 1 }),
 			UnitXP({ xp: 0, markLevel: 2, killCount: 0, harvestCount: 0 }),
 		);
@@ -322,7 +395,17 @@ describe("Specialization passives runtime", () => {
 		const ally = world.spawn(
 			UnitPos({ tileX: 6, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runSpecializationPassives(world);
@@ -337,7 +420,17 @@ describe("Save/Load round-trip", () => {
 		world.spawn(
 			UnitPos({ tileX: 3, tileZ: 4 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 			UnitVisual({ modelId: "scout", scale: 1.0, facingAngle: 0 }),
 			UnitSpecialization({ trackId: "pathfinder", trackVersion: 2 }),
 		);
@@ -368,7 +461,17 @@ describe("Save/Load round-trip", () => {
 		world.spawn(
 			UnitPos({ tileX: 3, tileZ: 4 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 			UnitVisual({ modelId: "infantry", scale: 1.0, facingAngle: 0 }),
 		);
 
@@ -423,7 +526,11 @@ describe("AI track selection", () => {
 		const version1 = pickAITrackVersion("pathfinder", new Set(), v2Techs);
 		expect(version1).toBe(1);
 
-		const version2 = pickAITrackVersion("pathfinder", new Set(["deep_signal_processing"]), v2Techs);
+		const version2 = pickAITrackVersion(
+			"pathfinder",
+			new Set(["deep_signal_processing"]),
+			v2Techs,
+		);
 		expect(version2).toBe(2);
 	});
 
@@ -431,7 +538,12 @@ describe("AI track selection", () => {
 		const researched = new Set(["advanced_recon_optics"]);
 		const gateTechs = new Map<string, string>();
 
-		const track = pickAITrack("static_remnants", "cult_infantry", researched, gateTechs);
+		const track = pickAITrack(
+			"static_remnants",
+			"cult_infantry",
+			researched,
+			gateTechs,
+		);
 		expect(track).toBe("");
 	});
 
@@ -446,12 +558,27 @@ describe("AI track selection", () => {
 		}
 
 		const reclScout = pickAITrack("reclaimers", "scout", researched, gateTechs);
-		const voltScout = pickAITrack("volt_collective", "scout", researched, gateTechs);
+		const voltScout = pickAITrack(
+			"volt_collective",
+			"scout",
+			researched,
+			gateTechs,
+		);
 		expect(reclScout).toBe("pathfinder");
 		expect(voltScout).toBe("infiltrator");
 
-		const reclInf = pickAITrack("reclaimers", "infantry", researched, gateTechs);
-		const signInf = pickAITrack("signal_choir", "infantry", researched, gateTechs);
+		const reclInf = pickAITrack(
+			"reclaimers",
+			"infantry",
+			researched,
+			gateTechs,
+		);
+		const signInf = pickAITrack(
+			"signal_choir",
+			"infantry",
+			researched,
+			gateTechs,
+		);
 		expect(reclInf).toBe("vanguard");
 		expect(signInf).toBe("shock_trooper");
 	});

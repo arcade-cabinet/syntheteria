@@ -13,21 +13,21 @@
 
 import { describe, expect, it } from "vitest";
 import {
+	DEEP_MINER_ACTIONS,
+	DEEP_MINER_SPECIALIZATIONS,
+	DEEP_MINER_V2_UPGRADES,
+	FABRICATOR_ACTIONS,
+	FABRICATOR_SPECIALIZATIONS,
+	FABRICATOR_V2_UPGRADES,
+	getWorkerTrackActions,
+	getWorkerTrackSpecializations,
+	SALVAGER_ACTIONS,
+	SALVAGER_SPECIALIZATIONS,
+	SALVAGER_V2_UPGRADES,
+	WORKER_TRACK_TECHS,
+	WORKER_TRACKS,
 	type WorkerTrack,
 	type WorkerTrackSpecialization,
-	WORKER_TRACKS,
-	DEEP_MINER_SPECIALIZATIONS,
-	FABRICATOR_SPECIALIZATIONS,
-	SALVAGER_SPECIALIZATIONS,
-	DEEP_MINER_V2_UPGRADES,
-	FABRICATOR_V2_UPGRADES,
-	SALVAGER_V2_UPGRADES,
-	DEEP_MINER_ACTIONS,
-	FABRICATOR_ACTIONS,
-	SALVAGER_ACTIONS,
-	WORKER_TRACK_TECHS,
-	getWorkerTrackSpecializations,
-	getWorkerTrackActions,
 } from "../specializations/workerTracks";
 
 // ─── Track structure ──────────────────────────────────────────────────────────
@@ -88,7 +88,9 @@ describe("Worker specialization tracks", () => {
 		});
 
 		it("DAISY dig value of 5 = center + 4 cardinal cells", () => {
-			const daisy = DEEP_MINER_SPECIALIZATIONS.find(s => s.effectType === "daisy_dig")!;
+			const daisy = DEEP_MINER_SPECIALIZATIONS.find(
+				(s) => s.effectType === "daisy_dig",
+			)!;
 			expect(daisy.effectValue).toBe(5);
 			expect(daisy.description).toContain("cardinal");
 			expect(daisy.description).toContain("dirt pit");
@@ -276,9 +278,19 @@ describe("Worker specialization tracks", () => {
 
 		it("tech costs use valid ResourceMaterial keys", () => {
 			const validMaterials = new Set([
-				"ferrous_scrap", "alloy_stock", "polymer_salvage", "conductor_wire",
-				"electrolyte", "silicon_wafer", "storm_charge", "el_crystal",
-				"scrap_metal", "e_waste", "intact_components", "thermal_fluid", "depth_salvage",
+				"ferrous_scrap",
+				"alloy_stock",
+				"polymer_salvage",
+				"conductor_wire",
+				"electrolyte",
+				"silicon_wafer",
+				"storm_charge",
+				"el_crystal",
+				"scrap_metal",
+				"e_waste",
+				"intact_components",
+				"thermal_fluid",
+				"depth_salvage",
 			]);
 			for (const tech of WORKER_TRACK_TECHS) {
 				for (const key of Object.keys(tech.cost)) {
@@ -326,7 +338,7 @@ describe("Worker specialization tracks", () => {
 			const specs = getWorkerTrackSpecializations("deep_miner", 5, true);
 			expect(specs).toHaveLength(4);
 
-			const effectTypes = specs.map(s => s.effectType);
+			const effectTypes = specs.map((s) => s.effectType);
 			// v2 should have seismic_daisy instead of daisy_dig
 			expect(effectTypes).toContain("seismic_daisy");
 			expect(effectTypes).not.toContain("daisy_dig");
@@ -340,7 +352,7 @@ describe("Worker specialization tracks", () => {
 
 		it("v2 mode for fabricator replaces correctly", () => {
 			const specs = getWorkerTrackSpecializations("fabricator", 5, true);
-			const effectTypes = specs.map(s => s.effectType);
+			const effectTypes = specs.map((s) => s.effectType);
 			expect(effectTypes).toContain("nano_repair");
 			expect(effectTypes).not.toContain("field_repair");
 			expect(effectTypes).toContain("architects_vision");
@@ -349,7 +361,7 @@ describe("Worker specialization tracks", () => {
 
 		it("v2 mode for salvager replaces correctly", () => {
 			const specs = getWorkerTrackSpecializations("salvager", 5, true);
-			const effectTypes = specs.map(s => s.effectType);
+			const effectTypes = specs.map((s) => s.effectType);
 			expect(effectTypes).toContain("quantum_sifting");
 			expect(effectTypes).not.toContain("material_analysis");
 			expect(effectTypes).toContain("total_disassembly");
@@ -398,7 +410,7 @@ describe("Worker specialization tracks", () => {
 				...DEEP_MINER_V2_UPGRADES,
 				...FABRICATOR_V2_UPGRADES,
 				...SALVAGER_V2_UPGRADES,
-			].map(s => s.effectType);
+			].map((s) => s.effectType);
 
 			const unique = new Set(allEffectTypes);
 			expect(unique.size).toBe(allEffectTypes.length);
@@ -409,22 +421,35 @@ describe("Worker specialization tracks", () => {
 				...DEEP_MINER_ACTIONS,
 				...FABRICATOR_ACTIONS,
 				...SALVAGER_ACTIONS,
-			].map(a => a.id);
+			].map((a) => a.id);
 
 			const unique = new Set(allActionIds);
 			expect(unique.size).toBe(allActionIds.length);
 		});
 
 		it("all actions have valid category", () => {
-			const validCategories = new Set(["movement", "combat", "utility", "economy"]);
-			const allActions = [...DEEP_MINER_ACTIONS, ...FABRICATOR_ACTIONS, ...SALVAGER_ACTIONS];
+			const validCategories = new Set([
+				"movement",
+				"combat",
+				"utility",
+				"economy",
+			]);
+			const allActions = [
+				...DEEP_MINER_ACTIONS,
+				...FABRICATOR_ACTIONS,
+				...SALVAGER_ACTIONS,
+			];
 			for (const action of allActions) {
 				expect(validCategories.has(action.category)).toBe(true);
 			}
 		});
 
 		it("all v2 upgrades target Mark III or IV only", () => {
-			const allV2 = [...DEEP_MINER_V2_UPGRADES, ...FABRICATOR_V2_UPGRADES, ...SALVAGER_V2_UPGRADES];
+			const allV2 = [
+				...DEEP_MINER_V2_UPGRADES,
+				...FABRICATOR_V2_UPGRADES,
+				...SALVAGER_V2_UPGRADES,
+			];
 			for (const upgrade of allV2) {
 				expect([3, 4]).toContain(upgrade.markLevel);
 			}

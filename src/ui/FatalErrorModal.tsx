@@ -10,7 +10,13 @@
  * but doesn't throw.
  */
 
-import { Component, type ErrorInfo, type ReactNode, useEffect, useState } from "react";
+import {
+	Component,
+	type ErrorInfo,
+	type ReactNode,
+	useEffect,
+	useState,
+} from "react";
 
 // ─── Global error state ──────────────────────────────────────────────────────
 
@@ -30,7 +36,11 @@ function broadcastError(err: FatalError) {
 }
 
 /** Push a fatal error from anywhere (WebGL interceptor, error boundary, etc.) */
-export function pushFatalError(message: string, stack?: string, source?: string) {
+export function pushFatalError(
+	message: string,
+	stack?: string,
+	source?: string,
+) {
 	broadcastError({
 		message,
 		stack: stack ?? new Error().stack ?? "(no stack)",
@@ -102,7 +112,10 @@ interface ErrorBoundaryState {
 	error: FatalError | null;
 }
 
-export class FatalErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class FatalErrorBoundary extends Component<
+	ErrorBoundaryProps,
+	ErrorBoundaryState
+> {
 	state: ErrorBoundaryState = { error: null };
 
 	static getDerivedStateFromError(error: Error): ErrorBoundaryState {
@@ -195,7 +208,8 @@ function FatalErrorOverlay({ error }: { error: FatalError }) {
 						color: "#666",
 					}}
 				>
-					Source: {error.source} | {new Date(error.timestamp).toLocaleTimeString()}
+					Source: {error.source} |{" "}
+					{new Date(error.timestamp).toLocaleTimeString()}
 				</p>
 				<p
 					style={{

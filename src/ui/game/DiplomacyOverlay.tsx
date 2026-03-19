@@ -8,20 +8,20 @@
  * Diegetic vocabulary: SIGNAL PROTOCOL, FACTION STANDING.
  */
 
-import { useState, useEffect, useMemo } from "react";
 import type { World } from "koota";
+import { useEffect, useMemo, useState } from "react";
+import { FACTION_COLORS_CSS } from "../../config/gameDefaults";
 import { FACTION_DEFINITIONS } from "../../ecs/factions/definitions";
 import { getRelation, type RelationType } from "../../ecs/factions/relations";
 import {
+	type DiplomacyEvent,
+	declareWar,
+	getDiplomacyPersonality,
+	getRecentDiplomacyEvents,
 	getStandingDisplay,
 	proposeAlliance,
-	declareWar,
-	getRecentDiplomacyEvents,
 	subscribeDiplomacy,
-	getDiplomacyPersonality,
-	type DiplomacyEvent,
 } from "../../ecs/systems/diplomacySystem";
-import { FACTION_COLORS_CSS } from "../../config/gameDefaults";
 import { Board } from "../../ecs/traits/board";
 
 type DiplomacyOverlayProps = {
@@ -54,7 +54,11 @@ const RELATION_COLORS: Record<RelationType, string> = {
 	hostile: "#cc4444",
 };
 
-export function DiplomacyOverlay({ world, factionId, onClose }: DiplomacyOverlayProps) {
+export function DiplomacyOverlay({
+	world,
+	factionId,
+	onClose,
+}: DiplomacyOverlayProps) {
 	const [, setTick] = useState(0);
 
 	// Subscribe to diplomacy changes
@@ -171,8 +175,16 @@ export function DiplomacyOverlay({ world, factionId, onClose }: DiplomacyOverlay
 								}}
 							>
 								{/* Faction header */}
-								<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-									<div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+								<div
+									style={{
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "space-between",
+									}}
+								>
+									<div
+										style={{ display: "flex", alignItems: "center", gap: 10 }}
+									>
 										<span
 											style={{
 												display: "inline-block",
@@ -182,7 +194,13 @@ export function DiplomacyOverlay({ world, factionId, onClose }: DiplomacyOverlay
 												backgroundColor: factionColor,
 											}}
 										/>
-										<span style={{ fontSize: 13, fontWeight: 700, color: factionColor }}>
+										<span
+											style={{
+												fontSize: 13,
+												fontWeight: 700,
+												color: factionColor,
+											}}
+										>
 											{faction.displayName}
 										</span>
 									</div>
@@ -200,12 +218,25 @@ export function DiplomacyOverlay({ world, factionId, onClose }: DiplomacyOverlay
 
 								{/* Standing bar */}
 								<div style={{ marginTop: 10 }}>
-									<div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-										<span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}>
+									<div
+										style={{
+											display: "flex",
+											justifyContent: "space-between",
+											marginBottom: 3,
+										}}
+									>
+										<span
+											style={{
+												fontSize: 9,
+												color: "rgba(255,255,255,0.4)",
+												letterSpacing: "0.1em",
+											}}
+										>
 											STANDING
 										</span>
 										<span style={{ fontSize: 9, color: display.color }}>
-											{display.value > 0 ? "+" : ""}{display.value}
+											{display.value > 0 ? "+" : ""}
+											{display.value}
 										</span>
 									</div>
 									<div
@@ -232,7 +263,10 @@ export function DiplomacyOverlay({ world, factionId, onClose }: DiplomacyOverlay
 										<div
 											style={{
 												position: "absolute",
-												left: display.value >= 0 ? "50%" : `${50 + (display.value / 200) * 100}%`,
+												left:
+													display.value >= 0
+														? "50%"
+														: `${50 + (display.value / 200) * 100}%`,
 												width: `${Math.abs(display.value) / 2}%`,
 												height: "100%",
 												background: display.color,
@@ -255,12 +289,26 @@ export function DiplomacyOverlay({ world, factionId, onClose }: DiplomacyOverlay
 									{faction.description}
 								</div>
 								{personality && !personality.acceptsAlliance && (
-									<div style={{ marginTop: 4, fontSize: 8, color: "#cc6666", fontStyle: "italic" }}>
+									<div
+										style={{
+											marginTop: 4,
+											fontSize: 8,
+											color: "#cc6666",
+											fontStyle: "italic",
+										}}
+									>
 										Will never accept alliance proposals.
 									</div>
 								)}
 								{personality?.willBackstab && (
-									<div style={{ marginTop: 4, fontSize: 8, color: "#f6c56a", fontStyle: "italic" }}>
+									<div
+										style={{
+											marginTop: 4,
+											fontSize: 8,
+											color: "#f6c56a",
+											fontStyle: "italic",
+										}}
+									>
 										Warning: known to betray alliances.
 									</div>
 								)}
@@ -363,13 +411,21 @@ export function DiplomacyOverlay({ world, factionId, onClose }: DiplomacyOverlay
 											borderLeft: `2px solid ${evt.standingChange < 0 ? "rgba(204,68,68,0.4)" : "rgba(126,231,203,0.4)"}`,
 										}}
 									>
-										<span style={{ color: "rgba(255,255,255,0.2)", marginRight: 8 }}>
+										<span
+											style={{ color: "rgba(255,255,255,0.2)", marginRight: 8 }}
+										>
 											C{evt.turnNumber}
 										</span>
-										{formatFactionName(evt.factionA)} / {formatFactionName(evt.factionB)}:{" "}
+										{formatFactionName(evt.factionA)} /{" "}
+										{formatFactionName(evt.factionB)}:{" "}
 										{evt.type.replace(/_/g, " ")} (
-										<span style={{ color: evt.standingChange < 0 ? "#cc6666" : "#7ee7cb" }}>
-											{evt.standingChange > 0 ? "+" : ""}{evt.standingChange}
+										<span
+											style={{
+												color: evt.standingChange < 0 ? "#cc6666" : "#7ee7cb",
+											}}
+										>
+											{evt.standingChange > 0 ? "+" : ""}
+											{evt.standingChange}
 										</span>
 										)
 									</div>

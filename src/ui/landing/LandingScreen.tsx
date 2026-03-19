@@ -32,7 +32,12 @@ export function LandingScreen({
 	return (
 		<div
 			data-testid="landing-screen"
-			style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}
+			style={{
+				position: "absolute",
+				inset: 0,
+				overflow: "hidden",
+				pointerEvents: "none",
+			}}
 		>
 			{/* HTML overlay — wordmark + bezel + buttons */}
 			<TitleMenuOverlay

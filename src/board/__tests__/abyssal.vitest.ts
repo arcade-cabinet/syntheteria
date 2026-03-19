@@ -41,10 +41,14 @@ describe("abyssal zones", () => {
 		let clusteredCount = 0;
 		for (const t of abyssalTiles) {
 			const hasNeighbor =
-				(t.z > 0 && board.tiles[t.z - 1]![t.x]!.floorType === "abyssal_platform") ||
-				(t.z < 63 && board.tiles[t.z + 1]![t.x]!.floorType === "abyssal_platform") ||
-				(t.x > 0 && board.tiles[t.z]![t.x - 1]!.floorType === "abyssal_platform") ||
-				(t.x < 63 && board.tiles[t.z]![t.x + 1]!.floorType === "abyssal_platform");
+				(t.z > 0 &&
+					board.tiles[t.z - 1]![t.x]!.floorType === "abyssal_platform") ||
+				(t.z < 63 &&
+					board.tiles[t.z + 1]![t.x]!.floorType === "abyssal_platform") ||
+				(t.x > 0 &&
+					board.tiles[t.z]![t.x - 1]!.floorType === "abyssal_platform") ||
+				(t.x < 63 &&
+					board.tiles[t.z]![t.x + 1]!.floorType === "abyssal_platform");
 			if (hasNeighbor) clusteredCount++;
 		}
 
@@ -54,12 +58,21 @@ describe("abyssal zones", () => {
 	});
 
 	it("arid climate produces fewer abyssal tiles than wet climate", () => {
-		const base = { width: 64, height: 64, difficulty: "normal" as const, seed: "climate-compare" };
+		const base = {
+			width: 64,
+			height: 64,
+			difficulty: "normal" as const,
+			seed: "climate-compare",
+		};
 		const wetBoard = generateBoard({ ...base, climateProfile: "wet" });
 		const aridBoard = generateBoard({ ...base, climateProfile: "arid" });
 
-		const wetAbyssal = wetBoard.tiles.flat().filter((t) => t.floorType === "abyssal_platform").length;
-		const aridAbyssal = aridBoard.tiles.flat().filter((t) => t.floorType === "abyssal_platform").length;
+		const wetAbyssal = wetBoard.tiles
+			.flat()
+			.filter((t) => t.floorType === "abyssal_platform").length;
+		const aridAbyssal = aridBoard.tiles
+			.flat()
+			.filter((t) => t.floorType === "abyssal_platform").length;
 
 		expect(wetAbyssal).toBeGreaterThan(aridAbyssal);
 	});

@@ -1,8 +1,8 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../../board/types";
-import type { FloorType } from "../../terrain/types";
 import { SALVAGE_DEFS } from "../../resources/salvageTypes";
+import type { FloorType } from "../../terrain/types";
 import { SalvageProp } from "../../traits/salvage";
 import { placeSalvageProps, TERRAIN_SALVAGE } from "../salvagePlacement";
 
@@ -23,10 +23,7 @@ function makeTile(
 	};
 }
 
-function makeBoard(
-	tiles: TileData[][],
-	seed = "test-seed",
-): GeneratedBoard {
+function makeBoard(tiles: TileData[][], seed = "test-seed"): GeneratedBoard {
 	const height = tiles.length;
 	const width = tiles[0]?.length ?? 0;
 	return {
@@ -199,9 +196,7 @@ describe("placeSalvageProps", () => {
 		const terminalCount = types.filter((t) => t === "terminal").length;
 
 		// machinery (0.4) + terminal (0.3) should dominate
-		expect(machineryCount + terminalCount).toBeGreaterThan(
-			types.length * 0.5,
-		);
+		expect(machineryCount + terminalCount).toBeGreaterThan(types.length * 0.5);
 	});
 
 	it("each terrain type only produces configured salvage types", () => {

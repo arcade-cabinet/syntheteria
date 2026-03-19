@@ -110,7 +110,9 @@ describe("NewGameModal", () => {
 		fireEvent.click(screen.getByTestId("start-btn"));
 		const { factions } = onStart.mock.calls[0][0];
 		expect(factions).toHaveLength(4);
-		const playerSlot = factions.find((f: { role: string }) => f.role === "player");
+		const playerSlot = factions.find(
+			(f: { role: string }) => f.role === "player",
+		);
 		expect(playerSlot).toBeDefined();
 		expect(playerSlot.factionId).toBe("reclaimers");
 		const aiSlots = factions.filter((f: { role: string }) => f.role === "ai");
@@ -125,7 +127,9 @@ describe("NewGameModal", () => {
 		fireEvent.click(screen.getByTestId("start-btn"));
 		const { factions } = onStart.mock.calls[0][0];
 		// All should be AI now (no player)
-		const playerSlots = factions.filter((f: { role: string }) => f.role === "player");
+		const playerSlots = factions.filter(
+			(f: { role: string }) => f.role === "player",
+		);
 		expect(playerSlots).toHaveLength(0);
 	});
 
@@ -136,10 +140,14 @@ describe("NewGameModal", () => {
 		fireEvent.click(screen.getByTestId("faction-signal_choir-player-radio"));
 		fireEvent.click(screen.getByTestId("start-btn"));
 		const { factions } = onStart.mock.calls[0][0];
-		const playerSlot = factions.find((f: { role: string }) => f.role === "player");
+		const playerSlot = factions.find(
+			(f: { role: string }) => f.role === "player",
+		);
 		expect(playerSlot?.factionId).toBe("signal_choir");
 		// Reclaimers should now be AI
-		const reclaimers = factions.find((f: { factionId: string }) => f.factionId === "reclaimers");
+		const reclaimers = factions.find(
+			(f: { factionId: string }) => f.factionId === "reclaimers",
+		);
 		expect(reclaimers?.role).toBe("ai");
 	});
 
@@ -150,7 +158,9 @@ describe("NewGameModal", () => {
 		fireEvent.click(screen.getByTestId("faction-volt_collective-role"));
 		fireEvent.click(screen.getByTestId("start-btn"));
 		const { factions } = onStart.mock.calls[0][0];
-		const volt = factions.find((f: { factionId: string }) => f.factionId === "volt_collective");
+		const volt = factions.find(
+			(f: { factionId: string }) => f.factionId === "volt_collective",
+		);
 		expect(volt?.role).toBe("off");
 	});
 });

@@ -48,8 +48,19 @@ function getElevatedTiles(tiles: TileData[][]): TileData[] {
 }
 
 /** Check if a tile at (x,z) has at least one passable neighbor at elevation 0. */
-function hasGroundNeighbor(tiles: TileData[][], x: number, z: number, w: number, h: number): boolean {
-	for (const [dx, dz] of [[0, -1], [0, 1], [1, 0], [-1, 0]]) {
+function hasGroundNeighbor(
+	tiles: TileData[][],
+	x: number,
+	z: number,
+	w: number,
+	h: number,
+): boolean {
+	for (const [dx, dz] of [
+		[0, -1],
+		[0, 1],
+		[1, 0],
+		[-1, 0],
+	]) {
 		const nx = x + dx!;
 		const nz = z + dz!;
 		if (nx < 0 || nx >= w || nz < 0 || nz >= h) continue;
@@ -107,7 +118,12 @@ describe("Phase 7: multi-level platforms", () => {
 				const current = stack.pop()!;
 				region.push(current);
 
-				for (const [dx, dz] of [[0, -1], [0, 1], [1, 0], [-1, 0]]) {
+				for (const [dx, dz] of [
+					[0, -1],
+					[0, 1],
+					[1, 0],
+					[-1, 0],
+				]) {
 					const nx = current.x + dx!;
 					const nz = current.z + dz!;
 					const nkey = `${nx},${nz}`;

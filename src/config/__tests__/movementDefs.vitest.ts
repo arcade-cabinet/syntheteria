@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-	MOVEMENT_PROFILES,
 	canUnitAct,
 	canUnitMove,
 	computeMaxMp,
+	MOVEMENT_PROFILES,
 	maxMoveDistance,
 } from "../movementDefs";
 
@@ -91,8 +91,11 @@ describe("canUnitMove", () => {
 
 describe("canUnitAct", () => {
 	const base = {
-		mp: 3, movesPerTurn: 1, cellsPerMove: 2,
-		movesUsed: 0, staged: false,
+		mp: 3,
+		movesPerTurn: 1,
+		cellsPerMove: 2,
+		movesUsed: 0,
+		staged: false,
 	};
 
 	it("non-staging action can always execute", () => {
@@ -114,23 +117,38 @@ describe("canUnitAct", () => {
 
 describe("maxMoveDistance", () => {
 	it("returns cellsPerMove when MP is sufficient", () => {
-		expect(maxMoveDistance({
-			mp: 6, movesPerTurn: 2, cellsPerMove: 3,
-			movesUsed: 0, staged: false,
-		})).toBe(3);
+		expect(
+			maxMoveDistance({
+				mp: 6,
+				movesPerTurn: 2,
+				cellsPerMove: 3,
+				movesUsed: 0,
+				staged: false,
+			}),
+		).toBe(3);
 	});
 
 	it("clamps to remaining MP", () => {
-		expect(maxMoveDistance({
-			mp: 1, movesPerTurn: 2, cellsPerMove: 3,
-			movesUsed: 1, staged: false,
-		})).toBe(1);
+		expect(
+			maxMoveDistance({
+				mp: 1,
+				movesPerTurn: 2,
+				cellsPerMove: 3,
+				movesUsed: 1,
+				staged: false,
+			}),
+		).toBe(1);
 	});
 
 	it("returns 0 when MP is 0", () => {
-		expect(maxMoveDistance({
-			mp: 0, movesPerTurn: 1, cellsPerMove: 2,
-			movesUsed: 0, staged: false,
-		})).toBe(0);
+		expect(
+			maxMoveDistance({
+				mp: 0,
+				movesPerTurn: 1,
+				cellsPerMove: 2,
+				movesUsed: 0,
+				staged: false,
+			}),
+		).toBe(0);
 	});
 });

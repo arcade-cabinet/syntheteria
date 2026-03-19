@@ -1,10 +1,6 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-	Building,
-	Powered,
-	TurretStats,
-} from "../../traits/building";
+import { Building, Powered, TurretStats } from "../../traits/building";
 import { UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
 import { runTurrets } from "../turretSystem";
 

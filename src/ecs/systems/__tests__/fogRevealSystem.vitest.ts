@@ -8,7 +8,14 @@ describe("fogRevealSystem", () => {
 
 	function spawnTile(x: number, z: number) {
 		return world.spawn(
-			Tile({ x, z, elevation: 0, passable: true, explored: true, visibility: 1 }),
+			Tile({
+				x,
+				z,
+				elevation: 0,
+				passable: true,
+				explored: true,
+				visibility: 1,
+			}),
 			TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
 		);
 	}

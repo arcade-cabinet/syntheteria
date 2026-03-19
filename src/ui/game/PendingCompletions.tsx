@@ -8,10 +8,13 @@
  */
 
 import type { World } from "koota";
-import { FabricationJob } from "../../ecs/systems/fabricationSystem";
-import { SynthesisQueue, FUSION_RECIPES } from "../../ecs/systems/synthesisSystem";
-import { getResearchState } from "../../ecs/systems/researchSystem";
 import { TECH_BY_ID } from "../../config/techTreeDefs";
+import { FabricationJob } from "../../ecs/systems/fabricationSystem";
+import { getResearchState } from "../../ecs/systems/researchSystem";
+import {
+	FUSION_RECIPES,
+	SynthesisQueue,
+} from "../../ecs/systems/synthesisSystem";
 import { Building } from "../../ecs/traits/building";
 
 export interface PendingItem {
@@ -53,7 +56,10 @@ export function collectPendingItems(world: World): PendingItem[] {
 	if (state?.currentTechId) {
 		const tech = TECH_BY_ID.get(state.currentTechId);
 		if (tech) {
-			const turnsLeft = Math.max(0, tech.turnsToResearch - state.progressPoints);
+			const turnsLeft = Math.max(
+				0,
+				tech.turnsToResearch - state.progressPoints,
+			);
 			if (turnsLeft === 1) {
 				items.push({ label: tech.name, type: "research" });
 			}

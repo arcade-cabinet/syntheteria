@@ -3,10 +3,17 @@ import { shortestPath } from "../../board/adjacency";
 import type { GeneratedBoard } from "../../board/types";
 import { pushTurnEvent } from "../../ui/game/turnEvents";
 import type { Difficulty } from "../../world/config";
-import { Board } from "../traits/board";
 import { getRelation } from "../factions/relations";
+import { Board } from "../traits/board";
 import { ResourceDeposit } from "../traits/resource";
-import { UnitAttack, UnitFaction, UnitHarvest, UnitMove, UnitPos, UnitStats } from "../traits/unit";
+import {
+	UnitAttack,
+	UnitFaction,
+	UnitHarvest,
+	UnitMove,
+	UnitPos,
+	UnitStats,
+} from "../traits/unit";
 
 // ---------------------------------------------------------------------------
 // Layer 1: Faction Personality — static strategic priorities per faction
@@ -78,7 +85,12 @@ const DIFFICULTY_AGGRESSION_MULT: Record<Difficulty, number> = {
 interface FactionSituation {
 	unitCount: number;
 	totalHp: number;
-	enemyThreats: Array<{ x: number; z: number; entityId: number; factionId: string }>;
+	enemyThreats: Array<{
+		x: number;
+		z: number;
+		entityId: number;
+		factionId: string;
+	}>;
 	nearbyDeposits: Array<{ x: number; z: number; entityId: number }>;
 	boardCenter: { x: number; z: number };
 }
@@ -102,7 +114,12 @@ function assessSituation(
 		if (f.factionId === factionId) continue;
 		// Skip allied factions — AI won't target allies
 		if (getRelation(world, factionId, f.factionId) === "ally") continue;
-		enemyThreats.push({ x: p.tileX, z: p.tileZ, entityId: e.id(), factionId: f.factionId });
+		enemyThreats.push({
+			x: p.tileX,
+			z: p.tileZ,
+			entityId: e.id(),
+			factionId: f.factionId,
+		});
 	}
 
 	// Gather resource deposits
@@ -125,7 +142,13 @@ function assessSituation(
 // Layer 3: Action Selection — per-unit scoring and execution
 // ---------------------------------------------------------------------------
 
-type ActionType = "attack" | "harvest" | "move_to_enemy" | "move_to_deposit" | "expand" | "idle";
+type ActionType =
+	| "attack"
+	| "harvest"
+	| "move_to_enemy"
+	| "move_to_deposit"
+	| "expand"
+	| "idle";
 
 interface ScoredAction {
 	type: ActionType;
@@ -194,7 +217,12 @@ function scoreActions(
 	}
 
 	// Score: expand toward board center
-	const distToCenter = manhattanDist(unit.x, unit.z, situation.boardCenter.x, situation.boardCenter.z);
+	const distToCenter = manhattanDist(
+		unit.x,
+		unit.z,
+		situation.boardCenter.x,
+		situation.boardCenter.z,
+	);
 	candidates.push({
 		type: "expand",
 		score: personality.expansionPriority * 2 + Math.max(0, 10 - distToCenter),
@@ -312,7 +340,9 @@ export function runAiTurns(world: World, board: GeneratedBoard): void {
 			switch (action.type) {
 				case "attack": {
 					if (action.targetEntityId != null && !entity.has(UnitAttack)) {
-						entity.add(UnitAttack({ targetEntityId: action.targetEntityId, damage: 2 }));
+						entity.add(
+							UnitAttack({ targetEntityId: action.targetEntityId, damage: 2 }),
+						);
 					}
 					break;
 				}
@@ -397,11 +427,25 @@ export function resolveAllMoves(world: World): void {
 		const stats = entity.get(UnitStats);
 		if (!move || !stats) continue;
 		entity.set(UnitPos, { tileX: move.toX, tileZ: move.toZ });
-		entity.set(UnitStats, { ...stats, mp: Math.max(0, stats.mp - move.mpCost) });
+		entity.set(UnitStats, {
+			...stats,
+			mp: Math.max(0, stats.mp - move.mpCost),
+		});
 		entity.remove(UnitMove);
 	}
 }
 
 // Exported for testing
-export { FACTION_PERSONALITY, DIFFICULTY_AGGRESSION_MULT, scoreActions, assessSituation };
-export type { FactionPersonality, FactionSituation, AiUnit, ScoredAction, ActionType };
+export {
+	FACTION_PERSONALITY,
+	DIFFICULTY_AGGRESSION_MULT,
+	scoreActions,
+	assessSituation,
+};
+export type {
+	FactionPersonality,
+	FactionSituation,
+	AiUnit,
+	ScoredAction,
+	ActionType,
+};

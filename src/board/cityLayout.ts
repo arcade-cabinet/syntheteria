@@ -57,16 +57,11 @@ interface Rect {
  * along the Z axis (creating a top child + bottom child), false = split along
  * the X axis (left child + right child). Orientation alternates each level.
  */
-function subdivide(
-	rect: Rect,
-	horizontal: boolean,
-	rng: () => number,
-): Rect[] {
+function subdivide(rect: Rect, horizontal: boolean, rng: () => number): Rect[] {
 	const dim = horizontal ? rect.h : rect.w;
 
 	// Choose corridor width: 1 or 2 tiles (seeded)
-	const corridorWidth =
-		rng() < 0.5 ? CORRIDOR_MIN : CORRIDOR_MAX;
+	const corridorWidth = rng() < 0.5 ? CORRIDOR_MIN : CORRIDOR_MAX;
 
 	// Minimum space needed: two children of MIN_BLOCK + corridor
 	const minRequired = MIN_BLOCK * 2 + corridorWidth;
@@ -89,8 +84,7 @@ function subdivide(
 		return [rect];
 	}
 
-	const splitSize =
-		clampedLo + Math.floor(rng() * (clampedHi - clampedLo + 1));
+	const splitSize = clampedLo + Math.floor(rng() * (clampedHi - clampedLo + 1));
 
 	let child1: Rect;
 	let child2: Rect;

@@ -14,30 +14,36 @@
 
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { UnitFaction, UnitPos, UnitStats, UnitVisual, UnitXP } from "../../traits/unit";
 import {
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+	UnitVisual,
+	UnitXP,
+} from "../../traits/unit";
+import {
+	CAVALRY_DEFAULTS,
 	INFANTRY_DEFAULTS,
-	WORKER_DEFAULTS,
+	RANGED_DEFAULTS,
 	SCOUT_DEFAULTS,
 	SUPPORT_DEFAULTS,
-	RANGED_DEFAULTS,
-	CAVALRY_DEFAULTS,
+	spawnCavalry,
 	spawnInfantry,
-	spawnWorker,
+	spawnRanged,
 	spawnScout,
 	spawnSupport,
-	spawnRanged,
-	spawnCavalry,
+	spawnWorker,
+	WORKER_DEFAULTS,
 } from "../archetypes";
 import {
+	CULT_CAVALRY_DEFAULTS,
 	CULT_INFANTRY_DEFAULTS,
 	CULT_RANGED_DEFAULTS,
-	CULT_CAVALRY_DEFAULTS,
+	spawnCultCavalry,
 	spawnCultInfantry,
 	spawnCultRanged,
-	spawnCultCavalry,
 } from "../CultMechs";
-import type { RobotClass, BotTier } from "../types";
+import type { BotTier, RobotClass } from "../types";
 
 describe("SPEC: Section 7 — Bot Roster", () => {
 	let world: ReturnType<typeof createWorld>;
@@ -189,7 +195,15 @@ describe("SPEC: Section 7 — Bot Roster", () => {
 		it("UnitXP trait tracks markLevel", () => {
 			const unit = world.spawn(
 				UnitPos({ tileX: 0, tileZ: 0 }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 2, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 2,
+					maxAp: 2,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+				}),
 				UnitFaction({ factionId: "player" }),
 				UnitXP({ xp: 0, markLevel: 1, killCount: 0, harvestCount: 0 }),
 			);

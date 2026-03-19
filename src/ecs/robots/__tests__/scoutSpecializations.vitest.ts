@@ -1,17 +1,20 @@
 import { describe, expect, it } from "vitest";
+import type {
+	ScoutTrack,
+	TrackSpecialization,
+} from "../specializations/scoutTracks";
 import {
-	SCOUT_TRACKS,
-	PATHFINDER_SPECIALIZATIONS,
+	getTrackActions,
+	getTrackSpecializations,
+	INFILTRATOR_ACTIONS,
 	INFILTRATOR_SPECIALIZATIONS,
-	PATHFINDER_V2_UPGRADES,
 	INFILTRATOR_V2_UPGRADES,
 	PATHFINDER_ACTIONS,
-	INFILTRATOR_ACTIONS,
+	PATHFINDER_SPECIALIZATIONS,
+	PATHFINDER_V2_UPGRADES,
 	SCOUT_TRACK_TECHS,
-	getTrackSpecializations,
-	getTrackActions,
+	SCOUT_TRACKS,
 } from "../specializations/scoutTracks";
-import type { ScoutTrack, TrackSpecialization } from "../specializations/scoutTracks";
 
 // ─── Track structure ─────────────────────────────────────────────────────────
 
@@ -173,26 +176,26 @@ describe("getTrackSpecializations", () => {
 		expect(v2).toHaveLength(4);
 
 		// Mark III should be seismic_sweep instead of fog_sweep
-		const markIII = v2.find(s => s.markLevel === 3);
+		const markIII = v2.find((s) => s.markLevel === 3);
 		expect(markIII!.effectType).toBe("seismic_sweep");
 
 		// Mark IV should be resonance_map instead of wayfinder_pulse
-		const markIV = v2.find(s => s.markLevel === 4);
+		const markIV = v2.find((s) => s.markLevel === 4);
 		expect(markIV!.effectType).toBe("resonance_map");
 
 		// Mark II and V unchanged
-		const markII = v2.find(s => s.effectType === "terrain_adapt");
+		const markII = v2.find((s) => s.effectType === "terrain_adapt");
 		expect(markII).toBeDefined();
-		const markV = v2.find(s => s.markLevel === 5);
+		const markV = v2.find((s) => s.markLevel === 5);
 		expect(markV!.effectType).toBe("permanent_vision");
 	});
 
 	it("v2 mode replaces infiltrator Mark III and IV", () => {
 		const v2 = getTrackSpecializations("infiltrator", 5, true);
 		expect(v2).toHaveLength(4);
-		const markIII = v2.find(s => s.markLevel === 3);
+		const markIII = v2.find((s) => s.markLevel === 3);
 		expect(markIII!.effectType).toBe("quantum_cloak");
-		const markIV = v2.find(s => s.markLevel === 4);
+		const markIV = v2.find((s) => s.markLevel === 4);
 		expect(markIV!.effectType).toBe("deep_intrusion");
 	});
 });
@@ -231,14 +234,14 @@ describe("Track radial actions", () => {
 	});
 
 	it("hack_building targets enemy buildings", () => {
-		const hack = INFILTRATOR_ACTIONS.find(a => a.id === "hack_building")!;
+		const hack = INFILTRATOR_ACTIONS.find((a) => a.id === "hack_building")!;
 		expect(hack.requiresEnemy).toBe(true);
 		expect(hack.maxRange).toBe(2);
 		expect(hack.cooldown).toBe(3);
 	});
 
 	it("cloak is a self-targeted utility", () => {
-		const cloak = INFILTRATOR_ACTIONS.find(a => a.id === "cloak")!;
+		const cloak = INFILTRATOR_ACTIONS.find((a) => a.id === "cloak")!;
 		expect(cloak.requiresEnemy).toBe(false);
 		expect(cloak.requiresFriendly).toBe(false);
 		expect(cloak.minRange).toBe(0);
@@ -254,14 +257,18 @@ describe("Scout track tech tree", () => {
 	});
 
 	it("advanced_recon_optics is tier 2, gates specialization choice", () => {
-		const tech = SCOUT_TRACK_TECHS.find(t => t.id === "advanced_recon_optics")!;
+		const tech = SCOUT_TRACK_TECHS.find(
+			(t) => t.id === "advanced_recon_optics",
+		)!;
 		expect(tech.tier).toBe(2);
 		expect(tech.prerequisites).toContain("signal_amplification");
 		expect(tech.turnsToResearch).toBe(4);
 	});
 
 	it("deep_signal_processing is tier 4, gates v2 upgrades", () => {
-		const tech = SCOUT_TRACK_TECHS.find(t => t.id === "deep_signal_processing")!;
+		const tech = SCOUT_TRACK_TECHS.find(
+			(t) => t.id === "deep_signal_processing",
+		)!;
 		expect(tech.tier).toBe(4);
 		expect(tech.prerequisites).toContain("advanced_recon_optics");
 		expect(tech.prerequisites).toContain("quantum_processors");
@@ -285,7 +292,9 @@ describe("Design invariants", () => {
 		// Tracks don't define visual overrides — same scout model
 		for (const track of Object.values(SCOUT_TRACKS)) {
 			for (const spec of track.specializations) {
-				expect((spec as unknown as Record<string, unknown>).modelId).toBeUndefined();
+				expect(
+					(spec as unknown as Record<string, unknown>).modelId,
+				).toBeUndefined();
 			}
 		}
 	});
@@ -303,22 +312,26 @@ describe("Design invariants", () => {
 	});
 
 	it("effect types are unique within each track (no collisions)", () => {
-		const pfEffects = PATHFINDER_SPECIALIZATIONS.map(s => s.effectType);
+		const pfEffects = PATHFINDER_SPECIALIZATIONS.map((s) => s.effectType);
 		expect(new Set(pfEffects).size).toBe(pfEffects.length);
 
-		const infEffects = INFILTRATOR_SPECIALIZATIONS.map(s => s.effectType);
+		const infEffects = INFILTRATOR_SPECIALIZATIONS.map((s) => s.effectType);
 		expect(new Set(infEffects).size).toBe(infEffects.length);
 	});
 
 	it("v2 upgrades have strictly better effectValue than base at same mark level", () => {
 		for (const v2 of PATHFINDER_V2_UPGRADES) {
-			const base = PATHFINDER_SPECIALIZATIONS.find(s => s.markLevel === v2.markLevel);
+			const base = PATHFINDER_SPECIALIZATIONS.find(
+				(s) => s.markLevel === v2.markLevel,
+			);
 			if (base) {
 				expect(v2.effectValue).toBeGreaterThan(base.effectValue);
 			}
 		}
 		for (const v2 of INFILTRATOR_V2_UPGRADES) {
-			const base = INFILTRATOR_SPECIALIZATIONS.find(s => s.markLevel === v2.markLevel);
+			const base = INFILTRATOR_SPECIALIZATIONS.find(
+				(s) => s.markLevel === v2.markLevel,
+			);
 			if (base) {
 				expect(v2.effectValue).toBeGreaterThanOrEqual(base.effectValue);
 			}

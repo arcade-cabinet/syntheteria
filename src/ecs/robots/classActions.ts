@@ -15,8 +15,8 @@
  * Design reference: GAME_DESIGN.md §5 (unit actions) + task #45.
  */
 
-import type { RobotClass } from "./types";
 import { getSpecializedActions } from "./specializations/trackRegistry";
+import type { RobotClass } from "./types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -513,7 +513,9 @@ const WORKER_ACTIONS: readonly ClassActionDef[] = [
  *
  * Cult classes use a subset of their faction-bot counterparts.
  */
-export const CLASS_ACTIONS: Readonly<Record<RobotClass, readonly ClassActionDef[]>> = {
+export const CLASS_ACTIONS: Readonly<
+	Record<RobotClass, readonly ClassActionDef[]>
+> = {
 	scout: SCOUT_ACTIONS,
 	infantry: INFANTRY_ACTIONS,
 	cavalry: CAVALRY_ACTIONS,
@@ -522,8 +524,8 @@ export const CLASS_ACTIONS: Readonly<Record<RobotClass, readonly ClassActionDef[
 	worker: WORKER_ACTIONS,
 	// Cult mechs — simplified action sets
 	cult_infantry: [INFANTRY_ACTIONS[0]!, INFANTRY_ACTIONS[1]!], // Move + Attack
-	cult_ranged: [RANGED_ACTIONS[0]!, RANGED_ACTIONS[1]!],       // Stage + Attack
-	cult_cavalry: [CAVALRY_ACTIONS[0]!, CAVALRY_ACTIONS[1]!],    // Move + Charge
+	cult_ranged: [RANGED_ACTIONS[0]!, RANGED_ACTIONS[1]!], // Stage + Attack
+	cult_cavalry: [CAVALRY_ACTIONS[0]!, CAVALRY_ACTIONS[1]!], // Move + Charge
 };
 
 // ─── Query helpers ────────────────────────────────────────────────────────────
@@ -531,22 +533,30 @@ export const CLASS_ACTIONS: Readonly<Record<RobotClass, readonly ClassActionDef[
 /**
  * Get all action definitions for a robot class.
  */
-export function getClassActions(robotClass: RobotClass): readonly ClassActionDef[] {
+export function getClassActions(
+	robotClass: RobotClass,
+): readonly ClassActionDef[] {
 	return CLASS_ACTIONS[robotClass];
 }
 
 /**
  * Get a specific action by ID for a robot class. Returns undefined if not found.
  */
-export function getClassAction(robotClass: RobotClass, actionId: string): ClassActionDef | undefined {
-	return CLASS_ACTIONS[robotClass].find(a => a.id === actionId);
+export function getClassAction(
+	robotClass: RobotClass,
+	actionId: string,
+): ClassActionDef | undefined {
+	return CLASS_ACTIONS[robotClass].find((a) => a.id === actionId);
 }
 
 /**
  * Check if a robot class has a specific action.
  */
-export function hasClassAction(robotClass: RobotClass, actionId: string): boolean {
-	return CLASS_ACTIONS[robotClass].some(a => a.id === actionId);
+export function hasClassAction(
+	robotClass: RobotClass,
+	actionId: string,
+): boolean {
+	return CLASS_ACTIONS[robotClass].some((a) => a.id === actionId);
 }
 
 /**
@@ -556,7 +566,7 @@ export function getClassActionsByCategory(
 	robotClass: RobotClass,
 	category: ActionCategory,
 ): readonly ClassActionDef[] {
-	return CLASS_ACTIONS[robotClass].filter(a => a.category === category);
+	return CLASS_ACTIONS[robotClass].filter((a) => a.category === category);
 }
 
 /**

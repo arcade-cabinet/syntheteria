@@ -40,7 +40,12 @@ function makeHighlightMesh(): THREE.Mesh {
 	return new THREE.Mesh(geometry, material);
 }
 
-export function HighlightRenderer({ world, useSphere, boardWidth, boardHeight }: HighlightRendererProps) {
+export function HighlightRenderer({
+	world,
+	useSphere,
+	boardWidth,
+	boardHeight,
+}: HighlightRendererProps) {
 	const { scene } = useThree();
 	const poolRef = useRef<Map<string, THREE.Mesh>>(new Map());
 
@@ -80,9 +85,20 @@ export function HighlightRenderer({ world, useSphere, boardWidth, boardHeight }:
 			if (useSphere && boardWidth && boardHeight) {
 				// Sphere placement: position on curved surface with tangent orientation
 				const yOff = tile.elevation * ELEVATION_STEP_M + HIGHLIGHT_Y_OFFSET;
-				const sp = sphereModelPlacement(tile.x, tile.z, boardWidth, boardHeight, yOff);
+				const sp = sphereModelPlacement(
+					tile.x,
+					tile.z,
+					boardWidth,
+					boardHeight,
+					yOff,
+				);
 				mesh.position.set(sp.position[0], sp.position[1], sp.position[2]);
-				mesh.quaternion.set(sp.quaternion[0], sp.quaternion[1], sp.quaternion[2], sp.quaternion[3]);
+				mesh.quaternion.set(
+					sp.quaternion[0],
+					sp.quaternion[1],
+					sp.quaternion[2],
+					sp.quaternion[3],
+				);
 			} else {
 				// Flat board placement
 				const wx = tile.x * TILE_SIZE_M;

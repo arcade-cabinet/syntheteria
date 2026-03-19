@@ -57,7 +57,9 @@ export interface BuildingBlueprint {
 
 // ─── Data ───────────────────────────────────────────────────────────────────
 
-export const BUILDING_BLUEPRINTS: Partial<Record<BuildingType, BuildingBlueprint>> = {
+export const BUILDING_BLUEPRINTS: Partial<
+	Record<BuildingType, BuildingBlueprint>
+> = {
 	storm_transmitter: {
 		displayName: "Lightning Rod",
 		powerDemand: 0,

@@ -66,7 +66,12 @@ export function highlightReachableTiles(
 
 	// Build set of tiles adjacent to the selected unit (attack range)
 	const attackRange = new Set<string>();
-	for (const [dx, dz] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+	for (const [dx, dz] of [
+		[0, 1],
+		[0, -1],
+		[1, 0],
+		[-1, 0],
+	]) {
 		attackRange.add(`${selectedUnitTileX + dx},${selectedUnitTileZ + dz}`);
 	}
 

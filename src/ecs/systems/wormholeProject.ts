@@ -18,19 +18,24 @@
  */
 
 import type { World } from "koota";
-import { WORMHOLE_PROJECT_TURNS } from "../../config/gameDefaults";
 import { playSfx } from "../../audio/sfx";
+import { WORMHOLE_PROJECT_TURNS } from "../../config/gameDefaults";
 import { pushTurnEvent } from "../../ui/game/turnEvents";
-import { pushToast } from "./toastNotifications";
-import { Building } from "../traits/building";
 import { Board } from "../traits/board";
+import { Building } from "../traits/building";
 import { isTechResearched } from "./researchSystem";
+import { pushToast } from "./toastNotifications";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export type WormholeProjectState =
 	| { status: "inactive" }
-	| { status: "building"; turnsRemaining: number; buildingEntityId: number; startTurn: number }
+	| {
+			status: "building";
+			turnsRemaining: number;
+			buildingEntityId: number;
+			startTurn: number;
+	  }
 	| { status: "completed"; completionTurn: number }
 	| { status: "destroyed" };
 
@@ -40,7 +45,10 @@ let projectState: WormholeProjectState = { status: "inactive" };
 
 // ─── Required techs ─────────────────────────────────────────────────────────
 
-const REQUIRED_TIER5_TECHS = ["mark_v_transcendence", "wormhole_stabilization"] as const;
+const REQUIRED_TIER5_TECHS = [
+	"mark_v_transcendence",
+	"wormhole_stabilization",
+] as const;
 
 /** Max manhattan distance from board center for valid placement. */
 const CENTER_PLACEMENT_RADIUS = 3;
@@ -50,9 +58,13 @@ const CENTER_PLACEMENT_RADIUS = 3;
 /**
  * Check if a faction has all prerequisites to build the Wormhole Stabilizer.
  */
-export function canStartWormholeProject(world: World, factionId: string): boolean {
+export function canStartWormholeProject(
+	world: World,
+	factionId: string,
+): boolean {
 	// Must not already be active or completed
-	if (projectState.status === "building" || projectState.status === "completed") return false;
+	if (projectState.status === "building" || projectState.status === "completed")
+		return false;
 
 	// Both tier-5 techs required
 	for (const techId of REQUIRED_TIER5_TECHS) {
@@ -65,7 +77,11 @@ export function canStartWormholeProject(world: World, factionId: string): boolea
 /**
  * Check if a tile is valid for wormhole stabilizer placement (near center).
  */
-export function isValidWormholePlacement(world: World, tileX: number, tileZ: number): boolean {
+export function isValidWormholePlacement(
+	world: World,
+	tileX: number,
+	tileZ: number,
+): boolean {
 	const center = getBoardCenter(world);
 	if (!center) return false;
 

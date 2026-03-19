@@ -360,7 +360,13 @@ describe("save/load round-trip integration", () => {
 		// so we must query the world to find units by position, not use old refs.
 
 		// Build a lookup: units by modelId
-		const restoredUnits = new Map<string, { pos: { tileX: number; tileZ: number }; stats: { hp: number; ap: number } }>();
+		const restoredUnits = new Map<
+			string,
+			{
+				pos: { tileX: number; tileZ: number };
+				stats: { hp: number; ap: number };
+			}
+		>();
 		for (const entity of world.query(UnitPos, UnitFaction, UnitStats)) {
 			const visual = entity.has(UnitVisual) ? entity.get(UnitVisual) : null;
 			const pos = entity.get(UnitPos)!;

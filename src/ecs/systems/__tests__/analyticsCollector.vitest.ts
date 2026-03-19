@@ -19,9 +19,19 @@ afterEach(() => {
 	world.destroy();
 });
 
-function spawnFaction(factionId: string, resources: Partial<Record<string, number>> = {}) {
+function spawnFaction(
+	factionId: string,
+	resources: Partial<Record<string, number>> = {},
+) {
 	return world.spawn(
-		Faction({ id: factionId, displayName: factionId, color: 0xffffff, persona: "otter", isPlayer: false, aggression: 0 }),
+		Faction({
+			id: factionId,
+			displayName: factionId,
+			color: 0xffffff,
+			persona: "otter",
+			isPlayer: false,
+			aggression: 0,
+		}),
 		ResourcePool(resources),
 	);
 }
@@ -29,13 +39,29 @@ function spawnFaction(factionId: string, resources: Partial<Record<string, numbe
 function spawnUnit(factionId: string) {
 	return world.spawn(
 		UnitFaction({ factionId }),
-		UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+		UnitStats({
+			hp: 10,
+			maxHp: 10,
+			ap: 3,
+			maxAp: 3,
+			scanRange: 4,
+			attack: 2,
+			defense: 0,
+		}),
 	);
 }
 
 function spawnBuilding(factionId: string) {
 	return world.spawn(
-		Building({ tileX: 0, tileZ: 0, buildingType: "storage_hub", modelId: "", factionId, hp: 50, maxHp: 50 }),
+		Building({
+			tileX: 0,
+			tileZ: 0,
+			buildingType: "storage_hub",
+			modelId: "",
+			factionId,
+			hp: 50,
+			maxHp: 50,
+		}),
 	);
 }
 

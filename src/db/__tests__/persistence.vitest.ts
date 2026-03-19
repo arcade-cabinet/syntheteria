@@ -183,9 +183,19 @@ describe("persistence round-trips", () => {
 	it("saveResources + loadResources round-trips resource pools", async () => {
 		const gameId = await repo.createGame("seed", 16, 16, "normal");
 		const resources = [
-			{ gameId, factionId: "reclaimers", material: "ferrous_scrap", amount: 25 },
+			{
+				gameId,
+				factionId: "reclaimers",
+				material: "ferrous_scrap",
+				amount: 25,
+			},
 			{ gameId, factionId: "reclaimers", material: "alloy_stock", amount: 10 },
-			{ gameId, factionId: "synth-collective", material: "storm_charge", amount: 5 },
+			{
+				gameId,
+				factionId: "synth-collective",
+				material: "storm_charge",
+				amount: 5,
+			},
 		];
 
 		await repo.saveResources(gameId, resources);
@@ -203,7 +213,8 @@ describe("persistence round-trips", () => {
 		expect(as.amount).toBe(10);
 
 		const sc = loaded.find(
-			(r) => r.factionId === "synth-collective" && r.material === "storm_charge",
+			(r) =>
+				r.factionId === "synth-collective" && r.material === "storm_charge",
 		)!;
 		expect(sc.amount).toBe(5);
 	});

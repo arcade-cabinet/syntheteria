@@ -1,9 +1,9 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { AgentSnapshot } from "../agents/SyntheteriaAgent";
 import {
 	AIRuntime,
-	FACTION_PERSONALITY,
 	DEFAULT_PERSONALITY,
+	FACTION_PERSONALITY,
 	personalityToBias,
 } from "../runtime/AIRuntime";
 
@@ -58,7 +58,9 @@ describe("AIRuntime", () => {
 
 	it("creates separate agents for different entities", () => {
 		runtime.getOrCreateAgent(makeSnap({ entityId: 1 }));
-		runtime.getOrCreateAgent(makeSnap({ entityId: 2, factionId: "iron_creed" }));
+		runtime.getOrCreateAgent(
+			makeSnap({ entityId: 2, factionId: "iron_creed" }),
+		);
 		expect(runtime.size).toBe(2);
 	});
 
@@ -73,7 +75,9 @@ describe("AIRuntime", () => {
 
 	it("prunes agents for dead entities", () => {
 		runtime.getOrCreateAgent(makeSnap({ entityId: 1 }));
-		runtime.getOrCreateAgent(makeSnap({ entityId: 2, factionId: "iron_creed" }));
+		runtime.getOrCreateAgent(
+			makeSnap({ entityId: 2, factionId: "iron_creed" }),
+		);
 		expect(runtime.size).toBe(2);
 
 		runtime.pruneStaleAgents(new Set([1])); // Entity 2 is dead
@@ -82,7 +86,9 @@ describe("AIRuntime", () => {
 
 	it("clear removes all agents", () => {
 		runtime.getOrCreateAgent(makeSnap({ entityId: 1 }));
-		runtime.getOrCreateAgent(makeSnap({ entityId: 2, factionId: "iron_creed" }));
+		runtime.getOrCreateAgent(
+			makeSnap({ entityId: 2, factionId: "iron_creed" }),
+		);
 		runtime.clear();
 		expect(runtime.size).toBe(0);
 	});
@@ -114,7 +120,10 @@ describe("personalityToBias", () => {
 	});
 
 	it("maps harvestPriority 3 to high harvest bias", () => {
-		const bias = personalityToBias({ ...DEFAULT_PERSONALITY, harvestPriority: 3 });
+		const bias = personalityToBias({
+			...DEFAULT_PERSONALITY,
+			harvestPriority: 3,
+		});
 		expect(bias.harvest).toBeCloseTo(1.0, 1);
 	});
 

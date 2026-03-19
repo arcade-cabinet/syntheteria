@@ -12,9 +12,9 @@
  * Design reference: GAME_DESIGN.md S7 (Bot Roster), task #55.
  */
 
-import type { MarkSpecialization } from "../marks";
-import type { ClassActionDef } from "../classActions";
 import type { TechDef } from "../../../config/techTreeDefs";
+import type { ClassActionDef } from "../classActions";
+import type { MarkSpecialization } from "../marks";
 
 // ─── Track IDs ───────────────────────────────────────────────────────────────
 
@@ -35,40 +35,45 @@ export interface WorkerTrackSpecialization extends MarkSpecialization {
 // that reshapes the board itself. At transcendence, targeted mining lets you
 // dig any specific cell without needing an adjacent ramp.
 
-export const DEEP_MINER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] = [
-	{
-		track: "deep_miner",
-		label: "Subsurface Probe",
-		markLevel: 2 as 3, // Mark II — cast to satisfy base type, runtime uses 2
-		effectType: "subsurface_probe",
-		effectValue: 2,
-		description: "Prospect action also reveals floor mining yields on adjacent tiles. +2 scan range for resource deposits.",
-	},
-	{
-		track: "deep_miner",
-		label: "DAISY Excavation",
-		markLevel: 3,
-		effectType: "daisy_dig",
-		effectValue: 5,
-		description: "Dig center cell + 4 cardinal neighbors simultaneously. Creates dirt pits with ramps (elevation -1). Yields floor resources from all 5 cells.",
-	},
-	{
-		track: "deep_miner",
-		label: "Deep Bore",
-		markLevel: 4,
-		effectType: "deep_bore",
-		effectValue: 2,
-		description: "DAISY pattern digs 2 levels deep (-2 elevation). Deeper pits yield +50% resources. Exposes buried resource deposits.",
-	},
-	{
-		track: "deep_miner",
-		label: "Transcendent Excavator",
-		markLevel: 5,
-		effectType: "targeted_mining",
-		effectValue: 3,
-		description: "Targeted mining within 3 range — dig any visible cell without adjacent ramp. Mined cells have 25% chance to expose rare depth_salvage.",
-	},
-] as const;
+export const DEEP_MINER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] =
+	[
+		{
+			track: "deep_miner",
+			label: "Subsurface Probe",
+			markLevel: 2 as 3, // Mark II — cast to satisfy base type, runtime uses 2
+			effectType: "subsurface_probe",
+			effectValue: 2,
+			description:
+				"Prospect action also reveals floor mining yields on adjacent tiles. +2 scan range for resource deposits.",
+		},
+		{
+			track: "deep_miner",
+			label: "DAISY Excavation",
+			markLevel: 3,
+			effectType: "daisy_dig",
+			effectValue: 5,
+			description:
+				"Dig center cell + 4 cardinal neighbors simultaneously. Creates dirt pits with ramps (elevation -1). Yields floor resources from all 5 cells.",
+		},
+		{
+			track: "deep_miner",
+			label: "Deep Bore",
+			markLevel: 4,
+			effectType: "deep_bore",
+			effectValue: 2,
+			description:
+				"DAISY pattern digs 2 levels deep (-2 elevation). Deeper pits yield +50% resources. Exposes buried resource deposits.",
+		},
+		{
+			track: "deep_miner",
+			label: "Transcendent Excavator",
+			markLevel: 5,
+			effectType: "targeted_mining",
+			effectValue: 3,
+			description:
+				"Targeted mining within 3 range — dig any visible cell without adjacent ramp. Mined cells have 25% chance to expose rare depth_salvage.",
+		},
+	] as const;
 
 // ─── Track B: Fabricator ─────────────────────────────────────────────────────
 //
@@ -77,40 +82,45 @@ export const DEEP_MINER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] = 
 // complete instantly and cost 25% less. The Fabricator turns the worker from a
 // construction unit into a logistics multiplier.
 
-export const FABRICATOR_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] = [
-	{
-		track: "fabricator",
-		label: "Rapid Assembly",
-		markLevel: 2 as 3, // Mark II
-		effectType: "rapid_assembly",
-		effectValue: 1,
-		description: "Build action takes 1 fewer turn to complete. Reduces build tick-down by 1.",
-	},
-	{
-		track: "fabricator",
-		label: "Field Repair",
-		markLevel: 3,
-		effectType: "field_repair",
-		effectValue: 3,
-		description: "New action: Repair adjacent friendly building for 3 HP. Costs 1 AP, no resources.",
-	},
-	{
-		track: "fabricator",
-		label: "Structural Upgrade",
-		markLevel: 4,
-		effectType: "structural_upgrade",
-		effectValue: 1,
-		description: "New action: Upgrade adjacent building to next tier. Costs 50% of original build cost. Upgraded buildings have +50% HP and enhanced effects.",
-	},
-	{
-		track: "fabricator",
-		label: "Transcendent Constructor",
-		markLevel: 5,
-		effectType: "instant_fabrication",
-		effectValue: 25,
-		description: "All builds complete instantly. Construction costs reduced by 25%. Repaired buildings gain a temporary +2 defense shield for 3 turns.",
-	},
-] as const;
+export const FABRICATOR_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] =
+	[
+		{
+			track: "fabricator",
+			label: "Rapid Assembly",
+			markLevel: 2 as 3, // Mark II
+			effectType: "rapid_assembly",
+			effectValue: 1,
+			description:
+				"Build action takes 1 fewer turn to complete. Reduces build tick-down by 1.",
+		},
+		{
+			track: "fabricator",
+			label: "Field Repair",
+			markLevel: 3,
+			effectType: "field_repair",
+			effectValue: 3,
+			description:
+				"New action: Repair adjacent friendly building for 3 HP. Costs 1 AP, no resources.",
+		},
+		{
+			track: "fabricator",
+			label: "Structural Upgrade",
+			markLevel: 4,
+			effectType: "structural_upgrade",
+			effectValue: 1,
+			description:
+				"New action: Upgrade adjacent building to next tier. Costs 50% of original build cost. Upgraded buildings have +50% HP and enhanced effects.",
+		},
+		{
+			track: "fabricator",
+			label: "Transcendent Constructor",
+			markLevel: 5,
+			effectType: "instant_fabrication",
+			effectValue: 25,
+			description:
+				"All builds complete instantly. Construction costs reduced by 25%. Repaired buildings gain a temporary +2 defense shield for 3 turns.",
+		},
+	] as const;
 
 // ─── Track C: Salvager ───────────────────────────────────────────────────────
 //
@@ -127,7 +137,8 @@ export const SALVAGER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] = [
 		markLevel: 2 as 3, // Mark II
 		effectType: "efficient_extraction",
 		effectValue: 25,
-		description: "Harvest and Salvage actions yield +25% resources. Salvage refund increased from 50% to 75%.",
+		description:
+			"Harvest and Salvage actions yield +25% resources. Salvage refund increased from 50% to 75%.",
 	},
 	{
 		track: "salvager",
@@ -135,7 +146,8 @@ export const SALVAGER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "material_analysis",
 		effectValue: 15,
-		description: "15% chance to find bonus rare materials (storm_charge, el_crystal) when harvesting any deposit. Prospect reveals exact yield amounts.",
+		description:
+			"15% chance to find bonus rare materials (storm_charge, el_crystal) when harvesting any deposit. Prospect reveals exact yield amounts.",
 	},
 	{
 		track: "salvager",
@@ -143,7 +155,8 @@ export const SALVAGER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "rapid_dismantle",
 		effectValue: 0,
-		description: "Salvage action is instant (0 tick-down) and costs 0 AP. Can salvage enemy buildings if adjacent and undefended.",
+		description:
+			"Salvage action is instant (0 tick-down) and costs 0 AP. Can salvage enemy buildings if adjacent and undefended.",
 	},
 	{
 		track: "salvager",
@@ -151,7 +164,8 @@ export const SALVAGER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] = [
 		markLevel: 5,
 		effectType: "total_recycling",
 		effectValue: 100,
-		description: "Salvage returns 100% of build cost. Every harvest has 10% chance to yield el_crystal. Destroyed enemy units in scan range drop salvage.",
+		description:
+			"Salvage returns 100% of build cost. Every harvest has 10% chance to yield el_crystal. Destroyed enemy units in scan range drop salvage.",
 	},
 ] as const;
 
@@ -167,7 +181,8 @@ export const DEEP_MINER_V2_UPGRADES: readonly WorkerTrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "seismic_daisy",
 		effectValue: 9,
-		description: "Replaces DAISY Excavation. Digs center + 8 surrounding cells (3x3 grid). All cells become dirt pits with ramp access. +75% yield from expanded pattern.",
+		description:
+			"Replaces DAISY Excavation. Digs center + 8 surrounding cells (3x3 grid). All cells become dirt pits with ramp access. +75% yield from expanded pattern.",
 	},
 	{
 		track: "deep_miner",
@@ -175,7 +190,8 @@ export const DEEP_MINER_V2_UPGRADES: readonly WorkerTrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "abyssal_bore",
 		effectValue: 3,
-		description: "Replaces Deep Bore. Digs 3 levels deep (-3 elevation). Exposes abyssal-tier resources (thermal_fluid, depth_salvage) regardless of floor type.",
+		description:
+			"Replaces Deep Bore. Digs 3 levels deep (-3 elevation). Exposes abyssal-tier resources (thermal_fluid, depth_salvage) regardless of floor type.",
 	},
 ] as const;
 
@@ -186,7 +202,8 @@ export const FABRICATOR_V2_UPGRADES: readonly WorkerTrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "nano_repair",
 		effectValue: 5,
-		description: "Replaces Field Repair. Repairs all friendly buildings within 2 range for 5 HP each. Passive: adjacent buildings regenerate 1 HP/turn.",
+		description:
+			"Replaces Field Repair. Repairs all friendly buildings within 2 range for 5 HP each. Passive: adjacent buildings regenerate 1 HP/turn.",
 	},
 	{
 		track: "fabricator",
@@ -194,7 +211,8 @@ export const FABRICATOR_V2_UPGRADES: readonly WorkerTrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "architects_vision",
 		effectValue: 2,
-		description: "Replaces Structural Upgrade. Upgrade costs reduced to 25% of original. Upgraded buildings gain +100% HP and a new passive ability based on building type.",
+		description:
+			"Replaces Structural Upgrade. Upgrade costs reduced to 25% of original. Upgraded buildings gain +100% HP and a new passive ability based on building type.",
 	},
 ] as const;
 
@@ -205,7 +223,8 @@ export const SALVAGER_V2_UPGRADES: readonly WorkerTrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "quantum_sifting",
 		effectValue: 30,
-		description: "Replaces Material Analysis. 30% chance for bonus rare materials. Harvesting also yields secondary material based on floor type.",
+		description:
+			"Replaces Material Analysis. 30% chance for bonus rare materials. Harvesting also yields secondary material based on floor type.",
 	},
 	{
 		track: "salvager",
@@ -213,33 +232,40 @@ export const SALVAGER_V2_UPGRADES: readonly WorkerTrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "total_disassembly",
 		effectValue: 0,
-		description: "Replaces Rapid Dismantle. Salvage any structure (friendly or enemy) instantly. Enemy buildings yield 75% of their cost to you. No adjacency required — range 2.",
+		description:
+			"Replaces Rapid Dismantle. Salvage any structure (friendly or enemy) instantly. Enemy buildings yield 75% of their cost to you. No adjacency required — range 2.",
 	},
 ] as const;
 
 // ─── Combined Track Map ──────────────────────────────────────────────────────
 
-export const WORKER_TRACKS: Record<WorkerTrack, {
-	readonly label: string;
-	readonly description: string;
-	readonly specializations: readonly WorkerTrackSpecialization[];
-	readonly v2Upgrades: readonly WorkerTrackSpecialization[];
-}> = {
+export const WORKER_TRACKS: Record<
+	WorkerTrack,
+	{
+		readonly label: string;
+		readonly description: string;
+		readonly specializations: readonly WorkerTrackSpecialization[];
+		readonly v2Upgrades: readonly WorkerTrackSpecialization[];
+	}
+> = {
 	deep_miner: {
 		label: "Deep Miner",
-		description: "Excavation and terraforming. DAISY dig pattern, depth reduction, underground resource access.",
+		description:
+			"Excavation and terraforming. DAISY dig pattern, depth reduction, underground resource access.",
 		specializations: DEEP_MINER_SPECIALIZATIONS,
 		v2Upgrades: DEEP_MINER_V2_UPGRADES,
 	},
 	fabricator: {
 		label: "Fabricator",
-		description: "Construction mastery. Faster builds, structure repair, building upgrades, cost reduction.",
+		description:
+			"Construction mastery. Faster builds, structure repair, building upgrades, cost reduction.",
 		specializations: FABRICATOR_SPECIALIZATIONS,
 		v2Upgrades: FABRICATOR_V2_UPGRADES,
 	},
 	salvager: {
 		label: "Salvager",
-		description: "Extraction and recycling. Better salvage yields, rare material chance, instant dismantle.",
+		description:
+			"Extraction and recycling. Better salvage yields, rare material chance, instant dismantle.",
 		specializations: SALVAGER_SPECIALIZATIONS,
 		v2Upgrades: SALVAGER_V2_UPGRADES,
 	},
@@ -263,7 +289,8 @@ export const DEEP_MINER_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: false,
 		requiresFriendly: false,
 		cooldown: 0,
-		description: "Excavate center + 4 cardinal cells. Creates dirt pits with ramps (-1 elevation)",
+		description:
+			"Excavate center + 4 cardinal cells. Creates dirt pits with ramps (-1 elevation)",
 	},
 	{
 		id: "targeted_mine",
@@ -279,7 +306,8 @@ export const DEEP_MINER_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: false,
 		requiresFriendly: false,
 		cooldown: 1,
-		description: "Mine a specific tile at range — no adjacent ramp needed (Mark V)",
+		description:
+			"Mine a specific tile at range — no adjacent ramp needed (Mark V)",
 	},
 ];
 
@@ -315,7 +343,8 @@ export const FABRICATOR_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: false,
 		requiresFriendly: true,
 		cooldown: 0,
-		description: "Upgrade adjacent building to next tier (costs 50% of original)",
+		description:
+			"Upgrade adjacent building to next tier (costs 50% of original)",
 	},
 ];
 
@@ -335,7 +364,8 @@ export const SALVAGER_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: false,
 		requiresFriendly: false,
 		cooldown: 0,
-		description: "Reveal exact yield and rare material chance of adjacent deposit",
+		description:
+			"Reveal exact yield and rare material chance of adjacent deposit",
 	},
 	{
 		id: "strip_salvage",
@@ -363,7 +393,8 @@ export const WORKER_TRACK_TECHS: readonly TechDef[] = [
 	{
 		id: "industrial_specialization",
 		name: "Industrial Specialization",
-		description: "Advanced chassis modularity for worker units. Unlocks Deep Miner, Fabricator, and Salvager specializations at the Garage.",
+		description:
+			"Advanced chassis modularity for worker units. Unlocks Deep Miner, Fabricator, and Salvager specializations at the Garage.",
 		tier: 2,
 		cost: { alloy_stock: 5, ferrous_scrap: 4, polymer_salvage: 3 },
 		turnsToResearch: 4,
@@ -373,7 +404,8 @@ export const WORKER_TRACK_TECHS: readonly TechDef[] = [
 	{
 		id: "deep_industrial_systems",
 		name: "Deep Industrial Systems",
-		description: "Quantum-enhanced industrial processes. Upgrades Deep Miner to v2 (Seismic DAISY), Fabricator to v2 (Nano-Repair Swarm), and Salvager to v2 (Quantum Sifting).",
+		description:
+			"Quantum-enhanced industrial processes. Upgrades Deep Miner to v2 (Seismic DAISY), Fabricator to v2 (Nano-Repair Swarm), and Salvager to v2 (Quantum Sifting).",
 		tier: 4,
 		cost: { intact_components: 10, alloy_stock: 8, storm_charge: 6 },
 		turnsToResearch: 8,
@@ -397,28 +429,30 @@ export function getWorkerTrackSpecializations(
 	const base = trackDef.specializations;
 
 	if (!useV2) {
-		return base.filter(s => effectiveMarkLevel(s) <= markLevel);
+		return base.filter((s) => effectiveMarkLevel(s) <= markLevel);
 	}
 
 	// v2: replace base Mark III/IV with upgraded versions
 	const v2 = trackDef.v2Upgrades;
-	const v2MarkLevels = new Set(v2.map(u => u.markLevel));
+	const v2MarkLevels = new Set(v2.map((u) => u.markLevel));
 
-	const merged = [
-		...base.filter(s => !v2MarkLevels.has(s.markLevel)),
-		...v2,
-	];
-	return merged.filter(s => effectiveMarkLevel(s) <= markLevel);
+	const merged = [...base.filter((s) => !v2MarkLevels.has(s.markLevel)), ...v2];
+	return merged.filter((s) => effectiveMarkLevel(s) <= markLevel);
 }
 
 /**
  * Get the actions unlocked by a worker track.
  */
-export function getWorkerTrackActions(track: WorkerTrack): readonly ClassActionDef[] {
+export function getWorkerTrackActions(
+	track: WorkerTrack,
+): readonly ClassActionDef[] {
 	switch (track) {
-		case "deep_miner": return DEEP_MINER_ACTIONS;
-		case "fabricator": return FABRICATOR_ACTIONS;
-		case "salvager": return SALVAGER_ACTIONS;
+		case "deep_miner":
+			return DEEP_MINER_ACTIONS;
+		case "fabricator":
+			return FABRICATOR_ACTIONS;
+		case "salvager":
+			return SALVAGER_ACTIONS;
 	}
 }
 

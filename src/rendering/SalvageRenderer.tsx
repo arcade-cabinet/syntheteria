@@ -10,10 +10,10 @@ import { Clone, Sparkles, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { type ReactNode, Suspense, useMemo, useRef } from "react";
-import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import { SalvageProp, type SalvageType } from "../ecs/traits/salvage";
+import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import { getAllSalvageModelUrls, resolveSalvageModelUrl } from "./modelPaths";
 import { sphereModelPlacement } from "./spherePlacement";
 import { buildExploredSet, isTileExplored } from "./tileVisibility";
@@ -53,8 +53,20 @@ function SalvageModel({
 	}, [scene]);
 
 	if (useSphere && boardWidth && boardHeight) {
-		const sp = sphereModelPlacement(tileX, tileZ, boardWidth, boardHeight, yOffset);
-		const sparklePos: [number, number, number] = sphereModelPlacement(tileX, tileZ, boardWidth, boardHeight, yOffset + TILE_SIZE_M * 0.3).position;
+		const sp = sphereModelPlacement(
+			tileX,
+			tileZ,
+			boardWidth,
+			boardHeight,
+			yOffset,
+		);
+		const sparklePos: [number, number, number] = sphereModelPlacement(
+			tileX,
+			tileZ,
+			boardWidth,
+			boardHeight,
+			yOffset + TILE_SIZE_M * 0.3,
+		).position;
 		return (
 			<>
 				<Clone
@@ -133,7 +145,12 @@ type SalvageRendererProps = {
 	boardHeight?: number;
 };
 
-export function SalvageRenderer({ world, useSphere, boardWidth, boardHeight }: SalvageRendererProps) {
+export function SalvageRenderer({
+	world,
+	useSphere,
+	boardWidth,
+	boardHeight,
+}: SalvageRendererProps) {
 	const instances = useMemo(() => {
 		const explored = buildExploredSet(world);
 		const result: Array<{

@@ -3,17 +3,17 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { RobotClass } from "../../robots/types";
 import { UnitFaction, UnitPos, UnitStats, UnitXP } from "../../traits/unit";
 import {
-	BASE_XP,
-	CLASS_ROLE,
-	OFF_ROLE_MULTIPLIER,
-	ROLE_ACTIONS,
 	applyMarkUpgrade,
 	awardXP,
+	BASE_XP,
+	CLASS_ROLE,
 	calculateXPForAction,
 	getMarkThreshold,
 	getXPForNextMark,
 	getXPProgress,
 	isRoleAligned,
+	OFF_ROLE_MULTIPLIER,
+	ROLE_ACTIONS,
 	recordHarvest,
 	recordKill,
 	resetAllXP,
@@ -32,7 +32,15 @@ function spawnUnit(
 	return world.spawn(
 		UnitPos({ tileX: 0, tileZ: 0 }),
 		UnitFaction({ factionId }),
-		UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+		UnitStats({
+			hp: 10,
+			maxHp: 10,
+			ap: 3,
+			maxAp: 3,
+			scanRange: 4,
+			attack: 2,
+			defense: 0,
+		}),
 		UnitXP({ xp: 0, markLevel: 1, killCount: 0, harvestCount: 0 }),
 	);
 }
@@ -96,8 +104,15 @@ describe("role alignment", () => {
 
 	it("all robot classes have a role family", () => {
 		const classes: RobotClass[] = [
-			"scout", "infantry", "cavalry", "ranged", "support", "worker",
-			"cult_infantry", "cult_ranged", "cult_cavalry",
+			"scout",
+			"infantry",
+			"cavalry",
+			"ranged",
+			"support",
+			"worker",
+			"cult_infantry",
+			"cult_ranged",
+			"cult_cavalry",
 		];
 		for (const cls of classes) {
 			expect(CLASS_ROLE[cls]).toBeDefined();

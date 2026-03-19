@@ -28,10 +28,10 @@ import { Sparkles } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { type StormProfile, STORM_PROFILE_SPECS } from "../world/config";
+import { WORMHOLE_PROJECT_TURNS } from "../config/gameDefaults";
 import { STORM_VISUAL_PARAMS, WORMHOLE_CYCLE } from "../config/weatherDefs";
 import { getWormholeProjectState } from "../ecs/systems/wormholeProject";
-import { WORMHOLE_PROJECT_TURNS } from "../config/gameDefaults";
+import { STORM_PROFILE_SPECS, type StormProfile } from "../world/config";
 
 // ---------------------------------------------------------------------------
 // Vertex shader

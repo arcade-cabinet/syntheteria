@@ -25,6 +25,16 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Board } from "../../traits/board";
+import {
+	BotFabricator,
+	Building,
+	Powered,
+	PowerGrid,
+	SignalNode,
+	TurretStats,
+} from "../../traits/building";
+import { Faction } from "../../traits/faction";
+import { ResourceDeposit, ResourcePool } from "../../traits/resource";
 import { Tile, TileHighlight } from "../../traits/tile";
 import {
 	UnitAttack,
@@ -36,42 +46,58 @@ import {
 	UnitVisual,
 	UnitXP,
 } from "../../traits/unit";
-import { Faction } from "../../traits/faction";
-import { ResourceDeposit, ResourcePool } from "../../traits/resource";
-import {
-	Building,
-	BotFabricator,
-	PowerGrid,
-	Powered,
-	SignalNode,
-	TurretStats,
-} from "../../traits/building";
 import { resolveAttacks } from "../attackSystem";
+import {
+	FabricationJob,
+	queueFabrication,
+	runFabrication,
+} from "../fabricationSystem";
 import { harvestSystem, startHarvest } from "../harvestSystem";
 import { movementSystem } from "../movementSystem";
 import { runPowerGrid } from "../powerSystem";
-import { runTurrets } from "../turretSystem";
 import { runRepairs } from "../repairSystem";
-import { runSignalNetwork } from "../signalSystem";
-import { FabricationJob, queueFabrication, runFabrication } from "../fabricationSystem";
-import { queueSynthesis, runSynthesis, SynthesisQueue } from "../synthesisSystem";
 import { runResourceRenewal } from "../resourceRenewalSystem";
 import { addResources, canAfford, spendResources } from "../resourceSystem";
+import { runSignalNetwork } from "../signalSystem";
+import {
+	queueSynthesis,
+	runSynthesis,
+	SynthesisQueue,
+} from "../synthesisSystem";
 import { computeTerritory, getTerritoryPercent } from "../territorySystem";
+import { runTurrets } from "../turretSystem";
 import { checkVictoryConditions } from "../victorySystem";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function spawnFaction(world: ReturnType<typeof createWorld>, id: string, isPlayer = false) {
+function spawnFaction(
+	world: ReturnType<typeof createWorld>,
+	id: string,
+	isPlayer = false,
+) {
 	return world.spawn(
 		Faction({ id, displayName: id, color: 0x00ffaa, isPlayer, aggression: 0 }),
 		ResourcePool({}),
 	);
 }
 
-function spawnBoard(world: ReturnType<typeof createWorld>, turn = 1, w = 16, h = 16) {
+function spawnBoard(
+	world: ReturnType<typeof createWorld>,
+	turn = 1,
+	w = 16,
+	h = 16,
+) {
 	return world.spawn(
-		Board({ width: w, height: h, seed: "test", tileSizeM: 2, turn, climateProfile: "temperate", stormProfile: "volatile", difficulty: "standard" }),
+		Board({
+			width: w,
+			height: h,
+			seed: "test",
+			tileSizeM: 2,
+			turn,
+			climateProfile: "temperate",
+			stormProfile: "volatile",
+			difficulty: "standard",
+		}),
 	);
 }
 
@@ -79,7 +105,14 @@ function spawnTileGrid(world: ReturnType<typeof createWorld>, size: number) {
 	for (let z = 0; z < size; z++) {
 		for (let x = 0; x < size; x++) {
 			world.spawn(
-				Tile({ x, z, elevation: 0, passable: true, explored: true, visibility: 1 }),
+				Tile({
+					x,
+					z,
+					elevation: 0,
+					passable: true,
+					explored: true,
+					visibility: 1,
+				}),
 				TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
 			);
 		}
@@ -92,19 +125,40 @@ function spawnTileGrid(world: ReturnType<typeof createWorld>, size: number) {
 
 describe("attackSystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); spawnBoard(world); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+		spawnBoard(world);
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("damage actually reduces target HP", () => {
 		const target = world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
 			UnitFaction({ factionId: "enemy" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 2, defense: 1 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 2,
+				defense: 1,
+			}),
 		);
 		world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 4, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 4,
+				defense: 0,
+			}),
 			UnitAttack({ targetEntityId: target.id(), damage: 0 }),
 		);
 
@@ -118,12 +172,30 @@ describe("attackSystem — behavior", () => {
 		const target = world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
 			UnitFaction({ factionId: "enemy" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 8, defense: 0, attackRange: 1 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 8,
+				defense: 0,
+				attackRange: 1,
+			}),
 		);
 		const attacker = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 3, defense: 0, attackRange: 1 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 3,
+				defense: 0,
+				attackRange: 1,
+			}),
 			UnitAttack({ targetEntityId: target.id(), damage: 0 }),
 		);
 
@@ -139,13 +211,29 @@ describe("attackSystem — behavior", () => {
 		const target = world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
 			UnitFaction({ factionId: "enemy" }),
-			UnitStats({ hp: 1, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 0, defense: 0 }),
+			UnitStats({
+				hp: 1,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 0,
+				defense: 0,
+			}),
 		);
 		const targetId = target.id();
 		world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 5, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 5,
+				defense: 0,
+			}),
 			UnitAttack({ targetEntityId: targetId, damage: 0 }),
 		);
 
@@ -165,18 +253,37 @@ describe("attackSystem — behavior", () => {
 
 describe("harvestSystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); spawnBoard(world); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+		spawnBoard(world);
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("harvest completion adds resources to faction pool", () => {
 		const playerFac = spawnFaction(world, "player", true);
 		const deposit = world.spawn(
-			ResourceDeposit({ tileX: 1, tileZ: 0, material: "ferrous_scrap", amount: 10, depleted: false }),
+			ResourceDeposit({
+				tileX: 1,
+				tileZ: 0,
+				material: "ferrous_scrap",
+				amount: 10,
+				depleted: false,
+			}),
 		);
 		const unit = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 0, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 0,
+				defense: 0,
+			}),
 			UnitXP({ xp: 0, markLevel: 1, killCount: 0, harvestCount: 0 }),
 			UnitVisual({ modelId: "worker", scale: 1, facingAngle: 0 }),
 		);
@@ -193,12 +300,26 @@ describe("harvestSystem — behavior", () => {
 	it("harvest deducts AP from the unit", () => {
 		spawnFaction(world, "player", true);
 		const deposit = world.spawn(
-			ResourceDeposit({ tileX: 1, tileZ: 0, material: "scrap_metal", amount: 5, depleted: false }),
+			ResourceDeposit({
+				tileX: 1,
+				tileZ: 0,
+				material: "scrap_metal",
+				amount: 5,
+				depleted: false,
+			}),
 		);
 		const unit = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 0, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 0,
+				defense: 0,
+			}),
 		);
 
 		const before = unit.get(UnitStats)!.ap;
@@ -209,12 +330,26 @@ describe("harvestSystem — behavior", () => {
 	it("depleted deposit cannot be harvested again", () => {
 		spawnFaction(world, "player", true);
 		const deposit = world.spawn(
-			ResourceDeposit({ tileX: 1, tileZ: 0, material: "scrap_metal", amount: 1, depleted: true }),
+			ResourceDeposit({
+				tileX: 1,
+				tileZ: 0,
+				material: "scrap_metal",
+				amount: 1,
+				depleted: true,
+			}),
 		);
 		const unit = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 0, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 0,
+				defense: 0,
+			}),
 		);
 
 		const result = startHarvest(world, unit.id(), deposit.id());
@@ -228,13 +363,29 @@ describe("harvestSystem — behavior", () => {
 
 describe("movementSystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); spawnTileGrid(world, 10); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+		spawnTileGrid(world, 10);
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("movement consumes MP and updates UnitPos", () => {
 		const unit = world.spawn(
 			UnitPos({ tileX: 2, tileZ: 2 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 0, defense: 0, movesUsed: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+				attack: 0,
+				defense: 0,
+				movesUsed: 0,
+			}),
 			UnitMove({ fromX: 2, fromZ: 2, toX: 3, toZ: 2, progress: 0, mpCost: 1 }),
 		);
 
@@ -256,7 +407,17 @@ describe("movementSystem — behavior", () => {
 	it("partial movement does not update UnitPos", () => {
 		const unit = world.spawn(
 			UnitPos({ tileX: 2, tileZ: 2 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 0, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				mp: 3,
+				maxMp: 3,
+				scanRange: 4,
+				attack: 0,
+				defense: 0,
+			}),
 			UnitMove({ fromX: 2, fromZ: 2, toX: 3, toZ: 2, progress: 0, mpCost: 1 }),
 		);
 
@@ -274,8 +435,13 @@ describe("movementSystem — behavior", () => {
 
 describe("terrain visibility — all tiles explored from turn 1", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); spawnTileGrid(world, 12); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+		spawnTileGrid(world, 12);
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("all tiles start explored with full visibility", () => {
 		for (const e of world.query(Tile)) {
@@ -293,17 +459,47 @@ describe("terrain visibility — all tiles explored from turn 1", () => {
 
 describe("powerSystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("transmitter charges power box within radius", () => {
 		world.spawn(
-			Building({ tileX: 0, tileZ: 0, buildingType: "storm_transmitter", modelId: "a", factionId: "player", hp: 40, maxHp: 40 }),
-			PowerGrid({ powerDelta: 5, storageCapacity: 0, currentCharge: 0, powerRadius: 12 }),
+			Building({
+				tileX: 0,
+				tileZ: 0,
+				buildingType: "storm_transmitter",
+				modelId: "a",
+				factionId: "player",
+				hp: 40,
+				maxHp: 40,
+			}),
+			PowerGrid({
+				powerDelta: 5,
+				storageCapacity: 0,
+				currentCharge: 0,
+				powerRadius: 12,
+			}),
 		);
 		const box = world.spawn(
-			Building({ tileX: 3, tileZ: 0, buildingType: "power_box", modelId: "b", factionId: "player", hp: 30, maxHp: 30 }),
-			PowerGrid({ powerDelta: 0, storageCapacity: 20, currentCharge: 0, powerRadius: 0 }),
+			Building({
+				tileX: 3,
+				tileZ: 0,
+				buildingType: "power_box",
+				modelId: "b",
+				factionId: "player",
+				hp: 30,
+				maxHp: 30,
+			}),
+			PowerGrid({
+				powerDelta: 0,
+				storageCapacity: 20,
+				currentCharge: 0,
+				powerRadius: 0,
+			}),
 		);
 
 		runPowerGrid(world);
@@ -313,16 +509,55 @@ describe("powerSystem — behavior", () => {
 
 	it("consumer gains Powered when power box has enough charge", () => {
 		world.spawn(
-			Building({ tileX: 0, tileZ: 0, buildingType: "storm_transmitter", modelId: "a", factionId: "player", hp: 40, maxHp: 40 }),
-			PowerGrid({ powerDelta: 5, storageCapacity: 0, currentCharge: 0, powerRadius: 12 }),
+			Building({
+				tileX: 0,
+				tileZ: 0,
+				buildingType: "storm_transmitter",
+				modelId: "a",
+				factionId: "player",
+				hp: 40,
+				maxHp: 40,
+			}),
+			PowerGrid({
+				powerDelta: 5,
+				storageCapacity: 0,
+				currentCharge: 0,
+				powerRadius: 12,
+			}),
 		);
 		world.spawn(
-			Building({ tileX: 2, tileZ: 0, buildingType: "power_box", modelId: "b", factionId: "player", hp: 30, maxHp: 30 }),
-			PowerGrid({ powerDelta: 0, storageCapacity: 20, currentCharge: 0, powerRadius: 0 }),
+			Building({
+				tileX: 2,
+				tileZ: 0,
+				buildingType: "power_box",
+				modelId: "b",
+				factionId: "player",
+				hp: 30,
+				maxHp: 30,
+			}),
+			PowerGrid({
+				powerDelta: 0,
+				storageCapacity: 20,
+				currentCharge: 0,
+				powerRadius: 0,
+			}),
 		);
 		const consumer = world.spawn(
-			Building({ tileX: 4, tileZ: 0, buildingType: "synthesizer", modelId: "c", factionId: "player", hp: 60, maxHp: 60 }),
-			PowerGrid({ powerDelta: -4, storageCapacity: 0, currentCharge: 0, powerRadius: 0 }),
+			Building({
+				tileX: 4,
+				tileZ: 0,
+				buildingType: "synthesizer",
+				modelId: "c",
+				factionId: "player",
+				hp: 60,
+				maxHp: 60,
+			}),
+			PowerGrid({
+				powerDelta: -4,
+				storageCapacity: 0,
+				currentCharge: 0,
+				powerRadius: 0,
+			}),
 		);
 
 		runPowerGrid(world);
@@ -333,12 +568,38 @@ describe("powerSystem — behavior", () => {
 
 	it("power box charge capped at storageCapacity", () => {
 		world.spawn(
-			Building({ tileX: 0, tileZ: 0, buildingType: "storm_transmitter", modelId: "a", factionId: "player", hp: 40, maxHp: 40 }),
-			PowerGrid({ powerDelta: 100, storageCapacity: 0, currentCharge: 0, powerRadius: 12 }),
+			Building({
+				tileX: 0,
+				tileZ: 0,
+				buildingType: "storm_transmitter",
+				modelId: "a",
+				factionId: "player",
+				hp: 40,
+				maxHp: 40,
+			}),
+			PowerGrid({
+				powerDelta: 100,
+				storageCapacity: 0,
+				currentCharge: 0,
+				powerRadius: 12,
+			}),
 		);
 		const box = world.spawn(
-			Building({ tileX: 1, tileZ: 0, buildingType: "power_box", modelId: "b", factionId: "player", hp: 30, maxHp: 30 }),
-			PowerGrid({ powerDelta: 0, storageCapacity: 20, currentCharge: 0, powerRadius: 0 }),
+			Building({
+				tileX: 1,
+				tileZ: 0,
+				buildingType: "power_box",
+				modelId: "b",
+				factionId: "player",
+				hp: 30,
+				maxHp: 30,
+			}),
+			PowerGrid({
+				powerDelta: 0,
+				storageCapacity: 20,
+				currentCharge: 0,
+				powerRadius: 0,
+			}),
 		);
 
 		runPowerGrid(world);
@@ -353,19 +614,44 @@ describe("powerSystem — behavior", () => {
 
 describe("turretSystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("powered turret damages nearest hostile within range", () => {
 		world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "defense_turret", modelId: "t", factionId: "player", hp: 50, maxHp: 50 }),
-			TurretStats({ attackDamage: 3, attackRange: 8, cooldownTurns: 2, currentCooldown: 0 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "defense_turret",
+				modelId: "t",
+				factionId: "player",
+				hp: 50,
+				maxHp: 50,
+			}),
+			TurretStats({
+				attackDamage: 3,
+				attackRange: 8,
+				cooldownTurns: 2,
+				currentCooldown: 0,
+			}),
 			Powered(),
 		);
 		const hostile = world.spawn(
 			UnitPos({ tileX: 6, tileZ: 5 }),
 			UnitFaction({ factionId: "enemy" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runTurrets(world);
@@ -375,14 +661,35 @@ describe("turretSystem — behavior", () => {
 
 	it("turret enters cooldown after firing", () => {
 		const turret = world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "defense_turret", modelId: "t", factionId: "player", hp: 50, maxHp: 50 }),
-			TurretStats({ attackDamage: 3, attackRange: 8, cooldownTurns: 2, currentCooldown: 0 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "defense_turret",
+				modelId: "t",
+				factionId: "player",
+				hp: 50,
+				maxHp: 50,
+			}),
+			TurretStats({
+				attackDamage: 3,
+				attackRange: 8,
+				cooldownTurns: 2,
+				currentCooldown: 0,
+			}),
 			Powered(),
 		);
 		world.spawn(
 			UnitPos({ tileX: 6, tileZ: 5 }),
 			UnitFaction({ factionId: "enemy" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runTurrets(world);
@@ -392,14 +699,35 @@ describe("turretSystem — behavior", () => {
 
 	it("turret does not fire when on cooldown", () => {
 		world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "defense_turret", modelId: "t", factionId: "player", hp: 50, maxHp: 50 }),
-			TurretStats({ attackDamage: 3, attackRange: 8, cooldownTurns: 2, currentCooldown: 2 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "defense_turret",
+				modelId: "t",
+				factionId: "player",
+				hp: 50,
+				maxHp: 50,
+			}),
+			TurretStats({
+				attackDamage: 3,
+				attackRange: 8,
+				cooldownTurns: 2,
+				currentCooldown: 2,
+			}),
 			Powered(),
 		);
 		const hostile = world.spawn(
 			UnitPos({ tileX: 6, tileZ: 5 }),
 			UnitFaction({ factionId: "enemy" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runTurrets(world);
@@ -410,14 +738,35 @@ describe("turretSystem — behavior", () => {
 
 	it("turret does not fire at friendly units", () => {
 		world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "defense_turret", modelId: "t", factionId: "player", hp: 50, maxHp: 50 }),
-			TurretStats({ attackDamage: 3, attackRange: 8, cooldownTurns: 2, currentCooldown: 0 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "defense_turret",
+				modelId: "t",
+				factionId: "player",
+				hp: 50,
+				maxHp: 50,
+			}),
+			TurretStats({
+				attackDamage: 3,
+				attackRange: 8,
+				cooldownTurns: 2,
+				currentCooldown: 0,
+			}),
 			Powered(),
 		);
 		const friendly = world.spawn(
 			UnitPos({ tileX: 6, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runTurrets(world);
@@ -432,18 +781,38 @@ describe("turretSystem — behavior", () => {
 
 describe("repairSystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("powered maintenance bay heals friendly unit within range by +2", () => {
 		world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "maintenance_bay", modelId: "m", factionId: "player", hp: 45, maxHp: 45 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "maintenance_bay",
+				modelId: "m",
+				factionId: "player",
+				hp: 45,
+				maxHp: 45,
+			}),
 			Powered(),
 		);
 		const unit = world.spawn(
 			UnitPos({ tileX: 5, tileZ: 6 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 5, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 5,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runRepairs(world);
@@ -453,13 +822,29 @@ describe("repairSystem — behavior", () => {
 
 	it("repair does not exceed maxHp", () => {
 		world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "maintenance_bay", modelId: "m", factionId: "player", hp: 45, maxHp: 45 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "maintenance_bay",
+				modelId: "m",
+				factionId: "player",
+				hp: 45,
+				maxHp: 45,
+			}),
 			Powered(),
 		);
 		const unit = world.spawn(
 			UnitPos({ tileX: 5, tileZ: 6 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 9, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 9,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runRepairs(world);
@@ -469,13 +854,29 @@ describe("repairSystem — behavior", () => {
 
 	it("repair does not affect enemy units", () => {
 		world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "maintenance_bay", modelId: "m", factionId: "player", hp: 45, maxHp: 45 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "maintenance_bay",
+				modelId: "m",
+				factionId: "player",
+				hp: 45,
+				maxHp: 45,
+			}),
 			Powered(),
 		);
 		const enemy = world.spawn(
 			UnitPos({ tileX: 5, tileZ: 6 }),
 			UnitFaction({ factionId: "enemy" }),
-			UnitStats({ hp: 5, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 5,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runRepairs(world);
@@ -485,13 +886,29 @@ describe("repairSystem — behavior", () => {
 
 	it("repair does not reach units beyond manhattan distance 2", () => {
 		world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "maintenance_bay", modelId: "m", factionId: "player", hp: 45, maxHp: 45 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "maintenance_bay",
+				modelId: "m",
+				factionId: "player",
+				hp: 45,
+				maxHp: 45,
+			}),
 			Powered(),
 		);
 		const farUnit = world.spawn(
 			UnitPos({ tileX: 8, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 5, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 5,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runRepairs(world);
@@ -506,18 +923,38 @@ describe("repairSystem — behavior", () => {
 
 describe("signalSystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("units outside signal coverage have scanRange halved", () => {
 		world.spawn(
-			Building({ tileX: 0, tileZ: 0, buildingType: "relay_tower", modelId: "r", factionId: "player", hp: 35, maxHp: 35 }),
+			Building({
+				tileX: 0,
+				tileZ: 0,
+				buildingType: "relay_tower",
+				modelId: "r",
+				factionId: "player",
+				hp: 35,
+				maxHp: 35,
+			}),
 			SignalNode({ range: 5, strength: 1.0 }),
 			Powered(),
 		);
 		const outUnit = world.spawn(
 			UnitPos({ tileX: 50, tileZ: 50 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 8, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 8,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runSignalNetwork(world);
@@ -527,13 +964,29 @@ describe("signalSystem — behavior", () => {
 
 	it("units inside signal coverage keep full scanRange", () => {
 		world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "relay_tower", modelId: "r", factionId: "player", hp: 35, maxHp: 35 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "relay_tower",
+				modelId: "r",
+				factionId: "player",
+				hp: 35,
+				maxHp: 35,
+			}),
 			SignalNode({ range: 10, strength: 1.0 }),
 			Powered(),
 		);
 		const inUnit = world.spawn(
 			UnitPos({ tileX: 5, tileZ: 5 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 8, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 8,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runSignalNetwork(world);
@@ -548,8 +1001,12 @@ describe("signalSystem — behavior", () => {
 
 describe("fabricationSystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("motor pool spawns robot after buildTime ticks", () => {
 		spawnFaction(world, "player", true);
@@ -557,7 +1014,15 @@ describe("fabricationSystem — behavior", () => {
 		addResources(world, "player", "conductor_wire", 10);
 
 		const pool = world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "motor_pool", modelId: "mp", factionId: "player", hp: 80, maxHp: 80 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "motor_pool",
+				modelId: "mp",
+				factionId: "player",
+				hp: 80,
+				maxHp: 80,
+			}),
 			BotFabricator({ fabricationSlots: 1, queueSize: 0 }),
 			Powered(),
 		);
@@ -586,7 +1051,15 @@ describe("fabricationSystem — behavior", () => {
 		addResources(world, "player", "ferrous_scrap", 20);
 
 		const pool = world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "motor_pool", modelId: "mp", factionId: "player", hp: 80, maxHp: 80 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "motor_pool",
+				modelId: "mp",
+				factionId: "player",
+				hp: 80,
+				maxHp: 80,
+			}),
 			BotFabricator({ fabricationSlots: 1, queueSize: 0 }),
 			// NOTE: no Powered trait
 		);
@@ -603,8 +1076,12 @@ describe("fabricationSystem — behavior", () => {
 
 describe("synthesisSystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("fusion converts inputs to outputs after tick-down", () => {
 		spawnFaction(world, "player", true);
@@ -612,7 +1089,15 @@ describe("synthesisSystem — behavior", () => {
 		addResources(world, "player", "conductor_wire", 10);
 
 		const synth = world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "synthesizer", modelId: "s", factionId: "player", hp: 60, maxHp: 60 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "synthesizer",
+				modelId: "s",
+				factionId: "player",
+				hp: 60,
+				maxHp: 60,
+			}),
 			Powered(),
 		);
 
@@ -641,7 +1126,15 @@ describe("synthesisSystem — behavior", () => {
 		addResources(world, "player", "conductor_wire", 10);
 
 		const synth = world.spawn(
-			Building({ tileX: 5, tileZ: 5, buildingType: "synthesizer", modelId: "s", factionId: "player", hp: 60, maxHp: 60 }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				buildingType: "synthesizer",
+				modelId: "s",
+				factionId: "player",
+				hp: 60,
+				maxHp: 60,
+			}),
 			Powered(),
 		);
 
@@ -662,13 +1155,25 @@ describe("synthesisSystem — behavior", () => {
 
 describe("resourceRenewalSystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("powered storm_transmitter generates storm_charge", () => {
 		spawnFaction(world, "player", true);
 		world.spawn(
-			Building({ tileX: 0, tileZ: 0, buildingType: "storm_transmitter", modelId: "a", factionId: "player", hp: 40, maxHp: 40 }),
+			Building({
+				tileX: 0,
+				tileZ: 0,
+				buildingType: "storm_transmitter",
+				modelId: "a",
+				factionId: "player",
+				hp: 40,
+				maxHp: 40,
+			}),
 			Powered(),
 		);
 
@@ -681,7 +1186,15 @@ describe("resourceRenewalSystem — behavior", () => {
 	it("unpowered transmitter does NOT generate resources", () => {
 		spawnFaction(world, "player", true);
 		world.spawn(
-			Building({ tileX: 0, tileZ: 0, buildingType: "storm_transmitter", modelId: "a", factionId: "player", hp: 40, maxHp: 40 }),
+			Building({
+				tileX: 0,
+				tileZ: 0,
+				buildingType: "storm_transmitter",
+				modelId: "a",
+				factionId: "player",
+				hp: 40,
+				maxHp: 40,
+			}),
 			// No Powered trait
 		);
 
@@ -698,8 +1211,12 @@ describe("resourceRenewalSystem — behavior", () => {
 
 describe("resourceSystem — CRUD behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("addResources increases pool; spendResources decreases it", () => {
 		spawnFaction(world, "player", true);
@@ -727,8 +1244,12 @@ describe("resourceSystem — CRUD behavior", () => {
 		addResources(world, "player", "ferrous_scrap", 5);
 		addResources(world, "player", "conductor_wire", 2);
 
-		expect(canAfford(world, "player", { ferrous_scrap: 3, conductor_wire: 2 })).toBe(true);
-		expect(canAfford(world, "player", { ferrous_scrap: 3, conductor_wire: 3 })).toBe(false);
+		expect(
+			canAfford(world, "player", { ferrous_scrap: 3, conductor_wire: 2 }),
+		).toBe(true);
+		expect(
+			canAfford(world, "player", { ferrous_scrap: 3, conductor_wire: 3 }),
+		).toBe(false);
 	});
 });
 
@@ -738,8 +1259,12 @@ describe("resourceSystem — CRUD behavior", () => {
 
 describe("territorySystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("unit claims territory within TERRITORY_UNIT_RADIUS", () => {
 		world.spawn(
@@ -758,7 +1283,15 @@ describe("territorySystem — behavior", () => {
 
 	it("building claims territory within TERRITORY_BUILDING_RADIUS", () => {
 		world.spawn(
-			Building({ tileX: 8, tileZ: 8, buildingType: "storage_hub", modelId: "s", factionId: "reclaimers", hp: 40, maxHp: 40 }),
+			Building({
+				tileX: 8,
+				tileZ: 8,
+				buildingType: "storage_hub",
+				modelId: "s",
+				factionId: "reclaimers",
+				hp: 40,
+				maxHp: 40,
+			}),
 		);
 
 		const territory = computeTerritory(world, 16, 16);
@@ -796,8 +1329,13 @@ describe("territorySystem — behavior", () => {
 
 describe("victorySystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
-	beforeEach(() => { world = createWorld(); spawnBoard(world); });
-	afterEach(() => { world.destroy(); });
+	beforeEach(() => {
+		world = createWorld();
+		spawnBoard(world);
+	});
+	afterEach(() => {
+		world.destroy();
+	});
 
 	it("defeat when all player units eliminated", () => {
 		spawnFaction(world, "player", true);
@@ -815,7 +1353,15 @@ describe("victorySystem — behavior", () => {
 		world.spawn(
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 2,
+				maxAp: 2,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		const result = checkVictoryConditions(world);

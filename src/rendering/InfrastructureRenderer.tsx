@@ -19,11 +19,11 @@ import { Clone, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { type ReactNode, Suspense, useEffect, useMemo, useRef } from "react";
-import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
 import { seedToFloat } from "../ecs/terrain/cluster";
+import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import {
 	getAllInfraModelUrls,
 	INFRA_ANTENNA_MODELS,
@@ -61,13 +61,24 @@ const GATEWAY_DENSITY = 0.3;
 // Deterministic model picker
 // ---------------------------------------------------------------------------
 
-function pickModel(models: readonly string[], seed: string, x: number, z: number): string {
+function pickModel(
+	models: readonly string[],
+	seed: string,
+	x: number,
+	z: number,
+): string {
 	const hash = seedToFloat(seed + String(x * 31 + z * 17));
 	const idx = Math.floor(hash * models.length) % models.length;
 	return models[idx]!;
 }
 
-function shouldPlace(density: number, seed: string, x: number, z: number, salt: string): boolean {
+function shouldPlace(
+	density: number,
+	seed: string,
+	x: number,
+	z: number,
+	salt: string,
+): boolean {
 	return seedToFloat(seed + salt + String(x * 53 + z * 37)) < density;
 }
 
@@ -75,7 +86,12 @@ function shouldPlace(density: number, seed: string, x: number, z: number, salt: 
 // Cardinal directions and neighbor analysis
 // ---------------------------------------------------------------------------
 
-const CARDINALS: [number, number][] = [[0, -1], [0, 1], [1, 0], [-1, 0]];
+const CARDINALS: [number, number][] = [
+	[0, -1],
+	[0, 1],
+	[1, 0],
+	[-1, 0],
+];
 
 interface TileAnalysis {
 	isPassable: boolean;
@@ -89,7 +105,8 @@ interface TileAnalysis {
 }
 
 function analyzeTile(
-	x: number, z: number,
+	x: number,
+	z: number,
 	board: GeneratedBoard,
 ): TileAnalysis {
 	const { width, height } = board.config;
@@ -132,8 +149,8 @@ function analyzeTile(
 // ---------------------------------------------------------------------------
 
 function dirToRotation(dx: number, dz: number): number {
-	if (dz === -1) return 0;           // north
-	if (dz === 1) return Math.PI;      // south
+	if (dz === -1) return 0; // north
+	if (dz === 1) return Math.PI; // south
 	if (dx === 1) return -Math.PI / 2; // east
 	if (dx === -1) return Math.PI / 2; // west
 	return 0;
@@ -174,7 +191,10 @@ function computeInfraInstances(
 
 			if (analysis.isPassable) {
 				// PIPE: corridor tile with exactly 1 structural neighbor
-				if (analysis.structuralNeighborCount === 1 && shouldPlace(PIPE_DENSITY, seed, x, z, "pipe")) {
+				if (
+					analysis.structuralNeighborCount === 1 &&
+					shouldPlace(PIPE_DENSITY, seed, x, z, "pipe")
+				) {
 					const [dx, dz] = analysis.structuralDirs[0];
 					const modelPath = pickModel(INFRA_PIPE_MODELS, seed, x, z);
 					instances.push({
@@ -187,7 +207,10 @@ function computeInfraInstances(
 				}
 
 				// LAMP: intersection with 3+ passable neighbors
-				else if (analysis.passableNeighborCount >= 3 && shouldPlace(LAMP_DENSITY, seed, x, z, "lamp")) {
+				else if (
+					analysis.passableNeighborCount >= 3 &&
+					shouldPlace(LAMP_DENSITY, seed, x, z, "lamp")
+				) {
 					const modelPath = pickModel(INFRA_LIGHT_MODELS, seed, x, z);
 					instances.push({
 						url: MODEL_BASE + modelPath,
@@ -199,12 +222,19 @@ function computeInfraInstances(
 				}
 
 				// SUPPORT: long corridor (2 passable neighbors on opposite sides)
-				else if (analysis.passableNeighborCount === 2 && analysis.structuralNeighborCount >= 1) {
+				else if (
+					analysis.passableNeighborCount === 2 &&
+					analysis.structuralNeighborCount >= 1
+				) {
 					const dirs = analysis.passableDirs;
-					const isOpposite = dirs.length === 2 &&
+					const isOpposite =
+						dirs.length === 2 &&
 						dirs[0][0] + dirs[1][0] === 0 &&
 						dirs[0][1] + dirs[1][1] === 0;
-					if (isOpposite && shouldPlace(SUPPORT_DENSITY, seed, x, z, "support")) {
+					if (
+						isOpposite &&
+						shouldPlace(SUPPORT_DENSITY, seed, x, z, "support")
+					) {
 						const modelPath = pickModel(INFRA_SUPPORT_MODELS, seed, x, z);
 						instances.push({
 							url: MODEL_BASE + modelPath,
@@ -219,7 +249,8 @@ function computeInfraInstances(
 				// GATEWAY: doorway tile (2 structural neighbors on opposite sides)
 				if (analysis.structuralNeighborCount === 2) {
 					const dirs = analysis.structuralDirs;
-					const isOpposite = dirs.length === 2 &&
+					const isOpposite =
+						dirs.length === 2 &&
 						dirs[0][0] + dirs[1][0] === 0 &&
 						dirs[0][1] + dirs[1][1] === 0;
 					if (isOpposite && shouldPlace(GATEWAY_DENSITY, seed, x, z, "gate")) {
@@ -238,9 +269,10 @@ function computeInfraInstances(
 			// ANTENNA / POWER: structural tile at boundary (has passable neighbor)
 			if (analysis.isStructural && analysis.passableNeighborCount >= 1) {
 				if (shouldPlace(ANTENNA_DENSITY, seed, x, z, "antenna")) {
-					const models = seedToFloat(seed + `at${x},${z}`) < 0.5
-						? INFRA_ANTENNA_MODELS
-						: INFRA_POWER_MODELS;
+					const models =
+						seedToFloat(seed + `at${x},${z}`) < 0.5
+							? INFRA_ANTENNA_MODELS
+							: INFRA_POWER_MODELS;
 					const modelPath = pickModel(models, seed, x, z);
 					const [dx, dz] = analysis.passableDirs[0];
 					instances.push({
@@ -273,7 +305,17 @@ function applyIndustrialMaterials(root: THREE.Object3D): void {
 	});
 }
 
-function InfraModel({ url, wx, wz, rotation }: { url: string; wx: number; wz: number; rotation: number }) {
+function InfraModel({
+	url,
+	wx,
+	wz,
+	rotation,
+}: {
+	url: string;
+	wx: number;
+	wz: number;
+	rotation: number;
+}) {
 	const { scene } = useGLTF(url);
 	const ref = useRef<THREE.Group>(null);
 
@@ -331,7 +373,10 @@ type InfrastructureRendererProps = {
 	world?: World;
 };
 
-export function InfrastructureRenderer({ board, world }: InfrastructureRendererProps) {
+export function InfrastructureRenderer({
+	board,
+	world,
+}: InfrastructureRendererProps) {
 	const instances = useMemo(() => {
 		const explored = world ? buildExploredSet(world) : undefined;
 		return computeInfraInstances(board, explored);

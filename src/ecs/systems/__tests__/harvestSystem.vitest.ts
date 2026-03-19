@@ -14,7 +14,14 @@ describe("harvestSystem", () => {
 
 	function spawnFaction(id: string, isPlayer: boolean) {
 		return world.spawn(
-			Faction({ id, displayName: id, color: 0xffffff, persona: "otter", isPlayer, aggression: 0 }),
+			Faction({
+				id,
+				displayName: id,
+				color: 0xffffff,
+				persona: "otter",
+				isPlayer,
+				aggression: 0,
+			}),
 			ResourcePool({ scrap_metal: 10, ferrous_scrap: 5 }),
 		);
 	}
@@ -28,7 +35,13 @@ describe("harvestSystem", () => {
 
 	function spawnDeposit(material = "scrap_metal" as const, amount = 10) {
 		return world.spawn(
-			ResourceDeposit({ tileX: 3, tileZ: 5, material, amount, depleted: false }),
+			ResourceDeposit({
+				tileX: 3,
+				tileZ: 5,
+				material,
+				amount,
+				depleted: false,
+			}),
 		);
 	}
 
@@ -36,7 +49,13 @@ describe("harvestSystem", () => {
 		spawnFaction("player", true);
 		const unit = spawnUnit("player");
 		unit.add(
-			UnitHarvest({ depositEntityId: 999, ticksRemaining: 3, totalTicks: 3, targetX: 0, targetZ: 0 }),
+			UnitHarvest({
+				depositEntityId: 999,
+				ticksRemaining: 3,
+				totalTicks: 3,
+				targetX: 0,
+				targetZ: 0,
+			}),
 		);
 
 		harvestSystem(world);
@@ -49,7 +68,13 @@ describe("harvestSystem", () => {
 		spawnFaction("player", true);
 		const unit = spawnUnit("player");
 		unit.add(
-			UnitHarvest({ depositEntityId: 999, ticksRemaining: 3, totalTicks: 3, targetX: 0, targetZ: 0 }),
+			UnitHarvest({
+				depositEntityId: 999,
+				ticksRemaining: 3,
+				totalTicks: 3,
+				targetX: 0,
+				targetZ: 0,
+			}),
 		);
 
 		harvestSystem(world);
@@ -135,7 +160,14 @@ describe("startHarvest", () => {
 
 	function spawnFaction(id: string, isPlayer: boolean) {
 		return world.spawn(
-			Faction({ id, displayName: id, color: 0xffffff, persona: "otter", isPlayer, aggression: 0 }),
+			Faction({
+				id,
+				displayName: id,
+				color: 0xffffff,
+				persona: "otter",
+				isPlayer,
+				aggression: 0,
+			}),
 			ResourcePool({ scrap_metal: 10 }),
 		);
 	}
@@ -149,7 +181,13 @@ describe("startHarvest", () => {
 
 	function spawnDeposit(material = "scrap_metal" as const, amount = 10) {
 		return world.spawn(
-			ResourceDeposit({ tileX: 3, tileZ: 5, material, amount, depleted: false }),
+			ResourceDeposit({
+				tileX: 3,
+				tileZ: 5,
+				material,
+				amount,
+				depleted: false,
+			}),
 		);
 	}
 
@@ -191,7 +229,13 @@ describe("startHarvest", () => {
 		spawnFaction("player", true);
 		const unit = spawnUnit("player");
 		const deposit = world.spawn(
-			ResourceDeposit({ tileX: 1, tileZ: 1, material: "scrap_metal", amount: 0, depleted: true }),
+			ResourceDeposit({
+				tileX: 1,
+				tileZ: 1,
+				material: "scrap_metal",
+				amount: 0,
+				depleted: true,
+			}),
 		);
 
 		expect(startHarvest(world, unit.id(), deposit.id())).toBe(false);

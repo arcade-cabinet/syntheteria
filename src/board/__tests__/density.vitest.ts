@@ -15,11 +15,11 @@
 
 import { createWorld } from "koota";
 import { describe, expect, it } from "vitest";
-import { generateBoard } from "../generator";
-import type { BoardConfig } from "../types";
+import { placeSalvageProps } from "../../ecs/systems/salvagePlacement";
 import { isPassableFloor } from "../../ecs/terrain/types";
 import { SalvageProp } from "../../ecs/traits/salvage";
-import { placeSalvageProps } from "../../ecs/systems/salvagePlacement";
+import { generateBoard } from "../generator";
+import type { BoardConfig } from "../types";
 
 const SEEDS = ["density-alpha", "density-beta", "density-gamma"];
 
@@ -46,7 +46,7 @@ describe("density verification", () => {
 			expect(
 				ratio,
 				`seed "${seed}": structural_mass ${(ratio * 100).toFixed(1)}% — expected 40-75%`,
-			).toBeGreaterThanOrEqual(0.40);
+			).toBeGreaterThanOrEqual(0.4);
 			expect(
 				ratio,
 				`seed "${seed}": structural_mass ${(ratio * 100).toFixed(1)}% — expected 40-75%`,
@@ -87,7 +87,7 @@ describe("density verification", () => {
 			expect(
 				ratio,
 				`seed "${seed}": salvage ${(ratio * 100).toFixed(1)}% of passable — expected 15-30%`,
-			).toBeLessThanOrEqual(0.30);
+			).toBeLessThanOrEqual(0.3);
 		}
 	});
 
@@ -109,7 +109,7 @@ describe("density verification", () => {
 			expect(
 				ratio,
 				`seed "${seed}": passable ${(ratio * 100).toFixed(1)}% — expected >= 20%`,
-			).toBeGreaterThanOrEqual(0.20);
+			).toBeGreaterThanOrEqual(0.2);
 		}
 	});
 });

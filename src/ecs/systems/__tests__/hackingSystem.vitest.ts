@@ -4,8 +4,18 @@ import { Building, Powered } from "../../traits/building";
 import { Faction } from "../../traits/faction";
 import { ResourcePool } from "../../traits/resource";
 import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../../traits/unit";
-import { HackProgress, cancelHack, runHackProgress, startHack, startUnitHack } from "../hackingSystem";
-import { HACKING_AP_COST, HACKING_BASE_DIFFICULTY, HACKING_RANGE } from "../hackingTypes";
+import {
+	cancelHack,
+	HackProgress,
+	runHackProgress,
+	startHack,
+	startUnitHack,
+} from "../hackingSystem";
+import {
+	HACKING_AP_COST,
+	HACKING_BASE_DIFFICULTY,
+	HACKING_RANGE,
+} from "../hackingTypes";
 
 describe("hackingSystem", () => {
 	let world: ReturnType<typeof createWorld>;
@@ -27,7 +37,17 @@ describe("hackingSystem", () => {
 		ap = 3,
 	) {
 		return world.spawn(
-			UnitStats({ hp: 10, maxHp: 10, ap, maxAp: 3, scanRange: 4, attack: 1, defense: 0, attackRange: 1, weightClass: "medium" }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 1,
+				defense: 0,
+				attackRange: 1,
+				weightClass: "medium",
+			}),
 			UnitFaction({ factionId }),
 			UnitPos({ tileX, tileZ }),
 		);
@@ -41,20 +61,47 @@ describe("hackingSystem", () => {
 		powered = true,
 	) {
 		const entity = world.spawn(
-			Building({ tileX, tileZ, buildingType: buildingType as any, modelId: "test", factionId, hp: 50, maxHp: 50 }),
+			Building({
+				tileX,
+				tileZ,
+				buildingType: buildingType as any,
+				modelId: "test",
+				factionId,
+				hp: 50,
+				maxHp: 50,
+			}),
 		);
 		if (powered) entity.add(Powered);
 		return entity;
 	}
 
-	function spawnFactionWithResources(factionId: string, resources: Partial<Record<string, number>> = {}) {
+	function spawnFactionWithResources(
+		factionId: string,
+		resources: Partial<Record<string, number>> = {},
+	) {
 		return world.spawn(
-			Faction({ id: factionId, displayName: factionId, color: 0xffffff, persona: "raven", isPlayer: false, aggression: 0 }),
+			Faction({
+				id: factionId,
+				displayName: factionId,
+				color: 0xffffff,
+				persona: "raven",
+				isPlayer: false,
+				aggression: 0,
+			}),
 			ResourcePool({
-				ferrous_scrap: 0, alloy_stock: 0, polymer_salvage: 0, conductor_wire: 0,
-				electrolyte: 0, silicon_wafer: 0, storm_charge: 0, el_crystal: 0,
-				scrap_metal: 0, e_waste: 0, intact_components: 0,
-				thermal_fluid: 0, depth_salvage: 0,
+				ferrous_scrap: 0,
+				alloy_stock: 0,
+				polymer_salvage: 0,
+				conductor_wire: 0,
+				electrolyte: 0,
+				silicon_wafer: 0,
+				storm_charge: 0,
+				el_crystal: 0,
+				scrap_metal: 0,
+				e_waste: 0,
+				intact_components: 0,
+				thermal_fluid: 0,
+				depth_salvage: 0,
 				...resources,
 			}),
 		);
@@ -69,7 +116,17 @@ describe("hackingSystem", () => {
 		maxAp = 2,
 	) {
 		return world.spawn(
-			UnitStats({ hp: 12, maxHp: 12, ap, maxAp, scanRange: 3, attack: 4, defense: 2, attackRange: 1, weightClass: "medium" }),
+			UnitStats({
+				hp: 12,
+				maxHp: 12,
+				ap,
+				maxAp,
+				scanRange: 3,
+				attack: 4,
+				defense: 2,
+				attackRange: 1,
+				weightClass: "medium",
+			}),
 			UnitFaction({ factionId }),
 			UnitPos({ tileX, tileZ }),
 			UnitVisual({ modelId, scale: 1.0, facingAngle: 0 }),
@@ -83,7 +140,12 @@ describe("hackingSystem", () => {
 			const hacker = spawnHacker("volt_collective", 3, 3, 3);
 			const target = spawnBuilding("iron_creed");
 
-			const result = startHack(world, hacker.id(), target.id(), "disable_building");
+			const result = startHack(
+				world,
+				hacker.id(),
+				target.id(),
+				"disable_building",
+			);
 			expect(result).toEqual({ ok: true });
 		});
 
@@ -91,7 +153,12 @@ describe("hackingSystem", () => {
 			const hacker = spawnHacker("player", 3, 3, 3);
 			const target = spawnBuilding("iron_creed");
 
-			const result = startHack(world, hacker.id(), target.id(), "disable_building");
+			const result = startHack(
+				world,
+				hacker.id(),
+				target.id(),
+				"disable_building",
+			);
 			expect(result).toEqual({ ok: true });
 		});
 
@@ -129,7 +196,12 @@ describe("hackingSystem", () => {
 			const hacker = spawnHacker("volt_collective", 3, 3, 0);
 			const target = spawnBuilding("iron_creed");
 
-			const result = startHack(world, hacker.id(), target.id(), "disable_building");
+			const result = startHack(
+				world,
+				hacker.id(),
+				target.id(),
+				"disable_building",
+			);
 			expect(result).toEqual({ ok: false, reason: "no_ap" });
 		});
 
@@ -137,7 +209,12 @@ describe("hackingSystem", () => {
 			const hacker = spawnHacker("iron_creed", 3, 3, 3);
 			const target = spawnBuilding("signal_choir");
 
-			const result = startHack(world, hacker.id(), target.id(), "disable_building");
+			const result = startHack(
+				world,
+				hacker.id(),
+				target.id(),
+				"disable_building",
+			);
 			expect(result).toEqual({ ok: false, reason: "not_volt" });
 		});
 
@@ -145,7 +222,12 @@ describe("hackingSystem", () => {
 			const hacker = spawnHacker("volt_collective", 3, 3, 3);
 			const target = spawnBuilding("volt_collective");
 
-			const result = startHack(world, hacker.id(), target.id(), "disable_building");
+			const result = startHack(
+				world,
+				hacker.id(),
+				target.id(),
+				"disable_building",
+			);
 			expect(result).toEqual({ ok: false, reason: "own_building" });
 		});
 
@@ -155,7 +237,12 @@ describe("hackingSystem", () => {
 			const target2 = spawnBuilding("iron_creed", 3, 2);
 
 			startHack(world, hacker.id(), target1.id(), "disable_building");
-			const result = startHack(world, hacker.id(), target2.id(), "disable_building");
+			const result = startHack(
+				world,
+				hacker.id(),
+				target2.id(),
+				"disable_building",
+			);
 			expect(result).toEqual({ ok: false, reason: "already_hacking" });
 		});
 
@@ -170,7 +257,12 @@ describe("hackingSystem", () => {
 			// Place building beyond HACKING_RANGE (manhattan distance > 3)
 			const target = spawnBuilding("iron_creed", HACKING_RANGE + 1, 0);
 
-			const result = startHack(world, hacker.id(), target.id(), "disable_building");
+			const result = startHack(
+				world,
+				hacker.id(),
+				target.id(),
+				"disable_building",
+			);
 			expect(result).toEqual({ ok: false, reason: "out_of_range" });
 		});
 
@@ -178,7 +270,12 @@ describe("hackingSystem", () => {
 			const hacker = spawnHacker("volt_collective", 0, 0, 3);
 			const target = spawnBuilding("iron_creed", HACKING_RANGE, 0);
 
-			const result = startHack(world, hacker.id(), target.id(), "disable_building");
+			const result = startHack(
+				world,
+				hacker.id(),
+				target.id(),
+				"disable_building",
+			);
 			expect(result).toEqual({ ok: true });
 		});
 
@@ -186,7 +283,12 @@ describe("hackingSystem", () => {
 			const hacker = spawnHacker("volt_collective", 3, 3, 3);
 			const target = spawnBuilding("iron_creed", 2, 2, "storage_hub");
 
-			const result = startHack(world, hacker.id(), target.id(), "convert_turret");
+			const result = startHack(
+				world,
+				hacker.id(),
+				target.id(),
+				"convert_turret",
+			);
 			expect(result).toEqual({ ok: false, reason: "invalid_hack_type" });
 		});
 
@@ -194,7 +296,12 @@ describe("hackingSystem", () => {
 			const hacker = spawnHacker("volt_collective", 3, 3, 3);
 			const target = spawnBuilding("iron_creed", 2, 2, "defense_turret");
 
-			const result = startHack(world, hacker.id(), target.id(), "convert_turret");
+			const result = startHack(
+				world,
+				hacker.id(),
+				target.id(),
+				"convert_turret",
+			);
 			expect(result).toEqual({ ok: true });
 		});
 	});
@@ -273,7 +380,10 @@ describe("hackingSystem", () => {
 			startHack(world, hacker2.id(), target2.id(), "disable_building");
 
 			// Make hacker1's hack complete next tick, hacker2 still in progress
-			hacker1.set(HackProgress, { ...hacker1.get(HackProgress)!, turnsRemaining: 1 });
+			hacker1.set(HackProgress, {
+				...hacker1.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 
 			const completed = runHackProgress(world);
 			expect(completed).toBe(1);
@@ -292,7 +402,10 @@ describe("hackingSystem", () => {
 
 			startHack(world, hacker.id(), target.id(), "disable_building");
 			// Fast-forward to completion
-			hacker.set(HackProgress, { ...hacker.get(HackProgress)!, turnsRemaining: 1 });
+			hacker.set(HackProgress, {
+				...hacker.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 			runHackProgress(world);
 
 			expect(target.has(Powered)).toBe(false);
@@ -303,21 +416,30 @@ describe("hackingSystem", () => {
 			const target = spawnBuilding("iron_creed", 2, 2, "storage_hub", false);
 
 			startHack(world, hacker.id(), target.id(), "disable_building");
-			hacker.set(HackProgress, { ...hacker.get(HackProgress)!, turnsRemaining: 1 });
+			hacker.set(HackProgress, {
+				...hacker.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 
 			// Should not throw
 			expect(() => runHackProgress(world)).not.toThrow();
 		});
 
 		it("steal_resources transfers resources from target faction to hacker faction", () => {
-			spawnFactionWithResources("iron_creed", { ferrous_scrap: 10, alloy_stock: 3 });
+			spawnFactionWithResources("iron_creed", {
+				ferrous_scrap: 10,
+				alloy_stock: 3,
+			});
 			spawnFactionWithResources("volt_collective", { ferrous_scrap: 2 });
 
 			const hacker = spawnHacker("volt_collective", 3, 3, 3);
 			const target = spawnBuilding("iron_creed");
 
 			startHack(world, hacker.id(), target.id(), "steal_resources");
-			hacker.set(HackProgress, { ...hacker.get(HackProgress)!, turnsRemaining: 1 });
+			hacker.set(HackProgress, {
+				...hacker.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 			runHackProgress(world);
 
 			// Check iron_creed lost resources
@@ -346,7 +468,10 @@ describe("hackingSystem", () => {
 			const target = spawnBuilding("iron_creed");
 
 			startHack(world, hacker.id(), target.id(), "steal_resources");
-			hacker.set(HackProgress, { ...hacker.get(HackProgress)!, turnsRemaining: 1 });
+			hacker.set(HackProgress, {
+				...hacker.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 
 			const completed = runHackProgress(world);
 			expect(completed).toBe(1);
@@ -358,7 +483,10 @@ describe("hackingSystem", () => {
 			const target = spawnBuilding("iron_creed", 2, 2, "defense_turret");
 
 			startHack(world, hacker.id(), target.id(), "convert_turret");
-			hacker.set(HackProgress, { ...hacker.get(HackProgress)!, turnsRemaining: 1 });
+			hacker.set(HackProgress, {
+				...hacker.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 			runHackProgress(world);
 
 			const building = target.get(Building)!;
@@ -370,7 +498,10 @@ describe("hackingSystem", () => {
 			const target = spawnBuilding("iron_creed");
 
 			startHack(world, hacker.id(), target.id(), "disable_building");
-			hacker.set(HackProgress, { ...hacker.get(HackProgress)!, turnsRemaining: 1 });
+			hacker.set(HackProgress, {
+				...hacker.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 
 			// Destroy target before hack completes
 			target.destroy();
@@ -485,7 +616,10 @@ describe("hackingSystem", () => {
 			const target = spawnTargetUnit("el_cult", 2, 0, "cult_infantry");
 
 			startUnitHack(world, hacker.id(), target.id());
-			hacker.set(HackProgress, { ...hacker.get(HackProgress)!, turnsRemaining: 1 });
+			hacker.set(HackProgress, {
+				...hacker.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 			runHackProgress(world);
 
 			expect(target.get(UnitFaction)!.factionId).toBe("player");
@@ -496,7 +630,10 @@ describe("hackingSystem", () => {
 			const target = spawnTargetUnit("el_cult", 2, 0, "cult_ranged", 2, 2);
 
 			startUnitHack(world, hacker.id(), target.id());
-			hacker.set(HackProgress, { ...hacker.get(HackProgress)!, turnsRemaining: 1 });
+			hacker.set(HackProgress, {
+				...hacker.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 			runHackProgress(world);
 
 			const stats = target.get(UnitStats)!;
@@ -508,7 +645,10 @@ describe("hackingSystem", () => {
 			const target = spawnTargetUnit("el_cult", 2, 0, "cult_cavalry", 4, 4);
 
 			startUnitHack(world, hacker.id(), target.id());
-			hacker.set(HackProgress, { ...hacker.get(HackProgress)!, turnsRemaining: 1 });
+			hacker.set(HackProgress, {
+				...hacker.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 			runHackProgress(world);
 
 			const stats = target.get(UnitStats)!;
@@ -522,7 +662,10 @@ describe("hackingSystem", () => {
 			const target = spawnTargetUnit("el_cult", 2, 0, "cult_infantry");
 
 			startUnitHack(world, hacker.id(), target.id());
-			hacker.set(HackProgress, { ...hacker.get(HackProgress)!, turnsRemaining: 1 });
+			hacker.set(HackProgress, {
+				...hacker.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 			runHackProgress(world);
 
 			// Model unchanged — unit keeps its visual identity
@@ -534,7 +677,10 @@ describe("hackingSystem", () => {
 			const target = spawnTargetUnit("el_cult", 2, 0);
 
 			startUnitHack(world, hacker.id(), target.id());
-			hacker.set(HackProgress, { ...hacker.get(HackProgress)!, turnsRemaining: 1 });
+			hacker.set(HackProgress, {
+				...hacker.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 
 			target.destroy();
 
@@ -547,7 +693,10 @@ describe("hackingSystem", () => {
 			const target = spawnTargetUnit("el_cult", 2, 0, "cult_ranged");
 
 			startUnitHack(world, hacker.id(), target.id());
-			hacker.set(HackProgress, { ...hacker.get(HackProgress)!, turnsRemaining: 1 });
+			hacker.set(HackProgress, {
+				...hacker.get(HackProgress)!,
+				turnsRemaining: 1,
+			});
 			runHackProgress(world);
 
 			expect(target.get(UnitFaction)!.factionId).toBe("iron_creed");

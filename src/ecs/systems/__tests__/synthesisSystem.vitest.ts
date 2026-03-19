@@ -5,9 +5,9 @@ import { Faction } from "../../traits/faction";
 import { ResourcePool } from "../../traits/resource";
 import {
 	FUSION_RECIPES,
-	SynthesisQueue,
 	queueSynthesis,
 	runSynthesis,
+	SynthesisQueue,
 } from "../synthesisSystem";
 
 function spawnFaction(

@@ -8,10 +8,10 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { movementCost, reachableTiles } from "../../board/adjacency";
-import { buildNavGraph, tileIndex } from "../../ai/navigation/boardNavGraph";
-import type { TileData, GeneratedBoard, BoardConfig } from "../../board/types";
 import type { Edge } from "yuka";
+import { buildNavGraph, tileIndex } from "../../ai/navigation/boardNavGraph";
+import { movementCost, reachableTiles } from "../../board/adjacency";
+import type { BoardConfig, GeneratedBoard, TileData } from "../../board/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -30,8 +30,17 @@ function makeTile(overrides: Partial<TileData> = {}): TileData {
 	};
 }
 
-function makeSmallBoard(tiles: TileData[][], width: number, height: number): GeneratedBoard {
-	const config: BoardConfig = { width, height, seed: "test", difficulty: "normal" };
+function makeSmallBoard(
+	tiles: TileData[][],
+	width: number,
+	height: number,
+): GeneratedBoard {
+	const config: BoardConfig = {
+		width,
+		height,
+		seed: "test",
+		difficulty: "normal",
+	};
 	return { config, tiles };
 }
 

@@ -18,10 +18,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { sphereRadius } from "./boardGeometry";
-import {
-	globeFragmentShader,
-	globeVertexShader,
-} from "./globe/shaders";
+import { globeFragmentShader, globeVertexShader } from "./globe/shaders";
 
 // ── LOD distance thresholds ──────────────────────────────────────────────────
 // Expressed as multiples of the sphere radius.
@@ -85,7 +82,13 @@ export function LodGlobe({ boardWidth, boardHeight }: LodGlobeProps) {
 		const ratio = dist / R;
 
 		// Smoothstep crossfade between NEAR and FAR
-		const t = Math.max(0, Math.min(1, (ratio - LOD_NEAR_FACTOR) / (LOD_FAR_FACTOR - LOD_NEAR_FACTOR)));
+		const t = Math.max(
+			0,
+			Math.min(
+				1,
+				(ratio - LOD_NEAR_FACTOR) / (LOD_FAR_FACTOR - LOD_NEAR_FACTOR),
+			),
+		);
 		// Smooth hermite interpolation (same as GLSL smoothstep)
 		const opacity = t * t * (3 - 2 * t);
 		uniforms.uOpacity.value = opacity;

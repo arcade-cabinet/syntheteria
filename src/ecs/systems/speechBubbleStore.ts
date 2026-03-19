@@ -11,7 +11,10 @@
  *   4. Renderer reads `getActiveSpeech()` each frame
  */
 
-import { SPEECH_BUBBLE_DURATION_TURNS, SPEECH_COOLDOWN_TURNS } from "../narrative/speechProfiles";
+import {
+	SPEECH_BUBBLE_DURATION_TURNS,
+	SPEECH_COOLDOWN_TURNS,
+} from "../narrative/speechProfiles";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -50,7 +53,11 @@ function notify() {
  * Trigger a speech bubble for a unit. Respects cooldown — silently
  * skips if the unit spoke too recently.
  */
-export function triggerSpeech(entityId: number, factionId: string, text: string): void {
+export function triggerSpeech(
+	entityId: number,
+	factionId: string,
+	text: string,
+): void {
 	const now = Date.now();
 
 	// Check cooldown

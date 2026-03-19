@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { CultStructure } from "../../ecs/traits/cult";
 import {
 	buildCultDomeData,
-	SECT_DOME_COLORS,
 	type CultDomeData,
+	SECT_DOME_COLORS,
 } from "../CultDomeRenderer";
 
 describe("CultDomeRenderer", () => {
@@ -17,7 +17,12 @@ describe("CultDomeRenderer", () => {
 		world.destroy();
 	});
 
-	function spawnAltar(x: number, z: number, faction: string, corruptionRadius = 3) {
+	function spawnAltar(
+		x: number,
+		z: number,
+		faction: string,
+		corruptionRadius = 3,
+	) {
 		return world.spawn(
 			CultStructure({
 				tileX: x,

@@ -10,24 +10,28 @@
 
 import type { World } from "koota";
 import type { GeneratedBoard } from "../board/types";
-import type { ClimateProfile, Difficulty, FactionSlot, StormProfile } from "../world/config";
+import type {
+	ClimateProfile,
+	Difficulty,
+	FactionSlot,
+	StormProfile,
+} from "../world/config";
 import { initFactions } from "./factions/init";
 import {
 	buildPlacementFlags,
-	placeRobots,
 	computeSpawnCenters,
+	placeRobots,
 	type SimpleBoardInfo,
 } from "./robots/placement";
 import { placeStarterBuildings } from "./systems/buildingPlacement";
 import { revealFog } from "./systems/fogRevealSystem";
 import { runPowerGrid } from "./systems/powerSystem";
 import { placeSalvageProps } from "./systems/salvagePlacement";
-import { tileFloorProps, TileFloor } from "./terrain";
+import { TileFloor, tileFloorProps } from "./terrain";
 import { Board } from "./traits/board";
 import { ResourceDeposit } from "./traits/resource";
 import { Tile, TileHighlight } from "./traits/tile";
 import { UnitPos, UnitStats } from "./traits/unit";
-
 
 export interface InitOptions {
 	climateProfile?: ClimateProfile;
@@ -37,7 +41,11 @@ export interface InitOptions {
 	factionSlots?: FactionSlot[];
 }
 
-export function initWorldFromBoard(world: World, board: GeneratedBoard, opts: InitOptions = {}): void {
+export function initWorldFromBoard(
+	world: World,
+	board: GeneratedBoard,
+	opts: InitOptions = {},
+): void {
 	const { width, height, seed } = board.config;
 	const climateProfile = opts.climateProfile ?? "temperate";
 	const stormProfile = opts.stormProfile ?? "volatile";
@@ -45,13 +53,25 @@ export function initWorldFromBoard(world: World, board: GeneratedBoard, opts: In
 	const factionSlots = opts.factionSlots;
 
 	// Derive player and active faction info from slots
-	const playerFactionId = factionSlots?.find((s) => s.role === "player")?.factionId ?? null;
+	const playerFactionId =
+		factionSlots?.find((s) => s.role === "player")?.factionId ?? null;
 	const activeFactionIds = factionSlots
 		? factionSlots.filter((s) => s.role !== "off").map((s) => s.factionId)
 		: ["reclaimers", "volt_collective", "signal_choir", "iron_creed"];
 
 	// Board singleton
-	world.spawn(Board({ width, height, seed, tileSizeM: 2.0, turn: 1, climateProfile, stormProfile, difficulty }));
+	world.spawn(
+		Board({
+			width,
+			height,
+			seed,
+			tileSizeM: 2.0,
+			turn: 1,
+			climateProfile,
+			stormProfile,
+			difficulty,
+		}),
+	);
 
 	// Tile entities
 	for (let z = 0; z < height; z++) {

@@ -90,9 +90,7 @@ export class TerritoryTracker {
 		for (const unit of units) {
 			const currentKey = `${unit.tileX},${unit.tileZ}`;
 			const prevKey = this.lastKnownPositions.get(unit.entityId);
-			const wasInTerritory = prevKey
-				? this.territory.has(prevKey)
-				: false;
+			const wasInTerritory = prevKey ? this.territory.has(prevKey) : false;
 			const isInTerritory = this.territory.has(currentKey);
 			const isOwnUnit = unit.factionId === this.factionId;
 

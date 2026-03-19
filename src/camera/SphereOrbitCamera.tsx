@@ -30,7 +30,10 @@ import {
 } from "react";
 import * as THREE from "three";
 import { sphereRadius, tileToSpherePos } from "../rendering/boardGeometry";
-import { registerCameraControls, unregisterCameraControls } from "./cameraStore";
+import {
+	registerCameraControls,
+	unregisterCameraControls,
+} from "./cameraStore";
 import type { CameraControls } from "./types";
 
 // ── Camera constants ──────────────────────────────────────────────────────────
@@ -44,7 +47,7 @@ export const FOV = 45;
  * MAX_ZOOM: far enough to see the whole planet.
  */
 export const MIN_ZOOM_FACTOR = 1.15; // 1.15x sphere radius = surface level
-export const MAX_ZOOM_FACTOR = 5.5;  // 5.5x sphere radius = full planet in viewport (strategic zoom)
+export const MAX_ZOOM_FACTOR = 5.5; // 5.5x sphere radius = full planet in viewport (strategic zoom)
 
 /** Default zoom: 1.8x radius — see a district-sized area. */
 export const DEFAULT_ZOOM_FACTOR = 1.8;
@@ -55,8 +58,8 @@ export const DEFAULT_ZOOM_FACTOR = 1.8;
  * We clamp to [~10°, ~170°] so the camera can reach both poles
  * but never goes to the exact singularity.
  */
-export const MIN_POLAR = Math.PI * 0.05;  // ~9° from north pole
-export const MAX_POLAR = Math.PI * 0.95;  // ~9° from south pole
+export const MIN_POLAR = Math.PI * 0.05; // ~9° from north pole
+export const MAX_POLAR = Math.PI * 0.95; // ~9° from south pole
 
 const KEY_ORBIT_SPEED = 1.5; // radians/sec for WASD orbit
 
@@ -87,7 +90,10 @@ export function SphereOrbitCamera({
 	const keys = useRef(new Set<string>());
 	const { camera } = useThree();
 
-	const R = useMemo(() => sphereRadius(boardWidth, boardHeight), [boardWidth, boardHeight]);
+	const R = useMemo(
+		() => sphereRadius(boardWidth, boardHeight),
+		[boardWidth, boardHeight],
+	);
 	const minDist = R * MIN_ZOOM_FACTOR;
 	const maxDist = R * MAX_ZOOM_FACTOR;
 	const defaultDist = R * DEFAULT_ZOOM_FACTOR;
@@ -103,7 +109,9 @@ export function SphereOrbitCamera({
 	// Camera position: along the spawn direction, at defaultDist from center
 	const startCamPos = useMemo(() => {
 		const len = Math.sqrt(
-			spawnPos.x * spawnPos.x + spawnPos.y * spawnPos.y + spawnPos.z * spawnPos.z,
+			spawnPos.x * spawnPos.x +
+				spawnPos.y * spawnPos.y +
+				spawnPos.z * spawnPos.z,
 		);
 		const scale = defaultDist / Math.max(len, 0.001);
 		return new THREE.Vector3(
@@ -128,9 +136,7 @@ export function SphereOrbitCamera({
 		const isTyping = (e: KeyboardEvent) => {
 			const t = e.target as HTMLElement;
 			return (
-				t.tagName === "INPUT" ||
-				t.tagName === "TEXTAREA" ||
-				t.isContentEditable
+				t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable
 			);
 		};
 		const down = (e: KeyboardEvent) => {
@@ -158,11 +164,7 @@ export function SphereOrbitCamera({
 				const len = Math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
 				const currentDist = ctrl.object.position.length();
 				const scale = currentDist / Math.max(len, 0.001);
-				ctrl.object.position.set(
-					pos.x * scale,
-					pos.y * scale,
-					pos.z * scale,
-				);
+				ctrl.object.position.set(pos.x * scale, pos.y * scale, pos.z * scale);
 				ctrl.object.lookAt(0, 0, 0);
 				ctrl.update();
 			},

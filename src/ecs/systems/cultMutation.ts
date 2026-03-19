@@ -43,7 +43,10 @@ function pickTier1BuffIndex(mutationSeed: number): number {
 	return Math.floor(rng() * TIER_1_BUFFS.length);
 }
 
-function pickTier2AbilityIndex(mutationSeed: number, tier1Index: number): number {
+function pickTier2AbilityIndex(
+	mutationSeed: number,
+	tier1Index: number,
+): number {
 	const rng = seededRng(`cult_mutation_t2_${mutationSeed}`);
 	// Pick from abilities, ensuring different index from tier 1 buff
 	let idx = Math.floor(rng() * TIER_2_ABILITIES.length);
@@ -53,7 +56,10 @@ function pickTier2AbilityIndex(mutationSeed: number, tier1Index: number): number
 	return idx;
 }
 
-function pickTier2SecondBuffIndex(mutationSeed: number, tier1Index: number): number {
+function pickTier2SecondBuffIndex(
+	mutationSeed: number,
+	tier1Index: number,
+): number {
 	const rng = seededRng(`cult_mutation_t2_buff_${mutationSeed}`);
 	// Pick a buff different from tier 1
 	let idx = Math.floor(rng() * TIER_1_BUFFS.length);
@@ -69,7 +75,7 @@ function pickTier2SecondBuffIndex(mutationSeed: number, tier1Index: number): num
 
 function applyBuff(
 	stats: { [k: string]: unknown },
-	buff: typeof TIER_1_BUFFS[number],
+	buff: (typeof TIER_1_BUFFS)[number],
 ): void {
 	(stats as Record<string, number>)[buff.stat] += buff.bonus;
 	if (buff.maxStat) {
@@ -109,7 +115,10 @@ export function tickCultMutations(world: World): void {
 			}
 			if (newTier >= 2 && oldTier < 2) {
 				const t1Idx = pickTier1BuffIndex(mutation.mutationSeed);
-				const t2BuffIdx = pickTier2SecondBuffIndex(mutation.mutationSeed, t1Idx);
+				const t2BuffIdx = pickTier2SecondBuffIndex(
+					mutation.mutationSeed,
+					t1Idx,
+				);
 				const secondBuff = TIER_1_BUFFS[t2BuffIdx];
 				applyBuff(stats as unknown as Record<string, unknown>, secondBuff);
 
@@ -140,7 +149,10 @@ export function tickCultMutations(world: World): void {
 		// Apply regen each turn if unit has regen ability
 		if (mutation.specialAbility === "regen" || (newTier >= 2 && oldTier >= 2)) {
 			const currentMutation = entity.get(CultMutation)!;
-			if (currentMutation.specialAbility === "regen" && stats.hp < stats.maxHp) {
+			if (
+				currentMutation.specialAbility === "regen" &&
+				stats.hp < stats.maxHp
+			) {
 				stats.hp = Math.min(stats.hp + 1, stats.maxHp);
 				entity.set(UnitStats, { ...stats });
 			}

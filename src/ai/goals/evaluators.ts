@@ -37,7 +37,12 @@ export interface TurnContext {
 	/** Current game turn (1-based). */
 	currentTurn: number;
 	/** Enemy positions remembered from perception (may include stale intel). */
-	rememberedEnemies: Array<{ entityId: number; x: number; z: number; factionId: string }>;
+	rememberedEnemies: Array<{
+		entityId: number;
+		x: number;
+		z: number;
+		factionId: string;
+	}>;
 	/** Faction's average unit position — centroid of owned units. */
 	factionCenter: { x: number; z: number };
 	/** Mineable tiles near faction units (for floor mining backstop). */
@@ -191,9 +196,10 @@ export class HarvestEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			const dist = manhattan(agent.tileX, agent.tileZ, dep.x, dep.z);
 			if (dist > agent.scanRange * 2) continue;
 			// Adjacent deposits are highly desirable; score tapers with distance
-			const score = dist <= 1
-				? 0.95
-				: Math.max(0, 0.85 * (1 - dist / (agent.scanRange * 2)));
+			const score =
+				dist <= 1
+					? 0.95
+					: Math.max(0, 0.85 * (1 - dist / (agent.scanRange * 2)));
 			if (score > best) best = score;
 		}
 		return best;
@@ -277,10 +283,14 @@ export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 
 		if (len > 0) {
 			// Push further in the same direction, clamped to board
-			const targetX = Math.max(0, Math.min(width - 1,
-				agent.tileX + Math.sign(dx) * 5));
-			const targetZ = Math.max(0, Math.min(height - 1,
-				agent.tileZ + Math.sign(dz) * 5));
+			const targetX = Math.max(
+				0,
+				Math.min(width - 1, agent.tileX + Math.sign(dx) * 5),
+			);
+			const targetZ = Math.max(
+				0,
+				Math.min(height - 1, agent.tileZ + Math.sign(dz) * 5),
+			);
 			agent.decidedAction = {
 				type: "move",
 				toX: targetX,
@@ -330,7 +340,10 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		// Time ramp: AI should build more as game progresses
 		const timeRamp = Math.min(1, _ctx.currentTurn / 20);
 
-		return Math.min(1, 0.45 + buildingBonus * 0.35 + motorPoolBonus + timeRamp * 0.15);
+		return Math.min(
+			1,
+			0.45 + buildingBonus * 0.35 + motorPoolBonus + timeRamp * 0.15,
+		);
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
@@ -375,14 +388,14 @@ export class BuildEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 export class ScoutEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	calculateDesirability(agent: SyntheteriaAgent): number {
 		const nearbyCount = _ctx.deposits.filter(
-			(d) => manhattan(agent.tileX, agent.tileZ, d.x, d.z) <= agent.scanRange * 2,
+			(d) =>
+				manhattan(agent.tileX, agent.tileZ, d.x, d.z) <= agent.scanRange * 2,
 		).length;
 
 		// After turn 10, scouting becomes relevant even if deposits are nearby
 		// — factions need to discover other factions, not just harvest
-		const timeBoost = _ctx.currentTurn > 10
-			? Math.min(0.4, (_ctx.currentTurn - 10) / 50)
-			: 0;
+		const timeBoost =
+			_ctx.currentTurn > 10 ? Math.min(0.4, (_ctx.currentTurn - 10) / 50) : 0;
 
 		// No enemies ever encountered — need to find them
 		const noEnemiesBoost =
@@ -395,7 +408,8 @@ export class ScoutEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			return Math.min(1, timeBoost + noEnemiesBoost);
 		}
 
-		if (_ctx.totalDeposits === 0) return Math.min(1, 0.1 + timeBoost + noEnemiesBoost);
+		if (_ctx.totalDeposits === 0)
+			return Math.min(1, 0.1 + timeBoost + noEnemiesBoost);
 
 		// No nearby deposits but some exist on the board — go find them
 		return Math.min(1, 0.6 + timeBoost + noEnemiesBoost);
@@ -403,7 +417,8 @@ export class ScoutEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 
 	setGoal(agent: SyntheteriaAgent): void {
 		// Priority 1: If no enemies encountered, explore toward distant quadrants
-		const noEnemies = _ctx.enemies.length === 0 && _ctx.rememberedEnemies.length === 0;
+		const noEnemies =
+			_ctx.enemies.length === 0 && _ctx.rememberedEnemies.length === 0;
 		if (noEnemies) {
 			const { width, height } = _ctx.boardSize;
 			const quadrants = [
@@ -484,7 +499,8 @@ export class FloorMineEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 
 		// Only desirable when no salvage deposits are nearby
 		const nearbyDeposits = _ctx.deposits.filter(
-			(d) => manhattan(agent.tileX, agent.tileZ, d.x, d.z) <= agent.scanRange * 2,
+			(d) =>
+				manhattan(agent.tileX, agent.tileZ, d.x, d.z) <= agent.scanRange * 2,
 		).length;
 
 		// If salvage exists nearby, prefer harvesting over mining
@@ -570,7 +586,16 @@ export function logEvaluatorChoice(
 ): void {
 	if (!_diagnosticsEnabled) return;
 
-	const names = ["Attack", "Chase", "Harvest", "Expand", "Build", "Scout", "FloorMine", "Idle"];
+	const names = [
+		"Attack",
+		"Chase",
+		"Harvest",
+		"Expand",
+		"Build",
+		"Scout",
+		"FloorMine",
+		"Idle",
+	];
 	const scores: string[] = [];
 	let bestIdx = 0;
 	let bestScore = -1;
@@ -579,7 +604,9 @@ export function logEvaluatorChoice(
 		const desirability = evaluators[i].calculateDesirability(agent);
 		const bias = evaluators[i].characterBias;
 		const effective = desirability * bias;
-		scores.push(`${names[i] ?? `E${i}`}=${effective.toFixed(2)}(d=${desirability.toFixed(2)}*b=${bias.toFixed(2)})`);
+		scores.push(
+			`${names[i] ?? `E${i}`}=${effective.toFixed(2)}(d=${desirability.toFixed(2)}*b=${bias.toFixed(2)})`,
+		);
 		if (effective > bestScore) {
 			bestScore = effective;
 			bestIdx = i;
@@ -588,6 +615,6 @@ export function logEvaluatorChoice(
 
 	console.log(
 		`[AI] ${agent.factionId} unit@(${agent.tileX},${agent.tileZ}): ` +
-		`CHOSE ${names[bestIdx] ?? `E${bestIdx}`} | ${scores.join(" ")}`,
+			`CHOSE ${names[bestIdx] ?? `E${bestIdx}`} | ${scores.join(" ")}`,
 	);
 }

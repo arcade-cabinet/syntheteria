@@ -15,8 +15,8 @@
  * All randomness via seededRng(seed + "_features").
  */
 
-import type { TileData } from "./types";
 import { seededRng } from "./noise";
+import type { TileData } from "./types";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -49,8 +49,8 @@ const TUNNEL_RATE = 0.03;
 
 const CARDINALS: readonly [number, number][] = [
 	[0, -1], // N
-	[1, 0],  // E
-	[0, 1],  // S
+	[1, 0], // E
+	[0, 1], // S
 	[-1, 0], // W
 ];
 
@@ -58,17 +58,38 @@ function inBounds(x: number, z: number, w: number, h: number): boolean {
 	return x >= 0 && x < w && z >= 0 && z < h;
 }
 
-function isWall(tiles: TileData[][], x: number, z: number, w: number, h: number): boolean {
+function isWall(
+	tiles: TileData[][],
+	x: number,
+	z: number,
+	w: number,
+	h: number,
+): boolean {
 	if (!inBounds(x, z, w, h)) return true; // out of bounds treated as wall
-	return tiles[z]![x]!.floorType === "structural_mass" || tiles[z]![x]!.floorType === "void_pit";
+	return (
+		tiles[z]![x]!.floorType === "structural_mass" ||
+		tiles[z]![x]!.floorType === "void_pit"
+	);
 }
 
-function isPassable(tiles: TileData[][], x: number, z: number, w: number, h: number): boolean {
+function isPassable(
+	tiles: TileData[][],
+	x: number,
+	z: number,
+	w: number,
+	h: number,
+): boolean {
 	if (!inBounds(x, z, w, h)) return false;
 	return tiles[z]![x]!.passable;
 }
 
-function countWallNeighbors(tiles: TileData[][], x: number, z: number, w: number, h: number): number {
+function countWallNeighbors(
+	tiles: TileData[][],
+	x: number,
+	z: number,
+	w: number,
+	h: number,
+): number {
 	let count = 0;
 	for (const [dx, dz] of CARDINALS) {
 		if (isWall(tiles, x + dx, z + dz, w, h)) count++;
@@ -126,7 +147,11 @@ interface BridgeCandidate {
 	axis: "ns" | "ew";
 }
 
-function findBridgeCandidates(tiles: TileData[][], w: number, h: number): BridgeCandidate[] {
+function findBridgeCandidates(
+	tiles: TileData[][],
+	w: number,
+	h: number,
+): BridgeCandidate[] {
 	const candidates: BridgeCandidate[] = [];
 
 	for (let z = 1; z < h - 1; z++) {
@@ -135,11 +160,17 @@ function findBridgeCandidates(tiles: TileData[][], w: number, h: number): Bridge
 			if (tile.floorType !== "structural_mass") continue;
 
 			// Check N-S passable on opposite sides
-			if (isPassable(tiles, x, z - 1, w, h) && isPassable(tiles, x, z + 1, w, h)) {
+			if (
+				isPassable(tiles, x, z - 1, w, h) &&
+				isPassable(tiles, x, z + 1, w, h)
+			) {
 				candidates.push({ x, z, axis: "ns" });
 			}
 			// Check E-W passable on opposite sides
-			if (isPassable(tiles, x - 1, z, w, h) && isPassable(tiles, x + 1, z, w, h)) {
+			if (
+				isPassable(tiles, x - 1, z, w, h) &&
+				isPassable(tiles, x + 1, z, w, h)
+			) {
 				candidates.push({ x, z, axis: "ew" });
 			}
 		}
@@ -215,7 +246,11 @@ interface TunnelCandidate {
 	z: number;
 }
 
-function findTunnelCandidates(tiles: TileData[][], w: number, h: number): TunnelCandidate[] {
+function findTunnelCandidates(
+	tiles: TileData[][],
+	w: number,
+	h: number,
+): TunnelCandidate[] {
 	const candidates: TunnelCandidate[] = [];
 
 	for (let z = 1; z < h - 1; z++) {
@@ -224,7 +259,8 @@ function findTunnelCandidates(tiles: TileData[][], w: number, h: number): Tunnel
 			if (tile.floorType !== "structural_mass") continue;
 
 			// N-S tunnel: passable north+south, wall not extending east or west
-			const nsPassable = isPassable(tiles, x, z - 1, w, h) && isPassable(tiles, x, z + 1, w, h);
+			const nsPassable =
+				isPassable(tiles, x, z - 1, w, h) && isPassable(tiles, x, z + 1, w, h);
 			if (nsPassable) {
 				// Single-thickness check: east and west should NOT be structural_mass
 				const eWall = isWall(tiles, x + 1, z, w, h);
@@ -236,7 +272,8 @@ function findTunnelCandidates(tiles: TileData[][], w: number, h: number): Tunnel
 			}
 
 			// E-W tunnel: passable east+west, wall not extending north or south
-			const ewPassable = isPassable(tiles, x - 1, z, w, h) && isPassable(tiles, x + 1, z, w, h);
+			const ewPassable =
+				isPassable(tiles, x - 1, z, w, h) && isPassable(tiles, x + 1, z, w, h);
 			if (ewPassable) {
 				const nWall = isWall(tiles, x, z - 1, w, h);
 				const sWall = isWall(tiles, x, z + 1, w, h);
@@ -308,7 +345,11 @@ function punchTunnels(
  * column placement. Only considers tiles that are still structural_mass after
  * pruning/bridge/tunnel steps.
  */
-function findColumnMarkers(tiles: TileData[][], w: number, h: number): ColumnMarker[] {
+function findColumnMarkers(
+	tiles: TileData[][],
+	w: number,
+	h: number,
+): ColumnMarker[] {
 	const markers: ColumnMarker[] = [];
 
 	for (let z = 0; z < h; z++) {
@@ -320,7 +361,8 @@ function findColumnMarkers(tiles: TileData[][], w: number, h: number): ColumnMar
 				const nx = x + dx;
 				const nz = z + dz;
 				if (!inBounds(nx, nz, w, h)) continue;
-				if (tiles[nz]![nx]!.floorType === "structural_mass") wallNeighborCount++;
+				if (tiles[nz]![nx]!.floorType === "structural_mass")
+					wallNeighborCount++;
 			}
 
 			// Classify junction type
@@ -330,10 +372,18 @@ function findColumnMarkers(tiles: TileData[][], w: number, h: number): ColumnMar
 				markers.push({ x, z, type: "T" });
 			} else if (wallNeighborCount === 2) {
 				// Check if it's an L-corner (adjacent sides, not straight)
-				const n = inBounds(x, z - 1, w, h) && tiles[z - 1]![x]!.floorType === "structural_mass";
-				const e = inBounds(x + 1, z, w, h) && tiles[z]![x + 1]!.floorType === "structural_mass";
-				const s = inBounds(x, z + 1, w, h) && tiles[z + 1]![x]!.floorType === "structural_mass";
-				const ww = inBounds(x - 1, z, w, h) && tiles[z]![x - 1]!.floorType === "structural_mass";
+				const n =
+					inBounds(x, z - 1, w, h) &&
+					tiles[z - 1]![x]!.floorType === "structural_mass";
+				const e =
+					inBounds(x + 1, z, w, h) &&
+					tiles[z]![x + 1]!.floorType === "structural_mass";
+				const s =
+					inBounds(x, z + 1, w, h) &&
+					tiles[z + 1]![x]!.floorType === "structural_mass";
+				const ww =
+					inBounds(x - 1, z, w, h) &&
+					tiles[z]![x - 1]!.floorType === "structural_mass";
 
 				// L-corner: two adjacent walls (NE, SE, SW, NW)
 				const isCorner = (n && e) || (e && s) || (s && ww) || (ww && n);

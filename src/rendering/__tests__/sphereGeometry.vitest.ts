@@ -6,14 +6,14 @@
  * Tests pure math/data — no Three.js rendering.
  */
 
-import { describe, expect, it } from "vitest";
 import * as THREE from "three";
+import { describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
 import {
 	buildSphereGeometry,
-	tileToSpherePos,
 	spherePosToTile,
 	sphereRadius,
+	tileToSpherePos,
 } from "../boardGeometry";
 
 // ---------------------------------------------------------------------------

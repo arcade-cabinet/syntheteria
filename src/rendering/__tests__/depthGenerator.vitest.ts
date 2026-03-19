@@ -7,17 +7,14 @@
  */
 
 import { describe, expect, it } from "vitest";
-import {
-	createDepthMappedLayer,
-	buildLayerGeometry,
-	GRATING_ATLAS_INDEX,
-} from "../depthMappedLayer";
-import {
-	createDepthLayerStack,
-	boardToDepthLayers,
-} from "../depthLayerStack";
 import type { GeneratedBoard, TileData } from "../../board/types";
 import { FLOOR_INDEX_MAP } from "../../ecs/terrain/types";
+import { boardToDepthLayers, createDepthLayerStack } from "../depthLayerStack";
+import {
+	buildLayerGeometry,
+	createDepthMappedLayer,
+	GRATING_ATLAS_INDEX,
+} from "../depthMappedLayer";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -145,8 +142,7 @@ describe("generator → depth layer integration", () => {
 			// The exact implementation determines which cells get -1
 			// but the bridge endpoints should facilitate connection to layer 0
 			const hasRampEndpoint =
-				layer1.getDepth(3, 4) === -1 ||
-				layer1.getDepth(5, 4) === -1;
+				layer1.getDepth(3, 4) === -1 || layer1.getDepth(5, 4) === -1;
 			expect(hasRampEndpoint).toBe(true);
 		}
 	});

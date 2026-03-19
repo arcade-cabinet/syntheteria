@@ -109,7 +109,10 @@ export function getCurrentStep(currentTurnNumber: number): TutorialStep | null {
 
 	// Auto-complete steps whose turn has passed
 	let step = TUTORIAL_STEPS[state.currentStepIndex]!;
-	while (step.turnNumber < currentTurnNumber && state.currentStepIndex < TUTORIAL_STEPS.length) {
+	while (
+		step.turnNumber < currentTurnNumber &&
+		state.currentStepIndex < TUTORIAL_STEPS.length
+	) {
 		state = {
 			...state,
 			completedSteps: [...state.completedSteps, step.id],

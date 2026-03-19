@@ -13,7 +13,12 @@ export interface GridApi {
 	worldToTile(wx: number, wz: number): { x: number; z: number } | null;
 	findTiles(predicate: (tile: TileData) => boolean): TileData[];
 	tilesInRange(cx: number, cz: number, range: number): TileData[];
-	reachable(fromX: number, fromZ: number, maxSteps: number, weightClass?: WeightClass): Set<string>;
+	reachable(
+		fromX: number,
+		fromZ: number,
+		maxSteps: number,
+		weightClass?: WeightClass,
+	): Set<string>;
 	path(fromX: number, fromZ: number, toX: number, toZ: number): TileData[];
 }
 

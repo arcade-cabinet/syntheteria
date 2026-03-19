@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	gradientVisForDistance,
-	MAX_GRADIENT_DIST,
-} from "../FogOfWarRenderer";
+import { gradientVisForDistance, MAX_GRADIENT_DIST } from "../FogOfWarRenderer";
 
 describe("fog gradient", () => {
 	describe("gradientVisForDistance", () => {

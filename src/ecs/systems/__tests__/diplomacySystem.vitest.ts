@@ -1,9 +1,15 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+	getRelation,
+	getStanding,
+	modifyStanding,
+	setRelation,
+	setStanding,
+} from "../../factions/relations";
 import { FactionRelation } from "../../traits/faction";
-import { UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
 import { Tile } from "../../traits/tile";
-import { getRelation, getStanding, modifyStanding, setRelation, setStanding } from "../../factions/relations";
+import { UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
 import {
 	_resetDiplomacy,
 	applyBreakPenalty,
@@ -179,9 +185,7 @@ describe("diplomacySystem", () => {
 			// All tiles start explored — shareAlliedFog runs without error
 			for (let x = 0; x < 5; x++) {
 				for (let z = 0; z < 5; z++) {
-					world.spawn(
-						Tile({ x, z, explored: true, visibility: 1 }),
-					);
+					world.spawn(Tile({ x, z, explored: true, visibility: 1 }));
 				}
 			}
 
@@ -293,7 +297,9 @@ describe("diplomacySystem", () => {
 			expect(getStandingLevel(world, "player", "reclaimers")).toBe("hostile");
 
 			setStanding(world, "player", "reclaimers", -25);
-			expect(getStandingLevel(world, "player", "reclaimers")).toBe("unfriendly");
+			expect(getStandingLevel(world, "player", "reclaimers")).toBe(
+				"unfriendly",
+			);
 
 			setStanding(world, "player", "reclaimers", 0);
 			expect(getStandingLevel(world, "player", "reclaimers")).toBe("neutral");
@@ -348,7 +354,13 @@ describe("diplomacySystem", () => {
 
 	describe("break penalties", () => {
 		it("alliance break penalizes standing with all factions", () => {
-			const factions = ["player", "reclaimers", "volt_collective", "signal_choir", "iron_creed"];
+			const factions = [
+				"player",
+				"reclaimers",
+				"volt_collective",
+				"signal_choir",
+				"iron_creed",
+			];
 			// Set initial neutral standing with all
 			for (const f of factions) {
 				if (f === "player") continue;
@@ -393,8 +405,8 @@ describe("diplomacySystem", () => {
 			const incomes = calculateTradeIncome(world, harvests);
 			// Player gets 15% of reclaimers' 200 = 30
 			// Reclaimers gets 15% of player's 100 = 15
-			const playerIncome = incomes.find(i => i.factionId === "player");
-			const reclaimerIncome = incomes.find(i => i.factionId === "reclaimers");
+			const playerIncome = incomes.find((i) => i.factionId === "player");
+			const reclaimerIncome = incomes.find((i) => i.factionId === "reclaimers");
 
 			expect(playerIncome).toBeDefined();
 			expect(playerIncome!.incomeShared).toBe(30);
@@ -429,7 +441,7 @@ describe("diplomacySystem", () => {
 		it("applyDiplomacyEvent records typed events", () => {
 			applyDiplomacyEvent(world, "trade_completed", "player", "reclaimers", 3);
 			const events = getRecentDiplomacyEvents();
-			const tradeEvent = events.find(e => e.type === "trade_completed");
+			const tradeEvent = events.find((e) => e.type === "trade_completed");
 			expect(tradeEvent).toBeDefined();
 			expect(tradeEvent!.standingChange).toBe(5);
 		});

@@ -1,12 +1,12 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
 import {
 	buildNavGraph,
-	yukaShortestPath,
-	updateTileCost,
-	tileIndex,
-	indexToTile,
 	clearNavGraphCache,
+	indexToTile,
+	tileIndex,
+	updateTileCost,
+	yukaShortestPath,
 } from "../navigation/boardNavGraph";
 
 // ---------------------------------------------------------------------------
@@ -36,7 +36,11 @@ function makeBoard(width: number, height: number): GeneratedBoard {
 	};
 }
 
-function makeBoardWithWall(width: number, height: number, wallX: number): GeneratedBoard {
+function makeBoardWithWall(
+	width: number,
+	height: number,
+	wallX: number,
+): GeneratedBoard {
 	const board = makeBoard(width, height);
 	// Create a wall column (impassable) at wallX, except for a gap at z=0
 	for (let z = 1; z < height; z++) {
@@ -58,9 +62,18 @@ describe("boardNavGraph", () => {
 	describe("tileIndex / indexToTile", () => {
 		it("round-trips correctly", () => {
 			const width = 16;
-			expect(indexToTile(tileIndex(5, 3, width), width)).toEqual({ x: 5, z: 3 });
-			expect(indexToTile(tileIndex(0, 0, width), width)).toEqual({ x: 0, z: 0 });
-			expect(indexToTile(tileIndex(15, 15, width), width)).toEqual({ x: 15, z: 15 });
+			expect(indexToTile(tileIndex(5, 3, width), width)).toEqual({
+				x: 5,
+				z: 3,
+			});
+			expect(indexToTile(tileIndex(0, 0, width), width)).toEqual({
+				x: 0,
+				z: 0,
+			});
+			expect(indexToTile(tileIndex(15, 15, width), width)).toEqual({
+				x: 15,
+				z: 15,
+			});
 		});
 	});
 

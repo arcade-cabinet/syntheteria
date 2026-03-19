@@ -158,11 +158,7 @@ function UnitStatusOverlay({ data }: { data: UnitBarData }) {
 			>
 				{/* HP bar — always show when damaged or selected */}
 				{(isDamaged || data.isSelected) && (
-					<SegmentedBar
-						current={data.hp}
-						max={data.maxHp}
-						color={barColor}
-					/>
+					<SegmentedBar current={data.hp} max={data.maxHp} color={barColor} />
 				)}
 				{/* AP bar — show when AP spent or selected */}
 				{(hasSpentAp || data.isSelected) && data.maxAp > 0 && (
@@ -232,10 +228,8 @@ export function UnitStatusBars({ world, selectedUnitId }: UnitStatusBarsProps) {
 				const move = entity.get(UnitMove);
 				if (move) {
 					const t = move.progress;
-					wx =
-						(move.fromX + (move.toX - move.fromX) * t) * TILE_SIZE_M;
-					wz =
-						(move.fromZ + (move.toZ - move.fromZ) * t) * TILE_SIZE_M;
+					wx = (move.fromX + (move.toX - move.fromX) * t) * TILE_SIZE_M;
+					wz = (move.fromZ + (move.toZ - move.fromZ) * t) * TILE_SIZE_M;
 				}
 			}
 

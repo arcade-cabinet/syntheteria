@@ -189,7 +189,15 @@ function connectCluster(
 
 	if (bestReachX < 0) return;
 
-	punchCorridor(tiles, bestOrphanX, bestOrphanZ, bestReachX, bestReachZ, width, height);
+	punchCorridor(
+		tiles,
+		bestOrphanX,
+		bestOrphanZ,
+		bestReachX,
+		bestReachZ,
+		width,
+		height,
+	);
 }
 
 /**

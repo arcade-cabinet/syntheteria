@@ -112,9 +112,8 @@ export function CombatEffectsRenderer({ world }: { world: World }) {
 				});
 
 				// Floating damage text
-				const label = result.kind === "destroyed"
-					? "DESTROYED"
-					: `-${result.damage}`;
+				const label =
+					result.kind === "destroyed" ? "DESTROYED" : `-${result.damage}`;
 				newTexts.push({
 					id: nextTextId++,
 					text: label,
@@ -122,7 +121,8 @@ export function CombatEffectsRenderer({ world }: { world: World }) {
 					y: 0.5,
 					z: worldZ + (Math.random() - 0.5) * 0.5,
 					age: 0,
-					lifetime: result.kind === "destroyed" ? DESTROY_LIFETIME : TEXT_LIFETIME,
+					lifetime:
+						result.kind === "destroyed" ? DESTROY_LIFETIME : TEXT_LIFETIME,
 					color: result.kind === "destroyed" ? 0xff2222 : 0xff6644,
 					isDestroy: result.kind === "destroyed",
 				});
@@ -133,7 +133,10 @@ export function CombatEffectsRenderer({ world }: { world: World }) {
 				processedRef.current.delete(eid);
 				entity.remove(CombatResult);
 			} else {
-				entity.set(CombatResult, { ...result, framesRemaining: result.framesRemaining - 1 });
+				entity.set(CombatResult, {
+					...result,
+					framesRemaining: result.framesRemaining - 1,
+				});
 			}
 		}
 

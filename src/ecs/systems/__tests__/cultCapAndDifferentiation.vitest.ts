@@ -6,8 +6,8 @@
 
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { GeneratedBoard, TileData } from "../../../board/types";
 import { resetAIRuntime, runYukaAiTurns } from "../../../ai/yukaAiTurnSystem";
+import type { GeneratedBoard, TileData } from "../../../board/types";
 import { Board } from "../../traits/board";
 import { Faction } from "../../traits/faction";
 import { ResourceDeposit, ResourcePool } from "../../traits/resource";
@@ -21,9 +21,9 @@ import {
 } from "../../traits/unit";
 import {
 	checkCultistSpawn,
+	getStormCultistParams,
 	initBreachZones,
 	_reset as resetCultState,
-	getStormCultistParams,
 } from "../cultistSystem";
 
 // ---------------------------------------------------------------------------
@@ -68,10 +68,7 @@ function spawnFaction(
 	id: string,
 	isPlayer = false,
 ): void {
-	world.spawn(
-		Faction({ id, displayName: id, isPlayer }),
-		ResourcePool(),
-	);
+	world.spawn(Faction({ id, displayName: id, isPlayer }), ResourcePool());
 }
 
 // ---------------------------------------------------------------------------
@@ -218,7 +215,13 @@ describe("AI faction differentiation — personalities produce different behavio
 		resetAIRuntime();
 		const world = createWorld();
 		world.spawn(
-			Board({ width: 32, height: 32, seed: "diff-test", tileSizeM: 2, turn: 1 }),
+			Board({
+				width: 32,
+				height: 32,
+				seed: "diff-test",
+				tileSizeM: 2,
+				turn: 1,
+			}),
 		);
 		spawnFaction(world, factionId);
 		spawnFaction(world, "player", true);
@@ -230,9 +233,12 @@ describe("AI faction differentiation — personalities produce different behavio
 			UnitPos({ tileX: 16, tileZ: 16 }),
 			UnitFaction({ factionId }),
 			UnitStats({
-				hp: 10, maxHp: 10,
-				ap: 3, maxAp: 3,
-				mp: 3, maxMp: 3,
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				mp: 3,
+				maxMp: 3,
 				scanRange: 6,
 				attackRange: 1,
 				attack: 3,
@@ -244,7 +250,15 @@ describe("AI faction differentiation — personalities produce different behavio
 		world.spawn(
 			UnitPos({ tileX: 16 + opts.enemyDistance, tileZ: 16 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 100, maxHp: 100, ap: 3, maxAp: 3, scanRange: 6, attack: 1, defense: 10 }),
+			UnitStats({
+				hp: 100,
+				maxHp: 100,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 6,
+				attack: 1,
+				defense: 10,
+			}),
 		);
 
 		// Deposit at specified distance
@@ -356,15 +370,23 @@ describe("AI faction differentiation — personalities produce different behavio
 		// Mixed scenario: enemy at 3 tiles, deposit at 1 tile
 		// All factions face the same situation but should make different choices
 
-		const factions = ["reclaimers", "volt_collective", "signal_choir", "iron_creed"];
+		const factions = [
+			"reclaimers",
+			"volt_collective",
+			"signal_choir",
+			"iron_creed",
+		];
 		const results = new Map<string, ReturnType<typeof runFactionSimulation>>();
 
 		for (const fid of factions) {
-			results.set(fid, runFactionSimulation(fid, {
-				enemyDistance: 3,
-				depositDistance: 1,
-				turns: 20,
-			}));
+			results.set(
+				fid,
+				runFactionSimulation(fid, {
+					enemyDistance: 3,
+					depositDistance: 1,
+					turns: 20,
+				}),
+			);
 		}
 
 		const reclaimers = results.get("reclaimers")!;
@@ -378,7 +400,9 @@ describe("AI faction differentiation — personalities produce different behavio
 
 		// Iron Creed + Signal Choir (aggression=3) should move toward enemy more
 		// than Volt Collective (aggression=1, reactiveOnly)
-		expect(iron.attacks + iron.moves).toBeGreaterThanOrEqual(volt.attacks + volt.moves);
+		expect(iron.attacks + iron.moves).toBeGreaterThanOrEqual(
+			volt.attacks + volt.moves,
+		);
 
 		// Volt Collective (reactiveOnly, defensePriority=3) should be least aggressive
 		// At distance 3, volt_collective with reactiveOnly should chase since dist <= scanRange

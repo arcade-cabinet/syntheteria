@@ -5,7 +5,15 @@ import type { RobotClass } from "../robots/types";
 import { TileFloor } from "../terrain";
 import { Board } from "../traits/board";
 import { Tile } from "../traits/tile";
-import { CombatResult, UnitAttack, UnitFaction, UnitPos, UnitStats, UnitVisual, UnitXP } from "../traits/unit";
+import {
+	CombatResult,
+	UnitAttack,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+	UnitVisual,
+	UnitXP,
+} from "../traits/unit";
 import { recordCombatEngagement, recordCombatKill } from "./campaignStats";
 import { recordAggression } from "./diplomacySystem";
 import { awardXP, recordKill } from "./experienceSystem";
@@ -50,8 +58,10 @@ function getWallTiles(world: World, currentTurn: number): Set<string> {
  * Melee attacks (range 1) always have LOS — caller should skip for range 1.
  */
 function hasLineOfSight(
-	ax: number, az: number,
-	bx: number, bz: number,
+	ax: number,
+	az: number,
+	bx: number,
+	bz: number,
 	walls: Set<string>,
 ): boolean {
 	let x0 = ax;
@@ -72,8 +82,14 @@ function hasLineOfSight(
 		}
 		if (x0 === x1 && z0 === z1) break;
 		const e2 = 2 * err;
-		if (e2 > -dz) { err -= dz; x0 += sx; }
-		if (e2 < dx) { err += dx; z0 += sz; }
+		if (e2 > -dz) {
+			err -= dz;
+			x0 += sx;
+		}
+		if (e2 < dx) {
+			err += dx;
+			z0 += sz;
+		}
 	}
 	return true;
 }
@@ -125,20 +141,27 @@ export function resolveAttacks(world: World): void {
 				if (attackerStats.attackRange > 1) {
 					const turn = readCurrentTurn(world);
 					const walls = getWallTiles(world, turn);
-					if (!hasLineOfSight(
-						attackerPos.tileX, attackerPos.tileZ,
-						targetPos.tileX, targetPos.tileZ,
-						walls,
-					)) {
+					if (
+						!hasLineOfSight(
+							attackerPos.tileX,
+							attackerPos.tileZ,
+							targetPos.tileX,
+							targetPos.tileZ,
+							walls,
+						)
+					) {
 						pushTurnEvent("Attack failed — no line of sight");
-						playSfx("attack_hit"); // TODO: add miss sfx
+						playSfx("attack_miss");
 						break;
 					}
 				}
 			}
 
 			// Primary damage
-			const damage = Math.max(MIN_DAMAGE, attackerStats.attack - targetStats.defense);
+			const damage = Math.max(
+				MIN_DAMAGE,
+				attackerStats.attack - targetStats.defense,
+			);
 			const newHp = targetStats.hp - damage;
 
 			// Faction names for log
@@ -157,7 +180,9 @@ export function resolveAttacks(world: World): void {
 
 			if (newHp <= 0) {
 				// Add CombatResult before destroying so renderer can flash
-				pushTurnEvent(`${attackerName} destroyed ${targetName} unit (${damage} dmg)`);
+				pushTurnEvent(
+					`${attackerName} destroyed ${targetName} unit (${damage} dmg)`,
+				);
 				playSfx("attack_hit");
 				recordCombatEngagement();
 				recordCombatKill(attackerName);
@@ -167,7 +192,12 @@ export function resolveAttacks(world: World): void {
 					recordKill(world, attacker.id());
 					const attackerVisual = attacker.get(UnitVisual);
 					if (attackerVisual?.modelId) {
-						awardXP(world, attacker.id(), attackerVisual.modelId as RobotClass, "combat");
+						awardXP(
+							world,
+							attacker.id(),
+							attackerVisual.modelId as RobotClass,
+							"combat",
+						);
 					}
 				}
 
@@ -175,7 +205,9 @@ export function resolveAttacks(world: World): void {
 			} else {
 				target.set(UnitStats, { ...targetStats, hp: newHp });
 				target.add(CombatResult({ kind: "hit", damage, framesRemaining: 60 }));
-				pushTurnEvent(`${attackerName} hit ${targetName} unit for ${damage} dmg (${newHp} HP left)`);
+				pushTurnEvent(
+					`${attackerName} hit ${targetName} unit for ${damage} dmg (${newHp} HP left)`,
+				);
 				playSfx("attack_hit");
 
 				// Counterattack: target strikes back if it survives and attacker is in target's range
@@ -192,20 +224,29 @@ export function resolveAttacks(world: World): void {
 						const cTurn = readCurrentTurn(world);
 						const cWalls = getWallTiles(world, cTurn);
 						counterLos = hasLineOfSight(
-							targetPos.tileX, targetPos.tileZ,
-							attackerPos.tileX, attackerPos.tileZ,
+							targetPos.tileX,
+							targetPos.tileZ,
+							attackerPos.tileX,
+							attackerPos.tileZ,
 							cWalls,
 						);
 					}
-					if (counterDist <= targetStats.attackRange && targetStats.attack > 0 && counterLos) {
+					if (
+						counterDist <= targetStats.attackRange &&
+						targetStats.attack > 0 &&
+						counterLos
+					) {
 						const counterDamage = Math.max(
 							MIN_DAMAGE,
-							Math.floor(targetStats.attack * COUNTER_DAMAGE_RATIO) - attackerStats.defense,
+							Math.floor(targetStats.attack * COUNTER_DAMAGE_RATIO) -
+								attackerStats.defense,
 						);
 						const attackerNewHp = attackerStats.hp - counterDamage;
 
 						if (attackerNewHp <= 0) {
-							pushTurnEvent(`${targetName} counterattack destroyed ${attackerName} unit (${counterDamage} dmg)`);
+							pushTurnEvent(
+								`${targetName} counterattack destroyed ${attackerName} unit (${counterDamage} dmg)`,
+							);
 							recordCombatKill(targetName);
 
 							// Award XP and kill credit to target (counterattack kill)
@@ -213,7 +254,12 @@ export function resolveAttacks(world: World): void {
 								recordKill(world, target.id());
 								const targetVisual = target.get(UnitVisual);
 								if (targetVisual?.modelId) {
-									awardXP(world, target.id(), targetVisual.modelId as RobotClass, "combat");
+									awardXP(
+										world,
+										target.id(),
+										targetVisual.modelId as RobotClass,
+										"combat",
+									);
 								}
 							}
 
@@ -224,8 +270,16 @@ export function resolveAttacks(world: World): void {
 							break;
 						}
 						attacker.set(UnitStats, { ...attackerStats, hp: attackerNewHp });
-						attacker.add(CombatResult({ kind: "counter", damage: counterDamage, framesRemaining: 60 }));
-						pushTurnEvent(`${targetName} counterattack hit ${attackerName} for ${counterDamage} dmg (${attackerNewHp} HP left)`);
+						attacker.add(
+							CombatResult({
+								kind: "counter",
+								damage: counterDamage,
+								framesRemaining: 60,
+							}),
+						);
+						pushTurnEvent(
+							`${targetName} counterattack hit ${attackerName} for ${counterDamage} dmg (${attackerNewHp} HP left)`,
+						);
 					}
 				}
 			}

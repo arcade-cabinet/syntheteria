@@ -1,16 +1,20 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { RobotClass } from "../types";
-import { UnitFaction, UnitPos, UnitStats, UnitXP } from "../../traits/unit";
-import { applyMarkUpgrade, awardXP, getMarkThreshold } from "../../systems/experienceSystem";
 import {
-	MARK_DEFS,
-	MARK_SPECIALIZATIONS,
-	MAX_MARK_LEVEL,
+	applyMarkUpgrade,
+	awardXP,
+	getMarkThreshold,
+} from "../../systems/experienceSystem";
+import { UnitFaction, UnitPos, UnitStats, UnitXP } from "../../traits/unit";
+import {
 	getMarkSpecEffectValue,
 	getMarkSpecializations,
 	hasMarkSpecEffect,
+	MARK_DEFS,
+	MARK_SPECIALIZATIONS,
+	MAX_MARK_LEVEL,
 } from "../marks";
+import type { RobotClass } from "../types";
 
 describe("Mark I-V progression", () => {
 	let world: ReturnType<typeof createWorld>;
@@ -27,7 +31,15 @@ describe("Mark I-V progression", () => {
 		return world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "player" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 			UnitXP({ xp, markLevel, killCount: 0, harvestCount: 0 }),
 		);
 	}
@@ -106,7 +118,14 @@ describe("Mark I-V progression", () => {
 
 	describe("mark specializations", () => {
 		it("6 player robot classes have specializations defined", () => {
-			const playerClasses: RobotClass[] = ["support", "infantry", "worker", "scout", "ranged", "cavalry"];
+			const playerClasses: RobotClass[] = [
+				"support",
+				"infantry",
+				"worker",
+				"scout",
+				"ranged",
+				"cavalry",
+			];
 			for (const cls of playerClasses) {
 				expect(MARK_SPECIALIZATIONS[cls]).toBeDefined();
 				expect(MARK_SPECIALIZATIONS[cls]!.length).toBe(3); // Mark III, IV, V
@@ -114,7 +133,11 @@ describe("Mark I-V progression", () => {
 		});
 
 		it("cult classes have no specializations", () => {
-			const cultClasses: RobotClass[] = ["cult_infantry", "cult_ranged", "cult_cavalry"];
+			const cultClasses: RobotClass[] = [
+				"cult_infantry",
+				"cult_ranged",
+				"cult_cavalry",
+			];
 			for (const cls of cultClasses) {
 				expect(MARK_SPECIALIZATIONS[cls]).toBeUndefined();
 			}

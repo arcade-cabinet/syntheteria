@@ -151,7 +151,10 @@ export class GameRepo {
 		);
 	}
 
-	async saveBuildings(gameId: string, buildings: BuildingRecord[]): Promise<void> {
+	async saveBuildings(
+		gameId: string,
+		buildings: BuildingRecord[],
+	): Promise<void> {
 		for (const b of buildings) {
 			await this.upsertBuilding(gameId, b);
 		}
@@ -165,7 +168,10 @@ export class GameRepo {
 		return rows.map(rowToBuilding);
 	}
 
-	async saveExplored(gameId: string, explored: ExploredRecord[]): Promise<void> {
+	async saveExplored(
+		gameId: string,
+		explored: ExploredRecord[],
+	): Promise<void> {
 		for (const e of explored) {
 			await this.db.run(
 				`INSERT OR REPLACE INTO game_explored (game_id, tile_x, tile_z, explored, visibility)
@@ -183,7 +189,10 @@ export class GameRepo {
 		return rows.map(rowToExplored);
 	}
 
-	async saveResources(gameId: string, resources: ResourceRecord[]): Promise<void> {
+	async saveResources(
+		gameId: string,
+		resources: ResourceRecord[],
+	): Promise<void> {
 		for (const r of resources) {
 			await this.db.run(
 				`INSERT OR REPLACE INTO game_resources (game_id, faction_id, material, amount)
@@ -236,7 +245,9 @@ export class GameRepo {
 		);
 	}
 
-	async loadCampaignStats(gameId: string): Promise<CampaignStatisticsRecord | null> {
+	async loadCampaignStats(
+		gameId: string,
+	): Promise<CampaignStatisticsRecord | null> {
 		const rows = await this.db.query<Record<string, unknown>>(
 			"SELECT * FROM campaign_statistics WHERE game_id = ?",
 			[gameId],
@@ -247,14 +258,22 @@ export class GameRepo {
 
 	// ─── Turn Event Logs ──────────────────────────────────────────────────────
 
-	async appendTurnEventLog(gameId: string, turn: number, eventsJson: string): Promise<void> {
+	async appendTurnEventLog(
+		gameId: string,
+		turn: number,
+		eventsJson: string,
+	): Promise<void> {
 		await this.db.run(
 			"INSERT INTO turn_event_logs (game_id, turn, events_json) VALUES (?, ?, ?)",
 			[gameId, turn, eventsJson],
 		);
 	}
 
-	async loadTurnEventLogs(gameId: string, fromTurn?: number, toTurn?: number): Promise<TurnEventLogRecord[]> {
+	async loadTurnEventLogs(
+		gameId: string,
+		fromTurn?: number,
+		toTurn?: number,
+	): Promise<TurnEventLogRecord[]> {
 		let sql = "SELECT * FROM turn_event_logs WHERE game_id = ?";
 		const params: unknown[] = [gameId];
 
@@ -306,7 +325,11 @@ export class GameRepo {
 
 	// ─── Turn Snapshots ───────────────────────────────────────────────────────
 
-	async saveTurnSnapshot(gameId: string, turn: number, snapshotJson: string): Promise<void> {
+	async saveTurnSnapshot(
+		gameId: string,
+		turn: number,
+		snapshotJson: string,
+	): Promise<void> {
 		await this.db.run(
 			"INSERT INTO turn_snapshots (game_id, turn, snapshot_json) VALUES (?, ?, ?)",
 			[gameId, turn, snapshotJson],
@@ -412,7 +435,9 @@ function rowToResource(row: Record<string, unknown>): ResourceRecord {
 	};
 }
 
-function rowToCampaignStats(row: Record<string, unknown>): CampaignStatisticsRecord {
+function rowToCampaignStats(
+	row: Record<string, unknown>,
+): CampaignStatisticsRecord {
 	return {
 		gameId: String(row.game_id),
 		statsJson: String(row.stats_json),
@@ -428,7 +453,9 @@ function rowToTurnEventLog(row: Record<string, unknown>): TurnEventLogRecord {
 	};
 }
 
-function rowToFactionResourceSnapshot(row: Record<string, unknown>): FactionResourceSnapshotRecord {
+function rowToFactionResourceSnapshot(
+	row: Record<string, unknown>,
+): FactionResourceSnapshotRecord {
 	return {
 		gameId: String(row.game_id),
 		turn: Number(row.turn),

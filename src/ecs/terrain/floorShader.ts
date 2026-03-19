@@ -52,8 +52,12 @@ export function makeFloorShaderMaterial(
 				uSunColor: { value: ZENITH_SUN_COLOR.clone() },
 				uColorAtlas: { value: loadAtlasTexture("floor_atlas_color.jpg") },
 				uNormalAtlas: { value: loadAtlasTexture("floor_atlas_normal.jpg") },
-				uRoughnessAtlas: { value: loadAtlasTexture("floor_atlas_roughness.jpg") },
-				uMetalnessAtlas: { value: loadAtlasTexture("floor_atlas_metalness.jpg") },
+				uRoughnessAtlas: {
+					value: loadAtlasTexture("floor_atlas_roughness.jpg"),
+				},
+				uMetalnessAtlas: {
+					value: loadAtlasTexture("floor_atlas_metalness.jpg"),
+				},
 				uOpacityAtlas: { value: loadAtlasTexture("floor_atlas_opacity.jpg") },
 			},
 		]),

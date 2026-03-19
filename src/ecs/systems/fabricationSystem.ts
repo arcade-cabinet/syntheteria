@@ -14,13 +14,19 @@
 import { trait, type World } from "koota";
 import { playSfx } from "../../audio/sfx";
 import { pushTurnEvent } from "../../ui/game/turnEvents";
-import type { RobotClass } from "../robots/types";
 import { TRACK_REGISTRY } from "../robots/specializations/trackRegistry";
+import type { RobotClass } from "../robots/types";
 import type { ResourceMaterial } from "../terrain/types";
-import { Building, BotFabricator, Powered } from "../traits/building";
-import { UnitFaction, UnitPos, UnitSpecialization, UnitStats, UnitVisual } from "../traits/unit";
-import { canAfford, spendResources } from "./resourceSystem";
+import { BotFabricator, Building, Powered } from "../traits/building";
+import {
+	UnitFaction,
+	UnitPos,
+	UnitSpecialization,
+	UnitStats,
+	UnitVisual,
+} from "../traits/unit";
 import { canSpawnUnit } from "./populationSystem";
+import { canAfford, spendResources } from "./resourceSystem";
 
 // ─── Fabrication job trait ──────────────────────────────────────────────────
 
@@ -90,44 +96,144 @@ export const ROBOT_COSTS: Record<RobotClass, RobotCost> = {
 const ROBOT_DEFAULTS: Record<
 	RobotClass,
 	{
-		stats: { hp: number; maxHp: number; ap: number; maxAp: number; mp: number; maxMp: number; scanRange: number; attack: number; defense: number };
+		stats: {
+			hp: number;
+			maxHp: number;
+			ap: number;
+			maxAp: number;
+			mp: number;
+			maxMp: number;
+			scanRange: number;
+			attack: number;
+			defense: number;
+		};
 		visual: { modelId: string; scale: number; facingAngle: number };
 	}
 > = {
 	scout: {
-		stats: { hp: 5, maxHp: 5, ap: 2, maxAp: 2, mp: 5, maxMp: 5, scanRange: 8, attack: 1, defense: 0 },
+		stats: {
+			hp: 5,
+			maxHp: 5,
+			ap: 2,
+			maxAp: 2,
+			mp: 5,
+			maxMp: 5,
+			scanRange: 8,
+			attack: 1,
+			defense: 0,
+		},
 		visual: { modelId: "scout", scale: 1.0, facingAngle: 0 },
 	},
 	infantry: {
-		stats: { hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 3, defense: 1 },
+		stats: {
+			hp: 10,
+			maxHp: 10,
+			ap: 2,
+			maxAp: 2,
+			mp: 3,
+			maxMp: 3,
+			scanRange: 4,
+			attack: 3,
+			defense: 1,
+		},
 		visual: { modelId: "infantry", scale: 1.0, facingAngle: 0 },
 	},
 	cavalry: {
-		stats: { hp: 7, maxHp: 7, ap: 2, maxAp: 2, mp: 4, maxMp: 4, scanRange: 5, attack: 3, defense: 0 },
+		stats: {
+			hp: 7,
+			maxHp: 7,
+			ap: 2,
+			maxAp: 2,
+			mp: 4,
+			maxMp: 4,
+			scanRange: 5,
+			attack: 3,
+			defense: 0,
+		},
 		visual: { modelId: "cavalry", scale: 1.0, facingAngle: 0 },
 	},
 	ranged: {
-		stats: { hp: 12, maxHp: 12, ap: 2, maxAp: 2, mp: 2, maxMp: 2, scanRange: 6, attack: 4, defense: 2 },
+		stats: {
+			hp: 12,
+			maxHp: 12,
+			ap: 2,
+			maxAp: 2,
+			mp: 2,
+			maxMp: 2,
+			scanRange: 6,
+			attack: 4,
+			defense: 2,
+		},
 		visual: { modelId: "ranged", scale: 1.0, facingAngle: 0 },
 	},
 	support: {
-		stats: { hp: 7, maxHp: 7, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 1, defense: 0 },
+		stats: {
+			hp: 7,
+			maxHp: 7,
+			ap: 2,
+			maxAp: 2,
+			mp: 3,
+			maxMp: 3,
+			scanRange: 4,
+			attack: 1,
+			defense: 0,
+		},
 		visual: { modelId: "support", scale: 1.0, facingAngle: 0 },
 	},
 	worker: {
-		stats: { hp: 8, maxHp: 8, ap: 2, maxAp: 2, mp: 2, maxMp: 2, scanRange: 3, attack: 0, defense: 0 },
+		stats: {
+			hp: 8,
+			maxHp: 8,
+			ap: 2,
+			maxAp: 2,
+			mp: 2,
+			maxMp: 2,
+			scanRange: 3,
+			attack: 0,
+			defense: 0,
+		},
 		visual: { modelId: "worker", scale: 1.0, facingAngle: 0 },
 	},
 	cult_infantry: {
-		stats: { hp: 12, maxHp: 12, ap: 2, maxAp: 2, mp: 2, maxMp: 2, scanRange: 3, attack: 4, defense: 2 },
+		stats: {
+			hp: 12,
+			maxHp: 12,
+			ap: 2,
+			maxAp: 2,
+			mp: 2,
+			maxMp: 2,
+			scanRange: 3,
+			attack: 4,
+			defense: 2,
+		},
 		visual: { modelId: "cult_infantry", scale: 1.0, facingAngle: 0 },
 	},
 	cult_ranged: {
-		stats: { hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 2, maxMp: 2, scanRange: 5, attack: 5, defense: 1 },
+		stats: {
+			hp: 10,
+			maxHp: 10,
+			ap: 2,
+			maxAp: 2,
+			mp: 2,
+			maxMp: 2,
+			scanRange: 5,
+			attack: 5,
+			defense: 1,
+		},
 		visual: { modelId: "cult_ranged", scale: 1.0, facingAngle: 0 },
 	},
 	cult_cavalry: {
-		stats: { hp: 8, maxHp: 8, ap: 2, maxAp: 2, mp: 4, maxMp: 4, scanRange: 4, attack: 3, defense: 1 },
+		stats: {
+			hp: 8,
+			maxHp: 8,
+			ap: 2,
+			maxAp: 2,
+			mp: 4,
+			maxMp: 4,
+			scanRange: 4,
+			attack: 3,
+			defense: 1,
+		},
 		visual: { modelId: "cult_cavalry", scale: 1.0, facingAngle: 0 },
 	},
 };
@@ -136,7 +242,10 @@ const ROBOT_DEFAULTS: Record<
 
 export type QueueResult =
 	| { ok: true }
-	| { ok: false; reason: "not_powered" | "queue_full" | "cannot_afford" | "pop_cap" };
+	| {
+			ok: false;
+			reason: "not_powered" | "queue_full" | "cannot_afford" | "pop_cap";
+	  };
 
 /**
  * Queue fabrication of a robot at a motor pool.
@@ -222,10 +331,7 @@ export function queueFabrication(
  */
 export function runFabrication(world: World): void {
 	// Build a lookup of motor pool entities by id for fast access
-	const motorPools = new Map<
-		number,
-		ReturnType<World["query"]>[number]
-	>();
+	const motorPools = new Map<number, ReturnType<World["query"]>[number]>();
 	for (const e of world.query(Building, BotFabricator)) {
 		motorPools.set(e.id(), e);
 	}
@@ -255,9 +361,10 @@ export function runFabrication(world: World): void {
 			const stats = { ...defaults.stats };
 			if (job.trackId) {
 				const trackEntry = TRACK_REGISTRY.get(job.trackId);
-				const mods = job.trackVersion === 2
-					? trackEntry?.v2StatMods
-					: trackEntry?.statMods;
+				const mods =
+					job.trackVersion === 2
+						? trackEntry?.v2StatMods
+						: trackEntry?.statMods;
 				if (mods) {
 					for (const [key, value] of Object.entries(mods)) {
 						if (value !== undefined && key in stats) {
@@ -277,16 +384,20 @@ export function runFabrication(world: World): void {
 
 			// Add specialization trait if track was chosen
 			if (job.trackId) {
-				unit.add(UnitSpecialization({
-					trackId: job.trackId,
-					trackVersion: job.trackVersion,
-				}));
+				unit.add(
+					UnitSpecialization({
+						trackId: job.trackId,
+						trackVersion: job.trackVersion,
+					}),
+				);
 			}
 
 			const trackLabel = job.trackId
 				? ` [${TRACK_REGISTRY.get(job.trackId)?.label ?? job.trackId}]`
 				: "";
-			pushTurnEvent(`Fabrication complete: ${job.robotClass.replace(/_/g, " ")}${trackLabel}`);
+			pushTurnEvent(
+				`Fabrication complete: ${job.robotClass.replace(/_/g, " ")}${trackLabel}`,
+			);
 
 			// Free up the fabrication slot
 			const fab = pool.get(BotFabricator)!;

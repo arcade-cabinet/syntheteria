@@ -20,7 +20,13 @@ import type { BotMark } from "../robots/marks";
 import { MARK_DEFS } from "../robots/marks";
 import type { ResourceMaterial } from "../terrain/types";
 import { Building, Powered } from "../traits/building";
-import { UnitFaction, UnitPos, UnitStats, UnitUpgrade, UnitVisual } from "../traits/unit";
+import {
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+	UnitUpgrade,
+	UnitVisual,
+} from "../traits/unit";
 import { canAfford, spendResources } from "./resourceSystem";
 
 // ─── Tier computation ──────────────────────────────────────────────────────
@@ -59,7 +65,16 @@ export function hasMark(marksStr: string, mark: BotMark): boolean {
 
 export type UpgradeResult =
 	| { ok: true }
-	| { ok: false; reason: "no_unit" | "no_bay" | "not_adjacent" | "already_has" | "tier_locked" | "cannot_afford" };
+	| {
+			ok: false;
+			reason:
+				| "no_unit"
+				| "no_bay"
+				| "not_adjacent"
+				| "already_has"
+				| "tier_locked"
+				| "cannot_afford";
+	  };
 
 /**
  * Apply a mark to a unit at a maintenance bay.
@@ -106,13 +121,18 @@ export function applyMark(
 	if (!bayEntity) return { ok: false, reason: "no_bay" };
 
 	const bay = bayEntity.get(Building);
-	if (!bay || bay.buildingType !== "maintenance_bay" || bay.factionId !== "player") {
+	if (
+		!bay ||
+		bay.buildingType !== "maintenance_bay" ||
+		bay.factionId !== "player"
+	) {
 		return { ok: false, reason: "no_bay" };
 	}
 
 	// Check adjacency (manhattan distance <= 1)
 	const unitPos = unitEntity.get(UnitPos)!;
-	const dist = Math.abs(unitPos.tileX - bay.tileX) + Math.abs(unitPos.tileZ - bay.tileZ);
+	const dist =
+		Math.abs(unitPos.tileX - bay.tileX) + Math.abs(unitPos.tileZ - bay.tileZ);
 	if (dist > 1) return { ok: false, reason: "not_adjacent" };
 
 	// Check existing marks
@@ -144,7 +164,11 @@ export function applyMark(
 	const stats = unitEntity.get(UnitStats)!;
 	const newStats = { ...stats };
 	const fx = markDef.effects;
-	if (fx.hp) newStats.hp = Math.min(newStats.hp + fx.hp, (fx.maxHp ?? 0) + newStats.maxHp);
+	if (fx.hp)
+		newStats.hp = Math.min(
+			newStats.hp + fx.hp,
+			(fx.maxHp ?? 0) + newStats.maxHp,
+		);
 	if (fx.maxHp) newStats.maxHp += fx.maxHp;
 	if (fx.ap) newStats.ap += fx.ap;
 	if (fx.maxAp) newStats.maxAp += fx.maxAp;

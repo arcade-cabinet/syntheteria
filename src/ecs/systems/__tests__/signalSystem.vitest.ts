@@ -1,10 +1,6 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-	Building,
-	Powered,
-	SignalNode,
-} from "../../traits/building";
+import { Building, Powered, SignalNode } from "../../traits/building";
 import { UnitPos, UnitStats } from "../../traits/unit";
 import { isInSignalRange, runSignalNetwork } from "../signalSystem";
 
@@ -119,7 +115,15 @@ describe("runSignalNetwork", () => {
 		spawnRelay(world, 0, 0, 3, true);
 		const unit = world.spawn(
 			UnitPos({ tileX: 50, tileZ: 50 }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 0, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 0,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 		);
 
 		runSignalNetwork(world);

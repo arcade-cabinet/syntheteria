@@ -92,7 +92,13 @@ export const SALVAGE_DEFS: Record<SalvageType, SalvageDef> = {
 			scrap_metal: { min: 1, max: 3 },
 			polymer_salvage: { min: 1, max: 2 },
 		},
-		models: ["cargo_a", "cargo_a_packed", "cargo_b", "containers_a", "containers_b"],
+		models: [
+			"cargo_a",
+			"cargo_a_packed",
+			"cargo_b",
+			"containers_a",
+			"containers_b",
+		],
 	},
 	storage_rack: {
 		displayName: "Storage Rack",
@@ -144,9 +150,7 @@ export function getAllSalvageModelIds(): string[] {
 }
 
 /** Lookup salvage type by model ID. */
-export function getSalvageTypeForModel(
-	modelId: string,
-): SalvageType | null {
+export function getSalvageTypeForModel(modelId: string): SalvageType | null {
 	for (const [type, def] of Object.entries(SALVAGE_DEFS)) {
 		if (def.models.includes(modelId)) return type as SalvageType;
 	}

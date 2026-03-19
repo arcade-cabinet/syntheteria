@@ -6,13 +6,13 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { seededRng } from "../noise";
-import type { TileData } from "../types";
 import {
 	carveRoom,
 	growingTreeMazeFill,
 	initSolidGrid,
 } from "../labyrinthMaze";
+import { seededRng } from "../noise";
+import type { TileData } from "../types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -41,7 +41,11 @@ function countPassable(tiles: TileData[][]): number {
 }
 
 /** Check that all corridors are exactly 1 tile wide (no 2x2 open areas in maze corridors). */
-function hasNo2x2OpenAreas(tiles: TileData[][], width: number, height: number): boolean {
+function hasNo2x2OpenAreas(
+	tiles: TileData[][],
+	width: number,
+	height: number,
+): boolean {
 	for (let z = 0; z < height - 1; z++) {
 		for (let x = 0; x < width - 1; x++) {
 			if (
@@ -62,7 +66,11 @@ function hasNo2x2OpenAreas(tiles: TileData[][], width: number, height: number): 
  * Note: maze corridors may not be connected to rooms — that's Phase 3's job.
  * This tests connectivity WITHIN the maze itself.
  */
-function floodFillCount(tiles: TileData[][], startX: number, startZ: number): number {
+function floodFillCount(
+	tiles: TileData[][],
+	startX: number,
+	startZ: number,
+): number {
 	if (!tiles[startZ]![startX]!.passable) return 0;
 	const visited = new Set<string>();
 	const stack: Array<[number, number]> = [[startX, startZ]];

@@ -15,10 +15,9 @@ import { Clone, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type { World } from "koota";
 import { Suspense, useEffect, useMemo, useRef } from "react";
-import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import * as THREE from "three";
-import { TILE_SIZE_M, ELEVATION_STEP_M } from "../board/grid";
 import { playSfx } from "../audio/sfx";
+import { ELEVATION_STEP_M, TILE_SIZE_M } from "../board/grid";
 import {
 	UnitAttack,
 	UnitFaction,
@@ -28,6 +27,7 @@ import {
 	UnitVisual,
 	UnitXP,
 } from "../ecs/traits/unit";
+import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import {
 	FACTION_COLORS,
 	getAllRobotModelUrls,
@@ -51,7 +51,10 @@ function applyFactionTint(root: THREE.Object3D, factionColor: number) {
 	root.traverse((child) => {
 		if (!(child instanceof THREE.Mesh)) return;
 		const mat = child.material;
-		if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial) {
+		if (
+			mat instanceof THREE.MeshStandardMaterial ||
+			mat instanceof THREE.MeshPhysicalMaterial
+		) {
 			// Clone material so we don't mutate the cached GLB original
 			const cloned = mat.clone();
 			cloned.emissive.copy(tint);
@@ -114,7 +117,8 @@ function UnitModel({
 
 		if (isCult) {
 			// Cult units: erratic jitter — unsettling, alien movement
-			const jitterY = Math.sin(t * 8 + phase) * 0.03 + Math.sin(t * 13 + phase * 2) * 0.02;
+			const jitterY =
+				Math.sin(t * 8 + phase) * 0.03 + Math.sin(t * 13 + phase * 2) * 0.02;
 			const jitterRot = Math.sin(t * 6 + phase) * 0.05;
 			cloneRef.current.position.y += jitterY;
 			cloneRef.current.rotation.z = jitterRot;
@@ -134,7 +138,13 @@ function UnitModel({
 	});
 
 	if (useSphere && boardWidth && boardHeight) {
-		const sp = sphereModelPlacement(x, z, boardWidth, boardHeight, yOffset + elevationY + 0.1);
+		const sp = sphereModelPlacement(
+			x,
+			z,
+			boardWidth,
+			boardHeight,
+			yOffset + elevationY + 0.1,
+		);
 		return (
 			<group ref={groupRef}>
 				<Clone
@@ -154,7 +164,11 @@ function UnitModel({
 			<Clone
 				ref={cloneRef}
 				object={scene}
-				position={[x * TILE_SIZE_M, yOffset + elevationY + 0.1, z * TILE_SIZE_M]}
+				position={[
+					x * TILE_SIZE_M,
+					yOffset + elevationY + 0.1,
+					z * TILE_SIZE_M,
+				]}
 				scale={scale}
 				castShadow
 			/>
@@ -164,14 +178,33 @@ function UnitModel({
 
 // ─── Fallback box mesh for units when GLB fails ─────────────────────────────
 
-function UnitBox({ x, z, color, useSphere, boardWidth, boardHeight }: { x: number; z: number; color: number; useSphere?: boolean; boardWidth?: number; boardHeight?: number }) {
-	const pos: [number, number, number] = useSphere && boardWidth && boardHeight
-		? sphereModelPlacement(x, z, boardWidth, boardHeight, 0.5).position
-		: [x * TILE_SIZE_M, 0.5, z * TILE_SIZE_M];
+function UnitBox({
+	x,
+	z,
+	color,
+	useSphere,
+	boardWidth,
+	boardHeight,
+}: {
+	x: number;
+	z: number;
+	color: number;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
+}) {
+	const pos: [number, number, number] =
+		useSphere && boardWidth && boardHeight
+			? sphereModelPlacement(x, z, boardWidth, boardHeight, 0.5).position
+			: [x * TILE_SIZE_M, 0.5, z * TILE_SIZE_M];
 	return (
 		<mesh position={pos} castShadow>
 			<boxGeometry args={[0.8, 1.0, 0.8]} />
-			<meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.3} />
+			<meshStandardMaterial
+				color={color}
+				emissive={color}
+				emissiveIntensity={0.3}
+			/>
 		</mesh>
 	);
 }
@@ -220,9 +253,10 @@ function ReadinessRing({
 		mat.emissiveIntensity = maxAp > 0 ? 0.6 + (ap / maxAp) * 0.8 : 0.6;
 	});
 
-	const sp = useSphere && boardWidth && boardHeight
-		? sphereModelPlacement(x, z, boardWidth, boardHeight, RING_Y)
-		: null;
+	const sp =
+		useSphere && boardWidth && boardHeight
+			? sphereModelPlacement(x, z, boardWidth, boardHeight, RING_Y)
+			: null;
 
 	return (
 		<mesh
@@ -269,9 +303,10 @@ function MarkAccentGlow({
 	// Intensity increases at Mark V
 	const intensity = markLevel >= 5 ? 2.5 : 1.5;
 
-	const pos: [number, number, number] = useSphere && boardWidth && boardHeight
-		? sphereModelPlacement(x, z, boardWidth, boardHeight, 1.2).position
-		: [x * TILE_SIZE_M, 1.2, z * TILE_SIZE_M];
+	const pos: [number, number, number] =
+		useSphere && boardWidth && boardHeight
+			? sphereModelPlacement(x, z, boardWidth, boardHeight, 1.2).position
+			: [x * TILE_SIZE_M, 1.2, z * TILE_SIZE_M];
 
 	return (
 		<pointLight
@@ -323,7 +358,13 @@ function MarkParticleTrail({
 
 		if (useSphere && boardWidth && boardHeight) {
 			// On sphere: orbit particles around the sphere-surface center point
-			const center = sphereModelPlacement(x, z, boardWidth, boardHeight, 0).position;
+			const center = sphereModelPlacement(
+				x,
+				z,
+				boardWidth,
+				boardHeight,
+				0,
+			).position;
 			const normal = new THREE.Vector3(...center).normalize();
 			// Build tangent frame on sphere surface
 			const tangent = new THREE.Vector3(-normal.z, 0, normal.x).normalize();
@@ -334,9 +375,21 @@ function MarkParticleTrail({
 				const angle = (i / PARTICLE_COUNT) * Math.PI * 2 + t * 1.2;
 				const orbitR = TILE_SIZE_M * 0.5;
 				const heightOffset = 0.8 + Math.sin(t * 2 + i * 1.3) * 0.3;
-				const px = center[0] + tangent.x * Math.cos(angle) * orbitR + bitangent.x * Math.sin(angle) * orbitR + normal.x * heightOffset;
-				const py = center[1] + tangent.y * Math.cos(angle) * orbitR + bitangent.y * Math.sin(angle) * orbitR + normal.y * heightOffset;
-				const pz = center[2] + tangent.z * Math.cos(angle) * orbitR + bitangent.z * Math.sin(angle) * orbitR + normal.z * heightOffset;
+				const px =
+					center[0] +
+					tangent.x * Math.cos(angle) * orbitR +
+					bitangent.x * Math.sin(angle) * orbitR +
+					normal.x * heightOffset;
+				const py =
+					center[1] +
+					tangent.y * Math.cos(angle) * orbitR +
+					bitangent.y * Math.sin(angle) * orbitR +
+					normal.y * heightOffset;
+				const pz =
+					center[2] +
+					tangent.z * Math.cos(angle) * orbitR +
+					bitangent.z * Math.sin(angle) * orbitR +
+					normal.z * heightOffset;
 				positions[i * 3] = px;
 				positions[i * 3 + 1] = py;
 				positions[i * 3 + 2] = pz;
@@ -396,7 +449,12 @@ interface UnitSnapshot {
 	markLevel: number;
 }
 
-export function UnitRenderer({ world, useSphere, boardWidth, boardHeight }: UnitRendererProps) {
+export function UnitRenderer({
+	world,
+	useSphere,
+	boardWidth,
+	boardHeight,
+}: UnitRendererProps) {
 	// Rebuild unit list each frame would be expensive — rebuild on key changes
 	// For now, rebuild every 200ms (units don't move that often in turn-based)
 	const unitsRef = useRef<UnitSnapshot[]>([]);
@@ -427,7 +485,12 @@ export function UnitRenderer({ world, useSphere, boardWidth, boardHeight }: Unit
 			if (!pos || !faction || !visual) continue;
 
 			// Scan range gate — hide enemy units not within any player unit's scan range
-			if (faction.factionId !== "player" && faction.factionId !== "" && !isUnitDetected(pos.tileX, pos.tileZ, playerScanners)) continue;
+			if (
+				faction.factionId !== "player" &&
+				faction.factionId !== "" &&
+				!isUnitDetected(pos.tileX, pos.tileZ, playerScanners)
+			)
+				continue;
 
 			// Use move destination if in motion — interpolate X, Z, and elevation Y
 			let x = pos.tileX;
@@ -486,8 +549,34 @@ export function UnitRenderer({ world, useSphere, boardWidth, boardHeight }: Unit
 
 				return (
 					<ModelErrorBoundary key={u.eid} name={u.url}>
-						<Suspense fallback={<UnitBox x={u.tileX} z={u.tileZ} color={u.color} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />}>
-							<UnitModel url={u.url} x={u.tileX} z={u.tileZ} elevationY={u.elevationY} factionColor={u.color} markScale={markScale} isCult={u.factionId.startsWith("static_") || u.factionId.startsWith("null_") || u.factionId.startsWith("lost_")} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+						<Suspense
+							fallback={
+								<UnitBox
+									x={u.tileX}
+									z={u.tileZ}
+									color={u.color}
+									useSphere={useSphere}
+									boardWidth={boardWidth}
+									boardHeight={boardHeight}
+								/>
+							}
+						>
+							<UnitModel
+								url={u.url}
+								x={u.tileX}
+								z={u.tileZ}
+								elevationY={u.elevationY}
+								factionColor={u.color}
+								markScale={markScale}
+								isCult={
+									u.factionId.startsWith("static_") ||
+									u.factionId.startsWith("null_") ||
+									u.factionId.startsWith("lost_")
+								}
+								useSphere={useSphere}
+								boardWidth={boardWidth}
+								boardHeight={boardHeight}
+							/>
 							{u.ap > 0 && (
 								<ReadinessRing
 									x={u.tileX}

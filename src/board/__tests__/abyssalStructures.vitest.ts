@@ -42,7 +42,8 @@ describe("abyssal structures", () => {
 			for (let z = 0; z < config.height; z++) {
 				for (let x = 0; x < config.width; x++) {
 					const tile = board.tiles[z]![x]!;
-					if (tile.floorType !== "durasteel_span" || tile.elevation !== 1) continue;
+					if (tile.floorType !== "durasteel_span" || tile.elevation !== 1)
+						continue;
 
 					const neighbors = [
 						[x - 1, z],
@@ -51,7 +52,8 @@ describe("abyssal structures", () => {
 						[x, z + 1],
 					] as const;
 					const hasAbyssalNeighbor = neighbors.some(([nx, nz]) => {
-						if (nx < 0 || nx >= config.width || nz < 0 || nz >= config.height) return false;
+						if (nx < 0 || nx >= config.width || nz < 0 || nz >= config.height)
+							return false;
 						return board.tiles[nz]![nx]!.floorType === "abyssal_platform";
 					});
 					if (hasAbyssalNeighbor) bridgeTiles.push({ x, z });
@@ -63,7 +65,10 @@ describe("abyssal structures", () => {
 			// Check that bridge tiles form lines (consecutive tiles in a row or column)
 			const bridgeSet = new Set(bridgeTiles.map((t) => `${t.x},${t.z}`));
 			for (const t of bridgeTiles) {
-				if (bridgeSet.has(`${t.x + 1},${t.z}`) || bridgeSet.has(`${t.x},${t.z + 1}`)) {
+				if (
+					bridgeSet.has(`${t.x + 1},${t.z}`) ||
+					bridgeSet.has(`${t.x},${t.z + 1}`)
+				) {
 					foundBridgeLine = true;
 					break;
 				}
@@ -102,7 +107,8 @@ describe("abyssal structures", () => {
 			for (let z = 1; z < config.height - 1; z++) {
 				for (let x = 1; x < config.width - 1; x++) {
 					const tile = board.tiles[z]![x]!;
-					if (tile.floorType !== "durasteel_span" || tile.elevation !== 1) continue;
+					if (tile.floorType !== "durasteel_span" || tile.elevation !== 1)
+						continue;
 
 					// Check if this tile is surrounded by abyssal context
 					// (at least 2 abyssal_platform or structural_mass@elev1 neighbors)
@@ -114,7 +120,8 @@ describe("abyssal structures", () => {
 					] as const;
 					let abyssalContext = 0;
 					for (const [nx, nz] of neighbors) {
-						if (nx < 0 || nx >= config.width || nz < 0 || nz >= config.height) continue;
+						if (nx < 0 || nx >= config.width || nz < 0 || nz >= config.height)
+							continue;
 						const n = board.tiles[nz]![nx]!;
 						if (
 							n.floorType === "abyssal_platform" ||
@@ -147,7 +154,8 @@ describe("abyssal structures", () => {
 		for (let z = 0; z < WET_CONFIG.height; z++) {
 			for (let x = 0; x < WET_CONFIG.width; x++) {
 				const tile = board.tiles[z]![x]!;
-				if (tile.floorType !== "durasteel_span" || tile.elevation !== 1) continue;
+				if (tile.floorType !== "durasteel_span" || tile.elevation !== 1)
+					continue;
 
 				// Check if this tile has an abyssal_platform neighbor AND
 				// a land-type neighbor (showing it's at a coastline)
@@ -161,7 +169,13 @@ describe("abyssal structures", () => {
 				let hasAbyssalNeighbor = false;
 				let hasLandNeighbor = false;
 				for (const [nx, nz] of neighbors) {
-					if (nx < 0 || nx >= WET_CONFIG.width || nz < 0 || nz >= WET_CONFIG.height) continue;
+					if (
+						nx < 0 ||
+						nx >= WET_CONFIG.width ||
+						nz < 0 ||
+						nz >= WET_CONFIG.height
+					)
+						continue;
 					const n = board.tiles[nz]![nx]!;
 					if (n.floorType === "abyssal_platform") hasAbyssalNeighbor = true;
 					if (
@@ -200,7 +214,8 @@ describe("abyssal structures", () => {
 		for (let z = 0; z < WET_CONFIG.height; z++) {
 			for (let x = 0; x < WET_CONFIG.width; x++) {
 				const tile = board.tiles[z]![x]!;
-				if (tile.floorType !== "durasteel_span" || tile.elevation !== 1) continue;
+				if (tile.floorType !== "durasteel_span" || tile.elevation !== 1)
+					continue;
 
 				const neighbors = [
 					[x - 1, z],
@@ -209,7 +224,12 @@ describe("abyssal structures", () => {
 					[x, z + 1],
 				] as const;
 				const hasAbyssalNeighbor = neighbors.some(([nx, nz]) => {
-					if (nx < 0 || nx >= WET_CONFIG.width || nz < 0 || nz >= WET_CONFIG.height)
+					if (
+						nx < 0 ||
+						nx >= WET_CONFIG.width ||
+						nz < 0 ||
+						nz >= WET_CONFIG.height
+					)
 						return false;
 					return board.tiles[nz]![nx]!.floorType === "abyssal_platform";
 				});
@@ -254,7 +274,8 @@ describe("abyssal structures", () => {
 			for (let z = 0; z < config.height; z++) {
 				for (let x = 0; x < config.width; x++) {
 					const tile = board.tiles[z]![x]!;
-					if (tile.floorType !== "structural_mass" || tile.elevation !== 1) continue;
+					if (tile.floorType !== "structural_mass" || tile.elevation !== 1)
+						continue;
 
 					// Check if this structural_mass tile is surrounded by abyssal tiles
 					// (meaning it's a pylon in an abyssal zone, not a building wall)

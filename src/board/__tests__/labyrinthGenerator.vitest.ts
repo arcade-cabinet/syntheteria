@@ -49,14 +49,25 @@ function countResources(tiles: TileData[][]): number {
 }
 
 /** Flood fill from (sx,sz), returns reachable passable count. */
-function floodFill(tiles: TileData[][], sx: number, sz: number, w: number, h: number): number {
+function floodFill(
+	tiles: TileData[][],
+	sx: number,
+	sz: number,
+	w: number,
+	h: number,
+): number {
 	if (!tiles[sz]?.[sx]?.passable) return 0;
 	const visited = new Set<string>();
 	const stack: Array<[number, number]> = [[sx, sz]];
 	visited.add(`${sx},${sz}`);
 	while (stack.length > 0) {
 		const [cx, cz] = stack.pop()!;
-		for (const [dx, dz] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+		for (const [dx, dz] of [
+			[0, -1],
+			[1, 0],
+			[0, 1],
+			[-1, 0],
+		]) {
 			const nx = cx + dx!;
 			const nz = cz + dz!;
 			const key = `${nx},${nz}`;

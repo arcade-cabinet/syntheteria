@@ -14,8 +14,8 @@
 
 import { describe, expect, it } from "vitest";
 import {
-	createDepthMappedLayer,
 	classifyEdges,
+	createDepthMappedLayer,
 	type EdgeType,
 } from "../depthMappedLayer";
 
@@ -117,9 +117,7 @@ describe("edge classification", () => {
 
 		// Cell (0,0) at depth -1 should have boundary walls on its exposed edges
 		// The boundary walls appear where depth != 0 at the grid edge
-		const cornerBoundaries = boundaries.filter(
-			(e) => e.x === 0 && e.z === 0,
-		);
+		const cornerBoundaries = boundaries.filter((e) => e.x === 0 && e.z === 0);
 		expect(cornerBoundaries.length).toBeGreaterThanOrEqual(2);
 	});
 
@@ -134,13 +132,31 @@ describe("edge classification", () => {
 		const walls = edges.filter((e) => e.type === "wall");
 
 		// (0,0)↔(1,0): diff=1 → ramp
-		expect(ramps.some((e) => e.x === 0 && e.direction === "east" || e.x === 1 && e.direction === "west")).toBe(true);
+		expect(
+			ramps.some(
+				(e) =>
+					(e.x === 0 && e.direction === "east") ||
+					(e.x === 1 && e.direction === "west"),
+			),
+		).toBe(true);
 
 		// (1,0)↔(2,0): diff=2 → wall
-		expect(walls.some((e) => e.x === 1 && e.direction === "east" || e.x === 2 && e.direction === "west")).toBe(true);
+		expect(
+			walls.some(
+				(e) =>
+					(e.x === 1 && e.direction === "east") ||
+					(e.x === 2 && e.direction === "west"),
+			),
+		).toBe(true);
 
 		// (2,0)↔(3,0): diff=3 → wall
-		expect(walls.some((e) => e.x === 2 && e.direction === "east" || e.x === 3 && e.direction === "west")).toBe(true);
+		expect(
+			walls.some(
+				(e) =>
+					(e.x === 2 && e.direction === "east") ||
+					(e.x === 3 && e.direction === "west"),
+			),
+		).toBe(true);
 	});
 
 	it("all-same-depth grid produces only boundary edges (if any depth != 0)", () => {

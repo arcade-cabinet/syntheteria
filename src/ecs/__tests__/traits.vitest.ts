@@ -1,11 +1,11 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { TileFloor } from "../terrain/traits";
 import { Board } from "../traits/board";
 import { Building } from "../traits/building";
 import { Faction, FactionRelation } from "../traits/faction";
 import { ResourceDeposit } from "../traits/resource";
 import { Tile, TileHighlight } from "../traits/tile";
-import { TileFloor } from "../terrain/traits";
 import {
 	UnitFaction,
 	UnitMove,
@@ -34,9 +34,7 @@ describe("Tile traits", () => {
 	});
 
 	it("spawns with initial values", () => {
-		const e = world.spawn(
-			Tile({ x: 5, z: 3, elevation: 2, passable: false }),
-		);
+		const e = world.spawn(Tile({ x: 5, z: 3, elevation: 2, passable: false }));
 		const t = e.get(Tile)!;
 		expect(t.x).toBe(5);
 		expect(t.z).toBe(3);
@@ -75,7 +73,15 @@ describe("Tile traits", () => {
 	});
 
 	it("TileFloor spawns with values", () => {
-		const e = world.spawn(TileFloor({ floorType: "collapsed_zone", mineable: true, hardness: 1, resourceMaterial: "scrap_metal", resourceAmount: 2 }));
+		const e = world.spawn(
+			TileFloor({
+				floorType: "collapsed_zone",
+				mineable: true,
+				hardness: 1,
+				resourceMaterial: "scrap_metal",
+				resourceAmount: 2,
+			}),
+		);
 		const f = e.get(TileFloor)!;
 		expect(f.floorType).toBe("collapsed_zone");
 		expect(f.mineable).toBe(true);

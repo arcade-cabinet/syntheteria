@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	CULT_STRUCTURE_DEFS,
-	type CultStructureType,
-} from "../cultStructures";
+import { CULT_STRUCTURE_DEFS, type CultStructureType } from "../cultStructures";
 
 const ALL_CULT_TYPES: CultStructureType[] = [
 	"breach_altar",

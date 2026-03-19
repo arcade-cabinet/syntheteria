@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it } from "vitest";
 import { createWorld } from "koota";
-import { collectPendingItems } from "../PendingCompletions";
+import { beforeEach, describe, expect, it } from "vitest";
 import { FabricationJob } from "../../../ecs/systems/fabricationSystem";
+import { collectPendingItems } from "../PendingCompletions";
 
 describe("collectPendingItems", () => {
 	it("returns empty array when no jobs exist", () => {

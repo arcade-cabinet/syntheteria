@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { generateCityLayout } from "../cityLayout";
 import type { CityBlock } from "../cityLayout";
+import { generateCityLayout } from "../cityLayout";
 
 describe("generateCityLayout", () => {
 	it("blocks plus corridors cover entire board", () => {
@@ -47,8 +47,14 @@ describe("generateCityLayout", () => {
 		const blocks = generateCityLayout(64, 64, "min-size-test");
 
 		for (const b of blocks) {
-			expect(b.w, `block at (${b.x},${b.z}) width ${b.w}`).toBeGreaterThanOrEqual(6);
-			expect(b.h, `block at (${b.x},${b.z}) height ${b.h}`).toBeGreaterThanOrEqual(6);
+			expect(
+				b.w,
+				`block at (${b.x},${b.z}) width ${b.w}`,
+			).toBeGreaterThanOrEqual(6);
+			expect(
+				b.h,
+				`block at (${b.x},${b.z}) height ${b.h}`,
+			).toBeGreaterThanOrEqual(6);
 		}
 	});
 

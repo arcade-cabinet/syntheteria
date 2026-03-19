@@ -2,20 +2,25 @@ import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import { generateBoard } from "../../board/generator";
 import type { BoardConfig, GeneratedBoard, TileData } from "../../board/types";
-import { floorTypeForTile } from "../../ecs/terrain/cluster";
 import { initFactions } from "../../ecs/factions/init";
+import { runAiTurns } from "../../ecs/systems/aiTurnSystem";
 import {
 	_reset,
 	checkCultistSpawn,
 	getStormCultistParams,
 } from "../../ecs/systems/cultistSystem";
-import { runAiTurns } from "../../ecs/systems/aiTurnSystem";
+import { floorTypeForTile } from "../../ecs/terrain/cluster";
 import { Board } from "../../ecs/traits/board";
 import { Faction } from "../../ecs/traits/faction";
 import { ResourcePool } from "../../ecs/traits/resource";
-import { UnitAttack, UnitFaction, UnitPos, UnitStats } from "../../ecs/traits/unit";
-import { CLIMATE_PROFILE_SPECS } from "../config";
+import {
+	UnitAttack,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+} from "../../ecs/traits/unit";
 import type { ClimateProfile, Difficulty, StormProfile } from "../config";
+import { CLIMATE_PROFILE_SPECS } from "../config";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -111,15 +116,22 @@ describe("climate profiles config wiring", () => {
 		let lowWaterAbyssal = 0;
 		for (let x = 0; x < 32; x++) {
 			for (let z = 0; z < 32; z++) {
-				if (floorTypeForTile(x, z, 0, seed, 0.8) === "abyssal_platform") highWaterAbyssal++;
-				if (floorTypeForTile(x, z, 0, seed, 0.1) === "abyssal_platform") lowWaterAbyssal++;
+				if (floorTypeForTile(x, z, 0, seed, 0.8) === "abyssal_platform")
+					highWaterAbyssal++;
+				if (floorTypeForTile(x, z, 0, seed, 0.1) === "abyssal_platform")
+					lowWaterAbyssal++;
 			}
 		}
 		expect(highWaterAbyssal).toBeGreaterThan(lowWaterAbyssal);
 	});
 
 	it("default climate profile in BoardConfig is temperate when omitted", () => {
-		const config: BoardConfig = { width: 16, height: 16, seed, difficulty: "normal" };
+		const config: BoardConfig = {
+			width: 16,
+			height: 16,
+			seed,
+			difficulty: "normal",
+		};
 		const board = generateBoard(config);
 		// Should generate without error
 		expect(board.tiles.length).toBe(16);
@@ -153,11 +165,12 @@ describe("climate profiles config wiring", () => {
 			let structuralCount = 0;
 			for (let z = 0; z < board.config.height; z++) {
 				for (let x = 0; x < board.config.width; x++) {
-					if (board.tiles[z]![x]!.floorType === "structural_mass") structuralCount++;
+					if (board.tiles[z]![x]!.floorType === "structural_mass")
+						structuralCount++;
 				}
 			}
 			// BSP always produces structural perimeters — at least 10% of tiles
-			expect(structuralCount / (SIZE * SIZE)).toBeGreaterThanOrEqual(0.10);
+			expect(structuralCount / (SIZE * SIZE)).toBeGreaterThanOrEqual(0.1);
 		}
 	});
 });
@@ -207,7 +220,15 @@ describe("storm profiles affect cultist spawning", () => {
 			world.spawn(
 				UnitPos({ tileX: i % 16, tileZ: Math.floor(i / 16) }),
 				UnitFaction({ factionId: "player" }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 3,
+					maxAp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+				}),
 			);
 		}
 
@@ -216,7 +237,15 @@ describe("storm profiles affect cultist spawning", () => {
 			world.spawn(
 				UnitPos({ tileX: i, tileZ: 15 }),
 				UnitFaction({ factionId: "static_remnants" }),
-				UnitStats({ hp: 6, maxHp: 6, ap: 2, maxAp: 2, scanRange: 3, attack: 3, defense: 0 }),
+				UnitStats({
+					hp: 6,
+					maxHp: 6,
+					ap: 2,
+					maxAp: 2,
+					scanRange: 3,
+					attack: 3,
+					defense: 0,
+				}),
 			);
 		}
 
@@ -259,7 +288,15 @@ describe("storm profiles affect cultist spawning", () => {
 			world.spawn(
 				UnitPos({ tileX: i, tileZ: 0 }),
 				UnitFaction({ factionId: "static_remnants" }),
-				UnitStats({ hp: 6, maxHp: 6, ap: 2, maxAp: 2, scanRange: 3, attack: 3, defense: 0 }),
+				UnitStats({
+					hp: 6,
+					maxHp: 6,
+					ap: 2,
+					maxAp: 2,
+					scanRange: 3,
+					attack: 3,
+					defense: 0,
+				}),
 			);
 		}
 

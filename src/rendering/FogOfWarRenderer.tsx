@@ -109,7 +109,11 @@ export function updateVisibility(
 	const reveals: { x: number; z: number; range: number }[] = [];
 	for (const entity of world.query(UnitPos, UnitFaction, UnitStats)) {
 		const faction = entity.get(UnitFaction);
-		if (!faction || (faction.factionId !== "player" && faction.factionId !== "")) continue;
+		if (
+			!faction ||
+			(faction.factionId !== "player" && faction.factionId !== "")
+		)
+			continue;
 		const pos = entity.get(UnitPos);
 		const stats = entity.get(UnitStats);
 		if (!pos || !stats) continue;
@@ -141,10 +145,10 @@ export function updateVisibility(
 			// Keep explored tiles visible — never re-fog (max with existing)
 			const existing = data[idx]!;
 			const finalVis = Math.max(existing, maxVis);
-			data[idx] = finalVis;     // R
+			data[idx] = finalVis; // R
 			data[idx + 1] = finalVis; // G
 			data[idx + 2] = finalVis; // B
-			data[idx + 3] = 255;      // A
+			data[idx + 3] = 255; // A
 		}
 	}
 
@@ -289,7 +293,11 @@ export function FogOfWarRenderer({ board, world }: FogOfWarRendererProps) {
 		const parts: string[] = [];
 		for (const entity of world.query(UnitPos, UnitFaction)) {
 			const faction = entity.get(UnitFaction);
-			if (!faction || (faction.factionId !== "player" && faction.factionId !== "")) continue;
+			if (
+				!faction ||
+				(faction.factionId !== "player" && faction.factionId !== "")
+			)
+				continue;
 			const pos = entity.get(UnitPos);
 			if (!pos) continue;
 			parts.push(`${pos.tileX},${pos.tileZ}`);

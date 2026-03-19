@@ -1,5 +1,6 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { CULT_INFANTRY_DEFAULTS } from "../../robots/CultMechs";
 import { CultMutation } from "../../traits/cult";
 import { UnitFaction, UnitStats } from "../../traits/unit";
 import {
@@ -9,7 +10,6 @@ import {
 	TIER_2_ABILITIES,
 	tickCultMutations,
 } from "../cultMutation";
-import { CULT_INFANTRY_DEFAULTS } from "../../robots/CultMechs";
 
 function spawnCultUnit(
 	world: ReturnType<typeof createWorld>,
@@ -20,7 +20,12 @@ function spawnCultUnit(
 	const e = world.spawn(
 		UnitFaction({ factionId }),
 		UnitStats(stats),
-		CultMutation({ turnsAlive: 0, mutationTier: 0, mutationSeed: seed, specialAbility: "" }),
+		CultMutation({
+			turnsAlive: 0,
+			mutationTier: 0,
+			mutationSeed: seed,
+			specialAbility: "",
+		}),
 	);
 	return e;
 }
@@ -221,7 +226,12 @@ describe("cultMutation", () => {
 		it("different seeds produce different mutations", () => {
 			// Spawn many units with different seeds
 			const seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 200, 300];
-			const results: Array<{ attack: number; defense: number; mp: number; ability: string }> = [];
+			const results: Array<{
+				attack: number;
+				defense: number;
+				mp: number;
+				ability: string;
+			}> = [];
 
 			for (const seed of seeds) {
 				world.destroy();
@@ -294,7 +304,12 @@ describe("cultMutation", () => {
 			const playerUnit = world.spawn(
 				UnitFaction({ factionId: "player" }),
 				UnitStats({ ...CULT_INFANTRY_DEFAULTS.stats }),
-				CultMutation({ turnsAlive: 0, mutationTier: 0, mutationSeed: 1, specialAbility: "" }),
+				CultMutation({
+					turnsAlive: 0,
+					mutationTier: 0,
+					mutationSeed: 1,
+					specialAbility: "",
+				}),
 			);
 
 			for (let i = 0; i < 10; i++) {

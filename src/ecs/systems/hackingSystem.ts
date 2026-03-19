@@ -21,22 +21,26 @@ import type { World } from "koota";
 import { trait } from "koota";
 import { playSfx } from "../../audio/sfx";
 import { pushTurnEvent } from "../../ui/game/turnEvents";
-import { pushToast } from "./toastNotifications";
+import type { RobotClass } from "../robots/types";
 import { Building, Powered } from "../traits/building";
 import { Faction } from "../traits/faction";
 import { ResourcePool } from "../traits/resource";
 import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../traits/unit";
-import type { RobotClass } from "../robots/types";
 import {
+	getHackedBotRole,
 	HACKING_AP_COST,
 	HACKING_BASE_DIFFICULTY,
 	HACKING_RANGE,
-	getHackedBotRole,
 } from "./hackingTypes";
+import { pushToast } from "./toastNotifications";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-export type HackType = "disable_building" | "steal_resources" | "convert_turret" | "capture_unit";
+export type HackType =
+	| "disable_building"
+	| "steal_resources"
+	| "convert_turret"
+	| "capture_unit";
 
 // ─── Hack Progress Trait ────────────────────────────────────────────────────
 
@@ -70,11 +74,32 @@ const UNIT_CAPTURE_DIFFICULTY = 6;
 
 export type StartHackResult =
 	| { ok: true }
-	| { ok: false; reason: "no_unit" | "no_ap" | "not_hacker" | "not_volt" | "already_hacking" | "no_target" | "own_building" | "out_of_range" | "invalid_hack_type" };
+	| {
+			ok: false;
+			reason:
+				| "no_unit"
+				| "no_ap"
+				| "not_hacker"
+				| "not_volt"
+				| "already_hacking"
+				| "no_target"
+				| "own_building"
+				| "out_of_range"
+				| "invalid_hack_type";
+	  };
 
 export type StartUnitHackResult =
 	| { ok: true }
-	| { ok: false; reason: "no_unit" | "no_ap" | "already_hacking" | "no_target" | "own_unit" | "out_of_range" };
+	| {
+			ok: false;
+			reason:
+				| "no_unit"
+				| "no_ap"
+				| "already_hacking"
+				| "no_target"
+				| "own_unit"
+				| "out_of_range";
+	  };
 
 function manhattanDist(ax: number, az: number, bx: number, bz: number): number {
 	return Math.abs(ax - bx) + Math.abs(az - bz);
@@ -103,17 +128,22 @@ export function startHack(
 
 	// Check AP
 	const stats = hackerEntity.get(UnitStats);
-	if (!stats || stats.ap < HACKING_AP_COST) return { ok: false, reason: "no_ap" };
+	if (!stats || stats.ap < HACKING_AP_COST)
+		return { ok: false, reason: "no_ap" };
 
 	// Check not already hacking
-	if (hackerEntity.has(HackProgress)) return { ok: false, reason: "already_hacking" };
+	if (hackerEntity.has(HackProgress))
+		return { ok: false, reason: "already_hacking" };
 
 	// Check hacker is a support unit (modelId check)
 	const hackerFaction = hackerEntity.get(UnitFaction);
 	if (!hackerFaction) return { ok: false, reason: "no_unit" };
 
 	// Volt Collective faction check — only volt_collective (or player-as-volt) can hack
-	if (hackerFaction.factionId !== "volt_collective" && hackerFaction.factionId !== "player") {
+	if (
+		hackerFaction.factionId !== "volt_collective" &&
+		hackerFaction.factionId !== "player"
+	) {
 		return { ok: false, reason: "not_volt" };
 	}
 
@@ -131,10 +161,14 @@ export function startHack(
 	if (!building) return { ok: false, reason: "no_target" };
 
 	// Can't hack own buildings
-	if (building.factionId === hackerFaction.factionId) return { ok: false, reason: "own_building" };
+	if (building.factionId === hackerFaction.factionId)
+		return { ok: false, reason: "own_building" };
 
 	// Validate hack type against building type
-	if (hackType === "convert_turret" && building.buildingType !== "defense_turret") {
+	if (
+		hackType === "convert_turret" &&
+		building.buildingType !== "defense_turret"
+	) {
 		return { ok: false, reason: "invalid_hack_type" };
 	}
 
@@ -142,7 +176,12 @@ export function startHack(
 	const hackerPos = hackerEntity.get(UnitPos);
 	if (!hackerPos) return { ok: false, reason: "no_unit" };
 
-	const dist = manhattanDist(hackerPos.tileX, hackerPos.tileZ, building.tileX, building.tileZ);
+	const dist = manhattanDist(
+		hackerPos.tileX,
+		hackerPos.tileZ,
+		building.tileX,
+		building.tileZ,
+	);
 	if (dist > HACKING_RANGE) return { ok: false, reason: "out_of_range" };
 
 	// Deduct AP
@@ -197,9 +236,11 @@ export function startUnitHack(
 	if (!hackerEntity) return { ok: false, reason: "no_unit" };
 
 	const stats = hackerEntity.get(UnitStats);
-	if (!stats || stats.ap < HACKING_AP_COST) return { ok: false, reason: "no_ap" };
+	if (!stats || stats.ap < HACKING_AP_COST)
+		return { ok: false, reason: "no_ap" };
 
-	if (hackerEntity.has(HackProgress)) return { ok: false, reason: "already_hacking" };
+	if (hackerEntity.has(HackProgress))
+		return { ok: false, reason: "already_hacking" };
 
 	const hackerFaction = hackerEntity.get(UnitFaction);
 	if (!hackerFaction) return { ok: false, reason: "no_unit" };
@@ -218,14 +259,20 @@ export function startUnitHack(
 	if (!targetFaction) return { ok: false, reason: "no_target" };
 
 	// Can't hack own units
-	if (targetFaction.factionId === hackerFaction.factionId) return { ok: false, reason: "own_unit" };
+	if (targetFaction.factionId === hackerFaction.factionId)
+		return { ok: false, reason: "own_unit" };
 
 	// Range check
 	const hackerPos = hackerEntity.get(UnitPos);
 	const targetPos = targetUnit.get(UnitPos);
 	if (!hackerPos || !targetPos) return { ok: false, reason: "no_unit" };
 
-	const dist = manhattanDist(hackerPos.tileX, hackerPos.tileZ, targetPos.tileX, targetPos.tileZ);
+	const dist = manhattanDist(
+		hackerPos.tileX,
+		hackerPos.tileZ,
+		targetPos.tileX,
+		targetPos.tileZ,
+	);
 	if (dist > HACKING_RANGE) return { ok: false, reason: "out_of_range" };
 
 	// Deduct AP
@@ -269,9 +316,18 @@ export function runHackProgress(world: World): number {
 		const hackerFaction = hacker.get(UnitFaction);
 		if (hackerFaction) {
 			if (progress.hackType === "capture_unit") {
-				resolveUnitCapture(world, progress.targetEntityId, hackerFaction.factionId);
+				resolveUnitCapture(
+					world,
+					progress.targetEntityId,
+					hackerFaction.factionId,
+				);
 			} else {
-				resolveHack(world, progress.targetEntityId, progress.hackType, hackerFaction.factionId);
+				resolveHack(
+					world,
+					progress.targetEntityId,
+					progress.hackType,
+					hackerFaction.factionId,
+				);
 			}
 		}
 
@@ -311,18 +367,35 @@ function resolveHack(
 			if (targetEntity.has(Powered)) {
 				targetEntity.remove(Powered);
 			}
-			pushTurnEvent(`Hack complete: ${building.buildingType.replace(/_/g, " ")} disabled`);
-			pushToast("system", `BUILDING DISABLED: ${buildingLabel}`, `OFFLINE FOR ${DISABLE_DURATION_TURNS} CYCLES`);
+			pushTurnEvent(
+				`Hack complete: ${building.buildingType.replace(/_/g, " ")} disabled`,
+			);
+			pushToast(
+				"system",
+				`BUILDING DISABLED: ${buildingLabel}`,
+				`OFFLINE FOR ${DISABLE_DURATION_TURNS} CYCLES`,
+			);
 			playSfx("build_complete");
 			break;
 		}
 
 		case "steal_resources": {
 			// Transfer resources from target faction to hacker faction
-			const stolen = transferResources(world, building.factionId, hackerFactionId, STEAL_AMOUNT);
+			const stolen = transferResources(
+				world,
+				building.factionId,
+				hackerFactionId,
+				STEAL_AMOUNT,
+			);
 			if (stolen > 0) {
-				pushTurnEvent(`Hack complete: stole ${stolen} resources from ${building.factionId}`);
-				pushToast("system", "RESOURCE THEFT COMPLETE", `${stolen} RESOURCES TRANSFERRED`);
+				pushTurnEvent(
+					`Hack complete: stole ${stolen} resources from ${building.factionId}`,
+				);
+				pushToast(
+					"system",
+					"RESOURCE THEFT COMPLETE",
+					`${stolen} RESOURCES TRANSFERRED`,
+				);
 			} else {
 				pushTurnEvent("Hack complete: no resources to steal");
 			}
@@ -334,7 +407,11 @@ function resolveHack(
 			// Flip turret faction
 			targetEntity.set(Building, { ...building, factionId: hackerFactionId });
 			pushTurnEvent(`Hack complete: turret converted to ${hackerFactionId}`);
-			pushToast("system", `TURRET CONVERTED: ${buildingLabel}`, "FACTION OWNERSHIP TRANSFERRED");
+			pushToast(
+				"system",
+				`TURRET CONVERTED: ${buildingLabel}`,
+				"FACTION OWNERSHIP TRANSFERRED",
+			);
 			playSfx("build_complete");
 			break;
 		}
@@ -381,7 +458,11 @@ function resolveUnitCapture(
 
 	const modelLabel = visual?.modelId?.replace(/_/g, " ") ?? "unit";
 	pushTurnEvent(`Hack complete: ${modelLabel} captured for ${hackerFactionId}`);
-	pushToast("system", `${modelLabel.toUpperCase()} CAPTURED`, "FACTION CONVERTED");
+	pushToast(
+		"system",
+		`${modelLabel.toUpperCase()} CAPTURED`,
+		"FACTION CONVERTED",
+	);
 	playSfx("build_complete");
 }
 
@@ -416,10 +497,19 @@ function transferResources(
 	if (!sourcePool || !sourceEntity || !targetPool || !targetEntity) return 0;
 
 	const RESOURCE_KEYS = [
-		"ferrous_scrap", "alloy_stock", "polymer_salvage", "conductor_wire",
-		"electrolyte", "silicon_wafer", "storm_charge", "el_crystal",
-		"scrap_metal", "e_waste", "intact_components",
-		"thermal_fluid", "depth_salvage",
+		"ferrous_scrap",
+		"alloy_stock",
+		"polymer_salvage",
+		"conductor_wire",
+		"electrolyte",
+		"silicon_wafer",
+		"storm_charge",
+		"el_crystal",
+		"scrap_metal",
+		"e_waste",
+		"intact_components",
+		"thermal_fluid",
+		"depth_salvage",
 	];
 
 	let totalStolen = 0;

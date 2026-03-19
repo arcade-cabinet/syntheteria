@@ -9,19 +9,19 @@
 import { describe, expect, it } from "vitest";
 import type { SupportTrack } from "../specializations/supportTracks";
 import {
-	SUPPORT_TRACKS,
-	FIELD_MEDIC_SPECIALIZATIONS,
-	SIGNAL_BOOSTER_SPECIALIZATIONS,
-	WAR_CALLER_SPECIALIZATIONS,
-	FIELD_MEDIC_V2_UPGRADES,
-	SIGNAL_BOOSTER_V2_UPGRADES,
-	WAR_CALLER_V2_UPGRADES,
 	FIELD_MEDIC_ACTIONS,
-	SIGNAL_BOOSTER_ACTIONS,
-	WAR_CALLER_ACTIONS,
-	SUPPORT_TRACK_TECHS,
-	getTrackSpecializations,
+	FIELD_MEDIC_SPECIALIZATIONS,
+	FIELD_MEDIC_V2_UPGRADES,
 	getTrackActions,
+	getTrackSpecializations,
+	SIGNAL_BOOSTER_ACTIONS,
+	SIGNAL_BOOSTER_SPECIALIZATIONS,
+	SIGNAL_BOOSTER_V2_UPGRADES,
+	SUPPORT_TRACK_TECHS,
+	SUPPORT_TRACKS,
+	WAR_CALLER_ACTIONS,
+	WAR_CALLER_SPECIALIZATIONS,
+	WAR_CALLER_V2_UPGRADES,
 } from "../specializations/supportTracks";
 
 describe("Support specialization tracks", () => {
@@ -137,7 +137,9 @@ describe("Support specialization tracks", () => {
 		it("v2 upgrades replace Mark III and IV", () => {
 			expect(SIGNAL_BOOSTER_V2_UPGRADES).toHaveLength(2);
 			expect(SIGNAL_BOOSTER_V2_UPGRADES[0]!.markLevel).toBe(3);
-			expect(SIGNAL_BOOSTER_V2_UPGRADES[0]!.effectType).toBe("quantum_counter_stealth");
+			expect(SIGNAL_BOOSTER_V2_UPGRADES[0]!.effectType).toBe(
+				"quantum_counter_stealth",
+			);
 			expect(SIGNAL_BOOSTER_V2_UPGRADES[1]!.markLevel).toBe(4);
 			expect(SIGNAL_BOOSTER_V2_UPGRADES[1]!.effectType).toBe("blackout_pulse");
 		});
@@ -222,7 +224,11 @@ describe("Support specialization tracks", () => {
 		});
 
 		it("all track actions have valid ClassActionDef fields", () => {
-			const allActions = [...FIELD_MEDIC_ACTIONS, ...SIGNAL_BOOSTER_ACTIONS, ...WAR_CALLER_ACTIONS];
+			const allActions = [
+				...FIELD_MEDIC_ACTIONS,
+				...SIGNAL_BOOSTER_ACTIONS,
+				...WAR_CALLER_ACTIONS,
+			];
 			for (const action of allActions) {
 				expect(action.id).toBeTruthy();
 				expect(action.label).toBeTruthy();
@@ -302,11 +308,11 @@ describe("Support specialization tracks", () => {
 			expect(specs).toHaveLength(4);
 
 			// Mark III should be nanite_regen (v2), not regen_aura (base)
-			const mark3 = specs.find(s => s.markLevel === 3);
+			const mark3 = specs.find((s) => s.markLevel === 3);
 			expect(mark3!.effectType).toBe("nanite_regen");
 
 			// Mark IV should be failsafe_override (v2), not emergency_stabilize (base)
-			const mark4 = specs.find(s => s.markLevel === 4);
+			const mark4 = specs.find((s) => s.markLevel === 4);
 			expect(mark4!.effectType).toBe("failsafe_override");
 		});
 
@@ -315,7 +321,7 @@ describe("Support specialization tracks", () => {
 			// Mark II (relay_amplifier) + Mark III v2 + Mark IV v2 + Mark V (omniscient_relay) = 4
 			expect(specs).toHaveLength(4);
 
-			const effectTypes = specs.map(s => s.effectType);
+			const effectTypes = specs.map((s) => s.effectType);
 			expect(effectTypes).toContain("relay_amplifier"); // Mark II base
 			expect(effectTypes).toContain("omniscient_relay"); // Mark V base
 			expect(effectTypes).toContain("quantum_counter_stealth"); // v2
@@ -340,13 +346,17 @@ describe("Support specialization tracks", () => {
 				...SIGNAL_BOOSTER_SPECIALIZATIONS,
 				...WAR_CALLER_SPECIALIZATIONS,
 			];
-			const effectTypes = allSpecs.map(s => s.effectType);
+			const effectTypes = allSpecs.map((s) => s.effectType);
 			expect(new Set(effectTypes).size).toBe(effectTypes.length);
 		});
 
 		it("all action IDs across all tracks are unique", () => {
-			const allActions = [...FIELD_MEDIC_ACTIONS, ...SIGNAL_BOOSTER_ACTIONS, ...WAR_CALLER_ACTIONS];
-			const ids = allActions.map(a => a.id);
+			const allActions = [
+				...FIELD_MEDIC_ACTIONS,
+				...SIGNAL_BOOSTER_ACTIONS,
+				...WAR_CALLER_ACTIONS,
+			];
+			const ids = allActions.map((a) => a.id);
 			expect(new Set(ids).size).toBe(ids.length);
 		});
 
@@ -355,13 +365,13 @@ describe("Support specialization tracks", () => {
 				...FIELD_MEDIC_SPECIALIZATIONS,
 				...SIGNAL_BOOSTER_SPECIALIZATIONS,
 				...WAR_CALLER_SPECIALIZATIONS,
-			].map(s => s.effectType);
+			].map((s) => s.effectType);
 
 			const v2Types = [
 				...FIELD_MEDIC_V2_UPGRADES,
 				...SIGNAL_BOOSTER_V2_UPGRADES,
 				...WAR_CALLER_V2_UPGRADES,
-			].map(s => s.effectType);
+			].map((s) => s.effectType);
 
 			for (const v2Type of v2Types) {
 				expect(baseTypes).not.toContain(v2Type);

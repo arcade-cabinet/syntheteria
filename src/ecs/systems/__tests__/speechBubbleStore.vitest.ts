@@ -101,7 +101,9 @@ describe("speechBubbleStore", () => {
 			// At exactly cooldown
 			vi.advanceTimersByTime(1);
 			triggerSpeech(1, "player", "Right on time");
-			const rightOnTime = getActiveSpeech().find((s) => s.text === "Right on time");
+			const rightOnTime = getActiveSpeech().find(
+				(s) => s.text === "Right on time",
+			);
 			expect(rightOnTime).toBeDefined();
 		});
 	});
@@ -169,7 +171,9 @@ describe("speechBubbleStore", () => {
 	describe("subscribeSpeech", () => {
 		it("notifies on triggerSpeech", () => {
 			let notified = false;
-			const unsub = subscribeSpeech(() => { notified = true; });
+			const unsub = subscribeSpeech(() => {
+				notified = true;
+			});
 
 			triggerSpeech(1, "player", "Hello");
 			expect(notified).toBe(true);
@@ -181,7 +185,9 @@ describe("speechBubbleStore", () => {
 			triggerSpeech(1, "player", "Hello");
 
 			let notified = false;
-			const unsub = subscribeSpeech(() => { notified = true; });
+			const unsub = subscribeSpeech(() => {
+				notified = true;
+			});
 
 			clearAllSpeech();
 			expect(notified).toBe(true);
@@ -191,7 +197,9 @@ describe("speechBubbleStore", () => {
 
 		it("unsubscribe stops future notifications", () => {
 			let count = 0;
-			const unsub = subscribeSpeech(() => { count++; });
+			const unsub = subscribeSpeech(() => {
+				count++;
+			});
 
 			triggerSpeech(1, "player", "One");
 			expect(count).toBe(1);
@@ -205,7 +213,9 @@ describe("speechBubbleStore", () => {
 			triggerSpeech(1, "player", "First");
 
 			let notified = false;
-			const unsub = subscribeSpeech(() => { notified = true; });
+			const unsub = subscribeSpeech(() => {
+				notified = true;
+			});
 
 			// Should be dropped — no notification
 			triggerSpeech(1, "player", "Blocked");

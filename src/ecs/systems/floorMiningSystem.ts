@@ -14,14 +14,21 @@
  */
 
 import type { World } from "koota";
-import type { RobotClass } from "../robots/types";
-import type { ResourceMaterial } from "../terrain/types";
-import { FLOOR_DEFS } from "../terrain/types";
-import { TileFloor } from "../terrain/traits";
-import { Tile } from "../traits/tile";
-import { UnitFaction, UnitMine, UnitPos, UnitStats, UnitVisual, UnitXP } from "../traits/unit";
 import { playSfx } from "../../audio/sfx";
 import { pushTurnEvent } from "../../ui/game/turnEvents";
+import type { RobotClass } from "../robots/types";
+import { TileFloor } from "../terrain/traits";
+import type { ResourceMaterial } from "../terrain/types";
+import { FLOOR_DEFS } from "../terrain/types";
+import { Tile } from "../traits/tile";
+import {
+	UnitFaction,
+	UnitMine,
+	UnitPos,
+	UnitStats,
+	UnitVisual,
+	UnitXP,
+} from "../traits/unit";
 import { awardXP, recordHarvest } from "./experienceSystem";
 import { isTechResearched } from "./researchSystem";
 import { trackIncome } from "./resourceDeltaSystem";
@@ -64,9 +71,11 @@ export function floorMiningSystem(world: World): void {
 		}
 
 		// Yield resources based on FloorDef range
-		const def = FLOOR_DEFS[floor.floorType as import("../terrain/types").FloorType];
+		const def =
+			FLOOR_DEFS[floor.floorType as import("../terrain/types").FloorType];
 		const [minYield, maxYield] = def.resourceAmount;
-		let yieldAmount = minYield + Math.floor(Math.random() * (maxYield - minYield + 1));
+		let yieldAmount =
+			minYield + Math.floor(Math.random() * (maxYield - minYield + 1));
 
 		// Deep mining tech bonus: +50% yield
 		if (isTechResearched(world, faction.factionId, "deep_mining")) {
@@ -82,7 +91,9 @@ export function floorMiningSystem(world: World): void {
 		trackIncome(floor.resourceMaterial as ResourceMaterial, yieldAmount);
 
 		const materialLabel = floor.resourceMaterial.replace(/_/g, " ");
-		pushTurnEvent(`Floor mining complete: +${yieldAmount} ${materialLabel} from ${def.label}`);
+		pushTurnEvent(
+			`Floor mining complete: +${yieldAmount} ${materialLabel} from ${def.label}`,
+		);
 
 		// Trigger speech and XP
 		triggerHarvestSpeech(world, unit.id(), faction.factionId);
@@ -105,7 +116,10 @@ export function floorMiningSystem(world: World): void {
 		// Lower tile elevation to create visible pit (-1 = pit depth)
 		const tileData = tileEntity.get(Tile);
 		if (tileData && tileData.elevation >= 0) {
-			tileEntity.set(Tile, { ...tileData, elevation: -1 as import("../traits/tile").Elevation });
+			tileEntity.set(Tile, {
+				...tileData,
+				elevation: -1 as import("../traits/tile").Elevation,
+			});
 		}
 
 		unit.remove(UnitMine);

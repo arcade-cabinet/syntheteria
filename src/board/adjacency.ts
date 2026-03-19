@@ -8,9 +8,14 @@ const DIRECTIONS = [
 ];
 
 /** Returns true if the tile is passable for the given weight class. */
-export function isPassableFor(tile: TileData, weightClass: WeightClass = "medium"): boolean {
-	if (tile.floorType === "void_pit" || tile.floorType === "structural_mass") return false;
-	if (tile.floorType === "abyssal_platform" && weightClass !== "light") return false;
+export function isPassableFor(
+	tile: TileData,
+	weightClass: WeightClass = "medium",
+): boolean {
+	if (tile.floorType === "void_pit" || tile.floorType === "structural_mass")
+		return false;
+	if (tile.floorType === "abyssal_platform" && weightClass !== "light")
+		return false;
 	return true;
 }
 
@@ -19,9 +24,14 @@ export function isPassableFor(tile: TileData, weightClass: WeightClass = "medium
  * When sourceElevation is provided, going UPHILL (destination higher than source)
  * adds +1 per elevation level. Downhill is free (gravity assists).
  */
-export function movementCost(tile: TileData, weightClass: WeightClass = "medium", sourceElevation?: number): number {
+export function movementCost(
+	tile: TileData,
+	weightClass: WeightClass = "medium",
+	sourceElevation?: number,
+): number {
 	let cost = 1;
-	if (tile.floorType === "abyssal_platform" && weightClass === "light") cost = 2;
+	if (tile.floorType === "abyssal_platform" && weightClass === "light")
+		cost = 2;
 	// Uphill cost: +1 per elevation level gained
 	if (sourceElevation !== undefined && tile.elevation > sourceElevation) {
 		cost += tile.elevation - sourceElevation;
@@ -48,7 +58,12 @@ export function tileNeighbors(
 		const nz = z + dz;
 		if (nx < 0 || nx >= width || nz < 0 || nz >= height) continue;
 		const tile = board.tiles[nz][nx];
-		if (weightClass !== undefined ? !isPassableFor(tile, weightClass) : !tile.passable) continue;
+		if (
+			weightClass !== undefined
+				? !isPassableFor(tile, weightClass)
+				: !tile.passable
+		)
+			continue;
 		// Depth layer gating: only traverse ramps (elevation diff <= 1), not cliffs
 		if (Math.abs(sourceTile.elevation - tile.elevation) > 1) continue;
 		neighbors.push(tile);
@@ -72,7 +87,12 @@ export function reachableTiles(
 	const result = new Set<string>();
 	const startTile = board.tiles[fromZ]?.[fromX];
 	if (!startTile) return result;
-	if (weightClass !== undefined ? !isPassableFor(startTile, weightClass) : !startTile.passable) return result;
+	if (
+		weightClass !== undefined
+			? !isPassableFor(startTile, weightClass)
+			: !startTile.passable
+	)
+		return result;
 
 	const startKey = `${fromX},${fromZ}`;
 	result.add(startKey);
@@ -91,9 +111,10 @@ export function reachableTiles(
 		const neighbors = tileNeighbors(cx, cz, board, weightClass);
 		for (const neighbor of neighbors) {
 			const key = `${neighbor.x},${neighbor.z}`;
-			const stepCost = weightClass !== undefined
-				? movementCost(neighbor, weightClass, sourceTile?.elevation)
-				: movementCost(neighbor, "medium", sourceTile?.elevation);
+			const stepCost =
+				weightClass !== undefined
+					? movementCost(neighbor, weightClass, sourceTile?.elevation)
+					: movementCost(neighbor, "medium", sourceTile?.elevation);
 			const newCost = cost + stepCost;
 			if (newCost > maxSteps) continue;
 			const prevCost = costMap.get(key);

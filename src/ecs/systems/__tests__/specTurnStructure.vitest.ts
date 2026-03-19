@@ -20,9 +20,9 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../../board/types";
-import { advanceTurn, getCurrentTurn } from "../turnSystem";
 import { Board } from "../../traits/board";
 import { UnitAttack, UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
+import { advanceTurn, getCurrentTurn } from "../turnSystem";
 
 function makeBoard(width: number, height: number): GeneratedBoard {
 	const tiles: TileData[][] = [];
@@ -77,12 +77,32 @@ describe("SPEC: Section 6 — Turn Structure", () => {
 			// Set up a player unit attacking an AI unit
 			const target = world.spawn(
 				UnitPos({ tileX: 1, tileZ: 0 }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 2, maxMp: 2, scanRange: 3, attack: 2, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 2,
+					maxAp: 2,
+					mp: 2,
+					maxMp: 2,
+					scanRange: 3,
+					attack: 2,
+					defense: 0,
+				}),
 				UnitFaction({ factionId: "reclaimers" }),
 			);
 			const attacker = world.spawn(
 				UnitPos({ tileX: 0, tileZ: 0 }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 2, maxMp: 2, scanRange: 3, attack: 5, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 2,
+					maxAp: 2,
+					mp: 2,
+					maxMp: 2,
+					scanRange: 3,
+					attack: 5,
+					defense: 0,
+				}),
 				UnitFaction({ factionId: "player" }),
 				UnitAttack({ targetEntityId: target.id(), damage: 5 }),
 			);
@@ -133,7 +153,17 @@ describe("SPEC: Section 6 — Turn Structure", () => {
 		it("refreshes player AP to maxAp at new turn", () => {
 			const unit = world.spawn(
 				UnitPos({ tileX: 0, tileZ: 0 }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 0, maxAp: 2, mp: 0, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 0,
+					maxAp: 2,
+					mp: 0,
+					maxMp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+				}),
 				UnitFaction({ factionId: "player" }),
 			);
 
@@ -146,7 +176,17 @@ describe("SPEC: Section 6 — Turn Structure", () => {
 		it("refreshes player MP to maxMp at new turn", () => {
 			const unit = world.spawn(
 				UnitPos({ tileX: 0, tileZ: 0 }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 0, maxAp: 2, mp: 0, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 0,
+					maxAp: 2,
+					mp: 0,
+					maxMp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+				}),
 				UnitFaction({ factionId: "player" }),
 			);
 
@@ -160,7 +200,17 @@ describe("SPEC: Section 6 — Turn Structure", () => {
 			// GAME_DESIGN.md: "Remaining AP/MP are forfeit at End Turn — they do not bank."
 			const unit = world.spawn(
 				UnitPos({ tileX: 0, tileZ: 0 }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 2,
+					maxAp: 2,
+					mp: 3,
+					maxMp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+				}),
 				UnitFaction({ factionId: "player" }),
 			);
 
@@ -178,7 +228,17 @@ describe("SPEC: Section 6 — Turn Structure", () => {
 		it("does NOT refresh AI faction AP during new turn", () => {
 			const aiUnit = world.spawn(
 				UnitPos({ tileX: 5, tileZ: 5 }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 0, maxAp: 2, mp: 0, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 0,
+					maxAp: 2,
+					mp: 0,
+					maxMp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+				}),
 				UnitFaction({ factionId: "reclaimers" }),
 			);
 
@@ -193,9 +253,17 @@ describe("SPEC: Section 6 — Turn Structure", () => {
 			const unit = world.spawn(
 				UnitPos({ tileX: 0, tileZ: 0 }),
 				UnitStats({
-					hp: 10, maxHp: 10, ap: 0, maxAp: 2, mp: 0, maxMp: 3,
-					scanRange: 4, attack: 2, defense: 0,
-					movesUsed: 2, staged: true,
+					hp: 10,
+					maxHp: 10,
+					ap: 0,
+					maxAp: 2,
+					mp: 0,
+					maxMp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+					movesUsed: 2,
+					staged: true,
 				}),
 				UnitFaction({ factionId: "player" }),
 			);
@@ -233,7 +301,17 @@ describe("SPEC: Section 6 — Turn Structure", () => {
 			// GAME_DESIGN.md: "Unit readiness glow: Units with remaining AP display an emissive cyan ring"
 			const unit = world.spawn(
 				UnitPos({ tileX: 0, tileZ: 0 }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 1, maxAp: 2, mp: 0, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 1,
+					maxAp: 2,
+					mp: 0,
+					maxMp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+				}),
 				UnitFaction({ factionId: "player" }),
 			);
 			const stats = unit.get(UnitStats)!;
@@ -243,7 +321,17 @@ describe("SPEC: Section 6 — Turn Structure", () => {
 		it("unit with AP = 0 is not ready", () => {
 			const unit = world.spawn(
 				UnitPos({ tileX: 0, tileZ: 0 }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 0, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 0,
+					maxAp: 2,
+					mp: 3,
+					maxMp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+				}),
 				UnitFaction({ factionId: "player" }),
 			);
 			const stats = unit.get(UnitStats)!;
@@ -254,12 +342,32 @@ describe("SPEC: Section 6 — Turn Structure", () => {
 			const units = [
 				world.spawn(
 					UnitPos({ tileX: 0, tileZ: 0 }),
-					UnitStats({ hp: 10, maxHp: 10, ap: 0, maxAp: 2, mp: 0, maxMp: 3, scanRange: 4, attack: 2, defense: 0 }),
+					UnitStats({
+						hp: 10,
+						maxHp: 10,
+						ap: 0,
+						maxAp: 2,
+						mp: 0,
+						maxMp: 3,
+						scanRange: 4,
+						attack: 2,
+						defense: 0,
+					}),
 					UnitFaction({ factionId: "player" }),
 				),
 				world.spawn(
 					UnitPos({ tileX: 1, tileZ: 0 }),
-					UnitStats({ hp: 8, maxHp: 8, ap: 0, maxAp: 2, mp: 0, maxMp: 1, scanRange: 3, attack: 0, defense: 0 }),
+					UnitStats({
+						hp: 8,
+						maxHp: 8,
+						ap: 0,
+						maxAp: 2,
+						mp: 0,
+						maxMp: 1,
+						scanRange: 3,
+						attack: 0,
+						defense: 0,
+					}),
 					UnitFaction({ factionId: "player" }),
 				),
 			];

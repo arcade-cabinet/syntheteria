@@ -4,7 +4,6 @@ import { TECH_BY_ID, TECH_TREE } from "../../../config/techTreeDefs";
 import { Building, Powered } from "../../traits/building";
 import { Faction } from "../../traits/faction";
 import {
-	ResearchState,
 	cancelResearch,
 	countResearchLabs,
 	getAvailableTechs,
@@ -13,6 +12,7 @@ import {
 	hasTechEffect,
 	isTechResearched,
 	queueResearch,
+	ResearchState,
 	runResearch,
 } from "../researchSystem";
 
@@ -39,14 +39,33 @@ function spawnFaction(
 	progressPoints = 0,
 ) {
 	return world.spawn(
-		Faction({ id: factionId, displayName: factionId, color: 0xffffff, persona: "otter", isPlayer: false, aggression: 0 }),
-		ResearchState({ researchedTechs: researched, currentTechId, progressPoints }),
+		Faction({
+			id: factionId,
+			displayName: factionId,
+			color: 0xffffff,
+			persona: "otter",
+			isPlayer: false,
+			aggression: 0,
+		}),
+		ResearchState({
+			researchedTechs: researched,
+			currentTechId,
+			progressPoints,
+		}),
 	);
 }
 
 function spawnResearchLab(factionId: string, powered = true) {
 	const entity = world.spawn(
-		Building({ tileX: 0, tileZ: 0, buildingType: "research_lab", modelId: "", factionId, hp: 50, maxHp: 50 }),
+		Building({
+			tileX: 0,
+			tileZ: 0,
+			buildingType: "research_lab",
+			modelId: "",
+			factionId,
+			hp: 50,
+			maxHp: 50,
+		}),
 	);
 	if (powered) entity.add(Powered);
 	return entity;
@@ -77,12 +96,20 @@ describe("getResearchState", () => {
 	});
 
 	it("returns parsed state for a faction", () => {
-		spawnFaction("player", "advanced_harvesting,signal_amplification", "reinforced_chassis", 2);
+		spawnFaction(
+			"player",
+			"advanced_harvesting,signal_amplification",
+			"reinforced_chassis",
+			2,
+		);
 		spawnResearchLab("player", true);
 
 		const state = getResearchState(world, "player");
 		expect(state).not.toBeNull();
-		expect(state!.researchedTechs).toEqual(["advanced_harvesting", "signal_amplification"]);
+		expect(state!.researchedTechs).toEqual([
+			"advanced_harvesting",
+			"signal_amplification",
+		]);
 		expect(state!.currentTechId).toBe("reinforced_chassis");
 		expect(state!.progressPoints).toBe(2);
 		expect(state!.labCount).toBe(1);
@@ -274,7 +301,10 @@ describe("runResearch", () => {
 		runResearch(world);
 
 		const state = getResearchState(world, "player");
-		expect(state!.researchedTechs).toEqual(["advanced_harvesting", "signal_amplification"]);
+		expect(state!.researchedTechs).toEqual([
+			"advanced_harvesting",
+			"signal_amplification",
+		]);
 	});
 
 	it("does not advance when no tech is queued", () => {
@@ -316,7 +346,9 @@ describe("isTechResearched", () => {
 		spawnFaction("player", "advanced_harvesting,signal_amplification");
 
 		expect(isTechResearched(world, "player", "advanced_harvesting")).toBe(true);
-		expect(isTechResearched(world, "player", "signal_amplification")).toBe(true);
+		expect(isTechResearched(world, "player", "signal_amplification")).toBe(
+			true,
+		);
 	});
 
 	it("returns false for an unresearched tech", () => {
@@ -388,7 +420,9 @@ describe("full research cycle", () => {
 		spawnResearchLab("player", true);
 
 		// Queue tier 1
-		expect(queueResearch(world, "player", "advanced_harvesting")).toEqual({ ok: true });
+		expect(queueResearch(world, "player", "advanced_harvesting")).toEqual({
+			ok: true,
+		});
 
 		// Run enough turns to complete (turnsToResearch = 3, 1 lab = 1 point/turn)
 		const tech1 = TECH_BY_ID.get("advanced_harvesting")!;
@@ -399,15 +433,23 @@ describe("full research cycle", () => {
 		expect(isTechResearched(world, "player", "advanced_harvesting")).toBe(true);
 
 		// Now queue tier 2 that depends on it
-		expect(queueResearch(world, "player", "efficient_fabrication")).toEqual({ ok: true });
+		expect(queueResearch(world, "player", "efficient_fabrication")).toEqual({
+			ok: true,
+		});
 
 		const tech2 = TECH_BY_ID.get("efficient_fabrication")!;
 		for (let i = 0; i < tech2.turnsToResearch; i++) {
 			runResearch(world);
 		}
 
-		expect(isTechResearched(world, "player", "efficient_fabrication")).toBe(true);
-		expect(hasTechEffect(world, "player", "fabrication_cost_reduction")).toBe(true);
-		expect(getTechEffectValue(world, "player", "fabrication_cost_reduction")).toBe(0.2);
+		expect(isTechResearched(world, "player", "efficient_fabrication")).toBe(
+			true,
+		);
+		expect(hasTechEffect(world, "player", "fabrication_cost_reduction")).toBe(
+			true,
+		);
+		expect(
+			getTechEffectValue(world, "player", "fabrication_cost_reduction"),
+		).toBe(0.2);
 	});
 });

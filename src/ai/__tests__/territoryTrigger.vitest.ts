@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
-	TerritoryTracker,
+	countEnemiesInTerritory,
 	getTerritoryTracker,
 	resetAllTerritoryTrackers,
-	countEnemiesInTerritory,
+	TerritoryTracker,
 } from "../triggers/territoryTrigger";
 
 describe("TerritoryTracker", () => {
@@ -182,6 +182,8 @@ describe("territory registry", () => {
 	});
 
 	it("countEnemiesInTerritory returns 0 for unknown faction", () => {
-		expect(countEnemiesInTerritory("unknown_faction", [{ tileX: 5, tileZ: 5 }])).toBe(0);
+		expect(
+			countEnemiesInTerritory("unknown_faction", [{ tileX: 5, tileZ: 5 }]),
+		).toBe(0);
 	});
 });

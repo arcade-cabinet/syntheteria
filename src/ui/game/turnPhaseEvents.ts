@@ -52,7 +52,9 @@ let _lastFaction = "";
 
 // ─── Public API ─────────────────────────────────────────────────────────────
 
-export function subscribeTurnPhaseEvents(listener: TurnEventListener): () => void {
+export function subscribeTurnPhaseEvents(
+	listener: TurnEventListener,
+): () => void {
 	listeners.add(listener);
 	return () => listeners.delete(listener);
 }

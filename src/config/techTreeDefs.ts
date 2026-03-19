@@ -63,7 +63,8 @@ const BASE_TECHS: readonly TechDef[] = [
 	{
 		id: "advanced_harvesting",
 		name: "Advanced Harvesting",
-		description: "Improved material extraction techniques. Harvesting yields +25%.",
+		description:
+			"Improved material extraction techniques. Harvesting yields +25%.",
 		tier: 1,
 		cost: { silicon_wafer: 3, scrap_metal: 5 },
 		turnsToResearch: 3,
@@ -125,7 +126,8 @@ const BASE_TECHS: readonly TechDef[] = [
 	{
 		id: "mark_ii_components",
 		name: "Mark II Components",
-		description: "Unlocks Mark II unit upgrades. Units can be upgraded to Mark II.",
+		description:
+			"Unlocks Mark II unit upgrades. Units can be upgraded to Mark II.",
 		tier: 2,
 		cost: { intact_components: 3, silicon_wafer: 5, alloy_stock: 4 },
 		turnsToResearch: 5,
@@ -137,7 +139,8 @@ const BASE_TECHS: readonly TechDef[] = [
 	{
 		id: "deep_mining",
 		name: "Deep Mining",
-		description: "Access buried resource deposits. Unlocks advanced material harvesting.",
+		description:
+			"Access buried resource deposits. Unlocks advanced material harvesting.",
 		tier: 3,
 		cost: { alloy_stock: 10, silicon_wafer: 6, electrolyte: 5 },
 		turnsToResearch: 6,
@@ -147,7 +150,8 @@ const BASE_TECHS: readonly TechDef[] = [
 	{
 		id: "adaptive_armor",
 		name: "Adaptive Armor",
-		description: "Self-repairing armor plating. Units regenerate 1 HP per turn.",
+		description:
+			"Self-repairing armor plating. Units regenerate 1 HP per turn.",
 		tier: 3,
 		cost: { intact_components: 5, alloy_stock: 8, polymer_salvage: 6 },
 		turnsToResearch: 6,
@@ -169,7 +173,8 @@ const BASE_TECHS: readonly TechDef[] = [
 	{
 		id: "quantum_processors",
 		name: "Quantum Processors",
-		description: "Next-generation computation. Hacking speed +50%, research speed +25%.",
+		description:
+			"Next-generation computation. Hacking speed +50%, research speed +25%.",
 		tier: 4,
 		cost: { intact_components: 8, silicon_wafer: 12, storm_charge: 6 },
 		turnsToResearch: 8,
@@ -192,7 +197,8 @@ const BASE_TECHS: readonly TechDef[] = [
 	{
 		id: "wormhole_theory",
 		name: "Wormhole Theory",
-		description: "Theoretical framework for spacetime manipulation. Prerequisite for Wormhole construction.",
+		description:
+			"Theoretical framework for spacetime manipulation. Prerequisite for Wormhole construction.",
 		tier: 4,
 		cost: { intact_components: 12, silicon_wafer: 14, storm_charge: 10 },
 		turnsToResearch: 10,
@@ -204,7 +210,8 @@ const BASE_TECHS: readonly TechDef[] = [
 	{
 		id: "mark_v_transcendence",
 		name: "Mark V Transcendence",
-		description: "The pinnacle of machine evolution. Unlocks Mark V — Technical Supremacy victory path.",
+		description:
+			"The pinnacle of machine evolution. Unlocks Mark V — Technical Supremacy victory path.",
 		tier: 5,
 		cost: { intact_components: 15, silicon_wafer: 15, storm_charge: 10 },
 		turnsToResearch: 12,
@@ -214,9 +221,15 @@ const BASE_TECHS: readonly TechDef[] = [
 	{
 		id: "wormhole_stabilization",
 		name: "Wormhole Stabilization",
-		description: "Enables Wormhole construction. The path home — or to new frontiers. Wormhole victory path.",
+		description:
+			"Enables Wormhole construction. The path home — or to new frontiers. Wormhole victory path.",
 		tier: 5,
-		cost: { intact_components: 20, storm_charge: 15, silicon_wafer: 10, alloy_stock: 15 },
+		cost: {
+			intact_components: 20,
+			storm_charge: 15,
+			silicon_wafer: 10,
+			alloy_stock: 15,
+		},
 		turnsToResearch: 15,
 		prerequisites: ["wormhole_theory"],
 		effects: [{ type: "enable_wormhole_construction", value: 1 }],
@@ -227,10 +240,10 @@ const BASE_TECHS: readonly TechDef[] = [
 // Track specialization techs — imported from the 6 class track files
 // ---------------------------------------------------------------------------
 
-import { SCOUT_TRACK_TECHS } from "../ecs/robots/specializations/scoutTracks";
-import { INFANTRY_TRACK_TECHS } from "../ecs/robots/specializations/infantryTracks";
 import { CAVALRY_TRACK_TECHS } from "../ecs/robots/specializations/cavalryTracks";
+import { INFANTRY_TRACK_TECHS } from "../ecs/robots/specializations/infantryTracks";
 import { RANGED_SPEC_TECHS } from "../ecs/robots/specializations/rangedTracks";
+import { SCOUT_TRACK_TECHS } from "../ecs/robots/specializations/scoutTracks";
 import { SUPPORT_TRACK_TECHS } from "../ecs/robots/specializations/supportTracks";
 import { WORKER_TRACK_TECHS } from "../ecs/robots/specializations/workerTracks";
 

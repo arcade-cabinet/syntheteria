@@ -13,12 +13,7 @@ import { pushTurnEvent } from "../../ui/game/turnEvents";
 import { Building, Powered, TurretStats } from "../traits/building";
 import { UnitFaction, UnitPos, UnitStats } from "../traits/unit";
 
-function manhattanDist(
-	ax: number,
-	az: number,
-	bx: number,
-	bz: number,
-): number {
+function manhattanDist(ax: number, az: number, bx: number, bz: number): number {
 	return Math.abs(ax - bx) + Math.abs(az - bz);
 }
 
@@ -66,10 +61,14 @@ export function runTurrets(world: World): void {
 		const targetFaction = bestTarget.get(UnitFaction);
 		const newHp = targetStats.hp - ts.attackDamage;
 		if (newHp <= 0) {
-			pushTurnEvent(`Turret destroyed ${targetFaction?.factionId ?? "enemy"} unit at (${bestTarget.get(UnitPos)?.tileX}, ${bestTarget.get(UnitPos)?.tileZ})`);
+			pushTurnEvent(
+				`Turret destroyed ${targetFaction?.factionId ?? "enemy"} unit at (${bestTarget.get(UnitPos)?.tileX}, ${bestTarget.get(UnitPos)?.tileZ})`,
+			);
 			bestTarget.destroy();
 		} else {
-			pushTurnEvent(`Turret hit ${targetFaction?.factionId ?? "enemy"} unit for ${ts.attackDamage} dmg`);
+			pushTurnEvent(
+				`Turret hit ${targetFaction?.factionId ?? "enemy"} unit for ${ts.attackDamage} dmg`,
+			);
 			bestTarget.set(UnitStats, { ...targetStats, hp: newHp });
 		}
 

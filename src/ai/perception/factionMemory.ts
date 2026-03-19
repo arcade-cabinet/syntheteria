@@ -164,7 +164,12 @@ export function resetAllFactionMemories(): void {
 export function updateFactionPerception(
 	factionId: string,
 	myUnits: Array<{ tileX: number; tileZ: number; scanRange: number }>,
-	allEnemies: Array<{ entityId: number; factionId: string; tileX: number; tileZ: number }>,
+	allEnemies: Array<{
+		entityId: number;
+		factionId: string;
+		tileX: number;
+		tileZ: number;
+	}>,
 	currentTurn: number,
 ): void {
 	const memory = getFactionMemory(factionId);
@@ -173,8 +178,7 @@ export function updateFactionPerception(
 	for (const unit of myUnits) {
 		for (const enemy of allEnemies) {
 			const dist =
-				Math.abs(unit.tileX - enemy.tileX) +
-				Math.abs(unit.tileZ - enemy.tileZ);
+				Math.abs(unit.tileX - enemy.tileX) + Math.abs(unit.tileZ - enemy.tileZ);
 			if (dist <= unit.scanRange) {
 				memory.recordSighting(
 					enemy.entityId,

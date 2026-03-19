@@ -11,7 +11,14 @@
  * and more will happen next turn."
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+	useSyncExternalStore,
+} from "react";
 import {
 	clearTurnSummary,
 	getTurnSummary,
@@ -142,7 +149,8 @@ export function TurnSummaryPanel() {
 									color: rc.net > 0 ? POSITIVE_COLOR : NEGATIVE_COLOR,
 								}}
 							>
-								{rc.shortName} {rc.net > 0 ? "+" : ""}{rc.net}
+								{rc.shortName} {rc.net > 0 ? "+" : ""}
+								{rc.net}
 							</span>
 						))}
 					</div>
@@ -156,10 +164,12 @@ export function TurnSummaryPanel() {
 					<span
 						style={{
 							...ENTRY_STYLE,
-							color: summary.territoryDelta > 0 ? POSITIVE_COLOR : NEGATIVE_COLOR,
+							color:
+								summary.territoryDelta > 0 ? POSITIVE_COLOR : NEGATIVE_COLOR,
 						}}
 					>
-						{summary.territoryDelta > 0 ? "+" : ""}{summary.territoryDelta} tiles ({summary.territoryTotal} total)
+						{summary.territoryDelta > 0 ? "+" : ""}
+						{summary.territoryDelta} tiles ({summary.territoryTotal} total)
 					</span>
 				</div>
 			)}
@@ -193,7 +203,10 @@ export function TurnSummaryPanel() {
 				<div style={SECTION_STYLE}>
 					<div style={LABEL_STYLE}>Research</div>
 					<span style={{ ...ENTRY_STYLE, color: "#b088d8" }}>
-						{summary.researchProgress.techName}: {summary.researchProgress.turnsLeft === 0 ? "COMPLETE" : `${summary.researchProgress.turnsLeft}t remaining`}
+						{summary.researchProgress.techName}:{" "}
+						{summary.researchProgress.turnsLeft === 0
+							? "COMPLETE"
+							: `${summary.researchProgress.turnsLeft}t remaining`}
 					</span>
 				</div>
 			)}
@@ -224,7 +237,9 @@ export function TurnSummaryPanel() {
 
 			{/* No content fallback */}
 			{!hasContent(summary) && (
-				<div style={{ ...ENTRY_STYLE, color: NEUTRAL_COLOR, textAlign: "center" }}>
+				<div
+					style={{ ...ENTRY_STYLE, color: NEUTRAL_COLOR, textAlign: "center" }}
+				>
 					Systems nominal. No activity.
 				</div>
 			)}

@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { SyntheteriaAgent } from "../agents/SyntheteriaAgent";
 import {
 	AttackEvaluator,
@@ -16,17 +16,19 @@ import {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeAgent(overrides: Partial<{
-	entityId: number;
-	factionId: string;
-	tileX: number;
-	tileZ: number;
-	hp: number;
-	ap: number;
-	scanRange: number;
-	attackRange: number;
-	attack: number;
-}> = {}): SyntheteriaAgent {
+function makeAgent(
+	overrides: Partial<{
+		entityId: number;
+		factionId: string;
+		tileX: number;
+		tileZ: number;
+		hp: number;
+		ap: number;
+		scanRange: number;
+		attackRange: number;
+		attack: number;
+	}> = {},
+): SyntheteriaAgent {
 	const agent = new SyntheteriaAgent(
 		overrides.entityId ?? 1,
 		overrides.factionId ?? "reclaimers",
@@ -343,9 +345,7 @@ describe("BuildEvaluator", () => {
 	it("returns positive score when build options exist", () => {
 		const agent = makeAgent();
 		setCtx({
-			buildOptions: [
-				{ buildingType: "storage_hub", tileX: 2, tileZ: 2 },
-			],
+			buildOptions: [{ buildingType: "storage_hub", tileX: 2, tileZ: 2 }],
 			factionBuildingCount: 2,
 		});
 		expect(evaluator.calculateDesirability(agent)).toBeGreaterThan(0);
@@ -389,9 +389,7 @@ describe("BuildEvaluator", () => {
 	it("setGoal moves toward build site when far away", () => {
 		const agent = makeAgent({ tileX: 0, tileZ: 0 });
 		setCtx({
-			buildOptions: [
-				{ buildingType: "storage_hub", tileX: 10, tileZ: 10 },
-			],
+			buildOptions: [{ buildingType: "storage_hub", tileX: 10, tileZ: 10 }],
 		});
 		evaluator.setGoal(agent);
 		expect(agent.decidedAction!.type).toBe("move");
@@ -538,7 +536,12 @@ describe("Think brain arbitration", () => {
 	});
 
 	it("idle wins when nothing interesting is nearby on turn 1", () => {
-		const agent = makeAgent({ attackRange: 1, scanRange: 2, tileX: 8, tileZ: 8 });
+		const agent = makeAgent({
+			attackRange: 1,
+			scanRange: 2,
+			tileX: 8,
+			tileZ: 8,
+		});
 		agent.addEvaluator(new AttackEvaluator(0.5));
 		agent.addEvaluator(new ChaseEnemyEvaluator(0.5));
 		agent.addEvaluator(new HarvestEvaluator(0.5));

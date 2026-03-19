@@ -12,9 +12,12 @@
 
 import type { World } from "koota";
 import { useEffect, useState } from "react";
-import { MARK_DEFS, type BotMark } from "../../ecs/robots/marks";
-import { getXPForNextMark, getXPProgress } from "../../ecs/systems/experienceSystem";
 import { FACTION_COLORS_CSS } from "../../config/gameDefaults";
+import { type BotMark, MARK_DEFS } from "../../ecs/robots/marks";
+import {
+	getXPForNextMark,
+	getXPProgress,
+} from "../../ecs/systems/experienceSystem";
 import {
 	UnitFaction,
 	UnitPos,
@@ -47,8 +50,10 @@ function formatName(id: string): string {
 	return id.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-
-function readSelectedUnit(world: World, entityId: number): SelectedUnitData | null {
+function readSelectedUnit(
+	world: World,
+	entityId: number,
+): SelectedUnitData | null {
 	for (const e of world.query(UnitPos, UnitFaction, UnitStats)) {
 		if (e.id() !== entityId) continue;
 		const faction = e.get(UnitFaction);
@@ -88,8 +93,21 @@ function HpBar({ hp, maxHp }: { hp: number; maxHp: number }) {
 	const color = pct > 60 ? "#7ee7cb" : pct > 30 ? "#f6c56a" : "#cc4444";
 	return (
 		<div style={{ marginTop: 6 }}>
-			<div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-				<span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", letterSpacing: 1, textTransform: "uppercase" }}>
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "space-between",
+					marginBottom: 2,
+				}}
+			>
+				<span
+					style={{
+						fontSize: 9,
+						color: "rgba(255,255,255,0.5)",
+						letterSpacing: 1,
+						textTransform: "uppercase",
+					}}
+				>
 					Hull
 				</span>
 				<span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)" }}>
@@ -121,7 +139,15 @@ function HpBar({ hp, maxHp }: { hp: number; maxHp: number }) {
 function ApPips({ ap, maxAp }: { ap: number; maxAp: number }) {
 	return (
 		<div style={{ marginTop: 6 }}>
-			<div style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>
+			<div
+				style={{
+					fontSize: 9,
+					color: "rgba(255,255,255,0.5)",
+					letterSpacing: 1,
+					textTransform: "uppercase",
+					marginBottom: 3,
+				}}
+			>
 				Cycles
 			</div>
 			<div style={{ display: "flex", gap: 4 }}>
@@ -150,8 +176,21 @@ function XpBar({ xp, markLevel }: { xp: number; markLevel: number }) {
 	const markLabel = MARK_NAMES[markLevel] ?? `${markLevel}`;
 	return (
 		<div style={{ marginTop: 6 }}>
-			<div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-				<span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", letterSpacing: 1, textTransform: "uppercase" }}>
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "space-between",
+					marginBottom: 2,
+				}}
+			>
+				<span
+					style={{
+						fontSize: 9,
+						color: "rgba(255,255,255,0.5)",
+						letterSpacing: 1,
+						textTransform: "uppercase",
+					}}
+				>
 					Mark {markLabel}
 				</span>
 				<span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)" }}>
@@ -180,16 +219,44 @@ function XpBar({ xp, markLevel }: { xp: number; markLevel: number }) {
 	);
 }
 
-function StatRow({ label, value, color }: { label: string; value: string | number; color: string }) {
+function StatRow({
+	label,
+	value,
+	color,
+}: {
+	label: string;
+	value: string | number;
+	color: string;
+}) {
 	return (
-		<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-			<span style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", letterSpacing: 0.5 }}>{label}</span>
+		<div
+			style={{
+				display: "flex",
+				justifyContent: "space-between",
+				alignItems: "center",
+			}}
+		>
+			<span
+				style={{
+					fontSize: 9,
+					color: "rgba(255,255,255,0.45)",
+					letterSpacing: 0.5,
+				}}
+			>
+				{label}
+			</span>
 			<span style={{ fontSize: 11, color, fontWeight: 600 }}>{value}</span>
 		</div>
 	);
 }
 
-export function SelectedInfo({ world, selectedUnitId }: { world: World; selectedUnitId: number | null }) {
+export function SelectedInfo({
+	world,
+	selectedUnitId,
+}: {
+	world: World;
+	selectedUnitId: number | null;
+}) {
 	const [data, setData] = useState<SelectedUnitData | null>(null);
 
 	// Re-read every 200ms to catch HP changes, AP spend, etc.
@@ -228,7 +295,14 @@ export function SelectedInfo({ world, selectedUnitId }: { world: World; selected
 			}}
 		>
 			{/* Name + faction */}
-			<div style={{ fontSize: 13, fontWeight: 700, color: factionColor, letterSpacing: 0.3 }}>
+			<div
+				style={{
+					fontSize: 13,
+					fontWeight: 700,
+					color: factionColor,
+					letterSpacing: 0.3,
+				}}
+			>
 				{formatName(data.name)}
 			</div>
 			<div
@@ -241,7 +315,11 @@ export function SelectedInfo({ world, selectedUnitId }: { world: World; selected
 				}}
 			>
 				{formatName(data.factionId)}
-				{data.tier > 1 && <span style={{ marginLeft: 6, color: "#f6c56a" }}>Tier {data.tier}</span>}
+				{data.tier > 1 && (
+					<span style={{ marginLeft: 6, color: "#f6c56a" }}>
+						Tier {data.tier}
+					</span>
+				)}
 			</div>
 
 			{/* HP + AP */}
@@ -261,9 +339,21 @@ export function SelectedInfo({ world, selectedUnitId }: { world: World; selected
 			>
 				<StatRow label="Power" value={data.attack} color="#ff8f8f" />
 				<StatRow label="Armor" value={data.defense} color="#8be6ff" />
-				<StatRow label="Range" value={data.attackRange} color="rgba(255,255,255,0.7)" />
-				<StatRow label="Scan" value={data.scanRange} color="rgba(255,255,255,0.7)" />
-				<StatRow label="Class" value={formatName(data.weightClass)} color="rgba(255,255,255,0.6)" />
+				<StatRow
+					label="Range"
+					value={data.attackRange}
+					color="rgba(255,255,255,0.7)"
+				/>
+				<StatRow
+					label="Scan"
+					value={data.scanRange}
+					color="rgba(255,255,255,0.7)"
+				/>
+				<StatRow
+					label="Class"
+					value={formatName(data.weightClass)}
+					color="rgba(255,255,255,0.6)"
+				/>
 			</div>
 
 			{/* Marks */}
@@ -275,7 +365,15 @@ export function SelectedInfo({ world, selectedUnitId }: { world: World; selected
 						borderTop: "1px solid rgba(139, 230, 255, 0.1)",
 					}}
 				>
-					<div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
+					<div
+						style={{
+							fontSize: 9,
+							color: "rgba(255,255,255,0.45)",
+							letterSpacing: 1,
+							textTransform: "uppercase",
+							marginBottom: 4,
+						}}
+					>
 						Marks
 					</div>
 					<div style={{ display: "flex", flexDirection: "column", gap: 3 }}>

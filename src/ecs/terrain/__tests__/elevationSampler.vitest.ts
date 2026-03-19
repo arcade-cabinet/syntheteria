@@ -31,7 +31,10 @@ function makeBoard(elev: (-1 | 0 | 1 | 2)[][]): GeneratedBoard {
 			resourceAmount: 0,
 		})),
 	);
-	return { config: { width, height, seed: "test", difficulty: "normal" }, tiles };
+	return {
+		config: { width, height, seed: "test", difficulty: "normal" },
+		tiles,
+	};
 }
 
 // ── ELEV_Y scale ──────────────────────────────────────────────────────────────

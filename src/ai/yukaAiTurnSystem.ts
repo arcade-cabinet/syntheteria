@@ -13,22 +13,29 @@
  */
 
 import type { World } from "koota";
+import { playSfx } from "../audio/sfx";
 import type { GeneratedBoard } from "../board/types";
-import type { Difficulty } from "../world/config";
-import { Board } from "../ecs/traits/board";
-import {
-	Building,
-	BotFabricator,
-	PowerGrid,
-	StorageCapacity,
-	type BuildingType,
-} from "../ecs/traits/building";
 import { BUILDING_DEFS } from "../ecs/buildings/definitions";
 import { getRelation } from "../ecs/factions/relations";
-import { ResourceDeposit, ResourcePool } from "../ecs/traits/resource";
-import { Faction } from "../ecs/traits/faction";
+import { TRACK_REGISTRY } from "../ecs/robots/specializations/trackRegistry";
+import type { RobotClass } from "../ecs/robots/types";
+import { queueFabrication } from "../ecs/systems/fabricationSystem";
+import { getResearchState } from "../ecs/systems/researchSystem";
 import { canAfford, spendResources } from "../ecs/systems/resourceSystem";
+import { TileFloor } from "../ecs/terrain/traits";
 import type { ResourceMaterial } from "../ecs/terrain/types";
+import { Board } from "../ecs/traits/board";
+import {
+	BotFabricator,
+	Building,
+	type BuildingType,
+	Powered,
+	PowerGrid,
+	StorageCapacity,
+} from "../ecs/traits/building";
+import { Faction } from "../ecs/traits/faction";
+import { ResourceDeposit, ResourcePool } from "../ecs/traits/resource";
+import { Tile } from "../ecs/traits/tile";
 import {
 	UnitAttack,
 	UnitFaction,
@@ -38,31 +45,30 @@ import {
 	UnitPos,
 	UnitStats,
 } from "../ecs/traits/unit";
-import { Tile } from "../ecs/traits/tile";
-import { TileFloor } from "../ecs/terrain/traits";
-import { playSfx } from "../audio/sfx";
+import type { Difficulty } from "../world/config";
 import type { AgentSnapshot } from "./agents/SyntheteriaAgent";
-import { setTurnContext, type TurnContext, type BuildOption, isAIDiagnosticsEnabled, logEvaluatorChoice } from "./goals/evaluators";
 import { assessSituationFuzzy } from "./fuzzy/situationModule";
 import {
-	updateFactionPerception,
-	resetAllFactionMemories,
-	getFactionMemory,
-} from "./perception/factionMemory";
+	type BuildOption,
+	isAIDiagnosticsEnabled,
+	logEvaluatorChoice,
+	setTurnContext,
+	type TurnContext,
+} from "./goals/evaluators";
 import {
-	getOrBuildNavGraph,
-	yukaShortestPath,
 	clearNavGraphCache,
+	getOrBuildNavGraph,
 	sphereManhattan,
+	yukaShortestPath,
 } from "./navigation/boardNavGraph";
-import { resetAllTerritoryTrackers } from "./triggers/territoryTrigger";
+import {
+	getFactionMemory,
+	resetAllFactionMemories,
+	updateFactionPerception,
+} from "./perception/factionMemory";
 import { AIRuntime } from "./runtime/AIRuntime";
-import { queueFabrication } from "../ecs/systems/fabricationSystem";
-import { getResearchState } from "../ecs/systems/researchSystem";
-import { TRACK_REGISTRY } from "../ecs/robots/specializations/trackRegistry";
 import { pickAITrack, pickAITrackVersion } from "./trackSelection";
-import { Powered } from "../ecs/traits/building";
-import type { RobotClass } from "../ecs/robots/types";
+import { resetAllTerritoryTrackers } from "./triggers/territoryTrigger";
 
 // ---------------------------------------------------------------------------
 // Module-level runtime — persists across turns within a game session
@@ -155,7 +161,10 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 	let currentTurn = 1;
 	for (const e of world.query(Board)) {
 		const b = e.get(Board);
-		if (b) { currentTurn = b.turn; break; }
+		if (b) {
+			currentTurn = b.turn;
+			break;
+		}
 	}
 
 	// ── Step 4: Build enemy/deposit lists + NavGraph ────────────────────
@@ -188,10 +197,7 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 	const navGraph = getOrBuildNavGraph(board);
 
 	// ── Step 5: Arbitrate per-faction with perception + fuzzy ───────────
-	const entityById = new Map<
-		number,
-		ReturnType<World["query"]>[number]
-	>();
+	const entityById = new Map<number, ReturnType<World["query"]>[number]>();
 	for (const e of world.query(UnitPos, UnitFaction, UnitStats)) {
 		entityById.set(e.id(), e);
 	}
@@ -211,8 +217,7 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		// Filter enemies: exclude own faction and allies
 		const factionEnemies = enemies.filter((e) => {
 			if (e.factionId === factionId) return false;
-			if (getRelation(world, factionId, e.factionId) === "ally")
-				return false;
+			if (getRelation(world, factionId, e.factionId) === "ally") return false;
 			return true;
 		});
 
@@ -228,12 +233,20 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			tileX: e.x,
 			tileZ: e.z,
 		}));
-		updateFactionPerception(factionId, myUnits, enemiesForPerception, currentTurn);
+		updateFactionPerception(
+			factionId,
+			myUnits,
+			enemiesForPerception,
+			currentTurn,
+		);
 
 		// ── Fuzzy scoring: modulate aggression with situation ────────
 		const factionResources = getFactionResourceScore(world, factionId);
 		const nearestEnemyDist = getNearestEnemyDist(
-			factionSnapshots, factionEnemies, board.config.width, navGraph.wrapX,
+			factionSnapshots,
+			factionEnemies,
+			board.config.width,
+			navGraph.wrapX,
 		);
 		const territoryPct = 0; // Territory tracking is opt-in, default 0
 		const fuzzyScores = assessSituationFuzzy(
@@ -244,7 +257,7 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 
 		// Fuzzy attack desirability modulates the aggression multiplier
 		// Scale from 0-100 fuzzy score to 0.5-1.5 multiplier
-		const fuzzyAttackMod = 0.5 + (fuzzyScores.attackDesirability / 100);
+		const fuzzyAttackMod = 0.5 + fuzzyScores.attackDesirability / 100;
 		const effectiveAggressionMult = aggressionMult * fuzzyAttackMod;
 
 		// ── Build context: buildings, affordability, placement ──────────
@@ -296,7 +309,10 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 
 		// Scan for mineable tiles near faction units
 		const mineableTiles = findMineableTilesNearUnits(
-			world, factionSnapshots, board.config.width, navGraph.wrapX,
+			world,
+			factionSnapshots,
+			board.config.width,
+			navGraph.wrapX,
 		);
 
 		// Set context for this faction's evaluators
@@ -381,7 +397,11 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 				}
 				case "mine": {
 					if (!entity.has(UnitMine)) {
-						const tileFloor = findTileFloorAt(world, action.targetX, action.targetZ);
+						const tileFloor = findTileFloorAt(
+							world,
+							action.targetX,
+							action.targetZ,
+						);
 						if (tileFloor && tileFloor.mineable && tileFloor.hardness > 0) {
 							entity.add(
 								UnitMine({
@@ -496,7 +516,12 @@ function getNearestEnemyDist(
 	for (const unit of myUnits) {
 		for (const enemy of enemies) {
 			const dist = sphereManhattan(
-				unit.tileX, unit.tileZ, enemy.x, enemy.z, boardWidth, wrapX,
+				unit.tileX,
+				unit.tileZ,
+				enemy.x,
+				enemy.z,
+				boardWidth,
+				wrapX,
 			);
 			if (dist < minDist) minDist = dist;
 		}
@@ -640,7 +665,11 @@ function executeAiBuild(
 	);
 
 	// Attach power grid if relevant
-	if (def.powerDelta !== 0 || def.powerRadius > 0 || buildingType === "power_box") {
+	if (
+		def.powerDelta !== 0 ||
+		def.powerRadius > 0 ||
+		buildingType === "power_box"
+	) {
 		entity.add(
 			PowerGrid({
 				powerDelta: def.powerDelta,
@@ -673,7 +702,11 @@ function executeAiBuild(
 // Cult faction exclusion
 // ---------------------------------------------------------------------------
 
-const CULT_FACTION_IDS = new Set(["static_remnants", "null_monks", "lost_signal"]);
+const CULT_FACTION_IDS = new Set([
+	"static_remnants",
+	"null_monks",
+	"lost_signal",
+]);
 
 function isCultFactionId(factionId: string): boolean {
 	return CULT_FACTION_IDS.has(factionId);
@@ -704,10 +737,19 @@ function findMineableTilesNearUnits(
 		// Check if any faction unit is within scan range * 2
 		for (const unit of units) {
 			const dist = sphereManhattan(
-				unit.tileX, unit.tileZ, tile.x, tile.z, boardWidth, wrapX,
+				unit.tileX,
+				unit.tileZ,
+				tile.x,
+				tile.z,
+				boardWidth,
+				wrapX,
 			);
 			if (dist <= unit.scanRange * 2) {
-				results.push({ x: tile.x, z: tile.z, material: floor.resourceMaterial });
+				results.push({
+					x: tile.x,
+					z: tile.z,
+					material: floor.resourceMaterial,
+				});
 				seen.add(key);
 				break;
 			}
@@ -761,10 +803,21 @@ function runAiFabrication(world: World, factionIds: string[]): void {
 
 			// Pick a robot class in priority order
 			for (const robotClass of AI_FAB_PRIORITY) {
-				const trackId = pickAITrack(factionId, robotClass, researched, gateTechIds);
+				const trackId = pickAITrack(
+					factionId,
+					robotClass,
+					researched,
+					gateTechIds,
+				);
 				const trackVersion = pickAITrackVersion(trackId, researched, v2TechIds);
 
-				const result = queueFabrication(world, e, robotClass, trackId, trackVersion);
+				const result = queueFabrication(
+					world,
+					e,
+					robotClass,
+					trackId,
+					trackVersion,
+				);
 				if (result.ok) break; // One unit per motor pool per turn
 			}
 		}
@@ -776,7 +829,11 @@ function findTileFloorAt(
 	world: World,
 	x: number,
 	z: number,
-): { mineable: boolean; hardness: number; resourceMaterial: string | null } | null {
+): {
+	mineable: boolean;
+	hardness: number;
+	resourceMaterial: string | null;
+} | null {
 	for (const e of world.query(Tile, TileFloor)) {
 		const tile = e.get(Tile);
 		if (tile && tile.x === x && tile.z === z) {

@@ -17,45 +17,52 @@
  *   "playing"    — Game renderers active, title scene hidden
  */
 
-import { Canvas, useFrame } from "@react-three/fiber";
 import { PerspectiveCamera, Text } from "@react-three/drei";
+import { Canvas, useFrame } from "@react-three/fiber";
 import type { World } from "koota";
-import { Suspense, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import {
+	Suspense,
+	useEffect,
+	useEffectEvent,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import * as THREE from "three";
 import type { BoardConfig, GeneratedBoard } from "../board/types";
 import { SphereOrbitCamera } from "../camera";
 import { resolveAttacks } from "../ecs/systems/attackSystem";
 import { BoardInput } from "../input/BoardInput";
 import { BiomeRenderer } from "../rendering/BiomeRenderer";
+import { BuildingRenderer } from "../rendering/BuildingRenderer";
 import { CombatEffectsRenderer } from "../rendering/CombatEffectsRenderer";
 import { CultDomeRenderer } from "../rendering/CultDomeRenderer";
 import { CutawayClipPlane } from "../rendering/CutawayClipPlane";
-import { UnifiedTerrainRenderer } from "../rendering/UnifiedTerrainRenderer";
 import { FogOfWarRenderer } from "../rendering/FogOfWarRenderer";
 import { FragmentRenderer } from "../rendering/FragmentRenderer";
-import { IlluminatorRenderer } from "../rendering/IlluminatorRenderer";
-import { InfrastructureRenderer } from "../rendering/InfrastructureRenderer";
-import { LodGlobe } from "../rendering/LodGlobe";
-import { StructureRenderer } from "../rendering/StructureRenderer";
-import { SalvageRenderer } from "../rendering/SalvageRenderer";
-import { BuildingRenderer } from "../rendering/BuildingRenderer";
-import { HighlightRenderer } from "../rendering/HighlightRenderer";
-import { ParticleRenderer } from "../rendering/particles/ParticleRenderer";
-import { TerritoryOverlayRenderer } from "../rendering/TerritoryOverlayRenderer";
-import { PathRenderer } from "../rendering/PathRenderer";
-import { StormSky } from "../rendering/StormSky";
-import { turnToChronometry } from "../rendering/sky/chronometry";
-import type { StormProfile } from "../world/config";
-import { UnitRenderer } from "../rendering/UnitRenderer";
-import { SpeechBubbleRenderer } from "../rendering/SpeechBubbleRenderer";
-import { UnitStatusBars } from "../rendering/UnitStatusBars";
-import { HoverTracker } from "./game/HoverTracker";
 import { Hypercane, LightningEffect, StormClouds } from "../rendering/globe";
 import { cinematicState } from "../rendering/globe/cinematicState";
 import {
 	globeFragmentShader,
 	globeVertexShader,
 } from "../rendering/globe/shaders";
+import { HighlightRenderer } from "../rendering/HighlightRenderer";
+import { IlluminatorRenderer } from "../rendering/IlluminatorRenderer";
+import { InfrastructureRenderer } from "../rendering/InfrastructureRenderer";
+import { LodGlobe } from "../rendering/LodGlobe";
+import { PathRenderer } from "../rendering/PathRenderer";
+import { ParticleRenderer } from "../rendering/particles/ParticleRenderer";
+import { SalvageRenderer } from "../rendering/SalvageRenderer";
+import { SpeechBubbleRenderer } from "../rendering/SpeechBubbleRenderer";
+import { StormSky } from "../rendering/StormSky";
+import { StructureRenderer } from "../rendering/StructureRenderer";
+import { turnToChronometry } from "../rendering/sky/chronometry";
+import { TerritoryOverlayRenderer } from "../rendering/TerritoryOverlayRenderer";
+import { UnifiedTerrainRenderer } from "../rendering/UnifiedTerrainRenderer";
+import { UnitRenderer } from "../rendering/UnitRenderer";
+import { UnitStatusBars } from "../rendering/UnitStatusBars";
+import type { StormProfile } from "../world/config";
+import { HoverTracker } from "./game/HoverTracker";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -131,7 +138,8 @@ function cinematicBeat(t: number) {
 	const lightningFreq = ct < 1.5 ? 1 : 2;
 
 	// Wormhole/hypercane intensity: 1 (0–3s), ramp 1→3 (3–4.5s), hold 3
-	const wormholeIntensity = ct < 3 ? 1 : ct < 4.5 ? 1 + (2 * (ct - 3)) / 1.5 : 3;
+	const wormholeIntensity =
+		ct < 3 ? 1 : ct < 4.5 ? 1 + (2 * (ct - 3)) / 1.5 : 3;
 
 	// Camera zoom: hold orbit (0–4.5s), zoom (4.5–6s), hold surface (6+)
 	// Returns 0→1 zoom progress
@@ -149,7 +157,15 @@ function cinematicBeat(t: number) {
 		else flash = Math.exp(-ft * 4);
 	}
 
-	return { growth, stormSpeed, lightningFreq, wormholeIntensity, zoomProgress, titleOpacity, flash };
+	return {
+		growth,
+		stormSpeed,
+		lightningFreq,
+		wormholeIntensity,
+		zoomProgress,
+		titleOpacity,
+		flash,
+	};
 }
 
 // ─── Animated Globe (title phases only) ──────────────────────────────────────
@@ -173,9 +189,10 @@ function AnimatedGlobe({
 	);
 
 	useFrame((state) => {
-		const growth = phase === "generating"
-			? cinematicBeat(cinematicTime.current).growth
-			: 0.3;
+		const growth =
+			phase === "generating"
+				? cinematicBeat(cinematicTime.current).growth
+				: 0.3;
 
 		if (meshRef.current) {
 			uniforms.uTime.value = state.clock.elapsedTime;
@@ -217,9 +234,8 @@ function CinematicFlash({
 
 	useFrame(() => {
 		if (!meshRef.current) return;
-		const flash = phase === "generating"
-			? cinematicBeat(cinematicTime.current).flash
-			: 0;
+		const flash =
+			phase === "generating" ? cinematicBeat(cinematicTime.current).flash : 0;
 		uniforms.uFlash.value = flash;
 		meshRef.current.visible = flash > 0.01;
 	});
@@ -262,7 +278,8 @@ function AnimatedTitleText({
 
 	useFrame((state, delta) => {
 		if (groupRef.current) {
-			groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.06;
+			groupRef.current.position.y =
+				Math.sin(state.clock.elapsedTime * 0.4) * 0.06;
 		}
 
 		// Animate opacity — cinematic-driven during generating, instant restore otherwise
@@ -282,7 +299,7 @@ function AnimatedTitleText({
 	const subtitle = "MACHINE CONSCIOUSNESS AWAKENS";
 	const radius = 3.0;
 	const titleArc = Math.PI * 0.55;
-	const subArc = Math.PI * 0.50;
+	const subArc = Math.PI * 0.5;
 
 	// Collect material refs
 	const registerMaterial = (mat: THREE.MeshBasicMaterial | null) => {
@@ -382,7 +399,13 @@ function TitleCamera({
 		camRef.current.position.z = zRef.current;
 	});
 
-	return <PerspectiveCamera ref={camRef} makeDefault position={[0, 0, TITLE_CAM_Z]} />;
+	return (
+		<PerspectiveCamera
+			ref={camRef}
+			makeDefault
+			position={[0, 0, TITLE_CAM_Z]}
+		/>
+	);
 }
 
 // ─── Title Scene ──────────────────────────────────────────────────────────────
@@ -465,7 +488,9 @@ function PersistentStormEffects({
 			position={isPlaying ? [boardCenterX, 0, boardCenterZ] : [0, 0, 0]}
 			scale={isPlaying ? STORM_SKY_SCALE : 1}
 		>
-			<StormClouds radius={isPlaying ? GAME_STORM_RADIUS / STORM_SKY_SCALE : 8} />
+			<StormClouds
+				radius={isPlaying ? GAME_STORM_RADIUS / STORM_SKY_SCALE : 8}
+			/>
 			<LightningEffect />
 			<Hypercane />
 		</group>
@@ -544,24 +569,81 @@ function GameScene({
 			)}
 			<CutawayClipPlane />
 
-			{board && <LodGlobe boardWidth={board.config.width} boardHeight={board.config.height} />}
-			{board && <BiomeRenderer board={board} dayAngle={dayAngle} season={season} />}
-			{board && <UnifiedTerrainRenderer board={board} world={world ?? undefined} turn={turn} />}
-			{board && <StructureRenderer board={board} world={world ?? undefined} useSphere boardWidth={bw} boardHeight={bh} />}
-			{board && <InfrastructureRenderer board={board} world={world ?? undefined} />}
+			{board && (
+				<LodGlobe
+					boardWidth={board.config.width}
+					boardHeight={board.config.height}
+				/>
+			)}
+			{board && (
+				<BiomeRenderer board={board} dayAngle={dayAngle} season={season} />
+			)}
+			{board && (
+				<UnifiedTerrainRenderer
+					board={board}
+					world={world ?? undefined}
+					turn={turn}
+				/>
+			)}
+			{board && (
+				<StructureRenderer
+					board={board}
+					world={world ?? undefined}
+					useSphere
+					boardWidth={bw}
+					boardHeight={bh}
+				/>
+			)}
+			{board && (
+				<InfrastructureRenderer board={board} world={world ?? undefined} />
+			)}
 
-			{world && bw && bh && <SalvageRenderer world={world} useSphere boardWidth={bw} boardHeight={bh} />}
-			{world && bw && bh && <BuildingRenderer world={world} useSphere boardWidth={bw} boardHeight={bh} />}
-			{world && bw && bh && <CultDomeRenderer world={world} boardWidth={bw} boardHeight={bh} />}
-			{board && bw && bh && <IlluminatorRenderer board={board} boardWidth={bw} boardHeight={bh} />}
+			{world && bw && bh && (
+				<SalvageRenderer
+					world={world}
+					useSphere
+					boardWidth={bw}
+					boardHeight={bh}
+				/>
+			)}
+			{world && bw && bh && (
+				<BuildingRenderer
+					world={world}
+					useSphere
+					boardWidth={bw}
+					boardHeight={bh}
+				/>
+			)}
+			{world && bw && bh && (
+				<CultDomeRenderer world={world} boardWidth={bw} boardHeight={bh} />
+			)}
+			{board && bw && bh && (
+				<IlluminatorRenderer board={board} boardWidth={bw} boardHeight={bh} />
+			)}
 			<FragmentRenderer />
-			{world && board && <TerritoryOverlayRenderer board={board} world={world} />}
+			{world && board && (
+				<TerritoryOverlayRenderer board={board} world={world} />
+			)}
 			{world && board && <FogOfWarRenderer world={world} board={board} />}
 
 			{world && <SceneLoop world={world} />}
-			{world && bw && bh && <HighlightRenderer world={world} useSphere boardWidth={bw} boardHeight={bh} />}
+			{world && bw && bh && (
+				<HighlightRenderer
+					world={world}
+					useSphere
+					boardWidth={bw}
+					boardHeight={bh}
+				/>
+			)}
 			<PathRenderer />
-			{world && bw && bh && <UnitRenderer world={world} useSphere boardWidth={bw} boardHeight={bh} />}
+			{world && bw && bh && (
+				<UnitRenderer
+					world={world}
+					useSphere
+					boardWidth={bw}
+					boardHeight={bh}
+				/>
+			)}
 			{world && board && onSelect && (
 				<BoardInput
 					world={world}
@@ -573,7 +655,9 @@ function GameScene({
 			)}
 			{world && board && <HoverTracker world={world} board={board} />}
 			{world && <CombatEffectsRenderer world={world} />}
-			{world && <UnitStatusBars world={world} selectedUnitId={selectedUnitId} />}
+			{world && (
+				<UnitStatusBars world={world} selectedUnitId={selectedUnitId} />
+			)}
 			{world && <SpeechBubbleRenderer world={world} />}
 			<ParticleRenderer />
 		</>

@@ -6,9 +6,8 @@
  * personality profile (aggression, harvestPriority, etc).
  */
 
-import { Vehicle } from "yuka";
-import { Think } from "yuka";
 import type { GoalEvaluator } from "yuka";
+import { Think, Vehicle } from "yuka";
 
 export interface AgentSnapshot {
 	entityId: number;
@@ -84,7 +83,12 @@ export class SyntheteriaAgent extends Vehicle {
 export type DecidedAction =
 	| { type: "attack"; targetEntityId: number; damage: number }
 	| { type: "move"; toX: number; toZ: number }
-	| { type: "harvest"; depositEntityId: number; targetX: number; targetZ: number }
+	| {
+			type: "harvest";
+			depositEntityId: number;
+			targetX: number;
+			targetZ: number;
+	  }
 	| { type: "build"; buildingType: string; tileX: number; tileZ: number }
 	| { type: "mine"; targetX: number; targetZ: number }
 	| { type: "idle" };

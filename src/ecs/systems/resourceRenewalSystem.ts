@@ -14,8 +14,8 @@
  */
 
 import type { World } from "koota";
-import type { BuildingType } from "../traits/building";
 import type { ResourceMaterial } from "../terrain/types";
+import type { BuildingType } from "../traits/building";
 import { Building, Powered } from "../traits/building";
 import { addResources } from "./resourceSystem";
 

@@ -21,7 +21,10 @@ export interface ComponentRecipe {
 	/** Material type of the produced component. */
 	readonly outputMaterial: "metal" | "electronic";
 	/** Resource costs to fabricate. */
-	readonly costs: readonly Readonly<{ type: ResourceMaterial; amount: number }>[];
+	readonly costs: readonly Readonly<{
+		type: ResourceMaterial;
+		amount: number;
+	}>[];
 	/** Turns to complete fabrication. */
 	readonly buildTime: number;
 }

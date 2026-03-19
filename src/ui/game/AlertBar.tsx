@@ -7,9 +7,9 @@
  * Uses a module-level event channel (same pattern as toastNotifications).
  */
 
-import { useState, useEffect, useCallback } from "react";
-import { TILE_SIZE_M } from "../../config/gameDefaults";
+import { useCallback, useEffect, useState } from "react";
 import { getCameraControls } from "../../camera/cameraStore";
+import { TILE_SIZE_M } from "../../config/gameDefaults";
 
 // ─── Alert Channel (module-level, same pattern as toastNotifications) ────────
 
@@ -206,9 +206,10 @@ export function AlertBar({ cameraTileX = 0, cameraTileZ = 0 }: AlertBarProps) {
 				// Fade out animation based on age
 				const age = Date.now() - alert.createdAt;
 				const fadeStart = alert.duration * 0.7;
-				const opacity = age > fadeStart
-					? Math.max(0.3, 1 - (age - fadeStart) / (alert.duration * 0.3))
-					: 1;
+				const opacity =
+					age > fadeStart
+						? Math.max(0.3, 1 - (age - fadeStart) / (alert.duration * 0.3))
+						: 1;
 
 				return (
 					<button

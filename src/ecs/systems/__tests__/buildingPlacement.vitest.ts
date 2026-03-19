@@ -2,7 +2,10 @@ import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../../board/types";
 import { FACTION_DEFINITIONS } from "../../factions/definitions";
-import { computeSpawnCenters, type SimpleBoardInfo } from "../../robots/placement";
+import {
+	computeSpawnCenters,
+	type SimpleBoardInfo,
+} from "../../robots/placement";
 import { Building, PowerGrid, StorageCapacity } from "../../traits/building";
 import { placeStarterBuildings } from "../buildingPlacement";
 
@@ -76,9 +79,7 @@ describe("placeStarterBuildings", () => {
 
 			expect(factionBuildings.length).toBe(2);
 
-			const types = factionBuildings.map(
-				(e) => e.get(Building)!.buildingType,
-			);
+			const types = factionBuildings.map((e) => e.get(Building)!.buildingType);
 			expect(types).toContain("storm_transmitter");
 			expect(types).toContain("storage_hub");
 		}

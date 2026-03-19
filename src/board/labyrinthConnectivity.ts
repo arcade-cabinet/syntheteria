@@ -15,8 +15,8 @@
  * Reference: Bob Nystrom "Rooms and Mazes" — connector merging step.
  */
 
-import type { TileData } from "./types";
 import { seededRng } from "./noise";
+import type { TileData } from "./types";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -42,8 +42,8 @@ interface Connector {
 /** Cardinal direction offsets. */
 const CARDINALS: readonly [number, number][] = [
 	[0, -1], // N
-	[1, 0],  // E
-	[0, 1],  // S
+	[1, 0], // E
+	[0, 1], // S
 	[-1, 0], // W
 ];
 
@@ -276,7 +276,11 @@ export function connectRegions(
  * Verify all passable tiles are connected (single flood-fill region).
  * Useful for testing and validation.
  */
-export function isFullyConnected(tiles: TileData[][], width: number, height: number): boolean {
+export function isFullyConnected(
+	tiles: TileData[][],
+	width: number,
+	height: number,
+): boolean {
 	const { regionCount } = floodFillRegions(tiles, width, height);
 	return regionCount <= 1;
 }

@@ -11,22 +11,22 @@
  */
 
 import { useThree } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
 import type { World } from "koota";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { ELEVATION_STEP_M, TILE_SIZE_M } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
-import { TILE_SIZE_M, ELEVATION_STEP_M } from "../board/grid";
 import { TileFloor } from "../ecs/terrain/traits";
 import { Tile } from "../ecs/traits/tile";
 import { boardToDepthLayers } from "./depthLayerStack";
 import {
-	buildLayerGeometry,
 	applyTargetedDig,
+	buildLayerGeometry,
+	type EdgeDirection,
 	type FloorQuad,
 	type RampQuad,
-	type WallQuad,
 	type VoidPlane,
-	type EdgeDirection,
+	type WallQuad,
 } from "./depthMappedLayer";
 import { buildExploredSet, isTileExplored } from "./tileVisibility";
 
@@ -46,8 +46,12 @@ function makeBridgeMaterial(): THREE.MeshStandardMaterial {
 	const loader = new THREE.TextureLoader();
 	const colorTex = loader.load("/assets/textures/floor_atlas_color.jpg");
 	const normalTex = loader.load("/assets/textures/floor_atlas_normal.jpg");
-	const roughnessTex = loader.load("/assets/textures/floor_atlas_roughness.jpg");
-	const metalnessTex = loader.load("/assets/textures/floor_atlas_metalness.jpg");
+	const roughnessTex = loader.load(
+		"/assets/textures/floor_atlas_roughness.jpg",
+	);
+	const metalnessTex = loader.load(
+		"/assets/textures/floor_atlas_metalness.jpg",
+	);
 
 	for (const tex of [colorTex, normalTex, roughnessTex, metalnessTex]) {
 		tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
@@ -149,7 +153,11 @@ function buildElevatedFloorGeometry(
 
 	if (filtered.length === 0) return new THREE.BufferGeometry();
 
-	const template = new THREE.BoxGeometry(TILE_SIZE_M, BRIDGE_THICKNESS, TILE_SIZE_M);
+	const template = new THREE.BoxGeometry(
+		TILE_SIZE_M,
+		BRIDGE_THICKNESS,
+		TILE_SIZE_M,
+	);
 
 	const merged = mergeTranslated(
 		template,
@@ -198,7 +206,12 @@ function buildColumnGeometry(
 	const colH = baseY * ELEVATION_STEP_M;
 	if (colH <= 0) return new THREE.BufferGeometry();
 
-	const template = new THREE.CylinderGeometry(COLUMN_RADIUS, COLUMN_RADIUS, colH, COLUMN_SEGMENTS);
+	const template = new THREE.CylinderGeometry(
+		COLUMN_RADIUS,
+		COLUMN_RADIUS,
+		colH,
+		COLUMN_SEGMENTS,
+	);
 
 	const merged = mergeTranslated(
 		template,
@@ -222,7 +235,11 @@ function buildRampGeometryFromQuads(
 	const rampWidth = TILE_SIZE_M;
 	const rampDepth = TILE_SIZE_M * 0.5;
 	const rampHeight = ELEVATION_STEP_M;
-	const template = new THREE.BoxGeometry(rampWidth, BRIDGE_THICKNESS, rampDepth);
+	const template = new THREE.BoxGeometry(
+		rampWidth,
+		BRIDGE_THICKNESS,
+		rampDepth,
+	);
 	const angle = Math.atan2(rampHeight, rampDepth);
 	template.rotateX(-angle);
 	template.translate(0, rampHeight / 2, 0);
@@ -251,7 +268,9 @@ function buildRampGeometryFromQuads(
 		const wx = (ramp.x + off.dx * 0.5) * TILE_SIZE_M;
 		const wz = (ramp.z + off.dz * 0.5) * TILE_SIZE_M;
 		// Base world Y is depth of the deeper cell
-		const wy = (baseY + (ramp.x === ramp.x ? layer0DepthForRamp(ramp) : 0)) * ELEVATION_STEP_M;
+		const wy =
+			(baseY + (ramp.x === ramp.x ? layer0DepthForRamp(ramp) : 0)) *
+			ELEVATION_STEP_M;
 
 		const yRot = DIRECTION_ROTY[ramp.direction];
 		mat4.makeRotationY(yRot);
@@ -279,7 +298,8 @@ function buildRampGeometryFromQuads(
 		}
 		if (idxAttr) {
 			const iOff = i * triCount;
-			for (let j = 0; j < triCount; j++) outIdx[iOff + j] = idxAttr.getX(j) + vBase;
+			for (let j = 0; j < triCount; j++)
+				outIdx[iOff + j] = idxAttr.getX(j) + vBase;
 		}
 	}
 
@@ -310,7 +330,13 @@ function buildWallGeometryFromQuads(
 
 	const half = TILE_SIZE_M / 2;
 
-	const wallPositions: Array<{ x: number; y: number; z: number; rotY: number; h: number }> = [];
+	const wallPositions: Array<{
+		x: number;
+		y: number;
+		z: number;
+		rotY: number;
+		h: number;
+	}> = [];
 	for (const wall of filtered) {
 		const cx = wall.x * TILE_SIZE_M;
 		const cz = wall.z * TILE_SIZE_M;
@@ -431,7 +457,11 @@ function buildFromDepthLayers(
 	return {
 		floors: buildFloorGeometry(allFloors, explored),
 		elevatedFloors: buildElevatedFloorGeometry(allElevatedFloors, explored),
-		columns: buildColumnGeometry(allElevatedFloors, elevatedBaseY || 1, explored),
+		columns: buildColumnGeometry(
+			allElevatedFloors,
+			elevatedBaseY || 1,
+			explored,
+		),
 		ramps: buildRampGeometryFromQuads(allRamps, 0, explored),
 		walls: buildWallGeometryFromQuads(allWalls, 0, explored),
 		voidPlanes: buildVoidGeometryFromQuads(allVoids, explored),
@@ -479,7 +509,8 @@ function mergeTranslated(
 		}
 		if (idxAttr) {
 			const iOff = i * triCount;
-			for (let j = 0; j < triCount; j++) outIdx[iOff + j] = idxAttr.getX(j) + vBase;
+			for (let j = 0; j < triCount; j++)
+				outIdx[iOff + j] = idxAttr.getX(j) + vBase;
 		}
 	}
 

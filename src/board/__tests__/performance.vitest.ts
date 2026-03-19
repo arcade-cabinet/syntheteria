@@ -11,24 +11,34 @@
 
 import { createWorld } from "koota";
 import { describe, expect, it } from "vitest";
-import { generateBoard } from "../generator";
-import type { BoardConfig } from "../types";
-import { SEGS } from "../../rendering/boardGeometry";
-import { isPassableFloor } from "../../ecs/terrain/types";
 import { placeSalvageProps } from "../../ecs/systems/salvagePlacement";
+import { isPassableFloor } from "../../ecs/terrain/types";
+import { SEGS } from "../../rendering/boardGeometry";
 import {
-	getStructuralEdges,
 	getColumnPositions,
 	getInteriorTiles,
+	getStructuralEdges,
 } from "../../rendering/structureHelpers";
+import { generateBoard } from "../generator";
+import type { BoardConfig } from "../types";
 
 // ─── Board configs ───────────────────────────────────────────────────────────
 
 /** Standard game board. */
-const STANDARD: BoardConfig = { width: 96, height: 96, seed: "perf-audit", difficulty: "normal" };
+const STANDARD: BoardConfig = {
+	width: 96,
+	height: 96,
+	seed: "perf-audit",
+	difficulty: "normal",
+};
 
 /** Max supported board. */
-const MAX_BOARD: BoardConfig = { width: 128, height: 128, seed: "perf-audit-max", difficulty: "normal" };
+const MAX_BOARD: BoardConfig = {
+	width: 128,
+	height: 128,
+	seed: "perf-audit-max",
+	difficulty: "normal",
+};
 
 // ─── Budget limits ───────────────────────────────────────────────────────────
 
@@ -157,21 +167,36 @@ describe("performance audit", () => {
 		const columns = getColumnPositions(board);
 		const interior = getInteriorTiles(board);
 
-		const boardVerts = MAX_BOARD.width * MAX_BOARD.height * (SEGS + 1) * (SEGS + 1);
+		const boardVerts =
+			MAX_BOARD.width * MAX_BOARD.height * (SEGS + 1) * (SEGS + 1);
 
 		// This test always passes — it just logs the metrics for human review
-		console.log(`\n=== PERFORMANCE AUDIT (${MAX_BOARD.width}x${MAX_BOARD.height}) ===`);
-		console.log(`Board geometry: ${boardVerts.toLocaleString()} vertices (sphere, SEGS=${SEGS})`);
+		console.log(
+			`\n=== PERFORMANCE AUDIT (${MAX_BOARD.width}x${MAX_BOARD.height}) ===`,
+		);
+		console.log(
+			`Board geometry: ${boardVerts.toLocaleString()} vertices (sphere, SEGS=${SEGS})`,
+		);
 		console.log(`Total tiles: ${total.toLocaleString()}`);
-		console.log(`  Structural: ${structural} (${((structural / total) * 100).toFixed(1)}%)`);
-		console.log(`  Passable: ${passable} (${((passable / total) * 100).toFixed(1)}%)`);
-		console.log(`  Bridges: ${bridges} (${((bridges / total) * 100).toFixed(1)}%)`);
-		console.log(`  Void pits: ${voidPits} (${((voidPits / total) * 100).toFixed(1)}%)`);
+		console.log(
+			`  Structural: ${structural} (${((structural / total) * 100).toFixed(1)}%)`,
+		);
+		console.log(
+			`  Passable: ${passable} (${((passable / total) * 100).toFixed(1)}%)`,
+		);
+		console.log(
+			`  Bridges: ${bridges} (${((bridges / total) * 100).toFixed(1)}%)`,
+		);
+		console.log(
+			`  Void pits: ${voidPits} (${((voidPits / total) * 100).toFixed(1)}%)`,
+		);
 		console.log(`Salvage instances: ${salvageCount}`);
 		console.log(`Structural edges (walls): ${edges.length}`);
 		console.log(`Column positions: ${columns.length}`);
 		console.log(`Interior tiles: ${interior.length}`);
-		console.log(`Structure verts: ${(edges.length * 24 + columns.length * 14 + interior.length * 24).toLocaleString()}`);
+		console.log(
+			`Structure verts: ${(edges.length * 24 + columns.length * 14 + interior.length * 24).toLocaleString()}`,
+		);
 		console.log(`=== END AUDIT ===\n`);
 
 		expect(true).toBe(true);

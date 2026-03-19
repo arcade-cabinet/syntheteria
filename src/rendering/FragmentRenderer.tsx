@@ -15,8 +15,8 @@ import { TILE_SIZE_M } from "../board/grid";
 import {
 	FRAGMENT_CONFIG,
 	getPlacedFragments,
-	subscribeMemoryFragments,
 	type PlacedFragment,
+	subscribeMemoryFragments,
 } from "../ecs/systems/memoryFragments";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -28,11 +28,7 @@ const GLOW_COLOR = new THREE.Color(glowR, glowG, glowB);
 
 // ─── Single Fragment Mesh ─────────────────────────────────────────────────────
 
-function FragmentCrystal({
-	fragment,
-}: {
-	fragment: PlacedFragment;
-}) {
+function FragmentCrystal({ fragment }: { fragment: PlacedFragment }) {
 	const meshRef = useRef<THREE.Mesh>(null);
 	const matRef = useRef<THREE.MeshStandardMaterial>(null);
 

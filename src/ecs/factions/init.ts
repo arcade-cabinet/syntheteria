@@ -70,7 +70,11 @@ export function initFactions(
 				aggression: isPlayer ? 0 : def.aggression,
 			}),
 			ResourcePool(poolInit),
-			ResearchState({ researchedTechs: "", currentTechId: "", progressPoints: 0 }),
+			ResearchState({
+				researchedTechs: "",
+				currentTechId: "",
+				progressPoints: 0,
+			}),
 		);
 	}
 }

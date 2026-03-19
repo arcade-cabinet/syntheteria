@@ -25,7 +25,10 @@ export const MAX_MARK_LEVEL = 5;
  * Resource cost to upgrade to each mark level.
  * Mark 1 is free (starting level). Marks 2–5 have escalating costs.
  */
-export const MARK_LEVEL_COSTS: Record<2 | 3 | 4 | 5, Readonly<Partial<Record<ResourceMaterial, number>>>> = {
+export const MARK_LEVEL_COSTS: Record<
+	2 | 3 | 4 | 5,
+	Readonly<Partial<Record<ResourceMaterial, number>>>
+> = {
 	2: { scrap_metal: 6, e_waste: 3, intact_components: 1 },
 	3: { scrap_metal: 12, e_waste: 6, intact_components: 2 },
 	4: { scrap_metal: 20, e_waste: 10, intact_components: 4 },

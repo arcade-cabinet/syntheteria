@@ -11,9 +11,9 @@
  * Design reference: GAME_DESIGN.md S7 (Bot Roster), task #51.
  */
 
-import type { MarkSpecialization } from "../marks";
-import type { ClassActionDef } from "../classActions";
 import type { TechDef } from "../../../config/techTreeDefs";
+import type { ClassActionDef } from "../classActions";
+import type { MarkSpecialization } from "../marks";
 
 // ─── Track IDs ───────────────────────────────────────────────────────────────
 
@@ -33,40 +33,45 @@ export interface InfantryTrackSpecialization extends MarkSpecialization {
 // softer targets. At transcendence it becomes a zone-denial engine — enemies
 // within its radius can't move freely and take passive damage.
 
-export const VANGUARD_SPECIALIZATIONS: readonly InfantryTrackSpecialization[] = [
-	{
-		track: "vanguard",
-		label: "Hardened Plating",
-		markLevel: 2 as 3, // Mark II — cast to satisfy base type, runtime uses 2
-		effectType: "hardened_plating",
-		effectValue: 3,
-		description: "Permanent +3 max HP and +1 defense. Reduces incoming critical damage by 50%.",
-	},
-	{
-		track: "vanguard",
-		label: "Threat Beacon",
-		markLevel: 3,
-		effectType: "threat_beacon",
-		effectValue: 2,
-		description: "Enemies within 2 tiles must target this unit first (taunt). +1 defense while taunting.",
-	},
-	{
-		track: "vanguard",
-		label: "Reactive Armor",
-		markLevel: 4,
-		effectType: "reactive_armor",
-		effectValue: 2,
-		description: "When hit, reflect 2 damage back to the attacker. Fortify now grants +4 defense instead of +2.",
-	},
-	{
-		track: "vanguard",
-		label: "Transcendent Bulwark",
-		markLevel: 5,
-		effectType: "bulwark_aura",
-		effectValue: 2,
-		description: "Adjacent allies gain +2 defense. Enemies within 2 tiles take 1 damage at start of their turn and have -1 MP.",
-	},
-] as const;
+export const VANGUARD_SPECIALIZATIONS: readonly InfantryTrackSpecialization[] =
+	[
+		{
+			track: "vanguard",
+			label: "Hardened Plating",
+			markLevel: 2 as 3, // Mark II — cast to satisfy base type, runtime uses 2
+			effectType: "hardened_plating",
+			effectValue: 3,
+			description:
+				"Permanent +3 max HP and +1 defense. Reduces incoming critical damage by 50%.",
+		},
+		{
+			track: "vanguard",
+			label: "Threat Beacon",
+			markLevel: 3,
+			effectType: "threat_beacon",
+			effectValue: 2,
+			description:
+				"Enemies within 2 tiles must target this unit first (taunt). +1 defense while taunting.",
+		},
+		{
+			track: "vanguard",
+			label: "Reactive Armor",
+			markLevel: 4,
+			effectType: "reactive_armor",
+			effectValue: 2,
+			description:
+				"When hit, reflect 2 damage back to the attacker. Fortify now grants +4 defense instead of +2.",
+		},
+		{
+			track: "vanguard",
+			label: "Transcendent Bulwark",
+			markLevel: 5,
+			effectType: "bulwark_aura",
+			effectValue: 2,
+			description:
+				"Adjacent allies gain +2 defense. Enemies within 2 tiles take 1 damage at start of their turn and have -1 MP.",
+		},
+	] as const;
 
 // ─── Track B: Shock Trooper ─────────────────────────────────────────────────
 //
@@ -75,40 +80,45 @@ export const VANGUARD_SPECIALIZATIONS: readonly InfantryTrackSpecialization[] = 
 // and ending fights fast. At transcendence, every kill resets its action point,
 // enabling chain kills.
 
-export const SHOCK_TROOPER_SPECIALIZATIONS: readonly InfantryTrackSpecialization[] = [
-	{
-		track: "shock_trooper",
-		label: "Impact Charge",
-		markLevel: 2 as 3, // Mark II
-		effectType: "impact_charge",
-		effectValue: 2,
-		description: "+2 attack damage when attacking a unit you moved adjacent to this turn. -1 defense.",
-	},
-	{
-		track: "shock_trooper",
-		label: "Weak Point Analysis",
-		markLevel: 3,
-		effectType: "weak_point",
-		effectValue: 2,
-		description: "Attacks ignore 2 points of target defense. Attacks against targets below 50% HP deal +2 bonus damage.",
-	},
-	{
-		track: "shock_trooper",
-		label: "Execution Protocol",
-		markLevel: 4,
-		effectType: "execution",
-		effectValue: 4,
-		description: "Attacks against targets at or below 4 HP deal double damage. Kills restore 1 AP.",
-	},
-	{
-		track: "shock_trooper",
-		label: "Transcendent Striker",
-		markLevel: 5,
-		effectType: "chain_kill",
-		effectValue: 1,
-		description: "Every kill fully restores AP and grants +1 attack for the rest of the turn (stacks). No defense bonus from any source.",
-	},
-] as const;
+export const SHOCK_TROOPER_SPECIALIZATIONS: readonly InfantryTrackSpecialization[] =
+	[
+		{
+			track: "shock_trooper",
+			label: "Impact Charge",
+			markLevel: 2 as 3, // Mark II
+			effectType: "impact_charge",
+			effectValue: 2,
+			description:
+				"+2 attack damage when attacking a unit you moved adjacent to this turn. -1 defense.",
+		},
+		{
+			track: "shock_trooper",
+			label: "Weak Point Analysis",
+			markLevel: 3,
+			effectType: "weak_point",
+			effectValue: 2,
+			description:
+				"Attacks ignore 2 points of target defense. Attacks against targets below 50% HP deal +2 bonus damage.",
+		},
+		{
+			track: "shock_trooper",
+			label: "Execution Protocol",
+			markLevel: 4,
+			effectType: "execution",
+			effectValue: 4,
+			description:
+				"Attacks against targets at or below 4 HP deal double damage. Kills restore 1 AP.",
+		},
+		{
+			track: "shock_trooper",
+			label: "Transcendent Striker",
+			markLevel: 5,
+			effectType: "chain_kill",
+			effectValue: 1,
+			description:
+				"Every kill fully restores AP and grants +1 attack for the rest of the turn (stacks). No defense bonus from any source.",
+		},
+	] as const;
 
 // ─── v2 Upgraded Versions ────────────────────────────────────────────────────
 //
@@ -122,7 +132,8 @@ export const VANGUARD_V2_UPGRADES: readonly InfantryTrackSpecialization[] = [
 		markLevel: 3,
 		effectType: "graviton_anchor",
 		effectValue: 3,
-		description: "Replaces Threat Beacon. Enemies within 3 tiles must target this unit first. Taunted enemies have -1 attack.",
+		description:
+			"Replaces Threat Beacon. Enemies within 3 tiles must target this unit first. Taunted enemies have -1 attack.",
 	},
 	{
 		track: "vanguard",
@@ -130,46 +141,55 @@ export const VANGUARD_V2_UPGRADES: readonly InfantryTrackSpecialization[] = [
 		markLevel: 4,
 		effectType: "ablative_shell",
 		effectValue: 3,
-		description: "Replaces Reactive Armor. Reflect 3 damage on hit. Once per turn, absorb the first attack completely (0 damage taken).",
+		description:
+			"Replaces Reactive Armor. Reflect 3 damage on hit. Once per turn, absorb the first attack completely (0 damage taken).",
 	},
 ] as const;
 
-export const SHOCK_TROOPER_V2_UPGRADES: readonly InfantryTrackSpecialization[] = [
-	{
-		track: "shock_trooper",
-		label: "Overclocked Servos",
-		markLevel: 3,
-		effectType: "overclocked_servos",
-		effectValue: 3,
-		description: "Replaces Weak Point Analysis. Ignores 3 points of defense. Sub-50% targets take +3 bonus damage. +1 MP.",
-	},
-	{
-		track: "shock_trooper",
-		label: "Termination Sequence",
-		markLevel: 4,
-		effectType: "termination_sequence",
-		effectValue: 5,
-		description: "Replaces Execution Protocol. Targets at or below 5 HP take triple damage. Kills restore 2 AP.",
-	},
-] as const;
+export const SHOCK_TROOPER_V2_UPGRADES: readonly InfantryTrackSpecialization[] =
+	[
+		{
+			track: "shock_trooper",
+			label: "Overclocked Servos",
+			markLevel: 3,
+			effectType: "overclocked_servos",
+			effectValue: 3,
+			description:
+				"Replaces Weak Point Analysis. Ignores 3 points of defense. Sub-50% targets take +3 bonus damage. +1 MP.",
+		},
+		{
+			track: "shock_trooper",
+			label: "Termination Sequence",
+			markLevel: 4,
+			effectType: "termination_sequence",
+			effectValue: 5,
+			description:
+				"Replaces Execution Protocol. Targets at or below 5 HP take triple damage. Kills restore 2 AP.",
+		},
+	] as const;
 
 // ─── Combined Track Map ──────────────────────────────────────────────────────
 
-export const INFANTRY_TRACKS: Record<InfantryTrack, {
-	readonly label: string;
-	readonly description: string;
-	readonly specializations: readonly InfantryTrackSpecialization[];
-	readonly v2Upgrades: readonly InfantryTrackSpecialization[];
-}> = {
+export const INFANTRY_TRACKS: Record<
+	InfantryTrack,
+	{
+		readonly label: string;
+		readonly description: string;
+		readonly specializations: readonly InfantryTrackSpecialization[];
+		readonly v2Upgrades: readonly InfantryTrackSpecialization[];
+	}
+> = {
 	vanguard: {
 		label: "Vanguard",
-		description: "Tank and frontline anchor. High HP, taunt/aggro, damage reflection, and zone control.",
+		description:
+			"Tank and frontline anchor. High HP, taunt/aggro, damage reflection, and zone control.",
 		specializations: VANGUARD_SPECIALIZATIONS,
 		v2Upgrades: VANGUARD_V2_UPGRADES,
 	},
 	shock_trooper: {
 		label: "Shock Trooper",
-		description: "Burst damage assassin. Armor piercing, execution strikes, and chain-kill resets.",
+		description:
+			"Burst damage assassin. Armor piercing, execution strikes, and chain-kill resets.",
 		specializations: SHOCK_TROOPER_SPECIALIZATIONS,
 		v2Upgrades: SHOCK_TROOPER_V2_UPGRADES,
 	},
@@ -193,7 +213,8 @@ export const VANGUARD_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: false,
 		requiresFriendly: false,
 		cooldown: 0,
-		description: "Force nearby enemies to target this unit. +1 defense while active.",
+		description:
+			"Force nearby enemies to target this unit. +1 defense while active.",
 	},
 	{
 		id: "shield_wall",
@@ -209,7 +230,8 @@ export const VANGUARD_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: false,
 		requiresFriendly: false,
 		cooldown: 2,
-		description: "Absorb the next attack directed at an adjacent ally. Damage taken is halved.",
+		description:
+			"Absorb the next attack directed at an adjacent ally. Damage taken is halved.",
 	},
 ];
 
@@ -229,7 +251,8 @@ export const SHOCK_TROOPER_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: true,
 		requiresFriendly: false,
 		cooldown: 0,
-		description: "Sprint 2-3 tiles toward an enemy and attack with +2 damage bonus.",
+		description:
+			"Sprint 2-3 tiles toward an enemy and attack with +2 damage bonus.",
 	},
 	{
 		id: "execute",
@@ -245,7 +268,8 @@ export const SHOCK_TROOPER_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: true,
 		requiresFriendly: false,
 		cooldown: 1,
-		description: "Finishing blow — deals double damage to targets below 50% HP.",
+		description:
+			"Finishing blow — deals double damage to targets below 50% HP.",
 	},
 ];
 
@@ -257,7 +281,8 @@ export const INFANTRY_TRACK_TECHS: readonly TechDef[] = [
 	{
 		id: "combat_chassis_specialization",
 		name: "Combat Chassis Specialization",
-		description: "Modular combat frame reconfiguration. Unlocks Vanguard and Shock Trooper specializations at the Garage.",
+		description:
+			"Modular combat frame reconfiguration. Unlocks Vanguard and Shock Trooper specializations at the Garage.",
 		tier: 2,
 		cost: { alloy_stock: 6, ferrous_scrap: 4, polymer_salvage: 3 },
 		turnsToResearch: 4,
@@ -267,7 +292,8 @@ export const INFANTRY_TRACK_TECHS: readonly TechDef[] = [
 	{
 		id: "advanced_combat_doctrine",
 		name: "Advanced Combat Doctrine",
-		description: "Next-generation battlefield programming. Upgrades Vanguard to v2 (Graviton Anchor) and Shock Trooper to v2 (Overclocked Servos).",
+		description:
+			"Next-generation battlefield programming. Upgrades Vanguard to v2 (Graviton Anchor) and Shock Trooper to v2 (Overclocked Servos).",
 		tier: 4,
 		cost: { intact_components: 9, alloy_stock: 10, storm_charge: 6 },
 		turnsToResearch: 8,
@@ -291,24 +317,23 @@ export function getInfantryTrackSpecializations(
 	const base = trackDef.specializations;
 
 	if (!useV2) {
-		return base.filter(s => effectiveMarkLevel(s) <= markLevel);
+		return base.filter((s) => effectiveMarkLevel(s) <= markLevel);
 	}
 
 	// v2: replace base Mark III/IV with upgraded versions
 	const v2 = trackDef.v2Upgrades;
-	const v2MarkLevels = new Set(v2.map(u => u.markLevel));
+	const v2MarkLevels = new Set(v2.map((u) => u.markLevel));
 
-	const merged = [
-		...base.filter(s => !v2MarkLevels.has(s.markLevel)),
-		...v2,
-	];
-	return merged.filter(s => effectiveMarkLevel(s) <= markLevel);
+	const merged = [...base.filter((s) => !v2MarkLevels.has(s.markLevel)), ...v2];
+	return merged.filter((s) => effectiveMarkLevel(s) <= markLevel);
 }
 
 /**
  * Get the actions unlocked by an infantry track.
  */
-export function getInfantryTrackActions(track: InfantryTrack): readonly ClassActionDef[] {
+export function getInfantryTrackActions(
+	track: InfantryTrack,
+): readonly ClassActionDef[] {
 	return track === "vanguard" ? VANGUARD_ACTIONS : SHOCK_TROOPER_ACTIONS;
 }
 
@@ -318,7 +343,10 @@ export function getInfantryTrackActions(track: InfantryTrack): readonly ClassAct
  */
 function effectiveMarkLevel(spec: InfantryTrackSpecialization): number {
 	// Mark II specs use the cast pattern — detect by effectType
-	if (spec.effectType === "hardened_plating" || spec.effectType === "impact_charge") {
+	if (
+		spec.effectType === "hardened_plating" ||
+		spec.effectType === "impact_charge"
+	) {
 		return 2;
 	}
 	return spec.markLevel;

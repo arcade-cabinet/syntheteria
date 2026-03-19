@@ -73,7 +73,10 @@ let techPoints = 0;
 /** Consecutive turns player has held >= FORCED_DOMINATION_PERCENT territory. */
 let forcedDominationCounter = 0;
 
-export function checkVictoryConditions(world: World, opts?: { observerMode?: boolean }): GameOutcome {
+export function checkVictoryConditions(
+	world: World,
+	opts?: { observerMode?: boolean },
+): GameOutcome {
 	// Defeat check: any player units? (skip in observer mode — no player faction)
 	if (!opts?.observerMode) {
 		let hasPlayerUnit = false;
@@ -112,7 +115,10 @@ export function checkVictoryConditions(world: World, opts?: { observerMode?: boo
 	techPoints += playerLabCount;
 
 	// 2. Research victory
-	if (playerLabCount >= VICTORY_RESEARCH_LABS && techPoints >= VICTORY_RESEARCH_POINTS) {
+	if (
+		playerLabCount >= VICTORY_RESEARCH_LABS &&
+		techPoints >= VICTORY_RESEARCH_POINTS
+	) {
 		return { result: "victory", reason: "research" };
 	}
 
@@ -180,7 +186,8 @@ export function getVictoryProgress(world: World): VictoryProgress {
 	const currentTurn = getCurrentTurnForVictory(world);
 
 	const wormhole = getWormholeProjectState();
-	const wormholeTurnsRemaining = wormhole.status === "building" ? wormhole.turnsRemaining : null;
+	const wormholeTurnsRemaining =
+		wormhole.status === "building" ? wormhole.turnsRemaining : null;
 
 	return {
 		territoryPercent,
@@ -197,14 +204,24 @@ export function getVictoryProgress(world: World): VictoryProgress {
 // Technical Supremacy — requires mark_v_transcendence + Mark V unit of each class
 // ---------------------------------------------------------------------------
 
-const FACTION_ROBOT_CLASSES = ["scout", "infantry", "cavalry", "ranged", "support", "worker"] as const;
+const FACTION_ROBOT_CLASSES = [
+	"scout",
+	"infantry",
+	"cavalry",
+	"ranged",
+	"support",
+	"worker",
+] as const;
 
 /**
  * Check if a faction has achieved Technical Supremacy:
  *   1. mark_v_transcendence tech researched
  *   2. At least one Mark V (markLevel >= 5) unit of EACH faction robot class
  */
-export function checkTechnicalSupremacy(world: World, factionId: string): boolean {
+export function checkTechnicalSupremacy(
+	world: World,
+	factionId: string,
+): boolean {
 	if (!isTechResearched(world, factionId, "mark_v_transcendence")) return false;
 
 	const markVClasses = new Set<string>();

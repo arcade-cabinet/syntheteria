@@ -13,12 +13,7 @@ import { UnitPos, UnitStats } from "../traits/unit";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function manhattanDist(
-	ax: number,
-	az: number,
-	bx: number,
-	bz: number,
-): number {
+function manhattanDist(ax: number, az: number, bx: number, bz: number): number {
 	return Math.abs(ax - bx) + Math.abs(az - bz);
 }
 

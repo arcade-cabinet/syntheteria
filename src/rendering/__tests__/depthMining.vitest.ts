@@ -11,12 +11,12 @@
 
 import { describe, expect, it } from "vitest";
 import {
-	createDepthMappedLayer,
-	classifyEdges,
-	buildLayerGeometry,
 	applyDaisyDig,
-	applyTargetedDig,
 	applyDeepDig,
+	applyTargetedDig,
+	buildLayerGeometry,
+	classifyEdges,
+	createDepthMappedLayer,
 	GRAVEL_ATLAS_INDEX,
 } from "../depthMappedLayer";
 
@@ -169,9 +169,7 @@ describe("mining integration", () => {
 		const geo = buildLayerGeometry(layer);
 
 		// The dug cell should have a floor quad at worldY = baseY + depth = 0 + (-1) = -1
-		const dugFloor = geo.floorQuads.find(
-			(q) => q.x === 2 && q.z === 2,
-		);
+		const dugFloor = geo.floorQuads.find((q) => q.x === 2 && q.z === 2);
 		expect(dugFloor).toBeDefined();
 		expect(dugFloor!.worldY).toBe(-1);
 	});

@@ -59,7 +59,11 @@ export function getPopCap(world: World, factionId: string): number {
 		else if (b.buildingType === "power_plant") powerPlants++;
 	}
 
-	return BASE_POP_CAP + outposts * POP_PER_OUTPOST + powerPlants * POP_PER_POWER_PLANT;
+	return (
+		BASE_POP_CAP +
+		outposts * POP_PER_OUTPOST +
+		powerPlants * POP_PER_POWER_PLANT
+	);
 }
 
 /**

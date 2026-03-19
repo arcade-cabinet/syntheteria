@@ -16,20 +16,20 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { generateBoard } from "../generator";
-import { generateDepthLayer } from "../depth";
-import { seededRng } from "../noise";
-import type { BoardConfig, TileData } from "../types";
+import { SALVAGE_DEFS } from "../../ecs/resources/salvageTypes";
 import {
 	FLOOR_DEFS,
-	isPassableFloor,
 	type FloorType,
+	isPassableFloor,
 	type ResourceMaterial,
 } from "../../ecs/terrain/types";
-import { SECTOR_SCALE_SPECS } from "../../world/config";
-import { SALVAGE_DEFS } from "../../ecs/resources/salvageTypes";
 import type { SalvageType } from "../../ecs/traits/salvage";
+import { SECTOR_SCALE_SPECS } from "../../world/config";
 import { isPassableFor, movementCost } from "../adjacency";
+import { generateDepthLayer } from "../depth";
+import { generateBoard } from "../generator";
+import { seededRng } from "../noise";
+import type { BoardConfig, TileData } from "../types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -43,7 +43,11 @@ function makeConfig(overrides: Partial<BoardConfig> = {}): BoardConfig {
 	};
 }
 
-function allTiles(board: { tiles: TileData[][] }, w: number, h: number): TileData[] {
+function allTiles(
+	board: { tiles: TileData[][] },
+	w: number,
+	h: number,
+): TileData[] {
 	const result: TileData[] = [];
 	for (let z = 0; z < h; z++) {
 		for (let x = 0; x < w; x++) {
@@ -172,7 +176,8 @@ describe("Section 2 — Deterministic generation", () => {
 		let diffs = 0;
 		for (let z = 0; z < 32; z++) {
 			for (let x = 0; x < 32; x++) {
-				if (board1.tiles[z]![x]!.floorType !== board2.tiles[z]![x]!.floorType) diffs++;
+				if (board1.tiles[z]![x]!.floorType !== board2.tiles[z]![x]!.floorType)
+					diffs++;
 			}
 		}
 		expect(diffs).toBeGreaterThan(0);
@@ -180,7 +185,11 @@ describe("Section 2 — Deterministic generation", () => {
 
 	it("determinism holds across 3 independent calls", () => {
 		const config = makeConfig({ seed: "triple-check" });
-		const boards = [generateBoard(config), generateBoard(config), generateBoard(config)];
+		const boards = [
+			generateBoard(config),
+			generateBoard(config),
+			generateBoard(config),
+		];
 		const tiles0 = allTiles(boards[0]!, config.width, config.height);
 		const tiles1 = allTiles(boards[1]!, config.width, config.height);
 		const tiles2 = allTiles(boards[2]!, config.width, config.height);
@@ -356,7 +365,12 @@ describe("Section 2 — Floor mining is the backstop", () => {
 
 describe("Section 2 — Bridges and tunnels", () => {
 	// Use a larger board and multiple seeds to increase chance of span generation
-	const seeds = ["bridge-test-1", "bridge-test-2", "bridge-test-3", "bridge-test-4"];
+	const seeds = [
+		"bridge-test-1",
+		"bridge-test-2",
+		"bridge-test-3",
+		"bridge-test-4",
+	];
 
 	it("board contains elevated structure tiles (elevation=1)", () => {
 		let foundElevated = false;
@@ -460,10 +474,7 @@ describe("Section 2 — 13 resource materials in 4 tiers", () => {
 		"e_waste",
 		"intact_components",
 	];
-	const ABYSSAL: ResourceMaterial[] = [
-		"thermal_fluid",
-		"depth_salvage",
-	];
+	const ABYSSAL: ResourceMaterial[] = ["thermal_fluid", "depth_salvage"];
 
 	it("13 materials total across 4 tiers", () => {
 		const all = [...FOUNDATION, ...ADVANCED, ...COMMON, ...ABYSSAL];
@@ -543,45 +554,65 @@ describe("Section 2 — Player start", () => {
 describe("Section 2 — Weight-class terrain interaction", () => {
 	it("abyssal_platform is passable for light units", () => {
 		const tile: TileData = {
-			x: 0, z: 0, elevation: 0, passable: true,
+			x: 0,
+			z: 0,
+			elevation: 0,
+			passable: true,
 			floorType: "abyssal_platform",
-			resourceMaterial: null, resourceAmount: 0,
+			resourceMaterial: null,
+			resourceAmount: 0,
 		};
 		expect(isPassableFor(tile, "light")).toBe(true);
 	});
 
 	it("abyssal_platform is NOT passable for medium units", () => {
 		const tile: TileData = {
-			x: 0, z: 0, elevation: 0, passable: true,
+			x: 0,
+			z: 0,
+			elevation: 0,
+			passable: true,
 			floorType: "abyssal_platform",
-			resourceMaterial: null, resourceAmount: 0,
+			resourceMaterial: null,
+			resourceAmount: 0,
 		};
 		expect(isPassableFor(tile, "medium")).toBe(false);
 	});
 
 	it("abyssal_platform is NOT passable for heavy units", () => {
 		const tile: TileData = {
-			x: 0, z: 0, elevation: 0, passable: true,
+			x: 0,
+			z: 0,
+			elevation: 0,
+			passable: true,
 			floorType: "abyssal_platform",
-			resourceMaterial: null, resourceAmount: 0,
+			resourceMaterial: null,
+			resourceAmount: 0,
 		};
 		expect(isPassableFor(tile, "heavy")).toBe(false);
 	});
 
 	it("abyssal_platform costs 2 MP for light units", () => {
 		const tile: TileData = {
-			x: 0, z: 0, elevation: 0, passable: true,
+			x: 0,
+			z: 0,
+			elevation: 0,
+			passable: true,
 			floorType: "abyssal_platform",
-			resourceMaterial: null, resourceAmount: 0,
+			resourceMaterial: null,
+			resourceAmount: 0,
 		};
 		expect(movementCost(tile, "light")).toBe(2);
 	});
 
 	it("void_pit is impassable for all weight classes", () => {
 		const tile: TileData = {
-			x: 0, z: 0, elevation: -1, passable: false,
+			x: 0,
+			z: 0,
+			elevation: -1,
+			passable: false,
 			floorType: "void_pit",
-			resourceMaterial: null, resourceAmount: 0,
+			resourceMaterial: null,
+			resourceAmount: 0,
 		};
 		expect(isPassableFor(tile, "light")).toBe(false);
 		expect(isPassableFor(tile, "medium")).toBe(false);
@@ -590,9 +621,13 @@ describe("Section 2 — Weight-class terrain interaction", () => {
 
 	it("durasteel_span is passable for all weight classes", () => {
 		const tile: TileData = {
-			x: 0, z: 0, elevation: 0, passable: true,
+			x: 0,
+			z: 0,
+			elevation: 0,
+			passable: true,
 			floorType: "durasteel_span",
-			resourceMaterial: null, resourceAmount: 0,
+			resourceMaterial: null,
+			resourceAmount: 0,
 		};
 		expect(isPassableFor(tile, "light")).toBe(true);
 		expect(isPassableFor(tile, "medium")).toBe(true);

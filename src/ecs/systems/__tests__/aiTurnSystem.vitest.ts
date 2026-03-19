@@ -2,7 +2,13 @@ import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../../board/types";
 import { ResourceDeposit } from "../../traits/resource";
-import { UnitAttack, UnitFaction, UnitMove, UnitPos, UnitStats } from "../../traits/unit";
+import {
+	UnitAttack,
+	UnitFaction,
+	UnitMove,
+	UnitPos,
+	UnitStats,
+} from "../../traits/unit";
 import {
 	type AiUnit,
 	FACTION_PERSONALITY,
@@ -54,7 +60,9 @@ function makeAiUnit(overrides: Partial<AiUnit> = {}): AiUnit {
 	};
 }
 
-function makeSituation(overrides: Partial<FactionSituation> = {}): FactionSituation {
+function makeSituation(
+	overrides: Partial<FactionSituation> = {},
+): FactionSituation {
 	return {
 		unitCount: 1,
 		totalHp: 10,
@@ -129,7 +137,14 @@ describe("aiTurnSystem", () => {
 		const aiEntity = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "iron_creed" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+			}),
 		);
 		world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
@@ -150,7 +165,15 @@ describe("aiTurnSystem", () => {
 		const aiEntity = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "signal_choir" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 6, attackRange: 3, attack: 4 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 6,
+				attackRange: 3,
+				attack: 4,
+			}),
 		);
 		const player = world.spawn(
 			UnitPos({ tileX: 2, tileZ: 0 }),
@@ -201,7 +224,12 @@ describe("GOAP scoring", () => {
 
 	it("reclaimers prefer deposits when no adjacent enemies", () => {
 		const personality = FACTION_PERSONALITY.reclaimers;
-		const unit = makeAiUnit({ factionId: "reclaimers", x: 5, z: 5, attackRange: 1 });
+		const unit = makeAiUnit({
+			factionId: "reclaimers",
+			x: 5,
+			z: 5,
+			attackRange: 1,
+		});
 		const situation = makeSituation({
 			enemyThreats: [{ x: 15, z: 15, entityId: 99, factionId: "player" }],
 			nearbyDeposits: [{ x: 6, z: 5, entityId: 50 }],
@@ -214,7 +242,11 @@ describe("GOAP scoring", () => {
 
 	it("volt_collective ignores distant enemies", () => {
 		const personality = FACTION_PERSONALITY.volt_collective;
-		const unit = makeAiUnit({ factionId: "volt_collective", scanRange: 4, attackRange: 1 });
+		const unit = makeAiUnit({
+			factionId: "volt_collective",
+			scanRange: 4,
+			attackRange: 1,
+		});
 		const situation = makeSituation({
 			enemyThreats: [{ x: 10, z: 10, entityId: 99, factionId: "player" }],
 		});
@@ -227,7 +259,11 @@ describe("GOAP scoring", () => {
 
 	it("signal_choir always chases enemies aggressively", () => {
 		const personality = FACTION_PERSONALITY.signal_choir;
-		const unit = makeAiUnit({ factionId: "signal_choir", scanRange: 4, attackRange: 1 });
+		const unit = makeAiUnit({
+			factionId: "signal_choir",
+			scanRange: 4,
+			attackRange: 1,
+		});
 		const situation = makeSituation({
 			enemyThreats: [{ x: 8, z: 8, entityId: 99, factionId: "player" }],
 		});

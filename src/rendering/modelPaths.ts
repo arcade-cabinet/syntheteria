@@ -6,8 +6,8 @@
  */
 
 import { FACTION_COLORS as GAME_FACTION_COLORS } from "../config/gameDefaults";
-import { BUILDING_DEFS } from "../ecs/buildings/definitions";
 import { CULT_STRUCTURE_DEFS } from "../ecs/buildings/cultStructures";
+import { BUILDING_DEFS } from "../ecs/buildings/definitions";
 import { SALVAGE_DEFS } from "../ecs/resources/salvageTypes";
 
 const MODEL_BASE = "/assets/models/";
@@ -639,9 +639,7 @@ export function getAllBuildingModelUrls(): string[] {
 export function getAllRobotModelUrls(): string[] {
 	return [
 		...new Set(
-			Object.values(ROBOT_MODEL_ID_PATHS).map(
-				(rel) => ROBOT_MODEL_BASE + rel,
-			),
+			Object.values(ROBOT_MODEL_ID_PATHS).map((rel) => ROBOT_MODEL_BASE + rel),
 		),
 	];
 }

@@ -15,12 +15,7 @@ describe("runRepairs", () => {
 		world.destroy();
 	});
 
-	function spawnBay(
-		x: number,
-		z: number,
-		factionId: string,
-		powered: boolean,
-	) {
+	function spawnBay(x: number, z: number, factionId: string, powered: boolean) {
 		const entity = world.spawn(
 			Building({
 				tileX: x,
@@ -47,7 +42,15 @@ describe("runRepairs", () => {
 	) {
 		return world.spawn(
 			UnitPos({ tileX: x, tileZ: z }),
-			UnitStats({ hp, maxHp, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+			UnitStats({
+				hp,
+				maxHp,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
+			}),
 			UnitFaction({ factionId }),
 		);
 	}

@@ -1,16 +1,13 @@
 import { describe, expect, it } from "vitest";
-import {
-	BUILDING_BLUEPRINTS,
-	getBuildingDisplayName,
-} from "../buildingDefs";
+import { BUILDING_BLUEPRINTS, getBuildingDisplayName } from "../buildingDefs";
 import {
 	BREAK_ALLIANCE_PENALTY,
 	BREAK_TRADE_PENALTY,
+	getStandingTier,
 	STANDING_CHANGES,
 	STANDING_DECAY_PER_TURN,
 	STANDING_TIERS,
 	TRADE_INCOME_SHARE_PERCENT,
-	getStandingTier,
 } from "../diplomacyDefs";
 import {
 	FACTION_AI_BIASES,
@@ -18,21 +15,21 @@ import {
 	getDominantBias,
 } from "../factionAiDefs";
 import {
+	getThoughtsForTrigger,
 	NARRATIVE_THOUGHTS,
 	THOUGHT_BY_ID,
-	getThoughtsForTrigger,
 } from "../narrativeDefs";
 import {
 	FOUNDABLE_POI_TYPES,
-	POI_DEFINITIONS,
 	POI_BY_TYPE,
+	POI_DEFINITIONS,
 	POI_DISCOVERY_RADIUS,
 	poiToTile,
 } from "../poiDefs";
 import {
 	COMPONENT_RECIPES,
-	RECIPE_BY_ID,
 	getRecipeCostMap,
+	RECIPE_BY_ID,
 } from "../recipeDefs";
 import {
 	MARK_LEVEL_COSTS,
@@ -79,8 +76,12 @@ describe("diplomacy config", () => {
 	});
 
 	it("attack is the most severe negative standing change", () => {
-		expect(STANDING_CHANGES.unit_attacked).toBeLessThan(STANDING_CHANGES.territory_encroachment);
-		expect(STANDING_CHANGES.unit_attacked).toBeLessThan(STANDING_CHANGES.hacking_detected);
+		expect(STANDING_CHANGES.unit_attacked).toBeLessThan(
+			STANDING_CHANGES.territory_encroachment,
+		);
+		expect(STANDING_CHANGES.unit_attacked).toBeLessThan(
+			STANDING_CHANGES.hacking_detected,
+		);
 	});
 
 	it("trade income share is a reasonable percentage", () => {
@@ -176,9 +177,15 @@ describe("POI config", () => {
 
 describe("weather config", () => {
 	it("visibility multipliers decrease with storm intensity", () => {
-		expect(WEATHER_VISIBILITY.clearMultiplier).toBeGreaterThan(WEATHER_VISIBILITY.lightRainMultiplier);
-		expect(WEATHER_VISIBILITY.lightRainMultiplier).toBeGreaterThan(WEATHER_VISIBILITY.heavyRainMultiplier);
-		expect(WEATHER_VISIBILITY.heavyRainMultiplier).toBeGreaterThan(WEATHER_VISIBILITY.surgeMultiplier);
+		expect(WEATHER_VISIBILITY.clearMultiplier).toBeGreaterThan(
+			WEATHER_VISIBILITY.lightRainMultiplier,
+		);
+		expect(WEATHER_VISIBILITY.lightRainMultiplier).toBeGreaterThan(
+			WEATHER_VISIBILITY.heavyRainMultiplier,
+		);
+		expect(WEATHER_VISIBILITY.heavyRainMultiplier).toBeGreaterThan(
+			WEATHER_VISIBILITY.surgeMultiplier,
+		);
 	});
 
 	it("night penalty reduces visibility", () => {
@@ -186,15 +193,21 @@ describe("weather config", () => {
 	});
 
 	it("power generation is lower at night", () => {
-		expect(POWER_GENERATION.nightMultiplier).toBeLessThan(POWER_GENERATION.dayMultiplier);
+		expect(POWER_GENERATION.nightMultiplier).toBeLessThan(
+			POWER_GENERATION.dayMultiplier,
+		);
 	});
 
 	it("cultists are more active at night", () => {
-		expect(CULTIST_ACTIVITY.nightMultiplier).toBeGreaterThan(CULTIST_ACTIVITY.dayMultiplier);
+		expect(CULTIST_ACTIVITY.nightMultiplier).toBeGreaterThan(
+			CULTIST_ACTIVITY.dayMultiplier,
+		);
 	});
 
 	it("repair is slower during storms", () => {
-		expect(REPAIR_SPEED.stormMultiplier).toBeLessThan(REPAIR_SPEED.clearMultiplier);
+		expect(REPAIR_SPEED.stormMultiplier).toBeLessThan(
+			REPAIR_SPEED.clearMultiplier,
+		);
 	});
 
 	it("all three storm profiles have visual params", () => {
@@ -204,12 +217,15 @@ describe("weather config", () => {
 	});
 
 	it("cataclysmic has more rain particles than stable", () => {
-		expect(STORM_VISUAL_PARAMS.cataclysmic.rainParticleCount)
-			.toBeGreaterThan(STORM_VISUAL_PARAMS.stable.rainParticleCount);
+		expect(STORM_VISUAL_PARAMS.cataclysmic.rainParticleCount).toBeGreaterThan(
+			STORM_VISUAL_PARAMS.stable.rainParticleCount,
+		);
 	});
 
 	it("wormhole cycle has day/night glow intensities", () => {
-		expect(WORMHOLE_CYCLE.maxGlowIntensity).toBeGreaterThan(WORMHOLE_CYCLE.minGlowIntensity);
+		expect(WORMHOLE_CYCLE.maxGlowIntensity).toBeGreaterThan(
+			WORMHOLE_CYCLE.minGlowIntensity,
+		);
 	});
 });
 
@@ -263,7 +279,12 @@ describe("faction AI config", () => {
 
 	it("all biases are in 0-1 range", () => {
 		for (const faction of Object.values(FACTION_AI_BIASES)) {
-			for (const bias of [faction.buildBias, faction.expandBias, faction.harvestBias, faction.scoutBias]) {
+			for (const bias of [
+				faction.buildBias,
+				faction.expandBias,
+				faction.harvestBias,
+				faction.scoutBias,
+			]) {
 				expect(bias).toBeGreaterThanOrEqual(0);
 				expect(bias).toBeLessThanOrEqual(1);
 			}
@@ -288,8 +309,9 @@ describe("faction AI config", () => {
 	});
 
 	it("signal_choir has the most starting units", () => {
-		expect(FACTION_AI_BIASES.signal_choir.startingUnits)
-			.toBeGreaterThan(FACTION_AI_BIASES.reclaimers.startingUnits);
+		expect(FACTION_AI_BIASES.signal_choir.startingUnits).toBeGreaterThan(
+			FACTION_AI_BIASES.reclaimers.startingUnits,
+		);
 	});
 });
 

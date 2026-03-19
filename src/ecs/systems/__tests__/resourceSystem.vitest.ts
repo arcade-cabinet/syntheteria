@@ -16,9 +16,20 @@ describe("resourceSystem", () => {
 		world = createWorld();
 	});
 
-	function spawnFaction(id: string, isPlayer: boolean, pool: Partial<Record<string, number>> = {}) {
+	function spawnFaction(
+		id: string,
+		isPlayer: boolean,
+		pool: Partial<Record<string, number>> = {},
+	) {
 		return world.spawn(
-			Faction({ id, displayName: id, color: 0xffffff, persona: "otter", isPlayer, aggression: 0 }),
+			Faction({
+				id,
+				displayName: id,
+				color: 0xffffff,
+				persona: "otter",
+				isPlayer,
+				aggression: 0,
+			}),
 			ResourcePool(pool),
 		);
 	}
@@ -102,7 +113,9 @@ describe("resourceSystem", () => {
 		it("returns false for nonexistent faction", () => {
 			spawnFaction("player", true, { scrap_metal: 10 });
 
-			expect(spendResources(world, "nonexistent", "scrap_metal", 1)).toBe(false);
+			expect(spendResources(world, "nonexistent", "scrap_metal", 1)).toBe(
+				false,
+			);
 		});
 	});
 

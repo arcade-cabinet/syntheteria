@@ -171,15 +171,36 @@ describe("ECS serialization round-trip", () => {
 	describe("serializeExplored / applyExplored", () => {
 		it("serializes only explored or partially visible tiles", () => {
 			world.spawn(
-				Tile({ x: 0, z: 0, elevation: 0, passable: true, explored: true, visibility: 1.0 }),
+				Tile({
+					x: 0,
+					z: 0,
+					elevation: 0,
+					passable: true,
+					explored: true,
+					visibility: 1.0,
+				}),
 				TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
 			);
 			world.spawn(
-				Tile({ x: 1, z: 0, elevation: 0, passable: true, explored: false, visibility: 0.5 }),
+				Tile({
+					x: 1,
+					z: 0,
+					elevation: 0,
+					passable: true,
+					explored: false,
+					visibility: 0.5,
+				}),
 				TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
 			);
 			world.spawn(
-				Tile({ x: 2, z: 0, elevation: 0, passable: true, explored: false, visibility: 0 }),
+				Tile({
+					x: 2,
+					z: 0,
+					elevation: 0,
+					passable: true,
+					explored: false,
+					visibility: 0,
+				}),
 				TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
 			);
 
@@ -192,7 +213,14 @@ describe("ECS serialization round-trip", () => {
 
 		it("applies explored state and never reduces visibility", () => {
 			const entity = world.spawn(
-				Tile({ x: 3, z: 3, elevation: 0, passable: true, explored: false, visibility: 0.8 }),
+				Tile({
+					x: 3,
+					z: 3,
+					elevation: 0,
+					passable: true,
+					explored: false,
+					visibility: 0.8,
+				}),
 				TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
 			);
 
@@ -208,7 +236,14 @@ describe("ECS serialization round-trip", () => {
 
 		it("applies higher visibility from save", () => {
 			const entity = world.spawn(
-				Tile({ x: 0, z: 0, elevation: 0, passable: true, explored: false, visibility: 0.2 }),
+				Tile({
+					x: 0,
+					z: 0,
+					elevation: 0,
+					passable: true,
+					explored: false,
+					visibility: 0.2,
+				}),
 				TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
 			);
 
@@ -225,7 +260,14 @@ describe("ECS serialization round-trip", () => {
 	describe("serializeResources / applyResources", () => {
 		it("serializes non-zero resources per faction", () => {
 			world.spawn(
-				Faction({ id: "player", displayName: "Player", color: 0x00ffaa, isPlayer: true, persona: "otter", aggression: 0 }),
+				Faction({
+					id: "player",
+					displayName: "Player",
+					color: 0x00ffaa,
+					isPlayer: true,
+					persona: "otter",
+					aggression: 0,
+				}),
 				ResourcePool({
 					ferrous_scrap: 10,
 					alloy_stock: 5,
@@ -246,14 +288,23 @@ describe("ECS serialization round-trip", () => {
 			const records = serializeResources(world, "g1");
 			// Only non-zero: ferrous_scrap=10, alloy_stock=5, scrap_metal=3
 			expect(records.length).toBe(3);
-			expect(records.find((r) => r.material === "ferrous_scrap")?.amount).toBe(10);
+			expect(records.find((r) => r.material === "ferrous_scrap")?.amount).toBe(
+				10,
+			);
 			expect(records.find((r) => r.material === "alloy_stock")?.amount).toBe(5);
 			expect(records.find((r) => r.material === "scrap_metal")?.amount).toBe(3);
 		});
 
 		it("applies saved resource amounts onto faction pools", () => {
 			world.spawn(
-				Faction({ id: "player", displayName: "Player", color: 0x00ffaa, isPlayer: true, persona: "otter", aggression: 0 }),
+				Faction({
+					id: "player",
+					displayName: "Player",
+					color: 0x00ffaa,
+					isPlayer: true,
+					persona: "otter",
+					aggression: 0,
+				}),
 				ResourcePool({
 					ferrous_scrap: 0,
 					alloy_stock: 0,
@@ -272,8 +323,18 @@ describe("ECS serialization round-trip", () => {
 			);
 
 			applyResources(world, [
-				{ gameId: "g1", factionId: "player", material: "ferrous_scrap", amount: 42 },
-				{ gameId: "g1", factionId: "player", material: "storm_charge", amount: 7 },
+				{
+					gameId: "g1",
+					factionId: "player",
+					material: "ferrous_scrap",
+					amount: 42,
+				},
+				{
+					gameId: "g1",
+					factionId: "player",
+					material: "storm_charge",
+					amount: 7,
+				},
 			]);
 
 			for (const entity of world.query(ResourcePool, Faction)) {

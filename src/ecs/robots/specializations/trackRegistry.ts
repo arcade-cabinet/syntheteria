@@ -6,16 +6,39 @@
  * Single source of truth consumed by fabrication, AI, UI, and save/load.
  */
 
+import type { TechDef } from "../../../config/techTreeDefs";
 import type { ClassActionDef } from "../classActions";
 import type { RobotClass } from "../types";
-
-import { SCOUT_TRACKS, SCOUT_TRACK_TECHS, getTrackActions as getScoutActions } from "./scoutTracks";
-import { INFANTRY_TRACKS, INFANTRY_TRACK_TECHS, getInfantryTrackActions } from "./infantryTracks";
-import { CAVALRY_TRACKS, CAVALRY_TRACK_TECHS, getTrackActions as getCavalryActions } from "./cavalryTracks";
-import { RANGED_TRACKS, RANGED_SPEC_TECHS, getRangedTrackActions } from "./rangedTracks";
-import { SUPPORT_TRACKS, SUPPORT_TRACK_TECHS, getTrackActions as getSupportActions } from "./supportTracks";
-import { WORKER_TRACKS, WORKER_TRACK_TECHS, getWorkerTrackActions } from "./workerTracks";
-import type { TechDef } from "../../../config/techTreeDefs";
+import {
+	CAVALRY_TRACK_TECHS,
+	CAVALRY_TRACKS,
+	getTrackActions as getCavalryActions,
+} from "./cavalryTracks";
+import {
+	getInfantryTrackActions,
+	INFANTRY_TRACK_TECHS,
+	INFANTRY_TRACKS,
+} from "./infantryTracks";
+import {
+	getRangedTrackActions,
+	RANGED_SPEC_TECHS,
+	RANGED_TRACKS,
+} from "./rangedTracks";
+import {
+	getTrackActions as getScoutActions,
+	SCOUT_TRACK_TECHS,
+	SCOUT_TRACKS,
+} from "./scoutTracks";
+import {
+	getTrackActions as getSupportActions,
+	SUPPORT_TRACK_TECHS,
+	SUPPORT_TRACKS,
+} from "./supportTracks";
+import {
+	getWorkerTrackActions,
+	WORKER_TRACK_TECHS,
+	WORKER_TRACKS,
+} from "./workerTracks";
 
 // ─── Track Entry ────────────────────────────────────────────────────────────
 
@@ -82,7 +105,11 @@ function buildRegistry(): ReadonlyMap<string, TrackEntry> {
 			robotClass: "ranged",
 			label: def.label,
 			description: def.description,
-			gateTechId: RANGED_SPEC_TECHS.find(t => t.id === (id === "sniper" ? "precision_targeting" : "area_suppression"))!.id,
+			gateTechId: RANGED_SPEC_TECHS.find(
+				(t) =>
+					t.id ===
+					(id === "sniper" ? "precision_targeting" : "area_suppression"),
+			)!.id,
 			v2TechId: "", // ranged v2 uses existing mark_iv + prereqs
 			statMods: def.statMods as Record<string, number>,
 			v2StatMods: def.v2.statMods as Record<string, number>,
@@ -130,18 +157,31 @@ export function getTracksForClass(robotClass: RobotClass): TrackEntry[] {
 }
 
 /** Get the actions granted by a specialization track. */
-export function getSpecializedActions(trackId: string): readonly ClassActionDef[] {
+export function getSpecializedActions(
+	trackId: string,
+): readonly ClassActionDef[] {
 	const entry = TRACK_REGISTRY.get(trackId);
 	if (!entry) return [];
 
 	switch (entry.robotClass) {
-		case "scout": return getScoutActions(trackId as "pathfinder" | "infiltrator");
-		case "infantry": return getInfantryTrackActions(trackId as "vanguard" | "shock_trooper");
-		case "cavalry": return getCavalryActions(trackId as "flanker" | "interceptor");
-		case "ranged": return getRangedTrackActions(trackId as "sniper" | "suppressor");
-		case "support": return getSupportActions(trackId as "field_medic" | "signal_booster" | "war_caller");
-		case "worker": return getWorkerTrackActions(trackId as "deep_miner" | "fabricator" | "salvager");
-		default: return [];
+		case "scout":
+			return getScoutActions(trackId as "pathfinder" | "infiltrator");
+		case "infantry":
+			return getInfantryTrackActions(trackId as "vanguard" | "shock_trooper");
+		case "cavalry":
+			return getCavalryActions(trackId as "flanker" | "interceptor");
+		case "ranged":
+			return getRangedTrackActions(trackId as "sniper" | "suppressor");
+		case "support":
+			return getSupportActions(
+				trackId as "field_medic" | "signal_booster" | "war_caller",
+			);
+		case "worker":
+			return getWorkerTrackActions(
+				trackId as "deep_miner" | "fabricator" | "salvager",
+			);
+		default:
+			return [];
 	}
 }
 

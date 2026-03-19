@@ -29,7 +29,10 @@ const CUTAWAY_OFF_Y = 100;
 const SLICE_LEVELS = [3.0, 2.0, 1.0, 0.5];
 
 /** The global clipping plane — reused every frame (no allocation). */
-const cutawayPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), CUTAWAY_OFF_Y);
+const cutawayPlane = new THREE.Plane(
+	new THREE.Vector3(0, -1, 0),
+	CUTAWAY_OFF_Y,
+);
 
 /** Current cutaway Y threshold. Infinity = no cutaway. */
 let currentCutawayY = CUTAWAY_OFF_Y;
@@ -47,8 +50,10 @@ export function updateCutaway(cameraDistance: number): void {
 		currentCutawayY = SLICE_LEVELS[SLICE_LEVELS.length - 1];
 	} else {
 		// Interpolate between slice levels based on zoom
-		const t = 1 - (cameraDistance - CUTAWAY_END_DISTANCE) /
-			(CUTAWAY_START_DISTANCE - CUTAWAY_END_DISTANCE);
+		const t =
+			1 -
+			(cameraDistance - CUTAWAY_END_DISTANCE) /
+				(CUTAWAY_START_DISTANCE - CUTAWAY_END_DISTANCE);
 		// t goes from 0 (far) to 1 (close)
 		const sliceIndex = Math.min(
 			SLICE_LEVELS.length - 1,

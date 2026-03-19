@@ -10,7 +10,13 @@
  */
 
 import type { World } from "koota";
-import { UnitFaction, UnitPos, UnitSpecialization, UnitStats, UnitXP } from "../traits/unit";
+import {
+	UnitFaction,
+	UnitPos,
+	UnitSpecialization,
+	UnitStats,
+	UnitXP,
+} from "../traits/unit";
 
 // ─── Passive effect handlers ────────────────────────────────────────────────
 
@@ -26,7 +32,10 @@ import { UnitFaction, UnitPos, UnitSpecialization, UnitStats, UnitXP } from "../
  */
 export function runSpecializationPassives(world: World): void {
 	// Build position lookup for fast neighbor queries
-	const unitsByPos = new Map<string, Array<{ entityId: number; factionId: string }>>();
+	const unitsByPos = new Map<
+		string,
+		Array<{ entityId: number; factionId: string }>
+	>();
 	const allUnits: Array<{
 		entityId: number;
 		x: number;
@@ -129,7 +138,8 @@ function healNearbyFriendlies(
 		if (!pos || !faction || !stats) continue;
 		if (faction.factionId !== source.factionId) continue;
 
-		const dist = Math.abs(pos.tileX - source.x) + Math.abs(pos.tileZ - source.z);
+		const dist =
+			Math.abs(pos.tileX - source.x) + Math.abs(pos.tileZ - source.z);
 		if (dist > range) continue;
 
 		if (stats.hp < stats.maxHp) {
@@ -155,7 +165,8 @@ function boostNearbyScanRange(
 		if (!pos || !faction || !stats) continue;
 		if (faction.factionId !== source.factionId) continue;
 
-		const dist = Math.abs(pos.tileX - source.x) + Math.abs(pos.tileZ - source.z);
+		const dist =
+			Math.abs(pos.tileX - source.x) + Math.abs(pos.tileZ - source.z);
 		if (dist > range) continue;
 
 		// Boost is additive — applied fresh each turn (stats reset at turn start)
@@ -179,7 +190,8 @@ function buffNearbyFriendlyAttack(
 		if (!pos || !faction || !stats) continue;
 		if (faction.factionId !== source.factionId) continue;
 
-		const dist = Math.abs(pos.tileX - source.x) + Math.abs(pos.tileZ - source.z);
+		const dist =
+			Math.abs(pos.tileX - source.x) + Math.abs(pos.tileZ - source.z);
 		if (dist > range) continue;
 
 		entity.set(UnitStats, {
@@ -203,7 +215,8 @@ function buffNearbyFriendlyDefense(
 		if (!pos || !faction || !stats) continue;
 		if (faction.factionId !== source.factionId) continue;
 
-		const dist = Math.abs(pos.tileX - source.x) + Math.abs(pos.tileZ - source.z);
+		const dist =
+			Math.abs(pos.tileX - source.x) + Math.abs(pos.tileZ - source.z);
 		if (dist > range) continue;
 
 		entity.set(UnitStats, {

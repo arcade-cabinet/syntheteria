@@ -20,8 +20,8 @@
 import { describe, expect, it } from "vitest";
 import {
 	createDepthMappedLayer,
-	GRAVEL_ATLAS_INDEX,
 	GRATING_ATLAS_INDEX,
+	GRAVEL_ATLAS_INDEX,
 	STRUCTURAL_ATLAS_INDEX,
 	VOID_ATLAS_INDEX,
 } from "../depthMappedLayer";

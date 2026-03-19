@@ -84,34 +84,37 @@ function adjacencyMask(board: GeneratedBoard, x: number, z: number): number {
  * For t_junction: default T has walls N+E+S (open west).
  *   Rotation 0 = open W, π/2 = open N, π = open E, 3π/2 = open S.
  */
-const CLASSIFICATION_TABLE: Record<number, { shape: WallShape; rotation: number }> = {
+const CLASSIFICATION_TABLE: Record<
+	number,
+	{ shape: WallShape; rotation: number }
+> = {
 	// 0 neighbors — isolated
-	[0]:             { shape: "isolated",   rotation: 0 },
+	[0]: { shape: "isolated", rotation: 0 },
 
 	// 1 neighbor — dead end (rotation points open end away from the neighbor)
-	[N]:             { shape: "dead_end",   rotation: Math.PI },    // neighbor north → open south... no, open north
-	[E]:             { shape: "dead_end",   rotation: 3 * HALF_PI },
-	[S]:             { shape: "dead_end",   rotation: 0 },
-	[W]:             { shape: "dead_end",   rotation: HALF_PI },
+	[N]: { shape: "dead_end", rotation: Math.PI }, // neighbor north → open south... no, open north
+	[E]: { shape: "dead_end", rotation: 3 * HALF_PI },
+	[S]: { shape: "dead_end", rotation: 0 },
+	[W]: { shape: "dead_end", rotation: HALF_PI },
 
 	// 2 neighbors opposite — straight
-	[N | S]:         { shape: "straight",   rotation: 0 },           // N-S run
-	[E | W]:         { shape: "straight",   rotation: HALF_PI },     // E-W run
+	[N | S]: { shape: "straight", rotation: 0 }, // N-S run
+	[E | W]: { shape: "straight", rotation: HALF_PI }, // E-W run
 
 	// 2 neighbors adjacent — corner
-	[N | E]:         { shape: "corner",     rotation: 0 },
-	[E | S]:         { shape: "corner",     rotation: HALF_PI },
-	[S | W]:         { shape: "corner",     rotation: Math.PI },
-	[N | W]:         { shape: "corner",     rotation: 3 * HALF_PI },
+	[N | E]: { shape: "corner", rotation: 0 },
+	[E | S]: { shape: "corner", rotation: HALF_PI },
+	[S | W]: { shape: "corner", rotation: Math.PI },
+	[N | W]: { shape: "corner", rotation: 3 * HALF_PI },
 
 	// 3 neighbors — T-junction (rotation = which side is open)
-	[N | E | S]:     { shape: "t_junction", rotation: 0 },          // open west
-	[E | S | W]:     { shape: "t_junction", rotation: HALF_PI },    // open north
-	[N | S | W]:     { shape: "t_junction", rotation: Math.PI },    // open east
-	[N | E | W]:     { shape: "t_junction", rotation: 3 * HALF_PI },// open south
+	[N | E | S]: { shape: "t_junction", rotation: 0 }, // open west
+	[E | S | W]: { shape: "t_junction", rotation: HALF_PI }, // open north
+	[N | S | W]: { shape: "t_junction", rotation: Math.PI }, // open east
+	[N | E | W]: { shape: "t_junction", rotation: 3 * HALF_PI }, // open south
 
 	// 4 neighbors — crossroad
-	[N | E | S | W]: { shape: "crossroad",  rotation: 0 },
+	[N | E | S | W]: { shape: "crossroad", rotation: 0 },
 };
 
 // ---------------------------------------------------------------------------
@@ -174,7 +177,9 @@ export function classifyAllWalls(
 /**
  * Count walls by shape — useful for debugging and testing.
  */
-export function countByShape(walls: ClassifiedWall[]): Record<WallShape, number> {
+export function countByShape(
+	walls: ClassifiedWall[],
+): Record<WallShape, number> {
 	const counts: Record<WallShape, number> = {
 		isolated: 0,
 		dead_end: 0,

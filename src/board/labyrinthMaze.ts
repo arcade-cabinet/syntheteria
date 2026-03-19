@@ -32,8 +32,8 @@ interface Cell {
 /** Cardinal direction offsets. Step of 2 to move between odd-coordinate cells. */
 const DIRECTIONS: readonly Cell[] = [
 	{ x: 0, z: -2 }, // north
-	{ x: 2, z: 0 },  // east
-	{ x: 0, z: 2 },  // south
+	{ x: 2, z: 0 }, // east
+	{ x: 0, z: 2 }, // south
 	{ x: -2, z: 0 }, // west
 ];
 
@@ -41,7 +41,12 @@ const DIRECTIONS: readonly Cell[] = [
 // Grid helpers
 // ---------------------------------------------------------------------------
 
-function inBounds(x: number, z: number, width: number, height: number): boolean {
+function inBounds(
+	x: number,
+	z: number,
+	width: number,
+	height: number,
+): boolean {
 	return x >= 0 && x < width && z >= 0 && z < height;
 }
 

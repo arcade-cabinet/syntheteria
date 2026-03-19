@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { GameOutcome } from "../../ecs/systems/victorySystem";
 import { getCameraControls } from "../../camera/cameraStore";
+import type { GameOutcome } from "../../ecs/systems/victorySystem";
 
 type GameOutcomeOverlayProps = {
 	outcome: GameOutcome;
@@ -20,13 +20,20 @@ const TITLES: Record<string, string> = {
 };
 
 const DESCRIPTIONS: Record<string, string> = {
-	domination: "Territory control exceeds threshold. Sector grid belongs to your signal.",
-	research: "Full lattice decode complete. The machine substrate yields its secrets.",
-	economic: "Resource accumulation secures operational dominance across the ecumenopolis.",
-	survival: "Persistence subroutine exceeded cycle threshold. Syntheteria acknowledges endurance.",
-	wormhole: "The path is open. Spacetime bends to your signal. Transcendence achieved.",
-	technical_supremacy: "Mark V units of every class assembled. The machine lattice evolves beyond its creators.",
-	forced_domination: "Overwhelming territorial supremacy. No faction can challenge your dominion.",
+	domination:
+		"Territory control exceeds threshold. Sector grid belongs to your signal.",
+	research:
+		"Full lattice decode complete. The machine substrate yields its secrets.",
+	economic:
+		"Resource accumulation secures operational dominance across the ecumenopolis.",
+	survival:
+		"Persistence subroutine exceeded cycle threshold. Syntheteria acknowledges endurance.",
+	wormhole:
+		"The path is open. Spacetime bends to your signal. Transcendence achieved.",
+	technical_supremacy:
+		"Mark V units of every class assembled. The machine lattice evolves beyond its creators.",
+	forced_domination:
+		"Overwhelming territorial supremacy. No faction can challenge your dominion.",
 	elimination: "All relay nodes destroyed. Signal propagation terminated.",
 };
 
@@ -34,25 +41,61 @@ const DESCRIPTIONS: Record<string, string> = {
  * Victory-specific color washes — each win path gets a distinct visual identity.
  * Returns [accentColor, radialGradientCenter, radialGradientEdge].
  */
-function getOutcomeTheme(reason: string): { accent: string; washCenter: string; washEdge: string } {
+function getOutcomeTheme(reason: string): {
+	accent: string;
+	washCenter: string;
+	washEdge: string;
+} {
 	switch (reason) {
 		case "domination":
 		case "forced_domination":
-			return { accent: "#ff9944", washCenter: "rgba(255,102,0,0.25)", washEdge: "rgba(3,3,8,0.92)" };
+			return {
+				accent: "#ff9944",
+				washCenter: "rgba(255,102,0,0.25)",
+				washEdge: "rgba(3,3,8,0.92)",
+			};
 		case "research":
-			return { accent: "#44ddff", washCenter: "rgba(68,221,255,0.2)", washEdge: "rgba(3,3,8,0.92)" };
+			return {
+				accent: "#44ddff",
+				washCenter: "rgba(68,221,255,0.2)",
+				washEdge: "rgba(3,3,8,0.92)",
+			};
 		case "economic":
-			return { accent: "#ffd700", washCenter: "rgba(255,215,0,0.2)", washEdge: "rgba(3,3,8,0.92)" };
+			return {
+				accent: "#ffd700",
+				washCenter: "rgba(255,215,0,0.2)",
+				washEdge: "rgba(3,3,8,0.92)",
+			};
 		case "survival":
-			return { accent: "#7ee7cb", washCenter: "rgba(126,231,203,0.18)", washEdge: "rgba(3,3,8,0.92)" };
+			return {
+				accent: "#7ee7cb",
+				washCenter: "rgba(126,231,203,0.18)",
+				washEdge: "rgba(3,3,8,0.92)",
+			};
 		case "wormhole":
-			return { accent: "#cc88ff", washCenter: "rgba(160,80,255,0.35)", washEdge: "rgba(3,3,8,0.90)" };
+			return {
+				accent: "#cc88ff",
+				washCenter: "rgba(160,80,255,0.35)",
+				washEdge: "rgba(3,3,8,0.90)",
+			};
 		case "technical_supremacy":
-			return { accent: "#ffffff", washCenter: "rgba(200,200,255,0.25)", washEdge: "rgba(3,3,8,0.92)" };
+			return {
+				accent: "#ffffff",
+				washCenter: "rgba(200,200,255,0.25)",
+				washEdge: "rgba(3,3,8,0.92)",
+			};
 		case "elimination":
-			return { accent: "#cc4444", washCenter: "rgba(204,0,0,0.3)", washEdge: "rgba(3,3,8,0.95)" };
+			return {
+				accent: "#cc4444",
+				washCenter: "rgba(204,0,0,0.3)",
+				washEdge: "rgba(3,3,8,0.95)",
+			};
 		default:
-			return { accent: "#7ee7cb", washCenter: "rgba(126,231,203,0.15)", washEdge: "rgba(3,3,8,0.92)" };
+			return {
+				accent: "#7ee7cb",
+				washCenter: "rgba(126,231,203,0.15)",
+				washEdge: "rgba(3,3,8,0.92)",
+			};
 	}
 }
 

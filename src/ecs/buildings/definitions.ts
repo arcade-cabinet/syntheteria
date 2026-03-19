@@ -181,7 +181,12 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { alloy_stock: 8, silicon_wafer: 4, conductor_wire: 3, el_crystal: 1 },
+		buildCost: {
+			alloy_stock: 8,
+			silicon_wafer: 4,
+			conductor_wire: 3,
+			el_crystal: 1,
+		},
 		buildTime: 16,
 	},
 	research_lab: {

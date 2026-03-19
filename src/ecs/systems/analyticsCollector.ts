@@ -10,13 +10,13 @@
  */
 
 import type { World } from "koota";
-import type { CampaignStats } from "./campaignStats";
-import { serializeCampaignStats } from "./campaignStats";
+import type { FactionSnapshotData } from "../../db/types";
 import { Building } from "../traits/building";
 import { Faction } from "../traits/faction";
 import { ResourcePool } from "../traits/resource";
 import { UnitFaction, UnitStats } from "../traits/unit";
-import type { FactionSnapshotData } from "../../db/types";
+import type { CampaignStats } from "./campaignStats";
+import { serializeCampaignStats } from "./campaignStats";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -32,10 +32,19 @@ export interface FactionResourceData {
 // ─── Resource Materials ─────────────────────────────────────────────────────
 
 const RESOURCE_KEYS = [
-	"ferrous_scrap", "alloy_stock", "polymer_salvage", "conductor_wire",
-	"electrolyte", "silicon_wafer", "storm_charge", "el_crystal",
-	"scrap_metal", "e_waste", "intact_components",
-	"thermal_fluid", "depth_salvage",
+	"ferrous_scrap",
+	"alloy_stock",
+	"polymer_salvage",
+	"conductor_wire",
+	"electrolyte",
+	"silicon_wafer",
+	"storm_charge",
+	"el_crystal",
+	"scrap_metal",
+	"e_waste",
+	"intact_components",
+	"thermal_fluid",
+	"depth_salvage",
 ] as const;
 
 // ─── Collectors ─────────────────────────────────────────────────────────────
@@ -74,7 +83,10 @@ export function collectFactionResources(world: World): FactionResourceData[] {
  * Collect a per-faction turn snapshot: unit counts, building counts,
  * territory percentage, and resource totals.
  */
-export function collectTurnSnapshot(world: World, totalTiles: number): TurnSnapshotData {
+export function collectTurnSnapshot(
+	world: World,
+	totalTiles: number,
+): TurnSnapshotData {
 	// Count units per faction
 	const unitCounts = new Map<string, number>();
 	for (const e of world.query(UnitStats, UnitFaction)) {
@@ -111,7 +123,10 @@ export function collectTurnSnapshot(world: World, totalTiles: number): TurnSnaps
 
 		const buildingCount = buildingCounts.get(f.id) ?? 0;
 		// Territory % approximated from building count relative to total tiles
-		const territoryPercent = totalTiles > 0 ? Math.round((buildingCount / totalTiles) * 100 * 100) / 100 : 0;
+		const territoryPercent =
+			totalTiles > 0
+				? Math.round((buildingCount / totalTiles) * 100 * 100) / 100
+				: 0;
 
 		factions.push({
 			factionId: f.id,

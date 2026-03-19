@@ -14,20 +14,22 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { Entity, World } from "koota";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { playSfx } from "../audio/sfx";
+import { shortestPath } from "../board/adjacency";
 import { createGridApi } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
-import {
-	clearHighlights,
-	highlightPlacementTile,
-	highlightReachableTiles,
-} from "../ecs/systems/highlightSystem";
-import { ResourceDeposit } from "../ecs/traits/resource";
-import { Building } from "../ecs/traits/building";
 import {
 	cancelBuildPlacement,
 	confirmBuildPlacement,
 	isInBuildPlacementMode,
 } from "../ecs/systems/buildSystem";
+import {
+	clearHighlights,
+	highlightPlacementTile,
+	highlightReachableTiles,
+} from "../ecs/systems/highlightSystem";
+import { Building } from "../ecs/traits/building";
+import { ResourceDeposit } from "../ecs/traits/resource";
 import {
 	UnitAttack,
 	UnitFaction,
@@ -35,6 +37,8 @@ import {
 	UnitPos,
 	UnitStats,
 } from "../ecs/traits/unit";
+import { spherePosToTile, sphereRadius } from "../rendering/boardGeometry";
+import { clearPreviewPath, setPreviewPath } from "../rendering/PathRenderer";
 import {
 	closeRadialMenu,
 	confirmRadialSelection,
@@ -47,10 +51,6 @@ import {
 	setProviderBoard,
 	setProviderSelectedUnit,
 } from "../systems/radialProviders";
-import { playSfx } from "../audio/sfx";
-import { sphereRadius, spherePosToTile } from "../rendering/boardGeometry";
-import { setPreviewPath, clearPreviewPath } from "../rendering/PathRenderer";
-import { shortestPath } from "../board/adjacency";
 import "../systems/radialProviders";
 
 type BoardInputProps = {
@@ -253,18 +253,29 @@ export function BoardInput({
 					for (const e of world.query(UnitPos, UnitFaction)) {
 						if (e.id() === selectedId) {
 							const p = e.get(UnitPos);
-							if (p) { unitX = p.tileX; unitZ = p.tileZ; }
+							if (p) {
+								unitX = p.tileX;
+								unitZ = p.tileZ;
+							}
 							break;
 						}
 					}
 					if (unitX >= 0 && (hoverTile.x !== unitX || hoverTile.z !== unitZ)) {
-						const path = shortestPath(unitX, unitZ, hoverTile.x, hoverTile.z, board);
+						const path = shortestPath(
+							unitX,
+							unitZ,
+							hoverTile.x,
+							hoverTile.z,
+							board,
+						);
 						if (path.length >= 2) {
-							setPreviewPath(path.map((t) => ({
-								tileX: t.x,
-								tileZ: t.z,
-								elevation: t.elevation,
-							})));
+							setPreviewPath(
+								path.map((t) => ({
+									tileX: t.x,
+									tileZ: t.z,
+									elevation: t.elevation,
+								})),
+							);
 						} else {
 							clearPreviewPath();
 						}
@@ -342,11 +353,7 @@ export function BoardInput({
 				if (selectionType === "empty_sector") {
 					for (const e of world.query(Building)) {
 						const b = e.get(Building);
-						if (
-							b &&
-							b.tileX === tile.x &&
-							b.tileZ === tile.z
-						) {
+						if (b && b.tileX === tile.x && b.tileZ === tile.z) {
 							selectionType = "building";
 							targetEntityId = String(e.id());
 							targetFaction = b.factionId;
@@ -419,7 +426,11 @@ export function BoardInput({
 
 			// Check for enemy within attack range — click-to-attack
 			const distToClick = Math.abs(x - pos.tileX) + Math.abs(z - pos.tileZ);
-			if (distToClick <= stats.attackRange && stats.attackRange > 0 && stats.ap >= 1) {
+			if (
+				distToClick <= stats.attackRange &&
+				stats.attackRange > 0 &&
+				stats.ap >= 1
+			) {
 				for (const e of world.query(UnitPos, UnitFaction)) {
 					const ep = e.get(UnitPos);
 					const ef = e.get(UnitFaction);

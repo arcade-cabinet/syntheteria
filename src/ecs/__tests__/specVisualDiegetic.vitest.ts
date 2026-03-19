@@ -12,20 +12,23 @@
  * These tests verify spec compliance. Failures indicate missing or divergent features.
  */
 
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
-	registerRadialProvider,
-	openRadialMenu,
-	getRadialMenuState,
+	FACTION_COLORS,
+	PLAYER_UNIT_COLOR,
+	STANDING_DISPLAY,
+} from "../../config/gameDefaults";
+import {
 	getRadialGeometry,
-	_reset as resetRadial,
+	getRadialMenuState,
+	openRadialMenu,
 	type RadialActionProvider,
 	type RadialOpenContext,
+	registerRadialProvider,
+	_reset as resetRadial,
 } from "../../systems/radialMenu";
-import { STANDING_DISPLAY, FACTION_COLORS, PLAYER_UNIT_COLOR } from "../../config/gameDefaults";
 
 describe("SPEC: Section 9 — Visual & Diegetic Language", () => {
-
 	// ─── Color palette ─────────────────────────────────────────────────
 
 	describe("color palette (spec hex values)", () => {
@@ -50,9 +53,9 @@ describe("SPEC: Section 9 — Visual & Diegetic Language", () => {
 			// PLAYER_UNIT_COLOR = 0x00ffaa (bright mint green)
 			expect(PLAYER_UNIT_COLOR).toBeTruthy();
 			// Extract RGB components — should be green-heavy
-			const r = (PLAYER_UNIT_COLOR >> 16) & 0xFF;
-			const g = (PLAYER_UNIT_COLOR >> 8) & 0xFF;
-			const b = PLAYER_UNIT_COLOR & 0xFF;
+			const r = (PLAYER_UNIT_COLOR >> 16) & 0xff;
+			const g = (PLAYER_UNIT_COLOR >> 8) & 0xff;
+			const b = PLAYER_UNIT_COLOR & 0xff;
 			expect(g).toBeGreaterThan(r); // Green dominates
 		});
 	});
@@ -80,10 +83,30 @@ describe("SPEC: Section 9 — Visual & Diegetic Language", () => {
 			// Register a test provider with multiple actions
 			const provider: RadialActionProvider = {
 				id: "test_provider",
-				category: { id: "test_cat", label: "Test", icon: "T", tone: "cyan", priority: 1 },
+				category: {
+					id: "test_cat",
+					label: "Test",
+					icon: "T",
+					tone: "cyan",
+					priority: 1,
+				},
 				getActions: () => [
-					{ id: "action1", label: "Action 1", icon: "1", tone: "cyan", enabled: true, onExecute: () => {} },
-					{ id: "action2", label: "Action 2", icon: "2", tone: "cyan", enabled: true, onExecute: () => {} },
+					{
+						id: "action1",
+						label: "Action 1",
+						icon: "1",
+						tone: "cyan",
+						enabled: true,
+						onExecute: () => {},
+					},
+					{
+						id: "action2",
+						label: "Action 2",
+						icon: "2",
+						tone: "cyan",
+						enabled: true,
+						onExecute: () => {},
+					},
 				],
 			};
 			registerRadialProvider(provider);
@@ -110,9 +133,24 @@ describe("SPEC: Section 9 — Visual & Diegetic Language", () => {
 			let executed = false;
 			const provider: RadialActionProvider = {
 				id: "single_provider",
-				category: { id: "single_cat", label: "Direct", icon: "D", tone: "mint", priority: 1 },
+				category: {
+					id: "single_cat",
+					label: "Direct",
+					icon: "D",
+					tone: "mint",
+					priority: 1,
+				},
 				getActions: () => [
-					{ id: "only_action", label: "Do Thing", icon: "!", tone: "mint", enabled: true, onExecute: () => { executed = true; } },
+					{
+						id: "only_action",
+						label: "Do Thing",
+						icon: "!",
+						tone: "mint",
+						enabled: true,
+						onExecute: () => {
+							executed = true;
+						},
+					},
 				],
 			};
 			registerRadialProvider(provider);
@@ -134,9 +172,22 @@ describe("SPEC: Section 9 — Visual & Diegetic Language", () => {
 		it("menu opens with context info (selectionType, targetEntity, faction)", () => {
 			const provider: RadialActionProvider = {
 				id: "ctx_provider",
-				category: { id: "ctx_cat", label: "Context", icon: "C", tone: "cyan", priority: 1 },
+				category: {
+					id: "ctx_cat",
+					label: "Context",
+					icon: "C",
+					tone: "cyan",
+					priority: 1,
+				},
 				getActions: () => [
-					{ id: "ctx_action", label: "Act", icon: "A", tone: "cyan", enabled: true, onExecute: () => {} },
+					{
+						id: "ctx_action",
+						label: "Act",
+						icon: "A",
+						tone: "cyan",
+						enabled: true,
+						onExecute: () => {},
+					},
 				],
 			};
 			registerRadialProvider(provider);
@@ -194,8 +245,22 @@ describe("SPEC: Section 9 — Visual & Diegetic Language", () => {
 			// This test documents the spec requirement.
 			// Implementation verification requires scanning UI strings.
 			const specVocabulary = {
-				avoid: ["Turn 1", "Settings", "Save game", "Loading...", "You win", "Game over"],
-				use: ["TURN CYCLE", "Calibration", "Persistence sync", "Mapping sectors...", "Signal dominance achieved", "Relay lost"],
+				avoid: [
+					"Turn 1",
+					"Settings",
+					"Save game",
+					"Loading...",
+					"You win",
+					"Game over",
+				],
+				use: [
+					"TURN CYCLE",
+					"Calibration",
+					"Persistence sync",
+					"Mapping sectors...",
+					"Signal dominance achieved",
+					"Relay lost",
+				],
 			};
 			expect(specVocabulary.avoid).toHaveLength(6);
 			expect(specVocabulary.use).toHaveLength(6);
@@ -239,7 +304,13 @@ describe("SPEC: Section 9 — Visual & Diegetic Language", () => {
 		});
 
 		it("all defined factions have colors in the FACTION_COLORS map", () => {
-			const expectedFactions = ["player", "reclaimers", "volt_collective", "signal_choir", "iron_creed"];
+			const expectedFactions = [
+				"player",
+				"reclaimers",
+				"volt_collective",
+				"signal_choir",
+				"iron_creed",
+			];
 			for (const fid of expectedFactions) {
 				expect(FACTION_COLORS[fid]).toBeDefined();
 				expect(FACTION_COLORS[fid]).toBeGreaterThan(0);

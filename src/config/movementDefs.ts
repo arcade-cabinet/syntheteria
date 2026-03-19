@@ -30,20 +30,21 @@ export interface MovementProfile {
  * - Infantry is steady (1 move, 2 cells) — reliable march
  * - Ranged/Worker/Support have limited movement but powerful staged actions
  */
-export const MOVEMENT_PROFILES: Readonly<Record<RobotClass, MovementProfile>> = {
-	// ── Faction bots ──────────────────────────────────────────────────────
-	scout:    { movesPerTurn: 2, cellsPerMove: 3 },
-	cavalry:  { movesPerTurn: 2, cellsPerMove: 2 },
-	infantry: { movesPerTurn: 1, cellsPerMove: 2 },
-	ranged:   { movesPerTurn: 1, cellsPerMove: 1 },
-	support:  { movesPerTurn: 1, cellsPerMove: 2 },
-	worker:   { movesPerTurn: 1, cellsPerMove: 1 },
+export const MOVEMENT_PROFILES: Readonly<Record<RobotClass, MovementProfile>> =
+	{
+		// ── Faction bots ──────────────────────────────────────────────────────
+		scout: { movesPerTurn: 2, cellsPerMove: 3 },
+		cavalry: { movesPerTurn: 2, cellsPerMove: 2 },
+		infantry: { movesPerTurn: 1, cellsPerMove: 2 },
+		ranged: { movesPerTurn: 1, cellsPerMove: 1 },
+		support: { movesPerTurn: 1, cellsPerMove: 2 },
+		worker: { movesPerTurn: 1, cellsPerMove: 1 },
 
-	// ── Cult mechs ────────────────────────────────────────────────────────
-	cult_infantry: { movesPerTurn: 1, cellsPerMove: 2 },
-	cult_ranged:   { movesPerTurn: 1, cellsPerMove: 1 },
-	cult_cavalry:  { movesPerTurn: 2, cellsPerMove: 2 },
-} as const;
+		// ── Cult mechs ────────────────────────────────────────────────────────
+		cult_infantry: { movesPerTurn: 1, cellsPerMove: 2 },
+		cult_ranged: { movesPerTurn: 1, cellsPerMove: 1 },
+		cult_cavalry: { movesPerTurn: 2, cellsPerMove: 2 },
+	} as const;
 
 /**
  * Compute total MP (movement points) for a robot class.
@@ -86,7 +87,10 @@ export function canUnitMove(stats: UnitMovementState): boolean {
  * Staging is per-ACTION — some actions require staging, others don't.
  * Use classActions.ts `canUseAction()` for full action validation.
  */
-export function canUnitAct(stats: UnitMovementState, actionRequiresStaging: boolean): boolean {
+export function canUnitAct(
+	stats: UnitMovementState,
+	actionRequiresStaging: boolean,
+): boolean {
 	if (actionRequiresStaging && !stats.staged) return false;
 	return true;
 }

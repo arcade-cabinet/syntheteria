@@ -22,9 +22,15 @@
  */
 
 import type { World } from "koota";
-import type { RobotClass } from "../robots/types";
 import { MAX_MARK_LEVEL } from "../robots/marks";
-import { UnitFaction, UnitPos, UnitStats, UnitVisual, UnitXP } from "../traits/unit";
+import type { RobotClass } from "../robots/types";
+import {
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+	UnitVisual,
+	UnitXP,
+} from "../traits/unit";
 import { pushToast } from "./toastNotifications";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

@@ -37,11 +37,7 @@ export function BiomeRenderer({
 	const boardCenterZ = Math.floor(board.config.height / 2) * TILE_SIZE_M;
 	const boardWidth = board.config.width * TILE_SIZE_M;
 	const materialRef = useRef<THREE.ShaderMaterial>(
-		makeFloorShaderMaterial(
-			board.config.seed,
-			boardCenterX,
-			boardCenterZ,
-		),
+		makeFloorShaderMaterial(board.config.seed, boardCenterX, boardCenterZ),
 	);
 
 	// Set boardWidth for shader uniform

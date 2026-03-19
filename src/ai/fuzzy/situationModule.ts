@@ -12,13 +12,13 @@
  */
 
 import {
-	FuzzyModule,
-	FuzzyVariable,
-	FuzzyRule,
-	LeftShoulderFuzzySet,
-	TriangularFuzzySet,
-	RightShoulderFuzzySet,
 	FuzzyAND,
+	FuzzyModule,
+	FuzzyRule,
+	FuzzyVariable,
+	LeftShoulderFuzzySet,
+	RightShoulderFuzzySet,
+	TriangularFuzzySet,
 } from "yuka";
 
 // ---------------------------------------------------------------------------

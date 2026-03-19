@@ -11,16 +11,16 @@
 
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { resetAIRuntime } from "../../../ai/yukaAiTurnSystem";
 import { generateBoard } from "../../../board/generator";
 import type { GeneratedBoard } from "../../../board/types";
-import { resetAIRuntime } from "../../../ai/yukaAiTurnSystem";
 import { initWorldFromBoard } from "../../init";
 import { Building } from "../../traits/building";
 import { Faction } from "../../traits/faction";
 import { ResourcePool } from "../../traits/resource";
 import { UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
-import { advanceTurn } from "../turnSystem";
 import { computeTerritory } from "../territorySystem";
+import { advanceTurn } from "../turnSystem";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -47,7 +47,8 @@ function snapshot(
 	for (const e of world.query(Building)) {
 		const b = e.get(Building);
 		if (!b) continue;
-		buildingsByFaction[b.factionId] = (buildingsByFaction[b.factionId] ?? 0) + 1;
+		buildingsByFaction[b.factionId] =
+			(buildingsByFaction[b.factionId] ?? 0) + 1;
 		totalBuildings++;
 	}
 
@@ -80,10 +81,19 @@ function snapshot(
 		const r = e.get(ResourcePool);
 		if (!f || !r) continue;
 		const total =
-			r.scrap_metal + r.ferrous_scrap + r.alloy_stock +
-			r.polymer_salvage + r.conductor_wire + r.electrolyte +
-			r.silicon_wafer + r.storm_charge + r.el_crystal +
-			r.e_waste + r.intact_components + r.thermal_fluid + r.depth_salvage;
+			r.scrap_metal +
+			r.ferrous_scrap +
+			r.alloy_stock +
+			r.polymer_salvage +
+			r.conductor_wire +
+			r.electrolyte +
+			r.silicon_wafer +
+			r.storm_charge +
+			r.el_crystal +
+			r.e_waste +
+			r.intact_components +
+			r.thermal_fluid +
+			r.depth_salvage;
 		resourcesByFaction[f.id] = total;
 	}
 
@@ -160,13 +170,22 @@ describe("50-turn AI-vs-AI balance playtest", () => {
 		console.log("\n=== 50-TURN BALANCE PLAYTEST RESULTS ===\n");
 		for (const s of snapshots) {
 			console.log(`Turn ${s.turn}:`);
-			console.log(`  Buildings: ${s.totalBuildings} ${JSON.stringify(s.buildingsByFaction)}`);
-			console.log(`  Units: ${s.totalUnits} ${JSON.stringify(s.unitsByFaction)}`);
-			console.log(`  Territory%: ${JSON.stringify(
-				Object.fromEntries(
-					Object.entries(s.territoryPctByFaction).map(([k, v]) => [k, v.toFixed(1) + "%"]),
-				),
-			)}`);
+			console.log(
+				`  Buildings: ${s.totalBuildings} ${JSON.stringify(s.buildingsByFaction)}`,
+			);
+			console.log(
+				`  Units: ${s.totalUnits} ${JSON.stringify(s.unitsByFaction)}`,
+			);
+			console.log(
+				`  Territory%: ${JSON.stringify(
+					Object.fromEntries(
+						Object.entries(s.territoryPctByFaction).map(([k, v]) => [
+							k,
+							v.toFixed(1) + "%",
+						]),
+					),
+				)}`,
+			);
 			console.log(`  Resources: ${JSON.stringify(s.resourcesByFaction)}`);
 			console.log();
 		}
@@ -191,9 +210,16 @@ describe("50-turn AI-vs-AI balance playtest", () => {
 
 		// 4. Unit count changes by turn 50 — either fabrication (more) or combat (fewer)
 		// At least one faction should have different unit count than initial
-		const aiFactionIds = ["reclaimers", "volt_collective", "signal_choir", "iron_creed"];
+		const aiFactionIds = [
+			"reclaimers",
+			"volt_collective",
+			"signal_choir",
+			"iron_creed",
+		];
 		const unitCountChanged = aiFactionIds.some(
-			(fid) => (turn50.unitsByFaction[fid] ?? 0) !== (initial.unitsByFaction[fid] ?? 0),
+			(fid) =>
+				(turn50.unitsByFaction[fid] ?? 0) !==
+				(initial.unitsByFaction[fid] ?? 0),
 		);
 		expect(unitCountChanged).toBe(true);
 
@@ -212,7 +238,8 @@ describe("50-turn AI-vs-AI balance playtest", () => {
 		// 7. Cult spawns — cultist units appear by turn 50
 		const cultFactions = ["static_remnants", "null_monks", "lost_signal"];
 		const cultUnitsT50 = cultFactions.reduce(
-			(sum, fid) => sum + (turn50.unitsByFaction[fid] ?? 0), 0,
+			(sum, fid) => sum + (turn50.unitsByFaction[fid] ?? 0),
+			0,
 		);
 		expect(cultUnitsT50).toBeGreaterThan(0);
 

@@ -14,16 +14,51 @@ import {
 } from "../../systems/radialMenu";
 
 // Tone colors
-const TONE_COLORS: Record<string, { fill: string; hover: string; text: string }> = {
-	neutral: { fill: "rgba(139,230,255,0.15)", hover: "rgba(139,230,255,0.35)", text: "#8be6ff" },
-	harvest: { fill: "rgba(126,231,203,0.15)", hover: "rgba(126,231,203,0.35)", text: "#7ee7cb" },
-	hostile: { fill: "rgba(204,68,68,0.15)", hover: "rgba(204,68,68,0.35)", text: "#cc4444" },
-	construct: { fill: "rgba(232,200,106,0.15)", hover: "rgba(232,200,106,0.35)", text: "#e8c86a" },
+const TONE_COLORS: Record<
+	string,
+	{ fill: string; hover: string; text: string }
+> = {
+	neutral: {
+		fill: "rgba(139,230,255,0.15)",
+		hover: "rgba(139,230,255,0.35)",
+		text: "#8be6ff",
+	},
+	harvest: {
+		fill: "rgba(126,231,203,0.15)",
+		hover: "rgba(126,231,203,0.35)",
+		text: "#7ee7cb",
+	},
+	hostile: {
+		fill: "rgba(204,68,68,0.15)",
+		hover: "rgba(204,68,68,0.35)",
+		text: "#cc4444",
+	},
+	construct: {
+		fill: "rgba(232,200,106,0.15)",
+		hover: "rgba(232,200,106,0.35)",
+		text: "#e8c86a",
+	},
 	// Fallbacks for tones used by the full provider set
-	default: { fill: "rgba(139,230,255,0.15)", hover: "rgba(139,230,255,0.35)", text: "#8be6ff" },
-	power: { fill: "rgba(232,200,106,0.15)", hover: "rgba(232,200,106,0.35)", text: "#e8c86a" },
-	combat: { fill: "rgba(204,68,68,0.15)", hover: "rgba(204,68,68,0.35)", text: "#cc4444" },
-	signal: { fill: "rgba(139,230,255,0.15)", hover: "rgba(139,230,255,0.35)", text: "#8be6ff" },
+	default: {
+		fill: "rgba(139,230,255,0.15)",
+		hover: "rgba(139,230,255,0.35)",
+		text: "#8be6ff",
+	},
+	power: {
+		fill: "rgba(232,200,106,0.15)",
+		hover: "rgba(232,200,106,0.35)",
+		text: "#e8c86a",
+	},
+	combat: {
+		fill: "rgba(204,68,68,0.15)",
+		hover: "rgba(204,68,68,0.35)",
+		text: "#cc4444",
+	},
+	signal: {
+		fill: "rgba(139,230,255,0.15)",
+		hover: "rgba(139,230,255,0.35)",
+		text: "#8be6ff",
+	},
 };
 
 function getTone(tone: string) {

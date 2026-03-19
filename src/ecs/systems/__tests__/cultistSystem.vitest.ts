@@ -3,7 +3,13 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../../board/types";
 import { Board } from "../../traits/board";
 import { CultStructure } from "../../traits/cult";
-import { UnitFaction, UnitMove, UnitPos, UnitStats, UnitVisual } from "../../traits/unit";
+import {
+	UnitFaction,
+	UnitMove,
+	UnitPos,
+	UnitStats,
+	UnitVisual,
+} from "../../traits/unit";
 import { resolveAllMoves } from "../aiTurnSystem";
 import {
 	_reset,
@@ -22,7 +28,11 @@ import {
 } from "../cultistSystem";
 
 /** Build a W×H board where every tile is passable and flat. */
-function makeBoard(width: number, height: number, floorType = "durasteel_span"): GeneratedBoard {
+function makeBoard(
+	width: number,
+	height: number,
+	floorType = "durasteel_span",
+): GeneratedBoard {
 	const tiles: TileData[][] = [];
 	for (let z = 0; z < height; z++) {
 		const row: TileData[] = [];
@@ -46,7 +56,10 @@ function makeBoard(width: number, height: number, floorType = "durasteel_span"):
 }
 
 /** Build a board with cult-friendly terrain in the non-center, non-edge areas. */
-function makeBoardWithCultTerrain(width: number, height: number): GeneratedBoard {
+function makeBoardWithCultTerrain(
+	width: number,
+	height: number,
+): GeneratedBoard {
 	const tiles: TileData[][] = [];
 	const margin = Math.max(3, Math.floor(width / 8));
 	const centerX = Math.floor(width / 2);
@@ -56,11 +69,13 @@ function makeBoardWithCultTerrain(width: number, height: number): GeneratedBoard
 	for (let z = 0; z < height; z++) {
 		const row: TileData[] = [];
 		for (let x = 0; x < width; x++) {
-			const isEdge = x < margin || x >= width - margin || z < margin || z >= height - margin;
+			const isEdge =
+				x < margin || x >= width - margin || z < margin || z >= height - margin;
 			const distToCenter = Math.abs(x - centerX) + Math.abs(z - centerZ);
 			const isCenter = distToCenter < centerExclusion;
 			// Use cult terrain in the valid zone
-			const floorType = !isEdge && !isCenter ? "collapsed_zone" : "durasteel_span";
+			const floorType =
+				!isEdge && !isCenter ? "collapsed_zone" : "durasteel_span";
 			row.push({
 				x,
 				z,
@@ -121,7 +136,13 @@ describe("cultistSystem", () => {
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
 			UnitStats({
-				hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0,
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
 			}),
 		);
 
@@ -137,7 +158,13 @@ describe("cultistSystem", () => {
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
 			UnitStats({
-				hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0,
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
 			}),
 		);
 
@@ -151,7 +178,13 @@ describe("cultistSystem", () => {
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
 			UnitStats({
-				hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0,
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
 			}),
 		);
 
@@ -166,7 +199,13 @@ describe("cultistSystem", () => {
 				UnitPos({ tileX: i % 16, tileZ: Math.floor(i / 16) }),
 				UnitFaction({ factionId: "player" }),
 				UnitStats({
-					hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0,
+					hp: 10,
+					maxHp: 10,
+					ap: 3,
+					maxAp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
 				}),
 			);
 		}
@@ -182,7 +221,13 @@ describe("cultistSystem", () => {
 				UnitPos({ tileX: i, tileZ: 0 }),
 				UnitFaction({ factionId: "static_remnants" }),
 				UnitStats({
-					hp: 6, maxHp: 6, ap: 2, maxAp: 2, scanRange: 3, attack: 3, defense: 0,
+					hp: 6,
+					maxHp: 6,
+					ap: 2,
+					maxAp: 2,
+					scanRange: 3,
+					attack: 3,
+					defense: 0,
 				}),
 			);
 		}
@@ -191,7 +236,13 @@ describe("cultistSystem", () => {
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
 			UnitStats({
-				hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0,
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
 			}),
 		);
 
@@ -207,7 +258,8 @@ describe("cultistSystem", () => {
 		expect(zones.length).toBeGreaterThan(0);
 
 		for (const zone of zones) {
-			const onEdge = zone.x === 0 || zone.x === 15 || zone.z === 0 || zone.z === 15;
+			const onEdge =
+				zone.x === 0 || zone.x === 15 || zone.z === 0 || zone.z === 15;
 			expect(onEdge).toBe(true);
 		}
 	});
@@ -225,7 +277,13 @@ describe("cultistSystem", () => {
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
 			UnitStats({
-				hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0,
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
 			}),
 		);
 
@@ -245,7 +303,13 @@ describe("cultistSystem", () => {
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
 			UnitStats({
-				hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0,
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attack: 2,
+				defense: 0,
 			}),
 		);
 
@@ -275,7 +339,13 @@ describe("cultistSystem", () => {
 				UnitPos({ tileX: 5, tileZ: 5 }),
 				UnitFaction({ factionId: "player" }),
 				UnitStats({
-					hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0,
+					hp: 10,
+					maxHp: 10,
+					ap: 3,
+					maxAp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
 				}),
 			);
 		}
@@ -501,7 +571,13 @@ describe("cultistSystem", () => {
 				UnitPos({ tileX: 5, tileZ: 5 }),
 				UnitFaction({ factionId: "player" }),
 				UnitStats({
-					hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0,
+					hp: 10,
+					maxHp: 10,
+					ap: 3,
+					maxAp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
 				}),
 			);
 
@@ -521,13 +597,21 @@ describe("cultistSystem", () => {
 					UnitPos({ tileX: i % 16, tileZ: Math.floor(i / 16) }),
 					UnitFaction({ factionId: "player" }),
 					UnitStats({
-						hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0,
+						hp: 10,
+						maxHp: 10,
+						ap: 3,
+						maxAp: 3,
+						scanRange: 4,
+						attack: 2,
+						defense: 0,
 					}),
 				);
 			}
 
 			// Add Board entity for storm profile reading
-			world.spawn(Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 1 }));
+			world.spawn(
+				Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 1 }),
+			);
 
 			let maxSeen = 0;
 			for (let turn = 1; turn <= 100; turn++) {
@@ -553,12 +637,20 @@ describe("cultistSystem", () => {
 					UnitPos({ tileX: i % 32, tileZ: Math.floor(i / 32) }),
 					UnitFaction({ factionId: "player" }),
 					UnitStats({
-						hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0,
+						hp: 10,
+						maxHp: 10,
+						ap: 3,
+						maxAp: 3,
+						scanRange: 4,
+						attack: 2,
+						defense: 0,
 					}),
 				);
 			}
 
-			world.spawn(Board({ width: 32, height: 32, seed: "test", tileSizeM: 2, turn: 1 }));
+			world.spawn(
+				Board({ width: 32, height: 32, seed: "test", tileSizeM: 2, turn: 1 }),
+			);
 
 			let maxSeen = initialGuards;
 			for (let turn = 1; turn <= 100; turn++) {
@@ -593,7 +685,14 @@ describe("cultistSystem", () => {
 				UnitPos({ tileX: 5, tileZ: 4 }),
 				UnitFaction({ factionId: "static_remnants" }),
 				UnitStats({
-					hp: 6, maxHp: 6, ap: 2, maxAp: 2, scanRange: 3, attack: 3, defense: 0, attackRange: 1,
+					hp: 6,
+					maxHp: 6,
+					ap: 2,
+					maxAp: 2,
+					scanRange: 3,
+					attack: 3,
+					defense: 0,
+					attackRange: 1,
 				}),
 			);
 
@@ -603,12 +702,20 @@ describe("cultistSystem", () => {
 					UnitPos({ tileX: 5, tileZ: 2 }),
 					UnitFaction({ factionId: "player" }),
 					UnitStats({
-						hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0,
+						hp: 10,
+						maxHp: 10,
+						ap: 3,
+						maxAp: 3,
+						scanRange: 4,
+						attack: 2,
+						defense: 0,
 					}),
 				);
 			}
 
-			world.spawn(Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 1 }));
+			world.spawn(
+				Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 1 }),
+			);
 
 			runCultPatrols(world, board);
 
@@ -643,11 +750,20 @@ describe("cultistSystem", () => {
 				UnitPos({ tileX: 12, tileZ: 5 }),
 				UnitFaction({ factionId: "null_monks" }),
 				UnitStats({
-					hp: 6, maxHp: 6, ap: 2, maxAp: 2, scanRange: 3, attack: 3, defense: 0, attackRange: 1,
+					hp: 6,
+					maxHp: 6,
+					ap: 2,
+					maxAp: 2,
+					scanRange: 3,
+					attack: 3,
+					defense: 0,
+					attackRange: 1,
 				}),
 			);
 
-			world.spawn(Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 1 }));
+			world.spawn(
+				Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 1 }),
+			);
 
 			runCultPatrols(world, board);
 
@@ -680,10 +796,15 @@ describe("cultistSystem", () => {
 			// Setup: only 1 player unit (tier 0 → wanderer)
 			world.spawn(
 				CultStructure({
-					tileX: 8, tileZ: 8,
+					tileX: 8,
+					tileZ: 8,
 					structureType: "breach_altar",
-					modelId: "", hp: 60, maxHp: 60,
-					corruptionRadius: 5, spawnsUnits: false, spawnInterval: 0,
+					modelId: "",
+					hp: 60,
+					maxHp: 60,
+					corruptionRadius: 5,
+					spawnsUnits: false,
+					spawnInterval: 0,
 				}),
 			);
 
@@ -692,8 +813,16 @@ describe("cultistSystem", () => {
 				UnitPos({ tileX: 7, tileZ: 8 }),
 				UnitFaction({ factionId: "static_remnants" }),
 				UnitStats({
-					hp: 6, maxHp: 6, ap: 2, maxAp: 2, mp: 2, maxMp: 2,
-					scanRange: 3, attack: 3, defense: 0, attackRange: 1,
+					hp: 6,
+					maxHp: 6,
+					ap: 2,
+					maxAp: 2,
+					mp: 2,
+					maxMp: 2,
+					scanRange: 3,
+					attack: 3,
+					defense: 0,
+					attackRange: 1,
 				}),
 			);
 
@@ -701,10 +830,20 @@ describe("cultistSystem", () => {
 			world.spawn(
 				UnitPos({ tileX: 5, tileZ: 8 }),
 				UnitFaction({ factionId: "player" }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 3,
+					maxAp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+				}),
 			);
 
-			world.spawn(Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 1 }));
+			world.spawn(
+				Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 1 }),
+			);
 			runCultPatrols(world, board);
 
 			// Wanderer should flee — move AWAY from player at (5,8)
@@ -720,10 +859,15 @@ describe("cultistSystem", () => {
 			// Setup: 30+ player units (tier 2 → war_party)
 			world.spawn(
 				CultStructure({
-					tileX: 0, tileZ: 0,
+					tileX: 0,
+					tileZ: 0,
 					structureType: "breach_altar",
-					modelId: "", hp: 60, maxHp: 60,
-					corruptionRadius: 5, spawnsUnits: false, spawnInterval: 0,
+					modelId: "",
+					hp: 60,
+					maxHp: 60,
+					corruptionRadius: 5,
+					spawnsUnits: false,
+					spawnInterval: 0,
 				}),
 			);
 
@@ -731,8 +875,16 @@ describe("cultistSystem", () => {
 				UnitPos({ tileX: 2, tileZ: 2 }),
 				UnitFaction({ factionId: "lost_signal" }),
 				UnitStats({
-					hp: 6, maxHp: 6, ap: 2, maxAp: 2, mp: 2, maxMp: 2,
-					scanRange: 3, attack: 3, defense: 0, attackRange: 1,
+					hp: 6,
+					maxHp: 6,
+					ap: 2,
+					maxAp: 2,
+					mp: 2,
+					maxMp: 2,
+					scanRange: 3,
+					attack: 3,
+					defense: 0,
+					attackRange: 1,
 				}),
 			);
 
@@ -741,11 +893,21 @@ describe("cultistSystem", () => {
 				world.spawn(
 					UnitPos({ tileX: 14, tileZ: 14 }),
 					UnitFaction({ factionId: "player" }),
-					UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+					UnitStats({
+						hp: 10,
+						maxHp: 10,
+						ap: 3,
+						maxAp: 3,
+						scanRange: 4,
+						attack: 2,
+						defense: 0,
+					}),
 				);
 			}
 
-			world.spawn(Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 1 }));
+			world.spawn(
+				Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 1 }),
+			);
 			runCultPatrols(world, board);
 
 			// War party should move toward enemies even outside scan range
@@ -778,10 +940,15 @@ describe("cultistSystem", () => {
 			// With only 1 player unit (tier 0), lost_signal should still be aggressive
 			world.spawn(
 				CultStructure({
-					tileX: 8, tileZ: 8,
+					tileX: 8,
+					tileZ: 8,
 					structureType: "breach_altar",
-					modelId: "", hp: 60, maxHp: 60,
-					corruptionRadius: 5, spawnsUnits: false, spawnInterval: 0,
+					modelId: "",
+					hp: 60,
+					maxHp: 60,
+					corruptionRadius: 5,
+					spawnsUnits: false,
+					spawnInterval: 0,
 				}),
 			);
 
@@ -789,8 +956,16 @@ describe("cultistSystem", () => {
 				UnitPos({ tileX: 7, tileZ: 8 }),
 				UnitFaction({ factionId: "lost_signal" }),
 				UnitStats({
-					hp: 6, maxHp: 6, ap: 2, maxAp: 2, mp: 2, maxMp: 2,
-					scanRange: 3, attack: 3, defense: 0, attackRange: 1,
+					hp: 6,
+					maxHp: 6,
+					ap: 2,
+					maxAp: 2,
+					mp: 2,
+					maxMp: 2,
+					scanRange: 3,
+					attack: 3,
+					defense: 0,
+					attackRange: 1,
 				}),
 			);
 
@@ -798,10 +973,20 @@ describe("cultistSystem", () => {
 			world.spawn(
 				UnitPos({ tileX: 5, tileZ: 8 }),
 				UnitFaction({ factionId: "player" }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attack: 2, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 3,
+					maxAp: 3,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+				}),
 			);
 
-			world.spawn(Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 1 }));
+			world.spawn(
+				Board({ width: 16, height: 16, seed: "test", tileSizeM: 2, turn: 1 }),
+			);
 			runCultPatrols(world, board);
 
 			// Lost Signal (aggressive) should chase, not flee — moves toward player at x=5

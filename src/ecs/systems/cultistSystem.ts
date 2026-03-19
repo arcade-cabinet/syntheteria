@@ -1,25 +1,34 @@
 import type { World } from "koota";
-import { CULT_FINAL_ASSAULT_MULTIPLIER, CULT_FINAL_ASSAULT_TURN } from "../../config/gameDefaults";
 import { playSfx } from "../../audio/sfx";
 import { shortestPath, tileNeighbors } from "../../board/adjacency";
 import type { GeneratedBoard } from "../../board/types";
+import {
+	CULT_FINAL_ASSAULT_MULTIPLIER,
+	CULT_FINAL_ASSAULT_TURN,
+} from "../../config/gameDefaults";
 import { pushTurnEvent } from "../../ui/game/turnEvents";
-import { pushToast } from "./toastNotifications";
 import type { StormProfile } from "../../world/config";
 import { CULT_STRUCTURE_DEFS } from "../buildings/cultStructures";
 import {
+	CULT_MAX_ENEMIES_PER_TIER,
+	CULT_TIER_UNIT_TYPES,
+	getEscalationTier,
 	spawnCultCavalry,
 	spawnCultInfantry,
-	spawnCultRanged,
 	spawnCultMechByType,
-	getEscalationTier,
-	CULT_TIER_UNIT_TYPES,
-	CULT_MAX_ENEMIES_PER_TIER,
+	spawnCultRanged,
 } from "../robots/CultMechs";
 import { Board } from "../traits/board";
 import { Building } from "../traits/building";
 import { CultStructure } from "../traits/cult";
-import { UnitAttack, UnitFaction, UnitMove, UnitPos, UnitStats } from "../traits/unit";
+import {
+	UnitAttack,
+	UnitFaction,
+	UnitMove,
+	UnitPos,
+	UnitStats,
+} from "../traits/unit";
+import { pushToast } from "./toastNotifications";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -57,8 +66,16 @@ export interface StormCultistParams {
 }
 
 const STORM_CULTIST_PARAMS: Record<StormProfile, StormCultistParams> = {
-	stable: { baseSpawnInterval: 7, maxWaveSize: 2, maxTotalCultists: MAX_TOTAL_CULTISTS },
-	volatile: { baseSpawnInterval: BASE_SPAWN_INTERVAL, maxWaveSize: MAX_WAVE_SIZE, maxTotalCultists: MAX_TOTAL_CULTISTS },
+	stable: {
+		baseSpawnInterval: 7,
+		maxWaveSize: 2,
+		maxTotalCultists: MAX_TOTAL_CULTISTS,
+	},
+	volatile: {
+		baseSpawnInterval: BASE_SPAWN_INTERVAL,
+		maxWaveSize: MAX_WAVE_SIZE,
+		maxTotalCultists: MAX_TOTAL_CULTISTS,
+	},
 	cataclysmic: { baseSpawnInterval: 3, maxWaveSize: 6, maxTotalCultists: 20 },
 };
 
@@ -107,7 +124,7 @@ export interface SectBias {
 
 export const SECT_BIASES: Record<string, SectBias> = {
 	static_remnants: {
-		patrolRadiusMult: 0.75,  // Tight patrol — defend POIs
+		patrolRadiusMult: 0.75, // Tight patrol — defend POIs
 		targetIsolated: false,
 		preferBuildings: false,
 		attackBonus: 0,
@@ -115,19 +132,19 @@ export const SECT_BIASES: Record<string, SectBias> = {
 		spreadCorruption: false,
 	},
 	null_monks: {
-		patrolRadiusMult: 1.5,   // Wide patrol — ambush range
-		targetIsolated: true,    // Target isolated units
+		patrolRadiusMult: 1.5, // Wide patrol — ambush range
+		targetIsolated: true, // Target isolated units
 		preferBuildings: false,
 		attackBonus: 0,
 		aggressive: false,
-		spreadCorruption: true,  // Prioritize corruption spread
+		spreadCorruption: true, // Prioritize corruption spread
 	},
 	lost_signal: {
 		patrolRadiusMult: 1.0,
 		targetIsolated: false,
-		preferBuildings: true,   // Charge buildings in assault
-		attackBonus: 1,          // Berserker damage bonus
-		aggressive: true,        // Engages even in wanderer stage
+		preferBuildings: true, // Charge buildings in assault
+		attackBonus: 1, // Berserker damage bonus
+		aggressive: true, // Engages even in wanderer stage
 		spreadCorruption: false,
 	},
 };
@@ -156,7 +173,11 @@ let poisInitialized = false;
  * Each POI gets a breach_altar + 1 cult mech guard.
  * Called once at game start from initWorldFromBoard or similar.
  */
-export function initCultPOIs(world: World, board: GeneratedBoard, seed: number): void {
+export function initCultPOIs(
+	world: World,
+	board: GeneratedBoard,
+	seed: number,
+): void {
 	if (poisInitialized) return;
 	poisInitialized = true;
 
@@ -184,7 +205,8 @@ export function initCultPOIs(world: World, board: GeneratedBoard, seed: number):
 	if (candidates.length === 0) return;
 
 	// Deterministic selection using seed
-	const count = INITIAL_POI_COUNT_MIN +
+	const count =
+		INITIAL_POI_COUNT_MIN +
 		((seed >>> 0) % (INITIAL_POI_COUNT_MAX - INITIAL_POI_COUNT_MIN + 1));
 	const poiCount = Math.min(count, candidates.length);
 
@@ -194,7 +216,11 @@ export function initCultPOIs(world: World, board: GeneratedBoard, seed: number):
 
 	// Simple greedy selection with spacing constraint
 	let rng = seed >>> 0;
-	for (let attempt = 0; attempt < candidates.length * 2 && selected.length < poiCount; attempt++) {
+	for (
+		let attempt = 0;
+		attempt < candidates.length * 2 && selected.length < poiCount;
+		attempt++
+	) {
 		// LCG pseudo-random
 		rng = (rng * 1664525 + 1013904223) >>> 0;
 		const idx = rng % candidates.length;
@@ -301,15 +327,22 @@ export function initBreachZones(board: GeneratedBoard): void {
  * Pick a cult mech type from available tier types using deterministic selection.
  */
 function pickTierMechType(tier: number, salt: number): string {
-	const types = CULT_TIER_UNIT_TYPES[Math.min(tier, CULT_TIER_UNIT_TYPES.length - 1)];
-	return types[((salt >>> 0) % types.length + types.length) % types.length];
+	const types =
+		CULT_TIER_UNIT_TYPES[Math.min(tier, CULT_TIER_UNIT_TYPES.length - 1)];
+	return types[(((salt >>> 0) % types.length) + types.length) % types.length];
 }
 
 /**
  * Spawns cult mechs at structures with spawnsUnits=true at the correct interval.
  * Called each turn from checkCultistSpawn.
  */
-function spawnFromStructures(world: World, board: GeneratedBoard, turn: number, maxTotal: number, tier: number): number {
+function spawnFromStructures(
+	world: World,
+	board: GeneratedBoard,
+	turn: number,
+	maxTotal: number,
+	tier: number,
+): number {
 	let spawned = 0;
 
 	// Count existing cultists
@@ -337,7 +370,13 @@ function spawnFromStructures(world: World, board: GeneratedBoard, turn: number, 
 		const cultFaction = CULT_FACTIONS[turn % CULT_FACTIONS.length];
 		const mechTypeId = pickTierMechType(tier, turn * 31 + spawned * 7);
 
-		spawnCultMechByType(world, mechTypeId as import("../robots/CultMechs").CultMechType, spawnTile.x, spawnTile.z, cultFaction);
+		spawnCultMechByType(
+			world,
+			mechTypeId as import("../robots/CultMechs").CultMechType,
+			spawnTile.x,
+			spawnTile.z,
+			cultFaction,
+		);
 		spawned++;
 	}
 
@@ -386,7 +425,10 @@ export function runCultPatrols(world: World, board: GeneratedBoard): void {
 	for (const e of world.query(CultStructure)) {
 		const s = e.get(CultStructure);
 		if (!s) continue;
-		if (s.structureType === "breach_altar" || s.structureType === "cult_stronghold") {
+		if (
+			s.structureType === "breach_altar" ||
+			s.structureType === "cult_stronghold"
+		) {
 			patrolCenters.push({ x: s.tileX, z: s.tileZ });
 		}
 	}
@@ -405,7 +447,8 @@ export function runCultPatrols(world: World, board: GeneratedBoard): void {
 	}
 
 	// Collect faction building positions (for assault stage targeting)
-	const buildingPositions: Array<{ x: number; z: number; entityId: number }> = [];
+	const buildingPositions: Array<{ x: number; z: number; entityId: number }> =
+		[];
 	if (stage === "assault") {
 		for (const e of world.query(Building)) {
 			const b = e.get(Building);
@@ -428,7 +471,8 @@ export function runCultPatrols(world: World, board: GeneratedBoard): void {
 		let nearestCenter = patrolCenters[0];
 		let nearestCenterDist = Number.POSITIVE_INFINITY;
 		for (const center of patrolCenters) {
-			const dist = Math.abs(pos.tileX - center.x) + Math.abs(pos.tileZ - center.z);
+			const dist =
+				Math.abs(pos.tileX - center.x) + Math.abs(pos.tileZ - center.z);
 			if (dist < nearestCenterDist) {
 				nearestCenterDist = dist;
 				nearestCenter = center;
@@ -439,7 +483,8 @@ export function runCultPatrols(world: World, board: GeneratedBoard): void {
 		let nearestEnemy: { x: number; z: number; entityId: number } | null = null;
 		let nearestEnemyDist = Number.POSITIVE_INFINITY;
 		for (const enemy of enemyPositions) {
-			const dist = Math.abs(pos.tileX - enemy.x) + Math.abs(pos.tileZ - enemy.z);
+			const dist =
+				Math.abs(pos.tileX - enemy.x) + Math.abs(pos.tileZ - enemy.z);
 			if (dist <= stats.scanRange && dist < nearestEnemyDist) {
 				nearestEnemyDist = dist;
 				nearestEnemy = enemy;
@@ -447,22 +492,27 @@ export function runCultPatrols(world: World, board: GeneratedBoard): void {
 		}
 
 		const bias = getSectBias(f.factionId);
-		const effectivePatrolRadius = Math.round(PATROL_RADIUS * bias.patrolRadiusMult);
+		const effectivePatrolRadius = Math.round(
+			PATROL_RADIUS * bias.patrolRadiusMult,
+		);
 
 		// Null Monks: target isolated enemies (pick the one furthest from other enemies)
 		let targetEnemy = nearestEnemy;
 		let targetEnemyDist = nearestEnemyDist;
 		if (bias.targetIsolated && enemyPositions.length > 1 && nearestEnemy) {
-			let mostIsolated: { x: number; z: number; entityId: number } | null = null;
+			let mostIsolated: { x: number; z: number; entityId: number } | null =
+				null;
 			let bestIsolation = -1;
 			for (const enemy of enemyPositions) {
-				const dist = Math.abs(pos.tileX - enemy.x) + Math.abs(pos.tileZ - enemy.z);
+				const dist =
+					Math.abs(pos.tileX - enemy.x) + Math.abs(pos.tileZ - enemy.z);
 				if (dist > stats.scanRange) continue;
 				// Isolation = min distance to any OTHER enemy
 				let minPeerDist = Number.POSITIVE_INFINITY;
 				for (const other of enemyPositions) {
 					if (other.entityId === enemy.entityId) continue;
-					const peerDist = Math.abs(enemy.x - other.x) + Math.abs(enemy.z - other.z);
+					const peerDist =
+						Math.abs(enemy.x - other.x) + Math.abs(enemy.z - other.z);
 					if (peerDist < minPeerDist) minPeerDist = peerDist;
 				}
 				if (minPeerDist > bestIsolation) {
@@ -472,19 +522,55 @@ export function runCultPatrols(world: World, board: GeneratedBoard): void {
 			}
 			if (mostIsolated) {
 				targetEnemy = mostIsolated;
-				targetEnemyDist = Math.abs(pos.tileX - mostIsolated.x) + Math.abs(pos.tileZ - mostIsolated.z);
+				targetEnemyDist =
+					Math.abs(pos.tileX - mostIsolated.x) +
+					Math.abs(pos.tileZ - mostIsolated.z);
 			}
 		}
 
 		// Lost Signal: aggressive — skip wanderer stage, use war_party behavior instead
-		const effectiveStage = (stage === "wanderer" && bias.aggressive) ? "war_party" : stage;
+		const effectiveStage =
+			stage === "wanderer" && bias.aggressive ? "war_party" : stage;
 
 		if (effectiveStage === "wanderer") {
-			runWandererBehavior(e, pos, stats, nearestCenter, nearestCenterDist, targetEnemy, targetEnemyDist, effectivePatrolRadius, board, world);
+			runWandererBehavior(
+				e,
+				pos,
+				stats,
+				nearestCenter,
+				nearestCenterDist,
+				targetEnemy,
+				targetEnemyDist,
+				effectivePatrolRadius,
+				board,
+				world,
+			);
 		} else if (effectiveStage === "war_party") {
-			runWarPartyBehavior(e, pos, stats, nearestCenter, nearestCenterDist, targetEnemy, targetEnemyDist, enemyPositions, effectivePatrolRadius, bias, board, world);
+			runWarPartyBehavior(
+				e,
+				pos,
+				stats,
+				nearestCenter,
+				nearestCenterDist,
+				targetEnemy,
+				targetEnemyDist,
+				enemyPositions,
+				effectivePatrolRadius,
+				bias,
+				board,
+				world,
+			);
 		} else {
-			runAssaultBehavior(e, pos, stats, targetEnemy, targetEnemyDist, buildingPositions, bias, board);
+			runAssaultBehavior(
+				e,
+				pos,
+				stats,
+				targetEnemy,
+				targetEnemyDist,
+				buildingPositions,
+				bias,
+				board,
+			);
 		}
 	}
 }
@@ -509,7 +595,11 @@ function runWandererBehavior(
 	if (nearestEnemy && nearestEnemyDist <= stats.attackRange) {
 		const neighbors = tileNeighbors(pos.tileX, pos.tileZ, board);
 		const escapeNeighbors = neighbors.filter((n) => {
-			return !nearestEnemy || (Math.abs(n.x - nearestEnemy.x) + Math.abs(n.z - nearestEnemy.z) > nearestEnemyDist);
+			return (
+				!nearestEnemy ||
+				Math.abs(n.x - nearestEnemy.x) + Math.abs(n.z - nearestEnemy.z) >
+					nearestEnemyDist
+			);
 		});
 		if (escapeNeighbors.length === 0) {
 			// Cornered — fight back
@@ -528,18 +618,24 @@ function runWandererBehavior(
 			let bestNeighbor = null;
 			let bestDist = -1;
 			for (const n of neighbors) {
-				const dist = Math.abs(n.x - nearestEnemy.x) + Math.abs(n.z - nearestEnemy.z);
+				const dist =
+					Math.abs(n.x - nearestEnemy.x) + Math.abs(n.z - nearestEnemy.z);
 				if (dist > bestDist) {
 					bestDist = dist;
 					bestNeighbor = n;
 				}
 			}
 			if (bestNeighbor) {
-				e.add(UnitMove({
-					fromX: pos.tileX, fromZ: pos.tileZ,
-					toX: bestNeighbor.x, toZ: bestNeighbor.z,
-					progress: 0, mpCost: 1,
-				}));
+				e.add(
+					UnitMove({
+						fromX: pos.tileX,
+						fromZ: pos.tileZ,
+						toX: bestNeighbor.x,
+						toZ: bestNeighbor.z,
+						progress: 0,
+						mpCost: 1,
+					}),
+				);
 			}
 		}
 		return;
@@ -548,14 +644,25 @@ function runWandererBehavior(
 	// Return to patrol radius if too far
 	if (nearestCenterDist > effectivePatrolRadius) {
 		if (!e.has(UnitMove)) {
-			const path = shortestPath(pos.tileX, pos.tileZ, nearestCenter.x, nearestCenter.z, board);
+			const path = shortestPath(
+				pos.tileX,
+				pos.tileZ,
+				nearestCenter.x,
+				nearestCenter.z,
+				board,
+			);
 			if (path.length >= 2) {
 				const next = path[1];
-				e.add(UnitMove({
-					fromX: pos.tileX, fromZ: pos.tileZ,
-					toX: next.x, toZ: next.z,
-					progress: 0, mpCost: 1,
-				}));
+				e.add(
+					UnitMove({
+						fromX: pos.tileX,
+						fromZ: pos.tileZ,
+						toX: next.x,
+						toZ: next.z,
+						progress: 0,
+						mpCost: 1,
+					}),
+				);
 			}
 		}
 		return;
@@ -568,13 +675,20 @@ function runWandererBehavior(
 			const boardTurn = readTurn(world);
 			const idx = (e.id() * 7 + boardTurn * 13) % neighbors.length;
 			const candidate = neighbors[idx];
-			const candidateDist = Math.abs(candidate.x - nearestCenter.x) + Math.abs(candidate.z - nearestCenter.z);
+			const candidateDist =
+				Math.abs(candidate.x - nearestCenter.x) +
+				Math.abs(candidate.z - nearestCenter.z);
 			if (candidateDist <= effectivePatrolRadius) {
-				e.add(UnitMove({
-					fromX: pos.tileX, fromZ: pos.tileZ,
-					toX: candidate.x, toZ: candidate.z,
-					progress: 0, mpCost: 1,
-				}));
+				e.add(
+					UnitMove({
+						fromX: pos.tileX,
+						fromZ: pos.tileZ,
+						toX: candidate.x,
+						toZ: candidate.z,
+						progress: 0,
+						mpCost: 1,
+					}),
+				);
 			}
 		}
 	}
@@ -601,7 +715,12 @@ function runWarPartyBehavior(
 	// Priority 1: attack if enemy in attack range (with sect damage bonus)
 	if (nearestEnemy && nearestEnemyDist <= stats.attackRange) {
 		if (!e.has(UnitAttack)) {
-			e.add(UnitAttack({ targetEntityId: nearestEnemy.entityId, damage: 2 + bias.attackBonus }));
+			e.add(
+				UnitAttack({
+					targetEntityId: nearestEnemy.entityId,
+					damage: 2 + bias.attackBonus,
+				}),
+			);
 		}
 		return;
 	}
@@ -609,14 +728,25 @@ function runWarPartyBehavior(
 	// Priority 2: chase enemy if within scan range
 	if (nearestEnemy) {
 		if (!e.has(UnitMove)) {
-			const path = shortestPath(pos.tileX, pos.tileZ, nearestEnemy.x, nearestEnemy.z, board);
+			const path = shortestPath(
+				pos.tileX,
+				pos.tileZ,
+				nearestEnemy.x,
+				nearestEnemy.z,
+				board,
+			);
 			if (path.length >= 2) {
 				const next = path[1];
-				e.add(UnitMove({
-					fromX: pos.tileX, fromZ: pos.tileZ,
-					toX: next.x, toZ: next.z,
-					progress: 0, mpCost: 1,
-				}));
+				e.add(
+					UnitMove({
+						fromX: pos.tileX,
+						fromZ: pos.tileZ,
+						toX: next.x,
+						toZ: next.z,
+						progress: 0,
+						mpCost: 1,
+					}),
+				);
 			}
 		}
 		return;
@@ -628,20 +758,32 @@ function runWarPartyBehavior(
 		let closestEnemy = allEnemies[0];
 		let closestDist = Number.POSITIVE_INFINITY;
 		for (const enemy of allEnemies) {
-			const dist = Math.abs(pos.tileX - enemy.x) + Math.abs(pos.tileZ - enemy.z);
+			const dist =
+				Math.abs(pos.tileX - enemy.x) + Math.abs(pos.tileZ - enemy.z);
 			if (dist < closestDist) {
 				closestDist = dist;
 				closestEnemy = enemy;
 			}
 		}
-		const path = shortestPath(pos.tileX, pos.tileZ, closestEnemy.x, closestEnemy.z, board);
+		const path = shortestPath(
+			pos.tileX,
+			pos.tileZ,
+			closestEnemy.x,
+			closestEnemy.z,
+			board,
+		);
 		if (path.length >= 2) {
 			const next = path[1];
-			e.add(UnitMove({
-				fromX: pos.tileX, fromZ: pos.tileZ,
-				toX: next.x, toZ: next.z,
-				progress: 0, mpCost: 1,
-			}));
+			e.add(
+				UnitMove({
+					fromX: pos.tileX,
+					fromZ: pos.tileZ,
+					toX: next.x,
+					toZ: next.z,
+					progress: 0,
+					mpCost: 1,
+				}),
+			);
 		}
 		return;
 	}
@@ -649,14 +791,25 @@ function runWarPartyBehavior(
 	// Fallback: patrol around center
 	if (nearestCenterDist > effectivePatrolRadius) {
 		if (!e.has(UnitMove)) {
-			const path = shortestPath(pos.tileX, pos.tileZ, nearestCenter.x, nearestCenter.z, board);
+			const path = shortestPath(
+				pos.tileX,
+				pos.tileZ,
+				nearestCenter.x,
+				nearestCenter.z,
+				board,
+			);
 			if (path.length >= 2) {
 				const next = path[1];
-				e.add(UnitMove({
-					fromX: pos.tileX, fromZ: pos.tileZ,
-					toX: next.x, toZ: next.z,
-					progress: 0, mpCost: 1,
-				}));
+				e.add(
+					UnitMove({
+						fromX: pos.tileX,
+						fromZ: pos.tileZ,
+						toX: next.x,
+						toZ: next.z,
+						progress: 0,
+						mpCost: 1,
+					}),
+				);
 			}
 		}
 		return;
@@ -668,13 +821,20 @@ function runWarPartyBehavior(
 			const boardTurn = readTurn(world);
 			const idx = (e.id() * 7 + boardTurn * 13) % neighbors.length;
 			const candidate = neighbors[idx];
-			const candidateDist = Math.abs(candidate.x - nearestCenter.x) + Math.abs(candidate.z - nearestCenter.z);
+			const candidateDist =
+				Math.abs(candidate.x - nearestCenter.x) +
+				Math.abs(candidate.z - nearestCenter.z);
 			if (candidateDist <= effectivePatrolRadius) {
-				e.add(UnitMove({
-					fromX: pos.tileX, fromZ: pos.tileZ,
-					toX: candidate.x, toZ: candidate.z,
-					progress: 0, mpCost: 1,
-				}));
+				e.add(
+					UnitMove({
+						fromX: pos.tileX,
+						fromZ: pos.tileZ,
+						toX: candidate.x,
+						toZ: candidate.z,
+						progress: 0,
+						mpCost: 1,
+					}),
+				);
 			}
 		}
 	}
@@ -697,7 +857,12 @@ function runAssaultBehavior(
 	// Priority 1: attack if enemy in attack range (with sect damage bonus)
 	if (nearestEnemy && nearestEnemyDist <= stats.attackRange) {
 		if (!e.has(UnitAttack)) {
-			e.add(UnitAttack({ targetEntityId: nearestEnemy.entityId, damage: 2 + bias.attackBonus }));
+			e.add(
+				UnitAttack({
+					targetEntityId: nearestEnemy.entityId,
+					damage: 2 + bias.attackBonus,
+				}),
+			);
 		}
 		return;
 	}
@@ -705,14 +870,25 @@ function runAssaultBehavior(
 	// Priority 2: chase enemy unit if within scan range
 	if (nearestEnemy && nearestEnemyDist <= stats.scanRange) {
 		if (!e.has(UnitMove)) {
-			const path = shortestPath(pos.tileX, pos.tileZ, nearestEnemy.x, nearestEnemy.z, board);
+			const path = shortestPath(
+				pos.tileX,
+				pos.tileZ,
+				nearestEnemy.x,
+				nearestEnemy.z,
+				board,
+			);
 			if (path.length >= 2) {
 				const next = path[1];
-				e.add(UnitMove({
-					fromX: pos.tileX, fromZ: pos.tileZ,
-					toX: next.x, toZ: next.z,
-					progress: 0, mpCost: 1,
-				}));
+				e.add(
+					UnitMove({
+						fromX: pos.tileX,
+						fromZ: pos.tileZ,
+						toX: next.x,
+						toZ: next.z,
+						progress: 0,
+						mpCost: 1,
+					}),
+				);
 			}
 		}
 		return;
@@ -729,28 +905,50 @@ function runAssaultBehavior(
 				closestBuilding = bldg;
 			}
 		}
-		const path = shortestPath(pos.tileX, pos.tileZ, closestBuilding.x, closestBuilding.z, board);
+		const path = shortestPath(
+			pos.tileX,
+			pos.tileZ,
+			closestBuilding.x,
+			closestBuilding.z,
+			board,
+		);
 		if (path.length >= 2) {
 			const next = path[1];
-			e.add(UnitMove({
-				fromX: pos.tileX, fromZ: pos.tileZ,
-				toX: next.x, toZ: next.z,
-				progress: 0, mpCost: 1,
-			}));
+			e.add(
+				UnitMove({
+					fromX: pos.tileX,
+					fromZ: pos.tileZ,
+					toX: next.x,
+					toZ: next.z,
+					progress: 0,
+					mpCost: 1,
+				}),
+			);
 		}
 		return;
 	}
 
 	// Priority 4: charge toward nearest enemy unit (even outside scan range)
 	if (nearestEnemy && !e.has(UnitMove)) {
-		const path = shortestPath(pos.tileX, pos.tileZ, nearestEnemy.x, nearestEnemy.z, board);
+		const path = shortestPath(
+			pos.tileX,
+			pos.tileZ,
+			nearestEnemy.x,
+			nearestEnemy.z,
+			board,
+		);
 		if (path.length >= 2) {
 			const next = path[1];
-			e.add(UnitMove({
-				fromX: pos.tileX, fromZ: pos.tileZ,
-				toX: next.x, toZ: next.z,
-				progress: 0, mpCost: 1,
-			}));
+			e.add(
+				UnitMove({
+					fromX: pos.tileX,
+					fromZ: pos.tileZ,
+					toX: next.x,
+					toZ: next.z,
+					progress: 0,
+					mpCost: 1,
+				}),
+			);
 		}
 	}
 }
@@ -768,7 +966,9 @@ export function cleanupDestroyedStructures(world: World): void {
 		const s = e.get(CultStructure);
 		if (!s) continue;
 		if (s.hp <= 0) {
-			pushTurnEvent(`${s.structureType.replace(/_/g, " ")} destroyed at (${s.tileX}, ${s.tileZ})`);
+			pushTurnEvent(
+				`${s.structureType.replace(/_/g, " ")} destroyed at (${s.tileX}, ${s.tileZ})`,
+			);
 			// Remove from altar tracking
 			altarZones.delete(`${s.tileX},${s.tileZ}`);
 			e.destroy();
@@ -804,7 +1004,10 @@ export function checkCultistSpawn(
 
 	// Determine escalation tier based on total non-cult unit count
 	const tier = getEscalationTier(civilizedUnitCount);
-	const tierMaxEnemies = CULT_MAX_ENEMIES_PER_TIER[Math.min(tier, CULT_MAX_ENEMIES_PER_TIER.length - 1)];
+	const tierMaxEnemies =
+		CULT_MAX_ENEMIES_PER_TIER[
+			Math.min(tier, CULT_MAX_ENEMIES_PER_TIER.length - 1)
+		];
 	let effectiveMaxCultists = Math.min(params.maxTotalCultists, tierMaxEnemies);
 
 	// Final assault mode after turn 300 — x5 spawn rate and cap
@@ -813,17 +1016,29 @@ export function checkCultistSpawn(
 		effectiveMaxCultists *= CULT_FINAL_ASSAULT_MULTIPLIER;
 		// One-time notification on the exact turn
 		if (turn === CULT_FINAL_ASSAULT_TURN) {
-			pushToast("combat", "FINAL ASSAULT INITIATED", "EL CULT FORCES SURGE — ALL SECTORS COMPROMISED");
+			pushToast(
+				"combat",
+				"FINAL ASSAULT INITIATED",
+				"EL CULT FORCES SURGE — ALL SECTORS COMPROMISED",
+			);
 			pushTurnEvent("EL CULT FINAL ASSAULT — spawn rate x5");
 		}
 	}
 
 	// Spawn from existing structures (altar-based spawning)
 	if (turn >= params.baseSpawnInterval) {
-		const structureSpawned = spawnFromStructures(world, board, turn, effectiveMaxCultists, tier);
+		const structureSpawned = spawnFromStructures(
+			world,
+			board,
+			turn,
+			effectiveMaxCultists,
+			tier,
+		);
 		if (structureSpawned > 0) {
 			playSfx("cultist_spawn");
-			pushTurnEvent(`${structureSpawned} cult mech${structureSpawned > 1 ? "s" : ""} emerged from POI`);
+			pushTurnEvent(
+				`${structureSpawned} cult mech${structureSpawned > 1 ? "s" : ""} emerged from POI`,
+			);
 		}
 	}
 
@@ -838,7 +1053,8 @@ export function checkCultistSpawn(
 	// Escalation: spawn interval decreases, wave size increases with civilized strength
 	const escalation = Math.min(1, civilizedUnitCount / MAX_ESCALATION_TERRITORY);
 	const interval = Math.round(
-		params.baseSpawnInterval - (params.baseSpawnInterval - MIN_SPAWN_INTERVAL) * escalation,
+		params.baseSpawnInterval -
+			(params.baseSpawnInterval - MIN_SPAWN_INTERVAL) * escalation,
 	);
 	let waveSize = Math.round(
 		BASE_WAVE_SIZE + (params.maxWaveSize - BASE_WAVE_SIZE) * escalation,
@@ -855,11 +1071,13 @@ export function checkCultistSpawn(
 	const toSpawn = Math.min(waveSize, effectiveMaxCultists - cultistCount);
 	if (toSpawn > 0) {
 		playSfx("cultist_spawn");
-		pushTurnEvent(`${toSpawn} cultist${toSpawn > 1 ? "s" : ""} spawned at breach zone`);
+		pushTurnEvent(
+			`${toSpawn} cultist${toSpawn > 1 ? "s" : ""} spawned at breach zone`,
+		);
 	}
 	for (let i = 0; i < toSpawn; i++) {
 		const zoneIndex =
-			((turn * 31 + i * 17) % breachZones.length + breachZones.length) %
+			(((turn * 31 + i * 17) % breachZones.length) + breachZones.length) %
 			breachZones.length;
 		const zone = breachZones[zoneIndex];
 		if (!zone) continue;
@@ -867,7 +1085,13 @@ export function checkCultistSpawn(
 		const cultFaction = CULT_FACTIONS[(turn + i) % CULT_FACTIONS.length];
 		const mechTypeId = pickTierMechType(tier, turn * 13 + i * 29);
 
-		spawnCultMechByType(world, mechTypeId as import("../robots/CultMechs").CultMechType, zone.x, zone.z, cultFaction);
+		spawnCultMechByType(
+			world,
+			mechTypeId as import("../robots/CultMechs").CultMechType,
+			zone.x,
+			zone.z,
+			cultFaction,
+		);
 
 		// Spawn breach altar at this zone if one doesn't already exist (capped to prevent sprawl)
 		const zoneKey = `${zone.x},${zone.z}`;
@@ -935,7 +1159,6 @@ export function checkCultistSpawn(
 			}
 		}
 	}
-
 }
 
 // ---------------------------------------------------------------------------

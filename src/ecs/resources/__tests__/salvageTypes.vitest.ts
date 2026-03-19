@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
+import type { SalvageType } from "../../traits/salvage";
 import {
-	SALVAGE_DEFS,
 	getAllSalvageModelIds,
 	getSalvageTypeForModel,
+	SALVAGE_DEFS,
 } from "../salvageTypes";
-import type { SalvageType } from "../../traits/salvage";
 
 const ALL_SALVAGE_TYPES: SalvageType[] = [
 	"container",

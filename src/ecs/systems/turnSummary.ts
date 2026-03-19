@@ -10,16 +10,19 @@
 
 import type { World } from "koota";
 import type { GeneratedBoard } from "../../board/types";
-import type { ResourceMaterial } from "../terrain/types";
-import { getResourceDeltas, type ResourceDeltaMap } from "./resourceDeltaSystem";
-import { getCompletedTurnLogs, type TurnEvent } from "./turnEventLog";
-import { computeTerritory } from "./territorySystem";
-import { getResearchState } from "./researchSystem";
 import { TECH_BY_ID } from "../../config/techTreeDefs";
-import { FabricationJob } from "./fabricationSystem";
-import { SynthesisQueue, FUSION_RECIPES } from "./synthesisSystem";
+import type { ResourceMaterial } from "../terrain/types";
 import { Building, Powered } from "../traits/building";
 import { Faction } from "../traits/faction";
+import { FabricationJob } from "./fabricationSystem";
+import { getResearchState } from "./researchSystem";
+import {
+	getResourceDeltas,
+	type ResourceDeltaMap,
+} from "./resourceDeltaSystem";
+import { FUSION_RECIPES, SynthesisQueue } from "./synthesisSystem";
+import { computeTerritory } from "./territorySystem";
+import { getCompletedTurnLogs, type TurnEvent } from "./turnEventLog";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -113,7 +116,11 @@ export function collectTurnSummary(
 ): { summary: TurnSummaryData; milestones: RivalMilestone[] } {
 	const deltas = getResourceDeltas();
 	const resourceChanges = collectResourceChanges(deltas);
-	const territory = computeTerritory(world, board.config.width, board.config.height);
+	const territory = computeTerritory(
+		world,
+		board.config.width,
+		board.config.height,
+	);
 	const playerTerritory = territory.counts.get("player") ?? 0;
 	const territoryDelta = playerTerritory - lastTerritoryCount;
 	lastTerritoryCount = playerTerritory;
@@ -176,7 +183,9 @@ export function resetTurnSummary(): void {
 
 // ─── Internals ───────────────────────────────────────────────────────────────
 
-function collectResourceChanges(deltas: ResourceDeltaMap | null): ResourceChange[] {
+function collectResourceChanges(
+	deltas: ResourceDeltaMap | null,
+): ResourceChange[] {
 	if (!deltas) return [];
 	const changes: ResourceChange[] = [];
 	for (const [mat, delta] of Object.entries(deltas)) {
@@ -195,7 +204,8 @@ function collectResourceChanges(deltas: ResourceDeltaMap | null): ResourceChange
 function extractLastTurnEvents(turn: number): TurnEvent[] {
 	const logs = getCompletedTurnLogs();
 	// The just-completed turn's log
-	const lastLog = logs.find((l) => l.turnNumber === turn - 1) ?? logs[logs.length - 1];
+	const lastLog =
+		logs.find((l) => l.turnNumber === turn - 1) ?? logs[logs.length - 1];
 	return lastLog?.events ?? [];
 }
 
@@ -241,7 +251,9 @@ function extractFabricationCompletions(events: TurnEvent[]): string[] {
 		});
 }
 
-function getResearchProgressForPlayer(world: World): { techName: string; turnsLeft: number } | null {
+function getResearchProgressForPlayer(
+	world: World,
+): { techName: string; turnsLeft: number } | null {
 	const state = getResearchState(world, "player");
 	if (!state || !state.currentTechId) return null;
 	const tech = TECH_BY_ID.get(state.currentTechId);
@@ -294,7 +306,12 @@ function detectRivalMilestones(
 ): RivalMilestone[] {
 	const milestones: RivalMilestone[] = [];
 
-	const rivalFactions = ["reclaimers", "volt_collective", "signal_choir", "iron_creed"];
+	const rivalFactions = [
+		"reclaimers",
+		"volt_collective",
+		"signal_choir",
+		"iron_creed",
+	];
 
 	for (const fid of rivalFactions) {
 		const display = FACTION_DISPLAY[fid];
@@ -340,9 +357,12 @@ function detectRivalMilestones(
 		}
 
 		// Check territory milestones (crossing 10%, 20%, 30%...)
-		const territoryPct = territory.totalTiles > 0
-			? Math.floor(((territory.counts.get(fid) ?? 0) / territory.totalTiles) * 100)
-			: 0;
+		const territoryPct =
+			territory.totalTiles > 0
+				? Math.floor(
+						((territory.counts.get(fid) ?? 0) / territory.totalTiles) * 100,
+					)
+				: 0;
 		const prevTerritory = lastRivalUnitCounts.get(fid) ?? 0;
 		const newThreshold = Math.floor(territoryPct / 10) * 10;
 		const prevThreshold = Math.floor(prevTerritory / 10) * 10;

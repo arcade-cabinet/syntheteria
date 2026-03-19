@@ -8,7 +8,7 @@
  */
 
 import * as THREE from "three";
-import { tileToSpherePos, sphereRadius } from "./boardGeometry";
+import { sphereRadius, tileToSpherePos } from "./boardGeometry";
 
 const _up = new THREE.Vector3(0, 1, 0);
 const _normal = new THREE.Vector3();
@@ -31,7 +31,10 @@ export function sphereModelPlacement(
 	boardWidth: number,
 	boardHeight: number,
 	yOffset = 0,
-): { position: [number, number, number]; quaternion: [number, number, number, number] } {
+): {
+	position: [number, number, number];
+	quaternion: [number, number, number, number];
+} {
 	const R = sphereRadius(boardWidth, boardHeight);
 	const pos = tileToSpherePos(tileX, tileZ, boardWidth, boardHeight, R);
 
@@ -73,7 +76,10 @@ export function sphereModelPlacementWithRotation(
 	boardHeight: number,
 	yRotation: number,
 	yOffset = 0,
-): { position: [number, number, number]; quaternion: [number, number, number, number] } {
+): {
+	position: [number, number, number];
+	quaternion: [number, number, number, number];
+} {
 	const R = sphereRadius(boardWidth, boardHeight);
 	const pos = tileToSpherePos(tileX, tileZ, boardWidth, boardHeight, R);
 
@@ -86,9 +92,10 @@ export function sphereModelPlacementWithRotation(
 
 	// First: align Y-up to sphere normal (handle degenerate near-pole cases)
 	const dot = _up.dot(_normal);
-	const qSurface = dot < -0.9999
-		? new THREE.Quaternion().setFromAxisAngle(_fallbackAxis, Math.PI)
-		: new THREE.Quaternion().setFromUnitVectors(_up, _normal);
+	const qSurface =
+		dot < -0.9999
+			? new THREE.Quaternion().setFromAxisAngle(_fallbackAxis, Math.PI)
+			: new THREE.Quaternion().setFromUnitVectors(_up, _normal);
 	// Then: apply Y-axis rotation in the model's local frame
 	const qYaw = new THREE.Quaternion().setFromAxisAngle(_normal, yRotation);
 	const q = qYaw.multiply(qSurface);

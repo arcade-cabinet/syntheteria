@@ -21,10 +21,10 @@
  * All randomness via seededRng(seed + "_abyssal"). Deterministic.
  */
 
-import type { TileData, Elevation } from "./types";
-import { seededRng } from "./noise";
-import { geographyValue, seedToFloat } from "../ecs/terrain/cluster";
 import { TILE_SIZE_M } from "../config/gameDefaults";
+import { geographyValue, seedToFloat } from "../ecs/terrain/cluster";
+import { seededRng } from "./noise";
+import type { Elevation, TileData } from "./types";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -50,8 +50,8 @@ export interface ProtectedZone {
 /** Cardinal direction offsets. */
 const CARDINALS: readonly [number, number][] = [
 	[0, -1], // N
-	[1, 0],  // E
-	[0, 1],  // S
+	[1, 0], // E
+	[0, 1], // S
 	[-1, 0], // W
 ];
 
@@ -77,8 +77,12 @@ function inBounds(x: number, z: number, w: number, h: number): boolean {
 
 function isProtected(x: number, z: number, zones: ProtectedZone[]): boolean {
 	for (const zone of zones) {
-		if (x >= zone.x && x < zone.x + zone.w &&
-			z >= zone.z && z < zone.z + zone.h) {
+		if (
+			x >= zone.x &&
+			x < zone.x + zone.w &&
+			z >= zone.z &&
+			z < zone.z + zone.h
+		) {
 			return true;
 		}
 	}
@@ -115,11 +119,7 @@ function convertAbyssalTiles(
 			if (isProtected(x, z, protectedZones)) continue;
 
 			// Evaluate geography noise at this tile position
-			const geo = geographyValue(
-				x * TILE_SIZE_M,
-				z * TILE_SIZE_M,
-				seedFloat,
-			);
+			const geo = geographyValue(x * TILE_SIZE_M, z * TILE_SIZE_M, seedFloat);
 
 			if (geo > abyssalThreshold) {
 				tile.floorType = "abyssal_platform";
@@ -224,8 +224,14 @@ function placePlatformIslands(
 					for (let dx = 0; dx < pw && fits; dx++) {
 						const tx = rx + dx;
 						const tz = rz + dz;
-						if (!inBounds(tx, tz, w, h)) { fits = false; break; }
-						if (!regionSet.has(`${tx},${tz}`)) { fits = false; break; }
+						if (!inBounds(tx, tz, w, h)) {
+							fits = false;
+							break;
+						}
+						if (!regionSet.has(`${tx},${tz}`)) {
+							fits = false;
+							break;
+						}
 					}
 				}
 
@@ -396,7 +402,12 @@ export function applyAbyssalZones(
 
 	// Step 1: Convert passable tiles in ocean basins to abyssal
 	const tilesConverted = convertAbyssalTiles(
-		tiles, width, height, seed, waterLevel, protectedZones,
+		tiles,
+		width,
+		height,
+		seed,
+		waterLevel,
+		protectedZones,
 	);
 
 	if (tilesConverted === 0) {
@@ -407,7 +418,13 @@ export function applyAbyssalZones(
 	const regions = findAbyssalRegions(tiles, width, height);
 
 	// Step 3: Place platform islands in large abyssal regions
-	const platformTiles = placePlatformIslands(tiles, width, height, regions, rng);
+	const platformTiles = placePlatformIslands(
+		tiles,
+		width,
+		height,
+		regions,
+		rng,
+	);
 
 	// Step 4: Place bridges across narrow abyssal gaps
 	const bridgeTiles = placeBridges(tiles, width, height, rng);

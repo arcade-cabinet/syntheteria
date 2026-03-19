@@ -1,7 +1,6 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import type { Difficulty, StormProfile } from "../../world/config";
 import { Board } from "../../ecs/traits/board";
 import { ResourceDeposit } from "../../ecs/traits/resource";
 import {
@@ -12,7 +11,12 @@ import {
 	UnitPos,
 	UnitStats,
 } from "../../ecs/traits/unit";
-import { resetAIRuntime, runYukaAiTurns, getAIRuntime } from "../yukaAiTurnSystem";
+import type { Difficulty, StormProfile } from "../../world/config";
+import {
+	getAIRuntime,
+	resetAIRuntime,
+	runYukaAiTurns,
+} from "../yukaAiTurnSystem";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -77,7 +81,15 @@ describe("Yuka AI turn system", () => {
 		const aiUnit = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "reclaimers" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 2,
+			}),
 		);
 		world.spawn(
 			UnitPos({ tileX: 3, tileZ: 0 }),
@@ -98,7 +110,15 @@ describe("Yuka AI turn system", () => {
 		const aiUnit = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "iron_creed" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 3 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 3,
+			}),
 		);
 		const player = world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
@@ -119,7 +139,15 @@ describe("Yuka AI turn system", () => {
 		const aiUnit = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "signal_choir" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 6, attackRange: 3, attack: 4 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 6,
+				attackRange: 3,
+				attack: 4,
+			}),
 		);
 		const player = world.spawn(
 			UnitPos({ tileX: 2, tileZ: 0 }),
@@ -140,7 +168,15 @@ describe("Yuka AI turn system", () => {
 		world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "volt_collective" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 2,
+			}),
 		);
 		world.spawn(
 			UnitPos({ tileX: 15, tileZ: 0 }),
@@ -166,7 +202,15 @@ describe("Yuka AI turn system", () => {
 		const aiUnit = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "reclaimers" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 1, maxAp: 3, scanRange: 4, attackRange: 1, attack: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 1,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 2,
+			}),
 		);
 		world.spawn(
 			UnitPos({ tileX: 5, tileZ: 5 }),
@@ -184,7 +228,15 @@ describe("Yuka AI turn system", () => {
 		const aiUnit = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "reclaimers" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 2,
+			}),
 		);
 		world.spawn(
 			UnitPos({ tileX: 5, tileZ: 5 }),
@@ -208,7 +260,15 @@ describe("Yuka AI turn system", () => {
 		const aiUnit = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "reclaimers" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 2,
+			}),
 		);
 		world.spawn(
 			UnitPos({ tileX: 5, tileZ: 5 }),
@@ -230,7 +290,15 @@ describe("Yuka AI turn system", () => {
 		const aiUnit = world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "reclaimers" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 0, attack: 0 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 0,
+				attack: 0,
+			}),
 		);
 		world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
@@ -249,7 +317,15 @@ describe("Yuka AI turn system", () => {
 		world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "reclaimers" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 2,
+			}),
 		);
 		// Player far away
 		world.spawn(
@@ -259,7 +335,13 @@ describe("Yuka AI turn system", () => {
 		);
 		// Deposit nearby
 		world.spawn(
-			ResourceDeposit({ tileX: 2, tileZ: 0, material: "scrap_metal", amount: 10, depleted: false }),
+			ResourceDeposit({
+				tileX: 2,
+				tileZ: 0,
+				material: "scrap_metal",
+				amount: 10,
+				depleted: false,
+			}),
 		);
 
 		const board = makeBoard(16, 16);
@@ -289,7 +371,15 @@ describe("Yuka AI turn system", () => {
 		world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "volt_collective" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 8, attackRange: 1, attack: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 8,
+				attackRange: 1,
+				attack: 2,
+			}),
 		);
 		world.spawn(
 			UnitPos({ tileX: 4, tileZ: 0 }),
@@ -316,7 +406,15 @@ describe("Yuka AI turn system", () => {
 		world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "reclaimers" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 2,
+			}),
 		);
 
 		const board = makeBoard(4, 4);
@@ -330,12 +428,28 @@ describe("Yuka AI turn system", () => {
 		world.spawn(
 			UnitPos({ tileX: 0, tileZ: 0 }),
 			UnitFaction({ factionId: "reclaimers" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 2,
+			}),
 		);
 		world.spawn(
 			UnitPos({ tileX: 7, tileZ: 7 }),
 			UnitFaction({ factionId: "iron_creed" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 3 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 3,
+			}),
 		);
 		world.spawn(
 			UnitPos({ tileX: 4, tileZ: 4 }),
@@ -354,7 +468,15 @@ describe("Yuka AI turn system", () => {
 		world.spawn(
 			UnitPos({ tileX: 1, tileZ: 0 }),
 			UnitFaction({ factionId: "reclaimers" }),
-			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4, attackRange: 1, attack: 2 }),
+			UnitStats({
+				hp: 10,
+				maxHp: 10,
+				ap: 3,
+				maxAp: 3,
+				scanRange: 4,
+				attackRange: 1,
+				attack: 2,
+			}),
 		);
 		world.spawn(
 			UnitPos({ tileX: 15, tileZ: 15 }),
@@ -362,7 +484,13 @@ describe("Yuka AI turn system", () => {
 			UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, scanRange: 4 }),
 		);
 		const deposit = world.spawn(
-			ResourceDeposit({ tileX: 2, tileZ: 0, material: "scrap_metal", amount: 10, depleted: false }),
+			ResourceDeposit({
+				tileX: 2,
+				tileZ: 0,
+				material: "scrap_metal",
+				amount: 10,
+				depleted: false,
+			}),
 		);
 
 		const board = makeBoard(16, 16);

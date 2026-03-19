@@ -14,8 +14,8 @@ import { useEffect, useState } from "react";
 import { FACTION_COLORS_CSS } from "../../config/gameDefaults";
 import {
 	getHoverState,
-	subscribeHoverState,
 	type HoverState,
+	subscribeHoverState,
 } from "./hoverState";
 
 /** Convert snake_case modelId to Title Case display name. */
@@ -35,7 +35,9 @@ function HpBar({ hp, maxHp }: { hp: number; maxHp: number }) {
 				marginTop: 4,
 			}}
 		>
-			<span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", width: 16 }}>INT</span>
+			<span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", width: 16 }}>
+				INT
+			</span>
 			<div
 				style={{
 					flex: 1,
@@ -55,7 +57,14 @@ function HpBar({ hp, maxHp }: { hp: number; maxHp: number }) {
 					}}
 				/>
 			</div>
-			<span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", minWidth: 30, textAlign: "right" }}>
+			<span
+				style={{
+					fontSize: 9,
+					color: "rgba(255,255,255,0.5)",
+					minWidth: 30,
+					textAlign: "right",
+				}}
+			>
 				{hp}/{maxHp}
 			</span>
 		</div>
@@ -72,7 +81,9 @@ function ApPips({ ap, maxAp }: { ap: number; maxAp: number }) {
 				marginTop: 2,
 			}}
 		>
-			<span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", width: 16 }}>CYC</span>
+			<span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", width: 16 }}>
+				CYC
+			</span>
 			<div style={{ display: "flex", gap: 3 }}>
 				{Array.from({ length: maxAp }).map((_, i) => (
 					<div
@@ -153,7 +164,8 @@ export function EntityTooltip() {
 						}}
 					>
 						{formatName(unit.factionId)}
-						{unit.weightClass !== "medium" && ` / ${formatName(unit.weightClass)}`}
+						{unit.weightClass !== "medium" &&
+							` / ${formatName(unit.weightClass)}`}
 					</div>
 
 					<HpBar hp={unit.hp} maxHp={unit.maxHp} />
@@ -169,8 +181,12 @@ export function EntityTooltip() {
 							color: "rgba(255,255,255,0.5)",
 						}}
 					>
-						<span>PWR <span style={{ color: "#ff8f8f" }}>{unit.attack}</span></span>
-						<span>ARM <span style={{ color: "#8be6ff" }}>{unit.defense}</span></span>
+						<span>
+							PWR <span style={{ color: "#ff8f8f" }}>{unit.attack}</span>
+						</span>
+						<span>
+							ARM <span style={{ color: "#8be6ff" }}>{unit.defense}</span>
+						</span>
 					</div>
 				</>
 			)}

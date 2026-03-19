@@ -20,46 +20,51 @@
  *   9.  Stage — "Stage" (ranged, support, worker — staging classes)
  *   10. Class-specific utility/combat actions (per classActions.ts)
  */
-import type { RadialOpenContext } from "./radialMenu";
-import { registerRadialProvider } from "./radialMenu";
+
 import type { World } from "koota";
-import type { BuildingType } from "../ecs/traits/building";
-import { Building, BotFabricator, Powered } from "../ecs/traits/building";
+import { playSfx } from "../audio/sfx";
+import { createGridApi } from "../board/grid";
+import type { GeneratedBoard } from "../board/types";
 import { BUILDING_DEFS } from "../ecs/buildings/definitions";
-import { canAfford } from "../ecs/systems/resourceSystem";
+import { getRelation } from "../ecs/factions/relations";
+import { hasClassAction } from "../ecs/robots/classActions";
+import type { BotMark } from "../ecs/robots/marks";
+import { MARK_DEFS } from "../ecs/robots/marks";
+import type { RobotClass } from "../ecs/robots/types";
 import { startBuildPlacement } from "../ecs/systems/buildSystem";
-import { startHarvest } from "../ecs/systems/harvestSystem";
+import {
+	declareWar,
+	getDiplomacyPersonality,
+	proposeAlliance,
+} from "../ecs/systems/diplomacySystem";
 import {
 	queueFabrication,
 	ROBOT_COSTS,
 } from "../ecs/systems/fabricationSystem";
+import { startHarvest } from "../ecs/systems/harvestSystem";
+import { clearHighlights } from "../ecs/systems/highlightSystem";
 import { canSpawnUnit } from "../ecs/systems/populationSystem";
+import { canAfford } from "../ecs/systems/resourceSystem";
 import {
-	queueSynthesis,
 	FUSION_RECIPES,
+	queueSynthesis,
 	SynthesisQueue,
 } from "../ecs/systems/synthesisSystem";
-import { clearHighlights } from "../ecs/systems/highlightSystem";
-import { playSfx } from "../audio/sfx";
+import { applyMark, getMaxTier, hasMark } from "../ecs/systems/upgradeSystem";
+import { Board } from "../ecs/traits/board";
+import type { BuildingType } from "../ecs/traits/building";
+import { BotFabricator, Building, Powered } from "../ecs/traits/building";
+import { ResourceDeposit } from "../ecs/traits/resource";
 import {
 	UnitAttack,
 	UnitFaction,
 	UnitMove,
 	UnitPos,
 	UnitStats,
+	UnitUpgrade,
 } from "../ecs/traits/unit";
-import { ResourceDeposit } from "../ecs/traits/resource";
-import { createGridApi } from "../board/grid";
-import type { GeneratedBoard } from "../board/types";
-import type { RobotClass } from "../ecs/robots/types";
-import type { BotMark } from "../ecs/robots/marks";
-import { MARK_DEFS } from "../ecs/robots/marks";
-import { applyMark, getMaxTier, hasMark } from "../ecs/systems/upgradeSystem";
-import { declareWar, getDiplomacyPersonality, proposeAlliance } from "../ecs/systems/diplomacySystem";
-import { getRelation } from "../ecs/factions/relations";
-import { Board } from "../ecs/traits/board";
-import { UnitUpgrade } from "../ecs/traits/unit";
-import { hasClassAction } from "../ecs/robots/classActions";
+import type { RadialOpenContext } from "./radialMenu";
+import { registerRadialProvider } from "./radialMenu";
 
 /** World ref set by BoardInput so providers can query ECS state. */
 let _worldRef: World | null = null;
@@ -182,7 +187,11 @@ registerRadialProvider({
 		const unitEntity = getSelectedPlayerUnit();
 		if (!unitEntity) return [];
 		const unitStats = unitEntity.get(UnitStats);
-		if (!unitStats || !hasClassAction(unitStats.robotClass as RobotClass, "harvest")) return [];
+		if (
+			!unitStats ||
+			!hasClassAction(unitStats.robotClass as RobotClass, "harvest")
+		)
+			return [];
 
 		const world = _worldRef;
 		const unitId = _selectedUnitId;
@@ -247,8 +256,8 @@ registerRadialProvider({
 		// Determine attack type from class actions
 		const robotClass = stats.robotClass as RobotClass;
 		const attackAction = ["attack_melee", "attack_ranged", "charge", "flank"]
-			.map(id => ({ id, has: hasClassAction(robotClass, id) }))
-			.filter(a => a.has);
+			.map((id) => ({ id, has: hasClassAction(robotClass, id) }))
+			.filter((a) => a.has);
 		if (attackAction.length === 0) return [];
 
 		// Check staging requirement for ranged attack
@@ -327,7 +336,11 @@ registerRadialProvider({
 		const unitEntity = getSelectedPlayerUnit();
 		if (!unitEntity) return [];
 		const unitStats = unitEntity.get(UnitStats);
-		if (!unitStats || !hasClassAction(unitStats.robotClass as RobotClass, "build")) return [];
+		if (
+			!unitStats ||
+			!hasClassAction(unitStats.robotClass as RobotClass, "build")
+		)
+			return [];
 
 		const world = _worldRef;
 
@@ -526,7 +539,8 @@ registerRadialProvider({
 		if (!unitFaction || unitFaction.factionId !== "player") return [];
 
 		const unitPos = unitEntity.get(UnitPos)!;
-		const dist = Math.abs(unitPos.tileX - b.tileX) + Math.abs(unitPos.tileZ - b.tileZ);
+		const dist =
+			Math.abs(unitPos.tileX - b.tileX) + Math.abs(unitPos.tileZ - b.tileZ);
 		if (dist > 1) return [];
 
 		const maxTier = getMaxTier(world, "player");
@@ -542,7 +556,8 @@ registerRadialProvider({
 
 			let disabledReason: string | undefined;
 			if (alreadyHas) disabledReason = "Already applied";
-			else if (tierLocked) disabledReason = `Needs tier ${def.minTier} (build research lab)`;
+			else if (tierLocked)
+				disabledReason = `Needs tier ${def.minTier} (build research lab)`;
 			else if (!affordable) disabledReason = "Not enough resources";
 
 			return {
@@ -630,7 +645,12 @@ registerRadialProvider({
 				enabled: canAlly,
 				disabledReason: canAlly ? undefined : "This faction refuses alliances",
 				onExecute: () => {
-					const accepted = proposeAlliance(world, "player", targetFaction, turn);
+					const accepted = proposeAlliance(
+						world,
+						"player",
+						targetFaction,
+						turn,
+					);
 					if (accepted) {
 						playSfx("build_complete");
 					}
@@ -813,7 +833,9 @@ registerRadialProvider({
 		}
 		if (!targetPos) return [];
 
-		const dist = Math.abs(pos.tileX - targetPos.tileX) + Math.abs(pos.tileZ - targetPos.tileZ);
+		const dist =
+			Math.abs(pos.tileX - targetPos.tileX) +
+			Math.abs(pos.tileZ - targetPos.tileZ);
 		const inRange = dist >= 2 && dist <= 3;
 
 		return [
@@ -823,13 +845,20 @@ registerRadialProvider({
 				icon: "\u26A1",
 				tone: "hostile",
 				enabled: inRange,
-				disabledReason: inRange ? undefined : dist < 2 ? "Too close to charge" : "Out of charge range",
+				disabledReason: inRange
+					? undefined
+					: dist < 2
+						? "Too close to charge"
+						: "Out of charge range",
 				onExecute: () => {
 					if (!unitEntity) return;
 					playSfx("attack_hit");
 					// Charge does +2 bonus damage
 					unitEntity.add(
-						UnitAttack({ targetEntityId: targetId, damage: (stats.attack || 2) + 2 }),
+						UnitAttack({
+							targetEntityId: targetId,
+							damage: (stats.attack || 2) + 2,
+						}),
 					);
 					const cur = unitEntity.get(UnitStats);
 					if (cur) {
@@ -890,7 +919,9 @@ registerRadialProvider({
 		}
 		if (!targetPos) return [];
 
-		const dist = Math.abs(pos.tileX - targetPos.tileX) + Math.abs(pos.tileZ - targetPos.tileZ);
+		const dist =
+			Math.abs(pos.tileX - targetPos.tileX) +
+			Math.abs(pos.tileZ - targetPos.tileZ);
 
 		return [
 			{
@@ -905,7 +936,10 @@ registerRadialProvider({
 					playSfx("attack_hit");
 					// Flank does +3 bonus damage
 					unitEntity.add(
-						UnitAttack({ targetEntityId: targetId, damage: (stats.attack || 2) + 3 }),
+						UnitAttack({
+							targetEntityId: targetId,
+							damage: (stats.attack || 2) + 3,
+						}),
 					);
 					const cur = unitEntity.get(UnitStats);
 					if (cur) {
@@ -997,7 +1031,9 @@ registerRadialProvider({
 		}
 		if (!targetPos) return [];
 
-		const dist = Math.abs(pos.tileX - targetPos.tileX) + Math.abs(pos.tileZ - targetPos.tileZ);
+		const dist =
+			Math.abs(pos.tileX - targetPos.tileX) +
+			Math.abs(pos.tileZ - targetPos.tileZ);
 		const inRange = dist <= 4;
 
 		return [
@@ -1099,7 +1135,11 @@ registerRadialProvider({
 		let reachable = false;
 		if (_boardRef) {
 			const gridApi = createGridApi(_boardRef);
-			const reachableSet = gridApi.reachable(pos.tileX, pos.tileZ, Math.min(2, stats.mp));
+			const reachableSet = gridApi.reachable(
+				pos.tileX,
+				pos.tileZ,
+				Math.min(2, stats.mp),
+			);
 			reachable = reachableSet.has(`${targetX},${targetZ}`);
 		}
 
@@ -1234,7 +1274,9 @@ registerRadialProvider({
 
 		const targetPos = targetEntity.get(UnitPos)!;
 		const targetStats = targetEntity.get(UnitStats)!;
-		const dist = Math.abs(pos.tileX - targetPos.tileX) + Math.abs(pos.tileZ - targetPos.tileZ);
+		const dist =
+			Math.abs(pos.tileX - targetPos.tileX) +
+			Math.abs(pos.tileZ - targetPos.tileZ);
 
 		// Already at max HP
 		if (targetStats.hp >= targetStats.maxHp) return [];
@@ -1256,7 +1298,10 @@ registerRadialProvider({
 					});
 					const myStats = unitEntity.get(UnitStats);
 					if (myStats) {
-						unitEntity.set(UnitStats, { ...myStats, ap: Math.max(0, myStats.ap - 1) });
+						unitEntity.set(UnitStats, {
+							...myStats,
+							ap: Math.max(0, myStats.ap - 1),
+						});
 					}
 					playSfx("build_complete");
 					clearHighlights(world);
@@ -1306,7 +1351,9 @@ registerRadialProvider({
 		}
 		if (!targetPos) return [];
 
-		const dist = Math.abs(pos.tileX - targetPos.tileX) + Math.abs(pos.tileZ - targetPos.tileZ);
+		const dist =
+			Math.abs(pos.tileX - targetPos.tileX) +
+			Math.abs(pos.tileZ - targetPos.tileZ);
 
 		return [
 			{

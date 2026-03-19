@@ -62,7 +62,11 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
 		<div
 			data-testid="settings-modal"
 			className="absolute inset-0 flex items-center justify-center"
-			style={{ backgroundColor: "rgba(2, 5, 10, 0.82)", zIndex: 110, backdropFilter: "blur(6px)" }}
+			style={{
+				backgroundColor: "rgba(2, 5, 10, 0.82)",
+				zIndex: 110,
+				backdropFilter: "blur(6px)",
+			}}
 			role="dialog"
 			aria-label="System Calibration"
 			aria-modal={true}
@@ -96,22 +100,34 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
 							<VolumeSlider
 								label="Master"
 								value={master}
-								onChange={(v) => { setMaster(v); setMasterVolume(v); }}
+								onChange={(v) => {
+									setMaster(v);
+									setMasterVolume(v);
+								}}
 							/>
 							<VolumeSlider
 								label="SFX"
 								value={sfx}
-								onChange={(v) => { setSfx(v); setSfxVolume(v); }}
+								onChange={(v) => {
+									setSfx(v);
+									setSfxVolume(v);
+								}}
 							/>
 							<VolumeSlider
 								label="Music"
 								value={music}
-								onChange={(v) => { setMusic(v); setMusicVolume(v); }}
+								onChange={(v) => {
+									setMusic(v);
+									setMusicVolume(v);
+								}}
 							/>
 							<VolumeSlider
 								label="Ambient"
 								value={ambient}
-								onChange={(v) => { setAmbient(v); setAmbientVolume(v); }}
+								onChange={(v) => {
+									setAmbient(v);
+									setAmbientVolume(v);
+								}}
 							/>
 						</CalibSection>
 
@@ -119,7 +135,11 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
 						<CalibSection title="Keybindings">
 							<div className="flex flex-col gap-2">
 								{KEYBINDS.map((b) => (
-									<KeyRow key={b.keys} keys={b.keys} description={b.description} />
+									<KeyRow
+										key={b.keys}
+										keys={b.keys}
+										description={b.description}
+									/>
 								))}
 							</div>
 						</CalibSection>
@@ -203,7 +223,10 @@ function VolumeSlider({
 				<div className="h-[6px] rounded-full bg-white/10 overflow-hidden w-full">
 					<div
 						className="h-full rounded-full"
-						style={{ width: `${percent}%`, backgroundColor: "rgba(139, 230, 255, 0.55)" }}
+						style={{
+							width: `${percent}%`,
+							backgroundColor: "rgba(139, 230, 255, 0.55)",
+						}}
 					/>
 				</div>
 			</div>

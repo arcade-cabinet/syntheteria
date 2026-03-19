@@ -1,10 +1,10 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Building } from "../../traits/building";
+import { WORMHOLE_PROJECT_TURNS } from "../../../config/gameDefaults";
 import { Board } from "../../traits/board";
+import { Building } from "../../traits/building";
 import { Faction } from "../../traits/faction";
 import { ResearchState } from "../researchSystem";
-import { WORMHOLE_PROJECT_TURNS } from "../../../config/gameDefaults";
 import {
 	_resetWormholeProject,
 	canStartWormholeProject,
@@ -36,7 +36,14 @@ describe("wormholeProject", () => {
 
 	function spawnFactionWithResearch(factionId: string, researched: string[]) {
 		return world.spawn(
-			Faction({ id: factionId, displayName: factionId, color: 0xffffff, persona: "raven", isPlayer: false, aggression: 0 }),
+			Faction({
+				id: factionId,
+				displayName: factionId,
+				color: 0xffffff,
+				persona: "raven",
+				isPlayer: false,
+				aggression: 0,
+			}),
 			ResearchState({
 				researchedTechs: researched.join(","),
 				currentTechId: "",

@@ -67,7 +67,10 @@ export function trackIncome(material: ResourceMaterial, amount: number): void {
 }
 
 /** Call when a resource is spent (construction, fabrication, mark upgrades, etc.) */
-export function trackExpenditure(material: ResourceMaterial, amount: number): void {
+export function trackExpenditure(
+	material: ResourceMaterial,
+	amount: number,
+): void {
 	if (amount <= 0) return;
 	currentExpenditure[material] = (currentExpenditure[material] ?? 0) + amount;
 }

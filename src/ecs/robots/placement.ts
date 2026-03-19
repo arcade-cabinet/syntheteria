@@ -3,7 +3,11 @@ import { FACTION_DEFINITIONS } from "../factions/definitions";
 import { UnitPos } from "../traits/unit";
 import { spawnSupport } from "./BuilderBot";
 import { spawnCavalry } from "./CavalryBot";
-import { spawnCultCavalry, spawnCultInfantry, spawnCultRanged } from "./CultMechs";
+import {
+	spawnCultCavalry,
+	spawnCultInfantry,
+	spawnCultRanged,
+} from "./CultMechs";
 import { spawnRanged } from "./GuardBot";
 import { spawnWorker } from "./HarvesterBot";
 import type { BotMark } from "./marks";
@@ -33,12 +37,42 @@ export function buildPlacementFlags(
 	// Player starter squad — all 6 faction bot types
 	if (playerFactionId) {
 		flags.push(
-			{ robotType: "scout", factionId: "player", count: 1, zone: "player_start" },
-			{ robotType: "infantry", factionId: "player", count: 1, zone: "player_start" },
-			{ robotType: "cavalry", factionId: "player", count: 1, zone: "player_start" },
-			{ robotType: "ranged", factionId: "player", count: 1, zone: "player_start" },
-			{ robotType: "support", factionId: "player", count: 1, zone: "player_start" },
-			{ robotType: "worker", factionId: "player", count: 1, zone: "player_start" },
+			{
+				robotType: "scout",
+				factionId: "player",
+				count: 1,
+				zone: "player_start",
+			},
+			{
+				robotType: "infantry",
+				factionId: "player",
+				count: 1,
+				zone: "player_start",
+			},
+			{
+				robotType: "cavalry",
+				factionId: "player",
+				count: 1,
+				zone: "player_start",
+			},
+			{
+				robotType: "ranged",
+				factionId: "player",
+				count: 1,
+				zone: "player_start",
+			},
+			{
+				robotType: "support",
+				factionId: "player",
+				count: 1,
+				zone: "player_start",
+			},
+			{
+				robotType: "worker",
+				factionId: "player",
+				count: 1,
+				zone: "player_start",
+			},
 		);
 	}
 
@@ -244,7 +278,9 @@ export function computeSpawnCenters(
 	// AI factions
 	const aiIds = activeFactionIds
 		? activeFactionIds.filter((id) => id !== playerFactionId)
-		: FACTION_DEFINITIONS.map((f) => f.id).filter((id) => id !== playerFactionId);
+		: FACTION_DEFINITIONS.map((f) => f.id).filter(
+				(id) => id !== playerFactionId,
+			);
 
 	for (const factionId of aiIds) {
 		const def = FACTION_DEFINITIONS.find((f) => f.id === factionId);
@@ -286,7 +322,13 @@ export function placeRobots(
 
 			if (flag.zone === "player_start" || flag.zone === "faction_start") {
 				if (spawnCenter) {
-					tile = findPassableNear(spawnCenter.x, spawnCenter.z, 10, board, occupied);
+					tile = findPassableNear(
+						spawnCenter.x,
+						spawnCenter.z,
+						10,
+						board,
+						occupied,
+					);
 				}
 			} else {
 				const cx = Math.floor(board.width / 2);

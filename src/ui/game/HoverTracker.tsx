@@ -11,20 +11,25 @@ import * as THREE from "three";
 import { createGridApi } from "../../board/grid";
 import type { GeneratedBoard } from "../../board/types";
 import { BUILDING_DEFS } from "../../ecs/buildings/definitions";
+import { SALVAGE_DEFS } from "../../ecs/resources/salvageTypes";
 import { computeTerritory } from "../../ecs/systems/territorySystem";
+import { FLOOR_DEFS, type FloorType } from "../../ecs/terrain/types";
 import { Building, Powered } from "../../ecs/traits/building";
 import { ResourceDeposit } from "../../ecs/traits/resource";
 import { SalvageProp } from "../../ecs/traits/salvage";
 import { Tile } from "../../ecs/traits/tile";
-import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../../ecs/traits/unit";
-import { FLOOR_DEFS, type FloorType } from "../../ecs/terrain/types";
-import { SALVAGE_DEFS } from "../../ecs/resources/salvageTypes";
+import {
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+	UnitVisual,
+} from "../../ecs/traits/unit";
 import {
 	clearHoverState,
-	setHoverState,
 	type HoverBuildingInfo,
 	type HoverTileInfo,
 	type HoverUnitInfo,
+	setHoverState,
 } from "./hoverState";
 
 type HoverTrackerProps = {
@@ -111,7 +116,9 @@ export function HoverTracker({ world, board }: HoverTrackerProps) {
 			tileX: tile.x,
 			tileZ: tile.z,
 			terrain: floorDef?.label ?? tileData.floorType,
-			passable: tileData.floorType !== "void_pit" && tileData.floorType !== "structural_mass",
+			passable:
+				tileData.floorType !== "void_pit" &&
+				tileData.floorType !== "structural_mass",
 			elevation: tileData.elevation,
 		};
 
@@ -126,7 +133,12 @@ export function HoverTracker({ world, board }: HoverTrackerProps) {
 		// Check for resource deposit
 		for (const e of world.query(ResourceDeposit)) {
 			const dep = e.get(ResourceDeposit);
-			if (dep && !dep.depleted && dep.tileX === tile.x && dep.tileZ === tile.z) {
+			if (
+				dep &&
+				!dep.depleted &&
+				dep.tileX === tile.x &&
+				dep.tileZ === tile.z
+			) {
 				tileInfo.resource = { material: dep.material, amount: dep.amount };
 				break;
 			}
@@ -138,7 +150,13 @@ export function HoverTracker({ world, board }: HoverTrackerProps) {
 			const pos = e.get(UnitPos);
 			const faction = e.get(UnitFaction);
 			const stats = e.get(UnitStats);
-			if (pos && faction && stats && pos.tileX === tile.x && pos.tileZ === tile.z) {
+			if (
+				pos &&
+				faction &&
+				stats &&
+				pos.tileX === tile.x &&
+				pos.tileZ === tile.z
+			) {
 				const visual = e.get(UnitVisual);
 				unitInfo = {
 					name: visual?.modelId ?? "Unit",

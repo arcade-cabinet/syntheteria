@@ -8,10 +8,10 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import {
-	TURNS_PER_DAY,
-	TURNS_PER_YEAR,
 	computeSunColor,
 	computeSunDir,
+	TURNS_PER_DAY,
+	TURNS_PER_YEAR,
 	turnToChronometry,
 } from "../chronometry";
 
@@ -38,8 +38,9 @@ describe("turnToChronometry", () => {
 	});
 
 	it("season increases monotonically over one year", () => {
-		const seasons = Array.from({ length: TURNS_PER_YEAR }, (_, i) =>
-			turnToChronometry(i + 1).season,
+		const seasons = Array.from(
+			{ length: TURNS_PER_YEAR },
+			(_, i) => turnToChronometry(i + 1).season,
 		);
 		for (let i = 1; i < seasons.length; i++) {
 			expect(seasons[i]).toBeGreaterThan(seasons[i - 1]);

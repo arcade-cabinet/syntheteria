@@ -12,9 +12,9 @@ import { FACTION_DEFINITIONS } from "../factions/definitions";
 import { getSpawnCenters } from "../robots/placement";
 import {
 	Building,
+	type BuildingType,
 	PowerGrid,
 	StorageCapacity,
-	type BuildingType,
 } from "../traits/building";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -63,11 +63,7 @@ function spawnBuilding(
 		}),
 	);
 
-	if (
-		def.powerDelta !== 0 ||
-		def.powerRadius > 0 ||
-		type === "power_box"
-	) {
+	if (def.powerDelta !== 0 || def.powerRadius > 0 || type === "power_box") {
 		entity.add(
 			PowerGrid({
 				powerDelta: def.powerDelta,
@@ -104,7 +100,10 @@ export function placeStarterBuildings(
 	// AI factions are stored under their real id (e.g. "volt_collective").
 	// The player's spawn center is stored under "player", not the faction def id,
 	// so we add it explicitly.
-	const placements: Array<{ factionId: string; center: { x: number; z: number } }> = [];
+	const placements: Array<{
+		factionId: string;
+		center: { x: number; z: number };
+	}> = [];
 
 	for (const faction of FACTION_DEFINITIONS) {
 		const center = spawnCenters.get(faction.id);
@@ -141,13 +140,7 @@ export function placeStarterBuildings(
 		// Place storage_hub nearby
 		const hubTile = findPassableNear(center.x, center.z, board, occupied);
 		if (hubTile) {
-			spawnBuilding(
-				world,
-				"storage_hub",
-				factionId,
-				hubTile.x,
-				hubTile.z,
-			);
+			spawnBuilding(world, "storage_hub", factionId, hubTile.x, hubTile.z);
 			occupied.add(`${hubTile.x},${hubTile.z}`);
 		}
 	}

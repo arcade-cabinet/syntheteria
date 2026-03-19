@@ -16,12 +16,12 @@
 
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { FACTION_DEFINITIONS } from "../factions/definitions";
-import { CULT_DEFINITIONS } from "../factions/cults";
 import { CULT_STRUCTURE_DEFS } from "../buildings/cultStructures";
-import { setRelation, getRelation, isHostile } from "../factions/relations";
+import { CULT_DEFINITIONS } from "../factions/cults";
+import { FACTION_DEFINITIONS } from "../factions/definitions";
+import { getRelation, isHostile, setRelation } from "../factions/relations";
+import type { CultDef, FactionDef } from "../factions/types";
 import { FactionRelation } from "../traits/faction";
-import type { FactionDef, CultDef } from "../factions/types";
 
 describe("SPEC: Section 8 — Factions + Cults", () => {
 	let world: ReturnType<typeof createWorld>;
@@ -181,14 +181,18 @@ describe("SPEC: Section 8 — Factions + Cults", () => {
 			// The constant is module-private, so we test it via the spawn behavior
 			// The cultistSystem uses BASE_SPAWN_INTERVAL = 5 internally
 			// We verify through the exported storm params
-			const { getStormCultistParams } = await import("../systems/cultistSystem");
+			const { getStormCultistParams } = await import(
+				"../systems/cultistSystem"
+			);
 			const params = getStormCultistParams("volatile");
 			expect(params.baseSpawnInterval).toBe(5);
 		});
 
 		it("MAX_TOTAL_CULTISTS = 12 (spec)", async () => {
 			// GAME_DESIGN.md: "MAX_TOTAL_CULTISTS=12"
-			const { getStormCultistParams } = await import("../systems/cultistSystem");
+			const { getStormCultistParams } = await import(
+				"../systems/cultistSystem"
+			);
 			const params = getStormCultistParams("volatile");
 			expect(params.maxTotalCultists).toBe(12);
 		});
@@ -205,24 +209,37 @@ describe("SPEC: Section 8 — Factions + Cults", () => {
 
 		it("signal_corruptor exists with correct properties", () => {
 			expect(CULT_STRUCTURE_DEFS.signal_corruptor).toBeDefined();
-			expect(CULT_STRUCTURE_DEFS.signal_corruptor.displayName).toBe("Signal Corruptor");
+			expect(CULT_STRUCTURE_DEFS.signal_corruptor.displayName).toBe(
+				"Signal Corruptor",
+			);
 		});
 
 		it("human_shelter exists with correct properties", () => {
 			expect(CULT_STRUCTURE_DEFS.human_shelter).toBeDefined();
-			expect(CULT_STRUCTURE_DEFS.human_shelter.displayName).toBe("Human Shelter");
+			expect(CULT_STRUCTURE_DEFS.human_shelter.displayName).toBe(
+				"Human Shelter",
+			);
 		});
 
 		it("corruption_node exists with correct properties", () => {
 			expect(CULT_STRUCTURE_DEFS.corruption_node).toBeDefined();
-			expect(CULT_STRUCTURE_DEFS.corruption_node.displayName).toBe("Corruption Node");
+			expect(CULT_STRUCTURE_DEFS.corruption_node.displayName).toBe(
+				"Corruption Node",
+			);
 		});
 
 		it("exactly 4 cult structure types in spec (code may have more)", () => {
 			// GAME_DESIGN.md lists 4 types. Code has 5 (includes cult_stronghold).
-			const specTypes = ["breach_altar", "signal_corruptor", "human_shelter", "corruption_node"];
+			const specTypes = [
+				"breach_altar",
+				"signal_corruptor",
+				"human_shelter",
+				"corruption_node",
+			];
 			for (const type of specTypes) {
-				expect(CULT_STRUCTURE_DEFS[type as keyof typeof CULT_STRUCTURE_DEFS]).toBeDefined();
+				expect(
+					CULT_STRUCTURE_DEFS[type as keyof typeof CULT_STRUCTURE_DEFS],
+				).toBeDefined();
 			}
 		});
 	});
@@ -232,7 +249,9 @@ describe("SPEC: Section 8 — Factions + Cults", () => {
 	describe("victory paths (3 spec paths)", () => {
 		it("subjugation / domination victory path exists", async () => {
 			// GAME_DESIGN.md: "Subjugation / Dominance — defeat or outlast all active machine consciousnesses"
-			const { checkVictoryConditions, _resetVictory } = await import("../systems/victorySystem");
+			const { checkVictoryConditions, _resetVictory } = await import(
+				"../systems/victorySystem"
+			);
 			_resetVictory();
 			// Victory system returns VictoryReason type that includes "domination"
 			// Just verify the module exports what we need
@@ -241,21 +260,35 @@ describe("SPEC: Section 8 — Factions + Cults", () => {
 
 		it("technical supremacy victory path exists", async () => {
 			// GAME_DESIGN.md: "Technical Supremacy — full automation and Mark V progression"
-			const { checkVictoryConditions, _resetVictory } = await import("../systems/victorySystem");
+			const { checkVictoryConditions, _resetVictory } = await import(
+				"../systems/victorySystem"
+			);
 			_resetVictory();
 			// Victory system includes "research" as a reason
 			expect(checkVictoryConditions).toBeTypeOf("function");
 		});
 
 		it("game returns 'playing' when no victory/defeat conditions met", async () => {
-			const { checkVictoryConditions, _resetVictory } = await import("../systems/victorySystem");
-			const { UnitFaction, UnitStats, UnitPos } = await import("../traits/unit");
+			const { checkVictoryConditions, _resetVictory } = await import(
+				"../systems/victorySystem"
+			);
+			const { UnitFaction, UnitStats, UnitPos } = await import(
+				"../traits/unit"
+			);
 			_resetVictory();
 
 			// Spawn a player unit so we don't trigger defeat
 			world.spawn(
 				UnitPos({ tileX: 0, tileZ: 0 }),
-				UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, scanRange: 4, attack: 2, defense: 0 }),
+				UnitStats({
+					hp: 10,
+					maxHp: 10,
+					ap: 2,
+					maxAp: 2,
+					scanRange: 4,
+					attack: 2,
+					defense: 0,
+				}),
 				UnitFaction({ factionId: "player" }),
 			);
 
@@ -264,7 +297,9 @@ describe("SPEC: Section 8 — Factions + Cults", () => {
 		});
 
 		it("defeat when all player units destroyed", async () => {
-			const { checkVictoryConditions, _resetVictory } = await import("../systems/victorySystem");
+			const { checkVictoryConditions, _resetVictory } = await import(
+				"../systems/victorySystem"
+			);
 			_resetVictory();
 
 			// No player units in world — should be defeat

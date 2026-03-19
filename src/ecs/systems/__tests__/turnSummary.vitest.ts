@@ -1,27 +1,27 @@
-import { beforeEach, describe, expect, it } from "vitest";
 import { createWorld } from "koota";
+import { beforeEach, describe, expect, it } from "vitest";
 import { generateBoard } from "../../../board/generator";
 import type { BoardConfig } from "../../../board/types";
+import { TECH_TREE } from "../../../config/techTreeDefs";
 import { initWorldFromBoard } from "../../init";
-import {
-	collectTurnSummary,
-	clearTurnSummary,
-	getTurnSummary,
-	getRivalMilestones,
-	resetTurnSummary,
-	subscribeTurnSummary,
-} from "../turnSummary";
-import {
-	trackIncome,
-	trackExpenditure,
-	finalizeTurnDeltas,
-	resetResourceDeltas,
-} from "../resourceDeltaSystem";
-import { resetTurnEventLog } from "../turnEventLog";
 import { Building } from "../../traits/building";
 import { Faction } from "../../traits/faction";
 import { ResearchState } from "../researchSystem";
-import { TECH_TREE } from "../../../config/techTreeDefs";
+import {
+	finalizeTurnDeltas,
+	resetResourceDeltas,
+	trackExpenditure,
+	trackIncome,
+} from "../resourceDeltaSystem";
+import { resetTurnEventLog } from "../turnEventLog";
+import {
+	clearTurnSummary,
+	collectTurnSummary,
+	getRivalMilestones,
+	getTurnSummary,
+	resetTurnSummary,
+	subscribeTurnSummary,
+} from "../turnSummary";
 
 const SMALL_CONFIG: BoardConfig = {
 	width: 16,
@@ -38,9 +38,7 @@ function makeWorld() {
 		climateProfile: "arid",
 		stormProfile: "stable",
 		difficulty: "standard",
-		factionSlots: [
-			{ factionId: "reclaimers", role: "ai" },
-		],
+		factionSlots: [{ factionId: "reclaimers", role: "ai" }],
 	});
 	return { world, board };
 }
@@ -71,7 +69,9 @@ describe("turnSummary", () => {
 		expect(summary.turn).toBe(2);
 		expect(summary.resourceChanges.length).toBeGreaterThan(0);
 
-		const scr = summary.resourceChanges.find((r) => r.material === "scrap_metal");
+		const scr = summary.resourceChanges.find(
+			(r) => r.material === "scrap_metal",
+		);
 		expect(scr).toBeDefined();
 		expect(scr!.net).toBe(5);
 		expect(scr!.shortName).toBe("SCR");
@@ -160,9 +160,19 @@ describe("turnSummary", () => {
 
 		// Add income for all 13 materials
 		const materials = [
-			"ferrous_scrap", "alloy_stock", "polymer_salvage", "conductor_wire",
-			"electrolyte", "silicon_wafer", "storm_charge", "el_crystal",
-			"scrap_metal", "e_waste", "intact_components", "thermal_fluid", "depth_salvage",
+			"ferrous_scrap",
+			"alloy_stock",
+			"polymer_salvage",
+			"conductor_wire",
+			"electrolyte",
+			"silicon_wafer",
+			"storm_charge",
+			"el_crystal",
+			"scrap_metal",
+			"e_waste",
+			"intact_components",
+			"thermal_fluid",
+			"depth_salvage",
 		] as const;
 		for (const mat of materials) {
 			trackIncome(mat, 1);
@@ -272,7 +282,8 @@ describe("detectRivalMilestones", () => {
 		const { milestones } = collectTurnSummary(world, board, 3);
 
 		const buildMilestone = milestones.find(
-			(m) => m.factionId === "reclaimers" && m.message.includes("INFRASTRUCTURE"),
+			(m) =>
+				m.factionId === "reclaimers" && m.message.includes("INFRASTRUCTURE"),
 		);
 		expect(buildMilestone).toBeDefined();
 		expect(buildMilestone!.message).toContain("STRUCTURES");
@@ -305,7 +316,8 @@ describe("detectRivalMilestones", () => {
 		const { milestones } = collectTurnSummary(world, board, 3);
 
 		const buildMilestone = milestones.find(
-			(m) => m.factionId === "reclaimers" && m.message.includes("INFRASTRUCTURE"),
+			(m) =>
+				m.factionId === "reclaimers" && m.message.includes("INFRASTRUCTURE"),
 		);
 		expect(buildMilestone).toBeUndefined();
 	});

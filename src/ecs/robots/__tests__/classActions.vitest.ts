@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import type { RobotClass } from "../types";
 import {
 	CLASS_ACTIONS,
 	canUseAction,
@@ -8,14 +7,22 @@ import {
 	getClassActionsByCategory,
 	hasClassAction,
 } from "../classActions";
+import type { RobotClass } from "../types";
 
 describe("classActions", () => {
 	// ─── Coverage / Completeness ──────────────────────────────────────
 
 	describe("all classes have actions defined", () => {
 		const ALL_CLASSES: RobotClass[] = [
-			"scout", "infantry", "cavalry", "ranged", "support", "worker",
-			"cult_infantry", "cult_ranged", "cult_cavalry",
+			"scout",
+			"infantry",
+			"cavalry",
+			"ranged",
+			"support",
+			"worker",
+			"cult_infantry",
+			"cult_ranged",
+			"cult_cavalry",
 		];
 
 		it("every robot class has at least 1 action", () => {
@@ -25,7 +32,14 @@ describe("classActions", () => {
 		});
 
 		it("player classes have 4-6 actions", () => {
-			const playerClasses: RobotClass[] = ["scout", "infantry", "cavalry", "ranged", "support", "worker"];
+			const playerClasses: RobotClass[] = [
+				"scout",
+				"infantry",
+				"cavalry",
+				"ranged",
+				"support",
+				"worker",
+			];
 			for (const cls of playerClasses) {
 				expect(CLASS_ACTIONS[cls].length).toBeGreaterThanOrEqual(4);
 				expect(CLASS_ACTIONS[cls].length).toBeLessThanOrEqual(6);
@@ -33,7 +47,11 @@ describe("classActions", () => {
 		});
 
 		it("cult classes have exactly 2 actions", () => {
-			const cultClasses: RobotClass[] = ["cult_infantry", "cult_ranged", "cult_cavalry"];
+			const cultClasses: RobotClass[] = [
+				"cult_infantry",
+				"cult_ranged",
+				"cult_cavalry",
+			];
 			for (const cls of cultClasses) {
 				expect(CLASS_ACTIONS[cls]).toHaveLength(2);
 			}
@@ -285,10 +303,17 @@ describe("classActions", () => {
 
 	describe("action uniqueness", () => {
 		it("no duplicate action IDs within a class", () => {
-			const playerClasses: RobotClass[] = ["scout", "infantry", "cavalry", "ranged", "support", "worker"];
+			const playerClasses: RobotClass[] = [
+				"scout",
+				"infantry",
+				"cavalry",
+				"ranged",
+				"support",
+				"worker",
+			];
 			for (const cls of playerClasses) {
 				const actions = getClassActions(cls);
-				const ids = actions.map(a => a.id);
+				const ids = actions.map((a) => a.id);
 				expect(new Set(ids).size).toBe(ids.length);
 			}
 		});

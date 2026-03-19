@@ -1,6 +1,12 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import { CombatResult, UnitAttack, UnitFaction, UnitPos, UnitStats } from "../../traits/unit";
+import {
+	CombatResult,
+	UnitAttack,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+} from "../../traits/unit";
 import { resolveAttacks } from "../attackSystem";
 
 describe("attackSystem", () => {

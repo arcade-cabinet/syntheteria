@@ -1,6 +1,6 @@
 import type { World } from "koota";
-import { FactionRelation } from "../traits/faction";
 import { STANDING_THRESHOLDS } from "../../config/gameDefaults";
+import { FactionRelation } from "../traits/faction";
 
 export type RelationType = "ally" | "neutral" | "hostile";
 
@@ -14,9 +14,12 @@ export function relationFromStanding(standing: number): RelationType {
 /** Default standing values when forcing a relation state. */
 function defaultStandingForRelation(relation: RelationType): number {
 	switch (relation) {
-		case "hostile": return -60;
-		case "ally": return 60;
-		case "neutral": return 0;
+		case "hostile":
+			return -60;
+		case "ally":
+			return 60;
+		case "neutral":
+			return 0;
 	}
 }
 
@@ -35,9 +38,10 @@ export function setRelation(
 			(r.factionA === factionB && r.factionB === factionA)
 		) {
 			// Keep standing if it already matches the relation's range, otherwise force it
-			const standing = relationFromStanding(r.standing) === relation
-				? r.standing
-				: defaultStandingForRelation(relation);
+			const standing =
+				relationFromStanding(r.standing) === relation
+					? r.standing
+					: defaultStandingForRelation(relation);
 			e.set(FactionRelation, { factionA, factionB, relation, standing });
 			found = true;
 			break;
@@ -128,12 +132,14 @@ export function modifyStanding(
 	}
 	// No entity yet — create one
 	const standing = Math.max(-100, Math.min(100, delta));
-	world.spawn(FactionRelation({
-		factionA,
-		factionB,
-		relation: relationFromStanding(standing),
-		standing,
-	}));
+	world.spawn(
+		FactionRelation({
+			factionA,
+			factionB,
+			relation: relationFromStanding(standing),
+			standing,
+		}),
+	);
 }
 
 /**
@@ -166,5 +172,7 @@ export function setStanding(
 			return;
 		}
 	}
-	world.spawn(FactionRelation({ factionA, factionB, relation, standing: clamped }));
+	world.spawn(
+		FactionRelation({ factionA, factionB, relation, standing: clamped }),
+	);
 }

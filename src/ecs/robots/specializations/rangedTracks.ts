@@ -11,9 +11,9 @@
  *   attackRange 3, weightClass "heavy", actions: Stage/Attack(2-4)/Overwatch/Relocate
  */
 
+import type { TechDef, TechEffectType } from "../../../config/techTreeDefs";
 import type { ClassActionDef } from "../classActions";
 import type { MarkSpecialization } from "../marks";
-import type { TechDef, TechEffectType } from "../../../config/techTreeDefs";
 
 // ─── Track Identity ──────────────────────────────────────────────────────────
 
@@ -75,7 +75,8 @@ const SNIPER_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: true,
 		requiresFriendly: false,
 		cooldown: 0,
-		description: "High-damage precision shot at extreme range (3-6). Costs 2 AP.",
+		description:
+			"High-damage precision shot at extreme range (3-6). Costs 2 AP.",
 	},
 	{
 		id: "headshot",
@@ -91,7 +92,8 @@ const SNIPER_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: true,
 		requiresFriendly: false,
 		cooldown: 2,
-		description: "Critical strike — 2x damage if target HP < 50%. 2-turn cooldown.",
+		description:
+			"Critical strike — 2x damage if target HP < 50%. 2-turn cooldown.",
 	},
 ];
 
@@ -152,7 +154,8 @@ const SUPPRESSOR_ACTIONS: readonly ClassActionDef[] = [
 		requiresEnemy: false,
 		requiresFriendly: false,
 		cooldown: 2,
-		description: "Splash damage to target tile + all 4 adjacent tiles. 2-turn cooldown.",
+		description:
+			"Splash damage to target tile + all 4 adjacent tiles. 2-turn cooldown.",
 	},
 ];
 
@@ -186,11 +189,12 @@ export const RANGED_TRACKS: Readonly<Record<RangedTrack, RangedTrackDef>> = {
 	sniper: {
 		id: "sniper",
 		label: "Sniper",
-		description: "Extreme range, single-target precision. Headshot crits punish wounded targets.",
+		description:
+			"Extreme range, single-target precision. Headshot crits punish wounded targets.",
 		statMods: {
-			attackRange: 2,   // base 3 → 5
-			attack: 1,        // base 4 → 5
-			defense: -1,      // base 2 → 1 (glass cannon tradeoff)
+			attackRange: 2, // base 3 → 5
+			attack: 1, // base 4 → 5
+			defense: -1, // base 2 → 1 (glass cannon tradeoff)
 		},
 		actions: SNIPER_ACTIONS,
 		markSpecializations: SNIPER_MARK_SPECS,
@@ -199,21 +203,23 @@ export const RANGED_TRACKS: Readonly<Record<RangedTrack, RangedTrackDef>> = {
 			label: "Sniper v2",
 			requiredTech: ["mark_iv_components", "quantum_processors"],
 			statMods: {
-				attackRange: 3,   // base 3 → 6
-				attack: 2,        // base 4 → 6
-				scanRange: 2,     // base 6 → 8
+				attackRange: 3, // base 3 → 6
+				attack: 2, // base 4 → 6
+				scanRange: 2, // base 6 → 8
 			},
-			description: "Enhanced optics + quantum targeting. +3 range, +2 attack, +2 scan.",
+			description:
+				"Enhanced optics + quantum targeting. +3 range, +2 attack, +2 scan.",
 		},
 	},
 	suppressor: {
 		id: "suppressor",
 		label: "Suppressor",
-		description: "Area control specialist. AP drain, zone denial, splash damage.",
+		description:
+			"Area control specialist. AP drain, zone denial, splash damage.",
 		statMods: {
-			hp: 2,           // base 12 → 14 (tankier for frontline suppression)
+			hp: 2, // base 12 → 14 (tankier for frontline suppression)
 			maxHp: 2,
-			attack: -1,      // base 4 → 3 (lower per-hit, compensated by area effects)
+			attack: -1, // base 4 → 3 (lower per-hit, compensated by area effects)
 		},
 		actions: SUPPRESSOR_ACTIONS,
 		markSpecializations: SUPPRESSOR_MARK_SPECS,
@@ -222,9 +228,9 @@ export const RANGED_TRACKS: Readonly<Record<RangedTrack, RangedTrackDef>> = {
 			label: "Suppressor v2",
 			requiredTech: ["mark_iv_components", "adaptive_armor"],
 			statMods: {
-				hp: 4,           // base 12 → 16
+				hp: 4, // base 12 → 16
 				maxHp: 4,
-				defense: 1,      // base 2 → 3
+				defense: 1, // base 2 → 3
 			},
 			description: "Adaptive plating + reinforced frame. +4 HP, +1 defense.",
 		},
@@ -241,7 +247,8 @@ export const RANGED_SPEC_TECHS: readonly TechDef[] = [
 	{
 		id: "precision_targeting",
 		name: "Precision Targeting",
-		description: "Unlocks Sniper specialization for Quadruped Tanks. Enables Aimed Shot and Headshot actions.",
+		description:
+			"Unlocks Sniper specialization for Quadruped Tanks. Enables Aimed Shot and Headshot actions.",
 		tier: 2,
 		cost: { silicon_wafer: 6, conductor_wire: 3, alloy_stock: 4 },
 		turnsToResearch: 5,
@@ -251,7 +258,8 @@ export const RANGED_SPEC_TECHS: readonly TechDef[] = [
 	{
 		id: "area_suppression",
 		name: "Area Suppression",
-		description: "Unlocks Suppressor specialization for Quadruped Tanks. Enables Suppressive Fire and Barrage actions.",
+		description:
+			"Unlocks Suppressor specialization for Quadruped Tanks. Enables Suppressive Fire and Barrage actions.",
 		tier: 2,
 		cost: { alloy_stock: 6, storm_charge: 3, polymer_salvage: 4 },
 		turnsToResearch: 5,
@@ -268,7 +276,9 @@ export function getRangedTrack(track: RangedTrack): RangedTrackDef {
 }
 
 /** Get all additional actions for a given track (does NOT include base ranged actions). */
-export function getRangedTrackActions(track: RangedTrack): readonly ClassActionDef[] {
+export function getRangedTrackActions(
+	track: RangedTrack,
+): readonly ClassActionDef[] {
 	return RANGED_TRACKS[track].actions;
 }
 
@@ -277,7 +287,9 @@ export function getRangedTrackSpecs(
 	track: RangedTrack,
 	markLevel: number,
 ): readonly MarkSpecialization[] {
-	return RANGED_TRACKS[track].markSpecializations.filter(s => s.markLevel <= markLevel);
+	return RANGED_TRACKS[track].markSpecializations.filter(
+		(s) => s.markLevel <= markLevel,
+	);
 }
 
 /** Check if a ranged track has a specific effect active at a given mark level. */
@@ -286,7 +298,9 @@ export function hasRangedTrackEffect(
 	markLevel: number,
 	effectType: string,
 ): boolean {
-	return getRangedTrackSpecs(track, markLevel).some(s => s.effectType === effectType);
+	return getRangedTrackSpecs(track, markLevel).some(
+		(s) => s.effectType === effectType,
+	);
 }
 
 /** Get the effect value for a specific track effect at a given mark level. */
@@ -296,7 +310,7 @@ export function getRangedTrackEffectValue(
 	effectType: string,
 ): number {
 	const specs = getRangedTrackSpecs(track, markLevel);
-	const matching = specs.filter(s => s.effectType === effectType);
+	const matching = specs.filter((s) => s.effectType === effectType);
 	if (matching.length === 0) return 0;
 	return matching[matching.length - 1]!.effectValue;
 }
@@ -308,7 +322,9 @@ export function applyTrackStatMods(
 	useV2: boolean,
 ): Record<string, number> {
 	const result = { ...baseStats };
-	const mods = useV2 ? RANGED_TRACKS[track].v2.statMods : RANGED_TRACKS[track].statMods;
+	const mods = useV2
+		? RANGED_TRACKS[track].v2.statMods
+		: RANGED_TRACKS[track].statMods;
 	for (const [key, value] of Object.entries(mods)) {
 		if (value !== undefined && key in result) {
 			result[key] = (result[key] ?? 0) + value;

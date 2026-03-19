@@ -14,9 +14,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+	type FragmentDefinition,
 	getFragmentProgress,
 	getReadFragments,
-	type FragmentDefinition,
 } from "../../ecs/systems/memoryFragments";
 import { pushToast } from "./toastStore";
 
@@ -284,7 +284,13 @@ function FragmentLog({ onBack }: { onBack: () => void }) {
 				overflow: "hidden",
 			}}
 		>
-			<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+				}}
+			>
 				<span
 					style={{
 						fontFamily: "monospace",
@@ -353,7 +359,13 @@ function FragmentCard({ fragment }: { fragment: FragmentDefinition }) {
 				padding: "10px 12px",
 			}}
 		>
-			<div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "space-between",
+					marginBottom: 4,
+				}}
+			>
 				<span
 					style={{
 						fontFamily: "monospace",

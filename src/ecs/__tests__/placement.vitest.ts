@@ -2,9 +2,9 @@ import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	buildPlacementFlags,
-	placeRobots,
 	computeSpawnCenters,
 	getSpawnCenters,
+	placeRobots,
 	type SimpleBoardInfo,
 } from "../robots/placement";
 import { UnitFaction, UnitPos } from "../traits/unit";
@@ -27,7 +27,12 @@ describe("placeRobots", () => {
 
 	it("spawns robots from built placement flags", () => {
 		const board = makeBoard(16, 16);
-		const allIds = ["reclaimers", "volt_collective", "signal_choir", "iron_creed"];
+		const allIds = [
+			"reclaimers",
+			"volt_collective",
+			"signal_choir",
+			"iron_creed",
+		];
 		computeSpawnCenters(board, "reclaimers", allIds);
 		const flags = buildPlacementFlags("reclaimers", allIds);
 		placeRobots(world, flags, board);

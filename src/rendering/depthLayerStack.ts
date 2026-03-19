@@ -9,13 +9,13 @@
  * boardToDepthLayers converts a GeneratedBoard into the stack.
  */
 
-import {
-	createDepthMappedLayer,
-	GRATING_ATLAS_INDEX,
-	type DepthMappedLayer,
-} from "./depthMappedLayer";
 import type { GeneratedBoard } from "../board/types";
 import { FLOOR_INDEX_MAP } from "../ecs/terrain/types";
+import {
+	createDepthMappedLayer,
+	type DepthMappedLayer,
+	GRATING_ATLAS_INDEX,
+} from "./depthMappedLayer";
 
 // ---------------------------------------------------------------------------
 // DepthLayerStack
@@ -88,7 +88,10 @@ export function boardToDepthLayers(board: GeneratedBoard): DepthLayerStack {
 	const layer0 = createDepthMappedLayer(width, height, 0);
 
 	// Collect elevated tiles by elevation level for upper layers
-	const elevatedTiles = new Map<number, Array<{ x: number; z: number; floorType: string }>>();
+	const elevatedTiles = new Map<
+		number,
+		Array<{ x: number; z: number; floorType: string }>
+	>();
 
 	for (let z = 0; z < height; z++) {
 		for (let x = 0; x < width; x++) {

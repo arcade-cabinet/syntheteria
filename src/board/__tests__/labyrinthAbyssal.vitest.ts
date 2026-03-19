@@ -10,12 +10,9 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { TileData, Elevation } from "../types";
-import {
-	applyAbyssalZones,
-	type ProtectedZone,
-} from "../labyrinthAbyssal";
-import { initSolidGrid, carveRoom } from "../labyrinthMaze";
+import { applyAbyssalZones, type ProtectedZone } from "../labyrinthAbyssal";
+import { carveRoom, initSolidGrid } from "../labyrinthMaze";
+import type { Elevation, TileData } from "../types";
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -1,12 +1,19 @@
-import { describe, expect, it, beforeEach, vi } from "vitest";
 import { createWorld, type World } from "koota";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TileFloor } from "../../terrain/traits";
-import { Tile } from "../../traits/tile";
-import { UnitFaction, UnitMine, UnitPos, UnitStats, UnitVisual, UnitXP } from "../../traits/unit";
 import { Faction } from "../../traits/faction";
 import { ResourcePool } from "../../traits/resource";
-import { ResearchState } from "../researchSystem";
+import { Tile } from "../../traits/tile";
+import {
+	UnitFaction,
+	UnitMine,
+	UnitPos,
+	UnitStats,
+	UnitVisual,
+	UnitXP,
+} from "../../traits/unit";
 import { floorMiningSystem, startFloorMining } from "../floorMiningSystem";
+import { ResearchState } from "../researchSystem";
 
 // Mock audio and UI
 vi.mock("../../../audio/sfx", () => ({ playSfx: vi.fn() }));
@@ -17,14 +24,24 @@ function createTestWorld(): World {
 	return createWorld();
 }
 
-function spawnTile(world: World, x: number, z: number, floorType: string, mineable: boolean, hardness: number, material: string | null) {
+function spawnTile(
+	world: World,
+	x: number,
+	z: number,
+	floorType: string,
+	mineable: boolean,
+	hardness: number,
+	material: string | null,
+) {
 	return world.spawn(
 		Tile({ x, z, elevation: 0, passable: true, explored: true, visibility: 1 }),
 		TileFloor({
 			floorType: floorType as import("../../terrain/types").FloorType,
 			mineable,
 			hardness,
-			resourceMaterial: material as import("../../terrain/types").ResourceMaterial | null,
+			resourceMaterial: material as
+				| import("../../terrain/types").ResourceMaterial
+				| null,
 			resourceAmount: hardness > 0 ? 3 : 0,
 		}),
 	);
@@ -34,7 +51,24 @@ function spawnUnit(world: World, x: number, z: number, factionId: string) {
 	return world.spawn(
 		UnitPos({ tileX: x, tileZ: z }),
 		UnitFaction({ factionId }),
-		UnitStats({ hp: 10, maxHp: 10, ap: 2, maxAp: 2, mp: 3, maxMp: 3, scanRange: 4, attack: 2, defense: 0, attackRange: 1, weightClass: "medium", robotClass: "worker", movesPerTurn: 1, cellsPerMove: 2, movesUsed: 0, staged: false }),
+		UnitStats({
+			hp: 10,
+			maxHp: 10,
+			ap: 2,
+			maxAp: 2,
+			mp: 3,
+			maxMp: 3,
+			scanRange: 4,
+			attack: 2,
+			defense: 0,
+			attackRange: 1,
+			weightClass: "medium",
+			robotClass: "worker",
+			movesPerTurn: 1,
+			cellsPerMove: 2,
+			movesUsed: 0,
+			staged: false,
+		}),
 		UnitVisual({ modelId: "worker", scale: 1, facingAngle: 0 }),
 		UnitXP({ xp: 0, markLevel: 1, killCount: 0, harvestCount: 0 }),
 	);
@@ -44,10 +78,19 @@ function spawnFaction(world: World, factionId: string) {
 	world.spawn(
 		Faction({ id: factionId }),
 		ResourcePool({
-			ferrous_scrap: 0, alloy_stock: 0, polymer_salvage: 0, conductor_wire: 0,
-			electrolyte: 0, silicon_wafer: 0, storm_charge: 0, el_crystal: 0,
-			scrap_metal: 0, e_waste: 0, intact_components: 0,
-			thermal_fluid: 0, depth_salvage: 0,
+			ferrous_scrap: 0,
+			alloy_stock: 0,
+			polymer_salvage: 0,
+			conductor_wire: 0,
+			electrolyte: 0,
+			silicon_wafer: 0,
+			storm_charge: 0,
+			el_crystal: 0,
+			scrap_metal: 0,
+			e_waste: 0,
+			intact_components: 0,
+			thermal_fluid: 0,
+			depth_salvage: 0,
 		}),
 	);
 }
@@ -63,7 +106,9 @@ describe("floorMiningSystem", () => {
 		spawnFaction(world, "reclaimers");
 		spawnTile(world, 1, 0, "collapsed_zone", true, 2, "scrap_metal");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
-		unit.add(UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 3, totalTicks: 3 }));
+		unit.add(
+			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 3, totalTicks: 3 }),
+		);
 
 		floorMiningSystem(world);
 
@@ -76,7 +121,9 @@ describe("floorMiningSystem", () => {
 		spawnFaction(world, "reclaimers");
 		spawnTile(world, 1, 0, "collapsed_zone", true, 1, "scrap_metal");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
-		unit.add(UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }));
+		unit.add(
+			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
+		);
 
 		floorMiningSystem(world);
 
@@ -95,9 +142,19 @@ describe("floorMiningSystem", () => {
 
 	it("marks tile as not mineable and mined after completion", () => {
 		spawnFaction(world, "reclaimers");
-		const tile = spawnTile(world, 1, 0, "collapsed_zone", true, 1, "scrap_metal");
+		const tile = spawnTile(
+			world,
+			1,
+			0,
+			"collapsed_zone",
+			true,
+			1,
+			"scrap_metal",
+		);
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
-		unit.add(UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }));
+		unit.add(
+			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
+		);
 
 		floorMiningSystem(world);
 
@@ -109,9 +166,19 @@ describe("floorMiningSystem", () => {
 
 	it("lowers tile elevation to -1 on completion", () => {
 		spawnFaction(world, "reclaimers");
-		const tile = spawnTile(world, 1, 0, "collapsed_zone", true, 1, "scrap_metal");
+		const tile = spawnTile(
+			world,
+			1,
+			0,
+			"collapsed_zone",
+			true,
+			1,
+			"scrap_metal",
+		);
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
-		unit.add(UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }));
+		unit.add(
+			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
+		);
 
 		// Tile starts at elevation 0
 		expect(tile.get(Tile)!.elevation).toBe(0);
@@ -126,7 +193,9 @@ describe("floorMiningSystem", () => {
 		spawnFaction(world, "reclaimers");
 		spawnTile(world, 1, 0, "void_pit", false, 0, null);
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
-		unit.add(UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }));
+		unit.add(
+			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
+		);
 
 		floorMiningSystem(world);
 
@@ -205,24 +274,47 @@ describe("deep mining tech bonus", () => {
 		world = createTestWorld();
 	});
 
-	function spawnFactionWithResearch(w: World, factionId: string, techs: string) {
+	function spawnFactionWithResearch(
+		w: World,
+		factionId: string,
+		techs: string,
+	) {
 		w.spawn(
 			Faction({ id: factionId }),
 			ResourcePool({
-				ferrous_scrap: 0, alloy_stock: 0, polymer_salvage: 0, conductor_wire: 0,
-				electrolyte: 0, silicon_wafer: 0, storm_charge: 0, el_crystal: 0,
-				scrap_metal: 0, e_waste: 0, intact_components: 0,
-				thermal_fluid: 0, depth_salvage: 0,
+				ferrous_scrap: 0,
+				alloy_stock: 0,
+				polymer_salvage: 0,
+				conductor_wire: 0,
+				electrolyte: 0,
+				silicon_wafer: 0,
+				storm_charge: 0,
+				el_crystal: 0,
+				scrap_metal: 0,
+				e_waste: 0,
+				intact_components: 0,
+				thermal_fluid: 0,
+				depth_salvage: 0,
 			}),
-			ResearchState({ researchedTechs: techs, currentTechId: "", progressPoints: 0 }),
+			ResearchState({
+				researchedTechs: techs,
+				currentTechId: "",
+				progressPoints: 0,
+			}),
 		);
 	}
 
 	it("applies +50% yield when deep_mining is researched", () => {
-		spawnFactionWithResearch(world, "reclaimers", "advanced_harvesting,efficient_fabrication,deep_mining");
+		spawnFactionWithResearch(
+			world,
+			"reclaimers",
+			"advanced_harvesting,efficient_fabrication,deep_mining",
+		);
 		spawnTile(world, 1, 0, "collapsed_zone", true, 1, "scrap_metal");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
-		unit.add(UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }));
+		unit.add(
+			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
+		);
 
 		floorMiningSystem(world);
 
@@ -244,7 +336,9 @@ describe("deep mining tech bonus", () => {
 		spawnFactionWithResearch(world, "reclaimers", "advanced_harvesting");
 		spawnTile(world, 1, 0, "collapsed_zone", true, 1, "scrap_metal");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
-		unit.add(UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }));
+		unit.add(
+			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
+		);
 
 		floorMiningSystem(world);
 

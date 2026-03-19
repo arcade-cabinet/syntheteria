@@ -1,7 +1,7 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import { spawnCavalry, CAVALRY_DEFAULTS } from "../robots/CavalryBot";
-import { spawnCultInfantry, CULT_INFANTRY_DEFAULTS } from "../robots/CultMechs";
+import { CAVALRY_DEFAULTS, spawnCavalry } from "../robots/CavalryBot";
+import { CULT_INFANTRY_DEFAULTS, spawnCultInfantry } from "../robots/CultMechs";
 import { RANGED_DEFAULTS, spawnRanged } from "../robots/GuardBot";
 import { spawnWorker } from "../robots/HarvesterBot";
 import type { BotMark } from "../robots/marks";
@@ -76,13 +76,20 @@ describe("robot spawning", () => {
 
 describe("buildPlacementFlags", () => {
 	it("player gets 6 faction bots", () => {
-		const flags = buildPlacementFlags("reclaimers", ["reclaimers", "volt_collective"]);
+		const flags = buildPlacementFlags("reclaimers", [
+			"reclaimers",
+			"volt_collective",
+		]);
 		const playerFlags = flags.filter((f) => f.factionId === "player");
 		expect(playerFlags).toHaveLength(6);
 	});
 
 	it("AI factions get 4 combat bots each", () => {
-		const flags = buildPlacementFlags("reclaimers", ["reclaimers", "volt_collective", "signal_choir"]);
+		const flags = buildPlacementFlags("reclaimers", [
+			"reclaimers",
+			"volt_collective",
+			"signal_choir",
+		]);
 		const vcFlags = flags.filter((f) => f.factionId === "volt_collective");
 		expect(vcFlags).toHaveLength(4);
 	});

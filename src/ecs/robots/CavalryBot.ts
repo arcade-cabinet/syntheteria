@@ -5,9 +5,18 @@ import { UnitFaction, UnitPos, UnitStats, UnitVisual } from "../traits/unit";
 /** Cavalry — fast strike, flanking. Arachnoid.glb */
 export const CAVALRY_DEFAULTS = {
 	stats: {
-		hp: 7, maxHp: 7, ap: 2, maxAp: 2, mp: 4, maxMp: 4,
-		scanRange: 5, attack: 3, defense: 0, attackRange: 1,
-		weightClass: "medium" as const, robotClass: "cavalry" as const,
+		hp: 7,
+		maxHp: 7,
+		ap: 2,
+		maxAp: 2,
+		mp: 4,
+		maxMp: 4,
+		scanRange: 5,
+		attack: 3,
+		defense: 0,
+		attackRange: 1,
+		weightClass: "medium" as const,
+		robotClass: "cavalry" as const,
 		...MOVEMENT_PROFILES.cavalry,
 	},
 	visual: { modelId: "cavalry", scale: 1.0, facingAngle: 0 },

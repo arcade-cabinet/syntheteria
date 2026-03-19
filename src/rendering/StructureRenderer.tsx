@@ -18,10 +18,10 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { type ReactNode, Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import { TILE_SIZE_M } from "../board/grid";
 import type { GeneratedBoard } from "../board/types";
 import { seedToFloat } from "../ecs/terrain/cluster";
+import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import {
 	getAllStructureModelUrls,
 	resolveStructureModelUrl,
@@ -33,13 +33,17 @@ import {
 	STRUCTURE_WINDOW_WALL_MODELS,
 } from "./modelPaths";
 import {
+	sphereModelPlacement,
+	sphereModelPlacementWithRotation,
+	worldToTileCoords,
+} from "./spherePlacement";
+import {
 	type ColumnPosition,
-	type StructuralEdge,
 	getColumnPositions,
 	getInteriorTiles,
 	getStructuralEdges,
+	type StructuralEdge,
 } from "./structureHelpers";
-import { sphereModelPlacement, sphereModelPlacementWithRotation, worldToTileCoords } from "./spherePlacement";
 import { buildExploredSet } from "./tileVisibility";
 
 // Preload all structure models
@@ -71,10 +75,10 @@ function applyIndustrialMaterials(root: THREE.Object3D): void {
 // ---------------------------------------------------------------------------
 
 const EDGE_ROTATIONS: Record<string, number> = {
-	north: 0,           // face -Z
-	south: Math.PI,     // face +Z
+	north: 0, // face -Z
+	south: Math.PI, // face +Z
 	east: -Math.PI / 2, // face +X
-	west: Math.PI / 2,  // face -X
+	west: Math.PI / 2, // face -X
 };
 
 // ---------------------------------------------------------------------------
@@ -83,8 +87,8 @@ const EDGE_ROTATIONS: Record<string, number> = {
 
 const DIRECTIONS: [number, number][] = [
 	[0, -1], // North
-	[0, 1],  // South
-	[1, 0],  // East
+	[0, 1], // South
+	[1, 0], // East
 	[-1, 0], // West
 ];
 
@@ -95,7 +99,10 @@ interface RampEdge {
 	dz: number;
 }
 
-function collectRampEdges(board: GeneratedBoard, explored?: Set<string>): RampEdge[] {
+function collectRampEdges(
+	board: GeneratedBoard,
+	explored?: Set<string>,
+): RampEdge[] {
 	const { width, height } = board.config;
 	const edges: RampEdge[] = [];
 	const seen = new Set<string>();
@@ -141,14 +148,24 @@ const RAMP_ROTATIONS: Record<string, number> = {
 // Deterministic model picker (seed-based, no Math.random)
 // ---------------------------------------------------------------------------
 
-function pickModel(models: readonly string[], seed: string, x: number, z: number): string {
+function pickModel(
+	models: readonly string[],
+	seed: string,
+	x: number,
+	z: number,
+): string {
 	const hash = seedToFloat(seed + String(x * 31 + z * 17));
 	const idx = Math.floor(hash * models.length) % models.length;
 	return models[idx]!;
 }
 
 /** ~20% of wall edges get a windowed variant for variety. */
-function isWindowWall(seed: string, x: number, z: number, edge: string): boolean {
+function isWindowWall(
+	seed: string,
+	x: number,
+	z: number,
+	edge: string,
+): boolean {
 	const hash = seedToFloat(seed + edge + String(x * 13 + z * 7));
 	return hash < 0.2;
 }
@@ -192,10 +209,18 @@ function computeWallInstances(
 		let wx = cx;
 		let wz = cz;
 		switch (e.edge) {
-			case "north": wz = cz - half; break;
-			case "south": wz = cz + half; break;
-			case "west":  wx = cx - half; break;
-			case "east":  wx = cx + half; break;
+			case "north":
+				wz = cz - half;
+				break;
+			case "south":
+				wz = cz + half;
+				break;
+			case "west":
+				wx = cx - half;
+				break;
+			case "east":
+				wx = cx + half;
+				break;
 		}
 
 		const models = isWindowWall(seed, e.x, e.z, e.edge)
@@ -218,7 +243,12 @@ function computeColumnInstances(
 	seed: string,
 ): ColumnInstance[] {
 	return positions.map((p, i) => {
-		const modelPath = pickModel(STRUCTURE_COLUMN_MODELS, seed, Math.round(p.x), Math.round(p.z));
+		const modelPath = pickModel(
+			STRUCTURE_COLUMN_MODELS,
+			seed,
+			Math.round(p.x),
+			Math.round(p.z),
+		);
 		return {
 			url: resolveStructureModelUrl(modelPath),
 			wx: p.x,
@@ -228,9 +258,7 @@ function computeColumnInstances(
 	});
 }
 
-function computeStaircaseInstances(
-	rampEdges: RampEdge[],
-): StaircaseInstance[] {
+function computeStaircaseInstances(rampEdges: RampEdge[]): StaircaseInstance[] {
 	const url = resolveStructureModelUrl(STRUCTURE_STAIRCASE_MODEL);
 	return rampEdges.map((edge) => ({
 		url,
@@ -281,7 +309,23 @@ function computeRoofInstances(
 // GLB model components
 // ---------------------------------------------------------------------------
 
-function WallModel({ url, wx, wz, rotation, useSphere, boardWidth, boardHeight }: { url: string; wx: number; wz: number; rotation: number; useSphere?: boolean; boardWidth?: number; boardHeight?: number }) {
+function WallModel({
+	url,
+	wx,
+	wz,
+	rotation,
+	useSphere,
+	boardWidth,
+	boardHeight,
+}: {
+	url: string;
+	wx: number;
+	wz: number;
+	rotation: number;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
+}) {
 	const { scene } = useGLTF(url);
 	const ref = useRef<THREE.Group>(null);
 
@@ -299,7 +343,14 @@ function WallModel({ url, wx, wz, rotation, useSphere, boardWidth, boardHeight }
 
 	if (useSphere && boardWidth && boardHeight) {
 		const tile = worldToTileCoords(wx, wz, TILE_SIZE_M);
-		const sp = sphereModelPlacementWithRotation(tile.tileX, tile.tileZ, boardWidth, boardHeight, rotation, yOffset);
+		const sp = sphereModelPlacementWithRotation(
+			tile.tileX,
+			tile.tileZ,
+			boardWidth,
+			boardHeight,
+			rotation,
+			yOffset,
+		);
 		return (
 			<Clone
 				ref={ref}
@@ -326,7 +377,21 @@ function WallModel({ url, wx, wz, rotation, useSphere, boardWidth, boardHeight }
 	);
 }
 
-function ColumnModel({ url, wx, wz, useSphere, boardWidth, boardHeight }: { url: string; wx: number; wz: number; useSphere?: boolean; boardWidth?: number; boardHeight?: number }) {
+function ColumnModel({
+	url,
+	wx,
+	wz,
+	useSphere,
+	boardWidth,
+	boardHeight,
+}: {
+	url: string;
+	wx: number;
+	wz: number;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
+}) {
 	const { scene } = useGLTF(url);
 	const ref = useRef<THREE.Group>(null);
 
@@ -344,7 +409,13 @@ function ColumnModel({ url, wx, wz, useSphere, boardWidth, boardHeight }: { url:
 
 	if (useSphere && boardWidth && boardHeight) {
 		const tile = worldToTileCoords(wx, wz, TILE_SIZE_M);
-		const sp = sphereModelPlacement(tile.tileX, tile.tileZ, boardWidth, boardHeight, yOffset);
+		const sp = sphereModelPlacement(
+			tile.tileX,
+			tile.tileZ,
+			boardWidth,
+			boardHeight,
+			yOffset,
+		);
 		return (
 			<Clone
 				ref={ref}
@@ -368,7 +439,23 @@ function ColumnModel({ url, wx, wz, useSphere, boardWidth, boardHeight }: { url:
 	);
 }
 
-function StaircaseModel({ url, wx, wz, rotation, useSphere, boardWidth, boardHeight }: { url: string; wx: number; wz: number; rotation: number; useSphere?: boolean; boardWidth?: number; boardHeight?: number }) {
+function StaircaseModel({
+	url,
+	wx,
+	wz,
+	rotation,
+	useSphere,
+	boardWidth,
+	boardHeight,
+}: {
+	url: string;
+	wx: number;
+	wz: number;
+	rotation: number;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
+}) {
 	const { scene } = useGLTF(url);
 	const ref = useRef<THREE.Group>(null);
 
@@ -386,7 +473,14 @@ function StaircaseModel({ url, wx, wz, rotation, useSphere, boardWidth, boardHei
 
 	if (useSphere && boardWidth && boardHeight) {
 		const tile = worldToTileCoords(wx, wz, TILE_SIZE_M);
-		const sp = sphereModelPlacementWithRotation(tile.tileX, tile.tileZ, boardWidth, boardHeight, rotation, yOffset);
+		const sp = sphereModelPlacementWithRotation(
+			tile.tileX,
+			tile.tileZ,
+			boardWidth,
+			boardHeight,
+			rotation,
+			yOffset,
+		);
 		return (
 			<Clone
 				ref={ref}
@@ -413,7 +507,21 @@ function StaircaseModel({ url, wx, wz, rotation, useSphere, boardWidth, boardHei
 	);
 }
 
-function RoofModel({ url, wx, wz, useSphere, boardWidth, boardHeight }: { url: string; wx: number; wz: number; useSphere?: boolean; boardWidth?: number; boardHeight?: number }) {
+function RoofModel({
+	url,
+	wx,
+	wz,
+	useSphere,
+	boardWidth,
+	boardHeight,
+}: {
+	url: string;
+	wx: number;
+	wz: number;
+	useSphere?: boolean;
+	boardWidth?: number;
+	boardHeight?: number;
+}) {
 	const { scene } = useGLTF(url);
 	const ref = useRef<THREE.Group>(null);
 	const camera = useThree((s) => s.camera);
@@ -438,7 +546,13 @@ function RoofModel({ url, wx, wz, useSphere, boardWidth, boardHeight }: { url: s
 
 	if (useSphere && boardWidth && boardHeight) {
 		const tile = worldToTileCoords(wx, wz, TILE_SIZE_M);
-		const sp = sphereModelPlacement(tile.tileX, tile.tileZ, boardWidth, boardHeight, yOffset);
+		const sp = sphereModelPlacement(
+			tile.tileX,
+			tile.tileZ,
+			boardWidth,
+			boardHeight,
+			yOffset,
+		);
 		return (
 			<Clone
 				ref={ref}
@@ -483,13 +597,20 @@ function StructureCullGroup({ children }: { children: ReactNode }) {
 
 	useFrame(() => {
 		if (!groupRef.current) return;
-		groupRef.current.visible = camera.position.length() < STRUCTURE_CULL_DISTANCE;
+		groupRef.current.visible =
+			camera.position.length() < STRUCTURE_CULL_DISTANCE;
 	});
 
 	return <group ref={groupRef}>{children}</group>;
 }
 
-export function StructureRenderer({ board, world, useSphere, boardWidth, boardHeight }: StructureRendererProps) {
+export function StructureRenderer({
+	board,
+	world,
+	useSphere,
+	boardWidth,
+	boardHeight,
+}: StructureRendererProps) {
 	const instances = useMemo(() => {
 		const explored = world ? buildExploredSet(world) : undefined;
 		const seed = board.config.seed;
@@ -511,28 +632,58 @@ export function StructureRenderer({ board, world, useSphere, boardWidth, boardHe
 			{instances.walls.map((w) => (
 				<ModelErrorBoundary key={w.key} name={w.url}>
 					<Suspense fallback={null}>
-						<WallModel url={w.url} wx={w.wx} wz={w.wz} rotation={w.rotation} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+						<WallModel
+							url={w.url}
+							wx={w.wx}
+							wz={w.wz}
+							rotation={w.rotation}
+							useSphere={useSphere}
+							boardWidth={boardWidth}
+							boardHeight={boardHeight}
+						/>
 					</Suspense>
 				</ModelErrorBoundary>
 			))}
 			{instances.columns.map((c) => (
 				<ModelErrorBoundary key={c.key} name={c.url}>
 					<Suspense fallback={null}>
-						<ColumnModel url={c.url} wx={c.wx} wz={c.wz} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+						<ColumnModel
+							url={c.url}
+							wx={c.wx}
+							wz={c.wz}
+							useSphere={useSphere}
+							boardWidth={boardWidth}
+							boardHeight={boardHeight}
+						/>
 					</Suspense>
 				</ModelErrorBoundary>
 			))}
 			{instances.staircases.map((s) => (
 				<ModelErrorBoundary key={s.key} name={s.url}>
 					<Suspense fallback={null}>
-						<StaircaseModel url={s.url} wx={s.wx} wz={s.wz} rotation={s.rotation} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+						<StaircaseModel
+							url={s.url}
+							wx={s.wx}
+							wz={s.wz}
+							rotation={s.rotation}
+							useSphere={useSphere}
+							boardWidth={boardWidth}
+							boardHeight={boardHeight}
+						/>
 					</Suspense>
 				</ModelErrorBoundary>
 			))}
 			{instances.roofs.map((r) => (
 				<ModelErrorBoundary key={r.key} name={r.url}>
 					<Suspense fallback={null}>
-						<RoofModel url={r.url} wx={r.wx} wz={r.wz} useSphere={useSphere} boardWidth={boardWidth} boardHeight={boardHeight} />
+						<RoofModel
+							url={r.url}
+							wx={r.wx}
+							wz={r.wz}
+							useSphere={useSphere}
+							boardWidth={boardWidth}
+							boardHeight={boardHeight}
+						/>
 					</Suspense>
 				</ModelErrorBoundary>
 			))}

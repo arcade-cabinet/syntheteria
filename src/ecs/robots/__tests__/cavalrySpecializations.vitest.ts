@@ -11,19 +11,19 @@
  */
 
 import { describe, expect, it } from "vitest";
+import type { CavalryTrack } from "../specializations/cavalryTracks";
 import {
-	CAVALRY_TRACKS,
 	CAVALRY_TRACK_TECHS,
+	CAVALRY_TRACKS,
 	FLANKER_ACTIONS,
 	FLANKER_SPECIALIZATIONS,
 	FLANKER_V2_UPGRADES,
+	getTrackActions,
+	getTrackSpecializations,
 	INTERCEPTOR_ACTIONS,
 	INTERCEPTOR_SPECIALIZATIONS,
 	INTERCEPTOR_V2_UPGRADES,
-	getTrackActions,
-	getTrackSpecializations,
 } from "../specializations/cavalryTracks";
-import type { CavalryTrack } from "../specializations/cavalryTracks";
 
 describe("Cavalry specialization tracks", () => {
 	// ─── Track Structure ──────────────────────────────────────────────
@@ -240,7 +240,9 @@ describe("Cavalry specialization tracks", () => {
 		});
 
 		it("no duplicate action IDs across both tracks", () => {
-			const allIds = [...FLANKER_ACTIONS, ...INTERCEPTOR_ACTIONS].map(a => a.id);
+			const allIds = [...FLANKER_ACTIONS, ...INTERCEPTOR_ACTIONS].map(
+				(a) => a.id,
+			);
 			expect(new Set(allIds).size).toBe(allIds.length);
 		});
 	});
@@ -332,7 +334,7 @@ describe("Cavalry specialization tracks", () => {
 			const specs = getTrackSpecializations("flanker", 5, true);
 			expect(specs).toHaveLength(4);
 
-			const effectTypes = specs.map(s => s.effectType);
+			const effectTypes = specs.map((s) => s.effectType);
 			// Mark II stays (side_arc_bonus)
 			expect(effectTypes).toContain("side_arc_bonus");
 			// Mark III replaced by phantom_ambush
@@ -347,7 +349,7 @@ describe("Cavalry specialization tracks", () => {
 
 		it("v2 mode for interceptor replaces correctly", () => {
 			const specs = getTrackSpecializations("interceptor", 5, true);
-			const effectTypes = specs.map(s => s.effectType);
+			const effectTypes = specs.map((s) => s.effectType);
 			expect(effectTypes).toContain("reactive_pounce");
 			expect(effectTypes).toContain("gravity_well");
 			expect(effectTypes).not.toContain("corridor_denial");
@@ -388,7 +390,10 @@ describe("Cavalry specialization tracks", () => {
 		});
 
 		it("all interceptor specializations have track=interceptor", () => {
-			for (const spec of [...INTERCEPTOR_SPECIALIZATIONS, ...INTERCEPTOR_V2_UPGRADES]) {
+			for (const spec of [
+				...INTERCEPTOR_SPECIALIZATIONS,
+				...INTERCEPTOR_V2_UPGRADES,
+			]) {
 				expect(spec.track).toBe("interceptor");
 			}
 		});
@@ -409,17 +414,19 @@ describe("Cavalry specialization tracks", () => {
 		});
 
 		it("no duplicate effectTypes within a track (base specs only)", () => {
-			const flankerTypes = FLANKER_SPECIALIZATIONS.map(s => s.effectType);
+			const flankerTypes = FLANKER_SPECIALIZATIONS.map((s) => s.effectType);
 			expect(new Set(flankerTypes).size).toBe(flankerTypes.length);
 
-			const interceptorTypes = INTERCEPTOR_SPECIALIZATIONS.map(s => s.effectType);
+			const interceptorTypes = INTERCEPTOR_SPECIALIZATIONS.map(
+				(s) => s.effectType,
+			);
 			expect(new Set(interceptorTypes).size).toBe(interceptorTypes.length);
 		});
 
 		it("v2 upgrades have unique effectTypes (not reusing base types)", () => {
 			const baseTypes = new Set([
-				...FLANKER_SPECIALIZATIONS.map(s => s.effectType),
-				...INTERCEPTOR_SPECIALIZATIONS.map(s => s.effectType),
+				...FLANKER_SPECIALIZATIONS.map((s) => s.effectType),
+				...INTERCEPTOR_SPECIALIZATIONS.map((s) => s.effectType),
 			]);
 			for (const v2 of [...FLANKER_V2_UPGRADES, ...INTERCEPTOR_V2_UPGRADES]) {
 				expect(baseTypes.has(v2.effectType)).toBe(false);
@@ -427,7 +434,7 @@ describe("Cavalry specialization tracks", () => {
 		});
 
 		it("tech IDs are unique", () => {
-			const ids = CAVALRY_TRACK_TECHS.map(t => t.id);
+			const ids = CAVALRY_TRACK_TECHS.map((t) => t.id);
 			expect(new Set(ids).size).toBe(ids.length);
 		});
 	});

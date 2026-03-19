@@ -232,9 +232,8 @@ export function checkProximity(unitX: number, unitZ: number): string[] {
 		for (const id of newlyDiscovered) {
 			const def = fragmentMap.get(id);
 			if (def) {
-				const truncated = def.text.length > 80
-					? `${def.text.slice(0, 80)}...`
-					: def.text;
+				const truncated =
+					def.text.length > 80 ? `${def.text.slice(0, 80)}...` : def.text;
 				pushToast(
 					"system",
 					`FRAGMENT RECOVERED: ${def.title.toUpperCase()}`,
@@ -319,11 +318,19 @@ export function placeFragmentsInWorld(
 ) {
 	let state = seed >>> 0;
 
-	for (let i = 0; i < locations.length && i < FRAGMENT_DEFINITIONS.length; i++) {
+	for (
+		let i = 0;
+		i < locations.length && i < FRAGMENT_DEFINITIONS.length;
+		i++
+	) {
 		// Simple LCG shuffle
 		state = (Math.imul(state ^ 0x45d9f3b, 0x45d9f3b) + 1) >>> 0;
 		const defIndex = state % FRAGMENT_DEFINITIONS.length;
-		placeFragment(FRAGMENT_DEFINITIONS[defIndex]!.id, locations[i]!.x, locations[i]!.z);
+		placeFragment(
+			FRAGMENT_DEFINITIONS[defIndex]!.id,
+			locations[i]!.x,
+			locations[i]!.z,
+		);
 	}
 }
 

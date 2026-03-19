@@ -14,10 +14,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FACTION_COLORS_CSS } from "../../config/gameDefaults";
-import {
-	subscribeTurnPhaseEvents,
-	type TurnEvent,
-} from "./turnPhaseEvents";
+import { subscribeTurnPhaseEvents, type TurnEvent } from "./turnPhaseEvents";
 
 // ─── Phase Label ─────────────────────────────────────────────────────────────
 

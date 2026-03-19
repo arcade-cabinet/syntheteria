@@ -68,8 +68,15 @@ export function applyMultiLevelPlatforms(
 		if (candidates.length < 4) continue;
 
 		// Select a contiguous subset of interior tiles for the platform
-		const platformCount = Math.max(4, Math.floor(candidates.length * PLATFORM_FRACTION));
-		const platformTiles = selectContiguousPlatform(candidates, platformCount, rng);
+		const platformCount = Math.max(
+			4,
+			Math.floor(candidates.length * PLATFORM_FRACTION),
+		);
+		const platformTiles = selectContiguousPlatform(
+			candidates,
+			platformCount,
+			rng,
+		);
 
 		// Verify every platform tile has at least one ground neighbor (ramp access)
 		// If not, remove edge tiles until connectivity is ensured
@@ -117,7 +124,12 @@ function findPassableRegions(
 				const current = stack.pop()!;
 				region.push(current);
 
-				for (const [dx, dz] of [[0, -1], [0, 1], [1, 0], [-1, 0]]) {
+				for (const [dx, dz] of [
+					[0, -1],
+					[0, 1],
+					[1, 0],
+					[-1, 0],
+				]) {
 					const nx = current.x + dx!;
 					const nz = current.z + dz!;
 					const nkey = `${nx},${nz}`;
@@ -160,7 +172,12 @@ function findInteriorTiles(
 	for (const tile of region) {
 		// A tile is interior if ALL 4 cardinal neighbors are also in the region
 		let allNeighborsInRegion = true;
-		for (const [dx, dz] of [[0, -1], [0, 1], [1, 0], [-1, 0]]) {
+		for (const [dx, dz] of [
+			[0, -1],
+			[0, 1],
+			[1, 0],
+			[-1, 0],
+		]) {
 			const nx = tile.x + dx!;
 			const nz = tile.z + dz!;
 			if (nx < 0 || nx >= width || nz < 0 || nz >= height) {
@@ -235,7 +252,12 @@ function addNeighborsToFrontier(
 	selected: Set<string>,
 	frontier: Set<string>,
 ): void {
-	for (const [dx, dz] of [[0, -1], [0, 1], [1, 0], [-1, 0]]) {
+	for (const [dx, dz] of [
+		[0, -1],
+		[0, 1],
+		[1, 0],
+		[-1, 0],
+	]) {
 		const nx = tile.x + dx!;
 		const nz = tile.z + dz!;
 		const key = `${nx},${nz}`;
@@ -268,7 +290,12 @@ function ensureRampAccess(
 
 	// Check if any platform tile borders a non-platform passable tile (ground)
 	const hasBorderAccess = platformTiles.some((t) => {
-		for (const [dx, dz] of [[0, -1], [0, 1], [1, 0], [-1, 0]]) {
+		for (const [dx, dz] of [
+			[0, -1],
+			[0, 1],
+			[1, 0],
+			[-1, 0],
+		]) {
 			const nx = t.x + dx!;
 			const nz = t.z + dz!;
 			if (nx < 0 || nx >= width || nz < 0 || nz >= height) continue;

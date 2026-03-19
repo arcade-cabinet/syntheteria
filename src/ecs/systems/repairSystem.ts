@@ -30,8 +30,7 @@ export function runRepairs(world: World): void {
 			const pos = unit.get(UnitPos);
 			if (!pos) continue;
 
-			const dist =
-				Math.abs(pos.tileX - bayX) + Math.abs(pos.tileZ - bayZ);
+			const dist = Math.abs(pos.tileX - bayX) + Math.abs(pos.tileZ - bayZ);
 			if (dist > REPAIR_RANGE) continue;
 
 			const stats = unit.get(UnitStats);

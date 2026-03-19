@@ -10,8 +10,8 @@
  *   geographyValue — low-frequency large-scale geography (former ocean basins)
  */
 
-import { TILE_SIZE_M } from "../../config/gameDefaults";
 import type { Elevation } from "../../board/types";
+import { TILE_SIZE_M } from "../../config/gameDefaults";
 import type { FloorType } from "./types";
 import { FLOOR_DEFS } from "./types";
 
@@ -63,7 +63,11 @@ function valueNoise(px: number, py: number): number {
 // Cluster selection — high-frequency local terrain (mirrors GLSL main())
 // ---------------------------------------------------------------------------
 
-function clusterValue(worldX: number, worldZ: number, seedFloat: number): number {
+function clusterValue(
+	worldX: number,
+	worldZ: number,
+	seedFloat: number,
+): number {
 	const s1x = seedFloat * 17.3;
 	const s1z = seedFloat * 11.7;
 	const s2x = seedFloat * 5.1;
@@ -85,14 +89,18 @@ function clusterValue(worldX: number, worldZ: number, seedFloat: number): number
  * Uses low frequency noise for continent-scale geography patches.
  * Exactly mirrored in the GLSL fragment shader.
  */
-export function geographyValue(worldX: number, worldZ: number, seedFloat: number): number {
+export function geographyValue(
+	worldX: number,
+	worldZ: number,
+	seedFloat: number,
+): number {
 	const s1x = seedFloat * 73.1;
 	const s1z = seedFloat * 31.9;
 	const s2x = seedFloat * 17.7;
 	const s2z = seedFloat * 43.3;
 	return (
-		valueNoise((worldX + s1x) * 0.05, (worldZ + s1z) * 0.05) * 0.60 +
-		valueNoise((worldX + s2x) * 0.02, (worldZ + s2z) * 0.02) * 0.40
+		valueNoise((worldX + s1x) * 0.05, (worldZ + s1z) * 0.05) * 0.6 +
+		valueNoise((worldX + s2x) * 0.02, (worldZ + s2z) * 0.02) * 0.4
 	);
 }
 
@@ -132,7 +140,7 @@ export function floorTypeForTile(
 	// Cluster-driven passable surface types
 	const cluster = clusterValue(worldX, worldZ, seedFloat);
 	if (cluster < 0.22) return "durasteel_span";
-	if (cluster < 0.40) return "transit_deck";
+	if (cluster < 0.4) return "transit_deck";
 	if (cluster < 0.57) return "collapsed_zone";
 	if (cluster < 0.72) return "dust_district";
 	if (cluster < 0.88) return "bio_district";
@@ -151,7 +159,10 @@ export function tileFloorProps(
 	const def = FLOOR_DEFS[floorType];
 	const [min, max] = def.resourceAmount;
 	// Deterministic roll from tile position
-	const roll = min === max ? min : min + (Math.abs(hash21(tileX, tileZ) * (max - min + 1)) | 0);
+	const roll =
+		min === max
+			? min
+			: min + (Math.abs(hash21(tileX, tileZ) * (max - min + 1)) | 0);
 	return {
 		floorType,
 		mineable: def.mineable,

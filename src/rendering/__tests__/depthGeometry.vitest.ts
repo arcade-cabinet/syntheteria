@@ -12,8 +12,8 @@
 
 import { describe, expect, it } from "vitest";
 import {
-	createDepthMappedLayer,
 	buildLayerGeometry,
+	createDepthMappedLayer,
 	type LayerGeometryResult,
 } from "../depthMappedLayer";
 
@@ -76,9 +76,7 @@ describe("depth geometry generation", () => {
 		const geo = buildLayerGeometry(layer);
 
 		// The floor quad at (1,1) should have the cutout flag
-		const abyssalFloor = geo.floorQuads.find(
-			(q) => q.x === 1 && q.z === 1,
-		);
+		const abyssalFloor = geo.floorQuads.find((q) => q.x === 1 && q.z === 1);
 		expect(abyssalFloor).toBeDefined();
 		expect(abyssalFloor!.opacityCutout).toBe(true);
 	});
@@ -91,9 +89,7 @@ describe("depth geometry generation", () => {
 
 		// Should have a void plane descriptor for the abyssal cell
 		expect(geo.voidPlanes.length).toBeGreaterThanOrEqual(1);
-		const voidPlane = geo.voidPlanes.find(
-			(v) => v.x === 1 && v.z === 1,
-		);
+		const voidPlane = geo.voidPlanes.find((v) => v.x === 1 && v.z === 1);
 		expect(voidPlane).toBeDefined();
 	});
 
@@ -111,9 +107,13 @@ describe("depth geometry generation", () => {
 
 		// Varied layer should have more geometry primitives
 		const flatPrimCount =
-			flatGeo.floorQuads.length + flatGeo.rampQuads.length + flatGeo.wallQuads.length;
+			flatGeo.floorQuads.length +
+			flatGeo.rampQuads.length +
+			flatGeo.wallQuads.length;
 		const variedPrimCount =
-			variedGeo.floorQuads.length + variedGeo.rampQuads.length + variedGeo.wallQuads.length;
+			variedGeo.floorQuads.length +
+			variedGeo.rampQuads.length +
+			variedGeo.wallQuads.length;
 
 		expect(variedPrimCount).toBeGreaterThan(flatPrimCount);
 	});
@@ -182,9 +182,7 @@ describe("depth geometry generation", () => {
 		layer.setBiome(1, 1, 1); // durasteel_span
 		const geo = buildLayerGeometry(layer);
 
-		const durasteel = geo.floorQuads.find(
-			(q) => q.x === 1 && q.z === 1,
-		);
+		const durasteel = geo.floorQuads.find((q) => q.x === 1 && q.z === 1);
 		expect(durasteel).toBeDefined();
 		expect(durasteel!.opacityCutout).toBe(false);
 	});

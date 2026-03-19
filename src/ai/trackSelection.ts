@@ -14,7 +14,10 @@ import type { RobotClass } from "../ecs/robots/types";
  * Per-faction preferred tracks for each robot class.
  * First entry is most preferred. Empty array = no preference (random).
  */
-const FACTION_TRACK_PREFS: Record<string, Partial<Record<RobotClass, string[]>>> = {
+const FACTION_TRACK_PREFS: Record<
+	string,
+	Partial<Record<RobotClass, string[]>>
+> = {
 	reclaimers: {
 		scout: ["pathfinder"],
 		infantry: ["vanguard"],

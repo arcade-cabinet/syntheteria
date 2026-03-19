@@ -2,19 +2,19 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { initGameplayPRNG } from "../../seed";
 import {
 	CONTEXT_SPEECH,
+	type ContextSpeechTrigger,
 	EVENT_SPEECH,
 	EVENT_VISION_RADIUS,
-	PERSONA_TO_PROFILE,
-	SPEECH_BUBBLE_DURATION_TURNS,
-	SPEECH_COOLDOWN_TURNS,
+	type EventSpeechTrigger,
 	getContextSpeech,
 	getContextSpeechByPersona,
 	getEventSpeech,
 	getEventSpeechByPersona,
+	PERSONA_TO_PROFILE,
 	pickSpeechLine,
 	profileForPersona,
-	type ContextSpeechTrigger,
-	type EventSpeechTrigger,
+	SPEECH_BUBBLE_DURATION_TURNS,
+	SPEECH_COOLDOWN_TURNS,
 	type SpeechProfileId,
 } from "../speechProfiles";
 
@@ -25,14 +25,29 @@ beforeEach(() => {
 
 describe("speech profile types and data", () => {
 	const ALL_PROFILES: SpeechProfileId[] = [
-		"mentor", "scout", "quartermaster", "fabricator", "warden", "feral", "cult",
+		"mentor",
+		"scout",
+		"quartermaster",
+		"fabricator",
+		"warden",
+		"feral",
+		"cult",
 	];
 	const ALL_EVENT_TRIGGERS: EventSpeechTrigger[] = [
-		"hostile_construction", "enemy_scouts", "taking_fire",
-		"target_down", "storm_intensifying", "lightning_close",
+		"hostile_construction",
+		"enemy_scouts",
+		"taking_fire",
+		"target_down",
+		"storm_intensifying",
+		"lightning_close",
 	];
 	const ALL_CONTEXT_TRIGGERS: ContextSpeechTrigger[] = [
-		"harvesting", "combat", "storm", "idle", "movement", "discovery",
+		"harvesting",
+		"combat",
+		"storm",
+		"idle",
+		"movement",
+		"discovery",
 	];
 
 	it("EVENT_SPEECH has all profiles × triggers", () => {

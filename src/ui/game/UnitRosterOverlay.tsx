@@ -9,20 +9,20 @@
  * Diegetic vocabulary: UNIT REGISTRY.
  */
 
-import { useState, useEffect, useMemo } from "react";
 import type { World } from "koota";
+import { useEffect, useMemo, useState } from "react";
+import { getCameraControls } from "../../camera/cameraStore";
+import { TILE_SIZE_M } from "../../config/gameDefaults";
+import { TRACK_REGISTRY } from "../../ecs/robots/specializations/trackRegistry";
 import type { RobotClass } from "../../ecs/robots/types";
 import {
 	UnitFaction,
 	UnitPos,
+	UnitSpecialization,
 	UnitStats,
 	UnitVisual,
-	UnitSpecialization,
 	UnitXP,
 } from "../../ecs/traits/unit";
-import { TRACK_REGISTRY } from "../../ecs/robots/specializations/trackRegistry";
-import { TILE_SIZE_M } from "../../config/gameDefaults";
-import { getCameraControls } from "../../camera/cameraStore";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -66,7 +66,12 @@ type UnitRosterOverlayProps = {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function UnitRosterOverlay({ world, factionId, onClose, onSelectUnit }: UnitRosterOverlayProps) {
+export function UnitRosterOverlay({
+	world,
+	factionId,
+	onClose,
+	onSelectUnit,
+}: UnitRosterOverlayProps) {
 	const [units, setUnits] = useState<RosterUnit[]>([]);
 	const [filter, setFilter] = useState<FilterField>("all");
 
@@ -81,7 +86,9 @@ export function UnitRosterOverlay({ world, factionId, onClose, onSelectUnit }: U
 				const stats = e.get(UnitStats);
 				if (!pos || !stats) continue;
 				const vis = e.has(UnitVisual) ? e.get(UnitVisual) : null;
-				const spec = e.has(UnitSpecialization) ? e.get(UnitSpecialization) : null;
+				const spec = e.has(UnitSpecialization)
+					? e.get(UnitSpecialization)
+					: null;
 				const xp = e.has(UnitXP) ? e.get(UnitXP) : null;
 
 				const trackId = spec?.trackId ?? "";
@@ -220,7 +227,16 @@ export function UnitRosterOverlay({ world, factionId, onClose, onSelectUnit }: U
 					active={filter === "all"}
 					onClick={() => setFilter("all")}
 				/>
-				{(["scout", "infantry", "cavalry", "ranged", "support", "worker"] as RobotClass[]).map(
+				{(
+					[
+						"scout",
+						"infantry",
+						"cavalry",
+						"ranged",
+						"support",
+						"worker",
+					] as RobotClass[]
+				).map(
 					(cls) =>
 						classesPresent.has(cls) && (
 							<FilterButton
@@ -250,7 +266,8 @@ export function UnitRosterOverlay({ world, factionId, onClose, onSelectUnit }: U
 
 				{filtered.map((unit) => {
 					const hpPct = unit.maxHp > 0 ? (unit.hp / unit.maxHp) * 100 : 0;
-					const hpColor = hpPct > 60 ? "#7ee7cb" : hpPct > 30 ? "#f6c56a" : "#cc4444";
+					const hpColor =
+						hpPct > 60 ? "#7ee7cb" : hpPct > 30 ? "#f6c56a" : "#cc4444";
 
 					return (
 						<button
@@ -274,19 +291,29 @@ export function UnitRosterOverlay({ world, factionId, onClose, onSelectUnit }: U
 								transition: "border-color 0.15s",
 							}}
 							onMouseEnter={(e) => {
-								(e.currentTarget as HTMLElement).style.borderColor = "rgba(139, 230, 255, 0.3)";
+								(e.currentTarget as HTMLElement).style.borderColor =
+									"rgba(139, 230, 255, 0.3)";
 							}}
 							onMouseLeave={(e) => {
-								(e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)";
+								(e.currentTarget as HTMLElement).style.borderColor =
+									"rgba(255,255,255,0.06)";
 							}}
 						>
 							{/* Class */}
 							<div style={{ width: 70 }}>
-								<div style={{ fontSize: 11, color: "#8be6ff", fontWeight: 600 }}>
+								<div
+									style={{ fontSize: 11, color: "#8be6ff", fontWeight: 600 }}
+								>
 									{CLASS_LABELS[unit.robotClass] ?? unit.robotClass}
 								</div>
 								{unit.trackLabel && (
-									<div style={{ fontSize: 8, color: "rgba(255,255,255,0.35)", marginTop: 1 }}>
+									<div
+										style={{
+											fontSize: 8,
+											color: "rgba(255,255,255,0.35)",
+											marginTop: 1,
+										}}
+									>
 										{unit.trackLabel}
 									</div>
 								)}
@@ -301,8 +328,16 @@ export function UnitRosterOverlay({ world, factionId, onClose, onSelectUnit }: U
 
 							{/* HP bar */}
 							<div style={{ flex: 1, minWidth: 80 }}>
-								<div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-									<span style={{ fontSize: 8, color: "rgba(255,255,255,0.4)" }}>INT</span>
+								<div
+									style={{
+										display: "flex",
+										justifyContent: "space-between",
+										marginBottom: 2,
+									}}
+								>
+									<span style={{ fontSize: 8, color: "rgba(255,255,255,0.4)" }}>
+										INT
+									</span>
 									<span style={{ fontSize: 8, color: "rgba(255,255,255,0.4)" }}>
 										{unit.hp}/{unit.maxHp}
 									</span>
@@ -327,15 +362,30 @@ export function UnitRosterOverlay({ world, factionId, onClose, onSelectUnit }: U
 							</div>
 
 							{/* Stats */}
-							<div style={{ display: "flex", gap: 8, fontSize: 9, color: "rgba(255,255,255,0.35)" }}>
+							<div
+								style={{
+									display: "flex",
+									gap: 8,
+									fontSize: 9,
+									color: "rgba(255,255,255,0.35)",
+								}}
+							>
 								<span>PWR {unit.attack}</span>
 								<span>ARM {unit.defense}</span>
-								<span>CYC {unit.ap}/{unit.maxAp}</span>
+								<span>
+									CYC {unit.ap}/{unit.maxAp}
+								</span>
 							</div>
 
 							{/* Position */}
 							<div style={{ width: 60, textAlign: "right" }}>
-								<span style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontVariantNumeric: "tabular-nums" }}>
+								<span
+									style={{
+										fontSize: 9,
+										color: "rgba(255,255,255,0.25)",
+										fontVariantNumeric: "tabular-nums",
+									}}
+								>
 									({unit.tileX},{unit.tileZ})
 								</span>
 							</div>

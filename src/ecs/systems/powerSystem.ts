@@ -13,12 +13,7 @@ import { Building, Powered, PowerGrid } from "../traits/building";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function manhattanDist(
-	ax: number,
-	az: number,
-	bx: number,
-	bz: number,
-): number {
+function manhattanDist(ax: number, az: number, bx: number, bz: number): number {
 	return Math.abs(ax - bx) + Math.abs(az - bz);
 }
 
@@ -164,11 +159,7 @@ export function runPowerGrid(world: World): void {
  * Check if a tile is within powered coverage.
  * A tile is powered if it's within range of a transmitter OR a charged power box.
  */
-export function isPowered(
-	world: World,
-	tileX: number,
-	tileZ: number,
-): boolean {
+export function isPowered(world: World, tileX: number, tileZ: number): boolean {
 	for (const e of world.query(Building, PowerGrid)) {
 		const b = e.get(Building);
 		const pg = e.get(PowerGrid);
@@ -182,10 +173,7 @@ export function isPowered(
 		}
 
 		// Charged power box coverage — use a fixed broadcast radius of 6
-		if (
-			b.buildingType === "power_box" &&
-			pg.currentCharge > 0
-		) {
+		if (b.buildingType === "power_box" && pg.currentCharge > 0) {
 			if (manhattanDist(tileX, tileZ, b.tileX, b.tileZ) <= 6) {
 				return true;
 			}

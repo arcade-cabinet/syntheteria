@@ -2,10 +2,7 @@ import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Building } from "../../traits/building";
 import { UnitFaction, UnitPos } from "../../traits/unit";
-import {
-	computeTerritory,
-	getTerritoryPercent,
-} from "../territorySystem";
+import { computeTerritory, getTerritoryPercent } from "../territorySystem";
 
 describe("territorySystem", () => {
 	let world: ReturnType<typeof createWorld>;
@@ -34,13 +31,22 @@ describe("territorySystem", () => {
 		const snap = computeTerritory(world, 16, 16);
 
 		// Center tile should be claimed
-		expect(snap.tiles.get("5,5")).toEqual({ factionId: "player", contested: false });
+		expect(snap.tiles.get("5,5")).toEqual({
+			factionId: "player",
+			contested: false,
+		});
 
 		// Adjacent tile (distance 1) should be claimed
-		expect(snap.tiles.get("6,5")).toEqual({ factionId: "player", contested: false });
+		expect(snap.tiles.get("6,5")).toEqual({
+			factionId: "player",
+			contested: false,
+		});
 
 		// Tile at manhattan distance 2 should be claimed
-		expect(snap.tiles.get("7,5")).toEqual({ factionId: "player", contested: false });
+		expect(snap.tiles.get("7,5")).toEqual({
+			factionId: "player",
+			contested: false,
+		});
 
 		// Tile at manhattan distance 3 should NOT be claimed
 		expect(snap.tiles.has("8,5")).toBe(false);
@@ -48,13 +54,21 @@ describe("territorySystem", () => {
 
 	it("claims tiles around a building within radius 4", () => {
 		world.spawn(
-			Building({ tileX: 5, tileZ: 5, factionId: "player", buildingType: "outpost" }),
+			Building({
+				tileX: 5,
+				tileZ: 5,
+				factionId: "player",
+				buildingType: "outpost",
+			}),
 		);
 
 		const snap = computeTerritory(world, 16, 16);
 
 		// Tile at manhattan distance 4 should be claimed (building radius)
-		expect(snap.tiles.get("9,5")).toEqual({ factionId: "player", contested: false });
+		expect(snap.tiles.get("9,5")).toEqual({
+			factionId: "player",
+			contested: false,
+		});
 
 		// Tile at manhattan distance 5 should NOT be claimed
 		expect(snap.tiles.has("10,5")).toBe(false);

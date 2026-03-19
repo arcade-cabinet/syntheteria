@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
-	type InfantryTrack,
-	INFANTRY_TRACKS,
+	getInfantryTrackActions,
+	getInfantryTrackSpecializations,
 	INFANTRY_TRACK_TECHS,
+	INFANTRY_TRACKS,
+	type InfantryTrack,
 	SHOCK_TROOPER_ACTIONS,
 	SHOCK_TROOPER_SPECIALIZATIONS,
 	SHOCK_TROOPER_V2_UPGRADES,
 	VANGUARD_ACTIONS,
 	VANGUARD_SPECIALIZATIONS,
 	VANGUARD_V2_UPGRADES,
-	getInfantryTrackActions,
-	getInfantryTrackSpecializations,
 } from "../specializations/infantryTracks";
 
 // ─── Track structure ─────────────────────────────────────────────────────────
@@ -164,17 +164,21 @@ describe("v2 upgrades", () => {
 
 	it("v2 upgrades are strictly better than base versions", () => {
 		// Vanguard: Graviton Anchor range 3 > Threat Beacon range 2
-		expect(VANGUARD_V2_UPGRADES[0]!.effectValue)
-			.toBeGreaterThan(VANGUARD_SPECIALIZATIONS[1]!.effectValue);
+		expect(VANGUARD_V2_UPGRADES[0]!.effectValue).toBeGreaterThan(
+			VANGUARD_SPECIALIZATIONS[1]!.effectValue,
+		);
 		// Vanguard: Ablative Shell reflect 3 > Reactive Armor reflect 2
-		expect(VANGUARD_V2_UPGRADES[1]!.effectValue)
-			.toBeGreaterThan(VANGUARD_SPECIALIZATIONS[2]!.effectValue);
+		expect(VANGUARD_V2_UPGRADES[1]!.effectValue).toBeGreaterThan(
+			VANGUARD_SPECIALIZATIONS[2]!.effectValue,
+		);
 		// Shock Trooper: Overclocked defense ignore 3 > Weak Point 2
-		expect(SHOCK_TROOPER_V2_UPGRADES[0]!.effectValue)
-			.toBeGreaterThan(SHOCK_TROOPER_SPECIALIZATIONS[1]!.effectValue);
+		expect(SHOCK_TROOPER_V2_UPGRADES[0]!.effectValue).toBeGreaterThan(
+			SHOCK_TROOPER_SPECIALIZATIONS[1]!.effectValue,
+		);
 		// Shock Trooper: Termination threshold 5 > Execution threshold 4
-		expect(SHOCK_TROOPER_V2_UPGRADES[1]!.effectValue)
-			.toBeGreaterThan(SHOCK_TROOPER_SPECIALIZATIONS[2]!.effectValue);
+		expect(SHOCK_TROOPER_V2_UPGRADES[1]!.effectValue).toBeGreaterThan(
+			SHOCK_TROOPER_SPECIALIZATIONS[2]!.effectValue,
+		);
 	});
 });
 
@@ -222,7 +226,7 @@ describe("getInfantryTrackSpecializations", () => {
 		const specs = getInfantryTrackSpecializations("vanguard", 5, true);
 		expect(specs).toHaveLength(4);
 
-		const effectTypes = specs.map(s => s.effectType);
+		const effectTypes = specs.map((s) => s.effectType);
 		// Mark II stays
 		expect(effectTypes).toContain("hardened_plating");
 		// v2 replaces Mark III
@@ -239,7 +243,7 @@ describe("getInfantryTrackSpecializations", () => {
 		const specs = getInfantryTrackSpecializations("shock_trooper", 5, true);
 		expect(specs).toHaveLength(4);
 
-		const effectTypes = specs.map(s => s.effectType);
+		const effectTypes = specs.map((s) => s.effectType);
 		expect(effectTypes).toContain("impact_charge");
 		expect(effectTypes).toContain("overclocked_servos");
 		expect(effectTypes).not.toContain("weak_point");
@@ -278,7 +282,9 @@ describe("Infantry track actions", () => {
 
 	it("getInfantryTrackActions returns correct actions", () => {
 		expect(getInfantryTrackActions("vanguard")).toBe(VANGUARD_ACTIONS);
-		expect(getInfantryTrackActions("shock_trooper")).toBe(SHOCK_TROOPER_ACTIONS);
+		expect(getInfantryTrackActions("shock_trooper")).toBe(
+			SHOCK_TROOPER_ACTIONS,
+		);
 	});
 
 	it("rush action has min range 2 (charge-style)", () => {
@@ -327,7 +333,9 @@ describe("Infantry track techs", () => {
 		const upgradeTech = INFANTRY_TRACK_TECHS[1]!;
 		expect(upgradeTech.id).toBe("advanced_combat_doctrine");
 		expect(upgradeTech.tier).toBe(4);
-		expect(upgradeTech.prerequisites).toContain("combat_chassis_specialization");
+		expect(upgradeTech.prerequisites).toContain(
+			"combat_chassis_specialization",
+		);
 		expect(upgradeTech.prerequisites).toContain("mark_iii_components");
 		expect(upgradeTech.turnsToResearch).toBe(8);
 	});
@@ -353,8 +361,14 @@ describe("Infantry track techs", () => {
 	});
 
 	it("upgrade tech costs more than gate tech", () => {
-		const gateCost = Object.values(INFANTRY_TRACK_TECHS[0]!.cost).reduce((a, b) => a + b, 0);
-		const upgradeCost = Object.values(INFANTRY_TRACK_TECHS[1]!.cost).reduce((a, b) => a + b, 0);
+		const gateCost = Object.values(INFANTRY_TRACK_TECHS[0]!.cost).reduce(
+			(a, b) => a + b,
+			0,
+		);
+		const upgradeCost = Object.values(INFANTRY_TRACK_TECHS[1]!.cost).reduce(
+			(a, b) => a + b,
+			0,
+		);
 		expect(upgradeCost).toBeGreaterThan(gateCost);
 	});
 });
@@ -364,21 +378,21 @@ describe("Infantry track techs", () => {
 describe("Design constraints", () => {
 	it("all specialization effectTypes are unique within a track", () => {
 		for (const track of Object.values(INFANTRY_TRACKS)) {
-			const effectTypes = track.specializations.map(s => s.effectType);
+			const effectTypes = track.specializations.map((s) => s.effectType);
 			expect(new Set(effectTypes).size).toBe(effectTypes.length);
 		}
 	});
 
 	it("all specialization effectTypes are unique across v2 upgrades", () => {
 		for (const track of Object.values(INFANTRY_TRACKS)) {
-			const v2Types = track.v2Upgrades.map(s => s.effectType);
+			const v2Types = track.v2Upgrades.map((s) => s.effectType);
 			expect(new Set(v2Types).size).toBe(v2Types.length);
 		}
 	});
 
 	it("v2 upgrades do not duplicate base effectTypes", () => {
 		for (const track of Object.values(INFANTRY_TRACKS)) {
-			const baseTypes = new Set(track.specializations.map(s => s.effectType));
+			const baseTypes = new Set(track.specializations.map((s) => s.effectType));
 			for (const v2 of track.v2Upgrades) {
 				expect(baseTypes.has(v2.effectType)).toBe(false);
 			}
@@ -386,12 +400,14 @@ describe("Design constraints", () => {
 	});
 
 	it("all tech IDs are unique", () => {
-		const ids = INFANTRY_TRACK_TECHS.map(t => t.id);
+		const ids = INFANTRY_TRACK_TECHS.map((t) => t.id);
 		expect(new Set(ids).size).toBe(ids.length);
 	});
 
 	it("all radial action IDs are unique across both tracks", () => {
-		const allIds = [...VANGUARD_ACTIONS, ...SHOCK_TROOPER_ACTIONS].map(a => a.id);
+		const allIds = [...VANGUARD_ACTIONS, ...SHOCK_TROOPER_ACTIONS].map(
+			(a) => a.id,
+		);
 		expect(new Set(allIds).size).toBe(allIds.length);
 	});
 
@@ -409,11 +425,17 @@ describe("Design constraints", () => {
 
 	it("tracks offer opposing fantasies: tank vs glass cannon", () => {
 		// Vanguard should have defense/HP-related descriptions
-		const vDescriptions = VANGUARD_SPECIALIZATIONS.map(s => s.description).join(" ");
-		expect(vDescriptions.toLowerCase()).toMatch(/defense|hp|damage.*back|absorb/);
+		const vDescriptions = VANGUARD_SPECIALIZATIONS.map(
+			(s) => s.description,
+		).join(" ");
+		expect(vDescriptions.toLowerCase()).toMatch(
+			/defense|hp|damage.*back|absorb/,
+		);
 
 		// Shock Trooper should have attack/damage-related descriptions
-		const sDescriptions = SHOCK_TROOPER_SPECIALIZATIONS.map(s => s.description).join(" ");
+		const sDescriptions = SHOCK_TROOPER_SPECIALIZATIONS.map(
+			(s) => s.description,
+		).join(" ");
 		expect(sDescriptions.toLowerCase()).toMatch(/damage|attack|kill/);
 	});
 });

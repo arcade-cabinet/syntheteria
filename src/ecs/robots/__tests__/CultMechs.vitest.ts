@@ -156,20 +156,32 @@ describe("cult mech spawning", () => {
 
 describe("mech stat balance", () => {
 	it("archon is the toughest unit", () => {
-		expect(CULT_ARCHON_DEFAULTS.stats.hp).toBeGreaterThan(CULT_INFANTRY_DEFAULTS.stats.hp);
-		expect(CULT_ARCHON_DEFAULTS.stats.attack).toBeGreaterThan(CULT_RANGED_DEFAULTS.stats.attack);
+		expect(CULT_ARCHON_DEFAULTS.stats.hp).toBeGreaterThan(
+			CULT_INFANTRY_DEFAULTS.stats.hp,
+		);
+		expect(CULT_ARCHON_DEFAULTS.stats.attack).toBeGreaterThan(
+			CULT_RANGED_DEFAULTS.stats.attack,
+		);
 	});
 
 	it("cavalry is the fastest unit", () => {
-		expect(CULT_CAVALRY_DEFAULTS.stats.mp).toBeGreaterThan(CULT_INFANTRY_DEFAULTS.stats.mp);
-		expect(CULT_CAVALRY_DEFAULTS.stats.mp).toBeGreaterThan(CULT_RANGED_DEFAULTS.stats.mp);
+		expect(CULT_CAVALRY_DEFAULTS.stats.mp).toBeGreaterThan(
+			CULT_INFANTRY_DEFAULTS.stats.mp,
+		);
+		expect(CULT_CAVALRY_DEFAULTS.stats.mp).toBeGreaterThan(
+			CULT_RANGED_DEFAULTS.stats.mp,
+		);
 	});
 
 	it("ranged has the longest base attack range", () => {
-		expect(CULT_RANGED_DEFAULTS.stats.attackRange).toBeGreaterThan(CULT_INFANTRY_DEFAULTS.stats.attackRange);
+		expect(CULT_RANGED_DEFAULTS.stats.attackRange).toBeGreaterThan(
+			CULT_INFANTRY_DEFAULTS.stats.attackRange,
+		);
 	});
 
 	it("shaman has good scan range for support role", () => {
-		expect(CULT_SHAMAN_DEFAULTS.stats.scanRange).toBeGreaterThanOrEqual(CULT_RANGED_DEFAULTS.stats.scanRange);
+		expect(CULT_SHAMAN_DEFAULTS.stats.scanRange).toBeGreaterThanOrEqual(
+			CULT_RANGED_DEFAULTS.stats.scanRange,
+		);
 	});
 });

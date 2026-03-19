@@ -21,6 +21,10 @@ export function buildExploredSet(world: World): Set<string> {
 }
 
 /** Check if a tile coordinate is explored. */
-export function isTileExplored(explored: Set<string>, tileX: number, tileZ: number): boolean {
+export function isTileExplored(
+	explored: Set<string>,
+	tileX: number,
+	tileZ: number,
+): boolean {
 	return explored.has(`${tileX},${tileZ}`);
 }

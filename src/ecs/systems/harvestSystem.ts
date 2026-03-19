@@ -1,10 +1,16 @@
 import type { World } from "koota";
+import { playSfx } from "../../audio/sfx";
+import { pushTurnEvent } from "../../ui/game/turnEvents";
 import type { RobotClass } from "../robots/types";
 import type { ResourceMaterial } from "../terrain/types";
 import { ResourceDeposit } from "../traits/resource";
-import { UnitFaction, UnitHarvest, UnitStats, UnitVisual, UnitXP } from "../traits/unit";
-import { playSfx } from "../../audio/sfx";
-import { pushTurnEvent } from "../../ui/game/turnEvents";
+import {
+	UnitFaction,
+	UnitHarvest,
+	UnitStats,
+	UnitVisual,
+	UnitXP,
+} from "../traits/unit";
 import { awardXP, recordHarvest } from "./experienceSystem";
 import { trackIncome } from "./resourceDeltaSystem";
 import { addResources } from "./resourceSystem";
@@ -46,7 +52,9 @@ export function harvestSystem(world: World): void {
 				yieldAmount,
 			);
 			trackIncome(deposit.material as ResourceMaterial, yieldAmount);
-			pushTurnEvent(`Harvest complete: +${yieldAmount} ${deposit.material.replace(/_/g, " ")}`);
+			pushTurnEvent(
+				`Harvest complete: +${yieldAmount} ${deposit.material.replace(/_/g, " ")}`,
+			);
 
 			// Trigger harvest speech for the unit
 			triggerHarvestSpeech(world, unit.id(), faction.factionId);
@@ -56,7 +64,12 @@ export function harvestSystem(world: World): void {
 				recordHarvest(world, unit.id());
 				const unitVisual = unit.get(UnitVisual);
 				if (unitVisual?.modelId) {
-					awardXP(world, unit.id(), unitVisual.modelId as RobotClass, "harvest");
+					awardXP(
+						world,
+						unit.id(),
+						unitVisual.modelId as RobotClass,
+						"harvest",
+					);
 				}
 			}
 

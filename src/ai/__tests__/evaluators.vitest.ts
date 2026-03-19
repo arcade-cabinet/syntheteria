@@ -248,11 +248,12 @@ describe("HarvestEvaluator", () => {
 describe("ExpandEvaluator", () => {
 	const evaluator = new ExpandEvaluator(1.0);
 
-	it("returns low score on turn 1", () => {
+	it("returns moderate score on turn 1", () => {
 		const agent = makeAgent({ tileX: 0, tileZ: 0 });
 		setCtx({ currentTurn: 1 });
 		const score = evaluator.calculateDesirability(agent);
-		expect(score).toBeCloseTo(0.3125, 2);
+		// 0.5 + 0.4 * min(1, 1/20) = 0.5 + 0.4 * 0.05 = 0.52
+		expect(score).toBeCloseTo(0.52, 2);
 	});
 
 	it("returns higher score as turns progress", () => {
@@ -266,11 +267,11 @@ describe("ExpandEvaluator", () => {
 		expect(lateScore).toBeGreaterThan(earlyScore);
 	});
 
-	it("caps at 0.8 by turn 40", () => {
+	it("caps at 0.9 by turn 20", () => {
 		const agent = makeAgent({ tileX: 0, tileZ: 0 });
-		setCtx({ currentTurn: 40 });
+		setCtx({ currentTurn: 20 });
 		const score = evaluator.calculateDesirability(agent);
-		expect(score).toBe(0.8);
+		expect(score).toBe(0.9);
 	});
 
 	it("setGoal targets remembered enemies when available", () => {

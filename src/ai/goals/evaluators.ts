@@ -237,9 +237,10 @@ export class HarvestEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 
 export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	calculateDesirability(_agent: SyntheteriaAgent): number {
-		// Time-based escalation: desire to expand grows over the first 40 turns
-		const timeRamp = Math.min(1, _ctx.currentTurn / 40);
-		const base = 0.3 + 0.5 * timeRamp;
+		// Time-based escalation: desire to expand grows over the first 20 turns
+		// Higher floor (0.5) so scouts push outward from turn 1
+		const timeRamp = Math.min(1, _ctx.currentTurn / 20);
+		const base = 0.5 + 0.4 * timeRamp;
 
 		return Math.min(1, base);
 	}

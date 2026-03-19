@@ -19,11 +19,9 @@ import { Suspense, useEffect, useEffectEvent, useMemo, useRef, useState } from "
 import * as THREE from "three";
 import type { BoardConfig, GeneratedBoard } from "../board/types";
 import { SphereOrbitCamera } from "../camera";
-import { TILE_SIZE_M } from "../config/gameDefaults";
 import { resolveAttacks } from "../ecs/systems/attackSystem";
 import { BoardInput } from "../input/BoardInput";
 import { BiomeRenderer } from "../rendering/BiomeRenderer";
-import { BoardRenderer } from "../rendering/BoardRenderer";
 import { CombatEffectsRenderer } from "../rendering/CombatEffectsRenderer";
 import { CutawayClipPlane } from "../rendering/CutawayClipPlane";
 import { UnifiedTerrainRenderer } from "../rendering/UnifiedTerrainRenderer";
@@ -379,8 +377,8 @@ function GameScene({
 			/>
 
 			<StormDome
-				centerX={board ? Math.floor(board.config.width / 2) * TILE_SIZE_M : 0}
-				centerZ={board ? Math.floor(board.config.height / 2) * TILE_SIZE_M : 0}
+				centerX={0}
+				centerZ={0}
 				dayAngle={dayAngle}
 				season={season}
 				stormProfile={stormProfile}
@@ -397,7 +395,6 @@ function GameScene({
 			<CutawayClipPlane />
 
 			{board && <LodGlobe boardWidth={board.config.width} boardHeight={board.config.height} />}
-			{board && <BoardRenderer board={board} dayAngle={dayAngle} season={season} />}
 			{board && <BiomeRenderer board={board} dayAngle={dayAngle} season={season} />}
 			{board && <UnifiedTerrainRenderer board={board} world={world ?? undefined} turn={turn} />}
 			{board && <StructureRenderer board={board} world={world ?? undefined} useSphere boardWidth={bw} boardHeight={bh} />}
@@ -490,8 +487,8 @@ export function Globe({
 				{/* Storm effects render in ALL phases — they ARE the sky */}
 				<PersistentStormEffects
 					phase={phase}
-					boardCenterX={board ? Math.floor(board.config.width / 2) * TILE_SIZE_M : 0}
-					boardCenterZ={board ? Math.floor(board.config.height / 2) * TILE_SIZE_M : 0}
+					boardCenterX={0}
+					boardCenterZ={0}
 				/>
 			</Suspense>
 		</Canvas>

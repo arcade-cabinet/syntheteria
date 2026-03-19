@@ -27,7 +27,7 @@ describe("tutorialSystem", () => {
 		const step = getCurrentStep(1);
 		expect(step).not.toBeNull();
 		expect(step!.id).toBe("select_technician");
-		expect(step!.instruction).toContain("Field Technician");
+		expect(step!.instruction).toContain("WORKER");
 	});
 
 	it("advances to next step on complete", () => {
@@ -104,6 +104,20 @@ describe("tutorialSystem", () => {
 		const steps = getAllSteps();
 		expect(steps.length).toBeGreaterThanOrEqual(5);
 		expect(steps[0]!.id).toBe("select_technician");
+	});
+
+	it("auto-advances past steps whose turn has passed", () => {
+		// Don't complete any steps manually. Jump to turn 3.
+		// Steps 0,1 (turn 1) and steps 2,3 (turn 2) should all auto-complete.
+		const step = getCurrentStep(3);
+		expect(step).not.toBeNull();
+		expect(step!.id).toBe("explore_sector");
+		expect(step!.turnNumber).toBe(3);
+
+		const state = getTutorialState();
+		// Steps 0-3 should be auto-completed
+		expect(state.completedSteps).toHaveLength(4);
+		expect(state.currentStepIndex).toBe(4);
 	});
 
 	it("does nothing when completing steps after deactivation", () => {

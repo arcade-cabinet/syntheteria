@@ -60,8 +60,8 @@ function personalityToBias(personality: {
 		chase: norm(personality.aggression) * 0.8, // Chase slightly less than attack
 		harvest: norm(personality.harvestPriority),
 		expand: norm(personality.expansionPriority),
-		build: norm(personality.harvestPriority) * 0.9, // Build correlates with harvest focus
-		scout: norm(personality.expansionPriority) * 0.7, // Scout correlates with expansion
+		build: Math.max(norm(personality.harvestPriority), 0.6), // All factions build — floor at 0.6
+		scout: norm(personality.expansionPriority) * 0.85, // Scout correlates with expansion
 		idle: norm(personality.defensePriority) * 0.5, // Defensive factions idle more
 		reactiveOnly: personality.reactiveOnly,
 	};

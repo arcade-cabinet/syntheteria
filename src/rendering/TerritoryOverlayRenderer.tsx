@@ -38,17 +38,17 @@ const TERRITORY_OPACITY = 0.10;
 /** Contested stripe opacity. */
 const CONTESTED_OPACITY = 0.08;
 
-/** Width of boundary strip in world units. */
-const STRIP_WIDTH = 0.08;
+/** Width of boundary strip in world units — wide enough to see at game zoom. */
+const STRIP_WIDTH = 0.25;
 
 /** Height above floor for boundary strips. */
-const STRIP_Y = 0.015;
+const STRIP_Y = 0.02;
 
-/** Emissive intensity for boundary strips. */
-const STRIP_EMISSIVE = 0.8;
+/** Emissive intensity for boundary strips — bright faction-colored glow. */
+const STRIP_EMISSIVE = 2.0;
 
 /** Opacity of boundary strips. */
-const STRIP_OPACITY = 0.6;
+const STRIP_OPACITY = 0.85;
 
 function hexToRgb(hex: number): [number, number, number] {
 	return [

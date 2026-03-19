@@ -2,7 +2,7 @@
  * player-turn.spec.ts — Living E2E spec for Syntheteria's player turn flow.
  *
  * Architecture under test (src/main.tsx Root):
- *   landing → generating → game
+ *   title → generating → playing
  *
  * Debug bridge: window.__syntheteria
  *   { phase, turn, playerAp, selectedUnitId, getWorld }

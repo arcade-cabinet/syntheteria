@@ -285,9 +285,9 @@ const DOME_FRAG = /* glsl */ `
     color += vortex.rgb;
     color += sun.rgb;
 
-    // Alpha fade near horizon — smooth transition where storm dome meets board sphere.
-    // pos.y < 0 is below equator; fade out between -0.05 and 0.15 for atmospheric blend.
-    float horizonFade = smoothstep(-0.05, 0.15, pos.y);
+    // Alpha fade near horizon — wide atmospheric blend where dome meets board sphere.
+    // pos.y < 0 is below equator; fade over a broad band to avoid hard geometric edges.
+    float horizonFade = smoothstep(-0.15, 0.30, pos.y);
 
     gl_FragColor = vec4(color, horizonFade);
   }

@@ -67,7 +67,7 @@ src/config/
 │   └── cultStructures.ts
 ├── factions/             ← from src/factions/definitions.ts + cults.ts
 ├── resources/            ← from src/resources/salvageTypes.ts
-├── terrain/              ← from src/terrain/types.ts (FloorType, ResourceMaterial)
+├── terrain/              ← from src/terrain/types.ts (BiomeType, ResourceMaterial)
 ├── narrative/            ← from src/narrative/speechProfiles.ts + splits
 ├── robots/               ← from src/robots/ (archetype defs, tracks, marks)
 ├── diplomacyDefs.ts      (existing)

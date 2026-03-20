@@ -590,11 +590,11 @@ Run: `pnpm test:vitest` (unit) | `pnpm test:ct` (browser CT) | `pnpm verify` (fu
 
 GLSL shaders in `src/terrain/glsl/`:
 - `floorVert.glsl` — vertex shader with elevation
-- `floorFrag.glsl` — fragment shader samples atlas by floorType index, applies PBR lighting
+- `floorFrag.glsl` — fragment shader samples atlas by biomeType index, applies PBR lighting
 - `common.glsl` — shared noise functions
 - `patterns/` — per-substrate surface shaders
 
-Atlas UV mapping: `floorType` integer → atlas cell index → UV offset.
+Atlas UV mapping: `biomeType` integer → atlas cell index → UV offset.
 Grating opacity cutout: `abyssal_platform` tiles use opacity atlas to discard fragments, revealing void beneath.
 
 ### Material Setup (`floorShader.ts`)

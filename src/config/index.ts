@@ -137,6 +137,13 @@ export {
 	POI_DISCOVERY_RADIUS,
 	poiToTile,
 } from "./poiDefs";
+// --- Player preferences ---
+export type { PlayerPreferences } from "./preferences";
+export {
+	getPreferences,
+	loadPreferences,
+	savePreferences,
+} from "./preferences";
 export type { ComponentRecipe } from "./recipeDefs";
 // --- Recipes ---
 export {
@@ -144,6 +151,14 @@ export {
 	getRecipeCostMap,
 	RECIPE_BY_ID,
 } from "./recipeDefs";
+// --- Config registry ---
+export {
+	applyConfigOverrides,
+	clearConfigOverrides,
+	getConfig,
+	getConfigOverrides,
+	setConfigOverride,
+} from "./registry";
 // --- Resource / salvage definitions (data) ---
 export type { SalvageDef, YieldRange } from "./resources";
 export {

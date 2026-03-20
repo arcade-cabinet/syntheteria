@@ -36,6 +36,7 @@
 		"@capacitor/android": "^8.2.0",
 		"@capacitor/core": "^8.2.0",
 		"@capacitor/ios": "^8.2.0",
+		"@capacitor/preferences": "^8.0.1",
 		"@enable3d/phaser-extension": "^0.26.1",
 		"@react-three/drei": "^10.7.7",
 		"@react-three/fiber": "^9.5.0",

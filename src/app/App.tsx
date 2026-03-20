@@ -388,22 +388,18 @@ export function App() {
 		});
 	});
 
-	// Mount GameBoard shortly after phase becomes "playing".
-	// Globe stays visible briefly with a fade-out transition.
+	// Globe → GameBoard transition via EventBus events (no arbitrary timers).
+	// Flow: handleTransitionComplete → phase="playing" → GameBoard mounts →
+	//        Globe starts fade-out → CSS transitionend → Globe unmounts
 	const [globeDismissed, setGlobeDismissed] = useState(false);
 	useEffect(() => {
 		if (phase === "playing") {
-			// Mount GameBoard after a brief delay
-			const mountTimer = setTimeout(() => setGameBoardMounted(true), 100);
-			// Dismiss Globe after transition animation completes
-			const dismissTimer = setTimeout(() => setGlobeDismissed(true), 1200);
-			return () => {
-				clearTimeout(mountTimer);
-				clearTimeout(dismissTimer);
-			};
+			// Mount GameBoard immediately when phase is playing
+			setGameBoardMounted(true);
+		} else {
+			setGameBoardMounted(false);
+			setGlobeDismissed(false);
 		}
-		setGameBoardMounted(false);
-		setGlobeDismissed(false);
 	}, [phase]);
 
 	const gameActive = phase === "playing" && session !== null && sceneReady;
@@ -421,6 +417,12 @@ export function App() {
 			{/* Globe: title/setup/generating + transition-out during playing */}
 			{!globeDismissed && (
 				<div
+					onTransitionEnd={(e) => {
+						// Unmount Globe after CSS fade-out completes (event-driven, no timer)
+						if (e.propertyName === "opacity" && gameBoardMounted) {
+							setGlobeDismissed(true);
+						}
+					}}
 					style={{
 						position: "absolute",
 						inset: 0,

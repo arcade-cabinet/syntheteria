@@ -412,25 +412,37 @@ export function App() {
 				background: "#030308",
 			}}
 		>
-			{/* Globe: title/setup/generating phases (R3F landing animation) */}
-			{phase !== "playing" && (
-				<Globe
-					phase={phase}
-					config={session?.config}
-					board={session?.board}
-					world={session?.world}
-					selectedUnitId={selectedUnitId}
-					onSelect={setSelectedUnitId}
-					onSceneReady={() => setSceneReady(true)}
-					onTransitionComplete={handleTransitionComplete}
-					turn={turn}
-					focusTileX={session?.spawnTile?.x}
-					focusTileZ={session?.spawnTile?.z}
-					stormProfile={session?.newGameConfig?.stormProfile}
-				/>
+			{/* Globe: title/setup/generating + transition-out during playing */}
+			{(phase !== "playing" || !gameBoardMounted) && (
+				<div
+					style={{
+						position: "absolute",
+						inset: 0,
+						zIndex: gameBoardMounted ? 5 : 1,
+						transition: "opacity 0.8s ease-out, transform 0.8s ease-out",
+						opacity: gameBoardMounted ? 0 : 1,
+						transform: gameBoardMounted ? "scale(0.3)" : "scale(1)",
+						pointerEvents: gameBoardMounted ? "none" : "auto",
+					}}
+				>
+					<Globe
+						phase={phase === "playing" ? "generating" : phase}
+						config={session?.config}
+						board={session?.board}
+						world={session?.world}
+						selectedUnitId={selectedUnitId}
+						onSelect={setSelectedUnitId}
+						onSceneReady={() => setSceneReady(true)}
+						onTransitionComplete={handleTransitionComplete}
+						turn={turn}
+						focusTileX={session?.spawnTile?.x}
+						focusTileZ={session?.spawnTile?.z}
+						stormProfile={session?.newGameConfig?.stormProfile}
+					/>
+				</div>
 			)}
 
-			{/* GameBoard: playing phase (Phaser + enable3d), delayed one frame for WebGL context release */}
+			{/* GameBoard: playing phase (Phaser + enable3d) */}
 			{phase === "playing" && gameBoardMounted && session && (
 				<GameBoard
 					session={session}

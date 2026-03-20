@@ -2,8 +2,8 @@
  * Wormhole Project — endgame victory path through stabilizer construction.
  *
  * Requirements to start:
- *   - Both tier-5 techs researched (mark_v_transcendence + wormhole_stabilization)
- *   - Can afford 50 advanced materials (intact_components, storm_charge, etc.)
+ *   - Storm Transmitter at Tier 3 + Synthesizer at Tier 3
+ *   - Can afford 50 advanced materials (steel, fuel, etc.)
  *   - Building placed at map center (within 3 tiles of center)
  *
  * When construction starts:
@@ -22,7 +22,6 @@ import { playSfx } from "../audio/sfx";
 import { WORMHOLE_PROJECT_TURNS } from "../config/gameDefaults";
 import { Board, Building } from "../traits";
 import { pushTurnEvent } from "../ui/game/turnEvents";
-import { isTechResearched } from "./researchSystem";
 import { pushToast } from "./toastNotifications";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -42,20 +41,24 @@ export type WormholeProjectState =
 
 let projectState: WormholeProjectState = { status: "inactive" };
 
-// ─── Required techs ─────────────────────────────────────────────────────────
+// ─── Required buildings at tier 3 ────────────────────────────────────────
 
-const REQUIRED_TIER5_TECHS = [
-	"mark_v_transcendence",
-	"wormhole_stabilization",
-] as const;
+const REQUIRED_BUILDING_TIERS: ReadonlyArray<{
+	type: string;
+	minTier: number;
+}> = [
+	{ type: "storm_transmitter", minTier: 3 },
+	{ type: "synthesizer", minTier: 3 },
+];
 
 /** Max manhattan distance from board center for valid placement. */
 const CENTER_PLACEMENT_RADIUS = 3;
 
-// ─── Validation ─────────────────────────────────────────────────────────────
+// ─── Validation ─────────────────────────────────────────────────────────
 
 /**
  * Check if a faction has all prerequisites to build the Wormhole Stabilizer.
+ * Requires Storm Transmitter Tier 3 + Synthesizer Tier 3.
  */
 export function canStartWormholeProject(
 	world: World,
@@ -65,9 +68,17 @@ export function canStartWormholeProject(
 	if (projectState.status === "building" || projectState.status === "completed")
 		return false;
 
-	// Both tier-5 techs required
-	for (const techId of REQUIRED_TIER5_TECHS) {
-		if (!isTechResearched(world, factionId, techId)) return false;
+	for (const req of REQUIRED_BUILDING_TIERS) {
+		let found = false;
+		for (const e of world.query(Building)) {
+			const b = e.get(Building);
+			if (!b || b.factionId !== factionId) continue;
+			if (b.buildingType === req.type && (b.buildingTier ?? 1) >= req.minTier) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) return false;
 	}
 
 	return true;

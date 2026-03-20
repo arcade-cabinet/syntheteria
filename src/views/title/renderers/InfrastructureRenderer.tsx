@@ -6,10 +6,10 @@
  * monorail segments, gateways. Placed deterministically from board seed.
  *
  * Placement rules:
- *   - Pipes: corridor tiles with exactly one structural_mass neighbor (edge of corridor)
+ *   - Pipes: corridor tiles with exactly one mountain neighbor (edge of corridor)
  *   - Lamps: corridor tiles at intersections (3+ passable cardinal neighbors)
  *   - Supports: long corridors (2 opposite passable neighbors, no cross-neighbors)
- *   - Antennas/power: structural_mass tiles at the boundary (has 1+ passable neighbor)
+ *   - Antennas/power: mountain tiles at the boundary (has 1+ passable neighbor)
  *   - Gateways: corridor tiles with 2 opposite structural neighbors (doorway openings)
  *
  * Fog of war gated — only renders on explored tiles.
@@ -103,7 +103,7 @@ interface TileAnalysis {
 	isStructural: boolean;
 	passableNeighborCount: number;
 	structuralNeighborCount: number;
-	/** Directions where neighbor is structural_mass */
+	/** Directions where neighbor is mountain */
 	structuralDirs: [number, number][];
 	/** Directions where neighbor is passable */
 	passableDirs: [number, number][];

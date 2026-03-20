@@ -4,7 +4,7 @@
  * Adapts Yuka's ObstacleAvoidanceBehavior to discrete tile-grid movement.
  * Instead of continuous ray-based detection, we scan tiles ahead of the
  * unit in its movement direction and compute a lateral displacement force
- * to steer around structural_mass walls and impassable terrain.
+ * to steer around mountain walls and impassable terrain.
  *
  * This prevents units from getting stuck against walls — they smoothly
  * navigate around obstacles by preferring tiles with clear forward paths.
@@ -28,7 +28,7 @@ const AVOIDANCE_WEIGHT = 2.0;
 // ---------------------------------------------------------------------------
 
 /**
- * Check if a tile is an obstacle (impassable or structural_mass wall).
+ * Check if a tile is an obstacle (impassable or mountain wall).
  */
 function isObstacle(x: number, z: number, board: GeneratedBoard): boolean {
 	const { width, height } = board.config;

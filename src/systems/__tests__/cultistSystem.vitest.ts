@@ -31,7 +31,7 @@ import {
 function makeBoard(
 	width: number,
 	height: number,
-	floorType = "durasteel_span",
+	floorType = "grassland",
 ): GeneratedBoard {
 	const tiles: TileData[][] = [];
 	for (let z = 0; z < height; z++) {
@@ -74,8 +74,7 @@ function makeBoardWithCultTerrain(
 			const distToCenter = Math.abs(x - centerX) + Math.abs(z - centerZ);
 			const isCenter = distToCenter < centerExclusion;
 			// Use cult terrain in the valid zone
-			const floorType =
-				!isEdge && !isCenter ? "collapsed_zone" : "durasteel_span";
+			const floorType = !isEdge && !isCenter ? "ruins" : "grassland";
 			row.push({
 				x,
 				z,

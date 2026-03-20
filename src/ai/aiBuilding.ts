@@ -336,7 +336,7 @@ export function dynamicAiBuildOrder(
 	// Second motor pool for throughput
 	if ((existing["motor_pool"] ?? 0) < 2) order.push("motor_pool");
 
-	// Resource refinery = renewable ferrous_scrap income (+2/turn)
+	// Resource refinery = renewable iron_ore income (+2/turn)
 	if ((existing["resource_refinery"] ?? 0) === 0)
 		order.push("resource_refinery");
 

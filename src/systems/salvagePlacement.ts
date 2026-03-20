@@ -3,15 +3,15 @@
  *
  * Salvage props are the PRIMARY resource source. Density and type
  * vary by terrain substrate:
- *   structural_mass  → machinery, terminals (advanced yields)
- *   collapsed_zone   → debris (common yields)
- *   transit_deck     → containers (polymer, scrap)
- *   dust_district    → vessels (electrolyte)
- *   durasteel_span   → containers, debris (mixed)
- *   bio_district     → debris (polymer heavy)
- *   aerostructure    → machinery (ferrous heavy)
- *   abyssal_platform → vessels (abyssal yields)
- *   void_pit         → nothing
+ *   mountain   → machinery, terminals (advanced yields)
+ *   ruins      → debris (common yields)
+ *   grassland  → containers (timber, stone)
+ *   desert     → vessels (fuel)
+ *   grassland  → containers, debris (mixed)
+ *   forest     → debris (timber heavy)
+ *   hills      → machinery (iron_ore heavy)
+ *   wetland    → vessels (abyssal yields)
+ *   water      → nothing
  */
 
 import type { World } from "koota";

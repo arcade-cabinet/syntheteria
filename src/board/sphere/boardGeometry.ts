@@ -188,7 +188,7 @@ export function buildSphereGeometry(
 			}
 
 			// Floor index for this tile
-			const ft = board.tiles[tz]?.[tx]?.floorType ?? "void_pit";
+			const ft = board.tiles[tz]?.[tx]?.floorType ?? "water";
 			const cellIdx = FLOOR_INDEX_MAP[ft] ?? 8;
 			for (let fi = 0; fi < vertsPerTile; fi++) {
 				floorIndices[fii++] = cellIdx;

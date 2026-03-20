@@ -113,10 +113,10 @@ export class WorldScene extends Scene3D {
 			createSalvageRenderer(scene, world);
 			createStructureRenderer(scene, world, board);
 
-			// Vegetation (bio_district canopy blobs + accent trees)
+			// Vegetation (forest canopy blobs + accent trees)
 			createVegetationRenderer(scene, board);
 
-			// Ocean (animated deep water + abyssal_platform grating)
+			// Ocean (animated deep water + wetland grating)
 			createOceanRenderer(scene, board);
 
 			// Fog of war

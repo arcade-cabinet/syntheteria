@@ -32,7 +32,7 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Place 3-6 cult POIs on collapsed_zone / dust_district tiles during mapgen.
+ * Place 3-6 cult POIs on ruins / desert tiles during mapgen.
  * Each POI gets a breach_altar + 1 cult mech guard.
  * Called once at game start from initWorldFromBoard or similar.
  */

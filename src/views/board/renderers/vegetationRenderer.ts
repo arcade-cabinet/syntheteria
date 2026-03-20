@@ -1,7 +1,7 @@
 /**
- * vegetationRenderer — CivRev2/Polytopia-style forest canopy for bio_district tiles.
+ * vegetationRenderer — CivRev2/Polytopia-style forest canopy for forest tiles.
  *
- * For each bio_district tile on the board:
+ * For each forest tile on the board:
  * - One canopy blob mesh (IcosahedronGeometry, vertex-colored dark green,
  *   slightly randomized per tile via seeded noise)
  * - 2-3 small cone trunks poking through the canopy for silhouette variety
@@ -139,7 +139,7 @@ function buildTrunkMeshes(
 // ---------------------------------------------------------------------------
 
 /**
- * Scan the board for bio_district tiles and place canopy + trunks.
+ * Scan the board for forest tiles and place canopy + trunks.
  * Call once in WorldScene.create().
  */
 export function createVegetationRenderer(

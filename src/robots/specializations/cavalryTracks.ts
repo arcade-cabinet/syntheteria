@@ -282,7 +282,7 @@ export const CAVALRY_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Articulated limb actuators for cavalry chassis. Unlocks Flanker and Interceptor specializations at the Garage.",
 		tier: 2,
-		cost: { alloy_stock: 5, polymer_salvage: 3, ferrous_scrap: 2 },
+		cost: { steel: 5, timber: 3, iron_ore: 2 },
 		turnsToResearch: 4,
 		prerequisites: ["reinforced_chassis"],
 		effects: [{ type: "unit_hp_bonus" as const, value: 1 }],
@@ -293,7 +293,7 @@ export const CAVALRY_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Neural-reactive combat processors. Upgrades Flanker to v2 (Phantom Ambush) and Interceptor to v2 (Gravity Well).",
 		tier: 4,
-		cost: { intact_components: 8, alloy_stock: 10, storm_charge: 5 },
+		cost: { steel: 18, fuel: 5 },
 		turnsToResearch: 8,
 		prerequisites: ["arachnoid_motor_suite", "mark_iii_components"],
 		effects: [{ type: "unit_hp_bonus" as const, value: 2 }],

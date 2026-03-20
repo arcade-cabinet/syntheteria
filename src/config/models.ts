@@ -478,7 +478,7 @@ export const STRUCTURE_FLOOR_HALLWAY_MODELS: readonly string[] = [
 	"structures/FloorTile_Double_Hallway.glb",
 ];
 
-/** Roof tile models — placed atop structural_mass wall tiles. */
+/** Roof tile models — placed atop mountain wall tiles. */
 export const STRUCTURE_ROOF_MODELS: readonly string[] = [
 	"structures/RoofTile_Empty.glb",
 	"structures/RoofTile_Plate.glb",

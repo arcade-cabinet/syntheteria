@@ -14,7 +14,7 @@ function makeBoard(width: number, height: number): SimpleBoardInfo {
 		width,
 		height,
 		isPassable: () => true,
-		getFloorType: () => "durasteel_span",
+		getFloorType: () => "grassland",
 	};
 }
 

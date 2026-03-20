@@ -20,6 +20,7 @@ import { TileFloor } from "../terrain/traits";
 import type { ResourceMaterial } from "../terrain/types";
 import { FLOOR_DEFS } from "../terrain/types";
 import {
+	Building,
 	Tile,
 	UnitFaction,
 	UnitMine,
@@ -30,7 +31,6 @@ import {
 } from "../traits";
 import { pushTurnEvent } from "../ui/game/turnEvents";
 import { awardXP, recordHarvest } from "./experienceSystem";
-import { isTechResearched } from "./researchSystem";
 import { trackIncome } from "./resourceDeltaSystem";
 import { addResources } from "./resourceSystem";
 import { triggerHarvestSpeech } from "./speechTriggers";
@@ -77,8 +77,8 @@ export function floorMiningSystem(world: World): void {
 		let yieldAmount =
 			minYield + Math.floor(Math.random() * (maxYield - minYield + 1));
 
-		// Deep mining tech bonus: +50% yield
-		if (isTechResearched(world, faction.factionId, "deep_mining")) {
+		// Deep mining bonus: +50% yield if faction has a Motor Pool at Tier 3+
+		if (factionHasBuildingAtTier(world, faction.factionId, "motor_pool", 3)) {
 			yieldAmount = Math.floor(yieldAmount * 1.5);
 		}
 
@@ -202,4 +202,19 @@ function findTileFloor(
 		}
 	}
 	return null;
+}
+
+function factionHasBuildingAtTier(
+	world: World,
+	factionId: string,
+	buildingType: string,
+	minTier: number,
+): boolean {
+	for (const e of world.query(Building)) {
+		const b = e.get(Building);
+		if (!b || b.factionId !== factionId) continue;
+		if (b.buildingType === buildingType && (b.buildingTier ?? 1) >= minTier)
+			return true;
+	}
+	return false;
 }

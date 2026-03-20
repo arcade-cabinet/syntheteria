@@ -23,7 +23,6 @@ import { clearHighlights } from "./highlightSystem";
 import { checkAllFragmentProximity } from "./memoryFragments";
 import { runPowerGrid } from "./powerSystem";
 import { runRepairs } from "./repairSystem";
-import { runResearch } from "./researchSystem";
 import { finalizeTurnDeltas } from "./resourceDeltaSystem";
 import { runResourceRenewal } from "./resourceRenewalSystem";
 import { runSignalNetwork } from "./signalSystem";
@@ -114,7 +113,6 @@ function runEnvironmentPhase(world: World, board: GeneratedBoard): void {
 	// Signal network moved to phase 5.5 (after AP refresh) so AP penalty sticks
 	runRepairs(world);
 	runSynthesis(world);
-	runResearch(world);
 	runFabrication(world);
 	runBuildingUpgrades(world);
 	runAnalysisAcceleration(world);

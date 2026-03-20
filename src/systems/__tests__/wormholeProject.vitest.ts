@@ -2,7 +2,6 @@ import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { WORMHOLE_PROJECT_TURNS } from "../../config/gameDefaults";
 import { Board, Building, Faction } from "../../traits";
-import { ResearchState } from "../researchSystem";
 import {
 	_resetWormholeProject,
 	canStartWormholeProject,
@@ -32,7 +31,7 @@ describe("wormholeProject", () => {
 		);
 	}
 
-	function spawnFactionWithResearch(factionId: string, researched: string[]) {
+	function spawnFaction(factionId: string) {
 		return world.spawn(
 			Faction({
 				id: factionId,
@@ -42,10 +41,32 @@ describe("wormholeProject", () => {
 				isPlayer: false,
 				aggression: 0,
 			}),
-			ResearchState({
-				researchedTechs: researched.join(","),
-				currentTechId: "",
-				progressPoints: 0,
+		);
+	}
+
+	function spawnPrerequisiteBuildings(factionId: string) {
+		world.spawn(
+			Building({
+				tileX: 0,
+				tileZ: 0,
+				buildingType: "storm_transmitter",
+				modelId: "storm_transmitter",
+				factionId,
+				hp: 100,
+				maxHp: 100,
+				buildingTier: 3,
+			}),
+		);
+		world.spawn(
+			Building({
+				tileX: 1,
+				tileZ: 0,
+				buildingType: "synthesizer",
+				modelId: "synthesizer",
+				factionId,
+				hp: 100,
+				maxHp: 100,
+				buildingTier: 3,
 			}),
 		);
 	}
@@ -75,32 +96,40 @@ describe("wormholeProject", () => {
 	// ─── canStartWormholeProject ────────────────────────────────────────
 
 	describe("canStartWormholeProject", () => {
-		it("returns true when both tier-5 techs are researched", () => {
-			spawnFactionWithResearch("player", [
-				"mark_v_transcendence",
-				"wormhole_stabilization",
-			]);
+		it("returns true when both required buildings are at tier 3", () => {
+			spawnFaction("player");
+			spawnPrerequisiteBuildings("player");
 
 			expect(canStartWormholeProject(world, "player")).toBe(true);
 		});
 
-		it("returns false when only one tier-5 tech is researched", () => {
-			spawnFactionWithResearch("player", ["mark_v_transcendence"]);
+		it("returns false when only one prerequisite building exists", () => {
+			spawnFaction("player");
+			world.spawn(
+				Building({
+					tileX: 0,
+					tileZ: 0,
+					buildingType: "storm_transmitter",
+					modelId: "storm_transmitter",
+					factionId: "player",
+					hp: 100,
+					maxHp: 100,
+					buildingTier: 3,
+				}),
+			);
 
 			expect(canStartWormholeProject(world, "player")).toBe(false);
 		});
 
-		it("returns false when neither tier-5 tech is researched", () => {
-			spawnFactionWithResearch("player", []);
+		it("returns false when no prerequisite buildings exist", () => {
+			spawnFaction("player");
 
 			expect(canStartWormholeProject(world, "player")).toBe(false);
 		});
 
 		it("returns false when project is already building", () => {
-			spawnFactionWithResearch("player", [
-				"mark_v_transcendence",
-				"wormhole_stabilization",
-			]);
+			spawnFaction("player");
+			spawnPrerequisiteBuildings("player");
 			spawnBoard();
 			const stabilizer = spawnStabilizer("player", 16, 16);
 			onWormholeStabilizerPlaced(world, stabilizer.id(), "player");
@@ -109,10 +138,8 @@ describe("wormholeProject", () => {
 		});
 
 		it("returns false when project is already completed", () => {
-			spawnFactionWithResearch("player", [
-				"mark_v_transcendence",
-				"wormhole_stabilization",
-			]);
+			spawnFaction("player");
+			spawnPrerequisiteBuildings("player");
 			spawnBoard();
 			const stabilizer = spawnStabilizer("player", 16, 16);
 			onWormholeStabilizerPlaced(world, stabilizer.id(), "player");
@@ -313,10 +340,8 @@ describe("wormholeProject", () => {
 		});
 
 		it("allows re-starting project after reset", () => {
-			spawnFactionWithResearch("player", [
-				"mark_v_transcendence",
-				"wormhole_stabilization",
-			]);
+			spawnFaction("player");
+			spawnPrerequisiteBuildings("player");
 			spawnBoard();
 			const stabilizer = spawnStabilizer("player", 16, 16);
 			onWormholeStabilizerPlaced(world, stabilizer.id(), "player");

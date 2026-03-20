@@ -83,13 +83,13 @@ describe("HUD resource display", () => {
 			<HUD
 				{...defaultProps}
 				resources={{
-					scrap_metal: 10,
-					ferrous_scrap: 5,
-					alloy_stock: 3,
-					polymer_salvage: 2,
-					conductor_wire: 1,
-					electrolyte: 7,
-					silicon_wafer: 4,
+					stone: 10,
+					iron_ore: 5,
+					steel: 3,
+					timber: 2,
+					circuits: 1,
+					fuel: 7,
+					glass: 4,
 				}}
 			/>,
 		);

@@ -34,7 +34,7 @@ export const INITIAL_POI_COUNT_MAX = 6;
 export const PATROL_RADIUS = 4;
 
 /** Floor types where cult POIs can spawn at game start. */
-export const CULT_TERRAIN = new Set(["collapsed_zone", "dust_district"]);
+export const CULT_TERRAIN = new Set(["ruins", "desert"]);
 
 // ---------------------------------------------------------------------------
 // Storm profile overrides

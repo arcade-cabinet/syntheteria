@@ -250,7 +250,7 @@ export const RANGED_SPEC_TECHS: readonly TechDef[] = [
 		description:
 			"Unlocks Sniper specialization for Quadruped Tanks. Enables Aimed Shot and Headshot actions.",
 		tier: 2,
-		cost: { silicon_wafer: 6, conductor_wire: 3, alloy_stock: 4 },
+		cost: { glass: 6, circuits: 3, steel: 4 },
 		turnsToResearch: 5,
 		prerequisites: ["mark_ii_components", "signal_amplification"],
 		effects: [{ type: "unlock_mark_level" as TechEffectType, value: 2 }],
@@ -261,7 +261,7 @@ export const RANGED_SPEC_TECHS: readonly TechDef[] = [
 		description:
 			"Unlocks Suppressor specialization for Quadruped Tanks. Enables Suppressive Fire and Barrage actions.",
 		tier: 2,
-		cost: { alloy_stock: 6, storm_charge: 3, polymer_salvage: 4 },
+		cost: { steel: 6, fuel: 3, timber: 4 },
 		turnsToResearch: 5,
 		prerequisites: ["mark_ii_components", "reinforced_chassis"],
 		effects: [{ type: "unlock_mark_level" as TechEffectType, value: 2 }],

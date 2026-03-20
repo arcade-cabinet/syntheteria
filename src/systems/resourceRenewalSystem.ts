@@ -5,9 +5,9 @@
  * serves double duty: it generates power AND produces renewable income.
  *
  * Per turn, each powered building of these types generates:
- *   - storm_transmitter → 1 storm_charge
- *   - geothermal_tap    → 1 thermal_fluid
- *   - solar_array        → 1 electrolyte
+ *   - storm_transmitter → 1 fuel
+ *   - geothermal_tap    → 1 coal
+ *   - solar_array        → 1 coal
  *
  * Called once per turn in the environment phase, after runPowerGrid
  * (so Powered trait is up-to-date).

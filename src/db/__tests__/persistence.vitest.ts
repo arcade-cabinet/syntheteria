@@ -186,14 +186,14 @@ describe("persistence round-trips", () => {
 			{
 				gameId,
 				factionId: "reclaimers",
-				material: "ferrous_scrap",
+				material: "iron_ore",
 				amount: 25,
 			},
-			{ gameId, factionId: "reclaimers", material: "alloy_stock", amount: 10 },
+			{ gameId, factionId: "reclaimers", material: "steel", amount: 10 },
 			{
 				gameId,
 				factionId: "synth-collective",
-				material: "storm_charge",
+				material: "fuel",
 				amount: 5,
 			},
 		];
@@ -203,18 +203,17 @@ describe("persistence round-trips", () => {
 
 		expect(loaded.length).toBe(3);
 		const fs = loaded.find(
-			(r) => r.factionId === "reclaimers" && r.material === "ferrous_scrap",
+			(r) => r.factionId === "reclaimers" && r.material === "iron_ore",
 		)!;
 		expect(fs.amount).toBe(25);
 
 		const as = loaded.find(
-			(r) => r.factionId === "reclaimers" && r.material === "alloy_stock",
+			(r) => r.factionId === "reclaimers" && r.material === "steel",
 		)!;
 		expect(as.amount).toBe(10);
 
 		const sc = loaded.find(
-			(r) =>
-				r.factionId === "synth-collective" && r.material === "storm_charge",
+			(r) => r.factionId === "synth-collective" && r.material === "fuel",
 		)!;
 		expect(sc.amount).toBe(5);
 	});
@@ -223,10 +222,10 @@ describe("persistence round-trips", () => {
 		const gameId = await repo.createGame("seed", 16, 16, "normal");
 
 		await repo.saveResources(gameId, [
-			{ gameId, factionId: "reclaimers", material: "scrap_metal", amount: 10 },
+			{ gameId, factionId: "reclaimers", material: "stone", amount: 10 },
 		]);
 		await repo.saveResources(gameId, [
-			{ gameId, factionId: "reclaimers", material: "scrap_metal", amount: 42 },
+			{ gameId, factionId: "reclaimers", material: "stone", amount: 42 },
 		]);
 
 		const loaded = await repo.loadResources(gameId);
@@ -264,7 +263,7 @@ describe("persistence round-trips", () => {
 			},
 		]);
 		await repo.saveResources(g2, [
-			{ gameId: g2, factionId: "f2", material: "e_waste", amount: 99 },
+			{ gameId: g2, factionId: "f2", material: "circuits", amount: 99 },
 		]);
 
 		expect((await repo.loadUnits(g2)).length).toBe(0);

@@ -30,7 +30,7 @@ function manhattanDist(ax: number, az: number, bx: number, bz: number): number {
 }
 
 // ---------------------------------------------------------------------------
-// Line of sight — Bresenham line walk checking for structural_mass walls
+// Line of sight — Bresenham line walk checking for mountain walls
 // ---------------------------------------------------------------------------
 
 /** Cached set of "x,z" keys for tiles that block LOS. Rebuilt once per turn. */
@@ -53,7 +53,7 @@ function getWallTiles(world: World, currentTurn: number): Set<string> {
 }
 
 /**
- * Bresenham line-of-sight check. Returns true if no structural_mass tile
+ * Bresenham line-of-sight check. Returns true if no mountain tile
  * lies on the line between (ax,az) and (bx,bz), excluding the endpoints.
  * Melee attacks (range 1) always have LOS — caller should skip for range 1.
  */

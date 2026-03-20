@@ -22,26 +22,26 @@ import { isCultFactionId } from "./aiHelpers";
 
 /**
  * Synthesis priority: produce the refined materials most needed for
- * upcoming builds. alloy_stock unlocks motor_pool and analysis_node.
- * polymer_salvage unlocks storage_hub. silicon_wafer unlocks analysis_node.
+ * upcoming builds. steel unlocks motor_pool and analysis_node.
+ * timber unlocks storage_hub. glass unlocks analysis_node.
  */
 const SYNTHESIS_PRIORITY: readonly string[] = [
-	"alloy_fusion", // ferrous_scrap -> alloy_stock (most needed)
-	"polymer_reclamation", // scrap_metal -> polymer_salvage
-	"wafer_fabrication", // e_waste -> silicon_wafer
-	"storm_capacitor", // ferrous_scrap -> storm_charge
-	"crystal_synthesis", // silicon_wafer -> el_crystal (late game)
+	"alloy_fusion", // iron_ore -> steel (most needed)
+	"polymer_reclamation", // stone -> timber
+	"wafer_fabrication", // circuits -> glass
+	"storm_capacitor", // iron_ore -> fuel
+	"crystal_synthesis", // glass -> quantum_crystal (late game)
 ];
 
 // Resource floor: keep at least this much of each material in reserve
 // so buildings can be afforded. Values match the most expensive single-material
 // requirement across common buildings.
 const RESERVE: Partial<Record<string, number>> = {
-	ferrous_scrap: 8,
-	conductor_wire: 6,
-	scrap_metal: 4,
-	polymer_salvage: 5,
-	alloy_stock: 4,
+	iron_ore: 8,
+	circuits: 6,
+	stone: 4,
+	timber: 5,
+	steel: 4,
 };
 
 // ---------------------------------------------------------------------------

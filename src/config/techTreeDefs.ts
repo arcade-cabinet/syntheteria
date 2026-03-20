@@ -51,15 +51,10 @@ export interface TechDef {
 // ---------------------------------------------------------------------------
 
 /**
- * Resource name mapping from old JSON keys to our 13-material taxonomy:
- *   microchips      → silicon_wafer
- *   scrap           → scrap_metal
- *   heavy_metals    → alloy_stock
- *   plastics        → polymer_salvage
- *   light_metals    → ferrous_scrap
- *   uranics         → storm_charge
- *   rare_components → intact_components
- *   oil             → electrolyte
+ * Resource costs use the current biome-based taxonomy:
+ *   Natural:    stone, timber, iron_ore, coal, food, fiber, sand, clay
+ *   Processed:  steel, concrete, glass, circuits, fuel
+ *   Synthetic:  alloy, nanomaterial, fusion_cell, quantum_crystal
  */
 const BASE_TECHS: readonly TechDef[] = [
 	// ── Tier 1 ──────────────────────────────────────────────────────────────
@@ -69,7 +64,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		description:
 			"Improved material extraction techniques. Harvesting yields +25%.",
 		tier: 1,
-		cost: { silicon_wafer: 3, scrap_metal: 5 },
+		cost: { glass: 3, stone: 5 },
 		turnsToResearch: 3,
 		prerequisites: [],
 		effects: [{ type: "harvest_bonus", value: 0.25 }],
@@ -79,7 +74,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		name: "Signal Amplification",
 		description: "Extended relay tower range. Signal range +50%.",
 		tier: 1,
-		cost: { silicon_wafer: 4, ferrous_scrap: 3 },
+		cost: { glass: 4, iron_ore: 3 },
 		turnsToResearch: 3,
 		prerequisites: [],
 		effects: [{ type: "signal_range_bonus", value: 0.5 }],
@@ -89,7 +84,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		name: "Reinforced Chassis",
 		description: "Hardened unit frames. All units gain +2 HP.",
 		tier: 1,
-		cost: { alloy_stock: 5, polymer_salvage: 3 },
+		cost: { steel: 5, timber: 3 },
 		turnsToResearch: 3,
 		prerequisites: [],
 		effects: [{ type: "unit_hp_bonus", value: 2 }],
@@ -101,7 +96,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		name: "Storm Shielding",
 		description: "Protective field generators. Buildings resist storm damage.",
 		tier: 2,
-		cost: { storm_charge: 4, alloy_stock: 6, silicon_wafer: 3 },
+		cost: { fuel: 4, steel: 6, glass: 3 },
 		turnsToResearch: 5,
 		prerequisites: ["reinforced_chassis"],
 		effects: [{ type: "storm_resistance", value: 0.5 }],
@@ -111,7 +106,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		name: "Efficient Fabrication",
 		description: "Optimized assembly processes. Fabrication costs reduced 20%.",
 		tier: 2,
-		cost: { silicon_wafer: 6, intact_components: 2 },
+		cost: { glass: 6, steel: 2 },
 		turnsToResearch: 4,
 		prerequisites: ["advanced_harvesting"],
 		effects: [{ type: "fabrication_cost_reduction", value: 0.2 }],
@@ -121,7 +116,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		name: "Network Encryption",
 		description: "Hardened signal protocols. Hacking defense +30%.",
 		tier: 2,
-		cost: { silicon_wafer: 8, ferrous_scrap: 4 },
+		cost: { glass: 8, iron_ore: 4 },
 		turnsToResearch: 4,
 		prerequisites: ["signal_amplification"],
 		effects: [{ type: "hacking_defense_bonus", value: 0.3 }],
@@ -132,7 +127,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		description:
 			"Unlocks Mark II unit upgrades. Units can be upgraded to Mark II.",
 		tier: 2,
-		cost: { intact_components: 3, silicon_wafer: 5, alloy_stock: 4 },
+		cost: { steel: 7, glass: 5 },
 		turnsToResearch: 5,
 		prerequisites: ["reinforced_chassis"],
 		effects: [{ type: "unlock_mark_level", value: 2 }],
@@ -145,7 +140,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		description:
 			"Access buried resource deposits. Unlocks advanced material harvesting.",
 		tier: 3,
-		cost: { alloy_stock: 10, silicon_wafer: 6, electrolyte: 5 },
+		cost: { steel: 10, glass: 6, fuel: 5 },
 		turnsToResearch: 6,
 		prerequisites: ["efficient_fabrication", "advanced_harvesting"],
 		effects: [{ type: "unlock_deep_harvest", value: 1 }],
@@ -156,7 +151,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		description:
 			"Self-repairing armor plating. Units regenerate 1 HP per turn.",
 		tier: 3,
-		cost: { intact_components: 5, alloy_stock: 8, polymer_salvage: 6 },
+		cost: { steel: 13, timber: 6 },
 		turnsToResearch: 6,
 		prerequisites: ["storm_shielding", "mark_ii_components"],
 		effects: [{ type: "unit_regen", value: 1 }],
@@ -166,7 +161,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		name: "Mark III Components",
 		description: "Unlocks Mark III unit upgrades with enhanced capabilities.",
 		tier: 3,
-		cost: { intact_components: 6, silicon_wafer: 8, storm_charge: 4 },
+		cost: { steel: 6, glass: 8, fuel: 4 },
 		turnsToResearch: 7,
 		prerequisites: ["mark_ii_components"],
 		effects: [{ type: "unlock_mark_level", value: 3 }],
@@ -179,7 +174,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		description:
 			"Next-generation computation. Hacking speed +50%, research speed +25%.",
 		tier: 4,
-		cost: { intact_components: 8, silicon_wafer: 12, storm_charge: 6 },
+		cost: { steel: 8, glass: 12, fuel: 6 },
 		turnsToResearch: 8,
 		prerequisites: ["network_encryption", "deep_mining"],
 		effects: [
@@ -192,7 +187,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		name: "Mark IV Components",
 		description: "Near-peak machine evolution. Unlocks Mark IV upgrades.",
 		tier: 4,
-		cost: { intact_components: 10, silicon_wafer: 10, storm_charge: 8 },
+		cost: { steel: 10, glass: 10, fuel: 8 },
 		turnsToResearch: 9,
 		prerequisites: ["mark_iii_components", "adaptive_armor"],
 		effects: [{ type: "unlock_mark_level", value: 4 }],
@@ -203,7 +198,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		description:
 			"Theoretical framework for spacetime manipulation. Prerequisite for Wormhole construction.",
 		tier: 4,
-		cost: { intact_components: 12, silicon_wafer: 14, storm_charge: 10 },
+		cost: { steel: 12, glass: 14, fuel: 10 },
 		turnsToResearch: 10,
 		prerequisites: ["quantum_processors"],
 		effects: [{ type: "unlock_wormhole", value: 1 }],
@@ -216,7 +211,7 @@ const BASE_TECHS: readonly TechDef[] = [
 		description:
 			"The pinnacle of machine evolution. Unlocks Mark V — Technical Supremacy victory path.",
 		tier: 5,
-		cost: { intact_components: 15, silicon_wafer: 15, storm_charge: 10 },
+		cost: { steel: 15, glass: 15, fuel: 10 },
 		turnsToResearch: 12,
 		prerequisites: ["mark_iv_components", "quantum_processors"],
 		effects: [{ type: "unlock_mark_level", value: 5 }],
@@ -228,10 +223,9 @@ const BASE_TECHS: readonly TechDef[] = [
 			"Enables Wormhole construction. The path home — or to new frontiers. Wormhole victory path.",
 		tier: 5,
 		cost: {
-			intact_components: 20,
-			storm_charge: 15,
-			silicon_wafer: 10,
-			alloy_stock: 15,
+			steel: 35,
+			fuel: 15,
+			glass: 10,
 		},
 		turnsToResearch: 15,
 		prerequisites: ["wormhole_theory"],

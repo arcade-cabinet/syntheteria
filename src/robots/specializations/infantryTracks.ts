@@ -284,7 +284,7 @@ export const INFANTRY_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Modular combat frame reconfiguration. Unlocks Vanguard and Shock Trooper specializations at the Garage.",
 		tier: 2,
-		cost: { alloy_stock: 6, ferrous_scrap: 4, polymer_salvage: 3 },
+		cost: { steel: 6, iron_ore: 4, timber: 3 },
 		turnsToResearch: 4,
 		prerequisites: ["reinforced_chassis"],
 		effects: [{ type: "unit_hp_bonus" as const, value: 1 }],
@@ -295,7 +295,7 @@ export const INFANTRY_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Next-generation battlefield programming. Upgrades Vanguard to v2 (Graviton Anchor) and Shock Trooper to v2 (Overclocked Servos).",
 		tier: 4,
-		cost: { intact_components: 9, alloy_stock: 10, storm_charge: 6 },
+		cost: { steel: 19, fuel: 6 },
 		turnsToResearch: 8,
 		prerequisites: ["combat_chassis_specialization", "mark_iii_components"],
 		effects: [{ type: "unit_hp_bonus" as const, value: 2 }],

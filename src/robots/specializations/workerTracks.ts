@@ -71,7 +71,7 @@ export const DEEP_MINER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] =
 			effectType: "targeted_mining",
 			effectValue: 3,
 			description:
-				"Targeted mining within 3 range — dig any visible cell without adjacent ramp. Mined cells have 25% chance to expose rare depth_salvage.",
+				"Targeted mining within 3 range — dig any visible cell without adjacent ramp. Mined cells have 25% chance to expose rare alloy.",
 		},
 	] as const;
 
@@ -147,7 +147,7 @@ export const SALVAGER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] = [
 		effectType: "material_analysis",
 		effectValue: 15,
 		description:
-			"15% chance to find bonus rare materials (storm_charge, el_crystal) when harvesting any deposit. Prospect reveals exact yield amounts.",
+			"15% chance to find bonus rare materials (fuel, quantum_crystal) when harvesting any deposit. Prospect reveals exact yield amounts.",
 	},
 	{
 		track: "salvager",
@@ -165,7 +165,7 @@ export const SALVAGER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] = [
 		effectType: "total_recycling",
 		effectValue: 100,
 		description:
-			"Salvage returns 100% of build cost. Every harvest has 10% chance to yield el_crystal. Destroyed enemy units in scan range drop salvage.",
+			"Salvage returns 100% of build cost. Every harvest has 10% chance to yield quantum_crystal. Destroyed enemy units in scan range drop salvage.",
 	},
 ] as const;
 
@@ -191,7 +191,7 @@ export const DEEP_MINER_V2_UPGRADES: readonly WorkerTrackSpecialization[] = [
 		effectType: "abyssal_bore",
 		effectValue: 3,
 		description:
-			"Replaces Deep Bore. Digs 3 levels deep (-3 elevation). Exposes abyssal-tier resources (thermal_fluid, depth_salvage) regardless of floor type.",
+			"Replaces Deep Bore. Digs 3 levels deep (-3 elevation). Exposes abyssal-tier resources (fuel, alloy) regardless of floor type.",
 	},
 ] as const;
 
@@ -396,7 +396,7 @@ export const WORKER_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Advanced chassis modularity for worker units. Unlocks Deep Miner, Fabricator, and Salvager specializations at the Garage.",
 		tier: 2,
-		cost: { alloy_stock: 5, ferrous_scrap: 4, polymer_salvage: 3 },
+		cost: { steel: 5, iron_ore: 4, timber: 3 },
 		turnsToResearch: 4,
 		prerequisites: ["advanced_harvesting"],
 		effects: [{ type: "harvest_bonus" as const, value: 0.1 }],
@@ -407,7 +407,7 @@ export const WORKER_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Quantum-enhanced industrial processes. Upgrades Deep Miner to v2 (Seismic DAISY), Fabricator to v2 (Nano-Repair Swarm), and Salvager to v2 (Quantum Sifting).",
 		tier: 4,
-		cost: { intact_components: 10, alloy_stock: 8, storm_charge: 6 },
+		cost: { steel: 18, fuel: 6 },
 		turnsToResearch: 8,
 		prerequisites: ["industrial_specialization", "deep_mining"],
 		effects: [{ type: "harvest_bonus" as const, value: 0.15 }],

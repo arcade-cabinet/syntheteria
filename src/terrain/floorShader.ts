@@ -6,9 +6,9 @@
  * materials — normals, roughness, metalness, and grating opacity cutout.
  *
  * Atlas: 3x3 grid (3072x3072), 1024px per cell:
- *   0: Metal032 (structural_mass)    1: Metal038 (durasteel_span)     2: Concrete007 (transit_deck)
- *   3: Concrete034 (collapsed_zone)  4: Asphalt004 (dust_district)    5: Metal025 (bio_district)
- *   6: Metal036 (aerostructure)      7: Grate001 (abyssal_platform)   8: void_pit (solid black)
+ *   0: Metal032 (mountain)    1: Metal038 (grassland)     2: Concrete007 (grassland)
+ *   3: Concrete034 (ruins)    4: Asphalt004 (desert)      5: Metal025 (forest)
+ *   6: Metal036 (hills)       7: Grate001 (wetland)       8: water (solid black)
  */
 
 import * as THREE from "three";

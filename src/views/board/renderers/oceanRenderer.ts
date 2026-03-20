@@ -1,12 +1,12 @@
 /**
- * oceanRenderer — deep water waves + roboformed grating for abyssal_platform tiles.
+ * oceanRenderer — deep water waves + roboformed grating for wetland tiles.
  *
  * Two visual layers:
  *
- * 1. VOID_PIT tiles (open ocean): animated deep water plane with gentle vertex
+ * 1. Water tiles (open ocean): animated deep water plane with gentle vertex
  *    displacement (subtle waves). Sits just above the basic water in terrainRenderer.
  *
- * 2. abyssal_platform tiles (passable elevation -1, roboformed ocean): metallic
+ * 2. Wetland tiles (passable elevation -1, roboformed ocean): metallic
  *    grating mesh with canvas-generated crosshatch texture, blue underlighting,
  *    and shadow casting onto the deep water below.
  *
@@ -105,7 +105,7 @@ function createGratingTexture(): THREE.CanvasTexture {
 }
 
 // ---------------------------------------------------------------------------
-// Build animated deep water plane (covers all VOID_PIT tiles)
+// Build animated deep water plane (covers all water tiles)
 // ---------------------------------------------------------------------------
 
 function buildDeepWaterPlane(board: GeneratedBoard): THREE.Mesh {
@@ -151,7 +151,7 @@ function buildDeepWaterPlane(board: GeneratedBoard): THREE.Mesh {
 }
 
 // ---------------------------------------------------------------------------
-// Build grating meshes for abyssal_platform tiles
+// Build grating meshes for wetland tiles
 // ---------------------------------------------------------------------------
 
 function buildGratingMeshes(scene: THREE.Scene, board: GeneratedBoard): void {
@@ -215,7 +215,7 @@ export function createOceanRenderer(
 	_waterMesh = buildDeepWaterPlane(board);
 	scene.add(_waterMesh);
 
-	// Metallic grating over abyssal_platform tiles
+	// Metallic grating over wetland tiles
 	buildGratingMeshes(scene, board);
 }
 

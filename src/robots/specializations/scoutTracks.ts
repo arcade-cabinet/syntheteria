@@ -276,7 +276,7 @@ export const SCOUT_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Enhanced sensor arrays for scout chassis. Unlocks Pathfinder and Infiltrator specializations at the Garage.",
 		tier: 2,
-		cost: { silicon_wafer: 5, conductor_wire: 3, ferrous_scrap: 2 },
+		cost: { glass: 5, circuits: 3, iron_ore: 2 },
 		turnsToResearch: 4,
 		prerequisites: ["signal_amplification"],
 		effects: [{ type: "signal_range_bonus" as const, value: 0.2 }],
@@ -287,7 +287,7 @@ export const SCOUT_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Quantum-enhanced signal analysis. Upgrades Pathfinder to v2 (Seismic Cartography) and Infiltrator to v2 (Quantum Cloak).",
 		tier: 4,
-		cost: { intact_components: 8, silicon_wafer: 10, storm_charge: 5 },
+		cost: { steel: 18, glass: 10, fuel: 5 },
 		turnsToResearch: 8,
 		prerequisites: ["advanced_recon_optics", "quantum_processors"],
 		effects: [{ type: "signal_range_bonus" as const, value: 0.3 }],

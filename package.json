@@ -15,6 +15,7 @@
 		"test:e2e": "playwright test -c playwright.e2e.config.ts",
 		"test:all": "pnpm test:vitest && pnpm test:ct",
 		"verify": "pnpm lint && pnpm tsc && pnpm test:vitest",
+		"check-imports": "bash scripts/check-imports.sh",
 		"verify:with-ct": "pnpm verify && pnpm test:ct",
 		"tsc": "tsc --noEmit",
 		"db:build:foundation": "tsx scripts/build-foundation-db.ts",

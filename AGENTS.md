@@ -57,9 +57,9 @@ src/
 ├── camera/             # Camera controllers
 ├── db/                 # SQLite schema + GameRepo
 ├── rendering/          # TRANSITIONAL — decompose per docs/COMPREHENSIVE_ENGINEERING_PLAN.md §8; then delete
-├── views/              # ALL rendering entrypoints — see docs/COMPREHENSIVE_ENGINEERING_PLAN.md
-│   ├── title/          # TARGET: R3F title + generating globe (migrate from legacy view/)
-│   └── board/          # TARGET: Phaser + enable3d match board (migrate current flat views/*.ts)
+├── views/              # ALL rendering entrypoints
+│   ├── title/          # R3F title + generating globe (TSX) — migrated from src/view/
+│   └── board/          # Phaser + enable3d match board (pure TS) — migrated from flat src/views/
 ├── ui/                 # React DOM: Globe composes views/title; HUD, landing/, game/
 ├── input/              # Board interaction (click, drag, select)
 ├── world/              # New-game config (+ future settlement snapshots per `GAME_DESIGN.md` / runbook Phase G)

@@ -9,10 +9,9 @@
  */
 
 import {
-	VICTORY_DOMINATION_PERCENT,
-	VICTORY_ECONOMIC_TOTAL,
-	VICTORY_RESEARCH_POINTS,
-	VICTORY_SURVIVAL_TURNS,
+	VICTORY_NETWORK_COVERAGE_PERCENT,
+	VICTORY_RECLAMATION_PERCENT,
+	VICTORY_TURN_CAP,
 } from "../../config";
 import type { VictoryProgress } from "../../systems";
 
@@ -245,10 +244,25 @@ export function HUD({
 							minWidth: 60,
 						}}
 					>
-						<span>DOM</span>
+						<span>NET</span>
 						<ProgressBar
-							value={victoryProgress.territoryPercent}
-							max={VICTORY_DOMINATION_PERCENT}
+							value={victoryProgress.networkCoveragePercent}
+							max={VICTORY_NETWORK_COVERAGE_PERCENT}
+							color="#44ddff"
+						/>
+					</div>
+					<div
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 3,
+							minWidth: 60,
+						}}
+					>
+						<span>RCL</span>
+						<ProgressBar
+							value={victoryProgress.reclamationPercent}
+							max={VICTORY_RECLAMATION_PERCENT}
 							color="#7ee7cb"
 						/>
 					</div>
@@ -260,43 +274,23 @@ export function HUD({
 							minWidth: 60,
 						}}
 					>
-						<span>RES</span>
-						<ProgressBar
-							value={victoryProgress.techPoints}
-							max={VICTORY_RESEARCH_POINTS}
-							color="#8be6ff"
-						/>
-					</div>
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: 3,
-							minWidth: 60,
-						}}
-					>
-						<span>ECO</span>
-						<ProgressBar
-							value={victoryProgress.totalResources}
-							max={VICTORY_ECONOMIC_TOTAL}
-							color="#f6c56a"
-						/>
-					</div>
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: 3,
-							minWidth: 60,
-						}}
-					>
-						<span>SRV</span>
+						<span>CYC</span>
 						<ProgressBar
 							value={victoryProgress.currentTurn}
-							max={VICTORY_SURVIVAL_TURNS}
+							max={VICTORY_TURN_CAP}
 							color="#aa44ff"
 						/>
 					</div>
+					{victoryProgress.rivalFactionsAlive > 0 && (
+						<span style={{ fontSize: 8, opacity: 0.7 }}>
+							RVL {victoryProgress.rivalFactionsAlive}
+						</span>
+					)}
+					{victoryProgress.cultStructuresRemaining > 0 && (
+						<span style={{ fontSize: 8, opacity: 0.7 }}>
+							CULT {victoryProgress.cultStructuresRemaining}
+						</span>
+					)}
 				</div>
 			)}
 			{!isObserverMode && (

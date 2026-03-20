@@ -1,166 +1,162 @@
 /**
- * Victory system — 5 win paths + 1 defeat condition + forced endgame.
+ * Victory system — 6 win paths + defeat condition.
  *
  * Victory paths:
- *   1. Domination — control 60%+ of total tiles via territory system
- *   2. Research — have 3+ research labs and accumulate 100 tech points
- *   3. Economic — total resources across all materials >= 500
- *   4. Survival — survive 200 turns
- *   5. Wormhole — complete the Wormhole Stabilizer project (20 turns)
- *
- * Forced endgame (anti-stalemate):
- *   - 80% territory held for 10 consecutive turns = forced domination victory
+ *   1. Domination — all rival machine factions eliminated (no units AND no buildings)
+ *   2. Network Supremacy — signal coverage ≥ 80% of passable map tiles
+ *   3. Reclamation — roboform ≥ 60% of passable tiles to Level 3+ (building tier)
+ *   4. Transcendence — Wormhole Stabilizer complete (20-turn project)
+ *   5. Cult Eradication — all cult structures destroyed (0 remaining with HP > 0)
+ *   6. Score (Turn Cap) — turn reaches 200 → highest score wins
  *
  * Defeat:
- *   - Elimination — all player units destroyed
+ *   - Elimination — all player units AND buildings destroyed
  */
 
 import type { World } from "koota";
 import {
-	FORCED_DOMINATION_HOLD_TURNS,
-	FORCED_DOMINATION_PERCENT,
-	VICTORY_DOMINATION_PERCENT,
-	VICTORY_ECONOMIC_TOTAL,
-	VICTORY_RESEARCH_LABS,
-	VICTORY_RESEARCH_POINTS,
-	VICTORY_SURVIVAL_TURNS,
+	VICTORY_NETWORK_COVERAGE_PERCENT,
+	VICTORY_RECLAMATION_MIN_LEVEL,
+	VICTORY_RECLAMATION_PERCENT,
+	VICTORY_TURN_CAP,
 } from "../config/gameDefaults";
 import {
 	Board,
 	Building,
+	CultStructure,
 	Faction,
-	ResourcePool,
+	Powered,
+	SignalNode,
+	Tile,
 	UnitFaction,
-	UnitStats,
-	UnitXP,
 } from "../traits";
-import { isTechResearched } from "./researchSystem";
-import { computeTerritory, getTerritoryPercent } from "./territorySystem";
+import { calculateFactionScore } from "./scoreSystem";
 import { getWormholeProjectState } from "./wormholeProject";
 
-export type VictoryReason =
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+export type VictoryType =
 	| "domination"
-	| "research"
-	| "economic"
-	| "survival"
-	| "wormhole"
-	| "technical_supremacy"
-	| "forced_domination";
+	| "network_supremacy"
+	| "reclamation"
+	| "transcendence"
+	| "cult_eradication"
+	| "score";
+
+export interface VictoryResult {
+	type: VictoryType;
+	winnerId: string;
+	score?: number;
+}
 
 export type GameOutcome =
 	| { result: "playing" }
-	| { result: "victory"; reason: VictoryReason }
+	| { result: "victory"; reason: VictoryType; winnerId: string; score?: number }
 	| { result: "defeat"; reason: "elimination" };
 
 export interface VictoryProgress {
-	/** Territory % controlled by player. */
-	territoryPercent: number;
-	/** Number of player research labs. */
-	researchLabs: number;
-	/** Accumulated tech points. */
-	techPoints: number;
-	/** Total resources across all materials. */
-	totalResources: number;
+	/** Signal coverage % of passable tiles. */
+	networkCoveragePercent: number;
+	/** % of passable tiles roboformed to Level 3+. */
+	reclamationPercent: number;
 	/** Current turn number. */
 	currentTurn: number;
 	/** Wormhole project turns remaining (null if not active). */
 	wormholeTurnsRemaining: number | null;
-	/** Consecutive turns holding forced domination threshold. */
-	forcedDominationProgress: number;
+	/** Number of cult structures remaining. */
+	cultStructuresRemaining: number;
+	/** Number of rival factions still alive. */
+	rivalFactionsAlive: number;
 }
 
 const CULT_FACTIONS = ["static_remnants", "null_monks", "lost_signal"] as const;
 
-/** Accumulated tech points (1 per research lab per turn). */
-let techPoints = 0;
+const MACHINE_FACTIONS = [
+	"reclaimers",
+	"volt_collective",
+	"signal_choir",
+	"iron_creed",
+] as const;
 
-/** Consecutive turns player has held >= FORCED_DOMINATION_PERCENT territory. */
-let forcedDominationCounter = 0;
+function isCultFaction(factionId: string): boolean {
+	return (CULT_FACTIONS as readonly string[]).includes(factionId);
+}
+
+function isMachineFaction(factionId: string): boolean {
+	return (MACHINE_FACTIONS as readonly string[]).includes(factionId);
+}
+
+// ─── Victory Checks ─────────────────────────────────────────────────────────
 
 export function checkVictoryConditions(
 	world: World,
 	opts?: { observerMode?: boolean },
 ): GameOutcome {
-	// Defeat check: any player units? (skip in observer mode — no player faction)
+	const playerFactionId = "player";
+
+	// Defeat check: player must have at least one unit OR one building
 	if (!opts?.observerMode) {
-		let hasPlayerUnit = false;
-		for (const e of world.query(UnitFaction)) {
-			const f = e.get(UnitFaction);
-			if (f?.factionId === "player") {
-				hasPlayerUnit = true;
-				break;
-			}
-		}
-		if (!hasPlayerUnit) {
+		const hasPlayerPresence = factionHasPresence(world, playerFactionId);
+		if (!hasPlayerPresence) {
 			return { result: "defeat", reason: "elimination" };
 		}
 	}
 
-	// Get board dimensions for territory
-	const boardDims = getBoardDims(world);
-
-	// 1. Domination — territory control
-	if (boardDims) {
-		const territory = computeTerritory(world, boardDims.w, boardDims.h);
-		const pct = getTerritoryPercent(territory, "player");
-		if (pct >= VICTORY_DOMINATION_PERCENT) {
-			return { result: "victory", reason: "domination" };
-		}
+	// 1. Domination — all rival machine factions eliminated
+	const rivalAlive = countRivalFactionsAlive(world, playerFactionId);
+	if (rivalAlive === 0 && hasAnyRivalFactionEverExisted(world)) {
+		return {
+			result: "victory",
+			reason: "domination",
+			winnerId: playerFactionId,
+		};
 	}
 
-	// Count player research labs + accumulate tech points
-	let playerLabCount = 0;
-	for (const e of world.query(Building)) {
-		const b = e.get(Building);
-		if (b?.factionId === "player" && b.buildingType === "analysis_node") {
-			playerLabCount++;
-		}
-	}
-	techPoints += playerLabCount;
-
-	// 2. Research victory
-	if (
-		playerLabCount >= VICTORY_RESEARCH_LABS &&
-		techPoints >= VICTORY_RESEARCH_POINTS
-	) {
-		return { result: "victory", reason: "research" };
+	// 2. Network Supremacy — signal coverage ≥ threshold
+	const networkPct = computeSignalCoveragePercent(world);
+	if (networkPct >= VICTORY_NETWORK_COVERAGE_PERCENT) {
+		return {
+			result: "victory",
+			reason: "network_supremacy",
+			winnerId: playerFactionId,
+		};
 	}
 
-	// 3. Economic victory — total resources
-	const totalRes = getPlayerTotalResources(world);
-	if (totalRes >= VICTORY_ECONOMIC_TOTAL) {
-		return { result: "victory", reason: "economic" };
+	// 3. Reclamation — roboform tiles at level 3+ ≥ threshold
+	const reclamationPct = computeReclamationPercent(world, playerFactionId);
+	if (reclamationPct >= VICTORY_RECLAMATION_PERCENT) {
+		return {
+			result: "victory",
+			reason: "reclamation",
+			winnerId: playerFactionId,
+		};
 	}
 
-	// 4. Survival victory
-	const turn = getCurrentTurnForVictory(world);
-	if (turn >= VICTORY_SURVIVAL_TURNS) {
-		return { result: "victory", reason: "survival" };
-	}
-
-	// 5. Wormhole victory — stabilizer project completed
+	// 4. Transcendence — wormhole project completed
 	const wormholeState = getWormholeProjectState();
 	if (wormholeState.status === "completed") {
-		return { result: "victory", reason: "wormhole" };
+		return {
+			result: "victory",
+			reason: "transcendence",
+			winnerId: playerFactionId,
+		};
 	}
 
-	// 6. Technical Supremacy — mark_v_transcendence researched + Mark V unit of each class
-	if (checkTechnicalSupremacy(world, "player")) {
-		return { result: "victory", reason: "technical_supremacy" };
+	// 5. Cult Eradication — all cult structures destroyed
+	const cultCount = countCultStructuresAlive(world);
+	if (cultCount === 0 && cultStructuresEverExisted(world)) {
+		return {
+			result: "victory",
+			reason: "cult_eradication",
+			winnerId: playerFactionId,
+		};
 	}
 
-	// 7. Forced domination (anti-stalemate) — 80% territory for 10 consecutive turns
-	if (boardDims) {
-		const territory = computeTerritory(world, boardDims.w, boardDims.h);
-		const pct = getTerritoryPercent(territory, "player");
-		if (pct >= FORCED_DOMINATION_PERCENT) {
-			forcedDominationCounter++;
-			if (forcedDominationCounter >= FORCED_DOMINATION_HOLD_TURNS) {
-				return { result: "victory", reason: "forced_domination" };
-			}
-		} else {
-			forcedDominationCounter = 0;
-		}
+	// 6. Score (Turn Cap) — turn reaches threshold
+	const turn = getCurrentTurnForVictory(world);
+	if (turn >= VICTORY_TURN_CAP) {
+		const { winnerId, score } = determineScoreWinner(world);
+		return { result: "victory", reason: "score", winnerId, score };
 	}
 
 	return { result: "playing" };
@@ -171,76 +167,191 @@ export function checkVictoryConditions(
  * Used by the HUD to show progress bars/indicators.
  */
 export function getVictoryProgress(world: World): VictoryProgress {
-	const boardDims = getBoardDims(world);
-	let territoryPercent = 0;
-	if (boardDims) {
-		const territory = computeTerritory(world, boardDims.w, boardDims.h);
-		territoryPercent = getTerritoryPercent(territory, "player");
-	}
-
-	let researchLabs = 0;
-	for (const e of world.query(Building)) {
-		const b = e.get(Building);
-		if (b?.factionId === "player" && b.buildingType === "analysis_node") {
-			researchLabs++;
-		}
-	}
-
-	const totalResources = getPlayerTotalResources(world);
+	const networkCoveragePercent = computeSignalCoveragePercent(world);
+	const reclamationPercent = computeReclamationPercent(world, "player");
 	const currentTurn = getCurrentTurnForVictory(world);
 
 	const wormhole = getWormholeProjectState();
 	const wormholeTurnsRemaining =
 		wormhole.status === "building" ? wormhole.turnsRemaining : null;
 
+	const cultStructuresRemaining = countCultStructuresAlive(world);
+	const rivalFactionsAlive = countRivalFactionsAlive(world, "player");
+
 	return {
-		territoryPercent,
-		researchLabs,
-		techPoints,
-		totalResources,
+		networkCoveragePercent,
+		reclamationPercent,
 		currentTurn,
 		wormholeTurnsRemaining,
-		forcedDominationProgress: forcedDominationCounter,
+		cultStructuresRemaining,
+		rivalFactionsAlive,
 	};
 }
 
-// ---------------------------------------------------------------------------
-// Technical Supremacy — requires mark_v_transcendence + Mark V unit of each class
-// ---------------------------------------------------------------------------
+// ─── Internal Helpers ────────────────────────────────────────────────────────
 
-const FACTION_ROBOT_CLASSES = [
-	"scout",
-	"infantry",
-	"cavalry",
-	"ranged",
-	"support",
-	"worker",
-] as const;
+/** Whether a faction has any units or buildings alive. */
+function factionHasPresence(world: World, factionId: string): boolean {
+	for (const e of world.query(UnitFaction)) {
+		const f = e.get(UnitFaction);
+		if (f?.factionId === factionId) return true;
+	}
+	for (const e of world.query(Building)) {
+		const b = e.get(Building);
+		if (b?.factionId === factionId && b.hp > 0) return true;
+	}
+	return false;
+}
+
+/** Count rival machine factions that still have units or buildings. */
+function countRivalFactionsAlive(
+	world: World,
+	playerFactionId: string,
+): number {
+	const alive = new Set<string>();
+	for (const e of world.query(UnitFaction)) {
+		const f = e.get(UnitFaction);
+		if (!f || f.factionId === playerFactionId || isCultFaction(f.factionId))
+			continue;
+		if (isMachineFaction(f.factionId)) alive.add(f.factionId);
+	}
+	for (const e of world.query(Building)) {
+		const b = e.get(Building);
+		if (!b || b.factionId === playerFactionId || isCultFaction(b.factionId))
+			continue;
+		if (isMachineFaction(b.factionId) && b.hp > 0) alive.add(b.factionId);
+	}
+	return alive.size;
+}
+
+/** Whether any rival machine faction was ever spawned (has a Faction entity). */
+function hasAnyRivalFactionEverExisted(world: World): boolean {
+	for (const e of world.query(Faction)) {
+		const f = e.get(Faction);
+		if (!f) continue;
+		if (isMachineFaction(f.id) && !f.isPlayer) return true;
+	}
+	return false;
+}
+
+/** Signal coverage as % of passable tiles. */
+function computeSignalCoveragePercent(world: World): number {
+	const passableTiles = getPassableTileSet(world);
+	if (passableTiles.size === 0) return 0;
+
+	const covered = buildSignalCoverageSet(world);
+	let coveredPassable = 0;
+	for (const key of covered) {
+		if (passableTiles.has(key)) coveredPassable++;
+	}
+	return (coveredPassable / passableTiles.size) * 100;
+}
+
+/** Build signal coverage set from all powered signal nodes. */
+function buildSignalCoverageSet(world: World): Set<string> {
+	const covered = new Set<string>();
+	for (const e of world.query(Building, SignalNode, Powered)) {
+		const b = e.get(Building);
+		const sn = e.get(SignalNode);
+		if (!b || !sn || sn.range <= 0) continue;
+		for (let x = b.tileX - sn.range; x <= b.tileX + sn.range; x++) {
+			const remainingZ = sn.range - Math.abs(x - b.tileX);
+			for (let z = b.tileZ - remainingZ; z <= b.tileZ + remainingZ; z++) {
+				covered.add(`${x},${z}`);
+			}
+		}
+	}
+	return covered;
+}
+
+/** Get the set of passable tile keys. */
+function getPassableTileSet(world: World): Set<string> {
+	const tiles = new Set<string>();
+	for (const e of world.query(Tile)) {
+		const t = e.get(Tile);
+		if (t?.passable) tiles.add(`${t.x},${t.z}`);
+	}
+	// Fall back to board dimensions if no Tile entities exist
+	if (tiles.size === 0) {
+		const boardDims = getBoardDims(world);
+		if (boardDims) {
+			for (let z = 0; z < boardDims.h; z++) {
+				for (let x = 0; x < boardDims.w; x++) {
+					tiles.add(`${x},${z}`);
+				}
+			}
+		}
+	}
+	return tiles;
+}
 
 /**
- * Check if a faction has achieved Technical Supremacy:
- *   1. mark_v_transcendence tech researched
- *   2. At least one Mark V (markLevel >= 5) unit of EACH faction robot class
+ * Reclamation: % of passable tiles that have a player building with
+ * buildingTier >= VICTORY_RECLAMATION_MIN_LEVEL.
  */
-export function checkTechnicalSupremacy(
-	world: World,
-	factionId: string,
-): boolean {
-	if (!isTechResearched(world, factionId, "mark_v_transcendence")) return false;
+function computeReclamationPercent(world: World, factionId: string): number {
+	const passableTiles = getPassableTileSet(world);
+	if (passableTiles.size === 0) return 0;
 
-	const markVClasses = new Set<string>();
-	for (const e of world.query(UnitFaction, UnitStats, UnitXP)) {
-		const f = e.get(UnitFaction);
-		if (f?.factionId !== factionId) continue;
-		const stats = e.get(UnitStats);
-		const xp = e.get(UnitXP);
-		if (!stats || !xp) continue;
-		if (xp.markLevel >= 5) {
-			markVClasses.add(stats.robotClass);
+	const roboformedTiles = new Set<string>();
+	for (const e of world.query(Building)) {
+		const b = e.get(Building);
+		if (!b || b.factionId !== factionId || b.hp <= 0) continue;
+		if (b.buildingTier >= VICTORY_RECLAMATION_MIN_LEVEL) {
+			const key = `${b.tileX},${b.tileZ}`;
+			if (passableTiles.has(key)) roboformedTiles.add(key);
 		}
 	}
 
-	return FACTION_ROBOT_CLASSES.every((cls) => markVClasses.has(cls));
+	return (roboformedTiles.size / passableTiles.size) * 100;
+}
+
+/** Count cult structures with HP > 0. */
+function countCultStructuresAlive(world: World): number {
+	let count = 0;
+	for (const e of world.query(CultStructure)) {
+		const cs = e.get(CultStructure);
+		if (cs && cs.hp > 0) count++;
+	}
+	return count;
+}
+
+/** Track whether cult structures were ever placed. Module-level flag. */
+let _cultStructuresEverPlaced = false;
+
+function cultStructuresEverExisted(world: World): boolean {
+	if (_cultStructuresEverPlaced) return true;
+	// Check if any cult structure entities exist (even with hp <= 0)
+	for (const _e of world.query(CultStructure)) {
+		_cultStructuresEverPlaced = true;
+		return true;
+	}
+	return false;
+}
+
+/** Determine score-victory winner across all factions. */
+function determineScoreWinner(world: World): {
+	winnerId: string;
+	score: number;
+} {
+	const factionIds: string[] = ["player"];
+	for (const e of world.query(Faction)) {
+		const f = e.get(Faction);
+		if (f && !f.isPlayer && isMachineFaction(f.id)) {
+			factionIds.push(f.id);
+		}
+	}
+
+	let bestId = "player";
+	let bestScore = -Infinity;
+	for (const fid of factionIds) {
+		const score = calculateFactionScore(world, fid);
+		if (score > bestScore) {
+			bestScore = score;
+			bestId = fid;
+		}
+	}
+	return { winnerId: bestId, score: bestScore };
 }
 
 function getBoardDims(world: World): { w: number; h: number } | null {
@@ -251,21 +362,6 @@ function getBoardDims(world: World): { w: number; h: number } | null {
 	return null;
 }
 
-function getPlayerTotalResources(world: World): number {
-	for (const e of world.query(ResourcePool, Faction)) {
-		const f = e.get(Faction);
-		if (!f?.isPlayer) continue;
-		const pool = e.get(ResourcePool);
-		if (!pool) continue;
-		let total = 0;
-		for (const val of Object.values(pool)) {
-			if (typeof val === "number") total += val;
-		}
-		return total;
-	}
-	return 0;
-}
-
 function getCurrentTurnForVictory(world: World): number {
 	for (const e of world.query(Board)) {
 		const b = e.get(Board);
@@ -274,17 +370,7 @@ function getCurrentTurnForVictory(world: World): number {
 	return 1;
 }
 
-function _isCultFaction(factionId: string): boolean {
-	return (CULT_FACTIONS as readonly string[]).includes(factionId);
-}
-
 /** Reset module state — for tests. */
 export function _resetVictory(): void {
-	techPoints = 0;
-	forcedDominationCounter = 0;
-}
-
-/** Read current tech points — for tests. */
-export function _getTechPoints(): number {
-	return techPoints;
+	_cultStructuresEverPlaced = false;
 }

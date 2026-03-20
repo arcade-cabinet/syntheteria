@@ -67,6 +67,7 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 
 ### Victory
 - `checkVictoryConditions`, `getVictoryProgress`
+- `calculateFactionScore`, `recordCultStructureDestroyed`
 - `canStartWormholeProject`, `tickWormholeProject`
 
 ## Files
@@ -114,5 +115,6 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 | turretSystem.ts | Turret firing logic |
 | tutorialSystem.ts | Tutorial step state machine |
 | upgradeSystem.ts | Unit mark/tier upgrades |
-| victorySystem.ts | Victory condition checks |
+| victorySystem.ts | 6 victory conditions: domination, network, reclamation, transcendence, cult, score |
+| scoreSystem.ts | Weighted faction score for turn-cap victory |
 | wormholeProject.ts | Wormhole project state machine |

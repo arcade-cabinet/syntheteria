@@ -253,18 +253,16 @@ describe("SPEC: Section 8 — Factions + Cults", () => {
 				"../../systems/victorySystem"
 			);
 			_resetVictory();
-			// Victory system returns VictoryReason type that includes "domination"
-			// Just verify the module exports what we need
+			// Victory system returns VictoryType that includes "domination"
 			expect(checkVictoryConditions).toBeTypeOf("function");
 		});
 
-		it("technical supremacy victory path exists", async () => {
-			// GAME_DESIGN.md: "Technical Supremacy — full automation and Mark V progression"
+		it("transcendence victory path exists", async () => {
+			// GAME_DESIGN.md: "Transcendence — complete Wormhole Stabilizer"
 			const { checkVictoryConditions, _resetVictory } = await import(
 				"../../systems/victorySystem"
 			);
 			_resetVictory();
-			// Victory system includes "research" as a reason
 			expect(checkVictoryConditions).toBeTypeOf("function");
 		});
 

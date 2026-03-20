@@ -275,6 +275,13 @@ export {
 } from "./resourceSystem";
 // --- Salvage ---
 export { placeSalvageProps, TERRAIN_SALVAGE } from "./salvagePlacement";
+// --- Score ---
+export {
+	_resetScoreSystem,
+	calculateFactionScore,
+	getCultStructuresDestroyed,
+	recordCultStructureDestroyed,
+} from "./scoreSystem";
 // --- Signal ---
 export { isInSignalRange, runSignalNetwork } from "./signalSystem";
 // --- Specialization ---
@@ -375,13 +382,12 @@ export {
 export type {
 	GameOutcome,
 	VictoryProgress,
-	VictoryReason,
+	VictoryResult,
+	VictoryType,
 } from "./victorySystem";
 // --- Victory ---
 export {
-	_getTechPoints,
 	_resetVictory,
-	checkTechnicalSupremacy,
 	checkVictoryConditions,
 	getVictoryProgress,
 } from "./victorySystem";

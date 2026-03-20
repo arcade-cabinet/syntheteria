@@ -66,7 +66,7 @@ import {
 } from "../synthesisSystem";
 import { computeTerritory, getTerritoryPercent } from "../territorySystem";
 import { runTurrets } from "../turretSystem";
-import { checkVictoryConditions } from "../victorySystem";
+import { _resetVictory, checkVictoryConditions } from "../victorySystem";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -1328,15 +1328,16 @@ describe("victorySystem — behavior", () => {
 	let world: ReturnType<typeof createWorld>;
 	beforeEach(() => {
 		world = createWorld();
+		_resetVictory();
 		spawnBoard(world);
 	});
 	afterEach(() => {
 		world.destroy();
 	});
 
-	it("defeat when all player units eliminated", () => {
+	it("defeat when all player units and buildings eliminated", () => {
 		spawnFaction(world, "player", true);
-		// No player units spawned → defeat
+		// No player units or buildings spawned → defeat
 
 		const result = checkVictoryConditions(world);
 		expect(result.result).toBe("defeat");

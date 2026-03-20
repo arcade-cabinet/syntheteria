@@ -104,16 +104,14 @@ export const TERRITORY_BUILDING_RADIUS = 4;
 // Victory conditions
 // ---------------------------------------------------------------------------
 
-/** Domination: faction must control this percentage of total tiles. */
-export const VICTORY_DOMINATION_PERCENT = 60;
-/** Research: number of research labs required. */
-export const VICTORY_RESEARCH_LABS = 3;
-/** Research: tech points required (research labs generate 1/turn). */
-export const VICTORY_RESEARCH_POINTS = 100;
-/** Economic: total resources across all materials. */
-export const VICTORY_ECONOMIC_TOTAL = 500;
-/** Survival: number of turns to survive. */
-export const VICTORY_SURVIVAL_TURNS = 200;
+/** Network Supremacy: signal coverage must reach this % of passable tiles. */
+export const VICTORY_NETWORK_COVERAGE_PERCENT = 80;
+/** Reclamation: roboformed tiles at min level must reach this % of passable tiles. */
+export const VICTORY_RECLAMATION_PERCENT = 60;
+/** Reclamation: minimum roboform level (building tier) required. */
+export const VICTORY_RECLAMATION_MIN_LEVEL = 3;
+/** Score (turn-cap) victory: game ends at this turn. */
+export const VICTORY_TURN_CAP = 200;
 
 // ---------------------------------------------------------------------------
 // Diplomacy

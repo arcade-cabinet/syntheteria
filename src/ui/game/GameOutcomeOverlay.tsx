@@ -9,31 +9,28 @@ type GameOutcomeOverlayProps = {
 };
 
 const TITLES: Record<string, string> = {
-	domination: "SIGNAL DOMINANCE ACHIEVED",
-	research: "LATTICE DECODED",
-	economic: "RESOURCE SUPREMACY",
-	survival: "PERSISTENCE CONFIRMED",
-	wormhole: "WORMHOLE STABILIZED",
-	technical_supremacy: "MARK V TRANSCENDENCE",
-	forced_domination: "TOTAL DOMINANCE",
+	domination: "ALL RIVALS ELIMINATED",
+	network_supremacy: "SIGNAL DOMINANCE ACHIEVED",
+	reclamation: "ECUMENOPOLIS RECLAIMED",
+	transcendence: "WORMHOLE STABILIZED",
+	cult_eradication: "CULT THREAT NEUTRALIZED",
+	score: "CYCLE LIMIT REACHED",
 	elimination: "RELAY LOST",
 };
 
 const DESCRIPTIONS: Record<string, string> = {
 	domination:
-		"Territory control exceeds threshold. Sector grid belongs to your signal.",
-	research:
-		"Full lattice decode complete. The machine substrate yields its secrets.",
-	economic:
-		"Resource accumulation secures operational dominance across the ecumenopolis.",
-	survival:
-		"Persistence subroutine exceeded cycle threshold. Syntheteria acknowledges endurance.",
-	wormhole:
+		"Every rival machine consciousness has been wiped from Syntheteria. The sector is yours alone.",
+	network_supremacy:
+		"Signal coverage blankets the ecumenopolis. Every tile hears your broadcast.",
+	reclamation:
+		"The planet's surface transforms under your directive. Roboforming is nearly complete.",
+	transcendence:
 		"The path is open. Spacetime bends to your signal. Transcendence achieved.",
-	technical_supremacy:
-		"Mark V units of every class assembled. The machine lattice evolves beyond its creators.",
-	forced_domination:
-		"Overwhelming territorial supremacy. No faction can challenge your dominion.",
+	cult_eradication:
+		"Every cult structure lies in ruins. The human remnant threat is ended.",
+	score:
+		"Cycle cap reached. Final tallies computed. The dominant faction prevails.",
 	elimination: "All relay nodes destroyed. Signal propagation terminated.",
 };
 
@@ -48,37 +45,36 @@ function getOutcomeTheme(reason: string): {
 } {
 	switch (reason) {
 		case "domination":
-		case "forced_domination":
 			return {
 				accent: "#ff9944",
 				washCenter: "rgba(255,102,0,0.25)",
 				washEdge: "rgba(3,3,8,0.92)",
 			};
-		case "research":
+		case "network_supremacy":
 			return {
 				accent: "#44ddff",
 				washCenter: "rgba(68,221,255,0.2)",
 				washEdge: "rgba(3,3,8,0.92)",
 			};
-		case "economic":
-			return {
-				accent: "#ffd700",
-				washCenter: "rgba(255,215,0,0.2)",
-				washEdge: "rgba(3,3,8,0.92)",
-			};
-		case "survival":
+		case "reclamation":
 			return {
 				accent: "#7ee7cb",
 				washCenter: "rgba(126,231,203,0.18)",
 				washEdge: "rgba(3,3,8,0.92)",
 			};
-		case "wormhole":
+		case "transcendence":
 			return {
 				accent: "#cc88ff",
 				washCenter: "rgba(160,80,255,0.35)",
 				washEdge: "rgba(3,3,8,0.90)",
 			};
-		case "technical_supremacy":
+		case "cult_eradication":
+			return {
+				accent: "#ffd700",
+				washCenter: "rgba(255,215,0,0.2)",
+				washEdge: "rgba(3,3,8,0.92)",
+			};
+		case "score":
 			return {
 				accent: "#ffffff",
 				washCenter: "rgba(200,200,255,0.25)",

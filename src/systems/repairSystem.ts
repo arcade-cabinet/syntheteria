@@ -9,7 +9,7 @@ import type { World } from "koota";
 import { Building, Powered, UnitFaction, UnitPos, UnitStats } from "../traits";
 
 const REPAIR_RANGE = 2;
-const REPAIR_AMOUNT = 2;
+const REPAIR_AMOUNT_BY_TIER: Record<number, number> = { 1: 2, 2: 3, 3: 5 };
 
 export function runRepairs(world: World): void {
 	// Collect powered maintenance bays
@@ -20,6 +20,8 @@ export function runRepairs(world: World): void {
 		const bayX = b.tileX;
 		const bayZ = b.tileZ;
 		const bayFaction = b.factionId;
+		const tier = b.buildingTier ?? 1;
+		const repairAmount = REPAIR_AMOUNT_BY_TIER[tier] ?? 2;
 
 		// Find friendly units within range
 		for (const unit of world.query(UnitPos, UnitStats, UnitFaction)) {
@@ -37,7 +39,7 @@ export function runRepairs(world: World): void {
 
 			unit.set(UnitStats, {
 				...stats,
-				hp: Math.min(stats.hp + REPAIR_AMOUNT, stats.maxHp),
+				hp: Math.min(stats.hp + repairAmount, stats.maxHp),
 			});
 		}
 	}

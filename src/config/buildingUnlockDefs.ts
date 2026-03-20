@@ -36,78 +36,16 @@ export const BUILDING_UNLOCK_CHAINS: Partial<
 		unlocksAtTier2: ["power_plant", "solar_array"],
 		unlocksAtTier3: ["geothermal_tap"],
 		tiers: {
-			2: { cost: { iron_ore: 5, steel: 3 }, upgradeTurns: 6, minEpoch: 2 },
-			3: {
-				cost: { steel: 8, circuits: 4 },
-				upgradeTurns: 10,
-				minEpoch: 3,
-			},
+			2: { cost: { iron_ore: 3, steel: 2 }, upgradeTurns: 3, minEpoch: 2 },
+			3: { cost: { steel: 5, circuits: 3 }, upgradeTurns: 6, minEpoch: 3 },
 		},
 	},
 	motor_pool: {
 		unlocksAtTier2: ["maintenance_bay"],
 		tiers: {
 			2: {
-				cost: { iron_ore: 6, steel: 4, circuits: 2 },
-				upgradeTurns: 8,
-				minEpoch: 2,
-			},
-			3: {
-				cost: { steel: 10, circuits: 6, alloy: 3 },
-				upgradeTurns: 12,
-				minEpoch: 3,
-			},
-		},
-	},
-	synthesizer: {
-		unlocksAtTier2: ["resource_refinery"],
-		tiers: {
-			2: {
-				cost: { iron_ore: 4, glass: 3 },
-				upgradeTurns: 6,
-				minEpoch: 2,
-			},
-			3: {
-				cost: { steel: 6, circuits: 4, glass: 3 },
-				upgradeTurns: 10,
-				minEpoch: 3,
-			},
-		},
-	},
-	relay_tower: {
-		unlocksAtTier2: ["outpost"],
-		tiers: {
-			2: {
-				cost: { circuits: 4, glass: 2 },
-				upgradeTurns: 5,
-				minEpoch: 2,
-			},
-			3: {
-				cost: { circuits: 6, steel: 4, alloy: 2 },
-				upgradeTurns: 8,
-				minEpoch: 3,
-			},
-		},
-	},
-	defense_turret: {
-		tiers: {
-			2: {
-				cost: { iron_ore: 5, steel: 3 },
-				upgradeTurns: 5,
-				minEpoch: 2,
-			},
-			3: {
-				cost: { steel: 8, alloy: 3 },
-				upgradeTurns: 8,
-				minEpoch: 3,
-			},
-		},
-	},
-	maintenance_bay: {
-		tiers: {
-			2: {
-				cost: { steel: 4, circuits: 3 },
-				upgradeTurns: 6,
+				cost: { iron_ore: 3, steel: 2, circuits: 1 },
+				upgradeTurns: 4,
 				minEpoch: 2,
 			},
 			3: {
@@ -117,16 +55,74 @@ export const BUILDING_UNLOCK_CHAINS: Partial<
 			},
 		},
 	},
-	analysis_node: {
+	synthesizer: {
+		unlocksAtTier2: ["resource_refinery"],
 		tiers: {
 			2: {
-				cost: { glass: 4, circuits: 3 },
-				upgradeTurns: 6,
+				cost: { iron_ore: 2, glass: 2 },
+				upgradeTurns: 3,
 				minEpoch: 2,
 			},
 			3: {
-				cost: { circuits: 8, alloy: 3, quantum_crystal: 1 },
-				upgradeTurns: 10,
+				cost: { steel: 4, circuits: 3, glass: 2 },
+				upgradeTurns: 6,
+				minEpoch: 3,
+			},
+		},
+	},
+	relay_tower: {
+		unlocksAtTier2: ["outpost"],
+		tiers: {
+			2: {
+				cost: { circuits: 2, glass: 1 },
+				upgradeTurns: 3,
+				minEpoch: 2,
+			},
+			3: {
+				cost: { circuits: 4, steel: 3, alloy: 1 },
+				upgradeTurns: 5,
+				minEpoch: 3,
+			},
+		},
+	},
+	defense_turret: {
+		tiers: {
+			2: {
+				cost: { iron_ore: 3, steel: 2 },
+				upgradeTurns: 3,
+				minEpoch: 2,
+			},
+			3: {
+				cost: { steel: 5, alloy: 2 },
+				upgradeTurns: 5,
+				minEpoch: 3,
+			},
+		},
+	},
+	maintenance_bay: {
+		tiers: {
+			2: {
+				cost: { steel: 2, circuits: 2 },
+				upgradeTurns: 3,
+				minEpoch: 2,
+			},
+			3: {
+				cost: { steel: 4, circuits: 3, alloy: 1 },
+				upgradeTurns: 5,
+				minEpoch: 3,
+			},
+		},
+	},
+	analysis_node: {
+		tiers: {
+			2: {
+				cost: { glass: 2, circuits: 2 },
+				upgradeTurns: 3,
+				minEpoch: 2,
+			},
+			3: {
+				cost: { circuits: 5, alloy: 2, quantum_crystal: 1 },
+				upgradeTurns: 6,
 				minEpoch: 3,
 			},
 		},

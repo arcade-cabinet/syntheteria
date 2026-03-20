@@ -68,11 +68,11 @@ describe("scoreSystem", () => {
 		expect(scoreOne).toBeGreaterThanOrEqual(0.5);
 	});
 
-	it("cult structures destroyed contribute 5 each", () => {
+	it("cult structures destroyed contribute 10 each", () => {
 		const scoreBefore = calculateFactionScore(world, "player");
 		recordCultStructureDestroyed("player");
 		const scoreAfter = calculateFactionScore(world, "player");
-		expect(scoreAfter - scoreBefore).toBe(5);
+		expect(scoreAfter - scoreBefore).toBe(10);
 	});
 
 	it("multiple cult destructions accumulate", () => {
@@ -80,7 +80,7 @@ describe("scoreSystem", () => {
 		recordCultStructureDestroyed("player");
 		recordCultStructureDestroyed("player");
 		const score = calculateFactionScore(world, "player");
-		expect(score).toBe(15); // 3 × 5
+		expect(score).toBe(30); // 3 × 10
 	});
 
 	it("combined score calculation", () => {
@@ -146,7 +146,7 @@ describe("scoreSystem", () => {
 
 	it("reset clears destroyed cult structure counts", () => {
 		recordCultStructureDestroyed("player");
-		expect(calculateFactionScore(world, "player")).toBe(5);
+		expect(calculateFactionScore(world, "player")).toBe(10);
 		_resetScoreSystem();
 		expect(calculateFactionScore(world, "player")).toBe(0);
 	});

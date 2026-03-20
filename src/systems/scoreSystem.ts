@@ -1,8 +1,9 @@
 /**
  * Score calculation for the turn-cap victory condition.
  *
- * Score = territory × 1 + network coverage × 2 + roboform tiles × 1.5 +
- *         active units × 0.5 + buildings × 1 + cult POIs destroyed × 5
+ * Score = territory × 2 + network coverage × 3 + roboform tiles × 2 +
+ *         active units × 1 + buildings × 2 + building tier sum × 5 +
+ *         cult POIs destroyed × 10
  */
 
 import type { World } from "koota";
@@ -36,12 +37,13 @@ export function _resetScoreSystem(): void {
 
 // ─── Weights ────────────────────────────────────────────────────────────────
 
-const WEIGHT_TERRITORY = 1;
-const WEIGHT_NETWORK = 2;
-const WEIGHT_ROBOFORM = 1.5;
-const WEIGHT_UNITS = 0.5;
-const WEIGHT_BUILDINGS = 1;
-const WEIGHT_CULT_DESTROYED = 5;
+const WEIGHT_TERRITORY = 2;
+const WEIGHT_NETWORK = 3;
+const WEIGHT_ROBOFORM = 2;
+const WEIGHT_UNITS = 1;
+const WEIGHT_BUILDINGS = 2;
+const WEIGHT_BUILDING_TIERS = 5;
+const WEIGHT_CULT_DESTROYED = 10;
 
 // ─── Score Calculation ──────────────────────────────────────────────────────
 
@@ -49,11 +51,11 @@ export function calculateFactionScore(world: World, factionId: string): number {
 	const territory = countTerritoryTiles(world, factionId);
 	const units = countActiveUnits(world, factionId);
 	const buildings = countActiveBuildings(world, factionId);
+	const buildingTierSum = countBuildingTierSum(world, factionId);
 	const roboform = countRoboformedTiles(world, factionId);
 	const cultDestroyed = getCultStructuresDestroyed(factionId);
 
 	// Network coverage: count tiles covered by this faction's signal nodes
-	// (simplified — counts powered signal node coverage for this faction)
 	const networkCoverage = countSignalCoveredTiles(world, factionId);
 
 	return (
@@ -62,6 +64,7 @@ export function calculateFactionScore(world: World, factionId: string): number {
 		roboform * WEIGHT_ROBOFORM +
 		units * WEIGHT_UNITS +
 		buildings * WEIGHT_BUILDINGS +
+		buildingTierSum * WEIGHT_BUILDING_TIERS +
 		cultDestroyed * WEIGHT_CULT_DESTROYED
 	);
 }
@@ -115,6 +118,17 @@ function countActiveBuildings(world: World, factionId: string): number {
 		if (b?.factionId === factionId && b.hp > 0) count++;
 	}
 	return count;
+}
+
+function countBuildingTierSum(world: World, factionId: string): number {
+	let sum = 0;
+	for (const e of world.query(Building)) {
+		const b = e.get(Building);
+		if (b?.factionId === factionId && b.hp > 0) {
+			sum += b.buildingTier ?? 1;
+		}
+	}
+	return sum;
 }
 
 function countRoboformedTiles(world: World, factionId: string): number {

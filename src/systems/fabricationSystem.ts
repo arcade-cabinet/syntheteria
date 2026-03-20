@@ -33,6 +33,15 @@ import { canAfford, spendResources } from "./resourceSystem";
 
 // ─── Fabrication job trait ──────────────────────────────────────────────────
 
+/** Motor Pool tier → fabrication slots. */
+const MOTOR_POOL_SLOTS_BY_TIER: Record<number, number> = { 1: 2, 2: 3, 3: 4 };
+/** Motor Pool tier → build time multiplier (lower = faster). */
+const MOTOR_POOL_TIME_MULT_BY_TIER: Record<number, number> = {
+	1: 1.0,
+	2: 0.8,
+	3: 0.6,
+};
+
 /** A single in-progress fabrication job, linked to a motor pool entity. */
 export const FabricationJob = trait({
 	/** The motor pool entity id (from entity.id()). */
@@ -277,7 +286,7 @@ export function queueFabrication(
 
 	// Must have BotFabricator with available slots
 	const fab = motorPoolEntity.get(BotFabricator);
-	if (!fab || fab.queueSize >= fab.fabricationSlots) {
+	if (!fab) {
 		return { ok: false, reason: "queue_full" };
 	}
 
@@ -286,8 +295,13 @@ export function queueFabrication(
 		return { ok: false, reason: "queue_full" };
 	}
 
-	// Motor Pool tier gates which robot classes can be fabricated
+	// Effective slots scale with building tier
 	const poolTier = building.buildingTier ?? 1;
+	const effectiveSlots =
+		MOTOR_POOL_SLOTS_BY_TIER[poolTier] ?? fab.fabricationSlots;
+	if (fab.queueSize >= effectiveSlots) {
+		return { ok: false, reason: "queue_full" };
+	}
 	const allowedClasses =
 		MOTOR_POOL_UNIT_TIERS[poolTier] ?? MOTOR_POOL_UNIT_TIERS[1]!;
 	if (!allowedClasses.includes(robotClass)) {
@@ -320,12 +334,16 @@ export function queueFabrication(
 		queueSize: fab.queueSize + 1,
 	});
 
+	// Build time scales down with tier
+	const timeMult = MOTOR_POOL_TIME_MULT_BY_TIER[poolTier] ?? 1.0;
+	const effectiveBuildTime = Math.max(1, Math.round(cost.buildTime * timeMult));
+
 	// Spawn job entity
 	world.spawn(
 		FabricationJob({
 			motorPoolId: motorPoolEntity.id(),
 			robotClass,
-			turnsRemaining: cost.buildTime,
+			turnsRemaining: effectiveBuildTime,
 			factionId,
 			trackId,
 			trackVersion,

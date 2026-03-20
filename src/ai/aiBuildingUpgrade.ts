@@ -25,7 +25,7 @@ const UPGRADE_PRIORITY: readonly string[] = [
 
 /**
  * Evaluate and initiate building tier upgrades for an AI faction.
- * Upgrades one building per faction per turn (the highest-priority eligible one).
+ * Upgrades ALL eligible buildings each turn (not just one).
  */
 export function aiConsiderBuildingUpgrades(
 	world: World,
@@ -69,7 +69,7 @@ export function aiConsiderBuildingUpgrades(
 		});
 	}
 
-	// Try upgrading in priority order — one upgrade per faction per turn
+	// Try upgrading ALL buildings in priority order
 	for (const targetType of UPGRADE_PRIORITY) {
 		const candidates = factionBuildings.filter(
 			(b) =>
@@ -87,13 +87,12 @@ export function aiConsiderBuildingUpgrades(
 		candidates.sort((a, b) => a.tier - b.tier);
 
 		for (const candidate of candidates) {
-			const result = startBuildingUpgrade(
+			startBuildingUpgrade(
 				world,
 				candidate.entityId,
 				highestBuildingTier,
 				currentTurn,
 			);
-			if (result.success) return;
 		}
 	}
 }

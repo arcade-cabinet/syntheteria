@@ -22,8 +22,8 @@ describe("epochDefs", () => {
 		expect(new Set(ids).size).toBe(5);
 	});
 
-	it("building tiers map to epochs (1,1,2,3,3)", () => {
-		expect(EPOCHS.map((e) => e.techTier)).toEqual([1, 1, 2, 3, 3]);
+	it("all epoch techTier fields are 1 (turn-driven progression)", () => {
+		expect(EPOCHS.map((e) => e.techTier)).toEqual([1, 1, 1, 1, 1]);
 	});
 
 	it("minTurn increases monotonically", () => {
@@ -78,14 +78,14 @@ describe("epochDefs", () => {
 	});
 
 	describe("getEpochForTechTier", () => {
-		it("maps building tiers to highest eligible epoch", () => {
-			expect(getEpochForTechTier(1).id).toBe("expansion");
-			expect(getEpochForTechTier(2).id).toBe("consolidation");
+		it("all tiers resolve to transcendence since techTier is now 1 for all", () => {
+			expect(getEpochForTechTier(1).id).toBe("transcendence");
+			expect(getEpochForTechTier(2).id).toBe("transcendence");
 			expect(getEpochForTechTier(3).id).toBe("transcendence");
 		});
 
 		it("clamps out-of-range tiers", () => {
-			expect(getEpochForTechTier(0).id).toBe("expansion");
+			expect(getEpochForTechTier(0).id).toBe("transcendence");
 			expect(getEpochForTechTier(10).id).toBe("transcendence");
 		});
 	});
@@ -117,13 +117,13 @@ describe("epochDefs", () => {
 		});
 
 		it("stays at highest eligible epoch when turns outpace tier", () => {
-			// Turn 200 but only building tier 1 → epoch 2 (tier 1, minTurn 10)
-			expect(computeEpoch(1, 200).id).toBe("expansion");
+			// Epochs are purely turn-driven — tier is ignored
+			expect(computeEpoch(1, 200).id).toBe("transcendence");
 		});
 
-		it("tier 0 always returns epoch 1", () => {
+		it("tier 0 still uses turn-based progression", () => {
 			expect(computeEpoch(0, 1).id).toBe("emergence");
-			expect(computeEpoch(0, 200).id).toBe("emergence");
+			expect(computeEpoch(0, 200).id).toBe("transcendence");
 		});
 	});
 

@@ -100,13 +100,14 @@ describe("fabricationSystem", () => {
 
 		it("rejects when queue is full", () => {
 			const pool = spawnMotorPool(true);
-			// Fill the single slot
+			// Tier 1 motor pool has 2 effective slots — fill both
+			queueFabrication(world, pool, "scout");
 			queueFabrication(world, pool, "scout");
 
 			const result = queueFabrication(world, pool, "worker");
 
 			expect(result).toEqual({ ok: false, reason: "queue_full" });
-			expect(world.query(FabricationJob).length).toBe(1);
+			expect(world.query(FabricationJob).length).toBe(2);
 		});
 
 		it("rejects when cannot afford", () => {

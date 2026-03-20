@@ -5,13 +5,13 @@
  * storm escalation, and victory paths. They provide organic pacing so
  * the game grows from intimate survival into strategic-scale competition.
  *
- * Epoch transitions are driven by the highest building tier across ALL
- * factions (including AI) and the current turn number.
- * Building tiers (1–3) map to epoch eligibility:
+ * Epoch transitions are purely turn-driven (no building tier gating):
  *
- *   Building tier 1 → Epoch 1 (always) + Epoch 2 (turn 10+)
- *   Building tier 2 → Epoch 3 (turn 30+)
- *   Building tier 3 → Epoch 4 (turn 60+) + Epoch 5 (turn 100+)
+ *   Turn  1+ → Epoch 1: Emergence
+ *   Turn 10+ → Epoch 2: Expansion
+ *   Turn 30+ → Epoch 3: Consolidation
+ *   Turn 60+ → Epoch 4: Convergence
+ *   Turn 100+ → Epoch 5: Transcendence
  */
 
 // ---------------------------------------------------------------------------
@@ -31,7 +31,7 @@ export interface EpochDef {
 	readonly name: string;
 	readonly subtitle: string;
 	readonly description: string;
-	/** Minimum building tier required to unlock this epoch (highest tier across all factions). */
+	/** Legacy field — no longer used for gating (epochs are purely turn-driven). */
 	readonly techTier: 1 | 2 | 3;
 	/** Minimum turn before this epoch can trigger (prevents early-rush cheese). */
 	readonly minTurn: number;
@@ -89,12 +89,12 @@ export const EPOCHS: readonly EpochDef[] = [
 		subtitle: "The Lattice Tightens",
 		description:
 			"Advanced tech unlocks specializations. Cult escalation intensifies — war parties form. The storm begins to shift.",
-		techTier: 2,
+		techTier: 1,
 		minTurn: 30,
 		stormEscalation: "volatile",
 		cultMutationCap: 2,
-		cultSpawnMod: 0.8,
-		cultCapMod: 1.0,
+		cultSpawnMod: 0.6,
+		cultCapMod: 1.5,
 		wormholeAvailable: false,
 	},
 	{
@@ -104,12 +104,12 @@ export const EPOCHS: readonly EpochDef[] = [
 		subtitle: "Eye of the Storm",
 		description:
 			"The hypercane approaches its peak. Wormhole Theory becomes researchable. Cult assaults begin. The wormhole project can be started.",
-		techTier: 3,
+		techTier: 1,
 		minTurn: 60,
 		stormEscalation: "cataclysmic",
 		cultMutationCap: 3,
-		cultSpawnMod: 0.7,
-		cultCapMod: 1.5,
+		cultSpawnMod: 0.4,
+		cultCapMod: 2.0,
 		wormholeAvailable: true,
 	},
 	{
@@ -119,12 +119,12 @@ export const EPOCHS: readonly EpochDef[] = [
 		subtitle: "The Final Frequency",
 		description:
 			"Endgame. Mark V units and the Wormhole Stabilizer become available. All victory paths are open. The cult launches its final assault.",
-		techTier: 3,
+		techTier: 1,
 		minTurn: 100,
 		stormEscalation: "cataclysmic",
 		cultMutationCap: 3,
-		cultSpawnMod: 0.5,
-		cultCapMod: 2.0,
+		cultSpawnMod: 0.3,
+		cultCapMod: 3.0,
 		wormholeAvailable: true,
 	},
 ] as const;
@@ -158,23 +158,20 @@ export function getEpochForTechTier(tier: number): EpochDef {
 }
 
 /**
- * Compute the current epoch from the highest building tier across all
- * factions and the current turn number.
+ * Compute the current epoch from the current turn number.
  *
- * The epoch is the highest epoch whose techTier (building tier) AND minTurn
- * requirements are both met. This prevents epoch-skipping via early rushes.
+ * Epochs are purely turn-driven — building tier is accepted for
+ * signature compatibility but ignored.
  */
 export function computeEpoch(
-	highestBuildingTier: number,
+	_highestBuildingTier: number,
 	currentTurn: number,
 ): EpochDef {
-	let result = EPOCHS[0];
-	for (const epoch of EPOCHS) {
-		if (highestBuildingTier >= epoch.techTier && currentTurn >= epoch.minTurn) {
-			result = epoch;
-		}
-	}
-	return result;
+	if (currentTurn >= 100) return EPOCHS[4];
+	if (currentTurn >= 60) return EPOCHS[3];
+	if (currentTurn >= 30) return EPOCHS[2];
+	if (currentTurn >= 10) return EPOCHS[1];
+	return EPOCHS[0];
 }
 
 /**

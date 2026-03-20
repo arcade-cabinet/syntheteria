@@ -105,9 +105,9 @@ export const TERRITORY_BUILDING_RADIUS = 4;
 // ---------------------------------------------------------------------------
 
 /** Network Supremacy: signal coverage must reach this % of passable tiles. */
-export const VICTORY_NETWORK_COVERAGE_PERCENT = 80;
+export const VICTORY_NETWORK_COVERAGE_PERCENT = 50;
 /** Reclamation: roboformed tiles at min level must reach this % of passable tiles. */
-export const VICTORY_RECLAMATION_PERCENT = 60;
+export const VICTORY_RECLAMATION_PERCENT = 30;
 /** Reclamation: minimum roboform level (building tier) required. */
 export const VICTORY_RECLAMATION_MIN_LEVEL = 3;
 /** Score (turn-cap) victory: game ends at this turn. */
@@ -170,7 +170,7 @@ export const STANDING_DECAY_PER_TURN = 1;
 // ---------------------------------------------------------------------------
 
 /** Turn after which cult enters final assault mode (x5 spawn rate). */
-export const CULT_FINAL_ASSAULT_TURN = 300;
+export const CULT_FINAL_ASSAULT_TURN = 150;
 
 /** Cult spawn rate multiplier during final assault. */
 export const CULT_FINAL_ASSAULT_MULTIPLIER = 5;

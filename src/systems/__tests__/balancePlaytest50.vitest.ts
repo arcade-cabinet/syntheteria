@@ -386,8 +386,8 @@ describe("200-turn AI-vs-AI comprehensive playtest", () => {
 		const maxScoreT200 = Math.max(...Object.values(turn200.scoresByFaction));
 		expect(maxScoreT200).toBeGreaterThan(100);
 
-		// 10. Game progresses through epochs
-		expect(turn100.epoch).toBeGreaterThanOrEqual(2);
+		// 10. Game progresses through epochs — turn-based, so turn 100 = epoch 5
+		expect(turn100.epoch).toBeGreaterThanOrEqual(5);
 
 		// 11. 200 turns completed (implicit — we got here)
 		expect(turn200.turn).toBe(200);

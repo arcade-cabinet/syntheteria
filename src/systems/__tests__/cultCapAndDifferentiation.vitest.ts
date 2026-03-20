@@ -96,14 +96,14 @@ describe("cult unit cap enforcement", () => {
 		);
 	});
 
-	it("volatile storm cap is 12", () => {
+	it("volatile storm cap is 20", () => {
 		const params = getStormCultistParams("volatile");
-		expect(params.maxTotalCultists).toBe(12);
+		expect(params.maxTotalCultists).toBe(20);
 	});
 
-	it("stable storm cap is 12", () => {
+	it("stable storm cap is 20", () => {
 		const params = getStormCultistParams("stable");
-		expect(params.maxTotalCultists).toBe(12);
+		expect(params.maxTotalCultists).toBe(20);
 	});
 
 	it("cataclysmic storm allows up to 20", () => {
@@ -123,7 +123,7 @@ describe("cult unit cap enforcement", () => {
 
 		initBreachZones(board);
 
-		const MAX_CAP = 12; // volatile maxTotalCultists
+		const MAX_CAP = 20; // volatile maxTotalCultists
 
 		for (let turn = 1; turn <= 100; turn++) {
 			// Update turn counter
@@ -163,7 +163,7 @@ describe("cult unit cap enforcement", () => {
 		}
 
 		const count = countCultUnits(world);
-		expect(count).toBeLessThanOrEqual(12);
+		expect(count).toBeLessThanOrEqual(20);
 	});
 
 	it("cult spawning occurs at breach zones on interval", () => {
@@ -189,7 +189,7 @@ describe("cult unit cap enforcement", () => {
 
 		const count = countCultUnits(world);
 		expect(count).toBeGreaterThan(0);
-		expect(count).toBeLessThanOrEqual(12);
+		expect(count).toBeLessThanOrEqual(20);
 	});
 });
 

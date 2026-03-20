@@ -173,28 +173,22 @@ describe("SPEC: Section 8 — Factions + Cults", () => {
 	// ─── Cult escalation constants ─────────────────────────────────────
 
 	describe("cult escalation constants", () => {
-		it("BASE_SPAWN_INTERVAL = 5 (spec)", async () => {
-			// GAME_DESIGN.md: "BASE_SPAWN_INTERVAL=5"
-			// Import the constant from cultistSystem
+		it("BASE_SPAWN_INTERVAL = 4 (spec)", async () => {
 			const { _reset } = await import("../../systems/cultistSystem");
 			_reset(); // Clean state
-			// The constant is module-private, so we test it via the spawn behavior
-			// The cultistSystem uses BASE_SPAWN_INTERVAL = 5 internally
-			// We verify through the exported storm params
 			const { getStormCultistParams } = await import(
 				"../../systems/cultistSystem"
 			);
 			const params = getStormCultistParams("volatile");
-			expect(params.baseSpawnInterval).toBe(5);
+			expect(params.baseSpawnInterval).toBe(4);
 		});
 
-		it("MAX_TOTAL_CULTISTS = 12 (spec)", async () => {
-			// GAME_DESIGN.md: "MAX_TOTAL_CULTISTS=12"
+		it("MAX_TOTAL_CULTISTS = 20 (spec)", async () => {
 			const { getStormCultistParams } = await import(
 				"../../systems/cultistSystem"
 			);
 			const params = getStormCultistParams("volatile");
-			expect(params.maxTotalCultists).toBe(12);
+			expect(params.maxTotalCultists).toBe(20);
 		});
 	});
 

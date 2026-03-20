@@ -15,11 +15,11 @@ import type { StormProfile } from "../world/config";
 // Constants
 // ---------------------------------------------------------------------------
 
-export const BASE_SPAWN_INTERVAL = 5;
-export const MIN_SPAWN_INTERVAL = 2;
+export const BASE_SPAWN_INTERVAL = 4;
+export const MIN_SPAWN_INTERVAL = 1;
 export const BASE_WAVE_SIZE = 1;
 export const MAX_WAVE_SIZE = 4;
-export const MAX_TOTAL_CULTISTS = 12;
+export const MAX_TOTAL_CULTISTS = 20;
 export const MAX_ESCALATION_TERRITORY = 80;
 export const CORRUPTION_NODE_CHANCE = 0.3;
 

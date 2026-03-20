@@ -255,8 +255,8 @@ describe("storm profiles affect cultist spawning", () => {
 		spawnBoardEntity(world, "volatile");
 		spawnPlayerUnit(world);
 
-		// Turn 5 should spawn (default grace period = 5)
-		checkCultistSpawn(world, board, 5);
+		// Turn 4 should spawn (grace period = 4)
+		checkCultistSpawn(world, board, 4);
 		expect(countCultists(world)).toBeGreaterThan(0);
 	});
 
@@ -266,7 +266,7 @@ describe("storm profiles affect cultist spawning", () => {
 		expect(stable.maxWaveSize).toBe(2);
 
 		const volatile = getStormCultistParams("volatile");
-		expect(volatile.baseSpawnInterval).toBe(5);
+		expect(volatile.baseSpawnInterval).toBe(4);
 		expect(volatile.maxWaveSize).toBe(4);
 
 		const cataclysmic = getStormCultistParams("cataclysmic");
@@ -275,12 +275,12 @@ describe("storm profiles affect cultist spawning", () => {
 		expect(cataclysmic.maxTotalCultists).toBe(20);
 	});
 
-	it("stable storm: cap at 12 cultists is unchanged", () => {
+	it("stable storm: cap at 20 cultists", () => {
 		spawnBoardEntity(world, "stable");
 		spawnPlayerUnit(world);
 
-		// Pre-spawn 12 cultists
-		for (let i = 0; i < 12; i++) {
+		// Pre-spawn 20 cultists
+		for (let i = 0; i < 20; i++) {
 			world.spawn(
 				UnitPos({ tileX: i, tileZ: 0 }),
 				UnitFaction({ factionId: "static_remnants" }),
@@ -297,7 +297,7 @@ describe("storm profiles affect cultist spawning", () => {
 		}
 
 		checkCultistSpawn(world, board, 7);
-		expect(countCultists(world)).toBe(12);
+		expect(countCultists(world)).toBe(20);
 	});
 });
 

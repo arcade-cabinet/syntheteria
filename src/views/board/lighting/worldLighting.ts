@@ -15,9 +15,11 @@ export function setupWorldLighting(scene: THREE.Scene): void {
 	for (const l of existing) scene.remove(l);
 
 	// Deep blue-grey ambient — prevents pure-black shadows
+	// sync with poc-roboforming.html
 	scene.add(new THREE.AmbientLight(0x223344, 0.6));
 
 	// Cool blue-white directional sun
+	// sync with poc-roboforming.html
 	const sun = new THREE.DirectionalLight(0xaaccff, 0.8);
 	sun.position.set(10, 50, 20);
 	sun.castShadow = true;
@@ -29,6 +31,7 @@ export function setupWorldLighting(scene: THREE.Scene): void {
 	scene.add(sun);
 
 	// Near-black fog for depth
+	// sync with poc-roboforming.html
 	scene.fog = new THREE.FogExp2(0x050a0f, 0.012);
 }
 

@@ -33,21 +33,27 @@ export function runBalanceTier(
 	turnCount: number,
 	runCount: number,
 	configOverrides?: Record<string, unknown>,
+	opts?: { boardWidth?: number; boardHeight?: number; gameSpeed?: "quick" | "standard" | "epic" | "marathon" },
 ): BatchReport {
+	const boardWidth = opts?.boardWidth ?? 44;
+	const boardHeight = opts?.boardHeight ?? 44;
+	const gameSpeed = opts?.gameSpeed ?? "standard";
+
 	const runs: RunResult[] = [];
 	for (let i = 0; i < runCount; i++) {
 		runs.push(
 			runSingleGame({
 				turnCount,
-				boardWidth: 44,
-				boardHeight: 44,
+				boardWidth,
+				boardHeight,
 				seed: `balance-tier${tier}-run${i}`,
 				checkpointInterval: Math.max(1, Math.floor(turnCount / 10)),
 				configOverrides,
+				gameSpeed,
 			}),
 		);
 	}
-	const report = aggregateRuns(runs, tier, turnCount, "44x44");
+	const report = aggregateRuns(runs, tier, turnCount, `${boardWidth}x${boardHeight}`);
 	report.diagnostics = diagnoseGaps(report);
 	return report;
 }

@@ -99,6 +99,24 @@ function aggregateCheckpoints(runs: RunResult[]): CheckpointAggregate[] {
 				snapshots.map((s) => s.cultStructureCount),
 			),
 			epoch: computeAggregate(snapshots.map((s) => s.epoch)),
+			contestedTiles: computeAggregate(
+				snapshots.map((s) => s.contestedTiles),
+			),
+			battlesThisCheckpoint: computeAggregate(
+				snapshots.map((s) => s.battlesThisCheckpoint),
+			),
+			eliminationsThisCheckpoint: computeAggregate(
+				snapshots.map((s) => s.eliminationsThisCheckpoint),
+			),
+			leadingFactionAdvantage: computeAggregate(
+				snapshots.map((s) => s.leadingFactionAdvantage),
+			),
+			avgBuildingDiversity: computeAggregate(
+				snapshots.map((s) => meanValues(s.buildingDiversity)),
+			),
+			avgSpecializationUsage: computeAggregate(
+				snapshots.map((s) => meanValues(s.specializationUsage)),
+			),
 		};
 	});
 }
@@ -218,6 +236,13 @@ function sumValues(record: Record<string, number>): number {
 function maxValue(record: Record<string, number>): number {
 	const values = Object.values(record);
 	return values.length > 0 ? Math.max(...values) : 0;
+}
+
+function meanValues(record: Record<string, number>): number {
+	const values = Object.values(record);
+	return values.length > 0
+		? values.reduce((a, b) => a + b, 0) / values.length
+		: 0;
 }
 
 export function computeAggregate(values: number[]): AggregateMetric {

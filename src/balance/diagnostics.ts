@@ -41,6 +41,10 @@ export function diagnoseGaps(report: BatchReport): Diagnostic[] {
 	detectEpochPacing(report, diagnostics);
 	detectCultBalance(report, diagnostics);
 	detectFactionHomogeneity(report, diagnostics);
+	detectTurtling(report, diagnostics);
+	detectNoSpecialization(report, diagnostics);
+	detectOneDimensionalEconomy(report, diagnostics);
+	detectDecisiveVictory(report, diagnostics);
 
 	return diagnostics;
 }
@@ -364,4 +368,138 @@ function collectFactionResourceMean(
 		}
 	}
 	return count > 0 ? total / count : 0;
+}
+
+/**
+ * Turtling: no battles for 5+ consecutive checkpoints AND all factions alive.
+ */
+function detectTurtling(report: BatchReport, diagnostics: Diagnostic[]): void {
+	for (const run of report.runs) {
+		let peacefulStreak = 0;
+		for (const snap of run.snapshots) {
+			if (snap.turn === 0) continue;
+
+			const allAlive = AI_FACTIONS.every(
+				(fid) => (snap.unitsByFaction[fid] ?? 0) > 0,
+			);
+			const noBattles = snap.battlesThisCheckpoint === 0;
+
+			if (noBattles && allAlive) {
+				peacefulStreak++;
+			} else {
+				peacefulStreak = 0;
+			}
+
+			if (peacefulStreak >= 5) {
+				diagnostics.push({
+					severity: "warning",
+					category: "turtling",
+					message: `No battles for ${peacefulStreak}+ checkpoints with all factions alive in seed ${run.seed} (turn ${snap.turn})`,
+					data: {
+						streak: peacefulStreak,
+						seed: run.seed,
+						turn: snap.turn,
+					},
+				});
+				break;
+			}
+		}
+	}
+}
+
+/**
+ * No specialization: <20% of units have specialization tracks by turn 50.
+ */
+function detectNoSpecialization(
+	report: BatchReport,
+	diagnostics: Diagnostic[],
+): void {
+	if (report.turnCount < 50) return;
+
+	for (const run of report.runs) {
+		const midSnap = run.snapshots.find((s) => s.turn >= 50);
+		if (!midSnap) continue;
+
+		for (const fid of AI_FACTIONS) {
+			const usage = midSnap.specializationUsage[fid] ?? 0;
+			if (usage < 20 && (midSnap.unitsByFaction[fid] ?? 0) >= 4) {
+				diagnostics.push({
+					severity: "info",
+					category: "no_specialization",
+					message: `${fid} only ${usage.toFixed(0)}% specialized by turn ${midSnap.turn} in seed ${run.seed}`,
+					data: { faction: fid, usage, seed: run.seed },
+				});
+			}
+		}
+	}
+}
+
+/**
+ * One-dimensional economy: faction has only 1-2 building types.
+ */
+function detectOneDimensionalEconomy(
+	report: BatchReport,
+	diagnostics: Diagnostic[],
+): void {
+	if (report.turnCount < 30) return;
+
+	for (const run of report.runs) {
+		const finalSnap = run.snapshots[run.snapshots.length - 1];
+		if (!finalSnap || finalSnap.turn < 30) continue;
+
+		for (const fid of AI_FACTIONS) {
+			const diversity = finalSnap.buildingDiversity[fid] ?? 0;
+			const totalBuildings = finalSnap.buildingsByFaction[fid] ?? 0;
+			if (diversity <= 2 && totalBuildings >= 3) {
+				diagnostics.push({
+					severity: "warning",
+					category: "one_dimensional_economy",
+					message: `${fid} has only ${diversity} building type(s) with ${totalBuildings} buildings at turn ${finalSnap.turn} in seed ${run.seed}`,
+					data: {
+						faction: fid,
+						diversity,
+						totalBuildings,
+						seed: run.seed,
+					},
+				});
+			}
+		}
+	}
+}
+
+/**
+ * Decisive victory check: does ANYONE win before the turn cap?
+ */
+function detectDecisiveVictory(
+	report: BatchReport,
+	diagnostics: Diagnostic[],
+): void {
+	const decisiveWins = report.runs.filter(
+		(r) => r.victoryType !== null && r.victoryType !== "score",
+	);
+
+	if (decisiveWins.length > 0) {
+		const avgTurn =
+			decisiveWins.reduce((sum, r) => sum + (r.victoryTurn ?? 0), 0) /
+			decisiveWins.length;
+		const types = [...new Set(decisiveWins.map((r) => r.victoryType))];
+		diagnostics.push({
+			severity: "info",
+			category: "decisive_victory",
+			message: `${decisiveWins.length}/${report.runs.length} runs had decisive victories (avg turn ${avgTurn.toFixed(0)}, types: ${types.join(", ")})`,
+			data: {
+				count: decisiveWins.length,
+				total: report.runs.length,
+				avgTurn,
+				types,
+			},
+		});
+	} else {
+		diagnostics.push({
+			severity: "warning",
+			category: "decisive_victory",
+			message: `No decisive victories in ${report.runs.length} runs — all ended at turn cap`,
+			data: { count: 0, total: report.runs.length },
+		});
+	}
 }

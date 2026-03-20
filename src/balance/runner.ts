@@ -14,6 +14,7 @@ import {
 	clearConfigOverrides,
 	computeEpoch,
 } from "../config";
+import type { GameSpeed } from "../config/gameSpeedDefs";
 import { initWorldFromBoard } from "../init-world";
 import {
 	_resetScoreSystem,
@@ -33,6 +34,7 @@ import {
 	Faction,
 	ResourcePool,
 	UnitFaction,
+	UnitStats,
 } from "../traits";
 import type { RunResult, RunSnapshot } from "./types";
 
@@ -80,6 +82,7 @@ export interface RunConfig {
 	seed: string;
 	checkpointInterval: number;
 	configOverrides?: Record<string, unknown>;
+	gameSpeed?: GameSpeed;
 }
 
 /**
@@ -112,12 +115,15 @@ export function runSingleGame(config: RunConfig): RunResult {
 		difficulty: "normal",
 	});
 
+	const gameSpeed = config.gameSpeed ?? "standard";
+
 	initWorldFromBoard(world, board, {
 		difficulty: "standard",
 		factionSlots: AI_FACTIONS.map((id) => ({
 			factionId: id,
 			role: "ai" as const,
 		})),
+		gameSpeed,
 	});
 
 	const snapshots: RunSnapshot[] = [];
@@ -125,13 +131,82 @@ export function runSingleGame(config: RunConfig): RunResult {
 	let victoryWinner: string | null = null;
 	let victoryTurn: number | null = null;
 
-	snapshots.push(takeSnapshot(world, board, 0));
+	// Track previous resources for spending computation
+	let prevResources: Record<string, number> = {};
+	// Track battle and elimination counts between checkpoints
+	let battlesSinceCheckpoint = 0;
+	let eliminationsSinceCheckpoint = 0;
+	let prevUnitCounts: Record<string, number> = {};
+
+	snapshots.push(
+		takeSnapshot(
+			world,
+			board,
+			0,
+			prevResources,
+			battlesSinceCheckpoint,
+			eliminationsSinceCheckpoint,
+			null,
+		),
+	);
+
+	// Record initial resources
+	for (const fid of AI_FACTIONS) {
+		prevResources[fid] = snapshots[0].resourcesByFaction[fid] ?? 0;
+		prevUnitCounts[fid] = snapshots[0].unitsByFaction[fid] ?? 0;
+	}
 
 	for (let t = 1; t <= config.turnCount; t++) {
 		advanceTurn(world, board, { observerMode: true });
 
+		// Track combat: unit count drops between turns indicate battles
+		const currentUnitCounts: Record<string, number> = {};
+		for (const fid of AI_FACTIONS) {
+			let count = 0;
+			for (const e of world.query(UnitFaction)) {
+				const f = e.get(UnitFaction);
+				if (f?.factionId === fid) count++;
+			}
+			currentUnitCounts[fid] = count;
+		}
+
+		// Detect battles: if any faction lost units this turn
+		const anyLosses = AI_FACTIONS.some(
+			(fid) =>
+				(currentUnitCounts[fid] ?? 0) < (prevUnitCounts[fid] ?? 0),
+		);
+		if (anyLosses) battlesSinceCheckpoint++;
+
+		// Detect eliminations: faction went from >0 to 0 units
+		for (const fid of AI_FACTIONS) {
+			if (
+				(prevUnitCounts[fid] ?? 0) > 0 &&
+				(currentUnitCounts[fid] ?? 0) === 0
+			) {
+				eliminationsSinceCheckpoint++;
+			}
+		}
+		prevUnitCounts = currentUnitCounts;
+
 		if (t % config.checkpointInterval === 0 || t === config.turnCount) {
-			snapshots.push(takeSnapshot(world, board, t));
+			const prevSnap = snapshots[snapshots.length - 1] ?? null;
+			const snap = takeSnapshot(
+				world,
+				board,
+				t,
+				prevResources,
+				battlesSinceCheckpoint,
+				eliminationsSinceCheckpoint,
+				prevSnap,
+			);
+			snapshots.push(snap);
+
+			// Update tracking for next checkpoint
+			for (const fid of AI_FACTIONS) {
+				prevResources[fid] = snap.resourcesByFaction[fid] ?? 0;
+			}
+			battlesSinceCheckpoint = 0;
+			eliminationsSinceCheckpoint = 0;
 		}
 
 		if (t >= 10 && !victoryType) {
@@ -158,10 +233,28 @@ export function runSingleGame(config: RunConfig): RunResult {
 	};
 }
 
+/** Building chain depth: how deep the unlock tree goes. */
+const BUILDING_CHAIN: Record<string, number> = {
+	storm_transmitter: 0,
+	motor_pool: 0,
+	outpost: 0,
+	power_box: 0,
+	synthesizer: 1,
+	storage_hub: 1,
+	defense_turret: 1,
+	analysis_node: 2,
+	relay_tower: 2,
+	resource_refinery: 2,
+};
+
 function takeSnapshot(
 	world: World,
 	board: GeneratedBoard,
 	turn: number,
+	prevResources: Record<string, number>,
+	battlesSinceCheckpoint: number,
+	eliminationsSinceCheckpoint: number,
+	prevSnap: RunSnapshot | null,
 ): RunSnapshot {
 	const { width, height } = board.config;
 
@@ -173,12 +266,34 @@ function takeSnapshot(
 	let cultUnitCount = 0;
 	let cultStructureCount = 0;
 
+	// New metrics
+	const maxBuildChainDepth: Record<string, number> = {};
+	const buildingDiversity: Record<string, number> = {};
+	const avgBuildingTier: Record<string, number> = {};
+	const combatToWorkerRatio: Record<string, number> = {};
+	const specializationUsage: Record<string, number> = {};
+
 	for (const fid of AI_FACTIONS) {
 		buildingsByFaction[fid] = 0;
 		buildingTierMax[fid] = 0;
 		unitsByFaction[fid] = 0;
 		resourcesByFaction[fid] = 0;
 		scoresByFaction[fid] = 0;
+		maxBuildChainDepth[fid] = 0;
+		buildingDiversity[fid] = 0;
+		avgBuildingTier[fid] = 0;
+		combatToWorkerRatio[fid] = 0;
+		specializationUsage[fid] = 0;
+	}
+
+	// Building metrics
+	const buildingTypesByFaction: Record<string, Set<string>> = {};
+	const buildingTierSums: Record<string, number> = {};
+	const buildingCounts: Record<string, number> = {};
+	for (const fid of AI_FACTIONS) {
+		buildingTypesByFaction[fid] = new Set();
+		buildingTierSums[fid] = 0;
+		buildingCounts[fid] = 0;
 	}
 
 	for (const e of world.query(Building)) {
@@ -191,7 +306,35 @@ function takeSnapshot(
 				buildingTierMax[fid] ?? 0,
 				b.buildingTier,
 			);
+			buildingTypesByFaction[fid]?.add(b.buildingType);
+			buildingTierSums[fid] = (buildingTierSums[fid] ?? 0) + b.buildingTier;
+			buildingCounts[fid] = (buildingCounts[fid] ?? 0) + 1;
+			const chainDepth = BUILDING_CHAIN[b.buildingType] ?? 0;
+			maxBuildChainDepth[fid] = Math.max(
+				maxBuildChainDepth[fid] ?? 0,
+				chainDepth,
+			);
 		}
+	}
+
+	for (const fid of AI_FACTIONS) {
+		buildingDiversity[fid] = buildingTypesByFaction[fid]?.size ?? 0;
+		avgBuildingTier[fid] =
+			buildingCounts[fid] > 0
+				? buildingTierSums[fid] / buildingCounts[fid]
+				: 0;
+	}
+
+	// Unit metrics — combat vs worker ratio, specialization
+	const combatUnits: Record<string, number> = {};
+	const workerUnits: Record<string, number> = {};
+	const specializedUnits: Record<string, number> = {};
+	const totalUnitsPerFaction: Record<string, number> = {};
+	for (const fid of AI_FACTIONS) {
+		combatUnits[fid] = 0;
+		workerUnits[fid] = 0;
+		specializedUnits[fid] = 0;
+		totalUnitsPerFaction[fid] = 0;
 	}
 
 	for (const e of world.query(UnitFaction)) {
@@ -200,9 +343,31 @@ function takeSnapshot(
 		const fid = f.factionId;
 		if (AI_FACTIONS.includes(fid)) {
 			unitsByFaction[fid] = (unitsByFaction[fid] ?? 0) + 1;
+			totalUnitsPerFaction[fid] = (totalUnitsPerFaction[fid] ?? 0) + 1;
+
+			const stats = e.get(UnitStats);
+			if (stats) {
+				if (stats.attack > 0) {
+					combatUnits[fid] = (combatUnits[fid] ?? 0) + 1;
+				} else {
+					workerUnits[fid] = (workerUnits[fid] ?? 0) + 1;
+				}
+				// Units with marks or specializations count as specialized
+				if (stats.maxAp > 3 || stats.attack > 3 || stats.defense > 2) {
+					specializedUnits[fid] = (specializedUnits[fid] ?? 0) + 1;
+				}
+			}
 		} else if (CULT_FACTIONS.includes(fid)) {
 			cultUnitCount++;
 		}
+	}
+
+	for (const fid of AI_FACTIONS) {
+		const workers = Math.max(1, workerUnits[fid] ?? 1);
+		combatToWorkerRatio[fid] = (combatUnits[fid] ?? 0) / workers;
+		const total = totalUnitsPerFaction[fid] ?? 0;
+		specializationUsage[fid] =
+			total > 0 ? ((specializedUnits[fid] ?? 0) / total) * 100 : 0;
 	}
 
 	for (const e of world.query(CultStructure)) {
@@ -231,6 +396,42 @@ function takeSnapshot(
 		scoresByFaction[fid] = calculateFactionScore(world, fid);
 	}
 
+	// Territory growth rate: delta since previous snapshot
+	const territoryGrowthRate: Record<string, number> = {};
+	for (const fid of AI_FACTIONS) {
+		const prev = prevSnap?.territoryPctByFaction[fid] ?? 0;
+		territoryGrowthRate[fid] = (territoryPctByFaction[fid] ?? 0) - prev;
+	}
+
+	// Contested tiles: tiles claimed by 2+ factions
+	let contestedTiles = 0;
+	if (territory) {
+		for (const tt of territory.tiles.values()) {
+			if (tt.contested) contestedTiles++;
+		}
+	}
+
+	// Resource spending: diff from previous checkpoint
+	const resourceSpentThisCheckpoint: Record<string, number> = {};
+	const stockpileRatio: Record<string, number> = {};
+	for (const fid of AI_FACTIONS) {
+		const curr = resourcesByFaction[fid] ?? 0;
+		const prev = prevResources[fid] ?? 0;
+		// Spending is estimated: if current < prev, faction spent at least (prev - curr)
+		// But income may have also increased total. Use max(0, prev - curr) as lower bound.
+		resourceSpentThisCheckpoint[fid] = Math.max(0, prev - curr);
+		// Stockpile ratio: idle resources / max(resources seen, 1)
+		const maxSeen = Math.max(curr, prev, 1);
+		stockpileRatio[fid] = curr / maxSeen;
+	}
+
+	// Leading faction advantage
+	const scores = AI_FACTIONS.map((fid) => scoresByFaction[fid] ?? 0);
+	scores.sort((a, b) => b - a);
+	const leader = scores[0] ?? 0;
+	const second = scores[1] ?? 0;
+	const leadingFactionAdvantage = second > 0 ? leader / second : leader > 0 ? 10 : 1;
+
 	const highestTier = Math.max(
 		...Object.values(buildingTierMax).map((v) => v ?? 0),
 		1,
@@ -248,5 +449,17 @@ function takeSnapshot(
 		scoresByFaction,
 		cultUnitCount,
 		cultStructureCount,
+		territoryGrowthRate,
+		contestedTiles,
+		maxBuildChainDepth,
+		buildingDiversity,
+		avgBuildingTier,
+		specializationUsage,
+		combatToWorkerRatio,
+		resourceSpentThisCheckpoint,
+		stockpileRatio,
+		battlesThisCheckpoint: battlesSinceCheckpoint,
+		eliminationsThisCheckpoint: eliminationsSinceCheckpoint,
+		leadingFactionAdvantage,
 	};
 }

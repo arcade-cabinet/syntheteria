@@ -13,6 +13,30 @@ export interface RunSnapshot {
 	scoresByFaction: Record<string, number>;
 	cultUnitCount: number;
 	cultStructureCount: number;
+
+	// Territory depth
+	territoryGrowthRate: Record<string, number>;
+	contestedTiles: number;
+
+	// Building strategy
+	maxBuildChainDepth: Record<string, number>;
+	buildingDiversity: Record<string, number>;
+	avgBuildingTier: Record<string, number>;
+
+	// Unit composition
+	specializationUsage: Record<string, number>;
+	combatToWorkerRatio: Record<string, number>;
+
+	// Economy
+	resourceSpentThisCheckpoint: Record<string, number>;
+	stockpileRatio: Record<string, number>;
+
+	// Combat
+	battlesThisCheckpoint: number;
+	eliminationsThisCheckpoint: number;
+
+	// Decisive victory indicator
+	leadingFactionAdvantage: number;
 }
 
 export interface RunResult {
@@ -53,6 +77,12 @@ export interface CheckpointAggregate {
 	cultUnits: AggregateMetric;
 	cultStructures: AggregateMetric;
 	epoch: AggregateMetric;
+	contestedTiles: AggregateMetric;
+	battlesThisCheckpoint: AggregateMetric;
+	eliminationsThisCheckpoint: AggregateMetric;
+	leadingFactionAdvantage: AggregateMetric;
+	avgBuildingDiversity: AggregateMetric;
+	avgSpecializationUsage: AggregateMetric;
 }
 
 export interface Diagnostic {

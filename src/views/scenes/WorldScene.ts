@@ -71,11 +71,14 @@ export class WorldScene extends Scene3D {
 	}
 
 	init(): void {
-		this.accessThirdDimension({ maxSubSteps: 1, fixedTimeStep: 1 / 60 });
+		this.accessThirdDimension({ usePhysics: false });
 	}
 
 	create(): void {
 		this.third.warpSpeed("-ground", "-orbitControls");
+
+		// Override enable3d's deprecated PCFSoftShadowMap default
+		this.third.renderer.shadowMap.type = THREE.PCFShadowMap;
 
 		const scene = this.third.scene;
 		scene.background = new THREE.Color(0x050a0f);

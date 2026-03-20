@@ -46,6 +46,9 @@ jobs:
       - name: Unit tests
         run: pnpm exec vitest run
 
+      - name: Import gate check
+        run: pnpm run check-imports
+
       - name: Build web export
         run: pnpm build
 

@@ -16,6 +16,7 @@ import { resolveAttacks } from "./attackSystem";
 import { biomeMiningSystem } from "./biomeMiningSystem";
 import { runBuildingUpgrades } from "./buildingUpgradeSystem";
 import { recordTurnEnd } from "./campaignStats";
+import { fireELArrival } from "./cultEncounterTracker";
 import {
 	checkCultistSpawn,
 	runCultPatrols,
@@ -28,6 +29,7 @@ import { runHackProgress } from "./hackingSystem";
 import { harvestSystem } from "./harvestSystem";
 import { clearHighlights } from "./highlightSystem";
 import { checkAllFragmentProximity } from "./memoryFragments";
+import { runPOIDiscovery } from "./poiDiscoverySystem";
 import { runPowerGrid } from "./powerSystem";
 import { runRepairs } from "./repairSystem";
 import { finalizeTurnDeltas } from "./resourceDeltaSystem";
@@ -163,6 +165,9 @@ function runEnvironmentPhase(world: World, board: GeneratedBoard): void {
 	// Check player unit proximity to undiscovered memory fragments
 	checkAllFragmentProximity(world);
 
+	// POI discovery — check unit positions against undiscovered POIs
+	runPOIDiscovery(world);
+
 	// Track campaign statistics and finalize turn logs
 	recordTurnEnd();
 	finalizeTurn();
@@ -200,6 +205,10 @@ function checkEpochTransition(world: World): void {
 	if (epoch.number !== lastEpochNumber && !firedEpochEvents.has(epoch.number)) {
 		firedEpochEvents.add(epoch.number);
 		lastEpochNumber = epoch.number;
+
+		if (epoch.number === 3) {
+			fireELArrival(world);
+		}
 
 		const event = getEpochEvent(epoch.number);
 		if (event) {

@@ -45,6 +45,11 @@ import {
 	updateParticles,
 } from "../renderers/particleRenderer";
 import {
+	createPOIRenderer,
+	destroyPOIRenderer,
+	updatePOIs,
+} from "../renderers/poiRenderer";
+import {
 	createRoboformOverlay,
 	destroyRoboformOverlay,
 	updateRoboformOverlay,
@@ -125,6 +130,9 @@ export class WorldScene extends Scene3D {
 			createSalvageRenderer(scene, world);
 			createStructureRenderer(scene, world, board);
 
+			// POI markers
+			createPOIRenderer(scene, world);
+
 			// Vegetation (forest canopy blobs + accent trees)
 			createVegetationRenderer(scene, board);
 
@@ -196,6 +204,7 @@ export class WorldScene extends Scene3D {
 		EventBus.off("tech-tier-changed");
 		destroyRoboformOverlay();
 		destroyInfraConnections();
+		destroyPOIRenderer();
 		resetEpochAtmosphere();
 	}
 
@@ -231,6 +240,7 @@ export class WorldScene extends Scene3D {
 		updateTerritory(world, boardConfig.width, boardConfig.height);
 		updateRoboformOverlay();
 		updateInfraConnections(world);
+		updatePOIs(world);
 
 		// Update epoch atmosphere based on current turn + building tier
 		this._highestBuildingTier = this.computeHighestBuildingTier();

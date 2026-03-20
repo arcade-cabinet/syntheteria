@@ -19,6 +19,7 @@ export {
 } from "./building";
 export { CultMutation, CultStructure, type CultStructureType } from "./cult";
 export { Faction, FactionRelation } from "./faction";
+export { POIMarker } from "./poi";
 export { ResourceDeposit, ResourcePool } from "./resource";
 export { SalvageProp, type SalvageType } from "./salvage";
 export { Tile, TileHighlight } from "./tile";

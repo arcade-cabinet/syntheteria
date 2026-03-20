@@ -24,7 +24,15 @@ export type POIType =
 	| "ruin_military"
 	| "northern_cult_site"
 	| "deep_sea_gateway"
-	| "science_campus";
+	| "science_campus"
+	| "holocron_observatory"
+	| "holocron_bunker"
+	| "holocron_ai_lab"
+	| "holocron_el_site"
+	| "holocron_satellite"
+	| "holocron_storm_station"
+	| "holocron_archive"
+	| "holocron_beacon";
 
 export interface POIDef {
 	readonly type: POIType;
@@ -56,6 +64,14 @@ export const FOUNDABLE_POI_TYPES: readonly POIType[] = [
 	"ruin_outpost",
 	"ruin_research",
 	"ruin_military",
+	"holocron_observatory",
+	"holocron_bunker",
+	"holocron_ai_lab",
+	"holocron_el_site",
+	"holocron_satellite",
+	"holocron_storm_station",
+	"holocron_archive",
+	"holocron_beacon",
 ] as const;
 
 // ─── Data ────────────────────────────────────────────────────────────────────
@@ -138,12 +154,86 @@ export const POI_DEFINITIONS: readonly POIDef[] = [
 		relativeZ: 0.9,
 		discoveredAtStart: false,
 	},
+	// ── Holocron POIs ─────────────────────────────────────────────────────
+	{
+		type: "holocron_observatory",
+		name: "Shattered Observatory",
+		relativeX: 0.1,
+		relativeZ: 0.85,
+		discoveredAtStart: false,
+	},
+	{
+		type: "holocron_bunker",
+		name: "Pre-Storm Bunker",
+		relativeX: 0.85,
+		relativeZ: 0.4,
+		discoveredAtStart: false,
+	},
+	{
+		type: "holocron_ai_lab",
+		name: "Genesis AI Lab",
+		relativeX: 0.35,
+		relativeZ: 0.1,
+		discoveredAtStart: false,
+	},
+	{
+		type: "holocron_el_site",
+		name: "EL Arrival Crater",
+		relativeX: 0.65,
+		relativeZ: 0.85,
+		discoveredAtStart: false,
+	},
+	{
+		type: "holocron_satellite",
+		name: "Fallen Satellite Array",
+		relativeX: 0.4,
+		relativeZ: 0.45,
+		discoveredAtStart: false,
+	},
+	{
+		type: "holocron_storm_station",
+		name: "Storm Research Station",
+		relativeX: 0.25,
+		relativeZ: 0.55,
+		discoveredAtStart: false,
+	},
+	{
+		type: "holocron_archive",
+		name: "Digital Archive Vault",
+		relativeX: 0.7,
+		relativeZ: 0.35,
+		discoveredAtStart: false,
+	},
+	{
+		type: "holocron_beacon",
+		name: "Ancient Signal Beacon",
+		relativeX: 0.55,
+		relativeZ: 0.75,
+		discoveredAtStart: false,
+	},
 ] as const;
 
 /** Fast lookup by POI type. */
 export const POI_BY_TYPE: ReadonlyMap<POIType, POIDef> = new Map(
 	POI_DEFINITIONS.map((p) => [p.type, p]),
 );
+
+/** All holocron POI types. */
+export const HOLOCRON_POI_TYPES: readonly POIType[] = [
+	"holocron_observatory",
+	"holocron_bunker",
+	"holocron_ai_lab",
+	"holocron_el_site",
+	"holocron_satellite",
+	"holocron_storm_station",
+	"holocron_archive",
+	"holocron_beacon",
+] as const;
+
+/** Check whether a POI type is a holocron discovery site. */
+export function isHolocronPOI(type: POIType): boolean {
+	return (HOLOCRON_POI_TYPES as readonly string[]).includes(type);
+}
 
 /**
  * Convert relative POI coordinates to tile coordinates for a given board size.

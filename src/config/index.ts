@@ -116,6 +116,12 @@ export {
 	VICTORY_TURN_CAP,
 	WORMHOLE_PROJECT_TURNS,
 } from "./gameDefaults";
+export type {
+	HumanEncounter,
+	HumanEncounterTrigger,
+} from "./humanEncounterDefs";
+// --- Human encounters ---
+export { getHumanEncounter, HUMAN_ENCOUNTERS } from "./humanEncounterDefs";
 // --- Model paths + 3D GLB resolvers (extends FACTION_COLORS for all factions) ---
 export * from "./models";
 export type { MovementProfile } from "./movementDefs";
@@ -143,6 +149,8 @@ export type { POIDef, POIType } from "./poiDefs";
 // --- POI ---
 export {
 	FOUNDABLE_POI_TYPES,
+	HOLOCRON_POI_TYPES,
+	isHolocronPOI,
 	POI_BY_TYPE,
 	POI_DEFINITIONS,
 	POI_DISCOVERY_FRINGE_RADIUS,

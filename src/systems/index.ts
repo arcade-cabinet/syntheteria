@@ -79,13 +79,17 @@ export {
 	checkCultistSpawn,
 	cleanupDestroyedStructures,
 	fireCultEncounter,
+	fireELArrival,
+	fireHumanEncounter,
 	getAltarZones,
 	getBreachZones,
 	getCorruptedTiles,
 	getEscalationStage,
 	getPOIPositions,
 	getStormCultistParams,
+	hasELArrivalFired,
 	hasFiredEncounter,
+	hasFiredHumanEncounter,
 	initBreachZones,
 	initCultPOIs,
 	runCultPatrols,
@@ -203,6 +207,16 @@ export {
 } from "./memoryFragments";
 // --- Movement ---
 export { movementSystem } from "./movementSystem";
+export type { ActivePOIBonus } from "./poiDiscoverySystem";
+// --- POI ---
+export {
+	_resetPOIDiscovery,
+	getActivePOIBonuses,
+	hasActiveBonus,
+	runPOIDiscovery,
+	tickPOIBonuses,
+} from "./poiDiscoverySystem";
+export { placePOIs } from "./poiPlacement";
 // --- Population ---
 export {
 	BASE_POP_CAP,

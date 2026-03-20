@@ -131,8 +131,8 @@ describe("narrative config", () => {
 // ─── POI config ──────────────────────────────────────────────────────────────
 
 describe("POI config", () => {
-	it("has 11 POI definitions", () => {
-		expect(POI_DEFINITIONS).toHaveLength(11);
+	it("has 19 POI definitions", () => {
+		expect(POI_DEFINITIONS).toHaveLength(19);
 	});
 
 	it("home_base is the only POI discovered at start", () => {

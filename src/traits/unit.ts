@@ -74,7 +74,7 @@ export const UnitMine = trait({
 	/** Target tile coordinates. */
 	targetX: 0,
 	targetZ: 0,
-	/** Ticks remaining (from FloorDef.hardness). */
+	/** Ticks remaining (from BiomeDef.hardness). */
 	ticksRemaining: 0,
 	/** Total ticks for progress display. */
 	totalTicks: 0,

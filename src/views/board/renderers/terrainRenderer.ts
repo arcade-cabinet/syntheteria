@@ -2,7 +2,7 @@
  * terrainRenderer — builds the vertex-colored flat-shaded terrain mesh.
  *
  * Takes a GeneratedBoard and creates a Three.js mesh with:
- * - Per-vertex colors from FloorType -> color lookup
+ * - Per-vertex colors from BiomeType -> color lookup
  * - Vertex-color edge interpolation for smooth terrain blending (CivRev2-style)
  * - Discrete elevation platforms with steep cliff transitions
  * - MeshStandardMaterial with vertexColors + flatShading (POC recipe)
@@ -13,14 +13,14 @@
 
 import * as THREE from "three";
 import type { GeneratedBoard, TileData } from "../../../board";
-import type { FloorType } from "../../../terrain";
+import type { BiomeType } from "../../../terrain";
 
 // ---------------------------------------------------------------------------
-// FloorType -> terrain color lookup
+// BiomeType -> terrain color lookup
 // ---------------------------------------------------------------------------
 
 // Biome → terrain color lookup — CivRev2-style vibrant colors.
-const FLOOR_COLORS: Record<FloorType, THREE.Color> = {
+const FLOOR_COLORS: Record<BiomeType, THREE.Color> = {
 	grassland: new THREE.Color(0x7cb342), // warm green
 	forest: new THREE.Color(0x2e7d32), // dark green
 	mountain: new THREE.Color(0x757575), // grey
@@ -72,7 +72,7 @@ function getTile(board: GeneratedBoard, gx: number, gz: number): TileData {
 			z: cz,
 			elevation: 0 as const,
 			passable: true,
-			floorType: "grassland" as FloorType,
+			biomeType: "grassland" as BiomeType,
 			resourceMaterial: null,
 			resourceAmount: 0,
 		}
@@ -151,10 +151,10 @@ export function buildTerrainMesh(board: GeneratedBoard): THREE.Group {
 		// Bilinear interpolation of floor colors from 4 surrounding tiles.
 		// Tile centers stay pure; boundaries get smooth gradients.
 
-		const c00 = FLOOR_COLORS[t00.floorType] ?? DEFAULT_COLOR;
-		const c10 = FLOOR_COLORS[t10.floorType] ?? DEFAULT_COLOR;
-		const c01 = FLOOR_COLORS[t01.floorType] ?? DEFAULT_COLOR;
-		const c11 = FLOOR_COLORS[t11.floorType] ?? DEFAULT_COLOR;
+		const c00 = FLOOR_COLORS[t00.biomeType] ?? DEFAULT_COLOR;
+		const c10 = FLOOR_COLORS[t10.biomeType] ?? DEFAULT_COLOR;
+		const c01 = FLOOR_COLORS[t01.biomeType] ?? DEFAULT_COLOR;
+		const c11 = FLOOR_COLORS[t11.biomeType] ?? DEFAULT_COLOR;
 
 		// Bilinear blend
 		blendedColor.set(0);

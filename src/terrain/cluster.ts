@@ -1,7 +1,7 @@
 /**
  * JS-side cluster math — mirrors the GLSL in floorShader.ts exactly.
  *
- * Used by the board generator and initWorldFromBoard to assign FloorType
+ * Used by the board generator and initWorldFromBoard to assign BiomeType
  * values that match what the shader renders. Same seed → same boundaries
  * on both CPU and GPU.
  *
@@ -12,8 +12,8 @@
 
 import type { Elevation } from "../board";
 import { TILE_SIZE_M } from "../config";
-import type { FloorType } from "./types";
-import { FLOOR_DEFS } from "./types";
+import type { BiomeType } from "./types";
+import { BIOME_DEFS } from "./types";
 
 // ---------------------------------------------------------------------------
 // Seed → float (FNV-1a) — same as GLSL uSeed uniform
@@ -105,19 +105,19 @@ export function geographyValue(
 }
 
 /**
- * Returns the FloorType for a tile at (tileX, tileZ) with the given elevation
+ * Returns the BiomeType for a tile at (tileX, tileZ) with the given elevation
  * and board seed. Matches the GLSL cluster and geography selection in floorShader.ts.
  *
  * @param waterLevel ClimateProfile.waterLevel (0–1). Higher = more water tiles.
  *                   Defaults to 0.35 (temperate).
  */
-export function floorTypeForTile(
+export function biomeTypeForTile(
 	tileX: number,
 	tileZ: number,
 	elevation: Elevation,
 	seed: string,
 	waterLevel = 0.35,
-): FloorType {
+): BiomeType {
 	if (elevation === -1) return "water";
 
 	const seedFloat = seedToFloat(seed);
@@ -143,22 +143,22 @@ export function floorTypeForTile(
 }
 
 /**
- * Returns a fully populated TileFloor trait value for the given floor type,
+ * Returns a fully populated TileBiome trait value for the given biome type,
  * with a deterministic resource amount roll from the tile position.
  */
-export function tileFloorProps(
-	floorType: FloorType,
+export function tileBiomeProps(
+	biomeType: BiomeType,
 	tileX: number,
 	tileZ: number,
 ) {
-	const def = FLOOR_DEFS[floorType];
+	const def = BIOME_DEFS[biomeType];
 	const [min, max] = def.resourceAmount;
 	const roll =
 		min === max
 			? min
 			: min + (Math.abs(hash21(tileX, tileZ) * (max - min + 1)) | 0);
 	return {
-		floorType,
+		biomeType,
 		mineable: def.mineable,
 		hardness: def.hardness,
 		resourceMaterial: def.resourceMaterial,

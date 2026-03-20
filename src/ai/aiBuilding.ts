@@ -8,7 +8,7 @@
 import type { World } from "koota";
 import { playSfx } from "../audio";
 import type { GeneratedBoard } from "../board";
-import { BUILDING_DEFS } from "../buildings";
+import { BUILDING_DEFS } from "../config/buildings";
 import { canAfford, spendResources } from "../systems";
 import type { ResourceMaterial } from "../terrain";
 import {

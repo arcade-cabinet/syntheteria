@@ -1,16 +1,16 @@
 /**
- * TileFloor — ECS trait encoding terrain surface type and strip-mining data.
+ * TileBiome — ECS trait encoding terrain surface type and strip-mining data.
  *
- * Assigned by initWorldFromBoard via floorTypeForTile() — same math as the
+ * Assigned by initWorldFromBoard via biomeTypeForTile() — same math as the
  * GLSL cluster selection in floorShader.ts, so visual and gameplay are
  * always in sync.
  */
 
 import { trait } from "koota";
-import type { FloorType, ResourceMaterial } from "./types";
+import type { BiomeType, ResourceMaterial } from "./types";
 
-export const TileFloor = trait({
-	floorType: "grassland" as FloorType,
+export const TileBiome = trait({
+	biomeType: "grassland" as BiomeType,
 	mineable: false,
 	hardness: 0,
 	resourceMaterial: null as ResourceMaterial | null,

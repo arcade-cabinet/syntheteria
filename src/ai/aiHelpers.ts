@@ -7,7 +7,7 @@
 
 import type { World } from "koota";
 import type { GeneratedBoard } from "../board";
-import { TileFloor } from "../terrain";
+import { TileBiome } from "../terrain";
 import {
 	Board,
 	Building,
@@ -199,10 +199,10 @@ export function findMineableTilesNearUnits(
 	const results: Array<{ x: number; z: number; material: string }> = [];
 	const seen = new Set<string>();
 
-	for (const e of world.query(Tile, TileFloor)) {
+	for (const e of world.query(Tile, TileBiome)) {
 		const tile = e.get(Tile);
-		const floor = e.get(TileFloor);
-		if (!tile || !floor || !floor.mineable || !floor.resourceMaterial) continue;
+		const biome = e.get(TileBiome);
+		if (!tile || !biome || !biome.mineable || !biome.resourceMaterial) continue;
 
 		const key = `${tile.x},${tile.z}`;
 		if (seen.has(key)) continue;
@@ -221,7 +221,7 @@ export function findMineableTilesNearUnits(
 				results.push({
 					x: tile.x,
 					z: tile.z,
-					material: floor.resourceMaterial,
+					material: biome.resourceMaterial,
 				});
 				seen.add(key);
 				break;
@@ -232,8 +232,8 @@ export function findMineableTilesNearUnits(
 	return results;
 }
 
-/** Find TileFloor data at a specific coordinate. */
-export function findTileFloorAt(
+/** Find TileBiome data at a specific coordinate. */
+export function findTileBiomeAt(
 	world: World,
 	x: number,
 	z: number,
@@ -242,11 +242,11 @@ export function findTileFloorAt(
 	hardness: number;
 	resourceMaterial: string | null;
 } | null {
-	for (const e of world.query(Tile, TileFloor)) {
+	for (const e of world.query(Tile, TileBiome)) {
 		const tile = e.get(Tile);
 		if (tile && tile.x === x && tile.z === z) {
-			const floor = e.get(TileFloor);
-			if (floor) return floor;
+			const biome = e.get(TileBiome);
+			if (biome) return biome;
 		}
 	}
 	return null;

@@ -14,7 +14,7 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { BUILDING_DEFS } from "../../buildings";
+import { BUILDING_DEFS } from "../../config/buildings";
 import {
 	FabricationJob,
 	queueFabrication,
@@ -50,7 +50,7 @@ function makeBoard(width: number, height: number): GeneratedBoard {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "grassland",
+				biomeType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -306,7 +306,7 @@ describe("AI fabrication chain", () => {
 			width: 32,
 			height: 32,
 			isPassable: () => true,
-			getFloorType: () => "grassland" as const,
+			getBiomeType: () => "grassland" as const,
 		};
 		computeSpawnCenters(boardInfo, null, ["reclaimers", "volt_collective"]);
 

@@ -11,7 +11,7 @@
  */
 
 import * as THREE from "three";
-import { FLOOR_INDEX_MAP, sampleElevation } from "../../terrain";
+import { BIOME_INDEX_MAP, sampleElevation } from "../../terrain";
 import { TILE_SIZE_M } from "../grid";
 import type { GeneratedBoard } from "../types";
 
@@ -117,7 +117,7 @@ export function spherePosToTile(
  *   uv        — per-tile-quad UV (for PBR atlas sampling)
  *   normal    — outward from sphere center
  *   elevation — bilinear interpolation of tile elevations (radial offset)
- *   floorIndex — atlas cell index for the tile's FloorType
+ *   floorIndex — atlas cell index for the tile's BiomeType
  */
 export function buildSphereGeometry(
 	board: GeneratedBoard,
@@ -188,8 +188,8 @@ export function buildSphereGeometry(
 			}
 
 			// Floor index for this tile
-			const ft = board.tiles[tz]?.[tx]?.floorType ?? "water";
-			const cellIdx = FLOOR_INDEX_MAP[ft] ?? 8;
+			const ft = board.tiles[tz]?.[tx]?.biomeType ?? "water";
+			const cellIdx = BIOME_INDEX_MAP[ft] ?? 8;
 			for (let fi = 0; fi < vertsPerTile; fi++) {
 				floorIndices[fii++] = cellIdx;
 			}

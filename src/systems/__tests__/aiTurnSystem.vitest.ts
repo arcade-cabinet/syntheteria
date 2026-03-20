@@ -29,7 +29,7 @@ function makeBoard(width: number, height: number): GeneratedBoard {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "grassland",
+				biomeType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});

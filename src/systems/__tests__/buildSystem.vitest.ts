@@ -1,7 +1,7 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { TileData } from "../../board/types";
-import { BUILDING_DEFS } from "../../buildings";
+import { BUILDING_DEFS } from "../../config/buildings";
 import {
 	BotFabricator,
 	Building,
@@ -27,7 +27,7 @@ function makeTile(x: number, z: number, passable = true): TileData {
 		z,
 		elevation: 0,
 		passable,
-		floorType: "grassland",
+		biomeType: "grassland",
 		resourceMaterial: null,
 		resourceAmount: 0,
 	};

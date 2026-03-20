@@ -74,7 +74,7 @@ export function Minimap({ world, board }: MinimapProps) {
 
 				const isExplored = explored.has(`${x},${z}`);
 				const color = isExplored
-					? (TERRAIN_COLORS[tile.floorType] ?? FOG_COLOR)
+					? (TERRAIN_COLORS[tile.biomeType] ?? FOG_COLOR)
 					: FOG_COLOR;
 
 				// Map tile to pixel range

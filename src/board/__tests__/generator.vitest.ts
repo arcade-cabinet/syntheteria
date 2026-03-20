@@ -20,7 +20,7 @@ describe("generateBoard", () => {
 				const t2 = board2.tiles[z][x];
 				expect(t1.elevation).toBe(t2.elevation);
 				expect(t1.passable).toBe(t2.passable);
-				expect(t1.floorType).toBe(t2.floorType);
+				expect(t1.biomeType).toBe(t2.biomeType);
 				expect(t1.resourceMaterial).toBe(t2.resourceMaterial);
 				expect(t1.resourceAmount).toBe(t2.resourceAmount);
 			}

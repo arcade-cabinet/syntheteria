@@ -25,7 +25,7 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 ### Economy & Resources
 - `getPlayerResources`, `addResources`, `spendResources`, `canAfford`
 - `harvestSystem`, `startHarvest` — resource harvesting
-- `floorMiningSystem`, `startFloorMining` — floor tile mining
+- `biomeMiningSystem`, `startBiomeMining` — biome tile mining
 - `runResourceRenewal` — deposit regeneration
 - `queueSynthesis`, `runSynthesis` — fusion recipes
 - `trackIncome`, `trackExpenditure`, `finalizeTurnDeltas`
@@ -86,7 +86,7 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 | diplomacySystem.ts | Faction diplomacy + trade |
 | experienceSystem.ts | Unit XP + mark thresholds |
 | fabricationSystem.ts | Robot fabrication queue |
-| floorMiningSystem.ts | Floor tile mining |
+| biomeMiningSystem.ts | Biome tile mining |
 | fogRevealSystem.ts | Fog of war reveal |
 | hackingSystem.ts | Unit hacking actions |
 | hackingTypes.ts | Hacking constants + bot roles |

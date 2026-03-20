@@ -117,7 +117,7 @@ function analyzeTile(
 	const { width, height } = board.config;
 	const tile = board.tiles[z]?.[x];
 	const isPassable = tile?.passable ?? false;
-	const isStructural = tile?.floorType === "mountain";
+	const isStructural = tile?.biomeType === "mountain";
 
 	let passableNeighborCount = 0;
 	let structuralNeighborCount = 0;
@@ -133,7 +133,7 @@ function analyzeTile(
 			passableNeighborCount++;
 			passableDirs.push([dx, dz]);
 		}
-		if (neighbor.floorType === "mountain") {
+		if (neighbor.biomeType === "mountain") {
 			structuralNeighborCount++;
 			structuralDirs.push([dx, dz]);
 		}

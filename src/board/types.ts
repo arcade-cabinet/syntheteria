@@ -1,7 +1,7 @@
-import type { FloorType, ResourceMaterial } from "../terrain";
+import type { BiomeType, ResourceMaterial } from "../terrain";
 import type { ClimateProfile } from "../world/config";
 
-export type { FloorType, ResourceMaterial };
+export type { BiomeType, ResourceMaterial };
 export type Elevation = -1 | 0 | 1 | 2;
 export type WeightClass = "light" | "medium" | "heavy";
 
@@ -11,7 +11,7 @@ export interface TileData {
 	elevation: Elevation;
 	passable: boolean;
 	/** Terrain substrate — set by generateBoard, used by initWorldFromBoard. */
-	floorType: FloorType;
+	biomeType: BiomeType;
 	resourceMaterial: ResourceMaterial | null;
 	resourceAmount: number;
 }

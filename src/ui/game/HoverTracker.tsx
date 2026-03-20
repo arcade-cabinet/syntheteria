@@ -10,10 +10,10 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { GeneratedBoard } from "../../board";
 import { createGridApi } from "../../board";
-import { BUILDING_DEFS } from "../../buildings";
-import { SALVAGE_DEFS } from "../../resources";
+import { BUILDING_DEFS } from "../../config/buildings";
+import { SALVAGE_DEFS } from "../../config/resources";
 import { computeTerritory } from "../../systems";
-import { FLOOR_DEFS, type FloorType } from "../../terrain";
+import { BIOME_DEFS, type BiomeType } from "../../terrain";
 import {
 	Building,
 	Powered,
@@ -112,13 +112,13 @@ export function HoverTracker({ world, board }: HoverTrackerProps) {
 			return;
 		}
 
-		const floorDef = FLOOR_DEFS[tileData.floorType as FloorType];
+		const biomeDef = BIOME_DEFS[tileData.biomeType as BiomeType];
 		const tileInfo: HoverTileInfo = {
 			tileX: tile.x,
 			tileZ: tile.z,
-			terrain: floorDef?.label ?? tileData.floorType,
+			terrain: biomeDef?.label ?? tileData.biomeType,
 			passable:
-				tileData.floorType !== "water" && tileData.floorType !== "mountain",
+				tileData.biomeType !== "water" && tileData.biomeType !== "mountain",
 			elevation: tileData.elevation,
 		};
 

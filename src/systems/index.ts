@@ -23,6 +23,7 @@ export {
 } from "./analyticsCollector";
 // --- Combat ---
 export { resolveAttacks } from "./attackSystem";
+export { biomeMiningSystem, startBiomeMining } from "./biomeMiningSystem";
 // --- Building ---
 export { placeStarterBuildings } from "./buildingPlacement";
 export type { BuildingUpgradeJob } from "./buildingUpgradeSystem";
@@ -71,7 +72,6 @@ export type {
 	SectBias,
 	StormCultistParams,
 } from "./cultistSystem";
-
 // --- Cult ---
 export {
 	_reset as _resetCultist,
@@ -102,7 +102,6 @@ export type {
 	StandingLevel,
 	TradeIncome,
 } from "./diplomacySystem";
-
 // --- Diplomacy ---
 export {
 	_resetDiplomacy,
@@ -122,7 +121,6 @@ export {
 	subscribeDiplomacy,
 } from "./diplomacySystem";
 export type { RobotRoleFamily, XPActionType } from "./experienceSystem";
-
 // --- Experience & Upgrade ---
 export {
 	applyMarkUpgrade,
@@ -148,7 +146,6 @@ export {
 	ROBOT_COSTS,
 	runFabrication,
 } from "./fabricationSystem";
-export { floorMiningSystem, startFloorMining } from "./floorMiningSystem";
 // --- Fog of War ---
 export { revealFog } from "./fogRevealSystem";
 export type {

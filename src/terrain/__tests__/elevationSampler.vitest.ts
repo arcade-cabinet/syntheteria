@@ -26,7 +26,7 @@ function makeBoard(elev: (-1 | 0 | 1 | 2)[][]): GeneratedBoard {
 			z,
 			elevation: e,
 			passable: true,
-			floorType: "grassland",
+			biomeType: "grassland",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		})),

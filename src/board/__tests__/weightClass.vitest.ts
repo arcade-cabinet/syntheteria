@@ -6,7 +6,7 @@ import type { GeneratedBoard, TileData, WeightClass } from "../types";
 function makeTile(
 	x: number,
 	z: number,
-	floorType: TileData["floorType"],
+	biomeType: TileData["biomeType"],
 	passable = true,
 ): TileData {
 	return {
@@ -14,7 +14,7 @@ function makeTile(
 		z,
 		elevation: 0,
 		passable,
-		floorType,
+		biomeType,
 		resourceMaterial: null,
 		resourceAmount: 0,
 	};
@@ -64,7 +64,7 @@ describe("isPassableFor", () => {
 	});
 
 	it("normal tiles passable for all weight classes at cost 1", () => {
-		const normalFloors: TileData["floorType"][] = [
+		const normalFloors: TileData["biomeType"][] = [
 			"hills",
 			"grassland",
 			"ruins",

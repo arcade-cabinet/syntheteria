@@ -8,7 +8,7 @@
 import type { World } from "koota";
 import { tileNeighbors } from "../board/adjacency";
 import type { GeneratedBoard } from "../board/types";
-import { CULT_STRUCTURE_DEFS } from "../buildings";
+import { CULT_STRUCTURE_DEFS } from "../config/buildings";
 import {
 	spawnCultCavalry,
 	spawnCultInfantry,
@@ -57,7 +57,7 @@ export function initCultPOIs(
 		for (let x = margin; x < width - margin; x++) {
 			const tile = board.tiles[z]?.[x];
 			if (!tile || !tile.passable) continue;
-			if (!CULT_TERRAIN.has(tile.floorType)) continue;
+			if (!CULT_TERRAIN.has(tile.biomeType)) continue;
 			// Exclude center area (player starts near center)
 			const distToCenter = Math.abs(x - centerX) + Math.abs(z - centerZ);
 			if (distToCenter < centerExclusion) continue;

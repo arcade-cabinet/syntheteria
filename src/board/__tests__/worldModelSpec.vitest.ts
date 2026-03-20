@@ -16,11 +16,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { SALVAGE_DEFS } from "../../resources";
+import { SALVAGE_DEFS } from "../../config/resources";
 import {
-	FLOOR_DEFS,
-	type FloorType,
-	isPassableFloor,
+	BIOME_DEFS,
+	type BiomeType,
+	isPassableBiome,
 	type ResourceMaterial,
 } from "../../terrain/types";
 import type { SalvageType } from "../../traits";
@@ -55,10 +55,10 @@ function allTiles(
 	return result;
 }
 
-function countByFloorType(tiles: TileData[]): Map<FloorType, number> {
-	const counts = new Map<FloorType, number>();
+function countByBiomeType(tiles: TileData[]): Map<BiomeType, number> {
+	const counts = new Map<BiomeType, number>();
 	for (const t of tiles) {
-		counts.set(t.floorType, (counts.get(t.floorType) ?? 0) + 1);
+		counts.set(t.biomeType, (counts.get(t.biomeType) ?? 0) + 1);
 	}
 	return counts;
 }
@@ -66,7 +66,7 @@ function countByFloorType(tiles: TileData[]): Map<FloorType, number> {
 // ─── Section 2.1: Terrain Substrates ─────────────────────────────────────────
 
 describe("Section 2 — Terrain Substrates (9 types)", () => {
-	const EXPECTED_FLOOR_TYPES: FloorType[] = [
+	const EXPECTED_BIOME_TYPES: BiomeType[] = [
 		"water",
 		"mountain",
 		"wetland",
@@ -78,30 +78,29 @@ describe("Section 2 — Terrain Substrates (9 types)", () => {
 		"tundra",
 	];
 
-	it("FloorType union has exactly 9 substrate types", () => {
-		expect(Object.keys(FLOOR_DEFS)).toHaveLength(9);
-		for (const ft of EXPECTED_FLOOR_TYPES) {
-			expect(FLOOR_DEFS).toHaveProperty(ft);
+	it("BiomeType union has exactly 9 substrate types", () => {
+		expect(Object.keys(BIOME_DEFS)).toHaveLength(9);
+		for (const ft of EXPECTED_BIOME_TYPES) {
+			expect(BIOME_DEFS).toHaveProperty(ft);
 		}
 	});
 
 	it("water and mountain are impassable; others are passable", () => {
-		expect(isPassableFloor("water")).toBe(false);
-		expect(isPassableFloor("mountain")).toBe(false);
-		expect(isPassableFloor("wetland")).toBe(true);
-		expect(isPassableFloor("hills")).toBe(true);
-		expect(isPassableFloor("grassland")).toBe(true);
-		expect(isPassableFloor("ruins")).toBe(true);
-		expect(isPassableFloor("desert")).toBe(true);
-		expect(isPassableFloor("forest")).toBe(true);
-		expect(isPassableFloor("tundra")).toBe(true);
+		expect(isPassableBiome("water")).toBe(false);
+		expect(isPassableBiome("mountain")).toBe(false);
+		expect(isPassableBiome("wetland")).toBe(true);
+		expect(isPassableBiome("hills")).toBe(true);
+		expect(isPassableBiome("grassland")).toBe(true);
+		expect(isPassableBiome("ruins")).toBe(true);
+		expect(isPassableBiome("desert")).toBe(true);
+		expect(isPassableBiome("forest")).toBe(true);
+		expect(isPassableBiome("tundra")).toBe(true);
 	});
 
-	it("generated board contains at least 5 distinct floor types", () => {
-		// A realistic board should use multiple substrate types
+	it("generated board contains at least 5 distinct biome types", () => {
 		const board = generateBoard(makeConfig({ width: 44, height: 44 }));
 		const tiles = allTiles(board, 44, 44);
-		const types = countByFloorType(tiles);
+		const types = countByBiomeType(tiles);
 		expect(types.size).toBeGreaterThanOrEqual(5);
 	});
 
@@ -109,7 +108,7 @@ describe("Section 2 — Terrain Substrates (9 types)", () => {
 		const config = makeConfig({ width: 44, height: 44 });
 		const board = generateBoard(config);
 		const tiles = allTiles(board, 44, 44);
-		const voidTiles = tiles.filter((t) => t.floorType === "water");
+		const voidTiles = tiles.filter((t) => t.biomeType === "water");
 		for (const t of voidTiles) {
 			expect(t.passable).toBe(false);
 		}
@@ -119,15 +118,14 @@ describe("Section 2 — Terrain Substrates (9 types)", () => {
 		const config = makeConfig({ width: 44, height: 44 });
 		const board = generateBoard(config);
 		const tiles = allTiles(board, 44, 44);
-		const massTiles = tiles.filter((t) => t.floorType === "mountain");
+		const massTiles = tiles.filter((t) => t.biomeType === "mountain");
 		for (const t of massTiles) {
 			expect(t.passable).toBe(false);
 		}
 	});
 
-	it("GAME_DESIGN primary yields match FLOOR_DEFS", () => {
-		// Table from Section 2:
-		const specYields: Record<FloorType, ResourceMaterial | null> = {
+	it("GAME_DESIGN primary yields match BIOME_DEFS", () => {
+		const specYields: Record<BiomeType, ResourceMaterial | null> = {
 			water: null,
 			mountain: "stone",
 			wetland: "clay",
@@ -139,8 +137,8 @@ describe("Section 2 — Terrain Substrates (9 types)", () => {
 			tundra: "coal",
 		};
 
-		for (const [floor, expectedMaterial] of Object.entries(specYields)) {
-			const def = FLOOR_DEFS[floor as FloorType];
+		for (const [biome, expectedMaterial] of Object.entries(specYields)) {
+			const def = BIOME_DEFS[biome as BiomeType];
 			expect(def.resourceMaterial).toBe(expectedMaterial);
 		}
 	});
@@ -158,7 +156,7 @@ describe("Section 2 — Deterministic generation", () => {
 			for (let x = 0; x < config.width; x++) {
 				const t1 = board1.tiles[z]![x]!;
 				const t2 = board2.tiles[z]![x]!;
-				expect(t1.floorType).toBe(t2.floorType);
+				expect(t1.biomeType).toBe(t2.biomeType);
 				expect(t1.elevation).toBe(t2.elevation);
 				expect(t1.passable).toBe(t2.passable);
 				expect(t1.resourceMaterial).toBe(t2.resourceMaterial);
@@ -174,7 +172,7 @@ describe("Section 2 — Deterministic generation", () => {
 		let diffs = 0;
 		for (let z = 0; z < 32; z++) {
 			for (let x = 0; x < 32; x++) {
-				if (board1.tiles[z]![x]!.floorType !== board2.tiles[z]![x]!.floorType)
+				if (board1.tiles[z]![x]!.biomeType !== board2.tiles[z]![x]!.biomeType)
 					diffs++;
 			}
 		}
@@ -193,8 +191,8 @@ describe("Section 2 — Deterministic generation", () => {
 		const tiles2 = allTiles(boards[2]!, config.width, config.height);
 
 		for (let i = 0; i < tiles0.length; i++) {
-			expect(tiles0[i]!.floorType).toBe(tiles1[i]!.floorType);
-			expect(tiles1[i]!.floorType).toBe(tiles2[i]!.floorType);
+			expect(tiles0[i]!.biomeType).toBe(tiles1[i]!.biomeType);
+			expect(tiles1[i]!.biomeType).toBe(tiles2[i]!.biomeType);
 		}
 	});
 });
@@ -300,11 +298,11 @@ describe("Section 2 — Salvage props are PRIMARY resource source", () => {
 
 describe("Section 2 — Floor mining is the backstop", () => {
 	it("water is not mineable", () => {
-		expect(FLOOR_DEFS.water.mineable).toBe(false);
+		expect(BIOME_DEFS.water.mineable).toBe(false);
 	});
 
-	it("all passable floor types ARE mineable (backstop guarantee)", () => {
-		const passableTypes: FloorType[] = [
+	it("all passable biome types ARE mineable (backstop guarantee)", () => {
+		const passableTypes: BiomeType[] = [
 			"wetland",
 			"hills",
 			"grassland",
@@ -314,24 +312,24 @@ describe("Section 2 — Floor mining is the backstop", () => {
 			"tundra",
 		];
 		for (const ft of passableTypes) {
-			expect(FLOOR_DEFS[ft].mineable).toBe(true);
+			expect(BIOME_DEFS[ft].mineable).toBe(true);
 		}
 	});
 
 	it("mountain is mineable despite being impassable (mountain-mining)", () => {
-		expect(FLOOR_DEFS.mountain.mineable).toBe(true);
+		expect(BIOME_DEFS.mountain.mineable).toBe(true);
 	});
 
-	it("every mineable floor has a non-null resourceMaterial", () => {
-		for (const [_name, def] of Object.entries(FLOOR_DEFS)) {
+	it("every mineable biome has a non-null resourceMaterial", () => {
+		for (const [_name, def] of Object.entries(BIOME_DEFS)) {
 			if (def.mineable) {
 				expect(def.resourceMaterial).not.toBeNull();
 			}
 		}
 	});
 
-	it("every mineable floor has resourceAmount[min] > 0", () => {
-		for (const [_name, def] of Object.entries(FLOOR_DEFS)) {
+	it("every mineable biome has resourceAmount[min] > 0", () => {
+		for (const [_name, def] of Object.entries(BIOME_DEFS)) {
 			if (def.mineable) {
 				expect(def.resourceAmount[0]).toBeGreaterThan(0);
 			}
@@ -431,17 +429,17 @@ describe("Section 2 — 13 resource materials in 4 tiers", () => {
 	});
 
 	it("all 13 materials are valid values in the ResourceMaterial type", () => {
-		// Verify each exists as a possible yield in FLOOR_DEFS or SALVAGE_DEFS
+		// Verify each exists as a possible yield in BIOME_DEFS or SALVAGE_DEFS
 		const allMaterials = [...FOUNDATION, ...ADVANCED, ...COMMON, ...ABYSSAL];
-		const knownFromFloor = new Set(
-			Object.values(FLOOR_DEFS)
+		const knownFromBiome = new Set(
+			Object.values(BIOME_DEFS)
 				.map((d) => d.resourceMaterial)
 				.filter(Boolean),
 		);
 		const knownFromSalvage = new Set(
 			Object.values(SALVAGE_DEFS).flatMap((d) => Object.keys(d.yields)),
 		);
-		const allKnown = new Set([...knownFromFloor, ...knownFromSalvage]);
+		const allKnown = new Set([...knownFromBiome, ...knownFromSalvage]);
 
 		for (const mat of allMaterials) {
 			expect(allKnown.has(mat)).toBe(true);
@@ -468,7 +466,7 @@ describe("Section 2 — Player start", () => {
 		const cx = Math.floor(config.width / 2);
 		const cz = Math.floor(config.height / 2);
 		const center = board.tiles[cz]![cx]!;
-		expect(center.floorType).toBe("grassland");
+		expect(center.biomeType).toBe("grassland");
 	});
 
 	it("center tile has no resource deposit (cleared for spawn)", () => {
@@ -491,7 +489,7 @@ describe("Section 2 — Weight-class terrain interaction", () => {
 			z: 0,
 			elevation: 0,
 			passable: true,
-			floorType: "wetland",
+			biomeType: "wetland",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		};
@@ -504,7 +502,7 @@ describe("Section 2 — Weight-class terrain interaction", () => {
 			z: 0,
 			elevation: 0,
 			passable: true,
-			floorType: "wetland",
+			biomeType: "wetland",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		};
@@ -517,7 +515,7 @@ describe("Section 2 — Weight-class terrain interaction", () => {
 			z: 0,
 			elevation: 0,
 			passable: true,
-			floorType: "wetland",
+			biomeType: "wetland",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		};
@@ -530,7 +528,7 @@ describe("Section 2 — Weight-class terrain interaction", () => {
 			z: 0,
 			elevation: 0,
 			passable: true,
-			floorType: "wetland",
+			biomeType: "wetland",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		};
@@ -543,7 +541,7 @@ describe("Section 2 — Weight-class terrain interaction", () => {
 			z: 0,
 			elevation: -1,
 			passable: false,
-			floorType: "water",
+			biomeType: "water",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		};
@@ -558,7 +556,7 @@ describe("Section 2 — Weight-class terrain interaction", () => {
 			z: 0,
 			elevation: 0,
 			passable: true,
-			floorType: "grassland",
+			biomeType: "grassland",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		};

@@ -31,7 +31,7 @@ import {
 function makeBoard(
 	width: number,
 	height: number,
-	floorType = "grassland",
+	biomeType = "grassland",
 ): GeneratedBoard {
 	const tiles: TileData[][] = [];
 	for (let z = 0; z < height; z++) {
@@ -42,7 +42,7 @@ function makeBoard(
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: floorType as TileData["floorType"],
+				biomeType: biomeType as TileData["biomeType"],
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -74,13 +74,13 @@ function makeBoardWithCultTerrain(
 			const distToCenter = Math.abs(x - centerX) + Math.abs(z - centerZ);
 			const isCenter = distToCenter < centerExclusion;
 			// Use cult terrain in the valid zone
-			const floorType = !isEdge && !isCenter ? "ruins" : "grassland";
+			const biomeType = !isEdge && !isCenter ? "ruins" : "grassland";
 			row.push({
 				x,
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: floorType as TileData["floorType"],
+				biomeType: biomeType as TileData["biomeType"],
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});

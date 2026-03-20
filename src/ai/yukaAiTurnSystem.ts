@@ -15,7 +15,7 @@
 import type { World } from "koota";
 import { playSfx } from "../audio";
 import type { GeneratedBoard } from "../board";
-import { BUILDING_DEFS } from "../buildings";
+import { BUILDING_DEFS } from "../config/buildings";
 import { getRelation } from "../factions";
 import { type RobotClass, TRACK_REGISTRY } from "../robots";
 import {
@@ -33,7 +33,7 @@ import {
 	spendResources,
 } from "../systems";
 import type { ResourceMaterial } from "../terrain";
-import { TileFloor } from "../terrain";
+import { TileBiome } from "../terrain";
 import {
 	Board,
 	BotFabricator,
@@ -69,7 +69,7 @@ import {
 	countNearbyThreats,
 	DIFFICULTY_AGGRESSION_MULT,
 	findMineableTilesNearUnits,
-	findTileFloorAt,
+	findTileBiomeAt,
 	getFactionBuildings,
 	getFactionResourceScore,
 	getNearestEnemyDist,
@@ -757,18 +757,18 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 				}
 				case "mine": {
 					if (!entity.has(UnitMine)) {
-						const tileFloor = findTileFloorAt(
+						const tileBiome = findTileBiomeAt(
 							world,
 							action.targetX,
 							action.targetZ,
 						);
-						if (tileFloor && tileFloor.mineable && tileFloor.hardness > 0) {
+						if (tileBiome && tileBiome.mineable && tileBiome.hardness > 0) {
 							entity.add(
 								UnitMine({
 									targetX: action.targetX,
 									targetZ: action.targetZ,
-									ticksRemaining: tileFloor.hardness,
-									totalTicks: tileFloor.hardness,
+									ticksRemaining: tileBiome.hardness,
+									totalTicks: tileBiome.hardness,
 								}),
 							);
 						}

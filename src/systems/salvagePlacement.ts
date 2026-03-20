@@ -16,9 +16,9 @@
 
 import type { World } from "koota";
 import type { GeneratedBoard } from "../board/types";
-import { SALVAGE_DEFS } from "../resources";
+import { SALVAGE_DEFS } from "../config/resources";
 import { makePRNG } from "../seed";
-import type { FloorType } from "../terrain/types";
+import type { BiomeType } from "../terrain/types";
 import { SalvageProp, type SalvageType } from "../traits";
 
 // ─── Scatter config ─────────────────────────────────────────────────────────
@@ -28,7 +28,7 @@ interface TerrainSalvageConfig {
 	readonly weights: ReadonlyArray<readonly [SalvageType, number]>;
 }
 
-const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
+const TERRAIN_SALVAGE: Record<BiomeType, TerrainSalvageConfig> = {
 	mountain: {
 		rate: 0.6,
 		weights: [
@@ -152,7 +152,7 @@ export function placeSalvageProps(world: World, board: GeneratedBoard): number {
 	for (let z = 0; z < height; z++) {
 		for (let x = 0; x < width; x++) {
 			const tile = board.tiles[z]![x]!;
-			const cfg = TERRAIN_SALVAGE[tile.floorType];
+			const cfg = TERRAIN_SALVAGE[tile.biomeType];
 			if (!cfg || cfg.rate === 0) continue;
 
 			// Per-tile deterministic RNG

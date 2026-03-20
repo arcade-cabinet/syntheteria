@@ -14,7 +14,7 @@ function makeBoard(width: number, height: number): SimpleBoardInfo {
 		width,
 		height,
 		isPassable: () => true,
-		getFloorType: () => "grassland",
+		getBiomeType: () => "grassland",
 	};
 }
 
@@ -163,7 +163,7 @@ describe("placeRobots", () => {
 			width: 32,
 			height: 32,
 			isPassable: () => true,
-			getFloorType: (x, z) => {
+			getBiomeType: (x: number, z: number) => {
 				if (x >= 3 && x <= 8 && z >= 3 && z <= 8) return "ruins";
 				return "grassland";
 			},

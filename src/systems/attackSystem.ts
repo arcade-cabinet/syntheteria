@@ -1,7 +1,7 @@
 import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
 import type { RobotClass } from "../robots/types";
-import { TileFloor } from "../terrain";
+import { TileBiome } from "../terrain";
 import {
 	Board,
 	CombatResult,
@@ -40,9 +40,9 @@ let wallCacheTurn = -1;
 function getWallTiles(world: World, currentTurn: number): Set<string> {
 	if (wallTileCache && wallCacheTurn === currentTurn) return wallTileCache;
 	const walls = new Set<string>();
-	for (const entity of world.query(Tile, TileFloor)) {
-		const floor = entity.get(TileFloor);
-		if (floor?.floorType === "mountain") {
+	for (const entity of world.query(Tile, TileBiome)) {
+		const biome = entity.get(TileBiome);
+		if (biome?.biomeType === "mountain") {
 			const tile = entity.get(Tile);
 			if (tile) walls.add(`${tile.x},${tile.z}`);
 		}

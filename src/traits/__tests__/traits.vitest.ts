@@ -1,6 +1,6 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { TileFloor } from "../../terrain/traits";
+import { TileBiome } from "../../terrain/traits";
 import { Board } from "../../traits/board";
 import { Building } from "../../traits/building";
 import { Faction, FactionRelation } from "../../traits/faction";
@@ -63,27 +63,27 @@ describe("Tile traits", () => {
 		expect(e.has(Tile)).toBe(false);
 	});
 
-	it("TileFloor defaults", () => {
-		const e = world.spawn(TileFloor);
-		const f = e.get(TileFloor)!;
-		expect(f.floorType).toBe("grassland");
+	it("TileBiome defaults", () => {
+		const e = world.spawn(TileBiome);
+		const f = e.get(TileBiome)!;
+		expect(f.biomeType).toBe("grassland");
 		expect(f.mineable).toBe(false);
 		expect(f.hardness).toBe(0);
 		expect(f.resourceAmount).toBe(0);
 	});
 
-	it("TileFloor spawns with values", () => {
+	it("TileBiome spawns with values", () => {
 		const e = world.spawn(
-			TileFloor({
-				floorType: "ruins",
+			TileBiome({
+				biomeType: "ruins",
 				mineable: true,
 				hardness: 1,
 				resourceMaterial: "stone",
 				resourceAmount: 2,
 			}),
 		);
-		const f = e.get(TileFloor)!;
-		expect(f.floorType).toBe("ruins");
+		const f = e.get(TileBiome)!;
+		expect(f.biomeType).toBe("ruins");
 		expect(f.mineable).toBe(true);
 		expect(f.resourceMaterial).toBe("stone");
 		expect(f.resourceAmount).toBe(2);

@@ -6,6 +6,7 @@ import { setCurrentTurn } from "../ui/game/turnEvents";
 import { resolveAllMoves } from "./aiTurnSystem";
 import { runAnalysisAcceleration } from "./analysisSystem";
 import { resolveAttacks } from "./attackSystem";
+import { biomeMiningSystem } from "./biomeMiningSystem";
 import { runBuildingUpgrades } from "./buildingUpgradeSystem";
 import { recordTurnEnd } from "./campaignStats";
 import {
@@ -16,7 +17,6 @@ import {
 import { tickCultMutations } from "./cultMutation";
 import { runDiplomacy, shareAlliedFog } from "./diplomacySystem";
 import { runFabrication } from "./fabricationSystem";
-import { floorMiningSystem } from "./floorMiningSystem";
 import { runHackProgress } from "./hackingSystem";
 import { harvestSystem } from "./harvestSystem";
 import { clearHighlights } from "./highlightSystem";
@@ -107,7 +107,7 @@ function runEnvironmentPhase(world: World, board: GeneratedBoard): void {
 	const turn = getCurrentTurn(world);
 	setCurrentTurn(turn);
 	harvestSystem(world);
-	floorMiningSystem(world);
+	biomeMiningSystem(world);
 	runPowerGrid(world);
 	runResourceRenewal(world);
 	// Signal network moved to phase 5.5 (after AP refresh) so AP penalty sticks

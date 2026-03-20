@@ -34,9 +34,9 @@ export {
 } from "./sphere";
 // --- Types ---
 export type {
+	BiomeType,
 	BoardConfig,
 	Elevation,
-	FloorType,
 	GeneratedBoard,
 	ResourceMaterial,
 	TileData,

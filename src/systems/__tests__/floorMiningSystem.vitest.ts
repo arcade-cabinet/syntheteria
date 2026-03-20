@@ -1,6 +1,6 @@
 import { createWorld, type World } from "koota";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TileFloor } from "../../terrain/traits";
+import { TileBiome } from "../../terrain/traits";
 import {
 	Faction,
 	ResourcePool,
@@ -12,7 +12,7 @@ import {
 	UnitVisual,
 	UnitXP,
 } from "../../traits";
-import { floorMiningSystem, startFloorMining } from "../floorMiningSystem";
+import { biomeMiningSystem, startBiomeMining } from "../biomeMiningSystem";
 import { ResearchState } from "../researchSystem";
 
 // Mock audio and UI
@@ -28,15 +28,15 @@ function spawnTile(
 	world: World,
 	x: number,
 	z: number,
-	floorType: string,
+	biomeType: string,
 	mineable: boolean,
 	hardness: number,
 	material: string | null,
 ) {
 	return world.spawn(
 		Tile({ x, z, elevation: 0, passable: true, explored: true, visibility: 1 }),
-		TileFloor({
-			floorType: floorType as import("../../terrain/types").FloorType,
+		TileBiome({
+			biomeType: biomeType as import("../../terrain/types").BiomeType,
 			mineable,
 			hardness,
 			resourceMaterial: material as
@@ -93,7 +93,7 @@ function spawnFaction(world: World, factionId: string) {
 	);
 }
 
-describe("floorMiningSystem", () => {
+describe("biomeMiningSystem", () => {
 	let world: World;
 
 	beforeEach(() => {
@@ -108,7 +108,7 @@ describe("floorMiningSystem", () => {
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 3, totalTicks: 3 }),
 		);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
 		const mine = unit.get(UnitMine);
 		expect(mine).toBeTruthy();
@@ -123,7 +123,7 @@ describe("floorMiningSystem", () => {
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
 		);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
 		// UnitMine should be removed
 		expect(unit.has(UnitMine)).toBe(false);
@@ -146,9 +146,9 @@ describe("floorMiningSystem", () => {
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
 		);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
-		const floor = tile.get(TileFloor);
+		const floor = tile.get(TileBiome);
 		expect(floor!.mineable).toBe(false);
 		expect(floor!.resourceAmount).toBe(0);
 		expect(floor!.mined).toBe(true);
@@ -165,7 +165,7 @@ describe("floorMiningSystem", () => {
 		// Tile starts at elevation 0
 		expect(tile.get(Tile)!.elevation).toBe(0);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
 		// Tile should now be at pit depth (-1)
 		expect(tile.get(Tile)!.elevation).toBe(-1);
@@ -179,13 +179,13 @@ describe("floorMiningSystem", () => {
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
 		);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
 		expect(unit.has(UnitMine)).toBe(false);
 	});
 });
 
-describe("startFloorMining", () => {
+describe("startBiomeMining", () => {
 	let world: World;
 
 	beforeEach(() => {
@@ -197,7 +197,7 @@ describe("startFloorMining", () => {
 		spawnTile(world, 1, 0, "hills", true, 2, "iron_ore");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 
-		const result = startFloorMining(world, unit.id(), 1, 0);
+		const result = startBiomeMining(world, unit.id(), 1, 0);
 		expect(result).toBe(true);
 		expect(unit.has(UnitMine)).toBe(true);
 
@@ -215,7 +215,7 @@ describe("startFloorMining", () => {
 		spawnTile(world, 3, 0, "hills", true, 2, "iron_ore");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 
-		const result = startFloorMining(world, unit.id(), 3, 0);
+		const result = startBiomeMining(world, unit.id(), 3, 0);
 		expect(result).toBe(false);
 		expect(unit.has(UnitMine)).toBe(false);
 	});
@@ -225,7 +225,7 @@ describe("startFloorMining", () => {
 		spawnTile(world, 1, 0, "water", false, 0, null);
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 
-		const result = startFloorMining(world, unit.id(), 1, 0);
+		const result = startBiomeMining(world, unit.id(), 1, 0);
 		expect(result).toBe(false);
 	});
 
@@ -235,7 +235,7 @@ describe("startFloorMining", () => {
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.set(UnitStats, { ...unit.get(UnitStats)!, ap: 0 });
 
-		const result = startFloorMining(world, unit.id(), 1, 0);
+		const result = startBiomeMining(world, unit.id(), 1, 0);
 		expect(result).toBe(false);
 	});
 
@@ -244,7 +244,7 @@ describe("startFloorMining", () => {
 		spawnTile(world, 0, 0, "desert", true, 1, "sand");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 
-		const result = startFloorMining(world, unit.id(), 0, 0);
+		const result = startBiomeMining(world, unit.id(), 0, 0);
 		expect(result).toBe(true);
 	});
 });
@@ -296,14 +296,14 @@ describe("deep mining tech bonus", () => {
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
 		);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
 		// Get the resources — should be boosted
 		for (const e of world.query(Faction, ResourcePool)) {
 			const f = e.get(Faction);
 			if (f?.id === "reclaimers") {
 				const r = e.get(ResourcePool);
-				// ruins yields [1,3] per FLOOR_DEFS, so base yield 1-3
+				// ruins yields [1,3] per BIOME_DEFS, so base yield 1-3
 				// With deep_mining +50%, minimum yield is floor(1*1.5) = 1, max is floor(3*1.5) = 4
 				// Any yield > 0 confirms the system ran
 				expect(r!.stone).toBeGreaterThan(0);
@@ -320,7 +320,7 @@ describe("deep mining tech bonus", () => {
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
 		);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
 		// Resources should still be yielded (base amount, no bonus)
 		for (const e of world.query(Faction, ResourcePool)) {

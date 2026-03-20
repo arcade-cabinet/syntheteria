@@ -3,7 +3,7 @@
  *
  * Creates:
  *  - Board singleton entity
- *  - One Tile + TileHighlight + TileFloor entity per board tile
+ *  - One Tile + TileHighlight + TileBiome entity per board tile
  *  - All faction entities
  *  - All robots from placement flags
  */
@@ -23,7 +23,7 @@ import {
 	revealFog,
 	runPowerGrid,
 } from "./systems";
-import { TileFloor, tileFloorProps } from "./terrain";
+import { TileBiome, tileBiomeProps } from "./terrain";
 import { Board } from "./traits/board";
 import { ResourceDeposit } from "./traits/resource";
 import { Tile, TileHighlight } from "./traits/tile";
@@ -79,7 +79,7 @@ export function initWorldFromBoard(
 	for (let z = 0; z < height; z++) {
 		for (let x = 0; x < width; x++) {
 			const tile = board.tiles[z]![x]!;
-			const floorType = tile.floorType;
+			const biomeType = tile.biomeType;
 			world.spawn(
 				Tile({
 					x: tile.x,
@@ -88,7 +88,7 @@ export function initWorldFromBoard(
 					passable: tile.passable,
 				}),
 				TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
-				TileFloor(tileFloorProps(floorType, tile.x, tile.z)),
+				TileBiome(tileBiomeProps(biomeType, tile.x, tile.z)),
 			);
 
 			if (tile.resourceMaterial !== null) {
@@ -116,7 +116,7 @@ export function initWorldFromBoard(
 		width,
 		height,
 		isPassable: (x, z) => board.tiles[z]?.[x]?.passable ?? false,
-		getFloorType: (x, z) => board.tiles[z]?.[x]?.floorType,
+		getBiomeType: (x, z) => board.tiles[z]?.[x]?.biomeType,
 	};
 	computeSpawnCenters(boardInfo, playerFactionId, activeFactionIds);
 

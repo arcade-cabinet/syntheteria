@@ -94,8 +94,8 @@ export interface SimpleBoardInfo {
 	width: number;
 	height: number;
 	isPassable: (x: number, z: number) => boolean;
-	/** Floor type at tile. Returns undefined for out-of-bounds. */
-	getFloorType?: (x: number, z: number) => string | undefined;
+	/** Biome type at tile. Returns undefined for out-of-bounds. */
+	getBiomeType?: (x: number, z: number) => string | undefined;
 }
 
 const SPAWNERS: Record<
@@ -132,7 +132,7 @@ function scoreTile(
 			const tx = x + dx;
 			const tz = z + dz;
 			if (tx < 0 || tz < 0 || tx >= board.width || tz >= board.height) continue;
-			const ft = board.getFloorType?.(tx, tz);
+			const ft = board.getBiomeType?.(tx, tz);
 			if (ft === terrainAffinity) affinityCount++;
 		}
 	}

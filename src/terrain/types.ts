@@ -30,9 +30,6 @@ export type BiomeType =
 	| "ruins"
 	| "tundra";
 
-/** Backward compatibility alias — old code uses FloorType */
-export type FloorType = BiomeType;
-
 /**
  * Resource material taxonomy — natural → processed → synthetic.
  *
@@ -76,9 +73,6 @@ export type BiomeDef = {
 	/** Movement cost multiplier (1.0 = normal, 2.0 = double). */
 	movementCost: number;
 };
-
-/** Backward compatibility alias */
-export type FloorDef = BiomeDef;
 
 export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
 	water: {
@@ -155,9 +149,6 @@ export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
 	},
 };
 
-/** Backward compat: FLOOR_DEFS = BIOME_DEFS */
-export const FLOOR_DEFS: Record<FloorType, FloorDef> = BIOME_DEFS;
-
 /** BiomeType → color index for rendering. */
 export const BIOME_INDEX_MAP: Record<BiomeType, number> = {
 	grassland: 0,
@@ -171,13 +162,7 @@ export const BIOME_INDEX_MAP: Record<BiomeType, number> = {
 	mountain: 8,
 };
 
-/** Backward compat alias */
-export const FLOOR_INDEX_MAP: Record<FloorType, number> = BIOME_INDEX_MAP;
-
 /** True for passable biome types. */
 export function isPassableBiome(t: BiomeType): boolean {
 	return t !== "water" && t !== "mountain";
 }
-
-/** Backward compat alias */
-export const isPassableFloor = isPassableBiome;

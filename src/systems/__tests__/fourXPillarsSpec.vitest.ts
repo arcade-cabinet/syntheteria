@@ -13,11 +13,11 @@
 
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { BUILDING_DEFS } from "../../buildings";
-import { SALVAGE_DEFS } from "../../resources";
+import { BUILDING_DEFS } from "../../config/buildings";
+import { SALVAGE_DEFS } from "../../config/resources";
 import {
-	FLOOR_DEFS,
-	type FloorType,
+	BIOME_DEFS,
+	type BiomeType,
 	type ResourceMaterial,
 } from "../../terrain/types";
 import {
@@ -279,8 +279,8 @@ describe("Section 5 — eXploit", () => {
 		expect(pool?.iron_ore).toBeGreaterThan(0);
 	});
 
-	it("floor mining backstop: all passable FLOOR_DEFS are mineable", () => {
-		const passableFloors: FloorType[] = [
+	it("biome mining backstop: all passable BIOME_DEFS are mineable", () => {
+		const passableBiomes: BiomeType[] = [
 			"wetland",
 			"hills",
 			"grassland",
@@ -290,8 +290,8 @@ describe("Section 5 — eXploit", () => {
 			"tundra",
 		];
 
-		for (const ft of passableFloors) {
-			const def = FLOOR_DEFS[ft];
+		for (const ft of passableBiomes) {
+			const def = BIOME_DEFS[ft];
 			expect(def.mineable).toBe(true);
 			expect(def.resourceMaterial).not.toBeNull();
 			expect(def.resourceAmount[0]).toBeGreaterThan(0);

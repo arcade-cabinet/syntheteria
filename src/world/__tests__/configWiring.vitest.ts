@@ -9,7 +9,7 @@ import {
 	getStormCultistParams,
 	runAiTurns,
 } from "../../systems";
-import { floorTypeForTile } from "../../terrain/cluster";
+import { biomeTypeForTile } from "../../terrain/cluster";
 import {
 	Board,
 	Faction,
@@ -36,7 +36,7 @@ function makeBoard(width: number, height: number): GeneratedBoard {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "grassland",
+				biomeType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -110,13 +110,13 @@ describe("climate profiles config wiring", () => {
 		expect(CLIMATE_PROFILE_SPECS.frozen.waterLevel).toBe(0.45);
 	});
 
-	it("floorTypeForTile respects waterLevel parameter", () => {
+	it("biomeTypeForTile respects waterLevel parameter", () => {
 		let highWaterCount = 0;
 		let lowWaterCount = 0;
 		for (let x = 0; x < 32; x++) {
 			for (let z = 0; z < 32; z++) {
-				if (floorTypeForTile(x, z, 0, seed, 0.8) === "water") highWaterCount++;
-				if (floorTypeForTile(x, z, 0, seed, 0.1) === "water") lowWaterCount++;
+				if (biomeTypeForTile(x, z, 0, seed, 0.8) === "water") highWaterCount++;
+				if (biomeTypeForTile(x, z, 0, seed, 0.1) === "water") lowWaterCount++;
 			}
 		}
 		expect(highWaterCount).toBeGreaterThan(lowWaterCount);
@@ -162,7 +162,7 @@ describe("climate profiles config wiring", () => {
 			let structuralCount = 0;
 			for (let z = 0; z < board.config.height; z++) {
 				for (let x = 0; x < board.config.width; x++) {
-					if (board.tiles[z]![x]!.floorType === "mountain") structuralCount++;
+					if (board.tiles[z]![x]!.biomeType === "mountain") structuralCount++;
 				}
 			}
 			// BSP always produces structural perimeters — at least 10% of tiles

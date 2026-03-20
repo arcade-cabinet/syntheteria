@@ -1,24 +1,24 @@
 /**
- * Floor Mining System — strip-mine tiles for basic resources.
+ * Biome Mining System — strip-mine tiles for basic resources.
  *
  * This is the BACKSTOP economy: when salvage props are consumed,
  * units can mine the floor itself for foundation-tier materials.
- * Each FloorType yields a specific material at a rate determined
+ * Each BiomeType yields a specific material at a rate determined
  * by hardness (turns to complete) and resourceAmount (yield range).
  *
  * Flow:
  *   1. Player/AI selects "mine" on a worker adjacent to a mineable tile
- *   2. UnitMine trait is added with ticksRemaining = FloorDef.hardness
- *   3. Each turn, floorMiningSystem decrements ticksRemaining
+ *   2. UnitMine trait is added with ticksRemaining = BiomeDef.hardness
+ *   3. Each turn, biomeMiningSystem decrements ticksRemaining
  *   4. On completion: yield resources, mark tile as mined (mineable → false)
  */
 
 import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
 import type { RobotClass } from "../robots/types";
-import { TileFloor } from "../terrain/traits";
-import type { ResourceMaterial } from "../terrain/types";
-import { FLOOR_DEFS } from "../terrain/types";
+import { TileBiome } from "../terrain/traits";
+import type { BiomeType, ResourceMaterial } from "../terrain/types";
+import { BIOME_DEFS } from "../terrain/types";
 import {
 	Building,
 	Tile,
@@ -35,8 +35,8 @@ import { trackIncome } from "./resourceDeltaSystem";
 import { addResources } from "./resourceSystem";
 import { triggerHarvestSpeech } from "./speechTriggers";
 
-/** Process one tick of all active floor mining operations. */
-export function floorMiningSystem(world: World): void {
+/** Process one tick of all active biome mining operations. */
+export function biomeMiningSystem(world: World): void {
 	for (const unit of world.query(UnitMine, UnitFaction)) {
 		const mine = unit.get(UnitMine);
 		if (!mine) continue;
@@ -56,23 +56,20 @@ export function floorMiningSystem(world: World): void {
 			continue;
 		}
 
-		// Find the tile entity at target coordinates
-		const tileFloor = findTileFloor(world, mine.targetX, mine.targetZ);
-		if (!tileFloor) {
+		const tileBiome = findTileBiome(world, mine.targetX, mine.targetZ);
+		if (!tileBiome) {
 			unit.remove(UnitMine);
 			continue;
 		}
 
-		const { entity: tileEntity, floor } = tileFloor;
+		const { entity: tileEntity, biome } = tileBiome;
 
-		if (!floor.mineable || !floor.resourceMaterial) {
+		if (!biome.mineable || !biome.resourceMaterial) {
 			unit.remove(UnitMine);
 			continue;
 		}
 
-		// Yield resources based on FloorDef range
-		const def =
-			FLOOR_DEFS[floor.floorType as import("../terrain/types").FloorType];
+		const def = BIOME_DEFS[biome.biomeType as BiomeType];
 		const [minYield, maxYield] = def.resourceAmount;
 		let yieldAmount =
 			minYield + Math.floor(Math.random() * (maxYield - minYield + 1));
@@ -85,14 +82,14 @@ export function floorMiningSystem(world: World): void {
 		addResources(
 			world,
 			faction.factionId,
-			floor.resourceMaterial as ResourceMaterial,
+			biome.resourceMaterial as ResourceMaterial,
 			yieldAmount,
 		);
-		trackIncome(floor.resourceMaterial as ResourceMaterial, yieldAmount);
+		trackIncome(biome.resourceMaterial as ResourceMaterial, yieldAmount);
 
-		const materialLabel = floor.resourceMaterial.replace(/_/g, " ");
+		const materialLabel = biome.resourceMaterial.replace(/_/g, " ");
 		pushTurnEvent(
-			`Floor mining complete: +${yieldAmount} ${materialLabel} from ${def.label}`,
+			`Biome mining complete: +${yieldAmount} ${materialLabel} from ${def.label}`,
 		);
 
 		// Trigger speech and XP
@@ -106,8 +103,8 @@ export function floorMiningSystem(world: World): void {
 		}
 
 		// Mark tile as mined — can't mine again
-		tileEntity.set(TileFloor, {
-			...floor,
+		tileEntity.set(TileBiome, {
+			...biome,
 			mineable: false,
 			resourceAmount: 0,
 			mined: true,
@@ -126,14 +123,13 @@ export function floorMiningSystem(world: World): void {
 	}
 }
 
-/** Start a floor mining operation. Returns true on success. */
-export function startFloorMining(
+/** Start a biome mining operation. Returns true on success. */
+export function startBiomeMining(
 	world: World,
 	unitEntityId: number,
 	targetX: number,
 	targetZ: number,
 ): boolean {
-	// Find the unit
 	let unitEntity = null;
 	for (const e of world.query(UnitStats, UnitFaction, UnitPos)) {
 		if (e.id() === unitEntityId) {
@@ -143,62 +139,56 @@ export function startFloorMining(
 	}
 	if (!unitEntity) return false;
 
-	// Check unit has AP
 	const stats = unitEntity.get(UnitStats);
 	if (!stats || stats.ap < 1) return false;
 
-	// Check unit not already mining or harvesting
 	if (unitEntity.has(UnitMine)) return false;
 
-	// Check adjacency (Manhattan distance <= 1)
 	const pos = unitEntity.get(UnitPos);
 	if (!pos) return false;
 	const dist = Math.abs(pos.tileX - targetX) + Math.abs(pos.tileZ - targetZ);
 	if (dist > 1) return false;
 
-	// Find the tile and check it's mineable
-	const tileFloor = findTileFloor(world, targetX, targetZ);
-	if (!tileFloor) return false;
+	const tileBiome = findTileBiome(world, targetX, targetZ);
+	if (!tileBiome) return false;
 
-	const { floor } = tileFloor;
-	if (!floor.mineable || !floor.resourceMaterial) return false;
+	const { biome } = tileBiome;
+	if (!biome.mineable || !biome.resourceMaterial) return false;
 
-	// Deduct AP
 	unitEntity.set(UnitStats, { ...stats, ap: stats.ap - 1 });
 
-	// Add UnitMine trait
 	unitEntity.add(
 		UnitMine({
 			targetX,
 			targetZ,
-			ticksRemaining: floor.hardness,
-			totalTicks: floor.hardness,
+			ticksRemaining: biome.hardness,
+			totalTicks: biome.hardness,
 		}),
 	);
 
 	return true;
 }
 
-interface TileFloorData {
-	floorType: import("../terrain/types").FloorType;
+interface TileBiomeData {
+	biomeType: BiomeType;
 	mineable: boolean;
 	hardness: number;
-	resourceMaterial: import("../terrain/types").ResourceMaterial | null;
+	resourceMaterial: ResourceMaterial | null;
 	resourceAmount: number;
 	mined: boolean;
 }
 
-/** Find a tile entity with TileFloor at given coordinates. */
-function findTileFloor(
+/** Find a tile entity with TileBiome at given coordinates. */
+function findTileBiome(
 	world: World,
 	x: number,
 	z: number,
-): { entity: ReturnType<World["query"]>[number]; floor: TileFloorData } | null {
-	for (const e of world.query(Tile, TileFloor)) {
+): { entity: ReturnType<World["query"]>[number]; biome: TileBiomeData } | null {
+	for (const e of world.query(Tile, TileBiome)) {
 		const tile = e.get(Tile);
 		if (tile && tile.x === x && tile.z === z) {
-			const floor = e.get(TileFloor);
-			if (floor) return { entity: e, floor: floor as TileFloorData };
+			const biome = e.get(TileBiome);
+			if (biome) return { entity: e, biome: biome as TileBiomeData };
 		}
 	}
 	return null;

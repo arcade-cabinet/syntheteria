@@ -8,7 +8,7 @@
  * Deterministic: same seed = identical output.
  */
 
-import { FLOOR_DEFS, type FloorType, floorTypeForTile } from "../terrain";
+import { BIOME_DEFS, type BiomeType, biomeTypeForTile } from "../terrain";
 import { seededRng } from "./noise";
 import type { BoardConfig, Elevation, GeneratedBoard, TileData } from "./types";
 
@@ -59,7 +59,7 @@ export function generateBoard(config: BoardConfig): GeneratedBoard {
 	applyElevation(tiles, width, height, seed);
 
 	// Phase 3: Assign floor types from terrain noise
-	assignFloorTypes(tiles, width, height, seed);
+	assignBiomeTypes(tiles, width, height, seed);
 
 	// Phase 4: Scatter resources
 	scatterResources(tiles, width, height, seed);
@@ -82,7 +82,7 @@ function createTileGrid(w: number, h: number, _seed: string): TileData[][] {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "grassland",
+				biomeType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -144,7 +144,7 @@ function applyElevation(
  * Impassable tiles get geography-driven types; passable tiles get
  * cluster-noise-driven biome types.
  */
-function assignFloorTypes(
+function assignBiomeTypes(
 	tiles: TileData[][],
 	w: number,
 	h: number,
@@ -157,23 +157,23 @@ function assignFloorTypes(
 			const tile = tiles[z]![x]!;
 
 			if (tile.elevation === -1) {
-				tile.floorType = "water";
+				tile.biomeType = "water";
 				tile.passable = false;
 				continue;
 			}
 
 			if (tile.elevation === 2) {
-				tile.floorType = "mountain";
+				tile.biomeType = "mountain";
 				tile.passable = false;
 				continue;
 			}
 
 			// Passable tiles: use terrain noise for biome variety
-			const noiseFloor = floorTypeForTile(x, z, 0, seed);
-			if (noiseFloor !== "water" && noiseFloor !== "mountain") {
-				tile.floorType = noiseFloor;
+			const noiseBiome = biomeTypeForTile(x, z, 0, seed);
+			if (noiseBiome !== "water" && noiseBiome !== "mountain") {
+				tile.biomeType = noiseBiome;
 			} else {
-				const passableTypes: FloorType[] = [
+				const passableTypes: BiomeType[] = [
 					"grassland",
 					"forest",
 					"desert",
@@ -182,9 +182,9 @@ function assignFloorTypes(
 					"ruins",
 					"tundra",
 				];
-				tile.floorType = passableTypes[
+				tile.biomeType = passableTypes[
 					Math.floor(rng() * passableTypes.length)
-				] as FloorType;
+				] as BiomeType;
 			}
 		}
 	}
@@ -204,11 +204,11 @@ function scatterResources(
 		for (let x = 0; x < w; x++) {
 			const tile = tiles[z]![x]!;
 
-			const rate = SCATTER_RATE[tile.floorType] ?? 0;
+			const rate = SCATTER_RATE[tile.biomeType] ?? 0;
 			if (rate === 0) continue;
 			if (rng() >= rate) continue;
 
-			const def = FLOOR_DEFS[tile.floorType];
+			const def = BIOME_DEFS[tile.biomeType];
 			if (!def.mineable || def.resourceMaterial === null) continue;
 
 			tile.resourceMaterial = def.resourceMaterial;
@@ -236,14 +236,14 @@ function forcePlayerStart(
 			const tile = tiles[tz]![tx]!;
 			tile.elevation = 0;
 			tile.passable = true;
-			if (tile.floorType === "water" || tile.floorType === "mountain") {
-				tile.floorType = "grassland";
+			if (tile.biomeType === "water" || tile.biomeType === "mountain") {
+				tile.biomeType = "grassland";
 			}
 		}
 	}
 
 	const spawn = tiles[cz]![cx]!;
-	spawn.floorType = "grassland";
+	spawn.biomeType = "grassland";
 	spawn.resourceMaterial = null;
 	spawn.resourceAmount = 0;
 }

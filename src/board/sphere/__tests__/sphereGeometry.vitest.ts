@@ -24,7 +24,7 @@ import {
 function makeBoard(
 	width: number,
 	height: number,
-	floorType: TileData["floorType"] = "grassland",
+	biomeType: TileData["biomeType"] = "grassland",
 ): GeneratedBoard {
 	const tiles: TileData[][] = [];
 	for (let z = 0; z < height; z++) {
@@ -35,7 +35,7 @@ function makeBoard(
 				z,
 				elevation: 0,
 				passable: true,
-				floorType,
+				biomeType,
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -229,12 +229,12 @@ describe("buildSphereGeometry", () => {
 		}
 	});
 
-	it("floorIndex matches the board tile floorType", () => {
+	it("floorIndex matches the board tile biomeType", () => {
 		const board = makeBoard(4, 4, "hills");
 		const geo = buildSphereGeometry(board);
 		const fi = geo.getAttribute("floorIndex");
 
-		// FLOOR_INDEX_MAP.hills = 2
+		// BIOME_INDEX_MAP.hills = 2
 		for (let i = 0; i < fi.count; i++) {
 			expect(fi.getX(i)).toBe(2);
 		}
@@ -243,8 +243,8 @@ describe("buildSphereGeometry", () => {
 	it("mixed floor types are assigned correctly", () => {
 		const board = makeBoard(4, 4);
 		// Set some tiles to different types
-		board.tiles[0][0].floorType = "water";
-		board.tiles[1][1].floorType = "mountain";
+		board.tiles[0][0].biomeType = "water";
+		board.tiles[1][1].biomeType = "mountain";
 
 		const geo = buildSphereGeometry(board);
 		const fi = geo.getAttribute("floorIndex");

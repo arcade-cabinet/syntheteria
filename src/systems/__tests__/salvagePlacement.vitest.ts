@@ -1,15 +1,15 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { SALVAGE_DEFS } from "../../resources";
-import type { FloorType } from "../../terrain/types";
+import { SALVAGE_DEFS } from "../../config/resources";
+import type { BiomeType } from "../../terrain/types";
 import { SalvageProp } from "../../traits";
 import { placeSalvageProps, TERRAIN_SALVAGE } from "../salvagePlacement";
 
 function makeTile(
 	x: number,
 	z: number,
-	floorType: FloorType,
+	biomeType: BiomeType,
 	passable = true,
 ): TileData {
 	return {
@@ -17,7 +17,7 @@ function makeTile(
 		z,
 		elevation: 0,
 		passable,
-		floorType,
+		biomeType,
 		resourceMaterial: null,
 		resourceAmount: 0,
 	};
@@ -32,9 +32,9 @@ function makeBoard(tiles: TileData[][], seed = "test-seed"): GeneratedBoard {
 	};
 }
 
-/** Create a uniform board of one floor type. */
+/** Create a uniform board of one biome type. */
 function uniformBoard(
-	floorType: FloorType,
+	biomeType: BiomeType,
 	width: number,
 	height: number,
 	seed = "test-seed",
@@ -43,7 +43,7 @@ function uniformBoard(
 	for (let z = 0; z < height; z++) {
 		const row: TileData[] = [];
 		for (let x = 0; x < width; x++) {
-			row.push(makeTile(x, z, floorType));
+			row.push(makeTile(x, z, biomeType));
 		}
 		tiles.push(row);
 	}
@@ -200,7 +200,7 @@ describe("placeSalvageProps", () => {
 	});
 
 	it("each terrain type only produces configured salvage types", () => {
-		const floorTypes: FloorType[] = [
+		const biomeTypes: BiomeType[] = [
 			"mountain",
 			"ruins",
 			"hills",
@@ -212,12 +212,12 @@ describe("placeSalvageProps", () => {
 		];
 
 		// Reuse a single world, resetting between floor types
-		for (const floorType of floorTypes) {
-			const board = uniformBoard(floorType, 40, 40);
+		for (const biomeType of biomeTypes) {
+			const board = uniformBoard(biomeType, 40, 40);
 			const w = createWorld();
 			placeSalvageProps(w, board);
 
-			const cfg = TERRAIN_SALVAGE[floorType];
+			const cfg = TERRAIN_SALVAGE[biomeType];
 			const allowedTypes = new Set(cfg.weights.map(([t]) => t));
 
 			for (const entity of w.query(SalvageProp)) {

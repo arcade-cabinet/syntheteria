@@ -171,7 +171,7 @@ function buildGratingMeshes(scene: THREE.Scene, board: GeneratedBoard): void {
 			if (!tile) continue;
 
 			// Abyssal platform = passable, elevation -1, roboformed ocean grating
-			if (tile.floorType !== "wetland") continue;
+			if (tile.biomeType !== "wetland") continue;
 
 			const pos = tileToWorld(x, z);
 

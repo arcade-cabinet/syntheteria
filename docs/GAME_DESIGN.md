@@ -308,6 +308,10 @@ grants +50% yield. Each FloorType yields a specific foundation-tier material.
   city-scale “settlement production” as a single screen.
 - **15 faction-buildable structures:**
 
+> **Building availability is gated by building→building unlock chains and epoch progression.**
+> See §7 "Building-Driven Progression" for the full unlock tree. The table below shows the
+> complete building catalog; not all are available from game start.
+
 | Structure | Role | Power | Key Cost |
 |-----------|------|-------|----------|
 | Storm Transmitter | Taps storm energy | +5 | ferrous_scrap, conductor_wire |
@@ -391,8 +395,8 @@ The roster is built from **9 chassis families** with **Mark I-V progression**. S
 ### Robot Specializations (14 tracks)
 
 When **adding a unit to a Motor Pool (or equivalent) production queue** via that building’s panel,
-the player picks robot **class** and then **specialization track** (gated by tech). Each track grants
-unique actions, Mark-level passive abilities, and v2 upgrades via higher-tier research.
+the player picks robot **class** and then **specialization track** (gated by Motor Pool upgrade tier). Each track grants
+unique actions, Mark-level passive abilities, and v2 upgrades via higher-tier Motor Pool upgrades.
 
 | Class | Track A | Track B | Track C |
 |-------|---------|---------|---------|
@@ -406,14 +410,17 @@ unique actions, Mark-level passive abilities, and v2 upgrades via higher-tier re
 **Per-building production UI (target):** At each **Motor Pool** (or designated facility), **enqueue**
 units, **reorder** the queue, and see **costs / turns remaining** — same 4X tension as “what do I build
 next?”, scoped to **that network node**. Step flow for a new bot: pick **class** → pick **track**
-(filtered by researched gates) → item enters queue; if no tracks unlocked, queue an unspecialized
+(filtered by Motor Pool tier gates) → item enters queue; if no tracks unlocked, queue an unspecialized
 unit. **`GarageModal.tsx`** is the reference pattern for this; a future unified “city panel” is **not**
 the target.
 
 **AI Track Selection**: Each AI faction has preferred tracks per class based on personality
 (e.g., Iron Creed prefers shock_trooper + war_caller; Signal Choir prefers infiltrator + sniper).
 
-### Tech Tree (27 techs, 5 tiers)
+### Tech Tree (27 techs, 5 tiers) — LEGACY
+
+> **LEGACY — currently implemented.** The centralized tech tree below is the shipped system.
+> It will be replaced by building-driven progression (see TARGET section below).
 
 15 base techs + 12 specialization track-gating techs. Research requires research labs and resource costs.
 
@@ -424,6 +431,57 @@ the target.
 | 3 | Deep Mining, Adaptive Armor, Mark III | — |
 | 4 | Quantum Processors, Mark IV, Wormhole Theory | Ranged/Scout/Infantry/Cavalry/Support/Worker v2 techs |
 | 5 | Mark V Transcendence, Wormhole Stabilization | — |
+
+### Building-Driven Progression (TARGET — replaces centralized tech tree)
+
+> **Design principle:** Robots don't invent — they recover, adapt, and optimize. The technology
+> already exists in the ruined infrastructure. Progression flows through **building upgrades**,
+> not a centralized research tree.
+
+#### Building Upgrade Tiers
+
+Each building has internal upgrade tiers (Tier 1→3). Upgrading costs resources + turns,
+performed at the building via its management panel.
+
+| Building | Tier 1 (Epoch 1) | Tier 2 (Epoch 2) | Tier 3 (Epoch 3+) |
+|----------|-----------------|-----------------|-------------------|
+| **Motor Pool** | Scout, Worker, Infantry (Mark I) | +Support, Cavalry, Ranged; Mark II | Specialization tracks; Mark III-V |
+| **Synthesizer** | Basic fusion (common→foundation) | Advanced fusion (foundation→advanced) | Efficient synthesis (+yield, -cost) |
+| **Relay Tower** | Basic signal relay | Extended range + encryption | Deep scan (reveals hidden things) |
+| **Storm Transmitter** | Basic storm tap (+5 power) | Storm shielding (buildings resist damage) | Storm channeling (excess→offense) |
+| **Defense Turret** | Basic turret (dmg:3, range:8) | Enhanced targeting + range | Area denial mode |
+| **Maintenance Bay** | Basic repair (+2 HP/turn) | Auto-repair aura | Component recovery from wrecks |
+
+#### Building→Building Unlock Chains
+
+Advancing one building unlocks the ability to construct others:
+
+| Prerequisite | Unlocks |
+|-------------|---------|
+| Storm Transmitter Tier 2 | Power Plant |
+| Storm Transmitter Tier 3 | Geothermal Tap |
+| Motor Pool Tier 2 | Maintenance Bay |
+| Synthesizer (any tier) | Resource Refinery |
+| Relay Tower Tier 2 | Outpost |
+| All buildings Tier 3 + Epoch 4 | Wormhole Stabilizer |
+
+#### Analysis Node (replaces Research Lab)
+
+The **Research Lab** is renamed **Analysis Node** — a passive network accelerator:
+- Having one in your signal network reduces upgrade times for ALL nearby buildings by 25%
+- Multiple Analysis Nodes stack with diminishing returns
+- It's an efficiency multiplier, NOT the gatekeeper of progression
+- Strategic placement decision: where does the network need faster upgrades?
+
+#### Epoch↔Tier Alignment
+
+| Epoch | Building Tier Cap | New Buildings Unlockable |
+|-------|------------------|------------------------|
+| 1 (Emergence) | Tier 1 | Storm Transmitter, Power Box, Motor Pool, Relay Tower, Storage Hub, Defense Turret |
+| 2 (Expansion) | Tier 2 | Solar Array, Synthesizer, Outpost, Maintenance Bay, Power Plant |
+| 3 (Consolidation) | Tier 3 | Resource Refinery, Geothermal Tap |
+| 4 (Convergence) | Tier 3 | Wormhole Stabilizer |
+| 5 (Transcendence) | Tier 3 | — (endgame) |
 
 ---
 
@@ -454,6 +512,17 @@ The faction system works exactly like Civilization's civilizations:
 | Volt Collective | 1/3 | Yellow | Raven | NE corner | Energy harvesters. Neutral until you touch their crystals — then relentless. |
 | Signal Choir | 3/3 | Purple | Lynx | SE corner | Hive-mind signal network. Expands aggressively into all sectors. |
 | Iron Creed | 3/3 | Red | Bear | SW corner | Militant orthodoxy. Views all non-aligned machines as heretics to be destroyed. |
+
+#### Faction Terrain Affinities (TARGET — biome mapping)
+
+When biome terrain replaces industrial floor types, faction affinities map to:
+
+| Faction | Current Affinity | Target Biome Affinity | Strategic Edge |
+|---------|-----------------|----------------------|---------------|
+| Reclaimers | collapsed_zone | Ruins/debris | Early salvage, faster scavenging |
+| Volt Collective | aerostructure | Exposed highlands | Storm energy harvesting bonus |
+| Signal Choir | bio_district | Forest/wetland | Signal propagation advantage |
+| Iron Creed | structural_mass | Mountains/rocky | Mining bonus, defensive terrain |
 
 ### Cult of EL — Primary Antagonists (always present)
 
@@ -514,7 +583,10 @@ Three sects (each with distinct GOAP behavior):
 | 2 | 11-20 | Second buff + special ability (regen / area_attack / fear_aura) |
 | 3 | 21+ | ABERRANT — +2 ALL stats, mini-boss. 1.5x XP reward on kill |
 
-### Victory Paths (7 conditions)
+### Victory Paths (7 conditions) — LEGACY
+
+> **LEGACY — currently implemented.** The 7-path system below is the shipped system.
+> It will be replaced by the 6-condition TARGET system below.
 
 1. **Domination** — control 60%+ of total tiles via territory system.
 2. **Research** — have 3+ research labs and accumulate 100 tech points.
@@ -525,6 +597,25 @@ Three sects (each with distinct GOAP behavior):
 7. **Forced Domination** (anti-stalemate) — hold 80%+ territory for 10 consecutive turns.
 
 **Defeat:** All player units destroyed (elimination).
+
+### Victory Paths (TARGET — 6 conditions)
+
+> Replaces the 7-path system above. Cuts conditions that don't fit the fiction (Research, Survival,
+> Economic hoarding) and adds conditions that reward the actual mechanics.
+
+| Victory | Condition | Rewards... |
+|---------|-----------|-----------|
+| **Domination** | Eliminate all rival machine factions | Military play, territorial control |
+| **Network Supremacy** | Signal coverage ≥ 80% of map tiles | Hub-and-spoke building, Relay Tower investment |
+| **Reclamation** | Roboform ≥ 60% of map to Level 3+ | Economic/expansion, terrain transformation |
+| **Transcendence** | Complete Wormhole Stabilizer project | Mega-project, late-game resource commitment |
+| **Cult Eradication** | Destroy all cult POIs (altars + strongholds) | Aggressive anti-cult campaign |
+| **Score (Turn Cap)** | Highest score at turn 200 | Balanced play, guaranteed game ending |
+
+**Score calculation:** Territory controlled × 1 + Network coverage × 2 + Roboform tiles × 1.5 +
+Active units × 0.5 + Buildings × 1 + Cult POIs destroyed × 5.
+
+**Defeat:** All player units AND buildings destroyed (elimination).
 
 ---
 

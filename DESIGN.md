@@ -48,7 +48,8 @@ planet’s surface; mechanically it is addressable `(x, z)` tiles.
   infrastructure) reads as one **network**, not a Civ-style settlement blob. **Per-building management**
   is the pattern: click a building → **building-specific panel** (e.g. **GarageModal** for production
   facilities) in **React DOM** over the same Phaser board — not a monolithic “city screen.” See
-  `docs/PHASER_PIVOT_PLAN.md` Phase 4 and `docs/CLOUD_AGENT_RUNBOOK.md` Phase G for data contracts.
+  See [references/archive/PHASER_PIVOT_PLAN.md](references/archive/PHASER_PIVOT_PLAN.md) Phase 4 and
+  [references/archive/CLOUD_AGENT_RUNBOOK.md](references/archive/CLOUD_AGENT_RUNBOOK.md) Phase G for data contracts.
   **`src/world/` today is new-game setup only** (sector scale, climate, factions); landmark seeding
   uses `src/config/poiDefs.ts` until richer world snapshots land in `world/`.
 - All factions, cultists, and the player occupy the **same coordinate space** on that grid.
@@ -70,8 +71,8 @@ remains valid for the **title/generating globe** (R3F) and any strategic globe p
 
 During **play** (`playing` phase), the board is rendered with **Phaser 3 + enable3d (Scene3D)**:
 orthographic isometric camera, vertex-colored flat-shaded terrain, POC lighting recipe
-(see `docs/RENDERING_VISION.md`, `poc-roboforming.html`). **React DOM** owns HUD, command panels,
-HUD, per-building modals, and overlays on top of the canvas (`docs/PHASER_VS_REACT_MATRIX.md`).
+(see [references/RENDERING_VISION.md](references/RENDERING_VISION.md), `poc-roboforming.html`). **React DOM** owns HUD, command panels,
+HUD, per-building modals, and overlays on top of the canvas ([references/PHASER_VS_REACT_MATRIX.md](references/PHASER_VS_REACT_MATRIX.md)).
 
 - **Globe (`src/ui/Globe.tsx`)** — **title and generating** only: one R3F `<Canvas>` with storm,
   hypercane, lightning, zoom toward surface. **Signed off; do not replace** for landing flow.

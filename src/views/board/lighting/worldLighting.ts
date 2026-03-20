@@ -4,7 +4,7 @@
  * Ambient 0x223344 @ 0.6, directional 0xaaccff @ 0.8,
  * FogExp2 0x050a0f @ 0.012, NO tone mapping.
  *
- * See docs/RENDERING_VISION.md for the full lighting specification.
+ * See ARCHITECTURE.md for the full lighting specification.
  */
 
 import * as THREE from "three";

@@ -1,6 +1,6 @@
 # Syntheteria — Multi-Agent Orchestration
 
-> **Session start**: Read this file, then `docs/memory-bank/activeContext.md`.
+> **Session start**: Read this file, then [CHANGELOG.md](CHANGELOG.md) and [README.md](README.md).
 > **NEVER reference `pending/`** — it is the old game, quarantined permanently.
 
 ---
@@ -91,8 +91,8 @@ src/
 ## Session Protocol
 
 Every agent session must:
-1. Read `docs/memory-bank/activeContext.md` — current focus and state
-2. Read `docs/memory-bank/progress.md` — what works and what doesn't
+1. Read [CHANGELOG.md](CHANGELOG.md) — current project status
+2. Read [README.md](README.md) — active context and quick start
 3. Check this file — package structure rules above
 4. Run `pnpm test:vitest` — verify all tests pass before starting
 5. **Never** read or reference anything in `pending/`
@@ -106,7 +106,7 @@ Follow the patterns from [koota examples](https://github.com/pmndrs/koota/tree/m
 - **Traits** — defined in `src/traits/`, one file per domain, all re-exported via `index.ts`
 - **Systems** — one system per file in `src/systems/`, pure functions accepting `(world: World)`
 - **Actions** — imperative world mutations (spawn, destroy, modify) in dedicated files
-- **Sim/View split** — `traits/` + `systems/` never import `views/`; rendering adapters live under **`src/views/`** only (`title/` = R3F, `board/` = Phaser). Legacy **`src/view/`** is deleted — content migrated to `src/views/title/` — see [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](docs/COMPREHENSIVE_ENGINEERING_PLAN.md).
+- **Sim/View split** — `traits/` + `systems/` never import `views/`; rendering adapters live under **`src/views/`** only (`title/` = R3F, `board/` = Phaser). Legacy **`src/view/`** is deleted — content migrated to `src/views/title/`.
 
 ---
 
@@ -132,10 +132,9 @@ pnpm verify — required gates (matches core CI checks: lint + tsc + Vitest)
   Vitest (node): 130 test files, 2282 tests, all passing
 
 pnpm verify:with-ct — optional; browser CT may still need preview path updates.
-  See Phase C in docs/CLOUD_AGENT_RUNBOOK.md.
   CI runs test:ct with continue-on-error: true.
 ```
-Playwright runs **headed** (`headless: false`); in CI, `xvfb-run -a` provides a virtual display. Done checklist: [docs/plans/IS_THE_GAME_DONE.md](docs/plans/IS_THE_GAME_DONE.md).
+Playwright runs **headed** (`headless: false`); in CI, `xvfb-run -a` provides a virtual display.
 
 ## Agent Roles
 
@@ -195,15 +194,15 @@ All parallel agent work uses git worktrees:
 
 ## Documentation Structure
 
-All docs live under `docs/`. See [docs/AGENTS.md](docs/AGENTS.md) for the full index.
-
-| Layer | Purpose | Files |
-|-------|---------|-------|
-| **Memory Bank** | Session bootstrap — read first | 7 files in `docs/memory-bank/` |
-| **Design** | What the game IS | 6 files in `docs/design/` |
-| **Technical** | How it's built | 5 files in `docs/technical/` |
-| **Interface** | Player-facing surfaces | 2 files in `docs/interface/` |
-| **Execution** | Roadmap | `docs/plans/GAMEPLAN_1_0.md` |
+| File | Purpose |
+|------|---------|
+| [AGENTS.md](AGENTS.md) | Package structure, architecture rules, session protocol |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Technical architecture, rendering, ECS, AI, testing |
+| [DESIGN.md](DESIGN.md) | Game design bible — vision, lore, factions, economy |
+| [CHANGELOG.md](CHANGELOG.md) | Project status and history |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, workflow, code rules |
+| [README.md](README.md) | Quick start and active context |
+| [references/](references/) | Archived docs, POC files, design references |
 
 ## Cursor Cloud specific instructions
 

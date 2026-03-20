@@ -66,7 +66,7 @@ describe("Tile traits", () => {
 	it("TileFloor defaults", () => {
 		const e = world.spawn(TileFloor);
 		const f = e.get(TileFloor)!;
-		expect(f.floorType).toBe("durasteel_span");
+		expect(f.floorType).toBe("grassland");
 		expect(f.mineable).toBe(false);
 		expect(f.hardness).toBe(0);
 		expect(f.resourceAmount).toBe(0);
@@ -75,17 +75,17 @@ describe("Tile traits", () => {
 	it("TileFloor spawns with values", () => {
 		const e = world.spawn(
 			TileFloor({
-				floorType: "collapsed_zone",
+				floorType: "ruins",
 				mineable: true,
 				hardness: 1,
-				resourceMaterial: "scrap_metal",
+				resourceMaterial: "stone",
 				resourceAmount: 2,
 			}),
 		);
 		const f = e.get(TileFloor)!;
-		expect(f.floorType).toBe("collapsed_zone");
+		expect(f.floorType).toBe("ruins");
 		expect(f.mineable).toBe(true);
-		expect(f.resourceMaterial).toBe("scrap_metal");
+		expect(f.resourceMaterial).toBe("stone");
 		expect(f.resourceAmount).toBe(2);
 	});
 
@@ -226,7 +226,7 @@ describe("ResourceDeposit trait", () => {
 	it("defaults", () => {
 		const e = world.spawn(ResourceDeposit);
 		const r = e.get(ResourceDeposit)!;
-		expect(r.material).toBe("scrap_metal");
+		expect(r.material).toBe("stone");
 		expect(r.amount).toBe(0);
 		expect(r.depleted).toBe(false);
 	});
@@ -236,13 +236,13 @@ describe("ResourceDeposit trait", () => {
 			ResourceDeposit({
 				tileX: 2,
 				tileZ: 3,
-				material: "thermal_fluid",
+				material: "fuel",
 				amount: 50,
 				depleted: false,
 			}),
 		);
 		const r = e.get(ResourceDeposit)!;
-		expect(r.material).toBe("thermal_fluid");
+		expect(r.material).toBe("fuel");
 		expect(r.amount).toBe(50);
 	});
 });

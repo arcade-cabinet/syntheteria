@@ -58,9 +58,9 @@ describe("turnSummary", () => {
 		const { world, board } = makeWorld();
 
 		// Simulate a turn's resource income
-		trackIncome("scrap_metal", 5);
-		trackIncome("ferrous_scrap", 3);
-		trackExpenditure("e_waste", 2);
+		trackIncome("stone", 5);
+		trackIncome("iron_ore", 3);
+		trackExpenditure("sand", 2);
 		finalizeTurnDeltas();
 
 		const { summary } = collectTurnSummary(world, board, 2);
@@ -68,14 +68,12 @@ describe("turnSummary", () => {
 		expect(summary.turn).toBe(2);
 		expect(summary.resourceChanges.length).toBeGreaterThan(0);
 
-		const scr = summary.resourceChanges.find(
-			(r) => r.material === "scrap_metal",
-		);
+		const scr = summary.resourceChanges.find((r) => r.material === "stone");
 		expect(scr).toBeDefined();
 		expect(scr!.net).toBe(5);
-		expect(scr!.shortName).toBe("SCR");
+		expect(scr!.shortName).toBe("STN");
 
-		const ews = summary.resourceChanges.find((r) => r.material === "e_waste");
+		const ews = summary.resourceChanges.find((r) => r.material === "sand");
 		expect(ews).toBeDefined();
 		expect(ews!.net).toBe(-2);
 	});
@@ -142,9 +140,9 @@ describe("turnSummary", () => {
 	it("resource changes are sorted by absolute net descending", () => {
 		const { world, board } = makeWorld();
 
-		trackIncome("scrap_metal", 1);
-		trackIncome("ferrous_scrap", 10);
-		trackIncome("e_waste", 5);
+		trackIncome("stone", 1);
+		trackIncome("iron_ore", 10);
+		trackIncome("sand", 5);
 		finalizeTurnDeltas();
 
 		const { summary } = collectTurnSummary(world, board, 2);
@@ -159,19 +157,19 @@ describe("turnSummary", () => {
 
 		// Add income for all 13 materials
 		const materials = [
-			"ferrous_scrap",
-			"alloy_stock",
-			"polymer_salvage",
-			"conductor_wire",
-			"electrolyte",
-			"silicon_wafer",
-			"storm_charge",
-			"el_crystal",
-			"scrap_metal",
-			"e_waste",
-			"intact_components",
-			"thermal_fluid",
-			"depth_salvage",
+			"iron_ore",
+			"steel",
+			"timber",
+			"circuits",
+			"coal",
+			"glass",
+			"fuel",
+			"quantum_crystal",
+			"stone",
+			"sand",
+			"steel",
+			"fuel",
+			"alloy",
 		] as const;
 		for (const mat of materials) {
 			trackIncome(mat, 1);

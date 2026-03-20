@@ -64,19 +64,17 @@ describe("save/load round-trip integration", () => {
 				aggression: 0,
 			}),
 			ResourcePool({
-				ferrous_scrap: 25,
-				alloy_stock: 10,
-				polymer_salvage: 3,
-				conductor_wire: 0,
-				electrolyte: 0,
-				silicon_wafer: 0,
-				storm_charge: 7,
-				el_crystal: 0,
-				scrap_metal: 15,
-				e_waste: 0,
-				intact_components: 2,
-				thermal_fluid: 0,
-				depth_salvage: 0,
+				iron_ore: 25,
+				steel: 10,
+				timber: 3,
+				circuits: 0,
+				coal: 0,
+				glass: 0,
+				fuel: 7,
+				quantum_crystal: 0,
+				stone: 15,
+				sand: 0,
+				alloy: 0,
 			}),
 		);
 
@@ -91,19 +89,17 @@ describe("save/load round-trip integration", () => {
 				aggression: 5,
 			}),
 			ResourcePool({
-				ferrous_scrap: 12,
-				alloy_stock: 8,
-				polymer_salvage: 0,
-				conductor_wire: 0,
-				electrolyte: 0,
-				silicon_wafer: 0,
-				storm_charge: 3,
-				el_crystal: 0,
-				scrap_metal: 0,
-				e_waste: 0,
-				intact_components: 0,
-				thermal_fluid: 0,
-				depth_salvage: 0,
+				iron_ore: 12,
+				steel: 8,
+				timber: 0,
+				circuits: 0,
+				coal: 0,
+				glass: 0,
+				fuel: 3,
+				quantum_crystal: 0,
+				stone: 0,
+				sand: 0,
+				alloy: 0,
 			}),
 		);
 
@@ -247,8 +243,8 @@ describe("save/load round-trip integration", () => {
 		expect(buildingRecords.length).toBe(2);
 		// 3 tiles have explored=true or visibility>0 (tile x=8 has both false/0)
 		expect(exploredRecords.length).toBe(3);
-		// Non-zero resources: player has 6 non-zero, synth-col has 3 non-zero
-		expect(resourceRecords.length).toBe(9);
+		// Non-zero resources: player has 5 non-zero, synth-col has 3 non-zero
+		expect(resourceRecords.length).toBe(8);
 
 		// ── Step 2: Simulate 3 turns of gameplay (mutate ECS) ────────────────
 
@@ -301,19 +297,17 @@ describe("save/load round-trip integration", () => {
 			const f = entity.get(Faction);
 			if (f?.id === "player") {
 				entity.set(ResourcePool, {
-					ferrous_scrap: 50,
-					alloy_stock: 0,
-					polymer_salvage: 0,
-					conductor_wire: 0,
-					electrolyte: 0,
-					silicon_wafer: 0,
-					storm_charge: 20,
-					el_crystal: 0,
-					scrap_metal: 30,
-					e_waste: 0,
-					intact_components: 0,
-					thermal_fluid: 0,
-					depth_salvage: 0,
+					iron_ore: 50,
+					steel: 0,
+					timber: 0,
+					circuits: 0,
+					coal: 0,
+					glass: 0,
+					fuel: 20,
+					quantum_crystal: 0,
+					stone: 30,
+					sand: 0,
+					alloy: 0,
 				});
 			}
 		}
@@ -347,7 +341,7 @@ describe("save/load round-trip integration", () => {
 		expect(loadedUnits.length).toBe(3);
 		expect(loadedBuildings.length).toBe(2);
 		expect(loadedExplored.length).toBe(3);
-		expect(loadedResources.length).toBe(9);
+		expect(loadedResources.length).toBe(8);
 
 		// ── Step 5: Apply saved state back onto the mutated world ────────────
 
@@ -438,17 +432,16 @@ describe("save/load round-trip integration", () => {
 			const f = entity.get(Faction);
 			const pool = entity.get(ResourcePool)!;
 			if (f?.id === "player") {
-				expect(pool.ferrous_scrap).toBe(25);
-				expect(pool.alloy_stock).toBe(10);
-				expect(pool.storm_charge).toBe(7);
-				expect(pool.scrap_metal).toBe(15);
-				expect(pool.intact_components).toBe(2);
-				expect(pool.polymer_salvage).toBe(3);
+				expect(pool.iron_ore).toBe(25);
+				expect(pool.steel).toBe(10);
+				expect(pool.fuel).toBe(7);
+				expect(pool.stone).toBe(15);
+				expect(pool.timber).toBe(3);
 			}
 			if (f?.id === "synth-col") {
-				expect(pool.ferrous_scrap).toBe(12);
-				expect(pool.alloy_stock).toBe(8);
-				expect(pool.storm_charge).toBe(3);
+				expect(pool.iron_ore).toBe(12);
+				expect(pool.steel).toBe(8);
+				expect(pool.fuel).toBe(3);
 			}
 		}
 	});
@@ -466,19 +459,17 @@ describe("save/load round-trip integration", () => {
 				aggression: 0,
 			}),
 			ResourcePool({
-				ferrous_scrap: 10,
-				alloy_stock: 0,
-				polymer_salvage: 0,
-				conductor_wire: 0,
-				electrolyte: 0,
-				silicon_wafer: 0,
-				storm_charge: 0,
-				el_crystal: 0,
-				scrap_metal: 0,
-				e_waste: 0,
-				intact_components: 0,
-				thermal_fluid: 0,
-				depth_salvage: 0,
+				iron_ore: 10,
+				steel: 0,
+				timber: 0,
+				circuits: 0,
+				coal: 0,
+				glass: 0,
+				fuel: 0,
+				quantum_crystal: 0,
+				stone: 0,
+				sand: 0,
+				alloy: 0,
 			}),
 		);
 
@@ -515,19 +506,17 @@ describe("save/load round-trip integration", () => {
 		});
 		for (const entity of world.query(ResourcePool, Faction)) {
 			entity.set(ResourcePool, {
-				ferrous_scrap: 30,
-				alloy_stock: 5,
-				polymer_salvage: 0,
-				conductor_wire: 0,
-				electrolyte: 0,
-				silicon_wafer: 0,
-				storm_charge: 0,
-				el_crystal: 0,
-				scrap_metal: 0,
-				e_waste: 0,
-				intact_components: 0,
-				thermal_fluid: 0,
-				depth_salvage: 0,
+				iron_ore: 30,
+				steel: 5,
+				timber: 0,
+				circuits: 0,
+				coal: 0,
+				glass: 0,
+				fuel: 0,
+				quantum_crystal: 0,
+				stone: 0,
+				sand: 0,
+				alloy: 0,
 			});
 		}
 
@@ -557,8 +546,8 @@ describe("save/load round-trip integration", () => {
 
 		for (const entity of world.query(ResourcePool)) {
 			const pool = entity.get(ResourcePool)!;
-			expect(pool.ferrous_scrap).toBe(30);
-			expect(pool.alloy_stock).toBe(5);
+			expect(pool.iron_ore).toBe(30);
+			expect(pool.steel).toBe(5);
 		}
 	});
 

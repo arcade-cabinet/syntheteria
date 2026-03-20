@@ -134,10 +134,10 @@ export function floorTypeForTile(
 	// Cluster-driven passable biome types
 	const cluster = clusterValue(worldX, worldZ, seedFloat);
 	if (cluster < 0.15) return "grassland";
-	if (cluster < 0.30) return "forest";
+	if (cluster < 0.3) return "forest";
 	if (cluster < 0.45) return "desert";
 	if (cluster < 0.57) return "hills";
-	if (cluster < 0.70) return "wetland";
+	if (cluster < 0.7) return "wetland";
 	if (cluster < 0.85) return "ruins";
 	return "tundra";
 }

@@ -164,19 +164,19 @@ describe("Section 5 — eXploit", () => {
 		expect(poolData).not.toBeNull();
 
 		const expectedMaterials: ResourceMaterial[] = [
-			"ferrous_scrap",
-			"alloy_stock",
-			"polymer_salvage",
-			"conductor_wire",
-			"electrolyte",
-			"silicon_wafer",
-			"storm_charge",
-			"el_crystal",
-			"scrap_metal",
-			"e_waste",
-			"intact_components",
-			"thermal_fluid",
-			"depth_salvage",
+			"iron_ore",
+			"steel",
+			"timber",
+			"circuits",
+			"coal",
+			"glass",
+			"fuel",
+			"quantum_crystal",
+			"stone",
+			"sand",
+			"steel",
+			"fuel",
+			"alloy",
 		];
 
 		for (const mat of expectedMaterials) {
@@ -205,7 +205,7 @@ describe("Section 5 — eXploit", () => {
 			ResourceDeposit({
 				tileX: 1,
 				tileZ: 0,
-				material: "ferrous_scrap",
+				material: "iron_ore",
 				amount: 5,
 				depleted: false,
 			}),
@@ -244,7 +244,7 @@ describe("Section 5 — eXploit", () => {
 			ResourceDeposit({
 				tileX: 1,
 				tileZ: 0,
-				material: "ferrous_scrap",
+				material: "iron_ore",
 				amount: 10,
 				depleted: false,
 			}),
@@ -276,18 +276,18 @@ describe("Section 5 — eXploit", () => {
 
 		// Check faction pool gained resources
 		const pool = playerFaction.get(ResourcePool);
-		expect(pool?.ferrous_scrap).toBeGreaterThan(0);
+		expect(pool?.iron_ore).toBeGreaterThan(0);
 	});
 
 	it("floor mining backstop: all passable FLOOR_DEFS are mineable", () => {
 		const passableFloors: FloorType[] = [
-			"abyssal_platform",
-			"transit_deck",
-			"durasteel_span",
-			"collapsed_zone",
-			"dust_district",
-			"bio_district",
-			"aerostructure",
+			"wetland",
+			"hills",
+			"grassland",
+			"ruins",
+			"desert",
+			"forest",
+			"tundra",
 		];
 
 		for (const ft of passableFloors) {
@@ -301,14 +301,14 @@ describe("Section 5 — eXploit", () => {
 	it("addResources increases faction pool; spendResources decreases it", () => {
 		spawnPlayerFaction(world);
 
-		addResources(world, "player", "ferrous_scrap", 10);
-		expect(canAfford(world, "player", { ferrous_scrap: 10 })).toBe(true);
-		expect(canAfford(world, "player", { ferrous_scrap: 11 })).toBe(false);
+		addResources(world, "player", "iron_ore", 10);
+		expect(canAfford(world, "player", { iron_ore: 10 })).toBe(true);
+		expect(canAfford(world, "player", { iron_ore: 11 })).toBe(false);
 
-		const spent = spendResources(world, "player", "ferrous_scrap", 7);
+		const spent = spendResources(world, "player", "iron_ore", 7);
 		expect(spent).toBe(true);
-		expect(canAfford(world, "player", { ferrous_scrap: 3 })).toBe(true);
-		expect(canAfford(world, "player", { ferrous_scrap: 4 })).toBe(false);
+		expect(canAfford(world, "player", { iron_ore: 3 })).toBe(true);
+		expect(canAfford(world, "player", { iron_ore: 4 })).toBe(false);
 	});
 });
 

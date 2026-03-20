@@ -27,7 +27,7 @@ function makeTile(x: number, z: number, passable = true): TileData {
 		z,
 		elevation: 0,
 		passable,
-		floorType: "durasteel_span",
+		floorType: "grassland",
 		resourceMaterial: null,
 		resourceAmount: 0,
 	};
@@ -91,7 +91,7 @@ describe("buildSystem", () => {
 
 	describe("confirmBuildPlacement", () => {
 		it("spawns a building entity with correct traits", () => {
-			spawnPlayerFaction({ ferrous_scrap: 10, conductor_wire: 10 });
+			spawnPlayerFaction({ iron_ore: 10, circuits: 10 });
 			startBuildPlacement(world, "storm_transmitter");
 
 			const board = makeBoard(10, 10);
@@ -114,7 +114,7 @@ describe("buildSystem", () => {
 		});
 
 		it("attaches PowerGrid for storm_transmitter", () => {
-			spawnPlayerFaction({ ferrous_scrap: 10, conductor_wire: 10 });
+			spawnPlayerFaction({ iron_ore: 10, circuits: 10 });
 			startBuildPlacement(world, "storm_transmitter");
 
 			const board = makeBoard(10, 10);
@@ -128,7 +128,7 @@ describe("buildSystem", () => {
 		});
 
 		it("attaches StorageCapacity for storage_hub", () => {
-			spawnPlayerFaction({ ferrous_scrap: 10, polymer_salvage: 10 });
+			spawnPlayerFaction({ iron_ore: 10, timber: 10 });
 			startBuildPlacement(world, "storage_hub");
 
 			const board = makeBoard(10, 10);
@@ -140,7 +140,7 @@ describe("buildSystem", () => {
 		});
 
 		it("attaches SignalNode for relay_tower", () => {
-			spawnPlayerFaction({ conductor_wire: 10, silicon_wafer: 10 });
+			spawnPlayerFaction({ circuits: 10, glass: 10 });
 			startBuildPlacement(world, "relay_tower");
 
 			const board = makeBoard(10, 10);
@@ -154,9 +154,9 @@ describe("buildSystem", () => {
 
 		it("attaches TurretStats for defense_turret", () => {
 			spawnPlayerFaction({
-				ferrous_scrap: 10,
-				alloy_stock: 10,
-				silicon_wafer: 10,
+				iron_ore: 10,
+				steel: 10,
+				glass: 10,
 			});
 			startBuildPlacement(world, "defense_turret");
 
@@ -173,9 +173,9 @@ describe("buildSystem", () => {
 
 		it("attaches BotFabricator for motor_pool", () => {
 			spawnPlayerFaction({
-				ferrous_scrap: 10,
-				alloy_stock: 10,
-				conductor_wire: 10,
+				iron_ore: 10,
+				steel: 10,
+				circuits: 10,
 			});
 			startBuildPlacement(world, "motor_pool");
 
@@ -189,22 +189,22 @@ describe("buildSystem", () => {
 
 		it("deducts resources after placement", () => {
 			const entity = spawnPlayerFaction({
-				ferrous_scrap: 5,
-				conductor_wire: 3,
+				iron_ore: 5,
+				circuits: 3,
 			});
 			startBuildPlacement(world, "storm_transmitter");
 
 			const board = makeBoard(10, 10);
 			confirmBuildPlacement(world, 5, 5, board);
 
-			// storm_transmitter costs: ferrous_scrap: 3, conductor_wire: 2
+			// storm_transmitter costs: iron_ore: 3, circuits: 2
 			const pool = entity.get(ResourcePool)!;
-			expect(pool.ferrous_scrap).toBe(2);
-			expect(pool.conductor_wire).toBe(1);
+			expect(pool.iron_ore).toBe(2);
+			expect(pool.circuits).toBe(1);
 		});
 
 		it("returns false when can't afford", () => {
-			spawnPlayerFaction({ ferrous_scrap: 1 });
+			spawnPlayerFaction({ iron_ore: 1 });
 			startBuildPlacement(world, "storm_transmitter");
 
 			const board = makeBoard(10, 10);
@@ -217,7 +217,7 @@ describe("buildSystem", () => {
 		});
 
 		it("returns false on impassable tile", () => {
-			spawnPlayerFaction({ ferrous_scrap: 10, conductor_wire: 10 });
+			spawnPlayerFaction({ iron_ore: 10, circuits: 10 });
 			startBuildPlacement(world, "storm_transmitter");
 
 			const board = makeBoard(10, 10, false); // all impassable
@@ -228,7 +228,7 @@ describe("buildSystem", () => {
 		});
 
 		it("returns false on tile occupied by another building", () => {
-			spawnPlayerFaction({ ferrous_scrap: 20, conductor_wire: 20 });
+			spawnPlayerFaction({ iron_ore: 20, circuits: 20 });
 
 			// Place a building at (5,5)
 			world.spawn(
@@ -252,7 +252,7 @@ describe("buildSystem", () => {
 		});
 
 		it("returns false when not in placement mode", () => {
-			spawnPlayerFaction({ ferrous_scrap: 10, conductor_wire: 10 });
+			spawnPlayerFaction({ iron_ore: 10, circuits: 10 });
 			const board = makeBoard(10, 10);
 
 			const result = confirmBuildPlacement(world, 5, 5, board);

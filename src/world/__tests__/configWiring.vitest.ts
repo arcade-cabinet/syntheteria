@@ -36,7 +36,7 @@ function makeBoard(width: number, height: number): GeneratedBoard {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "durasteel_span",
+				floorType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -111,18 +111,15 @@ describe("climate profiles config wiring", () => {
 	});
 
 	it("floorTypeForTile respects waterLevel parameter", () => {
-		// With a very high waterLevel, more tiles should be abyssal
-		let highWaterAbyssal = 0;
-		let lowWaterAbyssal = 0;
+		let highWaterCount = 0;
+		let lowWaterCount = 0;
 		for (let x = 0; x < 32; x++) {
 			for (let z = 0; z < 32; z++) {
-				if (floorTypeForTile(x, z, 0, seed, 0.8) === "abyssal_platform")
-					highWaterAbyssal++;
-				if (floorTypeForTile(x, z, 0, seed, 0.1) === "abyssal_platform")
-					lowWaterAbyssal++;
+				if (floorTypeForTile(x, z, 0, seed, 0.8) === "water") highWaterCount++;
+				if (floorTypeForTile(x, z, 0, seed, 0.1) === "water") lowWaterCount++;
 			}
 		}
-		expect(highWaterAbyssal).toBeGreaterThan(lowWaterAbyssal);
+		expect(highWaterCount).toBeGreaterThan(lowWaterCount);
 	});
 
 	it("default climate profile in BoardConfig is temperate when omitted", () => {
@@ -152,7 +149,7 @@ describe("climate profiles config wiring", () => {
 		}
 	});
 
-	it("BSP generator produces structural_mass perimeters on all climate profiles", () => {
+	it("BSP generator produces mountain perimeters on all climate profiles", () => {
 		for (const climate of ["temperate", "wet", "arid", "frozen"] as const) {
 			const config: BoardConfig = {
 				width: SIZE,
@@ -165,8 +162,7 @@ describe("climate profiles config wiring", () => {
 			let structuralCount = 0;
 			for (let z = 0; z < board.config.height; z++) {
 				for (let x = 0; x < board.config.width; x++) {
-					if (board.tiles[z]![x]!.floorType === "structural_mass")
-						structuralCount++;
+					if (board.tiles[z]![x]!.floorType === "mountain") structuralCount++;
 				}
 			}
 			// BSP always produces structural perimeters — at least 10% of tiles
@@ -319,8 +315,8 @@ describe("difficulty affects resources and AI aggression", () => {
 				const f = e.get(Faction);
 				const r = e.get(ResourcePool);
 				if (f?.isPlayer && r) {
-					expect(r.scrap_metal).toBe(20); // 10 * 2
-					expect(r.ferrous_scrap).toBe(10); // 5 * 2
+					expect(r.stone).toBe(20); // 10 * 2
+					expect(r.iron_ore).toBe(10); // 5 * 2
 				}
 			}
 		});
@@ -333,8 +329,8 @@ describe("difficulty affects resources and AI aggression", () => {
 				const f = e.get(Faction);
 				const r = e.get(ResourcePool);
 				if (f?.isPlayer && r) {
-					expect(r.scrap_metal).toBe(10);
-					expect(r.ferrous_scrap).toBe(5);
+					expect(r.stone).toBe(10);
+					expect(r.iron_ore).toBe(5);
 				}
 			}
 		});
@@ -347,8 +343,8 @@ describe("difficulty affects resources and AI aggression", () => {
 				const f = e.get(Faction);
 				const r = e.get(ResourcePool);
 				if (f?.isPlayer && r) {
-					expect(r.scrap_metal).toBe(5); // 10 * 0.5
-					expect(r.ferrous_scrap).toBe(3); // Math.round(5 * 0.5)
+					expect(r.stone).toBe(5); // 10 * 0.5
+					expect(r.iron_ore).toBe(3); // Math.round(5 * 0.5)
 				}
 			}
 		});
@@ -362,9 +358,9 @@ describe("difficulty affects resources and AI aggression", () => {
 					const f = e.get(Faction);
 					const r = e.get(ResourcePool);
 					if (f && !f.isPlayer && r) {
-						expect(r.scrap_metal).toBe(30);
-						expect(r.ferrous_scrap).toBe(30);
-						expect(r.alloy_stock).toBe(12);
+						expect(r.stone).toBe(30);
+						expect(r.iron_ore).toBe(30);
+						expect(r.steel).toBe(12);
 					}
 				}
 			}

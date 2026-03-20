@@ -32,7 +32,7 @@ function makeBoard(width: number, height: number): GeneratedBoard {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "durasteel_span",
+				floorType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -338,7 +338,7 @@ describe("Yuka AI turn system", () => {
 			ResourceDeposit({
 				tileX: 2,
 				tileZ: 0,
-				material: "scrap_metal",
+				material: "stone",
 				amount: 10,
 				depleted: false,
 			}),
@@ -487,7 +487,7 @@ describe("Yuka AI turn system", () => {
 			ResourceDeposit({
 				tileX: 2,
 				tileZ: 0,
-				material: "scrap_metal",
+				material: "stone",
 				amount: 10,
 				depleted: false,
 			}),

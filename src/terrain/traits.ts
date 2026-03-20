@@ -10,7 +10,7 @@ import { trait } from "koota";
 import type { FloorType, ResourceMaterial } from "./types";
 
 export const TileFloor = trait({
-	floorType: "durasteel_span" as FloorType,
+	floorType: "grassland" as FloorType,
 	mineable: false,
 	hardness: 0,
 	resourceMaterial: null as ResourceMaterial | null,

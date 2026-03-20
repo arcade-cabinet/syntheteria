@@ -23,8 +23,8 @@ export const RENEWAL_YIELDS: Partial<
 	Record<BuildingType, { material: ResourceMaterial; amount: number }>
 > = {
 	storm_transmitter: { material: "fuel", amount: 1 },
-	geothermal_tap: { material: "fuel", amount: 1 },
-	solar_array: { material: "fuel", amount: 1 },
+	geothermal_tap: { material: "coal", amount: 1 },
+	solar_array: { material: "coal", amount: 1 },
 	resource_refinery: { material: "iron_ore", amount: 2 },
 	synthesizer: { material: "stone", amount: 1 },
 };

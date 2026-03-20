@@ -24,7 +24,7 @@ import {
 function makeBoard(
 	width: number,
 	height: number,
-	floorType: TileData["floorType"] = "durasteel_span",
+	floorType: TileData["floorType"] = "grassland",
 ): GeneratedBoard {
 	const tiles: TileData[][] = [];
 	for (let z = 0; z < height; z++) {
@@ -230,11 +230,11 @@ describe("buildSphereGeometry", () => {
 	});
 
 	it("floorIndex matches the board tile floorType", () => {
-		const board = makeBoard(4, 4, "transit_deck");
+		const board = makeBoard(4, 4, "hills");
 		const geo = buildSphereGeometry(board);
 		const fi = geo.getAttribute("floorIndex");
 
-		// FLOOR_INDEX_MAP.transit_deck = 2
+		// FLOOR_INDEX_MAP.hills = 2
 		for (let i = 0; i < fi.count; i++) {
 			expect(fi.getX(i)).toBe(2);
 		}
@@ -243,8 +243,8 @@ describe("buildSphereGeometry", () => {
 	it("mixed floor types are assigned correctly", () => {
 		const board = makeBoard(4, 4);
 		// Set some tiles to different types
-		board.tiles[0][0].floorType = "void_pit";
-		board.tiles[1][1].floorType = "structural_mass";
+		board.tiles[0][0].floorType = "water";
+		board.tiles[1][1].floorType = "mountain";
 
 		const geo = buildSphereGeometry(board);
 		const fi = geo.getAttribute("floorIndex");

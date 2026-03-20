@@ -12,7 +12,7 @@
  *   5. Floor mining as backstop (mineable passable substrates)
  *   6. Bridges and tunnels (elevation stacking)
  *   7. Terrain yield correctness per GAME_DESIGN.md table
- *   8. Weight-class passability (abyssal_platform light-only)
+ *   8. Weight-class passability (wetland light-only)
  */
 
 import { describe, expect, it } from "vitest";
@@ -67,15 +67,15 @@ function countByFloorType(tiles: TileData[]): Map<FloorType, number> {
 
 describe("Section 2 — Terrain Substrates (9 types)", () => {
 	const EXPECTED_FLOOR_TYPES: FloorType[] = [
-		"void_pit",
-		"structural_mass",
-		"abyssal_platform",
-		"transit_deck",
-		"durasteel_span",
-		"collapsed_zone",
-		"dust_district",
-		"bio_district",
-		"aerostructure",
+		"water",
+		"mountain",
+		"wetland",
+		"hills",
+		"grassland",
+		"ruins",
+		"desert",
+		"forest",
+		"tundra",
 	];
 
 	it("FloorType union has exactly 9 substrate types", () => {
@@ -85,16 +85,16 @@ describe("Section 2 — Terrain Substrates (9 types)", () => {
 		}
 	});
 
-	it("void_pit and structural_mass are impassable; others are passable", () => {
-		expect(isPassableFloor("void_pit")).toBe(false);
-		expect(isPassableFloor("structural_mass")).toBe(false);
-		expect(isPassableFloor("abyssal_platform")).toBe(true);
-		expect(isPassableFloor("transit_deck")).toBe(true);
-		expect(isPassableFloor("durasteel_span")).toBe(true);
-		expect(isPassableFloor("collapsed_zone")).toBe(true);
-		expect(isPassableFloor("dust_district")).toBe(true);
-		expect(isPassableFloor("bio_district")).toBe(true);
-		expect(isPassableFloor("aerostructure")).toBe(true);
+	it("water and mountain are impassable; others are passable", () => {
+		expect(isPassableFloor("water")).toBe(false);
+		expect(isPassableFloor("mountain")).toBe(false);
+		expect(isPassableFloor("wetland")).toBe(true);
+		expect(isPassableFloor("hills")).toBe(true);
+		expect(isPassableFloor("grassland")).toBe(true);
+		expect(isPassableFloor("ruins")).toBe(true);
+		expect(isPassableFloor("desert")).toBe(true);
+		expect(isPassableFloor("forest")).toBe(true);
+		expect(isPassableFloor("tundra")).toBe(true);
 	});
 
 	it("generated board contains at least 5 distinct floor types", () => {
@@ -105,21 +105,21 @@ describe("Section 2 — Terrain Substrates (9 types)", () => {
 		expect(types.size).toBeGreaterThanOrEqual(5);
 	});
 
-	it("void_pit tiles are marked impassable in generated board", () => {
+	it("water tiles are marked impassable in generated board", () => {
 		const config = makeConfig({ width: 44, height: 44 });
 		const board = generateBoard(config);
 		const tiles = allTiles(board, 44, 44);
-		const voidTiles = tiles.filter((t) => t.floorType === "void_pit");
+		const voidTiles = tiles.filter((t) => t.floorType === "water");
 		for (const t of voidTiles) {
 			expect(t.passable).toBe(false);
 		}
 	});
 
-	it("structural_mass tiles are marked impassable in generated board", () => {
+	it("mountain tiles are marked impassable in generated board", () => {
 		const config = makeConfig({ width: 44, height: 44 });
 		const board = generateBoard(config);
 		const tiles = allTiles(board, 44, 44);
-		const massTiles = tiles.filter((t) => t.floorType === "structural_mass");
+		const massTiles = tiles.filter((t) => t.floorType === "mountain");
 		for (const t of massTiles) {
 			expect(t.passable).toBe(false);
 		}
@@ -128,15 +128,15 @@ describe("Section 2 — Terrain Substrates (9 types)", () => {
 	it("GAME_DESIGN primary yields match FLOOR_DEFS", () => {
 		// Table from Section 2:
 		const specYields: Record<FloorType, ResourceMaterial | null> = {
-			void_pit: null,
-			structural_mass: "intact_components",
-			abyssal_platform: "thermal_fluid",
-			transit_deck: "ferrous_scrap",
-			durasteel_span: "ferrous_scrap",
-			collapsed_zone: "scrap_metal",
-			dust_district: "e_waste",
-			bio_district: "polymer_salvage",
-			aerostructure: "scrap_metal",
+			water: null,
+			mountain: "stone",
+			wetland: "clay",
+			hills: "iron_ore",
+			grassland: "food",
+			ruins: "iron_ore",
+			desert: "sand",
+			forest: "timber",
+			tundra: "coal",
 		};
 
 		for (const [floor, expectedMaterial] of Object.entries(specYields)) {
@@ -254,39 +254,39 @@ describe("Section 2 — Salvage props are PRIMARY resource source", () => {
 		expect(types.length).toBeGreaterThanOrEqual(5);
 	});
 
-	it("container: duration=4, yields polymer_salvage + scrap_metal", () => {
+	it("container: duration=4, yields stone + iron_ore", () => {
 		const def = SALVAGE_DEFS.container;
 		expect(def.harvestDuration).toBe(4);
-		expect(def.yields).toHaveProperty("polymer_salvage");
-		expect(def.yields).toHaveProperty("scrap_metal");
+		expect(def.yields).toHaveProperty("stone");
+		expect(def.yields).toHaveProperty("iron_ore");
 	});
 
-	it("terminal: duration=8, yields silicon_wafer + conductor_wire", () => {
+	it("terminal: duration=8, yields glass + circuits", () => {
 		const def = SALVAGE_DEFS.terminal;
 		expect(def.harvestDuration).toBe(8);
-		expect(def.yields).toHaveProperty("silicon_wafer");
-		expect(def.yields).toHaveProperty("conductor_wire");
+		expect(def.yields).toHaveProperty("glass");
+		expect(def.yields).toHaveProperty("circuits");
 	});
 
-	it("vessel: duration=5, yields electrolyte + scrap_metal", () => {
+	it("vessel: duration=5, yields fuel + clay", () => {
 		const def = SALVAGE_DEFS.vessel;
 		expect(def.harvestDuration).toBe(5);
-		expect(def.yields).toHaveProperty("electrolyte");
-		expect(def.yields).toHaveProperty("scrap_metal");
+		expect(def.yields).toHaveProperty("fuel");
+		expect(def.yields).toHaveProperty("clay");
 	});
 
-	it("machinery: duration=8, yields ferrous_scrap + alloy_stock", () => {
+	it("machinery: duration=8, yields iron_ore + steel", () => {
 		const def = SALVAGE_DEFS.machinery;
 		expect(def.harvestDuration).toBe(8);
-		expect(def.yields).toHaveProperty("ferrous_scrap");
-		expect(def.yields).toHaveProperty("alloy_stock");
+		expect(def.yields).toHaveProperty("iron_ore");
+		expect(def.yields).toHaveProperty("steel");
 	});
 
-	it("debris: duration=3, yields scrap_metal + ferrous_scrap", () => {
+	it("debris: duration=3, yields stone + iron_ore", () => {
 		const def = SALVAGE_DEFS.debris;
 		expect(def.harvestDuration).toBe(3);
-		expect(def.yields).toHaveProperty("scrap_metal");
-		expect(def.yields).toHaveProperty("ferrous_scrap");
+		expect(def.yields).toHaveProperty("stone");
+		expect(def.yields).toHaveProperty("iron_ore");
 	});
 
 	it("every salvage type has at least one GLB model ID", () => {
@@ -299,27 +299,27 @@ describe("Section 2 — Salvage props are PRIMARY resource source", () => {
 // ─── Section 2.5: Floor Mining as Backstop ───────────────────────────────────
 
 describe("Section 2 — Floor mining is the backstop", () => {
-	it("void_pit is not mineable", () => {
-		expect(FLOOR_DEFS.void_pit.mineable).toBe(false);
+	it("water is not mineable", () => {
+		expect(FLOOR_DEFS.water.mineable).toBe(false);
 	});
 
 	it("all passable floor types ARE mineable (backstop guarantee)", () => {
 		const passableTypes: FloorType[] = [
-			"abyssal_platform",
-			"transit_deck",
-			"durasteel_span",
-			"collapsed_zone",
-			"dust_district",
-			"bio_district",
-			"aerostructure",
+			"wetland",
+			"hills",
+			"grassland",
+			"ruins",
+			"desert",
+			"forest",
+			"tundra",
 		];
 		for (const ft of passableTypes) {
 			expect(FLOOR_DEFS[ft].mineable).toBe(true);
 		}
 	});
 
-	it("structural_mass is mineable despite being impassable (mountain-mining)", () => {
-		expect(FLOOR_DEFS.structural_mass.mineable).toBe(true);
+	it("mountain is mineable despite being impassable (mountain-mining)", () => {
+		expect(FLOOR_DEFS.mountain.mineable).toBe(true);
 	});
 
 	it("every mineable floor has a non-null resourceMaterial", () => {
@@ -395,23 +395,19 @@ describe("Section 2 — Bridges and tunnels", () => {
 
 describe("Section 2 — 13 resource materials in 4 tiers", () => {
 	const FOUNDATION: ResourceMaterial[] = [
-		"ferrous_scrap",
-		"alloy_stock",
-		"polymer_salvage",
-		"conductor_wire",
+		"iron_ore",
+		"steel",
+		"timber",
+		"circuits",
 	];
 	const ADVANCED: ResourceMaterial[] = [
-		"electrolyte",
-		"silicon_wafer",
-		"storm_charge",
-		"el_crystal",
+		"coal",
+		"glass",
+		"fuel",
+		"quantum_crystal",
 	];
-	const COMMON: ResourceMaterial[] = [
-		"scrap_metal",
-		"e_waste",
-		"intact_components",
-	];
-	const ABYSSAL: ResourceMaterial[] = ["thermal_fluid", "depth_salvage"];
+	const COMMON: ResourceMaterial[] = ["stone", "sand", "steel"];
+	const ABYSSAL: ResourceMaterial[] = ["fuel", "alloy"];
 
 	it("13 materials total across 4 tiers", () => {
 		const all = [...FOUNDATION, ...ADVANCED, ...COMMON, ...ABYSSAL];
@@ -466,13 +462,13 @@ describe("Section 2 — Player start", () => {
 		expect(center.elevation).toBe(0);
 	});
 
-	it("center tile is durasteel_span (default start floor)", () => {
+	it("center tile is grassland (default start floor)", () => {
 		const config = makeConfig();
 		const board = generateBoard(config);
 		const cx = Math.floor(config.width / 2);
 		const cz = Math.floor(config.height / 2);
 		const center = board.tiles[cz]![cx]!;
-		expect(center.floorType).toBe("durasteel_span");
+		expect(center.floorType).toBe("grassland");
 	});
 
 	it("center tile has no resource deposit (cleared for spawn)", () => {
@@ -489,65 +485,65 @@ describe("Section 2 — Player start", () => {
 // ─── Section 2.9: Weight Class Passability ───────────────────────────────────
 
 describe("Section 2 — Weight-class terrain interaction", () => {
-	it("abyssal_platform is passable for light units", () => {
+	it("wetland is passable for light units", () => {
 		const tile: TileData = {
 			x: 0,
 			z: 0,
 			elevation: 0,
 			passable: true,
-			floorType: "abyssal_platform",
+			floorType: "wetland",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		};
 		expect(isPassableFor(tile, "light")).toBe(true);
 	});
 
-	it("abyssal_platform is NOT passable for medium units", () => {
+	it("wetland is NOT passable for medium units", () => {
 		const tile: TileData = {
 			x: 0,
 			z: 0,
 			elevation: 0,
 			passable: true,
-			floorType: "abyssal_platform",
+			floorType: "wetland",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		};
 		expect(isPassableFor(tile, "medium")).toBe(false);
 	});
 
-	it("abyssal_platform is NOT passable for heavy units", () => {
+	it("wetland is NOT passable for heavy units", () => {
 		const tile: TileData = {
 			x: 0,
 			z: 0,
 			elevation: 0,
 			passable: true,
-			floorType: "abyssal_platform",
+			floorType: "wetland",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		};
 		expect(isPassableFor(tile, "heavy")).toBe(false);
 	});
 
-	it("abyssal_platform costs 2 MP for light units", () => {
+	it("wetland costs 2 MP for light units", () => {
 		const tile: TileData = {
 			x: 0,
 			z: 0,
 			elevation: 0,
 			passable: true,
-			floorType: "abyssal_platform",
+			floorType: "wetland",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		};
 		expect(movementCost(tile, "light")).toBe(2);
 	});
 
-	it("void_pit is impassable for all weight classes", () => {
+	it("water is impassable for all weight classes", () => {
 		const tile: TileData = {
 			x: 0,
 			z: 0,
 			elevation: -1,
 			passable: false,
-			floorType: "void_pit",
+			floorType: "water",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		};
@@ -556,13 +552,13 @@ describe("Section 2 — Weight-class terrain interaction", () => {
 		expect(isPassableFor(tile, "heavy")).toBe(false);
 	});
 
-	it("durasteel_span is passable for all weight classes", () => {
+	it("grassland is passable for all weight classes", () => {
 		const tile: TileData = {
 			x: 0,
 			z: 0,
 			elevation: 0,
 			passable: true,
-			floorType: "durasteel_span",
+			floorType: "grassland",
 			resourceMaterial: null,
 			resourceAmount: 0,
 		};

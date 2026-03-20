@@ -23,7 +23,7 @@ function makeTile(overrides: Partial<TileData> = {}): TileData {
 		z: 0,
 		elevation: 0,
 		passable: true,
-		floorType: "durasteel_span",
+		floorType: "grassland",
 		resourceMaterial: null,
 		resourceAmount: 0,
 		...overrides,
@@ -70,7 +70,7 @@ describe("movementCost with elevation", () => {
 
 	it("abyssal platform with light weight + uphill stacks costs", () => {
 		const from = makeTile({ elevation: 0 });
-		const to = makeTile({ elevation: 1, floorType: "abyssal_platform" });
+		const to = makeTile({ elevation: 1, floorType: "wetland" });
 		// abyssal = 2 + uphill = 1 = 3
 		expect(movementCost(to, "light", from.elevation)).toBe(3);
 	});

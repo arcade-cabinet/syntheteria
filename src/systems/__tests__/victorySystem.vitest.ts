@@ -134,9 +134,9 @@ describe("victorySystem", () => {
 			world.spawn(
 				Faction({ id: "player", displayName: "Player", isPlayer: true }),
 				ResourcePool({
-					ferrous_scrap: 200,
-					alloy_stock: 200,
-					polymer_salvage: 100,
+					iron_ore: 200,
+					steel: 200,
+					timber: 100,
 				}),
 			);
 
@@ -155,7 +155,7 @@ describe("victorySystem", () => {
 			);
 			world.spawn(
 				Faction({ id: "player", displayName: "Player", isPlayer: true }),
-				ResourcePool({ ferrous_scrap: 100 }),
+				ResourcePool({ iron_ore: 100 }),
 			);
 
 			const outcome = checkVictoryConditions(world);
@@ -211,7 +211,7 @@ describe("victorySystem", () => {
 			);
 			world.spawn(
 				Faction({ id: "player", displayName: "Player", isPlayer: true }),
-				ResourcePool({ ferrous_scrap: 50 }),
+				ResourcePool({ iron_ore: 50 }),
 			);
 
 			const progress = getVictoryProgress(world);

@@ -91,19 +91,19 @@ function snapshot(
 		const r = e.get(ResourcePool);
 		if (!f || !r) continue;
 		const total =
-			r.scrap_metal +
-			r.ferrous_scrap +
-			r.alloy_stock +
-			r.polymer_salvage +
-			r.conductor_wire +
-			r.electrolyte +
-			r.silicon_wafer +
-			r.storm_charge +
-			r.el_crystal +
-			r.e_waste +
-			r.intact_components +
-			r.thermal_fluid +
-			r.depth_salvage;
+			r.stone +
+			r.iron_ore +
+			r.steel +
+			r.timber +
+			r.circuits +
+			r.coal +
+			r.glass +
+			r.fuel +
+			r.quantum_crystal +
+			r.sand +
+			r.steel +
+			r.fuel +
+			r.alloy;
 		resourcesByFaction[f.id] = total;
 	}
 

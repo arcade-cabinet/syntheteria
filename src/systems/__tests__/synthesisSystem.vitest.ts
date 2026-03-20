@@ -90,43 +90,42 @@ describe("synthesisSystem", () => {
 	describe("queueSynthesis", () => {
 		it("queues recipe on powered synthesizer with sufficient resources", () => {
 			spawnFaction(world, "player", true, {
-				ferrous_scrap: 10,
-				conductor_wire: 5,
+				iron_ore: 10,
+				coal: 5,
 			});
 			const synth = spawnSynthesizer(world, 5, 5, "player", true);
 
-			const result = queueSynthesis(world, synth.id(), "alloy_fusion");
+			const result = queueSynthesis(world, synth.id(), "steel_smelting");
 
 			expect(result).toBe(true);
 			expect(synth.has(SynthesisQueue)).toBe(true);
 			const sq = synth.get(SynthesisQueue);
-			expect(sq?.recipeId).toBe("alloy_fusion");
+			expect(sq?.recipeId).toBe("steel_smelting");
 			expect(sq?.ticksRemaining).toBe(3);
 		});
 
 		it("spends input resources on queue", () => {
 			const faction = spawnFaction(world, "player", true, {
-				ferrous_scrap: 10,
-				conductor_wire: 5,
+				iron_ore: 10,
+				coal: 5,
 			});
 			const synth = spawnSynthesizer(world, 5, 5, "player", true);
 
-			queueSynthesis(world, synth.id(), "alloy_fusion");
+			queueSynthesis(world, synth.id(), "steel_smelting");
 
 			const pool = faction.get(ResourcePool);
-			// 10 - 3 ferrous_scrap, 5 - 2 conductor_wire
-			expect(pool?.ferrous_scrap).toBe(7);
-			expect(pool?.conductor_wire).toBe(3);
+			expect(pool?.iron_ore).toBe(7);
+			expect(pool?.coal).toBe(3);
 		});
 
 		it("fails when resources are insufficient", () => {
 			spawnFaction(world, "player", true, {
-				ferrous_scrap: 1,
-				conductor_wire: 0,
+				iron_ore: 1,
+				coal: 0,
 			});
 			const synth = spawnSynthesizer(world, 5, 5, "player", true);
 
-			const result = queueSynthesis(world, synth.id(), "alloy_fusion");
+			const result = queueSynthesis(world, synth.id(), "steel_smelting");
 
 			expect(result).toBe(false);
 			expect(synth.has(SynthesisQueue)).toBe(false);
@@ -134,20 +133,20 @@ describe("synthesisSystem", () => {
 
 		it("fails on unpowered synthesizer", () => {
 			spawnFaction(world, "player", true, {
-				ferrous_scrap: 10,
-				conductor_wire: 5,
+				iron_ore: 10,
+				coal: 5,
 			});
 			const synth = spawnSynthesizer(world, 5, 5, "player", false);
 
-			const result = queueSynthesis(world, synth.id(), "alloy_fusion");
+			const result = queueSynthesis(world, synth.id(), "steel_smelting");
 
 			expect(result).toBe(false);
 		});
 
 		it("fails on non-synthesizer building", () => {
 			spawnFaction(world, "player", true, {
-				ferrous_scrap: 10,
-				conductor_wire: 5,
+				iron_ore: 10,
+				coal: 5,
 			});
 			const turret = world.spawn(
 				Building({
@@ -162,15 +161,15 @@ describe("synthesisSystem", () => {
 			);
 			turret.add(Powered);
 
-			const result = queueSynthesis(world, turret.id(), "alloy_fusion");
+			const result = queueSynthesis(world, turret.id(), "steel_smelting");
 
 			expect(result).toBe(false);
 		});
 
 		it("fails with invalid recipe id", () => {
 			spawnFaction(world, "player", true, {
-				ferrous_scrap: 10,
-				conductor_wire: 5,
+				iron_ore: 10,
+				coal: 5,
 			});
 			const synth = spawnSynthesizer(world, 5, 5, "player", true);
 
@@ -181,13 +180,13 @@ describe("synthesisSystem", () => {
 
 		it("fails when synthesizer already has queued conversion", () => {
 			spawnFaction(world, "player", true, {
-				ferrous_scrap: 20,
-				conductor_wire: 10,
+				iron_ore: 20,
+				coal: 10,
 			});
 			const synth = spawnSynthesizer(world, 5, 5, "player", true);
 
-			queueSynthesis(world, synth.id(), "alloy_fusion");
-			const result = queueSynthesis(world, synth.id(), "alloy_fusion");
+			queueSynthesis(world, synth.id(), "steel_smelting");
+			const result = queueSynthesis(world, synth.id(), "steel_smelting");
 
 			expect(result).toBe(false);
 		});
@@ -196,108 +195,97 @@ describe("synthesisSystem", () => {
 	describe("runSynthesis", () => {
 		it("ticks down over 3 turns then completes", () => {
 			const faction = spawnFaction(world, "player", true, {
-				ferrous_scrap: 10,
-				conductor_wire: 5,
+				iron_ore: 10,
+				coal: 5,
 			});
 			const synth = spawnSynthesizer(world, 5, 5, "player", true);
-			queueSynthesis(world, synth.id(), "alloy_fusion");
+			queueSynthesis(world, synth.id(), "steel_smelting");
 
-			// Turn 1: 3 -> 2
 			runSynthesis(world);
 			expect(synth.has(SynthesisQueue)).toBe(true);
 			expect(synth.get(SynthesisQueue)?.ticksRemaining).toBe(2);
-			expect(faction.get(ResourcePool)?.alloy_stock).toBe(0);
+			expect(faction.get(ResourcePool)?.steel).toBe(0);
 
-			// Turn 2: 2 -> 1
 			runSynthesis(world);
 			expect(synth.has(SynthesisQueue)).toBe(true);
 			expect(synth.get(SynthesisQueue)?.ticksRemaining).toBe(1);
-			expect(faction.get(ResourcePool)?.alloy_stock).toBe(0);
+			expect(faction.get(ResourcePool)?.steel).toBe(0);
 
-			// Turn 3: 1 -> 0, complete
 			runSynthesis(world);
 			expect(synth.has(SynthesisQueue)).toBe(false);
-			expect(faction.get(ResourcePool)?.alloy_stock).toBe(2);
+			expect(faction.get(ResourcePool)?.steel).toBe(2);
 		});
 
 		it("does not process on unpowered synthesizer", () => {
 			const faction = spawnFaction(world, "player", true, {
-				ferrous_scrap: 10,
-				conductor_wire: 5,
+				iron_ore: 10,
+				coal: 5,
 			});
 			const synth = spawnSynthesizer(world, 5, 5, "player", true);
-			queueSynthesis(world, synth.id(), "alloy_fusion");
+			queueSynthesis(world, synth.id(), "steel_smelting");
 
-			// Remove power before processing
 			synth.remove(Powered);
 
 			runSynthesis(world);
 
 			const pool = faction.get(ResourcePool);
-			expect(pool?.alloy_stock).toBe(0);
-			// Queue should remain with ticks unchanged
+			expect(pool?.steel).toBe(0);
 			expect(synth.has(SynthesisQueue)).toBe(true);
 			expect(synth.get(SynthesisQueue)?.ticksRemaining).toBe(3);
 		});
 
-		it("polymer_reclamation converts scrap_metal + conductor_wire to polymer_salvage", () => {
+		it("concrete_mixing converts stone + sand to concrete", () => {
 			const faction = spawnFaction(world, "player", true, {
-				scrap_metal: 10,
-				conductor_wire: 5,
+				stone: 10,
+				sand: 5,
 			});
 			const synth = spawnSynthesizer(world, 5, 5, "player", true);
-			queueSynthesis(world, synth.id(), "polymer_reclamation");
+			queueSynthesis(world, synth.id(), "concrete_mixing");
 
-			// Run 3 turns to complete
 			runSynthesis(world);
 			runSynthesis(world);
 			runSynthesis(world);
 
 			const pool = faction.get(ResourcePool);
-			expect(pool?.polymer_salvage).toBe(2);
-			expect(pool?.scrap_metal).toBe(8); // 10 - 2
-			expect(pool?.conductor_wire).toBe(4); // 5 - 1
+			expect(pool?.concrete).toBe(2);
+			expect(pool?.stone).toBe(8);
+			expect(pool?.sand).toBe(4);
 		});
 
 		it("resumes ticking when power is restored", () => {
 			const faction = spawnFaction(world, "player", true, {
-				ferrous_scrap: 10,
-				conductor_wire: 5,
+				iron_ore: 10,
+				coal: 5,
 			});
 			const synth = spawnSynthesizer(world, 5, 5, "player", true);
-			queueSynthesis(world, synth.id(), "alloy_fusion");
+			queueSynthesis(world, synth.id(), "steel_smelting");
 
-			// Turn 1: powered, tick 3 -> 2
 			runSynthesis(world);
 			expect(synth.get(SynthesisQueue)?.ticksRemaining).toBe(2);
 
-			// Turn 2: unpowered, no tick
 			synth.remove(Powered);
 			runSynthesis(world);
 			expect(synth.get(SynthesisQueue)?.ticksRemaining).toBe(2);
 
-			// Turn 3: power restored, tick 2 -> 1
 			synth.add(Powered);
 			runSynthesis(world);
 			expect(synth.get(SynthesisQueue)?.ticksRemaining).toBe(1);
 
-			// Turn 4: tick 1 -> 0, complete
 			runSynthesis(world);
 			expect(synth.has(SynthesisQueue)).toBe(false);
-			expect(faction.get(ResourcePool)?.alloy_stock).toBe(2);
+			expect(faction.get(ResourcePool)?.steel).toBe(2);
 		});
 
 		it("removes SynthesisQueue after completion", () => {
 			spawnFaction(world, "player", true, {
-				ferrous_scrap: 10,
-				conductor_wire: 5,
+				iron_ore: 10,
+				coal: 5,
 			});
 			const synth = spawnSynthesizer(world, 5, 5, "player", true);
-			queueSynthesis(world, synth.id(), "alloy_fusion");
+			queueSynthesis(world, synth.id(), "steel_smelting");
 
 			expect(synth.has(SynthesisQueue)).toBe(true);
 
-			// 3 turns to complete
 			runSynthesis(world);
 			runSynthesis(world);
 			runSynthesis(world);

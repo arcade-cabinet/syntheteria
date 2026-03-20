@@ -188,8 +188,8 @@ describe("BUILDING_DEFS", () => {
 			expect(def.signalRange).toBeGreaterThan(0);
 		});
 
-		it("costs intact_components", () => {
-			expect(def.buildCost.intact_components).toBeGreaterThanOrEqual(50);
+		it("costs alloy", () => {
+			expect(def.buildCost.alloy).toBeGreaterThanOrEqual(50);
 		});
 
 		it("has 20-turn build time", () => {

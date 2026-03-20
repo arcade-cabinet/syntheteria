@@ -19,19 +19,17 @@ describe("resourceRenewalSystem", () => {
 				aggression: 0,
 			}),
 			ResourcePool({
-				ferrous_scrap: 0,
-				alloy_stock: 0,
-				polymer_salvage: 0,
-				conductor_wire: 0,
-				electrolyte: 0,
-				silicon_wafer: 0,
-				storm_charge: 0,
-				el_crystal: 0,
-				scrap_metal: 0,
-				e_waste: 0,
-				intact_components: 0,
-				thermal_fluid: 0,
-				depth_salvage: 0,
+				iron_ore: 0,
+				steel: 0,
+				timber: 0,
+				circuits: 0,
+				coal: 0,
+				glass: 0,
+				fuel: 0,
+				quantum_crystal: 0,
+				stone: 0,
+				sand: 0,
+				alloy: 0,
 			}),
 		);
 	});
@@ -66,28 +64,28 @@ describe("resourceRenewalSystem", () => {
 		return 0;
 	}
 
-	it("powered storm transmitter generates 1 storm_charge", () => {
+	it("powered storm transmitter generates 1 fuel", () => {
 		spawnBuilding("storm_transmitter", "player", true);
 
 		runResourceRenewal(world);
 
-		expect(getResource("storm_charge")).toBe(1);
+		expect(getResource("fuel")).toBe(1);
 	});
 
-	it("powered geothermal tap generates 1 thermal_fluid", () => {
+	it("powered geothermal tap generates 1 coal", () => {
 		spawnBuilding("geothermal_tap", "player", true);
 
 		runResourceRenewal(world);
 
-		expect(getResource("thermal_fluid")).toBe(1);
+		expect(getResource("coal")).toBe(1);
 	});
 
-	it("powered solar array generates 1 electrolyte", () => {
+	it("powered solar array generates 1 coal", () => {
 		spawnBuilding("solar_array", "player", true);
 
 		runResourceRenewal(world);
 
-		expect(getResource("electrolyte")).toBe(1);
+		expect(getResource("coal")).toBe(1);
 	});
 
 	it("unpowered buildings generate nothing", () => {
@@ -98,9 +96,9 @@ describe("resourceRenewalSystem", () => {
 		const total = runResourceRenewal(world);
 
 		expect(total).toBe(0);
-		expect(getResource("storm_charge")).toBe(0);
-		expect(getResource("thermal_fluid")).toBe(0);
-		expect(getResource("electrolyte")).toBe(0);
+		expect(getResource("fuel")).toBe(0);
+		expect(getResource("fuel")).toBe(0);
+		expect(getResource("coal")).toBe(0);
 	});
 
 	it("non-generating buildings produce nothing", () => {
@@ -120,7 +118,7 @@ describe("resourceRenewalSystem", () => {
 
 		runResourceRenewal(world);
 
-		expect(getResource("storm_charge")).toBe(3);
+		expect(getResource("fuel")).toBe(3);
 	});
 
 	it("resources go to the correct faction", () => {
@@ -135,19 +133,17 @@ describe("resourceRenewalSystem", () => {
 				aggression: 3,
 			}),
 			ResourcePool({
-				ferrous_scrap: 0,
-				alloy_stock: 0,
-				polymer_salvage: 0,
-				conductor_wire: 0,
-				electrolyte: 0,
-				silicon_wafer: 0,
-				storm_charge: 0,
-				el_crystal: 0,
-				scrap_metal: 0,
-				e_waste: 0,
-				intact_components: 0,
-				thermal_fluid: 0,
-				depth_salvage: 0,
+				iron_ore: 0,
+				steel: 0,
+				timber: 0,
+				circuits: 0,
+				coal: 0,
+				glass: 0,
+				fuel: 0,
+				quantum_crystal: 0,
+				stone: 0,
+				sand: 0,
+				alloy: 0,
 			}),
 		);
 
@@ -156,7 +152,7 @@ describe("resourceRenewalSystem", () => {
 		runResourceRenewal(world);
 
 		// Player should get nothing, iron_creed should get 1
-		expect(getResource("storm_charge")).toBe(0);
+		expect(getResource("fuel")).toBe(0);
 	});
 
 	it("accumulates over multiple turns", () => {
@@ -167,8 +163,8 @@ describe("resourceRenewalSystem", () => {
 		runResourceRenewal(world);
 		runResourceRenewal(world);
 
-		expect(getResource("storm_charge")).toBe(3);
-		expect(getResource("electrolyte")).toBe(3);
+		expect(getResource("fuel")).toBe(3);
+		expect(getResource("coal")).toBe(3);
 	});
 
 	it("returns total resources generated", () => {
@@ -183,15 +179,15 @@ describe("resourceRenewalSystem", () => {
 
 	it("RENEWAL_YIELDS config matches expected building types", () => {
 		expect(RENEWAL_YIELDS.storm_transmitter).toEqual({
-			material: "storm_charge",
+			material: "fuel",
 			amount: 1,
 		});
 		expect(RENEWAL_YIELDS.geothermal_tap).toEqual({
-			material: "thermal_fluid",
+			material: "coal",
 			amount: 1,
 		});
 		expect(RENEWAL_YIELDS.solar_array).toEqual({
-			material: "electrolyte",
+			material: "coal",
 			amount: 1,
 		});
 	});

@@ -12,10 +12,8 @@ export function isPassableFor(
 	tile: TileData,
 	weightClass: WeightClass = "medium",
 ): boolean {
-	if (tile.floorType === "water" || tile.floorType === "mountain")
-		return false;
-	if (tile.floorType === "wetland" && weightClass !== "light")
-		return false;
+	if (tile.floorType === "water" || tile.floorType === "mountain") return false;
+	if (tile.floorType === "wetland" && weightClass !== "light") return false;
 	return true;
 }
 
@@ -30,8 +28,7 @@ export function movementCost(
 	sourceElevation?: number,
 ): number {
 	let cost = 1;
-	if (tile.floorType === "wetland" && weightClass === "light")
-		cost = 2;
+	if (tile.floorType === "wetland" && weightClass === "light") cost = 2;
 	// Uphill cost: +1 per elevation level gained
 	if (sourceElevation !== undefined && tile.elevation > sourceElevation) {
 		cost += tile.elevation - sourceElevation;

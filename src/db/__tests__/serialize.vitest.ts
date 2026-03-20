@@ -270,30 +270,26 @@ describe("ECS serialization round-trip", () => {
 					aggression: 0,
 				}),
 				ResourcePool({
-					ferrous_scrap: 10,
-					alloy_stock: 5,
-					polymer_salvage: 0,
-					conductor_wire: 0,
-					electrolyte: 0,
-					silicon_wafer: 0,
-					storm_charge: 0,
-					el_crystal: 0,
-					scrap_metal: 3,
-					e_waste: 0,
-					intact_components: 0,
-					thermal_fluid: 0,
-					depth_salvage: 0,
+					iron_ore: 10,
+					steel: 5,
+					timber: 0,
+					circuits: 0,
+					coal: 0,
+					glass: 0,
+					fuel: 0,
+					quantum_crystal: 0,
+					stone: 3,
+					sand: 0,
+					alloy: 0,
 				}),
 			);
 
 			const records = serializeResources(world, "g1");
-			// Only non-zero: ferrous_scrap=10, alloy_stock=5, scrap_metal=3
+			// Only non-zero: iron_ore=10, steel=5, stone=3
 			expect(records.length).toBe(3);
-			expect(records.find((r) => r.material === "ferrous_scrap")?.amount).toBe(
-				10,
-			);
-			expect(records.find((r) => r.material === "alloy_stock")?.amount).toBe(5);
-			expect(records.find((r) => r.material === "scrap_metal")?.amount).toBe(3);
+			expect(records.find((r) => r.material === "iron_ore")?.amount).toBe(10);
+			expect(records.find((r) => r.material === "steel")?.amount).toBe(5);
+			expect(records.find((r) => r.material === "stone")?.amount).toBe(3);
 		});
 
 		it("applies saved resource amounts onto faction pools", () => {
@@ -307,19 +303,17 @@ describe("ECS serialization round-trip", () => {
 					aggression: 0,
 				}),
 				ResourcePool({
-					ferrous_scrap: 0,
-					alloy_stock: 0,
-					polymer_salvage: 0,
-					conductor_wire: 0,
-					electrolyte: 0,
-					silicon_wafer: 0,
-					storm_charge: 0,
-					el_crystal: 0,
-					scrap_metal: 0,
-					e_waste: 0,
-					intact_components: 0,
-					thermal_fluid: 0,
-					depth_salvage: 0,
+					iron_ore: 0,
+					steel: 0,
+					timber: 0,
+					circuits: 0,
+					coal: 0,
+					glass: 0,
+					fuel: 0,
+					quantum_crystal: 0,
+					stone: 0,
+					sand: 0,
+					alloy: 0,
 				}),
 			);
 
@@ -327,23 +321,23 @@ describe("ECS serialization round-trip", () => {
 				{
 					gameId: "g1",
 					factionId: "player",
-					material: "ferrous_scrap",
+					material: "iron_ore",
 					amount: 42,
 				},
 				{
 					gameId: "g1",
 					factionId: "player",
-					material: "storm_charge",
+					material: "fuel",
 					amount: 7,
 				},
 			]);
 
 			for (const entity of world.query(ResourcePool, Faction)) {
 				const pool = entity.get(ResourcePool)!;
-				expect(pool.ferrous_scrap).toBe(42);
-				expect(pool.storm_charge).toBe(7);
+				expect(pool.iron_ore).toBe(42);
+				expect(pool.fuel).toBe(7);
 				// Others remain 0
-				expect(pool.alloy_stock).toBe(0);
+				expect(pool.steel).toBe(0);
 			}
 		});
 	});

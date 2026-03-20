@@ -105,7 +105,7 @@ describe("performance audit", () => {
 		for (let z = 0; z < MAX_BOARD.height; z++) {
 			for (let x = 0; x < MAX_BOARD.width; x++) {
 				const tile = board.tiles[z]![x]!;
-				if (tile.floorType === "structural_mass") structural++;
+				if (tile.floorType === "mountain") structural++;
 				if (isPassableFloor(tile.floorType)) passable++;
 				if (tile.elevation === 1) bridges++;
 				if (tile.elevation === -1) voidPits++;

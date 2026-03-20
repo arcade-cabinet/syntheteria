@@ -76,28 +76,27 @@ describe("collectFactionResources", () => {
 	});
 
 	it("returns resources for each faction", () => {
-		spawnFaction("player", { scrap_metal: 10, ferrous_scrap: 5 });
-		spawnFaction("enemy", { alloy_stock: 20 });
+		spawnFaction("player", { stone: 10, iron_ore: 5 });
+		spawnFaction("enemy", { steel: 20 });
 
 		const snapshots = collectFactionResources(world);
 		expect(snapshots).toHaveLength(2);
 
 		const player = snapshots.find((s) => s.factionId === "player");
 		expect(player).toBeDefined();
-		expect(player!.resources.scrap_metal).toBe(10);
-		expect(player!.resources.ferrous_scrap).toBe(5);
+		expect(player!.resources.stone).toBe(10);
+		expect(player!.resources.iron_ore).toBe(5);
 
 		const enemy = snapshots.find((s) => s.factionId === "enemy");
-		expect(enemy!.resources.alloy_stock).toBe(20);
+		expect(enemy!.resources.steel).toBe(20);
 	});
 
 	it("omits zero-valued resources", () => {
-		spawnFaction("player", { scrap_metal: 5 });
+		spawnFaction("player", { stone: 5 });
 
 		const snapshots = collectFactionResources(world);
 		const player = snapshots[0];
-		// Only scrap_metal should appear, not all 13 materials
-		expect(Object.keys(player.resources)).toEqual(["scrap_metal"]);
+		expect(Object.keys(player.resources)).toEqual(["stone"]);
 	});
 });
 
@@ -142,12 +141,12 @@ describe("collectTurnSnapshot", () => {
 	});
 
 	it("includes resource totals", () => {
-		spawnFaction("player", { scrap_metal: 50, e_waste: 10 });
+		spawnFaction("player", { stone: 50, circuits: 10 });
 
 		const snap = collectTurnSnapshot(world, 100);
 		const player = snap.factions.find((f) => f.factionId === "player");
-		expect(player!.resourceTotals.scrap_metal).toBe(50);
-		expect(player!.resourceTotals.e_waste).toBe(10);
+		expect(player!.resourceTotals.stone).toBe(50);
+		expect(player!.resourceTotals.circuits).toBe(10);
 	});
 
 	it("returns empty factions array when no factions exist", () => {

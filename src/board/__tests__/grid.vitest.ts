@@ -31,7 +31,7 @@ function makePassableBoard(width: number, height: number): GeneratedBoard {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "durasteel_span",
+				floorType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});

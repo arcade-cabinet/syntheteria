@@ -16,7 +16,7 @@
  *   8.  signalSystem — relay coverage halves out-of-range scanRange
  *   9.  fabricationSystem — motor pool ticks down job, spawns robot
  *   10. synthesisSystem — fusion converts inputs to outputs
- *   11. resourceRenewalSystem — powered transmitters generate storm_charge
+ *   11. resourceRenewalSystem — powered transmitters generate fuel
  *   12. resourceSystem — add/spend/canAfford CRUD
  *   13. territorySystem — unit/building proximity paints territory
  *   14. victorySystem — defeat on elimination, victory thresholds
@@ -267,7 +267,7 @@ describe("harvestSystem — behavior", () => {
 			ResourceDeposit({
 				tileX: 1,
 				tileZ: 0,
-				material: "ferrous_scrap",
+				material: "iron_ore",
 				amount: 10,
 				depleted: false,
 			}),
@@ -294,7 +294,7 @@ describe("harvestSystem — behavior", () => {
 		harvestSystem(world); // 3 ticks → complete
 
 		const pool = playerFac.get(ResourcePool);
-		expect((pool as Record<string, number>).ferrous_scrap).toBeGreaterThan(0);
+		expect((pool as Record<string, number>).iron_ore).toBeGreaterThan(0);
 	});
 
 	it("harvest deducts AP from the unit", () => {
@@ -303,7 +303,7 @@ describe("harvestSystem — behavior", () => {
 			ResourceDeposit({
 				tileX: 1,
 				tileZ: 0,
-				material: "scrap_metal",
+				material: "stone",
 				amount: 5,
 				depleted: false,
 			}),
@@ -333,7 +333,7 @@ describe("harvestSystem — behavior", () => {
 			ResourceDeposit({
 				tileX: 1,
 				tileZ: 0,
-				material: "scrap_metal",
+				material: "stone",
 				amount: 1,
 				depleted: true,
 			}),
@@ -1010,8 +1010,8 @@ describe("fabricationSystem — behavior", () => {
 
 	it("motor pool spawns robot after buildTime ticks", () => {
 		spawnFaction(world, "player", true);
-		addResources(world, "player", "ferrous_scrap", 20);
-		addResources(world, "player", "conductor_wire", 10);
+		addResources(world, "player", "iron_ore", 20);
+		addResources(world, "player", "circuits", 10);
 
 		const pool = world.spawn(
 			Building({
@@ -1048,7 +1048,7 @@ describe("fabricationSystem — behavior", () => {
 
 	it("unpowered motor pool rejects fabrication", () => {
 		spawnFaction(world, "player", true);
-		addResources(world, "player", "ferrous_scrap", 20);
+		addResources(world, "player", "iron_ore", 20);
 
 		const pool = world.spawn(
 			Building({
@@ -1085,8 +1085,8 @@ describe("synthesisSystem — behavior", () => {
 
 	it("fusion converts inputs to outputs after tick-down", () => {
 		spawnFaction(world, "player", true);
-		addResources(world, "player", "ferrous_scrap", 10);
-		addResources(world, "player", "conductor_wire", 10);
+		addResources(world, "player", "iron_ore", 10);
+		addResources(world, "player", "coal", 10);
 
 		const synth = world.spawn(
 			Building({
@@ -1101,15 +1101,14 @@ describe("synthesisSystem — behavior", () => {
 			Powered(),
 		);
 
-		const queued = queueSynthesis(world, synth.id(), "alloy_fusion");
+		const queued = queueSynthesis(world, synth.id(), "steel_smelting");
 		expect(queued).toBe(true);
 
-		// alloy_fusion: 3 ferrous_scrap + 2 conductor_wire → 1 alloy_stock
-		// Verify inputs spent (10 - 3 = 7 ferrous_scrap remaining, 10 - 2 = 8 conductor_wire)
-		expect(canAfford(world, "player", { ferrous_scrap: 7 })).toBe(true);
-		expect(canAfford(world, "player", { ferrous_scrap: 8 })).toBe(false);
-		expect(canAfford(world, "player", { conductor_wire: 8 })).toBe(true);
-		expect(canAfford(world, "player", { conductor_wire: 9 })).toBe(false);
+		// steel_smelting: 3 iron_ore + 2 coal → 2 steel
+		expect(canAfford(world, "player", { iron_ore: 7 })).toBe(true);
+		expect(canAfford(world, "player", { iron_ore: 8 })).toBe(false);
+		expect(canAfford(world, "player", { coal: 8 })).toBe(true);
+		expect(canAfford(world, "player", { coal: 9 })).toBe(false);
 
 		// Tick down (3 ticks to complete)
 		runSynthesis(world);
@@ -1117,13 +1116,13 @@ describe("synthesisSystem — behavior", () => {
 		runSynthesis(world);
 
 		// Output deposited
-		expect(canAfford(world, "player", { alloy_stock: 1 })).toBe(true);
+		expect(canAfford(world, "player", { steel: 2 })).toBe(true);
 	});
 
 	it("synthesis queue removed after completion", () => {
 		spawnFaction(world, "player", true);
-		addResources(world, "player", "ferrous_scrap", 10);
-		addResources(world, "player", "conductor_wire", 10);
+		addResources(world, "player", "iron_ore", 10);
+		addResources(world, "player", "coal", 10);
 
 		const synth = world.spawn(
 			Building({
@@ -1138,7 +1137,7 @@ describe("synthesisSystem — behavior", () => {
 			Powered(),
 		);
 
-		queueSynthesis(world, synth.id(), "alloy_fusion");
+		queueSynthesis(world, synth.id(), "steel_smelting");
 		expect(synth.has(SynthesisQueue)).toBe(true);
 
 		runSynthesis(world);
@@ -1162,7 +1161,7 @@ describe("resourceRenewalSystem — behavior", () => {
 		world.destroy();
 	});
 
-	it("powered storm_transmitter generates storm_charge", () => {
+	it("powered storm_transmitter generates fuel", () => {
 		spawnFaction(world, "player", true);
 		world.spawn(
 			Building({
@@ -1180,7 +1179,7 @@ describe("resourceRenewalSystem — behavior", () => {
 		const total = runResourceRenewal(world);
 
 		expect(total).toBe(1);
-		expect(canAfford(world, "player", { storm_charge: 1 })).toBe(true);
+		expect(canAfford(world, "player", { fuel: 1 })).toBe(true);
 	});
 
 	it("unpowered transmitter does NOT generate resources", () => {
@@ -1201,7 +1200,7 @@ describe("resourceRenewalSystem — behavior", () => {
 		const total = runResourceRenewal(world);
 
 		expect(total).toBe(0);
-		expect(canAfford(world, "player", { storm_charge: 1 })).toBe(false);
+		expect(canAfford(world, "player", { fuel: 1 })).toBe(false);
 	});
 });
 
@@ -1221,35 +1220,33 @@ describe("resourceSystem — CRUD behavior", () => {
 	it("addResources increases pool; spendResources decreases it", () => {
 		spawnFaction(world, "player", true);
 
-		addResources(world, "player", "alloy_stock", 10);
-		expect(canAfford(world, "player", { alloy_stock: 10 })).toBe(true);
+		addResources(world, "player", "steel", 10);
+		expect(canAfford(world, "player", { steel: 10 })).toBe(true);
 
-		spendResources(world, "player", "alloy_stock", 4);
-		expect(canAfford(world, "player", { alloy_stock: 6 })).toBe(true);
-		expect(canAfford(world, "player", { alloy_stock: 7 })).toBe(false);
+		spendResources(world, "player", "steel", 4);
+		expect(canAfford(world, "player", { steel: 6 })).toBe(true);
+		expect(canAfford(world, "player", { steel: 7 })).toBe(false);
 	});
 
 	it("spendResources returns false when insufficient", () => {
 		spawnFaction(world, "player", true);
-		addResources(world, "player", "silicon_wafer", 3);
+		addResources(world, "player", "glass", 3);
 
-		const result = spendResources(world, "player", "silicon_wafer", 5);
+		const result = spendResources(world, "player", "glass", 5);
 		expect(result).toBe(false);
 		// Pool should be unchanged
-		expect(canAfford(world, "player", { silicon_wafer: 3 })).toBe(true);
+		expect(canAfford(world, "player", { glass: 3 })).toBe(true);
 	});
 
 	it("canAfford checks multiple materials simultaneously", () => {
 		spawnFaction(world, "player", true);
-		addResources(world, "player", "ferrous_scrap", 5);
-		addResources(world, "player", "conductor_wire", 2);
+		addResources(world, "player", "iron_ore", 5);
+		addResources(world, "player", "circuits", 2);
 
-		expect(
-			canAfford(world, "player", { ferrous_scrap: 3, conductor_wire: 2 }),
-		).toBe(true);
-		expect(
-			canAfford(world, "player", { ferrous_scrap: 3, conductor_wire: 3 }),
-		).toBe(false);
+		expect(canAfford(world, "player", { iron_ore: 3, circuits: 2 })).toBe(true);
+		expect(canAfford(world, "player", { iron_ore: 3, circuits: 3 })).toBe(
+			false,
+		);
 	});
 });
 

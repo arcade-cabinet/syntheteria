@@ -21,7 +21,7 @@ function makeTile(x: number, z: number, passable = true): TileData {
 		z,
 		elevation: 0,
 		passable,
-		floorType: "durasteel_span",
+		floorType: "grassland",
 		resourceMaterial: null,
 		resourceAmount: 0,
 	};

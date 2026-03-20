@@ -34,30 +34,30 @@ function makeBoard(tiles: TileData[][]): GeneratedBoard {
 }
 
 describe("isPassableFor", () => {
-	it("light units can traverse abyssal_platform", () => {
-		const tile = makeTile(0, 0, "abyssal_platform");
+	it("light units can traverse wetland", () => {
+		const tile = makeTile(0, 0, "wetland");
 		expect(isPassableFor(tile, "light")).toBe(true);
 	});
 
-	it("medium units cannot traverse abyssal_platform", () => {
-		const tile = makeTile(0, 0, "abyssal_platform");
+	it("medium units cannot traverse wetland", () => {
+		const tile = makeTile(0, 0, "wetland");
 		expect(isPassableFor(tile, "medium")).toBe(false);
 	});
 
-	it("heavy units cannot traverse abyssal_platform", () => {
-		const tile = makeTile(0, 0, "abyssal_platform");
+	it("heavy units cannot traverse wetland", () => {
+		const tile = makeTile(0, 0, "wetland");
 		expect(isPassableFor(tile, "heavy")).toBe(false);
 	});
 
-	it("void_pit impassable for all weight classes", () => {
-		const tile = makeTile(0, 0, "void_pit", false);
+	it("water impassable for all weight classes", () => {
+		const tile = makeTile(0, 0, "water", false);
 		for (const wc of ["light", "medium", "heavy"] as WeightClass[]) {
 			expect(isPassableFor(tile, wc)).toBe(false);
 		}
 	});
 
-	it("structural_mass impassable for all weight classes", () => {
-		const tile = makeTile(0, 0, "structural_mass", false);
+	it("mountain impassable for all weight classes", () => {
+		const tile = makeTile(0, 0, "mountain", false);
 		for (const wc of ["light", "medium", "heavy"] as WeightClass[]) {
 			expect(isPassableFor(tile, wc)).toBe(false);
 		}
@@ -65,12 +65,12 @@ describe("isPassableFor", () => {
 
 	it("normal tiles passable for all weight classes at cost 1", () => {
 		const normalFloors: TileData["floorType"][] = [
-			"transit_deck",
-			"durasteel_span",
-			"collapsed_zone",
-			"dust_district",
-			"bio_district",
-			"aerostructure",
+			"hills",
+			"grassland",
+			"ruins",
+			"desert",
+			"forest",
+			"tundra",
 		];
 		for (const floor of normalFloors) {
 			const tile = makeTile(0, 0, floor);
@@ -83,13 +83,13 @@ describe("isPassableFor", () => {
 });
 
 describe("movementCost", () => {
-	it("abyssal_platform costs 2 AP for light units", () => {
-		const tile = makeTile(0, 0, "abyssal_platform");
+	it("wetland costs 2 AP for light units", () => {
+		const tile = makeTile(0, 0, "wetland");
 		expect(movementCost(tile, "light")).toBe(2);
 	});
 
 	it("normal tile costs 1 AP for all weight classes", () => {
-		const tile = makeTile(0, 0, "transit_deck");
+		const tile = makeTile(0, 0, "hills");
 		for (const wc of ["light", "medium", "heavy"] as WeightClass[]) {
 			expect(movementCost(tile, wc)).toBe(1);
 		}
@@ -97,13 +97,13 @@ describe("movementCost", () => {
 });
 
 describe("reachableTiles with weightClass", () => {
-	it("light unit can reach abyssal_platform tiles (costs 2 AP)", () => {
-		// Layout: [transit_deck] [abyssal_platform] [transit_deck]
+	it("light unit can reach wetland tiles (costs 2 AP)", () => {
+		// Layout: [hills] [wetland] [hills]
 		const tiles = [
 			[
-				makeTile(0, 0, "transit_deck"),
-				makeTile(1, 0, "abyssal_platform"),
-				makeTile(2, 0, "transit_deck"),
+				makeTile(0, 0, "hills"),
+				makeTile(1, 0, "wetland"),
+				makeTile(2, 0, "hills"),
 			],
 		];
 		const board = makeBoard(tiles);
@@ -119,12 +119,12 @@ describe("reachableTiles with weightClass", () => {
 		expect(reachable1.has("1,0")).toBe(false);
 	});
 
-	it("medium unit cannot reach abyssal_platform tiles", () => {
+	it("medium unit cannot reach wetland tiles", () => {
 		const tiles = [
 			[
-				makeTile(0, 0, "transit_deck"),
-				makeTile(1, 0, "abyssal_platform"),
-				makeTile(2, 0, "transit_deck"),
+				makeTile(0, 0, "hills"),
+				makeTile(1, 0, "wetland"),
+				makeTile(2, 0, "hills"),
 			],
 		];
 		const board = makeBoard(tiles);
@@ -140,9 +140,9 @@ describe("reachableTiles with weightClass", () => {
 		// 3-tile row: transit(1) -> abyssal(2) -> transit(1) = need 4 AP to reach tile 2
 		const tiles = [
 			[
-				makeTile(0, 0, "transit_deck"),
-				makeTile(1, 0, "abyssal_platform"),
-				makeTile(2, 0, "transit_deck"),
+				makeTile(0, 0, "hills"),
+				makeTile(1, 0, "wetland"),
+				makeTile(2, 0, "hills"),
 			],
 		];
 		const board = makeBoard(tiles);

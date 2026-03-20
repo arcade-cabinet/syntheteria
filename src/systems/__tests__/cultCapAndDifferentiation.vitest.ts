@@ -41,7 +41,7 @@ function makeBoard(width: number, height: number): GeneratedBoard {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "durasteel_span",
+				floorType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -267,7 +267,7 @@ describe("AI faction differentiation — personalities produce different behavio
 			ResourceDeposit({
 				tileX: 16 + opts.depositDistance,
 				tileZ: 16,
-				material: "scrap_metal",
+				material: "stone",
 				amount: 100,
 				depleted: false,
 			}),

@@ -503,19 +503,23 @@ function transferResources(
 	if (!sourcePool || !sourceEntity || !targetPool || !targetEntity) return 0;
 
 	const RESOURCE_KEYS = [
-		"ferrous_scrap",
-		"alloy_stock",
-		"polymer_salvage",
-		"conductor_wire",
-		"electrolyte",
-		"silicon_wafer",
-		"storm_charge",
-		"el_crystal",
-		"scrap_metal",
-		"e_waste",
-		"intact_components",
-		"thermal_fluid",
-		"depth_salvage",
+		"stone",
+		"timber",
+		"iron_ore",
+		"coal",
+		"food",
+		"fiber",
+		"sand",
+		"clay",
+		"steel",
+		"concrete",
+		"glass",
+		"circuits",
+		"fuel",
+		"alloy",
+		"nanomaterial",
+		"fusion_cell",
+		"quantum_crystal",
 	];
 
 	let totalStolen = 0;

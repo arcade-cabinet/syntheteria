@@ -147,7 +147,7 @@ Playwright runs **headed** (`headless: false`); in CI, `xvfb-run -a` provides a 
 | **frontend-designer** | UI panels, HUD, modals, mobile layout | `src/ui/`, `src/input/` |
 | **rendering-engineer** | R3F title scene, Phaser board, materials, shaders | `src/views/title/`, `src/views/board/` |
 | **audio-engineer** | Spatial audio, SFX, adaptive music | `src/audio/` |
-| **config-docs** | Config files, documentation, CI | `docs/`, `config/`, `.github/` |
+| **config-docs** | Config files, documentation, CI | root `*.md`, `config/`, `.github/` |
 
 ### Merge Order (Multi-Agent)
 

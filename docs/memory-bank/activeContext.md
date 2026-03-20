@@ -79,6 +79,7 @@ The prior R3F stack used `Globe.tsx` as a single persistent `<Canvas>` with sphe
 3. **Port world/city separation from pending/** — Tier 1: bots, snapshots, config, generation. Tier 2: city catalog, transitions. Tier 3: AI split, radial menu
 4. **Begin Phaser + enable3d migration** — follow the implementation plan
 5. **Visual gaps** (during rendering overhaul):
-   - Terrain blending, forest canopy, elevation drama, ocean layers, roboforming progression
+   - Terrain blending, forest canopy, elevation drama, ocean layers
+   - ~~Roboforming progression~~ DONE: `src/views/renderers/roboformOverlay.ts` + `src/views/lighting/epochAtmosphere.ts`
 
 **Accepted tech debt**: `pending/` directory (252MB quarantined reference code) remains in working tree — excluded from tsconfig + biome.

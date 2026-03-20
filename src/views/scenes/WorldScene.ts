@@ -61,6 +61,12 @@ export class WorldScene extends Scene3D {
 	private _isDragging = false;
 	private _dragPrev = { x: 0, y: 0 };
 	private _config: GameBoardConfig | null = null;
+	/**
+	 * Highest tech tier across all factions. Updated each turn.
+	 * Used to compute epoch for atmosphere changes.
+	 * Default to 1 (Emergence) at game start.
+	 */
+	private _highestTechTier = 1;
 
 	constructor() {
 		super({ key: "WorldScene" });
@@ -118,6 +124,15 @@ export class WorldScene extends Scene3D {
 			createTerritoryRenderer(scene);
 			updateTerritory(world, boardConfig.width, boardConfig.height);
 
+			// Roboform overlay (visual terrain development progression)
+			createRoboformOverlay(scene);
+			updateRoboformOverlay();
+
+			// Epoch atmosphere (visual progression per age)
+			const turn = getCurrentTurn(world);
+			const epoch = computeEpoch(this._highestTechTier, turn);
+			applyEpochAtmosphere(scene, epoch.number);
+
 			// Particles
 			createParticleRenderer(scene);
 
@@ -144,12 +159,21 @@ export class WorldScene extends Scene3D {
 		// Listen for turn-advanced events from React
 		EventBus.on("turn-advanced", () => this.onTurnAdvanced());
 
+		// Listen for tech tier changes to update epoch atmosphere
+		EventBus.on(
+			"tech-tier-changed",
+			(tier: number) => this.setHighestTechTier(tier),
+		);
+
 		EventBus.emit("scene-ready", this);
 	}
 
 	shutdown(): void {
 		unregisterCameraControls();
 		EventBus.off("turn-advanced");
+		EventBus.off("tech-tier-changed");
+		destroyRoboformOverlay();
+		resetEpochAtmosphere();
 	}
 
 	private registerCameraControls(): void {
@@ -182,7 +206,23 @@ export class WorldScene extends Scene3D {
 		// Re-sync all renderers with updated ECS state
 		updateFog(world);
 		updateTerritory(world, boardConfig.width, boardConfig.height);
+		updateRoboformOverlay();
+
+		// Update epoch atmosphere based on current turn + tech tier
+		const turn = getCurrentTurn(world);
+		const epoch = computeEpoch(this._highestTechTier, turn);
+		applyEpochAtmosphere(this.third.scene, epoch.number);
+
 		// Units and buildings sync in update() loop already
+	}
+
+	/**
+	 * Update the highest tech tier tracked by the scene.
+	 * Called externally (via EventBus or direct) when factions research new techs.
+	 * This drives epoch atmosphere transitions.
+	 */
+	setHighestTechTier(tier: number): void {
+		this._highestTechTier = Math.max(1, Math.min(5, tier));
 	}
 
 	// ---- Camera ----

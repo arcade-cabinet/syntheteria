@@ -20,6 +20,8 @@ Entry: `src/main.tsx` (Root component — screen state machine + DOM bootstrap)
 
 - `koota` — ECS
 - `@react-three/fiber`, `@react-three/drei`, `three` — R3F
+- `phaser` — Phaser 3 game framework (match board)
+- `@enable3d/phaser-extension` — Three.js bridge for Phaser
 - `sql.js` — in-memory SQLite (pure JS)
 - `vite` + `vite-plugin-glsl` — bundler + GLSL imports
 
@@ -44,10 +46,12 @@ pnpm verify           # lint + tsc + test (full gate)
 
 ## Codebase Scale
 
-- ~70 active `.ts`/`.tsx` files
-- 29 test suites, all passing
+- ~434 active `.ts`/`.tsx` files under `src/`
+- 123 Vitest test files, all passing
+- 2208 tests
 - 0 TypeScript errors
-- ~212 GLB models in public/assets/models/
+- ~360 GLB models in public/assets/models/
+- 11+ config definition files in `src/config/`
 
 ## What `pending/` Is
 

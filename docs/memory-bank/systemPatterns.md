@@ -6,15 +6,15 @@
 ## Architecture Overview
 
 ```
-gameDefaults.ts (tunables)  -->  systems (pure logic)  -->  Koota ECS (state)  -->  R3F renderers
-                                        |                          |
+gameDefaults.ts (tunables)  -->  systems (pure logic)  -->  Koota ECS (state)  -->  views/board (Phaser)
+                                        |                          |                  views/title (R3F globe)
                                   board/grid.ts             sql.js SQLite
                                   (GridApi)                (persistence)
 ```
 
 - **Koota ECS** owns all game state.
 - **Systems** are pure functions — accept `world: WorldType` param, never import world singleton.
-- **R3F renderers** query ECS, read traits, produce geometry. No game logic in TSX.
+- **views/board** (Phaser + enable3d) renders the match board; **views/title** (R3F) renders the title globe.
 - **`gameDefaults.ts`** owns all tunables — never hardcode in systems or renderers.
 - **One source of truth per domain** — no dual data stores.
 - **No JSON for game data** — all definitions are TypeScript `const` objects.
@@ -107,6 +107,12 @@ Salvage props (SALVAGE_DEFS) are the primary resource source. Each has:
 
 Floor mining (FLOOR_DEFS) is the backstop for resource deserts.
 
+### Resource Model (TARGET — replaces salvage taxonomy)
+
+Biome-based natural resources → processed materials → synthetic outputs.
+See `docs/GAME_DESIGN.md` §5 for the full resource progression vision.
+Current salvage and floor mining systems are LEGACY.
+
 ### Faction Resource Pool
 
 ```ts
@@ -128,6 +134,11 @@ Buildings define `powerDelta`:
 - Positive = generates/transmits power (storm_transmitter: +5)
 - Negative = draws power (motor_pool: -3)
 - Zero with storageCapacity = stores power (power_box: stores 20)
+
+### Building-Driven Progression (TARGET)
+
+Each building has internal upgrade tiers (1→3). Buildings unlock other buildings.
+Research Lab becomes "Analysis Node" (passive accelerator). See `docs/GAME_DESIGN.md` §7.
 
 ### Building Traits
 
@@ -164,12 +175,13 @@ export function HighlightRenderer({ world }: { world: WorldType }) {
 }
 ```
 
-## Command UI Pattern (target) — Civ VI–style
+## Command UI Pattern (target) — Civ VI–style + per-building modals
 
 **Radial menu is deprecated** as the product direction. **Target:** contextual **action strip /
 inspector** (React DOM) driven by the same selection context the game already uses; **specialized
 units and buildings** show **filtered** actions (fabricator vs recon vs combat), with heavy flows
-(build queue, tech, diplomacy) in **panels/modals**. Use **Civilization VI (especially mobile)** as
+(build queue, tech, diplomacy) in **per-building management modals** (extending the GarageModal
+pattern to every building type) and **panels**. Use **Civilization VI (especially mobile)** as
 the reference for **dense but legible** layouts, not CivRev2’s minimal radial.
 
 ### Legacy: dual-ring radial (to retire)
@@ -230,5 +242,5 @@ to track in-progress work. The pattern:
 | All tunables in `gameDefaults.ts` | No magic numbers in systems/renderers |
 | GridApi only | Never access `board.tiles[][]` outside `src/board/` |
 | SQLite is non-fatal | DB failures don't crash, ECS runs in memory |
-| Salvage = primary resource | Floor mining is backstop only |
+| Salvage = primary resource | Floor mining is backstop only (LEGACY — target: biome resources) |
 | Storm = power grid | transmitters tap storm, power boxes store charge |

@@ -9,7 +9,7 @@
 | Layer | Technology |
 |-------|-----------|
 | Bundler | **Vite** (`pnpm dev`, `pnpm build`) |
-| Renderer | **R3F** — one persistent `<Canvas>` in `Globe.tsx` |
+| Renderer | **Title:** R3F `Globe.tsx` · **Match:** Phaser + enable3d `src/views/board/` (see `RENDERING_VISION.md`) |
 | ECS | **Koota** — all game state as typed traits |
 | AI | **Yuka** — GOAP goal evaluation, fuzzy logic, NavGraph A* |
 | Persistence | **sql.js** — pure JS SQLite, no wasm needed |
@@ -39,23 +39,18 @@ syntheteria/
 │   │   ├── cityLayout.ts      # BSP city layout (walls, corridors, districts)
 │   │   ├── connectivity.ts    # Flood-fill + corridor punching
 │   │   ├── labyrinth*.ts      # Rooms-and-Mazes generator (4 files)
-│   │   └── types.ts           # Elevation, TileData, BoardConfig, GeneratedBoard
+│   │   ├── types.ts           # Elevation, TileData, BoardConfig, GeneratedBoard
+│   │   └── sphere/            # Sphere geometry + model placement
+│   │       ├── boardGeometry.ts   # buildSphereGeometry, tileToSpherePos, spherePosToTile
+│   │       └── spherePlacement.ts # Model position + orientation on sphere surface
 │   ├── camera/
 │   │   ├── IsometricCamera.tsx # Flat-board CivRev2-style PAN camera
 │   │   ├── SphereOrbitCamera.tsx # Sphere world orbit camera
 │   │   ├── cameraStore.ts     # Global camera controls registry
 │   │   ├── cutawayStore.ts    # Cutaway clip plane state
 │   │   └── types.ts           # CameraControls interface
-│   ├── ecs/
-│   │   ├── traits/            # board, tile, unit, faction, resource, building, salvage, cult
-│   │   ├── terrain/           # FloorType, FLOOR_DEFS, ResourceMaterial, GLSL shaders
-│   │   ├── robots/            # 9 archetypes, placement flags, marks, specializations
-│   │   │   └── specializations/  # 6 track files + trackRegistry.ts (14 tracks total)
-│   │   ├── factions/          # definitions, cults, init, relations
-│   │   ├── buildings/         # 15 faction buildings + 6 cult structures (TypeScript const)
-│   │   ├── resources/         # 10 salvage types with yield tables
-│   │   ├── narrative/         # speechProfiles — faction persona dialogue
-│   │   └── systems/           # 40+ systems (movement, combat, economy, AI, cult, etc.)
+│   ├── traits/                # ALL Koota trait definitions
+│   ├── systems/               # ALL Koota systems (one per file, 40+)
 │   ├── ai/                    # Yuka GOAP AI
 │   │   ├── agents/            # SyntheteriaAgent.ts — agent entity
 │   │   ├── fuzzy/             # situationModule.ts — fuzzy logic assessment
@@ -66,64 +61,70 @@ syntheteria/
 │   │   ├── triggers/          # territoryTrigger.ts — territory response
 │   │   ├── trackSelection.ts  # Per-faction specialization preferences
 │   │   └── yukaAiTurnSystem.ts # Per-turn AI execution
-│   ├── systems/               # command UI backends: radialMenu (legacy), radialProviders
+│   ├── views/                 # ALL rendering entrypoints
+│   │   ├── title/             # R3F title + generating globe (TSX)
+│   │   │   ├── renderers/     # BoardRenderer, UnitRenderer, BuildingRenderer, StormSky, etc.
+│   │   │   ├── overlays/      # FogOfWarRenderer, HighlightRenderer, PathRenderer, Territory
+│   │   │   ├── effects/       # CombatEffects, Particles, SpeechBubble
+│   │   │   ├── globe/         # GlobeWithCities, Hypercane, StormClouds, Lightning, TitleText
+│   │   │   ├── materials/     # heightMaterial.ts
+│   │   │   └── glsl/          # fogOfWar (sphere), height shaders
+│   │   └── board/             # Phaser + enable3d match board (pure TS)
+│   │       ├── scenes/        # WorldScene.ts — main Phaser scene
+│   │       ├── renderers/     # terrain, unit, building, salvage, fog, highlight, etc.
+│   │       ├── lighting/      # worldLighting, epochAtmosphere
+│   │       ├── input/         # boardInput.ts — Phaser pointer handling
+│   │       └── labels/        # domLabels.ts — CivRev2-style DOM labels
 │   ├── audio/                 # audioEngine, sfx (Tone.js), ambience (storm loop)
 │   ├── db/                    # SQLite schema + GameRepo (sql.js adapter)
-│   ├── rendering/
-│   │   ├── BoardRenderer.tsx  # Merged BufferGeometry, PBR atlas shader
-│   │   ├── BiomeRenderer.tsx  # Biome-specific terrain visuals
-│   │   ├── UnifiedTerrainRenderer.tsx # Unified depth layers (bridge/pit/terrain)
-│   │   ├── HighlightRenderer.tsx # Emissive overlay from TileHighlight
-│   │   ├── UnitRenderer.tsx   # GLB models, faction colors, lerped movement
-│   │   ├── BuildingRenderer.tsx # Building GLBs, fog-gated
-│   │   ├── SalvageRenderer.tsx # Salvage GLBs
-│   │   ├── StructureRenderer.tsx # Wall/column rendering
-│   │   ├── ProceduralStructureRenderer.tsx # Procedural geometry
-│   │   ├── FogOfWarRenderer.tsx # Per-unit scan radius fog
-│   │   ├── TerritoryOverlayRenderer.tsx # Faction territory colors
-│   │   ├── PathRenderer.tsx   # Pathfinding visualization
-│   │   ├── CombatEffectsRenderer.tsx # Damage text + combat flash
-│   │   ├── FragmentRenderer.tsx # Memory fragment objects
-│   │   ├── SpeechBubbleRenderer.tsx # In-world speech bubbles
-│   │   ├── UnitStatusBars.tsx # HP/AP bars above units
-│   │   ├── CutawayClipPlane.tsx # Dollhouse zoom clipping
-│   │   ├── StormSky.tsx       # BackSide sky sphere with storm + wormhole + illuminator GLSL
-│   │   ├── boardGeometry.ts   # Flat board + sphere geometry builders
-│   │   ├── spherePlacement.ts # Model position + orientation on sphere surface
-│   │   ├── modelPaths.ts      # GLB model path resolution
-│   │   ├── tileVisibility.ts  # Fog-gated visibility
-│   │   ├── particles/         # ParticlePool, ParticleRenderer, effectEvents
-│   │   ├── globe/             # Title screen: GlobeWithCities, Hypercane, StormClouds, Lightning, shaders
-│   │   ├── sky/               # chronometry.ts — turn→time (day/night, seasons)
-│   │   ├── labyrinth/         # wallClassification.ts
-│   │   └── glsl/              # GLSL shaders: fogOfWar (flat+sphere), height
-│   ├── input/                 # BoardInput (click-to-select, click-to-move, click-to-attack)
+│   ├── input/                 # Board interaction (click, drag, select)
+│   │   ├── BoardInput.tsx     # R3F pointer event handling on the sphere
+│   │   └── pathPreview.ts     # Renderer-agnostic A* path preview state
 │   ├── ui/
 │   │   ├── Globe.tsx          # ONE persistent R3F Canvas across all phases
 │   │   ├── FatalErrorModal.tsx # Error recovery UI
 │   │   ├── icons.tsx          # UI icon components
 │   │   ├── landing/           # LandingScreen, NewGameModal, SettingsModal, title/
 │   │   └── game/              # HUD, command UI, settlement production (legacy GarageModal shim), overlays
-│   ├── config/                # 11 definition files (all TypeScript const objects)
+│   ├── config/                # Game data files (all TypeScript const objects)
 │   │   ├── gameDefaults.ts    # All tunables: tile size, AP, camera, board sizes, faction colors
-│   │   ├── techTreeDefs.ts    # 27 techs in 5 tiers
+│   │   ├── techTreeDefs.ts    # LEGACY 27 techs in 5 tiers — TARGET: building-driven progression
 │   │   ├── buildingDefs.ts    # Building type definitions
 │   │   ├── diplomacyDefs.ts   # Diplomacy thresholds and rules
+│   │   ├── epochDefs.ts       # Epoch / climate deterioration definitions
 │   │   ├── factionAiDefs.ts   # AI faction personality parameters
+│   │   ├── models.ts          # GLB model path manifest
 │   │   ├── movementDefs.ts    # Movement cost definitions
 │   │   ├── narrativeDefs.ts   # Narrative/lore definitions
 │   │   ├── poiDefs.ts         # Point of interest definitions
 │   │   ├── recipeDefs.ts      # Synthesis recipe definitions
 │   │   ├── upgradeDefs.ts     # Upgrade path definitions
-│   │   └── weatherDefs.ts     # Storm/weather parameters
-│   └── world/                 # Config wiring, world initialization
+│   │   ├── weatherDefs.ts     # Storm/weather parameters
+│   │   ├── buildings/         # Building + cult structure definitions (moved from ecs/buildings/)
+│   │   │   ├── definitions.ts # BUILDING_DEFS — player-buildable structures
+│   │   │   └── cultStructures.ts # CULT_STRUCTURE_DEFS — cult structures
+│   │   └── resources/         # Salvage definitions (moved from ecs/resources/)
+│   │       └── salvageTypes.ts # SALVAGE_DEFS — harvestable props with yield tables
+│   ├── buildings/             # REDIRECT barrel — re-exports from config/buildings/
+│   ├── resources/             # REDIRECT barrel — re-exports from config/resources/
+│   ├── lib/                   # Shared utilities
+│   │   ├── chronometry.ts     # turnToChronometry — day/night cycle + seasons from turn
+│   │   ├── uuid.ts            # UUID generation
+│   │   ├── particles/         # ParticlePool + effectEvents
+│   │   └── fog/               # tileVisibility, unitDetection
+│   ├── factions/              # Faction definitions, init, relations
+│   ├── robots/                # Archetypes, placement, specializations
+│   ├── terrain/               # Floor types, elevation, GLSL shaders
+│   ├── narrative/             # Speech profiles
+│   ├── world/                 # New-game config, world initialization
+│   └── types/                 # Shared type declarations
 ├── docs/
 │   ├── GAME_DESIGN.md         # Vision, lore, world model, economy, bots, factions
 │   ├── ARCHITECTURE.md        # THIS FILE — tech stack, packages, patterns
 │   ├── ROADMAP.md             # Foundation status, next systems
 │   └── memory-bank/           # Session context (activeContext.md, progress.md)
 ├── public/
-│   ├── assets/models/         # 360 curated GLB models (city, defense, industrial, etc.)
+│   ├── assets/models/         # ~360 curated GLB models (city, defense, industrial, etc.)
 │   └── assets/textures/       # PBR atlas textures (AmbientCG)
 └── pending/                   # OLD GAME — quarantined, REFERENCE ONLY (see §7)
 ```
@@ -153,23 +154,20 @@ Fixed-size deterministic board. No infinite chunk streaming.
 | `labyrinthConnectivity.ts` | Labyrinth connectivity |
 | `labyrinth.ts` | Core labyrinth types |
 
+#### `board/sphere/` — Sphere Geometry
+
+| File | Purpose |
+|------|---------|
+| `boardGeometry.ts` | `buildSphereGeometry()`, `tileToSpherePos()`, `spherePosToTile()`, `sphereRadius()` |
+| `spherePlacement.ts` | Model position + orientation on sphere surface (quaternion normal alignment) |
+
 **GridApi** is the only public interface into board state outside `board/`. Never access `board.tiles[][]` directly.
 
 **Elevation:** `-1` (void pit) | `0` (ground) | `1` (bridge) | `2` (elevated structure tier).
 
-### `src/ecs/` — Koota ECS
+### `src/traits/` — Koota Traits
 
 All game state lives as typed traits on Koota entities.
-
-#### Core
-
-| File | Purpose |
-|------|---------|
-| `world.ts` | `createWorld()` + `WorldType` export |
-| `init.ts` | `initWorldFromBoard(world, board)` — tiles, resources, factions, robots |
-| `seed.ts` | Seed phrase ↔ numeric seed conversion |
-
-#### Traits (`ecs/traits/`)
 
 | Trait file | Traits defined |
 |-----------|----------------|
@@ -182,7 +180,7 @@ All game state lives as typed traits on Koota entities.
 | `salvage.ts` | `SalvageProp` — harvestable dead-world props (primary resource source) |
 | `cult.ts` | `CultStructure` — cult-placed structures at breach zones |
 
-#### Terrain (`ecs/terrain/`)
+### `src/terrain/` — Terrain
 
 | File | Purpose |
 |------|---------|
@@ -202,7 +200,7 @@ All game state lives as typed traits on Koota entities.
 - Common: `scrap_metal`, `e_waste`, `intact_components`
 - Abyssal: `thermal_fluid`, `depth_salvage`
 
-#### Buildings (`ecs/buildings/`)
+### `src/config/buildings/` — Building Definitions
 
 | File | Purpose |
 |------|---------|
@@ -215,7 +213,7 @@ All game state lives as typed traits on Koota entities.
 
 **Storm power model:** The perpetual storm IS the power grid. Storm transmitters tap it (positive `powerDelta`), power boxes store charge (`storageCapacity`), everything else draws from nearby power boxes (negative `powerDelta`).
 
-#### Resources / Salvage (`ecs/resources/`)
+### `src/config/resources/` — Salvage Definitions
 
 | File | Purpose |
 |------|---------|
@@ -223,26 +221,50 @@ All game state lives as typed traits on Koota entities.
 
 **10 salvage types:** container, terminal, vessel, machinery, debris, cargo_crate, storage_rack, power_cell, landing_wreck, abyssal_relic — PRIMARY resource source. Each maps to specific GLB models and yields specific materials. `abyssal_relic` yields `el_crystal`.
 
-#### Systems (`ecs/systems/`)
+### `src/systems/` — Koota Systems
 
 42 systems. See `docs/memory-bank/progress.md` for the complete list with status and file paths.
 
-#### Other ECS packages
+### `src/robots/` — Robot Archetypes
 
 | Package | Purpose |
 |---------|---------|
 | `robots/` | 9 robot spawn functions + placement flags + marks system + specialization tracks |
 | `robots/specializations/` | 6 track files (14 tracks) + trackRegistry.ts — single source of truth |
 | `robots/classActions.ts` | Per-class action definitions (unique action sets per robot class) |
-| `factions/` | `FACTION_DEFINITIONS`, `CULT_DEFINITIONS`, relations helpers |
-| `narrative/` | Speech profiles — faction persona dialogue |
 
-### `src/systems/` — Command UI (legacy radial machinery)
+### `src/factions/` — Factions
 
-| File | Purpose |
-|------|---------|
-| `radialMenu.ts` | **Legacy** dual-ring state machine — **superseded** by Civ VI–style command UI (`GAME_DESIGN.md` §9) |
-| `radialProviders.ts` | Action providers (Move/Harvest/Attack/…); **keep** logic, **re-skin** consumers away from radial |
+`FACTION_DEFINITIONS`, `CULT_DEFINITIONS`, relations helpers.
+
+### `src/narrative/` — Speech Profiles
+
+Faction persona dialogue.
+
+### `src/views/title/` — R3F Renderers (Title + Playing)
+
+R3F components for the title screen globe and the playing-phase game board.
+
+| Subdirectory | Contents |
+|-------------|---------|
+| `renderers/` | BoardRenderer, BiomeRenderer, UnifiedTerrainRenderer, UnitRenderer, BuildingRenderer, SalvageRenderer, StructureRenderer, StormSky, CultDomeRenderer, IlluminatorRenderer, InfrastructureRenderer, LodGlobe, FragmentRenderer, CutawayClipPlane |
+| `overlays/` | FogOfWarRenderer, HighlightRenderer, PathRenderer, TerritoryOverlayRenderer |
+| `effects/` | CombatEffectsRenderer, ParticleRenderer, SpeechBubbleRenderer |
+| `globe/` | GlobeWithCities, Hypercane, StormClouds, LightningEffect, TitleText, cinematicState, shaders |
+| `materials/` | heightMaterial.ts |
+| `glsl/` | fogOfWar sphere shaders, height shaders |
+
+### `src/views/board/` — Phaser + enable3d Renderers (Match Board)
+
+Pure TypeScript Phaser scene and renderers. No React dependency.
+
+| Subdirectory | Contents |
+|-------------|---------|
+| `scenes/` | WorldScene.ts — main Phaser scene |
+| `renderers/` | terrainRenderer, unitRenderer, buildingRenderer, salvageRenderer, fogRenderer, highlightRenderer, structureRenderer, territoryRenderer, oceanRenderer, combatEffects, particleRenderer, speechRenderer, vegetationRenderer, roboformOverlay |
+| `lighting/` | worldLighting.ts, epochAtmosphere.ts |
+| `input/` | boardInput.ts — Phaser pointer handling |
+| `labels/` | domLabels.ts — CivRev2-style DOM labels over Phaser canvas |
 
 ### `src/db/` — SQLite Persistence
 

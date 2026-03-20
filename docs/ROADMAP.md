@@ -12,7 +12,7 @@ sphere world geometry, globe-based rendering pipeline, PBR texture atlas, fog of
 title-to-game cinematic, save/load, and audio is complete.
 
 ```
-pnpm verify  →  146 Vitest test files (2487 tests) + 0 TypeScript errors + 0 Biome errors  *(refresh from `pnpm test:vitest`)*
+pnpm verify  →  123 Vitest test files (2208 tests) + 0 TypeScript errors + 0 Biome errors  *(refresh from `pnpm test:vitest`)*
 ```
 
 ### What Works
@@ -28,19 +28,19 @@ pnpm verify  →  146 Vitest test files (2487 tests) + 0 TypeScript errors + 0 B
 | Persistent storm effects (StormClouds, Hypercane, Lightning in ALL phases) | DONE |
 | Cutaway clip plane (CutawayClipPlane.tsx + cutawayStore.ts) | WIP |
 | Fixed-size board generator (seeded FNV-1a + mulberry32) | DONE |
-| 9 terrain substrates (FloorType) with PBR atlas shader | DONE |
-| 13-material resource taxonomy (ResourceMaterial) | DONE |
+| 9 terrain substrates (FloorType) with PBR atlas shader | DONE — **LEGACY** — target: biome terrain |
+| 13-material resource taxonomy (ResourceMaterial) | DONE — **LEGACY** — target: natural→processed→synthetic |
 | BFS adjacency, A* pathfinding | DONE |
 | GridApi addressable interface | DONE |
-| Bridge/tunnel depth stacking (data + rendering) | DONE |
-| Labyrinth generator (Rooms-and-Mazes, seeded) | DONE |
-| BSP city layout (walls, corridors, doorways, 5 district zones) | DONE |
-| Connectivity guarantee (flood-fill + corridor punching) | DONE |
-| PBR texture atlas (8 AmbientCG packs, 5 atlas maps) | DONE |
+| Bridge/tunnel depth stacking (data + rendering) | **REMOVED** — depth system deleted |
+| Labyrinth generator (Rooms-and-Mazes, seeded) | **REMOVED** — overworld-only; noise-based generator |
+| BSP city layout (walls, corridors, doorways, 5 district zones) | **REMOVED** — overworld-only; labyrinth pipeline deleted |
+| Connectivity guarantee (flood-fill + corridor punching) | **REMOVED** — labyrinth pipeline deleted |
+| PBR texture atlas (8 AmbientCG packs, 5 atlas maps) | **LEGACY** — target: vertex-color biome terrain |
 | Koota ECS world init, traits, 42 systems | DONE |
 | 9 robot archetypes + spawn functions | DONE |
 | 14 specialization tracks across 6 classes | DONE |
-| Settlement production UI | **Partial** — `GarageModal.tsx` is a shim; **target:** full queue + priorities in city screen (`GAME_DESIGN.md` §5, §7) |
+| Settlement production UI | Per-building modals | **GarageModal.tsx pattern** — target: each building type gets its own management panel |
 | Specialization passives runtime (aura effects per turn) | DONE |
 | AI track selection (per-faction preferences) | DONE |
 | 5 factions + 3 cults (TypeScript const) | DONE |
@@ -63,7 +63,7 @@ pnpm verify  →  146 Vitest test files (2487 tests) + 0 TypeScript errors + 0 B
 | Salvage prop placement in mapgen | DONE |
 | Instanced GLB rendering for salvage, buildings, structures | DONE |
 | Radial menu (dual-ring state machine, SVG renderer, per-class action providers) | DONE in code — **UX superseded** by Civ VI–style command UI (`GAME_DESIGN.md` §9) |
-| Unified terrain renderer (replaced DepthRenderer + MinedPitRenderer) | DONE |
+| Unified terrain renderer (replaced DepthRenderer + MinedPitRenderer) | **LEGACY** — stubbed after depth removal |
 | HUD (turn, AP, resource counters for 13 materials) | DONE |
 | Storm sky (3 GLSL layers: storm, wormhole, illuminator) | DONE |
 | GLSL shader extraction (vite-plugin-glsl #include) | DONE |
@@ -77,14 +77,14 @@ pnpm verify  →  146 Vitest test files (2487 tests) + 0 TypeScript errors + 0 B
 | Seamless biome patterns (toroidal tiling) | DONE |
 | 3D title text + globe animation | DONE |
 | Fatal error modal | DONE |
-| Procedural walls/columns | DONE |
+| Procedural walls/columns | **REMOVED** — depth system deleted |
 | Storm power grid (transmitters → power boxes → consumers) | DONE |
 | Defense turret auto-attack (powered turrets, cooldown, manhattan range) | DONE |
 | Motor pool bot fabrication (queue, resource cost, tick-down, spawn) | DONE |
 | Synthesizer material fusion (recipes, common → advanced conversion) | DONE |
 | Relay tower signal network (chained coverage, scanRange penalty) | DONE |
 | Maintenance bay repair (+2 HP/turn to friendly units in range) | DONE |
-| 27-tech research tree (15 base + 12 track-gating, 5 tiers) | DONE |
+| 27-tech research tree (15 base + 12 track-gating, 5 tiers) | DONE — **LEGACY** — target: building-driven progression |
 | 7 victory conditions (domination, research, economic, survival, wormhole, technical supremacy, forced) | DONE |
 | Territory system (faction tile painting, percentage tracking) | DONE |
 | Population cap enforcement | DONE |
@@ -220,7 +220,7 @@ pnpm verify  →  146 Vitest test files (2487 tests) + 0 TypeScript errors + 0 B
 
 ---
 
-## Phase 8 — Sphere World (DONE)
+## Phase 8 — Sphere World (DONE) — **SUPERSEDED** — match board uses Phaser + enable3d isometric. Sphere geometry retained for title globe only.
 
 - [x] **8.1** — `buildSphereGeometry()` — map tile grid onto SphereGeometry
 - [x] **8.2** — SphereOrbitCamera — orbit around sphere center
@@ -236,15 +236,15 @@ pnpm verify  →  146 Vitest test files (2487 tests) + 0 TypeScript errors + 0 B
 
 ---
 
-## Phase 9 — Sphere Polish + Cleanup (NEXT)
+## Phase 9 — Sphere Polish + Cleanup — **SUPERSEDED** — sphere-specific polish no longer applicable; board is Phaser isometric
 
-- [ ] **9.1** — Delete flat board code (GHOST, CURVE_STRENGTH, buildBoardGeometry)
-- [ ] **9.2** — Delete GameScreen.tsx (superseded by Globe.tsx)
-- [ ] **9.3** — LOD system (procedural shader at far zoom, PBR atlas at close zoom)
-- [ ] **9.4** — Strategic zoom (seamless surface-to-globe, Supreme Commander style)
-- [ ] **9.5** — Cutaway dollhouse zoom (descend through layers instead of into ceiling)
-- [ ] **9.6** — Volumetric fog (haze at scan range edge, not hard cutoff)
-- [ ] **9.7** — Infrastructure renderer (48 unused GLB models)
+- [ ] ~~**9.1** — Delete flat board code (GHOST, CURVE_STRENGTH, buildBoardGeometry)~~ SUPERSEDED
+- [ ] ~~**9.2** — Delete GameScreen.tsx (superseded by Globe.tsx)~~ SUPERSEDED
+- [ ] ~~**9.3** — LOD system (procedural shader at far zoom, PBR atlas at close zoom)~~ SUPERSEDED
+- [ ] ~~**9.4** — Strategic zoom (seamless surface-to-globe, Supreme Commander style)~~ SUPERSEDED
+- [ ] ~~**9.5** — Cutaway dollhouse zoom (descend through layers instead of into ceiling)~~ SUPERSEDED
+- [ ] ~~**9.6** — Volumetric fog (haze at scan range edge, not hard cutoff)~~ SUPERSEDED
+- [ ] ~~**9.7** — Infrastructure renderer (48 unused GLB models)~~ SUPERSEDED
 
 ---
 
@@ -260,3 +260,22 @@ pnpm verify  →  146 Vitest test files (2487 tests) + 0 TypeScript errors + 0 B
 - [ ] Paper playtesting at turn 1/10/100/1000
 - [ ] Full balance pass (economy, combat, AI tuning)
 - [ ] 100-turn AI-vs-AI playtest
+
+---
+
+## Phase 11 — Design Overhaul (NEXT)
+
+The game's design has evolved significantly. These are the target changes:
+
+- [ ] **11.1** — Biome terrain (replace industrial FloorTypes with grassland, forest, mountain, water, etc.)
+- [ ] **11.2** — Natural→processed→synthetic resource taxonomy (replace 13-material salvage)
+- [ ] **11.3** — Overworld generator with biome noise (replace labyrinth pipeline)
+- [ ] **11.4** — Building-driven progression (replace centralized tech tree with per-building upgrade tiers)
+- [ ] **11.5** — Building→building unlock chains
+- [ ] **11.6** — Per-building management modals (extend GarageModal pattern to all buildings)
+- [ ] **11.7** — Victory condition overhaul (6 paths: Domination, Network, Reclamation, Transcendence, Cult Eradication, Score)
+- [ ] **11.8** — Improvement overlays (roads, mines, irrigation → roboforming visual progression)
+- [ ] **11.9** — Cultist scripted encounter events
+- [ ] **11.10** — Capacitor setup (Android + iOS + Web), GitHub Actions APK builds
+
+See `docs/GAME_DESIGN.md` for full TARGET sections.

@@ -1,17 +1,20 @@
 /**
  * @package views
  *
- * Phaser + enable3d game board rendering.
- * NO React dependency — pure Phaser/Three.js.
+ * Unified rendering package:
+ *   - views/title/ — R3F title + generating globe (TSX)
+ *   - views/board/ — Phaser + enable3d playing board (pure TS)
  *
- * React mounts the game via src/app/GameBoard.tsx (the only React bridge).
- * React ↔ Phaser communication via EventBus.
+ * Consumers import from "../views" (or "../views/title" / "../views/board"
+ * for sub-package-specific imports).
  */
+
+// ─── Board (Phaser + enable3d) ──────────────────────────────────────────────
 
 export type { GameBoardConfig } from "./board/createGame";
 export { createGame } from "./board/createGame";
 export { EventBus } from "./board/eventBus";
-// --- Lighting ---
+// Lighting
 export {
 	applyEpochAtmosphere,
 	getCurrentAtmosphereEpoch,
@@ -22,7 +25,7 @@ export {
 	addAccentLight,
 	setupWorldLighting,
 } from "./board/lighting/worldLighting";
-// --- Roboform overlay ---
+// Roboform overlay
 export type { RoboformTile } from "./board/renderers/roboformOverlay";
 export {
 	clearRoboformData,
@@ -34,3 +37,45 @@ export {
 	updateRoboformOverlay,
 } from "./board/renderers/roboformOverlay";
 export { WorldScene } from "./board/scenes/WorldScene";
+
+// ─── Title (R3F) ────────────────────────────────────────────────────────────
+// Re-exported so consumers can use `from "../views"` for everything,
+// or `from "../views/title"` for title-specific imports.
+
+export {
+	// Effects
+	CombatEffectsRenderer,
+	ParticleRenderer,
+	SpeechBubbleRenderer,
+	// Globe
+	GlobeWithCities,
+	Hypercane,
+	LightningEffect,
+	StormClouds,
+	TitleText,
+	// Shared
+	ModelErrorBoundary,
+	// Overlays
+	FogOfWarRenderer,
+	HighlightRenderer,
+	clearPreviewPath,
+	PathRenderer,
+	setPreviewPath,
+	TerritoryOverlayRenderer,
+	// Renderers
+	BiomeRenderer,
+	BoardRenderer,
+	BuildingRenderer,
+	CultDomeRenderer,
+	CutawayClipPlane,
+	FragmentRenderer,
+	IlluminatorRenderer,
+	InfrastructureRenderer,
+	LodGlobe,
+	SalvageRenderer,
+	StormSky,
+	StructureRenderer,
+	UnifiedTerrainRenderer,
+	UnitRenderer,
+	UnitStatusBars,
+} from "./title";

@@ -48,7 +48,7 @@ src/
 ├── board/              # Overworld generator, tile grid, adjacency, sphere/ (geometry + placement)
 ├── factions/           # Faction definitions, init, relations
 ├── robots/             # Archetypes, placement, specializations
-├── terrain/            # Floor types, elevation, GLSL shaders
+├── terrain/            # Biome types, elevation, GLSL shaders
 ├── narrative/          # Speech profiles
 ├── config/             # Tunables, tech tree, recipes; subpackages buildings/, resources/; models.ts (GLB paths)
 ├── audio/              # Tone.js SFX + ambience
@@ -59,7 +59,8 @@ src/
 │   └── board/          # Phaser + enable3d match board (pure TS)
 ├── ui/                 # React DOM: Globe composes views/title; HUD, landing/, game/
 ├── input/              # Board interaction + pathPreview.ts (move preview state)
-├── world/              # New-game config (hub-and-spoke; no settlement-type snapshot tranche)
+├── world/              # New-game config (hub-and-spoke); building actions use per-building modals (no city screen)
+├── balance/            # Balance harness — simulated runs, aggregation, diagnostics
 ├── lib/                # Shared utilities: chronometry.ts, fog/, particles/, uuid
 ├── types/              # Shared type declarations
 ├── init-world.ts       # World initialization from board
@@ -105,7 +106,7 @@ Follow the patterns from [koota examples](https://github.com/pmndrs/koota/tree/m
 - **Traits** — defined in `src/traits/`, one file per domain, all re-exported via `index.ts`
 - **Systems** — one system per file in `src/systems/`, pure functions accepting `(world: World)`
 - **Actions** — imperative world mutations (spawn, destroy, modify) in dedicated files
-- **Sim/View split** — `traits/` + `systems/` never import `views/`; rendering adapters live under **`src/views/`** only (`title/` = R3F, `board/` = Phaser). **`src/view/`** removed — migrated to `src/views/title/` — see [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](docs/COMPREHENSIVE_ENGINEERING_PLAN.md).
+- **Sim/View split** — `traits/` + `systems/` never import `views/`; rendering adapters live under **`src/views/`** only (`title/` = R3F, `board/` = Phaser). Legacy **`src/view/`** is deleted — content migrated to `src/views/title/` — see [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](docs/COMPREHENSIVE_ENGINEERING_PLAN.md).
 
 ---
 
@@ -125,10 +126,10 @@ pnpm verify              # lint + tsc + test (all gates)
 ## Validation (before any commit)
 
 ```
-pnpm verify — required gates (matches CI Quality job)
+pnpm verify — required gates (matches core CI checks: lint + tsc + Vitest)
   Biome lint: 0 errors
   TypeScript: 0 errors
-  Vitest (node): all suites passing
+  Vitest (node): 130 test files, 2282 tests, all passing
 
 pnpm verify:with-ct — optional; browser CT may still need preview path updates.
   See Phase C in docs/CLOUD_AGENT_RUNBOOK.md.
@@ -172,22 +173,25 @@ All parallel agent work uses git worktrees:
 
 | System | File | Purpose |
 |--------|------|---------|
-| Game Loop | `src/ecs/gameState.ts` | 60fps tick, 21 systems, 8 phases |
-| Turn System | `src/systems/turnSystem.ts` | AP/MP per unit, turn phases |
-| Resources | `src/systems/resources.ts` | 11 material types, add/spend |
+| Turn system | `src/systems/turnSystem.ts` | `advanceTurn` — combat, AI, moves, environment phase, AP refresh, epoch hooks, victory check |
+| Resources | `src/systems/resourceSystem.ts` | Material pools, add/spend |
 | Harvest | `src/systems/harvestSystem.ts` | Structure → materials pipeline |
-| Building | `src/systems/buildingPlacement.ts` | 7 building types, adjacency |
-| Combat | `src/systems/combat.ts` | Component damage, formations |
-| Tech Tree | `src/systems/techTree.ts` | Research DAG, effects |
-| Diplomacy | `src/systems/diplomacy.ts` | Standing, trade, alliances |
-| Victory | `src/systems/victoryConditions.ts` | 3 win paths |
-| Exploration | `src/systems/exploration.ts` | Fog of war, vision radius |
-| World Gen | `src/world/generation.ts` | Procedural ecumenopolis |
-| Radial Menu | `src/systems/radialMenu.ts` | Context menu state |
+| Building placement | `src/systems/buildingPlacement.ts` | Starter placement, adjacency |
+| Combat | `src/systems/attackSystem.ts` | Attack resolution |
+| Research | `src/systems/researchSystem.ts` | Tech queue, effects |
+| Diplomacy | `src/systems/diplomacySystem.ts` | Standing, trade, alliances |
+| Victory | `src/systems/victorySystem.ts` | Win / lose / draw conditions |
+| Exploration | `src/systems/fogRevealSystem.ts` | Fog of war reveal |
+| World Gen | `src/board/generator.ts` | Procedural overworld board from seed |
+| Building Upgrade | `src/systems/buildingUpgradeSystem.ts` | Per-building tier upgrade jobs |
+| Analysis System | `src/systems/analysisSystem.ts` | Analysis node acceleration for upgrades |
+| Score System | `src/systems/scoreSystem.ts` | Weighted faction score (e.g. turn-cap victory) |
+| Balance Harness | `src/balance/index.ts` | Simulated runs, aggregation, balance diagnostics |
+| Config Registry | `src/config/registry.ts` | Unified typed config API + test overrides |
 | Board terrain | `src/views/title/renderers/BoardRenderer.tsx` | Height + biome sphere mesh |
-| Game HUD | `src/ui/panels/GameHUD.tsx` (RN), `src/ui/dom/GameHUDDom.tsx` (Vite) | Top bar, resources, turn |
-| App Entry (Vite) | `src/main.tsx` → `AppVite.tsx` | Capacitor SQLite + session DB, R3F scene, DOM HUD |
-| App Entry (Expo) | `App.tsx` | Legacy Expo/RN path; 39 renderers |
+| Game HUD | `src/ui/game/HUD.tsx` | Top bar, resources, turn |
+| App Entry (Vite) | `src/main.tsx` → `src/app/App.tsx` | React root, session lifecycle, game shell |
+| App Entry (legacy Expo) | `pending/App.tsx` | Quarantined legacy RN path — do not use |
 
 ## Documentation Structure
 
@@ -213,10 +217,10 @@ All validation commands are documented in the Validation table above. Quick refe
 
 - **Lint**: `pnpm lint` (Biome)
 - **Type check**: `pnpm tsc`
-- **Unit tests**: `pnpm test` (Jest, 142 suites / 2500+ tests)
-- **Vitest**: `pnpm test:vitest` (4 files; note: `AppVite.vitest.tsx` has a pre-existing failure looking for a "Continue" button that the UI no longer renders)
+- **Unit tests**: `pnpm test` / `pnpm test:vitest` (Vitest — 130 test files / 2282 tests)
+- **Vitest**: same as above; entrypoint is `vitest run` via `package.json`
 - **Playwright CT**: `xvfb-run -a pnpm test:ct` (headed; requires `xvfb-run` in headless VMs). Many CT tests fail in Cloud VMs because the R3F 3D scenes require GPU/WebGL capabilities not available in software-rendered environments.
-- **Full CI**: `pnpm verify` (lint + tsc + test + test:ct)
+- **Full local gate**: `pnpm verify` (lint + tsc + Vitest). CI also runs `check-imports` and `pnpm build`; component tests are a separate job (`test:ct`, continue-on-error).
 
 ### Gotchas
 

@@ -31,10 +31,10 @@ import { generateBoard } from "../board/generator";
 
 | Concern | File type | Location |
 |---------|-----------|----------|
-| Game logic | `.ts` | `src/systems/`, domain packages |
+| Game logic | `.ts` | `src/systems/`, `src/balance/`, domain packages |
 | Trait definitions | `.ts` | `src/traits/` |
-| React components | `.tsx` | `src/ui/`, `src/app/` |
-| Shaders | `.glsl` | `src/terrain/glsl/`, `src/rendering/glsl/` |
+| React components | `.tsx` | `src/ui/`, `src/app/`, `src/views/title/` |
+| Shaders | `.glsl` | `src/views/title/glsl/`, `src/terrain/glsl/` |
 | Config/data | `.ts` | `src/config/` |
 | Tests | `.vitest.ts` | `__tests__/` inside owning package |
 
@@ -60,10 +60,10 @@ If Claude changes a visible flow, it must:
 2. Tests live in `__tests__/` inside the package that owns the code
 
 Test commands:
-- `pnpm test:vitest` — all Vitest suites
-- `pnpm test:ct` — Playwright component tests
+- `pnpm test:vitest` — all Vitest suites (130 test files, 2282 tests)
+- `pnpm test:ct` — Playwright component tests (Vitest browser)
 - `pnpm test:e2e` — Playwright E2E
-- `pnpm verify` — lint + tsc + test (all gates)
+- `pnpm verify` — lint + tsc + test:vitest (required gates)
 
 ### What Claude Should Prefer
 

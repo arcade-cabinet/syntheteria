@@ -9,7 +9,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { World } from "koota";
-import { UnitPos, UnitVisual } from "../../traits";
+import { UnitMove, UnitPos, UnitVisual } from "../../traits";
 import { resolveRobotModelUrl } from "../../rendering";
 import { tileToWorld } from "./terrainRenderer";
 
@@ -80,18 +80,48 @@ export function updateUnits(
 		// Already loaded — update position + animation
 		const existing = meshes.get(id);
 		if (existing) {
-			const wp = tileToWorld(pos.tileX, pos.tileZ);
-			baseYPositions.set(id, wp.y);
-			existing.position.x = wp.x;
-			existing.position.z = wp.z;
+			// Check for movement animation via UnitMove trait
+			const move = entity.has(UnitMove) ? entity.get(UnitMove) : null;
+
+			let wpX: number;
+			let wpY: number;
+			let wpZ: number;
+
+			if (move) {
+				// Lerp between source and destination tile positions
+				const from = tileToWorld(move.fromX, move.fromZ);
+				const to = tileToWorld(move.toX, move.toZ);
+				const t = Math.min(1.0, Math.max(0.0, move.progress));
+
+				wpX = from.x + (to.x - from.x) * t;
+				wpY = from.y + (to.y - from.y) * t;
+				wpZ = from.z + (to.z - from.z) * t;
+
+				// Face movement direction
+				const dx = to.x - from.x;
+				const dz = to.z - from.z;
+				if (dx !== 0 || dz !== 0) {
+					existing.rotation.y = Math.atan2(dx, dz);
+				}
+			} else {
+				const wp = tileToWorld(pos.tileX, pos.tileZ);
+				wpX = wp.x;
+				wpY = wp.y;
+				wpZ = wp.z;
+
+				// Apply facing angle (only when stationary)
+				existing.rotation.y = visual.facingAngle;
+			}
+
+			baseYPositions.set(id, wpY);
+			existing.position.x = wpX;
+			existing.position.z = wpZ;
 
 			// Bob-and-weave procedural animation
 			const phase = phaseOffsets.get(id) ?? 0;
 			existing.position.y =
-				wp.y + Math.sin(time * BOB_SPEED + phase) * BOB_AMPLITUDE;
+				wpY + Math.sin(time * BOB_SPEED + phase) * BOB_AMPLITUDE;
 
-			// Apply facing angle
-			existing.rotation.y = visual.facingAngle;
 			continue;
 		}
 

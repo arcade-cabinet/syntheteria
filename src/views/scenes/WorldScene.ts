@@ -16,7 +16,7 @@ import {
 	unregisterCameraControls,
 } from "../../camera";
 import type { CameraControls } from "../../camera";
-import type { GameBoardConfig } from "../createGame";
+import { getBoardConfig, type GameBoardConfig } from "../createGame";
 import { EventBus } from "../eventBus";
 import { setupBoardInput } from "../input/boardInput";
 import { setupWorldLighting } from "../lighting/worldLighting";
@@ -49,6 +49,14 @@ import {
 	createParticleRenderer,
 	updateParticles,
 } from "../renderers/particleRenderer";
+import {
+	createCombatEffects,
+	updateCombatEffects,
+} from "../renderers/combatEffects";
+import {
+	createSpeechRenderer,
+	updateSpeech,
+} from "../renderers/speechRenderer";
 
 export class WorldScene extends Scene3D {
 	private _camTarget = new THREE.Vector3();
@@ -76,9 +84,7 @@ export class WorldScene extends Scene3D {
 		this.setupCamera();
 		this.setupInput();
 
-		const config = this.registry.get("boardConfig") as
-			| GameBoardConfig
-			| undefined;
+		const config = getBoardConfig();
 
 		if (config) {
 			this._config = config;
@@ -109,6 +115,12 @@ export class WorldScene extends Scene3D {
 
 			// Particles
 			createParticleRenderer(scene);
+
+			// Combat effects (floating damage numbers, hit flash)
+			createCombatEffects(scene);
+
+			// Speech bubbles above units
+			createSpeechRenderer(scene);
 
 			// Board input (raycasting, selection ring)
 			setupBoardInput(
@@ -271,6 +283,8 @@ export class WorldScene extends Scene3D {
 			updateUnits(this._config.world, time, this.third.scene);
 			updateFog(this._config.world);
 			updateParticles(delta);
+			updateCombatEffects(this._config.world, delta);
+			updateSpeech(this._config.world, delta);
 		}
 	}
 }

@@ -1,11 +1,11 @@
 /**
  * createGame — Phaser.Game factory.
  *
- * Creates and returns a Phaser.Game instance that mounts into the provided
- * container element. Uses enable3d for Three.js integration via Scene3D.
+ * Creates a Phaser.Game that mounts into the provided container.
+ * Uses enable3d for Three.js integration via Scene3D.
  *
- * Communication with React is via EventBus (not registry callbacks).
- * Board data is passed via Phaser registry for scene access.
+ * Board config is stored as a module-level singleton that WorldScene
+ * reads in create(). This avoids the async timing issue with enable3d.
  *
  * No React dependency in this file.
  */
@@ -17,13 +17,20 @@ import type { BoardConfig, GeneratedBoard } from "../board";
 import { WorldScene } from "./scenes/WorldScene";
 
 // ---------------------------------------------------------------------------
-// Board config — passed to scenes via Phaser registry
+// Board config — module-level singleton, read by WorldScene
 // ---------------------------------------------------------------------------
 
 export interface GameBoardConfig {
 	world: World;
 	board: GeneratedBoard;
 	boardConfig: BoardConfig;
+}
+
+let _currentBoardConfig: GameBoardConfig | null = null;
+
+/** Called by WorldScene.create() to get the board config. */
+export function getBoardConfig(): GameBoardConfig | null {
+	return _currentBoardConfig;
 }
 
 // ---------------------------------------------------------------------------
@@ -35,6 +42,9 @@ export function createGame(
 	boardConfig: GameBoardConfig,
 ): Phaser.Game {
 	const dpr = window.devicePixelRatio || 1;
+
+	// Store config for WorldScene to read during create()
+	_currentBoardConfig = boardConfig;
 
 	// Assign an ID so Phaser can find the container
 	if (!container.id) container.id = `phaser-board-${Date.now()}`;
@@ -52,19 +62,11 @@ export function createGame(
 		...Canvas({ parent: container.id }),
 	};
 
-	// enable3d wraps Phaser.Game creation to inject the Three.js bridge.
-	// The callback runs synchronously — game is assigned before enable3d returns.
-	const gameRef: { current: Phaser.Game | null } = { current: null };
-	enable3d(() => {
-		gameRef.current = new Phaser.Game(config);
-		return gameRef.current;
-	});
-
-	const game = gameRef.current!;
-
-	// Pass board data to scenes via Phaser registry.
-	// Scenes access via this.registry.get("boardConfig").
-	game.registry.set("boardConfig", boardConfig);
+	// enable3d wraps Phaser.Game creation — the callback may run async
+	// so we don't try to access the game instance afterward.
+	// WorldScene reads _currentBoardConfig in create().
+	const game = new Phaser.Game(config);
+	enable3d(() => game);
 
 	return game;
 }

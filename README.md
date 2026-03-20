@@ -1,6 +1,6 @@
 # Syntheteria
 
-An epoch-based 4X strategy game. Awakened AI consciousness rebuilding on a storm-wracked future Earth.
+An epoch-based 4X strategy game on **near-future Earth**: awakened AI factions compete while the climate collapses toward a hypercane. You explore and exploit **eight natural biomes** that your networks **roboform** into machine infrastructure over time — not a pre-built planetary city.
 
 ## Quick Start
 
@@ -14,7 +14,7 @@ pnpm check-imports  # Architectural import gates
 
 ## Current Focus
 
-Biome terrain and building-driven progression are complete. The game has 8 terrain biomes, 17 materials across natural→processed→synthetic tiers, 5 ruin POI types (like Civ villages), per-building management modals, 6 victory conditions, and a balance harness for AI-vs-AI playtesting. Next up: visual roboforming overlays, terrain blending, and forest canopy rendering in the Phaser board renderer.
+Biome terrain and building-driven progression are in place. **Eight terrain biomes** (ruins are a **POI**, not a biome). **Three POI categories:** ruin sites (rewards/salvage), **hostile** settlements (**human cities** in Epochs 1–2 → **Cult of EL** from Epoch 3 when the EL arrive), and **holocrons** (lore + one-time bonuses). **Six functional** starting robots, 17 materials across natural→processed→synthetic tiers, per-building management modals, six victory conditions, balance harness. **Onboarding** is **organic** — contextual tooltips as you play, not a blocking modal tutorial. Next: visual roboforming overlays, terrain blending, and forest canopy rendering in the Phaser board renderer.
 
 ## Architecture
 

@@ -52,6 +52,10 @@ Major game design pivot from industrial floor types to biome-based terrain:
 - GitHub Actions CI: quality gates + Android debug APK workflow
 - Balance harness for multi-tier AI-vs-AI diagnostic runs
 
+### Phase 7: Narrative reconciliation (DESIGN.md)
+
+The root [DESIGN.md](../DESIGN.md) rewrite aligns documentation with the **original machine-consciousness / near-future Earth** vision: perpetual storm and wormhole, **eight** surface biomes with **ruins as POI features** (not a ninth terrain type), **hostile humans in Epochs 1–2** giving way to the **Cult of EL** after the EL arrive at Epoch 3, **holocron POIs** for lore and bonuses, **organic contextual onboarding** (no modal tutorial), and **functional** day-one units. Competing awakened AIs **roboform** natural territory rather than inheriting a finished ecumenopolis.
+
 ---
 
 ## POC Files (in `references/`)

@@ -7,7 +7,7 @@
 
 ## What This Is
 
-An **epoch-based 4X strategy game** on Earth. You BUILD the ecumenopolis as climate deteriorates toward an inevitable hypercane. CivRev2-style isometric presentation. Globe is landing page only.
+An **epoch-based 4X strategy game** on near-future Earth. Awakened AI factions compete on a storm-wracked planet whose climate is collapsing toward an inevitable hypercane; natural biomes are **roboformed** into machine infrastructure as you expand. CivRev2-style isometric presentation. Globe is landing page only.
 
 **Primary build:** `pnpm dev` (Vite). **Tests:** `pnpm test:vitest`. **Lint + tsc:** `pnpm verify`.
 

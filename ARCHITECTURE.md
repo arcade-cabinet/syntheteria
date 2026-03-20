@@ -52,7 +52,9 @@ Scene3D (Phaser + enable3d) renders the match board with vertex-colored flat-sha
 **Fog:** `FogExp2(0x050a0f, 0.012)` — near-black blue, very low density.
 **Tone mapping:** NONE — ACESFilmic washes out saturated accent colors.
 
-**Biome colors (8 types):**
+**Biome colors (8 terrain types):**
+
+Ruins are a **POI category** (salvage, lore-adjacent discovery), not a biome — see Points of Interest below.
 
 | Biome | Color | Character |
 |-------|-------|-----------|
@@ -64,23 +66,30 @@ Scene3D (Phaser + enable3d) renders the match board with vertex-colored flat-sha
 | Hills | `#8d6e63` | Elevated terrain, defensive bonus |
 | Wetland | `#00695c` | Marshy, slow traversal |
 | Tundra | `#b0bec5` | Cold, sparse resources |
-| Ruins | `#546e7a` | Machine debris, rich salvage |
 
-**Roboforming (5-level progression):**
+**Roboforming** turns natural tiles into machine infrastructure (three visual tiers; natural Earth is the baseline before transformation):
 
 | Level | Name | Visual |
 |-------|------|--------|
-| 0 | Natural | Original biome colors |
-| 1 | Graded | Desaturated earth tones |
+| 1 | Graded | Desaturated earth tones, cleared surface |
 | 2 | Paved | Grey concrete with gridlines |
-| 3 | Plated | Steel grey + faction accent |
-| 4 | Armored | Dark alloy + glowing faction trim |
+| 3 | Plated | Steel grey with faction accent trim |
 
-Transitions use vertex color interpolation — a tile at level 2.5 blends between Paved and Plated.
+Vertex color interpolation blends between tiers during transitions.
+
+**Points of interest (three categories, placed at generation time):**
+
+| Category | Role |
+|----------|------|
+| **Ruins** | Positive discovery — salvage, resources, occasional unit recovery |
+| **Hostile** | Human cities (Epochs 1–2) → **Cult of EL** structures (Epoch 3+, when the EL arrive); primary organic antagonist pipeline |
+| **Holocrons** | Lore fragments + one-time gameplay bonuses (weather intel, scan buffs, POI reveals, etc.) |
+
+**Antagonist arc:** Hostile human cities fear machine intelligence and attack in early epochs; at Epoch 3 the EL transit the wormhole and surviving human threats transform into cult-aligned POIs — same mechanical layers, escalated danger.
 
 **Camera:** Orthographic isometric — drag-pan, scroll-zoom, WASD rotate. No perspective distortion.
 
-**Models:** GLB at 2.5x scale, bob-and-weave procedural animation (Wall-E style). No faction tint on meshes — faction identity via ground disc and UI labels.
+**Models:** ~**212** GLB assets in `public/assets/` (see `src/config/models.ts`); rendered at 2.5x scale with bob-and-weave procedural animation (Wall-E style). No faction tint on meshes — faction identity via ground disc and UI labels.
 
 ### React Owns the UI
 
@@ -207,7 +216,7 @@ Replaces the legacy Research Lab — a passive network accelerator:
 |------|-------|-----------|
 | Natural | 8 | stone, timber, iron_ore, copper_ore, clay, sand, herbs, fiber |
 | Processed | 5 | ferrous_alloy, polymer_sheet, silicon_wafer, conductor_wire, electrolyte |
-| Synthetic | 4 | alloy_stock, storm_charge, el_crystal, quantum_substrate |
+| Synthetic | 4 | alloy_stock, storm_charge, el_crystal, quantum_crystal |
 
 - **Biomes yield natural resources** — grassland→herbs, mountain→stone/iron_ore, forest→timber
 - **Synthesizer converts** natural→processed→synthetic
@@ -238,9 +247,11 @@ Each faction has character biases that combine with FSM multipliers:
 | Signal Choir | Expansionist — scout + expand |
 | Iron Creed | Aggressive — attack focused |
 
-### Cult AI
+### Hostile humans and Cult AI
 
-Three sects with distinct GOAP behaviors:
+**Epochs 1–2:** Hostile **human** cities use the same spawn/AI scaffolding as later cult forces (different visuals/names). **Epoch 3+:** The EL arrive; surviving human POIs flip to **Cult of EL** structures with sect behaviors below.
+
+Three cult sects with distinct GOAP behaviors:
 
 | Sect | Style | Special |
 |------|-------|---------|
@@ -250,6 +261,8 @@ Three sects with distinct GOAP behaviors:
 
 Escalation: Wanderer → War Party → Assault (based on turn count and faction strength).
 Time-based mutation: tiers 0-3 over 21+ turns, culminating in aberrant mini-bosses.
+
+**Onboarding:** Organic first ~10 turns — contextual tooltips (no modal tutorial), triggered once per concept when the player naturally hits each beat (move, harvest, hostile, build, relay, epoch).
 
 ---
 

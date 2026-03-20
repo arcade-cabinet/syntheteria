@@ -2,6 +2,20 @@
 
 ## Current State (2026-03-20)
 
+### DESIGN.md rewrite (latest)
+
+Single-source design doc reconciled with the **near-future Earth** pitch: awakened machine minds, perpetual storm, wormhole eye — not a far-future ecumenopolis city-cover as the default framing.
+
+| Topic | Canon |
+|-------|--------|
+| Setting | Near-future Earth; natural **8 biomes** (grassland → tundra); **ruins are a POI type**, not terrain |
+| POIs | **Three categories:** ruins (positive), hostile (human → cult), holocrons (lore + one-time bonus) |
+| Epochs | **1–2:** hostile **human** cities · **3+:** **Cult of EL** after EL arrival |
+| Onboarding | **Organic** — contextual tooltips on first encounter; **no modal tutorial** |
+| Starting units | **Six functional** robot classes at game start (not a broken-repair loop) |
+
+Root docs ([AGENTS.md](AGENTS.md), [README.md](README.md), [ARCHITECTURE.md](ARCHITECTURE.md), this file, [references/HISTORY.md](references/HISTORY.md)) updated to match.
+
 ### Metrics
 
 | Metric | Value |
@@ -20,8 +34,10 @@
 
 ### Design Overhaul (Phase 11)
 
-- **Biome terrain** — 8 types (grassland, forest, mountain, water, desert, hills, wetland, tundra) replacing industrial floor types
+- **Biome terrain** — **8** types (grassland, forest, mountain, water, desert, hills, wetland, tundra) replacing industrial floor types — **not 9**; no “ruins” terrain tile
 - **Ruin POIs** — 5 ruin types (depot, factory, outpost, research, military) as discoverable map features, not a biome
+- **Hostile POIs** — human cities (Epochs 1–2), cult structures (Epoch 3+); **holocron POIs** — lore + gameplay bonuses
+- **Organic tutorial** — contextual first-run tooltips (no modal onboarding)
 - **Natural→processed→synthetic resource taxonomy** — 17 materials across 3 tiers
 - **Building-driven progression** — tier 1-3 upgrades per building, replaces centralized tech tree
 - **Building→building unlock chains** — prerequisite system gates construction

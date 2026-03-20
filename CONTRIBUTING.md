@@ -61,3 +61,7 @@ See [AGENTS.md](AGENTS.md) for the full package map and rules.
 ## Architecture
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full technical reference.
+
+## Game design
+
+Canonical setting, epochs, POI model, and onboarding live in [DESIGN.md](DESIGN.md) — **near-future Earth**, eight biomes, human→cult antagonist arc, holocrons, organic tooltips.

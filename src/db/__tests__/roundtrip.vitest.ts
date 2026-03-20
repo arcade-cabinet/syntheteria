@@ -20,7 +20,7 @@ import {
 	UnitVisual,
 } from "../../traits";
 import type { SqliteAdapter } from "../adapter";
-import { createSqlJsAdapter } from "../adapter";
+import { createTestAdapter } from "../adapter";
 import { GameRepo } from "../gameRepo";
 import { runMigrations } from "../migrations";
 import {
@@ -38,7 +38,7 @@ let db: SqliteAdapter;
 let repo: GameRepo;
 
 beforeEach(async () => {
-	db = await createSqlJsAdapter();
+	db = await createTestAdapter();
 	await runMigrations(db);
 	repo = new GameRepo(db);
 });

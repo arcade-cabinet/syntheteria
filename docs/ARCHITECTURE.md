@@ -272,7 +272,7 @@ Pure TypeScript Phaser scene and renderers. No React dependency.
 |------|---------|
 | `schema.ts` | `meta`, `games`, `tiles`, `tile_resources`, `units`, `buildings`, `events` |
 | `migrations.ts` | Run pending schema migrations |
-| `adapter.ts` | `SqliteAdapter` interface + `createSqlJsAdapter()` |
+| `adapter.ts` | `SqliteAdapter` interface + `createTestAdapter()` (test-only sql.js) |
 | `gameRepo.ts` | `GameRepo`: `createGame`, `saveTiles`, `listGames`, `getGame`, `loadTiles` |
 | `serialize.ts` | World state ↔ DB serialization |
 | `types.ts` | `GameRecord`, `GameSummary`, `TileRecord`, `UnitRecord` |

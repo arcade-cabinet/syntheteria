@@ -11,7 +11,7 @@ import { playSfx } from "../audio/sfx";
 import { TILE_SIZE_M } from "../board/grid";
 import { getCameraControls } from "../camera/cameraStore";
 import { PLAYER_MAX_AP } from "../config/gameDefaults";
-import { createSqlJsAdapter } from "../db/adapter";
+import { createCapacitorAdapter, initCapacitorSqlite } from "../db";
 import { GameRepo } from "../db/gameRepo";
 import { runMigrations } from "../db/migrations";
 import type { GameSummary } from "../db/types";
@@ -154,7 +154,8 @@ export function App() {
 		let cancelled = false;
 		async function init() {
 			try {
-				const db = await createSqlJsAdapter();
+				await initCapacitorSqlite();
+				const db = await createCapacitorAdapter();
 				await runMigrations(db);
 				if (cancelled) return;
 				const repo = new GameRepo(db);

@@ -6,7 +6,11 @@
 
 export type { SqliteAdapter } from "./adapter";
 // --- Adapter ---
-export { createSqlJsAdapter } from "./adapter";
+export { createTestAdapter } from "./adapter";
+export {
+	createCapacitorAdapter,
+	initCapacitorSqlite,
+} from "./capacitorAdapter";
 
 // --- Repository ---
 export { GameRepo } from "./gameRepo";

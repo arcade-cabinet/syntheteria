@@ -5,10 +5,13 @@
  * All app logic lives in src/app/.
  */
 
+import { defineCustomElements as jeepSqlite } from "jeep-sqlite/loader";
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
 import { FatalErrorGate } from "./ui";
 import "@root/global.css";
+
+jeepSqlite(window);
 
 if (import.meta.hot) {
 	import.meta.hot.accept();

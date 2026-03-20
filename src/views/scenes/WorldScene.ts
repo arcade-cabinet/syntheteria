@@ -1,27 +1,57 @@
 /**
  * WorldScene — Scene3D for the isometric game board.
  *
- * This is the main Phaser scene that renders terrain, units, buildings,
- * fog of war, and handles camera/input. Uses enable3d's Scene3D for
- * Three.js integration.
+ * Orchestrates all Phaser renderers: terrain, units, buildings, salvage,
+ * structures, fog, highlights, territory, particles.
+ * Handles camera (ortho isometric) and input (drag-pan, scroll-zoom, WASD).
  *
  * Pattern from poc-roboforming.html — proven working.
+ * NO React — pure Phaser/Three.js.
  */
 
 import { Scene3D } from "@enable3d/phaser-extension";
 import * as THREE from "three";
 import type { GameBoardConfig } from "../createGame";
 import { EventBus } from "../eventBus";
+import { setupBoardInput } from "../input/boardInput";
 import { setupWorldLighting } from "../lighting/worldLighting";
-import { buildTerrainMesh } from "../renderers/terrainRenderer";
+import { buildTerrainMesh, TILE_SIZE } from "../renderers/terrainRenderer";
+import {
+	createUnitRenderer,
+	updateUnits,
+} from "../renderers/unitRenderer";
+import {
+	createBuildingRenderer,
+} from "../renderers/buildingRenderer";
+import {
+	createSalvageRenderer,
+} from "../renderers/salvageRenderer";
+import {
+	createStructureRenderer,
+} from "../renderers/structureRenderer";
+import {
+	createFogRenderer,
+	updateFog,
+} from "../renderers/fogRenderer";
+import {
+	createHighlightRenderer,
+} from "../renderers/highlightRenderer";
+import {
+	createTerritoryRenderer,
+	updateTerritory,
+} from "../renderers/territoryRenderer";
+import {
+	createParticleRenderer,
+	updateParticles,
+} from "../renderers/particleRenderer";
 
 export class WorldScene extends Scene3D {
 	private _camTarget = new THREE.Vector3();
-	private _camOffset = new THREE.Vector3();
 	private _zoomLevel = 30;
 	private _rotAngle = Math.PI / 4;
 	private _isDragging = false;
 	private _dragPrev = { x: 0, y: 0 };
+	private _config: GameBoardConfig | null = null;
 
 	constructor() {
 		super({ key: "WorldScene" });
@@ -32,30 +62,59 @@ export class WorldScene extends Scene3D {
 	}
 
 	create(): void {
-		// Disable default enable3d ground and orbit controls
 		this.third.warpSpeed("-ground", "-orbitControls");
 
 		const scene = this.third.scene;
 		scene.background = new THREE.Color(0x050a0f);
 
-		// Lighting from POC recipe
 		setupWorldLighting(scene);
-
-		// Orthographic isometric camera
 		this.setupCamera();
-
-		// Input: drag-pan, scroll-zoom
 		this.setupInput();
 
-		// Read board config from registry
 		const config = this.registry.get("boardConfig") as
 			| GameBoardConfig
 			| undefined;
+
 		if (config) {
-			this.buildTerrain(config);
+			this._config = config;
+			const { world, board, boardConfig } = config;
+
+			// Terrain
+			const terrainGroup = buildTerrainMesh(board);
+			scene.add(terrainGroup);
+
+			// Center camera
+			const centerX = (boardConfig.width * TILE_SIZE) / 2;
+			const centerZ = (boardConfig.height * TILE_SIZE) / 2;
+			this._camTarget.set(centerX, 0, centerZ);
+
+			// Units, buildings, salvage, structures
+			createUnitRenderer(scene, world);
+			createBuildingRenderer(scene, world);
+			createSalvageRenderer(scene, world);
+			createStructureRenderer(scene, world, board);
+
+			// Fog of war
+			createFogRenderer(scene, world);
+
+			// Overlays
+			createHighlightRenderer(scene);
+			createTerritoryRenderer(scene);
+			updateTerritory(world, boardConfig.width, boardConfig.height);
+
+			// Particles
+			createParticleRenderer(scene);
+
+			// Board input (raycasting, selection ring)
+			setupBoardInput(
+				this,
+				scene,
+				this.third.camera,
+				boardConfig.width,
+				boardConfig.height,
+			);
 		}
 
-		// Notify React that the scene is ready
 		EventBus.emit("scene-ready", this);
 	}
 
@@ -72,7 +131,6 @@ export class WorldScene extends Scene3D {
 			500,
 		);
 
-		// Initial isometric position
 		const dist = 80;
 		const tilt = Math.PI / 5.2;
 		cam.position.set(
@@ -84,7 +142,6 @@ export class WorldScene extends Scene3D {
 		cam.updateProjectionMatrix();
 
 		this.third.camera = cam;
-		this._camOffset = cam.position.clone().sub(this._camTarget);
 	}
 
 	private updateCamera(): void {
@@ -92,7 +149,6 @@ export class WorldScene extends Scene3D {
 		if (!cam || !("isOrthographicCamera" in cam)) return;
 		const orthoCam = cam as THREE.OrthographicCamera;
 
-		// WASD rotation/zoom
 		if (this.input.keyboard) {
 			const left = this.input.keyboard.addKey("A");
 			const right = this.input.keyboard.addKey("D");
@@ -100,10 +156,8 @@ export class WorldScene extends Scene3D {
 			const zoomOut = this.input.keyboard.addKey("S");
 			if (left.isDown) this._rotAngle += 0.015;
 			if (right.isDown) this._rotAngle -= 0.015;
-			if (zoomIn.isDown)
-				this._zoomLevel = Math.max(10, this._zoomLevel - 0.5);
-			if (zoomOut.isDown)
-				this._zoomLevel = Math.min(60, this._zoomLevel + 0.5);
+			if (zoomIn.isDown) this._zoomLevel = Math.max(10, this._zoomLevel - 0.5);
+			if (zoomOut.isDown) this._zoomLevel = Math.min(60, this._zoomLevel + 0.5);
 		}
 
 		const aspect = this.scale.width / this.scale.height;
@@ -116,11 +170,9 @@ export class WorldScene extends Scene3D {
 		const dist = 80;
 		const tilt = Math.PI / 5.2;
 		orthoCam.position.set(
-			this._camTarget.x +
-				dist * Math.cos(tilt) * Math.sin(this._rotAngle),
+			this._camTarget.x + dist * Math.cos(tilt) * Math.sin(this._rotAngle),
 			dist * Math.sin(tilt),
-			this._camTarget.z +
-				dist * Math.cos(tilt) * Math.cos(this._rotAngle),
+			this._camTarget.z + dist * Math.cos(tilt) * Math.cos(this._rotAngle),
 		);
 		orthoCam.lookAt(this._camTarget);
 	}
@@ -128,7 +180,6 @@ export class WorldScene extends Scene3D {
 	// ---- Input ----
 
 	private setupInput(): void {
-		// Drag to pan
 		this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
 			this._isDragging = true;
 			this._dragPrev.x = pointer.x;
@@ -146,11 +197,8 @@ export class WorldScene extends Scene3D {
 			this._dragPrev.y = pointer.y;
 		});
 
-		this.input.on("pointerup", () => {
-			this._isDragging = false;
-		});
+		this.input.on("pointerup", () => { this._isDragging = false; });
 
-		// Scroll to zoom
 		this.input.on(
 			"wheel",
 			(
@@ -159,30 +207,20 @@ export class WorldScene extends Scene3D {
 				_deltaX: number,
 				deltaY: number,
 			) => {
-				this._zoomLevel = Math.max(
-					10,
-					Math.min(60, this._zoomLevel + deltaY * 0.02),
-				);
+				this._zoomLevel = Math.max(10, Math.min(60, this._zoomLevel + deltaY * 0.02));
 			},
 		);
 	}
 
-	// ---- Terrain ----
-
-	private buildTerrain(config: GameBoardConfig): void {
-		const terrainGroup = buildTerrainMesh(config.board);
-		this.third.scene.add(terrainGroup);
-
-		// Center camera on board
-		const { width, height } = config.boardConfig;
-		const centerX = (width * 2) / 2; // TILE_SIZE = 2
-		const centerZ = (height * 2) / 2;
-		this._camTarget.set(centerX, 0, centerZ);
-	}
-
 	// ---- Update Loop ----
 
-	update(_time: number, _delta: number): void {
+	update(time: number, delta: number): void {
 		this.updateCamera();
+
+		if (this._config) {
+			updateUnits(this._config.world, time, this.third.scene);
+			updateFog(this._config.world);
+			updateParticles(delta);
+		}
 	}
 }

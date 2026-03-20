@@ -13,9 +13,15 @@ import { Scene3D } from "@enable3d/phaser-extension";
 import * as THREE from "three";
 import type { CameraControls } from "../../camera";
 import { registerCameraControls, unregisterCameraControls } from "../../camera";
+import { computeEpoch } from "../../config";
+import { getCurrentTurn } from "../../systems";
 import { type GameBoardConfig, getBoardConfig } from "../createGame";
 import { EventBus } from "../eventBus";
 import { setupBoardInput } from "../input/boardInput";
+import {
+	applyEpochAtmosphere,
+	resetEpochAtmosphere,
+} from "../lighting/epochAtmosphere";
 import { setupWorldLighting } from "../lighting/worldLighting";
 import { createBuildingRenderer } from "../renderers/buildingRenderer";
 import {
@@ -24,10 +30,16 @@ import {
 } from "../renderers/combatEffects";
 import { createFogRenderer, updateFog } from "../renderers/fogRenderer";
 import { createHighlightRenderer } from "../renderers/highlightRenderer";
+import { createOceanRenderer, updateOcean } from "../renderers/oceanRenderer";
 import {
 	createParticleRenderer,
 	updateParticles,
 } from "../renderers/particleRenderer";
+import {
+	createRoboformOverlay,
+	destroyRoboformOverlay,
+	updateRoboformOverlay,
+} from "../renderers/roboformOverlay";
 import { createSalvageRenderer } from "../renderers/salvageRenderer";
 import {
 	createSpeechRenderer,
@@ -40,6 +52,7 @@ import {
 	updateTerritory,
 } from "../renderers/territoryRenderer";
 import { createUnitRenderer, updateUnits } from "../renderers/unitRenderer";
+import { createVegetationRenderer } from "../renderers/vegetationRenderer";
 
 export class WorldScene extends Scene3D {
 	private _camTarget = new THREE.Vector3();
@@ -90,6 +103,12 @@ export class WorldScene extends Scene3D {
 			createBuildingRenderer(scene, world);
 			createSalvageRenderer(scene, world);
 			createStructureRenderer(scene, world, board);
+
+			// Vegetation (bio_district canopy blobs + accent trees)
+			createVegetationRenderer(scene, board);
+
+			// Ocean (animated deep water + abyssal_platform grating)
+			createOceanRenderer(scene, board);
 
 			// Fog of war
 			createFogRenderer(scene, world);
@@ -273,6 +292,7 @@ export class WorldScene extends Scene3D {
 		if (this._config) {
 			updateUnits(this._config.world, time, this.third.scene);
 			updateFog(this._config.world);
+			updateOcean(time);
 			updateParticles(delta);
 			updateCombatEffects(this._config.world, delta);
 			updateSpeech(this._config.world, delta);

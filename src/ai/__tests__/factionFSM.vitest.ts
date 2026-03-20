@@ -46,11 +46,16 @@ describe("FactionFSM", () => {
 		expect(fsm.currentStateId).toBe("EXPLORE");
 	});
 
-	it("EXPLORE → EXPAND at turn 8", () => {
-		fsm.update(makeCtx({ currentTurn: 7 }));
+	it("EXPLORE → EXPAND at turn 6", () => {
+		fsm.update(makeCtx({ currentTurn: 5 }));
 		expect(fsm.currentStateId).toBe("EXPLORE");
 
-		fsm.update(makeCtx({ currentTurn: 8 }));
+		fsm.update(makeCtx({ currentTurn: 6 }));
+		expect(fsm.currentStateId).toBe("EXPAND");
+	});
+
+	it("EXPLORE → EXPAND when enemy contacted", () => {
+		fsm.update(makeCtx({ currentTurn: 3, enemyFactionContacted: true }));
 		expect(fsm.currentStateId).toBe("EXPAND");
 	});
 
@@ -69,15 +74,15 @@ describe("FactionFSM", () => {
 		fsm.update(makeCtx({ currentTurn: 10 }));
 		expect(fsm.currentStateId).toBe("EXPAND");
 
-		// Needs enemy contact AND 6+ units, or turn 40+ with 5+
+		// Needs enemy contact AND 5+ units, or turn 30+ with 4+
 		fsm.update(
-			makeCtx({ currentTurn: 15, unitCount: 5, enemyFactionContacted: true }),
+			makeCtx({ currentTurn: 15, unitCount: 4, enemyFactionContacted: true }),
 		);
 		expect(fsm.currentStateId).toBe("EXPAND");
 
-		// 6+ units + enemy contacted → ATTACK
+		// 5+ units + enemy contacted → ATTACK
 		fsm.update(
-			makeCtx({ currentTurn: 15, unitCount: 6, enemyFactionContacted: true }),
+			makeCtx({ currentTurn: 15, unitCount: 5, enemyFactionContacted: true }),
 		);
 		expect(fsm.currentStateId).toBe("ATTACK");
 	});
@@ -95,29 +100,29 @@ describe("FactionFSM", () => {
 		fsm.update(makeCtx({ nearbyThreats: 3 }));
 		expect(fsm.currentStateId).toBe("FORTIFY");
 
-		// Threats cleared, units rebuilt
-		fsm.update(makeCtx({ nearbyThreats: 0, unitCount: 6 }));
+		// Threats cleared, units rebuilt (4+ needed)
+		fsm.update(makeCtx({ nearbyThreats: 0, unitCount: 4 }));
 		expect(fsm.currentStateId).toBe("EXPAND");
 	});
 
 	it("FORTIFY → ATTACK when threats gone and attack conditions met", () => {
 		// Get to FORTIFY
-		fsm.update(makeCtx({ nearbyThreats: 3, currentTurn: 30 }));
+		fsm.update(makeCtx({ nearbyThreats: 3, currentTurn: 25 }));
 		expect(fsm.currentStateId).toBe("FORTIFY");
 
-		// Threats gone, can attack (5+ units is enough due to the 25+ turn trigger)
+		// Threats gone, can attack (4+ units with turn 20+ and enemy contacted)
 		fsm.update(
 			makeCtx({
 				nearbyThreats: 0,
-				unitCount: 6,
-				currentTurn: 30,
+				unitCount: 5,
+				currentTurn: 25,
 				enemyFactionContacted: true,
 			}),
 		);
 		expect(fsm.currentStateId).toBe("ATTACK");
 	});
 
-	it("ATTACK → RETREAT when units < 3", () => {
+	it("ATTACK → RETREAT when units < 2", () => {
 		// Get to ATTACK
 		fsm.update(makeCtx({ currentTurn: 10 })); // → EXPAND
 		fsm.update(
@@ -125,19 +130,19 @@ describe("FactionFSM", () => {
 		); // → ATTACK
 		expect(fsm.currentStateId).toBe("ATTACK");
 
-		fsm.update(makeCtx({ currentTurn: 50, unitCount: 2 }));
+		fsm.update(makeCtx({ currentTurn: 50, unitCount: 1 }));
 		expect(fsm.currentStateId).toBe("RETREAT");
 	});
 
-	it("ATTACK → EXPAND when units drop to 3", () => {
+	it("ATTACK → EXPAND when units drop to 2", () => {
 		fsm.update(makeCtx({ currentTurn: 10 }));
 		fsm.update(
 			makeCtx({ currentTurn: 15, unitCount: 10, enemyFactionContacted: true }),
 		);
 		expect(fsm.currentStateId).toBe("ATTACK");
 
-		// Units drop to 3 — just below the attack threshold
-		fsm.update(makeCtx({ currentTurn: 50, unitCount: 3 }));
+		// Units drop to 2 — below the attack hold threshold
+		fsm.update(makeCtx({ currentTurn: 50, unitCount: 2 }));
 		expect(fsm.currentStateId).toBe("EXPAND");
 	});
 
@@ -186,7 +191,7 @@ describe("FactionFSM bias overrides", () => {
 		const bias = fsm.getBias();
 		expect(bias.scout).toBeGreaterThan(1);
 		expect(bias.expand).toBeGreaterThan(1);
-		expect(bias.attack).toBeLessThanOrEqual(1);
+		expect(bias.attack).toBeGreaterThanOrEqual(1);
 	});
 
 	it("ATTACK state boosts attack and chase", () => {

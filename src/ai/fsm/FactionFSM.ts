@@ -87,17 +87,18 @@ interface FactionState {
 const EXPLORE_STATE: FactionState = {
 	getBias: () => ({
 		...NEUTRAL_BIAS,
-		scout: 1.8,
-		expand: 1.4,
+		scout: 2.0,
+		expand: 1.5,
 		harvest: 1.2,
-		attack: 1.0,
-		chase: 0.8,
-		idle: 0.3,
+		attack: 1.2,
+		chase: 1.0,
+		idle: 0.2,
 	}),
 	checkTransition(ctx) {
 		if (ctx.unitCount < 3) return "RETREAT";
 		if (ctx.nearbyThreats >= 3) return "FORTIFY";
-		if (ctx.currentTurn >= 8) return "EXPAND";
+		if (ctx.enemyFactionContacted) return "EXPAND";
+		if (ctx.currentTurn >= 6) return "EXPAND";
 		return null;
 	},
 };
@@ -117,11 +118,10 @@ const EXPAND_STATE: FactionState = {
 	checkTransition(ctx) {
 		if (ctx.unitCount < 3) return "RETREAT";
 		if (ctx.nearbyThreats >= 3) return "FORTIFY";
-		// Transition to ATTACK early: 6+ units and enemy contacted, or turn 40+ regardless
-		if (ctx.enemyFactionContacted && ctx.unitCount >= 6) {
+		if (ctx.enemyFactionContacted && ctx.unitCount >= 5) {
 			return "ATTACK";
 		}
-		if (ctx.currentTurn >= 40 && ctx.unitCount >= 5) {
+		if (ctx.currentTurn >= 30 && ctx.unitCount >= 4) {
 			return "ATTACK";
 		}
 		return null;
@@ -141,15 +141,13 @@ const FORTIFY_STATE: FactionState = {
 	}),
 	checkTransition(ctx) {
 		if (ctx.unitCount < 3) return "RETREAT";
-		// De-escalate if threats gone and enough units
-		if (ctx.nearbyThreats === 0 && ctx.unitCount >= 5) {
-			if (ctx.currentTurn >= 25 && ctx.enemyFactionContacted) {
+		if (ctx.nearbyThreats === 0 && ctx.unitCount >= 4) {
+			if (ctx.currentTurn >= 20 && ctx.enemyFactionContacted) {
 				return "ATTACK";
 			}
 			return "EXPAND";
 		}
-		// Overwhelming force — go on the offensive even with threats
-		if (ctx.unitCount >= 8 && ctx.enemyFactionContacted) return "ATTACK";
+		if (ctx.unitCount >= 6 && ctx.enemyFactionContacted) return "ATTACK";
 		return null;
 	},
 };
@@ -157,20 +155,19 @@ const FORTIFY_STATE: FactionState = {
 const ATTACK_STATE: FactionState = {
 	getBias: () => ({
 		...NEUTRAL_BIAS,
-		attack: 2.0,
-		chase: 1.8,
-		expand: 1.2,
-		scout: 0.6,
-		harvest: 0.6,
-		build: 0.7,
-		evade: 0.4,
-		idle: 0.1,
+		attack: 2.5,
+		chase: 2.2,
+		expand: 1.0,
+		scout: 0.5,
+		harvest: 0.5,
+		build: 0.6,
+		evade: 0.3,
+		idle: 0.05,
 	}),
 	checkTransition(ctx) {
-		if (ctx.unitCount < 3) return "RETREAT";
-		if (ctx.nearbyThreats >= 5 && ctx.unitCount <= 5) return "FORTIFY";
-		// Fall back to expand only if army is quite small
-		if (ctx.unitCount < 4) return "EXPAND";
+		if (ctx.unitCount < 2) return "RETREAT";
+		if (ctx.nearbyThreats >= 5 && ctx.unitCount <= 4) return "FORTIFY";
+		if (ctx.unitCount < 3) return "EXPAND";
 		return null;
 	},
 };

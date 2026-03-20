@@ -27,19 +27,16 @@ import {
 export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	calculateDesirability(agent: SyntheteriaAgent): number {
 		const _ctx = getTurnContext();
-		// Logistic time ramp: smooth curve from 0.5 early to 0.9 late
 		const timeScore = 0.5 + 0.4 * logistic(_ctx.currentTurn, 10, 0.3);
 
-		// If faction hasn't expanded recently (no buildings growing), escalate
 		const stagnationBonus =
-			_ctx.factionBuildingCount < 4 && _ctx.currentTurn > 15 ? 0.1 : 0;
+			_ctx.factionBuildingCount < 4 && _ctx.currentTurn > 10 ? 0.15 : 0;
 
-		// Late game with no enemies: high urgency to find rivals
 		const seekEnemyBonus =
 			_ctx.enemies.length === 0 &&
 			_ctx.rememberedEnemies.length === 0 &&
-			_ctx.currentTurn > 20
-				? 0.15
+			_ctx.currentTurn > 12
+				? 0.2
 				: 0;
 
 		return Math.min(
@@ -192,24 +189,19 @@ export class ScoutEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 				manhattan(agent.tileX, agent.tileZ, d.x, d.z) <= agent.scanRange * 2,
 		).length;
 
-		// Smooth time escalation via logistic — scouting becomes important mid-game
-		const timeBoost = 0.4 * logistic(_ctx.currentTurn, 15, 0.2);
+		const timeBoost = 0.4 * logistic(_ctx.currentTurn, 10, 0.25);
 
-		// No enemies ever encountered — urgency to find them
 		const noEnemiesBoost =
 			_ctx.enemies.length === 0 && _ctx.rememberedEnemies.length === 0
-				? 0.3
+				? 0.4
 				: 0;
 
 		let base: number;
 		if (nearbyCount > 0) {
-			// Deposits nearby — scouting only if time-driven or no enemies found
 			base = timeBoost + noEnemiesBoost;
 		} else if (_ctx.totalDeposits === 0) {
-			// No deposits anywhere — light scouting
 			base = 0.15 + timeBoost + noEnemiesBoost;
 		} else {
-			// No nearby deposits but some exist on the board — go find them
 			base = 0.6 + timeBoost + noEnemiesBoost;
 		}
 

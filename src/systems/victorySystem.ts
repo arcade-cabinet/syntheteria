@@ -95,22 +95,25 @@ function isMachineFaction(factionId: string): boolean {
  * Evaluates in order: defeat (elimination), domination, network supremacy,
  * reclamation, transcendence, cult eradication, score (turn cap).
  *
+ * In observerMode, evaluates per-faction instead of player-centric.
+ *
  * @param world - ECS world.
- * @param opts - Optional flags (observerMode skips player defeat check).
+ * @param opts - Optional flags (observerMode evaluates all factions).
  * @returns GameOutcome: playing, victory (with type/winner), or defeat.
  */
 export function checkVictoryConditions(
 	world: World,
 	opts?: { observerMode?: boolean },
 ): GameOutcome {
+	if (opts?.observerMode) {
+		return checkVictoryConditionsObserver(world);
+	}
+
 	const playerFactionId = "player";
 
-	// Defeat check: player must have at least one unit OR one building
-	if (!opts?.observerMode) {
-		const hasPlayerPresence = factionHasPresence(world, playerFactionId);
-		if (!hasPlayerPresence) {
-			return { result: "defeat", reason: "elimination" };
-		}
+	const hasPlayerPresence = factionHasPresence(world, playerFactionId);
+	if (!hasPlayerPresence) {
+		return { result: "defeat", reason: "elimination" };
 	}
 
 	// 1. Domination — all rival machine factions eliminated
@@ -169,6 +172,77 @@ export function checkVictoryConditions(
 	}
 
 	// 6. Score (Turn Cap) — turn reaches threshold (scaled by speed)
+	const turn = getCurrentTurnForVictory(world);
+	if (turn >= speedConfig.turnCap) {
+		const { winnerId, score } = determineScoreWinner(world);
+		return { result: "victory", reason: "score", winnerId, score };
+	}
+
+	return { result: "playing" };
+}
+
+/**
+ * Observer-mode victory check — evaluates each machine faction for victory.
+ * Used by the balance harness where there is no "player" faction.
+ */
+function checkVictoryConditionsObserver(world: World): GameOutcome {
+	const speedConfig = getSpeedConfigFromBoard(world);
+
+	// Collect alive factions (have units OR buildings with hp > 0)
+	const aliveFactions = new Set<string>();
+	for (const e of world.query(UnitFaction)) {
+		const f = e.get(UnitFaction);
+		if (f && isMachineFaction(f.factionId)) aliveFactions.add(f.factionId);
+	}
+	for (const e of world.query(Building)) {
+		const b = e.get(Building);
+		if (b && b.hp > 0 && isMachineFaction(b.factionId))
+			aliveFactions.add(b.factionId);
+	}
+
+	// 1. Domination — only one machine faction survives
+	if (aliveFactions.size === 1) {
+		const winnerId = [...aliveFactions][0];
+		return { result: "victory", reason: "domination", winnerId };
+	}
+
+	// 2. Network Supremacy — any single faction's signal coverage ≥ threshold
+	const scaledNetworkPct =
+		VICTORY_NETWORK_COVERAGE_PERCENT * speedConfig.victoryScaleMultiplier;
+	for (const fid of MACHINE_FACTIONS) {
+		if (!aliveFactions.has(fid)) continue;
+		const coverage = computeFactionSignalCoverage(world, fid);
+		if (coverage >= scaledNetworkPct) {
+			return { result: "victory", reason: "network_supremacy", winnerId: fid };
+		}
+	}
+
+	// 3. Reclamation — any single faction's tiles ≥ threshold
+	const scaledReclamationPct =
+		VICTORY_RECLAMATION_PERCENT * speedConfig.victoryScaleMultiplier;
+	for (const fid of MACHINE_FACTIONS) {
+		if (!aliveFactions.has(fid)) continue;
+		const recPct = computeReclamationPercent(world, fid);
+		if (recPct >= scaledReclamationPct) {
+			return { result: "victory", reason: "reclamation", winnerId: fid };
+		}
+	}
+
+	// 4. Transcendence — wormhole completed (winner = strongest)
+	const wormholeState = getWormholeProjectState();
+	if (wormholeState.status === "completed") {
+		const { winnerId } = determineScoreWinner(world);
+		return { result: "victory", reason: "transcendence", winnerId };
+	}
+
+	// 5. Cult Eradication — all cult structures destroyed (winner = strongest)
+	const cultCount = countCultStructuresAlive(world);
+	if (cultCount === 0 && cultStructuresEverExisted(world)) {
+		const { winnerId } = determineScoreWinner(world);
+		return { result: "victory", reason: "cult_eradication", winnerId };
+	}
+
+	// 6. Score (turn cap) — highest scoring faction
 	const turn = getCurrentTurnForVictory(world);
 	if (turn >= speedConfig.turnCap) {
 		const { winnerId, score } = determineScoreWinner(world);
@@ -250,12 +324,37 @@ function hasAnyRivalFactionEverExisted(world: World): boolean {
 	return false;
 }
 
-/** Signal coverage as % of passable tiles. */
+/** Signal coverage as % of passable tiles (all factions combined). */
 function computeSignalCoveragePercent(world: World): number {
 	const passableTiles = getPassableTileSet(world);
 	if (passableTiles.size === 0) return 0;
 
 	const covered = buildSignalCoverageSet(world);
+	let coveredPassable = 0;
+	for (const key of covered) {
+		if (passableTiles.has(key)) coveredPassable++;
+	}
+	return (coveredPassable / passableTiles.size) * 100;
+}
+
+/** Signal coverage % for a single faction's powered signal nodes. */
+function computeFactionSignalCoverage(world: World, factionId: string): number {
+	const passableTiles = getPassableTileSet(world);
+	if (passableTiles.size === 0) return 0;
+
+	const covered = new Set<string>();
+	for (const e of world.query(Building, SignalNode, Powered)) {
+		const b = e.get(Building);
+		const sn = e.get(SignalNode);
+		if (!b || !sn || sn.range <= 0 || b.factionId !== factionId) continue;
+		for (let x = b.tileX - sn.range; x <= b.tileX + sn.range; x++) {
+			const remainingZ = sn.range - Math.abs(x - b.tileX);
+			for (let z = b.tileZ - remainingZ; z <= b.tileZ + remainingZ; z++) {
+				covered.add(`${x},${z}`);
+			}
+		}
+	}
+
 	let coveredPassable = 0;
 	for (const key of covered) {
 		if (passableTiles.has(key)) coveredPassable++;

@@ -57,7 +57,6 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 - `isTechResearched`, `hasTechEffect`, `getTechEffectValue`
 
 ### UI State (Zustand-like stores)
-- `getRadialMenuState`, `openRadialMenu`, `confirmRadialSelection`
 - `triggerSpeech`, `getActiveSpeech`, `subscribeSpeech`
 - `pushToast`, `dismissToast`, `subscribeToasts`
 - `logTurnEvent`, `getCurrentTurnEvents`, `getCompletedTurnLogs`
@@ -83,6 +82,7 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 | campaignStats.ts | Long-running campaign statistics |
 | cultistSystem.ts | Cult POI init, patrols, corruption |
 | cultMutation.ts | Cult unit mutation tiers |
+| cultEncounterTracker.ts | One-time cult encounter triggers (epoch-gated toasts + turn events) |
 | diplomacySystem.ts | Faction diplomacy + trade |
 | experienceSystem.ts | Unit XP + mark thresholds |
 | fabricationSystem.ts | Robot fabrication queue |
@@ -96,7 +96,7 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 | movementSystem.ts | Unit movement interpolation |
 | populationSystem.ts | Population cap + counting |
 | powerSystem.ts | Power grid simulation |
-| radialMenu.ts | Legacy radial state machine (Vitest + specs; in-game UI uses BuildingModal) |
+| radialMenu.ts | LEGACY — radial state machine (tests only; game uses BuildingModal) |
 | repairSystem.ts | Unit repair |
 | researchSystem.ts | Tech research queue |
 | resourceDeltaSystem.ts | Per-turn income/expenditure tracking |

@@ -72,11 +72,11 @@ maestro test --env TIMEOUT=600000 maestro/
 
 | Flow | Purpose | Ported from | Platform |
 |------|---------|-------------|----------|
-| `title.yaml` | Title screen, New Game, Settings, close | `tests/e2e/title.spec.ts` | Native (iOS + Android; use `--platform ios` / `--platform android`) |
+| `title.yaml` | Title screen, New Game, Settings, close | (historical Playwright E2E removed; use Vitest browser + Maestro) | Native (iOS + Android; use `--platform ios` / `--platform android`) |
 | `title-web.yaml` | Same as title; URL from `MAESTRO_WEB_URL` / config | — | Web (`pnpm dev`, MAESTRO_WEB_URL=http://localhost:5173) |
-| `onboarding.yaml` | New game → scene ready → radial → briefing → city site | `tests/e2e/onboarding.spec.ts` | Native (iOS + Android) |
+| `onboarding.yaml` | New game → scene ready → radial → briefing → city site | (historical Playwright E2E removed) | Native (iOS + Android) |
 | `onboarding-web.yaml` | Same as onboarding; URL from `MAESTRO_WEB_URL` / config | — | Web (same as title-web) |
-| `ai-playtest.yaml` | 100× End Turn, assert no render error | `tests/e2e/ai-playtest-100turns.spec.ts` | Native (iOS + Android) |
+| `ai-playtest.yaml` | 100× End Turn, assert no render error | (historical Playwright E2E removed) | Native (iOS + Android) |
 
 **To run on web (no dev build):** Set `MAESTRO_WEB_URL=http://localhost:5173` or `config/e2e.json` (webUrl). Start the app with `pnpm dev`, then `scripts/run-maestro-e2e.sh --web` or `maestro test -e MAESTRO_WEB_URL=http://localhost:5173 maestro/flows/title-web.yaml`. Maestro Web support is in Beta.
 

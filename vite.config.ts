@@ -10,6 +10,11 @@ export default defineConfig({
 		alias: {
 			"@": path.resolve(__dirname, "./src"),
 			"@root": path.resolve(__dirname, "."),
+			// jeep-sqlite has no package exports for "jeep-sqlite/loader" — resolve explicitly for Vite.
+			"jeep-sqlite/loader": path.resolve(
+				__dirname,
+				"node_modules/jeep-sqlite/loader/index.js",
+			),
 		},
 	},
 	root: ".",
@@ -19,8 +24,10 @@ export default defineConfig({
 		emptyOutDir: true,
 		sourcemap: true,
 	},
+	// Default: Vite crawls every *.html under the repo — pending/playwright/index.html
+	// pulls legacy @playwright/experimental-ct-react and breaks dev. Only scan the app shell.
 	optimizeDeps: {
-		exclude: ["jeep-sqlite"],
+		entries: ["index.html"],
 	},
 	server: {
 		port: 5173,

@@ -50,6 +50,10 @@ coverage/
 /ralph/projects/*/logs/
 /ralph/projects/*/status.json
 
+# Vitest browser (failure screenshots / attachments)
+tests/components/__screenshots__/
+.vitest-attachments/
+
 # Playwright
 /test-results/
 /playwright-report/

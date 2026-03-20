@@ -23,11 +23,5 @@
 		"src/**/*.d.ts",
 		"vitest/setup.ts"
 	],
-	"exclude": [
-		"pending",
-		"tests/e2e",
-		"tests/components",
-		"tests/visual",
-		"node_modules"
-	]
+	"exclude": ["pending", "tests/components", "tests/visual", "node_modules"]
 }

@@ -131,10 +131,11 @@ pnpm verify — required gates (matches core CI checks: lint + tsc + Vitest)
   TypeScript: 0 errors
   Vitest (node): 139 test files, 2345 tests, all passing
 
-pnpm verify:with-ct — optional; browser CT may still need preview path updates.
+pnpm verify:with-ct — optional; adds Vitest browser smoke (`tests/components/smoke.browser.test.tsx`).
+  Legacy component browser tests are not in test.include until previews are migrated.
   CI runs test:ct with continue-on-error: true.
 ```
-Playwright runs **headed** (`headless: false`); in CI, `xvfb-run -a` provides a virtual display.
+Vitest browser mode uses **headless Chromium in CI** (`CI=true`); locally the provider may open a visible window depending on config.
 
 ## Agent Roles
 
@@ -218,11 +219,11 @@ All validation commands are documented in the Validation table above. Quick refe
 - **Type check**: `pnpm tsc`
 - **Unit tests**: `pnpm test` / `pnpm test:vitest` (Vitest — 139 test files / 2345 tests)
 - **Vitest**: same as above; entrypoint is `vitest run` via `package.json`
-- **Playwright CT**: `xvfb-run -a pnpm test:ct` (headed; requires `xvfb-run` in headless VMs). Many CT tests fail in Cloud VMs because the R3F 3D scenes require GPU/WebGL capabilities not available in software-rendered environments.
+- **Vitest browser** (`pnpm test:ct`): Playwright-backed browser mode; currently runs a small smoke test (full-screen R3F previews are excluded until imports are updated). In headless VMs use `CI=true` or ensure a display is available for the browser provider.
 - **Full local gate**: `pnpm verify` (lint + tsc + Vitest). CI also runs `check-imports` and `pnpm build`; component tests are a separate job (`test:ct`, continue-on-error).
 
 ### Gotchas
 
-- `pnpm install` may warn about ignored build scripts for `better-sqlite3` and `sharp`. These do not block `pnpm dev`, `pnpm build`, Jest, or Vitest. They may affect `drizzle-kit` or Playwright screenshot comparison respectively.
+- `pnpm install` may warn about ignored build scripts for `better-sqlite3` and `sharp`. These do not block `pnpm dev`, `pnpm build`, or Vitest. They may affect `drizzle-kit` or Playwright screenshot comparison respectively.
 - Playwright tests run **headed** (`headless: false` in config). Always wrap with `xvfb-run -a` in headless Cloud VMs.
 - After clicking "New Game" in the browser, the game requires 3D model assets (`.glb` files in `public/assets/`) and WebGL. If the environment lacks GPU support or models are missing, the game scene will crash on asset load (intentional fail-hard behavior per architecture rules).

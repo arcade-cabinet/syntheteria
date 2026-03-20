@@ -26,10 +26,14 @@ import {
 	getPopCap,
 	getPopulation,
 	getVictoryProgress,
+	openRadialMenu,
 	pushToast,
 	resetTurnSummary,
+	setBuildProviderWorld,
+	setProviderBoard,
+	setProviderSelectedUnit,
 } from "../systems";
-import { UnitFaction, UnitPos } from "../traits";
+import { Building, UnitFaction, UnitPos } from "../traits";
 import { Globe } from "../ui/Globe";
 import { EventBus } from "../views/eventBus";
 // Side-effect import: register radial menu providers at module scope

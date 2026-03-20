@@ -16,7 +16,7 @@
 
 import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 import type { GeneratedBoard } from "../../board";
 import { TILE_SIZE_M } from "../../board";
@@ -320,6 +320,41 @@ export function TerritoryOverlayRenderer({
 
 	const { width, height } = board.config;
 
+	const removeBoundaryStrips = useCallback(() => {
+		if (stripMeshRef.current) {
+			scene.remove(stripMeshRef.current);
+			stripMeshRef.current.geometry.dispose();
+			(stripMeshRef.current.material as THREE.Material).dispose();
+			stripMeshRef.current = null;
+		}
+	}, [scene]);
+
+	const updateBoundaryStrips = useCallback(
+		(territory: TerritorySnapshot, explored: Set<string>) => {
+			removeBoundaryStrips();
+
+			const edges = collectBoundaryEdges(territory, explored, width, height);
+			const result = buildBoundaryStripGeometry(edges);
+			if (!result) return;
+
+			const material = new THREE.MeshStandardMaterial({
+				vertexColors: true,
+				transparent: true,
+				opacity: STRIP_OPACITY,
+				depthWrite: false,
+				emissive: 0xffffff,
+				emissiveIntensity: STRIP_EMISSIVE,
+				side: THREE.DoubleSide,
+			});
+
+			const mesh = new THREE.Mesh(result.geometry, material);
+			mesh.renderOrder = 6; // above territory tint, below fog
+			scene.add(mesh);
+			stripMeshRef.current = mesh;
+		},
+		[removeBoundaryStrips, scene, width, height],
+	);
+
 	useEffect(() => {
 		const tex = createTerritoryTexture(width, height);
 		textureRef.current = tex;
@@ -364,41 +399,6 @@ export function TerritoryOverlayRenderer({
 			removeBoundaryStrips();
 		};
 	}, [world, scene, width, height, removeBoundaryStrips, updateBoundaryStrips]);
-
-	function removeBoundaryStrips() {
-		if (stripMeshRef.current) {
-			scene.remove(stripMeshRef.current);
-			stripMeshRef.current.geometry.dispose();
-			(stripMeshRef.current.material as THREE.Material).dispose();
-			stripMeshRef.current = null;
-		}
-	}
-
-	function updateBoundaryStrips(
-		territory: TerritorySnapshot,
-		explored: Set<string>,
-	) {
-		removeBoundaryStrips();
-
-		const edges = collectBoundaryEdges(territory, explored, width, height);
-		const result = buildBoundaryStripGeometry(edges);
-		if (!result) return;
-
-		const material = new THREE.MeshStandardMaterial({
-			vertexColors: true,
-			transparent: true,
-			opacity: STRIP_OPACITY,
-			depthWrite: false,
-			emissive: 0xffffff,
-			emissiveIntensity: STRIP_EMISSIVE,
-			side: THREE.DoubleSide,
-		});
-
-		const mesh = new THREE.Mesh(result.geometry, material);
-		mesh.renderOrder = 6; // above territory tint, below fog
-		scene.add(mesh);
-		stripMeshRef.current = mesh;
-	}
 
 	// Update territory overlay once per second (territory only changes at end of turn)
 	useFrame((state) => {

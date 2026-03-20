@@ -13,8 +13,8 @@
  * Usage:  npx tsx scripts/build-texture-atlas.ts
  */
 
-import path from "node:path";
 import fs from "node:fs";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
@@ -29,94 +29,92 @@ const OUT_DIR = path.join(ROOT, "public/assets/textures");
 
 /** Pack names in cell order (index 8 = void_pit, no pack). */
 const PACKS = [
-  "Metal032",    // 0 — structural_mass
-  "Metal038",    // 1 — durasteel_span
-  "Concrete007", // 2 — transit_deck
-  "Concrete034", // 3 — collapsed_zone
-  "Asphalt004",  // 4 — dust_district
-  "Metal025",    // 5 — bio_district
-  "Metal036",    // 6 — aerostructure
-  "Grate001",    // 7 — abyssal_platform
-  // 8 = void_pit — solid black, no source pack
+	"Metal032", // 0 — structural_mass
+	"Metal038", // 1 — durasteel_span
+	"Concrete007", // 2 — transit_deck
+	"Concrete034", // 3 — collapsed_zone
+	"Asphalt004", // 4 — dust_district
+	"Metal025", // 5 — bio_district
+	"Metal036", // 6 — aerostructure
+	"Grate001", // 7 — abyssal_platform
+	// 8 = void_pit — solid black, no source pack
 ] as const;
 
 type MapType = "Color" | "NormalGL" | "Roughness" | "Metalness" | "Opacity";
 
 const MAP_TYPES: MapType[] = [
-  "Color",
-  "NormalGL",
-  "Roughness",
-  "Metalness",
-  "Opacity",
+	"Color",
+	"NormalGL",
+	"Roughness",
+	"Metalness",
+	"Opacity",
 ];
 
 function cellPosition(index: number): { left: number; top: number } {
-  const col = index % GRID;
-  const row = Math.floor(index / GRID);
-  return { left: col * CELL, top: row * CELL };
+	const col = index % GRID;
+	const row = Math.floor(index / GRID);
+	return { left: col * CELL, top: row * CELL };
 }
 
 function sourcePath(pack: string, mapType: MapType): string {
-  return path.join(SOURCES, pack, `${pack}_1K-JPG_${mapType}.jpg`);
+	return path.join(SOURCES, pack, `${pack}_1K-JPG_${mapType}.jpg`);
 }
 
 async function buildAtlas(mapType: MapType): Promise<void> {
-  // Opacity atlas: white background (fully opaque default).
-  // All others: black background.
-  const isOpacity = mapType === "Opacity";
-  const bgColor = isOpacity
-    ? { r: 255, g: 255, b: 255 }
-    : { r: 0, g: 0, b: 0 };
+	// Opacity atlas: white background (fully opaque default).
+	// All others: black background.
+	const isOpacity = mapType === "Opacity";
+	const bgColor = isOpacity ? { r: 255, g: 255, b: 255 } : { r: 0, g: 0, b: 0 };
 
-  const composites: sharp.OverlayOptions[] = [];
+	const composites: sharp.OverlayOptions[] = [];
 
-  for (let i = 0; i < PACKS.length; i++) {
-    const pack = PACKS[i];
-    const src = sourcePath(pack, mapType);
+	for (let i = 0; i < PACKS.length; i++) {
+		const pack = PACKS[i];
+		const src = sourcePath(pack, mapType);
 
-    if (!fs.existsSync(src)) {
-      // Missing map — the background fill handles it:
-      //   Metalness: black  (metalness=0 for non-metallic materials)
-      //   Opacity:   white  (fully opaque)
-      continue;
-    }
+		if (!fs.existsSync(src)) {
+			// Missing map — the background fill handles it:
+			//   Metalness: black  (metalness=0 for non-metallic materials)
+			//   Opacity:   white  (fully opaque)
+			continue;
+		}
 
-    const { left, top } = cellPosition(i);
-    composites.push({ input: src, left, top });
-  }
-  // Cell 8 (void_pit) is always background fill — nothing to composite.
+		const { left, top } = cellPosition(i);
+		composites.push({ input: src, left, top });
+	}
+	// Cell 8 (void_pit) is always background fill — nothing to composite.
 
-  const outName = `floor_atlas_${mapType.toLowerCase().replace("normalgl", "normal")}.jpg`;
-  const outPath = path.join(OUT_DIR, outName);
+	const outName = `floor_atlas_${mapType.toLowerCase().replace("normalgl", "normal")}.jpg`;
+	const outPath = path.join(OUT_DIR, outName);
 
-  await sharp({
-    create: {
-      width: ATLAS,
-      height: ATLAS,
-      channels: 3,
-      background: bgColor,
-    },
-  })
-    .composite(composites)
-    .jpeg({ quality: 90 })
-    .toFile(outPath);
+	await sharp({
+		create: {
+			width: ATLAS,
+			height: ATLAS,
+			channels: 3,
+			background: bgColor,
+		},
+	})
+		.composite(composites)
+		.jpeg({ quality: 90 })
+		.toFile(outPath);
 
-  const stat = fs.statSync(outPath);
-  const kb = (stat.size / 1024).toFixed(0);
-  console.log(`  ${outName}  ${kb} KB`);
+	const stat = fs.statSync(outPath);
+	const kb = (stat.size / 1024).toFixed(0);
+	console.log(`  ${outName}  ${kb} KB`);
 }
 
 async function main() {
-  console.log("Building texture atlases (3072x3072, 3x3 grid)...\n");
+	console.log("Building texture atlases (3072x3072, 3x3 grid)...\n");
 
-  for (const mapType of MAP_TYPES) {
-    await buildAtlas(mapType);
-  }
+	for (const mapType of MAP_TYPES) {
+		await buildAtlas(mapType);
+	}
 
-  console.log("\nDone.");
+	console.log("\nDone.");
 }
 
 main().catch((err) => {
-  console.error(err);
-  process.exit(1);
+	console.error(err);
+	process.exit(1);
 });

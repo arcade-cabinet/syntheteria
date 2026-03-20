@@ -260,7 +260,8 @@ describe("bridge placement", () => {
 describe("tunnel placement", () => {
 	it("punches tunnels through single-thickness walls", () => {
 		// Grid with single-thickness walls between open areas
-		const { tiles, w, h } = gridFromMap([
+		// (grid structure for context only — tests use per-seed grids in loop)
+		gridFromMap([
 			"...........",
 			"...........",
 			"###########",

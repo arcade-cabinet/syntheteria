@@ -69,12 +69,28 @@ function createMockReverb() {
 // throw "not a constructor" when called with `new Tone.Gain(...)` etc.
 vi.mock("tone", () => ({
 	start: vi.fn().mockResolvedValue(undefined),
-	Gain: vi.fn(function () { return createMockGain(); }),
-	Synth: vi.fn(function () { return createMockSynth(); }),
-	PolySynth: vi.fn(function () { return createMockSynth(); }),
-	FMSynth: vi.fn(function () { return createMockSynth(); }),
-	NoiseSynth: vi.fn(function () { return createMockSynth(); }),
-	Noise: vi.fn(function () { return createMockNoise(); }),
-	Filter: vi.fn(function () { return createMockFilter(); }),
-	Reverb: vi.fn(function () { return createMockReverb(); }),
+	Gain: vi.fn(function () {
+		return createMockGain();
+	}),
+	Synth: vi.fn(function () {
+		return createMockSynth();
+	}),
+	PolySynth: vi.fn(function () {
+		return createMockSynth();
+	}),
+	FMSynth: vi.fn(function () {
+		return createMockSynth();
+	}),
+	NoiseSynth: vi.fn(function () {
+		return createMockSynth();
+	}),
+	Noise: vi.fn(function () {
+		return createMockNoise();
+	}),
+	Filter: vi.fn(function () {
+		return createMockFilter();
+	}),
+	Reverb: vi.fn(function () {
+		return createMockReverb();
+	}),
 }));

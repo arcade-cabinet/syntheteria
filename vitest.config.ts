@@ -22,7 +22,13 @@ export default defineConfig({
 		environment: "jsdom",
 		globals: true,
 		include: ["**/*.vitest.{ts,tsx}"],
-		exclude: ["**/node_modules/**", "**/dist/**", "tests/**", "pending/**", "**/.claude/worktrees/**"],
+		exclude: [
+			"**/node_modules/**",
+			"**/dist/**",
+			"tests/**",
+			"pending/**",
+			"**/.claude/worktrees/**",
+		],
 		setupFiles: ["vitest/setup.ts"],
 		coverage: {
 			provider: "v8",

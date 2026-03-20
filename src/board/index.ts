@@ -22,7 +22,17 @@ export { generateLabyrinthBoard } from "./labyrinthGenerator";
 
 // --- Noise ---
 export { createNoise2D, seededRng, simplexNoise2D } from "./noise";
-
+// --- Sphere geometry (grid ↔ sphere math) ---
+export {
+	buildSphereGeometry,
+	SEGS,
+	sphereModelPlacement,
+	sphereModelPlacementWithRotation,
+	spherePosToTile,
+	sphereRadius,
+	tileToSpherePos,
+	worldToTileCoords,
+} from "./sphere";
 // --- Types ---
 export type {
 	BoardConfig,

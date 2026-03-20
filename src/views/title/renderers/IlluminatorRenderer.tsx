@@ -15,7 +15,7 @@ import type { World } from "koota";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { GeneratedBoard } from "../../../board";
-import { sphereModelPlacement } from "../../../rendering";
+import { sphereModelPlacement } from "../../../board";
 
 // ---------------------------------------------------------------------------
 // Constants

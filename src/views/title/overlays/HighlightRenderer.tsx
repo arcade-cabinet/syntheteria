@@ -11,8 +11,11 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { ELEVATION_STEP_M, TILE_SIZE_M } from "../../../board";
-import { sphereModelPlacement } from "../../../rendering";
+import {
+	ELEVATION_STEP_M,
+	sphereModelPlacement,
+	TILE_SIZE_M,
+} from "../../../board";
 import { Tile, TileHighlight } from "../../../traits";
 
 type HighlightRendererProps = {

@@ -11,8 +11,7 @@ import { useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import type { GeneratedBoard } from "../../../board";
-import { TILE_SIZE_M } from "../../../board";
-import { buildSphereGeometry } from "../../../rendering";
+import { buildSphereGeometry, TILE_SIZE_M } from "../../../board";
 import {
 	makeFloorShaderMaterial,
 	updateFloorShaderChronometry,

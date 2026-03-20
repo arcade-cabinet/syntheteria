@@ -11,9 +11,9 @@
  */
 
 import * as THREE from "three";
-import type { GeneratedBoard } from "../board";
-import { TILE_SIZE_M } from "../board";
-import { FLOOR_INDEX_MAP, sampleElevation } from "../terrain";
+import { FLOOR_INDEX_MAP, sampleElevation } from "../../terrain";
+import { TILE_SIZE_M } from "../grid";
+import type { GeneratedBoard } from "../types";
 
 /**
  * SEGS=3 → 16 verts/tile — smooth enough for curvature + height blending.

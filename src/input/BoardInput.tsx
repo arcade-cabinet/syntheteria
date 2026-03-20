@@ -16,8 +16,12 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { playSfx } from "../audio";
 import type { GeneratedBoard } from "../board";
-import { createGridApi, shortestPath } from "../board";
-import { spherePosToTile, sphereRadius } from "../rendering";
+import {
+	createGridApi,
+	shortestPath,
+	spherePosToTile,
+	sphereRadius,
+} from "../board";
 import { clearPreviewPath, setPreviewPath } from "../rendering/pathPreview";
 import {
 	cancelBuildPlacement,

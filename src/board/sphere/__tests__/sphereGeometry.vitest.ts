@@ -8,7 +8,7 @@
 
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import type { GeneratedBoard, TileData } from "../../board/types";
+import type { GeneratedBoard, TileData } from "../../types";
 import {
 	buildSphereGeometry,
 	spherePosToTile,

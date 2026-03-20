@@ -5,14 +5,17 @@
  * TSX renderer components are NOT exported here (they live in individual files for now).
  */
 
-// --- Sphere geometry ---
+// --- Sphere geometry & placement (canonical: src/board/sphere) ---
 export {
 	buildSphereGeometry,
 	SEGS,
+	sphereModelPlacement,
+	sphereModelPlacementWithRotation,
 	spherePosToTile,
 	sphereRadius,
 	tileToSpherePos,
-} from "./boardGeometry";
+	worldToTileCoords,
+} from "../board";
 export type { DepthLayerStack } from "./depthLayerStack";
 
 // --- Depth layers ---
@@ -126,12 +129,6 @@ export {
 export type { Chronometry } from "./sky/chronometry";
 // --- Sky chronometry ---
 export { turnToChronometry } from "./sky/chronometry";
-// --- Sphere placement ---
-export {
-	sphereModelPlacement,
-	sphereModelPlacementWithRotation,
-	worldToTileCoords,
-} from "./spherePlacement";
 export type { ColumnPosition, StructuralEdge } from "./structureHelpers";
 // --- Structure helpers ---
 export {

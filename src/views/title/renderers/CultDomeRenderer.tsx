@@ -15,8 +15,7 @@ import { useFrame } from "@react-three/fiber";
 import type { World } from "koota";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../../board";
-import { sphereModelPlacement } from "../../../rendering";
+import { sphereModelPlacement, TILE_SIZE_M } from "../../../board";
 import { CultStructure } from "../../../traits";
 
 // ---------------------------------------------------------------------------

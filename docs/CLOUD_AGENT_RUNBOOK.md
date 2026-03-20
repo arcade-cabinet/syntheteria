@@ -60,7 +60,7 @@ origin/main  ◄── PR ── feature/phaser-civrev2-main-integration (integr
 
 | File | Role | Compare against |
 |------|------|-----------------|
-| [poc-roboforming.html](../poc-roboforming.html) | **Primary** — Phaser-style vertex terrain, lighting, roboforming, CivRev2 mood | `src/views/lighting/worldLighting.ts`, `WorldScene` |
+| [poc-roboforming.html](../poc-roboforming.html) | **Primary** — Phaser-style vertex terrain, lighting, roboforming, CivRev2 mood | `src/views/board/lighting/worldLighting.ts`, `WorldScene` |
 | [poc-isometric.html](../poc-isometric.html) | Isometric / board framing experiments | Camera math vs `views` board |
 | [poc.html](../poc.html) | Earlier grating / ocean experiments | `oceanRenderer` etc. |
 | [poc_real_world.html](../poc_real_world.html) | Real-world-ish terrain POC | Terrain color language |
@@ -132,64 +132,62 @@ Copy checkboxes into your task tracker; **do not skip gates**.
 
 ### Phase A — Repository hygiene
 
-- [ ] Open + merge squash PR: `feature/phaser-civrev2-main-integration` → `main` (see **§3.1** before push)  
-- [ ] `pnpm verify` on `main` after merge  
+- [x] Open + merge squash PR: `feature/phaser-civrev2-main-integration` → `main` (see **§3.1** before push)  
+- [x] `pnpm verify` on `main` after merge  
 
 ### Phase B — `views/` unification ([COMPREHENSIVE_ENGINEERING_PLAN.md](COMPREHENSIVE_ENGINEERING_PLAN.md) §0)
 
-- [ ] `src/views/title/` ← migrate `src/view/` (R3F globe)  
-- [ ] `src/views/board/` ← migrate current Phaser files from flat `src/views/*`  
-- [ ] Remove `src/view/`; update all imports; grep CI gate  
-- [ ] `pnpm verify`  
+- [x] `src/views/title/` ← migrate `src/view/` (R3F globe)  
+- [x] `src/views/board/` ← migrate current Phaser files from flat `src/views/*`  
+- [x] Remove `src/view/`; update all imports; grep CI gate  
+- [x] `pnpm verify`  
 
 ### Phase C — Gates & regression safety ([COMPREHENSIVE_ENGINEERING_PLAN.md](COMPREHENSIVE_ENGINEERING_PLAN.md) §7)
 
-- [ ] Script or Biome: block `systems/` / `traits/` → `views/`  
-- [ ] Playwright (or CT): golden screenshot title + playing  
-- [ ] Optional: GLB path resolution Vitest sweep  
+- [x] Script or Biome: block `systems/` / `traits/` → `views/`  
+- [x] Playwright (or CT): golden screenshot title + playing  
+- [x] Optional: GLB path resolution Vitest sweep  
 
 ### Phase D — POC + CivRev2 lock-in
 
-- [ ] Side-by-side `poc-roboforming.html` vs dev build; lock constants in `worldLighting.ts`  
-- [ ] CivRev2 parity sheet  
-- [ ] [RENDERING_VISION.md](RENDERING_VISION.md) gaps: blending, elevation drama, remaining ocean polish as needed  
+- [x] Side-by-side `poc-roboforming.html` vs dev build; lock constants in `worldLighting.ts`  
+- [x] CivRev2 parity sheet  
+- [x] [RENDERING_VISION.md](RENDERING_VISION.md) gaps: blending, elevation drama, remaining ocean polish as needed  
 
 ### Phase E — Epoch / cult / roboform presentation
 
-- [ ] `epochDefs` → `epochAtmosphere` + fog tunables (deterministic tests)  
-- [ ] `roboformOverlay` driven from ECS/build events ([GAME_DESIGN.md](GAME_DESIGN.md) §4, RENDERING_VISION roboforming table)  
+- [x] `epochDefs` → `epochAtmosphere` + fog tunables (deterministic tests)  
+- [x] `roboformOverlay` driven from ECS/build events ([GAME_DESIGN.md](GAME_DESIGN.md) §4, RENDERING_VISION roboforming table)  
 
 ### Phase F — Config consolidation ([PHASER_PIVOT_PLAN.md](PHASER_PIVOT_PLAN.md) 0.1)
 
-- [ ] Move pure data packages under `src/config/` subfolders; barrels only  
-- [ ] `pnpm verify`  
+- [x] Move pure data packages under `src/config/` subfolders; barrels only  
+- [x] `pnpm verify`  
 
 ### Phase G — Settlements / city data ([PHASER_PIVOT_PLAN.md](PHASER_PIVOT_PLAN.md) 0.2 / Phase 4)
 
-- [ ] `src/world/` snapshots, POI / settlement contracts — **data from design**, not executable `pending/` code  
-- [ ] City UX = **Civ VI–style DOM panel** over the map; **no** Phaser city-interior scene  
-- [ ] **All production queueing** in that panel — reorder / priorities (4X tradeoffs); retire standalone “Garage” UX; fold `GarageModal.tsx`  
+**CANCELLED** — Design pivot: hub-and-spoke **networks** replace discrete settlement types; per-building modals replace a unified city screen (`GAME_DESIGN.md`). No separate “settlement snapshot” tranche; world/hub data evolves with biome + resource work.
 
 ### Phase H — Cleanup
 
-- [ ] Delete legacy R3F **match** renderers not used by title globe  
-- [ ] Trim R3F deps to minimum for title  
-- [ ] Final `pnpm verify`; update [memory-bank/progress.md](memory-bank/progress.md) + [activeContext.md](memory-bank/activeContext.md)  
+- [x] Delete legacy R3F **match** renderers not used by title globe  
+- [x] Trim R3F deps to minimum for title  
+- [x] Final `pnpm verify`; update [memory-bank/progress.md](memory-bank/progress.md) + [activeContext.md](memory-bank/activeContext.md)  
 
 ### Phase I — Eliminate `src/rendering/` ([COMPREHENSIVE_ENGINEERING_PLAN.md](COMPREHENSIVE_ENGINEERING_PLAN.md) §8)
 
-- [ ] **Why:** Kitchen-sink package mixes board geometry, asset catalogs, globe shaders, materials, particles, fog **rules**, and input state — violates single responsibility (not primarily “TS vs TSX”; there is no TSX there today).  
-- [ ] Move `boardGeometry` / `spherePlacement` → `board/` or `lib/sphereBoard`  
-- [ ] Move depth/labyrinth geometry → `board/depth/` (or equivalent)  
-- [ ] Move `modelPaths` (+ dedupe faction tint with `config`) → `lib/` or `config/models/`  
-- [ ] Move globe shaders + `cinematicState` + title-only GLSL → `views/title/`  
-- [ ] Move `heightMaterial` → `views/title/materials/`  
-- [ ] Move `particles/*` → `lib/particles/` or `effects/`  
-- [ ] Move `pathPreview` → `input/pathPreview.ts`  
-- [ ] Move `tileVisibility` / `unitDetection` → `lib/fog/` (pure helpers; systems call them)  
-- [ ] Move `chronometry` → `lib/` or `config/`  
-- [ ] Delete `src/rendering/`; `rg rendering` gate on `src/`  
-- [ ] `pnpm verify`; update [AGENTS.md](../AGENTS.md) package map (remove `rendering/`)
+- [x] **Why:** Kitchen-sink package mixed board geometry, asset catalogs, globe shaders, materials, particles, fog **rules**, and input state — violated single responsibility.  
+- [x] Move `boardGeometry` / `spherePlacement` → `board/sphere/`  
+- [x] ~~Move depth/labyrinth geometry → `board/depth/`~~ — labyrinth/depth **removed** with overworld pivot  
+- [x] Move `modelPaths` → `config/models.ts`  
+- [x] Move globe shaders + `cinematicState` + title-only GLSL → `views/title/`  
+- [x] Move `heightMaterial` → `views/title/materials/`  
+- [x] Move `particles/*` → `lib/particles/`  
+- [x] Move `pathPreview` → `input/pathPreview.ts`  
+- [x] Move `tileVisibility` / `unitDetection` → `lib/fog/`  
+- [x] Move `chronometry` → `lib/chronometry.ts`  
+- [x] Delete `src/rendering/`; import gate (`scripts/check-imports.sh`) on `src/`  
+- [x] `pnpm verify`; update [AGENTS.md](../AGENTS.md) package map (no `rendering/`)
 
 ---
 
@@ -206,7 +204,7 @@ pnpm tsc              # types only
 
 **Vitest 4 + `@vitest/browser-playwright`:** `vitest.browser.config.ts` uses the `playwright()` provider factory. Component tests under `tests/components/*.browser.test.tsx` still reference removed modules (`src/rendering/BoardRenderer`, `src/city/...`, old `ai` exports). **Do not block merges on `test:ct` until Phase C** — update previews to **`src/views/board/`** + `src/views/title/` (post–Phase B) or delete obsolete files.
 
-**Vitest CLI counts (2026-03-19, `pnpm test:vitest`):** **146 test files**, **2487 tests** passed. Docs that still say “131 suites / 2239 tests” are stale — update `memory-bank/progress.md` when those numbers change.
+**Vitest CLI counts (2026-03-20, `pnpm test:vitest`):** **123 test files**, **2208 tests** passed. Update `memory-bank/progress.md` when those numbers change.
 
 ---
 

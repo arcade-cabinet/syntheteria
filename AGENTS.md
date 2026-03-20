@@ -45,24 +45,22 @@ src/
 ├── traits/             # ALL Koota trait definitions
 ├── systems/            # ALL Koota systems (one per file)
 ├── ai/                 # Yuka GOAP: agents/, fsm/, goals/, navigation/, steering/
-├── board/              # Labyrinth generator, tile grid, adjacency
-├── buildings/          # Building definitions + cult structures
+├── board/              # Overworld generator, tile grid, adjacency, sphere/ (geometry + placement)
 ├── factions/           # Faction definitions, init, relations
 ├── robots/             # Archetypes, placement, specializations
 ├── terrain/            # Floor types, elevation, GLSL shaders
-├── resources/          # Salvage type definitions
 ├── narrative/          # Speech profiles
-├── config/             # Game data + model URL catalog (`models.ts`), tunables, tech tree, recipes, etc.
+├── config/             # Tunables, tech tree, recipes; subpackages buildings/, resources/; models.ts (GLB paths)
 ├── audio/              # Tone.js SFX + ambience
 ├── camera/             # Camera controllers
 ├── db/                 # SQLite schema + GameRepo
 ├── views/              # ALL rendering entrypoints
 │   ├── title/          # R3F title + generating globe (TSX) — migrated from src/view/
-│   └── board/          # Phaser + enable3d match board (pure TS) — migrated from flat src/views/
+│   └── board/          # Phaser + enable3d match board (pure TS)
 ├── ui/                 # React DOM: Globe composes views/title; HUD, landing/, game/
-├── input/              # Board interaction (click, drag, select)
-├── world/              # New-game config (+ future settlement snapshots per `GAME_DESIGN.md` / runbook Phase G)
-├── lib/                # Shared utilities (chronometry, fog helpers, particles, uuid)
+├── input/              # Board interaction + pathPreview.ts (move preview state)
+├── world/              # New-game config (hub-and-spoke; no settlement-type snapshot tranche)
+├── lib/                # Shared utilities: chronometry.ts, fog/, particles/, uuid
 ├── types/              # Shared type declarations
 ├── init-world.ts       # World initialization from board
 ├── create-world.ts     # Koota world factory
@@ -107,7 +105,7 @@ Follow the patterns from [koota examples](https://github.com/pmndrs/koota/tree/m
 - **Traits** — defined in `src/traits/`, one file per domain, all re-exported via `index.ts`
 - **Systems** — one system per file in `src/systems/`, pure functions accepting `(world: World)`
 - **Actions** — imperative world mutations (spawn, destroy, modify) in dedicated files
-- **Sim/View split** — `traits/` + `systems/` never import `views/`; rendering adapters live under **`src/views/`** only (`title/` = R3F, `board/` = Phaser). **`src/view/` must be removed** after migration — see [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](docs/COMPREHENSIVE_ENGINEERING_PLAN.md).
+- **Sim/View split** — `traits/` + `systems/` never import `views/`; rendering adapters live under **`src/views/`** only (`title/` = R3F, `board/` = Phaser). **`src/view/`** removed — migrated to `src/views/title/` — see [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](docs/COMPREHENSIVE_ENGINEERING_PLAN.md).
 
 ---
 
@@ -132,8 +130,8 @@ pnpm verify — required gates (matches CI Quality job)
   TypeScript: 0 errors
   Vitest (node): all suites passing
 
-pnpm verify:with-ct — optional; browser CT is bitrotted (stale paths to old
-  R3F preview imports). Repair is Phase C in docs/CLOUD_AGENT_RUNBOOK.md.
+pnpm verify:with-ct — optional; browser CT may still need preview path updates.
+  See Phase C in docs/CLOUD_AGENT_RUNBOOK.md.
   CI runs test:ct with continue-on-error: true.
 ```
 Playwright runs **headed** (`headless: false`); in CI, `xvfb-run -a` provides a virtual display. Done checklist: [docs/plans/IS_THE_GAME_DONE.md](docs/plans/IS_THE_GAME_DONE.md).

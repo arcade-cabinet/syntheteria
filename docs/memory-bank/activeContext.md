@@ -4,60 +4,43 @@
 
 ---
 
-## Current State (2026-03-19)
+## Current State (2026-03-20)
 
-**Cloud / long-running work:** [docs/CLOUD_AGENT_RUNBOOK.md](../CLOUD_AGENT_RUNBOOK.md) — full doc map, **four POC HTML files**, phased backlog (A–H), squash PR from **`feature/phaser-civrev2-main-integration`** → `main`.
+**Runbook:** [docs/CLOUD_AGENT_RUNBOOK.md](../CLOUD_AGENT_RUNBOOK.md) — structural phases **B, C, D, E, F, H, I** completed; **Phase G cancelled** (hub-and-spoke design — no settlement-type snapshot tranche; see `GAME_DESIGN.md`).
 
-**Umbrella engineering plan:** [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](../COMPREHENSIVE_ENGINEERING_PLAN.md) — single **`src/views/`** package (`title/` R3F + `board/` Phaser), Koota/Phaser/three reference review, CivRev2 + POC gates, robot/asset tests, CI import rules. Clones: [reference-codebases.md](../reference-codebases.md).
+**Umbrella plan:** [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](../COMPREHENSIVE_ENGINEERING_PLAN.md) — **`src/views/title/`** (R3F globe, migrated from deleted `src/view/`) + **`src/views/board/`** (Phaser + enable3d). Clones: [reference-codebases.md](../reference-codebases.md).
 
-**PIVOT: Labyrinth underground → 4X overworld.** Rendering stack validated via POC.
+### Structural work complete
 
-**Design targets captured in `docs/GAME_DESIGN.md` (2026-03-20):** biome-based overworld + vertex-color CivRev2 terrain (TARGET), industrial floor types marked LEGACY; hub-and-spoke **networks** (not city screens) with **GarageModal**-style per-building UI; cultists as **AI-only** antagonist + scripted narrative beats (no player cult systems); **resource progression** arc early/mid/late (TARGET) vs current 13-material taxonomy.
+- **`src/view/` deleted** — title / generating globe → **`src/views/title/`**; match board → **`src/views/board/`**.
+- **`src/rendering/` deleted** — split into **`src/board/sphere/`** (geometry + placement), **`src/config/models.ts`**, **`src/views/title/globe/`**, **`src/views/title/glsl/`**, **`src/views/title/materials/`**, **`src/lib/particles/`**, **`src/input/pathPreview.ts`**, **`src/lib/fog/`** (tile visibility + unit detection), **`src/lib/chronometry.ts`**.
+- **Data consolidation** — definitions under **`src/config/buildings/`** and **`src/config/resources/`** (redirect barrels remain at `src/buildings/`, `src/resources/`).
+- **Labyrinth + depth underground removed** — overworld-only; **`src/board/generator.ts`** is **noise-based** (labyrinth tests deleted).
+- **Import gate:** `scripts/check-imports.sh`.
 
-### Rendering Stack: Phaser + enable3d (VALIDATED)
+### Design pivots (`GAME_DESIGN.md`)
 
-The `poc-roboforming.html` prototype proved that **Phaser + enable3d** delivers CivRev2-tier visuals:
-- Vertex colors + flat shading + good lighting = stylized 3D without PBR/HDRI
-- Lighting recipe: ambient 0x223344@0.6, directional 0xaaccff@0.8, cyan/magenta point lights, FogExp2
-- GLB models load at 2.5x scale with procedural bob-and-weave animation
-- DOM label projection works for hub names, HP, production counters
-- New deps: `phaser@3.90.0`, `@enable3d/phaser-extension@0.26.1`
+Biome-based overworld + vertex-color CivRev2 terrain (**TARGET**); industrial floor types **LEGACY** where noted. Hub-and-spoke **networks** (not city screens); **per-building** modals (GarageModal-style) vs a single city management screen. Cultists: **AI-only** antagonist + scripted beats. **Resource progression** natural → processed → synthetic (**TARGET**) vs current 13-material taxonomy.
 
-Visual gaps identified (documented in `docs/RENDERING_VISION.md`):
-- Terrain blending (hard tile boundaries → need vertex color edge interpolation)
-- Forest canopy (scattered trees → need canopy blob mesh)
-- Elevation drama (smooth noise → need chunky discrete platforms)
-- Ocean layers (open ocean + grid-covered metallic grating)
+### Rendering: Phaser + enable3d (board) + R3F (title)
 
-### Codebase Restructuring COMPLETE
+`poc-roboforming.html` validated the board look (vertex colors, lighting, DOM labels). Gaps: `docs/RENDERING_VISION.md` (blending, canopy, elevation drama, ocean layers).
 
-Package structure fully aligned to Koota best practices:
-- **All packages have `index.ts`** with public API exports
-- **Zero deep import violations** — all 367 converted to barrel imports
-- **main.tsx split** — 1253 → 28 LOC, app shell in `src/app/` (App.tsx, CommandBar, useKeyboardShortcuts, hmrState)
-- **Top 5 largest files split** — cultistSystem (1397→37+6 files), radialProviders (→8 files in radial/), evaluators (1022→34+5 files), speechProfiles (1017→104+3 files), yukaAiTurnSystem (1684→755+6 files)
-- **Circular deps fixed** — lazy init for module-scope model preloads, direct type imports for cross-package types
-- **Koota patterns documented** — `docs/KOOTA_PATTERNS.md` (world, traits, systems, actions, frameloop, React hooks)
-- **Pending/ assessed** — 80% salvageable for settlement data / city-screen contracts (Civ-style panel, not interior scene; see `project_pending_salvage.md` memory)
+### Gameplay systems & quality
 
-### Gameplay Systems (Complete from prior work)
+Core sim remains (economy, combat, AI GOAP, tech tree, diplomacy, etc.).
 
-All core gameplay systems remain implemented: economy, combat, AI GOAP, cultists, specializations, tech tree, victory conditions, diplomacy, territory, save/load, audio. These will be re-wired to the new Phaser + enable3d rendering stack.
+**123 Vitest files, 2208 tests (all passing).** 0 TypeScript errors, 0 lint errors. ~**434** `src/**/*.ts(x)` files (`find src -name '*.ts' -o -name '*.tsx' | wc -l`).
 
-**2487 tests, 146 Vitest test files (all passing), 0 TypeScript errors.** ~**465** `src/**/*.ts(x)` files. *Refresh counts after large merges:* `pnpm test:vitest` + `find src -name '*.ts' -o -name '*.tsx' | wc -l`.
-
-**Git (pre-PR):** If `main` is many commits ahead of `origin/main`, use branch **`feature/phaser-civrev2-main-integration`** and **`docs/CLOUD_AGENT_RUNBOOK.md` §3.1** before opening the squash PR.
-
-**Pending/ is READ-ONLY REFERENCE** — valuable for design patterns and game data, but most code is incompatible (real-time hex-grid architecture vs our turn-based square-grid). Port DATA (configs, narrative text), not CODE.
+**Pending/ is READ-ONLY REFERENCE** — port DATA (configs, narrative text), not CODE.
 
 ---
 
-## Architecture: Phaser + enable3d (Target)
+## Architecture: Phaser + enable3d (match) + R3F (title)
 
-The rendering stack is pivoting from R3F/React Three Fiber to **Phaser + enable3d**:
-- **Phaser** — game loop, input handling, scene management
-- **enable3d** — Three.js bridge (`Scene3D`) providing 3D rendering inside Phaser scenes
-- **DOM overlay** — HTML labels and HUD positioned over the game canvas
+- **Title / generating** — R3F (`Globe.tsx`, `src/views/title/`).
+- **Playing** — **Phaser** + **enable3d** (`Scene3D`), game loop, input, 3D in scene.
+- **DOM overlay** — HTML labels and HUD over the canvas.
 
 ### Camera
 - Orthographic isometric, drag-pan, scroll-zoom, WASD rotate
@@ -80,14 +63,10 @@ The rendering stack is pivoting from R3F/React Three Fiber to **Phaser + enable3
 
 ## Next Steps
 
-**Umbrella docs exist:** [COMPREHENSIVE_ENGINEERING_PLAN.md](../COMPREHENSIVE_ENGINEERING_PLAN.md) + [CLOUD_AGENT_RUNBOOK.md](../CLOUD_AGENT_RUNBOOK.md). **Phaser + enable3d board** is live under `src/views/` (flat layout until Phase B splits `title/` + `board/`).
+1. **Biome terrain** — implement biome-based terrain model per `GAME_DESIGN.md` (replace industrial floor-type presentation where planned).
+2. **Resource overhaul** — natural → processed → synthetic progression; align ECS + UI with design doc.
+3. **Overworld generator** — iterate noise-based `src/board/generator.ts` (passability, POIs, resource scatter) for hub-and-spoke flow.
+4. **Visual polish** — `RENDERING_VISION.md` gaps; roboforming via `src/views/board/renderers/roboformOverlay.ts` + `epochAtmosphere.ts`.
+5. **Optional:** repair browser CT / import previews per runbook Phase C follow-up (`pnpm verify:with-ct`).
 
-1. **Pre-PR:** Run **`pnpm verify`**; follow runbook **§3.1**; push **`feature/phaser-civrev2-main-integration`** → squash PR to `main`.
-2. **Phase B (views):** `src/views/title/` + `src/views/board/`, delete `src/view/` — [COMPREHENSIVE_ENGINEERING_PLAN.md](../COMPREHENSIVE_ENGINEERING_PLAN.md) §0.
-3. **Consolidate data packages into `src/config/`** — [PHASER_PIVOT_PLAN.md](../PHASER_PIVOT_PLAN.md) 0.1.
-4. **Port settlement data from `pending/`** — city-screen contracts; **Civ VI–style** production queue + command UI (`GAME_DESIGN.md` §5, §9).
-5. **Visual gaps** (see `RENDERING_VISION.md`):
-   - Terrain blending, forest canopy, elevation drama, ocean layers
-   - Roboforming presentation: `src/views/renderers/roboformOverlay.ts` + `epochAtmosphere.ts` (iterate vs design)
-
-**Accepted tech debt**: `pending/` directory (252MB quarantined reference code) remains in working tree — excluded from tsconfig + biome.
+**Accepted tech debt:** `pending/` (quarantined reference) remains excluded from tsconfig + biome.

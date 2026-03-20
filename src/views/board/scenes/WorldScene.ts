@@ -34,6 +34,11 @@ import {
 } from "../renderers/combatEffects";
 import { createFogRenderer, updateFog } from "../renderers/fogRenderer";
 import { createHighlightRenderer } from "../renderers/highlightRenderer";
+import {
+	createInfraConnectionRenderer,
+	destroyInfraConnections,
+	updateInfraConnections,
+} from "../renderers/infraConnectionRenderer";
 import { createOceanRenderer, updateOcean } from "../renderers/oceanRenderer";
 import {
 	createParticleRenderer,
@@ -45,6 +50,8 @@ import {
 	updateRoboformOverlay,
 } from "../renderers/roboformOverlay";
 import { createSalvageRenderer } from "../renderers/salvageRenderer";
+import { createScatterRenderer } from "../renderers/scatterRenderer";
+import { createHorizonPlane, createSkyDome } from "../renderers/skyRenderer";
 import {
 	createSpeechRenderer,
 	updateSpeech,
@@ -99,6 +106,10 @@ export class WorldScene extends Scene3D {
 			this._config = config;
 			const { world, board, boardConfig } = config;
 
+			// Sky dome + horizon plane (replace hard edges with storm atmosphere)
+			createSkyDome(scene, boardConfig.width, boardConfig.height);
+			createHorizonPlane(scene, boardConfig.width, boardConfig.height);
+
 			// Terrain
 			const terrainGroup = buildTerrainMesh(board);
 			scene.add(terrainGroup);
@@ -117,6 +128,9 @@ export class WorldScene extends Scene3D {
 			// Vegetation (forest canopy blobs + accent trees)
 			createVegetationRenderer(scene, board);
 
+			// Biome scatter models (rocks, craters, etc.)
+			createScatterRenderer(scene, board);
+
 			// Ocean (animated deep water + wetland grating)
 			createOceanRenderer(scene, board);
 
@@ -131,6 +145,10 @@ export class WorldScene extends Scene3D {
 			// Roboform overlay (visual terrain development progression)
 			createRoboformOverlay(scene);
 			updateRoboformOverlay();
+
+			// Infrastructure connections between buildings
+			createInfraConnectionRenderer(scene);
+			updateInfraConnections(world);
 
 			// Epoch atmosphere (visual progression per age)
 			const turn = getCurrentTurn(world);
@@ -177,6 +195,7 @@ export class WorldScene extends Scene3D {
 		EventBus.off("turn-advanced");
 		EventBus.off("tech-tier-changed");
 		destroyRoboformOverlay();
+		destroyInfraConnections();
 		resetEpochAtmosphere();
 	}
 
@@ -211,6 +230,7 @@ export class WorldScene extends Scene3D {
 		updateFog(world);
 		updateTerritory(world, boardConfig.width, boardConfig.height);
 		updateRoboformOverlay();
+		updateInfraConnections(world);
 
 		// Update epoch atmosphere based on current turn + building tier
 		this._highestBuildingTier = this.computeHighestBuildingTier();

@@ -9,10 +9,12 @@
 import type { World } from "koota";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { resolveBuildingModelUrl } from "../../../config";
+import { BUILDING_TIER_MODELS, resolveBuildingModelUrl } from "../../../config";
 import { buildExploredSet } from "../../../lib/fog";
 import { Building, CultStructure } from "../../../traits";
 import { tileToWorld } from "./terrainRenderer";
+
+const MODEL_BASE = "/assets/models/";
 
 // ---------------------------------------------------------------------------
 // State
@@ -22,6 +24,9 @@ const loader = new GLTFLoader();
 
 /** Currently placed building models, keyed by `${tileX},${tileZ}`. */
 let placedModels: Map<string, THREE.Object3D> = new Map();
+
+/** Track the tier of placed building models for upgrade detection. */
+let placedTiers: Map<string, number> = new Map();
 
 /** Scene reference stored at init time. */
 let sceneRef: THREE.Scene | null = null;
@@ -44,6 +49,23 @@ function enableShadows(object: THREE.Object3D): void {
 
 function tileKey(tileX: number, tileZ: number): string {
 	return `${tileX},${tileZ}`;
+}
+
+/**
+ * Resolve a building's model URL, using tier-specific variants when available.
+ * Falls back to the default modelId resolution.
+ */
+function resolveTierModelUrl(
+	buildingType: string,
+	modelId: string,
+	tier: number,
+): string | null {
+	const tierModels = BUILDING_TIER_MODELS[buildingType];
+	if (tierModels) {
+		const tierIdx = Math.max(0, Math.min(tierModels.length - 1, tier - 1));
+		return MODEL_BASE + tierModels[tierIdx];
+	}
+	return resolveBuildingModelUrl(modelId);
 }
 
 /**
@@ -100,6 +122,7 @@ function loadAndPlace(
 export function createBuildingRenderer(scene: THREE.Scene, world: World): void {
 	sceneRef = scene;
 	placedModels = new Map();
+	placedTiers = new Map();
 	pendingLoads.clear();
 
 	updateBuildings(world);
@@ -129,16 +152,26 @@ export function updateBuildings(world: World): void {
 
 		const key = tileKey(b.tileX, b.tileZ);
 
-		// Fog gate — skip unexplored tiles
 		if (!explored.has(key)) continue;
 
 		activeKeys.add(key);
 
-		if (placedModels.has(key)) continue;
+		// Check if building was upgraded (tier changed) — replace model
+		const existingTier = placedTiers.get(key);
+		if (placedModels.has(key) && existingTier === b.buildingTier) continue;
 
-		const url = resolveBuildingModelUrl(b.modelId);
+		// Tier changed — remove the old model so we can load the new one
+		if (placedModels.has(key) && existingTier !== b.buildingTier) {
+			const oldModel = placedModels.get(key);
+			if (oldModel) scene.remove(oldModel);
+			placedModels.delete(key);
+			placedTiers.delete(key);
+		}
+
+		const url = resolveTierModelUrl(b.buildingType, b.modelId, b.buildingTier);
 		if (!url) continue;
 
+		placedTiers.set(key, b.buildingTier);
 		loadAndPlace(scene, url, b.tileX, b.tileZ);
 	}
 
@@ -167,6 +200,7 @@ export function updateBuildings(world: World): void {
 		if (!activeKeys.has(key)) {
 			scene.remove(model);
 			placedModels.delete(key);
+			placedTiers.delete(key);
 		}
 	}
 }

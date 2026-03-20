@@ -19,7 +19,8 @@
  */
 
 import * as THREE from "three";
-import { FACTION_COLORS } from "../../../config";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { FACTION_COLORS, IMPROVEMENT_MODELS } from "../../../config";
 import { tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------
@@ -65,6 +66,13 @@ const roboformData = new Map<string, RoboformTile>();
 // ---------------------------------------------------------------------------
 
 let roboformGroup: THREE.Group | null = null;
+let infraGroup: THREE.Group | null = null;
+
+const MODEL_BASE = "/assets/models/";
+const loader = new GLTFLoader();
+
+/** Track which tiles have loaded infrastructure models to avoid reloading. */
+const loadedInfraTiles = new Set<string>();
 
 const ROBOFORM_Y = 0.03; // slightly above territory overlay (0.02)
 const TILE_PLANE_SIZE = 1.9; // slightly smaller than TILE_SIZE for grid gaps
@@ -85,6 +93,17 @@ edgeTrimGeo.rotateX(-Math.PI / 2);
 // Temp color for interpolation
 const _tmpA = new THREE.Color();
 const _tmpB = new THREE.Color();
+
+function tileHash(x: number, z: number, layer: number): number {
+	let h = 2166136261;
+	h ^= x;
+	h = Math.imul(h, 16777619);
+	h ^= z;
+	h = Math.imul(h, 16777619);
+	h ^= layer;
+	h = Math.imul(h, 16777619);
+	return (h >>> 0) / 4294967296;
+}
 
 // ---------------------------------------------------------------------------
 // Color interpolation
@@ -175,6 +194,10 @@ export function createRoboformOverlay(scene: THREE.Scene): void {
 	roboformGroup = new THREE.Group();
 	roboformGroup.name = "roboform-overlay";
 	scene.add(roboformGroup);
+
+	infraGroup = new THREE.Group();
+	infraGroup.name = "roboform-infra";
+	scene.add(infraGroup);
 }
 
 /**
@@ -229,10 +252,115 @@ export function updateRoboformOverlay(): void {
 
 			const edgeMesh = new THREE.Mesh(edgeTrimGeo, edgeMat);
 			edgeMesh.position.set(pos.x, ROBOFORM_Y + EDGE_TRIM_OFFSET, pos.z);
-			// Rotate 45 degrees so the ring corners align with tile edges
 			edgeMesh.rotation.y = Math.PI / 4;
 			roboformGroup.add(edgeMesh);
 		}
+
+		// Infrastructure 3D models for level 2+
+		if (data.level >= 2 && infraGroup && !loadedInfraTiles.has(key)) {
+			loadedInfraTiles.add(key);
+			placeInfrastructureModels(infraGroup, tx, tz, data.level, pos);
+		}
+	}
+
+	// Remove infra models for tiles that are no longer level 2+
+	for (const tileKey of loadedInfraTiles) {
+		const tileData = roboformData.get(tileKey);
+		if (!tileData || tileData.level < 2) {
+			loadedInfraTiles.delete(tileKey);
+		}
+	}
+}
+
+/**
+ * Select and load infrastructure models for a roboformed tile.
+ * Level 2: road/pipeline models. Level 3+: denser infrastructure + lighting.
+ */
+function placeInfrastructureModels(
+	group: THREE.Group,
+	tx: number,
+	tz: number,
+	level: number,
+	pos: { x: number; y: number; z: number },
+): void {
+	const infraY = ROBOFORM_Y + 0.01;
+
+	// Level 2+: pipeline or road segment
+	const pipeModels = IMPROVEMENT_MODELS.pipeline;
+	const pipeIdx = Math.floor(tileHash(tx, tz, 200) * pipeModels.length);
+	const pipeUrl = MODEL_BASE + pipeModels[pipeIdx];
+	const pipeRot = tileHash(tx, tz, 201) * Math.PI * 2;
+
+	loader.load(
+		pipeUrl,
+		(gltf) => {
+			const model = gltf.scene;
+			model.position.set(pos.x, infraY, pos.z);
+			model.rotation.y = pipeRot;
+			model.scale.setScalar(0.5);
+			model.traverse((child) => {
+				if ((child as THREE.Mesh).isMesh) {
+					child.castShadow = true;
+					child.receiveShadow = true;
+				}
+			});
+			group.add(model);
+		},
+		undefined,
+		() => {},
+	);
+
+	// Level 3+: lighting fixtures and power infrastructure
+	if (level >= 3) {
+		const lightModels = IMPROVEMENT_MODELS.lighting;
+		const lightIdx = Math.floor(tileHash(tx, tz, 210) * lightModels.length);
+		const lightUrl = MODEL_BASE + lightModels[lightIdx];
+		const offsetX = (tileHash(tx, tz, 211) - 0.5) * 0.8;
+		const offsetZ = (tileHash(tx, tz, 212) - 0.5) * 0.8;
+
+		loader.load(
+			lightUrl,
+			(gltf) => {
+				const model = gltf.scene;
+				model.position.set(pos.x + offsetX, infraY, pos.z + offsetZ);
+				model.scale.setScalar(0.4);
+				model.traverse((child) => {
+					if ((child as THREE.Mesh).isMesh) {
+						child.castShadow = true;
+						child.receiveShadow = true;
+					}
+				});
+				group.add(model);
+			},
+			undefined,
+			() => {},
+		);
+	}
+
+	// Level 4: mining/power infrastructure
+	if (level >= 4) {
+		const powerModels = IMPROVEMENT_MODELS.power_line;
+		const pwrIdx = Math.floor(tileHash(tx, tz, 220) * powerModels.length);
+		const pwrUrl = MODEL_BASE + powerModels[pwrIdx];
+
+		loader.load(
+			pwrUrl,
+			(gltf) => {
+				const model = gltf.scene;
+				model.position.set(pos.x, infraY, pos.z);
+				model.rotation.y = tileHash(tx, tz, 221) * Math.PI;
+				model.scale.setScalar(0.45);
+				model.traverse((child) => {
+					if ((child as THREE.Mesh).isMesh) {
+						child.castShadow = true;
+						child.receiveShadow = true;
+					}
+				});
+				group.add(model);
+			},
+			undefined,
+			() => {},
+		);
 	}
 }
 
@@ -248,4 +376,13 @@ export function destroyRoboformOverlay(): void {
 		roboformGroup.parent?.remove(roboformGroup);
 		roboformGroup = null;
 	}
+	if (infraGroup) {
+		while (infraGroup.children.length > 0) {
+			const child = infraGroup.children[0];
+			infraGroup.remove(child);
+		}
+		infraGroup.parent?.remove(infraGroup);
+		infraGroup = null;
+	}
+	loadedInfraTiles.clear();
 }

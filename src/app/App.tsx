@@ -188,6 +188,9 @@ export function App() {
 			setPhase("generating");
 			const s = await createNewGame(cfg, repoRef.current);
 			if (repoRef.current) setSavedGames(await repoRef.current.listGames());
+			// Initialize radial menu providers with game context
+			setBuildProviderWorld(s.world);
+			setProviderBoard(s.board);
 			setGameOutcome({ result: "playing" });
 			setSession(s);
 			setTurn(1);
@@ -210,6 +213,9 @@ export function App() {
 					setPhase("title");
 					return;
 				}
+				// Initialize radial menu providers with game context
+				setBuildProviderWorld(s.world);
+				setProviderBoard(s.board);
 				setGameOutcome({ result: "playing" });
 				setSession(s);
 				setTurn(getCurrentTurn(s.world));
@@ -429,10 +435,52 @@ export function App() {
 				<GameBoard
 					session={session}
 					onSceneReady={() => setSceneReady(true)}
-					onTileClick={(x, z) => {
-						// TODO: wire to radial menu / move system
+					onTileClick={(tileX, tileZ) => {
+						// Check what's at the clicked tile
+						let selectionType: "unit" | "building" | "empty_sector" = "empty_sector";
+						let targetEntityId: string | null = null;
+						let targetFaction: string | null = null;
+
+						for (const e of session.world.query(UnitPos, UnitFaction)) {
+							const pos = e.get(UnitPos);
+							const fac = e.get(UnitFaction);
+							if (pos?.tileX === tileX && pos?.tileZ === tileZ) {
+								selectionType = "unit";
+								targetEntityId = String(e.id());
+								targetFaction = fac?.factionId ?? null;
+								setSelectedUnitId(e.id());
+								break;
+							}
+						}
+
+						if (selectionType === "empty_sector") {
+							for (const e of session.world.query(Building)) {
+								const b = e.get(Building);
+								if (b?.tileX === tileX && b?.tileZ === tileZ) {
+									selectionType = "building";
+									targetEntityId = String(e.id());
+									targetFaction = b.factionId;
+									break;
+								}
+							}
+						}
+
+						// Open radial menu at click position
+						openRadialMenu(
+							window.innerWidth / 2,
+							window.innerHeight / 2,
+							{
+								selectionType,
+								targetEntityId,
+								targetSector: { q: tileX, r: tileZ },
+								targetFaction,
+							},
+						);
 					}}
-					onUnitSelect={setSelectedUnitId}
+					onUnitSelect={(id) => {
+						setSelectedUnitId(id);
+						setProviderSelectedUnit(id);
+					}}
 				/>
 			)}
 

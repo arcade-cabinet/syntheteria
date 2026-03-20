@@ -155,16 +155,77 @@ power boxes store the charge (storageCapacity), and all other structures draw fr
 
 ---
 
-## 4. Game Phases
+## 4. Epochs (Age System)
 
-1. **Awakening:** Reconnect scattered machines, merge fractured perception, restore power, recover
-   fabrication. The player starts with a handful of Mark I robots in a small illuminated pocket of the
-   ecumenopolis, surrounded by darkness.
-2. **Expansion:** Explore outward, harvest salvage, accumulate resources, and establish infrastructure.
-   The fog of war lifts as units explore.
-3. **Competition:** Contest territory, salvage, and strategic control against rival machine factions
-   while cult pressure escalates.
-4. **Resolution:** Achieve dominance, technical supremacy, or the wormhole/transcendence route.
+Epochs are Civilization-style ages that provide long-game pacing and organic delineation.
+Each epoch gates tech tiers, cult evolution, storm escalation, and victory paths. The game
+grows from intimate survival into strategic-scale competition.
+
+**Epoch transitions** are driven by the **highest tech tier researched by ANY faction**
+(including AI), subject to a minimum turn floor. When any faction pushes the envelope, the
+whole world escalates. This creates a shared global clock visible to all players.
+
+| Epoch | Name | Tech Tier | Min Turn | Storm | Cult Mutation Cap | Cult Spawn Mod | Wormhole |
+|-------|------|-----------|----------|-------|-------------------|----------------|----------|
+| 1 | **Emergence** — *The Awakening* | Tier 1 | Turn 1 | Stable | 0 (base stats) | 1.0x | No |
+| 2 | **Expansion** — *Signal Horizon* | Tier 2 | Turn 10 | Stable | 1 (stat buff) | 0.9x | No |
+| 3 | **Consolidation** — *The Lattice Tightens* | Tier 3 | Turn 30 | Volatile | 2 (ability) | 0.8x | No |
+| 4 | **Convergence** — *Eye of the Storm* | Tier 4 | Turn 60 | Cataclysmic | 3 (aberrant) | 0.7x | Yes |
+| 5 | **Transcendence** — *The Final Frequency* | Tier 5 | Turn 100 | Cataclysmic | 3 (aberrant) | 0.5x | Yes |
+
+### Epoch Details
+
+**Epoch 1: Emergence** — Basic survival. Reconnect scattered machines, restore power, recover
+fabrication. The player starts with a handful of Mark I robots in a small illuminated pocket of the
+ecumenopolis. Cult presence is minimal (half cap) with no mutation. Storm is calm.
+
+**Epoch 2: Expansion** — Territory and diplomacy emerge. Mark II components, Storm Shielding, and
+specialization tracks become available. Cult wanderers begin mutating (tier 1 stat buffs). Faction
+borders take shape. Rivalry begins.
+
+**Epoch 3: Consolidation** — Advanced tech unlocks Mark III and deep specializations. Cult war
+parties form — coordinated groups target territory edges. Cultists gain special abilities (tier 2
+mutation). Storm shifts to volatile. The middle game.
+
+**Epoch 4: Convergence** — The hypercane approaches peak intensity (cataclysmic). Wormhole Theory
+and Quantum Processors unlock. The wormhole project can NOW be started. Cult assault stage begins —
+aberrant mini-bosses appear (tier 3 mutation). Cult cap increases 1.5x. The endgame approaches.
+
+**Epoch 5: Transcendence** — Mark V Transcendence and Wormhole Stabilization become researchable.
+All victory paths are open. Cult spawn rate doubles and cap doubles. The cult launches its final
+assault. This is the endgame — domination, research, wormhole, or technical supremacy.
+
+### System Mappings
+
+**Tech tree → Epochs:** The 5 existing tech tiers map 1:1 to epochs. Tier 1 = Emergence, Tier 2 =
+Expansion, etc. No changes to the tech tree needed — epochs are an overlay.
+
+**Cult mutation → Epochs:** The 4-tier cult mutation system (0-3) maps to epochs 1-4:
+- Epoch 1: mutation cap 0 (base stats only, no mutation even if cultist survives)
+- Epoch 2: mutation cap 1 (random stat buff after 6 turns alive)
+- Epoch 3: mutation cap 2 (special ability after 11 turns alive)
+- Epoch 4+: mutation cap 3 (aberrant after 21 turns alive)
+
+**Storm progression → Epochs:** Storm profile escalates by epoch regardless of starting config:
+- Epochs 1-2: stable (calm, manageable)
+- Epoch 3: volatile (regular surges)
+- Epochs 4-5: cataclysmic (violent hypercane arcs)
+
+**Wormhole project → Epochs:** The Wormhole Stabilizer building is gated to Epoch 4+ (Convergence).
+Even with `wormhole_stabilization` tech, construction cannot begin until the epoch reaches 4. This
+prevents cheese via fast-tracking wormhole research.
+
+### Game Phases (Legacy — now subsumed by Epochs)
+
+The original 4 game phases map roughly to epochs:
+1. Awakening → Epoch 1 (Emergence)
+2. Expansion → Epoch 2 (Expansion)
+3. Competition → Epochs 3-4 (Consolidation + Convergence)
+4. Resolution → Epoch 5 (Transcendence)
+
+### Implementation
+
+Config: `src/config/epochDefs.ts` — `EPOCHS`, `computeEpoch()`, `getEpochForTechTier()`
 
 ---
 

@@ -6,7 +6,6 @@
  */
 
 export type { BuildingBlueprint, BuildingComponent } from "./buildingDefs";
-
 // --- Building blueprints ---
 export { BUILDING_BLUEPRINTS, getBuildingDisplayName } from "./buildingDefs";
 export type {
@@ -14,7 +13,6 @@ export type {
 	StandingTier,
 	StandingTierName,
 } from "./diplomacyDefs";
-
 // --- Diplomacy ---
 export {
 	ALLIANCE_FOG_SHARING,
@@ -27,6 +25,16 @@ export {
 	TRADE_INCOME_SHARE_PERCENT as DIPLO_TRADE_SHARE,
 	WAR_BORDER_CONTEST_RADIUS,
 } from "./diplomacyDefs";
+export type { EpochDef, EpochId } from "./epochDefs";
+// --- Epochs ---
+export {
+	computeEpoch,
+	EPOCH_BY_ID,
+	EPOCHS,
+	getEpochByNumber,
+	getEpochForTechTier,
+	TECH_TIER_TO_EPOCH,
+} from "./epochDefs";
 export type { FactionAiBias } from "./factionAiDefs";
 
 // --- Faction AI ---

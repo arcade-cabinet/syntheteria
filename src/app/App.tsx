@@ -537,100 +537,77 @@ export function App() {
 				</div>
 			)}
 
-			{/* Playing: Game DOM overlays */}
+			{/* Playing: ALL game DOM overlays — z-indexed above Phaser canvas */}
 			{gameActive && (
-				<HUD
-					turn={turn}
-					ap={playerAp}
-					maxAp={PLAYER_MAX_AP}
-					onEndTurn={handleEndTurn}
-					onSave={() => void doSave()}
-					resources={getPlayerResources(session.world)}
-					productionQueue={getProductionQueue(session.world)}
-					victoryProgress={getVictoryProgress(session.world)}
-					population={getPopulation(session.world, "player")}
-					popCap={getPopCap(session.world, "player")}
-					isObserverMode={isObserverMode}
-					observerSpeed={observerSpeed}
-					onSetObserverSpeed={setObserverSpeed}
-					currentResearch={getCurrentResearchForHUD(session.world)}
-				/>
-			)}
-
-			{gameActive && !isObserverMode && (
-				<CommandBar
-					showTechTree={showTechTree}
-					showGarage={showGarage}
-					showRoster={showRoster}
-					showDiplomacy={showDiplomacy}
-					onToggle={(key) => {
-						setShowTechTree(key === "techTree");
-						setShowGarage(key === "garage");
-						setShowRoster(key === "roster");
-						setShowDiplomacy(key === "diplomacy");
+				<div
+					data-testid="game-overlays"
+					style={{
+						position: "absolute",
+						inset: 0,
+						zIndex: 10,
+						pointerEvents: "none",
 					}}
-				/>
-			)}
+				>
+					<div style={{ pointerEvents: "auto" }}>
+						<HUD
+							turn={turn}
+							ap={playerAp}
+							maxAp={PLAYER_MAX_AP}
+							onEndTurn={handleEndTurn}
+							onSave={() => void doSave()}
+							resources={getPlayerResources(session.world)}
+							productionQueue={getProductionQueue(session.world)}
+							victoryProgress={getVictoryProgress(session.world)}
+							population={getPopulation(session.world, "player")}
+							popCap={getPopCap(session.world, "player")}
+							isObserverMode={isObserverMode}
+							observerSpeed={observerSpeed}
+							onSetObserverSpeed={setObserverSpeed}
+							currentResearch={getCurrentResearchForHUD(session.world)}
+						/>
+					</div>
 
-			{gameActive && showTechTree && (
-				<TechTreeOverlay
-					world={session.world}
-					factionId="player"
-					onClose={() => setShowTechTree(false)}
-				/>
-			)}
-			{gameActive && showGarage && (
-				<GarageModal
-					world={session.world}
-					factionId="player"
-					onClose={() => setShowGarage(false)}
-				/>
-			)}
-			{gameActive && showRoster && (
-				<UnitRosterOverlay
-					world={session.world}
-					factionId="player"
-					onClose={() => setShowRoster(false)}
-					onSelectUnit={(id) => {
-						setSelectedUnitId(id);
-						setShowRoster(false);
-					}}
-				/>
-			)}
-			{gameActive && showDiplomacy && (
-				<DiplomacyOverlay
-					world={session.world}
-					factionId="player"
-					onClose={() => setShowDiplomacy(false)}
-				/>
-			)}
-
-			{gameActive && <AlertBar />}
-			{gameActive && !isObserverMode && (
-				<PendingCompletions items={collectPendingItems(session.world)} />
-			)}
-			{gameActive && !isObserverMode && <TurnSummaryPanel />}
-			{gameActive && (
-				<PauseMenu
-					visible={paused}
-					onResume={() => setPaused(false)}
-					onSave={() => void doSave()}
-					onQuitToTitle={handleReturnToMenu}
-				/>
-			)}
-			{gameActive && gameOutcome.result !== "playing" && (
-				<GameOutcomeOverlay
-					outcome={gameOutcome}
-					turn={turn}
-					onReturnToMenu={handleReturnToMenu}
-				/>
-			)}
-			{gameActive && (
-				<>
-					<TurnLog />
-					{session.world && session.board && (
-						<Minimap world={session.world} board={session.board} />
+					{!isObserverMode && (
+						<CommandBar
+							showTechTree={showTechTree}
+							showGarage={showGarage}
+							showRoster={showRoster}
+							showDiplomacy={showDiplomacy}
+							onToggle={(key) => {
+								setShowTechTree(key === "techTree");
+								setShowGarage(key === "garage");
+								setShowRoster(key === "roster");
+								setShowDiplomacy(key === "diplomacy");
+							}}
+						/>
 					)}
+
+					{showTechTree && (
+						<TechTreeOverlay world={session.world} factionId="player" onClose={() => setShowTechTree(false)} />
+					)}
+					{showGarage && (
+						<GarageModal world={session.world} factionId="player" onClose={() => setShowGarage(false)} />
+					)}
+					{showRoster && (
+						<UnitRosterOverlay world={session.world} factionId="player" onClose={() => setShowRoster(false)}
+							onSelectUnit={(id) => { setSelectedUnitId(id); setShowRoster(false); }}
+						/>
+					)}
+					{showDiplomacy && (
+						<DiplomacyOverlay world={session.world} factionId="player" onClose={() => setShowDiplomacy(false)} />
+					)}
+
+					<AlertBar />
+					{!isObserverMode && <PendingCompletions items={collectPendingItems(session.world)} />}
+					{!isObserverMode && <TurnSummaryPanel />}
+					<PauseMenu visible={paused} onResume={() => setPaused(false)}
+						onSave={() => void doSave()} onQuitToTitle={handleReturnToMenu}
+					/>
+					{gameOutcome.result !== "playing" && (
+						<GameOutcomeOverlay outcome={gameOutcome} turn={turn} onReturnToMenu={handleReturnToMenu} />
+					)}
+					<TurnLog />
+					{session.world && session.board && <Minimap world={session.world} board={session.board} />}
 					<RadialMenu />
 					<KeybindHints />
 					<SystemToasts />
@@ -638,13 +615,8 @@ export function App() {
 					<TurnPhaseOverlay />
 					<TutorialOverlay turn={turn} />
 					<EntityTooltip />
-					{session.world && (
-						<SelectedInfo
-							world={session.world}
-							selectedUnitId={selectedUnitId ?? null}
-						/>
-					)}
-				</>
+					{session.world && <SelectedInfo world={session.world} selectedUnitId={selectedUnitId ?? null} />}
+				</div>
 			)}
 		</div>
 	);

@@ -42,8 +42,9 @@ yarn-error.*
 coverage/
 
 # generated native folders
-/ios
-/android
+# Native platform directories are tracked for CI builds
+# /ios
+# /android
 
 # Ralph (ralph-cursor)
 /ralph/projects/*/logs/

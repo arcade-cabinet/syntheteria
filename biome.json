@@ -15,7 +15,9 @@
 			"!poc*.html",
 			"!assets/coi-serviceworker.js",
 			"!public/assets/coi-serviceworker.js",
-			"!.claude/worktrees/**"
+			"!.claude/worktrees/**",
+			"!android/**",
+			"!ios/**"
 		]
 	},
 	"formatter": { "enabled": true, "indentStyle": "tab" },

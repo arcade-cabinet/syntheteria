@@ -1,3 +1,4 @@
+import { BIOME_DEFS } from "../terrain";
 import type { GeneratedBoard, TileData, WeightClass } from "./types";
 
 const DIRECTIONS = [
@@ -7,29 +8,56 @@ const DIRECTIONS = [
 	[-1, 0], // West
 ];
 
-/** Returns true if the tile is passable for the given weight class. */
+/** Amphibious specialization tracks that allow water traversal. */
+const AMPHIBIOUS_TRACKS = new Set([
+	"amphibious_recon",
+	"marine",
+	"aquatic_engineer",
+]);
+/** Aerial specialization tracks that allow mountain and water traversal. */
+const AERIAL_TRACKS = new Set(["aerial_striker"]);
+
+/** Returns true if the tile is passable for the given weight class and specialization. */
 export function isPassableFor(
 	tile: TileData,
 	weightClass: WeightClass = "medium",
+	specialization?: string,
 ): boolean {
-	if (tile.biomeType === "water" || tile.biomeType === "mountain") return false;
+	if (tile.biomeType === "water") {
+		if (
+			specialization &&
+			(AMPHIBIOUS_TRACKS.has(specialization) ||
+				AERIAL_TRACKS.has(specialization))
+		) {
+			return true;
+		}
+		return false;
+	}
+	if (tile.biomeType === "mountain") {
+		if (specialization && AERIAL_TRACKS.has(specialization)) {
+			return true;
+		}
+		return false;
+	}
 	if (tile.biomeType === "wetland" && weightClass !== "light") return false;
 	return true;
 }
 
 /**
  * Returns the movement cost for entering the given tile.
- * When sourceElevation is provided, going UPHILL (destination higher than source)
- * adds +1 per elevation level. Downhill is free (gravity assists).
+ * Reads base cost from BIOME_DEFS. Heavy units pay extra in wetland.
+ * When sourceElevation is provided, going UPHILL adds +1 per elevation level.
  */
 export function movementCost(
 	tile: TileData,
 	weightClass: WeightClass = "medium",
 	sourceElevation?: number,
 ): number {
-	let cost = 1;
-	if (tile.biomeType === "wetland" && weightClass === "light") cost = 2;
-	// Uphill cost: +1 per elevation level gained
+	const biomeDef = BIOME_DEFS[tile.biomeType];
+	let cost = biomeDef?.movementCost ?? 1;
+
+	if (tile.biomeType === "wetland" && weightClass === "heavy") cost = 3;
+
 	if (sourceElevation !== undefined && tile.elevation > sourceElevation) {
 		cost += tile.elevation - sourceElevation;
 	}

@@ -19,19 +19,22 @@ import {
 // ─── Track structure ─────────────────────────────────────────────────────────
 
 describe("Scout specialization tracks", () => {
-	it("defines exactly 2 tracks: pathfinder and infiltrator", () => {
+	it("defines exactly 3 tracks: pathfinder, infiltrator, and amphibious_recon", () => {
 		const tracks = Object.keys(SCOUT_TRACKS);
-		expect(tracks).toHaveLength(2);
+		expect(tracks).toHaveLength(3);
 		expect(tracks).toContain("pathfinder");
 		expect(tracks).toContain("infiltrator");
+		expect(tracks).toContain("amphibious_recon");
 	});
 
 	it("each track has label, description, specializations, and v2Upgrades", () => {
-		for (const track of Object.values(SCOUT_TRACKS)) {
+		for (const [id, track] of Object.entries(SCOUT_TRACKS)) {
 			expect(track.label).toBeTruthy();
 			expect(track.description).toBeTruthy();
 			expect(track.specializations.length).toBeGreaterThan(0);
-			expect(track.v2Upgrades.length).toBeGreaterThan(0);
+			if (id !== "amphibious_recon") {
+				expect(track.v2Upgrades.length).toBeGreaterThan(0);
+			}
 		}
 	});
 

@@ -143,6 +143,37 @@ export const MOTOR_POOL_MARK_TIERS: Record<number, number> = {
 	3: 5,
 };
 
+/** Motor Pool tier → available specialization tracks per class */
+export const MOTOR_POOL_TRACK_TIERS: Record<
+	number,
+	Record<string, readonly string[]>
+> = {
+	1: {
+		scout: ["pathfinder"],
+		infantry: ["vanguard"],
+		worker: ["salvager"],
+		support: ["field_medic"],
+		cavalry: ["flanker"],
+		ranged: ["sniper"],
+	},
+	2: {
+		scout: ["pathfinder", "infiltrator"],
+		infantry: ["vanguard", "shock_trooper"],
+		worker: ["salvager", "deep_miner", "fabricator"],
+		support: ["field_medic", "signal_booster", "war_caller"],
+		cavalry: ["flanker", "interceptor"],
+		ranged: ["sniper", "suppressor"],
+	},
+	3: {
+		scout: ["pathfinder", "infiltrator", "amphibious_recon"],
+		infantry: ["vanguard", "shock_trooper", "marine"],
+		worker: ["salvager", "deep_miner", "fabricator", "aquatic_engineer"],
+		support: ["field_medic", "signal_booster", "war_caller"],
+		cavalry: ["flanker", "interceptor", "aerial_striker"],
+		ranged: ["sniper", "suppressor"],
+	},
+};
+
 /** Check if a building type is available given the player's current buildings */
 export function isBuildingUnlocked(
 	buildingType: BuildingType,

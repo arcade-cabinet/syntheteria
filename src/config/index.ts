@@ -30,6 +30,7 @@ export {
 	BUILDING_UNLOCK_CHAINS,
 	isBuildingUnlocked,
 	MOTOR_POOL_MARK_TIERS,
+	MOTOR_POOL_TRACK_TIERS,
 	MOTOR_POOL_UNIT_TIERS,
 	STARTER_BUILDINGS,
 } from "./buildingUnlockDefs";
@@ -116,6 +117,9 @@ export {
 	VICTORY_TURN_CAP,
 	WORMHOLE_PROJECT_TURNS,
 } from "./gameDefaults";
+export type { GameSpeed, SpeedConfig } from "./gameSpeedDefs";
+// --- Game speed ---
+export { GAME_SPEEDS, getSpeedConfig } from "./gameSpeedDefs";
 export type {
 	HumanEncounter,
 	HumanEncounterTrigger,

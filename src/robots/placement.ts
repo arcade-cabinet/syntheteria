@@ -1,6 +1,6 @@
 import type { World } from "koota";
 import { FACTION_DEFINITIONS } from "../factions";
-import { UnitPos } from "../traits";
+import { UnitPos, UnitSpecialization } from "../traits";
 import { spawnSupport } from "./BuilderBot";
 import { spawnCavalry } from "./CavalryBot";
 import {
@@ -293,6 +293,16 @@ export function computeSpawnCenters(
 	}
 }
 
+/** Default starter specialization track per robot class. Cult units get none. */
+const DEFAULT_STARTER_TRACKS: Partial<Record<RobotClass, string>> = {
+	scout: "pathfinder",
+	infantry: "vanguard",
+	worker: "salvager",
+	support: "field_medic",
+	cavalry: "flanker",
+	ranged: "sniper",
+};
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 export function placeRobots(
@@ -338,8 +348,21 @@ export function placeRobots(
 			}
 
 			if (tile) {
-				spawner(world, tile.x, tile.z, flag.factionId);
+				const entity = spawner(world, tile.x, tile.z, flag.factionId);
 				occupied.add(`${tile.x},${tile.z}`);
+
+				// Assign default starter specialization (non-cult units only)
+				const defaultTrack = DEFAULT_STARTER_TRACKS[flag.robotType];
+				if (
+					defaultTrack &&
+					entity &&
+					typeof entity === "object" &&
+					"add" in entity
+				) {
+					(entity as { add: (t: unknown) => void }).add(
+						UnitSpecialization({ trackId: defaultTrack, trackVersion: 1 }),
+					);
+				}
 			}
 		}
 	}

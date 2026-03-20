@@ -63,7 +63,7 @@ describe("isPassableFor", () => {
 		}
 	});
 
-	it("normal tiles passable for all weight classes at cost 1", () => {
+	it("normal tiles passable for all weight classes", () => {
 		const normalFloors: TileData["biomeType"][] = [
 			"hills",
 			"grassland",
@@ -75,7 +75,6 @@ describe("isPassableFor", () => {
 			const tile = makeTile(0, 0, floor);
 			for (const wc of ["light", "medium", "heavy"] as WeightClass[]) {
 				expect(isPassableFor(tile, wc)).toBe(true);
-				expect(movementCost(tile, wc)).toBe(1);
 			}
 		}
 	});
@@ -87,11 +86,11 @@ describe("movementCost", () => {
 		expect(movementCost(tile, "light")).toBe(2);
 	});
 
-	it("normal tile costs 1 AP for all weight classes", () => {
+	it("normal tile costs match BIOME_DEFS", () => {
 		const tile = makeTile(0, 0, "hills");
-		for (const wc of ["light", "medium", "heavy"] as WeightClass[]) {
-			expect(movementCost(tile, wc)).toBe(1);
-		}
+		expect(movementCost(tile, "medium")).toBe(1.5);
+		const grassTile = makeTile(0, 0, "grassland");
+		expect(movementCost(grassTile, "medium")).toBe(1);
 	});
 });
 
@@ -136,21 +135,21 @@ describe("reachableTiles with weightClass", () => {
 	});
 
 	it("light unit traversal through abyssal costs accumulate correctly", () => {
-		// 3-tile row: transit(1) -> abyssal(2) -> transit(1) = need 4 AP to reach tile 2
+		// 3-tile row: grassland(1) -> wetland(2) -> grassland(1) = need 3 to reach tile 2
 		const tiles = [
 			[
-				makeTile(0, 0, "hills"),
+				makeTile(0, 0, "grassland"),
 				makeTile(1, 0, "wetland"),
-				makeTile(2, 0, "hills"),
+				makeTile(2, 0, "grassland"),
 			],
 		];
 		const board = makeBoard(tiles);
 
-		// 3 AP: can reach abyssal (cost 2) but not beyond (2+1=3, exactly enough)
+		// 3 AP: can reach wetland (cost 2) and grassland beyond (2+1=3, exactly enough)
 		const reachable3 = reachableTiles(0, 0, 3, board, "light");
 		expect(reachable3.has("2,0")).toBe(true);
 
-		// 2 AP: can reach abyssal (cost 2) but not transit beyond (2+1=3 > 2)
+		// 2 AP: can reach wetland (cost 2) but not beyond (2+1=3 > 2)
 		const reachable2 = reachableTiles(0, 0, 2, board, "light");
 		expect(reachable2.has("1,0")).toBe(true);
 		expect(reachable2.has("2,0")).toBe(false);

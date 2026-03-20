@@ -20,6 +20,7 @@ import {
 	VICTORY_RECLAMATION_PERCENT,
 	VICTORY_TURN_CAP,
 } from "../config/gameDefaults";
+import { getSpeedConfig } from "../config/gameSpeedDefs";
 import {
 	Board,
 	Building,
@@ -122,9 +123,12 @@ export function checkVictoryConditions(
 		};
 	}
 
-	// 2. Network Supremacy — signal coverage ≥ threshold
+	// 2. Network Supremacy — signal coverage ≥ threshold (scaled by speed)
+	const speedConfig = getSpeedConfigFromBoard(world);
+	const scaledNetworkPct =
+		VICTORY_NETWORK_COVERAGE_PERCENT * speedConfig.victoryScaleMultiplier;
 	const networkPct = computeSignalCoveragePercent(world);
-	if (networkPct >= VICTORY_NETWORK_COVERAGE_PERCENT) {
+	if (networkPct >= scaledNetworkPct) {
 		return {
 			result: "victory",
 			reason: "network_supremacy",
@@ -132,9 +136,11 @@ export function checkVictoryConditions(
 		};
 	}
 
-	// 3. Reclamation — roboform tiles at level 3+ ≥ threshold
+	// 3. Reclamation — roboform tiles at level 3+ ≥ threshold (scaled by speed)
+	const scaledReclamationPct =
+		VICTORY_RECLAMATION_PERCENT * speedConfig.victoryScaleMultiplier;
 	const reclamationPct = computeReclamationPercent(world, playerFactionId);
-	if (reclamationPct >= VICTORY_RECLAMATION_PERCENT) {
+	if (reclamationPct >= scaledReclamationPct) {
 		return {
 			result: "victory",
 			reason: "reclamation",
@@ -162,9 +168,9 @@ export function checkVictoryConditions(
 		};
 	}
 
-	// 6. Score (Turn Cap) — turn reaches threshold
+	// 6. Score (Turn Cap) — turn reaches threshold (scaled by speed)
 	const turn = getCurrentTurnForVictory(world);
-	if (turn >= VICTORY_TURN_CAP) {
+	if (turn >= speedConfig.turnCap) {
 		const { winnerId, score } = determineScoreWinner(world);
 		return { result: "victory", reason: "score", winnerId, score };
 	}
@@ -378,6 +384,15 @@ function getCurrentTurnForVictory(world: World): number {
 		if (b) return b.turn;
 	}
 	return 1;
+}
+
+/** Read SpeedConfig from the Board entity's gameSpeed field. */
+function getSpeedConfigFromBoard(world: World) {
+	for (const e of world.query(Board)) {
+		const b = e.get(Board);
+		if (b) return getSpeedConfig(b.gameSpeed);
+	}
+	return getSpeedConfig("standard");
 }
 
 /** Reset module state — for tests. */

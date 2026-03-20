@@ -10,10 +10,42 @@
  */
 
 import type { World } from "koota";
+import type { BiomeType } from "../terrain";
+import { BIOME_DEFS, TileBiome } from "../terrain";
 import { Tile } from "../traits";
 
 /** Fringe visibility values by distance past scanRange. */
 const FRINGE_VISIBILITY: readonly number[] = [0.7, 0.4];
+
+/** Look up the biome type at a tile position via TileBiome entities. */
+function lookupBiomeType(
+	world: World,
+	tileX: number,
+	tileZ: number,
+): BiomeType | null {
+	for (const entity of world.query(Tile, TileBiome)) {
+		const tile = entity.get(Tile);
+		if (!tile || tile.x !== tileX || tile.z !== tileZ) continue;
+		const biome = entity.get(TileBiome);
+		return biome?.biomeType ?? null;
+	}
+	return null;
+}
+
+/**
+ * Compute effective scan range for a unit at a given tile position,
+ * applying the biome's vision modifier (e.g. hills +2, forest -2).
+ */
+export function effectiveScanRange(
+	world: World,
+	tileX: number,
+	tileZ: number,
+	baseScanRange: number,
+): number {
+	const biomeType = lookupBiomeType(world, tileX, tileZ);
+	const modifier = biomeType ? (BIOME_DEFS[biomeType]?.visionModifier ?? 0) : 0;
+	return Math.max(1, baseScanRange + modifier);
+}
 
 /**
  * Reveal fog around a position. Tiles within scanRange become fully explored.

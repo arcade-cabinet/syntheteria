@@ -1,7 +1,7 @@
 import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
 import type { RobotClass } from "../robots/types";
-import { TileBiome } from "../terrain";
+import { BIOME_DEFS, TileBiome } from "../terrain";
 import {
 	Board,
 	CombatResult,
@@ -28,6 +28,40 @@ const COUNTER_DAMAGE_RATIO = 0.5;
 
 function manhattanDist(ax: number, az: number, bx: number, bz: number): number {
 	return Math.abs(ax - bx) + Math.abs(az - bz);
+}
+
+/**
+ * Look up the terrain defense bonus for a tile position.
+ * Scans TileBiome entities for the matching tile coordinates.
+ */
+function getTerrainDefenseBonus(
+	world: World,
+	tileX: number,
+	tileZ: number,
+): number {
+	for (const entity of world.query(Tile, TileBiome)) {
+		const tile = entity.get(Tile);
+		if (!tile || tile.x !== tileX || tile.z !== tileZ) continue;
+		const biome = entity.get(TileBiome);
+		if (!biome) continue;
+		return BIOME_DEFS[biome.biomeType]?.defenseBonus ?? 0;
+	}
+	return 0;
+}
+
+/**
+ * Check if the defender has cover from ranged attacks (e.g. forest).
+ * Cover blocks ranged attacks from non-adjacent tiles.
+ */
+function hasTerrainCover(world: World, tileX: number, tileZ: number): boolean {
+	for (const entity of world.query(Tile, TileBiome)) {
+		const tile = entity.get(Tile);
+		if (!tile || tile.x !== tileX || tile.z !== tileZ) continue;
+		const biome = entity.get(TileBiome);
+		if (!biome) continue;
+		return BIOME_DEFS[biome.biomeType]?.coverFromRanged ?? false;
+	}
+	return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -155,13 +189,27 @@ export function resolveAttacks(world: World): void {
 						playSfx("attack_miss");
 						break;
 					}
+
+					// Cover check — forest etc. blocks ranged from non-adjacent
+					if (
+						dist > 1 &&
+						hasTerrainCover(world, targetPos.tileX, targetPos.tileZ)
+					) {
+						pushTurnEvent("Attack failed — target has terrain cover");
+						playSfx("attack_miss");
+						break;
+					}
 				}
 			}
 
-			// Primary damage
+			// Primary damage — terrain defense bonus applied to defender
+			const terrainDefense = targetPos
+				? getTerrainDefenseBonus(world, targetPos.tileX, targetPos.tileZ)
+				: 0;
+			const effectiveDefense = targetStats.defense + terrainDefense;
 			const damage = Math.max(
 				MIN_DAMAGE,
-				attackerStats.attack - targetStats.defense,
+				attackerStats.attack - effectiveDefense,
 			);
 			const newHp = targetStats.hp - damage;
 
@@ -239,10 +287,19 @@ export function resolveAttacks(world: World): void {
 						targetStats.attack > 0 &&
 						counterLos
 					) {
+						const attackerTerrainDefense = attackerPos
+							? getTerrainDefenseBonus(
+									world,
+									attackerPos.tileX,
+									attackerPos.tileZ,
+								)
+							: 0;
+						const attackerEffectiveDefense =
+							attackerStats.defense + attackerTerrainDefense;
 						const counterDamage = Math.max(
 							MIN_DAMAGE,
 							Math.floor(targetStats.attack * COUNTER_DAMAGE_RATIO) -
-								attackerStats.defense,
+								attackerEffectiveDefense,
 						);
 						const attackerNewHp = attackerStats.hp - counterDamage;
 

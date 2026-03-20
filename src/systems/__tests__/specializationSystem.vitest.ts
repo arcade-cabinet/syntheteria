@@ -148,17 +148,17 @@ describe("Track Registry", () => {
 		expect(classes).toContain("worker");
 	});
 
-	it("has 14 total tracks (2+2+2+2+3+3)", () => {
-		expect(TRACK_REGISTRY.size).toBe(14);
+	it("has 18 total tracks (3+3+3+2+3+4)", () => {
+		expect(TRACK_REGISTRY.size).toBe(18);
 	});
 
 	it("getTracksForClass returns correct count per class", () => {
-		expect(getTracksForClass("scout")).toHaveLength(2);
-		expect(getTracksForClass("infantry")).toHaveLength(2);
-		expect(getTracksForClass("cavalry")).toHaveLength(2);
+		expect(getTracksForClass("scout")).toHaveLength(3);
+		expect(getTracksForClass("infantry")).toHaveLength(3);
+		expect(getTracksForClass("cavalry")).toHaveLength(3);
 		expect(getTracksForClass("ranged")).toHaveLength(2);
 		expect(getTracksForClass("support")).toHaveLength(3);
-		expect(getTracksForClass("worker")).toHaveLength(3);
+		expect(getTracksForClass("worker")).toHaveLength(4);
 	});
 
 	it("getSpecializedActions returns actions for known tracks", () => {

@@ -14,10 +14,12 @@
 import { trait, type World } from "koota";
 import { playSfx } from "../audio/sfx";
 import { MOTOR_POOL_UNIT_TIERS } from "../config/buildingUnlockDefs";
+import { getSpeedConfig } from "../config/gameSpeedDefs";
 import { TRACK_REGISTRY } from "../robots/specializations/trackRegistry";
 import type { RobotClass } from "../robots/types";
 import type { ResourceMaterial } from "../terrain/types";
 import {
+	Board,
 	BotFabricator,
 	Building,
 	Powered,
@@ -335,9 +337,13 @@ export function queueFabrication(
 		queueSize: fab.queueSize + 1,
 	});
 
-	// Build time scales down with tier
+	// Build time scales down with tier, and adjusts for game speed
 	const timeMult = MOTOR_POOL_TIME_MULT_BY_TIER[poolTier] ?? 1.0;
-	const effectiveBuildTime = Math.max(1, Math.round(cost.buildTime * timeMult));
+	const speedMult = readBuildTimeMultiplier(world);
+	const effectiveBuildTime = Math.max(
+		1,
+		Math.round(cost.buildTime * timeMult * speedMult),
+	);
 
 	// Spawn job entity
 	world.spawn(
@@ -450,4 +456,13 @@ export function runFabrication(world: World): void {
 			jobEntity.set(FabricationJob, { ...job, turnsRemaining: remaining });
 		}
 	}
+}
+
+/** Read the game speed build time multiplier from the Board entity. */
+function readBuildTimeMultiplier(world: World): number {
+	for (const e of world.query(Board)) {
+		const b = e.get(Board);
+		if (b) return getSpeedConfig(b.gameSpeed).buildTimeMultiplier;
+	}
+	return 1.0;
 }

@@ -2,11 +2,14 @@ import type { World } from "koota";
 import { runYukaAiTurns } from "../ai/yukaAiTurnSystem";
 import type { GeneratedBoard } from "../board/types";
 import { computeEpoch, getEpochEvent } from "../config";
+import { BIOME_DEFS, TileBiome } from "../terrain";
 import {
 	Board,
 	Faction,
 	ResourcePool,
+	Tile,
 	UnitFaction,
+	UnitPos,
 	UnitStats,
 } from "../traits";
 import { setCurrentTurn } from "../ui/game/turnEvents";
@@ -156,6 +159,9 @@ function runEnvironmentPhase(world: World, board: GeneratedBoard): void {
 	runSpecializationPassives(world);
 	tickWormholeProject(world);
 
+	// Environmental terrain drain — desert heat, tundra cold
+	runEnvironmentalDrain(world);
+
 	// Diplomacy: drift hostile→neutral, process backstabs
 	const factionIds = getFactionIds(world);
 	runDiplomacy(world, turn, factionIds);
@@ -173,6 +179,33 @@ function runEnvironmentPhase(world: World, board: GeneratedBoard): void {
 	recordTurnEnd();
 	finalizeTurn();
 	finalizeTurnDeltas();
+}
+
+/**
+ * Environmental terrain drain — units on hostile biomes (desert, tundra) lose HP each turn.
+ * HP cannot drop below 1 from environmental drain alone.
+ */
+function runEnvironmentalDrain(world: World): void {
+	for (const entity of world.query(UnitPos, UnitStats)) {
+		const pos = entity.get(UnitPos);
+		const stats = entity.get(UnitStats);
+		if (!pos || !stats) continue;
+
+		// Look up biome via TileBiome entities
+		let drain = 0;
+		for (const tileEntity of world.query(Tile, TileBiome)) {
+			const tile = tileEntity.get(Tile);
+			if (!tile || tile.x !== pos.tileX || tile.z !== pos.tileZ) continue;
+			const biome = tileEntity.get(TileBiome);
+			if (!biome) break;
+			drain = BIOME_DEFS[biome.biomeType]?.environmentalDrain ?? 0;
+			break;
+		}
+
+		if (drain > 0) {
+			entity.set(UnitStats, { ...stats, hp: Math.max(1, stats.hp - drain) });
+		}
+	}
 }
 
 export function getCurrentTurn(world: World): number {

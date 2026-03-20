@@ -161,16 +161,19 @@ export function getEpochForTechTier(tier: number): EpochDef {
  * Compute the current epoch from the current turn number.
  *
  * Epochs are purely turn-driven — building tier is accepted for
- * signature compatibility but ignored.
+ * signature compatibility but ignored. When epochTurns is provided
+ * (from game speed config), those thresholds are used instead of defaults.
  */
 export function computeEpoch(
 	_highestBuildingTier: number,
 	currentTurn: number,
+	epochTurns?: readonly [number, number, number, number],
 ): EpochDef {
-	if (currentTurn >= 100) return EPOCHS[4];
-	if (currentTurn >= 60) return EPOCHS[3];
-	if (currentTurn >= 30) return EPOCHS[2];
-	if (currentTurn >= 10) return EPOCHS[1];
+	const turns = epochTurns ?? [10, 30, 60, 100];
+	if (currentTurn >= turns[3]) return EPOCHS[4];
+	if (currentTurn >= turns[2]) return EPOCHS[3];
+	if (currentTurn >= turns[1]) return EPOCHS[2];
+	if (currentTurn >= turns[0]) return EPOCHS[1];
 	return EPOCHS[0];
 }
 

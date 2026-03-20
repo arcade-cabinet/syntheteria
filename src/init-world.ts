@@ -18,6 +18,7 @@ import {
 	type SimpleBoardInfo,
 } from "./robots";
 import {
+	effectiveScanRange,
 	placeSalvageProps,
 	placeStarterBuildings,
 	revealFog,
@@ -32,6 +33,7 @@ import type {
 	ClimateProfile,
 	Difficulty,
 	FactionSlot,
+	GameSpeed,
 	StormProfile,
 } from "./world/config";
 
@@ -39,6 +41,7 @@ export interface InitOptions {
 	climateProfile?: ClimateProfile;
 	stormProfile?: StormProfile;
 	difficulty?: Difficulty;
+	gameSpeed?: GameSpeed;
 	/** Faction slots from New Game config. Controls which factions are active and who is the player. */
 	factionSlots?: FactionSlot[];
 }
@@ -52,6 +55,7 @@ export function initWorldFromBoard(
 	const climateProfile = opts.climateProfile ?? "temperate";
 	const stormProfile = opts.stormProfile ?? "volatile";
 	const difficulty = opts.difficulty ?? "standard";
+	const gameSpeed = opts.gameSpeed ?? "standard";
 	const factionSlots = opts.factionSlots;
 
 	// Derive player and active faction info from slots
@@ -72,6 +76,7 @@ export function initWorldFromBoard(
 			climateProfile,
 			stormProfile,
 			difficulty,
+			gameSpeed,
 		}),
 	);
 
@@ -135,7 +140,13 @@ export function initWorldFromBoard(
 		const pos = entity.get(UnitPos);
 		const stats = entity.get(UnitStats);
 		if (pos && stats) {
-			revealFog(world, pos.tileX, pos.tileZ, stats.scanRange);
+			const scanRange = effectiveScanRange(
+				world,
+				pos.tileX,
+				pos.tileZ,
+				stats.scanRange,
+			);
+			revealFog(world, pos.tileX, pos.tileZ, scanRange);
 		}
 	}
 }

@@ -154,7 +154,7 @@ export {
 	runFabrication,
 } from "./fabricationSystem";
 // --- Fog of War ---
-export { revealFog } from "./fogRevealSystem";
+export { effectiveScanRange, revealFog } from "./fogRevealSystem";
 export type {
 	HackType,
 	StartHackResult,

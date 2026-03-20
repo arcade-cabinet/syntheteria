@@ -70,6 +70,14 @@ export type BiomeDef = {
 	resourceAmount: [number, number];
 	/** Movement cost multiplier (1.0 = normal, 2.0 = double). */
 	movementCost: number;
+	/** Defense bonus when a unit stands here (+0 to +2). */
+	defenseBonus: number;
+	/** Scan range modifier (-2 to +2). */
+	visionModifier: number;
+	/** Blocks ranged attacks from non-adjacent tiles. */
+	coverFromRanged: boolean;
+	/** HP lost per turn standing on this tile (0 for most biomes). */
+	environmentalDrain: number;
 };
 
 export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
@@ -80,6 +88,10 @@ export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
 		resourceMaterial: null,
 		resourceAmount: [0, 0],
 		movementCost: Infinity,
+		defenseBonus: 0,
+		visionModifier: 0,
+		coverFromRanged: false,
+		environmentalDrain: 0,
 	},
 	mountain: {
 		label: "Mountain",
@@ -88,6 +100,10 @@ export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
 		resourceMaterial: "stone",
 		resourceAmount: [3, 7],
 		movementCost: Infinity,
+		defenseBonus: 0,
+		visionModifier: 0,
+		coverFromRanged: false,
+		environmentalDrain: 0,
 	},
 	grassland: {
 		label: "Grassland",
@@ -96,6 +112,10 @@ export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
 		resourceMaterial: "food",
 		resourceAmount: [2, 4],
 		movementCost: 1.0,
+		defenseBonus: 0,
+		visionModifier: 0,
+		coverFromRanged: false,
+		environmentalDrain: 0,
 	},
 	forest: {
 		label: "Forest",
@@ -104,6 +124,10 @@ export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
 		resourceMaterial: "timber",
 		resourceAmount: [2, 5],
 		movementCost: 1.5,
+		defenseBonus: 2,
+		visionModifier: -2,
+		coverFromRanged: true,
+		environmentalDrain: 0,
 	},
 	desert: {
 		label: "Desert",
@@ -112,6 +136,10 @@ export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
 		resourceMaterial: "sand",
 		resourceAmount: [1, 3],
 		movementCost: 1.5,
+		defenseBonus: 0,
+		visionModifier: 2,
+		coverFromRanged: false,
+		environmentalDrain: 1,
 	},
 	hills: {
 		label: "Hills",
@@ -120,6 +148,10 @@ export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
 		resourceMaterial: "iron_ore",
 		resourceAmount: [2, 4],
 		movementCost: 1.5,
+		defenseBonus: 1,
+		visionModifier: 2,
+		coverFromRanged: false,
+		environmentalDrain: 0,
 	},
 	wetland: {
 		label: "Wetland",
@@ -128,6 +160,10 @@ export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
 		resourceMaterial: "clay",
 		resourceAmount: [1, 3],
 		movementCost: 2.0,
+		defenseBonus: 1,
+		visionModifier: 0,
+		coverFromRanged: false,
+		environmentalDrain: 0,
 	},
 	tundra: {
 		label: "Tundra",
@@ -136,6 +172,10 @@ export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
 		resourceMaterial: "coal",
 		resourceAmount: [1, 2],
 		movementCost: 1.5,
+		defenseBonus: 0,
+		visionModifier: 1,
+		coverFromRanged: false,
+		environmentalDrain: 1,
 	},
 };
 

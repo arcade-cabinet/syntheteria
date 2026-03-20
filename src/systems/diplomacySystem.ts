@@ -42,7 +42,7 @@ import {
 	setStanding,
 } from "../factions/relations";
 import { FactionRelation, UnitFaction, UnitPos, UnitStats } from "../traits";
-import { revealFog } from "./fogRevealSystem";
+import { effectiveScanRange, revealFog } from "./fogRevealSystem";
 import { pushToast } from "./toastNotifications";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -536,7 +536,13 @@ export function shareAlliedFog(world: World, playerFaction: string): void {
 		if (faction.factionId === playerFaction) continue;
 
 		if (getRelation(world, playerFaction, faction.factionId) === "ally") {
-			revealFog(world, pos.tileX, pos.tileZ, stats.scanRange);
+			const scanRange = effectiveScanRange(
+				world,
+				pos.tileX,
+				pos.tileZ,
+				stats.scanRange,
+			);
+			revealFog(world, pos.tileX, pos.tileZ, scanRange);
 		}
 	}
 }

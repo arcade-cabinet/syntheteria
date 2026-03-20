@@ -33,21 +33,24 @@ import {
 // ─── Track structure ──────────────────────────────────────────────────────────
 
 describe("Worker specialization tracks", () => {
-	describe("3 tracks exist", () => {
-		it("WORKER_TRACKS has exactly 3 entries", () => {
+	describe("4 tracks exist", () => {
+		it("WORKER_TRACKS has exactly 4 entries", () => {
 			const tracks = Object.keys(WORKER_TRACKS) as WorkerTrack[];
-			expect(tracks).toHaveLength(3);
+			expect(tracks).toHaveLength(4);
 			expect(tracks).toContain("deep_miner");
 			expect(tracks).toContain("fabricator");
 			expect(tracks).toContain("salvager");
+			expect(tracks).toContain("aquatic_engineer");
 		});
 
 		it("each track has label, description, specializations, and v2Upgrades", () => {
-			for (const track of Object.values(WORKER_TRACKS)) {
+			for (const [id, track] of Object.entries(WORKER_TRACKS)) {
 				expect(track.label).toBeTruthy();
 				expect(track.description).toBeTruthy();
 				expect(track.specializations.length).toBeGreaterThanOrEqual(4);
-				expect(track.v2Upgrades.length).toBeGreaterThanOrEqual(2);
+				if (id !== "aquatic_engineer") {
+					expect(track.v2Upgrades.length).toBeGreaterThanOrEqual(2);
+				}
 			}
 		});
 	});

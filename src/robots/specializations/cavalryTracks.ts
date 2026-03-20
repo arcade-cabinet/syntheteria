@@ -17,7 +17,7 @@ import type { MarkSpecialization } from "../marks";
 
 // ─── Track IDs ───────────────────────────────────────────────────────────────
 
-export type CavalryTrack = "flanker" | "interceptor";
+export type CavalryTrack = "flanker" | "interceptor" | "aerial_striker";
 
 // ─── Specialization Interface ────────────────────────────────────────────────
 
@@ -166,6 +166,51 @@ export const INTERCEPTOR_V2_UPGRADES: readonly TrackSpecialization[] = [
 	},
 ] as const;
 
+// ─── Track C: Aerial Striker ────────────────────────────────────────────────
+//
+// Fantasy: A lightweight arachnoid with jump-jets. Can fly over mountains
+// and water at higher movement cost. Trades HP for mobility and terrain
+// immunity. Unlocked at Motor Pool tier 3.
+
+export const AERIAL_STRIKER_SPECIALIZATIONS: readonly TrackSpecialization[] = [
+	{
+		track: "aerial_striker",
+		label: "Jump Jets",
+		markLevel: 2 as 3,
+		effectType: "jump_jets",
+		effectValue: 2,
+		description:
+			"Can fly over mountains and water (movement cost 2.0 per tile). +2 MP but -2 max HP (light airframe).",
+	},
+	{
+		track: "aerial_striker",
+		label: "Terrain Immunity",
+		markLevel: 3,
+		effectType: "terrain_immunity",
+		effectValue: 1,
+		description:
+			"Immune to all terrain movement penalties. All tiles cost 1.0 MP to enter.",
+	},
+	{
+		track: "aerial_striker",
+		label: "Strafing Run",
+		markLevel: 4,
+		effectType: "strafing_run",
+		effectValue: 2,
+		description:
+			"Attack action hits target and one adjacent enemy. +2 attack when initiating from 2+ tiles away.",
+	},
+	{
+		track: "aerial_striker",
+		label: "Transcendent Raptor",
+		markLevel: 5,
+		effectType: "transcendent_raptor",
+		effectValue: 1,
+		description:
+			"After attacking, may immediately move up to 3 tiles. Strafing Run hits all enemies adjacent to target.",
+	},
+] as const;
+
 // ─── Combined Track Map ──────────────────────────────────────────────────────
 
 export const CAVALRY_TRACKS: Record<
@@ -190,6 +235,13 @@ export const CAVALRY_TRACKS: Record<
 			"Reaction and denial. Attacks of opportunity, movement disruption, and area lockdown.",
 		specializations: INTERCEPTOR_SPECIALIZATIONS,
 		v2Upgrades: INTERCEPTOR_V2_UPGRADES,
+	},
+	aerial_striker: {
+		label: "Aerial Striker",
+		description:
+			"Airborne mobility. Fly over mountains and water, immune to terrain penalties, strafing attacks.",
+		specializations: AERIAL_STRIKER_SPECIALIZATIONS,
+		v2Upgrades: [],
 	},
 };
 
@@ -271,6 +323,27 @@ export const INTERCEPTOR_ACTIONS: readonly ClassActionDef[] = [
 	},
 ];
 
+/** Actions unlocked by the Aerial Striker track. */
+export const AERIAL_STRIKER_ACTIONS: readonly ClassActionDef[] = [
+	{
+		id: "strafe",
+		label: "Strafe",
+		icon: "\uD83D\uDE80", // rocket
+		tone: "hostile",
+		category: "combat",
+		apCost: 1,
+		minRange: 2,
+		maxRange: 3,
+		requiresStaging: false,
+		requiresAdjacent: false,
+		requiresEnemy: true,
+		requiresFriendly: false,
+		cooldown: 1,
+		description:
+			"Fly-by attack — strike target and one adjacent enemy, then reposition",
+	},
+];
+
 // ─── Tech Tree Additions ─────────────────────────────────────────────────────
 //
 // These techs gate and upgrade the cavalry specialization tracks.
@@ -332,7 +405,9 @@ export function getTrackSpecializations(
 export function getTrackActions(
 	track: CavalryTrack,
 ): readonly ClassActionDef[] {
-	return track === "flanker" ? FLANKER_ACTIONS : INTERCEPTOR_ACTIONS;
+	if (track === "flanker") return FLANKER_ACTIONS;
+	if (track === "aerial_striker") return AERIAL_STRIKER_ACTIONS;
+	return INTERCEPTOR_ACTIONS;
 }
 
 /**
@@ -340,10 +415,10 @@ export function getTrackActions(
  * Handles the Mark II cast (markLevel stored as 3 but logically 2).
  */
 function effectiveMarkLevel(spec: TrackSpecialization): number {
-	// Mark II specs have markLevel cast as 3 but effectType identifies them
 	if (
 		spec.effectType === "side_arc_bonus" ||
-		spec.effectType === "reactive_pounce"
+		spec.effectType === "reactive_pounce" ||
+		spec.effectType === "jump_jets"
 	) {
 		return 2;
 	}

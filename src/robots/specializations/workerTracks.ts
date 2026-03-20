@@ -18,7 +18,11 @@ import type { MarkSpecialization } from "../marks";
 
 // ─── Track IDs ───────────────────────────────────────────────────────────────
 
-export type WorkerTrack = "deep_miner" | "fabricator" | "salvager";
+export type WorkerTrack =
+	| "deep_miner"
+	| "fabricator"
+	| "salvager"
+	| "aquatic_engineer";
 
 // ─── Specialization Interface ────────────────────────────────────────────────
 
@@ -169,6 +173,52 @@ export const SALVAGER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] = [
 	},
 ] as const;
 
+// ─── Track D: Aquatic Engineer ──────────────────────────────────────────────
+//
+// Fantasy: A waterproofed worker that can build on water tiles and harvest
+// aquatic resources. Enables coastal and naval infrastructure. Unlocked at
+// Motor Pool tier 3.
+
+export const AQUATIC_ENGINEER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] =
+	[
+		{
+			track: "aquatic_engineer",
+			label: "Platform Assembly",
+			markLevel: 2 as 3,
+			effectType: "platform_assembly",
+			effectValue: 1,
+			description:
+				"Can build on water tiles (creates platform improvements). Water movement cost 2.0.",
+		},
+		{
+			track: "aquatic_engineer",
+			label: "Aquatic Harvesting",
+			markLevel: 3,
+			effectType: "aquatic_harvest",
+			effectValue: 2,
+			description:
+				"Can harvest water tile resources. Water deposits yield +50% materials.",
+		},
+		{
+			track: "aquatic_engineer",
+			label: "Naval Infrastructure",
+			markLevel: 4,
+			effectType: "naval_infra",
+			effectValue: 1,
+			description:
+				"Buildings on water platforms gain +2 signal range. Platforms connect to power grid across water.",
+		},
+		{
+			track: "aquatic_engineer",
+			label: "Transcendent Dockmaster",
+			markLevel: 5,
+			effectType: "transcendent_dockmaster",
+			effectValue: 1,
+			description:
+				"Platform building is instant. All water tiles within 3 range of platforms become passable. Aquatic buildings have double HP.",
+		},
+	] as const;
+
 // ─── v2 Upgraded Versions ────────────────────────────────────────────────────
 //
 // Unlocked by higher-tier tech tree research. Replaces the base track's
@@ -268,6 +318,13 @@ export const WORKER_TRACKS: Record<
 			"Extraction and recycling. Better salvage yields, rare material chance, instant dismantle.",
 		specializations: SALVAGER_SPECIALIZATIONS,
 		v2Upgrades: SALVAGER_V2_UPGRADES,
+	},
+	aquatic_engineer: {
+		label: "Aquatic Engineer",
+		description:
+			"Naval construction. Build on water, harvest aquatic resources, coastal infrastructure.",
+		specializations: AQUATIC_ENGINEER_SPECIALIZATIONS,
+		v2Upgrades: [],
 	},
 };
 
@@ -385,6 +442,43 @@ export const SALVAGER_ACTIONS: readonly ClassActionDef[] = [
 	},
 ];
 
+/** Actions unlocked by the Aquatic Engineer track. */
+export const AQUATIC_ENGINEER_ACTIONS: readonly ClassActionDef[] = [
+	{
+		id: "build_platform",
+		label: "Platform",
+		icon: "\uD83C\uDF0A", // wave
+		tone: "construct",
+		category: "economy",
+		apCost: 1,
+		minRange: 1,
+		maxRange: 1,
+		requiresStaging: true,
+		requiresAdjacent: true,
+		requiresEnemy: false,
+		requiresFriendly: false,
+		cooldown: 0,
+		description:
+			"Build a platform on adjacent water tile, enabling construction",
+	},
+	{
+		id: "aquatic_harvest",
+		label: "Dredge",
+		icon: "\u2693", // anchor
+		tone: "harvest",
+		category: "economy",
+		apCost: 1,
+		minRange: 0,
+		maxRange: 0,
+		requiresStaging: true,
+		requiresAdjacent: false,
+		requiresEnemy: false,
+		requiresFriendly: false,
+		cooldown: 0,
+		description: "Harvest resources from water tiles",
+	},
+];
+
 // ─── Tech Tree Additions ─────────────────────────────────────────────────────
 //
 // These techs gate and upgrade the worker specialization tracks.
@@ -453,6 +547,8 @@ export function getWorkerTrackActions(
 			return FABRICATOR_ACTIONS;
 		case "salvager":
 			return SALVAGER_ACTIONS;
+		case "aquatic_engineer":
+			return AQUATIC_ENGINEER_ACTIONS;
 	}
 }
 
@@ -464,7 +560,8 @@ function effectiveMarkLevel(spec: WorkerTrackSpecialization): number {
 	if (
 		spec.effectType === "subsurface_probe" ||
 		spec.effectType === "rapid_assembly" ||
-		spec.effectType === "efficient_extraction"
+		spec.effectType === "efficient_extraction" ||
+		spec.effectType === "platform_assembly"
 	) {
 		return 2;
 	}

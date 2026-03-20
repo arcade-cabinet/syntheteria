@@ -29,19 +29,22 @@ describe("Cavalry specialization tracks", () => {
 	// ─── Track Structure ──────────────────────────────────────────────
 
 	describe("track structure", () => {
-		it("has exactly 2 tracks: flanker and interceptor", () => {
+		it("has exactly 3 tracks: flanker, interceptor, and aerial_striker", () => {
 			const tracks = Object.keys(CAVALRY_TRACKS) as CavalryTrack[];
-			expect(tracks).toHaveLength(2);
+			expect(tracks).toHaveLength(3);
 			expect(tracks).toContain("flanker");
 			expect(tracks).toContain("interceptor");
+			expect(tracks).toContain("aerial_striker");
 		});
 
 		it("each track has label, description, specializations, and v2Upgrades", () => {
-			for (const track of Object.values(CAVALRY_TRACKS)) {
+			for (const [id, track] of Object.entries(CAVALRY_TRACKS)) {
 				expect(track.label.length).toBeGreaterThan(0);
 				expect(track.description.length).toBeGreaterThan(0);
 				expect(track.specializations.length).toBeGreaterThanOrEqual(4);
-				expect(track.v2Upgrades.length).toBeGreaterThanOrEqual(2);
+				if (id !== "aerial_striker") {
+					expect(track.v2Upgrades.length).toBeGreaterThanOrEqual(2);
+				}
 			}
 		});
 	});

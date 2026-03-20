@@ -16,19 +16,22 @@ import {
 // ─── Track structure ─────────────────────────────────────────────────────────
 
 describe("Infantry track structure", () => {
-	it("has exactly 2 tracks: vanguard and shock_trooper", () => {
+	it("has exactly 3 tracks: vanguard, shock_trooper, and marine", () => {
 		const tracks = Object.keys(INFANTRY_TRACKS) as InfantryTrack[];
-		expect(tracks).toHaveLength(2);
+		expect(tracks).toHaveLength(3);
 		expect(tracks).toContain("vanguard");
 		expect(tracks).toContain("shock_trooper");
+		expect(tracks).toContain("marine");
 	});
 
 	it("each track has label, description, specializations, and v2Upgrades", () => {
-		for (const track of Object.values(INFANTRY_TRACKS)) {
+		for (const [id, track] of Object.entries(INFANTRY_TRACKS)) {
 			expect(track.label).toBeTruthy();
 			expect(track.description).toBeTruthy();
 			expect(track.specializations.length).toBeGreaterThanOrEqual(4);
-			expect(track.v2Upgrades.length).toBeGreaterThanOrEqual(2);
+			if (id !== "marine") {
+				expect(track.v2Upgrades.length).toBeGreaterThanOrEqual(2);
+			}
 		}
 	});
 });

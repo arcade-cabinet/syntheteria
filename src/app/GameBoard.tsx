@@ -1,16 +1,8 @@
 /**
  * GameBoard — React wrapper that mounts a Phaser game into a div.
  *
- * This is the ONLY React component that touches Phaser. It creates a
- * container div, mounts Phaser.Game via useLayoutEffect (synchronous,
- * per official Phaser+React template), and cleans up on unmount.
- *
+ * This is the ONLY React component that touches Phaser.
  * Communication: React ↔ Phaser via EventBus (Phaser EventEmitter).
- * React listens for scene-ready, tile-clicked, etc.
- * React emits end-turn, select-unit, etc.
- *
- * All game UI (HUD, modals, overlays) renders as React DOM siblings
- * layered on top of this div.
  */
 
 import { forwardRef, useEffect, useLayoutEffect, useRef } from "react";
@@ -31,14 +23,30 @@ interface GameBoardProps {
 }
 
 export const GameBoard = forwardRef<GameBoardRef, GameBoardProps>(
-	function GameBoard({ session, onSceneReady, onTileClick, onUnitSelect }, ref) {
+	function GameBoard(
+		{ session, onSceneReady, onTileClick, onUnitSelect },
+		ref,
+	) {
 		const containerRef = useRef<HTMLDivElement>(null);
 		const gameRef = useRef<Phaser.Game | null>(null);
+		const callbacksRef = useRef({ onSceneReady, onTileClick, onUnitSelect });
+		callbacksRef.current = { onSceneReady, onTileClick, onUnitSelect };
 
-		// Mount Phaser game synchronously (useLayoutEffect per official template)
 		useLayoutEffect(() => {
 			const container = containerRef.current;
 			if (!container || !session) return;
+
+			// Register EventBus listeners BEFORE creating the game
+			// so we catch scene-ready even if it fires during init
+			const handleSceneReady = () => callbacksRef.current.onSceneReady?.();
+			const handleTileClick = (x: number, z: number) =>
+				callbacksRef.current.onTileClick?.(x, z);
+			const handleUnitSelect = (id: number | null) =>
+				callbacksRef.current.onUnitSelect?.(id);
+
+			EventBus.on("scene-ready", handleSceneReady);
+			EventBus.on("tile-clicked", handleTileClick);
+			EventBus.on("unit-selected", handleUnitSelect);
 
 			const boardConfig: GameBoardConfig = {
 				world: session.world,
@@ -49,7 +57,6 @@ export const GameBoard = forwardRef<GameBoardRef, GameBoardProps>(
 			const game = createGame(container, boardConfig);
 			gameRef.current = game;
 
-			// Expose ref to parent
 			if (typeof ref === "function") {
 				ref({ game });
 			} else if (ref) {
@@ -57,6 +64,9 @@ export const GameBoard = forwardRef<GameBoardRef, GameBoardProps>(
 			}
 
 			return () => {
+				EventBus.off("scene-ready", handleSceneReady);
+				EventBus.off("tile-clicked", handleTileClick);
+				EventBus.off("unit-selected", handleUnitSelect);
 				game.destroy(true);
 				gameRef.current = null;
 				if (typeof ref === "function") {
@@ -66,23 +76,6 @@ export const GameBoard = forwardRef<GameBoardRef, GameBoardProps>(
 				}
 			};
 		}, [session, ref]);
-
-		// EventBus listeners — Phaser → React
-		useEffect(() => {
-			const handleSceneReady = () => onSceneReady?.();
-			const handleTileClick = (x: number, z: number) => onTileClick?.(x, z);
-			const handleUnitSelect = (id: number | null) => onUnitSelect?.(id);
-
-			EventBus.on("scene-ready", handleSceneReady);
-			EventBus.on("tile-clicked", handleTileClick);
-			EventBus.on("unit-selected", handleUnitSelect);
-
-			return () => {
-				EventBus.off("scene-ready", handleSceneReady);
-				EventBus.off("tile-clicked", handleTileClick);
-				EventBus.off("unit-selected", handleUnitSelect);
-			};
-		}, [onSceneReady, onTileClick, onUnitSelect]);
 
 		return (
 			<div

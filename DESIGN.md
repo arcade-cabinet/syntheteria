@@ -67,7 +67,7 @@ world generation. They are map objects, not terrain types.
 | 3 | Plated | Steel grey with faction accent trim |
 
 As factions roboform, natural Earth becomes machine surface. At endgame, a dominant faction's
-territory reads as continuous infrastructure — the ecumenopolis built, not inherited.
+territory reads as continuous machine infrastructure — a machine world forged, not inherited.
 
 ### Presentation
 

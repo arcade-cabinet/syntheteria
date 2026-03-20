@@ -50,6 +50,9 @@ export function initFactions(
 					circuits: 12,
 					timber: 8,
 					glass: 4,
+					coal: 15,
+					sand: 10,
+					fuel: 6,
 				};
 
 		const poolInit = isPlayer

@@ -104,7 +104,6 @@ describe("resourceRenewalSystem", () => {
 	it("non-generating buildings produce nothing", () => {
 		spawnBuilding("motor_pool", "player", true);
 		spawnBuilding("storage_hub", "player", true);
-		spawnBuilding("defense_turret", "player", true);
 
 		const total = runResourceRenewal(world);
 

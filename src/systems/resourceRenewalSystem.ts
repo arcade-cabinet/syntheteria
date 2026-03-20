@@ -27,6 +27,8 @@ export const RENEWAL_YIELDS: Partial<
 	solar_array: { material: "coal", amount: 1 },
 	resource_refinery: { material: "iron_ore", amount: 2 },
 	synthesizer: { material: "stone", amount: 1 },
+	defense_turret: { material: "coal", amount: 1 },
+	outpost: { material: "timber", amount: 1 },
 };
 
 /**

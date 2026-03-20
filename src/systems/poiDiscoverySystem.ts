@@ -11,6 +11,7 @@ import { Board, POIMarker, UnitFaction, UnitPos } from "../traits";
 import { pushTurnEvent } from "../ui/game/turnEvents";
 import { addResources } from "./resourceSystem";
 import { pushToast } from "./toastNotifications";
+import { fireTutorialTooltip } from "./tutorialTooltips";
 
 // ─── Holocron lore text ─────────────────────────────────────────────────────
 
@@ -145,6 +146,8 @@ export function runPOIDiscovery(world: World): void {
 		if (!unitPositions.has(key)) continue;
 
 		poiEntity.set(POIMarker, { ...marker, discovered: true, cleared: true });
+
+		fireTutorialTooltip("first_poi_discovered");
 
 		const poiType = marker.poiType as POIType;
 		const loreEntry = HOLOCRON_LORE[poiType];

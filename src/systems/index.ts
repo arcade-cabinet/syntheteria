@@ -365,6 +365,14 @@ export {
 	skipTutorial,
 	subscribeTutorial,
 } from "./tutorialSystem";
+export type { TooltipTrigger } from "./tutorialTooltips";
+// --- Tutorial Tooltips (organic contextual hints) ---
+export {
+	fireTutorialTooltip,
+	getAllTooltipDefs,
+	hasTooltipFired,
+	resetTutorialTooltips,
+} from "./tutorialTooltips";
 export type { UpgradeResult } from "./upgradeSystem";
 export {
 	applyMark,

@@ -42,6 +42,7 @@ import { runSynthesis } from "./synthesisSystem";
 import { pushToast } from "./toastNotifications";
 import { finalizeTurn } from "./turnEventLog";
 import { runTurrets } from "./turretSystem";
+import { fireTutorialTooltip } from "./tutorialTooltips";
 import { checkVictoryConditions, type GameOutcome } from "./victorySystem";
 import { tickWormholeProject } from "./wormholeProject";
 
@@ -205,6 +206,8 @@ function checkEpochTransition(world: World): void {
 	if (epoch.number !== lastEpochNumber && !firedEpochEvents.has(epoch.number)) {
 		firedEpochEvents.add(epoch.number);
 		lastEpochNumber = epoch.number;
+
+		fireTutorialTooltip("first_epoch_change");
 
 		if (epoch.number === 3) {
 			fireELArrival(world);

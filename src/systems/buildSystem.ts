@@ -25,6 +25,7 @@ import {
 	TurretStats,
 } from "../traits";
 import { canAfford, spendResources } from "./resourceSystem";
+import { fireTutorialTooltip } from "./tutorialTooltips";
 import {
 	canStartWormholeProject,
 	isValidWormholePlacement,
@@ -179,6 +180,8 @@ export function confirmBuildPlacement(
 	pendingBuildType = null;
 
 	playSfx("build_complete");
+
+	fireTutorialTooltip("first_building_placed");
 
 	return true;
 }

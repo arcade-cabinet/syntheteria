@@ -18,6 +18,7 @@ import { recordCombatEngagement, recordCombatKill } from "./campaignStats";
 import { recordAggression } from "./diplomacySystem";
 import { awardXP, recordKill } from "./experienceSystem";
 import { triggerCombatSpeech } from "./speechTriggers";
+import { fireTutorialTooltip } from "./tutorialTooltips";
 
 /** Minimum damage floor — even a heavily armored target takes at least 1. */
 const MIN_DAMAGE = 1;
@@ -177,6 +178,8 @@ export function resolveAttacks(world: World): void {
 
 			// Trigger combat speech for attacker
 			triggerCombatSpeech(world, attacker.id(), attackerName);
+
+			fireTutorialTooltip("first_combat");
 
 			if (newHp <= 0) {
 				// Add CombatResult before destroying so renderer can flash

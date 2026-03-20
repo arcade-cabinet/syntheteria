@@ -12,6 +12,7 @@ import type { ResourceMaterial } from "../terrain";
 import { Building } from "../traits";
 import { canAfford, spendResources } from "./resourceSystem";
 import { pushToast } from "./toastNotifications";
+import { fireTutorialTooltip } from "./tutorialTooltips";
 
 export interface BuildingUpgradeJob {
 	entityId: number;
@@ -159,6 +160,7 @@ export function runBuildingUpgrades(world: World): void {
 								6000,
 							);
 						}
+						fireTutorialTooltip("first_building_upgraded");
 					}
 					break;
 				}

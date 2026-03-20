@@ -30,6 +30,7 @@ import {
 import { pushTurnEvent } from "../ui/game/turnEvents";
 import { canSpawnUnit } from "./populationSystem";
 import { canAfford, spendResources } from "./resourceSystem";
+import { fireTutorialTooltip } from "./tutorialTooltips";
 
 // ─── Fabrication job trait ──────────────────────────────────────────────────
 
@@ -432,6 +433,8 @@ export function runFabrication(world: World): void {
 			pushTurnEvent(
 				`Fabrication complete: ${job.robotClass.replace(/_/g, " ")}${trackLabel}`,
 			);
+
+			fireTutorialTooltip("first_fabrication");
 
 			// Free up the fabrication slot
 			const fab = pool.get(BotFabricator)!;

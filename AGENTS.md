@@ -137,3 +137,92 @@ pnpm verify:with-ct — optional; browser CT is bitrotted (stale paths to old
   src/rendering/*R3F). Repair is Phase C in docs/CLOUD_AGENT_RUNBOOK.md.
   CI runs test:ct with continue-on-error: true.
 ```
+Playwright runs **headed** (`headless: false`); in CI, `xvfb-run -a` provides a virtual display. Done checklist: [docs/plans/IS_THE_GAME_DONE.md](docs/plans/IS_THE_GAME_DONE.md).
+
+## Agent Roles
+
+### Registered Agents (`.claude/agents/`)
+
+| Agent | Scope | Key Domains |
+|-------|-------|-------------|
+| **systems-engineer** | ECS systems, game loop, Koota traits | `src/systems/`, `src/ecs/` |
+| **ai-engineer** | AI behavior, GOAP, steering, pathfinding | `src/ai/`, `src/systems/governor*` |
+| **frontend-designer** | UI panels, HUD, modals, mobile layout | `src/ui/`, `src/input/` |
+| **rendering-engineer** | R3F renderers, materials, shaders | `src/rendering/` |
+| **audio-engineer** | Spatial audio, SFX, adaptive music | `src/audio/` |
+| **config-docs** | Config files, documentation, CI | `docs/`, `config/`, `.github/` |
+
+### Merge Order (Multi-Agent)
+
+When agents work in parallel on isolated worktrees:
+
+1. **systems-engineer** first — foundational ECS changes
+2. **ai-engineer** second — depends on ECS types
+3. **rendering-engineer** third — depends on ECS + world state
+4. **frontend-designer** fourth — depends on system APIs
+5. **audio-engineer** fifth — depends on event system
+6. **config-docs** last — documents what changed
+
+### Worktree Protocol
+
+All parallel agent work uses git worktrees:
+1. Create worktree per agent: `.claude/worktrees/<agent>-<ticket>`
+2. Each agent works exclusively in its worktree
+3. Merge back one at a time to primary branch
+4. Never run two agents on same worktree
+
+## Key System Files
+
+| System | File | Purpose |
+|--------|------|---------|
+| Game Loop | `src/ecs/gameState.ts` | 60fps tick, 21 systems, 8 phases |
+| Turn System | `src/systems/turnSystem.ts` | AP/MP per unit, turn phases |
+| Resources | `src/systems/resources.ts` | 11 material types, add/spend |
+| Harvest | `src/systems/harvestSystem.ts` | Structure → materials pipeline |
+| Building | `src/systems/buildingPlacement.ts` | 7 building types, adjacency |
+| Combat | `src/systems/combat.ts` | Component damage, formations |
+| Tech Tree | `src/systems/techTree.ts` | Research DAG, effects |
+| Diplomacy | `src/systems/diplomacy.ts` | Standing, trade, alliances |
+| Victory | `src/systems/victoryConditions.ts` | 3 win paths |
+| Exploration | `src/systems/exploration.ts` | Fog of war, vision radius |
+| World Gen | `src/world/generation.ts` | Procedural ecumenopolis |
+| Radial Menu | `src/systems/radialMenu.ts` | Context menu state |
+| Floor Render | `src/rendering/StructuralFloorRenderer.tsx` | PBR textured floors |
+| Game HUD | `src/ui/panels/GameHUD.tsx` (RN), `src/ui/dom/GameHUDDom.tsx` (Vite) | Top bar, resources, turn |
+| App Entry (Vite) | `src/main.tsx` → `AppVite.tsx` | Capacitor SQLite + session DB, R3F scene, DOM HUD |
+| App Entry (Expo) | `App.tsx` | Legacy Expo/RN path; 39 renderers |
+
+## Documentation Structure
+
+All docs live under `docs/`. See [docs/AGENTS.md](docs/AGENTS.md) for the full index.
+
+| Layer | Purpose | Files |
+|-------|---------|-------|
+| **Memory Bank** | Session bootstrap — read first | 7 files in `docs/memory-bank/` |
+| **Design** | What the game IS | 6 files in `docs/design/` |
+| **Technical** | How it's built | 5 files in `docs/technical/` |
+| **Interface** | Player-facing surfaces | 2 files in `docs/interface/` |
+| **Execution** | Roadmap | `docs/plans/GAMEPLAN_1_0.md` |
+
+## Cursor Cloud specific instructions
+
+### Services
+
+Syntheteria is fully client-side — **no external backend, database, or Docker services are needed**. The only process to run is the Vite dev server (`pnpm dev`, port 5173). Capacitor SQLite and sql.js operate entirely in-browser.
+
+### Running checks
+
+All validation commands are documented in the Validation table above. Quick reference:
+
+- **Lint**: `pnpm lint` (Biome)
+- **Type check**: `pnpm tsc`
+- **Unit tests**: `pnpm test` (Jest, 142 suites / 2500+ tests)
+- **Vitest**: `pnpm test:vitest` (4 files; note: `AppVite.vitest.tsx` has a pre-existing failure looking for a "Continue" button that the UI no longer renders)
+- **Playwright CT**: `xvfb-run -a pnpm test:ct` (headed; requires `xvfb-run` in headless VMs). Many CT tests fail in Cloud VMs because the R3F 3D scenes require GPU/WebGL capabilities not available in software-rendered environments.
+- **Full CI**: `pnpm verify` (lint + tsc + test + test:ct)
+
+### Gotchas
+
+- `pnpm install` may warn about ignored build scripts for `better-sqlite3` and `sharp`. These do not block `pnpm dev`, `pnpm build`, Jest, or Vitest. They may affect `drizzle-kit` or Playwright screenshot comparison respectively.
+- Playwright tests run **headed** (`headless: false` in config). Always wrap with `xvfb-run -a` in headless Cloud VMs.
+- After clicking "New Game" in the browser, the game requires 3D model assets (`.glb` files in `public/assets/`) and WebGL. If the environment lacks GPU support or models are missing, the game scene will crash on asset load (intentional fail-hard behavior per architecture rules).

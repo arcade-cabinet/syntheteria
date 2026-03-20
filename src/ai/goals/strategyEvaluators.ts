@@ -28,16 +28,26 @@ export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	calculateDesirability(agent: SyntheteriaAgent): number {
 		const _ctx = getTurnContext();
 		// Logistic time ramp: smooth curve from 0.5 early to 0.9 late
-		// Centered at turn 10, steepness 0.3 — gradual, not a cliff
 		const timeScore = 0.5 + 0.4 * logistic(_ctx.currentTurn, 10, 0.3);
 
 		// If faction hasn't expanded recently (no buildings growing), escalate
 		const stagnationBonus =
 			_ctx.factionBuildingCount < 4 && _ctx.currentTurn > 15 ? 0.1 : 0;
 
+		// Late game with no enemies: high urgency to find rivals
+		const seekEnemyBonus =
+			_ctx.enemies.length === 0 &&
+			_ctx.rememberedEnemies.length === 0 &&
+			_ctx.currentTurn > 20
+				? 0.15
+				: 0;
+
 		return Math.min(
 			1,
-			timeScore + stagnationBonus + momentumBonus(agent, "move"),
+			timeScore +
+				stagnationBonus +
+				seekEnemyBonus +
+				momentumBonus(agent, "move"),
 		);
 	}
 
@@ -52,6 +62,27 @@ export class ExpandEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 				if (dist < closestDist) {
 					closestDist = dist;
 					closest = enemy;
+				}
+			}
+			if (closest) {
+				agent.decidedAction = {
+					type: "move",
+					toX: closest.x,
+					toZ: closest.z,
+				};
+				return;
+			}
+		}
+
+		// Priority 1b: Move toward enemy buildings — seek and destroy
+		if (_ctx.enemyBuildings.length > 0) {
+			let closest: (typeof _ctx.enemyBuildings)[0] | null = null;
+			let closestDist = Infinity;
+			for (const bldg of _ctx.enemyBuildings) {
+				const dist = manhattan(agent.tileX, agent.tileZ, bldg.x, bldg.z);
+				if (dist < closestDist) {
+					closestDist = dist;
+					closest = bldg;
 				}
 			}
 			if (closest) {

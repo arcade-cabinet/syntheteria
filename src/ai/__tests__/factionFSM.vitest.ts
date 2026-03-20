@@ -46,11 +46,11 @@ describe("FactionFSM", () => {
 		expect(fsm.currentStateId).toBe("EXPLORE");
 	});
 
-	it("EXPLORE → EXPAND at turn 10", () => {
-		fsm.update(makeCtx({ currentTurn: 9 }));
+	it("EXPLORE → EXPAND at turn 8", () => {
+		fsm.update(makeCtx({ currentTurn: 7 }));
 		expect(fsm.currentStateId).toBe("EXPLORE");
 
-		fsm.update(makeCtx({ currentTurn: 10 }));
+		fsm.update(makeCtx({ currentTurn: 8 }));
 		expect(fsm.currentStateId).toBe("EXPAND");
 	});
 
@@ -66,24 +66,24 @@ describe("FactionFSM", () => {
 
 	it("EXPAND → ATTACK when conditions met", () => {
 		// First get to EXPAND
-		fsm.update(makeCtx({ currentTurn: 15 }));
+		fsm.update(makeCtx({ currentTurn: 10 }));
 		expect(fsm.currentStateId).toBe("EXPAND");
 
-		// Not enough conditions yet (too early)
+		// Needs enemy contact AND 6+ units, or turn 40+ with 5+
 		fsm.update(
-			makeCtx({ currentTurn: 20, unitCount: 10, enemyFactionContacted: true }),
+			makeCtx({ currentTurn: 15, unitCount: 5, enemyFactionContacted: true }),
 		);
 		expect(fsm.currentStateId).toBe("EXPAND");
 
-		// All conditions met: turn 25+, enemy contacted, units >= 6
+		// 6+ units + enemy contacted → ATTACK
 		fsm.update(
-			makeCtx({ currentTurn: 25, unitCount: 6, enemyFactionContacted: true }),
+			makeCtx({ currentTurn: 15, unitCount: 6, enemyFactionContacted: true }),
 		);
 		expect(fsm.currentStateId).toBe("ATTACK");
 	});
 
 	it("EXPAND → FORTIFY when threats appear", () => {
-		fsm.update(makeCtx({ currentTurn: 15 }));
+		fsm.update(makeCtx({ currentTurn: 10 }));
 		expect(fsm.currentStateId).toBe("EXPAND");
 
 		fsm.update(makeCtx({ currentTurn: 20, nearbyThreats: 4 }));
@@ -102,15 +102,15 @@ describe("FactionFSM", () => {
 
 	it("FORTIFY → ATTACK when threats gone and attack conditions met", () => {
 		// Get to FORTIFY
-		fsm.update(makeCtx({ nearbyThreats: 3, currentTurn: 50 }));
+		fsm.update(makeCtx({ nearbyThreats: 3, currentTurn: 30 }));
 		expect(fsm.currentStateId).toBe("FORTIFY");
 
-		// Threats gone, can attack
+		// Threats gone, can attack (5+ units is enough due to the 25+ turn trigger)
 		fsm.update(
 			makeCtx({
 				nearbyThreats: 0,
-				unitCount: 8,
-				currentTurn: 50,
+				unitCount: 6,
+				currentTurn: 30,
 				enemyFactionContacted: true,
 			}),
 		);
@@ -119,9 +119,9 @@ describe("FactionFSM", () => {
 
 	it("ATTACK → RETREAT when units < 3", () => {
 		// Get to ATTACK
-		fsm.update(makeCtx({ currentTurn: 15 })); // → EXPAND
+		fsm.update(makeCtx({ currentTurn: 10 })); // → EXPAND
 		fsm.update(
-			makeCtx({ currentTurn: 30, unitCount: 10, enemyFactionContacted: true }),
+			makeCtx({ currentTurn: 15, unitCount: 10, enemyFactionContacted: true }),
 		); // → ATTACK
 		expect(fsm.currentStateId).toBe("ATTACK");
 
@@ -130,9 +130,9 @@ describe("FactionFSM", () => {
 	});
 
 	it("ATTACK → EXPAND when units drop to 3", () => {
-		fsm.update(makeCtx({ currentTurn: 15 }));
+		fsm.update(makeCtx({ currentTurn: 10 }));
 		fsm.update(
-			makeCtx({ currentTurn: 30, unitCount: 10, enemyFactionContacted: true }),
+			makeCtx({ currentTurn: 15, unitCount: 10, enemyFactionContacted: true }),
 		);
 		expect(fsm.currentStateId).toBe("ATTACK");
 
@@ -168,7 +168,7 @@ describe("FactionFSM", () => {
 	it("tracks previousStateId", () => {
 		expect(fsm.previousStateId).toBe(null);
 
-		fsm.update(makeCtx({ currentTurn: 15 }));
+		fsm.update(makeCtx({ currentTurn: 10 }));
 		expect(fsm.previousStateId).toBe("EXPLORE");
 		expect(fsm.currentStateId).toBe("EXPAND");
 	});
@@ -186,7 +186,7 @@ describe("FactionFSM bias overrides", () => {
 		const bias = fsm.getBias();
 		expect(bias.scout).toBeGreaterThan(1);
 		expect(bias.expand).toBeGreaterThan(1);
-		expect(bias.attack).toBeLessThan(1);
+		expect(bias.attack).toBeLessThanOrEqual(1);
 	});
 
 	it("ATTACK state boosts attack and chase", () => {
@@ -239,7 +239,7 @@ describe("FSM registry", () => {
 
 	it("resetFactionFSMs clears all instances", () => {
 		const fsm1 = getFactionFSM("reclaimers");
-		fsm1.update(makeCtx({ currentTurn: 15 }));
+		fsm1.update(makeCtx({ currentTurn: 10 }));
 		expect(fsm1.currentStateId).toBe("EXPAND");
 
 		resetFactionFSMs();
@@ -253,7 +253,7 @@ describe("FSM registry", () => {
 		const recl = getFactionFSM("reclaimers");
 		const volt = getFactionFSM("volt_collective");
 
-		recl.update(makeCtx({ currentTurn: 15 }));
+		recl.update(makeCtx({ currentTurn: 10 }));
 		volt.update(makeCtx({ currentTurn: 5 }));
 
 		expect(recl.currentStateId).toBe("EXPAND");

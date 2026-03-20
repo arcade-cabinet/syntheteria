@@ -493,9 +493,7 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		}
 
 		// Force ratio: own combat units vs nearest enemy faction's units
-		const ownCombatUnits = factionSnapshots.filter(
-			(s) => s.attack > 0,
-		).length;
+		const ownCombatUnits = factionSnapshots.filter((s) => s.attack > 0).length;
 		const enemyFactionUnitCounts = new Map<string, number>();
 		for (const e of factionEnemies) {
 			const count = enemyFactionUnitCounts.get(e.factionId) ?? 0;

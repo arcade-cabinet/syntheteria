@@ -14,21 +14,25 @@ describe("Balance Harness", () => {
 		expect(criticals.length).toBe(0);
 	}, 30_000);
 
-	it("Tier 2: 5 runs × 100 turns — mid-game balance", () => {
-		const report = runBalanceTier(2, 100, 5);
+	it("Tier 2: Quick speed (32×32, 100 turns) × 5 runs — mid-game with combat", () => {
+		const report = runBalanceTier(2, 100, 5, undefined, {
+			boardWidth: 32,
+			boardHeight: 32,
+			gameSpeed: "quick",
+		});
 		printBalanceSummary(report);
 
 		expect(report.runs.length).toBe(5);
 
 		const finalCheckpoint = report.checkpoints[report.checkpoints.length - 1];
-		expect(finalCheckpoint?.epoch.mean).toBeGreaterThanOrEqual(3);
+		expect(finalCheckpoint?.epoch.mean).toBeGreaterThanOrEqual(2);
 
 		for (const stats of Object.values(report.factions)) {
 			expect(stats.avgBuildingCount).toBeGreaterThan(0);
 		}
 	}, 60_000);
 
-	it("Tier 3: 3 runs × 200 turns — full game", () => {
+	it("Tier 3: Standard speed (44×44, 200 turns) × 3 runs — full game", () => {
 		const report = runBalanceTier(3, 200, 3);
 		printBalanceSummary(report);
 

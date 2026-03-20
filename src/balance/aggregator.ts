@@ -99,9 +99,7 @@ function aggregateCheckpoints(runs: RunResult[]): CheckpointAggregate[] {
 				snapshots.map((s) => s.cultStructureCount),
 			),
 			epoch: computeAggregate(snapshots.map((s) => s.epoch)),
-			contestedTiles: computeAggregate(
-				snapshots.map((s) => s.contestedTiles),
-			),
+			contestedTiles: computeAggregate(snapshots.map((s) => s.contestedTiles)),
 			battlesThisCheckpoint: computeAggregate(
 				snapshots.map((s) => s.battlesThisCheckpoint),
 			),

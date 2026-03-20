@@ -33,7 +33,11 @@ export function runBalanceTier(
 	turnCount: number,
 	runCount: number,
 	configOverrides?: Record<string, unknown>,
-	opts?: { boardWidth?: number; boardHeight?: number; gameSpeed?: "quick" | "standard" | "epic" | "marathon" },
+	opts?: {
+		boardWidth?: number;
+		boardHeight?: number;
+		gameSpeed?: "quick" | "standard" | "epic" | "marathon";
+	},
 ): BatchReport {
 	const boardWidth = opts?.boardWidth ?? 44;
 	const boardHeight = opts?.boardHeight ?? 44;
@@ -53,7 +57,12 @@ export function runBalanceTier(
 			}),
 		);
 	}
-	const report = aggregateRuns(runs, tier, turnCount, `${boardWidth}x${boardHeight}`);
+	const report = aggregateRuns(
+		runs,
+		tier,
+		turnCount,
+		`${boardWidth}x${boardHeight}`,
+	);
 	report.diagnostics = diagnoseGaps(report);
 	return report;
 }

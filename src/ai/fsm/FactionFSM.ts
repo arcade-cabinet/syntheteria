@@ -90,14 +90,14 @@ const EXPLORE_STATE: FactionState = {
 		scout: 1.8,
 		expand: 1.4,
 		harvest: 1.2,
-		attack: 0.8,
-		chase: 0.6,
+		attack: 1.0,
+		chase: 0.8,
 		idle: 0.3,
 	}),
 	checkTransition(ctx) {
 		if (ctx.unitCount < 3) return "RETREAT";
 		if (ctx.nearbyThreats >= 3) return "FORTIFY";
-		if (ctx.currentTurn >= 10) return "EXPAND";
+		if (ctx.currentTurn >= 8) return "EXPAND";
 		return null;
 	},
 };
@@ -105,24 +105,23 @@ const EXPLORE_STATE: FactionState = {
 const EXPAND_STATE: FactionState = {
 	getBias: () => ({
 		...NEUTRAL_BIAS,
-		build: 1.8,
+		build: 1.6,
 		expand: 1.6,
-		harvest: 1.5,
+		harvest: 1.4,
 		scout: 1.4,
-		attack: 1.3,
-		chase: 1.3,
-		evade: 1.0,
-		idle: 0.1, // Idle must NEVER win in EXPAND — all productive actions dominate
+		attack: 1.5,
+		chase: 1.5,
+		evade: 0.8,
+		idle: 0.1,
 	}),
 	checkTransition(ctx) {
 		if (ctx.unitCount < 3) return "RETREAT";
 		if (ctx.nearbyThreats >= 3) return "FORTIFY";
-		// Transition to ATTACK earlier: 6+ units and enemy contacted
-		if (
-			ctx.currentTurn >= 25 &&
-			ctx.enemyFactionContacted &&
-			ctx.unitCount >= 6
-		) {
+		// Transition to ATTACK early: 6+ units and enemy contacted, or turn 40+ regardless
+		if (ctx.enemyFactionContacted && ctx.unitCount >= 6) {
+			return "ATTACK";
+		}
+		if (ctx.currentTurn >= 40 && ctx.unitCount >= 5) {
 			return "ATTACK";
 		}
 		return null;

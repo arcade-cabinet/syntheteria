@@ -219,9 +219,10 @@ function collectEnemyPositions(
 	return positions;
 }
 
-function computeCentroid(
-	positions: Array<{ x: number; z: number }>,
-): { x: number; z: number } {
+function computeCentroid(positions: Array<{ x: number; z: number }>): {
+	x: number;
+	z: number;
+} {
 	if (positions.length === 0) return { x: 0, z: 0 };
 	let sx = 0;
 	let sz = 0;

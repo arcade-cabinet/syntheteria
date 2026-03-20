@@ -172,8 +172,7 @@ export function runSingleGame(config: RunConfig): RunResult {
 
 		// Detect battles: if any faction lost units this turn
 		const anyLosses = AI_FACTIONS.some(
-			(fid) =>
-				(currentUnitCounts[fid] ?? 0) < (prevUnitCounts[fid] ?? 0),
+			(fid) => (currentUnitCounts[fid] ?? 0) < (prevUnitCounts[fid] ?? 0),
 		);
 		if (anyLosses) battlesSinceCheckpoint++;
 
@@ -320,9 +319,7 @@ function takeSnapshot(
 	for (const fid of AI_FACTIONS) {
 		buildingDiversity[fid] = buildingTypesByFaction[fid]?.size ?? 0;
 		avgBuildingTier[fid] =
-			buildingCounts[fid] > 0
-				? buildingTierSums[fid] / buildingCounts[fid]
-				: 0;
+			buildingCounts[fid] > 0 ? buildingTierSums[fid] / buildingCounts[fid] : 0;
 	}
 
 	// Unit metrics — combat vs worker ratio, specialization
@@ -430,7 +427,8 @@ function takeSnapshot(
 	scores.sort((a, b) => b - a);
 	const leader = scores[0] ?? 0;
 	const second = scores[1] ?? 0;
-	const leadingFactionAdvantage = second > 0 ? leader / second : leader > 0 ? 10 : 1;
+	const leadingFactionAdvantage =
+		second > 0 ? leader / second : leader > 0 ? 10 : 1;
 
 	const highestTier = Math.max(
 		...Object.values(buildingTierMax).map((v) => v ?? 0),

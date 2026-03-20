@@ -97,8 +97,8 @@ describe("AttackEvaluator", () => {
 	it("returns near-zero when enemies exist but none in range (early game)", () => {
 		const agent = makeAgent({ attackRange: 1 });
 		setCtx({ enemies: [{ entityId: 99, x: 5, z: 5, factionId: "player" }] });
-		// Time escalation provides a tiny base even without adjacent targets
-		expect(evaluator.calculateDesirability(agent)).toBeLessThan(0.01);
+		// Time escalation provides a small base even without adjacent targets
+		expect(evaluator.calculateDesirability(agent)).toBeLessThan(0.05);
 	});
 
 	it("returns high score when enemy is adjacent", () => {

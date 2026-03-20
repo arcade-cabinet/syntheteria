@@ -69,15 +69,15 @@ describe("FactionFSM", () => {
 		fsm.update(makeCtx({ currentTurn: 15 }));
 		expect(fsm.currentStateId).toBe("EXPAND");
 
-		// Not enough conditions yet
+		// Not enough conditions yet (too early)
 		fsm.update(
-			makeCtx({ currentTurn: 39, unitCount: 10, enemyFactionContacted: true }),
+			makeCtx({ currentTurn: 20, unitCount: 10, enemyFactionContacted: true }),
 		);
 		expect(fsm.currentStateId).toBe("EXPAND");
 
-		// All conditions met: turn 40+, enemy contacted, units > 8
+		// All conditions met: turn 25+, enemy contacted, units >= 6
 		fsm.update(
-			makeCtx({ currentTurn: 40, unitCount: 10, enemyFactionContacted: true }),
+			makeCtx({ currentTurn: 25, unitCount: 6, enemyFactionContacted: true }),
 		);
 		expect(fsm.currentStateId).toBe("ATTACK");
 	});
@@ -121,7 +121,7 @@ describe("FactionFSM", () => {
 		// Get to ATTACK
 		fsm.update(makeCtx({ currentTurn: 15 })); // → EXPAND
 		fsm.update(
-			makeCtx({ currentTurn: 45, unitCount: 10, enemyFactionContacted: true }),
+			makeCtx({ currentTurn: 30, unitCount: 10, enemyFactionContacted: true }),
 		); // → ATTACK
 		expect(fsm.currentStateId).toBe("ATTACK");
 
@@ -129,14 +129,15 @@ describe("FactionFSM", () => {
 		expect(fsm.currentStateId).toBe("RETREAT");
 	});
 
-	it("ATTACK → EXPAND when units drop to 5", () => {
+	it("ATTACK → EXPAND when units drop to 3", () => {
 		fsm.update(makeCtx({ currentTurn: 15 }));
 		fsm.update(
-			makeCtx({ currentTurn: 45, unitCount: 10, enemyFactionContacted: true }),
+			makeCtx({ currentTurn: 30, unitCount: 10, enemyFactionContacted: true }),
 		);
 		expect(fsm.currentStateId).toBe("ATTACK");
 
-		fsm.update(makeCtx({ currentTurn: 50, unitCount: 5 }));
+		// Units drop to 3 — just below the attack threshold
+		fsm.update(makeCtx({ currentTurn: 50, unitCount: 3 }));
 		expect(fsm.currentStateId).toBe("EXPAND");
 	});
 

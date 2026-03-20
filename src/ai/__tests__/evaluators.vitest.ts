@@ -80,6 +80,9 @@ function setCtx(overrides: Partial<TurnContext> = {}): void {
 		factionTerritoryCount: 0,
 		isStrongestFaction: false,
 		existingBuildingTypes: {},
+		enemyBuildings: [],
+		forceRatio: 1,
+		tileBiomes: new Map(),
 		...overrides,
 	});
 }

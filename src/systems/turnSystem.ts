@@ -230,8 +230,8 @@ function getFactionIds(world: World): string[] {
 // Epoch transition events
 // ---------------------------------------------------------------------------
 
-const CATCHUP_THRESHOLD = 0.5;
-const CATCHUP_BONUS_RATE = 0.25;
+const CATCHUP_THRESHOLD = 0.25;
+const CATCHUP_BONUS_RATE = 0.10;
 
 function checkEpochTransition(world: World): void {
 	const turn = getCurrentTurn(world);

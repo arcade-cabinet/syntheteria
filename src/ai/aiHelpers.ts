@@ -287,6 +287,61 @@ export function checkIsStrongest(
 }
 
 // ---------------------------------------------------------------------------
+// Terrain scoring for AI decisions
+// ---------------------------------------------------------------------------
+
+/**
+ * Score a tile for strategic desirability based on biome properties.
+ * Higher = more desirable for unit placement.
+ *
+ * - Hills: high defense + vision → good for positioning
+ * - Forest: high defense + cover → good for defense
+ * - Desert/tundra: environmental drain → avoid if possible
+ * - Grassland: neutral, good for attacking enemies on
+ */
+export function scoreTileForPosition(biomeType: string): number {
+	switch (biomeType) {
+		case "hills":
+			return 1.3; // +defense, +vision
+		case "forest":
+			return 1.2; // +defense, +cover
+		case "wetland":
+			return 0.8; // slow, minor defense
+		case "grassland":
+			return 1.0; // neutral
+		case "desert":
+			return 0.5; // drain
+		case "tundra":
+			return 0.5; // drain
+		default:
+			return 1.0;
+	}
+}
+
+/**
+ * Score a tile for attacking an enemy on it.
+ * Lower enemy defense bonus = better target.
+ */
+export function scoreTileForAttacking(biomeType: string): number {
+	switch (biomeType) {
+		case "grassland":
+			return 1.3; // No defense bonus — ideal for attacking
+		case "desert":
+			return 1.2; // No defense, enemies draining
+		case "wetland":
+			return 1.0;
+		case "hills":
+			return 0.7; // Enemy has defense bonus
+		case "forest":
+			return 0.5; // Enemy has defense + cover
+		case "tundra":
+			return 0.9;
+		default:
+			return 1.0;
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Movement helper — uses Yuka NavGraph A* when available
 // ---------------------------------------------------------------------------
 

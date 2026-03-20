@@ -68,6 +68,17 @@ export interface TurnContext {
 	isStrongestFaction: boolean;
 	/** Count of each building type the faction currently owns. */
 	existingBuildingTypes: Record<string, number>;
+	/** Enemy building positions — for targeting enemy economy. */
+	enemyBuildings: Array<{
+		entityId: number;
+		x: number;
+		z: number;
+		factionId: string;
+	}>;
+	/** Ratio of own combat units to nearest enemy units (for overwhelming force). */
+	forceRatio: number;
+	/** Biome type at each tile coordinate — sparse map for terrain-aware decisions. */
+	tileBiomes: Map<string, string>;
 }
 
 let _ctx: TurnContext = {
@@ -97,6 +108,9 @@ let _ctx: TurnContext = {
 	factionTerritoryCount: 0,
 	isStrongestFaction: false,
 	existingBuildingTypes: {},
+	enemyBuildings: [],
+	forceRatio: 1,
+	tileBiomes: new Map(),
 };
 
 export function setTurnContext(ctx: TurnContext): void {

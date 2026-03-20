@@ -6,6 +6,7 @@
 
 import { GoalEvaluator } from "yuka";
 import type { SyntheteriaAgent } from "../agents/SyntheteriaAgent";
+import { scoreTileForAttacking } from "../aiHelpers";
 import {
 	computeEvadeDesirability,
 	computeFleeDirection,
@@ -35,42 +36,70 @@ export class AttackEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		for (const enemy of _ctx.enemies) {
 			const dist = manhattan(agent.tileX, agent.tileZ, enemy.x, enemy.z);
 			if (dist <= agent.attackRange) {
-				// Smooth quadratic decay: closer = higher score
-				// Adjacent (dist<=1) → 0.95, at max range → ~0.85
 				const score =
 					0.85 + 0.1 * quadraticDecay(dist, Math.max(agent.attackRange, 1));
 				best = Math.max(best, score);
 			}
 		}
 
+		// Also consider attacking enemy BUILDINGS within range
+		for (const bldg of _ctx.enemyBuildings) {
+			const dist = manhattan(agent.tileX, agent.tileZ, bldg.x, bldg.z);
+			if (dist <= agent.attackRange) {
+				// Buildings are slightly lower priority than units but still high
+				const score =
+					0.80 + 0.1 * quadraticDecay(dist, Math.max(agent.attackRange, 1));
+				best = Math.max(best, score);
+			}
+		}
+
 		// Time escalation: aggression rises after turn 30 even without adjacent enemies
-		// Only applies when enemies exist on the map (drives units to seek combat)
 		const timeAggression =
 			_ctx.enemies.length > 0 ? logistic(_ctx.currentTurn, 30, 0.15) * 0.2 : 0;
 		if (best === 0) return Math.min(1, timeAggression);
 
 		// Adjacent attacks (score >= 0.93) bypass aggressionMult — always fight back
 		if (best >= 0.93) return Math.min(1, best + momentumBonus(agent, "attack"));
+
+		// Overwhelming force (2:1+) — always attack aggressively
+		const forceBoost = _ctx.forceRatio >= 2.0 ? 0.2 : 0;
 		return Math.min(
 			1,
 			best * _ctx.aggressionMult +
 				timeAggression +
+				forceBoost +
 				momentumBonus(agent, "attack"),
 		);
 	}
 
 	setGoal(agent: SyntheteriaAgent): void {
 		const _ctx = getTurnContext();
-		// Find the best attack target
-		let bestTarget: (typeof _ctx.enemies)[0] | null = null;
+		let bestTarget: { entityId: number; x: number; z: number } | null = null;
 		let bestDist = Infinity;
+		let targetIsBuilding = false;
+
+		// Prefer unit targets first
 		for (const enemy of _ctx.enemies) {
 			const dist = manhattan(agent.tileX, agent.tileZ, enemy.x, enemy.z);
 			if (dist <= agent.attackRange && dist < bestDist) {
 				bestDist = dist;
 				bestTarget = enemy;
+				targetIsBuilding = false;
 			}
 		}
+
+		// If no unit targets, attack enemy buildings
+		if (!bestTarget) {
+			for (const bldg of _ctx.enemyBuildings) {
+				const dist = manhattan(agent.tileX, agent.tileZ, bldg.x, bldg.z);
+				if (dist <= agent.attackRange && dist < bestDist) {
+					bestDist = dist;
+					bestTarget = bldg;
+					targetIsBuilding = true;
+				}
+			}
+		}
+
 		if (bestTarget) {
 			agent.decidedAction = {
 				type: "attack",
@@ -99,7 +128,6 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		for (const enemy of _ctx.enemies) {
 			const dist = manhattan(agent.tileX, agent.tileZ, enemy.x, enemy.z);
 			if (this.reactiveOnly && dist > agent.scanRange) continue;
-			// Already in attack range — AttackEvaluator handles it
 			if (dist <= agent.attackRange) continue;
 
 			const score = quadraticDecay(dist, 30);
@@ -113,14 +141,26 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			if (score > best) best = score;
 		}
 
+		// Chase enemy BUILDINGS — destroy their economy
+		for (const bldg of _ctx.enemyBuildings) {
+			const dist = manhattan(agent.tileX, agent.tileZ, bldg.x, bldg.z);
+			if (dist <= agent.attackRange) continue; // AttackEvaluator handles adjacent
+			const score = quadraticDecay(dist, 35) * 0.75;
+			if (score > best) best = score;
+		}
+
 		// Time escalation: willingness to pursue increases mid-game
-		// Only applies when there are enemies to actually chase
 		const chaseTimeBoost =
 			best > 0 ? logistic(_ctx.currentTurn, 20, 0.2) * 0.15 : 0;
+
+		// Overwhelming force boost — chase aggressively when 2:1 advantage
+		const forceBoost = _ctx.forceRatio >= 2.0 && best > 0 ? 0.15 : 0;
+
 		return Math.min(
 			1,
 			best * _ctx.aggressionMult +
 				chaseTimeBoost +
+				forceBoost +
 				momentumBonus(agent, "move"),
 		);
 	}
@@ -128,15 +168,19 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 	setGoal(agent: SyntheteriaAgent): void {
 		const _ctx = getTurnContext();
 		let bestEnemy: { entityId: number; x: number; z: number } | null = null;
-		let bestDist = Infinity;
+		let bestScore = -Infinity;
 
-		// Prefer currently visible enemies
+		// Prefer currently visible enemies — weigh distance AND terrain advantage
 		for (const enemy of _ctx.enemies) {
 			const dist = manhattan(agent.tileX, agent.tileZ, enemy.x, enemy.z);
 			if (this.reactiveOnly && dist > agent.scanRange) continue;
 			if (dist <= agent.attackRange) continue;
-			if (dist < bestDist) {
-				bestDist = dist;
+			const biome = _ctx.tileBiomes.get(`${enemy.x},${enemy.z}`) ?? "grassland";
+			const terrainMult = scoreTileForAttacking(biome);
+			// Lower distance + higher terrain score = better target
+			const score = terrainMult / Math.max(1, dist);
+			if (score > bestScore) {
+				bestScore = score;
 				bestEnemy = enemy;
 			}
 		}
@@ -145,15 +189,27 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 		if (!bestEnemy) {
 			for (const enemy of _ctx.rememberedEnemies) {
 				const dist = manhattan(agent.tileX, agent.tileZ, enemy.x, enemy.z);
-				if (dist < bestDist) {
-					bestDist = dist;
+				const score = 0.6 / Math.max(1, dist);
+				if (score > bestScore) {
+					bestScore = score;
 					bestEnemy = enemy;
 				}
 			}
 		}
 
+		// If still no target, chase nearest enemy building
+		if (!bestEnemy) {
+			for (const bldg of _ctx.enemyBuildings) {
+				const dist = manhattan(agent.tileX, agent.tileZ, bldg.x, bldg.z);
+				const score = 0.5 / Math.max(1, dist);
+				if (score > bestScore) {
+					bestScore = score;
+					bestEnemy = bldg;
+				}
+			}
+		}
+
 		if (bestEnemy) {
-			// Check if pursuit intercept is beneficial
 			const heading = _ctx.enemyHeadings.get(bestEnemy.entityId);
 			const hdx = heading?.dx ?? 0;
 			const hdz = heading?.dz ?? 0;

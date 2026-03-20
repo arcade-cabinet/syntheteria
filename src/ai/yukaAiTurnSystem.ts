@@ -468,6 +468,72 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		}
 
 		// Set context for this faction's evaluators
+		// Collect enemy building positions for targeting economy
+		const enemyBuildings: Array<{
+			entityId: number;
+			x: number;
+			z: number;
+			factionId: string;
+		}> = [];
+		for (const e of world.query(Building)) {
+			const b = e.get(Building);
+			if (
+				b &&
+				b.factionId !== factionId &&
+				!isCultFactionId(b.factionId) &&
+				b.hp > 0
+			) {
+				enemyBuildings.push({
+					entityId: e.id(),
+					x: b.tileX,
+					z: b.tileZ,
+					factionId: b.factionId,
+				});
+			}
+		}
+
+		// Force ratio: own combat units vs nearest enemy faction's units
+		const ownCombatUnits = factionSnapshots.filter(
+			(s) => s.attack > 0,
+		).length;
+		const enemyFactionUnitCounts = new Map<string, number>();
+		for (const e of factionEnemies) {
+			const count = enemyFactionUnitCounts.get(e.factionId) ?? 0;
+			enemyFactionUnitCounts.set(e.factionId, count + 1);
+		}
+		let nearestEnemyCount = 1;
+		if (enemyFactionUnitCounts.size > 0) {
+			nearestEnemyCount = Math.max(
+				1,
+				Math.min(...enemyFactionUnitCounts.values()),
+			);
+		}
+		const forceRatio =
+			nearestEnemyCount > 0 ? ownCombatUnits / nearestEnemyCount : 1;
+
+		// Build sparse biome map for terrain-aware decisions
+		// Only include tiles near enemies and faction units (within 15 tiles)
+		const tileBiomes = new Map<string, string>();
+		const relevantPositions = [
+			...factionSnapshots.map((s) => ({ x: s.tileX, z: s.tileZ })),
+			...factionEnemies.map((e) => ({ x: e.x, z: e.z })),
+			...enemyBuildings.map((b) => ({ x: b.x, z: b.z })),
+		];
+		for (const pos of relevantPositions) {
+			for (let dx = -3; dx <= 3; dx++) {
+				for (let dz = -3; dz <= 3; dz++) {
+					const tx = pos.x + dx;
+					const tz = pos.z + dz;
+					const key = `${tx},${tz}`;
+					if (tileBiomes.has(key)) continue;
+					const tile = board.tiles[tz]?.[tx];
+					if (tile) {
+						tileBiomes.set(key, tile.biomeType);
+					}
+				}
+			}
+		}
+
 		setTurnContext({
 			enemies: factionEnemies,
 			deposits,
@@ -495,6 +561,9 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			factionTerritoryCount,
 			isStrongestFaction,
 			existingBuildingTypes,
+			enemyBuildings,
+			forceRatio,
+			tileBiomes,
 		});
 
 		// ── Faction FSM: macro strategy bias overrides ──────────────

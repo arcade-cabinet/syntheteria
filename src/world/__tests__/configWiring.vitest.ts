@@ -185,25 +185,25 @@ describe("storm profiles affect cultist spawning", () => {
 		board = makeBoard(16, 16);
 	});
 
-	it("stable storm: grace period is 7 turns, not 5", () => {
+	it("stable storm: grace period is 4 turns", () => {
 		spawnBoardEntity(world, "stable");
 		spawnPlayerUnit(world);
 
-		// Turn 5 should NOT spawn (stable grace = 7)
-		checkCultistSpawn(world, board, 5);
+		// Turn 3 should NOT spawn (stable grace = 4)
+		checkCultistSpawn(world, board, 3);
 		expect(countCultists(world)).toBe(0);
 
-		// Turn 7 SHOULD spawn
-		checkCultistSpawn(world, board, 7);
+		// Turn 4 SHOULD spawn
+		checkCultistSpawn(world, board, 4);
 		expect(countCultists(world)).toBeGreaterThan(0);
 	});
 
-	it("cataclysmic storm: grace period is 3 turns", () => {
+	it("cataclysmic storm: grace period is 2 turns", () => {
 		spawnBoardEntity(world, "cataclysmic");
 		spawnPlayerUnit(world);
 
-		// Turn 3 should spawn (cataclysmic grace = 3)
-		checkCultistSpawn(world, board, 3);
+		// Turn 2 should spawn (cataclysmic grace = 2)
+		checkCultistSpawn(world, board, 2);
 		expect(countCultists(world)).toBeGreaterThan(0);
 	});
 
@@ -255,22 +255,22 @@ describe("storm profiles affect cultist spawning", () => {
 		spawnBoardEntity(world, "volatile");
 		spawnPlayerUnit(world);
 
-		// Turn 4 should spawn (grace period = 4)
-		checkCultistSpawn(world, board, 4);
+		// Turn 3 should spawn (grace period = 3)
+		checkCultistSpawn(world, board, 3);
 		expect(countCultists(world)).toBeGreaterThan(0);
 	});
 
 	it("getStormCultistParams returns correct values", () => {
 		const stable = getStormCultistParams("stable");
-		expect(stable.baseSpawnInterval).toBe(7);
+		expect(stable.baseSpawnInterval).toBe(4);
 		expect(stable.maxWaveSize).toBe(2);
 
 		const volatile = getStormCultistParams("volatile");
-		expect(volatile.baseSpawnInterval).toBe(4);
+		expect(volatile.baseSpawnInterval).toBe(3);
 		expect(volatile.maxWaveSize).toBe(4);
 
 		const cataclysmic = getStormCultistParams("cataclysmic");
-		expect(cataclysmic.baseSpawnInterval).toBe(3);
+		expect(cataclysmic.baseSpawnInterval).toBe(2);
 		expect(cataclysmic.maxWaveSize).toBe(6);
 		expect(cataclysmic.maxTotalCultists).toBe(20);
 	});
@@ -349,7 +349,7 @@ describe("difficulty affects resources and AI aggression", () => {
 			}
 		});
 
-		it("AI faction resources are NOT affected by difficulty", () => {
+		it("AI faction resources are NOT affected by difficulty (except Iron Creed buff)", () => {
 			for (const diff of ["story", "standard", "hard"] as Difficulty[]) {
 				const world = createWorld();
 				initFactions(world, diff);
@@ -358,8 +358,13 @@ describe("difficulty affects resources and AI aggression", () => {
 					const f = e.get(Faction);
 					const r = e.get(ResourcePool);
 					if (f && !f.isPlayer && r) {
-						expect(r.stone).toBe(30);
-						expect(r.iron_ore).toBe(30);
+						if (f.id === "iron_creed") {
+							expect(r.stone).toBe(45);
+							expect(r.iron_ore).toBe(45);
+						} else {
+							expect(r.stone).toBe(30);
+							expect(r.iron_ore).toBe(30);
+						}
 						expect(r.steel).toBe(12);
 					}
 				}

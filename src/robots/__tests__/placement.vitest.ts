@@ -38,8 +38,10 @@ describe("placeRobots", () => {
 		placeRobots(world, flags, board);
 
 		const units = world.query(UnitPos);
-		// 6 player + 4+4+4 AI = 18 total
-		expect(units.length).toBe(18);
+		// 6 player (2 scout, 2 worker, 1 infantry, 1 support)
+		// + 6+6+6 AI (2 scout, 2 worker, 1 infantry, 1 support each)
+		// + 1 extra infantry for iron_creed = 25 total
+		expect(units.length).toBe(25);
 	});
 
 	it("places player units near spawn center", () => {

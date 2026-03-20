@@ -8,6 +8,12 @@
 export type { BuildingBlueprint, BuildingComponent } from "./buildingDefs";
 // --- Building blueprints ---
 export { BUILDING_BLUEPRINTS, getBuildingDisplayName } from "./buildingDefs";
+export type { BuildingMilestone } from "./buildingMilestoneDefs";
+// --- Building milestones ---
+export {
+	BUILDING_MILESTONES,
+	getBuildingMilestone,
+} from "./buildingMilestoneDefs";
 // --- Building definitions (data) ---
 export type {
 	BuildingDef,
@@ -27,6 +33,9 @@ export {
 	MOTOR_POOL_UNIT_TIERS,
 	STARTER_BUILDINGS,
 } from "./buildingUnlockDefs";
+export type { CultEncounter, CultEncounterTrigger } from "./cultEncounterDefs";
+// --- Cult encounters ---
+export { CULT_ENCOUNTERS, getCultEncounter } from "./cultEncounterDefs";
 export type {
 	StandingAction,
 	StandingTier,
@@ -54,6 +63,9 @@ export {
 	getEpochForTechTier,
 	TECH_TIER_TO_EPOCH,
 } from "./epochDefs";
+export type { EpochEvent } from "./epochEventDefs";
+// --- Epoch events ---
+export { EPOCH_EVENTS, getEpochEvent } from "./epochEventDefs";
 export type { FactionAiBias } from "./factionAiDefs";
 // --- Faction AI ---
 export {

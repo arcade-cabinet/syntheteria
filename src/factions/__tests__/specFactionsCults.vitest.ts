@@ -173,14 +173,14 @@ describe("SPEC: Section 8 — Factions + Cults", () => {
 	// ─── Cult escalation constants ─────────────────────────────────────
 
 	describe("cult escalation constants", () => {
-		it("BASE_SPAWN_INTERVAL = 4 (spec)", async () => {
+		it("BASE_SPAWN_INTERVAL = 3 (volatile — early cult pressure)", async () => {
 			const { _reset } = await import("../../systems/cultistSystem");
 			_reset(); // Clean state
 			const { getStormCultistParams } = await import(
 				"../../systems/cultistSystem"
 			);
 			const params = getStormCultistParams("volatile");
-			expect(params.baseSpawnInterval).toBe(4);
+			expect(params.baseSpawnInterval).toBe(3);
 		});
 
 		it("MAX_TOTAL_CULTISTS = 20 (spec)", async () => {

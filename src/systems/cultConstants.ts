@@ -10,6 +10,7 @@ import type { World } from "koota";
 import { resetWanderState } from "../ai/steering/wanderSteering";
 import { Board } from "../traits";
 import type { StormProfile } from "../world/config";
+import { _resetCultEncounters } from "./cultEncounterTracker";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -48,16 +49,16 @@ export interface StormCultistParams {
 
 export const STORM_CULTIST_PARAMS: Record<StormProfile, StormCultistParams> = {
 	stable: {
-		baseSpawnInterval: 7,
+		baseSpawnInterval: 4,
 		maxWaveSize: 2,
 		maxTotalCultists: MAX_TOTAL_CULTISTS,
 	},
 	volatile: {
-		baseSpawnInterval: BASE_SPAWN_INTERVAL,
+		baseSpawnInterval: 3,
 		maxWaveSize: MAX_WAVE_SIZE,
 		maxTotalCultists: MAX_TOTAL_CULTISTS,
 	},
-	cataclysmic: { baseSpawnInterval: 3, maxWaveSize: 6, maxTotalCultists: 20 },
+	cataclysmic: { baseSpawnInterval: 2, maxWaveSize: 6, maxTotalCultists: 20 },
 };
 
 export function readStormProfile(world: World): StormProfile {
@@ -151,4 +152,5 @@ export function _reset(): void {
 	poiPositions = [];
 	poisInitialized = false;
 	resetWanderState();
+	_resetCultEncounters();
 }

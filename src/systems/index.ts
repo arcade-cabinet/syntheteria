@@ -75,14 +75,17 @@ export type {
 // --- Cult ---
 export {
 	_reset as _resetCultist,
+	_resetCultEncounters,
 	checkCultistSpawn,
 	cleanupDestroyedStructures,
+	fireCultEncounter,
 	getAltarZones,
 	getBreachZones,
 	getCorruptedTiles,
 	getEscalationStage,
 	getPOIPositions,
 	getStormCultistParams,
+	hasFiredEncounter,
 	initBreachZones,
 	initCultPOIs,
 	runCultPatrols,
@@ -328,7 +331,12 @@ export {
 	resetTurnSummary,
 	subscribeTurnSummary,
 } from "./turnSummary";
-export { advanceTurn, getCurrentTurn, getGameOutcome } from "./turnSystem";
+export {
+	_resetEpochEvents,
+	advanceTurn,
+	getCurrentTurn,
+	getGameOutcome,
+} from "./turnSystem";
 // --- Turret ---
 export { runTurrets } from "./turretSystem";
 export type { TutorialState, TutorialStep } from "./tutorialSystem";

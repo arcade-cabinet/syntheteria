@@ -3,10 +3,15 @@
  * Replaces the centralized tech tree with per-building upgrades.
  */
 import type { World } from "koota";
-import { BUILDING_UNLOCK_CHAINS, computeEpoch } from "../config";
+import {
+	BUILDING_UNLOCK_CHAINS,
+	computeEpoch,
+	getBuildingMilestone,
+} from "../config";
 import type { ResourceMaterial } from "../terrain";
 import { Building } from "../traits";
 import { canAfford, spendResources } from "./resourceSystem";
+import { pushToast } from "./toastNotifications";
 
 export interface BuildingUpgradeJob {
 	entityId: number;
@@ -118,8 +123,24 @@ export function runBuildingUpgrades(world: World): void {
 		if (job.turnsRemaining <= 0) {
 			for (const entity of world.query(Building)) {
 				if (entity.id() === job.entityId) {
+					const b = entity.get(Building);
 					entity.set(Building, { buildingTier: job.targetTier });
 					completed.push(i);
+
+					if (b) {
+						const milestone = getBuildingMilestone(
+							b.buildingType,
+							job.targetTier,
+						);
+						if (milestone) {
+							pushToast(
+								"construction",
+								milestone.title,
+								milestone.toastMessage,
+								6000,
+							);
+						}
+					}
 					break;
 				}
 			}

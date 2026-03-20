@@ -21,6 +21,12 @@ export {
 } from "./cultConstants";
 // --- Corruption ---
 export { cleanupDestroyedStructures, spreadCorruption } from "./cultCorruption";
+// --- Encounter tracker ---
+export {
+	_resetCultEncounters,
+	fireCultEncounter,
+	hasFiredEncounter,
+} from "./cultEncounterTracker";
 export type { EscalationStage, SectBias } from "./cultEscalation";
 // --- Escalation ---
 export { getEscalationStage, SECT_BIASES } from "./cultEscalation";

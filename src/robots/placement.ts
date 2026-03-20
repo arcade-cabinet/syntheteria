@@ -25,8 +25,8 @@ export interface RobotPlacementFlag {
 
 /**
  * Build placement flags for the current game config.
- * All factions get the same starter squad composition.
- * Player gets a full 6-bot squad; AI factions get a 4-bot squad.
+ * All factions get a 6-bot starter squad: 2 scout, 2 worker, 1 infantry, 1 support.
+ * Iron Creed gets 1 extra infantry (7 total) for early aggression.
  */
 export function buildPlacementFlags(
 	playerFactionId: string | null,
@@ -40,23 +40,17 @@ export function buildPlacementFlags(
 			{
 				robotType: "scout",
 				factionId: "player",
-				count: 1,
+				count: 2,
+				zone: "player_start",
+			},
+			{
+				robotType: "worker",
+				factionId: "player",
+				count: 2,
 				zone: "player_start",
 			},
 			{
 				robotType: "infantry",
-				factionId: "player",
-				count: 1,
-				zone: "player_start",
-			},
-			{
-				robotType: "cavalry",
-				factionId: "player",
-				count: 1,
-				zone: "player_start",
-			},
-			{
-				robotType: "ranged",
 				factionId: "player",
 				count: 1,
 				zone: "player_start",
@@ -67,23 +61,24 @@ export function buildPlacementFlags(
 				count: 1,
 				zone: "player_start",
 			},
-			{
-				robotType: "worker",
-				factionId: "player",
-				count: 1,
-				zone: "player_start",
-			},
 		);
 	}
 
-	// AI factions — 4 combat bots each (same types as player)
+	// AI factions — 6 bots each: 2 scout, 2 worker, 1 infantry, 1 support
+	// Iron Creed gets 1 extra infantry (7 total)
 	for (const factionId of activeFactionIds) {
 		if (factionId === playerFactionId) continue;
+		const isIronCreed = factionId === "iron_creed";
 		flags.push(
-			{ robotType: "scout", factionId, count: 1, zone: "faction_start" },
-			{ robotType: "infantry", factionId, count: 1, zone: "faction_start" },
-			{ robotType: "cavalry", factionId, count: 1, zone: "faction_start" },
-			{ robotType: "ranged", factionId, count: 1, zone: "faction_start" },
+			{ robotType: "scout", factionId, count: 2, zone: "faction_start" },
+			{ robotType: "worker", factionId, count: 2, zone: "faction_start" },
+			{
+				robotType: "infantry",
+				factionId,
+				count: isIronCreed ? 2 : 1,
+				zone: "faction_start",
+			},
+			{ robotType: "support", factionId, count: 1, zone: "faction_start" },
 		);
 	}
 

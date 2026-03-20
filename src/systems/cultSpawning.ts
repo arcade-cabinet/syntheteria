@@ -39,6 +39,10 @@ import {
 	setBreachZones,
 } from "./cultConstants";
 import { cleanupDestroyedStructures } from "./cultCorruption";
+import {
+	checkAllCultsDestroyed,
+	fireCultEncounter,
+} from "./cultEncounterTracker";
 import { pushToast } from "./toastNotifications";
 
 // ---------------------------------------------------------------------------
@@ -170,6 +174,7 @@ export function checkCultistSpawn(
 				"EL CULT FORCES SURGE — ALL SECTORS COMPROMISED",
 			);
 			pushTurnEvent("EL CULT FINAL ASSAULT — spawn rate x5");
+			fireCultEncounter(world, "cult_final_assault");
 		}
 	}
 
@@ -222,6 +227,7 @@ export function checkCultistSpawn(
 		pushTurnEvent(
 			`${toSpawn} cultist${toSpawn > 1 ? "s" : ""} spawned at breach zone`,
 		);
+		fireCultEncounter(world, "first_cult_sighting");
 	}
 	for (let i = 0; i < toSpawn; i++) {
 		const zoneIndex =
@@ -259,6 +265,7 @@ export function checkCultistSpawn(
 					spawnInterval: altarDef.spawnInterval,
 				}),
 			);
+			fireCultEncounter(world, "first_cult_structure");
 
 			const neighbors = tileNeighbors(zone.x, zone.z, board);
 			const shelterCount = Math.min(1 + (turn % 2), neighbors.length);

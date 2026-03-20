@@ -2,6 +2,7 @@ import type { World } from "koota";
 import { seededRng } from "../board/noise";
 import { CultMutation, UnitFaction, UnitStats } from "../traits";
 import { pushTurnEvent } from "../ui/game/turnEvents";
+import { fireCultEncounter } from "./cultEncounterTracker";
 
 // ---------------------------------------------------------------------------
 // Mutation tier thresholds (turnsAlive boundaries)
@@ -142,6 +143,7 @@ export function tickCultMutations(world: World): void {
 				stats.maxMp += ABERRANT_BOOST;
 				entity.set(UnitStats, { ...stats });
 				pushTurnEvent(`Cult mech became ABERRANT — mini-boss threat detected`);
+				fireCultEncounter(world, "cult_archon_appears");
 			}
 		}
 

@@ -130,7 +130,7 @@ describe("cultistSystem", () => {
 		world.destroy();
 	});
 
-	it("no spawn before grace period (turn < 4)", () => {
+	it("no spawn before grace period (turn < 3)", () => {
 		world.spawn(
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
@@ -145,14 +145,14 @@ describe("cultistSystem", () => {
 			}),
 		);
 
-		for (let turn = 1; turn < 4; turn++) {
+		for (let turn = 1; turn < 3; turn++) {
 			checkCultistSpawn(world, board, turn);
 		}
 
 		expect(countCultists(world)).toBe(0);
 	});
 
-	it("spawns at correct interval (turn 4 with base escalation)", () => {
+	it("spawns at correct interval (turn 3 with base escalation)", () => {
 		world.spawn(
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
@@ -167,7 +167,7 @@ describe("cultistSystem", () => {
 			}),
 		);
 
-		checkCultistSpawn(world, board, 4);
+		checkCultistSpawn(world, board, 3);
 
 		expect(countCultists(world)).toBeGreaterThan(0);
 	});
@@ -187,7 +187,7 @@ describe("cultistSystem", () => {
 			}),
 		);
 
-		checkCultistSpawn(world, board, 6);
+		checkCultistSpawn(world, board, 4);
 
 		expect(countCultists(world)).toBe(0);
 	});
@@ -245,7 +245,7 @@ describe("cultistSystem", () => {
 			}),
 		);
 
-		checkCultistSpawn(world, board, 4);
+		checkCultistSpawn(world, board, 3);
 
 		expect(countCultists(world)).toBe(20);
 	});
@@ -286,7 +286,7 @@ describe("cultistSystem", () => {
 			}),
 		);
 
-		checkCultistSpawn(world, board, 4);
+		checkCultistSpawn(world, board, 3);
 
 		const validIds = new Set(["static_remnants", "null_monks", "lost_signal"]);
 		for (const e of world.query(UnitFaction)) {
@@ -312,7 +312,7 @@ describe("cultistSystem", () => {
 			}),
 		);
 
-		checkCultistSpawn(world, board, 4);
+		checkCultistSpawn(world, board, 3);
 
 		// Valid HP values from known mech types (drone=12, zealot=10, shaman=8, herald=8, archon=20)
 		const validHpValues = new Set([8, 10, 12, 20]);
@@ -351,7 +351,7 @@ describe("cultistSystem", () => {
 
 		it("spawns breach altar at breach zone", () => {
 			spawnPlayerUnit(world);
-			checkCultistSpawn(world, board, 4);
+			checkCultistSpawn(world, board, 3);
 
 			expect(countStructures(world, "breach_altar")).toBeGreaterThan(0);
 
@@ -404,7 +404,7 @@ describe("cultistSystem", () => {
 
 		it("spawns human shelters adjacent to breach altars", () => {
 			spawnPlayerUnit(world);
-			checkCultistSpawn(world, board, 4);
+			checkCultistSpawn(world, board, 3);
 
 			const shelterCount = countStructures(world, "human_shelter");
 			expect(shelterCount).toBeGreaterThan(0);
@@ -581,7 +581,8 @@ describe("cultistSystem", () => {
 			);
 
 			// checkCultistSpawn calls cleanupDestroyedStructures first
-			checkCultistSpawn(world, board, 6);
+			// Use turn 4 which is NOT a spawn interval (4%3 ≠ 0) so only cleanup runs
+			checkCultistSpawn(world, board, 4);
 
 			// Structure should be gone
 			expect(countStructures(world, "breach_altar")).toBe(0);

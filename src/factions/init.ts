@@ -44,8 +44,8 @@ export function initFactions(
 		const basePool = isPlayer
 			? { stone: 10, iron_ore: 5, circuits: 2 }
 			: {
-					stone: 30,
-					iron_ore: 30,
+					stone: def.id === "iron_creed" ? 45 : 30,
+					iron_ore: def.id === "iron_creed" ? 45 : 30,
 					steel: 12,
 					circuits: 12,
 					timber: 8,

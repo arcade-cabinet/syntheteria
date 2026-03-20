@@ -1,7 +1,14 @@
 import type { World } from "koota";
 import { runYukaAiTurns } from "../ai/yukaAiTurnSystem";
 import type { GeneratedBoard } from "../board/types";
-import { Board, Faction, UnitFaction, UnitStats } from "../traits";
+import { computeEpoch, getEpochEvent } from "../config";
+import {
+	Board,
+	Faction,
+	ResourcePool,
+	UnitFaction,
+	UnitStats,
+} from "../traits";
 import { setCurrentTurn } from "../ui/game/turnEvents";
 import { resolveAllMoves } from "./aiTurnSystem";
 import { runAnalysisAcceleration } from "./analysisSystem";
@@ -25,9 +32,12 @@ import { runPowerGrid } from "./powerSystem";
 import { runRepairs } from "./repairSystem";
 import { finalizeTurnDeltas } from "./resourceDeltaSystem";
 import { runResourceRenewal } from "./resourceRenewalSystem";
+import { addResources } from "./resourceSystem";
+import { calculateFactionScore } from "./scoreSystem";
 import { runSignalNetwork } from "./signalSystem";
 import { runSpecializationPassives } from "./specializationSystem";
 import { runSynthesis } from "./synthesisSystem";
+import { pushToast } from "./toastNotifications";
 import { finalizeTurn } from "./turnEventLog";
 import { runTurrets } from "./turretSystem";
 import { checkVictoryConditions, type GameOutcome } from "./victorySystem";
@@ -35,6 +45,18 @@ import { tickWormholeProject } from "./wormholeProject";
 
 /** Last outcome computed by advanceTurn. */
 let lastOutcome: GameOutcome = { result: "playing" };
+
+/** Track which epoch events have already fired. */
+const firedEpochEvents = new Set<number>();
+
+/** Track the last observed epoch number. */
+let lastEpochNumber = 1;
+
+/** Reset epoch event state — call on new game or tests. */
+export function _resetEpochEvents(): void {
+	firedEpochEvents.clear();
+	lastEpochNumber = 1;
+}
 
 export function advanceTurn(
 	world: World,
@@ -67,6 +89,12 @@ export function advanceTurn(
 	runSignalNetwork(world);
 
 	incrementTurn(world);
+
+	// Phase 5.6: Epoch transition events
+	checkEpochTransition(world);
+
+	// Phase 5.7: Catchup mechanic — resource bonus for trailing factions
+	applyCatchupBonus(world);
 
 	// Phase 6: Check victory/defeat conditions
 	lastOutcome = checkVictoryConditions(world, {
@@ -157,4 +185,70 @@ function getFactionIds(world: World): string[] {
 		if (f?.id) ids.push(f.id);
 	}
 	return ids;
+}
+
+// ---------------------------------------------------------------------------
+// Epoch transition events
+// ---------------------------------------------------------------------------
+
+const CATCHUP_THRESHOLD = 0.5;
+const CATCHUP_BONUS_RATE = 0.25;
+
+function checkEpochTransition(world: World): void {
+	const turn = getCurrentTurn(world);
+	const epoch = computeEpoch(1, turn);
+	if (epoch.number !== lastEpochNumber && !firedEpochEvents.has(epoch.number)) {
+		firedEpochEvents.add(epoch.number);
+		lastEpochNumber = epoch.number;
+
+		const event = getEpochEvent(epoch.number);
+		if (event) {
+			pushToast("turn", event.title, event.toastMessage, 8000);
+		}
+	}
+	lastEpochNumber = epoch.number;
+}
+
+// ---------------------------------------------------------------------------
+// Catchup mechanic — resource income bonus for factions trailing in score
+// ---------------------------------------------------------------------------
+
+const CATCHUP_MATERIALS: readonly string[] = [
+	"stone",
+	"iron_ore",
+	"coal",
+	"sand",
+	"timber",
+];
+
+function applyCatchupBonus(world: World): void {
+	const factionScores: Array<{ id: string; score: number }> = [];
+	for (const e of world.query(Faction)) {
+		const f = e.get(Faction);
+		if (!f) continue;
+		const score = calculateFactionScore(world, f.id);
+		factionScores.push({ id: f.id, score });
+	}
+
+	if (factionScores.length < 2) return;
+
+	const leaderScore = Math.max(...factionScores.map((fs) => fs.score));
+	if (leaderScore <= 0) return;
+
+	for (const fs of factionScores) {
+		if (fs.score >= leaderScore * CATCHUP_THRESHOLD) continue;
+
+		for (const mat of CATCHUP_MATERIALS) {
+			for (const e of world.query(ResourcePool, Faction)) {
+				const f = e.get(Faction);
+				if (!f || f.id !== fs.id) continue;
+				const pool = e.get(ResourcePool);
+				if (!pool) continue;
+				const current = (pool[mat as keyof typeof pool] as number) || 0;
+				const bonus = Math.max(1, Math.round(current * CATCHUP_BONUS_RATE));
+				addResources(world, fs.id, mat as "stone", bonus);
+				break;
+			}
+		}
+	}
 }

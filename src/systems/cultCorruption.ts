@@ -8,6 +8,10 @@ import type { World } from "koota";
 import { CultStructure } from "../traits";
 import { pushTurnEvent } from "../ui/game/turnEvents";
 import { altarZones, corruptedTiles } from "./cultConstants";
+import {
+	checkAllCultsDestroyed,
+	fireCultEncounter,
+} from "./cultEncounterTracker";
 
 // ---------------------------------------------------------------------------
 // Structure destruction — check for structures reduced to 0 HP
@@ -18,6 +22,7 @@ import { altarZones, corruptedTiles } from "./cultConstants";
  * Called each turn from the environment phase.
  */
 export function cleanupDestroyedStructures(world: World): void {
+	let anyDestroyed = false;
 	for (const e of world.query(CultStructure)) {
 		const s = e.get(CultStructure);
 		if (!s) continue;
@@ -25,10 +30,13 @@ export function cleanupDestroyedStructures(world: World): void {
 			pushTurnEvent(
 				`${s.structureType.replace(/_/g, " ")} destroyed at (${s.tileX}, ${s.tileZ})`,
 			);
-			// Remove from altar tracking
 			altarZones.delete(`${s.tileX},${s.tileZ}`);
 			e.destroy();
+			anyDestroyed = true;
 		}
+	}
+	if (anyDestroyed) {
+		checkAllCultsDestroyed(world);
 	}
 }
 
@@ -37,6 +45,7 @@ export function cleanupDestroyedStructures(world: World): void {
 // ---------------------------------------------------------------------------
 
 export function spreadCorruption(world: World): void {
+	const prevSize = corruptedTiles.size;
 	for (const e of world.query(CultStructure)) {
 		const s = e.get(CultStructure);
 		if (!s || s.structureType !== "corruption_node") continue;
@@ -48,5 +57,8 @@ export function spreadCorruption(world: World): void {
 				}
 			}
 		}
+	}
+	if (corruptedTiles.size > prevSize) {
+		fireCultEncounter(world, "cult_corruption_spread");
 	}
 }

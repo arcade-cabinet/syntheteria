@@ -75,23 +75,28 @@ describe("robot spawning", () => {
 });
 
 describe("buildPlacementFlags", () => {
-	it("player gets 6 faction bots", () => {
+	it("player gets 6 bots (2 scout, 2 worker, 1 infantry, 1 support)", () => {
 		const flags = buildPlacementFlags("reclaimers", [
 			"reclaimers",
 			"volt_collective",
 		]);
 		const playerFlags = flags.filter((f) => f.factionId === "player");
-		expect(playerFlags).toHaveLength(6);
+		expect(playerFlags).toHaveLength(4);
+		const totalPlayerUnits = playerFlags.reduce((s, f) => s + f.count, 0);
+		expect(totalPlayerUnits).toBe(6);
 	});
 
-	it("AI factions get 4 combat bots each", () => {
+	it("AI factions get 6 bots each (iron_creed gets 7)", () => {
 		const flags = buildPlacementFlags("reclaimers", [
 			"reclaimers",
 			"volt_collective",
 			"signal_choir",
+			"iron_creed",
 		]);
 		const vcFlags = flags.filter((f) => f.factionId === "volt_collective");
-		expect(vcFlags).toHaveLength(4);
+		expect(vcFlags.reduce((s, f) => s + f.count, 0)).toBe(6);
+		const icFlags = flags.filter((f) => f.factionId === "iron_creed");
+		expect(icFlags.reduce((s, f) => s + f.count, 0)).toBe(7);
 	});
 });
 

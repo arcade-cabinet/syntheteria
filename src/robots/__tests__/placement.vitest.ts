@@ -164,8 +164,8 @@ describe("placeRobots", () => {
 			height: 32,
 			isPassable: () => true,
 			getFloorType: (x, z) => {
-				if (x >= 3 && x <= 8 && z >= 3 && z <= 8) return "collapsed_zone";
-				return "durasteel_span";
+				if (x >= 3 && x <= 8 && z >= 3 && z <= 8) return "ruins";
+				return "grassland";
 			},
 		};
 		computeSpawnCenters(board);

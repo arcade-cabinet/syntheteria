@@ -26,20 +26,14 @@ import {
 	getPopCap,
 	getPopulation,
 	getVictoryProgress,
-	openRadialMenu,
 	pushToast,
 	resetTurnSummary,
-	setBuildProviderWorld,
-	setProviderBoard,
-	setProviderSelectedUnit,
 } from "../systems";
 import { Building, UnitFaction, UnitPos } from "../traits";
 import { Globe } from "../ui/Globe";
-import { EventBus } from "../views";
-// Side-effect import: register radial menu providers at module scope
-import "../systems/radial";
 // --- Game DOM overlays ---
 import { AlertBar } from "../ui/game/AlertBar";
+import { BuildingModal } from "../ui/game/BuildingModal";
 import { DiplomacyOverlay } from "../ui/game/DiplomacyOverlay";
 import { EntityTooltip } from "../ui/game/EntityTooltip";
 import { GameOutcomeOverlay } from "../ui/game/GameOutcomeOverlay";
@@ -52,7 +46,6 @@ import {
 	collectPendingItems,
 	PendingCompletions,
 } from "../ui/game/PendingCompletions";
-import { RadialMenu } from "../ui/game/RadialMenu";
 import { SelectedInfo } from "../ui/game/SelectedInfo";
 import { SystemToasts } from "../ui/game/SystemToasts";
 import { TechTreeOverlay } from "../ui/game/TechTreeOverlay";
@@ -63,6 +56,7 @@ import { TurnSummaryPanel } from "../ui/game/TurnSummaryPanel";
 import { TutorialOverlay } from "../ui/game/TutorialOverlay";
 import { UnitRosterOverlay } from "../ui/game/UnitRosterOverlay";
 import { LandingScreen } from "../ui/landing/LandingScreen";
+import { EventBus } from "../views";
 import type { NewGameConfig } from "../world/config";
 import { getPlayerFactionId } from "../world/config";
 import { CommandBar } from "./CommandBar";
@@ -114,6 +108,9 @@ export function App() {
 	const [showGarage, setShowGarage] = useState(false);
 	const [showRoster, setShowRoster] = useState(false);
 	const [showDiplomacy, setShowDiplomacy] = useState(false);
+	const [buildingModalEntityId, setBuildingModalEntityId] = useState<
+		number | null
+	>(null);
 	const repoRef = useRef<GameRepo | null>(null);
 	const sessionRef = useRef<GameSession | null>(null);
 	sessionRef.current = session;
@@ -188,9 +185,6 @@ export function App() {
 			setPhase("generating");
 			const s = await createNewGame(cfg, repoRef.current);
 			if (repoRef.current) setSavedGames(await repoRef.current.listGames());
-			// Initialize radial menu providers with game context
-			setBuildProviderWorld(s.world);
-			setProviderBoard(s.board);
 			setGameOutcome({ result: "playing" });
 			setSession(s);
 			setTurn(1);
@@ -213,9 +207,7 @@ export function App() {
 					setPhase("title");
 					return;
 				}
-				// Initialize radial menu providers with game context
-				setBuildProviderWorld(s.world);
-				setProviderBoard(s.board);
+				// Initialize game context
 				setGameOutcome({ result: "playing" });
 				setSession(s);
 				setTurn(getCurrentTurn(s.world));
@@ -369,6 +361,17 @@ export function App() {
 		handleEndTurn,
 	});
 
+	// Listen for building-clicked events from Phaser board
+	useEffect(() => {
+		const handler = (entityId: number) => {
+			setBuildingModalEntityId(entityId);
+		};
+		EventBus.on("building-clicked", handler);
+		return () => {
+			EventBus.off("building-clicked", handler);
+		};
+	}, []);
+
 	// Debug bridge
 	useEffect(() => {
 		if (!session) return;
@@ -457,46 +460,26 @@ export function App() {
 					onSceneReady={() => setSceneReady(true)}
 					onTileClick={(tileX, tileZ) => {
 						// Check what's at the clicked tile
-						let selectionType: "unit" | "building" | "empty_sector" =
-							"empty_sector";
-						let targetEntityId: string | null = null;
-						let targetFaction: string | null = null;
-
 						for (const e of session.world.query(UnitPos, UnitFaction)) {
 							const pos = e.get(UnitPos);
-							const fac = e.get(UnitFaction);
 							if (pos?.tileX === tileX && pos?.tileZ === tileZ) {
-								selectionType = "unit";
-								targetEntityId = String(e.id());
-								targetFaction = fac?.factionId ?? null;
 								setSelectedUnitId(e.id());
-								break;
+								return;
 							}
 						}
 
-						if (selectionType === "empty_sector") {
-							for (const e of session.world.query(Building)) {
-								const b = e.get(Building);
-								if (b?.tileX === tileX && b?.tileZ === tileZ) {
-									selectionType = "building";
-									targetEntityId = String(e.id());
-									targetFaction = b.factionId;
-									break;
-								}
+						for (const e of session.world.query(Building)) {
+							const b = e.get(Building);
+							if (b?.tileX === tileX && b?.tileZ === tileZ) {
+								setBuildingModalEntityId(e.id());
+								return;
 							}
 						}
 
-						// Open radial menu at click position
-						openRadialMenu(window.innerWidth / 2, window.innerHeight / 2, {
-							selectionType,
-							targetEntityId,
-							targetSector: { q: tileX, r: tileZ },
-							targetFaction,
-						});
+						setSelectedUnitId(null);
 					}}
 					onUnitSelect={(id) => {
 						setSelectedUnitId(id);
-						setProviderSelectedUnit(id);
 					}}
 				/>
 			)}
@@ -634,7 +617,13 @@ export function App() {
 					{session.world && session.board && (
 						<Minimap world={session.world} board={session.board} />
 					)}
-					<RadialMenu />
+					{buildingModalEntityId != null && (
+						<BuildingModal
+							world={session.world}
+							buildingEntityId={buildingModalEntityId}
+							onClose={() => setBuildingModalEntityId(null)}
+						/>
+					)}
 					<KeybindHints />
 					<SystemToasts />
 					<ToastStack />

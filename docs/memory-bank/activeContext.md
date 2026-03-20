@@ -20,7 +20,7 @@
 
 ### Design pivots (`GAME_DESIGN.md`)
 
-Biome-based overworld + vertex-color CivRev2 terrain (**TARGET**); industrial floor types **LEGACY** where noted. Hub-and-spoke **networks** (not city screens); **per-building** modals (GarageModal-style) vs a single city management screen. Cultists: **AI-only** antagonist + scripted beats. **Resource progression** natural → processed → synthetic (**TARGET**) vs current 13-material taxonomy.
+Biome-based overworld + vertex-color CivRev2 terrain (**TARGET**); industrial floor types **LEGACY** where noted. Hub-and-spoke **networks** (not city screens); **per-building** modals (BuildingModal dispatcher + 8 type-specific panels — **DONE**) vs a single city management screen. Cultists: **AI-only** antagonist + scripted beats. **Resource progression** natural → processed → synthetic (**TARGET**) vs current 13-material taxonomy.
 
 ### Rendering: Phaser + enable3d (board) + R3F (title)
 

@@ -162,7 +162,7 @@
 | 27 techs (5 tiers) | DONE | `src/config/techTreeDefs.ts` | 15 base + 12 track-gating techs |
 | Research system | DONE | `src/systems/researchSystem.ts` | Research labs accumulate points |
 | Tech prerequisites | DONE | `src/config/techTreeDefs.ts` | DAG with prereq chains |
-| Tech UI | DONE | `src/ui/game/TechTreeOverlay.tsx` | Full DAG visualization with research progress |
+| Tech UI | DONE (redirects) | `src/ui/game/TechTreeOverlay.tsx` | Now wraps BuildingProgressionOverlay |
 
 ### AI
 
@@ -273,11 +273,13 @@ Used by `src/ui/Globe.tsx` for **title → generating → playing** (R3F subtree
 | Title scene | DONE | `src/ui/landing/title/` | Title menu components |
 | GameScreen | LEGACY | `src/ui/game/GameScreen.tsx` | Old separate Canvas — superseded by Globe.tsx |
 | HUD | DONE | `src/ui/game/HUD.tsx` | Turn, 13-material resource counters, AP, End Turn |
-| Radial menu (legacy) | DONE / superseded | `src/systems/radialMenu.ts`, `RadialMenu.tsx` | Replace with Civ VI–style command UI per `GAME_DESIGN.md` §9 |
+| Radial menu (legacy) | **DELETED** | `src/systems/radialMenu.ts` (state machine kept), `RadialMenu.tsx` + `src/systems/radial/` deleted | Replaced by per-building modals |
+| Per-building modals | DONE | `src/ui/game/BuildingModal.tsx`, `src/ui/game/building-panels/` | BuildingModal dispatcher + 8 panels (Generic, Synthesizer, AnalysisNode, Power, Storage, Turret, Relay, Maintenance) |
+| Building progression | DONE | `src/ui/game/BuildingProgressionOverlay.tsx` | Replaces TechTreeOverlay; shows unlock chains + tier status |
 | Board input (playing) | DONE | `src/views/input/boardInput.ts` | Phaser pointer → tile, EventBus |
 | Board input (legacy R3F) | LEGACY | `src/input/BoardInput.tsx` | Globe / old match only |
 | Camera (sphere orbit) | DONE | `src/camera/SphereOrbitCamera.tsx` | Orbit around sphere, polar clamped, WASD orbit |
-| GarageModal.tsx (shim) | Partial | `src/ui/game/GarageModal.tsx` | Fold into settlement city screen — queue + priorities (`GAME_DESIGN.md` §5; see Robot Specializations table) |
+| GarageModal.tsx | DONE | `src/ui/game/GarageModal.tsx` | Motor Pool panel — routed through BuildingModal dispatcher |
 | Diplomacy overlay | DONE | `src/ui/game/DiplomacyOverlay.tsx` | Faction standings panel |
 | Tech tree overlay | DONE | `src/ui/game/TechTreeOverlay.tsx` | Full DAG with research progress |
 | Unit roster overlay | DONE | `src/ui/game/UnitRosterOverlay.tsx` | All player units with quick-jump |

@@ -213,33 +213,6 @@ export {
 } from "./populationSystem";
 // --- Power ---
 export { isPowered, runPowerGrid } from "./powerSystem";
-export {
-	setBuildProviderWorld,
-	setProviderBoard,
-	setProviderSelectedUnit,
-} from "./radial";
-export type {
-	RadialAction,
-	RadialActionProvider,
-	RadialCategory,
-	RadialMenuState,
-	RadialOpenContext,
-	RadialPetal,
-} from "./radialMenu";
-// --- Radial Menu ---
-export {
-	_reset as _resetRadial,
-	closeRadialMenu,
-	confirmRadialSelection,
-	getRadialGeometry,
-	getRadialMenuState,
-	getResolvedActionsForCategory,
-	hitTestRadial,
-	openRadialMenu,
-	registerRadialProvider,
-	resetRadialMenu,
-	updateRadialHover,
-} from "./radialMenu";
 // --- Repair ---
 export { runRepairs } from "./repairSystem";
 export type { QueueResearchResult } from "./researchSystem";

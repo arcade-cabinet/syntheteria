@@ -14,7 +14,7 @@ pnpm check-imports  # Architectural import gates
 
 ## Current Focus
 
-Biome terrain and building-driven progression are in place. **Eight terrain biomes** (ruins are a **POI**, not a biome). **Three POI categories:** ruin sites (rewards/salvage), **hostile** settlements (**human cities** in Epochs 1–2 → **Cult of EL** from Epoch 3 when the EL arrive), and **holocrons** (lore + one-time bonuses). **Six functional** starting robots, 17 materials across natural→processed→synthetic tiers, per-building management modals, six victory conditions, balance harness. **Onboarding** is **organic** — contextual tooltips as you play, not a blocking modal tutorial. Next: visual roboforming overlays, terrain blending, and forest canopy rendering in the Phaser board renderer.
+**Design implementation complete** for the near-future Earth vertical slice: **eight biomes**, full **POI** surface (19 sites — ruins, hostile humans → cult at Epoch 3, holocrons), **storm sky dome** and board-scale atmosphere, **roboform overlays** and **infrastructure connections**, **building tier visuals**, **organic tutorial** tooltips (fire-once), and **integration coverage** across lifecycle, POIs, buildings, factions, and victory. **139** Vitest files / **2345** tests, **0** TypeScript and Biome errors. Ongoing work is polish, balance iteration, and platform release hardening — not missing core systems.
 
 ## Architecture
 
@@ -41,7 +41,7 @@ See [AGENTS.md](AGENTS.md) for package structure, session rules, architecture ru
 | `pnpm dev` | Vite dev server (localhost:5173) |
 | `pnpm verify` | Full CI gate (lint + tsc + vitest) |
 | `pnpm build` | Production web build |
-| `pnpm test:vitest` | Run Vitest suites (130 files, 2282 tests) |
+| `pnpm test:vitest` | Run Vitest suites (139 files, 2345 tests) |
 | `pnpm lint` | Biome lint + format check |
 | `pnpm tsc` | TypeScript type check |
 | `pnpm check-imports` | Architectural import gates |

@@ -53,7 +53,7 @@ See [AGENTS.md](AGENTS.md) for the full package map and rules.
 
 ## Testing
 
-- `pnpm test:vitest` — unit and integration tests (130 files, 2282 tests)
+- `pnpm test:vitest` — unit and integration tests (139 files, 2345 tests)
 - `pnpm check-imports` — architectural rules enforcement
 - Balance harness: `vitest run src/balance/__tests__/balanceHarness.vitest.ts`
 - Playwright CT: `xvfb-run -a pnpm test:ct` (optional, needs display server)

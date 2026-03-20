@@ -16,7 +16,7 @@
 | ECS | Koota |
 | Database | Capacitor SQLite (web: jeep-sqlite, native: SQLite) |
 | AI | Yuka 0.7.8 (GOAP + FSM + steering) |
-| Testing | Vitest (130 files, 2282 tests) |
+| Testing | Vitest (139 files, 2345 tests) |
 | Lint | Biome |
 | Mobile | Capacitor (Android + iOS) |
 
@@ -87,6 +87,10 @@ Vertex color interpolation blends between tiers during transitions.
 
 **Antagonist arc:** Hostile human cities fear machine intelligence and attack in early epochs; at Epoch 3 the EL transit the wormhole and surviving human threats transform into cult-aligned POIs — same mechanical layers, escalated danger.
 
+### Sky renderer (Phaser board)
+
+`src/views/board/renderers/skyRenderer.ts` provides the match-phase atmosphere: an **inverted sphere** sky dome with storm-gradient vertex colors, plus a **horizon plane** that hides the terrain skirt so the board reads as a continuous world with no hard map edge. `WorldScene` composes `createSkyDome()` and `createHorizonPlane()` with the Scene3D camera. The title flow still uses R3F `StormSky` in `views/title/` — different code path from the Phaser board sky.
+
 **Camera:** Orthographic isometric — drag-pan, scroll-zoom, WASD rotate. No perspective distortion.
 
 **Models:** ~**212** GLB assets in `public/assets/` (see `src/config/models.ts`); rendered at 2.5x scale with bob-and-weave procedural animation (Wall-E style). No faction tint on meshes — faction identity via ground disc and UI labels.
@@ -126,6 +130,31 @@ React DOM overlays the Phaser canvas for all user interface:
 - Zoom cinematic toward surface on game start
 - Speech bubble overlay via Drei `<Html>`
 - Signed off — do not replace for landing flow
+
+---
+
+## Points of Interest (POI) System
+
+Simulation and rendering are split across traits, systems, and the board renderer:
+
+| Layer | Location | Role |
+|-------|----------|------|
+| **Trait** | `src/traits/poi.ts` — `POIMarker` | Category (ruin / hostile / holocron), subtype, discovery/cleared flags, rewards metadata |
+| **Placement** | `src/systems/poiPlacement.ts` — `placePOIs()` | World-gen: scatter POIs by epoch and biome rules (**19** total: 5 ruins, 6 hostile, 8 holocrons) |
+| **Discovery** | `src/systems/poiDiscoverySystem.ts` — `runPOIDiscovery()` | Vision-based reveal, combat resolution, **rewards** (resources, scan bonuses, map reveals, XP), holocron lore hooks |
+| **View** | `src/views/board/renderers/poiRenderer.ts` — `createPOIRenderer()` | Instanced GLB markers for undiscovered/discovered POIs; torn down with `destroyPOIRenderer()` |
+
+Turn resolution calls discovery from `turnSystem` after movement and combat so POI state stays authoritative in ECS.
+
+---
+
+## Organic Tutorial
+
+**No modal tutorial** — onboarding is contextual only:
+
+- `src/systems/tutorialTooltips.ts` defines **~10** `TooltipTrigger` keys (move, harvest, hostile contact, build, relay, POI, fabrication, upgrade, etc.).
+- `fireTutorialTooltip(world, trigger)` pushes a categorized toast **once per save/session** per trigger (internal Set + `resetTutorialTooltips()` for tests/new game).
+- Systems call `fireTutorialTooltip` at natural moments (`movementSystem`, `harvestSystem`, `attackSystem`, `buildSystem`, `poiDiscoverySystem`, etc.) so the player learns by playing.
 
 ---
 
@@ -327,7 +356,7 @@ Event speech: faction-specific reactions.
 
 ### Coverage
 
-- 130 test files, 2282 tests across all packages
+- 139 test files, 2345 tests across all packages
 - Tests colocated in `__tests__/` inside owning packages
 - Import gates via `scripts/check-imports.sh` enforce sim/view boundary
 - Balance harness provides multi-tier AI-vs-AI regression testing

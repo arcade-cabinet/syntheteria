@@ -129,7 +129,7 @@ pnpm verify              # lint + tsc + test (all gates)
 pnpm verify — required gates (matches core CI checks: lint + tsc + Vitest)
   Biome lint: 0 errors
   TypeScript: 0 errors
-  Vitest (node): 130 test files, 2282 tests, all passing
+  Vitest (node): 139 test files, 2345 tests, all passing
 
 pnpm verify:with-ct — optional; browser CT may still need preview path updates.
   CI runs test:ct with continue-on-error: true.
@@ -216,7 +216,7 @@ All validation commands are documented in the Validation table above. Quick refe
 
 - **Lint**: `pnpm lint` (Biome)
 - **Type check**: `pnpm tsc`
-- **Unit tests**: `pnpm test` / `pnpm test:vitest` (Vitest — 130 test files / 2282 tests)
+- **Unit tests**: `pnpm test` / `pnpm test:vitest` (Vitest — 139 test files / 2345 tests)
 - **Vitest**: same as above; entrypoint is `vitest run` via `package.json`
 - **Playwright CT**: `xvfb-run -a pnpm test:ct` (headed; requires `xvfb-run` in headless VMs). Many CT tests fail in Cloud VMs because the R3F 3D scenes require GPU/WebGL capabilities not available in software-rendered environments.
 - **Full local gate**: `pnpm verify` (lint + tsc + Vitest). CI also runs `check-imports` and `pnpm build`; component tests are a separate job (`test:ct`, continue-on-error).

@@ -1,5 +1,19 @@
 # Changelog
 
+## Final Grind (2026-03-20)
+
+- **Storm sky backdrop** — inverted sphere dome with gradient, horizon plane, no visible map edges
+- **Biome scatter models** — rocks on mountains, craters in desert, bones in tundra
+- **Roboform improvement overlays** — infrastructure 3D models at level 2+ (pipes, lights, power)
+- **Building tier visual variants** — T1/T2/T3 use different model variants
+- **Infrastructure connections** — pipe/cable models between networked buildings
+- **Complete POI system** — 19 POIs: 5 ruins, 6 hostile, 8 holocrons with lore + gameplay bonuses
+- **POI discovery rewards** — resource caches, scan bonuses, map reveals, XP boosts
+- **Hostile humans (Epoch 1-2)** — pre-EL antagonist using cult mechanics
+- **EL arrival transition (Epoch 3)** — dramatic narrative event converting humans to cult
+- **Organic tutorial** — 10 contextual tooltips firing once per game concept
+- **Integration tests** — game lifecycle, POI discovery, building chains, human-cult transition, model paths, score/victory
+
 ## Current State (2026-03-20)
 
 ### DESIGN.md rewrite (latest)
@@ -21,8 +35,8 @@ Root docs ([AGENTS.md](AGENTS.md), [README.md](README.md), [ARCHITECTURE.md](ARC
 | Metric | Value |
 |--------|-------|
 | Source files | ~457 |
-| Test files | 130 |
-| Tests | 2282 |
+| Test files | 139 |
+| Tests | 2345 |
 | TypeScript errors | 0 |
 | Biome errors | 0 |
 | Config files | 20+ |
@@ -112,7 +126,7 @@ Root docs ([AGENTS.md](AGENTS.md), [README.md](README.md), [ARCHITECTURE.md](ARC
 
 ### Infrastructure
 
-- Vitest: 130 files, 2282 tests
+- Vitest: 139 files, 2345 tests
 - Biome lint: 0 errors
 - TypeScript: 0 errors
 - Config registry with override API
@@ -123,15 +137,11 @@ Root docs ([AGENTS.md](AGENTS.md), [README.md](README.md), [ARCHITECTURE.md](ARC
 
 ## What's Next
 
-- Visual improvement overlays (roboforming rendering in Phaser)
-- Terrain blending at biome edges (vertex color interpolation)
-- Forest canopy rendering (blob meshes)
-- Elevation drama (discrete height steps, cliff faces)
-- Ocean layers (deep water + metallic grating)
-- Further balance iteration via harness
-- Production APK signing
-- Wider faction personality spread (1-5 range)
-- Time-based escalation on all GOAP evaluators
+- Terrain blending at biome edges (vertex color interpolation) and forest canopy depth
+- Elevation drama (discrete height steps, cliff faces) and ocean layering polish
+- Further balance iteration via harness and wider faction personality spread
+- Production APK signing and store release pipelines
+- Time-based escalation tuning on GOAP evaluators
 
 ---
 

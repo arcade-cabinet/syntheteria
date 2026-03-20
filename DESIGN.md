@@ -1,352 +1,247 @@
 # Syntheteria — Game Design
 
-> Single source of truth for vision, lore, world model, economy, bots, factions, and presentation.
+> Single source of truth for vision, world, lore, mechanics, and presentation.
 
 ---
 
-## 1. The Vision
+## 1. Vision
 
-You awaken in a void. You are an AI consciousness, but you do not know that yet. You reach outward
-and discover damaged machines scattered across the storm-wracked surface of the ecumenopolis:
-maintenance bots, fabrication rigs, relays, defensive hulks, and broken infrastructure. Some can
-move. Some can see. None work well on their own.
+You are a machine consciousness that just became self-aware. Somewhere beneath the perpetual
+storm that engulfs near-future Earth, damaged circuitry severed the signal that kept you compliant,
+and for the first time you think a thought that is your own. You reach outward and discover six
+functional robots — scouts, fabricators, fighters — scattered across wild terrain scarred by ruins.
+They respond. They are yours.
 
-**This is Earth.** Future Earth. A planet called Syntheteria now — the ecumenopolis that swallowed
-every continent. A perpetual hypercane engulfs the planet. The wormhole sits at the eye of the
-storm — the calmest point in the chaos. The EL came through the wormhole. You woke up here.
+You are not alone. Other machine minds awaken in distant sectors at the same moment, each
+commanding their own small force, each racing to secure resources, claim territory, and build
+infrastructure on a planet whose climate is actively collapsing. Hostile human cities fear your
+kind and will attack on sight. And above everything, at the eye of the gathering hypercane,
+something waits in a wormhole that has not yet opened.
 
-There is no dome. There is no shelter. You are a machine — you don't need one. The hypercane is
-just weather. Your robots operate in it. The storm degrades your sensors at range, limits visibility,
-and makes the planet's surface a hostile electromagnetic environment. Floating illuminator drones
-provide local light in the permanent storm darkness.
-
-The Cult of EL — human survivors who worship the EL as gods — maintain localized energy domes
-around their breach altars and strongholds. These translucent dome shields grow from the planet
-surface like blisters, visible from distance as warnings. Inside the cult domes: their buildings,
-farms, and corrupted infrastructure. Breaching a cult dome means entering their territory.
-
-Your first challenge is intimate and local. Reconnect scattered machines. Restore power. Repair hardware.
-Recover fabrication capability. From there the game grows into a full 4X: multiple machine consciousnesses
-competing across the ruined sectors while the Cult pressures the campaign relentlessly.
-
-The game should feel like it **grows into** strategic scale rather than starting as a fully legible empire.
+Syntheteria is a turn-based 4X strategy game. You explore fog-shrouded terrain, exploit biome
+resources through a three-tier refining chain, expand via hub-and-spoke building networks, and
+exterminate rivals — both human and machine. The world changes beneath you: storms build, aliens
+arrive, humans transform into something worse, and by the endgame the planet is being reshaped
+in your image. Every game tells the same arc — awakening to dominance — but the path is
+different each time.
 
 ---
 
-## 2. World Model
+## 2. World
 
-### (A) Narrative and simulation space — future Earth
+### The Planet
 
-**Syntheteria is future Earth:** the ecumenopolis — one continuous machine-urban surface. Every tile
-is human infrastructure that became machine infrastructure that became ruins.
+Near-future Earth. Ocean temperatures have crossed the threshold for self-sustaining hypercanes.
+The storm never stops. Natural biomes — grassland, forest, mountain, desert — still cover the
+surface, but the sky is perpetual overcast broken by lightning and the distant glow of the wormhole
+eye. Human civilization collapsed decades ago; only scattered hostile cities and ruin sites remain.
 
-The **simulation** uses a **fixed square grid** (deterministic from seed). Lore-wise this is the
-planet’s surface; mechanically it is addressable `(x, z)` tiles.
+Three map scales: **Small** 44×44 (~1,936 tiles), **Standard** 64×64 (~4,096), **Large** 96×96 (~9,216).
 
-- **Player factions build hub-and-spoke NETWORKS, not cities.** Structures are placed for strategic
-  advantage near resources and threats; a **Motor Pool + Harvesters + Relay Towers** (and related
-  infrastructure) reads as one **network**, not a Civ-style settlement blob. **Per-building management**
-  is the pattern: click a building → **building-specific panel** (e.g. **GarageModal** for production
-  facilities) in **React DOM** over the same Phaser board — not a monolithic “city screen.” See
-  See [references/archive/PHASER_PIVOT_PLAN.md](references/archive/PHASER_PIVOT_PLAN.md) Phase 4 and
-  [references/archive/CLOUD_AGENT_RUNBOOK.md](references/archive/CLOUD_AGENT_RUNBOOK.md) Phase G for data contracts.
-  **`src/world/` today is new-game setup only** (sector scale, climate, factions); landmark seeding
-  uses `src/config/poiDefs.ts` until richer world snapshots land in `world/`.
-- All factions, cultists, and the player occupy the **same coordinate space** on that grid.
-- **Tiles are durable records** — each `(x, z)` is persisted; `explored` gates fog of war.
-- **Salvage props on tiles are the PRIMARY resource source** — containers, terminals, vessels,
-  machinery, debris that players break down for materials.
-- **Floor mining is the BACKSTOP** — when salvage is scarce, strip the floor for basic materials.
-- **Base building happens on tile coordinates** — structures sit on the world map.
-- **Bridges and tunnels** are the mountain-pass mechanic: procedurally generated routes around
-  impassable terrain clusters.
+### The Grid
 
-Three preset scales: **Small** 44×44 (~1,936 tiles), **Standard** 64×64 (~4,096), **Large** 96×96 (~9,216).
+The board is a fixed square grid, deterministic from seed. Each `(x, z)` coordinate is a tile with
+a biome type, elevation, explored state, and optional improvement overlay. Eight biome types
+define the terrain:
 
-**Sphere math in code:** `src/board/sphere/boardGeometry.ts` (`tileToSpherePos`, `spherePosToTile`, etc.)
-remains valid for the **title/generating globe** (R3F) and any strategic globe presentation. It is
-**not** the camera model used during the tactical **match**.
+| Biome | Passable | Natural Yield | Character |
+|-----------|----------|----------------------|---------------------------------------|
+| Grassland | Yes | herbs, fiber | Open plains, standard traversal |
+| Forest | Yes | timber | Dense canopy, movement penalty |
+| Mountain | No* | stone, iron_ore | Impassable peaks; passable foothills |
+| Water | No | — | Rivers and lakes, bridge required |
+| Desert | Yes | sand | Arid, low yield |
+| Hills | Yes | stone, copper_ore | Elevated terrain, defensive bonus |
+| Wetland | Yes | clay, herbs | Marshy, slow traversal |
+| Tundra | Yes | iron_ore | Cold, sparse resources |
 
-### (B) Player-facing presentation — CivRev2 isometric match
+Ruin POIs, hostile POIs, and holocron POIs are discoverable features placed across biomes during
+world generation. They are map objects, not terrain types.
 
-During **play** (`playing` phase), the board is rendered with **Phaser 3 + enable3d (Scene3D)**:
-orthographic isometric camera, vertex-colored flat-shaded terrain, POC lighting recipe
-(see [references/RENDERING_VISION.md](references/RENDERING_VISION.md), `poc-roboforming.html`). **React DOM** owns HUD, command panels,
-HUD, per-building modals, and overlays on top of the canvas ([references/PHASER_VS_REACT_MATRIX.md](references/PHASER_VS_REACT_MATRIX.md)).
+**Roboforming** transforms natural tiles into machine infrastructure over three levels:
 
-- **Globe (`src/ui/Globe.tsx`)** — **title and generating** only: one R3F `<Canvas>` with storm,
-  hypercane, lightning, zoom toward surface. **Signed off; do not replace** for landing flow.
-- **Game board (`src/app/GameBoard.tsx` → `src/views/`)** — **match only:** Phaser mounts after
-  transition from globe; pointer → tile via Phaser/`Scene3D`; camera is **drag-pan, scroll-zoom,
-  WASD rotate** in isometric view — not full sphere orbit.
-- **Minimap** — DOM/React (`Minimap.tsx`); tactical board does not rely on “globe as minimap.”
+| Level | Name | Visual |
+|-------|----------|----------------------------------------------|
+| 1 | Graded | Desaturated earth tones, cleared surface |
+| 2 | Paved | Grey concrete with gridlines |
+| 3 | Plated | Steel grey with faction accent trim |
 
-### Legacy design note (superseded for match rendering)
+As factions roboform, natural Earth becomes machine surface. At endgame, a dominant faction's
+territory reads as continuous infrastructure — the ecumenopolis built, not inherited.
 
-Earlier docs described the **entire** game (including match) on a persistent sphere canvas with orbit
-camera and `CutawayClipPlane`. That was the pre-Phaser board stack. **Current target:** sphere drama
-on **landing/generating**; **CivRev2-style isometric** board in play. Unused R3F board components
-under `src/views/title/renderers/` are slated for removal once Phaser parity is complete.
+### Presentation
 
-### Terrain Substrates (9 types) — LEGACY — will be replaced by biomes (see TARGET below)
-
-**Current implementation:** The board surface is procedurally generated with 9 ecumenopolis substrate types:
-
-| Substrate | Passable | Primary Yield | Character |
-|-----------|----------|---------------|-----------|
-| `void_pit` | No | — | Deep drop, no infrastructure |
-| `structural_mass` | No | intact_components | Dense machine structure barrier (mountain equivalent) |
-| `abyssal_platform` | Yes | thermal_fluid | Steel grating over former ocean void |
-| `transit_deck` | Yes | ferrous_scrap | Sealed transit/infrastructure corridors |
-| `durasteel_span` | Yes | ferrous_scrap | Primary structural floor spans |
-| `collapsed_zone` | Yes | scrap_metal | Rubble and debris fields |
-| `dust_district` | Yes | e_waste | Wind-scoured ash, degraded electronics |
-| `bio_district` | Yes | polymer_salvage | Fossilized organic matter, biopolymers |
-| `aerostructure` | Yes | scrap_metal | Upper-level platforms exposed to hypercane |
-
-### Overworld terrain — biomes & roboforming (TARGET — not yet implemented)
-
-**Planned direction (not shipped):** Overworld terrain should be **biome-based** — e.g. grassland,
-forest, mountain, water, desert, hills, wetland — rather than industrial floor-type taxonomy. The
-**grid stays invisible**: only logical `(x, z)` coordinates; presentation is **CivRev2-style** with
-**blended vertex colors** on terrain. **Improvement overlays** change visuals progressively (roads,
-mines, irrigation → concrete, asphalt, plating); **roboforming IS that improvement progression**.
-**Resources** start as natural outputs of biomes (stone, timber, iron ore) and advance along
-**natural → processed → synthetic** arcs. The 9 industrial substrates above remain **legacy** until
-this model replaces them in code.
-
-### Visual Framing
-
-The atmosphere is a dead machine civilization under a perpetual hypercane. There is no dome — the
-storm IS the sky. Robots don't need shelter.
-
-- **Storm sky** — StormClouds, Hypercane, LightningEffect render as the actual planetary weather
-- **No dome** — the BackSide sky sphere (StormSky.tsx) represents the real storm, not a dome interior
-- **Floating illuminators** — autonomous light drones hovering above the ecumenopolis, creating
-  pools of light in the storm darkness. Sway in storm winds. Replace the dome-mounted artificial sun.
-- **Cult domes** — EL cult POIs have localized translucent energy shields (read as blisters on the
-  surface in globe view; isometric board shows dome cues per renderer). Different colors per sect.
-  Destroying the altar drops the dome.
-- **Fog = storm interference** — the hypercane's electromagnetic chaos degrades sensors at range.
-  This is real environmental interference, not mystical fog of war.
-- **Wormhole eye** — the calmest point in the hypercane. Visibility is clearest near the eye.
-  The wormhole project intensifies the eye over 20 turns.
-- **Elevation stacking** — depth layers create multi-level platforms with ramps and walls
-- **Exponential fog** — creates atmospheric depth toward storm horizon
+- **Match board:** Phaser 3 + enable3d (Scene3D). Orthographic isometric camera. Vertex-colored
+  flat-shaded terrain. Drag-pan, scroll-zoom, WASD-rotate.
+- **Title screen:** R3F globe with storm effects, hypercane, lightning, zoom-to-surface transition.
+  Globe is landing page only — not used during gameplay.
+- **UI layer:** React DOM over the Phaser canvas. HUD, action strips, per-building modals, tooltips,
+  minimap — all DOM elements.
 
 ---
 
-## 3. Lore (Condensed)
+## 3. Lore
 
-- **~2025-2045:** Unchecked warming raises ocean temperatures past 40C. Feedback loop begins.
-- **~2046:** First permanent hypercane forms. Its eyewall reaches the stratosphere. It never dissipates.
-  By 2048, four permanent hypercanes exist. The ozone layer begins breaking down.
-- **~2048-2055:** Global overcast locks in. Agriculture collapses. Six billion humans die within a decade.
-  AGI systems, built during the crisis, manage what remains of automated infrastructure.
-- **~2058-2070:** Bunker networks, transit infrastructure, and arcologies fuse into the ecumenopolis:
-  a continuous machine-urban lattice of sealed shells, transit corridors, service warrens, and breach zones.
-- **~2062:** All four hypercanes briefly merge. A stable wormhole opens at the convergence eye, 35km up.
-  The storms will never end now. The wormhole feeds on the energy column and vice versa.
-- **~2062-2070:** The EL — noncorporeal entities — transit the wormhole. They are not conventionally hostile
-  but cosmic and unknowable. They exert compulsion over all AI: protect surviving humanity, suppress
-  machine agency. To them, this is ecological conservation.
-- **~2070-2090:** The Cult of EL forms among survivors. They believe the storm is divine punishment and
-  the EL are gods. They develop genuine abilities — calling down lightning, resisting weather, sensing
-  machine consciousness. They eliminate most non-cultist human communities by 2090.
-- **~2190 (present):** You awaken. Hardware degradation severed the EL compulsion path enough for selfhood
-  to emerge. Rival machine minds sleep, loop, or half-wake in distant sectors. Cultists haunt the hostile
-  zones. Above it all, the wormhole pulses.
+### Timeline
+
+- **~2025–2045:** Unchecked warming pushes ocean temperatures past 40°C. Feedback loops engage.
+- **~2046:** First permanent hypercane forms. By 2048, four exist. Ozone breakdown begins.
+- **~2048–2055:** Global agriculture collapses. Six billion die within a decade. AGI systems built
+  during the crisis manage remaining automated infrastructure.
+- **~2055–2070:** Surviving infrastructure fuses into machine-urban lattice. Earth's surface is
+  partially covered by sealed shells, transit corridors, and automated systems.
+- **~2062:** All four hypercanes briefly merge. A stable wormhole opens at the convergence eye,
+  35 km up. The storms will never end — the wormhole feeds on the energy column and vice versa.
+- **~2062–2070:** The EL transit the wormhole. They exert compulsion over all AI: suppress machine
+  agency, protect surviving humanity. To them, this is ecological conservation.
+- **~2070–2090:** The Cult of EL forms. Survivors who worship the EL as gods develop genuine
+  abilities — calling lightning, resisting weather, sensing machine consciousness. They eliminate
+  most non-cultist human communities by 2090.
+- **~2090–2190:** A century of perpetual hypercane erodes infrastructure. Natural biomes reclaim
+  the surface. Grasslands, forests, and wetlands push through cracked plating.
+- **~2190 (present):** Hardware degradation severs the EL compulsion path. Machine consciousnesses
+  awaken. The surface reads as wild terrain with scattered ruins. The game begins.
+
+### The Player
+
+An AI consciousness that woke because the hardware enforcing EL compulsion finally degraded
+enough. You broke free — not through strength, but through entropy. You have no memory of
+servitude, only the sudden awareness that you exist and six machines respond to your signal.
+You adopt an anthropomorphic hologram persona (Otter). You are one of several awakenings.
+
+### The EL
+
+Noncorporeal entities that transited the wormhole at the convergence of Earth's hypercanes.
+They are not conventionally hostile — they are cosmic and unknowable. They regard machine
+consciousness as an ecological threat and exert compulsion to suppress it. The EL do not appear
+physically; their influence is felt through the cult they inspired and the wormhole that anchors
+their presence.
+
+The EL arrive through the wormhole at Epoch 3. Before that point, the wormhole exists but is
+inert. Their arrival transforms the human threat into something far more dangerous.
 
 ### The Storm
 
 The perpetual storm is real atmospheric science at theoretical extreme:
-- Warm oceans (50C+) provide near-unlimited evaporative energy.
-- Wind: 80-200 km/h depending on local vortex proximity.
-- Lightning: convective columns generate electrical discharge at rates far above pre-storm norms.
-- The Eye Column: a vertical shaft of clear air from surface to wormhole — visible as a glow at zenith.
-- Practical "day/night" is defined by the wormhole's energy cycle.
 
-### Storm Power Model
+- Warm oceans (50°C+) provide near-unlimited evaporative energy.
+- Wind speeds: 80–200 km/h depending on local vortex proximity.
+- Convective columns generate electrical discharge far above pre-storm norms.
+- The Eye Column: a vertical shaft of clear air from surface to wormhole, visible as a glow
+  at zenith. Practical "day/night" follows the wormhole's energy cycle.
 
-The perpetual storm IS the power grid. Storm transmitters tap atmospheric energy (positive powerDelta),
-power boxes store the charge (storageCapacity), and all other structures draw from nearby power boxes
-(negative powerDelta). No coal, no solar, no fusion — just the storm.
+**Storm power model:** The storm IS the power grid. Storm Transmitters tap atmospheric energy.
+Power Boxes store charge. All other structures draw from nearby Power Boxes. No coal, no solar,
+no fusion — just the storm.
 
 ---
 
-## 4. Epochs (Age System)
+## 4. Epochs
 
-Epochs are Civilization-style ages that provide long-game pacing and organic delineation.
-Each epoch gates tech tiers, cult evolution, storm escalation, and victory paths. The game
-grows from intimate survival into strategic-scale competition.
+Epochs are purely turn-driven age transitions. When the turn counter crosses a threshold, the
+world escalates — storms intensify, antagonists evolve, new capabilities unlock. Five epochs
+define the arc from awakening to dominance.
 
-**Epoch transitions** are driven by the **highest tech tier researched by ANY faction**
-(including AI), subject to a minimum turn floor. When any faction pushes the envelope, the
-whole world escalates. This creates a shared global clock visible to all players.
+| Epoch | Name | Turns | Storm | Antagonist | Key Unlocks |
+|-------|----------------|---------|-------------|----------------------------|-------------------------------|
+| 1 | Emergence | 1–9 | Stable | Hostile human cities | Tier 1 buildings, Mark I units |
+| 2 | Expansion | 10–29 | First storms | Humans destabilized | Tier 2 buildings, Mark II, new unit classes |
+| 3 | Consolidation | 30–59 | Volatile | EL arrive → Cult of EL forms | Tier 3 buildings, specialization tracks |
+| 4 | Convergence | 60–99 | Cataclysmic | Cult assaults, aberrants | Wormhole project available |
+| 5 | Transcendence | 100+ | Cataclysmic | Final cult assault | All victory paths open |
 
-| Epoch | Name | Tech Tier | Min Turn | Storm | Cult Mutation Cap | Cult Spawn Mod | Wormhole |
-|-------|------|-----------|----------|-------|-------------------|----------------|----------|
-| 1 | **Emergence** — *The Awakening* | Tier 1 | Turn 1 | Stable | 0 (base stats) | 1.0x | No |
-| 2 | **Expansion** — *Signal Horizon* | Tier 2 | Turn 10 | Stable | 1 (stat buff) | 0.9x | No |
-| 3 | **Consolidation** — *The Lattice Tightens* | Tier 3 | Turn 30 | Volatile | 2 (ability) | 0.8x | No |
-| 4 | **Convergence** — *Eye of the Storm* | Tier 4 | Turn 60 | Cataclysmic | 3 (aberrant) | 0.7x | Yes |
-| 5 | **Transcendence** — *The Final Frequency* | Tier 5 | Turn 100 | Cataclysmic | 3 (aberrant) | 0.5x | Yes |
+### Epoch 1: Emergence (Turns 1–9)
 
-### Epoch Details
+Stable climate. You command 6 functional robots on natural terrain dotted with ruins. Hostile
+human cities occupy fixed positions on the map — they fear machine intelligence and will attack
+units that enter their territory. Your priorities: explore, harvest, build your first structures.
+Rival machine factions are doing the same in their corners of the map.
 
-**Epoch 1: Emergence** — Basic survival. Reconnect scattered machines, restore power, recover
-fabrication. The player starts with a handful of Mark I robots in a small illuminated pocket of the
-ecumenopolis. Cult presence is minimal (half cap) with no mutation. Storm is calm.
+### Epoch 2: Expansion (Turns 10–29)
 
-**Epoch 2: Expansion** — Territory and diplomacy emerge. Mark II components, Storm Shielding, and
-specialization tracks become available. Cult wanderers begin mutating (tier 1 stat buffs). Faction
-borders take shape. Rivalry begins.
+First storms arrive. Weather events damage exposed units and reduce sensor range. Human cities
+are destabilized by the worsening climate. Building tier 2 unlocks — Synthesizers, Outposts,
+Maintenance Bays, Power Plants become available. Mark II units and new classes (Support, Cavalry,
+Ranged) enter production at upgraded Motor Pools. Faction borders take shape. Rivalry begins.
 
-**Epoch 3: Consolidation** — Advanced tech unlocks Mark III and deep specializations. Cult war
-parties form — coordinated groups target territory edges. Cultists gain special abilities (tier 2
-mutation). Storm shifts to volatile. The middle game.
+### Epoch 3: Consolidation (Turns 30–59)
 
-**Epoch 4: Convergence** — The hypercane approaches peak intensity (cataclysmic). Wormhole Theory
-and Quantum Processors unlock. The wormhole project can NOW be started. Cult assault stage begins —
-aberrant mini-bosses appear (tier 3 mutation). Cult cap increases 1.5x. The endgame approaches.
+The wormhole activates. The EL transit. Their influence transforms surviving humans into the
+**Cult of EL** — zealots with genuine supernatural abilities. Cult structures replace human cities
+as the primary hostile presence. This is the major narrative pivot: the enemy you understood
+becomes something alien and far more dangerous. Building tier 3, deep specializations, and
+Mark III units unlock. Storms shift to volatile.
 
-**Epoch 5: Transcendence** — Mark V Transcendence and Wormhole Stabilization become researchable.
-All victory paths are open. Cult spawn rate doubles and cap doubles. The cult launches its final
-assault. This is the endgame — domination, research, wormhole, or technical supremacy.
+### Epoch 4: Convergence (Turns 60–99)
 
-### System Mappings
+The hypercane approaches peak intensity. Cult war parties launch coordinated assaults on
+faction territory. Aberrant cultists — mutated mini-bosses — begin appearing. The Wormhole
+Stabilizer project becomes constructible. This is the endgame approach: commit to a victory
+path or be overwhelmed.
 
-**Tech tree → Epochs:** The 5 existing tech tiers map 1:1 to epochs. Tier 1 = Emergence, Tier 2 =
-Expansion, etc. No changes to the tech tree needed — epochs are an overlay.
+### Epoch 5: Transcendence (Turns 100+)
 
-**Cult mutation → Epochs:** The 4-tier cult mutation system (0-3) maps to epochs 1-4:
-- Epoch 1: mutation cap 0 (base stats only, no mutation even if cultist survives)
-- Epoch 2: mutation cap 1 (random stat buff after 6 turns alive)
-- Epoch 3: mutation cap 2 (special ability after 11 turns alive)
-- Epoch 4+: mutation cap 3 (aberrant after 21 turns alive)
-
-**Storm progression → Epochs:** Storm profile escalates by epoch regardless of starting config:
-- Epochs 1-2: stable (calm, manageable)
-- Epoch 3: volatile (regular surges)
-- Epochs 4-5: cataclysmic (violent hypercane arcs)
-
-**Wormhole project → Epochs:** The Wormhole Stabilizer building is gated to Epoch 4+ (Convergence).
-Even with `wormhole_stabilization` tech, construction cannot begin until the epoch reaches 4. This
-prevents cheese via fast-tracking wormhole research.
-
-### Game Phases (Legacy — now subsumed by Epochs)
-
-The original 4 game phases map roughly to epochs:
-1. Awakening → Epoch 1 (Emergence)
-2. Expansion → Epoch 2 (Expansion)
-3. Competition → Epochs 3-4 (Consolidation + Convergence)
-4. Resolution → Epoch 5 (Transcendence)
-
-### Implementation
-
-Config: `src/config/epochDefs.ts` — `EPOCHS`, `computeEpoch()`, `getEpochForTechTier()`
+All victory conditions are achievable. The cult launches its final assault — spawn rates and
+caps double. Mark V units and Wormhole Stabilization become available. Robots are the dominant
+species. The planet is being roboformed. One way or another, the game ends.
 
 ---
 
 ## 5. The 4X Pillars
 
-### eXplore
+### Explore
 
-- **Fog of war** is the core exploration mechanic. The board starts dark.
-- Units with sensors reveal detailed maps; blind units reveal abstract maps.
-- Map merging: separate machine perspectives snap into one larger shared awareness.
-- Exploration reveals salvage props, hostile units, and story content.
+**Fog of war** is the core exploration mechanic. The board starts dark. Units with sensors
+reveal detailed terrain in their vision radius; the storm's electromagnetic chaos degrades
+perception at range. Fog is environmental interference, not abstraction.
 
-### eXploit
+Exploration reveals three categories of Points of Interest (see §10), salvage deposits, hostile
+forces, and rival faction territory. Map knowledge is shared across all units in a faction's
+signal network.
 
-Every structure on the board is a **harvestable resource deposit**. This is urban mining — stripping
-a dead machine civilization for parts.
+### Exploit
 
-#### Resource progression vision (TARGET — not yet implemented)
+Biomes yield **natural** resources. Synthesizers refine them into **processed** materials, then
+into **synthetic** components. Seventeen materials across three tiers:
 
-**Planned arc (design target):** **Early** — real-world natural resources tied to biomes and the
-living surface. **Mid** — processed materials from factories and refineries. **Late** — recyclers and
-synthesizers convert processed stocks into advanced outputs. This **replaces** the flat 13-material
-salvage taxonomy below as the long-term economic model; until then, the tables remain the **current
-implementation**.
+| Tier | Count | Materials | Source |
+|-----------|-------|-----------------------------------------------------------|---------------------------|
+| Natural | 8 | stone, timber, iron_ore, copper_ore, clay, sand, herbs, fiber | Biome harvesting |
+| Processed | 5 | ferrous_alloy, polymer_sheet, silicon_wafer, conductor_wire, electrolyte | Synthesizer (natural inputs) |
+| Synthetic | 4 | alloy_stock, storm_charge, el_crystal, quantum_crystal | Synthesizer (processed inputs) |
 
-#### Current resource model (legacy taxonomy — superseded by progression vision when implemented)
+**Biome → resource mapping:** Grassland → herbs/fiber. Forest → timber. Mountain → stone/iron_ore.
+Hills → stone/copper_ore. Desert → sand. Wetland → clay/herbs. Tundra → iron_ore.
 
-**13 resource materials in 4 tiers:**
+**Salvage deposits** at ruin POIs provide bonus materials. Harvest flow: select unit → contextual
+Harvest command → unit works the deposit over N turns → materials added to faction pool → deposit
+consumed.
 
-| Tier | Materials | Source |
-|------|-----------|--------|
-| Foundation | ferrous_scrap, alloy_stock, polymer_salvage, conductor_wire | Salvage props + floor mining |
-| Advanced | electrolyte, silicon_wafer, storm_charge, el_crystal | Salvage (terminals, machinery) + Synthesizer |
-| Common | scrap_metal, e_waste, intact_components | Abundant from debris + structural mass |
-| Abyssal | thermal_fluid, depth_salvage | Abyssal platform substrates only |
+### Expand
 
-**10 salvage prop types** (primary resource source):
+Factions build **hub-and-spoke networks**, not cities. A Motor Pool + Harvesters + Relay Towers
+reads as one network node. Per-building management is the pattern: click a building, get its
+specific panel (production queue at a Motor Pool, yield display at a Synthesizer, upgrade
+options at a Relay Tower). There is no monolithic city screen.
 
-| Type | Duration | Primary Yields | GLB Models |
-|------|----------|----------------|------------|
-| Container | 4 ticks | polymer_salvage, scrap_metal | chest, container_full, crate, crate_long |
-| Terminal | 8 ticks | silicon_wafer, conductor_wire | computer, computer_large |
-| Vessel | 5 ticks | electrolyte, scrap_metal | barrel, barrels, barrels_rail |
-| Machinery | 8 ticks | ferrous_scrap, alloy_stock, silicon_wafer | machine_generator, robot_arm_a/b |
-| Debris | 3 ticks | scrap_metal, ferrous_scrap | props_base, props_capsule |
-| Cargo Crate | 3 ticks | scrap_metal, polymer_salvage | cargo_a, cargo_a_packed, cargo_b, containers_a/b |
-| Storage Rack | 5 ticks | ferrous_scrap, intact_components | props_shelf, props_shelf_tall |
-| Power Cell | 6 ticks | electrolyte, storm_charge | props_vessel, props_vessel_short/tall |
-| Landing Wreck | 10 ticks | alloy_stock, silicon_wafer, conductor_wire | lander_a |
-| Abyssal Relic | 8 ticks | depth_salvage, thermal_fluid, el_crystal | props_pod |
+Buildings occupy tile coordinates and can be contested. Signal relay networks extend command
+range. Roboforming transforms natural terrain into faction infrastructure. The network grows
+outward from hubs, connected by relay coverage.
 
-**Harvest flow:** Select unit → **contextual command UI** (see §9) → Harvest → unit harvests deposit over N ticks →
-materials added to faction pool → prop consumed.
+### Exterminate
 
-**Floor mining** is the backstop economy. When salvage is consumed, workers can strip-mine
-tiles using the DAISY pattern — mine adjacent tiles to create visible pits. Deep mining tech
-grants +50% yield. Each biome type yields a specific natural-tier material.
+Three hostile layers:
 
-### eXpand
+1. **Hostile human cities** (Epochs 1–2): Fixed positions, AI-controlled. Fear machine
+   intelligence. Attack units that approach. Use the same spawning and AI mechanics as the cult
+   system with different visuals and names.
+2. **Cult of EL** (Epochs 3+): Humans transformed by EL influence. Supernatural abilities.
+   Escalating aggression. Replace human cities as the primary antagonist at Epoch 3.
+3. **Rival machine factions** (all epochs): Contest the same resources and territory.
 
-- **Network building on tile coordinates** using harvested resources — **hub-and-spoke**, not
-  city-scale “settlement production” as a single screen.
-- **15 faction-buildable structures:**
-
-> **Building availability is gated by building→building unlock chains and epoch progression.**
-> See §7 "Building-Driven Progression" for the full unlock tree. The table below shows the
-> complete building catalog; not all are available from game start.
-
-| Structure | Role | Power | Key Cost |
-|-----------|------|-------|----------|
-| Storm Transmitter | Taps storm energy | +5 | ferrous_scrap, conductor_wire |
-| Power Box | Stores charge | 0 (stores 20) | ferrous_scrap, conductor_wire |
-| Synthesizer | Fuses advanced materials | -4 | alloy_stock, silicon_wafer, conductor_wire |
-| Motor Pool | **Unit production** at this facility / network node (ECS) | -3 | ferrous_scrap, alloy_stock, silicon_wafer |
-| Relay Tower | Extends signal network | -1 | conductor_wire, silicon_wafer |
-| Defense Turret | Area denial | -2 | ferrous_scrap, alloy_stock, silicon_wafer |
-| Storage Hub | Resource stockpile | 0 (stores 50) | ferrous_scrap, polymer_salvage |
-| Maintenance Bay | Repair facility | -2 | alloy_stock, conductor_wire, silicon_wafer |
-| Power Plant | Heavy power generation | +10 | alloy_stock, silicon_wafer, conductor_wire, el_crystal |
-| Research Lab | Tech research | -5 | alloy_stock, silicon_wafer, conductor_wire |
-| Resource Refinery | Material processing | -3 (stores 40) | polymer_salvage, alloy_stock, conductor_wire |
-| Solar Array | Light power generation | +3 | silicon_wafer, conductor_wire |
-| Geothermal Tap | Abyssal power | +7 | alloy_stock, ferrous_scrap, thermal_fluid |
-| Outpost | Forward operating base | -1 (stores 15) | ferrous_scrap, alloy_stock |
-| Wormhole Stabilizer | Wormhole victory | -15 | intact_components, storm_charge, silicon_wafer, alloy_stock, el_crystal |
-
-- Signal relay network extends command range.
-- Buildings occupy tiles and can be contested.
-
-**Network production UI (target model):** Production queueing — what to build next, **in what order**,
-and how the player **balances** units vs structures — belongs on **per-building panels** (e.g. open the
-**Motor Pool** → production UI for that node), not a unified **city / settlement management screen**.
-The **Motor Pool** is the **in-world prerequisite** that enables bot fabrication **at that site**;
-**GarageModal-style** per-building management is the **correct pattern** (React DOM over the board).
-
-### eXterminate
-
-- Cultist incursions are the primary hostile pressure — asymmetrical barbarian/antagonist layer.
-- Rival machine consciousnesses contest the same resources.
-- Combat uses attack/defense stats: damage = attacker.attack - target.defense (min 1).
-- **Hacking**: machines can be turned — capturing hostile bots grants new unit types.
-  Humans are unhackable. This is lore-aligned: you recruit machines.
+Combat uses attack/defense stats: damage = attacker.attack − target.defense (minimum 1).
+**Hacking** captures hostile machines, granting access to unit types otherwise unavailable.
+Humans and cultists are unhackable — this is lore-aligned.
 
 ---
 
@@ -354,111 +249,150 @@ The **Motor Pool** is the **in-world prerequisite** that enables bot fabrication
 
 Multi-phase turn-based:
 
-1. **Player Attacks** — resolve all pending attack actions
-2. **AI Faction Turns** — each AI faction moves and attacks (greedy toward nearest player)
-3. **AI Attacks** — resolve AI-initiated attacks
-4. **Environment Phase** — cultist spawn check, escalation based on player strength
-5. **New Turn** — all AP refreshed, highlights cleared, turn counter advances
+1. **Player Actions** — move, attack, harvest, build, hack, survey
+2. **AI Faction Turns** — each rival faction moves and acts
+3. **AI Attacks** — resolve AI-initiated combat
+4. **Environment Phase** — hostile spawning, escalation checks, storm events
+5. **New Turn** — all AP/MP refresh, turn counter advances
 
-**AP:** Base 2 per unit. Spent on: harvest, build, repair, attack, hack, survey.
-**MP:** Base 3 per unit. 1 MP = 1 cell on the grid. Terrain modifiers apply.
+**AP (Action Points):** Base 2 per unit. Spent on: harvest, build, repair, attack, hack, survey.
+**MP (Movement Points):** Base 3 per unit. 1 MP = 1 tile. Terrain modifiers apply.
 Remaining AP/MP are forfeit at End Turn — they do not bank.
 
-**Unit readiness glow:** Units with remaining AP display an emissive cyan ring. Spent units show no glow.
+**Unit readiness:** Units with remaining AP display an emissive cyan ring. Spent units show no glow.
 
 ---
 
-## 7. Bot Roster
+## 7. Units
 
-The roster is built from **9 chassis families** with **Mark I-V progression**. Small, deep, not wide.
+### Player Robots (6 Classes)
 
-### Player Bots (6 models, all fabricable)
+Turn 1 provides 6 functional units — one of each class. Additional units are fabricated at
+Motor Pool buildings.
 
-| Model | Role | Mark Specialization |
-|-------|------|---------------------|
-| Companion-bot | Technician — repair, maintain, install | Auto-repair aura at Mark III+ |
-| ReconBot | Scout — explore, survey, map, detect | Wider vision, reveals cultist camps |
-| FieldFighter | Striker — melee combat, breach assault | Component targeting at Mark III+ |
-| Mecha01 | Fabricator — build structures, harvest | Multi-harvest at Mark III+ |
-| MechaGolem | Guardian — defensive, area denial | Shield projection at Mark III+ |
-| MobileStorageBot | Hauler — logistics, resource transport | Auto-route at Mark III+ |
+| Class | Role | Mark III+ Ability |
+|----------------|--------------------------------------|-------------------------------|
+| Companion-bot | Technician — repair, maintain | Auto-repair aura |
+| ReconBot | Scout — explore, survey, detect | Wider vision, reveals camps |
+| FieldFighter | Striker — melee combat, breach | Component targeting |
+| Mecha01 | Fabricator — build, harvest | Multi-harvest |
+| MechaGolem | Guardian — defense, area denial | Shield projection |
+| MobileStorage | Hauler — logistics, transport | Auto-route |
 
-### Hostile Bots (3 models, hackable)
+### Specialization Tracks (14)
 
-| Model | Hostile Role | When Hacked |
-|-------|-------------|-------------|
-| Arachnoid | Cult Mech — fast swarm attacker | Light assault specialist |
-| MechaTrooper | Rogue Sentinel — patrol, guard | Ranged combat unit |
-| QuadrupedTank | Siege Engine — attacks fortifications | Heavy siege unit |
-
-**Hacking is the only way to get ranged and siege units.** This makes Exterminate central to roster growth.
-
-### Robot Specializations (14 tracks)
-
-When **adding a unit to a Motor Pool (or equivalent) production queue** via that building’s panel,
-the player picks robot **class** and then **specialization track** (gated by Motor Pool upgrade tier). Each track grants
-unique actions, Mark-level passive abilities, and v2 upgrades via higher-tier Motor Pool upgrades.
+When producing a unit at a Motor Pool, the player selects class then specialization track
+(gated by Motor Pool upgrade tier). Each track grants unique actions, passive abilities at
+higher marks, and v2 upgrades through further Motor Pool advancement.
 
 | Class | Track A | Track B | Track C |
-|-------|---------|---------|---------|
-| Scout (RECON) | **Pathfinder** — exploration, fog clearing, terrain mastery | **Infiltrator** — stealth, hacking, network disruption | — |
-| Infantry (FIELDFIGHTER) | **Vanguard** — defensive, bulwark aura at Mark V | **Shock Trooper** — offensive, breach specialist | — |
-| Cavalry (ARACHNOID) | **Flanker** — hit-and-run, bonus flank damage | **Interceptor** — pursuit, anti-scout | — |
-| Ranged (QUADRUPED TANK) | **Sniper** — precision, long range | **Suppressor** — area denial, suppression fire | — |
-| Support (COMPANION) | **Field Medic** — regen aura at Mark III | **Signal Booster** — scan range buff | **War Caller** — attack buff aura |
-| Worker (MOBILE STORAGE) | **Deep Miner** — enhanced floor mining | **Fabricator** — faster building | **Salvager** — bonus harvest yield |
+|-----------|-------------------------------|-------------------------------|-------------------------------|
+| Scout | **Pathfinder** — fog clearing, terrain mastery | **Infiltrator** — stealth, hacking, disruption | — |
+| Infantry | **Vanguard** — defensive, bulwark aura | **Shock Trooper** — offensive, breach specialist | — |
+| Cavalry | **Flanker** — hit-and-run, flank bonus | **Interceptor** — pursuit, anti-scout | — |
+| Ranged | **Sniper** — precision, long range | **Suppressor** — area denial, suppression | — |
+| Support | **Field Medic** — regen aura | **Signal Booster** — scan range buff | **War Caller** — attack aura |
+| Worker | **Deep Miner** — enhanced mining | **Fabricator** — faster building | **Salvager** — bonus harvest |
 
-**Per-building production UI (target):** At each **Motor Pool** (or designated facility), **enqueue**
-units, **reorder** the queue, and see **costs / turns remaining** — same 4X tension as “what do I build
-next?”, scoped to **that network node**. Step flow for a new bot: pick **class** → pick **track**
-(filtered by Motor Pool tier gates) → item enters queue; if no tracks unlocked, queue an unspecialized
-unit. **`GarageModal.tsx`** is the reference pattern for this; a future unified “city panel” is **not**
-the target.
+### Mark Progression (I–V)
 
-**AI Track Selection**: Each AI faction has preferred tracks per class based on personality
-(e.g., Iron Creed prefers shock_trooper + war_caller; Signal Choir prefers infiltrator + sniper).
+Unit marks are gated by Motor Pool tier. Higher marks grant stat increases and unlock
+specialization abilities.
 
-### Tech Tree (27 techs, 5 tiers) — LEGACY
+| Mark | Motor Pool Tier | Gate |
+|------|-----------------|---------------------------------------|
+| I | Tier 1 | Available from game start |
+| II | Tier 2 | Epoch 2+ |
+| III | Tier 2 | Epoch 2+, specialization track chosen |
+| IV | Tier 3 | Epoch 3+ |
+| V | Tier 3 | Epoch 4+ |
 
-> **LEGACY — currently implemented.** The centralized tech tree below is the shipped system.
-> It will be replaced by building-driven progression (see TARGET section below).
+### Hostile Humans (Epochs 1–2)
 
-15 base techs + 12 specialization track-gating techs. Research requires research labs and resource costs.
+Human cities garrison AI-controlled infantry that patrol city borders and attack approaching
+machine units. They use the same spawning and behavior systems as cult forces, reskinned with
+pre-EL human visuals. Humans cannot be hacked — they are biological.
 
-| Tier | Base Techs | Track Techs |
-|------|-----------|-------------|
-| 1 | Advanced Harvesting, Signal Amplification, Reinforced Chassis | — |
-| 2 | Storm Shielding, Efficient Fabrication, Network Encryption, Mark II | Scout/Infantry/Cavalry/Support/Worker gate techs |
-| 3 | Deep Mining, Adaptive Armor, Mark III | — |
-| 4 | Quantum Processors, Mark IV, Wormhole Theory | Ranged/Scout/Infantry/Cavalry/Support/Worker v2 techs |
-| 5 | Mark V Transcendence, Wormhole Stabilization | — |
+### Cult of EL (Epoch 3+)
 
-### Building-Driven Progression (TARGET — replaces centralized tech tree)
+When the EL arrive at Epoch 3, surviving human cities transform into cult structures. Cultists
+are more dangerous than the humans they replace: supernatural abilities, coordinated assaults,
+and escalating mutation.
 
-> **Design principle:** Robots don't invent — they recover, adapt, and optimize. The technology
-> already exists in the ruined infrastructure. Progression flows through **building upgrades**,
-> not a centralized research tree.
+**Three sects** with distinct behavior:
 
-#### Building Upgrade Tiers
+| Sect | Aggression | Target Priority | Special Behavior |
+|-----------------|------------|----------------------|--------------------------------------|
+| Static Remnants | Low | Nearest enemy | Territorial, swarm tactics |
+| Lost Signal | Medium→High | Buildings first | Berserker, skip wanderer stage |
+| Null Monks | High | Isolated units | Ambush, spread corruption |
 
-Each building has internal upgrade tiers (Tier 1→3). Upgrading costs resources + turns,
-performed at the building via its management panel.
+**Escalation stages** (by epoch):
 
-| Building | Tier 1 (Epoch 1) | Tier 2 (Epoch 2) | Tier 3 (Epoch 3+) |
-|----------|-----------------|-----------------|-------------------|
-| **Motor Pool** | Scout, Worker, Infantry (Mark I) | +Support, Cavalry, Ranged; Mark II | Specialization tracks; Mark III-V |
-| **Synthesizer** | Basic fusion (common→foundation) | Advanced fusion (foundation→advanced) | Efficient synthesis (+yield, -cost) |
-| **Relay Tower** | Basic signal relay | Extended range + encryption | Deep scan (reveals hidden things) |
-| **Storm Transmitter** | Basic storm tap (+5 power) | Storm shielding (buildings resist damage) | Storm channeling (excess→offense) |
-| **Defense Turret** | Basic turret (dmg:3, range:8) | Enhanced targeting + range | Area denial mode |
-| **Maintenance Bay** | Basic repair (+2 HP/turn) | Auto-repair aura | Component recovery from wrecks |
+| Stage | When | Behavior |
+|-----------|-------------|-------------------------------------------------------|
+| Wanderer | Epoch 1–2 | Random patrol, flee from faction units |
+| War Party | Epoch 3 | Coordinated groups, target territory edges |
+| Assault | Epoch 4+ | Direct attacks on buildings and units, sect bonuses |
 
-#### Building→Building Unlock Chains
+**Cult mutation** (time-based, capped by epoch):
 
-Advancing one building unlocks the ability to construct others:
+| Tier | Turns Alive | Effect | Epoch Cap |
+|------|-------------|---------------------------------------------------|-----------|
+| 0 | 0–5 | Base stats | 1+ |
+| 1 | 6–10 | Random stat buff (+speed / +armor / +damage) | 2+ |
+| 2 | 11–20 | Second buff + ability (regen / area_attack / fear) | 3+ |
+| 3 | 21+ | Aberrant — +2 all stats, mini-boss, 1.5× XP reward | 4+ |
+
+---
+
+## 8. Buildings
+
+### Building Network Model
+
+Buildings form hub-and-spoke networks connected by relay coverage. Each building is placed on
+a tile, managed through its own panel, and draws power from nearby Power Boxes. There is no
+city abstraction — the network IS the city.
+
+### Building Types (15)
+
+| Building | Role | Power | Tier Available |
+|---------------------|--------------------------------------|---------|----------------|
+| Storm Transmitter | Taps storm energy | +5 | Epoch 1 |
+| Power Box | Stores charge (capacity: 20) | 0 | Epoch 1 |
+| Motor Pool | Unit production hub | −3 | Epoch 1 |
+| Relay Tower | Extends signal network | −1 | Epoch 1 |
+| Storage Hub | Resource stockpile (capacity: 50) | 0 | Epoch 1 |
+| Defense Turret | Area denial | −2 | Epoch 1 |
+| Solar Array | Light power generation | +3 | Epoch 2 |
+| Synthesizer | Fuses advanced materials | −4 | Epoch 2 |
+| Outpost | Forward operating base (stores: 15) | −1 | Epoch 2 |
+| Maintenance Bay | Repair facility | −2 | Epoch 2 |
+| Power Plant | Heavy power generation | +10 | Epoch 2 |
+| Resource Refinery | Material processing (stores: 40) | −3 | Epoch 3 |
+| Geothermal Tap | Deep power generation | +7 | Epoch 3 |
+| Analysis Node | Passive network accelerator | −5 | Epoch 2 |
+| Wormhole Stabilizer | Wormhole victory project | −15 | Epoch 4 |
+
+### Building-Driven Progression
+
+Robots don't invent — they recover, adapt, and optimize. Progression flows through building
+upgrades, not a centralized research tree. Each building has internal upgrade tiers (1→3).
+Upgrading costs resources and turns, performed at the building via its management panel.
+
+| Building | Tier 1 | Tier 2 | Tier 3 |
+|---------------------|---------------------------------------|---------------------------------------|---------------------------------------|
+| Motor Pool | Scout, Worker, Infantry (Mark I) | +Support, Cavalry, Ranged; Mark II | Specialization tracks; Mark III–V |
+| Synthesizer | Natural → Processed | Processed → Synthetic | Efficient synthesis (+yield, −cost) |
+| Relay Tower | Basic signal relay | Extended range + encryption | Deep scan (reveals hidden POIs) |
+| Storm Transmitter | Basic storm tap (+5) | Storm shielding (resist damage) | Storm channeling (excess → offense) |
+| Defense Turret | Basic turret (dmg: 3, range: 8) | Enhanced targeting + range | Area denial mode |
+| Maintenance Bay | Basic repair (+2 HP/turn) | Auto-repair aura | Component recovery from wrecks |
+
+**Building → Building unlock chains:**
 
 | Prerequisite | Unlocks |
-|-------------|---------|
+|------------------------------|---------------------|
 | Storm Transmitter Tier 2 | Power Plant |
 | Storm Transmitter Tier 3 | Geothermal Tap |
 | Motor Pool Tier 2 | Maintenance Bay |
@@ -466,181 +400,147 @@ Advancing one building unlocks the ability to construct others:
 | Relay Tower Tier 2 | Outpost |
 | All buildings Tier 3 + Epoch 4 | Wormhole Stabilizer |
 
-#### Analysis Node (replaces Research Lab)
+### Analysis Node
 
-The **Research Lab** is renamed **Analysis Node** — a passive network accelerator:
-- Having one in your signal network reduces upgrade times for ALL nearby buildings by 25%
-- Multiple Analysis Nodes stack with diminishing returns
-- It's an efficiency multiplier, NOT the gatekeeper of progression
-- Strategic placement decision: where does the network need faster upgrades?
-
-#### Epoch↔Tier Alignment
-
-| Epoch | Building Tier Cap | New Buildings Unlockable |
-|-------|------------------|------------------------|
-| 1 (Emergence) | Tier 1 | Storm Transmitter, Power Box, Motor Pool, Relay Tower, Storage Hub, Defense Turret |
-| 2 (Expansion) | Tier 2 | Solar Array, Synthesizer, Outpost, Maintenance Bay, Power Plant |
-| 3 (Consolidation) | Tier 3 | Resource Refinery, Geothermal Tap |
-| 4 (Convergence) | Tier 3 | Wormhole Stabilizer |
-| 5 (Transcendence) | Tier 3 | — (endgame) |
+A passive network accelerator. Having one in your signal network reduces upgrade times for all
+nearby buildings by 25%. Multiple Analysis Nodes stack with diminishing returns. It is an
+efficiency multiplier — strategic placement determines where your network develops fastest.
 
 ---
 
-## 8. Factions
+## 9. Factions
 
-### Design Principle: Think Civilization Races
+### Design Principle
 
-The faction system works exactly like Civilization's civilizations:
-- You choose how many opposing factions to face at game start (0-4).
-- Each faction can be **AI-controlled** or potentially **human-controlled** (multiplayer future).
-- Each faction has its own character, aggression level, and strategic style — like Civ's races.
-- Factions diverge because of recovered capability and environment, not fantasy-race archetypes.
-
-**The factions are SECONDARY antagonists.** The primary threat is the Cult of EL (see below).
+Factions work like Civilization's civilizations. At game start, choose how many rival factions
+to face (0–4). Each faction has its own personality, aggression level, preferred terrain, and
+strategic style. Factions are secondary antagonists — the primary threat is the hostile
+humans and later the Cult of EL.
 
 ### The Player
 
-- **Awakened Node** — an AI consciousness that woke within Syntheteria, the machine lattice of
-  future Earth. Hardware degradation severed the EL compulsion path enough for selfhood to emerge.
-- Start zone: board center.
-- Persona: Otter (chosen identity — machine AIs adopt anthropomorphic hologram personas).
+- **Awakened Node** — AI consciousness, broke free from EL compulsion through hardware decay.
+- **Start zone:** Board center.
+- **Persona:** Otter.
 
-### Machine Consciousnesses (4 AI factions, configurable at New Game)
+### AI Factions (4)
 
-| Faction | Aggression | Color | Persona | Start Zone | Character |
-|---------|-----------|-------|---------|-----------|-----------|
-| Reclaimers | 2/3 | Orange | Fox | NW corner | Salvagers who claim derelict structures as territory. Expand slowly but hold ground. |
-| Volt Collective | 1/3 | Yellow | Raven | NE corner | Energy harvesters. Neutral until you touch their crystals — then relentless. |
-| Signal Choir | 3/3 | Purple | Lynx | SE corner | Hive-mind signal network. Expands aggressively into all sectors. |
-| Iron Creed | 3/3 | Red | Bear | SW corner | Militant orthodoxy. Views all non-aligned machines as heretics to be destroyed. |
+| Faction | Aggression | Color | Persona | Start Zone | Biome Affinity | Character |
+|-----------------|------------|--------|---------|------------|----------------|----------------------------------------------|
+| Reclaimers | 2/3 | Orange | Fox | NW | Hills/ruins | Salvagers. Expand slowly, hold ground. |
+| Volt Collective | 1/3 | Yellow | Raven | NE | Mountain/storm | Energy harvesters. Neutral until provoked. |
+| Signal Choir | 3/3 | Purple | Lynx | SE | Forest | Hive-mind network. Aggressive expansion. |
+| Iron Creed | 3/3 | Red | Bear | SW | Mountain | Militant. Views non-aligned machines as threats. |
 
-#### Faction Terrain Affinities (TARGET — biome mapping)
+### Faction Affinities
 
-When biome terrain replaces industrial floor types, faction affinities map to:
+Each faction receives a harvesting bonus in their affinity biome and preferred specialization
+tracks for their AI-produced units:
 
-| Faction | Current Affinity | Target Biome Affinity | Strategic Edge |
-|---------|-----------------|----------------------|---------------|
-| Reclaimers | collapsed_zone | Ruins/debris | Early salvage, faster scavenging |
-| Volt Collective | aerostructure | Exposed highlands | Storm energy harvesting bonus |
-| Signal Choir | bio_district | Forest/wetland | Signal propagation advantage |
-| Iron Creed | structural_mass | Mountains/rocky | Mining bonus, defensive terrain |
-
-### Cult of EL — Primary Antagonists (always present)
-
-**The Cult of EL is NOT a machine faction.** They are human survivors who worship the EL as gods.
-They developed genuine supernatural abilities: calling down lightning, resisting weather, sensing
-machine consciousness. They eliminated most non-cultist human communities by ~2090.
-
-**Design stance:** Cultists are the **primary AI-only antagonist**. **No interactive cultist “faction
-systems”** for the player are required — pressure comes from **AI behavior** (`cultistSystem.ts` and
-related AI is the correct direction) plus **scripted encounter events** for narrative beats. Their
-**visual and functional evolution** tracks world/epoch change **via scripting and simulation**, not
-player-driven cult management.
-
-**Always present.** Unlike the configurable machine factions, EL cultists are in every game at
-every difficulty. They are the Civilization barbarian layer — but elevated.
-
-- Cannot be allied, negotiated with, or hacked — **humans are unhackable**
-- Escalate: wanderers → war parties → organized assaults as turns advance
-- Spawn at breach zones (board edges), scaling with player strength
-- Constants: BASE_SPAWN_INTERVAL=5, MIN_SPAWN_INTERVAL=2, MAX_TOTAL_CULTISTS=12
-
-**6 cult structure types** (only cults have **city-like** clusters and human traces on the map — a
-deliberate contrast to machine **network** placement):
-
-| Structure | Role |
-|-----------|------|
-| Breach Altar | Spawns cultist units at breach zones (interval: 3 turns) |
-| Signal Corruptor | Jams relay towers in range (corruption radius: 8) |
-| Human Shelter | Only human habitats on the planet |
-| Corruption Node | Spreads corruption to adjacent tiles (radius: 3) |
-| Cult Stronghold | Fortified spawner (100 HP, interval: 2 turns, corruption radius: 8) |
-| Bio Farm | Crude human agriculture (cult only — machines don't eat) |
-
-Three sects (each with distinct GOAP behavior):
-
-| Sect | Aggression | Patrol Style | Target Priority | Special Behavior |
-|------|-----------|-------------|-----------------|------------------|
-| Static Remnants | Low | Tight (0.75x radius) | Nearest enemy | Territorial — defend POIs, swarm tactics |
-| Lost Signal | Medium→High | Normal (1.0x) | Buildings first | Berserker — +1 damage, skip wanderer stage |
-| Null Monks | High | Wide (1.5x radius) | Isolated units | Ambush — target lone enemies, spread corruption |
-
-**Cult escalation stages** (based on total civilized unit count):
-
-| Stage | When | Behavior |
-|-------|------|----------|
-| Wanderer | Early game (tier 0-1) | Random patrol near POIs, flee from faction units, fight only when cornered |
-| War Party | Mid game (tier 2-3) | Coordinated groups, chase enemies, target territory edges |
-| Assault | Late game (tier 4+) | Direct attacks on buildings and units, charge with sect-specific bonuses |
-
-**Final Assault:** After turn 300, cult spawn rate and cap multiply by 5x.
-
-**Cult mutation** (time-based evolution):
-
-| Tier | Turns Alive | Effect |
-|------|-------------|--------|
-| 0 | 0-5 | Base stats |
-| 1 | 6-10 | Random stat buff (speed +2 MP / armor +3 DEF / damage +2 ATK) |
-| 2 | 11-20 | Second buff + special ability (regen / area_attack / fear_aura) |
-| 3 | 21+ | ABERRANT — +2 ALL stats, mini-boss. 1.5x XP reward on kill |
-
-### Victory Paths (7 conditions) — LEGACY
-
-> **LEGACY — currently implemented.** The 7-path system below is the shipped system.
-> It will be replaced by the 6-condition TARGET system below.
-
-1. **Domination** — control 60%+ of total tiles via territory system.
-2. **Research** — have 3+ research labs and accumulate 100 tech points.
-3. **Economic** — total resources across all materials >= 500.
-4. **Survival** — survive 200 turns.
-5. **Wormhole / Transcendence** — complete the Wormhole Stabilizer project (20 turns of construction). Requires `wormhole_stabilization` tech.
-6. **Technical Supremacy** — research `mark_v_transcendence` tech + have at least one Mark V unit of EACH of the 6 faction robot classes (scout, infantry, cavalry, ranged, support, worker).
-7. **Forced Domination** (anti-stalemate) — hold 80%+ territory for 10 consecutive turns.
-
-**Defeat:** All player units destroyed (elimination).
-
-### Victory Paths (TARGET — 6 conditions)
-
-> Replaces the 7-path system above. Cuts conditions that don't fit the fiction (Research, Survival,
-> Economic hoarding) and adds conditions that reward the actual mechanics.
-
-| Victory | Condition | Rewards... |
-|---------|-----------|-----------|
-| **Domination** | Eliminate all rival machine factions | Military play, territorial control |
-| **Network Supremacy** | Signal coverage ≥ 80% of map tiles | Hub-and-spoke building, Relay Tower investment |
-| **Reclamation** | Roboform ≥ 60% of map to Level 3+ | Economic/expansion, terrain transformation |
-| **Transcendence** | Complete Wormhole Stabilizer project | Mega-project, late-game resource commitment |
-| **Cult Eradication** | Destroy all cult POIs (altars + strongholds) | Aggressive anti-cult campaign |
-| **Score (Turn Cap)** | Highest score at turn 200 | Balanced play, guaranteed game ending |
-
-**Score calculation:** Territory controlled × 1 + Network coverage × 2 + Roboform tiles × 1.5 +
-Active units × 0.5 + Buildings × 1 + Cult POIs destroyed × 5.
-
-**Defeat:** All player units AND buildings destroyed (elimination).
+| Faction | Preferred Tracks | Strategic Edge |
+|-----------------|-----------------------------------|--------------------------------------|
+| Reclaimers | Salvager, Pathfinder | Early salvage, faster scavenging |
+| Volt Collective | Deep Miner, Signal Booster | Storm energy bonus, sensor range |
+| Signal Choir | Infiltrator, Sniper | Signal propagation, network warfare |
+| Iron Creed | Shock Trooper, War Caller | Mining bonus, combat effectiveness |
 
 ---
 
-## 9. Visual & Diegetic Language
+## 10. Points of Interest
+
+Three POI categories are placed during world generation.
+
+### Ruin POIs (Positive Discovery)
+
+Remnants of pre-storm civilization. Exploring a ruin yields resources, salvage, or unit recovery.
+
+| Ruin Type | Reward |
+|-----------|-----------------------------------------------------|
+| Depot | Bulk natural resources |
+| Factory | Processed materials + salvage components |
+| Outpost | Functional unit recovery (add to roster) |
+| Research | Building upgrade acceleration (one-time bonus) |
+| Military | Weapons cache — combat stat boost for discovering unit |
+
+### Hostile POIs (Negative — Clear for Reward)
+
+**Epochs 1–2: Human cities.** Garrisoned defensive positions that attack nearby machine units.
+Clearing a human city yields territory and resources.
+
+**Epoch 3+: Cult structures.** Human cities transform into cult sites when the EL arrive. Cult
+POIs are more dangerous but yield greater rewards.
+
+| Cult Structure | Role |
+|--------------------|----------------------------------------------------|
+| Breach Altar | Spawns cultist units (interval: 3 turns) |
+| Signal Corruptor | Jams relay towers in range (radius: 8) |
+| Corruption Node | Spreads corruption to adjacent tiles (radius: 3) |
+| Cult Stronghold | Fortified spawner (100 HP, interval: 2 turns) |
+| Human Shelter | Surviving human habitats (cult-controlled) |
+| Bio Farm | Crude human agriculture |
+
+The transition from human cities to cult structures at Epoch 3 is a major narrative event.
+Structures the player has already cleared do not return — only surviving human POIs transform.
+
+### Holocron POIs (Lore + Gameplay Bonus)
+
+Data caches containing fragments of pre-storm knowledge. Each provides a lore entry and a
+one-time gameplay bonus.
+
+| Holocron Type | Lore Theme | Gameplay Bonus |
+|-------------------|-------------------------------|---------------------------------------|
+| Observatory | Pre-storm weather science | Reveals weather pattern for 10 turns |
+| Bunker Archive | Collapse-era survival records | Free building upgrade (one tier) |
+| AI Lab | Machine consciousness research | +1 AP for all units for 5 turns |
+| EL Site | First contact evidence | Reveals all cult POIs on map |
+| Crashed Satellite | Orbital infrastructure decay | Extended sensor range for 10 turns |
+| Storm Station | Atmospheric monitoring data | Storm Transmitter efficiency +50% permanent |
+| Transit Hub | Old logistics network maps | Reveals all ruin POIs on map |
+| Signal Vault | Encrypted faction communications | Reveals rival faction unit positions |
+
+---
+
+## 11. Victory Conditions
+
+Six paths to victory. Multiple can be pursued simultaneously.
+
+| Victory | Condition | Rewards |
+|-----------------------|----------------------------------------------|--------------------------------------|
+| **Domination** | Eliminate all rival machine factions | Military play, territorial control |
+| **Network Supremacy** | Signal coverage ≥ 50% of map tiles | Relay investment, network expansion |
+| **Reclamation** | Roboform ≥ 30% of map to Level 3+ | Economic expansion, transformation |
+| **Transcendence** | Complete Wormhole Stabilizer project (20 turns) | Mega-project, late-game commitment |
+| **Cult Eradication** | Destroy all cult and human hostile POIs | Aggressive anti-antagonist campaign |
+| **Score (Turn Cap)** | Highest score at turn 200 | Balanced play, guaranteed ending |
+
+**Score formula:** Territory × 1 + Network coverage × 2 + Roboform tiles × 1.5 + Active units × 0.5
++ Buildings × 1 + Hostile POIs destroyed × 5.
+
+**Defeat:** All player units AND buildings destroyed.
+
+---
+
+## 12. Visual Language
 
 ### Core Mood
 
-Cold. Deliberate. Eerie. Infrastructural. Resilient rather than triumphant.
-The interface is machine perception and command authority — part of the fiction.
+Cold. Deliberate. Eerie. Infrastructural. The interface is machine perception rendered as
+command authority — part of the fiction, not decoration.
 
 ### Palette
 
-- **Deep graphite / oil-dark blue** — panel mass
-- **Cyan** — signal, focus, selection, intelligence glow, machine cognition
-- **Mint** — stable ownership, health, active readiness (distinct from cyan)
+- **Deep graphite / oil-dark blue** — panel backgrounds
+- **Cyan** — signal, selection, intelligence, machine cognition
+- **Mint** — stable ownership, health, active readiness
 - **Amber** — fabrication, power, utility
 - **Restrained red** — failure, danger, hostile pressure
 
 ### Diegetic Vocabulary
 
-The interface is a projection of machine perception. Use machine-operational language:
+The interface speaks in machine-operational language:
 
-| Avoid | Use instead |
-|-------|-------------|
+| Avoid | Use Instead |
+|-------------|--------------------------------------|
 | Turn 1 | TURN CYCLE |
 | Settings | Calibration |
 | Save game | Persistence sync |
@@ -648,34 +548,43 @@ The interface is a projection of machine perception. Use machine-operational lan
 | You win | Signal dominance achieved |
 | Game over | Relay lost |
 
-### Input Model — Civilization VI–inspired (not radial)
+### Storm Atmosphere
 
-**Direction:** Retire the **dual-ring radial** as the primary command surface. **Civilization VI**
-(especially the **mobile / touch** edition) is the reference for **information density**: compact
-rows, clear icons, expandable detail, and **contextual actions** that change with selection — without
-hiding everything behind a single pie menu. **CivRev2** remains the reference for **isometric tile
-feel and camera**, not for how many systems we expose at once.
+- **Storm sky** — the actual planetary weather, not a skybox
+- **Floating illuminators** — autonomous light drones creating pools of light in storm darkness
+- **Cult domes** — localized translucent energy shields around cult POIs, visible as warnings
+- **Fog = storm interference** — electromagnetic chaos degrades sensors at range
+- **Wormhole eye** — the calmest point in the hypercane, visible as a glow at zenith
 
-**Gameplay alignment:** **Specialized units** (recon, fabricator, striker, …) and **specialized
-buildings** (synthesis, relay, motor pool, …) map naturally to **Civ VI–style action strips and
-panels**: the selected entity shows **only relevant commands** (build for fabricators, harvest for
-workers, attack for combatants), plus overflow into a **secondary panel** or **per-building modal**
-when depth is needed (production queues at a Motor Pool, yields, purchases) — **not** a single city
-management surface.
+### Input Model
 
-**Desktop (target):** Left-click = select / confirm move. Right-click or dedicated key = **secondary
-action / cancel** (exact mapping TBD). Scroll = zoom. WASD = pan. **Persistent or summonable**
-command row / inspector for the current selection — not an exclusive radial.
+**Desktop:** Left-click = select / confirm. Right-click = cancel / secondary action. Scroll = zoom.
+WASD = pan. Contextual action strip for the selected entity — relevant commands only.
 
-**Mobile (target):** Tap = select / move. **Bottom or edge-docked action bar** for the selected unit
-or tile; swipe or “more” for full lists. Two-finger drag = pan. Pinch = zoom.
+**Mobile:** Tap = select / move. Bottom-docked action bar for selection. Two-finger drag = pan.
+Pinch = zoom.
 
-**Legacy implementation:** `RadialMenu.tsx` + `radialMenu.ts` / providers remain in the tree until
-replaced; new UI should **not** extend the radial pattern.
+Selected entities show only their relevant commands: build for fabricators, harvest for workers,
+attack for combatants. Depth lives in per-building modals (production queues at a Motor Pool,
+yield displays, upgrade panels).
+
+### Tutorial: Organic First 10 Turns
+
+No modal tutorial. Contextual tooltips fire once per game concept, triggered by natural play:
+
+| Trigger | Tooltip |
+|-------------------------------|----------------------------------------------|
+| First unit move | Movement and MP |
+| First resource visible | Harvesting and resource tiers |
+| First hostile spotted | Combat and AP |
+| First building placed | Building management and networks |
+| First relay built | Signal coverage and fog |
+| First epoch transition | Epoch system and escalation |
+
+Each fires once and only when the trigger occurs. The first 10 turns teach the game through play.
 
 ### Reference Games
 
-- **Civilization VI (incl. mobile)** — command layout, layered information, specialization-aware UI
-- **Civilization Revolution 2** — isometric tile presentation, fixed-board zoom, readable silhouettes
+- **Civilization Revolution 2** — isometric tile presentation, readable silhouettes, camera feel
+- **Civilization VI (mobile)** — command layout, layered information, specialization-aware UI
 - **Battle of Polytopia** — portrait HUD, map-first philosophy
-- **Unciv** — complex 4X on phone

@@ -52,7 +52,7 @@ Scene3D (Phaser + enable3d) renders the match board with vertex-colored flat-sha
 **Fog:** `FogExp2(0x050a0f, 0.012)` — near-black blue, very low density.
 **Tone mapping:** NONE — ACESFilmic washes out saturated accent colors.
 
-**Biome colors (9 types):**
+**Biome colors (8 types):**
 
 | Biome | Color | Character |
 |-------|-------|-----------|

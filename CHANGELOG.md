@@ -12,7 +12,7 @@
 | TypeScript errors | 0 |
 | Biome errors | 0 |
 | Config files | 20+ |
-| GLB models | 360 |
+| GLB models | 212 |
 
 ---
 
@@ -20,7 +20,8 @@
 
 ### Design Overhaul (Phase 11)
 
-- **Biome terrain** — 9 types (grassland, forest, mountain, water, desert, hills, wetland, tundra, ruins) replacing industrial floor types
+- **Biome terrain** — 8 types (grassland, forest, mountain, water, desert, hills, wetland, tundra) replacing industrial floor types
+- **Ruin POIs** — 5 ruin types (depot, factory, outpost, research, military) as discoverable map features, not a biome
 - **Natural→processed→synthetic resource taxonomy** — 17 materials across 3 tiers
 - **Building-driven progression** — tier 1-3 upgrades per building, replaces centralized tech tree
 - **Building→building unlock chains** — prerequisite system gates construction

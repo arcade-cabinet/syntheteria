@@ -14,7 +14,7 @@ pnpm check-imports  # Architectural import gates
 
 ## Current Focus
 
-Biome terrain and building-driven progression are complete. The game has 9 terrain types, 17 materials across natural→processed→synthetic tiers, per-building management modals, 6 victory conditions, and a balance harness for AI-vs-AI playtesting. Next up: visual roboforming overlays, terrain blending, and forest canopy rendering in the Phaser board renderer.
+Biome terrain and building-driven progression are complete. The game has 8 terrain biomes, 17 materials across natural→processed→synthetic tiers, 5 ruin POI types (like Civ villages), per-building management modals, 6 victory conditions, and a balance harness for AI-vs-AI playtesting. Next up: visual roboforming overlays, terrain blending, and forest canopy rendering in the Phaser board renderer.
 
 ## Architecture
 

@@ -21,7 +21,7 @@
  * Architecture note:
  *   The sky sphere is a visual container; the storm, wormhole, and illuminator
  *   are distinct systems co-rendered here for a single draw call.
- *   See src/rendering/sky/chronometry.ts for the turn→time-of-day math.
+ *   See src/lib/chronometry.ts for the turn→time-of-day math.
  */
 
 import { Sparkles } from "@react-three/drei";

@@ -5,3 +5,11 @@
  */
 
 export { BoardInput } from "./BoardInput";
+export type { PathPoint } from "./pathPreview";
+export {
+	clearPreviewPath,
+	getPathVersion,
+	getPreviewPath,
+	setPreviewPath,
+	subscribePathState,
+} from "./pathPreview";

@@ -24,7 +24,7 @@ import {
 	type EffectEvent,
 	type ParticleConfig,
 	ParticlePool,
-} from "../../../rendering";
+} from "../../../lib/particles";
 
 const MAX_PARTICLES = 2048;
 

@@ -58,7 +58,6 @@ export {
 	DIPLOMACY_BACKSTAB_DELAY,
 	DIPLOMACY_PEACE_DRIFT_TURNS,
 	ELEVATION_STEP_M,
-	FACTION_COLORS,
 	FACTION_COLORS_CSS,
 	FORCED_DOMINATION_HOLD_TURNS,
 	FORCED_DOMINATION_PERCENT,
@@ -88,6 +87,8 @@ export {
 	VICTORY_SURVIVAL_TURNS,
 	WORMHOLE_PROJECT_TURNS,
 } from "./gameDefaults";
+// --- Model paths + 3D GLB resolvers (extends FACTION_COLORS for all factions) ---
+export * from "./models";
 export type { MovementProfile } from "./movementDefs";
 // --- Movement ---
 export {

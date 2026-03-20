@@ -21,7 +21,7 @@ import * as THREE from "three";
 import type { GeneratedBoard } from "../../../board";
 import { TILE_SIZE_M } from "../../../board";
 import { FACTION_COLORS } from "../../../config";
-import { buildExploredSet } from "../../../rendering";
+import { buildExploredSet } from "../../../lib/fog";
 import { computeTerritory, type TerritorySnapshot } from "../../../systems";
 
 type TerritoryOverlayRendererProps = {

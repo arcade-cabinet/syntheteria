@@ -23,7 +23,6 @@ import * as THREE from "three";
 import type { GeneratedBoard } from "../../../board";
 import { TILE_SIZE_M } from "../../../board";
 import {
-	buildExploredSet,
 	getAllInfraModelUrls,
 	INFRA_ANTENNA_MODELS,
 	INFRA_GATEWAY_MODELS,
@@ -31,7 +30,8 @@ import {
 	INFRA_PIPE_MODELS,
 	INFRA_POWER_MODELS,
 	INFRA_SUPPORT_MODELS,
-} from "../../../rendering";
+} from "../../../config";
+import { buildExploredSet } from "../../../lib/fog";
 import { seedToFloat } from "../../../terrain";
 import { ModelErrorBoundary } from "../ModelErrorBoundary";
 

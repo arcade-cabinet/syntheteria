@@ -9,8 +9,8 @@
  */
 
 import * as THREE from "three";
-import FRAG from "./glsl/heightFrag.glsl";
-import VERT from "./glsl/heightVert.glsl";
+import FRAG from "../glsl/heightFrag.glsl";
+import VERT from "../glsl/heightVert.glsl";
 
 /**
  * Fixed zenith sun direction — perpetual harsh artificial daylight.

@@ -52,18 +52,17 @@ src/
 ├── terrain/            # Floor types, elevation, GLSL shaders
 ├── resources/          # Salvage type definitions
 ├── narrative/          # Speech profiles
-├── config/             # 11 game data files (tunables, tech tree, recipes, etc.)
+├── config/             # Game data + model URL catalog (`models.ts`), tunables, tech tree, recipes, etc.
 ├── audio/              # Tone.js SFX + ambience
 ├── camera/             # Camera controllers
 ├── db/                 # SQLite schema + GameRepo
-├── rendering/          # TRANSITIONAL — decompose per docs/COMPREHENSIVE_ENGINEERING_PLAN.md §8; then delete
 ├── views/              # ALL rendering entrypoints
 │   ├── title/          # R3F title + generating globe (TSX) — migrated from src/view/
 │   └── board/          # Phaser + enable3d match board (pure TS) — migrated from flat src/views/
 ├── ui/                 # React DOM: Globe composes views/title; HUD, landing/, game/
 ├── input/              # Board interaction (click, drag, select)
 ├── world/              # New-game config (+ future settlement snapshots per `GAME_DESIGN.md` / runbook Phase G)
-├── lib/                # Shared utilities
+├── lib/                # Shared utilities (chronometry, fog helpers, particles, uuid)
 ├── types/              # Shared type declarations
 ├── init-world.ts       # World initialization from board
 ├── create-world.ts     # Koota world factory
@@ -134,7 +133,7 @@ pnpm verify — required gates (matches CI Quality job)
   Vitest (node): all suites passing
 
 pnpm verify:with-ct — optional; browser CT is bitrotted (stale paths to old
-  src/rendering/*R3F). Repair is Phase C in docs/CLOUD_AGENT_RUNBOOK.md.
+  R3F preview imports). Repair is Phase C in docs/CLOUD_AGENT_RUNBOOK.md.
   CI runs test:ct with continue-on-error: true.
 ```
 Playwright runs **headed** (`headless: false`); in CI, `xvfb-run -a` provides a virtual display. Done checklist: [docs/plans/IS_THE_GAME_DONE.md](docs/plans/IS_THE_GAME_DONE.md).
@@ -148,7 +147,7 @@ Playwright runs **headed** (`headless: false`); in CI, `xvfb-run -a` provides a 
 | **systems-engineer** | ECS systems, game loop, Koota traits | `src/systems/`, `src/ecs/` |
 | **ai-engineer** | AI behavior, GOAP, steering, pathfinding | `src/ai/`, `src/systems/governor*` |
 | **frontend-designer** | UI panels, HUD, modals, mobile layout | `src/ui/`, `src/input/` |
-| **rendering-engineer** | R3F renderers, materials, shaders | `src/rendering/` |
+| **rendering-engineer** | R3F title scene, Phaser board, materials, shaders | `src/views/title/`, `src/views/board/` |
 | **audio-engineer** | Spatial audio, SFX, adaptive music | `src/audio/` |
 | **config-docs** | Config files, documentation, CI | `docs/`, `config/`, `.github/` |
 
@@ -187,7 +186,7 @@ All parallel agent work uses git worktrees:
 | Exploration | `src/systems/exploration.ts` | Fog of war, vision radius |
 | World Gen | `src/world/generation.ts` | Procedural ecumenopolis |
 | Radial Menu | `src/systems/radialMenu.ts` | Context menu state |
-| Floor Render | `src/rendering/StructuralFloorRenderer.tsx` | PBR textured floors |
+| Board terrain | `src/views/title/renderers/BoardRenderer.tsx` | Height + biome sphere mesh |
 | Game HUD | `src/ui/panels/GameHUD.tsx` (RN), `src/ui/dom/GameHUDDom.tsx` (Vite) | Top bar, resources, turn |
 | App Entry (Vite) | `src/main.tsx` → `AppVite.tsx` | Capacitor SQLite + session DB, R3F scene, DOM HUD |
 | App Entry (Expo) | `App.tsx` | Legacy Expo/RN path; 39 renderers |

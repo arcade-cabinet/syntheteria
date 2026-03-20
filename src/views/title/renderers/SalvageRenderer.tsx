@@ -11,14 +11,12 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { World } from "koota";
 import { type ReactNode, Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { TILE_SIZE_M } from "../../../board";
+import { sphereModelPlacement, TILE_SIZE_M } from "../../../board";
 import {
-	buildExploredSet,
 	getAllSalvageModelUrls,
-	isTileExplored,
 	resolveSalvageModelUrl,
-	sphereModelPlacement,
-} from "../../../rendering";
+} from "../../../config";
+import { buildExploredSet, isTileExplored } from "../../../lib/fog";
 import { SalvageProp, type SalvageType } from "../../../traits";
 import { ModelErrorBoundary } from "../ModelErrorBoundary";
 

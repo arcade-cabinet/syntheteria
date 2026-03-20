@@ -6,8 +6,8 @@
  */
 
 import { BUILDING_DEFS, CULT_STRUCTURE_DEFS } from "../buildings";
-import { FACTION_COLORS as GAME_FACTION_COLORS } from "../config";
 import { SALVAGE_DEFS } from "../resources";
+import { FACTION_COLORS as GAME_FACTION_COLORS } from "./gameDefaults";
 
 const MODEL_BASE = "/assets/models/";
 

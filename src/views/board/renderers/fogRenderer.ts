@@ -10,7 +10,7 @@
 
 import type { World } from "koota";
 import * as THREE from "three";
-import { buildExploredSet, isTileExplored } from "../../../rendering";
+import { buildExploredSet, isTileExplored } from "../../../lib/fog";
 import { TILE_SIZE } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------

@@ -22,7 +22,6 @@ import {
 	spherePosToTile,
 	sphereRadius,
 } from "../board";
-import { clearPreviewPath, setPreviewPath } from "../rendering/pathPreview";
 import {
 	cancelBuildPlacement,
 	clearHighlights,
@@ -47,6 +46,7 @@ import {
 	UnitPos,
 	UnitStats,
 } from "../traits";
+import { clearPreviewPath, setPreviewPath } from "./pathPreview";
 // Import providers so they register at module scope
 import "../systems/radial";
 

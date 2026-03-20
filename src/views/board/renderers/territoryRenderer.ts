@@ -9,7 +9,7 @@
 
 import type { World } from "koota";
 import * as THREE from "three";
-import { FACTION_COLORS } from "../../../rendering";
+import { FACTION_COLORS } from "../../../config";
 import { computeTerritory } from "../../../systems";
 import { tileToWorld } from "./terrainRenderer";
 

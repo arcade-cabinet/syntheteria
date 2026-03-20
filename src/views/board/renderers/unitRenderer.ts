@@ -9,7 +9,7 @@
 import type { World } from "koota";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { resolveRobotModelUrl } from "../../../rendering";
+import { resolveRobotModelUrl } from "../../../config";
 import { UnitMove, UnitPos, UnitVisual } from "../../../traits";
 import { tileToWorld } from "./terrainRenderer";
 

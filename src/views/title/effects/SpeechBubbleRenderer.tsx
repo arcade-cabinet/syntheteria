@@ -14,7 +14,7 @@ import { useFrame } from "@react-three/fiber";
 import type { World } from "koota";
 import { useRef, useState } from "react";
 import { TILE_SIZE_M } from "../../../board";
-import { FACTION_COLORS } from "../../../rendering";
+import { FACTION_COLORS } from "../../../config";
 import type { ActiveSpeech } from "../../../systems";
 import { getActiveSpeech } from "../../../systems";
 import { UnitFaction, UnitMove, UnitPos } from "../../../traits";

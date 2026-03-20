@@ -1,5 +1,5 @@
 // ─── View Package ─────────────────────────────────────────────────────────────
-// All React Three Fiber renderer components. Imports from rendering/ (pure TS)
+// All React Three Fiber renderer components. Imports from config, board, lib, input.
 // and traits/ (ECS queries). No logic here — just presentation.
 
 // Effects

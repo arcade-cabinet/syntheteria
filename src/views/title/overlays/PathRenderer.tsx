@@ -15,8 +15,8 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../../../board";
 import { ELEVATION_STEP_M } from "../../../config";
-import type { PathPoint } from "../../../rendering/pathPreview";
-import { getPathVersion, getPreviewPath } from "../../../rendering/pathPreview";
+import type { PathPoint } from "../../../input/pathPreview";
+import { getPathVersion, getPreviewPath } from "../../../input/pathPreview";
 
 // Re-export path API for consumers that import from `view/`.
 export {
@@ -26,7 +26,7 @@ export {
 	type PathPoint,
 	setPreviewPath,
 	subscribePathState,
-} from "../../../rendering/pathPreview";
+} from "../../../input/pathPreview";
 
 // ---------------------------------------------------------------------------
 // Path line geometry

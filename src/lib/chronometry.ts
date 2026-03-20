@@ -13,7 +13,7 @@
  *   turnToChronometry(turn) → { dayAngle, season }
  *
  * Usage:
- *   import { turnToChronometry } from "../rendering/sky/chronometry";
+ *   import { turnToChronometry } from "../lib/chronometry";
  *   const { dayAngle, season } = turnToChronometry(turn);
  */
 

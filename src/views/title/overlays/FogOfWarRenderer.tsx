@@ -13,12 +13,12 @@ import type { World } from "koota";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import type { GeneratedBoard } from "../../../board";
+import { buildSphereGeometry } from "../../../board";
+import { UnitFaction, UnitPos, UnitStats } from "../../../traits";
 import {
-	buildSphereGeometry,
 	fogOfWarSphereFrag as SPHERE_FRAG,
 	fogOfWarSphereVert as SPHERE_VERT,
-} from "../../../rendering";
-import { UnitFaction, UnitPos, UnitStats } from "../../../traits";
+} from "../glsl";
 
 type FogOfWarRendererProps = {
 	board: GeneratedBoard;

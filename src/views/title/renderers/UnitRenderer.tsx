@@ -17,14 +17,17 @@ import type { World } from "koota";
 import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { playSfx } from "../../../audio";
-import { ELEVATION_STEP_M, TILE_SIZE_M } from "../../../board";
+import {
+	ELEVATION_STEP_M,
+	sphereModelPlacement,
+	TILE_SIZE_M,
+} from "../../../board";
 import {
 	FACTION_COLORS,
 	getAllRobotModelUrls,
-	isUnitDetected,
 	resolveRobotModelUrl,
-	sphereModelPlacement,
-} from "../../../rendering";
+} from "../../../config";
+import { isUnitDetected } from "../../../lib/fog";
 import {
 	UnitAttack,
 	UnitFaction,

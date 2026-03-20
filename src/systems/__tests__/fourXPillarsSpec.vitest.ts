@@ -137,7 +137,7 @@ describe("Section 5 — eXplore", () => {
 
 	it("enemy units are hidden by scan range, not tile exploration", async () => {
 		// The actual detection is in unitDetection.ts — tested separately.
-		const { isUnitDetected } = await import("../../rendering/unitDetection");
+		const { isUnitDetected } = await import("../../lib/fog/unitDetection");
 		const scanners = [{ x: 5, z: 5, range: 3 }];
 		expect(isUnitDetected(6, 5, scanners)).toBe(true);
 		expect(isUnitDetected(10, 10, scanners)).toBe(false);

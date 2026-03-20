@@ -17,4 +17,4 @@ export {
 	lightningVertexShader,
 	stormFragmentShader,
 	stormVertexShader,
-} from "../../ui/landing/title/shaders";
+} from "../../../ui/landing/title/shaders";

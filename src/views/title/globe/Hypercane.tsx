@@ -6,11 +6,8 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import {
-	cinematicState,
-	hypercaneFragmentShader,
-	hypercaneVertexShader,
-} from "../../../rendering";
+import { cinematicState } from "./cinematicState";
+import { hypercaneFragmentShader, hypercaneVertexShader } from "./shaders";
 
 export function Hypercane() {
 	const meshRef = useRef<THREE.Mesh>(null);

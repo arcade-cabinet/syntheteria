@@ -10,8 +10,10 @@ Board interaction component — translates pointer events into tile selections a
 
 ## Public API
 - `BoardInput` — R3F component for board pointer interaction
+- `pathPreview.ts` — module-level A* hover path state (`setPreviewPath`, `getPreviewPath`, …)
 
 ## Files
 | File | Purpose |
 |------|---------|
 | BoardInput.tsx | Pointer event handling on the sphere world |
+| pathPreview.ts | Shared path preview store for `BoardInput` + `PathRenderer` |

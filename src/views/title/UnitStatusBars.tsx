@@ -29,7 +29,8 @@ import type { World } from "koota";
 import { useRef, useState } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../../board";
-import { FACTION_COLORS, isUnitDetected } from "../../rendering";
+import { FACTION_COLORS } from "../../config";
+import { isUnitDetected } from "../../lib/fog";
 import {
 	UnitFaction,
 	UnitHarvest,

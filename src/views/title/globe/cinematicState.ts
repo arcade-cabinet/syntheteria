@@ -3,7 +3,7 @@
  * read by LightningEffect/StormClouds/Hypercane each frame.
  *
  * Separated into its own module to avoid circular imports between
- * ui/Globe.tsx and rendering/globe/*.
+ * ui/Globe.tsx and views/title/globe/*.
  */
 export const cinematicState = {
 	stormSpeed: 1,

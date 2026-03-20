@@ -8,6 +8,7 @@
 import { createWorld } from "koota";
 import type { BoardConfig, GeneratedBoard } from "../board";
 import { generateBoard } from "../board";
+import { setPlayerFactionColor } from "../config";
 import type { WorldType } from "../create-world";
 import {
 	applyBuildings,
@@ -24,7 +25,6 @@ import {
 import { FACTION_DEFINITIONS } from "../factions";
 import { initWorldFromBoard } from "../init-world";
 import { randomUUID } from "../lib";
-import { setPlayerFactionColor } from "../rendering";
 import { getSpawnCenters } from "../robots";
 import { seedToPhrase } from "../seed";
 import {

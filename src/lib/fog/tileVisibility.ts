@@ -6,7 +6,7 @@
  */
 
 import type { World } from "koota";
-import { Tile } from "../traits";
+import { Tile } from "../../traits";
 
 /** Build a Set of "x,z" keys for all explored tiles. */
 export function buildExploredSet(world: World): Set<string> {

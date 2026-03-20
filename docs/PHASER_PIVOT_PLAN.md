@@ -9,7 +9,7 @@
 > - main.tsx → thin 28-LOC mount, app shell in `src/app/`
 > - Rendering vision documented (`docs/RENDERING_VISION.md`)
 > - Pending/ salvageability assessed (80% reusable)
-> - Vitest: **146 test files, 2487 tests**, 0 TS errors (update this line when counts change)
+> - Vitest: **123 test files, 2208 tests**, 0 TS errors (update this line when counts change)
 
 ---
 

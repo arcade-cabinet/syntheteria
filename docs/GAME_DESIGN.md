@@ -62,7 +62,7 @@ planet’s surface; mechanically it is addressable `(x, z)` tiles.
 
 Three preset scales: **Small** 44×44 (~1,936 tiles), **Standard** 64×64 (~4,096), **Large** 96×96 (~9,216).
 
-**Sphere math in code:** `src/rendering/boardGeometry.ts` (`tileToSpherePos`, `spherePosToTile`, etc.)
+**Sphere math in code:** `src/board/sphere/boardGeometry.ts` (`tileToSpherePos`, `spherePosToTile`, etc.)
 remains valid for the **title/generating globe** (R3F) and any strategic globe presentation. It is
 **not** the camera model used during the tactical **match**.
 
@@ -85,7 +85,7 @@ HUD, per-building modals, and overlays on top of the canvas (`docs/PHASER_VS_REA
 Earlier docs described the **entire** game (including match) on a persistent sphere canvas with orbit
 camera and `CutawayClipPlane`. That was the pre-Phaser board stack. **Current target:** sphere drama
 on **landing/generating**; **CivRev2-style isometric** board in play. Unused R3F board components
-under `src/view/renderers/` are slated for removal once Phaser parity is complete.
+under `src/views/title/renderers/` are slated for removal once Phaser parity is complete.
 
 ### Terrain Substrates (9 types) — LEGACY — will be replaced by biomes (see TARGET below)
 

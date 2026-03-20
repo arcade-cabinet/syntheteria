@@ -49,7 +49,7 @@
 | Systems | `src/ecs/systems/` | movement, highlight, turn, attack, harvest, resource, AI, cultist |
 | Command UI | `src/systems/` + `src/ui/game/` | **Target:** Civ VI–style strip/inspector; **legacy:** radialMenu + RadialMenu.tsx |
 | DB | `src/db/` | SQLite schema, GameRepo, sql.js adapter |
-| Rendering | `src/rendering/` | Board, Depth, Highlight, Unit, StormSky, chronometry |
+| Rendering | `src/views/board/` + `src/views/title/` | Phaser board + R3F title globe (`src/rendering/` **deleted**) |
 | Input | `src/input/` | BoardInput (select/move/attack) |
 | UI | `src/ui/` | Landing, NewGameModal, Settings, GameScreen, HUD, command panels (legacy RadialMenu until removed) |
 | Config | `src/config/` | gameDefaults.ts |

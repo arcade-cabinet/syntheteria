@@ -14,7 +14,7 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { BUILDING_DEFS } from "../../buildings/definitions";
+import { BUILDING_DEFS } from "../../buildings";
 import {
 	FabricationJob,
 	queueFabrication,

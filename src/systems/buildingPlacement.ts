@@ -8,7 +8,7 @@
 
 import type { World } from "koota";
 import type { GeneratedBoard } from "../board/types";
-import { BUILDING_DEFS } from "../buildings/definitions";
+import { BUILDING_DEFS } from "../buildings";
 import { FACTION_DEFINITIONS } from "../factions/definitions";
 import { getSpawnCenters } from "../robots/placement";
 import {

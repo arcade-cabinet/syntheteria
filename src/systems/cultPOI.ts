@@ -8,7 +8,7 @@
 import type { World } from "koota";
 import { tileNeighbors } from "../board/adjacency";
 import type { GeneratedBoard } from "../board/types";
-import { CULT_STRUCTURE_DEFS } from "../buildings/cultStructures";
+import { CULT_STRUCTURE_DEFS } from "../buildings";
 import {
 	spawnCultCavalry,
 	spawnCultInfantry,

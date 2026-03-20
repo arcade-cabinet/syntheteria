@@ -6,7 +6,7 @@
  */
 
 import { playSfx } from "../../audio/sfx";
-import { BUILDING_DEFS } from "../../buildings/definitions";
+import { BUILDING_DEFS } from "../../buildings";
 import { hasClassAction } from "../../robots/classActions";
 import type { BotMark } from "../../robots/marks";
 import { MARK_DEFS } from "../../robots/marks";

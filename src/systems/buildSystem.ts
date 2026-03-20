@@ -13,7 +13,7 @@
 
 import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
-import { BUILDING_DEFS } from "../buildings/definitions";
+import { BUILDING_DEFS } from "../buildings";
 import type { ResourceMaterial } from "../terrain/types";
 import {
 	BotFabricator,

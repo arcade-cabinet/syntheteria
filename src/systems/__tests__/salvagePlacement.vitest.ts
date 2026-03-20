@@ -1,7 +1,7 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { SALVAGE_DEFS } from "../../resources/salvageTypes";
+import { SALVAGE_DEFS } from "../../resources";
 import type { FloorType } from "../../terrain/types";
 import { SalvageProp } from "../../traits";
 import { placeSalvageProps, TERRAIN_SALVAGE } from "../salvagePlacement";

@@ -1,7 +1,7 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { TileData } from "../../board/types";
-import { BUILDING_DEFS } from "../../buildings/definitions";
+import { BUILDING_DEFS } from "../../buildings";
 import {
 	BotFabricator,
 	Building,

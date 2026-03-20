@@ -16,7 +16,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { SALVAGE_DEFS } from "../../resources/salvageTypes";
+import { SALVAGE_DEFS } from "../../resources";
 import {
 	FLOOR_DEFS,
 	type FloorType,

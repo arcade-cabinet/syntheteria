@@ -16,7 +16,7 @@
 
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { CULT_STRUCTURE_DEFS } from "../../buildings/cultStructures";
+import { CULT_STRUCTURE_DEFS } from "../../buildings";
 import { FactionRelation } from "../../traits";
 import { CULT_DEFINITIONS } from "../cults";
 import { FACTION_DEFINITIONS } from "../definitions";

@@ -16,7 +16,7 @@
 
 import type { World } from "koota";
 import type { GeneratedBoard } from "../board/types";
-import { SALVAGE_DEFS } from "../resources/salvageTypes";
+import { SALVAGE_DEFS } from "../resources";
 import { makePRNG } from "../seed";
 import type { FloorType } from "../terrain/types";
 import { SalvageProp, type SalvageType } from "../traits";

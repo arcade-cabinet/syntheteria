@@ -9,7 +9,7 @@ import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
 import { tileNeighbors } from "../board/adjacency";
 import type { GeneratedBoard } from "../board/types";
-import { CULT_STRUCTURE_DEFS } from "../buildings/cultStructures";
+import { CULT_STRUCTURE_DEFS } from "../buildings";
 import {
 	CULT_FINAL_ASSAULT_MULTIPLIER,
 	CULT_FINAL_ASSAULT_TURN,

@@ -13,8 +13,8 @@
 
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { BUILDING_DEFS } from "../../buildings/definitions";
-import { SALVAGE_DEFS } from "../../resources/salvageTypes";
+import { BUILDING_DEFS } from "../../buildings";
+import { SALVAGE_DEFS } from "../../resources";
 import {
 	FLOOR_DEFS,
 	type FloorType,

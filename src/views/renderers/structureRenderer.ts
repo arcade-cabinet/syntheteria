@@ -8,16 +8,16 @@
  * NO React — pure Three.js.
  */
 
+import type { World } from "koota";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import type { World } from "koota";
 import type { GeneratedBoard } from "../../board";
 import {
 	buildExploredSet,
 	getStructuralEdges,
 	resolveStructureModelUrl,
-	STRUCTURE_WALL_MODELS,
 	STRUCTURE_COLUMN_MODELS,
+	STRUCTURE_WALL_MODELS,
 } from "../../rendering";
 import { tileToWorld } from "./terrainRenderer";
 
@@ -70,10 +70,7 @@ export function createStructureRenderer(
 	}
 }
 
-export function updateStructures(
-	world: World,
-	board: GeneratedBoard,
-): void {
+export function updateStructures(world: World, board: GeneratedBoard): void {
 	// Structures are static after placement — only need to update
 	// if fog of war reveals new tiles. For now, no-op.
 	// TODO: rebuild when explored set changes

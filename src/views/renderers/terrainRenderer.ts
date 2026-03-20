@@ -91,8 +91,7 @@ export function buildTerrainMesh(board: GeneratedBoard): THREE.Group {
 
 		// Elevation + subtle noise
 		const baseY = ELEVATION_Y[tile.elevation] ?? 0;
-		const noiseY =
-			(Math.sin(vx * 0.4) + Math.cos(vz * 0.4)) * 0.15;
+		const noiseY = (Math.sin(vx * 0.4) + Math.cos(vz * 0.4)) * 0.15;
 		posAttr.setY(i, baseY + (tile.elevation >= 0 ? noiseY : 0));
 
 		// Vertex color from floor type
@@ -130,11 +129,7 @@ export function buildTerrainMesh(board: GeneratedBoard): THREE.Group {
 		opacity: 0.8,
 	});
 	const water = new THREE.Mesh(waterGeo, waterMat);
-	water.position.set(
-		(width * TILE_SIZE) / 2,
-		-0.6,
-		(height * TILE_SIZE) / 2,
-	);
+	water.position.set((width * TILE_SIZE) / 2, -0.6, (height * TILE_SIZE) / 2);
 	group.add(water);
 
 	return group;

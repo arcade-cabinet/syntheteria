@@ -7,10 +7,10 @@
  * Pure Three.js — no React dependency.
  */
 
-import * as THREE from "three";
 import type { World } from "koota";
-import { computeTerritory } from "../../systems";
+import * as THREE from "three";
 import { FACTION_COLORS } from "../../rendering";
+import { computeTerritory } from "../../systems";
 import { tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------

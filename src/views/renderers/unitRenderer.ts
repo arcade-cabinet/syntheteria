@@ -6,11 +6,11 @@
  * and applies procedural bob-and-weave animation per architecture mandate.
  */
 
+import type { World } from "koota";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import type { World } from "koota";
-import { UnitMove, UnitPos, UnitVisual } from "../../traits";
 import { resolveRobotModelUrl } from "../../rendering";
+import { UnitMove, UnitPos, UnitVisual } from "../../traits";
 import { tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------
@@ -47,10 +47,7 @@ let loader: GLTFLoader | null = null;
  * Create the unit renderer — returns the loader instance (call once).
  * Units are added/removed reactively via `updateUnits`.
  */
-export function createUnitRenderer(
-	_scene: THREE.Scene,
-	_world: World,
-): void {
+export function createUnitRenderer(_scene: THREE.Scene, _world: World): void {
 	loader = new GLTFLoader();
 }
 

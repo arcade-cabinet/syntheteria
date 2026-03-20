@@ -11,52 +11,35 @@
 
 import { Scene3D } from "@enable3d/phaser-extension";
 import * as THREE from "three";
-import {
-	registerCameraControls,
-	unregisterCameraControls,
-} from "../../camera";
 import type { CameraControls } from "../../camera";
-import { getBoardConfig, type GameBoardConfig } from "../createGame";
+import { registerCameraControls, unregisterCameraControls } from "../../camera";
+import { type GameBoardConfig, getBoardConfig } from "../createGame";
 import { EventBus } from "../eventBus";
 import { setupBoardInput } from "../input/boardInput";
 import { setupWorldLighting } from "../lighting/worldLighting";
-import { buildTerrainMesh, TILE_SIZE } from "../renderers/terrainRenderer";
-import {
-	createUnitRenderer,
-	updateUnits,
-} from "../renderers/unitRenderer";
-import {
-	createBuildingRenderer,
-} from "../renderers/buildingRenderer";
-import {
-	createSalvageRenderer,
-} from "../renderers/salvageRenderer";
-import {
-	createStructureRenderer,
-} from "../renderers/structureRenderer";
-import {
-	createFogRenderer,
-	updateFog,
-} from "../renderers/fogRenderer";
-import {
-	createHighlightRenderer,
-} from "../renderers/highlightRenderer";
-import {
-	createTerritoryRenderer,
-	updateTerritory,
-} from "../renderers/territoryRenderer";
-import {
-	createParticleRenderer,
-	updateParticles,
-} from "../renderers/particleRenderer";
+import { createBuildingRenderer } from "../renderers/buildingRenderer";
 import {
 	createCombatEffects,
 	updateCombatEffects,
 } from "../renderers/combatEffects";
+import { createFogRenderer, updateFog } from "../renderers/fogRenderer";
+import { createHighlightRenderer } from "../renderers/highlightRenderer";
+import {
+	createParticleRenderer,
+	updateParticles,
+} from "../renderers/particleRenderer";
+import { createSalvageRenderer } from "../renderers/salvageRenderer";
 import {
 	createSpeechRenderer,
 	updateSpeech,
 } from "../renderers/speechRenderer";
+import { createStructureRenderer } from "../renderers/structureRenderer";
+import { buildTerrainMesh, TILE_SIZE } from "../renderers/terrainRenderer";
+import {
+	createTerritoryRenderer,
+	updateTerritory,
+} from "../renderers/territoryRenderer";
+import { createUnitRenderer, updateUnits } from "../renderers/unitRenderer";
 
 export class WorldScene extends Scene3D {
 	private _camTarget = new THREE.Vector3();
@@ -262,7 +245,9 @@ export class WorldScene extends Scene3D {
 			this._dragPrev.y = pointer.y;
 		});
 
-		this.input.on("pointerup", () => { this._isDragging = false; });
+		this.input.on("pointerup", () => {
+			this._isDragging = false;
+		});
 
 		this.input.on(
 			"wheel",
@@ -272,7 +257,10 @@ export class WorldScene extends Scene3D {
 				_deltaX: number,
 				deltaY: number,
 			) => {
-				this._zoomLevel = Math.max(10, Math.min(60, this._zoomLevel + deltaY * 0.02));
+				this._zoomLevel = Math.max(
+					10,
+					Math.min(60, this._zoomLevel + deltaY * 0.02),
+				);
 			},
 		);
 	}

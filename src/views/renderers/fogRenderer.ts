@@ -8,8 +8,8 @@
  * The mesh sits at y = 0.1 (just above terrain surface).
  */
 
-import * as THREE from "three";
 import type { World } from "koota";
+import * as THREE from "three";
 import { buildExploredSet, isTileExplored } from "../../rendering";
 import { TILE_SIZE } from "./terrainRenderer";
 
@@ -57,11 +57,7 @@ export function createFogRenderer(scene: THREE.Scene, world: World): void {
 		boardHeight,
 	);
 	geo.rotateX(-Math.PI / 2);
-	geo.translate(
-		(boardWidth * TILE_SIZE) / 2,
-		0,
-		(boardHeight * TILE_SIZE) / 2,
-	);
+	geo.translate((boardWidth * TILE_SIZE) / 2, 0, (boardHeight * TILE_SIZE) / 2);
 
 	// Per-vertex alpha via vertex colors (rgb = black, a via opacity blending)
 	const posAttr = geo.attributes.position;

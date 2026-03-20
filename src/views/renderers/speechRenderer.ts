@@ -8,10 +8,10 @@
  * Pure Three.js — no React dependency.
  */
 
-import * as THREE from "three";
 import type { World } from "koota";
-import { UnitPos } from "../../traits";
+import * as THREE from "three";
 import { getActiveSpeech } from "../../systems";
+import { UnitPos } from "../../traits";
 import { tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------
@@ -144,7 +144,9 @@ function createSpeechSprite(text: string): THREE.Sprite {
  * Build a Map of entityId -> world position for all units with UnitPos.
  * Only built when there are active speech bubbles.
  */
-function buildUnitPositions(world: World): Map<number, { x: number; y: number; z: number }> {
+function buildUnitPositions(
+	world: World,
+): Map<number, { x: number; y: number; z: number }> {
 	const positions = new Map<number, { x: number; y: number; z: number }>();
 	for (const entity of world.query(UnitPos)) {
 		const pos = entity.get(UnitPos);

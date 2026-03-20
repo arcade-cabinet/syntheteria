@@ -10,9 +10,9 @@
  * No React dependency in this file.
  */
 
-import Phaser from "phaser";
 import { Canvas, enable3d } from "@enable3d/phaser-extension";
 import type { World } from "koota";
+import Phaser from "phaser";
 import type { BoardConfig, GeneratedBoard } from "../board";
 import { WorldScene } from "./scenes/WorldScene";
 

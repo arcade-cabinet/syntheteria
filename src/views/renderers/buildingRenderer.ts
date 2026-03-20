@@ -6,11 +6,11 @@
  * tile-world positions. Fog-gated: only explored tiles show buildings.
  */
 
+import type { World } from "koota";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import type { World } from "koota";
+import { buildExploredSet, resolveBuildingModelUrl } from "../../rendering";
 import { Building, CultStructure } from "../../traits";
-import { resolveBuildingModelUrl, buildExploredSet } from "../../rendering";
 import { tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------
@@ -96,10 +96,7 @@ function loadAndPlace(
  * Initialise the building renderer. Call once when the scene is created.
  * Performs the first scan of the ECS world and begins loading visible models.
  */
-export function createBuildingRenderer(
-	scene: THREE.Scene,
-	world: World,
-): void {
+export function createBuildingRenderer(scene: THREE.Scene, world: World): void {
 	sceneRef = scene;
 	placedModels = new Map();
 	pendingLoads.clear();

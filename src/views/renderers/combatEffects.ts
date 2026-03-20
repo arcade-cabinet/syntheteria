@@ -8,8 +8,8 @@
  * Pure Three.js — no React dependency.
  */
 
-import * as THREE from "three";
 import type { World } from "koota";
+import * as THREE from "three";
 import { CombatResult, UnitPos } from "../../traits";
 import { spawnParticles } from "./particleRenderer";
 import { tileToWorld } from "./terrainRenderer";

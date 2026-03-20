@@ -46,10 +46,7 @@ const tmpColor = new THREE.Color();
  */
 export function createParticleRenderer(scene: THREE.Scene): void {
 	geometry = new THREE.BufferGeometry();
-	geometry.setAttribute(
-		"position",
-		new THREE.BufferAttribute(positions, 3),
-	);
+	geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 	geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
 	// Draw range starts at 0 — no particles alive yet

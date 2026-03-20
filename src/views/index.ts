@@ -8,8 +8,8 @@
  * React ↔ Phaser communication via EventBus.
  */
 
-export { createGame } from "./createGame";
 export type { GameBoardConfig } from "./createGame";
+export { createGame } from "./createGame";
 export { EventBus } from "./eventBus";
+export { addAccentLight, setupWorldLighting } from "./lighting/worldLighting";
 export { WorldScene } from "./scenes/WorldScene";
-export { setupWorldLighting, addAccentLight } from "./lighting/worldLighting";

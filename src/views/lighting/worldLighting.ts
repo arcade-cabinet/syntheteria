@@ -11,9 +11,7 @@ import * as THREE from "three";
 
 export function setupWorldLighting(scene: THREE.Scene): void {
 	// Remove any default lights
-	const existing = scene.children.filter(
-		(c) => (c as THREE.Light).isLight,
-	);
+	const existing = scene.children.filter((c) => (c as THREE.Light).isLight);
 	for (const l of existing) scene.remove(l);
 
 	// Deep blue-grey ambient — prevents pure-black shadows

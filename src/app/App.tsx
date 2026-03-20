@@ -34,7 +34,6 @@ import { Globe } from "../ui/Globe";
 import { EventBus } from "../views/eventBus";
 // Side-effect import: register radial menu providers at module scope
 import "../systems/radial";
-import { GameBoard } from "./GameBoard";
 // --- Game DOM overlays ---
 import { AlertBar } from "../ui/game/AlertBar";
 import { DiplomacyOverlay } from "../ui/game/DiplomacyOverlay";
@@ -64,6 +63,7 @@ import type { NewGameConfig } from "../world/config";
 import { getPlayerFactionId } from "../world/config";
 import { CommandBar } from "./CommandBar";
 import { installDebugBridge } from "./debug";
+import { GameBoard } from "./GameBoard";
 import { hmrState } from "./hmrState";
 import {
 	getCurrentResearchForHUD,
@@ -104,6 +104,8 @@ export function App() {
 	);
 	const [observerSpeed, _setObserverSpeed] = useState(hmrState.observerSpeed);
 	const [paused, setPaused] = useState(false);
+	// Delay GameBoard mount by one frame after Globe unmounts to avoid WebGL context conflict
+	const [gameBoardMounted, setGameBoardMounted] = useState(false);
 	const [showTechTree, setShowTechTree] = useState(false);
 	const [showGarage, setShowGarage] = useState(false);
 	const [showRoster, setShowRoster] = useState(false);
@@ -376,6 +378,18 @@ export function App() {
 		});
 	});
 
+	// Wait one frame after phase becomes "playing" before mounting GameBoard.
+	// This lets Globe's R3F Canvas unmount and release its WebGL context first.
+	useEffect(() => {
+		if (phase === "playing") {
+			const raf = requestAnimationFrame(() => setGameBoardMounted(true));
+			return () => {
+				cancelAnimationFrame(raf);
+			};
+		}
+		setGameBoardMounted(false);
+	}, [phase]);
+
 	const gameActive = phase === "playing" && session !== null && sceneReady;
 
 	return (
@@ -406,8 +420,8 @@ export function App() {
 				/>
 			)}
 
-			{/* GameBoard: playing phase (Phaser + enable3d) */}
-			{phase === "playing" && session && (
+			{/* GameBoard: playing phase (Phaser + enable3d), delayed one frame for WebGL context release */}
+			{phase === "playing" && gameBoardMounted && session && (
 				<GameBoard
 					session={session}
 					onSceneReady={() => setSceneReady(true)}

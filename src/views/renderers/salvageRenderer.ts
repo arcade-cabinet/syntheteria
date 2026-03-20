@@ -5,11 +5,11 @@
  * Models are cached per URL and cloned per tile position.
  */
 
+import type { World } from "koota";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import type { World } from "koota";
+import { buildExploredSet, resolveSalvageModelUrl } from "../../rendering";
 import { SalvageProp } from "../../traits";
-import { resolveSalvageModelUrl, buildExploredSet } from "../../rendering";
 import { tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------
@@ -73,10 +73,7 @@ function cloneWithShadows(source: THREE.Group): THREE.Group {
  * Initialise the salvage renderer — call once when the scene is set up.
  * Performs an initial scan of the ECS world and loads visible salvage models.
  */
-export function createSalvageRenderer(
-	scene: THREE.Scene,
-	world: World,
-): void {
+export function createSalvageRenderer(scene: THREE.Scene, world: World): void {
 	parentScene = scene;
 	salvageGroup = new THREE.Group();
 	salvageGroup.name = "salvage";

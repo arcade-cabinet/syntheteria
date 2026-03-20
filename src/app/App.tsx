@@ -426,7 +426,7 @@ export function App() {
 					style={{
 						position: "absolute",
 						inset: 0,
-						zIndex: gameBoardMounted ? 5 : 1,
+						zIndex: 0,
 						transition: "opacity 0.8s ease-out, transform 0.8s ease-out",
 						opacity: gameBoardMounted ? 0 : 1,
 						transform: gameBoardMounted ? "scale(0.3)" : "scale(1)",
@@ -504,15 +504,17 @@ export function App() {
 				/>
 			)}
 
-			{/* Title / Setup: landing screen */}
+			{/* Title / Setup: landing screen (z-index above Globe canvas) */}
 			{(phase === "title" ||
 				phase === "setup" ||
 				(phase === "playing" && !sceneReady)) && (
-				<LandingScreen
-					onStartGame={handleStartGame}
-					onLoadGame={handleLoadGame}
-					savedGames={savedGames}
-				/>
+				<div style={{ position: "absolute", inset: 0, zIndex: 10 }}>
+					<LandingScreen
+						onStartGame={handleStartGame}
+						onLoadGame={handleLoadGame}
+						savedGames={savedGames}
+					/>
+				</div>
 			)}
 
 			{/* Generating overlay */}

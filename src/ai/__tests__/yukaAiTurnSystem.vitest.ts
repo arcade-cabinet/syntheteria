@@ -102,7 +102,8 @@ describe("Yuka AI turn system", () => {
 
 		expect(aiUnit.has(UnitMove)).toBe(true);
 		const move = aiUnit.get(UnitMove)!;
-		expect(move.toX).toBe(1);
+		// Multi-step: unit uses MP to advance toward player
+		expect(move.toX).toBeGreaterThanOrEqual(1);
 		expect(move.toZ).toBe(0);
 	});
 
@@ -348,7 +349,7 @@ describe("Yuka AI turn system", () => {
 		runYukaAiTurns(world, board);
 
 		// Reclaimers have harvestPriority=3 — should move toward deposit
-		// The unit at (0,0) should move toward (2,0), stepping to (1,0)
+		// The unit at (0,0) should move toward (2,0), advancing by available MP
 		const units = world.query(UnitPos, UnitFaction, UnitMove);
 		let foundMove = false;
 		for (const e of units) {
@@ -356,7 +357,8 @@ describe("Yuka AI turn system", () => {
 			const m = e.get(UnitMove);
 			if (f?.factionId === "reclaimers" && m) {
 				foundMove = true;
-				expect(m.toX).toBe(1);
+				expect(m.toX).toBeGreaterThanOrEqual(1);
+				expect(m.toX).toBeLessThanOrEqual(2);
 				expect(m.toZ).toBe(0);
 			}
 		}

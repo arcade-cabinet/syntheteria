@@ -353,20 +353,22 @@ export function moveToward(
 	targetZ: number,
 	board: GeneratedBoard,
 ): void {
-	// Try Yuka NavGraph pathfinding first
 	const navGraph = getOrBuildNavGraph(board);
 	const path = yukaShortestPath(fromX, fromZ, targetX, targetZ, navGraph);
 
 	if (path.length >= 2) {
-		const next = path[1];
+		const stats = entity.get(UnitStats);
+		const availMp = stats?.mp ?? 1;
+		const steps = Math.min(path.length - 1, Math.max(1, availMp));
+		const dest = path[steps];
 		entity.add(
 			UnitMove({
 				fromX,
 				fromZ,
-				toX: next.x,
-				toZ: next.z,
+				toX: dest.x,
+				toZ: dest.z,
 				progress: 0,
-				mpCost: 1,
+				mpCost: steps,
 			}),
 		);
 	}

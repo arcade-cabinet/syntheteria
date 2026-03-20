@@ -19,16 +19,18 @@ import type { FloorType } from "../../terrain";
 // FloorType -> terrain color lookup
 // ---------------------------------------------------------------------------
 
+// Colors tuned for VISUAL CONTRAST — matching POC terrain vibrancy.
+// Machine-city theme but with enough color variation to read clearly.
 const FLOOR_COLORS: Record<FloorType, THREE.Color> = {
-	void_pit: new THREE.Color(0x0a0a12),
-	structural_mass: new THREE.Color(0x7f8c8d),
-	abyssal_platform: new THREE.Color(0x2c3e50),
-	transit_deck: new THREE.Color(0x5a5a5a),
-	durasteel_span: new THREE.Color(0x8a8a90),
-	collapsed_zone: new THREE.Color(0x6b5b3a),
-	dust_district: new THREE.Color(0xc2b280),
-	bio_district: new THREE.Color(0x5daa3e),
-	aerostructure: new THREE.Color(0x4a6fa5),
+	void_pit: new THREE.Color(0x1a5276), // deep blue (like POC water)
+	structural_mass: new THREE.Color(0x8b9da8), // light blue-grey (readable)
+	abyssal_platform: new THREE.Color(0x2c3e50), // dark blue-grey
+	transit_deck: new THREE.Color(0x7a7a72), // warm grey (distinct from structural)
+	durasteel_span: new THREE.Color(0x95a0a8), // bright steel (catch light)
+	collapsed_zone: new THREE.Color(0x8b7355), // warm brown (POC hills color)
+	dust_district: new THREE.Color(0xc2b280), // amber/sand (POC desert)
+	bio_district: new THREE.Color(0x5daa3e), // vivid green (POC grassland)
+	aerostructure: new THREE.Color(0x5a7fb5), // bright blue (sky-facing)
 };
 
 const DEFAULT_COLOR = new THREE.Color(0x444455);

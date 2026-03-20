@@ -1,6 +1,6 @@
 # Syntheteria — Architecture
 
-> Technical reference for the ground-up rewrite on `docs/syntheteria-1-0-done`.
+> Technical reference for the ground-up rewrite.
 
 ---
 
@@ -279,37 +279,14 @@ Pure TypeScript Phaser scene and renderers. No React dependency.
 
 SQLite is **non-fatal**: DB failures don't crash the game — ECS runs in memory.
 
-### `src/rendering/` — R3F Renderers
+### `src/lib/` — Shared Utilities
 
-| File | Purpose |
-|------|---------|
-| `BoardRenderer.tsx` | Merged `BufferGeometry` (single draw call), PBR atlas shader |
-| `BiomeRenderer.tsx` | Biome-specific terrain visuals |
-| `UnifiedTerrainRenderer.tsx` | Unified depth layers — replaced DepthRenderer + MinedPitRenderer |
-| `HighlightRenderer.tsx` | Thin emissive plane pool per tile from `TileHighlight` |
-| `UnitRenderer.tsx` | GLB models from asset library, lerped on `UnitMove`, faction colors |
-| `BuildingRenderer.tsx` | Building GLBs, fog-gated |
-| `SalvageRenderer.tsx` | Salvage prop GLBs |
-| `StructureRenderer.tsx` | Wall/column structural rendering |
-| `ProceduralStructureRenderer.tsx` | Procedural geometry for structures |
-| `FogOfWarRenderer.tsx` | Per-unit scan radius fog (flat + sphere GLSL variants) |
-| `TerritoryOverlayRenderer.tsx` | Faction territory color overlay |
-| `PathRenderer.tsx` | Pathfinding line visualization |
-| `CombatEffectsRenderer.tsx` | Floating damage numbers + combat flash |
-| `FragmentRenderer.tsx` | Memory fragment glowing objects |
-| `SpeechBubbleRenderer.tsx` | In-world speech bubble rendering |
-| `UnitStatusBars.tsx` | HP/AP status bars above units |
-| `CutawayClipPlane.tsx` | Dollhouse zoom clipping plane |
-| `StormSky.tsx` | BackSide sphere with 3 GLSL layers (storm / wormhole / illuminator disc) |
-| `boardGeometry.ts` | Both flat (legacy) and sphere geometry builders |
-| `spherePlacement.ts` | Model position + orientation on sphere surface |
-| `modelPaths.ts` | GLB model path resolution |
-| `tileVisibility.ts` | Fog-gated visibility checks |
-| `particles/` | ParticlePool + ParticleRenderer + effectEvents |
-| `globe/` | Title screen: GlobeWithCities, Hypercane, StormClouds, Lightning, TitleText, shaders |
-| `sky/chronometry.ts` | `turnToChronometry(turn)` — day/night cycle + seasons from turn counter |
-| `labyrinth/wallClassification.ts` | Wall type classification |
-| `glsl/` | GLSL shaders: fogOfWar (flat + sphere variants), height shaders |
+| File / Subdirectory | Purpose |
+|---------------------|---------|
+| `chronometry.ts` | `turnToChronometry(turn)` — day/night cycle + seasons from turn counter |
+| `uuid.ts` | UUID generation |
+| `particles/` | ParticlePool + effectEvents — shared particle system primitives |
+| `fog/` | tileVisibility.ts + unitDetection.ts — fog-gated visibility logic |
 
 ### `src/ai/` — Yuka GOAP AI
 
@@ -348,6 +325,7 @@ SQLite is **non-fatal**: DB failures don't crash the game — ECS runs in memory
 | File | Purpose |
 |------|---------|
 | `BoardInput.tsx` | Click-to-select, click-to-move, click-to-attack via Y=0 plane raycast |
+| `pathPreview.ts` | Renderer-agnostic A* path preview state (shared between R3F and Phaser) |
 
 ### `src/ui/` — UI Components
 
@@ -364,7 +342,7 @@ SQLite is **non-fatal**: DB failures don't crash the game — ECS runs in memory
 | `ui/game/HUD.tsx` | Turn counter, resource counters (13-material), AP display, End Turn button |
 | `ui/game/RadialMenu.tsx` | **Legacy** SVG radial — replace with command strip / inspector per `GAME_DESIGN.md` §9 |
 | `ui/game/GarageModal.tsx` | **Legacy** fabrication UI — **target:** fold into settlement/city production queue (`GAME_DESIGN.md` §5 — eXpand, §7 — Bot Roster) |
-| `ui/game/TechTreeOverlay.tsx` | Full 27-tech DAG with research progress |
+| `ui/game/TechTreeOverlay.tsx` | **LEGACY** full 27-tech DAG with research progress — **TARGET:** building-driven progression |
 | `ui/game/DiplomacyOverlay.tsx` | Faction standings panel |
 | `ui/game/UnitRosterOverlay.tsx` | All player units with quick-jump |
 | `ui/game/TurnSummaryPanel.tsx` | End-of-turn recap |
@@ -375,21 +353,25 @@ All player-visible elements carry `data-testid` attributes for component tests a
 
 ### `src/config/` — Tunables
 
-11 definition files — all TypeScript `const` objects (never JSON):
+Game data files — all TypeScript `const` objects (never JSON):
 
 | File | Purpose |
 |------|---------|
 | `gameDefaults.ts` | All tunables: tile size, AP, camera, board sizes, faction colors, unit dims |
-| `techTreeDefs.ts` | 27 techs in 5 tiers — 15 base + 12 track-gating |
+| `techTreeDefs.ts` | **LEGACY** 27 techs in 5 tiers — 15 base + 12 track-gating. **TARGET:** building-driven progression |
 | `buildingDefs.ts` | Building type definitions |
 | `diplomacyDefs.ts` | Diplomacy thresholds and rules |
+| `epochDefs.ts` | Epoch / climate deterioration definitions |
 | `factionAiDefs.ts` | AI faction personality parameters |
+| `models.ts` | GLB model path manifest |
 | `movementDefs.ts` | Movement cost definitions |
 | `narrativeDefs.ts` | Narrative/lore definitions |
 | `poiDefs.ts` | Point of interest definitions |
 | `recipeDefs.ts` | Synthesis recipe definitions |
 | `upgradeDefs.ts` | Upgrade path definitions |
 | `weatherDefs.ts` | Storm/weather parameters |
+| `buildings/` | Building + cult structure definitions (see `config/buildings/` section above) |
+| `resources/` | Salvage definitions (see `config/resources/` section above) |
 
 **Rule:** No magic numbers in system or rendering code. All tunables in config files.
 
@@ -436,7 +418,7 @@ window.__syntheteria = {
 
 ## Sphere World Architecture
 
-### Geometry (`boardGeometry.ts`)
+### Geometry (`board/sphere/boardGeometry.ts`)
 
 The board geometry module contains BOTH flat and sphere implementations:
 
@@ -451,7 +433,7 @@ The board geometry module contains BOTH flat and sphere implementations:
 - `tileToSpherePos(x, z, W, H, R)` — converts tile grid coords to 3D sphere surface position
 - `spherePosToTile(pos, W, H, R)` — inverse: 3D position → tile coords (for raycasting)
 
-### Model Placement (`spherePlacement.ts`)
+### Model Placement (`board/sphere/spherePlacement.ts`)
 
 All 3D models (units, buildings, salvage, structures) are placed on the sphere surface:
 - Position: `tileToSpherePos()` + optional Y offset along normal
@@ -562,7 +544,7 @@ events         -- id, game_id, turn, type, payload (JSON)
 
 ## Test Strategy
 
-**146 Vitest test files, 2487 tests. 0 TypeScript errors. Vitest-only.** *(Bump when `pnpm test:vitest` output changes.)*
+**123 Vitest test files, 2208 tests. 0 TypeScript errors. Vitest-only.** *(Bump when `pnpm test:vitest` output changes.)*
 
 Run: `pnpm test:vitest` (unit) | `pnpm test:ct` (browser CT) | `pnpm verify` (full gate)
 
@@ -573,24 +555,21 @@ Run: `pnpm test:vitest` (unit) | `pnpm test:ct` (browser CT) | `pnpm verify` (fu
 | `board/__tests__/depth.vitest.ts` | Bridge/tunnel span generation |
 | `board/__tests__/grid.vitest.ts` | GridApi CRUD |
 | `board/__tests__/noise.vitest.ts` | seededRng determinism/range, noise2D |
+| `board/sphere/__tests__/*.vitest.ts` | Sphere geometry, tile ↔ sphere conversion |
 | `camera/__tests__/camera.vitest.ts` | Camera: FOV, angle, CameraControls API |
-| `ecs/__tests__/traits.vitest.ts` | Koota trait defaults, world lifecycle |
-| `ecs/__tests__/movementSystem.vitest.ts` | movementSystem lerp + completion |
-| `ecs/__tests__/highlightSystem.vitest.ts` | BFS highlight + clear |
-| `ecs/__tests__/turnSystem.vitest.ts` | Turn advance, AP refresh |
-| `ecs/__tests__/placement.vitest.ts` | Robot placement flags → tile coords |
-| `ecs/__tests__/robots.vitest.ts` | 9 robot spawn functions |
-| `ecs/__tests__/factions.vitest.ts` | FACTION_DEFINITIONS, CULT_DEFINITIONS, relations |
-| `ecs/__tests__/init.vitest.ts` | initWorldFromBoard: Board, tiles, ResourceDeposit, factions, robots |
-| `ecs/terrain/__tests__/*.vitest.ts` | Elevation, floor shader, cluster math |
-| `ecs/systems/__tests__/*.vitest.ts` | All 42 systems |
+| `traits/__tests__/*.vitest.ts` | Koota trait defaults, world lifecycle |
+| `systems/__tests__/*.vitest.ts` | All 42 systems |
+| `terrain/__tests__/*.vitest.ts` | Elevation, floor shader, cluster math |
 | `db/__tests__/gameRepo.vitest.ts` | GameRepo CRUD, round-trip |
 | `ui/__tests__/*.vitest.tsx` | HUD, NewGameModal, LandingScreen |
-| `systems/__tests__/radialMenu.vitest.ts` | Dual-ring state machine, hit testing, providers |
-| `rendering/__tests__/*.vitest.ts` | Renderers, chronometry |
+| `views/title/__tests__/*.vitest.ts` | R3F renderer tests |
+| `views/board/__tests__/*.vitest.ts` | Phaser board renderer tests |
 | `ai/__tests__/*.vitest.ts` | AI systems |
 | `config/__tests__/*.vitest.ts` | Config definitions |
+| `config/buildings/*.vitest.ts` | Building + cult structure definitions |
+| `config/resources/__tests__/*.vitest.ts` | Salvage definitions |
 | `world/__tests__/*.vitest.ts` | World config |
+| `lib/fog/__tests__/*.vitest.ts` | Unit detection, visibility |
 
 ---
 
@@ -611,7 +590,7 @@ Run: `pnpm test:vitest` (unit) | `pnpm test:ct` (browser CT) | `pnpm verify` (fu
 
 ### Shader
 
-GLSL shaders in `src/ecs/terrain/glsl/`:
+GLSL shaders in `src/terrain/glsl/`:
 - `floorVert.glsl` — vertex shader with elevation
 - `floorFrag.glsl` — fragment shader samples atlas by floorType index, applies PBR lighting
 - `common.glsl` — shared noise functions
@@ -640,7 +619,7 @@ Robot classes can specialize into permanent tracks when **queued for production*
 ### Architecture
 
 ```
-src/ecs/robots/specializations/
+src/robots/specializations/
 ├── trackRegistry.ts      # Central registry — single source of truth
 ├── scoutTracks.ts         # Pathfinder + Infiltrator (2 tracks)
 ├── infantryTracks.ts      # Vanguard + Shock Trooper (2 tracks)
@@ -672,7 +651,7 @@ Each track defines: `trackId`, `robotClass`, `label`, `description`, `gateTechId
 
 ### Tech Gates
 
-12 track techs (2 per class: gate + v2 upgrade) added to `techTreeDefs.ts`, bringing total to 27 techs.
+12 track techs (2 per class: gate + v2 upgrade) added to `techTreeDefs.ts`, bringing total to 27 techs. **LEGACY** — target is building-driven progression.
 
 ---
 

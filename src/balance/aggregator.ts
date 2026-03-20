@@ -21,6 +21,18 @@ const AI_FACTIONS = [
 	"iron_creed",
 ];
 
+/**
+ * Aggregate results from multiple game runs into a BatchReport.
+ *
+ * Computes per-checkpoint and per-faction statistics (min/max/mean/stddev/median)
+ * across all runs, plus overall victory rate and average game length.
+ *
+ * @param runs - Array of RunResult from runSingleGame().
+ * @param tier - Balance tier label for the report.
+ * @param turnCount - Configured turn count for this batch.
+ * @param boardSize - Board size label (e.g. "64x64").
+ * @returns A BatchReport with aggregated checkpoint and faction data.
+ */
 export function aggregateRuns(
 	runs: RunResult[],
 	tier: number,

@@ -60,7 +60,19 @@ export function canUpgradeBuilding(
 	return { canUpgrade: false, reason: "not_found" };
 }
 
-/** Start upgrading a building to the next tier. Deducts resources. */
+/**
+ * Start upgrading a building to the next tier. Deducts resources.
+ *
+ * Validates epoch requirement and cost, deducts resources from the owning
+ * faction's pool, and enqueues a BuildingUpgradeJob. Fails gracefully
+ * with a reason string if any precondition is not met.
+ *
+ * @param world - ECS world.
+ * @param entityId - Entity ID of the building to upgrade.
+ * @param highestBuildingTier - Current highest building tier (for epoch calculation).
+ * @param currentTurn - Current turn number (for epoch calculation).
+ * @returns Success flag and optional failure reason.
+ */
 export function startBuildingUpgrade(
 	world: World,
 	entityId: number,
@@ -112,7 +124,14 @@ export function startBuildingUpgrade(
 	return { success: false, reason: "not_found" };
 }
 
-/** Tick all upgrade jobs. Called each turn in the environment phase. */
+/**
+ * Tick all active upgrade jobs. Called each turn in the environment phase.
+ *
+ * Decrements turnsRemaining on each job. When a job completes, sets the
+ * building's tier and fires a milestone toast notification if applicable.
+ *
+ * @param world - ECS world.
+ */
 export function runBuildingUpgrades(world: World): void {
 	const completed: number[] = [];
 
@@ -152,7 +171,12 @@ export function runBuildingUpgrades(world: World): void {
 	}
 }
 
-/** Get the current upgrade job for a building, if any. */
+/**
+ * Get the current upgrade job for a building, if any.
+ *
+ * @param entityId - Entity ID of the building to query.
+ * @returns The active BuildingUpgradeJob or null.
+ */
 export function getBuildingUpgradeJob(
 	entityId: number,
 ): BuildingUpgradeJob | null {

@@ -300,7 +300,7 @@ materials added to faction pool → prop consumed.
 
 **Floor mining** is the backstop economy. When salvage is consumed, workers can strip-mine
 tiles using the DAISY pattern — mine adjacent tiles to create visible pits. Deep mining tech
-grants +50% yield. Each FloorType yields a specific foundation-tier material.
+grants +50% yield. Each biome type yields a specific natural-tier material.
 
 ### eXpand
 

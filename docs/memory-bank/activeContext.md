@@ -6,9 +6,9 @@
 
 ## Current State (2026-03-20)
 
-**Runbook:** [docs/CLOUD_AGENT_RUNBOOK.md](../CLOUD_AGENT_RUNBOOK.md) — structural phases **B–I** completed; **Phase G cancelled** (hub-and-spoke design — no settlement-type snapshot tranche; see `GAME_DESIGN.md`).
+**Runbook:** [docs/CLOUD_AGENT_RUNBOOK.md](../CLOUD_AGENT_RUNBOOK.md) — structural phases **A–I** completed; **Phase G cancelled** (hub-and-spoke design — no settlement-type snapshot tranche; see `GAME_DESIGN.md`).
 
-**MEGA-PHASES 1–7 — complete:** biome terrain + resource taxonomy, building-driven progression and unlock chains, six victory conditions (+ elimination defeat), per-building modals and building progression overlay, Capacitor (Android + iOS + Web), CI/CD (including Android debug APK workflow), and cleanup/doc refresh (this tranche).
+**MEGA-PHASES 1–7 — complete:** biome terrain + resource taxonomy, building-driven progression and unlock chains, six victory conditions (+ elimination defeat), per-building modals and building progression overlay, Capacitor (Android + iOS + Web), CI/CD (including Android debug APK workflow), epoch events, cult encounters, building milestones, balance harness, config registry, Capacitor SQLite persistence, zero backward compat breaks, and cleanup/doc refresh.
 
 **Umbrella plan:** [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](../COMPREHENSIVE_ENGINEERING_PLAN.md) — **`src/views/title/`** (R3F globe) + **`src/views/board/`** (Phaser + enable3d). Clones: [reference-codebases.md](../reference-codebases.md).
 
@@ -26,6 +26,13 @@
 - **Resource progression** natural → processed → synthetic (aligned with config + ECS).
 - **Hub-and-spoke networks** (not city screens); **per-building modals** (`BuildingModal` + panels — **DONE**).
 - **Building-driven progression** — tiers/unlocks via `buildingUpgradeSystem`, `BuildingProgressionOverlay` (centralized tech tree UI **LEGACY** — `TechTreeOverlay` redirects to building progression).
+- **Epoch events** — 4 narrative transition beats (epochs 2–5) via `src/config/epochEventDefs.ts`.
+- **Cult encounters** — 8 one-time scripted triggers via `src/config/cultEncounterDefs.ts` + `src/systems/cultEncounterTracker.ts`.
+- **Building milestones** — 6 upgrade milestone toasts via `src/config/buildingMilestoneDefs.ts`.
+- **Balance harness** — headless game runner (`src/balance/runner.ts`) + aggregator + diagnostic gap detection.
+- **Config registry** — unified `getConfig`/`setConfigOverride` API (`src/config/registry.ts`) for runtime tuning.
+- **Capacitor SQLite** — `src/db/capacitorAdapter.ts` + `@capacitor/preferences` for cross-platform persistence.
+- **Score system** — weighted faction score for turn-cap victory (`src/systems/scoreSystem.ts`).
 
 ### Rendering: Phaser + enable3d (board) + R3F (title)
 
@@ -33,9 +40,9 @@
 
 ### Gameplay systems & quality
 
-Core sim wired: economy, combat, AI GOAP, **legacy** research DAG (data still drives effects), diplomacy, **six** win paths + score + building upgrades + analysis acceleration.
+Core sim wired: economy, combat, AI GOAP, **legacy** research DAG (data still drives effects), diplomacy, **six** win paths + score + building upgrades + analysis acceleration + cult encounters + epoch events + building milestones + catchup mechanic.
 
-**Vitest: 126 test files, 2252 tests (all passing).** 0 TypeScript errors, 0 lint errors. **443** `src/**/*.ts(x)` files (`find src -name '*.ts' -o -name '*.tsx' | wc -l`).
+**Vitest: 130 test files, 2282 tests (all passing).** 0 TypeScript errors, 0 lint errors. **457** `src/**/*.ts(x)` files (`find src -name '*.ts' -o -name '*.tsx' | wc -l`).
 
 **Pending/ is READ-ONLY REFERENCE** — port DATA (configs, narrative text), not CODE.
 
@@ -61,7 +68,7 @@ Core sim wired: economy, combat, AI GOAP, **legacy** research DAG (data still dr
 ## Key Rules
 
 - ECS systems accept `world: World` param — never singleton
-- No JSON configs — TypeScript `const` objects only (11 config files in `src/config/`)
+- No JSON configs — TypeScript `const` objects only (20 config files in `src/config/`)
 - All generation seeded-deterministic
 - pending/ is reference-only — port data, not code
 - Check pending/ BEFORE building from scratch

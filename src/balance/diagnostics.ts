@@ -21,6 +21,15 @@ const AI_FACTIONS = [
 	"iron_creed",
 ];
 
+/**
+ * Scan a BatchReport for common balance pathologies and return diagnostics.
+ *
+ * Detects: stagnation, snowball, resource hoarding, elimination cascade,
+ * victory unreachable, epoch pacing issues, cult balance, and faction homogeneity.
+ *
+ * @param report - A BatchReport produced by aggregateRuns().
+ * @returns Array of Diagnostic entries with severity, category, and details.
+ */
 export function diagnoseGaps(report: BatchReport): Diagnostic[] {
 	const diagnostics: Diagnostic[] = [];
 

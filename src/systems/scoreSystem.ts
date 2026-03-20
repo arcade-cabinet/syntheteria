@@ -47,6 +47,16 @@ const WEIGHT_CULT_DESTROYED = 10;
 
 // ─── Score Calculation ──────────────────────────────────────────────────────
 
+/**
+ * Calculate the weighted faction score for turn-cap victory.
+ *
+ * Score components: territory (×2), signal coverage (×3), roboform tiles (×2),
+ * active units (×1), buildings (×2), building tier sum (×5), cult POIs destroyed (×10).
+ *
+ * @param world - ECS world.
+ * @param factionId - Faction to score.
+ * @returns Total weighted score.
+ */
 export function calculateFactionScore(world: World, factionId: string): number {
 	const territory = countTerritoryTiles(world, factionId);
 	const units = countActiveUnits(world, factionId);

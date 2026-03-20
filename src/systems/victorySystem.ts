@@ -88,6 +88,16 @@ function isMachineFaction(factionId: string): boolean {
 
 // ─── Victory Checks ─────────────────────────────────────────────────────────
 
+/**
+ * Check all 6 victory conditions + defeat.
+ *
+ * Evaluates in order: defeat (elimination), domination, network supremacy,
+ * reclamation, transcendence, cult eradication, score (turn cap).
+ *
+ * @param world - ECS world.
+ * @param opts - Optional flags (observerMode skips player defeat check).
+ * @returns GameOutcome: playing, victory (with type/winner), or defeat.
+ */
 export function checkVictoryConditions(
 	world: World,
 	opts?: { observerMode?: boolean },

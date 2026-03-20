@@ -12,7 +12,7 @@ sphere world geometry, globe-based rendering pipeline, PBR texture atlas, fog of
 title-to-game cinematic, save/load, and audio is complete.
 
 ```
-pnpm verify  →  123 Vitest test files (2208 tests) + 0 TypeScript errors + 0 Biome errors  *(refresh from `pnpm test:vitest`)*
+pnpm verify  →  130 Vitest test files (2282 tests) + 0 TypeScript errors + 0 Biome errors  *(refresh from `pnpm test:vitest`)*
 ```
 
 ### What Works
@@ -28,8 +28,8 @@ pnpm verify  →  123 Vitest test files (2208 tests) + 0 TypeScript errors + 0 B
 | Persistent storm effects (StormClouds, Hypercane, Lightning in ALL phases) | DONE |
 | Cutaway clip plane (CutawayClipPlane.tsx + cutawayStore.ts) | WIP |
 | Fixed-size board generator (seeded FNV-1a + mulberry32) | DONE |
-| 9 terrain substrates (FloorType) with PBR atlas shader | DONE — **LEGACY** — target: biome terrain |
-| 13-material resource taxonomy (ResourceMaterial) | DONE — **LEGACY** — target: natural→processed→synthetic |
+| 9 biome types (BiomeType) — grassland, forest, desert, hills, wetland, ruins, tundra, water, mountain | DONE |
+| 17-material resource taxonomy (ResourceMaterial) — natural → processed → synthetic | DONE |
 | BFS adjacency, A* pathfinding | DONE |
 | GridApi addressable interface | DONE |
 | Bridge/tunnel depth stacking (data + rendering) | **REMOVED** — depth system deleted |
@@ -103,7 +103,7 @@ pnpm verify  →  123 Vitest test files (2208 tests) + 0 TypeScript errors + 0 B
 | Audio (Tone.js synth pooling, SFX, ambient storm loop) | DONE |
 | Campaign stats + analytics collector | DONE |
 | 360 GLB models from 3 asset packs | DONE |
-| 11 TypeScript config definition files | DONE |
+| 20 TypeScript config definition files (incl. registry, preferences, milestones, encounters) | DONE |
 | Combat effects (floating damage, combat flash) | DONE |
 | Path visualization | DONE |
 | Unit status bars (HP/AP above units) | DONE |
@@ -275,7 +275,7 @@ The game's design has evolved significantly. Remaining gaps are mostly presentat
 - [x] **11.6** — Per-building management modals (extend GarageModal pattern to all buildings)
 - [x] **11.7** — Victory condition overhaul (6 paths: Domination, Network, Reclamation, Transcendence, Cult Eradication, Score)
 - [ ] **11.8** — Improvement overlays (roads, mines, irrigation → roboforming visual progression)
-- [ ] **11.9** — Cultist scripted encounter events
+- [x] **11.9** — Cultist scripted encounter events (8 encounter triggers — `src/config/cultEncounterDefs.ts`)
 - [x] **11.10** — Capacitor setup (Android + iOS + Web), GitHub Actions APK builds
 
 See `docs/GAME_DESIGN.md` for full TARGET sections.

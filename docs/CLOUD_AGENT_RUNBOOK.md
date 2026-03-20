@@ -199,7 +199,7 @@ Copy checkboxes into your task tracker; **do not skip gates**.
 - [x] **11.6** Per-building modals  
 - [x] **11.7** Victory conditions (6 paths + elimination defeat)  
 - [ ] **11.8** Improvement overlays (visual roboforming — Phaser rendering work)  
-- [ ] **11.9** Cultist scripted encounters (narrative/content)  
+- [x] **11.9** Cultist scripted encounters (8 triggers wired — `src/config/cultEncounterDefs.ts` + `src/systems/cultEncounterTracker.ts`)  
 - [x] **11.10** Capacitor + CI/CD (Android debug APK workflow, iOS/Web targets)  
 
 ---
@@ -217,7 +217,7 @@ pnpm tsc              # types only
 
 **Vitest 4 + `@vitest/browser-playwright`:** `vitest.browser.config.ts` uses the `playwright()` provider factory. Component tests under `tests/components/*.browser.test.tsx` still reference removed modules (`src/rendering/BoardRenderer`, `src/city/...`, old `ai` exports). **Do not block merges on `test:ct` until Phase C** — update previews to **`src/views/board/`** + `src/views/title/` (post–Phase B) or delete obsolete files.
 
-**Vitest CLI counts (2026-03-20, `pnpm test:vitest`):** **126 test files**, **2252 tests** passed. Update `memory-bank/progress.md` when those numbers change.
+**Vitest CLI counts (2026-03-20, `pnpm test:vitest`):** **130 test files**, **2282 tests** passed. Update `memory-bank/progress.md` when those numbers change.
 
 ---
 

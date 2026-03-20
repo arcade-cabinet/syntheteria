@@ -63,6 +63,16 @@ const ALL_MATERIALS: ResourceMaterial[] = [
 	"quantum_crystal",
 ];
 
+/**
+ * Configuration for a single headless game run.
+ *
+ * @property turnCount - Total number of turns to simulate.
+ * @property boardWidth - Width of the generated board in tiles.
+ * @property boardHeight - Height of the generated board in tiles.
+ * @property seed - Deterministic seed string for board generation.
+ * @property checkpointInterval - Turns between snapshot captures.
+ * @property configOverrides - Optional runtime config overrides (applied via registry).
+ */
 export interface RunConfig {
 	turnCount: number;
 	boardWidth: number;
@@ -72,6 +82,15 @@ export interface RunConfig {
 	configOverrides?: Record<string, unknown>;
 }
 
+/**
+ * Execute a single headless game simulation and return the results.
+ *
+ * Resets all global state (AI runtime, victory, score, building upgrades,
+ * config overrides) before and after the run for full isolation.
+ *
+ * @param config - Run configuration (board size, seed, turn count, overrides).
+ * @returns Snapshot data, victory outcome, and timing information.
+ */
 export function runSingleGame(config: RunConfig): RunResult {
 	const startTime = Date.now();
 

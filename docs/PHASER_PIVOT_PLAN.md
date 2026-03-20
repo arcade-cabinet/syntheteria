@@ -9,7 +9,7 @@
 > - main.tsx → thin 28-LOC mount, app shell in `src/app/`
 > - Rendering vision documented (`docs/RENDERING_VISION.md`)
 > - Pending/ salvageability assessed (80% reusable)
-> - Vitest: **123 test files, 2208 tests**, 0 TS errors (update this line when counts change)
+> - Vitest: **130 test files, 2282 tests**, 0 TS errors (update this line when counts change)
 
 ---
 
@@ -196,7 +196,7 @@ export function buildTerrainMesh(board: GeneratedBoard): THREE.Mesh {
 
 ### 1.4 — Model Renderer
 
-GLBs at 2.5x scale with procedural bob-and-weave. Existing `rendering/modelPaths.ts` (645 LOC of path resolution) transfers directly — it's pure TS.
+GLBs at 2.5x scale with procedural bob-and-weave. Existing `config/models.ts` (GLB path resolution) transfers directly — it's pure TS.
 
 ### 1.5 — Camera + Input
 
@@ -214,7 +214,7 @@ React components positioned via `Vector3.project(camera)` → CSS `left`/`top`. 
 
 ### 2.1 — Fog of War
 
-BFS explored set from `rendering/tileVisibility.ts` → geometry mask or shader on terrain mesh.
+BFS explored set from `lib/fog/tileVisibility.ts` → geometry mask or shader on terrain mesh.
 
 ### 2.2 — HUD Integration
 
@@ -245,7 +245,7 @@ UI ships, `RadialMenu.tsx` may remain as a bridge — **do not** invest in exten
 
 ### 2.5 — Combat Effects + Speech Bubbles
 
-Port patterns from legacy `src/view/effects/` where needed. In `src/views/`, use Phaser/Three objects or DOM-projected labels.
+Port patterns from legacy `src/views/title/effects/` where needed. In `src/views/`, use Phaser/Three objects or DOM-projected labels.
 
 **Validation:** Full gameplay loop — start game, move units, build, attack, end turn, AI responds. All in Phaser board + React DOM overlays.
 
@@ -312,15 +312,15 @@ the overworld when traits change.
 
 ### 5.1 — Delete unused R3F **board** code (keep Globe)
 
-**Do not delete** `src/ui/Globe.tsx` or title `src/view/globe/` — landing/generating stay R3F.
+**Do not delete** `src/ui/Globe.tsx` or title `src/views/title/globe/` — landing/generating stay R3F.
 
 Remove once Phaser parity is proven:
 
-- Old **match** R3F renderers under `src/view/renderers/` and related overlays not used by `Globe.tsx`
+- Old **match** R3F renderers under `src/views/title/renderers/` and related overlays not used by `Globe.tsx`
 - `src/ui/game/GameScreen.tsx` and any dead entry that mounted the old board canvas
 - Sphere **orbit** camera for match if nothing else needs it; title globe keeps its camera
 
-Keep `src/rendering/globe/` and sphere geometry helpers while the title globe uses them.
+Keep `src/views/title/globe/` and sphere geometry helpers while the title globe uses them.
 
 ### 5.2 — Remove Unused Dependencies
 
@@ -341,7 +341,7 @@ src/
 │   ├── renderers/        terrain, units, buildings, fog, particles, …
 │   ├── input/            boardInput.ts
 │   └── lighting/         worldLighting, epochAtmosphere
-│   ├── title/          R3F — title globe (migrated from src/view/)
+│   ├── title/          R3F — title globe (migrated from former src/view/)
 ├── ui/                   React DOM (Globe, landing, HUD, modals, overlays)
 ├── rendering/            DELETED — decomposed into board/sphere, config/models, lib/, etc.
 ├── config/               Tunables + (optional) consolidated data subpackages
@@ -356,7 +356,7 @@ src/
 └── types/                Shared types
 ```
 
-**Layering:** `views/` imports `rendering/`, `traits/`, `systems/`, `config/`, `board/` — not `ui/`. `app/GameBoard.tsx` mounts Phaser. `view/` stays for R3F globe; `Globe.tsx` composes `view/` + phase logic.
+**Layering:** `views/` imports `traits/`, `systems/`, `config/`, `board/` — not `ui/`. `app/GameBoard.tsx` mounts Phaser. `views/title/` hosts R3F globe; `Globe.tsx` composes `views/title/` + phase logic.
 
 ---
 

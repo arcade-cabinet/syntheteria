@@ -31,14 +31,10 @@ syntheteria/
 ├── src/
 │   ├── main.tsx               # Entry: DOM bootstrap + Root (title → setup → generating → playing)
 │   ├── board/                 # Fixed-size deterministic board generator
-│   │   ├── generator.ts       # generateBoard(config) — seeded noise, resource scatter
+│   │   ├── generator.ts       # generateBoard(config) — seeded noise, biome scatter
 │   │   ├── adjacency.ts       # BFS reachability, A* pathfinding
 │   │   ├── grid.ts            # GridApi — addressable interface
-│   │   ├── depth.ts           # Bridge/tunnel span generation
 │   │   ├── noise.ts           # FNV-1a + mulberry32 PRNG
-│   │   ├── cityLayout.ts      # BSP city layout (walls, corridors, districts)
-│   │   ├── connectivity.ts    # Flood-fill + corridor punching
-│   │   ├── labyrinth*.ts      # Rooms-and-Mazes generator (4 files)
 │   │   ├── types.ts           # Elevation, TileData, BoardConfig, GeneratedBoard
 │   │   └── sphere/            # Sphere geometry + model placement
 │   │       ├── boardGeometry.ts   # buildSphereGeometry, tileToSpherePos, spherePosToTile
@@ -90,14 +86,20 @@ syntheteria/
 │   │   ├── gameDefaults.ts    # All tunables: tile size, AP, camera, board sizes, faction colors
 │   │   ├── techTreeDefs.ts    # LEGACY 27 techs in 5 tiers — TARGET: building-driven progression
 │   │   ├── buildingDefs.ts    # Building type definitions
+│   │   ├── buildingMilestoneDefs.ts  # 6 building upgrade milestone toasts
+│   │   ├── buildingUnlockDefs.ts     # Building→building unlock chains
+│   │   ├── cultEncounterDefs.ts      # 8 one-time cult encounter triggers
 │   │   ├── diplomacyDefs.ts   # Diplomacy thresholds and rules
 │   │   ├── epochDefs.ts       # Epoch / climate deterioration definitions
+│   │   ├── epochEventDefs.ts  # 4 epoch transition narrative beats
 │   │   ├── factionAiDefs.ts   # AI faction personality parameters
 │   │   ├── models.ts          # GLB model path manifest
 │   │   ├── movementDefs.ts    # Movement cost definitions
 │   │   ├── narrativeDefs.ts   # Narrative/lore definitions
 │   │   ├── poiDefs.ts         # Point of interest definitions
+│   │   ├── preferences.ts     # Capacitor Preferences adapter
 │   │   ├── recipeDefs.ts      # Synthesis recipe definitions
+│   │   ├── registry.ts        # Unified config registry with runtime overrides
 │   │   ├── upgradeDefs.ts     # Upgrade path definitions
 │   │   ├── weatherDefs.ts     # Storm/weather parameters
 │   │   ├── buildings/         # Building + cult structure definitions (moved from ecs/buildings/)
@@ -140,19 +142,10 @@ Fixed-size deterministic board. No infinite chunk streaming.
 | File | Purpose |
 |------|---------|
 | `types.ts` | `Elevation`, `TileData`, `BoardConfig`, `GeneratedBoard` |
-| `generator.ts` | `generateBoard(config)` — seeded noise, resource scatter, faction corners |
+| `generator.ts` | `generateBoard(config)` — seeded noise, biome scatter, faction corners |
 | `noise.ts` | FNV-1a hash → mulberry32 PRNG, 2D value noise |
 | `adjacency.ts` | `tileNeighbors()`, `reachableTiles()` (BFS), `shortestPath()` (A*) |
 | `grid.ts` | `createGridApi(board)` — addressable API for all placement + display systems |
-| `depth.ts` | `generateDepthLayer()` — bridge/tunnel span generation |
-| `cityLayout.ts` | BSP city layout — walls, corridors, doorways, 5 district zones |
-| `connectivity.ts` | Flood-fill + corridor punching — connectivity guarantee |
-| `labyrinthGenerator.ts` | Rooms-and-Mazes generator (main entry) |
-| `labyrinthMaze.ts` | Maze corridor generation |
-| `labyrinthAbyssal.ts` | Abyssal zone generation |
-| `labyrinthFeatures.ts` | Feature placement |
-| `labyrinthConnectivity.ts` | Labyrinth connectivity |
-| `labyrinth.ts` | Core labyrinth types |
 
 #### `board/sphere/` — Sphere Geometry
 
@@ -184,21 +177,20 @@ All game state lives as typed traits on Koota entities.
 
 | File | Purpose |
 |------|---------|
-| `types.ts` | `FloorType` (9 substrates), `ResourceMaterial` (13 materials), `FLOOR_DEFS` |
-| `traits.ts` | `TileFloor` — floorType, mineable, hardness, resourceType, resourceAmount |
-| `cluster.ts` | JS mirror of GLSL cluster math — `floorTypeForTile()`, `tileFloorProps()` |
+| `types.ts` | `BiomeType` (9 biomes), `ResourceMaterial` (17 materials), `BIOME_DEFS`, `isPassableBiome` |
+| `traits.ts` | `TileFloor` — biomeType, mineable, hardness, resourceType, resourceAmount |
+| `cluster.ts` | JS mirror of GLSL cluster math — `biomeTypeForTile()`, `tileFloorProps()` |
 | `floorShader.ts` | `makeFloorShaderMaterial(seed)` — PBR atlas shader (5 AmbientCG atlas maps) |
 | `glsl/` | Extracted GLSL shader files: `floorVert.glsl`, `floorFrag.glsl`, `common.glsl`, `patterns/*.glsl` |
 
-**9 terrain substrates** (FloorType):
-- Impassable: `void_pit`, `structural_mass`
-- Passable: `abyssal_platform`, `transit_deck`, `durasteel_span`, `collapsed_zone`, `dust_district`, `bio_district`, `aerostructure`
+**9 biome types** (BiomeType):
+- Impassable: `water`, `mountain`
+- Passable: `grassland`, `forest`, `desert`, `hills`, `wetland`, `ruins`, `tundra`
 
-**13 resource materials** (ResourceMaterial):
-- Foundation: `ferrous_scrap`, `alloy_stock`, `polymer_salvage`, `conductor_wire`
-- Advanced: `electrolyte`, `silicon_wafer`, `storm_charge`, `el_crystal`
-- Common: `scrap_metal`, `e_waste`, `intact_components`
-- Abyssal: `thermal_fluid`, `depth_salvage`
+**17 resource materials** (ResourceMaterial) — natural → processed → synthetic:
+- Natural: `stone`, `timber`, `iron_ore`, `coal`, `food`, `fiber`, `sand`, `clay`
+- Processed: `steel`, `concrete`, `glass`, `circuits`, `fuel`
+- Synthetic: `alloy`, `nanomaterial`, `fusion_cell`, `quantum_crystal`
 
 ### `src/config/buildings/` — Building Definitions
 
@@ -223,7 +215,7 @@ All game state lives as typed traits on Koota entities.
 
 ### `src/systems/` — Koota Systems
 
-42 systems. See `docs/memory-bank/progress.md` for the complete list with status and file paths.
+42 systems + buildingUpgradeSystem, analysisSystem, scoreSystem, cultEncounterTracker. See `docs/memory-bank/progress.md` for the complete list with status and file paths.
 
 ### `src/robots/` — Robot Archetypes
 
@@ -360,14 +352,20 @@ Game data files — all TypeScript `const` objects (never JSON):
 | `gameDefaults.ts` | All tunables: tile size, AP, camera, board sizes, faction colors, unit dims |
 | `techTreeDefs.ts` | **LEGACY** 27 techs in 5 tiers — 15 base + 12 track-gating. **TARGET:** building-driven progression |
 | `buildingDefs.ts` | Building type definitions |
+| `buildingMilestoneDefs.ts` | 6 building upgrade milestone toasts |
+| `buildingUnlockDefs.ts` | Building→building unlock chains |
+| `cultEncounterDefs.ts` | 8 one-time cult encounter triggers |
 | `diplomacyDefs.ts` | Diplomacy thresholds and rules |
 | `epochDefs.ts` | Epoch / climate deterioration definitions |
+| `epochEventDefs.ts` | 4 epoch transition narrative beats |
 | `factionAiDefs.ts` | AI faction personality parameters |
 | `models.ts` | GLB model path manifest |
 | `movementDefs.ts` | Movement cost definitions |
 | `narrativeDefs.ts` | Narrative/lore definitions |
 | `poiDefs.ts` | Point of interest definitions |
+| `preferences.ts` | Capacitor Preferences adapter (audio, keybinds, accessibility) |
 | `recipeDefs.ts` | Synthesis recipe definitions |
+| `registry.ts` | Unified config registry with runtime overrides (balance harness) |
 | `upgradeDefs.ts` | Upgrade path definitions |
 | `weatherDefs.ts` | Storm/weather parameters |
 | `buildings/` | Building + cult structure definitions (see `config/buildings/` section above) |
@@ -544,7 +542,7 @@ events         -- id, game_id, turn, type, payload (JSON)
 
 ## Test Strategy
 
-**123 Vitest test files, 2208 tests. 0 TypeScript errors. Vitest-only.** *(Bump when `pnpm test:vitest` output changes.)*
+**130 Vitest test files, 2282 tests. 0 TypeScript errors. Vitest-only.** *(Bump when `pnpm test:vitest` output changes.)*
 
 Run: `pnpm test:vitest` (unit) | `pnpm test:ct` (browser CT) | `pnpm verify` (full gate)
 

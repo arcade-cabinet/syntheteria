@@ -15,13 +15,13 @@
 
 | Metric | Value |
 |--------|-------|
-| Active `.ts`/`.tsx` files under `src/` | 447 (`find src -name '*.ts' -o -name '*.tsx' \| wc -l`) |
-| Vitest test files | 132 (all passing) |
+| Active `.ts`/`.tsx` files under `src/` | 457 (`find src -name '*.ts' -o -name '*.tsx' \| wc -l`) |
+| Vitest test files | 130 (all passing) |
 | Vitest tests | 2282 |
 | TypeScript errors | 0 |
 | Biome errors | 0 |
 | GLB models in public/ | 360 |
-| Config definition files | 14 (`src/config/`) |
+| Config definition files | 20 (`src/config/` incl. registry, preferences, milestones, encounters) |
 | Jest | Removed (Vitest-only) |
 
 ---
@@ -37,8 +37,8 @@
 | BFS adjacency | DONE | `src/board/adjacency.ts` | 4-dir passable neighbors, reachable BFS, A* path |
 | GridApi | DONE | `src/board/grid.ts` | Addressable grid API |
 | Labyrinth / depth underground | **REMOVED** | — | Deleted with pivot to overworld-only; no `labyrinth*.ts`, no `depth.ts` |
-| 9 terrain substrates | DONE / LEGACY | `src/terrain/types.ts` | FloorType + FLOOR_DEFS — industrial palette **LEGACY** vs biome target in design doc |
-| Resource taxonomy | DONE | `src/terrain/types.ts`, `src/config/resources/` | Natural → processed → synthetic progression (**TARGET**); legacy industrial labels may remain in comments |
+| 9 biome types | DONE | `src/terrain/types.ts` | BiomeType + BIOME_DEFS — grassland, forest, desert, hills, wetland, ruins, tundra, water, mountain |
+| Resource taxonomy | DONE | `src/terrain/types.ts`, `src/config/resources/` | 17 materials: natural (stone, timber, iron_ore, coal, food, fiber, sand, clay) → processed (steel, concrete, glass, circuits, fuel) → synthetic (alloy, nanomaterial, fusion_cell, quantum_crystal) |
 | PBR texture atlas | DONE | `src/terrain/floorShader.ts` | AmbientCG atlas (5 maps: color, normal, roughness, metalness, opacity) |
 | BSP / city layout / connectivity | **REMOVED** | — | Old labyrinth-era mapgen deleted |
 

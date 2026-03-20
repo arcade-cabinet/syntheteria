@@ -230,6 +230,32 @@ to track in-progress work. The pattern:
 1. `queueX()` — validate preconditions, deduct resources, spawn job entity
 2. `runX()` — tick jobs each turn, complete on countdown, clean up orphans
 
+## Building-Driven Progression Pattern (TARGET — replaces centralized tech tree)
+
+Buildings have internal upgrade tiers (1→3). Upgrading costs resources + turns.
+`buildingUpgradeSystem.ts` manages upgrade jobs; `analysisSystem.ts` accelerates
+upgrades via Analysis Nodes with diminishing returns.
+
+Building→building unlock chains gate construction of new building types.
+Epoch transitions gate building tier caps.
+
+```ts
+startBuildingUpgrade(world, entityId, highestTier, turn); // deducts resources, queues job
+runBuildingUpgrades(world);                                // ticks all jobs each turn
+```
+
+## Config Registry Pattern
+
+`src/config/registry.ts` provides unified access to all game tunables with
+runtime override support (used by the balance harness for testing variations).
+
+```ts
+getConfig<number>("victory.turnCap")      // → 200 (or override value)
+setConfigOverride("victory.turnCap", 150) // set runtime override
+clearConfigOverrides()                    // restore compiled defaults
+applyConfigOverrides({ ... })             // batch overrides
+```
+
 ## Rule Summary
 
 | Rule | Detail |

@@ -18,6 +18,10 @@ const firedEncounters = new Set<CultEncounterTrigger>();
 /**
  * Attempt to fire a cult encounter. Returns true if it fired (first time),
  * false if already fired or epoch requirement not met.
+ *
+ * @param world - ECS world (used to read current turn for epoch check).
+ * @param trigger - The CultEncounterTrigger key to attempt.
+ * @returns True if the encounter fired, false if suppressed.
  */
 export function fireCultEncounter(
 	world: World,
@@ -57,6 +61,7 @@ export function hasFiredEncounter(trigger: CultEncounterTrigger): boolean {
 	return firedEncounters.has(trigger);
 }
 
+/** Reset all fired encounter state — for tests and game restart. */
 export function _resetCultEncounters(): void {
 	firedEncounters.clear();
 }

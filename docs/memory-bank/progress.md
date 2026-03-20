@@ -15,9 +15,9 @@
 
 | Metric | Value |
 |--------|-------|
-| Active `.ts`/`.tsx` files under `src/` | ~434 (`find src -name '*.ts' -o -name '*.tsx' \| wc -l`) |
-| Vitest test files | 123 (all passing) |
-| Vitest tests | 2208 |
+| Active `.ts`/`.tsx` files under `src/` | 443 (`find src -name '*.ts' -o -name '*.tsx' \| wc -l`) |
+| Vitest test files | 126 (all passing) |
+| Vitest tests | 2252 |
 | TypeScript errors | 0 |
 | Biome errors | 0 |
 | GLB models in public/ | 360 |
@@ -32,13 +32,13 @@
 
 | System | Status | Key Files | Notes |
 |--------|--------|-----------|-------|
-| Overworld generator | DONE | `src/board/generator.ts` | **Noise-based** overworld (industrial floor types **LEGACY** per `GAME_DESIGN.md`; biome terrain **planned**) |
+| Overworld generator | DONE | `src/board/generator.ts` | **Biome + noise** overworld (industrial-only presentation **LEGACY** where still present) |
 | Noise + elevation | DONE | `src/board/noise.ts` | Seeded RNG + noise for terrain |
 | BFS adjacency | DONE | `src/board/adjacency.ts` | 4-dir passable neighbors, reachable BFS, A* path |
 | GridApi | DONE | `src/board/grid.ts` | Addressable grid API |
 | Labyrinth / depth underground | **REMOVED** | — | Deleted with pivot to overworld-only; no `labyrinth*.ts`, no `depth.ts` |
 | 9 terrain substrates | DONE / LEGACY | `src/terrain/types.ts` | FloorType + FLOOR_DEFS — industrial palette **LEGACY** vs biome target in design doc |
-| 13-material taxonomy | DONE | `src/terrain/types.ts` | ResourceMaterial — 4 tiers |
+| Resource taxonomy | DONE | `src/terrain/types.ts`, `src/config/resources/` | Natural → processed → synthetic progression (**TARGET**); legacy industrial labels may remain in comments |
 | PBR texture atlas | DONE | `src/terrain/floorShader.ts` | AmbientCG atlas (5 maps: color, normal, roughness, metalness, opacity) |
 | BSP / city layout / connectivity | **REMOVED** | — | Old labyrinth-era mapgen deleted |
 
@@ -103,16 +103,19 @@
 | Floor mining system | DONE | `src/systems/floorMiningSystem.ts` | DAISY pattern, deep mining tech +50% yield, pit creation |
 | Specialization system | DONE | `src/systems/specializationSystem.ts` | Aura passives: regen, scan boost, attack buff, defense buff |
 | Cult mutation system | DONE | `src/systems/cultMutation.ts` | 4-tier time-based: buffs → abilities → aberrant |
-| Victory system | DONE | `src/systems/victorySystem.ts` | 7 paths + elimination defeat + forced endgame |
+| Victory system | DONE | `src/systems/victorySystem.ts` | **6** win paths + elimination defeat (turn-cap score uses `scoreSystem`) |
 | Territory system | DONE | `src/systems/territorySystem.ts` | Faction tile painting |
 | Population system | DONE | `src/systems/populationSystem.ts` | Population cap enforcement |
 | Resource renewal | DONE | `src/systems/resourceRenewalSystem.ts` | Resource deposit regeneration |
 | Experience system | DONE | `src/systems/experienceSystem.ts` | XP tracking, mark level progression |
 | Research system | DONE | `src/systems/researchSystem.ts` | Tech tree progression, research labs |
-| Upgrade system | DONE | `src/systems/upgradeSystem.ts` | Mark level upgrades |
+| Building upgrade system | DONE | `src/systems/buildingUpgradeSystem.ts` | Per-building tier jobs, unlock chains |
+| Analysis system | DONE | `src/systems/analysisSystem.ts` | Acceleration for queued building upgrades |
+| Score system | DONE | `src/systems/scoreSystem.ts` | Weighted faction score (turn-cap victory) |
+| Upgrade system | DONE | `src/systems/upgradeSystem.ts` | Mark level upgrades (units) |
 | Diplomacy system | DONE | `src/systems/diplomacySystem.ts` | Granular standings (-100 to +100) |
 | Hacking system | DONE | `src/systems/hackingSystem.ts` | Hack enemy units/buildings |
-| Build system | DONE | `src/systems/buildSystem.ts` | Command UI (today: legacy radial) → select → check cost → place |
+| Build system | DONE | `src/systems/buildSystem.ts` | Build placement flow → check cost → place |
 | Building placement | DONE | `src/systems/buildingPlacement.ts` | Adjacency and cost validation |
 | Fog reveal system | DONE | `src/systems/fogRevealSystem.ts` | Per-unit scan radius fog |
 | Toast notifications | DONE | `src/systems/toastNotifications.ts` | In-game toast messages |
@@ -159,10 +162,11 @@
 
 | System | Status | Key Files | Notes |
 |--------|--------|-----------|-------|
-| 27 techs (5 tiers) | DONE | `src/config/techTreeDefs.ts` | 15 base + 12 track-gating techs |
+| 27 techs (5 tiers) | DONE / **LEGACY** sim data | `src/config/techTreeDefs.ts` | 15 base + 12 track-gating techs — still drives research effects; **player-facing tree superseded** by building progression |
 | Research system | DONE | `src/systems/researchSystem.ts` | Research labs accumulate points |
 | Tech prerequisites | DONE | `src/config/techTreeDefs.ts` | DAG with prereq chains |
-| Tech UI | DONE (redirects) | `src/ui/game/TechTreeOverlay.tsx` | Now wraps BuildingProgressionOverlay |
+| Centralized tech tree UI | **LEGACY** | `src/ui/game/TechTreeOverlay.tsx` | Re-exports **BuildingProgressionOverlay** — use building-driven UI |
+| Building progression UI | DONE | `src/ui/game/BuildingProgressionOverlay.tsx` | Unlocks + tiers (primary progression surface) |
 
 ### AI
 
@@ -178,6 +182,13 @@
 | AI agents | DONE | `src/ai/agents/SyntheteriaAgent.ts` | Agent entity definition |
 | AI runtime | DONE | `src/ai/runtime/AIRuntime.ts` | Runtime orchestration |
 | Yuka turn system | DONE | `src/ai/yukaAiTurnSystem.ts` | Per-turn AI execution |
+
+### Mobile / CI
+
+| System | Status | Key Files | Notes |
+|--------|--------|-----------|-------|
+| Capacitor | DONE | `capacitor.config.ts`, `android/`, `ios/` | Android + iOS + Web targets |
+| CI/CD | DONE | `.github/workflows/` | Includes Android debug APK build job |
 
 ### Persistence
 
@@ -273,7 +284,7 @@ Used by `src/ui/Globe.tsx` for **title → generating → playing** (R3F subtree
 | Title scene | DONE | `src/ui/landing/title/` | Title menu components |
 | GameScreen | LEGACY | `src/ui/game/GameScreen.tsx` | Old separate Canvas — superseded by Globe.tsx |
 | HUD | DONE | `src/ui/game/HUD.tsx` | Turn, 13-material resource counters, AP, End Turn |
-| Radial menu (legacy) | **DELETED** | `src/systems/radialMenu.ts` (state machine kept), `RadialMenu.tsx` + `src/systems/radial/` deleted | Replaced by per-building modals |
+| Radial menu (legacy) | **LEGACY** | `src/systems/radialMenu.ts` | State machine **retained** for Vitest + diegetic specs; in-game radial UI **removed** — per-building modals are the command surface |
 | Per-building modals | DONE | `src/ui/game/BuildingModal.tsx`, `src/ui/game/building-panels/` | BuildingModal dispatcher + 8 panels (Generic, Synthesizer, AnalysisNode, Power, Storage, Turret, Relay, Maintenance) |
 | Building progression | DONE | `src/ui/game/BuildingProgressionOverlay.tsx` | Replaces TechTreeOverlay; shows unlock chains + tier status |
 | Board input (playing) | DONE | `src/views/input/boardInput.ts` | Phaser pointer → tile, EventBus |
@@ -281,7 +292,7 @@ Used by `src/ui/Globe.tsx` for **title → generating → playing** (R3F subtree
 | Camera (sphere orbit) | DONE | `src/camera/SphereOrbitCamera.tsx` | Orbit around sphere, polar clamped, WASD orbit |
 | GarageModal.tsx | DONE | `src/ui/game/GarageModal.tsx` | Motor Pool panel — routed through BuildingModal dispatcher |
 | Diplomacy overlay | DONE | `src/ui/game/DiplomacyOverlay.tsx` | Faction standings panel |
-| Tech tree overlay | DONE | `src/ui/game/TechTreeOverlay.tsx` | Full DAG with research progress |
+| Tech tree overlay | **LEGACY** (redirect) | `src/ui/game/TechTreeOverlay.tsx` | Wraps `BuildingProgressionOverlay` |
 | Unit roster overlay | DONE | `src/ui/game/UnitRosterOverlay.tsx` | All player units with quick-jump |
 | Selected info | DONE | `src/ui/game/SelectedInfo.tsx` | Unit/building/tile info panel |
 | Entity tooltip | DONE | `src/ui/game/EntityTooltip.tsx` | Hover information |
@@ -314,7 +325,8 @@ Used by `src/ui/Globe.tsx` for **title → generating → playing** (R3F subtree
 
 | Gap | Impact | Notes |
 |-----|--------|-------|
-| Biome terrain + resource progression | Major | Design targets in `GAME_DESIGN.md`; industrial floor / 13-material sim still present where marked LEGACY. |
+| Phase 11.8 improvement overlays | Major (visual) | Roads/mines/irrigation → roboforming progression on Phaser board — see `ROADMAP.md` §11.8. |
+| Phase 11.9 cultist scripted encounters | Content | Narrative beats not fully wired — see `ROADMAP.md` §11.9. |
 | Terrain blending | Visual | Hard tile boundaries. Need vertex color edge interpolation. See `docs/RENDERING_VISION.md`. |
 | Forest canopy | Visual | Scattered trees → need canopy blob mesh. See `docs/RENDERING_VISION.md`. |
 | Elevation drama | Visual | Smooth noise → need chunky discrete platforms. See `docs/RENDERING_VISION.md`. |

@@ -75,8 +75,10 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 |------|--------|
 | aiTurnSystem.ts | AI turn execution + move resolution |
 | analyticsCollector.ts | Per-turn analytics snapshots |
+| analysisSystem.ts | Analysis node acceleration for building upgrades |
 | attackSystem.ts | Combat resolution |
 | buildingPlacement.ts | Starter building placement |
+| buildingUpgradeSystem.ts | Per-building tier upgrade jobs |
 | buildSystem.ts | Player build flow |
 | campaignStats.ts | Long-running campaign statistics |
 | cultistSystem.ts | Cult POI init, patrols, corruption |
@@ -94,8 +96,7 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 | movementSystem.ts | Unit movement interpolation |
 | populationSystem.ts | Population cap + counting |
 | powerSystem.ts | Power grid simulation |
-| radialMenu.ts | Radial menu state machine |
-| radial/ | Radial menu action providers (split by domain) |
+| radialMenu.ts | Legacy radial state machine (Vitest + specs; in-game UI uses BuildingModal) |
 | repairSystem.ts | Unit repair |
 | researchSystem.ts | Tech research queue |
 | resourceDeltaSystem.ts | Per-turn income/expenditure tracking |

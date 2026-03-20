@@ -263,19 +263,19 @@ pnpm verify  →  123 Vitest test files (2208 tests) + 0 TypeScript errors + 0 B
 
 ---
 
-## Phase 11 — Design Overhaul (NEXT)
+## Phase 11 — Design Overhaul (in progress)
 
-The game's design has evolved significantly. These are the target changes:
+The game's design has evolved significantly. Remaining gaps are mostly presentation (11.8) and narrative (11.9).
 
-- [ ] **11.1** — Biome terrain (replace industrial FloorTypes with grassland, forest, mountain, water, etc.)
-- [ ] **11.2** — Natural→processed→synthetic resource taxonomy (replace 13-material salvage)
-- [ ] **11.3** — Overworld generator with biome noise (replace labyrinth pipeline)
-- [ ] **11.4** — Building-driven progression (replace centralized tech tree with per-building upgrade tiers)
-- [ ] **11.5** — Building→building unlock chains
-- [ ] **11.6** — Per-building management modals (extend GarageModal pattern to all buildings)
-- [ ] **11.7** — Victory condition overhaul (6 paths: Domination, Network, Reclamation, Transcendence, Cult Eradication, Score)
+- [x] **11.1** — Biome terrain (replace industrial FloorTypes with grassland, forest, mountain, water, etc.)
+- [x] **11.2** — Natural→processed→synthetic resource taxonomy (replace 13-material salvage)
+- [x] **11.3** — Overworld generator with biome noise (replace labyrinth pipeline)
+- [x] **11.4** — Building-driven progression (replace centralized tech tree with per-building upgrade tiers)
+- [x] **11.5** — Building→building unlock chains
+- [x] **11.6** — Per-building management modals (extend GarageModal pattern to all buildings)
+- [x] **11.7** — Victory condition overhaul (6 paths: Domination, Network, Reclamation, Transcendence, Cult Eradication, Score)
 - [ ] **11.8** — Improvement overlays (roads, mines, irrigation → roboforming visual progression)
 - [ ] **11.9** — Cultist scripted encounter events
-- [ ] **11.10** — Capacitor setup (Android + iOS + Web), GitHub Actions APK builds
+- [x] **11.10** — Capacitor setup (Android + iOS + Web), GitHub Actions APK builds
 
 See `docs/GAME_DESIGN.md` for full TARGET sections.

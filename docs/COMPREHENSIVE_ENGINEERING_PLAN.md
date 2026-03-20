@@ -10,6 +10,8 @@
 
 ## 0. Non-negotiable: one `views/` package (no `view/`)
 
+> **STATUS: DONE** — `src/view/` deleted, `src/views/title/` + `src/views/board/` created.
+
 **Problem:** `src/view/` (R3F) and `src/views/` (Phaser) is confusing, error-prone, and violates “one obvious place” for rendering code.
 
 **Target layout (canonical):**
@@ -198,6 +200,8 @@ After each milestone: `AGENTS.md` package map, `progress.md` tables, and this fi
 
 ## 8. Retire `src/rendering/` — decompose, then delete
 
+> **STATUS: DONE** — `src/rendering/` deleted and decomposed. See CLOUD_AGENT_RUNBOOK.md Phase I.
+
 ### 8.1 Why it violates project principles
 
 | Issue | Detail |
@@ -273,10 +277,10 @@ Use **`docs/CLOUD_AGENT_RUNBOOK.md` §3.1** as the canonical short list. In brie
 
 ## 12. Sign-off checklist (before calling “done”)
 
-- [ ] `src/view/` deleted; only `src/views/` with `title/` + `board/`.
-- [ ] **`src/rendering/` deleted** — concerns split per §8; no `from "../rendering"` left.
-- [ ] No `systems`/`traits` → `views` imports.
-- [ ] `pnpm verify` green.
+- [x] `src/view/` deleted; only `src/views/` with `title/` + `board/`.
+- [x] **`src/rendering/` deleted** — concerns split per §8; no `from "../rendering"` left.
+- [x] No `systems`/`traits` → `views` imports.
+- [x] `pnpm verify` green.
 - [ ] Reference repos cloned locally; version pins noted in README or this doc.
 - [ ] CivRev2 parity sheet + POC side-by-side signed off.
 - [ ] Robot/building path resolution tests green.

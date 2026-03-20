@@ -54,9 +54,15 @@ Each evaluator returns a desirability score [0, 1]. Think.arbitrate() picks the 
 | 5 | **ExpandEvaluator** | Move to unclaimed territory | FIXED — pushes 10 tiles outward, multi-base expansion |
 | 6 | **BuildEvaluator** | Place buildings | FIXED — priority order, motor pool bonus, time ramp |
 | 7 | **ScoutEvaluator** | Explore unknown areas | DONE — quadrant exploration, enemy discovery boost |
-| 8 | **FloorMineEvaluator** | Strip-mine floor tiles | DONE — backstop economy when salvage scarce |
+| 8 | **FloorMineEvaluator** | Strip-mine floor tiles | DONE — backstop economy when salvage scarce. **LEGACY** — target: biome resource extraction |
 | 9 | **EvadeEvaluator** | Flee when outnumbered | DONE — HP-weighted, local force ratio |
-| 10 | **ResearchEvaluator** | Start tech research | DONE — auto-queues per faction tech priority |
+| 10 | **ResearchEvaluator** | Start tech research | DONE — auto-queues per faction tech priority. **LEGACY** — target: building-driven progression replaces centralized research |
+
+> **Design pivot:** The centralized tech tree is being replaced by building-driven progression.
+> `ResearchEvaluator` will evolve to evaluate building upgrade priorities instead. 
+> `FloorMineEvaluator` will adapt to biome-based resource extraction.
+> Cult AI (`cultistSystem.ts`) is confirmed as the correct direction — cultists are AI-only 
+> antagonists with scripted encounter events, no interactive systems needed.
 
 ### Remaining Issues
 

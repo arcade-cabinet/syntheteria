@@ -84,6 +84,10 @@ src/config/
 
 ### 0.2 — Port Settlement / City Data from Pending/ (Tier 1)
 
+> **CANCELLED** — Hub-and-spoke building networks replace the city/settlement concept.
+> Per-building management modals (GarageModal pattern) replace city management panels.
+> See `docs/GAME_DESIGN.md` §2 and §7 for current design.
+
 Port **data contracts and pure view-model logic** from `pending/` (not executable grid code):
 
 1. **Snapshot types** — `WorldSessionSnapshot`, `CityRuntimeSnapshot`, `SectorPoiSnapshot`
@@ -271,6 +275,10 @@ Discrete elevation levels (flat, hill, mountain, peak). Cliff faces between leve
 
 ## Phase 4: Settlement Management (CivRev2 / Civ VI Model)
 
+> **CANCELLED** — No settlement/city management screen. Each building has its own management
+> modal. Motor Pool → fabrication panel. Synthesizer → recipe panel. Etc.
+> The "city screen" concept is replaced by per-building interaction.
+
 ### 4.1 — World map only (WorldScene)
 The **entire** tactical match runs in one isometric Phaser scene: terrain, units, buildings, fog,
 settlement markers on tiles. Phase 1–3 deliver this. There is **no** `CityScene` or walkable interior.
@@ -333,14 +341,15 @@ src/
 │   ├── renderers/        terrain, units, buildings, fog, particles, …
 │   ├── input/            boardInput.ts
 │   └── lighting/         worldLighting, epochAtmosphere
-├── view/                 R3F — title globe (+ pruned legacy board TSX)
+│   ├── title/          R3F — title globe (migrated from src/view/)
 ├── ui/                   React DOM (Globe, landing, HUD, modals, overlays)
-├── rendering/            Pure TS geometry/placement math (framework-agnostic)
+├── rendering/            DELETED — decomposed into board/sphere, config/models, lib/, etc.
 ├── config/               Tunables + (optional) consolidated data subpackages
 ├── systems/              ECS systems
 ├── traits/               Koota traits
 ├── ai/                   Yuka GOAP
 ├── board/                Board generation
+├── board/sphere/          Sphere geometry (grid ↔ sphere math)
 ├── db/                   SQLite persistence
 ├── world/                New-game config + (future) settlement snapshots & POI contracts
 ├── audio/                Tone.js

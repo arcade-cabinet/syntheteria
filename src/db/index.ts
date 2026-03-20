@@ -1,35 +1,65 @@
-import { drizzle } from "drizzle-orm/expo-sqlite";
-import { openDatabaseSync } from "expo-sqlite";
-import { initializeDatabaseSync } from "./bootstrap";
-import { setDatabaseResolver } from "./runtime";
-import * as schema from "./schema";
+/**
+ * @package db
+ *
+ * SQLite persistence — schema, migrations, serialization, and game repository.
+ */
 
-const canUseSyncExpoSqlite =
-	typeof SharedArrayBuffer !== "undefined" && typeof window !== "undefined";
+export type { SqliteAdapter } from "./adapter";
+// --- Adapter ---
+export { createSqlJsAdapter } from "./adapter";
 
-function tryOpenDatabase() {
-	if (!canUseSyncExpoSqlite) return null;
-	try {
-		return openDatabaseSync("syntheteria.db");
-	} catch {
-		// expo-sqlite requires COOP/COEP headers for SharedArrayBuffer.
-		// In Node (Jest), tests set the resolver via createTestDb().
-		// In browser (Playwright CT), use FakeDatabase with game_config + model_definitions.
-		return null;
-	}
-}
+// --- Repository ---
+export { GameRepo } from "./gameRepo";
 
-export const expoDb = tryOpenDatabase();
+// --- Migrations ---
+export { runMigrations } from "./migrations";
 
-export const db = expoDb ? drizzle(expoDb, { schema }) : null;
+// --- Schema ---
+export {
+	ALL_CREATE_STATEMENTS,
+	SCHEMA_VERSION,
+	SQL_CREATE_BUILDINGS,
+	SQL_CREATE_CAMPAIGN_STATISTICS,
+	SQL_CREATE_EVENTS,
+	SQL_CREATE_EXPLORED,
+	SQL_CREATE_FACTION_RESOURCE_SNAPSHOTS,
+	SQL_CREATE_GAMES,
+	SQL_CREATE_META,
+	SQL_CREATE_RESOURCES,
+	SQL_CREATE_TILE_RESOURCES,
+	SQL_CREATE_TILES,
+	SQL_CREATE_TURN_EVENT_LOGS,
+	SQL_CREATE_TURN_SNAPSHOTS,
+	SQL_CREATE_UNITS,
+} from "./schema";
 
-if (expoDb) {
-	setDatabaseResolver(() => expoDb);
-	initializeDatabaseSync(expoDb);
-} else if (typeof window !== "undefined") {
-	throw new Error(
-		"SQLite requires COOP/COEP headers (SharedArrayBuffer). " +
-			"Ensure Cross-Origin-Embedder-Policy and Cross-Origin-Opener-Policy are set.",
-	);
-}
-// In Node (Jest): tests call setDatabaseResolver(createTestDb()) in beforeAll
+// --- Serialization ---
+export {
+	applyBuildings,
+	applyExplored,
+	applyResources,
+	applyTurn,
+	applyUnits,
+	serializeBuildings,
+	serializeExplored,
+	serializeResources,
+	serializeUnits,
+} from "./serialize";
+
+// --- Types ---
+export type {
+	BuildingRecord,
+	CampaignStatisticsRecord,
+	EventRecord,
+	ExploredRecord,
+	FactionResourceSnapshotRecord,
+	FactionSnapshotData,
+	GameRecord,
+	GameSummary,
+	ResourceRecord,
+	TileRecord,
+	TileResourceRecord,
+	TurnEventLogRecord,
+	TurnSnapshotRecord,
+	UnitRecord,
+} from "./types";

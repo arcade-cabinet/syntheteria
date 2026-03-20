@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Syntheteria — CivRev2-Style Isometric POC</title>
+    <style>
+        :root {
+            --ui-bg: rgba(8, 10, 18, 0.92);
+            --ui-border: rgba(0, 255, 255, 0.6);
+            --ui-cyan: #00ffff;
+            --ui-magenta: #ff00ff;
+            --ui-text: #d0e8f0;
+            --ui-dim: #556677;
+            --ui-energy: #f1c40f;
+            --ui-durasteel: #8899aa;
+            --ui-data: #b388ff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body, html {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Courier New', Courier, monospace;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            color: var(--ui-text);
+        }
+
+        #game-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .interactive { pointer-events: auto; }
+
+        /* ── Top Bar HUD ────────────────────────────────────── */
+        #top-bar {
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            height: 42px;
+            background: var(--ui-bg);
+            border-bottom: 1px solid var(--ui-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.08);
+        }
+
+        .top-stat {
+            display: flex; align-items: center; gap: 6px;
+        }
+        .top-stat .icon {
+            width: 14px; height: 14px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+        .stat-energy .icon { background: var(--ui-energy); }
+        .stat-energy .val { color: var(--ui-energy); }
+        .stat-durasteel .icon { background: var(--ui-durasteel); }
+        .stat-durasteel .val { color: var(--ui-durasteel); }
+        .stat-data .icon { background: var(--ui-data); }
+        .stat-data .val { color: var(--ui-data); }
+        .turn-counter { color: var(--ui-cyan); }
+
+        /* ── Floating Labels ────────────────────────────────── */
+        #markers-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        .floating-label {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            background: rgba(6, 8, 16, 0.88);
+            border: 1px solid var(--ui-border);
+            border-radius: 3px;
+            padding: 5px 10px 4px;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.15);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            cursor: pointer;
+            transition: opacity 0.15s;
+            will-change: transform;
+        }
+
+        .floating-label::after {
+            content: '';
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 24px;
+            background: linear-gradient(to bottom, var(--ui-border), transparent);
+        }
+
+        .floating-label.unit-label {
+            border-color: rgba(255, 0, 255, 0.5);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.12);
+            padding: 3px 8px 3px;
+            font-size: 9px;
+        }
+        .floating-label.unit-label::after {
+            height: 16px;
+            bottom: -16px;
+            background: linear-gradient(to bottom, rgba(255,0,255,0.5), transparent);
+        }
+
+        .label-row {
+            display: flex; align-items: center; gap: 6px;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .tier-badge {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--ui-cyan);
+            border-radius: 2px;
+            padding: 1px 4px;
+            font-size: 9px;
+            color: var(--ui-cyan);
+        }
+        .unit-label .tier-badge {
+            border-color: var(--ui-magenta);
+            color: var(--ui-magenta);
+        }
+
+        .health-bar {
+            width: 100%;
+            height: 3px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 1px;
+            overflow: hidden;
+        }
+        .health-fill {
+            height: 100%;
+            border-radius: 1px;
+            transition: width 0.3s;
+        }
+
+        .prod-indicator {
+            font-size: 8px;
+            color: var(--ui-dim);
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Advisor Dialog ─────────────────────────────────── */
+        #advisor-dialog {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 92%;
+            max-width: 520px;
+            background: var(--ui-bg);
+            border: 1px solid var(--ui-border);
+            border-left: 4px solid var(--ui-cyan);
+            padding: 16px;
+            display: flex;
+            gap: 14px;
+            cursor: pointer;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 20px rgba(0,255,255,0.06);
+            border-radius: 3px;
+        }
+
+        #advisor-portrait {
+            width: 56px; height: 56px;
+            min-width: 56px;
+            background: #0a0e18;
+            border: 1px solid #223344;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #advisor-portrait svg {
+            width: 32px; height: 32px;
+            fill: var(--ui-cyan);
+            opacity: 0.7;
+        }
+
+        .dialog-content h4 {
+            margin: 0 0 4px;
+            color: var(--ui-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-size: 11px;
+        }
+        .dialog-content p {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.55;
+            color: #aabbcc;
+        }
+        .dialog-content .dismiss {
+            margin-top: 6px;
+            font-size: 9px;
+            color: #445566;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ── Loading ────────────────────────────────────────── */
+        #loading-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #050810;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            transition: opacity 0.6s;
+        }
+        #loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #loading-text {
+            color: var(--ui-cyan);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        #loading-bar-outer {
+            width: 280px;
+            height: 4px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        #loading-bar-inner {
+            width: 0%;
+            height: 100%;
+            background: var(--ui-cyan);
+            transition: width 0.3s;
+            border-radius: 2px;
+        }
+    </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+
+<canvas id="game-canvas"></canvas>
+
+<div id="ui-layer">
+    <div id="top-bar" class="interactive">
+        <div class="turn-counter">CYCLE 1</div>
+        <div class="top-stat stat-energy">
+            <span class="icon"></span>
+            <span class="val">2,048</span>
+        </div>
+        <div class="top-stat stat-durasteel">
+            <span class="icon"></span>
+            <span class="val">640</span>
+        </div>
+        <div class="top-stat stat-data">
+            <span class="icon"></span>
+            <span class="val">+312 TB/s</span>
+        </div>
+    </div>
+
+    <div id="markers-container"></div>
+
+    <div id="advisor-dialog" class="interactive">
+        <div id="advisor-portrait">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        </div>
+        <div class="dialog-content">
+            <h4>Grid Interface Ping</h4>
+            <p>Architect, our scouters have breached a new durasteel corridor. The labyrinth stretches further than initial projections. We can harvest these superstructure walls for Raw Durasteel and High-Density Alloys.</p>
+            <p class="dismiss">[ click to acknowledge ]</p>
+        </div>
+    </div>
+</div>
+
+<div id="loading-overlay">
+    <div id="loading-text">Generating labyrinth...</div>
+    <div id="loading-bar-outer"><div id="loading-bar-inner"></div></div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// ─── Config ───────────────────────────────────────────────────────────────
+const MAP_W = 48;
+const MAP_H = 48;
+const TILE = 2.0;
+const SEED = 'syntheteria-poc-42';
+
+// Tile types
+const T_WALL     = 0;
+const T_ALLOY    = 1;
+const T_ROOM     = 2;
+const T_CORRIDOR = 3;
+
+// ─── Seeded RNG ──────────────────────────────────────────────────────────
+function seededRng(seed) {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) {
+        h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+    }
+    let s = h >>> 0;
+    return () => {
+        s = (s * 1103515245 + 12345) & 0x7fffffff;
+        return s / 0x7fffffff;
+    };
+}
+
+// ─── Labyrinth Generation ────────────────────────────────────────────────
+function generateLabyrinth(w, h, seed) {
+    const rng = seededRng(seed);
+    const grid = [];
+    for (let z = 0; z < h; z++) {
+        grid[z] = [];
+        for (let x = 0; x < w; x++) {
+            grid[z][x] = rng() < 0.08 ? T_ALLOY : T_WALL;
+        }
+    }
+
+    const rooms = [];
+    const MIN_SPACING = 2;
+
+    function canPlace(rx, rz, rw, rh) {
+        if (rx < 1 || rz < 1 || rx + rw >= w - 1 || rz + rh >= h - 1) return false;
+        for (const o of rooms) {
+            const ox1 = o.x - MIN_SPACING, oz1 = o.z - MIN_SPACING;
+            const ox2 = o.x + o.w + MIN_SPACING, oz2 = o.z + o.h + MIN_SPACING;
+            if (rx < ox2 && rx + rw > ox1 && rz < oz2 && rz + rh > oz1) return false;
+        }
+        return true;
+    }
+
+    function placeNear(tx, tz, rw, rh) {
+        const sx = tx - Math.floor(rw / 2);
+        const sz = tz - Math.floor(rh / 2);
+        if (canPlace(sx, sz, rw, rh)) return { x: sx, z: sz };
+        for (let r = 1; r < Math.max(w, h) / 2; r++) {
+            for (let dz = -r; dz <= r; dz++) {
+                for (let dx = -r; dx <= r; dx++) {
+                    if (Math.abs(dx) !== r && Math.abs(dz) !== r) continue;
+                    const x = sx + dx, z = sz + dz;
+                    if (canPlace(x, z, rw, rh)) return { x, z };
+                }
+            }
+        }
+        return null;
+    }
+
+    function placeRandom(rw, rh) {
+        for (let a = 0; a < 200; a++) {
+            const x = 1 + Math.floor(rng() * (w - rw - 2));
+            const z = 1 + Math.floor(rng() * (h - rh - 2));
+            if (canPlace(x, z, rw, rh)) return { x, z };
+        }
+        return null;
+    }
+
+    // Player start at center
+    const ps = 6 + Math.floor(rng() * 3);
+    const pp = placeNear(Math.floor(w / 2), Math.floor(h / 2), ps, ps);
+    if (pp) rooms.push({ ...pp, w: ps, h: ps, kind: 'faction_start', tag: 'player' });
+
+    // Faction starts at corners
+    const corners = [
+        { cx: Math.floor(w * 0.15), cz: Math.floor(h * 0.15), tag: 'iron_creed' },
+        { cx: Math.floor(w * 0.85), cz: Math.floor(h * 0.15), tag: 'void_architects' },
+        { cx: Math.floor(w * 0.85), cz: Math.floor(h * 0.85), tag: 'signal_weavers' },
+        { cx: Math.floor(w * 0.15), cz: Math.floor(h * 0.85), tag: 'bio_collective' },
+    ];
+    for (const c of corners) {
+        const s = 6 + Math.floor(rng() * 3);
+        const p = placeNear(c.cx, c.cz, s, s);
+        if (p) rooms.push({ ...p, w: s, h: s, kind: 'faction_start', tag: c.tag });
+    }
+
+    // Cult POI rooms
+    for (let i = 0; i < 3; i++) {
+        const p = placeRandom(4, 4);
+        if (p) rooms.push({ ...p, w: 4, h: 4, kind: 'cult_poi', tag: ['static_remnants', 'null_monks', 'lost_signal'][i] });
+    }
+
+    // Scatter rooms
+    const target = Math.round(8 + ((w * h) / 9216) * 32);
+    while (rooms.length < target) {
+        const rw = 3 + Math.floor(rng() * 4);
+        const rh = 3 + Math.floor(rng() * 4);
+        const p = placeRandom(rw, rh);
+        if (!p) break;
+        rooms.push({ ...p, w: rw, h: rh, kind: 'scatter', tag: null });
+    }
+
+    // Carve rooms
+    for (const room of rooms) {
+        for (let rz = room.z; rz < room.z + room.h; rz++) {
+            for (let rx = room.x; rx < room.x + room.w; rx++) {
+                if (rx >= 0 && rx < w && rz >= 0 && rz < h) {
+                    grid[rz][rx] = T_ROOM;
+                }
+            }
+        }
+    }
+
+    // Connect rooms with corridors (L-shaped)
+    for (let i = 0; i < rooms.length - 1; i++) {
+        const r1 = rooms[i], r2 = rooms[i + 1];
+        const cx1 = Math.floor(r1.x + r1.w / 2);
+        const cz1 = Math.floor(r1.z + r1.h / 2);
+        const cx2 = Math.floor(r2.x + r2.w / 2);
+        const cz2 = Math.floor(r2.z + r2.h / 2);
+
+        const minX = Math.min(cx1, cx2), maxX = Math.max(cx1, cx2);
+        for (let x = minX; x <= maxX; x++) {
+            if (x >= 0 && x < w && cz1 >= 0 && cz1 < h && (grid[cz1][x] === T_WALL || grid[cz1][x] === T_ALLOY)) {
+                grid[cz1][x] = T_CORRIDOR;
+            }
+        }
+        const minZ = Math.min(cz1, cz2), maxZ = Math.max(cz1, cz2);
+        for (let z = minZ; z <= maxZ; z++) {
+            if (z >= 0 && z < h && cx2 >= 0 && cx2 < w && (grid[z][cx2] === T_WALL || grid[z][cx2] === T_ALLOY)) {
+                grid[z][cx2] = T_CORRIDOR;
+            }
+        }
+    }
+
+    // Extra random corridor connections for loops
+    for (let i = 0; i < rooms.length; i++) {
+        if (rng() < 0.3) {
+            const j = Math.floor(rng() * rooms.length);
+            if (j === i) continue;
+            const r1 = rooms[i], r2 = rooms[j];
+            const cx1 = Math.floor(r1.x + r1.w / 2);
+            const cz1 = Math.floor(r1.z + r1.h / 2);
+            const cx2 = Math.floor(r2.x + r2.w / 2);
+            const cz2 = Math.floor(r2.z + r2.h / 2);
+            const minX = Math.min(cx1, cx2), maxX = Math.max(cx1, cx2);
+            for (let x = minX; x <= maxX; x++) {
+                if (x >= 0 && x < w && cz1 >= 0 && cz1 < h && (grid[cz1][x] === T_WALL || grid[cz1][x] === T_ALLOY)) {
+                    grid[cz1][x] = T_CORRIDOR;
+                }
+            }
+            const minZ = Math.min(cz1, cz2), maxZ = Math.max(cz1, cz2);
+            for (let z = minZ; z <= maxZ; z++) {
+                if (z >= 0 && z < h && cx2 >= 0 && cx2 < w && (grid[z][cx2] === T_WALL || grid[z][cx2] === T_ALLOY)) {
+                    grid[z][cx2] = T_CORRIDOR;
+                }
+            }
+        }
+    }
+
+    return { grid, rooms };
+}
+
+// ─── Three.js Setup ──────────────────────────────────────────────────────
+const canvas = document.getElementById('game-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.85;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#0a0815');
+scene.fog = new THREE.FogExp2(0x0a0815, 0.008);
+
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.5, 500);
+const mapCenter = new THREE.Vector3(MAP_W * TILE / 2, 0, MAP_H * TILE / 2);
+camera.position.set(mapCenter.x + 35, 55, mapCenter.z + 50);
+camera.lookAt(mapCenter);
+
+// ─── Lighting ────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x1a2233, 0.5));
+scene.add(new THREE.HemisphereLight(0x1a2244, 0x080810, 0.4));
+
+const dirLight = new THREE.DirectionalLight(0x99aacc, 1.0);
+dirLight.position.set(20, 60, 30);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+dirLight.shadow.camera.left = -60;
+dirLight.shadow.camera.right = 60;
+dirLight.shadow.camera.top = 60;
+dirLight.shadow.camera.bottom = -60;
+dirLight.shadow.camera.near = 1;
+dirLight.shadow.camera.far = 150;
+dirLight.shadow.bias = -0.001;
+scene.add(dirLight);
+
+// ─── Generate labyrinth ──────────────────────────────────────────────────
+const { grid, rooms } = generateLabyrinth(MAP_W, MAP_H, SEED);
+
+// ─── Materials ───────────────────────────────────────────────────────────
+const matWall = new THREE.MeshStandardMaterial({
+    color: 0x161e2a, roughness: 0.55, metalness: 0.65, flatShading: true
+});
+const matRoom = new THREE.MeshStandardMaterial({
+    color: 0x2a303a, roughness: 0.85, metalness: 0.1
+});
+const matCorridor = new THREE.MeshStandardMaterial({
+    color: 0x181c24, roughness: 0.9, metalness: 0.05
+});
+const matRoof = new THREE.MeshStandardMaterial({
+    color: 0x0d1118, roughness: 0.7, metalness: 0.5, flatShading: true
+});
+
+// ─── Build World Geometry ────────────────────────────────────────────────
+const floorGeoUnit = new THREE.PlaneGeometry(TILE, TILE);
+floorGeoUnit.rotateX(-Math.PI / 2);
+
+const roomFloorParts = [];
+const corrFloorParts = [];
+const wallPositions = [];
+const wallScales = [];
+const alloyPositions = [];
+const rngWall = seededRng(SEED + '_wall_heights');
+
+for (let z = 0; z < MAP_H; z++) {
+    for (let x = 0; x < MAP_W; x++) {
+        const type = grid[z][x];
+        const wx = x * TILE + TILE / 2;
+        const wz = z * TILE + TILE / 2;
+
+        if (type === T_ROOM || type === T_CORRIDOR) {
+            const geo = floorGeoUnit.clone();
+            geo.translate(wx, 0.01, wz);
+            if (type === T_ROOM) roomFloorParts.push(geo);
+            else corrFloorParts.push(geo);
+        } else {
+            const h = 2 + rngWall() * 3.5;
+            wallPositions.push(new THREE.Vector3(wx, h / 2, wz));
+            wallScales.push(new THREE.Vector3(TILE, h, TILE));
+            if (type === T_ALLOY) {
+                alloyPositions.push(new THREE.Vector3(wx, h / 2, wz));
+            }
+        }
+    }
+}
+
+// Merge floor geometry
+function mergeSimpleGeometries(geos) {
+    if (geos.length === 0) return null;
+    const positions = [];
+    const normals = [];
+    const uvs = [];
+    for (const g of geos) {
+        const p = g.attributes.position.array;
+        const n = g.attributes.normal.array;
+        const u = g.attributes.uv.array;
+        for (let i = 0; i < p.length; i++) positions.push(p[i]);
+        for (let i = 0; i < n.length; i++) normals.push(n[i]);
+        for (let i = 0; i < u.length; i++) uvs.push(u[i]);
+    }
+    const merged = new THREE.BufferGeometry();
+    merged.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    merged.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+    merged.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    return merged;
+}
+
+if (roomFloorParts.length > 0) {
+    const mesh = new THREE.Mesh(mergeSimpleGeometries(roomFloorParts), matRoom);
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+}
+if (corrFloorParts.length > 0) {
+    const mesh = new THREE.Mesh(mergeSimpleGeometries(corrFloorParts), matCorridor);
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+}
+
+// Instanced walls
+const wallBoxGeo = new THREE.BoxGeometry(1, 1, 1);
+const wallCount = wallPositions.length;
+const wallInstanced = new THREE.InstancedMesh(wallBoxGeo, matWall, wallCount);
+wallInstanced.castShadow = true;
+wallInstanced.receiveShadow = true;
+
+const dummy = new THREE.Object3D();
+for (let i = 0; i < wallCount; i++) {
+    dummy.position.copy(wallPositions[i]);
+    dummy.scale.copy(wallScales[i]);
+    dummy.updateMatrix();
+    wallInstanced.setMatrixAt(i, dummy.matrix);
+}
+wallInstanced.instanceMatrix.needsUpdate = true;
+scene.add(wallInstanced);
+
+// Color alloy walls cyan on the instanced mesh
+const alloySet = new Set();
+for (const ap of alloyPositions) {
+    alloySet.add(Math.round(ap.x * 1000) + ',' + Math.round(ap.z * 1000));
+}
+const alloyColor = new THREE.Color(0x00cccc);
+const defaultColor = new THREE.Color(0x161e2a);
+for (let i = 0; i < wallCount; i++) {
+    const key = Math.round(wallPositions[i].x * 1000) + ',' + Math.round(wallPositions[i].z * 1000);
+    wallInstanced.setColorAt(i, alloySet.has(key) ? alloyColor : defaultColor);
+}
+if (wallInstanced.instanceColor) wallInstanced.instanceColor.needsUpdate = true;
+
+// Roof greebles
+const rngRoof = seededRng(SEED + '_roofs');
+const roofPositions = [];
+const roofScales = [];
+for (let i = 0; i < wallCount; i++) {
+    if (rngRoof() > 0.45) continue;
+    const wp = wallPositions[i];
+    const ws = wallScales[i];
+    const topY = wp.y + ws.y / 2;
+    const rw = TILE * (0.3 + rngRoof() * 0.4);
+    const rh = 0.3 + rngRoof() * 0.8;
+    const rd = TILE * (0.3 + rngRoof() * 0.4);
+    roofPositions.push(new THREE.Vector3(wp.x, topY + rh / 2, wp.z));
+    roofScales.push(new THREE.Vector3(rw, rh, rd));
+}
+if (roofPositions.length > 0) {
+    const roofInstanced = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), matRoof, roofPositions.length);
+    roofInstanced.castShadow = true;
+    for (let i = 0; i < roofPositions.length; i++) {
+        dummy.position.copy(roofPositions[i]);
+        dummy.scale.copy(roofScales[i]);
+        dummy.updateMatrix();
+        roofInstanced.setMatrixAt(i, dummy.matrix);
+    }
+    roofInstanced.instanceMatrix.needsUpdate = true;
+    scene.add(roofInstanced);
+}
+
+// Alloy point lights (sparse)
+const rngAlloy = seededRng(SEED + '_alloy_lights');
+for (const ap of alloyPositions) {
+    if (rngAlloy() < 0.85) continue;
+    const light = new THREE.PointLight(0x00ffff, 0.6, 12, 2);
+    light.position.set(ap.x, ap.y + 2, ap.z);
+    scene.add(light);
+}
+
+// Base floor
+const baseFloorGeo = new THREE.PlaneGeometry(MAP_W * TILE + 40, MAP_H * TILE + 40);
+baseFloorGeo.rotateX(-Math.PI / 2);
+const baseFloor = new THREE.Mesh(baseFloorGeo, new THREE.MeshStandardMaterial({
+    color: 0x050810, roughness: 0.95
+}));
+baseFloor.position.set(mapCenter.x, -0.5, mapCenter.z);
+baseFloor.receiveShadow = true;
+scene.add(baseFloor);
+
+// ─── GLB Loading ─────────────────────────────────────────────────────────
+const gltfLoader = new GLTFLoader();
+const loadedModels = {};
+let modelsToLoad = 0;
+let modelsLoaded = 0;
+
+const MODEL_MANIFEST = {
+    antenna:       '/assets/models/infrastructure/Antenna_1.glb',
+    motor_pool:    '/assets/models/buildings/Machine_building_plant.glb',
+    synthesizer:   '/assets/models/infrastructure/machine_generatorLarge.glb',
+    reactor:       '/assets/models/buildings/Reactor.glb',
+    drone_center:  '/assets/models/buildings/Drone_control_center.glb',
+    scout:         '/assets/models/robots/factions/ReconBot.glb',
+    infantry:      '/assets/models/robots/factions/FieldFighter.glb',
+    cavalry:       '/assets/models/robots/factions/Arachnoid.glb',
+    chest:         '/assets/models/city/Props_Chest.glb',
+    crate:         '/assets/models/city/Props_Crate.glb',
+    container:     '/assets/models/city/Props_ContainerFull.glb',
+    computer:      '/assets/models/city/Props_Computer.glb',
+};
+
+const loadingBar = document.getElementById('loading-bar-inner');
+const loadingTextEl = document.getElementById('loading-text');
+
+function updateLoadingProgress() {
+    modelsLoaded++;
+    const pct = Math.round((modelsLoaded / modelsToLoad) * 100);
+    loadingBar.style.width = pct + '%';
+    loadingTextEl.textContent = 'Loading models... ' + modelsLoaded + '/' + modelsToLoad;
+    if (modelsLoaded >= modelsToLoad) {
+        setTimeout(function() {
+            placeEntities();
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }, 300);
+    }
+}
+
+function loadModels() {
+    const entries = Object.entries(MODEL_MANIFEST);
+    modelsToLoad = entries.length;
+
+    for (const [key, url] of entries) {
+        gltfLoader.load(
+            url,
+            function(gltf) {
+                const model = gltf.scene;
+                const box = new THREE.Box3().setFromObject(model);
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                loadedModels[key] = { scene: model, size: size, box: box };
+                updateLoadingProgress();
+            },
+            undefined,
+            function(err) {
+                console.warn('Failed to load ' + key + ': ' + url, err);
+                updateLoadingProgress();
+            }
+        );
+    }
+}
+
+// ─── Entity Placement ────────────────────────────────────────────────────
+const interactableMeshes = [];
+const uiMarkers = [];
+
+function cloneAndScale(key, targetHeight) {
+    const data = loadedModels[key];
+    if (!data) return null;
+    const clone = data.scene.clone(true);
+    const scale = targetHeight / Math.max(data.size.y, 0.01);
+    clone.scale.setScalar(scale);
+    clone.traverse(function(c) {
+        if (c.isMesh) {
+            c.castShadow = true;
+            c.receiveShadow = true;
+        }
+    });
+    return clone;
+}
+
+function roomCenter(room) {
+    return new THREE.Vector3(
+        (room.x + room.w / 2) * TILE,
+        0,
+        (room.z + room.h / 2) * TILE
+    );
+}
+
+function placeEntities() {
+    const rngPlace = seededRng(SEED + '_placement');
+
+    const factionRooms = rooms.filter(function(r) { return r.kind === 'faction_start'; });
+    const cultRooms = rooms.filter(function(r) { return r.kind === 'cult_poi'; });
+    const scatterRooms = rooms.filter(function(r) { return r.kind === 'scatter'; });
+
+    const buildingDefs = [
+        { key: 'antenna', name: 'STORM TRANSMITTER', tier: 'T3', height: 4.0 },
+        { key: 'motor_pool', name: 'MOTOR POOL', tier: 'T2', height: 3.0 },
+        { key: 'synthesizer', name: 'SYNTHESIZER', tier: 'T1', height: 3.5 },
+        { key: 'reactor', name: 'REACTOR', tier: 'T4', height: 3.5 },
+        { key: 'drone_center', name: 'DRONE HQ', tier: 'T2', height: 3.0 },
+    ];
+
+    const unitDefs = [
+        { key: 'scout', name: 'RECON-7', height: 1.5 },
+        { key: 'infantry', name: 'FIELD-FIGHTER', height: 1.8 },
+        { key: 'cavalry', name: 'ARACHNOID-X', height: 2.0 },
+    ];
+
+    const propDefs = ['chest', 'crate', 'container', 'computer'];
+
+    // Place buildings in faction rooms
+    for (let i = 0; i < factionRooms.length; i++) {
+        const room = factionRooms[i];
+        const bdef = buildingDefs[i % buildingDefs.length];
+        const center = roomCenter(room);
+
+        const model = cloneAndScale(bdef.key, bdef.height);
+        if (model) {
+            model.position.copy(center);
+            model.rotation.y = rngPlace() * Math.PI * 2;
+            scene.add(model);
+
+            // Click box
+            const clickBox = new THREE.Mesh(
+                new THREE.BoxGeometry(3, 4, 3),
+                new THREE.MeshBasicMaterial({ visible: false })
+            );
+            clickBox.position.copy(center);
+            clickBox.position.y = 2;
+            clickBox.userData = { type: 'building', name: bdef.name, pos: center };
+            scene.add(clickBox);
+            interactableMeshes.push(clickBox);
+
+            // Label
+            const prodText = bdef.key === 'antenna' ? '> Transmitting' : '> Online';
+            const hp = room.tag === 'player' ? 100 : 60 + Math.floor(rngPlace() * 40);
+            createFloatingLabel(bdef.name, bdef.tier, center, 'base', prodText, hp);
+
+            // Cyan point light for player base
+            if (room.tag === 'player') {
+                const pLight = new THREE.PointLight(0x00ffff, 1.2, 18, 2);
+                pLight.position.set(center.x, 4, center.z);
+                scene.add(pLight);
+            }
+        }
+
+        // Unit near building
+        const udef = unitDefs[i % unitDefs.length];
+        const unitModel = cloneAndScale(udef.key, udef.height);
+        if (unitModel) {
+            const offset = new THREE.Vector3(
+                (rngPlace() - 0.5) * room.w * TILE * 0.6,
+                0,
+                (rngPlace() - 0.5) * room.h * TILE * 0.6
+            );
+            const unitPos = center.clone().add(offset);
+            unitModel.position.copy(unitPos);
+            unitModel.rotation.y = rngPlace() * Math.PI * 2;
+            scene.add(unitModel);
+
+            const uClickBox = new THREE.Mesh(
+                new THREE.BoxGeometry(2, 3, 2),
+                new THREE.MeshBasicMaterial({ visible: false })
+            );
+            uClickBox.position.copy(unitPos);
+            uClickBox.position.y = 1;
+            uClickBox.userData = { type: 'unit', name: udef.name, pos: unitPos };
+            scene.add(uClickBox);
+            interactableMeshes.push(uClickBox);
+
+            const lvl = 'LV' + (1 + Math.floor(rngPlace() * 5));
+            const uhp = 40 + Math.floor(rngPlace() * 60);
+            createFloatingLabel(udef.name, lvl, unitPos, 'unit', null, uhp);
+        }
+    }
+
+    // Cult POI rooms — magenta lighting
+    for (const room of cultRooms) {
+        const center = roomCenter(room);
+        const pLight = new THREE.PointLight(0xff00ff, 1.0, 16, 2);
+        pLight.position.set(center.x, 3, center.z);
+        scene.add(pLight);
+
+        const model = cloneAndScale('drone_center', 2.5);
+        if (model) {
+            model.position.copy(center);
+            model.rotation.y = rngPlace() * Math.PI * 2;
+            model.traverse(function(c) {
+                if (c.isMesh && c.material) {
+                    c.material = c.material.clone();
+                    c.material.emissive = new THREE.Color(0x330022);
+                    c.material.emissiveIntensity = 0.5;
+                }
+            });
+            scene.add(model);
+        }
+
+        const cultName = room.tag.toUpperCase().replace(/_/g, ' ');
+        createFloatingLabel(cultName, 'CULT', center, 'base', '> Hostile', 100);
+    }
+
+    // Scatter rooms — salvage props
+    for (const room of scatterRooms) {
+        if (rngPlace() < 0.4) continue;
+        const propKey = propDefs[Math.floor(rngPlace() * propDefs.length)];
+        const count = 1 + Math.floor(rngPlace() * 3);
+        for (let j = 0; j < count; j++) {
+            const model = cloneAndScale(propKey, 0.8 + rngPlace() * 0.6);
+            if (model) {
+                const px = (room.x + 0.5 + rngPlace() * (room.w - 1)) * TILE;
+                const pz = (room.z + 0.5 + rngPlace() * (room.h - 1)) * TILE;
+                model.position.set(px, 0, pz);
+                model.rotation.y = rngPlace() * Math.PI * 2;
+                scene.add(model);
+            }
+        }
+    }
+
+    // Sparse corridor salvage
+    for (let z = 0; z < MAP_H; z++) {
+        for (let x = 0; x < MAP_W; x++) {
+            if (grid[z][x] === T_CORRIDOR && rngPlace() < 0.02) {
+                const propKey = propDefs[Math.floor(rngPlace() * propDefs.length)];
+                const model = cloneAndScale(propKey, 0.5 + rngPlace() * 0.5);
+                if (model) {
+                    model.position.set(x * TILE + TILE / 2, 0, z * TILE + TILE / 2);
+                    model.rotation.y = rngPlace() * Math.PI * 2;
+                    scene.add(model);
+                }
+            }
+        }
+    }
+}
+
+// ─── Selection Ring ──────────────────────────────────────────────────────
+const ringGeo = new THREE.RingGeometry(1.2, 1.5, 48);
+ringGeo.rotateX(-Math.PI / 2);
+const ringMat = new THREE.MeshBasicMaterial({
+    color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.8
+});
+const selectionRing = new THREE.Mesh(ringGeo, ringMat);
+selectionRing.position.y = 0.08;
+selectionRing.visible = false;
+scene.add(selectionRing);
+
+const innerRingGeo = new THREE.RingGeometry(0.9, 1.0, 48);
+innerRingGeo.rotateX(-Math.PI / 2);
+const innerRingMat = new THREE.MeshBasicMaterial({
+    color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.4
+});
+const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
+innerRing.position.y = 0.08;
+innerRing.visible = false;
+scene.add(innerRing);
+
+function selectAt(pos) {
+    selectionRing.position.set(pos.x, 0.08, pos.z);
+    selectionRing.visible = true;
+    selectionRing.scale.set(0.1, 0.1, 0.1);
+    innerRing.position.set(pos.x, 0.08, pos.z);
+    innerRing.visible = true;
+}
+
+// ─── Floating Label Factory (DOM-safe, no innerHTML) ─────────────────────
+function createFloatingLabel(name, tier, worldPos, kind, production, health) {
+    const container = document.getElementById('markers-container');
+    const el = document.createElement('div');
+    el.className = kind === 'unit' ? 'floating-label unit-label interactive' : 'floating-label interactive';
+
+    // Build label via DOM API (no innerHTML)
+    const row = document.createElement('div');
+    row.className = 'label-row';
+    const badge = document.createElement('span');
+    badge.className = 'tier-badge';
+    badge.textContent = tier;
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = name;
+    row.appendChild(badge);
+    row.appendChild(nameSpan);
+    el.appendChild(row);
+
+    const hpBar = document.createElement('div');
+    hpBar.className = 'health-bar';
+    const hpFill = document.createElement('div');
+    hpFill.className = 'health-fill';
+    hpFill.style.width = health + '%';
+    hpFill.style.background = kind === 'unit' ? 'var(--ui-magenta)' : 'var(--ui-cyan)';
+    hpBar.appendChild(hpFill);
+    el.appendChild(hpBar);
+
+    if (production) {
+        const prod = document.createElement('div');
+        prod.className = 'prod-indicator';
+        prod.textContent = production;
+        el.appendChild(prod);
+    }
+
+    el.addEventListener('pointerdown', function(e) {
+        e.stopPropagation();
+        selectAt(worldPos);
+    });
+
+    container.appendChild(el);
+    const labelYOffset = kind === 'unit' ? 3.0 : 5.0;
+    uiMarkers.push({
+        element: el,
+        worldPos: worldPos.clone().add(new THREE.Vector3(0, labelYOffset, 0))
+    });
+}
+
+// ─── Camera Controls ─────────────────────────────────────────────────────
+const cameraTarget = mapCenter.clone();
+const cameraOffset = new THREE.Vector3().subVectors(camera.position, cameraTarget);
+let zoomLevel = 1.0;
+
+const input = {
+    isDragging: false,
+    hasDragged: false,
+    prevX: 0, prevY: 0,
+    velX: 0, velY: 0
+};
+
+canvas.addEventListener('pointerdown', function(e) {
+    input.isDragging = true;
+    input.hasDragged = false;
+    input.prevX = e.clientX;
+    input.prevY = e.clientY;
+    input.velX = 0;
+    input.velY = 0;
+});
+
+canvas.addEventListener('pointermove', function(e) {
+    if (!input.isDragging) return;
+    const dx = e.clientX - input.prevX;
+    const dy = e.clientY - input.prevY;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) input.hasDragged = true;
+
+    const panSpeed = 0.08 * zoomLevel;
+    cameraTarget.x -= dx * panSpeed;
+    cameraTarget.z -= dy * panSpeed;
+
+    input.velX = dx;
+    input.velY = dy;
+    input.prevX = e.clientX;
+    input.prevY = e.clientY;
+});
+
+function onPointerUp(e) {
+    input.isDragging = false;
+    if (!input.hasDragged && e.type === 'pointerup') {
+        handleClick(e.clientX, e.clientY);
+    }
+}
+canvas.addEventListener('pointerup', onPointerUp);
+canvas.addEventListener('pointerleave', onPointerUp);
+
+canvas.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    zoomLevel = THREE.MathUtils.clamp(zoomLevel + e.deltaY * 0.001, 0.3, 2.5);
+}, { passive: false });
+
+// Advisor dialog dismiss
+document.getElementById('advisor-dialog').addEventListener('click', function() {
+    this.style.display = 'none';
+});
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+function handleClick(cx, cy) {
+    mouse.x = (cx / window.innerWidth) * 2 - 1;
+    mouse.y = -(cy / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(interactableMeshes);
+    if (hits.length > 0) {
+        const data = hits[0].object.userData;
+        selectAt(data.pos || hits[0].object.position);
+    } else {
+        selectionRing.visible = false;
+        innerRing.visible = false;
+    }
+}
+
+window.addEventListener('resize', function() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ─── Render Loop ─────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+const tempV = new THREE.Vector3();
+
+function animate() {
+    requestAnimationFrame(animate);
+    const elapsed = clock.getElapsedTime();
+
+    // Momentum panning
+    if (!input.isDragging && (Math.abs(input.velX) > 0.1 || Math.abs(input.velY) > 0.1)) {
+        const panSpeed = 0.06 * zoomLevel;
+        cameraTarget.x -= input.velX * panSpeed;
+        cameraTarget.z -= input.velY * panSpeed;
+        input.velX *= 0.88;
+        input.velY *= 0.88;
+    }
+
+    // Clamp target
+    cameraTarget.x = THREE.MathUtils.clamp(cameraTarget.x, -10, MAP_W * TILE + 10);
+    cameraTarget.z = THREE.MathUtils.clamp(cameraTarget.z, -10, MAP_H * TILE + 10);
+
+    // Update camera
+    const targetCamPos = cameraTarget.clone().add(
+        cameraOffset.clone().multiplyScalar(zoomLevel)
+    );
+    camera.position.lerp(targetCamPos, 0.12);
+    camera.lookAt(cameraTarget);
+
+    // Selection ring animation
+    if (selectionRing.visible) {
+        selectionRing.rotation.z = elapsed * 0.8;
+        selectionRing.scale.lerp(new THREE.Vector3(1, 1, 1), 0.15);
+        innerRing.rotation.z = -elapsed * 1.2;
+        innerRingMat.opacity = 0.2 + 0.2 * Math.sin(elapsed * 4);
+    }
+
+    renderer.render(scene, camera);
+    updateUIMarkers();
+}
+
+function updateUIMarkers() {
+    const hw = window.innerWidth / 2;
+    const hh = window.innerHeight / 2;
+
+    for (const marker of uiMarkers) {
+        tempV.copy(marker.worldPos);
+        tempV.project(camera);
+
+        if (tempV.z > 1) {
+            marker.element.style.opacity = '0';
+            marker.element.style.pointerEvents = 'none';
+            continue;
+        }
+
+        const x = (tempV.x * hw) + hw;
+        const y = -(tempV.y * hh) + hh;
+
+        const dist = camera.position.distanceTo(marker.worldPos);
+        const fade = THREE.MathUtils.clamp(1.0 - (dist - 30) / 70, 0, 1);
+
+        marker.element.style.opacity = String(fade.toFixed(2));
+        marker.element.style.pointerEvents = fade > 0.3 ? 'auto' : 'none';
+        marker.element.style.transform = 'translate(-50%, -100%) translate(' + x + 'px, ' + y + 'px)';
+    }
+}
+
+// ─── Go ──────────────────────────────────────────────────────────────────
+loadModels();
+animate();
+
+</script>
+</body>
+</html>

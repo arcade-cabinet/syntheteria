@@ -6,6 +6,9 @@
  *
  * Events are organized by turn number. At the end of each turn,
  * the current turn's events are finalized and a new accumulator starts.
+ *
+ * Ported from pending/systems/turnEventLog.ts — zero external deps.
+ * Replaces the simpler pushTurnEvent string system in ui/game/turnEvents.ts.
  */
 
 // ─── Types ───────────────────────────────────────────────────────────────────

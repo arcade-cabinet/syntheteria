@@ -14,10 +14,12 @@
  * @exports getRadialMenuState / getResolvedActionsForCategory - State access
  * @exports hitTestRadial / getRadialGeometry - Hit testing and ring dimensions
  *
- * @dependencies config/radialMenu.json
- * @consumers RadialMenu.tsx, UnitInput, keyboardShortcuts, radialProviders
+ * @consumers RadialMenu.tsx, BoardInput, radial/
  */
-import radialConfig from "../config/radialMenu.json";
+
+const radialConfig = {
+	appearance: { innerRadius: 40, outerRadius: 90, gapAngle: 4 },
+} as const;
 
 // --- Types ---
 
@@ -184,7 +186,7 @@ function computeOuterPetalAngles(
 	const midAngle = (innerPetal.startAngle + innerPetal.endAngle) / 2;
 	const totalGap = gapAngle * count;
 
-	// Outer ring arc: proportional to count, max 180°
+	// Outer ring arc: proportional to count, max 180deg
 	const maxArc = Math.min(180, count * 45);
 	const availableArc = maxArc - totalGap;
 	const petalArc = availableArc / count;
@@ -489,4 +491,12 @@ export function getRadialGeometry() {
 		outerRingInner: outerRadius + 8,
 		outerRingOuter: outerRadius + 8 + (outerRadius - innerRadius),
 	};
+}
+
+/**
+ * Reset all state and clear providers. For test cleanup.
+ */
+export function _reset() {
+	resetRadialMenu();
+	providers.length = 0;
 }

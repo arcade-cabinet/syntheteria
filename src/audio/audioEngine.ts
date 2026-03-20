@@ -4,18 +4,20 @@
  * Provides master, SFX, music, and ambient volume channels.
  * All audio in the game routes through these channels.
  *
- * Must call initAudio() once on first user interaction (click/tap)
- * to satisfy browser autoplay policies.
+ * Tone.js is LAZY-IMPORTED on first initAudio() call to avoid
+ * creating an AudioContext before any user gesture (browser policy).
  */
 
-import * as Tone from "tone";
+// import type is compile-time only — no AudioContext created at module load
+import type { Gain } from "tone";
 
-// ─── Volume Channels ─────────────────────────────────────────────────────────
+// Runtime module ref — populated by dynamic import in initAudio()
+let Tone: typeof import("tone") | null = null;
 
-let masterGain: Tone.Gain | null = null;
-let sfxGain: Tone.Gain | null = null;
-let musicGain: Tone.Gain | null = null;
-let ambientGain: Tone.Gain | null = null;
+let masterGain: Gain | null = null;
+let sfxGain: Gain | null = null;
+let musicGain: Gain | null = null;
+let ambientGain: Gain | null = null;
 
 let initialized = false;
 
@@ -29,12 +31,15 @@ let ambientVolume = 0.6;
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 /**
- * Initialize the audio engine. Call once on first user gesture.
+ * Initialize the audio engine. Call once on first user gesture (click/tap).
+ * Lazy-imports Tone.js so no AudioContext is created until the user interacts.
  * Idempotent — safe to call multiple times.
  */
 export async function initAudio(): Promise<void> {
 	if (initialized) return;
 
+	// Dynamic import — Tone.js AudioContext only created here, after user gesture
+	Tone = await import("tone");
 	await Tone.start();
 
 	masterGain = new Tone.Gain(masterVolume).toDestination();
@@ -55,21 +60,21 @@ export function isAudioInitialized(): boolean {
 /**
  * Get the SFX output node. All SFX synths connect here.
  */
-export function getSfxOutput(): Tone.Gain | null {
+export function getSfxOutput(): Gain | null {
 	return sfxGain;
 }
 
 /**
  * Get the music output node. Adaptive music connects here.
  */
-export function getMusicOutput(): Tone.Gain | null {
+export function getMusicOutput(): Gain | null {
 	return musicGain;
 }
 
 /**
  * Get the ambient output node. Ambient soundscape connects here.
  */
-export function getAmbientOutput(): Tone.Gain | null {
+export function getAmbientOutput(): Gain | null {
 	return ambientGain;
 }
 
@@ -114,6 +119,11 @@ export function getAmbientVolumeLevel(): number {
  * Dispose all audio nodes. Call on game exit.
  */
 export function disposeAudio() {
+	// Dispose sfx pools first (they reference sfxGain)
+	import("./sfx").then((m) => m.disposeSfxPools()).catch(() => {});
+	// Stop ambience (references ambientGain)
+	import("./ambience").then((m) => m.stopAmbience()).catch(() => {});
+
 	masterGain?.dispose();
 	sfxGain?.dispose();
 	musicGain?.dispose();

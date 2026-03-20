@@ -1,424 +1,145 @@
-/**
- * @module harvestSystem
- *
- * Core Exploit mechanic: Fabricator bots harvest ecumenopolis structures for materials.
- * Manages the full harvest lifecycle from start through tick-down to yield deposit and
- * structure consumption. The ecumenopolis itself is the resource base.
- *
- * @exports ActiveHarvest - In-progress harvest state
- * @exports startHarvest / cancelHarvest - Harvest lifecycle control
- * @exports getActiveHarvests - Active harvest list for UI progress bars
- * @exports isStructureConsumed / getConsumedStructureIds - Consumed structure tracking for renderers
- * @exports harvestSystem - Per-tick harvest timer and completion logic
- * @exports resetHarvestSystem / rehydrateHarvestState - Reset and save/load support
- *
- * @dependencies ecs/traits, ecs/world, narrative (queueThought), resourcePools,
- *   harvestEvents, resources (addResource)
- * @consumers gameState (harvestSystem tick), radialProviders, PlayerGovernor,
- *   HarvestVisualRenderer, HarvestProgressOverlay, CityRenderer, audioHooks,
- *   saveAllState, persistenceSystem, initialization
- */
-
-import { getDatabaseSync } from "../db/runtime";
-import type { Entity } from "../ecs/traits";
+import type { World } from "koota";
+import { playSfx } from "../audio/sfx";
+import type { RobotClass } from "../robots/types";
+import type { ResourceMaterial } from "../terrain/types";
 import {
-	HarvestOp as HarvestOpTrait,
-	Identity,
-	WorldPosition,
-} from "../ecs/traits";
-import { harvestOps, units, world } from "../ecs/world";
-import { writeTileDelta } from "../world/gen/persist";
-import { CHUNK_SIZE, tileKey3D } from "../world/gen/types";
-import { invalidateChunk } from "../world/gen/worldGrid";
-import { getActiveWorldSession } from "../world/session";
-import { expireHarvestEvents, pushHarvestYield } from "./harvestEvents";
-import { queueThought } from "./narrative";
-import {
-	getResourcePoolForFloorMaterial,
-	getResourcePoolForModel,
-	type HarvestResource,
-	isFloorHarvestable,
-	isHarvestable,
-	rollHarvestYield,
-} from "./resourcePools";
-import { addResource, type ResourcePool } from "./resources";
-import { getTurnState } from "./turnSystem";
+	ResourceDeposit,
+	UnitFaction,
+	UnitHarvest,
+	UnitStats,
+	UnitVisual,
+	UnitXP,
+} from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
+import { awardXP, recordHarvest } from "./experienceSystem";
+import { trackIncome } from "./resourceDeltaSystem";
+import { addResources } from "./resourceSystem";
+import { triggerHarvestSpeech } from "./speechTriggers";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+/** Process one tick of all active harvest operations. */
+export function harvestSystem(world: World): void {
+	for (const unit of world.query(UnitHarvest, UnitFaction)) {
+		const harvest = unit.get(UnitHarvest);
+		if (!harvest) continue;
 
-export interface ActiveHarvest {
-	/** Entity ID of the harvesting bot */
-	harvesterId: string;
-	/** Structure snapshot ID (omit for floor harvest) */
-	structureId?: number;
-	/** Model ID for resource pool lookup (omit for floor harvest) */
-	modelId?: string;
-	/** Model family for resource pool lookup (omit for floor harvest) */
-	modelFamily?: string;
-	/** True when harvesting a floor tile (strip-mining) */
-	isFloorHarvest?: boolean;
-	/** Floor material ID (for floor harvest) */
-	floorMaterial?: string;
-	/** Elevation level (for floor harvest) */
-	level?: number;
-	/** Ticks remaining */
-	ticksRemaining: number;
-	/** Total ticks for this harvest */
-	totalTicks: number;
-	/** World position of the target */
-	targetX: number;
-	targetZ: number;
-}
+		const remaining = harvest.ticksRemaining - 1;
 
-// ─── State ───────────────────────────────────────────────────────────────────
-
-const activeHarvests: ActiveHarvest[] = [];
-const consumedStructureIds = new Set<number>();
-const consumedFloorTiles = new Set<string>();
-
-// W2: Koota entity index — keyed by harvesterId
-const _harvestOpIndex = new Map<string, Entity>();
-
-// ─── W2: Koota entity helpers ─────────────────────────────────────────────────
-
-function spawnHarvestOpEntity(
-	harvesterId: string,
-	structureId: number,
-	ticksRemaining: number,
-	harvestType: "structure" | "floor",
-): void {
-	// Destroy any existing entity for this harvester
-	const existing = _harvestOpIndex.get(harvesterId);
-	if (existing?.isAlive()) existing.destroy();
-
-	const entity = world.spawn(HarvestOpTrait);
-	entity.set(HarvestOpTrait, {
-		harvesterId,
-		structureId,
-		ticksRemaining,
-		harvestType,
-	});
-	_harvestOpIndex.set(harvesterId, entity);
-}
-
-function destroyHarvestOpEntity(harvesterId: string): void {
-	const entity = _harvestOpIndex.get(harvesterId);
-	if (entity?.isAlive()) entity.destroy();
-	_harvestOpIndex.delete(harvesterId);
-}
-
-function updateHarvestOpTicks(
-	harvesterId: string,
-	ticksRemaining: number,
-): void {
-	const entity = _harvestOpIndex.get(harvesterId);
-	if (!entity?.isAlive()) return;
-	const cur = entity.get(HarvestOpTrait);
-	if (!cur) return;
-	entity.set(HarvestOpTrait, { ...cur, ticksRemaining });
-}
-
-// ─── Public API ──────────────────────────────────────────────────────────────
-
-/**
- * Start a harvest operation. Called from the radial menu action.
- */
-export function startHarvest(
-	harvesterId: string,
-	structureId: number,
-	modelId: string,
-	modelFamily: string,
-	targetX: number,
-	targetZ: number,
-): boolean {
-	// Don't double-harvest
-	if (consumedStructureIds.has(structureId)) return false;
-	if (activeHarvests.some((h) => h.structureId === structureId)) return false;
-
-	// Check the harvester isn't already busy
-	if (activeHarvests.some((h) => h.harvesterId === harvesterId)) return false;
-
-	if (!isHarvestable(modelFamily)) return false;
-
-	const pool = getResourcePoolForModel(modelFamily, modelId);
-	const totalTicks = pool.harvestDuration;
-
-	activeHarvests.push({
-		harvesterId,
-		structureId,
-		modelId,
-		modelFamily,
-		ticksRemaining: totalTicks,
-		totalTicks,
-		targetX,
-		targetZ,
-	});
-
-	spawnHarvestOpEntity(harvesterId, structureId, totalTicks, "structure");
-
-	queueThought("harvest_instinct");
-	return true;
-}
-
-/**
- * Start a floor harvest (strip-mining). Fabricator harvests floor tile → pit.
- */
-export function startFloorHarvest(
-	harvesterId: string,
-	tileX: number,
-	tileZ: number,
-	level: number,
-	floorMaterial: string,
-): boolean {
-	const key = tileKey3D(tileX, tileZ, level);
-	if (consumedFloorTiles.has(key)) return false;
-	if (
-		activeHarvests.some(
-			(h) =>
-				h.isFloorHarvest &&
-				h.targetX === tileX &&
-				h.targetZ === tileZ &&
-				h.level === level,
-		)
-	)
-		return false;
-	if (activeHarvests.some((h) => h.harvesterId === harvesterId)) return false;
-
-	if (!isFloorHarvestable(floorMaterial)) return false;
-
-	const pool = getResourcePoolForFloorMaterial(floorMaterial);
-	const totalTicks = pool.harvestDuration;
-
-	activeHarvests.push({
-		harvesterId,
-		isFloorHarvest: true,
-		floorMaterial,
-		level,
-		ticksRemaining: totalTicks,
-		totalTicks,
-		targetX: tileX,
-		targetZ: tileZ,
-	});
-
-	spawnHarvestOpEntity(harvesterId, 0, totalTicks, "floor");
-
-	queueThought("harvest_instinct");
-	return true;
-}
-
-/**
- * Cancel a harvest in progress.
- */
-export function cancelHarvest(harvesterId: string) {
-	const index = activeHarvests.findIndex((h) => h.harvesterId === harvesterId);
-	if (index >= 0) {
-		activeHarvests.splice(index, 1);
-	}
-	destroyHarvestOpEntity(harvesterId);
-}
-
-/**
- * Get all active harvests (for UI display).
- */
-export function getActiveHarvests(): readonly ActiveHarvest[] {
-	return activeHarvests;
-}
-
-/**
- * Get harvest position/timing data for a bot by harvesterId.
- * Used by HarvestVisualRenderer to get fields not stored in the Koota entity.
- */
-export function getHarvestExtras(
-	harvesterId: string,
-): ActiveHarvest | undefined {
-	return activeHarvests.find((h) => h.harvesterId === harvesterId);
-}
-
-/**
- * Check if a structure has been consumed by harvesting.
- */
-export function isStructureConsumed(structureId: number): boolean {
-	return consumedStructureIds.has(structureId);
-}
-
-/**
- * Get the set of consumed structure IDs (for renderer filtering).
- */
-export function getConsumedStructureIds(): ReadonlySet<number> {
-	return consumedStructureIds;
-}
-
-/**
- * Check if a floor tile has been consumed by strip-mining.
- */
-export function isFloorTileConsumed(
-	tileX: number,
-	tileZ: number,
-	level: number,
-): boolean {
-	return consumedFloorTiles.has(tileKey3D(tileX, tileZ, level));
-}
-
-/**
- * Get the set of consumed floor tile keys (for renderer/persistence).
- */
-export function getConsumedFloorTiles(): ReadonlySet<string> {
-	return consumedFloorTiles;
-}
-
-/**
- * Reset harvest state — call on new game/load.
- */
-export function resetHarvestSystem() {
-	// Destroy all HarvestOp Koota entities
-	for (const e of Array.from(harvestOps)) {
-		if (e.isAlive()) e.destroy();
-	}
-	_harvestOpIndex.clear();
-	activeHarvests.length = 0;
-	consumedStructureIds.clear();
-	consumedFloorTiles.clear();
-}
-
-/**
- * Rehydrate harvest state from a save — restores consumed IDs and active harvests.
- */
-export function rehydrateHarvestState(
-	consumedIds: number[],
-	harvests: ActiveHarvest[],
-	consumedFloorKeys: string[] = [],
-) {
-	consumedStructureIds.clear();
-	for (const id of consumedIds) {
-		consumedStructureIds.add(id);
-	}
-	consumedFloorTiles.clear();
-	for (const key of consumedFloorKeys) {
-		consumedFloorTiles.add(key);
-	}
-	activeHarvests.length = 0;
-	for (const h of harvests) {
-		activeHarvests.push(h);
-		const harvestType = h.isFloorHarvest ? "floor" : ("structure" as const);
-		spawnHarvestOpEntity(
-			h.harvesterId,
-			h.structureId ?? 0,
-			h.ticksRemaining,
-			harvestType,
-		);
-	}
-}
-
-// ─── Harvest Resource → ResourcePool Key Mapping ─────────────────────────────
-
-const HARVEST_TO_POOL_KEY: Record<HarvestResource, keyof ResourcePool> = {
-	heavy_metals: "ferrousScrap",
-	light_metals: "alloyStock",
-	uranics: "electrolyte",
-	plastics: "polymerSalvage",
-	oil: "electrolyte",
-	microchips: "siliconWafer",
-	scrap: "scrapMetal",
-	rare_components: "elCrystal",
-};
-
-// ─── Tick System ─────────────────────────────────────────────────────────────
-
-/**
- * Harvest tick — called once per simulation frame.
- * Advances all active harvests, completes when timer reaches 0.
- * @param tick - Current simulation tick (used for harvest yield event timestamps)
- */
-export function harvestSystem(tick?: number) {
-	const currentTick = tick ?? 0;
-
-	// Expire old yield notifications
-	expireHarvestEvents(currentTick);
-
-	for (let i = activeHarvests.length - 1; i >= 0; i--) {
-		const harvest = activeHarvests[i];
-
-		// Check harvester is still alive and in range
-		const harvester = Array.from(units).find(
-			(u) => u.get(Identity)?.id === harvest.harvesterId,
-		);
-		if (!harvester) {
-			activeHarvests.splice(i, 1);
-			destroyHarvestOpEntity(harvest.harvesterId);
+		if (remaining > 0) {
+			unit.set(UnitHarvest, { ...harvest, ticksRemaining: remaining });
 			continue;
 		}
 
-		const pos = harvester.get(WorldPosition);
-		if (pos) {
-			const dx = pos.x - harvest.targetX;
-			const dz = pos.z - harvest.targetZ;
-			const dist = Math.sqrt(dx * dx + dz * dz);
-			// Must be within 3 units to harvest
-			if (dist > 3.0) continue; // Paused — too far away
+		// Harvest complete — play SFX and find the deposit to yield resources
+		playSfx("harvest_complete");
+		const faction = unit.get(UnitFaction);
+		if (!faction) {
+			unit.remove(UnitHarvest);
+			continue;
 		}
 
-		harvest.ticksRemaining--;
-		updateHarvestOpTicks(harvest.harvesterId, harvest.ticksRemaining);
+		for (const dep of world.query(ResourceDeposit)) {
+			if (dep.id() !== harvest.depositEntityId) continue;
 
-		if (harvest.ticksRemaining <= 0) {
-			// Harvest complete — roll yield and deposit resources
-			const pool = harvest.isFloorHarvest
-				? getResourcePoolForFloorMaterial(harvest.floorMaterial!)
-				: getResourcePoolForModel(harvest.modelFamily!, harvest.modelId!);
-			const seed = harvest.isFloorHarvest
-				? harvest.targetX * 31 +
-					harvest.targetZ * 17 +
-					(harvest.level ?? 0) * 7 +
-					harvest.totalTicks
-				: harvest.structureId! * 31 +
-					harvest.modelId!.length * 17 +
-					harvest.totalTicks;
-			const yields = rollHarvestYield(pool, seed);
+			const deposit = dep.get(ResourceDeposit);
+			if (!deposit || deposit.depleted) break;
 
-			for (const [resource, amount] of yields) {
-				const poolKey = HARVEST_TO_POOL_KEY[resource];
-				if (poolKey) {
-					addResource(poolKey, amount);
+			// Yield 2-5 units of the deposit's material
+			const yieldAmount = 2 + Math.floor(Math.random() * 4);
+			addResources(
+				world,
+				faction.factionId,
+				deposit.material as ResourceMaterial,
+				yieldAmount,
+			);
+			trackIncome(deposit.material as ResourceMaterial, yieldAmount);
+			pushTurnEvent(
+				`Harvest complete: +${yieldAmount} ${deposit.material.replace(/_/g, " ")}`,
+			);
+
+			// Trigger harvest speech for the unit
+			triggerHarvestSpeech(world, unit.id(), faction.factionId);
+
+			// Award XP and harvest credit to the harvesting unit
+			if (unit.has(UnitXP)) {
+				recordHarvest(world, unit.id());
+				const unitVisual = unit.get(UnitVisual);
+				if (unitVisual?.modelId) {
+					awardXP(
+						world,
+						unit.id(),
+						unitVisual.modelId as RobotClass,
+						"harvest",
+					);
 				}
 			}
 
-			// Push a yield event for UI notification
-			pushHarvestYield(harvest.targetX, harvest.targetZ, yields, currentTick);
-
-			// Mark as consumed
-			if (harvest.isFloorHarvest) {
-				consumedFloorTiles.add(
-					tileKey3D(harvest.targetX, harvest.targetZ, harvest.level ?? 0),
-				);
-				// Persist pit state to SQLite
-				const session = getActiveWorldSession();
-				if (session) {
-					try {
-						const db = getDatabaseSync();
-						const turnNumber = getTurnState().turnNumber;
-						writeTileDelta(db, session.saveGame.id, {
-							tileX: harvest.targetX,
-							tileZ: harvest.targetZ,
-							level: harvest.level ?? 0,
-							changeType: "harvested",
-							newModelId: null,
-							newPassable: true,
-							controllerFaction: null,
-							resourceRemaining: null,
-							turnNumber,
-						});
-						const cx = Math.floor(harvest.targetX / CHUNK_SIZE);
-						const cz = Math.floor(harvest.targetZ / CHUNK_SIZE);
-						invalidateChunk(cx, cz);
-					} catch {
-						// DB may be unavailable (tests, headless)
-					}
-				}
+			// Decrease deposit amount
+			const newAmount = deposit.amount - yieldAmount;
+			if (newAmount <= 0) {
+				dep.set(ResourceDeposit, {
+					...deposit,
+					amount: 0,
+					depleted: true,
+				});
 			} else {
-				consumedStructureIds.add(harvest.structureId!);
+				dep.set(ResourceDeposit, { ...deposit, amount: newAmount });
 			}
-			destroyHarvestOpEntity(harvest.harvesterId);
-			activeHarvests.splice(i, 1);
+			break;
+		}
+
+		unit.remove(UnitHarvest);
+	}
+}
+
+/** Start a harvest operation on a deposit. Returns true on success. */
+export function startHarvest(
+	world: World,
+	unitEntityId: number,
+	depositEntityId: number,
+): boolean {
+	// Find the unit
+	let unitEntity = null;
+	for (const e of world.query(UnitStats, UnitFaction)) {
+		if (e.id() === unitEntityId) {
+			unitEntity = e;
+			break;
 		}
 	}
+	if (!unitEntity) return false;
+
+	// Check unit has AP
+	const stats = unitEntity.get(UnitStats);
+	if (!stats || stats.ap < 1) return false;
+
+	// Check unit not already harvesting
+	if (unitEntity.has(UnitHarvest)) return false;
+
+	// Find the deposit
+	let depositEntity = null;
+	for (const e of world.query(ResourceDeposit)) {
+		if (e.id() === depositEntityId) {
+			depositEntity = e;
+			break;
+		}
+	}
+	if (!depositEntity) return false;
+
+	const deposit = depositEntity.get(ResourceDeposit);
+	if (!deposit || deposit.depleted) return false;
+
+	// Deduct AP
+	unitEntity.set(UnitStats, { ...stats, ap: stats.ap - 1 });
+
+	// Add UnitHarvest trait
+	unitEntity.add(
+		UnitHarvest({
+			depositEntityId,
+			ticksRemaining: 3,
+			totalTicks: 3,
+			targetX: deposit.tileX,
+			targetZ: deposit.tileZ,
+		}),
+	);
+
+	return true;
 }

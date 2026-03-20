@@ -1,0 +1,5087 @@
+{
+	"total": 212,
+	"models": [
+		{
+			"path": "city/Column_1.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.6843,
+				"height": 4.4634,
+				"depth": 0.6843
+			},
+			"bbox_min": [-0.3421, -0.3421, 0.0],
+			"bbox_max": [0.3421, 0.3421, 4.4634],
+			"vertices": 120,
+			"faces": 60,
+			"mesh_count": 1,
+			"mesh_names": ["Column_1"],
+			"materials": ["DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Column_2.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.6843,
+				"height": 4.4634,
+				"depth": 0.6843
+			},
+			"bbox_min": [-0.3421, -0.3421, 0.0],
+			"bbox_max": [0.3421, 0.3421, 4.4634],
+			"vertices": 296,
+			"faces": 188,
+			"mesh_count": 1,
+			"mesh_names": ["Column_2"],
+			"materials": ["DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Column_3.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.3678,
+				"height": 4.4634,
+				"depth": 1.3678
+			},
+			"bbox_min": [-0.6839, -0.6839, 0.0],
+			"bbox_max": [0.6839, 0.6839, 4.4634],
+			"vertices": 1225,
+			"faces": 758,
+			"mesh_count": 1,
+			"mesh_names": ["Column_3"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [1.0, 0.5245, 0.1132],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Column_Slim.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.6286,
+				"height": 4.4597,
+				"depth": 0.693
+			},
+			"bbox_min": [-0.3194, -0.3061, 0.0],
+			"bbox_max": [0.3092, 0.387, 4.4597],
+			"vertices": 388,
+			"faces": 396,
+			"mesh_count": 1,
+			"mesh_names": ["Column_Slim"],
+			"materials": ["DarkGrey", "Main", "Pipes"],
+			"material_colors": {
+				"Pipes": [0.0188, 0.0188, 0.0188],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Arrow.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.3601,
+				"height": 0.336,
+				"depth": 0.0493
+			},
+			"bbox_min": [-0.1801, -0.0247, -0.1854],
+			"bbox_max": [0.1801, 0.0247, 0.1507],
+			"vertices": 76,
+			"faces": 56,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Arrow"],
+			"materials": ["Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Arrow_2.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.3673,
+				"height": 0.2513,
+				"depth": 0.0728
+			},
+			"bbox_min": [-0.184, -0.0206, -0.1603],
+			"bbox_max": [0.1833, 0.0522, 0.0911],
+			"vertices": 76,
+			"faces": 54,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Arrow_2"],
+			"materials": ["Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Basic_1.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.2699,
+				"height": 0.2699,
+				"depth": 0.0503
+			},
+			"bbox_min": [-0.135, -0.0104, -0.135],
+			"bbox_max": [0.135, 0.0399, 0.135],
+			"vertices": 170,
+			"faces": 130,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Basic_1"],
+			"materials": ["DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Basic_2.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.2699,
+				"height": 0.5292,
+				"depth": 0.0517
+			},
+			"bbox_min": [-0.135, -0.023, -0.2646],
+			"bbox_max": [0.135, 0.0287, 0.2646],
+			"vertices": 256,
+			"faces": 212,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Basic_2"],
+			"materials": ["DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Basic_3.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.3099,
+				"height": 0.3099,
+				"depth": 0.0413
+			},
+			"bbox_min": [-0.1549, -0.012, -0.1403],
+			"bbox_max": [0.1549, 0.0292, 0.1696],
+			"vertices": 96,
+			"faces": 56,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Basic_3"],
+			"materials": ["Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Basic_4.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.6795,
+				"height": 0.4605,
+				"depth": 0.068
+			},
+			"bbox_min": [-0.3397, -0.0152, -0.2336],
+			"bbox_max": [0.3397, 0.0528, 0.2269],
+			"vertices": 208,
+			"faces": 140,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Basic_4"],
+			"materials": ["Accent", "DarkAccent"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Accent": [0.5596, 0.2977, 0.0668]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Cylinder.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.4302,
+				"height": 0.3827,
+				"depth": 0.1909
+			},
+			"bbox_min": [-0.2151, -0.1914, -0.1914],
+			"bbox_max": [0.2151, -0.0005, 0.1914],
+			"vertices": 472,
+			"faces": 374,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Cylinder"],
+			"materials": ["Accent", "DarkAccent"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Accent": [0.5596, 0.2977, 0.0668]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Cylinder_Long.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.7893,
+				"height": 0.3827,
+				"depth": 0.1909
+			},
+			"bbox_min": [-0.2151, -0.1914, -0.1914],
+			"bbox_max": [0.5742, -0.0005, 0.1914],
+			"vertices": 472,
+			"faces": 374,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Cylinder_Long"],
+			"materials": ["Accent", "DarkAccent"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Accent": [0.5596, 0.2977, 0.0668]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Dots.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.5513,
+				"height": 0.2231,
+				"depth": 0.0588
+			},
+			"bbox_min": [-0.2756, -0.0294, -0.1115],
+			"bbox_max": [0.2756, 0.0294, 0.1115],
+			"vertices": 392,
+			"faces": 378,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Dots"],
+			"materials": ["Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Hexagon.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.3415,
+				"height": 0.3944,
+				"depth": 0.079
+			},
+			"bbox_min": [-0.1708, -0.0243, -0.1972],
+			"bbox_max": [0.1708, 0.0547, 0.1972],
+			"vertices": 96,
+			"faces": 56,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Hexagon"],
+			"materials": ["Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Output.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.2997,
+				"height": 0.297,
+				"depth": 0.0587
+			},
+			"bbox_min": [-0.1499, -0.0277, -0.1485],
+			"bbox_max": [0.1499, 0.031, 0.1485],
+			"vertices": 392,
+			"faces": 316,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Output"],
+			"materials": ["Accent", "DarkGrey"],
+			"material_colors": {
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Output_Small.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.1584,
+				"height": 0.1584,
+				"depth": 0.0542
+			},
+			"bbox_min": [-0.0792, -0.0255, -0.0792],
+			"bbox_max": [0.0792, 0.0287, 0.0792],
+			"vertices": 196,
+			"faces": 158,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Output_Small"],
+			"materials": ["DarkGrey"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Pipes_Long.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.5143,
+				"height": 1.5846,
+				"depth": 0.0932
+			},
+			"bbox_min": [-0.2572, -0.0932, -0.7923],
+			"bbox_max": [0.2572, 0.0, 0.7923],
+			"vertices": 794,
+			"faces": 498,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Pipes_Long"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Black": [0.042, 0.042, 0.042],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Pipes_Medium.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.5143,
+				"height": 0.7659,
+				"depth": 0.0932
+			},
+			"bbox_min": [-0.2572, -0.0932, -0.383],
+			"bbox_max": [0.2572, 0.0, 0.383],
+			"vertices": 794,
+			"faces": 498,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Pipes_Medium"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Black": [0.042, 0.042, 0.042],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Pipes_Small.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.3504,
+				"height": 0.2462,
+				"depth": 0.1102
+			},
+			"bbox_min": [-0.1536, -0.0541, -0.1231],
+			"bbox_max": [0.1968, 0.0561, 0.1231],
+			"vertices": 500,
+			"faces": 498,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Pipes_Small"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Black": [0.042, 0.042, 0.042],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Plate_Details.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.6199,
+				"height": 0.6199,
+				"depth": 0.0321
+			},
+			"bbox_min": [-0.31, -0.0158, -0.3098],
+			"bbox_max": [0.3099, 0.0163, 0.3102],
+			"vertices": 516,
+			"faces": 368,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Plate_Details"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Plate_Large.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.0521,
+				"height": 1.0757,
+				"depth": 0.0287
+			},
+			"bbox_min": [-0.5261, -0.0128, -0.5374],
+			"bbox_max": [0.5261, 0.0159, 0.5383],
+			"vertices": 432,
+			"faces": 356,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Plate_Large"],
+			"materials": ["Accent", "Main"],
+			"material_colors": {
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Plate_Long.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.0521,
+				"height": 0.3482,
+				"depth": 0.0287
+			},
+			"bbox_min": [-0.5261, -0.0287, -0.1733],
+			"bbox_max": [0.5261, 0.0, 0.1749],
+			"vertices": 432,
+			"faces": 356,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Plate_Long"],
+			"materials": ["Accent", "Main"],
+			"material_colors": {
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Plate_Small.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.396,
+				"height": 0.3466,
+				"depth": 0.0287
+			},
+			"bbox_min": [-0.198, -0.0287, -0.1733],
+			"bbox_max": [0.198, 0.0, 0.1733],
+			"vertices": 352,
+			"faces": 300,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Plate_Small"],
+			"materials": ["Accent", "Main"],
+			"material_colors": {
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Triangles.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.476,
+				"height": 0.1611,
+				"depth": 0.0269
+			},
+			"bbox_min": [-0.216, -0.0135, -0.0806],
+			"bbox_max": [0.26, 0.0135, 0.0806],
+			"vertices": 54,
+			"faces": 24,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Triangles"],
+			"materials": ["Accent"],
+			"material_colors": {
+				"Accent": [0.5596, 0.2977, 0.0668]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Vent_1.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.5265,
+				"height": 0.3099,
+				"depth": 0.0413
+			},
+			"bbox_min": [-0.2632, -0.0143, -0.1559],
+			"bbox_max": [0.2632, 0.027, 0.154],
+			"vertices": 288,
+			"faces": 164,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Vent_1"],
+			"materials": ["Accent", "Black", "DarkAccent"],
+			"material_colors": {
+				"Black": [0.042, 0.042, 0.042],
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Accent": [0.5596, 0.2977, 0.0668]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Vent_2.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.3099,
+				"height": 0.3099,
+				"depth": 0.0413
+			},
+			"bbox_min": [-0.1553, -0.0139, -0.165],
+			"bbox_max": [0.1546, 0.0274, 0.1449],
+			"vertices": 244,
+			"faces": 136,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Vent_2"],
+			"materials": ["Accent", "Black", "DarkAccent"],
+			"material_colors": {
+				"Black": [0.042, 0.042, 0.042],
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Accent": [0.5596, 0.2977, 0.0668]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Vent_3.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.0521,
+				"height": 0.2235,
+				"depth": 0.0287
+			},
+			"bbox_min": [-0.5261, -0.011, -0.1099],
+			"bbox_max": [0.5261, 0.0177, 0.1136],
+			"vertices": 712,
+			"faces": 540,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Vent_3"],
+			"materials": ["Accent", "Main"],
+			"material_colors": {
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Vent_4.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.2383,
+				"height": 0.3753,
+				"depth": 0.0905
+			},
+			"bbox_min": [-0.1191, -0.0626, -0.1695],
+			"bbox_max": [0.1191, 0.0279, 0.2058],
+			"vertices": 1160,
+			"faces": 630,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Vent_4"],
+			"materials": ["Accent", "Black", "DarkAccent"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_Vent_5.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.6864,
+				"height": 0.3753,
+				"depth": 0.0905
+			},
+			"bbox_min": [-0.3432, -0.0453, -0.1877],
+			"bbox_max": [0.3432, 0.0453, 0.1877],
+			"vertices": 1160,
+			"faces": 630,
+			"mesh_count": 1,
+			"mesh_names": ["Details_Vent_5"],
+			"materials": ["Accent", "Black", "DarkAccent"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Details/Details_X.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.3192,
+				"height": 0.3192,
+				"depth": 0.0242
+			},
+			"bbox_min": [-0.1574, -0.0115, -0.1573],
+			"bbox_max": [0.1617, 0.0128, 0.1619],
+			"vertices": 72,
+			"faces": 44,
+			"mesh_count": 1,
+			"mesh_names": ["Details_X"],
+			"materials": ["Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Door_Double.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.6528,
+				"height": 2.7912,
+				"depth": 0.4542
+			},
+			"bbox_min": [-1.3264, 0.1878, -0.0004],
+			"bbox_max": [1.3264, 0.642, 2.7908],
+			"vertices": 2924,
+			"faces": 1992,
+			"mesh_count": 2,
+			"mesh_names": ["Door_Double.R", "Door_Double.L"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Door_Single.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.6732,
+				"height": 2.7912,
+				"depth": 0.4514
+			},
+			"bbox_min": [-0.8366, 0.1916, -0.0007],
+			"bbox_max": [0.8366, 0.643, 2.7904],
+			"vertices": 1942,
+			"faces": 1400,
+			"mesh_count": 1,
+			"mesh_names": ["Door_Single"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/FloorTile_Basic.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.0934,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, 0.0],
+			"bbox_max": [1.0, 1.0, 0.0934],
+			"vertices": 616,
+			"faces": 388,
+			"mesh_count": 1,
+			"mesh_names": ["FloorTile_Basic"],
+			"materials": ["DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/FloorTile_Basic2.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.0934,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0458],
+			"bbox_max": [1.0, 1.0, 0.0476],
+			"vertices": 886,
+			"faces": 570,
+			"mesh_count": 1,
+			"mesh_names": ["FloorTile_Basic2"],
+			"materials": ["Accent", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/FloorTile_Corner.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.0615,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0202],
+			"bbox_max": [1.0, 1.0, 0.0413],
+			"vertices": 560,
+			"faces": 360,
+			"mesh_count": 1,
+			"mesh_names": ["FloorTile_Corner"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/FloorTile_Double_Hallway.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 0.0685,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0202],
+			"bbox_max": [3.0, 1.0, 0.0483],
+			"vertices": 768,
+			"faces": 476,
+			"mesh_count": 1,
+			"mesh_names": ["FloorTile_Double"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/FloorTile_Empty.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.0773,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0042],
+			"bbox_max": [1.0, 1.0, 0.0731],
+			"vertices": 112,
+			"faces": 68,
+			"mesh_count": 1,
+			"mesh_names": ["FloorTile_Empty"],
+			"materials": ["DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/FloorTile_InnerCorner.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.051,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0027],
+			"bbox_max": [1.0, 1.0, 0.0483],
+			"vertices": 322,
+			"faces": 217,
+			"mesh_count": 1,
+			"mesh_names": ["FloorTile_InnerCorner"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/FloorTile_Side.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.0685,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0202],
+			"bbox_max": [1.0, 1.0, 0.0483],
+			"vertices": 384,
+			"faces": 238,
+			"mesh_count": 1,
+			"mesh_names": ["FloorTile_Side"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Pipes.glb",
+			"category": "city",
+			"bounds": {
+				"width": 3.5084,
+				"height": 0.3701,
+				"depth": 0.1276
+			},
+			"bbox_min": [-1.6768, -0.3405, 3.9851],
+			"bbox_max": [1.8317, -0.2129, 4.3552],
+			"vertices": 452,
+			"faces": 356,
+			"mesh_count": 1,
+			"mesh_names": ["Pipes"],
+			"materials": ["Pipes"],
+			"material_colors": {
+				"Pipes": [0.0188, 0.0188, 0.0188]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Base.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.396,
+				"height": 0.3203,
+				"depth": 2.396
+			},
+			"bbox_min": [-1.198, -1.198, 0.0002],
+			"bbox_max": [1.198, 1.198, 0.3205],
+			"vertices": 1012,
+			"faces": 556,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Base"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Capsule.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.8693,
+				"height": 1.6192,
+				"depth": 0.8693
+			},
+			"bbox_min": [-0.4347, -0.4347, -0.0017],
+			"bbox_max": [0.4347, 0.4347, 1.6174],
+			"vertices": 2368,
+			"faces": 1260,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Capsule"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Chest.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.2876,
+				"height": 0.911,
+				"depth": 0.8082
+			},
+			"bbox_min": [-0.6438, -0.4026, 0.0045],
+			"bbox_max": [0.6438, 0.4056, 0.9155],
+			"vertices": 8449,
+			"faces": 5024,
+			"mesh_count": 2,
+			"mesh_names": ["Props_ChestBottom", "Props_ChestTop"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Computer.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.5804,
+				"height": 2.0795,
+				"depth": 0.6441
+			},
+			"bbox_min": [-0.2902, -0.4025, -0.0042],
+			"bbox_max": [0.2902, 0.2416, 2.0753],
+			"vertices": 970,
+			"faces": 624,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Computer"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_ComputerSmall.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.7512,
+				"height": 1.5378,
+				"depth": 0.4564
+			},
+			"bbox_min": [-0.3756, -0.3224, -0.0042],
+			"bbox_max": [0.3756, 0.134, 1.5336],
+			"vertices": 970,
+			"faces": 624,
+			"mesh_count": 1,
+			"mesh_names": ["Props_ComputerSmall"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_ContainerFull.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.202,
+				"height": 0.5824,
+				"depth": 0.7517
+			},
+			"bbox_min": [-0.601, -0.3758, 0.0017],
+			"bbox_max": [0.601, 0.3758, 0.5841],
+			"vertices": 8799,
+			"faces": 4930,
+			"mesh_count": 1,
+			"mesh_names": ["Props_ContainerFull"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Crate.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.7971,
+				"height": 0.8055,
+				"depth": 0.7971
+			},
+			"bbox_min": [-0.3986, -0.3986, -0.0033],
+			"bbox_max": [0.3986, 0.3986, 0.8022],
+			"vertices": 5056,
+			"faces": 2688,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Crate"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_CrateLong.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.233,
+				"height": 0.7698,
+				"depth": 0.7698
+			},
+			"bbox_min": [-0.6192, -0.3847, 0.0013],
+			"bbox_max": [0.6137, 0.3851, 0.7711],
+			"vertices": 5472,
+			"faces": 3120,
+			"mesh_count": 1,
+			"mesh_names": ["Props_CrateLong"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Laser.glb",
+			"category": "city",
+			"bounds": {
+				"width": 3.8413,
+				"height": 1.2906,
+				"depth": 1.4639
+			},
+			"bbox_min": [-2.0812, -0.7271, -0.02],
+			"bbox_max": [1.7601, 0.7368, 1.2706],
+			"vertices": 2900,
+			"faces": 1568,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Laser"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Pod.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.81,
+				"height": 3.6124,
+				"depth": 1.8101
+			},
+			"bbox_min": [-0.905, -0.905, 0.0019],
+			"bbox_max": [0.905, 0.9051, 3.6144],
+			"vertices": 4196,
+			"faces": 2246,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Pod"],
+			"materials": ["Accent", "DarkAccent", "DarkGrey", "Glass", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Glass": [1.0, 1.0, 1.0],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Shelf.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.789,
+				"height": 2.5001,
+				"depth": 0.8108
+			},
+			"bbox_min": [-0.8945, -0.4054, 0.0035],
+			"bbox_max": [0.8945, 0.4054, 2.5036],
+			"vertices": 640,
+			"faces": 368,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Shelf"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Shelf_Tall.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0569,
+				"height": 3.1067,
+				"depth": 0.8108
+			},
+			"bbox_min": [-1.0285, -0.4054, 0.0035],
+			"bbox_max": [1.0285, 0.4054, 3.1102],
+			"vertices": 928,
+			"faces": 536,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Shelf_Tall"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Statue.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.1849,
+				"height": 2.6098,
+				"depth": 1.4639
+			},
+			"bbox_min": [-0.6022, -0.7271, 0.0014],
+			"bbox_max": [0.5827, 0.7368, 2.6112],
+			"vertices": 2164,
+			"faces": 1128,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Statue"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Teleporter_1.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.2058,
+				"height": 0.9045,
+				"depth": 1.2058
+			},
+			"bbox_min": [-0.6029, -0.6029, -0.0041],
+			"bbox_max": [0.6029, 0.6029, 0.9004],
+			"vertices": 1276,
+			"faces": 688,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Teleporter_1"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Teleporter_2.glb",
+			"category": "city",
+			"bounds": {
+				"width": 1.2058,
+				"height": 1.3388,
+				"depth": 1.2058
+			},
+			"bbox_min": [-0.6029, -0.6029, 0.0015],
+			"bbox_max": [0.6029, 0.6029, 1.3403],
+			"vertices": 1776,
+			"faces": 960,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Teleporter_2"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Vessel.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.2873,
+				"height": 0.7705,
+				"depth": 0.2873
+			},
+			"bbox_min": [-0.1437, -0.1437, -0.0025],
+			"bbox_max": [0.1437, 0.1437, 0.7681],
+			"vertices": 640,
+			"faces": 332,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Vessel"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Vessel_Short.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.2873,
+				"height": 0.538,
+				"depth": 0.2873
+			},
+			"bbox_min": [-0.1437, -0.1437, -0.0068],
+			"bbox_max": [0.1437, 0.1437, 0.5312],
+			"vertices": 496,
+			"faces": 252,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Vessel_Short"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Props_Vessel_Tall.glb",
+			"category": "city",
+			"bounds": {
+				"width": 0.2873,
+				"height": 1.0227,
+				"depth": 0.2873
+			},
+			"bbox_min": [-0.1437, -0.1437, -0.0011],
+			"bbox_max": [0.1437, 0.1437, 1.0216],
+			"vertices": 624,
+			"faces": 316,
+			"mesh_count": 1,
+			"mesh_names": ["Props_Vessel_Tall"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/RoofTile_Corner_Pipes.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.1147,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0416],
+			"bbox_max": [1.0, 1.0, 0.0731],
+			"vertices": 915,
+			"faces": 490,
+			"mesh_count": 1,
+			"mesh_names": ["RoofTile_Corner_Pipes"],
+			"materials": ["Accent", "Black", "DarkGrey", "Main"],
+			"material_colors": {
+				"Black": [0.042, 0.042, 0.042],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/RoofTile_Details.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.0805,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0074],
+			"bbox_max": [1.0, 1.0, 0.0731],
+			"vertices": 1288,
+			"faces": 848,
+			"mesh_count": 1,
+			"mesh_names": ["RoofTile_Details"],
+			"materials": ["Accent", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/RoofTile_Empty.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.0773,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0042],
+			"bbox_max": [1.0, 1.0, 0.0731],
+			"vertices": 112,
+			"faces": 68,
+			"mesh_count": 1,
+			"mesh_names": ["RoofTile_Empty"],
+			"materials": ["DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/RoofTile_InnerCorner_Pipes.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.1147,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0416],
+			"bbox_max": [1.0, 1.0, 0.0731],
+			"vertices": 915,
+			"faces": 490,
+			"mesh_count": 1,
+			"mesh_names": ["RoofTile_InnerCorner_Pipes"],
+			"materials": ["Accent", "Black", "DarkGrey", "Main"],
+			"material_colors": {
+				"Black": [0.042, 0.042, 0.042],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/RoofTile_OrangeVent.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.1157,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0251],
+			"bbox_max": [1.0, 1.0, 0.0906],
+			"vertices": 400,
+			"faces": 232,
+			"mesh_count": 1,
+			"mesh_names": ["RoofTile_OrangeVent"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/RoofTile_Pipes1.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.1133,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0402],
+			"bbox_max": [1.0, 1.0, 0.0731],
+			"vertices": 728,
+			"faces": 388,
+			"mesh_count": 1,
+			"mesh_names": ["RoofTile_Pipes1"],
+			"materials": ["Accent", "Black", "DarkGrey", "Main"],
+			"material_colors": {
+				"Black": [0.042, 0.042, 0.042],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/RoofTile_Pipes2.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.1148,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0402],
+			"bbox_max": [1.0, 1.0, 0.0746],
+			"vertices": 1656,
+			"faces": 900,
+			"mesh_count": 1,
+			"mesh_names": ["RoofTile_Pipes2"],
+			"materials": ["Accent", "Black", "DarkGrey", "Main"],
+			"material_colors": {
+				"Black": [0.042, 0.042, 0.042],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/RoofTile_Plate.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.0773,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0042],
+			"bbox_max": [1.0, 1.0, 0.0731],
+			"vertices": 688,
+			"faces": 424,
+			"mesh_count": 1,
+			"mesh_names": ["RoofTile_Plate"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/RoofTile_Plate2.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.0935,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0042],
+			"bbox_max": [1.0, 1.0, 0.0893],
+			"vertices": 740,
+			"faces": 436,
+			"mesh_count": 1,
+			"mesh_names": ["RoofTile_Plate2"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/RoofTile_Sides_Pipes.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.1133,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0402],
+			"bbox_max": [1.0, 1.0, 0.0731],
+			"vertices": 574,
+			"faces": 308,
+			"mesh_count": 1,
+			"mesh_names": ["RoofTile_Sides_Pipes"],
+			"materials": ["Accent", "Black", "DarkGrey", "Main"],
+			"material_colors": {
+				"Black": [0.042, 0.042, 0.042],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/RoofTile_SmallVents.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.0907,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0042],
+			"bbox_max": [1.0, 1.0, 0.0864],
+			"vertices": 648,
+			"faces": 340,
+			"mesh_count": 1,
+			"mesh_names": ["RoofTile_SmallVents"],
+			"materials": ["Accent", "Black", "DarkAccent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/RoofTile_Vents.glb",
+			"category": "city",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.0773,
+				"depth": 2.0
+			},
+			"bbox_min": [-1.0, -1.0, -0.0042],
+			"bbox_max": [1.0, 1.0, 0.0731],
+			"vertices": 2160,
+			"faces": 1622,
+			"mesh_count": 1,
+			"mesh_names": ["RoofTile_Vents"],
+			"materials": ["Accent", "Black", "DarkGrey", "Main"],
+			"material_colors": {
+				"Black": [0.042, 0.042, 0.042],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Staircase.glb",
+			"category": "city",
+			"bounds": {
+				"width": 3.7822,
+				"height": 1.4539,
+				"depth": 3.112
+			},
+			"bbox_min": [-1.8911, -3.112, -1.2395],
+			"bbox_max": [1.8911, 0.0, 0.2145],
+			"vertices": 620,
+			"faces": 312,
+			"mesh_count": 1,
+			"mesh_names": ["Staircase"],
+			"materials": ["Accent", "DarkGrey", "Main"],
+			"material_colors": {
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/DoorDoubleLong_Wall_SideA.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.437,
+				"depth": 2.2538
+			},
+			"bbox_min": [-2.0, -0.2557, -0.0061],
+			"bbox_max": [2.0, 1.9981, 4.4309],
+			"vertices": 480,
+			"faces": 326,
+			"mesh_count": 1,
+			"mesh_names": ["DoorDoubleLong_Wall_SideA"],
+			"materials": ["Accent", "DarkGrey", "Light", "Main"],
+			"material_colors": {
+				"Light": [0.8, 0.8, 0.8],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/DoorDouble_Wall_SideA.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.437,
+				"depth": 1.2538
+			},
+			"bbox_min": [-2.0, -0.2557, -0.0061],
+			"bbox_max": [2.0, 0.9981, 4.4309],
+			"vertices": 480,
+			"faces": 326,
+			"mesh_count": 1,
+			"mesh_names": ["DoorDouble_Wall_SideA"],
+			"materials": ["Accent", "DarkGrey", "Light", "Main"],
+			"material_colors": {
+				"Light": [0.8, 0.8, 0.8],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/DoorDouble_Wall_SideB.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 0.5307
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.2751, 4.4309],
+			"vertices": 304,
+			"faces": 196,
+			"mesh_count": 1,
+			"mesh_names": ["DoorDouble_Wall_SideB"],
+			"materials": ["Accent", "DarkGrey", "Light", "Main"],
+			"material_colors": {
+				"Light": [0.8, 0.8, 0.8],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/DoorSingleLong_Wall_SideA.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.437,
+				"depth": 2.2538
+			},
+			"bbox_min": [-2.0, -0.2557, -0.0061],
+			"bbox_max": [2.0, 1.9981, 4.4309],
+			"vertices": 486,
+			"faces": 332,
+			"mesh_count": 1,
+			"mesh_names": ["DoorSingleLong_Wall_SideA"],
+			"materials": ["Accent", "DarkGrey", "Light", "Main"],
+			"material_colors": {
+				"Light": [0.8, 0.8, 0.8],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/DoorSingle_Wall_SideA.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.437,
+				"depth": 1.2538
+			},
+			"bbox_min": [-2.0, -0.2557, -0.0061],
+			"bbox_max": [2.0, 0.9981, 4.4309],
+			"vertices": 486,
+			"faces": 332,
+			"mesh_count": 1,
+			"mesh_names": ["DoorSingle_Wall_SideA"],
+			"materials": ["Accent", "DarkGrey", "Light", "Main"],
+			"material_colors": {
+				"Light": [0.8, 0.8, 0.8],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/DoorSingle_Wall_SideB.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 0.5307
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.2751, 4.4309],
+			"vertices": 310,
+			"faces": 202,
+			"mesh_count": 1,
+			"mesh_names": ["DoorSingle_Wall_SideB"],
+			"materials": ["Accent", "DarkGrey", "Light", "Main"],
+			"material_colors": {
+				"Light": [0.8, 0.8, 0.8],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/LongWindow_Wall_SideA.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 1.0641
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.8084, 4.4309],
+			"vertices": 554,
+			"faces": 332,
+			"mesh_count": 1,
+			"mesh_names": ["LongWindow_Wall_SideA"],
+			"materials": ["Accent", "DarkGrey", "Glass", "Light", "Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402],
+				"Glass": [0.8, 0.8, 0.8],
+				"Light": [0.8, 0.8, 0.8],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/LongWindow_Wall_SideB.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 0.5355
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.2799, 4.4309],
+			"vertices": 522,
+			"faces": 316,
+			"mesh_count": 1,
+			"mesh_names": ["LongWindow_Wall_SideB"],
+			"materials": ["Accent", "DarkGrey", "Glass", "Light", "Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402],
+				"Glass": [0.8, 0.8, 0.8],
+				"Light": [0.8, 0.8, 0.8],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/SmallWindows_Wall_SideA.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 1.0584
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.8027, 4.4309],
+			"vertices": 1216,
+			"faces": 794,
+			"mesh_count": 1,
+			"mesh_names": ["SmallWindows_Wall_SideA"],
+			"materials": ["Accent", "DarkGrey", "Glass", "Light", "Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402],
+				"Glass": [0.8, 0.8, 0.8],
+				"Light": [0.8, 0.8, 0.8],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/SmallWindows_Wall_SideB.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 0.5261
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.2704, 4.4309],
+			"vertices": 1116,
+			"faces": 742,
+			"mesh_count": 1,
+			"mesh_names": ["SmallWindows_Wall_SideB"],
+			"materials": ["Accent", "DarkGrey", "Glass", "Light", "Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402],
+				"Glass": [0.8, 0.8, 0.8],
+				"Light": [0.8, 0.8, 0.8],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/ThreeWindows_Wall_SideA.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 1.0584
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.8027, 4.4309],
+			"vertices": 1216,
+			"faces": 794,
+			"mesh_count": 1,
+			"mesh_names": ["ThreeWindows_Wall_SideA"],
+			"materials": ["Accent", "DarkGrey", "Glass", "Light", "Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402],
+				"Glass": [0.8, 0.8, 0.8],
+				"Light": [0.8, 0.8, 0.8],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/ThreeWindows_Wall_SideB.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 0.5261
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.2704, 4.4309],
+			"vertices": 1116,
+			"faces": 742,
+			"mesh_count": 1,
+			"mesh_names": ["ThreeWindows_Wall_SideB"],
+			"materials": ["Accent", "DarkGrey", "Glass", "Light", "Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402],
+				"Glass": [0.8, 0.8, 0.8],
+				"Light": [0.8, 0.8, 0.8],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/Wall_1.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 0.5447
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.289, 4.4309],
+			"vertices": 2076,
+			"faces": 1088,
+			"mesh_count": 1,
+			"mesh_names": ["Wall_1"],
+			"materials": ["Accent", "DarkGrey", "Light", "Main"],
+			"material_colors": {
+				"Light": [0.8, 0.8, 0.8],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/Wall_2.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 0.5334
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.2777, 4.4309],
+			"vertices": 3260,
+			"faces": 2106,
+			"mesh_count": 1,
+			"mesh_names": ["Wall_2"],
+			"materials": [
+				"Accent",
+				"Black",
+				"DarkAccent",
+				"DarkGrey",
+				"Light",
+				"Main"
+			],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Light": [0.8, 0.8, 0.8],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/Wall_3.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 0.523
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.2673, 4.4309],
+			"vertices": 1940,
+			"faces": 1148,
+			"mesh_count": 1,
+			"mesh_names": ["Wall_3"],
+			"materials": [
+				"Accent",
+				"Black",
+				"DarkAccent",
+				"DarkGrey",
+				"Light",
+				"Main"
+			],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Light": [0.8, 0.8, 0.8],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/Wall_4.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 0.5726
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.3169, 4.4309],
+			"vertices": 2423,
+			"faces": 1356,
+			"mesh_count": 1,
+			"mesh_names": ["Wall_4"],
+			"materials": ["Accent", "DarkGrey", "Light", "Main"],
+			"material_colors": {
+				"Light": [0.8, 0.8, 0.8],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/Wall_5.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 0.5279
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.2722, 4.4309],
+			"vertices": 2126,
+			"faces": 1414,
+			"mesh_count": 1,
+			"mesh_names": ["Wall_5"],
+			"materials": [
+				"Accent",
+				"Black",
+				"DarkAccent",
+				"DarkGrey",
+				"Light",
+				"Main"
+			],
+			"material_colors": {
+				"DarkAccent": [0.2266, 0.1234, 0.0301],
+				"Main": [0.402, 0.402, 0.402],
+				"Black": [0.042, 0.042, 0.042],
+				"Light": [0.8, 0.8, 0.8],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/Wall_Empty.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 0.4991
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.2435, 4.4309],
+			"vertices": 418,
+			"faces": 314,
+			"mesh_count": 1,
+			"mesh_names": ["Wall_Empty"],
+			"materials": ["Accent", "DarkGrey", "Light", "Main"],
+			"material_colors": {
+				"Light": [0.8, 0.8, 0.8],
+				"DarkGrey": [0.2395, 0.2395, 0.2395],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"Main": [0.402, 0.402, 0.402]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/Window_Wall_SideA.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 1.0641
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.8084, 4.4309],
+			"vertices": 554,
+			"faces": 332,
+			"mesh_count": 1,
+			"mesh_names": ["Window_Wall_SideA"],
+			"materials": ["Accent", "DarkGrey", "Glass", "Light", "Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402],
+				"Glass": [0.8, 0.8, 0.8],
+				"Light": [0.8, 0.8, 0.8],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "city/Walls/Window_Wall_SideB.glb",
+			"category": "city",
+			"bounds": {
+				"width": 4.0,
+				"height": 4.4309,
+				"depth": 0.5355
+			},
+			"bbox_min": [-2.0, -0.2557, 0.0],
+			"bbox_max": [2.0, 0.2799, 4.4309],
+			"vertices": 522,
+			"faces": 316,
+			"mesh_count": 1,
+			"mesh_names": ["Window_Wall_SideB"],
+			"materials": ["Accent", "DarkGrey", "Glass", "Light", "Main"],
+			"material_colors": {
+				"Main": [0.402, 0.402, 0.402],
+				"Glass": [0.8, 0.8, 0.8],
+				"Light": [0.8, 0.8, 0.8],
+				"Accent": [0.5596, 0.2977, 0.0668],
+				"DarkGrey": [0.2395, 0.2395, 0.2395]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/Fence.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 0.6918,
+				"height": 1.2556,
+				"depth": 0.0511
+			},
+			"bbox_min": [-0.3459, -0.0256, 0.0],
+			"bbox_max": [0.3459, 0.0256, 1.2556],
+			"vertices": 288,
+			"faces": 160,
+			"mesh_count": 1,
+			"mesh_names": ["Fence"],
+			"materials": ["DarkGrey", "Grey"],
+			"material_colors": {
+				"DarkGrey": [0.0668, 0.0668, 0.0668],
+				"Grey": [0.1734, 0.1734, 0.1734]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/Sign_Corner_Hazard.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 1.0923,
+				"height": 0.2011,
+				"depth": 1.2082
+			},
+			"bbox_min": [-0.9698, -0.1226, -0.0978],
+			"bbox_max": [0.1225, 1.0857, 0.1033],
+			"vertices": 142,
+			"faces": 124,
+			"mesh_count": 1,
+			"mesh_names": ["Sign_Corner_Hazard"],
+			"materials": ["Grey", "Texture_Signs"],
+			"material_colors": {
+				"Grey": [0.1734, 0.1734, 0.1734],
+				"Texture_Signs": [0.0, 0.0, 0.0]
+			},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/Tank.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 0.569,
+				"height": 0.831,
+				"depth": 0.619
+			},
+			"bbox_min": [-0.2845, -0.619, -0.4155],
+			"bbox_max": [0.2845, 0.0, 0.4155],
+			"vertices": 1480,
+			"faces": 1392,
+			"mesh_count": 1,
+			"mesh_names": ["Tank"],
+			"materials": ["Black", "LightGrey", "Orange"],
+			"material_colors": {
+				"Black": [0.0272, 0.0272, 0.0272],
+				"LightGrey": [0.2598, 0.2598, 0.2598],
+				"Orange": [0.3108, 0.1363, 0.0352]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/Turret_Cannon.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 1.1584,
+				"height": 0.6472,
+				"depth": 1.1145
+			},
+			"bbox_min": [-0.5792, -0.5573, -0.0083],
+			"bbox_max": [0.5792, 0.5573, 0.6389],
+			"vertices": 2391,
+			"faces": 1318,
+			"mesh_count": 2,
+			"mesh_names": ["Turret_Cannon_Base", "Turret_Cannon_Top"],
+			"materials": ["Black", "Grey", "LightGrey", "Orange"],
+			"material_colors": {
+				"Black": [0.0272, 0.0272, 0.0272],
+				"Grey": [0.1734, 0.1734, 0.1734],
+				"LightGrey": [0.2598, 0.2598, 0.2598],
+				"Orange": [0.3108, 0.1363, 0.0352]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/Turret_Gun.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 1.1584,
+				"height": 0.587,
+				"depth": 1.1644
+			},
+			"bbox_min": [-0.5792, -0.6072, -0.0083],
+			"bbox_max": [0.5792, 0.5573, 0.5786],
+			"vertices": 2234,
+			"faces": 1182,
+			"mesh_count": 2,
+			"mesh_names": ["Turret_Gun_Base", "Turret_Gun_Top"],
+			"materials": ["Black", "Grey", "LightGrey", "Orange"],
+			"material_colors": {
+				"Black": [0.0272, 0.0272, 0.0272],
+				"Grey": [0.1734, 0.1734, 0.1734],
+				"LightGrey": [0.2598, 0.2598, 0.2598],
+				"Orange": [0.3108, 0.1363, 0.0352]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/Turret_GunDouble.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 1.1584,
+				"height": 0.587,
+				"depth": 1.1644
+			},
+			"bbox_min": [-0.5792, -0.6072, -0.0083],
+			"bbox_max": [0.5792, 0.5573, 0.5786],
+			"vertices": 2740,
+			"faces": 1504,
+			"mesh_count": 2,
+			"mesh_names": ["Turret_GunDouble_Base", "Turret_GunDouble_Top"],
+			"materials": ["Black", "Grey", "LightGrey", "Orange"],
+			"material_colors": {
+				"Black": [0.0272, 0.0272, 0.0272],
+				"Grey": [0.1734, 0.1734, 0.1734],
+				"LightGrey": [0.2598, 0.2598, 0.2598],
+				"Orange": [0.3108, 0.1363, 0.0352]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/barricade-doorway-a.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 0.075,
+				"height": 1.4602,
+				"depth": 1.2558
+			},
+			"bbox_min": [-0.075, -0.6279, -0.4149],
+			"bbox_max": [0.0, 0.6279, 1.0453],
+			"vertices": 128,
+			"faces": 64,
+			"mesh_count": 1,
+			"mesh_names": ["barricade-doorway-a"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/barricade-doorway-b.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 0.075,
+				"height": 1.5835,
+				"depth": 1.2555
+			},
+			"bbox_min": [-0.075, -0.6278, -0.4882],
+			"bbox_max": [0.0, 0.6278, 1.0953],
+			"vertices": 216,
+			"faces": 108,
+			"mesh_count": 1,
+			"mesh_names": ["barricade-doorway-b"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/barricade-window-a.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 0.075,
+				"height": 0.9602,
+				"depth": 1.2558
+			},
+			"bbox_min": [-0.075, -0.6279, 0.0851],
+			"bbox_max": [0.0, 0.6279, 1.0453],
+			"vertices": 128,
+			"faces": 64,
+			"mesh_count": 1,
+			"mesh_names": ["barricade-window-a"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/barricade-window-b.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 0.075,
+				"height": 1.0835,
+				"depth": 1.2555
+			},
+			"bbox_min": [-0.075, -0.6278, 0.0118],
+			"bbox_max": [0.0, 0.6278, 1.0953],
+			"vertices": 216,
+			"faces": 108,
+			"mesh_count": 1,
+			"mesh_names": ["barricade-window-b"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/concrete_road_barrier.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 1.5454,
+				"height": 0.831,
+				"depth": 0.6387
+			},
+			"bbox_min": [-0.7746, -0.344, -0.0084],
+			"bbox_max": [0.7707, 0.2947, 0.8226],
+			"vertices": 31539,
+			"faces": 60928,
+			"mesh_count": 1,
+			"mesh_names": ["concrete_road_barrier"],
+			"materials": ["concrete_road_barrier"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/gate_complex.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 1.0,
+				"height": 1.013,
+				"depth": 0.5
+			},
+			"bbox_min": [1.5, -1.75, 0.0],
+			"bbox_max": [2.5, -1.25, 1.013],
+			"vertices": 720,
+			"faces": 460,
+			"mesh_count": 1,
+			"mesh_names": ["gate_complex"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/gate_simple.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 1.0,
+				"height": 1.08,
+				"depth": 0.5
+			},
+			"bbox_min": [1.5, -1.75, 0.0],
+			"bbox_max": [2.5, -1.25, 1.08],
+			"vertices": 318,
+			"faces": 212,
+			"mesh_count": 1,
+			"mesh_names": ["gate_simple"],
+			"materials": ["dark", "metal", "metalDark"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/modular_chainlink_fence.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 8.115,
+				"height": 2.5229,
+				"depth": 2.1492
+			},
+			"bbox_min": [-6.04, -0.0742, 0.0],
+			"bbox_max": [2.075, 2.075, 2.5229],
+			"vertices": 84774,
+			"faces": 89232,
+			"mesh_count": 20,
+			"mesh_names": [
+				"modular_chainlink_fence_door_latch",
+				"modular_chainlink_fence_door_gate",
+				"modular_chainlink_fence_corner_outer",
+				"modular_chainlink_fence_start_01_corner_01",
+				"modular_chainlink_post_middle",
+				"modular_chainlink_fence_end_01",
+				"modular_chainlink_fence_end_02",
+				"modular_chainlink_fence_door_frame",
+				"modular_chainlink_fence_bar_bracket_01",
+				"modular_chainlink_fence_post_bracket_02",
+				"modular_chainlink_fence_bar_bracket_02",
+				"modular_chainlink_fence_post_bracket_01",
+				"modular_chainlink_fence_double",
+				"modular_chainlink_fence",
+				"modular_chainlink_fence_post_bracket_03",
+				"modular_chainlink_fence_bar_bracket_03",
+				"modular_chainlink_fence_post",
+				"modular_chainlink_fence_corner_support",
+				"modular_chainlink_fence_corner_inner",
+				"modular_chainlink_fence_start_01_corner_02"
+			],
+			"materials": [
+				"modular_chainlink_fence_posts",
+				"modular_chainlink_fence_wire"
+			],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/security_camera_01.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 0.1696,
+				"height": 0.286,
+				"depth": 0.5537
+			},
+			"bbox_min": [-0.0847, -0.2502, -0.0248],
+			"bbox_max": [0.0848, 0.3035, 0.2612],
+			"vertices": 10107,
+			"faces": 13571,
+			"mesh_count": 1,
+			"mesh_names": ["security_camera_01"],
+			"materials": ["security_camera_01", "security_camera_01_glass"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/turret_double.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 0.9,
+				"height": 0.7,
+				"depth": 0.6
+			},
+			"bbox_min": [1.55, -1.8, 0.0],
+			"bbox_max": [2.45, -1.2, 0.7],
+			"vertices": 1228,
+			"faces": 876,
+			"mesh_count": 2,
+			"mesh_names": ["turret_double", "turret"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/turret_single.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 0.6,
+				"height": 0.9,
+				"depth": 0.7224
+			},
+			"bbox_min": [1.7, -1.85, 0.0],
+			"bbox_max": [2.3, -1.1276, 0.9],
+			"vertices": 854,
+			"faces": 576,
+			"mesh_count": 4,
+			"mesh_names": ["turret_single", "turret", "Group", "Group.001"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "defense/wall-low.glb",
+			"category": "defense",
+			"bounds": {
+				"width": 0.1,
+				"height": 1.2,
+				"depth": 2.0
+			},
+			"bbox_min": [-0.05, -1.0, 0.0],
+			"bbox_max": [0.05, 1.0, 1.2],
+			"vertices": 20,
+			"faces": 10,
+			"mesh_count": 1,
+			"mesh_names": ["wall-low"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/Collectible_Board.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.354,
+				"height": 0.3225,
+				"depth": 0.0468
+			},
+			"bbox_min": [-0.1895, -0.0234, -0.1348],
+			"bbox_max": [0.1645, 0.0234, 0.1878],
+			"vertices": 492,
+			"faces": 280,
+			"mesh_count": 1,
+			"mesh_names": ["Collectible_Board"],
+			"materials": ["DarkGrey", "Gold", "Green", "Grey"],
+			"material_colors": {
+				"Gold": [0.233, 0.172, 0.0095],
+				"Green": [0.0411, 0.0732, 0.0053],
+				"DarkGrey": [0.0668, 0.0668, 0.0668],
+				"Grey": [0.1734, 0.1734, 0.1734]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/Collectible_Gear.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.3511,
+				"height": 0.3967,
+				"depth": 0.3182
+			},
+			"bbox_min": [-0.1756, -0.1591, -0.1983],
+			"bbox_max": [0.1756, 0.1591, 0.1983],
+			"vertices": 500,
+			"faces": 440,
+			"mesh_count": 1,
+			"mesh_names": ["Collectible_Gear"],
+			"materials": ["Orange"],
+			"material_colors": {
+				"Orange": [0.3108, 0.1363, 0.0352]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/Lootbox.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.5919,
+				"height": 0.5121,
+				"depth": 0.6081
+			},
+			"bbox_min": [-0.296, -0.295, -0.0005],
+			"bbox_max": [0.296, 0.3131, 0.5116],
+			"vertices": 1379,
+			"faces": 940,
+			"mesh_count": 2,
+			"mesh_names": ["Lootbox_Base", "Lootbox_Top"],
+			"materials": ["DarkGrey", "Grey", "Orange"],
+			"material_colors": {
+				"Orange": [0.3108, 0.1363, 0.0352],
+				"DarkGrey": [0.0668, 0.0668, 0.0668],
+				"Grey": [0.1734, 0.1734, 0.1734]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/bones.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.8614,
+				"height": 0.4422,
+				"depth": 0.5821
+			},
+			"bbox_min": [1.5693, -1.7911, 0.0],
+			"bbox_max": [2.4307, -1.2089, 0.4422],
+			"vertices": 336,
+			"faces": 168,
+			"mesh_count": 1,
+			"mesh_names": ["bones"],
+			"materials": ["bone"],
+			"material_colors": {
+				"bone": [1.0, 0.8471, 0.7686]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/crater.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.715,
+				"height": 0.1176,
+				"depth": 0.8256
+			},
+			"bbox_min": [1.6425, -1.9128, 0.0],
+			"bbox_max": [2.3575, -1.0872, 0.1176],
+			"vertices": 96,
+			"faces": 60,
+			"mesh_count": 1,
+			"mesh_names": ["crater"],
+			"materials": ["rock", "rockDark"],
+			"material_colors": {
+				"rock": [0.9098, 0.5176, 0.3882],
+				"rockDark": [0.698, 0.3725, 0.2627]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/craterLarge.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.886,
+				"height": 0.12,
+				"depth": 0.886
+			},
+			"bbox_min": [1.557, -1.943, 0.0],
+			"bbox_max": [2.443, -1.057, 0.12],
+			"vertices": 96,
+			"faces": 60,
+			"mesh_count": 1,
+			"mesh_names": ["craterLarge"],
+			"materials": ["rock", "rockDark"],
+			"material_colors": {
+				"rock": [0.9098, 0.5176, 0.3882],
+				"rockDark": [0.698, 0.3725, 0.2627]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/hangar_largeA.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 2.0,
+				"height": 1.0,
+				"depth": 3.0
+			},
+			"bbox_min": [1.0, -3.0, 0.0],
+			"bbox_max": [3.0, 0.0, 1.0],
+			"vertices": 572,
+			"faces": 412,
+			"mesh_count": 3,
+			"mesh_names": ["hangar_largeA", "gate", "gate.001"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/hangar_smallA.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 2.0,
+				"height": 1.0,
+				"depth": 2.0
+			},
+			"bbox_min": [1.0, -2.5, 0.0],
+			"bbox_max": [3.0, -0.5, 1.0],
+			"vertices": 400,
+			"faces": 280,
+			"mesh_count": 3,
+			"mesh_names": ["hangar_smallA", "gate", "gate.001"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/meteor_detailed.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.866,
+				"height": 0.735,
+				"depth": 0.825
+			},
+			"bbox_min": [1.567, -1.9125, 0.0],
+			"bbox_max": [2.433, -1.0875, 0.735],
+			"vertices": 324,
+			"faces": 196,
+			"mesh_count": 1,
+			"mesh_names": ["meteor_detailed"],
+			"materials": ["rockTrack"],
+			"material_colors": {
+				"rockTrack": [0.9811, 0.581, 0.4489]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/meteor_half.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.866,
+				"height": 0.3675,
+				"depth": 0.75
+			},
+			"bbox_min": [1.567, -1.875, 0.0],
+			"bbox_max": [2.433, -1.125, 0.3675],
+			"vertices": 84,
+			"faces": 44,
+			"mesh_count": 1,
+			"mesh_names": ["meteor_half"],
+			"materials": ["rockTrack"],
+			"material_colors": {
+				"rockTrack": [0.9811, 0.581, 0.4489]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/rock_crystals.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.8509,
+				"height": 0.3375,
+				"depth": 0.8015
+			},
+			"bbox_min": [1.5284, -1.8716, 0.0],
+			"bbox_max": [2.3794, -1.0701, 0.3375],
+			"vertices": 576,
+			"faces": 364,
+			"mesh_count": 1,
+			"mesh_names": ["rock_crystals"],
+			"materials": ["crystal", "rock", "rockTrack"],
+			"material_colors": {
+				"rockTrack": [0.9811, 0.581, 0.4489],
+				"crystal": [0.1862, 0.8774, 0.5934],
+				"rock": [0.9098, 0.5176, 0.3882]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/rock_crystalsLargeA.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.8339,
+				"height": 0.541,
+				"depth": 0.9193
+			},
+			"bbox_min": [1.598, -1.9665, 0.0],
+			"bbox_max": [2.4318, -1.0472, 0.541],
+			"vertices": 600,
+			"faces": 384,
+			"mesh_count": 1,
+			"mesh_names": ["rock_crystalsLargeA"],
+			"materials": ["crystal", "rock", "rockTrack"],
+			"material_colors": {
+				"rockTrack": [0.9811, 0.581, 0.4489],
+				"crystal": [0.1862, 0.8774, 0.5934],
+				"rock": [0.9098, 0.5176, 0.3882]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/rock_crystalsLargeB.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.9393,
+				"height": 0.55,
+				"depth": 0.9321
+			},
+			"bbox_min": [1.52, -1.9578, 0.0],
+			"bbox_max": [2.4593, -1.0257, 0.55],
+			"vertices": 594,
+			"faces": 380,
+			"mesh_count": 1,
+			"mesh_names": ["rock_crystalsLargeB"],
+			"materials": ["crystal", "rock", "rockTrack"],
+			"material_colors": {
+				"rockTrack": [0.9811, 0.581, 0.4489],
+				"crystal": [0.1862, 0.8774, 0.5934],
+				"rock": [0.9098, 0.5176, 0.3882]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/rocks_smallA.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.9372,
+				"height": 0.1051,
+				"depth": 0.8698
+			},
+			"bbox_min": [1.5292, -1.9255, 0.0],
+			"bbox_max": [2.4664, -1.0556, 0.1051],
+			"vertices": 120,
+			"faces": 60,
+			"mesh_count": 1,
+			"mesh_names": ["rocks_smallA"],
+			"materials": ["rock"],
+			"material_colors": {
+				"rock": [0.9098, 0.5176, 0.3882]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "exploration/rocks_smallB.glb",
+			"category": "exploration",
+			"bounds": {
+				"width": 0.7288,
+				"height": 0.186,
+				"depth": 0.6988
+			},
+			"bbox_min": [1.634, -1.8206, 0.0],
+			"bbox_max": [2.3629, -1.1219, 0.186],
+			"vertices": 96,
+			"faces": 48,
+			"mesh_count": 1,
+			"mesh_names": ["rocks_smallB"],
+			"materials": ["rock"],
+			"material_colors": {
+				"rock": [0.9098, 0.5176, 0.3882]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/Barrel_01.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.563,
+				"height": 0.88,
+				"depth": 0.563
+			},
+			"bbox_min": [-0.2815, -0.2815, -0.0066],
+			"bbox_max": [0.2815, 0.2815, 0.8734],
+			"vertices": 2081,
+			"faces": 2682,
+			"mesh_count": 1,
+			"mesh_names": ["Barrel_01"],
+			"materials": ["Barrel_01"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/Computer.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.4697,
+				"height": 1.0078,
+				"depth": 0.6293
+			},
+			"bbox_min": [-0.2348, -0.4052, -0.0025],
+			"bbox_max": [0.2348, 0.224, 1.0053],
+			"vertices": 1057,
+			"faces": 1008,
+			"mesh_count": 1,
+			"mesh_names": ["Computer"],
+			"materials": ["Grey", "LightGrey", "Orange", "Screen"],
+			"material_colors": {
+				"Screen": [0.0928, 0.1751, 0.196],
+				"Grey": [0.1734, 0.1734, 0.1734],
+				"LightGrey": [0.2598, 0.2598, 0.2598],
+				"Orange": [0.3108, 0.1363, 0.0352]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/Computer_Large.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 1.294,
+				"height": 2.3821,
+				"depth": 0.6898
+			},
+			"bbox_min": [-0.647, -0.3962, 0.0004],
+			"bbox_max": [0.647, 0.2936, 2.3824],
+			"vertices": 2567,
+			"faces": 2356,
+			"mesh_count": 1,
+			"mesh_names": ["Computer_Large"],
+			"materials": [
+				"DarkGrey",
+				"Grey",
+				"LightGrey",
+				"MetalLight",
+				"Orange",
+				"Screen",
+				"Texture_Signs"
+			],
+			"material_colors": {
+				"LightGrey": [0.2598, 0.2598, 0.2598],
+				"Orange": [0.3108, 0.1363, 0.0352],
+				"Texture_Signs": [0.0, 0.0, 0.0],
+				"MetalLight": [0.42, 0.42, 0.42],
+				"Screen": [0.0928, 0.1751, 0.196],
+				"Grey": [0.1734, 0.1734, 0.1734],
+				"DarkGrey": [0.0668, 0.0668, 0.0668]
+			},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/Lever.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.398,
+				"height": 0.4457,
+				"depth": 0.6624
+			},
+			"bbox_min": [-0.199, -0.2715, -0.0147],
+			"bbox_max": [0.199, 0.3909, 0.431],
+			"vertices": 414,
+			"faces": 328,
+			"mesh_count": 2,
+			"mesh_names": ["Lever_Base", "Lever_Top"],
+			"materials": ["Black", "Grey", "LightGrey"],
+			"material_colors": {
+				"Black": [0.0272, 0.0272, 0.0272],
+				"Grey": [0.1734, 0.1734, 0.1734],
+				"LightGrey": [0.2598, 0.2598, 0.2598]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/TV_1.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 1.2035,
+				"height": 1.375,
+				"depth": 0.4096
+			},
+			"bbox_min": [-0.2048, -0.1285, -0.2048],
+			"bbox_max": [0.9987, 0.2811, 1.1702],
+			"vertices": 560,
+			"faces": 312,
+			"mesh_count": 1,
+			"mesh_names": ["TV_1"],
+			"materials": ["Grey", "LightGrey", "MetalLight", "Texture_Signs"],
+			"material_colors": {
+				"Texture_Signs": [0.0, 0.0, 0.0],
+				"MetalLight": [0.42, 0.42, 0.42],
+				"Grey": [0.1734, 0.1734, 0.1734],
+				"LightGrey": [0.2598, 0.2598, 0.2598]
+			},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/TV_2.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.8065,
+				"height": 1.2118,
+				"depth": 0.3448
+			},
+			"bbox_min": [-0.1724, -0.1082, -0.2266],
+			"bbox_max": [0.6341, 0.2366, 0.9852],
+			"vertices": 608,
+			"faces": 336,
+			"mesh_count": 1,
+			"mesh_names": ["TV_2"],
+			"materials": ["Grey", "LightGrey", "MetalLight", "Texture_Signs"],
+			"material_colors": {
+				"Texture_Signs": [0.0, 0.0, 0.0],
+				"MetalLight": [0.42, 0.42, 0.42],
+				"Grey": [0.1734, 0.1734, 0.1734],
+				"LightGrey": [0.2598, 0.2598, 0.2598]
+			},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/TV_3.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.7336,
+				"height": 2.378,
+				"depth": 0.6315
+			},
+			"bbox_min": [-0.2531, -0.4528, -0.0035],
+			"bbox_max": [0.4806, 0.1786, 2.3745],
+			"vertices": 888,
+			"faces": 554,
+			"mesh_count": 1,
+			"mesh_names": ["TV_3"],
+			"materials": ["Black", "Grey", "LightGrey", "Texture_Signs"],
+			"material_colors": {
+				"Black": [0.0272, 0.0272, 0.0272],
+				"Texture_Signs": [0.0, 0.0, 0.0],
+				"Grey": [0.1734, 0.1734, 0.1734],
+				"LightGrey": [0.2598, 0.2598, 0.2598]
+			},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/barrel.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.2,
+				"height": 0.25,
+				"depth": 0.1732
+			},
+			"bbox_min": [1.9, -1.5866, 0.0],
+			"bbox_max": [2.1, -1.4134, 0.25],
+			"vertices": 96,
+			"faces": 56,
+			"mesh_count": 1,
+			"mesh_names": ["barrel"],
+			"materials": ["metal", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/barrel_stove.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.5926,
+				"height": 0.8556,
+				"depth": 0.5926
+			},
+			"bbox_min": [-0.2963, -0.2963, 0.0],
+			"bbox_max": [0.2963, 0.2963, 0.8556],
+			"vertices": 6741,
+			"faces": 9216,
+			"mesh_count": 1,
+			"mesh_names": ["barrel_stove"],
+			"materials": ["barrel_stove"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/barrels.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.55,
+				"height": 0.35,
+				"depth": 0.4964
+			},
+			"bbox_min": [1.725, -1.7482, 0.0],
+			"bbox_max": [2.275, -1.2518, 0.35],
+			"vertices": 464,
+			"faces": 268,
+			"mesh_count": 5,
+			"mesh_names": [
+				"barrels",
+				"barrel",
+				"barrel.001",
+				"barrel.002",
+				"barrel.003"
+			],
+			"materials": ["metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/barrels_rail.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.55,
+				"height": 0.35,
+				"depth": 0.4964
+			},
+			"bbox_min": [1.725, -1.7482, -0.0],
+			"bbox_max": [2.275, -1.2518, 0.35],
+			"vertices": 704,
+			"faces": 428,
+			"mesh_count": 5,
+			"mesh_names": [
+				"barrels_rail",
+				"barrel",
+				"barrel.001",
+				"barrel.002",
+				"barrel.003"
+			],
+			"materials": ["metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/chimney.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.4,
+				"height": 2.0,
+				"depth": 0.4
+			},
+			"bbox_min": [1.8, -1.7, 0.0],
+			"bbox_max": [2.2, -1.3, 2.0],
+			"vertices": 192,
+			"faces": 140,
+			"mesh_count": 1,
+			"mesh_names": ["chimney"],
+			"materials": ["dark", "metal"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/chimney_detailed.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.4,
+				"height": 2.0,
+				"depth": 0.4
+			},
+			"bbox_min": [1.8, -1.7, 0.0],
+			"bbox_max": [2.2, -1.3, 2.0],
+			"vertices": 576,
+			"faces": 332,
+			"mesh_count": 1,
+			"mesh_names": ["chimney_detailed"],
+			"materials": ["dark", "metal", "metalDark"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/conveyor-long.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.4,
+				"depth": 1.0
+			},
+			"bbox_min": [-1.0, -0.5, 0.0],
+			"bbox_max": [1.0, 0.5, 0.4],
+			"vertices": 144,
+			"faces": 92,
+			"mesh_count": 1,
+			"mesh_names": ["conveyor-long"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/conveyor-sides.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 1.0,
+				"height": 0.4,
+				"depth": 1.0
+			},
+			"bbox_min": [-0.5, -0.5, 0.0],
+			"bbox_max": [0.5, 0.5, 0.4],
+			"vertices": 140,
+			"faces": 92,
+			"mesh_count": 2,
+			"mesh_names": ["Group", "Group.001"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/conveyor.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 1.0,
+				"height": 0.4,
+				"depth": 1.0
+			},
+			"bbox_min": [-0.5, -0.5, 0.0],
+			"bbox_max": [0.5, 0.5, 0.4],
+			"vertices": 144,
+			"faces": 92,
+			"mesh_count": 1,
+			"mesh_names": ["conveyor"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/machine_barrel.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.6464,
+				"height": 0.6,
+				"depth": 0.5155
+			},
+			"bbox_min": [1.7768, -1.7577, -0.0],
+			"bbox_max": [2.4232, -1.2423, 0.6],
+			"vertices": 518,
+			"faces": 338,
+			"mesh_count": 2,
+			"mesh_names": ["machine_barrel", "cables"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/machine_barrelLarge.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.7543,
+				"height": 0.6,
+				"depth": 0.7543
+			},
+			"bbox_min": [1.6228, -1.8772, 0.0],
+			"bbox_max": [2.3772, -1.1228, 0.6],
+			"vertices": 330,
+			"faces": 192,
+			"mesh_count": 1,
+			"mesh_names": ["machine_barrelLarge"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/robot-arm-a.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 1.0,
+				"height": 3.2,
+				"depth": 1.0
+			},
+			"bbox_min": [-0.5, -0.5, 0.0],
+			"bbox_max": [0.5, 0.5, 3.2],
+			"vertices": 786,
+			"faces": 472,
+			"mesh_count": 9,
+			"mesh_names": [
+				"robot-arm-a",
+				"element-a",
+				"element-b",
+				"element-c",
+				"element-d",
+				"element-e",
+				"element-f",
+				"claw-a",
+				"claw-b"
+			],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/robot-arm-b.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 1.0,
+				"height": 3.0,
+				"depth": 1.0
+			},
+			"bbox_min": [-0.5, -0.5, 0.0],
+			"bbox_max": [0.5, 0.5, 3.0],
+			"vertices": 712,
+			"faces": 420,
+			"mesh_count": 7,
+			"mesh_names": [
+				"robot-arm-b",
+				"element-a",
+				"element-b",
+				"element-c",
+				"element-d",
+				"element-e",
+				"element-f"
+			],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/scanner-high.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.7,
+				"height": 1.2,
+				"depth": 1.6
+			},
+			"bbox_min": [-0.35, -0.8, 0.0],
+			"bbox_max": [0.35, 0.8, 1.2],
+			"vertices": 168,
+			"faces": 108,
+			"mesh_count": 1,
+			"mesh_names": ["scanner-high"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "industrial/scanner-low.glb",
+			"category": "industrial",
+			"bounds": {
+				"width": 0.7,
+				"height": 1.0,
+				"depth": 1.6
+			},
+			"bbox_min": [-0.35, -0.8, 0.0],
+			"bbox_max": [0.35, 0.8, 1.0],
+			"vertices": 168,
+			"faces": 108,
+			"mesh_count": 1,
+			"mesh_names": ["scanner-low"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/Antenna_1.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.4019,
+				"height": 1.6556,
+				"depth": 0.0632
+			},
+			"bbox_min": [-0.1018, -0.0316, -0.001],
+			"bbox_max": [0.3001, 0.0316, 1.6545],
+			"vertices": 176,
+			"faces": 88,
+			"mesh_count": 1,
+			"mesh_names": ["Antenna_1"],
+			"materials": ["MetalLight"],
+			"material_colors": {
+				"MetalLight": [0.42, 0.42, 0.42]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/Antenna_2.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.6174,
+				"height": 0.7306,
+				"depth": 0.6567
+			},
+			"bbox_min": [-0.4845, -0.3562, -0.3575],
+			"bbox_max": [0.1329, 0.3004, 0.3731],
+			"vertices": 380,
+			"faces": 412,
+			"mesh_count": 1,
+			"mesh_names": ["Antenna_2"],
+			"materials": ["DarkGrey", "Grey", "LightGrey"],
+			"material_colors": {
+				"DarkGrey": [0.0668, 0.0668, 0.0668],
+				"Grey": [0.1734, 0.1734, 0.1734],
+				"LightGrey": [0.2598, 0.2598, 0.2598]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/Cable_Long.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.2876,
+				"height": 2.5059,
+				"depth": 0.1319
+			},
+			"bbox_min": [-0.1419, -0.0868, -2.5052],
+			"bbox_max": [0.1457, 0.0451, 0.0007],
+			"vertices": 400,
+			"faces": 768,
+			"mesh_count": 1,
+			"mesh_names": ["Cable_Long"],
+			"materials": ["Black"],
+			"material_colors": {
+				"Black": [0.0272, 0.0272, 0.0272]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/Cable_Thick.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.5462,
+				"height": 1.6396,
+				"depth": 0.3857
+			},
+			"bbox_min": [-0.2731, -0.1929, -1.6327],
+			"bbox_max": [0.2731, 0.1929, 0.0069],
+			"vertices": 200,
+			"faces": 384,
+			"mesh_count": 1,
+			"mesh_names": ["Cable_Thick"],
+			"materials": ["Black"],
+			"material_colors": {
+				"Black": [0.0272, 0.0272, 0.0272]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/Support.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.6865,
+				"height": 0.4012,
+				"depth": 0.2922
+			},
+			"bbox_min": [-0.3479, -0.1569, -0.1961],
+			"bbox_max": [0.3386, 0.1354, 0.2051],
+			"vertices": 120,
+			"faces": 60,
+			"mesh_count": 1,
+			"mesh_names": ["Support"],
+			"materials": ["Grey", "MetalLight"],
+			"material_colors": {
+				"MetalLight": [0.42, 0.42, 0.42],
+				"Grey": [0.1734, 0.1734, 0.1734]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/Support_Long.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 1.1098,
+				"height": 3.561,
+				"depth": 0.0878
+			},
+			"bbox_min": [-0.0, -0.0439, -1.7805],
+			"bbox_max": [1.1098, 0.0439, 1.7805],
+			"vertices": 700,
+			"faces": 524,
+			"mesh_count": 1,
+			"mesh_names": ["Support_Long"],
+			"materials": ["Grey", "LightGrey"],
+			"material_colors": {
+				"Grey": [0.1734, 0.1734, 0.1734],
+				"LightGrey": [0.2598, 0.2598, 0.2598]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/exterior_aircon_unit.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 1.8,
+				"height": 0.9279,
+				"depth": 0.3742
+			},
+			"bbox_min": [-0.8927, -0.1582, -0.3201],
+			"bbox_max": [0.9073, 0.216, 0.6078],
+			"vertices": 13684,
+			"faces": 18986,
+			"mesh_count": 2,
+			"mesh_names": ["exterior_aircon_unit", "exterior_aircon_unit_rusted"],
+			"materials": [
+				"exterior_aircon_unit_01",
+				"exterior_aircon_unit_02",
+				"exterior_aircon_unit_rusted_01",
+				"exterior_aircon_unit_rusted_02"
+			],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/industrial_wall_lamp.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.2735,
+				"height": 0.4299,
+				"depth": 0.1404
+			},
+			"bbox_min": [-0.1367, -0.1404, -0.215],
+			"bbox_max": [0.1367, -0.0, 0.215],
+			"vertices": 3588,
+			"faces": 4446,
+			"mesh_count": 1,
+			"mesh_names": ["industrial_wall_lamp"],
+			"materials": ["industrial_wall_lamp", "industrial_wall_lamp_glass"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/machine_generator.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.7,
+				"height": 0.4,
+				"depth": 0.525
+			},
+			"bbox_min": [1.6, -1.7, 0.0],
+			"bbox_max": [2.3, -1.175, 0.4],
+			"vertices": 624,
+			"faces": 406,
+			"mesh_count": 2,
+			"mesh_names": ["machine_generator", "cable"],
+			"materials": ["_defaultMat", "dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"_defaultMat": [1.0, 1.0, 1.0],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/machine_generatorLarge.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 1.0,
+				"height": 0.683,
+				"depth": 1.3
+			},
+			"bbox_min": [1.5, -2.15, 0.0],
+			"bbox_max": [2.5, -0.85, 0.683],
+			"vertices": 186,
+			"faces": 126,
+			"mesh_count": 1,
+			"mesh_names": ["machine_generatorLarge"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/machine_wireless.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.75,
+				"height": 0.6,
+				"depth": 0.5
+			},
+			"bbox_min": [1.625, -1.75, 0.0],
+			"bbox_max": [2.375, -1.25, 0.6],
+			"vertices": 272,
+			"faces": 174,
+			"mesh_count": 1,
+			"mesh_names": ["machine_wireless"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/modular_airduct_circular_01.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 4.1707,
+				"height": 1.3241,
+				"depth": 1.4635
+			},
+			"bbox_min": [-2.0855, -1.4221, -0.2716],
+			"bbox_max": [2.0852, 0.0414, 1.0526],
+			"vertices": 12933,
+			"faces": 14280,
+			"mesh_count": 16,
+			"mesh_names": [
+				"modular_airduct_rectangular_vent_fan",
+				"modular_airduct_rectangular_converter",
+				"modular_airduct_circular_single",
+				"modular_airduct_circular_smooth_single",
+				"modular_airduct_circular_smooth_bend_half",
+				"modular_airduct_circular_smooth_bend_quater",
+				"modular_airduct_circular_fan",
+				"modular_airduct_circular_brace_extention_wires",
+				"modular_airduct_circular_brace",
+				"modular_airduct_circular_brace_extention",
+				"modular_airduct_circular_triple",
+				"modular_airduct_circular_double",
+				"modular_airduct_circular_smooth_double",
+				"modular_airduct_circular_smooth_triple",
+				"modular_airduct_circular_bend_half",
+				"modular_airduct_circular_bend_quater"
+			],
+			"materials": [
+				"modular_airduct_circular_01",
+				"modular_airduct_circular_01.001"
+			],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/modular_industrial_pipes_01.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 1.4028,
+				"height": 1.9546,
+				"depth": 0.3076
+			},
+			"bbox_min": [-0.7036, -0.1794, -1.0023],
+			"bbox_max": [0.6992, 0.1282, 0.9523],
+			"vertices": 14285,
+			"faces": 12340,
+			"mesh_count": 8,
+			"mesh_names": [
+				"modular_industrial_pipes_01_pipe01",
+				"modular_industrial_pipes_01_pipe02",
+				"modular_industrial_pipes_01_pipe03",
+				"modular_industrial_pipes_01_pipe05",
+				"modular_industrial_pipes_01_pipe06",
+				"modular_industrial_pipes_01_pipe07",
+				"modular_industrial_pipes_01_pipe08",
+				"modular_industrial_pipes_01_pipe04"
+			],
+			"materials": [
+				"modular_industrial_pipes_01_group01",
+				"modular_industrial_pipes_01_group02"
+			],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/monorail_trackCornerLarge.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 1.6,
+				"height": 0.13,
+				"depth": 1.6
+			},
+			"bbox_min": [1.0, -2.1, 0.0],
+			"bbox_max": [2.6, -0.5, 0.13],
+			"vertices": 312,
+			"faces": 204,
+			"mesh_count": 1,
+			"mesh_names": ["monorail_trackCornerLarge"],
+			"materials": ["metal", "metalDark"],
+			"material_colors": {
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/monorail_trackSlope.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.2,
+				"height": 0.63,
+				"depth": 1.0
+			},
+			"bbox_min": [1.9, -2.0, -0.0],
+			"bbox_max": [2.1, -1.0, 0.63],
+			"vertices": 48,
+			"faces": 28,
+			"mesh_count": 1,
+			"mesh_names": ["monorail_trackSlope"],
+			"materials": ["metal", "metalDark"],
+			"material_colors": {
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/monorail_trackStraight.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.2,
+				"height": 0.13,
+				"depth": 1.0
+			},
+			"bbox_min": [1.9, -2.0, -0.0],
+			"bbox_max": [2.1, -1.0, 0.13],
+			"vertices": 48,
+			"faces": 28,
+			"mesh_count": 1,
+			"mesh_names": ["monorail_trackStraight"],
+			"materials": ["metal", "metalDark"],
+			"material_colors": {
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/monorail_trackSupport.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.2,
+				"height": 0.5,
+				"depth": 0.2
+			},
+			"bbox_min": [1.9, -1.6, -0.0],
+			"bbox_max": [2.1, -1.4, 0.5],
+			"vertices": 272,
+			"faces": 176,
+			"mesh_count": 1,
+			"mesh_names": ["monorail_trackSupport"],
+			"materials": ["dark", "metal", "metalDark"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/pipe_corner.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.8464,
+				"height": 0.6,
+				"depth": 0.8464
+			},
+			"bbox_min": [1.5, -1.8464, -0.0],
+			"bbox_max": [2.3464, -1.0, 0.6],
+			"vertices": 127,
+			"faces": 84,
+			"mesh_count": 1,
+			"mesh_names": ["pipe_corner"],
+			"materials": ["metal", "metalDark"],
+			"material_colors": {
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/pipe_cross.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 1.0,
+				"height": 0.6,
+				"depth": 1.0
+			},
+			"bbox_min": [1.5, -2.0, 0.0],
+			"bbox_max": [2.5, -1.0, 0.6],
+			"vertices": 299,
+			"faces": 200,
+			"mesh_count": 1,
+			"mesh_names": ["pipe_cross"],
+			"materials": ["dark", "metal", "metalDark"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/pipe_end.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.6928,
+				"height": 0.6,
+				"depth": 1.0
+			},
+			"bbox_min": [1.6536, -2.0, -0.0],
+			"bbox_max": [2.3464, -1.0, 0.6],
+			"vertices": 118,
+			"faces": 82,
+			"mesh_count": 1,
+			"mesh_names": ["pipe_end"],
+			"materials": ["dark", "metal", "metalDark"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/pipe_entrance.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.9238,
+				"height": 0.8,
+				"depth": 0.6
+			},
+			"bbox_min": [1.5381, -2.0, -0.1],
+			"bbox_max": [2.4619, -1.4, 0.7],
+			"vertices": 174,
+			"faces": 126,
+			"mesh_count": 1,
+			"mesh_names": ["pipe_entrance"],
+			"materials": ["metal", "metalDark"],
+			"material_colors": {
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/pipe_ring.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.9238,
+				"height": 0.8,
+				"depth": 1.0
+			},
+			"bbox_min": [1.5381, -2.0, -0.1],
+			"bbox_max": [2.4619, -1.0, 0.7],
+			"vertices": 204,
+			"faces": 144,
+			"mesh_count": 1,
+			"mesh_names": ["pipe_ring"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/pipe_split.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 1.0,
+				"height": 0.6,
+				"depth": 0.8464
+			},
+			"bbox_min": [1.5, -1.8464, 0.0],
+			"bbox_max": [2.5, -1.0, 0.6],
+			"vertices": 212,
+			"faces": 142,
+			"mesh_count": 1,
+			"mesh_names": ["pipe_split"],
+			"materials": ["dark", "metal", "metalDark"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/pipe_straight.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.6928,
+				"height": 0.6,
+				"depth": 1.0
+			},
+			"bbox_min": [1.6536, -2.0, -0.0],
+			"bbox_max": [2.3464, -1.0, 0.6],
+			"vertices": 112,
+			"faces": 80,
+			"mesh_count": 1,
+			"mesh_names": ["pipe_straight"],
+			"materials": ["dark", "metal", "metalDark"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/pipe_supportHigh.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.4,
+				"height": 1.0,
+				"depth": 0.4
+			},
+			"bbox_min": [1.8, -1.7, -0.0],
+			"bbox_max": [2.2, -1.3, 1.0],
+			"vertices": 84,
+			"faces": 40,
+			"mesh_count": 1,
+			"mesh_names": ["pipe_supportHigh"],
+			"materials": ["_defaultMat", "metal", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"_defaultMat": [1.0, 1.0, 1.0],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/pipe_supportLow.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.4,
+				"height": 0.5,
+				"depth": 0.4
+			},
+			"bbox_min": [1.8, -1.7, -0.0],
+			"bbox_max": [2.2, -1.3, 0.5],
+			"vertices": 84,
+			"faces": 40,
+			"mesh_count": 1,
+			"mesh_names": ["pipe_supportLow"],
+			"materials": ["_defaultMat", "metal", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"_defaultMat": [1.0, 1.0, 1.0],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/power_box_01.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.4626,
+				"height": 0.5031,
+				"depth": 0.402
+			},
+			"bbox_min": [-0.2876, -0.3545, -0.2516],
+			"bbox_max": [0.175, 0.0475, 0.2516],
+			"vertices": 20513,
+			"faces": 21272,
+			"mesh_count": 2,
+			"mesh_names": ["power_box_01_door", "power_box_01_box"],
+			"materials": ["power_box_01"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/satelliteDish.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.6884,
+				"height": 0.6165,
+				"depth": 0.5665
+			},
+			"bbox_min": [1.6558, -1.75, -0.0],
+			"bbox_max": [2.3442, -1.1835, 0.6165],
+			"vertices": 424,
+			"faces": 274,
+			"mesh_count": 1,
+			"mesh_names": ["satelliteDish"],
+			"materials": ["_defaultMat", "dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"_defaultMat": [1.0, 1.0, 1.0],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/satelliteDish_detailed.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.7,
+				"height": 0.6165,
+				"depth": 0.7
+			},
+			"bbox_min": [1.65, -1.85, -0.0],
+			"bbox_max": [2.35, -1.15, 0.6165],
+			"vertices": 584,
+			"faces": 390,
+			"mesh_count": 1,
+			"mesh_names": ["satelliteDish_detailed"],
+			"materials": ["_defaultMat", "dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"_defaultMat": [1.0, 1.0, 1.0],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/satelliteDish_large.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.8487,
+				"height": 0.8142,
+				"depth": 0.7369
+			},
+			"bbox_min": [1.5756, -1.7692, 0.0],
+			"bbox_max": [2.4244, -1.0323, 0.8142],
+			"vertices": 308,
+			"faces": 186,
+			"mesh_count": 1,
+			"mesh_names": ["satelliteDish_large"],
+			"materials": ["dark", "metal", "metalDark"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "infrastructure/street_lamp_01.glb",
+			"category": "infrastructure",
+			"bounds": {
+				"width": 0.7043,
+				"height": 3.8706,
+				"depth": 0.3865
+			},
+			"bbox_min": [-0.3522, -0.1932, 0.0],
+			"bbox_max": [0.3522, 0.1932, 3.8706],
+			"vertices": 17906,
+			"faces": 30610,
+			"mesh_count": 1,
+			"mesh_names": ["street_lamp_01"],
+			"materials": [
+				"street_lamp_01",
+				"street_lamp_01_bulb",
+				"street_lamp_01_glass"
+			],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "logistics/box-large.glb",
+			"category": "logistics",
+			"bounds": {
+				"width": 1.0,
+				"height": 0.5,
+				"depth": 1.0
+			},
+			"bbox_min": [-0.5, -0.5, 0.0],
+			"bbox_max": [0.5, 0.5, 0.5],
+			"vertices": 48,
+			"faces": 28,
+			"mesh_count": 1,
+			"mesh_names": ["box-large"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "logistics/box-long.glb",
+			"category": "logistics",
+			"bounds": {
+				"width": 1.0,
+				"height": 0.5,
+				"depth": 0.5
+			},
+			"bbox_min": [-0.5, -0.25, 0.0],
+			"bbox_max": [0.5, 0.25, 0.5],
+			"vertices": 48,
+			"faces": 28,
+			"mesh_count": 1,
+			"mesh_names": ["box-long"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "logistics/box-small.glb",
+			"category": "logistics",
+			"bounds": {
+				"width": 0.5,
+				"height": 0.5,
+				"depth": 0.5
+			},
+			"bbox_min": [-0.25, -0.25, 0.0],
+			"bbox_max": [0.25, 0.25, 0.5],
+			"vertices": 48,
+			"faces": 28,
+			"mesh_count": 1,
+			"mesh_names": ["box-small"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "logistics/box-wide.glb",
+			"category": "logistics",
+			"bounds": {
+				"width": 0.5,
+				"height": 0.5,
+				"depth": 1.0
+			},
+			"bbox_min": [-0.25, -0.5, 0.0],
+			"bbox_max": [0.25, 0.5, 0.5],
+			"vertices": 48,
+			"faces": 28,
+			"mesh_count": 1,
+			"mesh_names": ["box-wide"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "logistics/craft_cargoA.glb",
+			"category": "logistics",
+			"bounds": {
+				"width": 1.6,
+				"height": 0.8,
+				"depth": 2.45
+			},
+			"bbox_min": [1.2, -2.725, 0.0],
+			"bbox_max": [2.8, -0.275, 0.8],
+			"vertices": 422,
+			"faces": 264,
+			"mesh_count": 1,
+			"mesh_names": ["craft_cargoA"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "logistics/craft_cargoB.glb",
+			"category": "logistics",
+			"bounds": {
+				"width": 1.5,
+				"height": 0.9,
+				"depth": 2.5
+			},
+			"bbox_min": [1.25, -2.75, 0.0],
+			"bbox_max": [2.75, -0.25, 0.9],
+			"vertices": 602,
+			"faces": 380,
+			"mesh_count": 1,
+			"mesh_names": ["craft_cargoB"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "logistics/craft_miner.glb",
+			"category": "logistics",
+			"bounds": {
+				"width": 1.8,
+				"height": 0.7,
+				"depth": 2.6
+			},
+			"bbox_min": [1.1, -2.8, 0.0],
+			"bbox_max": [2.9, -0.2, 0.7],
+			"vertices": 640,
+			"faces": 384,
+			"mesh_count": 1,
+			"mesh_names": ["craft_miner"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "logistics/door-wide-closed.glb",
+			"category": "logistics",
+			"bounds": {
+				"width": 1.8,
+				"height": 1.6,
+				"depth": 0.0
+			},
+			"bbox_min": [-0.9, -0.4, 0.0],
+			"bbox_max": [0.9, -0.4, 1.6],
+			"vertices": 36,
+			"faces": 22,
+			"mesh_count": 1,
+			"mesh_names": ["door-wide-closed"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "logistics/door-wide-open.glb",
+			"category": "logistics",
+			"bounds": {
+				"width": 1.8,
+				"height": 0.7802,
+				"depth": 0.3
+			},
+			"bbox_min": [-0.9, -0.7, 0.8198],
+			"bbox_max": [0.9, -0.4, 1.6],
+			"vertices": 24,
+			"faces": 16,
+			"mesh_count": 1,
+			"mesh_names": ["door-wide-open"],
+			"materials": ["colormap"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "logistics/rollershutter_door.glb",
+			"category": "logistics",
+			"bounds": {
+				"width": 3.08,
+				"height": 2.4,
+				"depth": 0.3001
+			},
+			"bbox_min": [-0.54, -0.2991, 0.0],
+			"bbox_max": [2.54, 0.001, 2.4],
+			"vertices": 1372,
+			"faces": 1104,
+			"mesh_count": 2,
+			"mesh_names": ["rollershutter_door", "rollershutter_door_graffiti"],
+			"materials": ["rollershutter_door", "rollershutter_door_graffiti"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "logistics/rover.glb",
+			"category": "logistics",
+			"bounds": {
+				"width": 0.3,
+				"height": 0.3853,
+				"depth": 0.35
+			},
+			"bbox_min": [1.85, -1.675, 0.0067],
+			"bbox_max": [2.15, -1.325, 0.392],
+			"vertices": 288,
+			"faces": 172,
+			"mesh_count": 1,
+			"mesh_names": ["rover"],
+			"materials": ["dark", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"dark": [0.2745, 0.298, 0.3412],
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "robots/hostile/Arachnoid.glb",
+			"category": "robots",
+			"bounds": {
+				"width": 0.042,
+				"height": 0.0585,
+				"depth": 0.054
+			},
+			"bbox_min": [-0.021, -0.0285, -0.03],
+			"bbox_max": [0.021, 0.0255, 0.0285],
+			"vertices": 31092,
+			"faces": 10364,
+			"mesh_count": 1,
+			"mesh_names": ["Mesh_0"],
+			"materials": ["Material_0"],
+			"material_colors": {},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "robots/hostile/MechaTrooper.glb",
+			"category": "robots",
+			"bounds": {
+				"width": 0.078,
+				"height": 0.09,
+				"depth": 0.048
+			},
+			"bbox_min": [-0.039, -0.0255, -0.045],
+			"bbox_max": [0.039, 0.0225, 0.045],
+			"vertices": 99228,
+			"faces": 33076,
+			"mesh_count": 1,
+			"mesh_names": ["Mesh_0"],
+			"materials": ["Material_0"],
+			"material_colors": {},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "robots/hostile/QuadrupedTank.glb",
+			"category": "robots",
+			"bounds": {
+				"width": 0.057,
+				"height": 0.084,
+				"depth": 0.075
+			},
+			"bbox_min": [-0.0285, -0.039, -0.042],
+			"bbox_max": [0.0285, 0.036, 0.042],
+			"vertices": 79644,
+			"faces": 26548,
+			"mesh_count": 1,
+			"mesh_names": ["Mesh_0"],
+			"materials": ["Material_0"],
+			"material_colors": {},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "robots/industrial/MechaGolem.glb",
+			"category": "robots",
+			"bounds": {
+				"width": 0.078,
+				"height": 0.081,
+				"depth": 0.06
+			},
+			"bbox_min": [-0.039, -0.0315, -0.0405],
+			"bbox_max": [0.039, 0.0285, 0.0405],
+			"vertices": 75336,
+			"faces": 25112,
+			"mesh_count": 1,
+			"mesh_names": ["Mesh_0"],
+			"materials": ["Material_0"],
+			"material_colors": {},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "robots/industrial/MobileStorageBot.glb",
+			"category": "robots",
+			"bounds": {
+				"width": 0.075,
+				"height": 0.069,
+				"depth": 0.051
+			},
+			"bbox_min": [-0.0375, -0.027, -0.0345],
+			"bbox_max": [0.0375, 0.024, 0.0345],
+			"vertices": 52848,
+			"faces": 17616,
+			"mesh_count": 1,
+			"mesh_names": ["Mesh_0"],
+			"materials": ["Material_0"],
+			"material_colors": {},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "robots/player/Companion-bot.glb",
+			"category": "robots",
+			"bounds": {
+				"width": 0.0345,
+				"height": 0.0855,
+				"depth": 0.027
+			},
+			"bbox_min": [-0.0172, -0.015, -0.0428],
+			"bbox_max": [0.0172, 0.012, 0.0428],
+			"vertices": 21936,
+			"faces": 7312,
+			"mesh_count": 1,
+			"mesh_names": ["Mesh_0"],
+			"materials": ["Material_0"],
+			"material_colors": {},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "robots/player/FieldFighter.glb",
+			"category": "robots",
+			"bounds": {
+				"width": 0.057,
+				"height": 0.0885,
+				"depth": 0.024
+			},
+			"bbox_min": [-0.0285, -0.0135, -0.0443],
+			"bbox_max": [0.0285, 0.0105, 0.0443],
+			"vertices": 42792,
+			"faces": 14264,
+			"mesh_count": 1,
+			"mesh_names": ["Mesh_0"],
+			"materials": ["Material_0"],
+			"material_colors": {},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "robots/player/Mecha01.glb",
+			"category": "robots",
+			"bounds": {
+				"width": 0.057,
+				"height": 0.066,
+				"depth": 0.06
+			},
+			"bbox_min": [-0.0285, -0.0315, -0.033],
+			"bbox_max": [0.0285, 0.0285, 0.033],
+			"vertices": 62712,
+			"faces": 20904,
+			"mesh_count": 1,
+			"mesh_names": ["Mesh_0"],
+			"materials": ["Material_0"],
+			"material_colors": {},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "robots/player/ReconBot.glb",
+			"category": "robots",
+			"bounds": {
+				"width": 0.0405,
+				"height": 0.0885,
+				"depth": 0.042
+			},
+			"bbox_min": [-0.0203, -0.0225, -0.0443],
+			"bbox_max": [0.0203, 0.0195, 0.0443],
+			"vertices": 41208,
+			"faces": 13736,
+			"mesh_count": 1,
+			"mesh_names": ["Mesh_0"],
+			"materials": ["Material_0"],
+			"material_colors": {},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/Column_MetalSupport.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 0.9566,
+				"height": 0.044,
+				"depth": 4.0
+			},
+			"bbox_min": [-0.4709, -2.0, -0.022],
+			"bbox_max": [0.4857, 2.0, 0.022],
+			"vertices": 744,
+			"faces": 748,
+			"mesh_count": 1,
+			"mesh_names": ["Column_MetalSupport"],
+			"materials": ["MI_PaddedWall", "MI_Trim_02"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/Column_Pipes.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 0.8746,
+				"height": 5.0,
+				"depth": 0.8746
+			},
+			"bbox_min": [-0.4373, -0.4373, -0.0],
+			"bbox_max": [0.4373, 0.4373, 5.0],
+			"vertices": 6540,
+			"faces": 6480,
+			"mesh_count": 1,
+			"mesh_names": ["Column_Pipes"],
+			"materials": ["MI_PaddedWall", "MI_Trim_01", "MI_Trim_02"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/Column_Simple.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 0.5068,
+				"height": 5.0,
+				"depth": 0.9749
+			},
+			"bbox_min": [-0.2534, -0.4687, 0.0],
+			"bbox_max": [0.2534, 0.5062, 5.0],
+			"vertices": 174,
+			"faces": 108,
+			"mesh_count": 1,
+			"mesh_names": ["Column_Simple"],
+			"materials": ["MI_Trim_01", "MI_Trim_02"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/Prop_AccessPoint.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 0.4412,
+				"height": 0.4679,
+				"depth": 1.2963
+			},
+			"bbox_min": [-0.2206, -0.639, 1.1118],
+			"bbox_max": [0.2206, 0.6573, 1.5797],
+			"vertices": 754,
+			"faces": 738,
+			"mesh_count": 1,
+			"mesh_names": ["Prop_AccessPoint"],
+			"materials": [
+				"MI_Trim_01",
+				"M_Black",
+				"M_Decal_Screen",
+				"M_LightFade_Red"
+			],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/Prop_Vent_Big.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 2.0004,
+				"height": 0.0688,
+				"depth": 0.9764
+			},
+			"bbox_min": [-1.0002, -0.4812, -0.0688],
+			"bbox_max": [1.0002, 0.4952, 0.0],
+			"vertices": 574,
+			"faces": 328,
+			"mesh_count": 1,
+			"mesh_names": ["Prop_Vent_Big"],
+			"materials": ["MI_Trim_01", "MI_Trim_02"],
+			"material_colors": {},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/Prop_Vent_Small.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 1.0,
+				"height": 0.0438,
+				"depth": 0.6183
+			},
+			"bbox_min": [-0.5, -0.3092, -0.0],
+			"bbox_max": [0.5, 0.3092, 0.0438],
+			"vertices": 396,
+			"faces": 210,
+			"mesh_count": 1,
+			"mesh_names": ["Prop_Vent_Small"],
+			"materials": ["MI_Trim_01", "MI_Trim_02", "M_Black"],
+			"material_colors": {
+				"M_Black": [0.0058, 0.0058, 0.0058]
+			},
+			"has_textures": true,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/platform_center.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 1.0,
+				"height": 0.0,
+				"depth": 1.0
+			},
+			"bbox_min": [1.5, -2.0, 0.05],
+			"bbox_max": [2.5, -1.0, 0.05],
+			"vertices": 8,
+			"faces": 4,
+			"mesh_count": 1,
+			"mesh_names": ["platform_center"],
+			"materials": ["metal"],
+			"material_colors": {
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/platform_corner.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 1.0,
+				"height": 0.1,
+				"depth": 1.0
+			},
+			"bbox_min": [1.5, -2.0, -0.0],
+			"bbox_max": [2.5, -1.0, 0.1],
+			"vertices": 134,
+			"faces": 84,
+			"mesh_count": 1,
+			"mesh_names": ["platform_corner"],
+			"materials": ["metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/platform_high.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 1.0,
+				"height": 1.0,
+				"depth": 1.0
+			},
+			"bbox_min": [1.5, -2.0, 0.0],
+			"bbox_max": [2.5, -1.0, 1.0],
+			"vertices": 388,
+			"faces": 236,
+			"mesh_count": 1,
+			"mesh_names": ["platform_high"],
+			"materials": ["_defaultMat", "metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"_defaultMat": [1.0, 1.0, 1.0],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/platform_large.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 2.0,
+				"height": 0.1,
+				"depth": 2.0
+			},
+			"bbox_min": [1.0, -2.5, 0.0],
+			"bbox_max": [3.0, -0.5, 0.1],
+			"vertices": 104,
+			"faces": 76,
+			"mesh_count": 1,
+			"mesh_names": ["platform_large"],
+			"materials": ["metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/structure.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 1.0,
+				"height": 1.0,
+				"depth": 1.0
+			},
+			"bbox_min": [1.5, -2.0, -0.0],
+			"bbox_max": [2.5, -1.0, 1.0],
+			"vertices": 280,
+			"faces": 168,
+			"mesh_count": 1,
+			"mesh_names": ["structure"],
+			"materials": ["metal", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/structure_closed.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 1.0,
+				"height": 1.0,
+				"depth": 1.0
+			},
+			"bbox_min": [1.5, -2.0, -0.0],
+			"bbox_max": [2.5, -1.0, 1.0],
+			"vertices": 408,
+			"faces": 264,
+			"mesh_count": 1,
+			"mesh_names": ["structure_closed"],
+			"materials": ["metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/structure_detailed.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 1.0,
+				"height": 1.0,
+				"depth": 1.0
+			},
+			"bbox_min": [1.5, -2.0, -0.0],
+			"bbox_max": [2.5, -1.0, 1.0],
+			"vertices": 400,
+			"faces": 232,
+			"mesh_count": 1,
+			"mesh_names": ["structure_detailed"],
+			"materials": ["metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/supports_high.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 0.825,
+				"height": 1.0,
+				"depth": 0.825
+			},
+			"bbox_min": [1.5875, -1.9125, 0.0],
+			"bbox_max": [2.4125, -1.0875, 1.0],
+			"vertices": 540,
+			"faces": 312,
+			"mesh_count": 1,
+			"mesh_names": ["supports_high"],
+			"materials": ["metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		},
+		{
+			"path": "structural/supports_low.glb",
+			"category": "structural",
+			"bounds": {
+				"width": 0.825,
+				"height": 0.5,
+				"depth": 0.825
+			},
+			"bbox_min": [1.5875, -1.9125, 0.0],
+			"bbox_max": [2.4125, -1.0875, 0.5],
+			"vertices": 324,
+			"faces": 184,
+			"mesh_count": 1,
+			"mesh_names": ["supports_low"],
+			"materials": ["metal", "metalDark", "metalRed"],
+			"material_colors": {
+				"metalRed": [1.0, 0.6285, 0.2028],
+				"metalDark": [0.6751, 0.71, 0.7736],
+				"metal": [0.8431, 0.8706, 0.9098]
+			},
+			"has_textures": false,
+			"has_animations": false,
+			"has_armature": false
+		}
+	]
+}

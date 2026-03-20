@@ -1,305 +1,540 @@
-import gameplayConfig from "../config/gameplay.json";
-import type { Entity } from "../ecs/traits";
-import { Hacking, Identity, Signal, Unit, WorldPosition } from "../ecs/traits";
-import { world } from "../ecs/world";
-import { globalCompute } from "./hacking";
-
 /**
- * Extended hacking system for the radial capture flow (US-009).
+ * Hacking System — multi-target hacking for buildings and units.
  *
- * Radial 'Hack' action on player unit adjacent to hostile bot.
- * Requirements: signal link active + sufficient compute.
- * Multi-turn progress bar over target. On completion: hostile bot
- * faction changes to player, gains player speech profile.
+ * Building hacks (Volt Collective / player only):
+ *   - disable_building: removes Powered trait
+ *   - steal_resources: transfers resources from target faction
+ *   - convert_turret: flips turret faction ownership
  *
- * Hacked unit type mapping:
- *   Arachnoid  -> light melee
- *   MechaTrooper -> ranged
- *   QuadrupedTank -> siege
+ * Unit capture (ANY faction can initiate):
+ *   - capture_unit: flips target unit's faction, applies HackedBotRole stats
+ *   - This is the ONLY way to acquire ranged/siege units (GAME_DESIGN.md §7)
+ *   - Humans are unhackable (lore-aligned)
  *
- * Fails if signal link broken (target moves out of range) -- progress resets.
- *
- * IMPORTANT: Koota static traits return copies from get(), not mutable refs.
- * All mutations use entity.set() to persist changes.
+ * Flow:
+ *   1. startHack() / startUnitHack() — validates, adds HackProgress trait
+ *   2. runHackProgress() — called each turn in environment phase, decrements timer
+ *   3. When timer reaches 0, resolveHack() / resolveUnitCapture() applies effect
  */
 
-/** Range at which a hack can operate */
-export const HACK_RANGE = 3.0;
+import type { World } from "koota";
+import { trait } from "koota";
+import { playSfx } from "../audio/sfx";
+import type { RobotClass } from "../robots/types";
+import {
+	Building,
+	Faction,
+	Powered,
+	ResourcePool,
+	UnitFaction,
+	UnitPos,
+	UnitStats,
+	UnitVisual,
+} from "../traits";
+import { pushTurnEvent } from "../ui/game/turnEvents";
+import {
+	getHackedBotRole,
+	HACKING_AP_COST,
+	HACKING_BASE_DIFFICULTY,
+	HACKING_RANGE,
+} from "./hackingTypes";
+import { pushToast } from "./toastNotifications";
 
-/** Speech profile assigned to captured units by their original type */
-export const CAPTURED_SPEECH_PROFILES: Record<string, string> = {
-	arachnoid: "light_melee",
-	mecha_trooper: "ranged",
-	quadruped_tank: "siege",
-};
+// ─── Types ──────────────────────────────────────────────────────────────────
 
-export interface HackCheckResult {
-	canHack: boolean;
-	reason: string | null;
+export type HackType =
+	| "disable_building"
+	| "steal_resources"
+	| "convert_turret"
+	| "capture_unit";
+
+// ─── Hack Progress Trait ────────────────────────────────────────────────────
+
+/** Attached to the hacking unit while a hack is in progress. */
+export const HackProgress = trait({
+	/** Entity ID of the building or unit being hacked. */
+	targetEntityId: -1,
+	/** Turns remaining until hack completes. */
+	turnsRemaining: 0,
+	/** Total turns required (for progress bar). */
+	totalTurns: 0,
+	/** What this hack does on completion. */
+	hackType: "disable_building" as HackType,
+});
+
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+/** How many turns a disabled building stays offline after a disable hack. */
+const DISABLE_DURATION_TURNS = 3;
+
+/** Amount of each resource stolen per steal_resources hack. */
+const STEAL_AMOUNT = 5;
+
+/** Robot classes that can hack (support units). */
+const _HACKER_MODEL_IDS = new Set(["support"]);
+
+/** Difficulty multiplier for unit capture vs building hacks. */
+const UNIT_CAPTURE_DIFFICULTY = 6;
+
+// ─── Validation ─────────────────────────────────────────────────────────────
+
+export type StartHackResult =
+	| { ok: true }
+	| {
+			ok: false;
+			reason:
+				| "no_unit"
+				| "no_ap"
+				| "not_hacker"
+				| "not_volt"
+				| "already_hacking"
+				| "no_target"
+				| "own_building"
+				| "out_of_range"
+				| "invalid_hack_type";
+	  };
+
+export type StartUnitHackResult =
+	| { ok: true }
+	| {
+			ok: false;
+			reason:
+				| "no_unit"
+				| "no_ap"
+				| "already_hacking"
+				| "no_target"
+				| "own_unit"
+				| "out_of_range";
+	  };
+
+function manhattanDist(ax: number, az: number, bx: number, bz: number): number {
+	return Math.abs(ax - bx) + Math.abs(az - bz);
+}
+
+// ─── Actions ────────────────────────────────────────────────────────────────
+
+/**
+ * Start a hack on a target building. Validates all preconditions.
+ */
+export function startHack(
+	world: World,
+	hackerEntityId: number,
+	targetEntityId: number,
+	hackType: HackType,
+): StartHackResult {
+	// Find hacker unit
+	let hackerEntity = null;
+	for (const e of world.query(UnitStats, UnitFaction, UnitPos)) {
+		if (e.id() === hackerEntityId) {
+			hackerEntity = e;
+			break;
+		}
+	}
+	if (!hackerEntity) return { ok: false, reason: "no_unit" };
+
+	// Check AP
+	const stats = hackerEntity.get(UnitStats);
+	if (!stats || stats.ap < HACKING_AP_COST)
+		return { ok: false, reason: "no_ap" };
+
+	// Check not already hacking
+	if (hackerEntity.has(HackProgress))
+		return { ok: false, reason: "already_hacking" };
+
+	// Check hacker is a support unit (modelId check)
+	const hackerFaction = hackerEntity.get(UnitFaction);
+	if (!hackerFaction) return { ok: false, reason: "no_unit" };
+
+	// Volt Collective faction check — only volt_collective (or player-as-volt) can hack
+	if (
+		hackerFaction.factionId !== "volt_collective" &&
+		hackerFaction.factionId !== "player"
+	) {
+		return { ok: false, reason: "not_volt" };
+	}
+
+	// Find target building
+	let targetBuilding = null;
+	for (const e of world.query(Building)) {
+		if (e.id() === targetEntityId) {
+			targetBuilding = e;
+			break;
+		}
+	}
+	if (!targetBuilding) return { ok: false, reason: "no_target" };
+
+	const building = targetBuilding.get(Building);
+	if (!building) return { ok: false, reason: "no_target" };
+
+	// Can't hack own buildings
+	if (building.factionId === hackerFaction.factionId)
+		return { ok: false, reason: "own_building" };
+
+	// Validate hack type against building type
+	if (
+		hackType === "convert_turret" &&
+		building.buildingType !== "defense_turret"
+	) {
+		return { ok: false, reason: "invalid_hack_type" };
+	}
+
+	// Range check
+	const hackerPos = hackerEntity.get(UnitPos);
+	if (!hackerPos) return { ok: false, reason: "no_unit" };
+
+	const dist = manhattanDist(
+		hackerPos.tileX,
+		hackerPos.tileZ,
+		building.tileX,
+		building.tileZ,
+	);
+	if (dist > HACKING_RANGE) return { ok: false, reason: "out_of_range" };
+
+	// Deduct AP
+	hackerEntity.set(UnitStats, { ...stats, ap: stats.ap - HACKING_AP_COST });
+
+	// Add HackProgress trait
+	hackerEntity.add(
+		HackProgress({
+			targetEntityId,
+			turnsRemaining: HACKING_BASE_DIFFICULTY,
+			totalTurns: HACKING_BASE_DIFFICULTY,
+			hackType,
+		}),
+	);
+
+	pushTurnEvent(`Hacking initiated: ${hackType.replace(/_/g, " ")}`);
+	return { ok: true };
 }
 
 /**
- * Check whether a hacker entity can initiate a hack on a target.
+ * Cancel an active hack. Progress is lost.
  */
-export function checkHackEligibility(
-	hacker: Entity,
-	target: Entity,
-): HackCheckResult {
-	const hackerIdentity = hacker.get(Identity);
-	if (!hackerIdentity || hackerIdentity.faction !== "player") {
-		return { canHack: false, reason: "Only player units can hack" };
+export function cancelHack(world: World, hackerEntityId: number): boolean {
+	for (const e of world.query(HackProgress)) {
+		if (e.id() !== hackerEntityId) continue;
+		e.remove(HackProgress);
+		pushTurnEvent("Hack cancelled");
+		return true;
 	}
-
-	const targetIdentity = target.get(Identity);
-	if (!targetIdentity) {
-		return { canHack: false, reason: "Invalid target" };
-	}
-
-	if (targetIdentity.faction === "player") {
-		return { canHack: false, reason: "Cannot hack friendly units" };
-	}
-
-	if (targetIdentity.faction === "cultist") {
-		return { canHack: false, reason: "Humans cannot be hacked" };
-	}
-
-	// Check signal link
-	const signal = hacker.get(Signal);
-	if (!signal?.connected) {
-		return {
-			canHack: false,
-			reason: "No signal link — connect to network first",
-		};
-	}
-
-	// Check hacking component
-	const hackComp = hacker.get(Hacking);
-	if (!hackComp) {
-		return { canHack: false, reason: "Unit lacks hacking capability" };
-	}
-
-	// Check already hacking something else
-	if (hackComp.targetId && hackComp.targetId !== targetIdentity.id) {
-		return { canHack: false, reason: "Already hacking another target" };
-	}
-
-	// Check compute availability
-	if (globalCompute.available < hackComp.computeCostPerTick) {
-		return {
-			canHack: false,
-			reason: `Insufficient compute (need ${hackComp.computeCostPerTick}, have ${globalCompute.available})`,
-		};
-	}
-
-	return { canHack: true, reason: null };
+	return false;
 }
+
+// ─── Unit Hacking ──────────────────────────────────────────────────────────
 
 /**
- * Initiate a hack from a player unit on a hostile target.
- * Returns true if the hack was started.
+ * Start a hack on a target unit. Any faction can hack enemy units.
+ * This is the ONLY way to acquire ranged/siege units (GAME_DESIGN.md §7).
  */
-export function initiateHack(hacker: Entity, target: Entity): boolean {
-	const check = checkHackEligibility(hacker, target);
-	if (!check.canHack) return false;
+export function startUnitHack(
+	world: World,
+	hackerEntityId: number,
+	targetEntityId: number,
+): StartUnitHackResult {
+	// Find hacker unit
+	let hackerEntity = null;
+	for (const e of world.query(UnitStats, UnitFaction, UnitPos)) {
+		if (e.id() === hackerEntityId) {
+			hackerEntity = e;
+			break;
+		}
+	}
+	if (!hackerEntity) return { ok: false, reason: "no_unit" };
 
-	const hackComp = hacker.get(Hacking);
-	const targetIdentity = target.get(Identity);
-	if (!hackComp || !targetIdentity) return false;
+	const stats = hackerEntity.get(UnitStats);
+	if (!stats || stats.ap < HACKING_AP_COST)
+		return { ok: false, reason: "no_ap" };
 
-	// Use entity.set() to persist trait changes (static traits return copies from get())
-	hacker.set(Hacking, {
-		...hackComp,
-		targetId: targetIdentity.id,
-		progress: 0,
-	});
+	if (hackerEntity.has(HackProgress))
+		return { ok: false, reason: "already_hacking" };
 
-	return true;
+	const hackerFaction = hackerEntity.get(UnitFaction);
+	if (!hackerFaction) return { ok: false, reason: "no_unit" };
+
+	// Find target unit
+	let targetUnit = null;
+	for (const e of world.query(UnitStats, UnitFaction, UnitPos)) {
+		if (e.id() === targetEntityId) {
+			targetUnit = e;
+			break;
+		}
+	}
+	if (!targetUnit) return { ok: false, reason: "no_target" };
+
+	const targetFaction = targetUnit.get(UnitFaction);
+	if (!targetFaction) return { ok: false, reason: "no_target" };
+
+	// Can't hack own units
+	if (targetFaction.factionId === hackerFaction.factionId)
+		return { ok: false, reason: "own_unit" };
+
+	// Range check
+	const hackerPos = hackerEntity.get(UnitPos);
+	const targetPos = targetUnit.get(UnitPos);
+	if (!hackerPos || !targetPos) return { ok: false, reason: "no_unit" };
+
+	const dist = manhattanDist(
+		hackerPos.tileX,
+		hackerPos.tileZ,
+		targetPos.tileX,
+		targetPos.tileZ,
+	);
+	if (dist > HACKING_RANGE) return { ok: false, reason: "out_of_range" };
+
+	// Deduct AP
+	hackerEntity.set(UnitStats, { ...stats, ap: stats.ap - HACKING_AP_COST });
+
+	// Add HackProgress trait
+	hackerEntity.add(
+		HackProgress({
+			targetEntityId,
+			turnsRemaining: UNIT_CAPTURE_DIFFICULTY,
+			totalTurns: UNIT_CAPTURE_DIFFICULTY,
+			hackType: "capture_unit",
+		}),
+	);
+
+	pushTurnEvent("Unit hack initiated: capture in progress");
+	return { ok: true };
 }
 
-export interface HackProgressEvent {
-	hackerId: string;
-	targetId: string;
-	progress: number;
-	completed: boolean;
-	failed: boolean;
-	failReason: string | null;
-}
-
-let lastHackEvents: HackProgressEvent[] = [];
-
-export function getLastHackEvents(): HackProgressEvent[] {
-	return lastHackEvents;
-}
-
-export function resetHackingSystemState() {
-	lastHackEvents = [];
-}
+// ─── Per-Turn Processing ────────────────────────────────────────────────────
 
 /**
- * Extended hacking system tick. Processes all active hacks with
- * signal-link-break detection and faction conversion.
- *
- * This supplements the existing hackingSystem() in hacking.ts by
- * providing the radial-flow specific behavior (progress events,
- * speech profile assignment, link-break resets).
+ * Process all active hacks. Called each turn during the environment phase.
+ * Returns the number of hacks completed this turn.
  */
-export function hackingCaptureSystem() {
-	const events: HackProgressEvent[] = [];
-	const hackers = world.query(Hacking, Signal, Identity, WorldPosition);
+export function runHackProgress(world: World): number {
+	let completed = 0;
 
-	for (const entity of hackers) {
-		const hack = entity.get(Hacking)!;
-		const identity = entity.get(Identity)!;
-		const signal = entity.get(Signal)!;
-		const hackerPos = entity.get(WorldPosition)!;
+	for (const hacker of world.query(HackProgress, UnitFaction)) {
+		const progress = hacker.get(HackProgress);
+		if (!progress) continue;
 
-		if (!hack.targetId) continue;
+		const newRemaining = progress.turnsRemaining - 1;
 
-		const currentTargetId = hack.targetId;
-
-		// Find target
-		const target = world
-			.query(Identity, WorldPosition)
-			.find((e) => e.get(Identity)?.id === currentTargetId);
-
-		if (!target) {
-			// Target no longer exists — reset hack
-			entity.set(Hacking, {
-				...hack,
-				targetId: null,
-				progress: 0,
-			});
-			events.push({
-				hackerId: identity.id,
-				targetId: currentTargetId,
-				progress: 0,
-				completed: false,
-				failed: true,
-				failReason: "Target destroyed",
-			});
+		if (newRemaining > 0) {
+			hacker.set(HackProgress, { ...progress, turnsRemaining: newRemaining });
 			continue;
 		}
 
-		const targetIdentity = target.get(Identity)!;
-		const targetPos = target.get(WorldPosition)!;
-
-		// Already converted
-		if (targetIdentity.faction === "player") {
-			entity.set(Hacking, {
-				...hack,
-				targetId: null,
-				progress: 0,
-			});
-			continue;
-		}
-
-		// Check signal link — if broken, reset progress
-		if (!signal.connected) {
-			entity.set(Hacking, {
-				...hack,
-				targetId: null,
-				progress: 0,
-			});
-			events.push({
-				hackerId: identity.id,
-				targetId: currentTargetId,
-				progress: 0,
-				completed: false,
-				failed: true,
-				failReason: "Signal link broken",
-			});
-			continue;
-		}
-
-		// Check range — if target moved out, reset
-		const dx = hackerPos.x - targetPos.x;
-		const dz = hackerPos.z - targetPos.z;
-		const dist = Math.sqrt(dx * dx + dz * dz);
-
-		if (dist > HACK_RANGE) {
-			entity.set(Hacking, {
-				...hack,
-				targetId: null,
-				progress: 0,
-			});
-			events.push({
-				hackerId: identity.id,
-				targetId: currentTargetId,
-				progress: 0,
-				completed: false,
-				failed: true,
-				failReason: "Target out of range",
-			});
-			continue;
-		}
-
-		// Check compute
-		if (globalCompute.available < hack.computeCostPerTick) {
-			events.push({
-				hackerId: identity.id,
-				targetId: targetIdentity.id,
-				progress: hack.progress,
-				completed: false,
-				failed: false,
-				failReason: null,
-			});
-			continue;
-		}
-
-		// Progress hack
-		const difficulty = gameplayConfig.hacking.baseDifficulty;
-		globalCompute.available -= hack.computeCostPerTick;
-		const newProgress = hack.progress + hack.computeCostPerTick / difficulty;
-
-		// Use epsilon to handle floating-point accumulation near 1.0
-		const COMPLETION_THRESHOLD = 1.0 - 1e-9;
-		if (newProgress >= COMPLETION_THRESHOLD) {
-			// Success — convert target to player faction
-			target.set(Identity, {
-				...targetIdentity,
-				faction: "player" as const,
-			});
-
-			// Assign speech profile based on unit type
-			const targetUnit = target.get(Unit);
-			if (targetUnit) {
-				const speechProfile =
-					CAPTURED_SPEECH_PROFILES[targetUnit.type] ?? "generic";
-				target.set(Unit, {
-					...targetUnit,
-					displayName: `${targetUnit.displayName} [${speechProfile}]`,
-				});
+		// Hack complete — resolve effect
+		const hackerFaction = hacker.get(UnitFaction);
+		if (hackerFaction) {
+			if (progress.hackType === "capture_unit") {
+				resolveUnitCapture(
+					world,
+					progress.targetEntityId,
+					hackerFaction.factionId,
+				);
+			} else {
+				resolveHack(
+					world,
+					progress.targetEntityId,
+					progress.hackType,
+					hackerFaction.factionId,
+				);
 			}
+		}
 
-			events.push({
-				hackerId: identity.id,
-				targetId: targetIdentity.id,
-				progress: 1.0,
-				completed: true,
-				failed: false,
-				failReason: null,
-			});
+		hacker.remove(HackProgress);
+		completed++;
+	}
 
-			entity.set(Hacking, {
-				...hack,
-				targetId: null,
-				progress: 0,
-			});
-		} else {
-			entity.set(Hacking, {
-				...hack,
-				progress: newProgress,
-			});
-			events.push({
-				hackerId: identity.id,
-				targetId: targetIdentity.id,
-				progress: newProgress,
-				completed: false,
-				failed: false,
-				failReason: null,
-			});
+	return completed;
+}
+
+/**
+ * Apply the hack effect to the target building.
+ */
+function resolveHack(
+	world: World,
+	targetEntityId: number,
+	hackType: HackType,
+	hackerFactionId: string,
+): void {
+	// Find target building
+	let targetEntity = null;
+	for (const e of world.query(Building)) {
+		if (e.id() === targetEntityId) {
+			targetEntity = e;
+			break;
+		}
+	}
+	if (!targetEntity) return;
+
+	const building = targetEntity.get(Building);
+	if (!building) return;
+
+	const buildingLabel = building.buildingType.replace(/_/g, " ").toUpperCase();
+	switch (hackType) {
+		case "disable_building": {
+			// Remove Powered trait — building goes offline
+			if (targetEntity.has(Powered)) {
+				targetEntity.remove(Powered);
+			}
+			pushTurnEvent(
+				`Hack complete: ${building.buildingType.replace(/_/g, " ")} disabled`,
+			);
+			pushToast(
+				"system",
+				`BUILDING DISABLED: ${buildingLabel}`,
+				`OFFLINE FOR ${DISABLE_DURATION_TURNS} CYCLES`,
+			);
+			playSfx("build_complete");
+			break;
+		}
+
+		case "steal_resources": {
+			// Transfer resources from target faction to hacker faction
+			const stolen = transferResources(
+				world,
+				building.factionId,
+				hackerFactionId,
+				STEAL_AMOUNT,
+			);
+			if (stolen > 0) {
+				pushTurnEvent(
+					`Hack complete: stole ${stolen} resources from ${building.factionId}`,
+				);
+				pushToast(
+					"system",
+					"RESOURCE THEFT COMPLETE",
+					`${stolen} RESOURCES TRANSFERRED`,
+				);
+			} else {
+				pushTurnEvent("Hack complete: no resources to steal");
+			}
+			playSfx("build_complete");
+			break;
+		}
+
+		case "convert_turret": {
+			// Flip turret faction
+			targetEntity.set(Building, { ...building, factionId: hackerFactionId });
+			pushTurnEvent(`Hack complete: turret converted to ${hackerFactionId}`);
+			pushToast(
+				"system",
+				`TURRET CONVERTED: ${buildingLabel}`,
+				"FACTION OWNERSHIP TRANSFERRED",
+			);
+			playSfx("build_complete");
+			break;
+		}
+	}
+}
+
+/**
+ * Capture a hostile unit — flip its faction and apply HackedBotRole stat mods.
+ * The unit retains its model but gains the hacker's faction and role-specific stats.
+ */
+function resolveUnitCapture(
+	world: World,
+	targetEntityId: number,
+	hackerFactionId: string,
+): void {
+	// Find target unit
+	let targetEntity = null;
+	for (const e of world.query(UnitStats, UnitFaction)) {
+		if (e.id() === targetEntityId) {
+			targetEntity = e;
+			break;
+		}
+	}
+	if (!targetEntity) return;
+
+	const targetFaction = targetEntity.get(UnitFaction);
+	const targetStats = targetEntity.get(UnitStats);
+	if (!targetFaction || !targetStats) return;
+
+	// Flip faction
+	targetEntity.set(UnitFaction, { factionId: hackerFactionId });
+
+	// Apply HackedBotRole stat modifications
+	const visual = targetEntity.get(UnitVisual);
+	if (visual?.modelId) {
+		const role = getHackedBotRole(visual.modelId as RobotClass);
+		targetEntity.set(UnitStats, {
+			...targetStats,
+			attackRange: role.attackRange,
+			ap: Math.floor(targetStats.maxAp * role.apModifier),
+			maxAp: Math.floor(targetStats.maxAp * role.apModifier),
+		});
+	}
+
+	const modelLabel = visual?.modelId?.replace(/_/g, " ") ?? "unit";
+	pushTurnEvent(`Hack complete: ${modelLabel} captured for ${hackerFactionId}`);
+	pushToast(
+		"system",
+		`${modelLabel.toUpperCase()} CAPTURED`,
+		"FACTION CONVERTED",
+	);
+	playSfx("build_complete");
+}
+
+/**
+ * Transfer up to `amount` of each resource from source faction to target faction.
+ * Returns total resources transferred.
+ */
+function transferResources(
+	world: World,
+	sourceFactionId: string,
+	targetFactionId: string,
+	amount: number,
+): number {
+	// Find source and target faction resource pools
+	let sourcePool: Record<string, unknown> | null = null;
+	let sourceEntity = null;
+	let targetPool: Record<string, unknown> | null = null;
+	let targetEntity = null;
+
+	for (const e of world.query(Faction, ResourcePool)) {
+		const f = e.get(Faction);
+		if (!f) continue;
+		if (f.id === sourceFactionId) {
+			sourcePool = e.get(ResourcePool) as unknown as Record<string, unknown>;
+			sourceEntity = e;
+		} else if (f.id === targetFactionId) {
+			targetPool = e.get(ResourcePool) as unknown as Record<string, unknown>;
+			targetEntity = e;
 		}
 	}
 
-	lastHackEvents = events;
+	if (!sourcePool || !sourceEntity || !targetPool || !targetEntity) return 0;
+
+	const RESOURCE_KEYS = [
+		"ferrous_scrap",
+		"alloy_stock",
+		"polymer_salvage",
+		"conductor_wire",
+		"electrolyte",
+		"silicon_wafer",
+		"storm_charge",
+		"el_crystal",
+		"scrap_metal",
+		"e_waste",
+		"intact_components",
+		"thermal_fluid",
+		"depth_salvage",
+	];
+
+	let totalStolen = 0;
+	const sourceUpdates: Record<string, number> = {};
+	const targetUpdates: Record<string, number> = {};
+
+	for (const key of RESOURCE_KEYS) {
+		const available = (sourcePool[key] as number) ?? 0;
+		if (available <= 0) continue;
+		const stolen = Math.min(available, amount);
+		sourceUpdates[key] = available - stolen;
+		targetUpdates[key] = ((targetPool[key] as number) ?? 0) + stolen;
+		totalStolen += stolen;
+	}
+
+	if (totalStolen > 0) {
+		sourceEntity.set(ResourcePool, { ...sourcePool, ...sourceUpdates });
+		targetEntity.set(ResourcePool, { ...targetPool, ...targetUpdates });
+	}
+
+	return totalStolen;
 }

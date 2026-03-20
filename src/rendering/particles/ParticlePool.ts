@@ -6,6 +6,8 @@
  * age, lifetime, size, sizeEnd, and opacity.
  *
  * The pool recycles dead particles automatically.
+ *
+ * Ported from pending/rendering/particles/ParticlePool.ts — zero external deps.
  */
 
 export interface ParticleConfig {

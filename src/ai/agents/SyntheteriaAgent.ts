@@ -1,137 +1,97 @@
-import { GameEntity, Vehicle } from "yuka";
-import type {
-	BotNavigationProfile,
-	BotSteeringProfile,
-} from "../../bots/types";
-import { STEERING_TUNING } from "../config/behaviorProfiles";
-import type {
-	AgentMemoryState,
-	AgentPersistenceState,
-	AgentRole,
-	AgentStatus,
-	AgentTaskState,
-} from "./types";
+/**
+ * SyntheteriaAgent — extends Yuka Vehicle, owns a Think brain.
+ *
+ * Each AI-controlled unit gets one agent. The Think brain holds
+ * GoalEvaluators whose characterBias values come from the faction's
+ * personality profile (aggression, harvestPriority, etc).
+ */
 
-export interface AgentConstructionOptions {
-	entityId: string;
-	role: AgentRole;
-	maxSpeed?: number;
-	steeringProfile: BotSteeringProfile;
-	navigationProfile: BotNavigationProfile;
+import type { GoalEvaluator } from "yuka";
+import { Think, Vehicle } from "yuka";
+
+export interface AgentSnapshot {
+	entityId: number;
+	factionId: string;
+	tileX: number;
+	tileZ: number;
+	hp: number;
+	ap: number;
+	maxAp: number;
+	mp: number;
+	maxMp: number;
+	scanRange: number;
+	attackRange: number;
+	attack: number;
+	defense: number;
 }
 
 export class SyntheteriaAgent extends Vehicle {
-	override name: string;
-	readonly entityId: string;
-	readonly role: AgentRole;
-	steeringProfile: BotSteeringProfile;
-	navigationProfile: BotNavigationProfile;
-	status: AgentStatus;
-	task: AgentTaskState | null;
-	memory: AgentMemoryState;
+	readonly entityId: number;
+	readonly factionId: string;
+	brain: Think<SyntheteriaAgent>;
 
-	constructor({
-		entityId,
-		role,
-		maxSpeed = 1,
-		steeringProfile,
-		navigationProfile,
-	}: AgentConstructionOptions) {
+	// Snapshot of ECS state — refreshed each turn
+	tileX = 0;
+	tileZ = 0;
+	hp = 10;
+	ap = 2;
+	maxAp = 2;
+	mp = 3;
+	maxMp = 3;
+	scanRange = 4;
+	attackRange = 1;
+	attack = 2;
+	defense = 0;
+
+	// Result of brain arbitration — what this agent decided to do
+	decidedAction: DecidedAction | null = null;
+
+	// Last action type from previous turn — used for momentum bonus
+	lastActionType: string | null = null;
+
+	constructor(entityId: number, factionId: string) {
 		super();
-		this.name = entityId;
 		this.entityId = entityId;
-		this.role = role;
-		this.steeringProfile = steeringProfile;
-		this.navigationProfile = navigationProfile;
-		this.maxSpeed = maxSpeed;
-		this.status = "idle";
-		this.task = null;
-		this.memory = {
-			visibleEntities: [],
-			knownFacts: [],
-			lastUpdatedTick: 0,
-		};
-		this.applyBehaviorProfile();
+		this.factionId = factionId;
+		this.brain = new Think(this);
 	}
 
-	applyBehaviorProfile() {
-		const tuning = STEERING_TUNING[this.steeringProfile];
-		this.maxForce = tuning.maxForce;
-		return tuning;
-	}
-
-	setTask(task: AgentTaskState | null) {
-		this.task = task;
-		this.status = task ? "executing_task" : "idle";
-	}
-
-	applyPersistenceState(state: AgentPersistenceState) {
-		this.status = state.status;
-		this.steeringProfile = state.profile.steeringProfile;
-		this.navigationProfile = state.profile.navigationProfile;
-		this.task = state.task
-			? { ...state.task, payload: { ...state.task.payload } }
-			: null;
-		this.maxSpeed = state.steering.maxSpeed;
-		this.memory = {
-			visibleEntities: [...state.memory.visibleEntities],
-			knownFacts: [...state.memory.knownFacts],
-			lastUpdatedTick: state.memory.lastUpdatedTick,
-		};
-		this.applyBehaviorProfile();
+	addEvaluator(evaluator: GoalEvaluator<SyntheteriaAgent>): this {
+		this.brain.addEvaluator(evaluator);
 		return this;
 	}
 
-	toPersistenceState(): AgentPersistenceState {
-		const payload =
-			this.task && typeof this.task.payload === "object"
-				? (this.task.payload as Record<string, unknown>)
-				: null;
-		const targetPosition =
-			payload?.destination && typeof payload.destination === "object"
-				? (payload.destination as { x: number; y: number; z: number })
-				: payload?.targetPosition && typeof payload.targetPosition === "object"
-					? (payload.targetPosition as { x: number; y: number; z: number })
-					: null;
-		return {
-			entityId: this.entityId,
-			role: this.role,
-			status: this.status,
-			profile: {
-				steeringProfile: this.steeringProfile,
-				navigationProfile: this.navigationProfile,
-			},
-			task: this.task
-				? { ...this.task, payload: { ...this.task.payload } }
-				: null,
-			steering: {
-				behavior: this.steering.behaviors[0]?.constructor?.name ?? null,
-				targetPosition,
-				arrivalTolerance: 0.25,
-				maxSpeed: this.maxSpeed,
-			},
-			memory: {
-				visibleEntities: [...this.memory.visibleEntities],
-				knownFacts: [...this.memory.knownFacts],
-				lastUpdatedTick: this.memory.lastUpdatedTick,
-			},
-		};
+	/** Sync agent state from ECS snapshot. */
+	syncFromSnapshot(snap: AgentSnapshot): void {
+		this.tileX = snap.tileX;
+		this.tileZ = snap.tileZ;
+		this.hp = snap.hp;
+		this.ap = snap.ap;
+		this.maxAp = snap.maxAp;
+		this.mp = snap.mp;
+		this.maxMp = snap.maxMp;
+		this.scanRange = snap.scanRange;
+		this.attackRange = snap.attackRange;
+		this.attack = snap.attack;
+		this.defense = snap.defense;
 	}
 
-	static fromPersistenceState(state: AgentPersistenceState): SyntheteriaAgent {
-		const agent = new SyntheteriaAgent({
-			entityId: state.entityId,
-			role: state.role,
-			maxSpeed: state.steering.maxSpeed,
-			steeringProfile: state.profile.steeringProfile,
-			navigationProfile: state.profile.navigationProfile,
-		});
-		return agent.applyPersistenceState(state);
+	/** Run the Think brain's arbitration to decide the best action. */
+	arbitrate(): void {
+		this.decidedAction = null;
+		this.brain.arbitrate();
 	}
 }
 
-export function isSyntheteriaAgent(
-	value: GameEntity | SyntheteriaAgent,
-): value is SyntheteriaAgent {
-	return value instanceof SyntheteriaAgent;
-}
+export type DecidedAction =
+	| { type: "attack"; targetEntityId: number; damage: number }
+	| { type: "move"; toX: number; toZ: number }
+	| {
+			type: "harvest";
+			depositEntityId: number;
+			targetX: number;
+			targetZ: number;
+	  }
+	| { type: "build"; buildingType: string; tileX: number; tileZ: number }
+	| { type: "mine"; targetX: number; targetZ: number }
+	| { type: "idle" };

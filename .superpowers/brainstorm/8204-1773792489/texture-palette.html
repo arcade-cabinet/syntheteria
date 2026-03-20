@@ -1,0 +1,204 @@
+<h2>Texture Palette</h2>
+<p class="subtitle">Three cluster types — pick a palette that fits the mood. Swipe / scroll to compare.</p>
+
+<style>
+.palette-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0 4px;
+}
+.tex-swatch {
+  width: 72px;
+  height: 72px;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid transparent;
+  position: relative;
+  flex-shrink: 0;
+}
+.tex-label {
+  font-size: 9px;
+  text-align: center;
+  opacity: 0.55;
+  margin-top: 2px;
+  width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cluster-heading {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 14px 0 4px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.ch-metal   { background: rgba(100,160,255,0.18); color: #88aaff; }
+.ch-concrete{ background: rgba(180,180,180,0.12); color: #aaa; }
+.ch-gravel  { background: rgba(180,130,80,0.18);  color: #cc9966; }
+.board-mini {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 1px;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 180px;
+  height: 180px;
+  margin: 10px 0 4px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.board-mini .t { aspect-ratio: 1; background-size: cover; background-position: center; }
+.poi-dot {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: bold;
+}
+.p-ore     { color: #ffcc33; }
+.p-crystal { color: #88ddff; }
+.p-scrap   { color: #bbbbbb; }
+.p-disc    { color: #ffff66; }
+.p-ruin    { color: #ff6666; }
+.ratio-bar {
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  margin: 6px 0;
+  gap: 2px;
+}
+.rb-seg { height: 100%; border-radius: 2px; }
+</style>
+
+<div class="options">
+
+  <!-- Palette 1: Dark industrial — mostly metal, concrete accent, no gravel -->
+  <div class="option" data-choice="dark-industrial" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Dark Industrial</h3>
+      <p>Mostly metal grating + plates. Concrete as accent clusters. No gravel — feels clean and manufactured. Dark, high-contrast. Very machine-world.</p>
+
+      <div class="ratio-bar">
+        <div class="rb-seg" style="width:55%; background:#556699;">Metal (55%)</div>
+        <div class="rb-seg" style="width:40%; background:#444;">Concrete (40%)</div>
+        <div class="rb-seg" style="width:5%; background:#222;">—</div>
+      </div>
+
+      <div class="cluster-heading ch-metal">Metal Cluster</div>
+      <div class="palette-row">
+        <div><div class="tex-swatch" style="background-image:url('textures/Metal005.png')"></div><div class="tex-label">Metal005</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Metal010.png')"></div><div class="tex-label">Metal010</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Metal019.png')"></div><div class="tex-label">Metal019</div></div>
+      </div>
+
+      <div class="cluster-heading ch-concrete">Concrete Cluster</div>
+      <div class="palette-row">
+        <div><div class="tex-swatch" style="background-image:url('textures/Concrete001.png')"></div><div class="tex-label">Concrete001</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Concrete010.png')"></div><div class="tex-label">Concrete010</div></div>
+      </div>
+
+      <div class="board-mini">
+        <div class="t" style="background-image:url('textures/Metal005.png')"></div><div class="t" style="background-image:url('textures/Metal005.png')"><div class="poi-dot p-ore">⬡</div></div><div class="t" style="background-image:url('textures/Metal010.png')"></div><div class="t" style="background-image:url('textures/Concrete001.png')"></div><div class="t" style="background-image:url('textures/Concrete001.png')"><div class="poi-dot p-disc">★</div></div><div class="t" style="background-image:url('textures/Metal019.png')"></div><div class="t" style="background-image:url('textures/Metal019.png')"></div><div class="t" style="background-image:url('textures/Metal005.png')"></div><div class="t" style="background-image:url('textures/Metal010.png')"></div><div class="t" style="background-image:url('textures/Concrete010.png')"></div>
+        <div class="t" style="background-image:url('textures/Metal010.png')"></div><div class="t" style="background-image:url('textures/Metal005.png')"><div class="poi-dot p-crystal">◆</div></div><div class="t" style="background-image:url('textures/Concrete001.png')"></div><div class="t" style="background-image:url('textures/Concrete001.png')"></div><div class="t" style="background-image:url('textures/Metal010.png')"></div><div class="t" style="background-image:url('textures/Metal010.png')"><div class="poi-dot p-ruin">✕</div></div><div class="t" style="background-image:url('textures/Metal019.png')"></div><div class="t" style="background-image:url('textures/Metal019.png')"></div><div class="t" style="background-image:url('textures/Concrete010.png')"></div><div class="t" style="background-image:url('textures/Metal005.png')"></div>
+        <div class="t" style="background-image:url('textures/Concrete010.png')"><div class="poi-dot p-scrap">▲</div></div><div class="t" style="background-image:url('textures/Metal019.png')"></div><div class="t" style="background-image:url('textures/Metal005.png')"></div><div class="t" style="background-image:url('textures/Metal005.png')"></div><div class="t" style="background-image:url('textures/Metal010.png')"><div class="poi-dot p-ore">⬡</div></div><div class="t" style="background-image:url('textures/Concrete001.png')"></div><div class="t" style="background-image:url('textures/Concrete001.png')"></div><div class="t" style="background-image:url('textures/Metal019.png')"></div><div class="t" style="background-image:url('textures/Metal005.png')"></div><div class="t" style="background-image:url('textures/Metal010.png')"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Palette 2: Weathered ruins — concrete dominant, gravel debris, metal sparse -->
+  <div class="option" data-choice="weathered-ruins" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Weathered Ruins</h3>
+      <p>Concrete dominant with patches of gravel/debris. Metal appears only in structural clusters. Earthy, aged, post-collapse. More variety, slightly noisier.</p>
+
+      <div class="ratio-bar">
+        <div class="rb-seg" style="width:50%; background:#444;">Concrete (50%)</div>
+        <div class="rb-seg" style="width:30%; background:#5a4a30;">Gravel (30%)</div>
+        <div class="rb-seg" style="width:20%; background:#556699;">Metal (20%)</div>
+      </div>
+
+      <div class="cluster-heading ch-concrete">Concrete Cluster</div>
+      <div class="palette-row">
+        <div><div class="tex-swatch" style="background-image:url('textures/Concrete001.png')"></div><div class="tex-label">Concrete001</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Concrete020.png')"></div><div class="tex-label">Concrete020</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Concrete043A.png')"></div><div class="tex-label">Concrete043A</div></div>
+      </div>
+
+      <div class="cluster-heading ch-gravel">Gravel/Debris Cluster</div>
+      <div class="palette-row">
+        <div><div class="tex-swatch" style="background-image:url('textures/Gravel001.png')"></div><div class="tex-label">Gravel001</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Gravel010.png')"></div><div class="tex-label">Gravel010</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Gravel017.png')"></div><div class="tex-label">Gravel017</div></div>
+      </div>
+
+      <div class="cluster-heading ch-metal">Metal Cluster (sparse)</div>
+      <div class="palette-row">
+        <div><div class="tex-swatch" style="background-image:url('textures/Metal003.png')"></div><div class="tex-label">Metal003</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Metal025.png')"></div><div class="tex-label">Metal025</div></div>
+      </div>
+
+      <div class="board-mini">
+        <div class="t" style="background-image:url('textures/Concrete001.png')"></div><div class="t" style="background-image:url('textures/Concrete001.png')"><div class="poi-dot p-ore">⬡</div></div><div class="t" style="background-image:url('textures/Gravel001.png')"></div><div class="t" style="background-image:url('textures/Gravel001.png')"></div><div class="t" style="background-image:url('textures/Gravel010.png')"><div class="poi-dot p-disc">★</div></div><div class="t" style="background-image:url('textures/Concrete001.png')"></div><div class="t" style="background-image:url('textures/Concrete020.png')"></div><div class="t" style="background-image:url('textures/Concrete020.png')"></div><div class="t" style="background-image:url('textures/Metal003.png')"></div><div class="t" style="background-image:url('textures/Metal003.png')"></div>
+        <div class="t" style="background-image:url('textures/Concrete043A.png')"></div><div class="t" style="background-image:url('textures/Gravel001.png')"><div class="poi-dot p-crystal">◆</div></div><div class="t" style="background-image:url('textures/Gravel010.png')"></div><div class="t" style="background-image:url('textures/Gravel017.png')"></div><div class="t" style="background-image:url('textures/Concrete001.png')"></div><div class="t" style="background-image:url('textures/Concrete001.png')"><div class="poi-dot p-ruin">✕</div></div><div class="t" style="background-image:url('textures/Concrete020.png')"></div><div class="t" style="background-image:url('textures/Metal025.png')"></div><div class="t" style="background-image:url('textures/Metal003.png')"></div><div class="t" style="background-image:url('textures/Concrete001.png')"></div>
+        <div class="t" style="background-image:url('textures/Gravel017.png')"><div class="poi-dot p-scrap">▲</div></div><div class="t" style="background-image:url('textures/Gravel010.png')"></div><div class="t" style="background-image:url('textures/Concrete043A.png')"></div><div class="t" style="background-image:url('textures/Concrete043A.png')"></div><div class="t" style="background-image:url('textures/Gravel001.png')"><div class="poi-dot p-ore">⬡</div></div><div class="t" style="background-image:url('textures/Gravel001.png')"></div><div class="t" style="background-image:url('textures/Concrete001.png')"></div><div class="t" style="background-image:url('textures/Metal025.png')"></div><div class="t" style="background-image:url('textures/Concrete020.png')"></div><div class="t" style="background-image:url('textures/Concrete043A.png')"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Palette 3: Equal three-way split -->
+  <div class="option" data-choice="balanced-three" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Balanced Three-Way</h3>
+      <p>Metal, concrete, and gravel in roughly equal shares — each cluster type is clearly distinct and about the same frequency. Maximum visual variety. Slightly noisier but clearly readable regions.</p>
+
+      <div class="ratio-bar">
+        <div class="rb-seg" style="width:34%; background:#556699;">Metal (34%)</div>
+        <div class="rb-seg" style="width:33%; background:#444;">Concrete (33%)</div>
+        <div class="rb-seg" style="width:33%; background:#5a4a30;">Gravel (33%)</div>
+      </div>
+
+      <div class="cluster-heading ch-metal">Metal</div>
+      <div class="palette-row">
+        <div><div class="tex-swatch" style="background-image:url('textures/Metal008.png')"></div><div class="tex-label">Metal008</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Metal015.png')"></div><div class="tex-label">Metal015</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Metal030.png')"></div><div class="tex-label">Metal030</div></div>
+      </div>
+
+      <div class="cluster-heading ch-concrete">Concrete</div>
+      <div class="palette-row">
+        <div><div class="tex-swatch" style="background-image:url('textures/Concrete005.png')"></div><div class="tex-label">Concrete005</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Concrete015.png')"></div><div class="tex-label">Concrete015</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Concrete025.png')"></div><div class="tex-label">Concrete025</div></div>
+      </div>
+
+      <div class="cluster-heading ch-gravel">Gravel</div>
+      <div class="palette-row">
+        <div><div class="tex-swatch" style="background-image:url('textures/Gravel005.png')"></div><div class="tex-label">Gravel005</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Gravel015.png')"></div><div class="tex-label">Gravel015</div></div>
+        <div><div class="tex-swatch" style="background-image:url('textures/Gravel017.png')"></div><div class="tex-label">Gravel017</div></div>
+      </div>
+
+      <div class="board-mini">
+        <div class="t" style="background-image:url('textures/Metal008.png')"></div><div class="t" style="background-image:url('textures/Metal008.png')"><div class="poi-dot p-ore">⬡</div></div><div class="t" style="background-image:url('textures/Metal015.png')"></div><div class="t" style="background-image:url('textures/Concrete005.png')"></div><div class="t" style="background-image:url('textures/Concrete005.png')"><div class="poi-dot p-disc">★</div></div><div class="t" style="background-image:url('textures/Gravel005.png')"></div><div class="t" style="background-image:url('textures/Gravel005.png')"></div><div class="t" style="background-image:url('textures/Gravel015.png')"></div><div class="t" style="background-image:url('textures/Metal030.png')"></div><div class="t" style="background-image:url('textures/Metal030.png')"></div>
+        <div class="t" style="background-image:url('textures/Metal015.png')"></div><div class="t" style="background-image:url('textures/Concrete015.png')"><div class="poi-dot p-crystal">◆</div></div><div class="t" style="background-image:url('textures/Concrete005.png')"></div><div class="t" style="background-image:url('textures/Concrete025.png')"></div><div class="t" style="background-image:url('textures/Gravel017.png')"></div><div class="t" style="background-image:url('textures/Gravel005.png')"><div class="poi-dot p-ruin">✕</div></div><div class="t" style="background-image:url('textures/Gravel015.png')"></div><div class="t" style="background-image:url('textures/Metal008.png')"></div><div class="t" style="background-image:url('textures/Metal015.png')"></div><div class="t" style="background-image:url('textures/Concrete015.png')"></div>
+        <div class="t" style="background-image:url('textures/Concrete025.png')"><div class="poi-dot p-scrap">▲</div></div><div class="t" style="background-image:url('textures/Gravel017.png')"></div><div class="t" style="background-image:url('textures/Metal030.png')"></div><div class="t" style="background-image:url('textures/Metal008.png')"></div><div class="t" style="background-image:url('textures/Concrete005.png')"><div class="poi-dot p-ore">⬡</div></div><div class="t" style="background-image:url('textures/Concrete015.png')"></div><div class="t" style="background-image:url('textures/Gravel005.png')"></div><div class="t" style="background-image:url('textures/Gravel017.png')"></div><div class="t" style="background-image:url('textures/Metal030.png')"></div><div class="t" style="background-image:url('textures/Concrete025.png')"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 12px; opacity: 0.7;">
+  Each option uses 2–3 variants <em>within</em> each cluster type for subtle intra-cluster variation. The specific variant numbers can be tuned after we lock in the palette direction.
+</div>

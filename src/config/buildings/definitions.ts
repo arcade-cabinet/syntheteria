@@ -9,8 +9,8 @@
  * GLB models: public/assets/models/
  */
 
-import type { ResourceMaterial } from "../terrain";
-import type { BuildingType } from "../traits";
+import type { ResourceMaterial } from "../../terrain";
+import type { BuildingType } from "../../traits";
 
 export interface BuildingDef {
 	readonly displayName: string;

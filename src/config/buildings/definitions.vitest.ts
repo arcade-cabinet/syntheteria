@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BuildingType } from "../../traits";
-import { BUILDING_DEFS } from "../definitions";
+import { BUILDING_DEFS } from "./definitions";
 
 const ALL_BUILDING_TYPES: BuildingType[] = [
 	"storm_transmitter",

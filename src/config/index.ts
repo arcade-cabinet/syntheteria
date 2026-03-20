@@ -8,6 +8,13 @@
 export type { BuildingBlueprint, BuildingComponent } from "./buildingDefs";
 // --- Building blueprints ---
 export { BUILDING_BLUEPRINTS, getBuildingDisplayName } from "./buildingDefs";
+// --- Building definitions (data) ---
+export type {
+	BuildingDef,
+	CultStructureDef,
+	CultStructureType,
+} from "./buildings";
+export { BUILDING_DEFS, CULT_STRUCTURE_DEFS } from "./buildings";
 export type {
 	StandingAction,
 	StandingTier,
@@ -36,7 +43,6 @@ export {
 	TECH_TIER_TO_EPOCH,
 } from "./epochDefs";
 export type { FactionAiBias } from "./factionAiDefs";
-
 // --- Faction AI ---
 export {
 	FACTION_AI_BIASES,
@@ -127,6 +133,13 @@ export {
 	getRecipeCostMap,
 	RECIPE_BY_ID,
 } from "./recipeDefs";
+// --- Resource / salvage definitions (data) ---
+export type { SalvageDef, YieldRange } from "./resources";
+export {
+	getAllSalvageModelIds,
+	getSalvageTypeForModel,
+	SALVAGE_DEFS,
+} from "./resources";
 export type { TechDef, TechEffect, TechEffectType } from "./techTreeDefs";
 // --- Tech tree ---
 export { getTechsByTier, TECH_BY_ID, TECH_TREE } from "./techTreeDefs";

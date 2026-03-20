@@ -1,12 +1,13 @@
 /**
- * @package resources
+ * @package resources — REDIRECT
  *
- * Salvage type definitions — what can be found and harvested on the map.
+ * Salvage definitions have moved to src/config/resources/.
+ * This barrel re-exports for backward compatibility.
  */
 
-export type { SalvageDef, YieldRange } from "./salvageTypes";
+export type { SalvageDef, YieldRange } from "../config/resources";
 export {
 	getAllSalvageModelIds,
 	getSalvageTypeForModel,
 	SALVAGE_DEFS,
-} from "./salvageTypes";
+} from "../config/resources";

@@ -1,10 +1,16 @@
 /**
- * @package buildings
+ * @package buildings — REDIRECT
  *
- * Building and cult structure definitions.
+ * Building definitions have moved to src/config/buildings/.
+ * This barrel re-exports for backward compatibility.
  */
 
-export type { CultStructureDef, CultStructureType } from "./cultStructures";
-export { CULT_STRUCTURE_DEFS } from "./cultStructures";
-export type { BuildingDef } from "./definitions";
-export { BUILDING_DEFS } from "./definitions";
+export type {
+	BuildingDef,
+	CultStructureDef,
+	CultStructureType,
+} from "../config/buildings";
+export {
+	BUILDING_DEFS,
+	CULT_STRUCTURE_DEFS,
+} from "../config/buildings";

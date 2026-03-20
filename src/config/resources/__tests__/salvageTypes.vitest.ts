@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SalvageType } from "../../traits";
+import type { SalvageType } from "../../../traits";
 import {
 	getAllSalvageModelIds,
 	getSalvageTypeForModel,

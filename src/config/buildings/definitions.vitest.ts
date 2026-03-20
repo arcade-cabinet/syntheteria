@@ -12,7 +12,7 @@ const ALL_BUILDING_TYPES: BuildingType[] = [
 	"storage_hub",
 	"maintenance_bay",
 	"power_plant",
-	"research_lab",
+	"analysis_node",
 	"resource_refinery",
 	"solar_array",
 	"geothermal_tap",
@@ -117,8 +117,8 @@ describe("BUILDING_DEFS", () => {
 		});
 	});
 
-	describe("research_lab", () => {
-		const def = BUILDING_DEFS.research_lab;
+	describe("analysis_node", () => {
+		const def = BUILDING_DEFS.analysis_node;
 
 		it("has negative powerDelta", () => {
 			expect(def.powerDelta).toBeLessThan(0);

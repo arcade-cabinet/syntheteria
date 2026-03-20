@@ -189,8 +189,8 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		},
 		buildTime: 16,
 	},
-	research_lab: {
-		displayName: "Research Lab",
+	analysis_node: {
+		displayName: "Analysis Node",
 		modelId: "research_center",
 		assetPath: "buildings/Research_center.glb",
 		hp: 80,

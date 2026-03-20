@@ -476,18 +476,18 @@ describe("BuildEvaluator", () => {
 		}
 	});
 
-	it("setGoal picks research_lab over outpost by priority", () => {
+	it("setGoal picks analysis_node over outpost by priority", () => {
 		const agent = makeAgent({ tileX: 2, tileZ: 2 });
 		setCtx({
 			buildOptions: [
 				{ buildingType: "outpost", tileX: 3, tileZ: 2 },
-				{ buildingType: "research_lab", tileX: 4, tileZ: 2 },
+				{ buildingType: "analysis_node", tileX: 4, tileZ: 2 },
 			],
 		});
 		evaluator.setGoal(agent);
 		expect(agent.decidedAction!.type).toBe("build");
 		if (agent.decidedAction!.type === "build") {
-			expect(agent.decidedAction!.buildingType).toBe("research_lab");
+			expect(agent.decidedAction!.buildingType).toBe("analysis_node");
 		}
 	});
 });

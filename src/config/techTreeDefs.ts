@@ -1,5 +1,8 @@
 /**
- * Tech tree definitions — base techs + specialization track techs.
+ * LEGACY — Tech tree definitions retained for backward compatibility.
+ * Building-driven progression (MEGA-PHASE 2) replaces the centralized
+ * tech tree with per-building upgrade tiers and building→building unlock
+ * chains. See src/config/buildingUnlockDefs.ts for the new system.
  *
  * Prerequisite chains form the research DAG.
  * Effects are applied when research completes.

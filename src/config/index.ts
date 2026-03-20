@@ -15,6 +15,18 @@ export type {
 	CultStructureType,
 } from "./buildings";
 export { BUILDING_DEFS, CULT_STRUCTURE_DEFS } from "./buildings";
+// --- Building unlock chains ---
+export type {
+	BuildingTierDef,
+	BuildingUnlockDef,
+} from "./buildingUnlockDefs";
+export {
+	BUILDING_UNLOCK_CHAINS,
+	isBuildingUnlocked,
+	MOTOR_POOL_MARK_TIERS,
+	MOTOR_POOL_UNIT_TIERS,
+	STARTER_BUILDINGS,
+} from "./buildingUnlockDefs";
 export type {
 	StandingAction,
 	StandingTier,

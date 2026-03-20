@@ -12,6 +12,7 @@ export {
 	type BuildingType,
 	Powered,
 	PowerGrid,
+	RESEARCH_LAB_ALIAS,
 	SignalNode,
 	StorageCapacity,
 	TurretStats,

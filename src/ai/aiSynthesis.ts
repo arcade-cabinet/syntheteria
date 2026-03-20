@@ -22,8 +22,8 @@ import { isCultFactionId } from "./aiHelpers";
 
 /**
  * Synthesis priority: produce the refined materials most needed for
- * upcoming builds. alloy_stock unlocks motor_pool and research_lab.
- * polymer_salvage unlocks storage_hub. silicon_wafer unlocks research_lab.
+ * upcoming builds. alloy_stock unlocks motor_pool and analysis_node.
+ * polymer_salvage unlocks storage_hub. silicon_wafer unlocks analysis_node.
  */
 const SYNTHESIS_PRIORITY: readonly string[] = [
 	"alloy_fusion", // ferrous_scrap -> alloy_stock (most needed)

@@ -84,7 +84,7 @@ describe("victorySystem", () => {
 					tileX: 1,
 					tileZ: 1,
 					factionId: "player",
-					buildingType: "research_lab",
+					buildingType: "analysis_node",
 				}),
 			);
 
@@ -110,7 +110,7 @@ describe("victorySystem", () => {
 					tileX: 1,
 					tileZ: 1,
 					factionId: "player",
-					buildingType: "research_lab",
+					buildingType: "analysis_node",
 				}),
 			);
 

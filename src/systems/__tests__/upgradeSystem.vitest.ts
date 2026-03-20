@@ -87,7 +87,7 @@ describe("upgradeSystem", () => {
 			Building({
 				tileX,
 				tileZ,
-				buildingType: "research_lab",
+				buildingType: "analysis_node",
 				modelId: "test",
 				factionId: "player",
 				hp: 80,

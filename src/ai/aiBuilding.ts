@@ -32,7 +32,7 @@ export const AI_BUILDABLE: BuildingType[] = [
 	"storm_transmitter",
 	"motor_pool",
 	"synthesizer",
-	"research_lab",
+	"analysis_node",
 	"outpost",
 	"storage_hub",
 	"defense_turret",
@@ -46,7 +46,7 @@ const MAX_PER_TYPE: Record<string, number> = {
 	storm_transmitter: 2,
 	motor_pool: 3,
 	synthesizer: 2,
-	research_lab: 1,
+	analysis_node: 1,
 	outpost: 5,
 	storage_hub: 2,
 	defense_turret: 4,
@@ -331,7 +331,7 @@ export function dynamicAiBuildOrder(
 	if ((existing["motor_pool"] ?? 0) === 0) order.push("motor_pool");
 	if ((existing["storm_transmitter"] ?? 0) === 0)
 		order.push("storm_transmitter");
-	if ((existing["research_lab"] ?? 0) === 0) order.push("research_lab");
+	if ((existing["analysis_node"] ?? 0) === 0) order.push("analysis_node");
 
 	// Second motor pool for throughput
 	if ((existing["motor_pool"] ?? 0) < 2) order.push("motor_pool");

@@ -112,7 +112,7 @@ export function checkVictoryConditions(
 	let playerLabCount = 0;
 	for (const e of world.query(Building)) {
 		const b = e.get(Building);
-		if (b?.factionId === "player" && b.buildingType === "research_lab") {
+		if (b?.factionId === "player" && b.buildingType === "analysis_node") {
 			playerLabCount++;
 		}
 	}
@@ -181,7 +181,7 @@ export function getVictoryProgress(world: World): VictoryProgress {
 	let researchLabs = 0;
 	for (const e of world.query(Building)) {
 		const b = e.get(Building);
-		if (b?.factionId === "player" && b.buildingType === "research_lab") {
+		if (b?.factionId === "player" && b.buildingType === "analysis_node") {
 			researchLabs++;
 		}
 	}

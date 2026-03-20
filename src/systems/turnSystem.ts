@@ -4,7 +4,9 @@ import type { GeneratedBoard } from "../board/types";
 import { Board, Faction, UnitFaction, UnitStats } from "../traits";
 import { setCurrentTurn } from "../ui/game/turnEvents";
 import { resolveAllMoves } from "./aiTurnSystem";
+import { runAnalysisAcceleration } from "./analysisSystem";
 import { resolveAttacks } from "./attackSystem";
+import { runBuildingUpgrades } from "./buildingUpgradeSystem";
 import { recordTurnEnd } from "./campaignStats";
 import {
 	checkCultistSpawn,
@@ -114,6 +116,8 @@ function runEnvironmentPhase(world: World, board: GeneratedBoard): void {
 	runSynthesis(world);
 	runResearch(world);
 	runFabrication(world);
+	runBuildingUpgrades(world);
+	runAnalysisAcceleration(world);
 	runTurrets(world);
 	runHackProgress(world);
 	checkCultistSpawn(world, board, turn);

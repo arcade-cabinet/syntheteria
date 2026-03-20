@@ -13,6 +13,7 @@
 
 import { trait, type World } from "koota";
 import { playSfx } from "../audio/sfx";
+import { MOTOR_POOL_UNIT_TIERS } from "../config/buildingUnlockDefs";
 import { TRACK_REGISTRY } from "../robots/specializations/trackRegistry";
 import type { RobotClass } from "../robots/types";
 import type { ResourceMaterial } from "../terrain/types";
@@ -246,7 +247,12 @@ export type QueueResult =
 	| { ok: true }
 	| {
 			ok: false;
-			reason: "not_powered" | "queue_full" | "cannot_afford" | "pop_cap";
+			reason:
+				| "not_powered"
+				| "queue_full"
+				| "cannot_afford"
+				| "pop_cap"
+				| "class_locked";
 	  };
 
 /**
@@ -278,6 +284,14 @@ export function queueFabrication(
 	const building = motorPoolEntity.get(Building);
 	if (!building) {
 		return { ok: false, reason: "queue_full" };
+	}
+
+	// Motor Pool tier gates which robot classes can be fabricated
+	const poolTier = building.buildingTier ?? 1;
+	const allowedClasses =
+		MOTOR_POOL_UNIT_TIERS[poolTier] ?? MOTOR_POOL_UNIT_TIERS[1]!;
+	if (!allowedClasses.includes(robotClass)) {
+		return { ok: false, reason: "class_locked" };
 	}
 
 	const cost = ROBOT_COSTS[robotClass];

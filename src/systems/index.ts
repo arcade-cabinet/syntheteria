@@ -6,11 +6,15 @@
 
 // --- AI & Turn Flow ---
 export { resolveAllMoves, runAiTurns } from "./aiTurnSystem";
+// --- Analysis (building upgrade acceleration) ---
+export {
+	analysisAcceleration,
+	runAnalysisAcceleration,
+} from "./analysisSystem";
 export type {
 	FactionResourceData,
 	TurnSnapshotData,
 } from "./analyticsCollector";
-
 // --- Analytics & Campaign Stats ---
 export {
 	collectCampaignStats,
@@ -21,6 +25,13 @@ export {
 export { resolveAttacks } from "./attackSystem";
 // --- Building ---
 export { placeStarterBuildings } from "./buildingPlacement";
+export type { BuildingUpgradeJob } from "./buildingUpgradeSystem";
+export {
+	clearBuildingUpgradeJobs,
+	getBuildingUpgradeJob,
+	runBuildingUpgrades,
+	startBuildingUpgrade,
+} from "./buildingUpgradeSystem";
 export {
 	_resetBuildSystem,
 	cancelBuildPlacement,

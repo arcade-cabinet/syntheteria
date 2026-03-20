@@ -128,7 +128,7 @@ describe("fabricationSystem", () => {
 			}
 			const pool = spawnMotorPool(true);
 
-			const result = queueFabrication(world, pool, "ranged");
+			const result = queueFabrication(world, pool, "infantry");
 
 			expect(result).toEqual({ ok: false, reason: "cannot_afford" });
 		});

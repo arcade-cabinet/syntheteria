@@ -1,8 +1,11 @@
 /**
  * @package rendering
  *
- * Rendering utilities — geometry builders, sphere placement, model paths, and materials.
- * TSX renderer components are NOT exported here (they live in individual files for now).
+ * TRANSITIONAL — being decomposed. See docs/COMPREHENSIVE_ENGINEERING_PLAN.md §8.
+ *
+ * Rendering utilities — model paths, materials, particles, visibility, chronometry.
+ * Sphere geometry has moved to src/board/sphere/.
+ * Depth/labyrinth systems have been deleted (overworld replaces underground).
  */
 
 // --- Sphere geometry & placement (canonical: src/board/sphere) ---
@@ -16,30 +19,6 @@ export {
 	tileToSpherePos,
 	worldToTileCoords,
 } from "../board";
-export type { DepthLayerStack } from "./depthLayerStack";
-
-// --- Depth layers ---
-export { boardToDepthLayers, createDepthLayerStack } from "./depthLayerStack";
-export type {
-	DepthMappedLayer,
-	EdgeDirection,
-	EdgeType,
-	FloorQuad,
-	LayerGeometryResult,
-	RampQuad,
-	VoidPlane,
-	WallQuad,
-} from "./depthMappedLayer";
-export {
-	applyTargetedDig,
-	buildLayerGeometry,
-	classifyEdges,
-	createDepthMappedLayer,
-	GRATING_ATLAS_INDEX,
-	GRAVEL_ATLAS_INDEX,
-	STRUCTURAL_ATLAS_INDEX,
-	VOID_ATLAS_INDEX,
-} from "./depthMappedLayer";
 export { cinematicState } from "./globe/cinematicState";
 // --- Globe shaders ---
 export {
@@ -57,8 +36,7 @@ export { default as fogOfWarSphereFrag } from "./glsl/fogOfWarSphereFrag.glsl";
 export { default as fogOfWarSphereVert } from "./glsl/fogOfWarSphereVert.glsl";
 // --- Materials ---
 export { makeHeightMaterial, updateHeightChronometry } from "./heightMaterial";
-// --- Model paths ---
-// --- Faction colors (unaliased for view/ consumers) ---
+// --- Model paths + Faction colors ---
 export {
 	BUILDING_BASEMODULE_MODELS,
 	BUILDING_CARGODEPOT_MODELS,
@@ -129,14 +107,6 @@ export {
 export type { Chronometry } from "./sky/chronometry";
 // --- Sky chronometry ---
 export { turnToChronometry } from "./sky/chronometry";
-export type { ColumnPosition, StructuralEdge } from "./structureHelpers";
-// --- Structure helpers ---
-export {
-	getColumnPositions,
-	getInteriorTiles,
-	getStructuralEdges,
-	wallHeight,
-} from "./structureHelpers";
 // --- Tile visibility ---
 export { buildExploredSet, isTileExplored } from "./tileVisibility";
 export type { Scanner } from "./unitDetection";

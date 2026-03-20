@@ -26,9 +26,7 @@ import {
 import type { SalvageType } from "../../traits";
 import { SECTOR_SCALE_SPECS } from "../../world/config";
 import { isPassableFor, movementCost } from "../adjacency";
-import { generateDepthLayer } from "../depth";
 import { generateBoard } from "../generator";
-import { seededRng } from "../noise";
 import type { BoardConfig, TileData } from "../types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -377,7 +375,7 @@ describe("Section 2 — Bridges and tunnels", () => {
 		for (const seed of seeds) {
 			const config = makeConfig({ width: 44, height: 44, seed });
 			const board = generateBoard(config);
-			// Labyrinth generator creates structural_mass walls at elevation 1
+			// Generator may place raised tiles (e.g. bridges) at elevation 1
 			for (const row of board.tiles) {
 				for (const tile of row) {
 					if (tile.elevation === 1) {
@@ -390,67 +388,6 @@ describe("Section 2 — Bridges and tunnels", () => {
 			if (foundElevated) break;
 		}
 		expect(foundElevated).toBe(true);
-	});
-
-	it("generateDepthLayer produces tunnel spans (elevation=-1 tiles)", () => {
-		let foundTunnel = false;
-		for (const seed of seeds) {
-			const config = makeConfig({ width: 44, height: 44, seed });
-			const board = generateBoard(config);
-			const rng = seededRng(seed + "_depth");
-			const layer = generateDepthLayer(board, rng);
-			if (layer.spans.some((s) => s.type === "tunnel")) {
-				foundTunnel = true;
-				break;
-			}
-		}
-		expect(foundTunnel).toBe(true);
-	});
-
-	it("bridge tiles have elevation=1 (raised over impassable terrain)", () => {
-		for (const seed of seeds) {
-			const config = makeConfig({ width: 44, height: 44, seed });
-			const board = generateBoard(config);
-			const rng = seededRng(seed + "_depth");
-			const layer = generateDepthLayer(board, rng);
-			for (const span of layer.spans.filter((s) => s.type === "bridge")) {
-				// Body tiles (not entrances) have elevation 1
-				const bodyTiles = span.tiles.filter(
-					(t) => !span.entrances.some((e) => e.x === t.x && e.z === t.z),
-				);
-				for (const t of bodyTiles) {
-					expect(t.elevation).toBe(1);
-				}
-			}
-		}
-	});
-
-	it("each bridge/tunnel has exactly 2 entrances", () => {
-		for (const seed of seeds) {
-			const config = makeConfig({ width: 44, height: 44, seed });
-			const board = generateBoard(config);
-			const rng = seededRng(seed + "_depth");
-			const layer = generateDepthLayer(board, rng);
-			for (const span of layer.spans) {
-				expect(span.entrances).toHaveLength(2);
-			}
-		}
-	});
-
-	it("no two spans share the same tile", () => {
-		const config = makeConfig({ width: 44, height: 44, seed: "no-overlap" });
-		const board = generateBoard(config);
-		const rng = seededRng("no-overlap_depth");
-		const layer = generateDepthLayer(board, rng);
-
-		const used = new Set<string>();
-		for (const span of layer.spans) {
-			for (const t of span.tiles) {
-				const key = `${t.x},${t.z}`;
-				expect(used.has(key)).toBe(false);
-				used.add(key);
-			}
-		}
 	});
 });
 

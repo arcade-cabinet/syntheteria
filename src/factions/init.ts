@@ -42,21 +42,21 @@ export function initFactions(
 		const entityId = isPlayer ? "player" : def.id;
 
 		const basePool = isPlayer
-			? { scrap_metal: 10, ferrous_scrap: 5, conductor_wire: 2 }
+			? { stone: 10, iron_ore: 5, circuits: 2 }
 			: {
-					scrap_metal: 30,
-					ferrous_scrap: 30,
-					alloy_stock: 12,
-					conductor_wire: 12,
-					polymer_salvage: 8,
-					silicon_wafer: 4,
+					stone: 30,
+					iron_ore: 30,
+					steel: 12,
+					circuits: 12,
+					timber: 8,
+					glass: 4,
 				};
 
 		const poolInit = isPlayer
 			? {
-					scrap_metal: Math.round(basePool.scrap_metal * mult),
-					ferrous_scrap: Math.round(basePool.ferrous_scrap * mult),
-					conductor_wire: Math.round((basePool.conductor_wire ?? 0) * mult),
+					stone: Math.round(basePool.stone * mult),
+					iron_ore: Math.round(basePool.iron_ore * mult),
+					circuits: Math.round((basePool.circuits ?? 0) * mult),
 				}
 			: basePool;
 

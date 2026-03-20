@@ -38,8 +38,8 @@ export const COMPONENT_RECIPES: readonly ComponentRecipe[] = [
 		outputComponent: "camera",
 		outputMaterial: "electronic",
 		costs: [
-			{ type: "e_waste", amount: 4 },
-			{ type: "intact_components", amount: 1 },
+			{ type: "circuits", amount: 4 },
+			{ type: "glass", amount: 1 },
 		],
 		buildTime: 8,
 	},
@@ -48,7 +48,7 @@ export const COMPONENT_RECIPES: readonly ComponentRecipe[] = [
 		name: "Arm Assembly",
 		outputComponent: "arms",
 		outputMaterial: "metal",
-		costs: [{ type: "scrap_metal", amount: 5 }],
+		costs: [{ type: "stone", amount: 5 }],
 		buildTime: 6,
 	},
 	{
@@ -56,7 +56,7 @@ export const COMPONENT_RECIPES: readonly ComponentRecipe[] = [
 		name: "Leg Assembly",
 		outputComponent: "legs",
 		outputMaterial: "metal",
-		costs: [{ type: "scrap_metal", amount: 4 }],
+		costs: [{ type: "stone", amount: 4 }],
 		buildTime: 5,
 	},
 	{
@@ -65,8 +65,8 @@ export const COMPONENT_RECIPES: readonly ComponentRecipe[] = [
 		outputComponent: "power_cell",
 		outputMaterial: "electronic",
 		costs: [
-			{ type: "e_waste", amount: 3 },
-			{ type: "scrap_metal", amount: 2 },
+			{ type: "circuits", amount: 3 },
+			{ type: "stone", amount: 2 },
 		],
 		buildTime: 7,
 	},
@@ -76,8 +76,8 @@ export const COMPONENT_RECIPES: readonly ComponentRecipe[] = [
 		outputComponent: "power_supply",
 		outputMaterial: "electronic",
 		costs: [
-			{ type: "e_waste", amount: 5 },
-			{ type: "intact_components", amount: 1 },
+			{ type: "circuits", amount: 5 },
+			{ type: "steel", amount: 1 },
 		],
 		buildTime: 10,
 	},

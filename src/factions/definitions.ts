@@ -21,7 +21,7 @@ export const FACTION_DEFINITIONS: readonly FactionDef[] = [
 		persona: "fox",
 		isPlayer: false,
 		startZone: "corner_nw",
-		terrainAffinity: "collapsed_zone",
+		terrainAffinity: "ruins",
 		aggression: 2,
 		description:
 			"Salvagers who claim derelict structures as territory. Moderate aggression.",
@@ -33,7 +33,7 @@ export const FACTION_DEFINITIONS: readonly FactionDef[] = [
 		persona: "raven",
 		isPlayer: false,
 		startZone: "corner_ne",
-		terrainAffinity: "aerostructure",
+		terrainAffinity: "hills",
 		aggression: 1,
 		description: "Energy harvesters. Neutral until you touch their crystals.",
 	},
@@ -44,7 +44,7 @@ export const FACTION_DEFINITIONS: readonly FactionDef[] = [
 		persona: "lynx",
 		isPlayer: false,
 		startZone: "corner_se",
-		terrainAffinity: "bio_district",
+		terrainAffinity: "forest",
 		aggression: 3,
 		description:
 			"Hive-mind signal network. Expands aggressively into all sectors.",
@@ -56,7 +56,7 @@ export const FACTION_DEFINITIONS: readonly FactionDef[] = [
 		persona: "bear",
 		isPlayer: false,
 		startZone: "corner_sw",
-		terrainAffinity: "structural_mass",
+		terrainAffinity: "mountain",
 		aggression: 3,
 		description:
 			"Militant orthodoxy. Views all non-aligned machines as heretics to be destroyed.",

@@ -1,12 +1,11 @@
 /**
- * Salvage type definitions — harvestable ecumenopolis props.
+ * Salvage type definitions — harvestable overworld props.
  *
- * These are the PRIMARY resource source. Ancient dead-world debris
+ * These are the PRIMARY resource source. Legacy machine ruins
  * that players break down for materials. Buildings and props on the
  * surface contain the good stuff; floor mining is the backstop.
  *
- * Yield patterns ported from pending/config/modelDefinitions.json
- * harvest data, mapped to our 13-material ResourceMaterial taxonomy.
+ * Yield patterns mapped to natural/processed/synthetic ResourceMaterial taxonomy.
  */
 
 import type { ResourceMaterial } from "../../terrain";
@@ -33,8 +32,8 @@ export const SALVAGE_DEFS: Record<SalvageType, SalvageDef> = {
 		harvestDuration: 4,
 		hp: 20,
 		yields: {
-			polymer_salvage: { min: 1, max: 2 },
-			scrap_metal: { min: 2, max: 4 },
+			stone: { min: 2, max: 4 },
+			iron_ore: { min: 1, max: 2 },
 		},
 		models: [
 			"props_chest",
@@ -48,8 +47,8 @@ export const SALVAGE_DEFS: Record<SalvageType, SalvageDef> = {
 		harvestDuration: 8,
 		hp: 25,
 		yields: {
-			silicon_wafer: { min: 1, max: 3 },
-			conductor_wire: { min: 1, max: 2 },
+			circuits: { min: 1, max: 3 },
+			glass: { min: 1, max: 2 },
 		},
 		models: ["computer", "computer_large"],
 	},
@@ -58,8 +57,8 @@ export const SALVAGE_DEFS: Record<SalvageType, SalvageDef> = {
 		harvestDuration: 5,
 		hp: 20,
 		yields: {
-			electrolyte: { min: 1, max: 3 },
-			scrap_metal: { min: 1, max: 2 },
+			fuel: { min: 1, max: 3 },
+			clay: { min: 1, max: 2 },
 		},
 		models: ["barrel", "barrels", "barrels_rail"],
 	},
@@ -68,9 +67,9 @@ export const SALVAGE_DEFS: Record<SalvageType, SalvageDef> = {
 		harvestDuration: 8,
 		hp: 40,
 		yields: {
-			ferrous_scrap: { min: 2, max: 5 },
-			alloy_stock: { min: 1, max: 2 },
-			silicon_wafer: { min: 0, max: 1 },
+			iron_ore: { min: 2, max: 5 },
+			steel: { min: 1, max: 2 },
+			glass: { min: 0, max: 1 },
 		},
 		models: ["machine_generator", "robot_arm_a", "robot_arm_b"],
 	},
@@ -79,8 +78,8 @@ export const SALVAGE_DEFS: Record<SalvageType, SalvageDef> = {
 		harvestDuration: 3,
 		hp: 15,
 		yields: {
-			scrap_metal: { min: 2, max: 4 },
-			ferrous_scrap: { min: 0, max: 1 },
+			stone: { min: 2, max: 4 },
+			iron_ore: { min: 0, max: 1 },
 		},
 		models: ["props_base", "props_capsule"],
 	},
@@ -89,8 +88,8 @@ export const SALVAGE_DEFS: Record<SalvageType, SalvageDef> = {
 		harvestDuration: 3,
 		hp: 15,
 		yields: {
-			scrap_metal: { min: 1, max: 3 },
-			polymer_salvage: { min: 1, max: 2 },
+			stone: { min: 1, max: 3 },
+			timber: { min: 1, max: 2 },
 		},
 		models: [
 			"cargo_a",
@@ -105,8 +104,8 @@ export const SALVAGE_DEFS: Record<SalvageType, SalvageDef> = {
 		harvestDuration: 5,
 		hp: 20,
 		yields: {
-			ferrous_scrap: { min: 1, max: 3 },
-			intact_components: { min: 0, max: 1 },
+			iron_ore: { min: 1, max: 3 },
+			steel: { min: 0, max: 1 },
 		},
 		models: ["props_shelf", "props_shelf_tall"],
 	},
@@ -115,8 +114,8 @@ export const SALVAGE_DEFS: Record<SalvageType, SalvageDef> = {
 		harvestDuration: 6,
 		hp: 25,
 		yields: {
-			electrolyte: { min: 2, max: 4 },
-			storm_charge: { min: 0, max: 2 },
+			fuel: { min: 2, max: 4 },
+			coal: { min: 0, max: 2 },
 		},
 		models: ["props_vessel", "props_vessel_short", "props_vessel_tall"],
 	},
@@ -125,9 +124,9 @@ export const SALVAGE_DEFS: Record<SalvageType, SalvageDef> = {
 		harvestDuration: 10,
 		hp: 35,
 		yields: {
-			alloy_stock: { min: 2, max: 4 },
-			silicon_wafer: { min: 1, max: 3 },
-			conductor_wire: { min: 1, max: 2 },
+			steel: { min: 2, max: 4 },
+			glass: { min: 1, max: 3 },
+			circuits: { min: 1, max: 2 },
 		},
 		models: ["lander_a"],
 	},
@@ -136,9 +135,9 @@ export const SALVAGE_DEFS: Record<SalvageType, SalvageDef> = {
 		harvestDuration: 8,
 		hp: 30,
 		yields: {
-			depth_salvage: { min: 2, max: 5 },
-			thermal_fluid: { min: 1, max: 3 },
-			el_crystal: { min: 0, max: 1 },
+			alloy: { min: 2, max: 5 },
+			fuel: { min: 1, max: 3 },
+			quantum_crystal: { min: 0, max: 1 },
 		},
 		models: ["props_pod"],
 	},

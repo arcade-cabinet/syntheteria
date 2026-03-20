@@ -118,8 +118,8 @@ export function HoverTracker({ world, board }: HoverTrackerProps) {
 			tileZ: tile.z,
 			terrain: floorDef?.label ?? tileData.floorType,
 			passable:
-				tileData.floorType !== "void_pit" &&
-				tileData.floorType !== "structural_mass",
+				tileData.floorType !== "water" &&
+				tileData.floorType !== "mountain",
 			elevation: tileData.elevation,
 		};
 

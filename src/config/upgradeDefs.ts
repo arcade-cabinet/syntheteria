@@ -13,9 +13,9 @@ import type { ResourceMaterial } from "../terrain/types";
 // ─── Mark Level Costs ───────────────────────────────────────────────────────
 
 export interface MarkLevelCost {
-	readonly scrap_metal: number;
-	readonly e_waste: number;
-	readonly intact_components: number;
+	readonly stone: number;
+	readonly circuits: number;
+	readonly steel: number;
 }
 
 /** Maximum mark level in the game. */
@@ -29,10 +29,10 @@ export const MARK_LEVEL_COSTS: Record<
 	2 | 3 | 4 | 5,
 	Readonly<Partial<Record<ResourceMaterial, number>>>
 > = {
-	2: { scrap_metal: 6, e_waste: 3, intact_components: 1 },
-	3: { scrap_metal: 12, e_waste: 6, intact_components: 2 },
-	4: { scrap_metal: 20, e_waste: 10, intact_components: 4 },
-	5: { scrap_metal: 30, e_waste: 15, intact_components: 6 },
+	2: { stone: 6, circuits: 3, steel: 1 },
+	3: { stone: 12, circuits: 6, steel: 2 },
+	4: { stone: 20, circuits: 10, steel: 4 },
+	5: { stone: 30, circuits: 15, steel: 6 },
 } as const;
 
 /**

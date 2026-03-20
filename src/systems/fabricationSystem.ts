@@ -55,40 +55,40 @@ export interface RobotCost {
 export const ROBOT_COSTS: Record<RobotClass, RobotCost> = {
 	// Faction bots
 	scout: {
-		materials: { ferrous_scrap: 2, conductor_wire: 1 },
+		materials: { iron_ore: 2, circuits: 1 },
 		buildTime: 2,
 	},
 	infantry: {
-		materials: { alloy_stock: 3, ferrous_scrap: 2 },
+		materials: { steel: 3, iron_ore: 2 },
 		buildTime: 3,
 	},
 	cavalry: {
-		materials: { ferrous_scrap: 3, conductor_wire: 2, polymer_salvage: 1 },
+		materials: { iron_ore: 3, circuits: 2, timber: 1 },
 		buildTime: 3,
 	},
 	ranged: {
-		materials: { alloy_stock: 4, silicon_wafer: 2, conductor_wire: 2 },
+		materials: { steel: 4, glass: 2, circuits: 2 },
 		buildTime: 5,
 	},
 	support: {
-		materials: { ferrous_scrap: 3, alloy_stock: 2, conductor_wire: 1 },
+		materials: { iron_ore: 3, steel: 2, circuits: 1 },
 		buildTime: 4,
 	},
 	worker: {
-		materials: { ferrous_scrap: 3, polymer_salvage: 2 },
+		materials: { iron_ore: 3, timber: 2 },
 		buildTime: 3,
 	},
 	// Cult mechs (not player-buildable — costs here for system completeness)
 	cult_infantry: {
-		materials: { alloy_stock: 5, ferrous_scrap: 3 },
+		materials: { steel: 5, iron_ore: 3 },
 		buildTime: 6,
 	},
 	cult_ranged: {
-		materials: { alloy_stock: 4, silicon_wafer: 3 },
+		materials: { steel: 4, glass: 3 },
 		buildTime: 6,
 	},
 	cult_cavalry: {
-		materials: { ferrous_scrap: 4, conductor_wire: 3 },
+		materials: { iron_ore: 4, circuits: 3 },
 		buildTime: 5,
 	},
 };

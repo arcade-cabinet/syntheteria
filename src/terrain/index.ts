@@ -10,5 +10,18 @@ export {
 	updateFloorShaderChronometry,
 } from "./floorShader";
 export { TileFloor } from "./traits";
-export type { FloorDef, FloorType, ResourceMaterial } from "./types";
-export { FLOOR_DEFS, FLOOR_INDEX_MAP, isPassableFloor } from "./types";
+export type {
+	BiomeDef,
+	BiomeType,
+	FloorDef,
+	FloorType,
+	ResourceMaterial,
+} from "./types";
+export {
+	BIOME_DEFS,
+	BIOME_INDEX_MAP,
+	FLOOR_DEFS,
+	FLOOR_INDEX_MAP,
+	isPassableBiome,
+	isPassableFloor,
+} from "./types";

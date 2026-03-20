@@ -107,19 +107,23 @@ export function getFactionResourceScore(
 		const r = e.get(ResourcePool);
 		if (f?.id === factionId && r) {
 			const total =
-				r.scrap_metal +
-				r.ferrous_scrap +
-				r.alloy_stock +
-				r.polymer_salvage +
-				r.conductor_wire +
-				r.electrolyte +
-				r.silicon_wafer +
-				r.storm_charge +
-				r.el_crystal +
-				r.e_waste +
-				r.intact_components +
-				r.thermal_fluid +
-				r.depth_salvage;
+				r.stone +
+				r.timber +
+				r.iron_ore +
+				r.coal +
+				r.food +
+				r.fiber +
+				r.sand +
+				r.clay +
+				r.steel +
+				r.concrete +
+				r.glass +
+				r.circuits +
+				r.fuel +
+				r.alloy +
+				r.nanomaterial +
+				r.fusion_cell +
+				r.quantum_crystal;
 			// Normalize: 0 resources = 0, 200+ = 100
 			return Math.min(100, (total / 200) * 100);
 		}

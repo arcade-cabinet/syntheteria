@@ -19,18 +19,17 @@ import type { FloorType } from "../../../terrain";
 // FloorType -> terrain color lookup
 // ---------------------------------------------------------------------------
 
-// Colors tuned for VISUAL CONTRAST — matching POC terrain vibrancy.
-// Machine-city theme but with enough color variation to read clearly.
+// Biome → terrain color lookup — CivRev2-style vibrant colors.
 const FLOOR_COLORS: Record<FloorType, THREE.Color> = {
-	void_pit: new THREE.Color(0x1a5276), // deep blue (like POC water)
-	structural_mass: new THREE.Color(0x8b9da8), // light blue-grey (readable)
-	abyssal_platform: new THREE.Color(0x2c3e50), // dark blue-grey
-	transit_deck: new THREE.Color(0x7a7a72), // warm grey (distinct from structural)
-	durasteel_span: new THREE.Color(0x95a0a8), // bright steel (catch light)
-	collapsed_zone: new THREE.Color(0x8b7355), // warm brown (POC hills color)
-	dust_district: new THREE.Color(0xc2b280), // amber/sand (POC desert)
-	bio_district: new THREE.Color(0x5daa3e), // vivid green (POC grassland)
-	aerostructure: new THREE.Color(0x5a7fb5), // bright blue (sky-facing)
+	grassland: new THREE.Color(0x7cb342), // warm green
+	forest: new THREE.Color(0x2e7d32), // dark green
+	mountain: new THREE.Color(0x757575), // grey
+	water: new THREE.Color(0x1565c0), // deep blue
+	desert: new THREE.Color(0xd4a437), // sandy gold
+	hills: new THREE.Color(0x8d6e63), // brown
+	wetland: new THREE.Color(0x00695c), // teal
+	ruins: new THREE.Color(0x546e7a), // blue-grey
+	tundra: new THREE.Color(0xb0bec5), // light grey-blue
 };
 
 const DEFAULT_COLOR = new THREE.Color(0x444455);
@@ -73,7 +72,7 @@ function getTile(board: GeneratedBoard, gx: number, gz: number): TileData {
 			z: cz,
 			elevation: 0 as const,
 			passable: true,
-			floorType: "structural_mass" as FloorType,
+			floorType: "grassland" as FloorType,
 			resourceMaterial: null,
 			resourceAmount: 0,
 		}

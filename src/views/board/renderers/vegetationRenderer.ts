@@ -151,7 +151,7 @@ export function createVegetationRenderer(
 	for (let z = 0; z < height; z++) {
 		for (let x = 0; x < width; x++) {
 			const tile = board.tiles[z]?.[x];
-			if (!tile || tile.floorType !== "bio_district") continue;
+			if (!tile || tile.floorType !== "forest") continue;
 
 			const pos = tileToWorld(x, z);
 			const group = new THREE.Group();

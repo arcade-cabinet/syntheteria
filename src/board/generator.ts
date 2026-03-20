@@ -18,19 +18,19 @@ import type { BoardConfig, Elevation, GeneratedBoard, TileData } from "./types";
 const _TARGET_PASSABLE_RATIO = 0.65;
 
 /**
- * Surface scatter rates per floor type.
+ * Surface scatter rates per biome type.
  * Backstop deposits — survival-level basics when no buildings are in range.
  */
 const SCATTER_RATE: Record<string, number> = {
-	structural_mass: 0.7,
-	abyssal_platform: 0.2,
-	durasteel_span: 0.08,
-	transit_deck: 0.08,
-	collapsed_zone: 0.15,
-	dust_district: 0.12,
-	bio_district: 0.08,
-	aerostructure: 0.06,
-	void_pit: 0,
+	mountain: 0.7,
+	water: 0,
+	grassland: 0.08,
+	forest: 0.12,
+	desert: 0.08,
+	hills: 0.15,
+	wetland: 0.08,
+	ruins: 0.2,
+	tundra: 0.06,
 };
 
 // ─── Public API ─────────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ function createTileGrid(w: number, h: number, _seed: string): TileData[][] {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "durasteel_span",
+				floorType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -97,7 +97,7 @@ function createTileGrid(w: number, h: number, _seed: string): TileData[][] {
 /**
  * Apply procedural elevation using layered sine/cosine noise.
  * Creates terrain features: mountains (elevation 2), hills (1),
- * flat ground (0), and pits (-1).
+ * flat ground (0), and water (-1).
  */
 function applyElevation(
 	tiles: TileData[][],
@@ -106,7 +106,6 @@ function applyElevation(
 	seed: string,
 ): void {
 	const rng = seededRng(seed + "_elevation");
-	// Random phase offsets for variety per seed
 	const phaseX = rng() * Math.PI * 2;
 	const phaseZ = rng() * Math.PI * 2;
 	const phaseX2 = rng() * Math.PI * 2;
@@ -116,7 +115,6 @@ function applyElevation(
 		for (let x = 0; x < w; x++) {
 			const tile = tiles[z]![x]!;
 
-			// Multi-octave noise for natural-looking terrain
 			const nx = x / w;
 			const nz = z / h;
 			const n1 = Math.sin(nx * 8 + phaseX) * Math.cos(nz * 8 + phaseZ) * 0.5;
@@ -124,17 +122,16 @@ function applyElevation(
 				Math.sin(nx * 16 + phaseX2) * Math.cos(nz * 16 + phaseZ2) * 0.25;
 			const noise = n1 + n2;
 
-			// Quantize to discrete elevation levels
 			if (noise > 0.4) {
-				tile.elevation = 2 as Elevation; // Mountain
+				tile.elevation = 2 as Elevation;
 				tile.passable = false;
 			} else if (noise > 0.2) {
-				tile.elevation = 1 as Elevation; // Hill
+				tile.elevation = 1 as Elevation;
 			} else if (noise < -0.4) {
-				tile.elevation = -1 as Elevation; // Pit / water
+				tile.elevation = -1 as Elevation;
 				tile.passable = false;
 			} else {
-				tile.elevation = 0 as Elevation; // Flat ground
+				tile.elevation = 0 as Elevation;
 			}
 		}
 	}
@@ -145,7 +142,7 @@ function applyElevation(
 /**
  * Assign floor types based on elevation and cluster noise.
  * Impassable tiles get geography-driven types; passable tiles get
- * cluster-noise-driven zone types.
+ * cluster-noise-driven biome types.
  */
 function assignFloorTypes(
 	tiles: TileData[][],
@@ -160,34 +157,30 @@ function assignFloorTypes(
 			const tile = tiles[z]![x]!;
 
 			if (tile.elevation === -1) {
-				tile.floorType = "void_pit";
+				tile.floorType = "water";
 				tile.passable = false;
 				continue;
 			}
 
 			if (tile.elevation === 2) {
-				tile.floorType = "structural_mass";
+				tile.floorType = "mountain";
 				tile.passable = false;
 				continue;
 			}
 
-			// Passable tiles: use terrain noise for zone variety
+			// Passable tiles: use terrain noise for biome variety
 			const noiseFloor = floorTypeForTile(x, z, 0, seed);
-			if (
-				noiseFloor !== "void_pit" &&
-				noiseFloor !== "structural_mass" &&
-				noiseFloor !== "abyssal_platform"
-			) {
+			if (noiseFloor !== "water" && noiseFloor !== "mountain") {
 				tile.floorType = noiseFloor;
 			} else {
-				// Noise returned impassable type — pick a passable one
 				const passableTypes: FloorType[] = [
-					"durasteel_span",
-					"collapsed_zone",
-					"dust_district",
-					"bio_district",
-					"aerostructure",
-					"transit_deck",
+					"grassland",
+					"forest",
+					"desert",
+					"hills",
+					"wetland",
+					"ruins",
+					"tundra",
 				];
 				tile.floorType = passableTypes[
 					Math.floor(rng() * passableTypes.length)
@@ -234,7 +227,6 @@ function forcePlayerStart(
 	w: number,
 	h: number,
 ): void {
-	// Force center tile and immediate neighbors passable
 	const radius = 2;
 	for (let dz = -radius; dz <= radius; dz++) {
 		for (let dx = -radius; dx <= radius; dx++) {
@@ -244,18 +236,14 @@ function forcePlayerStart(
 			const tile = tiles[tz]![tx]!;
 			tile.elevation = 0;
 			tile.passable = true;
-			if (
-				tile.floorType === "void_pit" ||
-				tile.floorType === "structural_mass"
-			) {
-				tile.floorType = "durasteel_span";
+			if (tile.floorType === "water" || tile.floorType === "mountain") {
+				tile.floorType = "grassland";
 			}
 		}
 	}
 
-	// Spawn cell: canonical passable start floor (GAME_DESIGN / world model spec)
 	const spawn = tiles[cz]![cx]!;
-	spawn.floorType = "durasteel_span";
+	spawn.floorType = "grassland";
 	spawn.resourceMaterial = null;
 	spawn.resourceAmount = 0;
 }

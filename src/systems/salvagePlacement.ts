@@ -29,7 +29,7 @@ interface TerrainSalvageConfig {
 }
 
 const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
-	structural_mass: {
+	mountain: {
 		rate: 0.6,
 		weights: [
 			["machinery", 0.4],
@@ -38,7 +38,7 @@ const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
 			["debris", 0.1],
 		],
 	},
-	collapsed_zone: {
+	ruins: {
 		rate: 0.5,
 		weights: [
 			["debris", 0.5],
@@ -46,16 +46,7 @@ const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
 			["vessel", 0.2],
 		],
 	},
-	transit_deck: {
-		rate: 0.4,
-		weights: [
-			["container", 0.4],
-			["debris", 0.3],
-			["vessel", 0.2],
-			["terminal", 0.1],
-		],
-	},
-	durasteel_span: {
+	grassland: {
 		rate: 0.35,
 		weights: [
 			["container", 0.3],
@@ -64,7 +55,15 @@ const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
 			["terminal", 0.1],
 		],
 	},
-	dust_district: {
+	forest: {
+		rate: 0.3,
+		weights: [
+			["debris", 0.5],
+			["vessel", 0.3],
+			["container", 0.2],
+		],
+	},
+	desert: {
 		rate: 0.45,
 		weights: [
 			["vessel", 0.4],
@@ -73,23 +72,16 @@ const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
 			["machinery", 0.1],
 		],
 	},
-	bio_district: {
-		rate: 0.3,
-		weights: [
-			["debris", 0.5],
-			["vessel", 0.3],
-			["container", 0.2],
-		],
-	},
-	aerostructure: {
+	hills: {
 		rate: 0.4,
 		weights: [
-			["machinery", 0.5],
+			["container", 0.4],
 			["debris", 0.3],
-			["container", 0.2],
+			["vessel", 0.2],
+			["terminal", 0.1],
 		],
 	},
-	abyssal_platform: {
+	wetland: {
 		rate: 0.25,
 		weights: [
 			["vessel", 0.5],
@@ -97,7 +89,15 @@ const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
 			["machinery", 0.2],
 		],
 	},
-	void_pit: {
+	tundra: {
+		rate: 0.4,
+		weights: [
+			["machinery", 0.5],
+			["debris", 0.3],
+			["container", 0.2],
+		],
+	},
+	water: {
 		rate: 0,
 		weights: [],
 	},

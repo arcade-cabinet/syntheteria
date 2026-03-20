@@ -24,19 +24,23 @@ export interface ProductionQueueItem {
 
 /** Shorten material names for compact HUD display. */
 const SHORT_NAMES: Record<string, string> = {
-	ferrous_scrap: "FER",
-	alloy_stock: "ALY",
-	polymer_salvage: "PLY",
-	conductor_wire: "CND",
-	electrolyte: "ELT",
-	silicon_wafer: "SIL",
-	storm_charge: "STM",
-	el_crystal: "ELC",
-	scrap_metal: "SCR",
-	e_waste: "EWS",
-	intact_components: "CMP",
-	thermal_fluid: "THR",
-	depth_salvage: "DEP",
+	stone: "STN",
+	timber: "TBR",
+	iron_ore: "ORE",
+	coal: "COL",
+	food: "FOD",
+	fiber: "FBR",
+	sand: "SND",
+	clay: "CLY",
+	steel: "STL",
+	concrete: "CON",
+	glass: "GLS",
+	circuits: "CRC",
+	fuel: "FUL",
+	alloy: "ALY",
+	nanomaterial: "NAN",
+	fusion_cell: "FSN",
+	quantum_crystal: "QTC",
 };
 
 export interface CurrentResearch {

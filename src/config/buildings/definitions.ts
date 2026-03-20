@@ -45,7 +45,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { ferrous_scrap: 3, conductor_wire: 2 },
+		buildCost: { iron_ore: 3, circuits: 2 },
 		buildTime: 4,
 	},
 	power_box: {
@@ -62,7 +62,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { ferrous_scrap: 2, conductor_wire: 1 },
+		buildCost: { iron_ore: 2, circuits: 1 },
 		buildTime: 2,
 	},
 	synthesizer: {
@@ -79,7 +79,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { ferrous_scrap: 4, conductor_wire: 2 },
+		buildCost: { iron_ore: 4, circuits: 2 },
 		buildTime: 6,
 	},
 	motor_pool: {
@@ -96,7 +96,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { ferrous_scrap: 6, alloy_stock: 3, conductor_wire: 2 },
+		buildCost: { iron_ore: 6, steel: 3, circuits: 2 },
 		buildTime: 10,
 	},
 	relay_tower: {
@@ -113,7 +113,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { conductor_wire: 3, silicon_wafer: 1 },
+		buildCost: { circuits: 3, glass: 1 },
 		buildTime: 4,
 	},
 	defense_turret: {
@@ -130,7 +130,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 3,
 		turretRange: 8,
 		turretCooldown: 2,
-		buildCost: { ferrous_scrap: 4, alloy_stock: 2 },
+		buildCost: { iron_ore: 4, steel: 2 },
 		buildTime: 6,
 	},
 	storage_hub: {
@@ -147,7 +147,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { ferrous_scrap: 3, polymer_salvage: 2 },
+		buildCost: { iron_ore: 3, timber: 2 },
 		buildTime: 3,
 	},
 	maintenance_bay: {
@@ -164,7 +164,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { alloy_stock: 3, conductor_wire: 2, silicon_wafer: 1 },
+		buildCost: { steel: 3, circuits: 2, glass: 1 },
 		buildTime: 6,
 	},
 	power_plant: {
@@ -182,10 +182,10 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretRange: 0,
 		turretCooldown: 0,
 		buildCost: {
-			alloy_stock: 8,
-			silicon_wafer: 4,
-			conductor_wire: 3,
-			el_crystal: 1,
+			steel: 8,
+			glass: 4,
+			circuits: 3,
+			quantum_crystal: 1,
 		},
 		buildTime: 16,
 	},
@@ -203,7 +203,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { alloy_stock: 4, silicon_wafer: 2, conductor_wire: 2 },
+		buildCost: { steel: 4, glass: 2, circuits: 2 },
 		buildTime: 12,
 	},
 	resource_refinery: {
@@ -220,7 +220,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { ferrous_scrap: 5, polymer_salvage: 3 },
+		buildCost: { iron_ore: 5, timber: 3 },
 		buildTime: 6,
 	},
 	solar_array: {
@@ -237,7 +237,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { silicon_wafer: 3, conductor_wire: 2 },
+		buildCost: { glass: 3, circuits: 2 },
 		buildTime: 4,
 	},
 	geothermal_tap: {
@@ -254,7 +254,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { alloy_stock: 5, ferrous_scrap: 4, thermal_fluid: 2 },
+		buildCost: { steel: 5, iron_ore: 4, fuel: 2 },
 		buildTime: 10,
 	},
 	outpost: {
@@ -271,7 +271,7 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretDamage: 0,
 		turretRange: 0,
 		turretCooldown: 0,
-		buildCost: { ferrous_scrap: 4, polymer_salvage: 2 },
+		buildCost: { iron_ore: 4, timber: 2 },
 		buildTime: 5,
 	},
 	wormhole_stabilizer: {
@@ -289,11 +289,11 @@ export const BUILDING_DEFS: Record<BuildingType, BuildingDef> = {
 		turretRange: 0,
 		turretCooldown: 0,
 		buildCost: {
-			intact_components: 50,
-			storm_charge: 30,
-			silicon_wafer: 25,
-			alloy_stock: 25,
-			el_crystal: 10,
+			alloy: 50,
+			fusion_cell: 30,
+			glass: 25,
+			steel: 25,
+			quantum_crystal: 10,
 		},
 		buildTime: 20,
 	},

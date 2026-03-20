@@ -42,7 +42,7 @@ function getWallTiles(world: World, currentTurn: number): Set<string> {
 	const walls = new Set<string>();
 	for (const entity of world.query(Tile, TileFloor)) {
 		const floor = entity.get(TileFloor);
-		if (floor?.floorType === "structural_mass") {
+		if (floor?.floorType === "mountain") {
 			const tile = entity.get(Tile);
 			if (tile) walls.add(`${tile.x},${tile.z}`);
 		}

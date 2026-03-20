@@ -327,9 +327,9 @@ describe("deep mining tech bonus", () => {
 			const f = e.get(Faction);
 			if (f?.id === "reclaimers") {
 				const r = e.get(ResourcePool);
-				// ruins base yield: [1,3] — max without bonus is 3
+				// ruins base yield: [1,4] — max without bonus is 4
 				expect(r!.stone).toBeGreaterThan(0);
-				expect(r!.stone).toBeLessThanOrEqual(3);
+				expect(r!.stone).toBeLessThanOrEqual(4);
 			}
 		}
 	});

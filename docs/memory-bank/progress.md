@@ -15,13 +15,13 @@
 
 | Metric | Value |
 |--------|-------|
-| Active `.ts`/`.tsx` files under `src/` | 443 (`find src -name '*.ts' -o -name '*.tsx' \| wc -l`) |
-| Vitest test files | 126 (all passing) |
-| Vitest tests | 2252 |
+| Active `.ts`/`.tsx` files under `src/` | 447 (`find src -name '*.ts' -o -name '*.tsx' \| wc -l`) |
+| Vitest test files | 132 (all passing) |
+| Vitest tests | 2282 |
 | TypeScript errors | 0 |
 | Biome errors | 0 |
 | GLB models in public/ | 360 |
-| Config definition files | 11 (`src/config/`) |
+| Config definition files | 14 (`src/config/`) |
 | Jest | Removed (Vitest-only) |
 
 ---
@@ -126,6 +126,10 @@
 | Campaign stats | DONE | `src/systems/campaignStats.ts` | Cross-game statistics |
 | Analytics collector | DONE | `src/systems/analyticsCollector.ts` | Gameplay data collection |
 | Speech triggers | DONE | `src/systems/speechTriggers.ts` | Context-sensitive dialogue |
+| Epoch events | DONE | `src/config/epochEventDefs.ts` | 4 epoch transition narrative beats (epochs 2-5) |
+| Cult encounters | DONE | `src/config/cultEncounterDefs.ts` + `src/systems/cultEncounterTracker.ts` | 8 one-time cult encounter triggers |
+| Building milestones | DONE | `src/config/buildingMilestoneDefs.ts` | 6 building upgrade milestone toasts |
+| Catchup mechanic | DONE | `src/systems/turnSystem.ts` | 25% resource bonus for factions below 50% leader score |
 | Speech bubble store | DONE | `src/systems/speechBubbleStore.ts` | Bubble state management |
 | Turn summary | DONE | `src/systems/turnSummary.ts` | End-of-turn recap |
 | Wormhole project | DONE | `src/systems/wormholeProject.ts` | 20-turn construction for wormhole victory |
@@ -326,7 +330,7 @@ Used by `src/ui/Globe.tsx` for **title → generating → playing** (R3F subtree
 | Gap | Impact | Notes |
 |-----|--------|-------|
 | Phase 11.8 improvement overlays | Major (visual) | Roads/mines/irrigation → roboforming progression on Phaser board — see `ROADMAP.md` §11.8. |
-| Phase 11.9 cultist scripted encounters | Content | Narrative beats not fully wired — see `ROADMAP.md` §11.9. |
+| Phase 11.9 cultist scripted encounters | **DONE** | 8 encounter triggers wired into cult subsystems — see `src/config/cultEncounterDefs.ts`. |
 | Terrain blending | Visual | Hard tile boundaries. Need vertex color edge interpolation. See `docs/RENDERING_VISION.md`. |
 | Forest canopy | Visual | Scattered trees → need canopy blob mesh. See `docs/RENDERING_VISION.md`. |
 | Elevation drama | Visual | Smooth noise → need chunky discrete platforms. See `docs/RENDERING_VISION.md`. |

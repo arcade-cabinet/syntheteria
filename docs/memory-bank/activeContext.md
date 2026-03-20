@@ -71,8 +71,8 @@ Core sim wired: economy, combat, AI GOAP, **legacy** research DAG (data still dr
 ## Next Steps
 
 1. **Phase 11.8** — Improvement overlays (roads, mines, irrigation → roboforming visual progression on Phaser board).
-2. **Phase 11.9** — Cultist scripted encounter events (narrative/content).
-3. **Visual polish** — `RENDERING_VISION.md` gaps; extend `roboformOverlay` / `epochAtmosphere` as needed.
-4. **Optional:** repair browser CT / import previews per runbook Phase C follow-up (`pnpm verify:with-ct`).
+2. **Visual polish** — `RENDERING_VISION.md` gaps; extend `roboformOverlay` / `epochAtmosphere` as needed.
+3. **Optional:** repair browser CT / import previews per runbook Phase C follow-up (`pnpm verify:with-ct`).
+4. **Balance iteration** — Iron Creed may be too dominant in long games (67% win rate at 200 turns); consider tuning catchup mechanic thresholds.
 
 **Accepted tech debt:** `pending/` (quarantined reference) remains excluded from tsconfig + biome. **`src/systems/radialMenu.ts`** kept for Vitest + diegetic specs — no in-game `RadialMenu` in active `src/ui/` (per-building modals replaced player radial UI).

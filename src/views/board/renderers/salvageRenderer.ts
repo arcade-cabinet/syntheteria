@@ -8,8 +8,8 @@
 import type { World } from "koota";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { buildExploredSet, resolveSalvageModelUrl } from "../../rendering";
-import { SalvageProp } from "../../traits";
+import { buildExploredSet, resolveSalvageModelUrl } from "../../../rendering";
+import { SalvageProp } from "../../../traits";
 import { tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------

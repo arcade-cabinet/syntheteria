@@ -12,8 +12,8 @@
  */
 
 import * as THREE from "three";
-import type { GeneratedBoard, TileData } from "../../board";
-import type { FloorType } from "../../terrain";
+import type { GeneratedBoard, TileData } from "../../../board";
+import type { FloorType } from "../../../terrain";
 
 // ---------------------------------------------------------------------------
 // FloorType -> terrain color lookup

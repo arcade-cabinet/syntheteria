@@ -35,7 +35,7 @@ import {
 } from "../systems";
 import { Building, UnitFaction, UnitPos } from "../traits";
 import { Globe } from "../ui/Globe";
-import { EventBus } from "../views/eventBus";
+import { EventBus } from "../views";
 // Side-effect import: register radial menu providers at module scope
 import "../systems/radial";
 // --- Game DOM overlays ---

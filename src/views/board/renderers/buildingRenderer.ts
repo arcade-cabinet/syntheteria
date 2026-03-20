@@ -9,8 +9,8 @@
 import type { World } from "koota";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { buildExploredSet, resolveBuildingModelUrl } from "../../rendering";
-import { Building, CultStructure } from "../../traits";
+import { buildExploredSet, resolveBuildingModelUrl } from "../../../rendering";
+import { Building, CultStructure } from "../../../traits";
 import { tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------

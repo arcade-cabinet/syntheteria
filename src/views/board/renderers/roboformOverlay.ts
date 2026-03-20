@@ -19,7 +19,7 @@
  */
 
 import * as THREE from "three";
-import { FACTION_COLORS } from "../../rendering";
+import { FACTION_COLORS } from "../../../rendering";
 import { tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------

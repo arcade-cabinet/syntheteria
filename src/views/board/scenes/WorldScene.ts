@@ -11,10 +11,13 @@
 
 import { Scene3D } from "@enable3d/phaser-extension";
 import * as THREE from "three";
-import type { CameraControls } from "../../camera";
-import { registerCameraControls, unregisterCameraControls } from "../../camera";
-import { computeEpoch } from "../../config";
-import { getCurrentTurn } from "../../systems";
+import type { CameraControls } from "../../../camera";
+import {
+	registerCameraControls,
+	unregisterCameraControls,
+} from "../../../camera";
+import { computeEpoch } from "../../../config";
+import { getCurrentTurn } from "../../../systems";
 import { type GameBoardConfig, getBoardConfig } from "../createGame";
 import { EventBus } from "../eventBus";
 import { setupBoardInput } from "../input/boardInput";

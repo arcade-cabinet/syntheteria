@@ -8,19 +8,22 @@
  * React ↔ Phaser communication via EventBus.
  */
 
-export type { GameBoardConfig } from "./createGame";
-export { createGame } from "./createGame";
-export { EventBus } from "./eventBus";
+export type { GameBoardConfig } from "./board/createGame";
+export { createGame } from "./board/createGame";
+export { EventBus } from "./board/eventBus";
 // --- Lighting ---
 export {
 	applyEpochAtmosphere,
 	getCurrentAtmosphereEpoch,
 	getEpochAtmosphereParams,
 	resetEpochAtmosphere,
-} from "./lighting/epochAtmosphere";
-export { addAccentLight, setupWorldLighting } from "./lighting/worldLighting";
+} from "./board/lighting/epochAtmosphere";
+export {
+	addAccentLight,
+	setupWorldLighting,
+} from "./board/lighting/worldLighting";
 // --- Roboform overlay ---
-export type { RoboformTile } from "./renderers/roboformOverlay";
+export type { RoboformTile } from "./board/renderers/roboformOverlay";
 export {
 	clearRoboformData,
 	createRoboformOverlay,
@@ -29,5 +32,5 @@ export {
 	getRoboformSnapshot,
 	setRoboformLevel,
 	updateRoboformOverlay,
-} from "./renderers/roboformOverlay";
-export { WorldScene } from "./scenes/WorldScene";
+} from "./board/renderers/roboformOverlay";
+export { WorldScene } from "./board/scenes/WorldScene";

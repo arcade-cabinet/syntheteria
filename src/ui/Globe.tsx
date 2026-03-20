@@ -64,7 +64,7 @@ import {
 	UnifiedTerrainRenderer,
 	UnitRenderer,
 	UnitStatusBars,
-} from "../view";
+} from "../views/title";
 import type { StormProfile } from "../world/config";
 import { HoverTracker } from "./game/HoverTracker";
 

@@ -6,9 +6,8 @@
  */
 
 import { forwardRef, useEffect, useLayoutEffect, useRef } from "react";
-import type { GameBoardConfig } from "../views/createGame";
-import { createGame } from "../views/createGame";
-import { EventBus } from "../views/eventBus";
+import type { GameBoardConfig } from "../views";
+import { createGame, EventBus } from "../views";
 import type { GameSession } from "./types";
 
 export interface GameBoardRef {

@@ -10,8 +10,8 @@
 
 import type { World } from "koota";
 import * as THREE from "three";
-import { getActiveSpeech } from "../../systems";
-import { UnitPos } from "../../traits";
+import { getActiveSpeech } from "../../../systems";
+import { UnitPos } from "../../../traits";
 import { tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------

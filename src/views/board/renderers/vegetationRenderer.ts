@@ -14,7 +14,7 @@
  */
 
 import * as THREE from "three";
-import type { GeneratedBoard } from "../../board";
+import type { GeneratedBoard } from "../../../board";
 import { TILE_SIZE, tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------

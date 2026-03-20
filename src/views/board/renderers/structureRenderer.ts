@@ -11,14 +11,14 @@
 import type { World } from "koota";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import type { GeneratedBoard } from "../../board";
+import type { GeneratedBoard } from "../../../board";
 import {
 	buildExploredSet,
 	getStructuralEdges,
 	resolveStructureModelUrl,
 	STRUCTURE_COLUMN_MODELS,
 	STRUCTURE_WALL_MODELS,
-} from "../../rendering";
+} from "../../../rendering";
 import { tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------

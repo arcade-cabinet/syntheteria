@@ -1,5 +1,10 @@
 # Syntheteria — Brutally Honest Session Review (2026-03-18)
 
+> **Superseded for current state** — snapshot from pre–Phaser pivot / pre–package finalization. For
+> architecture, renderer status, **PR workflow**, and **current test counts** see
+> `docs/CLOUD_AGENT_RUNBOOK.md`, `docs/memory-bank/progress.md`, `docs/PHASER_PIVOT_PLAN.md`, `AGENTS.md`.
+> Findings below (e.g. missing `GarageModal`, dead `pickAITrack`) are **historical** — verify against code before acting.
+
 > Independent audit of what was delivered vs. what was claimed.
 > No sugar-coating. Screenshots and evidence for every claim.
 

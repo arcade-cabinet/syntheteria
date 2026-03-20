@@ -160,9 +160,8 @@ export class WorldScene extends Scene3D {
 		EventBus.on("turn-advanced", () => this.onTurnAdvanced());
 
 		// Listen for tech tier changes to update epoch atmosphere
-		EventBus.on(
-			"tech-tier-changed",
-			(tier: number) => this.setHighestTechTier(tier),
+		EventBus.on("tech-tier-changed", (tier: number) =>
+			this.setHighestTechTier(tier),
 		);
 
 		EventBus.emit("scene-ready", this);

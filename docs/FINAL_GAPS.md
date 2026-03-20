@@ -1,5 +1,7 @@
 # Syntheteria — Final Comprehensive Gaps Report (2026-03-18)
 
+> **Superseded — do not treat P0/P1 items as current.** Historical audit; paths reference old layouts (`src/ecs/`, pre-views split). For **today**: run **`pnpm verify`**, read **`docs/memory-bank/progress.md`**, **`docs/CLOUD_AGENT_RUNBOOK.md`**, **`RENDERING_VISION.md`**. Summary tables below are **frozen in time** and often wrong now.
+
 > Audit of EVERYTHING incomplete, broken, missing, or not matching the vision.
 > Organized by priority. Nothing deferred. Nothing hidden.
 
@@ -7,16 +9,18 @@
 
 ## Audit Summary
 
-| Check | Result |
+*Frozen 2026-03-18. Do not use as live status — run `pnpm verify` today.*
+
+| Check | Result (historical) |
 |-------|--------|
 | TypeScript (`npx tsc --noEmit`) | **0 ERRORS** (fixed: #101) |
-| Vitest (`pnpm test:vitest`) | **131 suites, 2239 tests, 0 failures** (fixed: #102) |
+| Vitest (`pnpm test:vitest`) | **131 suites, 2239 tests** (superseded — see `memory-bank/progress.md` for current counts) |
 | Biome lint (`pnpm lint`) | **0 errors** (fixed: #103) |
 | Production build (`pnpm build`) | **SUCCEEDS** — 324MB dist (deploy concern, not code fix — #108) |
 | TODO/FIXME/HACK/XXX in source | **0** (fixed: #107 — added attack_miss SFX) |
 | Stale "dome" references | **0 stale** — CultDomeRenderer is lore-correct, all others fixed (#106) |
 | Dead code | **IsometricCamera deleted** (#105). `pending/` = accepted tech debt (#110). |
-| Doc accuracy | **Updated** — 131 suites, 2239 tests in all docs (#109, #99) |
+| Doc accuracy | Claims in this file are **not maintained** — use runbook + memory bank |
 
 ---
 
@@ -163,15 +167,15 @@ These areas were checked and confirmed functional:
 - **Sphere world** — `buildSphereGeometry()`, `tileToSpherePos()`, `spherePosToTile()`
 - **SphereOrbitCamera** — orbit around sphere center, WASD rotates, scroll zooms
 - **Sphere model placement** — units/buildings/salvage tangent to sphere surface
-- **All 4 overlay modals** — Research, Garage, Roster, Diplomacy — all wired in main.tsx with open/close buttons in command bar
+- **Overlay modals** — Research, Roster, Diplomacy; **production** moving to **settlement/city screen** (legacy `GarageModal` may still exist)
 - **HUD** — CYCLE counter, resources, victory progress, AP, ADVANCE button, SYNC button
-- **Radial menu** — right-click context actions (code wired in BoardInput.tsx)
+- **Command UI** — legacy radial still wired (`BoardInput.tsx`); **target:** Civ VI–style strip/inspector (`GAME_DESIGN.md` §9)
 - **Observer mode** — AI-vs-AI auto-play with speed control
 - **Save/Load** — SQLite persistence, auto-save every 3 turns, manual save via SYNC
 - **40+ ECS systems** — all properly wired with `world` param in turnSystem.ts
 - **AI GOAP** — Yuka-based with faction personalities, fuzzy logic, NavGraph A*
 - **pickAITrack wired** — AI uses track preferences when fabricating (fixed from HONEST_REVIEW findings)
-- **GarageModal exists** — two-step fabrication UI (Classification -> Specialization) now built
+- **`GarageModal.tsx`** — interim fabrication UI; **design target:** production queue + priorities inside **city modal** (`GAME_DESIGN.md` §5)
 - **Cult domes** — CultDomeRenderer renders translucent hemispheres at POIs (lore-correct)
 - **Floating illuminators** — IlluminatorRenderer provides light in storm darkness
 - **Storm effects** — StormClouds, Hypercane, LightningEffect persistent across all phases
@@ -216,7 +220,7 @@ These areas were checked and confirmed functional:
 - Wall visibility / cut-away — **CutawayClipPlane.tsx exists (WIP)**
 - Mini-globe in corner — **Minimap.tsx exists but is 2D; globe IS minimap at zoom-out**
 - Line of sight for ranged — **Task #44 completed**
-- Building preview ghost — **Not verified (build placement uses radial menu)**
+- Building preview ghost — **Not verified (build placement uses command UI path)**
 - Power conduit visualization — **Not implemented (no visible connections between buildings)**
 - Idle animations — **Task #53 completed (procedural bounce/wiggle)**
 

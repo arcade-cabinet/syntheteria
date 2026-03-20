@@ -9,7 +9,7 @@
 > - main.tsx → thin 28-LOC mount, app shell in `src/app/`
 > - Rendering vision documented (`docs/RENDERING_VISION.md`)
 > - Pending/ salvageability assessed (80% reusable)
-> - 143 test suites, 2440 tests, 0 TS errors
+> - Vitest: **146 test files, 2487 tests**, 0 TS errors (update this line when counts change)
 
 ---
 
@@ -20,12 +20,12 @@
 │  React DOM Layer (src/ui/, src/app/)            │
 │  ┌───────────────────────────────────────────┐  │
 │  │ LandingScreen, NewGameModal, SettingsModal│  │
-│  │ HUD, RadialMenu, TechTree, GarageModal   │  │
+│  │ HUD, command panels, TechTree, settlement production   │  │
 │  │ PauseMenu, Minimap, Overlays, Tooltips   │  │
 │  └───────────────────────────────────────────┘  │
 │                                                 │
 │  ┌───────────────────────────────────────────┐  │
-│  │ Phaser Canvas (src/view/)                 │  │
+│  │ Phaser Canvas (src/views/)                 │  │
 │  │ ┌─────────────────────────────────────┐   │  │
 │  │ │ Scene3D: terrain, models, fog,      │   │  │
 │  │ │ lighting, particles, animations     │   │  │
@@ -37,11 +37,11 @@
 └─────────────────────────────────────────────────┘
 ```
 
-**What Phaser replaces:** Globe.tsx's R3F `<Canvas>` — the 3D game board rendering ONLY.
+**What Phaser replaces:** The **match** board only. `Globe.tsx` stays for **title + generating** (R3F). During `playing`, `GameBoard` mounts Phaser into a div; React DOM overlays sit above.
 
 **What is OFF LIMITS — DO NOT CHANGE:**
 - `src/ui/landing/` — LandingScreen, NewGameModal, SettingsModal — SIGNED OFF, DO NOT TOUCH
-- `src/ui/game/` — HUD, RadialMenu, TechTree, GarageModal, all overlays — stays React DOM
+- `src/ui/game/` — HUD, command/settlement UI (incl. production queue), TechTree, all overlays — stays React DOM
 - `src/app/App.tsx` — phase state machine, session lifecycle — stays React
 - The new game flow, settings flow, landing page design — ALL SIGNED OFF
 
@@ -82,17 +82,19 @@ src/config/
 
 **Validation:** `pnpm verify` must pass after migration.
 
-### 0.2 — Port World/City Separation from Pending/ (Tier 1)
+### 0.2 — Port Settlement / City Data from Pending/ (Tier 1)
 
-Port data contracts and pure logic from `pending/`:
+Port **data contracts and pure view-model logic** from `pending/` (not executable grid code):
 
 1. **Snapshot types** — `WorldSessionSnapshot`, `CityRuntimeSnapshot`, `SectorPoiSnapshot`
-2. **POI contracts** — `WorldPoiType` enum, city state enums (`latent`/`surveyed`/`founded`)
-3. **Runtime state** — `activeScene: "world" | "city"`, `activeCityInstanceId`
-4. **City site actions** — `getCitySiteViewModel()` decision logic
-5. **City presentation** — POI type → display labels/badges
+2. **POI / settlement contracts** — `WorldPoiType` enum, site state enums (`latent`/`surveyed`/`founded`)
+3. **UI session state** — which settlement is focused (e.g. `focusedSettlementId`, `cityPanelOpen`) —
+   lives in **React / app shell**, not a Phaser scene switch
+4. **City site actions** — `getCitySiteViewModel()` decision logic (what buttons/options apply)
+5. **Presentation hints** — POI type → labels/badges on the **overworld** map
 
-**Target:** `src/world/` package with snapshot types, POI contracts, and scene state.
+**Target:** extend `src/world/` beyond new-game config with snapshot types and settlement contracts.
+Phaser keeps a **single** match scene (`WorldScene`); “enter city” = open DOM city screen (CivRev2/Civ VI pattern).
 
 ### 0.3 — Replace R3F with Phaser in Build Pipeline
 
@@ -108,30 +110,27 @@ Configure Vite for Phaser:
 - Configure asset handling for GLB models
 - Ensure HMR works with Phaser scenes
 
-Create the Phaser mount point in App.tsx:
-- Replace `<Globe>` with `<GameBoard>` — a React component that creates a `<div>` and mounts a Phaser.Game into it
-- React passes phase, session, config down; Phaser renders the board
-- React still renders all DOM overlays on top
+Create the Phaser mount in `App.tsx` for the **playing** phase only:
+- After title → generating → playing transition, mount `<GameBoard>` (div + `Phaser.Game` via `createGame`)
+- Keep `<Globe>` for phases before playing; **do not** remove the landing globe
+- React passes session/board/world; Phaser renders the tactical board; DOM overlays unchanged on top
 
-**Validation:** `pnpm dev` starts, Phaser boots in the game board area, empty scene renders. Landing page still works (it's pure React DOM — unaffected).
+**Validation:** `pnpm dev` starts; landing + new game unchanged; Phaser boots when entering play.
 
 ---
 
 ## Phase 1: Game Board Rendering
 
-### 1.1 — Rewrite src/view/ for Phaser (No React in view/)
+### 1.1 — `src/views/` Phaser board (no React inside)
 
-`src/view/` follows the Koota examples pattern: **the view layer is NOT tied to React.** In Koota's boids example, `view/` is pure imperative Three.js (`view/main.ts`, `view/scene.ts`, `view/systems/syncThreeObjects.ts`). React is just one option for rendering — Phaser is another.
-
-`src/view/` becomes pure Phaser + Three.js — **no React, no JSX, no hooks:**
+Follows the Koota sim/view idea: **board rendering is not React.** In Koota's boids example, `view/` is pure imperative Three.js. Here the **playing** board is **`src/views/`** — Phaser + enable3d — **no React, no JSX, no hooks:**
 
 ```
-src/view/
+src/views/
 ├── index.ts                 Barrel export
 ├── createGame.ts            Phaser.Game factory — returns game instance
 ├── scenes/
-│   ├── WorldScene.ts        Scene3D — isometric overworld board
-│   └── CityScene.ts         Scene3D — city interior (Phase 4)
+│   └── WorldScene.ts        Scene3D — isometric overworld board (only match scene)
 ├── renderers/
 │   ├── terrainRenderer.ts   Vertex-colored flat-shaded terrain mesh
 │   ├── unitRenderer.ts      GLB robot models + bob-and-weave
@@ -145,7 +144,7 @@ src/view/
 ├── camera/
 │   └── isometricCamera.ts   Ortho camera + drag-pan + scroll-zoom + WASD rotate
 └── input/
-    └── boardInput.ts        Click-to-select, click-to-move, radial trigger
+    └── boardInput.ts        Click-to-select, click-to-move, command UI triggers
 ```
 
 The ONLY React piece is a thin mount in `src/app/GameBoard.tsx`:
@@ -162,7 +161,7 @@ export function GameBoard({ session, phase, ... }: GameBoardProps) {
 }
 ```
 
-This follows Koota's sim/view split exactly: `view/` is the rendering layer (pure Phaser/Three.js), `app/` bridges it to React. The view has ZERO React dependency.
+Koota-style split: **`views/`** = Phaser/Three.js board; **`app/GameBoard.tsx`** = sole React bridge; **`view/`** = R3F title globe (and legacy board TSX until pruned).
 
 ### 1.2 — Implement POC Lighting Recipe
 
@@ -233,13 +232,16 @@ update(time: number, delta: number) {
 
 React still owns the turn button. Phaser just re-reads ECS trait values each frame and updates visuals.
 
-### 2.4 — Radial Menu + Build System
+### 2.4 — Command UI + Build System
 
-Radial menu is DOM (stays in `src/ui/game/RadialMenu.tsx`). Build placement sends commands through ECS systems. Phaser renders the preview ghost.
+**Target:** **Civ VI–style** contextual commands (action strip / inspector), not the legacy radial.
+Build placement and move/harvest/attack dispatch through ECS systems unchanged; only the **surface**
+that fires those commands moves to panels and rows. Phaser renders the preview ghost. Until the new
+UI ships, `RadialMenu.tsx` may remain as a bridge — **do not** invest in extending radial providers.
 
 ### 2.5 — Combat Effects + Speech Bubbles
 
-Port from existing `src/view/effects/`. Floating damage text, flash effects, speech bubbles — these become Phaser text/sprite objects or DOM-projected labels.
+Port patterns from legacy `src/view/effects/` where needed. In `src/views/`, use Phaser/Three objects or DOM-projected labels.
 
 **Validation:** Full gameplay loop — start game, move units, build, attack, end turn, AI responds. All in Phaser board + React DOM overlays.
 
@@ -267,40 +269,50 @@ Discrete elevation levels (flat, hill, mountain, peak). Cliff faces between leve
 
 ---
 
-## Phase 4: World/City View Separation
+## Phase 4: Settlement Management (CivRev2 / Civ VI Model)
 
-### 4.1 — World Overview (WorldScene)
-The main game board — isometric overworld with terrain, units, buildings, fog. This is what Phase 1-3 builds.
+### 4.1 — World map only (WorldScene)
+The **entire** tactical match runs in one isometric Phaser scene: terrain, units, buildings, fog,
+settlement markers on tiles. Phase 1–3 deliver this. There is **no** `CityScene` or walkable interior.
 
-### 4.2 — City Interior (CityScene)
-When player enters a base, Phaser switches to `CityScene`:
-- Separate camera, lighting, environment
-- Interior layout from `pending/city/` (catalog, grammar, composites)
-- Port `cityTransition.ts` (enterCityInstance, returnToWorld)
+### 4.2 — City / settlement screen (React DOM)
+Selecting a settlement opens a **management UI** (full-screen or large modal) — **all production
+queueing** (units, structures, and anything else the settlement spends turns on), **queue order /
+priorities** (4X-style “what to build next” tradeoffs), yields, purchases, narrative hooks — same
+pattern as **Civ VI** city screens (including **mobile** for dense, scannable rows). No separate
+“Garage” product concept; motor pools are **facilities**, not their own modal brand.
 
-React renders a `CitySiteModal` overlay during the transition. Phaser swaps the active scene underneath.
+Phaser may **pause or dim** behind the panel (optional polish); the city “view” is **not** a second 3D level.
 
-### 4.3 — Scene Management
+Use `pending/` only for **data** inspiration (catalogs, copy, state shapes). Do not port real-time
+interior navigation or `cityTransition.ts` scene swaps.
+
+### 4.3 — Wiring
 
 ```typescript
-// src/world/sceneManager.ts
-export type ActiveScene = "world" | "city";
-export function enterCity(cityId: number): void { ... }
-export function returnToWorld(): void { ... }
+// Example: app-level UI state (not Phaser scenes)
+export function openSettlementPanel(settlementId: number): void { ... }
+export function closeSettlementPanel(): void { ... }
 ```
 
-React calls these functions; Phaser handles the scene switch internally.
+ECS + SQLite own settlement truth; React reads/writes through existing command paths; Phaser re-renders
+the overworld when traits change.
 
 ---
 
 ## Phase 5: Cleanup
 
-### 5.1 — Delete R3F Code
+### 5.1 — Delete unused R3F **board** code (keep Globe)
 
-- `src/ui/Globe.tsx` — replaced by `src/view/GameBoard.tsx`
-- `src/camera/SphereOrbitCamera.tsx` — replaced by Phaser isometric camera
-- `src/rendering/globe/` — globe-specific shaders (sphere world)
-- Old R3F renderer `.tsx` files in `src/view/renderers/` — replaced by new Phaser renderers
+**Do not delete** `src/ui/Globe.tsx` or title `src/view/globe/` — landing/generating stay R3F.
+
+Remove once Phaser parity is proven:
+
+- Old **match** R3F renderers under `src/view/renderers/` and related overlays not used by `Globe.tsx`
+- `src/ui/game/GameScreen.tsx` and any dead entry that mounted the old board canvas
+- Sphere **orbit** camera for match if nothing else needs it; title globe keeps its camera
+
+Keep `src/rendering/globe/` and sphere geometry helpers while the title globe uses them.
 
 ### 5.2 — Remove Unused Dependencies
 
@@ -316,26 +328,26 @@ Check if `three` is still needed directly or if enable3d re-exports it.
 src/
 ├── main.tsx              Thin mount (28 LOC)
 ├── app/                  React app shell (App.tsx, GameBoard.tsx, session, debug)
-├── view/                 Phaser game board — NO React, pure Phaser/Three.js
-│   ├── scenes/           WorldScene, CityScene (Scene3D)
-│   ├── renderers/        terrain, units, buildings, fog, particles
-│   ├── camera/           Isometric camera controller
-│   ├── input/            Board input (click, drag, select)
-│   └── lighting/         World lighting recipe
-├── ui/                   React DOM (landing, HUD, modals, overlays, tooltips)
+├── views/                Phaser + enable3d — playing board ONLY (pure .ts + Scene3D)
+│   ├── scenes/           WorldScene (single match scene)
+│   ├── renderers/        terrain, units, buildings, fog, particles, …
+│   ├── input/            boardInput.ts
+│   └── lighting/         worldLighting, epochAtmosphere
+├── view/                 R3F — title globe (+ pruned legacy board TSX)
+├── ui/                   React DOM (Globe, landing, HUD, modals, overlays)
 ├── rendering/            Pure TS geometry/placement math (framework-agnostic)
-├── config/               All game data (consolidated — buildings, factions, robots, terrain, etc.)
-├── systems/              ECS systems (unchanged)
-├── traits/               Koota traits (unchanged)
-├── ai/                   Yuka GOAP (unchanged)
-├── board/                Board generation (unchanged)
-├── db/                   SQLite persistence (unchanged)
-├── world/                World/city state, POI contracts, scene management
-├── audio/                Tone.js audio (unchanged)
-└── types/                Shared type declarations
+├── config/               Tunables + (optional) consolidated data subpackages
+├── systems/              ECS systems
+├── traits/               Koota traits
+├── ai/                   Yuka GOAP
+├── board/                Board generation
+├── db/                   SQLite persistence
+├── world/                New-game config + (future) settlement snapshots & POI contracts
+├── audio/                Tone.js
+└── types/                Shared types
 ```
 
-**Layering rule:** `view/` imports from `rendering/`, `traits/`, `systems/`, `config/`, `board/`. It does NOT import from `ui/` or `app/`. React (`app/`) imports from `view/` to mount the game. This is Koota's sim/view pattern — view reads ECS state, app bridges to React.
+**Layering:** `views/` imports `rendering/`, `traits/`, `systems/`, `config/`, `board/` — not `ui/`. `app/GameBoard.tsx` mounts Phaser. `view/` stays for R3F globe; `Globe.tsx` composes `view/` + phase logic.
 
 ---
 
@@ -344,11 +356,11 @@ src/
 ```
 Phase 0 (Foundation) — all 3 tracks run in parallel
   ├── 0.1 Config consolidation
-  ├── 0.2 World/city data port
+  ├── 0.2 Settlement / city data port
   └── 0.3 Phaser replaces R3F in build
         │
 Phase 1 (Game Board) — depends on 0.3
-  ├── 1.1 Rewrite src/view/ for Phaser
+  ├── 1.1 Implement src/views/ (Phaser)
   ├── 1.2 Lighting recipe
   ├── 1.3 Terrain renderer
   ├── 1.4 Model renderer
@@ -359,7 +371,7 @@ Phase 2 (Full Gameplay) — depends on Phase 1
   ├── 2.1 Fog of war
   ├── 2.2 HUD integration
   ├── 2.3 Turn system wiring
-  ├── 2.4 Radial menu + build
+  ├── 2.4 Command UI + build
   └── 2.5 Combat effects + speech
         │
 Phase 3 (Visual Gaps) — depends on 2.1, 2.3
@@ -369,10 +381,10 @@ Phase 3 (Visual Gaps) — depends on 2.1, 2.3
   ├── 3.4 Ocean layers
   └── 3.5 Roboforming
         │
-Phase 4 (World/City) — depends on Phase 2 + 0.2
-  ├── 4.1 World overview (done in Phase 1-3)
-  ├── 4.2 City interior scene
-  └── 4.3 Scene management
+Phase 4 (Settlement UI) — depends on Phase 2 + 0.2
+  ├── 4.1 World map (done in Phase 1-3)
+  ├── 4.2 React city / settlement management panel
+  └── 4.3 App wiring (focus id, open/close, ECS commands)
         │
 Phase 5 (Cleanup) — depends on Phases 2-4
   ├── 5.1 Delete R3F code
@@ -390,7 +402,7 @@ Phase 5 (Cleanup) — depends on Phases 2-4
 | 1 | Visual: Phaser renders board. Functional: camera, input, model loading |
 | 2 | Existing Vitest suites pass (ECS systems unchanged). Manual: full game loop |
 | 3 | Visual comparison against POC screenshots and CivRev2 reference |
-| 4 | New E2E tests for world↔city transitions |
+| 4 | E2E or integration tests for opening settlement panel + queue actions |
 | 5 | `pnpm verify` — all tests pass after cleanup |
 
 **Key invariant:** ECS logic (systems, traits, AI) is rendering-agnostic. Changing the rendering backend does NOT change system tests. If a system test breaks, the abstraction leaked.
@@ -405,7 +417,7 @@ Phase 5 (Cleanup) — depends on Phases 2-4
 | Circular deps in consolidated config/ | Direct type imports for cross-package types (proven) |
 | Landing page regression | Landing page is pure React DOM — Phaser doesn't touch it |
 | HUD/overlay regression | All overlays are pure React DOM — Phaser doesn't touch them |
-| Bundle size (Phaser + Three.js) | Code-split Phaser scenes, lazy-load city interior |
+| Bundle size (Phaser + Three.js) | Code-split Phaser boot; city UI is DOM (no extra 3D scene) |
 | enable3d compatibility | POC already validated the stack works |
 
 ---

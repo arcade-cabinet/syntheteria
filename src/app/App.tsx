@@ -457,7 +457,8 @@ export function App() {
 					onSceneReady={() => setSceneReady(true)}
 					onTileClick={(tileX, tileZ) => {
 						// Check what's at the clicked tile
-						let selectionType: "unit" | "building" | "empty_sector" = "empty_sector";
+						let selectionType: "unit" | "building" | "empty_sector" =
+							"empty_sector";
 						let targetEntityId: string | null = null;
 						let targetFaction: string | null = null;
 
@@ -486,16 +487,12 @@ export function App() {
 						}
 
 						// Open radial menu at click position
-						openRadialMenu(
-							window.innerWidth / 2,
-							window.innerHeight / 2,
-							{
-								selectionType,
-								targetEntityId,
-								targetSector: { q: tileX, r: tileZ },
-								targetFaction,
-							},
-						);
+						openRadialMenu(window.innerWidth / 2, window.innerHeight / 2, {
+							selectionType,
+							targetEntityId,
+							targetSector: { q: tileX, r: tileZ },
+							targetFaction,
+						});
 					}}
 					onUnitSelect={(id) => {
 						setSelectedUnitId(id);
@@ -583,31 +580,60 @@ export function App() {
 					)}
 
 					{showTechTree && (
-						<TechTreeOverlay world={session.world} factionId="player" onClose={() => setShowTechTree(false)} />
+						<TechTreeOverlay
+							world={session.world}
+							factionId="player"
+							onClose={() => setShowTechTree(false)}
+						/>
 					)}
 					{showGarage && (
-						<GarageModal world={session.world} factionId="player" onClose={() => setShowGarage(false)} />
+						<GarageModal
+							world={session.world}
+							factionId="player"
+							onClose={() => setShowGarage(false)}
+						/>
 					)}
 					{showRoster && (
-						<UnitRosterOverlay world={session.world} factionId="player" onClose={() => setShowRoster(false)}
-							onSelectUnit={(id) => { setSelectedUnitId(id); setShowRoster(false); }}
+						<UnitRosterOverlay
+							world={session.world}
+							factionId="player"
+							onClose={() => setShowRoster(false)}
+							onSelectUnit={(id) => {
+								setSelectedUnitId(id);
+								setShowRoster(false);
+							}}
 						/>
 					)}
 					{showDiplomacy && (
-						<DiplomacyOverlay world={session.world} factionId="player" onClose={() => setShowDiplomacy(false)} />
+						<DiplomacyOverlay
+							world={session.world}
+							factionId="player"
+							onClose={() => setShowDiplomacy(false)}
+						/>
 					)}
 
 					<AlertBar />
-					{!isObserverMode && <PendingCompletions items={collectPendingItems(session.world)} />}
+					{!isObserverMode && (
+						<PendingCompletions items={collectPendingItems(session.world)} />
+					)}
 					{!isObserverMode && <TurnSummaryPanel />}
-					<PauseMenu visible={paused} onResume={() => setPaused(false)}
-						onSave={() => void doSave()} onQuitToTitle={handleReturnToMenu}
+					<PauseMenu
+						visible={paused}
+						onResume={() => setPaused(false)}
+						onSave={() => void doSave()}
+						onQuitToTitle={handleReturnToMenu}
 					/>
 					{gameOutcome.result !== "playing" && (
-						<GameOutcomeOverlay outcome={gameOutcome} turn={turn} onReturnToMenu={handleReturnToMenu} />
+						<GameOutcomeOverlay
+							outcome={gameOutcome}
+							turn={turn}
+							onReturnToMenu={handleReturnToMenu}
+						/>
 					)}
 					<TurnLog />
-					{session.world && session.board && <Minimap world={session.world} board={session.board} />}
+					{session.world && session.board && (
+						<Minimap world={session.world} board={session.board} />
+					)}
 					<RadialMenu />
 					<KeybindHints />
 					<SystemToasts />
@@ -615,7 +641,12 @@ export function App() {
 					<TurnPhaseOverlay />
 					<TutorialOverlay turn={turn} />
 					<EntityTooltip />
-					{session.world && <SelectedInfo world={session.world} selectedUnitId={selectedUnitId ?? null} />}
+					{session.world && (
+						<SelectedInfo
+							world={session.world}
+							selectedUnitId={selectedUnitId ?? null}
+						/>
+					)}
 				</div>
 			)}
 		</div>

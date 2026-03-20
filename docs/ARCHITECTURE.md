@@ -66,7 +66,7 @@ syntheteria/
 │   │   ├── triggers/          # territoryTrigger.ts — territory response
 │   │   ├── trackSelection.ts  # Per-faction specialization preferences
 │   │   └── yukaAiTurnSystem.ts # Per-turn AI execution
-│   ├── systems/               # radialMenu state machine, radialProviders
+│   ├── systems/               # command UI backends: radialMenu (legacy), radialProviders
 │   ├── audio/                 # audioEngine, sfx (Tone.js), ambience (storm loop)
 │   ├── db/                    # SQLite schema + GameRepo (sql.js adapter)
 │   ├── rendering/
@@ -103,7 +103,7 @@ syntheteria/
 │   │   ├── FatalErrorModal.tsx # Error recovery UI
 │   │   ├── icons.tsx          # UI icon components
 │   │   ├── landing/           # LandingScreen, NewGameModal, SettingsModal, title/
-│   │   └── game/              # HUD, RadialMenu, GarageModal, overlays, panels (26 files)
+│   │   └── game/              # HUD, command UI, settlement production (legacy GarageModal shim), overlays
 │   ├── config/                # 11 definition files (all TypeScript const objects)
 │   │   ├── gameDefaults.ts    # All tunables: tile size, AP, camera, board sizes, faction colors
 │   │   ├── techTreeDefs.ts    # 27 techs in 5 tiers
@@ -237,12 +237,12 @@ All game state lives as typed traits on Koota entities.
 | `factions/` | `FACTION_DEFINITIONS`, `CULT_DEFINITIONS`, relations helpers |
 | `narrative/` | Speech profiles — faction persona dialogue |
 
-### `src/systems/` — Radial Menu
+### `src/systems/` — Command UI (legacy radial machinery)
 
 | File | Purpose |
 |------|---------|
-| `radialMenu.ts` | Dual-ring radial context menu state machine (pure TS, no React) |
-| `radialProviders.ts` | Move/Harvest/Attack action providers |
+| `radialMenu.ts` | **Legacy** dual-ring state machine — **superseded** by Civ VI–style command UI (`GAME_DESIGN.md` §9) |
+| `radialProviders.ts` | Action providers (Move/Harvest/Attack/…); **keep** logic, **re-skin** consumers away from radial |
 
 ### `src/db/` — SQLite Persistence
 
@@ -340,8 +340,8 @@ SQLite is **non-fatal**: DB failures don't crash the game — ECS runs in memory
 | `ui/landing/title/` | Title menu scene components |
 | `ui/game/GameScreen.tsx` | **LEGACY** — old separate Canvas, superseded by Globe.tsx |
 | `ui/game/HUD.tsx` | Turn counter, resource counters (13-material), AP display, End Turn button |
-| `ui/game/RadialMenu.tsx` | SVG renderer for dual-ring radial context menu |
-| `ui/game/GarageModal.tsx` | Two-step fabrication: Classification → Specialization track |
+| `ui/game/RadialMenu.tsx` | **Legacy** SVG radial — replace with command strip / inspector per `GAME_DESIGN.md` §9 |
+| `ui/game/GarageModal.tsx` | **Legacy** fabrication UI — **target:** fold into settlement/city production queue (`GAME_DESIGN.md` §5 — eXpand, §7 — Bot Roster) |
 | `ui/game/TechTreeOverlay.tsx` | Full 27-tech DAG with research progress |
 | `ui/game/DiplomacyOverlay.tsx` | Faction standings panel |
 | `ui/game/UnitRosterOverlay.tsx` | All player units with quick-jump |
@@ -390,7 +390,7 @@ All player-visible elements carry `data-testid` attributes for component tests a
 game renderers activate in the playing phase.
 
 Landing DOM overlays (`LandingScreen`, `NewGameModal`) layer on top of the Canvas.
-Game DOM overlays (`HUD`, `GarageModal`, etc.) layer on top during the playing phase.
+Game DOM overlays (`HUD`, settlement/city panels, etc.) layer on top during the playing phase.
 
 **UI Architecture Rule:**
 - **Overlay UI** (HUD, modals, panels) = DOM-based, layered on Canvas
@@ -540,7 +540,7 @@ events         -- id, game_id, turn, type, payload (JSON)
 
 ## Test Strategy
 
-**126 test suites, 2239 tests. 0 TypeScript errors. Vitest-only.**
+**146 Vitest test files, 2487 tests. 0 TypeScript errors. Vitest-only.** *(Bump when `pnpm test:vitest` output changes.)*
 
 Run: `pnpm test:vitest` (unit) | `pnpm test:ct` (browser CT) | `pnpm verify` (full gate)
 
@@ -613,7 +613,7 @@ Fixed zenith sun — perpetual harsh artificial daylight under the storm sky (no
 
 ## Specialization System
 
-Robot classes can specialize into permanent tracks at fabrication time. Chosen in the Garage modal (two-step: Classification → Specialization).
+Robot classes can specialize into permanent tracks when **queued for production** at a settlement. **Target UX:** city/settlement screen with production queue + priorities; **legacy:** `GarageModal` two-step flow.
 
 ### Architecture
 
@@ -634,11 +634,11 @@ Each track defines: `trackId`, `robotClass`, `label`, `description`, `gateTechId
 
 ### Flow
 
-1. Player opens Garage at motor pool → `GarageModal.tsx`
-2. Step 1: pick robot class (6 options)
-3. Step 2: pick specialization track (filtered by researched gate techs)
-4. `queueFabrication()` with track ID → unit spawns with `UnitSpecialization` trait
-5. Each turn, `specializationSystem.ts` applies aura passives based on track + mark level
+1. Player opens **settlement screen** → manage **production queue** (reorder / prioritize)
+2. Add unit job: pick robot class (6 options) → pick specialization track (filtered by gate techs)
+3. `queueFabrication()` (or equivalent) with track ID → on completion, unit spawns with `UnitSpecialization` trait
+4. Each turn, `specializationSystem.ts` applies aura passives based on track + mark level  
+   *(Until the city panel ships, `GarageModal.tsx` may still perform steps 2–3 in isolation.)*
 
 ### AI Track Selection
 

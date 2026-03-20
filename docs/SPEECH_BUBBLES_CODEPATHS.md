@@ -220,7 +220,7 @@ import {
 - [x] CSS styling applied with faction colors
 
 ### ✅ Tests
-- [x] All 2440 tests pass
+- [x] Full Vitest run passes (`pnpm test:vitest` — update checked count when regressions fixed)
 - [x] No TypeScript errors
 - [x] No linting errors
 

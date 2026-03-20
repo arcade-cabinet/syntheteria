@@ -15,9 +15,9 @@
 
 | Metric | Value |
 |--------|-------|
-| Active `.ts`/`.tsx` files | 344 |
-| Vitest suites | 131 (all passing) |
-| Vitest tests | 2239 |
+| Active `.ts`/`.tsx` files under `src/` | 465 |
+| Vitest test files | 146 (all passing) |
+| Vitest tests | 2487 |
 | TypeScript errors | 0 |
 | Biome errors | 0 |
 | GLB models in public/ | 360 |
@@ -112,7 +112,7 @@
 | Upgrade system | DONE | `src/ecs/systems/upgradeSystem.ts` | Mark level upgrades |
 | Diplomacy system | DONE | `src/ecs/systems/diplomacySystem.ts` | Granular standings (-100 to +100) |
 | Hacking system | DONE | `src/ecs/systems/hackingSystem.ts` | Hack enemy units/buildings |
-| Build system | DONE | `src/ecs/systems/buildSystem.ts` | Radial menu → select → check cost → place |
+| Build system | DONE | `src/ecs/systems/buildSystem.ts` | Command UI (today: legacy radial) → select → check cost → place |
 | Building placement | DONE | `src/ecs/systems/buildingPlacement.ts` | Adjacency and cost validation |
 | Fog reveal system | DONE | `src/ecs/systems/fogRevealSystem.ts` | Per-unit scan radius fog |
 | Toast notifications | DONE | `src/ecs/systems/toastNotifications.ts` | In-game toast messages |
@@ -141,7 +141,7 @@
 | Worker tracks | DONE | `src/ecs/robots/specializations/workerTracks.ts` | Deep Miner + Fabricator + Salvager |
 | Per-class actions | DONE | `src/ecs/robots/classActions.ts` | Unique action sets per class + track actions |
 | AI track selection | DONE | `src/ai/trackSelection.ts` | Per-faction preferences |
-| Garage modal | DONE | `src/ui/game/GarageModal.tsx` | Two-step fabrication UI |
+| Settlement production | **Partial** | `GarageModal.tsx` (legacy) | **Target:** city modal — full queue, reorder, 4X priorities (`GAME_DESIGN.md` §5) |
 | Mark progression | DONE | `src/ecs/robots/marks.ts` | Mark I-V with specialization abilities |
 
 ### Buildings / Salvage / Cult
@@ -151,7 +151,7 @@
 | 15 faction buildings | DONE | `src/ecs/buildings/definitions.ts` | BUILDING_DEFS — TypeScript const with build costs |
 | 6 cult structures | DONE | `src/ecs/buildings/cultStructures.ts` | breach_altar, signal_corruptor, human_shelter, corruption_node, cult_stronghold, bio_farm |
 | 10 salvage types | DONE | `src/ecs/resources/salvageTypes.ts` | container, terminal, vessel, machinery, debris, cargo_crate, storage_rack, power_cell, landing_wreck, abyssal_relic |
-| Building placement | DONE | `src/ecs/systems/buildSystem.ts` | Radial menu → select structure → check cost → place |
+| Building placement | DONE | `src/ecs/systems/buildSystem.ts` | Command UI → select structure → check cost → place |
 | Building power systems | DONE | `src/ecs/systems/powerSystem.ts` + 5 systems | All building types have active gameplay effects |
 | Salvage mapgen | DONE | `src/ecs/systems/salvagePlacement.ts` | Scatter salvage entities during mapgen |
 
@@ -210,50 +210,73 @@
 | GLSL shaders | DONE | `src/rendering/glsl/` | fogOfWar (flat+sphere), height shaders |
 | Globe shaders | DONE | `src/rendering/globe/shaders.ts` | Globe vertex/fragment shaders |
 
-### View (R3F Components)
+### View — R3F (title / generating globe + legacy match stack)
+
+Used by `src/ui/Globe.tsx` for **title → generating**. Legacy **match** R3F components below are
+candidates for removal after Phaser parity; see `src/views/` for the playing-phase board.
 
 | System | Status | Key Files | Notes |
 |--------|--------|-----------|-------|
-| Board renderer | DONE | `src/view/renderers/BoardRenderer.tsx` | Merged BufferGeometry, PBR atlas shader |
-| Biome renderer | DONE | `src/view/renderers/BiomeRenderer.tsx` | Biome-specific terrain visuals |
-| Unified terrain | DONE | `src/view/renderers/UnifiedTerrainRenderer.tsx` | Unified depth layers |
-| Unit renderer | DONE | `src/view/renderers/UnitRenderer.tsx` | GLB models, faction colors, lerped movement |
-| Building renderer | DONE | `src/view/renderers/BuildingRenderer.tsx` | Building GLBs rendered, fog-gated |
-| Salvage renderer | DONE | `src/view/renderers/SalvageRenderer.tsx` | Salvage GLBs with rendering |
-| Structure renderer | DONE | `src/view/renderers/StructureRenderer.tsx` | Wall/column/structural rendering |
-| Storm sky | DONE | `src/view/renderers/StormSky.tsx` | 3 GLSL layers: storm, wormhole, illuminator |
-| LOD globe | DONE | `src/view/renderers/LodGlobe.tsx` | Procedural shader at far zoom |
-| Illuminator | DONE | `src/view/renderers/IlluminatorRenderer.tsx` | Light orb placement |
-| Infrastructure | DONE | `src/view/renderers/InfrastructureRenderer.tsx` | Pipes, supports, gateways |
-| Cult domes | DONE | `src/view/renderers/CultDomeRenderer.tsx` | Translucent hemisphere shields |
-| Fragment renderer | DONE | `src/view/renderers/FragmentRenderer.tsx` | Memory fragment objects |
-| Cutaway clip plane | WIP | `src/view/renderers/CutawayClipPlane.tsx` | Dollhouse zoom clipping |
-| Highlight renderer | DONE | `src/view/overlays/HighlightRenderer.tsx` | Emissive plane pool |
-| Fog of war | DONE | `src/view/overlays/FogOfWarRenderer.tsx` | Per-unit scan radius fog |
-| Territory overlay | DONE | `src/view/overlays/TerritoryOverlayRenderer.tsx` | Faction-colored territory |
-| Path renderer | DONE | `src/view/overlays/PathRenderer.tsx` | Pathfinding visualization |
-| Combat effects | DONE | `src/view/effects/CombatEffectsRenderer.tsx` | Floating damage text + flash |
-| Speech bubbles | DONE | `src/view/effects/SpeechBubbleRenderer.tsx` | In-world speech bubbles |
-| Particle system | DONE | `src/view/effects/ParticleRenderer.tsx` | Points-based particle rendering |
-| Unit status bars | DONE | `src/view/UnitStatusBars.tsx` | HP/AP bars above units |
-| Model error boundary | DONE | `src/view/ModelErrorBoundary.tsx` | GLB loading fallback |
+| Board renderer | LEGACY | `src/view/renderers/BoardRenderer.tsx` | Pre-Phaser match terrain |
+| Biome renderer | LEGACY | `src/view/renderers/BiomeRenderer.tsx` | |
+| Unified terrain | LEGACY | `src/view/renderers/UnifiedTerrainRenderer.tsx` | |
+| Unit renderer | LEGACY | `src/view/renderers/UnitRenderer.tsx` | |
+| Building renderer | LEGACY | `src/view/renderers/BuildingRenderer.tsx` | |
+| Salvage renderer | LEGACY | `src/view/renderers/SalvageRenderer.tsx` | |
+| Structure renderer | LEGACY | `src/view/renderers/StructureRenderer.tsx` | |
+| Storm sky | DONE | `src/view/renderers/StormSky.tsx` | Globe / generating sky |
+| LOD globe | DONE | `src/view/renderers/LodGlobe.tsx` | Title procedural + PBR |
+| Illuminator | DONE | `src/view/renderers/IlluminatorRenderer.tsx` | |
+| Infrastructure | LEGACY | `src/view/renderers/InfrastructureRenderer.tsx` | |
+| Cult domes | LEGACY | `src/view/renderers/CultDomeRenderer.tsx` | |
+| Fragment renderer | LEGACY | `src/view/renderers/FragmentRenderer.tsx` | |
+| Cutaway clip plane | WIP | `src/view/renderers/CutawayClipPlane.tsx` | |
+| Highlight renderer | LEGACY | `src/view/overlays/HighlightRenderer.tsx` | |
+| Fog of war | LEGACY | `src/view/overlays/FogOfWarRenderer.tsx` | |
+| Territory overlay | LEGACY | `src/view/overlays/TerritoryOverlayRenderer.tsx` | |
+| Path renderer | LEGACY | `src/view/overlays/PathRenderer.tsx` | Preview state in `src/rendering/pathPreview.ts` |
+| Combat effects | LEGACY | `src/view/effects/CombatEffectsRenderer.tsx` | |
+| Speech bubbles | LEGACY | `src/view/effects/SpeechBubbleRenderer.tsx` | |
+| Particle system | LEGACY | `src/view/effects/ParticleRenderer.tsx` | |
+| Unit status bars | LEGACY | `src/view/UnitStatusBars.tsx` | |
+| Model error boundary | DONE | `src/view/ModelErrorBoundary.tsx` | Globe GLB fallback |
 | Globe renderers | DONE | `src/view/globe/` | GlobeWithCities, Hypercane, StormClouds, Lightning, TitleText |
+
+### Views — Phaser + enable3d (playing phase)
+
+| System | Status | Key Files | Notes |
+|--------|--------|-----------|-------|
+| Game factory | DONE | `src/views/createGame.ts` | Phaser.Game + enable3d |
+| World scene | DONE | `src/views/scenes/WorldScene.ts` | Scene3D, camera, sync |
+| Event bus | DONE | `src/views/eventBus.ts` | React ↔ Phaser |
+| Terrain | DONE | `src/views/renderers/terrainRenderer.ts` | Vertex colors, flat shading |
+| Units / buildings / salvage / structures | DONE | `src/views/renderers/*Renderer.ts` | GLB + bob-and-weave |
+| Fog / highlights / territory | DONE | `fogRenderer`, `highlightRenderer`, `territoryRenderer` | |
+| Ocean / vegetation | DONE | `oceanRenderer.ts`, `vegetationRenderer.ts` | |
+| Combat / speech / particles | DONE | `combatEffects`, `speechRenderer`, `particleRenderer` | |
+| Roboforming overlay | DONE | `src/views/renderers/roboformOverlay.ts` | |
+| Epoch atmosphere | DONE | `src/views/lighting/epochAtmosphere.ts` | |
+| World lighting | DONE | `src/views/lighting/worldLighting.ts` | POC recipe |
+| Board input | DONE | `src/views/input/boardInput.ts` | Pointer → tile |
+| DOM labels | DONE | `src/views/labels/domLabels.ts` | |
+| React bridge | DONE | `src/app/GameBoard.tsx` | Sole Phaser mount |
 
 ### UI / Input
 
 | System | Status | Key Files | Notes |
 |--------|--------|-----------|-------|
-| Globe (persistent canvas) | DONE | `src/ui/Globe.tsx` | ONE Canvas across all phases — primary scene container |
+| Globe (title + generating) | DONE | `src/ui/Globe.tsx` | R3F Canvas for title through generating; **playing** uses `GameBoard` + `src/views/` |
 | Landing screen | DONE | `src/ui/landing/LandingScreen.tsx` | Title + New Game + Continue + Settings |
 | New Game modal | DONE | `src/ui/landing/NewGameModal.tsx` | SectorScale, seed phrases, factions |
 | Settings modal | DONE | `src/ui/landing/SettingsModal.tsx` | Audio, keybindings, accessibility |
 | Title scene | DONE | `src/ui/landing/title/` | Title menu components |
 | GameScreen | LEGACY | `src/ui/game/GameScreen.tsx` | Old separate Canvas — superseded by Globe.tsx |
 | HUD | DONE | `src/ui/game/HUD.tsx` | Turn, 13-material resource counters, AP, End Turn |
-| Radial menu | DONE | `src/systems/radialMenu.ts` | Dual-ring state machine + SVG renderer |
-| Board input | DONE | `src/input/BoardInput.tsx` | Click-to-select, click-to-move, click-to-attack |
+| Radial menu (legacy) | DONE / superseded | `src/systems/radialMenu.ts`, `RadialMenu.tsx` | Replace with Civ VI–style command UI per `GAME_DESIGN.md` §9 |
+| Board input (playing) | DONE | `src/views/input/boardInput.ts` | Phaser pointer → tile, EventBus |
+| Board input (legacy R3F) | LEGACY | `src/input/BoardInput.tsx` | Globe / old match only |
 | Camera (sphere orbit) | DONE | `src/camera/SphereOrbitCamera.tsx` | Orbit around sphere, polar clamped, WASD orbit |
-| Garage modal | DONE | `src/ui/game/GarageModal.tsx` | Two-step fabrication: Classification → Specialization |
+| GarageModal.tsx (shim) | Partial | `src/ui/game/GarageModal.tsx` | Fold into settlement city screen — queue + priorities (`GAME_DESIGN.md` §5; see Robot Specializations table) |
 | Diplomacy overlay | DONE | `src/ui/game/DiplomacyOverlay.tsx` | Faction standings panel |
 | Tech tree overlay | DONE | `src/ui/game/TechTreeOverlay.tsx` | Full DAG with research progress |
 | Unit roster overlay | DONE | `src/ui/game/UnitRosterOverlay.tsx` | All player units with quick-jump |

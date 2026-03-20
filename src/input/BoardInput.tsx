@@ -18,6 +18,7 @@ import { playSfx } from "../audio";
 import type { GeneratedBoard } from "../board";
 import { createGridApi, shortestPath } from "../board";
 import { spherePosToTile, sphereRadius } from "../rendering";
+import { clearPreviewPath, setPreviewPath } from "../rendering/pathPreview";
 import {
 	cancelBuildPlacement,
 	clearHighlights,
@@ -42,7 +43,6 @@ import {
 	UnitPos,
 	UnitStats,
 } from "../traits";
-import { clearPreviewPath, setPreviewPath } from "../view";
 // Import providers so they register at module scope
 import "../systems/radial";
 

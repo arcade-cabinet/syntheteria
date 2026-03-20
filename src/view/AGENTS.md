@@ -1,6 +1,9 @@
-# src/view/ — React Three Fiber Renderer Components
+# src/view/ — React Three Fiber (legacy package name)
 
-All R3F presentation components. No game logic — only rendering.
+> **Migration:** This tree becomes **`src/views/title/`** — same code, one parent `views/` package.
+> Do not add new top-level `view/` packages elsewhere. See [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](../../docs/COMPREHENSIVE_ENGINEERING_PLAN.md) §0.
+
+All R3F presentation components for the title/generating globe. No game logic — only rendering.
 
 ## Structure
 

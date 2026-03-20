@@ -607,7 +607,7 @@ import { world } from '../sim/world';
 | `world.ts` | `src/create-world.ts` | DONE |
 | `traits/index.ts` | `src/traits/index.ts` | DONE |
 | `systems/` with `world: World` param | `src/systems/` | DONE |
-| sim/view split | `src/rendering/` (pure) + `src/view/` (React) | DONE |
+| sim/view split | **`src/board/`** + **`src/lib/`** (math, fog helpers, assets) + **`src/views/title/`** + **`src/views/board/`** — **`src/rendering/` retired** (§8) — **no `src/view/`** after §0 | IN PROGRESS — [COMPREHENSIVE_ENGINEERING_PLAN.md](COMPREHENSIVE_ENGINEERING_PLAN.md) §0 + §8 |
 | One system per file | `src/systems/*.ts` | DONE (but some files >500 LOC) |
 | Config as TS constants | `src/config/*.ts` (11 files) | DONE |
 | Singleton traits | Board, Time etc. on world | DONE |
@@ -651,7 +651,7 @@ src/
 ├── config/               TypeScript constants (11 files)
 │   └── index.ts          Barrel export
 │
-├── board/                Board generation & grid
+├── board/                Board generation & grid (+ sphere/depth from ex-`rendering/` after §8)
 ├── ai/                   Yuka GOAP
 ├── buildings/            Building definitions
 ├── factions/             Faction & cult definitions
@@ -661,14 +661,11 @@ src/
 ├── narrative/            Speech profiles & lore
 ├── db/                   SQLite persistence
 ├── audio/                Tone.js audio engine
+├── lib/                  Shared utils (+ modelPaths, particles, fog helpers after §8)
 │
-├── rendering/            Pure TS geometry/placement utilities
-│   └── index.ts          (no TSX allowed)
-├── view/                 R3F renderer components
-│   ├── renderers/
-│   ├── overlays/
-│   ├── effects/
-│   └── globe/
+├── views/                All render adapters (barrel per subpackage)
+│   ├── title/            R3F — globe, StormSky, PathRenderer, …
+│   └── board/            Phaser + enable3d — WorldScene, terrain, units, …
 ├── ui/                   DOM overlay components
 │   ├── game/
 │   └── landing/

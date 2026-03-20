@@ -33,53 +33,58 @@ The game should feel like it **grows into** strategic scale rather than starting
 
 ---
 
-## 2. World Model: The Sphere World
+## 2. World Model
 
-**Syntheteria is future Earth.** The ecumenopolis. The game grid wraps around a sphere — the planet
-itself. Every tile is human infrastructure that became machine infrastructure that became ruins.
-The curvature is real: the board IS the planet surface.
+### (A) Narrative and simulation space — future Earth
 
-Syntheteria uses a **fixed-board 4X on a sphere**. The tile grid maps onto the sphere via
-equirectangular projection (`tileToSpherePos()`).
+**Syntheteria is future Earth:** the ecumenopolis — one continuous machine-urban surface. Every tile
+is human infrastructure that became machine infrastructure that became ruins.
 
-- The grid IS the ecumenopolis surface. There is no overworld + base modal split.
-- All factions, cultists, and the player occupy the **same coordinate space**.
-- **Tiles are GPS coordinates** — each (x,z) is a database record, `explored` is the topmost gatekeeper.
-- **Salvage props on tiles are the PRIMARY resource source** — ancient dead-world debris (containers,
-  terminals, vessels, machinery, debris) that players break down for materials.
+The **simulation** uses a **fixed square grid** (deterministic from seed). Lore-wise this is the
+planet’s surface; mechanically it is addressable `(x, z)` tiles.
+
+- The grid is the ecumenopolis playfield. **Settlements work like Civ VI / CivRev2:** bases and major
+  POIs exist **on the overworld map**; opening one brings up a **city management panel** (production,
+  buildings, yields, tile acquisition, etc.) in **React DOM** over the same Phaser board — not a
+  second navigable “city map” or interior Scene3D. See `docs/PHASER_PIVOT_PLAN.md` Phase 4 and
+  `docs/CLOUD_AGENT_RUNBOOK.md` Phase G for settlement data contracts ported from `pending/`.
+  **`src/world/` today is new-game setup only** (sector scale, climate, factions); landmark seeding
+  uses `src/config/poiDefs.ts` until richer settlement snapshots land in `world/`.
+- All factions, cultists, and the player occupy the **same coordinate space** on that grid.
+- **Tiles are durable records** — each `(x, z)` is persisted; `explored` gates fog of war.
+- **Salvage props on tiles are the PRIMARY resource source** — containers, terminals, vessels,
+  machinery, debris that players break down for materials.
 - **Floor mining is the BACKSTOP** — when salvage is scarce, strip the floor for basic materials.
-- **Base building happens on tile coordinates** — structures are placed directly on the world map.
-- **Bridges and tunnels** are the mountain-pass mechanic: procedurally generated, they route around
+- **Base building happens on tile coordinates** — structures sit on the world map.
+- **Bridges and tunnels** are the mountain-pass mechanic: procedurally generated routes around
   impassable terrain clusters.
 
-The board is generated deterministically from a seed. Three preset scales:
-**Small** 44x44 (~1,936 tiles), **Standard** 64x64 (~4,096 tiles), **Large** 96x96 (~9,216 tiles).
+Three preset scales: **Small** 44×44 (~1,936 tiles), **Standard** 64×64 (~4,096), **Large** 96×96 (~9,216).
 
-### Sphere World Architecture
+**Sphere math in code:** `src/rendering/boardGeometry.ts` (`tileToSpherePos`, `spherePosToTile`, etc.)
+remains valid for the **title/generating globe** (R3F) and any strategic globe presentation. It is
+**not** the camera model used during the tactical **match**.
 
-The game world is rendered as a 3D sphere, not a flat board:
+### (B) Player-facing presentation — CivRev2 isometric match
 
-- **Globe.tsx** is the ONE persistent R3F Canvas — renders across ALL phases (title → setup → generating → playing)
-- **Title scene:** Animated globe with storm clouds, hypercane, lightning — zooms to surface when generating
-- **Game scene:** Board rendered on sphere surface, all models tangent to sphere normal
-- **Camera:** Full 3D orbit around sphere center. WASD rotates the globe. Scroll zooms. Pan disabled.
-- **Raycasting:** Click on sphere → `spherePosToTile()` → tile coordinates
-- **No minimap needed:** The sphere IS the minimap at full zoom
+During **play** (`playing` phase), the board is rendered with **Phaser 3 + enable3d (Scene3D)**:
+orthographic isometric camera, vertex-colored flat-shaded terrain, POC lighting recipe
+(see `docs/RENDERING_VISION.md`, `poc-roboforming.html`). **React DOM** owns HUD, command panels,
+settlement screens, modals, and overlays on top of the canvas (`docs/PHASER_VS_REACT_MATRIX.md`).
 
-### Full 3D Camera
+- **Globe (`src/ui/Globe.tsx`)** — **title and generating** only: one R3F `<Canvas>` with storm,
+  hypercane, lightning, zoom toward surface. **Signed off; do not replace** for landing flow.
+- **Game board (`src/app/GameBoard.tsx` → `src/views/`)** — **match only:** Phaser mounts after
+  transition from globe; pointer → tile via Phaser/`Scene3D`; camera is **drag-pan, scroll-zoom,
+  WASD rotate** in isometric view — not full sphere orbit.
+- **Minimap** — DOM/React (`Minimap.tsx`); tactical board does not rely on “globe as minimap.”
 
-The camera orbits the sphere center at (0,0,0):
-- **Surface zoom** (1.15x radius): tactical view, individual tiles visible
-- **District zoom** (1.8x radius, default): see a city-block-sized area
-- **Planet zoom** (4x radius): see the entire sphere
-- **Polar clamped** to avoid singularities at poles
-- **No pan** — orbiting IS navigation. The world rotates under the camera.
+### Legacy design note (superseded for match rendering)
 
-### Cutaway Zoom
-
-When zooming close to the surface, the camera descends through structural layers rather than
-crashing into ceilings. `CutawayClipPlane.tsx` clips geometry above the camera for dollhouse-style
-interior views.
+Earlier docs described the **entire** game (including match) on a persistent sphere canvas with orbit
+camera and `CutawayClipPlane`. That was the pre-Phaser board stack. **Current target:** sphere drama
+on **landing/generating**; **CivRev2-style isometric** board in play. Unused R3F board components
+under `src/view/renderers/` are slated for removal once Phaser parity is complete.
 
 ### Terrain Substrates (9 types)
 
@@ -106,8 +111,9 @@ storm IS the sky. Robots don't need shelter.
 - **No dome** — the BackSide sky sphere (StormSky.tsx) represents the real storm, not a dome interior
 - **Floating illuminators** — autonomous light drones hovering above the ecumenopolis, creating
   pools of light in the storm darkness. Sway in storm winds. Replace the dome-mounted artificial sun.
-- **Cult domes** — EL cult POIs have localized translucent energy shields that grow from the sphere
-  surface like blisters. Visible from distance. Different colors per sect. Destroying the altar drops the dome.
+- **Cult domes** — EL cult POIs have localized translucent energy shields (read as blisters on the
+  surface in globe view; isometric board shows dome cues per renderer). Different colors per sect.
+  Destroying the altar drops the dome.
 - **Fog = storm interference** — the hypercane's electromagnetic chaos degrades sensors at range.
   This is real environmental interference, not mystical fog of war.
 - **Wormhole eye** — the calmest point in the hypercane. Visibility is clearest near the eye.
@@ -267,7 +273,7 @@ a dead machine civilization for parts.
 | Landing Wreck | 10 ticks | alloy_stock, silicon_wafer, conductor_wire | lander_a |
 | Abyssal Relic | 8 ticks | depth_salvage, thermal_fluid, el_crystal | props_pod |
 
-**Harvest flow:** Select unit → Radial → Harvest → unit harvests deposit over N ticks →
+**Harvest flow:** Select unit → **contextual command UI** (see §9) → Harvest → unit harvests deposit over N ticks →
 materials added to faction pool → prop consumed.
 
 **Floor mining** is the backstop economy. When salvage is consumed, workers can strip-mine
@@ -284,7 +290,7 @@ grants +50% yield. Each FloorType yields a specific foundation-tier material.
 | Storm Transmitter | Taps storm energy | +5 | ferrous_scrap, conductor_wire |
 | Power Box | Stores charge | 0 (stores 20) | ferrous_scrap, conductor_wire |
 | Synthesizer | Fuses advanced materials | -4 | alloy_stock, silicon_wafer, conductor_wire |
-| Motor Pool | Bot fabrication (Garage) | -3 | ferrous_scrap, alloy_stock, silicon_wafer |
+| Motor Pool | **Unit production** at this settlement (ECS facility) | -3 | ferrous_scrap, alloy_stock, silicon_wafer |
 | Relay Tower | Extends signal network | -1 | conductor_wire, silicon_wafer |
 | Defense Turret | Area denial | -2 | ferrous_scrap, alloy_stock, silicon_wafer |
 | Storage Hub | Resource stockpile | 0 (stores 50) | ferrous_scrap, polymer_salvage |
@@ -299,6 +305,13 @@ grants +50% yield. Each FloorType yields a specific foundation-tier material.
 
 - Signal relay network extends command range.
 - Buildings occupy tiles and can be contested.
+
+**Settlement production (4X model):** There is **no separate “Garage” product surface.** All **production
+queueing** — what the settlement builds next, **in what order**, and how the player **balances** units
+vs structures vs other outputs — lives in the **settlement / city management screen** (React DOM),
+same role as **Civilization VI**’s city panel (including the **mobile** layout’s clarity for many
+rows at once). The **Motor Pool** is the **in-world prerequisite** that enables bot fabrication at
+that site; the **queue and priorities** are UI on that settlement, not a standalone modal brand.
 
 ### eXterminate
 
@@ -355,8 +368,8 @@ The roster is built from **9 chassis families** with **Mark I-V progression**. S
 
 ### Robot Specializations (14 tracks)
 
-At fabrication time in the **Garage** (motor pool modal), players choose a robot class and then
-optionally a specialization track (gated by tech tree research). Each track grants unique actions,
+When **adding a unit to a settlement’s production queue** (city/settlement screen), the player picks
+robot **class** and then **specialization track** (gated by tech). Each track grants unique actions,
 Mark-level passive abilities, and v2 upgrades via higher-tier research.
 
 | Class | Track A | Track B | Track C |
@@ -368,10 +381,11 @@ Mark-level passive abilities, and v2 upgrades via higher-tier research.
 | Support (COMPANION) | **Field Medic** — regen aura at Mark III | **Signal Booster** — scan range buff | **War Caller** — attack buff aura |
 | Worker (MOBILE STORAGE) | **Deep Miner** — enhanced floor mining | **Fabricator** — faster building | **Salvager** — bonus harvest yield |
 
-**Garage Modal** (`GarageModal.tsx`):
-1. Step 1: **CLASSIFICATION MATRIX** — pick robot class (6 options)
-2. Step 2: **CONFIGURATION PROTOCOL** — pick track (filtered by researched gate techs)
-3. If no tracks are unlocked, fabricates an unspecialized unit immediately
+**Settlement production UI (target):** One place to **enqueue** units (and other settlement outputs),
+**reorder** the queue (priority = classic 4X “what do I build next?” tension), and see **costs /
+turns remaining**. Step flow for a new bot: pick **class** → pick **track** (filtered by researched
+gates) → item enters queue; if no tracks unlocked, queue an unspecialized unit. **Legacy code** may
+still expose `GarageModal.tsx` as a shim until that screen is folded into the **city modal**.
 
 **AI Track Selection**: Each AI faction has preferred tracks per class based on personality
 (e.g., Iron Creed prefers shock_trooper + war_caller; Signal Choir prefers infiltrator + sniper).
@@ -512,19 +526,33 @@ The interface is a projection of machine perception. Use machine-operational lan
 | You win | Signal dominance achieved |
 | Game over | Relay lost |
 
-### Input Model
+### Input Model — Civilization VI–inspired (not radial)
 
-**Desktop:** Left-click = select/move. Right-click = radial menu. Scroll = zoom. WASD = pan.
-**Mobile:** Tap = select/move. Long-press (500ms) = radial menu. Two-finger drag = pan. Pinch = zoom.
+**Direction:** Retire the **dual-ring radial** as the primary command surface. **Civilization VI**
+(especially the **mobile / touch** edition) is the reference for **information density**: compact
+rows, clear icons, expandable detail, and **contextual actions** that change with selection — without
+hiding everything behind a single pie menu. **CivRev2** remains the reference for **isometric tile
+feel and camera**, not for how many systems we expose at once.
 
-**Radial menu** is the only contextual action surface. Dual-ring design:
-- Inner ring: categories (Move, Harvest, Attack) — sorted by priority
-- Outer ring: actions within selected category
-- Single-action categories execute directly on inner ring click
-No persistent bottom panels. No floating toolbars for actions.
+**Gameplay alignment:** **Specialized units** (recon, fabricator, striker, …) and **specialized
+buildings** (synthesis, relay, motor pool, …) map naturally to **Civ VI–style action strips and
+panels**: the selected entity shows **only relevant commands** (build for fabricators, harvest for
+workers, attack for combatants), plus overflow into a **secondary panel** or **city/settlement
+screen** when depth is needed (production queues, yields, purchases).
+
+**Desktop (target):** Left-click = select / confirm move. Right-click or dedicated key = **secondary
+action / cancel** (exact mapping TBD). Scroll = zoom. WASD = pan. **Persistent or summonable**
+command row / inspector for the current selection — not an exclusive radial.
+
+**Mobile (target):** Tap = select / move. **Bottom or edge-docked action bar** for the selected unit
+or tile; swipe or “more” for full lists. Two-finger drag = pan. Pinch = zoom.
+
+**Legacy implementation:** `RadialMenu.tsx` + `radialMenu.ts` / providers remain in the tree until
+replaced; new UI should **not** extend the radial pattern.
 
 ### Reference Games
 
-- **Civilization Revolution 2** — tile presentation, fixed-board zoom, purpose-built mobile design
-- **Battle of Polytopia** — portrait mode HUD layout, map-first philosophy
+- **Civilization VI (incl. mobile)** — command layout, layered information, specialization-aware UI
+- **Civilization Revolution 2** — isometric tile presentation, fixed-board zoom, readable silhouettes
+- **Battle of Polytopia** — portrait HUD, map-first philosophy
 - **Unciv** — complex 4X on phone

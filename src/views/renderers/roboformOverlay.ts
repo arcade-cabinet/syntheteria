@@ -228,11 +228,7 @@ export function updateRoboformOverlay(): void {
 			});
 
 			const edgeMesh = new THREE.Mesh(edgeTrimGeo, edgeMat);
-			edgeMesh.position.set(
-				pos.x,
-				ROBOFORM_Y + EDGE_TRIM_OFFSET,
-				pos.z,
-			);
+			edgeMesh.position.set(pos.x, ROBOFORM_Y + EDGE_TRIM_OFFSET, pos.z);
 			// Rotate 45 degrees so the ring corners align with tile edges
 			edgeMesh.rotation.y = Math.PI / 4;
 			roboformGroup.add(edgeMesh);

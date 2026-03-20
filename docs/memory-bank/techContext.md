@@ -1,14 +1,13 @@
 # Tech Context: Syntheteria (Ground-Up Rewrite)
 
-> Current stack for the `ralph/syntheteria-1-0` branch.
-> Full details: `docs/ARCHITECTURE.md`
+> **Partially stale** — update when stack shifts. Authoritative: `docs/ARCHITECTURE.md`, `docs/memory-bank/progress.md`, `docs/CLOUD_AGENT_RUNBOOK.md`.
 
 ## Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Bundler | **Vite** — `pnpm dev`, `pnpm build` |
-| Renderer | **R3F** — one `<Canvas>` in `GameScreen.tsx` |
+| Renderer | **Title:** R3F `Globe.tsx` · **Match:** Phaser + enable3d `src/views/` (see `RENDERING_VISION.md`) |
 | ECS | **Koota** — all game state as typed traits |
 | Persistence | **sql.js** — pure JS SQLite, no wasm needed |
 | Testing | **Vitest** — `*.vitest.ts` files |
@@ -29,7 +28,7 @@ Entry: `src/main.tsx` (Root component — screen state machine + DOM bootstrap)
 ```bash
 pnpm dev              # Vite dev server (http://localhost:5173)
 pnpm build            # Production build
-pnpm test:vitest      # All Vitest suites (~29 suites, all passing)
+pnpm test:vitest      # All Vitest test files (see `progress.md` for current count)
 pnpm test:ct          # Vitest browser visual tests
 pnpm test:e2e         # Playwright E2E
 pnpm tsc              # TypeScript check (0 errors)

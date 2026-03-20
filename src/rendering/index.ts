@@ -114,6 +114,15 @@ export {
 } from "./particles/effectEvents";
 export type { ParticleConfig } from "./particles/ParticlePool";
 export { ParticlePool } from "./particles/ParticlePool";
+export type { PathPoint } from "./pathPreview";
+// --- Path preview (move hover, renderer-agnostic) ---
+export {
+	clearPreviewPath,
+	getPathVersion,
+	getPreviewPath,
+	setPreviewPath,
+	subscribePathState,
+} from "./pathPreview";
 export type { Chronometry } from "./sky/chronometry";
 // --- Sky chronometry ---
 export { turnToChronometry } from "./sky/chronometry";

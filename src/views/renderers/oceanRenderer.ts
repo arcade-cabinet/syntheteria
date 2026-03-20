@@ -122,7 +122,11 @@ function buildDeepWaterPlane(board: GeneratedBoard): THREE.Mesh {
 		segsZ,
 	);
 	geo.rotateX(-Math.PI / 2);
-	geo.translate((width * TILE_SIZE) / 2, DEEP_WATER_Y, (height * TILE_SIZE) / 2);
+	geo.translate(
+		(width * TILE_SIZE) / 2,
+		DEEP_WATER_Y,
+		(height * TILE_SIZE) / 2,
+	);
 
 	// Store original Y positions for wave animation
 	const posAttr = geo.attributes.position;
@@ -150,10 +154,7 @@ function buildDeepWaterPlane(board: GeneratedBoard): THREE.Mesh {
 // Build grating meshes for abyssal_platform tiles
 // ---------------------------------------------------------------------------
 
-function buildGratingMeshes(
-	scene: THREE.Scene,
-	board: GeneratedBoard,
-): void {
+function buildGratingMeshes(scene: THREE.Scene, board: GeneratedBoard): void {
 	const { width, height } = board.config;
 	const gratingTexture = createGratingTexture();
 
@@ -236,9 +237,7 @@ export function updateOcean(time: number): void {
 		// Two overlapping sine waves for organic motion
 		const wave1 = Math.sin(x * 0.8 + time * WAVE_SPEED) * WAVE_AMPLITUDE;
 		const wave2 =
-			Math.sin(z * 0.6 + time * WAVE_SPEED * 0.7 + 1.3) *
-			WAVE_AMPLITUDE *
-			0.6;
+			Math.sin(z * 0.6 + time * WAVE_SPEED * 0.7 + 1.3) * WAVE_AMPLITUDE * 0.6;
 
 		posAttr.setY(i, baseY + wave1 + wave2);
 	}

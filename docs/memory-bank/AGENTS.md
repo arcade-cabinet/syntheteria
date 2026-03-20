@@ -14,6 +14,9 @@
 | `docs/GAME_DESIGN.md` | Vision, lore, world model, 4X pillars, economy, bots, factions, visual language |
 | `docs/ARCHITECTURE.md` | Tech stack, all packages, ECS patterns, SQLite schema, test strategy, `pending/` reference |
 | `docs/ROADMAP.md` | Foundation status, P0/P1/P2/P3 work, `pending/` port targets |
+| `docs/COMPREHENSIVE_ENGINEERING_PLAN.md` | Single `views/`, reference repos, CivRev2 + POC gates, full test matrix |
+| `docs/CLOUD_AGENT_RUNBOOK.md` | Agent entry point: rules, phases A–H, squash branch, all POC/plan links |
+| `docs/reference-codebases.md` | Where to clone Koota / Phaser / three for doc review |
 | `docs/memory-bank/activeContext.md` | CURRENT focus + recent session changes |
 | `docs/memory-bank/progress.md` | Per-system status dashboard |
 | `docs/memory-bank/systemPatterns.md` | ECS patterns, board patterns, render patterns |

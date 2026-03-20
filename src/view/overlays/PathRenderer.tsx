@@ -15,58 +15,18 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { TILE_SIZE_M } from "../../board";
 import { ELEVATION_STEP_M } from "../../config";
+import type { PathPoint } from "../../rendering/pathPreview";
+import { getPathVersion, getPreviewPath } from "../../rendering/pathPreview";
 
-// ---------------------------------------------------------------------------
-// Path state store (module-level, same pattern as hoverState)
-// ---------------------------------------------------------------------------
-
-export interface PathPoint {
-	tileX: number;
-	tileZ: number;
-	elevation: number;
-}
-
-let currentPath: PathPoint[] = [];
-let pathVersion = 0;
-const pathListeners = new Set<() => void>();
-
-function notifyPathListeners() {
-	for (const fn of pathListeners) fn();
-}
-
-/**
- * Set the preview path. Called by BoardInput when a unit is selected
- * and the player hovers over a reachable tile.
- */
-export function setPreviewPath(path: PathPoint[]): void {
-	currentPath = path;
-	pathVersion++;
-	notifyPathListeners();
-}
-
-/**
- * Clear the preview path. Called when the unit is deselected,
- * when the hover leaves a reachable tile, or when a move is confirmed.
- */
-export function clearPreviewPath(): void {
-	if (currentPath.length === 0) return;
-	currentPath = [];
-	pathVersion++;
-	notifyPathListeners();
-}
-
-export function getPreviewPath(): PathPoint[] {
-	return currentPath;
-}
-
-export function getPathVersion(): number {
-	return pathVersion;
-}
-
-export function subscribePathState(fn: () => void): () => void {
-	pathListeners.add(fn);
-	return () => pathListeners.delete(fn);
-}
+// Re-export path API for consumers that import from `view/`.
+export {
+	clearPreviewPath,
+	getPathVersion,
+	getPreviewPath,
+	type PathPoint,
+	setPreviewPath,
+	subscribePathState,
+} from "../../rendering/pathPreview";
 
 // ---------------------------------------------------------------------------
 // Path line geometry

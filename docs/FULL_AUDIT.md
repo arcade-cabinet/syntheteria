@@ -1,5 +1,8 @@
 # Syntheteria — Full Quality Audit (2026-03-18)
 
+> **Historical snapshot** — metrics below are frozen. For **current** health: **`pnpm verify`** and
+> **`docs/memory-bank/progress.md`**.
+
 > Comprehensive audit across visuals, gameplay, UI, code quality, and completeness.
 > Screenshots saved in `docs/audit/`.
 
@@ -7,10 +10,10 @@
 
 ## Codebase Health Summary
 
-| Metric | Value | Status |
+| Metric | Value (2026-03-18) | Status |
 |--------|-------|--------|
 | TypeScript errors | 0 | PASS |
-| Vitest suites | 125 passing (0 failing) | PASS |
+| Vitest | 125 files passing (0 failing) | PASS |
 | Vitest tests | 2220 | PASS |
 | Biome lint | 0 errors | PASS |
 | Console errors (runtime) | 2 (1 x 404, 1 x pointer capture) | WARN |
@@ -242,7 +245,7 @@ This fires on clicking the ADVANCE button, indicating a pointer event handler is
 
 ### P2-10: No right-click radial menu accessible via Chrome DevTools
 
-**Observed:** Right-click radial menu is the core contextual action surface per GAME_DESIGN.md Section 9. Could not test it via Chrome DevTools automation (would need actual right-click on canvas). The code exists in `src/input/BoardInput.tsx` and `src/systems/radialMenu.ts`.
+**Observed (historical audit):** Radial was the context surface at audit time. **Current design:** `GAME_DESIGN.md` §9 deprecates radial in favor of **Civ VI–style** command UI; implementation migration pending. Radial code remains in `BoardInput.tsx` / `radialMenu.ts`.
 
 ---
 
@@ -336,7 +339,7 @@ This fires on clicking the ADVANCE button, indicating a pointer event handler is
 - [x] 15 faction buildings
 - [x] 6 cult structures
 - [x] 9 robot archetypes with GLB models
-- [x] 14 specialization tracks + Garage modal
+- [x] 14 specialization tracks + interim fabrication UI (`GarageModal` → merge into settlement production)
 - [x] 27-tech research tree
 - [x] Combat (attack/defense/counterattack)
 - [x] AI GOAP with faction personalities
@@ -352,10 +355,10 @@ This fires on clicking the ADVANCE button, indicating a pointer event handler is
 - [x] Readiness rings (exist but may not be visible)
 
 ### Implemented But Not Verified in UI
-- [ ] Radial menu (right-click — couldn't test via automation)
+- [ ] Context command UI (legacy radial — automation unclear; target: strip/inspector)
 - [ ] Hacking system (wired to UI but not triggered in 2 turns)
 - [ ] Floor mining (system exists, not tested visually)
-- [ ] Building placement via radial menu
+- [ ] Building placement via command UI
 - [ ] Speech bubbles above units
 - [ ] Turn summary panel after advance
 - [ ] Toast notifications

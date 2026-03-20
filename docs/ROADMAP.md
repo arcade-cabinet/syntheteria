@@ -12,7 +12,7 @@ sphere world geometry, globe-based rendering pipeline, PBR texture atlas, fog of
 title-to-game cinematic, save/load, and audio is complete.
 
 ```
-pnpm verify  →  126 vitest suites (2239 tests) + 0 TypeScript errors + 0 Biome errors
+pnpm verify  →  146 Vitest test files (2487 tests) + 0 TypeScript errors + 0 Biome errors  *(refresh from `pnpm test:vitest`)*
 ```
 
 ### What Works
@@ -40,7 +40,7 @@ pnpm verify  →  126 vitest suites (2239 tests) + 0 TypeScript errors + 0 Biome
 | Koota ECS world init, traits, 42 systems | DONE |
 | 9 robot archetypes + spawn functions | DONE |
 | 14 specialization tracks across 6 classes | DONE |
-| Garage modal (two-step fabrication: Class → Track) | DONE |
+| Settlement production UI | **Partial** — `GarageModal.tsx` is a shim; **target:** full queue + priorities in city screen (`GAME_DESIGN.md` §5, §7) |
 | Specialization passives runtime (aura effects per turn) | DONE |
 | AI track selection (per-faction preferences) | DONE |
 | 5 factions + 3 cults (TypeScript const) | DONE |
@@ -58,11 +58,11 @@ pnpm verify  →  126 vitest suites (2239 tests) + 0 TypeScript errors + 0 Biome
 | 15 faction building definitions (TypeScript const with build costs) | DONE |
 | 6 cult structure definitions | DONE |
 | 10 salvage type definitions with yield tables + GLB model mappings | DONE |
-| Building placement action (radial → select → cost check → place) | DONE |
+| Building placement action (command UI → select → cost check → place) | DONE |
 | Building power systems (all building types have active gameplay effects) | DONE |
 | Salvage prop placement in mapgen | DONE |
 | Instanced GLB rendering for salvage, buildings, structures | DONE |
-| Radial menu (dual-ring state machine, SVG renderer, per-class action providers) | DONE |
+| Radial menu (dual-ring state machine, SVG renderer, per-class action providers) | DONE in code — **UX superseded** by Civ VI–style command UI (`GAME_DESIGN.md` §9) |
 | Unified terrain renderer (replaced DepthRenderer + MinedPitRenderer) | DONE |
 | HUD (turn, AP, resource counters for 13 materials) | DONE |
 | Storm sky (3 GLSL layers: storm, wormhole, illuminator) | DONE |
@@ -138,7 +138,7 @@ pnpm verify  →  126 vitest suites (2239 tests) + 0 TypeScript errors + 0 Biome
 
 - [x] **1.1** — 13-material resource taxonomy
 - [x] **1.2** — Harvest system
-- [x] **1.3** — Radial menu
+- [x] **1.3** — Context actions (radial in code — **superseded** by Civ VI–style UI, `GAME_DESIGN.md` §9)
 - [x] **1.4** — HUD resource display
 
 ---
@@ -206,7 +206,7 @@ pnpm verify  →  126 vitest suites (2239 tests) + 0 TypeScript errors + 0 Biome
 ## Phase 7 — Specialization + Cult Evolution (DONE)
 
 - [x] **7.1** — 14 specialization tracks across 6 robot classes
-- [x] **7.2** — Garage modal (two-step fabrication)
+- [x] **7.2** — Unit fabrication UI (today: `GarageModal` — merge into settlement production queue)
 - [x] **7.3** — Track registry (single source of truth)
 - [x] **7.4** — Specialization passives runtime (aura effects)
 - [x] **7.5** — AI track selection (per-faction preferences)

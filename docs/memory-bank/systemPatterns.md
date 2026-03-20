@@ -164,25 +164,18 @@ export function HighlightRenderer({ world }: { world: WorldType }) {
 }
 ```
 
-## Radial Menu Pattern
+## Command UI Pattern (target) — Civ VI–style
 
-### Dual-Ring State Machine
+**Radial menu is deprecated** as the product direction. **Target:** contextual **action strip /
+inspector** (React DOM) driven by the same selection context the game already uses; **specialized
+units and buildings** show **filtered** actions (fabricator vs recon vs combat), with heavy flows
+(build queue, tech, diplomacy) in **panels/modals**. Use **Civilization VI (especially mobile)** as
+the reference for **dense but legible** layouts, not CivRev2’s minimal radial.
 
-Pure TypeScript (no React). Systems register action providers at module scope:
+### Legacy: dual-ring radial (to retire)
 
-```ts
-registerRadialProvider({
-  id: "harvest",
-  category: { id: "harvest", label: "Harvest", icon: "\u26cf", tone: "harvest", priority: 2 },
-  getActions: (ctx) => {
-    if (ctx.selectionType !== "resource_node") return [];
-    return [{ id: "harvest", label: "Harvest", enabled: true, onExecute: () => { ... } }];
-  },
-});
-```
-
-Inner ring = categories (sorted by priority). Outer ring = actions within selected category.
-Single-action categories execute directly.
+`radialMenu.ts` + `registerRadialProvider` + `RadialMenu.tsx` remain until replaced. **Do not** add
+new radial-only UX; wire new surfaces to existing **execute** paths (ECS commands).
 
 ## SQLite Pattern (non-fatal)
 

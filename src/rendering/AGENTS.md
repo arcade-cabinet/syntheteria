@@ -1,7 +1,8 @@
 # rendering/
 
-Pure TypeScript rendering utilities — geometry builders, sphere placement, model paths, and materials.
-**No React, no JSX.** R3F components live in `src/view/`.
+> **Scheduled for elimination.** This package is a **kitchen sink** (board geometry, labyrinth meshes, model URL catalogs, globe shader strings, Three materials, particles, fog rules, path preview). It violates single-responsibility; decompose per [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](../../docs/COMPREHENSIVE_ENGINEERING_PLAN.md) **§8** and [docs/CLOUD_AGENT_RUNBOOK.md](../../docs/CLOUD_AGENT_RUNBOOK.md) **Phase I**. There is **no `.tsx` here** — the problem is **mixed domains**, not TS/TSX.
+
+Pure TypeScript utilities and `.glsl` assets **until** §8 migration completes.
 
 ## Rules
 - **Pure TS only** — geometry, placement, materials, paths (exported via index)

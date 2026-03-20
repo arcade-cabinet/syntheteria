@@ -6,6 +6,10 @@
 
 ## Current State (2026-03-19)
 
+**Cloud / long-running work:** [docs/CLOUD_AGENT_RUNBOOK.md](../CLOUD_AGENT_RUNBOOK.md) — full doc map, **four POC HTML files**, phased backlog (A–H), squash PR from **`feature/phaser-civrev2-main-integration`** → `main`.
+
+**Umbrella engineering plan:** [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](../COMPREHENSIVE_ENGINEERING_PLAN.md) — single **`src/views/`** package (`title/` R3F + `board/` Phaser), Koota/Phaser/three reference review, CivRev2 + POC gates, robot/asset tests, CI import rules. Clones: [reference-codebases.md](../reference-codebases.md).
+
 **PIVOT: Labyrinth underground → 4X overworld.** Rendering stack validated via POC.
 
 ### Rendering Stack: Phaser + enable3d (VALIDATED)
@@ -32,13 +36,15 @@ Package structure fully aligned to Koota best practices:
 - **Top 5 largest files split** — cultistSystem (1397→37+6 files), radialProviders (→8 files in radial/), evaluators (1022→34+5 files), speechProfiles (1017→104+3 files), yukaAiTurnSystem (1684→755+6 files)
 - **Circular deps fixed** — lazy init for module-scope model preloads, direct type imports for cross-package types
 - **Koota patterns documented** — `docs/KOOTA_PATTERNS.md` (world, traits, systems, actions, frameloop, React hooks)
-- **Pending/ assessed** — 80% salvageable for world/city separation (see `project_pending_salvage.md` memory)
+- **Pending/ assessed** — 80% salvageable for settlement data / city-screen contracts (Civ-style panel, not interior scene; see `project_pending_salvage.md` memory)
 
 ### Gameplay Systems (Complete from prior work)
 
 All core gameplay systems remain implemented: economy, combat, AI GOAP, cultists, specializations, tech tree, victory conditions, diplomacy, territory, save/load, audio. These will be re-wired to the new Phaser + enable3d rendering stack.
 
-**2239 tests, 131 suites (all passing), 0 TypeScript errors. 344 source files.**
+**2487 tests, 146 Vitest test files (all passing), 0 TypeScript errors.** ~**465** `src/**/*.ts(x)` files. *Refresh counts after large merges:* `pnpm test:vitest` + `find src -name '*.ts' -o -name '*.tsx' | wc -l`.
+
+**Git (pre-PR):** If `main` is many commits ahead of `origin/main`, use branch **`feature/phaser-civrev2-main-integration`** and **`docs/CLOUD_AGENT_RUNBOOK.md` §3.1** before opening the squash PR.
 
 **Pending/ is READ-ONLY REFERENCE** — valuable for design patterns and game data, but most code is incompatible (real-time hex-grid architecture vs our turn-based square-grid). Port DATA (configs, narrative text), not CODE.
 
@@ -72,14 +78,14 @@ The prior R3F stack used `Globe.tsx` as a single persistent `<Canvas>` with sphe
 
 ## Next Steps
 
-**Codebase restructuring COMPLETE.** Package structure is solid. Ready for Phaser + enable3d pivot.
+**Umbrella docs exist:** [COMPREHENSIVE_ENGINEERING_PLAN.md](../COMPREHENSIVE_ENGINEERING_PLAN.md) + [CLOUD_AGENT_RUNBOOK.md](../CLOUD_AGENT_RUNBOOK.md). **Phaser + enable3d board** is live under `src/views/` (flat layout until Phase B splits `title/` + `board/`).
 
-1. **Create comprehensive Phaser pivot implementation plan** — the roadmap for the rendering migration
-2. **Consolidate data packages into src/config/** — buildings/, resources/, factions/, terrain/, narrative/ are pure data definitions
-3. **Port world/city separation from pending/** — Tier 1: bots, snapshots, config, generation. Tier 2: city catalog, transitions. Tier 3: AI split, radial menu
-4. **Begin Phaser + enable3d migration** — follow the implementation plan
-5. **Visual gaps** (during rendering overhaul):
+1. **Pre-PR:** Run **`pnpm verify`**; follow runbook **§3.1**; push **`feature/phaser-civrev2-main-integration`** → squash PR to `main`.
+2. **Phase B (views):** `src/views/title/` + `src/views/board/`, delete `src/view/` — [COMPREHENSIVE_ENGINEERING_PLAN.md](../COMPREHENSIVE_ENGINEERING_PLAN.md) §0.
+3. **Consolidate data packages into `src/config/`** — [PHASER_PIVOT_PLAN.md](../PHASER_PIVOT_PLAN.md) 0.1.
+4. **Port settlement data from `pending/`** — city-screen contracts; **Civ VI–style** production queue + command UI (`GAME_DESIGN.md` §5, §9).
+5. **Visual gaps** (see `RENDERING_VISION.md`):
    - Terrain blending, forest canopy, elevation drama, ocean layers
-   - ~~Roboforming progression~~ DONE: `src/views/renderers/roboformOverlay.ts` + `src/views/lighting/epochAtmosphere.ts`
+   - Roboforming presentation: `src/views/renderers/roboformOverlay.ts` + `epochAtmosphere.ts` (iterate vs design)
 
 **Accepted tech debt**: `pending/` directory (252MB quarantined reference code) remains in working tree — excluded from tsconfig + biome.

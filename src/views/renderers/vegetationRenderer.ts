@@ -15,7 +15,6 @@
 
 import * as THREE from "three";
 import type { GeneratedBoard } from "../../board";
-import { seededRng } from "../../board";
 import { TILE_SIZE, tileToWorld } from "./terrainRenderer";
 
 // ---------------------------------------------------------------------------
@@ -59,10 +58,7 @@ function tileHash(x: number, z: number, layer: number): number {
 // Build a single canopy blob
 // ---------------------------------------------------------------------------
 
-function buildCanopyMesh(
-	tx: number,
-	tz: number,
-): THREE.Mesh {
+function buildCanopyMesh(tx: number, tz: number): THREE.Mesh {
 	const geo = new THREE.IcosahedronGeometry(CANOPY_RADIUS, CANOPY_DETAIL);
 
 	// Squash vertically to make an oblate dome
@@ -151,7 +147,6 @@ export function createVegetationRenderer(
 	board: GeneratedBoard,
 ): void {
 	const { width, height } = board.config;
-	const rng = seededRng(board.config.seed + "_veg");
 
 	for (let z = 0; z < height; z++) {
 		for (let x = 0; x < width; x++) {
@@ -174,7 +169,8 @@ export function createVegetationRenderer(
 
 			// --- Accent trunks ---
 			const trunkCount =
-				MIN_TRUNKS + Math.floor(tileHash(x, z, 70) * (MAX_TRUNKS - MIN_TRUNKS + 1));
+				MIN_TRUNKS +
+				Math.floor(tileHash(x, z, 70) * (MAX_TRUNKS - MIN_TRUNKS + 1));
 			const trunks = buildTrunkMeshes(x, z, trunkCount);
 			for (const trunk of trunks) {
 				group.add(trunk);

@@ -2,12 +2,12 @@
  * Tests for roboformOverlay — the roboforming visual progression overlay.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
-	setRoboformLevel,
+	clearRoboformData,
 	getRoboformLevel,
 	getRoboformSnapshot,
-	clearRoboformData,
+	setRoboformLevel,
 } from "../renderers/roboformOverlay";
 
 describe("roboformOverlay", () => {

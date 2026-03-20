@@ -2,8 +2,8 @@
  * Tests for epochAtmosphere — epoch-based visual atmosphere transitions.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
 import * as THREE from "three";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
 	applyEpochAtmosphere,
 	getCurrentAtmosphereEpoch,
@@ -155,9 +155,7 @@ describe("epochAtmosphere", () => {
 			// Should have 4 accent lights for Transcendence
 			expect(params.accentLights.length).toBe(4);
 			// Wormhole glow should be the brightest (intensity 1.2)
-			const wormhole = params.accentLights.find(
-				(l) => l.intensity >= 1.0,
-			);
+			const wormhole = params.accentLights.find((l) => l.intensity >= 1.0);
 			expect(wormhole).toBeDefined();
 		});
 	});

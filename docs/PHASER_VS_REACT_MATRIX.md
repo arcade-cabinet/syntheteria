@@ -10,7 +10,7 @@
 **Clear split:**
 - **Phaser owns:** Game loop, board input, camera, scene lifecycle, game-world animations, particle effects
 - **React owns:** Modal dialogs, settings forms, overlays with complex state (tech tree DAG, unit roster), tooltips, responsive layouts
-- **Hybrid (DOM overlay):** HUD, status bars, minimap click-to-pan, radial menu (input via Phaser, rendering via React SVG)
+- **Hybrid (DOM overlay):** HUD, status bars, minimap click-to-pan, **command strip / inspector** (input via Phaser selection events, layout via React DOM — **not** the legacy SVG radial)
 
 The key insight: **Phaser's built-ins are game-specific; React's are for UI that exists independent of game state.** Use each for what it does best.
 
@@ -50,7 +50,7 @@ The key insight: **Phaser's built-ins are game-specific; React's are for UI that
 |-----------|-----------|-----|
 | **Form UI** | New Game modal (sector size, seed, faction picker), Settings (audio/keybinds/a11y) | React form libraries (or plain HTML) handle validation, multi-step flows, complex state. Phaser has no form widgets. |
 | **List rendering** | Tech tree DAG, unit roster, turn log, diplomacy standings | React's list virtualization + memoization handles large lists efficiently. Phaser Groups are game objects, not UI containers. |
-| **Modal overlays** | Garage, pause menu, diplomacy, tech tree | React portals + CSS overlays handle backdrops, z-stacking, focus trapping. Phaser has no modal layer concept. |
+| **Modal overlays** | Settlement/city, pause menu, diplomacy, tech tree | React portals + CSS overlays handle backdrops, z-stacking, focus trapping. Phaser has no modal layer concept. |
 | **Responsive layouts** | HUD adapts to mobile/desktop; tooltips position at cursor; minimap docks left/right | CSS flexbox/grid. Phaser only has fixed pixel positioning. |
 | **State management** | Turn number, resource counters, research progress, victory condition tracking | React hooks + context work well. Phaser events are for game logic broadcasts, not UI state. |
 | **Accessibility** | Keyboard navigation in lists, ARIA labels, semantic HTML | DOM required. Phaser has no a11y primitives. |
@@ -76,7 +76,7 @@ The key insight: **Phaser's built-ins are game-specific; React's are for UI that
 ├────────────────────────────────────────┤
 │  REACT DOM OVERLAY (z-index > canvas) │  ← Modal, HUD, panels, tooltips
 │  ├─ HUD (resources, turn, AP)          │
-│  ├─ Radial Menu (SVG)                  │
+│  ├─ Command strip / selection inspector │
 │  ├─ Minimap (canvas, but React-owned) │
 │  ├─ Tech Tree Modal                    │
 │  ├─ Pause Menu                         │
@@ -118,12 +118,12 @@ useEffect(() => {
 | Component | Current | Target | Reasoning |
 |-----------|---------|--------|-----------|
 | **HUD** (resources, turn, AP, end turn button) | React DOM | **React DOM** | State management (resource counters, AP), responsive layout. Button is a standard <button>. |
-| **Radial Menu** | React SVG | **Phaser** (logic) + **React** (render) | Input detection (click on tile → open menu, hover sectors) belongs in Phaser. SVG rendering can stay in React as an overlay, but listen to Phaser events. |
+| **Command UI** (selection actions) | React SVG radial (legacy) | **Phaser** (selection, tile hit) + **React** (rows, buttons, inspector) | **Civ VI / mobile Civ VI** pattern: show **contextual actions** for the selection without a dual-ring menu. Replace radial over time; see `GAME_DESIGN.md` §9. |
 | **Minimap** | React Canvas | **React Canvas** (Phaser integration) | 150px live display updates frequently but is inherently a UI element. React owns rendering; integrate with Phaser camera for click-to-pan. |
 | **Selected Info** (unit/building details) | React DOM | **React DOM** | Text-heavy info display. Lookup is logic (Phaser/ECS), rendering is React. |
 | **Entity Tooltip** (hover info) | React DOM | **React DOM** | Cursor-tracked overlay. Phaser can emit 'entityHovered' events; React renders the tooltip. |
 | **Turn Phase Overlay** ("AI THINKING...") | React DOM + useEffect | **Phaser Tweens** | Fade-in/fade-out animations, timer-based. Phaser's tween system is designed for this. Can emit events that React listens to if needed. |
-| **Garage Modal** (fabrication UI) | React DOM | **React DOM** | Multi-step form. Complex state (selected class → selected spec → build). React excels here. |
+| **Settlement production** (unit queue, class/track, priorities) | React DOM | **React DOM** | Belongs in **city/settlement screen** with reorderable queue — not a standalone “Garage.” Legacy `GarageModal.tsx` may exist until merged. |
 | **Diplomacy Overlay** (standings panel) | React DOM | **React DOM** | Table of factions + standings. List rendering, sorting. React's job. |
 | **Tech Tree Overlay** (full DAG) | React DOM | **React DOM** | Large graph visualization, search, filter. React + D3/custom canvas render. |
 | **Unit Roster** (all units list) | React DOM | **React DOM** | Scrollable list with quick-jump. Virtual list or memo. |
@@ -147,16 +147,21 @@ useEffect(() => {
 
 ## 5. Deep Dives: Specific Decisions
 
-### 5.1 Radial Menu
+### 5.1 Command UI (replaces radial)
 
-**Current:** React SVG overlay, reads from `radialMenuState`, renders petals.
+**Legacy:** React SVG dual-ring radial, `radialMenuState`, sector hit-testing.
 
-**Proposed:**
-1. **Input logic (Phaser):** Pointer events on the board → open menu, track hover sector.
-2. **State (ECS or Zustand):** Current selection, angle, sector definitions.
-3. **Rendering (React):** SVG overlay listening to Phaser events, re-renders on hover.
+**Target:**
+1. **Phaser:** Selection and tile taps unchanged; emit `selectionChanged` / `tileFocused` for UI.
+2. **React:** **Action strip** or **inspector panel** — icon buttons and short labels for Move, Harvest,
+   Attack, Build, etc., filtered by **unit class / building type / specialization** (same rules the
+   providers already encode; surface changes, not necessarily the whole provider graph at first).
+3. **Deep actions** (full build lists, production) live in **modals and settlement screens**, matching
+   **Civ VI mobile** information architecture: lots of data, but **progressive disclosure** instead of
+   one overloaded wheel.
 
-**Why split?** Pointer detection and sector collision are game input tasks (Phaser domain). SVG rendering is UI (React domain). Decouples input from presentation.
+**Why:** Radial was optimized for **minimal chrome** (CivRev2-like); we want **clearer affordances**
+and room for **specialization-heavy** commands without ring clutter.
 
 ---
 

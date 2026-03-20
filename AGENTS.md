@@ -56,11 +56,13 @@ src/
 ├── audio/              # Tone.js SFX + ambience
 ├── camera/             # Camera controllers
 ├── db/                 # SQLite schema + GameRepo
-├── rendering/          # Pure TS: geometry, placement, materials, model paths (no TSX)
-├── view/               # R3F renderer components: renderers/, effects/, overlays/, globe/
-├── ui/                 # React DOM components: Globe, landing/, game/ overlays
+├── rendering/          # TRANSITIONAL — decompose per docs/COMPREHENSIVE_ENGINEERING_PLAN.md §8; then delete
+├── views/              # ALL rendering entrypoints — see docs/COMPREHENSIVE_ENGINEERING_PLAN.md
+│   ├── title/          # TARGET: R3F title + generating globe (migrate from legacy view/)
+│   └── board/          # TARGET: Phaser + enable3d match board (migrate current flat views/*.ts)
+├── ui/                 # React DOM: Globe composes views/title; HUD, landing/, game/
 ├── input/              # Board interaction (click, drag, select)
-├── world/              # Config wiring
+├── world/              # New-game config (+ future settlement snapshots per `GAME_DESIGN.md` / runbook Phase G)
 ├── lib/                # Shared utilities
 ├── types/              # Shared type declarations
 ├── init-world.ts       # World initialization from board
@@ -106,7 +108,7 @@ Follow the patterns from [koota examples](https://github.com/pmndrs/koota/tree/m
 - **Traits** — defined in `src/traits/`, one file per domain, all re-exported via `index.ts`
 - **Systems** — one system per file in `src/systems/`, pure functions accepting `(world: World)`
 - **Actions** — imperative world mutations (spawn, destroy, modify) in dedicated files
-- **Sim/View split** — simulation (traits/systems) is completely decoupled from rendering (view)
+- **Sim/View split** — `traits/` + `systems/` never import `views/`; rendering adapters live under **`src/views/`** only (`title/` = R3F, `board/` = Phaser). **`src/view/` must be removed** after migration — see [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](docs/COMPREHENSIVE_ENGINEERING_PLAN.md).
 
 ---
 
@@ -126,8 +128,12 @@ pnpm verify              # lint + tsc + test (all gates)
 ## Validation (before any commit)
 
 ```
-pnpm verify — all gates must pass
+pnpm verify — required gates (matches CI Quality job)
   Biome lint: 0 errors
   TypeScript: 0 errors
-  Vitest: 143 suites, 2440 tests passing
+  Vitest (node): all suites passing
+
+pnpm verify:with-ct — optional; browser CT is bitrotted (stale paths to old
+  src/rendering/*R3F). Repair is Phase C in docs/CLOUD_AGENT_RUNBOOK.md.
+  CI runs test:ct with continue-on-error: true.
 ```

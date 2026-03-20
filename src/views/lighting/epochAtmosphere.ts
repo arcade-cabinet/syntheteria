@@ -215,10 +215,7 @@ let currentEpochNumber = 0;
  * @param scene — Three.js scene to modify
  * @param epoch — epoch number (1-5)
  */
-export function applyEpochAtmosphere(
-	scene: THREE.Scene,
-	epoch: number,
-): void {
+export function applyEpochAtmosphere(scene: THREE.Scene, epoch: number): void {
 	const clamped = Math.max(1, Math.min(5, Math.floor(epoch)));
 	if (clamped === currentEpochNumber) return;
 	currentEpochNumber = clamped;
@@ -245,10 +242,7 @@ export function applyEpochAtmosphere(
 	scene.add(ambient);
 
 	// --- Directional sun ---
-	const sun = new THREE.DirectionalLight(
-		params.sunColor,
-		params.sunIntensity,
-	);
+	const sun = new THREE.DirectionalLight(params.sunColor, params.sunIntensity);
 	sun.position.set(10, 50, 20);
 	sun.castShadow = true;
 	sun.shadow.mapSize.set(2048, 2048);
@@ -261,11 +255,7 @@ export function applyEpochAtmosphere(
 
 	// --- Accent point lights ---
 	for (const def of params.accentLights) {
-		const light = new THREE.PointLight(
-			def.color,
-			def.intensity,
-			def.distance,
-		);
+		const light = new THREE.PointLight(def.color, def.intensity, def.distance);
 		light.position.set(def.x, def.y, def.z);
 		light.userData.tag = EPOCH_LIGHT_TAG;
 		scene.add(light);
@@ -290,9 +280,7 @@ export function resetEpochAtmosphere(): void {
 /**
  * Get the atmosphere parameters for a given epoch (for testing/inspection).
  */
-export function getEpochAtmosphereParams(
-	epoch: number,
-): EpochAtmosphereParams {
+export function getEpochAtmosphereParams(epoch: number): EpochAtmosphereParams {
 	const clamped = Math.max(1, Math.min(5, Math.floor(epoch)));
 	return EPOCH_PARAMS[clamped - 1];
 }

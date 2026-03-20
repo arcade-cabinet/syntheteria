@@ -31,6 +31,9 @@ import {
 } from "../systems";
 import { UnitFaction, UnitPos } from "../traits";
 import { Globe } from "../ui/Globe";
+import { EventBus } from "../views/eventBus";
+// Side-effect import: register radial menu providers at module scope
+import "../systems/radial";
 import { GameBoard } from "./GameBoard";
 // --- Game DOM overlays ---
 import { AlertBar } from "../ui/game/AlertBar";
@@ -226,6 +229,7 @@ export function App() {
 		if (!session) return;
 		playSfx("turn_advance");
 		advanceTurn(session.world, session.board, { observerMode: isObserverMode });
+		EventBus.emit("turn-advanced");
 		const currentTurn = getCurrentTurn(session.world);
 		setTurn(currentTurn);
 		setPlayerAp(readPlayerAp(session.world));

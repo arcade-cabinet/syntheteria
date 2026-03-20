@@ -11,6 +11,11 @@
 
 import { Scene3D } from "@enable3d/phaser-extension";
 import * as THREE from "three";
+import {
+	registerCameraControls,
+	unregisterCameraControls,
+} from "../../camera";
+import type { CameraControls } from "../../camera";
 import type { GameBoardConfig } from "../createGame";
 import { EventBus } from "../eventBus";
 import { setupBoardInput } from "../input/boardInput";
@@ -115,7 +120,52 @@ export class WorldScene extends Scene3D {
 			);
 		}
 
+		// Register camera controls so App.tsx, Minimap, keyboard shortcuts
+		// can call panTo/setZoom without knowing about Phaser
+		this.registerCameraControls();
+
+		// Listen for turn-advanced events from React
+		EventBus.on("turn-advanced", () => this.onTurnAdvanced());
+
 		EventBus.emit("scene-ready", this);
+	}
+
+	shutdown(): void {
+		unregisterCameraControls();
+		EventBus.off("turn-advanced");
+	}
+
+	private registerCameraControls(): void {
+		const self = this;
+		const controls: CameraControls = {
+			panTo(x: number, z: number) {
+				// Convert from old TILE_SIZE_M coords to new TILE_SIZE coords
+				self._camTarget.x = x;
+				self._camTarget.z = z;
+			},
+			snapTo(x: number, z: number) {
+				self._camTarget.x = x;
+				self._camTarget.z = z;
+			},
+			setZoom(distance: number) {
+				self._zoomLevel = Math.max(10, Math.min(60, distance));
+			},
+			reset(centerX: number, centerZ: number) {
+				self._camTarget.set(centerX, 0, centerZ);
+				self._zoomLevel = 30;
+				self._rotAngle = Math.PI / 4;
+			},
+		};
+		registerCameraControls(controls);
+	}
+
+	private onTurnAdvanced(): void {
+		if (!this._config) return;
+		const { world, boardConfig } = this._config;
+		// Re-sync all renderers with updated ECS state
+		updateFog(world);
+		updateTerritory(world, boardConfig.width, boardConfig.height);
+		// Units and buildings sync in update() loop already
 	}
 
 	// ---- Camera ----

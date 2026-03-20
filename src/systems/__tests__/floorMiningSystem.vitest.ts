@@ -102,7 +102,7 @@ describe("biomeMiningSystem", () => {
 
 	it("decrements ticksRemaining each turn", () => {
 		spawnFaction(world, "reclaimers");
-		spawnTile(world, 1, 0, "ruins", true, 2, "stone");
+		spawnTile(world, 1, 0, "hills", true, 2, "stone");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 3, totalTicks: 3 }),
@@ -117,7 +117,7 @@ describe("biomeMiningSystem", () => {
 
 	it("yields resources and removes UnitMine on completion", () => {
 		spawnFaction(world, "reclaimers");
-		spawnTile(world, 1, 0, "ruins", true, 1, "stone");
+		spawnTile(world, 1, 0, "hills", true, 1, "stone");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
@@ -140,7 +140,7 @@ describe("biomeMiningSystem", () => {
 
 	it("marks tile as not mineable and mined after completion", () => {
 		spawnFaction(world, "reclaimers");
-		const tile = spawnTile(world, 1, 0, "ruins", true, 1, "stone");
+		const tile = spawnTile(world, 1, 0, "hills", true, 1, "stone");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
@@ -156,7 +156,7 @@ describe("biomeMiningSystem", () => {
 
 	it("lowers tile elevation to -1 on completion", () => {
 		spawnFaction(world, "reclaimers");
-		const tile = spawnTile(world, 1, 0, "ruins", true, 1, "stone");
+		const tile = spawnTile(world, 1, 0, "hills", true, 1, "stone");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
@@ -290,7 +290,7 @@ describe("deep mining tech bonus", () => {
 			"reclaimers",
 			"advanced_harvesting,efficient_fabrication,deep_mining",
 		);
-		spawnTile(world, 1, 0, "ruins", true, 1, "stone");
+		spawnTile(world, 1, 0, "hills", true, 1, "stone");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
@@ -303,8 +303,8 @@ describe("deep mining tech bonus", () => {
 			const f = e.get(Faction);
 			if (f?.id === "reclaimers") {
 				const r = e.get(ResourcePool);
-				// ruins yields [1,3] per BIOME_DEFS, so base yield 1-3
-				// With deep_mining +50%, minimum yield is floor(1*1.5) = 1, max is floor(3*1.5) = 4
+				// hills yields [2,4] per BIOME_DEFS, so base yield 2-4
+				// With deep_mining +50%, minimum yield is floor(2*1.5) = 3, max is floor(4*1.5) = 6
 				// Any yield > 0 confirms the system ran
 				expect(r!.stone).toBeGreaterThan(0);
 			}
@@ -314,7 +314,7 @@ describe("deep mining tech bonus", () => {
 	it("does not apply bonus without deep_mining tech", () => {
 		// Spawn faction WITH research state but WITHOUT deep_mining
 		spawnFactionWithResearch(world, "reclaimers", "advanced_harvesting");
-		spawnTile(world, 1, 0, "ruins", true, 1, "stone");
+		spawnTile(world, 1, 0, "hills", true, 1, "stone");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
@@ -327,7 +327,7 @@ describe("deep mining tech bonus", () => {
 			const f = e.get(Faction);
 			if (f?.id === "reclaimers") {
 				const r = e.get(ResourcePool);
-				// ruins base yield: [1,4] — max without bonus is 4
+				// hills base yield: [2,4] — max without bonus is 4
 				expect(r!.stone).toBeGreaterThan(0);
 				expect(r!.stone).toBeLessThanOrEqual(4);
 			}

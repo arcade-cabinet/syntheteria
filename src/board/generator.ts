@@ -29,7 +29,6 @@ const SCATTER_RATE: Record<string, number> = {
 	desert: 0.08,
 	hills: 0.15,
 	wetland: 0.08,
-	ruins: 0.2,
 	tundra: 0.06,
 };
 
@@ -179,7 +178,6 @@ function assignBiomeTypes(
 					"desert",
 					"hills",
 					"wetland",
-					"ruins",
 					"tundra",
 				];
 				tile.biomeType = passableTypes[

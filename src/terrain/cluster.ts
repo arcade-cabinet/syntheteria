@@ -136,9 +136,8 @@ export function biomeTypeForTile(
 	if (cluster < 0.15) return "grassland";
 	if (cluster < 0.3) return "forest";
 	if (cluster < 0.45) return "desert";
-	if (cluster < 0.57) return "hills";
-	if (cluster < 0.7) return "wetland";
-	if (cluster < 0.85) return "ruins";
+	if (cluster < 0.6) return "hills";
+	if (cluster < 0.75) return "wetland";
 	return "tundra";
 }
 

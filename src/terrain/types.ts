@@ -16,7 +16,6 @@
  *   desert    — arid wasteland; sand/glass
  *   hills     — rolling terrain; stone/ore (less than mountain)
  *   wetland   — marshy ground; reeds/peat, slow movement
- *   ruins     — legacy machine infrastructure; salvage
  *   tundra    — frozen terrain; sparse resources
  */
 export type BiomeType =
@@ -27,7 +26,6 @@ export type BiomeType =
 	| "desert"
 	| "hills"
 	| "wetland"
-	| "ruins"
 	| "tundra";
 
 /**
@@ -131,14 +129,6 @@ export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
 		resourceAmount: [1, 3],
 		movementCost: 2.0,
 	},
-	ruins: {
-		label: "Ruins",
-		mineable: true,
-		hardness: 2,
-		resourceMaterial: "iron_ore",
-		resourceAmount: [1, 4],
-		movementCost: 1.0,
-	},
 	tundra: {
 		label: "Tundra",
 		mineable: true,
@@ -156,10 +146,9 @@ export const BIOME_INDEX_MAP: Record<BiomeType, number> = {
 	hills: 2,
 	desert: 3,
 	wetland: 4,
-	ruins: 5,
-	tundra: 6,
-	water: 7,
-	mountain: 8,
+	tundra: 5,
+	water: 6,
+	mountain: 7,
 };
 
 /** True for passable biome types. */

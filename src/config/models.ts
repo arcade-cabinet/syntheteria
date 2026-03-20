@@ -407,157 +407,122 @@ export const LOGISTICS_DOOR_MODELS: readonly string[] = [
 	"logistics/rollershutter_door.glb",
 ];
 
-// ─── Structure model paths (walls, columns, doors, floors, roofs, details) ──
+// ─── Building tier visual variants ──────────────────────────────────────────
 
-/** Solid wall models — no windows/doors. */
-export const STRUCTURE_WALL_MODELS: readonly string[] = [
-	"structures/Wall_1.glb",
-	"structures/Wall_2.glb",
-	"structures/Wall_3.glb",
-	"structures/Wall_4.glb",
-	"structures/Wall_5.glb",
-	"structures/Wall_Empty.glb",
-];
+/** Building tier visual variants — T1/T2/T3 use progressively fancier models */
+export const BUILDING_TIER_MODELS: Record<string, readonly string[]> = {
+	outpost: [
+		"buildings/basemodule_A.glb",
+		"buildings/basemodule_B.glb",
+		"buildings/basemodule_C.glb",
+	],
+	motor_pool: [
+		"buildings/Machine_building_plant.glb",
+		"buildings/basemodule_garage.glb",
+		"buildings/Machine_building_plant.glb",
+	],
+	power_plant: [
+		"buildings/Reactor.glb",
+		"buildings/Reactor_add.glb",
+		"buildings/Reactor.glb",
+	],
+	colony: [
+		"buildings/Main_house.glb",
+		"buildings/Main_house_2lv.glb",
+		"buildings/Main_house_3lv.glb",
+	],
+	cargo_depot: [
+		"buildings/cargodepot_A.glb",
+		"buildings/cargodepot_B.glb",
+		"buildings/cargodepot_C.glb",
+	],
+	farm: [
+		"buildings/Farm.glb",
+		"buildings/Farm_module.glb",
+		"buildings/Farm.glb",
+	],
+	research: [
+		"buildings/Research_center.glb",
+		"buildings/Resource_warehouse.glb",
+		"buildings/Research_center.glb",
+	],
+};
 
-/** Wall-with-window models — both sides for mirrored variety. */
-export const STRUCTURE_WINDOW_WALL_MODELS: readonly string[] = [
-	"structures/Window_Wall_SideA.glb",
-	"structures/Window_Wall_SideB.glb",
-	"structures/SmallWindows_Wall_SideA.glb",
-	"structures/SmallWindows_Wall_SideB.glb",
-	"structures/LongWindow_Wall_SideA.glb",
-	"structures/LongWindow_Wall_SideB.glb",
-	"structures/ThreeWindows_Wall_SideA.glb",
-	"structures/ThreeWindows_Wall_SideB.glb",
-];
+// ─── Ruin POI model clusters ────────────────────────────────────────────────
 
-/** Wall-with-door models — both sides + long variants. */
-export const STRUCTURE_DOOR_WALL_MODELS: readonly string[] = [
-	"structures/DoorSingle_Wall_SideA.glb",
-	"structures/DoorSingle_Wall_SideB.glb",
-	"structures/DoorDouble_Wall_SideA.glb",
-	"structures/DoorDouble_Wall_SideB.glb",
-	"structures/DoorSingleLong_Wall_SideA.glb",
-	"structures/DoorDoubleLong_Wall_SideA.glb",
-];
+/** Ruin POI model clusters — scatter objects placed at ruin discovery sites */
+export const RUIN_POI_MODELS: Record<string, readonly string[]> = {
+	ruin_depot: [
+		"exploration/hangar_largeA.glb",
+		"exploration/hangar_smallA.glb",
+		"props/cargo_A.glb",
+	],
+	ruin_factory: [
+		"industrial/conveyor.glb",
+		"industrial/machine_barrel.glb",
+		"industrial/robot-arm-a.glb",
+	],
+	ruin_outpost: [
+		"buildings/basemodule_D.glb",
+		"exploration/Lootbox.glb",
+		"props/containers_A.glb",
+	],
+	ruin_research: [
+		"city/Props_Computer.glb",
+		"city/Props_ComputerSmall.glb",
+		"exploration/Collectible_Board.glb",
+	],
+	ruin_military: [
+		"defense/Tank.glb",
+		"defense/barricade-doorway-a.glb",
+		"exploration/crater.glb",
+	],
+};
 
-/** Standalone door models — placed at corridor openings. */
-export const STRUCTURE_DOOR_MODELS: readonly string[] = [
-	"structures/Door_Single.glb",
-	"structures/Door_Double.glb",
-];
+// ─── Natural feature / biome scatter models ─────────────────────────────────
 
-/** Column models — corners, junctions, isolated pillars. */
-export const STRUCTURE_COLUMN_MODELS: readonly string[] = [
-	"structures/Column_1.glb",
-	"structures/Column_2.glb",
-	"structures/Column_3.glb",
-	"structures/Column_Slim.glb",
-];
+/** Natural feature models — scatter objects on specific biome types */
+export const BIOME_SCATTER_MODELS: Record<string, readonly string[]> = {
+	mountain: [
+		"exploration/rocks_smallA.glb",
+		"exploration/rocks_smallB.glb",
+		"exploration/rock_crystals.glb",
+	],
+	hills: [
+		"exploration/rocks_smallA.glb",
+		"exploration/rock_crystalsLargeA.glb",
+	],
+	desert: [
+		"exploration/crater.glb",
+		"exploration/craterLarge.glb",
+		"exploration/meteor_half.glb",
+	],
+	tundra: ["exploration/meteor_detailed.glb", "exploration/bones.glb"],
+};
 
-/** Floor tile models — placed on passable corridor/room tiles. */
-export const STRUCTURE_FLOOR_MODELS: readonly string[] = [
-	"structures/FloorTile_Basic.glb",
-	"structures/FloorTile_Basic2.glb",
-	"structures/FloorTile_Empty.glb",
-];
+// ─── Infrastructure improvement overlay models ──────────────────────────────
 
-/** Floor tile edge variants — placed along walls (one side exposed). */
-export const STRUCTURE_FLOOR_SIDE_MODELS: readonly string[] = [
-	"structures/FloorTile_Side.glb",
-];
-
-/** Floor tile corner variants — placed at corridor corners. */
-export const STRUCTURE_FLOOR_CORNER_MODELS: readonly string[] = [
-	"structures/FloorTile_Corner.glb",
-	"structures/FloorTile_InnerCorner.glb",
-];
-
-/** Floor tile hallway — double-width corridor pieces. */
-export const STRUCTURE_FLOOR_HALLWAY_MODELS: readonly string[] = [
-	"structures/FloorTile_Double_Hallway.glb",
-];
-
-/** Roof tile models — placed atop mountain wall tiles. */
-export const STRUCTURE_ROOF_MODELS: readonly string[] = [
-	"structures/RoofTile_Empty.glb",
-	"structures/RoofTile_Plate.glb",
-	"structures/RoofTile_Plate2.glb",
-	"structures/RoofTile_Details.glb",
-	"structures/RoofTile_SmallVents.glb",
-	"structures/RoofTile_Vents.glb",
-	"structures/RoofTile_OrangeVent.glb",
-	"structures/RoofTile_Pipes1.glb",
-	"structures/RoofTile_Pipes2.glb",
-	"structures/RoofTile_Sides_Pipes.glb",
-];
-
-/** Roof tile corner variants — placed at corners of wall clusters. */
-export const STRUCTURE_ROOF_CORNER_MODELS: readonly string[] = [
-	"structures/RoofTile_Corner_Pipes.glb",
-	"structures/RoofTile_InnerCorner_Pipes.glb",
-];
-
-/** Wall-surface detail models — scattered on walls for visual richness. */
-export const STRUCTURE_DETAIL_MODELS: readonly string[] = [
-	"structures/Details_Arrow.glb",
-	"structures/Details_Arrow_2.glb",
-	"structures/Details_Basic_1.glb",
-	"structures/Details_Basic_2.glb",
-	"structures/Details_Basic_3.glb",
-	"structures/Details_Basic_4.glb",
-	"structures/Details_Cylinder.glb",
-	"structures/Details_Cylinder_Long.glb",
-	"structures/Details_Dots.glb",
-	"structures/Details_Hexagon.glb",
-	"structures/Details_Output.glb",
-	"structures/Details_Output_Small.glb",
-	"structures/Details_Pipes_Long.glb",
-	"structures/Details_Pipes_Medium.glb",
-	"structures/Details_Pipes_Small.glb",
-	"structures/Details_Plate_Details.glb",
-	"structures/Details_Plate_Large.glb",
-	"structures/Details_Plate_Long.glb",
-	"structures/Details_Plate_Small.glb",
-	"structures/Details_Triangles.glb",
-	"structures/Details_Vent_1.glb",
-	"structures/Details_Vent_2.glb",
-	"structures/Details_Vent_3.glb",
-	"structures/Details_Vent_4.glb",
-	"structures/Details_Vent_5.glb",
-	"structures/Details_X.glb",
-];
-
-/** Pipe models — connecting infrastructure between wall segments. */
-export const STRUCTURE_PIPES_MODEL = "structures/Pipes.glb";
-
-/** Staircase model — placed at elevation transitions (ramps). */
-export const STRUCTURE_STAIRCASE_MODEL = "structures/Staircase.glb";
-
-/** Resolve a structure model path to full URL. */
-export function resolveStructureModelUrl(relativePath: string): string {
-	return MODEL_BASE + relativePath;
-}
-
-/** Get all unique structure model URLs for preloading. */
-export function getAllStructureModelUrls(): string[] {
-	return [
-		...STRUCTURE_WALL_MODELS,
-		...STRUCTURE_WINDOW_WALL_MODELS,
-		...STRUCTURE_DOOR_WALL_MODELS,
-		...STRUCTURE_DOOR_MODELS,
-		...STRUCTURE_COLUMN_MODELS,
-		...STRUCTURE_FLOOR_MODELS,
-		...STRUCTURE_FLOOR_SIDE_MODELS,
-		...STRUCTURE_FLOOR_CORNER_MODELS,
-		...STRUCTURE_FLOOR_HALLWAY_MODELS,
-		...STRUCTURE_ROOF_MODELS,
-		...STRUCTURE_ROOF_CORNER_MODELS,
-		...STRUCTURE_DETAIL_MODELS,
-		STRUCTURE_PIPES_MODEL,
-		STRUCTURE_STAIRCASE_MODEL,
-	].map((rel) => MODEL_BASE + rel);
-}
+/** Infrastructure improvement overlay models — placed when tiles are roboformed */
+export const IMPROVEMENT_MODELS = {
+	road: [
+		"infrastructure/monorail_trackStraight.glb",
+		"infrastructure/monorail_trackCornerLarge.glb",
+	],
+	pipeline: [
+		"infrastructure/pipe_straight.glb",
+		"infrastructure/pipe_corner.glb",
+		"infrastructure/pipe_cross.glb",
+	],
+	power_line: [
+		"infrastructure/Cable_Long.glb",
+		"infrastructure/Cable_Thick.glb",
+	],
+	mining: ["infrastructure/drill_structure.glb"],
+	lighting: [
+		"infrastructure/lights.glb",
+		"infrastructure/industrial_wall_lamp.glb",
+	],
+};
 
 // ─── Robot model paths ──────────────────────────────────────────────────────
 //

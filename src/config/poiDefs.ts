@@ -17,7 +17,11 @@ export type POIType =
 	| "resource_depot"
 	| "research_site"
 	| "faction_outpost"
-	| "ruin"
+	| "ruin_depot"
+	| "ruin_factory"
+	| "ruin_outpost"
+	| "ruin_research"
+	| "ruin_military"
 	| "northern_cult_site"
 	| "deep_sea_gateway"
 	| "science_campus";
@@ -47,6 +51,11 @@ export const FOUNDABLE_POI_TYPES: readonly POIType[] = [
 	"resource_depot",
 	"research_site",
 	"science_campus",
+	"ruin_depot",
+	"ruin_factory",
+	"ruin_outpost",
+	"ruin_research",
+	"ruin_military",
 ] as const;
 
 // ─── Data ────────────────────────────────────────────────────────────────────
@@ -81,10 +90,38 @@ export const POI_DEFINITIONS: readonly POIDef[] = [
 		discoveredAtStart: false,
 	},
 	{
-		type: "ruin",
-		name: "Collapsed Sector",
+		type: "ruin_depot",
+		name: "Ruined Supply Depot",
+		relativeX: 0.2,
+		relativeZ: 0.3,
+		discoveredAtStart: false,
+	},
+	{
+		type: "ruin_factory",
+		name: "Abandoned Factory",
+		relativeX: 0.7,
+		relativeZ: 0.2,
+		discoveredAtStart: false,
+	},
+	{
+		type: "ruin_outpost",
+		name: "Collapsed Outpost",
 		relativeX: 0.3,
-		relativeZ: 0.8,
+		relativeZ: 0.7,
+		discoveredAtStart: false,
+	},
+	{
+		type: "ruin_research",
+		name: "Derelict Research Lab",
+		relativeX: 0.6,
+		relativeZ: 0.6,
+		discoveredAtStart: false,
+	},
+	{
+		type: "ruin_military",
+		name: "Military Wreckage",
+		relativeX: 0.5,
+		relativeZ: 0.15,
 		discoveredAtStart: false,
 	},
 	{

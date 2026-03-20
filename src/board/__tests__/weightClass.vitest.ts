@@ -67,7 +67,6 @@ describe("isPassableFor", () => {
 		const normalFloors: TileData["biomeType"][] = [
 			"hills",
 			"grassland",
-			"ruins",
 			"desert",
 			"forest",
 			"tundra",

@@ -4,7 +4,6 @@
  * Salvage props are the PRIMARY resource source. Density and type
  * vary by terrain substrate:
  *   mountain   → machinery, terminals (advanced yields)
- *   ruins      → debris (common yields)
  *   grassland  → containers (timber, stone)
  *   desert     → vessels (fuel)
  *   grassland  → containers, debris (mixed)
@@ -38,14 +37,6 @@ const TERRAIN_SALVAGE: Record<BiomeType, TerrainSalvageConfig> = {
 			["debris", 0.1],
 		],
 	},
-	ruins: {
-		rate: 0.5,
-		weights: [
-			["debris", 0.5],
-			["container", 0.3],
-			["vessel", 0.2],
-		],
-	},
 	grassland: {
 		rate: 0.35,
 		weights: [
@@ -73,12 +64,12 @@ const TERRAIN_SALVAGE: Record<BiomeType, TerrainSalvageConfig> = {
 		],
 	},
 	hills: {
-		rate: 0.4,
+		rate: 0.5,
 		weights: [
-			["container", 0.4],
-			["debris", 0.3],
+			["debris", 0.4],
+			["container", 0.3],
 			["vessel", 0.2],
-			["terminal", 0.1],
+			["machinery", 0.1],
 		],
 	},
 	wetland: {

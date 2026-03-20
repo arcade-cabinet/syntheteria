@@ -99,7 +99,7 @@ describe("placeSalvageProps", () => {
 
 	it("is deterministic with the same seed", () => {
 		// First run uses the beforeEach world
-		const board1 = uniformBoard("ruins", 20, 20, "deterministic");
+		const board1 = uniformBoard("hills", 20, 20, "deterministic");
 		const count1 = placeSalvageProps(world, board1);
 
 		const entities1 = world.query(SalvageProp);
@@ -115,7 +115,7 @@ describe("placeSalvageProps", () => {
 
 		// Second run in a temp world
 		const world2 = createWorld();
-		const board2 = uniformBoard("ruins", 20, 20, "deterministic");
+		const board2 = uniformBoard("hills", 20, 20, "deterministic");
 		const count2 = placeSalvageProps(world2, board2);
 
 		const entities2 = world2.query(SalvageProp);
@@ -136,7 +136,7 @@ describe("placeSalvageProps", () => {
 	});
 
 	it("different seeds produce different results", () => {
-		const boardA = uniformBoard("ruins", 20, 20, "seed-alpha");
+		const boardA = uniformBoard("hills", 20, 20, "seed-alpha");
 		const countA = placeSalvageProps(world, boardA);
 
 		const propsA = world
@@ -145,7 +145,7 @@ describe("placeSalvageProps", () => {
 			.sort((a, b) => a.tileX - b.tileX || a.tileZ - b.tileZ);
 
 		const worldB = createWorld();
-		const boardB = uniformBoard("ruins", 20, 20, "seed-beta");
+		const boardB = uniformBoard("hills", 20, 20, "seed-beta");
 		const countB = placeSalvageProps(worldB, boardB);
 
 		const propsB = worldB
@@ -202,7 +202,6 @@ describe("placeSalvageProps", () => {
 	it("each terrain type only produces configured salvage types", () => {
 		const biomeTypes: BiomeType[] = [
 			"mountain",
-			"ruins",
 			"hills",
 			"grassland",
 			"desert",
@@ -229,7 +228,7 @@ describe("placeSalvageProps", () => {
 	});
 
 	it("sets correct tile coordinates on spawned props", () => {
-		const board = uniformBoard("ruins", 20, 20);
+		const board = uniformBoard("hills", 20, 20);
 		placeSalvageProps(world, board);
 
 		for (const entity of world.query(SalvageProp)) {

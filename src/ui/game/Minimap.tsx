@@ -25,7 +25,6 @@ const TERRAIN_COLORS: Record<string, [number, number, number]> = {
 	wetland: [15, 20, 35],
 	grassland: [60, 55, 50],
 	forest: [35, 55, 28],
-	ruins: [50, 45, 38],
 	desert: [55, 52, 45],
 	hills: [50, 42, 35],
 	tundra: [45, 48, 55],

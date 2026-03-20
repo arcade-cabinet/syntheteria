@@ -284,7 +284,6 @@ describe("Section 5 — eXploit", () => {
 			"wetland",
 			"hills",
 			"grassland",
-			"ruins",
 			"desert",
 			"forest",
 			"tundra",

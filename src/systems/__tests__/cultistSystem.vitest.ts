@@ -74,7 +74,7 @@ function makeBoardWithCultTerrain(
 			const distToCenter = Math.abs(x - centerX) + Math.abs(z - centerZ);
 			const isCenter = distToCenter < centerExclusion;
 			// Use cult terrain in the valid zone
-			const biomeType = !isEdge && !isCenter ? "ruins" : "grassland";
+			const biomeType = !isEdge && !isCenter ? "hills" : "grassland";
 			row.push({
 				x,
 				z,

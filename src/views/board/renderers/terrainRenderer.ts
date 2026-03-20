@@ -28,7 +28,6 @@ const FLOOR_COLORS: Record<BiomeType, THREE.Color> = {
 	desert: new THREE.Color(0xd4a437), // sandy gold
 	hills: new THREE.Color(0x8d6e63), // brown
 	wetland: new THREE.Color(0x00695c), // teal
-	ruins: new THREE.Color(0x546e7a), // blue-grey
 	tundra: new THREE.Color(0xb0bec5), // light grey-blue
 };
 

@@ -5,7 +5,7 @@
  * Tests that FAIL indicate gaps between spec and implementation.
  *
  * Covers:
- *   1. 9 terrain substrate types with correct passability
+ *   1. 8 terrain substrate types with correct passability
  *   2. Deterministic board generation (same seed = identical board)
  *   3. Three preset sector scales (Small 44x44, Standard 64x64, Large 96x96)
  *   4. Salvage props present after generation (PRIMARY resource source)
@@ -65,21 +65,20 @@ function countByBiomeType(tiles: TileData[]): Map<BiomeType, number> {
 
 // ─── Section 2.1: Terrain Substrates ─────────────────────────────────────────
 
-describe("Section 2 — Terrain Substrates (9 types)", () => {
+describe("Section 2 — Terrain Substrates (8 types)", () => {
 	const EXPECTED_BIOME_TYPES: BiomeType[] = [
 		"water",
 		"mountain",
 		"wetland",
 		"hills",
 		"grassland",
-		"ruins",
 		"desert",
 		"forest",
 		"tundra",
 	];
 
-	it("BiomeType union has exactly 9 substrate types", () => {
-		expect(Object.keys(BIOME_DEFS)).toHaveLength(9);
+	it("BiomeType union has exactly 8 substrate types", () => {
+		expect(Object.keys(BIOME_DEFS)).toHaveLength(8);
 		for (const ft of EXPECTED_BIOME_TYPES) {
 			expect(BIOME_DEFS).toHaveProperty(ft);
 		}
@@ -91,7 +90,6 @@ describe("Section 2 — Terrain Substrates (9 types)", () => {
 		expect(isPassableBiome("wetland")).toBe(true);
 		expect(isPassableBiome("hills")).toBe(true);
 		expect(isPassableBiome("grassland")).toBe(true);
-		expect(isPassableBiome("ruins")).toBe(true);
 		expect(isPassableBiome("desert")).toBe(true);
 		expect(isPassableBiome("forest")).toBe(true);
 		expect(isPassableBiome("tundra")).toBe(true);
@@ -131,7 +129,6 @@ describe("Section 2 — Terrain Substrates (9 types)", () => {
 			wetland: "clay",
 			hills: "iron_ore",
 			grassland: "food",
-			ruins: "iron_ore",
 			desert: "sand",
 			forest: "timber",
 			tundra: "coal",
@@ -306,7 +303,6 @@ describe("Section 2 — Floor mining is the backstop", () => {
 			"wetland",
 			"hills",
 			"grassland",
-			"ruins",
 			"desert",
 			"forest",
 			"tundra",

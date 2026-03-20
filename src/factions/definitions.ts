@@ -21,7 +21,7 @@ export const FACTION_DEFINITIONS: readonly FactionDef[] = [
 		persona: "fox",
 		isPlayer: false,
 		startZone: "corner_nw",
-		terrainAffinity: "ruins",
+		terrainAffinity: "hills",
 		aggression: 2,
 		description:
 			"Salvagers who claim derelict structures as territory. Moderate aggression.",

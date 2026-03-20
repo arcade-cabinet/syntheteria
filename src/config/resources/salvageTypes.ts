@@ -1,7 +1,7 @@
 /**
  * Salvage type definitions — harvestable overworld props.
  *
- * These are the PRIMARY resource source. Legacy machine ruins
+ * These are the PRIMARY resource source. Legacy machine wreckage
  * that players break down for materials. Buildings and props on the
  * surface contain the good stuff; floor mining is the backstop.
  *

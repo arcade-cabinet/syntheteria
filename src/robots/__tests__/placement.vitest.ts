@@ -166,7 +166,7 @@ describe("placeRobots", () => {
 			height: 32,
 			isPassable: () => true,
 			getBiomeType: (x: number, z: number) => {
-				if (x >= 3 && x <= 8 && z >= 3 && z <= 8) return "ruins";
+				if (x >= 3 && x <= 8 && z >= 3 && z <= 8) return "hills";
 				return "grassland";
 			},
 		};

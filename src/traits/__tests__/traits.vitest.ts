@@ -75,7 +75,7 @@ describe("Tile traits", () => {
 	it("TileBiome spawns with values", () => {
 		const e = world.spawn(
 			TileBiome({
-				biomeType: "ruins",
+				biomeType: "hills",
 				mineable: true,
 				hardness: 1,
 				resourceMaterial: "stone",
@@ -83,7 +83,7 @@ describe("Tile traits", () => {
 			}),
 		);
 		const f = e.get(TileBiome)!;
-		expect(f.biomeType).toBe("ruins");
+		expect(f.biomeType).toBe("hills");
 		expect(f.mineable).toBe(true);
 		expect(f.resourceMaterial).toBe("stone");
 		expect(f.resourceAmount).toBe(2);

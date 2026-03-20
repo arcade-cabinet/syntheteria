@@ -12,6 +12,8 @@
 
 **PIVOT: Labyrinth underground → 4X overworld.** Rendering stack validated via POC.
 
+**Design targets captured in `docs/GAME_DESIGN.md` (2026-03-20):** biome-based overworld + vertex-color CivRev2 terrain (TARGET), industrial floor types marked LEGACY; hub-and-spoke **networks** (not city screens) with **GarageModal**-style per-building UI; cultists as **AI-only** antagonist + scripted narrative beats (no player cult systems); **resource progression** arc early/mid/late (TARGET) vs current 13-material taxonomy.
+
 ### Rendering Stack: Phaser + enable3d (VALIDATED)
 
 The `poc-roboforming.html` prototype proved that **Phaser + enable3d** delivers CivRev2-tier visuals:
@@ -61,9 +63,9 @@ The rendering stack is pivoting from R3F/React Three Fiber to **Phaser + enable3
 - Orthographic isometric, drag-pan, scroll-zoom, WASD rotate
 - No free orbit — stays in isometric projection
 
-### Prior Architecture (R3F — being replaced)
+### Title vs match
 
-The prior R3F stack used `Globe.tsx` as a single persistent `<Canvas>` with sphere geometry. This code still exists but will be superseded by the Phaser + enable3d approach. Sphere-world concepts (equirectangular projection, tile↔sphere mapping) remain valid and will be ported.
+`Globe.tsx` remains a single persistent `<Canvas>` for **title → generating**; **playing** uses the Phaser board (`src/views/board/`) plus DOM HUD. Sphere math lives in **`src/board/sphere/`** (not a monolithic `rendering/` package).
 
 ---
 

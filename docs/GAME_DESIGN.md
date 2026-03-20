@@ -43,13 +43,14 @@ is human infrastructure that became machine infrastructure that became ruins.
 The **simulation** uses a **fixed square grid** (deterministic from seed). Lore-wise this is the
 planet’s surface; mechanically it is addressable `(x, z)` tiles.
 
-- The grid is the ecumenopolis playfield. **Settlements work like Civ VI / CivRev2:** bases and major
-  POIs exist **on the overworld map**; opening one brings up a **city management panel** (production,
-  buildings, yields, tile acquisition, etc.) in **React DOM** over the same Phaser board — not a
-  second navigable “city map” or interior Scene3D. See `docs/PHASER_PIVOT_PLAN.md` Phase 4 and
-  `docs/CLOUD_AGENT_RUNBOOK.md` Phase G for settlement data contracts ported from `pending/`.
+- **Player factions build hub-and-spoke NETWORKS, not cities.** Structures are placed for strategic
+  advantage near resources and threats; a **Motor Pool + Harvesters + Relay Towers** (and related
+  infrastructure) reads as one **network**, not a Civ-style settlement blob. **Per-building management**
+  is the pattern: click a building → **building-specific panel** (e.g. **GarageModal** for production
+  facilities) in **React DOM** over the same Phaser board — not a monolithic “city screen.” See
+  `docs/PHASER_PIVOT_PLAN.md` Phase 4 and `docs/CLOUD_AGENT_RUNBOOK.md` Phase G for data contracts.
   **`src/world/` today is new-game setup only** (sector scale, climate, factions); landmark seeding
-  uses `src/config/poiDefs.ts` until richer settlement snapshots land in `world/`.
+  uses `src/config/poiDefs.ts` until richer world snapshots land in `world/`.
 - All factions, cultists, and the player occupy the **same coordinate space** on that grid.
 - **Tiles are durable records** — each `(x, z)` is persisted; `explored` gates fog of war.
 - **Salvage props on tiles are the PRIMARY resource source** — containers, terminals, vessels,
@@ -70,7 +71,7 @@ remains valid for the **title/generating globe** (R3F) and any strategic globe p
 During **play** (`playing` phase), the board is rendered with **Phaser 3 + enable3d (Scene3D)**:
 orthographic isometric camera, vertex-colored flat-shaded terrain, POC lighting recipe
 (see `docs/RENDERING_VISION.md`, `poc-roboforming.html`). **React DOM** owns HUD, command panels,
-settlement screens, modals, and overlays on top of the canvas (`docs/PHASER_VS_REACT_MATRIX.md`).
+HUD, per-building modals, and overlays on top of the canvas (`docs/PHASER_VS_REACT_MATRIX.md`).
 
 - **Globe (`src/ui/Globe.tsx`)** — **title and generating** only: one R3F `<Canvas>` with storm,
   hypercane, lightning, zoom toward surface. **Signed off; do not replace** for landing flow.
@@ -86,9 +87,9 @@ camera and `CutawayClipPlane`. That was the pre-Phaser board stack. **Current ta
 on **landing/generating**; **CivRev2-style isometric** board in play. Unused R3F board components
 under `src/view/renderers/` are slated for removal once Phaser parity is complete.
 
-### Terrain Substrates (9 types)
+### Terrain Substrates (9 types) — LEGACY — will be replaced by biomes (see TARGET below)
 
-The board surface is procedurally generated with 9 ecumenopolis substrate types:
+**Current implementation:** The board surface is procedurally generated with 9 ecumenopolis substrate types:
 
 | Substrate | Passable | Primary Yield | Character |
 |-----------|----------|---------------|-----------|
@@ -101,6 +102,17 @@ The board surface is procedurally generated with 9 ecumenopolis substrate types:
 | `dust_district` | Yes | e_waste | Wind-scoured ash, degraded electronics |
 | `bio_district` | Yes | polymer_salvage | Fossilized organic matter, biopolymers |
 | `aerostructure` | Yes | scrap_metal | Upper-level platforms exposed to hypercane |
+
+### Overworld terrain — biomes & roboforming (TARGET — not yet implemented)
+
+**Planned direction (not shipped):** Overworld terrain should be **biome-based** — e.g. grassland,
+forest, mountain, water, desert, hills, wetland — rather than industrial floor-type taxonomy. The
+**grid stays invisible**: only logical `(x, z)` coordinates; presentation is **CivRev2-style** with
+**blended vertex colors** on terrain. **Improvement overlays** change visuals progressively (roads,
+mines, irrigation → concrete, asphalt, plating); **roboforming IS that improvement progression**.
+**Resources** start as natural outputs of biomes (stone, timber, iron ore) and advance along
+**natural → processed → synthetic** arcs. The 9 industrial substrates above remain **legacy** until
+this model replaces them in code.
 
 ### Visual Framing
 
@@ -249,6 +261,16 @@ Config: `src/config/epochDefs.ts` — `EPOCHS`, `computeEpoch()`, `getEpochForTe
 Every structure on the board is a **harvestable resource deposit**. This is urban mining — stripping
 a dead machine civilization for parts.
 
+#### Resource progression vision (TARGET — not yet implemented)
+
+**Planned arc (design target):** **Early** — real-world natural resources tied to biomes and the
+living surface. **Mid** — processed materials from factories and refineries. **Late** — recyclers and
+synthesizers convert processed stocks into advanced outputs. This **replaces** the flat 13-material
+salvage taxonomy below as the long-term economic model; until then, the tables remain the **current
+implementation**.
+
+#### Current resource model (legacy taxonomy — superseded by progression vision when implemented)
+
 **13 resource materials in 4 tiers:**
 
 | Tier | Materials | Source |
@@ -282,7 +304,8 @@ grants +50% yield. Each FloorType yields a specific foundation-tier material.
 
 ### eXpand
 
-- **Base building on tile coordinates** using harvested resources.
+- **Network building on tile coordinates** using harvested resources — **hub-and-spoke**, not
+  city-scale “settlement production” as a single screen.
 - **15 faction-buildable structures:**
 
 | Structure | Role | Power | Key Cost |
@@ -290,7 +313,7 @@ grants +50% yield. Each FloorType yields a specific foundation-tier material.
 | Storm Transmitter | Taps storm energy | +5 | ferrous_scrap, conductor_wire |
 | Power Box | Stores charge | 0 (stores 20) | ferrous_scrap, conductor_wire |
 | Synthesizer | Fuses advanced materials | -4 | alloy_stock, silicon_wafer, conductor_wire |
-| Motor Pool | **Unit production** at this settlement (ECS facility) | -3 | ferrous_scrap, alloy_stock, silicon_wafer |
+| Motor Pool | **Unit production** at this facility / network node (ECS) | -3 | ferrous_scrap, alloy_stock, silicon_wafer |
 | Relay Tower | Extends signal network | -1 | conductor_wire, silicon_wafer |
 | Defense Turret | Area denial | -2 | ferrous_scrap, alloy_stock, silicon_wafer |
 | Storage Hub | Resource stockpile | 0 (stores 50) | ferrous_scrap, polymer_salvage |
@@ -306,12 +329,11 @@ grants +50% yield. Each FloorType yields a specific foundation-tier material.
 - Signal relay network extends command range.
 - Buildings occupy tiles and can be contested.
 
-**Settlement production (4X model):** There is **no separate “Garage” product surface.** All **production
-queueing** — what the settlement builds next, **in what order**, and how the player **balances** units
-vs structures vs other outputs — lives in the **settlement / city management screen** (React DOM),
-same role as **Civilization VI**’s city panel (including the **mobile** layout’s clarity for many
-rows at once). The **Motor Pool** is the **in-world prerequisite** that enables bot fabrication at
-that site; the **queue and priorities** are UI on that settlement, not a standalone modal brand.
+**Network production UI (target model):** Production queueing — what to build next, **in what order**,
+and how the player **balances** units vs structures — belongs on **per-building panels** (e.g. open the
+**Motor Pool** → production UI for that node), not a unified **city / settlement management screen**.
+The **Motor Pool** is the **in-world prerequisite** that enables bot fabrication **at that site**;
+**GarageModal-style** per-building management is the **correct pattern** (React DOM over the board).
 
 ### eXterminate
 
@@ -368,9 +390,9 @@ The roster is built from **9 chassis families** with **Mark I-V progression**. S
 
 ### Robot Specializations (14 tracks)
 
-When **adding a unit to a settlement’s production queue** (city/settlement screen), the player picks
-robot **class** and then **specialization track** (gated by tech). Each track grants unique actions,
-Mark-level passive abilities, and v2 upgrades via higher-tier research.
+When **adding a unit to a Motor Pool (or equivalent) production queue** via that building’s panel,
+the player picks robot **class** and then **specialization track** (gated by tech). Each track grants
+unique actions, Mark-level passive abilities, and v2 upgrades via higher-tier research.
 
 | Class | Track A | Track B | Track C |
 |-------|---------|---------|---------|
@@ -381,11 +403,12 @@ Mark-level passive abilities, and v2 upgrades via higher-tier research.
 | Support (COMPANION) | **Field Medic** — regen aura at Mark III | **Signal Booster** — scan range buff | **War Caller** — attack buff aura |
 | Worker (MOBILE STORAGE) | **Deep Miner** — enhanced floor mining | **Fabricator** — faster building | **Salvager** — bonus harvest yield |
 
-**Settlement production UI (target):** One place to **enqueue** units (and other settlement outputs),
-**reorder** the queue (priority = classic 4X “what do I build next?” tension), and see **costs /
-turns remaining**. Step flow for a new bot: pick **class** → pick **track** (filtered by researched
-gates) → item enters queue; if no tracks unlocked, queue an unspecialized unit. **Legacy code** may
-still expose `GarageModal.tsx` as a shim until that screen is folded into the **city modal**.
+**Per-building production UI (target):** At each **Motor Pool** (or designated facility), **enqueue**
+units, **reorder** the queue, and see **costs / turns remaining** — same 4X tension as “what do I build
+next?”, scoped to **that network node**. Step flow for a new bot: pick **class** → pick **track**
+(filtered by researched gates) → item enters queue; if no tracks unlocked, queue an unspecialized
+unit. **`GarageModal.tsx`** is the reference pattern for this; a future unified “city panel” is **not**
+the target.
 
 **AI Track Selection**: Each AI faction has preferred tracks per class based on personality
 (e.g., Iron Creed prefers shock_trooper + war_caller; Signal Choir prefers infiltrator + sniper).
@@ -438,6 +461,12 @@ The faction system works exactly like Civilization's civilizations:
 They developed genuine supernatural abilities: calling down lightning, resisting weather, sensing
 machine consciousness. They eliminated most non-cultist human communities by ~2090.
 
+**Design stance:** Cultists are the **primary AI-only antagonist**. **No interactive cultist “faction
+systems”** for the player are required — pressure comes from **AI behavior** (`cultistSystem.ts` and
+related AI is the correct direction) plus **scripted encounter events** for narrative beats. Their
+**visual and functional evolution** tracks world/epoch change **via scripting and simulation**, not
+player-driven cult management.
+
 **Always present.** Unlike the configurable machine factions, EL cultists are in every game at
 every difficulty. They are the Civilization barbarian layer — but elevated.
 
@@ -446,7 +475,8 @@ every difficulty. They are the Civilization barbarian layer — but elevated.
 - Spawn at breach zones (board edges), scaling with player strength
 - Constants: BASE_SPAWN_INTERVAL=5, MIN_SPAWN_INTERVAL=2, MAX_TOTAL_CULTISTS=12
 
-**6 cult structure types** (only cults have human traces):
+**6 cult structure types** (only cults have **city-like** clusters and human traces on the map — a
+deliberate contrast to machine **network** placement):
 
 | Structure | Role |
 |-----------|------|
@@ -537,8 +567,9 @@ feel and camera**, not for how many systems we expose at once.
 **Gameplay alignment:** **Specialized units** (recon, fabricator, striker, …) and **specialized
 buildings** (synthesis, relay, motor pool, …) map naturally to **Civ VI–style action strips and
 panels**: the selected entity shows **only relevant commands** (build for fabricators, harvest for
-workers, attack for combatants), plus overflow into a **secondary panel** or **city/settlement
-screen** when depth is needed (production queues, yields, purchases).
+workers, attack for combatants), plus overflow into a **secondary panel** or **per-building modal**
+when depth is needed (production queues at a Motor Pool, yields, purchases) — **not** a single city
+management surface.
 
 **Desktop (target):** Left-click = select / confirm move. Right-click or dedicated key = **secondary
 action / cancel** (exact mapping TBD). Scroll = zoom. WASD = pan. **Persistent or summonable**

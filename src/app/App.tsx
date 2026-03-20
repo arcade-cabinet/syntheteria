@@ -388,16 +388,22 @@ export function App() {
 		});
 	});
 
-	// Wait one frame after phase becomes "playing" before mounting GameBoard.
-	// This lets Globe's R3F Canvas unmount and release its WebGL context first.
+	// Mount GameBoard shortly after phase becomes "playing".
+	// Globe stays visible briefly with a fade-out transition.
+	const [globeDismissed, setGlobeDismissed] = useState(false);
 	useEffect(() => {
 		if (phase === "playing") {
-			const raf = requestAnimationFrame(() => setGameBoardMounted(true));
+			// Mount GameBoard after a brief delay
+			const mountTimer = setTimeout(() => setGameBoardMounted(true), 100);
+			// Dismiss Globe after transition animation completes
+			const dismissTimer = setTimeout(() => setGlobeDismissed(true), 1200);
 			return () => {
-				cancelAnimationFrame(raf);
+				clearTimeout(mountTimer);
+				clearTimeout(dismissTimer);
 			};
 		}
 		setGameBoardMounted(false);
+		setGlobeDismissed(false);
 	}, [phase]);
 
 	const gameActive = phase === "playing" && session !== null && sceneReady;
@@ -413,7 +419,7 @@ export function App() {
 			}}
 		>
 			{/* Globe: title/setup/generating + transition-out during playing */}
-			{(phase !== "playing" || !gameBoardMounted) && (
+			{!globeDismissed && (
 				<div
 					style={{
 						position: "absolute",

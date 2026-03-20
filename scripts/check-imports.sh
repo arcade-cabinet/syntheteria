@@ -51,6 +51,18 @@ else
   echo "  PASS"
 fi
 
+# Rule 4: No imports from deleted rendering/ package
+echo ""
+echo "Rule 4: No imports from deleted src/rendering/"
+violations=$(rg 'from ["'"'"'].*\/rendering["'"'"']' src/ --glob '*.{ts,tsx}' 2>/dev/null || true)
+if [ -n "$violations" ]; then
+  echo "  FAIL — stale imports from rendering/:"
+  echo "$violations"
+  errors=$((errors + 1))
+else
+  echo "  PASS"
+fi
+
 echo ""
 if [ "$errors" -gt 0 ]; then
   echo "=== $errors rule(s) violated ==="

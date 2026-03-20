@@ -331,6 +331,10 @@ export function dynamicAiBuildOrder(
 	if ((existing["motor_pool"] ?? 0) === 0) order.push("motor_pool");
 	if ((existing["storm_transmitter"] ?? 0) === 0)
 		order.push("storm_transmitter");
+
+	// Power box early — needed for buildings outside transmitter radius
+	if ((existing["power_box"] ?? 0) === 0) order.push("power_box");
+
 	if ((existing["analysis_node"] ?? 0) === 0) order.push("analysis_node");
 
 	// Second motor pool for throughput
@@ -340,17 +344,17 @@ export function dynamicAiBuildOrder(
 	if ((existing["resource_refinery"] ?? 0) === 0)
 		order.push("resource_refinery");
 
-	// Growth cycle -- outposts increase pop cap, turrets defend, then more infrastructure
+	// Growth cycle
 	order.push(
 		"outpost",
 		"defense_turret",
+		"power_box",
 		"motor_pool",
 		"synthesizer",
 		"outpost",
 		"storage_hub",
 		"storm_transmitter",
 		"relay_tower",
-		"power_box",
 		"resource_refinery",
 		"outpost",
 		"defense_turret",

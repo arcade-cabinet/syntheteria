@@ -22,26 +22,32 @@ import { isCultFactionId } from "./aiHelpers";
 
 /**
  * Synthesis priority: produce the refined materials most needed for
- * upcoming builds. steel unlocks motor_pool and analysis_node.
- * timber unlocks storage_hub. glass unlocks analysis_node.
+ * upcoming builds and fabrication. Steel is the critical bottleneck
+ * for motor_pools and military units; glass and circuits for analysis_nodes.
  */
 const SYNTHESIS_PRIORITY: readonly string[] = [
-	"alloy_fusion", // iron_ore -> steel (most needed)
-	"polymer_reclamation", // stone -> timber
-	"wafer_fabrication", // circuits -> glass
-	"storm_capacitor", // iron_ore -> fuel
-	"crystal_synthesis", // glass -> quantum_crystal (late game)
+	"steel_smelting",
+	"fuel_refining",
+	"glass_firing",
+	"circuit_assembly",
+	"concrete_mixing",
+	"alloy_forging",
+	"crystal_synthesis",
 ];
 
 // Resource floor: keep at least this much of each material in reserve
 // so buildings can be afforded. Values match the most expensive single-material
 // requirement across common buildings.
 const RESERVE: Partial<Record<string, number>> = {
-	iron_ore: 8,
-	circuits: 6,
-	stone: 4,
-	timber: 5,
-	steel: 4,
+	iron_ore: 6,
+	coal: 4,
+	stone: 3,
+	sand: 3,
+	timber: 4,
+	circuits: 4,
+	steel: 3,
+	glass: 2,
+	fuel: 2,
 };
 
 // ---------------------------------------------------------------------------

@@ -18,6 +18,7 @@ import {
 } from "../../../camera";
 import { computeEpoch } from "../../../config";
 import { getCurrentTurn } from "../../../systems";
+import { Building } from "../../../traits";
 import { type GameBoardConfig, getBoardConfig } from "../createGame";
 import { EventBus } from "../eventBus";
 import { setupBoardInput } from "../input/boardInput";
@@ -65,11 +66,11 @@ export class WorldScene extends Scene3D {
 	private _dragPrev = { x: 0, y: 0 };
 	private _config: GameBoardConfig | null = null;
 	/**
-	 * Highest tech tier across all factions. Updated each turn.
+	 * Highest building tier across all factions. Updated each turn.
 	 * Used to compute epoch for atmosphere changes.
 	 * Default to 1 (Emergence) at game start.
 	 */
-	private _highestTechTier = 1;
+	private _highestBuildingTier = 1;
 
 	constructor() {
 		super({ key: "WorldScene" });
@@ -133,7 +134,8 @@ export class WorldScene extends Scene3D {
 
 			// Epoch atmosphere (visual progression per age)
 			const turn = getCurrentTurn(world);
-			const epoch = computeEpoch(this._highestTechTier, turn);
+			this._highestBuildingTier = this.computeHighestBuildingTier();
+			const epoch = computeEpoch(this._highestBuildingTier, turn);
 			applyEpochAtmosphere(scene, epoch.number);
 
 			// Particles
@@ -210,21 +212,38 @@ export class WorldScene extends Scene3D {
 		updateTerritory(world, boardConfig.width, boardConfig.height);
 		updateRoboformOverlay();
 
-		// Update epoch atmosphere based on current turn + tech tier
+		// Update epoch atmosphere based on current turn + building tier
+		this._highestBuildingTier = this.computeHighestBuildingTier();
 		const turn = getCurrentTurn(world);
-		const epoch = computeEpoch(this._highestTechTier, turn);
+		const epoch = computeEpoch(this._highestBuildingTier, turn);
 		applyEpochAtmosphere(this.third.scene, epoch.number);
 
 		// Units and buildings sync in update() loop already
 	}
 
 	/**
-	 * Update the highest tech tier tracked by the scene.
-	 * Called externally (via EventBus or direct) when factions research new techs.
+	 * Compute the highest building tier across all factions in the world.
+	 */
+	private computeHighestBuildingTier(): number {
+		if (!this._config) return 1;
+		let maxTier = 1;
+		for (const entity of this._config.world.query(Building)) {
+			const b = entity.get(Building);
+			if (b) {
+				const tier = b.buildingTier ?? 1;
+				if (tier > maxTier) maxTier = tier;
+			}
+		}
+		return maxTier;
+	}
+
+	/**
+	 * Update the highest building tier tracked by the scene.
+	 * Called externally (via EventBus or direct) when buildings are upgraded.
 	 * This drives epoch atmosphere transitions.
 	 */
 	setHighestTechTier(tier: number): void {
-		this._highestTechTier = Math.max(1, Math.min(5, tier));
+		this._highestBuildingTier = Math.max(1, Math.min(3, tier));
 	}
 
 	// ---- Camera ----

@@ -62,6 +62,7 @@ import {
 	executeAiBuild,
 	runAiBuilding,
 } from "./aiBuilding";
+import { runAiBuildingUpgrades } from "./aiBuildingUpgrade";
 import { runAiDiplomacy } from "./aiDiplomacy";
 import { runAiFabrication } from "./aiFabrication";
 import {
@@ -783,6 +784,9 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 
 	// ── Step 6b: AI building — construct missing critical infrastructure ──
 	runAiBuilding(world, [...agentsByFaction.keys()], board);
+
+	// ── Step 6b2: AI building upgrades — tier up existing buildings ──────
+	runAiBuildingUpgrades(world, [...agentsByFaction.keys()]);
 
 	// ── Step 6c: AI synthesis — queue conversions at idle synthesizers ───
 	runAiSynthesis(world, [...agentsByFaction.keys()]);

@@ -27,6 +27,7 @@ export { resolveAttacks } from "./attackSystem";
 export { placeStarterBuildings } from "./buildingPlacement";
 export type { BuildingUpgradeJob } from "./buildingUpgradeSystem";
 export {
+	canUpgradeBuilding,
 	clearBuildingUpgradeJobs,
 	getBuildingUpgradeJob,
 	runBuildingUpgrades,

@@ -35,10 +35,7 @@ import {
 	CultStructure,
 	Faction,
 	ResourcePool,
-	UnitAttack,
 	UnitFaction,
-	UnitHarvest,
-	UnitMove,
 	UnitPos,
 	UnitStats,
 	UnitXP,
@@ -164,37 +161,7 @@ export function runSingleGame(config: RunConfig): RunResult {
 	}
 
 	for (let t = 1; t <= config.turnCount; t++) {
-		// Diagnostic: check for UnitAttack components BEFORE advanceTurn
-		let attacksBefore = 0;
-		for (const e of world.query(UnitAttack)) {
-			if (e.get(UnitAttack)) attacksBefore++;
-		}
-		let harvestBefore = 0;
-		for (const e of world.query(UnitHarvest)) {
-			if (e.get(UnitHarvest)) harvestBefore++;
-		}
-		let movesBefore = 0;
-		for (const e of world.query(UnitMove)) {
-			if (e.get(UnitMove)) movesBefore++;
-		}
-
 		advanceTurn(world, board, { observerMode: true });
-
-		// Diagnostic: check unit positions to detect movement
-		if (t <= 15 && config.seed === "balance-tier2-run0") {
-			// Check after advanceTurn
-			let movesAfter = 0;
-			for (const e of world.query(UnitMove)) {
-				if (e.get(UnitMove)) movesAfter++;
-			}
-			let harvestAfter = 0;
-			for (const e of world.query(UnitHarvest)) {
-				if (e.get(UnitHarvest)) harvestAfter++;
-			}
-			console.log(
-				`[T${t}] atk=${attacksBefore} mov=${movesBefore}→${movesAfter} harv=${harvestBefore}→${harvestAfter}`,
-			);
-		}
 
 		// Track combat: unit count drops between turns indicate battles
 		const currentUnitCounts: Record<string, number> = {};

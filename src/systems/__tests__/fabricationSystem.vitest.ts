@@ -33,19 +33,17 @@ describe("fabricationSystem", () => {
 				aggression: 0,
 			}),
 			ResourcePool({
-				ferrous_scrap: 20,
-				alloy_stock: 20,
-				polymer_salvage: 20,
-				conductor_wire: 20,
-				electrolyte: 20,
-				silicon_wafer: 20,
-				storm_charge: 20,
-				el_crystal: 20,
-				scrap_metal: 20,
-				e_waste: 20,
-				intact_components: 20,
-				thermal_fluid: 20,
-				depth_salvage: 20,
+				iron_ore: 20,
+				steel: 20,
+				timber: 20,
+				circuits: 20,
+				coal: 20,
+				glass: 20,
+				fuel: 20,
+				quantum_crystal: 20,
+				stone: 20,
+				sand: 20,
+				alloy: 20,
 			}),
 		);
 	});
@@ -102,37 +100,36 @@ describe("fabricationSystem", () => {
 
 		it("rejects when queue is full", () => {
 			const pool = spawnMotorPool(true);
-			// Fill the single slot
+			// Tier 1 motor pool has 2 effective slots — fill both
+			queueFabrication(world, pool, "scout");
 			queueFabrication(world, pool, "scout");
 
 			const result = queueFabrication(world, pool, "worker");
 
 			expect(result).toEqual({ ok: false, reason: "queue_full" });
-			expect(world.query(FabricationJob).length).toBe(1);
+			expect(world.query(FabricationJob).length).toBe(2);
 		});
 
 		it("rejects when cannot afford", () => {
 			// Drain all resources
 			for (const e of world.query(ResourcePool, Faction)) {
 				e.set(ResourcePool, {
-					ferrous_scrap: 0,
-					alloy_stock: 0,
-					polymer_salvage: 0,
-					conductor_wire: 0,
-					electrolyte: 0,
-					silicon_wafer: 0,
-					storm_charge: 0,
-					el_crystal: 0,
-					scrap_metal: 0,
-					e_waste: 0,
-					intact_components: 0,
-					thermal_fluid: 0,
-					depth_salvage: 0,
+					iron_ore: 0,
+					steel: 0,
+					timber: 0,
+					circuits: 0,
+					coal: 0,
+					glass: 0,
+					fuel: 0,
+					quantum_crystal: 0,
+					stone: 0,
+					sand: 0,
+					alloy: 0,
 				});
 			}
 			const pool = spawnMotorPool(true);
 
-			const result = queueFabrication(world, pool, "ranged");
+			const result = queueFabrication(world, pool, "infantry");
 
 			expect(result).toEqual({ ok: false, reason: "cannot_afford" });
 		});
@@ -141,11 +138,11 @@ describe("fabricationSystem", () => {
 			const pool = spawnMotorPool(true);
 			queueFabrication(world, pool, "scout");
 
-			// Scout costs: ferrous_scrap: 2, conductor_wire: 1
+			// Scout costs: iron_ore: 2, circuits: 1
 			for (const e of world.query(ResourcePool, Faction)) {
 				const r = e.get(ResourcePool)!;
-				expect(r.ferrous_scrap).toBe(18); // 20 - 2
-				expect(r.conductor_wire).toBe(19); // 20 - 1
+				expect(r.iron_ore).toBe(18); // 20 - 2
+				expect(r.circuits).toBe(19); // 20 - 1
 			}
 		});
 	});

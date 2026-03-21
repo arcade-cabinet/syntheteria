@@ -1,3 +1,6 @@
+import type { GameSpeed } from "../config/gameSpeedDefs";
+
+export type { GameSpeed };
 export type SectorScale = "small" | "standard" | "large";
 export type Difficulty = "story" | "standard" | "hard";
 export type ClimateProfile = "temperate" | "wet" | "arid" | "frozen";
@@ -15,6 +18,7 @@ export interface NewGameConfig {
 	difficulty: Difficulty;
 	climateProfile: ClimateProfile;
 	stormProfile: StormProfile;
+	gameSpeed: GameSpeed;
 	/** All four factions — each set to player, ai, or off. Cults are always present. */
 	factions: FactionSlot[];
 }
@@ -50,6 +54,7 @@ export const DEFAULT_NEW_GAME_CONFIG: Omit<NewGameConfig, "worldSeed"> = {
 	difficulty: "standard",
 	climateProfile: "temperate",
 	stormProfile: "cataclysmic",
+	gameSpeed: "standard",
 	factions: [
 		{ factionId: "reclaimers", role: "player" },
 		{ factionId: "volt_collective", role: "ai" },

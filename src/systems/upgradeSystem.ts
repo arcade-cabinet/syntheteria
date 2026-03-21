@@ -40,7 +40,7 @@ export function getMaxTier(world: World, factionId: string): 1 | 2 | 3 {
 	let labCount = 0;
 	for (const e of world.query(Building, Powered)) {
 		const b = e.get(Building);
-		if (b && b.buildingType === "research_lab" && b.factionId === factionId) {
+		if (b && b.buildingType === "analysis_node" && b.factionId === factionId) {
 			labCount++;
 		}
 	}

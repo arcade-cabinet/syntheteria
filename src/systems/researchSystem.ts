@@ -58,7 +58,7 @@ export function countResearchLabs(world: World, factionId: string): number {
 	let count = 0;
 	for (const e of world.query(Building, Powered)) {
 		const b = e.get(Building);
-		if (b && b.buildingType === "research_lab" && b.factionId === factionId) {
+		if (b && b.buildingType === "analysis_node" && b.factionId === factionId) {
 			count++;
 		}
 	}

@@ -27,7 +27,7 @@ describe("harvestSystem", () => {
 				isPlayer,
 				aggression: 0,
 			}),
-			ResourcePool({ scrap_metal: 10, ferrous_scrap: 5 }),
+			ResourcePool({ stone: 10, iron_ore: 5 }),
 		);
 	}
 
@@ -38,7 +38,7 @@ describe("harvestSystem", () => {
 		);
 	}
 
-	function spawnDeposit(material = "scrap_metal" as const, amount = 10) {
+	function spawnDeposit(material = "stone" as const, amount = 10) {
 		return world.spawn(
 			ResourceDeposit({
 				tileX: 3,
@@ -91,7 +91,7 @@ describe("harvestSystem", () => {
 
 	it("completion yields resources to faction pool", () => {
 		const factionEntity = spawnFaction("player", true);
-		const deposit = spawnDeposit("scrap_metal", 10);
+		const deposit = spawnDeposit("stone", 10);
 		const unit = spawnUnit("player");
 		unit.add(
 			UnitHarvest({
@@ -110,13 +110,13 @@ describe("harvestSystem", () => {
 
 		// Resources increased (yield is 2-5)
 		const pool = factionEntity.get(ResourcePool);
-		expect(pool?.scrap_metal).toBeGreaterThanOrEqual(12);
-		expect(pool?.scrap_metal).toBeLessThanOrEqual(15);
+		expect(pool?.stone).toBeGreaterThanOrEqual(12);
+		expect(pool?.stone).toBeLessThanOrEqual(15);
 	});
 
 	it("deposit amount decreases after harvest", () => {
 		spawnFaction("player", true);
-		const deposit = spawnDeposit("scrap_metal", 10);
+		const deposit = spawnDeposit("stone", 10);
 		const unit = spawnUnit("player");
 		unit.add(
 			UnitHarvest({
@@ -136,7 +136,7 @@ describe("harvestSystem", () => {
 
 	it("deposit becomes depleted when amount reaches 0", () => {
 		spawnFaction("player", true);
-		const deposit = spawnDeposit("scrap_metal", 1);
+		const deposit = spawnDeposit("stone", 1);
 		const unit = spawnUnit("player");
 		unit.add(
 			UnitHarvest({
@@ -173,7 +173,7 @@ describe("startHarvest", () => {
 				isPlayer,
 				aggression: 0,
 			}),
-			ResourcePool({ scrap_metal: 10 }),
+			ResourcePool({ stone: 10 }),
 		);
 	}
 
@@ -184,7 +184,7 @@ describe("startHarvest", () => {
 		);
 	}
 
-	function spawnDeposit(material = "scrap_metal" as const, amount = 10) {
+	function spawnDeposit(material = "stone" as const, amount = 10) {
 		return world.spawn(
 			ResourceDeposit({
 				tileX: 3,
@@ -237,7 +237,7 @@ describe("startHarvest", () => {
 			ResourceDeposit({
 				tileX: 1,
 				tileZ: 1,
-				material: "scrap_metal",
+				material: "stone",
 				amount: 0,
 				depleted: true,
 			}),

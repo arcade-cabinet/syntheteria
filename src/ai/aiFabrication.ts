@@ -11,7 +11,9 @@ import { getResearchState, queueFabrication } from "../systems";
 import {
 	BotFabricator,
 	Building,
+	Faction,
 	Powered,
+	ResourcePool,
 	UnitFaction,
 	UnitPos,
 	UnitStats,
@@ -76,7 +78,8 @@ export function computeFabPriority(
 /**
  * For each AI faction, find powered motor pools with open slots and queue
  * units. NEVER leave a motor pool idle when resources are available.
- * Fills ALL available slots, not just one per turn.
+ * Fills ALL available slots aggressively — no per-pool cap when resources
+ * are sufficient.
  */
 export function runAiFabrication(world: World, factionIds: string[]): void {
 	// Build gate and v2 tech maps from the track registry
@@ -98,17 +101,33 @@ export function runAiFabrication(world: World, factionIds: string[]): void {
 		// Dynamic priority based on current composition
 		const fabPriority = computeFabPriority(world, factionId);
 
-		// Find powered motor pools with open slots.
-		// Limit to 1 unit per motor pool per turn to preserve resources for building.
+		// Sum total resources for this faction to determine aggression level
+		let totalResources = 0;
+		for (const e of world.query(Faction, ResourcePool)) {
+			const f = e.get(Faction);
+			if (f?.id !== factionId) continue;
+			const r = e.get(ResourcePool);
+			if (!r) continue;
+			for (const val of Object.values(r as Record<string, number>)) {
+				if (typeof val === "number") totalResources += val;
+			}
+		}
+
+		// When resources > 100, fill all slots; otherwise limit to 1 per pool
+		const aggressive = totalResources > 100;
+
+		// Find powered motor pools with open slots
 		for (const e of world.query(Building, BotFabricator, Powered)) {
 			const b = e.get(Building);
 			const fab = e.get(BotFabricator);
 			if (!b || !fab || b.factionId !== factionId) continue;
 
-			let openSlots = Math.min(1, fab.fabricationSlots - fab.queueSize);
+			const maxSlots = aggressive
+				? fab.fabricationSlots - fab.queueSize
+				: Math.min(1, fab.fabricationSlots - fab.queueSize);
+			let openSlots = maxSlots;
 			while (openSlots > 0) {
 				let queued = false;
-				// Pick a robot class in priority order
 				for (const robotClass of fabPriority) {
 					const trackId = pickAITrack(
 						factionId,
@@ -134,19 +153,15 @@ export function runAiFabrication(world: World, factionIds: string[]): void {
 						openSlots--;
 						break;
 					}
-					// If can't afford this class, try the next
 					if (result.ok === false && result.reason === "cannot_afford")
 						continue;
-					// If pop cap, stop entirely
 					if (result.ok === false && result.reason === "pop_cap") {
 						openSlots = 0;
 						break;
 					}
-					// Other failures (not_powered, queue_full) -- stop this pool
 					openSlots = 0;
 					break;
 				}
-				// If nothing was queued in this pass, stop trying
 				if (!queued) break;
 			}
 		}

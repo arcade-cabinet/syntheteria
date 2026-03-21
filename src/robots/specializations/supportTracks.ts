@@ -67,7 +67,7 @@ export const FIELD_MEDIC_SPECIALIZATIONS: readonly TrackSpecialization[] = [
 		effectType: "chassis_revival",
 		effectValue: 1,
 		description:
-			"Can rebuild a destroyed friendly unit on an adjacent tile at 50% HP. Costs all AP + scrap_metal resources.",
+			"Can rebuild a destroyed friendly unit on an adjacent tile at 50% HP. Costs all AP + stone resources.",
 	},
 ] as const;
 
@@ -387,7 +387,7 @@ export const SUPPORT_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Enhanced support chassis firmware. Unlocks Field Medic, Signal Booster, and War Caller specializations at the Garage.",
 		tier: 2,
-		cost: { silicon_wafer: 4, polymer_salvage: 3, conductor_wire: 2 },
+		cost: { glass: 4, timber: 3, circuits: 2 },
 		turnsToResearch: 4,
 		prerequisites: ["reinforced_chassis"],
 		effects: [{ type: "unit_hp_bonus" as const, value: 1 }],
@@ -398,7 +398,7 @@ export const SUPPORT_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Quantum-linked support arrays. Upgrades Field Medic to v2 (Nanite Swarm), Signal Booster to v2 (Quantum Resonance), and War Caller to v2 (Overcharge Protocol).",
 		tier: 4,
-		cost: { intact_components: 7, silicon_wafer: 9, storm_charge: 5 },
+		cost: { steel: 16, glass: 9, fuel: 5 },
 		turnsToResearch: 8,
 		prerequisites: ["advanced_support_protocols", "quantum_processors"],
 		effects: [{ type: "unit_regen" as const, value: 1 }],

@@ -20,15 +20,14 @@ const SIZE = 150;
 
 // Terrain colors for minimap pixels
 const TERRAIN_COLORS: Record<string, [number, number, number]> = {
-	void_pit: [8, 8, 15],
-	structural_mass: [40, 45, 55],
-	abyssal_platform: [15, 20, 35],
-	transit_deck: [60, 55, 50],
-	durasteel_span: [55, 58, 65],
-	collapsed_zone: [50, 45, 38],
-	dust_district: [55, 52, 45],
-	bio_district: [35, 55, 28],
-	aerostructure: [50, 42, 35],
+	water: [8, 8, 15],
+	mountain: [40, 45, 55],
+	wetland: [15, 20, 35],
+	grassland: [60, 55, 50],
+	forest: [35, 55, 28],
+	desert: [55, 52, 45],
+	hills: [50, 42, 35],
+	tundra: [45, 48, 55],
 };
 
 const FOG_COLOR: [number, number, number] = [10, 12, 18];
@@ -74,7 +73,7 @@ export function Minimap({ world, board }: MinimapProps) {
 
 				const isExplored = explored.has(`${x},${z}`);
 				const color = isExplored
-					? (TERRAIN_COLORS[tile.floorType] ?? FOG_COLOR)
+					? (TERRAIN_COLORS[tile.biomeType] ?? FOG_COLOR)
 					: FOG_COLOR;
 
 				// Map tile to pixel range

@@ -16,35 +16,28 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { playSfx } from "../audio";
 import type { GeneratedBoard } from "../board";
-import { createGridApi, shortestPath } from "../board";
-import { spherePosToTile, sphereRadius } from "../rendering";
-import { clearPreviewPath, setPreviewPath } from "../rendering/pathPreview";
+import {
+	createGridApi,
+	shortestPath,
+	spherePosToTile,
+	sphereRadius,
+} from "../board";
 import {
 	cancelBuildPlacement,
 	clearHighlights,
-	closeRadialMenu,
 	confirmBuildPlacement,
-	confirmRadialSelection,
-	getRadialMenuState,
 	highlightPlacementTile,
 	highlightReachableTiles,
 	isInBuildPlacementMode,
-	openRadialMenu,
-	setBuildProviderWorld,
-	setProviderBoard,
-	setProviderSelectedUnit,
 } from "../systems";
 import {
-	Building,
-	ResourceDeposit,
 	UnitAttack,
 	UnitFaction,
 	UnitMove,
 	UnitPos,
 	UnitStats,
 } from "../traits";
-// Import providers so they register at module scope
-import "../systems/radial";
+import { clearPreviewPath, setPreviewPath } from "./pathPreview";
 
 type BoardInputProps = {
 	world: World;
@@ -94,17 +87,6 @@ export function BoardInput({
 		[board.config.width, board.config.height],
 	);
 	const sphereCenter = useRef(new THREE.Vector3(0, 0, 0));
-
-	// Wire world and board refs so radial providers can query ECS state
-	useEffect(() => {
-		setBuildProviderWorld(world);
-		setProviderBoard(board);
-	}, [world, board]);
-
-	// Keep selected unit in sync for radial providers
-	useEffect(() => {
-		setProviderSelectedUnit(selectedId ?? null);
-	}, [selectedId]);
 
 	const groundPlane = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
 	const raycaster = useRef(new THREE.Raycaster());
@@ -168,14 +150,8 @@ export function BoardInput({
 		};
 
 		const onPointerDown = (e: PointerEvent) => {
-			// If radial menu is open, handle left-click
-			if (e.button === 0 && getRadialMenuState().open) {
-				confirmRadialSelection();
-				return;
-			}
 			if (e.button === 0) {
 				pointerDownPos.current = { x: e.clientX, y: e.clientY };
-				// Update NDC immediately so tap-without-move works (touch devices)
 				const rect = canvas.getBoundingClientRect();
 				pointerRef.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
 				pointerRef.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -292,7 +268,7 @@ export function BoardInput({
 			}
 		}
 
-		// --- Right-click: cancel build placement or open radial menu ---
+		// --- Right-click: cancel build placement ---
 		if (rightClickedRef.current) {
 			rightClickedRef.current = false;
 
@@ -300,67 +276,6 @@ export function BoardInput({
 				cancelBuildPlacement();
 				clearHighlights(world);
 				return;
-			}
-
-			const tile = raycastToTile();
-			if (tile) {
-				// Determine what's at this tile
-				let selectionType:
-					| "unit"
-					| "empty_sector"
-					| "resource_node"
-					| "building"
-					| "none" = "empty_sector";
-				let targetEntityId: string | null = null;
-				let targetFaction: string | null = null;
-
-				for (const e of world.query(UnitPos, UnitFaction)) {
-					const p = e.get(UnitPos);
-					const f = e.get(UnitFaction);
-					if (p && f && p.tileX === tile.x && p.tileZ === tile.z) {
-						selectionType = "unit";
-						targetEntityId = String(e.id());
-						targetFaction = f.factionId;
-						break;
-					}
-				}
-
-				// Check for resource deposit if no unit found
-				if (selectionType === "empty_sector") {
-					for (const e of world.query(ResourceDeposit)) {
-						const dep = e.get(ResourceDeposit);
-						if (
-							dep &&
-							!dep.depleted &&
-							dep.tileX === tile.x &&
-							dep.tileZ === tile.z
-						) {
-							selectionType = "resource_node";
-							targetEntityId = String(e.id());
-							break;
-						}
-					}
-				}
-
-				// Check for building if still empty
-				if (selectionType === "empty_sector") {
-					for (const e of world.query(Building)) {
-						const b = e.get(Building);
-						if (b && b.tileX === tile.x && b.tileZ === tile.z) {
-							selectionType = "building";
-							targetEntityId = String(e.id());
-							targetFaction = b.factionId;
-							break;
-						}
-					}
-				}
-
-				openRadialMenu(lastScreenRef.current.x, lastScreenRef.current.y, {
-					selectionType,
-					targetEntityId,
-					targetSector: { q: tile.x, r: tile.z },
-					targetFaction,
-				});
 			}
 		}
 

@@ -23,7 +23,7 @@ function makeBoard(width: number, height: number): GeneratedBoard {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "durasteel_span",
+				biomeType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -44,7 +44,7 @@ function makeBoardWithWall(
 	const board = makeBoard(width, height);
 	// Create a wall column (impassable) at wallX, except for a gap at z=0
 	for (let z = 1; z < height; z++) {
-		board.tiles[z][wallX].floorType = "structural_mass";
+		board.tiles[z][wallX].biomeType = "mountain";
 		board.tiles[z][wallX].passable = false;
 	}
 	return board;
@@ -86,7 +86,7 @@ describe("boardNavGraph", () => {
 
 		it("skips impassable tiles", () => {
 			const board = makeBoard(4, 4);
-			board.tiles[1][1].floorType = "structural_mass";
+			board.tiles[1][1].biomeType = "mountain";
 			const { graph } = buildNavGraph(board);
 			expect(graph.getNodeCount()).toBe(15);
 		});
@@ -128,7 +128,7 @@ describe("boardNavGraph", () => {
 		it("returns empty for unreachable target", () => {
 			const board = makeBoard(4, 4);
 			// Create a fully walled tile
-			board.tiles[2][2].floorType = "structural_mass";
+			board.tiles[2][2].biomeType = "mountain";
 			const navGraph = buildNavGraph(board);
 			// (2,2) is impassable → no path
 			const path = yukaShortestPath(0, 0, 2, 2, navGraph);

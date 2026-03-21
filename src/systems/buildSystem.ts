@@ -13,7 +13,7 @@
 
 import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
-import { BUILDING_DEFS } from "../buildings/definitions";
+import { BUILDING_DEFS } from "../config/buildings";
 import type { ResourceMaterial } from "../terrain/types";
 import {
 	BotFabricator,
@@ -25,6 +25,7 @@ import {
 	TurretStats,
 } from "../traits";
 import { canAfford, spendResources } from "./resourceSystem";
+import { fireTutorialTooltip } from "./tutorialTooltips";
 import {
 	canStartWormholeProject,
 	isValidWormholePlacement,
@@ -179,6 +180,8 @@ export function confirmBuildPlacement(
 	pendingBuildType = null;
 
 	playSfx("build_complete");
+
+	fireTutorialTooltip("first_building_placed");
 
 	return true;
 }

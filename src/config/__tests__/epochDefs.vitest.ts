@@ -22,8 +22,8 @@ describe("epochDefs", () => {
 		expect(new Set(ids).size).toBe(5);
 	});
 
-	it("tech tiers map 1:1 to epochs", () => {
-		expect(EPOCHS.map((e) => e.techTier)).toEqual([1, 2, 3, 4, 5]);
+	it("all epoch techTier fields are 1 (turn-driven progression)", () => {
+		expect(EPOCHS.map((e) => e.techTier)).toEqual([1, 1, 1, 1, 1]);
 	});
 
 	it("minTurn increases monotonically", () => {
@@ -78,16 +78,14 @@ describe("epochDefs", () => {
 	});
 
 	describe("getEpochForTechTier", () => {
-		it("maps each tier to its epoch", () => {
-			expect(getEpochForTechTier(1).id).toBe("emergence");
-			expect(getEpochForTechTier(2).id).toBe("expansion");
-			expect(getEpochForTechTier(3).id).toBe("consolidation");
-			expect(getEpochForTechTier(4).id).toBe("convergence");
-			expect(getEpochForTechTier(5).id).toBe("transcendence");
+		it("all tiers resolve to transcendence since techTier is now 1 for all", () => {
+			expect(getEpochForTechTier(1).id).toBe("transcendence");
+			expect(getEpochForTechTier(2).id).toBe("transcendence");
+			expect(getEpochForTechTier(3).id).toBe("transcendence");
 		});
 
 		it("clamps out-of-range tiers", () => {
-			expect(getEpochForTechTier(0).id).toBe("emergence");
+			expect(getEpochForTechTier(0).id).toBe("transcendence");
 			expect(getEpochForTechTier(10).id).toBe("transcendence");
 		});
 	});
@@ -97,34 +95,43 @@ describe("epochDefs", () => {
 			expect(computeEpoch(1, 1).id).toBe("emergence");
 		});
 
-		it("requires both tech tier AND min turn", () => {
-			// Has tech tier 3 but only turn 5 — minTurn for epoch 3 is 30
-			expect(computeEpoch(3, 5).id).toBe("emergence");
+		it("building tier 1 + turn 10 → epoch 2", () => {
+			expect(computeEpoch(1, 10).id).toBe("expansion");
 		});
 
-		it("advances when both conditions are met", () => {
-			expect(computeEpoch(2, 10).id).toBe("expansion");
-			expect(computeEpoch(3, 30).id).toBe("consolidation");
-			expect(computeEpoch(4, 60).id).toBe("convergence");
-			expect(computeEpoch(5, 100).id).toBe("transcendence");
+		it("building tier 2 + turn 30 → epoch 3", () => {
+			expect(computeEpoch(2, 30).id).toBe("consolidation");
 		});
 
-		it("stays at highest eligible epoch when tech outpaces turns", () => {
-			// Tech tier 5 but only turn 50 — can reach epoch 3 (minTurn 30)
-			expect(computeEpoch(5, 50).id).toBe("consolidation");
+		it("building tier 3 + turn 60 → epoch 4", () => {
+			expect(computeEpoch(3, 60).id).toBe("convergence");
 		});
 
-		it("stays at highest eligible epoch when turns outpace tech", () => {
-			// Turn 200 but only tech tier 2 — can reach epoch 2 (techTier 2, minTurn 10)
-			expect(computeEpoch(2, 200).id).toBe("expansion");
+		it("building tier 3 + turn 100 → epoch 5", () => {
+			expect(computeEpoch(3, 100).id).toBe("transcendence");
+		});
+
+		it("stays at highest eligible epoch when tier outpaces turns", () => {
+			// Building tier 3 but only turn 50 → epoch 3 (minTurn 30)
+			expect(computeEpoch(3, 50).id).toBe("consolidation");
+		});
+
+		it("stays at highest eligible epoch when turns outpace tier", () => {
+			// Epochs are purely turn-driven — tier is ignored
+			expect(computeEpoch(1, 200).id).toBe("transcendence");
+		});
+
+		it("tier 0 still uses turn-based progression", () => {
+			expect(computeEpoch(0, 1).id).toBe("emergence");
+			expect(computeEpoch(0, 200).id).toBe("transcendence");
 		});
 	});
 
 	describe("TECH_TIER_TO_EPOCH", () => {
-		it("maps all 5 tiers", () => {
-			expect(TECH_TIER_TO_EPOCH.size).toBe(5);
-			expect(TECH_TIER_TO_EPOCH.get(1)).toBe("emergence");
-			expect(TECH_TIER_TO_EPOCH.get(5)).toBe("transcendence");
+		it("maps all 3 building tiers", () => {
+			expect(TECH_TIER_TO_EPOCH.size).toBe(3);
+			expect(TECH_TIER_TO_EPOCH.get(1)).toBe("expansion");
+			expect(TECH_TIER_TO_EPOCH.get(3)).toBe("transcendence");
 		});
 	});
 });

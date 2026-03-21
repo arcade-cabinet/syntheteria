@@ -1,6 +1,6 @@
 import { createWorld, type World } from "koota";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TileFloor } from "../../terrain/traits";
+import { TileBiome } from "../../terrain/traits";
 import {
 	Faction,
 	ResourcePool,
@@ -12,7 +12,7 @@ import {
 	UnitVisual,
 	UnitXP,
 } from "../../traits";
-import { floorMiningSystem, startFloorMining } from "../floorMiningSystem";
+import { biomeMiningSystem, startBiomeMining } from "../biomeMiningSystem";
 import { ResearchState } from "../researchSystem";
 
 // Mock audio and UI
@@ -28,15 +28,15 @@ function spawnTile(
 	world: World,
 	x: number,
 	z: number,
-	floorType: string,
+	biomeType: string,
 	mineable: boolean,
 	hardness: number,
 	material: string | null,
 ) {
 	return world.spawn(
 		Tile({ x, z, elevation: 0, passable: true, explored: true, visibility: 1 }),
-		TileFloor({
-			floorType: floorType as import("../../terrain/types").FloorType,
+		TileBiome({
+			biomeType: biomeType as import("../../terrain/types").BiomeType,
 			mineable,
 			hardness,
 			resourceMaterial: material as
@@ -78,24 +78,22 @@ function spawnFaction(world: World, factionId: string) {
 	world.spawn(
 		Faction({ id: factionId }),
 		ResourcePool({
-			ferrous_scrap: 0,
-			alloy_stock: 0,
-			polymer_salvage: 0,
-			conductor_wire: 0,
-			electrolyte: 0,
-			silicon_wafer: 0,
-			storm_charge: 0,
-			el_crystal: 0,
-			scrap_metal: 0,
-			e_waste: 0,
-			intact_components: 0,
-			thermal_fluid: 0,
-			depth_salvage: 0,
+			iron_ore: 0,
+			steel: 0,
+			timber: 0,
+			circuits: 0,
+			coal: 0,
+			glass: 0,
+			fuel: 0,
+			quantum_crystal: 0,
+			stone: 0,
+			sand: 0,
+			alloy: 0,
 		}),
 	);
 }
 
-describe("floorMiningSystem", () => {
+describe("biomeMiningSystem", () => {
 	let world: World;
 
 	beforeEach(() => {
@@ -104,13 +102,13 @@ describe("floorMiningSystem", () => {
 
 	it("decrements ticksRemaining each turn", () => {
 		spawnFaction(world, "reclaimers");
-		spawnTile(world, 1, 0, "collapsed_zone", true, 2, "scrap_metal");
+		spawnTile(world, 1, 0, "hills", true, 2, "stone");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 3, totalTicks: 3 }),
 		);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
 		const mine = unit.get(UnitMine);
 		expect(mine).toBeTruthy();
@@ -119,13 +117,13 @@ describe("floorMiningSystem", () => {
 
 	it("yields resources and removes UnitMine on completion", () => {
 		spawnFaction(world, "reclaimers");
-		spawnTile(world, 1, 0, "collapsed_zone", true, 1, "scrap_metal");
+		spawnTile(world, 1, 0, "hills", true, 1, "stone");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
 		);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
 		// UnitMine should be removed
 		expect(unit.has(UnitMine)).toBe(false);
@@ -135,30 +133,22 @@ describe("floorMiningSystem", () => {
 			const f = e.get(Faction);
 			if (f?.id === "reclaimers") {
 				const r = e.get(ResourcePool);
-				expect(r!.scrap_metal).toBeGreaterThan(0);
+				expect(r!.stone).toBeGreaterThan(0);
 			}
 		}
 	});
 
 	it("marks tile as not mineable and mined after completion", () => {
 		spawnFaction(world, "reclaimers");
-		const tile = spawnTile(
-			world,
-			1,
-			0,
-			"collapsed_zone",
-			true,
-			1,
-			"scrap_metal",
-		);
+		const tile = spawnTile(world, 1, 0, "hills", true, 1, "stone");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
 		);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
-		const floor = tile.get(TileFloor);
+		const floor = tile.get(TileBiome);
 		expect(floor!.mineable).toBe(false);
 		expect(floor!.resourceAmount).toBe(0);
 		expect(floor!.mined).toBe(true);
@@ -166,15 +156,7 @@ describe("floorMiningSystem", () => {
 
 	it("lowers tile elevation to -1 on completion", () => {
 		spawnFaction(world, "reclaimers");
-		const tile = spawnTile(
-			world,
-			1,
-			0,
-			"collapsed_zone",
-			true,
-			1,
-			"scrap_metal",
-		);
+		const tile = spawnTile(world, 1, 0, "hills", true, 1, "stone");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
@@ -183,7 +165,7 @@ describe("floorMiningSystem", () => {
 		// Tile starts at elevation 0
 		expect(tile.get(Tile)!.elevation).toBe(0);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
 		// Tile should now be at pit depth (-1)
 		expect(tile.get(Tile)!.elevation).toBe(-1);
@@ -191,19 +173,19 @@ describe("floorMiningSystem", () => {
 
 	it("removes UnitMine if tile is not mineable", () => {
 		spawnFaction(world, "reclaimers");
-		spawnTile(world, 1, 0, "void_pit", false, 0, null);
+		spawnTile(world, 1, 0, "water", false, 0, null);
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
 		);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
 		expect(unit.has(UnitMine)).toBe(false);
 	});
 });
 
-describe("startFloorMining", () => {
+describe("startBiomeMining", () => {
 	let world: World;
 
 	beforeEach(() => {
@@ -212,10 +194,10 @@ describe("startFloorMining", () => {
 
 	it("starts mining on adjacent mineable tile", () => {
 		spawnFaction(world, "reclaimers");
-		spawnTile(world, 1, 0, "transit_deck", true, 2, "ferrous_scrap");
+		spawnTile(world, 1, 0, "hills", true, 2, "iron_ore");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 
-		const result = startFloorMining(world, unit.id(), 1, 0);
+		const result = startBiomeMining(world, unit.id(), 1, 0);
 		expect(result).toBe(true);
 		expect(unit.has(UnitMine)).toBe(true);
 
@@ -230,39 +212,39 @@ describe("startFloorMining", () => {
 
 	it("rejects mining non-adjacent tile", () => {
 		spawnFaction(world, "reclaimers");
-		spawnTile(world, 3, 0, "transit_deck", true, 2, "ferrous_scrap");
+		spawnTile(world, 3, 0, "hills", true, 2, "iron_ore");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 
-		const result = startFloorMining(world, unit.id(), 3, 0);
+		const result = startBiomeMining(world, unit.id(), 3, 0);
 		expect(result).toBe(false);
 		expect(unit.has(UnitMine)).toBe(false);
 	});
 
 	it("rejects mining non-mineable tile", () => {
 		spawnFaction(world, "reclaimers");
-		spawnTile(world, 1, 0, "void_pit", false, 0, null);
+		spawnTile(world, 1, 0, "water", false, 0, null);
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 
-		const result = startFloorMining(world, unit.id(), 1, 0);
+		const result = startBiomeMining(world, unit.id(), 1, 0);
 		expect(result).toBe(false);
 	});
 
 	it("rejects mining when AP is 0", () => {
 		spawnFaction(world, "reclaimers");
-		spawnTile(world, 1, 0, "transit_deck", true, 2, "ferrous_scrap");
+		spawnTile(world, 1, 0, "hills", true, 2, "iron_ore");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.set(UnitStats, { ...unit.get(UnitStats)!, ap: 0 });
 
-		const result = startFloorMining(world, unit.id(), 1, 0);
+		const result = startBiomeMining(world, unit.id(), 1, 0);
 		expect(result).toBe(false);
 	});
 
 	it("allows mining own tile (distance 0)", () => {
 		spawnFaction(world, "reclaimers");
-		spawnTile(world, 0, 0, "dust_district", true, 1, "e_waste");
+		spawnTile(world, 0, 0, "desert", true, 1, "sand");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 
-		const result = startFloorMining(world, unit.id(), 0, 0);
+		const result = startBiomeMining(world, unit.id(), 0, 0);
 		expect(result).toBe(true);
 	});
 });
@@ -282,19 +264,17 @@ describe("deep mining tech bonus", () => {
 		w.spawn(
 			Faction({ id: factionId }),
 			ResourcePool({
-				ferrous_scrap: 0,
-				alloy_stock: 0,
-				polymer_salvage: 0,
-				conductor_wire: 0,
-				electrolyte: 0,
-				silicon_wafer: 0,
-				storm_charge: 0,
-				el_crystal: 0,
-				scrap_metal: 0,
-				e_waste: 0,
-				intact_components: 0,
-				thermal_fluid: 0,
-				depth_salvage: 0,
+				iron_ore: 0,
+				steel: 0,
+				timber: 0,
+				circuits: 0,
+				coal: 0,
+				glass: 0,
+				fuel: 0,
+				quantum_crystal: 0,
+				stone: 0,
+				sand: 0,
+				alloy: 0,
 			}),
 			ResearchState({
 				researchedTechs: techs,
@@ -310,23 +290,23 @@ describe("deep mining tech bonus", () => {
 			"reclaimers",
 			"advanced_harvesting,efficient_fabrication,deep_mining",
 		);
-		spawnTile(world, 1, 0, "collapsed_zone", true, 1, "scrap_metal");
+		spawnTile(world, 1, 0, "hills", true, 1, "stone");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
 		);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
 		// Get the resources — should be boosted
 		for (const e of world.query(Faction, ResourcePool)) {
 			const f = e.get(Faction);
 			if (f?.id === "reclaimers") {
 				const r = e.get(ResourcePool);
-				// collapsed_zone yields [1,3] per FLOOR_DEFS, so base yield 1-3
-				// With deep_mining +50%, minimum yield is floor(1*1.5) = 1, max is floor(3*1.5) = 4
+				// hills yields [2,4] per BIOME_DEFS, so base yield 2-4
+				// With deep_mining +50%, minimum yield is floor(2*1.5) = 3, max is floor(4*1.5) = 6
 				// Any yield > 0 confirms the system ran
-				expect(r!.scrap_metal).toBeGreaterThan(0);
+				expect(r!.stone).toBeGreaterThan(0);
 			}
 		}
 	});
@@ -334,22 +314,22 @@ describe("deep mining tech bonus", () => {
 	it("does not apply bonus without deep_mining tech", () => {
 		// Spawn faction WITH research state but WITHOUT deep_mining
 		spawnFactionWithResearch(world, "reclaimers", "advanced_harvesting");
-		spawnTile(world, 1, 0, "collapsed_zone", true, 1, "scrap_metal");
+		spawnTile(world, 1, 0, "hills", true, 1, "stone");
 		const unit = spawnUnit(world, 0, 0, "reclaimers");
 		unit.add(
 			UnitMine({ targetX: 1, targetZ: 0, ticksRemaining: 1, totalTicks: 1 }),
 		);
 
-		floorMiningSystem(world);
+		biomeMiningSystem(world);
 
 		// Resources should still be yielded (base amount, no bonus)
 		for (const e of world.query(Faction, ResourcePool)) {
 			const f = e.get(Faction);
 			if (f?.id === "reclaimers") {
 				const r = e.get(ResourcePool);
-				// collapsed_zone base yield: [1,3] — max without bonus is 3
-				expect(r!.scrap_metal).toBeGreaterThan(0);
-				expect(r!.scrap_metal).toBeLessThanOrEqual(3);
+				// hills base yield: [2,4] — max without bonus is 4
+				expect(r!.stone).toBeGreaterThan(0);
+				expect(r!.stone).toBeLessThanOrEqual(4);
 			}
 		}
 	});

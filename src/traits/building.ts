@@ -20,12 +20,15 @@ export type BuildingType =
 	| "storage_hub"
 	| "maintenance_bay"
 	| "power_plant"
-	| "research_lab"
+	| "analysis_node"
 	| "resource_refinery"
 	| "solar_array"
 	| "geothermal_tap"
 	| "outpost"
 	| "wormhole_stabilizer";
+
+/** @deprecated Use "analysis_node" instead. Backward-compat alias. */
+export const RESEARCH_LAB_ALIAS: BuildingType = "analysis_node";
 
 // ─── Traits ──────────────────────────────────────────────────────────────────
 
@@ -38,6 +41,7 @@ export const Building = trait({
 	factionId: "",
 	hp: 50,
 	maxHp: 50,
+	buildingTier: 1 as 1 | 2 | 3,
 });
 
 /** Power grid participation. Positive = generates/transmits, negative = draws. */

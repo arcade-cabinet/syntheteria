@@ -15,7 +15,7 @@ function makeTile(x: number, z: number, passable = true): TileData {
 		z,
 		elevation: 0,
 		passable,
-		floorType: "durasteel_span",
+		biomeType: "grassland",
 		resourceMaterial: null,
 		resourceAmount: 0,
 	};
@@ -43,7 +43,7 @@ function makePassableBoard(
 		width,
 		height,
 		isPassable: (x, z) => board.tiles[z]?.[x]?.passable ?? false,
-		getFloorType: (x, z) => board.tiles[z]?.[x]?.floorType,
+		getBiomeType: (x: number, z: number) => board.tiles[z]?.[x]?.biomeType,
 	});
 	return board;
 }

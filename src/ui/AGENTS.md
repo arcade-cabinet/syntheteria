@@ -17,7 +17,7 @@ React components — Globe (the ONE Canvas), landing screens, game HUD, and over
 
 ## Sub-packages
 - `landing/` — title screen, new game modal, settings
-- `game/` — HUD, command UI (legacy `RadialMenu` until replaced), **settlement production** (merge `GarageModal` into city screen), overlays (tech tree, diplomacy, roster, etc.)
+- `game/` — HUD, per-building modals (`BuildingModal.tsx`), Motor Pool panel (`GarageModal.tsx`), overlays (tech tree, diplomacy, roster, etc.)
 
 ## Files
 | File | Purpose |
@@ -26,4 +26,4 @@ React components — Globe (the ONE Canvas), landing screens, game HUD, and over
 | FatalErrorModal.tsx | Error boundary + fatal error display |
 | icons.tsx | SVG icon components |
 | landing/ | Landing screen, NewGameModal, SettingsModal |
-| game/ | HUD, command strip / legacy RadialMenu, settlement production (`GarageModal` until merged), overlays |
+| game/ | HUD, building management modals, Motor Pool (`GarageModal.tsx`), overlays |

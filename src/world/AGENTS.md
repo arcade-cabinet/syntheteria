@@ -20,7 +20,7 @@ New-game configuration — sector scale, difficulty, climate, storm profile, and
 |------|---------|
 | config.ts | New-game config types, defaults, and spec lookups |
 
-## Future (see `docs/PHASER_PIVOT_PLAN.md` 0.2 / Phase 4)
+## Future
 
 Settlement **snapshots and POI contracts** may land here for persistence and the **CivRev2/Civ VI-style
 city management panel** (React DOM). That is **not** a second Phaser scene or playable city interior.

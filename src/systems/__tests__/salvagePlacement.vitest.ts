@@ -1,15 +1,15 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { SALVAGE_DEFS } from "../../resources/salvageTypes";
-import type { FloorType } from "../../terrain/types";
+import { SALVAGE_DEFS } from "../../config/resources";
+import type { BiomeType } from "../../terrain/types";
 import { SalvageProp } from "../../traits";
 import { placeSalvageProps, TERRAIN_SALVAGE } from "../salvagePlacement";
 
 function makeTile(
 	x: number,
 	z: number,
-	floorType: FloorType,
+	biomeType: BiomeType,
 	passable = true,
 ): TileData {
 	return {
@@ -17,7 +17,7 @@ function makeTile(
 		z,
 		elevation: 0,
 		passable,
-		floorType,
+		biomeType,
 		resourceMaterial: null,
 		resourceAmount: 0,
 	};
@@ -32,9 +32,9 @@ function makeBoard(tiles: TileData[][], seed = "test-seed"): GeneratedBoard {
 	};
 }
 
-/** Create a uniform board of one floor type. */
+/** Create a uniform board of one biome type. */
 function uniformBoard(
-	floorType: FloorType,
+	biomeType: BiomeType,
 	width: number,
 	height: number,
 	seed = "test-seed",
@@ -43,7 +43,7 @@ function uniformBoard(
 	for (let z = 0; z < height; z++) {
 		const row: TileData[] = [];
 		for (let x = 0; x < width; x++) {
-			row.push(makeTile(x, z, floorType));
+			row.push(makeTile(x, z, biomeType));
 		}
 		tiles.push(row);
 	}
@@ -61,35 +61,35 @@ describe("placeSalvageProps", () => {
 		world.destroy();
 	});
 
-	it("places no salvage on void_pit tiles", () => {
-		const board = uniformBoard("void_pit", 20, 20);
+	it("places no salvage on water tiles", () => {
+		const board = uniformBoard("water", 20, 20);
 		const count = placeSalvageProps(world, board);
 		expect(count).toBe(0);
 		expect(world.query(SalvageProp).length).toBe(0);
 	});
 
-	it("places salvage on structural_mass tiles", () => {
-		const board = uniformBoard("structural_mass", 30, 30);
+	it("places salvage on mountain tiles", () => {
+		const board = uniformBoard("mountain", 30, 30);
 		const count = placeSalvageProps(world, board);
 		expect(count).toBeGreaterThan(0);
 		expect(world.query(SalvageProp).length).toBe(count);
 	});
 
-	it("structural_mass has highest density among passable terrain", () => {
+	it("mountain has highest density among passable terrain", () => {
 		const size = 50;
 
-		// Use the beforeEach world for structural_mass
-		const structuralBoard = uniformBoard("structural_mass", size, size);
+		// Use the beforeEach world for mountain
+		const structuralBoard = uniformBoard("mountain", size, size);
 		const structuralCount = placeSalvageProps(world, structuralBoard);
 
 		// Create + destroy temp worlds for comparison
 		const transitWorld = createWorld();
-		const transitBoard = uniformBoard("transit_deck", size, size);
+		const transitBoard = uniformBoard("hills", size, size);
 		const transitCount = placeSalvageProps(transitWorld, transitBoard);
 		transitWorld.destroy();
 
 		const bioWorld = createWorld();
-		const bioBoard = uniformBoard("bio_district", size, size);
+		const bioBoard = uniformBoard("forest", size, size);
 		const bioCount = placeSalvageProps(bioWorld, bioBoard);
 		bioWorld.destroy();
 
@@ -99,7 +99,7 @@ describe("placeSalvageProps", () => {
 
 	it("is deterministic with the same seed", () => {
 		// First run uses the beforeEach world
-		const board1 = uniformBoard("collapsed_zone", 20, 20, "deterministic");
+		const board1 = uniformBoard("hills", 20, 20, "deterministic");
 		const count1 = placeSalvageProps(world, board1);
 
 		const entities1 = world.query(SalvageProp);
@@ -115,7 +115,7 @@ describe("placeSalvageProps", () => {
 
 		// Second run in a temp world
 		const world2 = createWorld();
-		const board2 = uniformBoard("collapsed_zone", 20, 20, "deterministic");
+		const board2 = uniformBoard("hills", 20, 20, "deterministic");
 		const count2 = placeSalvageProps(world2, board2);
 
 		const entities2 = world2.query(SalvageProp);
@@ -136,7 +136,7 @@ describe("placeSalvageProps", () => {
 	});
 
 	it("different seeds produce different results", () => {
-		const boardA = uniformBoard("collapsed_zone", 20, 20, "seed-alpha");
+		const boardA = uniformBoard("hills", 20, 20, "seed-alpha");
 		const countA = placeSalvageProps(world, boardA);
 
 		const propsA = world
@@ -145,7 +145,7 @@ describe("placeSalvageProps", () => {
 			.sort((a, b) => a.tileX - b.tileX || a.tileZ - b.tileZ);
 
 		const worldB = createWorld();
-		const boardB = uniformBoard("collapsed_zone", 20, 20, "seed-beta");
+		const boardB = uniformBoard("hills", 20, 20, "seed-beta");
 		const countB = placeSalvageProps(worldB, boardB);
 
 		const propsB = worldB
@@ -167,7 +167,7 @@ describe("placeSalvageProps", () => {
 	});
 
 	it("spawned salvage props have valid modelId from SALVAGE_DEFS", () => {
-		const board = uniformBoard("dust_district", 30, 30);
+		const board = uniformBoard("desert", 30, 30);
 		placeSalvageProps(world, board);
 
 		const entities = world.query(SalvageProp);
@@ -186,7 +186,7 @@ describe("placeSalvageProps", () => {
 	});
 
 	it("respects terrain-specific salvage type distributions", () => {
-		const board = uniformBoard("structural_mass", 50, 50);
+		const board = uniformBoard("mountain", 50, 50);
 		placeSalvageProps(world, board);
 
 		const entities = world.query(SalvageProp);
@@ -200,24 +200,23 @@ describe("placeSalvageProps", () => {
 	});
 
 	it("each terrain type only produces configured salvage types", () => {
-		const floorTypes: FloorType[] = [
-			"structural_mass",
-			"collapsed_zone",
-			"transit_deck",
-			"durasteel_span",
-			"dust_district",
-			"bio_district",
-			"aerostructure",
-			"abyssal_platform",
+		const biomeTypes: BiomeType[] = [
+			"mountain",
+			"hills",
+			"grassland",
+			"desert",
+			"forest",
+			"tundra",
+			"wetland",
 		];
 
 		// Reuse a single world, resetting between floor types
-		for (const floorType of floorTypes) {
-			const board = uniformBoard(floorType, 40, 40);
+		for (const biomeType of biomeTypes) {
+			const board = uniformBoard(biomeType, 40, 40);
 			const w = createWorld();
 			placeSalvageProps(w, board);
 
-			const cfg = TERRAIN_SALVAGE[floorType];
+			const cfg = TERRAIN_SALVAGE[biomeType];
 			const allowedTypes = new Set(cfg.weights.map(([t]) => t));
 
 			for (const entity of w.query(SalvageProp)) {
@@ -229,7 +228,7 @@ describe("placeSalvageProps", () => {
 	});
 
 	it("sets correct tile coordinates on spawned props", () => {
-		const board = uniformBoard("collapsed_zone", 20, 20);
+		const board = uniformBoard("hills", 20, 20);
 		placeSalvageProps(world, board);
 
 		for (const entity of world.query(SalvageProp)) {

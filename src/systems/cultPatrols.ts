@@ -25,6 +25,7 @@ import {
 } from "../traits";
 import { runAssaultBehavior, runWarPartyBehavior } from "./cultAssaultBehavior";
 import { isCultFaction, PATROL_RADIUS, readTurn } from "./cultConstants";
+import { fireCultEncounter } from "./cultEncounterTracker";
 import { getEscalationStage, getSectBias } from "./cultEscalation";
 
 // ---------------------------------------------------------------------------
@@ -44,6 +45,10 @@ export function runCultPatrols(world: World, board: GeneratedBoard): void {
 	}
 	const tier = getEscalationTier(civilizedUnitCount);
 	const stage = getEscalationStage(tier);
+
+	if (stage === "war_party") {
+		fireCultEncounter(world, "cult_war_party");
+	}
 
 	// Collect all altar positions as patrol centers
 	const patrolCenters: Array<{ x: number; z: number }> = [];

@@ -59,7 +59,7 @@ function spawnResearchLab(factionId: string, powered = true) {
 		Building({
 			tileX: 0,
 			tileZ: 0,
-			buildingType: "research_lab",
+			buildingType: "analysis_node",
 			modelId: "",
 			factionId,
 			hp: 50,

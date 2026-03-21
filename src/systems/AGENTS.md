@@ -25,7 +25,7 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 ### Economy & Resources
 - `getPlayerResources`, `addResources`, `spendResources`, `canAfford`
 - `harvestSystem`, `startHarvest` — resource harvesting
-- `floorMiningSystem`, `startFloorMining` — floor tile mining
+- `biomeMiningSystem`, `startBiomeMining` — biome tile mining
 - `runResourceRenewal` — deposit regeneration
 - `queueSynthesis`, `runSynthesis` — fusion recipes
 - `trackIncome`, `trackExpenditure`, `finalizeTurnDeltas`
@@ -57,7 +57,6 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 - `isTechResearched`, `hasTechEffect`, `getTechEffectValue`
 
 ### UI State (Zustand-like stores)
-- `getRadialMenuState`, `openRadialMenu`, `confirmRadialSelection`
 - `triggerSpeech`, `getActiveSpeech`, `subscribeSpeech`
 - `pushToast`, `dismissToast`, `subscribeToasts`
 - `logTurnEvent`, `getCurrentTurnEvents`, `getCompletedTurnLogs`
@@ -67,6 +66,7 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 
 ### Victory
 - `checkVictoryConditions`, `getVictoryProgress`
+- `calculateFactionScore`, `recordCultStructureDestroyed`
 - `canStartWormholeProject`, `tickWormholeProject`
 
 ## Files
@@ -74,16 +74,19 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 |------|--------|
 | aiTurnSystem.ts | AI turn execution + move resolution |
 | analyticsCollector.ts | Per-turn analytics snapshots |
+| analysisSystem.ts | Analysis node acceleration for building upgrades |
 | attackSystem.ts | Combat resolution |
 | buildingPlacement.ts | Starter building placement |
+| buildingUpgradeSystem.ts | Per-building tier upgrade jobs |
 | buildSystem.ts | Player build flow |
 | campaignStats.ts | Long-running campaign statistics |
 | cultistSystem.ts | Cult POI init, patrols, corruption |
 | cultMutation.ts | Cult unit mutation tiers |
+| cultEncounterTracker.ts | One-time cult encounter triggers (epoch-gated toasts + turn events) |
 | diplomacySystem.ts | Faction diplomacy + trade |
 | experienceSystem.ts | Unit XP + mark thresholds |
 | fabricationSystem.ts | Robot fabrication queue |
-| floorMiningSystem.ts | Floor tile mining |
+| biomeMiningSystem.ts | Biome tile mining |
 | fogRevealSystem.ts | Fog of war reveal |
 | hackingSystem.ts | Unit hacking actions |
 | hackingTypes.ts | Hacking constants + bot roles |
@@ -93,8 +96,7 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 | movementSystem.ts | Unit movement interpolation |
 | populationSystem.ts | Population cap + counting |
 | powerSystem.ts | Power grid simulation |
-| radialMenu.ts | Radial menu state machine |
-| radial/ | Radial menu action providers (split by domain) |
+| radialMenu.ts | LEGACY — radial state machine (tests only; game uses BuildingModal) |
 | repairSystem.ts | Unit repair |
 | researchSystem.ts | Tech research queue |
 | resourceDeltaSystem.ts | Per-turn income/expenditure tracking |
@@ -114,5 +116,6 @@ All Koota ECS systems — pure functions that read/write traits on the world.
 | turretSystem.ts | Turret firing logic |
 | tutorialSystem.ts | Tutorial step state machine |
 | upgradeSystem.ts | Unit mark/tier upgrades |
-| victorySystem.ts | Victory condition checks |
+| victorySystem.ts | 6 victory conditions: domination, network, reclamation, transcendence, cult, score |
+| scoreSystem.ts | Weighted faction score for turn-cap victory |
 | wormholeProject.ts | Wormhole project state machine |

@@ -17,7 +17,7 @@ import type { MarkSpecialization } from "../marks";
 
 // ─── Track IDs ───────────────────────────────────────────────────────────────
 
-export type ScoutTrack = "pathfinder" | "infiltrator";
+export type ScoutTrack = "pathfinder" | "infiltrator" | "amphibious_recon";
 
 // ─── Specialization Interface ────────────────────────────────────────────────
 
@@ -163,6 +163,52 @@ export const INFILTRATOR_V2_UPGRADES: readonly TrackSpecialization[] = [
 	},
 ] as const;
 
+// ─── Track C: Amphibious Recon ──────────────────────────────────────────────
+//
+// Fantasy: A waterproofed scout that can wade through marshes and cross
+// shallow ocean tiles. Unlocked at Motor Pool tier 3. Trades stealth for
+// amphibious mobility and underwater resource scanning.
+
+export const AMPHIBIOUS_RECON_SPECIALIZATIONS: readonly TrackSpecialization[] =
+	[
+		{
+			track: "amphibious_recon",
+			label: "Aquatic Adaptation",
+			markLevel: 2 as 3,
+			effectType: "aquatic_adapt",
+			effectValue: 1,
+			description:
+				"Can traverse water tiles (movement cost 2.0). Wetland movement cost reduced to 1.0.",
+		},
+		{
+			track: "amphibious_recon",
+			label: "Sonar Sweep",
+			markLevel: 3,
+			effectType: "sonar_sweep",
+			effectValue: 4,
+			description:
+				"Reveals water tile resources within scan range. +2 scan range over water tiles.",
+		},
+		{
+			track: "amphibious_recon",
+			label: "Depth Charge",
+			markLevel: 4,
+			effectType: "depth_charge",
+			effectValue: 3,
+			description:
+				"Attack from water tiles deals +3 bonus damage. Enemies cannot counterattack aquatic units in water.",
+		},
+		{
+			track: "amphibious_recon",
+			label: "Transcendent Mariner",
+			markLevel: 5,
+			effectType: "transcendent_mariner",
+			effectValue: 1,
+			description:
+				"Water movement cost reduced to 1.0. Immune to environmental drain. All coastal tiles within scan range are permanently revealed.",
+		},
+	] as const;
+
 // ─── Combined Track Map ──────────────────────────────────────────────────────
 
 export const SCOUT_TRACKS: Record<
@@ -187,6 +233,13 @@ export const SCOUT_TRACKS: Record<
 			"Stealth and electronic warfare. Hacking, invisible movement, and network disruption.",
 		specializations: INFILTRATOR_SPECIALIZATIONS,
 		v2Upgrades: INFILTRATOR_V2_UPGRADES,
+	},
+	amphibious_recon: {
+		label: "Amphibious Recon",
+		description:
+			"Waterborne exploration. Traverse water tiles, reduced wetland cost, underwater resource scanning.",
+		specializations: AMPHIBIOUS_RECON_SPECIALIZATIONS,
+		v2Upgrades: [],
 	},
 };
 
@@ -265,6 +318,27 @@ export const INFILTRATOR_ACTIONS: readonly ClassActionDef[] = [
 	},
 ];
 
+/** Actions unlocked by the Amphibious Recon track. */
+export const AMPHIBIOUS_RECON_ACTIONS: readonly ClassActionDef[] = [
+	{
+		id: "sonar_scan",
+		label: "Sonar",
+		icon: "\uD83D\uDC1F", // fish
+		tone: "neutral",
+		category: "utility",
+		apCost: 1,
+		minRange: 0,
+		maxRange: 0,
+		requiresStaging: false,
+		requiresAdjacent: false,
+		requiresEnemy: false,
+		requiresFriendly: false,
+		cooldown: 1,
+		description:
+			"Reveal water tile resources and hidden units within scan range",
+	},
+];
+
 // ─── Tech Tree Additions ─────────────────────────────────────────────────────
 //
 // These techs gate and upgrade the scout specialization tracks.
@@ -276,7 +350,7 @@ export const SCOUT_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Enhanced sensor arrays for scout chassis. Unlocks Pathfinder and Infiltrator specializations at the Garage.",
 		tier: 2,
-		cost: { silicon_wafer: 5, conductor_wire: 3, ferrous_scrap: 2 },
+		cost: { glass: 5, circuits: 3, iron_ore: 2 },
 		turnsToResearch: 4,
 		prerequisites: ["signal_amplification"],
 		effects: [{ type: "signal_range_bonus" as const, value: 0.2 }],
@@ -287,7 +361,7 @@ export const SCOUT_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Quantum-enhanced signal analysis. Upgrades Pathfinder to v2 (Seismic Cartography) and Infiltrator to v2 (Quantum Cloak).",
 		tier: 4,
-		cost: { intact_components: 8, silicon_wafer: 10, storm_charge: 5 },
+		cost: { steel: 18, glass: 10, fuel: 5 },
 		turnsToResearch: 8,
 		prerequisites: ["advanced_recon_optics", "quantum_processors"],
 		effects: [{ type: "signal_range_bonus" as const, value: 0.3 }],
@@ -324,7 +398,9 @@ export function getTrackSpecializations(
  * Get the actions unlocked by a scout track.
  */
 export function getTrackActions(track: ScoutTrack): readonly ClassActionDef[] {
-	return track === "pathfinder" ? PATHFINDER_ACTIONS : INFILTRATOR_ACTIONS;
+	if (track === "pathfinder") return PATHFINDER_ACTIONS;
+	if (track === "amphibious_recon") return AMPHIBIOUS_RECON_ACTIONS;
+	return INFILTRATOR_ACTIONS;
 }
 
 /**
@@ -332,10 +408,10 @@ export function getTrackActions(track: ScoutTrack): readonly ClassActionDef[] {
  * Handles the Mark II cast (markLevel stored as 3 but logically 2).
  */
 function effectiveMarkLevel(spec: TrackSpecialization): number {
-	// Mark II specs have markLevel cast as 3 but effectType starts with terrain_ or signal_
 	if (
 		spec.effectType === "terrain_adapt" ||
-		spec.effectType === "signal_dampen"
+		spec.effectType === "signal_dampen" ||
+		spec.effectType === "aquatic_adapt"
 	) {
 		return 2;
 	}

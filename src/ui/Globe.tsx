@@ -32,12 +32,7 @@ import * as THREE from "three";
 import type { BoardConfig, GeneratedBoard } from "../board";
 import { SphereOrbitCamera } from "../camera";
 import { BoardInput } from "../input";
-import {
-	cinematicState,
-	globeFragmentShader,
-	globeVertexShader,
-	turnToChronometry,
-} from "../rendering";
+import { turnToChronometry } from "../lib/chronometry";
 import { resolveAttacks } from "../systems";
 import {
 	BiomeRenderer,
@@ -64,7 +59,12 @@ import {
 	UnifiedTerrainRenderer,
 	UnitRenderer,
 	UnitStatusBars,
-} from "../view";
+} from "../views/title";
+import { cinematicState } from "../views/title/globe/cinematicState";
+import {
+	globeFragmentShader,
+	globeVertexShader,
+} from "../views/title/globe/shaders";
 import type { StormProfile } from "../world/config";
 import { HoverTracker } from "./game/HoverTracker";
 
@@ -115,7 +115,7 @@ function SceneReadySignal({ onReady }: { onReady: () => void }) {
 
 const CINEMATIC_DURATION = 7;
 
-// cinematicState is imported from rendering/globe/cinematicState.ts
+// cinematicState is imported from views/title/globe/cinematicState.ts
 // Written here by TitleScene's useFrame, read by storm effect components each frame.
 
 /** Compute cinematic beat parameters from elapsed time [0, CINEMATIC_DURATION]. */

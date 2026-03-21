@@ -10,16 +10,17 @@ import type { World } from "koota";
 import { resetWanderState } from "../ai/steering/wanderSteering";
 import { Board } from "../traits";
 import type { StormProfile } from "../world/config";
+import { _resetCultEncounters } from "./cultEncounterTracker";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-export const BASE_SPAWN_INTERVAL = 5;
-export const MIN_SPAWN_INTERVAL = 2;
+export const BASE_SPAWN_INTERVAL = 4;
+export const MIN_SPAWN_INTERVAL = 1;
 export const BASE_WAVE_SIZE = 1;
 export const MAX_WAVE_SIZE = 4;
-export const MAX_TOTAL_CULTISTS = 12;
+export const MAX_TOTAL_CULTISTS = 20;
 export const MAX_ESCALATION_TERRITORY = 80;
 export const CORRUPTION_NODE_CHANCE = 0.3;
 
@@ -34,7 +35,7 @@ export const INITIAL_POI_COUNT_MAX = 6;
 export const PATROL_RADIUS = 4;
 
 /** Floor types where cult POIs can spawn at game start. */
-export const CULT_TERRAIN = new Set(["collapsed_zone", "dust_district"]);
+export const CULT_TERRAIN = new Set(["hills", "desert"]);
 
 // ---------------------------------------------------------------------------
 // Storm profile overrides
@@ -48,16 +49,16 @@ export interface StormCultistParams {
 
 export const STORM_CULTIST_PARAMS: Record<StormProfile, StormCultistParams> = {
 	stable: {
-		baseSpawnInterval: 7,
+		baseSpawnInterval: 4,
 		maxWaveSize: 2,
 		maxTotalCultists: MAX_TOTAL_CULTISTS,
 	},
 	volatile: {
-		baseSpawnInterval: BASE_SPAWN_INTERVAL,
+		baseSpawnInterval: 3,
 		maxWaveSize: MAX_WAVE_SIZE,
 		maxTotalCultists: MAX_TOTAL_CULTISTS,
 	},
-	cataclysmic: { baseSpawnInterval: 3, maxWaveSize: 6, maxTotalCultists: 20 },
+	cataclysmic: { baseSpawnInterval: 2, maxWaveSize: 6, maxTotalCultists: 20 },
 };
 
 export function readStormProfile(world: World): StormProfile {
@@ -151,4 +152,5 @@ export function _reset(): void {
 	poiPositions = [];
 	poisInitialized = false;
 	resetWanderState();
+	_resetCultEncounters();
 }

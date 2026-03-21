@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Syntheteria</string>
+    <string name="title_activity_main">Syntheteria</string>
+    <string name="package_name">com.syntheteria.game</string>
+    <string name="custom_url_scheme">com.syntheteria.game</string>
+</resources>

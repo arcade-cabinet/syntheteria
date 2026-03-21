@@ -6,7 +6,7 @@ import type { GeneratedBoard, TileData, WeightClass } from "../types";
 function makeTile(
 	x: number,
 	z: number,
-	floorType: TileData["floorType"],
+	biomeType: TileData["biomeType"],
 	passable = true,
 ): TileData {
 	return {
@@ -14,7 +14,7 @@ function makeTile(
 		z,
 		elevation: 0,
 		passable,
-		floorType,
+		biomeType,
 		resourceMaterial: null,
 		resourceAmount: 0,
 	};
@@ -34,76 +34,74 @@ function makeBoard(tiles: TileData[][]): GeneratedBoard {
 }
 
 describe("isPassableFor", () => {
-	it("light units can traverse abyssal_platform", () => {
-		const tile = makeTile(0, 0, "abyssal_platform");
+	it("light units can traverse wetland", () => {
+		const tile = makeTile(0, 0, "wetland");
 		expect(isPassableFor(tile, "light")).toBe(true);
 	});
 
-	it("medium units cannot traverse abyssal_platform", () => {
-		const tile = makeTile(0, 0, "abyssal_platform");
+	it("medium units cannot traverse wetland", () => {
+		const tile = makeTile(0, 0, "wetland");
 		expect(isPassableFor(tile, "medium")).toBe(false);
 	});
 
-	it("heavy units cannot traverse abyssal_platform", () => {
-		const tile = makeTile(0, 0, "abyssal_platform");
+	it("heavy units cannot traverse wetland", () => {
+		const tile = makeTile(0, 0, "wetland");
 		expect(isPassableFor(tile, "heavy")).toBe(false);
 	});
 
-	it("void_pit impassable for all weight classes", () => {
-		const tile = makeTile(0, 0, "void_pit", false);
+	it("water impassable for all weight classes", () => {
+		const tile = makeTile(0, 0, "water", false);
 		for (const wc of ["light", "medium", "heavy"] as WeightClass[]) {
 			expect(isPassableFor(tile, wc)).toBe(false);
 		}
 	});
 
-	it("structural_mass impassable for all weight classes", () => {
-		const tile = makeTile(0, 0, "structural_mass", false);
+	it("mountain impassable for all weight classes", () => {
+		const tile = makeTile(0, 0, "mountain", false);
 		for (const wc of ["light", "medium", "heavy"] as WeightClass[]) {
 			expect(isPassableFor(tile, wc)).toBe(false);
 		}
 	});
 
-	it("normal tiles passable for all weight classes at cost 1", () => {
-		const normalFloors: TileData["floorType"][] = [
-			"transit_deck",
-			"durasteel_span",
-			"collapsed_zone",
-			"dust_district",
-			"bio_district",
-			"aerostructure",
+	it("normal tiles passable for all weight classes", () => {
+		const normalFloors: TileData["biomeType"][] = [
+			"hills",
+			"grassland",
+			"desert",
+			"forest",
+			"tundra",
 		];
 		for (const floor of normalFloors) {
 			const tile = makeTile(0, 0, floor);
 			for (const wc of ["light", "medium", "heavy"] as WeightClass[]) {
 				expect(isPassableFor(tile, wc)).toBe(true);
-				expect(movementCost(tile, wc)).toBe(1);
 			}
 		}
 	});
 });
 
 describe("movementCost", () => {
-	it("abyssal_platform costs 2 AP for light units", () => {
-		const tile = makeTile(0, 0, "abyssal_platform");
+	it("wetland costs 2 AP for light units", () => {
+		const tile = makeTile(0, 0, "wetland");
 		expect(movementCost(tile, "light")).toBe(2);
 	});
 
-	it("normal tile costs 1 AP for all weight classes", () => {
-		const tile = makeTile(0, 0, "transit_deck");
-		for (const wc of ["light", "medium", "heavy"] as WeightClass[]) {
-			expect(movementCost(tile, wc)).toBe(1);
-		}
+	it("normal tile costs match BIOME_DEFS", () => {
+		const tile = makeTile(0, 0, "hills");
+		expect(movementCost(tile, "medium")).toBe(1.5);
+		const grassTile = makeTile(0, 0, "grassland");
+		expect(movementCost(grassTile, "medium")).toBe(1);
 	});
 });
 
 describe("reachableTiles with weightClass", () => {
-	it("light unit can reach abyssal_platform tiles (costs 2 AP)", () => {
-		// Layout: [transit_deck] [abyssal_platform] [transit_deck]
+	it("light unit can reach wetland tiles (costs 2 AP)", () => {
+		// Layout: [hills] [wetland] [hills]
 		const tiles = [
 			[
-				makeTile(0, 0, "transit_deck"),
-				makeTile(1, 0, "abyssal_platform"),
-				makeTile(2, 0, "transit_deck"),
+				makeTile(0, 0, "hills"),
+				makeTile(1, 0, "wetland"),
+				makeTile(2, 0, "hills"),
 			],
 		];
 		const board = makeBoard(tiles);
@@ -119,12 +117,12 @@ describe("reachableTiles with weightClass", () => {
 		expect(reachable1.has("1,0")).toBe(false);
 	});
 
-	it("medium unit cannot reach abyssal_platform tiles", () => {
+	it("medium unit cannot reach wetland tiles", () => {
 		const tiles = [
 			[
-				makeTile(0, 0, "transit_deck"),
-				makeTile(1, 0, "abyssal_platform"),
-				makeTile(2, 0, "transit_deck"),
+				makeTile(0, 0, "hills"),
+				makeTile(1, 0, "wetland"),
+				makeTile(2, 0, "hills"),
 			],
 		];
 		const board = makeBoard(tiles);
@@ -137,21 +135,21 @@ describe("reachableTiles with weightClass", () => {
 	});
 
 	it("light unit traversal through abyssal costs accumulate correctly", () => {
-		// 3-tile row: transit(1) -> abyssal(2) -> transit(1) = need 4 AP to reach tile 2
+		// 3-tile row: grassland(1) -> wetland(2) -> grassland(1) = need 3 to reach tile 2
 		const tiles = [
 			[
-				makeTile(0, 0, "transit_deck"),
-				makeTile(1, 0, "abyssal_platform"),
-				makeTile(2, 0, "transit_deck"),
+				makeTile(0, 0, "grassland"),
+				makeTile(1, 0, "wetland"),
+				makeTile(2, 0, "grassland"),
 			],
 		];
 		const board = makeBoard(tiles);
 
-		// 3 AP: can reach abyssal (cost 2) but not beyond (2+1=3, exactly enough)
+		// 3 AP: can reach wetland (cost 2) and grassland beyond (2+1=3, exactly enough)
 		const reachable3 = reachableTiles(0, 0, 3, board, "light");
 		expect(reachable3.has("2,0")).toBe(true);
 
-		// 2 AP: can reach abyssal (cost 2) but not transit beyond (2+1=3 > 2)
+		// 2 AP: can reach wetland (cost 2) but not beyond (2+1=3 > 2)
 		const reachable2 = reachableTiles(0, 0, 2, board, "light");
 		expect(reachable2.has("1,0")).toBe(true);
 		expect(reachable2.has("2,0")).toBe(false);

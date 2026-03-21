@@ -14,7 +14,7 @@
 import { createWorld } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { GeneratedBoard, TileData } from "../../board/types";
-import { BUILDING_DEFS } from "../../buildings/definitions";
+import { BUILDING_DEFS } from "../../config/buildings";
 import {
 	FabricationJob,
 	queueFabrication,
@@ -50,7 +50,7 @@ function makeBoard(width: number, height: number): GeneratedBoard {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "durasteel_span",
+				biomeType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -71,19 +71,17 @@ function spawnFactionEntity(
 	world.spawn(
 		Faction({ id: factionId, isPlayer: false }),
 		ResourcePool({
-			scrap_metal: 0,
-			ferrous_scrap: 0,
-			alloy_stock: 0,
-			polymer_salvage: 0,
-			conductor_wire: 0,
-			electrolyte: 0,
-			silicon_wafer: 0,
-			storm_charge: 0,
-			el_crystal: 0,
-			e_waste: 0,
-			intact_components: 0,
-			thermal_fluid: 0,
-			depth_salvage: 0,
+			stone: 0,
+			iron_ore: 0,
+			steel: 0,
+			timber: 0,
+			circuits: 0,
+			coal: 0,
+			glass: 0,
+			fuel: 0,
+			quantum_crystal: 0,
+			sand: 0,
+			alloy: 0,
 			...resources,
 		}),
 	);
@@ -197,8 +195,8 @@ describe("AI fabrication chain", () => {
 		spawnTransmitter(world, "reclaimers", 5, 5);
 		const pool = spawnMotorPool(world, "reclaimers", 6, 5);
 		spawnFactionEntity(world, "reclaimers", {
-			ferrous_scrap: 20,
-			conductor_wire: 10,
+			iron_ore: 20,
+			circuits: 10,
 		});
 
 		runPowerGrid(world);
@@ -223,8 +221,8 @@ describe("AI fabrication chain", () => {
 		const pool = spawnMotorPool(world, "reclaimers", 6, 5);
 		// No transmitter → not powered
 		spawnFactionEntity(world, "reclaimers", {
-			ferrous_scrap: 20,
-			conductor_wire: 10,
+			iron_ore: 20,
+			circuits: 10,
 		});
 
 		const result = queueFabrication(world, pool, "scout");
@@ -249,11 +247,11 @@ describe("AI fabrication chain", () => {
 		spawnTransmitter(world, "reclaimers", 5, 5);
 		spawnMotorPool(world, "reclaimers", 6, 5);
 		spawnFactionEntity(world, "reclaimers", {
-			ferrous_scrap: 50,
-			conductor_wire: 20,
-			alloy_stock: 10,
-			polymer_salvage: 10,
-			silicon_wafer: 5,
+			iron_ore: 50,
+			circuits: 20,
+			steel: 10,
+			timber: 10,
+			glass: 5,
 		});
 		// Need at least one AI unit for the turn system to run
 		world.spawn(
@@ -308,7 +306,7 @@ describe("AI fabrication chain", () => {
 			width: 32,
 			height: 32,
 			isPassable: () => true,
-			getFloorType: () => "durasteel_span" as const,
+			getBiomeType: () => "grassland" as const,
 		};
 		computeSpawnCenters(boardInfo, null, ["reclaimers", "volt_collective"]);
 

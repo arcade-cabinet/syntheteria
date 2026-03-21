@@ -14,7 +14,12 @@ All game data files — tunables, constants, tech tree, recipes, movement profil
 ### Game Defaults (`gameDefaults.ts`)
 - `TILE_SIZE_M`, `ELEVATION_STEP_M` — spatial constants
 - `PLAYER_MAX_AP`, `INITIAL_SCAN_RANGE` — player tuning
-- `FACTION_COLORS`, `FACTION_COLORS_CSS` — faction color palettes
+- `FACTION_COLORS_CSS` — CSS string faction colors for DOM UI
+
+### Models (`models.ts`)
+- `FACTION_COLORS` — hex map for 3D unit/building tint (extends game defaults + extra factions; `setPlayerFactionColor` mutates `player`)
+- `resolveRobotModelUrl`, `resolveBuildingModelUrl`, `resolveSalvageModelUrl`, `resolveStructureModelUrl` — GLB URL resolution
+- `INFRA_*`, `STRUCTURE_*`, `BUILDING_*`, etc. — model ID lists for preload / scatter
 - `VICTORY_*` — victory condition thresholds
 - `STANDING_*`, `DIPLOMACY_*` — diplomacy tuning
 
@@ -42,6 +47,7 @@ All game data files — tunables, constants, tech tree, recipes, movement profil
 | File | Purpose |
 |------|---------|
 | gameDefaults.ts | Core game constants and tunables |
+| models.ts | GLB path catalog, faction colors for meshes, URL resolvers |
 | buildingDefs.ts | Building blueprint components |
 | diplomacyDefs.ts | Diplomacy standing tiers and modifiers |
 | factionAiDefs.ts | AI faction personality biases |

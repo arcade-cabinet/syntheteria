@@ -126,6 +126,7 @@ export function NewGameModal({ onStart, onCancel }: NewGameModalProps) {
 			difficulty,
 			climateProfile,
 			stormProfile: DEFAULT_NEW_GAME_CONFIG.stormProfile,
+			gameSpeed: DEFAULT_NEW_GAME_CONFIG.gameSpeed,
 			factions,
 		};
 

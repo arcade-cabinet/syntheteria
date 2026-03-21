@@ -95,19 +95,17 @@ describe("hackingSystem", () => {
 				aggression: 0,
 			}),
 			ResourcePool({
-				ferrous_scrap: 0,
-				alloy_stock: 0,
-				polymer_salvage: 0,
-				conductor_wire: 0,
-				electrolyte: 0,
-				silicon_wafer: 0,
-				storm_charge: 0,
-				el_crystal: 0,
-				scrap_metal: 0,
-				e_waste: 0,
-				intact_components: 0,
-				thermal_fluid: 0,
-				depth_salvage: 0,
+				iron_ore: 0,
+				steel: 0,
+				timber: 0,
+				circuits: 0,
+				coal: 0,
+				glass: 0,
+				fuel: 0,
+				quantum_crystal: 0,
+				stone: 0,
+				sand: 0,
+				alloy: 0,
 				...resources,
 			}),
 		);
@@ -433,10 +431,10 @@ describe("hackingSystem", () => {
 
 		it("steal_resources transfers resources from target faction to hacker faction", () => {
 			spawnFactionWithResources("iron_creed", {
-				ferrous_scrap: 10,
-				alloy_stock: 3,
+				iron_ore: 10,
+				steel: 3,
 			});
-			spawnFactionWithResources("volt_collective", { ferrous_scrap: 2 });
+			spawnFactionWithResources("volt_collective", { iron_ore: 2 });
 
 			const hacker = spawnHacker("volt_collective", 3, 3, 3);
 			const target = spawnBuilding("iron_creed");
@@ -453,15 +451,15 @@ describe("hackingSystem", () => {
 				const f = e.get(Faction)!;
 				const pool = e.get(ResourcePool)!;
 				if (f.id === "iron_creed") {
-					// ferrous_scrap had 10, steal_amount=5 → 5 remaining
-					expect(pool.ferrous_scrap).toBe(5);
-					// alloy_stock had 3, steal_amount=5 but only 3 available → 0 remaining
-					expect(pool.alloy_stock).toBe(0);
+					// iron_ore had 10, steal_amount=5 → 5 remaining
+					expect(pool.iron_ore).toBe(5);
+					// steel had 3, steal_amount=5 but only 3 available → 0 remaining
+					expect(pool.steel).toBe(0);
 				} else if (f.id === "volt_collective") {
-					// ferrous_scrap had 2 + 5 stolen = 7
-					expect(pool.ferrous_scrap).toBe(7);
-					// alloy_stock had 0 + 3 stolen = 3
-					expect(pool.alloy_stock).toBe(3);
+					// iron_ore had 2 + 5 stolen = 7
+					expect(pool.iron_ore).toBe(7);
+					// steel had 0 + 3 stolen = 3
+					expect(pool.steel).toBe(3);
 				}
 			}
 		});

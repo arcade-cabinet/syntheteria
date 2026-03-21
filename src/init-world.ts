@@ -3,7 +3,7 @@
  *
  * Creates:
  *  - Board singleton entity
- *  - One Tile + TileHighlight + TileFloor entity per board tile
+ *  - One Tile + TileHighlight + TileBiome entity per board tile
  *  - All faction entities
  *  - All robots from placement flags
  */
@@ -18,12 +18,13 @@ import {
 	type SimpleBoardInfo,
 } from "./robots";
 import {
+	effectiveScanRange,
 	placeSalvageProps,
 	placeStarterBuildings,
 	revealFog,
 	runPowerGrid,
 } from "./systems";
-import { TileFloor, tileFloorProps } from "./terrain";
+import { TileBiome, tileBiomeProps } from "./terrain";
 import { Board } from "./traits/board";
 import { ResourceDeposit } from "./traits/resource";
 import { Tile, TileHighlight } from "./traits/tile";
@@ -32,6 +33,7 @@ import type {
 	ClimateProfile,
 	Difficulty,
 	FactionSlot,
+	GameSpeed,
 	StormProfile,
 } from "./world/config";
 
@@ -39,6 +41,7 @@ export interface InitOptions {
 	climateProfile?: ClimateProfile;
 	stormProfile?: StormProfile;
 	difficulty?: Difficulty;
+	gameSpeed?: GameSpeed;
 	/** Faction slots from New Game config. Controls which factions are active and who is the player. */
 	factionSlots?: FactionSlot[];
 }
@@ -52,6 +55,7 @@ export function initWorldFromBoard(
 	const climateProfile = opts.climateProfile ?? "temperate";
 	const stormProfile = opts.stormProfile ?? "volatile";
 	const difficulty = opts.difficulty ?? "standard";
+	const gameSpeed = opts.gameSpeed ?? "standard";
 	const factionSlots = opts.factionSlots;
 
 	// Derive player and active faction info from slots
@@ -72,6 +76,7 @@ export function initWorldFromBoard(
 			climateProfile,
 			stormProfile,
 			difficulty,
+			gameSpeed,
 		}),
 	);
 
@@ -79,7 +84,7 @@ export function initWorldFromBoard(
 	for (let z = 0; z < height; z++) {
 		for (let x = 0; x < width; x++) {
 			const tile = board.tiles[z]![x]!;
-			const floorType = tile.floorType;
+			const biomeType = tile.biomeType;
 			world.spawn(
 				Tile({
 					x: tile.x,
@@ -88,7 +93,7 @@ export function initWorldFromBoard(
 					passable: tile.passable,
 				}),
 				TileHighlight({ emissive: 0, color: 0x00ffaa, reason: "none" }),
-				TileFloor(tileFloorProps(floorType, tile.x, tile.z)),
+				TileBiome(tileBiomeProps(biomeType, tile.x, tile.z)),
 			);
 
 			if (tile.resourceMaterial !== null) {
@@ -116,7 +121,7 @@ export function initWorldFromBoard(
 		width,
 		height,
 		isPassable: (x, z) => board.tiles[z]?.[x]?.passable ?? false,
-		getFloorType: (x, z) => board.tiles[z]?.[x]?.floorType,
+		getBiomeType: (x, z) => board.tiles[z]?.[x]?.biomeType,
 	};
 	computeSpawnCenters(boardInfo, playerFactionId, activeFactionIds);
 
@@ -135,7 +140,13 @@ export function initWorldFromBoard(
 		const pos = entity.get(UnitPos);
 		const stats = entity.get(UnitStats);
 		if (pos && stats) {
-			revealFog(world, pos.tileX, pos.tileZ, stats.scanRange);
+			const scanRange = effectiveScanRange(
+				world,
+				pos.tileX,
+				pos.tileZ,
+				stats.scanRange,
+			);
+			revealFog(world, pos.tileX, pos.tileZ, scanRange);
 		}
 	}
 }

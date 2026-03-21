@@ -15,7 +15,7 @@
 import type { World } from "koota";
 import { playSfx } from "../audio";
 import type { GeneratedBoard } from "../board";
-import { BUILDING_DEFS } from "../buildings";
+import { BUILDING_DEFS } from "../config/buildings";
 import { getRelation } from "../factions";
 import { type RobotClass, TRACK_REGISTRY } from "../robots";
 import {
@@ -33,7 +33,7 @@ import {
 	spendResources,
 } from "../systems";
 import type { ResourceMaterial } from "../terrain";
-import { TileFloor } from "../terrain";
+import { TileBiome } from "../terrain";
 import {
 	Board,
 	BotFabricator,
@@ -62,13 +62,14 @@ import {
 	executeAiBuild,
 	runAiBuilding,
 } from "./aiBuilding";
+import { runAiBuildingUpgrades } from "./aiBuildingUpgrade";
 import { runAiDiplomacy } from "./aiDiplomacy";
 import { runAiFabrication } from "./aiFabrication";
 import {
 	countNearbyThreats,
 	DIFFICULTY_AGGRESSION_MULT,
 	findMineableTilesNearUnits,
-	findTileFloorAt,
+	findTileBiomeAt,
 	getFactionBuildings,
 	getFactionResourceScore,
 	getNearestEnemyDist,
@@ -467,6 +468,70 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 		}
 
 		// Set context for this faction's evaluators
+		// Collect enemy building positions for targeting economy
+		const enemyBuildings: Array<{
+			entityId: number;
+			x: number;
+			z: number;
+			factionId: string;
+		}> = [];
+		for (const e of world.query(Building)) {
+			const b = e.get(Building);
+			if (
+				b &&
+				b.factionId !== factionId &&
+				!isCultFactionId(b.factionId) &&
+				b.hp > 0
+			) {
+				enemyBuildings.push({
+					entityId: e.id(),
+					x: b.tileX,
+					z: b.tileZ,
+					factionId: b.factionId,
+				});
+			}
+		}
+
+		// Force ratio: own combat units vs nearest enemy faction's units
+		const ownCombatUnits = factionSnapshots.filter((s) => s.attack > 0).length;
+		const enemyFactionUnitCounts = new Map<string, number>();
+		for (const e of factionEnemies) {
+			const count = enemyFactionUnitCounts.get(e.factionId) ?? 0;
+			enemyFactionUnitCounts.set(e.factionId, count + 1);
+		}
+		let nearestEnemyCount = 1;
+		if (enemyFactionUnitCounts.size > 0) {
+			nearestEnemyCount = Math.max(
+				1,
+				Math.min(...enemyFactionUnitCounts.values()),
+			);
+		}
+		const forceRatio =
+			nearestEnemyCount > 0 ? ownCombatUnits / nearestEnemyCount : 1;
+
+		// Build sparse biome map for terrain-aware decisions
+		// Only include tiles near enemies and faction units (within 15 tiles)
+		const tileBiomes = new Map<string, string>();
+		const relevantPositions = [
+			...factionSnapshots.map((s) => ({ x: s.tileX, z: s.tileZ })),
+			...factionEnemies.map((e) => ({ x: e.x, z: e.z })),
+			...enemyBuildings.map((b) => ({ x: b.x, z: b.z })),
+		];
+		for (const pos of relevantPositions) {
+			for (let dx = -3; dx <= 3; dx++) {
+				for (let dz = -3; dz <= 3; dz++) {
+					const tx = pos.x + dx;
+					const tz = pos.z + dz;
+					const key = `${tx},${tz}`;
+					if (tileBiomes.has(key)) continue;
+					const tile = board.tiles[tz]?.[tx];
+					if (tile) {
+						tileBiomes.set(key, tile.biomeType);
+					}
+				}
+			}
+		}
+
 		setTurnContext({
 			enemies: factionEnemies,
 			deposits,
@@ -494,6 +559,9 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 			factionTerritoryCount,
 			isStrongestFaction,
 			existingBuildingTypes,
+			enemyBuildings,
+			forceRatio,
+			tileBiomes,
 		});
 
 		// ── Faction FSM: macro strategy bias overrides ──────────────
@@ -756,18 +824,18 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 				}
 				case "mine": {
 					if (!entity.has(UnitMine)) {
-						const tileFloor = findTileFloorAt(
+						const tileBiome = findTileBiomeAt(
 							world,
 							action.targetX,
 							action.targetZ,
 						);
-						if (tileFloor && tileFloor.mineable && tileFloor.hardness > 0) {
+						if (tileBiome && tileBiome.mineable && tileBiome.hardness > 0) {
 							entity.add(
 								UnitMine({
 									targetX: action.targetX,
 									targetZ: action.targetZ,
-									ticksRemaining: tileFloor.hardness,
-									totalTicks: tileFloor.hardness,
+									ticksRemaining: tileBiome.hardness,
+									totalTicks: tileBiome.hardness,
 								}),
 							);
 						}
@@ -783,6 +851,9 @@ export function runYukaAiTurns(world: World, board: GeneratedBoard): void {
 
 	// ── Step 6b: AI building — construct missing critical infrastructure ──
 	runAiBuilding(world, [...agentsByFaction.keys()], board);
+
+	// ── Step 6b2: AI building upgrades — tier up existing buildings ──────
+	runAiBuildingUpgrades(world, [...agentsByFaction.keys()]);
 
 	// ── Step 6c: AI synthesis — queue conversions at idle synthesizers ───
 	runAiSynthesis(world, [...agentsByFaction.keys()]);

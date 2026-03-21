@@ -7,7 +7,7 @@
 
 import type { World } from "koota";
 import type { GeneratedBoard } from "../board";
-import { TileFloor } from "../terrain";
+import { TileBiome } from "../terrain";
 import {
 	Board,
 	Building,
@@ -107,19 +107,23 @@ export function getFactionResourceScore(
 		const r = e.get(ResourcePool);
 		if (f?.id === factionId && r) {
 			const total =
-				r.scrap_metal +
-				r.ferrous_scrap +
-				r.alloy_stock +
-				r.polymer_salvage +
-				r.conductor_wire +
-				r.electrolyte +
-				r.silicon_wafer +
-				r.storm_charge +
-				r.el_crystal +
-				r.e_waste +
-				r.intact_components +
-				r.thermal_fluid +
-				r.depth_salvage;
+				r.stone +
+				r.timber +
+				r.iron_ore +
+				r.coal +
+				r.food +
+				r.fiber +
+				r.sand +
+				r.clay +
+				r.steel +
+				r.concrete +
+				r.glass +
+				r.circuits +
+				r.fuel +
+				r.alloy +
+				r.nanomaterial +
+				r.fusion_cell +
+				r.quantum_crystal;
 			// Normalize: 0 resources = 0, 200+ = 100
 			return Math.min(100, (total / 200) * 100);
 		}
@@ -195,10 +199,10 @@ export function findMineableTilesNearUnits(
 	const results: Array<{ x: number; z: number; material: string }> = [];
 	const seen = new Set<string>();
 
-	for (const e of world.query(Tile, TileFloor)) {
+	for (const e of world.query(Tile, TileBiome)) {
 		const tile = e.get(Tile);
-		const floor = e.get(TileFloor);
-		if (!tile || !floor || !floor.mineable || !floor.resourceMaterial) continue;
+		const biome = e.get(TileBiome);
+		if (!tile || !biome || !biome.mineable || !biome.resourceMaterial) continue;
 
 		const key = `${tile.x},${tile.z}`;
 		if (seen.has(key)) continue;
@@ -217,7 +221,7 @@ export function findMineableTilesNearUnits(
 				results.push({
 					x: tile.x,
 					z: tile.z,
-					material: floor.resourceMaterial,
+					material: biome.resourceMaterial,
 				});
 				seen.add(key);
 				break;
@@ -228,8 +232,8 @@ export function findMineableTilesNearUnits(
 	return results;
 }
 
-/** Find TileFloor data at a specific coordinate. */
-export function findTileFloorAt(
+/** Find TileBiome data at a specific coordinate. */
+export function findTileBiomeAt(
 	world: World,
 	x: number,
 	z: number,
@@ -238,11 +242,11 @@ export function findTileFloorAt(
 	hardness: number;
 	resourceMaterial: string | null;
 } | null {
-	for (const e of world.query(Tile, TileFloor)) {
+	for (const e of world.query(Tile, TileBiome)) {
 		const tile = e.get(Tile);
 		if (tile && tile.x === x && tile.z === z) {
-			const floor = e.get(TileFloor);
-			if (floor) return floor;
+			const biome = e.get(TileBiome);
+			if (biome) return biome;
 		}
 	}
 	return null;
@@ -283,6 +287,61 @@ export function checkIsStrongest(
 }
 
 // ---------------------------------------------------------------------------
+// Terrain scoring for AI decisions
+// ---------------------------------------------------------------------------
+
+/**
+ * Score a tile for strategic desirability based on biome properties.
+ * Higher = more desirable for unit placement.
+ *
+ * - Hills: high defense + vision → good for positioning
+ * - Forest: high defense + cover → good for defense
+ * - Desert/tundra: environmental drain → avoid if possible
+ * - Grassland: neutral, good for attacking enemies on
+ */
+export function scoreTileForPosition(biomeType: string): number {
+	switch (biomeType) {
+		case "hills":
+			return 1.3; // +defense, +vision
+		case "forest":
+			return 1.2; // +defense, +cover
+		case "wetland":
+			return 0.8; // slow, minor defense
+		case "grassland":
+			return 1.0; // neutral
+		case "desert":
+			return 0.5; // drain
+		case "tundra":
+			return 0.5; // drain
+		default:
+			return 1.0;
+	}
+}
+
+/**
+ * Score a tile for attacking an enemy on it.
+ * Lower enemy defense bonus = better target.
+ */
+export function scoreTileForAttacking(biomeType: string): number {
+	switch (biomeType) {
+		case "grassland":
+			return 1.3; // No defense bonus — ideal for attacking
+		case "desert":
+			return 1.2; // No defense, enemies draining
+		case "wetland":
+			return 1.0;
+		case "hills":
+			return 0.7; // Enemy has defense bonus
+		case "forest":
+			return 0.5; // Enemy has defense + cover
+		case "tundra":
+			return 0.9;
+		default:
+			return 1.0;
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Movement helper — uses Yuka NavGraph A* when available
 // ---------------------------------------------------------------------------
 
@@ -294,21 +353,44 @@ export function moveToward(
 	targetZ: number,
 	board: GeneratedBoard,
 ): void {
-	// Try Yuka NavGraph pathfinding first
 	const navGraph = getOrBuildNavGraph(board);
 	const path = yukaShortestPath(fromX, fromZ, targetX, targetZ, navGraph);
 
 	if (path.length >= 2) {
-		const next = path[1];
+		const stats = entity.get(UnitStats);
+		const availMp = stats?.maxMp ?? 3;
+		const steps = Math.min(path.length - 1, Math.max(1, availMp));
+		const dest = path[steps];
 		entity.add(
 			UnitMove({
 				fromX,
 				fromZ,
-				toX: next.x,
-				toZ: next.z,
+				toX: dest.x,
+				toZ: dest.z,
 				progress: 0,
-				mpCost: 1,
+				mpCost: steps,
 			}),
 		);
 	}
+}
+
+let _moveDebugCounter = 0;
+
+export function debugMoveToward(
+	entity: ReturnType<World["query"]>[number],
+	fromX: number,
+	fromZ: number,
+	targetX: number,
+	targetZ: number,
+	board: GeneratedBoard,
+): { pathLen: number; moved: boolean } {
+	const navGraph = getOrBuildNavGraph(board);
+	const path = yukaShortestPath(fromX, fromZ, targetX, targetZ, navGraph);
+	if (_moveDebugCounter < 20) {
+		console.log(
+			`[moveDbg] from=(${fromX},${fromZ}) to=(${targetX},${targetZ}) pathLen=${path.length}`,
+		);
+		_moveDebugCounter++;
+	}
+	return { pathLen: path.length, moved: path.length >= 2 };
 }

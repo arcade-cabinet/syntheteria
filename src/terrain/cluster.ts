@@ -1,19 +1,19 @@
 /**
  * JS-side cluster math — mirrors the GLSL in floorShader.ts exactly.
  *
- * Used by the board generator and initWorldFromBoard to assign FloorType
+ * Used by the board generator and initWorldFromBoard to assign BiomeType
  * values that match what the shader renders. Same seed → same boundaries
  * on both CPU and GPU.
  *
  * Two noise layers:
  *   clusterValue   — high-frequency local terrain variation (biome clusters)
- *   geographyValue — low-frequency large-scale geography (former ocean basins)
+ *   geographyValue — low-frequency large-scale geography (water/mountains)
  */
 
 import type { Elevation } from "../board";
 import { TILE_SIZE_M } from "../config";
-import type { FloorType } from "./types";
-import { FLOOR_DEFS } from "./types";
+import type { BiomeType } from "./types";
+import { BIOME_DEFS } from "./types";
 
 // ---------------------------------------------------------------------------
 // Seed → float (FNV-1a) — same as GLSL uSeed uniform
@@ -79,13 +79,13 @@ function clusterValue(
 }
 
 // ---------------------------------------------------------------------------
-// Geography selection — low-frequency large-scale ocean/land (mirrors GLSL)
+// Geography selection — low-frequency large-scale geography (mirrors GLSL)
 // ---------------------------------------------------------------------------
 
 /**
  * Returns a [0,1] geography value for a world position.
- * High values (> threshold) become abyssal_platform (former ocean).
- * Medium-high values (> lower threshold) become structural_mass.
+ * High values (> threshold) become water (former ocean).
+ * Medium-high values (> lower threshold) become mountain.
  * Uses low frequency noise for continent-scale geography patches.
  * Exactly mirrored in the GLSL fragment shader.
  */
@@ -105,66 +105,59 @@ export function geographyValue(
 }
 
 /**
- * Returns the FloorType for a tile at (tileX, tileZ) with the given elevation
+ * Returns the BiomeType for a tile at (tileX, tileZ) with the given elevation
  * and board seed. Matches the GLSL cluster and geography selection in floorShader.ts.
  *
- * @param waterLevel ClimateProfile.waterLevel (0–1). Higher = more abyssal tiles.
+ * @param waterLevel ClimateProfile.waterLevel (0–1). Higher = more water tiles.
  *                   Defaults to 0.35 (temperate).
  */
-export function floorTypeForTile(
+export function biomeTypeForTile(
 	tileX: number,
 	tileZ: number,
 	elevation: Elevation,
 	seed: string,
 	waterLevel = 0.35,
-): FloorType {
-	// Deep drops → impassable void pit
-	if (elevation === -1) return "void_pit";
+): BiomeType {
+	if (elevation === -1) return "water";
 
 	const seedFloat = seedToFloat(seed);
 	const worldX = tileX * TILE_SIZE_M;
 	const worldZ = tileZ * TILE_SIZE_M;
 	const geo = geographyValue(worldX, worldZ, seedFloat);
 
-	// Geography thresholds — scaled by waterLevel.
-	// waterLevel=0.35 → abyssal above 0.825, structural between 0.575–0.825
-	// waterLevel=0.40 → abyssal above 0.800, structural between 0.550–0.800
-	// waterLevel=0.28 → abyssal above 0.860, structural between 0.610–0.860
-	// Wide 0.22 band creates contiguous 5-15 tile blobs (20-30% of board).
-	const abyssalThreshold = 1.0 - waterLevel * 0.5;
-	const structuralThreshold = abyssalThreshold - 0.22;
+	const waterThreshold = 1.0 - waterLevel * 0.5;
+	const mountainThreshold = waterThreshold - 0.22;
 
-	if (geo > abyssalThreshold) return "abyssal_platform";
-	if (geo > structuralThreshold) return "structural_mass";
+	if (geo > waterThreshold) return "water";
+	if (geo > mountainThreshold) return "mountain";
 
-	// Cluster-driven passable surface types
+	// Cluster-driven passable biome types
 	const cluster = clusterValue(worldX, worldZ, seedFloat);
-	if (cluster < 0.22) return "durasteel_span";
-	if (cluster < 0.4) return "transit_deck";
-	if (cluster < 0.57) return "collapsed_zone";
-	if (cluster < 0.72) return "dust_district";
-	if (cluster < 0.88) return "bio_district";
-	return "aerostructure";
+	if (cluster < 0.15) return "grassland";
+	if (cluster < 0.3) return "forest";
+	if (cluster < 0.45) return "desert";
+	if (cluster < 0.6) return "hills";
+	if (cluster < 0.75) return "wetland";
+	return "tundra";
 }
 
 /**
- * Returns a fully populated TileFloor trait value for the given floor type,
+ * Returns a fully populated TileBiome trait value for the given biome type,
  * with a deterministic resource amount roll from the tile position.
  */
-export function tileFloorProps(
-	floorType: FloorType,
+export function tileBiomeProps(
+	biomeType: BiomeType,
 	tileX: number,
 	tileZ: number,
 ) {
-	const def = FLOOR_DEFS[floorType];
+	const def = BIOME_DEFS[biomeType];
 	const [min, max] = def.resourceAmount;
-	// Deterministic roll from tile position
 	const roll =
 		min === max
 			? min
 			: min + (Math.abs(hash21(tileX, tileZ) * (max - min + 1)) | 0);
 	return {
-		floorType,
+		biomeType,
 		mineable: def.mineable,
 		hardness: def.hardness,
 		resourceMaterial: def.resourceMaterial,

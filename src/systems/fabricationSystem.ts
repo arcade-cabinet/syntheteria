@@ -13,10 +13,13 @@
 
 import { trait, type World } from "koota";
 import { playSfx } from "../audio/sfx";
+import { MOTOR_POOL_UNIT_TIERS } from "../config/buildingUnlockDefs";
+import { getSpeedConfig } from "../config/gameSpeedDefs";
 import { TRACK_REGISTRY } from "../robots/specializations/trackRegistry";
 import type { RobotClass } from "../robots/types";
 import type { ResourceMaterial } from "../terrain/types";
 import {
+	Board,
 	BotFabricator,
 	Building,
 	Powered,
@@ -29,8 +32,18 @@ import {
 import { pushTurnEvent } from "../ui/game/turnEvents";
 import { canSpawnUnit } from "./populationSystem";
 import { canAfford, spendResources } from "./resourceSystem";
+import { fireTutorialTooltip } from "./tutorialTooltips";
 
 // ─── Fabrication job trait ──────────────────────────────────────────────────
+
+/** Motor Pool tier → fabrication slots. */
+const MOTOR_POOL_SLOTS_BY_TIER: Record<number, number> = { 1: 2, 2: 3, 3: 4 };
+/** Motor Pool tier → build time multiplier (lower = faster). */
+const MOTOR_POOL_TIME_MULT_BY_TIER: Record<number, number> = {
+	1: 1.0,
+	2: 0.8,
+	3: 0.6,
+};
 
 /** A single in-progress fabrication job, linked to a motor pool entity. */
 export const FabricationJob = trait({
@@ -55,40 +68,40 @@ export interface RobotCost {
 export const ROBOT_COSTS: Record<RobotClass, RobotCost> = {
 	// Faction bots
 	scout: {
-		materials: { ferrous_scrap: 2, conductor_wire: 1 },
+		materials: { iron_ore: 2, circuits: 1 },
 		buildTime: 2,
 	},
 	infantry: {
-		materials: { alloy_stock: 3, ferrous_scrap: 2 },
+		materials: { steel: 3, iron_ore: 2 },
 		buildTime: 3,
 	},
 	cavalry: {
-		materials: { ferrous_scrap: 3, conductor_wire: 2, polymer_salvage: 1 },
+		materials: { iron_ore: 3, circuits: 2, timber: 1 },
 		buildTime: 3,
 	},
 	ranged: {
-		materials: { alloy_stock: 4, silicon_wafer: 2, conductor_wire: 2 },
+		materials: { steel: 4, glass: 2, circuits: 2 },
 		buildTime: 5,
 	},
 	support: {
-		materials: { ferrous_scrap: 3, alloy_stock: 2, conductor_wire: 1 },
+		materials: { iron_ore: 3, steel: 2, circuits: 1 },
 		buildTime: 4,
 	},
 	worker: {
-		materials: { ferrous_scrap: 3, polymer_salvage: 2 },
+		materials: { iron_ore: 3, timber: 2 },
 		buildTime: 3,
 	},
 	// Cult mechs (not player-buildable — costs here for system completeness)
 	cult_infantry: {
-		materials: { alloy_stock: 5, ferrous_scrap: 3 },
+		materials: { steel: 5, iron_ore: 3 },
 		buildTime: 6,
 	},
 	cult_ranged: {
-		materials: { alloy_stock: 4, silicon_wafer: 3 },
+		materials: { steel: 4, glass: 3 },
 		buildTime: 6,
 	},
 	cult_cavalry: {
-		materials: { ferrous_scrap: 4, conductor_wire: 3 },
+		materials: { iron_ore: 4, circuits: 3 },
 		buildTime: 5,
 	},
 };
@@ -246,7 +259,12 @@ export type QueueResult =
 	| { ok: true }
 	| {
 			ok: false;
-			reason: "not_powered" | "queue_full" | "cannot_afford" | "pop_cap";
+			reason:
+				| "not_powered"
+				| "queue_full"
+				| "cannot_afford"
+				| "pop_cap"
+				| "class_locked";
 	  };
 
 /**
@@ -271,13 +289,26 @@ export function queueFabrication(
 
 	// Must have BotFabricator with available slots
 	const fab = motorPoolEntity.get(BotFabricator);
-	if (!fab || fab.queueSize >= fab.fabricationSlots) {
+	if (!fab) {
 		return { ok: false, reason: "queue_full" };
 	}
 
 	const building = motorPoolEntity.get(Building);
 	if (!building) {
 		return { ok: false, reason: "queue_full" };
+	}
+
+	// Effective slots scale with building tier
+	const poolTier = building.buildingTier ?? 1;
+	const effectiveSlots =
+		MOTOR_POOL_SLOTS_BY_TIER[poolTier] ?? fab.fabricationSlots;
+	if (fab.queueSize >= effectiveSlots) {
+		return { ok: false, reason: "queue_full" };
+	}
+	const allowedClasses =
+		MOTOR_POOL_UNIT_TIERS[poolTier] ?? MOTOR_POOL_UNIT_TIERS[1]!;
+	if (!allowedClasses.includes(robotClass)) {
+		return { ok: false, reason: "class_locked" };
 	}
 
 	const cost = ROBOT_COSTS[robotClass];
@@ -306,12 +337,20 @@ export function queueFabrication(
 		queueSize: fab.queueSize + 1,
 	});
 
+	// Build time scales down with tier, and adjusts for game speed
+	const timeMult = MOTOR_POOL_TIME_MULT_BY_TIER[poolTier] ?? 1.0;
+	const speedMult = readBuildTimeMultiplier(world);
+	const effectiveBuildTime = Math.max(
+		1,
+		Math.round(cost.buildTime * timeMult * speedMult),
+	);
+
 	// Spawn job entity
 	world.spawn(
 		FabricationJob({
 			motorPoolId: motorPoolEntity.id(),
 			robotClass,
-			turnsRemaining: cost.buildTime,
+			turnsRemaining: effectiveBuildTime,
 			factionId,
 			trackId,
 			trackVersion,
@@ -401,6 +440,8 @@ export function runFabrication(world: World): void {
 				`Fabrication complete: ${job.robotClass.replace(/_/g, " ")}${trackLabel}`,
 			);
 
+			fireTutorialTooltip("first_fabrication");
+
 			// Free up the fabrication slot
 			const fab = pool.get(BotFabricator)!;
 			pool.set(BotFabricator, {
@@ -415,4 +456,13 @@ export function runFabrication(world: World): void {
 			jobEntity.set(FabricationJob, { ...job, turnsRemaining: remaining });
 		}
 	}
+}
+
+/** Read the game speed build time multiplier from the Board entity. */
+function readBuildTimeMultiplier(world: World): number {
+	for (const e of world.query(Board)) {
+		const b = e.get(Board);
+		if (b) return getSpeedConfig(b.gameSpeed).buildTimeMultiplier;
+	}
+	return 1.0;
 }

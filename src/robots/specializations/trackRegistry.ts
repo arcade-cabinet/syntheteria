@@ -55,6 +55,11 @@ export interface TrackEntry {
 	readonly statMods?: Readonly<Record<string, number>>;
 	/** v2 stat modifiers (ranged tracks only). */
 	readonly v2StatMods?: Readonly<Record<string, number>>;
+	/** Movement capability flags for amphibious/aerial tracks. */
+	readonly movementFlags?: {
+		readonly canTraverseWater?: boolean;
+		readonly canTraverseMountain?: boolean;
+	};
 }
 
 // ─── Build Registry ─────────────────────────────────────────────────────────
@@ -62,7 +67,7 @@ export interface TrackEntry {
 function buildRegistry(): ReadonlyMap<string, TrackEntry> {
 	const map = new Map<string, TrackEntry>();
 
-	// Scout: 2 tracks
+	// Scout: 3 tracks
 	for (const [id, def] of Object.entries(SCOUT_TRACKS)) {
 		map.set(id, {
 			trackId: id,
@@ -71,10 +76,13 @@ function buildRegistry(): ReadonlyMap<string, TrackEntry> {
 			description: def.description,
 			gateTechId: SCOUT_TRACK_TECHS[0]!.id,
 			v2TechId: SCOUT_TRACK_TECHS[1]!.id,
+			...(id === "amphibious_recon"
+				? { movementFlags: { canTraverseWater: true } }
+				: {}),
 		});
 	}
 
-	// Infantry: 2 tracks
+	// Infantry: 3 tracks
 	for (const [id, def] of Object.entries(INFANTRY_TRACKS)) {
 		map.set(id, {
 			trackId: id,
@@ -83,10 +91,11 @@ function buildRegistry(): ReadonlyMap<string, TrackEntry> {
 			description: def.description,
 			gateTechId: INFANTRY_TRACK_TECHS[0]!.id,
 			v2TechId: INFANTRY_TRACK_TECHS[1]!.id,
+			...(id === "marine" ? { movementFlags: { canTraverseWater: true } } : {}),
 		});
 	}
 
-	// Cavalry: 2 tracks
+	// Cavalry: 3 tracks
 	for (const [id, def] of Object.entries(CAVALRY_TRACKS)) {
 		map.set(id, {
 			trackId: id,
@@ -95,6 +104,14 @@ function buildRegistry(): ReadonlyMap<string, TrackEntry> {
 			description: def.description,
 			gateTechId: CAVALRY_TRACK_TECHS[0]!.id,
 			v2TechId: CAVALRY_TRACK_TECHS[1]!.id,
+			...(id === "aerial_striker"
+				? {
+						movementFlags: {
+							canTraverseWater: true,
+							canTraverseMountain: true,
+						},
+					}
+				: {}),
 		});
 	}
 
@@ -128,7 +145,7 @@ function buildRegistry(): ReadonlyMap<string, TrackEntry> {
 		});
 	}
 
-	// Worker: 3 tracks
+	// Worker: 4 tracks
 	for (const [id, def] of Object.entries(WORKER_TRACKS)) {
 		map.set(id, {
 			trackId: id,
@@ -137,6 +154,9 @@ function buildRegistry(): ReadonlyMap<string, TrackEntry> {
 			description: def.description,
 			gateTechId: WORKER_TRACK_TECHS[0]!.id,
 			v2TechId: WORKER_TRACK_TECHS[1]!.id,
+			...(id === "aquatic_engineer"
+				? { movementFlags: { canTraverseWater: true } }
+				: {}),
 		});
 	}
 
@@ -165,11 +185,17 @@ export function getSpecializedActions(
 
 	switch (entry.robotClass) {
 		case "scout":
-			return getScoutActions(trackId as "pathfinder" | "infiltrator");
+			return getScoutActions(
+				trackId as "pathfinder" | "infiltrator" | "amphibious_recon",
+			);
 		case "infantry":
-			return getInfantryTrackActions(trackId as "vanguard" | "shock_trooper");
+			return getInfantryTrackActions(
+				trackId as "vanguard" | "shock_trooper" | "marine",
+			);
 		case "cavalry":
-			return getCavalryActions(trackId as "flanker" | "interceptor");
+			return getCavalryActions(
+				trackId as "flanker" | "interceptor" | "aerial_striker",
+			);
 		case "ranged":
 			return getRangedTrackActions(trackId as "sniper" | "suppressor");
 		case "support":
@@ -178,7 +204,11 @@ export function getSpecializedActions(
 			);
 		case "worker":
 			return getWorkerTrackActions(
-				trackId as "deep_miner" | "fabricator" | "salvager",
+				trackId as
+					| "deep_miner"
+					| "fabricator"
+					| "salvager"
+					| "aquatic_engineer",
 			);
 		default:
 			return [];

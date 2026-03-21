@@ -16,7 +16,7 @@
 
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { CULT_STRUCTURE_DEFS } from "../../buildings/cultStructures";
+import { CULT_STRUCTURE_DEFS } from "../../config/buildings";
 import { FactionRelation } from "../../traits";
 import { CULT_DEFINITIONS } from "../cults";
 import { FACTION_DEFINITIONS } from "../definitions";
@@ -173,28 +173,22 @@ describe("SPEC: Section 8 — Factions + Cults", () => {
 	// ─── Cult escalation constants ─────────────────────────────────────
 
 	describe("cult escalation constants", () => {
-		it("BASE_SPAWN_INTERVAL = 5 (spec)", async () => {
-			// GAME_DESIGN.md: "BASE_SPAWN_INTERVAL=5"
-			// Import the constant from cultistSystem
+		it("BASE_SPAWN_INTERVAL = 3 (volatile — early cult pressure)", async () => {
 			const { _reset } = await import("../../systems/cultistSystem");
 			_reset(); // Clean state
-			// The constant is module-private, so we test it via the spawn behavior
-			// The cultistSystem uses BASE_SPAWN_INTERVAL = 5 internally
-			// We verify through the exported storm params
 			const { getStormCultistParams } = await import(
 				"../../systems/cultistSystem"
 			);
 			const params = getStormCultistParams("volatile");
-			expect(params.baseSpawnInterval).toBe(5);
+			expect(params.baseSpawnInterval).toBe(3);
 		});
 
-		it("MAX_TOTAL_CULTISTS = 12 (spec)", async () => {
-			// GAME_DESIGN.md: "MAX_TOTAL_CULTISTS=12"
+		it("MAX_TOTAL_CULTISTS = 20 (spec)", async () => {
 			const { getStormCultistParams } = await import(
 				"../../systems/cultistSystem"
 			);
 			const params = getStormCultistParams("volatile");
-			expect(params.maxTotalCultists).toBe(12);
+			expect(params.maxTotalCultists).toBe(20);
 		});
 	});
 
@@ -253,18 +247,16 @@ describe("SPEC: Section 8 — Factions + Cults", () => {
 				"../../systems/victorySystem"
 			);
 			_resetVictory();
-			// Victory system returns VictoryReason type that includes "domination"
-			// Just verify the module exports what we need
+			// Victory system returns VictoryType that includes "domination"
 			expect(checkVictoryConditions).toBeTypeOf("function");
 		});
 
-		it("technical supremacy victory path exists", async () => {
-			// GAME_DESIGN.md: "Technical Supremacy — full automation and Mark V progression"
+		it("transcendence victory path exists", async () => {
+			// GAME_DESIGN.md: "Transcendence — complete Wormhole Stabilizer"
 			const { checkVictoryConditions, _resetVictory } = await import(
 				"../../systems/victorySystem"
 			);
 			_resetVictory();
-			// Victory system includes "research" as a reason
 			expect(checkVictoryConditions).toBeTypeOf("function");
 		});
 

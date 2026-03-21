@@ -217,7 +217,7 @@ const RESEARCH_TECH: HTNGoal = {
 		// Step 1: Build research lab if none exists
 		if (!ctx.hasResearchLab) {
 			steps.push({
-				name: "build_research_lab",
+				name: "build_analysis_node",
 				canExecute: (c) => c.canBuildResearchLab,
 				getAction: () => ({ type: "idle" }), // Build system handles
 			});

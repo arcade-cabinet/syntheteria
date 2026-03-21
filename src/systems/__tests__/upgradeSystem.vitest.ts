@@ -29,19 +29,17 @@ describe("upgradeSystem", () => {
 				aggression: 0,
 			}),
 			ResourcePool({
-				ferrous_scrap: 20,
-				alloy_stock: 20,
-				polymer_salvage: 20,
-				conductor_wire: 20,
-				electrolyte: 20,
-				silicon_wafer: 20,
-				storm_charge: 20,
-				el_crystal: 20,
-				scrap_metal: 20,
-				e_waste: 20,
-				intact_components: 20,
-				thermal_fluid: 20,
-				depth_salvage: 20,
+				iron_ore: 20,
+				steel: 20,
+				timber: 20,
+				circuits: 20,
+				coal: 20,
+				glass: 20,
+				fuel: 20,
+				quantum_crystal: 20,
+				stone: 20,
+				sand: 20,
+				alloy: 20,
 			}),
 		);
 	});
@@ -89,7 +87,7 @@ describe("upgradeSystem", () => {
 			Building({
 				tileX,
 				tileZ,
-				buildingType: "research_lab",
+				buildingType: "analysis_node",
 				modelId: "test",
 				factionId: "player",
 				hp: 80,
@@ -264,19 +262,17 @@ describe("upgradeSystem", () => {
 			// Drain all resources
 			for (const e of world.query(ResourcePool, Faction)) {
 				e.set(ResourcePool, {
-					ferrous_scrap: 0,
-					alloy_stock: 0,
-					polymer_salvage: 0,
-					conductor_wire: 0,
-					electrolyte: 0,
-					silicon_wafer: 0,
-					storm_charge: 0,
-					el_crystal: 0,
-					scrap_metal: 0,
-					e_waste: 0,
-					intact_components: 0,
-					thermal_fluid: 0,
-					depth_salvage: 0,
+					iron_ore: 0,
+					steel: 0,
+					timber: 0,
+					circuits: 0,
+					coal: 0,
+					glass: 0,
+					fuel: 0,
+					quantum_crystal: 0,
+					stone: 0,
+					sand: 0,
+					alloy: 0,
 				});
 			}
 
@@ -293,11 +289,11 @@ describe("upgradeSystem", () => {
 
 			applyMark(world, unit.id(), bay.id(), "reinforced_hull");
 
-			// reinforced_hull costs: alloy_stock: 2, ferrous_scrap: 1
+			// reinforced_hull costs: steel: 2, iron_ore: 1
 			for (const e of world.query(ResourcePool, Faction)) {
 				const r = e.get(ResourcePool)!;
-				expect(r.alloy_stock).toBe(18); // 20 - 2
-				expect(r.ferrous_scrap).toBe(19); // 20 - 1
+				expect(r.steel).toBe(18); // 20 - 2
+				expect(r.iron_ore).toBe(19); // 20 - 1
 			}
 		});
 

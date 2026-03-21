@@ -1,4 +1,4 @@
-/** Minimal SQLite driver interface. Both sql.js and @capacitor-community/sqlite implement this. */
+/** Minimal SQLite driver interface. Both Capacitor SQLite and sql.js implement this. */
 export interface SqliteAdapter {
 	run(sql: string, params?: unknown[]): void | Promise<void>;
 	query<T = Record<string, unknown>>(
@@ -9,11 +9,11 @@ export interface SqliteAdapter {
 }
 
 /**
- * Create an in-memory sql.js adapter (for tests).
+ * Create an in-memory sql.js adapter for TESTS ONLY.
+ * NOT used in production — production uses Capacitor SQLite.
  * Uses the asm.js build to avoid wasm loading issues in Node/test environments.
  */
-export async function createSqlJsAdapter(): Promise<SqliteAdapter> {
-	// Use asm.js build — pure JS, no wasm file needed
+export async function createTestAdapter(): Promise<SqliteAdapter> {
 	const initSqlJs = (await import("sql.js/dist/sql-asm.js")).default;
 	const SQL = await initSqlJs();
 	const db = new SQL.Database();

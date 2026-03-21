@@ -1,26 +1,32 @@
 /**
  * @package views
  *
- * Phaser + enable3d game board rendering.
- * NO React dependency — pure Phaser/Three.js.
+ * Unified rendering package:
+ *   - views/title/ — R3F title + generating globe (TSX)
+ *   - views/board/ — Phaser + enable3d playing board (pure TS)
  *
- * React mounts the game via src/app/GameBoard.tsx (the only React bridge).
- * React ↔ Phaser communication via EventBus.
+ * Consumers import from "../views" (or "../views/title" / "../views/board"
+ * for sub-package-specific imports).
  */
 
-export type { GameBoardConfig } from "./createGame";
-export { createGame } from "./createGame";
-export { EventBus } from "./eventBus";
-// --- Lighting ---
+// ─── Board (Phaser + enable3d) ──────────────────────────────────────────────
+
+export type { GameBoardConfig } from "./board/createGame";
+export { createGame } from "./board/createGame";
+export { EventBus } from "./board/eventBus";
+// Lighting
 export {
 	applyEpochAtmosphere,
 	getCurrentAtmosphereEpoch,
 	getEpochAtmosphereParams,
 	resetEpochAtmosphere,
-} from "./lighting/epochAtmosphere";
-export { addAccentLight, setupWorldLighting } from "./lighting/worldLighting";
-// --- Roboform overlay ---
-export type { RoboformTile } from "./renderers/roboformOverlay";
+} from "./board/lighting/epochAtmosphere";
+export {
+	addAccentLight,
+	setupWorldLighting,
+} from "./board/lighting/worldLighting";
+// Roboform overlay
+export type { RoboformTile } from "./board/renderers/roboformOverlay";
 export {
 	clearRoboformData,
 	createRoboformOverlay,
@@ -29,5 +35,47 @@ export {
 	getRoboformSnapshot,
 	setRoboformLevel,
 	updateRoboformOverlay,
-} from "./renderers/roboformOverlay";
-export { WorldScene } from "./scenes/WorldScene";
+} from "./board/renderers/roboformOverlay";
+export { WorldScene } from "./board/scenes/WorldScene";
+
+// ─── Title (R3F) ────────────────────────────────────────────────────────────
+// Re-exported so consumers can use `from "../views"` for everything,
+// or `from "../views/title"` for title-specific imports.
+
+export {
+	// Renderers
+	BiomeRenderer,
+	BoardRenderer,
+	BuildingRenderer,
+	// Effects
+	CombatEffectsRenderer,
+	CultDomeRenderer,
+	CutawayClipPlane,
+	clearPreviewPath,
+	// Overlays
+	FogOfWarRenderer,
+	FragmentRenderer,
+	// Globe
+	GlobeWithCities,
+	HighlightRenderer,
+	Hypercane,
+	IlluminatorRenderer,
+	InfrastructureRenderer,
+	LightningEffect,
+	LodGlobe,
+	// Shared
+	ModelErrorBoundary,
+	ParticleRenderer,
+	PathRenderer,
+	SalvageRenderer,
+	SpeechBubbleRenderer,
+	StormClouds,
+	StormSky,
+	StructureRenderer,
+	setPreviewPath,
+	TerritoryOverlayRenderer,
+	TitleText,
+	UnifiedTerrainRenderer,
+	UnitRenderer,
+	UnitStatusBars,
+} from "./title";

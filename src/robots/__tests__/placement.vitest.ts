@@ -14,7 +14,7 @@ function makeBoard(width: number, height: number): SimpleBoardInfo {
 		width,
 		height,
 		isPassable: () => true,
-		getFloorType: () => "durasteel_span",
+		getBiomeType: () => "grassland",
 	};
 }
 
@@ -38,8 +38,10 @@ describe("placeRobots", () => {
 		placeRobots(world, flags, board);
 
 		const units = world.query(UnitPos);
-		// 6 player + 4+4+4 AI = 18 total
-		expect(units.length).toBe(18);
+		// 6 player (2 scout, 2 worker, 1 infantry, 1 support)
+		// + 6+6+6 AI (2 scout, 2 worker, 1 infantry, 1 support each)
+		// + 1 extra infantry for iron_creed = 25 total
+		expect(units.length).toBe(25);
 	});
 
 	it("places player units near spawn center", () => {
@@ -163,9 +165,9 @@ describe("placeRobots", () => {
 			width: 32,
 			height: 32,
 			isPassable: () => true,
-			getFloorType: (x, z) => {
-				if (x >= 3 && x <= 8 && z >= 3 && z <= 8) return "collapsed_zone";
-				return "durasteel_span";
+			getBiomeType: (x: number, z: number) => {
+				if (x >= 3 && x <= 8 && z >= 3 && z <= 8) return "hills";
+				return "grassland";
 			},
 		};
 		computeSpawnCenters(board);

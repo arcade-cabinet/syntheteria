@@ -17,7 +17,7 @@ import type { MarkSpecialization } from "../marks";
 
 // ─── Track IDs ───────────────────────────────────────────────────────────────
 
-export type InfantryTrack = "vanguard" | "shock_trooper";
+export type InfantryTrack = "vanguard" | "shock_trooper" | "marine";
 
 // ─── Specialization Interface ────────────────────────────────────────────────
 
@@ -120,6 +120,51 @@ export const SHOCK_TROOPER_SPECIALIZATIONS: readonly InfantryTrackSpecialization
 		},
 	] as const;
 
+// ─── Track C: Marine ────────────────────────────────────────────────────────
+//
+// Fantasy: An amphibious heavy infantry that can wade through water at
+// reduced speed and build bridge improvements. Gains defense bonuses in
+// water and wetland biomes. Unlocked at Motor Pool tier 3.
+
+export const MARINE_SPECIALIZATIONS: readonly InfantryTrackSpecialization[] = [
+	{
+		track: "marine",
+		label: "Amphibious Chassis",
+		markLevel: 2 as 3,
+		effectType: "amphibious_chassis",
+		effectValue: 1,
+		description:
+			"Can traverse water tiles (movement cost 3.0). +1 defense in water and wetland biomes.",
+	},
+	{
+		track: "marine",
+		label: "Bridge Builder",
+		markLevel: 3,
+		effectType: "bridge_builder",
+		effectValue: 1,
+		description:
+			"Can build bridge improvements on water tiles, making them passable for all units.",
+	},
+	{
+		track: "marine",
+		label: "Coastal Fortification",
+		markLevel: 4,
+		effectType: "coastal_fort",
+		effectValue: 2,
+		description:
+			"+2 defense when adjacent to water. Bridges built by this unit have +50% HP.",
+	},
+	{
+		track: "marine",
+		label: "Transcendent Admiral",
+		markLevel: 5,
+		effectType: "transcendent_admiral",
+		effectValue: 1,
+		description:
+			"Water movement cost reduced to 1.0. All friendly units adjacent to bridges gain +1 defense. Bridge building is instant.",
+	},
+] as const;
+
 // ─── v2 Upgraded Versions ────────────────────────────────────────────────────
 //
 // Unlocked by higher-tier tech tree research. Replaces the base track's
@@ -192,6 +237,13 @@ export const INFANTRY_TRACKS: Record<
 			"Burst damage assassin. Armor piercing, execution strikes, and chain-kill resets.",
 		specializations: SHOCK_TROOPER_SPECIALIZATIONS,
 		v2Upgrades: SHOCK_TROOPER_V2_UPGRADES,
+	},
+	marine: {
+		label: "Marine",
+		description:
+			"Amphibious assault. Traverse water, build bridges, coastal defense bonuses.",
+		specializations: MARINE_SPECIALIZATIONS,
+		v2Upgrades: [],
 	},
 };
 
@@ -273,6 +325,27 @@ export const SHOCK_TROOPER_ACTIONS: readonly ClassActionDef[] = [
 	},
 ];
 
+/** Actions unlocked by the Marine track. */
+export const MARINE_ACTIONS: readonly ClassActionDef[] = [
+	{
+		id: "build_bridge",
+		label: "Bridge",
+		icon: "\uD83C\uDF09", // bridge at night
+		tone: "construct",
+		category: "economy",
+		apCost: 1,
+		minRange: 1,
+		maxRange: 1,
+		requiresStaging: true,
+		requiresAdjacent: true,
+		requiresEnemy: false,
+		requiresFriendly: false,
+		cooldown: 0,
+		description:
+			"Build a bridge on an adjacent water tile, making it passable for all units",
+	},
+];
+
 // ─── Tech Tree Additions ─────────────────────────────────────────────────────
 //
 // These techs gate and upgrade the infantry specialization tracks.
@@ -284,7 +357,7 @@ export const INFANTRY_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Modular combat frame reconfiguration. Unlocks Vanguard and Shock Trooper specializations at the Garage.",
 		tier: 2,
-		cost: { alloy_stock: 6, ferrous_scrap: 4, polymer_salvage: 3 },
+		cost: { steel: 6, iron_ore: 4, timber: 3 },
 		turnsToResearch: 4,
 		prerequisites: ["reinforced_chassis"],
 		effects: [{ type: "unit_hp_bonus" as const, value: 1 }],
@@ -295,7 +368,7 @@ export const INFANTRY_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Next-generation battlefield programming. Upgrades Vanguard to v2 (Graviton Anchor) and Shock Trooper to v2 (Overclocked Servos).",
 		tier: 4,
-		cost: { intact_components: 9, alloy_stock: 10, storm_charge: 6 },
+		cost: { steel: 19, fuel: 6 },
 		turnsToResearch: 8,
 		prerequisites: ["combat_chassis_specialization", "mark_iii_components"],
 		effects: [{ type: "unit_hp_bonus" as const, value: 2 }],
@@ -334,7 +407,9 @@ export function getInfantryTrackSpecializations(
 export function getInfantryTrackActions(
 	track: InfantryTrack,
 ): readonly ClassActionDef[] {
-	return track === "vanguard" ? VANGUARD_ACTIONS : SHOCK_TROOPER_ACTIONS;
+	if (track === "vanguard") return VANGUARD_ACTIONS;
+	if (track === "marine") return MARINE_ACTIONS;
+	return SHOCK_TROOPER_ACTIONS;
 }
 
 /**
@@ -342,10 +417,10 @@ export function getInfantryTrackActions(
  * Handles the Mark II cast (markLevel stored as 3 but logically 2).
  */
 function effectiveMarkLevel(spec: InfantryTrackSpecialization): number {
-	// Mark II specs use the cast pattern — detect by effectType
 	if (
 		spec.effectType === "hardened_plating" ||
-		spec.effectType === "impact_charge"
+		spec.effectType === "impact_charge" ||
+		spec.effectType === "amphibious_chassis"
 	) {
 		return 2;
 	}

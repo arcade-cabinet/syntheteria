@@ -15,6 +15,7 @@ import { awardXP, recordHarvest } from "./experienceSystem";
 import { trackIncome } from "./resourceDeltaSystem";
 import { addResources } from "./resourceSystem";
 import { triggerHarvestSpeech } from "./speechTriggers";
+import { fireTutorialTooltip } from "./tutorialTooltips";
 
 /** Process one tick of all active harvest operations. */
 export function harvestSystem(world: World): void {
@@ -31,6 +32,7 @@ export function harvestSystem(world: World): void {
 
 		// Harvest complete — play SFX and find the deposit to yield resources
 		playSfx("harvest_complete");
+		fireTutorialTooltip("first_harvest_complete");
 		const faction = unit.get(UnitFaction);
 		if (!faction) {
 			unit.remove(UnitHarvest);

@@ -8,7 +8,7 @@
 import type { World } from "koota";
 import { tileNeighbors } from "../board/adjacency";
 import type { GeneratedBoard } from "../board/types";
-import { CULT_STRUCTURE_DEFS } from "../buildings/cultStructures";
+import { CULT_STRUCTURE_DEFS } from "../config/buildings";
 import {
 	spawnCultCavalry,
 	spawnCultInfantry,
@@ -32,7 +32,7 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Place 3-6 cult POIs on collapsed_zone / dust_district tiles during mapgen.
+ * Place 3-6 cult POIs on hills / desert tiles during mapgen.
  * Each POI gets a breach_altar + 1 cult mech guard.
  * Called once at game start from initWorldFromBoard or similar.
  */
@@ -57,7 +57,7 @@ export function initCultPOIs(
 		for (let x = margin; x < width - margin; x++) {
 			const tile = board.tiles[z]?.[x];
 			if (!tile || !tile.passable) continue;
-			if (!CULT_TERRAIN.has(tile.floorType)) continue;
+			if (!CULT_TERRAIN.has(tile.biomeType)) continue;
 			// Exclude center area (player starts near center)
 			const distToCenter = Math.abs(x - centerX) + Math.abs(z - centerZ);
 			if (distToCenter < centerExclusion) continue;

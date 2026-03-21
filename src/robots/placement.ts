@@ -1,6 +1,6 @@
 import type { World } from "koota";
 import { FACTION_DEFINITIONS } from "../factions";
-import { UnitPos } from "../traits";
+import { UnitPos, UnitSpecialization } from "../traits";
 import { spawnSupport } from "./BuilderBot";
 import { spawnCavalry } from "./CavalryBot";
 import {
@@ -25,8 +25,8 @@ export interface RobotPlacementFlag {
 
 /**
  * Build placement flags for the current game config.
- * All factions get the same starter squad composition.
- * Player gets a full 6-bot squad; AI factions get a 4-bot squad.
+ * All factions get a 6-bot starter squad: 2 scout, 2 worker, 1 infantry, 1 support.
+ * Iron Creed gets 1 extra infantry (7 total) for early aggression.
  */
 export function buildPlacementFlags(
 	playerFactionId: string | null,
@@ -40,23 +40,17 @@ export function buildPlacementFlags(
 			{
 				robotType: "scout",
 				factionId: "player",
-				count: 1,
+				count: 2,
+				zone: "player_start",
+			},
+			{
+				robotType: "worker",
+				factionId: "player",
+				count: 2,
 				zone: "player_start",
 			},
 			{
 				robotType: "infantry",
-				factionId: "player",
-				count: 1,
-				zone: "player_start",
-			},
-			{
-				robotType: "cavalry",
-				factionId: "player",
-				count: 1,
-				zone: "player_start",
-			},
-			{
-				robotType: "ranged",
 				factionId: "player",
 				count: 1,
 				zone: "player_start",
@@ -67,23 +61,24 @@ export function buildPlacementFlags(
 				count: 1,
 				zone: "player_start",
 			},
-			{
-				robotType: "worker",
-				factionId: "player",
-				count: 1,
-				zone: "player_start",
-			},
 		);
 	}
 
-	// AI factions — 4 combat bots each (same types as player)
+	// AI factions — 6 bots each: 2 scout, 2 worker, 1 infantry, 1 support
+	// Iron Creed gets 1 extra infantry (7 total)
 	for (const factionId of activeFactionIds) {
 		if (factionId === playerFactionId) continue;
+		const isIronCreed = factionId === "iron_creed";
 		flags.push(
-			{ robotType: "scout", factionId, count: 1, zone: "faction_start" },
-			{ robotType: "infantry", factionId, count: 1, zone: "faction_start" },
-			{ robotType: "cavalry", factionId, count: 1, zone: "faction_start" },
-			{ robotType: "ranged", factionId, count: 1, zone: "faction_start" },
+			{ robotType: "scout", factionId, count: 2, zone: "faction_start" },
+			{ robotType: "worker", factionId, count: 2, zone: "faction_start" },
+			{
+				robotType: "infantry",
+				factionId,
+				count: isIronCreed ? 2 : 1,
+				zone: "faction_start",
+			},
+			{ robotType: "support", factionId, count: 1, zone: "faction_start" },
 		);
 	}
 
@@ -94,8 +89,8 @@ export interface SimpleBoardInfo {
 	width: number;
 	height: number;
 	isPassable: (x: number, z: number) => boolean;
-	/** Floor type at tile. Returns undefined for out-of-bounds. */
-	getFloorType?: (x: number, z: number) => string | undefined;
+	/** Biome type at tile. Returns undefined for out-of-bounds. */
+	getBiomeType?: (x: number, z: number) => string | undefined;
 }
 
 const SPAWNERS: Record<
@@ -132,7 +127,7 @@ function scoreTile(
 			const tx = x + dx;
 			const tz = z + dz;
 			if (tx < 0 || tz < 0 || tx >= board.width || tz >= board.height) continue;
-			const ft = board.getFloorType?.(tx, tz);
+			const ft = board.getBiomeType?.(tx, tz);
 			if (ft === terrainAffinity) affinityCount++;
 		}
 	}
@@ -298,6 +293,16 @@ export function computeSpawnCenters(
 	}
 }
 
+/** Default starter specialization track per robot class. Cult units get none. */
+const DEFAULT_STARTER_TRACKS: Partial<Record<RobotClass, string>> = {
+	scout: "pathfinder",
+	infantry: "vanguard",
+	worker: "salvager",
+	support: "field_medic",
+	cavalry: "flanker",
+	ranged: "sniper",
+};
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 export function placeRobots(
@@ -343,8 +348,21 @@ export function placeRobots(
 			}
 
 			if (tile) {
-				spawner(world, tile.x, tile.z, flag.factionId);
+				const entity = spawner(world, tile.x, tile.z, flag.factionId);
 				occupied.add(`${tile.x},${tile.z}`);
+
+				// Assign default starter specialization (non-cult units only)
+				const defaultTrack = DEFAULT_STARTER_TRACKS[flag.robotType];
+				if (
+					defaultTrack &&
+					entity &&
+					typeof entity === "object" &&
+					"add" in entity
+				) {
+					(entity as { add: (t: unknown) => void }).add(
+						UnitSpecialization({ trackId: defaultTrack, trackVersion: 1 }),
+					);
+				}
 			}
 		}
 	}

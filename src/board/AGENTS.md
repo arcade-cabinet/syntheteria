@@ -13,7 +13,7 @@ Deterministic labyrinth board generation and tile grid utilities.
 - `getAdjacent(x, z, board)` → neighbor tiles
 - `reachableTiles(x, z, range, board)` → set of reachable coordinates
 - `movementCost(from, to)` → cost in MP
-- Types: `BoardConfig`, `GeneratedBoard`, `TileData`, `FloorType`
+- Types: `BoardConfig`, `GeneratedBoard`, `TileData`, `BiomeType`
 
 ## Key Files
 | File | Purpose |

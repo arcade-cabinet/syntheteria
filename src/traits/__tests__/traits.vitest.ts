@@ -1,6 +1,6 @@
 import { createWorld } from "koota";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { TileFloor } from "../../terrain/traits";
+import { TileBiome } from "../../terrain/traits";
 import { Board } from "../../traits/board";
 import { Building } from "../../traits/building";
 import { Faction, FactionRelation } from "../../traits/faction";
@@ -63,29 +63,29 @@ describe("Tile traits", () => {
 		expect(e.has(Tile)).toBe(false);
 	});
 
-	it("TileFloor defaults", () => {
-		const e = world.spawn(TileFloor);
-		const f = e.get(TileFloor)!;
-		expect(f.floorType).toBe("durasteel_span");
+	it("TileBiome defaults", () => {
+		const e = world.spawn(TileBiome);
+		const f = e.get(TileBiome)!;
+		expect(f.biomeType).toBe("grassland");
 		expect(f.mineable).toBe(false);
 		expect(f.hardness).toBe(0);
 		expect(f.resourceAmount).toBe(0);
 	});
 
-	it("TileFloor spawns with values", () => {
+	it("TileBiome spawns with values", () => {
 		const e = world.spawn(
-			TileFloor({
-				floorType: "collapsed_zone",
+			TileBiome({
+				biomeType: "hills",
 				mineable: true,
 				hardness: 1,
-				resourceMaterial: "scrap_metal",
+				resourceMaterial: "stone",
 				resourceAmount: 2,
 			}),
 		);
-		const f = e.get(TileFloor)!;
-		expect(f.floorType).toBe("collapsed_zone");
+		const f = e.get(TileBiome)!;
+		expect(f.biomeType).toBe("hills");
 		expect(f.mineable).toBe(true);
-		expect(f.resourceMaterial).toBe("scrap_metal");
+		expect(f.resourceMaterial).toBe("stone");
 		expect(f.resourceAmount).toBe(2);
 	});
 
@@ -226,7 +226,7 @@ describe("ResourceDeposit trait", () => {
 	it("defaults", () => {
 		const e = world.spawn(ResourceDeposit);
 		const r = e.get(ResourceDeposit)!;
-		expect(r.material).toBe("scrap_metal");
+		expect(r.material).toBe("stone");
 		expect(r.amount).toBe(0);
 		expect(r.depleted).toBe(false);
 	});
@@ -236,13 +236,13 @@ describe("ResourceDeposit trait", () => {
 			ResourceDeposit({
 				tileX: 2,
 				tileZ: 3,
-				material: "thermal_fluid",
+				material: "fuel",
 				amount: 50,
 				depleted: false,
 			}),
 		);
 		const r = e.get(ResourceDeposit)!;
-		expect(r.material).toBe("thermal_fluid");
+		expect(r.material).toBe("fuel");
 		expect(r.amount).toBe(50);
 	});
 });

@@ -1,7 +1,7 @@
 import type { World } from "koota";
 import { playSfx } from "../audio/sfx";
 import type { RobotClass } from "../robots/types";
-import { TileFloor } from "../terrain";
+import { BIOME_DEFS, TileBiome } from "../terrain";
 import {
 	Board,
 	CombatResult,
@@ -18,6 +18,7 @@ import { recordCombatEngagement, recordCombatKill } from "./campaignStats";
 import { recordAggression } from "./diplomacySystem";
 import { awardXP, recordKill } from "./experienceSystem";
 import { triggerCombatSpeech } from "./speechTriggers";
+import { fireTutorialTooltip } from "./tutorialTooltips";
 
 /** Minimum damage floor — even a heavily armored target takes at least 1. */
 const MIN_DAMAGE = 1;
@@ -29,8 +30,42 @@ function manhattanDist(ax: number, az: number, bx: number, bz: number): number {
 	return Math.abs(ax - bx) + Math.abs(az - bz);
 }
 
+/**
+ * Look up the terrain defense bonus for a tile position.
+ * Scans TileBiome entities for the matching tile coordinates.
+ */
+function getTerrainDefenseBonus(
+	world: World,
+	tileX: number,
+	tileZ: number,
+): number {
+	for (const entity of world.query(Tile, TileBiome)) {
+		const tile = entity.get(Tile);
+		if (!tile || tile.x !== tileX || tile.z !== tileZ) continue;
+		const biome = entity.get(TileBiome);
+		if (!biome) continue;
+		return BIOME_DEFS[biome.biomeType]?.defenseBonus ?? 0;
+	}
+	return 0;
+}
+
+/**
+ * Check if the defender has cover from ranged attacks (e.g. forest).
+ * Cover blocks ranged attacks from non-adjacent tiles.
+ */
+function hasTerrainCover(world: World, tileX: number, tileZ: number): boolean {
+	for (const entity of world.query(Tile, TileBiome)) {
+		const tile = entity.get(Tile);
+		if (!tile || tile.x !== tileX || tile.z !== tileZ) continue;
+		const biome = entity.get(TileBiome);
+		if (!biome) continue;
+		return BIOME_DEFS[biome.biomeType]?.coverFromRanged ?? false;
+	}
+	return false;
+}
+
 // ---------------------------------------------------------------------------
-// Line of sight — Bresenham line walk checking for structural_mass walls
+// Line of sight — Bresenham line walk checking for mountain walls
 // ---------------------------------------------------------------------------
 
 /** Cached set of "x,z" keys for tiles that block LOS. Rebuilt once per turn. */
@@ -40,9 +75,9 @@ let wallCacheTurn = -1;
 function getWallTiles(world: World, currentTurn: number): Set<string> {
 	if (wallTileCache && wallCacheTurn === currentTurn) return wallTileCache;
 	const walls = new Set<string>();
-	for (const entity of world.query(Tile, TileFloor)) {
-		const floor = entity.get(TileFloor);
-		if (floor?.floorType === "structural_mass") {
+	for (const entity of world.query(Tile, TileBiome)) {
+		const biome = entity.get(TileBiome);
+		if (biome?.biomeType === "mountain") {
 			const tile = entity.get(Tile);
 			if (tile) walls.add(`${tile.x},${tile.z}`);
 		}
@@ -53,7 +88,7 @@ function getWallTiles(world: World, currentTurn: number): Set<string> {
 }
 
 /**
- * Bresenham line-of-sight check. Returns true if no structural_mass tile
+ * Bresenham line-of-sight check. Returns true if no mountain tile
  * lies on the line between (ax,az) and (bx,bz), excluding the endpoints.
  * Melee attacks (range 1) always have LOS — caller should skip for range 1.
  */
@@ -154,13 +189,27 @@ export function resolveAttacks(world: World): void {
 						playSfx("attack_miss");
 						break;
 					}
+
+					// Cover check — forest etc. blocks ranged from non-adjacent
+					if (
+						dist > 1 &&
+						hasTerrainCover(world, targetPos.tileX, targetPos.tileZ)
+					) {
+						pushTurnEvent("Attack failed — target has terrain cover");
+						playSfx("attack_miss");
+						break;
+					}
 				}
 			}
 
-			// Primary damage
+			// Primary damage — terrain defense bonus applied to defender
+			const terrainDefense = targetPos
+				? getTerrainDefenseBonus(world, targetPos.tileX, targetPos.tileZ)
+				: 0;
+			const effectiveDefense = targetStats.defense + terrainDefense;
 			const damage = Math.max(
 				MIN_DAMAGE,
-				attackerStats.attack - targetStats.defense,
+				attackerStats.attack - effectiveDefense,
 			);
 			const newHp = targetStats.hp - damage;
 
@@ -177,6 +226,8 @@ export function resolveAttacks(world: World): void {
 
 			// Trigger combat speech for attacker
 			triggerCombatSpeech(world, attacker.id(), attackerName);
+
+			fireTutorialTooltip("first_combat");
 
 			if (newHp <= 0) {
 				// Add CombatResult before destroying so renderer can flash
@@ -236,10 +287,19 @@ export function resolveAttacks(world: World): void {
 						targetStats.attack > 0 &&
 						counterLos
 					) {
+						const attackerTerrainDefense = attackerPos
+							? getTerrainDefenseBonus(
+									world,
+									attackerPos.tileX,
+									attackerPos.tileZ,
+								)
+							: 0;
+						const attackerEffectiveDefense =
+							attackerStats.defense + attackerTerrainDefense;
 						const counterDamage = Math.max(
 							MIN_DAMAGE,
 							Math.floor(targetStats.attack * COUNTER_DAMAGE_RATIO) -
-								attackerStats.defense,
+								attackerEffectiveDefense,
 						);
 						const attackerNewHp = attackerStats.hp - counterDamage;
 

@@ -31,7 +31,7 @@ import {
 function makeBoard(
 	width: number,
 	height: number,
-	floorType = "durasteel_span",
+	biomeType = "grassland",
 ): GeneratedBoard {
 	const tiles: TileData[][] = [];
 	for (let z = 0; z < height; z++) {
@@ -42,7 +42,7 @@ function makeBoard(
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: floorType as TileData["floorType"],
+				biomeType: biomeType as TileData["biomeType"],
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -74,14 +74,13 @@ function makeBoardWithCultTerrain(
 			const distToCenter = Math.abs(x - centerX) + Math.abs(z - centerZ);
 			const isCenter = distToCenter < centerExclusion;
 			// Use cult terrain in the valid zone
-			const floorType =
-				!isEdge && !isCenter ? "collapsed_zone" : "durasteel_span";
+			const biomeType = !isEdge && !isCenter ? "hills" : "grassland";
 			row.push({
 				x,
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: floorType as TileData["floorType"],
+				biomeType: biomeType as TileData["biomeType"],
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -131,7 +130,7 @@ describe("cultistSystem", () => {
 		world.destroy();
 	});
 
-	it("no spawn before grace period (turn < 5)", () => {
+	it("no spawn before grace period (turn < 3)", () => {
 		world.spawn(
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
@@ -146,14 +145,14 @@ describe("cultistSystem", () => {
 			}),
 		);
 
-		for (let turn = 1; turn < 5; turn++) {
+		for (let turn = 1; turn < 3; turn++) {
 			checkCultistSpawn(world, board, turn);
 		}
 
 		expect(countCultists(world)).toBe(0);
 	});
 
-	it("spawns at correct interval (turn 5 with base escalation)", () => {
+	it("spawns at correct interval (turn 3 with base escalation)", () => {
 		world.spawn(
 			UnitPos({ tileX: 5, tileZ: 5 }),
 			UnitFaction({ factionId: "player" }),
@@ -168,7 +167,7 @@ describe("cultistSystem", () => {
 			}),
 		);
 
-		checkCultistSpawn(world, board, 5);
+		checkCultistSpawn(world, board, 3);
 
 		expect(countCultists(world)).toBeGreaterThan(0);
 	});
@@ -188,7 +187,7 @@ describe("cultistSystem", () => {
 			}),
 		);
 
-		checkCultistSpawn(world, board, 6);
+		checkCultistSpawn(world, board, 4);
 
 		expect(countCultists(world)).toBe(0);
 	});
@@ -216,7 +215,7 @@ describe("cultistSystem", () => {
 	});
 
 	it("respects MAX_TOTAL_CULTISTS cap", () => {
-		for (let i = 0; i < 12; i++) {
+		for (let i = 0; i < 20; i++) {
 			world.spawn(
 				UnitPos({ tileX: i, tileZ: 0 }),
 				UnitFaction({ factionId: "static_remnants" }),
@@ -246,9 +245,9 @@ describe("cultistSystem", () => {
 			}),
 		);
 
-		checkCultistSpawn(world, board, 5);
+		checkCultistSpawn(world, board, 3);
 
-		expect(countCultists(world)).toBe(12);
+		expect(countCultists(world)).toBe(20);
 	});
 
 	it("breach zones are placed at board edges", () => {
@@ -287,7 +286,7 @@ describe("cultistSystem", () => {
 			}),
 		);
 
-		checkCultistSpawn(world, board, 5);
+		checkCultistSpawn(world, board, 3);
 
 		const validIds = new Set(["static_remnants", "null_monks", "lost_signal"]);
 		for (const e of world.query(UnitFaction)) {
@@ -313,7 +312,7 @@ describe("cultistSystem", () => {
 			}),
 		);
 
-		checkCultistSpawn(world, board, 5);
+		checkCultistSpawn(world, board, 3);
 
 		// Valid HP values from known mech types (drone=12, zealot=10, shaman=8, herald=8, archon=20)
 		const validHpValues = new Set([8, 10, 12, 20]);
@@ -352,7 +351,7 @@ describe("cultistSystem", () => {
 
 		it("spawns breach altar at breach zone", () => {
 			spawnPlayerUnit(world);
-			checkCultistSpawn(world, board, 5);
+			checkCultistSpawn(world, board, 3);
 
 			expect(countStructures(world, "breach_altar")).toBeGreaterThan(0);
 
@@ -405,7 +404,7 @@ describe("cultistSystem", () => {
 
 		it("spawns human shelters adjacent to breach altars", () => {
 			spawnPlayerUnit(world);
-			checkCultistSpawn(world, board, 5);
+			checkCultistSpawn(world, board, 3);
 
 			const shelterCount = countStructures(world, "human_shelter");
 			expect(shelterCount).toBeGreaterThan(0);
@@ -582,7 +581,8 @@ describe("cultistSystem", () => {
 			);
 
 			// checkCultistSpawn calls cleanupDestroyedStructures first
-			checkCultistSpawn(world, board, 6);
+			// Use turn 4 which is NOT a spawn interval (4%3 ≠ 0) so only cleanup runs
+			checkCultistSpawn(world, board, 4);
 
 			// Structure should be gone
 			expect(countStructures(world, "breach_altar")).toBe(0);
@@ -620,8 +620,8 @@ describe("cultistSystem", () => {
 				if (c > maxSeen) maxSeen = c;
 			}
 
-			// MAX_TOTAL_CULTISTS for volatile storm is 12
-			expect(maxSeen).toBeLessThanOrEqual(12);
+			// MAX_TOTAL_CULTISTS for volatile storm is 20
+			expect(maxSeen).toBeLessThanOrEqual(20);
 		});
 
 		it("cultist count stays within cap even with POI initial guards + spawning", () => {
@@ -659,7 +659,7 @@ describe("cultistSystem", () => {
 				if (c > maxSeen) maxSeen = c;
 			}
 
-			expect(maxSeen).toBeLessThanOrEqual(12);
+			expect(maxSeen).toBeLessThanOrEqual(20);
 		});
 	});
 

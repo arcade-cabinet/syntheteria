@@ -6,11 +6,15 @@
 
 // --- AI & Turn Flow ---
 export { resolveAllMoves, runAiTurns } from "./aiTurnSystem";
+// --- Analysis (building upgrade acceleration) ---
+export {
+	analysisAcceleration,
+	runAnalysisAcceleration,
+} from "./analysisSystem";
 export type {
 	FactionResourceData,
 	TurnSnapshotData,
 } from "./analyticsCollector";
-
 // --- Analytics & Campaign Stats ---
 export {
 	collectCampaignStats,
@@ -19,8 +23,17 @@ export {
 } from "./analyticsCollector";
 // --- Combat ---
 export { resolveAttacks } from "./attackSystem";
+export { biomeMiningSystem, startBiomeMining } from "./biomeMiningSystem";
 // --- Building ---
 export { placeStarterBuildings } from "./buildingPlacement";
+export type { BuildingUpgradeJob } from "./buildingUpgradeSystem";
+export {
+	canUpgradeBuilding,
+	clearBuildingUpgradeJobs,
+	getBuildingUpgradeJob,
+	runBuildingUpgrades,
+	startBuildingUpgrade,
+} from "./buildingUpgradeSystem";
 export {
 	_resetBuildSystem,
 	cancelBuildPlacement,
@@ -59,18 +72,24 @@ export type {
 	SectBias,
 	StormCultistParams,
 } from "./cultistSystem";
-
 // --- Cult ---
 export {
 	_reset as _resetCultist,
+	_resetCultEncounters,
 	checkCultistSpawn,
 	cleanupDestroyedStructures,
+	fireCultEncounter,
+	fireELArrival,
+	fireHumanEncounter,
 	getAltarZones,
 	getBreachZones,
 	getCorruptedTiles,
 	getEscalationStage,
 	getPOIPositions,
 	getStormCultistParams,
+	hasELArrivalFired,
+	hasFiredEncounter,
+	hasFiredHumanEncounter,
 	initBreachZones,
 	initCultPOIs,
 	runCultPatrols,
@@ -90,7 +109,6 @@ export type {
 	StandingLevel,
 	TradeIncome,
 } from "./diplomacySystem";
-
 // --- Diplomacy ---
 export {
 	_resetDiplomacy,
@@ -110,7 +128,6 @@ export {
 	subscribeDiplomacy,
 } from "./diplomacySystem";
 export type { RobotRoleFamily, XPActionType } from "./experienceSystem";
-
 // --- Experience & Upgrade ---
 export {
 	applyMarkUpgrade,
@@ -136,9 +153,8 @@ export {
 	ROBOT_COSTS,
 	runFabrication,
 } from "./fabricationSystem";
-export { floorMiningSystem, startFloorMining } from "./floorMiningSystem";
 // --- Fog of War ---
-export { revealFog } from "./fogRevealSystem";
+export { effectiveScanRange, revealFog } from "./fogRevealSystem";
 export type {
 	HackType,
 	StartHackResult,
@@ -191,6 +207,16 @@ export {
 } from "./memoryFragments";
 // --- Movement ---
 export { movementSystem } from "./movementSystem";
+export type { ActivePOIBonus } from "./poiDiscoverySystem";
+// --- POI ---
+export {
+	_resetPOIDiscovery,
+	getActivePOIBonuses,
+	hasActiveBonus,
+	runPOIDiscovery,
+	tickPOIBonuses,
+} from "./poiDiscoverySystem";
+export { placePOIs } from "./poiPlacement";
 // --- Population ---
 export {
 	BASE_POP_CAP,
@@ -202,33 +228,6 @@ export {
 } from "./populationSystem";
 // --- Power ---
 export { isPowered, runPowerGrid } from "./powerSystem";
-export {
-	setBuildProviderWorld,
-	setProviderBoard,
-	setProviderSelectedUnit,
-} from "./radial";
-export type {
-	RadialAction,
-	RadialActionProvider,
-	RadialCategory,
-	RadialMenuState,
-	RadialOpenContext,
-	RadialPetal,
-} from "./radialMenu";
-// --- Radial Menu ---
-export {
-	_reset as _resetRadial,
-	closeRadialMenu,
-	confirmRadialSelection,
-	getRadialGeometry,
-	getRadialMenuState,
-	getResolvedActionsForCategory,
-	hitTestRadial,
-	openRadialMenu,
-	registerRadialProvider,
-	resetRadialMenu,
-	updateRadialHover,
-} from "./radialMenu";
 // --- Repair ---
 export { runRepairs } from "./repairSystem";
 export type { QueueResearchResult } from "./researchSystem";
@@ -264,6 +263,13 @@ export {
 } from "./resourceSystem";
 // --- Salvage ---
 export { placeSalvageProps, TERRAIN_SALVAGE } from "./salvagePlacement";
+// --- Score ---
+export {
+	_resetScoreSystem,
+	calculateFactionScore,
+	getCultStructuresDestroyed,
+	recordCultStructureDestroyed,
+} from "./scoreSystem";
 // --- Signal ---
 export { isInSignalRange, runSignalNetwork } from "./signalSystem";
 // --- Specialization ---
@@ -339,7 +345,12 @@ export {
 	resetTurnSummary,
 	subscribeTurnSummary,
 } from "./turnSummary";
-export { advanceTurn, getCurrentTurn, getGameOutcome } from "./turnSystem";
+export {
+	_resetEpochEvents,
+	advanceTurn,
+	getCurrentTurn,
+	getGameOutcome,
+} from "./turnSystem";
 // --- Turret ---
 export { runTurrets } from "./turretSystem";
 export type { TutorialState, TutorialStep } from "./tutorialSystem";
@@ -354,6 +365,14 @@ export {
 	skipTutorial,
 	subscribeTutorial,
 } from "./tutorialSystem";
+export type { TooltipTrigger } from "./tutorialTooltips";
+// --- Tutorial Tooltips (organic contextual hints) ---
+export {
+	fireTutorialTooltip,
+	getAllTooltipDefs,
+	hasTooltipFired,
+	resetTutorialTooltips,
+} from "./tutorialTooltips";
 export type { UpgradeResult } from "./upgradeSystem";
 export {
 	applyMark,
@@ -364,13 +383,12 @@ export {
 export type {
 	GameOutcome,
 	VictoryProgress,
-	VictoryReason,
+	VictoryResult,
+	VictoryType,
 } from "./victorySystem";
 // --- Victory ---
 export {
-	_getTechPoints,
 	_resetVictory,
-	checkTechnicalSupremacy,
 	checkVictoryConditions,
 	getVictoryProgress,
 } from "./victorySystem";

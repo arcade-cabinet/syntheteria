@@ -29,7 +29,7 @@ import {
 	useRef,
 } from "react";
 import * as THREE from "three";
-import { sphereRadius, tileToSpherePos } from "../rendering";
+import { sphereRadius, tileToSpherePos } from "../board";
 import {
 	registerCameraControls,
 	unregisterCameraControls,

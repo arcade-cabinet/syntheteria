@@ -3,22 +3,21 @@
  *
  * Salvage props are the PRIMARY resource source. Density and type
  * vary by terrain substrate:
- *   structural_mass  → machinery, terminals (advanced yields)
- *   collapsed_zone   → debris (common yields)
- *   transit_deck     → containers (polymer, scrap)
- *   dust_district    → vessels (electrolyte)
- *   durasteel_span   → containers, debris (mixed)
- *   bio_district     → debris (polymer heavy)
- *   aerostructure    → machinery (ferrous heavy)
- *   abyssal_platform → vessels (abyssal yields)
- *   void_pit         → nothing
+ *   mountain   → machinery, terminals (advanced yields)
+ *   grassland  → containers (timber, stone)
+ *   desert     → vessels (fuel)
+ *   grassland  → containers, debris (mixed)
+ *   forest     → debris (timber heavy)
+ *   hills      → machinery (iron_ore heavy)
+ *   wetland    → vessels (abyssal yields)
+ *   water      → nothing
  */
 
 import type { World } from "koota";
 import type { GeneratedBoard } from "../board/types";
-import { SALVAGE_DEFS } from "../resources/salvageTypes";
+import { SALVAGE_DEFS } from "../config/resources";
 import { makePRNG } from "../seed";
-import type { FloorType } from "../terrain/types";
+import type { BiomeType } from "../terrain/types";
 import { SalvageProp, type SalvageType } from "../traits";
 
 // ─── Scatter config ─────────────────────────────────────────────────────────
@@ -28,8 +27,8 @@ interface TerrainSalvageConfig {
 	readonly weights: ReadonlyArray<readonly [SalvageType, number]>;
 }
 
-const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
-	structural_mass: {
+const TERRAIN_SALVAGE: Record<BiomeType, TerrainSalvageConfig> = {
+	mountain: {
 		rate: 0.6,
 		weights: [
 			["machinery", 0.4],
@@ -38,24 +37,7 @@ const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
 			["debris", 0.1],
 		],
 	},
-	collapsed_zone: {
-		rate: 0.5,
-		weights: [
-			["debris", 0.5],
-			["container", 0.3],
-			["vessel", 0.2],
-		],
-	},
-	transit_deck: {
-		rate: 0.4,
-		weights: [
-			["container", 0.4],
-			["debris", 0.3],
-			["vessel", 0.2],
-			["terminal", 0.1],
-		],
-	},
-	durasteel_span: {
+	grassland: {
 		rate: 0.35,
 		weights: [
 			["container", 0.3],
@@ -64,7 +46,15 @@ const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
 			["terminal", 0.1],
 		],
 	},
-	dust_district: {
+	forest: {
+		rate: 0.3,
+		weights: [
+			["debris", 0.5],
+			["vessel", 0.3],
+			["container", 0.2],
+		],
+	},
+	desert: {
 		rate: 0.45,
 		weights: [
 			["vessel", 0.4],
@@ -73,23 +63,16 @@ const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
 			["machinery", 0.1],
 		],
 	},
-	bio_district: {
-		rate: 0.3,
+	hills: {
+		rate: 0.5,
 		weights: [
-			["debris", 0.5],
-			["vessel", 0.3],
-			["container", 0.2],
+			["debris", 0.4],
+			["container", 0.3],
+			["vessel", 0.2],
+			["machinery", 0.1],
 		],
 	},
-	aerostructure: {
-		rate: 0.4,
-		weights: [
-			["machinery", 0.5],
-			["debris", 0.3],
-			["container", 0.2],
-		],
-	},
-	abyssal_platform: {
+	wetland: {
 		rate: 0.25,
 		weights: [
 			["vessel", 0.5],
@@ -97,7 +80,15 @@ const TERRAIN_SALVAGE: Record<FloorType, TerrainSalvageConfig> = {
 			["machinery", 0.2],
 		],
 	},
-	void_pit: {
+	tundra: {
+		rate: 0.4,
+		weights: [
+			["machinery", 0.5],
+			["debris", 0.3],
+			["container", 0.2],
+		],
+	},
+	water: {
 		rate: 0,
 		weights: [],
 	},
@@ -152,7 +143,7 @@ export function placeSalvageProps(world: World, board: GeneratedBoard): number {
 	for (let z = 0; z < height; z++) {
 		for (let x = 0; x < width; x++) {
 			const tile = board.tiles[z]![x]!;
-			const cfg = TERRAIN_SALVAGE[tile.floorType];
+			const cfg = TERRAIN_SALVAGE[tile.biomeType];
 			if (!cfg || cfg.rate === 0) continue;
 
 			// Per-tile deterministic RNG

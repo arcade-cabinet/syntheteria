@@ -3,12 +3,16 @@
  *
  * Handles both evaluator-driven build actions (computeBuildOptions) and
  * the unconditional post-GOAP infrastructure pass (runAiBuilding).
+ *
+ * Territory-aware placement: buildings expand toward the FRONTIER (edge of
+ * controlled territory), defense turrets face enemy factions, and resource
+ * buildings build toward hills/mountains.
  */
 
 import type { World } from "koota";
 import { playSfx } from "../audio";
 import type { GeneratedBoard } from "../board";
-import { BUILDING_DEFS } from "../buildings";
+import { BUILDING_DEFS } from "../config/buildings";
 import { canAfford, spendResources } from "../systems";
 import type { ResourceMaterial } from "../terrain";
 import {
@@ -18,6 +22,8 @@ import {
 	type BuildingType,
 	PowerGrid,
 	StorageCapacity,
+	UnitFaction,
+	UnitPos,
 } from "../traits";
 import type { AgentSnapshot } from "./agents/SyntheteriaAgent";
 import { getFactionBuildings, isCultFactionId } from "./aiHelpers";
@@ -32,7 +38,7 @@ export const AI_BUILDABLE: BuildingType[] = [
 	"storm_transmitter",
 	"motor_pool",
 	"synthesizer",
-	"research_lab",
+	"analysis_node",
 	"outpost",
 	"storage_hub",
 	"defense_turret",
@@ -46,7 +52,7 @@ const MAX_PER_TYPE: Record<string, number> = {
 	storm_transmitter: 2,
 	motor_pool: 3,
 	synthesizer: 2,
-	research_lab: 1,
+	analysis_node: 1,
 	outpost: 5,
 	storage_hub: 2,
 	defense_turret: 4,
@@ -61,8 +67,12 @@ const MAX_PER_TYPE: Record<string, number> = {
 
 /**
  * Compute which buildings the AI can afford and where to place them.
- * Searches near existing faction buildings first (infrastructure cluster),
- * then falls back to near units.
+ *
+ * Territory-aware placement strategy:
+ * - Frontier tiles (edge of controlled area) for outposts and expansion
+ * - Defense turrets face the nearest enemy faction
+ * - Resource buildings (refineries, synthesizers) expand toward hills/mountains
+ * - Core infrastructure clusters near existing buildings
  */
 export function computeBuildOptions(
 	world: World,
@@ -74,47 +84,107 @@ export function computeBuildOptions(
 ): BuildOption[] {
 	const options: BuildOption[] = [];
 
-	// Count existing buildings per type for this faction
 	const existingCounts: Record<string, number> = {};
+	const factionBuildingPositions: Array<{ x: number; z: number }> = [];
 	for (const e of world.query(Building)) {
 		const b = e.get(Building);
 		if (b && b.factionId === factionId) {
 			existingCounts[b.buildingType] =
 				(existingCounts[b.buildingType] || 0) + 1;
-		}
-	}
-
-	// Collect faction building positions for placement search
-	const factionBuildingPositions: Array<{ x: number; z: number }> = [];
-	for (const e of world.query(Building)) {
-		const b = e.get(Building);
-		if (b && b.factionId === factionId) {
 			factionBuildingPositions.push({ x: b.tileX, z: b.tileZ });
 		}
 	}
 
+	// Collect enemy building/unit positions for turret orientation
+	const enemyPositions = collectEnemyPositions(world, factionId);
+
+	// Compute faction centroid for frontier detection
+	const allPositions = [
+		...factionBuildingPositions,
+		...units.map((u) => ({ x: u.tileX, z: u.tileZ })),
+	];
+	const factionCenter = computeCentroid(allPositions);
+
+	// Identify frontier anchors: positions furthest from faction center
+	const frontierAnchors = computeFrontierAnchors(
+		factionBuildingPositions,
+		units.map((u) => ({ x: u.tileX, z: u.tileZ })),
+		factionCenter,
+		board,
+		enemyPositions,
+	);
+
+	// Resource tile positions for resource-building placement
+	const resourceTiles = findResourceTilesOnBoard(board);
+
 	for (const type of AI_BUILDABLE) {
 		const def = BUILDING_DEFS[type];
-		// Skip if already at max count for this type
 		const current = existingCounts[type] || 0;
 		const max = MAX_PER_TYPE[type] ?? 3;
 		if (current >= max) continue;
 		if (!canAfford(world, factionId, def.buildCost)) continue;
 
-		// Search near existing buildings first, then near units
-		const tile =
-			findBuildTileNear(
+		let tile: { x: number; z: number } | null = null;
+
+		if (type === "defense_turret" && enemyPositions.length > 0) {
+			tile = findTurretPlacement(
 				factionBuildingPositions,
-				board,
-				occupiedTiles,
-				wrapX,
-			) ??
-			findBuildTileNear(
-				units.map((u) => ({ x: u.tileX, z: u.tileZ })),
+				enemyPositions,
 				board,
 				occupiedTiles,
 				wrapX,
 			);
+		} else if (
+			type === "outpost" ||
+			type === "relay_tower" ||
+			type === "power_box" ||
+			type === "storm_transmitter"
+		) {
+			// Expansion and coverage buildings go to the frontier first
+			tile =
+				findBuildTileNear(frontierAnchors, board, occupiedTiles, wrapX) ??
+				findBuildTileNear(
+					factionBuildingPositions,
+					board,
+					occupiedTiles,
+					wrapX,
+				);
+		} else if (type === "resource_refinery" || type === "motor_pool") {
+			// Resource buildings expand toward hills/mountains, then frontier
+			tile =
+				findBuildTileNear(
+					resourceTiles.slice(0, 5),
+					board,
+					occupiedTiles,
+					wrapX,
+				) ??
+				findBuildTileNear(frontierAnchors, board, occupiedTiles, wrapX) ??
+				findBuildTileNear(
+					factionBuildingPositions,
+					board,
+					occupiedTiles,
+					wrapX,
+				);
+		} else {
+			// Core infrastructure: try terrain-aware near buildings, then frontier, then units
+			tile =
+				findTerrainAwareBuildTile(
+					factionBuildingPositions,
+					board,
+					occupiedTiles,
+					factionId,
+					type,
+					wrapX,
+				) ??
+				findBuildTileNear(frontierAnchors, board, occupiedTiles, wrapX) ??
+				findBuildTileNear(
+					units.map((u) => ({ x: u.tileX, z: u.tileZ })),
+					board,
+					occupiedTiles,
+					wrapX,
+				);
+		}
+
 		if (tile) {
 			options.push({
 				buildingType: type,
@@ -125,6 +195,244 @@ export function computeBuildOptions(
 	}
 
 	return options;
+}
+
+/** Collect enemy faction building and unit positions. */
+function collectEnemyPositions(
+	world: World,
+	myFactionId: string,
+): Array<{ x: number; z: number }> {
+	const positions: Array<{ x: number; z: number }> = [];
+	for (const e of world.query(Building)) {
+		const b = e.get(Building);
+		if (b && b.factionId !== myFactionId && !isCultFactionId(b.factionId)) {
+			positions.push({ x: b.tileX, z: b.tileZ });
+		}
+	}
+	for (const e of world.query(UnitPos, UnitFaction)) {
+		const f = e.get(UnitFaction);
+		const p = e.get(UnitPos);
+		if (
+			f &&
+			p &&
+			f.factionId !== myFactionId &&
+			!isCultFactionId(f.factionId)
+		) {
+			positions.push({ x: p.tileX, z: p.tileZ });
+		}
+	}
+	return positions;
+}
+
+function computeCentroid(positions: Array<{ x: number; z: number }>): {
+	x: number;
+	z: number;
+} {
+	if (positions.length === 0) return { x: 0, z: 0 };
+	let sx = 0;
+	let sz = 0;
+	for (const p of positions) {
+		sx += p.x;
+		sz += p.z;
+	}
+	return {
+		x: Math.round(sx / positions.length),
+		z: Math.round(sz / positions.length),
+	};
+}
+
+/**
+ * Frontier anchors: positions at the outer edge of controlled territory.
+ *
+ * True frontier = tiles owned by this faction that are adjacent to unclaimed
+ * or enemy tiles. Falls back to distance-from-centroid if no board is available.
+ */
+function computeFrontierAnchors(
+	buildings: Array<{ x: number; z: number }>,
+	unitPositions: Array<{ x: number; z: number }>,
+	center: { x: number; z: number },
+	board?: GeneratedBoard,
+	enemyPositions?: Array<{ x: number; z: number }>,
+): Array<{ x: number; z: number }> {
+	const all = [...buildings, ...unitPositions];
+	if (all.length === 0) return [];
+
+	if (board) {
+		const ownedSet = new Set(all.map((p) => `${p.x},${p.z}`));
+		const enemySet = new Set(
+			(enemyPositions ?? []).map((p) => `${p.x},${p.z}`),
+		);
+		const { width, height } = board.config;
+		const dirs = [
+			[0, 1],
+			[0, -1],
+			[1, 0],
+			[-1, 0],
+		];
+
+		const frontierTiles: Array<{ x: number; z: number; score: number }> = [];
+
+		for (const pos of all) {
+			let adjacentUnclaimed = 0;
+			let adjacentEnemy = 0;
+			for (const [dx, dz] of dirs) {
+				const nx = pos.x + dx;
+				const nz = pos.z + dz;
+				if (nx < 0 || nz < 0 || nx >= width || nz >= height) continue;
+				const key = `${nx},${nz}`;
+				if (enemySet.has(key)) {
+					adjacentEnemy++;
+				} else if (!ownedSet.has(key)) {
+					adjacentUnclaimed++;
+				}
+			}
+			if (adjacentUnclaimed > 0 || adjacentEnemy > 0) {
+				frontierTiles.push({
+					...pos,
+					score: adjacentEnemy * 2 + adjacentUnclaimed,
+				});
+			}
+		}
+
+		if (frontierTiles.length >= 2) {
+			frontierTiles.sort((a, b) => b.score - a.score);
+			return frontierTiles.slice(
+				0,
+				Math.max(3, Math.ceil(frontierTiles.length * 0.5)),
+			);
+		}
+	}
+
+	const withDist = all.map((p) => ({
+		...p,
+		dist: Math.abs(p.x - center.x) + Math.abs(p.z - center.z),
+	}));
+	withDist.sort((a, b) => b.dist - a.dist);
+
+	const frontierCount = Math.max(2, Math.ceil(withDist.length * 0.3));
+	return withDist.slice(0, frontierCount);
+}
+
+/** Find turret placement between faction buildings and enemy positions. */
+function findTurretPlacement(
+	factionPositions: Array<{ x: number; z: number }>,
+	enemyPositions: Array<{ x: number; z: number }>,
+	board: GeneratedBoard,
+	occupied: Set<string>,
+	wrapX: boolean,
+): { x: number; z: number } | null {
+	if (factionPositions.length === 0 || enemyPositions.length === 0) return null;
+
+	const fCenter = computeCentroid(factionPositions);
+	const eCenter = computeCentroid(enemyPositions);
+
+	// Place turret in the direction of enemies, 2-4 tiles from faction border
+	const dx = eCenter.x - fCenter.x;
+	const dz = eCenter.z - fCenter.z;
+	const len = Math.sqrt(dx * dx + dz * dz) || 1;
+	const ndx = dx / len;
+	const ndz = dz / len;
+
+	// Try a few distances to find a valid tile
+	for (let dist = 3; dist <= 8; dist++) {
+		const tx = Math.round(fCenter.x + ndx * dist);
+		const tz = Math.round(fCenter.z + ndz * dist);
+		const tile = findBuildTileNear([{ x: tx, z: tz }], board, occupied, wrapX);
+		if (tile) return tile;
+	}
+
+	return findBuildTileNear(factionPositions, board, occupied, wrapX);
+}
+
+/** Find resource-rich tiles (hills, mountains adj) on the board. */
+function findResourceTilesOnBoard(
+	board: GeneratedBoard,
+): Array<{ x: number; z: number }> {
+	const results: Array<{ x: number; z: number }> = [];
+	const { width, height } = board.config;
+	for (let z = 0; z < height; z++) {
+		for (let x = 0; x < width; x++) {
+			const tile = board.tiles[z]?.[x];
+			if (!tile || !tile.passable) continue;
+			if (tile.biomeType === "hills" || tile.biomeType === "forest") {
+				results.push({ x, z });
+			}
+		}
+	}
+	return results;
+}
+
+// ---------------------------------------------------------------------------
+// Terrain-aware tile scoring for faction-specific placement
+// ---------------------------------------------------------------------------
+
+const FACTION_TERRAIN_AFFINITY: Record<string, string[]> = {
+	iron_creed: ["hills", "desert"],
+	reclaimers: ["forest", "grassland"],
+	volt_collective: ["hills", "grassland"],
+	signal_choir: ["grassland", "forest"],
+};
+
+/**
+ * Find best-scored build tile near anchors, considering faction terrain affinity
+ * and building-type-specific placement preferences.
+ */
+export function findTerrainAwareBuildTile(
+	anchors: Array<{ x: number; z: number }>,
+	board: GeneratedBoard,
+	occupied: Set<string>,
+	factionId: string,
+	buildingType: string,
+	wrapX = false,
+): { x: number; z: number } | null {
+	const { width, height } = board.config;
+	const affinityBiomes = FACTION_TERRAIN_AFFINITY[factionId] ?? ["grassland"];
+
+	let bestTile: { x: number; z: number } | null = null;
+	let bestScore = -1;
+
+	for (const anchor of anchors) {
+		for (let r = 1; r <= 12; r++) {
+			for (let dx = -r; dx <= r; dx++) {
+				for (let dz = -r; dz <= r; dz++) {
+					let x = anchor.x + dx;
+					const z = anchor.z + dz;
+					if (wrapX) x = ((x % width) + width) % width;
+					if (x < 0 || z < 0 || x >= width || z >= height) continue;
+					const key = `${x},${z}`;
+					if (occupied.has(key)) continue;
+					const tile = board.tiles[z]?.[x];
+					if (!tile?.passable) continue;
+
+					let score = 10 - r;
+
+					if (affinityBiomes.includes(tile.biomeType)) {
+						score += 5;
+					}
+
+					if (buildingType === "relay_tower") {
+						if (tile.biomeType === "hills") score += 3;
+					} else if (buildingType === "defense_turret") {
+						if (tile.biomeType === "hills") score += 4;
+					} else if (
+						buildingType === "motor_pool" ||
+						buildingType === "resource_refinery"
+					) {
+						if (tile.biomeType === "hills" || tile.biomeType === "forest") {
+							score += 3;
+						}
+					}
+
+					if (score > bestScore) {
+						bestScore = score;
+						bestTile = { x, z };
+					}
+				}
+			}
+			if (bestTile) return bestTile;
+		}
+	}
+	return bestTile;
 }
 
 // ---------------------------------------------------------------------------
@@ -247,13 +555,13 @@ export const _lastBuildTurn = new Map<string, number>();
  * if affordable and below cap.
  *
  * Priority is dynamic: missing critical buildings come first.
+ * Placement is territory-aware: expands toward the frontier.
  */
 export function runAiBuilding(
 	world: World,
 	factionIds: string[],
 	board: GeneratedBoard,
 ): void {
-	// Read current turn
 	let currentTurn = 1;
 	for (const e of world.query(Board)) {
 		const b = e.get(Board);
@@ -267,11 +575,9 @@ export function runAiBuilding(
 		if (factionId === "player") continue;
 		if (isCultFactionId(factionId)) continue;
 
-		// Space out building: one building every 2 turns to balance growth with income
 		const lastTurn = _lastBuildTurn.get(factionId) ?? 0;
 		if (currentTurn - lastTurn < 2 && currentTurn > 1) continue;
 
-		// Count existing buildings per type
 		const existing: Record<string, number> = {};
 		const buildingPositions: Array<{ x: number; z: number }> = [];
 		for (const e of world.query(Building)) {
@@ -282,14 +588,33 @@ export function runAiBuilding(
 			}
 		}
 
-		// Build the occupied set
+		// Collect unit positions for frontier computation
+		const unitPositions: Array<{ x: number; z: number }> = [];
+		for (const e of world.query(UnitPos, UnitFaction)) {
+			const f = e.get(UnitFaction);
+			const p = e.get(UnitPos);
+			if (f && p && f.factionId === factionId) {
+				unitPositions.push({ x: p.tileX, z: p.tileZ });
+			}
+		}
+
 		const occupiedTiles = new Set<string>();
 		for (const e of world.query(Building)) {
 			const b = e.get(Building);
 			if (b) occupiedTiles.add(`${b.tileX},${b.tileZ}`);
 		}
 
-		// Dynamic priority: missing critical buildings first
+		const allPositions = [...buildingPositions, ...unitPositions];
+		const center = computeCentroid(allPositions);
+		const enemyPositions = collectEnemyPositions(world, factionId);
+		const frontierAnchors = computeFrontierAnchors(
+			buildingPositions,
+			unitPositions,
+			center,
+			board,
+			enemyPositions,
+		);
+
 		const priority = dynamicAiBuildOrder(existing);
 
 		for (const type of priority) {
@@ -301,18 +626,36 @@ export function runAiBuilding(
 			if (current >= max) continue;
 			if (!canAfford(world, factionId, def.buildCost)) continue;
 
-			// Find placement tile near existing buildings
-			const tile = findBuildTileNear(
-				buildingPositions,
-				board,
-				occupiedTiles,
-				false,
-			);
+			let tile: { x: number; z: number } | null = null;
+
+			if (type === "defense_turret" && enemyPositions.length > 0) {
+				tile = findTurretPlacement(
+					buildingPositions,
+					enemyPositions,
+					board,
+					occupiedTiles,
+					false,
+				);
+			} else if (
+				type === "outpost" ||
+				type === "relay_tower" ||
+				type === "power_box" ||
+				type === "storm_transmitter"
+			) {
+				tile =
+					findBuildTileNear(frontierAnchors, board, occupiedTiles, false) ??
+					findBuildTileNear(buildingPositions, board, occupiedTiles, false);
+			} else {
+				tile =
+					findBuildTileNear(buildingPositions, board, occupiedTiles, false) ??
+					findBuildTileNear(frontierAnchors, board, occupiedTiles, false);
+			}
+
 			if (!tile) continue;
 
 			executeAiBuild(world, factionId, type as BuildingType, tile.x, tile.z);
 			_lastBuildTurn.set(factionId, currentTurn);
-			break; // One building per faction per turn
+			break;
 		}
 	}
 }
@@ -331,26 +674,30 @@ export function dynamicAiBuildOrder(
 	if ((existing["motor_pool"] ?? 0) === 0) order.push("motor_pool");
 	if ((existing["storm_transmitter"] ?? 0) === 0)
 		order.push("storm_transmitter");
-	if ((existing["research_lab"] ?? 0) === 0) order.push("research_lab");
+
+	// Power box early — needed for buildings outside transmitter radius
+	if ((existing["power_box"] ?? 0) === 0) order.push("power_box");
+
+	if ((existing["analysis_node"] ?? 0) === 0) order.push("analysis_node");
 
 	// Second motor pool for throughput
 	if ((existing["motor_pool"] ?? 0) < 2) order.push("motor_pool");
 
-	// Resource refinery = renewable ferrous_scrap income (+2/turn)
+	// Resource refinery = renewable iron_ore income (+2/turn)
 	if ((existing["resource_refinery"] ?? 0) === 0)
 		order.push("resource_refinery");
 
-	// Growth cycle -- outposts increase pop cap, turrets defend, then more infrastructure
+	// Growth cycle
 	order.push(
 		"outpost",
 		"defense_turret",
+		"power_box",
 		"motor_pool",
 		"synthesizer",
 		"outpost",
 		"storage_hub",
 		"storm_transmitter",
 		"relay_tower",
-		"power_box",
 		"resource_refinery",
 		"outpost",
 		"defense_turret",

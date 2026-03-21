@@ -57,19 +57,17 @@ function seedResources(factionId: string) {
 			isPlayer: false,
 		}),
 		ResourcePool({
-			scrap_metal: 100,
-			ferrous_scrap: 100,
-			alloy_stock: 100,
-			silicon_wafer: 100,
-			polymer_salvage: 100,
-			conductor_wire: 100,
-			storm_charge: 100,
-			electrolyte: 100,
-			intact_components: 100,
-			el_crystal: 100,
-			depth_salvage: 100,
-			thermal_fluid: 100,
-			e_waste: 100,
+			stone: 100,
+			iron_ore: 100,
+			steel: 100,
+			glass: 100,
+			timber: 100,
+			circuits: 100,
+			fuel: 100,
+			coal: 100,
+			quantum_crystal: 100,
+			alloy: 100,
+			sand: 100,
 		}),
 	);
 }
@@ -150,17 +148,17 @@ describe("Track Registry", () => {
 		expect(classes).toContain("worker");
 	});
 
-	it("has 14 total tracks (2+2+2+2+3+3)", () => {
-		expect(TRACK_REGISTRY.size).toBe(14);
+	it("has 18 total tracks (3+3+3+2+3+4)", () => {
+		expect(TRACK_REGISTRY.size).toBe(18);
 	});
 
 	it("getTracksForClass returns correct count per class", () => {
-		expect(getTracksForClass("scout")).toHaveLength(2);
-		expect(getTracksForClass("infantry")).toHaveLength(2);
-		expect(getTracksForClass("cavalry")).toHaveLength(2);
+		expect(getTracksForClass("scout")).toHaveLength(3);
+		expect(getTracksForClass("infantry")).toHaveLength(3);
+		expect(getTracksForClass("cavalry")).toHaveLength(3);
 		expect(getTracksForClass("ranged")).toHaveLength(2);
 		expect(getTracksForClass("support")).toHaveLength(3);
-		expect(getTracksForClass("worker")).toHaveLength(3);
+		expect(getTracksForClass("worker")).toHaveLength(4);
 	});
 
 	it("getSpecializedActions returns actions for known tracks", () => {

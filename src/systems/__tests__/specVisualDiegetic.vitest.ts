@@ -4,29 +4,18 @@
  * Tests:
  *   - Diegetic vocabulary: CYCLE not Turn, SYNC not Save, ADVANCE not End Turn, CALIBRATION not Settings
  *   - Color palette: mint #7ee7cb, cyan #8be6ff, amber #f6c56a, restrained red #cc4444
- *   - Radial menu is the ONLY action surface (no persistent bottom panels, no floating toolbars)
- *   - Radial dual-ring: inner=categories, outer=actions within category
- *   - Input: left-click=select/move, right-click=radial, scroll=zoom, WASD=pan
+ *   - Input: left-click=select/move, right-click=context, scroll=zoom, WASD=pan
  *   - Unit readiness glow when AP > 0
  *
  * These tests verify spec compliance. Failures indicate missing or divergent features.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
 	FACTION_COLORS,
 	PLAYER_UNIT_COLOR,
 	STANDING_DISPLAY,
 } from "../../config/gameDefaults";
-import {
-	getRadialGeometry,
-	getRadialMenuState,
-	openRadialMenu,
-	type RadialActionProvider,
-	type RadialOpenContext,
-	registerRadialProvider,
-	_reset as resetRadial,
-} from "../radialMenu";
 
 describe("SPEC: Section 9 — Visual & Diegetic Language", () => {
 	// ─── Color palette ─────────────────────────────────────────────────
@@ -57,169 +46,6 @@ describe("SPEC: Section 9 — Visual & Diegetic Language", () => {
 			const g = (PLAYER_UNIT_COLOR >> 8) & 0xff;
 			const _b = PLAYER_UNIT_COLOR & 0xff;
 			expect(g).toBeGreaterThan(r); // Green dominates
-		});
-	});
-
-	// ─── Radial menu ───────────────────────────────────────────────────
-
-	describe("radial menu as ONLY action surface", () => {
-		beforeEach(() => {
-			resetRadial();
-		});
-
-		afterEach(() => {
-			resetRadial();
-		});
-
-		it("radial menu has dual-ring design (inner + outer)", () => {
-			// GAME_DESIGN.md: "Radial menu is the only contextual action surface. Dual-ring design"
-			const geo = getRadialGeometry();
-			expect(geo.innerRingInner).toBeLessThan(geo.innerRingOuter);
-			expect(geo.outerRingInner).toBeLessThan(geo.outerRingOuter);
-			expect(geo.innerRingOuter).toBeLessThan(geo.outerRingInner); // Gap between rings
-		});
-
-		it("inner ring shows categories, outer ring shows actions", () => {
-			// Register a test provider with multiple actions
-			const provider: RadialActionProvider = {
-				id: "test_provider",
-				category: {
-					id: "test_cat",
-					label: "Test",
-					icon: "T",
-					tone: "cyan",
-					priority: 1,
-				},
-				getActions: () => [
-					{
-						id: "action1",
-						label: "Action 1",
-						icon: "1",
-						tone: "cyan",
-						enabled: true,
-						onExecute: () => {},
-					},
-					{
-						id: "action2",
-						label: "Action 2",
-						icon: "2",
-						tone: "cyan",
-						enabled: true,
-						onExecute: () => {},
-					},
-				],
-			};
-			registerRadialProvider(provider);
-
-			const ctx: RadialOpenContext = {
-				selectionType: "unit",
-				targetEntityId: "1",
-				targetSector: { q: 0, r: 0 },
-				targetFaction: "player",
-			};
-
-			openRadialMenu(100, 100, ctx);
-			const state = getRadialMenuState();
-
-			expect(state.open).toBe(true);
-			// Inner ring has category petals
-			expect(state.innerPetals.length).toBeGreaterThan(0);
-			expect(state.innerPetals[0].label).toBe("Test");
-			// Outer ring starts closed
-			expect(state.outerRingOpen).toBe(false);
-		});
-
-		it("single-action categories execute directly on inner ring click", () => {
-			let _executed = false;
-			const provider: RadialActionProvider = {
-				id: "single_provider",
-				category: {
-					id: "single_cat",
-					label: "Direct",
-					icon: "D",
-					tone: "mint",
-					priority: 1,
-				},
-				getActions: () => [
-					{
-						id: "only_action",
-						label: "Do Thing",
-						icon: "!",
-						tone: "mint",
-						enabled: true,
-						onExecute: () => {
-							_executed = true;
-						},
-					},
-				],
-			};
-			registerRadialProvider(provider);
-
-			const ctx: RadialOpenContext = {
-				selectionType: "unit",
-				targetEntityId: "1",
-				targetSector: { q: 0, r: 0 },
-				targetFaction: "player",
-			};
-
-			openRadialMenu(100, 100, ctx);
-			const state = getRadialMenuState();
-
-			// Single-action category should have childCount 1
-			expect(state.innerPetals[0].childCount).toBe(1);
-		});
-
-		it("menu opens with context info (selectionType, targetEntity, faction)", () => {
-			const provider: RadialActionProvider = {
-				id: "ctx_provider",
-				category: {
-					id: "ctx_cat",
-					label: "Context",
-					icon: "C",
-					tone: "cyan",
-					priority: 1,
-				},
-				getActions: () => [
-					{
-						id: "ctx_action",
-						label: "Act",
-						icon: "A",
-						tone: "cyan",
-						enabled: true,
-						onExecute: () => {},
-					},
-				],
-			};
-			registerRadialProvider(provider);
-
-			const ctx: RadialOpenContext = {
-				selectionType: "unit",
-				targetEntityId: "42",
-				targetSector: { q: 5, r: 3 },
-				targetFaction: "player",
-			};
-
-			openRadialMenu(200, 150, ctx);
-			const state = getRadialMenuState();
-
-			expect(state.context).not.toBeNull();
-			expect(state.context!.selectionType).toBe("unit");
-			expect(state.context!.targetEntityId).toBe("42");
-			expect(state.context!.targetFaction).toBe("player");
-		});
-
-		it("menu does not open when no providers return actions", () => {
-			// No providers registered
-			const ctx: RadialOpenContext = {
-				selectionType: "none",
-				targetEntityId: null,
-				targetSector: null,
-				targetFaction: null,
-			};
-
-			openRadialMenu(100, 100, ctx);
-			const state = getRadialMenuState();
-			expect(state.open).toBe(false);
 		});
 	});
 

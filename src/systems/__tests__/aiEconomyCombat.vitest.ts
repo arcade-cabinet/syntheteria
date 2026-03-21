@@ -44,7 +44,7 @@ function makeBoard(width: number, height: number): GeneratedBoard {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "durasteel_span",
+				biomeType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -88,7 +88,7 @@ describe("AI economy — harvestSystem in turn pipeline", () => {
 			ResourceDeposit({
 				tileX: 2,
 				tileZ: 0,
-				material: "scrap_metal",
+				material: "stone",
 				amount: 10,
 				depleted: false,
 			}),
@@ -114,7 +114,7 @@ describe("AI economy — harvestSystem in turn pipeline", () => {
 			const f = e.get(Faction);
 			if (f?.id === "reclaimers") pool = { ...e.get(ResourcePool)! };
 		}
-		expect(pool!.scrap_metal).toBe(0);
+		expect(pool!.stone).toBe(0);
 
 		// Run harvest system
 		harvestSystem(world);
@@ -124,7 +124,7 @@ describe("AI economy — harvestSystem in turn pipeline", () => {
 			const f = e.get(Faction);
 			if (f?.id === "reclaimers") pool = { ...e.get(ResourcePool)! };
 		}
-		expect(pool!.scrap_metal).toBeGreaterThan(0);
+		expect(pool!.stone).toBeGreaterThan(0);
 	});
 
 	it("AI-queued UnitHarvest is processed by advanceTurn", () => {
@@ -158,7 +158,7 @@ describe("AI economy — harvestSystem in turn pipeline", () => {
 			ResourceDeposit({
 				tileX: 2,
 				tileZ: 0,
-				material: "ferrous_scrap",
+				material: "iron_ore",
 				amount: 10,
 				depleted: false,
 			}),
@@ -177,8 +177,8 @@ describe("AI economy — harvestSystem in turn pipeline", () => {
 			const f = e.get(Faction);
 			if (f?.id === "reclaimers") pool = { ...e.get(ResourcePool)! };
 		}
-		// After 4 turns with harvest system active, AI should have some ferrous_scrap
-		expect(pool!.ferrous_scrap).toBeGreaterThan(0);
+		// After 4 turns with harvest system active, AI should have some iron_ore
+		expect(pool!.iron_ore).toBeGreaterThan(0);
 	});
 
 	it("GOAP produces harvest action when unit is adjacent to deposit", () => {
@@ -211,7 +211,7 @@ describe("AI economy — harvestSystem in turn pipeline", () => {
 			ResourceDeposit({
 				tileX: 2,
 				tileZ: 0,
-				material: "scrap_metal",
+				material: "stone",
 				amount: 10,
 				depleted: false,
 			}),
@@ -232,7 +232,7 @@ describe("AI economy — harvestSystem in turn pipeline", () => {
 			ResourceDeposit({
 				tileX: 2,
 				tileZ: 0,
-				material: "alloy_stock",
+				material: "steel",
 				amount: 20,
 				depleted: false,
 			}),
@@ -271,7 +271,7 @@ describe("AI economy — harvestSystem in turn pipeline", () => {
 			const f = e.get(Faction);
 			if (f?.id === "reclaimers") pool = { ...e.get(ResourcePool)! };
 		}
-		expect(pool!.alloy_stock).toBeGreaterThan(0);
+		expect(pool!.steel).toBeGreaterThan(0);
 	});
 });
 

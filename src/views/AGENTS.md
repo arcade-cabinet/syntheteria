@@ -1,15 +1,23 @@
-# src/views/ — Phaser + enable3d (playing board)
+# src/views/ — Unified Rendering Package
 
-> **Target layout:** files here move under **`src/views/board/`**; R3F title code moves from
-> `src/view/` into **`src/views/title/`**. Single package name `views` — no parallel `view/`.
-> See [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](../../docs/COMPREHENSIVE_ENGINEERING_PLAN.md) §0.
+Two sub-packages under one roof:
 
-## Current (pre-subfolder migration)
-
-- `createGame.ts`, `eventBus.ts`, `scenes/WorldScene.ts`, `renderers/`, `lighting/`, `input/`, `labels/`
-- Consumed by `src/app/GameBoard.tsx` and `App.tsx` (EventBus).
+| Sub-package | Stack | Phase | Contents |
+|-------------|-------|-------|----------|
+| `title/` | React Three Fiber (TSX) | title → generating | Globe, storms, cities, LOD, legacy match R3F renderers |
+| `board/` | Phaser + enable3d (pure TS) | playing | WorldScene, terrain, units, fog, lighting, input |
 
 ## Rules
 
-- No React inside this tree (except nothing — pure TS + Phaser).
-- Import `rendering/`, `traits/`, `systems/`, `config/`, `board/` — not `ui/`.
+- **`title/`** contains all R3F components (TSX). Only `Globe.tsx` imports from it.
+- **`board/`** contains all Phaser/Three.js code (pure TS, no React). Only `GameBoard.tsx` mounts it.
+- **No cross-imports** between `title/` and `board/` (they serve different phases).
+- **`systems/` and `traits/` must NOT import from `views/`** — rendering reads ECS, never the reverse.
+- Import from `views`, `views/title`, or `views/board` — never deep into sub-files.
+
+## Consumers
+
+| Consumer | Imports from |
+|----------|-------------|
+| `src/ui/Globe.tsx` | `views/title` |
+| `src/app/GameBoard.tsx` | `views/board` (via `views` barrel) |

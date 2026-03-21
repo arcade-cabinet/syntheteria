@@ -8,6 +8,35 @@
 export type { BuildingBlueprint, BuildingComponent } from "./buildingDefs";
 // --- Building blueprints ---
 export { BUILDING_BLUEPRINTS, getBuildingDisplayName } from "./buildingDefs";
+export type { BuildingMilestone } from "./buildingMilestoneDefs";
+// --- Building milestones ---
+export {
+	BUILDING_MILESTONES,
+	getBuildingMilestone,
+} from "./buildingMilestoneDefs";
+// --- Building definitions (data) ---
+export type {
+	BuildingDef,
+	CultStructureDef,
+	CultStructureType,
+} from "./buildings";
+export { BUILDING_DEFS, CULT_STRUCTURE_DEFS } from "./buildings";
+// --- Building unlock chains ---
+export type {
+	BuildingTierDef,
+	BuildingUnlockDef,
+} from "./buildingUnlockDefs";
+export {
+	BUILDING_UNLOCK_CHAINS,
+	isBuildingUnlocked,
+	MOTOR_POOL_MARK_TIERS,
+	MOTOR_POOL_TRACK_TIERS,
+	MOTOR_POOL_UNIT_TIERS,
+	STARTER_BUILDINGS,
+} from "./buildingUnlockDefs";
+export type { CultEncounter, CultEncounterTrigger } from "./cultEncounterDefs";
+// --- Cult encounters ---
+export { CULT_ENCOUNTERS, getCultEncounter } from "./cultEncounterDefs";
 export type {
 	StandingAction,
 	StandingTier,
@@ -35,8 +64,10 @@ export {
 	getEpochForTechTier,
 	TECH_TIER_TO_EPOCH,
 } from "./epochDefs";
+export type { EpochEvent } from "./epochEventDefs";
+// --- Epoch events ---
+export { EPOCH_EVENTS, getEpochEvent } from "./epochEventDefs";
 export type { FactionAiBias } from "./factionAiDefs";
-
 // --- Faction AI ---
 export {
 	FACTION_AI_BIASES,
@@ -58,7 +89,6 @@ export {
 	DIPLOMACY_BACKSTAB_DELAY,
 	DIPLOMACY_PEACE_DRIFT_TURNS,
 	ELEVATION_STEP_M,
-	FACTION_COLORS,
 	FACTION_COLORS_CSS,
 	FORCED_DOMINATION_HOLD_TURNS,
 	FORCED_DOMINATION_PERCENT,
@@ -81,13 +111,23 @@ export {
 	UNIT_HEIGHT,
 	UNIT_MOVE_SPEED,
 	UNIT_WIDTH,
-	VICTORY_DOMINATION_PERCENT,
-	VICTORY_ECONOMIC_TOTAL,
-	VICTORY_RESEARCH_LABS,
-	VICTORY_RESEARCH_POINTS,
-	VICTORY_SURVIVAL_TURNS,
+	VICTORY_NETWORK_COVERAGE_PERCENT,
+	VICTORY_RECLAMATION_MIN_LEVEL,
+	VICTORY_RECLAMATION_PERCENT,
+	VICTORY_TURN_CAP,
 	WORMHOLE_PROJECT_TURNS,
 } from "./gameDefaults";
+export type { GameSpeed, SpeedConfig } from "./gameSpeedDefs";
+// --- Game speed ---
+export { GAME_SPEEDS, getSpeedConfig } from "./gameSpeedDefs";
+export type {
+	HumanEncounter,
+	HumanEncounterTrigger,
+} from "./humanEncounterDefs";
+// --- Human encounters ---
+export { getHumanEncounter, HUMAN_ENCOUNTERS } from "./humanEncounterDefs";
+// --- Model paths + 3D GLB resolvers (extends FACTION_COLORS for all factions) ---
+export * from "./models";
 export type { MovementProfile } from "./movementDefs";
 // --- Movement ---
 export {
@@ -113,12 +153,21 @@ export type { POIDef, POIType } from "./poiDefs";
 // --- POI ---
 export {
 	FOUNDABLE_POI_TYPES,
+	HOLOCRON_POI_TYPES,
+	isHolocronPOI,
 	POI_BY_TYPE,
 	POI_DEFINITIONS,
 	POI_DISCOVERY_FRINGE_RADIUS,
 	POI_DISCOVERY_RADIUS,
 	poiToTile,
 } from "./poiDefs";
+// --- Player preferences ---
+export type { PlayerPreferences } from "./preferences";
+export {
+	getPreferences,
+	loadPreferences,
+	savePreferences,
+} from "./preferences";
 export type { ComponentRecipe } from "./recipeDefs";
 // --- Recipes ---
 export {
@@ -126,6 +175,21 @@ export {
 	getRecipeCostMap,
 	RECIPE_BY_ID,
 } from "./recipeDefs";
+// --- Config registry ---
+export {
+	applyConfigOverrides,
+	clearConfigOverrides,
+	getConfig,
+	getConfigOverrides,
+	setConfigOverride,
+} from "./registry";
+// --- Resource / salvage definitions (data) ---
+export type { SalvageDef, YieldRange } from "./resources";
+export {
+	getAllSalvageModelIds,
+	getSalvageTypeForModel,
+	SALVAGE_DEFS,
+} from "./resources";
 export type { TechDef, TechEffect, TechEffectType } from "./techTreeDefs";
 // --- Tech tree ---
 export { getTechsByTier, TECH_BY_ID, TECH_TREE } from "./techTreeDefs";

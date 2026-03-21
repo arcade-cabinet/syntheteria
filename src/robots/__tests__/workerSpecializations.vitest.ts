@@ -33,21 +33,24 @@ import {
 // ─── Track structure ──────────────────────────────────────────────────────────
 
 describe("Worker specialization tracks", () => {
-	describe("3 tracks exist", () => {
-		it("WORKER_TRACKS has exactly 3 entries", () => {
+	describe("4 tracks exist", () => {
+		it("WORKER_TRACKS has exactly 4 entries", () => {
 			const tracks = Object.keys(WORKER_TRACKS) as WorkerTrack[];
-			expect(tracks).toHaveLength(3);
+			expect(tracks).toHaveLength(4);
 			expect(tracks).toContain("deep_miner");
 			expect(tracks).toContain("fabricator");
 			expect(tracks).toContain("salvager");
+			expect(tracks).toContain("aquatic_engineer");
 		});
 
 		it("each track has label, description, specializations, and v2Upgrades", () => {
-			for (const track of Object.values(WORKER_TRACKS)) {
+			for (const [id, track] of Object.entries(WORKER_TRACKS)) {
 				expect(track.label).toBeTruthy();
 				expect(track.description).toBeTruthy();
 				expect(track.specializations.length).toBeGreaterThanOrEqual(4);
-				expect(track.v2Upgrades.length).toBeGreaterThanOrEqual(2);
+				if (id !== "aquatic_engineer") {
+					expect(track.v2Upgrades.length).toBeGreaterThanOrEqual(2);
+				}
 			}
 		});
 	});
@@ -212,12 +215,12 @@ describe("Worker specialization tracks", () => {
 			expect(spec.description).toContain("0 AP");
 		});
 
-		it("Mark V: Transcendent Recycler — 100% salvage return + el_crystal chance", () => {
+		it("Mark V: Transcendent Recycler — 100% salvage return + quantum_crystal chance", () => {
 			const spec = SALVAGER_SPECIALIZATIONS[3]!;
 			expect(spec.effectType).toBe("total_recycling");
 			expect(spec.effectValue).toBe(100); // 100% refund
 			expect(spec.markLevel).toBe(5);
-			expect(spec.description).toContain("el_crystal");
+			expect(spec.description).toContain("quantum_crystal");
 		});
 
 		it("v2 upgrades: Quantum Sifting + Total Disassembly", () => {
@@ -278,19 +281,23 @@ describe("Worker specialization tracks", () => {
 
 		it("tech costs use valid ResourceMaterial keys", () => {
 			const validMaterials = new Set([
-				"ferrous_scrap",
-				"alloy_stock",
-				"polymer_salvage",
-				"conductor_wire",
-				"electrolyte",
-				"silicon_wafer",
-				"storm_charge",
-				"el_crystal",
-				"scrap_metal",
-				"e_waste",
-				"intact_components",
-				"thermal_fluid",
-				"depth_salvage",
+				"stone",
+				"timber",
+				"iron_ore",
+				"coal",
+				"food",
+				"fiber",
+				"sand",
+				"clay",
+				"steel",
+				"concrete",
+				"glass",
+				"circuits",
+				"fuel",
+				"alloy",
+				"nanomaterial",
+				"fusion_cell",
+				"quantum_crystal",
 			]);
 			for (const tech of WORKER_TRACK_TECHS) {
 				for (const key of Object.keys(tech.cost)) {

@@ -9,7 +9,7 @@ import {
 	getStormCultistParams,
 	runAiTurns,
 } from "../../systems";
-import { floorTypeForTile } from "../../terrain/cluster";
+import { biomeTypeForTile } from "../../terrain/cluster";
 import {
 	Board,
 	Faction,
@@ -36,7 +36,7 @@ function makeBoard(width: number, height: number): GeneratedBoard {
 				z,
 				elevation: 0,
 				passable: true,
-				floorType: "durasteel_span",
+				biomeType: "grassland",
 				resourceMaterial: null,
 				resourceAmount: 0,
 			});
@@ -110,19 +110,16 @@ describe("climate profiles config wiring", () => {
 		expect(CLIMATE_PROFILE_SPECS.frozen.waterLevel).toBe(0.45);
 	});
 
-	it("floorTypeForTile respects waterLevel parameter", () => {
-		// With a very high waterLevel, more tiles should be abyssal
-		let highWaterAbyssal = 0;
-		let lowWaterAbyssal = 0;
+	it("biomeTypeForTile respects waterLevel parameter", () => {
+		let highWaterCount = 0;
+		let lowWaterCount = 0;
 		for (let x = 0; x < 32; x++) {
 			for (let z = 0; z < 32; z++) {
-				if (floorTypeForTile(x, z, 0, seed, 0.8) === "abyssal_platform")
-					highWaterAbyssal++;
-				if (floorTypeForTile(x, z, 0, seed, 0.1) === "abyssal_platform")
-					lowWaterAbyssal++;
+				if (biomeTypeForTile(x, z, 0, seed, 0.8) === "water") highWaterCount++;
+				if (biomeTypeForTile(x, z, 0, seed, 0.1) === "water") lowWaterCount++;
 			}
 		}
-		expect(highWaterAbyssal).toBeGreaterThan(lowWaterAbyssal);
+		expect(highWaterCount).toBeGreaterThan(lowWaterCount);
 	});
 
 	it("default climate profile in BoardConfig is temperate when omitted", () => {
@@ -152,7 +149,7 @@ describe("climate profiles config wiring", () => {
 		}
 	});
 
-	it("BSP generator produces structural_mass perimeters on all climate profiles", () => {
+	it("BSP generator produces mountain perimeters on all climate profiles", () => {
 		for (const climate of ["temperate", "wet", "arid", "frozen"] as const) {
 			const config: BoardConfig = {
 				width: SIZE,
@@ -165,8 +162,7 @@ describe("climate profiles config wiring", () => {
 			let structuralCount = 0;
 			for (let z = 0; z < board.config.height; z++) {
 				for (let x = 0; x < board.config.width; x++) {
-					if (board.tiles[z]![x]!.floorType === "structural_mass")
-						structuralCount++;
+					if (board.tiles[z]![x]!.biomeType === "mountain") structuralCount++;
 				}
 			}
 			// BSP always produces structural perimeters — at least 10% of tiles
@@ -189,25 +185,25 @@ describe("storm profiles affect cultist spawning", () => {
 		board = makeBoard(16, 16);
 	});
 
-	it("stable storm: grace period is 7 turns, not 5", () => {
+	it("stable storm: grace period is 4 turns", () => {
 		spawnBoardEntity(world, "stable");
 		spawnPlayerUnit(world);
 
-		// Turn 5 should NOT spawn (stable grace = 7)
-		checkCultistSpawn(world, board, 5);
+		// Turn 3 should NOT spawn (stable grace = 4)
+		checkCultistSpawn(world, board, 3);
 		expect(countCultists(world)).toBe(0);
 
-		// Turn 7 SHOULD spawn
-		checkCultistSpawn(world, board, 7);
+		// Turn 4 SHOULD spawn
+		checkCultistSpawn(world, board, 4);
 		expect(countCultists(world)).toBeGreaterThan(0);
 	});
 
-	it("cataclysmic storm: grace period is 3 turns", () => {
+	it("cataclysmic storm: grace period is 2 turns", () => {
 		spawnBoardEntity(world, "cataclysmic");
 		spawnPlayerUnit(world);
 
-		// Turn 3 should spawn (cataclysmic grace = 3)
-		checkCultistSpawn(world, board, 3);
+		// Turn 2 should spawn (cataclysmic grace = 2)
+		checkCultistSpawn(world, board, 2);
 		expect(countCultists(world)).toBeGreaterThan(0);
 	});
 
@@ -259,32 +255,32 @@ describe("storm profiles affect cultist spawning", () => {
 		spawnBoardEntity(world, "volatile");
 		spawnPlayerUnit(world);
 
-		// Turn 5 should spawn (default grace period = 5)
-		checkCultistSpawn(world, board, 5);
+		// Turn 3 should spawn (grace period = 3)
+		checkCultistSpawn(world, board, 3);
 		expect(countCultists(world)).toBeGreaterThan(0);
 	});
 
 	it("getStormCultistParams returns correct values", () => {
 		const stable = getStormCultistParams("stable");
-		expect(stable.baseSpawnInterval).toBe(7);
+		expect(stable.baseSpawnInterval).toBe(4);
 		expect(stable.maxWaveSize).toBe(2);
 
 		const volatile = getStormCultistParams("volatile");
-		expect(volatile.baseSpawnInterval).toBe(5);
+		expect(volatile.baseSpawnInterval).toBe(3);
 		expect(volatile.maxWaveSize).toBe(4);
 
 		const cataclysmic = getStormCultistParams("cataclysmic");
-		expect(cataclysmic.baseSpawnInterval).toBe(3);
+		expect(cataclysmic.baseSpawnInterval).toBe(2);
 		expect(cataclysmic.maxWaveSize).toBe(6);
 		expect(cataclysmic.maxTotalCultists).toBe(20);
 	});
 
-	it("stable storm: cap at 12 cultists is unchanged", () => {
+	it("stable storm: cap at 20 cultists", () => {
 		spawnBoardEntity(world, "stable");
 		spawnPlayerUnit(world);
 
-		// Pre-spawn 12 cultists
-		for (let i = 0; i < 12; i++) {
+		// Pre-spawn 20 cultists
+		for (let i = 0; i < 20; i++) {
 			world.spawn(
 				UnitPos({ tileX: i, tileZ: 0 }),
 				UnitFaction({ factionId: "static_remnants" }),
@@ -301,7 +297,7 @@ describe("storm profiles affect cultist spawning", () => {
 		}
 
 		checkCultistSpawn(world, board, 7);
-		expect(countCultists(world)).toBe(12);
+		expect(countCultists(world)).toBe(20);
 	});
 });
 
@@ -319,8 +315,8 @@ describe("difficulty affects resources and AI aggression", () => {
 				const f = e.get(Faction);
 				const r = e.get(ResourcePool);
 				if (f?.isPlayer && r) {
-					expect(r.scrap_metal).toBe(20); // 10 * 2
-					expect(r.ferrous_scrap).toBe(10); // 5 * 2
+					expect(r.stone).toBe(20); // 10 * 2
+					expect(r.iron_ore).toBe(10); // 5 * 2
 				}
 			}
 		});
@@ -333,8 +329,8 @@ describe("difficulty affects resources and AI aggression", () => {
 				const f = e.get(Faction);
 				const r = e.get(ResourcePool);
 				if (f?.isPlayer && r) {
-					expect(r.scrap_metal).toBe(10);
-					expect(r.ferrous_scrap).toBe(5);
+					expect(r.stone).toBe(10);
+					expect(r.iron_ore).toBe(5);
 				}
 			}
 		});
@@ -347,13 +343,13 @@ describe("difficulty affects resources and AI aggression", () => {
 				const f = e.get(Faction);
 				const r = e.get(ResourcePool);
 				if (f?.isPlayer && r) {
-					expect(r.scrap_metal).toBe(5); // 10 * 0.5
-					expect(r.ferrous_scrap).toBe(3); // Math.round(5 * 0.5)
+					expect(r.stone).toBe(5); // 10 * 0.5
+					expect(r.iron_ore).toBe(3); // Math.round(5 * 0.5)
 				}
 			}
 		});
 
-		it("AI faction resources are NOT affected by difficulty", () => {
+		it("AI faction resources are NOT affected by difficulty (except Iron Creed buff)", () => {
 			for (const diff of ["story", "standard", "hard"] as Difficulty[]) {
 				const world = createWorld();
 				initFactions(world, diff);
@@ -362,9 +358,14 @@ describe("difficulty affects resources and AI aggression", () => {
 					const f = e.get(Faction);
 					const r = e.get(ResourcePool);
 					if (f && !f.isPlayer && r) {
-						expect(r.scrap_metal).toBe(30);
-						expect(r.ferrous_scrap).toBe(30);
-						expect(r.alloy_stock).toBe(12);
+						if (f.id === "iron_creed") {
+							expect(r.stone).toBe(45);
+							expect(r.iron_ore).toBe(45);
+						} else {
+							expect(r.stone).toBe(30);
+							expect(r.iron_ore).toBe(30);
+						}
+						expect(r.steel).toBe(12);
 					}
 				}
 			}

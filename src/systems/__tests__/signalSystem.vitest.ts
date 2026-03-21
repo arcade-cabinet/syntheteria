@@ -66,13 +66,16 @@ describe("runSignalNetwork", () => {
 		world.destroy();
 	});
 
-	it("powered relay covers tiles within range", () => {
+	it("powered relay covers tiles within tier-scaled range", () => {
 		spawnRelay(world, 5, 5, 3, true);
 
 		expect(isInSignalRange(world, 5, 5)).toBe(true); // Same tile
 		expect(isInSignalRange(world, 7, 5)).toBe(true); // Distance 2
 		expect(isInSignalRange(world, 8, 5)).toBe(true); // Distance 3
-		expect(isInSignalRange(world, 9, 5)).toBe(false); // Distance 4
+		// Tier 1 relay has effective range 10, so distance 4 is still covered
+		expect(isInSignalRange(world, 9, 5)).toBe(true); // Distance 4
+		expect(isInSignalRange(world, 15, 5)).toBe(true); // Distance 10
+		expect(isInSignalRange(world, 16, 5)).toBe(false); // Distance 11
 	});
 
 	it("unpowered relay provides no coverage", () => {
@@ -83,17 +86,18 @@ describe("runSignalNetwork", () => {
 	});
 
 	it("relay chaining extends coverage", () => {
-		// Relay A at (0, 0) with range 5
+		// Relay A at (0, 0) with base range 5
 		spawnRelay(world, 0, 0, 5, true);
-		// Relay B at (4, 0) with range 5 — within A's range, extends from B
+		// Relay B at (4, 0) with base range 5 — within A's range, extends from B
 		spawnRelay(world, 4, 0, 5, true);
 
-		// A covers up to distance 5 from (0,0) = tiles up to (5, 0)
-		expect(isInSignalRange(world, 5, 0)).toBe(true);
-		// B covers up to distance 5 from (4,0) = tiles up to (9, 0)
-		expect(isInSignalRange(world, 9, 0)).toBe(true);
-		// Beyond B's range
-		expect(isInSignalRange(world, 10, 0)).toBe(false);
+		// Both relays are tier 1 with effective range 10
+		// A covers up to distance 10 from (0,0) = tiles up to (10, 0)
+		expect(isInSignalRange(world, 10, 0)).toBe(true);
+		// B covers up to distance 10 from (4,0) = tiles up to (14, 0)
+		expect(isInSignalRange(world, 14, 0)).toBe(true);
+		// Beyond B's effective range
+		expect(isInSignalRange(world, 15, 0)).toBe(false);
 	});
 
 	it("unit outside signal range has halved scanRange and -1 AP", () => {

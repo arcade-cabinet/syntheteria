@@ -1,20 +1,17 @@
 /**
  * Epoch definitions — long-game progression system.
  *
- * Epochs are Civilization-style ages that gate tech tiers, cult evolution,
+ * Epochs are Civilization-style ages that gate cult evolution,
  * storm escalation, and victory paths. They provide organic pacing so
  * the game grows from intimate survival into strategic-scale competition.
  *
- * Epoch transitions are driven by the highest tech tier researched by ANY
- * faction (including AI). This creates a shared global clock — when any
- * faction pushes the envelope, the whole world escalates.
+ * Epoch transitions are purely turn-driven (no building tier gating):
  *
- * Mapping:
- *   Tech tier 1 → Epoch 1: Emergence
- *   Tech tier 2 → Epoch 2: Expansion
- *   Tech tier 3 → Epoch 3: Consolidation
- *   Tech tier 4 → Epoch 4: Convergence
- *   Tech tier 5 → Epoch 5: Transcendence
+ *   Turn  1+ → Epoch 1: Emergence
+ *   Turn 10+ → Epoch 2: Expansion
+ *   Turn 30+ → Epoch 3: Consolidation
+ *   Turn 60+ → Epoch 4: Convergence
+ *   Turn 100+ → Epoch 5: Transcendence
  */
 
 // ---------------------------------------------------------------------------
@@ -34,8 +31,8 @@ export interface EpochDef {
 	readonly name: string;
 	readonly subtitle: string;
 	readonly description: string;
-	/** Tech tier that unlocks this epoch (highest tier researched by any faction). */
-	readonly techTier: 1 | 2 | 3 | 4 | 5;
+	/** Legacy field — no longer used for gating (epochs are purely turn-driven). */
+	readonly techTier: 1 | 2 | 3;
 	/** Minimum turn before this epoch can trigger (prevents early-rush cheese). */
 	readonly minTurn: number;
 	/** Storm profile active during this epoch (overrides starting profile). */
@@ -77,7 +74,7 @@ export const EPOCHS: readonly EpochDef[] = [
 		subtitle: "Signal Horizon",
 		description:
 			"Territory and diplomacy emerge. Early buildings go up. Rival factions stir. Cult wanderers begin mutating into organized threats.",
-		techTier: 2,
+		techTier: 1,
 		minTurn: 10,
 		stormEscalation: "stable",
 		cultMutationCap: 1,
@@ -92,12 +89,12 @@ export const EPOCHS: readonly EpochDef[] = [
 		subtitle: "The Lattice Tightens",
 		description:
 			"Advanced tech unlocks specializations. Cult escalation intensifies — war parties form. The storm begins to shift.",
-		techTier: 3,
+		techTier: 1,
 		minTurn: 30,
 		stormEscalation: "volatile",
 		cultMutationCap: 2,
-		cultSpawnMod: 0.8,
-		cultCapMod: 1.0,
+		cultSpawnMod: 0.6,
+		cultCapMod: 1.5,
 		wormholeAvailable: false,
 	},
 	{
@@ -107,12 +104,12 @@ export const EPOCHS: readonly EpochDef[] = [
 		subtitle: "Eye of the Storm",
 		description:
 			"The hypercane approaches its peak. Wormhole Theory becomes researchable. Cult assaults begin. The wormhole project can be started.",
-		techTier: 4,
+		techTier: 1,
 		minTurn: 60,
 		stormEscalation: "cataclysmic",
 		cultMutationCap: 3,
-		cultSpawnMod: 0.7,
-		cultCapMod: 1.5,
+		cultSpawnMod: 0.4,
+		cultCapMod: 2.0,
 		wormholeAvailable: true,
 	},
 	{
@@ -122,12 +119,12 @@ export const EPOCHS: readonly EpochDef[] = [
 		subtitle: "The Final Frequency",
 		description:
 			"Endgame. Mark V units and the Wormhole Stabilizer become available. All victory paths are open. The cult launches its final assault.",
-		techTier: 5,
+		techTier: 1,
 		minTurn: 100,
 		stormEscalation: "cataclysmic",
 		cultMutationCap: 3,
-		cultSpawnMod: 0.5,
-		cultCapMod: 2.0,
+		cultSpawnMod: 0.3,
+		cultCapMod: 3.0,
 		wormholeAvailable: true,
 	},
 ] as const;
@@ -147,26 +144,13 @@ export function getEpochByNumber(n: number): EpochDef {
 	return epoch ?? EPOCHS[0];
 }
 
-/** Get epoch definition by tech tier (1-5). */
+/** Get epoch definition by building tier (1-3). */
 export function getEpochForTechTier(tier: number): EpochDef {
-	const clamped = Math.max(1, Math.min(5, tier));
-	return EPOCHS[clamped - 1];
-}
-
-/**
- * Compute the current epoch from the highest tech tier researched by any
- * faction and the current turn number.
- *
- * The epoch is the highest epoch whose techTier AND minTurn requirements
- * are both met. This prevents epoch-skipping via early tech rushes.
- */
-export function computeEpoch(
-	highestTechTier: number,
-	currentTurn: number,
-): EpochDef {
+	const clamped = Math.max(1, Math.min(3, tier));
+	// Find the highest epoch whose techTier requirement is met (ignoring minTurn)
 	let result = EPOCHS[0];
 	for (const epoch of EPOCHS) {
-		if (highestTechTier >= epoch.techTier && currentTurn >= epoch.minTurn) {
+		if (clamped >= epoch.techTier) {
 			result = epoch;
 		}
 	}
@@ -174,12 +158,31 @@ export function computeEpoch(
 }
 
 /**
- * Tech tier to epoch mapping table (for documentation / UI display).
+ * Compute the current epoch from the current turn number.
+ *
+ * Epochs are purely turn-driven — building tier is accepted for
+ * signature compatibility but ignored. When epochTurns is provided
+ * (from game speed config), those thresholds are used instead of defaults.
+ */
+export function computeEpoch(
+	_highestBuildingTier: number,
+	currentTurn: number,
+	epochTurns?: readonly [number, number, number, number],
+): EpochDef {
+	const turns = epochTurns ?? [10, 30, 60, 100];
+	if (currentTurn >= turns[3]) return EPOCHS[4];
+	if (currentTurn >= turns[2]) return EPOCHS[3];
+	if (currentTurn >= turns[1]) return EPOCHS[2];
+	if (currentTurn >= turns[0]) return EPOCHS[1];
+	return EPOCHS[0];
+}
+
+/**
+ * Building tier to epoch mapping table (for documentation / UI display).
+ * Building tier 1 enables epochs 1-2, tier 2 enables epoch 3, tier 3 enables epochs 4-5.
  */
 export const TECH_TIER_TO_EPOCH: ReadonlyMap<number, EpochId> = new Map([
-	[1, "emergence"],
-	[2, "expansion"],
-	[3, "consolidation"],
-	[4, "convergence"],
-	[5, "transcendence"],
+	[1, "expansion"],
+	[2, "consolidation"],
+	[3, "transcendence"],
 ]);

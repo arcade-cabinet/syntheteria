@@ -5,9 +5,9 @@
  * serves double duty: it generates power AND produces renewable income.
  *
  * Per turn, each powered building of these types generates:
- *   - storm_transmitter → 1 storm_charge
- *   - geothermal_tap    → 1 thermal_fluid
- *   - solar_array        → 1 electrolyte
+ *   - storm_transmitter → 1 fuel
+ *   - geothermal_tap    → 1 coal
+ *   - solar_array        → 1 coal
  *
  * Called once per turn in the environment phase, after runPowerGrid
  * (so Powered trait is up-to-date).
@@ -22,11 +22,13 @@ import { addResources } from "./resourceSystem";
 export const RENEWAL_YIELDS: Partial<
 	Record<BuildingType, { material: ResourceMaterial; amount: number }>
 > = {
-	storm_transmitter: { material: "storm_charge", amount: 1 },
-	geothermal_tap: { material: "thermal_fluid", amount: 1 },
-	solar_array: { material: "electrolyte", amount: 1 },
-	resource_refinery: { material: "ferrous_scrap", amount: 2 },
-	synthesizer: { material: "scrap_metal", amount: 1 },
+	storm_transmitter: { material: "fuel", amount: 1 },
+	geothermal_tap: { material: "coal", amount: 1 },
+	solar_array: { material: "coal", amount: 1 },
+	resource_refinery: { material: "iron_ore", amount: 2 },
+	synthesizer: { material: "stone", amount: 1 },
+	defense_turret: { material: "coal", amount: 1 },
+	outpost: { material: "timber", amount: 1 },
 };
 
 /**

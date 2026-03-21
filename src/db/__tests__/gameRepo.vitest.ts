@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { SqliteAdapter } from "../adapter";
-import { createSqlJsAdapter } from "../adapter";
+import { createTestAdapter } from "../adapter";
 import { GameRepo } from "../gameRepo";
 import { runMigrations } from "../migrations";
 
@@ -8,7 +8,7 @@ let db: SqliteAdapter;
 let repo: GameRepo;
 
 beforeEach(async () => {
-	db = await createSqlJsAdapter();
+	db = await createTestAdapter();
 	await runMigrations(db);
 	repo = new GameRepo(db);
 });
@@ -267,8 +267,8 @@ describe("Turn Event Logs", () => {
 describe("Faction Resource Snapshots", () => {
 	it("saveFactionResourceSnapshot + loadFactionResourceSnapshots round-trip", async () => {
 		const gameId = await repo.createGame("seed", 8, 8, "normal");
-		const res1 = { scrap_metal: 10, ferrous_scrap: 5 };
-		const res2 = { scrap_metal: 20, alloy_stock: 3 };
+		const res1 = { stone: 10, iron_ore: 5 };
+		const res2 = { stone: 20, steel: 3 };
 
 		await repo.saveFactionResourceSnapshot(
 			gameId,
@@ -286,7 +286,7 @@ describe("Faction Resource Snapshots", () => {
 			gameId,
 			2,
 			"player",
-			JSON.stringify({ scrap_metal: 15 }),
+			JSON.stringify({ stone: 15 }),
 		);
 
 		const all = await repo.loadFactionResourceSnapshots(gameId);

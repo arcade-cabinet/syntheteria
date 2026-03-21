@@ -21,6 +21,8 @@ function _manhattanDist(
 	return Math.abs(ax - bx) + Math.abs(az - bz);
 }
 
+const SIGNAL_RANGE_BY_TIER: Record<number, number> = { 1: 10, 2: 15, 3: 25 };
+
 interface SignalRelay {
 	tileX: number;
 	tileZ: number;
@@ -38,7 +40,9 @@ function buildCoverageMap(world: World): Set<string> {
 		const b = e.get(Building);
 		const sn = e.get(SignalNode);
 		if (!b || !sn || sn.range <= 0) continue;
-		relays.push({ tileX: b.tileX, tileZ: b.tileZ, range: sn.range });
+		const tier = b.buildingTier ?? 1;
+		const effectiveRange = SIGNAL_RANGE_BY_TIER[tier] ?? sn.range;
+		relays.push({ tileX: b.tileX, tileZ: b.tileZ, range: effectiveRange });
 	}
 
 	const covered = new Set<string>();

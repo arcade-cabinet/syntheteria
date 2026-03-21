@@ -1,185 +1,197 @@
 /**
- * Terrain floor types — ecumenopolis substrate taxonomy.
+ * Biome terrain types — overworld biome taxonomy.
  *
- * Each FloorType corresponds to a visual cluster in the procedural shader
- * AND defines what the tile yields when strip-mined.
- *
- * Replaces: board/types.ts TileZone, pending/config/floorTextures.json,
- *           pending/config/zoneBlending.json
- *
- * Geography-driven types (void_pit, structural_mass, abyssal_platform) are
- * assigned from elevation and geography noise in the board generator.
- * Cluster-driven types (the remaining six) are assigned from the GLSL
- * cluster noise — same thresholds on CPU and GPU.
+ * Each BiomeType defines a natural terrain with yields when harvested/mined.
+ * Improvement overlays (roboforming) transform tiles visually and functionally.
  */
 
 /**
  * Impassable types:
- *   void_pit        — deep drop; no infrastructure (elevation = -1)
- *   structural_mass — dense machine structure; impassable barrier (geography noise)
+ *   water    — deep water; impassable without bridges
+ *   mountain — high elevation; impassable, mineable for stone/ore
  *
  * Passable types:
- *   abyssal_platform — steel grating over former ocean void; walk-on but hazardous
- *   transit_deck     — sealed transit/infrastructure corridors
- *   durasteel_span   — primary structural floor spans
- *   collapsed_zone   — rubble and debris fields
- *   dust_district    — wind-scoured ash and degraded electronics
- *   bio_district     — fossilized organic matter; polymer-rich
- *   aerostructure    — upper-level platforms exposed to the hypercane
+ *   grassland — open plains; food/fiber
+ *   forest    — wooded areas; timber, slower movement
+ *   desert    — arid wasteland; sand/glass
+ *   hills     — rolling terrain; stone/ore (less than mountain)
+ *   wetland   — marshy ground; reeds/peat, slow movement
+ *   tundra    — frozen terrain; sparse resources
  */
-export type FloorType =
-	| "void_pit"
-	| "structural_mass"
-	| "abyssal_platform"
-	| "transit_deck"
-	| "durasteel_span"
-	| "collapsed_zone"
-	| "dust_district"
-	| "bio_district"
-	| "aerostructure";
+export type BiomeType =
+	| "water"
+	| "mountain"
+	| "grassland"
+	| "forest"
+	| "desert"
+	| "hills"
+	| "wetland"
+	| "tundra";
 
 /**
- * 13-material resource taxonomy.
- * Replaces the old "ore" | "crystal" | "scrap" triple.
- * Ported from pending/systems/resources.ts and expanded.
+ * Resource material taxonomy — natural → processed → synthetic.
+ *
+ * Natural tier: extracted directly from biomes
+ * Processed tier: created at refineries/factories from natural materials
+ * Synthetic tier: created at synthesizers from processed materials (late game)
  */
 export type ResourceMaterial =
-	// Foundation tier — structural salvage
-	| "ferrous_scrap"
-	| "alloy_stock"
-	| "polymer_salvage"
-	| "conductor_wire"
-	// Advanced tier — energy and compute
-	| "electrolyte"
-	| "silicon_wafer"
-	| "storm_charge"
-	| "el_crystal"
-	// Common tier — general debris
-	| "scrap_metal"
-	| "e_waste"
-	| "intact_components"
-	// Abyssal tier — former ocean infrastructure
-	| "thermal_fluid"
-	| "depth_salvage";
+	// Natural tier — from biome harvesting/mining
+	| "stone"
+	| "timber"
+	| "iron_ore"
+	| "coal"
+	| "food"
+	| "fiber"
+	| "sand"
+	| "clay"
+	// Processed tier — from refineries
+	| "steel"
+	| "concrete"
+	| "glass"
+	| "circuits"
+	| "fuel"
+	// Synthetic tier — from synthesizers (late game)
+	| "alloy"
+	| "nanomaterial"
+	| "fusion_cell"
+	| "quantum_crystal";
 
-export type FloorDef = {
+export type BiomeDef = {
 	/** Human-readable label. */
 	label: string;
-	/** Whether a unit can strip-mine this tile. */
+	/** Whether a unit can harvest/mine this tile. */
 	mineable: boolean;
-	/** Turns required to fully mine (0 = not mineable). */
+	/** Turns required to fully harvest (0 = not mineable). */
 	hardness: number;
-	/** Primary resource material yielded on completion. */
+	/** Primary resource material yielded. */
 	resourceMaterial: ResourceMaterial | null;
 	/** [min, max] resource units yielded. */
 	resourceAmount: [number, number];
+	/** Movement cost multiplier (1.0 = normal, 2.0 = double). */
+	movementCost: number;
+	/** Defense bonus when a unit stands here (+0 to +2). */
+	defenseBonus: number;
+	/** Scan range modifier (-2 to +2). */
+	visionModifier: number;
+	/** Blocks ranged attacks from non-adjacent tiles. */
+	coverFromRanged: boolean;
+	/** HP lost per turn standing on this tile (0 for most biomes). */
+	environmentalDrain: number;
 };
 
-/**
- * Canonical floor definitions — gameplay values for each surface type.
- *
- * DESIGN INTENT — Floor mining is a BACKSTOP for resource deserts.
- * Buildings and prop structures on tiles are the PRIMARY resource source
- * (stripping a building yields advanced materials: conductor_wire,
- *  silicon_wafer, alloy_stock, storm_charge, el_crystal, etc.).
- *
- * Floor mining only yields basic/common materials. structural_mass is the
- * exception — it IS the "building" equivalent (impassable dense structure
- * that blocks movement) and yields intact_components as primary yield.
- *
- * Players who find themselves in a resource desert can always fall back to
- * floor mining for survival-level basics to build a Synthesizer and start
- * fusing advanced materials from base inputs.
- */
-export const FLOOR_DEFS: Record<FloorType, FloorDef> = {
-	void_pit: {
-		label: "Void Pit",
+export const BIOME_DEFS: Record<BiomeType, BiomeDef> = {
+	water: {
+		label: "Water",
 		mineable: false,
 		hardness: 0,
 		resourceMaterial: null,
 		resourceAmount: [0, 0],
+		movementCost: Infinity,
+		defenseBonus: 0,
+		visionModifier: 0,
+		coverFromRanged: false,
+		environmentalDrain: 0,
 	},
-	/** Primary building-equivalent structure — dense machine infrastructure.
-	 *  Impassable barrier (mountain/structure mechanic). High yield. */
-	structural_mass: {
-		label: "Structural Mass",
+	mountain: {
+		label: "Mountain",
 		mineable: true,
 		hardness: 5,
-		resourceMaterial: "intact_components",
+		resourceMaterial: "stone",
 		resourceAmount: [3, 7],
+		movementCost: Infinity,
+		defenseBonus: 0,
+		visionModifier: 0,
+		coverFromRanged: false,
+		environmentalDrain: 0,
 	},
-	/** Former ocean floor under steel grating. Only source of thermal_fluid. */
-	abyssal_platform: {
-		label: "Abyssal Platform",
+	grassland: {
+		label: "Grassland",
 		mineable: true,
-		hardness: 3,
-		resourceMaterial: "thermal_fluid",
-		resourceAmount: [2, 5],
-	},
-	/** Backstop: ferrous_scrap from surface floor panels. */
-	transit_deck: {
-		label: "Transit Deck",
-		mineable: true,
-		hardness: 2,
-		resourceMaterial: "ferrous_scrap",
-		resourceAmount: [1, 3],
-	},
-	/** Backstop: ferrous_scrap — primary structural flooring. */
-	durasteel_span: {
-		label: "Durasteel Span",
-		mineable: true,
-		hardness: 4,
-		resourceMaterial: "ferrous_scrap",
+		hardness: 1,
+		resourceMaterial: "food",
 		resourceAmount: [2, 4],
+		movementCost: 1.0,
+		defenseBonus: 0,
+		visionModifier: 0,
+		coverFromRanged: false,
+		environmentalDrain: 0,
 	},
-	/** Backstop: scrap_metal — rubble and debris fields. */
-	collapsed_zone: {
-		label: "Collapsed Zone",
-		mineable: true,
-		hardness: 1,
-		resourceMaterial: "scrap_metal",
-		resourceAmount: [1, 3],
-	},
-	/** Backstop: e_waste — degraded electronics in wind-scoured ash. */
-	dust_district: {
-		label: "Dust District",
-		mineable: true,
-		hardness: 1,
-		resourceMaterial: "e_waste",
-		resourceAmount: [1, 3],
-	},
-	/** Backstop: polymer_salvage — fossilized organics and biopolymers. */
-	bio_district: {
-		label: "Bio District",
-		mineable: true,
-		hardness: 2,
-		resourceMaterial: "polymer_salvage",
-		resourceAmount: [1, 3],
-	},
-	/** Backstop: scrap_metal from upper-platform debris. */
-	aerostructure: {
-		label: "Aerostructure",
+	forest: {
+		label: "Forest",
 		mineable: true,
 		hardness: 3,
-		resourceMaterial: "scrap_metal",
+		resourceMaterial: "timber",
+		resourceAmount: [2, 5],
+		movementCost: 1.5,
+		defenseBonus: 2,
+		visionModifier: -2,
+		coverFromRanged: true,
+		environmentalDrain: 0,
+	},
+	desert: {
+		label: "Desert",
+		mineable: true,
+		hardness: 2,
+		resourceMaterial: "sand",
+		resourceAmount: [1, 3],
+		movementCost: 1.5,
+		defenseBonus: 0,
+		visionModifier: 2,
+		coverFromRanged: false,
+		environmentalDrain: 1,
+	},
+	hills: {
+		label: "Hills",
+		mineable: true,
+		hardness: 3,
+		resourceMaterial: "iron_ore",
+		resourceAmount: [2, 4],
+		movementCost: 1.5,
+		defenseBonus: 1,
+		visionModifier: 2,
+		coverFromRanged: false,
+		environmentalDrain: 0,
+	},
+	wetland: {
+		label: "Wetland",
+		mineable: true,
+		hardness: 1,
+		resourceMaterial: "clay",
+		resourceAmount: [1, 3],
+		movementCost: 2.0,
+		defenseBonus: 1,
+		visionModifier: 0,
+		coverFromRanged: false,
+		environmentalDrain: 0,
+	},
+	tundra: {
+		label: "Tundra",
+		mineable: true,
+		hardness: 2,
+		resourceMaterial: "coal",
 		resourceAmount: [1, 2],
+		movementCost: 1.5,
+		defenseBonus: 0,
+		visionModifier: 1,
+		coverFromRanged: false,
+		environmentalDrain: 1,
 	},
 };
 
-/** FloorType → atlas cell index. Must match scripts/build-texture-atlas.ts layout. */
-export const FLOOR_INDEX_MAP: Record<FloorType, number> = {
-	structural_mass: 0,
-	durasteel_span: 1,
-	transit_deck: 2,
-	collapsed_zone: 3,
-	dust_district: 4,
-	bio_district: 5,
-	aerostructure: 6,
-	abyssal_platform: 7,
-	void_pit: 8,
+/** BiomeType → color index for rendering. */
+export const BIOME_INDEX_MAP: Record<BiomeType, number> = {
+	grassland: 0,
+	forest: 1,
+	hills: 2,
+	desert: 3,
+	wetland: 4,
+	tundra: 5,
+	water: 6,
+	mountain: 7,
 };
 
-/** True for passable floor types. */
-export function isPassableFloor(t: FloorType): boolean {
-	return t !== "void_pit" && t !== "structural_mass";
+/** True for passable biome types. */
+export function isPassableBiome(t: BiomeType): boolean {
+	return t !== "water" && t !== "mountain";
 }

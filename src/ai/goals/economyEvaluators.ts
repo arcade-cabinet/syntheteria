@@ -88,7 +88,7 @@ export class HarvestEvaluator extends GoalEvaluator<SyntheteriaAgent> {
  * Dynamic build priority — what the faction is MISSING matters more than
  * a static checklist. The economy chain is:
  *   power (transmitter) -> raw materials (harvest) -> refined (synthesizer)
- *   -> buildings/research_lab -> tech -> specialized units
+ *   -> buildings/analysis_node -> tech -> specialized units
  *
  * If the faction has zero of a critical building, that jumps to top priority.
  * Otherwise falls back to the static order for "nice to have" buildings.
@@ -101,7 +101,8 @@ function dynamicBuildPriority(existingTypes: Record<string, number>): string[] {
 	if ((existingTypes["motor_pool"] ?? 0) === 0) priority.push("motor_pool");
 	if ((existingTypes["storm_transmitter"] ?? 0) === 0)
 		priority.push("storm_transmitter");
-	if ((existingTypes["research_lab"] ?? 0) === 0) priority.push("research_lab");
+	if ((existingTypes["analysis_node"] ?? 0) === 0)
+		priority.push("analysis_node");
 
 	// Growth buildings
 	priority.push(

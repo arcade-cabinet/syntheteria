@@ -18,7 +18,11 @@ import type { MarkSpecialization } from "../marks";
 
 // ─── Track IDs ───────────────────────────────────────────────────────────────
 
-export type WorkerTrack = "deep_miner" | "fabricator" | "salvager";
+export type WorkerTrack =
+	| "deep_miner"
+	| "fabricator"
+	| "salvager"
+	| "aquatic_engineer";
 
 // ─── Specialization Interface ────────────────────────────────────────────────
 
@@ -71,7 +75,7 @@ export const DEEP_MINER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] =
 			effectType: "targeted_mining",
 			effectValue: 3,
 			description:
-				"Targeted mining within 3 range — dig any visible cell without adjacent ramp. Mined cells have 25% chance to expose rare depth_salvage.",
+				"Targeted mining within 3 range — dig any visible cell without adjacent ramp. Mined cells have 25% chance to expose rare alloy.",
 		},
 	] as const;
 
@@ -147,7 +151,7 @@ export const SALVAGER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] = [
 		effectType: "material_analysis",
 		effectValue: 15,
 		description:
-			"15% chance to find bonus rare materials (storm_charge, el_crystal) when harvesting any deposit. Prospect reveals exact yield amounts.",
+			"15% chance to find bonus rare materials (fuel, quantum_crystal) when harvesting any deposit. Prospect reveals exact yield amounts.",
 	},
 	{
 		track: "salvager",
@@ -165,9 +169,55 @@ export const SALVAGER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] = [
 		effectType: "total_recycling",
 		effectValue: 100,
 		description:
-			"Salvage returns 100% of build cost. Every harvest has 10% chance to yield el_crystal. Destroyed enemy units in scan range drop salvage.",
+			"Salvage returns 100% of build cost. Every harvest has 10% chance to yield quantum_crystal. Destroyed enemy units in scan range drop salvage.",
 	},
 ] as const;
+
+// ─── Track D: Aquatic Engineer ──────────────────────────────────────────────
+//
+// Fantasy: A waterproofed worker that can build on water tiles and harvest
+// aquatic resources. Enables coastal and naval infrastructure. Unlocked at
+// Motor Pool tier 3.
+
+export const AQUATIC_ENGINEER_SPECIALIZATIONS: readonly WorkerTrackSpecialization[] =
+	[
+		{
+			track: "aquatic_engineer",
+			label: "Platform Assembly",
+			markLevel: 2 as 3,
+			effectType: "platform_assembly",
+			effectValue: 1,
+			description:
+				"Can build on water tiles (creates platform improvements). Water movement cost 2.0.",
+		},
+		{
+			track: "aquatic_engineer",
+			label: "Aquatic Harvesting",
+			markLevel: 3,
+			effectType: "aquatic_harvest",
+			effectValue: 2,
+			description:
+				"Can harvest water tile resources. Water deposits yield +50% materials.",
+		},
+		{
+			track: "aquatic_engineer",
+			label: "Naval Infrastructure",
+			markLevel: 4,
+			effectType: "naval_infra",
+			effectValue: 1,
+			description:
+				"Buildings on water platforms gain +2 signal range. Platforms connect to power grid across water.",
+		},
+		{
+			track: "aquatic_engineer",
+			label: "Transcendent Dockmaster",
+			markLevel: 5,
+			effectType: "transcendent_dockmaster",
+			effectValue: 1,
+			description:
+				"Platform building is instant. All water tiles within 3 range of platforms become passable. Aquatic buildings have double HP.",
+		},
+	] as const;
 
 // ─── v2 Upgraded Versions ────────────────────────────────────────────────────
 //
@@ -191,7 +241,7 @@ export const DEEP_MINER_V2_UPGRADES: readonly WorkerTrackSpecialization[] = [
 		effectType: "abyssal_bore",
 		effectValue: 3,
 		description:
-			"Replaces Deep Bore. Digs 3 levels deep (-3 elevation). Exposes abyssal-tier resources (thermal_fluid, depth_salvage) regardless of floor type.",
+			"Replaces Deep Bore. Digs 3 levels deep (-3 elevation). Exposes abyssal-tier resources (fuel, alloy) regardless of floor type.",
 	},
 ] as const;
 
@@ -268,6 +318,13 @@ export const WORKER_TRACKS: Record<
 			"Extraction and recycling. Better salvage yields, rare material chance, instant dismantle.",
 		specializations: SALVAGER_SPECIALIZATIONS,
 		v2Upgrades: SALVAGER_V2_UPGRADES,
+	},
+	aquatic_engineer: {
+		label: "Aquatic Engineer",
+		description:
+			"Naval construction. Build on water, harvest aquatic resources, coastal infrastructure.",
+		specializations: AQUATIC_ENGINEER_SPECIALIZATIONS,
+		v2Upgrades: [],
 	},
 };
 
@@ -385,6 +442,43 @@ export const SALVAGER_ACTIONS: readonly ClassActionDef[] = [
 	},
 ];
 
+/** Actions unlocked by the Aquatic Engineer track. */
+export const AQUATIC_ENGINEER_ACTIONS: readonly ClassActionDef[] = [
+	{
+		id: "build_platform",
+		label: "Platform",
+		icon: "\uD83C\uDF0A", // wave
+		tone: "construct",
+		category: "economy",
+		apCost: 1,
+		minRange: 1,
+		maxRange: 1,
+		requiresStaging: true,
+		requiresAdjacent: true,
+		requiresEnemy: false,
+		requiresFriendly: false,
+		cooldown: 0,
+		description:
+			"Build a platform on adjacent water tile, enabling construction",
+	},
+	{
+		id: "aquatic_harvest",
+		label: "Dredge",
+		icon: "\u2693", // anchor
+		tone: "harvest",
+		category: "economy",
+		apCost: 1,
+		minRange: 0,
+		maxRange: 0,
+		requiresStaging: true,
+		requiresAdjacent: false,
+		requiresEnemy: false,
+		requiresFriendly: false,
+		cooldown: 0,
+		description: "Harvest resources from water tiles",
+	},
+];
+
 // ─── Tech Tree Additions ─────────────────────────────────────────────────────
 //
 // These techs gate and upgrade the worker specialization tracks.
@@ -396,7 +490,7 @@ export const WORKER_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Advanced chassis modularity for worker units. Unlocks Deep Miner, Fabricator, and Salvager specializations at the Garage.",
 		tier: 2,
-		cost: { alloy_stock: 5, ferrous_scrap: 4, polymer_salvage: 3 },
+		cost: { steel: 5, iron_ore: 4, timber: 3 },
 		turnsToResearch: 4,
 		prerequisites: ["advanced_harvesting"],
 		effects: [{ type: "harvest_bonus" as const, value: 0.1 }],
@@ -407,7 +501,7 @@ export const WORKER_TRACK_TECHS: readonly TechDef[] = [
 		description:
 			"Quantum-enhanced industrial processes. Upgrades Deep Miner to v2 (Seismic DAISY), Fabricator to v2 (Nano-Repair Swarm), and Salvager to v2 (Quantum Sifting).",
 		tier: 4,
-		cost: { intact_components: 10, alloy_stock: 8, storm_charge: 6 },
+		cost: { steel: 18, fuel: 6 },
 		turnsToResearch: 8,
 		prerequisites: ["industrial_specialization", "deep_mining"],
 		effects: [{ type: "harvest_bonus" as const, value: 0.15 }],
@@ -453,6 +547,8 @@ export function getWorkerTrackActions(
 			return FABRICATOR_ACTIONS;
 		case "salvager":
 			return SALVAGER_ACTIONS;
+		case "aquatic_engineer":
+			return AQUATIC_ENGINEER_ACTIONS;
 	}
 }
 
@@ -464,7 +560,8 @@ function effectiveMarkLevel(spec: WorkerTrackSpecialization): number {
 	if (
 		spec.effectType === "subsurface_probe" ||
 		spec.effectType === "rapid_assembly" ||
-		spec.effectType === "efficient_extraction"
+		spec.effectType === "efficient_extraction" ||
+		spec.effectType === "platform_assembly"
 	) {
 		return 2;
 	}

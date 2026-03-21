@@ -1,4 +1,5 @@
 import { trait } from "koota";
+import type { GameSpeed } from "../config/gameSpeedDefs";
 import type { ClimateProfile, Difficulty, StormProfile } from "../world/config";
 
 export const Board = trait({
@@ -10,4 +11,5 @@ export const Board = trait({
 	climateProfile: "temperate" as ClimateProfile,
 	stormProfile: "volatile" as StormProfile,
 	difficulty: "standard" as Difficulty,
+	gameSpeed: "standard" as GameSpeed,
 });

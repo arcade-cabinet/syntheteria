@@ -131,8 +131,8 @@ describe("narrative config", () => {
 // ─── POI config ──────────────────────────────────────────────────────────────
 
 describe("POI config", () => {
-	it("has 7 POI definitions", () => {
-		expect(POI_DEFINITIONS).toHaveLength(7);
+	it("has 19 POI definitions", () => {
+		expect(POI_DEFINITIONS).toHaveLength(19);
 	});
 
 	it("home_base is the only POI discovered at start", () => {
@@ -237,10 +237,10 @@ describe("upgrade config", () => {
 	});
 
 	it("mark level costs escalate with tier", () => {
-		const cost2 = MARK_LEVEL_COSTS[2].scrap_metal!;
-		const cost3 = MARK_LEVEL_COSTS[3].scrap_metal!;
-		const cost4 = MARK_LEVEL_COSTS[4].scrap_metal!;
-		const cost5 = MARK_LEVEL_COSTS[5].scrap_metal!;
+		const cost2 = MARK_LEVEL_COSTS[2].stone!;
+		const cost3 = MARK_LEVEL_COSTS[3].stone!;
+		const cost4 = MARK_LEVEL_COSTS[4].stone!;
+		const cost5 = MARK_LEVEL_COSTS[5].stone!;
 		expect(cost2).toBeLessThan(cost3);
 		expect(cost3).toBeLessThan(cost4);
 		expect(cost4).toBeLessThan(cost5);
@@ -384,8 +384,8 @@ describe("recipe config", () => {
 	it("getRecipeCostMap returns correct cost map", () => {
 		const cameraCost = getRecipeCostMap("camera_module");
 		expect(cameraCost).not.toBeNull();
-		expect(cameraCost!.e_waste).toBe(4);
-		expect(cameraCost!.intact_components).toBe(1);
+		expect(cameraCost!.circuits).toBe(4);
+		expect(cameraCost!.glass).toBe(1);
 	});
 
 	it("getRecipeCostMap returns null for unknown recipe", () => {

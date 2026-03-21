@@ -28,17 +28,29 @@ interface PowerEntity {
 	buildingType: string;
 }
 
+// ─── Tier-scaled power output ────────────────────────────────────────────────
+
+const TRANSMITTER_POWER_BY_TIER: Record<number, number> = { 1: 5, 2: 8, 3: 12 };
+
+function getTransmitterPower(tier: number): number {
+	return TRANSMITTER_POWER_BY_TIER[tier] ?? TRANSMITTER_POWER_BY_TIER[1]!;
+}
+
 function collectPowerEntities(world: World): PowerEntity[] {
 	const result: PowerEntity[] = [];
 	for (const e of world.query(Building, PowerGrid)) {
 		const b = e.get(Building);
 		const pg = e.get(PowerGrid);
 		if (!b || !pg) continue;
+		let powerDelta = pg.powerDelta;
+		if (powerDelta > 0 && b.buildingType === "storm_transmitter") {
+			powerDelta = getTransmitterPower(b.buildingTier ?? 1);
+		}
 		result.push({
 			entity: e,
 			tileX: b.tileX,
 			tileZ: b.tileZ,
-			powerDelta: pg.powerDelta,
+			powerDelta,
 			storageCapacity: pg.storageCapacity,
 			currentCharge: pg.currentCharge,
 			powerRadius: pg.powerRadius,

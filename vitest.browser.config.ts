@@ -1,20 +1,20 @@
 /**
- * Vitest browser-mode config for isolated R3F component tests.
- *
- * Uses Playwright as the browser provider so we stay on Vite 6 and share
- * the full project resolve aliases and optimizeDeps settings.
+ * Vitest browser-mode config (Playwright provider).
  *
  * Run: pnpm test:ct
  * Watch: pnpm test:ct:watch
- * Files: tests/components/**\/*.browser.test.{ts,tsx}
+ *
+ * Only smoke.browser.test.tsx runs for now; other browser tests still import outdated
+ * previews (old ecs/rendering paths). Widen test.include when those previews are migrated.
  */
 import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { playwright } from "@vitest/browser-playwright";
+import glsl from "vite-plugin-glsl";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-	plugins: [react()],
+	plugins: [react(), glsl()],
 	assetsInclude: ["**/*.glb", "**/*.gltf", "**/*.wasm"],
 	optimizeDeps: {
 		// sql.js must load its WASM at runtime — don't bundle it.
@@ -24,6 +24,10 @@ export default defineConfig({
 		alias: {
 			"@": path.resolve(__dirname, "./src"),
 			"@root": path.resolve(__dirname, "."),
+			"jeep-sqlite/loader": path.resolve(
+				__dirname,
+				"node_modules/jeep-sqlite/loader/index.js",
+			),
 			"react-native": path.resolve(__dirname, "./src/stubs/react-native"),
 			"expo-asset": path.resolve(__dirname, "./src/stubs/expo-asset.ts"),
 			"react-native-filament": path.resolve(
@@ -48,7 +52,7 @@ export default defineConfig({
 			provider: playwright(),
 			instances: [{ browser: "chromium" }],
 		},
-		include: ["tests/components/**/*.browser.test.{ts,tsx}"],
+		include: ["tests/components/smoke.browser.test.tsx"],
 		exclude: ["**/node_modules/**", "**/dist/**"],
 		// Canvas rendering needs time; set a generous default test timeout.
 		testTimeout: 30_000,

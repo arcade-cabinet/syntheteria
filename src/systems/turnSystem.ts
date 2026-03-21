@@ -8,7 +8,9 @@ import {
 	Faction,
 	ResourcePool,
 	Tile,
+	UnitAttack,
 	UnitFaction,
+	UnitMove,
 	UnitPos,
 	UnitStats,
 } from "../traits";
@@ -74,6 +76,29 @@ export function advanceTurn(
 
 	// Phase 2: AI faction turns (Yuka GOAP — move + queue attacks)
 	runYukaAiTurns(world, board);
+
+	// DEBUG: count moves/attacks after AI decisions (before resolution)
+	let _moveCount = 0;
+	let _atkCount = 0;
+	const _moveDests: string[] = [];
+	for (const e of world.query(UnitMove)) {
+		const m = e.get(UnitMove);
+		if (m) {
+			_moveCount++;
+			_moveDests.push(`(${m.fromX},${m.fromZ})->(${m.toX},${m.toZ})`);
+		}
+	}
+	for (const e of world.query(UnitAttack)) {
+		if (e.get(UnitAttack)) _atkCount++;
+	}
+	if (_moveCount > 0 || _atkCount > 0) {
+		const turn = getCurrentTurn(world);
+		if (turn <= 20) {
+			console.log(
+				`[advTurn T${turn}] moves=${_moveCount} attacks=${_atkCount} dests=${_moveDests.slice(0, 5).join(" ")}`,
+			);
+		}
+	}
 
 	// Phase 2.5: Resolve AI attacks BEFORE moves — attacks were evaluated
 	// against pre-move positions, so resolving them first prevents

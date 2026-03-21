@@ -26,10 +26,12 @@ export interface RunSnapshot {
 	// Unit composition
 	specializationUsage: Record<string, number>;
 	combatToWorkerRatio: Record<string, number>;
+	avgMarkLevel: Record<string, number>;
 
 	// Economy
 	resourceSpentThisCheckpoint: Record<string, number>;
 	stockpileRatio: Record<string, number>;
+	synthesisUsage: Record<string, number>;
 
 	// Combat
 	battlesThisCheckpoint: number;
@@ -37,6 +39,10 @@ export interface RunSnapshot {
 
 	// Decisive victory indicator
 	leadingFactionAdvantage: number;
+
+	// Victory proximity
+	closestVictoryType: string;
+	closestVictoryProgress: number;
 }
 
 export interface RunResult {

@@ -45,6 +45,7 @@ export function diagnoseGaps(report: BatchReport): Diagnostic[] {
 	detectNoSpecialization(report, diagnostics);
 	detectOneDimensionalEconomy(report, diagnostics);
 	detectDecisiveVictory(report, diagnostics);
+	detectVictoryProximity(report, diagnostics);
 
 	return diagnostics;
 }
@@ -501,5 +502,36 @@ function detectDecisiveVictory(
 			message: `No decisive victories in ${report.runs.length} runs — all ended at turn cap`,
 			data: { count: 0, total: report.runs.length },
 		});
+	}
+}
+
+/**
+ * Victory proximity: flag if no faction is within 50% of any victory by turn cap/2.
+ */
+function detectVictoryProximity(
+	report: BatchReport,
+	diagnostics: Diagnostic[],
+): void {
+	if (report.runs.length === 0) return;
+	const halfTurn = Math.floor(report.turnCount / 2);
+	if (halfTurn < 10) return;
+
+	for (const run of report.runs) {
+		const midSnap = run.snapshots.find((s) => s.turn >= halfTurn);
+		if (!midSnap) continue;
+
+		if (midSnap.closestVictoryProgress < 50) {
+			diagnostics.push({
+				severity: "warning",
+				category: "victory_proximity",
+				message: `No faction within 50% of any victory by turn ${midSnap.turn} in seed ${run.seed} (closest: ${midSnap.closestVictoryType} at ${midSnap.closestVictoryProgress.toFixed(0)}%)`,
+				data: {
+					seed: run.seed,
+					turn: midSnap.turn,
+					closestType: midSnap.closestVictoryType,
+					closestProgress: midSnap.closestVictoryProgress,
+				},
+			});
+		}
 	}
 }

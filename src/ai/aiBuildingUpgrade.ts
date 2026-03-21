@@ -2,8 +2,9 @@
  * AI building upgrade logic — evaluates and initiates building tier upgrades.
  * Called during the AI turn after other building decisions.
  *
- * Priority order for upgrades mirrors the economy chain:
- * motor_pool > synthesizer > storm_transmitter > relay_tower > defense_turret > others
+ * Priority order for upgrades:
+ * 1. Buildings whose upgrades UNLOCK new building types (chain progression)
+ * 2. Economy chain: motor_pool > synthesizer > storm_transmitter > relay_tower > defense_turret > others
  */
 
 import type { World } from "koota";
@@ -13,7 +14,7 @@ import { getBuildingUpgradeJob } from "../systems/buildingUpgradeSystem";
 import { Board, Building } from "../traits";
 import { isCultFactionId } from "./aiHelpers";
 
-const UPGRADE_PRIORITY: readonly string[] = [
+const BASE_UPGRADE_PRIORITY: readonly string[] = [
 	"motor_pool",
 	"synthesizer",
 	"storm_transmitter",
@@ -22,6 +23,61 @@ const UPGRADE_PRIORITY: readonly string[] = [
 	"analysis_node",
 	"maintenance_bay",
 ];
+
+/**
+ * Compute upgrade priority, boosting buildings whose upgrade unlocks new types.
+ */
+function computeUpgradePriority(
+	factionBuildings: Array<{ buildingType: string; tier: number }>,
+): string[] {
+	const ownedTypes = new Set(factionBuildings.map((b) => b.buildingType));
+
+	const unlockBoosted: string[] = [];
+	const normal: string[] = [];
+
+	for (const type of BASE_UPGRADE_PRIORITY) {
+		const chain =
+			BUILDING_UNLOCK_CHAINS[type as keyof typeof BUILDING_UNLOCK_CHAINS];
+		if (!chain) {
+			normal.push(type);
+			continue;
+		}
+
+		const candidates = factionBuildings.filter((b) => b.buildingType === type);
+		if (candidates.length === 0) {
+			normal.push(type);
+			continue;
+		}
+
+		const lowestTier = Math.min(...candidates.map((b) => b.tier));
+
+		let unlocksNew = false;
+		if (lowestTier < 2 && chain.unlocksAtTier2) {
+			for (const unlocked of chain.unlocksAtTier2) {
+				if (!ownedTypes.has(unlocked)) {
+					unlocksNew = true;
+					break;
+				}
+			}
+		}
+		if (!unlocksNew && lowestTier < 3 && chain.unlocksAtTier3) {
+			for (const unlocked of chain.unlocksAtTier3) {
+				if (!ownedTypes.has(unlocked)) {
+					unlocksNew = true;
+					break;
+				}
+			}
+		}
+
+		if (unlocksNew) {
+			unlockBoosted.push(type);
+		} else {
+			normal.push(type);
+		}
+	}
+
+	return [...unlockBoosted, ...normal];
+}
 
 /**
  * Evaluate and initiate building tier upgrades for an AI faction.
@@ -69,8 +125,10 @@ export function aiConsiderBuildingUpgrades(
 		});
 	}
 
+	const upgradePriority = computeUpgradePriority(factionBuildings);
+
 	// Try upgrading ALL buildings in priority order
-	for (const targetType of UPGRADE_PRIORITY) {
+	for (const targetType of upgradePriority) {
 		const candidates = factionBuildings.filter(
 			(b) =>
 				b.buildingType === targetType &&

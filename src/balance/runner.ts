@@ -25,7 +25,9 @@ import {
 	clearBuildingUpgradeJobs,
 	computeTerritory,
 	getTerritoryPercent,
+	getVictoryProgress,
 } from "../systems";
+import { SynthesisQueue } from "../systems/synthesisSystem";
 import type { ResourceMaterial } from "../terrain";
 import {
 	Board,
@@ -33,8 +35,13 @@ import {
 	CultStructure,
 	Faction,
 	ResourcePool,
+	UnitAttack,
 	UnitFaction,
+	UnitHarvest,
+	UnitMove,
+	UnitPos,
 	UnitStats,
+	UnitXP,
 } from "../traits";
 import type { RunResult, RunSnapshot } from "./types";
 
@@ -157,7 +164,37 @@ export function runSingleGame(config: RunConfig): RunResult {
 	}
 
 	for (let t = 1; t <= config.turnCount; t++) {
+		// Diagnostic: check for UnitAttack components BEFORE advanceTurn
+		let attacksBefore = 0;
+		for (const e of world.query(UnitAttack)) {
+			if (e.get(UnitAttack)) attacksBefore++;
+		}
+		let harvestBefore = 0;
+		for (const e of world.query(UnitHarvest)) {
+			if (e.get(UnitHarvest)) harvestBefore++;
+		}
+		let movesBefore = 0;
+		for (const e of world.query(UnitMove)) {
+			if (e.get(UnitMove)) movesBefore++;
+		}
+
 		advanceTurn(world, board, { observerMode: true });
+
+		// Diagnostic: check unit positions to detect movement
+		if (t <= 15 && config.seed === "balance-tier2-run0") {
+			// Check after advanceTurn
+			let movesAfter = 0;
+			for (const e of world.query(UnitMove)) {
+				if (e.get(UnitMove)) movesAfter++;
+			}
+			let harvestAfter = 0;
+			for (const e of world.query(UnitHarvest)) {
+				if (e.get(UnitHarvest)) harvestAfter++;
+			}
+			console.log(
+				`[T${t}] atk=${attacksBefore} mov=${movesBefore}→${movesAfter} harv=${harvestBefore}→${harvestAfter}`,
+			);
+		}
 
 		// Track combat: unit count drops between turns indicate battles
 		const currentUnitCounts: Record<string, number> = {};
@@ -271,6 +308,8 @@ function takeSnapshot(
 	const avgBuildingTier: Record<string, number> = {};
 	const combatToWorkerRatio: Record<string, number> = {};
 	const specializationUsage: Record<string, number> = {};
+	const avgMarkLevel: Record<string, number> = {};
+	const synthesisUsage: Record<string, number> = {};
 
 	for (const fid of AI_FACTIONS) {
 		buildingsByFaction[fid] = 0;
@@ -283,6 +322,8 @@ function takeSnapshot(
 		avgBuildingTier[fid] = 0;
 		combatToWorkerRatio[fid] = 0;
 		specializationUsage[fid] = 0;
+		avgMarkLevel[fid] = 0;
+		synthesisUsage[fid] = 0;
 	}
 
 	// Building metrics
@@ -322,16 +363,18 @@ function takeSnapshot(
 			buildingCounts[fid] > 0 ? buildingTierSums[fid] / buildingCounts[fid] : 0;
 	}
 
-	// Unit metrics — combat vs worker ratio, specialization
+	// Unit metrics — combat vs worker ratio, specialization, mark levels
 	const combatUnits: Record<string, number> = {};
 	const workerUnits: Record<string, number> = {};
 	const specializedUnits: Record<string, number> = {};
 	const totalUnitsPerFaction: Record<string, number> = {};
+	const markLevelSums: Record<string, number> = {};
 	for (const fid of AI_FACTIONS) {
 		combatUnits[fid] = 0;
 		workerUnits[fid] = 0;
 		specializedUnits[fid] = 0;
 		totalUnitsPerFaction[fid] = 0;
+		markLevelSums[fid] = 0;
 	}
 
 	for (const e of world.query(UnitFaction)) {
@@ -344,12 +387,13 @@ function takeSnapshot(
 
 			const stats = e.get(UnitStats);
 			if (stats) {
+				const xp = e.get(UnitXP);
+				markLevelSums[fid] = (markLevelSums[fid] ?? 0) + (xp?.markLevel ?? 1);
 				if (stats.attack > 0) {
 					combatUnits[fid] = (combatUnits[fid] ?? 0) + 1;
 				} else {
 					workerUnits[fid] = (workerUnits[fid] ?? 0) + 1;
 				}
-				// Units with marks or specializations count as specialized
 				if (stats.maxAp > 3 || stats.attack > 3 || stats.defense > 2) {
 					specializedUnits[fid] = (specializedUnits[fid] ?? 0) + 1;
 				}
@@ -365,6 +409,17 @@ function takeSnapshot(
 		const total = totalUnitsPerFaction[fid] ?? 0;
 		specializationUsage[fid] =
 			total > 0 ? ((specializedUnits[fid] ?? 0) / total) * 100 : 0;
+		avgMarkLevel[fid] = total > 0 ? (markLevelSums[fid] ?? 0) / total : 1;
+	}
+
+	// Synthesis usage: count active synthesis queues per faction
+	for (const e of world.query(Building)) {
+		const b = e.get(Building);
+		if (!b || b.buildingType !== "synthesizer") continue;
+		if (!AI_FACTIONS.includes(b.factionId)) continue;
+		if (e.has(SynthesisQueue)) {
+			synthesisUsage[b.factionId] = (synthesisUsage[b.factionId] ?? 0) + 1;
+		}
 	}
 
 	for (const e of world.query(CultStructure)) {
@@ -436,6 +491,43 @@ function takeSnapshot(
 	);
 	const epoch = computeEpoch(highestTier, turn);
 
+	// Victory proximity: which faction is closest to any victory condition
+	let closestVictoryType = "none";
+	let closestVictoryProgress = 0;
+
+	const maxTerritory = Math.max(
+		...AI_FACTIONS.map((fid) => territoryPctByFaction[fid] ?? 0),
+	);
+	const dominationTarget = 40;
+	const dominationProgress = Math.min(
+		100,
+		(maxTerritory / dominationTarget) * 100,
+	);
+	if (dominationProgress > closestVictoryProgress) {
+		closestVictoryProgress = dominationProgress;
+		closestVictoryType = "domination";
+	}
+
+	const maxScore = Math.max(
+		...AI_FACTIONS.map((fid) => scoresByFaction[fid] ?? 0),
+	);
+	const scoreTarget = 200;
+	const scoreProgress = Math.min(100, (maxScore / scoreTarget) * 100);
+	if (scoreProgress > closestVictoryProgress) {
+		closestVictoryProgress = scoreProgress;
+		closestVictoryType = "score";
+	}
+
+	const maxChainDepth = Math.max(
+		...AI_FACTIONS.map((fid) => maxBuildChainDepth[fid] ?? 0),
+	);
+	const techVictoryTarget = 3;
+	const techProgress = Math.min(100, (maxChainDepth / techVictoryTarget) * 100);
+	if (epoch.number >= 3 && techProgress > closestVictoryProgress) {
+		closestVictoryProgress = techProgress;
+		closestVictoryType = "technology";
+	}
+
 	return {
 		turn,
 		epoch: epoch.number,
@@ -454,10 +546,14 @@ function takeSnapshot(
 		avgBuildingTier,
 		specializationUsage,
 		combatToWorkerRatio,
+		avgMarkLevel,
 		resourceSpentThisCheckpoint,
 		stockpileRatio,
+		synthesisUsage,
 		battlesThisCheckpoint: battlesSinceCheckpoint,
 		eliminationsThisCheckpoint: eliminationsSinceCheckpoint,
 		leadingFactionAdvantage,
+		closestVictoryType,
+		closestVictoryProgress,
 	};
 }

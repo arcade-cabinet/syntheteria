@@ -358,7 +358,7 @@ export function moveToward(
 
 	if (path.length >= 2) {
 		const stats = entity.get(UnitStats);
-		const availMp = stats?.mp ?? 1;
+		const availMp = stats?.maxMp ?? 3;
 		const steps = Math.min(path.length - 1, Math.max(1, availMp));
 		const dest = path[steps];
 		entity.add(
@@ -372,4 +372,25 @@ export function moveToward(
 			}),
 		);
 	}
+}
+
+let _moveDebugCounter = 0;
+
+export function debugMoveToward(
+	entity: ReturnType<World["query"]>[number],
+	fromX: number,
+	fromZ: number,
+	targetX: number,
+	targetZ: number,
+	board: GeneratedBoard,
+): { pathLen: number; moved: boolean } {
+	const navGraph = getOrBuildNavGraph(board);
+	const path = yukaShortestPath(fromX, fromZ, targetX, targetZ, navGraph);
+	if (_moveDebugCounter < 20) {
+		console.log(
+			`[moveDbg] from=(${fromX},${fromZ}) to=(${targetX},${targetZ}) pathLen=${path.length}`,
+		);
+		_moveDebugCounter++;
+	}
+	return { pathLen: path.length, moved: path.length >= 2 };
 }

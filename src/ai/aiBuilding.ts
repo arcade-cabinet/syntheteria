@@ -110,6 +110,8 @@ export function computeBuildOptions(
 		factionBuildingPositions,
 		units.map((u) => ({ x: u.tileX, z: u.tileZ })),
 		factionCenter,
+		board,
+		enemyPositions,
 	);
 
 	// Resource tile positions for resource-building placement
@@ -125,7 +127,6 @@ export function computeBuildOptions(
 		let tile: { x: number; z: number } | null = null;
 
 		if (type === "defense_turret" && enemyPositions.length > 0) {
-			// Place turrets on border facing enemy factions
 			tile = findTurretPlacement(
 				factionBuildingPositions,
 				enemyPositions,
@@ -136,9 +137,10 @@ export function computeBuildOptions(
 		} else if (
 			type === "outpost" ||
 			type === "relay_tower" ||
-			type === "power_box"
+			type === "power_box" ||
+			type === "storm_transmitter"
 		) {
-			// Expansion buildings go to the frontier first
+			// Expansion and coverage buildings go to the frontier first
 			tile =
 				findBuildTileNear(frontierAnchors, board, occupiedTiles, wrapX) ??
 				findBuildTileNear(
@@ -147,8 +149,8 @@ export function computeBuildOptions(
 					occupiedTiles,
 					wrapX,
 				);
-		} else if (type === "resource_refinery") {
-			// Resource buildings expand toward hills/mountains
+		} else if (type === "resource_refinery" || type === "motor_pool") {
+			// Resource buildings expand toward hills/mountains, then frontier
 			tile =
 				findBuildTileNear(
 					resourceTiles.slice(0, 5),
@@ -156,6 +158,7 @@ export function computeBuildOptions(
 					occupiedTiles,
 					wrapX,
 				) ??
+				findBuildTileNear(frontierAnchors, board, occupiedTiles, wrapX) ??
 				findBuildTileNear(
 					factionBuildingPositions,
 					board,
@@ -163,12 +166,14 @@ export function computeBuildOptions(
 					wrapX,
 				);
 		} else {
-			// Core infrastructure near existing buildings, then frontier, then units
+			// Core infrastructure: try terrain-aware near buildings, then frontier, then units
 			tile =
-				findBuildTileNear(
+				findTerrainAwareBuildTile(
 					factionBuildingPositions,
 					board,
 					occupiedTiles,
+					factionId,
+					type,
 					wrapX,
 				) ??
 				findBuildTileNear(frontierAnchors, board, occupiedTiles, wrapX) ??
@@ -238,15 +243,65 @@ function computeCentroid(positions: Array<{ x: number; z: number }>): {
 
 /**
  * Frontier anchors: positions at the outer edge of controlled territory.
- * Sorted by distance from center (furthest first) for outward expansion.
+ *
+ * True frontier = tiles owned by this faction that are adjacent to unclaimed
+ * or enemy tiles. Falls back to distance-from-centroid if no board is available.
  */
 function computeFrontierAnchors(
 	buildings: Array<{ x: number; z: number }>,
 	unitPositions: Array<{ x: number; z: number }>,
 	center: { x: number; z: number },
+	board?: GeneratedBoard,
+	enemyPositions?: Array<{ x: number; z: number }>,
 ): Array<{ x: number; z: number }> {
 	const all = [...buildings, ...unitPositions];
 	if (all.length === 0) return [];
+
+	if (board) {
+		const ownedSet = new Set(all.map((p) => `${p.x},${p.z}`));
+		const enemySet = new Set(
+			(enemyPositions ?? []).map((p) => `${p.x},${p.z}`),
+		);
+		const { width, height } = board.config;
+		const dirs = [
+			[0, 1],
+			[0, -1],
+			[1, 0],
+			[-1, 0],
+		];
+
+		const frontierTiles: Array<{ x: number; z: number; score: number }> = [];
+
+		for (const pos of all) {
+			let adjacentUnclaimed = 0;
+			let adjacentEnemy = 0;
+			for (const [dx, dz] of dirs) {
+				const nx = pos.x + dx;
+				const nz = pos.z + dz;
+				if (nx < 0 || nz < 0 || nx >= width || nz >= height) continue;
+				const key = `${nx},${nz}`;
+				if (enemySet.has(key)) {
+					adjacentEnemy++;
+				} else if (!ownedSet.has(key)) {
+					adjacentUnclaimed++;
+				}
+			}
+			if (adjacentUnclaimed > 0 || adjacentEnemy > 0) {
+				frontierTiles.push({
+					...pos,
+					score: adjacentEnemy * 2 + adjacentUnclaimed,
+				});
+			}
+		}
+
+		if (frontierTiles.length >= 2) {
+			frontierTiles.sort((a, b) => b.score - a.score);
+			return frontierTiles.slice(
+				0,
+				Math.max(3, Math.ceil(frontierTiles.length * 0.5)),
+			);
+		}
+	}
 
 	const withDist = all.map((p) => ({
 		...p,
@@ -254,7 +309,6 @@ function computeFrontierAnchors(
 	}));
 	withDist.sort((a, b) => b.dist - a.dist);
 
-	// Top 30% are "frontier" — at minimum 2 anchors
 	const frontierCount = Math.max(2, Math.ceil(withDist.length * 0.3));
 	return withDist.slice(0, frontierCount);
 }
@@ -306,6 +360,79 @@ function findResourceTilesOnBoard(
 		}
 	}
 	return results;
+}
+
+// ---------------------------------------------------------------------------
+// Terrain-aware tile scoring for faction-specific placement
+// ---------------------------------------------------------------------------
+
+const FACTION_TERRAIN_AFFINITY: Record<string, string[]> = {
+	iron_creed: ["hills", "desert"],
+	reclaimers: ["forest", "grassland"],
+	volt_collective: ["hills", "grassland"],
+	signal_choir: ["grassland", "forest"],
+};
+
+/**
+ * Find best-scored build tile near anchors, considering faction terrain affinity
+ * and building-type-specific placement preferences.
+ */
+export function findTerrainAwareBuildTile(
+	anchors: Array<{ x: number; z: number }>,
+	board: GeneratedBoard,
+	occupied: Set<string>,
+	factionId: string,
+	buildingType: string,
+	wrapX = false,
+): { x: number; z: number } | null {
+	const { width, height } = board.config;
+	const affinityBiomes = FACTION_TERRAIN_AFFINITY[factionId] ?? ["grassland"];
+
+	let bestTile: { x: number; z: number } | null = null;
+	let bestScore = -1;
+
+	for (const anchor of anchors) {
+		for (let r = 1; r <= 12; r++) {
+			for (let dx = -r; dx <= r; dx++) {
+				for (let dz = -r; dz <= r; dz++) {
+					let x = anchor.x + dx;
+					const z = anchor.z + dz;
+					if (wrapX) x = ((x % width) + width) % width;
+					if (x < 0 || z < 0 || x >= width || z >= height) continue;
+					const key = `${x},${z}`;
+					if (occupied.has(key)) continue;
+					const tile = board.tiles[z]?.[x];
+					if (!tile?.passable) continue;
+
+					let score = 10 - r;
+
+					if (affinityBiomes.includes(tile.biomeType)) {
+						score += 5;
+					}
+
+					if (buildingType === "relay_tower") {
+						if (tile.biomeType === "hills") score += 3;
+					} else if (buildingType === "defense_turret") {
+						if (tile.biomeType === "hills") score += 4;
+					} else if (
+						buildingType === "motor_pool" ||
+						buildingType === "resource_refinery"
+					) {
+						if (tile.biomeType === "hills" || tile.biomeType === "forest") {
+							score += 3;
+						}
+					}
+
+					if (score > bestScore) {
+						bestScore = score;
+						bestTile = { x, z };
+					}
+				}
+			}
+			if (bestTile) return bestTile;
+		}
+	}
+	return bestTile;
 }
 
 // ---------------------------------------------------------------------------
@@ -479,12 +606,14 @@ export function runAiBuilding(
 
 		const allPositions = [...buildingPositions, ...unitPositions];
 		const center = computeCentroid(allPositions);
+		const enemyPositions = collectEnemyPositions(world, factionId);
 		const frontierAnchors = computeFrontierAnchors(
 			buildingPositions,
 			unitPositions,
 			center,
+			board,
+			enemyPositions,
 		);
-		const enemyPositions = collectEnemyPositions(world, factionId);
 
 		const priority = dynamicAiBuildOrder(existing);
 
@@ -507,17 +636,19 @@ export function runAiBuilding(
 					occupiedTiles,
 					false,
 				);
-			} else if (type === "outpost" || type === "relay_tower") {
+			} else if (
+				type === "outpost" ||
+				type === "relay_tower" ||
+				type === "power_box" ||
+				type === "storm_transmitter"
+			) {
 				tile =
 					findBuildTileNear(frontierAnchors, board, occupiedTiles, false) ??
 					findBuildTileNear(buildingPositions, board, occupiedTiles, false);
 			} else {
-				tile = findBuildTileNear(
-					buildingPositions,
-					board,
-					occupiedTiles,
-					false,
-				);
+				tile =
+					findBuildTileNear(buildingPositions, board, occupiedTiles, false) ??
+					findBuildTileNear(frontierAnchors, board, occupiedTiles, false);
 			}
 
 			if (!tile) continue;

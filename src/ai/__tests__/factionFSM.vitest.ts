@@ -46,11 +46,11 @@ describe("FactionFSM", () => {
 		expect(fsm.currentStateId).toBe("EXPLORE");
 	});
 
-	it("EXPLORE → EXPAND at turn 6", () => {
-		fsm.update(makeCtx({ currentTurn: 5 }));
+	it("EXPLORE → EXPAND at turn 4", () => {
+		fsm.update(makeCtx({ currentTurn: 3 }));
 		expect(fsm.currentStateId).toBe("EXPLORE");
 
-		fsm.update(makeCtx({ currentTurn: 6 }));
+		fsm.update(makeCtx({ currentTurn: 4 }));
 		expect(fsm.currentStateId).toBe("EXPAND");
 	});
 
@@ -74,15 +74,9 @@ describe("FactionFSM", () => {
 		fsm.update(makeCtx({ currentTurn: 10 }));
 		expect(fsm.currentStateId).toBe("EXPAND");
 
-		// Needs enemy contact AND 5+ units, or turn 30+ with 4+
+		// 4+ units + enemy contacted → ATTACK (threshold reduced from 5)
 		fsm.update(
 			makeCtx({ currentTurn: 15, unitCount: 4, enemyFactionContacted: true }),
-		);
-		expect(fsm.currentStateId).toBe("EXPAND");
-
-		// 5+ units + enemy contacted → ATTACK
-		fsm.update(
-			makeCtx({ currentTurn: 15, unitCount: 5, enemyFactionContacted: true }),
 		);
 		expect(fsm.currentStateId).toBe("ATTACK");
 	});
@@ -100,8 +94,8 @@ describe("FactionFSM", () => {
 		fsm.update(makeCtx({ nearbyThreats: 3 }));
 		expect(fsm.currentStateId).toBe("FORTIFY");
 
-		// Threats cleared, units rebuilt (4+ needed)
-		fsm.update(makeCtx({ nearbyThreats: 0, unitCount: 4 }));
+		// Threats cleared, units rebuilt (3+ needed, reduced from 4)
+		fsm.update(makeCtx({ nearbyThreats: 0, unitCount: 3 }));
 		expect(fsm.currentStateId).toBe("EXPAND");
 	});
 
@@ -110,11 +104,11 @@ describe("FactionFSM", () => {
 		fsm.update(makeCtx({ nearbyThreats: 3, currentTurn: 25 }));
 		expect(fsm.currentStateId).toBe("FORTIFY");
 
-		// Threats gone, can attack (4+ units with turn 20+ and enemy contacted)
+		// Threats gone, can attack (3+ units with turn 15+ and enemy contacted)
 		fsm.update(
 			makeCtx({
 				nearbyThreats: 0,
-				unitCount: 5,
+				unitCount: 4,
 				currentTurn: 25,
 				enemyFactionContacted: true,
 			}),
@@ -179,7 +173,7 @@ describe("FactionFSM", () => {
 	});
 
 	it("stays in same state when no transition fires", () => {
-		fsm.update(makeCtx({ currentTurn: 5 }));
+		fsm.update(makeCtx({ currentTurn: 3 }));
 		expect(fsm.currentStateId).toBe("EXPLORE");
 		expect(fsm.previousStateId).toBe(null);
 	});
@@ -259,7 +253,7 @@ describe("FSM registry", () => {
 		const volt = getFactionFSM("volt_collective");
 
 		recl.update(makeCtx({ currentTurn: 10 }));
-		volt.update(makeCtx({ currentTurn: 5 }));
+		volt.update(makeCtx({ currentTurn: 3 }));
 
 		expect(recl.currentStateId).toBe("EXPAND");
 		expect(volt.currentStateId).toBe("EXPLORE");

@@ -72,11 +72,35 @@ export function runBalanceTier(
  */
 export function printBalanceSummary(report: BatchReport): void {
 	console.log(
-		`\n=== BALANCE TIER ${report.tier}: ${report.runCount} runs × ${report.turnCount} turns ===\n`,
+		`\n=== BALANCE TIER ${report.tier}: ${report.runCount} runs × ${report.turnCount} turns (${report.boardSize}) ===\n`,
 	);
 	console.log(`Victory rate: ${(report.victoryRate * 100).toFixed(0)}%`);
 	console.log(`Avg game length: ${report.avgGameLength.toFixed(0)} turns`);
 	console.log();
+
+	// Per-checkpoint trend summary
+	if (report.checkpoints.length > 0) {
+		console.log("── Per-Checkpoint Trends ──");
+		for (const cp of report.checkpoints) {
+			if (cp.turn === 0) continue;
+			const terr = cp.maxTerritoryPct;
+			const bldgs = cp.totalBuildings;
+			const battles = cp.battlesThisCheckpoint;
+			const specs = cp.avgSpecializationUsage;
+			const diversity = cp.avgBuildingDiversity;
+			console.log(
+				`Turn ${String(cp.turn).padStart(3)}: ` +
+					`territory ${terr.mean.toFixed(1)}%, ` +
+					`buildings ${bldgs.mean.toFixed(0)}, ` +
+					`battles ${battles.mean.toFixed(0)}, ` +
+					`specs ${specs.mean.toFixed(0)}%, ` +
+					`diversity ${diversity.mean.toFixed(1)}, ` +
+					`epoch ${cp.epoch.mean.toFixed(1)}, ` +
+					`advantage ${cp.leadingFactionAdvantage.mean.toFixed(1)}x`,
+			);
+		}
+		console.log();
+	}
 
 	for (const [fid, stats] of Object.entries(report.factions)) {
 		console.log(

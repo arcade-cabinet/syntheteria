@@ -137,17 +137,19 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			if (score > best) best = score;
 		}
 
+		// Chase enemy buildings with higher priority — destroying buildings
+		// collapses networks and is strategically devastating
 		for (const bldg of _ctx.enemyBuildings) {
 			const dist = manhattan(agent.tileX, agent.tileZ, bldg.x, bldg.z);
 			if (dist <= agent.attackRange) continue;
-			const score = quadraticDecay(dist, 80) * 0.75;
+			const score = quadraticDecay(dist, 80) * 0.85;
 			if (score > best) best = score;
 		}
 
 		const chaseTimeBoost =
-			best > 0 ? logistic(_ctx.currentTurn, 10, 0.25) * 0.3 : 0;
+			best > 0 ? logistic(_ctx.currentTurn, 8, 0.3) * 0.35 : 0;
 
-		const forceBoost = _ctx.forceRatio >= 1.5 && best > 0 ? 0.25 : 0;
+		const forceBoost = _ctx.forceRatio >= 1.3 && best > 0 ? 0.3 : 0;
 
 		return Math.min(
 			1,
@@ -170,7 +172,6 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			if (dist <= agent.attackRange) continue;
 			const biome = _ctx.tileBiomes.get(`${enemy.x},${enemy.z}`) ?? "grassland";
 			const terrainMult = scoreTileForAttacking(biome);
-			// Lower distance + higher terrain score = better target
 			const score = terrainMult / Math.max(1, dist);
 			if (score > bestScore) {
 				bestScore = score;
@@ -190,11 +191,12 @@ export class ChaseEnemyEvaluator extends GoalEvaluator<SyntheteriaAgent> {
 			}
 		}
 
-		// If still no target, chase nearest enemy building
-		if (!bestEnemy) {
+		// If no unit targets, chase nearest enemy building — destroying buildings
+		// collapses enemy networks and is a high-value strategic target
+		if (!bestEnemy && _ctx.enemyBuildings.length > 0) {
 			for (const bldg of _ctx.enemyBuildings) {
 				const dist = manhattan(agent.tileX, agent.tileZ, bldg.x, bldg.z);
-				const score = 0.5 / Math.max(1, dist);
+				const score = 0.7 / Math.max(1, dist);
 				if (score > bestScore) {
 					bestScore = score;
 					bestEnemy = bldg;

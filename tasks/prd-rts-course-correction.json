@@ -1,0 +1,925 @@
+{
+  "name": "Syntheteria RTS Course Correction \u2014 Full Implementation",
+  "description": "Restore the original RTS vision for Syntheteria: one emergent AI waking in industrial ruins, repairing robots, exploring a procedural labyrinth city, fortifying positions, and pushing north to defeat the Cult of EL. Port the best infrastructure from the feature branch (Koota ECS, labyrinth generator, audio, persistence, GLB models) while dropping all 4X scope creep (no 4 factions, no 5 epochs, no sphere world).",
+  "branchName": "feature/rts-course-correction",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Fix All Biome Lint Errors",
+      "description": "As a developer, I want all Biome lint errors resolved so that the codebase is clean for the Koota port.",
+      "acceptanceCriteria": [
+        "Run `pnpm biome check --write --unsafe src/` for auto-fixes",
+        "Manually fix remaining errors (unused vars prefixed with `_`, explicit return types, remove `any`)",
+        "`pnpm lint` reports zero errors",
+        "Commit with message: `fix: resolve all Biome lint errors in original game code`"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": []
+    },
+    {
+      "id": "US-002",
+      "title": "Replace Miniplex with Koota ECS + Define Traits and World",
+      "description": "As a developer, I want the ECS foundation swapped from Miniplex to Koota so that all subsequent porting uses the new architecture.",
+      "acceptanceCriteria": [
+        "`pnpm add koota && pnpm remove miniplex` \u2014 Koota in deps, Miniplex removed",
+        "Create `src/ecs/traits.ts` with 8 Koota traits: Position, Faction, Fragment, UnitComponents, Unit, Navigation, BuildingTrait, LightningRod",
+        "Rewrite `src/ecs/world.ts` to use `createWorld()` from Koota",
+        "Update `src/ecs/types.ts` \u2014 keep Vec3, UnitComponent, component helpers; remove Entity/UnitEntity/BuildingEntity interfaces",
+        "Rewrite `src/ecs/factory.ts` \u2014 spawnUnit, spawnFabricationUnit, spawnLightningRod use `world.spawn(Trait1({}), ...)`",
+        "`pnpm tsc` may have consumer errors (expected at this stage, fixed in US-005/006/007)"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-001"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "Copy GLB Assets and Audio from Feature Branch",
+      "description": "As a developer, I want all 3D model and audio assets available in the project so that rendering and audio work can proceed.",
+      "acceptanceCriteria": [
+        "Extract 6 player robot GLBs via `git show cursor/cloud-agent-runbook-review-0483:public/assets/models/robots/factions/*.glb`",
+        "Extract 3 cult mech GLBs via `git show cursor/cloud-agent-runbook-review-0483:public/assets/models/robots/cult/*.glb`",
+        "Extract 25 building GLBs via `git show cursor/cloud-agent-runbook-review-0483:public/assets/models/buildings/*.glb`",
+        "Extract 5 audio system files via `git show cursor/cloud-agent-runbook-review-0483:src/audio/*.ts`",
+        "Verify counts: 6 faction GLBs, 3 cult GLBs, 25 building GLBs, 5 audio files",
+        "Commit with message: `feat: bring in GLB models (9 robots, 25 buildings) + audio from feature branch`"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": []
+    },
+    {
+      "id": "US-004",
+      "title": "Set Up Vitest Browser Mode for Component Testing",
+      "description": "As a developer, I want Vitest browser mode configured so that R3F canvas rendering and DOM overlay components can be tested in a real browser environment.",
+      "acceptanceCriteria": [
+        "Install vitest browser dependencies: `pnpm add -D @vitest/browser playwright`",
+        "Create `vitest.config.ts` for JSDOM unit tests (pattern: `src/**/*.vitest.ts`)",
+        "Create `vitest.browser.config.ts` for browser mode tests with Playwright provider (pattern: `tests/components/**/*.browser.test.tsx`)",
+        "Add npm scripts: `\"test\": \"vitest run\"`, `\"test:browser\": \"vitest --config vitest.browser.config.ts run\"`, `\"test:watch\": \"vitest\"`",
+        "Create `tests/components/smoke.browser.test.tsx` \u2014 minimal test that mounts an R3F Canvas and asserts it renders",
+        "Browser smoke test passes: `pnpm test:browser`",
+        "Commit with message: `chore: set up Vitest browser mode with Playwright provider for component testing`"
+      ],
+      "priority": 2,
+      "passes": false,
+      "labels": [],
+      "dependsOn": []
+    },
+    {
+      "id": "US-005",
+      "title": "Port All 12 Game Systems to Koota Queries",
+      "description": "As a developer, I want all game systems using Koota world queries so that the ECS migration is complete for logic code.",
+      "acceptanceCriteria": [
+        "Port `src/systems/movement.ts` \u2014 `world.query(Position, Navigation, Unit)`",
+        "Port `src/systems/combat.ts` \u2014 `world.query(Position, Unit, UnitComponents, Faction)`",
+        "Port `src/systems/enemies.ts` \u2014 faction filter via Koota queries",
+        "Port `src/systems/exploration.ts` \u2014 fog reveal with Fragment trait",
+        "Port `src/systems/fragmentMerge.ts` \u2014 fragment connectivity",
+        "Port `src/systems/resources.ts` \u2014 scavenging logic",
+        "Port `src/systems/fabrication.ts` \u2014 component manufacturing",
+        "Port `src/systems/power.ts` \u2014 lightning rod power grid",
+        "Port `src/systems/repair.ts` \u2014 unit repair",
+        "Port `src/systems/buildingPlacement.ts` \u2014 ghost preview",
+        "Port `src/systems/navmesh.ts` \u2014 nav mesh from terrain",
+        "Port `src/systems/pathfinding.ts` \u2014 A* on navmesh",
+        "All 12 systems use `entity.get(Trait)` / `entity.set(Trait, {...})` pattern",
+        "`pnpm tsc` shows reduced error count (consumer errors in renderers/UI still expected)"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-002"
+      ]
+    },
+    {
+      "id": "US-006",
+      "title": "Port Terrain, City Layout, and Game Loop to Koota",
+      "description": "As a developer, I want terrain generation, city layout, and the game loop using Koota so that world initialization works with the new ECS.",
+      "acceptanceCriteria": [
+        "Port `src/ecs/terrain.ts` \u2014 replace `world.add()` with `world.spawn()`, update entity type references",
+        "Port `src/ecs/cityLayout.ts` \u2014 same pattern (will be replaced by labyrinth in Phase 1, but must compile now)",
+        "Port `src/ecs/gameState.ts` \u2014 tick loop calls systems with Koota world, `useSyncExternalStore` bridge preserved, speed multiplier + pause retained"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-002"
+      ]
+    },
+    {
+      "id": "US-007",
+      "title": "Port Renderers, Input Handlers, UI, and App.tsx to Koota",
+      "description": "As a developer, I want all rendering, input, and UI components using Koota so that the full application compiles.",
+      "acceptanceCriteria": [
+        "Port `src/rendering/TerrainRenderer.tsx` \u2014 Koota world queries replace Miniplex hooks",
+        "Port `src/rendering/CityRenderer.tsx`",
+        "Port `src/rendering/UnitRenderer.tsx`",
+        "Port `src/rendering/StormSky.tsx`",
+        "Port `src/rendering/LandscapeProps.tsx`",
+        "Port `src/input/TopDownCamera.tsx` \u2014 entity selection via Koota",
+        "Port `src/input/UnitInput.tsx` \u2014 movement commands via Koota",
+        "Port `src/ui/GameUI.tsx` \u2014 HUD reads from Koota",
+        "Port `src/ui/TitleScreen.tsx`",
+        "Port `src/App.tsx` \u2014 world initialization, phase management",
+        "`pnpm tsc` reports zero errors",
+        "`pnpm lint` reports zero errors"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-005",
+        "US-006"
+      ]
+    },
+    {
+      "id": "US-008",
+      "title": "Phase 0 Integration Gate \u2014 TypeScript + Biome + Build",
+      "description": "As a developer, I want Phase 0 verified end-to-end so that Phase 1 can begin on a solid foundation.",
+      "acceptanceCriteria": [
+        "`pnpm tsc` \u2014 zero TypeScript errors",
+        "`pnpm lint` \u2014 zero Biome errors",
+        "`pnpm build` \u2014 production Vite build succeeds",
+        "All 27 original game files ported from Miniplex to Koota",
+        "9 robot GLBs in `public/assets/models/robots/`",
+        "25 building GLBs in `public/assets/models/buildings/`",
+        "Audio system files in `src/audio/`",
+        "Vitest browser mode smoke test passes",
+        "Commit with message: `chore: Phase 0 complete \u2014 Koota port + assets, ready for Phase 1`"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-001",
+        "US-002",
+        "US-003",
+        "US-004",
+        "US-005",
+        "US-006",
+        "US-007"
+      ]
+    },
+    {
+      "id": "US-009",
+      "title": "Extract Labyrinth Generator from Git History",
+      "description": "As a developer, I want the 6-phase rooms-and-mazes labyrinth generator restored so that the procedural city can be generated.",
+      "acceptanceCriteria": [
+        "Extract 10 source files from `aeef1650^` via `git show`: labyrinth.ts, labyrinthMaze.ts, labyrinthFeatures.ts, labyrinthConnectivity.ts, labyrinthPlatforms.ts, labyrinthGenerator.ts, labyrinthAbyssal.ts, cityLayout.ts, connectivity.ts, depth.ts",
+        "Extract 12 test files from `aeef1650^`: all `src/board/__tests__/labyrinth*.vitest.ts` + cityLayout, connectivity, depth, density tests",
+        "Fix import paths to match post-Phase-0 directory structure (Koota traits, world, types)",
+        "All labyrinth tests pass with seeded determinism: `pnpm vitest run src/board/`",
+        "Commit with message: `feat: extract labyrinth generator from aeef1650^ \u2014 rooms-and-mazes pipeline restored`"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-008"
+      ]
+    },
+    {
+      "id": "US-010",
+      "title": "Adapt Labyrinth for Single-Player RTS",
+      "description": "As a developer, I want the labyrinth generator configured for one player start and cult POI rooms so that the map suits the RTS format.",
+      "acceptanceCriteria": [
+        "Replace multi-faction start room placement with exactly ONE player start room near center-south",
+        "Add cult POI room types (shrine, workshop, antenna) concentrated in northern half of map",
+        "Remove `factionCount` from BoardConfig \u2014 replaced by fixed player start + cult density parameter",
+        "Seeded determinism still works (existing tests updated)",
+        "New test file `src/board/__tests__/labyrinthSinglePlayer.vitest.ts`: exactly one player start, cult rooms in north, seeded reproducibility",
+        "All board tests pass: `pnpm vitest run src/board/`"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-009"
+      ]
+    },
+    {
+      "id": "US-011",
+      "title": "Wire Labyrinth as Koota Board Data Source",
+      "description": "As a developer, I want the labyrinth generator feeding tile data into Koota entities so that the game world uses the procedural city.",
+      "acceptanceCriteria": [
+        "Wire labyrinth generator into world initialization (`gameState.ts` or equivalent) \u2014 call with game seed to produce tile grid",
+        "Spawn Koota entities for each tile using Position, Fragment, BuildingTrait traits as appropriate",
+        "Remove or replace old terrain.ts / cityLayout.ts with delegation to labyrinthGenerator.ts",
+        "Spawn initial player units (maintenance bot + utility drone) at the player start room",
+        "Smoke test: board tiles spawn, player start exists, cult POI rooms exist"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-010"
+      ]
+    },
+    {
+      "id": "US-012",
+      "title": "Replace Primitive Units with GLB Robot Models + Browser Test",
+      "description": "As a developer, I want player robots rendered as 3D GLB models so that they look like robots instead of colored boxes.",
+      "acceptanceCriteria": [
+        "Create `src/config/models.ts` \u2014 map 6 unit types to GLB paths (Arachnoid, Companion-bot, FieldFighter, MobileStorageBot, QuadrupedTank, ReconBot)",
+        "Rewrite `src/rendering/UnitRenderer.tsx` to use `useGLTF` + drei `Instances` for each robot type",
+        "Each unit entity reads `Unit.unitType` to select correct model",
+        "Call `useGLTF.preload()` for all 6 robot GLBs to prevent pop-in",
+        "Browser component test `tests/components/UnitRenderer.browser.test.tsx`: mounts UnitRenderer in R3F Canvas, asserts mesh children exist",
+        "Dev server shows robot models (visual verification)"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-008"
+      ]
+    },
+    {
+      "id": "US-013",
+      "title": "Replace Primitive City with GLB Building Models + Browser Test",
+      "description": "As a developer, I want the labyrinth city rendered with instanced GLB building models so that the environment looks like an industrial city.",
+      "acceptanceCriteria": [
+        "Extend `src/config/models.ts` with building type \u2192 GLB path mappings for all 25 building types",
+        "Rewrite `src/rendering/CityRenderer.tsx` to use instanced GLB rendering \u2014 group tiles by building type, use drei `Instances` per group",
+        "Apply tile rotation (0/90/180/270) and scale to match grid spacing",
+        "Call `useGLTF.preload()` for all used building GLBs",
+        "Browser component test `tests/components/CityRenderer.browser.test.tsx`: mounts CityRenderer with mock tile data, asserts instanced meshes render",
+        "Dev server shows labyrinth city with 3D buildings (visual verification)"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-011",
+        "US-012"
+      ]
+    },
+    {
+      "id": "US-014",
+      "title": "Responsive Viewport + Browser Test",
+      "description": "As a developer, I want the game canvas filling the viewport at all screen sizes so that the game works on desktop and mobile.",
+      "acceptanceCriteria": [
+        "R3F Canvas set to `style={{ width: '100vw', height: '100vh' }}`",
+        "`src/index.css` sets `html, body, #root` to `margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%`",
+        "`TopDownCamera` listens to `resize` events and updates frustum/aspect ratio",
+        "No black bars, clipping, or overflow scrollbars at any size",
+        "Browser component test `tests/components/Viewport.browser.test.tsx`: mounts Canvas, resizes window, asserts Canvas dimensions match",
+        "Manually verify at 1920x1080, 1366x768, 375x812 (portrait), 812x375 (landscape)"
+      ],
+      "priority": 2,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-008"
+      ]
+    },
+    {
+      "id": "US-015",
+      "title": "Real-Time Game Loop with 5-Speed Control",
+      "description": "As a developer, I want the game loop ticking at configurable speeds so that gameplay runs in real-time with pause support.",
+      "acceptanceCriteria": [
+        "Game loop via `useFrame` or `requestAnimationFrame` \u2014 each frame: `delta * speedMultiplier`",
+        "Support 5 speeds: 0x (paused), 0.5x, 1x, 2x, 4x",
+        "Speed stored in Koota singleton trait or React ref",
+        "Systems called in order: movement \u2192 combat \u2192 enemies \u2192 exploration \u2192 resources \u2192 fabrication \u2192 power \u2192 repair \u2192 building placement",
+        "At 0x, no systems tick",
+        "App.tsx manages phases: Title \u2192 Playing (board gen, entity spawn, loop start)",
+        "Verify: units spawn at player start, tick loop runs, pause stops updates, speed changes work"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-011"
+      ]
+    },
+    {
+      "id": "US-016",
+      "title": "Phase 1 Integration Gate \u2014 Labyrinth City Renders with Models",
+      "description": "As a developer, I want Phase 1 verified end-to-end so that the core RTS loop is solid before combat/exploration work.",
+      "acceptanceCriteria": [
+        "`pnpm tsc` \u2014 zero errors",
+        "`pnpm lint` \u2014 zero errors",
+        "`pnpm vitest run` \u2014 all labyrinth + existing tests pass",
+        "`pnpm test:browser` \u2014 all browser component tests pass (UnitRenderer, CityRenderer, Viewport)",
+        "`pnpm build` \u2014 production build succeeds",
+        "Visual: labyrinth city renders with GLB building models",
+        "Visual: 6 robot types visible as 3D models at player start",
+        "Visual: viewport fills screen responsively",
+        "Game loop ticks with 5 speed settings (0x/0.5x/1x/2x/4x)",
+        "Commit with message: `chore: Phase 1 complete \u2014 core RTS loop with labyrinth, GLB models, responsive viewport`"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-009",
+        "US-010",
+        "US-011",
+        "US-012",
+        "US-013",
+        "US-014",
+        "US-015"
+      ]
+    },
+    {
+      "id": "US-017",
+      "title": "Port Component Damage Combat System + Tests",
+      "description": "As a developer, I want combat that damages individual robot components so that the signature mechanic (parts break, not HP) is functional.",
+      "acceptanceCriteria": [
+        "Verify component damage helpers in `src/ecs/types.ts` work with Koota's `UnitComponents.componentsJson` field",
+        "Port `src/systems/combat.ts` \u2014 query units with Position, Unit, UnitComponents, Faction; opposing factions in range roll damage targeting random component",
+        "Damage sets `component.functional = false`; unit with ALL components non-functional is destroyed (entity removed)",
+        "Attack range from unit archetype config (melee vs ranged)",
+        "Test `src/systems/__tests__/combat.vitest.ts`: damage disables component, all-disabled destroys unit, same-faction no attack, range respected",
+        "`pnpm vitest run src/systems/__tests__/combat` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-016"
+      ]
+    },
+    {
+      "id": "US-018",
+      "title": "Port Fragment Merge Fog-of-War + Tests",
+      "description": "As a developer, I want fog-of-war that reveals tiles organically and merges explored regions so that exploration feels like assembling a puzzle.",
+      "acceptanceCriteria": [
+        "Port `src/systems/exploration.ts` \u2014 query player units with Position, Fragment; reveal tiles within vision range (affected by `hasCamera()`)",
+        "Port `src/systems/fragmentMerge.ts` \u2014 when two fragments share adjacent tiles, merge into one (smaller adopts larger's ID)",
+        "Wire fog rendering in TerrainRenderer: unrevealed = black, revealed = normal, previously-revealed-but-no-unit = dimmed",
+        "Test `src/systems/__tests__/exploration.vitest.ts`: exploring reveals tile, camera-less unit has reduced vision, adjacent fragments merge, merged fragments share one ID",
+        "`pnpm vitest run src/systems/__tests__/exploration` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-016"
+      ]
+    },
+    {
+      "id": "US-019",
+      "title": "Wire 3 Cult Mech Types as Enemies + GLB Rendering",
+      "description": "As a developer, I want 3 cult mech archetypes spawning as enemies so that the game has antagonists to fight.",
+      "acceptanceCriteria": [
+        "Extract `CultMechs.ts` from feature branch, adapt to new trait structure",
+        "Create `src/config/cultDefs.ts` \u2014 3 mech archetypes: Mecha01/Wanderer (weak, patrols), MechaGolem/Brute (heavy, guards), MechaTrooper/Assault (fast, ranged)",
+        "Add cult mech spawning to `src/systems/enemies.ts` \u2014 Wanderers in unexplored rooms, Brutes guard cult POI rooms",
+        "Update `src/rendering/UnitRenderer.tsx` to handle cult faction \u2014 load cult GLB models via Faction trait",
+        "Add cult GLB paths to `src/config/models.ts` (Mecha01.glb, MechaGolem.glb, MechaTrooper.glb)",
+        "Test `src/systems/__tests__/enemies.vitest.ts`: Wanderers spawn in unexplored rooms, POI rooms have Brutes, cult units have \"cultist\" faction",
+        "`pnpm vitest run src/systems/__tests__/enemies` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-016"
+      ]
+    },
+    {
+      "id": "US-020",
+      "title": "Implement Cult Escalation \u2014 3-Tier Threat Ramp",
+      "description": "As a developer, I want cult enemies escalating from lone patrols to coordinated assault waves so that difficulty increases over time.",
+      "acceptanceCriteria": [
+        "Create `src/systems/cultEscalation.ts` \u2014 track elapsed game time, escalate through 3 tiers",
+        "Tier 1 (0-10 min): lone Wanderers patrol corridors",
+        "Tier 2 (10-25 min): War Parties of 2-3 mixed mechs patrol aggressively",
+        "Tier 3 (25+ min): coordinated Assault Waves push toward player base",
+        "Wire into game loop tick order after enemy spawn system",
+        "Test `src/systems/__tests__/cultEscalation.vitest.ts`: starts at tier 1, advances at time threshold, tier 2 spawns mixed groups, tier 3 spawns assault waves",
+        "`pnpm vitest run src/systems/__tests__/cultEscalation` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-019"
+      ]
+    },
+    {
+      "id": "US-021",
+      "title": "Wire Yuka GOAP for Cult AI Behavior",
+      "description": "As a developer, I want cult units making autonomous decisions via GOAP so that enemies behave intelligently.",
+      "acceptanceCriteria": [
+        "Install Yuka if not present: `pnpm add yuka`",
+        "Create `src/ai/cultBehavior.ts` with 3 GoalEvaluator subclasses: PatrolGoal (random corridor walk), AggroGoal (detect + chase player), EscalateGoal (coordinate assault groups at tier 3)",
+        "Each cult entity gets a Yuka Vehicle with a Think goal evaluating all three behaviors",
+        "Maintain Map from Koota entity ID to Yuka Vehicle \u2014 create on spawn, remove on destroy",
+        "Add `cultAI` system to game loop that calls Yuka EntityManager.update(delta) each tick",
+        "Test `src/ai/__tests__/cultBehavior.vitest.ts`: idle unit selects PatrolGoal, unit near player switches to AggroGoal, patrol moves unit toward target tile",
+        "`pnpm vitest run src/ai/__tests__/cultBehavior` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-019"
+      ]
+    },
+    {
+      "id": "US-022",
+      "title": "Navmesh A* Pathfinding on Labyrinth Grid + Tests",
+      "description": "As a developer, I want pathfinding through labyrinth corridors so that units navigate around walls intelligently.",
+      "acceptanceCriteria": [
+        "Port `src/systems/navmesh.ts` \u2014 build Yuka NavGraph from walkable tiles; walls excluded, edges connect adjacent walkable tiles",
+        "Port `src/systems/pathfinding.ts` \u2014 on move command, run A* to find waypoint path; store in Navigation trait",
+        "Port `src/systems/movement.ts` \u2014 units with Navigation.moving follow waypoints at Unit.speed * delta, advance pathIndex, stop when final waypoint reached",
+        "Test `src/systems/__tests__/pathfinding.vitest.ts`: path exists between walkable tiles, path avoids walls, no path returns empty, movement reaches destination",
+        "`pnpm vitest run src/systems/__tests__/pathfinding` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-016"
+      ]
+    },
+    {
+      "id": "US-023",
+      "title": "RTS Unit Selection + Move/Attack Commands + Touch Support",
+      "description": "As a developer, I want click-to-select and right-click-to-move/attack so that the game plays like an RTS.",
+      "acceptanceCriteria": [
+        "Port `src/input/UnitInput.tsx` \u2014 left-click selects unit (Unit.selected = true, others false), box select (click-drag rectangle)",
+        "Right-click on walkable tile: issue move command to selected units (triggers pathfinding, sets Navigation.moving)",
+        "Right-click on enemy: issue attack-move (pathfind to enemy position, enter combat range)",
+        "Touch support: tap = select, double-tap = move, long-press = attack",
+        "Visual feedback: selection ring on selected units, waypoint indicator on move, red indicator on attack target",
+        "Verify end-to-end: click unit \u2192 right-click tile \u2192 unit pathfinds and walks \u2192 right-click enemy \u2192 unit approaches and fights"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-017",
+        "US-022"
+      ]
+    },
+    {
+      "id": "US-024",
+      "title": "Phase 2 Integration Gate \u2014 Combat, Exploration, AI Working",
+      "description": "As a developer, I want Phase 2 verified end-to-end so that the game is playable before building the economy.",
+      "acceptanceCriteria": [
+        "`pnpm tsc` \u2014 zero errors",
+        "`pnpm lint` \u2014 zero errors",
+        "`pnpm vitest run` \u2014 all tests pass (combat, fog, enemies, pathfinding, cult AI, escalation)",
+        "`pnpm test:browser` \u2014 all browser tests pass",
+        "`pnpm build` \u2014 production build succeeds",
+        "Gameplay: select units and move through labyrinth",
+        "Gameplay: fog-of-war reveals tiles, fragments merge when regions touch",
+        "Gameplay: cult Wanderers patrol, combat triggers on contact",
+        "Gameplay: component damage disables capabilities (blind without camera, immobile without legs)",
+        "Gameplay: cult escalation increases threat over time",
+        "Commit with message: `chore: Phase 2 complete \u2014 combat, exploration, cult AI, pathfinding, RTS input`"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-017",
+        "US-018",
+        "US-019",
+        "US-020",
+        "US-021",
+        "US-022",
+        "US-023"
+      ]
+    },
+    {
+      "id": "US-025",
+      "title": "Port Resource Scavenging \u2014 4 Materials from Ruin Sites + Tests",
+      "description": "As a developer, I want units collecting materials from ruins so that the resource economy has inputs.",
+      "acceptanceCriteria": [
+        "Add traits to `src/ecs/traits.ts`: Inventory (material/quantity pairs), ScavengeSite (material type, remaining quantity)",
+        "Create `src/config/materials.ts` \u2014 4 materials: Scrap Metal (common, ruins), Circuitry (uncommon, tech rooms), Power Cells (rare, cult structures), Durasteel (rare, deep ruins)",
+        "Port `src/systems/resources.ts` \u2014 unit at ScavengeSite transfers materials to Inventory over time; depleted sites lose ScavengeSite trait",
+        "Seed scavenge sites during board generation: ruin rooms get scrap, tech rooms get circuitry, cult rooms get power cells",
+        "Test `src/systems/__tests__/resources.vitest.ts`: unit collects over time, depleted site stops, inventory tracks materials, scavenge rate respects game speed",
+        "`pnpm vitest run src/systems/__tests__/resources` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-024"
+      ]
+    },
+    {
+      "id": "US-026",
+      "title": "Port Lightning Rod Power System + Tests",
+      "description": "As a developer, I want lightning rods harvesting storm energy to power buildings so that the power infrastructure works.",
+      "acceptanceCriteria": [
+        "Port `src/systems/power.ts` \u2014 query LightningRod entities, find Building entities within protectionRadius, set Building.powered accordingly",
+        "Rod currentOutput fluctuates via noise function (storm intensity)",
+        "Render subtle power radius indicator around rods; buildings show lit/dark visual state based on powered status",
+        "Test `src/systems/__tests__/power.vitest.ts`: building in range is powered, building outside is unpowered, removing rod unpowers, output fluctuates",
+        "`pnpm vitest run src/systems/__tests__/power` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-024"
+      ]
+    },
+    {
+      "id": "US-027",
+      "title": "Port Building Placement \u2014 6 Types, Ghost Preview + Browser Test",
+      "description": "As a developer, I want to place buildings with validation and ghost preview so that base-building is functional.",
+      "acceptanceCriteria": [
+        "Create `src/config/buildingDefs.ts` \u2014 6 buildings with costs, build times, GLB paths, gameplay properties: Lightning Rod, Fabrication Unit, Repair Bay, Barricade, Sensor Tower, Storage Depot",
+        "Port `src/systems/buildingPlacement.ts` \u2014 placement mode with ghost preview (semi-transparent GLB), validation (walkable tile, not blocking connectivity, builder adjacent), material consumption, build timer",
+        "Validation rules: no walls/occupied tiles, no blocking only path, minimum rod spacing, builder within 1 tile",
+        "Test `src/systems/__tests__/buildingPlacement.vitest.ts`: valid placement spawns entity, wall placement rejected, blocking connectivity rejected, materials consumed, build timer completes",
+        "Browser test `tests/components/BuildingPlacement.browser.test.tsx`: ghost preview renders in Canvas with transparency",
+        "`pnpm vitest run src/systems/__tests__/buildingPlacement` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-024"
+      ]
+    },
+    {
+      "id": "US-028",
+      "title": "Port Fabrication System \u2014 Craft Components from Materials + Tests",
+      "description": "As a developer, I want to craft robot components at powered fabrication units so that damaged robots can be repaired.",
+      "acceptanceCriteria": [
+        "Create `src/config/recipeDefs.ts` \u2014 4 recipes: Camera (2 Circuitry + 1 Scrap), Arms (3 Scrap + 1 Circuitry), Legs (3 Scrap + 1 Durasteel), Power Cell (2 Power Cells + 1 Circuitry)",
+        "Port `src/systems/fabrication.ts` \u2014 query powered fabrication buildings, check adjacent unit has matching materials, consume + start timer, produce component",
+        "Show progress bar over fabrication building while crafting",
+        "Test `src/systems/__tests__/fabrication.vitest.ts`: consumes correct materials, unpowered refuses, timer completes, insufficient materials prevents",
+        "`pnpm vitest run src/systems/__tests__/fabrication` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-025",
+        "US-026"
+      ]
+    },
+    {
+      "id": "US-029",
+      "title": "Port Repair System \u2014 Auto-Repair at Powered Bays + Tests",
+      "description": "As a developer, I want damaged robots auto-repairing at repair bays so that units can recover from combat.",
+      "acceptanceCriteria": [
+        "Port `src/systems/repair.ts` \u2014 query powered operational repair bays, find adjacent player units with broken components, repair over time",
+        "Manual repair option: unit at fabrication unit can self-repair using inventory components (slower than bay)",
+        "Show repair animation (sparks, progress bar) during repair",
+        "Test `src/systems/__tests__/repair.vitest.ts`: damaged unit at bay gets repaired, repair takes time, unpowered bay no repair, manual repair at fab unit works",
+        "`pnpm vitest run src/systems/__tests__/repair` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-026",
+        "US-028"
+      ]
+    },
+    {
+      "id": "US-030",
+      "title": "Mark I/II/III Upgrades via Radial Menu + Browser Test",
+      "description": "As a developer, I want to upgrade robot archetypes through 3 Mark tiers via a radial menu so that units become more powerful.",
+      "acceptanceCriteria": [
+        "Extend Unit trait with `mark: 1 | 2 | 3`; Mark level affects speed, vision, durability, damage",
+        "Create `src/config/robotDefs.ts` \u2014 6 archetypes (Maintenance, Utility Drone, Fabrication, Guard, Cavalry, Sentinel) with 3 Mark tiers of stats",
+        "Create `src/ui/game/RadialMenu.tsx` \u2014 DOM overlay on right-click/long-press selected unit; options: Move, Attack, Repair, Upgrade, Scavenge",
+        "Upgrade action: check materials, consume, increment mark, apply new stats",
+        "Upgrade grayed out if insufficient materials or already Mark III",
+        "Test `src/systems/__tests__/upgrade.vitest.ts`: I\u2192II consumes materials, II\u2192III consumes materials, III cannot upgrade, stats change, insufficient blocks",
+        "Browser test `tests/components/RadialMenu.browser.test.tsx`: menu renders positioned near selected unit, shows correct options",
+        "`pnpm vitest run src/systems/__tests__/upgrade` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-028"
+      ]
+    },
+    {
+      "id": "US-031",
+      "title": "Phase 3 Integration Gate \u2014 Full Resource Loop End-to-End",
+      "description": "As a developer, I want the complete resource loop verified so that the economy is solid before UI/audio work.",
+      "acceptanceCriteria": [
+        "`pnpm tsc` \u2014 zero errors",
+        "`pnpm lint` \u2014 zero errors",
+        "`pnpm vitest run` \u2014 all tests pass (resources, power, building, fabrication, repair, upgrade)",
+        "`pnpm test:browser` \u2014 all browser tests pass (BuildingPlacement, RadialMenu)",
+        "`pnpm build` \u2014 production build succeeds",
+        "Gameplay loop verified end-to-end: (1) move unit to ruin \u2192 (2) scavenge materials \u2192 (3) place lightning rod \u2192 (4) place fabrication unit in rod range \u2192 (5) craft component \u2192 (6) place repair bay \u2192 (7) repair damaged unit \u2192 (8) upgrade Mark I\u2192II",
+        "Commit with message: `chore: Phase 3 complete \u2014 full economy: scavenge, fabricate, power, repair, upgrade`"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-025",
+        "US-026",
+        "US-027",
+        "US-028",
+        "US-029",
+        "US-030"
+      ]
+    },
+    {
+      "id": "US-032",
+      "title": "Port Landing Page \u2014 LandingScreen + NewGameModal + Browser Test",
+      "description": "As a developer, I want a landing page with new game options so that players can start the game properly.",
+      "acceptanceCriteria": [
+        "Extract LandingScreen.tsx and NewGameModal.tsx from feature branch",
+        "Adapt for RTS: remove faction selection, map options; keep seed input, difficulty selector (Easy/Normal/Hard affects cult escalation speed), Start button, Continue button",
+        "Wire into App.tsx phase machine: `title \u2192 playing`",
+        "Browser test `tests/components/LandingScreen.browser.test.tsx`: renders title, New Game button, modal opens with seed/difficulty/start",
+        "Dev server shows landing screen with functional new game flow"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-031"
+      ]
+    },
+    {
+      "id": "US-033",
+      "title": "Port R3F Globe as Menu Background + Browser Test",
+      "description": "As a developer, I want a slowly rotating storm globe behind the landing page so that the menu has atmospheric presence.",
+      "acceptanceCriteria": [
+        "Extract Globe.tsx and title scene files from feature branch",
+        "Adapt as background-only: strip board/unit/input rendering, keep sphere + storm sky shader + atmospheric glow + slow auto-rotation",
+        "Compose as full-screen R3F Canvas behind LandingScreen DOM overlay",
+        "Browser test `tests/components/GlobeBackground.browser.test.tsx`: mounts in Canvas, asserts sphere mesh and rotation animation",
+        "Visual: spinning globe with storm atmosphere behind landing buttons"
+      ],
+      "priority": 2,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-031"
+      ]
+    },
+    {
+      "id": "US-034",
+      "title": "Port Audio System \u2014 Tone.js SFX + Music + Ambience",
+      "description": "As a developer, I want audio playing during gameplay so that the game has sound.",
+      "acceptanceCriteria": [
+        "Adapt `src/audio/audioEngine.ts` \u2014 lazy init on first interaction (autoplay policy), master volume, mute toggle, clean teardown",
+        "Adapt `src/audio/sfx.ts` \u2014 map SFX to RTS events: unit selected, moved, combat hit, component destroyed, building placed, fabrication complete, scavenging, cult spotted",
+        "Adapt `src/audio/music.ts` \u2014 mood system: Calm (exploring), Tense (cult spotted), Combat (fighting), Dread (tier 3 assault)",
+        "Adapt `src/audio/ambience.ts` \u2014 perpetual storm loop plays continuously",
+        "Wire audio into game events: SFX from system callbacks, music mood from game state, ambience continuous, all pause at speed 0x",
+        "Add volume slider + mute button to GameUI.tsx and LandingScreen settings",
+        "Verify: storm ambience plays, music shifts mood, SFX triggers on actions, mute/volume work, audio respects pause"
+      ],
+      "priority": 2,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-031"
+      ]
+    },
+    {
+      "id": "US-035",
+      "title": "Port SQLite Persistence \u2014 Save/Load Koota World + Tests",
+      "description": "As a developer, I want save/load via SQLite so that game progress persists across sessions.",
+      "acceptanceCriteria": [
+        "Extract DB files from feature branch; adapt schema for RTS: games, tiles, units, buildings, lightning_rods tables",
+        "Rewrite `src/db/serialize.ts` for Koota: save queries all entities, extracts trait data, inserts into SQLite; load reads tables, spawns entities with traits",
+        "Wire save/load into App.tsx: save pauses + serializes + resumes, load from Continue button, auto-save every 5 min",
+        "Add save button to GameUI (Ctrl+S / HUD button), Continue button on LandingScreen shows available saves",
+        "SQLite is non-fatal: DB failure \u2192 game continues in memory, save/load shows \"unavailable\"",
+        "Test `src/db/__tests__/serialize.vitest.ts`: save creates records, load restores traits, round-trip preserves state, component damage survives, DB failure no crash",
+        "`pnpm vitest run src/db/__tests__/serialize` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-031"
+      ]
+    },
+    {
+      "id": "US-036",
+      "title": "Wire Game Speed Control UI + Keyboard Shortcuts",
+      "description": "As a developer, I want speed control buttons and keyboard shortcuts so that players can pause and adjust game speed.",
+      "acceptanceCriteria": [
+        "Extract `gameSpeedDefs.ts` from feature branch \u2014 5 speeds: 0x, 0.5x, 1x, 2x, 4x",
+        "Add speed control buttons to GameUI: Pause (||), speed buttons (0.5x-4x), current speed indicator",
+        "Keyboard shortcuts: Space = pause/unpause, + = increase speed, - = decrease speed",
+        "Verify all systems respect `delta * speedMultiplier` \u2014 at 0x nothing ticks, at 4x everything 4x",
+        "Audio tempo adjusts with speed if applicable"
+      ],
+      "priority": 2,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-031"
+      ]
+    },
+    {
+      "id": "US-037",
+      "title": "Phase 4 Integration Gate \u2014 Full Session Start to Resume",
+      "description": "As a developer, I want the complete game shell verified so that Polish + Narrative work can begin.",
+      "acceptanceCriteria": [
+        "`pnpm tsc` \u2014 zero errors",
+        "`pnpm lint` \u2014 zero errors",
+        "`pnpm vitest run` \u2014 all tests pass (including persistence round-trip)",
+        "`pnpm test:browser` \u2014 all browser tests pass (LandingScreen, GlobeBackground)",
+        "`pnpm build` \u2014 production build succeeds",
+        "Full session: (1) landing page with globe \u2192 (2) New Game modal \u2192 (3) Start \u2192 labyrinth generates \u2192 (4) audio plays (storm + music + SFX) \u2192 (5) play for 1 min \u2192 (6) save (Ctrl+S) \u2192 (7) return to title \u2192 (8) Continue \u2192 (9) state restored \u2192 (10) speed controls work \u2192 (11) volume/mute work",
+        "Commit with message: `chore: Phase 4 complete \u2014 landing page, audio, save/load, speed controls`"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-032",
+        "US-033",
+        "US-034",
+        "US-035",
+        "US-036"
+      ]
+    },
+    {
+      "id": "US-038",
+      "title": "Narrative Dialogue System \u2014 Typewriter Overlay + Browser Test",
+      "description": "As a developer, I want an intro narrative and phase transitions told through a typewriter dialogue overlay so that the story is communicated.",
+      "acceptanceCriteria": [
+        "Create `src/config/narrativeDefs.ts` \u2014 intro sequence (5 frames), phase transition dialogues, victory dialogue",
+        "Create `src/ui/game/NarrativeOverlay.tsx` \u2014 full-screen DOM overlay with typewriter text effect, click/tap/Space advances, Skip button, atmospheric dark background",
+        "Wire Narration phase into App.tsx: `title \u2192 narration \u2192 playing`; first game plays intro, subsequent games offer Skip Intro",
+        "Browser test `tests/components/NarrativeOverlay.browser.test.tsx`: renders text with typewriter animation, advances on click, skip button skips sequence",
+        "Dev server: New Game \u2192 intro dialogue plays with typewriter \u2192 transitions to gameplay"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-037"
+      ]
+    },
+    {
+      "id": "US-039",
+      "title": "Human Temperature 5-Tier Disposition System + Tests",
+      "description": "As a developer, I want a human temperature meter affecting NPC behavior so that player actions have social consequences.",
+      "acceptanceCriteria": [
+        "Add HumanTemperature singleton trait (value 0-100, starts at 10) to `src/ecs/traits.ts`",
+        "Create `src/config/humanEncounterDefs.ts` \u2014 events: clear cult room +5, build near humans +3, lose unit -2, destroy shrine +8, friendly fire -10",
+        "Create `src/systems/humanTemperature.ts` \u2014 listen for events, adjust value, clamp 0-100; tier effects: Cool (21+) humans appear, Warm (41+) reveal shrines, Hot (61+) scouts join, Burning (81+) militia spawns",
+        "Add temperature display (gauge + tier name) to GameUI",
+        "Test `src/systems/__tests__/humanTemperature.vitest.ts`: clearing raises, friendly fire lowers, clamps at 0/100, tier thresholds trigger effects",
+        "`pnpm vitest run src/systems/__tests__/humanTemperature` passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-037"
+      ]
+    },
+    {
+      "id": "US-040",
+      "title": "3 Game Phases \u2014 Awakening/Expansion/War Gating",
+      "description": "As a developer, I want 3 game phases gating mechanics and triggering narrative so that the game has progression structure.",
+      "acceptanceCriteria": [
+        "Create `src/config/phaseDefs.ts` \u2014 3 phases with time thresholds, early-trigger conditions, unlocked buildings, Mark tiers, cult escalation tier, narrative dialogue",
+        "Create `src/systems/gamePhases.ts` \u2014 track elapsed time, check transition triggers, play narrative, unlock mechanics, advance escalation",
+        "Add GamePhase singleton trait to `src/ecs/traits.ts`",
+        "Awakening (0-15 min): only Lightning Rod + Barricade, Wanderers only, Mark I only",
+        "Expansion (15-35 min): all buildings, War Parties, Mark II available",
+        "War (35+ min): Assault Waves, Mark III available, victory objective active",
+        "Wire phase checks into building placement (unlock), upgrade (Mark tier), cult escalation",
+        "Add phase indicator to GameUI (name + progress)",
+        "Test `src/systems/__tests__/gamePhases.vitest.ts`: starts Awakening, Expansion at 15min or 3 rooms, War at 35min, building unlock respects phase, Mark unlock respects phase",
+        "`pnpm vitest run src/systems/__tests__/gamePhases` passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-038"
+      ]
+    },
+    {
+      "id": "US-041",
+      "title": "PBR Materials on City \u2014 ambientCG Textures + Browser Test",
+      "description": "As a developer, I want PBR-textured city surfaces so that the environment has visual depth and material realism.",
+      "acceptanceCriteria": [
+        "Select PBR textures from `/Volumes/home/assets/2DPhotorealistic/MATERIAL/1K-JPG/`: concrete (floors), metal (walls), durasteel (special), rust (ruins), grating (walkways)",
+        "Copy selected 1K texture sets to `public/assets/textures/pbr/`",
+        "Create `src/config/materialDefs.ts` \u2014 tile/building type \u2192 PBR texture path mappings",
+        "Apply in CityRenderer: MeshStandardMaterial with map, normalMap, roughnessMap, metalnessMap, aoMap as available; use drei `useTexture`",
+        "Apply in TerrainRenderer for uncovered tiles",
+        "Browser test `tests/components/PBRMaterials.browser.test.tsx`: renders city tile with PBR material, asserts material has normalMap and roughnessMap set",
+        "Visual: city surfaces show texture detail, normal map relief under lighting, varied roughness"
+      ],
+      "priority": 2,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-037"
+      ]
+    },
+    {
+      "id": "US-042",
+      "title": "Production Error Handling \u2014 Assert+Throw, Debug Overlay, Error Boundary",
+      "description": "As a developer, I want production-grade error handling so that bugs are caught immediately instead of silently degrading.",
+      "acceptanceCriteria": [
+        "Create `src/ui/game/DebugOverlay.tsx` \u2014 dev-only DOM overlay (bottom-left): last 10 errors, FPS, entity count, system count",
+        "Add React error boundary to App.tsx: dev shows stack + Reload, prod shows \"Something went wrong\" + Reload",
+        "Audit all systems \u2014 replace silent fallbacks with asserts: `if (!entity) return` \u2192 `assert(entity, \"Expected entity in combat\")`, empty catches \u2192 `throw new GameError(...)`",
+        "Create GameError class with context (system name, entity ID, state snapshot)",
+        "Verify: intentionally trigger error \u2192 DebugOverlay shows it, error boundary catches"
+      ],
+      "priority": 2,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-037"
+      ]
+    },
+    {
+      "id": "US-043",
+      "title": "E2E Tests with Playwright \u2014 New Game, Gameplay, Save/Load",
+      "description": "As a developer, I want E2E tests covering critical game flows so that regressions are caught automatically.",
+      "acceptanceCriteria": [
+        "Verify/create `playwright.config.ts` targeting Vite dev server with reasonable timeouts and failure screenshots",
+        "Create `tests/e2e/newGame.spec.ts`: navigate \u2192 landing page visible \u2192 New Game \u2192 modal \u2192 Start \u2192 game view renders",
+        "Create `tests/e2e/gameplay.spec.ts`: fixed seed \u2192 units visible \u2192 HUD displays info \u2192 pause/unpause (Space) \u2192 speed change (+/-)",
+        "Create `tests/e2e/saveLoad.spec.ts`: start game \u2192 wait \u2192 save (Ctrl+S) \u2192 return to title \u2192 Continue \u2192 state restored (HUD values match)",
+        "`pnpm playwright test` \u2014 all E2E tests pass"
+      ],
+      "priority": 2,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-037"
+      ]
+    },
+    {
+      "id": "US-044",
+      "title": "Mobile Optimization \u2014 Capacitor iOS/Android, Touch Refinement",
+      "description": "As a developer, I want the game running on mobile via Capacitor so that it is playable on phones and tablets.",
+      "acceptanceCriteria": [
+        "Initialize Capacitor: `npx cap add ios && npx cap add android`",
+        "Adapt main.tsx for Capacitor: detect `Capacitor.isNativePlatform()`, use native SQLite, viewport meta for no-zoom + safe-area-inset, fullscreen",
+        "Performance budgets: reduce max instances on mobile, lower shadow quality, 512px textures, target 30fps, use drei `AdaptiveDpr` + `PerformanceMonitor`",
+        "Touch refinement: tap accuracy (finger-sized targets), double-tap timing, long-press no conflict with scroll, pinch-to-zoom camera",
+        "Build: `pnpm build && npx cap sync && npx cap open ios && npx cap open android`",
+        "Test on simulator: game loads, touch works, 30fps+, save/load works, audio plays"
+      ],
+      "priority": 3,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-037"
+      ]
+    },
+    {
+      "id": "US-045",
+      "title": "Final Integration Gate \u2014 Full Playthrough Start to Victory",
+      "description": "As a developer, I want the complete game verified end-to-end so that the project is shippable.",
+      "acceptanceCriteria": [
+        "`pnpm tsc` \u2014 zero errors",
+        "`pnpm lint` \u2014 zero errors",
+        "`pnpm vitest run` \u2014 all unit tests pass",
+        "`pnpm test:browser` \u2014 all browser component tests pass",
+        "`pnpm playwright test` \u2014 all E2E tests pass",
+        "`pnpm build` \u2014 production build succeeds, bundle size reasonable",
+        "Full playthrough: (1) landing + globe \u2192 (2) New Game \u2192 intro narrative \u2192 (3) Awakening: explore, scavenge, build \u2192 (4) Phase transition \u2192 (5) Expansion: push out, war parties, Mark II \u2192 (6) Human temperature rises \u2192 (7) Phase transition \u2192 (8) War: assaults, Mark III, human allies \u2192 (9) Push north to cult stronghold \u2192 (10) Victory \u2192 (11) Save/load works at any point \u2192 (12) Audio throughout",
+        "Commit with message: `chore: Phase 5 complete \u2014 narrative, temperature, PBR, E2E, mobile ready`"
+      ],
+      "priority": 1,
+      "passes": false,
+      "labels": [],
+      "dependsOn": [
+        "US-038",
+        "US-039",
+        "US-040",
+        "US-041",
+        "US-042",
+        "US-043",
+        "US-044"
+      ]
+    }
+  ],
+  "metadata": {
+    "createdAt": "2026-03-23T23:08:14.009Z",
+    "version": "1.0.0",
+    "sourcePrd": "prd-rts-course-correction.md"
+  }
+}

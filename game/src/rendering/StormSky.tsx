@@ -2,37 +2,36 @@
  * Perpetual storm sky with pulsating wormhole effect.
  * Simple implementation using a dark dome with animated colors.
  */
-
-import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
-import * as THREE from "three";
+import { useRef } from "react"
+import { useFrame } from "@react-three/fiber"
+import * as THREE from "three"
 
 export function StormSky() {
-	const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null)
 
-	useFrame(({ clock }) => {
-		if (materialRef.current) {
-			materialRef.current.uniforms.uTime.value = clock.getElapsedTime();
-		}
-	});
+  useFrame(({ clock }) => {
+    if (materialRef.current) {
+      materialRef.current.uniforms.uTime.value = clock.getElapsedTime()
+    }
+  })
 
-	return (
-		<mesh>
-			<sphereGeometry args={[200, 32, 32]} />
-			<shaderMaterial
-				ref={materialRef}
-				side={THREE.BackSide}
-				uniforms={{
-					uTime: { value: 0 },
-				}}
-				vertexShader={`
+  return (
+    <mesh>
+      <sphereGeometry args={[200, 32, 32]} />
+      <shaderMaterial
+        ref={materialRef}
+        side={THREE.BackSide}
+        uniforms={{
+          uTime: { value: 0 },
+        }}
+        vertexShader={`
           varying vec3 vPosition;
           void main() {
             vPosition = position;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
           }
         `}
-				fragmentShader={`
+        fragmentShader={`
           uniform float uTime;
           varying vec3 vPosition;
 
@@ -79,7 +78,7 @@ export function StormSky() {
             gl_FragColor = vec4(stormColor + wormholeColor + flashColor, 1.0);
           }
         `}
-			/>
-		</mesh>
-	);
+      />
+    </mesh>
+  )
 }

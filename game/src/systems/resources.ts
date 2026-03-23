@@ -7,136 +7,133 @@
  * - Units with functional arms can scavenge nearby points
  */
 
-import { isInsideBuilding } from "../ecs/cityLayout";
-import { hasArms } from "../ecs/types";
-import { units } from "../ecs/world";
+import { units } from "../ecs/world"
+import { hasArms } from "../ecs/types"
+import { isInsideBuilding } from "../ecs/cityLayout"
 
 export interface ResourcePool {
-	scrapMetal: number;
-	eWaste: number;
-	intactComponents: number;
+  scrapMetal: number
+  eWaste: number
+  intactComponents: number
 }
 
 // Global resource pool
 const resources: ResourcePool = {
-	scrapMetal: 0,
-	eWaste: 0,
-	intactComponents: 0,
-};
+  scrapMetal: 0,
+  eWaste: 0,
+  intactComponents: 0,
+}
 
 export function getResources(): ResourcePool {
-	return { ...resources };
+  return { ...resources }
 }
 
 export function addResource(type: keyof ResourcePool, amount: number) {
-	resources[type] += amount;
+  resources[type] += amount
 }
 
-export function spendResource(
-	type: keyof ResourcePool,
-	amount: number,
-): boolean {
-	if (resources[type] < amount) return false;
-	resources[type] -= amount;
-	return true;
+export function spendResource(type: keyof ResourcePool, amount: number): boolean {
+  if (resources[type] < amount) return false
+  resources[type] -= amount
+  return true
 }
 
 // --- Scavenge Points ---
 
 export interface ScavengePoint {
-	x: number;
-	z: number;
-	remaining: number; // how many scavenges left
-	type: keyof ResourcePool;
-	amountPerScavenge: number;
+  x: number
+  z: number
+  remaining: number // how many scavenges left
+  type: keyof ResourcePool
+  amountPerScavenge: number
 }
 
 // Seeded PRNG
 function seededRandom(seed: number): () => number {
-	let s = seed;
-	return () => {
-		s = (s * 1103515245 + 12345) & 0x7fffffff;
-		return s / 0x7fffffff;
-	};
+  let s = seed
+  return () => {
+    s = (s * 1103515245 + 12345) & 0x7fffffff
+    return s / 0x7fffffff
+  }
 }
 
-let scavengePoints: ScavengePoint[] | null = null;
+let scavengePoints: ScavengePoint[] | null = null
 
 export function getScavengePoints(): ScavengePoint[] {
-	if (scavengePoints) return scavengePoints;
+  if (scavengePoints) return scavengePoints
 
-	const rng = seededRandom(789);
-	const points: ScavengePoint[] = [];
+  const rng = seededRandom(789)
+  const points: ScavengePoint[] = []
 
-	// Scatter scavenge points through the city area
-	for (let z = -15; z < 45; z += 4) {
-		for (let x = -25; x < 45; x += 4) {
-			if (rng() > 0.35) continue; // ~35% chance
-			// Don't place inside buildings
-			if (isInsideBuilding(x, z)) continue;
+  // Scatter scavenge points through the city area
+  for (let z = -15; z < 45; z += 4) {
+    for (let x = -25; x < 45; x += 4) {
+      if (rng() > 0.35) continue // ~35% chance
+      // Don't place inside buildings
+      if (isInsideBuilding(x, z)) continue
 
-			const typeRoll = rng();
-			let type: keyof ResourcePool;
-			let amount: number;
-			let remaining: number;
+      const typeRoll = rng()
+      let type: keyof ResourcePool
+      let amount: number
+      let remaining: number
 
-			if (typeRoll < 0.5) {
-				type = "scrapMetal";
-				amount = 2 + Math.floor(rng() * 3);
-				remaining = 3 + Math.floor(rng() * 4);
-			} else if (typeRoll < 0.85) {
-				type = "eWaste";
-				amount = 1 + Math.floor(rng() * 2);
-				remaining = 2 + Math.floor(rng() * 3);
-			} else {
-				type = "intactComponents";
-				amount = 1;
-				remaining = 1 + Math.floor(rng() * 2);
-			}
+      if (typeRoll < 0.5) {
+        type = "scrapMetal"
+        amount = 2 + Math.floor(rng() * 3)
+        remaining = 3 + Math.floor(rng() * 4)
+      } else if (typeRoll < 0.85) {
+        type = "eWaste"
+        amount = 1 + Math.floor(rng() * 2)
+        remaining = 2 + Math.floor(rng() * 3)
+      } else {
+        type = "intactComponents"
+        amount = 1
+        remaining = 1 + Math.floor(rng() * 2)
+      }
 
-			points.push({
-				x: x + (rng() - 0.5) * 3,
-				z: z + (rng() - 0.5) * 3,
-				remaining,
-				type,
-				amountPerScavenge: amount,
-			});
-		}
-	}
+      points.push({
+        x: x + (rng() - 0.5) * 3,
+        z: z + (rng() - 0.5) * 3,
+        remaining,
+        type,
+        amountPerScavenge: amount,
+      })
+    }
+  }
 
-	scavengePoints = points;
-	return points;
+  scavengePoints = points
+  return points
 }
 
 /** Auto-scavenge range for units with arms */
-const SCAVENGE_RANGE = 2.5;
+const SCAVENGE_RANGE = 2.5
 
 /**
  * Scavenging system. Called once per sim tick.
  * Units with functional arms automatically scavenge nearby resource points.
  */
 export function resourceSystem() {
-	const points = getScavengePoints();
+  const points = getScavengePoints()
 
-	for (const unit of units) {
-		if (!hasArms(unit)) continue;
-		if (unit.navigation?.moving) continue; // busy moving
+  for (const unit of units) {
+    if (!hasArms(unit)) continue
+    if (unit.navigation?.moving) continue // busy moving
 
-		const ux = unit.worldPosition.x;
-		const uz = unit.worldPosition.z;
+    const ux = unit.worldPosition.x
+    const uz = unit.worldPosition.z
 
-		for (const point of points) {
-			if (point.remaining <= 0) continue;
+    for (const point of points) {
+      if (point.remaining <= 0) continue
 
-			const dx = point.x - ux;
-			const dz = point.z - uz;
-			const dist = Math.sqrt(dx * dx + dz * dz);
+      const dx = point.x - ux
+      const dz = point.z - uz
+      const dist = Math.sqrt(dx * dx + dz * dz)
 
-			if (dist <= SCAVENGE_RANGE) {
-				resources[point.type] += point.amountPerScavenge;
-				point.remaining--;
-				break; // one scavenge per tick per unit
-			}
-		}
-	}
+      if (dist <= SCAVENGE_RANGE) {
+        resources[point.type] += point.amountPerScavenge
+        point.remaining--
+        break // one scavenge per tick per unit
+      }
+    }
+  }
 }

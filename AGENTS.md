@@ -153,26 +153,3 @@ All docs live under `docs/`. See [docs/AGENTS.md](docs/AGENTS.md) for the full i
 | **Technical** | How it's built | 5 files in `docs/technical/` |
 | **Interface** | Player-facing surfaces | 2 files in `docs/interface/` |
 | **Execution** | Roadmap | `docs/plans/GAMEPLAN_1_0.md` |
-
-## Cursor Cloud specific instructions
-
-### Services
-
-Syntheteria is fully client-side — **no external backend, database, or Docker services are needed**. The only process to run is the Vite dev server (`pnpm dev`, port 5173). Capacitor SQLite and sql.js operate entirely in-browser.
-
-### Running checks
-
-All validation commands are documented in the Validation table above. Quick reference:
-
-- **Lint**: `pnpm lint` (Biome)
-- **Type check**: `pnpm tsc`
-- **Unit tests**: `pnpm test` (Jest, 142 suites / 2500+ tests)
-- **Vitest**: `pnpm test:vitest` (4 files; note: `AppVite.vitest.tsx` has a pre-existing failure looking for a "Continue" button that the UI no longer renders)
-- **Playwright CT**: `xvfb-run -a pnpm test:ct` (headed; requires `xvfb-run` in headless VMs). Many CT tests fail in Cloud VMs because the R3F 3D scenes require GPU/WebGL capabilities not available in software-rendered environments.
-- **Full CI**: `pnpm verify` (lint + tsc + test + test:ct)
-
-### Gotchas
-
-- `pnpm install` may warn about ignored build scripts for `better-sqlite3` and `sharp`. These do not block `pnpm dev`, `pnpm build`, Jest, or Vitest. They may affect `drizzle-kit` or Playwright screenshot comparison respectively.
-- Playwright tests run **headed** (`headless: false` in config). Always wrap with `xvfb-run -a` in headless Cloud VMs.
-- After clicking "New Game" in the browser, the game requires 3D model assets (`.glb` files in `public/assets/`) and WebGL. If the environment lacks GPU support or models are missing, the game scene will crash on asset load (intentional fail-hard behavior per architecture rules).

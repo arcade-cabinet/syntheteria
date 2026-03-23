@@ -1,0 +1,6817 @@
+{
+	"seed": "cool-amber-block",
+	"startTime": 1773373219790,
+	"endTime": 1773373241338,
+	"totalTurns": 100,
+	"snapshots": [
+		{
+			"turnNumber": 1,
+			"timestamp": 1773373223598,
+			"resources": {
+				"scrapMetal": 20,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 0,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 6,
+			"stormIntensity": 0.82,
+			"activeScene": "world",
+			"screenshotPath": "/Users/jbogaty/src/arcade-cabinet/syntheteria/tests/e2e/reports/screenshots/turn-001.png"
+		},
+		{
+			"turnNumber": 10,
+			"timestamp": 1773373225375,
+			"resources": {
+				"scrapMetal": 22,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 0,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 7,
+			"stormIntensity": 1.16,
+			"activeScene": "world",
+			"screenshotPath": "/Users/jbogaty/src/arcade-cabinet/syntheteria/tests/e2e/reports/screenshots/turn-010.png"
+		},
+		{
+			"turnNumber": 20,
+			"timestamp": 1773373226971,
+			"resources": {
+				"scrapMetal": 24,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 1,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 7,
+			"stormIntensity": 0.9,
+			"activeScene": "world",
+			"screenshotPath": null
+		},
+		{
+			"turnNumber": 25,
+			"timestamp": 1773373228430,
+			"resources": {
+				"scrapMetal": 26,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 1,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 7,
+			"stormIntensity": 0.9,
+			"activeScene": "world",
+			"screenshotPath": "/Users/jbogaty/src/arcade-cabinet/syntheteria/tests/e2e/reports/screenshots/turn-025.png"
+		},
+		{
+			"turnNumber": 30,
+			"timestamp": 1773373229246,
+			"resources": {
+				"scrapMetal": 26,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 1,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 7,
+			"stormIntensity": 0.9,
+			"activeScene": "world",
+			"screenshotPath": null
+		},
+		{
+			"turnNumber": 40,
+			"timestamp": 1773373230864,
+			"resources": {
+				"scrapMetal": 29,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 2,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 7,
+			"stormIntensity": 1.17,
+			"activeScene": "world",
+			"screenshotPath": null
+		},
+		{
+			"turnNumber": 50,
+			"timestamp": 1773373232672,
+			"resources": {
+				"scrapMetal": 32,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 3,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 7,
+			"stormIntensity": 0.82,
+			"activeScene": "world",
+			"screenshotPath": "/Users/jbogaty/src/arcade-cabinet/syntheteria/tests/e2e/reports/screenshots/turn-050.png"
+		},
+		{
+			"turnNumber": 60,
+			"timestamp": 1773373234338,
+			"resources": {
+				"scrapMetal": 34,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 3,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 7,
+			"stormIntensity": 0.75,
+			"activeScene": "world",
+			"screenshotPath": null
+		},
+		{
+			"turnNumber": 70,
+			"timestamp": 1773373236017,
+			"resources": {
+				"scrapMetal": 37,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 3,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 7,
+			"stormIntensity": 0.97,
+			"activeScene": "world",
+			"screenshotPath": null
+		},
+		{
+			"turnNumber": 75,
+			"timestamp": 1773373236968,
+			"resources": {
+				"scrapMetal": 39,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 4,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 7,
+			"stormIntensity": 0.67,
+			"activeScene": "world",
+			"screenshotPath": "/Users/jbogaty/src/arcade-cabinet/syntheteria/tests/e2e/reports/screenshots/turn-075.png"
+		},
+		{
+			"turnNumber": 80,
+			"timestamp": 1773373237839,
+			"resources": {
+				"scrapMetal": 39,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 4,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 7,
+			"stormIntensity": 0.6,
+			"activeScene": "world",
+			"screenshotPath": null
+		},
+		{
+			"turnNumber": 90,
+			"timestamp": 1773373239488,
+			"resources": {
+				"scrapMetal": 42,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 4,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 7,
+			"stormIntensity": 0.55,
+			"activeScene": "world",
+			"screenshotPath": null
+		},
+		{
+			"turnNumber": 100,
+			"timestamp": 1773373241306,
+			"resources": {
+				"scrapMetal": 45,
+				"eWaste": 0,
+				"intactComponents": 0,
+				"ferrousScrap": 0,
+				"alloyStock": 4,
+				"polymerSalvage": 0,
+				"conductorWire": 0,
+				"electrolyte": 0,
+				"siliconWafer": 0,
+				"stormCharge": 0,
+				"elCrystal": 0
+			},
+			"unitCount": 5,
+			"enemyCount": 7,
+			"stormIntensity": 0.73,
+			"activeScene": "world",
+			"screenshotPath": "/Users/jbogaty/src/arcade-cabinet/syntheteria/tests/e2e/reports/screenshots/turn-100.png"
+		}
+	],
+	"errors": ["[pageerror] Event"],
+	"turnEventLog": [
+		{
+			"turnNumber": 1,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373223344,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 1,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373223352,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 1,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373223352,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 1,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373223352,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 1,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373223353,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 1,
+						"stormIntensity": 0.8
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373223353,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 1,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 2,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373223647,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 2,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373223654,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 2,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373223654,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 2,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373223654,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 2,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373223655,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 2,
+						"stormIntensity": 0.82
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373223655,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 2,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 3,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373223810,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 3,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373223815,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 3,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373223815,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 3,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373223815,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 3,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373223816,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 3,
+						"stormIntensity": 0.83
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373223816,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 3,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 4,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224047,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 4,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224051,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 4,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224051,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 4,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224051,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 4,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373224052,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 4,
+						"stormIntensity": 0.86
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373224052,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 4,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 5,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224244,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 5,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224245,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 5,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224245,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 5,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224246,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 5,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373224246,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 5,
+						"stormIntensity": 0.93
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373224246,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 5,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 6,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224397,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 6,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224399,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 6,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224399,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 6,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224399,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 6,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373224400,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 6,
+						"stormIntensity": 0.98
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373224400,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 6,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 7,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224543,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 7,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224545,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 7,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224545,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 7,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224545,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 7,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373224546,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 7,
+						"stormIntensity": 1.03
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373224546,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 7,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 8,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224697,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 8,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224698,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 8,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224698,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 8,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224698,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 8,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373224699,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 8,
+						"stormIntensity": 1.09
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373224699,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 8,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 9,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224850,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 9,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224852,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 9,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224852,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 9,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373224852,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 9,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373224853,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 9,
+						"stormIntensity": 1.13
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373224853,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 9,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 10,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225056,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 10,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225057,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 10,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225057,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 10,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225058,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 10,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373225058,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 10,
+						"stormIntensity": 1.16
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373225058,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 10,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 11,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225417,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 11,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225419,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 11,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225419,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 11,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225420,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 11,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373225420,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 11,
+						"stormIntensity": 1.16
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373225420,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 11,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 12,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225559,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 12,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225560,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 12,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225560,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 12,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225560,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 12,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373225561,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 12,
+						"stormIntensity": 1.14
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373225561,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 12,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 13,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225711,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 13,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225713,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 13,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225713,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 13,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225714,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 13,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373225714,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 13,
+						"stormIntensity": 1.12
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373225714,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 13,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 14,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225860,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 14,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225861,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 14,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225861,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 14,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373225861,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 14,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373225862,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 14,
+						"stormIntensity": 1.08
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373225862,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 14,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 15,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226057,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 15,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226059,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 15,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226059,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 15,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226059,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 15,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373226060,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 15,
+						"stormIntensity": 1.04
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373226060,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 15,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 16,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226255,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 16,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226256,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 16,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226256,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 16,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226258,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 16,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373226259,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 16,
+						"stormIntensity": 0.99
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373226259,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 16,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 17,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226410,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 17,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226411,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 17,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226411,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 17,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226412,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 17,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373226412,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 17,
+						"stormIntensity": 0.94
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373226412,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 17,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 18,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226560,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 18,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226562,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 18,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226562,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 18,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226562,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 18,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373226563,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 18,
+						"stormIntensity": 0.89
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373226563,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 18,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 19,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226697,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 19,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226697,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 19,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226697,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 19,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226698,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 19,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373226698,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 19,
+						"stormIntensity": 0.89
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373226698,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 19,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 20,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226838,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 20,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226839,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 20,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226839,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 20,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373226840,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 20,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373226840,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 20,
+						"stormIntensity": 0.89
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373226840,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 20,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 21,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227056,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 21,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227058,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 21,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227058,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 21,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227059,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 21,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373227059,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 21,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373227059,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 21,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 22,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227264,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 22,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227265,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 22,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227265,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 22,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227266,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 22,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373227266,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 22,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373227266,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 22,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 23,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227414,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 23,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227416,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 23,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227416,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 23,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227416,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 23,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373227417,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 23,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373227417,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 23,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 24,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227920,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 24,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227922,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 24,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227922,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 24,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373227922,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 24,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373227923,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 24,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373227923,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 24,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 25,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228102,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 25,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228103,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 25,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228103,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 25,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228104,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 25,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373228104,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 25,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373228104,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 25,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 26,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228474,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 26,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228475,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 26,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228475,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 26,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228476,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 26,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373228476,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 26,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373228476,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 26,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 27,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228618,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 27,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228620,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 27,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228620,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 27,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228620,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 27,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373228621,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 27,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373228621,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 27,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 28,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228761,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 28,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228762,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 28,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228762,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 28,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228763,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 28,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373228763,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 28,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373228763,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 28,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 29,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228903,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 29,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228904,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 29,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228904,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 29,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373228905,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 29,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373228905,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 29,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373228905,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 29,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 30,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229107,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 30,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229108,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 30,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229108,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 30,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229109,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 30,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373229109,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 30,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373229109,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 30,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 31,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229326,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 31,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229327,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 31,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229327,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 31,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229327,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 31,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373229328,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 31,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373229328,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 31,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 32,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229483,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 32,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229484,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 32,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229484,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 32,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229485,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 32,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373229485,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 32,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373229485,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 32,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 33,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229633,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 33,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229635,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 33,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229635,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 33,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229635,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 33,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373229635,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 33,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373229635,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 33,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 34,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229787,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 34,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229789,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 34,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229789,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 34,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229789,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 34,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373229790,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 34,
+						"stormIntensity": 0.97
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373229790,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 34,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 35,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229928,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 35,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229930,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 35,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229930,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 35,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373229930,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 35,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373229931,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 35,
+						"stormIntensity": 1.03
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373229931,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 35,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 36,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230122,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 36,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230125,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 36,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230125,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 36,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230126,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 36,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373230126,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 36,
+						"stormIntensity": 1.07
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373230126,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 36,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 37,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230325,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 37,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230327,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 37,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230327,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 37,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230328,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 37,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373230328,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 37,
+						"stormIntensity": 1.12
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373230328,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 37,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 38,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230475,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 38,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230477,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 38,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230477,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 38,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230478,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 38,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373230478,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 38,
+						"stormIntensity": 1.15
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373230478,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 38,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 39,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230613,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 39,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230614,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 39,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230614,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 39,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230615,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 39,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373230615,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 39,
+						"stormIntensity": 1.16
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373230615,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 39,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 40,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230750,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 40,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230751,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 40,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230751,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 40,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230751,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 40,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373230752,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 40,
+						"stormIntensity": 1.17
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373230752,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 40,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 41,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230903,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 41,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230904,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 41,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230904,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 41,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373230905,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 41,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373230905,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 41,
+						"stormIntensity": 1.17
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373230905,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 41,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 42,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231083,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 42,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231084,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 42,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231084,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 42,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231085,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 42,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373231085,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 42,
+						"stormIntensity": 1.15
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373231085,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 42,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 43,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231288,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 43,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231289,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 43,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231289,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 43,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231289,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 43,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373231290,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 43,
+						"stormIntensity": 1.13
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373231290,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 43,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 44,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231438,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 44,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231439,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 44,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231439,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 44,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231440,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 44,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373231440,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 44,
+						"stormIntensity": 1.09
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373231440,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 44,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 45,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231582,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 45,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231583,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 45,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231583,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 45,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231584,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 45,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373231584,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 45,
+						"stormIntensity": 1.05
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373231584,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 45,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 46,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231732,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 46,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231733,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 46,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231733,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 46,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231733,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 46,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373231734,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 46,
+						"stormIntensity": 0.98
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373231734,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 46,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 47,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231888,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 47,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231890,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 47,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231890,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 47,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373231890,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 47,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373231891,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 47,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373231891,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 47,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 48,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232090,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 48,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232091,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 48,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232091,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 48,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232092,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 48,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373232092,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 48,
+						"stormIntensity": 0.84
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373232092,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 48,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 49,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232278,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 49,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232281,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 49,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232281,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 49,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232281,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 49,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373232282,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 49,
+						"stormIntensity": 0.83
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373232282,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 49,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 50,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232426,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 50,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232428,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 50,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232428,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 50,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232428,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 50,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373232429,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 50,
+						"stormIntensity": 0.83
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373232429,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 50,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 51,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232732,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 51,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232733,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 51,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232733,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 51,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232733,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 51,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373232734,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 51,
+						"stormIntensity": 0.82
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373232734,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 51,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 52,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232877,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 52,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232878,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 52,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232878,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 52,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373232878,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 52,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373232879,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 52,
+						"stormIntensity": 0.81
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373232879,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 52,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 53,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233084,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 53,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233086,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 53,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233086,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 53,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233086,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 53,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373233087,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 53,
+						"stormIntensity": 0.8
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373233087,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 53,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 54,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233273,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 54,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233274,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 54,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233274,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 54,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233275,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 54,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373233275,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 54,
+						"stormIntensity": 0.8
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373233275,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 54,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 55,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233435,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 55,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233437,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 55,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233437,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 55,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233437,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 55,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373233438,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 55,
+						"stormIntensity": 0.79
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373233438,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 55,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 56,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233578,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 56,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233579,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 56,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233579,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 56,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233580,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 56,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373233580,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 56,
+						"stormIntensity": 0.79
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373233580,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 56,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 57,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233714,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 57,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233715,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 57,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233715,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 57,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233716,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 57,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373233716,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 57,
+						"stormIntensity": 0.78
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373233716,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 57,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 58,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233864,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 58,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233866,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 58,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233866,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 58,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373233866,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 58,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373233867,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 58,
+						"stormIntensity": 0.77
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373233867,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 58,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 59,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234064,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 59,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234065,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 59,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234065,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 59,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234065,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 59,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373234066,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 59,
+						"stormIntensity": 0.76
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373234066,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 59,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 60,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234211,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 60,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234212,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 60,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234212,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 60,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234212,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 60,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373234213,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 60,
+						"stormIntensity": 0.76
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373234213,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 60,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 61,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234446,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 61,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234448,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 61,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234448,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 61,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234449,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 61,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373234449,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 61,
+						"stormIntensity": 0.75
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373234449,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 61,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 62,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234593,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 62,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234594,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 62,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234594,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 62,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234594,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 62,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373234595,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 62,
+						"stormIntensity": 0.74
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373234595,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 62,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 63,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234734,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 63,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234735,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 63,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234735,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 63,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234735,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 63,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373234736,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 63,
+						"stormIntensity": 0.79
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373234736,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 63,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 64,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234890,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 64,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234891,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 64,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234891,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 64,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373234892,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 64,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373234892,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 64,
+						"stormIntensity": 0.85
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373234892,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 64,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 65,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235072,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 65,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235073,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 65,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235073,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 65,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235073,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 65,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373235074,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 65,
+						"stormIntensity": 0.9
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373235074,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 65,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 66,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235218,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 66,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235219,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 66,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235219,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 66,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235219,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 66,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373235220,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 66,
+						"stormIntensity": 0.93
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373235220,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 66,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 67,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235409,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 67,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235410,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 67,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235410,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 67,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235410,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 67,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373235410,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 67,
+						"stormIntensity": 0.96
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373235410,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 67,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 68,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235564,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 68,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235565,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 68,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235565,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 68,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235565,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 68,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373235566,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 68,
+						"stormIntensity": 0.98
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373235566,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 68,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 69,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235716,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 69,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235717,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 69,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235717,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 69,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235717,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 69,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373235718,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 69,
+						"stormIntensity": 0.99
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373235718,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 69,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 70,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235862,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 70,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235864,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 70,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235864,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 70,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373235864,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 70,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373235865,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 70,
+						"stormIntensity": 0.98
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373235865,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 70,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 71,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236100,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 71,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236102,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 71,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236102,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 71,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236102,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 71,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373236103,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 71,
+						"stormIntensity": 0.96
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373236103,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 71,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 72,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236258,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 72,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236259,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 72,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236259,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 72,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236259,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 72,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373236260,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 72,
+						"stormIntensity": 0.94
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373236260,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 72,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 73,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236439,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 73,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236440,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 73,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236440,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 73,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236441,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 73,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373236441,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 73,
+						"stormIntensity": 0.91
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373236441,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 73,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 74,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236588,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 74,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236590,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 74,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236590,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 74,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236590,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 74,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373236590,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 74,
+						"stormIntensity": 0.85
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373236590,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 74,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 75,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236725,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 75,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236727,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 75,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236727,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 75,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373236727,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 75,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373236728,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 75,
+						"stormIntensity": 0.8
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373236728,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 75,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 76,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237030,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 76,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237032,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 76,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237032,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 76,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237033,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 76,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373237033,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 76,
+						"stormIntensity": 0.65
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373237033,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 76,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 77,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237208,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 77,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237210,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 77,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237210,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 77,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237210,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 77,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373237211,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 77,
+						"stormIntensity": 0.63
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373237211,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 77,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 78,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237397,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 78,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237399,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 78,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237399,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 78,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237399,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 78,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373237400,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 78,
+						"stormIntensity": 0.62
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373237400,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 78,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 79,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237551,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 79,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237553,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 79,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237553,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 79,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237553,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 79,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373237554,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 79,
+						"stormIntensity": 0.62
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373237554,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 79,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 80,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237718,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 80,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237720,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 80,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237720,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 80,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237720,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 80,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373237721,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 80,
+						"stormIntensity": 0.61
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373237721,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 80,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 81,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237888,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 81,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237889,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 81,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237889,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 81,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373237890,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 81,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373237890,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 81,
+						"stormIntensity": 0.6
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373237890,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 81,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 82,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238068,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 82,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238070,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 82,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238070,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 82,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238070,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 82,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373238071,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 82,
+						"stormIntensity": 0.59
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373238071,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 82,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 83,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238236,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 83,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238237,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 83,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238237,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 83,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238238,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 83,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373238238,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 83,
+						"stormIntensity": 0.59
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373238238,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 83,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 84,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238421,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 84,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238422,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 84,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238422,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 84,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238422,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 84,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373238423,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 84,
+						"stormIntensity": 0.58
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373238423,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 84,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 85,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238570,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 85,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238571,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 85,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238571,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 85,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238572,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 85,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373238572,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 85,
+						"stormIntensity": 0.58
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373238572,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 85,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 86,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238712,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 86,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238713,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 86,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238713,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 86,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238714,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 86,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373238714,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 86,
+						"stormIntensity": 0.57
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373238714,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 86,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 87,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238859,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 87,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238860,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 87,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238860,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 87,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238860,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 87,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373238861,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 87,
+						"stormIntensity": 0.57
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373238861,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 87,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 88,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238995,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 88,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238996,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 88,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238996,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 88,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373238996,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 88,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373238997,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 88,
+						"stormIntensity": 0.56
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373238997,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 88,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 89,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239181,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 89,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239182,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 89,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239182,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 89,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239183,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 89,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373239183,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 89,
+						"stormIntensity": 0.56
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373239183,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 89,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 90,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239376,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 90,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239378,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 90,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239378,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 90,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239378,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 90,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373239379,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 90,
+						"stormIntensity": 0.55
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373239379,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 90,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 91,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239523,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 91,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239525,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 91,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239525,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 91,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239525,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 91,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373239526,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 91,
+						"stormIntensity": 0.55
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373239526,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 91,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 92,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239664,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 92,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239666,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 92,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239666,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 92,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239666,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 92,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373239667,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 92,
+						"stormIntensity": 0.57
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373239667,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 92,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 93,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239816,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 93,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239818,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 93,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239818,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 93,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239818,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 93,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373239819,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 93,
+						"stormIntensity": 0.63
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373239819,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 93,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 94,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239956,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 94,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239957,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 94,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239957,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 94,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373239958,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 94,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373239958,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 94,
+						"stormIntensity": 0.68
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373239958,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 94,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 95,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240161,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 95,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240162,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 95,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240162,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 95,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240163,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 95,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373240163,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 95,
+						"stormIntensity": 0.74
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373240163,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 95,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 96,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240367,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 96,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240369,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 96,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240369,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 96,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240370,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 96,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373240370,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 96,
+						"stormIntensity": 0.78
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373240370,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 96,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 97,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240514,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 97,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240516,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 97,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240516,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 97,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240516,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 97,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373240517,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 97,
+						"stormIntensity": 0.8
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373240517,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 97,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 98,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240658,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 98,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240659,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 98,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240659,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 98,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240660,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 98,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373240660,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 98,
+						"stormIntensity": 0.82
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373240660,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 98,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 99,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240823,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 99,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240824,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 99,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240824,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 99,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240825,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 99,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373240825,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 99,
+						"stormIntensity": 0.81
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373240825,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 99,
+						"totalUnits": 9
+					}
+				}
+			]
+		},
+		{
+			"turnNumber": 100,
+			"events": [
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240967,
+					"entityId": null,
+					"faction": "reclaimers",
+					"details": {
+						"turnNumber": 100,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240968,
+					"entityId": null,
+					"faction": "volt_collective",
+					"details": {
+						"turnNumber": 100,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240968,
+					"entityId": null,
+					"faction": "signal_choir",
+					"details": {
+						"turnNumber": 100,
+						"decisionCount": "no_governor"
+					}
+				},
+				{
+					"type": "ai_faction_turn",
+					"timestamp": 1773373240968,
+					"entityId": null,
+					"faction": "iron_creed",
+					"details": {
+						"turnNumber": 100,
+						"decisionCount": "governor_active"
+					}
+				},
+				{
+					"type": "environment",
+					"timestamp": 1773373240969,
+					"entityId": null,
+					"faction": "environment",
+					"details": {
+						"turnNumber": 100,
+						"stormIntensity": 0.8
+					}
+				},
+				{
+					"type": "turn_end",
+					"timestamp": 1773373240969,
+					"entityId": null,
+					"faction": "system",
+					"details": {
+						"turnNumber": 100,
+						"totalUnits": 9
+					}
+				}
+			]
+		}
+	],
+	"victoryResult": null,
+	"campaignStats": {
+		"turnsElapsed": 0,
+		"structuresHarvested": 0,
+		"materialsGathered": {},
+		"cellsDiscovered": 0,
+		"totalCells": 0,
+		"unitsBuilt": 0,
+		"unitsLost": 0,
+		"unitsHacked": 0,
+		"structuresBuilt": 0,
+		"cultistIncursionsSurvived": 0,
+		"cultistsDestroyed": 0,
+		"buildingsDestroyed": 0,
+		"lightningStrikesReceived": 0,
+		"totalCombatEngagements": 0,
+		"peakTerritorySize": 0
+	},
+	"crashed": false,
+	"crashMessage": null
+}

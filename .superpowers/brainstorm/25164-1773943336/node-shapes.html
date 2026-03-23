@@ -1,0 +1,206 @@
+<h2>Radial Node Shapes — Information Density</h2>
+<p class="subtitle">Same radial layout, but nodes that can actually hold content. All include hover tooltips.</p>
+
+<div class="cards">
+  <!-- Option A: Rounded Rectangle Nodes -->
+  <div class="card" data-choice="rounded-rect" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d1520;padding:20px;display:flex;align-items:center;justify-content:center;min-height:320px;">
+      <svg width="340" height="300" viewBox="0 0 340 300">
+        <!-- Center disc (stays circular — it's the identity hub) -->
+        <circle cx="170" cy="150" r="38" fill="#ff884422" stroke="#ff8844" stroke-width="2"/>
+        <circle cx="170" cy="150" r="34" fill="#0d1520"/>
+        <text x="170" y="144" text-anchor="middle" fill="#ff8844" font-size="20" font-weight="bold" font-family="monospace">II</text>
+        <text x="170" y="160" text-anchor="middle" fill="#ff884488" font-size="7" font-family="monospace" letter-spacing="1">INFANTRY</text>
+
+        <!-- Connection lines -->
+        <line x1="170" y1="112" x2="170" y2="58" stroke="#8be6ff33" stroke-width="1"/>
+        <line x1="205" y1="125" x2="268" y2="80" stroke="#44aa8833" stroke-width="1"/>
+        <line x1="205" y1="175" x2="268" y2="215" stroke="#cc444433" stroke-width="1"/>
+        <line x1="170" y1="188" x2="170" y2="245" stroke="#8be6ff44" stroke-width="1"/>
+        <line x1="135" y1="175" x2="72" y2="215" stroke="#e8c86a33" stroke-width="1"/>
+        <line x1="135" y1="125" x2="72" y2="80" stroke="#7ee7cb33" stroke-width="1"/>
+
+        <!-- SCAN — rounded rect with icon + 2 lines -->
+        <rect x="125" y="22" width="90" height="40" rx="6" fill="#8be6ff11" stroke="#8be6ff55" stroke-width="1.5"/>
+        <text x="142" y="39" fill="#8be6ff" font-size="12" font-family="monospace">◎</text>
+        <text x="155" y="39" fill="#8be6ff" font-size="10" font-family="monospace" font-weight="bold">SCAN</text>
+        <text x="155" y="52" fill="#8be6ff66" font-size="7" font-family="monospace">Range: 6 tiles</text>
+
+        <!-- DEFEND -->
+        <rect x="248" y="55" width="90" height="40" rx="6" fill="#44aa8811" stroke="#44aa8855" stroke-width="1.5"/>
+        <text x="265" y="72" fill="#44aa88" font-size="12" font-family="monospace">⛨</text>
+        <text x="278" y="72" fill="#44aa88" font-size="10" font-family="monospace" font-weight="bold">DEFEND</text>
+        <text x="278" y="85" fill="#44aa8866" font-size="7" font-family="monospace">+3 armor, 1 AP</text>
+
+        <!-- ATTACK -->
+        <rect x="248" y="195" width="90" height="40" rx="6" fill="#cc444411" stroke="#cc444455" stroke-width="1.5"/>
+        <text x="265" y="212" fill="#cc4444" font-size="12" font-family="monospace">⚡</text>
+        <text x="278" y="212" fill="#cc4444" font-size="10" font-family="monospace" font-weight="bold">ATTACK</text>
+        <text x="278" y="225" fill="#cc444466" font-size="7" font-family="monospace">DMG 4, Rng 1</text>
+
+        <!-- MOVE (selected/hovered — shows tooltip) -->
+        <rect x="125" y="240" width="90" height="40" rx="6" fill="#8be6ff22" stroke="#8be6ff" stroke-width="2.5"/>
+        <text x="142" y="257" fill="#8be6ff" font-size="12" font-family="monospace">⊕</text>
+        <text x="155" y="257" fill="#8be6ff" font-size="10" font-family="monospace" font-weight="bold">MOVE</text>
+        <text x="155" y="270" fill="#8be6ff88" font-size="7" font-family="monospace">3 MP remaining</text>
+
+        <!-- Tooltip on hover (attached to MOVE) -->
+        <rect x="85" y="278" width="170" height="22" rx="4" fill="#1a2030ee" stroke="#8be6ff44" stroke-width="1"/>
+        <text x="170" y="293" text-anchor="middle" fill="#8be6ffaa" font-size="8" font-family="monospace">Move to adjacent tile. Costs 1 MP per tile.</text>
+
+        <!-- REPAIR -->
+        <rect x="2" y="195" width="90" height="40" rx="6" fill="#e8c86a11" stroke="#e8c86a55" stroke-width="1.5"/>
+        <text x="19" y="212" fill="#e8c86a" font-size="12" font-family="monospace">🔧</text>
+        <text x="32" y="212" fill="#e8c86a" font-size="10" font-family="monospace" font-weight="bold">REPAIR</text>
+        <text x="32" y="225" fill="#e8c86a66" font-size="7" font-family="monospace">+5 HP, 2 AP</text>
+
+        <!-- HARVEST -->
+        <rect x="2" y="55" width="90" height="40" rx="6" fill="#7ee7cb11" stroke="#7ee7cb55" stroke-width="1.5"/>
+        <text x="19" y="72" fill="#7ee7cb" font-size="12" font-family="monospace">⛏</text>
+        <text x="32" y="72" fill="#7ee7cb" font-size="10" font-family="monospace" font-weight="bold">HARVEST</text>
+        <text x="32" y="85" fill="#7ee7cb66" font-size="7" font-family="monospace">2 turns, adj.</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>A. Rounded Rectangles</h3>
+      <p>Icon + label (row 1) + stat/cost summary (row 2). Hover shows tooltip with full description. Most readable. Center stays circular for identity.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Pill/Capsule Nodes -->
+  <div class="card" data-choice="pill" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d1520;padding:20px;display:flex;align-items:center;justify-content:center;min-height:320px;">
+      <svg width="340" height="300" viewBox="0 0 340 300">
+        <!-- Center -->
+        <circle cx="170" cy="150" r="38" fill="#ff884422" stroke="#ff8844" stroke-width="2"/>
+        <circle cx="170" cy="150" r="34" fill="#0d1520"/>
+        <text x="170" y="144" text-anchor="middle" fill="#ff8844" font-size="20" font-weight="bold" font-family="monospace">II</text>
+        <text x="170" y="160" text-anchor="middle" fill="#ff884488" font-size="7" font-family="monospace" letter-spacing="1">INFANTRY</text>
+
+        <!-- Lines -->
+        <line x1="170" y1="112" x2="170" y2="65" stroke="#8be6ff33" stroke-width="1"/>
+        <line x1="205" y1="125" x2="265" y2="88" stroke="#44aa8833" stroke-width="1"/>
+        <line x1="205" y1="175" x2="265" y2="208" stroke="#cc444433" stroke-width="1"/>
+        <line x1="170" y1="188" x2="170" y2="240" stroke="#8be6ff44" stroke-width="1"/>
+        <line x1="135" y1="175" x2="75" y2="208" stroke="#e8c86a33" stroke-width="1"/>
+        <line x1="135" y1="125" x2="75" y2="88" stroke="#7ee7cb33" stroke-width="1"/>
+
+        <!-- Pill nodes — taller pills with icon on left, text stacked right -->
+        <!-- SCAN -->
+        <rect x="128" y="32" width="84" height="32" rx="16" fill="#8be6ff11" stroke="#8be6ff55" stroke-width="1.5"/>
+        <circle cx="148" cy="48" r="10" fill="#8be6ff22"/>
+        <text x="148" y="52" text-anchor="middle" fill="#8be6ff" font-size="11" font-family="monospace">◎</text>
+        <text x="185" y="45" text-anchor="middle" fill="#8be6ff" font-size="9" font-family="monospace" font-weight="bold">SCAN</text>
+        <text x="185" y="56" text-anchor="middle" fill="#8be6ff55" font-size="6" font-family="monospace">6 tiles</text>
+
+        <!-- DEFEND -->
+        <rect x="245" y="68" width="84" height="32" rx="16" fill="#44aa8811" stroke="#44aa8855" stroke-width="1.5"/>
+        <circle cx="265" cy="84" r="10" fill="#44aa8822"/>
+        <text x="265" y="88" text-anchor="middle" fill="#44aa88" font-size="11" font-family="monospace">⛨</text>
+        <text x="302" y="81" text-anchor="middle" fill="#44aa88" font-size="9" font-family="monospace" font-weight="bold">DEFEND</text>
+        <text x="302" y="92" text-anchor="middle" fill="#44aa8855" font-size="6" font-family="monospace">+3 armor</text>
+
+        <!-- ATTACK -->
+        <rect x="245" y="195" width="84" height="32" rx="16" fill="#cc444411" stroke="#cc444455" stroke-width="1.5"/>
+        <circle cx="265" cy="211" r="10" fill="#cc444422"/>
+        <text x="265" y="215" text-anchor="middle" fill="#cc4444" font-size="11" font-family="monospace">⚡</text>
+        <text x="302" y="208" text-anchor="middle" fill="#cc4444" font-size="9" font-family="monospace" font-weight="bold">ATTACK</text>
+        <text x="302" y="219" text-anchor="middle" fill="#cc444455" font-size="6" font-family="monospace">DMG 4</text>
+
+        <!-- MOVE (selected) -->
+        <rect x="128" y="237" width="84" height="32" rx="16" fill="#8be6ff22" stroke="#8be6ff" stroke-width="2.5"/>
+        <circle cx="148" cy="253" r="10" fill="#8be6ff33"/>
+        <text x="148" y="257" text-anchor="middle" fill="#8be6ff" font-size="11" font-family="monospace">⊕</text>
+        <text x="185" y="250" text-anchor="middle" fill="#8be6ff" font-size="9" font-family="monospace" font-weight="bold">MOVE</text>
+        <text x="185" y="261" text-anchor="middle" fill="#8be6ff88" font-size="6" font-family="monospace">3 MP left</text>
+
+        <!-- REPAIR -->
+        <rect x="11" y="195" width="84" height="32" rx="16" fill="#e8c86a11" stroke="#e8c86a55" stroke-width="1.5"/>
+        <circle cx="31" cy="211" r="10" fill="#e8c86a22"/>
+        <text x="31" y="215" text-anchor="middle" fill="#e8c86a" font-size="11" font-family="monospace">🔧</text>
+        <text x="68" y="208" text-anchor="middle" fill="#e8c86a" font-size="9" font-family="monospace" font-weight="bold">REPAIR</text>
+        <text x="68" y="219" text-anchor="middle" fill="#e8c86a55" font-size="6" font-family="monospace">+5 HP</text>
+
+        <!-- HARVEST -->
+        <rect x="11" y="68" width="84" height="32" rx="16" fill="#7ee7cb11" stroke="#7ee7cb55" stroke-width="1.5"/>
+        <circle cx="31" cy="84" r="10" fill="#7ee7cb22"/>
+        <text x="31" y="88" text-anchor="middle" fill="#7ee7cb" font-size="11" font-family="monospace">⛏</text>
+        <text x="68" y="81" text-anchor="middle" fill="#7ee7cb" font-size="9" font-family="monospace" font-weight="bold">HARVEST</text>
+        <text x="68" y="92" text-anchor="middle" fill="#7ee7cb55" font-size="6" font-family="monospace">2 turns</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>B. Pill Capsules</h3>
+      <p>Compact horizontal pills. Icon circle on left, label + one stat line on right. Softer, more sci-fi feel. Less room than rectangles but tighter layout.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Hex badges -->
+  <div class="card" data-choice="hex-badge" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d1520;padding:20px;display:flex;align-items:center;justify-content:center;min-height:320px;">
+      <svg width="340" height="300" viewBox="0 0 340 300">
+        <!-- Center -->
+        <circle cx="170" cy="150" r="38" fill="#ff884422" stroke="#ff8844" stroke-width="2"/>
+        <circle cx="170" cy="150" r="34" fill="#0d1520"/>
+        <text x="170" y="144" text-anchor="middle" fill="#ff8844" font-size="20" font-weight="bold" font-family="monospace">II</text>
+        <text x="170" y="160" text-anchor="middle" fill="#ff884488" font-size="7" font-family="monospace" letter-spacing="1">INFANTRY</text>
+
+        <!-- Lines -->
+        <line x1="170" y1="112" x2="170" y2="65" stroke="#8be6ff33" stroke-width="1"/>
+        <line x1="205" y1="125" x2="265" y2="85" stroke="#44aa8833" stroke-width="1"/>
+        <line x1="205" y1="175" x2="265" y2="210" stroke="#cc444433" stroke-width="1"/>
+        <line x1="170" y1="188" x2="170" y2="242" stroke="#8be6ff44" stroke-width="1"/>
+        <line x1="135" y1="175" x2="75" y2="210" stroke="#e8c86a33" stroke-width="1"/>
+        <line x1="135" y1="125" x2="75" y2="85" stroke="#7ee7cb33" stroke-width="1"/>
+
+        <!-- Hex badge: wide hexagon with label + subtitle -->
+        <!-- SCAN -->
+        <polygon points="170,25 215,35 215,60 170,70 125,60 125,35" fill="#8be6ff11" stroke="#8be6ff55" stroke-width="1.5"/>
+        <text x="170" y="45" text-anchor="middle" fill="#8be6ff" font-size="10" font-family="monospace" font-weight="bold">◎ SCAN</text>
+        <text x="170" y="58" text-anchor="middle" fill="#8be6ff55" font-size="7" font-family="monospace">Range: 6</text>
+
+        <!-- DEFEND -->
+        <polygon points="287,60 332,70 332,95 287,105 242,95 242,70" fill="#44aa8811" stroke="#44aa8855" stroke-width="1.5"/>
+        <text x="287" y="80" text-anchor="middle" fill="#44aa88" font-size="10" font-family="monospace" font-weight="bold">⛨ DEFEND</text>
+        <text x="287" y="93" text-anchor="middle" fill="#44aa8855" font-size="7" font-family="monospace">+3 armor</text>
+
+        <!-- ATTACK -->
+        <polygon points="287,195 332,205 332,230 287,240 242,230 242,205" fill="#cc444411" stroke="#cc444455" stroke-width="1.5"/>
+        <text x="287" y="215" text-anchor="middle" fill="#cc4444" font-size="10" font-family="monospace" font-weight="bold">⚡ ATTACK</text>
+        <text x="287" y="228" text-anchor="middle" fill="#cc444455" font-size="7" font-family="monospace">DMG 4, Rng 1</text>
+
+        <!-- MOVE (selected) -->
+        <polygon points="170,235 215,245 215,270 170,280 125,270 125,245" fill="#8be6ff22" stroke="#8be6ff" stroke-width="2.5"/>
+        <text x="170" y="255" text-anchor="middle" fill="#8be6ff" font-size="10" font-family="monospace" font-weight="bold">⊕ MOVE</text>
+        <text x="170" y="268" text-anchor="middle" fill="#8be6ff88" font-size="7" font-family="monospace">3 MP left</text>
+
+        <!-- REPAIR -->
+        <polygon points="53,195 98,205 98,230 53,240 8,230 8,205" fill="#e8c86a11" stroke="#e8c86a55" stroke-width="1.5"/>
+        <text x="53" y="215" text-anchor="middle" fill="#e8c86a" font-size="10" font-family="monospace" font-weight="bold">🔧 REPAIR</text>
+        <text x="53" y="228" text-anchor="middle" fill="#e8c86a55" font-size="7" font-family="monospace">+5 HP, 2 AP</text>
+
+        <!-- HARVEST -->
+        <polygon points="53,60 98,70 98,95 53,105 8,95 8,70" fill="#7ee7cb11" stroke="#7ee7cb55" stroke-width="1.5"/>
+        <text x="53" y="80" text-anchor="middle" fill="#7ee7cb" font-size="10" font-family="monospace" font-weight="bold">⛏ HARVEST</text>
+        <text x="53" y="93" text-anchor="middle" fill="#7ee7cb55" font-size="7" font-family="monospace">2 turns, adj.</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>C. Wide Hexagons</h3>
+      <p>Thematic hex badges — wide enough for icon + label on row 1, stat on row 2. Strategy-game feel. Center stays circular. Good balance of shape language and info density.</p>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px; padding:15px; border:1px solid #ffffff15; border-radius:8px; background:#ffffff05;">
+  <h3 style="margin-top:0;">Hover Tooltip (all options)</h3>
+  <p style="color:#ffffff88; font-size:13px; line-height:1.6;">
+    Regardless of shape, <strong>hovering any node</strong> shows an attached tooltip with:
+  </p>
+  <ul style="color:#ffffff66; font-size:12px; line-height:1.8;">
+    <li><strong>Actions:</strong> Full description, AP/MP cost, cooldown, prerequisites</li>
+    <li><strong>Tech nodes:</strong> Research cost, turns remaining, prerequisite chain, unlock description</li>
+    <li><strong>Robot classes:</strong> Base stats, material costs, build time, available tracks</li>
+  </ul>
+  <p style="color:#ffffff55; font-size:11px;">Tooltip attaches below/beside the hovered node, stays within viewport bounds.</p>
+</div>

@@ -20,26 +20,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
+          cache: npm
+          cache-dependency-path: game/package-lock.json
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        working-directory: game
+        run: npm ci
 
       - name: Build
-        run: pnpm run build:web
+        working-directory: game
+        run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: game/dist
 
   deploy:
     needs: build

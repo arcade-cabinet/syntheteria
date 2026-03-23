@@ -37,9 +37,13 @@ coverage/
 test-results/
 playwright-report/
 
-# Capacitor (added later)
+# Capacitor
 android/
 ios/
+
+# Worktrees
+.claude/worktrees
+.ralph-tui/worktrees
 
 # Misc
 *.tsbuildinfo

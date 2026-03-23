@@ -1,13 +1,22 @@
 /**
- * Tutorial System — Guided 3-turn onboarding flow.
+ * @module tutorialSystem
  *
- * Walks the player through select unit, harvest, build, end turn, and explore.
- * Each step has instruction text and an optional world-space objective marker.
- * Skippable at any time.
+ * Guided 3-turn onboarding flow. Walks the player through select unit, harvest,
+ * build, end turn, and explore. Each step has instruction text and an optional
+ * world-space objective marker. Skippable at any time.
  *
- * Ported from pending/systems/tutorialSystem.ts.
- * Adapted: removed getTurnState() dependency — turn number is passed as param.
+ * @exports TutorialStep / TutorialState - Step and state types
+ * @exports getCurrentStep / getTutorialState / getAllSteps - State access
+ * @exports completeCurrentStep / skipTutorial - Step progression
+ * @exports isStepCompleted - Completion check
+ * @exports subscribeTutorial - State change listener
+ * @exports _reset - Reset for new game
+ *
+ * @dependencies turnSystem (getTurnState)
+ * @consumers TutorialOverlay
  */
+
+import { getTurnState } from "./turnSystem";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -34,36 +43,36 @@ const TUTORIAL_STEPS: TutorialStep[] = [
 	{
 		id: "select_technician",
 		turnNumber: 1,
-		instruction: "Select your WORKER unit — tap the glowing ring",
-		markerLabel: "WORKER",
+		instruction: "Select your Field Technician",
+		markerLabel: "Unit",
 		targetWorldPosition: null, // dynamically resolved
 	},
 	{
 		id: "harvest_structure",
 		turnNumber: 1,
-		instruction: "Target a nearby salvage node to harvest raw materials",
-		markerLabel: "Salvage",
+		instruction: "Click a nearby structure to harvest resources",
+		markerLabel: "Structure",
 		targetWorldPosition: null,
 	},
 	{
 		id: "build_lightning_rod",
 		turnNumber: 2,
-		instruction: "Fabricate a Power Transmitter — right-click for radial menu",
-		markerLabel: "Fabricate",
+		instruction: "Build a Lightning Rod for power",
+		markerLabel: "Build",
 		targetWorldPosition: null,
 	},
 	{
 		id: "end_turn",
 		turnNumber: 2,
-		instruction: "Advance the cycle — all units have expended their AP",
+		instruction: "End your turn to let the world advance",
 		markerLabel: null,
 		targetWorldPosition: null,
 	},
 	{
 		id: "explore_sector",
 		turnNumber: 3,
-		instruction: "Deploy a SCOUT to recon the adjacent sector",
-		markerLabel: "Recon",
+		instruction: "Move a unit to explore the nearby sector",
+		markerLabel: "Explore",
 		targetWorldPosition: null,
 	},
 ];
@@ -98,36 +107,15 @@ export function getTutorialState(): TutorialState {
 
 /**
  * Get the current tutorial step, or null if tutorial is inactive/complete.
- * Pass the current turn number so the tutorial can gate steps by turn.
- *
- * Auto-advances past steps whose turn has passed — prevents stale steps
- * from persisting after the player advances the turn.
  */
-export function getCurrentStep(currentTurnNumber: number): TutorialStep | null {
+export function getCurrentStep(): TutorialStep | null {
 	if (!state.active || state.skipped) return null;
 	if (state.currentStepIndex >= TUTORIAL_STEPS.length) return null;
 
-	// Auto-complete steps whose turn has passed
-	let step = TUTORIAL_STEPS[state.currentStepIndex]!;
-	while (
-		step.turnNumber < currentTurnNumber &&
-		state.currentStepIndex < TUTORIAL_STEPS.length
-	) {
-		state = {
-			...state,
-			completedSteps: [...state.completedSteps, step.id],
-			currentStepIndex: state.currentStepIndex + 1,
-		};
-		if (state.currentStepIndex >= TUTORIAL_STEPS.length) {
-			state = { ...state, active: false };
-			notify();
-			return null;
-		}
-		step = TUTORIAL_STEPS[state.currentStepIndex]!;
-	}
-
+	const step = TUTORIAL_STEPS[state.currentStepIndex];
 	// Only show steps for the current turn or earlier
-	if (step.turnNumber > currentTurnNumber) return null;
+	const turn = getTurnState().turnNumber;
+	if (step.turnNumber > turn) return null;
 
 	return step;
 }
@@ -139,7 +127,7 @@ export function completeCurrentStep() {
 	if (!state.active || state.skipped) return;
 	if (state.currentStepIndex >= TUTORIAL_STEPS.length) return;
 
-	const step = TUTORIAL_STEPS[state.currentStepIndex]!;
+	const step = TUTORIAL_STEPS[state.currentStepIndex];
 	state = {
 		...state,
 		completedSteps: [...state.completedSteps, step.id],
@@ -179,7 +167,7 @@ export function getAllSteps(): TutorialStep[] {
 /**
  * Reset — call on new game.
  */
-export function _resetTutorial() {
+export function _reset() {
 	state = {
 		active: true,
 		skipped: false,

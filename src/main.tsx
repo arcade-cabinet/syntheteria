@@ -1,28 +1,38 @@
 /**
- * Entry point — thin mount.
- *
- * Creates the React root and renders <App /> inside <FatalErrorGate>.
- * All app logic lives in src/app/.
+ * Vite + Capacitor entry. R3F-only game; no Expo/RN.
+ * Uses Capacitor SQLite for persistence (web: IndexedDB, native: SQLite).
+ * Session runs on an in-memory sql.js DB synced to/from Capacitor on save/load.
  */
-
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./app/App";
-import { FatalErrorGate } from "./ui";
+import { App } from "./AppVite";
+import { setDatabaseResolver } from "./db/runtime";
+import {
+	createSessionDbSync,
+	initCapacitorDbForVite,
+} from "./db/viteCapacitorSession";
 import "@root/global.css";
 
-if (import.meta.hot) {
-	import.meta.hot.accept();
+async function init() {
+	// Capacitor SQLite: web (IndexedDB) and native. Schema + persistence.
+	await initCapacitorDbForVite();
+	// Session DB (sync API): in-memory sql.js, bootstrapped and seeded.
+	const db = await createSessionDbSync();
+	setDatabaseResolver(() => db);
+
+	const rootEl = document.getElementById("root");
+	if (!rootEl) throw new Error("Missing #root");
+	createRoot(rootEl).render(
+		<StrictMode>
+			<App />
+		</StrictMode>,
+	);
 }
 
-const rootEl = document.getElementById("root");
-if (!rootEl) throw new Error("Missing #root");
-
-const existingRoot = (rootEl as any).__reactRoot;
-const reactRoot = existingRoot ?? createRoot(rootEl);
-(rootEl as any).__reactRoot = reactRoot;
-
-reactRoot.render(
-	<FatalErrorGate>
-		<App />
-	</FatalErrorGate>,
-);
+init().catch((err) => {
+	console.error("Failed to init app", err);
+	const pre = document.createElement("pre");
+	pre.style.cssText = "color:#ff8f8f;padding:24px";
+	pre.textContent = `Signal Lost\n\n${err?.message ?? String(err)}`;
+	document.body.appendChild(pre);
+});

@@ -1,10 +1,9 @@
 import path from "node:path";
 import react from "@vitejs/plugin-react";
-import glsl from "vite-plugin-glsl";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-	plugins: [react(), glsl()],
+	plugins: [react()],
 	assetsInclude: ["**/*.glb", "**/*.gltf", "**/*.hdr", "**/*.bin"],
 	resolve: {
 		alias: {
@@ -22,13 +21,7 @@ export default defineConfig({
 		environment: "jsdom",
 		globals: true,
 		include: ["**/*.vitest.{ts,tsx}"],
-		exclude: [
-			"**/node_modules/**",
-			"**/dist/**",
-			"tests/**",
-			"pending/**",
-			"**/.claude/worktrees/**",
-		],
+		exclude: ["**/node_modules/**", "**/dist/**", "tests/**"],
 		setupFiles: ["vitest/setup.ts"],
 		coverage: {
 			provider: "v8",

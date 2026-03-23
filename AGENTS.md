@@ -1,142 +1,92 @@
 # Syntheteria — Multi-Agent Orchestration
 
-> **Session start**: Read this file, then `docs/memory-bank/activeContext.md`.
-> **NEVER reference `pending/`** — it is the old game, quarantined permanently.
+> **Session start**: Read this file, then follow the protocol in `docs/memory-bank/AGENTS.md`.
 
----
+**Vite/Capacitor migration (Phases 1–8 done):** Primary build is **Vite** (`pnpm dev`, `pnpm build`). Entry: `src/main.tsx` → **Capacitor SQLite** (init + schema) → **session DB** (sql.js in-memory) → `AppVite.tsx` (R3F scene + DOM UI). **Capacitor** wraps the same build (`pnpm cap:sync`, `pnpm cap:ios`/`cap:android`). R3F-only; Filament and scene snapshot removed. Persistence: Capacitor SQLite (web IndexedDB, native SQLite); session: sql.js. **Expo/RN** deps remain for legacy Jest; new features target the Vite path. Plan: [docs/plans/EXPO_TO_CAPACITOR_MIGRATION.md](docs/plans/EXPO_TO_CAPACITOR_MIGRATION.md).
 
-## What This Is
-
-An **epoch-based 4X strategy game** on Earth. You BUILD the ecumenopolis as climate deteriorates toward an inevitable hypercane. CivRev2-style isometric presentation. Globe is landing page only.
-
-**Primary build:** `pnpm dev` (Vite). **Tests:** `pnpm test:vitest`. **Lint + tsc:** `pnpm verify`.
-
----
-
-## Package Structure (MANDATORY)
-
-Every directory under `src/` is a **self-contained package** following these rules:
-
-### Rules
-
-1. **Logic in `.ts`, presentation in `.tsx`, shaders in `.glsl`** — never mix
-2. **Every package has `index.ts`** — exports ONLY the public API
-3. **Consumers import from the package, NEVER from internal files**
-   - Good: `import { Building } from "../traits"`
-   - Bad: `import { Building } from "../traits/building"`
-4. **Tests colocated in `__tests__/`** inside their owning package
-5. **No cross-cutting deep imports** — packages communicate through their public APIs
-6. **Systems accept `world: World` param** — never use a world singleton
-7. **Config is data, not code** — all tunables in `src/config/`, never hardcoded
-
-### File Size Limits
-
-| Threshold | Action |
-|-----------|--------|
-| > 300 LOC | Consider splitting into submodules |
-| > 500 LOC | Must split — create subpackage with own `index.ts` |
-| > 1000 LOC | Absolute max — if you see this, stop and refactor |
-
-### Package Map
+## Repository Layout
 
 ```
-src/
-├── app/                # App shell — session lifecycle, debug bridge, HUD data
-├── traits/             # ALL Koota trait definitions
-├── systems/            # ALL Koota systems (one per file)
-├── ai/                 # Yuka GOAP: agents/, fsm/, goals/, navigation/, steering/
-├── board/              # Labyrinth generator, tile grid, adjacency
-├── buildings/          # Building definitions + cult structures
-├── factions/           # Faction definitions, init, relations
-├── robots/             # Archetypes, placement, specializations
-├── terrain/            # Floor types, elevation, GLSL shaders
-├── resources/          # Salvage type definitions
-├── narrative/          # Speech profiles
-├── config/             # 11 game data files (tunables, tech tree, recipes, etc.)
-├── audio/              # Tone.js SFX + ambience
-├── camera/             # Camera controllers
-├── db/                 # SQLite schema + GameRepo
-├── rendering/          # TRANSITIONAL — decompose per docs/COMPREHENSIVE_ENGINEERING_PLAN.md §8; then delete
-├── views/              # ALL rendering entrypoints — see docs/COMPREHENSIVE_ENGINEERING_PLAN.md
-│   ├── title/          # TARGET: R3F title + generating globe (migrate from legacy view/)
-│   └── board/          # TARGET: Phaser + enable3d match board (migrate current flat views/*.ts)
-├── ui/                 # React DOM: Globe composes views/title; HUD, landing/, game/
-├── input/              # Board interaction (click, drag, select)
-├── world/              # New-game config (+ future settlement snapshots per `GAME_DESIGN.md` / runbook Phase G)
-├── lib/                # Shared utilities
-├── types/              # Shared type declarations
-├── init-world.ts       # World initialization from board
-├── create-world.ts     # Koota world factory
-├── seed.ts             # Seed phrase generation
-└── main.tsx            # Entry point (thin — delegates to app/)
+syntheteria/
+├── CLAUDE.md              # Claude Code behavior contract (Claude-specific)
+├── AGENTS.md              # THIS FILE — multi-agent orchestration
+├── src/                   # Expo application source
+│   ├── ecs/               # Koota ECS traits, game loop
+│   ├── systems/           # Game systems (pure logic, no TSX)
+│   ├── ai/                # AI: GOAP governors, Yuka steering, agents
+│   ├── rendering/         # R3F renderer components (39 total)
+│   ├── ui/                # React Native UI panels + HUD
+│   ├── world/             # World generation, spatial model, session
+│   ├── city/              # City config, runtime, kit lab
+│   ├── bots/              # Bot definitions, progression
+│   ├── config/            # Runtime config loaders + JSON
+│   ├── db/                # Capacitor SQLite + sql.js session; Drizzle schema
+│   ├── audio/             # Tone.js spatial audio
+│   ├── input/             # Input manager + providers
+│   └── pathfinding/       # A* + NavMesh
+├── docs/                  # All documentation
+│   ├── AGENTS.md          # Documentation index (which doc to read)
+│   ├── memory-bank/       # Session context (Cline-style memory bank)
+│   ├── design/            # Game design docs (6 files)
+│   ├── technical/         # Architecture & implementation (5 files)
+│   ├── interface/         # UI & interaction (2 files)
+│   ├── plans/             # Execution roadmap (GAMEPLAN_1_0.md)
+│   └── archive/           # Completed/obsolete docs
+├── assets/                # UI images, models, textures
+├── config/                # Build config (metro, babel, tsconfig)
+└── tests/                 # Playwright CT (tests/components/), E2E (tests/e2e/)
 ```
-
----
-
-## Architecture Rules
-
-| Rule | Detail |
-|------|--------|
-| No JSON for game data | All config is TypeScript `const` objects in `src/config/` |
-| Systems accept `world` param | Never use world singleton — enables test isolation |
-| All tunables in config files | No magic numbers in systems or renderers |
-| `pending/` is permanent quarantine | Nothing gets resurrected from it |
-| SQLite is non-fatal | DB failures don't crash — ECS runs in memory |
-| ECS `.get()` returns undefined | Always null-guard: `if (!x) continue;` |
-| No `world.entity(id)` in Koota | Use `Map<id, Entity>` per-operation when needed |
-| Package index exports only | No deep imports across package boundaries |
-| Robots use procedural animation | Bob-and-weave Wall-E style in code, NOT Blender rigging |
-| No faction tint on models | Models render with original textures, faction shown via ground disc |
-
----
 
 ## Session Protocol
 
-Every agent session must:
-1. Read `docs/memory-bank/activeContext.md` — current focus and state
-2. Read `docs/memory-bank/progress.md` — what works and what doesn't
-3. Check this file — package structure rules above
-4. Run `pnpm test:vitest` — verify all tests pass before starting
-5. **Never** read or reference anything in `pending/`
+1. **Read `docs/memory-bank/AGENTS.md`** — mandatory session start/end protocol
+2. **Read `docs/memory-bank/activeContext.md`** — current focus and next steps
+3. **Read `docs/memory-bank/progress.md`** — what works, what's broken
+4. **Read `docs/AGENTS.md`** — find domain docs relevant to your task
+5. **Read relevant domain docs** — use `head -15` on frontmatter to decide
 
----
+## Core Directives
 
-## Koota Patterns (from official examples)
+### Architecture Rules
 
-Follow the patterns from [koota examples](https://github.com/pmndrs/koota/tree/main/examples):
+| Rule | Detail |
+|------|--------|
+| **Koota owns game state** | ECS traits + systems. TSX reads, never writes. |
+| **Systems own logic** | Pure functions in `src/systems/`. No logic in TSX. |
+| **Config over code** | All tuning in JSON config files. Never hardcode constants. |
+| **Crash on missing assets** | `throw new Error()` — NEVER fallback, NEVER return null. |
+| **One source of truth** | Each data domain has exactly ONE authoritative store. |
+| **Test before integrate** | Jest tests required before wiring into game loop. |
+| **Assets** | Canonical: **`public/assets/`**. Root `assets` is a symlink to `public/assets`. Vite serves at `/assets/...`. Legacy Expo: `resolveAssetUri()`. |
 
-- **Traits** — defined in `src/traits/`, one file per domain, all re-exported via `index.ts`
-- **Systems** — one system per file in `src/systems/`, pure functions accepting `(world: World)`
-- **Actions** — imperative world mutations (spawn, destroy, modify) in dedicated files
-- **Sim/View split** — `traits/` + `systems/` never import `views/`; rendering adapters live under **`src/views/`** only (`title/` = R3F, `board/` = Phaser). **`src/view/` must be removed** after migration — see [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](docs/COMPREHENSIVE_ENGINEERING_PLAN.md).
+### Hard Bans
 
----
+| Banned | Use Instead |
+|--------|-------------|
+| (Vite/Vitest now used for primary build; Jest retained for existing tests) | — |
+| Miniplex | Koota |
+| Raw Web Audio | Tone.js |
+| Raw CSS | NativeWind v4 |
+| Math.random() | gameplayRandom / scopedRNG |
+| `export default` | Named exports only |
+| npm / yarn | pnpm |
+| ESLint / Prettier | Biome |
 
-## Common Commands
+### Validation
 
 ```bash
-pnpm dev                 # Vite dev server (http://localhost:5173)
-pnpm build               # Production build
-pnpm test:vitest         # Run all Vitest suites
-pnpm tsc                 # TypeScript check
-pnpm lint                # Biome lint + format check
-pnpm verify              # lint + tsc + test (all gates)
+pnpm verify        # Full CI: lint + tsc + test + test:ct
+pnpm lint          # Biome check
+pnpm lint:fix      # Biome autofix
+pnpm tsc           # TypeScript check (tsc --noEmit)
+pnpm dev           # Vite dev server (primary)
+pnpm build         # Vite build
+pnpm test          # Jest (unit + component)
+pnpm test:ct       # Playwright component tests (headed; tests/components/)
+pnpm test:e2e      # Playwright E2E (headed; tests/e2e/; CI uses xvfb-run)
+pnpm test:vitest   # Vitest (*.vitest.ts)
 ```
 
----
-
-## Validation (before any commit)
-
-```
-pnpm verify — required gates (matches CI Quality job)
-  Biome lint: 0 errors
-  TypeScript: 0 errors
-  Vitest (node): all suites passing
-
-pnpm verify:with-ct — optional; browser CT is bitrotted (stale paths to old
-  src/rendering/*R3F). Repair is Phase C in docs/CLOUD_AGENT_RUNBOOK.md.
-  CI runs test:ct with continue-on-error: true.
-```
 Playwright runs **headed** (`headless: false`); in CI, `xvfb-run -a` provides a virtual display. Done checklist: [docs/plans/IS_THE_GAME_DONE.md](docs/plans/IS_THE_GAME_DONE.md).
 
 ## Agent Roles

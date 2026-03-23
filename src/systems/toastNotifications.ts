@@ -7,8 +7,6 @@
  * Filterable by category.
  *
  * Consumers subscribe via useSyncExternalStore pattern.
- *
- * Ported from pending/systems/toastNotifications.ts — zero external deps.
  */
 
 export type ToastCategory =
@@ -130,7 +128,7 @@ export function dismissToast(id: string) {
  * Dismiss all toasts.
  */
 export function dismissAllToasts() {
-	for (const [, timer] of timers) {
+	for (const [_, timer] of timers) {
 		clearTimeout(timer);
 	}
 	timers.clear();
@@ -169,8 +167,8 @@ export function getMutedCategories(): ToastCategory[] {
 /**
  * Reset — call on new game or tests.
  */
-export function _resetToasts() {
-	for (const [, timer] of timers) {
+export function _reset() {
+	for (const [_, timer] of timers) {
 		clearTimeout(timer);
 	}
 	timers.clear();

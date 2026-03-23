@@ -63,7 +63,6 @@ tests/e2e/reports/playtest-results.json
 
 # Visual test output (manual-review screenshots, generated per run)
 tests/visual/screenshots/*.png
-tests/e2e/screenshots/*.png
 
 # E2E local config (copy from config/e2e.example.json)
 config/e2e.json
@@ -76,7 +75,3 @@ config/e2e.json
 
 # Nested clone (do not commit)
 /syntheteria/
-
-# Brainstorming companion cache
-.superpowers/
-.claude/worktrees/

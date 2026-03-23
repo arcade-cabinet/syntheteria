@@ -1,98 +1,101 @@
 # Syntheteria — Claude Code Contract
 
-> **MANDATORY**: Before doing ANY work, read `AGENTS.md` (root) for package structure rules.
+> **MANDATORY**: Before doing ANY work, read `AGENTS.md` (root), then follow the session
+> protocol in `docs/memory-bank/AGENTS.md`. This ensures you have current project context.
 
 ## Session Start Checklist
 
-1. Read `AGENTS.md` — package structure, architecture rules, hard bans
-2. Read `docs/memory-bank/activeContext.md` — current focus, recent changes, next steps
-3. Read `docs/memory-bank/progress.md` — system status dashboard
-4. Confirm: "I have read the memory bank and understand current project state."
-
-## Package Structure Standards (ENFORCED)
-
-These are NOT suggestions. Every file must follow them.
-
-### Import Rules
-
-```typescript
-// CORRECT — import from package index
-import { Building, Powered } from "../traits";
-import { advanceTurn } from "../systems";
-import { generateBoard } from "../board";
-
-// WRONG — deep import into package internals
-import { Building } from "../traits/building";
-import { advanceTurn } from "../systems/turnSystem";
-import { generateBoard } from "../board/generator";
-```
-
-### File Organization
-
-| Concern | File type | Location |
-|---------|-----------|----------|
-| Game logic | `.ts` | `src/systems/`, domain packages |
-| Trait definitions | `.ts` | `src/traits/` |
-| React components | `.tsx` | `src/ui/`, `src/app/` |
-| Shaders | `.glsl` | `src/terrain/glsl/`, `src/rendering/glsl/` |
-| Config/data | `.ts` | `src/config/` |
-| Tests | `.vitest.ts` | `__tests__/` inside owning package |
-
-### Every Package Must Have
-
-1. `index.ts` — public API exports only
-2. `__tests__/` — colocated tests
-3. Clear single responsibility
-4. < 500 LOC per file (300 preferred)
+1. Read `AGENTS.md` — multi-agent orchestration, architecture rules, hard bans
+2. Read `docs/memory-bank/AGENTS.md` — session protocol
+3. Read `docs/plans/IS_THE_GAME_DONE.md` — is the game DONE? Path to done.
+4. Read `docs/memory-bank/activeContext.md` — current focus, recent changes, next steps
+5. Read `docs/memory-bank/progress.md` — system status dashboard
+6. Read `docs/AGENTS.md` — find domain docs relevant to your task
+7. Confirm: "I have read the memory bank and understand current project state."
 
 ## Claude-Specific Behavior
 
+### .claude/ Directory
+
+```
+.claude/
+├── settings.json          # PostToolUse hook for typecheck on Edit/Write
+├── agents/                # 6 specialized agent definitions
+├── commands/              # Slash commands
+└── hooks/                 # Pre-commit quality gates
+```
+
 ### Progress Communication
+
+Claude communicates progress through repository state:
 
 1. **Update `docs/memory-bank/activeContext.md`** after significant work
 2. **Update `docs/memory-bank/progress.md`** if system status changed
-3. Never leave stale context — if you changed something, update the docs
+3. **Update relevant domain doc** if design/architecture changed
+4. Never leave stale context — if you changed something, update the docs
 
 ### Testing Ownership
 
 If Claude changes a visible flow, it must:
-1. Update or add Vitest coverage for the touched system
-2. Tests live in `__tests__/` inside the package that owns the code
+1. Update or add component-level test coverage for the touched surface
+2. Add E2E coverage if the change affects a multi-step player flow
+3. Not leave stale tests that describe old UI
 
-Test commands:
-- `pnpm test:vitest` — all Vitest suites
-- `pnpm test:ct` — Playwright component tests
-- `pnpm test:e2e` — Playwright E2E
-- `pnpm verify` — lint + tsc + test (all gates)
+Test roots:
+- Unit/system tests: `src/**/__tests__/*.test.ts` (Jest)
+- UI component tests: `src/ui/__tests__/` (Jest/RNTL)
+- Playwright CT: `tests/components/*.spec.tsx` — `pnpm test:ct` (headed)
+- Playwright E2E: `tests/e2e/*.spec.ts` — `pnpm test:e2e` (headed; CI uses `xvfb-run -a`)
+- Vitest: `*.vitest.ts` — `pnpm test:vitest`
+- Full CI: `pnpm verify` (lint + tsc + test + test:ct)
+
+### Brand Assets In Repo
+
+Use these — don't invent replacements:
+- Title background: `assets/ui/background.png`
+- Title buttons: `assets/ui/buttons/{new_game,load_game,settings}.png`
+- Mark: `assets/ui/mark.png`
+
+### UI Source Map
+
+Key player-visible files:
+- Title: `src/ui/TitleScreen.tsx`, `NewGameModal.tsx`, `LoadingOverlay.tsx`
+- HUD: `src/ui/GameUI.tsx`, `panels/GameHUD.tsx`, `panels/TopBar.tsx`
+- Radial: `src/ui/RadialMenu.tsx`, `src/systems/radialMenu.ts`, `src/systems/radialProviders.ts`
+- City: `src/ui/CitySiteOverlay.tsx`, `src/city/runtime/CityKitLab.tsx`
+- Shared: `src/ui/components/HudButton.tsx`, `HudPanel.tsx`, `icons.tsx`
 
 ### What Claude Should Prefer
 
-- Package index imports over deep file imports
-- Pure TS logic over TSX for non-visual code
-- `src/config/` tunables over hardcoded values
-- Systems that accept `world: World` param
+- Real UI flows over mockups
+- Component-tested surfaces over screenshots alone
+- Config-driven assets over hardcoded imports
+- Hard crashes on missing assets over silent fallbacks
+- Emergent bot speech over scripted story blocks
 - One source of truth per data domain
-- Procedural animation (Wall-E bob-and-weave) over Blender rigging
-- CivRev2-style DOM labels over in-canvas text
-- Isometric perspective camera over sphere orbit
 
 ### What Claude Should Avoid
 
-- Deep imports across package boundaries
-- TSX files outside `src/ui/` and `src/app/`
-- Files over 500 LOC without splitting
-- Referencing anything in `pending/`
-- Using `world.entity(id)` — Koota has no such API
+- Generic sci-fi panel kits that ignore brand identity
+- Placeholder copy or stub affordances where real state exists
 - Silent fallbacks that hide bugs
-- Faction tint on robot models (models render with original textures)
+- Changing visual direction without updating docs
+- Duplicating data stores (the floor renderer dual-store bug is the canonical example)
+- Adding `?? null`, `|| fallback`, or empty `catch` blocks in asset loading
 
-## Documentation
+## Documentation Pointers
 
-| Domain | Location |
-|--------|----------|
-| Package structure, architecture rules | `AGENTS.md` |
-| Game design, lore, factions, economy | `docs/GAME_DESIGN.md` |
-| Tech stack, packages, tests | `docs/ARCHITECTURE.md` |
-| AI systems | `docs/AI_DESIGN.md` |
-| Current focus and session state | `docs/memory-bank/activeContext.md` |
-| System status dashboard | `docs/memory-bank/progress.md` |
+All game design, architecture, and interface docs are in `docs/` organized by domain.
+See `docs/AGENTS.md` for the complete index with summaries.
+
+| Domain | Location | What's There |
+|--------|----------|-------------|
+| Memory bank | `docs/memory-bank/` | Session context, status, patterns |
+| **Done checklist** | `docs/plans/IS_THE_GAME_DONE.md` | Is the game DONE? Path to done, verify, E2E/CT |
+| Prioritization | `docs/plans/PRIORITIZATION.md` | P0/P1/P2/P3, what to do next |
+| Game design | `docs/design/` | Vision, lore, factions, economy, bots |
+| Technical | `docs/technical/` | Architecture, world, AI, assets, rendering |
+| Interface | `docs/interface/` | UI design, input model |
+| Execution | `docs/plans/` | GAMEPLAN_1_0, PR_CHECKLIST, TASK_LIST, PR_DESCRIPTION |
+| Test coverage | `docs/plans/COMPREHENSIVE_TEST_COVERAGE.md` | Scenario matrix, done-checklist verification |
+| Archive | `docs/archive/` | Old plans (reference only) |

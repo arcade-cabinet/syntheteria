@@ -5,14 +5,12 @@
 		"ignoreUnknown": true,
 		"includes": [
 			"**",
-			"!pending/**",
 			"!playwright-report/**",
 			"!test-results/**",
 			"!coverage/**",
 			"!tests/e2e/**",
 			"!tests/components/**",
 			"!tests/visual/**",
-			"!poc*.html",
 			"!assets/coi-serviceworker.js",
 			"!public/assets/coi-serviceworker.js",
 			"!.claude/worktrees/**"
@@ -241,16 +239,6 @@
 			],
 			"linter": {
 				"rules": { "style": { "noCommonJs": "off" } }
-			}
-		},
-		{
-			"includes": ["src/testing/**/*.js"],
-			"javascript": { "globals": ["jest"] },
-			"linter": {
-				"rules": {
-					"correctness": { "noUndeclaredVariables": "off" },
-					"style": { "noCommonJs": "off" }
-				}
 			}
 		}
 	],

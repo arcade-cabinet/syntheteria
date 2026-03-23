@@ -15,8 +15,6 @@
  * - sparks: generic spark burst at a position
  * - smoke: smoke puff (fabrication, destruction)
  * - dust: movement/construction dust
- *
- * Ported from pending/rendering/particles/effectEvents.ts — zero external deps.
  */
 
 export type EffectType =

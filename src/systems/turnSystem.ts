@@ -1,158 +1,417 @@
-import type { World } from "koota";
-import { runYukaAiTurns } from "../ai/yukaAiTurnSystem";
-import type { GeneratedBoard } from "../board/types";
-import { Board, Faction, UnitFaction, UnitStats } from "../traits";
-import { setCurrentTurn } from "../ui/game/turnEvents";
-import { resolveAllMoves } from "./aiTurnSystem";
-import { resolveAttacks } from "./attackSystem";
-import { recordTurnEnd } from "./campaignStats";
-import {
-	checkCultistSpawn,
-	runCultPatrols,
-	spreadCorruption,
-} from "./cultistSystem";
-import { tickCultMutations } from "./cultMutation";
-import { runDiplomacy, shareAlliedFog } from "./diplomacySystem";
-import { runFabrication } from "./fabricationSystem";
-import { floorMiningSystem } from "./floorMiningSystem";
-import { runHackProgress } from "./hackingSystem";
-import { harvestSystem } from "./harvestSystem";
-import { clearHighlights } from "./highlightSystem";
-import { checkAllFragmentProximity } from "./memoryFragments";
-import { runPowerGrid } from "./powerSystem";
-import { runRepairs } from "./repairSystem";
-import { runResearch } from "./researchSystem";
-import { finalizeTurnDeltas } from "./resourceDeltaSystem";
-import { runResourceRenewal } from "./resourceRenewalSystem";
-import { runSignalNetwork } from "./signalSystem";
-import { runSpecializationPassives } from "./specializationSystem";
-import { runSynthesis } from "./synthesisSystem";
-import { finalizeTurn } from "./turnEventLog";
-import { runTurrets } from "./turretSystem";
-import { checkVictoryConditions, type GameOutcome } from "./victorySystem";
-import { tickWormholeProject } from "./wormholeProject";
+/**
+ * @module turnSystem
+ *
+ * Civilization-style turn-based AP/MP system. Gates all gameplay actions (harvest,
+ * build, move, attack) behind per-unit Action Points and Movement Points that
+ * refresh each turn. Sequences player -> AI factions -> environment phases.
+ *
+ * @exports TurnState / UnitTurnState / TurnPhase - Core state types
+ * @exports getTurnState / subscribeTurnState - Read and observe turn state
+ * @exports initTurnStateEntity / getTurnStateEntity - Koota entity for reactive UI
+ * @exports initializeTurnForUnits / addUnitsToTurnState - Set up unit AP/MP pools
+ * @exports spendActionPoint / spendMovementPoints - Consume AP/MP for actions
+ * @exports hasActionPoints / hasMovementPoints / hasAnyPoints - Point availability checks
+ * @exports getUnitTurnState - Per-unit state for rendering (glow rings)
+ * @exports endPlayerTurn - Trigger AI faction turns, environment phase, then new turn
+ * @exports registerAIFactionTurnHandler / registerEnvironmentPhaseHandler - Phase hooks
+ * @exports resetTurnSystem / rehydrateTurnState - Reset and save/load support
+ *
+ * @dependencies narrative (queueThought), resourceDeltas (finalizeTurnDeltas),
+ *   turnEventLog (finalizeTurn, logTurnEvent)
+ * @consumers combat, movement, clickToMove, moveCommand, hacking, harvestSystem,
+ *   unitSelection, victoryConditions, tutorialSystem, tooltipSystem, factionSpawning,
+ *   turnPhaseHandlers, turnPhaseEvents, autosave, keyboardShortcuts, radialProviders,
+ *   playtestBridge, DiplomacyModal, GameHUD, VictoryOverlay, GlowRingRenderer,
+ *   ActionRangeRenderer, MovementOverlayRenderer, UnitRosterPanel, UnitInput,
+ *   PlayerGovernor, factionGovernors, audioHooks, saveAllState, initialization,
+ *   persistenceSystem, cultistIncursion, turretAutoAttack, UnitRenderer
+ */
 
-/** Last outcome computed by advanceTurn. */
-let lastOutcome: GameOutcome = { result: "playing" };
+import type { Entity } from "../ecs/traits";
+import { TurnStateKoota } from "../ecs/traits";
+import { world } from "../ecs/world";
+import { queueThought } from "./narrative";
+import { finalizeTurnDeltas } from "./resourceDeltas";
+import { finalizeTurn, logTurnEvent } from "./turnEventLog";
 
-export function advanceTurn(
-	world: World,
-	board: GeneratedBoard,
-	opts?: { observerMode?: boolean },
-): void {
-	// Phase 1: Resolve pending player attacks
-	resolveAttacks(world);
+// ─── Types ───────────────────────────────────────────────────────────────────
 
-	// Phase 2: AI faction turns (Yuka GOAP — move + queue attacks)
-	runYukaAiTurns(world, board);
+export interface UnitTurnState {
+	entityId: string;
+	/** Action points remaining this turn (harvest, build, repair, attack, hack) */
+	actionPoints: number;
+	/** Maximum action points per turn */
+	maxActionPoints: number;
+	/** Movement points remaining this turn */
+	movementPoints: number;
+	/** Maximum movement points per turn */
+	maxMovementPoints: number;
+	/** Whether this unit has been activated (selected) this turn */
+	activated: boolean;
+}
 
-	// Phase 2.5: Resolve AI attacks BEFORE moves — attacks were evaluated
-	// against pre-move positions, so resolving them first prevents
-	// "target out of range" spam from position drift.
-	resolveAttacks(world);
+export type TurnPhase = "player" | "ai_faction" | "environment";
 
-	// Phase 2.7: Complete AI moves (render loop handles visual lerp)
-	resolveAllMoves(world);
+export interface TurnState {
+	/** Current turn number (starts at 1) */
+	turnNumber: number;
+	/** Current phase within the turn */
+	phase: TurnPhase;
+	/** Which faction is currently acting (during ai_faction phase) */
+	activeFaction: string;
+	/** Per-unit turn state */
+	unitStates: Map<string, UnitTurnState>;
+	/** Whether any player unit has remaining actions */
+	playerHasActions: boolean;
+}
 
-	// Phase 4: Environment phase (cultist spawning)
-	runEnvironmentPhase(world, board);
+// ─── Constants ───────────────────────────────────────────────────────────────
 
-	// Phase 5: New turn — refresh player AP, clear highlights, increment
-	clearHighlights(world);
-	refreshPlayerAp(world);
+/** Base action points per turn (before Mark modifiers) */
+const BASE_ACTION_POINTS = 2;
+/** Base movement points per turn (before Mark modifiers) */
+const BASE_MOVEMENT_POINTS = 3;
 
-	// Phase 5.5: Signal penalty — reduce AP for units outside relay coverage.
-	// Must run AFTER refreshPlayerAp so the -1 AP is not overwritten.
-	runSignalNetwork(world);
+// ─── State ───────────────────────────────────────────────────────────────────
 
-	incrementTurn(world);
+let turnState: TurnState = {
+	turnNumber: 1,
+	phase: "player",
+	activeFaction: "player",
+	unitStates: new Map(),
+	playerHasActions: true,
+};
 
-	// Phase 6: Check victory/defeat conditions
-	lastOutcome = checkVictoryConditions(world, {
-		observerMode: opts?.observerMode,
+const listeners = new Set<() => void>();
+
+// ─── Koota entity (reactive mirror for useTrait) ──────────────────────────────
+
+let _turnStateEntity: Entity | null = null;
+
+/**
+ * Spawn (or reset) the TurnStateKoota entity.
+ * Call from initializeNewGame() so UI can reactively read turn state via useTrait.
+ */
+export function initTurnStateEntity(): void {
+	if (_turnStateEntity && _turnStateEntity.isAlive())
+		_turnStateEntity.destroy();
+	_turnStateEntity = world.spawn(TurnStateKoota);
+	_turnStateEntity.set(TurnStateKoota, {
+		turnNumber: turnState.turnNumber,
+		phase: turnState.phase,
+		activeFaction: turnState.activeFaction,
 	});
 }
 
-export function getGameOutcome(): GameOutcome {
-	return lastOutcome;
+/**
+ * Return the live TurnStateKoota entity.
+ * Throws if initTurnStateEntity() has not been called.
+ */
+export function getTurnStateEntity(): Entity {
+	if (!_turnStateEntity)
+		throw new Error("TurnStateKoota entity not initialized");
+	return _turnStateEntity;
 }
 
-function refreshPlayerAp(world: World): void {
-	for (const e of world.query(UnitStats, UnitFaction)) {
-		const faction = e.get(UnitFaction);
-		const stats = e.get(UnitStats);
-		if (!faction || !stats) continue;
-		if (faction.factionId === "player") {
-			e.set(UnitStats, {
-				...stats,
-				ap: stats.maxAp,
-				mp: stats.maxMp,
-				movesUsed: 0,
-				staged: false,
-			});
+/** Sync the entity's reactive fields from the current module-level turn state. */
+function syncEntityFromTurnState(): void {
+	if (!_turnStateEntity || !_turnStateEntity.isAlive()) return;
+	_turnStateEntity.set(TurnStateKoota, {
+		turnNumber: turnState.turnNumber,
+		phase: turnState.phase,
+		activeFaction: turnState.activeFaction,
+	});
+}
+
+function notify() {
+	syncEntityFromTurnState();
+	for (const listener of listeners) {
+		listener();
+	}
+}
+
+// ─── Public API ──────────────────────────────────────────────────────────────
+
+export function getTurnState(): TurnState {
+	return turnState;
+}
+
+export function subscribeTurnState(listener: () => void): () => void {
+	listeners.add(listener);
+	return () => listeners.delete(listener);
+}
+
+/**
+ * Initialize turn state for all player units at game start or turn begin.
+ */
+export function initializeTurnForUnits(
+	unitIds: string[],
+	markLevels?: Map<string, number>,
+) {
+	const unitStates = new Map<string, UnitTurnState>();
+
+	for (const id of unitIds) {
+		const markLevel = markLevels?.get(id) ?? 1;
+		// Mark progression gives logarithmic bonus to AP/MP
+		const markBonus = Math.floor(Math.log2(markLevel));
+
+		unitStates.set(id, {
+			entityId: id,
+			actionPoints: BASE_ACTION_POINTS + markBonus,
+			maxActionPoints: BASE_ACTION_POINTS + markBonus,
+			movementPoints: BASE_MOVEMENT_POINTS + markBonus,
+			maxMovementPoints: BASE_MOVEMENT_POINTS + markBonus,
+			activated: false,
+		});
+	}
+
+	turnState = {
+		...turnState,
+		unitStates,
+		playerHasActions: unitIds.length > 0,
+	};
+	notify();
+}
+
+/**
+ * Add units to the existing turn state without replacing current entries.
+ * Used to register rival faction units alongside player units.
+ */
+export function addUnitsToTurnState(
+	unitIds: string[],
+	markLevels?: Map<string, number>,
+) {
+	for (const id of unitIds) {
+		const markLevel = markLevels?.get(id) ?? 1;
+		const markBonus = Math.floor(Math.log2(markLevel));
+
+		turnState.unitStates.set(id, {
+			entityId: id,
+			actionPoints: BASE_ACTION_POINTS + markBonus,
+			maxActionPoints: BASE_ACTION_POINTS + markBonus,
+			movementPoints: BASE_MOVEMENT_POINTS + markBonus,
+			maxMovementPoints: BASE_MOVEMENT_POINTS + markBonus,
+			activated: false,
+		});
+	}
+	notify();
+}
+
+/**
+ * Spend an action point for a unit. Returns false if insufficient AP.
+ */
+export function spendActionPoint(entityId: string, cost = 1): boolean {
+	const unit = turnState.unitStates.get(entityId);
+	if (!unit || unit.actionPoints < cost) return false;
+
+	unit.actionPoints -= cost;
+	unit.activated = true;
+	updatePlayerHasActions();
+	notify();
+	return true;
+}
+
+/**
+ * Spend movement points for a unit. Returns false if insufficient MP.
+ */
+export function spendMovementPoints(entityId: string, cost = 1): boolean {
+	const unit = turnState.unitStates.get(entityId);
+	if (!unit || unit.movementPoints < cost) return false;
+
+	unit.movementPoints -= cost;
+	unit.activated = true;
+	updatePlayerHasActions();
+	notify();
+	return true;
+}
+
+/**
+ * Check if a unit has remaining action points.
+ */
+export function hasActionPoints(entityId: string): boolean {
+	const unit = turnState.unitStates.get(entityId);
+	return !!unit && unit.actionPoints > 0;
+}
+
+/**
+ * Check if a unit has remaining movement points.
+ */
+export function hasMovementPoints(entityId: string): boolean {
+	const unit = turnState.unitStates.get(entityId);
+	return !!unit && unit.movementPoints > 0;
+}
+
+/**
+ * Check if a unit has any remaining points (action OR movement).
+ */
+export function hasAnyPoints(entityId: string): boolean {
+	return hasActionPoints(entityId) || hasMovementPoints(entityId);
+}
+
+/**
+ * Get the unit turn state for rendering (glow rings, etc.)
+ */
+export function getUnitTurnState(entityId: string): UnitTurnState | undefined {
+	return turnState.unitStates.get(entityId);
+}
+
+// ─── AI Faction Turn Hooks ──────────────────────────────────────────────────
+
+/** Known AI factions — each takes a turn sequentially after the player. */
+const AI_FACTIONS = [
+	"reclaimers",
+	"volt_collective",
+	"signal_choir",
+	"iron_creed",
+];
+
+export type AIFactionTurnHandler = (
+	factionId: string,
+	turnNumber: number,
+) => void;
+export type EnvironmentPhaseHandler = (turnNumber: number) => void;
+
+const aiFactionTurnHandlers: AIFactionTurnHandler[] = [];
+const environmentPhaseHandlers: EnvironmentPhaseHandler[] = [];
+
+/**
+ * Register a handler that runs for each AI faction during their turn.
+ * Handlers are called sequentially per faction.
+ */
+export function registerAIFactionTurnHandler(handler: AIFactionTurnHandler) {
+	aiFactionTurnHandlers.push(handler);
+}
+
+/**
+ * Register a handler that runs during the environment phase.
+ */
+export function registerEnvironmentPhaseHandler(
+	handler: EnvironmentPhaseHandler,
+) {
+	environmentPhaseHandlers.push(handler);
+}
+
+/**
+ * End the player's turn. Triggers AI faction turns, then environment phase, then new turn.
+ */
+export function endPlayerTurn() {
+	if (turnState.phase !== "player") return;
+
+	queueThought("turn_awareness");
+
+	// AI faction phase — each faction takes a sequential turn
+	turnState = {
+		...turnState,
+		phase: "ai_faction",
+	};
+
+	for (const factionId of AI_FACTIONS) {
+		turnState = {
+			...turnState,
+			activeFaction: factionId,
+		};
+		notify();
+
+		// Run all registered AI turn handlers for this faction
+		for (const handler of aiFactionTurnHandlers) {
+			handler(factionId, turnState.turnNumber);
 		}
 	}
-}
 
-function incrementTurn(world: World): void {
-	for (const e of world.query(Board)) {
-		const b = e.get(Board);
-		if (!b) continue;
-		e.set(Board, { ...b, turn: b.turn + 1 });
+	// Environment phase (storm, weather, cultist pressure)
+	turnState = {
+		...turnState,
+		phase: "environment",
+		activeFaction: "environment",
+	};
+	notify();
+
+	// Run all registered environment phase handlers
+	for (const handler of environmentPhaseHandlers) {
+		handler(turnState.turnNumber);
 	}
-}
 
-function runEnvironmentPhase(world: World, board: GeneratedBoard): void {
-	const turn = getCurrentTurn(world);
-	setCurrentTurn(turn);
-	harvestSystem(world);
-	floorMiningSystem(world);
-	runPowerGrid(world);
-	runResourceRenewal(world);
-	// Signal network moved to phase 5.5 (after AP refresh) so AP penalty sticks
-	runRepairs(world);
-	runSynthesis(world);
-	runResearch(world);
-	runFabrication(world);
-	runTurrets(world);
-	runHackProgress(world);
-	checkCultistSpawn(world, board, turn);
-	runCultPatrols(world, board);
-	spreadCorruption(world);
-	tickCultMutations(world);
-	runSpecializationPassives(world);
-	tickWormholeProject(world);
-
-	// Diplomacy: drift hostile→neutral, process backstabs
-	const factionIds = getFactionIds(world);
-	runDiplomacy(world, turn, factionIds);
-
-	// Share fog of war from allied faction units
-	shareAlliedFog(world, "player");
-
-	// Check player unit proximity to undiscovered memory fragments
-	checkAllFragmentProximity(world);
-
-	// Track campaign statistics and finalize turn logs
-	recordTurnEnd();
-	finalizeTurn();
+	// Snapshot resource deltas before resetting for new turn
 	finalizeTurnDeltas();
+
+	// Log turn_end and finalize the turn's event log
+	logTurnEvent("turn_end", null, "system", {
+		turnNumber: turnState.turnNumber,
+		totalUnits: turnState.unitStates.size,
+	});
+	finalizeTurn();
+
+	// New turn
+	startNewTurn();
 }
 
-export function getCurrentTurn(world: World): number {
-	for (const e of world.query(Board)) {
-		const b = e.get(Board);
-		if (b) return b.turn;
+/**
+ * Start a new turn — refresh all unit AP/MP.
+ */
+function startNewTurn() {
+	const nextTurn = turnState.turnNumber + 1;
+
+	// Refresh all unit states
+	for (const [_id, unit] of turnState.unitStates) {
+		unit.actionPoints = unit.maxActionPoints;
+		unit.movementPoints = unit.maxMovementPoints;
+		unit.activated = false;
 	}
-	return 1;
+
+	turnState = {
+		...turnState,
+		turnNumber: nextTurn,
+		phase: "player",
+		activeFaction: "player",
+		playerHasActions: turnState.unitStates.size > 0,
+	};
+	notify();
 }
 
-/** Collect all unique faction IDs from Faction entities in the world. */
-function getFactionIds(world: World): string[] {
-	const ids: string[] = [];
-	for (const e of world.query(Faction)) {
-		const f = e.get(Faction);
-		if (f?.id) ids.push(f.id);
+function updatePlayerHasActions() {
+	let hasActions = false;
+	for (const [_, unit] of turnState.unitStates) {
+		if (unit.actionPoints > 0 || unit.movementPoints > 0) {
+			hasActions = true;
+			break;
+		}
 	}
-	return ids;
+	turnState.playerHasActions = hasActions;
+}
+
+/**
+ * Reset turn state — call on new game.
+ */
+export function resetTurnSystem() {
+	turnState = {
+		turnNumber: 1,
+		phase: "player",
+		activeFaction: "player",
+		unitStates: new Map(),
+		playerHasActions: true,
+	};
+}
+
+/**
+ * Rehydrate turn state from a save.
+ */
+export function rehydrateTurnState(saved: {
+	turnNumber: number;
+	phase: TurnPhase;
+	activeFaction: string;
+	unitStates: UnitTurnState[];
+}) {
+	const unitStates = new Map<string, UnitTurnState>();
+	for (const u of saved.unitStates) {
+		unitStates.set(u.entityId, { ...u });
+	}
+	turnState = {
+		turnNumber: saved.turnNumber,
+		phase: saved.phase,
+		activeFaction: saved.activeFaction,
+		unitStates,
+		playerHasActions: false,
+	};
+	updatePlayerHasActions();
+	notify();
 }

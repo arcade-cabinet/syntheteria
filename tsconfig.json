@@ -1,33 +1,21 @@
 {
+	"extends": "expo/tsconfig.base",
 	"compilerOptions": {
-		"target": "ES2020",
-		"module": "ESNext",
-		"moduleResolution": "bundler",
-		"jsx": "react-jsx",
-		"strict": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true,
-		"resolveJsonModule": true,
-		"isolatedModules": true,
-		"noEmit": true,
-		"lib": ["ES2020", "DOM", "DOM.Iterable"],
-		"paths": {
-			"@/*": ["./src/*"],
-			"@root/*": ["./*"]
-		}
+		"strict": true
 	},
-	"include": [
-		"src/**/*.ts",
-		"src/**/*.tsx",
-		"src/**/*.d.ts",
-		"vitest/setup.ts"
-	],
 	"exclude": [
-		"pending",
 		"tests/e2e",
 		"tests/components",
 		"tests/visual",
-		"node_modules"
+		"playwright.e2e.config.ts"
+	],
+	"include": [
+		"**/*.ts",
+		"**/*.tsx",
+		"**/*.d.ts",
+		"app-env.d.ts",
+		"nativewind-env.d.ts",
+		".expo/types/**/*.ts",
+		"expo-env.d.ts"
 	]
 }

@@ -37,7 +37,7 @@ async function clearPersistence(page: import("@playwright/test").Page) {
 test.describe("title screen", () => {
 	test.beforeEach(async ({ page }) => {
 		await clearPersistence(page);
-		await expect(page.getByTestId("title-logo")).toBeVisible();
+		await expect(page.getByText("SYNTHETERIA")).toBeVisible();
 	});
 
 	test("shows new game and settings before a save exists", async ({ page }) => {

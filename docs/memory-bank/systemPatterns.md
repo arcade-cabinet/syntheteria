@@ -1,234 +1,187 @@
-# System Patterns: Syntheteria (Ground-Up Rewrite)
-
-> ECS patterns and conventions for the `ralph/syntheteria-1-0` branch.
-> Full architecture details: `docs/ARCHITECTURE.md`
+# System Patterns: Syntheteria
 
 ## Architecture Overview
 
-```
-gameDefaults.ts (tunables)  -->  systems (pure logic)  -->  Koota ECS (state)  -->  R3F renderers
-                                        |                          |
-                                  board/grid.ts             sql.js SQLite
-                                  (GridApi)                (persistence)
-```
-
-- **Koota ECS** owns all game state.
-- **Systems** are pure functions — accept `world: WorldType` param, never import world singleton.
-- **R3F renderers** query ECS, read traits, produce geometry. No game logic in TSX.
-- **`gameDefaults.ts`** owns all tunables — never hardcode in systems or renderers.
-- **One source of truth per domain** — no dual data stores.
-- **No JSON for game data** — all definitions are TypeScript `const` objects.
-
-## Koota ECS Patterns
-
-### Trait Definition
-
-```ts
-export const UnitStats = trait({
-  hp: 10, maxHp: 10,
-  ap: 3,  maxAp: 3,
-  attack: 2, defense: 1,
-  scanRange: 4,
-});
-```
-
-### System Signature (always pass world, never import singleton)
-
-```ts
-export function highlightSystem(world: WorldType, selectedId: number | null): void {
-  for (const entity of world.query(Tile, TileHighlight)) {
-    const tile = entity.get(Tile);
-    const highlight = entity.get(TileHighlight);
-    if (!tile || !highlight) continue; // always null-guard .get() results
-    // ...
-  }
-}
-```
-
-### Entity Spawn
-
-```ts
-const entity = world.spawn(
-  UnitPos({ tileX: 5, tileZ: 5 }),
-  UnitStats({ hp: 10, maxHp: 10, ap: 3, maxAp: 3, attack: 2, defense: 1, scanRange: 4 }),
-  UnitFaction({ factionId: "player" }),
-);
-```
-
-### Entity ID Lookups
-
-Koota has no `world.entity(id)` — build a `Map<number, Entity>` when needed:
-
-```ts
-const idMap = new Map<number, Entity>();
-for (const entity of world.query(UnitFaction)) {
-  idMap.set(entity.id(), entity);
-}
-const target = idMap.get(selectedId);
-```
-
-### Test Cleanup
-
-16 worlds max per process. Always destroy in `afterEach`:
-
-```ts
-afterEach(() => { world.destroy(); });
-```
-
-## Board Patterns
-
-### GridApi (only public interface into board state)
-
-```ts
-const grid = createGridApi(board);
-const tile = grid.getTile(x, z);                    // TileData | null
-const pos = grid.tileWorldPos(x, z);                 // {wx, wy, wz}
-const reachable = grid.reachable(fromX, fromZ, ap); // Set<"x,z">
-const path = grid.path(fromX, fromZ, toX, toZ);     // TileData[]
-```
-
-Never access `board.tiles[z][x]` directly outside `src/board/`.
-
-### Board Generation
-
-```ts
-const board = generateBoard({ width: 32, height: 32, seed: "abc", difficulty: "normal" });
-// Deterministic: same seed always produces same board
-```
-
-## Resource Pattern
-
-### Salvage as Primary Source
-
-Salvage props (SALVAGE_DEFS) are the primary resource source. Each has:
-- `harvestDuration` — ticks to harvest
-- `yields` — material-specific yield ranges
-- `models` — GLB model IDs for rendering
-
-Floor mining (FLOOR_DEFS) is the backstop for resource deserts.
-
-### Faction Resource Pool
-
-```ts
-// Add resources after harvest completes
-addResources(world, factionId, "ferrous_scrap", 3);
-
-// Check if faction can afford a building
-canAfford(world, factionId, { ferrous_scrap: 6, alloy_stock: 3 });
-
-// Spend resources
-spendResources(world, factionId, "ferrous_scrap", 6);
-```
-
-## Building Pattern
-
-### Storm Power Model
-
-Buildings define `powerDelta`:
-- Positive = generates/transmits power (storm_transmitter: +5)
-- Negative = draws power (motor_pool: -3)
-- Zero with storageCapacity = stores power (power_box: stores 20)
-
-### Building Traits
-
-A building entity carries multiple traits based on its type:
-- `Building` — always present (type, position, faction, HP)
-- `PowerGrid` — if it participates in the power network
-- `SignalNode` — if it extends signal range (relay towers)
-- `TurretStats` — if it has combat capability (defense turrets)
-- `BotFabricator` — if it produces bots (motor pools)
-- `StorageCapacity` — if it stores resources
-
-## Render Pattern
-
-R3F components query ECS and render geometry. Example pattern:
-
-```tsx
-export function HighlightRenderer({ world }: { world: WorldType }) {
-  return (
-    <>
-      {world.query(Tile, TileHighlight)
-        .filter(e => (e.get(TileHighlight)?.emissive ?? 0) > 0)
-        .map(e => {
-          const tile = e.get(Tile)!;
-          const h = e.get(TileHighlight)!;
-          return (
-            <mesh key={e.id()} position={[tile.x * TILE_SIZE_M, 0.01, tile.z * TILE_SIZE_M]}>
-              <planeGeometry />
-              <meshStandardMaterial emissive={h.color} emissiveIntensity={h.emissive} />
-            </mesh>
-          );
-        })}
-    </>
-  );
-}
-```
-
-## Command UI Pattern (target) — Civ VI–style
-
-**Radial menu is deprecated** as the product direction. **Target:** contextual **action strip /
-inspector** (React DOM) driven by the same selection context the game already uses; **specialized
-units and buildings** show **filtered** actions (fabricator vs recon vs combat), with heavy flows
-(build queue, tech, diplomacy) in **panels/modals**. Use **Civilization VI (especially mobile)** as
-the reference for **dense but legible** layouts, not CivRev2’s minimal radial.
-
-### Legacy: dual-ring radial (to retire)
-
-`radialMenu.ts` + `registerRadialProvider` + `RadialMenu.tsx` remain until replaced. **Do not** add
-new radial-only UX; wire new surfaces to existing **execute** paths (ECS commands).
-
-## SQLite Pattern (non-fatal)
-
-DB failures never crash the game — ECS runs in memory:
-
-```ts
-if (repo) {
-  try {
-    await repo.saveTiles(gameId, flatTiles);
-  } catch (err) {
-    console.warn("[main] DB write failed (non-fatal):", err);
-  }
-}
-```
-
-## Building System Pattern (Wave 2)
-
-All building systems follow the same pattern:
-1. Query powered buildings of a specific type: `world.query(Building, Powered)`
-2. Filter by `buildingType`
-3. Perform the building's function (repair, attack, fabricate, etc.)
-4. Wire into `runEnvironmentPhase()` in turnSystem.ts
-
-### Environment Phase Order (turnSystem.ts)
+Syntheteria follows a strict separation of concerns:
 
 ```
-runPowerGrid(world)      — charge/drain power grid, set Powered trait
-runSignalNetwork(world)  — compute relay coverage, penalize uncovered units
-runRepairs(world)        — heal friendly units near powered maintenance bays
-runSynthesis(world)      — tick fusion recipes, deposit outputs
-runFabrication(world)    — tick bot build queues, spawn on completion
-runTurrets(world)        — powered turrets fire on nearest hostile
-checkCultistSpawn(...)   — escalation + wave spawning
+JSON Config  -->  Systems (logic)  -->  Koota ECS (state)  -->  TSX (rendering)
+                      |                      |
+                      v                      v
+                  AI Runtime            SQLite (persistence)
 ```
 
-### Fabrication Pattern (queue-based systems)
+- **Koota ECS** owns canonical gameplay state
+- **Systems** own all logic — 21 systems tick per frame in `gameState.ts`
+- **TSX** reads from contracts and renders — TSX must NOT invent gameplay logic
+- **JSON config** drives all tuning — 23+ config files in `src/config/`
+- **Persistence:** Capacitor SQLite (schema, web IndexedDB / native SQLite) + in-memory sql.js session (sync API). Runtime state is Koota ECS.
+- **No dual data stores** — ONE source of truth per data domain
 
-Systems like fabrication and synthesis use a separate **job entity** (e.g. `FabricationJob` trait)
-to track in-progress work. The pattern:
-1. `queueX()` — validate preconditions, deduct resources, spawn job entity
-2. `runX()` — tick jobs each turn, complete on countdown, clean up orphans
+## ECS Pattern (Koota)
 
-## Rule Summary
+Koota is the ECS runtime. Key patterns:
 
-| Rule | Detail |
-|------|--------|
-| Systems accept `world` param | Never `import { world }` singleton |
-| `.get()` always null-guard | `const x = e.get(Trait); if (!x) continue;` |
-| No `world.entity(id)` | Rebuild `Map<id, Entity>` per-operation |
-| 16 worlds max | `world.destroy()` in `afterEach` |
-| No JSON for game data | TypeScript `const` objects only |
-| All tunables in `gameDefaults.ts` | No magic numbers in systems/renderers |
-| GridApi only | Never access `board.tiles[][]` outside `src/board/` |
-| SQLite is non-fatal | DB failures don't crash, ECS runs in memory |
-| Salvage = primary resource | Floor mining is backstop only |
-| Storm = power grid | transmitters tap storm, power boxes store charge |
+- Traits define component schemas (`src/ecs/traits.ts`)
+- Queries filter entities by trait composition (`world.query(Trait, ...)`)
+- Live queries in `world.ts` exposed as named exports (`units`, `buildings`, `territoryCells`, etc.)
+- React renderers use `useQuery(Trait)` or `useTrait(entity, Trait)` for reactive updates
+- `_reset()` functions on remaining module-level Maps for test cleanup
+- Tests mock Koota queries as plain arrays via `jest.mock`
+
+**Migration status (W0–W5 complete):**
+- All rendering traits on entities: `FloorCell`, `TerritoryCell`, `SpeechBubble`, `HarvestOp`, `POI`, `AIFaction`, `UnitTurnState`, `Experience`, `AnimationState`, `BotLOD`
+- All reactive UI hooks use `useTrait`/`useQuery`: `useResourcePool`, `useTurnState`, territory/floor renderers
+- Persistence traits: `FactionResourcePool`, `FactionResearch`, `FactionStanding`, `ChunkDiscovery` (serialized in worldPersistence.ts)
+- Remaining Maps are legitimate: entity indexes (`_xxxIndex`), listener sets, primary system state not appropriate for ECS (turn state, territory cell ownership, construction tracking)
+
+## System Tick Architecture
+
+21 systems registered in `gameState.ts` execute in 8 ordered phases per frame:
+
+1. Input processing
+2. AI decision (GOAP governors evaluate)
+3. Movement / steering
+4. Physics (Rapier callbacks)
+5. Combat / hacking
+6. Economy / harvesting
+7. Construction / fabrication
+8. Rendering state sync
+
+Systems are pure functions operating on ECS state. They do not import React, R3F, or rendering concerns.
+
+## Config-Driven Design
+
+All tuning values live in JSON config files, loaded through the type-safe loader at `config/index.ts`:
+
+```typescript
+import { config } from "../../config";
+// Access: config.combat.hackRange, config.economy.harvestRate, etc.
+```
+
+- 23+ JSON config files in `src/config/`
+- Tests import expected values from config — never hardcode
+- `gameplayRandom` over `Math.random` for determinism; `scopedRNG` for reproducible sequences
+
+## Radial Menu Pipeline
+
+The radial context menu is the primary interaction surface, replacing toolbars, bottom sheets, and selection panels:
+
+```
+radialMenu.json  -->  radialMenu.ts  -->  radialProviders.ts  -->  RadialMenu.tsx
+   (config)           (state machine)      (context providers)      (SVG renderer)
+```
+
+- Right-click on desktop, long-press on mobile
+- Context-sensitive: terrain, structures, bots, enemies each expose different actions
+- All contextual actions flow through this pipeline — no separate toolbars
+
+## AI Architecture
+
+Three-layer AI stack:
+
+```
+GOAP Governors (strategic)  -->  Yuka Steering (tactical)  -->  NavMesh Pathfinding (movement)
+```
+
+- **GOAP Governors** (`src/ai/`): Evaluate faction goals, plan action sequences, issue orders to bots
+- **Yuka Steering** (`BotVehicle`): Execute movement orders — seek, flee, flank, siege, formation
+- **NavMesh Pathfinding** (`NavMeshBuilder`): Generate navigation meshes from sector geometry
+
+Bot definitions carry: archetype, mark, speech profile, default AI role, steering profile, navigation profile. All affect runtime behavior.
+
+### Bot States
+Standard: IDLE, PATROL, ATTACK, FLEE, HARVEST
+Tactical: FLANK (perpendicular intercept), SIEGE (spiral inward around fortified position)
+Faction-specific: Signal Choir hack attack (hold at range instead of closing to melee)
+
+### Governor System
+`governorSystem.ts` runs in the AI decision phase. Each AI civilization has a governor that:
+1. Evaluates current world state against faction goals
+2. Plans GOAP action sequences
+3. Issues orders to subordinate bots
+4. Executes through `GovernorActionExecutor`
+
+## Rendering Architecture
+
+39 R3F renderer components mounted in `GameScene.tsx` Canvas:
+
+- Renderers consume system state — they do NOT invent logic
+- `InstancedCubeRenderer` for cube economy (replaced `FreeCubeRenderer`)
+- `MaterialFactory` for JSON-driven PBR materials
+- `HologramRenderer` for otter hologram patron AI communication
+- `SelectionHighlight` + `PlacementPreview` for interaction feedback
+- HDRI environment with storm-reactive intensities
+
+### Rendering Rules
+- Zero Lambert materials — verified clean PBR
+- Instanced rendering for cubes and repeated geometry
+- Weather renderers consume storm system state, do not invent weather logic
+
+## Rapier Physics
+
+Physics is decoupled via callbacks — systems NEVER import Rapier directly:
+
+```typescript
+// Correct: system registers callback
+onCollision((entityA, entityB) => { /* handle */ });
+
+// Wrong: system imports Rapier
+import RAPIER from "@dimforge/rapier3d"; // NEVER
+```
+
+## World Generation
+
+Viewport-driven chunk generation:
+- Each chunk = square region of sector cells (e.g., 8x8 cells)
+- Generated deterministically from `worldSeed + chunkKey`
+- Camera position determines which chunks are loaded
+- Only player modifications (deltas) are persisted — baseline regenerates from seed
+- Creates effectively infinite explorable ecumenopolis with minimal storage
+
+## Save/Load System
+
+- IndexedDB + expo-sqlite persistence
+- 4 save slots + autosave
+- Saves campaign as one coherent machine-world state
+- Load reconstructs ECS state from SQLite records
+
+## Audio Architecture
+
+- Tone.js spatial audio engine
+- Procedural SFX library (not pre-recorded samples for most effects)
+- Ambient soundscapes tied to sector type
+- Adaptive music system responds to game state (combat, exploration, calm)
+- Quality tier system with GPU detection and mobile throttling
+
+## Component Decomposition Rules
+
+Strict separation enforced across the codebase:
+
+- **No logic in TSX** — extract to systems or pure functions
+- **Config over constants** — never hardcode tuning values
+- **`gameplayRandom` over `Math.random`** — deterministic RNG
+- **Never `_` prefix** for "unused" variables — delete or use them
+- **Pure functions for testability** — extract from R3F components
+
+## Module Pattern
+
+Module-level Map state remains for systems where ECS entities would be overhead:
+
+```typescript
+const _state = new Map<string, FactionState>();
+
+export function getFactionState(id: string) { return _state.get(id); }
+export function _reset() { _state.clear(); } // For test cleanup
+```
+
+For rendering-reactive state, prefer Koota entities + `useQuery` / `useTrait` hooks.
+Entity indexes (`_xxxIndex`) coexist with system Maps — they're the bridge between string IDs and Koota entity handles.
+
+## Testing Patterns
+
+- Mock all R3F renderers in smoke tests (ESM parse avoidance)
+- `jest.mock` for ECS queries — mock as plain arrays
+- Variables prefixed with `mock` can be referenced in `jest.mock` factories
+- `_reset()` called in `beforeEach` for module-level state cleanup
+- Tests import expected values from JSON config source of truth

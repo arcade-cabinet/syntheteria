@@ -1,174 +1,100 @@
-/**
- * @package ai
- *
- * Yuka GOAP AI runtime — agents, goals, navigation, steering, planning, and triggers.
- */
-
-export type { AgentSnapshot, DecidedAction } from "./agents/SyntheteriaAgent";
-// --- Agents ---
-export { SyntheteriaAgent } from "./agents/SyntheteriaAgent";
+export { CultistAgent } from "./agents/CultistAgent";
+export {
+	createAgentForRole,
+	rehydrateAgentFromState,
+} from "./agents/createAgentForRole";
+export { HaulerAgent } from "./agents/HaulerAgent";
+export { HostileMachineAgent } from "./agents/HostileMachineAgent";
+export { PlayerUnitAgent } from "./agents/PlayerUnitAgent";
+export { RivalScoutAgent } from "./agents/RivalScoutAgent";
+export {
+	isSyntheteriaAgent,
+	SyntheteriaAgent,
+} from "./agents/SyntheteriaAgent";
 export type {
-	FactionBiasOverride,
-	FactionStateContext,
-	FactionStateId,
-} from "./fsm/FactionFSM";
-// --- FSM ---
-export { FactionFSM, getFactionFSM, resetFactionFSMs } from "./fsm/FactionFSM";
-export type { FuzzyScores } from "./fuzzy/situationModule";
-// --- Fuzzy logic ---
-export { assessSituationFuzzy } from "./fuzzy/situationModule";
-export type { BuildOption, TurnContext } from "./goals/evaluators";
-// --- Goals ---
+	AgentMemoryState,
+	AgentPersistenceState,
+	AgentRole,
+	AgentRuntimeContract,
+	AgentStatus,
+	AgentSteeringState,
+	AgentTaskState,
+} from "./agents/types";
 export {
-	AttackEvaluator,
-	BuildEvaluator,
-	ChaseEnemyEvaluator,
-	EvadeEvaluator,
-	ExpandEvaluator,
-	FloorMineEvaluator,
-	HarvestEvaluator,
-	IdleEvaluator,
-	InterposeEvaluator,
-	ResearchEvaluator,
-	ScoutEvaluator,
-	setTurnContext,
-	WormholeEvaluator,
-} from "./goals/evaluators";
-export type { NavGraphResult } from "./navigation/boardNavGraph";
-// --- Navigation ---
+	type BridgeOwnershipMatrix,
+	DEFAULT_OWNERSHIP_MATRIX,
+	type KootaEntitySnapshot,
+	KootaYukaBridge,
+	type YukaWriteback,
+} from "./bridge/KootaYukaBridge";
+export { AgentRegistry } from "./core/AgentRegistry";
+export { AIClock, type ClockSnapshot } from "./core/AIClock";
+export { AIRuntime } from "./core/AIRuntime";
 export {
-	buildNavGraph,
-	clearNavGraphCache,
-	getOrBuildNavGraph,
-	sphereManhattan,
-	updateTileCost,
-	yukaShortestPath,
-} from "./navigation/boardNavGraph";
-export type { SightingRecord } from "./perception/factionMemory";
-// --- Perception ---
+	aiSystem,
+	cancelAgentTask,
+	getAgentState,
+	issueMoveCommand,
+	resetWorldAIService,
+	worldAIService,
+} from "./core/WorldAIService";
 export {
-	FactionMemory,
-	getFactionMemory,
-	resetAllFactionMemories,
-	updateFactionPerception,
-} from "./perception/factionMemory";
+	GOAL_CONTRACTS,
+	type GoalContract,
+	type GoalFact,
+	type GoalLayer,
+} from "./goals/GoalContracts";
+export {
+	type PlannerContext,
+	type PlannerDecision,
+	planAgentTask,
+} from "./goals/WorldPlanner";
 export type {
-	CombatDecision,
-	CombatEvalResult,
-	CombatUnit,
-} from "./planning/combatEval";
-// --- Planning ---
+	NavigationAdapter,
+	NavigationPathNode,
+	NavigationPoint,
+} from "./navigation/NavigationAdapter";
+export { SectorNavigationAdapter } from "./navigation/SectorNavigationAdapter";
+export { SquareGridNavigationAdapter } from "./navigation/SquareGridNavigationAdapter";
 export {
-	computeArmyStrength,
-	computeLocalStrength,
-	evaluateCombat,
-	evaluateLocalCombat,
-} from "./planning/combatEval";
-export type {
-	DiplomaticContext,
-	DiplomaticDecision,
-} from "./planning/diplomaticAi";
+	createWorldFactSnapshot,
+	type WorldFact,
+	type WorldFactSnapshot,
+} from "./perception/WorldFacts";
+export { isEntityExecutingAITask, readAIState } from "./runtimeState";
 export {
-	decideDiplomacy,
-	executeDiplomacy,
-	resetDiplomaticAi,
-} from "./planning/diplomaticAi";
-export type { HTNContext, HTNGoal, HTNStep } from "./planning/htnPlanner";
+	type AISerializedBundle,
+	deserializeAIState,
+	deserializeSingleAgentState,
+	serializeAIState,
+	serializeSingleAgentState,
+} from "./serialization/AISerialization";
 export {
-	getNextAction,
-	htnDecide,
-	planForState,
-} from "./planning/htnPlanner";
-export type {
-	InfluenceCell,
-	InfluenceInput,
-	InfluenceMap,
-} from "./planning/influenceMap";
+	LocalStateMachine,
+	type StateTransitionMap,
+} from "./state-machines/LocalStateMachine";
 export {
-	computeInfluenceMap,
-	findHighValueTile,
-	getFactionInfluenceMap,
-	getTopTiles,
-	needsRefresh,
-	resetInfluenceMaps,
-} from "./planning/influenceMap";
-// --- Steering ---
+	type BotAnimationState,
+	clearEntityAnimationStates,
+	deriveAnimationState,
+	getEntityAnimationState,
+	setEntityAnimationState,
+} from "./steering/AnimationState";
 export {
-	computeEvadeDesirability,
-	computeFleeDirection,
-	countAlliesInRadius,
-	countThreatsInRadius,
-} from "./steering/evasionSteering";
-export type { TilePos } from "./steering/flockingSteering";
+	applyArrive,
+	applyArriveWithSeparation,
+	applyFlee,
+	applySeek,
+	applySeekWithSeparation,
+	applySeparation,
+	clearSteering,
+} from "./steering/SteeringComposer";
 export {
-	computeFlockingForce,
-	pickFlockingTile,
-} from "./steering/flockingSteering";
-export type {
-	FormationGroup,
-	FormationUnit,
-} from "./steering/formationSteering";
+	STEERING_POLICIES,
+	type SteeringPolicy,
+} from "./steering/SteeringPolicies";
 export {
-	computeFormationOffsets,
-	detectFormations,
-	FORMATION_MIN_UNITS,
-	FORMATION_RADIUS,
-	getFormationTarget,
-	isFormationLeader,
-} from "./steering/formationSteering";
-export {
-	computeInterposeDesirability,
-	computeInterposePoint,
-	findInterposeTarget,
-	pickInterposeTile,
-} from "./steering/interposeSteering";
-export {
-	computeObstacleAvoidance,
-	pickAvoidanceTile,
-} from "./steering/obstacleAvoidanceSteering";
-export {
-	computeInterceptTarget,
-	shouldUsePursuit,
-} from "./steering/pursuitSteering";
-export {
-	computeWanderDirection,
-	pickWanderTile,
-	resetWanderState,
-} from "./steering/wanderSteering";
-export type { TaskStep, TaskStepType } from "./tasks/UnitTaskQueue";
-// --- Tasks ---
-export {
-	clearUnitTaskQueue,
-	createHarvestAndReturnTask,
-	createScoutPatrolTask,
-	getUnitTaskQueue,
-	resetAllTaskQueues,
-	setUnitTaskQueue,
-	UnitTaskQueue,
-} from "./tasks/UnitTaskQueue";
-// --- Track selection ---
-export { pickAITrack, pickAITrackVersion } from "./trackSelection";
-export type { CorruptionEvent } from "./triggers/corruptionTrigger";
-
-// --- Triggers ---
-export {
-	checkCorruptionTriggers,
-	checkFactionContact,
-	resetCorruptionTriggers,
-} from "./triggers/corruptionTrigger";
-export type {
-	TerritoryEvent,
-	TerritoryEventType,
-} from "./triggers/territoryTrigger";
-export {
-	countEnemiesInTerritory,
-	getTerritoryTracker,
-	resetAllTerritoryTrackers,
-	TerritoryTracker,
-} from "./triggers/territoryTrigger";
-// --- Runtime entry points ---
-export {
-	getAIRuntime,
-	resetAIRuntime,
-	runYukaAiTurns,
-} from "./yukaAiTurnSystem";
+	type SyntheteriaTaskDefinition,
+	type SyntheteriaTaskKind,
+} from "./tasks/TaskTypes";
+export { AITestHarness } from "./testing/AITestHarness";

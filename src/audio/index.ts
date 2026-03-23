@@ -1,21 +1,32 @@
 /**
- * @package audio
+ * Audio module — barrel export.
  *
- * Tone.js audio engine — SFX, music routing, and storm ambience.
+ * Provides the full audio stack for Syntheteria:
+ * - audioEngine: Tone.js init, volume channels
+ * - sfxLibrary: procedural SFX (combat, harvest, construction, turn, cultist)
+ * - adaptiveMusic: state-driven background music with crossfade
+ * - ambientSoundscape: wind, machinery, thunder, metal creaking
+ * - audioHooks: wiring into game system events
  */
 
-// --- Ambience ---
-export { startAmbience, stopAmbience } from "./ambience";
-// --- Engine lifecycle ---
 export {
-	_resetAudioEngine,
+	getMusicState,
+	type MusicState,
+	setMusicState,
+	startMusic,
+	stopMusic,
+} from "./adaptiveMusic";
+export {
+	isAmbientStarted,
+	startAmbientSoundscape,
+	stopAmbientSoundscape,
+	updateStormIntensity,
+} from "./ambientSoundscape";
+export {
 	disposeAudio,
-	getAmbientOutput,
 	getAmbientVolumeLevel,
 	getMasterVolume,
-	getMusicOutput,
 	getMusicVolumeLevel,
-	getSfxOutput,
 	getSfxVolumeLevel,
 	initAudio,
 	isAudioInitialized,
@@ -24,6 +35,25 @@ export {
 	setMusicVolume,
 	setSfxVolume,
 } from "./audioEngine";
-export type { SfxName } from "./sfx";
-// --- SFX ---
-export { disposeSfxPools, playSfx } from "./sfx";
+
+export { audioSystemTick, resetAudioHooks } from "./audioHooks";
+
+export {
+	playAIPhaseDrone,
+	playAttackClang,
+	playBuildingComplete,
+	playComponentBreak,
+	playConstructionHammer,
+	playCultistAttack,
+	playCultistSpawn,
+	playEnergyBurst,
+	playHarvestGrind,
+	playHitImpact,
+	playLightningCall,
+	playMaterialCollected,
+	playNewTurnFanfare,
+	playStageComplete,
+	playTurnStartChime,
+	playUnitDestroyed,
+	playWeldingSizzle,
+} from "./sfxLibrary";

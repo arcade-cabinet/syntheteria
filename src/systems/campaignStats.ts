@@ -6,8 +6,6 @@
  * events occur (harvest, combat, hacking, building).
  *
  * Displayed in the slide-out detail panel.
- *
- * Ported from pending/systems/campaignStats.ts — zero external deps.
  */
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -47,9 +45,6 @@ export interface CampaignStats {
 // ─── State ───────────────────────────────────────────────────────────────────
 
 let stats: CampaignStats = createDefaultStats();
-
-/** Per-faction combat kill counter — survives individual unit death. */
-let factionKills = new Map<string, number>();
 
 const listeners = new Set<() => void>();
 
@@ -177,22 +172,6 @@ export function recordCombatEngagement() {
 	notify();
 }
 
-/**
- * Record a combat kill credited to a faction.
- * Persists even after the killing unit is destroyed.
- */
-export function recordCombatKill(factionId: string) {
-	factionKills.set(factionId, (factionKills.get(factionId) ?? 0) + 1);
-	notify();
-}
-
-/**
- * Get the per-faction kill counts.
- */
-export function getCombatKills(): ReadonlyMap<string, number> {
-	return factionKills;
-}
-
 export function updateTerritorySize(currentSize: number) {
 	if (currentSize > stats.peakTerritorySize) {
 		stats = { ...stats, peakTerritorySize: currentSize };
@@ -222,6 +201,5 @@ export function rehydrateCampaignStats(saved: CampaignStats) {
 
 export function resetCampaignStats() {
 	stats = createDefaultStats();
-	factionKills = new Map<string, number>();
 	notify();
 }

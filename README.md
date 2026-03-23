@@ -20,16 +20,15 @@ Your first challenge is to navigate your scattered, broken robots toward each ot
 
 From there, you grow. You venture outside the city into a dangerous open world. You discover abandoned mines along the coast, a ruined science campus to the west, and the territory of the **Cult of EL** to the north — supernatural humans who can call lightning from the sky and command enslaved machine intelligences. You hack enemy drones, build an army, and push north to confront the cult leader and discover the final secret of EL.
 
-## Quick Start
+## Playable Prototype
+
+The game runs as a web application built with React Three Fiber + Three.js + Miniplex ECS.
 
 ```bash
-pnpm install
-pnpm web          # Expo web dev server (use --port to match E2E config if running Maestro web flows)
-pnpm test         # Jest (127 suites, 2,431 tests)
-pnpm tsc          # Type check
+cd game
+npm install
+npm run dev
 ```
-
-Stack: Expo + React Three Fiber + Three.js + **Koota ECS** (migrated from Miniplex). See `docs/` and `AGENTS.md` for architecture.
 
 **Controls (Mobile):**
 - Single tap — Select unit / tap ground to move
@@ -45,19 +44,27 @@ Stack: Expo + React Three Fiber + Three.js + **Koota ECS** (migrated from Minipl
 
 ## Project Status
 
-**Phase: 1.0 (Ralph PRD complete).** See `docs/memory-bank/progress.md` and `docs/plans/GAMEPLAN_1_0.md`.
+**Phase: Phase 2 Prototype**
 
 | Area | Status |
 |------|--------|
-| Engine | Koota ECS, R3F, Expo |
-| Title, New Game, HUD | Implemented |
-| World, terrain, fog | Implemented — procedural ecumenopolis |
-| Harvest, building, Motor Pool | Implemented — 11 materials |
-| Combat, hacking | Implemented — component damage, capture flow |
-| Cultists | Implemented — escalation, visual identity |
-| Save/load | Implemented — 4 slots, autosave |
-| AI (GOAP, steering) | Implemented |
-| E2E | Maestro flows (maestro/flows/) |
+| Engine | **Decided** — Custom: React Three Fiber + Three.js + Miniplex ECS |
+| Title screen & intro | **Implemented** — Glitch title, narration sequence |
+| Procedural city | **Implemented** — Factories, warehouses, towers, ruins, walls |
+| Terrain & navigation | **Implemented** — Continuous terrain, navmesh A*, fog-of-war |
+| Mobile input | **Implemented** — Two-finger camera, single tap unit control |
+| Power system | **Implemented** — Lightning rods, storm intensity, distribution |
+| Resources | **Implemented** — Scrap, e-waste, components; city scavenge points |
+| Building placement | **Implemented** — Lightning rods, fabrication units with costs |
+| Fabrication | **Implemented** — 5 recipes, build times, power dependency |
+| Enemy AI | **Implemented** — Feral machines with patrol/aggro behavior |
+| Combat | **Implemented** — Component-based damage, retaliation, salvage |
+| Repair | **Implemented** — Units with arms fix nearby broken parts |
+| Hacking | Not yet implemented |
+| Cultist enemies | Not yet implemented |
+| Save/load | Not yet implemented |
+| Audio | Not yet implemented |
+| Art style | TBD |
 
 ## Core Mechanics
 

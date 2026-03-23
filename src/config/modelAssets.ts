@@ -1,12 +1,12 @@
-import ArachnoidModel from "../../assets/models/robots/hostile/Arachnoid.glb";
-import MechaTrooperModel from "../../assets/models/robots/hostile/MechaTrooper.glb";
-import QuadrupedTankModel from "../../assets/models/robots/hostile/QuadrupedTank.glb";
-import MechaGolemModel from "../../assets/models/robots/industrial/MechaGolem.glb";
-import MobileStorageBotModel from "../../assets/models/robots/industrial/MobileStorageBot.glb";
-import CompanionBotModel from "../../assets/models/robots/player/Companion-bot.glb";
-import FieldFighterModel from "../../assets/models/robots/player/FieldFighter.glb";
-import Mecha01Model from "../../assets/models/robots/player/Mecha01.glb";
-import ReconBotModel from "../../assets/models/robots/player/ReconBot.glb";
+import ArachnoidModel from "../../assets/models/Arachnoid.glb";
+import CompanionBotModel from "../../assets/models/Companion-bot.glb";
+import FieldFighterModel from "../../assets/models/FieldFighter.glb";
+import Mecha01Model from "../../assets/models/Mecha01.glb";
+import MechaGolemModel from "../../assets/models/MechaGolem.glb";
+import MechaTrooperModel from "../../assets/models/MechaTrooper.glb";
+import MobileStorageBotModel from "../../assets/models/MobileStorageBot.glb";
+import QuadrupedTankModel from "../../assets/models/QuadrupedTank.glb";
+import ReconBotModel from "../../assets/models/ReconBot.glb";
 import type { AssetModule } from "./assetUri";
 
 export const modelAssets: Record<string, AssetModule> = {

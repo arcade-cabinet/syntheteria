@@ -1,101 +1,155 @@
-# Syntheteria — Claude Code Contract
+# Syntheteria - Development Context
 
-> **MANDATORY**: Before doing ANY work, read `AGENTS.md` (root), then follow the session
-> protocol in `docs/memory-bank/AGENTS.md`. This ensures you have current project context.
+## Project Status
 
-## Session Start Checklist
+Strategy game about awakening AI consciousness in a post-apocalyptic industrial city. Phase 2 prototype implemented with procedural city environment, building placement, power/resource systems, fabrication, enemy AI, and component-based combat. Title screen and intro narration flow complete. Mobile input redesigned for proper touch controls.
 
-1. Read `AGENTS.md` — multi-agent orchestration, architecture rules, hard bans
-2. Read `docs/memory-bank/AGENTS.md` — session protocol
-3. Read `docs/plans/IS_THE_GAME_DONE.md` — is the game DONE? Path to done.
-4. Read `docs/memory-bank/activeContext.md` — current focus, recent changes, next steps
-5. Read `docs/memory-bank/progress.md` — system status dashboard
-6. Read `docs/AGENTS.md` — find domain docs relevant to your task
-7. Confirm: "I have read the memory bank and understand current project state."
+### Implemented Systems
+- Title screen with glitch effect and game flow (title → narration → playing)
+- Procedural city layout with factories, warehouses, towers, ruins, and perimeter walls
+- Instanced mesh city rendering with building details (windows, roofs, ledges)
+- Mobile-first input: two-finger pan/zoom for camera, single tap for unit interaction
+- Desktop input: WASD/arrows + scroll zoom, left-click select, right-click move
+- Power system with fluctuating storm intensity and lightning rod output
+- Resource scavenging (scrap metal, e-waste, intact components) from city points
+- Building placement with ghost preview and resource cost validation
+- Fabrication system with 5 recipes (camera, arms, legs, power cell, power supply)
+- Feral enemy AI with patrol and aggro behavior (6 spawn zones)
+- Component-based combat (damage breaks parts, not HP bars)
+- Repair system (units with arms can fix nearby broken components)
+- Minimap with player/enemy/building differentiation
+- Combat event notifications and merge event overlays
 
-## Claude-Specific Behavior
+---
 
-### .claude/ Directory
+## Vision Summary
 
-```
-.claude/
-├── settings.json          # PostToolUse hook for typecheck on Edit/Write
-├── agents/                # 6 specialized agent definitions
-├── commands/              # Slash commands
-└── hooks/                 # Pre-commit quality gates
-```
+You awaken as an AI consciousness in a void. You connect to broken machines — maintenance robots and fabrication units — in the ruins of an industrial city. Your robots explore independently, building fragmented maps that merge when units find each other. You repair machines, restore power via lightning rods, fabricate components, and grow from scattered broken robots into a force capable of defeating the Cult of EL.
 
-### Progress Communication
+**Primary view:** 2.5D/3D top-down with fragmented map exploration
+**Setting:** Industrial city (center), coast with mines (E/S), science campus (SW), cultist territory (N)
+**Enemies:** Cultists with lightning powers, enslaved machines, rogue AIs
+**Victory:** Defeat the cult leader at the northern village
 
-Claude communicates progress through repository state:
+---
 
-1. **Update `docs/memory-bank/activeContext.md`** after significant work
-2. **Update `docs/memory-bank/progress.md`** if system status changed
-3. **Update relevant domain doc** if design/architecture changed
-4. Never leave stale context — if you changed something, update the docs
+## Engine Decision: Custom (R3F + Three.js + ECS)
 
-### Testing Ownership
+### Decision Status: Decided — Custom web engine
 
-If Claude changes a visible flow, it must:
-1. Update or add component-level test coverage for the touched surface
-2. Add E2E coverage if the change affects a multi-step player flow
-3. Not leave stale tests that describe old UI
+Using React Three Fiber, Three.js, and Miniplex ECS. No Unity, no Godot.
 
-Test roots:
-- Unit/system tests: `src/**/__tests__/*.test.ts` (Jest)
-- UI component tests: `src/ui/__tests__/` (Jest/RNTL)
-- Playwright CT: `tests/components/*.spec.tsx` — `pnpm test:ct` (headed)
-- Playwright E2E: `tests/e2e/*.spec.ts` — `pnpm test:e2e` (headed; CI uses `xvfb-run -a`)
-- Vitest: `*.vitest.ts` — `pnpm test:vitest`
-- Full CI: `pnpm verify` (lint + tsc + test + test:ct)
+**Rationale:**
+- **Mobile-first:** Web-native runs on any device with a browser — no app store gatekeeping
+- **AI-assisted development:** All code is text (TypeScript, JSX) — fully readable and verifiable by AI
+- **Continuous terrain + navmesh:** Custom terrain renderer with navmesh pathfinding for free 3D movement
+- **Free forever:** No licensing costs at any scale
+- **Iteration speed:** Hot reload, instant deploy, no compile step for logic changes
+- **CI:** Standard web tooling (Vitest, Playwright, GitHub Actions)
 
-### Brand Assets In Repo
+**Trade-offs accepted:**
+- Must build more from scratch (no built-in physics, animation, etc.)
+- 3D performance ceiling lower than native engines for extreme scenes
+- Mobile WebGL has device-specific quirks to handle
 
-Use these — don't invent replacements:
-- Title background: `assets/ui/background.png`
-- Title buttons: `assets/ui/buttons/{new_game,load_game,settings}.png`
-- Mark: `assets/ui/mark.png`
+See: [ARCHITECTURE.md](./docs/technical/ARCHITECTURE.md) for full technical design.
 
-### UI Source Map
+### Key Insight: Visual Verification Limit
 
-Key player-visible files:
-- Title: `src/ui/TitleScreen.tsx`, `NewGameModal.tsx`, `LoadingOverlay.tsx`
-- HUD: `src/ui/GameUI.tsx`, `panels/GameHUD.tsx`, `panels/TopBar.tsx`
-- Radial: `src/ui/RadialMenu.tsx`, `src/systems/radialMenu.ts`, `src/systems/radialProviders.ts`
-- City: `src/ui/CitySiteOverlay.tsx`, `src/city/runtime/CityKitLab.tsx`
-- Shared: `src/ui/components/HudButton.tsx`, `HudPanel.tsx`, `icons.tsx`
+AI-assisted development works well for:
+- Game logic, formulas, data structures
+- Scene structure (all text-based JSX/TypeScript)
+- Unit tests, integration tests
 
-### What Claude Should Prefer
+AI-assisted development **cannot** verify:
+- Visual output quality
+- Aesthetic quality
+- Visual glitches or artifacts
 
-- Real UI flows over mockups
-- Component-tested surfaces over screenshots alone
-- Config-driven assets over hardcoded imports
-- Hard crashes on missing assets over silent fallbacks
-- Emergent bot speech over scripted story blocks
-- One source of truth per data domain
+---
 
-### What Claude Should Avoid
+## Current Design Decisions
 
-- Generic sci-fi panel kits that ignore brand identity
-- Placeholder copy or stub affordances where real state exists
-- Silent fallbacks that hide bugs
-- Changing visual direction without updating docs
-- Duplicating data stores (the floor renderer dual-store bug is the canonical example)
-- Adding `?? null`, `|| fallback`, or empty `catch` blocks in asset loading
+- **Engine:** Custom — React Three Fiber + Three.js + Miniplex ECS (TypeScript)
+- **Platform:** Mobile-first, also PC
+- **Primary view:** 2.5D/3D top-down with continuous terrain and procedural city
+- **Navigation:** Free 3D movement via navmesh A* pathfinding (city buildings block paths)
+- **Exploration:** Fog-of-war reveals continuous terrain; fragments merge when robots meet
+- **Power:** Lightning rods with fluctuating storm intensity (sine wave + surges)
+- **Resources:** Scrap metal, e-waste, intact components — scavenged from city points
+- **Combat:** Component-based damage (parts break individually, no HP bar)
+- **Enemies:** Feral machines (patrol + aggro AI) — cultists planned for later
+- **Building:** Lightning rods and fabrication units placeable with resource costs
+- **Time model:** Flexible real-time with pause/speed controls (0.5x, 1x, 2x)
+- **Multiplayer:** Eventually (procedural world), beyond current scope — single-player focus
+- **Hacking:** Can take over any machine (link + technique + compute), never humans — not yet implemented
+- **Art style:** TBD (low-poly, pixel art, or clean minimal)
 
-## Documentation Pointers
+---
 
-All game design, architecture, and interface docs are in `docs/` organized by domain.
-See `docs/AGENTS.md` for the complete index with summaries.
+## What Needs Work
 
-| Domain | Location | What's There |
-|--------|----------|-------------|
-| Memory bank | `docs/memory-bank/` | Session context, status, patterns |
-| **Done checklist** | `docs/plans/IS_THE_GAME_DONE.md` | Is the game DONE? Path to done, verify, E2E/CT |
-| Prioritization | `docs/plans/PRIORITIZATION.md` | P0/P1/P2/P3, what to do next |
-| Game design | `docs/design/` | Vision, lore, factions, economy, bots |
-| Technical | `docs/technical/` | Architecture, world, AI, assets, rendering |
-| Interface | `docs/interface/` | UI design, input model |
-| Execution | `docs/plans/` | GAMEPLAN_1_0, PR_CHECKLIST, TASK_LIST, PR_DESCRIPTION |
-| Test coverage | `docs/plans/COMPREHENSIVE_TEST_COVERAGE.md` | Scenario matrix, done-checklist verification |
-| Archive | `docs/archive/` | Old plans (reference only) |
+### Component Data (Major)
+The basic component system works (camera, arms, legs, power_cell, power_supply) but needs expansion:
+- More component types for different unit specializations
+- Weapons for combat against cultists with supernatural powers
+- Components appropriate for coastal mines, deep-sea mining
+
+### Gameplay Systems (Major)
+- **Hacking system** — core mechanic, not yet implemented
+- **Cultist enemies** — currently only feral machines; cultists with lightning powers needed
+- **Signal/compute network** — global compute pool and signal BFS not yet implemented
+- **Save/load** — no persistence yet
+- **Audio** — no sound effects or music
+
+### Technical Docs (Moderate)
+- CORE_FORMULAS.md needs updating for implemented power/combat formulas
+- REFERENCE_BUILDS.md needs rewrite once new components are designed
+
+### Open Questions
+See OPEN_QUESTIONS.md — several resolved by implementation, some still open.
+
+---
+
+## Testing Strategy
+
+| Layer | Tool | Purpose |
+|-------|------|---------|
+| Unit | Vitest | ECS systems, formulas, game logic |
+| Integration | Vitest + @testing-library/react | React components, state bridge |
+| E2E | Playwright | Full gameplay loops in browser |
+| CI | GitHub Actions | Automated on every commit |
+
+---
+
+## Next Steps
+
+1. ~~**Scaffold project** — Vite + R3F + Miniplex + TypeScript~~ (done)
+2. ~~**Build Phase 1 prototype** — continuous terrain, navmesh, fog-of-war~~ (done)
+3. ~~**Title screen and intro flow** — glitch effect title, narration sequence~~ (done)
+4. ~~**Procedural city environment** — buildings block movement, labyrinthine layout~~ (done)
+5. ~~**Mobile input redesign** — two-finger camera, single tap unit control~~ (done)
+6. ~~**Power system** — lightning rods, storm intensity, power distribution~~ (done)
+7. ~~**Resources and scavenging** — scrap, e-waste, components from city points~~ (done)
+8. ~~**Building placement** — lightning rods and fabrication units with costs~~ (done)
+9. ~~**Fabrication** — 5 recipes, build times, power dependency~~ (done)
+10. ~~**Enemy AI** — feral machines with patrol/aggro behavior~~ (done)
+11. ~~**Combat** — component-based damage, retaliation, salvage drops~~ (done)
+12. ~~**Repair system** — units with arms fix nearby broken components~~ (done)
+13. **Hacking system** — signal link + technique + compute requirements
+14. **Cultist enemies** — humans with lightning powers, escalating organization
+15. **Signal/compute network** — BFS connectivity, global compute pool
+16. **Save/load** — IndexedDB persistence
+17. **Expand component data** — more types for unit specialization
+18. **Determine art style** — low-poly, pixel art, or clean minimal
+19. **Audio** — storm ambience, combat sounds, UI feedback
+
+---
+
+## Resources
+
+- [React Three Fiber](https://r3f.docs.pmnd.rs/) - React renderer for Three.js
+- [Miniplex](https://github.com/hmans/miniplex) - ECS for TypeScript
+- [drei](https://github.com/pmndrs/drei) - R3F helpers and abstractions
+- [Vitest](https://vitest.dev/) - Unit testing
+- [Playwright](https://playwright.dev/) - E2E browser testing

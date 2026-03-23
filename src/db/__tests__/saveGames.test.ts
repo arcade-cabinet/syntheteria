@@ -15,12 +15,6 @@ describe("save game persistence", () => {
 		jest.restoreAllMocks();
 	});
 
-	it("returns 0 when no save exists (missing save / empty slot)", () => {
-		const database = new FakeDatabase();
-		expect(getSaveGameCountSync(database)).toBe(0);
-		expect(getLatestSaveGameSync(database)).toBeNull();
-	});
-
 	it("creates and counts save games", () => {
 		const database = new FakeDatabase();
 
@@ -28,7 +22,7 @@ describe("save game persistence", () => {
 
 		expect(saveGame).not.toBeNull();
 		expect(saveGame?.world_seed).toBe(1337);
-		expect(saveGame?.sector_scale).toBe("standard");
+		expect(saveGame?.map_size).toBe("standard");
 		expect(saveGame?.difficulty).toBe("standard");
 		expect(saveGame?.climate_profile).toBe("temperate");
 		expect(saveGame?.storm_profile).toBe("volatile");

@@ -1,28 +1,9 @@
-import {
-	persistCampaignStatisticsSync,
-	persistFactionResourceStatesSync,
-	persistHarvestStateSync,
-	persistRuntimeWorldStateSync,
-	persistTurnStateSync,
-} from "../db/worldPersistence";
-import { getCampaignStats } from "../systems/campaignStats";
-import {
-	type EconomyFactionId,
-	getAllFactionResources,
-} from "../systems/factionEconomy";
-import {
-	getActiveHarvests,
-	getConsumedStructureIds,
-} from "../systems/harvestSystem";
+import { persistRuntimeWorldStateSync } from "../db/worldPersistence";
+import { getAllFragments } from "../ecs/terrain";
 import { getResources } from "../systems/resources";
-import { getTurnState } from "../systems/turnSystem";
 import { capturePersistableWorldEntities } from "./entityPersistence";
 import { getRuntimeState } from "./runtimeState";
 import { getActiveWorldSession } from "./session";
-import {
-	getStructuralCellRecords,
-	getStructuralFragments,
-} from "./structuralSpace";
 
 const PERSIST_INTERVAL = 60;
 
@@ -36,25 +17,24 @@ export function persistenceSystem(tick: number) {
 		return;
 	}
 
-	const saveGameId = session.saveGame.id;
-	const fragments = getStructuralFragments();
-	const sectorCells = fragments.flatMap((fragment) =>
-		getStructuralCellRecords(fragment.id).map((cell) => ({
-			q: cell.q,
-			r: cell.r,
-			discovery_state: cell.discoveryState,
+	const fragments = getAllFragments();
+	const tiles = fragments.flatMap((fragment) =>
+		Array.from(fragment.grid).map((tile) => ({
+			q: tile.q,
+			r: tile.r,
+			fog_state: tile.fog,
 		})),
 	);
 	const runtime = getRuntimeState();
 
 	persistRuntimeWorldStateSync({
-		saveGameId,
-		ecumenopolisId: session.ecumenopolis.id,
+		saveGameId: session.saveGame.id,
+		worldMapId: session.worldMap.id,
 		tick,
 		activeScene: runtime.activeScene,
 		activeCityInstanceId: runtime.activeCityInstanceId,
 		resources: getResources(),
-		sectorCells,
+		tiles,
 		pointsOfInterest: session.pointsOfInterest.map((poi) => ({
 			id: poi.id,
 			discovered: poi.discovered,
@@ -65,41 +45,4 @@ export function persistenceSystem(tick: number) {
 		})),
 		entities: capturePersistableWorldEntities(),
 	});
-
-	// Persist harvest state
-	persistHarvestStateSync(
-		saveGameId,
-		Array.from(getConsumedStructureIds()),
-		Array.from(getActiveHarvests()),
-	);
-
-	// Persist turn state
-	const turn = getTurnState();
-	persistTurnStateSync(
-		saveGameId,
-		turn.turnNumber,
-		turn.phase,
-		turn.activeFaction,
-		Array.from(turn.unitStates.values()),
-	);
-
-	// Persist per-faction resources
-	const factionResources = getAllFactionResources();
-	const factionEntries: Array<{
-		factionId: string;
-		resources: Record<string, number>;
-	}> = [];
-	for (const [factionId, pool] of factionResources) {
-		factionEntries.push({
-			factionId: factionId as EconomyFactionId,
-			resources: pool as unknown as Record<string, number>,
-		});
-	}
-	persistFactionResourceStatesSync(saveGameId, factionEntries);
-
-	// Persist campaign statistics
-	persistCampaignStatisticsSync(
-		saveGameId,
-		getCampaignStats() as unknown as Record<string, unknown>,
-	);
 }

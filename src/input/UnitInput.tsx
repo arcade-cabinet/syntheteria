@@ -1,6 +1,8 @@
 import { useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
+import { issueMoveCommand } from "../ai";
+import { getFragment } from "../ecs/terrain";
 import type { Entity, UnitEntity } from "../ecs/traits";
 import {
 	Building,
@@ -16,22 +18,6 @@ import {
 	getActivePlacement,
 	updateGhostPosition,
 } from "../systems/buildingPlacement";
-import { tryMoveUnit } from "../systems/moveCommand";
-import {
-	closeRadialMenu,
-	getRadialMenuState,
-	openRadialMenu,
-	type RadialOpenContext,
-} from "../systems/radialMenu";
-import {
-	hideTooltip,
-	showBuildingTooltip,
-	showUnitTooltip,
-} from "../systems/tooltipSystem";
-import { getUnitTurnState } from "../systems/turnSystem";
-import { deselectAll, selectEntity } from "../systems/unitSelection";
-import { worldToGrid } from "../world/sectorCoordinates";
-import { getStructuralFragment } from "../world/structuralSpace";
 
 /**
  * Handles unit selection and move commands.
@@ -66,7 +52,7 @@ function findEntityAtPoint(
 
 	// Check mobile units
 	for (const entity of units) {
-		const frag = getStructuralFragment(entity.get(MapFragment)!.fragmentId);
+		const frag = getFragment(entity.get(MapFragment)!.fragmentId);
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
 
@@ -82,7 +68,7 @@ function findEntityAtPoint(
 	// Check buildings (larger click target)
 	for (const entity of buildings) {
 		const frag = entity.get(MapFragment)!
-			? getStructuralFragment(entity.get(MapFragment)!.fragmentId)
+			? getFragment(entity.get(MapFragment)!.fragmentId)
 			: null;
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
@@ -99,9 +85,9 @@ function findEntityAtPoint(
 	return closest;
 }
 
-/** Issue a move command with MP cost check. Converts display-space target to real-world position. */
+/** Issue a move command. Converts display-space target to real-world position. */
 function issueMoveTo(entity: UnitEntity, displayX: number, displayZ: number) {
-	const frag = getStructuralFragment(entity.get(MapFragment)!.fragmentId);
+	const frag = getFragment(entity.get(MapFragment)!.fragmentId);
 	const ox = frag?.displayOffset.x ?? 0;
 	const oz = frag?.displayOffset.z ?? 0;
 
@@ -113,44 +99,12 @@ function issueMoveTo(entity: UnitEntity, displayX: number, displayZ: number) {
 		return;
 	}
 
-	const currentPos = entity.get(WorldPosition)!;
-	tryMoveUnit(
-		entityId,
-		{ x: currentPos.x, y: currentPos.y, z: currentPos.z },
-		{ x: realX, y: 0, z: realZ },
-	);
+	issueMoveCommand(entityId, {
+		x: realX,
+		y: 0,
+		z: realZ,
+	});
 }
-
-/** Build a RadialOpenContext from a 3D world point. */
-function buildRadialContext(point: THREE.Vector3): RadialOpenContext {
-	const entity = findEntityAtPoint(point);
-	const sector = worldToGrid(point.x, point.z);
-
-	if (entity) {
-		const unitComp = entity.get(Unit);
-		const _buildingComp = entity.get(Building);
-		const identity = entity.get(Identity);
-
-		return {
-			selectionType: unitComp ? "unit" : "building",
-			targetEntityId: identity?.id ?? null,
-			targetSector: sector,
-			targetFaction: identity?.faction ?? null,
-		};
-	}
-
-	return {
-		selectionType: "empty_sector",
-		targetEntityId: null,
-		targetSector: sector,
-		targetFaction: null,
-	};
-}
-
-/** Long-press duration threshold in ms */
-const LONG_PRESS_MS = 500;
-/** Max movement in px before long-press is cancelled */
-const LONG_PRESS_MOVE_THRESHOLD = 100; // 10px squared
 
 function getSelectedEntity(): Entity | null {
 	for (const entity of units) {
@@ -162,14 +116,29 @@ function getSelectedEntity(): Entity | null {
 	return null;
 }
 
+function deselectAll() {
+	for (const u of units) {
+		u.get(Unit)!.selected = false;
+	}
+	for (const b of buildings) {
+		b.get(Building)!.selected = false;
+	}
+}
+
+function isUnit(entity: Entity): boolean {
+	return !!entity.get(Unit);
+}
+
+function isBuilding(entity: Entity): boolean {
+	return !!entity.get(Building);
+}
+
 export function UnitInput() {
 	const { camera, gl } = useThree();
 	const touchStart = useRef<{ x: number; y: number; time: number } | null>(
 		null,
 	);
 	const wasPanning = useRef(false);
-	const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const longPressFired = useRef(false);
 
 	const handleTap = useCallback(
 		(clientX: number, clientY: number) => {
@@ -195,13 +164,15 @@ export function UnitInput() {
 
 			if (entityAtPoint) {
 				// Tapped on a unit or building — select it (deselect others)
-				selectEntity(entityAtPoint);
-			} else if (currentlySelected && currentlySelected.get(Unit)) {
+				deselectAll();
+				if (isUnit(entityAtPoint)) {
+					entityAtPoint.get(Unit)!.selected = true;
+				} else if (isBuilding(entityAtPoint)) {
+					entityAtPoint.get(Building)!.selected = true;
+				}
+			} else if (currentlySelected && isUnit(currentlySelected)) {
 				// Tapped empty ground with a mobile unit selected — move there
 				issueMoveTo(currentlySelected, point.x, point.z);
-			} else {
-				// Tapped empty ground with nothing relevant — deselect
-				deselectAll();
 			}
 		},
 		[camera, gl],
@@ -217,45 +188,12 @@ export function UnitInput() {
 			);
 			if (!point) return;
 
-			// Close any existing radial menu first
-			if (getRadialMenuState().open) {
-				closeRadialMenu();
+			// Right-click always moves selected units
+			for (const entity of units) {
+				if (entity.get(Unit)?.selected) {
+					issueMoveTo(entity, point.x, point.z);
+				}
 			}
-
-			// Auto-select the entity under the pointer for radial context
-			const entityAtPoint = findEntityAtPoint(point);
-			if (entityAtPoint) {
-				selectEntity(entityAtPoint);
-			}
-
-			const context = buildRadialContext(point);
-			openRadialMenu(clientX, clientY, context);
-		},
-		[camera, gl],
-	);
-
-	const handleLongPress = useCallback(
-		(clientX: number, clientY: number) => {
-			const point = getWorldPointFromEvent(
-				clientX,
-				clientY,
-				camera,
-				gl.domElement,
-			);
-			if (!point) return;
-
-			if (getRadialMenuState().open) {
-				closeRadialMenu();
-			}
-
-			// Auto-select the entity under the pointer for radial context
-			const entityAtPoint = findEntityAtPoint(point);
-			if (entityAtPoint) {
-				selectEntity(entityAtPoint);
-			}
-
-			const context = buildRadialContext(point);
-			openRadialMenu(clientX, clientY, context);
 		},
 		[camera, gl],
 	);
@@ -267,11 +205,6 @@ export function UnitInput() {
 		const onPointerDown = (e: PointerEvent) => {
 			if (e.pointerType === "touch") return; // handled by touch events
 			if (e.button === 0) {
-				// Close radial menu on left-click if it's open
-				if (getRadialMenuState().open) {
-					closeRadialMenu();
-					return;
-				}
 				handleTap(e.clientX, e.clientY);
 			} else if (e.button === 2) {
 				handleRightClick(e.clientX, e.clientY);
@@ -283,37 +216,20 @@ export function UnitInput() {
 		};
 
 		// --- Mobile: touch events ---
-		// Single-finger tap = select or move.
-		// Single-finger long-press = open radial menu.
-		// Multi-touch = camera pan (handled by TopDownCamera).
+		// Single-finger tap = select or move. Multi-touch = camera pan (handled by TopDownCamera).
 		const onTouchStart = (e: TouchEvent) => {
 			if (e.touches.length !== 1) {
-				// Multi-touch started — mark as panning, cancel long-press
+				// Multi-touch started — mark as panning
 				wasPanning.current = true;
 				touchStart.current = null;
-				if (longPressTimer.current) {
-					clearTimeout(longPressTimer.current);
-					longPressTimer.current = null;
-				}
 				return;
 			}
 			wasPanning.current = false;
-			longPressFired.current = false;
-			const startX = e.touches[0].clientX;
-			const startY = e.touches[0].clientY;
 			touchStart.current = {
-				x: startX,
-				y: startY,
+				x: e.touches[0].clientX,
+				y: e.touches[0].clientY,
 				time: performance.now(),
 			};
-
-			// Start long-press timer
-			longPressTimer.current = setTimeout(() => {
-				if (!wasPanning.current && touchStart.current) {
-					longPressFired.current = true;
-					handleLongPress(startX, startY);
-				}
-			}, LONG_PRESS_MS);
 		};
 
 		const onTouchMove = (e: TouchEvent) => {
@@ -321,31 +237,13 @@ export function UnitInput() {
 			// If finger moved more than a small threshold, it's a pan not a tap
 			const dx = e.touches[0]?.clientX - touchStart.current.x;
 			const dy = e.touches[0]?.clientY - touchStart.current.y;
-			if (dx * dx + dy * dy > LONG_PRESS_MOVE_THRESHOLD) {
+			if (dx * dx + dy * dy > 100) {
 				// 10px threshold squared
 				wasPanning.current = true;
-				// Cancel long-press timer on significant movement
-				if (longPressTimer.current) {
-					clearTimeout(longPressTimer.current);
-					longPressTimer.current = null;
-				}
 			}
 		};
 
 		const onTouchEnd = (e: TouchEvent) => {
-			// Cancel any pending long-press timer
-			if (longPressTimer.current) {
-				clearTimeout(longPressTimer.current);
-				longPressTimer.current = null;
-			}
-
-			// Don't process tap if long-press already fired
-			if (longPressFired.current) {
-				longPressFired.current = false;
-				touchStart.current = null;
-				return;
-			}
-
 			// Only count as a tap if we weren't panning and touch was brief
 			if (wasPanning.current || !touchStart.current) {
 				touchStart.current = null;
@@ -358,87 +256,22 @@ export function UnitInput() {
 
 			const elapsed = performance.now() - touchStart.current.time;
 			if (elapsed < 300) {
-				// Close radial menu on tap if open, otherwise normal tap behavior
-				if (getRadialMenuState().open) {
-					closeRadialMenu();
-				} else {
-					handleTap(touchStart.current.x, touchStart.current.y);
-				}
+				handleTap(touchStart.current.x, touchStart.current.y);
 			}
 			touchStart.current = null;
 		};
 
-		// Mouse move for ghost building preview + path preview tracking + tooltips
+		// Mouse move for ghost building preview
 		const onMouseMove = (e: MouseEvent) => {
-			// Store mouse position for PathPreviewRenderer
-			(canvas as any).__lastMouseEvent = {
-				clientX: e.clientX,
-				clientY: e.clientY,
-			};
-
-			if (getActivePlacement()) {
-				const point = getWorldPointFromEvent(
-					e.clientX,
-					e.clientY,
-					camera,
-					gl.domElement,
-				);
-				if (point) {
-					updateGhostPosition(point.x, point.z);
-				}
-				hideTooltip();
-				return;
-			}
-
-			// Tooltip on hover — find entity under cursor
-			if (!getRadialMenuState().open) {
-				const point = getWorldPointFromEvent(
-					e.clientX,
-					e.clientY,
-					camera,
-					gl.domElement,
-				);
-				if (point) {
-					const entity = findEntityAtPoint(point, 1.5);
-					if (entity) {
-						const identity = entity.get(Identity);
-						const unitComp = entity.get(Unit);
-						const buildingComp = entity.get(Building);
-						if (identity && unitComp) {
-							const functional = unitComp.components.filter(
-								(c) => c.functional,
-							).length;
-							showUnitTooltip(e.clientX, e.clientY, {
-								entityId: identity.id,
-								name: unitComp.displayName,
-								faction: identity.faction,
-								unitType: unitComp.type,
-								archetype: unitComp.archetypeId,
-								markLevel: unitComp.markLevel,
-								hpCurrent: functional,
-								hpMax: unitComp.components.length,
-								turnState: getUnitTurnState(identity.id) ?? null,
-								currentAction: unitComp.speed > 0 ? "Moving" : null,
-							});
-						} else if (identity && buildingComp) {
-							showBuildingTooltip(e.clientX, e.clientY, {
-								entityId: identity.id,
-								name: buildingComp.type.replace(/_/g, " "),
-								faction: identity.faction,
-								buildingType: buildingComp.type,
-								constructionStage: buildingComp.operational
-									? "Operational"
-									: "Under Construction",
-								buildingOutput: null,
-								powered: buildingComp.powered,
-							});
-						}
-					} else {
-						hideTooltip();
-					}
-				} else {
-					hideTooltip();
-				}
+			if (!getActivePlacement()) return;
+			const point = getWorldPointFromEvent(
+				e.clientX,
+				e.clientY,
+				camera,
+				gl.domElement,
+			);
+			if (point) {
+				updateGhostPosition(point.x, point.z);
 			}
 		};
 
@@ -466,7 +299,7 @@ export function UnitInput() {
 			canvas.removeEventListener("touchmove", onTouchMove);
 			canvas.removeEventListener("touchend", onTouchEnd);
 		};
-	}, [gl, camera, handleTap, handleRightClick, handleLongPress]);
+	}, [gl, camera, handleTap, handleRightClick]);
 
 	return null;
 }

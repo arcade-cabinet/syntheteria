@@ -10,6 +10,6 @@ export interface NavigationPathNode {
 }
 
 export interface NavigationAdapter {
-	readonly kind: "sector" | "square";
+	readonly kind: "hex" | "square";
 	findPath(start: NavigationPoint, goal: NavigationPoint): NavigationPathNode[];
 }

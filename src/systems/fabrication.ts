@@ -73,7 +73,7 @@ export function startFabrication(
 	// Check resources
 	const pool = getResources();
 	for (const cost of recipe.costs) {
-		if ((pool[cost.type] ?? 0) < cost.amount) return false;
+		if (pool[cost.type] < cost.amount) return false;
 	}
 
 	// Spend resources

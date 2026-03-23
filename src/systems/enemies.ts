@@ -1,6 +1,11 @@
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { gameplayRandom } from "../ecs/seed";
 import {
+	getTerrainHeight,
+	isWalkable,
+	requirePrimaryFragment,
+} from "../ecs/terrain";
+import {
 	AIController,
 	Identity,
 	MapFragment,
@@ -9,11 +14,6 @@ import {
 	WorldPosition,
 } from "../ecs/traits";
 import { units, world } from "../ecs/world";
-import {
-	getStructuralFragments,
-	getSurfaceHeightAtWorldPosition,
-	isPassableAtWorldPosition,
-} from "../world/structuralSpace";
 
 /**
  * Enemy system — feral machines that roam the city streets.
@@ -58,7 +58,7 @@ function findValidSpawn(): { x: number; z: number } | null {
 	for (const zone of shuffled) {
 		const x = zone.x + (gameplayRandom() - 0.5) * 6;
 		const z = zone.z + (gameplayRandom() - 0.5) * 6;
-		if (isPassableAtWorldPosition(x, z) && !isInsideBuilding(x, z)) {
+		if (isWalkable(x, z) && !isInsideBuilding(x, z)) {
 			return { x, z };
 		}
 	}
@@ -69,10 +69,8 @@ function spawnEnemy() {
 	const pos = findValidSpawn();
 	if (!pos) return;
 
-	const fragments = getStructuralFragments();
-	const fragment = fragments[0];
-	if (!fragment) return;
-	const y = getSurfaceHeightAtWorldPosition(pos.x, pos.z);
+	const fragment = requirePrimaryFragment();
+	const y = getTerrainHeight(pos.x, pos.z);
 	const id = `enemy_${nextEnemyId++}`;
 
 	// Feral bots have random component states
@@ -95,24 +93,18 @@ function spawnEnemy() {
 	entity.set(Identity, { id, faction: "feral" as const });
 	entity.set(WorldPosition, { x: pos.x, y, z: pos.z });
 	entity.set(MapFragment, { fragmentId: fragment.id });
-	entity.set(
-		Unit,
-		createBotUnitState({
-			unitType: "maintenance_bot",
-			displayName: `Feral ${id.slice(-2).toUpperCase()}`,
-			speed: 2 + gameplayRandom() * 1.5,
-			components: [
-				{ name: "camera", functional: hasCam, material: "electronic" },
-				{ name: "arms", functional: hasArmsRoll, material: "metal" },
-				{ name: "legs", functional: true, material: "metal" },
-				{ name: "power_cell", functional: true, material: "electronic" },
-			],
-			identity: {
-				archetypeId: "feral_raider",
-				speechProfile: "feral",
-			},
-		}),
-	);
+	entity.set(Unit, {
+		type: "maintenance_bot",
+		displayName: `Feral ${id.slice(-2).toUpperCase()}`,
+		speed: 2 + gameplayRandom() * 1.5,
+		selected: false,
+		components: [
+			{ name: "camera", functional: hasCam, material: "electronic" },
+			{ name: "arms", functional: hasArmsRoll, material: "metal" },
+			{ name: "legs", functional: true, material: "metal" },
+			{ name: "power_cell", functional: true, material: "electronic" },
+		],
+	});
 	entity.set(Navigation, { path: [], pathIndex: 0, moving: false });
 
 	enemyIds.add(id);
@@ -138,5 +130,3 @@ export function resetEnemyState() {
 	spawnTimer = 40;
 	enemyIds.clear();
 }
-
-import { createBotUnitState } from "../bots";

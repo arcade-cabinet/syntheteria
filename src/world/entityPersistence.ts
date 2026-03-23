@@ -1,8 +1,7 @@
-import {
-	type BotUnitType,
-	getBotDefinition,
-	getDefaultBotIdentity,
-} from "../bots";
+import type {
+	PersistableWorldEntity,
+	WorldEntityRecord,
+} from "../db/worldPersistence";
 import { registerExistingEntityId } from "../ecs/factory";
 import {
 	AIController,
@@ -16,50 +15,6 @@ import {
 	WorldPosition,
 } from "../ecs/traits";
 import { world } from "../ecs/world";
-import type { PersistableWorldEntity, WorldEntitySnapshot } from "./snapshots";
-
-export function toWorldEntitySnapshots(
-	saveGameId: number,
-	entities: PersistableWorldEntity[],
-): WorldEntitySnapshot[] {
-	return entities.map((entity, index) => ({
-		id: index + 1,
-		save_game_id: saveGameId,
-		entity_id: entity.entityId,
-		scene_location: entity.sceneLocation,
-		scene_building_id: entity.sceneBuildingId,
-		faction: entity.faction,
-		unit_type: entity.unitType,
-		bot_archetype_id: entity.botArchetypeId,
-		mark_level: entity.markLevel,
-		speech_profile: entity.speechProfile,
-		building_type: entity.buildingType,
-		display_name: entity.displayName,
-		fragment_id: entity.fragmentId,
-		x: entity.x,
-		y: entity.y,
-		z: entity.z,
-		speed: entity.speed,
-		selected: entity.selected ? 1 : 0,
-		components_json: JSON.stringify(entity.components),
-		navigation_json: entity.navigation
-			? JSON.stringify(entity.navigation)
-			: null,
-		ai_role: entity.aiRole,
-		ai_state_json: entity.aiStateJson,
-		powered:
-			typeof entity.powered === "boolean" ? (entity.powered ? 1 : 0) : null,
-		operational:
-			typeof entity.operational === "boolean"
-				? entity.operational
-					? 1
-					: 0
-				: null,
-		rod_capacity: entity.rodCapacity,
-		current_output: entity.currentOutput,
-		protection_radius: entity.protectionRadius,
-	}));
-}
 
 export function capturePersistableWorldEntities(): PersistableWorldEntity[] {
 	const persisted: PersistableWorldEntity[] = [];
@@ -85,9 +40,6 @@ export function capturePersistableWorldEntities(): PersistableWorldEntity[] {
 			sceneBuildingId: scene?.buildingId ?? null,
 			faction: identity.faction,
 			unitType: unit?.type ?? null,
-			botArchetypeId: unit?.archetypeId ?? null,
-			markLevel: unit?.markLevel ?? null,
-			speechProfile: unit?.speechProfile ?? null,
 			buildingType: building?.type ?? null,
 			displayName: unit?.displayName ?? null,
 			fragmentId: mapFragment?.fragmentId ?? null,
@@ -117,11 +69,8 @@ export function capturePersistableWorldEntities(): PersistableWorldEntity[] {
 	return persisted;
 }
 
-export function hydratePersistedWorldEntities(records: WorldEntitySnapshot[]) {
+export function hydratePersistedWorldEntities(records: WorldEntityRecord[]) {
 	for (const record of records) {
-		const botDefinition = record.unit_type
-			? getBotDefinition(record.unit_type)
-			: null;
 		const traits = [Identity, WorldPosition] as any[];
 		if (record.fragment_id) {
 			traits.push(MapFragment);
@@ -129,7 +78,7 @@ export function hydratePersistedWorldEntities(records: WorldEntitySnapshot[]) {
 		if (record.unit_type) {
 			traits.push(Unit, Navigation);
 		}
-		if (record.ai_role || record.unit_type) {
+		if (record.ai_role) {
 			traits.push(AIController);
 		}
 		if (record.building_type) {
@@ -166,12 +115,11 @@ export function hydratePersistedWorldEntities(records: WorldEntitySnapshot[]) {
 		}
 
 		if (record.unit_type) {
-			const defaults = getDefaultBotIdentity(record.unit_type);
 			entity.set(Unit, {
-				type: record.unit_type as BotUnitType,
-				archetypeId: record.bot_archetype_id ?? defaults.archetypeId,
-				markLevel: record.mark_level ?? defaults.markLevel,
-				speechProfile: record.speech_profile ?? defaults.speechProfile,
+				type: record.unit_type as
+					| "maintenance_bot"
+					| "utility_drone"
+					| "fabrication_unit",
 				displayName: record.display_name ?? "Unit",
 				speed: record.speed ?? 0,
 				selected: record.selected === 1,
@@ -189,12 +137,6 @@ export function hydratePersistedWorldEntities(records: WorldEntitySnapshot[]) {
 				enabled: true,
 				stateJson: record.ai_state_json,
 			});
-		} else if (record.unit_type) {
-			entity.set(AIController, {
-				role: botDefinition?.defaultAiRole ?? "player_unit",
-				enabled: true,
-				stateJson: record.ai_state_json,
-			});
 		}
 
 		if (record.building_type) {
@@ -204,7 +146,6 @@ export function hydratePersistedWorldEntities(records: WorldEntitySnapshot[]) {
 				operational: record.operational === 1,
 				selected: record.selected === 1,
 				components: record.unit_type ? [] : JSON.parse(record.components_json),
-				cooldownExpiresAtTick: 0,
 			});
 		}
 

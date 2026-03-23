@@ -1,13 +1,6 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { setCameraState } from "../rendering/cameraStateStore";
-import { cancelCameraFocus, updateCameraFocus } from "../systems/cameraFocus";
-import {
-	getNextCycleTier,
-	getTargetHeightForTier,
-	updateZoomTier,
-} from "../systems/zoomTier";
 
 /**
  * Mobile-first top-down camera with touch pan/zoom and keyboard/mouse support.
@@ -24,8 +17,8 @@ const MOMENTUM_DECAY = 0.92;
 
 export function TopDownCamera() {
 	const { camera, gl } = useThree();
-	const target = useRef(new THREE.Vector3(0, 0, 0));
-	const zoom = useRef(18);
+	const target = useRef(new THREE.Vector3(8, 0, 8));
+	const zoom = useRef(30);
 	const velocity = useRef({ x: 0, z: 0 });
 	const keys = useRef(new Set<string>());
 
@@ -45,11 +38,6 @@ export function TopDownCamera() {
 	// Mouse drag state
 	const mouseDrag = useRef<{ lastX: number; lastY: number } | null>(null);
 
-	// Double-tap zoom snap state
-	const lastTapTime = useRef(0);
-	const lastTapPos = useRef({ x: 0, y: 0 });
-	const snapTarget = useRef<number | null>(null);
-
 	// Initialize camera
 	useEffect(() => {
 		camera.position.set(
@@ -62,16 +50,8 @@ export function TopDownCamera() {
 
 	// Keyboard events
 	useEffect(() => {
-		const onKeyDown = (e: KeyboardEvent) => {
-			const key = e.key.toLowerCase();
-			keys.current.add(key);
-
-			// Z key: cycle zoom tier (desktop equivalent of double-tap)
-			if (key === "z" && !e.repeat) {
-				const nextTier = getNextCycleTier();
-				snapTarget.current = getTargetHeightForTier(nextTier);
-			}
-		};
+		const onKeyDown = (e: KeyboardEvent) =>
+			keys.current.add(e.key.toLowerCase());
 		const onKeyUp = (e: KeyboardEvent) =>
 			keys.current.delete(e.key.toLowerCase());
 		window.addEventListener("keydown", onKeyDown);
@@ -188,25 +168,7 @@ export function TopDownCamera() {
 			}
 		};
 
-		const onTouchEnd = (e: TouchEvent) => {
-			// Double-tap detection for zoom snap (only on single-finger release)
-			if (e.changedTouches.length === 1 && !ts.isPanning) {
-				const now = performance.now();
-				const touch = e.changedTouches[0];
-				const dx = touch.clientX - lastTapPos.current.x;
-				const dy = touch.clientY - lastTapPos.current.y;
-				const timeDelta = now - lastTapTime.current;
-
-				if (timeDelta < 300 && dx * dx + dy * dy < 900) {
-					// Double-tap detected — snap to next zoom tier
-					const nextTier = getNextCycleTier();
-					snapTarget.current = getTargetHeightForTier(nextTier);
-				}
-
-				lastTapTime.current = now;
-				lastTapPos.current = { x: touch.clientX, y: touch.clientY };
-			}
-
+		const onTouchEnd = () => {
 			ts.twoFingerCenter = null;
 			ts.lastPinchDist = null;
 			ts.isPanning = false;
@@ -226,71 +188,24 @@ export function TopDownCamera() {
 		const k = keys.current;
 		const panAmount = PAN_SPEED * zoom.current * delta;
 
-		// Manual input cancels any active camera focus
-		const hasManualInput =
-			k.has("w") ||
-			k.has("s") ||
-			k.has("a") ||
-			k.has("d") ||
-			k.has("arrowup") ||
-			k.has("arrowdown") ||
-			k.has("arrowleft") ||
-			k.has("arrowright") ||
-			mouseDrag.current !== null ||
-			touchState.current.isPanning;
+		// Keyboard pan
+		if (k.has("w") || k.has("arrowup")) target.current.z -= panAmount;
+		if (k.has("s") || k.has("arrowdown")) target.current.z += panAmount;
+		if (k.has("a") || k.has("arrowleft")) target.current.x -= panAmount;
+		if (k.has("d") || k.has("arrowright")) target.current.x += panAmount;
 
-		if (hasManualInput) {
-			cancelCameraFocus();
-		}
-
-		// Camera focus system (smooth pan-to-unit, AI action camera)
-		const focusResult = updateCameraFocus(
-			target.current.x,
-			target.current.z,
-			zoom.current,
-			delta,
-		);
-
-		if (focusResult) {
-			target.current.x = focusResult.x;
-			target.current.z = focusResult.z;
-			zoom.current = focusResult.zoom;
-		} else {
-			// Keyboard pan (only when no focus active)
-			if (k.has("w") || k.has("arrowup")) target.current.z -= panAmount;
-			if (k.has("s") || k.has("arrowdown")) target.current.z += panAmount;
-			if (k.has("a") || k.has("arrowleft")) target.current.x -= panAmount;
-			if (k.has("d") || k.has("arrowright")) target.current.x += panAmount;
-
-			// Touch momentum
-			velocity.current.x *= MOMENTUM_DECAY;
-			velocity.current.z *= MOMENTUM_DECAY;
-			if (
-				Math.abs(velocity.current.x) > 0.001 ||
-				Math.abs(velocity.current.z) > 0.001
-			) {
-				if (!touchState.current.isPanning) {
-					target.current.x += velocity.current.x;
-					target.current.z += velocity.current.z;
-				}
+		// Touch momentum
+		velocity.current.x *= MOMENTUM_DECAY;
+		velocity.current.z *= MOMENTUM_DECAY;
+		if (
+			Math.abs(velocity.current.x) > 0.001 ||
+			Math.abs(velocity.current.z) > 0.001
+		) {
+			if (!touchState.current.isPanning) {
+				target.current.x += velocity.current.x;
+				target.current.z += velocity.current.z;
 			}
 		}
-
-		// Snap-to zoom tier animation
-		if (snapTarget.current !== null) {
-			const diff = snapTarget.current - zoom.current;
-			if (Math.abs(diff) < 0.5) {
-				zoom.current = snapTarget.current;
-				snapTarget.current = null;
-			} else {
-				// Smooth exponential lerp toward target (300ms feel)
-				zoom.current += diff * Math.min(1, delta * 6);
-			}
-			zoom.current = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom.current));
-		}
-
-		// Update zoom tier system with current camera height
-		updateZoomTier(zoom.current, delta);
 
 		// Update camera position (always top-down)
 		camera.position.set(
@@ -299,16 +214,6 @@ export function TopDownCamera() {
 			target.current.z + zoom.current * 0.6,
 		);
 		camera.lookAt(target.current);
-
-		// Sync to camera store for scene snapshot (Filament path)
-		const persp = camera as import("three").PerspectiveCamera;
-		setCameraState({
-			position: [camera.position.x, camera.position.y, camera.position.z],
-			target: [target.current.x, 0, target.current.z],
-			fov: persp.fov,
-			near: persp.near,
-			far: persp.far,
-		});
 	});
 
 	return null;

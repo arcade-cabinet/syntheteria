@@ -1,60 +1,64 @@
-/**
- * Playwright component testing — isolated React components in a real browser.
- * Run: pnpm test:ct
- * Tests: tests/components/*.spec.tsx
- */
-import path from "node:path";
+import { resolve } from "node:path";
 import { defineConfig, devices } from "@playwright/experimental-ct-react";
-import react from "@vitejs/plugin-react";
+
+const GPU_ARGS = [
+	"--no-sandbox",
+	"--use-angle=gl",
+	"--enable-webgl",
+	"--ignore-gpu-blocklist",
+	"--disable-background-timer-throttling",
+	"--disable-backgrounding-occluded-windows",
+	"--disable-renderer-backgrounding",
+];
 
 export default defineConfig({
 	testDir: "./tests/components",
+	timeout: 30_000,
 	fullyParallel: true,
-	forbidOnly: !!process.env.CI,
-	retries: process.env.CI ? 2 : 0,
-	workers: process.env.CI ? 2 : undefined,
-	reporter: "html",
-	expect: {
-		toHaveScreenshot: { maxDiffPixelRatio: 0.02 },
-	},
 	use: {
+		...devices["Desktop Chrome"],
+		headless: true,
+		launchOptions: {
+			args: GPU_ARGS,
+		},
+		viewport: {
+			width: 1280,
+			height: 900,
+		},
+		ctPort: 3100,
 		ctViteConfig: {
-			plugins: [react()],
-			assetsInclude: ["**/*.glb", "**/*.gltf", "**/*.wasm"],
-			optimizeDeps: {
-				// Prevent Vite from bundling sql.js — it must load WASM at runtime.
-				exclude: ["sql.js"],
-			},
 			resolve: {
-				alias: {
-					"@": path.resolve(__dirname, "./src"),
-					"@root": path.resolve(__dirname, "."),
-					"react-native": path.resolve(__dirname, "./src/stubs/react-native"),
-					"expo-asset": path.resolve(__dirname, "./src/stubs/expo-asset.ts"),
-					"react-native-filament": path.resolve(
-						__dirname,
-						"./src/stubs/react-native-filament.ts",
-					),
-					"react-native-reanimated": path.resolve(
-						__dirname,
-						"./src/stubs/react-native-reanimated.ts",
-					),
-					"react-native-svg": path.resolve(
-						__dirname,
-						"./src/stubs/react-native-svg.ts",
-					),
-				},
+				alias: [
+					{
+						find: "react-native/Libraries/Utilities/codegenNativeComponent",
+						replacement: resolve(
+							__dirname,
+							"tests/components/mocks/codegenNativeComponent.ts",
+						),
+					},
+					{
+						find: "react-native-reanimated",
+						replacement: resolve(
+							__dirname,
+							"tests/components/mocks/react-native-reanimated.ts",
+						),
+					},
+					{
+						find: "react-native",
+						replacement: resolve(
+							__dirname,
+							"node_modules/react-native-web/dist/index.js",
+						),
+					},
+				],
+			},
+			define: {
+				__DEV__: "true",
+				"process.env.NODE_ENV": '"development"',
+			},
+			optimizeDeps: {
+				include: ["react-native-web"],
 			},
 		},
-		trace: "on-first-retry",
 	},
-	projects: [
-		{
-			name: "chromium",
-			use: {
-				...devices["Desktop Chrome"],
-				headless: false,
-			},
-		},
-	],
 });

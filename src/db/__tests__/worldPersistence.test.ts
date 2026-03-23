@@ -1,12 +1,11 @@
-import { defaultResourcePool } from "../../systems/resources";
 import { generateWorldData } from "../../world/generation";
-import { getDatabaseSync } from "../runtime";
 import { createSaveGameSync } from "../saveGames";
 import {
 	getPersistedWorldSync,
 	persistGeneratedWorldSync,
 	persistRuntimeWorldStateSync,
 } from "../worldPersistence";
+import { FakeDatabase } from "./helpers/fakeDatabase";
 
 describe("world persistence", () => {
 	beforeEach(() => {
@@ -18,10 +17,10 @@ describe("world persistence", () => {
 	});
 
 	it("persists and reloads generated world data", () => {
-		const database = getDatabaseSync();
+		const database = new FakeDatabase();
 		const config = {
 			worldSeed: 42,
-			sectorScale: "small" as const,
+			mapSize: "small" as const,
 			difficulty: "hard" as const,
 			climateProfile: "wet" as const,
 			stormProfile: "cataclysmic" as const,
@@ -32,18 +31,9 @@ describe("world persistence", () => {
 		persistGeneratedWorldSync(saveGame!, config, generatedWorld, database);
 		const persisted = getPersistedWorldSync(saveGame!, database);
 
-		expect(persisted.ecumenopolis.width).toBe(
-			generatedWorld.ecumenopolis.width,
-		);
-		expect(persisted.ecumenopolis.height).toBe(
-			generatedWorld.ecumenopolis.height,
-		);
-		expect(persisted.sectorCells).toHaveLength(
-			generatedWorld.sectorCells.length,
-		);
-		expect(persisted.sectorStructures).toHaveLength(
-			generatedWorld.sectorStructures.length,
-		);
+		expect(persisted.worldMap.width).toBe(generatedWorld.map.width);
+		expect(persisted.worldMap.height).toBe(generatedWorld.map.height);
+		expect(persisted.tiles).toHaveLength(generatedWorld.tiles.length);
 		expect(persisted.pointsOfInterest).toHaveLength(
 			generatedWorld.pointsOfInterest.length,
 		);
@@ -54,32 +44,17 @@ describe("world persistence", () => {
 			persisted.pointsOfInterest.some((poi) => poi.type === "home_base"),
 		).toBe(true);
 		expect(persisted.campaignState.active_scene).toBe("world");
-		expect(persisted.resourceState.scrap_metal).toBe(30);
-		expect(persisted.resourceState.e_waste).toBe(15);
-		// 5 bots + lightning_rod + motor_pool = 7 starting entities
-		expect(persisted.entities).toHaveLength(7);
-		expect(
-			persisted.entities.some((e) => e.unit_type === "maintenance_bot"),
-		).toBe(true);
-		expect(persisted.entities.some((e) => e.unit_type === "mecha_scout")).toBe(
-			true,
-		);
-		expect(
-			persisted.entities.some((e) => e.building_type === "motor_pool"),
-		).toBe(true);
-		expect(persisted.sectorStructures.length).toBeGreaterThan(0);
-		expect(
-			persisted.sectorStructures.some(
-				(s) => s.source === "seeded_district" || s.source === "landmark",
-			),
-		).toBe(true);
+		expect(persisted.resourceState.scrap_metal).toBe(0);
+		expect(persisted.entities).toHaveLength(2);
+		expect(persisted.entities[0]?.entity_id).toBe("unit_0");
+		expect(persisted.entities[1]?.building_type).toBe("lightning_rod");
 	});
 
 	it("persists runtime campaign state updates", () => {
-		const database = getDatabaseSync();
+		const database = new FakeDatabase();
 		const config = {
 			worldSeed: 42,
-			sectorScale: "small" as const,
+			mapSize: "small" as const,
 			difficulty: "hard" as const,
 			climateProfile: "wet" as const,
 			stormProfile: "cataclysmic" as const,
@@ -93,7 +68,7 @@ describe("world persistence", () => {
 		persistRuntimeWorldStateSync(
 			{
 				saveGameId: saveGame!.id,
-				ecumenopolisId: persisted.ecumenopolis.id,
+				worldMapId: persisted.worldMap.id,
 				tick: 120,
 				activeScene: "city",
 				activeCityInstanceId: persisted.cityInstances[0]?.id ?? null,
@@ -102,10 +77,10 @@ describe("world persistence", () => {
 					eWaste: 4,
 					intactComponents: 1,
 				},
-				sectorCells: persisted.sectorCells.slice(0, 2).map((tile, index) => ({
+				tiles: persisted.tiles.slice(0, 2).map((tile, index) => ({
 					q: tile.q,
 					r: tile.r,
-					discovery_state: (index + 1) as 1 | 2,
+					fog_state: (index + 1) as 1 | 2,
 				})),
 				pointsOfInterest: persisted.pointsOfInterest.slice(0, 1).map((poi) => ({
 					id: poi.id,
@@ -122,9 +97,6 @@ describe("world persistence", () => {
 						sceneBuildingId: null,
 						faction: "player",
 						unitType: "maintenance_bot",
-						botArchetypeId: "field_technician",
-						markLevel: 1,
-						speechProfile: "mentor",
 						buildingType: null,
 						displayName: "Maintenance Bot",
 						fragmentId: "world_primary",
@@ -154,13 +126,7 @@ describe("world persistence", () => {
 		expect(reloaded.pointsOfInterest[0]?.discovered).toBe(1);
 		expect(reloaded.cityInstances[0]?.state).toBe("surveyed");
 		expect(reloaded.entities).toHaveLength(1);
-		const unit = reloaded.entities.find(
-			(entity) => entity.entity_id === "unit_0",
-		);
-		expect(unit?.x).toBe(4);
-		expect(unit?.selected).toBe(1);
-		expect(unit?.bot_archetype_id).toBe("field_technician");
-		expect(unit?.mark_level).toBe(1);
-		expect(unit?.speech_profile).toBe("mentor");
+		expect(reloaded.entities[0]?.x).toBe(4);
+		expect(reloaded.entities[0]?.selected).toBe(1);
 	});
 });

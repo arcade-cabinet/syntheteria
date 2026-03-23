@@ -1,4 +1,3 @@
-import { type BotUnitType, getBotDefinition } from "../../bots";
 import type { AgentPersistenceState } from "../agents/types";
 
 export interface KootaEntitySnapshot {
@@ -42,18 +41,10 @@ export class KootaYukaBridge {
 		entity: KootaEntitySnapshot,
 		persistedState?: AgentPersistenceState | null,
 	): AgentPersistenceState {
-		const botDefinition = entity.unitType
-			? getBotDefinition(entity.unitType as BotUnitType)
-			: null;
 		return {
 			entityId: entity.entityId,
 			role: persistedState?.role ?? "player_unit",
 			status: persistedState?.status ?? "idle",
-			profile: persistedState?.profile ?? {
-				steeringProfile: botDefinition?.steeringProfile ?? "biped_scout",
-				navigationProfile:
-					botDefinition?.navigationProfile ?? "sector_surface_standard",
-			},
 			task: persistedState?.task ?? null,
 			steering: persistedState?.steering ?? {
 				behavior: null,

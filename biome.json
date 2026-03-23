@@ -7,13 +7,7 @@
 			"**",
 			"!playwright-report/**",
 			"!test-results/**",
-			"!coverage/**",
-			"!tests/e2e/**",
-			"!tests/components/**",
-			"!tests/visual/**",
-			"!assets/coi-serviceworker.js",
-			"!public/assets/coi-serviceworker.js",
-			"!.claude/worktrees/**"
+			"!coverage/**"
 		]
 	},
 	"formatter": { "enabled": true, "indentStyle": "tab" },
@@ -56,13 +50,7 @@
 			"!android/app/build/**",
 			"!playwright-report/**",
 			"!test-results/**",
-			"!coverage/**",
-			"!tests/e2e/**",
-			"!tests/components/**",
-			"!tests/visual/**",
-			"!assets/coi-serviceworker.js",
-			"!public/assets/coi-serviceworker.js",
-			"!.claude/worktrees/**"
+			"!coverage/**"
 		]
 	},
 	"javascript": {
@@ -229,18 +217,7 @@
 				}
 			}
 		},
-		{ "includes": ["*.web.*"] },
-		{
-			"includes": [
-				"**/*.test.ts",
-				"**/*.test.tsx",
-				"**/__tests__/**",
-				"jest.setup*.ts"
-			],
-			"linter": {
-				"rules": { "style": { "noCommonJs": "off" } }
-			}
-		}
+		{ "includes": ["*.web.*"] }
 	],
 	"assist": {
 		"enabled": null,

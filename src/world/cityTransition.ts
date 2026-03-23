@@ -1,19 +1,11 @@
 import { persistRuntimeWorldStateSync } from "../db/worldPersistence";
+import { getAllFragments } from "../ecs/terrain";
 import { getResources } from "../systems/resources";
-import { applyEntryToCity } from "./cityLifecycle";
 import { capturePersistableWorldEntities } from "./entityPersistence";
-import {
-	getRuntimeState,
-	setCityKitLabOpen,
-	setRuntimeScene,
-} from "./runtimeState";
+import { getRuntimeState, setRuntimeScene } from "./runtimeState";
 import { getActiveWorldSession } from "./session";
-import {
-	getStructuralCellRecords,
-	getStructuralFragments,
-} from "./structuralSpace";
 
-export function syncActiveWorldSessionState() {
+function flushTransitionState() {
 	const session = getActiveWorldSession();
 	if (!session) {
 		return;
@@ -22,16 +14,16 @@ export function syncActiveWorldSessionState() {
 	const runtime = getRuntimeState();
 	persistRuntimeWorldStateSync({
 		saveGameId: session.saveGame.id,
-		ecumenopolisId: session.ecumenopolis.id,
+		worldMapId: session.worldMap.id,
 		tick: runtime.currentTick,
 		activeScene: runtime.activeScene,
 		activeCityInstanceId: runtime.activeCityInstanceId,
 		resources: getResources(),
-		sectorCells: getStructuralFragments().flatMap((fragment) =>
-			getStructuralCellRecords(fragment.id).map((cell) => ({
-				q: cell.q,
-				r: cell.r,
-				discovery_state: cell.discoveryState,
+		tiles: getAllFragments().flatMap((fragment) =>
+			Array.from(fragment.grid).map((tile) => ({
+				q: tile.q,
+				r: tile.r,
+				fog_state: tile.fog,
 			})),
 		),
 		pointsOfInterest: session.pointsOfInterest.map((poi) => ({
@@ -49,7 +41,7 @@ export function syncActiveWorldSessionState() {
 export function enterCityInstance(cityInstanceId: number) {
 	const session = getActiveWorldSession();
 	if (!session) {
-		throw new Error("Cannot enter a district without an active world session.");
+		throw new Error("Cannot enter a city without an active world session.");
 	}
 
 	const city = session.cityInstances.find(
@@ -59,14 +51,17 @@ export function enterCityInstance(cityInstanceId: number) {
 		throw new Error(`City instance ${cityInstanceId} does not exist.`);
 	}
 
-	applyEntryToCity(city);
+	if (city.state === "latent") {
+		city.state = "surveyed";
+	}
+
 	setRuntimeScene("city", cityInstanceId);
-	syncActiveWorldSessionState();
+	flushTransitionState();
 }
 
 export function returnToWorld() {
 	setRuntimeScene("world", null);
-	syncActiveWorldSessionState();
+	flushTransitionState();
 }
 
 export function getActiveCityInstance() {
@@ -85,12 +80,4 @@ export function getActiveCityInstance() {
 
 export function getSceneMode() {
 	return getRuntimeState().activeScene;
-}
-
-export function openCityKitLab() {
-	setCityKitLabOpen(true);
-}
-
-export function closeCityKitLab() {
-	setCityKitLabOpen(false);
 }

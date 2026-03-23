@@ -1,17 +1,17 @@
-export type SectorScale = "small" | "standard" | "large";
+export type MapSize = "small" | "standard" | "large";
 export type Difficulty = "story" | "standard" | "hard";
 export type ClimateProfile = "temperate" | "wet" | "arid" | "frozen";
 export type StormProfile = "stable" | "volatile" | "cataclysmic";
 
 export interface NewGameConfig {
 	worldSeed: number;
-	sectorScale: SectorScale;
+	mapSize: MapSize;
 	difficulty: Difficulty;
 	climateProfile: ClimateProfile;
 	stormProfile: StormProfile;
 }
 
-export interface SectorScaleSpec {
+export interface MapSizeSpec {
 	width: number;
 	height: number;
 	label: string;
@@ -38,31 +38,30 @@ export interface StormProfileSpec {
 }
 
 export const DEFAULT_NEW_GAME_CONFIG: Omit<NewGameConfig, "worldSeed"> = {
-	sectorScale: "standard",
+	mapSize: "standard",
 	difficulty: "standard",
 	climateProfile: "temperate",
 	stormProfile: "volatile",
 };
 
-export const SECTOR_SCALE_SPECS: Record<SectorScale, SectorScaleSpec> = {
+export const MAP_SIZE_SPECS: Record<MapSize, MapSizeSpec> = {
 	small: {
 		width: 28,
 		height: 28,
 		label: "Small",
-		description: "Fast start, tighter district lattice, shorter campaigns.",
+		description: "Fast start, tighter frontier, shorter campaigns.",
 	},
 	standard: {
 		width: 40,
 		height: 40,
 		label: "Standard",
-		description: "Default intended experience with balanced district breadth.",
+		description: "Default intended experience with balanced biome spread.",
 	},
 	large: {
 		width: 56,
 		height: 56,
 		label: "Large",
-		description:
-			"Broader machine-world, slower expansion, wider sector variety.",
+		description: "Broader world, slower expansion, more terrain variety.",
 	},
 };
 
@@ -151,8 +150,8 @@ export function createNewGameConfig(
 	};
 }
 
-export function getSectorScaleSpec(sectorScale: SectorScale) {
-	return SECTOR_SCALE_SPECS[sectorScale];
+export function getMapSizeSpec(mapSize: MapSize) {
+	return MAP_SIZE_SPECS[mapSize];
 }
 
 export function getClimateProfileSpec(climateProfile: ClimateProfile) {

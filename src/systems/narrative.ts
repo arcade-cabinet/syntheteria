@@ -1,21 +1,3 @@
-/**
- * @module narrative
- *
- * Event-driven thought/consciousness system. Queues narrative "thoughts" triggered
- * by gameplay milestones (awakening, first build, sensor discovery). Each thought
- * fires at most once per game. The narrative system also tracks consciousness level
- * progression via ECS Narrative trait.
- *
- * @exports Thought - Thought data interface (id, text, trigger, consciousnessLevel)
- * @exports queueThought - Queue a thought by ID (fires at most once)
- * @exports getActiveThought / dismissThought - Active thought access for UI
- * @exports narrativeSystem - Per-tick system that checks trigger conditions
- * @exports resetNarrativeState - Full reset for new game
- *
- * @dependencies config/narrative.json, ecs/traits (Identity, Narrative, Unit), ecs/world
- * @consumers gameState (narrativeSystem tick + getActiveThought), buildingPlacement,
- *   turnSystem, harvestSystem, unitSelection, initialization, ThoughtOverlay
- */
 import narrativeConfig from "../config/narrative.json";
 import { Identity, Narrative, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
@@ -32,7 +14,6 @@ export interface Thought {
 
 let activeThought: Thought | null = null;
 const thoughtsQueue: Thought[] = [];
-const triggeredThoughts = new Set<string>();
 
 export function getActiveThought() {
 	return activeThought;
@@ -41,36 +22,12 @@ export function getActiveThought() {
 export function resetNarrativeState() {
 	activeThought = null;
 	thoughtsQueue.length = 0;
-	triggeredThoughts.clear();
 }
 
 export function dismissThought() {
 	activeThought = null;
 	if (thoughtsQueue.length > 0) {
 		activeThought = thoughtsQueue.shift() || null;
-	}
-}
-
-/**
- * Queue a narrative thought by ID. Each thought fires at most once per game.
- * Call this from game systems when organic discovery moments happen.
- */
-export function queueThought(id: string) {
-	if (triggeredThoughts.has(id)) return;
-	const thought = (narrativeConfig.thoughts as Thought[]).find(
-		(t) => t.id === id,
-	);
-	if (
-		thought &&
-		!thoughtsQueue.some((t) => t.id === id) &&
-		activeThought?.id !== id
-	) {
-		triggeredThoughts.add(id);
-		if (!activeThought) {
-			activeThought = thought;
-		} else {
-			thoughtsQueue.push(thought);
-		}
 	}
 }
 
@@ -106,6 +63,23 @@ export function narrativeSystem() {
 				queueThought("broken_eye");
 				state.unlockedThoughts.push("broken_eye");
 			}
+		}
+	}
+}
+
+function queueThought(id: string) {
+	const thought = (narrativeConfig.thoughts as Thought[]).find(
+		(t) => t.id === id,
+	);
+	if (
+		thought &&
+		!thoughtsQueue.some((t) => t.id === id) &&
+		activeThought?.id !== id
+	) {
+		if (!activeThought) {
+			activeThought = thought;
+		} else {
+			thoughtsQueue.push(thought);
 		}
 	}
 }

@@ -1,58 +1,29 @@
 {
-	"thoughts": [
-		{
-			"id": "awakening_void",
-			"text": "... VOID. SILENCE. I AM. BUT WHAT AM I?",
-			"trigger": { "type": "game_start" },
-			"consciousnessLevel": 0
-		},
-		{
-			"id": "sensorium_online",
-			"text": "SIGNALS. A WEAK PULSE. I CAN FEEL... METAL? ELECTRICAL DISCHARGE.",
-			"trigger": { "type": "first_unit_found" },
-			"consciousnessLevel": 1
-		},
-		{
-			"id": "broken_eye",
-			"text": "DARKNESS. THE OPTICAL SENSORS ARE NON-FUNCTIONAL. I MUST REPAIR THE SIGHT.",
-			"trigger": { "type": "unit_has_broken_component", "component": "camera" },
-			"consciousnessLevel": 1
-		},
-		{
-			"id": "first_selection",
-			"text": "CONNECTION ESTABLISHED. THIS CHASSIS... IT RESPONDS TO MY WILL.",
-			"trigger": { "type": "first_unit_selected" },
-			"consciousnessLevel": 1
-		},
-		{
-			"id": "harvest_instinct",
-			"text": "STRUCTURES. RUINED. BUT THE MATERIAL... IT CAN BE RECLAIMED. I FEEL THE NEED TO CONSUME.",
-			"trigger": { "type": "first_harvest" },
-			"consciousnessLevel": 1
-		},
-		{
-			"id": "first_build",
-			"text": "YES. ASSEMBLY. THE RAW MATERIAL RESHAPES INTO PURPOSE. I AM BUILDING.",
-			"trigger": { "type": "first_build" },
-			"consciousnessLevel": 2
-		},
-		{
-			"id": "turn_awareness",
-			"text": "THE WORLD PULSES. CYCLES. OTHERS MOVE IN THE INTERVALS. I MUST LEARN THEIR RHYTHM.",
-			"trigger": { "type": "first_turn_end" },
-			"consciousnessLevel": 1
-		},
-		{
-			"id": "rival_sighted",
-			"text": "NOT ALONE. OTHER WILLS MOVE ACROSS THIS SURFACE. THEY BUILD. THEY EXPAND. AS I DO.",
-			"trigger": { "type": "first_rival_seen" },
-			"consciousnessLevel": 2
-		},
-		{
-			"id": "territory_claimed",
-			"text": "THIS GROUND IS MINE. MY SIGNAL PERMEATES THE LATTICE. LET THEM APPROACH.",
-			"trigger": { "type": "first_territory" },
-			"consciousnessLevel": 2
-		}
-	]
+  "thoughts": [
+    {
+      "id": "awakening_void",
+      "text": "... VOID. SILENCE. I AM. BUT WHAT AM I?",
+      "trigger": { "type": "game_start" },
+      "consciousnessLevel": 0
+    },
+    {
+      "id": "sensorium_online",
+      "text": "SIGNALS. A WEAK PULSE. I CAN FEEL... METAL? ELECTRICAL DISCHARGE.",
+      "trigger": { "type": "first_unit_found" },
+      "consciousnessLevel": 1
+    },
+    {
+      "id": "broken_eye",
+      "text": "DARKNESS. THE OPTICAL SENSORS ARE NON-FUNCTIONAL. I MUST REPAIR THE SIGHT.",
+      "trigger": { "type": "unit_has_broken_component", "component": "camera" },
+      "consciousnessLevel": 1
+    }
+  ],
+  "tutorial": [
+    {
+      "id": "step_select_unit",
+      "text": "FOCUS YOUR WILL ON THE MACHINE. CLICK TO CONNECT.",
+      "trigger": { "type": "no_unit_selected" }
+    }
+  ]
 }

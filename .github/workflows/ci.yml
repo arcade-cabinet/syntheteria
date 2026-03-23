@@ -41,16 +41,15 @@ jobs:
         run: pnpm exec tsc --noEmit --pretty false
 
       - name: Unit tests
-        run: pnpm exec jest --runInBand
+        run: pnpm test -- --runInBand
 
       - name: Build web export
-        run: pnpm build
+        run: pnpm run build:web
 
   e2e:
     name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
     needs: quality
-    continue-on-error: true  # E2E is optional — see IS_THE_GAME_DONE.md; Quality is the required gate
 
     steps:
       - uses: actions/checkout@v4
@@ -71,8 +70,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run E2E tests (headed via xvfb-run)
-        run: xvfb-run -a pnpm exec playwright test -c playwright.e2e.config.ts
+      - name: Run E2E tests
+        run: pnpm exec playwright test --project=e2e-chromium
         env:
           CI: true
 

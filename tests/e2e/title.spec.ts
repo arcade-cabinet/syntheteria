@@ -1,55 +1,34 @@
+/**
+ * E2E tests for the Syntheteria title screen.
+ *
+ * Validates that the entry point of the game renders correctly and that the
+ * "NEW GAME" button is the only interactive option (CONTINUE and SETTINGS are
+ * disabled stubs at this stage of development).
+ */
 import { expect, test } from "@playwright/test";
 
-async function clearPersistence(page: import("@playwright/test").Page) {
-	await page.goto("/");
-	await page.evaluate(async () => {
-		try {
-			localStorage.clear();
-			sessionStorage.clear();
-		} catch (_error) {
-			// Some environments gate storage during early document bootstrap.
-		}
-		if ("caches" in window) {
-			const keys = await caches.keys();
-			await Promise.all(keys.map((key) => caches.delete(key)));
-		}
-		if (typeof indexedDB.databases === "function") {
-			const databases = await indexedDB.databases();
-			await Promise.all(
-				databases.map(
-					(database) =>
-						new Promise<void>((resolve) => {
-							if (!database.name) {
-								resolve();
-								return;
-							}
-							const request = indexedDB.deleteDatabase(database.name);
-							request.onsuccess = () => resolve();
-							request.onerror = () => resolve();
-							request.onblocked = () => resolve();
-						}),
-				),
-			);
-		}
-	});
-}
-
-test.describe("title screen", () => {
+test.describe("Title screen", () => {
 	test.beforeEach(async ({ page }) => {
-		await clearPersistence(page);
+		await page.goto("/");
+	});
+
+	test("renders the game title and tagline", async ({ page }) => {
 		await expect(page.getByText("SYNTHETERIA")).toBeVisible();
+		await expect(page.getByText("AWAKEN // CONNECT // REBUILD")).toBeVisible();
 	});
 
-	test("shows new game and settings before a save exists", async ({ page }) => {
-		await expect(page.getByTestId("title-new_game")).toBeVisible();
-		await expect(page.getByTestId("title-settings")).toBeVisible();
-		await expect(page.getByTestId("title-load_game")).toHaveCount(0);
+	test("shows NEW GAME as the only enabled button", async ({ page }) => {
+		// NEW GAME is wrapped in brackets when primary + enabled
+		const newGame = page.getByRole("button", { name: /NEW GAME/ });
+		await expect(newGame).toBeVisible();
+		await expect(newGame).toBeEnabled();
+
+		// Stub buttons are present but disabled
+		await expect(page.getByRole("button", { name: "CONTINUE" })).toBeDisabled();
+		await expect(page.getByRole("button", { name: "SETTINGS" })).toBeDisabled();
 	});
 
-	test("opens and closes the settings overlay", async ({ page }) => {
-		await page.getByTestId("title-settings").click();
-		await expect(page.getByText("Settings")).toBeVisible();
-		await page.getByTestId("settings-close").click();
-		await expect(page.getByText("Settings")).toHaveCount(0);
+	test("displays version string", async ({ page }) => {
+		await expect(page.getByText(/v\d+\.\d+\.\d+/)).toBeVisible();
 	});
 });

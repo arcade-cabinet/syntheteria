@@ -1,58 +1,158 @@
 import type { AgentRole } from "../ai";
-import { createStartingRoster } from "../bots/startingRoster";
+import type { TerrainSetId } from "../config/terrainSetRules";
+import type { Biome, FogState } from "../ecs/terrain";
 import type { UnitComponent } from "../ecs/traits";
 import type { ResourcePool } from "../systems/resources";
-import { loadChunkDiscovery } from "../world/chunkDiscovery";
 import type {
 	ClimateProfile,
 	NewGameConfig,
 	StormProfile,
 } from "../world/config";
-import type { WorldPoiType } from "../world/contracts";
 import type {
+	CityGenerationStatus,
+	CityInstanceState,
 	GeneratedCityInstanceSeed,
-	GeneratedEcumenopolisData,
-	GeneratedSectorCell,
-	GeneratedSectorPointOfInterest,
-	GeneratedSectorStructure,
+	GeneratedWorldData,
+	GeneratedWorldPointOfInterest,
+	GeneratedWorldTile,
+	WorldPoiType,
 } from "../world/generation";
-import type {
-	CampaignStateSnapshot,
-	CampaignStatisticsSnapshot,
-	CityRuntimeSnapshot,
-	EcumenopolisSnapshot,
-	FactionResourceStateSnapshot,
-	HarvestStateSnapshot,
-	PersistableWorldEntity,
-	PersistedWorldSnapshot,
-	ResourceStateSnapshot,
-	SectorCellSnapshot,
-	SectorPoiSnapshot,
-	SectorStructureSnapshot,
-	TurnEventLogSnapshot,
-	TurnStateSnapshot,
-	WorldEntitySnapshot,
-	WorldSessionSnapshot,
-} from "../world/snapshots";
 import { initializeDatabaseSync } from "./bootstrap";
 import { getDatabaseSync, setDatabaseResolver } from "./runtime";
 import type { SaveGameRecord } from "./saveGames";
 import type { SyncDatabase } from "./types";
-export type EcumenopolisRecord = EcumenopolisSnapshot;
-export type SectorCellRecord = SectorCellSnapshot;
-export type SectorStructureRecord = SectorStructureSnapshot;
-export type WorldPointOfInterestRecord = SectorPoiSnapshot;
-export type CityInstanceRecord = CityRuntimeSnapshot;
-export type CampaignStateRecord = CampaignStateSnapshot;
-export type ResourceStateRecord = ResourceStateSnapshot;
-export type WorldEntityRecord = WorldEntitySnapshot;
-export type HarvestStateRecord = HarvestStateSnapshot;
-export type TurnStateRecord = TurnStateSnapshot;
-export type FactionResourceStateRecord = FactionResourceStateSnapshot;
-export type CampaignStatisticsRecord = CampaignStatisticsSnapshot;
-export type TurnEventLogRecord = TurnEventLogSnapshot;
-export type PersistedWorldRecord = PersistedWorldSnapshot;
-export type ActiveWorldRecord = WorldSessionSnapshot;
+
+export interface WorldMapRecord {
+	id: number;
+	save_game_id: number;
+	width: number;
+	height: number;
+	map_size: string;
+	climate_profile: ClimateProfile;
+	storm_profile: StormProfile;
+	spawn_q: number;
+	spawn_r: number;
+	generated_at: number;
+}
+
+export interface WorldTileRecord {
+	id: number;
+	world_map_id: number;
+	q: number;
+	r: number;
+	biome: Biome;
+	terrain_set_id: TerrainSetId;
+	fog_state: FogState;
+	passable: number;
+}
+
+export interface WorldPointOfInterestRecord {
+	id: number;
+	world_map_id: number;
+	type: WorldPoiType;
+	name: string;
+	q: number;
+	r: number;
+	discovered: number;
+}
+
+export interface CityInstanceRecord {
+	id: number;
+	world_map_id: number;
+	poi_id: number | null;
+	name: string;
+	world_q: number;
+	world_r: number;
+	layout_seed: number;
+	generation_status: CityGenerationStatus;
+	state: CityInstanceState;
+}
+
+export interface CampaignStateRecord {
+	id: number;
+	save_game_id: number;
+	active_scene: "world" | "city";
+	active_city_instance_id: number | null;
+	current_tick: number;
+	last_synced_at: number;
+}
+
+export interface ResourceStateRecord {
+	id: number;
+	save_game_id: number;
+	scrap_metal: number;
+	e_waste: number;
+	intact_components: number;
+	last_synced_at: number;
+}
+
+export interface WorldEntityRecord {
+	id: number;
+	save_game_id: number;
+	entity_id: string;
+	scene_location: "world" | "interior";
+	scene_building_id: string | null;
+	faction: string;
+	unit_type: string | null;
+	building_type: string | null;
+	display_name: string | null;
+	fragment_id: string | null;
+	x: number;
+	y: number;
+	z: number;
+	speed: number | null;
+	selected: number;
+	components_json: string;
+	navigation_json: string | null;
+	ai_role: AgentRole | null;
+	ai_state_json: string | null;
+	powered: number | null;
+	operational: number | null;
+	rod_capacity: number | null;
+	current_output: number | null;
+	protection_radius: number | null;
+}
+
+export interface PersistableWorldEntity {
+	entityId: string;
+	sceneLocation: "world" | "interior";
+	sceneBuildingId: string | null;
+	faction: string;
+	unitType: string | null;
+	buildingType: string | null;
+	displayName: string | null;
+	fragmentId: string | null;
+	x: number;
+	y: number;
+	z: number;
+	speed: number | null;
+	selected: boolean;
+	components: UnitComponent[];
+	navigation: {
+		path: { q: number; r: number }[];
+		pathIndex: number;
+		moving: boolean;
+	} | null;
+	aiRole: AgentRole | null;
+	aiStateJson: string | null;
+	powered: boolean | null;
+	operational: boolean | null;
+	rodCapacity: number | null;
+	currentOutput: number | null;
+	protectionRadius: number | null;
+}
+
+export interface PersistedWorldRecord {
+	saveGame: SaveGameRecord;
+	config: NewGameConfig;
+	worldMap: WorldMapRecord;
+	tiles: WorldTileRecord[];
+	pointsOfInterest: WorldPointOfInterestRecord[];
+	cityInstances: CityInstanceRecord[];
+	campaignState: CampaignStateRecord;
+	resourceState: ResourceStateRecord;
+	entities: WorldEntityRecord[];
+}
 
 export function setWorldPersistenceDatabaseResolver(
 	resolver: (() => SyncDatabase) | null,
@@ -61,20 +161,20 @@ export function setWorldPersistenceDatabaseResolver(
 }
 
 function selectWorldMapBySaveId(database: SyncDatabase, saveGameId: number) {
-	return database.getFirstSync<EcumenopolisRecord>(
+	return database.getFirstSync<WorldMapRecord>(
 		`
 			SELECT
 				id,
 				save_game_id,
 				width,
 				height,
-				sector_scale,
+				map_size,
 				climate_profile,
 				storm_profile,
-				spawn_sector_id,
-				spawn_anchor_key,
+				spawn_q,
+				spawn_r,
 				generated_at
-			FROM ecumenopolis_maps
+			FROM world_maps
 			WHERE save_game_id = ?
 		`,
 		saveGameId,
@@ -82,53 +182,20 @@ function selectWorldMapBySaveId(database: SyncDatabase, saveGameId: number) {
 }
 
 function selectWorldTiles(database: SyncDatabase, worldMapId: number) {
-	return database.getAllSync<SectorCellRecord>(
+	return database.getAllSync<WorldTileRecord>(
 		`
 			SELECT
 				id,
-				ecumenopolis_id,
+				world_map_id,
 				q,
 				r,
-				structural_zone,
-				floor_preset_id,
-				discovery_state,
-				passable,
-				sector_archetype,
-				storm_exposure,
-				impassable_class,
-				anchor_key
-			FROM sector_cells
-			WHERE ecumenopolis_id = ?
+				biome,
+				terrain_set_id,
+				fog_state,
+				passable
+			FROM world_tiles
+			WHERE world_map_id = ?
 			ORDER BY r ASC, q ASC
-		`,
-		worldMapId,
-	);
-}
-
-function selectSectorStructures(database: SyncDatabase, worldMapId: number) {
-	return database.getAllSync<SectorStructureRecord>(
-		`
-			SELECT
-				id,
-				ecumenopolis_id,
-				district_structure_id,
-				anchor_key,
-				q,
-				r,
-				model_id,
-				placement_layer,
-				edge,
-				rotation_quarter_turns,
-				offset_x,
-				offset_y,
-				offset_z,
-				target_span,
-				sector_archetype,
-				source,
-				controller_faction
-			FROM sector_structures
-			WHERE ecumenopolis_id = ?
-			ORDER BY q ASC, r ASC, id ASC
 		`,
 		worldMapId,
 	);
@@ -139,14 +206,14 @@ function selectPointsOfInterest(database: SyncDatabase, worldMapId: number) {
 		`
 			SELECT
 				id,
-				ecumenopolis_id,
+				world_map_id,
 				type,
 				name,
 				q,
 				r,
 				discovered
 			FROM world_points_of_interest
-			WHERE ecumenopolis_id = ?
+			WHERE world_map_id = ?
 			ORDER BY id ASC
 		`,
 		worldMapId,
@@ -158,7 +225,7 @@ function selectCityInstances(database: SyncDatabase, worldMapId: number) {
 		`
 			SELECT
 				id,
-				ecumenopolis_id,
+				world_map_id,
 				poi_id,
 				name,
 				world_q,
@@ -167,7 +234,7 @@ function selectCityInstances(database: SyncDatabase, worldMapId: number) {
 				generation_status,
 				state
 			FROM city_instances
-			WHERE ecumenopolis_id = ?
+			WHERE world_map_id = ?
 			ORDER BY id ASC
 		`,
 		worldMapId,
@@ -208,79 +275,6 @@ function selectResourceState(database: SyncDatabase, saveGameId: number) {
 	);
 }
 
-function selectHarvestState(database: SyncDatabase, saveGameId: number) {
-	const row = database.getFirstSync<
-		HarvestStateRecord & { consumed_floor_tiles_json?: string }
-	>(
-		`
-			SELECT
-				id,
-				save_game_id,
-				consumed_structure_ids_json,
-				active_harvests_json,
-				COALESCE(consumed_floor_tiles_json, '[]') as consumed_floor_tiles_json,
-				last_synced_at
-			FROM harvest_states
-			WHERE save_game_id = ?
-		`,
-		saveGameId,
-	);
-	return row;
-}
-
-function selectTurnState(database: SyncDatabase, saveGameId: number) {
-	return database.getFirstSync<TurnStateRecord>(
-		`
-			SELECT
-				id,
-				save_game_id,
-				turn_number,
-				phase,
-				active_faction,
-				unit_states_json,
-				last_synced_at
-			FROM turn_states
-			WHERE save_game_id = ?
-		`,
-		saveGameId,
-	);
-}
-
-function selectFactionResourceStates(
-	database: SyncDatabase,
-	saveGameId: number,
-) {
-	return database.getAllSync<FactionResourceStateRecord>(
-		`
-			SELECT
-				id,
-				save_game_id,
-				faction_id,
-				resources_json,
-				last_synced_at
-			FROM faction_resource_states
-			WHERE save_game_id = ?
-			ORDER BY faction_id ASC
-		`,
-		saveGameId,
-	);
-}
-
-function selectCampaignStatistics(database: SyncDatabase, saveGameId: number) {
-	return database.getFirstSync<CampaignStatisticsRecord>(
-		`
-			SELECT
-				id,
-				save_game_id,
-				stats_json,
-				last_synced_at
-			FROM campaign_statistics
-			WHERE save_game_id = ?
-		`,
-		saveGameId,
-	);
-}
-
 function selectWorldEntities(database: SyncDatabase, saveGameId: number) {
 	return database.getAllSync<WorldEntityRecord>(
 		`
@@ -292,9 +286,6 @@ function selectWorldEntities(database: SyncDatabase, saveGameId: number) {
 				scene_building_id,
 				faction,
 				unit_type,
-				bot_archetype_id,
-				mark_level,
-				speech_profile,
 				building_type,
 				display_name,
 				fragment_id,
@@ -323,26 +314,22 @@ function selectWorldEntities(database: SyncDatabase, saveGameId: number) {
 export function persistGeneratedWorldSync(
 	saveGame: SaveGameRecord,
 	config: NewGameConfig,
-	generatedWorld: GeneratedEcumenopolisData,
+	generatedWorld: GeneratedWorldData,
 	database: SyncDatabase = getDatabaseSync(),
 ) {
 	initializeDatabaseSync(database);
 	const now = Date.now();
 
 	database.runSync(
-		"DELETE FROM sector_structures WHERE ecumenopolis_id IN (SELECT id FROM ecumenopolis_maps WHERE save_game_id = ?)",
+		"DELETE FROM city_instances WHERE world_map_id IN (SELECT id FROM world_maps WHERE save_game_id = ?)",
 		saveGame.id,
 	);
 	database.runSync(
-		"DELETE FROM city_instances WHERE ecumenopolis_id IN (SELECT id FROM ecumenopolis_maps WHERE save_game_id = ?)",
+		"DELETE FROM world_points_of_interest WHERE world_map_id IN (SELECT id FROM world_maps WHERE save_game_id = ?)",
 		saveGame.id,
 	);
 	database.runSync(
-		"DELETE FROM world_points_of_interest WHERE ecumenopolis_id IN (SELECT id FROM ecumenopolis_maps WHERE save_game_id = ?)",
-		saveGame.id,
-	);
-	database.runSync(
-		"DELETE FROM sector_cells WHERE ecumenopolis_id IN (SELECT id FROM ecumenopolis_maps WHERE save_game_id = ?)",
+		"DELETE FROM world_tiles WHERE world_map_id IN (SELECT id FROM world_maps WHERE save_game_id = ?)",
 		saveGame.id,
 	);
 	database.runSync(
@@ -350,47 +337,43 @@ export function persistGeneratedWorldSync(
 		saveGame.id,
 	);
 	database.runSync(
-		"DELETE FROM ecumenopolis_maps WHERE save_game_id = ?",
+		"DELETE FROM world_maps WHERE save_game_id = ?",
 		saveGame.id,
 	);
 
 	const worldMapInsert = database.runSync(
 		`
-			INSERT INTO ecumenopolis_maps (
+			INSERT INTO world_maps (
 				save_game_id,
 				width,
 				height,
-				sector_scale,
+				map_size,
 				climate_profile,
 				storm_profile,
-				spawn_sector_id,
-				spawn_anchor_key,
+				spawn_q,
+				spawn_r,
 				generated_at
 			)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`,
 		saveGame.id,
-		generatedWorld.ecumenopolis.width,
-		generatedWorld.ecumenopolis.height,
-		config.sectorScale,
+		generatedWorld.map.width,
+		generatedWorld.map.height,
+		config.mapSize,
 		config.climateProfile,
 		config.stormProfile,
-		generatedWorld.ecumenopolis.spawnSectorId,
-		generatedWorld.ecumenopolis.spawnAnchorKey,
+		generatedWorld.map.spawnQ,
+		generatedWorld.map.spawnR,
 		now,
 	);
 
 	const worldMapId = worldMapInsert.lastInsertRowId;
 
-	for (const tile of generatedWorld.sectorCells) {
+	for (const tile of generatedWorld.tiles) {
 		insertWorldTile(database, worldMapId, tile);
 	}
 
-	for (const structure of generatedWorld.sectorStructures) {
-		insertSectorStructure(database, worldMapId, structure);
-	}
-
-	const poiIds = new Map<string, number>();
+	const poiIds = new Map<WorldPoiType, number>();
 	for (const poi of generatedWorld.pointsOfInterest) {
 		const insert = insertWorldPointOfInterest(database, worldMapId, poi);
 		poiIds.set(poi.type, insert.lastInsertRowId);
@@ -409,10 +392,7 @@ export function persistGeneratedWorldSync(
 	ensureResourceStateSync(saveGame.id, database, now);
 	persistWorldEntitiesSync(
 		saveGame.id,
-		createStartingRoster({
-			spawnQ: Math.floor(generatedWorld.ecumenopolis.width / 2),
-			spawnR: Math.floor(generatedWorld.ecumenopolis.height / 2),
-		}),
+		createInitialWorldEntities(generatedWorld),
 		database,
 	);
 
@@ -469,7 +449,7 @@ function ensureResourceStateSync(
 				intact_components,
 				last_synced_at
 			)
-			VALUES (?, 30, 15, 0, ?)
+			VALUES (?, 0, 0, 0, ?)
 		`,
 		saveGameId,
 		now,
@@ -479,6 +459,67 @@ function ensureResourceStateSync(
 		"SELECT id, save_game_id, scrap_metal, e_waste, intact_components, last_synced_at FROM resource_states WHERE id = ?",
 		result.lastInsertRowId,
 	);
+}
+
+function createInitialWorldEntities(
+	generatedWorld: GeneratedWorldData,
+): PersistableWorldEntity[] {
+	return [
+		{
+			entityId: "unit_0",
+			sceneLocation: "world",
+			sceneBuildingId: null,
+			faction: "player",
+			unitType: "maintenance_bot",
+			buildingType: null,
+			displayName: "Maintenance Bot",
+			fragmentId: "world_primary",
+			x: generatedWorld.map.spawnQ,
+			y: 0,
+			z: generatedWorld.map.spawnR,
+			speed: 2,
+			selected: false,
+			components: [
+				{ name: "processor", functional: true, material: "electronic" },
+				{ name: "camera", functional: false, material: "electronic" },
+				{ name: "legs", functional: true, material: "metal" },
+				{ name: "arms", functional: true, material: "metal" },
+				{ name: "power_cell", functional: true, material: "electronic" },
+			],
+			navigation: { path: [], pathIndex: 0, moving: false },
+			aiRole: null,
+			aiStateJson: null,
+			powered: null,
+			operational: null,
+			rodCapacity: null,
+			currentOutput: null,
+			protectionRadius: null,
+		},
+		{
+			entityId: "bldg_1",
+			sceneLocation: "world",
+			sceneBuildingId: null,
+			faction: "player",
+			unitType: null,
+			buildingType: "lightning_rod",
+			displayName: "Lightning Rod",
+			fragmentId: "world_primary",
+			x: generatedWorld.map.spawnQ + 2,
+			y: 0,
+			z: generatedWorld.map.spawnR + 2,
+			speed: null,
+			selected: false,
+			components: [],
+			navigation: null,
+			aiRole: null,
+			aiStateJson: null,
+			powered: true,
+			operational: true,
+			rodCapacity: 12,
+			currentOutput: 4,
+			protectionRadius: 8,
+		},
+	];
 }
 
 function insertWorldEntity(
@@ -495,9 +536,6 @@ function insertWorldEntity(
 				scene_building_id,
 				faction,
 				unit_type,
-				bot_archetype_id,
-				mark_level,
-				speech_profile,
 				building_type,
 				display_name,
 				fragment_id,
@@ -516,7 +554,7 @@ function insertWorldEntity(
 				current_output,
 				protection_radius
 			)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`,
 		saveGameId,
 		entity.entityId,
@@ -524,9 +562,6 @@ function insertWorldEntity(
 		entity.sceneBuildingId,
 		entity.faction,
 		entity.unitType,
-		entity.botArchetypeId,
-		entity.markLevel,
-		entity.speechProfile,
 		entity.buildingType,
 		entity.displayName,
 		entity.fragmentId,
@@ -564,94 +599,40 @@ function persistWorldEntitiesSync(
 function insertWorldTile(
 	database: SyncDatabase,
 	worldMapId: number,
-	tile: GeneratedSectorCell,
+	tile: GeneratedWorldTile,
 ) {
 	return database.runSync(
 		`
-			INSERT INTO sector_cells (
-				ecumenopolis_id,
+			INSERT INTO world_tiles (
+				world_map_id,
 				q,
 				r,
-				structural_zone,
-				floor_preset_id,
-				discovery_state,
-				passable,
-				sector_archetype,
-				storm_exposure,
-				impassable_class,
-				anchor_key
+				biome,
+				terrain_set_id,
+				fog_state,
+				passable
 			)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
 		`,
 		worldMapId,
 		tile.q,
 		tile.r,
-		tile.structuralZone,
-		tile.floorPresetId,
-		tile.discoveryState,
+		tile.biome,
+		tile.terrainSetId,
+		tile.fog,
 		tile.passable ? 1 : 0,
-		tile.sectorArchetype,
-		tile.stormExposure,
-		tile.impassableClass,
-		tile.anchorKey,
-	);
-}
-
-function insertSectorStructure(
-	database: SyncDatabase,
-	worldMapId: number,
-	structure: GeneratedSectorStructure,
-) {
-	return database.runSync(
-		`
-			INSERT INTO sector_structures (
-				ecumenopolis_id,
-				district_structure_id,
-				anchor_key,
-				q,
-				r,
-				model_id,
-				placement_layer,
-				edge,
-				rotation_quarter_turns,
-				offset_x,
-				offset_y,
-				offset_z,
-				target_span,
-				sector_archetype,
-				source,
-				controller_faction
-			)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`,
-		worldMapId,
-		structure.districtStructureId,
-		structure.anchorKey,
-		structure.q,
-		structure.r,
-		structure.modelId,
-		structure.placementLayer,
-		structure.edge,
-		structure.rotationQuarterTurns,
-		structure.offsetX,
-		structure.offsetY,
-		structure.offsetZ,
-		structure.targetSpan,
-		structure.sectorArchetype,
-		structure.source,
-		structure.controllerFaction,
 	);
 }
 
 function insertWorldPointOfInterest(
 	database: SyncDatabase,
 	worldMapId: number,
-	poi: GeneratedSectorPointOfInterest,
+	poi: GeneratedWorldPointOfInterest,
 ) {
 	return database.runSync(
 		`
 			INSERT INTO world_points_of_interest (
-				ecumenopolis_id,
+				world_map_id,
 				type,
 				name,
 				q,
@@ -678,7 +659,7 @@ function insertCityInstance(
 	return database.runSync(
 		`
 			INSERT INTO city_instances (
-				ecumenopolis_id,
+				world_map_id,
 				poi_id,
 				name,
 				world_q,
@@ -715,14 +696,13 @@ export function getPersistedWorldSync(
 		saveGame,
 		config: {
 			worldSeed: saveGame.world_seed,
-			sectorScale: saveGame.sector_scale as NewGameConfig["sectorScale"],
+			mapSize: saveGame.map_size as NewGameConfig["mapSize"],
 			difficulty: saveGame.difficulty as NewGameConfig["difficulty"],
 			climateProfile: saveGame.climate_profile as ClimateProfile,
 			stormProfile: saveGame.storm_profile as StormProfile,
 		},
-		ecumenopolis: worldMap,
-		sectorCells: selectWorldTiles(database, worldMap.id),
-		sectorStructures: selectSectorStructures(database, worldMap.id),
+		worldMap,
+		tiles: selectWorldTiles(database, worldMap.id),
 		pointsOfInterest: selectPointsOfInterest(database, worldMap.id),
 		cityInstances: selectCityInstances(database, worldMap.id),
 		campaignState:
@@ -732,33 +712,29 @@ export function getPersistedWorldSync(
 			selectResourceState(database, saveGame.id) ??
 			ensureResourceStateSync(saveGame.id, database, Date.now())!,
 		entities: selectWorldEntities(database, saveGame.id),
-		harvestState: selectHarvestState(database, saveGame.id),
-		turnState: selectTurnState(database, saveGame.id),
-		factionResourceStates: selectFactionResourceStates(database, saveGame.id),
-		campaignStatistics: selectCampaignStatistics(database, saveGame.id),
 	};
 }
 
 export function persistRuntimeWorldStateSync(
 	{
 		saveGameId,
-		ecumenopolisId,
+		worldMapId,
 		tick,
 		activeScene,
 		activeCityInstanceId,
 		resources,
-		sectorCells,
+		tiles,
 		pointsOfInterest,
 		cityInstances,
 		entities,
 	}: {
 		saveGameId: number;
-		ecumenopolisId: number;
+		worldMapId: number;
 		tick: number;
 		activeScene: "world" | "city";
 		activeCityInstanceId: number | null;
 		resources: ResourcePool;
-		sectorCells: Pick<SectorCellRecord, "q" | "r" | "discovery_state">[];
+		tiles: Pick<WorldTileRecord, "q" | "r" | "fog_state">[];
 		pointsOfInterest: Pick<WorldPointOfInterestRecord, "id" | "discovered">[];
 		cityInstances: Pick<CityInstanceRecord, "id" | "state">[];
 		entities: PersistableWorldEntity[];
@@ -794,11 +770,11 @@ export function persistRuntimeWorldStateSync(
 		saveGameId,
 	);
 
-	for (const tile of sectorCells) {
+	for (const tile of tiles) {
 		database.runSync(
-			"UPDATE sector_cells SET discovery_state = ? WHERE ecumenopolis_id = ? AND q = ? AND r = ?",
-			tile.discovery_state,
-			ecumenopolisId,
+			"UPDATE world_tiles SET fog_state = ? WHERE world_map_id = ? AND q = ? AND r = ?",
+			tile.fog_state,
+			worldMapId,
 			tile.q,
 			tile.r,
 		);
@@ -821,292 +797,4 @@ export function persistRuntimeWorldStateSync(
 	}
 
 	persistWorldEntitiesSync(saveGameId, entities, database);
-}
-
-export function persistHarvestStateSync(
-	saveGameId: number,
-	consumedStructureIds: number[],
-	activeHarvests: unknown[],
-	database: SyncDatabase = getDatabaseSync(),
-	consumedFloorTiles: string[] = [],
-) {
-	initializeDatabaseSync(database);
-	const now = Date.now();
-	const consumedJson = JSON.stringify(consumedStructureIds);
-	const harvestsJson = JSON.stringify(activeHarvests);
-	const floorJson = JSON.stringify(consumedFloorTiles);
-
-	const existing = selectHarvestState(database, saveGameId);
-	if (existing) {
-		database.runSync(
-			`
-				UPDATE harvest_states
-				SET consumed_structure_ids_json = ?, active_harvests_json = ?, consumed_floor_tiles_json = ?, last_synced_at = ?
-				WHERE save_game_id = ?
-			`,
-			consumedJson,
-			harvestsJson,
-			floorJson,
-			now,
-			saveGameId,
-		);
-	} else {
-		database.runSync(
-			`
-				INSERT INTO harvest_states (
-					save_game_id, consumed_structure_ids_json, active_harvests_json, consumed_floor_tiles_json, last_synced_at
-				) VALUES (?, ?, ?, ?, ?)
-			`,
-			saveGameId,
-			consumedJson,
-			harvestsJson,
-			floorJson,
-			now,
-		);
-	}
-}
-
-export function persistTurnStateSync(
-	saveGameId: number,
-	turnNumber: number,
-	phase: string,
-	activeFaction: string,
-	unitStates: unknown[],
-	database: SyncDatabase = getDatabaseSync(),
-) {
-	initializeDatabaseSync(database);
-	const now = Date.now();
-	const unitStatesJson = JSON.stringify(unitStates);
-
-	const existing = selectTurnState(database, saveGameId);
-	if (existing) {
-		database.runSync(
-			`
-				UPDATE turn_states
-				SET turn_number = ?, phase = ?, active_faction = ?, unit_states_json = ?, last_synced_at = ?
-				WHERE save_game_id = ?
-			`,
-			turnNumber,
-			phase,
-			activeFaction,
-			unitStatesJson,
-			now,
-			saveGameId,
-		);
-	} else {
-		database.runSync(
-			`
-				INSERT INTO turn_states (
-					save_game_id, turn_number, phase, active_faction, unit_states_json, last_synced_at
-				) VALUES (?, ?, ?, ?, ?, ?)
-			`,
-			saveGameId,
-			turnNumber,
-			phase,
-			activeFaction,
-			unitStatesJson,
-			now,
-		);
-	}
-}
-
-export function persistFactionResourceStatesSync(
-	saveGameId: number,
-	factionResources: Array<{
-		factionId: string;
-		resources: Record<string, number>;
-	}>,
-	database: SyncDatabase = getDatabaseSync(),
-) {
-	initializeDatabaseSync(database);
-	const now = Date.now();
-
-	database.runSync(
-		"DELETE FROM faction_resource_states WHERE save_game_id = ?",
-		saveGameId,
-	);
-	for (const entry of factionResources) {
-		database.runSync(
-			`
-				INSERT INTO faction_resource_states (
-					save_game_id, faction_id, resources_json, last_synced_at
-				) VALUES (?, ?, ?, ?)
-			`,
-			saveGameId,
-			entry.factionId,
-			JSON.stringify(entry.resources),
-			now,
-		);
-	}
-}
-
-export function persistCampaignStatisticsSync(
-	saveGameId: number,
-	stats: Record<string, unknown>,
-	database: SyncDatabase = getDatabaseSync(),
-) {
-	initializeDatabaseSync(database);
-	const now = Date.now();
-	const statsJson = JSON.stringify(stats);
-
-	const existing = selectCampaignStatistics(database, saveGameId);
-	if (existing) {
-		database.runSync(
-			`
-				UPDATE campaign_statistics
-				SET stats_json = ?, last_synced_at = ?
-				WHERE save_game_id = ?
-			`,
-			statsJson,
-			now,
-			saveGameId,
-		);
-	} else {
-		database.runSync(
-			`
-				INSERT INTO campaign_statistics (
-					save_game_id, stats_json, last_synced_at
-				) VALUES (?, ?, ?)
-			`,
-			saveGameId,
-			statsJson,
-			now,
-		);
-	}
-}
-
-export function persistTurnEventLogSync(
-	saveGameId: number,
-	turnNumber: number,
-	events: unknown[],
-	database: SyncDatabase = getDatabaseSync(),
-) {
-	initializeDatabaseSync(database);
-	database.runSync(
-		`
-			INSERT INTO turn_event_logs (
-				save_game_id, turn_number, events_json
-			) VALUES (?, ?, ?)
-		`,
-		saveGameId,
-		turnNumber,
-		JSON.stringify(events),
-	);
-}
-
-// ─── T26: W3 trait persistence ────────────────────────────────────────────────
-
-/** Minimal entity interface used for DI in serializeW3TraitsSync. */
-type FactionResourceEntity = {
-	get: (
-		t?: unknown,
-	) => { factionId: string; resourcesJson: string } | undefined;
-};
-
-type ChunkDiscoveryEntity = {
-	get: (
-		t?: unknown,
-	) => { chunkX: number; chunkZ: number; discoveryLevel: string } | undefined;
-};
-
-/**
- * Serialize W3 Koota trait entities to SQLite.
- * Accepts DI-injected entity arrays for testability; in production pass the
- * live query iterables (factionResourcePools, chunkDiscoveries) from world.ts.
- *
- * - faction_resource_states: written only when poolEntities is non-empty.
- * - map_discovery: always deleted and re-inserted from chunkEntities.
- */
-export function serializeW3TraitsSync(
-	saveGameId: number,
-	database: SyncDatabase,
-	poolEntities: readonly FactionResourceEntity[],
-	chunkEntities: readonly ChunkDiscoveryEntity[],
-): void {
-	initializeDatabaseSync(database);
-
-	if (poolEntities.length > 0) {
-		const factionResources = poolEntities
-			.map((e) => e.get())
-			.filter(
-				(d): d is { factionId: string; resourcesJson: string } =>
-					d !== undefined,
-			)
-			.map((d) => ({
-				factionId: d.factionId,
-				resources: JSON.parse(d.resourcesJson) as Record<string, number>,
-			}));
-		persistFactionResourceStatesSync(saveGameId, factionResources, database);
-	}
-
-	database.runSync(
-		"DELETE FROM map_discovery WHERE save_game_id = ?",
-		saveGameId,
-	);
-	for (const e of chunkEntities) {
-		const chunk = e.get();
-		if (!chunk) continue;
-		database.runSync(
-			"INSERT INTO map_discovery (save_game_id, chunk_x, chunk_y, discovered_state) VALUES (?, ?, ?, ?)",
-			saveGameId,
-			chunk.chunkX,
-			chunk.chunkZ,
-			chunk.discoveryLevel,
-		);
-	}
-}
-
-/**
- * Rehydrate W3 Koota trait entities from SQLite rows.
- * Calls factionEconomy and chunkDiscovery helpers to spawn Koota entities.
- */
-export function rehydrateW3TraitsSync(
-	saveGameId: number,
-	database: SyncDatabase = getDatabaseSync(),
-): void {
-	initializeDatabaseSync(database);
-
-	const factionRows = database.getAllSync<{
-		faction_id: string;
-		resources_json: string;
-	}>(
-		"SELECT faction_id, resources_json FROM faction_resource_states WHERE save_game_id = ?",
-		saveGameId,
-	);
-
-	if (factionRows.length > 0) {
-		// Lazy require to avoid loading factionEconomy → resources → ai at module init
-		// (which would prevent jest.mock("session") from working in tests).
-		const { initFactionResourcePools, addFactionResourceKoota } =
-			// biome-ignore lint/style/noCommonJs: lazy require for jest.mock isolation
-			require("../systems/factionEconomy") as typeof import("../systems/factionEconomy");
-		const factionIds = factionRows.map((r) => r.faction_id);
-		initFactionResourcePools(factionIds);
-		for (const row of factionRows) {
-			const resources = JSON.parse(row.resources_json) as Record<
-				string,
-				number
-			>;
-			for (const [type, amount] of Object.entries(resources)) {
-				addFactionResourceKoota(row.faction_id, type, amount);
-			}
-		}
-	}
-
-	const chunkRows = database.getAllSync<{
-		chunk_x: number;
-		chunk_y: number;
-		discovered_state: string;
-	}>(
-		"SELECT chunk_x, chunk_y, discovered_state FROM map_discovery WHERE save_game_id = ?",
-		saveGameId,
-	);
-
-	for (const row of chunkRows) {
-		loadChunkDiscovery(
-			row.chunk_x,
-			row.chunk_y,
-			row.discovered_state as "unexplored" | "abstract" | "full",
-		);
-	}
 }

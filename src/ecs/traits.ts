@@ -1,6 +1,5 @@
 import { type Entity as KootaEntity, trait } from "koota";
 import type { AgentRole } from "../ai";
-import type { BotArchetypeId, BotSpeechProfile, BotUnitType } from "../bots";
 
 export type Entity = KootaEntity;
 export type UnitEntity = KootaEntity;
@@ -21,16 +20,7 @@ export interface UnitComponent {
 // Identity
 export const Identity = trait({
 	id: "",
-	faction: "player" as
-		| "player"
-		| "cultist"
-		| "rogue"
-		| "feral"
-		| "wildlife"
-		| "reclaimers"
-		| "volt_collective"
-		| "signal_choir"
-		| "iron_creed",
+	faction: "player" as "player" | "cultist" | "rogue" | "feral" | "wildlife",
 });
 
 // Which scene the entity belongs to
@@ -53,10 +43,10 @@ export const MapFragment = trait({ fragmentId: "" });
 
 // Unit (mobile robot)
 export const Unit = trait(() => ({
-	type: "maintenance_bot" as BotUnitType,
-	archetypeId: "field_technician" as BotArchetypeId,
-	markLevel: 1,
-	speechProfile: "mentor" as BotSpeechProfile,
+	type: "maintenance_bot" as
+		| "maintenance_bot"
+		| "utility_drone"
+		| "fabrication_unit",
 	displayName: "Unit",
 	speed: 0, // world units per second at 1x game speed
 	selected: false,
@@ -84,7 +74,6 @@ export const Building = trait(() => ({
 	operational: false,
 	selected: false,
 	components: [] as UnitComponent[],
-	cooldownExpiresAtTick: 0,
 }));
 
 // Lightning rod specialization
@@ -154,126 +143,3 @@ export function getFunctionalComponents(
 ): UnitComponent[] {
 	return components.filter((c) => c.functional);
 }
-
-// ==== W0: New traits for full Koota migration ====
-
-// Singletons
-export const ResourcePool = trait({
-	scrapMetal: 0,
-	eWaste: 0,
-	intactComponents: 0,
-	refinedAlloys: 0,
-	powerCells: 0,
-	circuitry: 0,
-	opticalFiber: 0,
-	nanoComposites: 0,
-	quantumCores: 0,
-	biomimeticPolymers: 0,
-	darkMatter: 0,
-});
-
-export const TurnStateKoota = trait({
-	turnNumber: 0,
-	phase: "player" as "player" | "ai_faction" | "environment",
-	activeFaction: "player" as string,
-});
-
-// Collections
-export const TerritoryCell = trait({
-	q: 0,
-	r: 0,
-	owner: "" as string,
-	strength: 0,
-});
-
-export const FloorCell = trait({
-	q: 0,
-	r: 0,
-	fragmentId: "",
-	structuralZone: "",
-	floorPresetId: "",
-	discoveryState: 0, // 0=unexplored, 1=abstract, 2=detailed
-	passable: true,
-});
-
-export const SpeechBubble = trait({
-	entityId: "",
-	text: "",
-	expiresAtTick: 0,
-	opacity: 1,
-	wx: 0,
-	wy: 0,
-	wz: 0,
-});
-
-export const HarvestOp = trait({
-	harvesterId: "",
-	structureId: 0,
-	ticksRemaining: 0,
-	harvestType: "structure" as "structure" | "floor",
-});
-
-export const POI = trait({
-	q: 0,
-	r: 0,
-	poiType: "",
-	name: "",
-	discovered: false,
-});
-
-export const AIFaction = trait({
-	factionId: "" as string,
-	phase: "dormant" as string,
-	ticksUntilDecision: 0,
-});
-
-export const FactionResearch = trait({
-	factionId: "" as string,
-	activeResearchId: null as string | null,
-	turnsCompleted: 0,
-	completedTechsJson: "[]",
-});
-
-export const FactionStanding = trait({
-	factionId: "" as string,
-	targetFactionId: "" as string,
-	standing: 0,
-	atWar: false,
-	allied: false,
-	tradingWith: false,
-});
-
-export const FactionResourcePool = trait({
-	factionId: "" as string,
-	resourcesJson: "{}",
-});
-
-export const ChunkDiscovery = trait({
-	chunkX: 0,
-	chunkZ: 0,
-	discoveryLevel: "unexplored" as "unexplored" | "abstract" | "full",
-});
-
-// Per-unit traits
-export const UnitTurnState = trait({
-	apRemaining: 0,
-	mpRemaining: 0,
-	hasActed: false,
-});
-
-export const Experience = trait({
-	xp: 0,
-	level: 1,
-	killCount: 0,
-	harvestCount: 0,
-});
-
-export const AnimationState = trait({
-	clipName: "",
-	playhead: 0,
-	blendWeight: 1,
-});
-
-export const BotLOD = trait({
-	level: "full" as "full" | "simplified" | "icon" | "hidden",
-});

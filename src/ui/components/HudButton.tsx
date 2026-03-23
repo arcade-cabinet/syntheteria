@@ -12,10 +12,9 @@ interface HudButtonProps {
 	active?: boolean;
 	disabled?: boolean;
 	className?: string;
-	variant?: "primary" | "secondary" | "utility" | "danger";
+	variant?: "primary" | "secondary" | "danger";
 	icon?: React.ReactNode;
 	meta?: string;
-	testID?: string;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -39,15 +38,6 @@ const BUTTON_TONES = {
 		meta: "text-[#89d9ff]",
 		accent: "bg-[#89d9ff]",
 	},
-	utility: {
-		border: "border-[#f6c56a]/28",
-		borderActive: "border-[#f6c56a]/65",
-		bg: "bg-[#171107]/92",
-		bgActive: "bg-[#332a0c]",
-		text: "text-[#fff4de]",
-		meta: "text-[#f6c56a]",
-		accent: "bg-[#f6c56a]",
-	},
 	danger: {
 		border: "border-[#ff8f7a]/30",
 		borderActive: "border-[#ff8f7a]/70",
@@ -68,7 +58,6 @@ export function HudButton({
 	variant = "primary",
 	icon,
 	meta,
-	testID,
 }: HudButtonProps) {
 	const scale = useSharedValue(1);
 	const tone = BUTTON_TONES[variant];
@@ -105,11 +94,7 @@ export function HudButton({
 			onPressIn={handlePressIn}
 			onPressOut={handlePressOut}
 			disabled={disabled}
-			testID={testID}
-			role="button"
-			aria-label={meta ? `${label}: ${meta}` : label}
-			aria-disabled={disabled}
-			className={`min-h-[52px] overflow-hidden rounded-[18px] border ${borderClass} ${bgClass} px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7fe5ff] ${className}`}
+			className={`min-h-[52px] overflow-hidden rounded-[18px] border ${borderClass} ${bgClass} px-3 py-2 ${className}`}
 			style={animatedStyle}
 		>
 			<View className="absolute inset-0 rounded-[18px] border border-white/5" />

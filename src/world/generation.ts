@@ -1,215 +1,404 @@
-/**
- * World terrain generation — converts chunk-based terrain into sector cells.
- *
- * This module ONLY handles terrain. POIs, factions, and player state
- * are separate systems that query the generated terrain.
- */
-
-import { getDatabaseSync } from "../db/runtime";
-import { type BreachZone, generateBreachZones } from "../systems/breachZones";
+import { pickTerrainSetId, type TerrainSetId } from "../config/terrainSetRules";
+import type { Biome, FogState } from "../ecs/terrain";
 import {
-	type GeneratedCityInstanceSeed,
-	seedCityInstances,
-} from "./citySeeding";
-import type { NewGameConfig } from "./config";
-import { SECTOR_SCALE_SPECS } from "./config";
-import { generateChunk } from "./gen/chunkGen";
-import { CHUNK_SIZE, type MapTile } from "./gen/types";
-import {
-	type GeneratedSectorPointOfInterest,
-	placeInitialPOIs,
-} from "./poiPlacement";
+	getClimateProfileSpec,
+	getMapSizeSpec,
+	type NewGameConfig,
+} from "./config";
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+export type WorldPoiType =
+	| "home_base"
+	| "coast_mines"
+	| "science_campus"
+	| "northern_cult_site"
+	| "deep_sea_gateway";
 
-export type { GeneratedCityInstanceSeed } from "./citySeeding";
-export type { GeneratedSectorPointOfInterest } from "./poiPlacement";
+export type CityInstanceState = "latent" | "surveyed" | "founded";
+export type CityGenerationStatus = "reserved" | "instanced";
 
-export interface GeneratedEcumenopolisData {
-	ecumenopolis: {
-		width: number;
-		height: number;
-		spawnSectorId: string;
-		spawnAnchorKey: string;
-	};
-	sectorCells: GeneratedSectorCell[];
-	sectorStructures: GeneratedSectorStructure[];
-	pointsOfInterest: GeneratedSectorPointOfInterest[];
-	cityInstances: GeneratedCityInstanceSeed[];
-	breachZones: BreachZone[];
-}
-
-export interface GeneratedSectorCell {
+export interface GeneratedWorldTile {
 	q: number;
 	r: number;
-	structuralZone: string;
-	floorPresetId: string;
-	discoveryState: number;
+	biome: Biome;
+	terrainSetId: TerrainSetId;
+	fog: FogState;
 	passable: boolean;
-	sectorArchetype: string;
-	stormExposure: "shielded" | "stressed" | "exposed";
-	impassableClass: "none" | "breach" | "sealed_power" | "structural_void";
-	anchorKey: string;
 }
 
-export interface GeneratedSectorStructure {
-	districtStructureId: string;
-	anchorKey: string;
+export interface GeneratedWorldMap {
+	width: number;
+	height: number;
+	spawnQ: number;
+	spawnR: number;
+}
+
+export interface GeneratedWorldPointOfInterest {
+	type: WorldPoiType;
+	name: string;
 	q: number;
 	r: number;
-	modelId: string;
-	placementLayer: string;
-	edge: string | null;
-	rotationQuarterTurns: number;
-	offsetX: number;
-	offsetY: number;
-	offsetZ: number;
-	targetSpan: number;
-	sectorArchetype: string;
-	source: "seeded_district" | "boundary" | "landmark" | "constructed";
-	controllerFaction: string | null;
+	discovered: boolean;
 }
 
-// ─── Zone Classification ────────────────────────────────────────────────────
-
-function classifyZone(tile: MapTile): string {
-	if (!tile.passable && tile.modelLayer === "structure") return "fabrication";
-	if (tile.modelLayer === "resource") return "storage";
-	if (tile.modelLayer === "prop") return "habitation";
-	if (tile.isBridge || tile.isRamp) return "transit";
-	return "corridor_transit";
+export interface GeneratedCityInstanceSeed {
+	poiType: WorldPoiType;
+	name: string;
+	worldQ: number;
+	worldR: number;
+	layoutSeed: number;
+	state: CityInstanceState;
+	generationStatus: CityGenerationStatus;
 }
 
-function classifyArchetype(tile: MapTile): string {
-	if (tile.modelLayer === "resource") return "resource_zone";
-	if (tile.modelLayer === "structure" || tile.modelLayer === "support")
-		return "industrial";
-	return "service_plate";
+export interface GeneratedWorldData {
+	map: GeneratedWorldMap;
+	tiles: GeneratedWorldTile[];
+	pointsOfInterest: GeneratedWorldPointOfInterest[];
+	cityInstances: GeneratedCityInstanceSeed[];
 }
 
-// ─── Terrain Generation ─────────────────────────────────────────────────────
+const NEIGHBOR_OFFSETS = [
+	[1, 0],
+	[1, -1],
+	[0, -1],
+	[-1, 0],
+	[-1, 1],
+	[0, 1],
+] as const;
 
-/**
- * Generate terrain cells from chunks. ONLY terrain — no POIs, no factions.
- */
-function generateTerrain(
-	worldSeed: number,
-	gridWidth: number,
-	gridHeight: number,
-): { cells: GeneratedSectorCell[]; structures: GeneratedSectorStructure[] } {
-	const chunksX = Math.ceil(gridWidth / CHUNK_SIZE);
-	const chunksZ = Math.ceil(gridHeight / CHUNK_SIZE);
-	const cells: GeneratedSectorCell[] = [];
-	const structures: GeneratedSectorStructure[] = [];
-	let structId = 0;
+const TERRAIN_SET_NEIGHBOR_OFFSETS = [
+	[-1, 0],
+	[0, -1],
+	[1, -1],
+] as const;
 
-	for (let cz = 0; cz < chunksZ; cz++) {
-		for (let cx = 0; cx < chunksX; cx++) {
-			const chunk = generateChunk(worldSeed, cx, cz, getDatabaseSync());
-			for (const tile of chunk.tiles) {
-				if (
-					tile.x < 0 ||
-					tile.z < 0 ||
-					tile.x >= gridWidth ||
-					tile.z >= gridHeight
-				)
-					continue;
+function createPurposeSeed(worldSeed: number, purpose: string) {
+	let hash = worldSeed >>> 0;
+	for (let index = 0; index < purpose.length; index++) {
+		hash = (Math.imul(hash, 31) + purpose.charCodeAt(index)) >>> 0;
+	}
+	return hash >>> 0;
+}
 
-				cells.push({
-					q: tile.x,
-					r: tile.z,
-					structuralZone: classifyZone(tile),
-					floorPresetId: tile.floorMaterial,
-					discoveryState: 0,
-					passable: tile.passable,
-					sectorArchetype: classifyArchetype(tile),
-					stormExposure: "shielded",
-					impassableClass: tile.passable ? "none" : "structural_void",
-					anchorKey: `${tile.x},${tile.z}`,
-				});
+function makePRNG(seed: number) {
+	let state = seed >>> 0;
+	return () => {
+		state |= 0;
+		state = (state + 0x6d2b79f5) | 0;
+		let t = Math.imul(state ^ (state >>> 15), 1 | state);
+		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+		return ((t ^ (t >>> 14)) >>> 0) / 0xffffffff;
+	};
+}
 
-				if (tile.modelId && tile.modelLayer) {
-					structures.push({
-						districtStructureId: `struct_${structId++}`,
-						anchorKey: `${tile.x},${tile.z}`,
-						q: tile.x,
-						r: tile.z,
-						modelId: tile.modelId,
-						placementLayer: tile.modelLayer,
-						edge: null,
-						rotationQuarterTurns: tile.rotation,
-						offsetX: 0,
-						offsetY: 0,
-						offsetZ: 0,
-						targetSpan: 1,
-						sectorArchetype: classifyArchetype(tile),
-						source: "seeded_district",
-						controllerFaction: null,
-					});
-				}
-			}
+function tileKey(q: number, r: number) {
+	return `${q},${r}`;
+}
+
+function hashCoordinates(q: number, r: number) {
+	const qHash = Math.imul(q ^ 0x45d9f3b, 0x45d9f3b);
+	const rHash = Math.imul(r ^ 0x119de1f3, 0x119de1f3);
+	return (qHash ^ rHash) >>> 0;
+}
+
+function centeredCoordinate(index: number, length: number) {
+	return index - Math.floor(length / 2);
+}
+
+function normalizeDistance(current: number, target: number, span: number) {
+	return Math.abs(current - target) / Math.max(1, span);
+}
+
+function scoreBiome(tile: GeneratedWorldTile, preferred: readonly Biome[]) {
+	const exactIndex = preferred.indexOf(tile.biome);
+	if (exactIndex === -1) {
+		return -2;
+	}
+	return preferred.length - exactIndex;
+}
+
+function countNeighborBiomes(
+	tile: GeneratedWorldTile,
+	tilesByKey: Map<string, GeneratedWorldTile>,
+) {
+	const counts = new Map<Biome, number>();
+	for (const [dq, dr] of NEIGHBOR_OFFSETS) {
+		const neighbor = tilesByKey.get(tileKey(tile.q + dq, tile.r + dr));
+		if (!neighbor) {
+			continue;
+		}
+		counts.set(neighbor.biome, (counts.get(neighbor.biome) ?? 0) + 1);
+	}
+	return counts;
+}
+
+function findBestPoiTile(
+	tiles: GeneratedWorldTile[],
+	tilesByKey: Map<string, GeneratedWorldTile>,
+	usedKeys: Set<string>,
+	target: { q: number; r: number },
+	preferredBiomes: readonly Biome[],
+	requiredNeighborBiome?: Biome,
+) {
+	let bestTile: GeneratedWorldTile | null = null;
+	let bestScore = Number.NEGATIVE_INFINITY;
+
+	for (const tile of tiles) {
+		if (usedKeys.has(tileKey(tile.q, tile.r))) {
+			continue;
+		}
+
+		const biomeScore = scoreBiome(tile, preferredBiomes);
+		if (biomeScore < 0) {
+			continue;
+		}
+
+		const neighborCounts = countNeighborBiomes(tile, tilesByKey);
+		if (
+			requiredNeighborBiome &&
+			(neighborCounts.get(requiredNeighborBiome) ?? 0) === 0
+		) {
+			continue;
+		}
+
+		const targetDistance =
+			normalizeDistance(tile.q, target.q, tiles.length) +
+			normalizeDistance(tile.r, target.r, tiles.length);
+		const coastalBonus =
+			requiredNeighborBiome && neighborCounts.get(requiredNeighborBiome)
+				? 1.5
+				: 0;
+		const passableBonus = tile.passable ? 0.6 : -1.2;
+		const score =
+			biomeScore * 4 + coastalBonus + passableBonus - targetDistance * 10;
+
+		if (score > bestScore) {
+			bestScore = score;
+			bestTile = tile;
 		}
 	}
 
-	return { cells, structures };
-}
-
-// ─── Orchestrator ───────────────────────────────────────────────────────────
-
-/**
- * Generate world data. Orchestrates separate systems:
- * 1. Terrain generation (chunks → sector cells)
- * 2. POI placement (finds usable space on terrain, reads from config)
- * 3. City seeding (creates city instances from POIs)
- * 4. Discovery (reveals area around spawn)
- * 5. Breach zones (structural fractures for hostile spawns)
- */
-export function generateWorldData(
-	config: NewGameConfig,
-): GeneratedEcumenopolisData {
-	const scale = SECTOR_SCALE_SPECS[config.sectorScale];
-	const { width, height } = scale;
-
-	// 1. Terrain
-	const terrain = generateTerrain(config.worldSeed, width, height);
-
-	// 2. POIs — separate system, queries terrain for usable space
-	const pois = placeInitialPOIs(terrain.cells, width, height, config.worldSeed);
-
-	// 3. Cities — seeded from POIs
-	const cities = seedCityInstances(pois, config.worldSeed);
-
-	// 4. Discovery around spawn
-	const spawnQ = Math.floor(width / 2);
-	const spawnR = Math.floor(height / 2);
-	for (const cell of terrain.cells) {
-		const dist = Math.max(Math.abs(cell.q - spawnQ), Math.abs(cell.r - spawnR));
-		if (dist <= 5) cell.discoveryState = 2;
-		else if (dist <= 7) cell.discoveryState = 1;
+	if (!bestTile) {
+		throw new Error("Failed to place world POI with current terrain rules.");
 	}
 
-	// 5. Breach zones — separate system, queries terrain + POIs for fracture points
-	const partialWorld = {
-		sectorCells: terrain.cells,
-		sectorStructures: terrain.structures,
-		pointsOfInterest: pois,
-		cityInstances: cities,
-		breachZones: [] as BreachZone[],
-		ecumenopolis: {
-			width,
-			height,
-			spawnSectorId: `${spawnQ},${spawnR}`,
-			spawnAnchorKey: `${spawnQ},${spawnR}`,
+	usedKeys.add(tileKey(bestTile.q, bestTile.r));
+	return bestTile;
+}
+
+export function generateWorldData(config: NewGameConfig): GeneratedWorldData {
+	const size = getMapSizeSpec(config.mapSize);
+	const climate = getClimateProfileSpec(config.climateProfile);
+	const baseRng = makePRNG(createPurposeSeed(config.worldSeed, "terrain"));
+	const width = size.width;
+	const height = size.height;
+	const coordinates: { q: number; r: number }[] = [];
+
+	for (let row = 0; row < height; row++) {
+		for (let column = 0; column < width; column++) {
+			coordinates.push({
+				q: centeredCoordinate(column, width),
+				r: centeredCoordinate(row, height),
+			});
+		}
+	}
+
+	const noise = new Map<string, { elevation: number; moisture: number }>();
+	for (const { q, r } of coordinates) {
+		noise.set(tileKey(q, r), {
+			elevation: Math.min(1, Math.max(0, baseRng() + climate.elevationBias)),
+			moisture: Math.min(1, Math.max(0, baseRng() + climate.moistureBias)),
+		});
+	}
+
+	for (let step = 0; step < 3; step++) {
+		const nextNoise = new Map<
+			string,
+			{ elevation: number; moisture: number }
+		>();
+		for (const { q, r } of coordinates) {
+			const current = noise.get(tileKey(q, r));
+			if (!current) {
+				continue;
+			}
+
+			let sumElevation = current.elevation;
+			let sumMoisture = current.moisture;
+			let count = 1;
+
+			for (const [dq, dr] of NEIGHBOR_OFFSETS) {
+				const neighbor = noise.get(tileKey(q + dq, r + dr));
+				if (!neighbor) {
+					continue;
+				}
+				sumElevation += neighbor.elevation;
+				sumMoisture += neighbor.moisture;
+				count++;
+			}
+
+			nextNoise.set(tileKey(q, r), {
+				elevation: sumElevation / count,
+				moisture: sumMoisture / count,
+			});
+		}
+
+		for (const [key, value] of nextNoise) {
+			noise.set(key, value);
+		}
+	}
+
+	const tiles = coordinates.map<GeneratedWorldTile>(({ q, r }) => {
+		const sample = noise.get(tileKey(q, r));
+		if (!sample) {
+			throw new Error(`Missing noise sample for (${q}, ${r}).`);
+		}
+
+		let biome: Biome;
+		if (sample.elevation < climate.waterLevel) {
+			biome = "water";
+		} else if (sample.elevation < climate.sandLevel) {
+			biome = "sand";
+		} else if (sample.elevation > climate.mountainLevel) {
+			biome = "mountain";
+		} else if (sample.moisture > climate.grassMoistureLevel) {
+			biome = "grass";
+		} else {
+			biome = "dirt";
+		}
+
+		return {
+			q,
+			r,
+			biome,
+			terrainSetId: "emerald_fields_and_forests",
+			fog: 0,
+			passable: biome !== "water" && biome !== "mountain",
+		};
+	});
+
+	const tilesByKey = new Map<string, GeneratedWorldTile>();
+	for (const tile of tiles) {
+		tilesByKey.set(tileKey(tile.q, tile.r), tile);
+	}
+
+	for (const tile of tiles) {
+		const neighborSetIds = TERRAIN_SET_NEIGHBOR_OFFSETS.flatMap(([dq, dr]) => {
+			const neighbor = tilesByKey.get(tileKey(tile.q + dq, tile.r + dr));
+			return neighbor ? [neighbor.terrainSetId] : [];
+		});
+		tile.terrainSetId = pickTerrainSetId(
+			tile.biome,
+			neighborSetIds,
+			tile.q,
+			tile.r,
+		);
+	}
+
+	const usedPoiKeys = new Set<string>();
+	const centerTarget = { q: 0, r: 0 };
+	const homeBaseTile = findBestPoiTile(
+		tiles,
+		tilesByKey,
+		usedPoiKeys,
+		centerTarget,
+		["grass", "dirt"],
+	);
+
+	const coastMinesTile = findBestPoiTile(
+		tiles,
+		tilesByKey,
+		usedPoiKeys,
+		{ q: -Math.floor(width / 3), r: 0 },
+		["sand", "dirt", "grass"],
+		"water",
+	);
+
+	const scienceCampusTile = findBestPoiTile(
+		tiles,
+		tilesByKey,
+		usedPoiKeys,
+		{ q: Math.floor(width / 4), r: Math.floor(height / 5) },
+		["grass", "dirt"],
+	);
+
+	const northernCultTile = findBestPoiTile(
+		tiles,
+		tilesByKey,
+		usedPoiKeys,
+		{ q: 0, r: -Math.floor(height / 3) },
+		["mountain", "dirt", "grass"],
+	);
+
+	const deepSeaGatewayTile = findBestPoiTile(
+		tiles,
+		tilesByKey,
+		usedPoiKeys,
+		{ q: Math.floor(width / 3), r: Math.floor(height / 3) },
+		["water"],
+	);
+
+	const pointsOfInterest: GeneratedWorldPointOfInterest[] = [
+		{
+			type: "home_base",
+			name: "Relay Home Base",
+			q: homeBaseTile.q,
+			r: homeBaseTile.r,
+			discovered: true,
 		},
-	};
-	const breachZones = generateBreachZones(partialWorld);
+		{
+			type: "coast_mines",
+			name: "Coastline Extraction Works",
+			q: coastMinesTile.q,
+			r: coastMinesTile.r,
+			discovered: false,
+		},
+		{
+			type: "science_campus",
+			name: "Science Campus",
+			q: scienceCampusTile.q,
+			r: scienceCampusTile.r,
+			discovered: false,
+		},
+		{
+			type: "northern_cult_site",
+			name: "Northern Cult Redoubt",
+			q: northernCultTile.q,
+			r: northernCultTile.r,
+			discovered: false,
+		},
+		{
+			type: "deep_sea_gateway",
+			name: "Deep Sea Launch Route",
+			q: deepSeaGatewayTile.q,
+			r: deepSeaGatewayTile.r,
+			discovered: false,
+		},
+	];
+
+	const cityInstances: GeneratedCityInstanceSeed[] = pointsOfInterest.map(
+		(poi) => ({
+			poiType: poi.type,
+			name: poi.name,
+			worldQ: poi.q,
+			worldR: poi.r,
+			layoutSeed: createPurposeSeed(
+				config.worldSeed,
+				`${poi.type}:${hashCoordinates(poi.q, poi.r)}`,
+			),
+			state: poi.type === "home_base" ? "founded" : "latent",
+			generationStatus: "reserved",
+		}),
+	);
 
 	return {
-		ecumenopolis: partialWorld.ecumenopolis,
-		sectorCells: terrain.cells,
-		sectorStructures: terrain.structures,
-		pointsOfInterest: pois,
-		cityInstances: cities,
-		breachZones,
+		map: {
+			width,
+			height,
+			spawnQ: homeBaseTile.q,
+			spawnR: homeBaseTile.r,
+		},
+		tiles,
+		pointsOfInterest,
+		cityInstances,
 	};
 }

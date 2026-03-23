@@ -2,22 +2,23 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { isInsideBuilding, isInsideCityBounds } from "../ecs/cityLayout";
-import { getWorldHalfExtents } from "../world/sectorCoordinates";
 import {
 	/**
-	 * Procedural structural props: debris, relics, pillars, and exposed growth.
+	 * Procedural landscape props: rocks, ruins, debris, and trees.
 	 *
-	 * Inside protected sectors: debris, scrap, and broken electronics — no natural canopy.
-	 * Near exposed sectors and breach edges: rocks, dead growth, and shell remnants.
+	 * Inside the city: only debris, scrap, and broken electronics — no trees.
+	 * Outside the city (countryside): rocks, trees, and natural vegetation.
 	 *
 	 * Fog-aware: only renders props in areas revealed by player fragments.
-	 * Deterministically placed using structural-space coordinates.
+	 * Deterministically placed using seeded positions based on terrain.
 	 */
-	getDiscoveryAtWorldPosition,
-	getStructuralFragments,
-	getSurfaceHeightAtWorldPosition,
-	isPassableAtWorldPosition,
-} from "../world/structuralSpace";
+
+	getAllFragments,
+	getFogAt,
+	getTerrainHeight,
+	getWorldHalfExtents,
+	isWalkable,
+} from "../ecs/terrain";
 
 // Simple seeded hash for deterministic placement
 function hash(x: number, z: number): number {
@@ -41,12 +42,12 @@ function generateProps(): PropInstance[] {
 		for (let gx = -worldHalfX; gx < worldHalfX; gx += STEP) {
 			const h = hash(gx, gz);
 
-			// Skip impassable sectors, buildings, and sparse placement
-			if (!isPassableAtWorldPosition(gx, gz)) continue;
+			// Skip water, buildings, and sparse placement
+			if (!isWalkable(gx, gz)) continue;
 			if (isInsideBuilding(gx, gz)) continue;
 			if (h > 0.25) continue; // ~25% chance of placing something
 
-			const terrainY = getSurfaceHeightAtWorldPosition(gx, gz);
+			const terrainY = getTerrainHeight(gx, gz);
 			const typeRoll = hash(gx + 0.5, gz + 0.5);
 			const rotY = hash(gx + 1, gz) * Math.PI * 2;
 			const scaleVar = 0.6 + hash(gx, gz + 1) * 0.8;
@@ -212,15 +213,9 @@ function PropGroup({
 			const inst = instances[i];
 			let revealed = false;
 
-			const fragments = getStructuralFragments();
+			const fragments = getAllFragments();
 			for (const frag of fragments) {
-				if (
-					getDiscoveryAtWorldPosition(
-						frag,
-						inst.position[0],
-						inst.position[2],
-					) >= 1
-				) {
+				if (getFogAt(frag, inst.position[0], inst.position[2]) >= 1) {
 					revealed = true;
 					break;
 				}

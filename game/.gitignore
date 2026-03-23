@@ -1,0 +1,7 @@
+# Build output
+dist/
+dist-ssr/
+
+# Playwright
+playwright-report/
+test-results/

@@ -31,35 +31,17 @@ export interface MapFragment {
 // --- Procedural terrain ---
 
 /**
- * Seed-derived phase offsets that shift the terrain sinusoids.
- * Recomputed whenever the world seed changes so the terrain is unique per seed.
- */
-let _terrainPhase = [0, 1.3, 2.7];
-
-/**
- * Call this once after setting the world seed to update terrain generation.
- */
-export function initTerrainFromSeed(seed: number) {
-	// Derive three phase offsets from the seed using cheap bit mixing
-	const a = ((seed ^ 0xdeadbeef) >>> 0) / 0xffffffff;
-	const b = ((seed * 1664525 + 1013904223) >>> 0) / 0xffffffff;
-	const c = (((seed ^ (seed >>> 16)) * 0x45d9f3b) >>> 0) / 0xffffffff;
-	_terrainPhase = [a * Math.PI * 2, b * Math.PI * 2, c * Math.PI * 2];
-}
-
-/**
  * Sample terrain height at any continuous world position.
- * Returns Y value (elevation). Phase offsets vary per world seed.
+ * Returns Y value (elevation). Same noise as the old chunk system.
  */
 export function getTerrainHeight(x: number, z: number): number {
 	const wx = x * 0.08;
 	const wz = z * 0.08;
-	const [p0, p1, p2] = _terrainPhase;
 	const h =
 		0.5 +
-		0.3 * Math.sin(wx * 1.2 + wz * 0.8 + p0) +
-		0.15 * Math.sin(wx * 2.5 + wz * 1.7 + p1) +
-		0.05 * Math.sin(wx * 5.1 + wz * 4.3 + p2);
+		0.3 * Math.sin(wx * 1.2 + wz * 0.8) +
+		0.15 * Math.sin(wx * 2.5 + wz * 1.7 + 1.3) +
+		0.05 * Math.sin(wx * 5.1 + wz * 4.3 + 2.7);
 	return Math.max(0, Math.min(1, h)) * 0.5; // 0–0.5 elevation
 }
 

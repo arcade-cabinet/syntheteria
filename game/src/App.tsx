@@ -5,7 +5,7 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getCityBuildings, resetCityLayout } from "./ecs/cityLayout";
+import { getCityBuildings } from "./ecs/cityLayout";
 import {
 	spawnFabricationUnit,
 	spawnLightningRod,
@@ -13,8 +13,6 @@ import {
 	spawnUnit,
 } from "./ecs/factory";
 import { getGameSpeed, simulationTick } from "./ecs/gameState";
-import { setWorldSeed } from "./ecs/seed";
-import { initTerrainFromSeed } from "./ecs/terrain";
 import { TopDownCamera } from "./input/TopDownCamera";
 import { UnitInput } from "./input/UnitInput";
 import { CityRenderer } from "./rendering/CityRenderer";
@@ -25,7 +23,6 @@ import { TerrainRenderer } from "./rendering/TerrainRenderer";
 import { UnitRenderer } from "./rendering/UnitRenderer";
 import { movementSystem } from "./systems/movement";
 import { buildNavGraph } from "./systems/navmesh";
-import { resetScavengePoints } from "./systems/resources";
 import { GameUI } from "./ui/GameUI";
 import { TitleScreen } from "./ui/TitleScreen";
 
@@ -112,13 +109,7 @@ function NarrationOverlay({ onComplete }: { onComplete: () => void }) {
 
 // --- World initialization ---
 
-function initializeWorld(seed: number) {
-	// Wire the seed into all procedural systems before generating anything.
-	setWorldSeed(seed);
-	initTerrainFromSeed(seed);
-	resetCityLayout();
-	resetScavengePoints();
-
+function initializeWorld() {
 	// Initialize city layout (must happen before navmesh so buildings block paths)
 	getCityBuildings();
 	buildNavGraph();
@@ -268,22 +259,16 @@ export default function App() {
 	const [phase, setPhase] = useState<"title" | "narration" | "playing">(
 		"title",
 	);
-	const pendingSeedRef = useRef<number>(42);
 
 	useEffect(() => {
 		if (phase === "playing" && !worldInitialized) {
 			worldInitialized = true;
-			initializeWorld(pendingSeedRef.current);
+			initializeWorld();
 		}
 	}, [phase]);
 
-	const handleNewGame = (seed: number) => {
-		pendingSeedRef.current = seed;
-		setPhase("narration");
-	};
-
 	if (phase === "title") {
-		return <TitleScreen onNewGame={handleNewGame} />;
+		return <TitleScreen onNewGame={() => setPhase("narration")} />;
 	}
 
 	if (phase === "narration") {

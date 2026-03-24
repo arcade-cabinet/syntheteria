@@ -29,10 +29,26 @@ interface FactionDef {
 }
 
 const FACTION_DEFINITIONS: readonly FactionDef[] = [
-	{ id: "reclaimers", startZone: "corner_nw", terrainAffinity: "collapsed_zone" },
-	{ id: "volt_collective", startZone: "corner_ne", terrainAffinity: "aerostructure" },
-	{ id: "signal_choir", startZone: "corner_se", terrainAffinity: "bio_district" },
-	{ id: "deep_net", startZone: "corner_sw", terrainAffinity: "abyssal_platform" },
+	{
+		id: "reclaimers",
+		startZone: "corner_nw",
+		terrainAffinity: "collapsed_zone",
+	},
+	{
+		id: "volt_collective",
+		startZone: "corner_ne",
+		terrainAffinity: "aerostructure",
+	},
+	{
+		id: "signal_choir",
+		startZone: "corner_se",
+		terrainAffinity: "bio_district",
+	},
+	{
+		id: "iron_creed",
+		startZone: "corner_sw",
+		terrainAffinity: "structural_mass",
+	},
 ];
 
 // ─── Room Types ──────────────────────────────────────────────────────────────

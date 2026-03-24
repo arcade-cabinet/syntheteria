@@ -11,19 +11,10 @@
  */
 
 import { useThree } from "@react-three/fiber";
-import type { Entity } from "koota";
 import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { playSfx } from "../audio";
-import { getFragment } from "../ecs/terrain";
-import {
-	BuildingTrait,
-	Fragment,
-	Navigation,
-	Position,
-	Unit,
-} from "../ecs/traits";
-import { serializePath } from "../ecs/types";
+import { Fragment, Navigation, Position, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
 import {
 	cancelPlacement,
@@ -31,7 +22,13 @@ import {
 	getActivePlacement,
 	updateGhostPosition,
 } from "../systems/buildingPlacement";
-import { findPath } from "../systems/pathfinding";
+import {
+	deselectAll,
+	findEntityAtPoint,
+	getSelectedEntity,
+	issueMoveTo,
+	selectEntity,
+} from "./selection";
 
 const GROUND_PLANE = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const raycaster = new THREE.Raycaster();
@@ -50,94 +47,6 @@ function getWorldPointFromEvent(
 	const intersection = new THREE.Vector3();
 	const hit = raycaster.ray.intersectPlane(GROUND_PLANE, intersection);
 	return hit ? intersection : null;
-}
-
-/** Find unit or building closest to a display-space point (accounts for fragment offsets). */
-function findEntityAtPoint(
-	point: THREE.Vector3,
-	threshold: number = 1.5,
-): Entity | null {
-	let closest: Entity | null = null;
-	let closestDist = threshold;
-
-	// Check mobile units
-	for (const entity of world.query(Position, Unit, Fragment)) {
-		const pos = entity.get(Position)!;
-		const frag = getFragment(entity.get(Fragment)?.fragmentId ?? "");
-		const ox = frag?.displayOffset.x ?? 0;
-		const oz = frag?.displayOffset.z ?? 0;
-
-		const dx = pos.x + ox - point.x;
-		const dz = pos.z + oz - point.z;
-		const dist = Math.sqrt(dx * dx + dz * dz);
-		if (dist < closestDist) {
-			closest = entity;
-			closestDist = dist;
-		}
-	}
-
-	// Check buildings (larger click target)
-	for (const entity of world.query(Position, BuildingTrait, Fragment)) {
-		const pos = entity.get(Position)!;
-		const fragmentId = entity.get(Fragment)?.fragmentId ?? "";
-		const frag = fragmentId ? getFragment(fragmentId) : null;
-		const ox = frag?.displayOffset.x ?? 0;
-		const oz = frag?.displayOffset.z ?? 0;
-
-		const dx = pos.x + ox - point.x;
-		const dz = pos.z + oz - point.z;
-		const dist = Math.sqrt(dx * dx + dz * dz);
-		if (dist < closestDist) {
-			closest = entity;
-			closestDist = dist;
-		}
-	}
-
-	return closest;
-}
-
-/** Issue a move command. Converts display-space target to real-world position. */
-function issueMoveTo(entity: Entity, displayX: number, displayZ: number) {
-	const frag = getFragment(entity.get(Fragment)?.fragmentId ?? "");
-	const ox = frag?.displayOffset.x ?? 0;
-	const oz = frag?.displayOffset.z ?? 0;
-
-	const realX = displayX - ox;
-	const realZ = displayZ - oz;
-
-	const pos = entity.get(Position)!;
-	const path = findPath(pos, { x: realX, y: 0, z: realZ });
-
-	if (path.length > 0 && entity.has(Navigation)) {
-		entity.set(Navigation, {
-			pathJson: serializePath(path),
-			pathIndex: 0,
-			moving: true,
-		});
-	}
-}
-
-function getSelectedEntity(): Entity | null {
-	for (const entity of world.query(Unit)) {
-		if (entity.get(Unit)!.selected) return entity;
-	}
-	for (const entity of world.query(BuildingTrait)) {
-		if (entity.get(BuildingTrait)!.selected) return entity;
-	}
-	return null;
-}
-
-function deselectAll() {
-	for (const entity of world.query(Unit)) {
-		if (entity.get(Unit)!.selected) {
-			entity.set(Unit, { selected: false });
-		}
-	}
-	for (const entity of world.query(BuildingTrait)) {
-		if (entity.get(BuildingTrait)!.selected) {
-			entity.set(BuildingTrait, { selected: false });
-		}
-	}
 }
 
 export function UnitInput() {
@@ -166,20 +75,13 @@ export function UnitInput() {
 				return;
 			}
 
-			const entityAtPoint = findEntityAtPoint(point);
+			const entityAtPoint = findEntityAtPoint(point.x, point.z);
 			const currentlySelected = getSelectedEntity();
 
 			if (entityAtPoint) {
-				// Tapped on a unit or building — select it (deselect others)
-				deselectAll();
-				if (entityAtPoint.has(Unit)) {
-					entityAtPoint.set(Unit, { selected: true });
-				} else if (entityAtPoint.has(BuildingTrait)) {
-					entityAtPoint.set(BuildingTrait, { selected: true });
-				}
+				selectEntity(entityAtPoint);
 				playSfx("unit_select");
 			} else if (currentlySelected?.has(Unit)) {
-				// Tapped empty ground with a mobile unit selected — move there
 				issueMoveTo(currentlySelected, point.x, point.z);
 				playSfx("unit_move");
 			}

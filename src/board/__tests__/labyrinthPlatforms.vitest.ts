@@ -17,26 +17,6 @@ function makeConfig(seed: string, size = 44): BoardConfig {
 	return { width: size, height: size, seed, difficulty: "normal" };
 }
 
-function _countByElevation(tiles: TileData[][]): Map<number, number> {
-	const counts = new Map<number, number>();
-	for (const row of tiles) {
-		for (const t of row) {
-			counts.set(t.elevation, (counts.get(t.elevation) ?? 0) + 1);
-		}
-	}
-	return counts;
-}
-
-function _getPassableTiles(tiles: TileData[][]): TileData[] {
-	const result: TileData[] = [];
-	for (const row of tiles) {
-		for (const t of row) {
-			if (t.passable) result.push(t);
-		}
-	}
-	return result;
-}
-
 function getElevatedTiles(tiles: TileData[][]): TileData[] {
 	const result: TileData[] = [];
 	for (const row of tiles) {

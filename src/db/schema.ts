@@ -67,10 +67,11 @@ CREATE TABLE IF NOT EXISTS lightning_rods (
 
 export const SQL_CREATE_RESOURCES = `
 CREATE TABLE IF NOT EXISTS resources (
-  game_id            TEXT PRIMARY KEY,
-  scrap_metal        INTEGER NOT NULL DEFAULT 0,
-  e_waste            INTEGER NOT NULL DEFAULT 0,
-  intact_components  INTEGER NOT NULL DEFAULT 0
+  game_id      TEXT PRIMARY KEY,
+  scrap_metal  INTEGER NOT NULL DEFAULT 0,
+  circuitry    INTEGER NOT NULL DEFAULT 0,
+  power_cells  INTEGER NOT NULL DEFAULT 0,
+  durasteel    INTEGER NOT NULL DEFAULT 0
 );`;
 
 export const SQL_CREATE_SCAVENGE_POINTS = `

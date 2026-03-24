@@ -215,6 +215,78 @@ export type StaticAssetPath =
   'assets/models/robots/factions/MobileStorageBot.glb' |
   'assets/models/robots/factions/QuadrupedTank.glb' |
   'assets/models/robots/factions/ReconBot.glb' |
+  'assets/textures/pbr/concrete/Concrete001_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/concrete/Concrete001_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/concrete/Concrete002_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/concrete/Concrete002_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/concrete/Concrete002_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/concrete/Concrete003_1K-JPG_AmbientOcclusion.jpg' |
+  'assets/textures/pbr/concrete/Concrete003_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/concrete/Concrete003_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/concrete/Concrete003_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/concrete/Concrete004_1K-JPG_AmbientOcclusion.jpg' |
+  'assets/textures/pbr/concrete/Concrete004_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/concrete/Concrete004_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/concrete/Concrete004_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/concrete/Concrete005_1K-JPG_AmbientOcclusion.jpg' |
+  'assets/textures/pbr/concrete/Concrete005_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/concrete/Concrete005_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/concrete/Concrete005_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/concrete/Concrete010_1K-JPG_AmbientOcclusion.jpg' |
+  'assets/textures/pbr/concrete/Concrete010_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/concrete/Concrete010_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/concrete/Concrete010_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/concrete/Concrete020_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/concrete/Concrete020_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/concrete/Concrete020_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel001_1K-JPG_AmbientOcclusion.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel001_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel001_1K-JPG_Metalness.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel001_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel001_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel002_1K-JPG_AmbientOcclusion.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel002_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel002_1K-JPG_Metalness.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel002_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel002_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel003_1K-JPG_AmbientOcclusion.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel003_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel003_1K-JPG_Metalness.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel003_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel003_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel006A_1K-JPG_AmbientOcclusion.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel006A_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel006A_1K-JPG_Metalness.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel006A_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel006A_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/metal/Metal001_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/metal/Metal001_1K-JPG_Metalness.jpg' |
+  'assets/textures/pbr/metal/Metal001_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/metal/Metal001_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/metal/Metal002_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/metal/Metal002_1K-JPG_Metalness.jpg' |
+  'assets/textures/pbr/metal/Metal002_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/metal/Metal002_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/metal/Metal003_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/metal/Metal003_1K-JPG_Metalness.jpg' |
+  'assets/textures/pbr/metal/Metal003_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/metal/Metal003_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/metal/Metal004_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/metal/Metal004_1K-JPG_Metalness.jpg' |
+  'assets/textures/pbr/metal/Metal004_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/metal/Metal004_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/metal/Metal005_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/metal/Metal005_1K-JPG_Metalness.jpg' |
+  'assets/textures/pbr/metal/Metal005_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/metal/Metal005_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/metal/Metal012_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/metal/Metal012_1K-JPG_Metalness.jpg' |
+  'assets/textures/pbr/metal/Metal012_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/metal/Metal012_1K-JPG_Roughness.jpg' |
+  'assets/textures/pbr/metal/Metal020_1K-JPG_Color.jpg' |
+  'assets/textures/pbr/metal/Metal020_1K-JPG_Metalness.jpg' |
+  'assets/textures/pbr/metal/Metal020_1K-JPG_NormalGL.jpg' |
+  'assets/textures/pbr/metal/Metal020_1K-JPG_Roughness.jpg' |
   'assets/ui/.DS_Store';
 
 /**
@@ -235,6 +307,11 @@ export type StaticAssetDirectory =
   'assets/models/robots/' |
   'assets/models/robots/cult/' |
   'assets/models/robots/factions/' |
+  'assets/textures/' |
+  'assets/textures/pbr/' |
+  'assets/textures/pbr/concrete/' |
+  'assets/textures/pbr/corrugated_steel/' |
+  'assets/textures/pbr/metal/' |
   'assets/ui/';
 
 /**
@@ -469,6 +546,78 @@ const assets = new Set<string>([
   'assets/models/robots/factions/MobileStorageBot.glb',
   'assets/models/robots/factions/QuadrupedTank.glb',
   'assets/models/robots/factions/ReconBot.glb',
+  'assets/textures/pbr/concrete/Concrete001_1K-JPG_Color.jpg',
+  'assets/textures/pbr/concrete/Concrete001_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/concrete/Concrete002_1K-JPG_Color.jpg',
+  'assets/textures/pbr/concrete/Concrete002_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/concrete/Concrete002_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/concrete/Concrete003_1K-JPG_AmbientOcclusion.jpg',
+  'assets/textures/pbr/concrete/Concrete003_1K-JPG_Color.jpg',
+  'assets/textures/pbr/concrete/Concrete003_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/concrete/Concrete003_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/concrete/Concrete004_1K-JPG_AmbientOcclusion.jpg',
+  'assets/textures/pbr/concrete/Concrete004_1K-JPG_Color.jpg',
+  'assets/textures/pbr/concrete/Concrete004_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/concrete/Concrete004_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/concrete/Concrete005_1K-JPG_AmbientOcclusion.jpg',
+  'assets/textures/pbr/concrete/Concrete005_1K-JPG_Color.jpg',
+  'assets/textures/pbr/concrete/Concrete005_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/concrete/Concrete005_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/concrete/Concrete010_1K-JPG_AmbientOcclusion.jpg',
+  'assets/textures/pbr/concrete/Concrete010_1K-JPG_Color.jpg',
+  'assets/textures/pbr/concrete/Concrete010_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/concrete/Concrete010_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/concrete/Concrete020_1K-JPG_Color.jpg',
+  'assets/textures/pbr/concrete/Concrete020_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/concrete/Concrete020_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel001_1K-JPG_AmbientOcclusion.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel001_1K-JPG_Color.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel001_1K-JPG_Metalness.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel001_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel001_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel002_1K-JPG_AmbientOcclusion.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel002_1K-JPG_Color.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel002_1K-JPG_Metalness.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel002_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel002_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel003_1K-JPG_AmbientOcclusion.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel003_1K-JPG_Color.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel003_1K-JPG_Metalness.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel003_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel003_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel006A_1K-JPG_AmbientOcclusion.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel006A_1K-JPG_Color.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel006A_1K-JPG_Metalness.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel006A_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/corrugated_steel/CorrugatedSteel006A_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/metal/Metal001_1K-JPG_Color.jpg',
+  'assets/textures/pbr/metal/Metal001_1K-JPG_Metalness.jpg',
+  'assets/textures/pbr/metal/Metal001_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/metal/Metal001_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/metal/Metal002_1K-JPG_Color.jpg',
+  'assets/textures/pbr/metal/Metal002_1K-JPG_Metalness.jpg',
+  'assets/textures/pbr/metal/Metal002_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/metal/Metal002_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/metal/Metal003_1K-JPG_Color.jpg',
+  'assets/textures/pbr/metal/Metal003_1K-JPG_Metalness.jpg',
+  'assets/textures/pbr/metal/Metal003_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/metal/Metal003_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/metal/Metal004_1K-JPG_Color.jpg',
+  'assets/textures/pbr/metal/Metal004_1K-JPG_Metalness.jpg',
+  'assets/textures/pbr/metal/Metal004_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/metal/Metal004_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/metal/Metal005_1K-JPG_Color.jpg',
+  'assets/textures/pbr/metal/Metal005_1K-JPG_Metalness.jpg',
+  'assets/textures/pbr/metal/Metal005_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/metal/Metal005_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/metal/Metal012_1K-JPG_Color.jpg',
+  'assets/textures/pbr/metal/Metal012_1K-JPG_Metalness.jpg',
+  'assets/textures/pbr/metal/Metal012_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/metal/Metal012_1K-JPG_Roughness.jpg',
+  'assets/textures/pbr/metal/Metal020_1K-JPG_Color.jpg',
+  'assets/textures/pbr/metal/Metal020_1K-JPG_Metalness.jpg',
+  'assets/textures/pbr/metal/Metal020_1K-JPG_NormalGL.jpg',
+  'assets/textures/pbr/metal/Metal020_1K-JPG_Roughness.jpg',
   'assets/ui/.DS_Store'
 ]);
 

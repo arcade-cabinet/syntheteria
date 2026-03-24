@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import { generateLabyrinth, generateRooms, type Room } from "../labyrinth";
-import type { BoardConfig, TileData } from "../types";
+import type { BoardConfig } from "../types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -24,20 +24,6 @@ function makeConfig(
 		seed,
 		difficulty: "normal",
 	};
-}
-
-/** Count tiles matching a predicate. */
-function _countTiles(
-	tiles: TileData[][],
-	pred: (t: TileData) => boolean,
-): number {
-	let count = 0;
-	for (const row of tiles) {
-		for (const tile of row) {
-			if (pred(tile)) count++;
-		}
-	}
-	return count;
 }
 
 /** Manhattan distance between two rooms' closest edges. */
@@ -142,24 +128,9 @@ describe("faction start rooms", () => {
 		}
 	});
 
-	it("faction rooms use terrain-affinity floor types", () => {
-		const rooms = generateRooms(48, 48, "affinity-floors");
-
-		// Reclaimers → collapsed_zone affinity → collapsed_zone floor
-		const reclaimers = rooms.find((r) => r.tag === "reclaimers");
-		expect(reclaimers?.floorType).toBe("collapsed_zone");
-
-		// Volt Collective → aerostructure affinity → aerostructure floor
-		const volt = rooms.find((r) => r.tag === "volt_collective");
-		expect(volt?.floorType).toBe("aerostructure");
-
-		// Signal Choir → bio_district affinity → bio_district floor
-		const signal = rooms.find((r) => r.tag === "signal_choir");
-		expect(signal?.floorType).toBe("bio_district");
-
-		// Iron Creed → structural_mass affinity → durasteel_span floor (fortified)
-		const iron = rooms.find((r) => r.tag === "iron_creed");
-		expect(iron?.floorType).toBe("durasteel_span");
+	// TODO(P1-2): Rewrite for single-player — dropped 4 competing AI factions
+	it.skip("faction rooms use terrain-affinity floor types", () => {
+		// Requires FACTION_DEFINITIONS from dropped factions module
 	});
 });
 

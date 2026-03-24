@@ -7,39 +7,29 @@
  * Placement rules:
  * - Must be on walkable terrain (not water, not inside existing buildings)
  * - Must have enough resources
- * - Lightning rods need minimum spacing from other rods
+ * - Some buildings require minimum spacing from others of the same type
  */
 
 import { playSfx } from "../audio";
+import {
+	BUILDING_DEFS,
+	type BuildingType,
+	BUILDING_TYPES,
+} from "../config/buildingDefs";
 import { isInsideBuilding } from "../ecs/cityLayout";
-import { spawnFabricationUnit, spawnLightningRod } from "../ecs/factory";
+import { spawnBuilding } from "../ecs/factory";
 import { isWalkable } from "../ecs/terrain";
-import { Faction, Fragment, LightningRod, Position, Unit } from "../ecs/traits";
+import { BuildingTrait, Faction, Fragment, Position, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
 import { buildNavGraph } from "./navmesh";
-import { getResources, type ResourcePool, spendResource } from "./resources";
+import { getResources, spendResource } from "./resources";
 
-export type PlaceableType = "lightning_rod" | "fabrication_unit" | null;
+export type PlaceableType = BuildingType | null;
 
-export interface PlacementCost {
-	type: keyof ResourcePool;
-	amount: number;
+/** Re-export for convenience — costs live in BUILDING_DEFS now */
+export function getBuildingCost(type: string) {
+	return BUILDING_DEFS[type]?.costs ?? [];
 }
-
-export const BUILDING_COSTS: Record<string, PlacementCost[]> = {
-	lightning_rod: [
-		{ type: "scrapMetal", amount: 5 },
-		{ type: "circuitry", amount: 2 },
-	],
-	fabrication_unit: [
-		{ type: "scrapMetal", amount: 8 },
-		{ type: "circuitry", amount: 3 },
-		{ type: "durasteel", amount: 1 },
-	],
-};
-
-/** Minimum distance between lightning rods */
-const MIN_ROD_SPACING = 10;
 
 let activePlacement: PlaceableType = null;
 let ghostPosition: { x: number; z: number } | null = null;
@@ -53,6 +43,10 @@ export function setActivePlacement(type: PlaceableType) {
 	activePlacement = type;
 	ghostPosition = null;
 	ghostValid = false;
+}
+
+export function getPlaceableTypes(): BuildingType[] {
+	return BUILDING_TYPES;
 }
 
 export function getGhostPosition(): {
@@ -71,18 +65,25 @@ export function updateGhostPosition(x: number, z: number) {
 		: false;
 }
 
-function isValidPlacement(x: number, z: number, type: PlaceableType): boolean {
-	if (!type) return false;
+function isValidPlacement(
+	x: number,
+	z: number,
+	type: BuildingType,
+): boolean {
 	if (!isWalkable(x, z)) return false;
 	if (isInsideBuilding(x, z)) return false;
 
-	// Lightning rods need spacing
-	if (type === "lightning_rod") {
-		for (const rod of world.query(LightningRod, Position)) {
-			const rodPos = rod.get(Position)!;
-			const dx = rodPos.x - x;
-			const dz = rodPos.z - z;
-			if (Math.sqrt(dx * dx + dz * dz) < MIN_ROD_SPACING) return false;
+	const def = BUILDING_DEFS[type];
+	if (!def) return false;
+
+	// Enforce minimum spacing from same building type
+	if (def.minSpacing > 0) {
+		for (const building of world.query(BuildingTrait, Position)) {
+			if (building.get(BuildingTrait)?.buildingType !== type) continue;
+			const bPos = building.get(Position)!;
+			const dx = bPos.x - x;
+			const dz = bPos.z - z;
+			if (Math.sqrt(dx * dx + dz * dz) < def.minSpacing) return false;
 		}
 	}
 
@@ -96,17 +97,17 @@ function isValidPlacement(x: number, z: number, type: PlaceableType): boolean {
 export function confirmPlacement(): boolean {
 	if (!activePlacement || !ghostPosition || !ghostValid) return false;
 
-	const costs = BUILDING_COSTS[activePlacement];
-	if (!costs) return false;
+	const def = BUILDING_DEFS[activePlacement];
+	if (!def) return false;
 
 	// Check all costs can be paid before spending
 	const pool = getResources();
-	for (const cost of costs) {
+	for (const cost of def.costs) {
 		if (pool[cost.type] < cost.amount) return false;
 	}
 
 	// Spend resources
-	for (const cost of costs) {
+	for (const cost of def.costs) {
 		if (!spendResource(cost.type, cost.amount)) return false;
 	}
 
@@ -114,23 +115,20 @@ export function confirmPlacement(): boolean {
 	let fragmentId: string | null = null;
 	for (const entity of world.query(Unit, Faction, Fragment)) {
 		if (entity.get(Faction)?.value === "player") {
-			fragmentId = entity.get(Fragment)?.fragmentId;
+			fragmentId = entity.get(Fragment)?.fragmentId ?? null;
 			break;
 		}
 	}
 	if (!fragmentId) return false;
 
-	// Place the building
-	if (activePlacement === "lightning_rod") {
-		spawnLightningRod({ x: ghostPosition.x, z: ghostPosition.z, fragmentId });
-	} else if (activePlacement === "fabrication_unit") {
-		spawnFabricationUnit({
-			x: ghostPosition.x,
-			z: ghostPosition.z,
-			fragmentId,
-			powered: false,
-		});
-	}
+	// Place the building using the generic spawn function
+	spawnBuilding({
+		x: ghostPosition.x,
+		z: ghostPosition.z,
+		fragmentId,
+		buildingType: activePlacement,
+		powered: def.startsPowered,
+	});
 
 	// Rebuild navmesh to account for new building
 	buildNavGraph();

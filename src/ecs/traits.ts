@@ -29,6 +29,8 @@ export const Unit = trait({
 	displayName: "",
 	speed: 3,
 	selected: false,
+	/** Mark level: 1 = base, 2 = improved, 3 = advanced */
+	mark: 1,
 });
 
 /** Navigation — navmesh path as JSON-stringified Vec3[] */

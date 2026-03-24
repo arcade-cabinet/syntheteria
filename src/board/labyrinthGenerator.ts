@@ -26,9 +26,9 @@ import { applyMultiLevelPlatforms } from "./labyrinthPlatforms";
 import { seededRng } from "./noise";
 import { floorTypeForTile } from "./terrain";
 import {
+	type BoardConfig,
 	CLIMATE_PROFILE_SPECS,
 	FLOOR_DEFS,
-	type BoardConfig,
 	type FloorType,
 	type GeneratedBoard,
 	type TileData,

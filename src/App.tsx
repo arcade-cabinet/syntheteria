@@ -170,22 +170,12 @@ export default function App() {
 		difficulty: "normal",
 	});
 	const wasPausedRef = useRef(false);
-	const startPosRef = useRef({ x: 48, z: 62 });
+	const [startPos, setStartPos] = useState<{ x: number; z: number } | null>(
+		null,
+	);
 
 	// Watch game snapshot for phase transitions during gameplay
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
-
-	useEffect(() => {
-		if (phase === "playing" && !worldInitialized) {
-			worldInitialized = true;
-			const cfg = gameConfigRef.current;
-			const { startX, startZ } = initializeWorld(cfg.seed, cfg.difficulty);
-			startPosRef.current = { x: startX, z: startZ };
-			// Start ambience and music when gameplay begins
-			startAmbience();
-			startMusic(1); // Epoch 1: Emergence
-		}
-	}, [phase]);
 
 	// Detect in-game phase transitions and show narrative overlay
 	useEffect(() => {
@@ -246,10 +236,26 @@ export default function App() {
 		return (
 			<NarrativeOverlay
 				sequence={INTRO_SEQUENCE}
-				onComplete={() => setPhase("playing")}
+				onComplete={() => {
+					if (!worldInitialized) {
+						worldInitialized = true;
+						const cfg = gameConfigRef.current;
+						const { startX, startZ } = initializeWorld(
+							cfg.seed,
+							cfg.difficulty,
+						);
+						setStartPos({ x: startX, z: startZ });
+						startAmbience();
+						startMusic(1); // Epoch 1: Emergence
+					}
+					setPhase("playing");
+				}}
 			/>
 		);
 	}
+
+	// Wait for world initialization before rendering the Canvas
+	if (!startPos) return null;
 
 	return (
 		<ErrorBoundary>
@@ -263,11 +269,7 @@ export default function App() {
 			>
 				<Canvas
 					camera={{
-						position: [
-							startPosRef.current.x,
-							40,
-							startPosRef.current.z + 40 * 0.6,
-						],
+						position: [startPos.x, 40, startPos.z + 40 * 0.6],
 						fov: 45,
 						near: 0.1,
 						far: 500,
@@ -287,7 +289,7 @@ export default function App() {
 					<CityRenderer />
 					<UnitRenderer />
 
-					<TopDownCamera initialTarget={startPosRef.current} initialZoom={40} />
+					<TopDownCamera initialTarget={startPos} initialZoom={40} />
 					<UnitInput />
 					<GameLoop />
 				</Canvas>

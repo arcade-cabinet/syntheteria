@@ -47,6 +47,7 @@ export function findEntityAtPoint(
 	// Check buildings (larger click target)
 	for (const entity of world.query(Position, BuildingTrait, Fragment)) {
 		const pos = entity.get(Position)!;
+		// Buildings may lack a fragment ID during placement preview — fall back to no offset
 		const fragmentId = entity.get(Fragment)?.fragmentId ?? "";
 		const frag = fragmentId ? getFragment(fragmentId) : null;
 		const ox = frag?.displayOffset.x ?? 0;
@@ -70,6 +71,8 @@ export function issueMoveTo(
 	displayX: number,
 	displayZ: number,
 ) {
+	// Fragment offset needed to convert display-space back to world-space
+	// Falls back to zero offset if fragment not yet registered
 	const frag = getFragment(entity.get(Fragment)?.fragmentId ?? "");
 	const ox = frag?.displayOffset.x ?? 0;
 	const oz = frag?.displayOffset.z ?? 0;

@@ -153,6 +153,7 @@ function RepairPanel({ selectedEntity }: { selectedEntity: Entity }) {
 	if (brokenComps.length === 0) return null;
 
 	const selectedPos = selectedEntity.get(Position)!;
+	// EntityId may be absent for dynamically spawned entities — empty string prevents self-match below
 	const selectedId = selectedEntity.get(EntityId)?.value ?? "";
 
 	let repairer: Entity | null = null;
@@ -297,6 +298,7 @@ function InlineFabricationPanel({ fabricator }: { fabricator: Entity }) {
 	const building = fabricator.get(BuildingTrait);
 	const isPowered = building?.powered && building?.operational;
 
+	// EntityId may be absent for dynamically spawned fabricators — empty string matches no jobs
 	const fabricatorId = fabricator.get(EntityId)?.value ?? "";
 	const myJobs = snap.fabricationJobs.filter(
 		(j) => j.fabricatorId === fabricatorId,

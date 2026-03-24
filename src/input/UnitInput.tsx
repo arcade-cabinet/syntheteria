@@ -11,11 +11,20 @@
  */
 
 import { useThree } from "@react-three/fiber";
+import type { Entity } from "koota";
 import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
+import { playSfx } from "../audio";
 import { getFragment } from "../ecs/terrain";
-import type { Entity, UnitEntity } from "../ecs/types";
-import { buildings, units } from "../ecs/world";
+import {
+	BuildingTrait,
+	Fragment,
+	Navigation,
+	Position,
+	Unit,
+} from "../ecs/traits";
+import { serializePath } from "../ecs/types";
+import { world } from "../ecs/world";
 import {
 	cancelPlacement,
 	confirmPlacement,
@@ -52,13 +61,14 @@ function findEntityAtPoint(
 	let closestDist = threshold;
 
 	// Check mobile units
-	for (const entity of units) {
-		const frag = getFragment(entity.mapFragment.fragmentId);
+	for (const entity of world.query(Position, Unit, Fragment)) {
+		const pos = entity.get(Position)!;
+		const frag = getFragment(entity.get(Fragment)?.fragmentId ?? "");
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
 
-		const dx = entity.worldPosition.x + ox - point.x;
-		const dz = entity.worldPosition.z + oz - point.z;
+		const dx = pos.x + ox - point.x;
+		const dz = pos.z + oz - point.z;
 		const dist = Math.sqrt(dx * dx + dz * dz);
 		if (dist < closestDist) {
 			closest = entity;
@@ -67,15 +77,15 @@ function findEntityAtPoint(
 	}
 
 	// Check buildings (larger click target)
-	for (const entity of buildings) {
-		const frag = entity.mapFragment
-			? getFragment(entity.mapFragment.fragmentId)
-			: null;
+	for (const entity of world.query(Position, BuildingTrait, Fragment)) {
+		const pos = entity.get(Position)!;
+		const fragmentId = entity.get(Fragment)?.fragmentId ?? "";
+		const frag = fragmentId ? getFragment(fragmentId) : null;
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
 
-		const dx = entity.worldPosition.x + ox - point.x;
-		const dz = entity.worldPosition.z + oz - point.z;
+		const dx = pos.x + ox - point.x;
+		const dz = pos.z + oz - point.z;
 		const dist = Math.sqrt(dx * dx + dz * dz);
 		if (dist < closestDist) {
 			closest = entity;
@@ -87,50 +97,47 @@ function findEntityAtPoint(
 }
 
 /** Issue a move command. Converts display-space target to real-world position. */
-function issueMoveTo(entity: UnitEntity, displayX: number, displayZ: number) {
-	const frag = getFragment(entity.mapFragment.fragmentId);
+function issueMoveTo(entity: Entity, displayX: number, displayZ: number) {
+	const frag = getFragment(entity.get(Fragment)?.fragmentId ?? "");
 	const ox = frag?.displayOffset.x ?? 0;
 	const oz = frag?.displayOffset.z ?? 0;
 
 	const realX = displayX - ox;
 	const realZ = displayZ - oz;
 
-	const path = findPath(entity.worldPosition, { x: realX, y: 0, z: realZ });
+	const pos = entity.get(Position)!;
+	const path = findPath(pos, { x: realX, y: 0, z: realZ });
 
-	if (path.length > 0 && entity.navigation) {
-		entity.navigation.path = path;
-		entity.navigation.pathIndex = 0;
-		entity.navigation.moving = true;
+	if (path.length > 0 && entity.has(Navigation)) {
+		entity.set(Navigation, {
+			pathJson: serializePath(path),
+			pathIndex: 0,
+			moving: true,
+		});
 	}
 }
 
 function getSelectedEntity(): Entity | null {
-	for (const entity of units) {
-		if (entity.unit.selected) return entity;
+	for (const entity of world.query(Unit)) {
+		if (entity.get(Unit)!.selected) return entity;
 	}
-	for (const entity of buildings) {
-		if (entity.building.selected) return entity;
+	for (const entity of world.query(BuildingTrait)) {
+		if (entity.get(BuildingTrait)!.selected) return entity;
 	}
 	return null;
 }
 
 function deselectAll() {
-	for (const u of units) {
-		u.unit.selected = false;
+	for (const entity of world.query(Unit)) {
+		if (entity.get(Unit)!.selected) {
+			entity.set(Unit, { selected: false });
+		}
 	}
-	for (const b of buildings) {
-		b.building.selected = false;
+	for (const entity of world.query(BuildingTrait)) {
+		if (entity.get(BuildingTrait)!.selected) {
+			entity.set(BuildingTrait, { selected: false });
+		}
 	}
-}
-
-function isUnit(entity: Entity): entity is UnitEntity {
-	return !!entity.unit;
-}
-
-function isBuilding(
-	entity: Entity,
-): entity is Entity & Required<Pick<Entity, "building">> {
-	return !!entity.building;
 }
 
 export function UnitInput() {
@@ -165,14 +172,16 @@ export function UnitInput() {
 			if (entityAtPoint) {
 				// Tapped on a unit or building — select it (deselect others)
 				deselectAll();
-				if (isUnit(entityAtPoint)) {
-					entityAtPoint.unit.selected = true;
-				} else if (isBuilding(entityAtPoint)) {
-					entityAtPoint.building.selected = true;
+				if (entityAtPoint.has(Unit)) {
+					entityAtPoint.set(Unit, { selected: true });
+				} else if (entityAtPoint.has(BuildingTrait)) {
+					entityAtPoint.set(BuildingTrait, { selected: true });
 				}
-			} else if (currentlySelected && isUnit(currentlySelected)) {
+				playSfx("unit_select");
+			} else if (currentlySelected?.has(Unit)) {
 				// Tapped empty ground with a mobile unit selected — move there
 				issueMoveTo(currentlySelected, point.x, point.z);
+				playSfx("unit_move");
 			}
 		},
 		[camera, gl],
@@ -189,8 +198,8 @@ export function UnitInput() {
 			if (!point) return;
 
 			// Right-click always moves selected units
-			for (const entity of units) {
-				if (entity.unit.selected) {
+			for (const entity of world.query(Unit, Navigation, Fragment, Position)) {
+				if (entity.get(Unit)!.selected) {
 					issueMoveTo(entity, point.x, point.z);
 				}
 			}

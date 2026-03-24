@@ -1,10 +1,8 @@
 /**
- * Syntheteria ECS Entity type and component definitions.
- * All components are optional — Miniplex queries select by presence.
+ * Syntheteria ECS type definitions and component helpers.
  *
  * Navigation uses continuous 3D positions (no grid/tiles).
  * Units move freely through the world via navmesh pathfinding.
- *
  * Units have functional/broken parts instead of hit points.
  */
 
@@ -22,72 +20,52 @@ export interface UnitComponent {
 	material: "metal" | "plastic" | "electronic";
 }
 
-export interface Entity {
-	// Identity
-	id: string;
-	faction: "player" | "cultist" | "rogue" | "feral";
+// --- JSON serialization helpers for Koota trait fields ---
 
-	// Continuous 3D position (single source of truth)
-	worldPosition?: Vec3;
+import { GameError } from "../errors";
 
-	// Which map fragment this entity belongs to (for fog-of-war grouping)
-	mapFragment?: { fragmentId: string };
-
-	// Unit (mobile robot)
-	unit?: {
-		type: "maintenance_bot" | "utility_drone" | "fabrication_unit";
-		displayName: string;
-		speed: number; // world units per second at 1x game speed
-		selected: boolean;
-		components: UnitComponent[];
-	};
-
-	// Navigation — navmesh path as world-space waypoints
-	navigation?: {
-		path: Vec3[];
-		pathIndex: number;
-		moving: boolean;
-	};
-
-	// Building / facility
-	building?: {
-		type: string;
-		powered: boolean;
-		operational: boolean;
-		selected: boolean;
-		components: UnitComponent[];
-	};
-
-	// Lightning rod specialization
-	lightningRod?: {
-		rodCapacity: number;
-		currentOutput: number;
-		protectionRadius: number;
-	};
+export function parseComponents(json: string | undefined): UnitComponent[] {
+	if (!json) return [];
+	try {
+		return JSON.parse(json) as UnitComponent[];
+	} catch (e) {
+		throw new GameError(
+			`Invalid components JSON: ${json.slice(0, 80)}`,
+			"ecs/parseComponents",
+			{ cause: e },
+		);
+	}
 }
 
-/** Entity with guaranteed unit components (matches units query) */
-export type UnitEntity = Entity &
-	Required<Pick<Entity, "unit" | "worldPosition" | "mapFragment">>;
+export function serializeComponents(components: UnitComponent[]): string {
+	return JSON.stringify(components);
+}
 
-/** Entity with guaranteed building components (matches buildings query) */
-export type BuildingEntity = Entity &
-	Required<Pick<Entity, "building" | "worldPosition">>;
+export function parsePath(json: string | undefined): Vec3[] {
+	if (!json) return [];
+	try {
+		return JSON.parse(json) as Vec3[];
+	} catch (e) {
+		throw new GameError(
+			`Invalid path JSON: ${json.slice(0, 80)}`,
+			"ecs/parsePath",
+			{ cause: e },
+		);
+	}
+}
 
-/** Entity with guaranteed lightning rod components (matches lightningRods query) */
-export type LightningRodEntity = Entity &
-	Required<Pick<Entity, "lightningRod" | "building" | "worldPosition">>;
+export function serializePath(path: Vec3[]): string {
+	return JSON.stringify(path);
+}
 
 // --- Component helpers ---
 
-export function hasCamera(entity: UnitEntity): boolean {
-	return entity.unit.components.some(
-		(c) => c.name === "camera" && c.functional,
-	);
+export function hasCamera(components: UnitComponent[]): boolean {
+	return components.some((c) => c.name === "camera" && c.functional);
 }
 
-export function hasArms(entity: UnitEntity): boolean {
-	return entity.unit.components.some((c) => c.name === "arms" && c.functional);
+export function hasArms(components: UnitComponent[]): boolean {
+	return components.some((c) => c.name === "arms" && c.functional);
 }
 
 export function hasFunctionalComponent(

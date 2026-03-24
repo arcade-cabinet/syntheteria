@@ -238,7 +238,9 @@ function findNearestWalkable(
 	visited.add(navIndex(gx, gz));
 
 	while (queue.length > 0) {
-		const [cx, cz] = queue.shift()!;
+		const entry = queue.shift();
+		if (!entry) break;
+		const [cx, cz] = entry;
 		if (walkGrid[navIndex(cx, cz)]) return { gx: cx, gz: cz };
 
 		for (const [dx, dz] of NEIGHBORS) {

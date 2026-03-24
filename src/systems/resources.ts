@@ -8,8 +8,15 @@
  */
 
 import { isInsideBuilding } from "../ecs/cityLayout";
-import { hasArms } from "../ecs/types";
-import { units } from "../ecs/world";
+import {
+	Faction,
+	Navigation,
+	Position,
+	Unit,
+	UnitComponents,
+} from "../ecs/traits";
+import { hasArms, parseComponents } from "../ecs/types";
+import { world } from "../ecs/world";
 
 export interface ResourcePool {
 	scrapMetal: number;
@@ -118,18 +125,28 @@ const SCAVENGE_RANGE = 2.5;
 export function resourceSystem() {
 	const points = getScavengePoints();
 
-	for (const unit of units) {
-		if (!hasArms(unit)) continue;
-		if (unit.navigation?.moving) continue; // busy moving
+	for (const entity of world.query(
+		Position,
+		Unit,
+		UnitComponents,
+		Faction,
+		Navigation,
+	)) {
+		if (entity.get(Faction)?.value !== "player") continue;
+		const components = parseComponents(
+			entity.get(UnitComponents)?.componentsJson,
+		);
+		if (!hasArms(components)) continue;
+		const nav = entity.get(Navigation)!;
+		if (nav.moving) continue; // busy moving
 
-		const ux = unit.worldPosition.x;
-		const uz = unit.worldPosition.z;
+		const pos = entity.get(Position)!;
 
 		for (const point of points) {
 			if (point.remaining <= 0) continue;
 
-			const dx = point.x - ux;
-			const dz = point.z - uz;
+			const dx = point.x - pos.x;
+			const dz = point.z - pos.z;
 			const dist = Math.sqrt(dx * dx + dz * dz);
 
 			if (dist <= SCAVENGE_RANGE) {

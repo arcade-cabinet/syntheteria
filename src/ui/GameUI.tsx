@@ -2,9 +2,12 @@
  * DOM overlay UI: resource bar, power info, speed controls, build toolbar,
  * unit info, combat log, minimap.
  */
-import { useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { getMasterVolume, setMasterVolume } from "../audio";
 import {
+	getGameSpeed,
 	getSnapshot,
+	isPaused,
 	setGameSpeed,
 	subscribe,
 	togglePause,
@@ -73,13 +76,14 @@ function BuildToolbar() {
 		>
 			{items.map(({ type, label }) => {
 				const isActive = active === type;
-				const costs = BUILDING_COSTS[type!];
+				const costs = BUILDING_COSTS[type ?? ""];
 				const canAfford = costs.every(
 					(c) => snap.resources[c.type] >= c.amount,
 				);
 
 				return (
 					<button
+						type="button"
 						key={type}
 						onClick={() => setActivePlacement(isActive ? null : type)}
 						title={costs.map((c) => `${c.amount} ${c.type}`).join(", ")}
@@ -136,9 +140,10 @@ function RepairPanel({ selectedUnit }: { selectedUnit: UnitEntity }) {
 			>
 				REPAIR ({repairer.unit.displayName} nearby)
 			</div>
-			{brokenComps.map((comp, i) => (
+			{brokenComps.map((comp) => (
 				<button
-					key={i}
+					type="button"
+					key={comp.name}
 					onClick={() => startRepair(repairer, selectedUnit, comp.name)}
 					style={{
 						display: "block",
@@ -199,9 +204,10 @@ function BuildingRepairPanel({
 					? `(${repairer.unit.displayName} nearby)`
 					: "(no unit with arms nearby)"}
 			</div>
-			{brokenComps.map((comp, i) => (
+			{brokenComps.map((comp) => (
 				<button
-					key={i}
+					type="button"
+					key={comp.name}
 					onClick={() =>
 						repairer && startRepair(repairer, selectedBuilding, comp.name)
 					}
@@ -247,25 +253,30 @@ function InlineFabricationPanel({ fabricator }: { fabricator: Entity }) {
 				paddingTop: "6px",
 			}}
 		>
-			<div
+			<button
+				type="button"
 				onClick={() => setExpanded(!expanded)}
 				style={{
+					background: "none",
+					border: "none",
+					padding: 0,
 					cursor: "pointer",
 					color: "#aa8844",
 					fontSize: "12px",
 					fontWeight: "bold",
+					fontFamily: "inherit",
 					marginBottom: "4px",
 				}}
 			>
 				FABRICATION {expanded ? "[-]" : "[+]"}
-			</div>
+			</button>
 
 			{myJobs.length > 0 && (
 				<div
 					style={{ color: "#00ffaa88", fontSize: "11px", marginBottom: "4px" }}
 				>
-					{myJobs.map((job, i) => (
-						<div key={i}>
+					{myJobs.map((job) => (
+						<div key={job.recipe.name}>
 							{job.recipe.name}: {job.ticksRemaining}t remaining
 						</div>
 					))}
@@ -280,6 +291,7 @@ function InlineFabricationPanel({ fabricator }: { fabricator: Entity }) {
 						);
 						return (
 							<button
+								type="button"
 								key={recipe.name}
 								onClick={() => startFabrication(fabricator, recipe.name)}
 								style={{
@@ -347,25 +359,30 @@ function FabricationPanel() {
 				minWidth: "180px",
 			}}
 		>
-			<div
+			<button
+				type="button"
 				onClick={() => setExpanded(!expanded)}
 				style={{
+					background: "none",
+					border: "none",
+					padding: 0,
 					cursor: "pointer",
 					color: "#aa8844",
 					fontWeight: "bold",
+					fontFamily: "inherit",
 					marginBottom: "4px",
 				}}
 			>
 				FABRICATOR {expanded ? "[-]" : "[+]"}
-			</div>
+			</button>
 
 			{/* Active jobs */}
 			{snap.fabricationJobs.length > 0 && (
 				<div
 					style={{ color: "#00ffaa88", fontSize: "11px", marginBottom: "4px" }}
 				>
-					{snap.fabricationJobs.map((job, i) => (
-						<div key={i}>
+					{snap.fabricationJobs.map((job) => (
+						<div key={job.recipe.name}>
 							{job.recipe.name}: {job.ticksRemaining}t remaining
 						</div>
 					))}
@@ -380,6 +397,7 @@ function FabricationPanel() {
 						);
 						return (
 							<button
+								type="button"
 								key={recipe.name}
 								onClick={() => startFabrication(fabricator, recipe.name)}
 								style={{
@@ -412,8 +430,100 @@ function FabricationPanel() {
 	);
 }
 
+function AudioControls() {
+	const [muted, setMuted] = useState(false);
+	const [volume, setVolume] = useState(() => getMasterVolume());
+
+	const toggleMute = useCallback(() => {
+		if (muted) {
+			setMasterVolume(volume);
+			setMuted(false);
+		} else {
+			setMasterVolume(0);
+			setMuted(true);
+		}
+	}, [muted, volume]);
+
+	const handleVolumeChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const v = Number.parseFloat(e.target.value);
+			setVolume(v);
+			setMasterVolume(v);
+			if (v > 0) setMuted(false);
+		},
+		[],
+	);
+
+	return (
+		<div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+			<button
+				type="button"
+				onClick={toggleMute}
+				style={speedButtonStyle(muted)}
+				title={muted ? "Unmute" : "Mute"}
+			>
+				{muted ? "MUTE" : "SND"}
+			</button>
+			<input
+				type="range"
+				min="0"
+				max="1"
+				step="0.05"
+				value={muted ? 0 : volume}
+				onChange={handleVolumeChange}
+				style={{
+					width: "60px",
+					accentColor: "#00ffaa",
+					cursor: "pointer",
+				}}
+				title={`Volume: ${Math.round((muted ? 0 : volume) * 100)}%`}
+			/>
+		</div>
+	);
+}
+
+const SPEED_STEPS = [0.5, 1, 2, 4];
+
 export function GameUI() {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
+
+	// Keyboard shortcuts: Space = pause, +/= = faster, - = slower
+	useEffect(() => {
+		function onKeyDown(e: KeyboardEvent) {
+			// Don't capture if user is typing in an input
+			if (
+				e.target instanceof HTMLInputElement ||
+				e.target instanceof HTMLTextAreaElement
+			)
+				return;
+
+			if (e.code === "Space") {
+				e.preventDefault();
+				togglePause();
+			} else if (e.key === "+" || e.key === "=") {
+				e.preventDefault();
+				const current = getGameSpeed();
+				if (isPaused()) {
+					togglePause();
+				} else {
+					const idx = SPEED_STEPS.indexOf(current);
+					if (idx < SPEED_STEPS.length - 1) {
+						setGameSpeed(SPEED_STEPS[idx + 1]);
+					}
+				}
+			} else if (e.key === "-") {
+				e.preventDefault();
+				const current = getGameSpeed();
+				const idx = SPEED_STEPS.indexOf(current);
+				if (idx > 0) {
+					setGameSpeed(SPEED_STEPS[idx - 1]);
+				}
+			}
+		}
+
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, []);
 
 	const selectedUnit = Array.from(units).find((u) => u.unit.selected);
 	// Only show building panel for pure buildings (not fabrication units, which show in unit panel)
@@ -464,26 +574,41 @@ export function GameUI() {
 
 				<div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
 					<button
+						type="button"
 						onClick={() => setGameSpeed(0.5)}
 						style={speedButtonStyle(snap.gameSpeed === 0.5)}
 					>
 						0.5x
 					</button>
 					<button
+						type="button"
 						onClick={() => setGameSpeed(1)}
 						style={speedButtonStyle(snap.gameSpeed === 1)}
 					>
 						1x
 					</button>
 					<button
+						type="button"
 						onClick={() => setGameSpeed(2)}
 						style={speedButtonStyle(snap.gameSpeed === 2)}
 					>
 						2x
 					</button>
-					<button onClick={togglePause} style={speedButtonStyle(snap.paused)}>
+					<button
+						type="button"
+						onClick={() => setGameSpeed(4)}
+						style={speedButtonStyle(snap.gameSpeed === 4)}
+					>
+						4x
+					</button>
+					<button
+						type="button"
+						onClick={togglePause}
+						style={speedButtonStyle(snap.paused)}
+					>
 						{snap.paused ? "PLAY" : "PAUSE"}
 					</button>
+					<AudioControls />
 				</div>
 			</div>
 
@@ -590,8 +715,8 @@ export function GameUI() {
 						>
 							COMPONENTS
 						</div>
-						{selectedUnit.unit.components.map((comp, i) => (
-							<ComponentStatus key={i} comp={comp} />
+						{selectedUnit.unit.components.map((comp) => (
+							<ComponentStatus key={comp.name} comp={comp} />
 						))}
 					</div>
 
@@ -674,8 +799,8 @@ export function GameUI() {
 							>
 								COMPONENTS
 							</div>
-							{selectedBuilding.building.components.map((comp, i) => (
-								<ComponentStatus key={i} comp={comp} />
+							{selectedBuilding.building.components.map((comp) => (
+								<ComponentStatus key={comp.name} comp={comp} />
 							))}
 						</div>
 					)}
@@ -727,8 +852,8 @@ export function GameUI() {
 						pointerEvents: "none",
 					}}
 				>
-					{snap.combatEvents.slice(0, 3).map((e, i) => (
-						<div key={i}>
+					{snap.combatEvents.slice(0, 3).map((e) => (
+						<div key={`${e.targetId}-${e.componentDamaged}`}>
 							{e.targetDestroyed
 								? `${e.targetId} DESTROYED`
 								: `${e.targetId}: ${e.componentDamaged} damaged`}

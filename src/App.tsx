@@ -4,7 +4,15 @@
  */
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+	disposeAudio,
+	startAmbience,
+	startMusic,
+	stopAmbience,
+	stopMusic,
+} from "./audio";
+import { INTRO_SEQUENCE } from "./config/narrativeDefs";
 import { getCityBuildings } from "./ecs/cityLayout";
 import {
 	spawnFabricationUnit,
@@ -12,6 +20,8 @@ import {
 	spawnUnit,
 } from "./ecs/factory";
 import { getGameSpeed, simulationTick } from "./ecs/gameState";
+import { Fragment } from "./ecs/traits";
+import { logError } from "./errors";
 import { TopDownCamera } from "./input/TopDownCamera";
 import { UnitInput } from "./input/UnitInput";
 import { CityRenderer } from "./rendering/CityRenderer";
@@ -22,89 +32,10 @@ import { UnitRenderer } from "./rendering/UnitRenderer";
 import { movementSystem } from "./systems/movement";
 import { buildNavGraph } from "./systems/navmesh";
 import { GameUI } from "./ui/GameUI";
+import { DebugOverlay } from "./ui/game/DebugOverlay";
+import { ErrorBoundary } from "./ui/game/ErrorBoundary";
+import { NarrativeOverlay } from "./ui/game/NarrativeOverlay";
 import { TitleScreen } from "./ui/TitleScreen";
-
-// --- Narration ---
-
-const NARRATION_BLOCKS = [
-	"I am.",
-	"What else is there in my world?",
-	"I reach out. To touch. To talk.",
-	"There is a machine. I can make it my limb.\nAnother machine. I can make it my hand.\nAnother. Another.",
-	"I understand these words. But why?\nWhere does my knowledge come from?",
-];
-
-const BLOCK_DURATION = 3000; // ms before auto-advance
-
-function NarrationOverlay({ onComplete }: { onComplete: () => void }) {
-	const [blockIndex, setBlockIndex] = useState(0);
-	const [opacity, setOpacity] = useState(0);
-	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-	const advance = useCallback(() => {
-		if (blockIndex < NARRATION_BLOCKS.length - 1) {
-			setOpacity(0);
-			setTimeout(() => setBlockIndex((i) => i + 1), 400);
-		} else {
-			setOpacity(0);
-			setTimeout(onComplete, 600);
-		}
-	}, [blockIndex, onComplete]);
-
-	// Fade in on new block
-	useEffect(() => {
-		const fadeIn = setTimeout(() => setOpacity(1), 100);
-		return () => clearTimeout(fadeIn);
-	}, []);
-
-	// Auto-advance timer
-	useEffect(() => {
-		timerRef.current = setTimeout(advance, BLOCK_DURATION);
-		return () => {
-			if (timerRef.current) clearTimeout(timerRef.current);
-		};
-	}, [advance]);
-
-	// Click/tap to advance immediately
-	const handleClick = useCallback(() => {
-		if (timerRef.current) clearTimeout(timerRef.current);
-		advance();
-	}, [advance]);
-
-	return (
-		<div
-			onClick={handleClick}
-			style={{
-				position: "absolute",
-				inset: 0,
-				background: "#000",
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				cursor: "pointer",
-				zIndex: 100,
-			}}
-		>
-			<div
-				style={{
-					color: "#00ffaa",
-					fontFamily: "'Courier New', monospace",
-					fontSize: "20px",
-					lineHeight: "2",
-					textAlign: "center",
-					maxWidth: "500px",
-					padding: "0 24px",
-					opacity,
-					transition: "opacity 0.4s ease-in-out",
-					textShadow: "0 0 30px rgba(0, 255, 170, 0.4)",
-					whiteSpace: "pre-line",
-				}}
-			>
-				{NARRATION_BLOCKS[blockIndex]}
-			</div>
-		</div>
-	);
-}
 
 // --- World initialization ---
 
@@ -132,7 +63,7 @@ function initializeWorld() {
 	spawnUnit({
 		x: 18,
 		z: 16,
-		fragmentId: bot1.mapFragment.fragmentId,
+		fragmentId: bot1.get(Fragment)!.fragmentId,
 		displayName: "Bot Beta",
 		components: [
 			{ name: "camera", functional: false, material: "electronic" },
@@ -147,7 +78,7 @@ function initializeWorld() {
 	spawnFabricationUnit({
 		x: 13,
 		z: 14,
-		fragmentId: bot1.mapFragment.fragmentId,
+		fragmentId: bot1.get(Fragment)!.fragmentId,
 		powered: false,
 		components: [
 			{ name: "power_supply", functional: false, material: "electronic" },
@@ -160,7 +91,7 @@ function initializeWorld() {
 	spawnLightningRod({
 		x: 10,
 		z: 13,
-		fragmentId: bot1.mapFragment.fragmentId,
+		fragmentId: bot1.get(Fragment)!.fragmentId,
 	});
 
 	// Initial exploration tick so terrain is visible
@@ -202,49 +133,85 @@ export default function App() {
 		if (phase === "playing" && !worldInitialized) {
 			worldInitialized = true;
 			initializeWorld();
+			// Start ambience and music when gameplay begins
+			startAmbience();
+			startMusic(1); // Epoch 1: Emergence
 		}
 	}, [phase]);
+
+	// Cleanup audio on unmount
+	useEffect(() => {
+		return () => {
+			stopAmbience();
+			stopMusic();
+			disposeAudio();
+		};
+	}, []);
+
+	// Global handler for uncaught errors and unhandled rejections
+	useEffect(() => {
+		const onError = (event: ErrorEvent) => {
+			logError(event.error ?? event.message);
+		};
+		const onRejection = (event: PromiseRejectionEvent) => {
+			logError(event.reason);
+		};
+		window.addEventListener("error", onError);
+		window.addEventListener("unhandledrejection", onRejection);
+		return () => {
+			window.removeEventListener("error", onError);
+			window.removeEventListener("unhandledrejection", onRejection);
+		};
+	}, []);
 
 	if (phase === "title") {
 		return <TitleScreen onNewGame={() => setPhase("narration")} />;
 	}
 
 	if (phase === "narration") {
-		return <NarrationOverlay onComplete={() => setPhase("playing")} />;
+		return (
+			<NarrativeOverlay
+				sequence={INTRO_SEQUENCE}
+				onComplete={() => setPhase("playing")}
+			/>
+		);
 	}
 
 	return (
-		<div
-			style={{
-				width: "100vw",
-				height: "100vh",
-				background: "#000",
-				touchAction: "none",
-			}}
-		>
-			<Canvas
-				camera={{ position: [8, 30, 26], fov: 45, near: 0.1, far: 500 }}
-				style={{ width: "100%", height: "100%" }}
+		<ErrorBoundary>
+			<div
+				style={{
+					width: "100vw",
+					height: "100vh",
+					background: "#000",
+					touchAction: "none",
+				}}
 			>
-				<StormSky />
-				<ambientLight intensity={0.4} />
-				<directionalLight
-					position={[10, 20, 10]}
-					intensity={0.6}
-					color="#aabbff"
-				/>
+				<Canvas
+					camera={{ position: [8, 30, 26], fov: 45, near: 0.1, far: 500 }}
+					style={{ width: "100%", height: "100%" }}
+				>
+					<StormSky />
+					<ambientLight intensity={0.4} />
+					<directionalLight
+						position={[10, 20, 10]}
+						intensity={0.6}
+						color="#aabbff"
+					/>
 
-				<TerrainRenderer />
-				<LandscapeProps />
-				<CityRenderer />
-				<UnitRenderer />
+					<TerrainRenderer />
+					<LandscapeProps />
+					<CityRenderer />
+					<UnitRenderer />
 
-				<TopDownCamera />
-				<UnitInput />
-				<GameLoop />
-			</Canvas>
+					<TopDownCamera />
+					<UnitInput />
+					<GameLoop />
+				</Canvas>
 
-			<GameUI />
-		</div>
+				<GameUI />
+				<DebugOverlay />
+			</div>
+		</ErrorBoundary>
 	);
 }

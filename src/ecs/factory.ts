@@ -1,9 +1,29 @@
 /**
- * Factory functions for spawning entities.
+ * Factory functions for spawning entities using Koota ECS.
  */
 
-import { createFragment, getFragment, getTerrainHeight } from "./terrain";
-import type { Entity, UnitComponent, UnitEntity } from "./types";
+import type { Entity } from "koota";
+import type { CultMechType } from "../config/cultDefs";
+import { CULT_MECH_DEFS } from "../config/cultDefs";
+import {
+	createFragment,
+	getFragment,
+	getTerrainHeight,
+	type MapFragment,
+} from "./terrain";
+import {
+	BuildingTrait,
+	EntityId,
+	Faction,
+	Fragment,
+	LightningRod,
+	Navigation,
+	Position,
+	Unit,
+	UnitComponents,
+} from "./traits";
+import type { UnitComponent } from "./types";
+import { serializeComponents } from "./types";
 import { world } from "./world";
 
 let nextEntityId = 0;
@@ -20,7 +40,7 @@ export function spawnUnit(options: {
 	displayName?: string;
 	speed?: number;
 	components: UnitComponent[];
-}): UnitEntity {
+}): Entity {
 	const {
 		x,
 		z,
@@ -31,7 +51,7 @@ export function spawnUnit(options: {
 	} = options;
 
 	// Create or reuse fragment
-	let fragment;
+	let fragment: MapFragment | undefined;
 	if (options.fragmentId) {
 		fragment = getFragment(options.fragmentId);
 		if (!fragment) throw new Error(`Fragment ${options.fragmentId} not found`);
@@ -40,28 +60,22 @@ export function spawnUnit(options: {
 	}
 
 	const y = getTerrainHeight(x, z);
+	const id = `unit_${nextEntityId++}`;
 
-	const entity = world.add({
-		id: `unit_${nextEntityId++}`,
-		faction: "player" as const,
-		worldPosition: { x, y, z },
-		mapFragment: { fragmentId: fragment.id },
-		unit: {
-			type,
-			displayName,
-			speed,
-			selected: false,
-			components,
-		},
-		navigation: { path: [], pathIndex: 0, moving: false },
-	} as Partial<Entity> as Entity);
-
-	return entity as UnitEntity;
+	return world.spawn(
+		EntityId({ value: id }),
+		Position({ x, y, z }),
+		Faction({ value: "player" }),
+		Fragment({ fragmentId: fragment.id }),
+		Unit({ unitType: type, displayName, speed, selected: false }),
+		UnitComponents({ componentsJson: serializeComponents(components) }),
+		Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+	);
 }
 
 /**
- * Spawn a fabrication unit — an immobile unit with building power tracking.
- * Has both `unit` (for selection/UI/components) and `building` (for power system).
+ * Spawn a fabrication unit -- an immobile unit with building power tracking.
+ * Has both Unit (for selection/UI/components) and BuildingTrait (for power system).
  */
 export function spawnFabricationUnit(options: {
 	x: number;
@@ -76,32 +90,39 @@ export function spawnFabricationUnit(options: {
 
 	const y = getTerrainHeight(options.x, options.z);
 	const powered = options.powered ?? false;
+	const id = `fab_${nextEntityId++}`;
 
-	return world.add({
-		id: `fab_${nextEntityId++}`,
-		faction: "player" as const,
-		worldPosition: { x: options.x, y, z: options.z },
-		mapFragment: { fragmentId: options.fragmentId },
-		unit: {
-			type: "fabrication_unit" as const,
+	const components = options.components ?? [
+		{
+			name: "power_supply",
+			functional: false,
+			material: "electronic" as const,
+		},
+		{ name: "fabrication_arm", functional: true, material: "metal" as const },
+		{ name: "material_hopper", functional: true, material: "metal" as const },
+	];
+
+	return world.spawn(
+		EntityId({ value: id }),
+		Position({ x: options.x, y, z: options.z }),
+		Faction({ value: "player" }),
+		Fragment({ fragmentId: options.fragmentId }),
+		Unit({
+			unitType: "fabrication_unit",
 			displayName: options.displayName ?? "Fabrication Unit",
 			speed: 0,
 			selected: false,
-			components: options.components ?? [
-				{ name: "power_supply", functional: false, material: "electronic" },
-				{ name: "fabrication_arm", functional: true, material: "metal" },
-				{ name: "material_hopper", functional: true, material: "metal" },
-			],
-		},
-		navigation: { path: [], pathIndex: 0, moving: false },
-		building: {
-			type: "fabrication_unit",
+		}),
+		UnitComponents({ componentsJson: serializeComponents(components) }),
+		Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+		BuildingTrait({
+			buildingType: "fabrication_unit",
 			powered,
 			operational: powered,
 			selected: false,
-			components: [],
-		},
-	} as Partial<Entity> as Entity);
+			buildingComponentsJson: "[]",
+		}),
+	);
 }
 
 /**
@@ -116,23 +137,61 @@ export function spawnLightningRod(options: {
 	if (!fragment) throw new Error(`Fragment ${options.fragmentId} not found`);
 
 	const y = getTerrainHeight(options.x, options.z);
+	const id = `bldg_${nextEntityId++}`;
 
-	return world.add({
-		id: `bldg_${nextEntityId++}`,
-		faction: "player" as const,
-		worldPosition: { x: options.x, y, z: options.z },
-		mapFragment: { fragmentId: options.fragmentId },
-		building: {
-			type: "lightning_rod",
+	return world.spawn(
+		EntityId({ value: id }),
+		Position({ x: options.x, y, z: options.z }),
+		Faction({ value: "player" }),
+		Fragment({ fragmentId: options.fragmentId }),
+		BuildingTrait({
+			buildingType: "lightning_rod",
 			powered: true,
 			operational: true,
 			selected: false,
-			components: [],
-		},
-		lightningRod: {
+			buildingComponentsJson: "[]",
+		}),
+		LightningRod({
 			rodCapacity: 10,
 			currentOutput: 7,
 			protectionRadius: 8,
-		},
-	} as Partial<Entity> as Entity);
+		}),
+	);
+}
+
+/**
+ * Spawn a cult mech at a world position.
+ * Uses cult mech definitions for component loadout, speed, etc.
+ */
+export function spawnCultUnit(options: {
+	x: number;
+	z: number;
+	mechType: CultMechType;
+	displayName?: string;
+}): Entity {
+	const { x, z, mechType } = options;
+	const def = CULT_MECH_DEFS[mechType];
+	const fragment = createFragment();
+	const y = getTerrainHeight(x, z);
+	const id = `cult_${nextEntityId++}`;
+
+	// Deep-copy components so each entity gets independent state
+	const components = def.components.map((c) => ({ ...c }));
+
+	return world.spawn(
+		EntityId({ value: id }),
+		Position({ x, y, z }),
+		Faction({ value: "cultist" }),
+		Fragment({ fragmentId: fragment.id }),
+		Unit({
+			unitType: def.unitType,
+			displayName:
+				options.displayName ??
+				`${def.displayName} ${id.slice(-2).toUpperCase()}`,
+			speed: def.speed,
+			selected: false,
+		}),
+		UnitComponents({ componentsJson: serializeComponents(components) }),
+		Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+	);
 }

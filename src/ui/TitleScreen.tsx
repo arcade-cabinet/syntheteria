@@ -3,6 +3,7 @@
  * Displayed before narration and gameplay.
  */
 import { useEffect, useState } from "react";
+import { initAudio } from "../audio";
 
 export function TitleScreen({ onNewGame }: { onNewGame: () => void }) {
 	const [titleOpacity, setTitleOpacity] = useState(0);
@@ -94,7 +95,7 @@ export function TitleScreen({ onNewGame }: { onNewGame: () => void }) {
 					textAlign: "center",
 				}}
 			>
-				AWAKEN // CONNECT // REBUILD
+				{"AWAKEN // CONNECT // REBUILD"}
 			</div>
 
 			{/* Menu */}
@@ -109,7 +110,14 @@ export function TitleScreen({ onNewGame }: { onNewGame: () => void }) {
 					gap: "16px",
 				}}
 			>
-				<MenuButton label="NEW GAME" onClick={onNewGame} primary />
+				<MenuButton
+					label="NEW GAME"
+					onClick={() => {
+						initAudio();
+						onNewGame();
+					}}
+					primary
+				/>
 				<MenuButton label="CONTINUE" onClick={() => {}} disabled />
 				<MenuButton label="SETTINGS" onClick={() => {}} disabled />
 			</div>
@@ -146,6 +154,7 @@ function MenuButton({
 
 	return (
 		<button
+			type="button"
 			onClick={disabled ? undefined : onClick}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}

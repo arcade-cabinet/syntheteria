@@ -1,15 +1,25 @@
 /**
- * Enemy system — feral machines that roam the city streets.
+ * Enemy system -- feral machines that roam the city streets.
  *
  * Feral bots spawn at city edges and patrol randomly.
- * They are hostile — will attack player units in range.
+ * They are hostile -- will attack player units in range.
  * Can be hacked and taken over (future feature).
  */
 
+import type { Entity } from "koota";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { createFragment, getTerrainHeight, isWalkable } from "../ecs/terrain";
-import type { Entity, UnitEntity, Vec3 } from "../ecs/types";
-import { units, world } from "../ecs/world";
+import {
+	EntityId,
+	Faction,
+	Fragment,
+	Navigation,
+	Position,
+	Unit,
+	UnitComponents,
+} from "../ecs/traits";
+import { serializeComponents, serializePath, type Vec3 } from "../ecs/types";
+import { world } from "../ecs/world";
 import { findPath } from "./pathfinding";
 
 let nextEnemyId = 0;
@@ -29,17 +39,14 @@ const SPAWN_ZONES = [
 const MAX_ENEMIES = 3;
 const SPAWN_INTERVAL = 60; // ticks between spawn attempts (slower spawning)
 const PATROL_RANGE = 15;
-const AGGRO_RANGE = 6; // slightly shorter aggro range — gives player more room
+const AGGRO_RANGE = 6; // slightly shorter aggro range -- gives player more room
 
 let spawnTimer = 40; // longer initial delay so player can orient
 
-// Track enemy entities by id
-const enemyIds = new Set<string>();
-
 function countEnemies(): number {
 	let count = 0;
-	for (const unit of units) {
-		if (unit.faction === "feral") count++;
+	for (const entity of world.query(Unit, Faction)) {
+		if (entity.get(Faction)?.value === "feral") count++;
 	}
 	return count;
 }
@@ -69,27 +76,27 @@ function spawnEnemy() {
 	const hasCam = Math.random() > 0.4;
 	const hasArmsRoll = Math.random() > 0.3;
 
-	world.add({
-		id,
-		faction: "feral" as const,
-		worldPosition: { x: pos.x, y, z: pos.z },
-		mapFragment: { fragmentId: fragment.id },
-		unit: {
-			type: "maintenance_bot",
+	world.spawn(
+		EntityId({ value: id }),
+		Position({ x: pos.x, y, z: pos.z }),
+		Faction({ value: "feral" }),
+		Fragment({ fragmentId: fragment.id }),
+		Unit({
+			unitType: "maintenance_bot",
 			displayName: `Feral ${id.slice(-2).toUpperCase()}`,
 			speed: 2 + Math.random() * 1.5,
 			selected: false,
-			components: [
+		}),
+		UnitComponents({
+			componentsJson: serializeComponents([
 				{ name: "camera", functional: hasCam, material: "electronic" },
 				{ name: "arms", functional: hasArmsRoll, material: "metal" },
 				{ name: "legs", functional: true, material: "metal" },
 				{ name: "power_cell", functional: true, material: "electronic" },
-			],
-		},
-		navigation: { path: [], pathIndex: 0, moving: false },
-	} as Partial<Entity> as Entity);
-
-	enemyIds.add(id);
+			]),
+		}),
+		Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+	);
 }
 
 /**
@@ -109,21 +116,25 @@ function getPatrolTarget(from: Vec3): Vec3 | null {
 /**
  * Find nearest player unit within aggro range.
  */
-function findNearestPlayerUnit(enemy: UnitEntity): UnitEntity | null {
-	let closest: UnitEntity | null = null;
+function findNearestPlayerUnit(
+	enemy: Entity,
+): { entity: Entity; dist: number } | null {
+	const enemyPos = enemy.get(Position)!;
+	let closest: Entity | null = null;
 	let closestDist = AGGRO_RANGE;
 
-	for (const unit of units) {
-		if (unit.faction !== "player") continue;
-		const dx = unit.worldPosition.x - enemy.worldPosition.x;
-		const dz = unit.worldPosition.z - enemy.worldPosition.z;
+	for (const unit of world.query(Position, Unit, Faction)) {
+		if (unit.get(Faction)?.value !== "player") continue;
+		const unitPos = unit.get(Position)!;
+		const dx = unitPos.x - enemyPos.x;
+		const dz = unitPos.z - enemyPos.z;
 		const dist = Math.sqrt(dx * dx + dz * dz);
 		if (dist < closestDist) {
 			closest = unit;
 			closestDist = dist;
 		}
 	}
-	return closest;
+	return closest ? { entity: closest, dist: closestDist } : null;
 }
 
 /**
@@ -141,34 +152,43 @@ export function enemySystem() {
 	}
 
 	// AI for each enemy
-	for (const unit of units) {
-		if (unit.faction !== "feral") continue;
+	for (const entity of world.query(Position, Unit, Faction, Navigation)) {
+		if (entity.get(Faction)?.value !== "feral") continue;
+
+		const nav = entity.get(Navigation)!;
 
 		// If moving, let it continue
-		if (unit.navigation?.moving) continue;
+		if (nav.moving) continue;
+
+		const pos = entity.get(Position)!;
 
 		// Check for nearby player units to aggro
-		const target = findNearestPlayerUnit(unit);
+		const target = findNearestPlayerUnit(entity);
 		if (target) {
 			// Move toward player unit
-			const path = findPath(unit.worldPosition, target.worldPosition);
-			if (path.length > 0 && unit.navigation) {
-				unit.navigation.path = path;
-				unit.navigation.pathIndex = 0;
-				unit.navigation.moving = true;
+			const targetPos = target.entity.get(Position)!;
+			const path = findPath(pos, targetPos);
+			if (path.length > 0) {
+				entity.set(Navigation, {
+					pathJson: serializePath(path),
+					pathIndex: 0,
+					moving: true,
+				});
 			}
 			continue;
 		}
 
 		// Patrol randomly (30% chance per tick when idle)
 		if (Math.random() < 0.3) {
-			const patrolTarget = getPatrolTarget(unit.worldPosition);
+			const patrolTarget = getPatrolTarget(pos);
 			if (patrolTarget) {
-				const path = findPath(unit.worldPosition, patrolTarget);
-				if (path.length > 0 && unit.navigation) {
-					unit.navigation.path = path;
-					unit.navigation.pathIndex = 0;
-					unit.navigation.moving = true;
+				const path = findPath(pos, patrolTarget);
+				if (path.length > 0) {
+					entity.set(Navigation, {
+						pathJson: serializePath(path),
+						pathIndex: 0,
+						moving: true,
+					});
 				}
 			}
 		}

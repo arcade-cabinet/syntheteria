@@ -1,5 +1,5 @@
 /**
- * Power system — lightning rods capture storm energy and distribute it.
+ * Power system -- lightning rods capture storm energy and distribute it.
  *
  * Power flows from lightning rods to connected buildings/units via BFS.
  * Buildings within a rod's protection radius receive power.
@@ -8,13 +8,19 @@
  * Storm intensity affects rod output (fluctuates over time).
  */
 
-import type { BuildingEntity } from "../ecs/types";
-import { buildings, lightningRods, units } from "../ecs/world";
+import {
+	BuildingTrait,
+	LightningRod,
+	Navigation,
+	Position,
+	Unit,
+} from "../ecs/traits";
+import { world } from "../ecs/world";
 
 /** How far power reaches from a lightning rod */
 const DEFAULT_POWER_RADIUS = 12;
 
-/** Storm intensity oscillates — affects all rod output */
+/** Storm intensity oscillates -- affects all rod output */
 let stormIntensity = 1.0;
 let stormPhase = 0;
 
@@ -40,9 +46,10 @@ export function getStormIntensity(): number {
  */
 function getTotalPowerGeneration(): number {
 	let total = 0;
-	for (const rod of lightningRods) {
-		const output = rod.lightningRod.rodCapacity * stormIntensity;
-		rod.lightningRod.currentOutput = output;
+	for (const rod of world.query(LightningRod, BuildingTrait, Position)) {
+		const lr = rod.get(LightningRod)!;
+		const output = lr.rodCapacity * stormIntensity;
+		rod.set(LightningRod, { currentOutput: output });
 		total += output;
 	}
 	return total;
@@ -53,21 +60,24 @@ function getTotalPowerGeneration(): number {
  */
 function getTotalPowerDemand(): number {
 	let demand = 0;
-	for (const building of buildings) {
-		if (building.building.operational) {
-			demand += getBuildingPowerDemand(building);
+	for (const building of world.query(BuildingTrait, Position)) {
+		const bldg = building.get(BuildingTrait)!;
+		if (bldg.operational) {
+			demand += getBuildingPowerDemand(bldg.buildingType);
 		}
 	}
-	for (const unit of units) {
-		// Skip fabrication units — their demand is counted via building component
-		if (unit.unit.type === "fabrication_unit") continue;
-		demand += getUnitPowerDemand(unit);
+	for (const unit of world.query(Unit, Position)) {
+		const u = unit.get(Unit)!;
+		// Skip fabrication units -- their demand is counted via building component
+		if (u.unitType === "fabrication_unit") continue;
+		const nav = unit.has(Navigation) ? unit.get(Navigation)! : null;
+		demand += getUnitPowerDemand(nav?.moving ?? false);
 	}
 	return demand;
 }
 
-function getBuildingPowerDemand(entity: BuildingEntity): number {
-	switch (entity.building.type) {
+function getBuildingPowerDemand(buildingType: string): number {
+	switch (buildingType) {
 		case "fabrication_unit":
 			return 3;
 		case "lightning_rod":
@@ -77,12 +87,10 @@ function getBuildingPowerDemand(entity: BuildingEntity): number {
 	}
 }
 
-function getUnitPowerDemand(entity: {
-	navigation?: { moving: boolean };
-}): number {
+function getUnitPowerDemand(isMoving: boolean): number {
 	// Moving units consume more
 	const baseDemand = 0.5;
-	const movingBonus = entity.navigation?.moving ? 0.3 : 0;
+	const movingBonus = isMoving ? 0.3 : 0;
 	return baseDemand + movingBonus;
 }
 
@@ -91,29 +99,31 @@ function getUnitPowerDemand(entity: {
  * If total generation < total demand, some buildings lose power.
  */
 function distributePower() {
-	// First, mark all buildings as unpowered
-	for (const building of buildings) {
-		if (building.building.type !== "lightning_rod") {
-			building.building.powered = false;
+	// First, mark all non-rod buildings as unpowered
+	for (const building of world.query(BuildingTrait, Position)) {
+		const bldg = building.get(BuildingTrait)!;
+		if (bldg.buildingType !== "lightning_rod") {
+			building.set(BuildingTrait, { powered: false });
 		}
 	}
 
 	// For each rod, power nearby buildings
-	for (const rod of lightningRods) {
-		const radius = rod.lightningRod.protectionRadius || DEFAULT_POWER_RADIUS;
-		const rx = rod.worldPosition.x;
-		const rz = rod.worldPosition.z;
+	for (const rod of world.query(LightningRod, BuildingTrait, Position)) {
+		const lr = rod.get(LightningRod)!;
+		const radius = lr.protectionRadius || DEFAULT_POWER_RADIUS;
+		const rodPos = rod.get(Position)!;
 
-		for (const building of buildings) {
-			if (building.building.type === "lightning_rod") continue;
+		for (const building of world.query(BuildingTrait, Position)) {
+			const bldg = building.get(BuildingTrait)!;
+			if (bldg.buildingType === "lightning_rod") continue;
 
-			const dx = building.worldPosition.x - rx;
-			const dz = building.worldPosition.z - rz;
+			const bldgPos = building.get(Position)!;
+			const dx = bldgPos.x - rodPos.x;
+			const dz = bldgPos.z - rodPos.z;
 			const dist = Math.sqrt(dx * dx + dz * dz);
 
 			if (dist <= radius) {
-				building.building.powered = true;
-				building.building.operational = true;
+				building.set(BuildingTrait, { powered: true, operational: true });
 			}
 		}
 	}
@@ -149,15 +159,19 @@ export function powerSystem(tick: number) {
 	distributePower();
 
 	let poweredCount = 0;
-	for (const building of buildings) {
-		if (building.building.powered) poweredCount++;
+	for (const building of world.query(BuildingTrait, Position)) {
+		if (building.get(BuildingTrait)?.powered) poweredCount++;
 	}
+
+	const rodCount = Array.from(
+		world.query(LightningRod, BuildingTrait, Position),
+	).length;
 
 	lastPowerSnapshot = {
 		totalGeneration: Math.round(generation * 10) / 10,
 		totalDemand: Math.round(demand * 10) / 10,
 		stormIntensity: Math.round(stormIntensity * 100) / 100,
-		rodCount: Array.from(lightningRods).length,
+		rodCount,
 		poweredBuildingCount: poweredCount,
 	};
 }

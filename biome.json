@@ -6,7 +6,18 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**", "!!**/dist"]
+		"includes": [
+			"**",
+			"!!**/dist",
+			"!!game",
+			"!!pending",
+			"!!pending-integration",
+			"!!.superpowers",
+			"!!tests/e2e/reports",
+			"!!coverage",
+			"!!prototype",
+			"!!src/static-assets.ts"
+		]
 	},
 	"formatter": {
 		"enabled": true,
@@ -15,7 +26,10 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"style": {
+				"noNonNullAssertion": "off"
+			}
 		}
 	},
 	"javascript": {

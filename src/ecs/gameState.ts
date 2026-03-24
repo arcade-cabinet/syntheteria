@@ -3,6 +3,7 @@
  * Bridges ECS mutable state to React via useSyncExternalStore.
  */
 
+import { logError } from "../errors";
 import {
 	type CombatEvent,
 	combatSystem,
@@ -32,7 +33,25 @@ import {
 	type MapFragment,
 	updateDisplayOffsets,
 } from "./terrain";
-import { units } from "./world";
+import { Faction, Unit } from "./traits";
+import { world } from "./world";
+
+/**
+ * Run a system, catching and logging any errors.
+ * Systems should throw on bugs (via gameAssert / GameError).
+ * The tick continues so one broken system doesn't freeze the game.
+ */
+function runSystem(name: string, fn: () => void): void {
+	try {
+		fn();
+	} catch (error) {
+		logError(
+			error instanceof Error
+				? error
+				: new Error(`System '${name}' failed: ${String(error)}`),
+		);
+	}
+}
 
 export interface GameSnapshot {
 	tick: number;
@@ -58,8 +77,8 @@ let snapshot: GameSnapshot | null = null;
 function buildSnapshot(): GameSnapshot {
 	let playerCount = 0;
 	let enemyCount = 0;
-	for (const u of units) {
-		if (u.faction === "player") playerCount++;
+	for (const entity of world.query(Unit, Faction)) {
+		if (entity.get(Faction)?.value === "player") playerCount++;
 		else enemyCount++;
 	}
 	return {
@@ -105,15 +124,17 @@ export function simulationTick() {
 
 	tick++;
 
-	explorationSystem();
-	lastMergeEvents = fragmentMergeSystem();
-	powerSystem(tick);
-	resourceSystem();
-	repairSystem();
-	fabricationSystem();
-	enemySystem();
-	combatSystem();
-	updateDisplayOffsets();
+	runSystem("exploration", explorationSystem);
+	runSystem("fragmentMerge", () => {
+		lastMergeEvents = fragmentMergeSystem();
+	});
+	runSystem("power", () => powerSystem(tick));
+	runSystem("resources", resourceSystem);
+	runSystem("repair", repairSystem);
+	runSystem("fabrication", fabricationSystem);
+	runSystem("enemy", enemySystem);
+	runSystem("combat", combatSystem);
+	runSystem("displayOffsets", updateDisplayOffsets);
 
 	snapshot = null;
 	notify();

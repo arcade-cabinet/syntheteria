@@ -6,12 +6,20 @@
  */
 
 import { useFrame } from "@react-three/fiber";
+import type { Entity } from "koota";
 import { useRef } from "react";
 import * as THREE from "three";
 import { getFragment, getTerrainHeight } from "../ecs/terrain";
-import type { BuildingEntity, UnitEntity } from "../ecs/types";
-import { hasArms, hasCamera } from "../ecs/types";
-import { buildings, units } from "../ecs/world";
+import {
+	BuildingTrait,
+	Faction,
+	Fragment,
+	Position,
+	Unit,
+	UnitComponents,
+} from "../ecs/traits";
+import { hasArms, hasCamera, parseComponents } from "../ecs/types";
+import { world } from "../ecs/world";
 import {
 	getActivePlacement,
 	getGhostPosition,
@@ -26,32 +34,34 @@ const COLOR_BUILDING = 0x888888;
 const COLOR_BUILDING_UNPOWERED = 0x554444;
 const COLOR_FABRICATION = 0xaa8844;
 
-function UnitMesh({ entity }: { entity: UnitEntity }) {
+function UnitMesh({ entity }: { entity: Entity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const ringRef = useRef<THREE.Mesh>(null);
 
-	const entityHasCamera = hasCamera(entity);
-	const entityHasArms = hasArms(entity);
-	const isEnemy = entity.faction !== "player";
+	const comps = parseComponents(
+		entity.get(UnitComponents)?.componentsJson ?? "[]",
+	);
+	const entityHasCamera = hasCamera(comps);
+	const entityHasArms = hasArms(comps);
+	const faction = entity.get(Faction)?.value ?? "player";
+	const isEnemy = faction !== "player";
 
 	useFrame(() => {
-		const frag = getFragment(entity.mapFragment.fragmentId);
+		const pos = entity.get(Position);
+		const frag = getFragment(entity.get(Fragment)?.fragmentId ?? "");
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
 
-		if (groupRef.current) {
-			groupRef.current.position.set(
-				entity.worldPosition.x + ox,
-				entity.worldPosition.y,
-				entity.worldPosition.z + oz,
-			);
+		if (groupRef.current && pos) {
+			groupRef.current.position.set(pos.x + ox, pos.y, pos.z + oz);
 		}
 		if (ringRef.current) {
-			ringRef.current.visible = entity.unit.selected;
+			ringRef.current.visible = entity.get(Unit)?.selected ?? false;
 		}
 	});
 
-	const bodyColor = entity.unit.selected
+	const unit = entity.get(Unit);
+	const bodyColor = unit?.selected
 		? COLOR_SELECTED
 		: isEnemy
 			? COLOR_ENEMY
@@ -114,36 +124,35 @@ function UnitMesh({ entity }: { entity: UnitEntity }) {
 	);
 }
 
-function BuildingMesh({ entity }: { entity: BuildingEntity }) {
+function BuildingMesh({ entity }: { entity: Entity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const ringRef = useRef<THREE.Mesh>(null);
 
 	useFrame(() => {
-		const frag = entity.mapFragment
-			? getFragment(entity.mapFragment.fragmentId)
-			: null;
+		const pos = entity.get(Position);
+		const fragmentId = entity.get(Fragment)?.fragmentId ?? "";
+		const frag = fragmentId ? getFragment(fragmentId) : null;
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;
 
-		if (groupRef.current) {
-			groupRef.current.position.set(
-				entity.worldPosition.x + ox,
-				entity.worldPosition.y,
-				entity.worldPosition.z + oz,
-			);
+		if (groupRef.current && pos) {
+			groupRef.current.position.set(pos.x + ox, pos.y, pos.z + oz);
 		}
 		if (ringRef.current) {
 			// Fabrication units are also units — use unit.selected if available
-			const selected = entity.unit
-				? entity.unit.selected
-				: entity.building.selected;
+			const unitData = entity.get(Unit);
+			const buildingData = entity.get(BuildingTrait);
+			const selected = unitData
+				? unitData.selected
+				: (buildingData?.selected ?? false);
 			ringRef.current.visible = selected;
 		}
 	});
 
-	const isFabricator = entity.building.type === "fabrication_unit";
-	const isRod = entity.building.type === "lightning_rod";
-	const isPowered = entity.building.powered;
+	const building = entity.get(BuildingTrait)!;
+	const isFabricator = building.buildingType === "fabrication_unit";
+	const isRod = building.buildingType === "lightning_rod";
+	const isPowered = building.powered;
 
 	return (
 		<group ref={groupRef}>
@@ -257,15 +266,21 @@ function GhostBuilding() {
 }
 
 export function UnitRenderer() {
+	// Query mobile units (excluding fabrication units which render as buildings)
+	const mobileUnits = Array.from(
+		world.query(Position, Unit, UnitComponents, Faction, Fragment),
+	).filter((e) => e.get(Unit)!.unitType !== "fabrication_unit");
+	const buildingEntities = Array.from(
+		world.query(Position, BuildingTrait, Fragment),
+	);
+
 	return (
 		<>
-			{Array.from(units)
-				.filter((entity) => entity.unit.type !== "fabrication_unit")
-				.map((entity) => (
-					<UnitMesh key={entity.id} entity={entity} />
-				))}
-			{Array.from(buildings).map((entity) => (
-				<BuildingMesh key={entity.id} entity={entity} />
+			{mobileUnits.map((entity) => (
+				<UnitMesh key={entity.id()} entity={entity} />
+			))}
+			{buildingEntities.map((entity) => (
+				<BuildingMesh key={entity.id()} entity={entity} />
 			))}
 			<GhostBuilding />
 		</>

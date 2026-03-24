@@ -1,5 +1,5 @@
 /**
- * Combat system — component-based damage.
+ * Combat system -- component-based damage.
  *
  * When hostile units are within melee range, they exchange damage.
  * Damage breaks random components rather than reducing HP.
@@ -9,9 +9,23 @@
  * Units without legs can't fight (immobile = vulnerable).
  */
 
-import type { UnitEntity } from "../ecs/types";
-import { hasArms } from "../ecs/types";
-import { units, world } from "../ecs/world";
+import type { Entity } from "koota";
+import { playSfx } from "../audio";
+import {
+	EntityId,
+	Faction,
+	Navigation,
+	Position,
+	Unit,
+	UnitComponents,
+} from "../ecs/traits";
+import {
+	hasArms,
+	parseComponents,
+	serializeComponents,
+	type UnitComponent,
+} from "../ecs/types";
+import { world } from "../ecs/world";
 import { addResource } from "./resources";
 
 const MELEE_RANGE = 2.5;
@@ -34,39 +48,51 @@ export function getLastCombatEvents(): CombatEvent[] {
  * Try to damage a random functional component on the target.
  * Returns the component name that was damaged, or null.
  */
-function dealDamage(attacker: UnitEntity, target: UnitEntity): string | null {
-	const functionalParts = target.unit.components.filter((c) => c.functional);
+function dealDamage(
+	attackerComponents: UnitComponent[],
+	target: Entity,
+): string | null {
+	const targetComps = parseComponents(
+		target.get(UnitComponents)?.componentsJson,
+	);
+	const functionalParts = targetComps.filter((c) => c.functional);
 	if (functionalParts.length === 0) return null;
 
 	// Units with arms are more effective fighters
-	const hitChance = hasArms(attacker) ? 0.6 : 0.3;
+	const hitChance = hasArms(attackerComponents) ? 0.6 : 0.3;
 	if (Math.random() > hitChance) return null;
 
 	// Pick a random functional component to break
 	const victim =
 		functionalParts[Math.floor(Math.random() * functionalParts.length)];
 	victim.functional = false;
+
+	// Write back the updated components
+	target.set(UnitComponents, {
+		componentsJson: serializeComponents(targetComps),
+	});
 	return victim.name;
 }
 
 /**
  * Check if a unit is destroyed (all components broken).
  */
-function isDestroyed(entity: UnitEntity): boolean {
-	return entity.unit.components.every((c) => !c.functional);
+function isDestroyed(entity: Entity): boolean {
+	const comps = parseComponents(entity.get(UnitComponents)?.componentsJson);
+	return comps.every((c) => !c.functional);
 }
 
 /**
- * Destroy a unit — remove from world, drop salvage.
+ * Destroy a unit -- remove from world, drop salvage.
  */
-function destroyUnit(entity: UnitEntity) {
+function destroyUnit(entity: Entity) {
 	// Drop some resources as salvage
-	const componentCount = entity.unit.components.length;
-	addResource("scrapMetal", Math.floor(componentCount * 1.5));
+	const comps = parseComponents(entity.get(UnitComponents)?.componentsJson);
+	addResource("scrapMetal", Math.floor(comps.length * 1.5));
 	if (Math.random() > 0.5) addResource("eWaste", 1);
 
 	// Remove from ECS
-	world.remove(entity);
+	entity.destroy();
 }
 
 /**
@@ -75,60 +101,78 @@ function destroyUnit(entity: UnitEntity) {
  */
 export function combatSystem() {
 	const events: CombatEvent[] = [];
-	const toDestroy: UnitEntity[] = [];
+	const toDestroy: Entity[] = [];
 
-	const allUnits = Array.from(units);
+	const allUnits = Array.from(
+		world.query(Position, Unit, UnitComponents, Faction, EntityId),
+	);
 
 	for (const attacker of allUnits) {
-		// Only feral units initiate attacks
-		if (attacker.faction !== "feral") continue;
-		if (!attacker.unit.components.some((c) => c.functional)) continue;
+		// Hostile factions (feral + cultist) initiate attacks against player
+		const attackerFaction = attacker.get(Faction)?.value;
+		if (attackerFaction !== "feral" && attackerFaction !== "cultist") continue;
+		const attackerComps = parseComponents(
+			attacker.get(UnitComponents)?.componentsJson,
+		);
+		if (!attackerComps.some((c) => c.functional)) continue;
 
 		for (const target of allUnits) {
-			if (target.faction !== "player") continue;
+			if (target.get(Faction)?.value !== "player") continue;
 
-			const dx = attacker.worldPosition.x - target.worldPosition.x;
-			const dz = attacker.worldPosition.z - target.worldPosition.z;
+			const aPos = attacker.get(Position)!;
+			const tPos = target.get(Position)!;
+			const dx = aPos.x - tPos.x;
+			const dz = aPos.z - tPos.z;
 			const dist = Math.sqrt(dx * dx + dz * dz);
 
 			if (dist > MELEE_RANGE) continue;
 			if (Math.random() > ATTACK_CHANCE) continue;
 
+			const attackerId = attacker.get(EntityId)?.value;
+			const targetId = target.get(EntityId)?.value;
+
 			// Feral attacks player
-			const damaged = dealDamage(attacker, target);
+			const damaged = dealDamage(attackerComps, target);
 			if (damaged) {
+				playSfx("attack_hit");
 				const destroyed = isDestroyed(target);
 				events.push({
-					attackerId: attacker.id,
-					targetId: target.id,
+					attackerId,
+					targetId,
 					componentDamaged: damaged,
 					targetDestroyed: destroyed,
 				});
 				if (destroyed) {
+					playSfx("unit_death");
 					toDestroy.push(target);
 				}
 			}
 
 			// Player unit retaliates if it has functional components
-			if (target.unit.components.some((c) => c.functional)) {
-				const retDamaged = dealDamage(target, attacker);
+			const targetComps = parseComponents(
+				target.get(UnitComponents)?.componentsJson,
+			);
+			if (targetComps.some((c) => c.functional)) {
+				const retDamaged = dealDamage(targetComps, attacker);
 				if (retDamaged) {
+					playSfx("attack_hit");
 					const retDestroyed = isDestroyed(attacker);
 					events.push({
-						attackerId: target.id,
-						targetId: attacker.id,
+						attackerId: targetId,
+						targetId: attackerId,
 						componentDamaged: retDamaged,
 						targetDestroyed: retDestroyed,
 					});
 					if (retDestroyed) {
+						playSfx("unit_death");
 						toDestroy.push(attacker);
 					}
 				}
 			}
 
 			// Stop the attacker's movement when in combat
-			if (attacker.navigation) {
-				attacker.navigation.moving = false;
+			if (attacker.has(Navigation)) {
+				attacker.set(Navigation, { moving: false });
 			}
 
 			break; // one target per attacker per tick
@@ -137,7 +181,9 @@ export function combatSystem() {
 
 	// Destroy dead units (after iteration)
 	for (const entity of toDestroy) {
-		destroyUnit(entity);
+		if (entity.isAlive()) {
+			destroyUnit(entity);
+		}
 	}
 
 	lastCombatEvents = events;

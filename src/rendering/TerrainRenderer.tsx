@@ -111,14 +111,23 @@ function FragmentTerrain({ fragmentId }: { fragmentId: string }) {
 		useMemo(() => {
 			ensureSharedGeometry();
 
+			if (
+				!sharedPositions ||
+				!sharedColors ||
+				!sharedIndices ||
+				!sharedAbsPositions
+			) {
+				throw new Error("Shared geometry not initialized");
+			}
+
 			// Detailed terrain — clone shared data, add per-fragment alpha
 			const geo = new THREE.BufferGeometry();
 			geo.setAttribute(
 				"position",
-				new THREE.Float32BufferAttribute(new Float32Array(sharedPositions!), 3),
+				new THREE.Float32BufferAttribute(new Float32Array(sharedPositions), 3),
 			);
 			const colorAttribute = new THREE.Float32BufferAttribute(
-				new Float32Array(sharedColors!),
+				new Float32Array(sharedColors),
 				3,
 			);
 			geo.setAttribute("color", colorAttribute);
@@ -128,7 +137,7 @@ function FragmentTerrain({ fragmentId }: { fragmentId: string }) {
 			);
 			geo.setAttribute("alpha", alphaAttribute);
 			geo.setIndex(
-				new THREE.BufferAttribute(new Uint32Array(sharedIndices!), 1),
+				new THREE.BufferAttribute(new Uint32Array(sharedIndices), 1),
 			);
 			geo.computeVertexNormals();
 
@@ -137,7 +146,7 @@ function FragmentTerrain({ fragmentId }: { fragmentId: string }) {
 			absGeo.setAttribute(
 				"position",
 				new THREE.Float32BufferAttribute(
-					new Float32Array(sharedAbsPositions!),
+					new Float32Array(sharedAbsPositions),
 					3,
 				),
 			);

@@ -6,8 +6,10 @@
  * Completed components are added to the global resource pool as intact parts.
  */
 
-import type { Entity } from "../ecs/types";
-import { buildings } from "../ecs/world";
+import type { Entity } from "koota";
+import { playSfx } from "../audio";
+import { BuildingTrait, EntityId } from "../ecs/traits";
+import { world } from "../ecs/world";
 import {
 	addResource,
 	getResources,
@@ -94,12 +96,17 @@ export function startFabrication(
 	recipeName: string,
 ): boolean {
 	// Must be a powered fabrication unit
-	if (fabricator.building?.type !== "fabrication_unit") return false;
-	if (!fabricator.building.powered || !fabricator.building.operational)
-		return false;
+	const building = fabricator.get(BuildingTrait);
+	if (!building) return false;
+	if (building.buildingType !== "fabrication_unit") return false;
+	if (!building.powered || !building.operational) return false;
+
+	const entityId = fabricator.get(EntityId);
+	if (!entityId) return false;
+	const fabId = entityId.value;
 
 	// Already has a job?
-	if (activeJobs.some((j) => j.fabricatorId === fabricator.id)) return false;
+	if (activeJobs.some((j) => j.fabricatorId === fabId)) return false;
 
 	const recipe = RECIPES.find((r) => r.name === recipeName);
 	if (!recipe) return false;
@@ -116,7 +123,7 @@ export function startFabrication(
 	}
 
 	activeJobs.push({
-		fabricatorId: fabricator.id,
+		fabricatorId: fabId,
 		recipe,
 		ticksRemaining: recipe.buildTime,
 	});
@@ -134,8 +141,10 @@ export function fabricationSystem() {
 
 		// Check fabricator is still powered
 		let fabricatorPowered = false;
-		for (const building of buildings) {
-			if (building.id === job.fabricatorId && building.building.powered) {
+		for (const building of world.query(BuildingTrait, EntityId)) {
+			const eid = building.get(EntityId)?.value;
+			const bldg = building.get(BuildingTrait)!;
+			if (eid === job.fabricatorId && bldg.powered) {
 				fabricatorPowered = true;
 				break;
 			}
@@ -145,9 +154,10 @@ export function fabricationSystem() {
 
 		job.ticksRemaining--;
 		if (job.ticksRemaining <= 0) {
-			// Component fabricated — add to resource pool
+			// Component fabricated -- add to resource pool
 			addResource("intactComponents", 1);
 			activeJobs.splice(i, 1);
+			playSfx("synthesis_complete");
 		}
 	}
 }

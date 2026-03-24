@@ -10,10 +10,12 @@
  * - Lightning rods need minimum spacing from other rods
  */
 
+import { playSfx } from "../audio";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { spawnFabricationUnit, spawnLightningRod } from "../ecs/factory";
 import { isWalkable } from "../ecs/terrain";
-import { lightningRods, units } from "../ecs/world";
+import { Faction, Fragment, LightningRod, Position, Unit } from "../ecs/traits";
+import { world } from "../ecs/world";
 import { buildNavGraph } from "./navmesh";
 import { getResources, type ResourcePool, spendResource } from "./resources";
 
@@ -64,7 +66,9 @@ export function getGhostPosition(): {
 
 export function updateGhostPosition(x: number, z: number) {
 	ghostPosition = { x, z };
-	ghostValid = isValidPlacement(x, z, activePlacement!);
+	ghostValid = activePlacement
+		? isValidPlacement(x, z, activePlacement)
+		: false;
 }
 
 function isValidPlacement(x: number, z: number, type: PlaceableType): boolean {
@@ -74,10 +78,10 @@ function isValidPlacement(x: number, z: number, type: PlaceableType): boolean {
 
 	// Lightning rods need spacing
 	if (type === "lightning_rod") {
-		for (const rod of lightningRods) {
-			if (!rod.worldPosition) continue;
-			const dx = rod.worldPosition.x - x;
-			const dz = rod.worldPosition.z - z;
+		for (const rod of world.query(LightningRod, Position)) {
+			const rodPos = rod.get(Position)!;
+			const dx = rodPos.x - x;
+			const dz = rodPos.z - z;
 			if (Math.sqrt(dx * dx + dz * dz) < MIN_ROD_SPACING) return false;
 		}
 	}
@@ -108,9 +112,9 @@ export function confirmPlacement(): boolean {
 
 	// Find a fragment to attach to (use first player unit's fragment)
 	let fragmentId: string | null = null;
-	for (const unit of units) {
-		if (unit.faction === "player") {
-			fragmentId = unit.mapFragment.fragmentId;
+	for (const entity of world.query(Unit, Faction, Fragment)) {
+		if (entity.get(Faction)?.value === "player") {
+			fragmentId = entity.get(Fragment)?.fragmentId;
 			break;
 		}
 	}
@@ -130,6 +134,7 @@ export function confirmPlacement(): boolean {
 
 	// Rebuild navmesh to account for new building
 	buildNavGraph();
+	playSfx("build_complete");
 
 	// Reset placement mode
 	activePlacement = null;

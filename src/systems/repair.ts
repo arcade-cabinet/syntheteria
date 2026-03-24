@@ -7,12 +7,24 @@
  * Repair costs depend on the component's material type.
  */
 
-import type { Entity, UnitComponent, UnitEntity } from "../ecs/types";
-import { hasArms } from "../ecs/types";
-import { buildings, units } from "../ecs/world";
+import type { Entity } from "koota";
+import {
+	BuildingTrait,
+	EntityId,
+	Position,
+	Unit,
+	UnitComponents,
+} from "../ecs/traits";
+import {
+	hasArms,
+	parseComponents,
+	serializeComponents,
+	type UnitComponent,
+} from "../ecs/types";
+import { world } from "../ecs/world";
 import { type ResourcePool, spendResource } from "./resources";
 
-/** Repair range — units must be within this distance */
+/** Repair range -- units must be within this distance */
 const REPAIR_RANGE = 3.0;
 
 /** Material cost to repair one component */
@@ -40,28 +52,38 @@ export function getActiveRepairs(): RepairAction[] {
 }
 
 /**
- * Start repairing a component on a target unit.
+ * Start repairing a component on a target entity.
  * Returns true if repair was started successfully.
  */
 export function startRepair(
-	repairer: UnitEntity,
+	repairer: Entity,
 	target: Entity,
 	componentName: string,
 ): boolean {
 	// Validate repairer has arms
-	if (!hasArms(repairer)) return false;
+	const repairerComps = repairer.get(UnitComponents);
+	if (!repairerComps) return false;
+	if (!hasArms(parseComponents(repairerComps.componentsJson))) return false;
 
 	// Validate distance
-	if (!repairer.worldPosition || !target.worldPosition) return false;
-	const dx = repairer.worldPosition.x - target.worldPosition.x;
-	const dz = repairer.worldPosition.z - target.worldPosition.z;
+	const repairerPos = repairer.get(Position);
+	const targetPos = target.get(Position);
+	if (!repairerPos || !targetPos) return false;
+	const dx = repairerPos.x - targetPos.x;
+	const dz = repairerPos.z - targetPos.z;
 	const dist = Math.sqrt(dx * dx + dz * dz);
 	if (dist > REPAIR_RANGE) return false;
 
 	// Find the broken component (on unit or building)
-	const components = target.unit
-		? target.unit.components
-		: target.building?.components;
+	let components: UnitComponent[] | null = null;
+	if (target.has(UnitComponents)) {
+		components = parseComponents(target.get(UnitComponents)?.componentsJson);
+	} else if (target.has(BuildingTrait)) {
+		components = parseComponents(
+			target.get(BuildingTrait)?.buildingComponentsJson,
+		);
+	}
+
 	const comp = components?.find(
 		(c: UnitComponent) => c.name === componentName && !c.functional,
 	);
@@ -71,16 +93,19 @@ export function startRepair(
 	const cost = REPAIR_COSTS[comp.material];
 	if (!spendResource(cost.type, cost.amount)) return false;
 
+	const repairerId = repairer.get(EntityId)?.value ?? "";
+	const targetId = target.get(EntityId)?.value ?? "";
+
 	// Already repairing?
 	const existing = activeRepairs.find(
-		(r) => r.targetId === target.id && r.componentName === componentName,
+		(r) => r.targetId === targetId && r.componentName === componentName,
 	);
 	if (existing) return false;
 
 	// Start repair (takes 5 ticks)
 	activeRepairs.push({
-		repairerId: repairer.id,
-		targetId: target.id,
+		repairerId,
+		targetId,
 		componentName,
 		ticksRemaining: 5,
 		totalTicks: 5,
@@ -100,25 +125,41 @@ export function repairSystem() {
 		if (repair.ticksRemaining <= 0) {
 			// Find target (unit or building) and fix the component
 			let found = false;
-			for (const unit of units) {
-				if (unit.id === repair.targetId) {
-					const comp = unit.unit.components.find(
+			for (const entity of world.query(Unit, UnitComponents, EntityId)) {
+				if (entity.get(EntityId)?.value === repair.targetId) {
+					const comps = parseComponents(
+						entity.get(UnitComponents)?.componentsJson,
+					);
+					const comp = comps.find(
 						(c: UnitComponent) =>
 							c.name === repair.componentName && !c.functional,
 					);
-					if (comp) comp.functional = true;
+					if (comp) {
+						comp.functional = true;
+						entity.set(UnitComponents, {
+							componentsJson: serializeComponents(comps),
+						});
+					}
 					found = true;
 					break;
 				}
 			}
 			if (!found) {
-				for (const bldg of buildings) {
-					if (bldg.id === repair.targetId) {
-						const comp = bldg.building.components.find(
+				for (const entity of world.query(BuildingTrait, EntityId)) {
+					if (entity.get(EntityId)?.value === repair.targetId) {
+						const comps = parseComponents(
+							entity.get(BuildingTrait)?.buildingComponentsJson,
+						);
+						const comp = comps.find(
 							(c: UnitComponent) =>
 								c.name === repair.componentName && !c.functional,
 						);
-						if (comp) comp.functional = true;
+						if (comp) {
+							comp.functional = true;
+							entity.set(BuildingTrait, {
+								buildingComponentsJson: serializeComponents(comps),
+							});
+						}
 						break;
 					}
 				}

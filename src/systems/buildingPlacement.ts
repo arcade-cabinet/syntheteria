@@ -28,13 +28,13 @@ export interface PlacementCost {
 
 export const BUILDING_COSTS: Record<string, PlacementCost[]> = {
 	lightning_rod: [
-		{ type: "scrapMetal", amount: 8 },
-		{ type: "eWaste", amount: 4 },
+		{ type: "scrapMetal", amount: 5 },
+		{ type: "circuitry", amount: 2 },
 	],
 	fabrication_unit: [
-		{ type: "scrapMetal", amount: 12 },
-		{ type: "eWaste", amount: 6 },
-		{ type: "intactComponents", amount: 2 },
+		{ type: "scrapMetal", amount: 8 },
+		{ type: "circuitry", amount: 3 },
+		{ type: "durasteel", amount: 1 },
 	],
 };
 

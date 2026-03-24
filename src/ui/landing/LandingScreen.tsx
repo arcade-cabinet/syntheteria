@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { initAudio } from "../../audio";
+import { GlobeBackground } from "./GlobeBackground";
 import { type NewGameConfig, NewGameModal } from "./NewGameModal";
 
 export type { NewGameConfig };
@@ -46,119 +47,122 @@ export function LandingScreen({
 	}, []);
 
 	return (
-		<div
-			style={{
-				position: "absolute",
-				inset: 0,
-				background: "#000",
-				display: "flex",
-				flexDirection: "column",
-				alignItems: "center",
-				justifyContent: "center",
-				zIndex: 200,
-			}}
-		>
-			{/* Scanline overlay */}
+		<>
+			<GlobeBackground />
 			<div
 				style={{
 					position: "absolute",
 					inset: 0,
-					background:
-						"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,170,0.03) 2px, rgba(0,255,170,0.03) 4px)",
-					pointerEvents: "none",
-				}}
-			/>
-
-			{/* Title */}
-			<div
-				style={{
-					opacity: titleOpacity,
-					transition: "opacity 1.5s ease-in-out",
-					fontFamily: "'Courier New', monospace",
-					fontSize: "clamp(32px, 8vw, 72px)",
-					fontWeight: "bold",
-					letterSpacing: "0.3em",
-					color: "#00ffaa",
-					textShadow: glitch
-						? "3px 0 #ff0044, -3px 0 #0044ff, 0 0 40px rgba(0,255,170,0.6)"
-						: "0 0 40px rgba(0,255,170,0.4), 0 0 80px rgba(0,255,170,0.15), 0 0 2px #00ffaa",
-					transform: glitch
-						? `translate(${Math.random() * 4 - 2}px, ${Math.random() * 2 - 1}px)`
-						: "none",
-					userSelect: "none",
-					textAlign: "center",
-					padding: "0 16px",
-				}}
-			>
-				SYNTHETERIA
-			</div>
-
-			{/* Subtitle */}
-			<div
-				style={{
-					opacity: titleOpacity * 0.6,
-					transition: "opacity 2s ease-in-out",
-					fontFamily: "'Courier New', monospace",
-					fontSize: "clamp(11px, 2vw, 16px)",
-					color: "#00ffaa",
-					letterSpacing: "0.5em",
-					marginTop: "12px",
-					textShadow: "0 0 20px rgba(0,255,170,0.3)",
-					textAlign: "center",
-				}}
-			>
-				{"AWAKEN // CONNECT // REBUILD"}
-			</div>
-
-			{/* Menu */}
-			<div
-				style={{
-					marginTop: "clamp(40px, 8vh, 80px)",
-					opacity: menuOpacity,
-					transition: "opacity 1s ease-in-out",
+					background: "transparent",
 					display: "flex",
 					flexDirection: "column",
 					alignItems: "center",
-					gap: "16px",
+					justifyContent: "center",
+					zIndex: 200,
 				}}
 			>
-				<MenuButton
-					label="NEW GAME"
-					onClick={() => {
-						initAudio();
-						setModal("new");
+				{/* Scanline overlay */}
+				<div
+					style={{
+						position: "absolute",
+						inset: 0,
+						background:
+							"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,170,0.03) 2px, rgba(0,255,170,0.03) 4px)",
+						pointerEvents: "none",
 					}}
-					primary
 				/>
-				<MenuButton label="CONTINUE" onClick={() => {}} disabled />
-				<MenuButton label="SETTINGS" onClick={() => {}} disabled />
-			</div>
 
-			{/* Version */}
-			<div
-				style={{
-					position: "absolute",
-					bottom: "20px",
-					fontFamily: "'Courier New', monospace",
-					fontSize: "11px",
-					color: "rgba(0,255,170,0.3)",
-					letterSpacing: "0.15em",
-				}}
-			>
-				v0.1.0
-			</div>
-
-			{/* New Game Modal */}
-			{modal === "new" && (
-				<NewGameModal
-					onStart={(config) => {
-						setModal("none");
-						onStartGame(config);
+				{/* Title */}
+				<div
+					style={{
+						opacity: titleOpacity,
+						transition: "opacity 1.5s ease-in-out",
+						fontFamily: "'Courier New', monospace",
+						fontSize: "clamp(32px, 8vw, 72px)",
+						fontWeight: "bold",
+						letterSpacing: "0.3em",
+						color: "#00ffaa",
+						textShadow: glitch
+							? "3px 0 #ff0044, -3px 0 #0044ff, 0 0 40px rgba(0,255,170,0.6)"
+							: "0 0 40px rgba(0,255,170,0.4), 0 0 80px rgba(0,255,170,0.15), 0 0 2px #00ffaa",
+						transform: glitch
+							? `translate(${Math.random() * 4 - 2}px, ${Math.random() * 2 - 1}px)`
+							: "none",
+						userSelect: "none",
+						textAlign: "center",
+						padding: "0 16px",
 					}}
-					onCancel={() => setModal("none")}
-				/>
-			)}
-		</div>
+				>
+					SYNTHETERIA
+				</div>
+
+				{/* Subtitle */}
+				<div
+					style={{
+						opacity: titleOpacity * 0.6,
+						transition: "opacity 2s ease-in-out",
+						fontFamily: "'Courier New', monospace",
+						fontSize: "clamp(11px, 2vw, 16px)",
+						color: "#00ffaa",
+						letterSpacing: "0.5em",
+						marginTop: "12px",
+						textShadow: "0 0 20px rgba(0,255,170,0.3)",
+						textAlign: "center",
+					}}
+				>
+					{"AWAKEN // CONNECT // REBUILD"}
+				</div>
+
+				{/* Menu */}
+				<div
+					style={{
+						marginTop: "clamp(40px, 8vh, 80px)",
+						opacity: menuOpacity,
+						transition: "opacity 1s ease-in-out",
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "center",
+						gap: "16px",
+					}}
+				>
+					<MenuButton
+						label="NEW GAME"
+						onClick={() => {
+							initAudio();
+							setModal("new");
+						}}
+						primary
+					/>
+					<MenuButton label="CONTINUE" onClick={() => {}} disabled />
+					<MenuButton label="SETTINGS" onClick={() => {}} disabled />
+				</div>
+
+				{/* Version */}
+				<div
+					style={{
+						position: "absolute",
+						bottom: "20px",
+						fontFamily: "'Courier New', monospace",
+						fontSize: "11px",
+						color: "rgba(0,255,170,0.3)",
+						letterSpacing: "0.15em",
+					}}
+				>
+					v0.1.0
+				</div>
+
+				{/* New Game Modal */}
+				{modal === "new" && (
+					<NewGameModal
+						onStart={(config) => {
+							setModal("none");
+							onStartGame(config);
+						}}
+						onCancel={() => setModal("none")}
+					/>
+				)}
+			</div>
+		</>
 	);
 }
 

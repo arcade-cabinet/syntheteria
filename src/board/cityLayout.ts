@@ -149,7 +149,7 @@ export function generateCityLayout(
 	height: number,
 	seed: string,
 ): CityBlock[] {
-	const rng = seededRng(seed + "_cityBSP");
+	const rng = seededRng(`${seed}_cityBSP`);
 
 	// Decide initial split orientation: horizontal if board is wider than tall,
 	// vertical otherwise. This produces more natural proportions.
@@ -163,7 +163,7 @@ export function generateCityLayout(
 
 	// Assign zones using a separate RNG stream so zone selection is independent
 	// of the BSP structure's random draws.
-	const zoneRng = seededRng(seed + "_cityZones");
+	const zoneRng = seededRng(`${seed}_cityZones`);
 
 	return leaves.map((rect) => ({
 		x: rect.x,

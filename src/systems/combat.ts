@@ -89,7 +89,7 @@ function destroyUnit(entity: Entity) {
 	// Drop some resources as salvage
 	const comps = parseComponents(entity.get(UnitComponents)?.componentsJson);
 	addResource("scrapMetal", Math.floor(comps.length * 1.5));
-	if (Math.random() > 0.5) addResource("eWaste", 1);
+	if (Math.random() > 0.5) addResource("circuitry", 1);
 
 	// Remove from ECS
 	entity.destroy();

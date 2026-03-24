@@ -67,3 +67,27 @@ export function resolveBuildingModelUrl(buildingType: string): string {
 export function getAllBuildingModelUrls(): string[] {
 	return [...new Set(Object.values(BUILDING_TYPE_TO_MODEL))];
 }
+
+// ─── City environment model paths ────────────────────────────────────────────
+
+import type { CityBuilding } from "../ecs/cityLayout";
+
+type CityBuildingType = CityBuilding["type"];
+
+const CITY_TYPE_TO_MODEL: Record<CityBuildingType, string> = {
+	conduit: "/assets/models/infrastructure/Connecting_gateway_long.glb",
+	node: "/assets/models/city/Props_Base.glb",
+	tower: "/assets/models/infrastructure/structure_tall.glb",
+	ruin: "/assets/models/defense/barricade-window-a.glb",
+	wall: "/assets/models/defense/wall-low.glb",
+};
+
+/** Resolve a city building type to its GLB model URL. */
+export function resolveCityModelUrl(type: CityBuildingType): string {
+	return CITY_TYPE_TO_MODEL[type];
+}
+
+/** All unique city model URLs for preloading. */
+export function getAllCityModelUrls(): string[] {
+	return [...new Set(Object.values(CITY_TYPE_TO_MODEL))];
+}

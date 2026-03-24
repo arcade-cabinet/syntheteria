@@ -86,3 +86,55 @@ export function getFunctionalComponents(
 ): UnitComponent[] {
 	return components.filter((c) => c.functional);
 }
+
+// --- Inventory helpers ---
+
+/** A map of material type → quantity carried by a unit */
+export type InventoryMap = Record<string, number>;
+
+export function parseInventory(json: string | undefined): InventoryMap {
+	if (!json || json === "{}") return {};
+	try {
+		return JSON.parse(json) as InventoryMap;
+	} catch (e) {
+		throw new GameError(
+			`Invalid inventory JSON: ${json.slice(0, 80)}`,
+			"ecs/parseInventory",
+			{ cause: e },
+		);
+	}
+}
+
+export function serializeInventory(inventory: InventoryMap): string {
+	return JSON.stringify(inventory);
+}
+
+/** Get the quantity of a specific material in an inventory */
+export function getInventoryAmount(
+	inventory: InventoryMap,
+	material: string,
+): number {
+	return inventory[material] ?? 0;
+}
+
+/** Return a new inventory with the specified amount added */
+export function addToInventory(
+	inventory: InventoryMap,
+	material: string,
+	amount: number,
+): InventoryMap {
+	return { ...inventory, [material]: (inventory[material] ?? 0) + amount };
+}
+
+/** Return a new inventory with the specified amount removed. Returns null if insufficient. */
+export function removeFromInventory(
+	inventory: InventoryMap,
+	material: string,
+	amount: number,
+): InventoryMap | null {
+	const current = inventory[material] ?? 0;
+	if (current < amount) return null;
+	const next = { ...inventory, [material]: current - amount };
+	if (next[material] === 0) delete next[material];
+	return next;
+}

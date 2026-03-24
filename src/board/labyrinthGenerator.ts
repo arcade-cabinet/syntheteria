@@ -17,8 +17,6 @@
  * Same seed = identical output.
  */
 
-import { FLOOR_DEFS, type FloorType, floorTypeForTile } from "../terrain";
-import { CLIMATE_PROFILE_SPECS } from "../world/config";
 import { generateLabyrinth, generateRooms } from "./labyrinth";
 import { applyAbyssalZones, type ProtectedZone } from "./labyrinthAbyssal";
 import { connectRegions } from "./labyrinthConnectivity";
@@ -26,7 +24,15 @@ import { applyLabyrinthFeatures } from "./labyrinthFeatures";
 import { growingTreeMazeFill } from "./labyrinthMaze";
 import { applyMultiLevelPlatforms } from "./labyrinthPlatforms";
 import { seededRng } from "./noise";
-import type { BoardConfig, GeneratedBoard, TileData } from "./types";
+import { floorTypeForTile } from "./terrain";
+import {
+	CLIMATE_PROFILE_SPECS,
+	FLOOR_DEFS,
+	type BoardConfig,
+	type FloorType,
+	type GeneratedBoard,
+	type TileData,
+} from "./types";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -67,7 +73,7 @@ export function generateLabyrinthBoard(config: BoardConfig): GeneratedBoard {
 	const rooms = generateRooms(width, height, seed);
 
 	// ── Phase 2: Growing Tree maze fill ──────────────────────────────────
-	const mazeRng = seededRng(seed + "_maze");
+	const mazeRng = seededRng(`${seed}_maze`);
 	growingTreeMazeFill(tiles, width, height, mazeRng);
 
 	// ── Phase 3: Region connectivity + loop creation ─────────────────────
@@ -132,9 +138,9 @@ function applyZoneFloors(
 	w: number,
 	h: number,
 	seed: string,
-	climate: string,
+	_climate: string,
 ): void {
-	const rng = seededRng(seed + "_zones");
+	const rng = seededRng(`${seed}_zones`);
 
 	for (let z = 0; z < h; z++) {
 		for (let x = 0; x < w; x++) {
@@ -178,7 +184,7 @@ function scatterResources(
 	h: number,
 	seed: string,
 ): void {
-	const rng = seededRng(seed + "_props");
+	const rng = seededRng(`${seed}_props`);
 
 	for (let z = 0; z < h; z++) {
 		for (let x = 0; x < w; x++) {

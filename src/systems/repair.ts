@@ -34,7 +34,7 @@ const REPAIR_COSTS: Record<
 > = {
 	metal: { type: "scrapMetal", amount: 3 },
 	plastic: { type: "scrapMetal", amount: 1 },
-	electronic: { type: "eWaste", amount: 2 },
+	electronic: { type: "circuitry", amount: 2 },
 };
 
 export interface RepairAction {

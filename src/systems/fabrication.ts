@@ -34,8 +34,8 @@ export const RECIPES: Recipe[] = [
 		outputComponent: "camera",
 		outputMaterial: "electronic",
 		costs: [
-			{ type: "eWaste", amount: 4 },
-			{ type: "intactComponents", amount: 1 },
+			{ type: "circuitry", amount: 2 },
+			{ type: "scrapMetal", amount: 1 },
 		],
 		buildTime: 8,
 	},
@@ -43,14 +43,20 @@ export const RECIPES: Recipe[] = [
 		name: "Arm Assembly",
 		outputComponent: "arms",
 		outputMaterial: "metal",
-		costs: [{ type: "scrapMetal", amount: 5 }],
+		costs: [
+			{ type: "scrapMetal", amount: 3 },
+			{ type: "circuitry", amount: 1 },
+		],
 		buildTime: 6,
 	},
 	{
 		name: "Leg Assembly",
 		outputComponent: "legs",
 		outputMaterial: "metal",
-		costs: [{ type: "scrapMetal", amount: 4 }],
+		costs: [
+			{ type: "scrapMetal", amount: 3 },
+			{ type: "durasteel", amount: 1 },
+		],
 		buildTime: 5,
 	},
 	{
@@ -58,8 +64,8 @@ export const RECIPES: Recipe[] = [
 		outputComponent: "power_cell",
 		outputMaterial: "electronic",
 		costs: [
-			{ type: "eWaste", amount: 3 },
-			{ type: "scrapMetal", amount: 2 },
+			{ type: "powerCells", amount: 2 },
+			{ type: "circuitry", amount: 1 },
 		],
 		buildTime: 7,
 	},
@@ -68,8 +74,8 @@ export const RECIPES: Recipe[] = [
 		outputComponent: "power_supply",
 		outputMaterial: "electronic",
 		costs: [
-			{ type: "eWaste", amount: 5 },
-			{ type: "intactComponents", amount: 1 },
+			{ type: "circuitry", amount: 3 },
+			{ type: "powerCells", amount: 1 },
 		],
 		buildTime: 10,
 	},
@@ -154,8 +160,8 @@ export function fabricationSystem() {
 
 		job.ticksRemaining--;
 		if (job.ticksRemaining <= 0) {
-			// Component fabricated -- add to resource pool
-			addResource("intactComponents", 1);
+			// Component fabricated -- add to resource pool as circuitry (reusable material)
+			addResource("circuitry", 1);
 			activeJobs.splice(i, 1);
 			playSfx("synthesis_complete");
 		}

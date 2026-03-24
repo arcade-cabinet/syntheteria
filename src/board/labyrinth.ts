@@ -11,10 +11,29 @@
  * Reference: journal.stuffwithstuff.com/2014/12/21/rooms-and-mazes/
  */
 
-import { FACTION_DEFINITIONS } from "../factions";
-import type { FloorType } from "../terrain";
 import { seededRng } from "./noise";
-import type { BoardConfig, Elevation, GeneratedBoard, TileData } from "./types";
+import type {
+	BoardConfig,
+	Elevation,
+	FloorType,
+	GeneratedBoard,
+	TileData,
+} from "./types";
+
+// ─── Faction definitions (inlined — will be replaced in P1-2) ────────────────
+
+interface FactionDef {
+	id: string;
+	startZone: "center" | "corner_nw" | "corner_ne" | "corner_se" | "corner_sw";
+	terrainAffinity: string;
+}
+
+const FACTION_DEFINITIONS: readonly FactionDef[] = [
+	{ id: "reclaimers", startZone: "corner_nw", terrainAffinity: "collapsed_zone" },
+	{ id: "volt_collective", startZone: "corner_ne", terrainAffinity: "aerostructure" },
+	{ id: "signal_choir", startZone: "corner_se", terrainAffinity: "bio_district" },
+	{ id: "deep_net", startZone: "corner_sw", terrainAffinity: "abyssal_platform" },
+];
 
 // ─── Room Types ──────────────────────────────────────────────────────────────
 
@@ -83,7 +102,6 @@ function startZonePosition(
 			return { cx: width - insetX, cz: height - insetZ };
 		case "corner_sw":
 			return { cx: insetX, cz: height - insetZ };
-		case "center":
 		default:
 			return { cx: Math.floor(width / 2), cz: Math.floor(height / 2) };
 	}
@@ -141,7 +159,7 @@ function placeRoomNear(
 	existingRooms: Room[],
 	width: number,
 	height: number,
-	rng: () => number,
+	_rng: () => number,
 ): { x: number; z: number } | null {
 	// Try placing centered on target first
 	const startX = targetX - Math.floor(roomW / 2);
@@ -222,7 +240,7 @@ function placeRoomRandom(
  */
 export function generateLabyrinth(config: BoardConfig): GeneratedBoard {
 	const { width, height, seed } = config;
-	const rng = seededRng(seed + "_labyrinth");
+	const rng = seededRng(`${seed}_labyrinth`);
 
 	// ── Initialize all tiles as structural_mass (solid walls) ─────────────
 	const tiles: TileData[][] = [];
@@ -377,7 +395,7 @@ export function generateRooms(
 	height: number,
 	seed: string,
 ): Room[] {
-	const rng = seededRng(seed + "_labyrinth");
+	const rng = seededRng(`${seed}_labyrinth`);
 	const rooms: Room[] = [];
 
 	// Player start

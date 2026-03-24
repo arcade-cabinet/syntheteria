@@ -8,7 +8,7 @@ function fnv1a(str: string): number {
 }
 
 function mulberry32(seed: number) {
-	return function () {
+	return () => {
 		seed |= 0;
 		seed = (seed + 0x6d2b79f5) | 0;
 		let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
@@ -51,7 +51,7 @@ export function createNoise2D(
 ): (x: number, z: number) => number {
 	const seedOffset = (rng() * 4294967296) >>> 0;
 
-	return function (x: number, z: number): number {
+	return (x: number, z: number): number => {
 		const ix = Math.floor(x);
 		const iz = Math.floor(z);
 		const fx = x - ix;

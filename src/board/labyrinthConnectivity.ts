@@ -214,7 +214,7 @@ export function connectRegions(
 	height: number,
 	seed: string,
 ): ConnectivityResult {
-	const rng = seededRng(seed + "_connect");
+	const rng = seededRng(`${seed}_connect`);
 
 	// Step 1: Identify regions
 	const { regionMap, regionCount } = floodFillRegions(tiles, width, height);

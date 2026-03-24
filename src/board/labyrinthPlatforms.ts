@@ -44,7 +44,7 @@ export function applyMultiLevelPlatforms(
 	height: number,
 	seed: string,
 ): void {
-	const rng = seededRng(seed + "_platforms");
+	const rng = seededRng(`${seed}_platforms`);
 	const centerX = Math.floor(width / 2);
 	const centerZ = Math.floor(height / 2);
 
@@ -162,7 +162,7 @@ function findPassableRegions(
  */
 function findInteriorTiles(
 	region: TileData[],
-	tiles: TileData[][],
+	_tiles: TileData[][],
 	width: number,
 	height: number,
 ): TileData[] {

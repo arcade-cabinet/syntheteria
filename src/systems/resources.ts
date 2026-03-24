@@ -7,6 +7,11 @@
  * - Units with functional arms can scavenge nearby points
  */
 
+import {
+	MATERIALS,
+	type MaterialId,
+	pickMaterialByWeight,
+} from "../config/materials";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import {
 	Faction,
@@ -20,15 +25,17 @@ import { world } from "../ecs/world";
 
 export interface ResourcePool {
 	scrapMetal: number;
-	eWaste: number;
-	intactComponents: number;
+	circuitry: number;
+	powerCells: number;
+	durasteel: number;
 }
 
 // Global resource pool
 const resources: ResourcePool = {
 	scrapMetal: 0,
-	eWaste: 0,
-	intactComponents: 0,
+	circuitry: 0,
+	powerCells: 0,
+	durasteel: 0,
 };
 
 export function getResources(): ResourcePool {
@@ -82,30 +89,20 @@ export function getScavengePoints(): ScavengePoint[] {
 			// Don't place inside buildings
 			if (isInsideBuilding(x, z)) continue;
 
-			const typeRoll = rng();
-			let type: keyof ResourcePool;
-			let amount: number;
-			let remaining: number;
-
-			if (typeRoll < 0.5) {
-				type = "scrapMetal";
-				amount = 2 + Math.floor(rng() * 3);
-				remaining = 3 + Math.floor(rng() * 4);
-			} else if (typeRoll < 0.85) {
-				type = "eWaste";
-				amount = 1 + Math.floor(rng() * 2);
-				remaining = 2 + Math.floor(rng() * 3);
-			} else {
-				type = "intactComponents";
-				amount = 1;
-				remaining = 1 + Math.floor(rng() * 2);
-			}
+			const materialId = pickMaterialByWeight(rng);
+			const mat = MATERIALS[materialId];
+			// Add slight variance to yield and durability
+			const amount =
+				mat.baseYield + Math.floor(rng() * Math.max(1, mat.baseYield));
+			const remaining =
+				mat.baseDurability +
+				Math.floor(rng() * Math.max(1, mat.baseDurability));
 
 			points.push({
 				x: x + (rng() - 0.5) * 3,
 				z: z + (rng() - 0.5) * 3,
 				remaining,
-				type,
+				type: materialId as keyof ResourcePool,
 				amountPerScavenge: amount,
 			});
 		}

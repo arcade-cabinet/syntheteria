@@ -58,3 +58,18 @@ export const LightningRod = trait({
 export const EntityId = trait({
 	value: "",
 });
+
+/** Per-unit material inventory as JSON string — parse with parseInventory() */
+export const Inventory = trait({
+	inventoryJson: "{}" as string,
+});
+
+/** Marks an entity as a scavengeable resource site */
+export const ScavengeSite = trait({
+	/** Which material this site yields */
+	materialType: "scrapMetal" as string,
+	/** Amount yielded per scavenge action */
+	amountPerScavenge: 2,
+	/** How many scavenge actions remain before depletion */
+	remaining: 3,
+});

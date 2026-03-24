@@ -3,12 +3,14 @@
  * Bridges ECS mutable state to React via useSyncExternalStore.
  */
 
+import { cultAISystem } from "../ai/cultBehavior";
 import { logError } from "../errors";
 import {
 	type CombatEvent,
 	combatSystem,
 	getLastCombatEvents,
 } from "../systems/combat";
+import { cultEscalationSystem } from "../systems/cultEscalation";
 import { enemySystem } from "../systems/enemies";
 import { explorationSystem } from "../systems/exploration";
 import {
@@ -165,6 +167,8 @@ export function simulationTick() {
 	runSystem("repair", repairSystem);
 	runSystem("fabrication", fabricationSystem);
 	runSystem("enemy", enemySystem);
+	runSystem("cultEscalation", () => cultEscalationSystem(1.0));
+	runSystem("cultAI", cultAISystem);
 	runSystem("combat", combatSystem);
 	runSystem("humanTemperature", humanTemperatureSystem);
 	runSystem("displayOffsets", updateDisplayOffsets);

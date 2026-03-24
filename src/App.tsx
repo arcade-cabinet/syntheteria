@@ -40,6 +40,7 @@ import { TopDownCamera } from "./input/TopDownCamera";
 import { UnitInput } from "./input/UnitInput";
 import { CityRenderer } from "./rendering/CityRenderer";
 import { LandscapeProps } from "./rendering/LandscapeProps";
+import { MoveIndicator } from "./rendering/MoveIndicator";
 import { StormSky } from "./rendering/StormSky";
 import { TerrainRenderer } from "./rendering/TerrainRenderer";
 import { UnitRenderer } from "./rendering/UnitRenderer";
@@ -288,6 +289,7 @@ export default function App() {
 					<LandscapeProps />
 					<CityRenderer />
 					<UnitRenderer />
+					<MoveIndicator />
 
 					<TopDownCamera initialTarget={startPos} initialZoom={40} />
 					<UnitInput />

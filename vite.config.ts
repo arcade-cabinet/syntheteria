@@ -12,5 +12,6 @@ export default defineConfig({
 			ignore: [".DS_Store"],
 		}),
 	],
-	base: "/syntheteria/",
+	// base: "/syntheteria/", // Only for GitHub Pages deployment
+	base: "/",
 });

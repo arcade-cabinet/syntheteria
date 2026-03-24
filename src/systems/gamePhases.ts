@@ -4,11 +4,12 @@
  * Awakening → Expansion → War
  *
  * Phase triggers (checked each tick):
- * - Awakening → Expansion: elapsed >= 900s OR 3+ rooms cleared
- * - Expansion → War: elapsed >= 2100s
+ * - Awakening → Expansion: player unit exits city bounds, OR elapsed >= 900s,
+ *   OR 3+ rooms cleared
+ * - Expansion → War: cult escalation reaches tier 3, OR elapsed >= 2100s
  *
- * Phase transitions store pending transition text so the UI can play
- * the corresponding narrative sequence.
+ * Phase transitions emit a pending phase ID so the UI can play the
+ * corresponding narrative sequence (EXPANSION_SEQUENCE, WAR_SEQUENCE).
  */
 
 import {
@@ -16,6 +17,10 @@ import {
 	getNextPhase,
 	PHASE_DEFS,
 } from "../config/phaseDefs";
+import { isInsideCityBounds } from "../ecs/cityLayout";
+import { Faction, Position, Unit } from "../ecs/traits";
+import { world } from "../ecs/world";
+import { getCurrentTierLevel } from "./cultEscalation";
 
 export type { GamePhaseId };
 
@@ -107,6 +112,25 @@ export function resetPhaseState(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Trigger checks
+// ---------------------------------------------------------------------------
+
+/** Returns true if any player unit is outside the city bounds. */
+function anyPlayerUnitOutsideCity(): boolean {
+	for (const entity of world.query(Unit, Faction, Position)) {
+		if (entity.get(Faction)!.value !== "player") continue;
+		const pos = entity.get(Position)!;
+		if (!isInsideCityBounds(pos.x, pos.z)) return true;
+	}
+	return false;
+}
+
+/** Returns true if cult escalation has reached tier 3. */
+function cultReachedTier3(): boolean {
+	return getCurrentTierLevel() >= 3;
+}
+
+// ---------------------------------------------------------------------------
 // System tick
 // ---------------------------------------------------------------------------
 
@@ -124,13 +148,21 @@ export function gamePhaseSystem(deltaSec: number): void {
 	const nextDef = PHASE_DEFS[nextPhaseId];
 	let shouldTransition = false;
 
-	// Time-based trigger
-	if (elapsedGameSec >= nextDef.timeThresholdSec) {
+	// Condition-based triggers (primary)
+	if (nextPhaseId === "expansion") {
+		shouldTransition = anyPlayerUnitOutsideCity();
+	} else if (nextPhaseId === "war") {
+		shouldTransition = cultReachedTier3();
+	}
+
+	// Time-based fallback trigger
+	if (!shouldTransition && elapsedGameSec >= nextDef.timeThresholdSec) {
 		shouldTransition = true;
 	}
 
 	// Early trigger: rooms cleared threshold
 	if (
+		!shouldTransition &&
 		nextDef.roomsClearedThreshold !== null &&
 		roomsCleared >= nextDef.roomsClearedThreshold
 	) {

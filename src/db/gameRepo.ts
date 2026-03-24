@@ -19,7 +19,10 @@ function generateId(): string {
 }
 
 export class GameRepo {
-	constructor(private db: SqliteAdapter) {}
+	private db: SqliteAdapter;
+	constructor(db: SqliteAdapter) {
+		this.db = db;
+	}
 
 	// ─── Games ────────────────────────────────────────────────────────────────
 

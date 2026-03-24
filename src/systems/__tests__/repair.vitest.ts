@@ -105,7 +105,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	for (const e of entities) {
-		if (!e.destroyed) e.destroy();
+		if (e.isAlive()) e.destroy();
 	}
 	entities.length = 0;
 	// Drain any leftover active repairs by ticking until empty

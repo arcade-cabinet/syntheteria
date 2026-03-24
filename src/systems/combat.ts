@@ -183,8 +183,8 @@ export function combatSystem() {
 			if (dist > MELEE_RANGE) continue;
 			if (Math.random() > ATTACK_CHANCE) continue;
 
-			const attackerId = attacker.get(EntityId)?.value;
-			const targetId = target.get(EntityId)?.value;
+			const attackerId = attacker.get(EntityId)?.value ?? "";
+			const targetId = target.get(EntityId)?.value ?? "";
 
 			// Feral/cultist attacks player
 			const damaged = dealDamage(attackerComps, attackerPower, target);

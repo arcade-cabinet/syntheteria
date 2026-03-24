@@ -13,6 +13,7 @@ import {
 	stopMusic,
 } from "./audio";
 import { INTRO_SEQUENCE } from "./config/narrativeDefs";
+import { getRooms, initCityLayout } from "./ecs/cityLayout";
 import {
 	spawnFabricationUnit,
 	spawnLightningRod,
@@ -38,16 +39,29 @@ import { LandingScreen, type NewGameConfig } from "./ui/landing/LandingScreen";
 
 // --- World initialization ---
 
-function initializeWorld() {
-	// Initialize city layout (must happen before navmesh so buildings block paths)
-	getCityBuildings();
+function initializeWorld(
+	seed = "default",
+	difficulty: "easy" | "normal" | "hard" = "normal",
+) {
+	// Generate labyrinth board (must happen before navmesh so walls block paths)
+	initCityLayout({ width: 48, height: 48, seed, difficulty });
 	buildNavGraph();
 
+	// Find the player start room to spawn units there
+	const rooms = getRooms();
+	const playerRoom = rooms.find((r) => r.tag === "player");
+	const TILE_SIZE = 2.0;
+	const startX = playerRoom
+		? (playerRoom.x + playerRoom.w / 2) * TILE_SIZE
+		: 48;
+	const startZ = playerRoom
+		? (playerRoom.z + playerRoom.h / 2) * TILE_SIZE
+		: 62;
+
 	// Bot 1: Has a working camera but broken arms.
-	// Spawns in a clear area within the city streets.
 	const bot1 = spawnUnit({
-		x: 8,
-		z: 12,
+		x: startX - 2,
+		z: startZ,
 		displayName: "Bot Alpha",
 		components: [
 			{ name: "camera", functional: true, material: "electronic" },
@@ -58,10 +72,9 @@ function initializeWorld() {
 	});
 
 	// Bot 2: Has working arms but broken camera.
-	// Nearby but separated by buildings — must navigate streets.
 	spawnUnit({
-		x: 18,
-		z: 16,
+		x: startX + 2,
+		z: startZ,
 		fragmentId: bot1.get(Fragment)!.fragmentId,
 		displayName: "Bot Beta",
 		components: [
@@ -72,11 +85,10 @@ function initializeWorld() {
 		],
 	});
 
-	// Fabrication unit: Stationary building, no power.
-	// Located in a street between the two bots.
+	// Fabrication unit in the player start room.
 	spawnFabricationUnit({
-		x: 13,
-		z: 14,
+		x: startX,
+		z: startZ + 2,
 		fragmentId: bot1.get(Fragment)!.fragmentId,
 		powered: false,
 		components: [
@@ -86,10 +98,10 @@ function initializeWorld() {
 		],
 	});
 
-	// Lightning rod: Provides power and protection in the starting area.
+	// Lightning rod in the player start room.
 	spawnLightningRod({
-		x: 10,
-		z: 13,
+		x: startX - 3,
+		z: startZ + 2,
 		fragmentId: bot1.get(Fragment)!.fragmentId,
 	});
 
@@ -127,11 +139,16 @@ export default function App() {
 	const [phase, setPhase] = useState<"title" | "narration" | "playing">(
 		"title",
 	);
+	const gameConfigRef = useRef<NewGameConfig>({
+		seed: "default",
+		difficulty: "normal",
+	});
 
 	useEffect(() => {
 		if (phase === "playing" && !worldInitialized) {
 			worldInitialized = true;
-			initializeWorld();
+			const cfg = gameConfigRef.current;
+			initializeWorld(cfg.seed, cfg.difficulty);
 			// Start ambience and music when gameplay begins
 			startAmbience();
 			startMusic(1); // Epoch 1: Emergence
@@ -166,8 +183,8 @@ export default function App() {
 	if (phase === "title") {
 		return (
 			<LandingScreen
-				onStartGame={(_config: NewGameConfig) => {
-					// Config (seed, difficulty) will be used when world gen is wired
+				onStartGame={(config: NewGameConfig) => {
+					gameConfigRef.current = config;
 					setPhase("narration");
 				}}
 			/>

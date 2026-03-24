@@ -13,7 +13,7 @@
 		"test:browser": "vitest --config vitest.browser.config.ts run",
 		"test:watch": "vitest",
 		"test:e2e": "playwright test",
-		"tsc": "tsc --noEmit",
+		"tsc": "tsc -b --noEmit",
 		"verify": "pnpm lint && pnpm tsc"
 	},
 	"dependencies": {

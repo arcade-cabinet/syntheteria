@@ -66,7 +66,7 @@ function spawnBuilding(
 
 afterEach(() => {
 	for (const e of entities) {
-		if (!e.destroyed) e.destroy();
+		if (e.isAlive()) e.destroy();
 	}
 	entities.length = 0;
 });

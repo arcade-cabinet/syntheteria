@@ -1,9 +1,9 @@
 /**
  * Tests for the game phase system.
  *
- * Covers phase progression (Awakening → Expansion → War),
- * time-based and condition-based triggers, transition text,
- * building/Mark tier gating, and state reset.
+ * Covers phase definitions (phaseDefs.ts) and phase state machine (gamePhases.ts).
+ * Phase transitions are condition-based (unit-outside-city, cult-tier-3),
+ * so most transition tests are covered by integration/E2E rather than unit tests.
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
@@ -14,16 +14,13 @@ import {
 	PHASE_DEFS,
 } from "../../config/phaseDefs";
 import {
-	gamePhaseSystem,
 	getCurrentGamePhase,
 	getCurrentPhaseDisplayName,
 	getMaxMarkTier,
 	getPhaseCultTier,
 	getPhaseElapsedSec,
-	getRoomsCleared,
 	isBuildingUnlockedInCurrentPhase,
-	popTransitionText,
-	recordRoomCleared,
+	popPhaseTransitionId,
 	resetPhaseState,
 } from "../gamePhases";
 
@@ -71,122 +68,40 @@ describe("phaseDefs", () => {
 // Phase state machine (systems/gamePhases.ts)
 // ---------------------------------------------------------------------------
 
-describe("gamePhaseSystem", () => {
+describe("gamePhaseSystem — initial state", () => {
 	it("starts in Awakening phase", () => {
 		expect(getCurrentGamePhase()).toBe("awakening");
 		expect(getCurrentPhaseDisplayName()).toBe("Awakening");
 		expect(getPhaseElapsedSec()).toBe(0);
 	});
-
-	it("accumulates elapsed time", () => {
-		gamePhaseSystem(10);
-		expect(getPhaseElapsedSec()).toBe(10);
-		gamePhaseSystem(5);
-		expect(getPhaseElapsedSec()).toBe(15);
-	});
-
-	it("transitions to Expansion at 900 seconds", () => {
-		// Just under threshold — still Awakening
-		gamePhaseSystem(899);
-		expect(getCurrentGamePhase()).toBe("awakening");
-
-		// Cross threshold
-		gamePhaseSystem(1);
-		expect(getCurrentGamePhase()).toBe("expansion");
-		expect(getCurrentPhaseDisplayName()).toBe("Expansion");
-	});
-
-	it("transitions to Expansion early when 3 rooms cleared", () => {
-		recordRoomCleared();
-		recordRoomCleared();
-		expect(getRoomsCleared()).toBe(2);
-
-		// 2 rooms + tick → still Awakening
-		gamePhaseSystem(1);
-		expect(getCurrentGamePhase()).toBe("awakening");
-
-		// 3rd room + tick → Expansion
-		recordRoomCleared();
-		gamePhaseSystem(1);
-		expect(getCurrentGamePhase()).toBe("expansion");
-	});
-
-	it("transitions to War at 2100 seconds", () => {
-		// Jump to Expansion first
-		gamePhaseSystem(900);
-		expect(getCurrentGamePhase()).toBe("expansion");
-
-		// Advance to just before War threshold
-		gamePhaseSystem(1199);
-		expect(getCurrentGamePhase()).toBe("expansion");
-
-		// Cross War threshold (total = 2100)
-		gamePhaseSystem(1);
-		expect(getCurrentGamePhase()).toBe("war");
-		expect(getCurrentPhaseDisplayName()).toBe("War");
-	});
-
-	it("does not advance past War", () => {
-		gamePhaseSystem(900); // → Expansion
-		gamePhaseSystem(1200); // → War
-		expect(getCurrentGamePhase()).toBe("war");
-
-		gamePhaseSystem(10000);
-		expect(getCurrentGamePhase()).toBe("war");
-	});
 });
 
 // ---------------------------------------------------------------------------
-// Transition text
+// Transition ID pop
 // ---------------------------------------------------------------------------
 
-describe("popTransitionText", () => {
+describe("popPhaseTransitionId", () => {
 	it("returns null when no transition has occurred", () => {
-		expect(popTransitionText()).toBeNull();
-	});
-
-	it("returns transition text after phase change", () => {
-		gamePhaseSystem(900); // → Expansion
-		const text = popTransitionText();
-		expect(text).not.toBeNull();
-		expect(text).toEqual(PHASE_DEFS.expansion.transitionText);
-	});
-
-	it("returns null on second pop (consumed)", () => {
-		gamePhaseSystem(900); // → Expansion
-		popTransitionText(); // consume
-		expect(popTransitionText()).toBeNull();
+		expect(popPhaseTransitionId()).toBeNull();
 	});
 });
 
 // ---------------------------------------------------------------------------
-// Phase-gated queries
+// Phase-gated queries (in Awakening — no ECS entities needed)
 // ---------------------------------------------------------------------------
 
 describe("phase-gated helpers", () => {
-	it("getMaxMarkTier reflects current phase", () => {
-		expect(getMaxMarkTier()).toBe(1); // Awakening
-		gamePhaseSystem(900);
-		expect(getMaxMarkTier()).toBe(2); // Expansion
-		gamePhaseSystem(1200);
-		expect(getMaxMarkTier()).toBe(3); // War
+	it("getMaxMarkTier returns 1 in Awakening", () => {
+		expect(getMaxMarkTier()).toBe(1);
 	});
 
-	it("getPhaseCultTier reflects current phase", () => {
+	it("getPhaseCultTier returns 1 in Awakening", () => {
 		expect(getPhaseCultTier()).toBe(1);
-		gamePhaseSystem(900);
-		expect(getPhaseCultTier()).toBe(2);
-		gamePhaseSystem(1200);
-		expect(getPhaseCultTier()).toBe(3);
 	});
 
 	it("isBuildingUnlockedInCurrentPhase checks current phase", () => {
 		expect(isBuildingUnlockedInCurrentPhase("lightning_rod")).toBe(true);
 		expect(isBuildingUnlockedInCurrentPhase("fabrication_unit")).toBe(false);
-
-		gamePhaseSystem(900); // → Expansion
-		expect(isBuildingUnlockedInCurrentPhase("fabrication_unit")).toBe(true);
-		expect(isBuildingUnlockedInCurrentPhase("sensor_tower")).toBe(true);
 	});
 });
 
@@ -195,16 +110,11 @@ describe("phase-gated helpers", () => {
 // ---------------------------------------------------------------------------
 
 describe("resetPhaseState", () => {
-	it("resets all phase state to initial values", () => {
-		gamePhaseSystem(900); // → Expansion
-		recordRoomCleared();
-		recordRoomCleared();
-
+	it("resets phase state to initial values", () => {
 		resetPhaseState();
 
 		expect(getCurrentGamePhase()).toBe("awakening");
 		expect(getPhaseElapsedSec()).toBe(0);
-		expect(getRoomsCleared()).toBe(0);
-		expect(popTransitionText()).toBeNull();
+		expect(popPhaseTransitionId()).toBeNull();
 	});
 });

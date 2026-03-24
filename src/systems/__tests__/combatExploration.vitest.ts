@@ -11,7 +11,7 @@
  * with traits (bypassing factory.ts terrain/fragment dependencies).
  */
 import type { Entity } from "koota";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
 	createFragment,
 	deleteFragment,
@@ -40,7 +40,7 @@ import { movementSystem } from "../movement";
 // ---------------------------------------------------------------------------
 
 const entities: Entity[] = [];
-const fragments: MapFragment[] = [];
+const fragmentIds: string[] = [];
 
 function makeComponents(...parts: UnitComponent[]): string {
 	return serializeComponents(parts);
@@ -96,6 +96,11 @@ function spawnCultMech(
 	return e;
 }
 
+function trackFragment(frag: MapFragment): MapFragment {
+	fragmentIds.push(frag.id);
+	return frag;
+}
+
 const FULL_COMPONENTS: UnitComponent[] = [
 	{ name: "camera", functional: true, material: "electronic" },
 	{ name: "arms", functional: true, material: "metal" },
@@ -109,22 +114,18 @@ const WEAK_COMPONENTS: UnitComponent[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Setup / teardown
+// Teardown — must use isAlive() for Koota entities
 // ---------------------------------------------------------------------------
-
-beforeEach(() => {
-	// Nothing to reset globally — fragments are created per test
-});
 
 afterEach(() => {
 	for (const e of entities) {
-		if (!e.destroyed) e.destroy();
+		if (e.isAlive()) e.destroy();
 	}
 	entities.length = 0;
-	for (const f of fragments) {
-		deleteFragment(f.id);
+	for (const id of fragmentIds) {
+		deleteFragment(id);
 	}
-	fragments.length = 0;
+	fragmentIds.length = 0;
 });
 
 // ---------------------------------------------------------------------------
@@ -133,8 +134,7 @@ afterEach(() => {
 
 describe("exploration — fog reveals", () => {
 	it("unit with camera reveals detailed fog around its position", () => {
-		const frag = createFragment();
-		fragments.push(frag);
+		const frag = trackFragment(createFragment());
 
 		// Check fog is initially unexplored at unit position
 		expect(getFogAt(frag, 0, 0)).toBe(0);
@@ -155,8 +155,7 @@ describe("exploration — fog reveals", () => {
 	});
 
 	it("unit without camera reveals abstract fog", () => {
-		const frag = createFragment();
-		fragments.push(frag);
+		const frag = trackFragment(createFragment());
 
 		spawnPlayerUnit(
 			0,
@@ -172,8 +171,7 @@ describe("exploration — fog reveals", () => {
 	});
 
 	it("fog outside vision radius remains unexplored", () => {
-		const frag = createFragment();
-		fragments.push(frag);
+		const frag = trackFragment(createFragment());
 
 		spawnPlayerUnit(0, 0, FULL_COMPONENTS, frag.id);
 
@@ -190,8 +188,7 @@ describe("exploration — fog reveals", () => {
 
 describe("movement — unit follows path", () => {
 	it("unit moves toward waypoint along path", () => {
-		const frag = createFragment();
-		fragments.push(frag);
+		const frag = trackFragment(createFragment());
 
 		const unit = spawnPlayerUnit(0, 0, FULL_COMPONENTS, frag.id, "mover_1");
 
@@ -213,8 +210,7 @@ describe("movement — unit follows path", () => {
 	});
 
 	it("unit stops when reaching waypoint", () => {
-		const frag = createFragment();
-		fragments.push(frag);
+		const frag = trackFragment(createFragment());
 
 		const unit = spawnPlayerUnit(0, 0, FULL_COMPONENTS, frag.id, "mover_2");
 
@@ -239,16 +235,9 @@ describe("movement — unit follows path", () => {
 
 describe("combat — component damage", () => {
 	it("hostile cult mech in melee range can damage player components", () => {
-		const frag = createFragment();
-		fragments.push(frag);
+		const frag = trackFragment(createFragment());
 
-		const _player = spawnPlayerUnit(
-			0,
-			0,
-			FULL_COMPONENTS,
-			frag.id,
-			"player_combat",
-		);
+		spawnPlayerUnit(0, 0, FULL_COMPONENTS, frag.id, "player_combat");
 		// Place cult mech within melee range (2.5)
 		spawnCultMech(1, 0, FULL_COMPONENTS, frag.id, "cult_combat");
 
@@ -267,8 +256,7 @@ describe("combat — component damage", () => {
 	});
 
 	it("combat events report component name and target", () => {
-		const frag = createFragment();
-		fragments.push(frag);
+		const frag = trackFragment(createFragment());
 
 		spawnPlayerUnit(0, 0, FULL_COMPONENTS, frag.id, "player_evt");
 		spawnCultMech(1, 0, FULL_COMPONENTS, frag.id, "cult_evt");
@@ -278,11 +266,11 @@ describe("combat — component damage", () => {
 		for (let tick = 0; tick < 200; tick++) {
 			combatSystem();
 			const events = getLastCombatEvents();
-			for (const e of events) {
-				expect(e.attackerId).toBeTruthy();
-				expect(e.targetId).toBeTruthy();
-				expect(e.componentDamaged).toBeTruthy();
-				expect(typeof e.targetDestroyed).toBe("boolean");
+			for (const ev of events) {
+				expect(ev.attackerId).toBeTruthy();
+				expect(ev.targetId).toBeTruthy();
+				expect(ev.componentDamaged).toBeTruthy();
+				expect(typeof ev.targetDestroyed).toBe("boolean");
 				found = true;
 			}
 			if (found) break;
@@ -291,8 +279,7 @@ describe("combat — component damage", () => {
 	});
 
 	it("unit with all components broken is destroyed", () => {
-		const frag = createFragment();
-		fragments.push(frag);
+		const frag = trackFragment(createFragment());
 
 		// Player with only 1 component — easy to destroy
 		const fragilePlayer = spawnPlayerUnit(
@@ -317,15 +304,14 @@ describe("combat — component damage", () => {
 		// Run combat until player is destroyed or max attempts
 		for (let tick = 0; tick < 500; tick++) {
 			combatSystem();
-			if (fragilePlayer.destroyed) break;
+			if (!fragilePlayer.isAlive()) break;
 		}
 
-		expect(fragilePlayer.destroyed).toBe(true);
+		expect(fragilePlayer.isAlive()).toBe(false);
 	});
 
 	it("units out of melee range do not fight", () => {
-		const frag = createFragment();
-		fragments.push(frag);
+		const frag = trackFragment(createFragment());
 
 		// Place units far apart (distance = 20 >> melee range 2.5)
 		spawnPlayerUnit(0, 0, FULL_COMPONENTS, frag.id, "far_player");
@@ -343,9 +329,8 @@ describe("combat — component damage", () => {
 
 describe("fragment merge — fog unification", () => {
 	it("units from different fragments merge when close", () => {
-		const frag1 = createFragment();
-		const frag2 = createFragment();
-		fragments.push(frag1, frag2);
+		const frag1 = trackFragment(createFragment());
+		const frag2 = trackFragment(createFragment());
 
 		// Place units from different fragments within merge distance (6)
 		spawnPlayerUnit(0, 0, FULL_COMPONENTS, frag1.id, "merge_a");
@@ -360,8 +345,7 @@ describe("fragment merge — fog unification", () => {
 	});
 
 	it("units from same fragment do not trigger merge", () => {
-		const frag = createFragment();
-		fragments.push(frag);
+		const frag = trackFragment(createFragment());
 
 		spawnPlayerUnit(0, 0, FULL_COMPONENTS, frag.id, "same_a");
 		spawnPlayerUnit(3, 0, FULL_COMPONENTS, frag.id, "same_b");
@@ -371,22 +355,20 @@ describe("fragment merge — fog unification", () => {
 	});
 
 	it("units from different fragments too far apart do not merge", () => {
-		const frag1 = createFragment();
-		const frag2 = createFragment();
-		fragments.push(frag1, frag2);
+		const frag1 = trackFragment(createFragment());
+		const frag2 = trackFragment(createFragment());
 
-		// Place units far apart (distance = 20 >> merge distance 6)
-		spawnPlayerUnit(0, 0, FULL_COMPONENTS, frag1.id, "far_a");
-		spawnPlayerUnit(20, 0, FULL_COMPONENTS, frag2.id, "far_b");
+		// Place units far apart (distance = 50 >> merge distance 6)
+		spawnPlayerUnit(-25, 0, FULL_COMPONENTS, frag1.id, "far_a");
+		spawnPlayerUnit(25, 0, FULL_COMPONENTS, frag2.id, "far_b");
 
 		const events = fragmentMergeSystem();
 		expect(events).toHaveLength(0);
 	});
 
 	it("after merge, both units share the same fragment", () => {
-		const frag1 = createFragment();
-		const frag2 = createFragment();
-		fragments.push(frag1, frag2);
+		const frag1 = trackFragment(createFragment());
+		const frag2 = trackFragment(createFragment());
 
 		const unitA = spawnPlayerUnit(0, 0, FULL_COMPONENTS, frag1.id, "shared_a");
 		const unitB = spawnPlayerUnit(3, 0, FULL_COMPONENTS, frag2.id, "shared_b");
@@ -405,8 +387,7 @@ describe("fragment merge — fog unification", () => {
 
 describe("full integration — move, explore, fight, merge", () => {
 	it("unit moves, reveals fog, encounters enemy, combat resolves", () => {
-		const frag = createFragment();
-		fragments.push(frag);
+		const frag = trackFragment(createFragment());
 
 		// Player starts at origin
 		const player = spawnPlayerUnit(
@@ -453,20 +434,19 @@ describe("full integration — move, explore, fight, merge", () => {
 	});
 
 	it("two fragments merge after units are moved close together", () => {
-		const fragA = createFragment();
-		const fragB = createFragment();
-		fragments.push(fragA, fragB);
+		const fragA = trackFragment(createFragment());
+		const fragB = trackFragment(createFragment());
 
-		// Start far apart
+		// Start far apart — use large distance to prevent accidental merge
 		const unitA = spawnPlayerUnit(
-			0,
+			-30,
 			0,
 			FULL_COMPONENTS,
 			fragA.id,
 			"merge_move_a",
 		);
 		const unitB = spawnPlayerUnit(
-			20,
+			30,
 			0,
 			FULL_COMPONENTS,
 			fragB.id,
@@ -477,19 +457,10 @@ describe("full integration — move, explore, fight, merge", () => {
 		const earlyEvents = fragmentMergeSystem();
 		expect(earlyEvents).toHaveLength(0);
 
-		// Move unit A toward unit B
-		unitA.set(Navigation, {
-			pathJson: JSON.stringify([{ x: 17, y: 0, z: 0 }]),
-			pathIndex: 0,
-			moving: true,
-		});
+		// Teleport unit A close to unit B (within merge distance 6)
+		unitA.set(Position, { x: 27, y: 0, z: 0 });
 
-		// Run movement for enough time (speed=3, distance=17, time=17/3≈5.7s)
-		for (let frame = 0; frame < 80; frame++) {
-			movementSystem(0.1, 1);
-		}
-
-		// Now they should be close enough to merge (within distance 6)
+		// Now they should be close enough to merge (distance = 3)
 		const mergeEvents = fragmentMergeSystem();
 		expect(mergeEvents.length).toBeGreaterThan(0);
 

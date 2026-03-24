@@ -148,7 +148,7 @@ export function RadialMenu({
 			tabIndex={-1}
 			onClick={handleBackdropClick}
 			onKeyDown={(e) => {
-				if (e.key === "Escape") handleBackdropClick();
+				if (e.key === "Escape") onClose();
 			}}
 			style={{
 				position: "absolute",

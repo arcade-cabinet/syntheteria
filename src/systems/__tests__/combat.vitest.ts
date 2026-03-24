@@ -36,7 +36,11 @@ function spawnUnit(
 		unitType?: string;
 		mark?: number;
 		speed?: number;
-		components?: { name: string; functional: boolean; material: string }[];
+		components?: {
+			name: string;
+			functional: boolean;
+			material: "metal" | "plastic" | "electronic";
+		}[];
 	} = {},
 ): Entity {
 	const {

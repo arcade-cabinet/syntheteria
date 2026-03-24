@@ -48,6 +48,7 @@ export function fragmentMergeSystem(): MergeEvent[] {
 function mergeFragments(unitA: Entity, unitB: Entity): MergeEvent | null {
 	const fragAId = unitA.get(Fragment)?.fragmentId;
 	const fragBId = unitB.get(Fragment)?.fragmentId;
+	if (!fragAId || !fragBId) return null;
 	const fragA = getFragment(fragAId);
 	const fragB = getFragment(fragBId);
 	if (!fragA || !fragB) return null;

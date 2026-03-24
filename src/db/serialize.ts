@@ -209,7 +209,8 @@ export function applyBuildings(
 	const rodByBuildingId = new Map(rods.map((r) => [r.buildingId, r]));
 
 	for (const b of buildings) {
-		const traits = [
+		// biome-ignore lint: explicit any[] needed — Koota traits are heterogeneous
+		const traits: any[] = [
 			EntityId({ value: b.entityId }),
 			Position({ x: b.x, y: b.y, z: b.z }),
 			Faction({ value: b.faction as "player" | "cultist" | "rogue" | "feral" }),

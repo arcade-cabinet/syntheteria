@@ -99,6 +99,12 @@ export function deleteFragment(id: string) {
 	fragments.delete(id);
 }
 
+/** Clear all fragments and reset ID counter. For tests only. */
+export function resetFragments() {
+	fragments.clear();
+	nextFragmentId = 0;
+}
+
 // --- Display offset management ---
 
 // How fast offsets decay toward zero each tick (0.003 = ~0.3% per tick)

@@ -23,7 +23,7 @@ import {
 	getCurrentGamePhase,
 	getCurrentPhaseDisplayName,
 	getPhaseElapsedSec,
-	popTransitionText,
+	popPhaseTransitionId,
 } from "../systems/gamePhases";
 import {
 	getHumanTemperature,
@@ -82,8 +82,8 @@ export interface GameSnapshot {
 	gamePhase: GamePhaseId;
 	gamePhaseDisplayName: string;
 	gamePhaseElapsedSec: number;
-	/** Narrative text to display on phase transition (null if no transition) */
-	phaseTransitionText: string[] | null;
+	/** Phase ID of a just-occurred transition (null if no transition this tick) */
+	phaseTransitionId: GamePhaseId | null;
 	/** Human temperature value (0-100) */
 	humanTemperature: number;
 	/** Human temperature tier name */
@@ -119,7 +119,7 @@ function buildSnapshot(): GameSnapshot {
 		gamePhase: getCurrentGamePhase(),
 		gamePhaseDisplayName: getCurrentPhaseDisplayName(),
 		gamePhaseElapsedSec: getPhaseElapsedSec(),
-		phaseTransitionText: popTransitionText(),
+		phaseTransitionId: popPhaseTransitionId(),
 		humanTemperature: getHumanTemperature(),
 		humanTemperatureTier: getHumanTemperatureTier(),
 	};

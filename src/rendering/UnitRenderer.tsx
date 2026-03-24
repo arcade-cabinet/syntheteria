@@ -249,6 +249,7 @@ function BuildingModel({ entity }: { entity: Entity }) {
 
 function GhostBuilding() {
 	const groupRef = useRef<THREE.Group>(null);
+	const matRef = useRef<THREE.MeshBasicMaterial>(null);
 
 	useFrame(() => {
 		const ghost = getGhostPosition();
@@ -263,6 +264,11 @@ function GhostBuilding() {
 		groupRef.current.visible = true;
 		const y = getTerrainHeight(ghost.x, ghost.z);
 		groupRef.current.position.set(ghost.x, y, ghost.z);
+
+		// Update color based on placement validity
+		if (matRef.current) {
+			matRef.current.color.setHex(ghost.valid ? 0x00ffaa : 0xff4444);
+		}
 	});
 
 	return (
@@ -270,6 +276,7 @@ function GhostBuilding() {
 			<mesh position={[0, 0.8, 0]}>
 				<boxGeometry args={[1.6, 1.6, 1.6]} />
 				<meshBasicMaterial
+					ref={matRef}
 					color={0x00ffaa}
 					transparent
 					opacity={0.3}

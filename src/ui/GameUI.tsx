@@ -22,7 +22,9 @@ import {
 	EntityId,
 	Faction,
 	LightningRod,
+	Navigation,
 	Position,
+	ScavengeSite,
 	Unit,
 	UnitComponents,
 } from "../ecs/traits";
@@ -35,6 +37,20 @@ import {
 } from "../systems/buildingPlacement";
 import { RECIPES, startFabrication } from "../systems/fabrication";
 import { startRepair } from "../systems/repair";
+import { getScavengePoints } from "../systems/resources";
+import {
+	getElapsedTicks,
+	getGameConfig,
+	getRawGameSpeed,
+} from "../ecs/gameState";
+import {
+	isPersistenceAvailable,
+	listSaves,
+	loadGame,
+	saveGame,
+} from "../db/persistence";
+import type { GameSummary } from "../db/types";
+import { RadialMenu } from "./game/RadialMenu";
 
 function ComponentStatus({ comp }: { comp: UnitComponent }) {
 	return (
@@ -624,10 +640,328 @@ function TemperatureGauge({ value }: { value: number }) {
 	);
 }
 
+function SaveLoadPanel() {
+	const [expanded, setExpanded] = useState(false);
+	const [saves, setSaves] = useState<GameSummary[]>([]);
+	const [status, setStatus] = useState<string | null>(null);
+
+	const available = isPersistenceAvailable();
+
+	const refreshSaves = useCallback(async () => {
+		const list = await listSaves();
+		setSaves(list);
+	}, []);
+
+	useEffect(() => {
+		if (expanded && available) {
+			refreshSaves();
+		}
+	}, [expanded, available, refreshSaves]);
+
+	const handleSave = useCallback(async () => {
+		const { seed, difficulty } = getGameConfig();
+		setStatus("Saving...");
+		const id = await saveGame(
+			world,
+			seed,
+			difficulty,
+			getElapsedTicks(),
+			getRawGameSpeed(),
+		);
+		if (id) {
+			setStatus("Saved!");
+			refreshSaves();
+		} else {
+			setStatus("Save failed");
+		}
+		setTimeout(() => setStatus(null), 2000);
+	}, [refreshSaves]);
+
+	const handleLoad = useCallback(async (gameId: string) => {
+		setStatus("Loading...");
+		const ok = await loadGame(world, gameId);
+		setStatus(ok ? "Loaded!" : "Load failed");
+		setTimeout(() => setStatus(null), 2000);
+	}, []);
+
+	if (!available) return null;
+
+	return (
+		<div
+			style={{
+				position: "absolute",
+				top: "10px",
+				left: "50%",
+				transform: "translateX(-50%)",
+				pointerEvents: "auto",
+				zIndex: 200,
+			}}
+		>
+			<button
+				type="button"
+				onClick={() => setExpanded(!expanded)}
+				style={{
+					background: "rgba(0,0,0,0.8)",
+					color: "#00ffaa",
+					border: "1px solid #00ffaa44",
+					borderRadius: "4px",
+					padding: "4px 12px",
+					fontSize: "11px",
+					fontFamily: "'Courier New', monospace",
+					cursor: "pointer",
+				}}
+			>
+				SAVE/LOAD {expanded ? "[-]" : "[+]"}
+			</button>
+
+			{status && (
+				<div
+					style={{
+						marginTop: "4px",
+						fontSize: "11px",
+						color: "#00ffaa",
+						textAlign: "center",
+					}}
+				>
+					{status}
+				</div>
+			)}
+
+			{expanded && (
+				<div
+					style={{
+						marginTop: "4px",
+						background: "rgba(0,0,0,0.9)",
+						border: "1px solid #00ffaa44",
+						borderRadius: "6px",
+						padding: "8px 12px",
+						minWidth: "200px",
+					}}
+				>
+					<button
+						type="button"
+						onClick={handleSave}
+						style={{
+							display: "block",
+							width: "100%",
+							background: "rgba(0,255,170,0.1)",
+							color: "#00ffaa",
+							border: "1px solid #00ffaa44",
+							borderRadius: "4px",
+							padding: "6px",
+							fontSize: "11px",
+							fontFamily: "'Courier New', monospace",
+							cursor: "pointer",
+							marginBottom: "6px",
+						}}
+					>
+						SAVE GAME
+					</button>
+
+					{saves.length > 0 && (
+						<div
+							style={{
+								borderTop: "1px solid #00ffaa22",
+								paddingTop: "6px",
+								fontSize: "11px",
+							}}
+						>
+							<div
+								style={{
+									color: "#00ffaa88",
+									marginBottom: "4px",
+								}}
+							>
+								SAVED GAMES
+							</div>
+							{saves.slice(0, 5).map((save) => (
+								<button
+									type="button"
+									key={save.id}
+									onClick={() => handleLoad(save.id)}
+									style={{
+										display: "block",
+										width: "100%",
+										textAlign: "left",
+										background: "rgba(0,0,0,0.5)",
+										color: "#00ffaa",
+										border: "1px solid #00ffaa22",
+										borderRadius: "4px",
+										padding: "4px 8px",
+										fontSize: "10px",
+										fontFamily: "'Courier New', monospace",
+										cursor: "pointer",
+										marginBottom: "3px",
+									}}
+								>
+									<div>
+										{save.seed} ({save.difficulty})
+									</div>
+									<div style={{ color: "#00ffaa66" }}>
+										Tick {save.elapsedTicks} —{" "}
+										{new Date(save.createdAt).toLocaleString()}
+									</div>
+								</button>
+							))}
+						</div>
+					)}
+				</div>
+			)}
+		</div>
+	);
+}
+
+/** Resource material color map */
+const MATERIAL_COLORS: Record<string, string> = {
+	scrapMetal: "#88ccaa",
+	circuitry: "#44ddff",
+	powerCells: "#ffcc44",
+	durasteel: "#cc88ff",
+};
+
+function ScavengeIndicator({
+	x,
+	z,
+	isIdle,
+}: {
+	x: number;
+	z: number;
+	isIdle: boolean;
+}) {
+	const RANGE = 3.0;
+	let nearestType: string | null = null;
+	let nearestRemaining = 0;
+
+	// Check ECS scavenge sites
+	for (const site of world.query(Position, ScavengeSite)) {
+		const siteData = site.get(ScavengeSite)!;
+		if (siteData.remaining <= 0) continue;
+		const sPos = site.get(Position)!;
+		const dx = sPos.x - x;
+		const dz = sPos.z - z;
+		if (Math.sqrt(dx * dx + dz * dz) <= RANGE) {
+			nearestType = siteData.materialType;
+			nearestRemaining = siteData.remaining;
+			break;
+		}
+	}
+
+	// Check legacy scavenge points
+	if (!nearestType) {
+		for (const point of getScavengePoints()) {
+			if (point.remaining <= 0) continue;
+			const dx = point.x - x;
+			const dz = point.z - z;
+			if (Math.sqrt(dx * dx + dz * dz) <= RANGE) {
+				nearestType = point.type;
+				nearestRemaining = point.remaining;
+				break;
+			}
+		}
+	}
+
+	if (!nearestType) return null;
+
+	const color = MATERIAL_COLORS[nearestType] ?? "#ccaa44";
+
+	return (
+		<div
+			style={{
+				marginTop: "8px",
+				borderTop: "1px solid #00ffaa22",
+				paddingTop: "6px",
+			}}
+		>
+			<div
+				style={{
+					fontSize: "11px",
+					color,
+					display: "flex",
+					alignItems: "center",
+					gap: "6px",
+				}}
+			>
+				<span
+					style={{
+						display: "inline-block",
+						width: "8px",
+						height: "8px",
+						borderRadius: "50%",
+						background: isIdle ? color : `${color}44`,
+						boxShadow: isIdle ? `0 0 6px ${color}` : "none",
+						animation: isIdle ? "pulse 1s infinite" : "none",
+					}}
+				/>
+				{isIdle ? "SCAVENGING" : "RESOURCE NEARBY"}
+				<span style={{ color: `${color}88`, fontSize: "10px" }}>
+					{nearestType.replace(/([A-Z])/g, " $1").trim()} ({nearestRemaining} left)
+				</span>
+			</div>
+		</div>
+	);
+}
+
+function PlacementHint() {
+	const active = getActivePlacement();
+	if (!active) return null;
+	const def = BUILDING_DEFS[active];
+	return (
+		<div
+			style={{
+				position: "absolute",
+				bottom: "180px",
+				left: "50%",
+				transform: "translateX(-50%)",
+				background: "rgba(0,0,0,0.85)",
+				border: "1px solid #00ffaa66",
+				borderRadius: "6px",
+				padding: "8px 16px",
+				fontSize: "12px",
+				fontFamily: "'Courier New', monospace",
+				color: "#00ffaa",
+				pointerEvents: "none",
+				textAlign: "center",
+				whiteSpace: "nowrap",
+			}}
+		>
+			Placing {def?.displayName ?? active} — Click to place, ESC to cancel
+		</div>
+	);
+}
+
 const SPEED_STEPS = [0.5, 1, 2, 4];
 
 export function GameUI() {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
+	const [radialMenu, setRadialMenu] = useState<{
+		entity: Entity;
+		screenX: number;
+		screenY: number;
+	} | null>(null);
+
+	// Listen for radial menu events from UnitInput
+	useEffect(() => {
+		function onRadialMenu(e: Event) {
+			const { screenX, screenY } = (e as CustomEvent).detail;
+			// Find the currently selected player unit
+			let selected: Entity | null = null;
+			for (const entity of world.query(Unit, Faction)) {
+				if (
+					entity.get(Unit)!.selected &&
+					entity.get(Faction)!.value === "player"
+				) {
+					selected = entity;
+					break;
+				}
+			}
+			if (selected) {
+				setRadialMenu({ entity: selected, screenX, screenY });
+			}
+		}
+		window.addEventListener("syntheteria:radialmenu", onRadialMenu);
+		return () =>
+			window.removeEventListener("syntheteria:radialmenu", onRadialMenu);
+	}, []);
 
 	// Keyboard shortcuts: Space = pause, +/= = faster, - = slower
 	useEffect(() => {
@@ -921,6 +1255,10 @@ export function GameUI() {
 						<RepairPanel selectedEntity={selectedUnit} />
 					)}
 
+					{unitFaction === "player" && unitPos && (
+						<ScavengeIndicator x={unitPos.x} z={unitPos.z} isIdle={!selectedUnit.get(Navigation)?.moving} />
+					)}
+
 					{unitData.unitType === "fabrication_unit" && unitBuilding && (
 						<InlineFabricationPanel fabricator={selectedUnit} />
 					)}
@@ -1083,7 +1421,19 @@ export function GameUI() {
 
 			<BuildToolbar />
 			<FabricationPanel />
+			<PlacementHint />
+			<SaveLoadPanel />
 			<Minimap />
+
+			{/* Radial menu on right-click selected unit */}
+			{radialMenu && (
+				<RadialMenu
+					entity={radialMenu.entity}
+					screenX={radialMenu.screenX}
+					screenY={radialMenu.screenY}
+					onClose={() => setRadialMenu(null)}
+				/>
+			)}
 		</div>
 	);
 }
@@ -1173,6 +1523,25 @@ function Minimap() {
 						const mx = cityToMinimap(bldg.x);
 						const my = cityToMinimap(bldg.z);
 						ctx.fillRect(mx, my, 1, 1);
+					}
+
+					// Draw scavenge sites (yellow dots — only in explored areas)
+					ctx.fillStyle = "#ccaa44";
+					for (const point of getScavengePoints()) {
+						if (point.remaining <= 0) continue;
+						if (getMergedFogAt(point.x, point.z) < 1) continue;
+						const mx = cityToMinimap(point.x);
+						const my = cityToMinimap(point.z);
+						ctx.fillRect(mx, my, 2, 2);
+					}
+					for (const site of world.query(Position, ScavengeSite)) {
+						const siteData = site.get(ScavengeSite)!;
+						if (siteData.remaining <= 0) continue;
+						const sPos = site.get(Position)!;
+						if (getMergedFogAt(sPos.x, sPos.z) < 1) continue;
+						const mx = cityToMinimap(sPos.x);
+						const my = cityToMinimap(sPos.z);
+						ctx.fillRect(mx, my, 2, 2);
 					}
 
 					// Draw player-placed buildings (cyan)

@@ -10,6 +10,11 @@ import {
 	combatSystem,
 	getLastCombatEvents,
 } from "../systems/combat";
+import {
+	type ComputeSnapshot,
+	computeSystem,
+	getComputeSnapshot,
+} from "../systems/compute";
 import { cultEscalationSystem } from "../systems/cultEscalation";
 import { enemySystem } from "../systems/enemies";
 import { explorationSystem } from "../systems/exploration";
@@ -27,6 +32,11 @@ import {
 	getPhaseElapsedSec,
 	popPhaseTransitionId,
 } from "../systems/gamePhases";
+import {
+	type HackEvent,
+	getLastHackEvents,
+	hackingSystem,
+} from "../systems/hacking";
 import {
 	getHumanTemperature,
 	getHumanTemperatureTier,
@@ -90,6 +100,10 @@ export interface GameSnapshot {
 	humanTemperature: number;
 	/** Human temperature tier name */
 	humanTemperatureTier: string;
+	/** Compute resource snapshot */
+	compute: ComputeSnapshot;
+	/** Hacking events from this tick */
+	hackEvents: HackEvent[];
 }
 
 let tick = 0;
@@ -98,6 +112,30 @@ let paused = false;
 let lastMergeEvents: MergeEvent[] = [];
 const listeners = new Set<() => void>();
 let snapshot: GameSnapshot | null = null;
+
+// Game config — set once at world init, read by save system
+let gameSeed = "default";
+let gameDifficulty: "easy" | "normal" | "hard" = "normal";
+
+export function setGameConfig(
+	seed: string,
+	difficulty: "easy" | "normal" | "hard",
+) {
+	gameSeed = seed;
+	gameDifficulty = difficulty;
+}
+
+export function getGameConfig() {
+	return { seed: gameSeed, difficulty: gameDifficulty };
+}
+
+export function getElapsedTicks(): number {
+	return tick;
+}
+
+export function getRawGameSpeed(): number {
+	return gameSpeed;
+}
 
 function buildSnapshot(): GameSnapshot {
 	let playerCount = 0;
@@ -124,6 +162,8 @@ function buildSnapshot(): GameSnapshot {
 		phaseTransitionId: popPhaseTransitionId(),
 		humanTemperature: getHumanTemperature(),
 		humanTemperatureTier: getHumanTemperatureTier(),
+		compute: getComputeSnapshot(),
+		hackEvents: getLastHackEvents(),
 	};
 }
 
@@ -166,9 +206,11 @@ export function simulationTick() {
 	runSystem("resources", resourceSystem);
 	runSystem("repair", repairSystem);
 	runSystem("fabrication", fabricationSystem);
+	runSystem("compute", computeSystem);
 	runSystem("enemy", enemySystem);
 	runSystem("cultEscalation", () => cultEscalationSystem(1.0));
 	runSystem("cultAI", cultAISystem);
+	runSystem("hacking", hackingSystem);
 	runSystem("combat", combatSystem);
 	runSystem("humanTemperature", humanTemperatureSystem);
 	runSystem("displayOffsets", updateDisplayOffsets);

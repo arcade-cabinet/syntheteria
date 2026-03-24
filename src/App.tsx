@@ -30,11 +30,14 @@ import {
 	getGameSpeed,
 	getSnapshot,
 	isPaused,
+	setGameConfig,
 	simulationTick,
 	subscribe,
 	togglePause,
 } from "./ecs/gameState";
 import { Fragment } from "./ecs/traits";
+import { initPersistence } from "./db/persistence";
+import { createWebAdapter } from "./db/webAdapter";
 import { logError } from "./errors";
 import { TopDownCamera } from "./input/TopDownCamera";
 import { UnitInput } from "./input/UnitInput";
@@ -65,6 +68,9 @@ function initializeWorld(
 	seed = "default",
 	difficulty: "easy" | "normal" | "hard" = "normal",
 ): { startX: number; startZ: number } {
+	// Store config for save/load
+	setGameConfig(seed, difficulty);
+
 	// Generate labyrinth board (must happen before navmesh so walls block paths)
 	initCityLayout({ width: 48, height: 48, seed, difficulty });
 	buildNavGraph();
@@ -196,6 +202,15 @@ export default function App() {
 		}
 		setPhaseNarrative(sequence);
 	}, [phase, snap.phaseTransitionId, phaseNarrative]);
+
+	// Initialize persistence layer (non-fatal — game works without it)
+	useEffect(() => {
+		createWebAdapter()
+			.then((adapter) => initPersistence(adapter))
+			.catch(() => {
+				// Non-fatal: save/load will be unavailable
+			});
+	}, []);
 
 	// Cleanup audio on unmount
 	useEffect(() => {

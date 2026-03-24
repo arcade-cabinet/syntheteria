@@ -1,10 +1,11 @@
 /**
  * Resource and scavenging system.
  *
- * Manages material resources gathered from the world:
- * - Scrap metal, e-waste, intact components
- * - Scavenge points scattered through the city
- * - Units with functional arms can scavenge nearby points
+ * Manages 4 core materials: scrap metal, circuitry, power cells, durasteel.
+ * Two scavenging paths:
+ * - ScavengeSite ECS entities: units scavenge into per-unit Inventory trait
+ * - Legacy ScavengePoint array: for backward compat until labyrinth seeds sites
+ * Both paths also deposit into the global ResourcePool.
  */
 
 import {
@@ -15,12 +16,20 @@ import {
 import { isInsideBuilding } from "../ecs/cityLayout";
 import {
 	Faction,
+	Inventory,
 	Navigation,
 	Position,
+	ScavengeSite,
 	Unit,
 	UnitComponents,
 } from "../ecs/traits";
-import { hasArms, parseComponents } from "../ecs/types";
+import {
+	addToInventory,
+	hasArms,
+	parseComponents,
+	parseInventory,
+	serializeInventory,
+} from "../ecs/types";
 import { world } from "../ecs/world";
 
 export interface ResourcePool {
@@ -55,12 +64,19 @@ export function spendResource(
 	return true;
 }
 
-// --- Scavenge Points ---
+/** Reset all resources to zero (for testing) */
+export function resetResources(): void {
+	for (const key of Object.keys(resources) as (keyof ResourcePool)[]) {
+		resources[key] = 0;
+	}
+}
+
+// --- Scavenge Points (legacy) ---
 
 export interface ScavengePoint {
 	x: number;
 	z: number;
-	remaining: number; // how many scavenges left
+	remaining: number;
 	type: keyof ResourcePool;
 	amountPerScavenge: number;
 }
@@ -82,16 +98,13 @@ export function getScavengePoints(): ScavengePoint[] {
 	const rng = seededRandom(789);
 	const points: ScavengePoint[] = [];
 
-	// Scatter scavenge points through the city area
 	for (let z = -15; z < 45; z += 4) {
 		for (let x = -25; x < 45; x += 4) {
-			if (rng() > 0.35) continue; // ~35% chance
-			// Don't place inside buildings
+			if (rng() > 0.35) continue;
 			if (isInsideBuilding(x, z)) continue;
 
 			const materialId = pickMaterialByWeight(rng);
 			const mat = MATERIALS[materialId];
-			// Add slight variance to yield and durability
 			const amount =
 				mat.baseYield + Math.floor(rng() * Math.max(1, mat.baseYield));
 			const remaining =
@@ -112,14 +125,88 @@ export function getScavengePoints(): ScavengePoint[] {
 	return points;
 }
 
+/** Reset legacy scavenge points (for testing) */
+export function resetScavengePoints(): void {
+	scavengePoints = null;
+}
+
+// --- Scavenging Constants ---
+
 /** Auto-scavenge range for units with arms */
 const SCAVENGE_RANGE = 2.5;
 
+// --- ECS-based Scavenging (ScavengeSite entities) ---
+
 /**
- * Scavenging system. Called once per sim tick.
- * Units with functional arms automatically scavenge nearby resource points.
+ * Scavenge from ScavengeSite entities into unit Inventory + global pool.
+ * Units with functional arms, idle, and within range automatically scavenge.
  */
-export function resourceSystem() {
+function scavengeFromSites(): void {
+	const sites = Array.from(world.query(Position, ScavengeSite));
+	if (sites.length === 0) return;
+
+	for (const entity of world.query(
+		Position,
+		Unit,
+		UnitComponents,
+		Faction,
+		Navigation,
+		Inventory,
+	)) {
+		if (entity.get(Faction)?.value !== "player") continue;
+		const components = parseComponents(
+			entity.get(UnitComponents)?.componentsJson,
+		);
+		if (!hasArms(components)) continue;
+		const nav = entity.get(Navigation)!;
+		if (nav.moving) continue;
+
+		const pos = entity.get(Position)!;
+
+		for (const site of sites) {
+			const siteData = site.get(ScavengeSite)!;
+			if (siteData.remaining <= 0) continue;
+
+			const sitePos = site.get(Position)!;
+			const dx = sitePos.x - pos.x;
+			const dz = sitePos.z - pos.z;
+			const dist = Math.sqrt(dx * dx + dz * dz);
+
+			if (dist <= SCAVENGE_RANGE) {
+				// Add to unit inventory
+				const inv = parseInventory(entity.get(Inventory)?.inventoryJson);
+				const updated = addToInventory(
+					inv,
+					siteData.materialType,
+					siteData.amountPerScavenge,
+				);
+				entity.set(Inventory, {
+					inventoryJson: serializeInventory(updated),
+				});
+
+				// Also add to global pool
+				const materialId = siteData.materialType as keyof ResourcePool;
+				if (materialId in resources) {
+					resources[materialId] += siteData.amountPerScavenge;
+				}
+
+				// Deplete site
+				site.set(ScavengeSite, {
+					remaining: siteData.remaining - 1,
+				});
+
+				break; // one scavenge per tick per unit
+			}
+		}
+	}
+}
+
+// --- Legacy Scavenging (ScavengePoint array) ---
+
+/**
+ * Scavenge from legacy ScavengePoint array into global pool.
+ */
+function scavengeFromLegacyPoints(): void {
 	const points = getScavengePoints();
 
 	for (const entity of world.query(
@@ -135,7 +222,7 @@ export function resourceSystem() {
 		);
 		if (!hasArms(components)) continue;
 		const nav = entity.get(Navigation)!;
-		if (nav.moving) continue; // busy moving
+		if (nav.moving) continue;
 
 		const pos = entity.get(Position)!;
 
@@ -149,8 +236,17 @@ export function resourceSystem() {
 			if (dist <= SCAVENGE_RANGE) {
 				resources[point.type] += point.amountPerScavenge;
 				point.remaining--;
-				break; // one scavenge per tick per unit
+				break;
 			}
 		}
 	}
+}
+
+/**
+ * Scavenging system. Called once per sim tick.
+ * Runs both ECS-based and legacy scavenging.
+ */
+export function resourceSystem() {
+	scavengeFromSites();
+	scavengeFromLegacyPoints();
 }

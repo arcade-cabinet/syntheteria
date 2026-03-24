@@ -134,8 +134,9 @@ export function serializeResources(gameId: string): ResourcePoolRecord {
 	return {
 		gameId,
 		scrapMetal: pool.scrapMetal,
-		eWaste: pool.eWaste,
-		intactComponents: pool.intactComponents,
+		circuitry: pool.circuitry,
+		powerCells: pool.powerCells,
+		durasteel: pool.durasteel,
 	};
 }
 
@@ -259,12 +260,12 @@ export function applyResources(pool: ResourcePoolRecord): void {
 	// Zero out current resources then add saved amounts
 	const current = getResources();
 	if (current.scrapMetal > 0) spendResource("scrapMetal", current.scrapMetal);
-	if (current.eWaste > 0) spendResource("eWaste", current.eWaste);
-	if (current.intactComponents > 0)
-		spendResource("intactComponents", current.intactComponents);
+	if (current.circuitry > 0) spendResource("circuitry", current.circuitry);
+	if (current.powerCells > 0) spendResource("powerCells", current.powerCells);
+	if (current.durasteel > 0) spendResource("durasteel", current.durasteel);
 
 	if (pool.scrapMetal > 0) addResource("scrapMetal", pool.scrapMetal);
-	if (pool.eWaste > 0) addResource("eWaste", pool.eWaste);
-	if (pool.intactComponents > 0)
-		addResource("intactComponents", pool.intactComponents);
+	if (pool.circuitry > 0) addResource("circuitry", pool.circuitry);
+	if (pool.powerCells > 0) addResource("powerCells", pool.powerCells);
+	if (pool.durasteel > 0) addResource("durasteel", pool.durasteel);
 }

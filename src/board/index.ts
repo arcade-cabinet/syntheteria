@@ -22,20 +22,14 @@ export { generateLabyrinthBoard } from "./labyrinthGenerator";
 
 // --- Noise ---
 export { createNoise2D, seededRng, simplexNoise2D } from "./noise";
-// --- Sphere geometry (grid ↔ sphere math) ---
-export {
-	buildSphereGeometry,
-	SEGS,
-	sphereModelPlacement,
-	sphereModelPlacementWithRotation,
-	spherePosToTile,
-	sphereRadius,
-	tileToSpherePos,
-	worldToTileCoords,
-} from "./sphere";
+
+// --- Terrain ---
+export { floorTypeForTile, geographyValue, seedToFloat } from "./terrain";
+
 // --- Types ---
 export type {
 	BoardConfig,
+	ClimateProfile,
 	Elevation,
 	FloorType,
 	GeneratedBoard,
@@ -43,3 +37,4 @@ export type {
 	TileData,
 	WeightClass,
 } from "./types";
+export { CLIMATE_PROFILE_SPECS, FLOOR_DEFS, isPassableFloor } from "./types";

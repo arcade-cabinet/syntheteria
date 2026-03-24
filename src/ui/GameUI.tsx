@@ -676,10 +676,9 @@ export function GameUI() {
 				}}
 			>
 				<span title="Scrap Metal">SCRAP: {snap.resources.scrapMetal}</span>
-				<span title="Electronic Waste">E-WASTE: {snap.resources.eWaste}</span>
-				<span title="Intact Components">
-					PARTS: {snap.resources.intactComponents}
-				</span>
+				<span title="Circuitry">CIRC: {snap.resources.circuitry}</span>
+				<span title="Power Cells">PWRCL: {snap.resources.powerCells}</span>
+				<span title="Durasteel">DURA: {snap.resources.durasteel}</span>
 				<span
 					style={{ color: stormColor(snap.power.stormIntensity) }}
 					title="Storm Intensity"

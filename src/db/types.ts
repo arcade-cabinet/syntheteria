@@ -65,8 +65,9 @@ export interface LightningRodRecord {
 export interface ResourcePoolRecord {
 	gameId: string;
 	scrapMetal: number;
-	eWaste: number;
-	intactComponents: number;
+	circuitry: number;
+	powerCells: number;
+	durasteel: number;
 }
 
 export interface ScavengePointRecord {

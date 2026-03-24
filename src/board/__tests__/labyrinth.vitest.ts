@@ -6,7 +6,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { FACTION_DEFINITIONS } from "../../factions/definitions";
 import { generateLabyrinth, generateRooms, type Room } from "../labyrinth";
 import type { BoardConfig, TileData } from "../types";
 
@@ -126,16 +125,9 @@ describe("faction start rooms", () => {
 		expect(Math.abs(roomCz - boardCz)).toBeLessThan(h * 0.25);
 	});
 
-	it("places all 4 AI faction start rooms", () => {
-		const rooms = generateRooms(48, 48, "all-factions");
-		for (const faction of FACTION_DEFINITIONS) {
-			const room = rooms.find((r) => r.tag === faction.id);
-			expect(
-				room,
-				`faction ${faction.id} should have a start room`,
-			).toBeDefined();
-			expect(room!.kind).toBe("faction_start");
-		}
+	// TODO(P1-2): Rewrite for single-player — dropped 4 competing AI factions
+	it.skip("places all 4 AI faction start rooms", () => {
+		// Requires FACTION_DEFINITIONS from dropped factions module
 	});
 
 	it("faction start rooms are 6x6 to 8x8", () => {

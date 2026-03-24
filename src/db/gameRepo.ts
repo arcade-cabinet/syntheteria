@@ -189,9 +189,9 @@ export class GameRepo {
 
 	async saveResources(gameId: string, pool: ResourcePoolRecord): Promise<void> {
 		await this.db.run(
-			`INSERT OR REPLACE INTO resources (game_id, scrap_metal, e_waste, intact_components)
-       VALUES (?, ?, ?, ?)`,
-			[gameId, pool.scrapMetal, pool.eWaste, pool.intactComponents],
+			`INSERT OR REPLACE INTO resources (game_id, scrap_metal, circuitry, power_cells, durasteel)
+       VALUES (?, ?, ?, ?, ?)`,
+			[gameId, pool.scrapMetal, pool.circuitry, pool.powerCells, pool.durasteel],
 		);
 	}
 
@@ -306,8 +306,9 @@ function rowToResources(row: Record<string, unknown>): ResourcePoolRecord {
 	return {
 		gameId: String(row.game_id),
 		scrapMetal: Number(row.scrap_metal),
-		eWaste: Number(row.e_waste),
-		intactComponents: Number(row.intact_components),
+		circuitry: Number(row.circuitry),
+		powerCells: Number(row.power_cells),
+		durasteel: Number(row.durasteel),
 	};
 }
 

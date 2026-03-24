@@ -2,6 +2,7 @@
  * DOM overlay UI: resource bar, power info, speed controls, build toolbar,
  * unit info, combat log, minimap.
  */
+import type { Entity } from "koota";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { getMasterVolume, setMasterVolume } from "../audio";
 import {
@@ -13,13 +14,17 @@ import {
 	togglePause,
 } from "../ecs/gameState";
 import { WORLD_HALF } from "../ecs/terrain";
-import type {
-	BuildingEntity,
-	Entity,
-	UnitComponent,
-	UnitEntity,
-} from "../ecs/types";
-import { buildings, units } from "../ecs/world";
+import {
+	BuildingTrait,
+	EntityId,
+	Faction,
+	LightningRod,
+	Position,
+	Unit,
+	UnitComponents,
+} from "../ecs/traits";
+import { parseComponents, type UnitComponent } from "../ecs/types";
+import { world } from "../ecs/world";
 import {
 	BUILDING_COSTS,
 	getActivePlacement,
@@ -109,21 +114,34 @@ function BuildToolbar() {
 	);
 }
 
-function RepairPanel({ selectedUnit }: { selectedUnit: UnitEntity }) {
-	const brokenComps = selectedUnit.unit.components.filter((c) => !c.functional);
+function RepairPanel({ selectedEntity }: { selectedEntity: Entity }) {
+	const comps = parseComponents(
+		selectedEntity.get(UnitComponents)?.componentsJson ?? "[]",
+	);
+	const brokenComps = comps.filter((c) => !c.functional);
 	if (brokenComps.length === 0) return null;
 
-	// Find a nearby unit with arms to be the repairer
-	const allUnits = Array.from(units);
-	const repairer = allUnits.find((u) => {
-		if (u.id === selectedUnit.id) return false;
-		if (u.faction !== "player") return false;
-		if (!u.unit.components.some((c) => c.name === "arms" && c.functional))
-			return false;
-		const dx = u.worldPosition.x - selectedUnit.worldPosition.x;
-		const dz = u.worldPosition.z - selectedUnit.worldPosition.z;
-		return Math.sqrt(dx * dx + dz * dz) < 3.0;
-	});
+	const selectedPos = selectedEntity.get(Position)!;
+	const selectedId = selectedEntity.get(EntityId)?.value ?? "";
+
+	let repairer: Entity | null = null;
+	let repairerName = "";
+	for (const entity of world.query(Unit, UnitComponents, Faction, Position)) {
+		if (entity.get(EntityId)?.value === selectedId) continue;
+		if (entity.get(Faction)!.value !== "player") continue;
+		const entityComps = parseComponents(
+			entity.get(UnitComponents)!.componentsJson,
+		);
+		if (!entityComps.some((c) => c.name === "arms" && c.functional)) continue;
+		const ePos = entity.get(Position)!;
+		const dx = ePos.x - selectedPos.x;
+		const dz = ePos.z - selectedPos.z;
+		if (Math.sqrt(dx * dx + dz * dz) < 3.0) {
+			repairer = entity;
+			repairerName = entity.get(Unit)!.displayName;
+			break;
+		}
+	}
 
 	if (!repairer) return null;
 
@@ -138,13 +156,13 @@ function RepairPanel({ selectedUnit }: { selectedUnit: UnitEntity }) {
 			<div
 				style={{ fontSize: "11px", color: "#00ffaa88", marginBottom: "4px" }}
 			>
-				REPAIR ({repairer.unit.displayName} nearby)
+				REPAIR ({repairerName} nearby)
 			</div>
 			{brokenComps.map((comp) => (
 				<button
 					type="button"
 					key={comp.name}
-					onClick={() => startRepair(repairer, selectedUnit, comp.name)}
+					onClick={() => startRepair(repairer!, selectedEntity, comp.name)}
 					style={{
 						display: "block",
 						width: "100%",
@@ -170,23 +188,33 @@ function RepairPanel({ selectedUnit }: { selectedUnit: UnitEntity }) {
 function BuildingRepairPanel({
 	selectedBuilding,
 }: {
-	selectedBuilding: BuildingEntity;
+	selectedBuilding: Entity;
 }) {
-	const brokenComps = selectedBuilding.building.components.filter(
+	const building = selectedBuilding.get(BuildingTrait)!;
+	const brokenComps = parseComponents(building.buildingComponentsJson).filter(
 		(c) => !c.functional,
 	);
 	if (brokenComps.length === 0) return null;
 
-	// Find a nearby player unit with arms to be the repairer
-	const allUnits = Array.from(units);
-	const repairer = allUnits.find((u) => {
-		if (u.faction !== "player") return false;
-		if (!u.unit.components.some((c) => c.name === "arms" && c.functional))
-			return false;
-		const dx = u.worldPosition.x - selectedBuilding.worldPosition.x;
-		const dz = u.worldPosition.z - selectedBuilding.worldPosition.z;
-		return Math.sqrt(dx * dx + dz * dz) < 3.0;
-	});
+	const buildingPos = selectedBuilding.get(Position)!;
+
+	let repairer: Entity | null = null;
+	let repairerName = "";
+	for (const entity of world.query(Unit, UnitComponents, Faction, Position)) {
+		if (entity.get(Faction)!.value !== "player") continue;
+		const entityComps = parseComponents(
+			entity.get(UnitComponents)!.componentsJson,
+		);
+		if (!entityComps.some((c) => c.name === "arms" && c.functional)) continue;
+		const ePos = entity.get(Position)!;
+		const dx = ePos.x - buildingPos.x;
+		const dz = ePos.z - buildingPos.z;
+		if (Math.sqrt(dx * dx + dz * dz) < 3.0) {
+			repairer = entity;
+			repairerName = entity.get(Unit)!.displayName;
+			break;
+		}
+	}
 
 	return (
 		<div
@@ -200,9 +228,7 @@ function BuildingRepairPanel({
 				style={{ fontSize: "11px", color: "#00ffaa88", marginBottom: "4px" }}
 			>
 				REPAIR{" "}
-				{repairer
-					? `(${repairer.unit.displayName} nearby)`
-					: "(no unit with arms nearby)"}
+				{repairer ? `(${repairerName} nearby)` : "(no unit with arms nearby)"}
 			</div>
 			{brokenComps.map((comp) => (
 				<button
@@ -237,12 +263,12 @@ function BuildingRepairPanel({
 function InlineFabricationPanel({ fabricator }: { fabricator: Entity }) {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
 	const [expanded, setExpanded] = useState(false);
-	const isPowered =
-		fabricator.building?.powered && fabricator.building?.operational;
+	const building = fabricator.get(BuildingTrait);
+	const isPowered = building?.powered && building?.operational;
 
-	// Active jobs for this fabricator
+	const fabricatorId = fabricator.get(EntityId)?.value ?? "";
 	const myJobs = snap.fabricationJobs.filter(
-		(j) => j.fabricatorId === fabricator.id,
+		(j) => j.fabricatorId === fabricatorId,
 	);
 
 	return (
@@ -334,13 +360,14 @@ function FabricationPanel() {
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
 	const [expanded, setExpanded] = useState(false);
 
-	// Find a powered fabrication unit
-	const fabricator = Array.from(buildings).find(
-		(b) =>
-			b.building.type === "fabrication_unit" &&
-			b.building.powered &&
-			b.building.operational,
-	);
+	let fabricator: Entity | null = null;
+	for (const entity of world.query(BuildingTrait)) {
+		const b = entity.get(BuildingTrait)!;
+		if (b.buildingType === "fabrication_unit" && b.powered && b.operational) {
+			fabricator = entity;
+			break;
+		}
+	}
 
 	if (!fabricator) return null;
 
@@ -376,7 +403,6 @@ function FabricationPanel() {
 				FABRICATOR {expanded ? "[-]" : "[+]"}
 			</button>
 
-			{/* Active jobs */}
 			{snap.fabricationJobs.length > 0 && (
 				<div
 					style={{ color: "#00ffaa88", fontSize: "11px", marginBottom: "4px" }}
@@ -399,7 +425,7 @@ function FabricationPanel() {
 							<button
 								type="button"
 								key={recipe.name}
-								onClick={() => startFabrication(fabricator, recipe.name)}
+								onClick={() => startFabrication(fabricator!, recipe.name)}
 								style={{
 									display: "block",
 									width: "100%",
@@ -490,7 +516,6 @@ export function GameUI() {
 	// Keyboard shortcuts: Space = pause, +/= = faster, - = slower
 	useEffect(() => {
 		function onKeyDown(e: KeyboardEvent) {
-			// Don't capture if user is typing in an input
 			if (
 				e.target instanceof HTMLInputElement ||
 				e.target instanceof HTMLTextAreaElement
@@ -525,13 +550,40 @@ export function GameUI() {
 		return () => window.removeEventListener("keydown", onKeyDown);
 	}, []);
 
-	const selectedUnit = Array.from(units).find((u) => u.unit.selected);
-	// Only show building panel for pure buildings (not fabrication units, which show in unit panel)
-	const selectedBuilding = Array.from(buildings).find(
-		(b) => b.building.selected && !b.unit,
-	);
+	let selectedUnit: Entity | null = null;
+	for (const entity of world.query(Unit)) {
+		if (entity.get(Unit)!.selected) {
+			selectedUnit = entity;
+			break;
+		}
+	}
+
+	let selectedBuilding: Entity | null = null;
+	for (const entity of world.query(BuildingTrait)) {
+		const b = entity.get(BuildingTrait)!;
+		if (b.selected && !entity.has(Unit)) {
+			selectedBuilding = entity;
+			break;
+		}
+	}
+
 	const fragmentCount = snap.fragments.length;
-	const buildingCount = Array.from(buildings).length;
+	const buildingCount = Array.from(world.query(BuildingTrait)).length;
+
+	const unitData = selectedUnit?.get(Unit);
+	const unitComps = selectedUnit
+		? parseComponents(selectedUnit.get(UnitComponents)?.componentsJson ?? "[]")
+		: [];
+	const unitPos = selectedUnit?.get(Position);
+	const unitFaction = selectedUnit?.get(Faction)?.value ?? "player";
+	const unitBuilding = selectedUnit?.get(BuildingTrait);
+
+	const buildingData = selectedBuilding?.get(BuildingTrait);
+	const buildingPos = selectedBuilding?.get(Position);
+	const buildingComps = selectedBuilding
+		? parseComponents(buildingData?.buildingComponentsJson ?? "[]")
+		: [];
+	const buildingRod = selectedBuilding?.get(LightningRod);
 
 	return (
 		<div
@@ -641,7 +693,7 @@ export function GameUI() {
 			</div>
 
 			{/* Selected unit info */}
-			{selectedUnit && (
+			{selectedUnit && unitData && unitPos && (
 				<div
 					style={{
 						position: "absolute",
@@ -664,7 +716,7 @@ export function GameUI() {
 							marginBottom: "4px",
 						}}
 					>
-						{selectedUnit.unit.displayName}
+						{unitData.displayName}
 					</div>
 					<div
 						style={{
@@ -673,30 +725,27 @@ export function GameUI() {
 							marginBottom: "6px",
 						}}
 					>
-						{selectedUnit.unit.type.replace(/_/g, " ").toUpperCase()}
-						{selectedUnit.faction !== "player" && (
+						{unitData.unitType.replace(/_/g, " ").toUpperCase()}
+						{unitFaction !== "player" && (
 							<span style={{ color: "#ff4444", marginLeft: "8px" }}>
 								HOSTILE
 							</span>
 						)}
 					</div>
-					{selectedUnit.unit.speed > 0 && (
-						<div>Speed: {selectedUnit.unit.speed.toFixed(1)}</div>
-					)}
-					{selectedUnit.building && (
+					{unitData.speed > 0 && <div>Speed: {unitData.speed.toFixed(1)}</div>}
+					{unitBuilding && (
 						<div
 							style={{
-								color: selectedUnit.building.powered ? "#00ff88" : "#ff4444",
+								color: unitBuilding.powered ? "#00ff88" : "#ff4444",
 							}}
 						>
-							{selectedUnit.building.powered ? "POWERED" : "UNPOWERED"}
+							{unitBuilding.powered ? "POWERED" : "UNPOWERED"}
 							{" / "}
-							{selectedUnit.building.operational ? "OPERATIONAL" : "OFFLINE"}
+							{unitBuilding.operational ? "OPERATIONAL" : "OFFLINE"}
 						</div>
 					)}
 					<div>
-						Pos: ({selectedUnit.worldPosition.x.toFixed(1)},{" "}
-						{selectedUnit.worldPosition.z.toFixed(1)})
+						Pos: ({unitPos.x.toFixed(1)}, {unitPos.z.toFixed(1)})
 					</div>
 
 					<div
@@ -715,24 +764,27 @@ export function GameUI() {
 						>
 							COMPONENTS
 						</div>
-						{selectedUnit.unit.components.map((comp) => (
+						{unitComps.map((comp) => (
 							<ComponentStatus key={comp.name} comp={comp} />
 						))}
 					</div>
 
-					{selectedUnit.faction === "player" && (
-						<RepairPanel selectedUnit={selectedUnit} />
+					{unitFaction === "player" && (
+						<RepairPanel selectedEntity={selectedUnit} />
 					)}
 
-					{selectedUnit.unit.type === "fabrication_unit" &&
-						selectedUnit.building && (
-							<InlineFabricationPanel fabricator={selectedUnit} />
-						)}
+					{unitData.unitType === "fabrication_unit" && unitBuilding && (
+						<InlineFabricationPanel fabricator={selectedUnit} />
+					)}
 
 					<div
-						style={{ fontSize: "11px", color: "#00ffaa88", marginTop: "8px" }}
+						style={{
+							fontSize: "11px",
+							color: "#00ffaa88",
+							marginTop: "8px",
+						}}
 					>
-						{selectedUnit.unit.speed > 0
+						{unitData.speed > 0
 							? "Tap to select \u2022 Tap ground to move"
 							: "Tap to select"}
 					</div>
@@ -740,7 +792,7 @@ export function GameUI() {
 			)}
 
 			{/* Selected building info */}
-			{selectedBuilding && (
+			{selectedBuilding && buildingData && buildingPos && (
 				<div
 					style={{
 						position: "absolute",
@@ -764,7 +816,7 @@ export function GameUI() {
 							color: "#aa8844",
 						}}
 					>
-						{selectedBuilding.building.type.replace(/_/g, " ").toUpperCase()}
+						{buildingData.buildingType.replace(/_/g, " ").toUpperCase()}
 					</div>
 					<div
 						style={{
@@ -773,16 +825,15 @@ export function GameUI() {
 							marginBottom: "6px",
 						}}
 					>
-						{selectedBuilding.building.powered ? "POWERED" : "UNPOWERED"}
+						{buildingData.powered ? "POWERED" : "UNPOWERED"}
 						{" / "}
-						{selectedBuilding.building.operational ? "OPERATIONAL" : "OFFLINE"}
+						{buildingData.operational ? "OPERATIONAL" : "OFFLINE"}
 					</div>
 					<div>
-						Pos: ({selectedBuilding.worldPosition.x.toFixed(1)},{" "}
-						{selectedBuilding.worldPosition.z.toFixed(1)})
+						Pos: ({buildingPos.x.toFixed(1)}, {buildingPos.z.toFixed(1)})
 					</div>
 
-					{selectedBuilding.building.components.length > 0 && (
+					{buildingComps.length > 0 && (
 						<div
 							style={{
 								marginTop: "8px",
@@ -799,36 +850,36 @@ export function GameUI() {
 							>
 								COMPONENTS
 							</div>
-							{selectedBuilding.building.components.map((comp) => (
+							{buildingComps.map((comp) => (
 								<ComponentStatus key={comp.name} comp={comp} />
 							))}
 						</div>
 					)}
 
-					{selectedBuilding.building.type === "lightning_rod" &&
-						selectedBuilding.lightningRod && (
-							<div
-								style={{
-									marginTop: "8px",
-									borderTop: "1px solid #aa884422",
-									paddingTop: "8px",
-								}}
-							>
-								<div>
-									Output:{" "}
-									{selectedBuilding.lightningRod.currentOutput.toFixed(1)} /{" "}
-									{selectedBuilding.lightningRod.rodCapacity}
-								</div>
-								<div>
-									Radius: {selectedBuilding.lightningRod.protectionRadius}
-								</div>
+					{buildingData.buildingType === "lightning_rod" && buildingRod && (
+						<div
+							style={{
+								marginTop: "8px",
+								borderTop: "1px solid #aa884422",
+								paddingTop: "8px",
+							}}
+						>
+							<div>
+								Output: {buildingRod.currentOutput.toFixed(1)} /{" "}
+								{buildingRod.rodCapacity}
 							</div>
-						)}
+							<div>Radius: {buildingRod.protectionRadius}</div>
+						</div>
+					)}
 
 					<BuildingRepairPanel selectedBuilding={selectedBuilding} />
 
 					<div
-						style={{ fontSize: "11px", color: "#aa884488", marginTop: "8px" }}
+						style={{
+							fontSize: "11px",
+							color: "#aa884488",
+							marginTop: "8px",
+						}}
 					>
 						Tap to select
 					</div>
@@ -882,13 +933,8 @@ export function GameUI() {
 				</div>
 			)}
 
-			{/* Build toolbar */}
 			<BuildToolbar />
-
-			{/* Fabrication panel */}
 			<FabricationPanel />
-
-			{/* Minimap */}
 			<Minimap />
 		</div>
 	);
@@ -927,17 +973,19 @@ function Minimap() {
 					ctx.fillRect(0, 0, 120, 120);
 
 					ctx.fillStyle = "#aa8844";
-					for (const entity of buildings) {
-						const x = 60 + (entity.worldPosition.x / WORLD_HALF) * 50;
-						const y = 60 + (entity.worldPosition.z / WORLD_HALF) * 50;
+					for (const entity of world.query(BuildingTrait, Position)) {
+						const pos = entity.get(Position)!;
+						const x = 60 + (pos.x / WORLD_HALF) * 50;
+						const y = 60 + (pos.z / WORLD_HALF) * 50;
 						ctx.fillRect(x - 2, y - 2, 5, 5);
 					}
 
-					for (const entity of units) {
-						const isEnemy = entity.faction !== "player";
+					for (const entity of world.query(Unit, Faction, Position)) {
+						const isEnemy = entity.get(Faction)!.value !== "player";
 						ctx.fillStyle = isEnemy ? "#ff3333" : "#ffaa00";
-						const x = 60 + (entity.worldPosition.x / WORLD_HALF) * 50;
-						const y = 60 + (entity.worldPosition.z / WORLD_HALF) * 50;
+						const pos = entity.get(Position)!;
+						const x = 60 + (pos.x / WORLD_HALF) * 50;
+						const y = 60 + (pos.z / WORLD_HALF) * 50;
 						ctx.fillRect(x - 1, y - 1, 3, 3);
 					}
 				}}

@@ -35,7 +35,7 @@ import { GameUI } from "./ui/GameUI";
 import { DebugOverlay } from "./ui/game/DebugOverlay";
 import { ErrorBoundary } from "./ui/game/ErrorBoundary";
 import { NarrativeOverlay } from "./ui/game/NarrativeOverlay";
-import { TitleScreen } from "./ui/TitleScreen";
+import { LandingScreen, type NewGameConfig } from "./ui/landing/LandingScreen";
 
 // --- World initialization ---
 
@@ -165,7 +165,14 @@ export default function App() {
 	}, []);
 
 	if (phase === "title") {
-		return <TitleScreen onNewGame={() => setPhase("narration")} />;
+		return (
+			<LandingScreen
+				onStartGame={(_config: NewGameConfig) => {
+					// Config (seed, difficulty) will be used when world gen is wired
+					setPhase("narration");
+				}}
+			/>
+		);
 	}
 
 	if (phase === "narration") {

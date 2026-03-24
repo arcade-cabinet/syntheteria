@@ -84,6 +84,7 @@ export function NewGameModal({
 				{/* Seed */}
 				<div>
 					<label
+						htmlFor="seed-input"
 						style={{
 							fontSize: "11px",
 							letterSpacing: "0.2em",
@@ -96,6 +97,7 @@ export function NewGameModal({
 					</label>
 					<div style={{ display: "flex", gap: "8px" }}>
 						<input
+							id="seed-input"
 							type="text"
 							value={seed}
 							onChange={(e) => setSeed(e.target.value)}
@@ -135,7 +137,7 @@ export function NewGameModal({
 
 				{/* Difficulty */}
 				<div>
-					<label
+					<span
 						style={{
 							fontSize: "11px",
 							letterSpacing: "0.2em",
@@ -145,7 +147,7 @@ export function NewGameModal({
 						}}
 					>
 						DIFFICULTY
-					</label>
+					</span>
 					<div style={{ display: "flex", gap: "8px" }}>
 						{(["easy", "normal", "hard"] as Difficulty[]).map((d) => {
 							const info = DIFFICULTY_INFO[d];

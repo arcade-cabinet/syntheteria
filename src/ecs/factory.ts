@@ -14,6 +14,7 @@ import {
 } from "./terrain";
 import {
 	BuildingTrait,
+	EngagementRule,
 	EntityId,
 	Faction,
 	Fragment,
@@ -73,6 +74,7 @@ export function spawnUnit(options: {
 		UnitComponents({ componentsJson: serializeComponents(components) }),
 		Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
 		Inventory({ inventoryJson: "{}" }),
+		EngagementRule({ value: "attack" }),
 	);
 }
 

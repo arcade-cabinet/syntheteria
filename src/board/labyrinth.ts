@@ -20,6 +20,7 @@ import type {
 	GeneratedBoard,
 	TileData,
 } from "./types";
+import { zoneForTile } from "./zones";
 
 // ─── Cult POI Definitions ───────────────────────────────────────────────────
 
@@ -38,6 +39,48 @@ const CULT_POI_DEFS: readonly CultPoiDef[] = [
 	{ type: "antenna", floorType: "aerostructure", minSize: 4, maxSize: 4 },
 ];
 
+// ─── Zone POI Definitions ───────────────────────────────────────────────────
+
+export type ZonePoiType = "observatory" | "mine_shaft" | "lab";
+
+interface ZonePoiDef {
+	type: ZonePoiType;
+	/** Which geographic zone this POI spawns in. */
+	zone: "campus" | "coast";
+	floorType: FloorType;
+	minSize: number;
+	maxSize: number;
+	/** How many of this POI to place. */
+	count: number;
+}
+
+export const ZONE_POI_DEFS: readonly ZonePoiDef[] = [
+	{
+		type: "observatory",
+		zone: "campus",
+		floorType: "bio_district",
+		minSize: 5,
+		maxSize: 7,
+		count: 1,
+	},
+	{
+		type: "lab",
+		zone: "campus",
+		floorType: "transit_deck",
+		minSize: 4,
+		maxSize: 6,
+		count: 2,
+	},
+	{
+		type: "mine_shaft",
+		zone: "coast",
+		floorType: "collapsed_zone",
+		minSize: 4,
+		maxSize: 6,
+		count: 3,
+	},
+];
+
 // ─── Room Types ──────────────────────────────────────────────────────────────
 
 export interface Room {
@@ -45,8 +88,8 @@ export interface Room {
 	z: number;
 	w: number;
 	h: number;
-	kind: "player_start" | "cult_poi" | "scatter";
-	/** Cult POI type or null for non-cult rooms. */
+	kind: "player_start" | "cult_poi" | "scatter" | "zone_poi";
+	/** Cult POI type, zone POI type, or null for non-POI rooms. */
 	tag: string | null;
 	/** Floor type for room interior. */
 	floorType: FloorType;
@@ -218,6 +261,37 @@ function placeRoomRandom(
 	return null;
 }
 
+/**
+ * Place a room within a specific geographic zone.
+ * Tries random positions and checks that the room center falls in the target zone.
+ */
+function placeRoomInZone(
+	roomW: number,
+	roomH: number,
+	targetZone: string,
+	existingRooms: Room[],
+	width: number,
+	height: number,
+	rng: () => number,
+): { x: number; z: number } | null {
+	for (let attempt = 0; attempt < MAX_PLACEMENT_ATTEMPTS; attempt++) {
+		const x = 1 + Math.floor(rng() * (width - roomW - 2));
+		const z = 1 + Math.floor(rng() * (height - roomH - 2));
+
+		// Check that room center is in the target zone
+		const cx = x + Math.floor(roomW / 2);
+		const cz = z + Math.floor(roomH / 2);
+		if (zoneForTile(cx, cz, width, height) !== targetZone) continue;
+
+		if (
+			canPlaceRoom({ x, z, w: roomW, h: roomH }, existingRooms, width, height)
+		) {
+			return { x, z };
+		}
+	}
+	return null;
+}
+
 // ─── Core Room Generation ────────────────────────────────────────────────────
 
 /**
@@ -275,6 +349,35 @@ function generateRoomList(
 				tag: def.type,
 				floorType: def.floorType,
 			});
+		}
+	}
+
+	// ── Zone POI rooms — observatory, labs (campus), mine shafts (coast) ─
+	for (const def of ZONE_POI_DEFS) {
+		for (let i = 0; i < def.count; i++) {
+			const size =
+				def.minSize + Math.floor(rng() * (def.maxSize - def.minSize + 1));
+
+			const pos = placeRoomInZone(
+				size,
+				size,
+				def.zone,
+				rooms,
+				width,
+				height,
+				rng,
+			);
+			if (pos) {
+				rooms.push({
+					x: pos.x,
+					z: pos.z,
+					w: size,
+					h: size,
+					kind: "zone_poi",
+					tag: def.type,
+					floorType: def.floorType,
+				});
+			}
 		}
 	}
 

@@ -58,7 +58,7 @@ export function MoveIndicator() {
 		<>
 			{markers.map((m, i) => (
 				<mesh
-					key={`${m.x.toFixed(2)}_${m.z.toFixed(2)}_${i}`}
+					key={`${m.x.toFixed(2)}_${m.z.toFixed(2)}`}
 					ref={(el) => {
 						meshRefs.current[i] = el;
 					}}

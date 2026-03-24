@@ -14,6 +14,7 @@ import type { Entity } from "koota";
 import { playSfx } from "../audio";
 import { getMarkTier } from "../config/robotDefs";
 import {
+	EngagementRule,
 	EntityId,
 	Faction,
 	Navigation,
@@ -203,11 +204,16 @@ export function combatSystem() {
 				}
 			}
 
-			// Player unit retaliates if it has functional components
+			// Player unit retaliates if engagement rule allows it
+			// "hold" and "flee" units do not retaliate
+			const targetRule = target.has(EngagementRule)
+				? target.get(EngagementRule)!.value
+				: "attack";
+			const canRetaliate = targetRule === "attack" || targetRule === "protect";
 			const targetComps = parseComponents(
 				target.get(UnitComponents)?.componentsJson,
 			);
-			if (targetComps.some((c) => c.functional)) {
+			if (canRetaliate && targetComps.some((c) => c.functional)) {
 				const targetPower = getAttackPower(target);
 				const retDamaged = dealDamage(targetComps, targetPower, attacker);
 				if (retDamaged) {

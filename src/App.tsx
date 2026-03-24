@@ -20,6 +20,8 @@ import {
 	WAR_SEQUENCE,
 } from "./config/narrativeDefs";
 import type { GamePhaseId } from "./config/phaseDefs";
+import { initPersistence } from "./db/persistence";
+import { createWebAdapter } from "./db/webAdapter";
 import { getRooms, initCityLayout } from "./ecs/cityLayout";
 import {
 	spawnFabricationUnit,
@@ -36,8 +38,6 @@ import {
 	togglePause,
 } from "./ecs/gameState";
 import { Fragment } from "./ecs/traits";
-import { initPersistence } from "./db/persistence";
-import { createWebAdapter } from "./db/webAdapter";
 import { logError } from "./errors";
 import { TopDownCamera } from "./input/TopDownCamera";
 import { UnitInput } from "./input/UnitInput";

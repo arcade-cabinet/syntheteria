@@ -190,6 +190,8 @@ export interface TileData {
 	floorType: FloorType;
 	resourceMaterial: ResourceMaterial | null;
 	resourceAmount: number;
+	/** Geographic zone this tile belongs to (set by zone assignment phase). */
+	zone?: "city" | "coast" | "campus" | "enemy";
 }
 
 export interface BoardConfig {

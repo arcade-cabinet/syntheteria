@@ -81,3 +81,29 @@ export const HumanTemperature = trait({
 	/** Current temperature value, clamped 0-100 */
 	value: 10,
 });
+
+/**
+ * Per-unit engagement rule.
+ * Controls automated combat behavior:
+ * - attack: aggressively pursue enemies in range
+ * - flee: run from enemies when in range
+ * - protect: hold position but fight if enemies approach
+ * - hold: do not move or fight automatically
+ */
+export const EngagementRule = trait({
+	value: "attack" as "attack" | "flee" | "protect" | "hold",
+});
+
+/** Marks a unit as currently being hacked (target-side state) */
+export const HackTarget = trait({
+	/** EntityId of the unit performing the hack */
+	hackerEntityId: "",
+	/** Progress 0..1 */
+	progress: 0,
+});
+
+/** Marks a unit as currently hacking something (hacker-side state) */
+export const Hacking = trait({
+	/** EntityId of the target being hacked */
+	targetEntityId: "",
+});

@@ -126,3 +126,67 @@ export function selectEntity(entity: Entity) {
 		entity.set(BuildingTrait, { selected: true });
 	}
 }
+
+/** Additively select an entity without deselecting others. */
+export function addToSelection(entity: Entity) {
+	if (entity.has(Unit)) {
+		entity.set(Unit, { selected: true });
+	} else if (entity.has(BuildingTrait)) {
+		entity.set(BuildingTrait, { selected: true });
+	}
+}
+
+/** Get all currently selected entities. */
+export function getSelectedEntities(): Entity[] {
+	const result: Entity[] = [];
+	for (const entity of world.query(Unit)) {
+		if (entity.get(Unit)!.selected) result.push(entity);
+	}
+	for (const entity of world.query(BuildingTrait)) {
+		if (entity.get(BuildingTrait)!.selected) result.push(entity);
+	}
+	return result;
+}
+
+/**
+ * Select all player units whose display-space position falls within
+ * the rectangle defined by two corners (in world XZ coordinates).
+ * Deselects all first, then selects units inside the box.
+ * Returns the number of units selected.
+ */
+export function boxSelect(
+	x1: number,
+	z1: number,
+	x2: number,
+	z2: number,
+): number {
+	const minX = Math.min(x1, x2);
+	const maxX = Math.max(x1, x2);
+	const minZ = Math.min(z1, z2);
+	const maxZ = Math.max(z1, z2);
+
+	deselectAll();
+	let count = 0;
+
+	for (const entity of world.query(Position, Unit, Fragment)) {
+		const pos = entity.get(Position)!;
+		const frag = getFragment(entity.get(Fragment)?.fragmentId ?? "");
+		const ox = frag?.displayOffset.x ?? 0;
+		const oz = frag?.displayOffset.z ?? 0;
+
+		const displayX = pos.x + ox;
+		const displayZ = pos.z + oz;
+
+		if (
+			displayX >= minX &&
+			displayX <= maxX &&
+			displayZ >= minZ &&
+			displayZ <= maxZ
+		) {
+			entity.set(Unit, { selected: true });
+			count++;
+		}
+	}
+
+	return count;
+}

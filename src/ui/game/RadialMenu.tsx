@@ -13,7 +13,7 @@ import {
 	ROBOT_DEFS,
 	type RobotType,
 } from "../../config/robotDefs";
-import { Position, ScavengeSite, Unit } from "../../ecs/traits";
+import { EngagementRule, Position, ScavengeSite, Unit } from "../../ecs/traits";
 import { world } from "../../ecs/world";
 import { canUpgrade, performUpgrade } from "../../systems/upgrade";
 
@@ -76,6 +76,23 @@ function getActions(entity: Entity, onClose: () => void): MenuAction[] {
 					: "Max mark reached",
 			onClick: () => {
 				performUpgrade(entity);
+				onClose();
+			},
+		});
+	}
+
+	// Engagement rule cycle
+	if (entity.has(EngagementRule)) {
+		const current = entity.get(EngagementRule)!.value;
+		const rules = ["attack", "flee", "protect", "hold"] as const;
+		const nextIdx = (rules.indexOf(current) + 1) % rules.length;
+		const next = rules[nextIdx];
+		actions.push({
+			label: `STANCE: ${current.toUpperCase()}`,
+			enabled: true,
+			tooltip: `Click to switch to ${next}`,
+			onClick: () => {
+				entity.set(EngagementRule, { value: next });
 				onClose();
 			},
 		});

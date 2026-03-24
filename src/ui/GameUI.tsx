@@ -7,9 +7,19 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { getMasterVolume, setMasterVolume } from "../audio";
 import { BUILDING_DEFS, BUILDING_TYPES } from "../config/buildingDefs";
 import { getTemperatureTier } from "../config/humanEncounterDefs";
+import {
+	isPersistenceAvailable,
+	listSaves,
+	loadGame,
+	saveGame,
+} from "../db/persistence";
+import type { GameSummary } from "../db/types";
 import { getCityBuildings } from "../ecs/cityLayout";
 import {
+	getElapsedTicks,
+	getGameConfig,
 	getGameSpeed,
+	getRawGameSpeed,
 	getSnapshot,
 	isPaused,
 	setGameSpeed,
@@ -38,18 +48,6 @@ import {
 import { RECIPES, startFabrication } from "../systems/fabrication";
 import { startRepair } from "../systems/repair";
 import { getScavengePoints } from "../systems/resources";
-import {
-	getElapsedTicks,
-	getGameConfig,
-	getRawGameSpeed,
-} from "../ecs/gameState";
-import {
-	isPersistenceAvailable,
-	listSaves,
-	loadGame,
-	saveGame,
-} from "../db/persistence";
-import type { GameSummary } from "../db/types";
 import { RadialMenu } from "./game/RadialMenu";
 
 function ComponentStatus({ comp }: { comp: UnitComponent }) {
@@ -894,7 +892,8 @@ function ScavengeIndicator({
 				/>
 				{isIdle ? "SCAVENGING" : "RESOURCE NEARBY"}
 				<span style={{ color: `${color}88`, fontSize: "10px" }}>
-					{nearestType.replace(/([A-Z])/g, " $1").trim()} ({nearestRemaining} left)
+					{nearestType.replace(/([A-Z])/g, " $1").trim()} ({nearestRemaining}{" "}
+					left)
 				</span>
 			</div>
 		</div>
@@ -1256,7 +1255,11 @@ export function GameUI() {
 					)}
 
 					{unitFaction === "player" && unitPos && (
-						<ScavengeIndicator x={unitPos.x} z={unitPos.z} isIdle={!selectedUnit.get(Navigation)?.moving} />
+						<ScavengeIndicator
+							x={unitPos.x}
+							z={unitPos.z}
+							isIdle={!selectedUnit.get(Navigation)?.moving}
+						/>
 					)}
 
 					{unitData.unitType === "fabrication_unit" && unitBuilding && (

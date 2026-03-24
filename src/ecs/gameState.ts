@@ -33,8 +33,8 @@ import {
 	popPhaseTransitionId,
 } from "../systems/gamePhases";
 import {
-	type HackEvent,
 	getLastHackEvents,
+	type HackEvent,
 	hackingSystem,
 } from "../systems/hacking";
 import {

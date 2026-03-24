@@ -8,11 +8,7 @@
  * Both paths also deposit into the global ResourcePool.
  */
 
-import {
-	MATERIALS,
-	type MaterialId,
-	pickMaterialByWeight,
-} from "../config/materials";
+import { MATERIALS, pickMaterialByWeight } from "../config/materials";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import {
 	Faction,

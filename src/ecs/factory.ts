@@ -3,6 +3,7 @@
  */
 
 import type { Entity } from "koota";
+import { BUILDING_DEFS } from "../config/buildingDefs";
 import type { CultMechType } from "../config/cultDefs";
 import { CULT_MECH_DEFS } from "../config/cultDefs";
 import {
@@ -16,6 +17,7 @@ import {
 	EntityId,
 	Faction,
 	Fragment,
+	Inventory,
 	LightningRod,
 	Navigation,
 	Position,
@@ -70,6 +72,7 @@ export function spawnUnit(options: {
 		Unit({ unitType: type, displayName, speed, selected: false }),
 		UnitComponents({ componentsJson: serializeComponents(components) }),
 		Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+		Inventory({ inventoryJson: "{}" }),
 	);
 }
 
@@ -155,6 +158,62 @@ export function spawnLightningRod(options: {
 			rodCapacity: 10,
 			currentOutput: 7,
 			protectionRadius: 8,
+		}),
+	);
+}
+
+/**
+ * Spawn a generic building at a world position.
+ * Uses building definitions from config/buildingDefs.ts.
+ * For lightning rods and fabrication units, delegates to their specialized spawn functions.
+ * For other building types, creates a building-only entity.
+ */
+export function spawnBuilding(options: {
+	x: number;
+	z: number;
+	fragmentId: string;
+	buildingType: string;
+	powered?: boolean;
+}): Entity {
+	const { x, z, fragmentId, buildingType } = options;
+
+	// Delegate to specialized spawners for types that have extra traits
+	if (buildingType === "lightning_rod") {
+		return spawnLightningRod({ x, z, fragmentId });
+	}
+	if (buildingType === "fabrication_unit") {
+		return spawnFabricationUnit({
+			x,
+			z,
+			fragmentId,
+			powered: options.powered,
+		});
+	}
+
+	// Generic building spawn
+	const fragment = getFragment(fragmentId);
+	if (!fragment) throw new Error(`Fragment ${fragmentId} not found`);
+
+	const y = getTerrainHeight(x, z);
+	const id = `bldg_${nextEntityId++}`;
+	const powered = options.powered ?? false;
+
+	const def = BUILDING_DEFS[buildingType];
+	const componentsJson = def
+		? serializeComponents(def.defaultComponents)
+		: "[]";
+
+	return world.spawn(
+		EntityId({ value: id }),
+		Position({ x, y, z }),
+		Faction({ value: "player" }),
+		Fragment({ fragmentId }),
+		BuildingTrait({
+			buildingType,
+			powered,
+			operational: powered,
+			selected: false,
+			buildingComponentsJson: componentsJson,
 		}),
 	);
 }

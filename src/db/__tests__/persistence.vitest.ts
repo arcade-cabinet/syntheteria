@@ -399,15 +399,17 @@ describe("persistence round-trip", () => {
 		await repo.saveResources(gameId, {
 			gameId,
 			scrapMetal: 15,
-			eWaste: 8,
-			intactComponents: 3,
+			circuitry: 8,
+			powerCells: 3,
+			durasteel: 2,
 		});
 
 		const loaded = await repo.loadResources(gameId);
 		expect(loaded).not.toBeNull();
 		expect(loaded!.scrapMetal).toBe(15);
-		expect(loaded!.eWaste).toBe(8);
-		expect(loaded!.intactComponents).toBe(3);
+		expect(loaded!.circuitry).toBe(8);
+		expect(loaded!.powerCells).toBe(3);
+		expect(loaded!.durasteel).toBe(2);
 	});
 
 	it("scavenge points round-trip through repo", async () => {
@@ -428,7 +430,7 @@ describe("persistence round-trip", () => {
 				x: 20.1,
 				z: 15.8,
 				remaining: 0,
-				resourceType: "eWaste",
+				resourceType: "circuitry",
 				amountPerScavenge: 1,
 			},
 		]);

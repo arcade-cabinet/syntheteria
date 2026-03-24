@@ -341,4 +341,17 @@ describe("edge cases", () => {
 		const board = generateLabyrinth(config);
 		expect(board.config).toBe(config);
 	});
+
+	it("cultDensity in BoardConfig overrides default", () => {
+		const config: BoardConfig = {
+			...makeConfig(48, 48, "cult-override"),
+			cultDensity: 2,
+		};
+		const board = generateLabyrinth(config);
+		expect(board.config.cultDensity).toBe(2);
+
+		const rooms = generateRooms(48, 48, "cult-override", 2);
+		const cultRooms = rooms.filter((r) => r.kind === "cult_poi");
+		expect(cultRooms.length).toBe(2);
+	});
 });

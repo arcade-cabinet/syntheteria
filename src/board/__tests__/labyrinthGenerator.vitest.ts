@@ -135,16 +135,16 @@ describe("board structure", () => {
 // ---------------------------------------------------------------------------
 
 describe("player start", () => {
-	it("center tile is always passable ground", () => {
+	it("player start tile is always passable ground", () => {
 		for (const seed of ["start-a", "start-b", "start-c"]) {
 			const board = generateBoard(makeConfig(seed));
 			const cx = Math.floor(32 / 2);
-			const cz = Math.floor(32 / 2);
-			const center = board.tiles[cz]![cx]!;
+			const cz = Math.floor(32 * 0.65);
+			const start = board.tiles[cz]![cx]!;
 
-			expect(center.passable).toBe(true);
-			expect(center.elevation).toBe(0);
-			expect(center.floorType).toBe("durasteel_span");
+			expect(start.passable).toBe(true);
+			expect(start.elevation).toBe(0);
+			expect(start.floorType).toBe("durasteel_span");
 		}
 	});
 });

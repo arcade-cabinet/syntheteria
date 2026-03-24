@@ -129,10 +129,10 @@ describe("Phase 7: multi-level platforms", () => {
 		}
 	});
 
-	it("player start center tile remains at elevation 0", () => {
+	it("player start tile remains at elevation 0", () => {
 		const board = generateBoard(makeConfig("center-safe", 44));
 		const cx = Math.floor(44 / 2);
-		const cz = Math.floor(44 / 2);
+		const cz = Math.floor(44 * 0.65);
 		const center = board.tiles[cz]![cx]!;
 		expect(center.elevation).toBe(0);
 		expect(center.passable).toBe(true);

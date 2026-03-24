@@ -1,30 +1,21 @@
 /**
- * Procedural city layout generator — circuit-board labyrinth style.
+ * City layout — backed by the labyrinth generator.
  *
- * Instead of isolated buildings, the city is composed of elongated
- * interconnected walls forming a labyrinth. The layout resembles
- * a giant circuit board when viewed from above: long corridors,
- * right-angle turns, T-junctions, and dead ends.
+ * Replaces the old procedural circuit-board generator. The labyrinth
+ * pipeline produces a tile grid (TileData[][]); this module converts
+ * non-passable tiles into CityBuilding objects for the renderer and
+ * provides collision/query functions used by navmesh, enemies, etc.
  *
- * Building types now represent wall segments and nodes:
- * - "conduit" — long narrow wall segments (traces on a circuit board)
- * - "node" — wider junction blocks where corridors meet (IC pads)
- * - "tower" — tall antenna/pylon structures at key junctions
- * - "ruin" — broken/collapsed wall segments with gaps
- * - "wall" — perimeter walls enclosing the city
- *
- * The layout is deterministic (seeded) so navmesh and rendering agree.
- * Buildings are stored as axis-aligned rectangles in world space.
+ * Call initCityLayout(config) once at world init to generate the board.
+ * After that, getCityBuildings() and the query functions work as before.
  */
 
-// Seeded PRNG for deterministic city generation
-function seededRandom(seed: number): () => number {
-	let s = seed;
-	return () => {
-		s = (s * 1103515245 + 12345) & 0x7fffffff;
-		return s / 0x7fffffff;
-	};
-}
+import { TILE_SIZE_M } from "../board/grid";
+import { generateRooms, type Room } from "../board/labyrinth";
+import { generateLabyrinthBoard } from "../board/labyrinthGenerator";
+import type { BoardConfig, GeneratedBoard, TileData } from "../board/types";
+
+// ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface CityBuilding {
 	/** World-space center */
@@ -39,350 +30,240 @@ export interface CityBuilding {
 	type: "conduit" | "node" | "tower" | "ruin" | "wall";
 }
 
+// ─── State ──────────────────────────────────────────────────────────────────
+
+let cachedBoard: GeneratedBoard | null = null;
+let cachedRooms: Room[] | null = null;
 let cachedBuildings: CityBuilding[] | null = null;
+let boardWidth = 0;
+let boardHeight = 0;
+
+// ─── Initialization ─────────────────────────────────────────────────────────
 
 /**
- * City area bounds — the labyrinth fills this region.
- * Open terrain beyond for future areas (coast, campus, etc.)
+ * Initialize the city layout by running the labyrinth generator.
+ * Must be called once before getCityBuildings() or query functions.
  */
-const CITY_MIN_X = -30;
-const CITY_MAX_X = 50;
-const CITY_MIN_Z = -20;
-const CITY_MAX_Z = 50;
-
-/** Check if a point is inside the city bounds */
-export function isInsideCityBounds(x: number, z: number): boolean {
-	return (
-		x >= CITY_MIN_X && x <= CITY_MAX_X && z >= CITY_MIN_Z && z <= CITY_MAX_Z
+export function initCityLayout(config: BoardConfig): GeneratedBoard {
+	cachedBoard = generateLabyrinthBoard(config);
+	cachedRooms = generateRooms(
+		config.width,
+		config.height,
+		config.seed,
+		config.cultDensity,
 	);
+	cachedBuildings = null; // will be built lazily
+	boardWidth = config.width;
+	boardHeight = config.height;
+	return cachedBoard;
 }
+
+/**
+ * Get the generated board. Throws if initCityLayout hasn't been called.
+ */
+export function getBoard(): GeneratedBoard {
+	if (!cachedBoard) {
+		throw new Error("City layout not initialized — call initCityLayout first");
+	}
+	return cachedBoard;
+}
+
+/**
+ * Get the generated rooms. Throws if initCityLayout hasn't been called.
+ */
+export function getRooms(): Room[] {
+	if (!cachedRooms) {
+		throw new Error("City layout not initialized — call initCityLayout first");
+	}
+	return cachedRooms;
+}
+
+// ─── Tile ↔ World Coordinate Conversion ──────────────────────────────────────
+
+function tileToWorld(tileX: number, tileZ: number): { x: number; z: number } {
+	return {
+		x: tileX * TILE_SIZE_M + TILE_SIZE_M / 2,
+		z: tileZ * TILE_SIZE_M + TILE_SIZE_M / 2,
+	};
+}
+
+function worldToTile(wx: number, wz: number): { x: number; z: number } | null {
+	const x = Math.floor(wx / TILE_SIZE_M);
+	const z = Math.floor(wz / TILE_SIZE_M);
+	if (x < 0 || x >= boardWidth || z < 0 || z >= boardHeight) return null;
+	return { x, z };
+}
+
+// ─── Building Generation from Tile Grid ──────────────────────────────────────
+
+/**
+ * Wall height varies by floor type for visual variety.
+ * structural_mass = tall solid walls, other impassable types shorter.
+ */
+function wallHeight(tile: TileData, hashSeed: number): number {
+	const base =
+		tile.floorType === "structural_mass"
+			? 3.5
+			: tile.floorType === "void_pit"
+				? 0.5
+				: 2.5;
+	// Deterministic variation based on position
+	const variation =
+		Math.abs(Math.sin(tile.x * 7.3 + tile.z * 3.1 + hashSeed)) * 1.5;
+	return base + variation;
+}
+
+/**
+ * Convert non-passable tiles into CityBuilding objects.
+ * Each non-passable tile becomes one building block.
+ * Adjacent tiles of the same type could be merged for perf,
+ * but 1:1 is simpler and the instance count is manageable for typical board sizes.
+ */
+function buildCityBuildingsFromTiles(board: GeneratedBoard): CityBuilding[] {
+	const { width, height } = board.config;
+	const tiles = board.tiles;
+	const buildings: CityBuilding[] = [];
+	const halfTile = TILE_SIZE_M / 2;
+
+	for (let z = 0; z < height; z++) {
+		for (let x = 0; x < width; x++) {
+			const tile = tiles[z]![x]!;
+			if (tile.passable) continue; // only walls become buildings
+
+			const { x: wx, z: wz } = tileToWorld(x, z);
+			const h = wallHeight(tile, 42.7);
+
+			// Classify building type based on context
+			let type: CityBuilding["type"];
+			if (tile.floorType === "void_pit") {
+				type = "ruin";
+			} else if (tile.elevation >= 2) {
+				type = "tower";
+			} else if (isBorderTile(x, z, width, height)) {
+				type = "wall";
+			} else {
+				// Check if this is a junction (walls on 3+ sides) → node,
+				// otherwise a conduit
+				const adjacentWalls = countAdjacentWalls(tiles, x, z, width, height);
+				type = adjacentWalls >= 3 ? "node" : "conduit";
+			}
+
+			buildings.push({
+				x: wx,
+				z: wz,
+				halfW: halfTile,
+				halfD: halfTile,
+				height: h,
+				type,
+			});
+		}
+	}
+
+	return buildings;
+}
+
+function isBorderTile(
+	x: number,
+	z: number,
+	width: number,
+	height: number,
+): boolean {
+	return x === 0 || z === 0 || x === width - 1 || z === height - 1;
+}
+
+function countAdjacentWalls(
+	tiles: TileData[][],
+	x: number,
+	z: number,
+	width: number,
+	height: number,
+): number {
+	let count = 0;
+	if (x > 0 && !tiles[z]![x - 1]!.passable) count++;
+	if (x < width - 1 && !tiles[z]![x + 1]!.passable) count++;
+	if (z > 0 && !tiles[z - 1]![x]!.passable) count++;
+	if (z < height - 1 && !tiles[z + 1]![x]!.passable) count++;
+	return count;
+}
+
+// ─── Public API ─────────────────────────────────────────────────────────────
 
 export function getCityBuildings(): CityBuilding[] {
 	if (cachedBuildings) return cachedBuildings;
 
-	const rng = seededRandom(42);
-	const buildings: CityBuilding[] = [];
-
-	// --- Circuit-board labyrinth generation ---
-	// We generate a maze-like structure using a grid of corridors.
-	// Primary corridors run N-S and E-W at regular intervals.
-	// Secondary corridors connect them, creating the labyrinth.
-	// Junctions become "nodes" (wider blocks like IC pads).
-
-	const CORRIDOR_SPACING = 8; // distance between primary corridors
-	const WALL_THICKNESS = 0.6; // half-width of corridor walls
-	const WALL_HEIGHT_MIN = 3;
-	const WALL_HEIGHT_MAX = 5;
-	const NODE_SIZE = 1.5; // half-extent of junction nodes
-
-	// Spawn area clearance (5,10) to (20,18) — keep navigable
-	const isSpawnArea = (x: number, z: number) =>
-		x > 2 && x < 23 && z > 7 && z < 21;
-
-	// --- Primary N-S corridors (vertical traces) ---
-	for (let x = CITY_MIN_X + 4; x < CITY_MAX_X - 4; x += CORRIDOR_SPACING) {
-		const xOff = (rng() - 0.5) * 1.5; // slight offset for organic feel
-		const corridorX = x + xOff;
-
-		// Break corridor into segments between cross-corridors
-		for (let z = CITY_MIN_Z + 4; z < CITY_MAX_Z - 8; z += CORRIDOR_SPACING) {
-			const zOff = (rng() - 0.5) * 1.0;
-			const segStart = z + zOff;
-			const segEnd = segStart + CORRIDOR_SPACING - 1;
-
-			// Skip segments that overlap spawn area
-			if (isSpawnArea(corridorX, (segStart + segEnd) / 2)) {
-				// Place a shorter ruin segment at the edge instead
-				if (rng() < 0.4) {
-					const ruinLen = 1.5 + rng() * 2;
-					buildings.push({
-						x: corridorX,
-						z: segStart + ruinLen / 2,
-						halfW: WALL_THICKNESS,
-						halfD: ruinLen / 2,
-						height: 1.5 + rng() * 1.5,
-						type: "ruin",
-					});
-				}
-				continue;
-			}
-
-			// Randomly break some segments (creates passages)
-			if (rng() < 0.15) continue;
-
-			// Sometimes split into two segments with a gap (doorway)
-			if (rng() < 0.25) {
-				const gapPos = segStart + (segEnd - segStart) * (0.3 + rng() * 0.4);
-				const gapSize = 1.5 + rng() * 1.5;
-				const seg1Len = gapPos - gapSize / 2 - segStart;
-				const seg2Len = segEnd - (gapPos + gapSize / 2);
-				const h = WALL_HEIGHT_MIN + rng() * (WALL_HEIGHT_MAX - WALL_HEIGHT_MIN);
-
-				if (seg1Len > 1) {
-					buildings.push({
-						x: corridorX,
-						z: segStart + seg1Len / 2,
-						halfW: WALL_THICKNESS,
-						halfD: seg1Len / 2,
-						height: h,
-						type: "conduit",
-					});
-				}
-				if (seg2Len > 1) {
-					buildings.push({
-						x: corridorX,
-						z: segEnd - seg2Len / 2,
-						halfW: WALL_THICKNESS,
-						halfD: seg2Len / 2,
-						height: h,
-						type: "conduit",
-					});
-				}
-				continue;
-			}
-
-			const segLen = segEnd - segStart;
-			const height =
-				WALL_HEIGHT_MIN + rng() * (WALL_HEIGHT_MAX - WALL_HEIGHT_MIN);
-			const isRuin = rng() < 0.12;
-
-			buildings.push({
-				x: corridorX,
-				z: (segStart + segEnd) / 2,
-				halfW: WALL_THICKNESS,
-				halfD: segLen / 2,
-				height: isRuin ? height * 0.5 : height,
-				type: isRuin ? "ruin" : "conduit",
-			});
-		}
+	if (!cachedBoard) {
+		// Fallback: generate with default config if not initialized
+		// This preserves backwards compatibility with code that calls
+		// getCityBuildings() before initCityLayout()
+		initCityLayout({
+			width: 48,
+			height: 48,
+			seed: "default",
+			difficulty: "normal",
+		});
 	}
 
-	// --- Primary E-W corridors (horizontal traces) ---
-	for (let z = CITY_MIN_Z + 4; z < CITY_MAX_Z - 4; z += CORRIDOR_SPACING) {
-		const zOff = (rng() - 0.5) * 1.5;
-		const corridorZ = z + zOff;
-
-		for (let x = CITY_MIN_X + 4; x < CITY_MAX_X - 8; x += CORRIDOR_SPACING) {
-			const xOff = (rng() - 0.5) * 1.0;
-			const segStart = x + xOff;
-			const segEnd = segStart + CORRIDOR_SPACING - 1;
-
-			if (isSpawnArea((segStart + segEnd) / 2, corridorZ)) {
-				if (rng() < 0.4) {
-					const ruinLen = 1.5 + rng() * 2;
-					buildings.push({
-						x: segStart + ruinLen / 2,
-						z: corridorZ,
-						halfW: ruinLen / 2,
-						halfD: WALL_THICKNESS,
-						height: 1.5 + rng() * 1.5,
-						type: "ruin",
-					});
-				}
-				continue;
-			}
-
-			if (rng() < 0.15) continue;
-
-			if (rng() < 0.25) {
-				const gapPos = segStart + (segEnd - segStart) * (0.3 + rng() * 0.4);
-				const gapSize = 1.5 + rng() * 1.5;
-				const seg1Len = gapPos - gapSize / 2 - segStart;
-				const seg2Len = segEnd - (gapPos + gapSize / 2);
-				const h = WALL_HEIGHT_MIN + rng() * (WALL_HEIGHT_MAX - WALL_HEIGHT_MIN);
-
-				if (seg1Len > 1) {
-					buildings.push({
-						x: segStart + seg1Len / 2,
-						z: corridorZ,
-						halfW: seg1Len / 2,
-						halfD: WALL_THICKNESS,
-						height: h,
-						type: "conduit",
-					});
-				}
-				if (seg2Len > 1) {
-					buildings.push({
-						x: segEnd - seg2Len / 2,
-						z: corridorZ,
-						halfW: seg2Len / 2,
-						halfD: WALL_THICKNESS,
-						height: h,
-						type: "conduit",
-					});
-				}
-				continue;
-			}
-
-			const segLen = segEnd - segStart;
-			const height =
-				WALL_HEIGHT_MIN + rng() * (WALL_HEIGHT_MAX - WALL_HEIGHT_MIN);
-			const isRuin = rng() < 0.12;
-
-			buildings.push({
-				x: (segStart + segEnd) / 2,
-				z: corridorZ,
-				halfW: segLen / 2,
-				halfD: WALL_THICKNESS,
-				height: isRuin ? height * 0.5 : height,
-				type: isRuin ? "ruin" : "conduit",
-			});
-		}
-	}
-
-	// --- Junction nodes (IC pads) at corridor intersections ---
-	for (let x = CITY_MIN_X + 4; x < CITY_MAX_X - 4; x += CORRIDOR_SPACING) {
-		for (let z = CITY_MIN_Z + 4; z < CITY_MAX_Z - 4; z += CORRIDOR_SPACING) {
-			if (isSpawnArea(x, z)) continue;
-			if (rng() < 0.25) continue; // skip some junctions for variety
-
-			const isTower = rng() < 0.15;
-			const nodeHeight = isTower ? 6 + rng() * 5 : WALL_HEIGHT_MIN + rng() * 2;
-
-			buildings.push({
-				x: x + (rng() - 0.5) * 1.5,
-				z: z + (rng() - 0.5) * 1.5,
-				halfW: isTower ? 0.8 : NODE_SIZE,
-				halfD: isTower ? 0.8 : NODE_SIZE,
-				height: nodeHeight,
-				type: isTower ? "tower" : "node",
-			});
-		}
-	}
-
-	// --- Secondary diagonal/offset connectors (makes it more labyrinthine) ---
-	for (let x = CITY_MIN_X + 8; x < CITY_MAX_X - 8; x += CORRIDOR_SPACING * 2) {
-		for (
-			let z = CITY_MIN_Z + 8;
-			z < CITY_MAX_Z - 8;
-			z += CORRIDOR_SPACING * 2
-		) {
-			if (isSpawnArea(x + CORRIDOR_SPACING / 2, z + CORRIDOR_SPACING / 2))
-				continue;
-			if (rng() < 0.5) continue;
-
-			const offX = CORRIDOR_SPACING / 2 + (rng() - 0.5) * 2;
-			const offZ = CORRIDOR_SPACING / 2 + (rng() - 0.5) * 2;
-			const cx = x + offX;
-			const cz = z + offZ;
-
-			// Short connecting wall segment
-			const isHorizontal = rng() < 0.5;
-			const len = 2 + rng() * 3;
-			const h = WALL_HEIGHT_MIN + rng() * 1.5;
-
-			buildings.push({
-				x: cx,
-				z: cz,
-				halfW: isHorizontal ? len / 2 : WALL_THICKNESS,
-				halfD: isHorizontal ? WALL_THICKNESS : len / 2,
-				height: h,
-				type: rng() < 0.2 ? "ruin" : "conduit",
-			});
-		}
-	}
-
-	// --- Perimeter walls ---
-	addPerimeterStructures(buildings, rng);
-
-	cachedBuildings = buildings;
-	return buildings;
+	cachedBuildings = buildCityBuildingsFromTiles(cachedBoard!);
+	return cachedBuildings;
 }
 
-function addPerimeterStructures(buildings: CityBuilding[], rng: () => number) {
-	// Segmented perimeter walls that look like PCB edge traces
-	const SEGMENT_LEN = 8;
-	const GAP_CHANCE = 0.2;
-
-	// North wall
-	for (let x = CITY_MIN_X; x < CITY_MAX_X; x += SEGMENT_LEN) {
-		if (rng() < GAP_CHANCE) continue;
-		buildings.push({
-			x: x + SEGMENT_LEN / 2,
-			z: CITY_MAX_Z + 2,
-			halfW: SEGMENT_LEN / 2 - 0.3,
-			halfD: 1.0,
-			height: 3 + rng() * 2,
-			type: "wall",
-		});
-	}
-
-	// South wall
-	for (let x = CITY_MIN_X; x < CITY_MAX_X; x += SEGMENT_LEN) {
-		if (rng() < GAP_CHANCE) continue;
-		buildings.push({
-			x: x + SEGMENT_LEN / 2,
-			z: CITY_MIN_Z - 2,
-			halfW: SEGMENT_LEN / 2 - 0.3,
-			halfD: 1.0,
-			height: 3 + rng() * 2,
-			type: "wall",
-		});
-	}
-
-	// West wall
-	for (let z = CITY_MIN_Z; z < CITY_MAX_Z; z += SEGMENT_LEN) {
-		if (rng() < GAP_CHANCE) continue;
-		buildings.push({
-			x: CITY_MIN_X - 2,
-			z: z + SEGMENT_LEN / 2,
-			halfW: 1.0,
-			halfD: SEGMENT_LEN / 2 - 0.3,
-			height: 3 + rng() * 2,
-			type: "wall",
-		});
-	}
-
-	// East wall
-	for (let z = CITY_MIN_Z; z < CITY_MAX_Z; z += SEGMENT_LEN) {
-		if (rng() < GAP_CHANCE) continue;
-		buildings.push({
-			x: CITY_MAX_X + 2,
-			z: z + SEGMENT_LEN / 2,
-			halfW: 1.0,
-			halfD: SEGMENT_LEN / 2 - 0.3,
-			height: 3 + rng() * 2,
-			type: "wall",
-		});
-	}
+/**
+ * Check if a point is inside the city bounds (the labyrinth board area).
+ */
+export function isInsideCityBounds(x: number, z: number): boolean {
+	const maxX = boardWidth * TILE_SIZE_M;
+	const maxZ = boardHeight * TILE_SIZE_M;
+	return x >= 0 && x < maxX && z >= 0 && z < maxZ;
 }
 
 /**
  * Check if a world position is inside any building footprint.
- * Used by navmesh to mark cells as unwalkable.
+ * Uses the tile grid directly — a position is "inside a building"
+ * if the tile at that position is non-passable.
  */
 export function isInsideBuilding(x: number, z: number): boolean {
-	const buildings = getCityBuildings();
-	for (const b of buildings) {
-		if (
-			x >= b.x - b.halfW &&
-			x <= b.x + b.halfW &&
-			z >= b.z - b.halfD &&
-			z <= b.z + b.halfD
-		) {
-			return true;
-		}
+	if (!cachedBoard) return false;
+	const tile = worldToTile(x, z);
+	if (!tile) return false;
+	return !cachedBoard.tiles[tile.z]![tile.x]!.passable;
+}
+
+/**
+ * Check if a world position is near a building edge (for movement cost increase).
+ * Returns true if any of the 4 neighbor tiles is non-passable while
+ * the current tile is passable.
+ */
+export function nearBuildingEdge(x: number, z: number, _margin = 0.5): boolean {
+	if (!cachedBoard) return false;
+	const tile = worldToTile(x, z);
+	if (!tile) return false;
+
+	const currentTile = cachedBoard.tiles[tile.z]![tile.x]!;
+	if (!currentTile.passable) return false; // Inside a wall, not "near edge"
+
+	// Check cardinal neighbors
+	const dirs = [
+		[0, -1],
+		[0, 1],
+		[-1, 0],
+		[1, 0],
+	] as const;
+	for (const [dx, dz] of dirs) {
+		const nx = tile.x + dx;
+		const nz = tile.z + dz;
+		if (nx < 0 || nx >= boardWidth || nz < 0 || nz >= boardHeight) continue;
+		if (!cachedBoard.tiles[nz]![nx]!.passable) return true;
 	}
 	return false;
 }
 
 /**
- * Check if a world position is near a building edge (for movement cost increase).
+ * Reset cached state. Called on new game.
  */
-export function nearBuildingEdge(
-	x: number,
-	z: number,
-	margin: number = 0.5,
-): boolean {
-	const buildings = getCityBuildings();
-	for (const b of buildings) {
-		const nearX = x >= b.x - b.halfW - margin && x <= b.x + b.halfW + margin;
-		const nearZ = z >= b.z - b.halfD - margin && z <= b.z + b.halfD + margin;
-		if (nearX && nearZ) {
-			const insideX = x >= b.x - b.halfW && x <= b.x + b.halfW;
-			const insideZ = z >= b.z - b.halfD && z <= b.z + b.halfD;
-			if (!insideX || !insideZ) return true; // Near edge but not inside
-		}
-	}
-	return false;
+export function resetCityLayout(): void {
+	cachedBoard = null;
+	cachedRooms = null;
+	cachedBuildings = null;
+	boardWidth = 0;
+	boardHeight = 0;
 }

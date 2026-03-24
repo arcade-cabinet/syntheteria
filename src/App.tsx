@@ -13,7 +13,6 @@ import {
 	stopMusic,
 } from "./audio";
 import { INTRO_SEQUENCE } from "./config/narrativeDefs";
-import { getCityBuildings } from "./ecs/cityLayout";
 import {
 	spawnFabricationUnit,
 	spawnLightningRod,

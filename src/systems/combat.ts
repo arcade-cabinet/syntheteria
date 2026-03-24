@@ -5,12 +5,14 @@
  * Damage breaks random components rather than reducing HP.
  * A unit with all components broken is destroyed.
  *
- * Units with functional arms deal more damage.
- * Units without legs can't fight (immobile = vulnerable).
+ * Damage uses attackPower (from robotDefs mark tiers) and
+ * durability (target's defense multiplier) to compute hit chance.
+ * Units with functional arms get a bonus.
  */
 
 import type { Entity } from "koota";
 import { playSfx } from "../audio";
+import { getMarkTier } from "../config/robotDefs";
 import {
 	EntityId,
 	Faction,
@@ -31,6 +33,11 @@ import { addResource } from "./resources";
 const MELEE_RANGE = 2.5;
 const ATTACK_CHANCE = 0.4; // chance per tick when in range
 
+/** Base hit chance before attackPower/durability modifiers */
+const BASE_HIT_CHANCE = 0.35;
+/** Bonus hit chance when attacker has functional arms */
+const ARMS_BONUS = 0.15;
+
 export interface CombatEvent {
 	attackerId: string;
 	targetId: string;
@@ -45,12 +52,56 @@ export function getLastCombatEvents(): CombatEvent[] {
 }
 
 /**
+ * Get the attackPower for a unit.
+ * Player units use robotDefs mark tiers; cult/feral mechs get defaults.
+ */
+export function getAttackPower(entity: Entity): number {
+	const unit = entity.get(Unit);
+	if (!unit) return 1.0;
+	const tier = getMarkTier(unit.unitType, unit.mark);
+	if (tier) return tier.stats.attackPower;
+	// Cult/feral mechs without mark definitions default to 1.0
+	return 1.0;
+}
+
+/**
+ * Get the durability for a unit.
+ * Player units use robotDefs mark tiers; cult/feral mechs get defaults.
+ */
+export function getDurability(entity: Entity): number {
+	const unit = entity.get(Unit);
+	if (!unit) return 1.0;
+	const tier = getMarkTier(unit.unitType, unit.mark);
+	if (tier) return tier.stats.durability;
+	return 1.0;
+}
+
+/**
+ * Compute hit chance: base + arms bonus, scaled by attacker's attackPower,
+ * reduced by target's durability. Clamped to [0.05, 0.95].
+ */
+export function computeHitChance(
+	attackerComponents: UnitComponent[],
+	attackPower: number,
+	targetDurability: number,
+): number {
+	const base = hasArms(attackerComponents)
+		? BASE_HIT_CHANCE + ARMS_BONUS
+		: BASE_HIT_CHANCE;
+	const raw = (base * attackPower) / targetDurability;
+	return Math.max(0.05, Math.min(0.95, raw));
+}
+
+/**
  * Try to damage a random functional component on the target.
+ * Uses attackPower/durability to scale hit probability.
  * Returns the component name that was damaged, or null.
  */
-function dealDamage(
+export function dealDamage(
 	attackerComponents: UnitComponent[],
+	attackPower: number,
 	target: Entity,
+	rng: () => number = Math.random,
 ): string | null {
 	const targetComps = parseComponents(
 		target.get(UnitComponents)?.componentsJson,
@@ -58,13 +109,16 @@ function dealDamage(
 	const functionalParts = targetComps.filter((c) => c.functional);
 	if (functionalParts.length === 0) return null;
 
-	// Units with arms are more effective fighters
-	const hitChance = hasArms(attackerComponents) ? 0.6 : 0.3;
-	if (Math.random() > hitChance) return null;
+	const targetDurability = getDurability(target);
+	const hitChance = computeHitChance(
+		attackerComponents,
+		attackPower,
+		targetDurability,
+	);
+	if (rng() > hitChance) return null;
 
 	// Pick a random functional component to break
-	const victim =
-		functionalParts[Math.floor(Math.random() * functionalParts.length)];
+	const victim = functionalParts[Math.floor(rng() * functionalParts.length)];
 	victim.functional = false;
 
 	// Write back the updated components
@@ -115,6 +169,7 @@ export function combatSystem() {
 			attacker.get(UnitComponents)?.componentsJson,
 		);
 		if (!attackerComps.some((c) => c.functional)) continue;
+		const attackerPower = getAttackPower(attacker);
 
 		for (const target of allUnits) {
 			if (target.get(Faction)?.value !== "player") continue;
@@ -131,8 +186,8 @@ export function combatSystem() {
 			const attackerId = attacker.get(EntityId)?.value;
 			const targetId = target.get(EntityId)?.value;
 
-			// Feral attacks player
-			const damaged = dealDamage(attackerComps, target);
+			// Feral/cultist attacks player
+			const damaged = dealDamage(attackerComps, attackerPower, target);
 			if (damaged) {
 				playSfx("attack_hit");
 				const destroyed = isDestroyed(target);
@@ -153,7 +208,8 @@ export function combatSystem() {
 				target.get(UnitComponents)?.componentsJson,
 			);
 			if (targetComps.some((c) => c.functional)) {
-				const retDamaged = dealDamage(targetComps, attacker);
+				const targetPower = getAttackPower(target);
+				const retDamaged = dealDamage(targetComps, targetPower, attacker);
 				if (retDamaged) {
 					playSfx("attack_hit");
 					const retDestroyed = isDestroyed(attacker);

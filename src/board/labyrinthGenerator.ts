@@ -62,15 +62,16 @@ const SCATTER_RATE: Record<string, number> = {
 export function generateLabyrinthBoard(config: BoardConfig): GeneratedBoard {
 	const { width, height, seed } = config;
 	const centerX = Math.floor(width / 2);
-	const centerZ = Math.floor(height / 2);
+	const centerZ = Math.floor(height * 0.65);
 
 	// ── Phase 1: Room placement ─────────────────────────────────────────
 	// generateLabyrinth creates an all-solid grid and carves rooms into it.
 	const board = generateLabyrinth(config);
 	const tiles = board.tiles;
 
-	// Get room list for protected zones (faction starts)
-	const rooms = generateRooms(width, height, seed);
+	// Get room list for protected zones
+	const cultDensity = config.cultDensity;
+	const rooms = generateRooms(width, height, seed, cultDensity);
 
 	// ── Phase 2: Growing Tree maze fill ──────────────────────────────────
 	const mazeRng = seededRng(`${seed}_maze`);
@@ -86,9 +87,9 @@ export function generateLabyrinthBoard(config: BoardConfig): GeneratedBoard {
 	const climate = config.climateProfile ?? "temperate";
 	const waterLevel = CLIMATE_PROFILE_SPECS[climate].waterLevel;
 
-	// Protect faction start rooms from becoming abyssal
+	// Protect the player start room from becoming abyssal
 	const protectedZones: ProtectedZone[] = rooms
-		.filter((r) => r.kind === "faction_start")
+		.filter((r) => r.kind === "player_start")
 		.map((r) => ({ x: r.x, z: r.z, w: r.w, h: r.h }));
 
 	applyAbyssalZones(tiles, width, height, seed, waterLevel, protectedZones);

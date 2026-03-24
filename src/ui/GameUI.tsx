@@ -6,6 +6,7 @@ import type { Entity } from "koota";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { getMasterVolume, setMasterVolume } from "../audio";
 import { BUILDING_DEFS, BUILDING_TYPES } from "../config/buildingDefs";
+import { getTemperatureTier } from "../config/humanEncounterDefs";
 import {
 	getGameSpeed,
 	getSnapshot,
@@ -26,7 +27,6 @@ import {
 } from "../ecs/traits";
 import { parseComponents, type UnitComponent } from "../ecs/types";
 import { world } from "../ecs/world";
-import { getTemperatureTier } from "../config/humanEncounterDefs";
 import {
 	getActivePlacement,
 	type PlaceableType,

@@ -15,11 +15,31 @@ export default defineConfig({
 	projects: [
 		{
 			name: "chromium",
-			use: { ...devices["Desktop Chrome"] },
+			use: {
+				...devices["Desktop Chrome"],
+				launchOptions: {
+					args: [
+						"--use-gl=angle",
+						"--use-angle=swiftshader",
+						"--enable-unsafe-swiftshader",
+						"--disable-gpu-sandbox",
+					],
+				},
+			},
 		},
 		{
 			name: "mobile-chrome",
-			use: { ...devices["Pixel 7"] },
+			use: {
+				...devices["Pixel 7"],
+				launchOptions: {
+					args: [
+						"--use-gl=angle",
+						"--use-angle=swiftshader",
+						"--enable-unsafe-swiftshader",
+						"--disable-gpu-sandbox",
+					],
+				},
+			},
 		},
 	],
 	webServer: {

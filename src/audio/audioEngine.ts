@@ -120,11 +120,17 @@ export function getAmbientVolumeLevel(): number {
  */
 export function disposeAudio() {
 	// Dispose sfx pools first (they reference sfxGain)
-	import("./sfx").then((m) => m.disposeSfxPools()).catch(() => {});
+	import("./sfx")
+		.then((m) => m.disposeSfxPools())
+		.catch((e) => console.error("[audioEngine] sfx dispose failed:", e));
 	// Stop music (references musicGain)
-	import("./music").then((m) => m.stopMusic()).catch(() => {});
+	import("./music")
+		.then((m) => m.stopMusic())
+		.catch((e) => console.error("[audioEngine] music stop failed:", e));
 	// Stop ambience (references ambientGain)
-	import("./ambience").then((m) => m.stopAmbience()).catch(() => {});
+	import("./ambience")
+		.then((m) => m.stopAmbience())
+		.catch((e) => console.error("[audioEngine] ambience stop failed:", e));
 
 	masterGain?.dispose();
 	sfxGain?.dispose();

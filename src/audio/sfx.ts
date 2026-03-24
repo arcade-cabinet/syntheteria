@@ -311,8 +311,9 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("G4", "16n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 80);
 		return 400;
@@ -346,15 +347,17 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("G5", "16n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 100);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("B5", "16n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 200);
 		return 500;
@@ -366,15 +369,17 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("E4", "8n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 120);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("G4", "8n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 240);
 		return 640;
@@ -396,15 +401,17 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("E5", "16n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 80);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("G5", "16n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 160);
 		return 460;
@@ -417,22 +424,25 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("E5", "16n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 100);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("G5", "16n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 200);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("C6", "8n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 300);
 		return 700;
@@ -445,22 +455,25 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease(["F3", "A3", "C4"], "4n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 500);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease(["G3", "B3", "D4"], "4n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 1000);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease(["C3", "E3", "G3", "C4"], "2n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 1500);
 		return 3000;
@@ -473,8 +486,9 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("C4", "8n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 120);
 		return 400;
@@ -487,22 +501,25 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("G5", "32n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 60);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("B5", "32n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 120);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("E6", "16n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 180);
 		return 400;
@@ -519,8 +536,9 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 				if (e.secondary) {
 					(e.secondary as ToneNs.Synth).triggerAttackRelease("F#4", "8n");
 				}
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 150);
 		return 500;
@@ -533,8 +551,9 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("B5", "8n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 200);
 		return 600;
@@ -556,8 +575,9 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "2n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 400);
 		return 1900;
@@ -569,15 +589,17 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("B2", "4n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 400);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("Bb2", "2n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 800);
 		return 2300;
@@ -618,8 +640,8 @@ export function playSfx(name: SfxName): void {
 		try {
 			const duration = SFX_TRIGGERS[name](entry);
 			setTimeout(() => releaseSynth(name, entry), duration);
-		} catch {
-			// Swallow audio errors — never crash the game for sound
+		} catch (e) {
+			console.error(`[sfx] playSfx("${name}") failed:`, e);
 			releaseSynth(name, entry);
 		}
 	});
@@ -634,8 +656,8 @@ export function disposeSfxPools(): void {
 			try {
 				entry.synth.dispose();
 				entry.secondary?.dispose();
-			} catch {
-				// Swallow disposal errors
+			} catch (e) {
+				console.error("[sfx] synth dispose failed:", e);
 			}
 		}
 	}

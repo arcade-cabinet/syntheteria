@@ -30,6 +30,7 @@ export function findEntityAtPoint(
 	// Check mobile units
 	for (const entity of world.query(Position, Unit, Fragment)) {
 		const pos = entity.get(Position)!;
+		// Fragment may not be registered yet during entity setup — fall back to no offset
 		const frag = getFragment(entity.get(Fragment)?.fragmentId ?? "");
 		const ox = frag?.displayOffset.x ?? 0;
 		const oz = frag?.displayOffset.z ?? 0;

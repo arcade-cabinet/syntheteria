@@ -198,6 +198,8 @@ export interface BoardConfig {
 	seed: string;
 	difficulty: "easy" | "normal" | "hard";
 	climateProfile?: ClimateProfile;
+	/** Number of cult POI rooms to place (default: 6). */
+	cultDensity?: number;
 }
 
 export interface GeneratedBoard {

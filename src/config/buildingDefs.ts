@@ -5,8 +5,8 @@
  * placement constraints, and default component loadouts.
  */
 
-import type { ResourcePool } from "../systems/resources";
 import type { UnitComponent } from "../ecs/types";
+import type { ResourcePool } from "../systems/resources";
 
 export interface BuildingDef {
 	/** Internal key — matches BuildingTrait.buildingType */

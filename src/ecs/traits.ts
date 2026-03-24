@@ -75,3 +75,9 @@ export const ScavengeSite = trait({
 	/** How many scavenge actions remain before depletion */
 	remaining: 3,
 });
+
+/** Human temperature — global disposition meter (0-100, starts at 10) */
+export const HumanTemperature = trait({
+	/** Current temperature value, clamped 0-100 */
+	value: 10,
+});

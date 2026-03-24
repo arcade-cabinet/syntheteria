@@ -1,8 +1,8 @@
 /**
- * Labyrinth Phase 1 — Room placement tests.
+ * Labyrinth Phase 1 — Room placement tests (single-player RTS).
  *
  * Tests determinism, room coverage, spacing invariants,
- * faction/cult placement, and scaling behavior.
+ * player start / cult POI placement, and scaling behavior.
  */
 
 import { describe, expect, it } from "vitest";
@@ -84,53 +84,54 @@ describe("determinism", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Room placement: faction starts
+// Room placement: player start
 // ---------------------------------------------------------------------------
 
-describe("faction start rooms", () => {
+describe("player start room", () => {
 	it("places a player start room", () => {
 		const rooms = generateRooms(48, 48, "faction-test");
 		const player = rooms.find((r) => r.tag === "player");
 		expect(player).toBeDefined();
-		expect(player!.kind).toBe("faction_start");
+		expect(player!.kind).toBe("player_start");
 	});
 
-	it("player start is near board center", () => {
+	it("exactly one player_start room (single-player)", () => {
+		const rooms = generateRooms(48, 48, "sp-single-start");
+		const playerStarts = rooms.filter((r) => r.kind === "player_start");
+		expect(playerStarts.length).toBe(1);
+		expect(playerStarts[0]!.tag).toBe("player");
+	});
+
+	it("player start is in southern half of board", () => {
 		const w = 48;
 		const h = 48;
 		const rooms = generateRooms(w, h, "player-center");
 		const player = rooms.find((r) => r.tag === "player")!;
 
-		// Room center should be within 25% of board center
+		// Player is placed near 65% height (center-south)
 		const roomCx = player.x + player.w / 2;
 		const roomCz = player.z + player.h / 2;
 		const boardCx = w / 2;
-		const boardCz = h / 2;
 
 		expect(Math.abs(roomCx - boardCx)).toBeLessThan(w * 0.25);
-		expect(Math.abs(roomCz - boardCz)).toBeLessThan(h * 0.25);
+		// Player should be in the southern half (z > height/3)
+		expect(roomCz).toBeGreaterThan(h / 3);
 	});
 
-	// TODO(P1-2): Rewrite for single-player — dropped 4 competing AI factions
-	it.skip("places all 4 AI faction start rooms", () => {
-		// Requires FACTION_DEFINITIONS from dropped factions module
-	});
-
-	it("faction start rooms are 6x6 to 8x8", () => {
+	it("player start room is 6x6 to 8x8", () => {
 		const rooms = generateRooms(48, 48, "faction-size");
-		const factionRooms = rooms.filter((r) => r.kind === "faction_start");
+		const player = rooms.find((r) => r.tag === "player")!;
 
-		for (const room of factionRooms) {
-			expect(room.w).toBeGreaterThanOrEqual(6);
-			expect(room.w).toBeLessThanOrEqual(8);
-			expect(room.h).toBeGreaterThanOrEqual(6);
-			expect(room.h).toBeLessThanOrEqual(8);
-		}
+		expect(player.w).toBeGreaterThanOrEqual(6);
+		expect(player.w).toBeLessThanOrEqual(8);
+		expect(player.h).toBeGreaterThanOrEqual(6);
+		expect(player.h).toBeLessThanOrEqual(8);
 	});
 
-	// TODO(P1-2): Rewrite for single-player — dropped 4 competing AI factions
-	it.skip("faction rooms use terrain-affinity floor types", () => {
-		// Requires FACTION_DEFINITIONS from dropped factions module
+	it("player start uses durasteel_span floor", () => {
+		const rooms = generateRooms(48, 48, "player-floor");
+		const player = rooms.find((r) => r.tag === "player")!;
+		expect(player.floorType).toBe("durasteel_span");
 	});
 });
 
@@ -139,28 +140,52 @@ describe("faction start rooms", () => {
 // ---------------------------------------------------------------------------
 
 describe("cult POI rooms", () => {
-	it("places 3 cult POI rooms", () => {
+	it("places 6 cult POI rooms by default", () => {
 		const rooms = generateRooms(48, 48, "cult-test");
+		const cultRooms = rooms.filter((r) => r.kind === "cult_poi");
+		expect(cultRooms.length).toBe(6);
+	});
+
+	it("respects custom cultDensity", () => {
+		const rooms = generateRooms(48, 48, "cult-density", 3);
 		const cultRooms = rooms.filter((r) => r.kind === "cult_poi");
 		expect(cultRooms.length).toBe(3);
 	});
 
-	it("cult rooms are 4x4", () => {
+	it("cult rooms are 4x4 or 5x5", () => {
 		const rooms = generateRooms(48, 48, "cult-size");
 		const cultRooms = rooms.filter((r) => r.kind === "cult_poi");
 
 		for (const room of cultRooms) {
-			expect(room.w).toBe(4);
-			expect(room.h).toBe(4);
+			expect(room.w).toBeGreaterThanOrEqual(4);
+			expect(room.w).toBeLessThanOrEqual(5);
+			expect(room.h).toBeGreaterThanOrEqual(4);
+			expect(room.h).toBeLessThanOrEqual(5);
 		}
 	});
 
-	it("cult rooms have correct tags", () => {
+	it("cult rooms use shrine/workshop/antenna tags", () => {
 		const rooms = generateRooms(48, 48, "cult-tags");
 		const cultRooms = rooms.filter((r) => r.kind === "cult_poi");
 
-		const tags = cultRooms.map((r) => r.tag).sort();
-		expect(tags).toEqual(["lost_signal", "null_monks", "static_remnants"]);
+		const tags = new Set(cultRooms.map((r) => r.tag));
+		expect(tags.has("shrine")).toBe(true);
+		expect(tags.has("workshop")).toBe(true);
+		expect(tags.has("antenna")).toBe(true);
+	});
+
+	it("cult POI rooms are in the northern half of the board", () => {
+		const h = 48;
+		const rooms = generateRooms(48, h, "cult-north");
+		const cultRooms = rooms.filter((r) => r.kind === "cult_poi");
+
+		const northBound = Math.floor(h * 0.55);
+		for (const room of cultRooms) {
+			expect(
+				room.z + room.h,
+				`cult room "${room.tag}" extends to z=${room.z + room.h}, past bound ${northBound}`,
+			).toBeLessThanOrEqual(northBound);
+		}
 	});
 });
 
@@ -280,7 +305,7 @@ describe("room count scaling", () => {
 	it("~15 rooms for 44x44 board", () => {
 		const rooms = generateRooms(44, 44, "scale-44");
 		// target = 8 + (1936/9216)*32 ≈ 15
-		// Faction starts (5) + cults (3) + scatter rooms
+		// Player start (1) + cults (6) + scatter rooms
 		expect(rooms.length).toBeGreaterThanOrEqual(10);
 		expect(rooms.length).toBeLessThanOrEqual(20);
 	});
@@ -305,7 +330,6 @@ describe("room count scaling", () => {
 
 describe("edge cases", () => {
 	it("handles minimum viable board size", () => {
-		// Small board — may not fit all faction rooms
 		const rooms = generateRooms(20, 20, "tiny-board");
 		// Should at least get the player room
 		const player = rooms.find((r) => r.tag === "player");

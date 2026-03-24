@@ -23,7 +23,6 @@ import {
 	updateGhostPosition,
 } from "../systems/buildingPlacement";
 import {
-	deselectAll,
 	findEntityAtPoint,
 	getSelectedEntity,
 	issueMoveTo,

@@ -5,7 +5,8 @@
  * never hardcode paths.
  */
 
-const ROBOT_BASE = "/assets/models/robots/";
+const BASE = import.meta.env.BASE_URL;
+const ROBOT_BASE = `${BASE}assets/models/robots/`;
 
 // ─── Robot model paths ──────────────────────────────────────────────────────
 
@@ -41,7 +42,7 @@ export function getAllRobotModelUrls(): string[] {
 
 // ─── Building model paths ───────────────────────────────────────────────────
 
-const BUILDING_BASE = "/assets/models/buildings/";
+const BUILDING_BASE = `${BASE}assets/models/buildings/`;
 
 const BUILDING_TYPE_TO_MODEL: Record<string, string> = {
 	lightning_rod: `${BUILDING_BASE}Solar_generator.glb`,
@@ -75,11 +76,11 @@ import type { CityBuilding } from "../ecs/cityLayout";
 type CityBuildingType = CityBuilding["type"];
 
 const CITY_TYPE_TO_MODEL: Record<CityBuildingType, string> = {
-	conduit: "/assets/models/infrastructure/Connecting_gateway_long.glb",
-	node: "/assets/models/city/Props_Base.glb",
-	tower: "/assets/models/infrastructure/structure_tall.glb",
-	ruin: "/assets/models/defense/barricade-window-a.glb",
-	wall: "/assets/models/defense/wall-low.glb",
+	conduit: `${BASE}assets/models/infrastructure/Connecting_gateway_long.glb`,
+	node: `${BASE}assets/models/city/Props_Base.glb`,
+	tower: `${BASE}assets/models/infrastructure/structure_tall.glb`,
+	ruin: `${BASE}assets/models/defense/barricade-window-a.glb`,
+	wall: `${BASE}assets/models/defense/wall-low.glb`,
 };
 
 /** Resolve a city building type to its GLB model URL. */

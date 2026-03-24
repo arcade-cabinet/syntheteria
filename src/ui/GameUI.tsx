@@ -5,6 +5,7 @@
 import type { Entity } from "koota";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { getMasterVolume, setMasterVolume } from "../audio";
+import { BUILDING_DEFS, BUILDING_TYPES } from "../config/buildingDefs";
 import {
 	getGameSpeed,
 	getSnapshot,
@@ -25,8 +26,8 @@ import {
 } from "../ecs/traits";
 import { parseComponents, type UnitComponent } from "../ecs/types";
 import { world } from "../ecs/world";
+import { getTemperatureTier } from "../config/humanEncounterDefs";
 import {
-	BUILDING_COSTS,
 	getActivePlacement,
 	type PlaceableType,
 	setActivePlacement,
@@ -61,10 +62,13 @@ function BuildToolbar() {
 	const active = getActivePlacement();
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
 
-	const items: { type: PlaceableType; label: string }[] = [
-		{ type: "lightning_rod", label: "ROD" },
-		{ type: "fabrication_unit", label: "FAB" },
-	];
+	const items = BUILDING_TYPES.map((type) => ({
+		type: type as PlaceableType,
+		label: BUILDING_DEFS[type].displayName
+			.split(" ")
+			.map((w) => w.slice(0, 3).toUpperCase())
+			.join(""),
+	}));
 
 	return (
 		<div
@@ -81,7 +85,8 @@ function BuildToolbar() {
 		>
 			{items.map(({ type, label }) => {
 				const isActive = active === type;
-				const costs = BUILDING_COSTS[type ?? ""];
+				const def = type ? BUILDING_DEFS[type] : undefined;
+				const costs = def?.costs ?? [];
 				const canAfford = costs.every(
 					(c) => snap.resources[c.type] >= c.amount,
 				);
@@ -508,6 +513,53 @@ function AudioControls() {
 	);
 }
 
+function TemperatureGauge({
+	value,
+	tierName,
+}: {
+	value: number;
+	tierName: string;
+}) {
+	const tierDef = getTemperatureTier(value);
+	const pct = Math.max(0, Math.min(100, value));
+
+	return (
+		<div
+			style={{
+				display: "flex",
+				gap: "6px",
+				alignItems: "center",
+				fontSize: "11px",
+			}}
+			title={tierDef.effect}
+		>
+			<span style={{ color: tierDef.color, whiteSpace: "nowrap" }}>
+				HUMAN: {tierName.toUpperCase()}
+			</span>
+			<div
+				style={{
+					width: "60px",
+					height: "6px",
+					background: "rgba(255,255,255,0.1)",
+					borderRadius: "3px",
+					overflow: "hidden",
+				}}
+			>
+				<div
+					style={{
+						width: `${pct}%`,
+						height: "100%",
+						background: tierDef.color,
+						borderRadius: "3px",
+						transition: "width 0.3s ease",
+					}}
+				/>
+			</div>
+			<span style={{ color: tierDef.color, fontSize: "10px" }}>{value}</span>
+		</div>
+	);
+}
+
 const SPEED_STEPS = [0.5, 1, 2, 4];
 
 export function GameUI() {
@@ -689,6 +741,10 @@ export function GameUI() {
 					PWR: {snap.power.totalGeneration.toFixed(0)}/
 					{snap.power.totalDemand.toFixed(0)}
 				</span>
+				<TemperatureGauge
+					value={snap.humanTemperature}
+					tierName={snap.humanTemperatureTier}
+				/>
 			</div>
 
 			{/* Selected unit info */}

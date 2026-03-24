@@ -13,13 +13,19 @@
 import { playSfx } from "../audio";
 import {
 	BUILDING_DEFS,
-	type BuildingType,
 	BUILDING_TYPES,
+	type BuildingType,
 } from "../config/buildingDefs";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import { spawnBuilding } from "../ecs/factory";
 import { isWalkable } from "../ecs/terrain";
-import { BuildingTrait, Faction, Fragment, Position, Unit } from "../ecs/traits";
+import {
+	BuildingTrait,
+	Faction,
+	Fragment,
+	Position,
+	Unit,
+} from "../ecs/traits";
 import { world } from "../ecs/world";
 import { buildNavGraph } from "./navmesh";
 import { getResources, spendResource } from "./resources";
@@ -65,11 +71,7 @@ export function updateGhostPosition(x: number, z: number) {
 		: false;
 }
 
-function isValidPlacement(
-	x: number,
-	z: number,
-	type: BuildingType,
-): boolean {
+function isValidPlacement(x: number, z: number, type: BuildingType): boolean {
 	if (!isWalkable(x, z)) return false;
 	if (isInsideBuilding(x, z)) return false;
 

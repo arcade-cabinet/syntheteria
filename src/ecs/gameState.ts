@@ -18,6 +18,19 @@ import {
 } from "../systems/fabrication";
 import { fragmentMergeSystem, type MergeEvent } from "../systems/fragmentMerge";
 import {
+	type GamePhaseId,
+	gamePhaseSystem,
+	getCurrentGamePhase,
+	getCurrentPhaseDisplayName,
+	getPhaseElapsedSec,
+	popTransitionText,
+} from "../systems/gamePhases";
+import {
+	getHumanTemperature,
+	getHumanTemperatureTier,
+	humanTemperatureSystem,
+} from "../systems/humanTemperature";
+import {
 	getPowerSnapshot,
 	type PowerSnapshot,
 	powerSystem,
@@ -65,6 +78,16 @@ export interface GameSnapshot {
 	power: PowerSnapshot;
 	resources: ResourcePool;
 	fabricationJobs: FabricationJob[];
+	/** Current game phase (Awakening/Expansion/War) */
+	gamePhase: GamePhaseId;
+	gamePhaseDisplayName: string;
+	gamePhaseElapsedSec: number;
+	/** Narrative text to display on phase transition (null if no transition) */
+	phaseTransitionText: string[] | null;
+	/** Human temperature value (0-100) */
+	humanTemperature: number;
+	/** Human temperature tier name */
+	humanTemperatureTier: string;
 }
 
 let tick = 0;
@@ -93,6 +116,12 @@ function buildSnapshot(): GameSnapshot {
 		power: getPowerSnapshot(),
 		resources: getResources(),
 		fabricationJobs: getActiveJobs(),
+		gamePhase: getCurrentGamePhase(),
+		gamePhaseDisplayName: getCurrentPhaseDisplayName(),
+		gamePhaseElapsedSec: getPhaseElapsedSec(),
+		phaseTransitionText: popTransitionText(),
+		humanTemperature: getHumanTemperature(),
+		humanTemperatureTier: getHumanTemperatureTier(),
 	};
 }
 
@@ -124,6 +153,9 @@ export function simulationTick() {
 
 	tick++;
 
+	// Phase progression (1 tick = 1 sim second)
+	runSystem("gamePhase", () => gamePhaseSystem(1.0));
+
 	runSystem("exploration", explorationSystem);
 	runSystem("fragmentMerge", () => {
 		lastMergeEvents = fragmentMergeSystem();
@@ -134,6 +166,7 @@ export function simulationTick() {
 	runSystem("fabrication", fabricationSystem);
 	runSystem("enemy", enemySystem);
 	runSystem("combat", combatSystem);
+	runSystem("humanTemperature", humanTemperatureSystem);
 	runSystem("displayOffsets", updateDisplayOffsets);
 
 	snapshot = null;

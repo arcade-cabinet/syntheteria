@@ -3,9 +3,12 @@
  *
  * Awakening → Expansion → War
  *
- * Phases advance by time thresholds or player conditions (rooms cleared).
- * Phase transitions unlock buildings, Mark tiers, and cult escalation tiers.
- * The current phase is stored as module state and exposed via getters.
+ * Phase triggers (checked each tick):
+ * - Awakening → Expansion: elapsed >= 900s OR 3+ rooms cleared
+ * - Expansion → War: elapsed >= 2100s
+ *
+ * Phase transitions store pending transition text so the UI can play
+ * the corresponding narrative sequence.
  */
 
 import {
@@ -14,14 +17,17 @@ import {
 	PHASE_DEFS,
 } from "../config/phaseDefs";
 
+export type { GamePhaseId };
+
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
 
 let currentPhase: GamePhaseId = "awakening";
 let elapsedGameSec = 0;
-let roomsCleared = 0;
+let pendingTransitionPhaseId: GamePhaseId | null = null;
 let pendingTransitionText: string[] | null = null;
+let roomsCleared = 0;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -59,19 +65,21 @@ export function isBuildingUnlockedInCurrentPhase(
 	return PHASE_DEFS[currentPhase].unlockedBuildings.includes(buildingType);
 }
 
-/** Record that a room was cleared (for early Expansion trigger) */
-export function recordRoomCleared(): void {
-	roomsCleared++;
-}
-
-/** Get the number of rooms cleared */
-export function getRoomsCleared(): number {
-	return roomsCleared;
+/**
+ * Pop the pending phase transition ID (the phase that was just entered).
+ * Returns null if no transition occurred since last call.
+ * Used by App.tsx to determine which narrative sequence to play.
+ */
+export function popPhaseTransitionId(): GamePhaseId | null {
+	const id = pendingTransitionPhaseId;
+	pendingTransitionPhaseId = null;
+	return id;
 }
 
 /**
- * Pop any pending transition text (narrative to show on phase change).
+ * Pop the pending transition text (narrative lines for the phase just entered).
  * Returns null if no transition occurred since last call.
+ * Consumed on read — second call returns null until next transition.
  */
 export function popTransitionText(): string[] | null {
 	const text = pendingTransitionText;
@@ -79,12 +87,23 @@ export function popTransitionText(): string[] | null {
 	return text;
 }
 
+/** Get number of rooms cleared (used for early Expansion trigger). */
+export function getRoomsCleared(): number {
+	return roomsCleared;
+}
+
+/** Record that a room was cleared (call when player clears a labyrinth room). */
+export function recordRoomCleared(): void {
+	roomsCleared++;
+}
+
 /** Reset phase state for a new game */
 export function resetPhaseState(): void {
 	currentPhase = "awakening";
 	elapsedGameSec = 0;
-	roomsCleared = 0;
+	pendingTransitionPhaseId = null;
 	pendingTransitionText = null;
+	roomsCleared = 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -103,17 +122,24 @@ export function gamePhaseSystem(deltaSec: number): void {
 	if (!nextPhaseId) return; // already at final phase
 
 	const nextDef = PHASE_DEFS[nextPhaseId];
+	let shouldTransition = false;
 
-	// Check time threshold
-	const timeReached = elapsedGameSec >= nextDef.timeThresholdSec;
+	// Time-based trigger
+	if (elapsedGameSec >= nextDef.timeThresholdSec) {
+		shouldTransition = true;
+	}
 
-	// Check optional early-trigger condition
-	const earlyTrigger =
+	// Early trigger: rooms cleared threshold
+	if (
 		nextDef.roomsClearedThreshold !== null &&
-		roomsCleared >= nextDef.roomsClearedThreshold;
+		roomsCleared >= nextDef.roomsClearedThreshold
+	) {
+		shouldTransition = true;
+	}
 
-	if (timeReached || earlyTrigger) {
+	if (shouldTransition) {
 		currentPhase = nextPhaseId;
+		pendingTransitionPhaseId = nextPhaseId;
 		pendingTransitionText = nextDef.transitionText;
 	}
 }

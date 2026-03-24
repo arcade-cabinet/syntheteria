@@ -108,7 +108,6 @@ function createMemoryAdapter(): SqliteAdapter {
 
 				// Handle OR REPLACE — remove existing row with same PK
 				if (sql.toUpperCase().includes("OR REPLACE")) {
-					const _rows = tables.get(tableName)!;
 					// For simplicity, just push (our tests don't rely on PK uniqueness)
 				}
 

@@ -26,7 +26,6 @@ let running = false;
 let thunderNoise: ToneNs.NoiseSynth | null = null;
 let thunderReverb: ToneNs.Reverb | null = null;
 let thunderTimer: ReturnType<typeof setTimeout> | null = null;
-let _ToneRef: typeof ToneNs | null = null;
 
 /** Thunder interval range in ms. */
 const THUNDER_MIN_MS = 15_000;
@@ -50,8 +49,6 @@ export function startAmbience(): void {
 			if (!currentOutput) return;
 
 			try {
-				_ToneRef = Tone;
-
 				// Layer 1: Storm rumble — brown noise through lowpass
 				filter = new Tone.Filter({
 					type: "lowpass",
@@ -112,7 +109,6 @@ export function stopAmbience(): void {
 	filter = null;
 	thunderNoise = null;
 	thunderReverb = null;
-	_ToneRef = null;
 	running = false;
 }
 

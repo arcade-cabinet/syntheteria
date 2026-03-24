@@ -123,7 +123,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	for (const e of entities) {
-		if (!e.destroyed) e.destroy();
+		if (e.isAlive()) e.destroy();
 	}
 	entities.length = 0;
 	// Drain active repairs
@@ -227,9 +227,7 @@ describe("economy integration — full resource loop", () => {
 	});
 
 	it("scavenging from ECS ScavengeSite entities deposits into global pool", () => {
-		const _worker = spawnWorker(0, 0, [
-			{ name: "arms", functional: true, material: "metal" },
-		]);
+		spawnWorker(0, 0, [{ name: "arms", functional: true, material: "metal" }]);
 		spawnScavengeSite(1, 0, "durasteel", 3, 5);
 
 		resourceSystem();

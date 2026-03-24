@@ -1,10 +1,11 @@
 /**
  * Syntheteria — Phase 1 Prototype
  * Opening narration → continuous terrain with navmesh-based free 3D navigation.
+ * In-game phase transitions trigger narrative overlays during gameplay.
  */
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
 	disposeAudio,
 	startAmbience,
@@ -12,14 +13,27 @@ import {
 	stopAmbience,
 	stopMusic,
 } from "./audio";
-import { INTRO_SEQUENCE } from "./config/narrativeDefs";
+import type { DialogueSequence } from "./config/narrativeDefs";
+import {
+	EXPANSION_SEQUENCE,
+	INTRO_SEQUENCE,
+	WAR_SEQUENCE,
+} from "./config/narrativeDefs";
+import type { GamePhaseId } from "./config/phaseDefs";
 import { getRooms, initCityLayout } from "./ecs/cityLayout";
 import {
 	spawnFabricationUnit,
 	spawnLightningRod,
 	spawnUnit,
 } from "./ecs/factory";
-import { getGameSpeed, simulationTick } from "./ecs/gameState";
+import {
+	getGameSpeed,
+	getSnapshot,
+	isPaused,
+	simulationTick,
+	subscribe,
+	togglePause,
+} from "./ecs/gameState";
 import { Fragment } from "./ecs/traits";
 import { logError } from "./errors";
 import { TopDownCamera } from "./input/TopDownCamera";
@@ -36,6 +50,13 @@ import { DebugOverlay } from "./ui/game/DebugOverlay";
 import { ErrorBoundary } from "./ui/game/ErrorBoundary";
 import { NarrativeOverlay } from "./ui/game/NarrativeOverlay";
 import { LandingScreen, type NewGameConfig } from "./ui/landing/LandingScreen";
+
+// --- Phase → Narrative sequence mapping ---
+
+const PHASE_NARRATIVE: Partial<Record<GamePhaseId, DialogueSequence>> = {
+	expansion: EXPANSION_SEQUENCE,
+	war: WAR_SEQUENCE,
+};
 
 // --- World initialization ---
 
@@ -139,10 +160,17 @@ export default function App() {
 	const [phase, setPhase] = useState<"title" | "narration" | "playing">(
 		"title",
 	);
+	const [phaseNarrative, setPhaseNarrative] = useState<DialogueSequence | null>(
+		null,
+	);
 	const gameConfigRef = useRef<NewGameConfig>({
 		seed: "default",
 		difficulty: "normal",
 	});
+	const wasPausedRef = useRef(false);
+
+	// Watch game snapshot for phase transitions during gameplay
+	const snap = useSyncExternalStore(subscribe, getSnapshot);
 
 	useEffect(() => {
 		if (phase === "playing" && !worldInitialized) {
@@ -154,6 +182,25 @@ export default function App() {
 			startMusic(1); // Epoch 1: Emergence
 		}
 	}, [phase]);
+
+	// Detect in-game phase transitions and show narrative overlay
+	useEffect(() => {
+		if (phase !== "playing") return;
+		if (phaseNarrative) return; // already showing a narrative
+
+		const transitionId = snap.phaseTransitionId;
+		if (!transitionId) return;
+
+		const sequence = PHASE_NARRATIVE[transitionId];
+		if (!sequence) return;
+
+		// Pause the game and show the narrative overlay
+		wasPausedRef.current = isPaused();
+		if (!isPaused()) {
+			togglePause();
+		}
+		setPhaseNarrative(sequence);
+	}, [phase, snap.phaseTransitionId, phaseNarrative]);
 
 	// Cleanup audio on unmount
 	useEffect(() => {
@@ -234,6 +281,20 @@ export default function App() {
 
 				<GameUI />
 				<DebugOverlay />
+
+				{/* In-game phase transition narrative overlay */}
+				{phaseNarrative && (
+					<NarrativeOverlay
+						sequence={phaseNarrative}
+						onComplete={() => {
+							setPhaseNarrative(null);
+							// Resume game if it wasn't paused before the transition
+							if (!wasPausedRef.current && isPaused()) {
+								togglePause();
+							}
+						}}
+					/>
+				)}
 			</div>
 		</ErrorBoundary>
 	);

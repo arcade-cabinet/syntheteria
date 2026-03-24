@@ -165,8 +165,11 @@ export function NarrativeOverlay({
 	const visibleText = fullText.slice(0, displayedChars);
 
 	return (
-		<button
-			type="button"
+		// biome-ignore lint/a11y/useSemanticElements: div+role=button required because SKIP <button> is a child — nested buttons are invalid HTML
+		<div
+			role="button"
+			tabIndex={0}
+			onKeyDown={(e) => e.key === " " && advance()}
 			style={{
 				position: "absolute",
 				inset: 0,
@@ -324,6 +327,6 @@ export function NarrativeOverlay({
 					}
 				`}
 			</style>
-		</button>
+		</div>
 	);
 }

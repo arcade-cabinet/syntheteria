@@ -188,16 +188,26 @@ function FragmentTerrain({ fragmentId }: { fragmentId: string }) {
 					fogIdx >= 0 && fogIdx < fog.length ? fog[fogIdx] : 0
 				) as FogState;
 
+				const wx = gx * MESH_STEP - WORLD_HALF;
+				const wz = gz * MESH_STEP - WORLD_HALF;
+				const rawH = getTerrainHeight(wx, wz) / 0.5;
+				const color = getTerrainColor(rawH);
+
 				if (fogState === 2) {
+					// Detailed: full color, full alpha
 					alphaAttr.setX(vertIdx, 1.0);
-					const wx = gx * MESH_STEP - WORLD_HALF;
-					const wz = gz * MESH_STEP - WORLD_HALF;
-					const rawH = getTerrainHeight(wx, wz) / 0.5;
-					const color = getTerrainColor(rawH);
 					colorAttr.setXYZ(vertIdx, color.r, color.g, color.b);
 				} else if (fogState === 1) {
-					alphaAttr.setX(vertIdx, 0.0);
+					// Abstract: dimmed terrain visible beneath wireframe
+					alphaAttr.setX(vertIdx, 0.35);
+					colorAttr.setXYZ(
+						vertIdx,
+						color.r * 0.3,
+						color.g * 0.3,
+						color.b * 0.3,
+					);
 				} else {
+					// Unexplored: invisible
 					alphaAttr.setX(vertIdx, 0.0);
 				}
 			}

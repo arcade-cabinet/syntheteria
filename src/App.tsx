@@ -63,7 +63,7 @@ const PHASE_NARRATIVE: Partial<Record<GamePhaseId, DialogueSequence>> = {
 function initializeWorld(
 	seed = "default",
 	difficulty: "easy" | "normal" | "hard" = "normal",
-) {
+): { startX: number; startZ: number } {
 	// Generate labyrinth board (must happen before navmesh so walls block paths)
 	initCityLayout({ width: 48, height: 48, seed, difficulty });
 	buildNavGraph();
@@ -128,6 +128,8 @@ function initializeWorld(
 
 	// Initial exploration tick so terrain is visible
 	simulationTick();
+
+	return { startX, startZ };
 }
 
 // --- Game loop ---
@@ -168,6 +170,7 @@ export default function App() {
 		difficulty: "normal",
 	});
 	const wasPausedRef = useRef(false);
+	const startPosRef = useRef({ x: 48, z: 62 });
 
 	// Watch game snapshot for phase transitions during gameplay
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
@@ -176,7 +179,8 @@ export default function App() {
 		if (phase === "playing" && !worldInitialized) {
 			worldInitialized = true;
 			const cfg = gameConfigRef.current;
-			initializeWorld(cfg.seed, cfg.difficulty);
+			const { startX, startZ } = initializeWorld(cfg.seed, cfg.difficulty);
+			startPosRef.current = { x: startX, z: startZ };
 			// Start ambience and music when gameplay begins
 			startAmbience();
 			startMusic(1); // Epoch 1: Emergence
@@ -258,7 +262,16 @@ export default function App() {
 				}}
 			>
 				<Canvas
-					camera={{ position: [8, 30, 26], fov: 45, near: 0.1, far: 500 }}
+					camera={{
+						position: [
+							startPosRef.current.x,
+							40,
+							startPosRef.current.z + 40 * 0.6,
+						],
+						fov: 45,
+						near: 0.1,
+						far: 500,
+					}}
 					style={{ width: "100%", height: "100%" }}
 				>
 					<StormSky />
@@ -274,7 +287,7 @@ export default function App() {
 					<CityRenderer />
 					<UnitRenderer />
 
-					<TopDownCamera />
+					<TopDownCamera initialTarget={startPosRef.current} initialZoom={40} />
 					<UnitInput />
 					<GameLoop />
 				</Canvas>

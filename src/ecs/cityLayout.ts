@@ -207,6 +207,59 @@ export function getCityBuildings(): CityBuilding[] {
 	return cachedBuildings;
 }
 
+/** A passable tile for rendering corridor floors. */
+export interface CorridorTile {
+	/** World-space center */
+	x: number;
+	z: number;
+	/** Half-extents (TILE_SIZE_M / 2) */
+	half: number;
+	/** Floor type for color variation */
+	floorType: string;
+}
+
+let cachedCorridors: CorridorTile[] | null = null;
+
+/**
+ * Get passable tiles as corridor floor data for the renderer.
+ * Each passable labyrinth tile becomes a floor plane.
+ */
+export function getCorridorTiles(): CorridorTile[] {
+	if (cachedCorridors) return cachedCorridors;
+
+	if (!cachedBoard) {
+		initCityLayout({
+			width: 48,
+			height: 48,
+			seed: "default",
+			difficulty: "normal",
+		});
+	}
+
+	const { width, height } = cachedBoard!.config;
+	const tiles = cachedBoard!.tiles;
+	const corridors: CorridorTile[] = [];
+	const halfTile = TILE_SIZE_M / 2;
+
+	for (let z = 0; z < height; z++) {
+		for (let x = 0; x < width; x++) {
+			const tile = tiles[z]![x]!;
+			if (!tile.passable) continue;
+
+			const { x: wx, z: wz } = tileToWorld(x, z);
+			corridors.push({
+				x: wx,
+				z: wz,
+				half: halfTile,
+				floorType: tile.floorType,
+			});
+		}
+	}
+
+	cachedCorridors = corridors;
+	return cachedCorridors;
+}
+
 /**
  * Check if a point is inside the city bounds (the labyrinth board area).
  */
@@ -264,6 +317,7 @@ export function resetCityLayout(): void {
 	cachedBoard = null;
 	cachedRooms = null;
 	cachedBuildings = null;
+	cachedCorridors = null;
 	boardWidth = 0;
 	boardHeight = 0;
 }

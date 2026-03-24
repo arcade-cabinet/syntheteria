@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { getMasterVolume, setMasterVolume } from "../audio";
 import { BUILDING_DEFS, BUILDING_TYPES } from "../config/buildingDefs";
 import { getTemperatureTier } from "../config/humanEncounterDefs";
+import { getCityBuildings } from "../ecs/cityLayout";
 import {
 	getGameSpeed,
 	getSnapshot,
@@ -15,7 +16,7 @@ import {
 	subscribe,
 	togglePause,
 } from "../ecs/gameState";
-import { WORLD_HALF } from "../ecs/terrain";
+import { getAllFragments, worldToFogIndex } from "../ecs/terrain";
 import {
 	BuildingTrait,
 	EntityId,
@@ -58,60 +59,85 @@ function ComponentStatus({ comp }: { comp: UnitComponent }) {
 	);
 }
 
+/** Short resource type labels for compact cost display */
+const RESOURCE_LABELS: Record<string, string> = {
+	scrapMetal: "SCR",
+	circuitry: "CIR",
+	powerCells: "PWR",
+	durasteel: "DUR",
+};
+
+/** Unicode icons per building type for quick recognition */
+const BUILDING_ICONS: Record<string, string> = {
+	lightning_rod: "\u26A1",
+	power_conduit: "\u2261",
+	fabrication_unit: "\u2692",
+	server_rack: "\u25A6",
+	relay_station: "\u2637",
+	defense_turret: "\u2694",
+};
+
 function BuildToolbar() {
 	const active = getActivePlacement();
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
-
-	const items = BUILDING_TYPES.map((type) => ({
-		type: type as PlaceableType,
-		label: BUILDING_DEFS[type].displayName
-			.split(" ")
-			.map((w) => w.slice(0, 3).toUpperCase())
-			.join(""),
-	}));
 
 	return (
 		<div
 			style={{
 				position: "absolute",
-				right: "16px",
+				right: "12px",
 				top: "50%",
 				transform: "translateY(-50%)",
 				display: "flex",
 				flexDirection: "column",
-				gap: "8px",
+				gap: "6px",
 				pointerEvents: "auto",
 			}}
 		>
-			{items.map(({ type, label }) => {
+			{BUILDING_TYPES.map((type) => {
+				const def = BUILDING_DEFS[type];
 				const isActive = active === type;
-				const def = type ? BUILDING_DEFS[type] : undefined;
-				const costs = def?.costs ?? [];
+				const costs = def.costs;
 				const canAfford = costs.every(
 					(c) => snap.resources[c.type] >= c.amount,
 				);
+				const icon = BUILDING_ICONS[type] ?? "\u25CB";
 
 				return (
 					<button
 						type="button"
 						key={type}
-						onClick={() => setActivePlacement(isActive ? null : type)}
-						title={costs.map((c) => `${c.amount} ${c.type}`).join(", ")}
+						onClick={() =>
+							setActivePlacement(isActive ? null : (type as PlaceableType))
+						}
 						style={{
-							background: isActive ? "rgba(0,255,170,0.2)" : "rgba(0,0,0,0.7)",
+							background: isActive ? "rgba(0,255,170,0.15)" : "rgba(0,0,0,0.8)",
 							color: canAfford ? "#00ffaa" : "#00ffaa44",
-							border: isActive ? "2px solid #00ffaa" : "1px solid #00ffaa44",
+							border: isActive ? "2px solid #00ffaa" : "1px solid #00ffaa33",
 							borderRadius: "6px",
-							padding: "10px 8px",
+							padding: "6px 10px",
 							fontSize: "11px",
 							fontFamily: "'Courier New', monospace",
 							cursor: canAfford ? "pointer" : "default",
-							minWidth: "50px",
-							textAlign: "center",
-							letterSpacing: "0.1em",
+							minWidth: "110px",
+							textAlign: "left",
+							lineHeight: "1.4",
 						}}
 					>
-						{label}
+						<div style={{ fontWeight: "bold", fontSize: "12px" }}>
+							{icon} {def.displayName.toUpperCase()}
+						</div>
+						<div
+							style={{
+								fontSize: "10px",
+								color: canAfford ? "#00ffaa88" : "#00ffaa33",
+								marginTop: "2px",
+							}}
+						>
+							{costs
+								.map((c) => `${c.amount}${RESOURCE_LABELS[c.type] ?? c.type}`)
+								.join(" ")}
+						</div>
 					</button>
 				);
 			})}
@@ -513,13 +539,49 @@ function AudioControls() {
 	);
 }
 
-function TemperatureGauge({
+function ResourceBadge({
+	icon,
+	label,
 	value,
-	tierName,
+	color,
 }: {
+	icon: string;
+	label: string;
 	value: number;
-	tierName: string;
+	color: string;
 }) {
+	return (
+		<span
+			title={label}
+			style={{
+				display: "inline-flex",
+				alignItems: "center",
+				gap: "4px",
+				background: "rgba(0,0,0,0.4)",
+				border: `1px solid ${color}44`,
+				borderRadius: "4px",
+				padding: "3px 8px",
+				fontSize: "14px",
+				fontWeight: "bold",
+				letterSpacing: "0.03em",
+			}}
+		>
+			<span
+				style={{
+					color,
+					fontSize: "11px",
+					fontWeight: "normal",
+					opacity: 0.8,
+				}}
+			>
+				{icon}
+			</span>
+			<span style={{ color }}>{value}</span>
+		</span>
+	);
+}
+
+function TemperatureGauge({ value }: { value: number }) {
 	const tierDef = getTemperatureTier(value);
 	const pct = Math.max(0, Math.min(100, value));
 
@@ -529,19 +591,19 @@ function TemperatureGauge({
 				display: "flex",
 				gap: "6px",
 				alignItems: "center",
-				fontSize: "11px",
+				fontSize: "13px",
 			}}
 			title={tierDef.effect}
 		>
 			<span style={{ color: tierDef.color, whiteSpace: "nowrap" }}>
-				HUMAN: {tierName.toUpperCase()}
+				HUMAN: {tierDef.displayName.toUpperCase()}
 			</span>
 			<div
 				style={{
-					width: "60px",
-					height: "6px",
+					width: "70px",
+					height: "8px",
 					background: "rgba(255,255,255,0.1)",
-					borderRadius: "3px",
+					borderRadius: "4px",
 					overflow: "hidden",
 				}}
 			>
@@ -555,7 +617,7 @@ function TemperatureGauge({
 					}}
 				/>
 			</div>
-			<span style={{ color: tierDef.color, fontSize: "10px" }}>{value}</span>
+			<span style={{ color: tierDef.color, fontSize: "12px" }}>{value}</span>
 		</div>
 	);
 }
@@ -647,33 +709,38 @@ export function GameUI() {
 				color: "#00ffaa",
 			}}
 		>
-			{/* Top bar */}
+			{/* Top bar — status + speed controls */}
 			<div
 				style={{
 					display: "flex",
 					justifyContent: "space-between",
-					padding: "8px 12px",
+					alignItems: "center",
+					padding: "10px 16px",
 					background:
-						"linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%)",
+						"linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 80%, transparent 100%)",
 					pointerEvents: "auto",
 					flexWrap: "wrap",
-					gap: "4px 0",
+					gap: "6px 0",
 				}}
 			>
 				<div
 					style={{
 						display: "flex",
-						gap: "16px",
-						fontSize: "13px",
+						gap: "20px",
+						fontSize: "15px",
 						alignItems: "center",
+						fontWeight: "bold",
+						letterSpacing: "0.05em",
 					}}
 				>
-					<span>UNITS: {snap.unitCount}</span>
-					<span>BLDG: {buildingCount}</span>
+					<span title="Player units">{snap.unitCount} UNITS</span>
+					<span title="Buildings placed">{buildingCount} BLDG</span>
 					{snap.enemyCount > 0 && (
-						<span style={{ color: "#ff4444" }}>HOSTILE: {snap.enemyCount}</span>
+						<span style={{ color: "#ff4444" }} title="Hostile units detected">
+							{snap.enemyCount} HOSTILE
+						</span>
 					)}
-					<span>FRAG: {fragmentCount}</span>
+					<span title="Map fragments">{fragmentCount} FRAG</span>
 				</div>
 
 				<div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
@@ -716,35 +783,59 @@ export function GameUI() {
 				</div>
 			</div>
 
-			{/* Resource bar */}
+			{/* Resource bar — larger, clearer, with colored badges */}
 			<div
 				style={{
 					display: "flex",
-					gap: "16px",
-					padding: "4px 12px 8px",
-					fontSize: "11px",
-					color: "#00ffaa99",
+					gap: "6px",
+					padding: "6px 16px 10px",
+					fontSize: "14px",
+					color: "#00ffaacc",
 					pointerEvents: "auto",
+					flexWrap: "wrap",
+					alignItems: "center",
 				}}
 			>
-				<span title="Scrap Metal">SCRAP: {snap.resources.scrapMetal}</span>
-				<span title="Circuitry">CIRC: {snap.resources.circuitry}</span>
-				<span title="Power Cells">PWRCL: {snap.resources.powerCells}</span>
-				<span title="Durasteel">DURA: {snap.resources.durasteel}</span>
+				<ResourceBadge
+					icon="Fe"
+					label="Scrap Metal"
+					value={snap.resources.scrapMetal}
+					color="#88ccaa"
+				/>
+				<ResourceBadge
+					icon="Ci"
+					label="Circuitry"
+					value={snap.resources.circuitry}
+					color="#44ddff"
+				/>
+				<ResourceBadge
+					icon="Pw"
+					label="Power Cells"
+					value={snap.resources.powerCells}
+					color="#ffcc44"
+				/>
+				<ResourceBadge
+					icon="Du"
+					label="Durasteel"
+					value={snap.resources.durasteel}
+					color="#cc88ff"
+				/>
+				<div style={{ width: "8px" }} />
 				<span
-					style={{ color: stormColor(snap.power.stormIntensity) }}
+					style={{
+						color: stormColor(snap.power.stormIntensity),
+						fontSize: "13px",
+					}}
 					title="Storm Intensity"
 				>
-					STORM: {(snap.power.stormIntensity * 100).toFixed(0)}%
+					STORM {(snap.power.stormIntensity * 100).toFixed(0)}%
 				</span>
-				<span title="Power Generation / Demand">
-					PWR: {snap.power.totalGeneration.toFixed(0)}/
+				<span style={{ fontSize: "13px" }} title="Power Generation / Demand">
+					PWR {snap.power.totalGeneration.toFixed(0)}/
 					{snap.power.totalDemand.toFixed(0)}
 				</span>
-				<TemperatureGauge
-					value={snap.humanTemperature}
-					tierName={snap.humanTemperatureTier}
-				/>
+				<div style={{ width: "8px" }} />
+				<TemperatureGauge value={snap.humanTemperature} />
 			</div>
 
 			{/* Selected unit info */}
@@ -1001,16 +1092,41 @@ function stormColor(intensity: number): string {
 	return "#00ffaa66";
 }
 
+/** City bounds: 48 tiles * 2m = 96 world units, with small margin */
+const CITY_EXTENT = 96;
+const MAP_SIZE = 150;
+const MAP_PAD = 4;
+
+/** Convert city world coords to minimap pixel coords */
+function cityToMinimap(worldCoord: number): number {
+	return MAP_PAD + (worldCoord / CITY_EXTENT) * (MAP_SIZE - MAP_PAD * 2);
+}
+
+/** Get merged fog state at a world position across all fragments (max wins) */
+function getMergedFogAt(wx: number, wz: number): number {
+	const idx = worldToFogIndex(wx, wz);
+	if (idx < 0) return 0;
+	let maxFog = 0;
+	for (const frag of getAllFragments()) {
+		const val = frag.fog[idx] ?? 0;
+		if (val > maxFog) maxFog = val;
+	}
+	return maxFog;
+}
+
 function Minimap() {
+	// Subscribe to snapshot so minimap redraws on state changes
+	useSyncExternalStore(subscribe, getSnapshot);
+
 	return (
 		<div
 			style={{
 				position: "absolute",
 				bottom: "16px",
 				right: "16px",
-				width: "120px",
-				height: "120px",
-				background: "rgba(0, 0, 0, 0.8)",
+				width: `${MAP_SIZE}px`,
+				height: `${MAP_SIZE}px`,
+				background: "rgba(0, 0, 0, 0.85)",
 				border: "1px solid #00ffaa44",
 				borderRadius: "8px",
 				overflow: "hidden",
@@ -1022,26 +1138,64 @@ function Minimap() {
 					if (!canvas) return;
 					const ctx = canvas.getContext("2d");
 					if (!ctx) return;
-					canvas.width = 120;
-					canvas.height = 120;
-					ctx.fillStyle = "#000";
-					ctx.fillRect(0, 0, 120, 120);
+					canvas.width = MAP_SIZE;
+					canvas.height = MAP_SIZE;
 
-					ctx.fillStyle = "#aa8844";
-					for (const entity of world.query(BuildingTrait, Position)) {
-						const pos = entity.get(Position)!;
-						const x = 60 + (pos.x / WORLD_HALF) * 50;
-						const y = 60 + (pos.z / WORLD_HALF) * 50;
-						ctx.fillRect(x - 2, y - 2, 5, 5);
+					// Clear
+					ctx.fillStyle = "#0a0a0a";
+					ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+
+					// Draw fog overlay — sample explored state on a coarse grid
+					const fogStep = 3;
+					for (let px = 0; px < MAP_SIZE; px += fogStep) {
+						for (let py = 0; py < MAP_SIZE; py += fogStep) {
+							const wx =
+								((px - MAP_PAD) / (MAP_SIZE - MAP_PAD * 2)) * CITY_EXTENT;
+							const wz =
+								((py - MAP_PAD) / (MAP_SIZE - MAP_PAD * 2)) * CITY_EXTENT;
+							const fog = getMergedFogAt(wx, wz);
+							if (fog >= 2) {
+								ctx.fillStyle = "rgba(0,40,30,0.6)";
+							} else if (fog >= 1) {
+								ctx.fillStyle = "rgba(0,20,15,0.4)";
+							} else {
+								continue; // leave as dark background
+							}
+							ctx.fillRect(px, py, fogStep, fogStep);
+						}
 					}
 
-					for (const entity of world.query(Unit, Faction, Position)) {
-						const isEnemy = entity.get(Faction)!.value !== "player";
-						ctx.fillStyle = isEnemy ? "#ff3333" : "#ffaa00";
+					// Draw labyrinth walls
+					ctx.fillStyle = "#333333";
+					for (const bldg of getCityBuildings()) {
+						const mx = cityToMinimap(bldg.x);
+						const my = cityToMinimap(bldg.z);
+						ctx.fillRect(mx, my, 1, 1);
+					}
+
+					// Draw player-placed buildings (cyan)
+					ctx.fillStyle = "#00aaaa";
+					for (const entity of world.query(BuildingTrait, Position)) {
 						const pos = entity.get(Position)!;
-						const x = 60 + (pos.x / WORLD_HALF) * 50;
-						const y = 60 + (pos.z / WORLD_HALF) * 50;
-						ctx.fillRect(x - 1, y - 1, 3, 3);
+						const mx = cityToMinimap(pos.x);
+						const my = cityToMinimap(pos.z);
+						ctx.fillRect(mx - 1, my - 1, 3, 3);
+					}
+
+					// Draw units
+					for (const entity of world.query(Unit, Faction, Position)) {
+						const faction = entity.get(Faction)!.value;
+						const pos = entity.get(Position)!;
+						const mx = cityToMinimap(pos.x);
+						const my = cityToMinimap(pos.z);
+
+						if (faction === "player") {
+							ctx.fillStyle = "#00ff88";
+							ctx.fillRect(mx - 1, my - 1, 3, 3);
+						} else {
+							ctx.fillStyle = "#ff3333";
+							ctx.fillRect(mx - 1, my - 1, 2, 2);
+						}
 					}
 				}}
 				style={{ width: "100%", height: "100%" }}

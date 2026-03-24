@@ -15,10 +15,18 @@ const MAX_ZOOM = 80;
 const PAN_SPEED = 0.5;
 const MOMENTUM_DECAY = 0.92;
 
-export function TopDownCamera() {
+export function TopDownCamera({
+	initialTarget,
+	initialZoom = 30,
+}: {
+	initialTarget?: { x: number; z: number };
+	initialZoom?: number;
+} = {}) {
 	const { camera, gl } = useThree();
-	const target = useRef(new THREE.Vector3(8, 0, 8));
-	const zoom = useRef(30);
+	const target = useRef(
+		new THREE.Vector3(initialTarget?.x ?? 48, 0, initialTarget?.z ?? 62),
+	);
+	const zoom = useRef(initialZoom);
 	const velocity = useRef({ x: 0, z: 0 });
 	const keys = useRef(new Set<string>());
 

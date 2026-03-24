@@ -85,6 +85,7 @@ function ErrorList({ errors }: { errors: readonly ErrorLogEntry[] }) {
 }
 
 export function DebugOverlay() {
+	const [visible, setVisible] = useState(false);
 	const fps = useFps();
 	const errors = useErrorLog();
 	const snapshot = useSyncExternalStore(subscribe, getSnapshot);
@@ -92,7 +93,19 @@ export function DebugOverlay() {
 
 	const toggle = useCallback(() => setCollapsed((c) => !c), []);
 
-	if (!IS_DEV) return null;
+	// Toggle with F12 or backtick key
+	useEffect(() => {
+		function onKey(e: KeyboardEvent) {
+			if (e.key === "F12" || e.key === "`") {
+				e.preventDefault();
+				setVisible((v) => !v);
+			}
+		}
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, []);
+
+	if (!IS_DEV || !visible) return null;
 
 	const entityCount = snapshot.unitCount + snapshot.enemyCount;
 

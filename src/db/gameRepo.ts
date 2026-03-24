@@ -191,7 +191,13 @@ export class GameRepo {
 		await this.db.run(
 			`INSERT OR REPLACE INTO resources (game_id, scrap_metal, circuitry, power_cells, durasteel)
        VALUES (?, ?, ?, ?, ?)`,
-			[gameId, pool.scrapMetal, pool.circuitry, pool.powerCells, pool.durasteel],
+			[
+				gameId,
+				pool.scrapMetal,
+				pool.circuitry,
+				pool.powerCells,
+				pool.durasteel,
+			],
 		);
 	}
 

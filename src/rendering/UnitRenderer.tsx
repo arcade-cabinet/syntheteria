@@ -1,14 +1,20 @@
 /**
- * Renders all units and buildings at their displayed positions.
- * Maintenance bots: small box with optional arm/camera indicators.
- * Enemy bots: red-tinted variants.
- * Fabrication unit: larger structure with status glow.
+ * Renders all units and buildings using GLB models loaded via useGLTF.
+ * Player robots, cult mechs, and buildings each resolve their model
+ * from src/config/models.ts based on their ECS unit/building type.
  */
 
+import { Clone, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type { Entity } from "koota";
-import { useRef } from "react";
+import { Suspense, useRef } from "react";
 import * as THREE from "three";
+import {
+	getAllBuildingModelUrls,
+	getAllRobotModelUrls,
+	resolveBuildingModelUrl,
+	resolveUnitModelUrl,
+} from "../config/models";
 import { getFragment, getTerrainHeight } from "../ecs/terrain";
 import {
 	BuildingTrait,
@@ -25,26 +31,35 @@ import {
 	getGhostPosition,
 } from "../systems/buildingPlacement";
 
-const COLOR_UNIT = 0x44aaff;
-const COLOR_ENEMY = 0xff3333;
-const COLOR_ENEMY_TREAD = 0x553322;
 const COLOR_SELECTED = 0xffaa00;
 const COLOR_BROKEN = 0xff4444;
-const COLOR_BUILDING = 0x888888;
-const COLOR_BUILDING_UNPOWERED = 0x554444;
-const COLOR_FABRICATION = 0xaa8844;
 
-function UnitMesh({ entity }: { entity: Entity }) {
+// ─── Unit mesh (GLB model) ──────────────────────────────────────────────────
+
+function UnitModel({ entity }: { entity: Entity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const ringRef = useRef<THREE.Mesh>(null);
+
+	const unit = entity.get(Unit);
+	const unitType = unit?.unitType ?? "maintenance_bot";
+	const modelUrl = resolveUnitModelUrl(unitType);
+	const { scene } = useGLTF(modelUrl);
+
+	const faction = entity.get(Faction)?.value ?? "player";
+	const isEnemy = faction !== "player";
 
 	const comps = parseComponents(
 		entity.get(UnitComponents)?.componentsJson ?? "[]",
 	);
 	const entityHasCamera = hasCamera(comps);
 	const entityHasArms = hasArms(comps);
-	const faction = entity.get(Faction)?.value ?? "player";
-	const isEnemy = faction !== "player";
+
+	// Tint the model based on faction and component status
+	const tintColor = isEnemy
+		? new THREE.Color(0xff3333)
+		: new THREE.Color(0x44aaff);
+	const damagedTint = new THREE.Color(COLOR_BROKEN);
+	const hasDamage = !entityHasCamera || !entityHasArms;
 
 	useFrame(() => {
 		const pos = entity.get(Position);
@@ -60,55 +75,22 @@ function UnitMesh({ entity }: { entity: Entity }) {
 		}
 	});
 
-	const unit = entity.get(Unit);
-	const bodyColor = unit?.selected
-		? COLOR_SELECTED
-		: isEnemy
-			? COLOR_ENEMY
-			: COLOR_UNIT;
-
 	return (
 		<group ref={groupRef}>
-			{/* Body */}
-			<mesh position={[0, 0.5, 0]}>
-				<boxGeometry args={[0.5, 0.6, 0.4]} />
-				<meshLambertMaterial color={bodyColor} />
-			</mesh>
-
-			{/* Legs/treads */}
-			<mesh position={[0, 0.15, 0]}>
-				<boxGeometry args={[0.55, 0.2, 0.5]} />
-				<meshLambertMaterial color={isEnemy ? COLOR_ENEMY_TREAD : 0x335588} />
-			</mesh>
-
-			{/* Camera (top dome) — red if broken */}
-			<mesh position={[0, 0.9, 0.1]}>
-				<sphereGeometry args={[0.12, 8, 8]} />
-				<meshLambertMaterial
-					color={
-						entityHasCamera ? (isEnemy ? 0xff8800 : 0x00ff88) : COLOR_BROKEN
-					}
-					emissive={
-						entityHasCamera ? (isEnemy ? 0x441100 : 0x004422) : 0x440000
-					}
-				/>
-			</mesh>
-
-			{/* Left arm — red if broken */}
-			<mesh position={[-0.35, 0.45, 0]}>
-				<boxGeometry args={[0.1, 0.4, 0.1]} />
-				<meshLambertMaterial
-					color={entityHasArms ? (isEnemy ? 0xaa5544 : 0x6688aa) : COLOR_BROKEN}
-				/>
-			</mesh>
-
-			{/* Right arm */}
-			<mesh position={[0.35, 0.45, 0]}>
-				<boxGeometry args={[0.1, 0.4, 0.1]} />
-				<meshLambertMaterial
-					color={entityHasArms ? (isEnemy ? 0xaa5544 : 0x6688aa) : COLOR_BROKEN}
-				/>
-			</mesh>
+			<Clone
+				object={scene}
+				inject={
+					<meshStandardMaterial
+						color={
+							unit?.selected
+								? COLOR_SELECTED
+								: hasDamage
+									? damagedTint
+									: tintColor
+						}
+					/>
+				}
+			/>
 
 			{/* Selection ring */}
 			<mesh
@@ -124,9 +106,15 @@ function UnitMesh({ entity }: { entity: Entity }) {
 	);
 }
 
-function BuildingMesh({ entity }: { entity: Entity }) {
+// ─── Building mesh (GLB model) ──────────────────────────────────────────────
+
+function BuildingModel({ entity }: { entity: Entity }) {
 	const groupRef = useRef<THREE.Group>(null);
 	const ringRef = useRef<THREE.Mesh>(null);
+
+	const building = entity.get(BuildingTrait)!;
+	const modelUrl = resolveBuildingModelUrl(building.buildingType);
+	const { scene } = useGLTF(modelUrl);
 
 	useFrame(() => {
 		const pos = entity.get(Position);
@@ -139,7 +127,6 @@ function BuildingMesh({ entity }: { entity: Entity }) {
 			groupRef.current.position.set(pos.x + ox, pos.y, pos.z + oz);
 		}
 		if (ringRef.current) {
-			// Fabrication units are also units — use unit.selected if available
 			const unitData = entity.get(Unit);
 			const buildingData = entity.get(BuildingTrait);
 			const selected = unitData
@@ -149,70 +136,30 @@ function BuildingMesh({ entity }: { entity: Entity }) {
 		}
 	});
 
-	const building = entity.get(BuildingTrait)!;
-	const isFabricator = building.buildingType === "fabrication_unit";
-	const isRod = building.buildingType === "lightning_rod";
 	const isPowered = building.powered;
 
 	return (
 		<group ref={groupRef}>
-			{/* Base platform */}
-			<mesh position={[0, 0.15, 0]}>
-				<boxGeometry args={[1.6, 0.3, 1.6]} />
-				<meshLambertMaterial
-					color={isPowered ? COLOR_BUILDING : COLOR_BUILDING_UNPOWERED}
-				/>
-			</mesh>
+			<Clone
+				object={scene}
+				inject={
+					isPowered ? undefined : (
+						<meshStandardMaterial color={0x554444} opacity={0.7} transparent />
+					)
+				}
+			/>
 
-			{isFabricator && (
-				<>
-					<mesh position={[0, 0.7, 0]}>
-						<boxGeometry args={[1.2, 0.8, 1.2]} />
-						<meshLambertMaterial
-							color={isPowered ? COLOR_FABRICATION : 0x554433}
-						/>
-					</mesh>
-					<mesh position={[0, 1.3, 0]}>
-						<cylinderGeometry args={[0.08, 0.08, 0.5, 8]} />
-						<meshLambertMaterial color={0x666666} />
-					</mesh>
-					<mesh position={[0.5, 0.9, 0.61]}>
-						<sphereGeometry args={[0.08, 8, 8]} />
-						<meshLambertMaterial
-							color={isPowered ? 0x00ff00 : COLOR_BROKEN}
-							emissive={isPowered ? 0x00ff00 : COLOR_BROKEN}
-						/>
-					</mesh>
-					<mesh position={[0, 1.2, 0.4]}>
-						<boxGeometry args={[0.4, 0.3, 0.3]} />
-						<meshLambertMaterial color={0x777766} />
-					</mesh>
-				</>
-			)}
-
-			{isRod && (
-				<>
-					{/* Lightning rod pole */}
-					<mesh position={[0, 1.5, 0]}>
-						<cylinderGeometry args={[0.06, 0.1, 2.5, 6]} />
-						<meshLambertMaterial color={0x888899} />
-					</mesh>
-					{/* Rod tip */}
-					<mesh position={[0, 2.8, 0]}>
-						<coneGeometry args={[0.12, 0.4, 6]} />
-						<meshLambertMaterial color={0xaabb00} emissive={0x334400} />
-					</mesh>
-					{/* Protection radius indicator */}
-					<mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-						<ringGeometry args={[7.5, 8, 32]} />
-						<meshBasicMaterial
-							color={0x00ffaa}
-							transparent
-							opacity={0.15}
-							side={THREE.DoubleSide}
-						/>
-					</mesh>
-				</>
+			{/* Protection radius indicator for lightning rods */}
+			{building.buildingType === "lightning_rod" && (
+				<mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
+					<ringGeometry args={[7.5, 8, 32]} />
+					<meshBasicMaterial
+						color={0x00ffaa}
+						transparent
+						opacity={0.15}
+						side={THREE.DoubleSide}
+					/>
+				</mesh>
 			)}
 
 			{/* Selection ring */}
@@ -229,9 +176,8 @@ function BuildingMesh({ entity }: { entity: Entity }) {
 	);
 }
 
-/**
- * Ghost preview for building placement.
- */
+// ─── Ghost preview for building placement ───────────────────────────────────
+
 function GhostBuilding() {
 	const groupRef = useRef<THREE.Group>(null);
 
@@ -265,8 +211,18 @@ function GhostBuilding() {
 	);
 }
 
+// ─── Preload all models ─────────────────────────────────────────────────────
+
+for (const url of getAllRobotModelUrls()) {
+	useGLTF.preload(url);
+}
+for (const url of getAllBuildingModelUrls()) {
+	useGLTF.preload(url);
+}
+
+// ─── Main renderer ──────────────────────────────────────────────────────────
+
 export function UnitRenderer() {
-	// Query mobile units (excluding fabrication units which render as buildings)
 	const mobileUnits = Array.from(
 		world.query(Position, Unit, UnitComponents, Faction, Fragment),
 	).filter((e) => e.get(Unit)!.unitType !== "fabrication_unit");
@@ -275,14 +231,14 @@ export function UnitRenderer() {
 	);
 
 	return (
-		<>
+		<Suspense fallback={null}>
 			{mobileUnits.map((entity) => (
-				<UnitMesh key={entity.id()} entity={entity} />
+				<UnitModel key={entity.id()} entity={entity} />
 			))}
 			{buildingEntities.map((entity) => (
-				<BuildingMesh key={entity.id()} entity={entity} />
+				<BuildingModel key={entity.id()} entity={entity} />
 			))}
 			<GhostBuilding />
-		</>
+		</Suspense>
 	);
 }

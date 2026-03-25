@@ -54,7 +54,9 @@ export function resetBaseIdCounter(): void {
 export function parseProductionQueue(json: string): ProductionItem[] {
 	try {
 		return JSON.parse(json) as ProductionItem[];
-	} catch {
+	} catch (e) {
+		// Non-fatal: corrupt JSON falls back to empty queue, but log it
+		console.warn("[baseManagement] corrupt production queue JSON:", json.slice(0, 80), e);
 		return [];
 	}
 }
@@ -66,7 +68,9 @@ export function serializeProductionQueue(items: ProductionItem[]): string {
 export function parseInfrastructure(json: string): InfrastructureItem[] {
 	try {
 		return JSON.parse(json) as InfrastructureItem[];
-	} catch {
+	} catch (e) {
+		// Non-fatal: corrupt JSON falls back to empty list, but log it
+		console.warn("[baseManagement] corrupt infrastructure JSON:", json.slice(0, 80), e);
 		return [];
 	}
 }
@@ -78,7 +82,9 @@ export function serializeInfrastructure(items: InfrastructureItem[]): string {
 export function parseStorage(json: string): BaseStorage {
 	try {
 		return JSON.parse(json) as BaseStorage;
-	} catch {
+	} catch (e) {
+		// Non-fatal: corrupt JSON falls back to empty storage, but log it
+		console.warn("[baseManagement] corrupt storage JSON:", json.slice(0, 80), e);
 		return {};
 	}
 }

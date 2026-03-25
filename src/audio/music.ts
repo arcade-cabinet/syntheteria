@@ -225,8 +225,9 @@ export function startMusic(epoch: number): void {
 					const chord = def.padChords[padIdx % def.padChords.length]!;
 					padSynth.triggerAttackRelease(chord, def.padInterval);
 					padIdx++;
-				} catch {
-					/* swallow — non-fatal */
+				} catch (e) {
+					// Non-fatal: pad synth trigger error
+					console.debug("[music] pad trigger error:", e);
 				}
 			}, def.padInterval);
 
@@ -238,8 +239,9 @@ export function startMusic(epoch: number): void {
 					const note = def.bassNotes[bassIdx % def.bassNotes.length]!;
 					bassSynth.triggerAttackRelease(note, def.bassInterval);
 					bassIdx++;
-				} catch {
-					/* swallow — non-fatal */
+				} catch (e) {
+					// Non-fatal: bass synth trigger error
+					console.debug("[music] bass trigger error:", e);
 				}
 			}, def.bassInterval);
 
@@ -253,8 +255,9 @@ export function startMusic(epoch: number): void {
 
 			running = true;
 			currentEpoch = clampedEpoch;
-		} catch {
-			// Swallow audio errors — never crash the game for music
+		} catch (e) {
+			// Non-fatal: audio errors never crash the game
+			console.warn("[music] start error:", e);
 		}
 	});
 }
@@ -299,8 +302,9 @@ function disposeMusic(): void {
 		bassLoop?.dispose();
 		padSynth?.dispose();
 		bassSynth?.dispose();
-	} catch {
-		// Swallow disposal errors
+	} catch (e) {
+		// Non-fatal: disposal errors during cleanup
+		console.warn("[music] disposal error:", e);
 	}
 
 	padLoop = null;

@@ -137,8 +137,9 @@ function initializeWorld(
 	for (const cb of CULT_BASES) {
 		try {
 			foundBase(world, cb.tileX, cb.tileZ, "cultist", cb.name);
-		} catch {
+		} catch (e) {
 			// Non-fatal: cult base placement may fail if too close to each other
+			console.warn("[init] cult base placement failed:", cb.name, e);
 		}
 	}
 
@@ -203,8 +204,9 @@ export default function App({ havok }: AppProps) {
 	useEffect(() => {
 		createWebAdapter()
 			.then((adapter) => initPersistence(adapter))
-			.catch(() => {
+			.catch((e) => {
 				// Non-fatal: save/load will be unavailable
+				console.warn("[persistence] DB init failed, save/load unavailable:", e);
 			});
 	}, []);
 
@@ -261,8 +263,9 @@ export default function App({ havok }: AppProps) {
 			<LandingScreen
 				onStartGame={(config: NewGameConfig) => {
 					// Initialize audio on first user gesture (browser AudioContext policy)
-					initAudio().catch(() => {
+					initAudio().catch((e) => {
 						// Non-fatal: audio will be unavailable
+						console.warn("[audio] init failed:", e);
 					});
 					gameConfigRef.current = config;
 					setPhase("narration");

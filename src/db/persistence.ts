@@ -147,8 +147,9 @@ export async function closePersistence(): Promise<void> {
 	if (adapter) {
 		try {
 			await adapter.close();
-		} catch {
-			// Non-fatal
+		} catch (e) {
+			// Non-fatal: DB close may fail if already closed
+			console.warn("[persistence] close error:", e);
 		}
 		adapter = null;
 		repo = null;

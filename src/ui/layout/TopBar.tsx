@@ -177,7 +177,8 @@ function SaveLoadControls() {
 				snap.gameSpeed,
 			);
 			setStatus(result ? "Saved" : "Save failed");
-		} catch {
+		} catch (e) {
+			console.error("[save] save failed:", e);
 			setStatus("Save failed");
 		} finally {
 			setSaving(false);
@@ -202,7 +203,8 @@ function SaveLoadControls() {
 			const latest = saves[0];
 			const ok = await loadGame(world, latest.id);
 			setStatus(ok ? "Loaded" : "Load failed");
-		} catch {
+		} catch (e) {
+			console.error("[save] load failed:", e);
 			setStatus("Load failed");
 		} finally {
 			setLoading(false);

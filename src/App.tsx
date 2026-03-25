@@ -1,10 +1,10 @@
 /**
  * Syntheteria — Phase 1 Prototype
- * Opening narration → continuous terrain with navmesh-based free 3D navigation.
+ * Opening narration → world initialization → gameplay.
  * In-game phase transitions trigger narrative overlays during gameplay.
+ * 3D canvas (BabylonJS via Reactylon) will be added in Task 4.
  */
 
-import { Canvas, useFrame } from "@react-three/fiber";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
 	disposeAudio,
@@ -29,7 +29,6 @@ import {
 	spawnUnit,
 } from "./ecs/factory";
 import {
-	getGameSpeed,
 	getSnapshot,
 	isPaused,
 	setGameConfig,
@@ -39,16 +38,6 @@ import {
 } from "./ecs/gameState";
 import { Fragment } from "./ecs/traits";
 import { logError } from "./errors";
-import { TopDownCamera } from "./input/TopDownCamera";
-import { UnitInput } from "./input/UnitInput";
-import { CityRenderer } from "./rendering/CityRenderer";
-import { LandscapeProps } from "./rendering/LandscapeProps";
-import { MoveIndicator } from "./rendering/MoveIndicator";
-import { StormSky } from "./rendering/StormSky";
-import { TerrainRenderer } from "./rendering/TerrainRenderer";
-import { UnitRenderer } from "./rendering/UnitRenderer";
-import { movementSystem } from "./systems/movement";
-import { buildNavGraph } from "./systems/navmesh";
 import { GameUI } from "./ui/GameUI";
 import { DebugOverlay } from "./ui/game/DebugOverlay";
 import { ErrorBoundary } from "./ui/game/ErrorBoundary";
@@ -71,9 +60,8 @@ function initializeWorld(
 	// Store config for save/load
 	setGameConfig(seed, difficulty);
 
-	// Generate labyrinth board (must happen before navmesh so walls block paths)
+	// Generate labyrinth board
 	initCityLayout({ width: 48, height: 48, seed, difficulty });
-	buildNavGraph();
 
 	// Find the player start room to spawn units there
 	const rooms = getRooms();
@@ -137,28 +125,6 @@ function initializeWorld(
 	simulationTick();
 
 	return { startX, startZ };
-}
-
-// --- Game loop ---
-
-function GameLoop() {
-	const simAccumulator = useRef(0);
-	const SIM_INTERVAL = 1.0;
-
-	useFrame((_, delta) => {
-		const speed = getGameSpeed();
-		if (speed <= 0) return;
-
-		movementSystem(delta, speed);
-
-		simAccumulator.current += delta * speed;
-		while (simAccumulator.current >= SIM_INTERVAL) {
-			simAccumulator.current -= SIM_INTERVAL;
-			simulationTick();
-		}
-	});
-
-	return null;
 }
 
 // --- Main App ---
@@ -270,47 +236,13 @@ export default function App() {
 		);
 	}
 
-	// Wait for world initialization before rendering the Canvas
+	// Wait for world initialization before rendering
 	if (!startPos) return null;
 
 	return (
 		<ErrorBoundary>
-			<div
-				style={{
-					width: "100vw",
-					height: "100vh",
-					background: "#000",
-					touchAction: "none",
-				}}
-			>
-				<Canvas
-					camera={{
-						position: [startPos.x, 40, startPos.z + 40 * 0.6],
-						fov: 45,
-						near: 0.1,
-						far: 500,
-					}}
-					style={{ width: "100%", height: "100%" }}
-				>
-					<StormSky />
-					<ambientLight intensity={0.4} />
-					<directionalLight
-						position={[10, 20, 10]}
-						intensity={0.6}
-						color="#aabbff"
-					/>
-
-					<TerrainRenderer />
-					<LandscapeProps />
-					<CityRenderer />
-					<UnitRenderer />
-					<MoveIndicator />
-
-					<TopDownCamera initialTarget={startPos} initialZoom={40} />
-					<UnitInput />
-					<GameLoop />
-				</Canvas>
-
+			<div className="w-screen h-screen bg-black touch-none">
+				{/* GameCanvas (BabylonJS) will be added here in Task 4 */}
 				<GameUI />
 				<DebugOverlay />
 

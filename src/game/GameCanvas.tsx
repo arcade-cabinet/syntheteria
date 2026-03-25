@@ -127,10 +127,10 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 				updateChunks(t.x, t.z, scene, chunkStateRef.current);
 			}
 		}
-		cam.onViewMatrixChangedObservable.add(onCameraMove);
+		const observer = cam.onViewMatrixChangedObservable.add(onCameraMove);
 
 		return () => {
-			cam.onViewMatrixChangedObservable.clear();
+			cam.onViewMatrixChangedObservable.remove(observer);
 			if (chunkStateRef.current) {
 				disposeAllChunks(chunkStateRef.current);
 				chunkStateRef.current = null;

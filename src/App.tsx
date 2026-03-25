@@ -5,6 +5,7 @@
  * 3D canvas rendered via BabylonJS + Reactylon (GameCanvas).
  */
 
+import type { Entity } from "koota";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
 	disposeAudio,
@@ -36,14 +37,16 @@ import {
 	subscribe,
 	togglePause,
 } from "./ecs/gameState";
-import { Fragment } from "./ecs/traits";
+import { Faction, Fragment, Unit } from "./ecs/traits";
+import { world } from "./ecs/world";
 import { logError } from "./errors";
 import { GameCanvas } from "./game/GameCanvas";
-import { GameUI } from "./ui/GameUI";
 import { DebugOverlay } from "./ui/game/DebugOverlay";
 import { ErrorBoundary } from "./ui/game/ErrorBoundary";
 import { NarrativeOverlay } from "./ui/game/NarrativeOverlay";
+import { RadialMenu } from "./ui/game/RadialMenu";
 import { LandingScreen, type NewGameConfig } from "./ui/landing/LandingScreen";
+import { GameLayout } from "./ui/layout/GameLayout";
 
 // --- Phase → Narrative sequence mapping ---
 
@@ -151,6 +154,11 @@ export default function App({ havok }: AppProps) {
 	const [startPos, setStartPos] = useState<{ x: number; z: number } | null>(
 		null,
 	);
+	const [radialMenu, setRadialMenu] = useState<{
+		entity: Entity;
+		screenX: number;
+		screenY: number;
+	} | null>(null);
 
 	// Watch game snapshot for phase transitions during gameplay
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
@@ -208,6 +216,29 @@ export default function App({ havok }: AppProps) {
 		};
 	}, []);
 
+	// Listen for radial menu events from InputHandler
+	useEffect(() => {
+		function onRadialMenu(e: Event) {
+			const { screenX, screenY } = (e as CustomEvent).detail;
+			let selected: Entity | null = null;
+			for (const entity of world.query(Unit, Faction)) {
+				if (
+					entity.get(Unit)!.selected &&
+					entity.get(Faction)!.value === "player"
+				) {
+					selected = entity;
+					break;
+				}
+			}
+			if (selected) {
+				setRadialMenu({ entity: selected, screenX, screenY });
+			}
+		}
+		window.addEventListener("syntheteria:radialmenu", onRadialMenu);
+		return () =>
+			window.removeEventListener("syntheteria:radialmenu", onRadialMenu);
+	}, []);
+
 	if (phase === "title") {
 		return (
 			<LandingScreen
@@ -246,29 +277,73 @@ export default function App({ havok }: AppProps) {
 
 	return (
 		<ErrorBoundary>
-			<div className="w-screen h-screen bg-black touch-none">
-				<GameCanvas
-					havok={havok}
-					startPos={startPos}
-					seed={gameConfigRef.current.seed}
-				/>
-				<GameUI />
-				<DebugOverlay />
-
-				{/* In-game phase transition narrative overlay */}
-				{phaseNarrative && (
-					<NarrativeOverlay
-						sequence={phaseNarrative}
-						onComplete={() => {
-							setPhaseNarrative(null);
-							// Resume game if it wasn't paused before the transition
-							if (!wasPausedRef.current && isPaused()) {
-								togglePause();
-							}
-						}}
+			<div className="touch-none">
+				<GameLayout>
+					<GameCanvas
+						havok={havok}
+						startPos={startPos}
+						seed={gameConfigRef.current.seed}
 					/>
-				)}
+
+					{/* Floating overlays inside the game area */}
+					<GameOverlays snap={snap} />
+					<DebugOverlay />
+
+					{/* Radial menu on right-click selected unit */}
+					{radialMenu && (
+						<RadialMenu
+							entity={radialMenu.entity}
+							screenX={radialMenu.screenX}
+							screenY={radialMenu.screenY}
+							onClose={() => setRadialMenu(null)}
+						/>
+					)}
+
+					{/* In-game phase transition narrative overlay */}
+					{phaseNarrative && (
+						<NarrativeOverlay
+							sequence={phaseNarrative}
+							onComplete={() => {
+								setPhaseNarrative(null);
+								// Resume game if it wasn't paused before the transition
+								if (!wasPausedRef.current && isPaused()) {
+									togglePause();
+								}
+							}}
+						/>
+					)}
+				</GameLayout>
 			</div>
 		</ErrorBoundary>
+	);
+}
+
+// ─── Game overlays (combat notifications, merge events) ─────────────────────
+
+import type { GameSnapshot } from "./ecs/gameState";
+
+function GameOverlays({ snap }: { snap: GameSnapshot }) {
+	return (
+		<div className="absolute inset-0 pointer-events-none font-mono z-10">
+			{/* Combat notifications */}
+			{snap.combatEvents.length > 0 && (
+				<div className="absolute top-20 right-20 bg-red-950/85 border border-red-500/40 rounded-lg px-3.5 py-2 text-[11px] text-red-400 max-w-[220px]">
+					{snap.combatEvents.slice(0, 3).map((e) => (
+						<div key={`${e.targetId}-${e.componentDamaged}`}>
+							{e.targetDestroyed
+								? `${e.targetId} DESTROYED`
+								: `${e.targetId}: ${e.componentDamaged} damaged`}
+						</div>
+					))}
+				</div>
+			)}
+
+			{/* Merge event notification */}
+			{snap.mergeEvents.length > 0 && (
+				<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/90 border-2 border-cyan-400 rounded-xl px-8 py-5 text-lg text-cyan-400 text-center">
+					MAP FRAGMENTS MERGED
+				</div>
+			)}
+		</div>
 	);
 }

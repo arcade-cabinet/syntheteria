@@ -2,7 +2,7 @@
  * Syntheteria — Phase 1 Prototype
  * Opening narration → world initialization → gameplay.
  * In-game phase transitions trigger narrative overlays during gameplay.
- * 3D canvas (BabylonJS via Reactylon) will be added in Task 4.
+ * 3D canvas rendered via BabylonJS + Reactylon (GameCanvas).
  */
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -38,6 +38,7 @@ import {
 } from "./ecs/gameState";
 import { Fragment } from "./ecs/traits";
 import { logError } from "./errors";
+import { GameCanvas } from "./game/GameCanvas";
 import { GameUI } from "./ui/GameUI";
 import { DebugOverlay } from "./ui/game/DebugOverlay";
 import { ErrorBoundary } from "./ui/game/ErrorBoundary";
@@ -129,9 +130,13 @@ function initializeWorld(
 
 // --- Main App ---
 
+interface AppProps {
+	havok: unknown;
+}
+
 let worldInitialized = false;
 
-export default function App() {
+export default function App({ havok }: AppProps) {
 	const [phase, setPhase] = useState<"title" | "narration" | "playing">(
 		"title",
 	);
@@ -242,7 +247,11 @@ export default function App() {
 	return (
 		<ErrorBoundary>
 			<div className="w-screen h-screen bg-black touch-none">
-				{/* GameCanvas (BabylonJS) will be added here in Task 4 */}
+				<GameCanvas
+					havok={havok}
+					startPos={startPos}
+					seed={gameConfigRef.current.seed}
+				/>
 				<GameUI />
 				<DebugOverlay />
 

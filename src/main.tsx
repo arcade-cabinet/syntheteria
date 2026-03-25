@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import App from "./App.tsx";
+import App from "./App";
 
 // Suppress THREE.Clock deprecation warnings from R3F v9 internals.
 // R3F uses THREE.Clock which was deprecated in Three.js r183 in favor of Timer.

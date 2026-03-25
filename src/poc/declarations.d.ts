@@ -3,9 +3,11 @@ declare module "*.jpg";
 declare module "*.jpeg";
 declare module "*.css";
 
-// Vite's import.meta.env used by shared config files (src/config/models.ts)
+// import.meta.env shims — Webpack DefinePlugin provides these at build time
 interface ImportMetaEnv {
 	readonly BASE_URL: string;
+	readonly DEV: boolean;
+	readonly PROD: boolean;
 }
 interface ImportMeta {
 	readonly env: ImportMetaEnv;

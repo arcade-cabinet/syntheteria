@@ -215,14 +215,55 @@ Faithful port of the R3F storm globe to BabylonJS:
 
 ## 10. Input
 
-- **Camera pan/zoom**: BabylonJS ArcRotateCamera (right-drag, two-finger, scroll)
-- **Unit selection**: BabylonJS `scene.pick()` on pointer down — raycast to find entity mesh
-- **Movement command**: Right-click on terrain → Yuka pathfind → set `Navigation` trait
-- **Radial menu**: Right-click on selected unit → DOM menu at screen position
-- **Base interaction**: Click base marker → Base Panel slides open
-- **Keyboard**: Space=pause, 1-5=speed, Ctrl+1-9=control groups, Escape=deselect/close panel
-- **Box selection**: Left-drag draws rectangle, selects all player units within
-- **Touch**: Single tap=select, double tap=move, long press=radial menu
+### Golden Rule: MOUSE-FIRST
+
+**If it can't be done with a mouse, it can't be done with tap/pinch and the UX has FAILED.**
+
+No keyboard shortcuts required for ANY action. No joystick. No central controls. Everything is point-and-click. Keyboard shortcuts are OPTIONAL accelerators for power users — never required.
+
+This is an RTS. The interaction model is:
+1. **Click** a unit to select it
+2. **Click** a destination to move it there (pathfinds automatically)
+3. **Click** a resource to harvest it
+4. **Click** an enemy to attack it
+5. **Click** a base marker to open the base panel
+6. **Click** an empty spot near a unit to open the radial menu (context actions)
+
+That's it. Every action is a click on something.
+
+### Camera
+- **Pan**: right-click drag / two-finger drag
+- **Zoom**: scroll wheel / pinch zoom
+- BabylonJS ArcRotateCamera handles all of this natively
+
+### Selection
+- **Click unit** → select it (highlight, show info in sidebar)
+- **Click terrain** with unit selected → move command (Yuka pathfind)
+- **Click enemy** with unit selected → attack command
+- **Click resource** with unit selected → harvest command
+- **Click nothing** → deselect
+- **Drag rectangle** → box select multiple units
+
+### Context Actions
+- **Click near selected unit** (or right-click) → radial menu appears at cursor
+- Actions shown depend on context: MOVE, ATTACK, HACK, FOUND BASE, SCAVENGE, STANCE
+- Click an action → executes → menu closes
+
+### Base Interaction
+- **Click base marker** → Base Panel slides open from right
+- **Click X** or click outside → panel closes
+
+### Touch (identical to mouse, just pointer events)
+- Tap = click
+- Two-finger drag = pan
+- Pinch = zoom
+- Long press = right-click equivalent (radial menu)
+- Drag = box select
+
+### Keyboard (OPTIONAL accelerators, never required)
+- Space = pause/unpause (also available as a clickable button in top bar)
+- Escape = deselect / close panel (also available as X button)
+- Number keys = speed presets (also available as clickable buttons)
 
 ---
 

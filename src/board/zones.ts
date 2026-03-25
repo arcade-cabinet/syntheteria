@@ -7,8 +7,10 @@
  *   - Campus (southwest): Ruined science campus with observatory
  *   - Enemy (north): Cult territory — strongholds and enslaved machines
  *
- * Zone assignment uses normalized (0..1) coordinates so it works at any
- * board size. The city occupies the central area; other zones surround it.
+ * Zone assignment uses absolute world coordinates scaled to a fixed reference
+ * size (WORLD_EXTENT). This means zones are position-stable regardless of
+ * board size or chunk boundaries — the same world position always maps to the
+ * same zone.
  */
 
 // ─── Zone Type ──────────────────────────────────────────────────────────────
@@ -75,6 +77,17 @@ export const ZONE_PROFILES: Record<WorldZone, ZoneProfile> = {
 // ─── Zone Geometry ──────────────────────────────────────────────────────────
 
 /**
+ * Reference world extent in tiles.
+ *
+ * All zone boundaries are defined relative to this. A board of any size uses
+ * the same boundaries by normalizing (x / WORLD_EXTENT, z / WORLD_EXTENT).
+ * Chunks at different world positions always get consistent zone assignments.
+ *
+ * 256 tiles = 512m world. Large enough for 4x4 chunks of 64 tiles each.
+ */
+export const WORLD_EXTENT = 256;
+
+/**
  * Zone boundary thresholds in normalized coordinates (0..1).
  *
  * Layout (looking at the board, z=0 is top/north, z=1 is bottom/south):
@@ -109,12 +122,15 @@ const CAMPUS_Z_MIN = 0.65;
 // ─── Zone Assignment ────────────────────────────────────────────────────────
 
 /**
- * Determine which zone a tile belongs to based on its board position.
+ * Determine which zone a tile belongs to based on its position.
  *
- * @param x - tile x coordinate
- * @param z - tile z coordinate (0 = north/top)
- * @param width - board width in tiles
- * @param height - board height in tiles
+ * Uses absolute world coordinates normalized against WORLD_EXTENT.
+ * This makes zone assignment stable across any board size or chunk boundary.
+ *
+ * @param x - tile x coordinate (absolute world position)
+ * @param z - tile z coordinate (absolute world position, 0 = north/top)
+ * @param width - board width in tiles (legacy compat — ignored when > 0, uses WORLD_EXTENT)
+ * @param height - board height in tiles (legacy compat — ignored when > 0, uses WORLD_EXTENT)
  * @returns the WorldZone for this tile
  */
 export function zoneForTile(
@@ -123,9 +139,15 @@ export function zoneForTile(
 	width: number,
 	height: number,
 ): WorldZone {
-	// Normalize to 0..1
-	const nx = width > 1 ? x / (width - 1) : 0.5;
-	const nz = height > 1 ? z / (height - 1) : 0.5;
+	// Normalize against fixed world extent, not board dimensions.
+	// For boards smaller than WORLD_EXTENT, tiles near (0,0) map to the
+	// northwest corner of the world — which is enemy territory.
+	// For legacy compatibility we still accept width/height but use the
+	// larger of (board dim, WORLD_EXTENT) to avoid collapsing zones.
+	const extentX = Math.max(width, WORLD_EXTENT);
+	const extentZ = Math.max(height, WORLD_EXTENT);
+	const nx = extentX > 1 ? x / (extentX - 1) : 0.5;
+	const nz = extentZ > 1 ? z / (extentZ - 1) : 0.5;
 
 	// Enemy territory: northern band
 	if (nz < ENEMY_Z_MAX) return "enemy";
@@ -148,6 +170,19 @@ export function zoneForTile(
 
 	// Remaining area between enemy and city on the west side — extend city
 	return "city";
+}
+
+/**
+ * Zone assignment using absolute world coordinates only.
+ * No board dimensions needed — normalizes against WORLD_EXTENT directly.
+ */
+export function zoneAtWorldPos(worldX: number, worldZ: number): WorldZone {
+	return zoneForTile(
+		Math.floor(worldX),
+		Math.floor(worldZ),
+		WORLD_EXTENT,
+		WORLD_EXTENT,
+	);
 }
 
 // ─── Zone Statistics ────────────────────────────────────────────────────────

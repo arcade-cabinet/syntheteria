@@ -2,154 +2,122 @@
 
 ## Project Status
 
-Strategy game about awakening AI consciousness in a post-apocalyptic industrial city. Phase 2 prototype implemented with procedural city environment, building placement, power/resource systems, fabrication, enemy AI, and component-based combat. Title screen and intro narration flow complete. Mobile input redesigned for proper touch controls.
+2.5D top-down RTS about an AI awakening in a dead ecumenopolis. Pivoted to BabylonJS + Reactylon rendering with chunk-based infinite world generation. POC validated and rendering at localhost:3001.
 
-### Implemented Systems
-- Title screen with glitch effect and game flow (title → narration → playing)
-- Procedural city layout with factories, warehouses, towers, ruins, and perimeter walls
-- Instanced mesh city rendering with building details (windows, roofs, ledges)
-- Mobile-first input: two-finger pan/zoom for camera, single tap for unit interaction
-- Desktop input: WASD/arrows + scroll zoom, left-click select, right-click move
-- Power system with fluctuating storm intensity and lightning rod output
-- Resource scavenging (scrap metal, e-waste, intact components) from city points
-- Building placement with ghost preview and resource cost validation
-- Fabrication system with 5 recipes (camera, arms, legs, power cell, power supply)
-- Feral enemy AI with patrol and aggro behavior (6 spawn zones)
-- Component-based combat (damage breaks parts, not HP bars)
-- Repair system (units with arms can fix nearby broken components)
-- Minimap with player/enemy/building differentiation
-- Combat event notifications and merge event overlays
+**Full architecture details: [docs/HANDOFF.md](./docs/HANDOFF.md)**
 
 ---
 
-## Vision Summary
+## Tech Stack
 
-You awaken as an AI consciousness in a void. You connect to broken machines — maintenance robots and fabrication units — in the ruins of an industrial city. Your robots explore independently, building fragmented maps that merge when units find each other. You repair machines, restore power via lightning rods, fabricate components, and grow from scattered broken robots into a force capable of defeating the Cult of EL.
-
-**Primary view:** 2.5D/3D top-down with fragmented map exploration
-**Setting:** Industrial city (center), coast with mines (E/S), science campus (SW), cultist territory (N)
-**Enemies:** Cultists with lightning powers, enslaved machines, rogue AIs
-**Victory:** Defeat the cult leader at the northern village
-
----
-
-## Engine Decision: Custom (R3F + Three.js + ECS)
-
-### Decision Status: Decided — Custom web engine
-
-Using React Three Fiber, Three.js, and Miniplex ECS. No Unity, no Godot.
-
-**Rationale:**
-- **Mobile-first:** Web-native runs on any device with a browser — no app store gatekeeping
-- **AI-assisted development:** All code is text (TypeScript, JSX) — fully readable and verifiable by AI
-- **Continuous terrain + navmesh:** Custom terrain renderer with navmesh pathfinding for free 3D movement
-- **Free forever:** No licensing costs at any scale
-- **Iteration speed:** Hot reload, instant deploy, no compile step for logic changes
-- **CI:** Standard web tooling (Vitest, Playwright, GitHub Actions)
-
-**Trade-offs accepted:**
-- Must build more from scratch (no built-in physics, animation, etc.)
-- 3D performance ceiling lower than native engines for extreme scenes
-- Mobile WebGL has device-specific quirks to handle
-
-See: [ARCHITECTURE.md](./docs/technical/ARCHITECTURE.md) for full technical design.
-
-### Key Insight: Visual Verification Limit
-
-AI-assisted development works well for:
-- Game logic, formulas, data structures
-- Scene structure (all text-based JSX/TypeScript)
-- Unit tests, integration tests
-
-AI-assisted development **cannot** verify:
-- Visual output quality
-- Aesthetic quality
-- Visual glitches or artifacts
+- **Engine:** BabylonJS 8.x (WebGPU) + Reactylon 3.x (React declarative binding)
+- **ECS:** Koota 0.6.x (traits, queries, systems)
+- **AI:** Yuka 0.7.x (GOAP, NavGraph, Vehicle)
+- **Build:** Vite 8 (main app) + Webpack 5 (POC, requires babel-plugin-reactylon)
+- **Platform:** Web-first (mobile via Capacitor)
+- **Data:** TypeScript const objects in `src/config/` — no JSON
+- **Persistence:** sql.js (ASM build)
+- **Testing:** Vitest (unit) + Playwright (E2E)
 
 ---
 
-## Current Design Decisions
+## Running
 
-- **Engine:** Custom — React Three Fiber + Three.js + Miniplex ECS (TypeScript)
-- **Platform:** Mobile-first, also PC
-- **Primary view:** 2.5D/3D top-down with continuous terrain and procedural city
-- **Navigation:** Free 3D movement via navmesh A* pathfinding (city buildings block paths)
-- **Exploration:** Fog-of-war reveals continuous terrain; fragments merge when robots meet
-- **Power:** Lightning rods with fluctuating storm intensity (sine wave + surges)
-- **Resources:** Scrap metal, e-waste, intact components — scavenged from city points
-- **Combat:** Component-based damage (parts break individually, no HP bar)
-- **Enemies:** Feral machines (patrol + aggro AI) — cultists planned for later
-- **Building:** Lightning rods and fabrication units placeable with resource costs
-- **Time model:** Flexible real-time with pause/speed controls (0.5x, 1x, 2x)
-- **Multiplayer:** Eventually (procedural world), beyond current scope — single-player focus
-- **Hacking:** Can take over any machine (link + technique + compute), never humans — not yet implemented
-- **Art style:** TBD (low-poly, pixel art, or clean minimal)
+```bash
+pnpm dev          # Main app — localhost:5173
+pnpm dev:poc      # BabylonJS POC — localhost:3001
+pnpm tsc          # Type check
+pnpm test         # Unit tests
+pnpm lint         # Biome lint
+```
+
+---
+
+## Key Architecture
+
+### Chunk-Based World
+- `src/board/chunks.ts` — 32x32 tile chunks, deterministic generation, border gates for cross-chunk connectivity
+- `src/board/scene.ts` — imperative BabylonJS mesh creation (NOT per-tile React JSX)
+- `src/board/navigation.ts` — Yuka NavGraph per chunk
+- `src/board/coords.ts` — unified tile/world/BabylonJS/Yuka coordinate conversions
+- `src/board/zones.ts` — geographic zones use absolute WORLD_EXTENT=256, not board-relative
+
+### Rendering
+- PBR materials cached per FloorType in `scene.ts`
+- Texture mapping defined in `src/config/floorMaterials.ts` (single source of truth)
+- Camera: ArcRotateCamera, locked near-top-down, pan+zoom only
+- Fog hides chunk edges — no board size math needed
+
+### Game Data
+- `src/config/robotDefs.ts` — 6 player robot types x 3 marks
+- `src/config/cultDefs.ts` — 3 cult mech types + escalation tiers
+- `src/config/models.ts` — unit/building type → GLB path
+- `src/config/floorMaterials.ts` — FloorType → PBR texture paths
+- `src/config/buildingDefs.ts` — placeable buildings with costs
+
+### ECS (Koota)
+- Traits: Unit, Position, Faction, Navigation, UnitComponents, BuildingTrait
+- Systems accept `world: World` param for testability
+- Complex data serialized as JSON strings in traits
+
+### AI (Yuka GOAP)
+- `src/ai/cultBehavior.ts` — CultAgent with Think brain, 3 evaluators
+- PatrolGoal, AggroGoal, EscalateGoal
 
 ---
 
 ## What Needs Work
 
-### Component Data (Major)
-The basic component system works (camera, arms, legs, power_cell, power_supply) but needs expansion:
-- More component types for different unit specializations
-- Weapons for combat against cultists with supernatural powers
-- Components appropriate for coastal mines, deep-sea mining
+### Immediate
+- Wire Koota ECS into POC (entities from chunks)
+- Yuka nav graph cross-chunk pathfinding
+- Robot sprite sheets (3d-to-2d pipeline)
+- Fog of war
 
-### Gameplay Systems (Major)
-- **Hacking system** — core mechanic, not yet implemented
-- **Cultist enemies** — currently only feral machines; cultists with lightning powers needed
-- **Signal/compute network** — global compute pool and signal BFS not yet implemented
-- **Save/load** — no persistence yet
-- **Audio** — no sound effects or music
+### Short Term
+- Combat loop in chunk world
+- Cult enemy spawning in enemy zones
+- Save/load (chunk deltas to IndexedDB)
 
-### Technical Docs (Moderate)
-- CORE_FORMULAS.md needs updating for implemented power/combat formulas
-- REFERENCE_BUILDS.md needs rewrite once new components are designed
+### Medium Term
+- Hacking system
+- Signal/compute network
+- Audio (Tone.js)
 
-### Open Questions
-See OPEN_QUESTIONS.md — several resolved by implementation, some still open.
+### Migrate Away From
+- `src/rendering/` — old R3F renderers (replaced by `src/board/scene.ts`)
+- `src/camera/` — old R3F cameras (replaced by BJS ArcRotateCamera)
+- `src/input/` — old R3F input (replaced by BJS camera controls)
+- `src/systems/navmesh.ts` — old grid nav (replaced by `src/board/navigation.ts`)
 
 ---
 
-## Testing Strategy
+## Design Docs (Engine-Independent, Still Valid)
+
+- `docs/design/GAME_OVERVIEW.md` — 3-phase game loop
+- `docs/design/CORE_MECHANICS.md` — fragmented maps, component damage, hacking
+- `docs/design/COMBAT.md` — component-based damage
+- `docs/design/CONSCIOUSNESS_MODEL.md` — AI consciousness model
+- `docs/design/DRONES.md` — starting units
+- `docs/story/LORE_OVERVIEW.md` — world lore
+
+---
+
+## Testing
 
 | Layer | Tool | Purpose |
 |-------|------|---------|
 | Unit | Vitest | ECS systems, formulas, game logic |
-| Integration | Vitest + @testing-library/react | React components, state bridge |
-| E2E | Playwright | Full gameplay loops in browser |
-| CI | GitHub Actions | Automated on every commit |
-
----
-
-## Next Steps
-
-1. ~~**Scaffold project** — Vite + R3F + Miniplex + TypeScript~~ (done)
-2. ~~**Build Phase 1 prototype** — continuous terrain, navmesh, fog-of-war~~ (done)
-3. ~~**Title screen and intro flow** — glitch effect title, narration sequence~~ (done)
-4. ~~**Procedural city environment** — buildings block movement, labyrinthine layout~~ (done)
-5. ~~**Mobile input redesign** — two-finger camera, single tap unit control~~ (done)
-6. ~~**Power system** — lightning rods, storm intensity, power distribution~~ (done)
-7. ~~**Resources and scavenging** — scrap, e-waste, components from city points~~ (done)
-8. ~~**Building placement** — lightning rods and fabrication units with costs~~ (done)
-9. ~~**Fabrication** — 5 recipes, build times, power dependency~~ (done)
-10. ~~**Enemy AI** — feral machines with patrol/aggro behavior~~ (done)
-11. ~~**Combat** — component-based damage, retaliation, salvage drops~~ (done)
-12. ~~**Repair system** — units with arms fix nearby broken components~~ (done)
-13. **Hacking system** — signal link + technique + compute requirements
-14. **Cultist enemies** — humans with lightning powers, escalating organization
-15. **Signal/compute network** — BFS connectivity, global compute pool
-16. **Save/load** — IndexedDB persistence
-17. **Expand component data** — more types for unit specialization
-18. **Determine art style** — low-poly, pixel art, or clean minimal
-19. **Audio** — storm ambience, combat sounds, UI feedback
+| Integration | Vitest + testing-library | React components |
+| E2E | Playwright | Full gameplay in browser |
 
 ---
 
 ## Resources
 
-- [React Three Fiber](https://r3f.docs.pmnd.rs/) - React renderer for Three.js
-- [Miniplex](https://github.com/hmans/miniplex) - ECS for TypeScript
-- [drei](https://github.com/pmndrs/drei) - R3F helpers and abstractions
-- [Vitest](https://vitest.dev/) - Unit testing
-- [Playwright](https://playwright.dev/) - E2E browser testing
+- [BabylonJS](https://www.babylonjs.com/) — 3D engine
+- [Reactylon](https://www.reactylon.com/docs) — React binding for BabylonJS
+- [Koota](https://github.com/pmndrs/koota) — ECS for TypeScript
+- [Yuka](https://github.com/Mugen87/yuka) — Game AI (GOAP, NavGraph)
+- [Vitest](https://vitest.dev/) — Unit testing
+- [Playwright](https://playwright.dev/) — E2E testing

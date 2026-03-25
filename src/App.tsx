@@ -29,6 +29,7 @@ import {
 	spawnLightningRod,
 	spawnUnit,
 } from "./ecs/factory";
+import { foundBase } from "./systems/baseManagement";
 import {
 	getSnapshot,
 	isPaused,
@@ -124,6 +125,21 @@ function initializeWorld(
 		z: startZ + 2,
 		fragmentId: bot1.get(Fragment)!.fragmentId,
 	});
+
+	// Pre-place cult bases in enemy territory (northern zone)
+	// Enemy zone is nz < 0.25 → tiles z < 0.25 * 256 = 64, x spread across width
+	const CULT_BASES = [
+		{ tileX: 50, tileZ: 20, name: "Cult Stronghold Alpha" },
+		{ tileX: 150, tileZ: 30, name: "Cult Outpost Beta" },
+		{ tileX: 100, tileZ: 10, name: "Cult Citadel Gamma" },
+	];
+	for (const cb of CULT_BASES) {
+		try {
+			foundBase(world, cb.tileX, cb.tileZ, "cultist", cb.name);
+		} catch {
+			// Non-fatal: cult base placement may fail if too close to each other
+		}
+	}
 
 	// Initial exploration tick so terrain is visible
 	simulationTick();

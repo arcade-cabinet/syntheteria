@@ -12,6 +12,7 @@
  */
 
 import type { ReactNode } from "react";
+import { BasePanel } from "../base/BasePanel";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 
@@ -36,6 +37,9 @@ export function GameLayout({ children }: GameLayoutProps) {
 
 				{/* Game canvas + overlays */}
 				{children}
+
+				{/* Base management side panel (slides from right) */}
+				<BasePanel />
 			</div>
 		</div>
 	);

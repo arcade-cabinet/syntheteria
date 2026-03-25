@@ -107,3 +107,15 @@ export const Hacking = trait({
 	/** EntityId of the target being hacked */
 	targetEntityId: "",
 });
+
+/** Base / settlement — player or cult stronghold */
+export const Base = trait({
+	name: "",
+	tileX: 0,
+	tileZ: 0,
+	factionId: "player" as string,
+	infrastructureJson: "[]" as string,
+	productionQueueJson: "[]" as string,
+	power: 0,
+	storageJson: "{}" as string,
+});

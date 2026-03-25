@@ -6,6 +6,10 @@
 import { cultAISystem } from "../ai/cultBehavior";
 import { logError } from "../errors";
 import {
+	baseProductionTick,
+	basePowerTick,
+} from "../systems/baseManagement";
+import {
 	type CombatEvent,
 	combatSystem,
 	getLastCombatEvents,
@@ -212,6 +216,8 @@ export function simulationTick() {
 	runSystem("cultAI", cultAISystem);
 	runSystem("hacking", hackingSystem);
 	runSystem("combat", combatSystem);
+	runSystem("basePower", () => basePowerTick(world));
+	runSystem("baseProduction", () => baseProductionTick(world, 1.0));
 	runSystem("humanTemperature", humanTemperatureSystem);
 	runSystem("displayOffsets", updateDisplayOffsets);
 

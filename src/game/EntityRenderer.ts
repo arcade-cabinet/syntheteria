@@ -24,6 +24,12 @@ import "@babylonjs/loaders/glTF";
 import { getAllRobotModelUrls, resolveUnitModelUrl } from "../config/models";
 import { EntityId, Faction, Navigation, Position, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
+import {
+	initBaseMarkers,
+	syncBaseMarkers,
+	disposeBaseMarkers,
+	type BaseMarkerState,
+} from "./BaseMarker";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -52,6 +58,8 @@ export interface EntityRendererState {
 	selectionMaterial: StandardMaterial;
 	/** Whether asset loading is complete. */
 	ready: boolean;
+	/** Base marker renderer state. */
+	baseMarkers: BaseMarkerState;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -108,11 +116,15 @@ export async function initEntityRenderer(
 	selectionMaterial.alpha = 0.8;
 	selectionMaterial.freeze();
 
+	// Initialize base markers
+	const baseMarkers = initBaseMarkers(scene);
+
 	return {
 		assetPool,
 		entityMeshes: new Map(),
 		selectionMaterial,
 		ready: assetPool.size > 0,
+		baseMarkers,
 	};
 }
 
@@ -197,6 +209,9 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 			state.entityMeshes.delete(eid);
 		}
 	}
+
+	// Sync base markers
+	syncBaseMarkers(state.baseMarkers, scene, world);
 }
 
 // ─── Raycasting ─────────────────────────────────────────────────────────────
@@ -243,6 +258,7 @@ export function disposeEntityRenderer(state: EntityRendererState): void {
 	}
 	state.assetPool.clear();
 
+	disposeBaseMarkers(state.baseMarkers);
 	state.selectionMaterial.dispose();
 	state.ready = false;
 }

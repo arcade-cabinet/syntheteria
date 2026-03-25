@@ -10,10 +10,12 @@
 
 import type { Entity } from "koota";
 import { useSyncExternalStore } from "react";
+import { worldToTileX, worldToTileZ } from "../../board/coords";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import {
 	BuildingTrait,
 	EngagementRule,
+	EntityId,
 	Faction,
 	Position,
 	ScavengeSite,
@@ -22,6 +24,8 @@ import {
 } from "../../ecs/traits";
 import { parseComponents } from "../../ecs/types";
 import { world } from "../../ecs/world";
+import { foundBase, validateBaseLocation } from "../../systems/baseManagement";
+import { selectBase } from "../base/BasePanel";
 import { cn } from "../lib/utils";
 
 // ─── Stance labels ──────────────────────────────────────────────────────────
@@ -153,9 +157,19 @@ function UnitActions({ entity }: { entity: Entity }) {
 			<ActionButton
 				label="FOUND BASE"
 				enabled={hasArms}
-				title="Establish a new base"
+				title="Establish a new base at this unit's position"
 				onClick={() => {
-					// Base founding will be wired in Task 8
+					const tileX = worldToTileX(unitPos.x);
+					const tileZ = worldToTileZ(unitPos.z);
+					const error = validateBaseLocation(world, tileX, tileZ, "player");
+					if (error) {
+						console.warn("[ActionPanel] Cannot found base:", error);
+						return;
+					}
+					const baseName = `Base ${Date.now().toString(36).slice(-4).toUpperCase()}`;
+					const baseEntity = foundBase(world, tileX, tileZ, "player", baseName);
+					const baseId = baseEntity.get(EntityId)?.value;
+					if (baseId) selectBase(baseId);
 				}}
 			/>
 			<ActionButton

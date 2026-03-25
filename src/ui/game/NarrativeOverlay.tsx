@@ -21,6 +21,12 @@ const CHAR_INTERVAL = 35;
 /** Milliseconds to wait after typewriter finishes before showing "continue" hint. */
 const CONTINUE_DELAY = 600;
 
+/** Milliseconds after typing finishes before auto-advancing to next frame. */
+const AUTO_ADVANCE_DELAY = 2500;
+
+/** Milliseconds for the fade-out transition between frames. */
+const FADE_DURATION = 500;
+
 // ---------------------------------------------------------------------------
 // Mood → style mapping
 // ---------------------------------------------------------------------------
@@ -59,9 +65,12 @@ export function NarrativeOverlay({
 	const [displayedChars, setDisplayedChars] = useState(0);
 	const [showContinue, setShowContinue] = useState(false);
 	const [fadeIn, setFadeIn] = useState(false);
+	const [fading, setFading] = useState(false);
 	const typewriterRef = useRef<ReturnType<typeof setInterval> | null>(null);
 	const continueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const frame = frames[frameIndex];
 	const fullText = frame?.text ?? "";
@@ -73,6 +82,8 @@ export function NarrativeOverlay({
 			if (typewriterRef.current) clearInterval(typewriterRef.current);
 			if (continueTimerRef.current) clearTimeout(continueTimerRef.current);
 			if (delayTimerRef.current) clearTimeout(delayTimerRef.current);
+			if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+			if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
 		};
 	}, []);
 
@@ -81,6 +92,7 @@ export function NarrativeOverlay({
 		setDisplayedChars(0);
 		setShowContinue(false);
 		setFadeIn(false);
+		setFading(false);
 
 		const startDelay = frame?.delay ?? 400;
 
@@ -111,20 +123,51 @@ export function NarrativeOverlay({
 		};
 	}, [fullText, frame?.delay]);
 
-	// Show "continue" hint after typewriter finishes
+	// Show "continue" hint and start auto-advance timer after typewriter finishes
 	useEffect(() => {
 		if (!isTyping && displayedChars > 0) {
+			// Show continue hint immediately (after short delay)
 			continueTimerRef.current = setTimeout(
 				() => setShowContinue(true),
 				CONTINUE_DELAY,
 			);
+
+			// Auto-advance: start hold timer
+			autoAdvanceRef.current = setTimeout(() => {
+				// Begin fade out
+				setFading(true);
+
+				// After fade completes, advance to next frame
+				fadeTimerRef.current = setTimeout(() => {
+					setFading(false);
+					if (frameIndex < frames.length - 1) {
+						setFrameIndex((i) => i + 1);
+					} else {
+						onComplete();
+					}
+				}, FADE_DURATION);
+			}, AUTO_ADVANCE_DELAY);
+
 			return () => {
 				if (continueTimerRef.current) clearTimeout(continueTimerRef.current);
+				if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+				if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
 			};
 		}
-	}, [isTyping, displayedChars]);
+	}, [isTyping, displayedChars, frameIndex, frames.length, onComplete]);
 
 	const advance = useCallback(() => {
+		// Cancel any auto-advance timers
+		if (autoAdvanceRef.current) {
+			clearTimeout(autoAdvanceRef.current);
+			autoAdvanceRef.current = null;
+		}
+		if (fadeTimerRef.current) {
+			clearTimeout(fadeTimerRef.current);
+			fadeTimerRef.current = null;
+		}
+		setFading(false);
+
 		// If still typing, complete the text instantly
 		if (isTyping) {
 			if (typewriterRef.current) {
@@ -207,8 +250,10 @@ export function NarrativeOverlay({
 						color: `${color}88`,
 						marginBottom: "12px",
 						textTransform: "uppercase",
-						opacity: fadeIn ? 1 : 0,
-						transition: "opacity 0.3s ease-in",
+						opacity: fading ? 0 : fadeIn ? 1 : 0,
+						transition: fading
+							? `opacity ${FADE_DURATION}ms ease-out`
+							: "opacity 0.3s ease-in",
 					}}
 				>
 					{frame.speaker}
@@ -231,8 +276,10 @@ export function NarrativeOverlay({
 					display: "flex",
 					alignItems: "center",
 					justifyContent: "center",
-					opacity: fadeIn ? 1 : 0,
-					transition: "opacity 0.3s ease-in",
+					opacity: fading ? 0 : fadeIn ? 1 : 0,
+					transition: fading
+						? `opacity ${FADE_DURATION}ms ease-out`
+						: "opacity 0.3s ease-in",
 				}}
 			>
 				{visibleText}
@@ -258,6 +305,10 @@ export function NarrativeOverlay({
 						color: "#00ffaa44",
 						letterSpacing: "0.2em",
 						animation: "pulse 2s ease-in-out infinite",
+						opacity: fading ? 0 : 1,
+						transition: fading
+							? `opacity ${FADE_DURATION}ms ease-out`
+							: undefined,
 					}}
 				>
 					{frameIndex < frames.length - 1

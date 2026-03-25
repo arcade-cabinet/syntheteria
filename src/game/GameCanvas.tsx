@@ -30,6 +30,7 @@ import {
 	disposeEntityRenderer,
 	type EntityRendererState,
 } from "./EntityRenderer";
+import { initInput } from "./InputHandler";
 
 // ─── Fog color — dark ecumenopolis void (#03070b) ────────────────────────────
 
@@ -153,7 +154,11 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			console.warn("[GameCanvas] Entity renderer init failed:", err);
 		});
 
+		// Input handler — click-to-select, click-to-move, box selection
+		const disposeInput = initInput(scene, () => entityStateRef.current);
+
 		return () => {
+			disposeInput();
 			cam.onViewMatrixChangedObservable.remove(observer);
 			if (entityRenderCallback) {
 				scene.unregisterBeforeRender(entityRenderCallback);

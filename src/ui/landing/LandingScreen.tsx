@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { initAudio } from "../../audio";
-import { GlobeBackground } from "./GlobeBackground";
+import { GlobeScene } from "./GlobeScene";
 import { type NewGameConfig, NewGameModal } from "./NewGameModal";
 
 export type { NewGameConfig };
@@ -48,7 +48,7 @@ export function LandingScreen({
 
 	return (
 		<>
-			<GlobeBackground />
+			<GlobeScene />
 			<div
 				style={{
 					position: "absolute",

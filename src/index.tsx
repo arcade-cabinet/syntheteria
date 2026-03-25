@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import HavokPhysics from "@babylonjs/havok";
 import App from "./App";
@@ -9,5 +10,9 @@ import "./index.css";
 
 	const root = ReactDOM.createRoot(rootEl);
 	const havok = await HavokPhysics();
-	root.render(<App havok={havok} />);
+	root.render(
+		<StrictMode>
+			<App havok={havok} />
+		</StrictMode>,
+	);
 })();

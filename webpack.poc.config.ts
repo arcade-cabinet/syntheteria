@@ -19,7 +19,7 @@ const config: Configuration = {
 				use: [
 					{
 						loader: "ts-loader",
-						options: { transpileOnly: true, configFile: "tsconfig.poc.json" },
+						options: { transpileOnly: true, configFile: "tsconfig.json" },
 					},
 					{
 						loader: "babel-loader",
@@ -47,7 +47,7 @@ const config: Configuration = {
 	},
 	plugins: [
 		new HtmlWebpackPlugin({ template: "poc/index.html" }),
-		new ForkTsCheckerWebpackPlugin({ typescript: { configFile: "tsconfig.poc.json" } }),
+		new ForkTsCheckerWebpackPlugin({ typescript: { configFile: "tsconfig.json" } }),
 	],
 	devServer: {
 		static: { directory: resolve(__dirname, "public") },

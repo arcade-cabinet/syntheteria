@@ -9,12 +9,21 @@ import { useCallback, useState, useSyncExternalStore } from "react";
 import { getMasterVolume, setMasterVolume } from "../../audio";
 import { getTemperatureTier } from "../../config/humanEncounterDefs";
 import {
+	isPersistenceAvailable,
+	listSaves,
+	loadGame,
+	saveGame,
+} from "../../db/persistence";
+import {
+	getElapsedTicks,
+	getGameConfig,
 	getSnapshot,
 	isPaused,
 	setGameSpeed,
 	subscribe,
 	togglePause,
 } from "../../ecs/gameState";
+import { world } from "../../ecs/world";
 import { cn } from "../lib/utils";
 
 const SPEED_STEPS = [0.5, 1, 2, 4] as const;
@@ -145,6 +154,83 @@ function AudioControls() {
 	);
 }
 
+function SaveLoadControls() {
+	const [saving, setSaving] = useState(false);
+	const [loading, setLoading] = useState(false);
+	const [status, setStatus] = useState<string | null>(null);
+
+	const handleSave = useCallback(async () => {
+		if (!isPersistenceAvailable()) {
+			setStatus("DB unavailable");
+			return;
+		}
+		setSaving(true);
+		setStatus(null);
+		try {
+			const { seed, difficulty } = getGameConfig();
+			const snap = getSnapshot();
+			const result = await saveGame(
+				world,
+				seed,
+				difficulty,
+				getElapsedTicks(),
+				snap.gameSpeed,
+			);
+			setStatus(result ? "Saved" : "Save failed");
+		} catch {
+			setStatus("Save failed");
+		} finally {
+			setSaving(false);
+			setTimeout(() => setStatus(null), 2000);
+		}
+	}, []);
+
+	const handleLoad = useCallback(async () => {
+		if (!isPersistenceAvailable()) {
+			setStatus("DB unavailable");
+			return;
+		}
+		setLoading(true);
+		setStatus(null);
+		try {
+			const saves = await listSaves();
+			if (saves.length === 0) {
+				setStatus("No saves");
+				return;
+			}
+			// Load the most recent save
+			const latest = saves[0];
+			const ok = await loadGame(world, latest.id);
+			setStatus(ok ? "Loaded" : "Load failed");
+		} catch {
+			setStatus("Load failed");
+		} finally {
+			setLoading(false);
+			setTimeout(() => setStatus(null), 2000);
+		}
+	}, []);
+
+	return (
+		<div className="flex items-center gap-1.5">
+			<SpeedButton
+				label={saving ? "..." : "SAVE"}
+				active={false}
+				onClick={handleSave}
+			/>
+			<SpeedButton
+				label={loading ? "..." : "LOAD"}
+				active={false}
+				onClick={handleLoad}
+			/>
+			{status && (
+				<span className="text-[11px] text-cyan-400/70 whitespace-nowrap">
+					{status}
+				</span>
+			)}
+		</div>
+	);
+}
+
 function stormColor(intensity: number): string {
 	if (intensity > 1.1) return "text-amber-400";
 	if (intensity > 0.8) return "text-cyan-400";
@@ -197,6 +283,7 @@ export function TopBar() {
 						active={snap.paused}
 						onClick={togglePause}
 					/>
+					<SaveLoadControls />
 					<AudioControls />
 				</div>
 			</div>

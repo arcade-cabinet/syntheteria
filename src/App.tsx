@@ -9,6 +9,7 @@ import type { Entity } from "koota";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
 	disposeAudio,
+	initAudio,
 	startAmbience,
 	startMusic,
 	stopAmbience,
@@ -259,6 +260,10 @@ export default function App({ havok }: AppProps) {
 		return (
 			<LandingScreen
 				onStartGame={(config: NewGameConfig) => {
+					// Initialize audio on first user gesture (browser AudioContext policy)
+					initAudio().catch(() => {
+						// Non-fatal: audio will be unavailable
+					});
 					gameConfigRef.current = config;
 					setPhase("narration");
 				}}

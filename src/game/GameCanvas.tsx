@@ -31,6 +31,8 @@ import {
 	type EntityRendererState,
 } from "./EntityRenderer";
 import { initInput } from "./InputHandler";
+import { getGameSpeed, simulationTick } from "../ecs/gameState";
+import { movementSystem } from "../systems/movement";
 
 // ─── Fog color — dark ecumenopolis void (#03070b) ────────────────────────────
 
@@ -72,6 +74,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 	const scene = useScene();
 	const chunkStateRef = useRef<ChunkManagerState | null>(null);
 	const entityStateRef = useRef<EntityRendererState | null>(null);
+	const simAccumulatorRef = useRef(0);
 
 	// startPos is already in world coordinates (tile * TILE_SIZE_M)
 	const startWX = startPos.x;
@@ -128,6 +131,26 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		const chunkState = initChunks(scene, startWX, startWZ, seed);
 		chunkStateRef.current = chunkState;
 
+		// ── Game loop: movement (per-frame) + simulation tick (fixed interval) ──
+		const SIM_INTERVAL = 1.0; // seconds of game time between ticks
+		const gameLoopCallback = () => {
+			const speed = getGameSpeed();
+			if (speed <= 0) return; // paused
+
+			const delta = scene.getEngine().getDeltaTime() / 1000; // ms → seconds
+
+			// Smooth per-frame unit movement
+			movementSystem(delta, speed);
+
+			// Accumulate scaled time and fire simulation ticks at fixed intervals
+			simAccumulatorRef.current += delta * speed;
+			while (simAccumulatorRef.current >= SIM_INTERVAL) {
+				simAccumulatorRef.current -= SIM_INTERVAL;
+				simulationTick();
+			}
+		};
+		scene.registerBeforeRender(gameLoopCallback);
+
 		// Update chunks when camera pans to a new chunk
 		function onCameraMove() {
 			const t = cam.target;
@@ -159,6 +182,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 
 		return () => {
 			disposeInput();
+			scene.unregisterBeforeRender(gameLoopCallback);
 			cam.onViewMatrixChangedObservable.remove(observer);
 			if (entityRenderCallback) {
 				scene.unregisterBeforeRender(entityRenderCallback);

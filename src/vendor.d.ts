@@ -68,3 +68,9 @@ declare module "sql.js" {
 		locateFile?: (file: string) => string;
 	}): Promise<SqlJsStatic>;
 }
+
+// Pure JS (ASM.js) build of sql.js — no WASM needed
+declare module "sql.js/dist/sql-asm.js" {
+	import type { SqlJsStatic } from "sql.js";
+	export default function initSqlJs(): Promise<SqlJsStatic>;
+}

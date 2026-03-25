@@ -2,7 +2,10 @@
  * sql.js adapter for web — pure JS SQLite, no native dependencies.
  * Uses sql.js/dist/sql-asm.js (no WASM, works in all browsers).
  */
-import initSqlJs, { type Database } from "sql.js";
+// Use the pure ASM.js build — no WASM fetch, works everywhere
+
+import type { Database } from "sql.js";
+import initSqlJs from "sql.js/dist/sql-asm.js";
 import type { SqliteAdapter } from "./adapter";
 
 let cachedDb: Database | null = null;
@@ -14,14 +17,11 @@ let cachedDb: Database | null = null;
 export async function createWebAdapter(
 	data?: ArrayLike<number> | null,
 ): Promise<SqliteAdapter> {
-	const SQL = await initSqlJs({
-		// Use the ASM.js build (no WASM fetch needed)
-		locateFile: (file: string) => `https://sql.js.org/dist/${file}`,
-	});
+	// sql-asm.js is pure JavaScript — no WASM fetch, no locateFile needed
+	const SQL = await initSqlJs();
 
-	cachedDb = data ? new SQL.Database(new Uint8Array(data)) : new SQL.Database();
-
-	const db = cachedDb;
+	const db = data ? new SQL.Database(new Uint8Array(data)) : new SQL.Database();
+	cachedDb = db;
 
 	return {
 		run(sql: string, params?: unknown[]) {

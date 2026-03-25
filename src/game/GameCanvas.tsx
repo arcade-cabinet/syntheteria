@@ -24,6 +24,12 @@ import {
 	disposeAllChunks,
 	type ChunkManagerState,
 } from "./ChunkManager";
+import {
+	initEntityRenderer,
+	syncEntities,
+	disposeEntityRenderer,
+	type EntityRendererState,
+} from "./EntityRenderer";
 
 // ─── Fog color — dark ecumenopolis void (#03070b) ────────────────────────────
 
@@ -64,6 +70,7 @@ interface SceneContentProps {
 function SceneContent({ startPos, seed }: SceneContentProps) {
 	const scene = useScene();
 	const chunkStateRef = useRef<ChunkManagerState | null>(null);
+	const entityStateRef = useRef<EntityRendererState | null>(null);
 
 	// startPos is already in world coordinates (tile * TILE_SIZE_M)
 	const startWX = startPos.x;
@@ -129,8 +136,32 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		}
 		const observer = cam.onViewMatrixChangedObservable.add(onCameraMove);
 
+		// Entity renderer — load GLBs and sync ECS entities to meshes each frame
+		let entityRenderCallback: (() => void) | null = null;
+
+		initEntityRenderer(scene).then((entityState) => {
+			entityStateRef.current = entityState;
+
+			// Sync entity meshes every frame
+			entityRenderCallback = () => {
+				if (entityStateRef.current) {
+					syncEntities(entityStateRef.current, scene);
+				}
+			};
+			scene.registerBeforeRender(entityRenderCallback);
+		}).catch((err) => {
+			console.warn("[GameCanvas] Entity renderer init failed:", err);
+		});
+
 		return () => {
 			cam.onViewMatrixChangedObservable.remove(observer);
+			if (entityRenderCallback) {
+				scene.unregisterBeforeRender(entityRenderCallback);
+			}
+			if (entityStateRef.current) {
+				disposeEntityRenderer(entityStateRef.current);
+				entityStateRef.current = null;
+			}
 			if (chunkStateRef.current) {
 				disposeAllChunks(chunkStateRef.current);
 				chunkStateRef.current = null;

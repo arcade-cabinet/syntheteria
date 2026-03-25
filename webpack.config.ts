@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
-import type { Configuration } from "webpack";
-import HtmlWebpackPlugin from "html-webpack-plugin";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
+import HtmlWebpackPlugin from "html-webpack-plugin";
+import type { Configuration } from "webpack";
 import webpack from "webpack";
 
 const config = (_env: unknown, argv: { mode?: string }): Configuration => {
@@ -63,7 +63,9 @@ const config = (_env: unknown, argv: { mode?: string }): Configuration => {
 		},
 		plugins: [
 			new HtmlWebpackPlugin({ template: "index.html" }),
-			new ForkTsCheckerWebpackPlugin({ typescript: { configFile: "tsconfig.json" } }),
+			new ForkTsCheckerWebpackPlugin({
+				typescript: { configFile: "tsconfig.json" },
+			}),
 			new webpack.DefinePlugin({
 				"import.meta.env": JSON.stringify({
 					DEV: !isProd,

@@ -149,7 +149,9 @@ function UnitActions({ entity }: { entity: Entity }) {
 			<ActionButton
 				label="SCAVENGE"
 				enabled={hasArms && nearbyScavenge}
-				title={nearbyScavenge ? "Scavenge nearby resources" : "No resources nearby"}
+				title={
+					nearbyScavenge ? "Scavenge nearby resources" : "No resources nearby"
+				}
 				onClick={() => {
 					// Scavenging is proximity-based and automatic when idle
 				}}
@@ -199,10 +201,7 @@ export function ActionPanel() {
 	// Find selected player unit
 	let selectedUnit: Entity | null = null;
 	for (const entity of world.query(Unit, Faction)) {
-		if (
-			entity.get(Unit)!.selected &&
-			entity.get(Faction)!.value === "player"
-		) {
+		if (entity.get(Unit)!.selected && entity.get(Faction)!.value === "player") {
 			selectedUnit = entity;
 			break;
 		}

@@ -7,32 +7,31 @@
  * Chunk lifecycle is managed imperatively via ChunkManager.
  */
 
-import { useEffect, useRef } from "react";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { Color3 } from "@babylonjs/core/Maths/math.color";
-import { Tools } from "@babylonjs/core/Misc/tools";
-import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import type { ArcRotateCamera, Scene as BScene } from "@babylonjs/core";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { Tools } from "@babylonjs/core/Misc/tools";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
-import type { ArcRotateCamera } from "@babylonjs/core";
-import type { Scene as BScene } from "@babylonjs/core";
-import { Engine } from "reactylon/web";
+import { useEffect, useRef } from "react";
 import { Scene, useScene } from "reactylon";
-import {
-	initChunks,
-	updateChunks,
-	disposeAllChunks,
-	type ChunkManagerState,
-} from "./ChunkManager";
-import {
-	initEntityRenderer,
-	syncEntities,
-	disposeEntityRenderer,
-	type EntityRendererState,
-} from "./EntityRenderer";
-import { initInput } from "./InputHandler";
+import { Engine } from "reactylon/web";
 import { getGameSpeed, simulationTick } from "../ecs/gameState";
 import { movementSystem } from "../systems/movement";
+import {
+	type ChunkManagerState,
+	disposeAllChunks,
+	initChunks,
+	updateChunks,
+} from "./ChunkManager";
+import {
+	disposeEntityRenderer,
+	type EntityRendererState,
+	initEntityRenderer,
+	syncEntities,
+} from "./EntityRenderer";
+import { initInput } from "./InputHandler";
 
 // ─── Fog color — dark ecumenopolis void (#03070b) ────────────────────────────
 
@@ -163,19 +162,21 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		// Entity renderer — load GLBs and sync ECS entities to meshes each frame
 		let entityRenderCallback: (() => void) | null = null;
 
-		initEntityRenderer(scene).then((entityState) => {
-			entityStateRef.current = entityState;
+		initEntityRenderer(scene)
+			.then((entityState) => {
+				entityStateRef.current = entityState;
 
-			// Sync entity meshes every frame
-			entityRenderCallback = () => {
-				if (entityStateRef.current) {
-					syncEntities(entityStateRef.current, scene);
-				}
-			};
-			scene.registerBeforeRender(entityRenderCallback);
-		}).catch((err) => {
-			console.warn("[GameCanvas] Entity renderer init failed:", err);
-		});
+				// Sync entity meshes every frame
+				entityRenderCallback = () => {
+					if (entityStateRef.current) {
+						syncEntities(entityStateRef.current, scene);
+					}
+				};
+				scene.registerBeforeRender(entityRenderCallback);
+			})
+			.catch((err) => {
+				console.warn("[GameCanvas] Entity renderer init failed:", err);
+			});
 
 		// Input handler — click-to-select, click-to-move, box selection
 		const disposeInput = initInput(scene, () => entityStateRef.current);

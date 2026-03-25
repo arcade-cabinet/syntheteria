@@ -17,12 +17,12 @@ import { getSnapshot, subscribe } from "../../ecs/gameState";
 import { Base, EntityId, Faction, Position, Unit } from "../../ecs/traits";
 import { world } from "../../ecs/world";
 import {
+	type BaseStorage,
 	getBaseStorage,
 	getInfrastructure,
 	getProductionQueue,
-	type ProductionItem,
 	type InfrastructureItem,
-	type BaseStorage,
+	type ProductionItem,
 } from "../../systems/baseManagement";
 import { cn } from "../lib/utils";
 
@@ -84,12 +84,17 @@ function ProductionQueueSection({ queue }: { queue: ProductionItem[] }) {
 		<div className="space-y-1.5">
 			{queue.map((item, i) => (
 				<div
+					// biome-ignore lint/suspicious/noArrayIndexKey: production queue is ordered, index is stable
 					key={`${item.unitType}-${i}`}
 					className="bg-slate-800/50 rounded p-1.5"
 				>
 					<div className="flex justify-between text-xs mb-1">
-						<span className="text-slate-300">{item.unitType.replace(/_/g, " ")}</span>
-						<span className="text-cyan-400">{Math.floor(item.progress * 100)}%</span>
+						<span className="text-slate-300">
+							{item.unitType.replace(/_/g, " ")}
+						</span>
+						<span className="text-cyan-400">
+							{Math.floor(item.progress * 100)}%
+						</span>
 					</div>
 					<div className="w-full bg-slate-700 rounded-full h-1.5">
 						<div
@@ -151,19 +156,16 @@ function PowerGauge({ power }: { power: number }) {
 function StorageGrid({ storage }: { storage: BaseStorage }) {
 	const entries = Object.entries(storage);
 	if (entries.length === 0) {
-		return (
-			<div className="text-slate-600 text-xs italic">Storage empty</div>
-		);
+		return <div className="text-slate-600 text-xs italic">Storage empty</div>;
 	}
 
 	return (
 		<div className="grid grid-cols-2 gap-1">
 			{entries.map(([type, amount]) => (
-				<div
-					key={type}
-					className="bg-slate-800/50 rounded px-2 py-1 text-xs"
-				>
-					<div className="text-slate-400 truncate">{type.replace(/([A-Z])/g, " $1").trim()}</div>
+				<div key={type} className="bg-slate-800/50 rounded px-2 py-1 text-xs">
+					<div className="text-slate-400 truncate">
+						{type.replace(/([A-Z])/g, " $1").trim()}
+					</div>
 					<div className="text-cyan-400 font-bold">{amount}</div>
 				</div>
 			))}
@@ -171,7 +173,13 @@ function StorageGrid({ storage }: { storage: BaseStorage }) {
 	);
 }
 
-function GarrisonSection({ baseTileX, baseTileZ }: { baseTileX: number; baseTileZ: number }) {
+function GarrisonSection({
+	baseTileX,
+	baseTileZ,
+}: {
+	baseTileX: number;
+	baseTileZ: number;
+}) {
 	// Find player units near this base (within 5 tiles)
 	const GARRISON_RANGE = 10; // world units (5 tiles * TILE_SIZE_M=2)
 	const units: { id: string; unitType: string; displayName: string }[] = [];
@@ -207,7 +215,9 @@ function GarrisonSection({ baseTileX, baseTileZ }: { baseTileX: number; baseTile
 					key={u.id}
 					className="flex justify-between text-xs bg-slate-800/50 rounded px-2 py-1"
 				>
-					<span className="text-slate-300">{u.displayName || u.unitType.replace(/_/g, " ")}</span>
+					<span className="text-slate-300">
+						{u.displayName || u.unitType.replace(/_/g, " ")}
+					</span>
 					<span className="text-slate-500 text-[10px]">{u.id}</span>
 				</div>
 			))}
@@ -217,7 +227,13 @@ function GarrisonSection({ baseTileX, baseTileZ }: { baseTileX: number; baseTile
 
 // ─── Section wrapper ─────────────────────────────────────────────────────────
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+	title,
+	children,
+}: {
+	title: string;
+	children: React.ReactNode;
+}) {
 	return (
 		<div className="space-y-1.5">
 			<h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
@@ -233,12 +249,17 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export function BasePanel() {
 	// Subscribe to both ECS changes and base panel selection
 	useSyncExternalStore(subscribe, getSnapshot);
-	const selectedId = useSyncExternalStore(subscribeBasePanel, getBasePanelSnapshot);
+	const selectedId = useSyncExternalStore(
+		subscribeBasePanel,
+		getBasePanelSnapshot,
+	);
 
 	if (!selectedId) return null;
 
 	// Find the base entity by EntityId
-	let baseEntity: ReturnType<typeof world.query> extends Iterable<infer T> ? T : never;
+	let baseEntity: ReturnType<typeof world.query> extends Iterable<infer T>
+		? T
+		: never;
 	let found = false;
 
 	for (const entity of world.query(Base, EntityId, Position, Faction)) {

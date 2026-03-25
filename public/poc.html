@@ -221,14 +221,14 @@
         };
 
         let scene, camera, renderer;
-        let mapData = [];
-        let uiMarkers = [];
-        let interactableMeshes = [];
-        let knownRooms = [];
+        const mapData = [];
+        const uiMarkers = [];
+        const interactableMeshes = [];
+        const knownRooms = [];
 
-        let cameraTarget = new THREE.Vector3();
-        let desiredCameraTarget = new THREE.Vector3();
-        let cameraOffset = new THREE.Vector3();
+        const cameraTarget = new THREE.Vector3();
+        const desiredCameraTarget = new THREE.Vector3();
+        const cameraOffset = new THREE.Vector3();
         let nexusPos = null;
 
         const raycaster = new THREE.Raycaster();
@@ -283,16 +283,16 @@
                 for (var m = 0; m < def.maps.length; m++) {
                     var mapType = def.maps[m];
                     var url = def.base + '_' + mapType + '.jpg';
-                    (function(name, mapType, url, repeat) {
-                        var promise = new Promise(function(resolve) {
-                            loader.load(url, function(tex) {
+                    ((name, mapType, url, repeat) => {
+                        var promise = new Promise((resolve) => {
+                            loader.load(url, (tex) => {
                                 tex.wrapS = THREE.RepeatWrapping;
                                 tex.wrapT = THREE.RepeatWrapping;
                                 tex.repeat.set(repeat, repeat);
                                 tex.encoding = (mapType === 'Color') ? THREE.sRGBEncoding : THREE.LinearEncoding;
                                 loaded[name][mapType] = tex;
                                 resolve();
-                            }, undefined, function(err) {
+                            }, undefined, (err) => {
                                 console.warn('Failed to load ' + url, err);
                                 resolve(); // non-fatal
                             });
@@ -302,7 +302,7 @@
                 }
             }
 
-            return Promise.all(promises).then(function() { return loaded; });
+            return Promise.all(promises).then(() => loaded);
         }
 
         function buildMaterial(texSet, overrides) {
@@ -319,7 +319,7 @@
         }
 
         // --- BOOT ---
-        loadPBRTextures().then(function(textures) {
+        loadPBRTextures().then((textures) => {
             init(textures);
             document.getElementById('loading-overlay').classList.add('fade-out');
             animate();
@@ -666,7 +666,7 @@
             hbar.appendChild(hfill);
             el.appendChild(hbar);
 
-            el.addEventListener('pointerdown', function(e) {
+            el.addEventListener('pointerdown', (e) => {
                 e.stopPropagation();
                 selectEntityAtPosition(worldPosition);
                 desiredCameraTarget.copy(worldPosition);
@@ -692,7 +692,7 @@
 
         // --- CONTROLS ---
         function setupInput(canvas) {
-            canvas.addEventListener('pointerdown', function(e) {
+            canvas.addEventListener('pointerdown', (e) => {
                 input.isDragging = true;
                 input.hasDragged = false;
                 input.previousPosition.x = e.clientX;
@@ -701,7 +701,7 @@
                 input.velocity.y = 0;
             });
 
-            canvas.addEventListener('pointermove', function(e) {
+            canvas.addEventListener('pointermove', (e) => {
                 if (!input.isDragging) return;
                 var deltaX = e.clientX - input.previousPosition.x;
                 var deltaY = e.clientY - input.previousPosition.y;
@@ -720,7 +720,7 @@
                 input.previousPosition.y = e.clientY;
             });
 
-            var onPointerUp = function(e) {
+            var onPointerUp = (e) => {
                 input.isDragging = false;
                 if (!input.hasDragged && e.type === 'pointerup') {
                     handleTap(e.clientX, e.clientY);
@@ -730,7 +730,7 @@
             canvas.addEventListener('pointerup', onPointerUp);
             canvas.addEventListener('pointerleave', onPointerUp);
 
-            canvas.addEventListener('wheel', function(e) {
+            canvas.addEventListener('wheel', (e) => {
                 var zoomSpeed = 0.001;
                 var zoomFactor = 1 + (e.deltaY * zoomSpeed);
                 cameraOffset.multiplyScalar(zoomFactor);

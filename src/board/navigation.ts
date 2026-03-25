@@ -23,8 +23,14 @@ export interface ChunkNavGraph {
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const DIRS: [number, number][] = [
-	[0, -1], [1, 0], [0, 1], [-1, 0],
-	[-1, -1], [1, -1], [-1, 1], [1, 1],
+	[0, -1],
+	[1, 0],
+	[0, 1],
+	[-1, 0],
+	[-1, -1],
+	[1, -1],
+	[-1, 1],
+	[1, 1],
 ];
 
 const ELEVATION_COST = 1.5;
@@ -75,7 +81,8 @@ export function buildChunkNavGraph(chunk: Chunk): ChunkNavGraph {
 			for (const [dx, dz] of DIRS) {
 				const nlx = lx + dx;
 				const nlz = lz + dz;
-				if (nlx < 0 || nlx >= CHUNK_SIZE || nlz < 0 || nlz >= CHUNK_SIZE) continue;
+				if (nlx < 0 || nlx >= CHUNK_SIZE || nlz < 0 || nlz >= CHUNK_SIZE)
+					continue;
 
 				const neighbor = tiles[nlz]![nlx]!;
 				if (!neighbor.passable) continue;

@@ -14,8 +14,8 @@ import { LoadAssetContainerAsync } from "@babylonjs/core/Loading/sceneLoader";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import type { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import type { Scene } from "@babylonjs/core/scene";
 // Side-effect import registers the glTF/GLB loader plugin
@@ -25,10 +25,10 @@ import { getAllRobotModelUrls, resolveUnitModelUrl } from "../config/models";
 import { EntityId, Faction, Navigation, Position, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
 import {
+	type BaseMarkerState,
+	disposeBaseMarkers,
 	initBaseMarkers,
 	syncBaseMarkers,
-	disposeBaseMarkers,
-	type BaseMarkerState,
 } from "./BaseMarker";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -167,13 +167,7 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 
 		// Create mesh for new entity
 		if (!entry) {
-			entry = createEntityMesh(
-				eid,
-				unit.unitType,
-				pos,
-				state,
-				scene,
-			);
+			entry = createEntityMesh(eid, unit.unitType, pos, state, scene);
 			if (!entry) continue; // model not loaded
 			state.entityMeshes.set(eid, entry);
 		}
@@ -194,7 +188,11 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 					// Only tint once
 					if (!mesh.metadata?.tinted) {
 						mesh.material = mesh.material.clone(`${mesh.material.name}-cult`);
-						(mesh.material as StandardMaterial).emissiveColor = new Color3(0.4, 0, 0);
+						(mesh.material as StandardMaterial).emissiveColor = new Color3(
+							0.4,
+							0,
+							0,
+						);
 						mesh.metadata = { ...mesh.metadata, tinted: true };
 					}
 				}
@@ -280,7 +278,14 @@ function createEntityMesh(
 		const fallbackUrl = resolveUnitModelUrl("__fallback__");
 		const fallbackContainer = state.assetPool.get(fallbackUrl);
 		if (!fallbackContainer) return undefined;
-		return createFromContainer(entityId, unitType, pos, fallbackContainer, state, scene);
+		return createFromContainer(
+			entityId,
+			unitType,
+			pos,
+			fallbackContainer,
+			state,
+			scene,
+		);
 	}
 
 	return createFromContainer(entityId, unitType, pos, container, state, scene);
@@ -313,7 +318,10 @@ function createFromContainer(
 		}
 		// Also tag the root if it's a mesh
 		if ("isPickable" in node) {
-			(node as AbstractMesh).metadata = { ...(node as AbstractMesh).metadata, entityId };
+			(node as AbstractMesh).metadata = {
+				...(node as AbstractMesh).metadata,
+				entityId,
+			};
 			(node as AbstractMesh).isPickable = true;
 			meshes.push(node as AbstractMesh);
 		}

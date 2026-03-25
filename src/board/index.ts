@@ -18,20 +18,20 @@ export type { Chunk, ChunkKey } from "./chunks";
 export { CHUNK_SIZE, chunkKey, generateChunk } from "./chunks";
 // --- Coordinates ---
 export {
-	TILE_SIZE_M as TILE_M,
+	babylonToYuka,
+	chunkOrigin,
 	ELEVATION_STEP_M as ELEV_M,
+	TILE_SIZE_M as TILE_M,
+	tileToBabylon,
+	tileToChunk,
 	tileToWorldX,
-	tileToWorldZ,
 	tileToWorldY,
+	tileToWorldZ,
+	tileToYuka,
+	worldToBabylon,
 	worldToTileX,
 	worldToTileZ,
-	tileToChunk,
-	chunkOrigin,
-	tileToBabylon,
-	worldToBabylon,
-	tileToYuka,
 	worldToYuka,
-	babylonToYuka,
 	yukaToBabylon,
 } from "./coords";
 // --- Generator ---
@@ -40,18 +40,18 @@ export type { GridApi } from "./grid";
 
 // --- Grid ---
 export { createGridApi, ELEVATION_STEP_M, TILE_SIZE_M } from "./grid";
-// --- Navigation (Yuka) ---
-export type { ChunkNavGraph } from "./navigation";
-export { buildChunkNavGraph, connectChunkGraphs } from "./navigation";
-// --- Scene (BabylonJS) ---
-export type { ChunkMeshes } from "./scene";
-export { populateChunkScene, disposeChunkMeshes } from "./scene";
 // --- Zone POIs ---
 export type { ZonePoiType } from "./labyrinth";
 export { ZONE_POI_DEFS } from "./labyrinth";
 export { generateLabyrinthBoard } from "./labyrinthGenerator";
+// --- Navigation (Yuka) ---
+export type { ChunkNavGraph } from "./navigation";
+export { buildChunkNavGraph, connectChunkGraphs } from "./navigation";
 // --- Noise ---
 export { createNoise2D, seededRng, simplexNoise2D } from "./noise";
+// --- Scene (BabylonJS) ---
+export type { ChunkMeshes } from "./scene";
+export { disposeChunkMeshes, populateChunkScene } from "./scene";
 // --- Terrain ---
 export { floorTypeForTile, geographyValue, seedToFloat } from "./terrain";
 // --- Types ---
@@ -68,4 +68,10 @@ export type {
 export { CLIMATE_PROFILE_SPECS, FLOOR_DEFS, isPassableFloor } from "./types";
 // --- Zones ---
 export type { WorldZone } from "./zones";
-export { WORLD_EXTENT, ZONE_PROFILES, zoneAtWorldPos, zoneCounts, zoneForTile } from "./zones";
+export {
+	WORLD_EXTENT,
+	ZONE_PROFILES,
+	zoneAtWorldPos,
+	zoneCounts,
+	zoneForTile,
+} from "./zones";

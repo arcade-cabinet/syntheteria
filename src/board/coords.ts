@@ -10,8 +10,8 @@
 
 import { Vector3 as BVector3 } from "@babylonjs/core/Maths/math.vector";
 import { Vector3 as YVector3 } from "yuka";
-import type { TileData } from "./types";
 import { CHUNK_SIZE } from "./chunks";
+import type { TileData } from "./types";
 
 export const TILE_SIZE_M = 2.0;
 export const ELEVATION_STEP_M = 0.4;
@@ -42,14 +42,20 @@ export function worldToTileZ(wz: number): number {
 
 // ─── Chunk coordinates ──────────────────────────────────────────────────────
 
-export function tileToChunk(tileX: number, tileZ: number): { cx: number; cz: number } {
+export function tileToChunk(
+	tileX: number,
+	tileZ: number,
+): { cx: number; cz: number } {
 	return {
 		cx: Math.floor(tileX / CHUNK_SIZE),
 		cz: Math.floor(tileZ / CHUNK_SIZE),
 	};
 }
 
-export function chunkOrigin(cx: number, cz: number): { tileX: number; tileZ: number } {
+export function chunkOrigin(
+	cx: number,
+	cz: number,
+): { tileX: number; tileZ: number } {
 	return {
 		tileX: cx * CHUNK_SIZE,
 		tileZ: cz * CHUNK_SIZE,

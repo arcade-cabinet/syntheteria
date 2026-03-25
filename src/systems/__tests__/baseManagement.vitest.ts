@@ -11,8 +11,8 @@ import { Base, EntityId, Faction, Position } from "../../ecs/traits";
 import { world } from "../../ecs/world";
 import {
 	addToBaseStorage,
-	baseProductionTick,
 	basePowerTick,
+	baseProductionTick,
 	enqueueProduction,
 	foundBase,
 	getBaseStorage,
@@ -61,7 +61,9 @@ function testFoundBase(
 describe("JSON helpers", () => {
 	it("parseProductionQueue handles empty and valid JSON", () => {
 		expect(parseProductionQueue("[]")).toEqual([]);
-		const items = [{ unitType: "drone", progress: 0.5, cost: { scrapMetal: 5 } }];
+		const items = [
+			{ unitType: "drone", progress: 0.5, cost: { scrapMetal: 5 } },
+		];
 		expect(parseProductionQueue(JSON.stringify(items))).toEqual(items);
 	});
 
@@ -71,7 +73,9 @@ describe("JSON helpers", () => {
 
 	it("serializeProductionQueue round-trips", () => {
 		const items = [{ unitType: "bot", progress: 0, cost: { circuitry: 3 } }];
-		expect(parseProductionQueue(serializeProductionQueue(items))).toEqual(items);
+		expect(parseProductionQueue(serializeProductionQueue(items))).toEqual(
+			items,
+		);
 	});
 
 	it("parseInfrastructure handles empty and valid JSON", () => {
@@ -326,7 +330,10 @@ describe("storage operations", () => {
 describe("enqueueProduction", () => {
 	it("adds items to the production queue", () => {
 		const entity = testFoundBase(128, 128, "player", "Queue Base");
-		enqueueProduction(entity, "maintenance_bot", { scrapMetal: 10, circuitry: 3 });
+		enqueueProduction(entity, "maintenance_bot", {
+			scrapMetal: 10,
+			circuitry: 3,
+		});
 
 		const queue = getProductionQueue(entity);
 		expect(queue.length).toBe(1);

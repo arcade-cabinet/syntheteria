@@ -6,7 +6,7 @@
  * Dark slate background with fog-of-war overlay.
  */
 
-import { useRef, useEffect, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { getCityBuildings } from "../../ecs/cityLayout";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import { getAllFragments, worldToFogIndex } from "../../ecs/terrain";
@@ -46,6 +46,7 @@ export function Minimap() {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: snap.tick drives minimap redraw each game tick
 	useEffect(() => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
@@ -62,10 +63,8 @@ export function Minimap() {
 		const fogStep = 3;
 		for (let px = 0; px < MAP_SIZE; px += fogStep) {
 			for (let py = 0; py < MAP_SIZE; py += fogStep) {
-				const wx =
-					((px - MAP_PAD) / (MAP_SIZE - MAP_PAD * 2)) * CITY_EXTENT;
-				const wz =
-					((py - MAP_PAD) / (MAP_SIZE - MAP_PAD * 2)) * CITY_EXTENT;
+				const wx = ((px - MAP_PAD) / (MAP_SIZE - MAP_PAD * 2)) * CITY_EXTENT;
+				const wz = ((py - MAP_PAD) / (MAP_SIZE - MAP_PAD * 2)) * CITY_EXTENT;
 				const fog = getMergedFogAt(wx, wz);
 				if (fog >= 2) {
 					ctx.fillStyle = "rgba(0,40,30,0.6)";
@@ -133,10 +132,7 @@ export function Minimap() {
 
 	return (
 		<div className="w-full aspect-square bg-slate-950 border border-slate-800 rounded-lg overflow-hidden">
-			<canvas
-				ref={canvasRef}
-				className="w-full h-full"
-			/>
+			<canvas ref={canvasRef} className="w-full h-full" />
 		</div>
 	);
 }

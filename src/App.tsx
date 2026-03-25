@@ -30,7 +30,6 @@ import {
 	spawnLightningRod,
 	spawnUnit,
 } from "./ecs/factory";
-import { foundBase } from "./systems/baseManagement";
 import {
 	getSnapshot,
 	isPaused,
@@ -43,6 +42,7 @@ import { Faction, Fragment, Unit } from "./ecs/traits";
 import { world } from "./ecs/world";
 import { logError } from "./errors";
 import { GameCanvas } from "./game/GameCanvas";
+import { foundBase } from "./systems/baseManagement";
 import { DebugOverlay } from "./ui/game/DebugOverlay";
 import { ErrorBoundary } from "./ui/game/ErrorBoundary";
 import { NarrativeOverlay } from "./ui/game/NarrativeOverlay";

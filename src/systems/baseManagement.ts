@@ -9,10 +9,10 @@
  */
 
 import type { Entity, World } from "koota";
-import { gameAssert } from "../errors";
 import { tileToWorldX, tileToWorldZ } from "../board/coords";
-import { zoneForTile, WORLD_EXTENT } from "../board/zones";
+import { WORLD_EXTENT, zoneForTile } from "../board/zones";
 import { Base, EntityId, Faction, Position } from "../ecs/traits";
+import { gameAssert } from "../errors";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -56,7 +56,11 @@ export function parseProductionQueue(json: string): ProductionItem[] {
 		return JSON.parse(json) as ProductionItem[];
 	} catch (e) {
 		// Non-fatal: corrupt JSON falls back to empty queue, but log it
-		console.warn("[baseManagement] corrupt production queue JSON:", json.slice(0, 80), e);
+		console.warn(
+			"[baseManagement] corrupt production queue JSON:",
+			json.slice(0, 80),
+			e,
+		);
 		return [];
 	}
 }
@@ -70,7 +74,11 @@ export function parseInfrastructure(json: string): InfrastructureItem[] {
 		return JSON.parse(json) as InfrastructureItem[];
 	} catch (e) {
 		// Non-fatal: corrupt JSON falls back to empty list, but log it
-		console.warn("[baseManagement] corrupt infrastructure JSON:", json.slice(0, 80), e);
+		console.warn(
+			"[baseManagement] corrupt infrastructure JSON:",
+			json.slice(0, 80),
+			e,
+		);
 		return [];
 	}
 }
@@ -84,7 +92,11 @@ export function parseStorage(json: string): BaseStorage {
 		return JSON.parse(json) as BaseStorage;
 	} catch (e) {
 		// Non-fatal: corrupt JSON falls back to empty storage, but log it
-		console.warn("[baseManagement] corrupt storage JSON:", json.slice(0, 80), e);
+		console.warn(
+			"[baseManagement] corrupt storage JSON:",
+			json.slice(0, 80),
+			e,
+		);
 		return {};
 	}
 }

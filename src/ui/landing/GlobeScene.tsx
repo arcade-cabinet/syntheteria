@@ -6,27 +6,27 @@
  * Purely decorative — no interactivity, no input, no game state.
  */
 
-import { useEffect } from "react";
+import type { Scene as BScene } from "@babylonjs/core";
+import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
+import { Constants } from "@babylonjs/core/Engines/constants";
+import { Effect } from "@babylonjs/core/Materials/effect";
+import { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
 import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
-import { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
-import { Effect } from "@babylonjs/core/Materials/effect";
-import { Constants } from "@babylonjs/core/Engines/constants";
 import { Tools } from "@babylonjs/core/Misc/tools";
-import type { Scene as BScene } from "@babylonjs/core";
-import { Engine } from "reactylon/web";
+import { useEffect } from "react";
 import { Scene, useScene } from "reactylon";
+import { Engine } from "reactylon/web";
 import {
-	stormVertexShader,
-	stormFragmentShader,
-	lightningVertexShader,
-	lightningFragmentShader,
-	globeVertexShader,
 	globeFragmentShader,
-	hypercaneVertexShader,
+	globeVertexShader,
 	hypercaneFragmentShader,
+	hypercaneVertexShader,
+	lightningFragmentShader,
+	lightningVertexShader,
+	stormFragmentShader,
+	stormVertexShader,
 } from "./title/shaders";
 
 // ─── Register all shaders in BabylonJS Effect store ─────────────────────────

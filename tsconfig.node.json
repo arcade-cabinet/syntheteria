@@ -24,7 +24,6 @@
 	},
 	"include": [
 		"webpack.config.ts",
-		"webpack.poc.config.ts",
 		"vitest.config.ts",
 		"vitest.browser.config.ts",
 		"playwright.config.ts"

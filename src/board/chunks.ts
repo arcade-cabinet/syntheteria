@@ -22,8 +22,8 @@ import { growingTreeMazeFill } from "./labyrinthMaze";
 import { seededRng } from "./noise";
 import { floorTypeForTile } from "./terrain";
 import {
-	FLOOR_DEFS,
 	type BoardConfig,
+	FLOOR_DEFS,
 	type FloorType,
 	type TileData,
 } from "./types";

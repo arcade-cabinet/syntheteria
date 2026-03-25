@@ -1,6 +1,6 @@
+import HavokPhysics from "@babylonjs/havok";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
-import HavokPhysics from "@babylonjs/havok";
 import App from "./App";
 import "./index.css";
 

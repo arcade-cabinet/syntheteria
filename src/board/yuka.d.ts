@@ -38,7 +38,11 @@ declare module "yuka" {
 	export class NavNode extends Node {
 		position: Vector3;
 		userData: Record<string, unknown>;
-		constructor(index?: number, position?: Vector3, userData?: Record<string, unknown>);
+		constructor(
+			index?: number,
+			position?: Vector3,
+			userData?: Record<string, unknown>,
+		);
 	}
 
 	export class NavEdge extends Edge {

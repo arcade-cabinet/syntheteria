@@ -1,4 +1,23 @@
-// Type shims for untyped dependencies
+// ─── Webpack DefinePlugin: import.meta.env ───────────────────────────────────
+
+interface ImportMetaEnv {
+	readonly DEV: boolean;
+	readonly PROD: boolean;
+	readonly BASE_URL: string;
+}
+
+interface ImportMeta {
+	readonly env: ImportMetaEnv;
+}
+
+// ─── CSS module side-effect imports ──────────────────────────────────────────
+
+declare module "*.css" {
+	const content: Record<string, string>;
+	export default content;
+}
+
+// ─── Type shims for untyped dependencies ─────────────────────────────────────
 
 declare module "yuka" {
 	export class GameEntity {

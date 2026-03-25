@@ -16,7 +16,10 @@
 			"!!tests/e2e/reports",
 			"!!coverage",
 			"!!prototype",
-			"!!src/static-assets.ts"
+			"!!reactylon-poc",
+			"!!docs/references",
+			"!!src/static-assets.ts",
+			"!!public/poc.html"
 		]
 	},
 	"formatter": {
@@ -29,6 +32,9 @@
 			"recommended": true,
 			"style": {
 				"noNonNullAssertion": "off"
+			},
+			"suspicious": {
+				"noUnknownAtRules": "off"
 			}
 		}
 	},

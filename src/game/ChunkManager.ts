@@ -11,12 +11,12 @@
 import type { Scene } from "@babylonjs/core/scene";
 import {
 	CHUNK_SIZE,
-	generateChunk,
 	type ChunkKey,
-	chunkKey,
 	type ChunkMeshes,
-	populateChunkScene,
+	chunkKey,
 	disposeChunkMeshes,
+	generateChunk,
+	populateChunkScene,
 	TILE_M,
 } from "../board";
 

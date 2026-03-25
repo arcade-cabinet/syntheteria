@@ -13,12 +13,12 @@
  * Returns a dispose function to remove the observer on cleanup.
  */
 
-import type { Entity } from "koota";
 import {
 	PointerEventTypes,
 	type PointerInfo,
 } from "@babylonjs/core/Events/pointerEvents";
 import type { Scene } from "@babylonjs/core/scene";
+import type { Entity } from "koota";
 
 import { EntityId, Faction, Position, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
@@ -29,10 +29,7 @@ import {
 	issueMoveTo,
 	selectEntity,
 } from "../input/selection";
-import {
-	getEntityAtPoint,
-	type EntityRendererState,
-} from "./EntityRenderer";
+import { type EntityRendererState, getEntityAtPoint } from "./EntityRenderer";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -84,7 +81,10 @@ export function initInput(
 
 	const observer = scene.onPointerObservable.add((info: PointerInfo) => {
 		// Only handle left mouse button (button 0)
-		if (info.event.button !== 0 && info.type !== PointerEventTypes.POINTERMOVE) {
+		if (
+			info.event.button !== 0 &&
+			info.type !== PointerEventTypes.POINTERMOVE
+		) {
 			return;
 		}
 
@@ -213,12 +213,7 @@ function handleBoxSelect(
 	const pick1 = scene.pick(x1, y1);
 	const pick2 = scene.pick(x2, y2);
 
-	if (
-		pick1?.hit &&
-		pick1.pickedPoint &&
-		pick2?.hit &&
-		pick2.pickedPoint
-	) {
+	if (pick1?.hit && pick1.pickedPoint && pick2?.hit && pick2.pickedPoint) {
 		boxSelect(
 			pick1.pickedPoint.x,
 			pick1.pickedPoint.z,

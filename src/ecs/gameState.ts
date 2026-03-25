@@ -5,10 +5,7 @@
 
 import { cultAISystem } from "../ai/cultBehavior";
 import { logError } from "../errors";
-import {
-	baseProductionTick,
-	basePowerTick,
-} from "../systems/baseManagement";
+import { basePowerTick, baseProductionTick } from "../systems/baseManagement";
 import {
 	type CombatEvent,
 	combatSystem,

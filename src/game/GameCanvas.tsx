@@ -61,6 +61,17 @@ function onSceneReady(scene: BScene) {
 	scene.fogDensity = 0.015;
 	scene.fogColor.set(FOG_R, FOG_G, FOG_B);
 	scene.clearColor.set(FOG_R, FOG_G, FOG_B, 1);
+
+	// Create default environment for PBR materials — GLBs need an environment
+	// texture for metallic/roughness reflections. Without this, PBR meshes
+	// render as completely black/invisible.
+	const envHelper = scene.createDefaultEnvironment({
+		createSkybox: false,
+		createGround: false,
+	});
+	if (!envHelper) {
+		console.warn("[GameCanvas] createDefaultEnvironment returned null — PBR materials may render black");
+	}
 }
 
 // ─── Inner scene content (needs useScene) ────────────────────────────────────

@@ -372,7 +372,12 @@ function createEntityMesh(
 		// Try fallback URL
 		const fallbackUrl = resolveUnitModelUrl("__fallback__");
 		const fallbackContainer = state.assetPool.get(fallbackUrl);
-		if (!fallbackContainer) return undefined;
+		if (!fallbackContainer) {
+			console.warn(
+				`[EntityRenderer] No model for "${unitType}" (url: ${modelUrl}) and no fallback available`,
+			);
+			return undefined;
+		}
 		return createFromContainer(
 			entityId,
 			unitType,
@@ -402,13 +407,24 @@ function createFromContainer(
 	rootNode.position = new Vector3(pos.x, pos.y, pos.z);
 	rootNode.scaling = new Vector3(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
 
-	// Tag all meshes with entityId for raycasting
+	// Tag all meshes with entityId for raycasting and enforce visibility
 	const meshes: AbstractMesh[] = [];
 	for (const node of instance.rootNodes) {
 		const nodeMeshes = (node as TransformNode).getChildMeshes?.(false) ?? [];
 		for (const mesh of nodeMeshes) {
 			mesh.metadata = { ...mesh.metadata, entityId };
 			mesh.isPickable = true;
+			mesh.isVisible = true;
+			mesh.setEnabled(true);
+			// Ensure PBR materials have minimum emissive so meshes are visible
+			// even without a perfect environment texture setup
+			if (mesh.material instanceof PBRMaterial) {
+				const pbr = mesh.material;
+				if (pbr.emissiveColor.equals(Color3.Black())) {
+					pbr.emissiveColor = new Color3(0.08, 0.08, 0.08);
+					pbr.emissiveIntensity = 1.0;
+				}
+			}
 			meshes.push(mesh);
 		}
 		// Also tag the root if it's a mesh
@@ -418,12 +434,36 @@ function createFromContainer(
 				entityId,
 			};
 			(node as AbstractMesh).isPickable = true;
+			(node as AbstractMesh).isVisible = true;
 			meshes.push(node as AbstractMesh);
 		}
 	}
 
 	// Also tag the root transform node
 	rootNode.metadata = { ...rootNode.metadata, entityId };
+
+	// Fallback: if GLB produced no visible child meshes, create a colored box
+	// so the entity is always visible in the scene
+	if (meshes.length === 0) {
+		console.warn(
+			`[EntityRenderer] GLB for "${unitType}" (entity ${entityId}) produced 0 meshes — creating fallback box`,
+		);
+		const fallbackBox = MeshBuilder.CreateBox(
+			`fallback-${entityId}`,
+			{ size: 1.0 },
+			scene,
+		);
+		const fallbackMat = new StandardMaterial(`fallback-mat-${entityId}`, scene);
+		fallbackMat.diffuseColor = new Color3(0.2, 0.8, 0.2);
+		fallbackMat.emissiveColor = new Color3(0, 0.3, 0);
+		fallbackMat.specularColor = Color3.Black();
+		fallbackBox.material = fallbackMat;
+		fallbackBox.parent = rootNode;
+		fallbackBox.position = new Vector3(0, 0.5, 0);
+		fallbackBox.metadata = { entityId };
+		fallbackBox.isPickable = true;
+		meshes.push(fallbackBox);
+	}
 
 	// Selection ring — torus parented to root, hidden by default
 	const ring = MeshBuilder.CreateTorus(

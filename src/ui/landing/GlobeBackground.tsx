@@ -1,22 +1,29 @@
-// @ts-nocheck — R3F JSX elements (`<mesh>`, `<shaderMaterial>`, etc.) conflict
-// with Reactylon's global JSX type augmentation. Both renderers extend
-// `JSX.IntrinsicElements` with overlapping element names but incompatible props.
-// Runtime works perfectly — R3F Canvas uses its own reconciler.
-
 /**
- * GlobeBackground — Full-screen R3F Canvas behind the landing page.
+ * GlobeBackground — BabylonJS Canvas behind the landing page.
  *
  * Renders a slowly rotating ecumenopolis globe with storm atmosphere,
  * lightning bolts, and hypercane spiral. Purely decorative — no
  * interactivity, no input handling, no game state.
  *
+ * Uses Reactylon Engine/Scene and imperative BabylonJS ShaderMaterial.
  * The lattice growth slowly animates from 0.3 -> 0.5 over time,
  * showing cities spreading across the globe surface.
  */
 
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Suspense, useMemo, useRef } from "react";
-import * as THREE from "three";
+import type { Scene as BScene } from "@babylonjs/core";
+import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
+import { Constants } from "@babylonjs/core/Engines/constants";
+import { Effect } from "@babylonjs/core/Materials/effect";
+import { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
+import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
+import { Vector2, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
+import { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
+import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
+import { useEffect } from "react";
+import { Scene, useScene } from "reactylon";
+import { Engine } from "reactylon/web";
+
 import {
 	globeFragmentShader,
 	globeVertexShader,
@@ -28,190 +35,191 @@ import {
 	stormVertexShader,
 } from "./title/shaders";
 
-// --- Storm Cloud Sky ---
+// ─── Register shaders in BabylonJS ShadersStore ──────────────────────────────
 
-function StormClouds({ radius = 8 }: { radius?: number }) {
-	const meshRef = useRef<THREE.Mesh>(null);
+Effect.ShadersStore.stormVertexShader = stormVertexShader;
+Effect.ShadersStore.stormFragmentShader = stormFragmentShader;
+Effect.ShadersStore.lightningVertexShader = lightningVertexShader;
+Effect.ShadersStore.lightningFragmentShader = lightningFragmentShader;
+Effect.ShadersStore.globeVertexShader = globeVertexShader;
+Effect.ShadersStore.globeFragmentShader = globeFragmentShader;
+Effect.ShadersStore.hypercaneVertexShader = hypercaneVertexShader;
+Effect.ShadersStore.hypercaneFragmentShader = hypercaneFragmentShader;
 
-	const uniforms = useMemo(
-		() => ({
-			uTime: { value: 0 },
-			uColor1: { value: new THREE.Color(0x020307) },
-			uColor2: { value: new THREE.Color(0x0a1428) },
-		}),
-		[],
+// ─── Scene setup ─────────────────────────────────────────────────────────────
+
+function onGlobeSceneReady(scene: BScene) {
+	scene.clearColor = new Color4(0, 0, 0, 1);
+
+	const camera = new ArcRotateCamera(
+		"globe-cam",
+		0, // alpha
+		Math.PI / 2, // beta — front-on
+		10, // radius
+		Vector3.Zero(),
+		scene,
 	);
-
-	useFrame((state) => {
-		if (meshRef.current) {
-			uniforms.uTime.value = state.clock.elapsedTime;
-			meshRef.current.rotation.y = state.clock.elapsedTime * 0.02;
-		}
-	});
-
-	return (
-		<mesh ref={meshRef}>
-			<sphereGeometry args={[radius, 64, 64]} />
-			<shaderMaterial
-				vertexShader={stormVertexShader}
-				fragmentShader={stormFragmentShader}
-				uniforms={uniforms}
-				transparent
-				side={THREE.BackSide}
-				depthWrite={false}
-			/>
-		</mesh>
-	);
+	camera.fov = 0.8; // ~45 degrees
+	// No user interaction — purely decorative
+	camera.inputs.clear();
 }
 
-// --- Lightning Bolt Overlay ---
+// ─── Scene content ───────────────────────────────────────────────────────────
 
-function LightningEffect() {
-	const flashRef = useRef(0);
-	const boltStartRef = useRef(new THREE.Vector2(0, 0.8));
-	const boltEndRef = useRef(new THREE.Vector2(0, -0.8));
+function GlobeSceneContent() {
+	const scene = useScene();
 
-	const uniforms = useMemo(
-		() => ({
-			uTime: { value: 0 },
-			uFlash: { value: 0 },
-			uBoltStart: { value: new THREE.Vector2(0, 0.8) },
-			uBoltEnd: { value: new THREE.Vector2(0, -0.8) },
-		}),
-		[],
-	);
+	useEffect(() => {
+		if (!scene) return;
 
-	useFrame((state) => {
-		uniforms.uTime.value = state.clock.elapsedTime;
+		const startTime = performance.now();
+		let flash = 0;
+		let growth = 0.3;
+		const boltStart = new Vector2(0, 0.8);
+		const boltEnd = new Vector2(0, -0.8);
 
-		if (Math.random() > 0.97) {
-			flashRef.current = 1;
-			const angle = Math.random() * Math.PI * 2;
-			const radius = 0.6 + Math.random() * 0.3;
-			boltStartRef.current.set(
-				Math.cos(angle) * radius,
-				Math.sin(angle) * radius,
-			);
-			boltEndRef.current.set(
-				Math.cos(angle + Math.PI) * (radius * 0.3),
-				Math.sin(angle + Math.PI) * (radius * 0.3),
-			);
-		} else {
-			flashRef.current *= 0.85;
-		}
+		// --- Storm Clouds (BackSide sphere) ---
+		const stormMesh = CreateSphere(
+			"storm-clouds",
+			{ diameter: 16, segments: 64 },
+			scene,
+		);
+		const stormMat = new ShaderMaterial("storm-mat", scene, "storm", {
+			attributes: ["position", "normal", "uv"],
+			uniforms: ["worldViewProjection", "world", "uTime", "uColor1", "uColor2"],
+		});
+		stormMat.setColor3("uColor1", new Color3(0.008, 0.012, 0.027));
+		stormMat.setColor3("uColor2", new Color3(0.039, 0.078, 0.157));
+		stormMat.alpha = 1;
+		stormMat.backFaceCulling = false;
+		// Render inside of sphere (back-side) — invert normals via negative scaling
+		stormMesh.scaling = new Vector3(-1, 1, 1);
+		stormMat.alphaMode = Constants.ALPHA_COMBINE;
+		stormMat.needDepthPrePass = false;
+		stormMesh.material = stormMat;
 
-		uniforms.uFlash.value = flashRef.current;
-		uniforms.uBoltStart.value.copy(boltStartRef.current);
-		uniforms.uBoltEnd.value.copy(boltEndRef.current);
-	});
+		// --- Lightning Bolt Overlay (additive plane) ---
+		const lightningMesh = CreatePlane("lightning-plane", { size: 15 }, scene);
+		lightningMesh.position.z = -2; // in front of globe, facing camera
+		lightningMesh.billboardMode = 7; // BILLBOARDMODE_ALL
+		const lightningMat = new ShaderMaterial(
+			"lightning-mat",
+			scene,
+			"lightning",
+			{
+				attributes: ["position", "uv"],
+				uniforms: [
+					"worldViewProjection",
+					"uTime",
+					"uFlash",
+					"uBoltStart",
+					"uBoltEnd",
+				],
+			},
+		);
+		lightningMat.alphaMode = Constants.ALPHA_ADD;
+		lightningMat.backFaceCulling = false;
+		lightningMat.needDepthPrePass = false;
+		lightningMesh.material = lightningMat;
 
-	return (
-		<mesh position={[0, 0, 2]}>
-			<planeGeometry args={[15, 15]} />
-			<shaderMaterial
-				vertexShader={lightningVertexShader}
-				fragmentShader={lightningFragmentShader}
-				uniforms={uniforms}
-				transparent
-				blending={THREE.AdditiveBlending}
-				depthWrite={false}
-			/>
-		</mesh>
-	);
+		// --- Globe with Ecumenopolis ---
+		const globeMesh = CreateSphere(
+			"globe",
+			{ diameter: 5, segments: 64 },
+			scene,
+		);
+		const globeMat = new ShaderMaterial("globe-mat", scene, "globe", {
+			attributes: ["position", "normal", "uv"],
+			uniforms: ["worldViewProjection", "world", "uTime", "uGrowth"],
+		});
+		globeMesh.material = globeMat;
+
+		// --- Hypercane Spiral Band ---
+		const hypercaneMesh = CreateCylinder(
+			"hypercane",
+			{
+				diameterTop: 2,
+				diameterBottom: 3,
+				height: 2,
+				tessellation: 64,
+				subdivisions: 32,
+				enclose: false,
+			},
+			scene,
+		);
+		hypercaneMesh.scaling = new Vector3(3, 0.5, 3);
+		const hypercaneMat = new ShaderMaterial(
+			"hypercane-mat",
+			scene,
+			"hypercane",
+			{
+				attributes: ["position", "normal", "uv"],
+				uniforms: ["worldViewProjection", "world", "uTime"],
+			},
+		);
+		hypercaneMat.alphaMode = Constants.ALPHA_ADD;
+		hypercaneMat.backFaceCulling = false;
+		hypercaneMat.needDepthPrePass = false;
+		hypercaneMesh.material = hypercaneMat;
+
+		// --- Animation loop ---
+		const renderLoop = () => {
+			const elapsed = (performance.now() - startTime) / 1000;
+
+			// Storm clouds
+			stormMat.setFloat("uTime", elapsed);
+			stormMesh.rotation.y = elapsed * 0.02;
+
+			// Lightning
+			lightningMat.setFloat("uTime", elapsed);
+			if (Math.random() > 0.97) {
+				flash = 1;
+				const angle = Math.random() * Math.PI * 2;
+				const r = 0.6 + Math.random() * 0.3;
+				boltStart.x = Math.cos(angle) * r;
+				boltStart.y = Math.sin(angle) * r;
+				boltEnd.x = Math.cos(angle + Math.PI) * (r * 0.3);
+				boltEnd.y = Math.sin(angle + Math.PI) * (r * 0.3);
+			} else {
+				flash *= 0.85;
+			}
+			lightningMat.setFloat("uFlash", flash);
+			lightningMat.setVector2("uBoltStart", boltStart);
+			lightningMat.setVector2("uBoltEnd", boltEnd);
+
+			// Globe
+			globeMat.setFloat("uTime", elapsed);
+			growth = Math.min(0.5, 0.3 + elapsed * 0.0017);
+			globeMat.setFloat("uGrowth", growth);
+			globeMesh.rotation.y = elapsed * 0.1;
+
+			// Hypercane
+			hypercaneMat.setFloat("uTime", elapsed);
+			hypercaneMesh.rotation.y = elapsed * 0.3;
+		};
+
+		scene.registerBeforeRender(renderLoop);
+
+		return () => {
+			scene.unregisterBeforeRender(renderLoop);
+			stormMesh.dispose();
+			stormMat.dispose();
+			lightningMesh.dispose();
+			lightningMat.dispose();
+			globeMesh.dispose();
+			globeMat.dispose();
+			hypercaneMesh.dispose();
+			hypercaneMat.dispose();
+		};
+	}, [scene]);
+
+	return null;
 }
 
-// --- Ecumenopolis Globe ---
-
-function GlobeWithCities() {
-	const meshRef = useRef<THREE.Mesh>(null);
-	const growthRef = useRef(0.3);
-
-	const uniforms = useMemo(
-		() => ({
-			uTime: { value: 0 },
-			uGrowth: { value: 0.3 },
-		}),
-		[],
-	);
-
-	useFrame((state) => {
-		if (meshRef.current) {
-			uniforms.uTime.value = state.clock.elapsedTime;
-			// Slowly grow lattice from 0.3 to 0.5 over ~2 minutes
-			growthRef.current = Math.min(0.5, 0.3 + state.clock.elapsedTime * 0.0017);
-			uniforms.uGrowth.value = growthRef.current;
-			meshRef.current.rotation.y = state.clock.elapsedTime * 0.1;
-		}
-	});
-
-	return (
-		<mesh ref={meshRef}>
-			<sphereGeometry args={[2.5, 64, 64]} />
-			<shaderMaterial
-				vertexShader={globeVertexShader}
-				fragmentShader={globeFragmentShader}
-				uniforms={uniforms}
-			/>
-		</mesh>
-	);
-}
-
-// --- Hypercane Spiral ---
-
-function Hypercane() {
-	const meshRef = useRef<THREE.Mesh>(null);
-
-	const uniforms = useMemo(
-		() => ({
-			uTime: { value: 0 },
-		}),
-		[],
-	);
-
-	useFrame((state) => {
-		if (meshRef.current) {
-			uniforms.uTime.value = state.clock.elapsedTime;
-			meshRef.current.rotation.y = state.clock.elapsedTime * 0.3;
-		}
-	});
-
-	return (
-		<mesh ref={meshRef} scale={[3, 0.5, 3]}>
-			<cylinderGeometry args={[1, 1.5, 2, 64, 32, true]} />
-			<shaderMaterial
-				vertexShader={hypercaneVertexShader}
-				fragmentShader={hypercaneFragmentShader}
-				uniforms={uniforms}
-				transparent
-				side={THREE.DoubleSide}
-				blending={THREE.AdditiveBlending}
-				depthWrite={false}
-			/>
-		</mesh>
-	);
-}
-
-// --- Scene (no Canvas — rendered inside the Canvas below) ---
-
-function TitleScene() {
-	return (
-		<>
-			<ambientLight intensity={0.15} />
-			<pointLight position={[10, 10, 10]} intensity={0.4} color="#8be6ff" />
-			<pointLight position={[-8, -4, -8]} intensity={0.2} color="#350a55" />
-
-			<StormClouds radius={8} />
-			<LightningEffect />
-			<GlobeWithCities />
-			<Hypercane />
-		</>
-	);
-}
-
-// --- Public Component ---
+// ─── Public Component ────────────────────────────────────────────────────────
 
 /**
- * Full-screen R3F Canvas showing the storm globe.
+ * Full-screen BabylonJS Canvas showing the storm globe.
  * Position behind the LandingScreen DOM overlay with a lower z-index.
  */
 export function GlobeBackground() {
@@ -223,15 +231,11 @@ export function GlobeBackground() {
 				zIndex: 100,
 			}}
 		>
-			<Canvas
-				camera={{ position: [0, 0, 10], fov: 45 }}
-				style={{ width: "100%", height: "100%" }}
-				gl={{ antialias: true, alpha: false }}
-			>
-				<Suspense fallback={null}>
-					<TitleScene />
-				</Suspense>
-			</Canvas>
+			<Engine>
+				<Scene onSceneReady={onGlobeSceneReady}>
+					<GlobeSceneContent />
+				</Scene>
+			</Engine>
 		</div>
 	);
 }

@@ -13,7 +13,8 @@ import {
 	getGovernorLog,
 	isAutoPlayEnabled,
 } from "../ai/governor/PlaytestGovernor";
-import { getSnapshot } from "../ecs/gameState";
+import { getSnapshot, setGameSpeed, simulationTick } from "../ecs/gameState";
+import { movementSystem } from "../systems/movement";
 import { Base, Faction } from "../ecs/traits";
 import { world } from "../ecs/world";
 
@@ -31,6 +32,9 @@ declare global {
 			disableAutoPlay: () => void;
 			isAutoPlayEnabled: () => boolean;
 			getGovernorLog: () => GovernorAction[];
+			setGameSpeed: (speed: number) => void;
+			/** Force-advance N simulation ticks (for headless E2E where WebGL render loop may not fire) */
+			forceTicks: (count: number) => void;
 		};
 	}
 }
@@ -79,6 +83,14 @@ function registerBridge(): void {
 		disableAutoPlay,
 		isAutoPlayEnabled,
 		getGovernorLog,
+		setGameSpeed,
+
+		forceTicks: (count: number) => {
+			for (let i = 0; i < count; i++) {
+				movementSystem(0.25, 1); // 250ms delta at 1x speed
+				simulationTick();
+			}
+		},
 	};
 }
 

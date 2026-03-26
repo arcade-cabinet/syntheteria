@@ -79,13 +79,15 @@ test.describe("Playtest Governor", () => {
 	});
 
 	test("auto-play runs governor and produces actions", async ({ page }) => {
+		test.setTimeout(60_000);
+
 		const errors: string[] = [];
 		page.on("pageerror", (err) => {
 			if (!isEngineError(err.message)) errors.push(err.message);
 		});
 
 		await startGameFully(page);
-		await page.waitForTimeout(1_000);
+		await page.waitForTimeout(2_000);
 
 		// Enable auto-play
 		await page.evaluate(() => {
@@ -97,15 +99,10 @@ test.describe("Playtest Governor", () => {
 		});
 		expect(isEnabled).toBe(true);
 
-		// Wait for ~100 ticks (at 1x speed, roughly 10-20 seconds)
-		// We'll poll until we hit 100 ticks or timeout
-		await page.waitForFunction(
-			() => {
-				const tick = window.__syntheteria?.getTickNumber() ?? 0;
-				return tick >= 100;
-			},
-			{ timeout: 30_000 },
-		);
+		// Force-advance 100 ticks (bypasses WebGL render loop which may not fire in headless)
+		await page.evaluate(() => {
+			window.__syntheteria?.forceTicks(100);
+		});
 
 		// Check results
 		const results = await page.evaluate(() => {

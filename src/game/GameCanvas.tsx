@@ -15,6 +15,11 @@ import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { Tools } from "@babylonjs/core/Misc/tools";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
+// Side-effect imports — Vite tree-shakes these without explicit import
+import "@babylonjs/core/Helpers/sceneHelpers";
+import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
+import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { useEffect, useRef } from "react";
 import { Scene, useScene } from "reactylon";
 import { Engine } from "reactylon/web";
@@ -75,18 +80,17 @@ function onSceneReady(scene: BScene) {
 	);
 	scene.ambientColor = new Color3(...epoch1.ambientColor);
 
-	// Create default environment for PBR materials — GLBs need an environment
-	// texture for metallic/roughness reflections. Without this, PBR meshes
-	// render as completely black/invisible.
-	const envHelper = scene.createDefaultEnvironment({
-		createSkybox: false,
-		createGround: false,
-	});
-	if (!envHelper) {
-		console.warn(
-			"[GameCanvas] createDefaultEnvironment returned null — PBR materials may render black",
-		);
-	}
+	// Environment texture for PBR reflections — just the IBL probe, no skybox/ground.
+	// Uses BabylonJS's default environment texture from CDN.
+	import("@babylonjs/core/Materials/Textures/cubeTexture").then(
+		({ CubeTexture }) => {
+			scene.environmentTexture =
+				CubeTexture.CreateFromPrefilteredData(
+					"https://assets.babylonjs.com/environments/environmentSpecular.env",
+					scene,
+				);
+		},
+	);
 }
 
 // ─── Inner scene content (needs useScene) ────────────────────────────────────
@@ -219,6 +223,31 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		cam.inertia = 0;
 		cam.panningInertia = 0;
 
+		// Create lights imperatively (Reactylon JSX inventory issues with Vite tree-shaking)
+		const sun = new DirectionalLight("sun", new Vector3(-0.3, -1, 0.3), scene);
+		sun.intensity = epoch1.sunIntensity;
+		sun.diffuse = new Color3(...epoch1.sunColor);
+
+		const ambient = new HemisphericLight("ambient", new Vector3(0, 1, 0), scene);
+		ambient.intensity = 0.5;
+		ambient.groundColor = new Color3(0.02, 0.06, 0.08);
+		ambient.diffuse = new Color3(0.12, 0.15, 0.2);
+
+		const accent = new PointLight("accent", new Vector3(startWX, 8, startWZ), scene);
+		accent.intensity = 2;
+		accent.diffuse = new Color3(0, 1, 1);
+
+		// Hub marker — cyan pyramid at player start
+		const hubMesh = MeshBuilder.CreateCylinder("hub-nexus", {
+			diameterTop: 0, diameterBottom: 3, height: 3, tessellation: 4,
+		}, scene);
+		hubMesh.position = new Vector3(startWX, 1.5, startWZ);
+		const hubMat = new StandardMaterial("hub-mat", scene);
+		hubMat.diffuseColor = new Color3(0, 1, 1);
+		hubMat.emissiveColor = new Color3(0, 0.4, 0.4);
+		hubMat.specularColor = Color3.Black();
+		hubMesh.material = hubMat;
+
 		// Initialize chunks around the start position
 		const chunkState = initChunks(scene, startWX, startWZ, seed);
 		chunkStateRef.current = chunkState;
@@ -324,53 +353,10 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		};
 	}, [scene, startWX, startWZ, seed]);
 
-	return (
-		<>
-			{/* Sun — epoch-driven directional light from upper-left */}
-			<directionalLight
-				name="sun"
-				direction={new Vector3(-0.3, -1, 0.3)}
-				intensity={epoch1.sunIntensity}
-				diffuse={new Color3(...epoch1.sunColor)}
-			/>
-
-			{/* Ambient fill — dark ground bounce */}
-			<hemisphericLight
-				name="ambient"
-				direction={new Vector3(0, 1, 0)}
-				intensity={0.5}
-				groundColor={new Color3(0.02, 0.06, 0.08)}
-				diffuse={new Color3(0.12, 0.15, 0.2)}
-			/>
-
-			{/* Accent light at player start — cyan glow */}
-			<pointLight
-				name="accent"
-				position={new Vector3(startWX, 8, startWZ)}
-				intensity={2}
-				diffuse={new Color3(0, 1, 1)}
-			/>
-
-			{/* Hub marker — cyan pyramid at player start */}
-			<cylinder
-				name="hub-nexus"
-				options={{
-					diameterTop: 0,
-					diameterBottom: 3,
-					height: 3,
-					tessellation: 4,
-				}}
-				position={new Vector3(startWX, 1.5, startWZ)}
-			>
-				<standardMaterial
-					name="hub-mat"
-					diffuseColor={new Color3(0, 1, 1)}
-					emissiveColor={new Color3(0, 0.4, 0.4)}
-					specularColor={Color3.Black()}
-				/>
-			</cylinder>
-		</>
-	);
+	// Lights and hub marker are created imperatively (not Reactylon JSX)
+	// because Vite's tree-shaking + babel-plugin-reactylon doesn't always
+	// register BabylonJS classes in Reactylon's inventory correctly.
+	return null;
 }
 
 // ─── Main component ──────────────────────────────────────────────────────────

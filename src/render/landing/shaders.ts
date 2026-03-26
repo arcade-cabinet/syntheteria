@@ -27,17 +27,22 @@ attribute uv : vec2<f32>;
 varying vUv : vec2<f32>;
 varying vPosition : vec3<f32>;
 varying vNormal : vec3<f32>;
+varying vWorldPosition : vec3<f32>;
 
 @vertex
 fn main(input : VertexInputs) -> FragmentInputs {
     vertexOutputs.vUv = vertexInputs.uv;
     vertexOutputs.vPosition = vertexInputs.position;
+    let worldPos = mesh.world * vec4<f32>(vertexInputs.position, 1.0);
     vertexOutputs.vNormal = normalize((mesh.world * vec4<f32>(vertexInputs.normal, 0.0)).xyz);
-    vertexOutputs.position = scene.viewProjection * mesh.world * vec4<f32>(vertexInputs.position, 1.0);
+    vertexOutputs.vWorldPosition = worldPos.xyz;
+    vertexOutputs.position = scene.viewProjection * worldPos;
 }
 `;
 
 export const stormFragmentShader = /* wgsl */ `
+#include<sceneUboDeclaration>
+
 uniform uTime : f32;
 uniform uColor1 : vec3<f32>;
 uniform uColor2 : vec3<f32>;
@@ -45,6 +50,7 @@ uniform uColor2 : vec3<f32>;
 varying vUv : vec2<f32>;
 varying vPosition : vec3<f32>;
 varying vNormal : vec3<f32>;
+varying vWorldPosition : vec3<f32>;
 
 fn hash3(p: vec3<f32>) -> f32 {
     return fract(sin(dot(p, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
@@ -130,14 +136,15 @@ fn main(input : FragmentInputs) -> FragmentOutputs {
     let flashDir = smoothstep(1.8, 0.0, length(pos.xz - vec2<f32>(cos(flashAngle), sin(flashAngle)) * 0.5));
     let flashColor = vec3<f32>(0.25, 0.35, 0.55) * flash * flashDir * 0.3;
 
-    // Atmospheric fade at edges (fresnel)
-    let fresnel = pow(1.0 - abs(dot(fragmentInputs.vNormal, vec3<f32>(0.0, 0.0, 1.0))), 2.0);
+    // View-dependent fresnel, not a hard-coded world-axis rim.
+    let viewDir = normalize(scene.vEyePosition.xyz - fragmentInputs.vWorldPosition);
+    let fresnel = pow(1.0 - max(0.0, dot(normalize(fragmentInputs.vNormal), viewDir)), 2.0);
     var alpha = density * (0.6 + fresnel * 0.4);
     alpha *= smoothstep(0.0, 0.3, density);
 
-    let finalColor = color + wormholeColor + flashColor;
+    let finalColor = (color + wormholeColor + flashColor) * 1.35;
 
-    fragmentOutputs.color = vec4<f32>(finalColor, alpha * 0.85);
+    fragmentOutputs.color = vec4<f32>(finalColor, alpha * 0.95);
 }
 `;
 
@@ -230,23 +237,29 @@ attribute uv : vec2<f32>;
 varying vUv : vec2<f32>;
 varying vNormal : vec3<f32>;
 varying vPosition : vec3<f32>;
+varying vWorldPosition : vec3<f32>;
 
 @vertex
 fn main(input : VertexInputs) -> FragmentInputs {
     vertexOutputs.vUv = vertexInputs.uv;
+    let worldPos = mesh.world * vec4<f32>(vertexInputs.position, 1.0);
     vertexOutputs.vNormal = normalize((mesh.world * vec4<f32>(vertexInputs.normal, 0.0)).xyz);
     vertexOutputs.vPosition = vertexInputs.position;
-    vertexOutputs.position = scene.viewProjection * mesh.world * vec4<f32>(vertexInputs.position, 1.0);
+    vertexOutputs.vWorldPosition = worldPos.xyz;
+    vertexOutputs.position = scene.viewProjection * worldPos;
 }
 `;
 
 export const globeFragmentShader = /* wgsl */ `
+#include<sceneUboDeclaration>
+
 uniform uTime : f32;
 uniform uGrowth : f32;
 
 varying vUv : vec2<f32>;
 varying vNormal : vec3<f32>;
 varying vPosition : vec3<f32>;
+varying vWorldPosition : vec3<f32>;
 
 // DEBUG: uncomment next line to test shader pipeline
 fn hash3(p: vec3<f32>) -> f32 {
@@ -379,14 +392,210 @@ fn main(input : FragmentInputs) -> FragmentOutputs {
 
     color += latticeGlow * lights * 0.6;
 
-    // Atmospheric fresnel glow -- cyan/signal color at edges
-    let fresnel = pow(1.0 - abs(dot(fragmentInputs.vNormal, vec3<f32>(0.0, 0.0, 1.0))), 3.0);
+    // Use the actual view direction so the rim light tracks the camera.
+    let viewDir = normalize(scene.vEyePosition.xyz - fragmentInputs.vWorldPosition);
+    let fresnel = pow(1.0 - max(0.0, dot(normalize(fragmentInputs.vNormal), viewDir)), 3.0);
     let atmosColor = mix(vec3<f32>(0.04, 0.12, 0.25), vec3<f32>(0.12, 0.22, 0.32), latticeMask);
-    color += atmosColor * fresnel * 0.5;
+    color += atmosColor * fresnel * 0.9;
 
     // Cloud shadows
     let clouds = fbm6(pos * 10.0 + uniforms.uTime * 0.1) * 0.1;
     color *= (1.0 - clouds * (1.0 - latticeMask * 0.8));
+
+    // Keep the globe readable against the nearly-black menu background.
+    color += vec3<f32>(0.025, 0.035, 0.05);
+    color *= 1.25;
+
+    fragmentOutputs.color = vec4<f32>(color, 1.0);
+}
+`;
+
+// --- Unified Landing Hero Globe ---
+
+export const landingHeroVertexShader = globeVertexShader;
+
+export const landingHeroFragmentShader = /* wgsl */ `
+#include<sceneUboDeclaration>
+
+uniform uTime : f32;
+uniform uGrowth : f32;
+var logoSamplerSampler: sampler;
+var logoSampler: texture_2d<f32>;
+
+varying vUv : vec2<f32>;
+varying vNormal : vec3<f32>;
+varying vPosition : vec3<f32>;
+varying vWorldPosition : vec3<f32>;
+
+fn hash3(p: vec3<f32>) -> f32 {
+    return fract(sin(dot(p, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
+}
+
+fn noise3(p: vec3<f32>) -> f32 {
+    let i = floor(p);
+    var f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+
+    let a = hash3(i);
+    let b = hash3(i + vec3<f32>(1.0, 0.0, 0.0));
+    let c = hash3(i + vec3<f32>(0.0, 1.0, 0.0));
+    let d = hash3(i + vec3<f32>(1.0, 1.0, 0.0));
+    let e = hash3(i + vec3<f32>(0.0, 0.0, 1.0));
+    let f2 = hash3(i + vec3<f32>(1.0, 0.0, 1.0));
+    let g = hash3(i + vec3<f32>(0.0, 1.0, 1.0));
+    let h = hash3(i + vec3<f32>(1.0, 1.0, 1.0));
+
+    return mix(
+        mix(mix(a, b, f.x), mix(c, d, f.x), f.y),
+        mix(mix(e, f2, f.x), mix(g, h, f.x), f.y),
+        f.z
+    );
+}
+
+fn fbm6(p_in: vec3<f32>) -> f32 {
+    var value: f32 = 0.0;
+    var amplitude: f32 = 0.5;
+    var p = p_in;
+    for (var i: i32 = 0; i < 6; i++) {
+        value += amplitude * noise3(p);
+        p *= 2.0;
+        amplitude *= 0.5;
+    }
+    return value;
+}
+
+fn fbm7(p_in: vec3<f32>) -> f32 {
+    var value: f32 = 0.0;
+    var amplitude: f32 = 0.5;
+    var p = p_in;
+    for (var i: i32 = 0; i < 7; i++) {
+        value += amplitude * noise3(p);
+        p *= 2.1;
+        amplitude *= 0.45;
+    }
+    return value;
+}
+
+fn continentPattern(pos: vec3<f32>) -> f32 {
+    let lat = asin(pos.y);
+    let lon = atan2(pos.z, pos.x);
+    var continents: f32 = 0.0;
+
+    continents += smoothstep(0.6, 0.3, distance(vec2<f32>(lon + 1.7, lat), vec2<f32>(-1.7, 0.7)))
+        * smoothstep(0.0, 0.4, fbm6(pos * 8.0));
+    continents += smoothstep(0.5, 0.2, distance(vec2<f32>(lon + 1.2, lat), vec2<f32>(-1.2, -0.4)))
+        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(10.0, 0.0, 0.0)));
+    continents += smoothstep(0.7, 0.2, distance(vec2<f32>(lon, lat), vec2<f32>(0.2, 0.5)))
+        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(20.0, 0.0, 0.0)));
+    continents += smoothstep(0.6, 0.2, distance(vec2<f32>(lon + 0.3, lat), vec2<f32>(0.3, -0.1)))
+        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(30.0, 0.0, 0.0)));
+    continents += smoothstep(0.8, 0.3, distance(vec2<f32>(lon - 1.8, lat), vec2<f32>(1.8, 0.6)))
+        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(40.0, 0.0, 0.0)));
+    continents += smoothstep(0.4, 0.15, distance(vec2<f32>(lon - 2.5, lat), vec2<f32>(2.5, -0.5)))
+        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(50.0, 0.0, 0.0)));
+
+    return clamp(continents, 0.0, 1.0);
+}
+
+@fragment
+fn main(input : FragmentInputs) -> FragmentOutputs {
+    let pos = normalize(fragmentInputs.vPosition);
+    let viewDir = normalize(scene.vEyePosition.xyz - fragmentInputs.vWorldPosition);
+    let fresnel = pow(1.0 - max(0.0, dot(normalize(fragmentInputs.vNormal), viewDir)), 3.0);
+
+    var landMask = continentPattern(pos);
+    let coastDetail = fbm6(pos * 15.0) * 0.3;
+    landMask = smoothstep(0.4 - coastDetail, 0.5 + coastDetail, landMask);
+
+    let latticePattern = fbm6(pos * 6.0 + uniforms.uTime * 0.03);
+    let growth = smoothstep(0.0, 1.0, uniforms.uGrowth);
+    var latticeSpread = landMask * growth * 2.0;
+    latticeSpread += (1.0 - landMask) * max(0.0, growth * 2.0 - 1.0);
+    latticeSpread = clamp(latticeSpread, 0.0, 1.0);
+    let latticeMask = smoothstep(0.3, 0.7, latticePattern + latticeSpread * 0.5) * latticeSpread;
+
+    let deepOcean = vec3<f32>(0.01, 0.02, 0.06);
+    let shallowOcean = vec3<f32>(0.02, 0.04, 0.10);
+    let coastalWater = vec3<f32>(0.03, 0.07, 0.13);
+    let plains = vec3<f32>(0.10, 0.13, 0.07);
+    let forest = vec3<f32>(0.06, 0.10, 0.06);
+    let desert = vec3<f32>(0.15, 0.13, 0.09);
+    let latticeBase = vec3<f32>(0.09, 0.10, 0.13);
+    let latticeDense = vec3<f32>(0.14, 0.16, 0.21);
+    let latticeCore = vec3<f32>(0.20, 0.25, 0.35);
+    let latticeGlow = vec3<f32>(0.35, 0.75, 0.88);
+
+    let oceanDepth = fbm6(pos * 8.0);
+    var oceanColor = mix(deepOcean, shallowOcean, oceanDepth);
+    oceanColor = mix(oceanColor, coastalWater, landMask * 0.3);
+
+    let landType = fbm6(pos * 5.0 + vec3<f32>(100.0, 0.0, 0.0));
+    var landColor = mix(forest, plains, smoothstep(0.3, 0.7, landType));
+    landColor = mix(landColor, desert, smoothstep(0.7, 1.0, landType) * abs(pos.y));
+
+    let terrainColor = mix(oceanColor, landColor, landMask);
+    var machineColor = mix(latticeBase, latticeDense, latticePattern);
+    machineColor = mix(machineColor, latticeCore, smoothstep(0.5, 1.0, latticeMask));
+    var color = mix(terrainColor, machineColor, latticeMask);
+
+    let lightGrid = fbm6(pos * 40.0 + uniforms.uTime * 0.2);
+    var cityLights = latticeMask * smoothstep(0.4, 0.6, lightGrid);
+    cityLights *= (0.5 + 0.5 * sin(uniforms.uTime * 2.0 + latticePattern * 30.0));
+    cityLights *= smoothstep(0.3, 0.8, latticeMask);
+    color += latticeGlow * cityLights * 0.6;
+
+    let longitude = atan2(pos.z, pos.x);
+    let equatorBand = 1.0 - smoothstep(0.10, 0.35, abs(pos.y));
+    let cycloneSwirl = sin(longitude * 12.0 + uniforms.uTime * 1.8 + fbm6(pos * 8.0) * 4.0) * 0.5 + 0.5;
+    let cycloneTurbulence = fbm7(pos * 9.0 + vec3<f32>(uniforms.uTime * 0.12, 0.0, -uniforms.uTime * 0.08));
+    let cycloneMask = equatorBand * smoothstep(0.38, 0.72, cycloneSwirl * 0.7 + cycloneTurbulence * 0.6);
+    let cycloneColor = mix(vec3<f32>(0.08, 0.12, 0.18), vec3<f32>(0.18, 0.30, 0.45), cycloneMask);
+    color = mix(color, cycloneColor, cycloneMask * 0.72);
+
+    let stormNoise = fbm7(pos * 5.0 + vec3<f32>(uniforms.uTime * 0.05, uniforms.uTime * 0.02, -uniforms.uTime * 0.04));
+    let stormMask = smoothstep(0.52, 0.78, stormNoise) * (0.45 + equatorBand * 0.55);
+    color *= (1.0 - stormMask * 0.22);
+    color += vec3<f32>(0.06, 0.10, 0.16) * stormMask * 0.18;
+
+    let bandCore = 1.0 - smoothstep(0.05, 0.16, abs(pos.y));
+    let bandSoft = 1.0 - smoothstep(0.14, 0.30, abs(pos.y));
+    let bandWidth = 1.0 - smoothstep(0.52, 0.86, abs(pos.z));
+    let frontMask = smoothstep(0.18, 0.48, pos.x);
+    let logoField = bandSoft * bandWidth * frontMask;
+    let logoU = clamp(0.5 - pos.z * 0.42, 0.0, 1.0);
+    let logoV = clamp(0.5 - pos.y * 1.95, 0.0, 1.0);
+    let logoSample = textureSample(logoSampler, logoSamplerSampler, vec2<f32>(logoU, logoV));
+    let logoAlpha = logoSample.a * bandCore * frontMask;
+    let logoGlow = smoothstep(0.08, 0.65, logoSample.a) * logoField;
+    let bandNoise = fbm6(vec3<f32>(pos.z * 8.0, pos.y * 16.0, uniforms.uTime * 0.05));
+    var bandColor = mix(vec3<f32>(0.03, 0.06, 0.11), vec3<f32>(0.08, 0.12, 0.18), logoField);
+    bandColor += vec3<f32>(0.02, 0.03, 0.05) * bandNoise * logoField;
+    color = mix(color, bandColor, logoField * 0.88);
+    color += logoSample.rgb * logoAlpha * 1.1;
+    color += vec3<f32>(0.18, 0.34, 0.48) * logoGlow * 0.55;
+
+    let flashSeed = floor(uniforms.uTime * 3.5);
+    let flashGate = step(0.82, hash3(vec3<f32>(flashSeed, 3.0, 7.0)));
+    let flashAngle = hash3(vec3<f32>(flashSeed, 5.0, 11.0)) * 6.28318;
+    let flashLat = (hash3(vec3<f32>(flashSeed, 13.0, 17.0)) - 0.5) * 0.36;
+    let boltDir = vec3<f32>(cos(flashAngle), flashLat, sin(flashAngle));
+    let boltAxis = normalize(cross(boltDir, vec3<f32>(0.0, 1.0, 0.0) + vec3<f32>(0.001, 0.0, 0.0)));
+    let boltPhase = dot(pos, boltDir) * 12.0 + dot(pos, boltAxis) * 8.0;
+    let boltJitter = fbm6(pos * 24.0 + vec3<f32>(flashSeed, 0.0, 0.0));
+    let boltCore = abs(dot(pos, boltAxis) + (boltJitter - 0.5) * 0.18);
+    let boltMask = flashGate * equatorBand * smoothstep(0.08, 0.0, boltCore) * smoothstep(0.2, 0.95, sin(boltPhase) * 0.5 + 0.5) * (1.0 - bandCore * frontMask * 0.85);
+    let boltGlow = flashGate * equatorBand * smoothstep(0.22, 0.0, boltCore) * (1.0 - bandCore * frontMask * 0.7);
+    color += vec3<f32>(0.70, 0.92, 1.0) * boltMask * 1.1;
+    color += vec3<f32>(0.18, 0.30, 0.45) * boltGlow * 0.35;
+
+    let atmosColor = mix(vec3<f32>(0.04, 0.12, 0.25), vec3<f32>(0.12, 0.22, 0.32), cycloneMask * 0.6 + latticeMask * 0.4);
+    color += atmosColor * fresnel * 1.05;
+
+    let cloudShadows = fbm6(pos * 10.0 + uniforms.uTime * 0.1) * 0.1;
+    color *= (1.0 - cloudShadows * (1.0 - latticeMask * 0.8));
+
+    color += vec3<f32>(0.025, 0.035, 0.05);
+    color *= 1.22;
 
     fragmentOutputs.color = vec4<f32>(color, 1.0);
 }
@@ -405,22 +614,28 @@ attribute uv : vec2<f32>;
 varying vPosition : vec3<f32>;
 varying vNormal : vec3<f32>;
 varying vUv : vec2<f32>;
+varying vWorldPosition : vec3<f32>;
 
 @vertex
 fn main(input : VertexInputs) -> FragmentInputs {
+    let worldPos = mesh.world * vec4<f32>(vertexInputs.position, 1.0);
     vertexOutputs.vPosition = vertexInputs.position;
     vertexOutputs.vNormal = normalize((mesh.world * vec4<f32>(vertexInputs.normal, 0.0)).xyz);
     vertexOutputs.vUv = vertexInputs.uv;
-    vertexOutputs.position = scene.viewProjection * mesh.world * vec4<f32>(vertexInputs.position, 1.0);
+    vertexOutputs.vWorldPosition = worldPos.xyz;
+    vertexOutputs.position = scene.viewProjection * worldPos;
 }
 `;
 
 export const hypercaneFragmentShader = /* wgsl */ `
+#include<sceneUboDeclaration>
+
 uniform uTime : f32;
 
 varying vPosition : vec3<f32>;
 varying vNormal : vec3<f32>;
 varying vUv : vec2<f32>;
+varying vWorldPosition : vec3<f32>;
 
 fn hash3(p: vec3<f32>) -> f32 {
     return fract(sin(dot(p, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
@@ -467,9 +682,12 @@ fn main(input : FragmentInputs) -> FragmentOutputs {
     // Storm spiral colors: deep blue-gray with cyan-tinted edges
     let stormColor = vec3<f32>(0.08, 0.10, 0.18);
     let glowColor = vec3<f32>(0.18, 0.30, 0.45);
-    let color = mix(stormColor, glowColor, intensity * 0.4);
+    let viewDir = normalize(scene.vEyePosition.xyz - fragmentInputs.vWorldPosition);
+    let fresnel = pow(1.0 - max(0.0, dot(normalize(fragmentInputs.vNormal), viewDir)), 2.0);
+    var color = mix(stormColor, glowColor, intensity * 0.55);
+    color += vec3<f32>(0.08, 0.16, 0.22) * fresnel * 0.8;
 
-    let alpha = intensity * 0.35;
+    let alpha = intensity * 0.55 + fresnel * 0.12;
 
     fragmentOutputs.color = vec4<f32>(color, alpha);
 }

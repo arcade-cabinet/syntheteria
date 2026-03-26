@@ -7,7 +7,12 @@
  */
 
 import { Component, type ReactNode } from "react";
-import { logError } from "../../errors";
+import {
+	clearFatalError,
+	getFatalError,
+	logError,
+	subscribeFatalError,
+} from "../errors";
 
 const IS_DEV = import.meta.env.DEV;
 
@@ -20,10 +25,21 @@ interface State {
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-	state: State = { error: null };
+	state: State = { error: getFatalError() };
+	private unsubscribeFatalError: (() => void) | null = null;
 
 	static getDerivedStateFromError(error: Error): State {
 		return { error };
+	}
+
+	componentDidMount() {
+		this.unsubscribeFatalError = subscribeFatalError(() => {
+			this.setState({ error: getFatalError() });
+		});
+	}
+
+	componentWillUnmount() {
+		this.unsubscribeFatalError?.();
 	}
 
 	componentDidCatch(error: Error, info: React.ErrorInfo) {
@@ -32,6 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
 	}
 
 	handleReload = () => {
+		clearFatalError();
 		window.location.reload();
 	};
 

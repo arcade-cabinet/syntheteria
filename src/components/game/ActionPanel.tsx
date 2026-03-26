@@ -28,7 +28,7 @@ import { world } from "../../ecs/world";
 import { foundBase, validateBaseLocation } from "../../systems/baseManagement";
 import { canUpgrade, performUpgrade } from "../../systems/upgrade";
 import { selectBase } from "../base/BasePanel";
-import { cn } from "../lib/utils";
+import { cn } from "../../lib/utils";
 
 // ─── Stance labels ──────────────────────────────────────────────────────────
 

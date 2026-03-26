@@ -209,7 +209,7 @@ function handleClick(
 			);
 			if (baseEntityId) {
 				// Dynamically import to avoid circular dependency
-				import("../ui/base/BasePanel")
+				import("../components/base/BasePanel")
 					.then(({ selectBase }) => {
 						selectBase(baseEntityId);
 					})

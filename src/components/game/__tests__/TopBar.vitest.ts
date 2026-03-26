@@ -67,7 +67,7 @@ vi.mock("../../../ecs/world", () => ({
 	},
 }));
 
-vi.mock("../../lib/utils", () => ({
+vi.mock("../../../lib/utils", () => ({
 	cn: vi.fn((...args: string[]) => args.filter(Boolean).join(" ")),
 }));
 

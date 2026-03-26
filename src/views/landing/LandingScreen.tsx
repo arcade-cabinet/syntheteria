@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { initAudio } from "../../audio";
-import { GlobeBackground } from "./GlobeBackground";
+import { GlobeBackground } from "../../render/landing/GlobeBackground";
 import { type NewGameConfig, NewGameModal } from "./NewGameModal";
 
 // ─── Curved Bezel Arc (ported from cursor branch brand identity) ─────────────
@@ -67,30 +67,14 @@ export function LandingScreen({
 }: {
 	onStartGame: (config: NewGameConfig) => void;
 }) {
-	const [titleOpacity, setTitleOpacity] = useState(0);
 	const [menuOpacity, setMenuOpacity] = useState(0);
-	const [glitch, setGlitch] = useState(false);
 	const [modal, setModal] = useState<Modal>("none");
 
 	useEffect(() => {
-		const t1 = setTimeout(() => setTitleOpacity(1), 200);
 		const t2 = setTimeout(() => setMenuOpacity(1), 1200);
 		return () => {
-			clearTimeout(t1);
 			clearTimeout(t2);
 		};
-	}, []);
-
-	// Periodic glitch effect
-	useEffect(() => {
-		const interval = setInterval(
-			() => {
-				setGlitch(true);
-				setTimeout(() => setGlitch(false), 100 + Math.random() * 150);
-			},
-			3000 + Math.random() * 4000,
-		);
-		return () => clearInterval(interval);
 	}, []);
 
 	return (
@@ -118,47 +102,6 @@ export function LandingScreen({
 						pointerEvents: "none",
 					}}
 				/>
-
-				{/* Title */}
-				<div
-					style={{
-						opacity: titleOpacity,
-						transition: "opacity 1.5s ease-in-out",
-						fontFamily: "'Courier New', monospace",
-						fontSize: "clamp(32px, 8vw, 72px)",
-						fontWeight: "bold",
-						letterSpacing: "0.3em",
-						color: "#8be6ff",
-						textShadow: glitch
-							? "3px 0 #ff0044, -3px 0 #0044ff, 0 0 40px rgba(139,230,255,0.6)"
-							: "0 0 40px rgba(139,230,255,0.4), 0 0 80px rgba(139,230,255,0.15), 0 0 2px #8be6ff",
-						transform: glitch
-							? `translate(${Math.random() * 4 - 2}px, ${Math.random() * 2 - 1}px)`
-							: "none",
-						userSelect: "none",
-						textAlign: "center",
-						padding: "0 16px",
-					}}
-				>
-					SYNTHETERIA
-				</div>
-
-				{/* Subtitle */}
-				<div
-					style={{
-						opacity: titleOpacity * 0.6,
-						transition: "opacity 2s ease-in-out",
-						fontFamily: "'Courier New', monospace",
-						fontSize: "clamp(11px, 2vw, 16px)",
-						color: "#8be6ff",
-						letterSpacing: "0.5em",
-						marginTop: "12px",
-						textShadow: "0 0 20px rgba(139,230,255,0.3)",
-						textAlign: "center",
-					}}
-				>
-					{"AWAKEN // CONNECT // REBUILD"}
-				</div>
 
 				{/* Bottom bezel zone — curved SVG arc with menu buttons */}
 				<div

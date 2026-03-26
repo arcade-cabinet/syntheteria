@@ -12,13 +12,13 @@ import {
 	useState,
 	useSyncExternalStore,
 } from "react";
-import { getSnapshot, subscribe } from "../../ecs/gameState";
+import { getSnapshot, subscribe } from "../ecs/gameState";
 import {
 	clearErrorLog,
 	type ErrorLogEntry,
 	getErrorLog,
 	subscribeErrors,
-} from "../../errors";
+} from "../errors";
 
 // Only render in dev mode
 const IS_DEV = import.meta.env.DEV;

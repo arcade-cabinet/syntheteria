@@ -15,7 +15,7 @@ import {
 	Position,
 } from "../../src/ecs/traits";
 import { world } from "../../src/ecs/world";
-import { BasePanel, selectBase } from "../../src/ui/base/BasePanel";
+import { BasePanel, selectBase } from "../../src/components/base/BasePanel";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;

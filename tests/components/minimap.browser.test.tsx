@@ -20,7 +20,7 @@ import {
 } from "../../src/ecs/traits";
 import { serializeComponents } from "../../src/ecs/types";
 import { world } from "../../src/ecs/world";
-import { Minimap } from "../../src/ui/layout/Minimap";
+import { Minimap } from "../../src/components/game/Minimap";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;

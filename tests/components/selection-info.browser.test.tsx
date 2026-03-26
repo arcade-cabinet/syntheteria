@@ -20,7 +20,7 @@ import {
 } from "../../src/ecs/traits";
 import { serializeComponents } from "../../src/ecs/types";
 import { world } from "../../src/ecs/world";
-import { SelectionInfo } from "../../src/ui/layout/SelectionInfo";
+import { SelectionInfo } from "../../src/components/game/SelectionInfo";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;

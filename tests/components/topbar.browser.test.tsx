@@ -27,7 +27,7 @@ import {
 } from "../../src/ecs/traits";
 import { serializeComponents } from "../../src/ecs/types";
 import { world } from "../../src/ecs/world";
-import { TopBar } from "../../src/ui/layout/TopBar";
+import { TopBar } from "../../src/components/game/TopBar";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;

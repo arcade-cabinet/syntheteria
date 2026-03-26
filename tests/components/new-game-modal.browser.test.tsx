@@ -10,7 +10,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import {
 	NewGameModal,
 	type NewGameConfig,
-} from "../../src/ui/landing/NewGameModal";
+} from "../../src/views/landing/NewGameModal";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;

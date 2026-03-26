@@ -20,7 +20,7 @@ import {
 } from "../../src/ecs/traits";
 import { serializeComponents } from "../../src/ecs/types";
 import { world } from "../../src/ecs/world";
-import { ActionPanel } from "../../src/ui/layout/ActionPanel";
+import { ActionPanel } from "../../src/components/game/ActionPanel";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;

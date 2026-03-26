@@ -25,13 +25,13 @@ describe("GameLayout structure", () => {
 	});
 
 	it("sidebar component is importable", async () => {
-		const mod = await import("../Sidebar");
+		const mod = await import("../../../components/game/Sidebar");
 		expect(mod.Sidebar).toBeDefined();
 		expect(typeof mod.Sidebar).toBe("function");
 	});
 
 	it("TopBar component is importable", async () => {
-		const mod = await import("../TopBar");
+		const mod = await import("../../../components/game/TopBar");
 		expect(mod.TopBar).toBeDefined();
 		expect(typeof mod.TopBar).toBe("function");
 	});

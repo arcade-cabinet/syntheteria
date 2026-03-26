@@ -24,7 +24,7 @@ import {
 	togglePause,
 } from "../../ecs/gameState";
 import { world } from "../../ecs/world";
-import { cn } from "../lib/utils";
+import { cn } from "../../lib/utils";
 
 const SPEED_STEPS = [0.5, 1, 2, 4] as const;
 

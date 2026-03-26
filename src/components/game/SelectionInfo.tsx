@@ -21,7 +21,7 @@ import {
 import { parseComponents, type UnitComponent } from "../../ecs/types";
 import { world } from "../../ecs/world";
 import { getScavengePoints } from "../../systems/resources";
-import { cn } from "../lib/utils";
+import { cn } from "../../lib/utils";
 
 // ─── Component status bar ───────────────────────────────────────────────────
 

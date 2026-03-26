@@ -12,9 +12,9 @@
  */
 
 import type { ReactNode } from "react";
-import { BasePanel } from "../base/BasePanel";
-import { Sidebar } from "./Sidebar";
-import { TopBar } from "./TopBar";
+import { BasePanel } from "../../components/base/BasePanel";
+import { Sidebar } from "../../components/game/Sidebar";
+import { TopBar } from "../../components/game/TopBar";
 
 export interface GameLayoutProps {
 	children: ReactNode;

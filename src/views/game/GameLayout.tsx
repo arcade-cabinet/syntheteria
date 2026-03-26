@@ -29,7 +29,7 @@ export function GameLayout({ children }: GameLayoutProps) {
 			</div>
 
 			{/* Game area */}
-			<div className="flex-1 relative overflow-hidden">
+			<div className="flex-1 relative overflow-hidden bg-[#03070b]">
 				{/* TopBar overlay */}
 				<div className="absolute top-0 w-full z-20 pointer-events-none">
 					<TopBar />

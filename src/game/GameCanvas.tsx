@@ -68,20 +68,28 @@ export interface GameCanvasProps {
 function onSceneReady(scene: BScene) {
 	scene.createDefaultCameraOrLight(true, undefined, true);
 
+	// Force opaque canvas — WebGPU defaults to premultiplied alpha which
+	// composites transparent clearColor as white. Set premultipliedAlpha=false
+	// on the engine to make it use alphaMode: "opaque".
+	const engine = scene.getEngine();
+	(engine as { premultipliedAlpha: boolean }).premultipliedAlpha = false;
+	// Reconfigure the WebGPU context with opaque alpha mode
+	if ("_configureContext" in engine && typeof (engine as Record<string, unknown>)._configureContext === "function") {
+		(engine as Record<string, () => void>)._configureContext();
+	}
+	const canvas = engine.getRenderingCanvas();
+	if (canvas) {
+		canvas.style.background = "#03070b";
+	}
+
 	// Exponential fog matching the void ground color
 	scene.fogMode = 2; // FOGMODE_EXP2
 	scene.fogDensity = epoch1.fogDensity;
 	scene.fogColor.set(FOG_R, FOG_G, FOG_B);
-	scene.clearColor.set(
-		epoch1.backgroundColor[0],
-		epoch1.backgroundColor[1],
-		epoch1.backgroundColor[2],
-		1,
-	);
+	scene.clearColor.set(FOG_R, FOG_G, FOG_B, 1);
 	scene.ambientColor = new Color3(...epoch1.ambientColor);
 
-	// Environment texture for PBR reflections — just the IBL probe, no skybox/ground.
-	// Uses BabylonJS's default environment texture from CDN.
+	// Environment texture for PBR reflections — just the IBL probe, no skybox.
 	import("@babylonjs/core/Materials/Textures/cubeTexture").then(
 		({ CubeTexture }) => {
 			scene.environmentTexture =
@@ -89,6 +97,9 @@ function onSceneReady(scene: BScene) {
 					"https://assets.babylonjs.com/environments/environmentSpecular.env",
 					scene,
 				);
+			// Re-force dark clear color after env texture loads (it can override)
+			scene.clearColor.set(FOG_R, FOG_G, FOG_B, 1);
+			scene.autoClear = true;
 		},
 	);
 }
@@ -363,7 +374,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 
 export function GameCanvas({ havok, startPos, seed }: GameCanvasProps) {
 	return (
-		<Engine>
+		<Engine engineOptions={{ premultipliedAlpha: false, alpha: false }}>
 			<Scene
 				onSceneReady={onSceneReady}
 				physicsOptions={{ plugin: new HavokPlugin(true, havok) }}

@@ -77,7 +77,7 @@ export const EPOCH_VISUALS: readonly EpochVisualDef[] = [
 		mood: "Bright clear day. Warm sunlight. The world before the storm.",
 		skyZenith: [0.27, 0.53, 0.8], // #4488CC bright blue
 		skyHorizon: [0.67, 0.78, 0.93], // #AACCEE light haze
-		backgroundColor: [0.42, 0.71, 0.93], // #6CB4EE CivRev2 sky
+		backgroundColor: [0.012, 0.027, 0.043], // #03070b dark void
 		ambientColor: [0.8, 0.87, 0.93], // cool bright fill
 		ambientIntensity: 1.8,
 		sunColor: [1.0, 1.0, 0.93], // near-white warm

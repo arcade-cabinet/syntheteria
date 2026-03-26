@@ -1,6 +1,6 @@
 # Implementation Options
 
-> **Note (2026-03-25):** This document is historical. The final engine choice is BabylonJS 8 + Reactylon 3 + Webpack 5. See [CLAUDE.md](../../CLAUDE.md) for current architecture.
+> **Historical Document (2026-03-23):** This document was written before the BabylonJS + Reactylon pivot. The architecture described here (R3F/Vite/Miniplex) has been superseded. See [CLAUDE.md](/CLAUDE.md) for current architecture.
 
 This document outlines the technology choices and implementation paths for Syntheteria.
 
@@ -81,9 +81,9 @@ See: [ARCHITECTURE.md](../technical/ARCHITECTURE.md) for full technical design.
 
 ---
 
-### Decision Status: Decided — Custom Web Engine
+### Decision Status: Decided — BabylonJS + Reactylon + Webpack
 
-The custom R3F/Three.js/ECS stack was chosen over Unity and Godot for mobile-first delivery, full AI-assisted development compatibility, and direct alignment with the fragmented map system.
+The custom web engine approach was chosen over Unity and Godot for mobile-first delivery, full AI-assisted development compatibility, and direct alignment with the fragmented map system. The specific stack has since evolved from R3F/Three.js/Miniplex to **BabylonJS 8 + Reactylon 3 + Webpack 5 + Koota ECS**. See [CLAUDE.md](../../CLAUDE.md) for the current architecture.
 
 ---
 
@@ -168,7 +168,7 @@ Scope:
 
 | Decision | Options | Status |
 |----------|---------|--------|
-| Game engine | Custom (R3F + Three.js + Miniplex ECS) | **Decided** |
+| Game engine | Custom (BabylonJS 8 + Reactylon 3 + Koota ECS) | **Decided** |
 | Visual style detail | Low-poly / Pixel art / Clean minimal | TBD |
 | Save system | IndexedDB (primary) + localStorage (fallback) | Decided |
 | Multiplayer timing | Post-launch (procedural world) | Deferred |
@@ -177,7 +177,7 @@ Scope:
 
 ## Next Steps
 
-1. **Scaffold project** — Vite + R3F + Miniplex + TypeScript
+1. ~~**Scaffold project**~~ — **Done** (Webpack + BabylonJS + Reactylon + Koota)
 2. **Build Phase 1 prototype** — fragmented map system is the key test
 3. **Iterate based on playtesting** — adjust scope based on what's fun
 4. **Determine visual style detail** — low-poly, pixel art, or clean minimal

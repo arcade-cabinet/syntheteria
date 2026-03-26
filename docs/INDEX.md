@@ -1,3 +1,5 @@
+> **Historical Document (2026-03-23):** This document was written before the BabylonJS + Reactylon pivot. The architecture described here (R3F/Vite/Miniplex) has been superseded. See [CLAUDE.md](/CLAUDE.md) for current architecture.
+
 # Syntheteria Documentation Index
 
 ## Design Documents
@@ -35,7 +37,7 @@
 | Intro Sequence | **Rewritten** - Void awakening, fragmented maps, base establishment |
 | Open Questions | **Updated** - 24 resolved, 1 partial, 5 open |
 | Lore Overview | **Updated** - Perpetual storm, lightning, world geography |
-| Implementation Options | **Superseded** - Engine decided: Custom R3F + Three.js + Miniplex ECS |
+| Implementation Options | **Superseded** - Engine decided: BabylonJS 8 + Reactylon 3 + Koota ECS |
 | Architecture | **Updated** - Build order with implementation status tracking |
 | Core Formulas | **Needs update** - Power/combat formulas implemented but doc not updated |
 | Reference Builds | **Needs update** - Component data retired, will need rebuild |
@@ -56,7 +58,7 @@ Major changes from the previous design:
 8. **Platform:** Mobile-first → PC and mobile equally
 9. **Components:** 101 components in JSON → Retired, redesigned with 5 basic types implemented
 10. **Combat:** Component-based damage (break parts, not HP), feral machines implemented, cultists pending
-11. **Engine:** Decided — Custom web engine (R3F + Three.js + Miniplex ECS)
+11. **Engine:** Decided — Custom web engine (BabylonJS 8 + Reactylon 3 + Koota ECS)
 
 ---
 

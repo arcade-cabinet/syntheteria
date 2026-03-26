@@ -19,7 +19,7 @@ This document defines the mathematical formulas for Syntheteria's game mechanics
 
 A robot is valid if and only if:
 
-```
+```text
 has_power_source AND has_controller AND (has_locomotion OR is_stationary)
 ```
 
@@ -35,19 +35,19 @@ Where:
 
 ### 2.1 Total Robot Weight
 
-```
+```text
 total_weight = sum(component.weight for component in robot.components)
 ```
 
 ### 2.2 Payload Weight
 
-```
+```text
 payload_weight = sum(item.weight for item in robot.cargo)
 ```
 
 ### 2.3 Operational Weight
 
-```
+```text
 operational_weight = total_weight + payload_weight
 ```
 
@@ -59,13 +59,13 @@ operational_weight = total_weight + payload_weight
 
 A robot can move if:
 
-```
+```text
 total_torque >= operational_weight
 ```
 
 ### 3.2 Torque Margin
 
-```
+```text
 torque_margin = total_torque / operational_weight
 ```
 
@@ -80,7 +80,7 @@ torque_margin = total_torque / operational_weight
 
 ### 4.1 Power Capacity
 
-```
+```text
 power_capacity = sum(source.power.output for source in robot.power_sources)
 ```
 
@@ -88,7 +88,7 @@ Note: Robots connected to lightning rod infrastructure may have effectively unli
 
 ### 4.2 Locomotion Power Draw
 
-```
+```text
 locomotion_power = base_rate × operational_weight × terrain_factor × speed_factor
 ```
 
@@ -127,13 +127,13 @@ locomotion_power = base_rate × operational_weight × terrain_factor × speed_fa
 
 ### 4.3 Total Power Draw
 
-```
+```text
 total_power_draw = locomotion_power + sum(function_power for each active component)
 ```
 
 ### 4.4 Power State
 
-```
+```text
 power_ratio = total_power_draw / power_capacity
 ```
 
@@ -158,20 +158,20 @@ power_ratio = total_power_draw / power_capacity
 
 ### 5.2 Robot Compute Cost
 
-```
+```text
 base_cost = sum(function.base_cost for each active function)
 robot_compute_cost = base_cost × automation_multiplier
 ```
 
 ### 5.3 Net Compute
 
-```
+```text
 net_compute = robot_compute_contribution - robot_compute_cost
 ```
 
 ### 5.4 Global Compute Pool
 
-```
+```text
 global_compute = sum(net_compute for each robot where net_compute > 0)
 compute_demand = sum(abs(net_compute) for each robot where net_compute < 0)
 available_compute = global_compute - compute_demand
@@ -187,13 +187,13 @@ If `available_compute < 0`, robots must be shut down or reduced.
 
 A hack can be attempted if:
 
-```
+```text
 has_signal_link AND has_technique AND available_compute >= hack_compute_cost
 ```
 
 ### 6.2 Hack Compute Cost
 
-```
+```text
 hack_compute_cost = target_complexity × technique_efficiency
 ```
 
@@ -203,7 +203,7 @@ Where:
 
 ### 6.3 Hack Duration
 
-```
+```text
 hack_duration = base_duration × (target_hack_resistance / player_compute_surplus)
 ```
 
@@ -215,13 +215,13 @@ Stronger targets take longer. More available compute speeds the process.
 
 ### 7.1 Base Signal Range
 
-```
+```text
 base_signal_range = 1000m  (starting, from core infrastructure)
 ```
 
 ### 7.2 Extended Range
 
-```
+```text
 extended_range = base_signal_range + sum(relay.range for each relay in network)
 ```
 
@@ -229,7 +229,7 @@ extended_range = base_signal_range + sum(relay.range for each relay in network)
 
 A robot is connected if:
 
-```
+```text
 distance_to_nearest_relay <= relay.range OR distance_to_core <= base_signal_range
 ```
 
@@ -239,7 +239,7 @@ distance_to_nearest_relay <= relay.range OR distance_to_core <= base_signal_rang
 
 ### 8.1 Lightning Rod Power
 
-```
+```text
 lightning_power = rod_capacity × storm_intensity
 ```
 
@@ -249,7 +249,7 @@ Storm intensity, rod capacity, and power distribution formulas need definition.
 
 Outside the city, random lightning strikes occur:
 
-```
+```text
 strike_probability = base_rate × storm_intensity × exposure_factor
 ```
 
@@ -259,7 +259,7 @@ Where `exposure_factor` = 0 inside lightning rod protection, 1.0 in open terrain
 
 Cultist-called lightning:
 
-```
+```text
 lightning_damage = base_damage × cultist_power_level
 ```
 

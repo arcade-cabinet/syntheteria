@@ -1,3 +1,5 @@
+> **Historical Document (2026-03-23):** This document was written before the BabylonJS + Reactylon pivot. The architecture described here (R3F/Vite/Miniplex) has been superseded. See [CLAUDE.md](/CLAUDE.md) for current architecture.
+
 # Phase 1: Core RTS Loop — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -70,7 +72,7 @@ All labyrinth tests should pass with seeded determinism.
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 feat: extract labyrinth generator from aeef1650^ — rooms-and-mazes pipeline restored
 ```
 
@@ -116,7 +118,7 @@ pnpm vitest run src/board/
 
 - [ ] **Step 7: Commit**
 
-```
+```text
 feat: adapt labyrinth generator for single-player RTS — one start, cult POI rooms
 ```
 
@@ -149,7 +151,7 @@ Write a quick smoke test or add a `console.log` to confirm: board tiles spawn, p
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: wire labyrinth generator as Koota board data source
 ```
 
@@ -191,7 +193,7 @@ Start the dev server (`pnpm dev`), create a new game. Confirm robot units appear
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 feat: render player robots as GLB models — 6 archetypes via useGLTF
 ```
 
@@ -228,7 +230,7 @@ Start dev server. Confirm the labyrinth city renders with 3D building models —
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 feat: render city as instanced GLB buildings — 25 building types mapped to labyrinth tiles
 ```
 
@@ -259,7 +261,7 @@ The labyrinth city should fill the visible area with no black bars or overflow s
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: responsive viewport — canvas fills screen at all sizes
 ```
 
@@ -298,7 +300,7 @@ Start dev server. Confirm:
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: real-time game loop with 5-speed control — tick orchestrator wired to Koota systems
 ```
 
@@ -349,7 +351,7 @@ Expected: builds successfully
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 chore: Phase 1 complete — core RTS loop with labyrinth city, GLB models, responsive viewport
 ```
 

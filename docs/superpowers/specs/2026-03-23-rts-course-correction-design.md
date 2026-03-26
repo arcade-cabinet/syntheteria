@@ -31,7 +31,7 @@ Restore the original RTS vision: one emergent AI waking in industrial ruins, rep
 
 ## Directory Structure (Target)
 
-```
+```text
 src/
   main.tsx                    — Capacitor-aware entry point
   app/

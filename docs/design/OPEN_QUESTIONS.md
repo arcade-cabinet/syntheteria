@@ -69,7 +69,7 @@ This document tracks design questions that need resolution.
 - [x] **Q21:** What about multiplayer?
   - **RESOLVED:** Eventually, with a procedurally generated world. Beyond current scope — focus on single-player first.
 - [x] **Q22:** What is the engine choice?
-  - **RESOLVED:** Custom web engine — React Three Fiber + Three.js + Miniplex ECS (TypeScript). Mobile-first web delivery, all code is text for AI-assisted development.
+  - **RESOLVED:** Custom web engine — BabylonJS 8 + Reactylon 3 + Koota ECS + Webpack 5 (TypeScript). Mobile-first web delivery, all code is text for AI-assisted development. Originally R3F/Three.js/Miniplex, superseded by BabylonJS pivot (2026-03-25).
 
 ---
 
@@ -114,7 +114,7 @@ This document tracks design questions that need resolution.
 | Gameplay Mechanics | 5 | 0 | 0 |
 | World/Setting | 4 | 0 | 0 |
 | Game Structure | 5 | 0 | 0 |
-| Technical/Scope | 4 | 0 | 0 |
+| Technical/Scope | 3 | 1 | 0 |
 | Business Model | 0 | 0 | 1 |
-| New (from redesign) | 3 | 0 | 4 |
-| **Total** | **24** | **1** | **5** |
+| New (from redesign) | 4 | 0 | 6 |
+| **Total** | **24** | **2** | **7** |

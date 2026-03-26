@@ -1,3 +1,5 @@
+> **Historical Document (2026-03-23):** This document was written before the BabylonJS + Reactylon pivot. The architecture described here (R3F/Vite/Miniplex) has been superseded. See [CLAUDE.md](/CLAUDE.md) for current architecture.
+
 # Phase 3: Economy + Building — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -61,7 +63,7 @@ Create `src/systems/__tests__/resources.vitest.ts`:
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 feat: resource scavenging — strip ruins for scrap, circuitry, power cells, durasteel
 ```
 
@@ -108,7 +110,7 @@ Create `src/systems/__tests__/fabrication.vitest.ts`:
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: fabrication system — craft components from scavenged materials at powered workshops
 ```
 
@@ -150,7 +152,7 @@ Create `src/systems/__tests__/power.vitest.ts`:
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: lightning rod power system — storm-harvested energy powers nearby buildings
 ```
 
@@ -203,7 +205,7 @@ Create `src/systems/__tests__/buildingPlacement.vitest.ts`:
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: building placement — ghost preview, validation, construction with material costs
 ```
 
@@ -242,7 +244,7 @@ Create `src/systems/__tests__/repair.vitest.ts`:
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: repair system — auto-repair at powered repair bays, manual repair at fabrication units
 ```
 
@@ -306,7 +308,7 @@ Create `src/systems/__tests__/upgrade.vitest.ts`:
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 feat: Mark I/II/III robot upgrades via radial menu — 6 archetypes with 3 tiers each
 ```
 
@@ -362,7 +364,7 @@ Expected: builds successfully
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 chore: Phase 3 complete — full economy loop: scavenge, fabricate, power, repair, upgrade
 ```
 

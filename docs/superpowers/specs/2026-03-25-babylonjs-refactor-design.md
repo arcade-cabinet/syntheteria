@@ -138,7 +138,7 @@ Kill Vite. Webpack 5 is the sole bundler.
 Reference: `otter-elite-force/docs/references/poc_final.html` — responsive RTS HUD pattern.
 
 ### Desktop Layout
-```
+```text
 ┌──────────────────────────────────────────────────────┐
 │ Resources ──── Status ──── Speed Controls ──── Clock │  thin top bar
 ├──────────┬───────────────────────────────────────────┤
@@ -155,7 +155,7 @@ Reference: `otter-elite-force/docs/references/poc_final.html` — responsive RTS
 ```
 
 ### Mobile Layout
-```
+```text
 ┌────────────────────────────────┐
 │ Resources ──── Status ──── Clk│
 ├───────────────────────────────┤

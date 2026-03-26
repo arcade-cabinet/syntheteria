@@ -1,3 +1,5 @@
+> **Historical Document (2026-03-23):** This document was written before the BabylonJS + Reactylon pivot. The architecture described here (R3F/Vite/Miniplex) has been superseded. See [CLAUDE.md](/CLAUDE.md) for current architecture.
+
 # Original Design Documents -- Consolidated Summary
 
 This document consolidates the key findings from all original Syntheteria design, story, and technical documents. It extracts the original maintainer's intent, scope, genre identity, and core mechanics as they existed in the design docs before subsequent development diverged.

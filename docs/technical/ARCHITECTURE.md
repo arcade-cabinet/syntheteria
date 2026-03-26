@@ -273,7 +273,7 @@ Runs at 1 tick/second at 1x speed. Adjustable: 0 (paused), 0.5x, 1x, 2x, 4x.
 
 **Tick order:**
 
-```
+```text
 1. stormSystem()           — update storm intensity, schedule random lightning strikes
 2. lightningStrikeSystem() — resolve pending strikes (damage, protection checks)
 3. powerNetworkSystem()    — BFS from lightning rods, distribute energy, check rod protection zones
@@ -349,7 +349,7 @@ Storm intensity cycles through phases and trends upward over the game. During su
 
 ### Power Distribution (BFS)
 
-```
+```text
 1. For each lightning rod: currentOutput = rodCapacity × stormIntensity × phaseMultiplier
 2. Build power graph: rods → distribution lines → connected buildings/stations
 3. BFS from rods, distributing available power to connected entities

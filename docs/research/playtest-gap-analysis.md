@@ -1,3 +1,5 @@
+> **Historical Document (2026-03-25):** This gap analysis has been addressed. All "IMPLEMENTED BUT NOT WIRED" items have been wired into the simulation tick and UI (see commits 058d2152, 02b27a63, ece573da, 9f1f1d0c). The wiring gaps identified below are now resolved.
+
 # Playtest Gap Analysis — What's Polished vs What's Dead Code
 
 ## POLISHED AND WORKING (verified in running game)

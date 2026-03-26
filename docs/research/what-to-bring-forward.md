@@ -1,3 +1,5 @@
+> **Historical Document (2026-03-23):** This document was written before the BabylonJS + Reactylon pivot. The architecture described here (R3F/Vite/Miniplex) has been superseded. See [CLAUDE.md](/CLAUDE.md) for current architecture.
+
 # What to Bring Forward — Later Work That Supports the Original Vision
 
 > Cross-referencing the original 27-file RTS game with everything built

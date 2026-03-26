@@ -14,7 +14,7 @@ The previous component data (101 components across 9 categories) and JSON schema
 
 ## Planned Structure
 
-```
+```text
 data/
 ├── schema/               # JSON Schema definitions (TBD)
 │   ├── component.schema.json

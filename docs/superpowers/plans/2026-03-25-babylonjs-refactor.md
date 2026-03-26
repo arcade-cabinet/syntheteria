@@ -1,3 +1,5 @@
+> **Completed (2026-03-25):** This plan has been fully executed. All 14 tasks are implemented and verified.
+
 # BabylonJS Refactor — Complete Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -365,13 +367,13 @@ Reference: `otter-elite-force/docs/references/poc_final.html` for the responsive
   ```bash
   grep -rn "catch.*{}" src/ --include="*.ts" --include="*.tsx"
   grep -rn "catch {$" src/ --include="*.ts" --include="*.tsx"
-  ```
+```text
   Replace every bare `catch` with `catch (e) { logError("module", "description", e); throw e; }` or `catch (e) { logError(...); }` if non-fatal is intentional (with a comment explaining WHY).
 
 - [ ] **Step 2:** Search for `??` fallbacks without safety comments:
   ```bash
   grep -rn "?? \[\]\|?? \"\"\|?? 0" src/ --include="*.ts" --include="*.tsx" | grep -v __tests__
-  ```
+```text
   Add `gameAssert()` before the fallback, or add a comment explaining why the fallback is safe.
 
 - [ ] **Step 3:** Verify ErrorBoundary wraps the app root. Debug overlay toggles with backtick.

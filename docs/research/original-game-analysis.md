@@ -1,3 +1,5 @@
+> **Historical Document (2026-03-23):** This document was written before the BabylonJS + Reactylon pivot. The architecture described here (R3F/Vite/Miniplex) has been superseded. See [CLAUDE.md](/CLAUDE.md) for current architecture.
+
 # Original Game Codebase Analysis
 
 > Complete analysis of `game/src/` -- the pre-migration state of Syntheteria.
@@ -20,7 +22,7 @@ It is structured as a single-page app with three phases: Title -> Narration -> P
 
 ### File Organization (30 files)
 
-```
+```text
 game/src/
   main.tsx              -- ReactDOM entry point (10 LOC)
   App.tsx               -- Root component: phases, narration, world init, game loop (233 LOC)
@@ -66,7 +68,7 @@ game/src/
 
 ### Data Flow
 
-```
+```text
 App.tsx (phase state machine)
   |
   |-- TitleScreen -> "narration" -> NarrationOverlay -> "playing"
@@ -227,7 +229,7 @@ All 3D rendering happens inside a single `<Canvas>` component. No scene graph ma
 ### Terrain Rendering
 
 The terrain is a **200x200 world-unit procedural heightfield** using layered sine waves (not Perlin noise):
-```
+```text
 height = 0.5 + 0.3*sin(1.2x + 0.8z) + 0.15*sin(2.5x + 1.7z + 1.3) + 0.05*sin(5.1x + 4.3z + 2.7)
 ```
 Scaled to 0-0.5 elevation. Below 0.15 raw = water (impassable).

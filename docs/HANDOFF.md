@@ -22,8 +22,7 @@ A 2.5D top-down RTS about an AI that wakes up in the sealed machine lattice of a
 | **React Binding** | Reactylon 3.x | Declarative JSX for BJS. Uses `babel-plugin-reactylon` |
 | **ECS** | Koota 0.6.x | Traits, queries, systems. NOT Miniplex (old) |
 | **AI** | Yuka 0.7.x | GOAP (Think/GoalEvaluator), NavGraph, Vehicle |
-| **Build (main app)** | Vite 8 + `@vitejs/plugin-react` | Standard React SPA |
-| **Build (POC)** | Webpack 5 + babel-plugin-reactylon | Separate entry, port 3001 |
+| **Build** | Webpack 5 + babel-plugin-reactylon | Single entry, dev port 8080 |
 | **Types** | TypeScript 6.x | `tsconfig.app.json` (main), `tsconfig.poc.json` (POC) |
 | **Testing** | Vitest (unit), Playwright (E2E) | Unchanged |
 | **Persistence** | sql.js (ASM build, no WASM fetch) | IndexedDB backing |
@@ -44,7 +43,7 @@ A 2.5D top-down RTS about an AI that wakes up in the sealed machine lattice of a
 
 ## 3. Project Structure
 
-```
+```text
 syntheteria/
 ├── src/
 │   ├── board/              ← CORE: generation, chunks, scene population, navigation
@@ -103,10 +102,8 @@ syntheteria/
 │   ├── technical/          ARCHITECTURE.md (OUTDATED — see this doc instead)
 │   ├── research/           Visual audits, analysis (still valid findings)
 │   └── references/         poc.html (original Three.js POC)
-├── webpack.poc.config.ts   Webpack config for POC (port 3001)
-├── tsconfig.poc.json       POC TypeScript config
-├── vite.config.ts          Main app Vite config (unchanged)
-└── tsconfig.app.json       Main app TS config (excludes src/poc)
+├── webpack.config.ts       Webpack config (Reactylon + babel-plugin-reactylon)
+└── tsconfig.json           TypeScript config
 ```
 
 ---
@@ -117,7 +114,7 @@ syntheteria/
 
 The world is not a fixed-size board. It's an infinite grid of **chunks** (32x32 tiles each). Chunks generate on demand as the camera pans. Each chunk is deterministic — same seed + chunk coordinates = identical output every time.
 
-```
+```text
 Chunk grid:        World:
 (0,0) (1,0) (2,0)   Each chunk = 32x32 tiles = 64x64 world meters
 (0,1) (1,1) (2,1)   TILE_SIZE_M = 2.0 meters per tile
@@ -255,13 +252,10 @@ All game data lives in `src/config/` as TypeScript const objects. No JSON. No ru
 ## 10. Running the Project
 
 ```bash
-# Main app (Vite, port 5173)
+# Dev server (Webpack + Reactylon)
 pnpm dev
 
-# POC (Webpack + Reactylon, port 3001)
-pnpm dev:poc
-
-# Type check main app
+# Type check
 pnpm tsc
 
 # Tests
@@ -299,21 +293,21 @@ GLB models on NAS (`/Volumes/home/assets/`). Robot models in `public/assets/mode
 
 ## 12. What's Next
 
-### Immediate
-- Wire Koota ECS into the POC (spawn entities from chunk data)
-- Yuka nav graph integration (build per chunk, pathfind across chunks)
-- Robot sprite sheets (3d-to-2d pipeline → atlas per robot type)
-- Replace procedural entity markers with actual robot sprites/models
+### Immediate (Done)
+- ~~Wire Koota ECS into the POC (spawn entities from chunk data)~~ -- **Done**
+- ~~Yuka nav graph integration (build per chunk, pathfind across chunks)~~ -- **Done**
+- ~~Replace procedural entity markers with actual robot GLB models~~ -- **Done**
+- ~~Radial menu, save/load, ghost preview, scavenging indicators~~ -- **Done**
+- ~~Cult escalation + Yuka AI wired into simulation tick~~ -- **Done**
 
 ### Short Term
+- Robot sprite sheets (3d-to-2d pipeline, atlas per robot type)
+- Cross-chunk pathfinding refinement
 - Fog of war (unexplored chunks = dark, explored = visible)
 - Camera pan triggers chunk load/unload with smooth transitions
-- Cult enemy spawning in enemy-zone chunks
-- Basic combat loop in the chunk world
 
 ### Medium Term
 - Hacking system
-- Save/load (chunk deltas to IndexedDB via sql.js)
 - Signal/compute network
 - Audio (Tone.js storm ambience, combat sounds)
 

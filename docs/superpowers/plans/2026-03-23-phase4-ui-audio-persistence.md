@@ -1,3 +1,5 @@
+> **Historical Document (2026-03-23):** This document was written before the BabylonJS + Reactylon pivot. The architecture described here (R3F/Vite/Miniplex) has been superseded. See [CLAUDE.md](/CLAUDE.md) for current architecture.
+
 # Phase 4: UI + Audio + Persistence — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -56,7 +58,7 @@ Start `pnpm dev`. Confirm the landing screen appears with title, new game button
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 feat: landing page — LandingScreen + NewGameModal adapted from feature branch
 ```
 
@@ -103,7 +105,7 @@ Start `pnpm dev`. Confirm: spinning globe with storm atmosphere visible behind t
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: R3F globe as menu background — storm atmosphere behind landing page
 ```
 
@@ -188,7 +190,7 @@ Start `pnpm dev`. Confirm:
 
 - [ ] **Step 9: Commit**
 
-```
+```text
 feat: audio system — Tone.js SFX, procedural music, storm ambience from feature branch
 ```
 
@@ -261,7 +263,7 @@ Create `src/db/__tests__/serialize.vitest.ts`:
 
 - [ ] **Step 8: Commit**
 
-```
+```text
 feat: Capacitor SQLite persistence — save/load with Koota serialization
 ```
 
@@ -305,7 +307,7 @@ Add tests to existing game loop tests:
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: game speed controls — pause/0.5x/1x/2x/4x with keyboard shortcuts
 ```
 
@@ -362,7 +364,7 @@ Expected: builds successfully
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 chore: Phase 4 complete — landing page, audio, save/load, speed controls
 ```
 

@@ -16,7 +16,7 @@ A 2.5D top-down RTS about an AI awakening in a dead ecumenopolis. You repair bro
 
 ```bash
 pnpm install
-pnpm dev          # Dev server — localhost:5173
+pnpm dev          # Dev server — localhost:8080
 pnpm build        # Production build
 pnpm tsc          # Type check
 pnpm test         # Unit tests

@@ -1,6 +1,6 @@
 # Syntheteria RTS Course Correction — Master Plan
 
-> **Note (2026-03-25):** This document is historical. The final engine choice is BabylonJS 8 + Reactylon 3 + Webpack 5, not R3F/Three.js as stated below. See [CLAUDE.md](../../../CLAUDE.md) for current architecture.
+> **Historical Document (2026-03-23):** This document was written before the BabylonJS + Reactylon pivot. The architecture described here (R3F/Vite/Miniplex) has been superseded. See [CLAUDE.md](/CLAUDE.md) for current architecture.
 
 > **Design Spec:** `docs/superpowers/specs/2026-03-23-rts-course-correction-design.md`
 
@@ -25,7 +25,7 @@ Restore the original RTS vision: one emergent AI waking in industrial ruins, rep
 
 ## Dependency Graph
 
-```
+```text
 Phase 0: Foundation
   ├── Fix Biome lint errors
   ├── Miniplex → Koota ECS port (27 files)

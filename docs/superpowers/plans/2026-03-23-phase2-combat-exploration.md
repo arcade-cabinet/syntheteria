@@ -1,3 +1,5 @@
+> **Historical Document (2026-03-23):** This document was written before the BabylonJS + Reactylon pivot. The architecture described here (R3F/Vite/Miniplex) has been superseded. See [CLAUDE.md](/CLAUDE.md) for current architecture.
+
 # Phase 2: Combat + Exploration — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -51,7 +53,7 @@ Create `src/systems/__tests__/combat.vitest.ts`:
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: port component damage combat system to Koota — no HP, component-level damage
 ```
 
@@ -95,7 +97,7 @@ Create `src/systems/__tests__/exploration.vitest.ts`:
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: port fragment merge fog-of-war to Koota — organic visibility growth
 ```
 
@@ -153,7 +155,7 @@ Create `src/systems/__tests__/enemies.vitest.ts`:
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 feat: wire 3 cult mech types as enemies — Wanderer, Brute, Assault with GLB models
 ```
 
@@ -198,7 +200,7 @@ Create `src/systems/__tests__/cultEscalation.vitest.ts`:
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: cult escalation — 3-tier threat ramp from wanderers to assault waves
 ```
 
@@ -246,7 +248,7 @@ Create `src/ai/__tests__/cultBehavior.vitest.ts`:
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 feat: Yuka GOAP for cult AI — patrol, aggro, escalate behaviors
 ```
 
@@ -287,7 +289,7 @@ Create `src/systems/__tests__/pathfinding.vitest.ts`:
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: navmesh pathfinding — A* on labyrinth grid via Yuka NavGraph
 ```
 
@@ -331,7 +333,7 @@ Start dev server. Confirm:
 
 - [ ] **Step 7: Commit**
 
-```
+```text
 feat: RTS input — unit selection, move commands, attack commands with touch support
 ```
 
@@ -384,7 +386,7 @@ Expected: builds successfully
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 chore: Phase 2 complete — combat, exploration, cult AI, pathfinding, RTS input
 ```
 

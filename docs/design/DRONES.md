@@ -55,7 +55,7 @@ Power draw is **dynamic** — it depends on what the robot is doing, not fixed c
 
 ### Locomotion Power
 
-```
+```text
 Locomotion Power = Base Rate x Weight x Terrain Factor x Speed Factor
 ```
 
@@ -73,7 +73,7 @@ Locomotion Power = Base Rate x Weight x Terrain Factor x Speed Factor
 
 ### Total Power Draw
 
-```
+```text
 Total Power = Locomotion Power + Sum of Function Powers
 ```
 
@@ -97,7 +97,7 @@ Compute cost depends on **what the robot does** and **how autonomously it does i
 
 ### Net Compute
 
-```
+```text
 Net Compute = Compute Contribution - Compute Cost
 ```
 

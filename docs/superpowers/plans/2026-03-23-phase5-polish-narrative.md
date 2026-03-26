@@ -1,3 +1,5 @@
+> **Historical Document (2026-03-23):** This document was written before the BabylonJS + Reactylon pivot. The architecture described here (R3F/Vite/Miniplex) has been superseded. See [CLAUDE.md](/CLAUDE.md) for current architecture.
+
 # Phase 5: Polish + Narrative — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -57,7 +59,7 @@ Start `pnpm dev`. Click "New Game" → "Start". Confirm intro dialogue plays wit
 
 - [ ] **Step 5: Commit**
 
-```
+```text
 feat: narrative dialogue system — intro sequence with typewriter effect
 ```
 
@@ -120,7 +122,7 @@ Create `src/systems/__tests__/humanTemperature.vitest.ts`:
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 feat: human temperature system — Colonization-style disposition meter with 5 tiers
 ```
 
@@ -180,7 +182,7 @@ Create `src/systems/__tests__/gamePhases.vitest.ts`:
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 feat: 3 game phases — Awakening/Expansion/War with gated mechanics and narrative beats
 ```
 
@@ -247,7 +249,7 @@ Start `pnpm dev`. Confirm:
 
 - [ ] **Step 7: Commit**
 
-```
+```text
 feat: PBR materials on city — concrete, metal, durasteel, rust from ambientCG
 ```
 
@@ -304,7 +306,7 @@ Expected: all E2E tests pass
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 test: E2E tests — new game flow, gameplay verification, save/load round-trip
 ```
 
@@ -356,7 +358,7 @@ Intentionally trigger an error (e.g., spawn a unit without Position trait). Conf
 
 - [ ] **Step 6: Commit**
 
-```
+```text
 feat: production error handling — assert+throw, debug overlay, error boundary
 ```
 
@@ -421,7 +423,7 @@ Run on iOS Simulator and/or Android Emulator. Verify:
 
 - [ ] **Step 7: Commit**
 
-```
+```text
 feat: mobile optimization — Capacitor build, touch refinement, performance budgets
 ```
 
@@ -490,7 +492,7 @@ Expected: builds successfully, bundle size reasonable
 
 - [ ] **Step 7: Final commit**
 
-```
+```text
 chore: Phase 5 complete — narrative, human temperature, PBR, E2E tests, mobile ready
 ```
 

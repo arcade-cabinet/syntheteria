@@ -124,13 +124,18 @@ const CAMPUS_Z_MIN = 0.65;
 /**
  * Determine which zone a tile belongs to based on its position.
  *
- * Uses absolute world coordinates normalized against WORLD_EXTENT.
- * This makes zone assignment stable across any board size or chunk boundary.
+ * Normalizes (x, z) against the given (width, height) so that the full
+ * zone layout (enemy north, city center, campus SW, coast E/S) spans
+ * whatever coordinate space the caller uses.
  *
- * @param x - tile x coordinate (absolute world position)
- * @param z - tile z coordinate (absolute world position, 0 = north/top)
- * @param width - board width in tiles (legacy compat — ignored when > 0, uses WORLD_EXTENT)
- * @param height - board height in tiles (legacy compat — ignored when > 0, uses WORLD_EXTENT)
+ * - Standalone boards pass their own dimensions (e.g. 64x64).
+ * - The chunk system passes WORLD_EXTENT for both width and height so
+ *   that world-space coordinates get consistent zone assignments.
+ *
+ * @param x - tile x coordinate
+ * @param z - tile z coordinate (0 = north/top)
+ * @param width - coordinate space width to normalize against
+ * @param height - coordinate space height to normalize against
  * @returns the WorldZone for this tile
  */
 export function zoneForTile(
@@ -139,15 +144,11 @@ export function zoneForTile(
 	width: number,
 	height: number,
 ): WorldZone {
-	// Normalize against fixed world extent, not board dimensions.
-	// For boards smaller than WORLD_EXTENT, tiles near (0,0) map to the
-	// northwest corner of the world — which is enemy territory.
-	// For legacy compatibility we still accept width/height but use the
-	// larger of (board dim, WORLD_EXTENT) to avoid collapsing zones.
-	const extentX = Math.max(width, WORLD_EXTENT);
-	const extentZ = Math.max(height, WORLD_EXTENT);
-	const nx = extentX > 1 ? x / (extentX - 1) : 0.5;
-	const nz = extentZ > 1 ? z / (extentZ - 1) : 0.5;
+	// Normalize against the provided dimensions. Callers decide the
+	// coordinate space: standalone boards use board dims; chunks use
+	// WORLD_EXTENT.
+	const nx = width > 1 ? x / (width - 1) : 0.5;
+	const nz = height > 1 ? z / (height - 1) : 0.5;
 
 	// Enemy territory: northern band
 	if (nz < ENEMY_Z_MAX) return "enemy";

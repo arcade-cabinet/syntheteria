@@ -1,21 +1,4 @@
-// ─── Webpack DefinePlugin: import.meta.env ───────────────────────────────────
-
-interface ImportMetaEnv {
-	readonly DEV: boolean;
-	readonly PROD: boolean;
-	readonly BASE_URL: string;
-}
-
-interface ImportMeta {
-	readonly env: ImportMetaEnv;
-}
-
-// ─── CSS module side-effect imports ──────────────────────────────────────────
-
-declare module "*.css" {
-	const content: Record<string, string>;
-	export default content;
-}
+// Vite provides import.meta.env natively via /// <reference types="vite/client" />
 
 // ─── Type shims for untyped dependencies ─────────────────────────────────────
 

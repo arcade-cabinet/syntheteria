@@ -1,0 +1,64 @@
+{
+  "scripts": [
+    {
+      "name": "dev",
+      "command": "pnpm dev",
+      "mode": "service",
+      "category": "dev"
+    },
+    {
+      "name": "build",
+      "command": "pnpm build",
+      "mode": "command",
+      "category": "build"
+    },
+    {
+      "name": "lint",
+      "command": "pnpm lint",
+      "mode": "command",
+      "category": "lint"
+    },
+    {
+      "name": "lint:fix",
+      "command": "pnpm lint:fix",
+      "mode": "command",
+      "category": "lint"
+    },
+    {
+      "name": "test",
+      "command": "pnpm test",
+      "mode": "command",
+      "category": "test"
+    },
+    {
+      "name": "test:browser",
+      "command": "pnpm test:browser",
+      "mode": "command",
+      "category": "test"
+    },
+    {
+      "name": "test:watch",
+      "command": "pnpm test:watch",
+      "mode": "command",
+      "category": "test"
+    },
+    {
+      "name": "test:e2e",
+      "command": "pnpm test:e2e",
+      "mode": "command",
+      "category": "test"
+    },
+    {
+      "name": "tsc",
+      "command": "pnpm tsc",
+      "mode": "command",
+      "category": "other"
+    },
+    {
+      "name": "verify",
+      "command": "pnpm verify",
+      "mode": "command",
+      "category": "other"
+    }
+  ]
+}

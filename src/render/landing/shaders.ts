@@ -53,7 +53,9 @@ varying vNormal : vec3<f32>;
 varying vWorldPosition : vec3<f32>;
 
 fn hash3(p: vec3<f32>) -> f32 {
-    return fract(sin(dot(p, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
+    var p3 = fract(p * vec3<f32>(0.1031, 0.1030, 0.0973));
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
 }
 
 fn noise3(p: vec3<f32>) -> f32 {
@@ -177,7 +179,10 @@ uniform uBoltEnd : vec2<f32>;
 varying vUv : vec2<f32>;
 
 fn hash1(n: f32) -> f32 {
-    return fract(sin(n) * 43758.5453);
+    var p = fract(n * 0.1031);
+    p *= p + 33.33;
+    p *= p + p;
+    return fract(p);
 }
 
 fn lightningBolt(uv: vec2<f32>, start: vec2<f32>, end: vec2<f32>, time: f32) -> f32 {
@@ -261,9 +266,10 @@ varying vNormal : vec3<f32>;
 varying vPosition : vec3<f32>;
 varying vWorldPosition : vec3<f32>;
 
-// DEBUG: uncomment next line to test shader pipeline
 fn hash3(p: vec3<f32>) -> f32 {
-    return fract(sin(dot(p, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
+    var p3 = fract(p * vec3<f32>(0.1031, 0.1030, 0.0973));
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
 }
 
 fn noise3(p: vec3<f32>) -> f32 {
@@ -428,7 +434,9 @@ varying vPosition : vec3<f32>;
 varying vWorldPosition : vec3<f32>;
 
 fn hash3(p: vec3<f32>) -> f32 {
-    return fract(sin(dot(p, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
+    var p3 = fract(p * vec3<f32>(0.1031, 0.1030, 0.0973));
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
 }
 
 fn noise3(p: vec3<f32>) -> f32 {
@@ -638,7 +646,9 @@ varying vUv : vec2<f32>;
 varying vWorldPosition : vec3<f32>;
 
 fn hash3(p: vec3<f32>) -> f32 {
-    return fract(sin(dot(p, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
+    var p3 = fract(p * vec3<f32>(0.1031, 0.1030, 0.0973));
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
 }
 
 fn noise3(p: vec3<f32>) -> f32 {

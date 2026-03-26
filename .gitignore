@@ -45,5 +45,10 @@ ios/
 .claude/worktrees
 .ralph-tui/worktrees
 
+# Developer-local tool configs
+.ralph-tui/config.toml
+.superpowers/brainstorm/**/.server.pid
+.superpowers/brainstorm/**/.server-stopped
+
 # Misc
 *.tsbuildinfo

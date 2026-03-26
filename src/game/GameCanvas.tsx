@@ -18,7 +18,9 @@ import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import { useEffect, useRef } from "react";
 import { Scene, useScene } from "reactylon";
 import { Engine } from "reactylon/web";
+import { getEpochVisual } from "../config/epochVisualDefs";
 import { getGameSpeed, simulationTick } from "../ecs/gameState";
+import { GameError, logError } from "../errors";
 import { movementSystem } from "../systems/movement";
 import {
 	type ChunkManagerState,
@@ -32,13 +34,15 @@ import {
 	initEntityRenderer,
 	syncEntities,
 } from "./EntityRenderer";
+import { updateFogVisibility } from "./FogOfWar";
 import { initInput } from "./InputHandler";
 
-// ─── Fog color — dark ecumenopolis void (#03070b) ────────────────────────────
+// ─── Epoch-driven atmosphere — Epoch 1 defaults ──────────────────────────────
 
-const FOG_R = 0.012;
-const FOG_G = 0.027;
-const FOG_B = 0.043;
+const epoch1 = getEpochVisual(1);
+const FOG_R = epoch1.fogColor[0];
+const FOG_G = epoch1.fogColor[1];
+const FOG_B = epoch1.fogColor[2];
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -58,9 +62,14 @@ function onSceneReady(scene: BScene) {
 
 	// Exponential fog matching the void ground color
 	scene.fogMode = 2; // FOGMODE_EXP2
-	scene.fogDensity = 0.015;
+	scene.fogDensity = epoch1.fogDensity;
 	scene.fogColor.set(FOG_R, FOG_G, FOG_B);
-	scene.clearColor.set(FOG_R, FOG_G, FOG_B, 1);
+	scene.clearColor.set(
+		epoch1.backgroundColor[0],
+		epoch1.backgroundColor[1],
+		epoch1.backgroundColor[2],
+		1,
+	);
 
 	// Create default environment for PBR materials — GLBs need an environment
 	// texture for metallic/roughness reflections. Without this, PBR meshes
@@ -201,6 +210,11 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 				simAccumulatorRef.current -= SIM_INTERVAL;
 				simulationTick();
 			}
+
+			// Update visual fog-of-war after simulation (reads fog grid, sets mesh visibility)
+			if (chunkStateRef.current) {
+				updateFogVisibility(chunkStateRef.current);
+			}
 		};
 		scene.registerBeforeRender(gameLoopCallback);
 
@@ -229,7 +243,11 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 				scene.registerBeforeRender(entityRenderCallback);
 			})
 			.catch((err) => {
-				console.warn("[GameCanvas] Entity renderer init failed:", err);
+				logError(
+					new GameError("Entity renderer initialization failed", "GameCanvas", {
+						cause: err,
+					}),
+				);
 			});
 
 		// Input handler — click-to-select, click-to-move, box selection
@@ -255,12 +273,12 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 
 	return (
 		<>
-			{/* Sun — cool directional light from upper-left */}
+			{/* Sun — epoch-driven directional light from upper-left */}
 			<directionalLight
 				name="sun"
 				direction={new Vector3(-0.3, -1, 0.3)}
-				intensity={Math.PI * 0.8}
-				diffuse={new Color3(0.67, 0.8, 1.0)}
+				intensity={epoch1.sunIntensity}
+				diffuse={new Color3(...epoch1.sunColor)}
 			/>
 
 			{/* Ambient fill — dark ground bounce */}

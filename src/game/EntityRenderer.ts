@@ -11,7 +11,6 @@
 
 import type { AssetContainer } from "@babylonjs/core/assetContainer";
 import { LoadAssetContainerAsync } from "@babylonjs/core/Loading/sceneLoader";
-import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
@@ -32,6 +31,7 @@ import {
 	Unit,
 } from "../ecs/traits";
 import { world } from "../ecs/world";
+import { GameError, logError } from "../errors";
 import {
 	type BaseMarkerState,
 	disposeBaseMarkers,
@@ -105,8 +105,7 @@ const SALVAGE_COLORS: Record<string, Color3> = {
 	durasteel: new Color3(0.75, 0.75, 0.8), // silver
 };
 
-/** Fallback color if material type is unknown. */
-const SALVAGE_FALLBACK_COLOR = new Color3(0.5, 0.5, 0.5);
+
 
 /** Pulse animation speed (radians per second). */
 const SALVAGE_PULSE_SPEED = 3.0;
@@ -149,14 +148,17 @@ export async function initEntityRenderer(
 		}),
 	);
 
-	// Log any failures but don't crash — missing models get the fallback
+	// Log any failures visibly — missing models are bugs, not expected
 	let failCount = 0;
 	for (let i = 0; i < results.length; i++) {
 		if (results[i].status === "rejected") {
 			failCount++;
-			console.warn(
-				`[EntityRenderer] Failed to load ${urls[i]}:`,
-				(results[i] as PromiseRejectedResult).reason,
+			logError(
+				new GameError(
+					`Failed to load model ${urls[i]}`,
+					"EntityRenderer",
+					{ cause: (results[i] as PromiseRejectedResult).reason },
+				),
 			);
 		}
 	}
@@ -369,23 +371,14 @@ function createEntityMesh(
 	const container = state.assetPool.get(modelUrl);
 
 	if (!container) {
-		// Try fallback URL
-		const fallbackUrl = resolveUnitModelUrl("__fallback__");
-		const fallbackContainer = state.assetPool.get(fallbackUrl);
-		if (!fallbackContainer) {
-			console.warn(
-				`[EntityRenderer] No model for "${unitType}" (url: ${modelUrl}) and no fallback available`,
-			);
-			return undefined;
-		}
-		return createFromContainer(
-			entityId,
-			unitType,
-			pos,
-			fallbackContainer,
-			state,
-			scene,
+		logError(
+			new GameError(
+				`No model loaded for unit type "${unitType}" (url: ${modelUrl})`,
+				"EntityRenderer",
+				{ entityId },
+			),
 		);
+		return undefined;
 	}
 
 	return createFromContainer(entityId, unitType, pos, container, state, scene);
@@ -416,15 +409,6 @@ function createFromContainer(
 			mesh.isPickable = true;
 			mesh.isVisible = true;
 			mesh.setEnabled(true);
-			// Ensure PBR materials have minimum emissive so meshes are visible
-			// even without a perfect environment texture setup
-			if (mesh.material instanceof PBRMaterial) {
-				const pbr = mesh.material;
-				if (pbr.emissiveColor.equals(Color3.Black())) {
-					pbr.emissiveColor = new Color3(0.08, 0.08, 0.08);
-					pbr.emissiveIntensity = 1.0;
-				}
-			}
 			meshes.push(mesh);
 		}
 		// Also tag the root if it's a mesh
@@ -442,27 +426,15 @@ function createFromContainer(
 	// Also tag the root transform node
 	rootNode.metadata = { ...rootNode.metadata, entityId };
 
-	// Fallback: if GLB produced no visible child meshes, create a colored box
-	// so the entity is always visible in the scene
+	// If GLB produced no visible child meshes, log error — don't create placeholder geometry
 	if (meshes.length === 0) {
-		console.warn(
-			`[EntityRenderer] GLB for "${unitType}" (entity ${entityId}) produced 0 meshes — creating fallback box`,
+		logError(
+			new GameError(
+				`GLB for "${unitType}" (entity ${entityId}) produced 0 meshes — entity will be invisible`,
+				"EntityRenderer",
+				{ entityId, context: { unitType } },
+			),
 		);
-		const fallbackBox = MeshBuilder.CreateBox(
-			`fallback-${entityId}`,
-			{ size: 1.0 },
-			scene,
-		);
-		const fallbackMat = new StandardMaterial(`fallback-mat-${entityId}`, scene);
-		fallbackMat.diffuseColor = new Color3(0.2, 0.8, 0.2);
-		fallbackMat.emissiveColor = new Color3(0, 0.3, 0);
-		fallbackMat.specularColor = Color3.Black();
-		fallbackBox.material = fallbackMat;
-		fallbackBox.parent = rootNode;
-		fallbackBox.position = new Vector3(0, 0.5, 0);
-		fallbackBox.metadata = { entityId };
-		fallbackBox.isPickable = true;
-		meshes.push(fallbackBox);
 	}
 
 	// Selection ring — torus parented to root, hidden by default
@@ -582,16 +554,26 @@ function createSalvageMesh(
 	y: number,
 	z: number,
 ): SalvageMeshEntry {
-	const baseColor = SALVAGE_COLORS[materialType] ?? SALVAGE_FALLBACK_COLOR;
+	const baseColor = SALVAGE_COLORS[materialType];
+	if (!baseColor) {
+		logError(
+			new GameError(
+				`Unknown salvage material type "${materialType}" — no color defined`,
+				"EntityRenderer",
+				{ context: { materialType, x, z } },
+			),
+		);
+	}
+	const color = baseColor ?? new Color3(0.5, 0.5, 0.5);
 
 	// Shared emissive material for this node
 	const mat = new StandardMaterial(`salvage_mat_${x}_${z}`, scene);
 	mat.diffuseColor = new Color3(
-		baseColor.r * 0.3,
-		baseColor.g * 0.3,
-		baseColor.b * 0.3,
+		color.r * 0.3,
+		color.g * 0.3,
+		color.b * 0.3,
 	);
-	mat.emissiveColor = baseColor.clone();
+	mat.emissiveColor = color.clone();
 	mat.specularColor = Color3.Black();
 
 	const meshes: AbstractMesh[] = [];
@@ -640,7 +622,7 @@ function createSalvageMesh(
 		cell2.material = mat;
 		meshes.push(cell2);
 	} else {
-		// durasteel / fallback — sturdy angular shapes
+		// durasteel / default — sturdy angular shapes
 		const slab = MeshBuilder.CreateBox(`salvage_slab_${x}_${z}`, { width: 0.7, height: 0.15, depth: 0.5 }, scene);
 		slab.position.y = 0.08;
 		slab.rotation.y = 0.3;
@@ -666,7 +648,7 @@ function createSalvageMesh(
 	// Random pulse phase so nodes don't glow in sync
 	const pulsePhase = (x * 7.3 + z * 13.7) % (Math.PI * 2);
 
-	return { root, meshes, material: mat, pulsePhase, baseColor };
+	return { root, meshes, material: mat, pulsePhase, baseColor: color };
 }
 
 function disposeSalvageEntry(entry: SalvageMeshEntry): void {

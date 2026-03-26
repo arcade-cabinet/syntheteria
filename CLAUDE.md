@@ -4,7 +4,7 @@
 
 2.5D top-down RTS about an AI awakening in a dead ecumenopolis. BabylonJS + Reactylon rendering with chunk-based infinite world generation. Fully playable with governor-driven automated playtests.
 
-**Full architecture details: [docs/HANDOFF.md](./docs/HANDOFF.md)**
+> For quick reference, read this file. For deep architecture details, see [docs/HANDOFF.md](./docs/HANDOFF.md).
 
 ---
 

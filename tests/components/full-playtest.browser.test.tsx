@@ -8,50 +8,47 @@
  * Runs HEADED so you can see the HUD components rendering in real Chrome.
  */
 
-import { afterEach, beforeEach, expect, test } from "vitest";
 import { createRoot, type Root } from "react-dom/client";
+import { afterEach, expect, test } from "vitest";
 
 // ─── Import game systems directly (no Reactylon needed) ───────────────────
 
 import {
-	enableAutoPlay,
-	disableAutoPlay,
-	getGovernorLog,
 	clearGovernorLog,
-	governorTick,
+	disableAutoPlay,
+	enableAutoPlay,
+	getGovernorLog,
 	resetGovernor,
 } from "../../src/ai/governor/PlaytestGovernor";
 import {
 	getSnapshot,
-	simulationTick,
-	setGameSpeed,
-	togglePause,
 	isPaused,
 	setGameConfig,
+	setGameSpeed,
+	simulationTick,
+	togglePause,
 } from "../../src/ecs/gameState";
-import { getRooms, initCityLayout } from "../../src/ecs/cityLayout";
 import {
-	Fragment,
-	Unit,
-	Position,
-	Faction,
-	EntityId,
-	Navigation,
-	UnitComponents,
-	Inventory,
 	EngagementRule,
+	EntityId,
+	Faction,
+	Fragment,
+	Inventory,
+	Navigation,
+	Position,
+	Unit,
+	UnitComponents,
 } from "../../src/ecs/traits";
+import { serializeComponents } from "../../src/ecs/types";
 import { world } from "../../src/ecs/world";
 import { movementSystem } from "../../src/systems/movement";
-import { getResources } from "../../src/systems/resources";
-import { serializeComponents } from "../../src/ecs/types";
 
 // ─── UI imports (React DOM only — no BabylonJS) ────────────────────────────
 
-import { TopBar } from "../../src/ui/layout/TopBar";
-import { Sidebar } from "../../src/ui/layout/Sidebar";
-import { SelectionInfo } from "../../src/ui/layout/SelectionInfo";
 import { ActionPanel } from "../../src/ui/layout/ActionPanel";
+import { SelectionInfo } from "../../src/ui/layout/SelectionInfo";
+import { Sidebar } from "../../src/ui/layout/Sidebar";
+import { TopBar } from "../../src/ui/layout/TopBar";
 
 // ─── Globals ─────────────────────────────────────────────────────────────────
 
@@ -88,7 +85,12 @@ async function flush(ms = 200) {
 
 let entityCounter = 0;
 
-function spawnTestUnit(name: string, x: number, z: number, faction: "player" | "cultist" = "player") {
+function spawnTestUnit(
+	name: string,
+	x: number,
+	z: number,
+	faction: "player" | "cultist" = "player",
+) {
 	const id = `test_${entityCounter++}`;
 	const components = [
 		{ name: "camera", functional: true, material: "electronic" },
@@ -101,7 +103,13 @@ function spawnTestUnit(name: string, x: number, z: number, faction: "player" | "
 		Position({ x, y: 0, z }),
 		Faction({ value: faction }),
 		Fragment({ fragmentId: `frag_${id}` }),
-		Unit({ unitType: "maintenance_bot", displayName: name, speed: 3, selected: false, mark: 1 }),
+		Unit({
+			unitType: "maintenance_bot",
+			displayName: name,
+			speed: 3,
+			selected: false,
+			mark: 1,
+		}),
 		UnitComponents({ componentsJson: serializeComponents(components) }),
 		Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
 		Inventory({ inventoryJson: "{}" }),
@@ -128,10 +136,12 @@ function initTestWorld() {
 
 test("full game loop: 200 ticks with governor, verify state", async () => {
 	// Initialize world
-	const { startX, startZ } = initTestWorld();
+	initTestWorld();
 
 	const snapBefore = getSnapshot();
-	console.log(`[PLAYTEST] Initial: T${snapBefore.tick}, ${snapBefore.unitCount} units, ${snapBefore.enemyCount} enemies`);
+	console.log(
+		`[PLAYTEST] Initial: T${snapBefore.tick}, ${snapBefore.unitCount} units, ${snapBefore.enemyCount} enemies`,
+	);
 
 	// Enable governor
 	enableAutoPlay();
@@ -147,7 +157,9 @@ test("full game loop: 200 ticks with governor, verify state", async () => {
 	const log = getGovernorLog();
 
 	console.log(`[PLAYTEST] After 200 ticks: T${snapAfter.tick}`);
-	console.log(`[PLAYTEST] Units: ${snapAfter.unitCount} player, ${snapAfter.enemyCount} enemies`);
+	console.log(
+		`[PLAYTEST] Units: ${snapAfter.unitCount} player, ${snapAfter.enemyCount} enemies`,
+	);
 	console.log(`[PLAYTEST] Governor made ${log.length} decisions`);
 
 	const actionTypes = new Set(log.map((a) => a.action));
@@ -180,7 +192,9 @@ test("governor explores, attacks, and survives 500 ticks", async () => {
 	const snap = getSnapshot();
 	const log = getGovernorLog();
 
-	console.log(`[STRESS] T${snap.tick}: ${snap.unitCount} units, ${snap.enemyCount} enemies, ${log.length} decisions`);
+	console.log(
+		`[STRESS] T${snap.tick}: ${snap.unitCount} units, ${snap.enemyCount} enemies, ${log.length} decisions`,
+	);
 
 	expect(snap.tick).toBeGreaterThanOrEqual(500);
 	expect(snap.unitCount).toBeGreaterThan(0);

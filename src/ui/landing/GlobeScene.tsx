@@ -31,14 +31,14 @@ import {
 
 // ─── Register all shaders in BabylonJS Effect store ─────────────────────────
 
-Effect.ShadersStore["stormVertexShader"] = stormVertexShader;
-Effect.ShadersStore["stormFragmentShader"] = stormFragmentShader;
-Effect.ShadersStore["lightningVertexShader"] = lightningVertexShader;
-Effect.ShadersStore["lightningFragmentShader"] = lightningFragmentShader;
-Effect.ShadersStore["globeVertexShader"] = globeVertexShader;
-Effect.ShadersStore["globeFragmentShader"] = globeFragmentShader;
-Effect.ShadersStore["hypercaneVertexShader"] = hypercaneVertexShader;
-Effect.ShadersStore["hypercaneFragmentShader"] = hypercaneFragmentShader;
+Effect.ShadersStore.stormVertexShader = stormVertexShader;
+Effect.ShadersStore.stormFragmentShader = stormFragmentShader;
+Effect.ShadersStore.lightningVertexShader = lightningVertexShader;
+Effect.ShadersStore.lightningFragmentShader = lightningFragmentShader;
+Effect.ShadersStore.globeVertexShader = globeVertexShader;
+Effect.ShadersStore.globeFragmentShader = globeFragmentShader;
+Effect.ShadersStore.hypercaneVertexShader = hypercaneVertexShader;
+Effect.ShadersStore.hypercaneFragmentShader = hypercaneFragmentShader;
 
 // ─── Scene setup ─────────────────────────────────────────────────────────────
 

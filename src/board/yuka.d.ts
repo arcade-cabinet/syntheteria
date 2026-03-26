@@ -66,6 +66,7 @@ declare module "yuka" {
 		clear(): this;
 	}
 
+	// biome-ignore lint/complexity/noStaticOnlyClass: Matches upstream Yuka API shape
 	export class GraphUtils {
 		static generateGridGraph(
 			size: number,

@@ -120,9 +120,11 @@ export async function initEntityRenderer(
 
 	const modelsLoaded = urls.length - failCount;
 	const modelsTotal = urls.length;
-	console.log(
-		`[EntityRenderer] Models loaded: ${modelsLoaded}/${modelsTotal}`,
-	);
+	if (import.meta.env.DEV) {
+		console.log(
+			`[EntityRenderer] Models loaded: ${modelsLoaded}/${modelsTotal}`,
+		);
+	}
 
 	// Shared cyan emissive material for selection rings (not frozen — per-ring clones need alpha writes)
 	const selectionMaterial = new StandardMaterial("selection-ring-mat", scene);
@@ -198,15 +200,13 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 
 		// Selection ring fade animation — lerp opacity toward target over ~200ms
 		const targetOpacity = unit.selected ? 0.8 : 0;
-		const lerpRate = 1 - Math.pow(0.01, 1 / 12); // ~200ms at 60fps
+		const lerpRate = 1 - 0.01 ** (1 / 12); // ~200ms at 60fps
 		entry.selectionRingOpacity +=
 			(targetOpacity - entry.selectionRingOpacity) * lerpRate;
 		const opacity = entry.selectionRingOpacity;
 		if (opacity > 0.01) {
 			entry.selectionRing.setEnabled(true);
-			(
-				entry.selectionRing.material as StandardMaterial
-			).alpha = opacity;
+			(entry.selectionRing.material as StandardMaterial).alpha = opacity;
 		} else {
 			entry.selectionRing.setEnabled(false);
 		}

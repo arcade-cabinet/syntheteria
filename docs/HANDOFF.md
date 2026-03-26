@@ -1,3 +1,5 @@
+> **Deep Architecture Reference.** For a quick overview, see [CLAUDE.md](/CLAUDE.md).
+
 # Syntheteria — Architecture Handoff (2026-03-25)
 
 This document is the single source of truth for the current state of the project after the BabylonJS + Reactylon pivot. It supersedes the outdated ARCHITECTURE.md (R3F/Three.js) and the pre-pivot sections of CLAUDE.md.

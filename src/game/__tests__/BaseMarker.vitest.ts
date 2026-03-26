@@ -40,16 +40,14 @@ vi.mock("@babylonjs/core/Meshes/meshBuilder", () => ({
 	MeshBuilder: {
 		CreateCylinder: vi
 			.fn()
-			.mockImplementation(
-				(name: string, _opts: unknown, _scene: unknown) => ({
-					name,
-					material: null,
-					metadata: null,
-					isPickable: false,
-					position: { x: 0, y: 0, z: 0 },
-					dispose: vi.fn(),
-				}),
-			),
+			.mockImplementation((name: string, _opts: unknown, _scene: unknown) => ({
+				name,
+				material: null,
+				metadata: null,
+				isPickable: false,
+				position: { x: 0, y: 0, z: 0 },
+				dispose: vi.fn(),
+			})),
 	},
 }));
 
@@ -62,14 +60,20 @@ describe("BaseMarkerState", () => {
 	it("tracks markers by entity ID", () => {
 		const state: BaseMarkerState = {
 			markers: new Map(),
-			playerMaterial: { dispose: vi.fn() } as any,
-			cultMaterial: { dispose: vi.fn() } as any,
+			playerMaterial: {
+				dispose: vi.fn(),
+			} as unknown as BaseMarkerState["playerMaterial"],
+			cultMaterial: {
+				dispose: vi.fn(),
+			} as unknown as BaseMarkerState["cultMaterial"],
 		};
 
 		expect(state.markers.size).toBe(0);
 
 		// Simulate adding a marker
-		state.markers.set("base_0", { name: "test-marker" } as any);
+		state.markers.set("base_0", {
+			name: "test-marker",
+		} as unknown as import("@babylonjs/core/Meshes/mesh").Mesh);
 		expect(state.markers.size).toBe(1);
 		expect(state.markers.has("base_0")).toBe(true);
 	});
@@ -77,13 +81,21 @@ describe("BaseMarkerState", () => {
 	it("removes markers for destroyed bases", () => {
 		const state: BaseMarkerState = {
 			markers: new Map(),
-			playerMaterial: { dispose: vi.fn() } as any,
-			cultMaterial: { dispose: vi.fn() } as any,
+			playerMaterial: {
+				dispose: vi.fn(),
+			} as unknown as BaseMarkerState["playerMaterial"],
+			cultMaterial: {
+				dispose: vi.fn(),
+			} as unknown as BaseMarkerState["cultMaterial"],
 		};
 
 		const disposeMock = vi.fn();
-		state.markers.set("base_0", { dispose: disposeMock } as any);
-		state.markers.set("base_1", { dispose: disposeMock } as any);
+		state.markers.set("base_0", {
+			dispose: disposeMock,
+		} as unknown as import("@babylonjs/core/Meshes/mesh").Mesh);
+		state.markers.set("base_1", {
+			dispose: disposeMock,
+		} as unknown as import("@babylonjs/core/Meshes/mesh").Mesh);
 
 		// Simulate removing a base
 		const marker = state.markers.get("base_0");
@@ -100,10 +112,17 @@ describe("getBaseEntityFromMesh", () => {
 	it("returns entity ID from valid mesh metadata", () => {
 		const state: BaseMarkerState = {
 			markers: new Map(),
-			playerMaterial: { dispose: vi.fn() } as any,
-			cultMaterial: { dispose: vi.fn() } as any,
+			playerMaterial: {
+				dispose: vi.fn(),
+			} as unknown as BaseMarkerState["playerMaterial"],
+			cultMaterial: {
+				dispose: vi.fn(),
+			} as unknown as BaseMarkerState["cultMaterial"],
 		};
-		state.markers.set("base_42", {} as any);
+		state.markers.set(
+			"base_42",
+			{} as unknown as import("@babylonjs/core/Meshes/mesh").Mesh,
+		);
 
 		const result = getBaseEntityFromMesh(state, {
 			baseEntityId: "base_42",
@@ -114,8 +133,12 @@ describe("getBaseEntityFromMesh", () => {
 	it("returns null for non-marker mesh metadata", () => {
 		const state: BaseMarkerState = {
 			markers: new Map(),
-			playerMaterial: { dispose: vi.fn() } as any,
-			cultMaterial: { dispose: vi.fn() } as any,
+			playerMaterial: {
+				dispose: vi.fn(),
+			} as unknown as BaseMarkerState["playerMaterial"],
+			cultMaterial: {
+				dispose: vi.fn(),
+			} as unknown as BaseMarkerState["cultMaterial"],
 		};
 
 		const result = getBaseEntityFromMesh(state, { somethingElse: true });
@@ -125,8 +148,12 @@ describe("getBaseEntityFromMesh", () => {
 	it("returns null for null metadata", () => {
 		const state: BaseMarkerState = {
 			markers: new Map(),
-			playerMaterial: { dispose: vi.fn() } as any,
-			cultMaterial: { dispose: vi.fn() } as any,
+			playerMaterial: {
+				dispose: vi.fn(),
+			} as unknown as BaseMarkerState["playerMaterial"],
+			cultMaterial: {
+				dispose: vi.fn(),
+			} as unknown as BaseMarkerState["cultMaterial"],
 		};
 
 		const result = getBaseEntityFromMesh(state, null);
@@ -136,8 +163,12 @@ describe("getBaseEntityFromMesh", () => {
 	it("returns null when marker ID not in state", () => {
 		const state: BaseMarkerState = {
 			markers: new Map(),
-			playerMaterial: { dispose: vi.fn() } as any,
-			cultMaterial: { dispose: vi.fn() } as any,
+			playerMaterial: {
+				dispose: vi.fn(),
+			} as unknown as BaseMarkerState["playerMaterial"],
+			cultMaterial: {
+				dispose: vi.fn(),
+			} as unknown as BaseMarkerState["cultMaterial"],
 		};
 		// Don't add "base_99" to markers
 		const result = getBaseEntityFromMesh(state, {

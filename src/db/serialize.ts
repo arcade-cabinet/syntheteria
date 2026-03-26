@@ -5,7 +5,7 @@
  * Load: DB records -> spawn/update Koota entities
  */
 
-import type { World } from "koota";
+import type { ConfigurableTrait, World } from "koota";
 import {
 	BuildingTrait,
 	EntityId,
@@ -209,8 +209,7 @@ export function applyBuildings(
 	const rodByBuildingId = new Map(rods.map((r) => [r.buildingId, r]));
 
 	for (const b of buildings) {
-		// biome-ignore lint: explicit any[] needed — Koota traits are heterogeneous
-		const traits: any[] = [
+		const traits: ConfigurableTrait[] = [
 			EntityId({ value: b.entityId }),
 			Position({ x: b.x, y: b.y, z: b.z }),
 			Faction({ value: b.faction as "player" | "cultist" | "rogue" | "feral" }),

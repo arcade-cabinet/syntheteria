@@ -13,8 +13,9 @@
 import type { Scene as BScene } from "@babylonjs/core";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Constants } from "@babylonjs/core/Engines/constants";
-import { Effect } from "@babylonjs/core/Materials/effect";
+import { ShaderStore } from "@babylonjs/core/Engines/shaderStore";
 import { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
+import { ShaderLanguage } from "@babylonjs/core/Materials/shaderLanguage";
 import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
 import { Vector2, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
@@ -35,16 +36,16 @@ import {
 	stormVertexShader,
 } from "./title/shaders";
 
-// ─── Register shaders in BabylonJS ShadersStore ──────────────────────────────
+// ─── Register WGSL shaders in BabylonJS ShadersStoreWGSL ─────────────────────
 
-Effect.ShadersStore.stormVertexShader = stormVertexShader;
-Effect.ShadersStore.stormFragmentShader = stormFragmentShader;
-Effect.ShadersStore.lightningVertexShader = lightningVertexShader;
-Effect.ShadersStore.lightningFragmentShader = lightningFragmentShader;
-Effect.ShadersStore.globeVertexShader = globeVertexShader;
-Effect.ShadersStore.globeFragmentShader = globeFragmentShader;
-Effect.ShadersStore.hypercaneVertexShader = hypercaneVertexShader;
-Effect.ShadersStore.hypercaneFragmentShader = hypercaneFragmentShader;
+ShaderStore.ShadersStoreWGSL["stormVertexShader"] = stormVertexShader;
+ShaderStore.ShadersStoreWGSL["stormFragmentShader"] = stormFragmentShader;
+ShaderStore.ShadersStoreWGSL["lightningVertexShader"] = lightningVertexShader;
+ShaderStore.ShadersStoreWGSL["lightningFragmentShader"] = lightningFragmentShader;
+ShaderStore.ShadersStoreWGSL["globeVertexShader"] = globeVertexShader;
+ShaderStore.ShadersStoreWGSL["globeFragmentShader"] = globeFragmentShader;
+ShaderStore.ShadersStoreWGSL["hypercaneVertexShader"] = hypercaneVertexShader;
+ShaderStore.ShadersStoreWGSL["hypercaneFragmentShader"] = hypercaneFragmentShader;
 
 // ─── Scene setup ─────────────────────────────────────────────────────────────
 
@@ -84,9 +85,14 @@ function GlobeSceneContent() {
 			{ diameter: 16, segments: 64 },
 			scene,
 		);
-		const stormMat = new ShaderMaterial("storm-mat", scene, "storm", {
+		const stormMat = new ShaderMaterial("storm-mat", scene, {
+			vertex: "storm",
+			fragment: "storm",
+		}, {
 			attributes: ["position", "normal", "uv"],
-			uniforms: ["worldViewProjection", "world", "uTime", "uColor1", "uColor2"],
+			uniforms: ["uTime", "uColor1", "uColor2"],
+			uniformBuffers: ["Scene", "Mesh"],
+			shaderLanguage: ShaderLanguage.WGSL,
 		});
 		stormMat.setColor3("uColor1", new Color3(0.008, 0.012, 0.027));
 		stormMat.setColor3("uColor2", new Color3(0.039, 0.078, 0.157));
@@ -105,16 +111,20 @@ function GlobeSceneContent() {
 		const lightningMat = new ShaderMaterial(
 			"lightning-mat",
 			scene,
-			"lightning",
+			{
+				vertex: "lightning",
+				fragment: "lightning",
+			},
 			{
 				attributes: ["position", "uv"],
 				uniforms: [
-					"worldViewProjection",
 					"uTime",
 					"uFlash",
 					"uBoltStart",
 					"uBoltEnd",
 				],
+				uniformBuffers: ["Scene", "Mesh"],
+				shaderLanguage: ShaderLanguage.WGSL,
 			},
 		);
 		lightningMat.alphaMode = Constants.ALPHA_ADD;
@@ -128,9 +138,14 @@ function GlobeSceneContent() {
 			{ diameter: 5, segments: 64 },
 			scene,
 		);
-		const globeMat = new ShaderMaterial("globe-mat", scene, "globe", {
+		const globeMat = new ShaderMaterial("globe-mat", scene, {
+			vertex: "globe",
+			fragment: "globe",
+		}, {
 			attributes: ["position", "normal", "uv"],
-			uniforms: ["worldViewProjection", "world", "uTime", "uGrowth"],
+			uniforms: ["uTime", "uGrowth"],
+			uniformBuffers: ["Scene", "Mesh"],
+			shaderLanguage: ShaderLanguage.WGSL,
 		});
 		globeMesh.material = globeMat;
 
@@ -151,10 +166,15 @@ function GlobeSceneContent() {
 		const hypercaneMat = new ShaderMaterial(
 			"hypercane-mat",
 			scene,
-			"hypercane",
+			{
+				vertex: "hypercane",
+				fragment: "hypercane",
+			},
 			{
 				attributes: ["position", "normal", "uv"],
-				uniforms: ["worldViewProjection", "world", "uTime"],
+				uniforms: ["uTime"],
+				uniformBuffers: ["Scene", "Mesh"],
+				shaderLanguage: ShaderLanguage.WGSL,
 			},
 		);
 		hypercaneMat.alphaMode = Constants.ALPHA_ADD;

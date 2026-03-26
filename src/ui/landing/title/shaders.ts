@@ -20,6 +20,10 @@ export const stormVertexShader = /* wgsl */ `
 #include<sceneUboDeclaration>
 #include<meshUboDeclaration>
 
+attribute position : vec3<f32>;
+attribute normal : vec3<f32>;
+attribute uv : vec2<f32>;
+
 varying vUv : vec2<f32>;
 varying vPosition : vec3<f32>;
 varying vNormal : vec3<f32>;
@@ -143,6 +147,9 @@ export const lightningVertexShader = /* wgsl */ `
 #include<sceneUboDeclaration>
 #include<meshUboDeclaration>
 
+attribute position : vec3<f32>;
+attribute uv : vec2<f32>;
+
 varying vUv : vec2<f32>;
 varying vPosition : vec3<f32>;
 
@@ -216,6 +223,10 @@ export const globeVertexShader = /* wgsl */ `
 #include<sceneUboDeclaration>
 #include<meshUboDeclaration>
 
+attribute position : vec3<f32>;
+attribute normal : vec3<f32>;
+attribute uv : vec2<f32>;
+
 varying vUv : vec2<f32>;
 varying vNormal : vec3<f32>;
 varying vPosition : vec3<f32>;
@@ -237,6 +248,7 @@ varying vUv : vec2<f32>;
 varying vNormal : vec3<f32>;
 varying vPosition : vec3<f32>;
 
+// DEBUG: uncomment next line to test shader pipeline
 fn hash3(p: vec3<f32>) -> f32 {
     return fract(sin(dot(p, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
 }
@@ -385,6 +397,10 @@ fn main(input : FragmentInputs) -> FragmentOutputs {
 export const hypercaneVertexShader = /* wgsl */ `
 #include<sceneUboDeclaration>
 #include<meshUboDeclaration>
+
+attribute position : vec3<f32>;
+attribute normal : vec3<f32>;
+attribute uv : vec2<f32>;
 
 varying vPosition : vec3<f32>;
 varying vNormal : vec3<f32>;

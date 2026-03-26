@@ -56,3 +56,8 @@ export type {
 } from "./types";
 // --- Web Adapter ---
 export { createWebAdapter, exportDatabase } from "./webAdapter";
+// --- Capacitor Adapter ---
+export {
+	createCapacitorAdapter,
+	initCapacitorSqlite,
+} from "./capacitorAdapter";

@@ -7,20 +7,11 @@
  *   - Lightning: jagged bolts with additive cyan glow
  *   - Hypercane: spiral storm band around the globe equator
  *   - Wormhole: purple zenith glow pulsing above everything
- *
- * BabylonJS ShaderMaterial format — attributes/uniforms declared explicitly.
  */
 
 // --- Storm Clouds (BackSide sphere) ---
 
 export const stormVertexShader = /* glsl */ `
-  precision highp float;
-  attribute vec3 position;
-  attribute vec3 normal;
-  attribute vec2 uv;
-  uniform mat4 worldViewProjection;
-  uniform mat4 world;
-
   varying vec2 vUv;
   varying vec3 vPosition;
   varying vec3 vNormal;
@@ -28,13 +19,12 @@ export const stormVertexShader = /* glsl */ `
   void main() {
     vUv = uv;
     vPosition = position;
-    vNormal = normalize(mat3(world) * normal);
-    gl_Position = worldViewProjection * vec4(position, 1.0);
+    vNormal = normalize(normalMatrix * normal);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
 
 export const stormFragmentShader = /* glsl */ `
-  precision highp float;
   uniform float uTime;
   uniform vec3 uColor1;
   uniform vec3 uColor2;
@@ -138,24 +128,16 @@ export const stormFragmentShader = /* glsl */ `
 // --- Lightning Bolts (additive plane) ---
 
 export const lightningVertexShader = /* glsl */ `
-  precision highp float;
-  attribute vec3 position;
-  attribute vec3 normal;
-  attribute vec2 uv;
-  uniform mat4 worldViewProjection;
-
   varying vec2 vUv;
   varying vec3 vPosition;
-
   void main() {
     vUv = uv;
     vPosition = position;
-    gl_Position = worldViewProjection * vec4(position, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
 
 export const lightningFragmentShader = /* glsl */ `
-  precision highp float;
   uniform float uTime;
   uniform float uFlash;
   uniform vec2 uBoltStart;
@@ -210,27 +192,19 @@ export const lightningFragmentShader = /* glsl */ `
 // --- Globe with Ecumenopolis Growth ---
 
 export const globeVertexShader = /* glsl */ `
-  precision highp float;
-  attribute vec3 position;
-  attribute vec3 normal;
-  attribute vec2 uv;
-  uniform mat4 worldViewProjection;
-  uniform mat4 world;
-
   varying vec2 vUv;
   varying vec3 vNormal;
   varying vec3 vPosition;
 
   void main() {
     vUv = uv;
-    vNormal = normalize(mat3(world) * normal);
+    vNormal = normalize(normalMatrix * normal);
     vPosition = position;
-    gl_Position = worldViewProjection * vec4(position, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
 
 export const globeFragmentShader = /* glsl */ `
-  precision highp float;
   uniform float uTime;
   uniform float uGrowth;
   varying vec2 vUv;
@@ -381,27 +355,19 @@ export const globeFragmentShader = /* glsl */ `
 // --- Hypercane Spiral Band ---
 
 export const hypercaneVertexShader = /* glsl */ `
-  precision highp float;
-  attribute vec3 position;
-  attribute vec3 normal;
-  attribute vec2 uv;
-  uniform mat4 worldViewProjection;
-  uniform mat4 world;
-
   varying vec3 vPosition;
   varying vec3 vNormal;
   varying vec2 vUv;
 
   void main() {
     vPosition = position;
-    vNormal = normalize(mat3(world) * normal);
+    vNormal = normalize(normalMatrix * normal);
     vUv = uv;
-    gl_Position = worldViewProjection * vec4(position, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
 
 export const hypercaneFragmentShader = /* glsl */ `
-  precision highp float;
   uniform float uTime;
   varying vec3 vPosition;
   varying vec3 vNormal;

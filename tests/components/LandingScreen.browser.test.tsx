@@ -1,22 +1,22 @@
 /**
  * Browser tests for LandingScreen component.
  *
- * Tests LandingScreen without the BabylonJS GlobeScene (mocked away).
+ * Tests LandingScreen without the R3F GlobeBackground (mocked away).
  * Verifies:
  * - LandingScreen renders title and NEW GAME button
  * - NEW GAME button is clickable
  * - CONTINUE and SETTINGS buttons render as disabled
  */
 
-import { afterEach, expect, test, vi } from "vitest";
-import { type Root, createRoot } from "react-dom/client";
 import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, expect, test, vi } from "vitest";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-// Mock GlobeScene — it needs BabylonJS/WebGL which may not be available
-vi.mock("../../src/ui/landing/GlobeScene", () => ({
-	GlobeScene: () => <div data-testid="mock-globe">Globe</div>,
+// Mock GlobeBackground — it needs R3F/WebGL which may not be available in tests
+vi.mock("../../src/ui/landing/GlobeBackground", () => ({
+	GlobeBackground: () => <div data-testid="mock-globe">Globe</div>,
 }));
 
 // Mock audio — avoid loading Tone.js in tests
@@ -114,7 +114,7 @@ test("LandingScreen NEW GAME button is clickable", async () => {
 	// After clicking NEW GAME, the modal should appear with seed input
 	const text = container!.textContent ?? "";
 	// NewGameModal shows difficulty options
-	expect(text).toContain("EASY") ;
+	expect(text).toContain("EASY");
 	expect(text).toContain("NORMAL");
 	expect(text).toContain("HARD");
 });

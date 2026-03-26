@@ -305,36 +305,26 @@ fn fbm6(p_in: vec3<f32>) -> f32 {
     return value;
 }
 
-// Procedural continent generation based on spherical coordinates
+// Procedural continent generation from noise threshold on the sphere
 fn continentPattern(pos: vec3<f32>) -> f32 {
-    let lat = asin(pos.y);
-    let lon = atan2(pos.z, pos.x);
-    var continents: f32 = 0.0;
+    // Use spherical coordinates
+    let lat = asin(clamp(pos.y, -1.0, 1.0));
 
-    // North America
-    continents += smoothstep(0.6, 0.3, distance(vec2<f32>(lon + 1.7, lat), vec2<f32>(-1.7, 0.7)))
-        * smoothstep(0.0, 0.4, fbm6(pos * 8.0));
+    // Base continent shape from low-frequency noise on the sphere
+    let n1 = fbm6(pos * 2.0 + vec3<f32>(0.0, 0.0, 0.0));
+    let n2 = fbm6(pos * 3.0 + vec3<f32>(7.0, 13.0, 19.0));
 
-    // South America
-    continents += smoothstep(0.5, 0.2, distance(vec2<f32>(lon + 1.2, lat), vec2<f32>(-1.2, -0.4)))
-        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(10.0, 0.0, 0.0)));
+    // Create continent-like patches using noise threshold
+    var land = smoothstep(0.42, 0.58, n1 * 0.6 + n2 * 0.4);
 
-    // Europe/Africa mass
-    continents += smoothstep(0.7, 0.2, distance(vec2<f32>(lon, lat), vec2<f32>(0.2, 0.5)))
-        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(20.0, 0.0, 0.0)));
+    // Reduce land at poles (ice caps are ocean in our ecumenopolis)
+    land *= smoothstep(1.2, 0.6, abs(lat));
 
-    continents += smoothstep(0.6, 0.2, distance(vec2<f32>(lon + 0.3, lat), vec2<f32>(0.3, -0.1)))
-        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(30.0, 0.0, 0.0)));
+    // Add some coastal detail
+    let coast = fbm6(pos * 12.0) * 0.15;
+    land = smoothstep(0.3 - coast, 0.5 + coast, land);
 
-    // Asia
-    continents += smoothstep(0.8, 0.3, distance(vec2<f32>(lon - 1.8, lat), vec2<f32>(1.8, 0.6)))
-        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(40.0, 0.0, 0.0)));
-
-    // Australia
-    continents += smoothstep(0.4, 0.15, distance(vec2<f32>(lon - 2.5, lat), vec2<f32>(2.5, -0.5)))
-        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(50.0, 0.0, 0.0)));
-
-    return clamp(continents, 0.0, 1.0);
+    return clamp(land, 0.0, 1.0);
 }
 
 @fragment
@@ -485,24 +475,24 @@ fn fbm7(p_in: vec3<f32>) -> f32 {
 }
 
 fn continentPattern(pos: vec3<f32>) -> f32 {
-    let lat = asin(pos.y);
-    let lon = atan2(pos.z, pos.x);
-    var continents: f32 = 0.0;
+    // Use spherical coordinates
+    let lat = asin(clamp(pos.y, -1.0, 1.0));
 
-    continents += smoothstep(0.6, 0.3, distance(vec2<f32>(lon + 1.7, lat), vec2<f32>(-1.7, 0.7)))
-        * smoothstep(0.0, 0.4, fbm6(pos * 8.0));
-    continents += smoothstep(0.5, 0.2, distance(vec2<f32>(lon + 1.2, lat), vec2<f32>(-1.2, -0.4)))
-        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(10.0, 0.0, 0.0)));
-    continents += smoothstep(0.7, 0.2, distance(vec2<f32>(lon, lat), vec2<f32>(0.2, 0.5)))
-        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(20.0, 0.0, 0.0)));
-    continents += smoothstep(0.6, 0.2, distance(vec2<f32>(lon + 0.3, lat), vec2<f32>(0.3, -0.1)))
-        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(30.0, 0.0, 0.0)));
-    continents += smoothstep(0.8, 0.3, distance(vec2<f32>(lon - 1.8, lat), vec2<f32>(1.8, 0.6)))
-        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(40.0, 0.0, 0.0)));
-    continents += smoothstep(0.4, 0.15, distance(vec2<f32>(lon - 2.5, lat), vec2<f32>(2.5, -0.5)))
-        * smoothstep(0.0, 0.4, fbm6(pos * 8.0 + vec3<f32>(50.0, 0.0, 0.0)));
+    // Base continent shape from low-frequency noise on the sphere
+    let n1 = fbm6(pos * 2.0 + vec3<f32>(0.0, 0.0, 0.0));
+    let n2 = fbm6(pos * 3.0 + vec3<f32>(7.0, 13.0, 19.0));
 
-    return clamp(continents, 0.0, 1.0);
+    // Create continent-like patches using noise threshold
+    var land = smoothstep(0.42, 0.58, n1 * 0.6 + n2 * 0.4);
+
+    // Reduce land at poles (ice caps are ocean in our ecumenopolis)
+    land *= smoothstep(1.2, 0.6, abs(lat));
+
+    // Add some coastal detail
+    let coast = fbm6(pos * 12.0) * 0.15;
+    land = smoothstep(0.3 - coast, 0.5 + coast, land);
+
+    return clamp(land, 0.0, 1.0);
 }
 
 @fragment
@@ -565,15 +555,13 @@ fn main(input : FragmentInputs) -> FragmentOutputs {
     color *= (1.0 - stormMask * 0.22);
     color += vec3<f32>(0.06, 0.10, 0.16) * stormMask * 0.18;
 
-    let bandCore = 1.0 - smoothstep(0.05, 0.16, abs(pos.y));
-    let bandSoft = 1.0 - smoothstep(0.14, 0.30, abs(pos.y));
-    let bandWidth = 1.0 - smoothstep(0.52, 0.86, abs(pos.z));
-    let frontMask = smoothstep(0.18, 0.48, pos.x);
-    let logoField = bandSoft * bandWidth * frontMask;
-    let logoU = clamp(0.5 - pos.z * 0.42, 0.0, 1.0);
-    let logoV = clamp(0.5 - pos.y * 1.95, 0.0, 1.0);
+    let bandCore = 1.0 - smoothstep(0.12, 0.32, abs(pos.y));
+    let bandSoft = 1.0 - smoothstep(0.25, 0.50, abs(pos.y));
+    let logoField = bandSoft;
+    let logoU = fract((atan2(pos.z, pos.x) + 3.14159) / 6.28318);
+    let logoV = clamp(0.5 - pos.y * 2.5, 0.0, 1.0);
     let logoSample = textureSample(logoSampler, logoSamplerSampler, vec2<f32>(logoU, logoV));
-    let logoAlpha = logoSample.a * bandCore * frontMask;
+    let logoAlpha = logoSample.a * bandCore;
     let logoGlow = smoothstep(0.08, 0.65, logoSample.a) * logoField;
     let bandNoise = fbm6(vec3<f32>(pos.z * 8.0, pos.y * 16.0, uniforms.uTime * 0.05));
     var bandColor = mix(vec3<f32>(0.03, 0.06, 0.11), vec3<f32>(0.08, 0.12, 0.18), logoField);
@@ -591,8 +579,8 @@ fn main(input : FragmentInputs) -> FragmentOutputs {
     let boltPhase = dot(pos, boltDir) * 12.0 + dot(pos, boltAxis) * 8.0;
     let boltJitter = fbm6(pos * 24.0 + vec3<f32>(flashSeed, 0.0, 0.0));
     let boltCore = abs(dot(pos, boltAxis) + (boltJitter - 0.5) * 0.18);
-    let boltMask = flashGate * equatorBand * smoothstep(0.08, 0.0, boltCore) * smoothstep(0.2, 0.95, sin(boltPhase) * 0.5 + 0.5) * (1.0 - bandCore * frontMask * 0.85);
-    let boltGlow = flashGate * equatorBand * smoothstep(0.22, 0.0, boltCore) * (1.0 - bandCore * frontMask * 0.7);
+    let boltMask = flashGate * equatorBand * smoothstep(0.08, 0.0, boltCore) * smoothstep(0.2, 0.95, sin(boltPhase) * 0.5 + 0.5) * (1.0 - bandCore * 0.85);
+    let boltGlow = flashGate * equatorBand * smoothstep(0.22, 0.0, boltCore) * (1.0 - bandCore * 0.7);
     color += vec3<f32>(0.70, 0.92, 1.0) * boltMask * 1.1;
     color += vec3<f32>(0.18, 0.30, 0.45) * boltGlow * 0.35;
 

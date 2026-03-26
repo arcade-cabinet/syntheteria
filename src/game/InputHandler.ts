@@ -29,6 +29,7 @@ import {
 	issueMoveTo,
 	selectEntity,
 } from "../input/selection";
+import { playSfx } from "../audio";
 import { type EntityRendererState, getEntityAtPoint } from "./EntityRenderer";
 import { showMoveMarker } from "./MoveMarker";
 
@@ -191,6 +192,7 @@ function handleClick(
 				} else {
 					// Clicked on a friendly entity — select it
 					selectEntity(entity);
+					playSfx("unit_select");
 				}
 				return;
 			}
@@ -212,8 +214,9 @@ function handleClick(
 				}
 			}
 
-			// Show destination marker
+			// Show destination marker and play move SFX
 			showMoveMarker(scene, worldX, worldZ);
+			playSfx("unit_move");
 			return;
 		}
 	}

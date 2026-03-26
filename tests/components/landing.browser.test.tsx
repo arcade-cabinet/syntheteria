@@ -7,12 +7,7 @@
  */
 
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, expect, test, vi } from "vitest";
-
-// GlobeBackground uses Reactylon Engine which needs babel-plugin-reactylon (Webpack only)
-vi.mock("../../src/ui/landing/GlobeBackground", () => ({
-	GlobeBackground: () => <div data-testid="globe-stub" />,
-}));
+import { afterEach, expect, test } from "vitest";
 
 import {
 	LandingScreen,

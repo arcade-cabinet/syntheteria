@@ -1,5 +1,7 @@
 # Implementation Options
 
+> **Note (2026-03-25):** This document is historical. The final engine choice is BabylonJS 8 + Reactylon 3 + Webpack 5. See [CLAUDE.md](../../CLAUDE.md) for current architecture.
+
 This document outlines the technology choices and implementation paths for Syntheteria.
 
 ## Visual Direction (Resolved)

@@ -1,5 +1,7 @@
 # Syntheteria RTS Course Correction — Master Plan
 
+> **Note (2026-03-25):** This document is historical. The final engine choice is BabylonJS 8 + Reactylon 3 + Webpack 5, not R3F/Three.js as stated below. See [CLAUDE.md](../../../CLAUDE.md) for current architecture.
+
 > **Design Spec:** `docs/superpowers/specs/2026-03-23-rts-course-correction-design.md`
 
 ## Vision

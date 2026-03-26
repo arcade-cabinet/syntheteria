@@ -89,6 +89,14 @@ export function clearGovernorLog(): void {
 	governorLog.length = 0;
 }
 
+/** Push an action to the log, capping at 1000 entries to prevent unbounded growth. */
+function pushGovernorLog(action: GovernorAction): void {
+	governorLog.push(action);
+	if (governorLog.length > 1000) {
+		governorLog.splice(0, governorLog.length - 1000);
+	}
+}
+
 /** Reset all governor state (for testing). */
 export function resetGovernor(): void {
 	autoPlayEnabled = false;
@@ -171,7 +179,7 @@ export function governorTick(world: World, tickNumber: number): GovernorAction[]
 			};
 			setNavTarget(unit, enemyPos.x, enemyPos.z);
 			actions.push(action);
-			governorLog.push(action);
+			pushGovernorLog(action);
 			continue;
 		}
 
@@ -185,7 +193,7 @@ export function governorTick(world: World, tickNumber: number): GovernorAction[]
 				targetZ: pos.z,
 			};
 			actions.push(action);
-			governorLog.push(action);
+			pushGovernorLog(action);
 			continue;
 		}
 
@@ -221,7 +229,7 @@ export function governorTick(world: World, tickNumber: number): GovernorAction[]
 						targetZ: pos.z,
 					};
 					actions.push(action);
-					governorLog.push(action);
+					pushGovernorLog(action);
 					continue;
 				} catch {
 					// Base founding failed — fall through to exploration
@@ -240,7 +248,7 @@ export function governorTick(world: World, tickNumber: number): GovernorAction[]
 			};
 			setNavTarget(unit, target.x, target.z);
 			actions.push(action);
-			governorLog.push(action);
+			pushGovernorLog(action);
 		} else {
 			actions.push({ entityId: eid, action: "idle" });
 		}

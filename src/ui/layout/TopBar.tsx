@@ -323,7 +323,16 @@ export function TopBar() {
 				>
 					STORM {(snap.power.stormIntensity * 100).toFixed(0)}%
 				</span>
-				<span className="text-[13px]" title="Power Generation / Demand">
+				<span
+					className={cn("text-[13px]", (() => {
+						const gen = snap.power.totalGeneration;
+						const demand = snap.power.totalDemand;
+						if (demand === 0 || gen > demand) return "text-green-400";
+						if (gen < demand * 0.9) return "text-red-400";
+						return "text-yellow-400";
+					})())}
+					title="Power Generation / Demand"
+				>
 					PWR {snap.power.totalGeneration.toFixed(0)}/
 					{snap.power.totalDemand.toFixed(0)}
 				</span>

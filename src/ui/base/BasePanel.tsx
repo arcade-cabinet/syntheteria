@@ -12,7 +12,7 @@
  * All interactions are click-based.
  */
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import { Base, EntityId, Faction, Position, Unit } from "../../ecs/traits";
 import { world } from "../../ecs/world";
@@ -253,6 +253,18 @@ export function BasePanel() {
 		subscribeBasePanel,
 		getBasePanelSnapshot,
 	);
+
+	// Close panel on Escape key
+	useEffect(() => {
+		if (!selectedId) return;
+		function handleKey(e: KeyboardEvent) {
+			if (e.key === "Escape") {
+				selectBase(null);
+			}
+		}
+		window.addEventListener("keydown", handleKey);
+		return () => window.removeEventListener("keydown", handleKey);
+	}, [selectedId]);
 
 	if (!selectedId) return null;
 

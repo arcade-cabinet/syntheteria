@@ -19,7 +19,7 @@ import type {
 const CHAR_INTERVAL = 35;
 
 /** Milliseconds to wait after typewriter finishes before showing "continue" hint. */
-const CONTINUE_DELAY = 600;
+const CONTINUE_DELAY = 300;
 
 /** Milliseconds after typing finishes before auto-advancing to next frame. */
 const AUTO_ADVANCE_DELAY = 2500;

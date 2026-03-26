@@ -113,7 +113,11 @@ export function Minimap() {
 			ctx.fillRect(mx - 1, my - 1, 3, 3);
 		}
 
-		// Draw units
+		// Draw units — collect player positions for viewport indicator
+		let playerSumX = 0;
+		let playerSumZ = 0;
+		let playerCount = 0;
+
 		for (const entity of world.query(Unit, Faction, Position)) {
 			const faction = entity.get(Faction)!.value;
 			const pos = entity.get(Position)!;
@@ -123,16 +127,53 @@ export function Minimap() {
 			if (faction === "player") {
 				ctx.fillStyle = "#00ff88";
 				ctx.fillRect(mx - 1, my - 1, 3, 3);
+				playerSumX += pos.x;
+				playerSumZ += pos.z;
+				playerCount++;
 			} else {
 				ctx.fillStyle = "#ff3333";
 				ctx.fillRect(mx - 1, my - 1, 2, 2);
 			}
 		}
+
+		// Draw viewport indicator — white rect centered on average player position
+		if (playerCount > 0) {
+			const avgX = playerSumX / playerCount;
+			const avgZ = playerSumZ / playerCount;
+			const cx = cityToMinimap(avgX);
+			const cz = cityToMinimap(avgZ);
+			const halfW = 12;
+			const halfH = 12;
+			ctx.strokeStyle = "rgba(255,255,255,0.6)";
+			ctx.lineWidth = 1;
+			ctx.strokeRect(cx - halfW, cz - halfH, halfW * 2, halfH * 2);
+		}
 	}, [snap.tick]);
 
 	return (
-		<div className="w-full aspect-square bg-slate-950 border border-slate-800 rounded-lg overflow-hidden">
-			<canvas ref={canvasRef} className="w-full h-full" />
+		<div className="flex flex-col gap-1">
+			<div className="w-full aspect-square bg-slate-950 border border-slate-800 rounded-lg overflow-hidden">
+				<canvas ref={canvasRef} className="w-full h-full" />
+			</div>
+			{/* Legend */}
+			<div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 px-0.5 text-[10px] text-slate-400 font-mono leading-none">
+				<span className="flex items-center gap-1">
+					<span className="inline-block w-2 h-2 rounded-full bg-[#00ff88]" />
+					Player
+				</span>
+				<span className="flex items-center gap-1">
+					<span className="inline-block w-2 h-2 rounded-full bg-[#ff3333]" />
+					Enemy
+				</span>
+				<span className="flex items-center gap-1">
+					<span className="inline-block w-2 h-2 rounded-full bg-[#00aaaa]" />
+					Base
+				</span>
+				<span className="flex items-center gap-1">
+					<span className="inline-block w-2 h-2 rounded-full bg-[#ccaa44]" />
+					Resource
+				</span>
+			</div>
 		</div>
 	);
 }

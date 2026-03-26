@@ -46,6 +46,10 @@ interface EntityMeshEntry {
 	unitType: string;
 	/** Base Y position (world coords) for bob animation offset. */
 	baseY: number;
+	/** Per-entity phase offset for bob animation (radians), derived from entity ID hash. */
+	bobPhase: number;
+	/** Current selection ring opacity for fade animation (0–0.8). */
+	selectionRingOpacity: number;
 }
 
 /** State bag for the entity renderer, managed imperatively. */
@@ -108,13 +112,12 @@ export async function initEntityRenderer(
 		}
 	}
 
-	// Shared cyan emissive material for selection rings
+	// Shared cyan emissive material for selection rings (not frozen — per-ring clones need alpha writes)
 	const selectionMaterial = new StandardMaterial("selection-ring-mat", scene);
 	selectionMaterial.diffuseColor = Color3.Black();
 	selectionMaterial.emissiveColor = new Color3(0, 1, 1);
 	selectionMaterial.specularColor = Color3.Black();
-	selectionMaterial.alpha = 0.8;
-	selectionMaterial.freeze();
+	selectionMaterial.alpha = 0;
 
 	// Initialize base markers
 	const baseMarkers = initBaseMarkers(scene);
@@ -172,13 +175,27 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 			state.entityMeshes.set(eid, entry);
 		}
 
-		// Update position
+		// Update position with per-entity bob phase offset
 		entry.baseY = pos.y;
-		const bobOffset = isMoving ? 0 : Math.sin(time * BOB_SPEED) * BOB_AMPLITUDE;
+		const bobOffset = isMoving
+			? 0
+			: Math.sin(time * BOB_SPEED + entry.bobPhase) * BOB_AMPLITUDE;
 		entry.root.position.set(pos.x, pos.y + bobOffset, pos.z);
 
-		// Selection ring visibility
-		entry.selectionRing.setEnabled(unit.selected);
+		// Selection ring fade animation — lerp opacity toward target over ~200ms
+		const targetOpacity = unit.selected ? 0.8 : 0;
+		const lerpRate = 1 - Math.pow(0.01, 1 / 12); // ~200ms at 60fps
+		entry.selectionRingOpacity +=
+			(targetOpacity - entry.selectionRingOpacity) * lerpRate;
+		const opacity = entry.selectionRingOpacity;
+		if (opacity > 0.01) {
+			entry.selectionRing.setEnabled(true);
+			(
+				entry.selectionRing.material as StandardMaterial
+			).alpha = opacity;
+		} else {
+			entry.selectionRing.setEnabled(false);
+		}
 
 		// Faction-based coloring — tint cult units red
 		const faction = entity.has(Faction) ? entity.get(Faction)!.value : "player";
@@ -263,6 +280,18 @@ export function disposeEntityRenderer(state: EntityRendererState): void {
 
 // ─── Internal helpers ───────────────────────────────────────────────────────
 
+/**
+ * Simple string hash → float in [0, 2π] for per-entity bob phase offset.
+ * Ensures entities bob at different phases rather than in sync.
+ */
+function hashEntityId(id: string): number {
+	let h = 0;
+	for (let i = 0; i < id.length; i++) {
+		h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
+	}
+	return ((h >>> 0) / 0xffffffff) * Math.PI * 2;
+}
+
 function createEntityMesh(
 	entityId: string,
 	unitType: string,
@@ -340,7 +369,12 @@ function createFromContainer(
 		},
 		scene,
 	);
-	ring.material = state.selectionMaterial;
+	// Clone material per ring so each can have independent alpha for fade animation
+	const ringMat = state.selectionMaterial.clone(
+		`selection-ring-mat-${entityId}`,
+	) as StandardMaterial;
+	ringMat.alpha = 0;
+	ring.material = ringMat;
 	ring.parent = rootNode;
 	ring.position = new Vector3(0, 0.05, 0); // Slightly above ground
 	ring.isPickable = false;
@@ -353,11 +387,16 @@ function createFromContainer(
 		kootaId: 0, // Not used for tracking — we use EntityId string
 		unitType,
 		baseY: pos.y,
+		bobPhase: hashEntityId(entityId),
+		selectionRingOpacity: 0,
 	};
 }
 
 function disposeEntry(entry: EntityMeshEntry): void {
-	// Dispose selection ring
+	// Dispose selection ring and its per-entity cloned material
+	if (entry.selectionRing.material) {
+		entry.selectionRing.material.dispose();
+	}
 	entry.selectionRing.dispose();
 
 	// Dispose all child meshes

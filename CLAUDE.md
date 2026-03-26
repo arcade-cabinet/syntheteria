@@ -28,9 +28,6 @@ pnpm lint         # Biome lint
 - `docs/design/` — game design (overview, mechanics, combat, consciousness, drones)
 - `docs/story/LORE_OVERVIEW.md` — world lore
 - `docs/technical/CORE_FORMULAS.md` — math formulas
-
-**Archived:** `docs/archive/` — pre-pivot docs. Do not read unless asked.
-
 ---
 
 ## Resources

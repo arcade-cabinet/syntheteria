@@ -93,7 +93,6 @@ src/
 - `docs/superpowers/reports/2026-03-26-babylonjs-refactor-report.md` — status + architecture
 - `docs/superpowers/plans/2026-03-27-test-plan.md` — test plan
 - `docs/design/` — game design (overview, mechanics, combat, consciousness, drones)
-- `docs/archive/` — pre-pivot docs, do NOT read unless asked
 
 ## Testing
 

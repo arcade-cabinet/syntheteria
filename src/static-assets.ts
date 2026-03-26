@@ -86,15 +86,13 @@ export type StaticAssetPath =
   'assets/textures/pbr/metal/Metal020_1K-JPG_Metalness.jpg' |
   'assets/textures/pbr/metal/Metal020_1K-JPG_NormalGL.jpg' |
   'assets/textures/pbr/metal/Metal020_1K-JPG_Roughness.jpg' |
-  'assets/ui/.DS_Store' |
-  'poc.html';
+  'assets/ui/.DS_Store';
 
 /**
  * Represents the known directories containing static assets.
  * '.' represents the root directory.
  */
 export type StaticAssetDirectory =
-  '.' |
   'assets/' |
   'assets/models/' |
   'assets/models/robots/' |
@@ -210,8 +208,7 @@ const assets = new Set<string>([
   'assets/textures/pbr/metal/Metal020_1K-JPG_Metalness.jpg',
   'assets/textures/pbr/metal/Metal020_1K-JPG_NormalGL.jpg',
   'assets/textures/pbr/metal/Metal020_1K-JPG_Roughness.jpg',
-  'assets/ui/.DS_Store',
-  'poc.html'
+  'assets/ui/.DS_Store'
 ]);
 
 // Store basePath resolved from Vite config

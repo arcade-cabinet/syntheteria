@@ -67,7 +67,7 @@ export function LandingScreen({
 						position: "absolute",
 						inset: 0,
 						background:
-							"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,170,0.03) 2px, rgba(0,255,170,0.03) 4px)",
+							"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(139,230,255,0.03) 2px, rgba(139,230,255,0.03) 4px)",
 						pointerEvents: "none",
 					}}
 				/>
@@ -81,10 +81,10 @@ export function LandingScreen({
 						fontSize: "clamp(32px, 8vw, 72px)",
 						fontWeight: "bold",
 						letterSpacing: "0.3em",
-						color: "#00ffaa",
+						color: "#8be6ff",
 						textShadow: glitch
-							? "3px 0 #ff0044, -3px 0 #0044ff, 0 0 40px rgba(0,255,170,0.6)"
-							: "0 0 40px rgba(0,255,170,0.4), 0 0 80px rgba(0,255,170,0.15), 0 0 2px #00ffaa",
+							? "3px 0 #ff0044, -3px 0 #0044ff, 0 0 40px rgba(139,230,255,0.6)"
+							: "0 0 40px rgba(139,230,255,0.4), 0 0 80px rgba(139,230,255,0.15), 0 0 2px #8be6ff",
 						transform: glitch
 							? `translate(${Math.random() * 4 - 2}px, ${Math.random() * 2 - 1}px)`
 							: "none",
@@ -103,10 +103,10 @@ export function LandingScreen({
 						transition: "opacity 2s ease-in-out",
 						fontFamily: "'Courier New', monospace",
 						fontSize: "clamp(11px, 2vw, 16px)",
-						color: "#00ffaa",
+						color: "#8be6ff",
 						letterSpacing: "0.5em",
 						marginTop: "12px",
-						textShadow: "0 0 20px rgba(0,255,170,0.3)",
+						textShadow: "0 0 20px rgba(139,230,255,0.3)",
 						textAlign: "center",
 					}}
 				>
@@ -144,7 +144,7 @@ export function LandingScreen({
 						bottom: "20px",
 						fontFamily: "'Courier New', monospace",
 						fontSize: "11px",
-						color: "rgba(0,255,170,0.3)",
+						color: "rgba(139,230,255,0.3)",
 						letterSpacing: "0.15em",
 					}}
 				>
@@ -190,14 +190,14 @@ function MenuButton({
 				background: disabled
 					? "transparent"
 					: hovered
-						? "rgba(0,255,170,0.15)"
+						? "rgba(139,230,255,0.15)"
 						: "transparent",
-				color: disabled ? "rgba(0,255,170,0.25)" : "#00ffaa",
+				color: disabled ? "rgba(139,230,255,0.25)" : "#8be6ff",
 				border: disabled
-					? "1px solid rgba(0,255,170,0.15)"
+					? "1px solid rgba(139,230,255,0.15)"
 					: primary && hovered
-						? "1px solid #00ffaa"
-						: "1px solid rgba(0,255,170,0.4)",
+						? "1px solid #8be6ff"
+						: "1px solid rgba(139,230,255,0.4)",
 				borderRadius: "4px",
 				padding: "12px 48px",
 				fontSize: "16px",
@@ -209,11 +209,11 @@ function MenuButton({
 				textShadow: disabled
 					? "none"
 					: hovered
-						? "0 0 10px rgba(0,255,170,0.5)"
+						? "0 0 10px rgba(139,230,255,0.5)"
 						: "none",
 				boxShadow:
 					primary && hovered
-						? "0 0 20px rgba(0,255,170,0.2), inset 0 0 20px rgba(0,255,170,0.05)"
+						? "0 0 20px rgba(139,230,255,0.2), inset 0 0 20px rgba(139,230,255,0.05)"
 						: "none",
 			}}
 		>

@@ -1,16 +1,16 @@
 /**
  * MoveMarker — temporary visual ring at click-to-move destination.
  *
- * Shows a green torus at the world position where the player clicked
+ * Shows a blue torus at the world position where the player clicked
  * to issue a move command. Fades out and self-disposes after 1.5s.
  */
 
-import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import type { Scene } from "@babylonjs/core/scene";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import type { Scene } from "@babylonjs/core/scene";
 
 let activeMarker: Mesh | null = null;
 let fadeTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -47,8 +47,8 @@ export function showMoveMarker(
 	ring.isPickable = false;
 
 	const mat = new StandardMaterial("move-marker-mat", scene);
-	mat.diffuseColor = new Color3(0, 0.8, 0.4);
-	mat.emissiveColor = new Color3(0, 0.4, 0.2);
+	mat.diffuseColor = new Color3(0.3, 0.7, 1);
+	mat.emissiveColor = new Color3(0.15, 0.35, 0.5);
 	mat.alpha = 0.8;
 	ring.material = mat;
 

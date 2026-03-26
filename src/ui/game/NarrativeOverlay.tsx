@@ -38,9 +38,9 @@ function moodColor(mood: DialogueFrame["mood"]): string {
 		case "glitch":
 			return "#00ccff";
 		case "calm":
-			return "#88ffcc";
+			return "#88ccff";
 		default:
-			return "#00ffaa";
+			return "#8be6ff";
 	}
 }
 
@@ -235,7 +235,7 @@ export function NarrativeOverlay({
 					position: "absolute",
 					inset: 0,
 					background:
-						"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,170,0.02) 2px, rgba(0,255,170,0.02) 4px)",
+						"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(139,230,255,0.02) 2px, rgba(139,230,255,0.02) 4px)",
 					pointerEvents: "none",
 				}}
 			/>
@@ -302,7 +302,7 @@ export function NarrativeOverlay({
 						bottom: "60px",
 						fontFamily: "'Courier New', monospace",
 						fontSize: "12px",
-						color: "#00ffaa44",
+						color: "#8be6ff44",
 						letterSpacing: "0.2em",
 						animation: "pulse 2s ease-in-out infinite",
 						opacity: fading ? 0 : 1,
@@ -329,9 +329,9 @@ export function NarrativeOverlay({
 					top: "20px",
 					right: "20px",
 					background: "transparent",
-					border: "1px solid #00ffaa33",
+					border: "1px solid #8be6ff33",
 					borderRadius: "4px",
-					color: "#00ffaa44",
+					color: "#8be6ff44",
 					fontFamily: "'Courier New', monospace",
 					fontSize: "12px",
 					padding: "6px 16px",

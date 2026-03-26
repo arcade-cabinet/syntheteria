@@ -56,11 +56,11 @@ export function NewGameModal({
 				onSubmit={handleSubmit}
 				style={{
 					background: "#0a0a0a",
-					border: "1px solid #00ffaa44",
+					border: "1px solid #8be6ff44",
 					borderRadius: "12px",
 					padding: "32px 40px",
 					fontFamily: "'Courier New', monospace",
-					color: "#00ffaa",
+					color: "#8be6ff",
 					minWidth: "320px",
 					maxWidth: "420px",
 					display: "flex",
@@ -75,7 +75,7 @@ export function NewGameModal({
 						letterSpacing: "0.25em",
 						textTransform: "uppercase",
 						textAlign: "center",
-						textShadow: "0 0 20px rgba(0,255,170,0.3)",
+						textShadow: "0 0 20px rgba(139,230,255,0.3)",
 					}}
 				>
 					INITIALIZE
@@ -88,7 +88,7 @@ export function NewGameModal({
 						style={{
 							fontSize: "11px",
 							letterSpacing: "0.2em",
-							color: "#00ffaa88",
+							color: "#8be6ff88",
 							display: "block",
 							marginBottom: "6px",
 						}}
@@ -105,13 +105,13 @@ export function NewGameModal({
 							autoComplete="off"
 							style={{
 								flex: 1,
-								background: "rgba(0,255,170,0.05)",
-								border: "1px solid #00ffaa33",
+								background: "rgba(139,230,255,0.05)",
+								border: "1px solid #8be6ff33",
 								borderRadius: "6px",
 								padding: "8px 12px",
 								fontSize: "13px",
 								fontFamily: "'Courier New', monospace",
-								color: "#00ffaa",
+								color: "#8be6ff",
 								outline: "none",
 							}}
 						/>
@@ -120,12 +120,12 @@ export function NewGameModal({
 							onClick={() => setSeed(generateSeed())}
 							title="Random seed"
 							style={{
-								background: "rgba(0,255,170,0.08)",
-								border: "1px solid #00ffaa33",
+								background: "rgba(139,230,255,0.08)",
+								border: "1px solid #8be6ff33",
 								borderRadius: "6px",
 								padding: "8px 10px",
 								fontSize: "14px",
-								color: "#00ffaa",
+								color: "#8be6ff",
 								cursor: "pointer",
 								fontFamily: "'Courier New', monospace",
 							}}
@@ -141,7 +141,7 @@ export function NewGameModal({
 						style={{
 							fontSize: "11px",
 							letterSpacing: "0.2em",
-							color: "#00ffaa88",
+							color: "#8be6ff88",
 							display: "block",
 							marginBottom: "8px",
 						}}
@@ -161,12 +161,12 @@ export function NewGameModal({
 									style={{
 										flex: 1,
 										background: selected
-											? "rgba(0,255,170,0.15)"
+											? "rgba(139,230,255,0.15)"
 											: "transparent",
-										color: selected ? "#00ffaa" : "#00ffaa66",
+										color: selected ? "#8be6ff" : "#8be6ff66",
 										border: selected
-											? "1px solid #00ffaa88"
-											: "1px solid #00ffaa22",
+											? "1px solid #8be6ff88"
+											: "1px solid #8be6ff22",
 										borderRadius: "6px",
 										padding: "10px 6px",
 										fontSize: "12px",
@@ -184,7 +184,7 @@ export function NewGameModal({
 					<div
 						style={{
 							fontSize: "10px",
-							color: "#00ffaa55",
+							color: "#8be6ff55",
 							marginTop: "6px",
 							textAlign: "center",
 						}}
@@ -207,7 +207,7 @@ export function NewGameModal({
 						style={{
 							background: "transparent",
 							border: "none",
-							color: "#00ffaa44",
+							color: "#8be6ff44",
 							fontFamily: "'Courier New', monospace",
 							fontSize: "12px",
 							letterSpacing: "0.15em",
@@ -221,16 +221,16 @@ export function NewGameModal({
 						type="submit"
 						style={{
 							flex: 1,
-							background: "rgba(0,255,170,0.1)",
-							border: "1px solid #00ffaa55",
+							background: "rgba(139,230,255,0.1)",
+							border: "1px solid #8be6ff55",
 							borderRadius: "6px",
 							padding: "12px 24px",
 							fontSize: "13px",
 							fontFamily: "'Courier New', monospace",
 							letterSpacing: "0.2em",
-							color: "#00ffaa",
+							color: "#8be6ff",
 							cursor: "pointer",
-							textShadow: "0 0 10px rgba(0,255,170,0.3)",
+							textShadow: "0 0 10px rgba(139,230,255,0.3)",
 						}}
 					>
 						[ START ]

@@ -191,7 +191,7 @@ export function RadialMenu({
 					transform: "translate(-50%, -50%)",
 					fontFamily: "'Courier New', monospace",
 					fontSize: "10px",
-					color: "#00ffaa88",
+					color: "#8be6ff88",
 					textAlign: "center",
 					pointerEvents: "none",
 					letterSpacing: "0.1em",
@@ -199,7 +199,7 @@ export function RadialMenu({
 			>
 				{unit?.displayName}
 				{robotDef && (
-					<div style={{ fontSize: "9px", color: "#00ffaa55" }}>
+					<div style={{ fontSize: "9px", color: "#8be6ff55" }}>
 						{robotDef.marks[(unit?.mark ?? 1) - 1]?.label}
 					</div>
 				)}
@@ -225,10 +225,10 @@ export function RadialMenu({
 							background: action.enabled
 								? "rgba(0,0,0,0.85)"
 								: "rgba(0,0,0,0.6)",
-							color: action.enabled ? "#00ffaa" : "#00ffaa44",
+							color: action.enabled ? "#8be6ff" : "#8be6ff44",
 							border: action.enabled
-								? "1px solid #00ffaa88"
-								: "1px solid #00ffaa22",
+								? "1px solid #8be6ff88"
+								: "1px solid #8be6ff22",
 							borderRadius: "6px",
 							padding: "6px 10px",
 							fontSize: "10px",

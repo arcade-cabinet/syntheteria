@@ -8,6 +8,7 @@
  */
 
 import type { ArcRotateCamera, Scene as BScene } from "@babylonjs/core";
+import { Animation } from "@babylonjs/core/Animations/animation";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
@@ -99,20 +100,62 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		const cam = scene.activeCamera as ArcRotateCamera;
 		if (!cam) return;
 
+		// Final gameplay values
+		const FINAL_ALPHA = Tools.ToRadians(-90);
+		const FINAL_BETA = Tools.ToRadians(25); // 2.5D RTS perspective with depth
+		const FINAL_RADIUS = 60;
+
+		// Start zoomed out and more tilted for a dramatic intro
 		cam.target = new Vector3(startWX, 0, startWZ);
-		cam.alpha = Tools.ToRadians(-90);
-		cam.beta = Tools.ToRadians(1); // near-vertical top-down
-		cam.radius = 60;
+		cam.alpha = FINAL_ALPHA;
+		cam.beta = Tools.ToRadians(45); // start tilted for dramatic reveal
+		cam.radius = 120; // start zoomed out
 
-		// Lock rotation — pan and zoom only
-		cam.lowerAlphaLimit = cam.alpha;
-		cam.upperAlphaLimit = cam.alpha;
-		cam.lowerBetaLimit = Tools.ToRadians(0.1);
-		cam.upperBetaLimit = Tools.ToRadians(1);
+		// Temporarily widen limits so animation can run freely
+		cam.lowerBetaLimit = 0;
+		cam.upperBetaLimit = Math.PI;
+		cam.lowerRadiusLimit = 10;
+		cam.upperRadiusLimit = 200;
 
-		// Zoom limits
-		cam.lowerRadiusLimit = 20;
-		cam.upperRadiusLimit = 100;
+		// Smooth intro animation (~1.5 seconds at 30fps = 45 frames)
+		const FPS = 30;
+		const INTRO_FRAMES = 45;
+
+		const radiusAnim = new Animation(
+			"introRadius",
+			"radius",
+			FPS,
+			Animation.ANIMATIONTYPE_FLOAT,
+			Animation.ANIMATIONLOOPMODE_CONSTANT,
+		);
+		radiusAnim.setKeys([
+			{ frame: 0, value: 120 },
+			{ frame: INTRO_FRAMES, value: FINAL_RADIUS },
+		]);
+
+		const betaAnim = new Animation(
+			"introBeta",
+			"beta",
+			FPS,
+			Animation.ANIMATIONTYPE_FLOAT,
+			Animation.ANIMATIONLOOPMODE_CONSTANT,
+		);
+		betaAnim.setKeys([
+			{ frame: 0, value: Tools.ToRadians(45) },
+			{ frame: INTRO_FRAMES, value: FINAL_BETA },
+		]);
+
+		cam.animations = [radiusAnim, betaAnim];
+		scene.beginAnimation(cam, 0, INTRO_FRAMES, false, 1.0, () => {
+			// Animation complete — lock camera to gameplay constraints
+			cam.alpha = FINAL_ALPHA;
+			cam.lowerAlphaLimit = FINAL_ALPHA;
+			cam.upperAlphaLimit = FINAL_ALPHA;
+			cam.lowerBetaLimit = Tools.ToRadians(20);
+			cam.upperBetaLimit = Tools.ToRadians(35);
+			cam.lowerRadiusLimit = 20;
+			cam.upperRadiusLimit = 100;
+		});
 
 		// Pan settings
 		cam.panningSensibility = 30;

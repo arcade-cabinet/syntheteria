@@ -8,8 +8,8 @@
  * - Save/Load buttons render
  */
 
+import { createRoot, type Root } from "react-dom/client";
 import { afterEach, expect, test, vi } from "vitest";
-import { type Root, createRoot } from "react-dom/client";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -45,8 +45,17 @@ const CACHED_SNAPSHOT = Object.freeze({
 	enemyCount: 1,
 	mergeEvents: [],
 	combatEvents: [],
-	power: Object.freeze({ totalGeneration: 10, totalDemand: 5, stormIntensity: 0.5 }),
-	resources: Object.freeze({ scrapMetal: 15, circuitry: 8, powerCells: 3, durasteel: 0 }),
+	power: Object.freeze({
+		totalGeneration: 10,
+		totalDemand: 5,
+		stormIntensity: 0.5,
+	}),
+	resources: Object.freeze({
+		scrapMetal: 15,
+		circuitry: 8,
+		powerCells: 3,
+		durasteel: 0,
+	}),
 	fabricationJobs: [],
 	gamePhase: "awakening",
 	gamePhaseDisplayName: "Awakening",

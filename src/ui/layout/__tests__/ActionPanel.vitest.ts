@@ -36,7 +36,10 @@ vi.mock("../../base/BasePanel", () => ({
 	selectBase: vi.fn(),
 }));
 
-import { foundBase, validateBaseLocation } from "../../../systems/baseManagement";
+import {
+	foundBase,
+	validateBaseLocation,
+} from "../../../systems/baseManagement";
 
 // ─── Cleanup ─────────────────────────────────────────────────────────────────
 
@@ -87,10 +90,7 @@ function spawnPlayerUnit(opts?: {
 /** Simulate ActionPanel's selection logic. */
 function findSelectedPlayerUnit(): Entity | null {
 	for (const entity of world.query(Unit, Faction)) {
-		if (
-			entity.get(Unit)!.selected &&
-			entity.get(Faction)!.value === "player"
-		) {
+		if (entity.get(Unit)!.selected && entity.get(Faction)!.value === "player") {
 			return entity;
 		}
 	}
@@ -151,9 +151,7 @@ describe("action availability", () => {
 		const comps = parseComponents(
 			unit.get(UnitComponents)?.componentsJson ?? "[]",
 		);
-		const hasLegs = comps.some(
-			(c) => c.name === "legs" && c.functional,
-		);
+		const hasLegs = comps.some((c) => c.name === "legs" && c.functional);
 
 		expect(hasLegs).toBe(false);
 	});
@@ -169,9 +167,7 @@ describe("action availability", () => {
 		const comps = parseComponents(
 			unit.get(UnitComponents)?.componentsJson ?? "[]",
 		);
-		const hasArms = comps.some(
-			(c) => c.name === "arms" && c.functional,
-		);
+		const hasArms = comps.some((c) => c.name === "arms" && c.functional);
 
 		expect(hasArms).toBe(false);
 	});
@@ -202,11 +198,22 @@ describe("action availability", () => {
 		const pos = unit.get(Position)!;
 
 		// Simulate what the FOUND BASE button does
-		const error = validateBaseLocation(world, Math.floor(pos.x / 2), Math.floor(pos.z / 2), "player");
+		const error = validateBaseLocation(
+			world,
+			Math.floor(pos.x / 2),
+			Math.floor(pos.z / 2),
+			"player",
+		);
 		expect(error).toBeNull();
 
 		const baseName = "Test Base";
-		foundBase(world, Math.floor(pos.x / 2), Math.floor(pos.z / 2), "player", baseName);
+		foundBase(
+			world,
+			Math.floor(pos.x / 2),
+			Math.floor(pos.z / 2),
+			"player",
+			baseName,
+		);
 		expect(foundBase).toHaveBeenCalled();
 	});
 });

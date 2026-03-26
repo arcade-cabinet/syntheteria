@@ -6,8 +6,8 @@
  * - Returns null (renders nothing) when no unit/building is selected
  */
 
+import { createRoot, type Root } from "react-dom/client";
 import { afterEach, expect, test, vi } from "vitest";
-import { type Root, createRoot } from "react-dom/client";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -22,8 +22,17 @@ const CACHED_SNAPSHOT = Object.freeze({
 	enemyCount: 0,
 	mergeEvents: [],
 	combatEvents: [],
-	power: Object.freeze({ totalGeneration: 0, totalDemand: 0, stormIntensity: 0 }),
-	resources: Object.freeze({ scrapMetal: 0, circuitry: 0, powerCells: 0, durasteel: 0 }),
+	power: Object.freeze({
+		totalGeneration: 0,
+		totalDemand: 0,
+		stormIntensity: 0,
+	}),
+	resources: Object.freeze({
+		scrapMetal: 0,
+		circuitry: 0,
+		powerCells: 0,
+		durasteel: 0,
+	}),
 	fabricationJobs: [],
 	gamePhase: "awakening",
 	gamePhaseDisplayName: "Awakening",

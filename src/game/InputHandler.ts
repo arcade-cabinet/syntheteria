@@ -83,12 +83,7 @@ export function initInput(
 	// ── Box selection DOM overlay ──
 	let selectionBox: HTMLDivElement | null = null;
 
-	function showSelectionBox(
-		x1: number,
-		y1: number,
-		x2: number,
-		y2: number,
-	) {
+	function showSelectionBox(x1: number, y1: number, x2: number, y2: number) {
 		if (!selectionBox) {
 			selectionBox = document.createElement("div");
 			selectionBox.style.cssText =

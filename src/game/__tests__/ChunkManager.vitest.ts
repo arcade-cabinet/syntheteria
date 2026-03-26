@@ -10,7 +10,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // ─── Mock board module ──────────────────────────────────────────────────────
 
 const mockDispose = vi.fn();
-const mockGenerateChunk = vi.fn((_seed: string, _cx: number, _cz: number) => ({ tiles: [], cx: 0, cz: 0 }));
+const mockGenerateChunk = vi.fn((_seed: string, _cx: number, _cz: number) => ({
+	tiles: [],
+	cx: 0,
+	cz: 0,
+}));
 const mockPopulateChunkScene = vi.fn((_chunk: unknown, _scene: unknown) => ({
 	floorMesh: { dispose: mockDispose },
 	wallMeshes: [],
@@ -22,8 +26,10 @@ vi.mock("../../board", () => ({
 	CHUNK_SIZE: 32,
 	TILE_M: 2.0,
 	chunkKey: (cx: number, cz: number) => mockChunkKey(cx, cz),
-	generateChunk: (seed: string, cx: number, cz: number) => mockGenerateChunk(seed, cx, cz),
-	populateChunkScene: (chunk: unknown, scene: unknown) => mockPopulateChunkScene(chunk, scene),
+	generateChunk: (seed: string, cx: number, cz: number) =>
+		mockGenerateChunk(seed, cx, cz),
+	populateChunkScene: (chunk: unknown, scene: unknown) =>
+		mockPopulateChunkScene(chunk, scene),
 	disposeChunkMeshes: (cm: unknown) => mockDisposeChunkMeshes(cm),
 }));
 

@@ -57,8 +57,11 @@ vi.mock("../../../ecs/terrain", () => ({
 	getTerrainHeight: vi.fn(() => 0),
 }));
 
+import {
+	foundBase,
+	validateBaseLocation,
+} from "../../../systems/baseManagement";
 import { getResources } from "../../../systems/resources";
-import { foundBase, validateBaseLocation } from "../../../systems/baseManagement";
 
 // ─── Cleanup ─────────────────────────────────────────────────────────────────
 
@@ -101,7 +104,11 @@ function spawnEnemyUnit(x: number, z: number): Entity {
 function spawnScavengeSite(x: number, z: number): Entity {
 	const entity = world.spawn(
 		Position({ x, y: 0, z }),
-		ScavengeSite({ materialType: "scrapMetal", amountPerScavenge: 2, remaining: 5 }),
+		ScavengeSite({
+			materialType: "scrapMetal",
+			amountPerScavenge: 2,
+			remaining: 5,
+		}),
 	);
 	entities.push(entity);
 	return entity;
@@ -314,7 +321,9 @@ describe("found base", () => {
 			powerCells: 0,
 			durasteel: 0,
 		});
-		vi.mocked(validateBaseLocation).mockReturnValue("Too close to existing base");
+		vi.mocked(validateBaseLocation).mockReturnValue(
+			"Too close to existing base",
+		);
 
 		const actions = governorTick(world, 10);
 

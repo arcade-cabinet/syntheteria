@@ -34,6 +34,13 @@ vi.mock("../../src/ecs/terrain", () => ({
 
 import type { Entity } from "koota";
 import {
+	clearGovernorLog,
+	type GovernorAction,
+	getGovernorLog,
+	governorTick,
+	resetGovernor,
+} from "../../src/ai/governor/PlaytestGovernor";
+import {
 	EntityId,
 	Faction,
 	Navigation,
@@ -42,13 +49,6 @@ import {
 	Unit,
 } from "../../src/ecs/traits";
 import { world } from "../../src/ecs/world";
-import {
-	clearGovernorLog,
-	type GovernorAction,
-	getGovernorLog,
-	governorTick,
-	resetGovernor,
-} from "../../src/ai/governor/PlaytestGovernor";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

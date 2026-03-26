@@ -132,9 +132,7 @@ function UnitActions({ entity }: { entity: Entity }) {
 				className="w-full px-2 py-2 text-xs font-mono rounded border min-h-[40px] flex items-center justify-center bg-slate-900/50 border-slate-700 text-slate-400 italic"
 				title="Click the ground to move selected units"
 			>
-				{hasLegs && unitData.speed > 0
-					? "Click ground to move"
-					: "Cannot move"}
+				{hasLegs && unitData.speed > 0 ? "Click ground to move" : "Cannot move"}
 			</div>
 			<ActionButton
 				label="ATTACK"

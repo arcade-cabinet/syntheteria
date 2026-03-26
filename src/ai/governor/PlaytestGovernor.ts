@@ -114,7 +114,10 @@ export function resetGovernor(): void {
  * @param tickNumber - Current simulation tick
  * @returns Array of actions taken this tick
  */
-export function governorTick(world: World, tickNumber: number): GovernorAction[] {
+export function governorTick(
+	world: World,
+	tickNumber: number,
+): GovernorAction[] {
 	if (tickNumber % TICK_INTERVAL !== 0) return [];
 
 	const actions: GovernorAction[] = [];
@@ -288,9 +291,10 @@ function findNearestEntity(
  * Find a random passable exploration target within EXPLORE_RANGE.
  * Tries up to 10 random positions.
  */
-function findExplorationTarget(
-	from: { x: number; z: number },
-): { x: number; z: number } | null {
+function findExplorationTarget(from: {
+	x: number;
+	z: number;
+}): { x: number; z: number } | null {
 	for (let attempt = 0; attempt < 10; attempt++) {
 		const angle = exploreRandom() * Math.PI * 2;
 		const dist = EXPLORE_RANGE * 0.3 + exploreRandom() * EXPLORE_RANGE * 0.7;

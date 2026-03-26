@@ -8,9 +8,9 @@
  * - Click on overlay advances text
  */
 
-import { afterEach, expect, test, vi } from "vitest";
-import { type Root, createRoot } from "react-dom/client";
 import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, expect, test, vi } from "vitest";
 import type { DialogueSequence } from "../../src/config/narrativeDefs";
 import { NarrativeOverlay } from "../../src/ui/game/NarrativeOverlay";
 

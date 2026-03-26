@@ -71,12 +71,8 @@ vi.mock("../../lib/utils", () => ({
 	cn: vi.fn((...args: string[]) => args.filter(Boolean).join(" ")),
 }));
 
-import {
-	getSnapshot,
-	setGameSpeed,
-	togglePause,
-} from "../../../ecs/gameState";
 import { isPersistenceAvailable } from "../../../db/persistence";
+import { getSnapshot, setGameSpeed, togglePause } from "../../../ecs/gameState";
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 

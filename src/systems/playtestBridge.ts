@@ -7,16 +7,16 @@
  */
 
 import {
-	type GovernorAction,
 	disableAutoPlay,
 	enableAutoPlay,
+	type GovernorAction,
 	getGovernorLog,
 	isAutoPlayEnabled,
 } from "../ai/governor/PlaytestGovernor";
 import { getSnapshot, setGameSpeed, simulationTick } from "../ecs/gameState";
-import { movementSystem } from "../systems/movement";
 import { Base, Faction } from "../ecs/traits";
 import { world } from "../ecs/world";
+import { movementSystem } from "../systems/movement";
 
 // ─── Global type augmentation ───────────────────────────────────────────────
 

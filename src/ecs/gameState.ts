@@ -4,6 +4,10 @@
  */
 
 import { cultAISystem } from "../ai/cultBehavior";
+import {
+	governorTick,
+	isAutoPlayEnabled,
+} from "../ai/governor/PlaytestGovernor";
 import { logError } from "../errors";
 import { basePowerTick, baseProductionTick } from "../systems/baseManagement";
 import {
@@ -217,6 +221,11 @@ export function simulationTick() {
 	runSystem("baseProduction", () => baseProductionTick(world, 1.0));
 	runSystem("humanTemperature", humanTemperatureSystem);
 	runSystem("displayOffsets", updateDisplayOffsets);
+
+	// Automated player AI (playtest governor)
+	if (isAutoPlayEnabled()) {
+		runSystem("governor", () => governorTick(world, tick));
+	}
 
 	snapshot = null;
 	notify();

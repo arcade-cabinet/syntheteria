@@ -43,9 +43,6 @@ function createHeroLogoTexture(scene: BScene) {
 	context.clearRect(0, 0, canvas.width, canvas.height);
 	context.textAlign = "center";
 	context.textBaseline = "middle";
-	context.save();
-	context.translate(canvas.width, 0);
-	context.scale(-1, 1);
 	context.strokeStyle = "rgba(32, 61, 82, 0.82)";
 	context.lineWidth = 18;
 	context.shadowColor = "rgba(139, 230, 255, 0.55)";
@@ -70,8 +67,6 @@ function createHeroLogoTexture(scene: BScene) {
 		canvas.width / 2,
 		510,
 	);
-	context.restore();
-
 	const texture = new Texture(
 		canvas.toDataURL("image/png"),
 		scene,

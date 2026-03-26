@@ -56,6 +56,15 @@ function getFloorMaterial(floorType: FloorType, scene: Scene): PBRMaterial {
 	if (mat) return mat;
 
 	const def = FLOOR_MATERIALS[floorType];
+	if (!def) {
+		console.error(`[scene] Unknown floorType: "${floorType}" — using fallback material`);
+		mat = new PBRMaterial(key, scene);
+		mat.roughness = 0.85;
+		mat.albedoColor = new Color3(0.3, 0.3, 0.3);
+		mat.freeze();
+		materialCache.set(key, mat);
+		return mat;
+	}
 	mat = new PBRMaterial(key, scene);
 	mat.roughness = 0.85;
 	mat.metallic = def.metalness ? 0.6 : 0.1;

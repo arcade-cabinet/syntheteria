@@ -1,80 +1,188 @@
 /**
- * @module cultEscalation
+ * Cult escalation system — 3-tier threat ramp.
  *
- * Escalation stage logic and per-sect behavior bias profiles.
- * Determines how cult units behave based on game progression.
+ * Tier 1 (0-10 min):  Lone Wanderers patrol corridors
+ * Tier 2 (10-25 min): War Parties of 2-3 mixed mechs patrol aggressively
+ * Tier 3 (25+ min):   Coordinated Assault Waves push toward player base
+ *
+ * Spawns cult mechs at city edge zones. Coexists with feral enemies.
+ * Uses component-based damage — cult mechs have component loadouts, not HP.
  */
 
+import {
+	CULT_MECH_DEFS,
+	type CultMechType,
+	type EscalationTier,
+	getEscalationTier,
+	pickCultMechType,
+	pickGroupSize,
+} from "../config/cultDefs";
+import { isInsideBuilding } from "../ecs/cityLayout";
+import { createFragment, getTerrainHeight, isWalkable } from "../ecs/terrain";
+import {
+	EntityId,
+	Faction,
+	Fragment,
+	Navigation,
+	Position,
+	Unit,
+	UnitComponents,
+} from "../ecs/traits";
+import { serializeComponents } from "../ecs/types";
+import { world } from "../ecs/world";
+
 // ---------------------------------------------------------------------------
-// Escalation stages — behavior changes with escalation tier
+// State
 // ---------------------------------------------------------------------------
+
+let elapsedGameSec = 0;
+let spawnCooldownSec = 0;
+let nextCultId = 0;
+let lastTierLevel = 0;
+
+/** Spawn points — same edges as feral spawns but offset so they don't overlap */
+const CULT_SPAWN_ZONES = [
+	{ x: -30, z: 10 },
+	{ x: -30, z: 35 },
+	{ x: 50, z: 10 },
+	{ x: 50, z: 35 },
+	{ x: 15, z: -22 },
+	{ x: 15, z: 52 },
+];
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function countCultUnits(): number {
+	let count = 0;
+	for (const entity of world.query(Unit, Faction)) {
+		if (entity.get(Faction)?.value === "cultist") count++;
+	}
+	return count;
+}
+
+function findValidCultSpawn(): { x: number; z: number } | null {
+	const shuffled = [...CULT_SPAWN_ZONES].sort(() => Math.random() - 0.5);
+	for (const zone of shuffled) {
+		const x = zone.x + (Math.random() - 0.5) * 8;
+		const z = zone.z + (Math.random() - 0.5) * 8;
+		if (isWalkable(x, z) && !isInsideBuilding(x, z)) {
+			return { x, z };
+		}
+	}
+	return null;
+}
 
 /**
- * Escalation stages determine cult unit behavior:
- *   - "wanderer"  (tier 0-1): random wander, flee from faction units
- *   - "war_party" (tier 2-3): coordinated groups, target faction territory edges
- *   - "assault"   (tier 4+):  direct attacks on faction buildings and units
+ * Spawn a single cult mech at the given position.
  */
-export type EscalationStage = "wanderer" | "war_party" | "assault";
+function spawnCultMech(mechType: CultMechType, x: number, z: number) {
+	const def = CULT_MECH_DEFS[mechType];
+	const fragment = createFragment();
+	const y = getTerrainHeight(x, z);
+	const id = `cult_${nextCultId++}`;
 
-export function getEscalationStage(tier: number): EscalationStage {
-	if (tier <= 1) return "wanderer";
-	if (tier <= 3) return "war_party";
-	return "assault";
+	// Deep-copy components so each entity has independent state
+	const components = def.components.map((c) => ({ ...c }));
+
+	world.spawn(
+		EntityId({ value: id }),
+		Position({ x, y, z }),
+		Faction({ value: "cultist" }),
+		Fragment({ fragmentId: fragment.id }),
+		Unit({
+			unitType: def.unitType,
+			displayName: `${def.displayName} ${id.slice(-2).toUpperCase()}`,
+			speed: def.speed,
+			selected: false,
+		}),
+		UnitComponents({
+			componentsJson: serializeComponents(components),
+		}),
+		Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+	);
+}
+
+/**
+ * Spawn a group of cult mechs near a single spawn zone.
+ */
+function spawnCultGroup(tier: EscalationTier) {
+	const basePos = findValidCultSpawn();
+	if (!basePos) return;
+
+	const groupSize = pickGroupSize(tier);
+	for (let i = 0; i < groupSize; i++) {
+		// Spread group members slightly around the base position
+		const offsetX = basePos.x + (Math.random() - 0.5) * 4;
+		const offsetZ = basePos.z + (Math.random() - 0.5) * 4;
+
+		// Ensure spawn position is valid; fall back to base if not
+		const x = isWalkable(offsetX, offsetZ) ? offsetX : basePos.x;
+		const z = isWalkable(offsetX, offsetZ) ? offsetZ : basePos.z;
+
+		const mechType = pickCultMechType(tier);
+		spawnCultMech(mechType, x, z);
+	}
 }
 
 // ---------------------------------------------------------------------------
-// Per-sect behavior profiles
+// Public API
 // ---------------------------------------------------------------------------
 
 /**
- * Bias profile that modifies cult unit behavior per sect:
- *   - Static Remnants: territorial, defend POIs, swarm tactics
- *   - Null Monks: stealth/ambush, target isolated units, spread corruption
- *   - Lost Signal: aggressive chargers, berserker behavior
+ * Reset escalation state. Call when starting a new game.
  */
-export interface SectBias {
-	/** Extra patrol radius multiplier (>1 = wider patrol, <1 = tighter defense). */
-	patrolRadiusMult: number;
-	/** If true, prioritize isolated enemies (furthest from other enemies). */
-	targetIsolated: boolean;
-	/** If true, prefer attacking buildings over units in assault stage. */
-	preferBuildings: boolean;
-	/** Attack damage bonus (added to base 2). */
-	attackBonus: number;
-	/** If true, flee threshold is lower (engages more aggressively even in wanderer stage). */
-	aggressive: boolean;
-	/** If true, prioritize spreading corruption (stay near corruption nodes). */
-	spreadCorruption: boolean;
+export function resetCultEscalation() {
+	elapsedGameSec = 0;
+	spawnCooldownSec = 0;
+	nextCultId = 0;
+	lastTierLevel = 0;
 }
 
-export const SECT_BIASES: Record<string, SectBias> = {
-	static_remnants: {
-		patrolRadiusMult: 0.75, // Tight patrol — defend POIs
-		targetIsolated: false,
-		preferBuildings: false,
-		attackBonus: 0,
-		aggressive: false,
-		spreadCorruption: false,
-	},
-	null_monks: {
-		patrolRadiusMult: 1.5, // Wide patrol — ambush range
-		targetIsolated: true, // Target isolated units
-		preferBuildings: false,
-		attackBonus: 0,
-		aggressive: false,
-		spreadCorruption: true, // Prioritize corruption spread
-	},
-	lost_signal: {
-		patrolRadiusMult: 1.0,
-		targetIsolated: false,
-		preferBuildings: true, // Charge buildings in assault
-		attackBonus: 1, // Berserker damage bonus
-		aggressive: true, // Engages even in wanderer stage
-		spreadCorruption: false,
-	},
-};
+/**
+ * Get the current escalation tier level (1-3).
+ */
+export function getCurrentTierLevel(): number {
+	return getEscalationTier(elapsedGameSec).level;
+}
 
-export function getSectBias(factionId: string): SectBias {
-	return SECT_BIASES[factionId] ?? SECT_BIASES.static_remnants;
+/**
+ * Get elapsed game time in seconds.
+ */
+export function getElapsedGameSec(): number {
+	return elapsedGameSec;
+}
+
+/**
+ * Cult escalation tick. Called once per sim tick.
+ *
+ * @param deltaSec - Real seconds since last tick (adjusted by game speed)
+ */
+export function cultEscalationSystem(deltaSec: number) {
+	elapsedGameSec += deltaSec;
+
+	const tier = getEscalationTier(elapsedGameSec);
+
+	// Tier transition burst — spawn a wave when advancing to a new tier
+	if (tier.level > lastTierLevel && lastTierLevel > 0) {
+		spawnCultGroup(tier);
+		lastTierLevel = tier.level;
+		spawnCooldownSec = tier.spawnIntervalSec * 0.5; // shorter cooldown after burst
+		return;
+	}
+	lastTierLevel = tier.level;
+
+	// Regular spawn cadence
+	spawnCooldownSec -= deltaSec;
+	if (spawnCooldownSec > 0) return;
+
+	const currentCount = countCultUnits();
+	if (currentCount >= tier.maxEnemies) {
+		spawnCooldownSec = tier.spawnIntervalSec;
+		return;
+	}
+
+	spawnCultGroup(tier);
+	spawnCooldownSec = tier.spawnIntervalSec;
 }

@@ -1,5 +1,0 @@
-# Maestro workspace config for Syntheteria
-# https://maestro.mobile.dev/api-reference/configuration
-flows:
-  - "flows/*.yaml"
-# Optional: executionOrder, includeTags, testOutputDir, platform

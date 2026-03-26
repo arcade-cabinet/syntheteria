@@ -50,10 +50,6 @@ function inBounds(
 	return x >= 0 && x < width && z >= 0 && z < height;
 }
 
-function _isOdd(n: number): boolean {
-	return (n & 1) === 1;
-}
-
 /**
  * Check if a tile is "solid" (uncarved wall / structural_mass).
  * Tiles that are already carved by room placement are non-solid.

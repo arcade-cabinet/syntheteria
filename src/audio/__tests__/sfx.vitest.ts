@@ -5,7 +5,7 @@
  * so no actual AudioContext is created.
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { SfxName } from "../sfx";
 
 // We test the module's public API behavior.
@@ -34,9 +34,19 @@ describe("sfx module", () => {
 		const names: SfxName[] = [
 			"unit_select",
 			"unit_move",
+			"unit_death",
 			"attack_hit",
+			"attack_miss",
 			"harvest_complete",
 			"build_complete",
+			"building_destroyed",
+			"building_upgrade",
+			"tech_researched",
+			"epoch_transition",
+			"hacking_start",
+			"hacking_complete",
+			"synthesis_complete",
+			"poi_discovered",
 			"turn_advance",
 			"cultist_spawn",
 			"victory",

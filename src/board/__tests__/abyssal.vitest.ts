@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { generateBoard } from "../generator";
-import type { BoardConfig } from "../types";
 
 describe("abyssal zones", () => {
 	it("abyssal tiles are abyssal_platform at elevation -1", () => {
@@ -77,7 +76,7 @@ describe("abyssal zones", () => {
 		expect(wetAbyssal).toBeGreaterThan(aridAbyssal);
 	});
 
-	it("center tile is never abyssal (player start override)", () => {
+	it("player start tile is never abyssal (player start override)", () => {
 		const board = generateBoard({
 			width: 64,
 			height: 64,
@@ -86,10 +85,10 @@ describe("abyssal zones", () => {
 			climateProfile: "wet",
 		});
 		const cx = Math.floor(64 / 2);
-		const cz = Math.floor(64 / 2);
-		const center = board.tiles[cz][cx];
-		expect(center.floorType).not.toBe("abyssal_platform");
-		expect(center.passable).toBe(true);
-		expect(center.elevation).toBe(0);
+		const cz = Math.floor(64 * 0.65);
+		const start = board.tiles[cz][cx];
+		expect(start.floorType).not.toBe("abyssal_platform");
+		expect(start.passable).toBe(true);
+		expect(start.elevation).toBe(0);
 	});
 });

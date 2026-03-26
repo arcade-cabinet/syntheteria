@@ -39,14 +39,14 @@ describe("generateBoard", () => {
 		}
 	});
 
-	it("player start tile at center is passable at elevation 0", () => {
+	it("player start tile at center-south is passable at elevation 0", () => {
 		const board = generateBoard(DEFAULT_CONFIG);
 		const cx = Math.floor(DEFAULT_CONFIG.width / 2);
-		const cz = Math.floor(DEFAULT_CONFIG.height / 2);
-		const center = board.tiles[cz][cx];
+		const cz = Math.floor(DEFAULT_CONFIG.height * 0.65);
+		const start = board.tiles[cz][cx];
 
-		expect(center.passable).toBe(true);
-		expect(center.elevation).toBe(0);
+		expect(start.passable).toBe(true);
+		expect(start.elevation).toBe(0);
 	});
 
 	it("at least 40% of tiles are passable on a 32x32 board", () => {

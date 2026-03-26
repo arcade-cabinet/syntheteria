@@ -1,82 +1,54 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
+# Dependencies
 node_modules/
-package-lock.json
-npm-shrinkwrap.json
 
-# Expo
-.expo/
+# Build output
 dist/
-web-build/
-expo-env.d.ts
+dist-ssr/
 
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 
-# Metro
-.metro-health-check*
+# npm artifacts (we use pnpm)
+package-lock.json
+yarn.lock
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
+# Environment
+*.local
+.env
+.env.*
 
-# macOS
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
 .DS_Store
-*.pem
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
-
-# coverage
+# Test output
 coverage/
+test-results/
+playwright-report/
 
-# generated native folders
-/ios
-/android
+# Capacitor
+android/
+ios/
 
-# Ralph (ralph-cursor)
-/ralph/projects/*/logs/
-/ralph/projects/*/status.json
+# Worktrees
+.claude/worktrees
+.ralph-tui/worktrees
 
-# Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-/playwright/.auth/
+# Developer-local tool configs
+.ralph-tui/config.toml
+.superpowers/brainstorm/**/.server.pid
+.superpowers/brainstorm/**/.server-stopped
 
-# Playtest report output (generated, not committed)
-tests/e2e/reports/screenshots/*.png
-tests/e2e/reports/playtest-report.html
-tests/e2e/reports/playtest-results.json
-
-# Visual test output (manual-review screenshots, generated per run)
-tests/visual/screenshots/*.png
-tests/e2e/screenshots/*.png
-
-# E2E local config (copy from config/e2e.example.json)
-config/e2e.json
-
-# Local integration staging
-/pending-integration/
-
-# Local task-orchestration scratch data
-/.ralph-tui/
-
-# Nested clone (do not commit)
-/syntheteria/
-
-# Brainstorming companion cache
-.superpowers/
-.claude/worktrees/
+# Misc
+*.tsbuildinfo

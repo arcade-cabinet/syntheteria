@@ -3,13 +3,13 @@
  *
  * Visual vocabulary:
  *   - Storm clouds: deep graphite blues, multi-layer fbm turbulence
- *   - Globe: Earth continents → ecumenopolis lattice spread with cyan/mint lights
+ *   - Globe: Earth continents -> ecumenopolis lattice spread with cyan/mint lights
  *   - Lightning: jagged bolts with additive cyan glow
  *   - Hypercane: spiral storm band around the globe equator
  *   - Wormhole: purple zenith glow pulsing above everything
  */
 
-// ─── Storm Clouds (BackSide sphere) ─────────────────────────────────────────
+// --- Storm Clouds (BackSide sphere) ---
 
 export const stormVertexShader = /* glsl */ `
   varying vec2 vUv;
@@ -89,7 +89,7 @@ export const stormFragmentShader = /* glsl */ `
     float density = stormLayer1 * 0.4 + stormLayer2 * 0.3 + stormLayer3 * 0.3;
     density = smoothstep(0.3, 0.8, density);
 
-    // Storm color: deep graphite → slate blue, matching game palette
+    // Storm color: deep graphite -> slate blue, matching game palette
     vec3 darkCloud = vec3(0.02, 0.03, 0.07);
     vec3 stormCloud = vec3(0.06, 0.08, 0.14);
     vec3 lightEdge = vec3(0.10, 0.14, 0.22);
@@ -97,7 +97,7 @@ export const stormFragmentShader = /* glsl */ `
     vec3 color = mix(darkCloud, stormCloud, stormLayer1);
     color = mix(color, lightEdge, stormLayer2 * 0.3);
 
-    // Wormhole glow at zenith — purple, pulsing
+    // Wormhole glow at zenith -- purple, pulsing
     float zenithDist = length(pos.xz);
     float wormholeRadius = 0.25 + 0.08 * sin(uTime * 0.6);
     float wormholeGlow = smoothstep(wormholeRadius, 0.0, zenithDist);
@@ -125,7 +125,7 @@ export const stormFragmentShader = /* glsl */ `
   }
 `;
 
-// ─── Lightning Bolts (additive plane) ────────────────────────────────────────
+// --- Lightning Bolts (additive plane) ---
 
 export const lightningVertexShader = /* glsl */ `
   varying vec2 vUv;
@@ -189,7 +189,7 @@ export const lightningFragmentShader = /* glsl */ `
   }
 `;
 
-// ─── Globe with Ecumenopolis Growth ──────────────────────────────────────────
+// --- Globe with Ecumenopolis Growth ---
 
 export const globeVertexShader = /* glsl */ `
   varying vec2 vUv;
@@ -339,7 +339,7 @@ export const globeFragmentShader = /* glsl */ `
 
     color += latticeGlow * lights * 0.6;
 
-    // Atmospheric fresnel glow — cyan/signal color at edges
+    // Atmospheric fresnel glow -- cyan/signal color at edges
     float fresnel = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 3.0);
     vec3 atmosColor = mix(vec3(0.04, 0.12, 0.25), vec3(0.12, 0.22, 0.32), latticeMask);
     color += atmosColor * fresnel * 0.5;
@@ -352,7 +352,7 @@ export const globeFragmentShader = /* glsl */ `
   }
 `;
 
-// ─── Hypercane Spiral Band ───────────────────────────────────────────────────
+// --- Hypercane Spiral Band ---
 
 export const hypercaneVertexShader = /* glsl */ `
   varying vec3 vPosition;

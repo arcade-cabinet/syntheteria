@@ -31,10 +31,19 @@ async function ensureTone(): Promise<typeof ToneNs | null> {
 export type SfxName =
 	| "unit_select"
 	| "unit_move"
+	| "unit_death"
 	| "attack_hit"
 	| "attack_miss"
 	| "harvest_complete"
 	| "build_complete"
+	| "building_destroyed"
+	| "building_upgrade"
+	| "tech_researched"
+	| "epoch_transition"
+	| "hacking_start"
+	| "hacking_complete"
+	| "synthesis_complete"
+	| "poi_discovered"
 	| "turn_advance"
 	| "cultist_spawn"
 	| "victory"
@@ -83,6 +92,18 @@ function createPooledSynth(
 				}).connect(output),
 				busy: false,
 			};
+		case "unit_death": {
+			// Heavy metallic crash: sawtooth attack + noise decay
+			const noise = new T.NoiseSynth({
+				noise: { type: "white" },
+				envelope: { attack: 0.001, decay: 0.3, sustain: 0, release: 0.15 },
+			}).connect(output);
+			const synth = new T.Synth({
+				oscillator: { type: "sawtooth" },
+				envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.2 },
+			}).connect(output);
+			return { synth: noise, secondary: synth, busy: false };
+		}
 		case "attack_hit": {
 			const noise = new T.NoiseSynth({
 				noise: { type: "white" },
@@ -114,6 +135,82 @@ function createPooledSynth(
 				synth: new T.Synth({
 					oscillator: { type: "square" },
 					envelope: { attack: 0.01, decay: 0.15, sustain: 0.1, release: 0.2 },
+				}).connect(output),
+				busy: false,
+			};
+		case "building_destroyed": {
+			// Explosion: noise burst + low-frequency rumble
+			const noise = new T.NoiseSynth({
+				noise: { type: "white" },
+				envelope: { attack: 0.001, decay: 0.4, sustain: 0, release: 0.2 },
+			}).connect(output);
+			const synth = new T.Synth({
+				oscillator: { type: "sine" },
+				envelope: { attack: 0.005, decay: 0.5, sustain: 0, release: 0.3 },
+			}).connect(output);
+			return { synth: noise, secondary: synth, busy: false };
+		}
+		case "building_upgrade":
+			return {
+				synth: new T.Synth({
+					oscillator: { type: "triangle" },
+					envelope: { attack: 0.01, decay: 0.15, sustain: 0.1, release: 0.15 },
+				}).connect(output),
+				busy: false,
+			};
+		case "tech_researched":
+			return {
+				synth: new T.Synth({
+					oscillator: { type: "triangle" },
+					envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 },
+				}).connect(output),
+				busy: false,
+			};
+		case "epoch_transition":
+			return {
+				synth: new T.PolySynth(T.Synth, {
+					oscillator: { type: "triangle" },
+					envelope: { attack: 0.1, decay: 0.6, sustain: 0.3, release: 0.8 },
+				}).connect(output),
+				busy: false,
+			};
+		case "hacking_start":
+			return {
+				synth: new T.FMSynth({
+					harmonicity: 5,
+					modulationIndex: 20,
+					envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.15 },
+					modulation: { type: "sine" },
+				}).connect(output),
+				busy: false,
+			};
+		case "hacking_complete":
+			return {
+				synth: new T.Synth({
+					oscillator: { type: "square" },
+					envelope: { attack: 0.005, decay: 0.08, sustain: 0, release: 0.05 },
+				}).connect(output),
+				busy: false,
+			};
+		case "synthesis_complete": {
+			// Chemical reaction: filtered noise + sine
+			const noise = new T.NoiseSynth({
+				noise: { type: "pink" },
+				envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 },
+			}).connect(output);
+			const synth = new T.Synth({
+				oscillator: { type: "sine" },
+				envelope: { attack: 0.02, decay: 0.3, sustain: 0, release: 0.2 },
+			}).connect(output);
+			return { synth: noise, secondary: synth, busy: false };
+		}
+		case "poi_discovered":
+			return {
+				synth: new T.FMSynth({
+					harmonicity: 2,
+					modulationIndex: 8,
+					envelope: { attack: 0.02, decay: 0.4, sustain: 0.1, release: 0.3 },
+					modulation: { type: "triangle" },
 				}).connect(output),
 				busy: false,
 			};
@@ -214,11 +311,21 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("G4", "16n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 80);
 		return 400;
+	},
+
+	unit_death: (e) => {
+		// Heavy metallic crash: sawtooth hit + noise decay
+		(e.synth as ToneNs.NoiseSynth).triggerAttackRelease("8n");
+		if (e.secondary) {
+			(e.secondary as ToneNs.Synth).triggerAttackRelease("A2", "8n");
+		}
+		return 500;
 	},
 
 	attack_hit: (e) => {
@@ -240,15 +347,17 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("G5", "16n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 100);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("B5", "16n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 200);
 		return 500;
@@ -260,18 +369,194 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("E4", "8n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 120);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("G4", "8n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 240);
 		return 640;
+	},
+
+	building_destroyed: (e) => {
+		// Explosion: noise burst + low-frequency rumble
+		(e.synth as ToneNs.NoiseSynth).triggerAttackRelease("4n");
+		if (e.secondary) {
+			(e.secondary as ToneNs.Synth).triggerAttackRelease("E1", "4n");
+		}
+		return 700;
+	},
+
+	building_upgrade: (e) => {
+		// Rising tone + click
+		const synth = e.synth as ToneNs.Synth;
+		synth.triggerAttackRelease("C5", "16n");
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("E5", "16n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 80);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("G5", "16n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 160);
+		return 460;
+	},
+
+	tech_researched: (e) => {
+		// Discovery chime: ascending triangle arpeggio
+		const synth = e.synth as ToneNs.Synth;
+		synth.triggerAttackRelease("C5", "16n");
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("E5", "16n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 100);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("G5", "16n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 200);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("C6", "8n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 300);
+		return 700;
+	},
+
+	epoch_transition: (e) => {
+		// Dramatic chord progression — longer, grander
+		const synth = e.synth as ToneNs.PolySynth;
+		synth.triggerAttackRelease(["C3", "E3", "G3"], "4n");
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease(["F3", "A3", "C4"], "4n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 500);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease(["G3", "B3", "D4"], "4n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 1000);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease(["C3", "E3", "G3", "C4"], "2n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 1500);
+		return 3000;
+	},
+
+	hacking_start: (e) => {
+		// Electronic interference: FM synth modulated tone
+		const synth = e.synth as ToneNs.FMSynth;
+		synth.triggerAttackRelease("A3", "8n");
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("C4", "8n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 120);
+		return 400;
+	},
+
+	hacking_complete: (e) => {
+		// Digital success: quick ascending beeps
+		const synth = e.synth as ToneNs.Synth;
+		synth.triggerAttackRelease("E5", "32n");
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("G5", "32n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 60);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("B5", "32n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 120);
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("E6", "16n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 180);
+		return 400;
+	},
+
+	synthesis_complete: (e) => {
+		// Chemical reaction: filtered noise + sine
+		(e.synth as ToneNs.NoiseSynth).triggerAttackRelease("8n");
+		if (e.secondary) {
+			(e.secondary as ToneNs.Synth).triggerAttackRelease("D4", "8n");
+		}
+		setTimeout(() => {
+			try {
+				if (e.secondary) {
+					(e.secondary as ToneNs.Synth).triggerAttackRelease("F#4", "8n");
+				}
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 150);
+		return 500;
+	},
+
+	poi_discovered: (e) => {
+		// Mysterious find: bell-like FM synth
+		const synth = e.synth as ToneNs.FMSynth;
+		synth.triggerAttackRelease("E5", "8n");
+		setTimeout(() => {
+			try {
+				synth.triggerAttackRelease("B5", "8n");
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
+			}
+		}, 200);
+		return 600;
 	},
 
 	turn_advance: (e) => {
@@ -290,8 +575,9 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "2n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 400);
 		return 1900;
@@ -303,15 +589,17 @@ const SFX_TRIGGERS: Record<SfxName, SfxTrigger> = {
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("B2", "4n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 400);
 		setTimeout(() => {
 			try {
 				synth.triggerAttackRelease("Bb2", "2n");
-			} catch {
-				/* skip */
+			} catch (e) {
+				// Synth may have been disposed between scheduling and firing
+				console.debug("[sfx] deferred trigger failed:", e);
 			}
 		}, 800);
 		return 2300;
@@ -352,8 +640,8 @@ export function playSfx(name: SfxName): void {
 		try {
 			const duration = SFX_TRIGGERS[name](entry);
 			setTimeout(() => releaseSynth(name, entry), duration);
-		} catch {
-			// Swallow audio errors — never crash the game for sound
+		} catch (e) {
+			console.error(`[sfx] playSfx("${name}") failed:`, e);
 			releaseSynth(name, entry);
 		}
 	});
@@ -368,8 +656,8 @@ export function disposeSfxPools(): void {
 			try {
 				entry.synth.dispose();
 				entry.secondary?.dispose();
-			} catch {
-				// Swallow disposal errors
+			} catch (e) {
+				console.error("[sfx] synth dispose failed:", e);
 			}
 		}
 	}

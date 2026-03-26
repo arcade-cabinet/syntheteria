@@ -1,0 +1,187 @@
+<h2>Unified Radial Menu — Core Interaction Patterns</h2>
+<p class="subtitle">Three modes the same component needs to support. Which feels right?</p>
+
+<div class="cards">
+  <!-- Pattern 1: Unit Context -->
+  <div class="card" data-choice="unit-context" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d1520;padding:30px;display:flex;align-items:center;justify-content:center;">
+      <svg width="280" height="280" viewBox="0 0 280 280">
+        <!-- Center disc with faction color -->
+        <circle cx="140" cy="140" r="42" fill="#ff884422" stroke="#ff8844" stroke-width="2"/>
+        <circle cx="140" cy="140" r="38" fill="#0d1520"/>
+        <!-- Mark level -->
+        <text x="140" y="135" text-anchor="middle" fill="#ff8844" font-size="22" font-weight="bold" font-family="monospace">II</text>
+        <!-- Curved text - classification (top) -->
+        <path id="topArc" d="M 98 140 A 42 42 0 0 1 182 140" fill="none"/>
+        <text font-size="8" fill="#ff884488" letter-spacing="2" font-family="monospace">
+          <textPath href="#topArc" startOffset="50%" text-anchor="middle">INFANTRY</textPath>
+        </text>
+        <!-- Curved text - specialization (bottom) -->
+        <path id="botArc" d="M 182 140 A 42 42 0 0 1 98 140" fill="none"/>
+        <text font-size="7" fill="#ff884066" letter-spacing="1.5" font-family="monospace">
+          <textPath href="#botArc" startOffset="50%" text-anchor="middle">STORM WALKER</textPath>
+        </text>
+
+        <!-- Connection lines -->
+        <line x1="140" y1="98" x2="140" y2="55" stroke="#8be6ff33" stroke-width="1"/>
+        <line x1="178" y1="116" x2="210" y2="80" stroke="#8be6ff33" stroke-width="1"/>
+        <line x1="178" y1="164" x2="210" y2="200" stroke="#cc444433" stroke-width="1"/>
+        <line x1="140" y1="182" x2="140" y2="225" stroke="#8be6ff44" stroke-width="1"/>
+        <line x1="102" y1="164" x2="70" y2="200" stroke="#e8c86a33" stroke-width="1"/>
+        <line x1="102" y1="116" x2="70" y2="80" stroke="#7ee7cb33" stroke-width="1"/>
+
+        <!-- Outer action circles -->
+        <circle cx="140" cy="48" r="22" fill="#8be6ff11" stroke="#8be6ff55" stroke-width="1.5"/>
+        <text x="140" y="44" text-anchor="middle" fill="#8be6ff" font-size="14" font-family="monospace">◎</text>
+        <text x="140" y="58" text-anchor="middle" fill="#8be6ff" font-size="7" font-family="monospace">SCAN</text>
+
+        <circle cx="213" cy="76" r="22" fill="#44aa8811" stroke="#44aa8855" stroke-width="1.5"/>
+        <text x="213" y="72" text-anchor="middle" fill="#44aa88" font-size="14" font-family="monospace">⛨</text>
+        <text x="213" y="86" text-anchor="middle" fill="#44aa88" font-size="7" font-family="monospace">DEFEND</text>
+
+        <circle cx="213" cy="204" r="22" fill="#cc444411" stroke="#cc444455" stroke-width="1.5"/>
+        <text x="213" y="200" text-anchor="middle" fill="#cc4444" font-size="14" font-family="monospace">⚡</text>
+        <text x="213" y="214" text-anchor="middle" fill="#cc4444" font-size="7" font-family="monospace">ATTACK</text>
+
+        <circle cx="140" cy="228" r="22" fill="#8be6ff22" stroke="#8be6ff66" stroke-width="1.5"/>
+        <text x="140" y="224" text-anchor="middle" fill="#8be6ff" font-size="14" font-family="monospace">⊕</text>
+        <text x="140" y="238" text-anchor="middle" fill="#8be6ff" font-size="7" font-family="monospace">MOVE</text>
+
+        <circle cx="67" cy="204" r="22" fill="#e8c86a11" stroke="#e8c86a55" stroke-width="1.5"/>
+        <text x="67" y="200" text-anchor="middle" fill="#e8c86a" font-size="14" font-family="monospace">🔧</text>
+        <text x="67" y="214" text-anchor="middle" fill="#e8c86a" font-size="7" font-family="monospace">REPAIR</text>
+
+        <circle cx="67" cy="76" r="22" fill="#7ee7cb11" stroke="#7ee7cb55" stroke-width="1.5"/>
+        <text x="67" y="72" text-anchor="middle" fill="#7ee7cb" font-size="14" font-family="monospace">⛏</text>
+        <text x="67" y="86" text-anchor="middle" fill="#7ee7cb" font-size="7" font-family="monospace">HARVEST</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>Unit Context</h3>
+      <p>Single-select ring. Center = faction color + Mark level + curved class/spec text. Outer ring = available actions. Lines connect center to options.</p>
+    </div>
+  </div>
+
+  <!-- Pattern 2: Tech Tree (hub/spoke) -->
+  <div class="card" data-choice="tech-tree" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d1520;padding:30px;display:flex;align-items:center;justify-content:center;">
+      <svg width="280" height="280" viewBox="0 0 280 280">
+        <!-- Center -->
+        <circle cx="140" cy="140" r="35" fill="#aa44ff22" stroke="#aa44ff" stroke-width="2"/>
+        <text x="140" y="145" text-anchor="middle" fill="#aa44ff" font-size="9" font-family="monospace">RESEARCH</text>
+
+        <!-- Discovered techs (pre-selected, filled) -->
+        <line x1="140" y1="105" x2="140" y2="55" stroke="#44ff8866" stroke-width="2"/>
+        <circle cx="140" cy="45" r="18" fill="#44ff8833" stroke="#44ff88" stroke-width="2"/>
+        <text x="140" y="49" text-anchor="middle" fill="#44ff88" font-size="7" font-family="monospace">ADV HARV</text>
+
+        <line x1="170" y1="115" x2="215" y2="80" stroke="#44ff8866" stroke-width="2"/>
+        <circle cx="220" cy="75" r="18" fill="#44ff8833" stroke="#44ff88" stroke-width="2"/>
+        <text x="220" y="79" text-anchor="middle" fill="#44ff88" font-size="7" font-family="monospace">MARK II</text>
+
+        <line x1="110" y1="115" x2="65" y2="80" stroke="#44ff8866" stroke-width="2"/>
+        <circle cx="60" cy="75" r="18" fill="#44ff8833" stroke="#44ff88" stroke-width="2"/>
+        <text x="60" y="79" text-anchor="middle" fill="#44ff88" font-size="7" font-family="monospace">SIGNAL</text>
+
+        <!-- Available techs (unselected, dimmed, branching from discovered) -->
+        <!-- From ADV HARV -->
+        <line x1="140" y1="27" x2="110" y2="10" stroke="#8be6ff22" stroke-width="1" stroke-dasharray="3,3"/>
+        <circle cx="105" cy="8" r="12" fill="none" stroke="#8be6ff33" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="105" y="11" text-anchor="middle" fill="#8be6ff44" font-size="5" font-family="monospace">DEEP MINE</text>
+
+        <line x1="140" y1="27" x2="170" y2="10" stroke="#8be6ff22" stroke-width="1" stroke-dasharray="3,3"/>
+        <circle cx="175" cy="8" r="12" fill="none" stroke="#8be6ff33" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="175" y="11" text-anchor="middle" fill="#8be6ff44" font-size="5" font-family="monospace">EFF FAB</text>
+
+        <!-- From MARK II -->
+        <line x1="235" y1="67" x2="260" y2="50" stroke="#8be6ff22" stroke-width="1" stroke-dasharray="3,3"/>
+        <circle cx="263" cy="47" r="12" fill="none" stroke="#8be6ff33" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="263" y="50" text-anchor="middle" fill="#8be6ff44" font-size="5" font-family="monospace">MARK III</text>
+
+        <!-- Undiscovered spoke (from center, dimmed) -->
+        <line x1="140" y1="175" x2="140" y2="230" stroke="#ffffff11" stroke-width="1" stroke-dasharray="3,3"/>
+        <circle cx="140" cy="240" r="18" fill="none" stroke="#ffffff22" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="140" y="244" text-anchor="middle" fill="#ffffff33" font-size="7" font-family="monospace">QUANTUM</text>
+
+        <line x1="170" y1="165" x2="220" y2="200" stroke="#ffffff11" stroke-width="1" stroke-dasharray="3,3"/>
+        <circle cx="225" cy="205" r="18" fill="none" stroke="#ffffff22" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="225" y="209" text-anchor="middle" fill="#ffffff33" font-size="7" font-family="monospace">ARMOR</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>Tech Tree (Hub/Spoke)</h3>
+      <p>Multi-select with LINE connections. Researched = filled green spokes. Available = dashed branches off discovered nodes. Locked = dim dashed from center. Ship-wheel pattern.</p>
+    </div>
+  </div>
+
+  <!-- Pattern 3: Motor Pool / Fabrication -->
+  <div class="card" data-choice="fabrication" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d1520;padding:30px;display:flex;align-items:center;justify-content:center;">
+      <svg width="280" height="280" viewBox="0 0 280 280">
+        <!-- Center = Motor Pool -->
+        <circle cx="140" cy="140" r="35" fill="#e8c86a22" stroke="#e8c86a" stroke-width="2"/>
+        <text x="140" y="136" text-anchor="middle" fill="#e8c86a" font-size="9" font-family="monospace">MOTOR</text>
+        <text x="140" y="148" text-anchor="middle" fill="#e8c86a" font-size="9" font-family="monospace">POOL</text>
+
+        <!-- Robot class ring (inner) -->
+        <circle cx="140" cy="60" r="22" fill="#8be6ff22" stroke="#8be6ff66" stroke-width="1.5"/>
+        <text x="140" y="56" text-anchor="middle" fill="#8be6ff" font-size="11" font-family="monospace">🤖</text>
+        <text x="140" y="70" text-anchor="middle" fill="#8be6ff" font-size="7" font-family="monospace">SCOUT</text>
+        <line x1="140" y1="105" x2="140" y2="82" stroke="#8be6ff33" stroke-width="1"/>
+
+        <circle cx="210" cy="100" r="22" fill="#cc444422" stroke="#cc444466" stroke-width="1.5"/>
+        <text x="210" y="96" text-anchor="middle" fill="#cc4444" font-size="11" font-family="monospace">⚔</text>
+        <text x="210" y="110" text-anchor="middle" fill="#cc4444" font-size="7" font-family="monospace">INFANTRY</text>
+        <line x1="170" y1="120" x2="190" y2="105" stroke="#cc444433" stroke-width="1"/>
+
+        <circle cx="210" cy="180" r="22" fill="#cc444422" stroke="#cc444466" stroke-width="1.5"/>
+        <text x="210" y="176" text-anchor="middle" fill="#cc4444" font-size="11" font-family="monospace">🏹</text>
+        <text x="210" y="190" text-anchor="middle" fill="#cc4444" font-size="7" font-family="monospace">RANGED</text>
+        <line x1="170" y1="160" x2="190" y2="175" stroke="#cc444433" stroke-width="1"/>
+
+        <circle cx="140" cy="220" r="22" fill="#7ee7cb22" stroke="#7ee7cb66" stroke-width="1.5"/>
+        <text x="140" y="216" text-anchor="middle" fill="#7ee7cb" font-size="11" font-family="monospace">⚙</text>
+        <text x="140" y="230" text-anchor="middle" fill="#7ee7cb" font-size="7" font-family="monospace">WORKER</text>
+        <line x1="140" y1="175" x2="140" y2="198" stroke="#7ee7cb33" stroke-width="1"/>
+
+        <circle cx="70" cy="180" r="22" fill="#44aa8822" stroke="#44aa8866" stroke-width="1.5"/>
+        <text x="70" y="176" text-anchor="middle" fill="#44aa88" font-size="11" font-family="monospace">✚</text>
+        <text x="70" y="190" text-anchor="middle" fill="#44aa88" font-size="7" font-family="monospace">SUPPORT</text>
+        <line x1="110" y1="160" x2="90" y2="175" stroke="#44aa8833" stroke-width="1"/>
+
+        <circle cx="70" cy="100" r="22" fill="#e8c86a22" stroke="#e8c86a66" stroke-width="1.5"/>
+        <text x="70" y="96" text-anchor="middle" fill="#e8c86a" font-size="11" font-family="monospace">🐴</text>
+        <text x="70" y="110" text-anchor="middle" fill="#e8c86a" font-size="7" font-family="monospace">CAVALRY</text>
+        <line x1="110" y1="120" x2="90" y2="105" stroke="#e8c86a33" stroke-width="1"/>
+
+        <!-- Selected: SCOUT → second ring fans out showing tracks -->
+        <circle cx="140" cy="60" r="22" fill="#8be6ff33" stroke="#8be6ff" stroke-width="2.5"/>
+
+        <!-- Track options (second ring from selected) -->
+        <line x1="140" y1="38" x2="120" y2="15" stroke="#8be6ff44" stroke-width="1"/>
+        <circle cx="118" cy="12" r="14" fill="#8be6ff11" stroke="#8be6ff44" stroke-width="1"/>
+        <text x="118" y="15" text-anchor="middle" fill="#8be6ff" font-size="5" font-family="monospace">RECON</text>
+
+        <line x1="140" y1="38" x2="160" y2="15" stroke="#8be6ff44" stroke-width="1"/>
+        <circle cx="162" cy="12" r="14" fill="#8be6ff11" stroke="#8be6ff44" stroke-width="1"/>
+        <text x="162" y="15" text-anchor="middle" fill="#8be6ff" font-size="5" font-family="monospace">SIGNAL</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>Fabrication (Nested Select)</h3>
+      <p>Single-select with drill-down. Center = building. Ring 1 = robot classes. Selecting a class (SCOUT highlighted) fans out Ring 2 = specialization tracks. Two-level deep.</p>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px; padding:15px; border:1px solid #ffffff15; border-radius:8px; background:#ffffff05;">
+  <h3 style="margin-top:0;">One Component, Three Modes</h3>
+  <p style="color:#ffffff88; font-size:13px; line-height:1.6;">
+    All three patterns share the same primitives: <strong>center disc</strong>, <strong>connection lines</strong>, <strong>outer circles</strong>, and <strong>curved text</strong>. The differences are in data and interaction mode:
+  </p>
+  <ul style="color:#ffffff66; font-size:12px; line-height:1.8;">
+    <li><strong>Unit Context</strong> — single-select ring, action callbacks, static layout</li>
+    <li><strong>Tech Tree</strong> — multi-select hub/spoke, pre-selected (discovered) nodes, branching sub-nodes</li>
+    <li><strong>Fabrication</strong> — single-select with drill-down, ring 2 fans from selected ring 1 item</li>
+  </ul>
+</div>

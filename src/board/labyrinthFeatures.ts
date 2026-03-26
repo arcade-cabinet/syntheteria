@@ -415,7 +415,7 @@ export function applyLabyrinthFeatures(
 	height: number,
 	seed: string,
 ): LabyrinthFeaturesResult {
-	const rng = seededRng(seed + "_features");
+	const rng = seededRng(`${seed}_features`);
 
 	// Step 1: Prune dead ends
 	const deadEndsFilled = pruneDeadEnds(tiles, width, height);

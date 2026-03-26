@@ -21,9 +21,6 @@ const MIN_ROOM_AREA = 16; // 4x4
 /** Fraction of qualifying room tiles that become elevated. */
 const PLATFORM_FRACTION = 0.45;
 
-/** Minimum tiles to leave un-elevated per room (ensures ramp access). */
-const _MIN_GROUND_BORDER = 1;
-
 /** Player start protection radius — never elevate within this many tiles of center. */
 const PLAYER_START_RADIUS = 4;
 
@@ -44,7 +41,7 @@ export function applyMultiLevelPlatforms(
 	height: number,
 	seed: string,
 ): void {
-	const rng = seededRng(seed + "_platforms");
+	const rng = seededRng(`${seed}_platforms`);
 	const centerX = Math.floor(width / 2);
 	const centerZ = Math.floor(height / 2);
 
@@ -162,7 +159,7 @@ function findPassableRegions(
  */
 function findInteriorTiles(
 	region: TileData[],
-	tiles: TileData[][],
+	_tiles: TileData[][],
 	width: number,
 	height: number,
 ): TileData[] {

@@ -21,9 +21,9 @@
  * All randomness via seededRng(seed + "_abyssal"). Deterministic.
  */
 
-import { TILE_SIZE_M } from "../config";
-import { geographyValue, seedToFloat } from "../terrain";
+import { TILE_SIZE_M } from "./grid";
 import { seededRng } from "./noise";
+import { geographyValue, seedToFloat } from "./terrain";
 import type { Elevation, TileData } from "./types";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -398,7 +398,7 @@ export function applyAbyssalZones(
 	waterLevel = 0.35,
 	protectedZones: ProtectedZone[] = [],
 ): AbyssalResult {
-	const rng = seededRng(seed + "_abyssal");
+	const rng = seededRng(`${seed}_abyssal`);
 
 	// Step 1: Convert passable tiles in ocean basins to abyssal
 	const tilesConverted = convertAbyssalTiles(

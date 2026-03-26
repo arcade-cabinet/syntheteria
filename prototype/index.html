@@ -105,12 +105,12 @@
 
     // ── Globals ────────────────────────────────────────────────────
     let scene, camera, renderer, clock;
-    let mapFragments = [];
-    let robots = [];
-    let lightningRods = [];
-    let lightningBolts = [];
+    const mapFragments = [];
+    const robots = [];
+    const lightningRods = [];
+    const lightningBolts = [];
     let wormhole;
-    let stormClouds = [];
+    const stormClouds = [];
     let selectedRobot = null;
     let paused = false;
     let mergeCount = 0;
@@ -824,10 +824,10 @@
 
         // Camera pan
         const panSpeed = 25 * dt;
-        if (keys['w'] || keys['arrowup'])    { camera.position.z -= panSpeed; }
-        if (keys['s'] || keys['arrowdown'])  { camera.position.z += panSpeed; }
-        if (keys['a'] || keys['arrowleft'])  { camera.position.x -= panSpeed; }
-        if (keys['d'] || keys['arrowright']) { camera.position.x += panSpeed; }
+        if (keys.w || keys.arrowup)    { camera.position.z -= panSpeed; }
+        if (keys.s || keys.arrowdown)  { camera.position.z += panSpeed; }
+        if (keys.a || keys.arrowleft)  { camera.position.x -= panSpeed; }
+        if (keys.d || keys.arrowright) { camera.position.x += panSpeed; }
 
         // Storm clouds drift
         stormClouds.forEach(c => {

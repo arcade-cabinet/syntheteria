@@ -1,124 +1,123 @@
 /**
- * Building blueprint definitions — stats, components, capabilities.
+ * Building type definitions for Syntheteria.
  *
- * Converted from pending/config/buildings.json to TypeScript const objects.
- *
- * Each building type has a blueprint that defines its power demand,
- * special capabilities (rod capacity, signal range, attack stats),
- * and default components. The building placement system reads these
- * to configure the ECS traits when a building is placed.
- *
- * Note: BuildingType is defined in src/traits/building.ts.
- * This file provides the DATA for each type, not the trait definitions.
+ * Six placeable building types, each with resource costs,
+ * placement constraints, and default component loadouts.
  */
 
-import type { BuildingType } from "../traits/building";
+import type { UnitComponent } from "../ecs/types";
+import type { ResourcePool } from "../systems/resources";
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-
-export interface BuildingComponent {
-	readonly name: string;
-	readonly functional: boolean;
-	readonly material: "metal" | "electronic";
+export interface BuildingDef {
+	/** Internal key — matches BuildingTrait.buildingType */
+	type: string;
+	/** Display name shown in UI */
+	displayName: string;
+	/** Resource costs to place */
+	costs: { type: keyof ResourcePool; amount: number }[];
+	/** Default components for this building */
+	defaultComponents: UnitComponent[];
+	/** Whether this building starts powered (lightning rods self-power) */
+	startsPowered: boolean;
+	/** Minimum spacing from other buildings of the same type (0 = no constraint) */
+	minSpacing: number;
+	/** Whether this building is also a Unit (selectable, has inventory) */
+	isUnit: boolean;
 }
 
-export interface BuildingBlueprint {
-	readonly displayName: string;
-	readonly powerDemand: number;
-	/** Lightning rod capacity (lightning_rod only). */
-	readonly rodCapacity?: number;
-	/** Default power output (lightning_rod only). */
-	readonly currentOutput?: number;
-	/** Storm protection radius in tiles (lightning_rod only). */
-	readonly protectionRadius?: number;
-	/** Number of fabrication slots (motor_pool only). */
-	readonly fabricationSlots?: number;
-	/** Signal range in tiles (relay_tower only). */
-	readonly signalRange?: number;
-	/** Signal strength 0-1 (relay_tower only). */
-	readonly signalStrength?: number;
-	/** Attack range in tiles (defense_turret only). */
-	readonly attackRange?: number;
-	/** Attack damage per shot (defense_turret only). */
-	readonly attackDamage?: number;
-	/** Turns between attacks (defense_turret only). */
-	readonly attackCooldown?: number;
-	/** Power output (power_sink only). */
-	readonly powerOutput?: number;
-	/** Storage capacity in units (storage_hub, power_sink only). */
-	readonly storageCapacity?: number;
-	/** Number of bots this module houses (habitat_module only). */
-	readonly botCapacity?: number;
-	/** HP repair rate per turn (habitat_module only). */
-	readonly repairRate?: number;
-	/** Default components when building is placed. */
-	readonly defaultComponents?: readonly BuildingComponent[];
-}
-
-// ─── Data ───────────────────────────────────────────────────────────────────
-
-export const BUILDING_BLUEPRINTS: Partial<
-	Record<BuildingType, BuildingBlueprint>
-> = {
-	storm_transmitter: {
+export const BUILDING_DEFS: Record<string, BuildingDef> = {
+	lightning_rod: {
+		type: "lightning_rod",
 		displayName: "Lightning Rod",
-		powerDemand: 0,
-		rodCapacity: 10,
-		currentOutput: 7,
-		protectionRadius: 12,
+		costs: [
+			{ type: "scrapMetal", amount: 5 },
+			{ type: "circuitry", amount: 2 },
+		],
+		defaultComponents: [],
+		startsPowered: true,
+		minSpacing: 10,
+		isUnit: false,
 	},
-	synthesizer: {
+	power_conduit: {
+		type: "power_conduit",
+		displayName: "Power Conduit",
+		costs: [
+			{ type: "scrapMetal", amount: 3 },
+			{ type: "circuitry", amount: 1 },
+		],
+		defaultComponents: [
+			{ name: "power_relay", functional: true, material: "electronic" },
+		],
+		startsPowered: false,
+		minSpacing: 0,
+		isUnit: false,
+	},
+	fabrication_unit: {
+		type: "fabrication_unit",
 		displayName: "Fabrication Unit",
-		powerDemand: 3,
+		costs: [
+			{ type: "scrapMetal", amount: 8 },
+			{ type: "circuitry", amount: 3 },
+			{ type: "durasteel", amount: 1 },
+		],
 		defaultComponents: [
 			{ name: "power_supply", functional: false, material: "electronic" },
 			{ name: "fabrication_arm", functional: true, material: "metal" },
 			{ name: "material_hopper", functional: true, material: "metal" },
 		],
+		startsPowered: false,
+		minSpacing: 0,
+		isUnit: true,
 	},
-	motor_pool: {
-		displayName: "Motor Pool",
-		powerDemand: 4,
-		fabricationSlots: 1,
-		defaultComponents: [
-			{ name: "assembly_arm", functional: true, material: "metal" },
-			{ name: "chassis_bay", functional: true, material: "metal" },
-			{ name: "power_supply", functional: false, material: "electronic" },
+	server_rack: {
+		type: "server_rack",
+		displayName: "Server Rack",
+		costs: [
+			{ type: "circuitry", amount: 5 },
+			{ type: "powerCells", amount: 2 },
 		],
+		defaultComponents: [
+			{ name: "compute_module", functional: true, material: "electronic" },
+			{ name: "cooling_fan", functional: true, material: "metal" },
+		],
+		startsPowered: false,
+		minSpacing: 0,
+		isUnit: false,
 	},
-	relay_tower: {
-		displayName: "Relay Tower",
-		powerDemand: 1,
-		signalRange: 20,
-		signalStrength: 1.0,
+	relay_station: {
+		type: "relay_station",
+		displayName: "Relay Station",
+		costs: [
+			{ type: "scrapMetal", amount: 4 },
+			{ type: "circuitry", amount: 3 },
+		],
+		defaultComponents: [
+			{ name: "antenna", functional: true, material: "metal" },
+			{ name: "signal_processor", functional: true, material: "electronic" },
+		],
+		startsPowered: false,
+		minSpacing: 0,
+		isUnit: false,
 	},
 	defense_turret: {
+		type: "defense_turret",
 		displayName: "Defense Turret",
-		powerDemand: 2,
-		attackRange: 8,
-		attackDamage: 3,
-		attackCooldown: 2,
+		costs: [
+			{ type: "scrapMetal", amount: 6 },
+			{ type: "durasteel", amount: 2 },
+			{ type: "circuitry", amount: 2 },
+		],
+		defaultComponents: [
+			{ name: "targeting_sensor", functional: true, material: "electronic" },
+			{ name: "weapon_mount", functional: true, material: "metal" },
+			{ name: "ammo_feed", functional: true, material: "metal" },
+		],
+		startsPowered: false,
+		minSpacing: 6,
+		isUnit: false,
 	},
-	power_box: {
-		displayName: "Power Sink",
-		powerDemand: 0,
-		powerOutput: 5,
-		storageCapacity: 20,
-	},
-	storage_hub: {
-		displayName: "Storage Hub",
-		powerDemand: 1,
-		storageCapacity: 50,
-	},
-	maintenance_bay: {
-		displayName: "Habitat Module",
-		powerDemand: 2,
-		botCapacity: 4,
-		repairRate: 0.1,
-	},
-} as const;
+};
 
-/** Get the display name for a building type, falling back to the type ID. */
-export function getBuildingDisplayName(type: BuildingType): string {
-	return BUILDING_BLUEPRINTS[type]?.displayName ?? type;
-}
+export type BuildingType = keyof typeof BUILDING_DEFS;
+
+export const BUILDING_TYPES = Object.keys(BUILDING_DEFS) as BuildingType[];

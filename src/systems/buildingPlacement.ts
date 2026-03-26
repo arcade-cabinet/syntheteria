@@ -1,160 +1,151 @@
 /**
- * Place starter buildings for each faction at world init.
+ * Building placement state machine.
  *
- * Uses terrain-affinity spawn centers computed by computeSpawnCenters().
- * Each faction gets storm_transmitter + motor_pool + outpost + storage_hub near spawn.
- * The motor_pool enables fabrication; the outpost raises pop cap by 4.
+ * Player selects a building type from the toolbar, then taps/clicks
+ * on the ground to place it. Ghost preview shows valid/invalid position.
+ *
+ * Placement rules:
+ * - Must be on walkable terrain (not water, not inside existing buildings)
+ * - Must have enough resources
+ * - Some buildings require minimum spacing from others of the same type
  */
 
-import type { World } from "koota";
-import type { GeneratedBoard } from "../board/types";
-import { BUILDING_DEFS } from "../buildings/definitions";
-import { FACTION_DEFINITIONS } from "../factions/definitions";
-import { getSpawnCenters } from "../robots/placement";
+import { playSfx } from "../audio";
 import {
-	BotFabricator,
-	Building,
+	BUILDING_DEFS,
+	BUILDING_TYPES,
 	type BuildingType,
-	PowerGrid,
-	StorageCapacity,
-} from "../traits";
+} from "../config/buildingDefs";
+import { isInsideBuilding } from "../ecs/cityLayout";
+import { spawnBuilding } from "../ecs/factory";
+import { isWalkable } from "../ecs/terrain";
+import {
+	BuildingTrait,
+	Faction,
+	Fragment,
+	Position,
+	Unit,
+} from "../ecs/traits";
+import { world } from "../ecs/world";
+import { buildNavGraph } from "./navmesh";
+import { getResources, spendResource } from "./resources";
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+export type PlaceableType = BuildingType | null;
 
-/** Find a passable tile near (cx, cz), avoiding already-occupied tiles. */
-function findPassableNear(
-	cx: number,
-	cz: number,
-	board: GeneratedBoard,
-	occupied: Set<string>,
-): { x: number; z: number } | null {
-	const { width, height } = board.config;
-	for (let r = 0; r <= 5; r++) {
-		for (let dx = -r; dx <= r; dx++) {
-			for (let dz = -r; dz <= r; dz++) {
-				const x = cx + dx;
-				const z = cz + dz;
-				if (x < 0 || z < 0 || x >= width || z >= height) continue;
-				const key = `${x},${z}`;
-				if (occupied.has(key)) continue;
-				const tile = board.tiles[z]?.[x];
-				if (tile?.passable) return { x, z };
-			}
+/** Re-export for convenience — costs live in BUILDING_DEFS now */
+export function getBuildingCost(type: string) {
+	return BUILDING_DEFS[type]?.costs ?? [];
+}
+
+let activePlacement: PlaceableType = null;
+let ghostPosition: { x: number; z: number } | null = null;
+let ghostValid = false;
+
+export function getActivePlacement(): PlaceableType {
+	return activePlacement;
+}
+
+export function setActivePlacement(type: PlaceableType) {
+	activePlacement = type;
+	ghostPosition = null;
+	ghostValid = false;
+}
+
+export function getPlaceableTypes(): BuildingType[] {
+	return BUILDING_TYPES;
+}
+
+export function getGhostPosition(): {
+	x: number;
+	z: number;
+	valid: boolean;
+} | null {
+	if (!ghostPosition || !activePlacement) return null;
+	return { ...ghostPosition, valid: ghostValid };
+}
+
+export function updateGhostPosition(x: number, z: number) {
+	ghostPosition = { x, z };
+	ghostValid = activePlacement
+		? isValidPlacement(x, z, activePlacement)
+		: false;
+}
+
+function isValidPlacement(x: number, z: number, type: BuildingType): boolean {
+	if (!isWalkable(x, z)) return false;
+	if (isInsideBuilding(x, z)) return false;
+
+	const def = BUILDING_DEFS[type];
+	if (!def) return false;
+
+	// Enforce minimum spacing from same building type
+	if (def.minSpacing > 0) {
+		for (const building of world.query(BuildingTrait, Position)) {
+			if (building.get(BuildingTrait)?.buildingType !== type) continue;
+			const bPos = building.get(Position)!;
+			const dx = bPos.x - x;
+			const dz = bPos.z - z;
+			if (Math.sqrt(dx * dx + dz * dz) < def.minSpacing) return false;
 		}
 	}
-	return null;
+
+	return true;
 }
-
-function spawnBuilding(
-	world: World,
-	type: BuildingType,
-	factionId: string,
-	x: number,
-	z: number,
-): void {
-	const def = BUILDING_DEFS[type];
-	const entity = world.spawn(
-		Building({
-			tileX: x,
-			tileZ: z,
-			buildingType: type,
-			modelId: def.modelId,
-			factionId,
-			hp: def.hp,
-			maxHp: def.hp,
-		}),
-	);
-
-	if (def.powerDelta !== 0 || def.powerRadius > 0 || type === "power_box") {
-		entity.add(
-			PowerGrid({
-				powerDelta: def.powerDelta,
-				storageCapacity: def.storageCapacity,
-				currentCharge: 0,
-				powerRadius: def.powerRadius,
-			}),
-		);
-	}
-
-	if (type === "storage_hub" && def.storageCapacity > 0) {
-		entity.add(
-			StorageCapacity({
-				capacity: def.storageCapacity,
-			}),
-		);
-	}
-
-	if (def.fabricationSlots > 0) {
-		entity.add(
-			BotFabricator({
-				fabricationSlots: def.fabricationSlots,
-				queueSize: 0,
-			}),
-		);
-	}
-}
-
-// ─── Main ───────────────────────────────────────────────────────────────────
 
 /**
- * Place starter buildings for each faction:
- *   1. storm_transmitter — power source (must be first for coverage)
- *   2. motor_pool — unit fabrication (critical: without this, faction dies)
- *   3. synthesizer — converts raw → refined materials (unlocks economy chain)
- *   4. outpost — raises pop cap by 4 (12 base + 4 = 16 slots at start)
- *   5. storage_hub — resource storage
- *
- * Power budget: transmitter +5, motor_pool -3, synthesizer -4 = -2 deficit.
- * The power system tolerates slight deficit — synthesizer still gets Powered
- * if within transmitter's powerRadius (12 tiles). For safety we place all
- * buildings within 3 tiles of spawn center.
- *
- * Uses spawn centers from the terrain-affinity system.
+ * Attempt to place the active building at the ghost position.
+ * Returns true if placement succeeded.
  */
-export function placeStarterBuildings(
-	world: World,
-	board: GeneratedBoard,
-): void {
-	const occupied = new Set<string>();
-	const spawnCenters = getSpawnCenters();
+export function confirmPlacement(): boolean {
+	if (!activePlacement || !ghostPosition || !ghostValid) return false;
 
-	// Build the list of (factionId, center) pairs to place buildings for.
-	// AI factions are stored under their real id (e.g. "volt_collective").
-	// The player's spawn center is stored under "player", not the faction def id,
-	// so we add it explicitly.
-	const placements: Array<{
-		factionId: string;
-		center: { x: number; z: number };
-	}> = [];
+	const def = BUILDING_DEFS[activePlacement];
+	if (!def) return false;
 
-	for (const faction of FACTION_DEFINITIONS) {
-		const center = spawnCenters.get(faction.id);
-		if (center) {
-			placements.push({ factionId: faction.id, center });
+	// Check all costs can be paid before spending
+	const pool = getResources();
+	for (const cost of def.costs) {
+		if (pool[cost.type] < cost.amount) return false;
+	}
+
+	// Spend resources
+	for (const cost of def.costs) {
+		if (!spendResource(cost.type, cost.amount)) return false;
+	}
+
+	// Find a fragment to attach to (use first player unit's fragment)
+	let fragmentId: string | null = null;
+	for (const entity of world.query(Unit, Faction, Fragment)) {
+		if (entity.get(Faction)?.value === "player") {
+			fragmentId = entity.get(Fragment)?.fragmentId ?? null;
+			break;
 		}
 	}
+	if (!fragmentId) return false;
 
-	// Player faction: spawn center stored under "player" key
-	const playerCenter = spawnCenters.get("player");
-	if (playerCenter) {
-		placements.push({ factionId: "player", center: playerCenter });
-	}
+	// Place the building using the generic spawn function
+	spawnBuilding({
+		x: ghostPosition.x,
+		z: ghostPosition.z,
+		fragmentId,
+		buildingType: activePlacement,
+		powered: def.startsPowered,
+	});
 
-	const STARTER_BUILDINGS: BuildingType[] = [
-		"storm_transmitter",
-		"motor_pool",
-		"synthesizer",
-		"outpost",
-		"storage_hub",
-	];
+	// Rebuild navmesh to account for new building
+	buildNavGraph();
+	playSfx("build_complete");
 
-	for (const { factionId, center } of placements) {
-		for (const type of STARTER_BUILDINGS) {
-			const tile = findPassableNear(center.x, center.z, board, occupied);
-			if (tile) {
-				spawnBuilding(world, type, factionId, tile.x, tile.z);
-				occupied.add(`${tile.x},${tile.z}`);
-			}
-		}
-	}
+	// Reset placement mode
+	activePlacement = null;
+	ghostPosition = null;
+	ghostValid = false;
+
+	return true;
+}
+
+export function cancelPlacement() {
+	activePlacement = null;
+	ghostPosition = null;
+	ghostValid = false;
 }

@@ -24,6 +24,14 @@ export {
 	setMusicVolume,
 	setSfxVolume,
 } from "./audioEngine";
+// --- Music ---
+export {
+	getCurrentMusicEpoch,
+	isMusicPlaying,
+	setMusicVolumeLevel,
+	startMusic,
+	stopMusic,
+} from "./music";
 export type { SfxName } from "./sfx";
 // --- SFX ---
 export { disposeSfxPools, playSfx } from "./sfx";

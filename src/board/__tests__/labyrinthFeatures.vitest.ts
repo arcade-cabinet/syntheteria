@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import type { ColumnMarker } from "../labyrinthFeatures";
 import { applyLabyrinthFeatures } from "../labyrinthFeatures";
 import type { TileData } from "../types";
 
@@ -143,10 +142,10 @@ describe("bridge placement", () => {
 				rows.push("#".repeat(20));
 			} else if (z % 2 === 0) {
 				// Wall rows with some gaps
-				rows.push("#" + "#".repeat(18) + "#");
+				rows.push(`#${"#".repeat(18)}#`);
 			} else {
 				// Corridor rows
-				rows.push("#" + ".".repeat(18) + "#");
+				rows.push(`#${".".repeat(18)}#`);
 			}
 		}
 
@@ -221,7 +220,7 @@ describe("bridge placement", () => {
 			if (z % 2 === 0) {
 				rows.push("#".repeat(30));
 			} else {
-				rows.push("#" + ".".repeat(28) + "#");
+				rows.push(`#${".".repeat(28)}#`);
 			}
 		}
 		const { tiles, w, h } = gridFromMap(rows);

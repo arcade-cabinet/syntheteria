@@ -1,289 +1,248 @@
 /**
- * RadialMenu — SVG overlay rendering the dual-ring radial context menu.
- * Reads state from radialMenu.ts, renders petals as SVG arc paths.
+ * RadialMenu — DOM overlay for unit actions.
+ *
+ * Appears when a selected player unit is right-clicked (or long-pressed on mobile).
+ * Displays contextual actions based on unit state and nearby buildings.
  */
 
-import { useEffect, useRef, useState } from "react";
+import type { Entity } from "koota";
+import { useCallback, useEffect, useState } from "react";
 import {
-	closeRadialMenu,
-	confirmRadialSelection,
-	getRadialGeometry,
-	getRadialMenuState,
-	type RadialPetal,
-	updateRadialHover,
-} from "../../systems";
+	getUpgradeCost,
+	MAX_MARK,
+	ROBOT_DEFS,
+	type RobotType,
+} from "../../config/robotDefs";
+import { EngagementRule, Position, ScavengeSite, Unit } from "../../ecs/traits";
+import { world } from "../../ecs/world";
+import { canUpgrade, performUpgrade } from "../../systems/upgrade";
 
-// Tone colors
-const TONE_COLORS: Record<
-	string,
-	{ fill: string; hover: string; text: string }
-> = {
-	neutral: {
-		fill: "rgba(139,230,255,0.15)",
-		hover: "rgba(139,230,255,0.35)",
-		text: "#8be6ff",
-	},
-	harvest: {
-		fill: "rgba(126,231,203,0.15)",
-		hover: "rgba(126,231,203,0.35)",
-		text: "#7ee7cb",
-	},
-	hostile: {
-		fill: "rgba(204,68,68,0.15)",
-		hover: "rgba(204,68,68,0.35)",
-		text: "#cc4444",
-	},
-	construct: {
-		fill: "rgba(232,200,106,0.15)",
-		hover: "rgba(232,200,106,0.35)",
-		text: "#e8c86a",
-	},
-	// Fallbacks for tones used by the full provider set
-	default: {
-		fill: "rgba(139,230,255,0.15)",
-		hover: "rgba(139,230,255,0.35)",
-		text: "#8be6ff",
-	},
-	power: {
-		fill: "rgba(232,200,106,0.15)",
-		hover: "rgba(232,200,106,0.35)",
-		text: "#e8c86a",
-	},
-	combat: {
-		fill: "rgba(204,68,68,0.15)",
-		hover: "rgba(204,68,68,0.35)",
-		text: "#cc4444",
-	},
-	signal: {
-		fill: "rgba(139,230,255,0.15)",
-		hover: "rgba(139,230,255,0.35)",
-		text: "#8be6ff",
-	},
-};
-
-function getTone(tone: string) {
-	return TONE_COLORS[tone] ?? TONE_COLORS.default;
+export interface RadialMenuProps {
+	entity: Entity;
+	screenX: number;
+	screenY: number;
+	onClose: () => void;
 }
 
-/** Convert degrees to radians */
-function deg2rad(deg: number) {
-	return (deg * Math.PI) / 180;
+interface MenuAction {
+	label: string;
+	enabled: boolean;
+	tooltip: string;
+	onClick: () => void;
 }
 
-/** Build an SVG arc path between two angles at given radii */
-function arcPath(
-	cx: number,
-	cy: number,
-	innerR: number,
-	outerR: number,
-	startDeg: number,
-	endDeg: number,
-): string {
-	const startRad = deg2rad(startDeg);
-	const endRad = deg2rad(endDeg);
-	const largeArc = endDeg - startDeg > 180 ? 1 : 0;
+function getActions(entity: Entity, onClose: () => void): MenuAction[] {
+	const unit = entity.get(Unit);
+	if (!unit) return [];
+	const pos = entity.get(Position);
+	if (!pos) return [];
 
-	const outerStart = {
-		x: cx + Math.cos(startRad) * outerR,
-		y: cy + Math.sin(startRad) * outerR,
-	};
-	const outerEnd = {
-		x: cx + Math.cos(endRad) * outerR,
-		y: cy + Math.sin(endRad) * outerR,
-	};
-	const innerStart = {
-		x: cx + Math.cos(endRad) * innerR,
-		y: cy + Math.sin(endRad) * innerR,
-	};
-	const innerEnd = {
-		x: cx + Math.cos(startRad) * innerR,
-		y: cy + Math.sin(startRad) * innerR,
-	};
+	const actions: MenuAction[] = [];
 
-	return [
-		`M ${outerStart.x} ${outerStart.y}`,
-		`A ${outerR} ${outerR} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
-		`L ${innerStart.x} ${innerStart.y}`,
-		`A ${innerR} ${innerR} 0 ${largeArc} 0 ${innerEnd.x} ${innerEnd.y}`,
-		"Z",
-	].join(" ");
+	// Move
+	if (unit.speed > 0) {
+		actions.push({
+			label: "MOVE",
+			enabled: true,
+			tooltip: "Right-click ground to move",
+			onClick: onClose,
+		});
+	}
+
+	// Attack
+	if (unit.speed > 0) {
+		actions.push({
+			label: "ATTACK",
+			enabled: true,
+			tooltip: "Right-click enemy to attack",
+			onClick: onClose,
+		});
+	}
+
+	// Upgrade
+	if (unit.mark < MAX_MARK) {
+		const costs = getUpgradeCost(unit.unitType, unit.mark);
+		const upgradePossible = canUpgrade(entity) !== null;
+		const costText = costs
+			? costs.map((c) => `${c.amount} ${c.type}`).join(", ")
+			: "";
+		actions.push({
+			label: `UPGRADE (Mk${unit.mark + 1})`,
+			enabled: upgradePossible,
+			tooltip: upgradePossible
+				? `Upgrade to Mark ${unit.mark + 1}: ${costText}`
+				: costs
+					? `Need: ${costText} (at powered fab)`
+					: "Max mark reached",
+			onClick: () => {
+				performUpgrade(entity);
+				onClose();
+			},
+		});
+	}
+
+	// Engagement rule cycle
+	if (entity.has(EngagementRule)) {
+		const current = entity.get(EngagementRule)!.value;
+		const rules = ["attack", "flee", "protect", "hold"] as const;
+		const nextIdx = (rules.indexOf(current) + 1) % rules.length;
+		const next = rules[nextIdx];
+		actions.push({
+			label: `STANCE: ${current.toUpperCase()}`,
+			enabled: true,
+			tooltip: `Click to switch to ${next}`,
+			onClick: () => {
+				entity.set(EngagementRule, { value: next });
+				onClose();
+			},
+		});
+	}
+
+	// Scavenge — show if near a scavenge site
+	let nearScavenge = false;
+	for (const site of world.query(Position, ScavengeSite)) {
+		const siteData = site.get(ScavengeSite)!;
+		if (siteData.remaining <= 0) continue;
+		const sPos = site.get(Position)!;
+		const dx = sPos.x - pos.x;
+		const dz = sPos.z - pos.z;
+		if (Math.sqrt(dx * dx + dz * dz) <= 3.0) {
+			nearScavenge = true;
+			break;
+		}
+	}
+	if (nearScavenge) {
+		actions.push({
+			label: "SCAVENGE",
+			enabled: true,
+			tooltip: "Auto-scavenge nearby resources",
+			onClick: onClose,
+		});
+	}
+
+	return actions;
 }
 
-function PetalPath({
-	petal,
-	cx,
-	cy,
-	innerR,
-	outerR,
-	isHovered,
-}: {
-	petal: RadialPetal;
-	cx: number;
-	cy: number;
-	innerR: number;
-	outerR: number;
-	isHovered: boolean;
-}) {
-	const tone = getTone(petal.tone);
-	const midAngle = deg2rad((petal.startAngle + petal.endAngle) / 2);
-	const labelR = (innerR + outerR) / 2;
-	const labelX = cx + Math.cos(midAngle) * labelR;
-	const labelY = cy + Math.sin(midAngle) * labelR;
+const MENU_RADIUS = 60;
 
-	return (
-		<g opacity={petal.enabled ? 1 : 0.4}>
-			<path
-				d={arcPath(cx, cy, innerR, outerR, petal.startAngle, petal.endAngle)}
-				fill={isHovered ? tone.hover : tone.fill}
-				stroke={tone.text}
-				strokeWidth={isHovered ? 2 : 1}
-			/>
-			<text
-				x={labelX}
-				y={labelY - 4}
-				textAnchor="middle"
-				dominantBaseline="middle"
-				fill={tone.text}
-				fontSize={12}
-				fontFamily="monospace"
-				pointerEvents="none"
-			>
-				{petal.icon}
-			</text>
-			<text
-				x={labelX}
-				y={labelY + 10}
-				textAnchor="middle"
-				dominantBaseline="middle"
-				fill={tone.text}
-				fontSize={8}
-				fontFamily="monospace"
-				letterSpacing={0.5}
-				pointerEvents="none"
-			>
-				{petal.label}
-			</text>
-		</g>
-	);
-}
+export function RadialMenu({
+	entity,
+	screenX,
+	screenY,
+	onClose,
+}: RadialMenuProps) {
+	const [actions, setActions] = useState<MenuAction[]>([]);
 
-export function RadialMenu() {
-	const [tick, setTick] = useState(0);
-	const rafRef = useRef(0);
-
-	// Poll state at 30fps to pick up hover changes
 	useEffect(() => {
-		let running = true;
-		const loop = () => {
-			if (!running) return;
-			setTick((t) => t + 1);
-			rafRef.current = requestAnimationFrame(loop);
-		};
-		rafRef.current = requestAnimationFrame(loop);
-		return () => {
-			running = false;
-			cancelAnimationFrame(rafRef.current);
-		};
-	}, []);
+		setActions(getActions(entity, onClose));
+	}, [entity, onClose]);
 
-	// Read current state (re-read each render via tick)
-	void tick;
-	const state = getRadialMenuState();
-	const geo = getRadialGeometry();
-
-	if (!state.open) return null;
-
-	const handlePointerMove = (e: React.PointerEvent) => {
-		updateRadialHover(e.clientX, e.clientY);
-	};
-
-	const handleClick = (e: React.MouseEvent) => {
-		// If clicking outside both rings, close
-		const dx = e.clientX - state.centerX;
-		const dy = e.clientY - state.centerY;
-		const dist = Math.sqrt(dx * dx + dy * dy);
-
-		if (dist < geo.innerRingInner) {
-			closeRadialMenu();
-			return;
+	// Close on Escape
+	useEffect(() => {
+		function onKey(e: KeyboardEvent) {
+			if (e.key === "Escape") onClose();
 		}
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [onClose]);
 
-		if (dist > geo.outerRingOuter * 1.3) {
-			closeRadialMenu();
-			return;
-		}
+	// Close on click outside
+	const handleBackdropClick = useCallback(
+		(e: React.MouseEvent) => {
+			if (e.target === e.currentTarget) onClose();
+		},
+		[onClose],
+	);
 
-		confirmRadialSelection();
-	};
+	if (actions.length === 0) return null;
 
-	// SVG viewport large enough to contain the menu
-	const size = geo.outerRingOuter * 2 + 60;
-	const svgCx = size / 2;
-	const svgCy = size / 2;
+	const unit = entity.get(Unit);
+	const robotDef = unit ? ROBOT_DEFS[unit.unitType as RobotType] : null;
 
 	return (
-		<div
-			data-testid="radial-menu"
+		<button
+			type="button"
+			tabIndex={-1}
+			onClick={handleBackdropClick}
+			onKeyDown={(e) => {
+				if (e.key === "Escape") onClose();
+			}}
 			style={{
-				position: "fixed",
+				position: "absolute",
 				inset: 0,
-				zIndex: 60,
-				pointerEvents: "none",
+				zIndex: 300,
+				pointerEvents: "auto",
+				background: "none",
+				border: "none",
+				padding: 0,
+				margin: 0,
+				cursor: "default",
+				display: "block",
+				width: "100%",
+				height: "100%",
 			}}
 		>
-			{/* Backdrop for closing */}
+			{/* Center label */}
 			<div
 				style={{
 					position: "absolute",
-					inset: 0,
-					pointerEvents: "auto",
+					left: screenX,
+					top: screenY,
+					transform: "translate(-50%, -50%)",
+					fontFamily: "'Courier New', monospace",
+					fontSize: "10px",
+					color: "#8be6ff88",
+					textAlign: "center",
+					pointerEvents: "none",
+					letterSpacing: "0.1em",
 				}}
-				onClick={() => closeRadialMenu()}
-				onPointerMove={handlePointerMove}
-			/>
-
-			{/* SVG radial menu */}
-			<svg
-				data-testid="radial-svg"
-				style={{
-					position: "absolute",
-					left: state.centerX - size / 2,
-					top: state.centerY - size / 2,
-					width: size,
-					height: size,
-					pointerEvents: "auto",
-				}}
-				viewBox={`0 0 ${size} ${size}`}
-				onPointerMove={handlePointerMove}
-				onClick={handleClick}
 			>
-				{/* Inner ring: categories */}
-				{state.innerPetals.map((petal, i) => (
-					<PetalPath
-						key={petal.id}
-						petal={petal}
-						cx={svgCx}
-						cy={svgCy}
-						innerR={geo.innerRingInner}
-						outerR={geo.innerRingOuter}
-						isHovered={state.innerHoveredIndex === i}
-					/>
-				))}
+				{unit?.displayName}
+				{robotDef && (
+					<div style={{ fontSize: "9px", color: "#8be6ff55" }}>
+						{robotDef.marks[(unit?.mark ?? 1) - 1]?.label}
+					</div>
+				)}
+			</div>
 
-				{/* Outer ring: actions within expanded category */}
-				{state.outerRingOpen &&
-					state.outerPetals.map((petal, i) => (
-						<PetalPath
-							key={petal.id}
-							petal={petal}
-							cx={svgCx}
-							cy={svgCy}
-							innerR={geo.outerRingInner}
-							outerR={geo.outerRingOuter}
-							isHovered={state.outerHoveredIndex === i}
-						/>
-					))}
-			</svg>
-		</div>
+			{/* Action buttons arranged in a circle */}
+			{actions.map((action, i) => {
+				const angle = (i / actions.length) * Math.PI * 2 - Math.PI / 2;
+				const x = screenX + Math.cos(angle) * MENU_RADIUS;
+				const y = screenY + Math.sin(angle) * MENU_RADIUS;
+
+				return (
+					<button
+						key={action.label}
+						type="button"
+						onClick={action.enabled ? action.onClick : undefined}
+						title={action.tooltip}
+						style={{
+							position: "absolute",
+							left: x,
+							top: y,
+							transform: "translate(-50%, -50%)",
+							background: action.enabled
+								? "rgba(0,0,0,0.85)"
+								: "rgba(0,0,0,0.6)",
+							color: action.enabled ? "#8be6ff" : "#8be6ff44",
+							border: action.enabled
+								? "1px solid #8be6ff88"
+								: "1px solid #8be6ff22",
+							borderRadius: "6px",
+							padding: "6px 10px",
+							fontSize: "10px",
+							fontFamily: "'Courier New', monospace",
+							letterSpacing: "0.1em",
+							cursor: action.enabled ? "pointer" : "default",
+							whiteSpace: "nowrap",
+							pointerEvents: "auto",
+						}}
+					>
+						{action.label}
+					</button>
+				);
+			})}
+		</button>
 	);
 }

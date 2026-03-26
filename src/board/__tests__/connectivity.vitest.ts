@@ -44,15 +44,15 @@ function floodFillCheck(
 }
 
 describe("connectivity guarantee", () => {
-	it("all passable tiles reachable from center after generation", () => {
+	it("all passable tiles reachable from player start after generation", () => {
 		const board = generateBoard({
 			width: 44,
 			height: 44,
 			seed: "conn-test",
 			difficulty: "normal",
 		});
-		const cx = 22;
-		const cz = 22;
+		const cx = Math.floor(44 / 2);
+		const cz = Math.floor(44 * 0.65);
 
 		const reachable = floodFillCheck(board.tiles, cx, cz, 44, 44);
 		const allPassable = board.tiles.flat().filter((t) => t.passable);
@@ -67,8 +67,8 @@ describe("connectivity guarantee", () => {
 				seed,
 				difficulty: "normal",
 			});
-			const cx = 16;
-			const cz = 16;
+			const cx = Math.floor(32 / 2);
+			const cz = Math.floor(32 * 0.65);
 
 			const reachable = floodFillCheck(board.tiles, cx, cz, 32, 32);
 			const allPassable = board.tiles.flat().filter((t) => t.passable);

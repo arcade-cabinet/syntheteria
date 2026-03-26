@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ecumenopolis 4X Viewport — PBR Materials</title>
+    <style>
+        :root {
+            --ui-bg: rgba(10, 15, 20, 0.9);
+            --ui-border: #00ffff;
+            --ui-text: #e0f7fa;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', Courier, monospace;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .interactive {
+            pointer-events: auto;
+        }
+
+        #top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: var(--ui-bg);
+            border-bottom: 1px solid var(--ui-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            box-sizing: border-box;
+            color: var(--ui-text);
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.15);
+            text-transform: uppercase;
+        }
+
+        .top-stat { display: flex; align-items: center; gap: 8px; }
+        .energy { color: #f1c40f; }
+        .data { color: #9b59b6; }
+        .durasteel { color: #95a5a6; }
+
+        .floating-label {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            background: rgba(10, 15, 25, 0.85);
+            border: 1px solid var(--ui-border);
+            border-radius: 2px;
+            padding: 4px 10px;
+            color: var(--ui-text);
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+            transition: opacity 0.2s;
+            will-change: transform;
+            cursor: pointer;
+            backdrop-filter: blur(2px);
+        }
+
+        .floating-label::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 20px;
+            background: var(--ui-border);
+            opacity: 0.5;
+        }
+
+        .city-name-row { display: flex; align-items: center; gap: 6px; letter-spacing: 1px; }
+
+        .pop-badge {
+            background: #000;
+            border-radius: 2px;
+            padding: 2px 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            border: 1px solid var(--ui-border);
+            color: var(--ui-border);
+        }
+
+        .health-bar {
+            width: 100%;
+            height: 3px;
+            background: #222;
+            overflow: hidden;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: var(--ui-border);
+            width: 80%;
+        }
+
+        #advisor-dialog {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            background: var(--ui-bg);
+            border: 1px solid var(--ui-border);
+            border-left: 4px solid var(--ui-border);
+            padding: 15px;
+            color: var(--ui-text);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            display: flex;
+            gap: 15px;
+            cursor: pointer;
+        }
+
+        #advisor-portrait {
+            width: 60px;
+            height: 60px;
+            background: #111;
+            border: 1px solid #333;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2300ffff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>');
+            background-size: cover;
+        }
+
+        .dialog-content h4 { margin: 0 0 5px 0; color: var(--ui-border); text-transform: uppercase; letter-spacing: 1px;}
+        .dialog-content p { margin: 0; font-size: 13px; line-height: 1.5; color: #ccc;}
+
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            color: var(--ui-text);
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            transition: opacity 0.5s;
+        }
+        #loading-overlay.fade-out { opacity: 0; pointer-events: none; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="loading-overlay">LOADING PBR TEXTURES...</div>
+
+    <canvas id="game-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div id="top-bar" class="interactive">
+            <div>CYCLE 42.1</div>
+            <div class="top-stat energy">⚡ 1,024</div>
+            <div class="top-stat durasteel">🏗️ WALL TIER 3</div>
+            <div class="top-stat data">💾 +419TB/s</div>
+        </div>
+
+        <div id="markers-container"></div>
+
+        <div id="advisor-dialog" class="interactive" onclick="this.style.display='none'">
+            <div id="advisor-portrait"></div>
+            <div class="dialog-content">
+                <h4>Grid Interface Ping</h4>
+                <p>Architect, our scouters have breached a new durasteel corridor. We can harvest these superstructure walls to extract Raw Durasteel and High-Density Alloys.</p>
+                <p style="color:#666; font-size: 10px; margin-top:5px;">[ Tap to acknowledge ]</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS & GLOBALS ---
+        const MAP_SIZE = 80;
+        const PLAYABLE_MIN = 15;
+        const PLAYABLE_MAX = 65;
+        const TILE_SIZE = 2;
+
+        const TILE = {
+            OCEAN_GRATING: 0,
+            FLOOR_CONCRETE: 1,
+            FLOOR_ASPHALT: 2,
+            WALL_DURASTEEL: 3,
+            WALL_ALLOY: 4
+        };
+
+        let scene, camera, renderer;
+        const mapData = [];
+        const uiMarkers = [];
+        const interactableMeshes = [];
+        const knownRooms = [];
+
+        const cameraTarget = new THREE.Vector3();
+        const desiredCameraTarget = new THREE.Vector3();
+        const cameraOffset = new THREE.Vector3();
+        let nexusPos = null;
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let selectionRing;
+
+        const input = {
+            isDragging: false,
+            hasDragged: false,
+            previousPosition: { x: 0, y: 0 },
+            velocity: { x: 0, y: 0 }
+        };
+
+        // --- PBR TEXTURE DEFINITIONS ---
+        // Using curated AmbientCG PBR textures from public/assets/textures/pbr/
+        const PBR_BASE = 'assets/textures/pbr';
+
+        const TEX_DEFS = {
+            concrete: {
+                base: PBR_BASE + '/concrete/Concrete004_1K-JPG',
+                maps: ['Color', 'NormalGL', 'Roughness', 'AmbientOcclusion'],
+                repeat: 1
+            },
+            asphalt: {
+                base: PBR_BASE + '/concrete/Concrete010_1K-JPG',
+                maps: ['Color', 'NormalGL', 'Roughness', 'AmbientOcclusion'],
+                repeat: 1
+            },
+            durasteel: {
+                base: PBR_BASE + '/corrugated_steel/CorrugatedSteel003_1K-JPG',
+                maps: ['Color', 'NormalGL', 'Roughness', 'Metalness', 'AmbientOcclusion'],
+                repeat: 1
+            },
+            alloy: {
+                base: PBR_BASE + '/metal/Metal012_1K-JPG',
+                maps: ['Color', 'NormalGL', 'Roughness', 'Metalness'],
+                repeat: 1
+            }
+        };
+
+        // --- TEXTURE LOADER ---
+        function loadPBRTextures() {
+            var loader = new THREE.TextureLoader();
+            var loaded = {};
+            var promises = [];
+
+            var names = Object.keys(TEX_DEFS);
+            for (var n = 0; n < names.length; n++) {
+                var name = names[n];
+                var def = TEX_DEFS[name];
+                loaded[name] = {};
+                for (var m = 0; m < def.maps.length; m++) {
+                    var mapType = def.maps[m];
+                    var url = def.base + '_' + mapType + '.jpg';
+                    ((name, mapType, url, repeat) => {
+                        var promise = new Promise((resolve) => {
+                            loader.load(url, (tex) => {
+                                tex.wrapS = THREE.RepeatWrapping;
+                                tex.wrapT = THREE.RepeatWrapping;
+                                tex.repeat.set(repeat, repeat);
+                                tex.encoding = (mapType === 'Color') ? THREE.sRGBEncoding : THREE.LinearEncoding;
+                                loaded[name][mapType] = tex;
+                                resolve();
+                            }, undefined, (err) => {
+                                console.warn('Failed to load ' + url, err);
+                                resolve(); // non-fatal
+                            });
+                        });
+                        promises.push(promise);
+                    })(name, mapType, url, def.repeat);
+                }
+            }
+
+            return Promise.all(promises).then(() => loaded);
+        }
+
+        function buildMaterial(texSet, overrides) {
+            var params = {};
+            var keys = Object.keys(overrides);
+            for (var i = 0; i < keys.length; i++) params[keys[i]] = overrides[keys[i]];
+
+            if (texSet.Color) params.map = texSet.Color;
+            if (texSet.NormalGL) params.normalMap = texSet.NormalGL;
+            if (texSet.Roughness) params.roughnessMap = texSet.Roughness;
+            if (texSet.Metalness) params.metalnessMap = texSet.Metalness;
+            if (texSet.AmbientOcclusion) params.aoMap = texSet.AmbientOcclusion;
+            return new THREE.MeshStandardMaterial(params);
+        }
+
+        // --- BOOT ---
+        loadPBRTextures().then((textures) => {
+            init(textures);
+            document.getElementById('loading-overlay').classList.add('fade-out');
+            animate();
+        });
+
+        function init(textures) {
+            var canvas = document.getElementById('game-canvas');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.0;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color('#03070b');
+            scene.fog = new THREE.FogExp2('#03070b', 0.010);
+
+            camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 1, 2000);
+
+            var ambientLight = new THREE.AmbientLight(0x223344, 0.7);
+            scene.add(ambientLight);
+
+            var dirLight = new THREE.DirectionalLight(0xaaccff, 0.9);
+            dirLight.position.set(10, 80, 20);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            dirLight.shadow.camera.left = -60;
+            dirLight.shadow.camera.right = 60;
+            dirLight.shadow.camera.top = 60;
+            dirLight.shadow.camera.bottom = -60;
+            dirLight.shadow.camera.near = 0.5;
+            dirLight.shadow.camera.far = 200;
+            scene.add(dirLight);
+
+            var pLight1 = new THREE.PointLight(0x00ffff, 1.2, 50);
+            pLight1.position.set(MAP_SIZE, 10, MAP_SIZE);
+            scene.add(pLight1);
+
+            generateLabyrinthMap();
+            buildCityscapeInstanced(textures);
+            populateEntities();
+            createSelectionRing();
+
+            setupInput(canvas);
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // --- LABYRINTH MAP GENERATION ---
+        function generateLabyrinthMap() {
+            for (var x = 0; x < MAP_SIZE; x++) {
+                mapData[x] = [];
+                for (var z = 0; z < MAP_SIZE; z++) {
+                    mapData[x][z] = Math.random() > 0.92 ? TILE.WALL_ALLOY : TILE.WALL_DURASTEEL;
+                }
+            }
+
+            var numRooms = 25;
+            for (var i = 0; i < numRooms; i++) {
+                var roomW = Math.floor(Math.random() * 5) + 3;
+                var roomH = Math.floor(Math.random() * 5) + 3;
+                var roomX = Math.floor(Math.random() * (PLAYABLE_MAX - PLAYABLE_MIN - roomW)) + PLAYABLE_MIN;
+                var roomZ = Math.floor(Math.random() * (PLAYABLE_MAX - PLAYABLE_MIN - roomH)) + PLAYABLE_MIN;
+
+                knownRooms.push({ cx: Math.floor(roomX + roomW/2), cz: Math.floor(roomZ + roomH/2) });
+
+                for (var rx = roomX; rx < roomX + roomW; rx++) {
+                    for (var rz = roomZ; rz < roomZ + roomH; rz++) {
+                        mapData[rx][rz] = TILE.FLOOR_CONCRETE;
+                    }
+                }
+            }
+
+            for (var i = 0; i < knownRooms.length - 1; i++) {
+                var r1 = knownRooms[i];
+                var r2 = knownRooms[i+1];
+                if (Math.random() > 0.5) {
+                    carveCorridorX(r1.cx, r2.cx, r1.cz);
+                    carveCorridorZ(r1.cz, r2.cz, r2.cx);
+                } else {
+                    carveCorridorZ(r1.cz, r2.cz, r1.cx);
+                    carveCorridorX(r1.cx, r2.cx, r2.cz);
+                }
+            }
+        }
+
+        function carveCorridorX(x1, x2, z) {
+            var minX = Math.min(x1, x2);
+            var maxX = Math.max(x1, x2);
+            for (var x = minX; x <= maxX; x++) {
+                if (mapData[x][z] !== TILE.FLOOR_CONCRETE) {
+                    mapData[x][z] = Math.random() > 0.8 ? TILE.OCEAN_GRATING : TILE.FLOOR_ASPHALT;
+                }
+            }
+        }
+
+        function carveCorridorZ(z1, z2, x) {
+            var minZ = Math.min(z1, z2);
+            var maxZ = Math.max(z1, z2);
+            for (var z = minZ; z <= maxZ; z++) {
+                if (mapData[x][z] !== TILE.FLOOR_CONCRETE) {
+                    mapData[x][z] = Math.random() > 0.8 ? TILE.OCEAN_GRATING : TILE.FLOOR_ASPHALT;
+                }
+            }
+        }
+
+        // --- INSTANCED MESH WITH PBR MATERIALS ---
+        function buildCityscapeInstanced(textures) {
+            var matConcrete = buildMaterial(textures.concrete, {
+                roughness: 0.9
+            });
+
+            var matAsphalt = buildMaterial(textures.asphalt, {
+                roughness: 0.85,
+                color: 0xaaaaaa
+            });
+
+            var matDurasteel = buildMaterial(textures.durasteel, {
+                roughness: 0.5,
+                metalness: 0.6
+            });
+
+            var matAlloy = buildMaterial(textures.alloy, {
+                metalness: 0.8,
+                roughness: 0.2,
+                emissive: 0x003333,
+                emissiveIntensity: 0.5
+            });
+
+            var totalTiles = MAP_SIZE * MAP_SIZE;
+
+            // Box geometry for walls — clone uv to uv2 for AO map
+            var boxGeo = new THREE.BoxGeometry(TILE_SIZE, 1, TILE_SIZE);
+            boxGeo.setAttribute('uv2', boxGeo.getAttribute('uv').clone());
+
+            // Plane geometry for floors — clone uv to uv2 for AO map
+            var planeGeo = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
+            planeGeo.rotateX(-Math.PI / 2);
+            planeGeo.setAttribute('uv2', planeGeo.getAttribute('uv').clone());
+
+            var instDurasteel = new THREE.InstancedMesh(boxGeo, matDurasteel, totalTiles);
+            var instAlloy = new THREE.InstancedMesh(boxGeo, matAlloy, totalTiles);
+            var instConcrete = new THREE.InstancedMesh(planeGeo, matConcrete, totalTiles);
+            var instAsphalt = new THREE.InstancedMesh(planeGeo, matAsphalt, totalTiles);
+
+            instDurasteel.castShadow = true; instDurasteel.receiveShadow = true;
+            instAlloy.castShadow = true; instAlloy.receiveShadow = true;
+            instConcrete.receiveShadow = true;
+            instAsphalt.receiveShadow = true;
+
+            var countDura = 0, countAlloy = 0, countConc = 0, countAsph = 0;
+            var dummy = new THREE.Object3D();
+
+            for (var x = 0; x < MAP_SIZE; x++) {
+                for (var z = 0; z < MAP_SIZE; z++) {
+                    var type = mapData[x][z];
+                    var worldX = x * TILE_SIZE + (TILE_SIZE / 2);
+                    var worldZ = z * TILE_SIZE + (TILE_SIZE / 2);
+
+                    if (type === TILE.FLOOR_CONCRETE) {
+                        dummy.position.set(worldX, 0, worldZ);
+                        dummy.scale.set(1, 1, 1);
+                        dummy.updateMatrix();
+                        instConcrete.setMatrixAt(countConc++, dummy.matrix);
+                    }
+                    else if (type === TILE.FLOOR_ASPHALT) {
+                        dummy.position.set(worldX, 0, worldZ);
+                        dummy.scale.set(1, 1, 1);
+                        dummy.updateMatrix();
+                        instAsphalt.setMatrixAt(countAsph++, dummy.matrix);
+                    }
+                    else if (type === TILE.WALL_DURASTEEL || type === TILE.WALL_ALLOY) {
+                        var distFromCenter = Math.max(Math.abs(x - MAP_SIZE/2), Math.abs(z - MAP_SIZE/2));
+                        var heightBase = (distFromCenter > (PLAYABLE_MAX - PLAYABLE_MIN)/2) ? 6 : 2;
+                        var height = (Math.random() * 4) + heightBase;
+
+                        dummy.position.set(worldX, height / 2, worldZ);
+                        dummy.scale.set(1, height, 1);
+                        dummy.updateMatrix();
+
+                        if (type === TILE.WALL_DURASTEEL) {
+                            instDurasteel.setMatrixAt(countDura++, dummy.matrix);
+                        } else {
+                            instAlloy.setMatrixAt(countAlloy++, dummy.matrix);
+                        }
+                    }
+                }
+            }
+
+            instDurasteel.count = countDura;
+            instAlloy.count = countAlloy;
+            instConcrete.count = countConc;
+            instAsphalt.count = countAsph;
+
+            scene.add(instDurasteel);
+            scene.add(instAlloy);
+            scene.add(instConcrete);
+            scene.add(instAsphalt);
+
+            createOceanGratingBackground();
+        }
+
+        function createOceanGratingBackground() {
+            var cvs = document.createElement('canvas');
+            cvs.width = 128;
+            cvs.height = 128;
+            var ctx = cvs.getContext('2d');
+            ctx.clearRect(0, 0, 128, 128);
+            ctx.strokeStyle = '#445566';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(128, 128);
+            ctx.moveTo(128, 0); ctx.lineTo(0, 128);
+            ctx.strokeRect(0,0,128,128);
+            ctx.stroke();
+
+            var gratingTex = new THREE.CanvasTexture(cvs);
+            gratingTex.wrapS = THREE.RepeatWrapping;
+            gratingTex.wrapT = THREE.RepeatWrapping;
+            gratingTex.repeat.set(MAP_SIZE, MAP_SIZE);
+
+            var bgGeo = new THREE.PlaneGeometry(MAP_SIZE * TILE_SIZE * 1.5, MAP_SIZE * TILE_SIZE * 1.5);
+            bgGeo.rotateX(-Math.PI / 2);
+            bgGeo.translate((MAP_SIZE * TILE_SIZE)/2, -0.1, (MAP_SIZE * TILE_SIZE)/2);
+
+            var gratingMat = new THREE.MeshStandardMaterial({
+                map: gratingTex, transparent: true, alphaTest: 0.1, metalness: 0.8, roughness: 0.4
+            });
+            var gratingMesh = new THREE.Mesh(bgGeo, gratingMat);
+            gratingMesh.receiveShadow = true;
+            gratingMesh.castShadow = true;
+            scene.add(gratingMesh);
+
+            var oceanGeo = new THREE.PlaneGeometry(MAP_SIZE * TILE_SIZE * 1.5, MAP_SIZE * TILE_SIZE * 1.5);
+            oceanGeo.rotateX(-Math.PI / 2);
+            oceanGeo.translate((MAP_SIZE * TILE_SIZE)/2, -6, (MAP_SIZE * TILE_SIZE)/2);
+            var oceanMat = new THREE.MeshStandardMaterial({ color: 0x001122, emissive: 0x000511, roughness: 0.1 });
+            var oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
+            scene.add(oceanMesh);
+
+            var underLight1 = new THREE.PointLight(0x0044aa, 3, 80);
+            underLight1.position.set((MAP_SIZE * TILE_SIZE)/2, -2, (MAP_SIZE * TILE_SIZE)/2);
+            scene.add(underLight1);
+        }
+
+        // --- ENTITIES & UI ---
+        function populateEntities() {
+            if(knownRooms.length < 2) return;
+
+            var hubRoom = knownRooms[0];
+            var hubWorldPos = new THREE.Vector3(
+                hubRoom.cx * TILE_SIZE + (TILE_SIZE / 2), 0, hubRoom.cz * TILE_SIZE + (TILE_SIZE / 2)
+            );
+
+            var hubGeo = new THREE.ConeGeometry(1.5, 3, 4);
+            var hubMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x003333, flatShading: true });
+            var hubMesh = new THREE.Mesh(hubGeo, hubMat);
+            hubMesh.position.copy(hubWorldPos);
+            hubMesh.position.y = 1.5;
+            hubMesh.castShadow = true;
+            hubMesh.userData = { type: 'city', name: 'NEXUS-PRIME' };
+            scene.add(hubMesh);
+
+            var clickBoxGeo = new THREE.BoxGeometry(3, 4, 3);
+            var clickBoxMat = new THREE.MeshBasicMaterial({visible: false});
+            var hubClickBox = new THREE.Mesh(clickBoxGeo, clickBoxMat);
+            hubClickBox.position.copy(hubWorldPos);
+            hubClickBox.position.y = 2;
+            hubClickBox.userData = hubMesh.userData;
+            scene.add(hubClickBox);
+            interactableMeshes.push(hubClickBox);
+
+            createFloatingLabel("NEXUS-PRIME", "T4", hubWorldPos, true);
+
+            var unitRoom = knownRooms[knownRooms.length - 1];
+            var unitWorldPos = new THREE.Vector3(
+                unitRoom.cx * TILE_SIZE + (TILE_SIZE / 2), 0.5, unitRoom.cz * TILE_SIZE + (TILE_SIZE / 2)
+            );
+
+            var unitGroup = new THREE.Group();
+            var body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.4, 1.8), new THREE.MeshStandardMaterial({ color: 0x445566 }));
+            body.castShadow = true;
+            unitGroup.add(body);
+
+            var turret = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.6), new THREE.MeshStandardMaterial({color: 0xff3333}));
+            turret.position.set(0, 0.4, 0.2);
+            unitGroup.add(turret);
+
+            unitGroup.position.copy(unitWorldPos);
+            unitGroup.rotation.y = Math.PI / 6;
+            scene.add(unitGroup);
+
+            var unitClickBox = new THREE.Mesh(clickBoxGeo, clickBoxMat);
+            unitClickBox.position.copy(unitWorldPos);
+            unitClickBox.userData = { type: 'unit', name: 'EXCAVATOR' };
+            scene.add(unitClickBox);
+            interactableMeshes.push(unitClickBox);
+
+            createFloatingLabel("EXCAVATOR-X9", "LV1", unitWorldPos, false);
+
+            nexusPos = hubWorldPos.clone();
+            updateViewport();
+        }
+
+        function createSelectionRing() {
+            var ringGeo = new THREE.RingGeometry(1.0, 1.2, 32);
+            var ringMat = new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
+            selectionRing = new THREE.Mesh(ringGeo, ringMat);
+            selectionRing.rotateX(-Math.PI / 2);
+            selectionRing.position.y = 0.1;
+            selectionRing.visible = false;
+            scene.add(selectionRing);
+        }
+
+        function createFloatingLabel(name, tier, worldPosition, isHub) {
+            var container = document.getElementById('markers-container');
+            var el = document.createElement('div');
+            el.className = 'floating-label interactive';
+
+            // Build label DOM safely
+            var row = document.createElement('div');
+            row.className = 'city-name-row';
+
+            var badge = document.createElement('div');
+            badge.className = 'pop-badge';
+            badge.textContent = tier;
+            row.appendChild(badge);
+
+            var nameSpan = document.createElement('span');
+            nameSpan.textContent = name;
+            row.appendChild(nameSpan);
+
+            el.appendChild(row);
+
+            var hbar = document.createElement('div');
+            hbar.className = 'health-bar';
+            var hfill = document.createElement('div');
+            hfill.className = 'health-fill';
+            hfill.style.width = isHub ? '100%' : '70%';
+            hfill.style.background = isHub ? '#00ffff' : '#ff00ff';
+            hbar.appendChild(hfill);
+            el.appendChild(hbar);
+
+            el.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                selectEntityAtPosition(worldPosition);
+                desiredCameraTarget.copy(worldPosition);
+            });
+
+            container.appendChild(el);
+            uiMarkers.push({ element: el, worldPos: worldPosition.clone().add(new THREE.Vector3(0, 3.5, 0)) });
+        }
+
+        // --- CAMERA ---
+        function updateViewport() {
+            var isDesktop = window.innerWidth > 768;
+            if (isDesktop) {
+                cameraOffset.set(0, 45, 55);
+            } else {
+                cameraOffset.set(0, 25, 30);
+            }
+            if (nexusPos) desiredCameraTarget.copy(nexusPos);
+            cameraTarget.copy(desiredCameraTarget);
+            camera.position.copy(cameraTarget).add(cameraOffset);
+            camera.lookAt(cameraTarget);
+        }
+
+        // --- CONTROLS ---
+        function setupInput(canvas) {
+            canvas.addEventListener('pointerdown', (e) => {
+                input.isDragging = true;
+                input.hasDragged = false;
+                input.previousPosition.x = e.clientX;
+                input.previousPosition.y = e.clientY;
+                input.velocity.x = 0;
+                input.velocity.y = 0;
+            });
+
+            canvas.addEventListener('pointermove', (e) => {
+                if (!input.isDragging) return;
+                var deltaX = e.clientX - input.previousPosition.x;
+                var deltaY = e.clientY - input.previousPosition.y;
+                if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) input.hasDragged = true;
+
+                var panSpeed = cameraOffset.y * 0.0015;
+                desiredCameraTarget.x -= deltaX * panSpeed;
+                desiredCameraTarget.z -= deltaY * panSpeed;
+
+                desiredCameraTarget.x = Math.max(PLAYABLE_MIN * TILE_SIZE, Math.min(PLAYABLE_MAX * TILE_SIZE, desiredCameraTarget.x));
+                desiredCameraTarget.z = Math.max(PLAYABLE_MIN * TILE_SIZE, Math.min(PLAYABLE_MAX * TILE_SIZE, desiredCameraTarget.z));
+
+                input.velocity.x = deltaX;
+                input.velocity.y = deltaY;
+                input.previousPosition.x = e.clientX;
+                input.previousPosition.y = e.clientY;
+            });
+
+            var onPointerUp = (e) => {
+                input.isDragging = false;
+                if (!input.hasDragged && e.type === 'pointerup') {
+                    handleTap(e.clientX, e.clientY);
+                }
+            };
+
+            canvas.addEventListener('pointerup', onPointerUp);
+            canvas.addEventListener('pointerleave', onPointerUp);
+
+            canvas.addEventListener('wheel', (e) => {
+                var zoomSpeed = 0.001;
+                var zoomFactor = 1 + (e.deltaY * zoomSpeed);
+                cameraOffset.multiplyScalar(zoomFactor);
+
+                var isDesktop = window.innerWidth > 768;
+                var minY = isDesktop ? 20 : 12;
+                var maxY = isDesktop ? 80 : 50;
+
+                if (cameraOffset.y < minY) cameraOffset.multiplyScalar(minY / cameraOffset.y);
+                if (cameraOffset.y > maxY) cameraOffset.multiplyScalar(maxY / cameraOffset.y);
+            });
+        }
+
+        function handleTap(clientX, clientY) {
+            mouse.x = (clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            var intersects = raycaster.intersectObjects(interactableMeshes);
+            if (intersects.length > 0) {
+                selectEntityAtPosition(intersects[0].object.position);
+                desiredCameraTarget.copy(intersects[0].object.position);
+            } else {
+                selectionRing.visible = false;
+            }
+        }
+
+        function selectEntityAtPosition(pos) {
+            selectionRing.position.set(pos.x, 0.1, pos.z);
+            selectionRing.visible = true;
+            selectionRing.scale.set(0.1, 0.1, 0.1);
+        }
+
+        // --- RENDER LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!input.isDragging && (Math.abs(input.velocity.x) > 0.1 || Math.abs(input.velocity.y) > 0.1)) {
+                var panSpeed = cameraOffset.y * 0.0015;
+                desiredCameraTarget.x -= input.velocity.x * panSpeed;
+                desiredCameraTarget.z -= input.velocity.y * panSpeed;
+
+                desiredCameraTarget.x = Math.max(PLAYABLE_MIN * TILE_SIZE, Math.min(PLAYABLE_MAX * TILE_SIZE, desiredCameraTarget.x));
+                desiredCameraTarget.z = Math.max(PLAYABLE_MIN * TILE_SIZE, Math.min(PLAYABLE_MAX * TILE_SIZE, desiredCameraTarget.z));
+
+                input.velocity.x *= 0.85;
+                input.velocity.y *= 0.85;
+            }
+
+            cameraTarget.lerp(desiredCameraTarget, 0.1);
+            camera.position.copy(cameraTarget).add(cameraOffset);
+            camera.lookAt(cameraTarget);
+
+            if (selectionRing.visible) {
+                selectionRing.rotation.z += 0.03;
+                if (selectionRing.scale.x < 1) {
+                    selectionRing.scale.x += (1 - selectionRing.scale.x) * 0.2;
+                    selectionRing.scale.y += (1 - selectionRing.scale.y) * 0.2;
+                }
+            }
+
+            renderer.render(scene, camera);
+            updateUIMarkers();
+        }
+
+        function updateUIMarkers() {
+            var halfWidth = window.innerWidth / 2;
+            var halfHeight = window.innerHeight / 2;
+            var tempV = new THREE.Vector3();
+
+            for (var i = 0; i < uiMarkers.length; i++) {
+                var marker = uiMarkers[i];
+                tempV.copy(marker.worldPos);
+                tempV.project(camera);
+
+                if (tempV.z > 1) {
+                    marker.element.style.opacity = '0';
+                    marker.element.style.pointerEvents = 'none';
+                    continue;
+                }
+
+                var x = (tempV.x * halfWidth) + halfWidth;
+                var y = -(tempV.y * halfHeight) + halfHeight;
+
+                marker.element.style.opacity = '1';
+                marker.element.style.pointerEvents = 'auto';
+                marker.element.style.transform = 'translate(-50%, -100%) translate(' + x + 'px, ' + y + 'px)';
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            updateViewport();
+        }
+    </script>
+</body>
+</html>

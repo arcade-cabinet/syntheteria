@@ -48,39 +48,6 @@ function countResources(tiles: TileData[][]): number {
 	return n;
 }
 
-/** Flood fill from (sx,sz), returns reachable passable count. */
-function _floodFill(
-	tiles: TileData[][],
-	sx: number,
-	sz: number,
-	w: number,
-	h: number,
-): number {
-	if (!tiles[sz]?.[sx]?.passable) return 0;
-	const visited = new Set<string>();
-	const stack: [number, number][] = [[sx, sz]];
-	visited.add(`${sx},${sz}`);
-	while (stack.length > 0) {
-		const [cx, cz] = stack.pop()!;
-		for (const [dx, dz] of [
-			[0, -1],
-			[1, 0],
-			[0, 1],
-			[-1, 0],
-		]) {
-			const nx = cx + dx!;
-			const nz = cz + dz!;
-			const key = `${nx},${nz}`;
-			if (nx < 0 || nx >= w || nz < 0 || nz >= h) continue;
-			if (visited.has(key)) continue;
-			if (!tiles[nz]![nx]!.passable) continue;
-			visited.add(key);
-			stack.push([nx, nz]);
-		}
-	}
-	return visited.size;
-}
-
 // ---------------------------------------------------------------------------
 // Seed determinism
 // ---------------------------------------------------------------------------
@@ -168,16 +135,16 @@ describe("board structure", () => {
 // ---------------------------------------------------------------------------
 
 describe("player start", () => {
-	it("center tile is always passable ground", () => {
+	it("player start tile is always passable ground", () => {
 		for (const seed of ["start-a", "start-b", "start-c"]) {
 			const board = generateBoard(makeConfig(seed));
 			const cx = Math.floor(32 / 2);
-			const cz = Math.floor(32 / 2);
-			const center = board.tiles[cz]![cx]!;
+			const cz = Math.floor(32 * 0.65);
+			const start = board.tiles[cz]![cx]!;
 
-			expect(center.passable).toBe(true);
-			expect(center.elevation).toBe(0);
-			expect(center.floorType).toBe("durasteel_span");
+			expect(start.passable).toBe(true);
+			expect(start.elevation).toBe(0);
+			expect(start.floorType).toBe("durasteel_span");
 		}
 	});
 });

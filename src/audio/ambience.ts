@@ -26,7 +26,6 @@ let running = false;
 let thunderNoise: ToneNs.NoiseSynth | null = null;
 let thunderReverb: ToneNs.Reverb | null = null;
 let thunderTimer: ReturnType<typeof setTimeout> | null = null;
-let _ToneRef: typeof ToneNs | null = null;
 
 /** Thunder interval range in ms. */
 const THUNDER_MIN_MS = 15_000;
@@ -50,8 +49,6 @@ export function startAmbience(): void {
 			if (!currentOutput) return;
 
 			try {
-				_ToneRef = Tone;
-
 				// Layer 1: Storm rumble — brown noise through lowpass
 				filter = new Tone.Filter({
 					type: "lowpass",
@@ -78,12 +75,14 @@ export function startAmbience(): void {
 
 				// Schedule first thunder
 				scheduleThunder();
-			} catch {
-				// Swallow audio errors — never crash the game for sound
+			} catch (e) {
+				// Non-fatal: audio errors never crash the game
+				console.warn("[ambience] audio init error:", e);
 			}
 		})
-		.catch(() => {
-			// Import failure — no audio
+		.catch((e) => {
+			// Non-fatal: Tone.js import failure — no audio
+			console.warn("[ambience] Tone.js import failed:", e);
 		});
 }
 
@@ -104,15 +103,15 @@ export function stopAmbience(): void {
 		filter?.dispose();
 		thunderNoise?.dispose();
 		thunderReverb?.dispose();
-	} catch {
-		// Swallow disposal errors
+	} catch (e) {
+		// Non-fatal: disposal errors during cleanup
+		console.warn("[ambience] disposal error:", e);
 	}
 
 	noise = null;
 	filter = null;
 	thunderNoise = null;
 	thunderReverb = null;
-	_ToneRef = null;
 	running = false;
 }
 
@@ -136,7 +135,8 @@ function fireThunder(): void {
 		// Vary volume for near/distant effect (-6dB to -18dB)
 		thunderNoise.volume.value = -6 - Math.random() * 12;
 		thunderNoise.triggerAttackRelease("8n");
-	} catch {
-		// Swallow — audio glitches are non-fatal
+	} catch (e) {
+		// Non-fatal: audio glitches during playback
+		console.debug("[ambience] thunder trigger error:", e);
 	}
 }

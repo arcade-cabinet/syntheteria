@@ -1,275 +1,475 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+/**
+ * Persistence round-trip tests.
+ *
+ * Uses a minimal in-memory SqliteAdapter (Map-backed) so tests run
+ * without sql.js or any native bindings.
+ */
+import { createWorld } from "koota";
+import { afterEach, describe, expect, it } from "vitest";
+
+import {
+	BuildingTrait,
+	EntityId,
+	Faction,
+	Fragment,
+	LightningRod,
+	Navigation,
+	Position,
+	Unit,
+	UnitComponents,
+} from "../../ecs/traits";
 import type { SqliteAdapter } from "../adapter";
-import { createSqlJsAdapter } from "../adapter";
 import { GameRepo } from "../gameRepo";
 import { runMigrations } from "../migrations";
+import {
+	applyBuildings,
+	applyUnits,
+	serializeBuildings,
+	serializeUnits,
+} from "../serialize";
 
-let db: SqliteAdapter;
-let repo: GameRepo;
+// ─── Minimal in-memory adapter (no native deps) ────────────────────────────
 
-beforeEach(async () => {
-	db = await createSqlJsAdapter();
-	await runMigrations(db);
-	repo = new GameRepo(db);
-});
+interface Row {
+	[key: string]: string | number | null;
+}
 
-afterEach(() => {
-	db.close();
-});
+function createMemoryAdapter(): SqliteAdapter {
+	const tables = new Map<string, Row[]>();
+	const meta = new Map<string, string>();
 
-describe("persistence round-trips", () => {
-	it("saveUnits + loadUnits round-trips unit positions", async () => {
-		const gameId = await repo.createGame("seed", 16, 16, "normal");
-		const units = [
-			{
-				id: "u1",
-				gameId,
-				factionId: "reclaimers",
-				tileX: 3,
-				tileZ: 7,
-				hp: 80,
-				maxHp: 100,
-				ap: 2,
-				maxAp: 3,
-				mp: 3,
-				maxMp: 3,
-				modelId: "scout-mk1",
-			},
-			{
-				id: "u2",
-				gameId,
-				factionId: "synth-collective",
-				tileX: 10,
-				tileZ: 4,
-				hp: 50,
-				maxHp: 50,
-				ap: 1,
-				maxAp: 2,
-				mp: 2,
-				maxMp: 2,
-				modelId: "harvester-bot",
-			},
-		];
+	return {
+		run(sql: string, params?: unknown[]) {
+			const trimmed = sql.trim().toUpperCase();
 
-		await repo.saveUnits(gameId, units);
-		const loaded = await repo.loadUnits(gameId);
+			// CREATE TABLE — just register the table name
+			if (trimmed.startsWith("CREATE TABLE")) {
+				const match = sql.match(/CREATE TABLE IF NOT EXISTS (\w+)/i);
+				if (match) {
+					const name = match[1]!;
+					if (!tables.has(name)) tables.set(name, []);
+				}
+				return;
+			}
 
-		expect(loaded.length).toBe(2);
-		const u1 = loaded.find((u) => u.id === "u1")!;
-		expect(u1.factionId).toBe("reclaimers");
-		expect(u1.tileX).toBe(3);
-		expect(u1.tileZ).toBe(7);
-		expect(u1.hp).toBe(80);
-		expect(u1.maxHp).toBe(100);
-		expect(u1.ap).toBe(2);
-		expect(u1.maxAp).toBe(3);
-		expect(u1.modelId).toBe("scout-mk1");
+			// INSERT OR REPLACE INTO meta
+			if (trimmed.startsWith("INSERT OR REPLACE INTO META")) {
+				if (params && params.length >= 2) {
+					meta.set(String(params[0]), String(params[1]));
+				}
+				return;
+			}
 
-		const u2 = loaded.find((u) => u.id === "u2")!;
-		expect(u2.factionId).toBe("synth-collective");
-		expect(u2.tileX).toBe(10);
-		expect(u2.tileZ).toBe(4);
+			// DELETE FROM <table> WHERE game_id = ? or WHERE id = ?
+			if (trimmed.startsWith("DELETE FROM")) {
+				const match = sql.match(/DELETE FROM (\w+) WHERE (\w+) = \?/i);
+				if (match) {
+					const tableName = match[1]!;
+					const colName = match[2]!;
+					const val = params?.[0];
+					const rows = tables.get(tableName);
+					if (rows) {
+						tables.set(
+							tableName,
+							rows.filter((r) => r[colName] !== val),
+						);
+					}
+				}
+				return;
+			}
+
+			// INSERT INTO <table> (...) VALUES (...)
+			if (trimmed.startsWith("INSERT")) {
+				const tableMatch = sql.match(
+					/INSERT(?:\s+OR\s+REPLACE)?\s+INTO\s+(\w+)\s*\(/i,
+				);
+				if (!tableMatch) return;
+				const tableName = tableMatch[1]!;
+
+				// Extract column names
+				const colMatch = sql.match(/\(([^)]+)\)\s*VALUES/i);
+				if (!colMatch || !params) return;
+				const cols = colMatch[1]!.split(",").map((c) => c.trim());
+
+				const row: Row = {};
+				for (let i = 0; i < cols.length; i++) {
+					const val = params[i];
+					row[cols[i]!] =
+						val === undefined || val === null
+							? null
+							: typeof val === "boolean"
+								? val
+									? 1
+									: 0
+								: (val as string | number);
+				}
+
+				if (!tables.has(tableName)) tables.set(tableName, []);
+
+				// Handle OR REPLACE — remove existing row with same PK
+				if (sql.toUpperCase().includes("OR REPLACE")) {
+					// For simplicity, just push (our tests don't rely on PK uniqueness)
+				}
+
+				tables.get(tableName)!.push(row);
+				return;
+			}
+
+			// UPDATE — not needed for tests currently
+		},
+
+		query<T>(sql: string, params?: unknown[]): T[] {
+			const match = sql.match(/SELECT\s+.+\s+FROM\s+(\w+)/i);
+			if (!match) return [];
+			const tableName = match[1]!;
+			let rows = tables.get(tableName) ?? [];
+
+			// Simple WHERE clause handling
+			const whereMatch = sql.match(/WHERE\s+(\w+)\s*=\s*\?/i);
+			if (whereMatch && params && params.length > 0) {
+				const col = whereMatch[1]!;
+				const val = params[0];
+				rows = rows.filter((r) => r[col] === val);
+			}
+
+			// ORDER BY — ignore for tests
+			return rows as T[];
+		},
+
+		close() {
+			tables.clear();
+		},
+	};
+}
+
+// ─── Tests ──────────────────────────────────────────────────────────────────
+
+describe("persistence round-trip", () => {
+	let db: SqliteAdapter;
+	let repo: GameRepo;
+
+	afterEach(() => {
+		db.close();
 	});
 
-	it("saveUnits overwrites existing unit on re-save", async () => {
-		const gameId = await repo.createGame("seed", 16, 16, "normal");
-		const unit = {
-			id: "u1",
-			gameId,
-			factionId: "reclaimers",
-			tileX: 3,
-			tileZ: 7,
-			hp: 100,
-			maxHp: 100,
-			ap: 3,
-			maxAp: 3,
-			mp: 3,
-			maxMp: 3,
-			modelId: "scout-mk1",
-		};
+	async function setup() {
+		db = createMemoryAdapter();
+		await runMigrations(db);
+		repo = new GameRepo(db);
+	}
 
-		await repo.saveUnits(gameId, [unit]);
-		await repo.saveUnits(gameId, [{ ...unit, tileX: 5, hp: 60 }]);
+	it("creates and retrieves a game record", async () => {
+		await setup();
+		const id = await repo.createGame("test-seed", "normal", 42, 1.0);
+		expect(id).toBeTruthy();
 
+		const game = await repo.getGame(id);
+		expect(game).not.toBeNull();
+		expect(game!.seed).toBe("test-seed");
+		expect(game!.difficulty).toBe("normal");
+		expect(game!.elapsedTicks).toBe(42);
+	});
+
+	it("lists saved games", async () => {
+		await setup();
+		await repo.createGame("seed-a", "easy", 10, 1.0);
+		await repo.createGame("seed-b", "hard", 20, 2.0);
+
+		const saves = await repo.listGames();
+		expect(saves.length).toBe(2);
+	});
+
+	it("round-trips units through serialize -> save -> load -> apply", async () => {
+		await setup();
+		const gameId = await repo.createGame("test", "normal", 0, 1.0);
+
+		// Create a world with a unit
+		const world = createWorld();
+		world.spawn(
+			EntityId({ value: "unit_0" }),
+			Position({ x: 5, y: 0.3, z: 10 }),
+			Faction({ value: "player" }),
+			Fragment({ fragmentId: "frag_1" }),
+			Unit({
+				unitType: "maintenance_bot",
+				displayName: "Bot Alpha",
+				speed: 3,
+				selected: false,
+			}),
+			UnitComponents({
+				componentsJson: JSON.stringify([
+					{ name: "camera", functional: true, material: "electronic" },
+					{ name: "arms", functional: false, material: "metal" },
+				]),
+			}),
+			Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+		);
+
+		// Serialize and save
+		const unitRecords = serializeUnits(world, gameId);
+		expect(unitRecords.length).toBe(1);
+		expect(unitRecords[0]!.entityId).toBe("unit_0");
+		expect(unitRecords[0]!.x).toBe(5);
+
+		await repo.saveUnits(gameId, unitRecords);
+
+		// Load back
 		const loaded = await repo.loadUnits(gameId);
 		expect(loaded.length).toBe(1);
-		expect(loaded[0].tileX).toBe(5);
-		expect(loaded[0].hp).toBe(60);
+		expect(loaded[0]!.entityId).toBe("unit_0");
+		expect(loaded[0]!.x).toBe(5);
+		expect(loaded[0]!.displayName).toBe("Bot Alpha");
+
+		// Apply to a fresh world
+		const world2 = createWorld();
+		applyUnits(world2, loaded);
+
+		const restored = [...world2.query(Unit, EntityId, Position)];
+		expect(restored.length).toBe(1);
+
+		const eid = restored[0]!.get(EntityId)!;
+		const pos = restored[0]!.get(Position)!;
+		const unit = restored[0]!.get(Unit)!;
+		expect(eid.value).toBe("unit_0");
+		expect(pos.x).toBe(5);
+		expect(pos.z).toBe(10);
+		expect(unit.displayName).toBe("Bot Alpha");
+
+		world.destroy();
+		world2.destroy();
 	});
 
-	it("saveBuildings + loadBuildings round-trips building positions", async () => {
-		const gameId = await repo.createGame("seed", 16, 16, "normal");
-		const buildings = [
-			{
-				id: "b1",
-				gameId,
-				factionId: "reclaimers",
-				tileX: 4,
-				tileZ: 4,
-				type: "storm_transmitter",
-				hp: 100,
-				maxHp: 100,
-			},
-			{
-				id: "b2",
-				gameId,
-				factionId: "reclaimers",
-				tileX: 5,
-				tileZ: 4,
-				type: "storage_hub",
-				hp: 40,
-				maxHp: 50,
-			},
-		];
+	it("round-trips buildings with lightning rod data", async () => {
+		await setup();
+		const gameId = await repo.createGame("test", "normal", 0, 1.0);
+
+		const world = createWorld();
+		world.spawn(
+			EntityId({ value: "bldg_0" }),
+			Position({ x: 10, y: 0.2, z: 13 }),
+			Faction({ value: "player" }),
+			Fragment({ fragmentId: "frag_1" }),
+			BuildingTrait({
+				buildingType: "lightning_rod",
+				powered: true,
+				operational: true,
+				selected: false,
+				buildingComponentsJson: "[]",
+			}),
+			LightningRod({
+				rodCapacity: 10,
+				currentOutput: 7,
+				protectionRadius: 8,
+			}),
+		);
+
+		const { buildings, rods } = serializeBuildings(world, gameId);
+		expect(buildings.length).toBe(1);
+		expect(rods.length).toBe(1);
+		expect(buildings[0]!.buildingType).toBe("lightning_rod");
+		expect(rods[0]!.rodCapacity).toBe(10);
 
 		await repo.saveBuildings(gameId, buildings);
+		await repo.saveLightningRods(gameId, rods);
+
+		const loadedBuildings = await repo.loadBuildings(gameId);
+		const loadedRods = await repo.loadLightningRods(gameId);
+
+		// Apply to fresh world
+		const world2 = createWorld();
+		applyBuildings(world2, loadedBuildings, loadedRods);
+
+		const restored = [...world2.query(BuildingTrait, LightningRod)];
+		expect(restored.length).toBe(1);
+
+		const bldg = restored[0]!.get(BuildingTrait)!;
+		const rod = restored[0]!.get(LightningRod)!;
+		expect(bldg.buildingType).toBe("lightning_rod");
+		expect(bldg.powered).toBe(true);
+		expect(rod.rodCapacity).toBe(10);
+		expect(rod.currentOutput).toBe(7);
+
+		world.destroy();
+		world2.destroy();
+	});
+
+	it("round-trips fabrication units with both Unit and Building traits", async () => {
+		await setup();
+		const gameId = await repo.createGame("test", "normal", 0, 1.0);
+
+		const world = createWorld();
+		world.spawn(
+			EntityId({ value: "fab_0" }),
+			Position({ x: 13, y: 0.2, z: 14 }),
+			Faction({ value: "player" }),
+			Fragment({ fragmentId: "frag_1" }),
+			Unit({
+				unitType: "fabrication_unit",
+				displayName: "Fabrication Unit",
+				speed: 0,
+				selected: false,
+			}),
+			UnitComponents({
+				componentsJson: JSON.stringify([
+					{ name: "fabrication_arm", functional: true, material: "metal" },
+				]),
+			}),
+			Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+			BuildingTrait({
+				buildingType: "fabrication_unit",
+				powered: false,
+				operational: false,
+				selected: false,
+				buildingComponentsJson: JSON.stringify([
+					{ name: "fabrication_arm", functional: true, material: "metal" },
+				]),
+			}),
+		);
+
+		const serialized = serializeBuildings(world, gameId);
+		expect(serialized.buildings.length).toBe(1);
+		expect(serialized.buildings[0]!.buildingType).toBe("fabrication_unit");
+
+		await repo.saveBuildings(gameId, serialized.buildings);
+
 		const loaded = await repo.loadBuildings(gameId);
+		const world2 = createWorld();
+		applyBuildings(world2, loaded, []);
 
+		// Fabrication units should have BOTH Building and Unit traits
+		const restored = [...world2.query(BuildingTrait, Unit)];
+		expect(restored.length).toBe(1);
+
+		const unit = restored[0]!.get(Unit)!;
+		expect(unit.unitType).toBe("fabrication_unit");
+		expect(unit.speed).toBe(0);
+
+		world.destroy();
+		world2.destroy();
+	});
+
+	it("component damage state survives serialization", async () => {
+		await setup();
+		const gameId = await repo.createGame("test", "normal", 0, 1.0);
+
+		const components = [
+			{ name: "camera", functional: true, material: "electronic" },
+			{ name: "arms", functional: false, material: "metal" },
+			{ name: "legs", functional: true, material: "metal" },
+			{ name: "power_cell", functional: false, material: "electronic" },
+		];
+
+		const world = createWorld();
+		world.spawn(
+			EntityId({ value: "unit_dmg" }),
+			Position({ x: 1, y: 0, z: 2 }),
+			Faction({ value: "player" }),
+			Fragment({ fragmentId: "frag_1" }),
+			Unit({
+				unitType: "maintenance_bot",
+				displayName: "Damaged Bot",
+				speed: 3,
+				selected: false,
+			}),
+			UnitComponents({ componentsJson: JSON.stringify(components) }),
+			Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+		);
+
+		const records = serializeUnits(world, gameId);
+		await repo.saveUnits(gameId, records);
+		const loaded = await repo.loadUnits(gameId);
+
+		const restoredComponents = JSON.parse(loaded[0]!.componentsJson);
+		expect(restoredComponents).toHaveLength(4);
+		expect(restoredComponents[0].name).toBe("camera");
+		expect(restoredComponents[0].functional).toBe(true);
+		expect(restoredComponents[1].name).toBe("arms");
+		expect(restoredComponents[1].functional).toBe(false);
+		expect(restoredComponents[3].name).toBe("power_cell");
+		expect(restoredComponents[3].functional).toBe(false);
+
+		world.destroy();
+	});
+
+	it("resources round-trip through repo", async () => {
+		await setup();
+		const gameId = await repo.createGame("test", "normal", 0, 1.0);
+
+		await repo.saveResources(gameId, {
+			gameId,
+			scrapMetal: 15,
+			circuitry: 8,
+			powerCells: 3,
+			durasteel: 2,
+		});
+
+		const loaded = await repo.loadResources(gameId);
+		expect(loaded).not.toBeNull();
+		expect(loaded!.scrapMetal).toBe(15);
+		expect(loaded!.circuitry).toBe(8);
+		expect(loaded!.powerCells).toBe(3);
+		expect(loaded!.durasteel).toBe(2);
+	});
+
+	it("scavenge points round-trip through repo", async () => {
+		await setup();
+		const gameId = await repo.createGame("test", "normal", 0, 1.0);
+
+		await repo.saveScavengePoints(gameId, [
+			{
+				gameId,
+				x: 5.5,
+				z: 10.2,
+				remaining: 3,
+				resourceType: "scrapMetal",
+				amountPerScavenge: 2,
+			},
+			{
+				gameId,
+				x: 20.1,
+				z: 15.8,
+				remaining: 0,
+				resourceType: "circuitry",
+				amountPerScavenge: 1,
+			},
+		]);
+
+		const loaded = await repo.loadScavengePoints(gameId);
 		expect(loaded.length).toBe(2);
-		const b1 = loaded.find((b) => b.id === "b1")!;
-		expect(b1.factionId).toBe("reclaimers");
-		expect(b1.tileX).toBe(4);
-		expect(b1.tileZ).toBe(4);
-		expect(b1.type).toBe("storm_transmitter");
-		expect(b1.hp).toBe(100);
-		expect(b1.maxHp).toBe(100);
-
-		const b2 = loaded.find((b) => b.id === "b2")!;
-		expect(b2.type).toBe("storage_hub");
-		expect(b2.hp).toBe(40);
+		expect(loaded[0]!.remaining).toBe(3);
+		expect(loaded[1]!.remaining).toBe(0);
 	});
 
-	it("saveExplored + loadExplored round-trips explored tiles", async () => {
-		const gameId = await repo.createGame("seed", 16, 16, "normal");
-		const explored = [
-			{ gameId, tileX: 0, tileZ: 0, explored: true, visibility: 1.0 },
-			{ gameId, tileX: 1, tileZ: 0, explored: true, visibility: 0.7 },
-			{ gameId, tileX: 2, tileZ: 0, explored: false, visibility: 0.0 },
-		];
-
-		await repo.saveExplored(gameId, explored);
-		const loaded = await repo.loadExplored(gameId);
-
-		expect(loaded.length).toBe(3);
-		const t0 = loaded.find((e) => e.tileX === 0 && e.tileZ === 0)!;
-		expect(t0.explored).toBe(true);
-		expect(t0.visibility).toBe(1.0);
-
-		const t1 = loaded.find((e) => e.tileX === 1 && e.tileZ === 0)!;
-		expect(t1.explored).toBe(true);
-		expect(t1.visibility).toBeCloseTo(0.7);
-
-		const t2 = loaded.find((e) => e.tileX === 2 && e.tileZ === 0)!;
-		expect(t2.explored).toBe(false);
-		expect(t2.visibility).toBe(0.0);
-	});
-
-	it("saveExplored overwrites on re-save", async () => {
-		const gameId = await repo.createGame("seed", 16, 16, "normal");
-
-		await repo.saveExplored(gameId, [
-			{ gameId, tileX: 0, tileZ: 0, explored: false, visibility: 0.0 },
-		]);
-		await repo.saveExplored(gameId, [
-			{ gameId, tileX: 0, tileZ: 0, explored: true, visibility: 1.0 },
-		]);
-
-		const loaded = await repo.loadExplored(gameId);
-		expect(loaded.length).toBe(1);
-		expect(loaded[0].explored).toBe(true);
-		expect(loaded[0].visibility).toBe(1.0);
-	});
-
-	it("saveResources + loadResources round-trips resource pools", async () => {
-		const gameId = await repo.createGame("seed", 16, 16, "normal");
-		const resources = [
-			{
-				gameId,
-				factionId: "reclaimers",
-				material: "ferrous_scrap",
-				amount: 25,
+	it("DB failure does not crash — persistence manager returns null/false", async () => {
+		// Create a broken adapter that throws on everything
+		const brokenAdapter: SqliteAdapter = {
+			run() {
+				throw new Error("DB broken");
 			},
-			{ gameId, factionId: "reclaimers", material: "alloy_stock", amount: 10 },
-			{
-				gameId,
-				factionId: "synth-collective",
-				material: "storm_charge",
-				amount: 5,
+			query() {
+				throw new Error("DB broken");
 			},
-		];
+			close() {},
+		};
 
-		await repo.saveResources(gameId, resources);
-		const loaded = await repo.loadResources(gameId);
+		const { initPersistence, saveGame, loadGame, listSaves } = await import(
+			"../persistence"
+		);
 
-		expect(loaded.length).toBe(3);
-		const fs = loaded.find(
-			(r) => r.factionId === "reclaimers" && r.material === "ferrous_scrap",
-		)!;
-		expect(fs.amount).toBe(25);
+		const world = createWorld();
 
-		const as = loaded.find(
-			(r) => r.factionId === "reclaimers" && r.material === "alloy_stock",
-		)!;
-		expect(as.amount).toBe(10);
+		const initResult = await initPersistence(brokenAdapter);
+		expect(initResult).toBe(false);
 
-		const sc = loaded.find(
-			(r) =>
-				r.factionId === "synth-collective" && r.material === "storm_charge",
-		)!;
-		expect(sc.amount).toBe(5);
-	});
+		const saveResult = await saveGame(world, "seed", "normal", 0, 1.0);
+		expect(saveResult).toBeNull();
 
-	it("saveResources overwrites existing amounts on re-save", async () => {
-		const gameId = await repo.createGame("seed", 16, 16, "normal");
+		const loadResult = await loadGame(world, "nonexistent");
+		expect(loadResult).toBe(false);
 
-		await repo.saveResources(gameId, [
-			{ gameId, factionId: "reclaimers", material: "scrap_metal", amount: 10 },
-		]);
-		await repo.saveResources(gameId, [
-			{ gameId, factionId: "reclaimers", material: "scrap_metal", amount: 42 },
-		]);
+		const saves = await listSaves();
+		expect(saves).toEqual([]);
 
-		const loaded = await repo.loadResources(gameId);
-		expect(loaded.length).toBe(1);
-		expect(loaded[0].amount).toBe(42);
-	});
-
-	it("load returns empty arrays for game with no saved data", async () => {
-		const gameId = await repo.createGame("seed", 16, 16, "normal");
-
-		expect(await repo.loadUnits(gameId)).toEqual([]);
-		expect(await repo.loadBuildings(gameId)).toEqual([]);
-		expect(await repo.loadExplored(gameId)).toEqual([]);
-		expect(await repo.loadResources(gameId)).toEqual([]);
-	});
-
-	it("data is isolated between games", async () => {
-		const g1 = await repo.createGame("s1", 16, 16, "normal");
-		const g2 = await repo.createGame("s2", 16, 16, "normal");
-
-		await repo.saveUnits(g1, [
-			{
-				id: "u1",
-				gameId: g1,
-				factionId: "f1",
-				tileX: 0,
-				tileZ: 0,
-				hp: 10,
-				maxHp: 10,
-				ap: 3,
-				maxAp: 3,
-				mp: 3,
-				maxMp: 3,
-				modelId: "m1",
-			},
-		]);
-		await repo.saveResources(g2, [
-			{ gameId: g2, factionId: "f2", material: "e_waste", amount: 99 },
-		]);
-
-		expect((await repo.loadUnits(g2)).length).toBe(0);
-		expect((await repo.loadResources(g1)).length).toBe(0);
-		expect((await repo.loadUnits(g1)).length).toBe(1);
-		expect((await repo.loadResources(g2)).length).toBe(1);
+		world.destroy();
 	});
 });

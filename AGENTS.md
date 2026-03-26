@@ -1,228 +1,119 @@
-# Syntheteria — Multi-Agent Orchestration
+# Syntheteria — Agent Instructions
 
-> **Session start**: Read this file, then `docs/memory-bank/activeContext.md`.
-> **NEVER reference `pending/`** — it is the old game, quarantined permanently.
-
----
+> **Read this file FIRST.** It is the single source of agentic truth.
 
 ## What This Is
 
-An **epoch-based 4X strategy game** on Earth. You BUILD the ecumenopolis as climate deteriorates toward an inevitable hypercane. CivRev2-style isometric presentation. Globe is landing page only.
+2.5D top-down RTS. AI wakes up in a dead ecumenopolis. Explore labyrinth, scavenge, fabricate, fight Cult of EL. Chunk-based infinite world. Real-time with pause. Component damage (not HP). Mouse-first input.
 
-**Primary build:** `pnpm dev` (Vite). **Tests:** `pnpm test:vitest`. **Lint + tsc:** `pnpm verify`.
+## Current State
 
----
+**Infrastructure built. Game NOT yet playable.** See `docs/superpowers/reports/2026-03-26-babylonjs-refactor-report.md` for the honest status.
 
-## Package Structure (MANDATORY)
+Known broken:
+- Robots not visible (EntityRenderer loads GLBs but meshes don't appear)
+- Camera too flat (beta=1°, need 20-30° for depth)
+- No starting focus (camera should center on player spawn)
+- Some tiles have `floorType: "undefined"` (chunk gen edge case)
 
-Every directory under `src/` is a **self-contained package** following these rules:
+## Tech Stack
 
-### Rules
+| What | Tech |
+|------|------|
+| Game engine | BabylonJS 8.x (WebGPU) + Reactylon 3.x |
+| Landing page | R3F + Three.js (GLSL shaders, WebGL) — coexists with BabylonJS |
+| ECS | Koota 0.6.x |
+| AI | Yuka 0.7.x (GOAP, NavGraph) |
+| Build | Webpack 5 + babel-plugin-reactylon |
+| UI | React 19 + shadcn/ui + Tailwind 3 |
+| Persistence | @capacitor-community/sqlite (web + native) with sql.js fallback |
+| Audio | Tone.js |
+| Testing | Vitest (unit + browser) + Playwright (E2E) |
+| Mobile | Capacitor |
 
-1. **Logic in `.ts`, presentation in `.tsx`, shaders in `.glsl`** — never mix
-2. **Every package has `index.ts`** — exports ONLY the public API
-3. **Consumers import from the package, NEVER from internal files**
-   - Good: `import { Building } from "../traits"`
-   - Bad: `import { Building } from "../traits/building"`
-4. **Tests colocated in `__tests__/`** inside their owning package
-5. **No cross-cutting deep imports** — packages communicate through their public APIs
-6. **Systems accept `world: World` param** — never use a world singleton
-7. **Config is data, not code** — all tunables in `src/config/`, never hardcoded
+## Critical Rules
 
-### File Size Limits
+1. **R3F and BabylonJS coexist.** R3F for landing page, BabylonJS for game canvas. Different screens, never simultaneous. Do NOT remove either.
+2. **WebGPU is the game engine.** Do NOT fall back to WebGL for the game canvas. Fix shaders to work with WebGPU, don't downgrade.
+3. **No JSON configs.** All game data in TypeScript `const` objects in `src/config/`.
+4. **ECS systems accept `world: World` param** for testability.
+5. **Mouse-first.** If it can't be done with a mouse, UX has FAILED.
+6. **No silent fallbacks.** `catch {}` is banned. Log + throw or log + comment why non-fatal.
+7. **NEVER claim done without visual verification.** Open Chrome, take a screenshot, look at it. Tests passing ≠ working game.
+8. **Everything is in scope.** Never defer review feedback as "out of scope" or "follow-up."
+9. **Don't remove working libraries.** Multiple renderers, persistence layers, etc. can coexist.
+10. **Capacitor SQLite works on web too.** Not just native.
 
-| Threshold | Action |
-|-----------|--------|
-| > 300 LOC | Consider splitting into submodules |
-| > 500 LOC | Must split — create subpackage with own `index.ts` |
-| > 1000 LOC | Absolute max — if you see this, stop and refactor |
+## Key Files
 
-### Package Map
+### Architecture (read these)
+- `CLAUDE.md` — commands, docs index
+- `docs/superpowers/reports/2026-03-26-babylonjs-refactor-report.md` — status, what's broken, architecture reference
+- `docs/superpowers/reports/2026-03-26-babylonjs-refactor-report.md` — what works, what's broken
+
+### Game Design (read when implementing features)
+- `docs/design/GAME_OVERVIEW.md` — 3-phase game loop
+- `docs/design/CORE_MECHANICS.md` — fragmented maps, component damage, hacking
+- `docs/design/COMBAT.md` — component-based damage
+- `docs/design/CONSCIOUSNESS_MODEL.md` — AI consciousness
+- `docs/design/DRONES.md` — starting units
+- `docs/story/LORE_OVERVIEW.md` — world lore
+- `docs/technical/CORE_FORMULAS.md` — math formulas
+
+### Source Code (key entry points)
+- `src/index.tsx` — Webpack entry, Havok init, React mount
+- `src/App.tsx` — phase state machine (title → narration → playing)
+- `src/game/GameCanvas.tsx` — BabylonJS scene, camera, chunk loading, game loop
+- `src/game/EntityRenderer.ts` — GLB mesh lifecycle (BROKEN — needs debugging)
+- `src/game/InputHandler.ts` — pointer events → ECS selection/movement
+- `src/ecs/gameState.ts` — 18 systems in `simulationTick()`
+- `src/ecs/traits.ts` — all Koota trait definitions
+- `src/board/chunks.ts` — 32×32 deterministic chunk generation
+- `src/board/scene.ts` — imperative BabylonJS mesh creation from chunks
+- `src/config/` — all game data (robotDefs, cultDefs, models, floorMaterials, buildingDefs)
+
+### Do NOT read (archived)
+- `docs/archive/` — 22 obsolete docs from pre-pivot era. Ignore unless user explicitly asks.
+
+## Source Structure
 
 ```
 src/
-├── app/                # App shell — session lifecycle, debug bridge, HUD data
-├── traits/             # ALL Koota trait definitions
-├── systems/            # ALL Koota systems (one per file)
-├── ai/                 # Yuka GOAP: agents/, fsm/, goals/, navigation/, steering/
-├── board/              # Labyrinth generator, tile grid, adjacency
-├── buildings/          # Building definitions + cult structures
-├── factions/           # Faction definitions, init, relations
-├── robots/             # Archetypes, placement, specializations
-├── terrain/            # Floor types, elevation, GLSL shaders
-├── resources/          # Salvage type definitions
-├── narrative/          # Speech profiles
-├── config/             # 11 game data files (tunables, tech tree, recipes, etc.)
-├── audio/              # Tone.js SFX + ambience
-├── camera/             # Camera controllers
-├── db/                 # SQLite schema + GameRepo
-├── rendering/          # TRANSITIONAL — decompose per docs/COMPREHENSIVE_ENGINEERING_PLAN.md §8; then delete
-├── views/              # ALL rendering entrypoints — see docs/COMPREHENSIVE_ENGINEERING_PLAN.md
-│   ├── title/          # TARGET: R3F title + generating globe (migrate from legacy view/)
-│   └── board/          # TARGET: Phaser + enable3d match board (migrate current flat views/*.ts)
-├── ui/                 # React DOM: Globe composes views/title; HUD, landing/, game/
-├── input/              # Board interaction (click, drag, select)
-├── world/              # New-game config (+ future settlement snapshots per `GAME_DESIGN.md` / runbook Phase G)
-├── lib/                # Shared utilities
-├── types/              # Shared type declarations
-├── init-world.ts       # World initialization from board
-├── create-world.ts     # Koota world factory
-├── seed.ts             # Seed phrase generation
-└── main.tsx            # Entry point (thin — delegates to app/)
+├── ai/           — Yuka GOAP (cultBehavior) + PlaytestGovernor
+├── audio/        — Tone.js (ambience, music, sfx)
+├── board/        — chunk generation, scene rendering, navigation, coords, zones
+├── config/       — TypeScript game data (robots, cults, models, materials, buildings)
+├── db/           — SQLite persistence (adapter, webAdapter, capacitorAdapter, serialize)
+├── ecs/          — Koota traits, factory, gameState, world
+├── game/         — BabylonJS game layer (canvas, entities, input, markers)
+├── input/        — ECS selection/movement logic (engine-independent)
+├── systems/      — 18+ game systems (combat, resources, power, fabrication, etc.)
+├── ui/
+│   ├── base/     — BasePanel (side panel for base management)
+│   ├── game/     — NarrativeOverlay, RadialMenu, ErrorBoundary, DebugOverlay
+│   ├── landing/  — LandingScreen, GlobeBackground (R3F), NewGameModal
+│   ├── layout/   — GameLayout, TopBar, Sidebar, Minimap, SelectionInfo, ActionPanel
+│   └── lib/      — cn() utility (shadcn pattern)
+└── errors.ts     — logError, gameAssert
 ```
 
----
-
-## Architecture Rules
-
-| Rule | Detail |
-|------|--------|
-| No JSON for game data | All config is TypeScript `const` objects in `src/config/` |
-| Systems accept `world` param | Never use world singleton — enables test isolation |
-| All tunables in config files | No magic numbers in systems or renderers |
-| `pending/` is permanent quarantine | Nothing gets resurrected from it |
-| SQLite is non-fatal | DB failures don't crash — ECS runs in memory |
-| ECS `.get()` returns undefined | Always null-guard: `if (!x) continue;` |
-| No `world.entity(id)` in Koota | Use `Map<id, Entity>` per-operation when needed |
-| Package index exports only | No deep imports across package boundaries |
-| Robots use procedural animation | Bob-and-weave Wall-E style in code, NOT Blender rigging |
-| No faction tint on models | Models render with original textures, faction shown via ground disc |
-
----
-
-## Session Protocol
-
-Every agent session must:
-1. Read `docs/memory-bank/activeContext.md` — current focus and state
-2. Read `docs/memory-bank/progress.md` — what works and what doesn't
-3. Check this file — package structure rules above
-4. Run `pnpm test:vitest` — verify all tests pass before starting
-5. **Never** read or reference anything in `pending/`
-
----
-
-## Koota Patterns (from official examples)
-
-Follow the patterns from [koota examples](https://github.com/pmndrs/koota/tree/main/examples):
-
-- **Traits** — defined in `src/traits/`, one file per domain, all re-exported via `index.ts`
-- **Systems** — one system per file in `src/systems/`, pure functions accepting `(world: World)`
-- **Actions** — imperative world mutations (spawn, destroy, modify) in dedicated files
-- **Sim/View split** — `traits/` + `systems/` never import `views/`; rendering adapters live under **`src/views/`** only (`title/` = R3F, `board/` = Phaser). **`src/view/` must be removed** after migration — see [docs/COMPREHENSIVE_ENGINEERING_PLAN.md](docs/COMPREHENSIVE_ENGINEERING_PLAN.md).
-
----
-
-## Common Commands
+## Testing
 
 ```bash
-pnpm dev                 # Vite dev server (http://localhost:5173)
-pnpm build               # Production build
-pnpm test:vitest         # Run all Vitest suites
-pnpm tsc                 # TypeScript check
-pnpm lint                # Biome lint + format check
-pnpm verify              # lint + tsc + test (all gates)
+pnpm test           # 722 unit tests (vitest, jsdom)
+pnpm test:browser   # 48 browser tests (vitest, headed Chrome)
+pnpm test:e2e       # 4 E2E tests (playwright)
+pnpm tsc            # Type check (0 errors)
+pnpm lint           # Biome lint (0 errors)
+pnpm build          # Production build (webpack)
 ```
 
----
+## Before Claiming Work Is Done
 
-## Validation (before any commit)
-
-```
-pnpm verify — required gates (matches CI Quality job)
-  Biome lint: 0 errors
-  TypeScript: 0 errors
-  Vitest (node): all suites passing
-
-pnpm verify:with-ct — optional; browser CT is bitrotted (stale paths to old
-  src/rendering/*R3F). Repair is Phase C in docs/CLOUD_AGENT_RUNBOOK.md.
-  CI runs test:ct with continue-on-error: true.
-```
-Playwright runs **headed** (`headless: false`); in CI, `xvfb-run -a` provides a virtual display. Done checklist: [docs/plans/IS_THE_GAME_DONE.md](docs/plans/IS_THE_GAME_DONE.md).
-
-## Agent Roles
-
-### Registered Agents (`.claude/agents/`)
-
-| Agent | Scope | Key Domains |
-|-------|-------|-------------|
-| **systems-engineer** | ECS systems, game loop, Koota traits | `src/systems/`, `src/ecs/` |
-| **ai-engineer** | AI behavior, GOAP, steering, pathfinding | `src/ai/`, `src/systems/governor*` |
-| **frontend-designer** | UI panels, HUD, modals, mobile layout | `src/ui/`, `src/input/` |
-| **rendering-engineer** | R3F renderers, materials, shaders | `src/rendering/` |
-| **audio-engineer** | Spatial audio, SFX, adaptive music | `src/audio/` |
-| **config-docs** | Config files, documentation, CI | `docs/`, `config/`, `.github/` |
-
-### Merge Order (Multi-Agent)
-
-When agents work in parallel on isolated worktrees:
-
-1. **systems-engineer** first — foundational ECS changes
-2. **ai-engineer** second — depends on ECS types
-3. **rendering-engineer** third — depends on ECS + world state
-4. **frontend-designer** fourth — depends on system APIs
-5. **audio-engineer** fifth — depends on event system
-6. **config-docs** last — documents what changed
-
-### Worktree Protocol
-
-All parallel agent work uses git worktrees:
-1. Create worktree per agent: `.claude/worktrees/<agent>-<ticket>`
-2. Each agent works exclusively in its worktree
-3. Merge back one at a time to primary branch
-4. Never run two agents on same worktree
-
-## Key System Files
-
-| System | File | Purpose |
-|--------|------|---------|
-| Game Loop | `src/ecs/gameState.ts` | 60fps tick, 21 systems, 8 phases |
-| Turn System | `src/systems/turnSystem.ts` | AP/MP per unit, turn phases |
-| Resources | `src/systems/resources.ts` | 11 material types, add/spend |
-| Harvest | `src/systems/harvestSystem.ts` | Structure → materials pipeline |
-| Building | `src/systems/buildingPlacement.ts` | 7 building types, adjacency |
-| Combat | `src/systems/combat.ts` | Component damage, formations |
-| Tech Tree | `src/systems/techTree.ts` | Research DAG, effects |
-| Diplomacy | `src/systems/diplomacy.ts` | Standing, trade, alliances |
-| Victory | `src/systems/victoryConditions.ts` | 3 win paths |
-| Exploration | `src/systems/exploration.ts` | Fog of war, vision radius |
-| World Gen | `src/world/generation.ts` | Procedural ecumenopolis |
-| Radial Menu | `src/systems/radialMenu.ts` | Context menu state |
-| Floor Render | `src/rendering/StructuralFloorRenderer.tsx` | PBR textured floors |
-| Game HUD | `src/ui/panels/GameHUD.tsx` (RN), `src/ui/dom/GameHUDDom.tsx` (Vite) | Top bar, resources, turn |
-| App Entry (Vite) | `src/main.tsx` → `AppVite.tsx` | Capacitor SQLite + session DB, R3F scene, DOM HUD |
-| App Entry (Expo) | `App.tsx` | Legacy Expo/RN path; 39 renderers |
-
-## Documentation Structure
-
-All docs live under `docs/`. See [docs/AGENTS.md](docs/AGENTS.md) for the full index.
-
-| Layer | Purpose | Files |
-|-------|---------|-------|
-| **Memory Bank** | Session bootstrap — read first | 7 files in `docs/memory-bank/` |
-| **Design** | What the game IS | 6 files in `docs/design/` |
-| **Technical** | How it's built | 5 files in `docs/technical/` |
-| **Interface** | Player-facing surfaces | 2 files in `docs/interface/` |
-| **Execution** | Roadmap | `docs/plans/GAMEPLAN_1_0.md` |
-
-## Cursor Cloud specific instructions
-
-### Services
-
-Syntheteria is fully client-side — **no external backend, database, or Docker services are needed**. The only process to run is the Vite dev server (`pnpm dev`, port 5173). Capacitor SQLite and sql.js operate entirely in-browser.
-
-### Running checks
-
-All validation commands are documented in the Validation table above. Quick reference:
-
-- **Lint**: `pnpm lint` (Biome)
-- **Type check**: `pnpm tsc`
-- **Unit tests**: `pnpm test` (Jest, 142 suites / 2500+ tests)
-- **Vitest**: `pnpm test:vitest` (4 files; note: `AppVite.vitest.tsx` has a pre-existing failure looking for a "Continue" button that the UI no longer renders)
-- **Playwright CT**: `xvfb-run -a pnpm test:ct` (headed; requires `xvfb-run` in headless VMs). Many CT tests fail in Cloud VMs because the R3F 3D scenes require GPU/WebGL capabilities not available in software-rendered environments.
-- **Full CI**: `pnpm verify` (lint + tsc + test + test:ct)
-
-### Gotchas
-
-- `pnpm install` may warn about ignored build scripts for `better-sqlite3` and `sharp`. These do not block `pnpm dev`, `pnpm build`, Jest, or Vitest. They may affect `drizzle-kit` or Playwright screenshot comparison respectively.
-- Playwright tests run **headed** (`headless: false` in config). Always wrap with `xvfb-run -a` in headless Cloud VMs.
-- After clicking "New Game" in the browser, the game requires 3D model assets (`.glb` files in `public/assets/`) and WebGL. If the environment lacks GPU support or models are missing, the game scene will crash on asset load (intentional fail-hard behavior per architecture rules).
+1. Run `pnpm tsc && pnpm lint`
+2. Run `pnpm test`
+3. Start `pnpm dev`
+4. Open Chrome DevTools MCP → navigate to localhost:8080
+5. Take a screenshot of every visual change
+6. Look at the screenshot. Does it look right?
+7. If you can't tell, describe what you see and ASK the user

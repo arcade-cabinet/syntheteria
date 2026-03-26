@@ -90,7 +90,7 @@ describe("labyrinth diagnostic — phase-by-phase", () => {
 		const board = generateLabyrinth(config);
 		const passableBefore = countPassable(board.tiles);
 
-		const mazeRng = seededRng(seed + "_maze");
+		const mazeRng = seededRng(`${seed}_maze`);
 		const carved = growingTreeMazeFill(board.tiles, size, size, mazeRng);
 
 		const passableAfter = countPassable(board.tiles);
@@ -110,7 +110,7 @@ describe("labyrinth diagnostic — phase-by-phase", () => {
 
 	it("Phase 3: regions connected", () => {
 		const board = generateLabyrinth(config);
-		const mazeRng = seededRng(seed + "_maze");
+		const mazeRng = seededRng(`${seed}_maze`);
 		growingTreeMazeFill(board.tiles, size, size, mazeRng);
 
 		const passableBefore = countPassable(board.tiles);
@@ -129,7 +129,7 @@ describe("labyrinth diagnostic — phase-by-phase", () => {
 
 	it("Phase 4: dead end pruning — should NOT collapse all corridors", () => {
 		const board = generateLabyrinth(config);
-		const mazeRng = seededRng(seed + "_maze");
+		const mazeRng = seededRng(`${seed}_maze`);
 		growingTreeMazeFill(board.tiles, size, size, mazeRng);
 		connectRegions(board.tiles, size, size, seed);
 
@@ -158,7 +158,7 @@ describe("labyrinth diagnostic — phase-by-phase", () => {
 		// After pruning, there should still be corridor tiles (transit_deck)
 		// If only room floor types remain, corridors were fully pruned
 		const types = countByType(board.tiles);
-		const corridorCount = types["transit_deck"] ?? 0;
+		const corridorCount = types.transit_deck ?? 0;
 		console.log(`Remaining corridor tiles (transit_deck): ${corridorCount}`);
 
 		// Corridors must survive pruning

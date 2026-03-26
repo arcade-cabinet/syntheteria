@@ -1,131 +1,87 @@
+/**
+ * DB record types for RTS persistence.
+ * These are flat row-oriented records — not ECS traits.
+ */
+
 export interface GameRecord {
 	id: string;
 	seed: string;
-	boardW: number;
-	boardH: number;
-	tileSizeM: number;
 	difficulty: "easy" | "normal" | "hard";
-	turn: number;
-	climateProfile: string;
-	stormProfile: string;
-	gameDifficulty: string;
-	factionSlots: string;
+	elapsedTicks: number;
+	gameSpeed: number;
 	createdAt: string;
 	updatedAt: string;
-}
-
-export interface TileRecord {
-	gameId: string;
-	x: number;
-	z: number;
-	zone?: string;
-	elevation: number;
-	passable: boolean;
-}
-
-export interface TileResourceRecord {
-	gameId: string;
-	x: number;
-	z: number;
-	resourceType: string;
-	amount: number;
-	depleted: boolean;
-}
-
-export interface UnitRecord {
-	id: string;
-	gameId: string;
-	factionId: string;
-	tileX: number;
-	tileZ: number;
-	hp: number;
-	maxHp: number;
-	ap: number;
-	maxAp: number;
-	mp: number;
-	maxMp: number;
-	modelId: string;
-	/** Specialization track ID. Empty = unspecialized. */
-	trackId?: string;
-	/** Track version: 1 = base, 2 = upgraded. */
-	trackVersion?: 1 | 2;
-}
-
-export interface BuildingRecord {
-	id: string;
-	gameId: string;
-	factionId: string;
-	tileX: number;
-	tileZ: number;
-	type: string;
-	hp: number;
-	maxHp: number;
-}
-
-export interface ExploredRecord {
-	gameId: string;
-	tileX: number;
-	tileZ: number;
-	explored: boolean;
-	visibility: number;
-}
-
-export interface ResourceRecord {
-	gameId: string;
-	factionId: string;
-	material: string;
-	amount: number;
-}
-
-export interface EventRecord {
-	gameId: string;
-	turn: number;
-	type: string;
-	payload: unknown;
 }
 
 export interface GameSummary {
 	id: string;
 	seed: string;
-	boardW: number;
-	boardH: number;
 	difficulty: string;
-	turn: number;
+	elapsedTicks: number;
 	createdAt: string;
 }
 
-// ─── Analytics Records ──────────────────────────────────────────────────────
-
-export interface CampaignStatisticsRecord {
+export interface UnitRecord {
+	id: string;
 	gameId: string;
-	statsJson: string;
-	updatedAt: string;
+	entityId: string;
+	unitType: string;
+	displayName: string;
+	faction: string;
+	x: number;
+	y: number;
+	z: number;
+	speed: number;
+	fragmentId: string;
+	componentsJson: string;
+	pathJson: string;
+	pathIndex: number;
+	moving: boolean;
 }
 
-export interface TurnEventLogRecord {
+export interface BuildingRecord {
+	id: string;
 	gameId: string;
-	turn: number;
-	eventsJson: string;
+	entityId: string;
+	buildingType: string;
+	faction: string;
+	x: number;
+	y: number;
+	z: number;
+	powered: boolean;
+	operational: boolean;
+	fragmentId: string;
+	buildingComponentsJson: string;
 }
 
-export interface FactionResourceSnapshotRecord {
+export interface LightningRodRecord {
+	buildingId: string;
 	gameId: string;
-	turn: number;
-	factionId: string;
-	resourcesJson: string;
+	rodCapacity: number;
+	currentOutput: number;
+	protectionRadius: number;
 }
 
-/** Per-faction counts within a turn snapshot. */
-export interface FactionSnapshotData {
-	factionId: string;
-	unitCount: number;
-	buildingCount: number;
-	territoryPercent: number;
-	resourceTotals: Record<string, number>;
+export interface ResourcePoolRecord {
+	gameId: string;
+	scrapMetal: number;
+	circuitry: number;
+	powerCells: number;
+	durasteel: number;
 }
 
-export interface TurnSnapshotRecord {
+export interface ScavengePointRecord {
 	gameId: string;
-	turn: number;
-	snapshotJson: string;
+	x: number;
+	z: number;
+	remaining: number;
+	resourceType: string;
+	amountPerScavenge: number;
+}
+
+export interface FogCellRecord {
+	gameId: string;
+	fragmentId: string;
+	cellIndex: number;
+	state: number;
 }

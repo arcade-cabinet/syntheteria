@@ -1,200 +1,223 @@
 /**
- * LandingScreen — DOM overlay for the title menu.
+ * LandingScreen — title menu with New Game modal.
  *
- * No longer owns a Canvas — the globe is rendered by the persistent
- * Globe component in main.tsx. This component provides:
- *   1. TitleMenuOverlay — HTML overlay (wordmark, bezel arc, image buttons)
- *   2. NewGameModal / SaveListModal / SettingsModal — overlays
+ * Replaces the old TitleScreen. Keeps the same visual identity
+ * (glitch title, scanlines, Courier New) but adds a New Game modal
+ * for seed and difficulty selection.
  */
 
-import { useState } from "react";
-import type { GameSummary } from "../../db";
-import type { NewGameConfig } from "../../world/config";
-import { NewGameModal } from "./NewGameModal";
-import { SettingsModal } from "./SettingsModal";
-import { TitleMenuOverlay } from "./title/TitleMenuOverlay";
+import { useEffect, useState } from "react";
+import { initAudio } from "../../audio";
+import { GlobeBackground } from "./GlobeBackground";
+import { type NewGameConfig, NewGameModal } from "./NewGameModal";
 
-type LandingScreenProps = {
-	onStartGame: (config: NewGameConfig) => void;
-	onLoadGame?: (gameId: string) => void;
-	savedGames?: GameSummary[];
-};
+export type { NewGameConfig };
 
-type Modal = "none" | "new" | "load" | "settings";
+type Modal = "none" | "new";
 
 export function LandingScreen({
 	onStartGame,
-	onLoadGame,
-	savedGames = [],
-}: LandingScreenProps) {
+}: {
+	onStartGame: (config: NewGameConfig) => void;
+}) {
+	const [titleOpacity, setTitleOpacity] = useState(0);
+	const [menuOpacity, setMenuOpacity] = useState(0);
+	const [glitch, setGlitch] = useState(false);
 	const [modal, setModal] = useState<Modal>("none");
 
+	useEffect(() => {
+		const t1 = setTimeout(() => setTitleOpacity(1), 200);
+		const t2 = setTimeout(() => setMenuOpacity(1), 1200);
+		return () => {
+			clearTimeout(t1);
+			clearTimeout(t2);
+		};
+	}, []);
+
+	// Periodic glitch effect
+	useEffect(() => {
+		const interval = setInterval(
+			() => {
+				setGlitch(true);
+				setTimeout(() => setGlitch(false), 100 + Math.random() * 150);
+			},
+			3000 + Math.random() * 4000,
+		);
+		return () => clearInterval(interval);
+	}, []);
+
 	return (
-		<div
-			data-testid="landing-screen"
-			style={{
-				position: "absolute",
-				inset: 0,
-				overflow: "hidden",
-				pointerEvents: "none",
-			}}
-		>
-			{/* HTML overlay — wordmark + bezel + buttons */}
-			<TitleMenuOverlay
-				hasSaveGame={savedGames.length > 0}
-				onNewGame={() => setModal("new")}
-				onContinueGame={() => setModal("load")}
-				onSettings={() => setModal("settings")}
-			/>
-
-			{/* Modals */}
-			{modal === "new" && (
-				<NewGameModal
-					onStart={(config) => {
-						setModal("none");
-						onStartGame(config);
-					}}
-					onCancel={() => setModal("none")}
-				/>
-			)}
-
-			{modal === "load" && onLoadGame && (
-				<SaveListModal
-					saves={savedGames}
-					onLoad={(id) => {
-						setModal("none");
-						onLoadGame(id);
-					}}
-					onCancel={() => setModal("none")}
-				/>
-			)}
-
-			<SettingsModal
-				visible={modal === "settings"}
-				onClose={() => setModal("none")}
-			/>
-		</div>
-	);
-}
-
-// ---------------------------------------------------------------------------
-// Save list modal
-// ---------------------------------------------------------------------------
-
-function SaveListModal({
-	saves,
-	onLoad,
-	onCancel,
-}: {
-	saves: GameSummary[];
-	onLoad: (gameId: string) => void;
-	onCancel: () => void;
-}) {
-	return (
-		<div
-			data-testid="save-list-modal"
-			style={{
-				position: "absolute",
-				inset: 0,
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				background: "rgba(3,3,8,0.85)",
-				zIndex: 20,
-				pointerEvents: "auto",
-			}}
-		>
+		<>
+			<GlobeBackground />
 			<div
 				style={{
+					position: "absolute",
+					inset: 0,
+					background: "transparent",
 					display: "flex",
 					flexDirection: "column",
-					gap: 16,
-					padding: "32px 40px",
-					border: "1px solid rgba(139,230,255,0.3)",
-					borderRadius: 8,
-					background: "#070c18",
-					fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-					color: "#8be6ff",
-					minWidth: 340,
-					maxWidth: 480,
+					alignItems: "center",
+					justifyContent: "center",
+					zIndex: 200,
 				}}
 			>
-				<h2
+				{/* Scanline overlay */}
+				<div
 					style={{
-						margin: 0,
-						fontSize: 14,
-						letterSpacing: "0.25em",
-						textTransform: "uppercase",
+						position: "absolute",
+						inset: 0,
+						background:
+							"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(139,230,255,0.03) 2px, rgba(139,230,255,0.03) 4px)",
+						pointerEvents: "none",
+					}}
+				/>
+
+				{/* Title */}
+				<div
+					style={{
+						opacity: titleOpacity,
+						transition: "opacity 1.5s ease-in-out",
+						fontFamily: "'Courier New', monospace",
+						fontSize: "clamp(32px, 8vw, 72px)",
+						fontWeight: "bold",
+						letterSpacing: "0.3em",
+						color: "#8be6ff",
+						textShadow: glitch
+							? "3px 0 #ff0044, -3px 0 #0044ff, 0 0 40px rgba(139,230,255,0.6)"
+							: "0 0 40px rgba(139,230,255,0.4), 0 0 80px rgba(139,230,255,0.15), 0 0 2px #8be6ff",
+						transform: glitch
+							? `translate(${Math.random() * 4 - 2}px, ${Math.random() * 2 - 1}px)`
+							: "none",
+						userSelect: "none",
+						textAlign: "center",
+						padding: "0 16px",
 					}}
 				>
-					Saved Games
-				</h2>
-
-				<div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-					{saves.map((s) => (
-						<button
-							key={s.id}
-							type="button"
-							data-testid={`save-row-${s.id}`}
-							onClick={() => onLoad(s.id)}
-							style={saveRowStyle}
-						>
-							<span style={{ color: "#8be6ff" }}>
-								{s.boardW}×{s.boardH} · {s.difficulty} · turn {s.turn}
-							</span>
-							<span style={{ color: "rgba(139,230,255,0.45)", fontSize: 11 }}>
-								{s.seed} · {formatDate(s.createdAt)}
-							</span>
-						</button>
-					))}
+					SYNTHETERIA
 				</div>
 
-				<button
-					type="button"
-					onClick={onCancel}
-					style={{ ...cancelBtnStyle, marginTop: 4, alignSelf: "flex-start" }}
+				{/* Subtitle */}
+				<div
+					style={{
+						opacity: titleOpacity * 0.6,
+						transition: "opacity 2s ease-in-out",
+						fontFamily: "'Courier New', monospace",
+						fontSize: "clamp(11px, 2vw, 16px)",
+						color: "#8be6ff",
+						letterSpacing: "0.5em",
+						marginTop: "12px",
+						textShadow: "0 0 20px rgba(139,230,255,0.3)",
+						textAlign: "center",
+					}}
 				>
-					Back
-				</button>
+					{"AWAKEN // CONNECT // REBUILD"}
+				</div>
+
+				{/* Menu */}
+				<div
+					style={{
+						marginTop: "clamp(40px, 8vh, 80px)",
+						opacity: menuOpacity,
+						transition: "opacity 1s ease-in-out",
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "center",
+						gap: "16px",
+					}}
+				>
+					<MenuButton
+						label="NEW GAME"
+						onClick={() => {
+							initAudio();
+							setModal("new");
+						}}
+						primary
+					/>
+					<MenuButton label="CONTINUE" onClick={() => {}} disabled />
+					<MenuButton label="SETTINGS" onClick={() => {}} disabled />
+				</div>
+
+				{/* Version */}
+				<div
+					style={{
+						position: "absolute",
+						bottom: "20px",
+						fontFamily: "'Courier New', monospace",
+						fontSize: "11px",
+						color: "rgba(139,230,255,0.3)",
+						letterSpacing: "0.15em",
+					}}
+				>
+					v0.1.0
+				</div>
+
+				{/* New Game Modal */}
+				{modal === "new" && (
+					<NewGameModal
+						onStart={(config) => {
+							setModal("none");
+							onStartGame(config);
+						}}
+						onCancel={() => setModal("none")}
+					/>
+				)}
 			</div>
-		</div>
+		</>
 	);
 }
 
-function formatDate(iso: string): string {
-	try {
-		return new Date(iso).toLocaleDateString(undefined, {
-			month: "short",
-			day: "numeric",
-		});
-	} catch {
-		return iso;
-	}
+function MenuButton({
+	label,
+	onClick,
+	primary,
+	disabled,
+}: {
+	label: string;
+	onClick: () => void;
+	primary?: boolean;
+	disabled?: boolean;
+}) {
+	const [hovered, setHovered] = useState(false);
+
+	return (
+		<button
+			type="button"
+			onClick={disabled ? undefined : onClick}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+			disabled={disabled}
+			style={{
+				background: disabled
+					? "transparent"
+					: hovered
+						? "rgba(139,230,255,0.15)"
+						: "transparent",
+				color: disabled ? "rgba(139,230,255,0.25)" : "#8be6ff",
+				border: disabled
+					? "1px solid rgba(139,230,255,0.15)"
+					: primary && hovered
+						? "1px solid #8be6ff"
+						: "1px solid rgba(139,230,255,0.4)",
+				borderRadius: "4px",
+				padding: "12px 48px",
+				fontSize: "16px",
+				fontFamily: "'Courier New', monospace",
+				letterSpacing: "0.2em",
+				cursor: disabled ? "default" : "pointer",
+				minWidth: "240px",
+				transition: "all 0.2s ease",
+				textShadow: disabled
+					? "none"
+					: hovered
+						? "0 0 10px rgba(139,230,255,0.5)"
+						: "none",
+				boxShadow:
+					primary && hovered
+						? "0 0 20px rgba(139,230,255,0.2), inset 0 0 20px rgba(139,230,255,0.05)"
+						: "none",
+			}}
+		>
+			{primary && !disabled ? `[ ${label} ]` : label}
+		</button>
+	);
 }
-
-const saveRowStyle: React.CSSProperties = {
-	display: "flex",
-	flexDirection: "column",
-	gap: 4,
-	padding: "10px 14px",
-	background: "transparent",
-	border: "1px solid rgba(139,230,255,0.2)",
-	borderRadius: 4,
-	color: "inherit",
-	fontFamily: "inherit",
-	fontSize: 13,
-	textAlign: "left",
-	cursor: "pointer",
-};
-
-const cancelBtnStyle: React.CSSProperties = {
-	background: "transparent",
-	border: "none",
-	color: "rgba(139,230,255,0.4)",
-	fontFamily: "inherit",
-	fontSize: 12,
-	letterSpacing: "0.15em",
-	textTransform: "uppercase",
-	cursor: "pointer",
-	padding: "4px 0",
-};

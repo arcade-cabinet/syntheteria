@@ -1,261 +1,54 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
-	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+	"$schema": "https://biomejs.dev/schemas/2.4.8/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
 	"files": {
-		"ignoreUnknown": true,
 		"includes": [
 			"**",
-			"!pending/**",
-			"!playwright-report/**",
-			"!test-results/**",
-			"!coverage/**",
-			"!tests/e2e/**",
-			"!tests/components/**",
-			"!tests/visual/**",
-			"!poc*.html",
-			"!assets/coi-serviceworker.js",
-			"!public/assets/coi-serviceworker.js",
-			"!.claude/worktrees/**"
+			"!!**/dist",
+			"!!game",
+			"!!pending",
+			"!!pending-integration",
+			"!!.superpowers",
+			"!!tests/e2e/reports",
+			"!!coverage",
+			"!!prototype",
+			"!!reactylon-poc",
+			"!!docs/references",
+			"!!src/static-assets.ts",
+			"!!public/poc.html"
 		]
 	},
-	"formatter": { "enabled": true, "indentStyle": "tab" },
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": false,
-			"correctness": {
-				"noChildrenProp": "error",
-				"noEmptyCharacterClassInRegex": "warn",
-				"noEmptyPattern": "warn",
-				"noUndeclaredVariables": "error",
-				"noUnreachable": "warn",
-				"noUnusedLabels": "warn",
-				"noUnusedVariables": "warn",
-				"useExhaustiveDependencies": "warn",
-				"useHookAtTopLevel": "error",
-				"useIsNan": "error",
-				"useJsxKeyInIterable": "error",
-				"useValidTypeof": "error"
+			"recommended": true,
+			"style": {
+				"noNonNullAssertion": "off"
 			},
-			"security": { "noDangerouslySetInnerHtmlWithChildren": "error" },
 			"suspicious": {
-				"noCommentText": "error",
-				"noDoubleEquals": "warn",
-				"noDuplicateCase": "error",
-				"noDuplicateClassMembers": "error",
-				"noDuplicateJsxProps": "error",
-				"noDuplicateObjectKeys": "error",
-				"noDuplicateParameters": "error",
-				"noRedeclare": "warn",
-				"noUnsafeNegation": "warn",
-				"noUnusedExpressions": "warn",
-				"noVar": "error",
-				"noWith": "warn"
-			}
-		},
-		"includes": [
-			"**",
-			"!android/app/build/**",
-			"!playwright-report/**",
-			"!test-results/**",
-			"!coverage/**",
-			"!tests/e2e/**",
-			"!tests/components/**",
-			"!tests/visual/**",
-			"!assets/coi-serviceworker.js",
-			"!public/assets/coi-serviceworker.js",
-			"!.claude/worktrees/**"
-		]
-	},
-	"javascript": {
-		"formatter": { "quoteStyle": "double" },
-		"globals": [
-			"onanimationend",
-			"ongamepadconnected",
-			"onlostpointercapture",
-			"onanimationiteration",
-			"onkeyup",
-			"onmousedown",
-			"onanimationstart",
-			"onslotchange",
-			"onprogress",
-			"ontransitionstart",
-			"onpause",
-			"onended",
-			"onpointerover",
-			"onscrollend",
-			"onformdata",
-			"ontransitionrun",
-			"onanimationcancel",
-			"ondrag",
-			"onchange",
-			"onbeforeinstallprompt",
-			"onbeforexrselect",
-			"onmessage",
-			"ontransitioncancel",
-			"onpointerdown",
-			"onabort",
-			"shared-node-browser",
-			"onpointerout",
-			"oncuechange",
-			"ongotpointercapture",
-			"onscrollsnapchanging",
-			"onsearch",
-			"onsubmit",
-			"onstalled",
-			"onsuspend",
-			"onreset",
-			"onerror",
-			"onresize",
-			"onmouseenter",
-			"ongamepaddisconnected",
-			"ondragover",
-			"onbeforetoggle",
-			"onmouseover",
-			"onpagehide",
-			"onmousemove",
-			"onratechange",
-			"oncommand",
-			"onmessageerror",
-			"onwheel",
-			"ondevicemotion",
-			"onauxclick",
-			"ontransitionend",
-			"onpaste",
-			"onpageswap",
-			"ononline",
-			"ondeviceorientationabsolute",
-			"onkeydown",
-			"onclose",
-			"onselect",
-			"onpageshow",
-			"onpointercancel",
-			"onbeforematch",
-			"onpointerrawupdate",
-			"ondragleave",
-			"onscrollsnapchange",
-			"onseeked",
-			"onwaiting",
-			"onbeforeunload",
-			"onplaying",
-			"onvolumechange",
-			"ondragend",
-			"onstorage",
-			"onloadeddata",
-			"onfocus",
-			"onoffline",
-			"onplay",
-			"onafterprint",
-			"onclick",
-			"oncut",
-			"onmouseout",
-			"ondblclick",
-			"oncanplay",
-			"onloadstart",
-			"onappinstalled",
-			"onpointermove",
-			"ontoggle",
-			"oncontextmenu",
-			"onblur",
-			"oncancel",
-			"onbeforeprint",
-			"oncontextrestored",
-			"onloadedmetadata",
-			"onpointerup",
-			"onlanguagechange",
-			"oncopy",
-			"onselectstart",
-			"onscroll",
-			"onload",
-			"ondragstart",
-			"onbeforeinput",
-			"oncanplaythrough",
-			"oninput",
-			"oninvalid",
-			"ontimeupdate",
-			"ondurationchange",
-			"onselectionchange",
-			"onmouseup",
-			"location",
-			"onkeypress",
-			"onpointerleave",
-			"oncontextlost",
-			"ondrop",
-			"onsecuritypolicyviolation",
-			"oncontentvisibilityautostatechange",
-			"ondeviceorientation",
-			"onseeking",
-			"onrejectionhandled",
-			"onunload",
-			"onmouseleave",
-			"onhashchange",
-			"onpointerenter",
-			"onmousewheel",
-			"onpagereveal",
-			"onunhandledrejection",
-			"ondragenter",
-			"onpopstate",
-			"__DEV__",
-			"onemptied"
-		]
-	},
-	"overrides": [
-		{ "includes": ["**/*.d.ts"], "linter": { "rules": {} } },
-		{
-			"includes": ["**/metro.config.js"],
-			"javascript": { "globals": ["exports"] }
-		},
-		{ "includes": ["**/*.js", "**/*.jsx"] },
-		{
-			"includes": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
-			"javascript": { "globals": [] },
-			"linter": {
-				"rules": {
-					"complexity": { "noUselessConstructor": "warn" },
-					"correctness": {
-						"noUndeclaredVariables": "off",
-						"noUnusedVariables": "warn"
-					},
-					"style": {
-						"noCommonJs": "warn",
-						"useConsistentArrayType": {
-							"level": "warn",
-							"options": { "syntax": "shorthand" }
-						}
-					},
-					"suspicious": {
-						"noDuplicateClassMembers": "error",
-						"noExtraNonNullAssertion": "warn",
-						"noRedeclare": "warn"
-					}
-				}
-			}
-		},
-		{ "includes": ["*.web.*"] },
-		{
-			"includes": [
-				"**/*.test.ts",
-				"**/*.test.tsx",
-				"**/__tests__/**",
-				"jest.setup*.ts"
-			],
-			"linter": {
-				"rules": { "style": { "noCommonJs": "off" } }
-			}
-		},
-		{
-			"includes": ["src/testing/**/*.js"],
-			"javascript": { "globals": ["jest"] },
-			"linter": {
-				"rules": {
-					"correctness": { "noUndeclaredVariables": "off" },
-					"style": { "noCommonJs": "off" }
-				}
+				"noUnknownAtRules": "off"
 			}
 		}
-	],
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double"
+		}
+	},
 	"assist": {
-		"enabled": null,
-		"actions": { "source": { "organizeImports": "on" } }
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
 	}
 }

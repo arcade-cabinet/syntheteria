@@ -48,7 +48,7 @@ Known broken:
 
 ### Architecture (read these)
 - `CLAUDE.md` — commands, docs index
-- `docs/HANDOFF.md` — deep architecture (chunk system, rendering, ECS, navigation, zones)
+- `docs/superpowers/reports/2026-03-26-babylonjs-refactor-report.md` — status, what's broken, architecture reference
 - `docs/superpowers/reports/2026-03-26-babylonjs-refactor-report.md` — what works, what's broken
 
 ### Game Design (read when implementing features)

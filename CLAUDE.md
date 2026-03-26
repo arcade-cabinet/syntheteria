@@ -2,8 +2,7 @@
 
 2.5D top-down RTS about an AI awakening in a dead ecumenopolis. BabylonJS + Reactylon game canvas, R3F landing page globe, Koota ECS, Yuka AI.
 
-> **Agents: read [AGENTS.md](./AGENTS.md) first.** It has rules, constraints, known issues, and source structure.
-> **Deep architecture: read [docs/HANDOFF.md](./docs/HANDOFF.md).** Chunk system, rendering, ECS, navigation, zones.
+> **Agents: read [AGENTS.md](./AGENTS.md) first.** Rules, constraints, known issues, source structure.
 
 ---
 
@@ -23,15 +22,14 @@ pnpm lint         # Biome lint
 
 ## Docs
 
-**Active (read these):**
+**Active:**
 - `AGENTS.md` — agentic rules, constraints, key files, source structure
-- `docs/HANDOFF.md` — deep architecture reference
+- `docs/superpowers/reports/2026-03-26-babylonjs-refactor-report.md` — status + architecture reference
 - `docs/design/` — game design (overview, mechanics, combat, consciousness, drones)
 - `docs/story/LORE_OVERVIEW.md` — world lore
 - `docs/technical/CORE_FORMULAS.md` — math formulas
-- `docs/superpowers/reports/` — session reports
 
-**Archived:** `docs/archive/` — 22 pre-pivot docs. Do not read unless asked.
+**Archived:** `docs/archive/` — pre-pivot docs. Do not read unless asked.
 
 ---
 

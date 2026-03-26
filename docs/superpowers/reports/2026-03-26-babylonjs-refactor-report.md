@@ -333,3 +333,59 @@ docs: honest status — infrastructure built, game not playable yet
 **Priority 5: Check PBR textures.** Do the texture files exist in public/? Are they loading or are all tiles using fallback colors?
 
 Everything else (tests, docs, CI, governor, base system) is secondary until the player can SEE and INTERACT with the game.
+
+---
+
+## Architecture Reference
+
+### Chunk-Based World
+
+Infinite grid of chunks (32×32 tiles, `TILE_SIZE_M = 2.0`). Chunks generate on demand. Same seed + chunk coords = identical output.
+
+**Generation pipeline (per chunk):**
+1. Room placement — seeded by `${worldSeed}_c${cx}_${cz}_labyrinth`
+2. Growing Tree maze fill — corridors between rooms
+3. Border gate opening — deterministic passable tiles at chunk edges (seeded by edge coords so adjacent chunks share gates)
+4. Region connectivity — flood-fill + union-find
+5. Dead-end pruning + bridges/tunnels
+6. Re-open border gates
+7. Zone floor assignment — absolute world coords via `WORLD_EXTENT = 256`
+8. Resource scatter + zone stamping
+
+**Border gates:** 4 per edge, seed = `${worldSeed}_edge_h_${cx}_${cz}`. Adjacent chunks compute identical gates.
+
+**Zones:** `WORLD_EXTENT = 256` reference frame. City (center), Coast (E/S), Campus (SW), Enemy/Cult (N).
+
+### Rendering
+
+Imperative mesh creation in `src/board/scene.ts` — NOT React JSX per tile. PBR materials cached per FloorType (single source of truth: `src/config/floorMaterials.ts`). 8 floor types + walls + void.
+
+Camera: ArcRotateCamera, beta ~1° (BROKEN — needs 20-30°), alpha locked -90°, zero inertia.
+Fog: exponential mode 2, density 0.015, color `#03070b`.
+
+### Navigation (Yuka)
+
+`src/board/navigation.ts`: NavGraph per chunk, 8-directional edges, cost = distance × (1 + elevation_delta × 1.5). `WorldNavGraph` merges at border gates.
+
+Coordinates (`src/board/coords.ts`): tile ↔ world ↔ BabylonJS ↔ Yuka conversions.
+
+### ECS (Koota)
+
+15 traits in `src/ecs/traits.ts`: Position, Unit, Faction, Navigation, UnitComponents, BuildingTrait, Base, Fragment, EntityId, ScavengeSite, LightningRod, EngagementRule, HumanTemperature, Hacking, Inventory.
+
+Complex data = JSON strings. Systems accept `world: World` param.
+
+### Simulation Loop
+
+`gameState.ts` → `simulationTick()` runs 18 systems (each in `runSystem()` for error isolation). Movement runs per-frame, simulation ticks at fixed 1.0s intervals.
+
+### AI
+
+Cult: `CultAgent extends Vehicle` with Think brain, 3 evaluators (Patrol, Aggro, Escalate).
+Governor: `PlaytestGovernor.ts` — attack > scavenge > found base > explore.
+
+### Assets
+
+PBR textures: `public/assets/textures/pbr/` (concrete, corrugated_steel, metal).
+GLB models: `public/assets/models/robots/` (3 player factions, 3 cult mechs).
+Registry: `src/config/models.ts`.

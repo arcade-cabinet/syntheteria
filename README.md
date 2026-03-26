@@ -41,7 +41,7 @@ pnpm lint         # Biome lint
 
 The game uses chunk-based infinite world generation with 32x32 tile chunks, BabylonJS imperative mesh creation (not per-tile React JSX), and Yuka NavGraph pathfinding. Game data lives in TypeScript const objects under `src/config/`.
 
-For full architecture details, see [CLAUDE.md](./CLAUDE.md) and [docs/HANDOFF.md](./docs/HANDOFF.md).
+For full architecture details, see [CLAUDE.md](./CLAUDE.md) and [AGENTS.md](./AGENTS.md).
 
 ## License
 

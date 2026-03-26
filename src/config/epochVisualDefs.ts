@@ -70,28 +70,28 @@ export interface EpochAccentLight {
 // ---------------------------------------------------------------------------
 
 export const EPOCH_VISUALS: readonly EpochVisualDef[] = [
-	// ── Epoch 1: Emergence ── Clear sunny day. No storm yet.
+	// ── Epoch 1: Emergence ── Dark dead ecumenopolis. Dim glow from circuits.
 	{
 		number: 1,
 		name: "Emergence",
-		mood: "Bright clear day. Warm sunlight. The world before the storm.",
-		skyZenith: [0.27, 0.53, 0.8], // #4488CC bright blue
-		skyHorizon: [0.67, 0.78, 0.93], // #AACCEE light haze
+		mood: "Dark sealed city. Faint cyan glow from ancient circuits. Storm overhead.",
+		skyZenith: [0.02, 0.04, 0.08],
+		skyHorizon: [0.03, 0.06, 0.10],
 		backgroundColor: [0.012, 0.027, 0.043], // #03070b dark void
-		ambientColor: [0.8, 0.87, 0.93], // cool bright fill
-		ambientIntensity: 1.8,
-		sunColor: [1.0, 1.0, 0.93], // near-white warm
-		sunIntensity: 2.5,
-		fogColor: [0.67, 0.8, 0.93], // light blue haze
-		fogDensity: 0.001,
+		ambientColor: [0.12, 0.15, 0.20], // cool dark fill
+		ambientIntensity: 0.5,
+		sunColor: [0.67, 0.8, 1.0], // cool blue-white
+		sunIntensity: Math.PI * 0.8,
+		fogColor: [0.012, 0.027, 0.043], // matches void
+		fogDensity: 0.015,
 		rainDensity: 0,
 		lightningInterval: null,
 		accentLights: [
 			{
-				color: [1.0, 0.93, 0.73],
-				intensity: 0.5,
-				distance: 100,
-				offset: [0, 30, 0],
+				color: [0.0, 1.0, 1.0], // cyan accent
+				intensity: 2,
+				distance: 30,
+				offset: [0, 8, 0],
 			},
 		],
 	},

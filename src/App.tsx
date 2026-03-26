@@ -5,7 +5,6 @@
  * 3D canvas rendered via BabylonJS + Reactylon (GameCanvas).
  */
 
-import type { Entity } from "koota";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
 	disposeAudio,
@@ -38,7 +37,7 @@ import {
 	subscribe,
 	togglePause,
 } from "./ecs/gameState";
-import { Faction, Fragment, Unit } from "./ecs/traits";
+import { Fragment } from "./ecs/traits";
 import { world } from "./ecs/world";
 import { logError } from "./errors";
 import { GameCanvas } from "./game/GameCanvas";
@@ -46,7 +45,6 @@ import { foundBase } from "./systems/baseManagement";
 import { DebugOverlay } from "./ui/game/DebugOverlay";
 import { ErrorBoundary } from "./ui/game/ErrorBoundary";
 import { NarrativeOverlay } from "./ui/game/NarrativeOverlay";
-import { RadialMenu } from "./ui/game/RadialMenu";
 import { LandingScreen, type NewGameConfig } from "./ui/landing/LandingScreen";
 import { GameLayout } from "./ui/layout/GameLayout";
 
@@ -173,11 +171,6 @@ export default function App({ havok }: AppProps) {
 	const [startPos, setStartPos] = useState<{ x: number; z: number } | null>(
 		null,
 	);
-	const [radialMenu, setRadialMenu] = useState<{
-		entity: Entity;
-		screenX: number;
-		screenY: number;
-	} | null>(null);
 
 	// Watch game snapshot for phase transitions during gameplay
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
@@ -236,29 +229,6 @@ export default function App({ havok }: AppProps) {
 		};
 	}, []);
 
-	// Listen for radial menu events from InputHandler
-	useEffect(() => {
-		function onRadialMenu(e: Event) {
-			const { screenX, screenY } = (e as CustomEvent).detail;
-			let selected: Entity | null = null;
-			for (const entity of world.query(Unit, Faction)) {
-				if (
-					entity.get(Unit)!.selected &&
-					entity.get(Faction)!.value === "player"
-				) {
-					selected = entity;
-					break;
-				}
-			}
-			if (selected) {
-				setRadialMenu({ entity: selected, screenX, screenY });
-			}
-		}
-		window.addEventListener("syntheteria:radialmenu", onRadialMenu);
-		return () =>
-			window.removeEventListener("syntheteria:radialmenu", onRadialMenu);
-	}, []);
-
 	if (phase === "title") {
 		return (
 			<LandingScreen
@@ -313,16 +283,6 @@ export default function App({ havok }: AppProps) {
 					{/* Floating overlays inside the game area */}
 					<GameOverlays snap={snap} />
 					<DebugOverlay />
-
-					{/* Radial menu on right-click selected unit */}
-					{radialMenu && (
-						<RadialMenu
-							entity={radialMenu.entity}
-							screenX={radialMenu.screenX}
-							screenY={radialMenu.screenY}
-							onClose={() => setRadialMenu(null)}
-						/>
-					)}
 
 					{/* In-game phase transition narrative overlay */}
 					{phaseNarrative && (

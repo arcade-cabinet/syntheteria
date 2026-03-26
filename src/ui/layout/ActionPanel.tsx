@@ -11,6 +11,7 @@
 import type { Entity } from "koota";
 import { useSyncExternalStore } from "react";
 import { worldToTileX, worldToTileZ } from "../../board/coords";
+import { getUpgradeCost, MAX_MARK } from "../../config/robotDefs";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import {
 	BuildingTrait,
@@ -25,6 +26,7 @@ import {
 import { parseComponents } from "../../ecs/types";
 import { world } from "../../ecs/world";
 import { foundBase, validateBaseLocation } from "../../systems/baseManagement";
+import { canUpgrade, performUpgrade } from "../../systems/upgrade";
 import { selectBase } from "../base/BasePanel";
 import { cn } from "../lib/utils";
 
@@ -184,7 +186,29 @@ function UnitActions({ entity }: { entity: Entity }) {
 				title={`Current: ${currentStance}. Click to cycle.`}
 				onClick={cycleStance}
 			/>
-			{/* HACK: hidden — not yet implemented */}
+			{/* UPGRADE: move from RadialMenu to ActionPanel */}
+			{unitData.mark < MAX_MARK && (
+				<ActionButton
+					label={`UPGRADE Mk${unitData.mark + 1}`}
+					enabled={canUpgrade(entity) !== null}
+					title={
+						canUpgrade(entity) !== null
+							? `Upgrade to Mark ${unitData.mark + 1}`
+							: (() => {
+									const costs = getUpgradeCost(
+										unitData.unitType,
+										unitData.mark,
+									);
+									return costs
+										? `Need: ${costs.map((c) => `${c.amount} ${c.type}`).join(", ")} (at powered fab)`
+										: "Max mark reached";
+								})()
+					}
+					onClick={() => {
+						performUpgrade(entity);
+					}}
+				/>
+			)}
 		</div>
 	);
 }

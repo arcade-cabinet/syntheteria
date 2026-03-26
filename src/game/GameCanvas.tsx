@@ -20,6 +20,8 @@ import { Scene, useScene } from "reactylon";
 import { Engine } from "reactylon/web";
 import { getEpochVisual } from "../config/epochVisualDefs";
 import { getGameSpeed, simulationTick } from "../ecs/gameState";
+import { Position, Unit } from "../ecs/traits";
+import { world } from "../ecs/world";
 import { GameError, logError } from "../errors";
 import { movementSystem } from "../systems/movement";
 import {
@@ -28,6 +30,7 @@ import {
 	initChunks,
 	updateChunks,
 } from "./ChunkManager";
+import { registerChunkState, unregisterChunkState } from "./chunkRegistry";
 import {
 	disposeEntityRenderer,
 	type EntityRendererState,
@@ -91,6 +94,30 @@ function onSceneReady(scene: BScene) {
 interface SceneContentProps {
 	startPos: { x: number; z: number };
 	seed: string;
+}
+
+/** Smoothly pan the camera target to (x, z) over ~20 frames. */
+function panCameraTo(scene: BScene, x: number, z: number): void {
+	const cam = scene.activeCamera as ArcRotateCamera;
+	if (!cam) return;
+
+	const FPS = 30;
+	const PAN_FRAMES = 20;
+
+	const panAnim = new Animation(
+		"panTarget",
+		"target",
+		FPS,
+		Animation.ANIMATIONTYPE_VECTOR3,
+		Animation.ANIMATIONLOOPMODE_CONSTANT,
+	);
+	panAnim.setKeys([
+		{ frame: 0, value: cam.target.clone() },
+		{ frame: PAN_FRAMES, value: new Vector3(x, 0, z) },
+	]);
+
+	cam.animations = [panAnim];
+	scene.beginAnimation(cam, 0, PAN_FRAMES, false);
 }
 
 function SceneContent({ startPos, seed }: SceneContentProps) {
@@ -195,6 +222,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		// Initialize chunks around the start position
 		const chunkState = initChunks(scene, startWX, startWZ, seed);
 		chunkStateRef.current = chunkState;
+		registerChunkState(chunkState);
 
 		// ── Game loop: movement (per-frame) + simulation tick (fixed interval) ──
 		const SIM_INTERVAL = 1.0; // seconds of game time between ticks
@@ -253,11 +281,32 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 				);
 			});
 
+		// Camera tracking — when a unit is selected, pan to it
+		let lastTrackedEntityId: string | null = null;
+		const cameraTrackCallback = () => {
+			for (const entity of world.query(Unit, Position)) {
+				const unit = entity.get(Unit)!;
+				if (!unit.selected) continue;
+				const pos = entity.get(Position)!;
+				// Only pan once per new selection (avoid continuous re-panning)
+				const entityKey = `${pos.x.toFixed(1)}_${pos.z.toFixed(1)}`;
+				if (lastTrackedEntityId !== entityKey) {
+					lastTrackedEntityId = entityKey;
+					panCameraTo(scene, pos.x, pos.z);
+				}
+				return;
+			}
+			// Nothing selected — reset tracker
+			lastTrackedEntityId = null;
+		};
+		scene.registerBeforeRender(cameraTrackCallback);
+
 		// Input handler — click-to-select, click-to-move, box selection
 		const disposeInput = initInput(scene, () => entityStateRef.current);
 
 		return () => {
 			disposeInput();
+			scene.unregisterBeforeRender(cameraTrackCallback);
 			scene.unregisterBeforeRender(gameLoopCallback);
 			cam.onViewMatrixChangedObservable.remove(observer);
 			if (entityRenderCallback) {
@@ -270,6 +319,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			if (chunkStateRef.current) {
 				disposeAllChunks(chunkStateRef.current);
 				chunkStateRef.current = null;
+				unregisterChunkState();
 			}
 		};
 	}, [scene, startWX, startWZ, seed]);

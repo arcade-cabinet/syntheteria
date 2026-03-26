@@ -32,6 +32,7 @@ import {
 } from "../ecs/traits";
 import { world } from "../ecs/world";
 import { GameError, logError } from "../errors";
+import { getLastCombatEvents } from "../systems/combat";
 import {
 	type BaseMarkerState,
 	disposeBaseMarkers,
@@ -94,6 +95,53 @@ const BOB_SPEED = 2.0;
 /** Selection ring inner/outer diameter ratio. */
 const RING_DIAMETER = 2.5;
 const RING_THICKNESS = 0.12;
+
+/** Duration of damage flash in milliseconds. */
+const DAMAGE_FLASH_MS = 150;
+
+/** Tracked flash state per entity. */
+const damageFlashTimers = new Map<string, number>();
+
+/**
+ * Briefly tint an entity's meshes red to indicate damage.
+ * The tint auto-reverts after DAMAGE_FLASH_MS.
+ */
+export function showDamageFlash(
+	entityId: string,
+	state: EntityRendererState,
+): void {
+	const entry = state.entityMeshes.get(entityId);
+	if (!entry) return;
+
+	// Store original emissive colors and tint red
+	const originals: Array<{ mesh: AbstractMesh; color: Color3 }> = [];
+	for (const mesh of entry.meshes) {
+		if (mesh.material && mesh.material instanceof StandardMaterial) {
+			originals.push({
+				mesh,
+				color: mesh.material.emissiveColor.clone(),
+			});
+			mesh.material.emissiveColor = new Color3(1, 0.1, 0.1);
+		}
+	}
+
+	// Prevent stacking — clear existing timer
+	const existing = damageFlashTimers.get(entityId);
+	if (existing) {
+		clearTimeout(existing);
+	}
+
+	// Revert after delay
+	const timer = window.setTimeout(() => {
+		for (const { mesh, color } of originals) {
+			if (mesh.material && mesh.material instanceof StandardMaterial) {
+				mesh.material.emissiveColor = color;
+			}
+		}
+		damageFlashTimers.delete(entityId);
+	}, DAMAGE_FLASH_MS);
+	damageFlashTimers.set(entityId, timer);
+}
 
 // ─── Salvage node constants ─────────────────────────────────────────────────
 
@@ -279,6 +327,11 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 			disposeEntry(entry);
 			state.entityMeshes.delete(eid);
 		}
+	}
+
+	// ── Combat damage flash ─────────────────────────────────────────────
+	for (const event of getLastCombatEvents()) {
+		showDamageFlash(event.targetId, state);
 	}
 
 	// ── Salvage node sync ────────────────────────────────────────────────

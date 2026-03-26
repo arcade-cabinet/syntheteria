@@ -90,7 +90,7 @@ src/
 ├── systems/      — 18+ game systems (combat, resources, power, fabrication, etc.)
 ├── ui/
 │   ├── base/     — BasePanel (side panel for base management)
-│   ├── game/     — NarrativeOverlay, RadialMenu, ErrorBoundary, DebugOverlay
+│   ├── game/     — NarrativeOverlay, ErrorBoundary, DebugOverlay
 │   ├── landing/  — LandingScreen, GlobeBackground (R3F), NewGameModal
 │   ├── layout/   — GameLayout, TopBar, Sidebar, Minimap, SelectionInfo, ActionPanel
 │   └── lib/      — cn() utility (shadcn pattern)
@@ -100,8 +100,8 @@ src/
 ## Testing
 
 ```bash
-pnpm test           # 722 unit tests (vitest, jsdom)
-pnpm test:browser   # 48 browser tests (vitest, headed Chrome)
+pnpm test           # 725 unit tests (vitest, jsdom)
+pnpm test:browser   # 54 browser tests (vitest, headed Chrome)
 pnpm test:e2e       # 4 E2E tests (playwright)
 pnpm tsc            # Type check (0 errors)
 pnpm lint           # Biome lint (0 errors)

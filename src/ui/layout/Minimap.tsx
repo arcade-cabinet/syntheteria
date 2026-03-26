@@ -18,6 +18,7 @@ import {
 	Unit,
 } from "../../ecs/traits";
 import { world } from "../../ecs/world";
+import { getChunkState } from "../../game/chunkRegistry";
 import { getScavengePoints } from "../../systems/resources";
 
 /** City bounds: 48 tiles * 2m = 96 world units */
@@ -77,12 +78,34 @@ export function Minimap() {
 			}
 		}
 
-		// Draw labyrinth walls
+		// Draw labyrinth walls (from city layout)
 		ctx.fillStyle = "#333333";
 		for (const bldg of getCityBuildings()) {
 			const mx = cityToMinimap(bldg.x);
 			const my = cityToMinimap(bldg.z);
 			ctx.fillRect(mx, my, 1, 1);
+		}
+
+		// Draw chunk terrain from loaded chunks
+		const chunkState = getChunkState();
+		if (chunkState) {
+			for (const chunkMeshes of chunkState.loaded.values()) {
+				for (const mesh of chunkMeshes.meshes) {
+					const wx = mesh.position.x;
+					const wz = mesh.position.z;
+					const mx = cityToMinimap(wx);
+					const my = cityToMinimap(wz);
+
+					// Wall meshes are named "w-{x}-{z}", floor meshes "f-{x}-{z}"
+					if (mesh.name.startsWith("w-")) {
+						ctx.fillStyle = "#2a2a2a";
+						ctx.fillRect(mx, my, 1, 1);
+					} else if (mesh.name.startsWith("f-")) {
+						ctx.fillStyle = "#1a1e24";
+						ctx.fillRect(mx, my, 1, 1);
+					}
+				}
+			}
 		}
 
 		// Draw scavenge sites (yellow dots — only in explored areas)

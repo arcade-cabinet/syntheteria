@@ -29,6 +29,7 @@ import {
 	issueMoveTo,
 	selectEntity,
 } from "../input/selection";
+import { getBaseEntityFromMesh } from "./BaseMarker";
 import { type EntityRendererState, getEntityAtPoint } from "./EntityRenderer";
 import { showMoveMarker } from "./MoveMarker";
 
@@ -193,6 +194,31 @@ function handleClick(
 					selectEntity(entity);
 					playSfx("unit_select");
 				}
+				return;
+			}
+		}
+	}
+
+	// Check if we clicked on a base marker
+	{
+		const pickResult = scene.pick(screenX, screenY);
+		if (pickResult?.hit && pickResult.pickedMesh && entityState) {
+			const baseEntityId = getBaseEntityFromMesh(
+				entityState.baseMarkers,
+				pickResult.pickedMesh.metadata,
+			);
+			if (baseEntityId) {
+				// Dynamically import to avoid circular dependency
+				import("../ui/base/BasePanel")
+					.then(({ selectBase }) => {
+						selectBase(baseEntityId);
+					})
+					.catch(() => {
+						// Non-fatal: base panel just won't open
+						console.warn(
+							"[InputHandler] Failed to import BasePanel for base click",
+						);
+					});
 				return;
 			}
 		}

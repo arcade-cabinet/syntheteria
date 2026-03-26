@@ -1,13 +1,13 @@
 /**
  * FogOfWar — visual fog-of-war overlay for BabylonJS chunk meshes.
  *
- * Reads the fog grid from all player-faction fragments and updates
- * mesh visibility on loaded chunk tiles each frame.
+ * Combines the permanent fog grid (explored state) with transient vision
+ * (computed each frame from player unit positions) to produce three visual
+ * states:
  *
- * Fog states → visual:
- *   0 (Unexplored) → mesh hidden entirely (isVisible = false)
- *   1 (Abstract/Shroud) → dimmed (visibility = 0.35)
- *   2 (Detailed/Visible) → full brightness (visibility = 1.0)
+ *   Unexplored → mesh hidden entirely (setEnabled(false))
+ *   Shroud     → explored but NOT in current vision (visibility = 0.35)
+ *   Visible    → in active vision range of a player unit (visibility = 1.0)
  *
  * Uses mesh.visibility (a per-mesh float 0–1) which works independently
  * of frozen PBR materials. Unexplored tiles are disabled entirely via
@@ -20,16 +20,25 @@ import {
 	type MapFragment,
 	worldToFogIndex,
 } from "../ecs/terrain";
-import { Faction, Fragment } from "../ecs/traits";
+import { Faction, Fragment, Position, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
 import type { ChunkManagerState } from "./ChunkManager";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-/** Visibility value for shroud/abstract tiles (dimmed but recognizable). */
+/** Visibility value for shroud tiles (explored but not in current vision). */
 const SHROUD_VISIBILITY = 0.35;
 
-// ─── Player fragment cache ──────────────────────────────────────────────────
+/** Vision radius in world units — must match exploration.ts VISION_RADIUS. */
+const VISION_RADIUS = 6;
+const VISION_RADIUS_SQ = VISION_RADIUS * VISION_RADIUS;
+
+// ─── Reusable buffers (avoid per-frame allocations) ─────────────────────────
+
+/** Cached player unit positions — reused each frame. */
+const playerPositions: Array<{ x: number; z: number }> = [];
+
+// ─── Player fragment helpers ────────────────────────────────────────────────
 
 /**
  * Collect all MapFragments belonging to player-faction entities.
@@ -57,7 +66,37 @@ function getPlayerFragments(): MapFragment[] {
 }
 
 /**
- * Get the best fog state across all player fragments for a world position.
+ * Collect world positions of all player units.
+ * Fills the reusable `playerPositions` array (cleared each call).
+ */
+function collectPlayerUnitPositions(): void {
+	playerPositions.length = 0;
+
+	for (const entity of world.query(Position, Unit, Faction)) {
+		const faction = entity.get(Faction)!;
+		if (faction.value !== "player") continue;
+
+		const pos = entity.get(Position)!;
+		playerPositions.push({ x: pos.x, z: pos.z });
+	}
+}
+
+/**
+ * Check if a world position is within vision range of any player unit.
+ */
+function isInPlayerVision(worldX: number, worldZ: number): boolean {
+	for (const pos of playerPositions) {
+		const dx = worldX - pos.x;
+		const dz = worldZ - pos.z;
+		if (dx * dx + dz * dz <= VISION_RADIUS_SQ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Get the best permanent fog state across all player fragments for a world position.
  * Returns the maximum fog state (0=unexplored, 1=abstract, 2=detailed).
  */
 function getBestFogState(
@@ -85,14 +124,15 @@ function getBestFogState(
 /**
  * Update visual fog-of-war on all loaded chunk meshes.
  *
- * Call once per frame (or per simulation tick) after explorationSystem runs.
- * Iterates loaded chunk meshes and sets visibility based on the player's
- * combined fog grid.
+ * Call once per frame after explorationSystem runs.
+ * Combines permanent fog grid (what's been explored) with transient
+ * vision (what player units can currently see) to set mesh visibility.
  *
  * @param chunkState - The ChunkManager state containing loaded chunk meshes
  */
 export function updateFogVisibility(chunkState: ChunkManagerState): void {
 	const playerFragments = getPlayerFragments();
+	collectPlayerUnitPositions();
 
 	// If no player fragments exist yet, hide everything
 	const hasFragments = playerFragments.length > 0;
@@ -104,27 +144,29 @@ export function updateFogVisibility(chunkState: ChunkManagerState): void {
 			const wz = mesh.position.z;
 
 			if (!hasFragments) {
-				// No player fragments — everything unexplored
 				mesh.setEnabled(false);
 				continue;
 			}
 
-			// Sample fog at tile center. Tiles are TILE_SIZE_M wide, so the
-			// center position maps cleanly to the fog grid.
+			// Check permanent fog grid — has this tile ever been explored?
 			const fogState = getBestFogState(playerFragments, wx, wz);
 
-			switch (fogState) {
-				case 0: // Unexplored — completely hidden
-					mesh.setEnabled(false);
-					break;
-				case 1: // Shroud — dimmed
-					mesh.setEnabled(true);
-					mesh.visibility = SHROUD_VISIBILITY;
-					break;
-				case 2: // Visible — full brightness
-					mesh.setEnabled(true);
-					mesh.visibility = 1.0;
-					break;
+			if (fogState === 0) {
+				// Unexplored — completely hidden
+				mesh.setEnabled(false);
+				continue;
+			}
+
+			// Tile has been explored (fogState >= 1).
+			// Now check transient vision — is a player unit currently seeing it?
+			mesh.setEnabled(true);
+
+			if (isInPlayerVision(wx, wz)) {
+				// Currently in vision — full brightness
+				mesh.visibility = 1.0;
+			} else {
+				// Explored but not in current vision — shroud
+				mesh.visibility = SHROUD_VISIBILITY;
 			}
 		}
 	}

@@ -31,8 +31,6 @@ export interface PbrMaterialDef {
 	readonly tiling: number;
 	/** Whether this is a wall (impassable) or floor (passable) material. */
 	readonly isWall: boolean;
-	/** Accent color for circuit trace overlays (hex). null = no accent. */
-	readonly accentColor: number | null;
 }
 
 /**
@@ -52,7 +50,6 @@ export const FLOOR_MATERIALS: Record<FloorType, PbrMaterialDef> = {
 		roughness: "concrete/Concrete002_1K-JPG_Roughness.jpg",
 		tiling: 2,
 		isWall: false,
-		accentColor: 0x00e5ff, // cyan trace
 	},
 	durasteel_span: {
 		label: "Durasteel Span — reinforced metal walkway",
@@ -62,7 +59,6 @@ export const FLOOR_MATERIALS: Record<FloorType, PbrMaterialDef> = {
 		metalness: "metal/Metal005_1K-JPG_Metalness.jpg",
 		tiling: 2,
 		isWall: false,
-		accentColor: 0x00ff88, // green trace
 	},
 	collapsed_zone: {
 		label: "Collapsed Zone — damaged concrete rubble",
@@ -71,7 +67,6 @@ export const FLOOR_MATERIALS: Record<FloorType, PbrMaterialDef> = {
 		roughness: "concrete/Concrete020_1K-JPG_Roughness.jpg",
 		tiling: 1.5,
 		isWall: false,
-		accentColor: null, // no accent — too damaged
 	},
 	dust_district: {
 		label: "Dust District — weathered abandoned concrete",
@@ -80,7 +75,6 @@ export const FLOOR_MATERIALS: Record<FloorType, PbrMaterialDef> = {
 		roughness: "concrete/Concrete010_1K-JPG_Roughness.jpg",
 		tiling: 2,
 		isWall: false,
-		accentColor: 0x334433, // dim faded green
 	},
 	bio_district: {
 		label: "Bio District — stained organic-growth concrete",
@@ -90,7 +84,6 @@ export const FLOOR_MATERIALS: Record<FloorType, PbrMaterialDef> = {
 		ao: "concrete/Concrete003_1K-JPG_AmbientOcclusion.jpg",
 		tiling: 2,
 		isWall: false,
-		accentColor: 0x228844, // organic green
 	},
 	aerostructure: {
 		label: "Aerostructure — elevated industrial metal platform",
@@ -100,7 +93,6 @@ export const FLOOR_MATERIALS: Record<FloorType, PbrMaterialDef> = {
 		metalness: "metal/Metal012_1K-JPG_Metalness.jpg",
 		tiling: 2,
 		isWall: false,
-		accentColor: 0x00ccff, // bright cyan
 	},
 	abyssal_platform: {
 		label: "Abyssal Platform — deep-level corrugated steel",
@@ -110,7 +102,6 @@ export const FLOOR_MATERIALS: Record<FloorType, PbrMaterialDef> = {
 		metalness: "corrugated_steel/CorrugatedSteel003_1K-JPG_Metalness.jpg",
 		tiling: 3,
 		isWall: false,
-		accentColor: 0x0066aa, // deep blue
 	},
 
 	// ── Impassable walls ──
@@ -123,7 +114,6 @@ export const FLOOR_MATERIALS: Record<FloorType, PbrMaterialDef> = {
 		metalness: "metal/Metal020_1K-JPG_Metalness.jpg",
 		tiling: 1,
 		isWall: true,
-		accentColor: 0x003344, // very dim teal
 	},
 
 	// ── Void — no geometry, just black emptiness ──
@@ -135,7 +125,6 @@ export const FLOOR_MATERIALS: Record<FloorType, PbrMaterialDef> = {
 		roughness: "concrete/Concrete020_1K-JPG_Roughness.jpg",
 		tiling: 1,
 		isWall: true,
-		accentColor: null,
 	},
 };
 

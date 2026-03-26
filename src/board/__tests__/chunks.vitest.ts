@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import { CHUNK_SIZE, generateChunk } from "../chunks";
-import { FLOOR_DEFS, type FloorType } from "../types";
+import { FLOOR_DEFS } from "../types";
 
 const VALID_FLOOR_TYPES = new Set(Object.keys(FLOOR_DEFS));
 
@@ -63,9 +63,7 @@ describe("chunk floorType integrity", () => {
 	it("floorType is a valid FloorType string, never 'undefined'", () => {
 		// Specifically test the string "undefined" case
 		const chunk = generateChunk("str-undef-test", -2, -3);
-		const allFloorTypes = chunk.tiles
-			.flat()
-			.map((t) => t.floorType);
+		const allFloorTypes = chunk.tiles.flat().map((t) => t.floorType);
 
 		expect(allFloorTypes).not.toContain("undefined");
 		expect(allFloorTypes).not.toContain(undefined);
@@ -74,4 +72,3 @@ describe("chunk floorType integrity", () => {
 		}
 	});
 });
-

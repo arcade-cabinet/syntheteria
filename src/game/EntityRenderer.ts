@@ -64,6 +64,10 @@ export interface EntityRendererState {
 	ready: boolean;
 	/** Base marker renderer state. */
 	baseMarkers: BaseMarkerState;
+	/** Number of models that loaded successfully. */
+	modelsLoaded: number;
+	/** Total number of models attempted. */
+	modelsTotal: number;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -103,14 +107,22 @@ export async function initEntityRenderer(
 	);
 
 	// Log any failures but don't crash — missing models get the fallback
+	let failCount = 0;
 	for (let i = 0; i < results.length; i++) {
 		if (results[i].status === "rejected") {
+			failCount++;
 			console.warn(
 				`[EntityRenderer] Failed to load ${urls[i]}:`,
 				(results[i] as PromiseRejectedResult).reason,
 			);
 		}
 	}
+
+	const modelsLoaded = urls.length - failCount;
+	const modelsTotal = urls.length;
+	console.log(
+		`[EntityRenderer] Models loaded: ${modelsLoaded}/${modelsTotal}`,
+	);
 
 	// Shared cyan emissive material for selection rings (not frozen — per-ring clones need alpha writes)
 	const selectionMaterial = new StandardMaterial("selection-ring-mat", scene);
@@ -128,6 +140,8 @@ export async function initEntityRenderer(
 		selectionMaterial,
 		ready: assetPool.size > 0,
 		baseMarkers,
+		modelsLoaded,
+		modelsTotal,
 	};
 }
 

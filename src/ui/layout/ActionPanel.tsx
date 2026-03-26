@@ -127,15 +127,15 @@ function UnitActions({ entity }: { entity: Entity }) {
 
 	return (
 		<div className="grid grid-cols-2 gap-1">
-			<ActionButton
-				label="MOVE"
-				enabled={hasLegs && unitData.speed > 0}
-				title="Click ground to move"
-				onClick={() => {
-					// Movement is handled by InputHandler click on ground
-					// This button serves as a visual indicator
-				}}
-			/>
+			{/* MOVE: instructional text, not a clickable action */}
+			<div
+				className="w-full px-2 py-2 text-xs font-mono rounded border min-h-[40px] flex items-center justify-center bg-slate-900/50 border-slate-700 text-slate-400 italic"
+				title="Click the ground to move selected units"
+			>
+				{hasLegs && unitData.speed > 0
+					? "Click ground to move"
+					: "Cannot move"}
+			</div>
 			<ActionButton
 				label="ATTACK"
 				enabled={hasArms}
@@ -146,16 +146,22 @@ function UnitActions({ entity }: { entity: Entity }) {
 					}
 				}}
 			/>
-			<ActionButton
-				label="SCAVENGE"
-				enabled={hasArms && nearbyScavenge}
+			{/* SCAVENGE: status indicator, not a clickable action */}
+			<div
+				className={cn(
+					"w-full px-2 py-2 text-xs font-mono rounded border min-h-[40px] flex items-center justify-center",
+					nearbyScavenge
+						? "bg-green-900/30 border-green-500/40 text-green-400"
+						: "bg-slate-900/50 border-slate-800 text-slate-600",
+				)}
 				title={
-					nearbyScavenge ? "Scavenge nearby resources" : "No resources nearby"
+					nearbyScavenge
+						? "Auto-scavenging nearby resources"
+						: "Move near resources to scavenge"
 				}
-				onClick={() => {
-					// Scavenging is proximity-based and automatic when idle
-				}}
-			/>
+			>
+				{nearbyScavenge ? "AUTO-SCAVENGING" : "SCAVENGE"}
+			</div>
 			<ActionButton
 				label="FOUND BASE"
 				enabled={hasArms}
@@ -180,14 +186,7 @@ function UnitActions({ entity }: { entity: Entity }) {
 				title={`Current: ${currentStance}. Click to cycle.`}
 				onClick={cycleStance}
 			/>
-			<ActionButton
-				label="HACK"
-				enabled={false}
-				title="No hackable target nearby"
-				onClick={() => {
-					// Hacking requires proximity to enemy unit
-				}}
-			/>
+			{/* HACK: hidden — not yet implemented */}
 		</div>
 	);
 }

@@ -55,6 +55,8 @@ declare module "yuka" {
 		addEdge(edge: TEdge): void;
 		getNode(index: number): TNode;
 		getEdge(from: number, to: number): TEdge;
+		getNodes(result: TNode[]): TNode[];
+		getEdgesOfNode(index: number, result: TEdge[]): TEdge[];
 		getNodeCount(): number;
 		getEdgeCount(): number;
 		removeNode(node: TNode): this;

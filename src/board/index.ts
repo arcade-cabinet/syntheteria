@@ -45,8 +45,13 @@ export type { ZonePoiType } from "./labyrinth";
 export { ZONE_POI_DEFS } from "./labyrinth";
 export { generateLabyrinthBoard } from "./labyrinthGenerator";
 // --- Navigation (Yuka) ---
-export type { ChunkNavGraph } from "./navigation";
-export { buildChunkNavGraph, connectChunkGraphs } from "./navigation";
+export type { ChunkNavGraph, WorldNavGraph } from "./navigation";
+export {
+	buildChunkNavGraph,
+	connectChunkGraphs,
+	createWorldNavGraph,
+	mergeChunkIntoWorld,
+} from "./navigation";
 // --- Noise ---
 export { createNoise2D, seededRng, simplexNoise2D } from "./noise";
 // --- Scene (BabylonJS) ---

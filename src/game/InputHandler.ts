@@ -30,6 +30,7 @@ import {
 	selectEntity,
 } from "../input/selection";
 import { type EntityRendererState, getEntityAtPoint } from "./EntityRenderer";
+import { showMoveMarker } from "./MoveMarker";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -79,6 +80,38 @@ export function initInput(
 	let pointerDownY = 0;
 	let isPointerDown = false;
 
+	// ── Box selection DOM overlay ──
+	let selectionBox: HTMLDivElement | null = null;
+
+	function showSelectionBox(
+		x1: number,
+		y1: number,
+		x2: number,
+		y2: number,
+	) {
+		if (!selectionBox) {
+			selectionBox = document.createElement("div");
+			selectionBox.style.cssText =
+				"position:fixed;border:1px solid rgba(0,200,255,0.6);background:rgba(0,200,255,0.1);pointer-events:none;z-index:50;";
+			document.body.appendChild(selectionBox);
+		}
+		const left = Math.min(x1, x2);
+		const top = Math.min(y1, y2);
+		const width = Math.abs(x2 - x1);
+		const height = Math.abs(y2 - y1);
+		selectionBox.style.left = `${left}px`;
+		selectionBox.style.top = `${top}px`;
+		selectionBox.style.width = `${width}px`;
+		selectionBox.style.height = `${height}px`;
+	}
+
+	function hideSelectionBox() {
+		if (selectionBox) {
+			selectionBox.remove();
+			selectionBox = null;
+		}
+	}
+
 	const observer = scene.onPointerObservable.add((info: PointerInfo) => {
 		// Only handle left mouse button (button 0)
 		if (
@@ -97,9 +130,23 @@ export function initInput(
 				break;
 			}
 
+			case PointerEventTypes.POINTERMOVE: {
+				if (!isPointerDown) return;
+				const moveX = info.event.offsetX;
+				const moveY = info.event.offsetY;
+				const dx = moveX - pointerDownX;
+				const dy = moveY - pointerDownY;
+				const dist = Math.sqrt(dx * dx + dy * dy);
+				if (dist > DRAG_THRESHOLD) {
+					showSelectionBox(pointerDownX, pointerDownY, moveX, moveY);
+				}
+				break;
+			}
+
 			case PointerEventTypes.POINTERUP: {
 				if (!isPointerDown) return;
 				isPointerDown = false;
+				hideSelectionBox();
 
 				const upX = info.event.offsetX;
 				const upY = info.event.offsetY;
@@ -122,6 +169,7 @@ export function initInput(
 	// Return cleanup function
 	return () => {
 		scene.onPointerObservable.remove(observer);
+		hideSelectionBox();
 	};
 }
 
@@ -168,6 +216,9 @@ function handleClick(
 					issueMoveTo(entity, worldX, worldZ);
 				}
 			}
+
+			// Show destination marker
+			showMoveMarker(scene, worldX, worldZ);
 			return;
 		}
 	}

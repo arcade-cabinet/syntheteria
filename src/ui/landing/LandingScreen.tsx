@@ -185,6 +185,7 @@ function MenuButton({
 			onClick={disabled ? undefined : onClick}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
+			disabled={disabled}
 			style={{
 				background: disabled
 					? "transparent"

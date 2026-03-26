@@ -155,9 +155,8 @@ interface AppProps {
 	havok: unknown;
 }
 
-let worldInitialized = false;
-
 export default function App({ havok }: AppProps) {
+	const worldInitRef = useRef(false);
 	const [phase, setPhase] = useState<"title" | "narration" | "playing">(
 		"title",
 	);
@@ -279,8 +278,8 @@ export default function App({ havok }: AppProps) {
 			<NarrativeOverlay
 				sequence={INTRO_SEQUENCE}
 				onComplete={() => {
-					if (!worldInitialized) {
-						worldInitialized = true;
+					if (!worldInitRef.current) {
+						worldInitRef.current = true;
 						const cfg = gameConfigRef.current;
 						const { startX, startZ } = initializeWorld(
 							cfg.seed,

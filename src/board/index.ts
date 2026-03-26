@@ -53,7 +53,7 @@ export {
 	mergeChunkIntoWorld,
 } from "./navigation";
 // --- Noise ---
-export { createNoise2D, seededRng, simplexNoise2D } from "./noise";
+export { createDualRng, createNoise2D, fnv1a, seededRng, simplexNoise2D } from "./noise";
 // --- Scene (BabylonJS) ---
 export type { ChunkMeshes } from "./scene";
 export { disposeChunkMeshes, populateChunkScene } from "./scene";

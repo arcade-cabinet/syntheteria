@@ -8,6 +8,7 @@
  * Both paths also deposit into the global ResourcePool.
  */
 
+import { seededRng } from "../board/noise";
 import { MATERIALS, pickMaterialByWeight } from "../config/materials";
 import { isInsideBuilding } from "../ecs/cityLayout";
 import {
@@ -77,21 +78,12 @@ export interface ScavengePoint {
 	amountPerScavenge: number;
 }
 
-// Seeded PRNG
-function seededRandom(seed: number): () => number {
-	let s = seed;
-	return () => {
-		s = (s * 1103515245 + 12345) & 0x7fffffff;
-		return s / 0x7fffffff;
-	};
-}
-
 let scavengePoints: ScavengePoint[] | null = null;
 
 export function getScavengePoints(): ScavengePoint[] {
 	if (scavengePoints) return scavengePoints;
 
-	const rng = seededRandom(789);
+	const rng = seededRng("scavenge-legacy-789");
 	const points: ScavengePoint[] = [];
 
 	for (let z = -15; z < 45; z += 4) {

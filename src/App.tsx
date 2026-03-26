@@ -165,7 +165,9 @@ export default function App({ havok }: AppProps) {
 	);
 	const gameConfigRef = useRef<NewGameConfig>({
 		seed: "default",
+		gameplaySeed: "default-gameplay",
 		difficulty: "normal",
+		worldName: "Default World",
 	});
 	const wasPausedRef = useRef(false);
 	const [startPos, setStartPos] = useState<{ x: number; z: number } | null>(

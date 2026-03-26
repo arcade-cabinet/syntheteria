@@ -70,6 +70,7 @@ function onSceneReady(scene: BScene) {
 		epoch1.backgroundColor[2],
 		1,
 	);
+	scene.ambientColor = new Color3(...epoch1.ambientColor);
 
 	// Create default environment for PBR materials — GLBs need an environment
 	// texture for metallic/roughness reflections. Without this, PBR meshes
@@ -79,7 +80,9 @@ function onSceneReady(scene: BScene) {
 		createGround: false,
 	});
 	if (!envHelper) {
-		console.warn("[GameCanvas] createDefaultEnvironment returned null — PBR materials may render black");
+		console.warn(
+			"[GameCanvas] createDefaultEnvironment returned null — PBR materials may render black",
+		);
 	}
 }
 

@@ -11,6 +11,53 @@ import { initAudio } from "../../audio";
 import { GlobeBackground } from "./GlobeBackground";
 import { type NewGameConfig, NewGameModal } from "./NewGameModal";
 
+// ─── Curved Bezel Arc (ported from cursor branch brand identity) ─────────────
+
+function BezelArc() {
+	const viewBoxW = 1200;
+	const viewBoxH = 200;
+
+	return (
+		<svg
+			width="100%"
+			height="100%"
+			viewBox={`0 0 ${viewBoxW} ${viewBoxH}`}
+			xmlns="http://www.w3.org/2000/svg"
+			preserveAspectRatio="none"
+			role="img"
+			aria-label="Menu bezel arc"
+			style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}
+		>
+			<title>Menu bezel arc</title>
+			<defs>
+				<linearGradient id="bezelFill" x1="0%" y1="0%" x2="0%" y2="100%">
+					<stop offset="0%" stopColor="rgba(6, 17, 26, 0.75)" />
+					<stop offset="100%" stopColor="rgba(3, 7, 13, 0.92)" />
+				</linearGradient>
+			</defs>
+			{/* Filled bezel body */}
+			<path
+				d={`M 0,${viewBoxH} L 0,120 Q ${viewBoxW / 2},20 ${viewBoxW},120 L ${viewBoxW},${viewBoxH} Z`}
+				fill="url(#bezelFill)"
+			/>
+			{/* Outer glow border — brand cyan #8be6ff */}
+			<path
+				d={`M 0,120 Q ${viewBoxW / 2},20 ${viewBoxW},120`}
+				fill="none"
+				stroke="rgba(139, 230, 255, 0.35)"
+				strokeWidth="2"
+			/>
+			{/* Inner accent line */}
+			<path
+				d={`M 50,125 Q ${viewBoxW / 2},30 ${viewBoxW - 50},125`}
+				fill="none"
+				stroke="rgba(139, 230, 255, 0.15)"
+				strokeWidth="1"
+			/>
+		</svg>
+	);
+}
+
 export type { NewGameConfig };
 
 type Modal = "none" | "new";
@@ -113,39 +160,58 @@ export function LandingScreen({
 					{"AWAKEN // CONNECT // REBUILD"}
 				</div>
 
-				{/* Menu */}
-				<div
-					style={{
-						marginTop: "clamp(40px, 8vh, 80px)",
-						opacity: menuOpacity,
-						transition: "opacity 1s ease-in-out",
-						display: "flex",
-						flexDirection: "column",
-						alignItems: "center",
-						gap: "16px",
-					}}
-				>
-					<MenuButton
-						label="NEW GAME"
-						onClick={() => {
-							initAudio();
-							setModal("new");
-						}}
-						primary
-					/>
-					<MenuButton label="CONTINUE" onClick={() => {}} disabled />
-					<MenuButton label="SETTINGS" onClick={() => {}} disabled />
-				</div>
-
-				{/* Version */}
+				{/* Bottom bezel zone — curved SVG arc with menu buttons */}
 				<div
 					style={{
 						position: "absolute",
-						bottom: "20px",
+						bottom: 0,
+						left: 0,
+						right: 0,
+						height: "clamp(140px, 25vh, 200px)",
+						pointerEvents: "none",
+					}}
+				>
+					<BezelArc />
+					<div
+						style={{
+							position: "absolute",
+							bottom: 0,
+							left: 0,
+							right: 0,
+							display: "flex",
+							flexDirection: "row",
+							alignItems: "flex-end",
+							justifyContent: "center",
+							gap: "clamp(16px, 3vw, 40px)",
+							paddingBottom: "clamp(16px, 3vh, 32px)",
+							opacity: menuOpacity,
+							transition: "opacity 1s ease-in-out",
+							pointerEvents: "auto",
+						}}
+					>
+						<MenuButton
+							label="NEW GAME"
+							onClick={() => {
+								initAudio();
+								setModal("new");
+							}}
+							primary
+						/>
+						<MenuButton label="CONTINUE" onClick={() => {}} disabled />
+						<MenuButton label="SETTINGS" onClick={() => {}} disabled />
+					</div>
+				</div>
+
+				{/* Version — above bezel */}
+				<div
+					style={{
+						position: "absolute",
+						bottom: "clamp(140px, 25vh, 200px)",
 						fontFamily: "'Courier New', monospace",
 						fontSize: "11px",
 						color: "rgba(139,230,255,0.3)",
 						letterSpacing: "0.15em",
+						marginBottom: "8px",
 					}}
 				>
 					v0.1.0

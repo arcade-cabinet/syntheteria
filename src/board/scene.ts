@@ -46,18 +46,41 @@ const FLOOR_COLORS: Record<string, Color3> = {
 	abyssal_platform: new Color3(0.08, 0.12, 0.18),
 };
 
+// ─── Variant selection ──────────────────────────────────────────────────────
+// Uses tile position hash to pick one of 3 visual variants per floor type.
+// Creates subtle visual variation (roughness, color tint) across the terrain.
+
+const VARIANT_COUNT = 3;
+
+/** Deterministic hash from tile coords → variant index (0..VARIANT_COUNT-1). */
+function tileVariant(tileX: number, tileZ: number): number {
+	// Simple hash: multiply by primes, XOR, modulo. Deterministic per position.
+	const h = ((tileX * 73856093) ^ (tileZ * 19349663)) >>> 0;
+	return h % VARIANT_COUNT;
+}
+
+// Per-variant roughness and color tint offsets for visual variety
+const VARIANT_ROUGHNESS = [0.82, 0.87, 0.9] as const;
+const VARIANT_TINT = [0.0, -0.015, 0.015] as const;
+
 // ─── Material cache ─────────────────────────────────────────────────────────
 
 const materialCache = new Map<string, PBRMaterial | StandardMaterial>();
 
-function getFloorMaterial(floorType: FloorType, scene: Scene): PBRMaterial {
-	const key = `floor-${floorType}`;
+function getFloorMaterial(
+	floorType: FloorType,
+	variant: number,
+	scene: Scene,
+): PBRMaterial {
+	const key = `floor-${floorType}-v${variant}`;
 	let mat = materialCache.get(key) as PBRMaterial | undefined;
 	if (mat) return mat;
 
 	const def = FLOOR_MATERIALS[floorType];
 	if (!def) {
-		console.error(`[scene] Unknown floorType: "${floorType}" — using fallback material`);
+		console.error(
+			`[scene] Unknown floorType: "${floorType}" — using fallback material`,
+		);
 		mat = new PBRMaterial(key, scene);
 		mat.roughness = 0.85;
 		mat.albedoColor = new Color3(0.3, 0.3, 0.3);
@@ -65,10 +88,17 @@ function getFloorMaterial(floorType: FloorType, scene: Scene): PBRMaterial {
 		materialCache.set(key, mat);
 		return mat;
 	}
+	const baseColor = FLOOR_COLORS[floorType] ?? new Color3(0.3, 0.3, 0.3);
+	const tint = VARIANT_TINT[variant] ?? 0;
+
 	mat = new PBRMaterial(key, scene);
-	mat.roughness = 0.85;
+	mat.roughness = VARIANT_ROUGHNESS[variant] ?? 0.85;
 	mat.metallic = def.metalness ? 0.6 : 0.1;
-	mat.albedoColor = FLOOR_COLORS[floorType] ?? new Color3(0.3, 0.3, 0.3);
+	mat.albedoColor = new Color3(
+		Math.max(0, Math.min(1, baseColor.r + tint)),
+		Math.max(0, Math.min(1, baseColor.g + tint)),
+		Math.max(0, Math.min(1, baseColor.b + tint)),
+	);
 	mat.albedoTexture = new Texture(`/assets/textures/pbr/${def.color}`, scene);
 	mat.freeze(); // won't change — optimize
 
@@ -132,7 +162,11 @@ export function populateChunkScene(chunk: Chunk, scene: Scene): ChunkMeshes {
 				mesh.position = new Vector3(wx, elev, wz);
 				mesh.receiveShadows = true;
 				mesh.isPickable = false;
-				mesh.material = getFloorMaterial(tile.floorType, scene);
+				mesh.material = getFloorMaterial(
+					tile.floorType,
+					tileVariant(tile.x, tile.z),
+					scene,
+				);
 				meshes.push(mesh);
 			} else {
 				const h = wallHeight(tile);

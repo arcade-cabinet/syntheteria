@@ -93,14 +93,16 @@ gamePhaseSystem, explorationSystem, fragmentMergeSystem, powerSystem, resourceSy
 
 ---
 
-## Design Docs (Engine-Independent, Still Valid)
+## Docs
 
-- `docs/design/GAME_OVERVIEW.md` — 3-phase game loop
-- `docs/design/CORE_MECHANICS.md` — fragmented maps, component damage, hacking
-- `docs/design/COMBAT.md` — component-based damage
-- `docs/design/CONSCIOUSNESS_MODEL.md` — AI consciousness model
-- `docs/design/DRONES.md` — starting units
+**Active (9 files, ~2100 lines):**
+- `docs/HANDOFF.md` — deep architecture reference
+- `docs/design/` — game design (5 files: overview, mechanics, combat, consciousness, drones)
 - `docs/story/LORE_OVERVIEW.md` — world lore
+- `docs/technical/CORE_FORMULAS.md` — math formulas
+- `docs/superpowers/reports/` — session reports
+
+**Archived (22 files in `docs/archive/`):** Pre-pivot plans, specs, research. Do not read unless explicitly asked.
 
 ---
 

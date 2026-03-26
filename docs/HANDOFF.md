@@ -329,8 +329,9 @@ These are engine-independent and remain valid:
 - `docs/design/COMBAT.md` — component-based damage, engagement rules
 - `docs/design/CONSCIOUSNESS_MODEL.md` — AI consciousness, compute/signal
 - `docs/design/DRONES.md` — starting units, progression
-- `docs/design/UI_CONCEPT.md` — HUD layout, radial menu
 - `docs/story/LORE_OVERVIEW.md` — world lore
+- `docs/technical/CORE_FORMULAS.md` — math formulas
+- Archived docs in `docs/archive/` — do not read unless asked
 
 ---
 

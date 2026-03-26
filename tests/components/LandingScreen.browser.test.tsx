@@ -1,7 +1,7 @@
 /**
  * Browser tests for LandingScreen component.
  *
- * Tests LandingScreen without the R3F GlobeBackground (mocked away).
+ * Tests LandingScreen without the BabylonJS GlobeBackground (mocked away).
  * Verifies:
  * - LandingScreen renders title and NEW GAME button
  * - NEW GAME button is clickable
@@ -14,7 +14,7 @@ import { afterEach, expect, test, vi } from "vitest";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-// Mock GlobeBackground — it needs R3F/WebGL which may not be available in tests
+// Mock GlobeBackground — it needs BabylonJS/WebGL which may not be available in tests
 vi.mock("../../src/ui/landing/GlobeBackground", () => ({
 	GlobeBackground: () => <div data-testid="mock-globe">Globe</div>,
 }));

@@ -8,6 +8,7 @@
  */
 
 import type { ArcRotateCamera, Scene as BScene } from "@babylonjs/core";
+import { Animation } from "@babylonjs/core/Animations/animation";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
@@ -17,7 +18,9 @@ import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import { useEffect, useRef } from "react";
 import { Scene, useScene } from "reactylon";
 import { Engine } from "reactylon/web";
+import { getEpochVisual } from "../config/epochVisualDefs";
 import { getGameSpeed, simulationTick } from "../ecs/gameState";
+import { GameError, logError } from "../errors";
 import { movementSystem } from "../systems/movement";
 import {
 	type ChunkManagerState,
@@ -31,13 +34,15 @@ import {
 	initEntityRenderer,
 	syncEntities,
 } from "./EntityRenderer";
+import { updateFogVisibility } from "./FogOfWar";
 import { initInput } from "./InputHandler";
 
-// ─── Fog color — dark ecumenopolis void (#03070b) ────────────────────────────
+// ─── Epoch-driven atmosphere — Epoch 1 defaults ──────────────────────────────
 
-const FOG_R = 0.012;
-const FOG_G = 0.027;
-const FOG_B = 0.043;
+const epoch1 = getEpochVisual(1);
+const FOG_R = epoch1.fogColor[0];
+const FOG_G = epoch1.fogColor[1];
+const FOG_B = epoch1.fogColor[2];
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -57,9 +62,28 @@ function onSceneReady(scene: BScene) {
 
 	// Exponential fog matching the void ground color
 	scene.fogMode = 2; // FOGMODE_EXP2
-	scene.fogDensity = 0.015;
+	scene.fogDensity = epoch1.fogDensity;
 	scene.fogColor.set(FOG_R, FOG_G, FOG_B);
-	scene.clearColor.set(FOG_R, FOG_G, FOG_B, 1);
+	scene.clearColor.set(
+		epoch1.backgroundColor[0],
+		epoch1.backgroundColor[1],
+		epoch1.backgroundColor[2],
+		1,
+	);
+	scene.ambientColor = new Color3(...epoch1.ambientColor);
+
+	// Create default environment for PBR materials — GLBs need an environment
+	// texture for metallic/roughness reflections. Without this, PBR meshes
+	// render as completely black/invisible.
+	const envHelper = scene.createDefaultEnvironment({
+		createSkybox: false,
+		createGround: false,
+	});
+	if (!envHelper) {
+		console.warn(
+			"[GameCanvas] createDefaultEnvironment returned null — PBR materials may render black",
+		);
+	}
 }
 
 // ─── Inner scene content (needs useScene) ────────────────────────────────────
@@ -99,20 +123,62 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		const cam = scene.activeCamera as ArcRotateCamera;
 		if (!cam) return;
 
+		// Final gameplay values
+		const FINAL_ALPHA = Tools.ToRadians(-90);
+		const FINAL_BETA = Tools.ToRadians(25); // 2.5D RTS perspective with depth
+		const FINAL_RADIUS = 60;
+
+		// Start zoomed out and more tilted for a dramatic intro
 		cam.target = new Vector3(startWX, 0, startWZ);
-		cam.alpha = Tools.ToRadians(-90);
-		cam.beta = Tools.ToRadians(1); // near-vertical top-down
-		cam.radius = 60;
+		cam.alpha = FINAL_ALPHA;
+		cam.beta = Tools.ToRadians(45); // start tilted for dramatic reveal
+		cam.radius = 120; // start zoomed out
 
-		// Lock rotation — pan and zoom only
-		cam.lowerAlphaLimit = cam.alpha;
-		cam.upperAlphaLimit = cam.alpha;
-		cam.lowerBetaLimit = Tools.ToRadians(0.1);
-		cam.upperBetaLimit = Tools.ToRadians(1);
+		// Temporarily widen limits so animation can run freely
+		cam.lowerBetaLimit = 0;
+		cam.upperBetaLimit = Math.PI;
+		cam.lowerRadiusLimit = 10;
+		cam.upperRadiusLimit = 200;
 
-		// Zoom limits
-		cam.lowerRadiusLimit = 20;
-		cam.upperRadiusLimit = 100;
+		// Smooth intro animation (~1.5 seconds at 30fps = 45 frames)
+		const FPS = 30;
+		const INTRO_FRAMES = 45;
+
+		const radiusAnim = new Animation(
+			"introRadius",
+			"radius",
+			FPS,
+			Animation.ANIMATIONTYPE_FLOAT,
+			Animation.ANIMATIONLOOPMODE_CONSTANT,
+		);
+		radiusAnim.setKeys([
+			{ frame: 0, value: 120 },
+			{ frame: INTRO_FRAMES, value: FINAL_RADIUS },
+		]);
+
+		const betaAnim = new Animation(
+			"introBeta",
+			"beta",
+			FPS,
+			Animation.ANIMATIONTYPE_FLOAT,
+			Animation.ANIMATIONLOOPMODE_CONSTANT,
+		);
+		betaAnim.setKeys([
+			{ frame: 0, value: Tools.ToRadians(45) },
+			{ frame: INTRO_FRAMES, value: FINAL_BETA },
+		]);
+
+		cam.animations = [radiusAnim, betaAnim];
+		scene.beginAnimation(cam, 0, INTRO_FRAMES, false, 1.0, () => {
+			// Animation complete — lock camera to gameplay constraints
+			cam.alpha = FINAL_ALPHA;
+			cam.lowerAlphaLimit = FINAL_ALPHA;
+			cam.upperAlphaLimit = FINAL_ALPHA;
+			cam.lowerBetaLimit = Tools.ToRadians(20);
+			cam.upperBetaLimit = Tools.ToRadians(35);
+			cam.lowerRadiusLimit = 20;
+			cam.upperRadiusLimit = 100;
+		});
 
 		// Pan settings
 		cam.panningSensibility = 30;
@@ -147,6 +213,11 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 				simAccumulatorRef.current -= SIM_INTERVAL;
 				simulationTick();
 			}
+
+			// Update visual fog-of-war after simulation (reads fog grid, sets mesh visibility)
+			if (chunkStateRef.current) {
+				updateFogVisibility(chunkStateRef.current);
+			}
 		};
 		scene.registerBeforeRender(gameLoopCallback);
 
@@ -175,7 +246,11 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 				scene.registerBeforeRender(entityRenderCallback);
 			})
 			.catch((err) => {
-				console.warn("[GameCanvas] Entity renderer init failed:", err);
+				logError(
+					new GameError("Entity renderer initialization failed", "GameCanvas", {
+						cause: err,
+					}),
+				);
 			});
 
 		// Input handler — click-to-select, click-to-move, box selection
@@ -201,12 +276,12 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 
 	return (
 		<>
-			{/* Sun — cool directional light from upper-left */}
+			{/* Sun — epoch-driven directional light from upper-left */}
 			<directionalLight
 				name="sun"
 				direction={new Vector3(-0.3, -1, 0.3)}
-				intensity={Math.PI * 0.8}
-				diffuse={new Color3(0.67, 0.8, 1.0)}
+				intensity={epoch1.sunIntensity}
+				diffuse={new Color3(...epoch1.sunColor)}
 			/>
 
 			{/* Ambient fill — dark ground bounce */}

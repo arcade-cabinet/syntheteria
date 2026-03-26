@@ -19,7 +19,7 @@ import {
 } from "@babylonjs/core/Events/pointerEvents";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Entity } from "koota";
-
+import { playSfx } from "../audio";
 import { EntityId, Faction, Position, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
 import {
@@ -191,6 +191,7 @@ function handleClick(
 				} else {
 					// Clicked on a friendly entity — select it
 					selectEntity(entity);
+					playSfx("unit_select");
 				}
 				return;
 			}
@@ -212,8 +213,9 @@ function handleClick(
 				}
 			}
 
-			// Show destination marker
+			// Show destination marker and play move SFX
 			showMoveMarker(scene, worldX, worldZ);
+			playSfx("unit_move");
 			return;
 		}
 	}

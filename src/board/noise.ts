@@ -1,4 +1,4 @@
-function fnv1a(str: string): number {
+export function fnv1a(str: string): number {
 	let hash = 2166136261;
 	for (let i = 0; i < str.length; i++) {
 		hash ^= str.charCodeAt(i);
@@ -19,6 +19,28 @@ function mulberry32(seed: number) {
 
 export function seededRng(seed: string): () => number {
 	return mulberry32(fnv1a(seed));
+}
+
+/**
+ * Create two independent RNG streams from a single master seed.
+ * - mapRng: for terrain generation, biome placement, salvage positions
+ * - gameplayRng: for combat rolls, scavenge yields, storm timing
+ *
+ * Each stream uses the same Mulberry32 algorithm but derives its initial
+ * state from a different FNV-1a hash of the master seed.
+ */
+export function createDualRng(masterSeed: number): {
+	mapRng: () => number;
+	gameplayRng: () => number;
+} {
+	// Derive two independent seeds via FNV-1a with different prefixes
+	const mapHash = fnv1a(`map:${masterSeed}`);
+	const gameplayHash = fnv1a(`gameplay:${masterSeed}`);
+
+	return {
+		mapRng: mulberry32(mapHash),
+		gameplayRng: mulberry32(gameplayHash),
+	};
 }
 
 function hashGrid(ix: number, iz: number, seedOffset: number): number {

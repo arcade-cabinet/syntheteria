@@ -6,13 +6,17 @@
  *   - Difficulty (Easy / Normal / Hard — affects cult escalation speed)
  */
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { fnv1a, seededRng } from "../../board/noise";
+import { generateWorldName } from "../../config/seedPools";
 
 export type Difficulty = "easy" | "normal" | "hard";
 
 export interface NewGameConfig {
 	seed: string;
+	gameplaySeed: string;
 	difficulty: Difficulty;
+	worldName: string;
 }
 
 const DIFFICULTY_INFO: Record<Difficulty, { label: string; desc: string }> = {
@@ -25,6 +29,11 @@ function generateSeed(): string {
 	return Math.random().toString(36).slice(2, 10).toUpperCase();
 }
 
+function worldNameFromSeed(seed: string): string {
+	const rng = seededRng(`worldname:${seed}`);
+	return generateWorldName(rng);
+}
+
 export function NewGameModal({
 	onStart,
 	onCancel,
@@ -35,9 +44,21 @@ export function NewGameModal({
 	const [seed, setSeed] = useState(generateSeed);
 	const [difficulty, setDifficulty] = useState<Difficulty>("normal");
 
+	const worldName = useMemo(() => worldNameFromSeed(seed), [seed]);
+
+	const handleReroll = useCallback(() => {
+		setSeed(generateSeed());
+	}, []);
+
 	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		onStart({ seed: seed.trim() || generateSeed(), difficulty });
+		const finalSeed = seed.trim() || generateSeed();
+		onStart({
+			seed: finalSeed,
+			gameplaySeed: fnv1a(`gameplay:${finalSeed}`).toString(36),
+			difficulty,
+			worldName: worldNameFromSeed(finalSeed),
+		});
 	}
 
 	return (
@@ -81,6 +102,57 @@ export function NewGameModal({
 					INITIALIZE
 				</div>
 
+				{/* World Name */}
+				<div style={{ textAlign: "center" }}>
+					<span
+						style={{
+							fontSize: "11px",
+							letterSpacing: "0.2em",
+							color: "#8be6ff88",
+							display: "block",
+							marginBottom: "8px",
+						}}
+					>
+						WORLD DESIGNATION
+					</span>
+					<div
+						style={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							gap: "10px",
+						}}
+					>
+						<span
+							style={{
+								fontSize: "16px",
+								letterSpacing: "0.1em",
+								color: "#8be6ff",
+								textShadow: "0 0 12px rgba(139,230,255,0.4)",
+							}}
+						>
+							{worldName}
+						</span>
+						<button
+							type="button"
+							onClick={handleReroll}
+							title="Re-roll world"
+							style={{
+								background: "rgba(139,230,255,0.08)",
+								border: "1px solid #8be6ff33",
+								borderRadius: "6px",
+								padding: "4px 8px",
+								fontSize: "14px",
+								color: "#8be6ff",
+								cursor: "pointer",
+								fontFamily: "'Courier New', monospace",
+							}}
+						>
+							{"\u21BB"}
+						</button>
+					</div>
+				</div>
+
 				{/* Seed */}
 				<div>
 					<label
@@ -117,7 +189,7 @@ export function NewGameModal({
 						/>
 						<button
 							type="button"
-							onClick={() => setSeed(generateSeed())}
+							onClick={handleReroll}
 							title="Random seed"
 							style={{
 								background: "rgba(139,230,255,0.08)",

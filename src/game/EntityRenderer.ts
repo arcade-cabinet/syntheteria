@@ -22,8 +22,16 @@ import type { Scene } from "@babylonjs/core/scene";
 import "@babylonjs/loaders/glTF";
 
 import { getAllRobotModelUrls, resolveUnitModelUrl } from "../config/models";
-import { EntityId, Faction, Navigation, Position, Unit } from "../ecs/traits";
+import {
+	EntityId,
+	Faction,
+	Navigation,
+	Position,
+	ScavengeSite,
+	Unit,
+} from "../ecs/traits";
 import { world } from "../ecs/world";
+import { GameError, logError } from "../errors";
 import {
 	type BaseMarkerState,
 	disposeBaseMarkers,
@@ -68,6 +76,8 @@ export interface EntityRendererState {
 	modelsLoaded: number;
 	/** Total number of models attempted. */
 	modelsTotal: number;
+	/** Salvage node meshes keyed by Koota entity numeric ID. */
+	salvageMeshes: Map<number, SalvageMeshEntry>;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -84,6 +94,36 @@ const BOB_SPEED = 2.0;
 /** Selection ring inner/outer diameter ratio. */
 const RING_DIAMETER = 2.5;
 const RING_THICKNESS = 0.12;
+
+// ─── Salvage node constants ─────────────────────────────────────────────────
+
+/** Emissive colors for each material type. */
+const SALVAGE_COLORS: Record<string, Color3> = {
+	scrapMetal: new Color3(1.0, 0.5, 0.1), // orange
+	circuitry: new Color3(0.0, 0.8, 1.0), // cyan
+	powerCells: new Color3(1.0, 0.9, 0.2), // yellow
+	durasteel: new Color3(0.75, 0.75, 0.8), // silver
+};
+
+/** Pulse animation speed (radians per second). */
+const SALVAGE_PULSE_SPEED = 3.0;
+
+/** Pulse emissive intensity range. */
+const SALVAGE_PULSE_MIN = 0.4;
+const SALVAGE_PULSE_MAX = 1.0;
+
+interface SalvageMeshEntry {
+	/** Root mesh for this salvage node. */
+	root: AbstractMesh;
+	/** All child meshes for disposal. */
+	meshes: AbstractMesh[];
+	/** Material for emissive pulsing. */
+	material: StandardMaterial;
+	/** Phase offset for pulse animation. */
+	pulsePhase: number;
+	/** Base emissive color (before pulsing). */
+	baseColor: Color3;
+}
 
 // ─── Initialization ─────────────────────────────────────────────────────────
 
@@ -106,14 +146,15 @@ export async function initEntityRenderer(
 		}),
 	);
 
-	// Log any failures but don't crash — missing models get the fallback
+	// Log any failures visibly — missing models are bugs, not expected
 	let failCount = 0;
 	for (let i = 0; i < results.length; i++) {
 		if (results[i].status === "rejected") {
 			failCount++;
-			console.warn(
-				`[EntityRenderer] Failed to load ${urls[i]}:`,
-				(results[i] as PromiseRejectedResult).reason,
+			logError(
+				new GameError(`Failed to load model ${urls[i]}`, "EntityRenderer", {
+					cause: (results[i] as PromiseRejectedResult).reason,
+				}),
 			);
 		}
 	}
@@ -144,6 +185,7 @@ export async function initEntityRenderer(
 		baseMarkers,
 		modelsLoaded,
 		modelsTotal,
+		salvageMeshes: new Map(),
 	};
 }
 
@@ -239,6 +281,9 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 		}
 	}
 
+	// ── Salvage node sync ────────────────────────────────────────────────
+	syncSalvageNodes(state, scene, time);
+
 	// Sync base markers
 	syncBaseMarkers(state.baseMarkers, scene, world);
 }
@@ -287,6 +332,11 @@ export function disposeEntityRenderer(state: EntityRendererState): void {
 	}
 	state.assetPool.clear();
 
+	for (const [, entry] of state.salvageMeshes) {
+		disposeSalvageEntry(entry);
+	}
+	state.salvageMeshes.clear();
+
 	disposeBaseMarkers(state.baseMarkers);
 	state.selectionMaterial.dispose();
 	state.ready = false;
@@ -317,18 +367,14 @@ function createEntityMesh(
 	const container = state.assetPool.get(modelUrl);
 
 	if (!container) {
-		// Try fallback URL
-		const fallbackUrl = resolveUnitModelUrl("__fallback__");
-		const fallbackContainer = state.assetPool.get(fallbackUrl);
-		if (!fallbackContainer) return undefined;
-		return createFromContainer(
-			entityId,
-			unitType,
-			pos,
-			fallbackContainer,
-			state,
-			scene,
+		logError(
+			new GameError(
+				`No model loaded for unit type "${unitType}" (url: ${modelUrl})`,
+				"EntityRenderer",
+				{ entityId },
+			),
 		);
+		return undefined;
 	}
 
 	return createFromContainer(entityId, unitType, pos, container, state, scene);
@@ -350,13 +396,15 @@ function createFromContainer(
 	rootNode.position = new Vector3(pos.x, pos.y, pos.z);
 	rootNode.scaling = new Vector3(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
 
-	// Tag all meshes with entityId for raycasting
+	// Tag all meshes with entityId for raycasting and enforce visibility
 	const meshes: AbstractMesh[] = [];
 	for (const node of instance.rootNodes) {
 		const nodeMeshes = (node as TransformNode).getChildMeshes?.(false) ?? [];
 		for (const mesh of nodeMeshes) {
 			mesh.metadata = { ...mesh.metadata, entityId };
 			mesh.isPickable = true;
+			mesh.isVisible = true;
+			mesh.setEnabled(true);
 			meshes.push(mesh);
 		}
 		// Also tag the root if it's a mesh
@@ -366,12 +414,24 @@ function createFromContainer(
 				entityId,
 			};
 			(node as AbstractMesh).isPickable = true;
+			(node as AbstractMesh).isVisible = true;
 			meshes.push(node as AbstractMesh);
 		}
 	}
 
 	// Also tag the root transform node
 	rootNode.metadata = { ...rootNode.metadata, entityId };
+
+	// If GLB produced no visible child meshes, log error — don't create placeholder geometry
+	if (meshes.length === 0) {
+		logError(
+			new GameError(
+				`GLB for "${unitType}" (entity ${entityId}) produced 0 meshes — entity will be invisible`,
+				"EntityRenderer",
+				{ entityId, context: { unitType } },
+			),
+		);
+	}
 
 	// Selection ring — torus parented to root, hidden by default
 	const ring = MeshBuilder.CreateTorus(
@@ -419,5 +479,213 @@ function disposeEntry(entry: EntityMeshEntry): void {
 	}
 
 	// Dispose root node
+	entry.root.dispose();
+}
+
+// ─── Salvage node rendering ────────────────────────────────────────────────
+
+/**
+ * Sync salvage node meshes with ECS ScavengeSite entities.
+ * Creates procedural meshes for new sites, updates pulse animation,
+ * and removes meshes for depleted/destroyed sites.
+ */
+function syncSalvageNodes(
+	state: EntityRendererState,
+	scene: Scene,
+	time: number,
+): void {
+	const liveIds = new Set<number>();
+
+	for (const entity of world.query(ScavengeSite, Position)) {
+		const site = entity.get(ScavengeSite)!;
+		const pos = entity.get(Position)!;
+		const eid = entity as unknown as number; // Koota entities ARE numbers
+
+		// Skip depleted sites
+		if (site.remaining <= 0) continue;
+
+		liveIds.add(eid);
+
+		let entry = state.salvageMeshes.get(eid);
+
+		// Create mesh if this entity is new
+		if (!entry) {
+			entry = createSalvageMesh(scene, site.materialType, pos.x, pos.y, pos.z);
+			state.salvageMeshes.set(eid, entry);
+		}
+
+		// Update position (salvage nodes don't move, but just in case)
+		entry.root.position.set(pos.x, pos.y, pos.z);
+
+		// Pulsing emissive animation
+		const pulse =
+			SALVAGE_PULSE_MIN +
+			(SALVAGE_PULSE_MAX - SALVAGE_PULSE_MIN) *
+				(0.5 + 0.5 * Math.sin(time * SALVAGE_PULSE_SPEED + entry.pulsePhase));
+		entry.material.emissiveColor = new Color3(
+			entry.baseColor.r * pulse,
+			entry.baseColor.g * pulse,
+			entry.baseColor.b * pulse,
+		);
+	}
+
+	// Dispose meshes for entities that no longer exist or are depleted
+	for (const [eid, entry] of state.salvageMeshes) {
+		if (!liveIds.has(eid)) {
+			disposeSalvageEntry(entry);
+			state.salvageMeshes.delete(eid);
+		}
+	}
+}
+
+/**
+ * Create a procedural salvage node mesh: a pile of debris shapes.
+ * Each material type gets a different shape composition.
+ */
+function createSalvageMesh(
+	scene: Scene,
+	materialType: string,
+	x: number,
+	y: number,
+	z: number,
+): SalvageMeshEntry {
+	const baseColor = SALVAGE_COLORS[materialType];
+	if (!baseColor) {
+		logError(
+			new GameError(
+				`Unknown salvage material type "${materialType}" — no color defined`,
+				"EntityRenderer",
+				{ context: { materialType, x, z } },
+			),
+		);
+	}
+	const color = baseColor ?? new Color3(0.5, 0.5, 0.5);
+
+	// Shared emissive material for this node
+	const mat = new StandardMaterial(`salvage_mat_${x}_${z}`, scene);
+	mat.diffuseColor = new Color3(color.r * 0.3, color.g * 0.3, color.b * 0.3);
+	mat.emissiveColor = color.clone();
+	mat.specularColor = Color3.Black();
+
+	const meshes: AbstractMesh[] = [];
+
+	// Build shape composition based on material type
+	if (materialType === "scrapMetal") {
+		// Twisted metal chunks — rotated boxes
+		const box1 = MeshBuilder.CreateBox(
+			`salvage_box1_${x}_${z}`,
+			{ width: 0.6, height: 0.3, depth: 0.4 },
+			scene,
+		);
+		box1.rotation.y = 0.7;
+		box1.position.y = 0.15;
+		box1.material = mat;
+		meshes.push(box1);
+
+		const box2 = MeshBuilder.CreateBox(
+			`salvage_box2_${x}_${z}`,
+			{ width: 0.4, height: 0.25, depth: 0.5 },
+			scene,
+		);
+		box2.rotation.y = -0.5;
+		box2.rotation.z = 0.3;
+		box2.position.set(0.2, 0.25, 0.1);
+		box2.material = mat;
+		meshes.push(box2);
+	} else if (materialType === "circuitry") {
+		// Circuit board — flat rectangle + small sphere nodes
+		const board = MeshBuilder.CreateBox(
+			`salvage_board_${x}_${z}`,
+			{ width: 0.8, height: 0.05, depth: 0.6 },
+			scene,
+		);
+		board.position.y = 0.1;
+		board.material = mat;
+		meshes.push(board);
+
+		const node1 = MeshBuilder.CreateSphere(
+			`salvage_node1_${x}_${z}`,
+			{ diameter: 0.15 },
+			scene,
+		);
+		node1.position.set(-0.2, 0.18, 0.1);
+		node1.material = mat;
+		meshes.push(node1);
+
+		const node2 = MeshBuilder.CreateSphere(
+			`salvage_node2_${x}_${z}`,
+			{ diameter: 0.12 },
+			scene,
+		);
+		node2.position.set(0.15, 0.18, -0.15);
+		node2.material = mat;
+		meshes.push(node2);
+	} else if (materialType === "powerCells") {
+		// Glowing cylinders — battery cells
+		const cell1 = MeshBuilder.CreateCylinder(
+			`salvage_cell1_${x}_${z}`,
+			{ height: 0.5, diameter: 0.25 },
+			scene,
+		);
+		cell1.position.set(0, 0.25, 0);
+		cell1.material = mat;
+		meshes.push(cell1);
+
+		const cell2 = MeshBuilder.CreateCylinder(
+			`salvage_cell2_${x}_${z}`,
+			{ height: 0.4, diameter: 0.2 },
+			scene,
+		);
+		cell2.rotation.z = 0.4;
+		cell2.position.set(0.2, 0.2, 0.15);
+		cell2.material = mat;
+		meshes.push(cell2);
+	} else {
+		// durasteel / default — sturdy angular shapes
+		const slab = MeshBuilder.CreateBox(
+			`salvage_slab_${x}_${z}`,
+			{ width: 0.7, height: 0.15, depth: 0.5 },
+			scene,
+		);
+		slab.position.y = 0.08;
+		slab.rotation.y = 0.3;
+		slab.material = mat;
+		meshes.push(slab);
+
+		const chunk = MeshBuilder.CreateBox(
+			`salvage_chunk_${x}_${z}`,
+			{ width: 0.3, height: 0.35, depth: 0.3 },
+			scene,
+		);
+		chunk.position.set(-0.15, 0.25, 0.1);
+		chunk.material = mat;
+		meshes.push(chunk);
+	}
+
+	// Parent all shapes under a root TransformNode
+	const root = MeshBuilder.CreateBox(
+		`salvage_root_${x}_${z}`,
+		{ size: 0.001 },
+		scene,
+	);
+	root.isVisible = false;
+	root.position.set(x, y, z);
+
+	for (const m of meshes) {
+		m.parent = root;
+		m.isPickable = false;
+	}
+
+	// Random pulse phase so nodes don't glow in sync
+	const pulsePhase = (x * 7.3 + z * 13.7) % (Math.PI * 2);
+
+	return { root, meshes, material: mat, pulsePhase, baseColor: color };
+}
+
+function disposeSalvageEntry(entry: SalvageMeshEntry): void {
+	entry.material.dispose();
+	for (const mesh of entry.meshes) {
+		mesh.dispose();
+	}
 	entry.root.dispose();
 }

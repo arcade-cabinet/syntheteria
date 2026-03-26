@@ -19,7 +19,7 @@ import {
 } from "@babylonjs/core/Events/pointerEvents";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Entity } from "koota";
-
+import { playSfx } from "../audio";
 import { EntityId, Faction, Position, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
 import {
@@ -29,7 +29,6 @@ import {
 	issueMoveTo,
 	selectEntity,
 } from "../input/selection";
-import { playSfx } from "../audio";
 import { type EntityRendererState, getEntityAtPoint } from "./EntityRenderer";
 import { showMoveMarker } from "./MoveMarker";
 

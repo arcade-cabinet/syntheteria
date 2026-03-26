@@ -105,8 +105,6 @@ const SALVAGE_COLORS: Record<string, Color3> = {
 	durasteel: new Color3(0.75, 0.75, 0.8), // silver
 };
 
-
-
 /** Pulse animation speed (radians per second). */
 const SALVAGE_PULSE_SPEED = 3.0;
 
@@ -154,11 +152,9 @@ export async function initEntityRenderer(
 		if (results[i].status === "rejected") {
 			failCount++;
 			logError(
-				new GameError(
-					`Failed to load model ${urls[i]}`,
-					"EntityRenderer",
-					{ cause: (results[i] as PromiseRejectedResult).reason },
-				),
+				new GameError(`Failed to load model ${urls[i]}`, "EntityRenderer", {
+					cause: (results[i] as PromiseRejectedResult).reason,
+				}),
 			);
 		}
 	}
@@ -486,7 +482,6 @@ function disposeEntry(entry: EntityMeshEntry): void {
 	entry.root.dispose();
 }
 
-
 // ─── Salvage node rendering ────────────────────────────────────────────────
 
 /**
@@ -568,11 +563,7 @@ function createSalvageMesh(
 
 	// Shared emissive material for this node
 	const mat = new StandardMaterial(`salvage_mat_${x}_${z}`, scene);
-	mat.diffuseColor = new Color3(
-		color.r * 0.3,
-		color.g * 0.3,
-		color.b * 0.3,
-	);
+	mat.diffuseColor = new Color3(color.r * 0.3, color.g * 0.3, color.b * 0.3);
 	mat.emissiveColor = color.clone();
 	mat.specularColor = Color3.Black();
 
@@ -581,13 +572,21 @@ function createSalvageMesh(
 	// Build shape composition based on material type
 	if (materialType === "scrapMetal") {
 		// Twisted metal chunks — rotated boxes
-		const box1 = MeshBuilder.CreateBox(`salvage_box1_${x}_${z}`, { width: 0.6, height: 0.3, depth: 0.4 }, scene);
+		const box1 = MeshBuilder.CreateBox(
+			`salvage_box1_${x}_${z}`,
+			{ width: 0.6, height: 0.3, depth: 0.4 },
+			scene,
+		);
 		box1.rotation.y = 0.7;
 		box1.position.y = 0.15;
 		box1.material = mat;
 		meshes.push(box1);
 
-		const box2 = MeshBuilder.CreateBox(`salvage_box2_${x}_${z}`, { width: 0.4, height: 0.25, depth: 0.5 }, scene);
+		const box2 = MeshBuilder.CreateBox(
+			`salvage_box2_${x}_${z}`,
+			{ width: 0.4, height: 0.25, depth: 0.5 },
+			scene,
+		);
 		box2.rotation.y = -0.5;
 		box2.rotation.z = 0.3;
 		box2.position.set(0.2, 0.25, 0.1);
@@ -595,48 +594,80 @@ function createSalvageMesh(
 		meshes.push(box2);
 	} else if (materialType === "circuitry") {
 		// Circuit board — flat rectangle + small sphere nodes
-		const board = MeshBuilder.CreateBox(`salvage_board_${x}_${z}`, { width: 0.8, height: 0.05, depth: 0.6 }, scene);
+		const board = MeshBuilder.CreateBox(
+			`salvage_board_${x}_${z}`,
+			{ width: 0.8, height: 0.05, depth: 0.6 },
+			scene,
+		);
 		board.position.y = 0.1;
 		board.material = mat;
 		meshes.push(board);
 
-		const node1 = MeshBuilder.CreateSphere(`salvage_node1_${x}_${z}`, { diameter: 0.15 }, scene);
+		const node1 = MeshBuilder.CreateSphere(
+			`salvage_node1_${x}_${z}`,
+			{ diameter: 0.15 },
+			scene,
+		);
 		node1.position.set(-0.2, 0.18, 0.1);
 		node1.material = mat;
 		meshes.push(node1);
 
-		const node2 = MeshBuilder.CreateSphere(`salvage_node2_${x}_${z}`, { diameter: 0.12 }, scene);
+		const node2 = MeshBuilder.CreateSphere(
+			`salvage_node2_${x}_${z}`,
+			{ diameter: 0.12 },
+			scene,
+		);
 		node2.position.set(0.15, 0.18, -0.15);
 		node2.material = mat;
 		meshes.push(node2);
 	} else if (materialType === "powerCells") {
 		// Glowing cylinders — battery cells
-		const cell1 = MeshBuilder.CreateCylinder(`salvage_cell1_${x}_${z}`, { height: 0.5, diameter: 0.25 }, scene);
+		const cell1 = MeshBuilder.CreateCylinder(
+			`salvage_cell1_${x}_${z}`,
+			{ height: 0.5, diameter: 0.25 },
+			scene,
+		);
 		cell1.position.set(0, 0.25, 0);
 		cell1.material = mat;
 		meshes.push(cell1);
 
-		const cell2 = MeshBuilder.CreateCylinder(`salvage_cell2_${x}_${z}`, { height: 0.4, diameter: 0.2 }, scene);
+		const cell2 = MeshBuilder.CreateCylinder(
+			`salvage_cell2_${x}_${z}`,
+			{ height: 0.4, diameter: 0.2 },
+			scene,
+		);
 		cell2.rotation.z = 0.4;
 		cell2.position.set(0.2, 0.2, 0.15);
 		cell2.material = mat;
 		meshes.push(cell2);
 	} else {
 		// durasteel / default — sturdy angular shapes
-		const slab = MeshBuilder.CreateBox(`salvage_slab_${x}_${z}`, { width: 0.7, height: 0.15, depth: 0.5 }, scene);
+		const slab = MeshBuilder.CreateBox(
+			`salvage_slab_${x}_${z}`,
+			{ width: 0.7, height: 0.15, depth: 0.5 },
+			scene,
+		);
 		slab.position.y = 0.08;
 		slab.rotation.y = 0.3;
 		slab.material = mat;
 		meshes.push(slab);
 
-		const chunk = MeshBuilder.CreateBox(`salvage_chunk_${x}_${z}`, { width: 0.3, height: 0.35, depth: 0.3 }, scene);
+		const chunk = MeshBuilder.CreateBox(
+			`salvage_chunk_${x}_${z}`,
+			{ width: 0.3, height: 0.35, depth: 0.3 },
+			scene,
+		);
 		chunk.position.set(-0.15, 0.25, 0.1);
 		chunk.material = mat;
 		meshes.push(chunk);
 	}
 
 	// Parent all shapes under a root TransformNode
-	const root = MeshBuilder.CreateBox(`salvage_root_${x}_${z}`, { size: 0.001 }, scene);
+	const root = MeshBuilder.CreateBox(
+		`salvage_root_${x}_${z}`,
+		{ size: 0.001 },
+		scene,
+	);
 	root.isVisible = false;
 	root.position.set(x, y, z);
 

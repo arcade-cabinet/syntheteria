@@ -107,4 +107,3 @@ export function generateWorldName(rng: () => number): string {
 
 	return `${SEED_ADJECTIVES[adj1Index]} ${SEED_ADJECTIVES[adj2Index]} ${SEED_NOUNS[nounIndex]}`;
 }
-

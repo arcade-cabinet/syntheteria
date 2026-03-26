@@ -254,14 +254,15 @@ function applyChunkZoneFloors(
 						tile.floorType = noiseFloor;
 					} else {
 						tile.floorType =
-							DISTRICT_FLOORS[Math.abs(wx * 7 + wz * 13) % DISTRICT_FLOORS.length]!;
+							DISTRICT_FLOORS[
+								Math.abs(wx * 7 + wz * 13) % DISTRICT_FLOORS.length
+							]!;
 					}
 				} else {
 					const zoneFloors = profile.floorTypes;
 					if (zoneFloors.length > 0) {
 						// Math.abs guards against negative world coords producing negative modulo
-						const idx =
-							Math.abs(wx * 7 + wz * 13) % zoneFloors.length;
+						const idx = Math.abs(wx * 7 + wz * 13) % zoneFloors.length;
 						tile.floorType = zoneFloors[idx] as FloorType;
 					}
 					// If zoneFloors is empty, keep existing floorType (transit_deck)

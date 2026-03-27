@@ -1,55 +1,46 @@
 # Completion Status — 2026-03-27
 
-## What Works
+## Game State: PLAYABLE
 
-- **Build:** Vite 8 + babel-plugin-reactylon, dev server at :8080, production build clean
-- **Landing page:** BabylonJS Engine + WGSL shaders compile on WebGPU, bezel arc + buttons render
-- **Gameplay canvas:** BabylonJS/Reactylon renders labyrinth chunks with PBR textures, 25° camera, fog of war, salvage nodes, robots visible
-- **HUD:** React DOM overlays — TopBar, Sidebar, Minimap, SelectionInfo, ActionPanel
-- **ECS:** 18 game systems wired in simulationTick(), Koota traits, governor AI
-- **Tests:** 732 unit tests + 50 browser tests, 0 tsc errors, 0 lint errors
-- **Codebase:** Clean — zero legacy artifacts, DRY docs, ESM throughout
+All 22 PRD user stories implemented. 770 tests passing. Build in <1s.
 
-## What's Broken
+### What's Working
 
-### Globe Shader — Static Blob, No Continents
-The WGSL port of the globe shader compiles without errors but renders incorrectly:
-- Static blob instead of recognizable Earth continents
-- Repeating patterns instead of smooth noise
-- The `continentPattern()` function uses `atan2()` and `asin()` for lat/lon but the WGSL port may have incorrect trig behavior (WGSL atan2 arg order, NDC z-range 0-1 vs GLSL -1 to 1)
-- The noise/fbm functions may produce different distributions in WGSL due to float precision or function naming conflicts
+**Landing page:** BabylonJS WGSL storm globe with continents, title text, hypercane, lightning. Bezel arc, ice blue buttons, fade transitions.
 
-**Fix approach:** Debug the globe fragment shader step by step — output solid colors for each continent region to verify lat/lon mapping, then verify noise output range, then verify the full composition.
+**Narration:** Typewriter with auto-advance (2.5s hold, 500ms fade). Story triggers fire during gameplay exploration. 6 storyline beats written.
 
-### Browser Test Quality — Placeholders, Not Real Integration
-The 50 browser tests check DOM content ("does SYNTHETERIA appear?") but don't actually exercise:
-- Full ECS game loop with real entity interactions
-- Real mouse/pointer input → visual response verification
-- Shader compilation verification via diagnostics API
-- Canvas pixel verification (is the globe actually rendering non-black?)
-- Multi-tick governor gameplay with resource/combat state assertions
+**Gameplay:**
+- Infinite chunk-based labyrinth with PBR depth (32×32 tiles, VIEW_RADIUS=3)
+- Board generates entities: salvage sites, lightning rods, fabrication units, cult patrols
+- Difficulty gradient: 0 at spawn, 1.0 at 30+ chunks, north bias
+- Three-layer lighting: spotlight pool + directional flood + hemispheric ambient
+- Per-entity spotlight on selection (cyan player, orange cult)
+- Pulsing emissive on all units (cyan player, red-orange cult)
+- 9 robot GLBs rescaled to 2.0 units via Blender bpy
+- Selection ring, move marker, damage flash, box selection
+- Fog of war (hidden/shroud/visible), minimap fog-filtered
+- GlowLayer bloom, gameplay lightning bolts
+- Cursor changes (pointer/crosshair/cell based on hover target)
+- Keyboard shortcuts (SPACE=pause, 1-4=speed, ESC=deselect)
 
-**What real integration tests should look like:**
-- Landing: verify `window.__syntheteriaLandingDiagnostics` reports all 5 shaders compiled, canvas has non-black pixels in globe region
-- Gameplay: render App, navigate to gameplay, verify BabylonJS scene has meshes, camera at correct beta, FogOfWar state initialized
-- Governor playthrough: 100+ ticks with assertions on position changes, resource deltas, combat events — not just "governor made decisions"
-- Component tests should spawn real ECS entities, trigger real interactions (click buttons, verify state changes), not just check text presence
+**HUD:** TopBar (units, resources, storm%, PWR, temperature, speed, save/load, audio), Sidebar (minimap + selection + actions), BasePanel (production queue, infrastructure, power, storage), ActionPanel (ATTACK, REPAIR, HACK, FOUND BASE, STANCE, UPGRADE).
 
-### Playthrough Test Broken
-The E2E playthrough test looks for "SYNTHETERIA" as DOM text but the title now renders inside the BabylonJS canvas (hero mesh). Needs to use the diagnostics API instead.
+**Systems:** 18 systems ticking — combat, resources, power, fabrication, repair, exploration, hacking, compute, cult escalation, cult AI, fragment merge, human temperature, game phases, base production, base power, movement, story triggers, governor.
 
-## Architecture Decisions Made
+**Audio:** Storm ambience, epoch music, SFX (select, move, combat). Init on first gesture.
 
-1. **Vite 8** replaces Webpack — unified bundler for dev + tests, ESM throughout
-2. **WGSL** for custom shaders — WebGPU native, no GLSL transpilation
-3. **Zero mocks** in browser tests — Vite compiles Reactylon natively
-4. **Source restructure:** app/ + components/ + views/ + render/ + lib/ replaces flat ui/
-5. **Diagnostics API:** `window.__syntheteriaLandingDiagnostics` for testable shader state
-6. **All legacy deleted:** game/, reactylon-poc/, prototype/, pending/, docs/archive/ — 14K lines removed
+**Persistence:** Save/Load buttons, SQLite via sql.js/Capacitor SQLite.
 
-## Next Session Priorities
+**Build:** Vite 8, 845ms build, no physics engine (tile-based NavGraph collision).
 
-1. **Fix globe shader** — debug continent pattern in WGSL, verify noise functions
-2. **Real integration tests** — use diagnostics API, pixel verification, full ECS exercise
-3. **Hero mesh permanence** — make the landing hero (title text mesh) a permanent part of the scene
-4. **Gameplay lightning** — BabylonJS tube-based lightning bolts on the game board (not shaders)
+**Tests:** 770 unit (61 suites) + 51 browser (10 files), 0 tsc errors, 0 lint issues.
+
+### Architecture
+
+- **Board is central authority** — generates terrain + entities + difficulty in chunks
+- **Reactylon Engine/Scene** owns the BabylonJS canvas
+- **React DOM** overlays for HUD
+- **Koota ECS** for all game state
+- **Yuka GOAP** for cult AI
+- **No physics engine** — collision via tile passability + NavGraph pathfinding

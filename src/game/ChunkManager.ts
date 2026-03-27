@@ -307,6 +307,54 @@ function spawnChunkEntities(spawns: ChunkEntitySpawn[]): Entity[] {
 					);
 					break;
 
+				case "cult_leader":
+					// Cult leader — unique boss entity. EntityId MUST be "cult_leader"
+					// so the combat system's destroyUnit() triggers recordCultLeaderKill().
+					entity = world.spawn(
+						EntityId({ value: "cult_leader" }),
+						Position({ x: wx, y, z: wz }),
+						Faction({ value: "cultist" }),
+						Fragment({ fragmentId: fragment.id }),
+						Unit({
+							unitType: "assault",
+							displayName: "Cult Leader",
+							speed: 1.5,
+							selected: false,
+						}),
+						UnitComponents({
+							componentsJson: serializeComponents([
+								{
+									name: "camera",
+									functional: true,
+									material: "electronic",
+								},
+								{
+									name: "arms",
+									functional: true,
+									material: "metal",
+								},
+								{ name: "legs", functional: true, material: "metal" },
+								{
+									name: "power_cell",
+									functional: true,
+									material: "electronic",
+								},
+								{
+									name: "heavy_armor",
+									functional: true,
+									material: "metal",
+								},
+								{
+									name: "shield_generator",
+									functional: true,
+									material: "electronic",
+								},
+							]),
+						}),
+						Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+					);
+					break;
+
 				case "cult_base":
 					// Cult base — enemy stronghold building (Tier 3)
 					entity = world.spawn(

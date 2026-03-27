@@ -62,6 +62,7 @@ export interface ChunkEntitySpawn {
 		| "fabrication_unit"
 		| "cult_patrol"
 		| "cult_base"
+		| "cult_leader"
 		| "story_trigger";
 	/** Material type for scavenge sites. */
 	materialType?: string;
@@ -338,6 +339,27 @@ function generateChunkEntities(
 			kind: "cult_base",
 		});
 		passableTiles.splice(idx, 1);
+	}
+
+	// ── Cult leader — unique boss, spawns once at very high danger ────
+	if (
+		danger > 0.9 &&
+		zone === "enemy" &&
+		passableTiles.length > 0
+	) {
+		// Deterministic single-spawn check: hash chunk coords + seed to get a
+		// stable 0-1 value. Only one chunk in the world will pass the threshold.
+		const leaderHash = seededRng(`${chunkSeed}_cult_leader_unique`);
+		if (leaderHash() < 0.08) {
+			const idx = Math.floor(rng() * passableTiles.length);
+			const spot = passableTiles[idx]!;
+			entities.push({
+				tileX: offsetX + spot.lx,
+				tileZ: offsetZ + spot.lz,
+				kind: "cult_leader",
+			});
+			passableTiles.splice(idx, 1);
+		}
 	}
 
 	// ── Story trigger rooms — zone-specific POIs (Tier 5) ────────────

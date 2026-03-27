@@ -326,9 +326,19 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 		// (replaces old per-entity SpotLight which caused solid-circle WebGPU bug)
 		const pulse = 0.5 + 0.5 * Math.sin(time * 2.0 + entry.bobPhase);
 		const selectionBoost = unit.selected ? 2.0 : 1.0;
+		const isCultLeader =
+			isCultist && unit.displayName === "Cult Leader";
 		for (const mesh of entry.meshes) {
 			if (mesh.material && mesh.material instanceof StandardMaterial) {
-				if (isCultist) {
+				if (isCultLeader) {
+					// Cult leader: bright red-white pulse at 2x emissive intensity
+					const leaderBoost = 2.0;
+					(mesh.material as StandardMaterial).emissiveColor = new Color3(
+						(0.6 + pulse * 0.4) * selectionBoost * leaderBoost,
+						(0.15 + pulse * 0.25) * selectionBoost * leaderBoost,
+						(0.1 + pulse * 0.2) * selectionBoost * leaderBoost,
+					);
+				} else if (isCultist) {
 					(mesh.material as StandardMaterial).emissiveColor = new Color3(
 						(0.3 + pulse * 0.25) * selectionBoost,
 						(0.02 + pulse * 0.05) * selectionBoost,

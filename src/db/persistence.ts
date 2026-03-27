@@ -76,9 +76,11 @@ export async function saveGame(
 		await repo.saveResources(gameId, resources);
 		await repo.saveScavengePoints(gameId, scavengePoints);
 
-		console.log(
-			`[persistence] Saved game ${gameId}: ${units.length} units, ${buildings.length} buildings`,
-		);
+		if (import.meta.env.DEV) {
+			console.log(
+				`[persistence] Saved game ${gameId}: ${units.length} units, ${buildings.length} buildings`,
+			);
+		}
 		return gameId;
 	} catch (err) {
 		console.error("[persistence] Save failed:", err);
@@ -109,9 +111,11 @@ export async function loadGame(world: World, gameId: string): Promise<boolean> {
 		applyBuildings(world, buildings, rods);
 		if (resources) applyResources(resources);
 
-		console.log(
-			`[persistence] Loaded game ${gameId}: ${units.length} units, ${buildings.length} buildings, tick ${game.elapsedTicks}`,
-		);
+		if (import.meta.env.DEV) {
+			console.log(
+				`[persistence] Loaded game ${gameId}: ${units.length} units, ${buildings.length} buildings, tick ${game.elapsedTicks}`,
+			);
+		}
 		return true;
 	} catch (err) {
 		console.error("[persistence] Load failed:", err);

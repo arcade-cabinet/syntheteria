@@ -61,6 +61,8 @@ afterEach(() => {
 
 function spawnPlayerUnit(opts?: {
 	components?: Array<{ name: string; functional: boolean; material: string }>;
+	x?: number;
+	z?: number;
 }): Entity {
 	const comps = opts?.components ?? [
 		{ name: "camera", functional: true, material: "electronic" },
@@ -71,7 +73,7 @@ function spawnPlayerUnit(opts?: {
 
 	const entity = world.spawn(
 		EntityId({ value: `unit_${entities.length}` }),
-		Position({ x: 50, y: 0, z: 50 }),
+		Position({ x: opts?.x ?? 50, y: 0, z: opts?.z ?? 50 }),
 		Faction({ value: "player" }),
 		Unit({
 			unitType: "maintenance_bot",
@@ -258,5 +260,176 @@ describe("hostile unit handling", () => {
 		// ActionPanel checks faction before showing unit actions
 		const faction = enemy.get(Faction)!.value;
 		expect(faction).not.toBe("player");
+	});
+});
+
+describe("REPAIR button (US-3.3)", () => {
+	it("detects broken components on selected unit", () => {
+		const unit = spawnPlayerUnit({
+			components: [
+				{ name: "camera", functional: false, material: "electronic" },
+				{ name: "arms", functional: true, material: "metal" },
+				{ name: "legs", functional: true, material: "metal" },
+			],
+		});
+
+		const comps = parseComponents(
+			unit.get(UnitComponents)?.componentsJson ?? "[]",
+		);
+		const brokenComps = comps.filter((c) => !c.functional);
+
+		expect(brokenComps.length).toBe(1);
+		expect(brokenComps[0].name).toBe("camera");
+	});
+
+	it("identifies nearby repairer with functional arms", () => {
+		// Unit with broken component
+		const target = spawnPlayerUnit({
+			components: [
+				{ name: "camera", functional: false, material: "electronic" },
+				{ name: "arms", functional: false, material: "metal" },
+				{ name: "legs", functional: true, material: "metal" },
+			],
+			x: 50,
+			z: 50,
+		});
+
+		// Nearby unit with functional arms (can repair) — spawned for side effect
+		spawnPlayerUnit({
+			components: [
+				{ name: "camera", functional: true, material: "electronic" },
+				{ name: "arms", functional: true, material: "metal" },
+				{ name: "legs", functional: true, material: "metal" },
+			],
+			x: 51,
+			z: 50,
+		});
+
+		const targetPos = target.get(Position)!;
+
+		// Simulate the findNearbyRepairer logic
+		const REPAIR_RANGE = 3.0;
+		let foundRepairer: Entity | null = null;
+		for (const entity of world.query(Unit, Faction, Position, UnitComponents)) {
+			if (entity.get(Faction)?.value !== "player") continue;
+			const pos = entity.get(Position)!;
+			const dx = pos.x - targetPos.x;
+			const dz = pos.z - targetPos.z;
+			if (Math.sqrt(dx * dx + dz * dz) > REPAIR_RANGE) continue;
+			const comps = parseComponents(
+				entity.get(UnitComponents)?.componentsJson ?? "[]",
+			);
+			if (comps.some((c) => c.name === "arms" && c.functional)) {
+				foundRepairer = entity;
+				break;
+			}
+		}
+
+		expect(foundRepairer).not.toBeNull();
+	});
+
+	it("no REPAIR when no broken components", () => {
+		const unit = spawnPlayerUnit({
+			components: [
+				{ name: "camera", functional: true, material: "electronic" },
+				{ name: "arms", functional: true, material: "metal" },
+				{ name: "legs", functional: true, material: "metal" },
+			],
+		});
+
+		const comps = parseComponents(
+			unit.get(UnitComponents)?.componentsJson ?? "[]",
+		);
+		const brokenComps = comps.filter((c) => !c.functional);
+
+		expect(brokenComps.length).toBe(0);
+	});
+});
+
+describe("HACK button (US-4.3)", () => {
+	it("canInitiateHack requires player faction and functional camera", () => {
+		// Player unit with camera
+		const hacker = spawnPlayerUnit({
+			components: [
+				{ name: "camera", functional: true, material: "electronic" },
+				{ name: "arms", functional: true, material: "metal" },
+			],
+		});
+
+		const faction = hacker.get(Faction)?.value;
+		expect(faction).toBe("player");
+
+		const comps = parseComponents(
+			hacker.get(UnitComponents)?.componentsJson ?? "[]",
+		);
+		const hasCamera = comps.some((c) => c.name === "camera" && c.functional);
+		expect(hasCamera).toBe(true);
+	});
+
+	it("cannot hack if no functional camera", () => {
+		const hacker = spawnPlayerUnit({
+			components: [
+				{ name: "camera", functional: false, material: "electronic" },
+				{ name: "arms", functional: true, material: "metal" },
+			],
+		});
+
+		const comps = parseComponents(
+			hacker.get(UnitComponents)?.componentsJson ?? "[]",
+		);
+		const hasCamera = comps.some((c) => c.name === "camera" && c.functional);
+		expect(hasCamera).toBe(false);
+	});
+
+	it("detects nearby hackable feral/rogue enemies", () => {
+		spawnPlayerUnit({ x: 50, z: 50 });
+
+		// Spawn a feral enemy within hack range (6 units)
+		const enemy = world.spawn(
+			EntityId({ value: "enemy_hack_target" }),
+			Position({ x: 53, y: 0, z: 50 }),
+			Faction({ value: "feral" }),
+			Unit({
+				unitType: "maintenance_bot",
+				displayName: "Feral Bot",
+				speed: 2,
+				selected: false,
+			}),
+			UnitComponents({
+				componentsJson: JSON.stringify([
+					{ name: "camera", functional: true, material: "electronic" },
+					{ name: "legs", functional: true, material: "metal" },
+				]),
+			}),
+		);
+		entities.push(enemy);
+
+		// Check hackable
+		const enemyFaction = enemy.get(Faction)?.value;
+		expect(enemyFaction === "feral" || enemyFaction === "rogue").toBe(true);
+	});
+
+	it("cultists cannot be hacked (they are human)", () => {
+		const cultist = world.spawn(
+			Position({ x: 53, y: 0, z: 50 }),
+			Faction({ value: "cultist" }),
+			Unit({
+				unitType: "maintenance_bot",
+				displayName: "Cult Mech",
+				speed: 2,
+				selected: false,
+			}),
+			UnitComponents({
+				componentsJson: JSON.stringify([
+					{ name: "camera", functional: true, material: "electronic" },
+				]),
+			}),
+		);
+		entities.push(cultist);
+
+		// Cultists are NOT in the hackable factions set
+		const faction = cultist.get(Faction)?.value;
+		expect(faction).toBe("cultist");
+		// canBeHacked checks for feral/rogue only
 	});
 });

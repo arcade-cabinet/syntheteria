@@ -1,9 +1,9 @@
 import type { Scene as BScene } from "@babylonjs/core";
-import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
+import type { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { ShaderStore } from "@babylonjs/core/Engines/shaderStore";
 import "@babylonjs/core/Misc/screenshotTools";
+import type { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
 import { Tools } from "@babylonjs/core/Misc/tools";
-import { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
 
 export interface LandingShaderDiagnostic {
 	name: string;
@@ -74,16 +74,26 @@ declare global {
 
 function getShaderStorePreview() {
 	return {
-		stormVertexShader: ShaderStore.ShadersStoreWGSL.stormVertexShader.slice(0, 80),
-		stormFragmentShader:
-			ShaderStore.ShadersStoreWGSL.stormFragmentShader.slice(0, 80),
+		stormVertexShader: ShaderStore.ShadersStoreWGSL.stormVertexShader.slice(
+			0,
+			80,
+		),
+		stormFragmentShader: ShaderStore.ShadersStoreWGSL.stormFragmentShader.slice(
+			0,
+			80,
+		),
 		lightningVertexShader:
 			ShaderStore.ShadersStoreWGSL.lightningVertexShader.slice(0, 80),
 		lightningFragmentShader:
 			ShaderStore.ShadersStoreWGSL.lightningFragmentShader.slice(0, 80),
-		globeVertexShader: ShaderStore.ShadersStoreWGSL.globeVertexShader.slice(0, 80),
-		globeFragmentShader:
-			ShaderStore.ShadersStoreWGSL.globeFragmentShader.slice(0, 80),
+		globeVertexShader: ShaderStore.ShadersStoreWGSL.globeVertexShader.slice(
+			0,
+			80,
+		),
+		globeFragmentShader: ShaderStore.ShadersStoreWGSL.globeFragmentShader.slice(
+			0,
+			80,
+		),
 		hypercaneVertexShader:
 			ShaderStore.ShadersStoreWGSL.hypercaneVertexShader.slice(0, 80),
 		hypercaneFragmentShader:
@@ -96,7 +106,11 @@ export function createLandingDiagnostics(scene: BScene) {
 		"storm-mat": { name: "storm-mat", status: "pending", error: null },
 		"lightning-mat": { name: "lightning-mat", status: "pending", error: null },
 		"globe-mat": { name: "globe-mat", status: "pending", error: null },
-		"landing-hero-mat": { name: "landing-hero-mat", status: "pending", error: null },
+		"landing-hero-mat": {
+			name: "landing-hero-mat",
+			status: "pending",
+			error: null,
+		},
 		"hypercane-mat": { name: "hypercane-mat", status: "pending", error: null },
 	};
 	const gpuErrors: string[] = [];
@@ -147,9 +161,17 @@ export function createLandingDiagnostics(scene: BScene) {
 			},
 			meshes: scene.meshes.map((mesh) => ({
 				name: mesh.name,
-				position: { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z },
+				position: {
+					x: mesh.position.x,
+					y: mesh.position.y,
+					z: mesh.position.z,
+				},
 				scaling: { x: mesh.scaling.x, y: mesh.scaling.y, z: mesh.scaling.z },
-				rotation: { x: mesh.rotation.x, y: mesh.rotation.y, z: mesh.rotation.z },
+				rotation: {
+					x: mesh.rotation.x,
+					y: mesh.rotation.y,
+					z: mesh.rotation.z,
+				},
 				visibility: mesh.visibility,
 				isVisible: mesh.isVisible,
 				isEnabled: mesh.isEnabled(),

@@ -1,7 +1,7 @@
 /**
  * ActionPanel — context-sensitive action buttons based on selection.
  *
- * Unit selected: MOVE, ATTACK, SCAVENGE, FOUND BASE, HACK, STANCE cycle.
+ * Unit selected: MOVE, ATTACK, SCAVENGE, FOUND BASE, REPAIR, HACK, STANCE cycle, UPGRADE.
  * Building selected: building-specific actions.
  * Nothing selected: empty.
  *
@@ -10,6 +10,7 @@
 
 import type { Entity } from "koota";
 import { useSyncExternalStore } from "react";
+import { playSfx } from "../../audio";
 import { worldToTileX, worldToTileZ } from "../../board/coords";
 import { getUpgradeCost, MAX_MARK } from "../../config/robotDefs";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
@@ -25,10 +26,18 @@ import {
 } from "../../ecs/traits";
 import { parseComponents } from "../../ecs/types";
 import { world } from "../../ecs/world";
+import { cn } from "../../lib/utils";
 import { foundBase, validateBaseLocation } from "../../systems/baseManagement";
+import {
+	canBeHacked,
+	canInitiateHack,
+	getHackProgress,
+	HACK_RANGE,
+	startHack,
+} from "../../systems/hacking";
+import { startRepair } from "../../systems/repair";
 import { canUpgrade, performUpgrade } from "../../systems/upgrade";
 import { selectBase } from "../base/BasePanel";
-import { cn } from "../../lib/utils";
 
 // ─── Stance labels ──────────────────────────────────────────────────────────
 
@@ -78,6 +87,54 @@ function ActionButton({
 	);
 }
 
+// ─── Repair helpers ──────────────────────────────────────────────────────────
+
+const REPAIR_RANGE = 3.0;
+
+/**
+ * Find a nearby player unit with functional arms that could act as repairer.
+ * Returns the repairer entity or null.
+ */
+function findNearbyRepairer(
+	_targetEntity: Entity,
+	targetX: number,
+	targetZ: number,
+): Entity | null {
+	for (const entity of world.query(Unit, Faction, Position, UnitComponents)) {
+		if (entity.get(Faction)?.value !== "player") continue;
+		// Can be the same entity (self-repair) — the repair system validates arms
+		const pos = entity.get(Position)!;
+		const dx = pos.x - targetX;
+		const dz = pos.z - targetZ;
+		if (Math.sqrt(dx * dx + dz * dz) > REPAIR_RANGE) continue;
+		const comps = parseComponents(
+			entity.get(UnitComponents)?.componentsJson ?? "[]",
+		);
+		if (comps.some((c) => c.name === "arms" && c.functional)) {
+			return entity;
+		}
+	}
+	return null;
+}
+
+// ─── Hack helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Find the nearest hackable enemy within range.
+ */
+function findNearbyHackTarget(hackerX: number, hackerZ: number): Entity | null {
+	for (const entity of world.query(Unit, Faction, Position)) {
+		if (!canBeHacked(entity)) continue;
+		const pos = entity.get(Position)!;
+		const dx = pos.x - hackerX;
+		const dz = pos.z - hackerZ;
+		if (Math.sqrt(dx * dx + dz * dz) <= HACK_RANGE) {
+			return entity;
+		}
+	}
+	return null;
+}
+
 // ─── Unit actions ───────────────────────────────────────────────────────────
 
 function UnitActions({ entity }: { entity: Entity }) {
@@ -104,6 +161,23 @@ function UnitActions({ entity }: { entity: Entity }) {
 			break;
 		}
 	}
+
+	// Check for broken components (for REPAIR button — US-3.3)
+	const brokenComps = comps.filter((c) => !c.functional);
+	const hasBrokenComponents = brokenComps.length > 0;
+	const nearbyRepairer = hasBrokenComponents
+		? findNearbyRepairer(entity, unitPos.x, unitPos.z)
+		: null;
+	const canRepair = hasBrokenComponents && nearbyRepairer !== null;
+
+	// Check for hackable enemies nearby (US-4.3)
+	const canHack = canInitiateHack(entity);
+	const nearbyHackTarget = canHack
+		? findNearbyHackTarget(unitPos.x, unitPos.z)
+		: null;
+	const entityId = entity.get(EntityId)?.value ?? "";
+	const hackProgress = getHackProgress(entityId);
+	const isHacking = hackProgress !== null;
 
 	// Current stance
 	const currentStance = entity.get(EngagementRule)?.value ?? "attack";
@@ -180,6 +254,58 @@ function UnitActions({ entity }: { entity: Entity }) {
 					if (baseId) selectBase(baseId);
 				}}
 			/>
+			{/* REPAIR: US-3.3 — repair broken components */}
+			{hasBrokenComponents && (
+				<ActionButton
+					label={`REPAIR (${brokenComps[0].name})`}
+					enabled={canRepair}
+					title={
+						canRepair
+							? `Repair ${brokenComps[0].name} on this unit`
+							: "Need a nearby unit with functional arms and resources"
+					}
+					onClick={() => {
+						if (nearbyRepairer && brokenComps.length > 0) {
+							const success = startRepair(
+								nearbyRepairer,
+								entity,
+								brokenComps[0].name,
+							);
+							if (success) {
+								playSfx("build_complete");
+							} else {
+								console.warn(
+									"[ActionPanel] Repair failed — insufficient resources or invalid state",
+								);
+							}
+						}
+					}}
+				/>
+			)}
+			{/* HACK: US-4.3 — hack nearby enemy machines */}
+			{canHack && (
+				<ActionButton
+					label={
+						isHacking
+							? `HACKING ${Math.floor((hackProgress ?? 0) * 100)}%`
+							: "HACK"
+					}
+					enabled={!!nearbyHackTarget || isHacking}
+					active={isHacking}
+					title={
+						isHacking
+							? "Hacking in progress..."
+							: nearbyHackTarget
+								? "Hack nearby enemy machine to convert it"
+								: "No hackable enemies in range"
+					}
+					onClick={() => {
+						if (nearbyHackTarget && !isHacking) {
+							startHack(entity, nearbyHackTarget);
+						}
+					}}
+				/>
+			)}
 			<ActionButton
 				label={`STANCE: ${STANCE_LABELS[currentStance] ?? "ATK"}`}
 				active

@@ -65,10 +65,15 @@ describe("movementSystem", () => {
 
 	it("reaches waypoint and advances pathIndex", () => {
 		// Place unit close enough to reach in one step
-		const unit = spawnMovingUnit(0, 0, [
-			{ x: 3, y: 0, z: 0 },
-			{ x: 3, y: 0, z: 6 },
-		], 10);
+		const unit = spawnMovingUnit(
+			0,
+			0,
+			[
+				{ x: 3, y: 0, z: 0 },
+				{ x: 3, y: 0, z: 6 },
+			],
+			10,
+		);
 
 		movementSystem(1.0, 1.0); // 10 units/sec — can reach first waypoint at dist 3
 
@@ -128,11 +133,16 @@ describe("movementSystem", () => {
 	});
 
 	it("traverses multiple waypoints over several frames", () => {
-		const unit = spawnMovingUnit(0, 0, [
-			{ x: 2, y: 0, z: 0 },
-			{ x: 2, y: 0, z: 4 },
-			{ x: 6, y: 0, z: 4 },
-		], 10);
+		const unit = spawnMovingUnit(
+			0,
+			0,
+			[
+				{ x: 2, y: 0, z: 0 },
+				{ x: 2, y: 0, z: 4 },
+				{ x: 6, y: 0, z: 4 },
+			],
+			10,
+		);
 
 		// Run multiple small frames
 		for (let i = 0; i < 20; i++) {

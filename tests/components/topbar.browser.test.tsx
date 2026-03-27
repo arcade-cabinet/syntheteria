@@ -7,27 +7,27 @@
 
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test } from "vitest";
+import { TopBar } from "../../src/components/game/TopBar";
 import {
 	getSnapshot,
+	isPaused,
 	setGameSpeed,
 	simulationTick,
 	togglePause,
-	isPaused,
 } from "../../src/ecs/gameState";
 import {
+	EngagementRule,
 	EntityId,
 	Faction,
+	Fragment,
+	Inventory,
 	Navigation,
 	Position,
 	Unit,
 	UnitComponents,
-	Inventory,
-	EngagementRule,
-	Fragment,
 } from "../../src/ecs/traits";
 import { serializeComponents } from "../../src/ecs/types";
 import { world } from "../../src/ecs/world";
-import { TopBar } from "../../src/components/game/TopBar";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
@@ -169,8 +169,7 @@ test("PAUSE button present", async () => {
 
 	const buttons = Array.from(container!.querySelectorAll("button"));
 	const pauseBtn = buttons.find(
-		(b) =>
-			b.textContent?.includes("PAUSE") || b.textContent?.includes("PLAY"),
+		(b) => b.textContent?.includes("PAUSE") || b.textContent?.includes("PLAY"),
 	);
 	expect(pauseBtn).toBeDefined();
 });

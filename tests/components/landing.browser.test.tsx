@@ -86,7 +86,8 @@ function render(onStart: (config: NewGameConfig) => void = () => {}) {
 type LandingDiagnostics = ReturnType<typeof collectLandingDiagnostics>;
 
 function collectLandingDiagnostics() {
-	const appDiagnostics = window.__syntheteriaLandingDiagnostics?.getSnapshot() ?? null;
+	const appDiagnostics =
+		window.__syntheteriaLandingDiagnostics?.getSnapshot() ?? null;
 	const canvas = document.querySelector<HTMLCanvasElement>("#reactylon-canvas");
 	const engine = BabylonEngine.LastCreatedEngine;
 	const scene = BabylonEngine.LastCreatedScene;
@@ -141,21 +142,24 @@ function diagnosticsJson(diag: LandingDiagnostics): string {
 }
 
 async function waitForLandingReady() {
-	return waitFor(() => {
-		const diag = collectLandingDiagnostics();
-		if (!diag.canvas || !diag.engine || !diag.scene || !diag.appDiagnostics) {
-			return null;
-		}
-		if (diag.scene.meshCount < 4) {
-			return null;
-		}
-		if (!diag.scene.activeCamera) {
-			return null;
-		}
-		return diag;
-	}, {
-		onTimeout: () => diagnosticsJson(collectLandingDiagnostics()),
-	});
+	return waitFor(
+		() => {
+			const diag = collectLandingDiagnostics();
+			if (!diag.canvas || !diag.engine || !diag.scene || !diag.appDiagnostics) {
+				return null;
+			}
+			if (diag.scene.meshCount < 4) {
+				return null;
+			}
+			if (!diag.scene.activeCamera) {
+				return null;
+			}
+			return diag;
+		},
+		{
+			onTimeout: () => diagnosticsJson(collectLandingDiagnostics()),
+		},
+	);
 }
 
 test("renders the real landing DOM overlay and Babylon canvas together", async () => {

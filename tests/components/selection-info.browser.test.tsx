@@ -7,20 +7,20 @@
 
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test } from "vitest";
+import { SelectionInfo } from "../../src/components/game/SelectionInfo";
 import {
+	EngagementRule,
 	EntityId,
 	Faction,
 	Fragment,
+	Inventory,
 	Navigation,
 	Position,
 	Unit,
 	UnitComponents,
-	Inventory,
-	EngagementRule,
 } from "../../src/ecs/traits";
 import { serializeComponents } from "../../src/ecs/types";
 import { world } from "../../src/ecs/world";
-import { SelectionInfo } from "../../src/components/game/SelectionInfo";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
@@ -64,7 +64,11 @@ function spawnUnit(opts: {
 	selected: boolean;
 	faction?: "player" | "cultist";
 	mark?: number;
-	components?: { name: string; functional: boolean; material: "electronic" | "metal" | "plastic" }[];
+	components?: {
+		name: string;
+		functional: boolean;
+		material: "electronic" | "metal" | "plastic";
+	}[];
 }) {
 	const e = world.spawn(
 		EntityId({ value: opts.id }),

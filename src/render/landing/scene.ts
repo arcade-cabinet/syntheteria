@@ -2,8 +2,8 @@ import type { Scene as BScene } from "@babylonjs/core";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Constants } from "@babylonjs/core/Engines/constants";
 import { ShaderStore } from "@babylonjs/core/Engines/shaderStore";
-import { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
 import { ShaderLanguage } from "@babylonjs/core/Materials/shaderLanguage";
+import { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
@@ -13,8 +13,8 @@ import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import { CreateTorus } from "@babylonjs/core/Meshes/Builders/torusBuilder";
 import { reportFatalError } from "../../errors";
 import {
-	createLandingDiagnostics,
 	attachShaderCompilationHook,
+	createLandingDiagnostics,
 } from "./diagnostics";
 import {
 	globeFragmentShader,
@@ -57,16 +57,8 @@ function createHeroLogoTexture(scene: BScene) {
 	context.lineWidth = 8;
 	context.fillStyle = "rgba(168, 235, 255, 0.96)";
 	context.font = "44px 'Courier New', monospace";
-	context.strokeText(
-		"AWAKEN  //  CONNECT  //  REBUILD",
-		canvas.width / 2,
-		510,
-	);
-	context.fillText(
-		"AWAKEN  //  CONNECT  //  REBUILD",
-		canvas.width / 2,
-		510,
-	);
+	context.strokeText("AWAKEN  //  CONNECT  //  REBUILD", canvas.width / 2, 510);
+	context.fillText("AWAKEN  //  CONNECT  //  REBUILD", canvas.width / 2, 510);
 	const texture = new Texture(
 		canvas.toDataURL("image/png"),
 		scene,
@@ -84,13 +76,17 @@ export function registerLandingShaders() {
 	ShaderStore.ShadersStoreWGSL.stormVertexShader = stormVertexShader;
 	ShaderStore.ShadersStoreWGSL.stormFragmentShader = stormFragmentShader;
 	ShaderStore.ShadersStoreWGSL.lightningVertexShader = lightningVertexShader;
-	ShaderStore.ShadersStoreWGSL.lightningFragmentShader = lightningFragmentShader;
+	ShaderStore.ShadersStoreWGSL.lightningFragmentShader =
+		lightningFragmentShader;
 	ShaderStore.ShadersStoreWGSL.globeVertexShader = globeVertexShader;
 	ShaderStore.ShadersStoreWGSL.globeFragmentShader = globeFragmentShader;
-	ShaderStore.ShadersStoreWGSL.landingHeroVertexShader = landingHeroVertexShader;
-	ShaderStore.ShadersStoreWGSL.landingHeroFragmentShader = landingHeroFragmentShader;
+	ShaderStore.ShadersStoreWGSL.landingHeroVertexShader =
+		landingHeroVertexShader;
+	ShaderStore.ShadersStoreWGSL.landingHeroFragmentShader =
+		landingHeroFragmentShader;
 	ShaderStore.ShadersStoreWGSL.hypercaneVertexShader = hypercaneVertexShader;
-	ShaderStore.ShadersStoreWGSL.hypercaneFragmentShader = hypercaneFragmentShader;
+	ShaderStore.ShadersStoreWGSL.hypercaneFragmentShader =
+		hypercaneFragmentShader;
 	shadersRegistered = true;
 }
 

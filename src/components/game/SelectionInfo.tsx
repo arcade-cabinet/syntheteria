@@ -20,8 +20,8 @@ import {
 } from "../../ecs/traits";
 import { parseComponents, type UnitComponent } from "../../ecs/types";
 import { world } from "../../ecs/world";
-import { getScavengePoints } from "../../systems/resources";
 import { cn } from "../../lib/utils";
+import { getScavengePoints } from "../../systems/resources";
 
 // ─── Component status bar ───────────────────────────────────────────────────
 

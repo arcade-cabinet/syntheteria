@@ -8,8 +8,8 @@
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, expect, test, vi } from "vitest";
 import {
-	NewGameModal,
 	type NewGameConfig,
+	NewGameModal,
 } from "../../src/views/landing/NewGameModal";
 
 let root: Root | null = null;
@@ -77,9 +77,7 @@ test("clicking difficulty button toggles selection", async () => {
 	await flush();
 
 	const buttons = container!.querySelectorAll("button");
-	const hard = Array.from(buttons).find((b) =>
-		b.textContent?.includes("HARD"),
-	);
+	const hard = Array.from(buttons).find((b) => b.textContent?.includes("HARD"));
 	hard!.click();
 	await flush(50);
 
@@ -139,8 +137,7 @@ test("re-roll button generates new seed", async () => {
 	// Find the re-roll button (↻ unicode character)
 	const buttons = container!.querySelectorAll("button");
 	const reroll = Array.from(buttons).find(
-		(b) =>
-			b.textContent?.includes("↻") || b.textContent?.includes("🔄"),
+		(b) => b.textContent?.includes("↻") || b.textContent?.includes("🔄"),
 	);
 
 	if (reroll) {

@@ -15,15 +15,15 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, expect, test } from "vitest";
 import App from "../../src/App";
 import {
-	enableAutoPlay,
-	getGovernorLog,
 	clearGovernorLog,
 	disableAutoPlay,
+	enableAutoPlay,
+	getGovernorLog,
 } from "../../src/ai/governor/PlaytestGovernor";
 import {
 	getSnapshot,
-	simulationTick,
 	isPaused,
+	simulationTick,
 	togglePause,
 } from "../../src/ecs/gameState";
 import { Faction, Unit } from "../../src/ecs/traits";
@@ -63,10 +63,7 @@ async function flush(ms = 200) {
 }
 
 /** Wait for a text substring to appear in the container, polling every 100ms. */
-async function waitForText(
-	text: string,
-	timeoutMs = 5000,
-): Promise<void> {
+async function waitForText(text: string, timeoutMs = 5000): Promise<void> {
 	const start = Date.now();
 	while (Date.now() - start < timeoutMs) {
 		if ((container!.textContent ?? "").includes(text)) return;
@@ -135,7 +132,10 @@ test("full playthrough: title -> new game -> narration -> gameplay -> governor t
 	// 6. Wait for gameplay phase — either "UNITS" (HUD) or "Game Error" (ErrorBoundary).
 	//    GameCanvas crashes without Havok WASM, but the world IS initialized
 	//    before the crash (initializeWorld runs in onComplete callback before render).
-	const found = await waitForAnyText(["UNITS", "Game Error", "Reload Game"], 8000);
+	const found = await waitForAnyText(
+		["UNITS", "Game Error", "Reload Game"],
+		8000,
+	);
 
 	// Whether we see the HUD or the error boundary, the world was initialized.
 	// The "Game Error" path proves we reached the playing phase.

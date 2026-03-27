@@ -1,9 +1,12 @@
 /**
  * Minimap — canvas element showing chunk outlines, unit dots, and fog.
  *
- * Green dots for player units, red for enemies, cyan for buildings,
- * yellow for scavenge sites, white rectangle for camera viewport.
+ * Green dots for player units, red for enemies (only in explored areas),
+ * cyan for buildings, yellow for scavenge sites, white rectangle for camera viewport.
  * Dark slate background with fog-of-war overlay.
+ *
+ * US-4.1: Enemy dots only visible in explored areas.
+ * US-6.1: Unexplored areas are dark/hidden.
  */
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
@@ -60,7 +63,7 @@ export function Minimap() {
 		ctx.fillStyle = "#0a0e14";
 		ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
 
-		// Draw fog overlay — sample explored state on a coarse grid
+		// Draw fog overlay — sample explored state on a coarse grid (US-6.1)
 		const fogStep = 3;
 		for (let px = 0; px < MAP_SIZE; px += fogStep) {
 			for (let py = 0; py < MAP_SIZE; py += fogStep) {
@@ -127,10 +130,11 @@ export function Minimap() {
 			ctx.fillRect(mx, my, 2, 2);
 		}
 
-		// Draw player-placed buildings (cyan)
+		// Draw player-placed buildings (cyan — only in explored areas)
 		ctx.fillStyle = "#00aaaa";
 		for (const entity of world.query(BuildingTrait, Position)) {
 			const pos = entity.get(Position)!;
+			if (getMergedFogAt(pos.x, pos.z) < 1) continue;
 			const mx = cityToMinimap(pos.x);
 			const my = cityToMinimap(pos.z);
 			ctx.fillRect(mx - 1, my - 1, 3, 3);
@@ -148,12 +152,15 @@ export function Minimap() {
 			const my = cityToMinimap(pos.z);
 
 			if (faction === "player") {
+				// Player units always visible on minimap
 				ctx.fillStyle = "#00ff88";
 				ctx.fillRect(mx - 1, my - 1, 3, 3);
 				playerSumX += pos.x;
 				playerSumZ += pos.z;
 				playerCount++;
 			} else {
+				// US-4.1: Enemy dots only visible in explored areas
+				if (getMergedFogAt(pos.x, pos.z) < 1) continue;
 				ctx.fillStyle = "#ff3333";
 				ctx.fillRect(mx - 1, my - 1, 2, 2);
 			}

@@ -7,20 +7,20 @@
 
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test } from "vitest";
+import { ActionPanel } from "../../src/components/game/ActionPanel";
 import {
+	EngagementRule,
 	EntityId,
 	Faction,
 	Fragment,
+	Inventory,
 	Navigation,
 	Position,
 	Unit,
 	UnitComponents,
-	Inventory,
-	EngagementRule,
 } from "../../src/ecs/traits";
 import { serializeComponents } from "../../src/ecs/types";
 import { world } from "../../src/ecs/world";
-import { ActionPanel } from "../../src/components/game/ActionPanel";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
@@ -115,9 +115,7 @@ test("FOUND BASE button present", async () => {
 	await flush();
 
 	const buttons = Array.from(container!.querySelectorAll("button"));
-	const foundBase = buttons.find((b) =>
-		b.textContent?.includes("FOUND BASE"),
-	);
+	const foundBase = buttons.find((b) => b.textContent?.includes("FOUND BASE"));
 	expect(foundBase).toBeDefined();
 });
 

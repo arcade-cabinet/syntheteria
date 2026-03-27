@@ -80,7 +80,10 @@ function onSceneReady(scene: BScene) {
 	const engine = scene.getEngine();
 	(engine as { premultipliedAlpha: boolean }).premultipliedAlpha = false;
 	// Reconfigure the WebGPU context with opaque alpha mode
-	if ("_configureContext" in engine && typeof (engine as Record<string, unknown>)._configureContext === "function") {
+	if (
+		"_configureContext" in engine &&
+		typeof (engine as Record<string, unknown>)._configureContext === "function"
+	) {
 		(engine as Record<string, () => void>)._configureContext();
 	}
 	const canvas = engine.getRenderingCanvas();
@@ -98,11 +101,10 @@ function onSceneReady(scene: BScene) {
 	// Environment texture for PBR reflections — just the IBL probe, no skybox.
 	import("@babylonjs/core/Materials/Textures/cubeTexture").then(
 		({ CubeTexture }) => {
-			scene.environmentTexture =
-				CubeTexture.CreateFromPrefilteredData(
-					"https://assets.babylonjs.com/environments/environmentSpecular.env",
-					scene,
-				);
+			scene.environmentTexture = CubeTexture.CreateFromPrefilteredData(
+				"https://assets.babylonjs.com/environments/environmentSpecular.env",
+				scene,
+			);
 			// Re-force dark clear color after env texture loads (it can override)
 			scene.clearColor.set(FOG_R, FOG_G, FOG_B, 1);
 			scene.autoClear = true;
@@ -246,19 +248,34 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		sun.intensity = epoch1.sunIntensity;
 		sun.diffuse = new Color3(...epoch1.sunColor);
 
-		const ambient = new HemisphericLight("ambient", new Vector3(0, 1, 0), scene);
+		const ambient = new HemisphericLight(
+			"ambient",
+			new Vector3(0, 1, 0),
+			scene,
+		);
 		ambient.intensity = 0.5;
 		ambient.groundColor = new Color3(0.02, 0.06, 0.08);
 		ambient.diffuse = new Color3(0.12, 0.15, 0.2);
 
-		const accent = new PointLight("accent", new Vector3(startWX, 8, startWZ), scene);
+		const accent = new PointLight(
+			"accent",
+			new Vector3(startWX, 8, startWZ),
+			scene,
+		);
 		accent.intensity = 2;
 		accent.diffuse = new Color3(0, 1, 1);
 
 		// Hub marker — cyan pyramid at player start
-		const hubMesh = MeshBuilder.CreateCylinder("hub-nexus", {
-			diameterTop: 0, diameterBottom: 3, height: 3, tessellation: 4,
-		}, scene);
+		const hubMesh = MeshBuilder.CreateCylinder(
+			"hub-nexus",
+			{
+				diameterTop: 0,
+				diameterBottom: 3,
+				height: 3,
+				tessellation: 4,
+			},
+			scene,
+		);
 		hubMesh.position = new Vector3(startWX, 1.5, startWZ);
 		const hubMat = new StandardMaterial("hub-mat", scene);
 		hubMat.diffuseColor = new Color3(0, 1, 1);

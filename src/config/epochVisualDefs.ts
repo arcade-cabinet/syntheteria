@@ -76,9 +76,9 @@ export const EPOCH_VISUALS: readonly EpochVisualDef[] = [
 		name: "Emergence",
 		mood: "Dark sealed city. Faint cyan glow from ancient circuits. Storm overhead.",
 		skyZenith: [0.02, 0.04, 0.08],
-		skyHorizon: [0.03, 0.06, 0.10],
+		skyHorizon: [0.03, 0.06, 0.1],
 		backgroundColor: [0.012, 0.027, 0.043], // #03070b dark void
-		ambientColor: [0.12, 0.15, 0.20], // cool dark fill
+		ambientColor: [0.12, 0.15, 0.2], // cool dark fill
 		ambientIntensity: 0.5,
 		sunColor: [0.67, 0.8, 1.0], // cool blue-white
 		sunIntensity: Math.PI * 0.8,

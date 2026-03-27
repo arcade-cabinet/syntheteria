@@ -5,17 +5,12 @@
  * No mocks — Vite compiles everything.
  */
 
-import { createRoot, type Root } from "react-dom/client";
 import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test } from "vitest";
-import {
-	Base,
-	EntityId,
-	Faction,
-	Position,
-} from "../../src/ecs/traits";
-import { world } from "../../src/ecs/world";
 import { BasePanel, selectBase } from "../../src/components/base/BasePanel";
+import { Base, EntityId, Faction, Position } from "../../src/ecs/traits";
+import { world } from "../../src/ecs/world";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;

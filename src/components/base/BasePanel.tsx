@@ -3,7 +3,7 @@
  *
  * Slides from the right when a base is selected. Shows:
  * - Header: name + faction badge
- * - Production queue with progress bars
+ * - Production queue with progress bars + BUILD UNIT button (US-3.1)
  * - Infrastructure list
  * - Power gauge (generation)
  * - Storage grid
@@ -13,18 +13,21 @@
  */
 
 import { useEffect, useSyncExternalStore } from "react";
+import { playSfx } from "../../audio";
+import { ROBOT_DEFS, type RobotType } from "../../config/robotDefs";
 import { getSnapshot, subscribe } from "../../ecs/gameState";
 import { Base, EntityId, Faction, Position, Unit } from "../../ecs/traits";
 import { world } from "../../ecs/world";
+import { cn } from "../../lib/utils";
 import {
 	type BaseStorage,
+	enqueueProduction,
 	getBaseStorage,
 	getInfrastructure,
 	getProductionQueue,
 	type InfrastructureItem,
 	type ProductionItem,
 } from "../../systems/baseManagement";
-import { cn } from "../../lib/utils";
 
 // ─── Selected base state ────────────────────────────────────────────────────
 
@@ -55,6 +58,28 @@ function getBasePanelSnapshot(): string | null {
 	return selectedBaseEntityId;
 }
 
+// ─── Buildable units ─────────────────────────────────────────────────────────
+
+/** Unit types that can be produced at a base. */
+const BUILDABLE_UNITS: { type: RobotType; cost: Record<string, number> }[] = [
+	{
+		type: "maintenance_bot",
+		cost: { scrapMetal: 5, circuitry: 2 },
+	},
+	{
+		type: "guard_bot",
+		cost: { scrapMetal: 8, circuitry: 3, powerCells: 2 },
+	},
+	{
+		type: "utility_drone",
+		cost: { scrapMetal: 4, circuitry: 3 },
+	},
+	{
+		type: "fabrication_unit",
+		cost: { scrapMetal: 6, circuitry: 4, durasteel: 2 },
+	},
+];
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function FactionBadge({ factionId }: { factionId: string }) {
@@ -73,37 +98,75 @@ function FactionBadge({ factionId }: { factionId: string }) {
 	);
 }
 
-function ProductionQueueSection({ queue }: { queue: ProductionItem[] }) {
-	if (queue.length === 0) {
-		return (
-			<div className="text-slate-600 text-xs italic">No production queued</div>
-		);
-	}
-
+function ProductionQueueSection({
+	queue,
+	baseEntity,
+}: {
+	queue: ProductionItem[];
+	baseEntity: ReturnType<typeof world.query> extends Iterable<infer T>
+		? T
+		: never;
+}) {
 	return (
 		<div className="space-y-1.5">
-			{queue.map((item, i) => (
-				<div
-					// biome-ignore lint/suspicious/noArrayIndexKey: production queue is ordered, index is stable
-					key={`${item.unitType}-${i}`}
-					className="bg-slate-800/50 rounded p-1.5"
-				>
-					<div className="flex justify-between text-xs mb-1">
-						<span className="text-slate-300">
-							{item.unitType.replace(/_/g, " ")}
-						</span>
-						<span className="text-cyan-400">
-							{Math.floor(item.progress * 100)}%
-						</span>
+			{queue.length > 0 ? (
+				queue.map((item, i) => (
+					<div
+						// biome-ignore lint/suspicious/noArrayIndexKey: production queue is ordered, index is stable
+						key={`${item.unitType}-${i}`}
+						className="bg-slate-800/50 rounded p-1.5"
+					>
+						<div className="flex justify-between text-xs mb-1">
+							<span className="text-slate-300">
+								{item.unitType.replace(/_/g, " ")}
+							</span>
+							<span className="text-cyan-400">
+								{Math.floor(item.progress * 100)}%
+							</span>
+						</div>
+						<div className="w-full bg-slate-700 rounded-full h-1.5">
+							<div
+								className="bg-cyan-400 h-1.5 rounded-full transition-all duration-300"
+								style={{ width: `${Math.min(100, item.progress * 100)}%` }}
+							/>
+						</div>
 					</div>
-					<div className="w-full bg-slate-700 rounded-full h-1.5">
-						<div
-							className="bg-cyan-400 h-1.5 rounded-full transition-all duration-300"
-							style={{ width: `${Math.min(100, item.progress * 100)}%` }}
-						/>
-					</div>
+				))
+			) : (
+				<div className="text-slate-600 text-xs italic">
+					No production queued
 				</div>
-			))}
+			)}
+
+			{/* Build buttons — US-3.1 */}
+			<div className="grid grid-cols-2 gap-1 pt-1">
+				{BUILDABLE_UNITS.map((bu) => {
+					const def = ROBOT_DEFS[bu.type];
+					const costStr = Object.entries(bu.cost)
+						.map(([k, v]) => `${v} ${k.replace(/([A-Z])/g, " $1").trim()}`)
+						.join(", ");
+					return (
+						<button
+							key={bu.type}
+							type="button"
+							onClick={() => {
+								enqueueProduction(baseEntity, bu.type, bu.cost);
+								playSfx("build_complete");
+							}}
+							title={`Build ${def.displayName}\nCost: ${costStr}`}
+							className={cn(
+								"px-1.5 py-1.5 text-[10px] font-mono rounded",
+								"border border-slate-700 text-slate-300",
+								"hover:border-cyan-400/50 hover:text-cyan-400",
+								"cursor-pointer transition-colors duration-150",
+								"bg-slate-900",
+							)}
+						>
+							+ {def.displayName.split(" ")[0]}
+						</button>
+					);
+				})}
+			</div>
 		</div>
 	);
 }
@@ -312,9 +375,9 @@ export function BasePanel() {
 					<FactionBadge factionId={faction} />
 				</div>
 
-				{/* Production Queue */}
+				{/* Production Queue + Build Buttons (US-3.1) */}
 				<Section title="Production Queue">
-					<ProductionQueueSection queue={queue} />
+					<ProductionQueueSection queue={queue} baseEntity={baseEntity!} />
 				</Section>
 
 				{/* Infrastructure */}

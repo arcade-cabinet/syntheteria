@@ -109,9 +109,9 @@ test("full playthrough: title -> new game -> narration -> gameplay -> governor t
 	root!.render(<App havok={null} />);
 	await flush(500);
 
-	// 2. Wait for title "SYNTHETERIA" to appear
-	await waitForText("SYNTHETERIA", 5000);
-	expect(container!.textContent).toContain("SYNTHETERIA");
+	// 2. Wait for landing page to render (title is in BabylonJS canvas, not DOM)
+	await waitForText("NEW GAME", 8000);
+	expect(container!.textContent).toContain("NEW GAME");
 
 	// 3. Click NEW GAME button
 	const newGameBtn = findButton("NEW GAME");

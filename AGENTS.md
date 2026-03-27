@@ -10,7 +10,7 @@
 
 **Landing page renders (globe + WGSL shaders working on WebGPU). Game canvas renders labyrinth + robots. Major restructure complete.**
 
-- 732 unit tests, 50 browser tests (+1 playthrough needs update), 0 tsc errors, 0 lint errors
+- 770 unit tests, 61 suites, 10 browser test files, 0 tsc errors, 0 lint errors
 - Build: Vite 8 + @vitejs/plugin-react + babel-plugin-reactylon
 - Landing: BabylonJS storm globe with WGSL custom ShaderMaterial (WebGPU native)
 - Gameplay: BabylonJS/Reactylon game canvas, 25° camera, fog of war, salvage nodes
@@ -18,7 +18,6 @@
 
 Known issues:
 - Globe has weird static blob / repeating pattern (shader continent logic)
-- Playthrough browser test needs update (title now in canvas, not DOM)
 - Test quality needs improvement (more ECS exercise, fewer placeholders)
 
 ## Tech Stack
@@ -28,6 +27,7 @@ Known issues:
 | Game engine | BabylonJS 8.x (WebGPU) + Reactylon 3.x |
 | ECS | Koota 0.6.x |
 | AI | Yuka 0.7.x (GOAP, NavGraph) |
+| Collision | Tile-based NavGraph (no physics engine) |
 | Build | Vite 8 + @vitejs/plugin-react + babel-plugin-reactylon |
 | UI | React 19 + shadcn/ui + Tailwind 3 |
 | Persistence | @capacitor-community/sqlite (web + native) with sql.js fallback |
@@ -97,8 +97,8 @@ src/
 ## Testing
 
 ```bash
-pnpm test           # 732 unit tests (vitest, jsdom)
-pnpm test:browser   # 51 browser tests (vitest, headed Chrome, zero mocks)
+pnpm test           # 770 unit tests (vitest, jsdom)
+pnpm test:browser   # browser tests (vitest, headed Chrome, zero mocks)
 pnpm tsc            # Type check (0 errors)
 pnpm lint           # Biome lint (0 errors)
 pnpm build          # Production build (vite)

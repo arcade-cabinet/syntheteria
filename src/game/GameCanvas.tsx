@@ -177,7 +177,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		// Final gameplay values
 		const FINAL_ALPHA = Tools.ToRadians(-90);
 		const FINAL_BETA = Tools.ToRadians(25); // 2.5D RTS perspective with depth
-		const FINAL_RADIUS = 60;
+		const FINAL_RADIUS = 40;
 
 		// Start zoomed out and more tilted for a dramatic intro
 		cam.target = new Vector3(startWX, 0, startWZ);
@@ -227,8 +227,8 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			cam.upperAlphaLimit = FINAL_ALPHA;
 			cam.lowerBetaLimit = Tools.ToRadians(20);
 			cam.upperBetaLimit = Tools.ToRadians(35);
-			cam.lowerRadiusLimit = 20;
-			cam.upperRadiusLimit = 100;
+			cam.lowerRadiusLimit = 15;
+			cam.upperRadiusLimit = 80;
 		});
 
 		// Pan settings

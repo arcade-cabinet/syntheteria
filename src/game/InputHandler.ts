@@ -108,6 +108,41 @@ export function initInput(
 		}
 	}
 
+	// ── Cursor style helper ──
+	function updateCursor(screenX: number, screenY: number) {
+		const canvas = scene.getEngine().getRenderingCanvas();
+		if (!canvas) return;
+
+		// During drag, always show crosshair
+		if (isPointerDown) {
+			canvas.style.cursor = "crosshair";
+			return;
+		}
+
+		const entityState = getEntityState();
+		if (entityState) {
+			const hitEntityId = getEntityAtPoint(entityState, scene, screenX, screenY);
+			if (hitEntityId) {
+				const entity = findEntityByIdString(hitEntityId);
+				if (entity && isEnemy(entity)) {
+					canvas.style.cursor = "crosshair";
+					return;
+				}
+				canvas.style.cursor = "pointer";
+				return;
+			}
+		}
+
+		// Check if we have selected units — terrain becomes a move target
+		const selected = getSelectedEntities();
+		if (selected.length > 0) {
+			canvas.style.cursor = "cell";
+			return;
+		}
+
+		canvas.style.cursor = "default";
+	}
+
 	const observer = scene.onPointerObservable.add((info: PointerInfo) => {
 		// Only handle left mouse button (button 0)
 		if (
@@ -127,15 +162,20 @@ export function initInput(
 			}
 
 			case PointerEventTypes.POINTERMOVE: {
-				if (!isPointerDown) return;
 				const moveX = info.event.offsetX;
 				const moveY = info.event.offsetY;
-				const dx = moveX - pointerDownX;
-				const dy = moveY - pointerDownY;
-				const dist = Math.sqrt(dx * dx + dy * dy);
-				if (dist > DRAG_THRESHOLD) {
-					showSelectionBox(pointerDownX, pointerDownY, moveX, moveY);
+
+				if (isPointerDown) {
+					const dx = moveX - pointerDownX;
+					const dy = moveY - pointerDownY;
+					const dist = Math.sqrt(dx * dx + dy * dy);
+					if (dist > DRAG_THRESHOLD) {
+						showSelectionBox(pointerDownX, pointerDownY, moveX, moveY);
+					}
 				}
+
+				// Update cursor based on what's under the mouse
+				updateCursor(moveX, moveY);
 				break;
 			}
 
@@ -166,6 +206,8 @@ export function initInput(
 	return () => {
 		scene.onPointerObservable.remove(observer);
 		hideSelectionBox();
+		const canvas = scene.getEngine().getRenderingCanvas();
+		if (canvas) canvas.style.cursor = "default";
 	};
 }
 

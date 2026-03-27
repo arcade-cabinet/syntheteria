@@ -140,8 +140,8 @@ export function LandingScreen({
 							}}
 							primary
 						/>
-						<MenuButton label="CONTINUE" onClick={() => {}} disabled />
-						<MenuButton label="SETTINGS" onClick={() => {}} disabled />
+						<MenuButton label="CONTINUE" onClick={() => {}} disabled title="No saved game found" />
+						<MenuButton label="SETTINGS" onClick={() => {}} disabled title="Coming soon" />
 					</div>
 				</div>
 
@@ -180,11 +180,13 @@ function MenuButton({
 	onClick,
 	primary,
 	disabled,
+	title,
 }: {
 	label: string;
 	onClick: () => void;
 	primary?: boolean;
 	disabled?: boolean;
+	title?: string;
 }) {
 	const [hovered, setHovered] = useState(false);
 
@@ -195,6 +197,7 @@ function MenuButton({
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 			disabled={disabled}
+			title={title}
 			style={{
 				background: disabled
 					? "transparent"

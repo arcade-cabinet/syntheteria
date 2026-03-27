@@ -1,5 +1,6 @@
 import {
 	type ReactNode,
+	useCallback,
 	useEffect,
 	useRef,
 	useState,
@@ -24,9 +25,12 @@ import {
 	type GameSnapshot,
 	getSnapshot,
 	isPaused,
+	setGameSpeed,
 	subscribe,
 	togglePause,
 } from "../ecs/gameState";
+import { selectBase } from "../components/base/BasePanel";
+import { deselectAll } from "../input/selection";
 import { reportFatalError } from "../errors";
 import { GameCanvas } from "../game/GameCanvas";
 import { popStoryTrigger } from "../systems/storyTriggers";
@@ -44,11 +48,24 @@ const PHASE_NARRATIVE: Partial<Record<GamePhaseId, DialogueSequence>> = {
 	war: WAR_SEQUENCE,
 };
 
+/** Speed presets mapped to number keys 1-4. */
+const SPEED_KEYS: Record<string, number> = {
+	"1": 0.5,
+	"2": 1,
+	"3": 2,
+	"4": 4,
+};
+
+/** Duration of the phase transition fade in milliseconds. */
+const PHASE_FADE_MS = 300;
+
 export default function App() {
 	const worldInitRef = useRef(false);
 	const [phase, setPhase] = useState<"title" | "narration" | "playing">(
 		"title",
 	);
+	const [fading, setFading] = useState(false);
+	const pendingPhaseRef = useRef<"title" | "narration" | "playing" | null>(null);
 	const [phaseNarrative, setPhaseNarrative] = useState<DialogueSequence | null>(
 		null,
 	);
@@ -63,6 +80,55 @@ export default function App() {
 		null,
 	);
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
+
+	/** Transition to a new phase with a fade-out / fade-in. */
+	const transitionTo = useCallback(
+		(nextPhase: "title" | "narration" | "playing") => {
+			pendingPhaseRef.current = nextPhase;
+			setFading(true);
+			setTimeout(() => {
+				setPhase(nextPhase);
+				pendingPhaseRef.current = null;
+				// Allow a tick for the new content to mount before fading in
+				requestAnimationFrame(() => setFading(false));
+			}, PHASE_FADE_MS);
+		},
+		[],
+	);
+
+	// ── Keyboard shortcuts (active during gameplay) ──
+	useEffect(() => {
+		if (phase !== "playing") return;
+
+		function handleKey(e: KeyboardEvent) {
+			// Ignore key events when an input/textarea is focused
+			const tag = (e.target as HTMLElement)?.tagName;
+			if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+			if (e.key === " ") {
+				e.preventDefault();
+				togglePause();
+				return;
+			}
+
+			if (e.key === "Escape") {
+				e.preventDefault();
+				deselectAll();
+				selectBase(null);
+				return;
+			}
+
+			const speed = SPEED_KEYS[e.key];
+			if (speed !== undefined) {
+				e.preventDefault();
+				setGameSpeed(speed);
+				return;
+			}
+		}
+
+		window.addEventListener("keydown", handleKey);
+		return () => window.removeEventListener("keydown", handleKey);
+	}, [phase]);
 
 	// US-5.1: Phase transition narratives
 	useEffect(() => {
@@ -129,7 +195,7 @@ export default function App() {
 						console.warn("[audio] init failed:", error);
 					});
 					gameConfigRef.current = config;
-					setPhase("narration");
+					transitionTo("narration");
 				}}
 			/>
 		);
@@ -149,7 +215,7 @@ export default function App() {
 						startAmbience();
 						startMusic(1);
 					}
-					setPhase("playing");
+					transitionTo("playing");
 				}}
 			/>
 		);
@@ -179,5 +245,18 @@ export default function App() {
 		);
 	}
 
-	return <ErrorBoundary>{content}</ErrorBoundary>;
+	return (
+		<ErrorBoundary>
+			<div
+				style={{
+					opacity: fading ? 0 : 1,
+					transition: `opacity ${PHASE_FADE_MS}ms ease-in-out`,
+					width: "100%",
+					height: "100%",
+				}}
+			>
+				{content}
+			</div>
+		</ErrorBoundary>
+	);
 }

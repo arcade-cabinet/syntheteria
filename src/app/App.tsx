@@ -19,6 +19,7 @@ import type { DialogueSequence } from "../config/narrativeDefs";
 import {
 	EXPANSION_SEQUENCE,
 	INTRO_SEQUENCE,
+	VICTORY_SEQUENCE,
 	WAR_SEQUENCE,
 } from "../config/narrativeDefs";
 import type { GamePhaseId } from "../config/phaseDefs";
@@ -82,6 +83,7 @@ export default function App() {
 		null,
 	);
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
+	const victoryNarrativeShownRef = useRef(false);
 
 	/** Transition to a new phase with a fade-out / fade-in. */
 	const transitionTo = useCallback(
@@ -163,6 +165,20 @@ export default function App() {
 		}
 		setPhaseNarrative(sequence);
 	}, [phase, snap.hasStoryTrigger, phaseNarrative]);
+
+	// Victory narrative — show wormhole ending sequence on victory (Tier 5)
+	useEffect(() => {
+		if (phase !== "playing" || phaseNarrative) return;
+		if (snap.gameOutcome !== "victory") return;
+		if (victoryNarrativeShownRef.current) return;
+
+		victoryNarrativeShownRef.current = true;
+		wasPausedRef.current = isPaused();
+		if (!isPaused()) {
+			togglePause();
+		}
+		setPhaseNarrative(VICTORY_SEQUENCE);
+	}, [phase, snap.gameOutcome, phaseNarrative]);
 
 	useEffect(() => {
 		return () => {

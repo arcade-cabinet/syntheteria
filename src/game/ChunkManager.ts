@@ -43,6 +43,7 @@ import {
 import { serializeComponents } from "../ecs/types";
 import { world } from "../ecs/world";
 import { logError } from "../errors";
+import { registerStoryTrigger } from "../systems/storyTriggers";
 
 /** How many chunks to load in each direction from the camera chunk. */
 const VIEW_RADIUS = 3;
@@ -303,6 +304,35 @@ function spawnChunkEntities(spawns: ChunkEntitySpawn[]): Entity[] {
 							]),
 						}),
 						Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+					);
+					break;
+
+				case "cult_base":
+					// Cult base — enemy stronghold building (Tier 3)
+					entity = world.spawn(
+						EntityId({ value: id }),
+						Position({ x: wx, y, z: wz }),
+						Faction({ value: "cultist" }),
+						Fragment({ fragmentId: fragment.id }),
+						BuildingTrait({
+							buildingType: "cult_base",
+							powered: true,
+							operational: true,
+							selected: false,
+							buildingComponentsJson: "[]",
+						}),
+					);
+					break;
+
+				case "story_trigger":
+					// Story trigger — register the zone for narrative system (Tier 5)
+					if (spawn.roomTag) {
+						registerStoryTrigger(wx, wz, spawn.roomTag);
+					}
+					// Spawn a marker entity for visual distinction
+					entity = world.spawn(
+						EntityId({ value: id }),
+						Position({ x: wx, y, z: wz }),
 					);
 					break;
 			}

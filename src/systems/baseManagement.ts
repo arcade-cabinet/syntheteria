@@ -10,9 +10,10 @@
 
 import type { Entity, World } from "koota";
 import { tileToWorldX, tileToWorldZ } from "../board/coords";
-import { WORLD_EXTENT, zoneForTile } from "../board/zones";
+import { zoneForTile } from "../board/zones";
 import { Base, EntityId, Faction, Position } from "../ecs/traits";
 import { gameAssert } from "../errors";
+import { recordBaseFounded } from "./gamePhases";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -118,7 +119,8 @@ export function validateBaseLocation(
 	factionId: string,
 ): string | null {
 	// Check zone — player cannot found bases in enemy territory
-	const zone = zoneForTile(tileX, tileZ, WORLD_EXTENT, WORLD_EXTENT);
+	// Use infinite-world mode (no width/height) for zone check
+	const zone = zoneForTile(tileX, tileZ);
 	if (factionId === "player" && zone === "enemy") {
 		return "Cannot found a base in enemy territory";
 	}
@@ -142,6 +144,7 @@ export function validateBaseLocation(
 /**
  * Found a new base at (tileX, tileZ).
  * Validates location and spawns a Base entity with Position, Faction, EntityId.
+ * When a player founds a base, records it for phase progression (Awakening -> Expansion).
  *
  * @returns The spawned base entity.
  * @throws GameError if the location is invalid.
@@ -163,6 +166,11 @@ export function foundBase(
 	const id = `base_${nextBaseId++}`;
 	const wx = tileToWorldX(tileX);
 	const wz = tileToWorldZ(tileZ);
+
+	// Record base founding for phase progression (Tier 5)
+	if (factionId === "player") {
+		recordBaseFounded();
+	}
 
 	return world.spawn(
 		EntityId({ value: id }),

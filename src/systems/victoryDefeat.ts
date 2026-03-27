@@ -4,12 +4,14 @@
  * Checks win/loss conditions each simulation tick:
  *
  * Defeat: All player units destroyed -> game over.
- * Victory: Cult leader entity destroyed -> player wins.
+ * Victory: Cult leader entity destroyed -> player wins, triggers wormhole ending.
  *
  * The system sets a terminal game state flag that the UI reads
- * to show the appropriate end-game overlay.
+ * to show the appropriate end-game overlay. Victory also triggers
+ * the VICTORY_SEQUENCE narrative and SFX.
  */
 
+import { playSfx } from "../audio";
 import { Faction, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
 
@@ -41,10 +43,12 @@ export function resetOutcome(): void {
 /**
  * Record that a cult leader was destroyed.
  * Called from combat system when the cult_leader entity dies.
+ * Triggers the victory SFX and sets the game outcome.
  */
 export function recordCultLeaderKill(): void {
 	if (outcome === "playing") {
 		outcome = "victory";
+		playSfx("victory");
 	}
 }
 
@@ -79,6 +83,7 @@ export function victoryDefeatSystem(): void {
 		terminalTicks++;
 		if (terminalTicks >= DEFEAT_GRACE_TICKS) {
 			outcome = "defeat";
+			playSfx("defeat");
 		}
 	} else {
 		// Reset grace period if player has units again (e.g., fabrication)

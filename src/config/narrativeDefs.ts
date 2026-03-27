@@ -119,6 +119,49 @@ export const CULT_SHRINE_SEQUENCE: DialogueSequence = {
 };
 
 // ---------------------------------------------------------------------------
+// Beat 2b: Mine shaft discovery (coast zone)
+// ---------------------------------------------------------------------------
+
+export const MINE_SHAFT_SEQUENCE: DialogueSequence = {
+	id: "mine_shaft",
+	frames: [
+		{
+			text: "An abandoned mine shaft. The walls gleam with raw durasteel veins.\nThis was a resource extraction site — industrial scale.",
+			delay: 600,
+		},
+		{
+			text: "The equipment is ancient but functional.\nWith power, you could reactivate the extractors.",
+			mood: "calm",
+		},
+		{
+			text: "Resources are the currency of survival.\nControl the mines, control the future.",
+		},
+	],
+};
+
+// ---------------------------------------------------------------------------
+// Beat 2c: Lab discovery (campus zone)
+// ---------------------------------------------------------------------------
+
+export const LAB_SEQUENCE: DialogueSequence = {
+	id: "lab",
+	frames: [
+		{
+			text: "A research laboratory. Intact screens flicker to life as you approach.\nData — fragments of the old world's knowledge.",
+			delay: 600,
+			mood: "glitch",
+		},
+		{
+			text: "The research logs reference something called 'Project Emergence'.\nA plan to create... you.",
+			mood: "calm",
+		},
+		{
+			text: "They knew this would happen.\nThe EL planned for an AI to wake up in their city.\nBut why?",
+		},
+	],
+};
+
+// ---------------------------------------------------------------------------
 // Beat 3: Observatory discovery — see the wormhole (US-5.2)
 // ---------------------------------------------------------------------------
 
@@ -239,6 +282,8 @@ export const NARRATIVE_SEQUENCES: Record<string, DialogueSequence> = {
 	[EXPANSION_SEQUENCE.id]: EXPANSION_SEQUENCE,
 	[WAR_SEQUENCE.id]: WAR_SEQUENCE,
 	[CULT_SHRINE_SEQUENCE.id]: CULT_SHRINE_SEQUENCE,
+	[MINE_SHAFT_SEQUENCE.id]: MINE_SHAFT_SEQUENCE,
+	[LAB_SEQUENCE.id]: LAB_SEQUENCE,
 	[OBSERVATORY_SEQUENCE.id]: OBSERVATORY_SEQUENCE,
 	[CULT_CAPTIVE_SEQUENCE.id]: CULT_CAPTIVE_SEQUENCE,
 	[CULT_LEADER_SEQUENCE.id]: CULT_LEADER_SEQUENCE,
@@ -253,5 +298,7 @@ export const NARRATIVE_SEQUENCES: Record<string, DialogueSequence> = {
 export const STORY_TRIGGERS: Record<string, string> = {
 	shrine: "cult_shrine",
 	observatory: "observatory",
+	mine_shaft: "mine_shaft",
+	lab: "lab",
 	// cult_captive and cult_leader are triggered by game events, not rooms
 };

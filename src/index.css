@@ -34,3 +34,18 @@ body {
 	display: block;
 	background: #03070b;
 }
+
+/* Resource pickup float animation */
+@keyframes floatUp {
+	0% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	70% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+		transform: translateY(-40px);
+	}
+}

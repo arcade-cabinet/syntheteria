@@ -1,4 +1,5 @@
 import { GameEndOverlay } from "../components/game/GameEndOverlay";
+import { ResourcePickupToast } from "../components/game/ResourcePickupToast";
 import { UnitDeathToast } from "../components/game/UnitDeathToast";
 import type { GameSnapshot } from "../ecs/gameState";
 
@@ -20,6 +21,9 @@ export function GameOverlays({ snap }: { snap: GameSnapshot }) {
 
 			{/* Unit death toast notifications */}
 			<UnitDeathToast combatEvents={snap.combatEvents} />
+
+			{/* Resource pickup feedback — floating "+2 Fe" text */}
+			<ResourcePickupToast resources={snap.resources} />
 
 			{/* Fragment merge notification */}
 			{snap.mergeEvents.length > 0 && (

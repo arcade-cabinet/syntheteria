@@ -1,12 +1,12 @@
 /**
  * Game phase system — 3-phase progression.
  *
- * Awakening → Expansion → War
+ * Awakening -> Expansion -> War
  *
  * Phase triggers (checked each tick):
- * - Awakening → Expansion: player unit exits city bounds, OR elapsed >= 900s,
- *   OR 3+ rooms cleared
- * - Expansion → War: cult escalation reaches tier 3, OR elapsed >= 2100s
+ * - Awakening -> Expansion: player founds first base, OR player unit exits
+ *   city bounds, OR elapsed >= 900s, OR 3+ rooms cleared
+ * - Expansion -> War: cult escalation reaches tier 3, OR elapsed >= 2100s
  *
  * Phase transitions emit a pending phase ID so the UI can play the
  * corresponding narrative sequence (EXPANSION_SEQUENCE, WAR_SEQUENCE).
@@ -18,7 +18,7 @@ import {
 	PHASE_DEFS,
 } from "../config/phaseDefs";
 import { isInsideCityBounds } from "../ecs/cityLayout";
-import { Faction, Position, Unit } from "../ecs/traits";
+import { Base, Faction, Position, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
 import { getCurrentTierLevel } from "./cultEscalation";
 
@@ -33,6 +33,7 @@ let elapsedGameSec = 0;
 let pendingTransitionPhaseId: GamePhaseId | null = null;
 let pendingTransitionText: string[] | null = null;
 let roomsCleared = 0;
+let baseFounded = false;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -102,6 +103,11 @@ export function recordRoomCleared(): void {
 	roomsCleared++;
 }
 
+/** Record that the player founded a base (Awakening->Expansion trigger). */
+export function recordBaseFounded(): void {
+	baseFounded = true;
+}
+
 /** Reset phase state for a new game */
 export function resetPhaseState(): void {
 	currentPhase = "awakening";
@@ -109,6 +115,7 @@ export function resetPhaseState(): void {
 	pendingTransitionPhaseId = null;
 	pendingTransitionText = null;
 	roomsCleared = 0;
+	baseFounded = false;
 }
 
 // ---------------------------------------------------------------------------
@@ -128,6 +135,19 @@ function anyPlayerUnitOutsideCity(): boolean {
 /** Returns true if cult escalation has reached tier 3. */
 function cultReachedTier3(): boolean {
 	return getCurrentTierLevel() >= 3;
+}
+
+/** Returns true if the player has founded at least one base. */
+function playerHasBase(): boolean {
+	if (baseFounded) return true;
+	// Also check ECS for any existing player bases
+	for (const entity of world.query(Base, Faction)) {
+		if (entity.get(Faction)?.value === "player") {
+			baseFounded = true;
+			return true;
+		}
+	}
+	return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -150,7 +170,8 @@ export function gamePhaseSystem(deltaSec: number): void {
 
 	// Condition-based triggers (primary)
 	if (nextPhaseId === "expansion") {
-		shouldTransition = anyPlayerUnitOutsideCity();
+		// Awakening -> Expansion: base founded OR unit left city
+		shouldTransition = playerHasBase() || anyPlayerUnitOutsideCity();
 	} else if (nextPhaseId === "war") {
 		shouldTransition = cultReachedTier3();
 	}

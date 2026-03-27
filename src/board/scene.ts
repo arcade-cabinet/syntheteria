@@ -8,6 +8,10 @@
  *   - Floor thin-boxes for passable tiles (PBR materials from FLOOR_MATERIALS)
  *   - Wall boxes for structural_mass tiles (height varies for visual interest)
  *   - Ocean ground plane beneath chunks
+ *
+ * Zone-aware rendering (Tier 3/5): Floor colors vary by zone profile,
+ * and POI rooms (cult shrines, observatories, labs, mines) get distinct
+ * emissive materials for visual distinction.
  */
 
 import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial";
@@ -46,6 +50,14 @@ const FLOOR_COLORS: Record<string, Color3> = {
 	abyssal_platform: new Color3(0.08, 0.12, 0.18),
 };
 
+/** Zone-specific tint applied to floor colors for geographic variety. */
+const ZONE_TINTS: Record<string, Color3> = {
+	city: new Color3(0, 0, 0), // no tint — neutral industrial
+	coast: new Color3(0.02, 0.04, 0.06), // slight blue tint — coastal
+	campus: new Color3(0.02, 0.04, 0.01), // slight green tint — organic
+	enemy: new Color3(0.04, 0.01, 0.01), // slight red tint — hostile
+};
+
 // ─── Variant selection ──────────────────────────────────────────────────────
 // Uses tile position hash to pick one of 3 visual variants per floor type.
 // Creates subtle visual variation (roughness, color tint) across the terrain.
@@ -71,8 +83,10 @@ function getFloorMaterial(
 	floorType: FloorType,
 	variant: number,
 	scene: Scene,
+	zone?: string,
 ): PBRMaterial {
-	const key = `floor-${floorType}-v${variant}`;
+	const zoneKey = zone ?? "city";
+	const key = `floor-${floorType}-v${variant}-${zoneKey}`;
 	let mat = materialCache.get(key) as PBRMaterial | undefined;
 	if (mat) return mat;
 
@@ -90,14 +104,15 @@ function getFloorMaterial(
 	}
 	const baseColor = FLOOR_COLORS[floorType] ?? new Color3(0.3, 0.3, 0.3);
 	const tint = VARIANT_TINT[variant] ?? 0;
+	const zoneTint = ZONE_TINTS[zoneKey] ?? new Color3(0, 0, 0);
 
 	mat = new PBRMaterial(key, scene);
 	mat.roughness = VARIANT_ROUGHNESS[variant] ?? 0.85;
 	mat.metallic = def.metalness ? 0.6 : 0.1;
 	mat.albedoColor = new Color3(
-		Math.max(0, Math.min(1, baseColor.r + tint)),
-		Math.max(0, Math.min(1, baseColor.g + tint)),
-		Math.max(0, Math.min(1, baseColor.b + tint)),
+		Math.max(0, Math.min(1, baseColor.r + tint + zoneTint.r)),
+		Math.max(0, Math.min(1, baseColor.g + tint + zoneTint.g)),
+		Math.max(0, Math.min(1, baseColor.b + tint + zoneTint.b)),
 	);
 	mat.albedoTexture = new Texture(`/assets/textures/pbr/${def.color}`, scene);
 	mat.freeze(); // won't change — optimize
@@ -162,10 +177,12 @@ export function populateChunkScene(chunk: Chunk, scene: Scene): ChunkMeshes {
 				mesh.position = new Vector3(wx, elev, wz);
 				mesh.receiveShadows = true;
 				mesh.isPickable = false;
+				// Zone-aware floor material for geographic variety
 				mesh.material = getFloorMaterial(
 					tile.floorType,
 					tileVariant(tile.x, tile.z),
 					scene,
+					tile.zone,
 				);
 				meshes.push(mesh);
 			} else {

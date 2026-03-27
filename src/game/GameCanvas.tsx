@@ -16,7 +16,7 @@
 import type { ArcRotateCamera, Scene as BScene } from "@babylonjs/core";
 import { Animation } from "@babylonjs/core/Animations/animation";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { Tools } from "@babylonjs/core/Misc/tools";
@@ -56,12 +56,16 @@ import {
 } from "./GameplayLightning";
 import { initInput } from "./InputHandler";
 
+// ─── Void color — the dark background of the ecumenopolis ────────────────────
+// Exact #03070b in linear 0-1 space. Used for clearColor, ground plane, and CSS.
+
+const VOID_R = 0x03 / 255; // 0.01176
+const VOID_G = 0x07 / 255; // 0.02745
+const VOID_B = 0x0b / 255; // 0.04314
+
 // ─── Epoch-driven atmosphere — Epoch 1 defaults ──────────────────────────────
 
 const epoch1 = getEpochVisual(1);
-const FOG_R = epoch1.fogColor[0];
-const FOG_G = epoch1.fogColor[1];
-const FOG_B = epoch1.fogColor[2];
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -88,7 +92,9 @@ function onSceneReady(scene: BScene) {
 	// Scene fog (FOGMODE_EXP2) applies uniform distance-based fog from the camera
 	// which obscures explored areas and ignores the exploration grid entirely.
 	scene.fogMode = 0; // FOGMODE_NONE
-	scene.clearColor.set(FOG_R, FOG_G, FOG_B, 1);
+
+	// Explicit void color #03070b — matches the labyrinth void between chunks
+	scene.clearColor = new Color4(VOID_R, VOID_G, VOID_B, 1);
 	scene.ambientColor = new Color3(...epoch1.ambientColor);
 
 	// Environment texture for PBR reflections — just the IBL probe, no skybox.
@@ -98,8 +104,8 @@ function onSceneReady(scene: BScene) {
 				"https://assets.babylonjs.com/environments/environmentSpecular.env",
 				scene,
 			);
-			// Re-force dark clear color after env texture loads (it can override)
-			scene.clearColor.set(FOG_R, FOG_G, FOG_B, 1);
+			// Re-force void clearColor after env texture loads (it can override)
+			scene.clearColor = new Color4(VOID_R, VOID_G, VOID_B, 1);
 			scene.autoClear = true;
 		},
 	);
@@ -149,6 +155,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 
 	useEffect(() => {
 		// Ground plane — catches viewport gaps so we never see black void.
+		// Uses exact void color #03070b so it blends seamlessly with clearColor.
 		const ground = MeshBuilder.CreateGround(
 			"void-ground",
 			{ width: 2000, height: 2000 },
@@ -156,9 +163,10 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		);
 		ground.position = new Vector3(startWX, -0.5, startWZ);
 		const groundMat = new StandardMaterial("void-ground-mat", scene);
-		groundMat.diffuseColor = new Color3(FOG_R, FOG_G, FOG_B);
-		groundMat.emissiveColor = new Color3(FOG_R, FOG_G, FOG_B);
+		groundMat.diffuseColor = new Color3(VOID_R, VOID_G, VOID_B);
+		groundMat.emissiveColor = new Color3(VOID_R, VOID_G, VOID_B);
 		groundMat.specularColor = Color3.Black();
+		groundMat.disableLighting = true;
 		groundMat.freeze();
 		ground.material = groundMat;
 		ground.isPickable = false;
@@ -250,7 +258,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		);
 		ambient.intensity = 0.8;
 		ambient.groundColor = new Color3(0.04, 0.08, 0.12);
-		ambient.diffuse = new Color3(0.18, 0.22, 0.30);
+		ambient.diffuse = new Color3(0.18, 0.22, 0.3);
 
 		// 3. Point light near camera — soft omnidirectional glow, no projected cone
 		const cameraLight = new PointLight(
@@ -435,7 +443,10 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 
 export function GameCanvas({ startPos, seed }: GameCanvasProps) {
 	return (
-		<Engine forceWebGL engineOptions={{ premultipliedAlpha: false, alpha: false }}>
+		<Engine
+			forceWebGL
+			engineOptions={{ premultipliedAlpha: false, alpha: false }}
+		>
 			<Scene onSceneReady={onSceneReady}>
 				<SceneContent startPos={startPos} seed={seed} />
 			</Scene>

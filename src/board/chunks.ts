@@ -13,6 +13,11 @@
  * ChunkEntitySpawn descriptors. ChunkManager spawns/despawns ECS entities
  * when chunks load/unload.
  *
+ * Geographic variety (Tier 3): Room sizes, wall density, floor types, and
+ * POI distribution now vary by zone (city/coast/campus/enemy). Zone is
+ * determined using infinite-world mode (distance+direction from spawn)
+ * instead of a fixed WORLD_EXTENT reference frame.
+ *
  * Usage:
  *   const chunk = generateChunk(worldSeed, chunkX, chunkZ);
  *   // chunk.tiles[localZ][localX] — local coords within chunk
@@ -32,7 +37,7 @@ import {
 	type FloorType,
 	type TileData,
 } from "./types";
-import { WORLD_EXTENT, ZONE_PROFILES, zoneForTile } from "./zones";
+import { type WorldZone, ZONE_PROFILES, zoneForTile } from "./zones";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -51,11 +56,19 @@ export interface ChunkEntitySpawn {
 	/** World-space tile Z. */
 	tileZ: number;
 	/** Entity category. */
-	kind: "scavenge_site" | "lightning_rod" | "fabrication_unit" | "cult_patrol";
+	kind:
+		| "scavenge_site"
+		| "lightning_rod"
+		| "fabrication_unit"
+		| "cult_patrol"
+		| "cult_base"
+		| "story_trigger";
 	/** Material type for scavenge sites. */
 	materialType?: string;
 	/** How many scavenge actions remain (scavenge sites). */
 	remaining?: number;
+	/** Room tag for story trigger rooms. */
+	roomTag?: string;
 }
 
 export interface Chunk {
@@ -98,6 +111,18 @@ export function dangerLevel(chunkX: number, chunkZ: number): number {
 	// Linear ramp from 0 at distance 2 to 1.0 at distance 30
 	const raw = (dist - 2) / 28;
 	return Math.min(1.0, raw + northBias);
+}
+
+// ─── Zone for chunk center ──────────────────────────────────────────────────
+
+/**
+ * Get the dominant zone for a chunk by sampling its center tile.
+ * Uses infinite-world mode (no width/height) so zones scale naturally.
+ */
+function chunkZone(chunkX: number, chunkZ: number): WorldZone {
+	const cx = chunkX * CHUNK_SIZE + Math.floor(CHUNK_SIZE / 2);
+	const cz = chunkZ * CHUNK_SIZE + Math.floor(CHUNK_SIZE / 2);
+	return zoneForTile(cx, cz);
 }
 
 // ─── Border gates ───────────────────────────────────────────────────────────
@@ -183,6 +208,14 @@ const COMMON_MATERIALS = ["scrapMetal", "circuitry", "powerCells"];
 const UNCOMMON_MATERIALS = ["scrapMetal", "circuitry", "durasteel"];
 const RARE_MATERIALS = ["durasteel", "powerCells", "circuitry"];
 
+/** Zone-specific POI types for story trigger rooms. */
+const ZONE_POI_TAGS: Record<WorldZone, string[]> = {
+	city: [],
+	coast: ["mine_shaft"],
+	campus: ["observatory", "lab"],
+	enemy: ["shrine"],
+};
+
 /**
  * Deterministically generate entity spawn descriptors for a chunk.
  *
@@ -190,6 +223,8 @@ const RARE_MATERIALS = ["durasteel", "powerCells", "circuitry"];
  * - Lightning rods in large rooms near origin
  * - Fabrication units in specific room configurations (rare)
  * - Cult patrols scale with danger level
+ * - Cult bases spawn at high danger levels in enemy territory (Tier 3)
+ * - Story trigger rooms get marker entities for visual distinction (Tier 5)
  */
 function generateChunkEntities(
 	tiles: TileData[][],
@@ -200,6 +235,7 @@ function generateChunkEntities(
 	const rng = seededRng(`${chunkSeed}_entities`);
 	const entities: ChunkEntitySpawn[] = [];
 	const danger = dangerLevel(chunkX, chunkZ);
+	const zone = chunkZone(chunkX, chunkZ);
 
 	// Find rooms by scanning for clusters of passable tiles
 	// (simplified: pick random passable tiles as spawn points)
@@ -218,9 +254,11 @@ function generateChunkEntities(
 	const offsetX = chunkX * CHUNK_SIZE;
 	const offsetZ = chunkZ * CHUNK_SIZE;
 
-	// ── Scavenge sites — common near spawn, rare far out ─────────────
-	// More sites in resource-rich zones, fewer in enemy territory
-	const scavengeCount = Math.floor(2 + rng() * 3 * (1 - danger * 0.5));
+	// ── Scavenge sites — zone-aware resource distribution ─────────────
+	const zoneMultiplier = ZONE_PROFILES[zone].resourceMultiplier;
+	const scavengeCount = Math.floor(
+		2 + rng() * 3 * (1 - danger * 0.5) * zoneMultiplier,
+	);
 	for (let i = 0; i < scavengeCount; i++) {
 		if (passableTiles.length === 0) break;
 		const idx = Math.floor(rng() * passableTiles.length);
@@ -273,13 +311,9 @@ function generateChunkEntities(
 	if (dist < 8 && rng() < 0.15 && passableTiles.length > 0) {
 		const idx = Math.floor(rng() * passableTiles.length);
 		const spot = passableTiles[idx]!;
-		const zone = zoneForTile(
-			offsetX + spot.lx,
-			offsetZ + spot.lz,
-			WORLD_EXTENT,
-			WORLD_EXTENT,
-		);
-		if (zone === "city" || zone === "campus") {
+		// Use infinite-world zone check (no WORLD_EXTENT)
+		const tileZone = zoneForTile(offsetX + spot.lx, offsetZ + spot.lz);
+		if (tileZone === "city" || tileZone === "campus") {
 			entities.push({
 				tileX: offsetX + spot.lx,
 				tileZ: offsetZ + spot.lz,
@@ -287,6 +321,38 @@ function generateChunkEntities(
 			});
 			passableTiles.splice(idx, 1);
 		}
+	}
+
+	// ── Cult bases — high danger enemy territory (Tier 3) ─────────────
+	if (
+		danger >= 0.6 &&
+		zone === "enemy" &&
+		rng() < 0.2 &&
+		passableTiles.length > 0
+	) {
+		const idx = Math.floor(rng() * passableTiles.length);
+		const spot = passableTiles[idx]!;
+		entities.push({
+			tileX: offsetX + spot.lx,
+			tileZ: offsetZ + spot.lz,
+			kind: "cult_base",
+		});
+		passableTiles.splice(idx, 1);
+	}
+
+	// ── Story trigger rooms — zone-specific POIs (Tier 5) ────────────
+	const poiTags = ZONE_POI_TAGS[zone];
+	if (poiTags.length > 0 && rng() < 0.15 && passableTiles.length > 0) {
+		const tag = poiTags[Math.floor(rng() * poiTags.length)]!;
+		const idx = Math.floor(rng() * passableTiles.length);
+		const spot = passableTiles[idx]!;
+		entities.push({
+			tileX: offsetX + spot.lx,
+			tileZ: offsetZ + spot.lz,
+			kind: "story_trigger",
+			roomTag: tag,
+		});
+		passableTiles.splice(idx, 1);
 	}
 
 	// ── Cult patrols — scale with danger, none within 2 chunks of spawn ─
@@ -316,6 +382,10 @@ function generateChunkEntities(
  * The chunk is fully self-contained: room placement, maze fill, connectivity,
  * pruning, zone floors, resources, and entity spawns are all computed locally.
  * Border gates ensure adjacent chunks connect.
+ *
+ * Zone-aware generation (Tier 3): Room sizes and wall density vary by the
+ * chunk's dominant zone. Cult territory chunks use smaller rooms with denser
+ * walls; coastal chunks use larger rooms with more open space.
  */
 export function generateChunk(
 	worldSeed: string,
@@ -325,21 +395,53 @@ export function generateChunk(
 	const offsetX = chunkX * CHUNK_SIZE;
 	const offsetZ = chunkZ * CHUNK_SIZE;
 	const chunkSeed = `${worldSeed}_c${chunkX}_${chunkZ}`;
+	const zone = chunkZone(chunkX, chunkZ);
+	const profile = ZONE_PROFILES[zone];
 
 	// Phase 1: Room placement + solid fill
+	// Cult density scales with zone: more cult rooms in enemy territory
+	const cultDensity = zone === "enemy" ? 3 : zone === "city" ? 1 : 0;
 	const config: BoardConfig = {
 		width: CHUNK_SIZE,
 		height: CHUNK_SIZE,
 		seed: chunkSeed,
 		difficulty: "normal",
-		cultDensity: 1,
+		cultDensity,
 	};
 	const board = generateLabyrinth(config);
 	const tiles = board.tiles;
 
-	// Phase 2: Maze fill
+	// Phase 2: Maze fill with zone-aware wall density
 	const mazeRng = seededRng(`${chunkSeed}_maze`);
 	growingTreeMazeFill(tiles, CHUNK_SIZE, CHUNK_SIZE, mazeRng);
+
+	// Apply zone wall density: remove some maze walls in open zones
+	// wallDensity 1.0 = keep all walls, 0.4 = remove 60% of maze corridors
+	if (profile.wallDensity < 1.0) {
+		const wallRng = seededRng(`${chunkSeed}_walldensity`);
+		for (let lz = 1; lz < CHUNK_SIZE - 1; lz++) {
+			for (let lx = 1; lx < CHUNK_SIZE - 1; lx++) {
+				const tile = tiles[lz]![lx]!;
+				if (
+					!tile.passable &&
+					tile.floorType === "structural_mass" &&
+					wallRng() > profile.wallDensity
+				) {
+					// Check if opening this wall connects two passable neighbors
+					const hasPassableNeighbor =
+						(tiles[lz - 1]?.[lx]?.passable ?? false) ||
+						(tiles[lz + 1]?.[lx]?.passable ?? false) ||
+						(tiles[lz]?.[lx - 1]?.passable ?? false) ||
+						(tiles[lz]?.[lx + 1]?.passable ?? false);
+					if (hasPassableNeighbor) {
+						tile.passable = true;
+						tile.floorType = "transit_deck";
+						tile.elevation = 0;
+					}
+				}
+			}
+		}
+	}
 
 	// Open border gates BEFORE connectivity so flood-fill sees them
 	openBorderGates(tiles, chunkX, chunkZ, worldSeed);
@@ -353,11 +455,11 @@ export function generateChunk(
 	// Re-open border gates in case pruning closed them
 	openBorderGates(tiles, chunkX, chunkZ, worldSeed);
 
-	// Phase 6: Zone floors + resources (using absolute world coords)
+	// Phase 6: Zone floors + resources (using absolute world coords, infinite-world mode)
 	applyChunkZoneFloors(tiles, offsetX, offsetZ, chunkSeed);
 	scatterChunkResources(tiles, offsetX, offsetZ, chunkSeed);
 
-	// Phase 8: Zone assignment (absolute coords)
+	// Phase 8: Zone assignment (absolute coords, infinite-world mode)
 	assignChunkZones(tiles, offsetX, offsetZ);
 
 	// Stamp world-space coordinates on each tile
@@ -421,7 +523,8 @@ function applyChunkZoneFloors(
 			if (rng() < 0.9) {
 				const wx = offsetX + lx;
 				const wz = offsetZ + lz;
-				const zone = zoneForTile(wx, wz, WORLD_EXTENT, WORLD_EXTENT);
+				// Use infinite-world mode (no width/height args)
+				const zone = zoneForTile(wx, wz);
 				const profile = ZONE_PROFILES[zone];
 
 				if (zone === "city") {
@@ -468,7 +571,8 @@ function scatterChunkResources(
 
 			const wx = offsetX + lx;
 			const wz = offsetZ + lz;
-			const zone = zoneForTile(wx, wz, WORLD_EXTENT, WORLD_EXTENT);
+			// Use infinite-world mode (no width/height args)
+			const zone = zoneForTile(wx, wz);
 			const rate = baseRate * ZONE_PROFILES[zone].resourceMultiplier;
 			if (rng() >= rate) continue;
 
@@ -489,12 +593,8 @@ function assignChunkZones(
 ): void {
 	for (let lz = 0; lz < CHUNK_SIZE; lz++) {
 		for (let lx = 0; lx < CHUNK_SIZE; lx++) {
-			tiles[lz]![lx]!.zone = zoneForTile(
-				offsetX + lx,
-				offsetZ + lz,
-				WORLD_EXTENT,
-				WORLD_EXTENT,
-			);
+			// Use infinite-world mode (no width/height args)
+			tiles[lz]![lx]!.zone = zoneForTile(offsetX + lx, offsetZ + lz);
 		}
 	}
 }

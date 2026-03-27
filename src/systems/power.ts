@@ -6,6 +6,9 @@
  * Units can charge when near a powered building.
  *
  * Storm intensity affects rod output (fluctuates over time).
+ *
+ * US-3.2: Storm intensity varies 0.5-1.0 (NOT above 1.0).
+ * US-6.2: PWR shows surplus as green, deficit as red.
  */
 
 import {
@@ -21,20 +24,21 @@ import { world } from "../ecs/world";
 const DEFAULT_POWER_RADIUS = 12;
 
 /** Storm intensity oscillates -- affects all rod output */
-let stormIntensity = 1.0;
+let stormIntensity = 0.75;
 let stormPhase = 0;
 
 /**
  * Update storm intensity. Called each sim tick.
- * The storm fluctuates with slow waves, occasionally surging.
+ * US-3.2: Storm varies within 0.5 to 1.0, NEVER above 1.0.
  */
 function updateStormIntensity(tick: number) {
 	stormPhase = tick * 0.02;
-	// Base oscillation (slow sine wave)
-	const base = 0.7 + 0.2 * Math.sin(stormPhase * 0.3);
-	// Occasional surges
-	const surge = Math.max(0, Math.sin(stormPhase * 1.7 + 2.3)) * 0.3;
-	stormIntensity = Math.min(1.5, base + surge);
+	// Base oscillation (slow sine wave) centered at 0.75
+	const base = 0.75 + 0.2 * Math.sin(stormPhase * 0.3);
+	// Occasional surges (additive, but clamped)
+	const surge = Math.max(0, Math.sin(stormPhase * 1.7 + 2.3)) * 0.15;
+	// US-3.2 / US-6.2: Clamp to [0.5, 1.0] — NEVER above 1.0
+	stormIntensity = Math.max(0.5, Math.min(1.0, base + surge));
 }
 
 export function getStormIntensity(): number {
@@ -96,7 +100,7 @@ function getUnitPowerDemand(isMoving: boolean): number {
 
 /**
  * Distribute power: buildings within rod range get powered.
- * If total generation < total demand, some buildings lose power.
+ * US-3.2: Power deficit causes fabrication to stop.
  */
 function distributePower() {
 	// First, mark all non-rod buildings as unpowered
@@ -132,17 +136,21 @@ function distributePower() {
 export interface PowerSnapshot {
 	totalGeneration: number;
 	totalDemand: number;
+	/** Storm intensity as percentage 0-100 (capped at 100, never above). */
 	stormIntensity: number;
 	rodCount: number;
 	poweredBuildingCount: number;
+	/** Whether generation meets demand. */
+	surplus: boolean;
 }
 
 let lastPowerSnapshot: PowerSnapshot = {
 	totalGeneration: 0,
 	totalDemand: 0,
-	stormIntensity: 1.0,
+	stormIntensity: 75,
 	rodCount: 0,
 	poweredBuildingCount: 0,
+	surplus: true,
 };
 
 export function getPowerSnapshot(): PowerSnapshot {
@@ -170,8 +178,10 @@ export function powerSystem(tick: number) {
 	lastPowerSnapshot = {
 		totalGeneration: Math.round(generation * 10) / 10,
 		totalDemand: Math.round(demand * 10) / 10,
-		stormIntensity: Math.round(stormIntensity * 100) / 100,
+		// US-6.2: Display as percentage, capped at 100%
+		stormIntensity: Math.round(stormIntensity * 100),
 		rodCount,
 		poweredBuildingCount: poweredCount,
+		surplus: generation >= demand,
 	};
 }

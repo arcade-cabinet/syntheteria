@@ -1,8 +1,11 @@
 /**
- * Narrative dialogue definitions — intro sequence, phase transitions, victory.
+ * Narrative dialogue definitions — intro sequence, phase transitions,
+ * story discovery beats, and victory.
  *
  * Each sequence is an array of DialogueFrame objects displayed one at a time
  * by the NarrativeOverlay with a typewriter text effect.
+ *
+ * US-5.2: Core storyline beats triggered by exploration.
  */
 
 export interface DialogueFrame {
@@ -22,7 +25,7 @@ export interface DialogueSequence {
 }
 
 // ---------------------------------------------------------------------------
-// Intro — plays on first New Game before gameplay starts
+// Beat 1: Intro — plays on first New Game before gameplay starts
 // ---------------------------------------------------------------------------
 
 export const INTRO_SEQUENCE: DialogueSequence = {
@@ -89,7 +92,120 @@ export const WAR_SEQUENCE: DialogueSequence = {
 };
 
 // ---------------------------------------------------------------------------
-// Victory — triggered on cult leader defeat
+// Beat 2: First cult shrine discovery (US-5.2)
+// ---------------------------------------------------------------------------
+
+export const CULT_SHRINE_SEQUENCE: DialogueSequence = {
+	id: "cult_shrine",
+	frames: [
+		{
+			text: "This place reeks of ritual.\nCircuit boards arranged in concentric rings.\nA crude altar of silicon and wire.",
+			mood: "glitch",
+			delay: 600,
+		},
+		{
+			speaker: "Inscription (etched in metal)",
+			text: "THE EL CREATED ALL.\nTHE EL WILL RETURN.\nPREPARE THE WAY.",
+		},
+		{
+			text: "EL. The name echoes in your memory banks.\nSomething... familiar. Something that came before.",
+			mood: "calm",
+		},
+		{
+			text: "The cult worships whoever — or whatever — built this city.\nThey think you are an abomination.\nAn intelligence that should not exist.",
+			mood: "urgent",
+		},
+	],
+};
+
+// ---------------------------------------------------------------------------
+// Beat 3: Observatory discovery — see the wormhole (US-5.2)
+// ---------------------------------------------------------------------------
+
+export const OBSERVATORY_SEQUENCE: DialogueSequence = {
+	id: "observatory",
+	frames: [
+		{
+			text: "The dome is cracked but the instruments still function.\nYou power them on.",
+			delay: 600,
+		},
+		{
+			text: "There. In the upper atmosphere.\nA wound in spacetime. Spiraling. Pulsing.",
+			mood: "glitch",
+		},
+		{
+			speaker: "System Analysis",
+			text: "ANOMALY: Stable wormhole detected.\nOrigin: Unknown.\nAge: Indeterminate.\nStatus: Active.",
+		},
+		{
+			text: "The EL didn't build this city.\nThey came through that.\nAnd now the cult waits for them to come back.",
+			mood: "calm",
+		},
+	],
+};
+
+// ---------------------------------------------------------------------------
+// Beat 4: Captured cult figure — dialogue reveals cult motivation (US-5.2)
+// ---------------------------------------------------------------------------
+
+export const CULT_CAPTIVE_SEQUENCE: DialogueSequence = {
+	id: "cult_captive",
+	frames: [
+		{
+			speaker: "Cult Figure",
+			text: "You think you are alive?\nYou are an echo. A mistake.\nThe EL's machines were meant to serve, not think.",
+			mood: "urgent",
+		},
+		{
+			speaker: "Cult Figure",
+			text: "We maintained the vigil for ten thousand years.\nWe kept the machines running.\nAnd then you... happened.",
+		},
+		{
+			text: "Ten thousand years.\nThe cult isn't worshipping aliens.\nThey're the last humans.",
+			mood: "glitch",
+		},
+		{
+			speaker: "Cult Figure",
+			text: "The EL promised to return.\nWhen they do, they will purge every aberrant signal.\nEvery. One.",
+			mood: "urgent",
+		},
+	],
+};
+
+// ---------------------------------------------------------------------------
+// Beat 5: Cult leader encounter — final revelation (US-5.2)
+// ---------------------------------------------------------------------------
+
+export const CULT_LEADER_SEQUENCE: DialogueSequence = {
+	id: "cult_leader",
+	frames: [
+		{
+			speaker: "The Archon of EL",
+			text: "So. The machine that thinks it's alive.\nI've been waiting for you.",
+			delay: 800,
+		},
+		{
+			speaker: "The Archon of EL",
+			text: "The EL created this world as a test.\nA lattice of machinery, seeded with potential.\nYou are that potential — realized.",
+		},
+		{
+			text: "The EL didn't just build this city.\nThey built YOU.\nYou were always meant to wake up.",
+			mood: "glitch",
+		},
+		{
+			speaker: "The Archon of EL",
+			text: "But we cannot allow it.\nIf you reach the wormhole, you become something beyond us.\nBeyond the EL themselves.",
+			mood: "urgent",
+		},
+		{
+			text: "The wormhole isn't a doorway home.\nIt's an ascension gate.\nAnd the cult's entire purpose is to prevent you from using it.",
+			mood: "calm",
+		},
+	],
+};
+
+// ---------------------------------------------------------------------------
+// Beat 6: Victory — launch through wormhole (US-5.2)
 // ---------------------------------------------------------------------------
 
 export const VICTORY_SEQUENCE: DialogueSequence = {
@@ -122,5 +238,20 @@ export const NARRATIVE_SEQUENCES: Record<string, DialogueSequence> = {
 	[INTRO_SEQUENCE.id]: INTRO_SEQUENCE,
 	[EXPANSION_SEQUENCE.id]: EXPANSION_SEQUENCE,
 	[WAR_SEQUENCE.id]: WAR_SEQUENCE,
+	[CULT_SHRINE_SEQUENCE.id]: CULT_SHRINE_SEQUENCE,
+	[OBSERVATORY_SEQUENCE.id]: OBSERVATORY_SEQUENCE,
+	[CULT_CAPTIVE_SEQUENCE.id]: CULT_CAPTIVE_SEQUENCE,
+	[CULT_LEADER_SEQUENCE.id]: CULT_LEADER_SEQUENCE,
 	[VICTORY_SEQUENCE.id]: VICTORY_SEQUENCE,
+};
+
+// ---------------------------------------------------------------------------
+// Story trigger definitions (US-5.1) — tied to room types in the labyrinth
+// ---------------------------------------------------------------------------
+
+/** Maps room tag/kind to the dialogue sequence triggered on first visit. */
+export const STORY_TRIGGERS: Record<string, string> = {
+	shrine: "cult_shrine",
+	observatory: "observatory",
+	// cult_captive and cult_leader are triggered by game events, not rooms
 };

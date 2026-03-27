@@ -12,6 +12,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockDispose = vi.fn();
 const mockGenerateChunk = vi.fn((_seed: string, _cx: number, _cz: number) => ({
 	tiles: [],
+	entities: [],
 	cx: 0,
 	cz: 0,
 }));
@@ -31,6 +32,12 @@ vi.mock("../../board", () => ({
 	populateChunkScene: (chunk: unknown, scene: unknown) =>
 		mockPopulateChunkScene(chunk, scene),
 	disposeChunkMeshes: (cm: unknown) => mockDisposeChunkMeshes(cm),
+}));
+
+// ─── Mock terrain module (needed by ChunkManager entity spawning) ────────
+vi.mock("../../ecs/terrain", () => ({
+	createFragment: () => ({ id: "test-fragment" }),
+	getTerrainHeight: () => 0,
 }));
 
 import {
@@ -134,6 +141,7 @@ describe("disposeAllChunks", () => {
 	it("handles empty state", () => {
 		const state: ChunkManagerState = {
 			loaded: new Map(),
+			chunkEntities: new Map(),
 			lastCameraChunk: "0,0",
 			seed: "test",
 		};

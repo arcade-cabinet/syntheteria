@@ -9,10 +9,15 @@
  * each chunk edge has fixed passable tiles at seeded positions, ensuring
  * adjacent chunks always line up.
  *
+ * Entity spawns (US-1.2): Each chunk also produces a deterministic list of
+ * ChunkEntitySpawn descriptors. ChunkManager spawns/despawns ECS entities
+ * when chunks load/unload.
+ *
  * Usage:
  *   const chunk = generateChunk(worldSeed, chunkX, chunkZ);
  *   // chunk.tiles[localZ][localX] — local coords within chunk
  *   // chunk.worldOffsetX/Z — world-space offset for rendering
+ *   // chunk.entities — entities to spawn when this chunk loads
  */
 
 import { generateLabyrinth } from "./labyrinth";
@@ -39,6 +44,20 @@ const GATES_PER_EDGE = 4;
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
+/** An entity spawn descriptor generated deterministically by the board. */
+export interface ChunkEntitySpawn {
+	/** World-space tile X. */
+	tileX: number;
+	/** World-space tile Z. */
+	tileZ: number;
+	/** Entity category. */
+	kind: "scavenge_site" | "lightning_rod" | "fabrication_unit" | "cult_patrol";
+	/** Material type for scavenge sites. */
+	materialType?: string;
+	/** How many scavenge actions remain (scavenge sites). */
+	remaining?: number;
+}
+
 export interface Chunk {
 	/** Chunk grid coordinate. */
 	chunkX: number;
@@ -48,12 +67,37 @@ export interface Chunk {
 	worldOffsetZ: number;
 	/** Row-major tiles: tiles[localZ][localX]. */
 	tiles: TileData[][];
+	/** Entities to spawn when this chunk loads. Deterministic from seed. */
+	entities: ChunkEntitySpawn[];
 }
 
 export type ChunkKey = `${number},${number}`;
 
 export function chunkKey(cx: number, cz: number): ChunkKey {
 	return `${cx},${cz}`;
+}
+
+// ─── Danger Level (US-1.3) ──────────────────────────────────────────────────
+
+/**
+ * Compute danger level for a chunk based on distance from spawn (0,0).
+ *
+ * Returns 0.0 near spawn, 1.0 at 30+ chunks out.
+ * Directional bias: north (negative Z) is slightly more dangerous.
+ * No enemies within 2 chunks of spawn.
+ */
+export function dangerLevel(chunkX: number, chunkZ: number): number {
+	const dist = Math.sqrt(chunkX * chunkX + chunkZ * chunkZ);
+
+	// Safe zone: 2 chunks around spawn
+	if (dist <= 2) return 0;
+
+	// North (negative Z) bias: +10% danger
+	const northBias = chunkZ < 0 ? 0.1 : 0;
+
+	// Linear ramp from 0 at distance 2 to 1.0 at distance 30
+	const raw = (dist - 2) / 28;
+	return Math.min(1.0, raw + northBias);
 }
 
 // ─── Border gates ───────────────────────────────────────────────────────────
@@ -132,14 +176,146 @@ function forcePassable(tiles: TileData[][], lx: number, lz: number): void {
 	tile.elevation = 0;
 }
 
+// ─── Entity spawn generation (US-1.2) ───────────────────────────────────────
+
+/** Scavenge material types by rarity band. */
+const COMMON_MATERIALS = ["scrap_metal", "e_waste", "ferrous_scrap"];
+const UNCOMMON_MATERIALS = ["polymer_salvage", "conductor_wire", "alloy_stock"];
+const RARE_MATERIALS = ["silicon_wafer", "electrolyte", "storm_charge"];
+
+/**
+ * Deterministically generate entity spawn descriptors for a chunk.
+ *
+ * - Scavenge sites placed in passable rooms (material rarity scales with danger)
+ * - Lightning rods in large rooms near origin
+ * - Fabrication units in specific room configurations (rare)
+ * - Cult patrols scale with danger level
+ */
+function generateChunkEntities(
+	tiles: TileData[][],
+	chunkX: number,
+	chunkZ: number,
+	chunkSeed: string,
+): ChunkEntitySpawn[] {
+	const rng = seededRng(`${chunkSeed}_entities`);
+	const entities: ChunkEntitySpawn[] = [];
+	const danger = dangerLevel(chunkX, chunkZ);
+
+	// Find rooms by scanning for clusters of passable tiles
+	// (simplified: pick random passable tiles as spawn points)
+	const passableTiles: Array<{ lx: number; lz: number }> = [];
+	for (let lz = 2; lz < CHUNK_SIZE - 2; lz++) {
+		for (let lx = 2; lx < CHUNK_SIZE - 2; lx++) {
+			const tile = tiles[lz]?.[lx];
+			if (tile?.passable && tile.floorType !== "void_pit") {
+				passableTiles.push({ lx, lz });
+			}
+		}
+	}
+
+	if (passableTiles.length === 0) return entities;
+
+	const offsetX = chunkX * CHUNK_SIZE;
+	const offsetZ = chunkZ * CHUNK_SIZE;
+
+	// ── Scavenge sites — common near spawn, rare far out ─────────────
+	// More sites in resource-rich zones, fewer in enemy territory
+	const scavengeCount = Math.floor(2 + rng() * 3 * (1 - danger * 0.5));
+	for (let i = 0; i < scavengeCount; i++) {
+		if (passableTiles.length === 0) break;
+		const idx = Math.floor(rng() * passableTiles.length);
+		const spot = passableTiles[idx]!;
+
+		// Material rarity scales inversely: common near, rare far
+		let materialPool: string[];
+		if (danger < 0.3) {
+			materialPool = COMMON_MATERIALS;
+		} else if (danger < 0.7) {
+			materialPool = rng() < 0.7 ? COMMON_MATERIALS : UNCOMMON_MATERIALS;
+		} else {
+			materialPool =
+				rng() < 0.4
+					? UNCOMMON_MATERIALS
+					: rng() < 0.7
+						? RARE_MATERIALS
+						: COMMON_MATERIALS;
+		}
+
+		const materialType = materialPool[Math.floor(rng() * materialPool.length)]!;
+		const remaining = 3 + Math.floor(rng() * 4);
+
+		entities.push({
+			tileX: offsetX + spot.lx,
+			tileZ: offsetZ + spot.lz,
+			kind: "scavenge_site",
+			materialType,
+			remaining,
+		});
+
+		// Remove used spot to avoid double-spawning
+		passableTiles.splice(idx, 1);
+	}
+
+	// ── Lightning rods — in large rooms near origin (< 5 chunks out) ──
+	const dist = Math.sqrt(chunkX * chunkX + chunkZ * chunkZ);
+	if (dist < 5 && rng() < 0.3 && passableTiles.length > 0) {
+		const idx = Math.floor(rng() * passableTiles.length);
+		const spot = passableTiles[idx]!;
+		entities.push({
+			tileX: offsetX + spot.lx,
+			tileZ: offsetZ + spot.lz,
+			kind: "lightning_rod",
+		});
+		passableTiles.splice(idx, 1);
+	}
+
+	// ── Fabrication units — rare, appear in city/campus zones ──────────
+	if (dist < 8 && rng() < 0.15 && passableTiles.length > 0) {
+		const idx = Math.floor(rng() * passableTiles.length);
+		const spot = passableTiles[idx]!;
+		const zone = zoneForTile(
+			offsetX + spot.lx,
+			offsetZ + spot.lz,
+			WORLD_EXTENT,
+			WORLD_EXTENT,
+		);
+		if (zone === "city" || zone === "campus") {
+			entities.push({
+				tileX: offsetX + spot.lx,
+				tileZ: offsetZ + spot.lz,
+				kind: "fabrication_unit",
+			});
+			passableTiles.splice(idx, 1);
+		}
+	}
+
+	// ── Cult patrols — scale with danger, none within 2 chunks of spawn ─
+	if (danger > 0) {
+		const patrolCount = Math.floor(danger * 3 * rng());
+		for (let i = 0; i < patrolCount; i++) {
+			if (passableTiles.length === 0) break;
+			const idx = Math.floor(rng() * passableTiles.length);
+			const spot = passableTiles[idx]!;
+			entities.push({
+				tileX: offsetX + spot.lx,
+				tileZ: offsetZ + spot.lz,
+				kind: "cult_patrol",
+			});
+			passableTiles.splice(idx, 1);
+		}
+	}
+
+	return entities;
+}
+
 // ─── Chunk generation ───────────────────────────────────────────────────────
 
 /**
  * Generate a single chunk at (chunkX, chunkZ) in chunk-grid coordinates.
  *
  * The chunk is fully self-contained: room placement, maze fill, connectivity,
- * pruning, zone floors, and resources are all computed locally. Border gates
- * ensure adjacent chunks connect.
+ * pruning, zone floors, resources, and entity spawns are all computed locally.
+ * Border gates ensure adjacent chunks connect.
  */
 export function generateChunk(
 	worldSeed: string,
@@ -192,12 +368,16 @@ export function generateChunk(
 		}
 	}
 
+	// Phase 9: Entity spawns (US-1.2)
+	const entities = generateChunkEntities(tiles, chunkX, chunkZ, chunkSeed);
+
 	return {
 		chunkX,
 		chunkZ,
 		worldOffsetX: offsetX,
 		worldOffsetZ: offsetZ,
 		tiles,
+		entities,
 	};
 }
 

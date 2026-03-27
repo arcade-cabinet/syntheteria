@@ -29,14 +29,15 @@ import {
 } from "../ecs/gameState";
 import { reportFatalError } from "../errors";
 import { GameCanvas } from "../game/GameCanvas";
-import { GameOverlays } from "./GameOverlays";
-import { initializeWorld } from "./initializeWorld";
-import { DebugOverlay } from "./DebugOverlay";
-import { ErrorBoundary } from "./ErrorBoundary";
-import { NarrativeOverlay } from "../views/game/NarrativeOverlay";
+import { popStoryTrigger } from "../systems/storyTriggers";
 import { GameLayout } from "../views/game/GameLayout";
+import { NarrativeOverlay } from "../views/game/NarrativeOverlay";
 import { LandingScreen } from "../views/landing/LandingScreen";
 import type { NewGameConfig } from "../views/landing/NewGameModal";
+import { DebugOverlay } from "./DebugOverlay";
+import { ErrorBoundary } from "./ErrorBoundary";
+import { GameOverlays } from "./GameOverlays";
+import { initializeWorld } from "./initializeWorld";
 
 const PHASE_NARRATIVE: Partial<Record<GamePhaseId, DialogueSequence>> = {
 	expansion: EXPANSION_SEQUENCE,
@@ -67,6 +68,7 @@ export default function App({ havok }: AppProps) {
 	);
 	const snap = useSyncExternalStore(subscribe, getSnapshot);
 
+	// US-5.1: Phase transition narratives
 	useEffect(() => {
 		if (phase !== "playing" || phaseNarrative) return;
 
@@ -82,6 +84,21 @@ export default function App({ havok }: AppProps) {
 		}
 		setPhaseNarrative(sequence);
 	}, [phase, snap.phaseTransitionId, phaseNarrative]);
+
+	// US-5.1: Story trigger narratives (exploration-triggered dialogue)
+	useEffect(() => {
+		if (phase !== "playing" || phaseNarrative) return;
+		if (!snap.hasStoryTrigger) return;
+
+		const sequence = popStoryTrigger();
+		if (!sequence) return;
+
+		wasPausedRef.current = isPaused();
+		if (!isPaused()) {
+			togglePause();
+		}
+		setPhaseNarrative(sequence);
+	}, [phase, snap.hasStoryTrigger, phaseNarrative]);
 
 	useEffect(() => {
 		return () => {

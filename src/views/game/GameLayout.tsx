@@ -1,12 +1,13 @@
 /**
  * GameLayout — responsive RTS HUD container.
  *
- * Desktop: Left sidebar (w-64) with minimap/selection/actions.
- *          TopBar across the top of the game area.
- *          GameCanvas fills remaining space.
+ * Desktop (>=768px): Left sidebar (w-64) with minimap/selection/actions.
+ *                    TopBar across the top of the game area.
+ *                    GameCanvas fills remaining space.
  *
- * Mobile:  Bottom panel (h-48) with minimap, selection, actions side-by-side.
- *          TopBar across the top.
+ * Mobile (<768px):   Bottom panel (h-48) with minimap, selection, actions
+ *                    side-by-side. TopBar across top.
+ *                    All buttons accessible without keyboard (US-6.5).
  *
  * Children are rendered into the game area (GameCanvas, overlays, etc).
  */
@@ -23,8 +24,8 @@ export interface GameLayoutProps {
 export function GameLayout({ children }: GameLayoutProps) {
 	return (
 		<div className="flex flex-col-reverse md:flex-row h-screen w-screen bg-black font-mono">
-			{/* Sidebar / Bottom panel */}
-			<div className="w-full md:w-64 h-48 md:h-full flex-shrink-0 bg-slate-950 border-t md:border-t-0 md:border-r border-slate-800 z-30">
+			{/* Sidebar (desktop) / Bottom panel (mobile) — US-6.5 */}
+			<div className="w-full md:w-64 h-48 md:h-full flex-shrink-0 bg-slate-950 border-t md:border-t-0 md:border-r border-slate-800 z-30 overflow-y-auto">
 				<Sidebar />
 			</div>
 

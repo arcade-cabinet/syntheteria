@@ -59,6 +59,10 @@ import {
 	resourceSystem,
 } from "../systems/resources";
 import {
+	hasPendingStoryTrigger,
+	storyTriggerSystem,
+} from "../systems/storyTriggers";
+import {
 	getAllFragments,
 	type MapFragment,
 	updateDisplayOffsets,
@@ -109,6 +113,8 @@ export interface GameSnapshot {
 	compute: ComputeSnapshot;
 	/** Hacking events from this tick */
 	hackEvents: HackEvent[];
+	/** Whether a story trigger is pending display (US-5.1) */
+	hasStoryTrigger: boolean;
 }
 
 let tick = 0;
@@ -169,6 +175,7 @@ function buildSnapshot(): GameSnapshot {
 		humanTemperatureTier: getHumanTemperatureTier(),
 		compute: getComputeSnapshot(),
 		hackEvents: getLastHackEvents(),
+		hasStoryTrigger: hasPendingStoryTrigger(),
 	};
 }
 
@@ -221,6 +228,9 @@ export function simulationTick() {
 	runSystem("baseProduction", () => baseProductionTick(world, 1.0));
 	runSystem("humanTemperature", humanTemperatureSystem);
 	runSystem("displayOffsets", updateDisplayOffsets);
+
+	// Story triggers (US-5.1) — checks if units entered trigger rooms
+	runSystem("storyTriggers", storyTriggerSystem);
 
 	// Automated player AI (playtest governor)
 	if (isAutoPlayEnabled()) {

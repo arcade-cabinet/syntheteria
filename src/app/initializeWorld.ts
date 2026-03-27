@@ -1,39 +1,17 @@
+/**
+ * World initialization — US-1.4: Only spawn player start.
+ *
+ * All entity placement (scavenge sites, lightning rods, fabrication units,
+ * cult bases, enemy patrols) comes from the board's chunk generation.
+ * This function ONLY creates the 2 starting robots and returns the
+ * start position for camera targeting.
+ */
+
 import { getRooms, initCityLayout } from "../ecs/cityLayout";
-import {
-	spawnFabricationUnit,
-	spawnLightningRod,
-	spawnUnit,
-} from "../ecs/factory";
+import { spawnUnit } from "../ecs/factory";
 import { setGameConfig, simulationTick } from "../ecs/gameState";
-import { getTerrainHeight } from "../ecs/terrain";
-import { EntityId, Fragment, Position, ScavengeSite } from "../ecs/traits";
-import { world } from "../ecs/world";
-import { foundBase } from "../systems/baseManagement";
+import { Fragment } from "../ecs/traits";
 import { buildNavGraph } from "../systems/navmesh";
-
-/** Counter for unique scavenge site IDs. */
-let nextScavengeId = 0;
-
-/** Spawn a scavenge site at world coordinates. */
-function spawnScavengeSite(
-	x: number,
-	z: number,
-	materialType: string,
-	remaining = 5,
-): void {
-	const y = getTerrainHeight(x, z);
-	const id = `scavenge_${nextScavengeId++}`;
-
-	world.spawn(
-		EntityId({ value: id }),
-		Position({ x, y, z }),
-		ScavengeSite({
-			materialType,
-			amountPerScavenge: 2,
-			remaining,
-		}),
-	);
-}
 
 export function initializeWorld(
 	seed = "default",
@@ -51,6 +29,8 @@ export function initializeWorld(
 	const startX = playerRoom ? (playerRoom.x + playerRoom.w / 2) * tileSize : 48;
 	const startZ = playerRoom ? (playerRoom.z + playerRoom.h / 2) * tileSize : 62;
 
+	// US-1.4: Only spawn the 2 starting robots. Nothing else.
+	// Bot Alpha: working camera, broken arms
 	const botAlpha = spawnUnit({
 		x: startX - 2,
 		z: startZ,
@@ -63,6 +43,7 @@ export function initializeWorld(
 		],
 	});
 
+	// Bot Beta: working arms, broken camera
 	spawnUnit({
 		x: startX + 2,
 		z: startZ,
@@ -76,59 +57,9 @@ export function initializeWorld(
 		],
 	});
 
-	spawnFabricationUnit({
-		x: startX,
-		z: startZ + 2,
-		fragmentId: botAlpha.get(Fragment)!.fragmentId,
-		powered: false,
-		components: [
-			{ name: "power_supply", functional: false, material: "electronic" },
-			{ name: "fabrication_arm", functional: true, material: "metal" },
-			{ name: "material_hopper", functional: true, material: "metal" },
-		],
-	});
-
-	spawnLightningRod({
-		x: startX - 3,
-		z: startZ + 2,
-		fragmentId: botAlpha.get(Fragment)!.fragmentId,
-	});
-
-	// Spawn scavenge sites near the player start — 4 types, spread around
-	const scavengeSites = [
-		{ dx: 6, dz: 0, type: "scrapMetal", remaining: 5 },
-		{ dx: -6, dz: 4, type: "circuitry", remaining: 4 },
-		{ dx: 4, dz: -6, type: "powerCells", remaining: 3 },
-		{ dx: -4, dz: -4, type: "durasteel", remaining: 4 },
-		{ dx: 8, dz: 6, type: "scrapMetal", remaining: 6 },
-		{ dx: -8, dz: -6, type: "circuitry", remaining: 5 },
-		{ dx: 10, dz: -4, type: "powerCells", remaining: 3 },
-		{ dx: -10, dz: 8, type: "durasteel", remaining: 4 },
-	];
-
-	for (const site of scavengeSites) {
-		spawnScavengeSite(
-			startX + site.dx,
-			startZ + site.dz,
-			site.type,
-			site.remaining,
-		);
-	}
-
-	// Cult bases in northern zone
-	const cultBases = [
-		{ tileX: 50, tileZ: 20, name: "Cult Stronghold Alpha" },
-		{ tileX: 150, tileZ: 30, name: "Cult Outpost Beta" },
-		{ tileX: 100, tileZ: 10, name: "Cult Citadel Gamma" },
-	];
-
-	for (const base of cultBases) {
-		try {
-			foundBase(world, base.tileX, base.tileZ, "cultist", base.name);
-		} catch (error) {
-			console.warn("[init] cult base placement failed:", base.name, error);
-		}
-	}
+	// All other entities (scavenge sites, lightning rods, fabrication units,
+	// cult bases, cult patrols) are spawned by ChunkManager when chunks load.
+	// See src/game/ChunkManager.ts spawnChunkEntities().
 
 	simulationTick();
 	return { startX, startZ };

@@ -14,8 +14,8 @@ export {
 	tileNeighbors,
 } from "./adjacency";
 // --- Chunks ---
-export type { Chunk, ChunkKey } from "./chunks";
-export { CHUNK_SIZE, chunkKey, generateChunk } from "./chunks";
+export type { Chunk, ChunkEntitySpawn, ChunkKey } from "./chunks";
+export { CHUNK_SIZE, chunkKey, dangerLevel, generateChunk } from "./chunks";
 // --- Coordinates ---
 export {
 	babylonToYuka,

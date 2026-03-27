@@ -1,16 +1,26 @@
 /**
- * World geography zones — fixed regions around the labyrinth city.
+ * World geography zones — distance+direction gradient from spawn.
  *
- * The game world has a fixed geography:
- *   - City (center): Dense industrial labyrinth — the player's home base
+ * The game world radiates outward from the player spawn at (0,0).
+ * Zone assignment uses distance from origin + compass direction,
+ * NOT a fixed WORLD_EXTENT reference frame. This means the world
+ * is infinite — zones scale naturally as you explore further out.
+ *
+ * Zone layout (compass directions from spawn):
+ *   - City (center): Dense industrial labyrinth near spawn
  *   - Coast (east/south): Open terrain with abandoned mines
  *   - Campus (southwest): Ruined science campus with observatory
  *   - Enemy (north): Cult territory — strongholds and enslaved machines
  *
- * Zone assignment uses absolute world coordinates scaled to a fixed reference
- * size (WORLD_EXTENT). This means zones are position-stable regardless of
- * board size or chunk boundaries — the same world position always maps to the
- * same zone.
+ * The gradient is smooth:
+ *   - Near spawn (< CITY_RADIUS tiles): always "city"
+ *   - Medium distance: direction determines zone with increasing probability
+ *   - Far: pure directional zones
+ *
+ * Standalone boards: When width/height are provided, coordinates are
+ * center-offset so the board center maps to origin (0,0). This allows
+ * the same zone assignment logic to work for both the infinite chunk
+ * world and standalone labyrinth boards.
  */
 
 // ─── Zone Type ──────────────────────────────────────────────────────────────
@@ -74,117 +84,129 @@ export const ZONE_PROFILES: Record<WorldZone, ZoneProfile> = {
 	},
 };
 
-// ─── Zone Geometry ──────────────────────────────────────────────────────────
+// ─── Distance+Direction Zone Assignment ─────────────────────────────────────
 
 /**
- * Reference world extent in tiles.
- *
- * All zone boundaries are defined relative to this. A board of any size uses
- * the same boundaries by normalizing (x / WORLD_EXTENT, z / WORLD_EXTENT).
- * Chunks at different world positions always get consistent zone assignments.
- *
- * 256 tiles = 512m world. Large enough for 4x4 chunks of 64 tiles each.
+ * Fraction of board half-extent that is guaranteed "city".
+ * For a 64x64 board (half = 32), city radius = 32 * 0.15 = ~5 tiles.
+ * This keeps the city core small so edges clearly show their zones.
  */
-export const WORLD_EXTENT = 256;
+const CITY_FRACTION = 0.15;
 
 /**
- * Zone boundary thresholds in normalized coordinates (0..1).
+ * Compass-direction zone assignment.
  *
- * Layout (looking at the board, z=0 is top/north, z=1 is bottom/south):
+ * Uses atan2 with negated Z (so north = up = positive angle).
  *
- *   ┌──────────────────────────┐
- *   │         ENEMY            │  z < 0.25
- *   ├──────────────────────────┤
- *   │       │       │          │
- *   │       │ CITY  │          │  0.25 ≤ z ≤ 0.75
- *   │       │       │          │
- *   ├───────┤       ├──────────┤
- *   │CAMPUS │       │  COAST   │  z > 0.75 OR x > 0.65
- *   └──────────────────────────┘
- *
- * City is the central rectangle. Coast wraps around east and south.
- * Campus is in the southwest corner. Enemy is the northern band.
+ * Layout:
+ *   North (z < 0): enemy territory
+ *   East (x > 0) / South (z > 0): coast
+ *   Southwest (x < 0, z > 0): campus
+ *   West/Northwest: city extension
  */
+function directionZone(dx: number, dz: number): WorldZone {
+	// atan2 with negated Z so north = up = positive angle
+	const angle = Math.atan2(-dz, dx);
+	// Normalize to [0, 2pi]
+	const a = angle < 0 ? angle + 2 * Math.PI : angle;
 
-/** City center boundary (normalized). */
-const CITY_X_MIN = 0.25;
-const CITY_X_MAX = 0.65;
-const CITY_Z_MIN = 0.25;
-const CITY_Z_MAX = 0.75;
+	// North band: ~60deg to ~120deg (pi/3 to 2pi/3)
+	if (a > Math.PI / 3 && a < (2 * Math.PI) / 3) return "enemy";
 
-/** Enemy zone is everything above this z threshold. */
-const ENEMY_Z_MAX = 0.25;
+	// Southwest: ~210deg to ~270deg (7pi/6 to 3pi/2)
+	if (a > (7 * Math.PI) / 6 && a < (3 * Math.PI) / 2) return "campus";
 
-/** Campus zone bounding box (southwest corner). */
-const CAMPUS_X_MAX = 0.35;
-const CAMPUS_Z_MIN = 0.65;
+	// East + far south: right side + bottom
+	if (a <= Math.PI / 3 || a >= (5 * Math.PI) / 3) return "coast";
 
-// ─── Zone Assignment ────────────────────────────────────────────────────────
+	// South-southeast coast wrap
+	if (a >= (3 * Math.PI) / 2 && a < (5 * Math.PI) / 3) return "coast";
+
+	// Everything else (west, northwest) — city
+	return "city";
+}
 
 /**
- * Determine which zone a tile belongs to based on its position.
+ * Determine which zone a tile belongs to.
  *
- * Normalizes (x, z) against the given (width, height) so that the full
- * zone layout (enemy north, city center, campus SW, coast E/S) spans
- * whatever coordinate space the caller uses.
+ * Two modes of operation:
  *
- * - Standalone boards pass their own dimensions (e.g. 64x64).
- * - The chunk system passes WORLD_EXTENT for both width and height so
- *   that world-space coordinates get consistent zone assignments.
+ * 1. **Chunk/infinite world** (no width/height or both zero):
+ *    Coordinates are absolute world space. Origin (0,0) = spawn.
+ *
+ * 2. **Standalone board** (width/height provided):
+ *    Coordinates are center-offset: (x - width/2, z - height/2).
+ *    The board center maps to world origin. This ensures the same
+ *    zone layout works for labyrinth generation tests.
  *
  * @param x - tile x coordinate
- * @param z - tile z coordinate (0 = north/top)
- * @param width - coordinate space width to normalize against
- * @param height - coordinate space height to normalize against
+ * @param z - tile z coordinate
+ * @param width - board width (optional, for standalone boards)
+ * @param height - board height (optional, for standalone boards)
  * @returns the WorldZone for this tile
  */
 export function zoneForTile(
 	x: number,
 	z: number,
-	width: number,
-	height: number,
+	width?: number,
+	height?: number,
 ): WorldZone {
-	// Normalize against the provided dimensions. Callers decide the
-	// coordinate space: standalone boards use board dims; chunks use
-	// WORLD_EXTENT.
-	const nx = width > 1 ? x / (width - 1) : 0.5;
-	const nz = height > 1 ? z / (height - 1) : 0.5;
+	// Center-offset for standalone boards
+	let dx = x;
+	let dz = z;
+	let radius: number;
 
-	// Enemy territory: northern band
-	if (nz < ENEMY_Z_MAX) return "enemy";
+	if (width && height && width > 1 && height > 1) {
+		// Standalone board: center the coordinates
+		dx = x - width / 2;
+		dz = z - height / 2;
+		// City radius scales with board size
+		radius = Math.min(width, height) * CITY_FRACTION;
+	} else {
+		// Infinite world: use fixed city radius (2 chunks)
+		radius = 32;
+	}
 
-	// City: central rectangle
-	if (
-		nx >= CITY_X_MIN &&
-		nx <= CITY_X_MAX &&
-		nz >= CITY_Z_MIN &&
-		nz <= CITY_Z_MAX
-	) {
+	const dist = Math.sqrt(dx * dx + dz * dz);
+
+	// Near center: always city
+	if (dist <= radius) return "city";
+
+	// Transition zone: gradual blend from city to directional
+	// At 3x the city radius, zones are fully directional
+	const transitionEnd = radius * 3;
+	const dzone = directionZone(dx, dz);
+
+	if (dist < transitionEnd) {
+		const t = (dist - radius) / (transitionEnd - radius);
+		// Deterministic hash to decide (no randomness)
+		const hash = Math.abs(Math.floor(x) * 7 + Math.floor(z) * 13) % 100;
+		if (hash < t * 100) return dzone;
 		return "city";
 	}
 
-	// Campus: southwest corner (below city, to the left)
-	if (nx < CAMPUS_X_MAX && nz >= CAMPUS_Z_MIN) return "campus";
-
-	// Coast: east and south (everything else outside city)
-	if (nx > CITY_X_MAX || nz > CITY_Z_MAX) return "coast";
-
-	// Remaining area between enemy and city on the west side — extend city
-	return "city";
+	return dzone;
 }
 
 /**
  * Zone assignment using absolute world coordinates only.
- * No board dimensions needed — normalizes against WORLD_EXTENT directly.
+ * Distance+direction based — no fixed world extent needed.
  */
 export function zoneAtWorldPos(worldX: number, worldZ: number): WorldZone {
-	return zoneForTile(
-		Math.floor(worldX),
-		Math.floor(worldZ),
-		WORLD_EXTENT,
-		WORLD_EXTENT,
-	);
+	return zoneForTile(Math.floor(worldX), Math.floor(worldZ));
 }
+
+// ─── Backward Compatibility ─────────────────────────────────────────────────
+
+/**
+ * WORLD_EXTENT is kept as a constant for any code that still references it,
+ * but zone assignment no longer uses a fixed extent. The world is effectively
+ * infinite. When WORLD_EXTENT is passed as width/height, zoneForTile
+ * center-offsets the coordinates.
+ *
+ * @deprecated Zone assignment now uses distance+direction from center.
+ */
+export const WORLD_EXTENT = 256;
 
 // ─── Zone Statistics ────────────────────────────────────────────────────────
 

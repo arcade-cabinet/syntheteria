@@ -63,6 +63,11 @@ import {
 	storyTriggerSystem,
 } from "../systems/storyTriggers";
 import {
+	type GameOutcome,
+	getGameOutcome,
+	victoryDefeatSystem,
+} from "../systems/victoryDefeat";
+import {
 	getAllFragments,
 	type MapFragment,
 	updateDisplayOffsets,
@@ -115,6 +120,8 @@ export interface GameSnapshot {
 	hackEvents: HackEvent[];
 	/** Whether a story trigger is pending display (US-5.1) */
 	hasStoryTrigger: boolean;
+	/** Victory/defeat state */
+	gameOutcome: GameOutcome;
 }
 
 let tick = 0;
@@ -176,6 +183,7 @@ function buildSnapshot(): GameSnapshot {
 		compute: getComputeSnapshot(),
 		hackEvents: getLastHackEvents(),
 		hasStoryTrigger: hasPendingStoryTrigger(),
+		gameOutcome: getGameOutcome(),
 	};
 }
 
@@ -205,6 +213,10 @@ export function isPaused(): boolean {
 export function simulationTick() {
 	if (paused) return;
 
+	// Don't run simulation if game is over
+	const currentOutcome = getGameOutcome();
+	if (currentOutcome !== "playing") return;
+
 	tick++;
 
 	// Phase progression (1 tick = 1 sim second)
@@ -231,6 +243,9 @@ export function simulationTick() {
 
 	// Story triggers (US-5.1) — checks if units entered trigger rooms
 	runSystem("storyTriggers", storyTriggerSystem);
+
+	// Victory/defeat check — runs after combat so death events are processed
+	runSystem("victoryDefeat", victoryDefeatSystem);
 
 	// Automated player AI (playtest governor)
 	if (isAutoPlayEnabled()) {

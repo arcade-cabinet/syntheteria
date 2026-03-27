@@ -6,11 +6,13 @@
  * creation, position updates, selection rings, idle bob animation,
  * and disposal when entities are destroyed.
  *
+ * Selection feedback uses a pulsing emissive boost + selection ring torus.
+ * No per-entity SpotLight — avoids the solid-circle WebGPU rendering bug.
+ *
  * Not a React component — called imperatively from GameCanvas.
  */
 
 import type { AssetContainer } from "@babylonjs/core/assetContainer";
-import { SpotLight } from "@babylonjs/core/Lights/spotLight";
 import { LoadAssetContainerAsync } from "@babylonjs/core/Loading/sceneLoader";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
@@ -60,8 +62,6 @@ interface EntityMeshEntry {
 	bobPhase: number;
 	/** Current selection ring opacity for fade animation (0–0.8). */
 	selectionRingOpacity: number;
-	/** Per-entity spotlight that activates on selection (pool of attention). */
-	spotlight: SpotLight | null;
 }
 
 /** State bag for the entity renderer, managed imperatively. */
@@ -322,50 +322,26 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 		}
 
 		// Pulsing emissive — sine wave creates breathing glow effect
-		// Player: cyan-white pulse (contrasts with warm spotlight)
-		// Cult: red-orange pulse (stands out against blue flood light)
+		// Selected units get a brighter emissive boost for clear feedback
+		// (replaces old per-entity SpotLight which caused solid-circle WebGPU bug)
 		const pulse = 0.5 + 0.5 * Math.sin(time * 2.0 + entry.bobPhase);
+		const selectionBoost = unit.selected ? 2.0 : 1.0;
 		for (const mesh of entry.meshes) {
 			if (mesh.material && mesh.material instanceof StandardMaterial) {
 				if (isCultist) {
 					(mesh.material as StandardMaterial).emissiveColor = new Color3(
-						0.3 + pulse * 0.25,
-						0.02 + pulse * 0.05,
-						0.02,
+						(0.3 + pulse * 0.25) * selectionBoost,
+						(0.02 + pulse * 0.05) * selectionBoost,
+						0.02 * selectionBoost,
 					);
 				} else {
 					(mesh.material as StandardMaterial).emissiveColor = new Color3(
-						0.02 + pulse * 0.03,
-						0.1 + pulse * 0.1,
-						0.15 + pulse * 0.12,
+						(0.02 + pulse * 0.03) * selectionBoost,
+						(0.1 + pulse * 0.1) * selectionBoost,
+						(0.15 + pulse * 0.12) * selectionBoost,
 					);
 				}
 			}
-		}
-
-		// Spotlight pool — creates visible attention ring around selected unit
-		if (unit.selected && !entry.spotlight) {
-			const spot = new SpotLight(
-				`spot-${eid}`,
-				new Vector3(pos.x, 15, pos.z),
-				new Vector3(0, -1, 0),
-				Math.PI / 4,
-				3,
-				scene,
-			);
-			spot.intensity = 8;
-			spot.diffuse = isCultist
-				? new Color3(1, 0.4, 0.2)
-				: new Color3(0.4, 0.9, 1);
-			spot.range = 20;
-			entry.spotlight = spot;
-		} else if (!unit.selected && entry.spotlight) {
-			entry.spotlight.dispose();
-			entry.spotlight = null;
-		}
-		// Move spotlight with unit
-		if (entry.spotlight) {
-			entry.spotlight.position.set(pos.x, 15, pos.z);
 		}
 	}
 
@@ -453,7 +429,7 @@ export function disposeEntityRenderer(state: EntityRendererState): void {
 // ─── Internal helpers ───────────────────────────────────────────────────────
 
 /**
- * Simple string hash → float in [0, 2π] for per-entity bob phase offset.
+ * Simple string hash -> float in [0, 2pi] for per-entity bob phase offset.
  * Ensures entities bob at different phases rather than in sync.
  */
 function hashEntityId(id: string): number {
@@ -571,15 +547,10 @@ function createFromContainer(
 		baseY: pos.y,
 		bobPhase: hashEntityId(entityId),
 		selectionRingOpacity: 0,
-		spotlight: null,
 	};
 }
 
 function disposeEntry(entry: EntityMeshEntry): void {
-	if (entry.spotlight) {
-		entry.spotlight.dispose();
-		entry.spotlight = null;
-	}
 	// Dispose selection ring and its per-entity cloned material
 	if (entry.selectionRing.material) {
 		entry.selectionRing.material.dispose();

@@ -1,8 +1,14 @@
 /**
  * GameCanvas — BabylonJS game scene via Reactylon.
  *
- * Renders the chunk-based labyrinth world with PBR materials, fog,
- * RTS camera (top-down, pan+zoom), and declarative lights.
+ * Renders the chunk-based labyrinth world with PBR materials,
+ * exploration-driven fog of war (FogOfWar.ts), RTS camera
+ * (top-down, pan+zoom), and declarative lights.
+ *
+ * Fog of war is handled per-mesh by FogOfWar.ts — scene.fogMode is
+ * disabled to avoid uniform distance-based fog that fights with the
+ * exploration state. Unexplored tiles are hidden (setEnabled(false)),
+ * shroud tiles get visibility=0.35, and visible tiles get full brightness.
  *
  * Chunk lifecycle is managed imperatively via ChunkManager.
  */
@@ -77,10 +83,11 @@ function onSceneReady(scene: BScene) {
 		canvas.style.background = "#03070b";
 	}
 
-	// Exponential fog matching the void ground color
-	scene.fogMode = 2; // FOGMODE_EXP2
-	scene.fogDensity = epoch1.fogDensity;
-	scene.fogColor.set(FOG_R, FOG_G, FOG_B);
+	// No scene-level fog — fog of war is handled per-mesh by FogOfWar.ts
+	// which uses mesh.visibility and mesh.setEnabled() based on exploration state.
+	// Scene fog (FOGMODE_EXP2) applies uniform distance-based fog from the camera
+	// which obscures explored areas and ignores the exploration grid entirely.
+	scene.fogMode = 0; // FOGMODE_NONE
 	scene.clearColor.set(FOG_R, FOG_G, FOG_B, 1);
 	scene.ambientColor = new Color3(...epoch1.ambientColor);
 
@@ -300,7 +307,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			const speed = getGameSpeed();
 			if (speed <= 0) return; // paused
 
-			const delta = scene.getEngine().getDeltaTime() / 1000; // ms → seconds
+			const delta = scene.getEngine().getDeltaTime() / 1000; // ms -> seconds
 
 			// Smooth per-frame unit movement
 			movementSystem(delta, speed);

@@ -43,6 +43,12 @@ import {
 	syncEntities,
 } from "./EntityRenderer";
 import { updateFogVisibility } from "./FogOfWar";
+import {
+	disposeLightning,
+	initLightning,
+	type LightningState,
+	updateLightning,
+} from "./GameplayLightning";
 import { initInput } from "./InputHandler";
 
 // ─── Epoch-driven atmosphere — Epoch 1 defaults ──────────────────────────────
@@ -139,6 +145,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 	const scene = useScene();
 	const chunkStateRef = useRef<ChunkManagerState | null>(null);
 	const entityStateRef = useRef<EntityRendererState | null>(null);
+	const lightningStateRef = useRef<LightningState | null>(null);
 	const simAccumulatorRef = useRef(0);
 
 	// startPos is already in world coordinates (tile * TILE_SIZE_M)
@@ -264,6 +271,13 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		chunkStateRef.current = chunkState;
 		registerChunkState(chunkState);
 
+		// Initialize gameplay lightning (bolts + GlowLayer)
+		const lightningState = initLightning(scene, () => {
+			const c = scene.activeCamera as ArcRotateCamera | null;
+			return c ? { x: c.target.x, z: c.target.z } : null;
+		});
+		lightningStateRef.current = lightningState;
+
 		// ── Game loop: movement (per-frame) + simulation tick (fixed interval) ──
 		const SIM_INTERVAL = 1.0; // seconds of game time between ticks
 		const gameLoopCallback = () => {
@@ -285,6 +299,11 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			// Update visual fog-of-war after simulation (reads fog grid, sets mesh visibility)
 			if (chunkStateRef.current) {
 				updateFogVisibility(chunkStateRef.current);
+			}
+
+			// Update gameplay lightning (creates/removes bolts)
+			if (lightningStateRef.current) {
+				updateLightning(lightningStateRef.current, 1); // epoch 1 for now
 			}
 		};
 		scene.registerBeforeRender(gameLoopCallback);
@@ -355,6 +374,10 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			if (entityStateRef.current) {
 				disposeEntityRenderer(entityStateRef.current);
 				entityStateRef.current = null;
+			}
+			if (lightningStateRef.current) {
+				disposeLightning(lightningStateRef.current);
+				lightningStateRef.current = null;
 			}
 			if (chunkStateRef.current) {
 				disposeAllChunks(chunkStateRef.current);

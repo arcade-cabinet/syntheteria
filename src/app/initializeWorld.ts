@@ -4,13 +4,36 @@ import {
 	spawnLightningRod,
 	spawnUnit,
 } from "../ecs/factory";
-import {
-	setGameConfig,
-	simulationTick,
-} from "../ecs/gameState";
-import { Fragment } from "../ecs/traits";
+import { setGameConfig, simulationTick } from "../ecs/gameState";
+import { getTerrainHeight } from "../ecs/terrain";
+import { EntityId, Fragment, Position, ScavengeSite } from "../ecs/traits";
 import { world } from "../ecs/world";
 import { foundBase } from "../systems/baseManagement";
+import { buildNavGraph } from "../systems/navmesh";
+
+/** Counter for unique scavenge site IDs. */
+let nextScavengeId = 0;
+
+/** Spawn a scavenge site at world coordinates. */
+function spawnScavengeSite(
+	x: number,
+	z: number,
+	materialType: string,
+	remaining = 5,
+): void {
+	const y = getTerrainHeight(x, z);
+	const id = `scavenge_${nextScavengeId++}`;
+
+	world.spawn(
+		EntityId({ value: id }),
+		Position({ x, y, z }),
+		ScavengeSite({
+			materialType,
+			amountPerScavenge: 2,
+			remaining,
+		}),
+	);
+}
 
 export function initializeWorld(
 	seed = "default",
@@ -19,15 +42,14 @@ export function initializeWorld(
 	setGameConfig(seed, difficulty);
 	initCityLayout({ width: 48, height: 48, seed, difficulty });
 
+	// Build navigation graph after city layout — required for pathfinding
+	buildNavGraph();
+
 	const rooms = getRooms();
 	const playerRoom = rooms.find((room) => room.tag === "player");
 	const tileSize = 2.0;
-	const startX = playerRoom
-		? (playerRoom.x + playerRoom.w / 2) * tileSize
-		: 48;
-	const startZ = playerRoom
-		? (playerRoom.z + playerRoom.h / 2) * tileSize
-		: 62;
+	const startX = playerRoom ? (playerRoom.x + playerRoom.w / 2) * tileSize : 48;
+	const startZ = playerRoom ? (playerRoom.z + playerRoom.h / 2) * tileSize : 62;
 
 	const botAlpha = spawnUnit({
 		x: startX - 2,
@@ -72,6 +94,28 @@ export function initializeWorld(
 		fragmentId: botAlpha.get(Fragment)!.fragmentId,
 	});
 
+	// Spawn scavenge sites near the player start — 4 types, spread around
+	const scavengeSites = [
+		{ dx: 6, dz: 0, type: "scrapMetal", remaining: 5 },
+		{ dx: -6, dz: 4, type: "circuitry", remaining: 4 },
+		{ dx: 4, dz: -6, type: "powerCells", remaining: 3 },
+		{ dx: -4, dz: -4, type: "durasteel", remaining: 4 },
+		{ dx: 8, dz: 6, type: "scrapMetal", remaining: 6 },
+		{ dx: -8, dz: -6, type: "circuitry", remaining: 5 },
+		{ dx: 10, dz: -4, type: "powerCells", remaining: 3 },
+		{ dx: -10, dz: 8, type: "durasteel", remaining: 4 },
+	];
+
+	for (const site of scavengeSites) {
+		spawnScavengeSite(
+			startX + site.dx,
+			startZ + site.dz,
+			site.type,
+			site.remaining,
+		);
+	}
+
+	// Cult bases in northern zone
 	const cultBases = [
 		{ tileX: 50, tileZ: 20, name: "Cult Stronghold Alpha" },
 		{ tileX: 150, tileZ: 30, name: "Cult Outpost Beta" },

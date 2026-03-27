@@ -83,8 +83,8 @@ export interface EntityRendererState {
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-/** Uniform scale applied to all robot GLBs. */
-const MODEL_SCALE = 0.5;
+/** Uniform scale applied to all robot GLBs. Must be visible at 25° camera / radius 60. */
+const MODEL_SCALE = 2.0;
 
 /** Bob animation amplitude (meters). */
 const BOB_AMPLITUDE = 0.1;

@@ -233,9 +233,9 @@ function SaveLoadControls() {
 	);
 }
 
-function stormColor(intensity: number): string {
-	if (intensity > 1.1) return "text-amber-400";
-	if (intensity > 0.8) return "text-cyan-400";
+function stormColor(intensityPct: number): string {
+	if (intensityPct > 90) return "text-amber-400";
+	if (intensityPct > 70) return "text-cyan-400";
 	return "text-cyan-400/40";
 }
 
@@ -321,7 +321,7 @@ export function TopBar() {
 					className={cn("text-[13px]", stormColor(snap.power.stormIntensity))}
 					title="Storm Intensity"
 				>
-					STORM {(snap.power.stormIntensity * 100).toFixed(0)}%
+					STORM {snap.power.stormIntensity}%
 				</span>
 				<span
 					className={cn(

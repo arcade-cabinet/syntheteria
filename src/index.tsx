@@ -1,4 +1,3 @@
-import HavokPhysics from "@babylonjs/havok";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
@@ -7,15 +6,12 @@ import "./index.css";
 // Register playtest bridge (window.__syntheteria) for E2E tests
 import "./systems/playtestBridge";
 
-(async () => {
-	const rootEl = document.getElementById("root");
-	if (!rootEl) throw new Error("Root element not found");
+const rootEl = document.getElementById("root");
+if (!rootEl) throw new Error("Root element not found");
 
-	const root = ReactDOM.createRoot(rootEl);
-	const havok = await HavokPhysics();
-	root.render(
-		<StrictMode>
-			<App havok={havok} />
-		</StrictMode>,
-	);
-})();
+const root = ReactDOM.createRoot(rootEl);
+root.render(
+	<StrictMode>
+		<App />
+	</StrictMode>,
+);

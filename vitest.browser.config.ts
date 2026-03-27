@@ -35,8 +35,6 @@ export default defineConfig({
 			"@babylonjs/core/Misc/screenshotTools",
 			"@babylonjs/core/Misc/tools",
 			"@babylonjs/core/scene",
-			"@babylonjs/core/Physics/v2/Plugins/havokPlugin",
-			"@babylonjs/havok",
 			"@babylonjs/loaders/glTF",
 			"tone",
 			"sql.js/dist/sql-asm.js",

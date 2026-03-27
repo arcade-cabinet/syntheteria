@@ -44,11 +44,7 @@ const PHASE_NARRATIVE: Partial<Record<GamePhaseId, DialogueSequence>> = {
 	war: WAR_SEQUENCE,
 };
 
-interface AppProps {
-	havok: unknown;
-}
-
-export default function App({ havok }: AppProps) {
+export default function App() {
 	const worldInitRef = useRef(false);
 	const [phase, setPhase] = useState<"title" | "narration" | "playing">(
 		"title",
@@ -162,7 +158,6 @@ export default function App({ havok }: AppProps) {
 			<div className="touch-none">
 				<GameLayout>
 					<GameCanvas
-						havok={havok}
 						startPos={startPos}
 						seed={gameConfigRef.current.seed}
 					/>

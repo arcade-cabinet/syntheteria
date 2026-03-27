@@ -14,7 +14,6 @@ import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { Tools } from "@babylonjs/core/Misc/tools";
-import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 // Side-effect imports — Vite tree-shakes these without explicit import
 import "@babylonjs/core/Helpers/sceneHelpers";
 import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
@@ -61,8 +60,6 @@ const FOG_B = epoch1.fogColor[2];
 // ─── Props ───────────────────────────────────────────────────────────────────
 
 export interface GameCanvasProps {
-	/** Havok physics WASM instance. */
-	havok: unknown;
 	/** Player start position in world coordinates (already scaled by TILE_SIZE_M). */
 	startPos: { x: number; z: number };
 	/** World generation seed. */
@@ -425,13 +422,10 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 
 // ─── Main component ──────────────────────────────────────────────────────────
 
-export function GameCanvas({ havok, startPos, seed }: GameCanvasProps) {
+export function GameCanvas({ startPos, seed }: GameCanvasProps) {
 	return (
 		<Engine engineOptions={{ premultipliedAlpha: false, alpha: false }}>
-			<Scene
-				onSceneReady={onSceneReady}
-				physicsOptions={{ plugin: new HavokPlugin(true, havok) }}
-			>
+			<Scene onSceneReady={onSceneReady}>
 				<SceneContent startPos={startPos} seed={seed} />
 			</Scene>
 		</Engine>

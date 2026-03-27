@@ -342,11 +342,7 @@ function generateChunkEntities(
 	}
 
 	// ── Cult leader — unique boss, spawns once at very high danger ────
-	if (
-		danger > 0.9 &&
-		zone === "enemy" &&
-		passableTiles.length > 0
-	) {
+	if (danger > 0.9 && zone === "enemy" && passableTiles.length > 0) {
 		// Deterministic single-spawn check: hash chunk coords + seed to get a
 		// stable 0-1 value. Only one chunk in the world will pass the threshold.
 		const leaderHash = seededRng(`${chunkSeed}_cult_leader_unique`);

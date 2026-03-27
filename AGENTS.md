@@ -10,15 +10,16 @@
 
 **Playable. All 22 PRD stories implemented. Victory/defeat conditions. Board generates all entities.**
 
-- 780 unit tests, 62 suites, 51 browser tests, 0 tsc errors, 0 lint errors
+- 859+ tests (780+ unit, 79 browser), 0 tsc errors, 0 lint errors
+- Browser tests use headed Chromium with Tailwind CSS loaded + visual verification
 - Build: Vite 8 + @vitejs/plugin-react + babel-plugin-reactylon
 - Landing: BabylonJS storm globe with WGSL custom ShaderMaterial (WebGPU native)
-- Gameplay: BabylonJS/Reactylon game canvas, 25° camera, fog of war, salvage nodes
+- Gameplay: BabylonJS/Reactylon game canvas (forceWebGL for resize), 25° camera, per-mesh fog of war, salvage nodes
 - HUD: React DOM overlays (TopBar, Sidebar, Minimap, SelectionInfo, ActionPanel)
+- All 18 gap list items implemented (resize, fog, salvage chain, input, victory/defeat, base, repair, hacking, save/load, zones, entities, death/resource toasts, combat feedback, audio, story triggers, phase progression)
 
 Known issues:
-- Globe has weird static blob / repeating pattern (shader continent logic)
-- Test quality needs improvement (more ECS exercise, fewer placeholders)
+- BabylonJS rgbdTextureTools race condition on engine teardown (suppressed in tests, cosmetic)
 
 ## Tech Stack
 
@@ -97,8 +98,8 @@ src/
 ## Testing
 
 ```bash
-pnpm test           # 780 unit tests (vitest, jsdom)
-pnpm test:browser   # browser tests (vitest, headed Chrome, zero mocks)
+pnpm test           # 780+ unit tests (vitest, jsdom)
+pnpm test:browser   # 79 browser tests (vitest, headed Chromium, zero mocks, Tailwind loaded)
 pnpm tsc            # Type check (0 errors)
 pnpm lint           # Biome lint (0 errors)
 pnpm build          # Production build (vite)

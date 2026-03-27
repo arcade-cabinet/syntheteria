@@ -305,24 +305,29 @@ fn fbm6(p_in: vec3<f32>) -> f32 {
     return value;
 }
 
-// Procedural continent generation from noise threshold on the sphere
+// Procedural continent generation — multi-scale noise threshold on the sphere.
+// Uses three offset noise layers at different frequencies to create varied
+// continent shapes that avoid the "single blob" look of a single low-freq layer.
 fn continentPattern(pos: vec3<f32>) -> f32 {
-    // Use spherical coordinates
     let lat = asin(clamp(pos.y, -1.0, 1.0));
 
-    // Base continent shape from low-frequency noise on the sphere
-    let n1 = fbm6(pos * 2.0 + vec3<f32>(0.0, 0.0, 0.0));
-    let n2 = fbm6(pos * 3.0 + vec3<f32>(7.0, 13.0, 19.0));
+    // Three noise layers at different scales and offsets for variety.
+    // The large offset vectors ensure each layer samples a different
+    // region of noise space, preventing symmetric/repetitive patterns.
+    let n1 = fbm6(pos * 1.8 + vec3<f32>(3.7, 11.2, 5.9));
+    let n2 = fbm6(pos * 3.2 + vec3<f32>(17.1, 29.3, 43.7));
+    let n3 = fbm6(pos * 5.0 + vec3<f32>(53.0, 71.0, 97.0));
 
-    // Create continent-like patches using noise threshold
-    var land = smoothstep(0.42, 0.58, n1 * 0.6 + n2 * 0.4);
+    // Blend layers: low-freq sets continent positions, mid-freq adds
+    // peninsulas/bays, high-freq adds coastal fractal detail
+    var land = smoothstep(0.40, 0.56, n1 * 0.5 + n2 * 0.3 + n3 * 0.2);
 
-    // Reduce land at poles (ice caps are ocean in our ecumenopolis)
-    land *= smoothstep(1.2, 0.6, abs(lat));
+    // Polar reduction (no land near poles — ice/ocean)
+    land *= smoothstep(1.2, 0.55, abs(lat));
 
-    // Add some coastal detail
-    let coast = fbm6(pos * 12.0) * 0.15;
-    land = smoothstep(0.3 - coast, 0.5 + coast, land);
+    // Coastal detail: fractal shoreline instead of smooth blobs
+    let coast = fbm6(pos * 14.0 + vec3<f32>(31.0, 0.0, 0.0)) * 0.18;
+    land = smoothstep(0.28 - coast, 0.52 + coast, land);
 
     return clamp(land, 0.0, 1.0);
 }
@@ -475,23 +480,14 @@ fn fbm7(p_in: vec3<f32>) -> f32 {
 }
 
 fn continentPattern(pos: vec3<f32>) -> f32 {
-    // Use spherical coordinates
     let lat = asin(clamp(pos.y, -1.0, 1.0));
-
-    // Base continent shape from low-frequency noise on the sphere
-    let n1 = fbm6(pos * 2.0 + vec3<f32>(0.0, 0.0, 0.0));
-    let n2 = fbm6(pos * 3.0 + vec3<f32>(7.0, 13.0, 19.0));
-
-    // Create continent-like patches using noise threshold
-    var land = smoothstep(0.42, 0.58, n1 * 0.6 + n2 * 0.4);
-
-    // Reduce land at poles (ice caps are ocean in our ecumenopolis)
-    land *= smoothstep(1.2, 0.6, abs(lat));
-
-    // Add some coastal detail
-    let coast = fbm6(pos * 12.0) * 0.15;
-    land = smoothstep(0.3 - coast, 0.5 + coast, land);
-
+    let n1 = fbm6(pos * 1.8 + vec3<f32>(3.7, 11.2, 5.9));
+    let n2 = fbm6(pos * 3.2 + vec3<f32>(17.1, 29.3, 43.7));
+    let n3 = fbm6(pos * 5.0 + vec3<f32>(53.0, 71.0, 97.0));
+    var land = smoothstep(0.40, 0.56, n1 * 0.5 + n2 * 0.3 + n3 * 0.2);
+    land *= smoothstep(1.2, 0.55, abs(lat));
+    let coast = fbm6(pos * 14.0 + vec3<f32>(31.0, 0.0, 0.0)) * 0.18;
+    land = smoothstep(0.28 - coast, 0.52 + coast, land);
     return clamp(land, 0.0, 1.0);
 }
 
@@ -647,7 +643,15 @@ fn noise3(p: vec3<f32>) -> f32 {
     let b = hash3(i + vec3<f32>(1.0, 0.0, 0.0));
     let c = hash3(i + vec3<f32>(0.0, 1.0, 0.0));
     let d = hash3(i + vec3<f32>(1.0, 1.0, 0.0));
-    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+    let e = hash3(i + vec3<f32>(0.0, 0.0, 1.0));
+    let f2 = hash3(i + vec3<f32>(1.0, 0.0, 1.0));
+    let g = hash3(i + vec3<f32>(0.0, 1.0, 1.0));
+    let h = hash3(i + vec3<f32>(1.0, 1.0, 1.0));
+    return mix(
+        mix(mix(a, b, f.x), mix(c, d, f.x), f.y),
+        mix(mix(e, f2, f.x), mix(g, h, f.x), f.y),
+        f.z
+    );
 }
 
 fn fbm5(p_in: vec3<f32>) -> f32 {

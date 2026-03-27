@@ -271,13 +271,14 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		cameraLight.range = 120;
 
 		// Follow camera target
-		scene.registerBeforeRender(() => {
+		const cameraLightCallback = () => {
 			const cam = scene.activeCamera as ArcRotateCamera;
 			if (cam) {
 				cameraLight.position.x = cam.target.x;
 				cameraLight.position.z = cam.target.z;
 			}
-		});
+		};
+		scene.registerBeforeRender(cameraLightCallback);
 
 		// Hub marker — cyan pyramid at player start
 		const hubMesh = MeshBuilder.CreateCylinder(
@@ -350,9 +351,15 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 
 		// Entity renderer — load GLBs and sync ECS entities to meshes each frame
 		let entityRenderCallback: (() => void) | null = null;
+		let sceneDisposed = false;
 
 		initEntityRenderer(scene)
 			.then((entityState) => {
+				// Guard: scene may have been disposed while GLBs were loading
+				if (sceneDisposed) {
+					disposeEntityRenderer(entityState);
+					return;
+				}
 				entityStateRef.current = entityState;
 
 				// Sync entity meshes every frame
@@ -408,9 +415,11 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		}
 
 		return () => {
+			sceneDisposed = true;
 			window.removeEventListener("resize", handleResize);
 			resizeObserver?.disconnect();
 			disposeInput();
+			scene.unregisterBeforeRender(cameraLightCallback);
 			scene.unregisterBeforeRender(cameraTrackCallback);
 			scene.unregisterBeforeRender(gameLoopCallback);
 			cam.onViewMatrixChangedObservable.remove(observer);

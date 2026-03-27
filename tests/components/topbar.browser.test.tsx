@@ -28,6 +28,12 @@ import {
 } from "../../src/ecs/traits";
 import { serializeComponents } from "../../src/ecs/types";
 import { world } from "../../src/ecs/world";
+import {
+	expectAllButtonsClickable,
+	expectReadableFont,
+	expectTouchTarget,
+	expectVisible,
+} from "./visual-helpers";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
@@ -223,4 +229,80 @@ test("clicking speed button changes game speed", async () => {
 
 	// Reset speed
 	setGameSpeed(1);
+});
+
+test("speed buttons meet minimum touch target size", async () => {
+	root!.render(<TopBar />);
+	await flush();
+
+	const buttons = Array.from(container!.querySelectorAll("button"));
+	const speedButtons = buttons.filter((b) => {
+		const text = b.textContent?.trim() ?? "";
+		return ["0.5x", "1x", "2x", "4x"].includes(text);
+	});
+	expect(speedButtons.length).toBe(4);
+
+	for (const btn of speedButtons) {
+		expectTouchTarget(btn, 36, btn.textContent?.trim());
+	}
+});
+
+test("resource badges are visible with readable font", async () => {
+	root!.render(<TopBar />);
+	await flush();
+
+	// Find resource badge spans by their title attributes
+	const badges = container!.querySelectorAll<HTMLSpanElement>("span[title]");
+	const resourceBadges = Array.from(badges).filter((s) =>
+		["Scrap Metal", "Circuitry", "Power Cells", "Durasteel"].includes(s.title),
+	);
+	expect(resourceBadges.length, "should find 4 resource badges").toBe(4);
+
+	for (const badge of resourceBadges) {
+		expectVisible(badge, badge.title);
+		expectReadableFont(badge, badge.title);
+	}
+});
+
+test("active speed button has distinct background from inactive", async () => {
+	root!.render(<TopBar />);
+	await flush();
+
+	const buttons = Array.from(container!.querySelectorAll("button"));
+	const btn1x = buttons.find((b) => b.textContent?.trim() === "1x");
+	const btn2x = buttons.find((b) => b.textContent?.trim() === "2x");
+	expect(btn1x).toBeDefined();
+	expect(btn2x).toBeDefined();
+
+	// 1x should be active by default
+	const bg1x = getComputedStyle(btn1x!).backgroundColor;
+	const bg2x = getComputedStyle(btn2x!).backgroundColor;
+	expect(bg1x, "active button bg should differ from inactive").not.toBe(bg2x);
+});
+
+test("all TopBar buttons are clickable (not obscured)", async () => {
+	spawnPlayerUnit("vis_p1", "Visual Test");
+	root!.render(<TopBar />);
+	await flush();
+
+	expectAllButtonsClickable(container!);
+});
+
+test("HOSTILE indicator has red color styling", async () => {
+	spawnPlayerUnit("vis_p2", "Alpha");
+	spawnEnemyUnit("vis_e1");
+	setGameSpeed(1);
+	root!.render(<TopBar />);
+	await flush();
+
+	// Find the HOSTILE span
+	const spans = container!.querySelectorAll("span");
+	const hostile = Array.from(spans).find((s) =>
+		s.textContent?.includes("HOSTILE"),
+	);
+	expect(hostile, "HOSTILE indicator should exist").toBeDefined();
+
+	const color = getComputedStyle(hostile!).color;
+	// Should be red-ish (rgb(239, 68, 68) for text-red-500 or similar)
+	expect(color, "HOSTILE should have red color").toMatch(/rgb\(\s*2[0-9]{2}/);
 });

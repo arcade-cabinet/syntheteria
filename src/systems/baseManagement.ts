@@ -9,9 +9,23 @@
  */
 
 import type { Entity, World } from "koota";
+import { playSfx } from "../audio";
 import { tileToWorldX, tileToWorldZ } from "../board/coords";
 import { zoneForTile } from "../board/zones";
-import { Base, EntityId, Faction, Position } from "../ecs/traits";
+import { ROBOT_DEFS, type RobotType } from "../config/robotDefs";
+import {
+	Base,
+	EngagementRule,
+	EntityId,
+	Faction,
+	Fragment,
+	Inventory,
+	Navigation,
+	Position,
+	Unit,
+	UnitComponents,
+} from "../ecs/traits";
+import { serializeComponents, type UnitComponent } from "../ecs/types";
 import { gameAssert } from "../errors";
 import { recordBaseFounded } from "./gamePhases";
 
@@ -226,6 +240,75 @@ export function baseProductionTick(
 	}
 
 	return completed;
+}
+
+/** Default components for a freshly produced unit. */
+const DEFAULT_UNIT_COMPONENTS: UnitComponent[] = [
+	{ name: "camera", functional: true, material: "electronic" },
+	{ name: "arms", functional: true, material: "metal" },
+	{ name: "legs", functional: true, material: "metal" },
+	{ name: "power_cell", functional: true, material: "electronic" },
+];
+
+let nextProducedUnitId = 0;
+
+/**
+ * Spawn units from completed production items.
+ * Called by simulationTick after baseProductionTick returns completed items.
+ * Units spawn near the base that produced them.
+ */
+export function spawnCompletedProduction(
+	world: World,
+	completed: { baseEntityId: string; item: ProductionItem }[],
+): void {
+	for (const { baseEntityId, item } of completed) {
+		// Find the base entity to get spawn position
+		let basePos: { x: number; z: number } | null = null;
+		for (const entity of world.query(Base, EntityId, Position)) {
+			if (entity.get(EntityId)!.value === baseEntityId) {
+				const pos = entity.get(Position)!;
+				basePos = { x: pos.x, z: pos.z };
+				break;
+			}
+		}
+		if (!basePos) continue;
+
+		const def = ROBOT_DEFS[item.unitType as RobotType];
+		const displayName = def?.displayName ?? item.unitType.replace(/_/g, " ");
+		const speed = def?.marks[0]?.stats.speed ?? 3;
+		const id = `prod_${nextProducedUnitId++}`;
+
+		// Spawn slightly offset from base to avoid stacking
+		const offsetX = (Math.random() - 0.5) * 4;
+		const offsetZ = (Math.random() - 0.5) * 4;
+
+		world.spawn(
+			EntityId({ value: id }),
+			Position({ x: basePos.x + offsetX, y: 0, z: basePos.z + offsetZ }),
+			Faction({ value: "player" }),
+			Fragment({ fragmentId: `prod_frag_${id}` }),
+			Unit({
+				unitType: item.unitType,
+				displayName: `${displayName} ${id.slice(-2).toUpperCase()}`,
+				speed,
+				selected: false,
+				mark: 1,
+			}),
+			UnitComponents({
+				componentsJson: serializeComponents(DEFAULT_UNIT_COMPONENTS),
+			}),
+			Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+			Inventory({ inventoryJson: "{}" }),
+			EngagementRule({ value: "attack" }),
+		);
+
+		playSfx("build_complete");
+	}
+}
+
+/** Reset the production unit ID counter (for testing). */
+export function resetProductionUnitId(): void {
+	nextProducedUnitId = 0;
 }
 
 // ─── Power ───────────────────────────────────────────────────────────────────

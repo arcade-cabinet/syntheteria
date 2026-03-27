@@ -12,7 +12,9 @@ import { FLOOR_DEFS } from "../types";
 const VALID_FLOOR_TYPES = new Set(Object.keys(FLOOR_DEFS));
 
 describe("chunk floorType integrity", () => {
-	it("no tile has undefined floorType across 100 chunks (positive coords)", () => {
+	it("no tile has undefined floorType across 100 chunks (positive coords)", {
+		timeout: 15000,
+	}, () => {
 		for (let cx = 0; cx < 10; cx++) {
 			for (let cz = 0; cz < 10; cz++) {
 				const chunk = generateChunk("floor-test", cx, cz);

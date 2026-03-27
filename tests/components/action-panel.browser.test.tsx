@@ -21,6 +21,7 @@ import {
 } from "../../src/ecs/traits";
 import { serializeComponents } from "../../src/ecs/types";
 import { world } from "../../src/ecs/world";
+import { expectAllButtonsClickable, expectTouchTarget } from "./visual-helpers";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
@@ -182,4 +183,106 @@ test("STANCE cycles on click (ATK -> DEF -> HOLD -> FLEE)", async () => {
 	await flush(50);
 	text = container!.textContent ?? "";
 	expect(text).toContain("STANCE: FLEE");
+});
+
+test("action buttons meet minimum touch target size", async () => {
+	spawnSelectedPlayerUnit("vis_1");
+	root!.render(<ActionPanel />);
+	await flush();
+
+	const buttons = container!.querySelectorAll<HTMLButtonElement>("button");
+	expect(buttons.length, "should have action buttons").toBeGreaterThan(0);
+
+	for (const btn of buttons) {
+		const rect = btn.getBoundingClientRect();
+		if (rect.width > 0 && rect.height > 0) {
+			expectTouchTarget(btn, 36, btn.textContent?.trim());
+		}
+	}
+});
+
+test("STANCE button has active/highlighted styling", async () => {
+	spawnSelectedPlayerUnit("vis_2");
+	root!.render(<ActionPanel />);
+	await flush();
+
+	const buttons = Array.from(container!.querySelectorAll("button"));
+	const stanceBtn = buttons.find((b) => b.textContent?.includes("STANCE"));
+	expect(stanceBtn, "STANCE button should exist").toBeDefined();
+
+	// STANCE is always active — should have cyan border/background
+	const style = getComputedStyle(stanceBtn!);
+	const borderColor = style.borderColor;
+	// Cyan border: rgb(34, 211, 238) or similar
+	expect(
+		borderColor,
+		`STANCE button should have cyan border, got: ${borderColor}`,
+	).toMatch(/rgb\(\s*\d+,\s*[12]\d{2},\s*2[0-9]{2}/);
+});
+
+test("action panel uses grid layout for buttons", async () => {
+	spawnSelectedPlayerUnit("vis_3");
+	root!.render(<ActionPanel />);
+	await flush();
+
+	// Find the grid container (parent of action buttons)
+	const gridEl = container!.querySelector<HTMLDivElement>("[class*='grid']");
+	expect(gridEl, "should have a grid layout container").toBeDefined();
+
+	const style = getComputedStyle(gridEl!);
+	expect(style.display, "container should use grid display").toBe("grid");
+});
+
+test("all action buttons are clickable (not obscured)", async () => {
+	spawnSelectedPlayerUnit("vis_4");
+	root!.render(<ActionPanel />);
+	await flush();
+
+	expectAllButtonsClickable(container!);
+});
+
+test("disabled buttons have distinct visual state", async () => {
+	// Spawn unit with broken arms to get disabled ATTACK button
+	const e = world.spawn(
+		EntityId({ value: "vis_5" }),
+		Position({ x: 10, y: 0, z: 20 }),
+		Faction({ value: "player" }),
+		Fragment({ fragmentId: "frag_1" }),
+		Unit({
+			unitType: "maintenance_bot",
+			displayName: "Broken Bot",
+			speed: 3,
+			selected: true,
+			mark: 1,
+		}),
+		UnitComponents({
+			componentsJson: serializeComponents([
+				{ name: "camera", functional: true, material: "electronic" },
+				{ name: "arms", functional: false, material: "metal" },
+				{ name: "legs", functional: true, material: "metal" },
+				{ name: "power_cell", functional: true, material: "electronic" },
+			]),
+		}),
+		Navigation({ pathJson: "[]", pathIndex: 0, moving: false }),
+		Inventory({ inventoryJson: "{}" }),
+		EngagementRule({ value: "attack" }),
+	);
+	spawnedEntities.push(e);
+
+	root!.render(<ActionPanel />);
+	await flush();
+
+	const buttons = Array.from(container!.querySelectorAll("button"));
+	const attackBtn = buttons.find((b) => b.textContent?.includes("ATTACK"));
+	expect(attackBtn, "ATTACK button should exist").toBeDefined();
+	expect(
+		attackBtn!.disabled,
+		"ATTACK should be disabled with broken arms",
+	).toBe(true);
+
+	// Disabled button should have muted/dim styling
+	const style = getComputedStyle(attackBtn!);
+	expect(style.cursor, "disabled button should have not-allowed cursor").toBe(
+		"not-allowed",
+	);
 });

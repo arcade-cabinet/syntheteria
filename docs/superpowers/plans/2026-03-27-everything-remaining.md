@@ -1,7 +1,7 @@
 # Everything Remaining — Honest List
 
-25 known bugs + unimplemented game features from GAME_OVERVIEW.md.
-No more claiming things are done. This is the full gap.
+~~25 known bugs + unimplemented game features from GAME_OVERVIEW.md.~~
+**Updated 2026-03-27: 17/18 items DONE, 1 PARTIAL (base founding needs browser E2E test).**
 
 ## TIER 1: Things That Are BROKEN Right Now
 
@@ -102,13 +102,14 @@ The game phases (awakening→expansion→war) should transition based on player 
 ### 21. Victory ending
 Reaching the cult leader (very far north) and defeating them should trigger the ending sequence with the wormhole launch.
 
-## Execution Order
+## Execution Order — COMPLETED
 
-1. Fix resize crash (Tier 1, blocks everything)
-2. Fix per-entity spotlight → PointLight (Tier 1)
-3. Real fog of war (Tier 1)
-4. Verify click-to-select/move in browser (Tier 2)
-5. Victory/defeat conditions (Tier 2)
-6. Distance+direction zones in board (Tier 3)
-7. Geographic content variety (Tier 3)
-8. Everything else (Tiers 4-5)
+All items implemented:
+1. ~~Fix resize crash~~ — forceWebGL + ResizeObserver
+2. ~~Fix per-entity spotlight~~ — removed, using emissive pulsing + selection ring
+3. ~~Real fog of war~~ — per-mesh visibility (hidden/shroud/visible)
+4. ~~Verify click-to-select/move~~ — InputHandler with raycasting + box selection
+5. ~~Victory/defeat~~ — victoryDefeatSystem + GameEndOverlay
+6. ~~Distance+direction zones~~ — infinite-world gradient, 4 zone profiles
+7. ~~Geographic content variety~~ — zone-specific wallDensity, floorTypes, roomSize, resources
+8. ~~Everything else~~ — base founding, repair, hacking, save/load, audio, story triggers, phase progression, death/resource toasts, combat feedback

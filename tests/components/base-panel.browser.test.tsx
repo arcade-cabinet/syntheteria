@@ -5,12 +5,12 @@
  * No mocks — Vite compiles everything.
  */
 
-import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { BasePanel, selectBase } from "../../src/components/base/BasePanel";
 import { Base, EntityId, Faction, Position } from "../../src/ecs/traits";
 import { world } from "../../src/ecs/world";
+import { expectVisible } from "./visual-helpers";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
@@ -81,9 +81,7 @@ test("panel hidden when no base selected", async () => {
 
 test("panel visible after selectBase()", async () => {
 	spawnBase("bp_2", "Alpha Base");
-	await act(async () => {
-		selectBase("bp_2");
-	});
+	selectBase("bp_2");
 	root!.render(<BasePanel />);
 	await flush();
 
@@ -94,9 +92,7 @@ test("panel visible after selectBase()", async () => {
 
 test("shows base name", async () => {
 	spawnBase("bp_3", "Omega Outpost");
-	await act(async () => {
-		selectBase("bp_3");
-	});
+	selectBase("bp_3");
 	root!.render(<BasePanel />);
 	await flush();
 
@@ -106,9 +102,7 @@ test("shows base name", async () => {
 
 test("close button works", async () => {
 	spawnBase("bp_4", "Test Base");
-	await act(async () => {
-		selectBase("bp_4");
-	});
+	selectBase("bp_4");
 	root!.render(<BasePanel />);
 	await flush();
 
@@ -121,9 +115,7 @@ test("close button works", async () => {
 	);
 	expect(closeBtn).toBeDefined();
 
-	await act(async () => {
-		closeBtn!.click();
-	});
+	closeBtn!.click();
 	// Re-render to pick up state change
 	root!.render(<BasePanel />);
 	await flush();
@@ -134,18 +126,14 @@ test("close button works", async () => {
 
 test("ESC key closes panel", async () => {
 	spawnBase("bp_5", "ESC Base");
-	await act(async () => {
-		selectBase("bp_5");
-	});
+	selectBase("bp_5");
 	root!.render(<BasePanel />);
 	await flush();
 
 	expect(container!.textContent).toContain("ESC Base");
 
 	// Dispatch Escape key event
-	await act(async () => {
-		window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
-	});
+	window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
 	root!.render(<BasePanel />);
 	await flush();
 
@@ -154,9 +142,7 @@ test("ESC key closes panel", async () => {
 
 test("shows power gauge", async () => {
 	spawnBase("bp_6", "Power Base", 25);
-	await act(async () => {
-		selectBase("bp_6");
-	});
+	selectBase("bp_6");
 	root!.render(<BasePanel />);
 	await flush();
 
@@ -167,12 +153,89 @@ test("shows power gauge", async () => {
 
 test("production queue section present", async () => {
 	spawnBase("bp_7", "Prod Base");
-	await act(async () => {
-		selectBase("bp_7");
-	});
+	selectBase("bp_7");
 	root!.render(<BasePanel />);
 	await flush();
 
 	const text = container!.textContent ?? "";
 	expect(text).toContain("Production Queue");
+});
+
+test("panel is full-height and right-aligned", async () => {
+	spawnBase("vis_1", "Visual Base");
+	selectBase("vis_1");
+	root!.render(<BasePanel />);
+	await flush();
+
+	const panel = container!.querySelector<HTMLDivElement>("[class*='fixed']");
+	expect(panel, "panel should exist").toBeDefined();
+
+	const style = getComputedStyle(panel!);
+	expect(style.position, "panel should be fixed").toBe("fixed");
+
+	const rect = panel!.getBoundingClientRect();
+	expect(rect.right, "panel should be flush to right edge").toBeCloseTo(
+		window.innerWidth,
+		0,
+	);
+	expect(
+		rect.height,
+		"panel should be full viewport height",
+	).toBeGreaterThanOrEqual(window.innerHeight - 1);
+});
+
+test("close button (X) is visible and touchable", async () => {
+	spawnBase("vis_2", "Close Test");
+	selectBase("vis_2");
+	root!.render(<BasePanel />);
+	await flush();
+
+	const closeBtn = Array.from(container!.querySelectorAll("button")).find(
+		(b) => b.textContent?.trim() === "X",
+	);
+	expect(closeBtn).toBeDefined();
+	expectVisible(closeBtn!, "close button");
+});
+
+test("power gauge bar has correct width proportion", async () => {
+	spawnBase("vis_3", "Power Test", 25);
+	selectBase("vis_3");
+	root!.render(<BasePanel />);
+	await flush();
+
+	// Find the power gauge fill bar (cyan bg, rounded)
+	const bars = container!.querySelectorAll<HTMLDivElement>("div");
+	const gaugeBar = Array.from(bars).find((d) => {
+		const style = d.style;
+		return (
+			style.width?.includes("%") &&
+			d.className?.includes("rounded-full") &&
+			d.className?.includes("bg-cyan")
+		);
+	});
+
+	if (gaugeBar) {
+		// 25 kW / 50 max = 50%
+		expect(gaugeBar.style.width, "gauge should show 50% fill for 25kW").toBe(
+			"50%",
+		);
+	}
+});
+
+test("section headers have uppercase tracking-wider styling", async () => {
+	spawnBase("vis_4", "Style Base");
+	selectBase("vis_4");
+	root!.render(<BasePanel />);
+	await flush();
+
+	const headers = container!.querySelectorAll("h3");
+	expect(headers.length, "should have section headers").toBeGreaterThan(0);
+
+	for (const h of headers) {
+		const style = getComputedStyle(h);
+		expect(
+			style.textTransform,
+			`header "${h.textContent}" should be uppercase`,
+		).toBe("uppercase");
+	}
 });

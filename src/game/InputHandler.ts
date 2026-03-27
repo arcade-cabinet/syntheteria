@@ -20,6 +20,7 @@ import {
 import type { Scene } from "@babylonjs/core/scene";
 import type { Entity } from "koota";
 import { playSfx } from "../audio";
+import { selectBase } from "../components/base/BasePanel";
 import { EntityId, Faction, Position, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
 import {
@@ -255,17 +256,7 @@ function handleClick(
 				pickResult.pickedMesh.metadata,
 			);
 			if (baseEntityId) {
-				// Dynamically import to avoid circular dependency
-				import("../components/base/BasePanel")
-					.then(({ selectBase }) => {
-						selectBase(baseEntityId);
-					})
-					.catch(() => {
-						// Non-fatal: base panel just won't open
-						console.warn(
-							"[InputHandler] Failed to import BasePanel for base click",
-						);
-					});
+				selectBase(baseEntityId);
 				return;
 			}
 		}

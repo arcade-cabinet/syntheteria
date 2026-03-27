@@ -9,7 +9,11 @@ import {
 	isAutoPlayEnabled,
 } from "../ai/governor/PlaytestGovernor";
 import { logError } from "../errors";
-import { basePowerTick, baseProductionTick } from "../systems/baseManagement";
+import {
+	basePowerTick,
+	baseProductionTick,
+	spawnCompletedProduction,
+} from "../systems/baseManagement";
 import {
 	type CombatEvent,
 	combatSystem,
@@ -209,6 +213,11 @@ export function isPaused(): boolean {
 
 /**
  * Run one simulation tick. Called at fixed intervals adjusted by game speed.
+ *
+ * Systems NOT in this loop (by design):
+ * - movementSystem: per-frame interpolation in GameCanvas for smooth animation
+ * - upgrade: UI-triggered only (ActionPanel click), not time-based
+ * - pathfinding/navmesh: utility libraries called on-demand by other systems
  */
 export function simulationTick() {
 	if (paused) return;
@@ -237,7 +246,12 @@ export function simulationTick() {
 	runSystem("hacking", hackingSystem);
 	runSystem("combat", combatSystem);
 	runSystem("basePower", () => basePowerTick(world));
-	runSystem("baseProduction", () => baseProductionTick(world, 1.0));
+	runSystem("baseProduction", () => {
+		const completed = baseProductionTick(world, 1.0);
+		if (completed.length > 0) {
+			spawnCompletedProduction(world, completed);
+		}
+	});
 	runSystem("humanTemperature", humanTemperatureSystem);
 	runSystem("displayOffsets", updateDisplayOffsets);
 

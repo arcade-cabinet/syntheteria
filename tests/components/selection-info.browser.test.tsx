@@ -21,6 +21,7 @@ import {
 } from "../../src/ecs/traits";
 import { serializeComponents } from "../../src/ecs/types";
 import { world } from "../../src/ecs/world";
+import { expectReadableFont, expectVisible } from "./visual-helpers";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
@@ -184,4 +185,126 @@ test("shows mark level for upgraded units", async () => {
 
 	const text = container!.textContent ?? "";
 	expect(text).toContain("MK2");
+});
+
+test("component status dots have correct colors (green=functional, red=broken)", async () => {
+	spawnUnit({
+		id: "vis_1",
+		name: "Visual Bot",
+		selected: true,
+		components: [
+			{ name: "camera", functional: true, material: "electronic" },
+			{ name: "arms", functional: false, material: "metal" },
+		],
+	});
+	root!.render(<SelectionInfo />);
+	await flush();
+
+	// Find status dots (small round elements)
+	const dots = container!.querySelectorAll<HTMLSpanElement>("span");
+	const statusDots = Array.from(dots).filter((s) => {
+		const style = getComputedStyle(s);
+		return style.borderRadius === "9999px" && s.offsetWidth <= 10;
+	});
+
+	// Should have at least 2 dots (one green, one red)
+	expect(
+		statusDots.length,
+		"should have component status dots",
+	).toBeGreaterThanOrEqual(2);
+
+	// Check that we have both green and red dots
+	const bgColors = statusDots.map((d) => getComputedStyle(d).backgroundColor);
+	// Green channel should dominate for functional, red channel for broken.
+	// Extract RGB values and check channel dominance instead of exact values,
+	// since Tailwind color resolution varies across environments.
+	function parseRgb(c: string): [number, number, number] | null {
+		const m = c.match(/rgb\(\s*(\d+),\s*(\d+),\s*(\d+)/);
+		return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
+	}
+	const hasGreen = bgColors.some((c) => {
+		const rgb = parseRgb(c);
+		return rgb !== null && rgb[1] > rgb[0] && rgb[1] > 100; // green channel dominant and bright
+	});
+	const hasRed = bgColors.some((c) => {
+		const rgb = parseRgb(c);
+		return rgb !== null && rgb[0] > rgb[1] && rgb[0] > 150; // red channel dominant and bright
+	});
+	expect(
+		hasGreen,
+		`should have green dot for functional component, got: ${bgColors.join(", ")}`,
+	).toBe(true);
+	expect(
+		hasRed,
+		`should have red dot for broken component, got: ${bgColors.join(", ")}`,
+	).toBe(true);
+});
+
+test("unit name has readable font and is visible", async () => {
+	spawnUnit({ id: "vis_2", name: "Test Unit Alpha", selected: true });
+	root!.render(<SelectionInfo />);
+	await flush();
+
+	// Find the unit name element (bold cyan text)
+	const boldEls = container!.querySelectorAll<HTMLDivElement>("div");
+	const nameEl = Array.from(boldEls).find(
+		(d) =>
+			d.textContent?.includes("Test Unit Alpha") &&
+			Number(getComputedStyle(d).fontWeight) >= 700,
+	);
+	expect(nameEl, "should find unit name element").toBeDefined();
+	expectVisible(nameEl!, "unit name");
+	expectReadableFont(nameEl!, "unit name");
+});
+
+test("HOSTILE badge has red styling", async () => {
+	spawnUnit({
+		id: "vis_3",
+		name: "Enemy Bot",
+		selected: true,
+		faction: "cultist",
+	});
+	root!.render(<SelectionInfo />);
+	await flush();
+
+	const spans = container!.querySelectorAll("span");
+	const hostile = Array.from(spans).find((s) =>
+		s.textContent?.includes("HOSTILE"),
+	);
+	expect(hostile, "HOSTILE badge should exist").toBeDefined();
+
+	const color = getComputedStyle(hostile!).color;
+	expect(color, "HOSTILE text should be red").toMatch(/rgb\(\s*2[0-9]{2}/);
+});
+
+test("No Selection state is visually centered", async () => {
+	root!.render(<SelectionInfo />);
+	await flush();
+
+	const noSelEl = Array.from(container!.querySelectorAll("div")).find((d) =>
+		d.textContent?.includes("No Selection"),
+	);
+	expect(noSelEl, "should find No Selection element").toBeDefined();
+	const style = getComputedStyle(noSelEl!);
+	expect(style.textAlign, "No Selection should be centered").toBe("center");
+});
+
+test("MK badge has distinct cyan styling", async () => {
+	spawnUnit({ id: "vis_4", name: "Mk2 Bot", selected: true, mark: 2 });
+	root!.render(<SelectionInfo />);
+	await flush();
+
+	const spans = container!.querySelectorAll("span");
+	const mkBadge = Array.from(spans).find((s) => s.textContent?.includes("MK2"));
+	expect(mkBadge, "MK2 badge should exist").toBeDefined();
+
+	const color = getComputedStyle(mkBadge!).color;
+	// Should be cyan-ish (blue+green channels high, red channel low)
+	const m = color.match(/rgb\(\s*(\d+),\s*(\d+),\s*(\d+)/);
+	expect(m, `MK badge should have rgb color, got: ${color}`).not.toBeNull();
+	const [r, g, b] = [Number(m![1]), Number(m![2]), Number(m![3])];
+	expect(
+		g > r && b > r,
+		`MK badge should be cyan (g=${g}, b=${b} > r=${r})`,
+	).toBe(true);
 });

@@ -326,8 +326,7 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 		// (replaces old per-entity SpotLight which caused solid-circle WebGPU bug)
 		const pulse = 0.5 + 0.5 * Math.sin(time * 2.0 + entry.bobPhase);
 		const selectionBoost = unit.selected ? 2.0 : 1.0;
-		const isCultLeader =
-			isCultist && unit.displayName === "Cult Leader";
+		const isCultLeader = isCultist && unit.displayName === "Cult Leader";
 		for (const mesh of entry.meshes) {
 			if (mesh.material && mesh.material instanceof StandardMaterial) {
 				if (isCultLeader) {
@@ -434,6 +433,12 @@ export function disposeEntityRenderer(state: EntityRendererState): void {
 	disposeBaseMarkers(state.baseMarkers);
 	state.selectionMaterial.dispose();
 	state.ready = false;
+
+	// Clear all pending damage flash timers to prevent leaks
+	for (const timer of damageFlashTimers.values()) {
+		clearTimeout(timer);
+	}
+	damageFlashTimers.clear();
 }
 
 // ─── Internal helpers ───────────────────────────────────────────────────────

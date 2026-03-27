@@ -11,6 +11,7 @@ import {
 	type NewGameConfig,
 	NewGameModal,
 } from "../../src/views/landing/NewGameModal";
+import { expectVisible } from "./visual-helpers";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
@@ -64,11 +65,21 @@ test("NORMAL is selected by default", async () => {
 		b.textContent?.includes("NORMAL"),
 	);
 	expect(normal).toBeDefined();
-	// Active button should have a different style (border color)
-	const style = normal!.style;
-	expect(
-		style.borderColor.includes("139") || style.border.includes("139"),
-	).toBe(true);
+	// Active button should have a brighter border and background
+	const normalStyle = normal!.style;
+	const easyBtn = Array.from(buttons).find((b) =>
+		b.textContent?.includes("EASY"),
+	);
+	expect(easyBtn).toBeDefined();
+	const easyStyle = easyBtn!.style;
+	// Selected button should have different border than unselected
+	expect(normalStyle.border, "NORMAL border should differ from EASY").not.toBe(
+		easyStyle.border,
+	);
+	// Selected button should have non-transparent background
+	expect(normalStyle.background, "NORMAL should have highlight bg").not.toBe(
+		"transparent",
+	);
 });
 
 test("clicking difficulty button toggles selection", async () => {
@@ -162,4 +173,91 @@ test("world name displays for the seed", async () => {
 	// World names are adjective-adjective-noun format — at least 5 chars
 	// We just verify the modal has content beyond the fixed labels
 	expect(text.length).toBeGreaterThan(50);
+});
+
+test("modal is centered in viewport", async () => {
+	setup();
+	root!.render(<NewGameModal onStart={() => {}} onCancel={() => {}} />);
+	await flush();
+
+	// The backdrop should cover the full viewport
+	const backdrop = container!.firstElementChild as HTMLDivElement;
+	expect(backdrop, "backdrop should exist").toBeDefined();
+	expect(backdrop.style.position, "backdrop should be absolute").toBe(
+		"absolute",
+	);
+	expect(
+		backdrop.style.inset === "0" || backdrop.style.inset === "0px",
+		`backdrop should cover viewport (inset: 0), got: ${backdrop.style.inset}`,
+	).toBe(true);
+
+	// The form should be centered
+	const form = container!.querySelector("form") as HTMLFormElement;
+	expect(form, "form should exist").toBeDefined();
+	expectVisible(form, "modal form");
+
+	const rect = form.getBoundingClientRect();
+	const vpCenterX = window.innerWidth / 2;
+	const formCenterX = rect.left + rect.width / 2;
+	expect(
+		Math.abs(formCenterX - vpCenterX),
+		"form should be horizontally centered",
+	).toBeLessThan(10);
+});
+
+test("seed input field is visible and editable", async () => {
+	setup();
+	root!.render(<NewGameModal onStart={() => {}} onCancel={() => {}} />);
+	await flush();
+
+	const input = container!.querySelector("input") as HTMLInputElement;
+	expect(input).not.toBeNull();
+	expectVisible(input, "seed input");
+
+	// Input should have monospace font
+	expect(input.style.fontFamily, "seed input should be monospace").toContain(
+		"Courier",
+	);
+});
+
+test("START button is the largest/most prominent action", async () => {
+	setup();
+	root!.render(<NewGameModal onStart={() => {}} onCancel={() => {}} />);
+	await flush();
+
+	const buttons = Array.from(container!.querySelectorAll("button"));
+	const startBtn = buttons.find((b) => b.textContent?.includes("START"));
+	const backBtn = buttons.find((b) => b.textContent?.trim() === "BACK");
+	expect(startBtn).toBeDefined();
+	expect(backBtn).toBeDefined();
+
+	const startRect = startBtn!.getBoundingClientRect();
+	const backRect = backBtn!.getBoundingClientRect();
+	expect(startRect.width, "START should be wider than BACK").toBeGreaterThan(
+		backRect.width,
+	);
+});
+
+test("difficulty buttons are horizontally aligned", async () => {
+	setup();
+	root!.render(<NewGameModal onStart={() => {}} onCancel={() => {}} />);
+	await flush();
+
+	const buttons = Array.from(container!.querySelectorAll("button"));
+	const diffButtons = buttons.filter((b) => {
+		const text = b.textContent?.trim() ?? "";
+		return ["EASY", "NORMAL", "HARD"].includes(text);
+	});
+	expect(diffButtons.length, "should have 3 difficulty buttons").toBe(3);
+
+	// All should be at approximately the same Y position
+	const tops = diffButtons.map((b) => b.getBoundingClientRect().top);
+	expect(
+		Math.abs(tops[0] - tops[1]),
+		"EASY and NORMAL should be on same row",
+	).toBeLessThan(5);
+	expect(
+		Math.abs(tops[1] - tops[2]),
+		"NORMAL and HARD should be on same row",
+	).toBeLessThan(5);
 });

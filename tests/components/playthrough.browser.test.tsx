@@ -8,6 +8,7 @@
  * No mocks — Vite compiles everything including Reactylon.
  */
 
+import { Engine as BabylonEngine } from "@babylonjs/core/Engines/engine";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, expect, test } from "vitest";
 import {
@@ -20,6 +21,7 @@ import { getSnapshot, simulationTick } from "../../src/ecs/gameState";
 import { Faction, Unit } from "../../src/ecs/traits";
 import { world } from "../../src/ecs/world";
 import { movementSystem } from "../../src/systems/movement";
+import { expectVisible } from "./visual-helpers";
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
@@ -32,7 +34,15 @@ function setup() {
 	root = createRoot(container);
 }
 
-function cleanup() {
+async function cleanup() {
+	// Dispose BabylonJS engine first to prevent async texture teardown race
+	const engine = BabylonEngine.LastCreatedEngine;
+	if (engine) {
+		engine.dispose();
+	}
+	// Give async callbacks time to fire (suppressed by global handler above)
+	await new Promise((r) => setTimeout(r, 100));
+
 	if (root) {
 		root.unmount();
 		root = null;
@@ -142,4 +152,30 @@ test("full playthrough: title -> new game -> narration -> gameplay -> governor t
 	// 11. Verify action types
 	const actionTypes = new Set(log.map((a) => a.action));
 	expect(actionTypes.size).toBeGreaterThan(0);
+
+	// 12. Visual: verify HUD buttons have non-zero dimensions
+	const buttons = container!.querySelectorAll<HTMLButtonElement>("button");
+	expect(buttons.length, "gameplay should have buttons").toBeGreaterThan(0);
+
+	for (const btn of buttons) {
+		const rect = btn.getBoundingClientRect();
+		if (rect.width > 0) {
+			expectVisible(btn, btn.textContent?.trim() ?? "button");
+		}
+	}
+
+	// 13. Visual: check that a canvas exists (BabylonJS game canvas)
+	const canvases = container!.querySelectorAll("canvas");
+	expect(
+		canvases.length,
+		"should have at least one canvas",
+	).toBeGreaterThanOrEqual(1);
+	for (const canvas of canvases) {
+		expect(canvas.width, "canvas should have non-zero width").toBeGreaterThan(
+			0,
+		);
+		expect(canvas.height, "canvas should have non-zero height").toBeGreaterThan(
+			0,
+		);
+	}
 });

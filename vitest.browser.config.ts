@@ -47,6 +47,7 @@ export default defineConfig({
 			headless: false,
 			instances: [{ browser: "chromium" }],
 		},
+		setupFiles: ["tests/components/browser-setup.ts"],
 		include: ["tests/components/**/*.browser.test.tsx"],
 	},
 });

@@ -435,7 +435,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 
 export function GameCanvas({ startPos, seed }: GameCanvasProps) {
 	return (
-		<Engine engineOptions={{ premultipliedAlpha: false, alpha: false }}>
+		<Engine forceWebGL engineOptions={{ premultipliedAlpha: false, alpha: false }}>
 			<Scene onSceneReady={onSceneReady}>
 				<SceneContent startPos={startPos} seed={seed} />
 			</Scene>

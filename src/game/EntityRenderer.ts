@@ -89,8 +89,8 @@ export interface EntityRendererState {
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 /** Uniform scale applied to all robot GLBs. Models are 2.0 units tall at native scale.
- * At 1.5x they're 3m tall (1.5 tiles) — visible but not dominating. */
-const MODEL_SCALE = 1.5;
+ * At 3.0x they're 6m tall (3 tiles) — clearly visible from default camera radius 40. */
+const MODEL_SCALE = 3.0;
 
 /** Bob animation amplitude (meters). */
 const BOB_AMPLITUDE = 0.1;

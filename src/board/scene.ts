@@ -41,21 +41,21 @@ export interface ChunkMeshes {
 const FLOOR_HEIGHT = 0.15;
 
 const FLOOR_COLORS: Record<string, Color3> = {
-	transit_deck: new Color3(0.35, 0.38, 0.42),
-	durasteel_span: new Color3(0.45, 0.5, 0.55),
-	collapsed_zone: new Color3(0.35, 0.35, 0.35),
-	dust_district: new Color3(0.25, 0.25, 0.25),
-	bio_district: new Color3(0.2, 0.35, 0.2),
-	aerostructure: new Color3(0.3, 0.4, 0.5),
-	abyssal_platform: new Color3(0.08, 0.12, 0.18),
+	transit_deck: new Color3(0.25, 0.30, 0.38), // blue-grey steel corridors
+	durasteel_span: new Color3(0.35, 0.40, 0.48), // lighter steel platforms
+	collapsed_zone: new Color3(0.20, 0.18, 0.16), // dark rust-brown rubble
+	dust_district: new Color3(0.30, 0.25, 0.18), // warm dusty amber
+	bio_district: new Color3(0.12, 0.30, 0.15), // visible green — overgrown
+	aerostructure: new Color3(0.22, 0.35, 0.50), // clear blue-steel
+	abyssal_platform: new Color3(0.05, 0.10, 0.20), // deep dark blue void
 };
 
 /** Zone-specific tint applied to floor colors for geographic variety. */
 const ZONE_TINTS: Record<string, Color3> = {
 	city: new Color3(0, 0, 0), // no tint — neutral industrial
-	coast: new Color3(0.02, 0.04, 0.06), // slight blue tint — coastal
-	campus: new Color3(0.02, 0.04, 0.01), // slight green tint — organic
-	enemy: new Color3(0.04, 0.01, 0.01), // slight red tint — hostile
+	coast: new Color3(0.04, 0.08, 0.12), // blue tint — coastal
+	campus: new Color3(0.04, 0.08, 0.02), // green tint — organic
+	enemy: new Color3(0.08, 0.02, 0.02), // red tint — hostile territory
 };
 
 // ─── Variant selection ──────────────────────────────────────────────────────
@@ -109,10 +109,17 @@ function getFloorMaterial(
 	mat = new PBRMaterial(key, scene);
 	mat.roughness = VARIANT_ROUGHNESS[variant] ?? 0.85;
 	mat.metallic = def.metalness ? 0.6 : 0.1;
-	mat.albedoColor = new Color3(
+	const finalColor = new Color3(
 		Math.max(0, Math.min(1, baseColor.r + tint + zoneTint.r)),
 		Math.max(0, Math.min(1, baseColor.g + tint + zoneTint.g)),
 		Math.max(0, Math.min(1, baseColor.b + tint + zoneTint.b)),
+	);
+	mat.albedoColor = finalColor;
+	// Subtle emissive glow — gives the dark industrial sci-fi atmosphere
+	mat.emissiveColor = new Color3(
+		finalColor.r * 0.08,
+		finalColor.g * 0.10,
+		finalColor.b * 0.15,
 	);
 	mat.albedoTexture = new Texture(`/assets/textures/pbr/${def.color}`, scene);
 	mat.freeze(); // won't change — optimize
@@ -130,9 +137,12 @@ function getWallMaterial(isAlloy: boolean, scene: Scene): PBRMaterial {
 	mat.roughness = isAlloy ? 0.2 : 0.5;
 	mat.metallic = isAlloy ? 0.8 : 0.6;
 	mat.albedoColor = isAlloy
-		? new Color3(0, 0.3, 0.35)
-		: new Color3(0.11, 0.16, 0.2);
-	if (isAlloy) mat.emissiveColor = new Color3(0, 0.15, 0.15);
+		? new Color3(0.02, 0.18, 0.22) // dark cyan-tinted alloy
+		: new Color3(0.08, 0.10, 0.14); // very dark steel — walls read as shadows
+	// Alloy walls glow faintly — internal circuitry visible through cracks
+	mat.emissiveColor = isAlloy
+		? new Color3(0.0, 0.12, 0.14)
+		: new Color3(0.02, 0.03, 0.05);
 	mat.albedoTexture = new Texture(
 		`/assets/textures/pbr/${FLOOR_MATERIALS.structural_mass.color}`,
 		scene,
@@ -147,7 +157,7 @@ function getWallMaterial(isAlloy: boolean, scene: Scene): PBRMaterial {
 
 function wallHeight(tile: TileData): number {
 	const h = ((tile.x * 7 + tile.z * 13) % 17) / 17;
-	return 2 + h * 4;
+	return 1.0 + h * 1.5; // 1.0-2.5 units — shorter than robots for visibility
 }
 
 /**

@@ -177,8 +177,8 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 
 		// Final gameplay values
 		const FINAL_ALPHA = Tools.ToRadians(-90);
-		const FINAL_BETA = Tools.ToRadians(25); // 2.5D RTS perspective with depth
-		const FINAL_RADIUS = 40;
+		const FINAL_BETA = Tools.ToRadians(30); // 2.5D RTS perspective with depth
+		const FINAL_RADIUS = 25; // closer to the action — robots clearly visible
 
 		// Start zoomed out and more tilted for a dramatic intro
 		cam.target = new Vector3(startWX, 0, startWZ);
@@ -228,8 +228,8 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			cam.upperAlphaLimit = FINAL_ALPHA;
 			cam.lowerBetaLimit = Tools.ToRadians(20);
 			cam.upperBetaLimit = Tools.ToRadians(35);
-			cam.lowerRadiusLimit = 15;
-			cam.upperRadiusLimit = 80;
+			cam.lowerRadiusLimit = 12;
+			cam.upperRadiusLimit = 60;
 		});
 
 		// Pan settings
@@ -256,19 +256,19 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			new Vector3(0, 1, 0),
 			scene,
 		);
-		ambient.intensity = 0.8;
-		ambient.groundColor = new Color3(0.04, 0.08, 0.12);
-		ambient.diffuse = new Color3(0.18, 0.22, 0.3);
+		ambient.intensity = 1.2;
+		ambient.groundColor = new Color3(0.06, 0.10, 0.16);
+		ambient.diffuse = new Color3(0.25, 0.30, 0.40);
 
 		// 3. Point light near camera — soft omnidirectional glow, no projected cone
 		const cameraLight = new PointLight(
 			"camera-light",
-			new Vector3(startWX, 20, startWZ),
+			new Vector3(startWX, 18, startWZ),
 			scene,
 		);
-		cameraLight.intensity = 3;
-		cameraLight.diffuse = new Color3(0.6, 0.75, 0.9);
-		cameraLight.range = 120;
+		cameraLight.intensity = 5;
+		cameraLight.diffuse = new Color3(0.55, 0.70, 0.90);
+		cameraLight.range = 80;
 
 		// Follow camera target
 		const cameraLightCallback = () => {
@@ -354,6 +354,9 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		let entityRenderCallback: (() => void) | null = null;
 		let sceneDisposed = false;
 
+		// Expose scene for diagnostics (dev only)
+		(window as Record<string, unknown>).__babylonScene = scene;
+
 		initEntityRenderer(scene)
 			.then((entityState) => {
 				// Guard: scene may have been disposed while GLBs were loading
@@ -362,6 +365,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 					return;
 				}
 				entityStateRef.current = entityState;
+				(window as Record<string, unknown>).__entityState = entityState;
 
 				// Sync entity meshes every frame
 				entityRenderCallback = () => {

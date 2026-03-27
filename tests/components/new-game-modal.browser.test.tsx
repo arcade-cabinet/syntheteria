@@ -132,7 +132,7 @@ test("re-roll button generates new seed", async () => {
 	await flush();
 
 	const input = container!.querySelector("input")!;
-	const originalSeed = input.value;
+	const _originalSeed = input.value;
 
 	// Find the re-roll button (↻ unicode character)
 	const buttons = container!.querySelectorAll("button");

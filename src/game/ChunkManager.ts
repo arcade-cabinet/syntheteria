@@ -201,7 +201,7 @@ function spawnChunkEntities(spawns: ChunkEntitySpawn[]): Entity[] {
 						EntityId({ value: id }),
 						Position({ x: wx, y, z: wz }),
 						ScavengeSite({
-							materialType: spawn.materialType ?? "scrap_metal",
+							materialType: spawn.materialType ?? "scrapMetal",
 							amountPerScavenge: 2,
 							remaining: spawn.remaining ?? 3,
 						}),

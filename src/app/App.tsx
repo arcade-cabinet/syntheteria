@@ -14,6 +14,7 @@ import {
 	stopAmbience,
 	stopMusic,
 } from "../audio";
+import { selectBase } from "../components/base/BasePanel";
 import type { DialogueSequence } from "../config/narrativeDefs";
 import {
 	EXPANSION_SEQUENCE,
@@ -29,10 +30,9 @@ import {
 	subscribe,
 	togglePause,
 } from "../ecs/gameState";
-import { selectBase } from "../components/base/BasePanel";
-import { deselectAll } from "../input/selection";
 import { reportFatalError } from "../errors";
 import { GameCanvas } from "../game/GameCanvas";
+import { deselectAll } from "../input/selection";
 import { popStoryTrigger } from "../systems/storyTriggers";
 import { GameLayout } from "../views/game/GameLayout";
 import { NarrativeOverlay } from "../views/game/NarrativeOverlay";
@@ -65,7 +65,9 @@ export default function App() {
 		"title",
 	);
 	const [fading, setFading] = useState(false);
-	const pendingPhaseRef = useRef<"title" | "narration" | "playing" | null>(null);
+	const pendingPhaseRef = useRef<"title" | "narration" | "playing" | null>(
+		null,
+	);
 	const [phaseNarrative, setPhaseNarrative] = useState<DialogueSequence | null>(
 		null,
 	);
@@ -223,10 +225,7 @@ export default function App() {
 		content = (
 			<div className="touch-none">
 				<GameLayout>
-					<GameCanvas
-						startPos={startPos}
-						seed={gameConfigRef.current.seed}
-					/>
+					<GameCanvas startPos={startPos} seed={gameConfigRef.current.seed} />
 					<GameOverlays snap={snap as GameSnapshot} />
 					<DebugOverlay />
 					{phaseNarrative && (

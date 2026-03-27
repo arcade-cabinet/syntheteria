@@ -311,7 +311,11 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 
 		// One-time material clone + base tint
 		for (const mesh of entry.meshes) {
-			if (mesh.material && mesh.material instanceof StandardMaterial && !mesh.metadata?.tinted) {
+			if (
+				mesh.material &&
+				mesh.material instanceof StandardMaterial &&
+				!mesh.metadata?.tinted
+			) {
 				mesh.material = mesh.material.clone(`${mesh.material.name}-${faction}`);
 				mesh.metadata = { ...mesh.metadata, tinted: true };
 			}
@@ -325,11 +329,15 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 			if (mesh.material && mesh.material instanceof StandardMaterial) {
 				if (isCultist) {
 					(mesh.material as StandardMaterial).emissiveColor = new Color3(
-						0.3 + pulse * 0.25, 0.02 + pulse * 0.05, 0.02,
+						0.3 + pulse * 0.25,
+						0.02 + pulse * 0.05,
+						0.02,
 					);
 				} else {
 					(mesh.material as StandardMaterial).emissiveColor = new Color3(
-						0.02 + pulse * 0.03, 0.1 + pulse * 0.1, 0.15 + pulse * 0.12,
+						0.02 + pulse * 0.03,
+						0.1 + pulse * 0.1,
+						0.15 + pulse * 0.12,
 					);
 				}
 			}
@@ -338,11 +346,17 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 		// Spotlight pool — creates visible attention ring around selected unit
 		if (unit.selected && !entry.spotlight) {
 			const spot = new SpotLight(
-				`spot-${eid}`, new Vector3(pos.x, 15, pos.z),
-				new Vector3(0, -1, 0), Math.PI / 4, 3, scene,
+				`spot-${eid}`,
+				new Vector3(pos.x, 15, pos.z),
+				new Vector3(0, -1, 0),
+				Math.PI / 4,
+				3,
+				scene,
 			);
 			spot.intensity = 8;
-			spot.diffuse = isCultist ? new Color3(1, 0.4, 0.2) : new Color3(0.4, 0.9, 1);
+			spot.diffuse = isCultist
+				? new Color3(1, 0.4, 0.2)
+				: new Color3(0.4, 0.9, 1);
 			spot.range = 20;
 			entry.spotlight = spot;
 		} else if (!unit.selected && entry.spotlight) {
@@ -363,9 +377,16 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 		}
 	}
 
-	// ── Combat damage flash ─────────────────────────────────────────────
+	// ── Combat damage flash + death notification ───────────────────────
 	for (const event of getLastCombatEvents()) {
 		showDamageFlash(event.targetId, state);
+		if (event.targetDestroyed) {
+			const entry = state.entityMeshes.get(event.targetId);
+			const unitName = entry?.unitType ?? event.targetId;
+			console.warn(
+				`[UNIT LOST] Player unit "${unitName}" (${event.targetId}) was destroyed in combat`,
+			);
+		}
 	}
 
 	// ── Salvage node sync ────────────────────────────────────────────────

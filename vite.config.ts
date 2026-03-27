@@ -27,7 +27,7 @@ export default defineConfig({
 					if (!id.includes("node_modules")) {
 						return undefined;
 					}
-						if (id.includes("@babylonjs/loaders")) {
+					if (id.includes("@babylonjs/loaders")) {
 						return "babylon-loaders";
 					}
 					if (id.includes("@babylonjs/gui")) {

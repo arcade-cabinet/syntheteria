@@ -179,9 +179,9 @@ function forcePassable(tiles: TileData[][], lx: number, lz: number): void {
 // ─── Entity spawn generation (US-1.2) ───────────────────────────────────────
 
 /** Scavenge material types by rarity band. */
-const COMMON_MATERIALS = ["scrap_metal", "e_waste", "ferrous_scrap"];
-const UNCOMMON_MATERIALS = ["polymer_salvage", "conductor_wire", "alloy_stock"];
-const RARE_MATERIALS = ["silicon_wafer", "electrolyte", "storm_charge"];
+const COMMON_MATERIALS = ["scrapMetal", "circuitry", "powerCells"];
+const UNCOMMON_MATERIALS = ["scrapMetal", "circuitry", "durasteel"];
+const RARE_MATERIALS = ["durasteel", "powerCells", "circuitry"];
 
 /**
  * Deterministically generate entity spawn descriptors for a chunk.

@@ -45,12 +45,14 @@ function ResourceBadge({
 		<span
 			title={label}
 			className={cn(
-				"inline-flex items-center gap-1 rounded px-2 py-0.5",
-				"bg-black/40 border border-current/20 text-sm font-bold tracking-wide",
+				"inline-flex items-center gap-1 rounded px-1.5 py-0.5",
+				"bg-black/40 border border-current/20 text-[11px] sm:text-sm font-bold tracking-wide",
 				colorClass,
 			)}
 		>
-			<span className="text-[11px] font-normal opacity-70">{icon}</span>
+			<span className="text-[10px] sm:text-[11px] font-normal opacity-70">
+				{icon}
+			</span>
 			<span>{value}</span>
 		</span>
 	);
@@ -62,11 +64,12 @@ function TemperatureGauge({ value }: { value: number }) {
 
 	return (
 		<div
-			className="flex items-center gap-1.5 text-[13px]"
+			className="flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-[13px]"
 			title={tierDef.effect}
 		>
 			<span style={{ color: tierDef.color }} className="whitespace-nowrap">
-				HUMAN: {tierDef.displayName.toUpperCase()}
+				<span className="hidden sm:inline">HUMAN: </span>
+				{tierDef.displayName.toUpperCase()}
 			</span>
 			<div className="w-[70px] h-2 bg-white/10 rounded overflow-hidden">
 				<div
@@ -249,13 +252,13 @@ export function TopBar() {
 			{/* Row 1: Status + Speed */}
 			<div
 				className={cn(
-					"flex justify-between items-center px-4 py-2.5",
+					"flex justify-between items-center px-2 sm:px-4 py-2 sm:py-2.5",
 					"bg-gradient-to-b from-black/85 via-black/40 to-transparent",
 					"flex-wrap gap-y-1.5",
 				)}
 			>
 				{/* Left: unit/building/fragment counts */}
-				<div className="flex gap-5 text-[15px] items-center font-bold tracking-wide">
+				<div className="flex gap-3 sm:gap-5 text-[13px] sm:text-[15px] items-center font-bold tracking-wide">
 					<span title="Player units">{snap.unitCount} UNITS</span>
 					{snap.enemyCount > 0 && (
 						<span className="text-red-500" title="Hostile units detected">
@@ -291,7 +294,7 @@ export function TopBar() {
 			</div>
 
 			{/* Row 2: Resource badges + power + temperature */}
-			<div className="flex flex-wrap items-center gap-1.5 px-4 pb-2.5 text-sm text-cyan-400/80">
+			<div className="flex flex-wrap items-center gap-1 sm:gap-1.5 px-2 sm:px-4 pb-2 sm:pb-2.5 text-sm text-cyan-400/80">
 				<ResourceBadge
 					icon="Fe"
 					label="Scrap Metal"
@@ -318,14 +321,17 @@ export function TopBar() {
 				/>
 				<div className="w-2" />
 				<span
-					className={cn("text-[13px]", stormColor(snap.power.stormIntensity))}
+					className={cn(
+						"text-[11px] sm:text-[13px]",
+						stormColor(snap.power.stormIntensity),
+					)}
 					title="Storm Intensity"
 				>
 					STORM {snap.power.stormIntensity}%
 				</span>
 				<span
 					className={cn(
-						"text-[13px]",
+						"text-[11px] sm:text-[13px]",
 						(() => {
 							const gen = snap.power.totalGeneration;
 							const demand = snap.power.totalDemand;

@@ -247,9 +247,13 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		sun.diffuse = new Color3(...epoch1.sunColor);
 
 		// 2. Ambient fill — subtle hemispheric for shadow softening
-		const ambient = new HemisphericLight("ambient", new Vector3(0, 1, 0), scene);
+		const ambient = new HemisphericLight(
+			"ambient",
+			new Vector3(0, 1, 0),
+			scene,
+		);
 		ambient.intensity = 0.6;
-		ambient.groundColor = new Color3(0.03, 0.06, 0.10);
+		ambient.groundColor = new Color3(0.03, 0.06, 0.1);
 		ambient.diffuse = new Color3(0.15, 0.18, 0.25);
 
 		// 3. Spot light pool — follows camera target, illuminates active area
@@ -390,7 +394,20 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		// Input handler — click-to-select, click-to-move, box selection
 		const disposeInput = initInput(scene, () => entityStateRef.current);
 
+		// Handle window/canvas resize — without this the WebGPU surface goes black
+		const engine = scene.getEngine();
+		const resizeHandler = () => engine.resize();
+		window.addEventListener("resize", resizeHandler);
+		let resizeObserver: ResizeObserver | null = null;
+		const canvas = engine.getRenderingCanvas();
+		if (canvas?.parentElement) {
+			resizeObserver = new ResizeObserver(() => engine.resize());
+			resizeObserver.observe(canvas.parentElement);
+		}
+
 		return () => {
+			window.removeEventListener("resize", resizeHandler);
+			resizeObserver?.disconnect();
 			disposeInput();
 			scene.unregisterBeforeRender(cameraTrackCallback);
 			scene.unregisterBeforeRender(gameLoopCallback);

@@ -121,7 +121,12 @@ export function initInput(
 
 		const entityState = getEntityState();
 		if (entityState) {
-			const hitEntityId = getEntityAtPoint(entityState, scene, screenX, screenY);
+			const hitEntityId = getEntityAtPoint(
+				entityState,
+				scene,
+				screenX,
+				screenY,
+			);
 			if (hitEntityId) {
 				const entity = findEntityByIdString(hitEntityId);
 				if (entity && isEnemy(entity)) {

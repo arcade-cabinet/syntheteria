@@ -10,13 +10,12 @@
 
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, expect, test } from "vitest";
-
-import App from "../../src/app/App";
 import {
 	clearGovernorLog,
 	enableAutoPlay,
 	getGovernorLog,
 } from "../../src/ai/governor/PlaytestGovernor";
+import App from "../../src/app/App";
 import { getSnapshot, simulationTick } from "../../src/ecs/gameState";
 import { Faction, Unit } from "../../src/ecs/traits";
 import { world } from "../../src/ecs/world";
@@ -28,8 +27,7 @@ let container: HTMLDivElement | null = null;
 function setup() {
 	container = document.createElement("div");
 	container.id = "playtest-root";
-	container.style.cssText =
-		"width:100vw;height:100vh;position:fixed;inset:0;";
+	container.style.cssText = "width:100vw;height:100vh;position:fixed;inset:0;";
 	document.body.appendChild(container);
 	root = createRoot(container);
 }
@@ -51,10 +49,7 @@ async function flush(ms = 200) {
 	await new Promise((r) => setTimeout(r, ms));
 }
 
-async function waitForText(
-	text: string,
-	timeoutMs = 8000,
-): Promise<void> {
+async function waitForText(text: string, timeoutMs = 8000): Promise<void> {
 	const start = Date.now();
 	while (Date.now() - start < timeoutMs) {
 		if ((container!.textContent ?? "").includes(text)) return;

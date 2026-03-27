@@ -148,7 +148,7 @@ test("'Click ground to move' instruction text present", async () => {
 });
 
 test("STANCE cycles on click (ATK -> DEF -> HOLD -> FLEE)", async () => {
-	const entity = spawnSelectedPlayerUnit("ap_6");
+	const _entity = spawnSelectedPlayerUnit("ap_6");
 	root!.render(<ActionPanel />);
 	await flush();
 

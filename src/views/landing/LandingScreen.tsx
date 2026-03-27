@@ -140,8 +140,18 @@ export function LandingScreen({
 							}}
 							primary
 						/>
-						<MenuButton label="CONTINUE" onClick={() => {}} disabled title="No saved game found" />
-						<MenuButton label="SETTINGS" onClick={() => {}} disabled title="Coming soon" />
+						<MenuButton
+							label="CONTINUE"
+							onClick={() => {}}
+							disabled
+							title="No saved game found"
+						/>
+						<MenuButton
+							label="SETTINGS"
+							onClick={() => {}}
+							disabled
+							title="Coming soon"
+						/>
 					</div>
 				</div>
 

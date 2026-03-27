@@ -18,7 +18,7 @@ import { Tools } from "@babylonjs/core/Misc/tools";
 import "@babylonjs/core/Helpers/sceneHelpers";
 import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
-import { SpotLight } from "@babylonjs/core/Lights/spotLight";
+import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { useEffect, useRef } from "react";
 import { Scene, useScene } from "reactylon";
 import { Engine } from "reactylon/web";
@@ -71,19 +71,8 @@ export interface GameCanvasProps {
 function onSceneReady(scene: BScene) {
 	scene.createDefaultCameraOrLight(true, undefined, true);
 
-	// Force opaque canvas — WebGPU defaults to premultiplied alpha which
-	// composites transparent clearColor as white. Set premultipliedAlpha=false
-	// on the engine to make it use alphaMode: "opaque".
-	const engine = scene.getEngine();
-	(engine as { premultipliedAlpha: boolean }).premultipliedAlpha = false;
-	// Reconfigure the WebGPU context with opaque alpha mode
-	if (
-		"_configureContext" in engine &&
-		typeof (engine as Record<string, unknown>)._configureContext === "function"
-	) {
-		(engine as Record<string, () => void>)._configureContext();
-	}
-	const canvas = engine.getRenderingCanvas();
+	// Canvas CSS background matches void color — handles WebGPU alpha transparency
+	const canvas = scene.getEngine().getRenderingCanvas();
 	if (canvas) {
 		canvas.style.background = "#03070b";
 	}
@@ -246,36 +235,32 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		sun.intensity = epoch1.sunIntensity;
 		sun.diffuse = new Color3(...epoch1.sunColor);
 
-		// 2. Ambient fill — subtle hemispheric for shadow softening
+		// 2. Ambient fill — hemispheric provides base visibility everywhere
 		const ambient = new HemisphericLight(
 			"ambient",
 			new Vector3(0, 1, 0),
 			scene,
 		);
-		ambient.intensity = 0.6;
-		ambient.groundColor = new Color3(0.03, 0.06, 0.1);
-		ambient.diffuse = new Color3(0.15, 0.18, 0.25);
+		ambient.intensity = 0.8;
+		ambient.groundColor = new Color3(0.04, 0.08, 0.12);
+		ambient.diffuse = new Color3(0.18, 0.22, 0.30);
 
-		// 3. Spot light pool — follows camera target, illuminates active area
-		//    Creates a visible "pool of light" around where the player is looking
-		const spotPool = new SpotLight(
-			"spot-pool",
-			new Vector3(startWX, 25, startWZ), // high above player
-			new Vector3(0, -1, 0), // straight down
-			Math.PI / 3, // 60° cone angle — wide pool
-			2, // exponent — soft falloff
+		// 3. Point light near camera — soft omnidirectional glow, no projected cone
+		const cameraLight = new PointLight(
+			"camera-light",
+			new Vector3(startWX, 20, startWZ),
 			scene,
 		);
-		spotPool.intensity = 15;
-		spotPool.diffuse = new Color3(0.7, 0.85, 1.0); // cool white-blue
-		spotPool.range = 80; // covers nearby chunks
+		cameraLight.intensity = 3;
+		cameraLight.diffuse = new Color3(0.6, 0.75, 0.9);
+		cameraLight.range = 120;
 
-		// Update spot light position to follow camera each frame
+		// Follow camera target
 		scene.registerBeforeRender(() => {
 			const cam = scene.activeCamera as ArcRotateCamera;
 			if (cam) {
-				spotPool.position.x = cam.target.x;
-				spotPool.position.z = cam.target.z;
+				cameraLight.position.x = cam.target.x;
+				cameraLight.position.z = cam.target.z;
 			}
 		});
 
@@ -394,19 +379,21 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		// Input handler — click-to-select, click-to-move, box selection
 		const disposeInput = initInput(scene, () => entityStateRef.current);
 
-		// Handle window/canvas resize — without this the WebGPU surface goes black
+		// Handle window/canvas resize
 		const engine = scene.getEngine();
-		const resizeHandler = () => engine.resize();
-		window.addEventListener("resize", resizeHandler);
+		const handleResize = () => {
+			engine.resize();
+		};
+		window.addEventListener("resize", handleResize);
 		let resizeObserver: ResizeObserver | null = null;
-		const canvas = engine.getRenderingCanvas();
-		if (canvas?.parentElement) {
-			resizeObserver = new ResizeObserver(() => engine.resize());
-			resizeObserver.observe(canvas.parentElement);
+		const resizeCanvas = engine.getRenderingCanvas();
+		if (resizeCanvas?.parentElement) {
+			resizeObserver = new ResizeObserver(handleResize);
+			resizeObserver.observe(resizeCanvas.parentElement);
 		}
 
 		return () => {
-			window.removeEventListener("resize", resizeHandler);
+			window.removeEventListener("resize", handleResize);
 			resizeObserver?.disconnect();
 			disposeInput();
 			scene.unregisterBeforeRender(cameraTrackCallback);

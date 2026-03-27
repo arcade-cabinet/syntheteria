@@ -10,6 +10,7 @@
  */
 
 import type { AssetContainer } from "@babylonjs/core/assetContainer";
+import { SpotLight } from "@babylonjs/core/Lights/spotLight";
 import { LoadAssetContainerAsync } from "@babylonjs/core/Loading/sceneLoader";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
@@ -59,6 +60,8 @@ interface EntityMeshEntry {
 	bobPhase: number;
 	/** Current selection ring opacity for fade animation (0–0.8). */
 	selectionRingOpacity: number;
+	/** Per-entity spotlight that activates on selection (pool of attention). */
+	spotlight: SpotLight | null;
 }
 
 /** State bag for the entity renderer, managed imperatively. */
@@ -83,8 +86,9 @@ export interface EntityRendererState {
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-/** Uniform scale applied to all robot GLBs. Must be visible at 25° camera / radius 60. */
-const MODEL_SCALE = 2.0;
+/** Uniform scale applied to all robot GLBs. Models are 2.0 units tall at native scale.
+ * At 1.5x they're 3m tall (1.5 tiles) — visible but not dominating. */
+const MODEL_SCALE = 1.5;
 
 /** Bob animation amplitude (meters). */
 const BOB_AMPLITUDE = 0.1;
@@ -301,23 +305,53 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 			entry.selectionRing.setEnabled(false);
 		}
 
-		// Faction-based coloring — tint cult units red
+		// Faction-based coloring — PULSING emissive glow in contrasting colors
 		const faction = entity.has(Faction) ? entity.get(Faction)!.value : "player";
-		if (faction === "cultist") {
-			for (const mesh of entry.meshes) {
-				if (mesh.material && mesh.material instanceof StandardMaterial) {
-					// Only tint once
-					if (!mesh.metadata?.tinted) {
-						mesh.material = mesh.material.clone(`${mesh.material.name}-cult`);
-						(mesh.material as StandardMaterial).emissiveColor = new Color3(
-							0.4,
-							0,
-							0,
-						);
-						mesh.metadata = { ...mesh.metadata, tinted: true };
-					}
+		const isCultist = faction === "cultist";
+
+		// One-time material clone + base tint
+		for (const mesh of entry.meshes) {
+			if (mesh.material && mesh.material instanceof StandardMaterial && !mesh.metadata?.tinted) {
+				mesh.material = mesh.material.clone(`${mesh.material.name}-${faction}`);
+				mesh.metadata = { ...mesh.metadata, tinted: true };
+			}
+		}
+
+		// Pulsing emissive — sine wave creates breathing glow effect
+		// Player: cyan-white pulse (contrasts with warm spotlight)
+		// Cult: red-orange pulse (stands out against blue flood light)
+		const pulse = 0.5 + 0.5 * Math.sin(time * 2.0 + entry.bobPhase);
+		for (const mesh of entry.meshes) {
+			if (mesh.material && mesh.material instanceof StandardMaterial) {
+				if (isCultist) {
+					(mesh.material as StandardMaterial).emissiveColor = new Color3(
+						0.3 + pulse * 0.25, 0.02 + pulse * 0.05, 0.02,
+					);
+				} else {
+					(mesh.material as StandardMaterial).emissiveColor = new Color3(
+						0.02 + pulse * 0.03, 0.1 + pulse * 0.1, 0.15 + pulse * 0.12,
+					);
 				}
 			}
+		}
+
+		// Spotlight pool — creates visible attention ring around selected unit
+		if (unit.selected && !entry.spotlight) {
+			const spot = new SpotLight(
+				`spot-${eid}`, new Vector3(pos.x, 15, pos.z),
+				new Vector3(0, -1, 0), Math.PI / 4, 3, scene,
+			);
+			spot.intensity = 8;
+			spot.diffuse = isCultist ? new Color3(1, 0.4, 0.2) : new Color3(0.4, 0.9, 1);
+			spot.range = 20;
+			entry.spotlight = spot;
+		} else if (!unit.selected && entry.spotlight) {
+			entry.spotlight.dispose();
+			entry.spotlight = null;
+		}
+		// Move spotlight with unit
+		if (entry.spotlight) {
+			entry.spotlight.position.set(pos.x, 15, pos.z);
 		}
 	}
 
@@ -516,10 +550,15 @@ function createFromContainer(
 		baseY: pos.y,
 		bobPhase: hashEntityId(entityId),
 		selectionRingOpacity: 0,
+		spotlight: null,
 	};
 }
 
 function disposeEntry(entry: EntityMeshEntry): void {
+	if (entry.spotlight) {
+		entry.spotlight.dispose();
+		entry.spotlight = null;
+	}
 	// Dispose selection ring and its per-entity cloned material
 	if (entry.selectionRing.material) {
 		entry.selectionRing.material.dispose();

@@ -19,7 +19,7 @@ import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import "@babylonjs/core/Helpers/sceneHelpers";
 import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
-import { PointLight } from "@babylonjs/core/Lights/pointLight";
+import { SpotLight } from "@babylonjs/core/Lights/spotLight";
 import { useEffect, useRef } from "react";
 import { Scene, useScene } from "reactylon";
 import { Engine } from "reactylon/web";
@@ -243,27 +243,40 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		cam.inertia = 0;
 		cam.panningInertia = 0;
 
-		// Create lights imperatively (Reactylon JSX inventory issues with Vite tree-shaking)
+		// ── Three-layer lighting system ──────────────────────────────────
+		// 1. Flood light (directional) — broad soft fill for environment readability
 		const sun = new DirectionalLight("sun", new Vector3(-0.3, -1, 0.3), scene);
 		sun.intensity = epoch1.sunIntensity;
 		sun.diffuse = new Color3(...epoch1.sunColor);
 
-		const ambient = new HemisphericLight(
-			"ambient",
-			new Vector3(0, 1, 0),
-			scene,
-		);
-		ambient.intensity = 0.5;
-		ambient.groundColor = new Color3(0.02, 0.06, 0.08);
-		ambient.diffuse = new Color3(0.12, 0.15, 0.2);
+		// 2. Ambient fill — subtle hemispheric for shadow softening
+		const ambient = new HemisphericLight("ambient", new Vector3(0, 1, 0), scene);
+		ambient.intensity = 0.6;
+		ambient.groundColor = new Color3(0.03, 0.06, 0.10);
+		ambient.diffuse = new Color3(0.15, 0.18, 0.25);
 
-		const accent = new PointLight(
-			"accent",
-			new Vector3(startWX, 8, startWZ),
+		// 3. Spot light pool — follows camera target, illuminates active area
+		//    Creates a visible "pool of light" around where the player is looking
+		const spotPool = new SpotLight(
+			"spot-pool",
+			new Vector3(startWX, 25, startWZ), // high above player
+			new Vector3(0, -1, 0), // straight down
+			Math.PI / 3, // 60° cone angle — wide pool
+			2, // exponent — soft falloff
 			scene,
 		);
-		accent.intensity = 2;
-		accent.diffuse = new Color3(0, 1, 1);
+		spotPool.intensity = 15;
+		spotPool.diffuse = new Color3(0.7, 0.85, 1.0); // cool white-blue
+		spotPool.range = 80; // covers nearby chunks
+
+		// Update spot light position to follow camera each frame
+		scene.registerBeforeRender(() => {
+			const cam = scene.activeCamera as ArcRotateCamera;
+			if (cam) {
+				spotPool.position.x = cam.target.x;
+				spotPool.position.z = cam.target.z;
+			}
+		});
 
 		// Hub marker — cyan pyramid at player start
 		const hubMesh = MeshBuilder.CreateCylinder(

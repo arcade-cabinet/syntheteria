@@ -8,9 +8,9 @@
 
 ## Current State
 
-**Landing page renders (globe + WGSL shaders working on WebGPU). Game canvas renders labyrinth + robots. Major restructure complete.**
+**Playable. All 22 PRD stories implemented. Victory/defeat conditions. Board generates all entities.**
 
-- 770 unit tests, 61 suites, 10 browser test files, 0 tsc errors, 0 lint errors
+- 780 unit tests, 62 suites, 51 browser tests, 0 tsc errors, 0 lint errors
 - Build: Vite 8 + @vitejs/plugin-react + babel-plugin-reactylon
 - Landing: BabylonJS storm globe with WGSL custom ShaderMaterial (WebGPU native)
 - Gameplay: BabylonJS/Reactylon game canvas, 25° camera, fog of war, salvage nodes
@@ -97,7 +97,7 @@ src/
 ## Testing
 
 ```bash
-pnpm test           # 770 unit tests (vitest, jsdom)
+pnpm test           # 780 unit tests (vitest, jsdom)
 pnpm test:browser   # browser tests (vitest, headed Chrome, zero mocks)
 pnpm tsc            # Type check (0 errors)
 pnpm lint           # Biome lint (0 errors)

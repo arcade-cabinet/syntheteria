@@ -8,6 +8,8 @@ import type { Entity } from "koota";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	BuildingTrait,
+	EntityId,
+	Faction,
 	Fragment,
 	Navigation,
 	Position,
@@ -31,13 +33,17 @@ vi.mock("../../systems/pathfinding", () => ({
 
 const entities: Entity[] = [];
 
+let unitCounter = 0;
+
 function spawnUnit(
 	x: number,
 	z: number,
 	opts?: { selected?: boolean },
 ): Entity {
 	const e = world.spawn(
+		EntityId({ value: `sel_unit_${unitCounter++}` }),
 		Position({ x, y: 0, z }),
+		Faction({ value: "player" }),
 		Fragment({ fragmentId: "" }),
 		Unit({
 			unitType: "maintenance_bot",
@@ -77,6 +83,28 @@ afterEach(() => {
 		if (e.has(Position)) e.destroy();
 	}
 	entities.length = 0;
+});
+
+// ─── Full select/deselect chain with all traits ─────────────────────────────
+
+describe("click-to-select chain (EntityId + Position + Unit + Faction)", () => {
+	it("spawns with all required traits, selects, then deselects", () => {
+		const unit = spawnUnit(10, 10);
+
+		// Verify all traits are present
+		expect(unit.has(EntityId)).toBe(true);
+		expect(unit.has(Position)).toBe(true);
+		expect(unit.has(Unit)).toBe(true);
+		expect(unit.has(Faction)).toBe(true);
+
+		// Select
+		selectEntity(unit);
+		expect(unit.get(Unit)!.selected).toBe(true);
+
+		// Deselect
+		deselectAll();
+		expect(unit.get(Unit)!.selected).toBe(false);
+	});
 });
 
 // ─── selectEntity + deselectAll ──────────────────────────────────────────────

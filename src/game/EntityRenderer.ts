@@ -82,6 +82,8 @@ export interface EntityRendererState {
 	modelsTotal: number;
 	/** Salvage node meshes keyed by Koota entity numeric ID. */
 	salvageMeshes: Map<number, SalvageMeshEntry>;
+	/** Model URLs that failed to load — prevents per-frame error spam. */
+	failedModelUrls: Set<string>;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -238,6 +240,7 @@ export async function initEntityRenderer(
 		modelsLoaded,
 		modelsTotal,
 		salvageMeshes: new Map(),
+		failedModelUrls: new Set(),
 	};
 }
 
@@ -432,6 +435,7 @@ export function disposeEntityRenderer(state: EntityRendererState): void {
 
 	disposeBaseMarkers(state.baseMarkers);
 	state.selectionMaterial.dispose();
+	state.failedModelUrls.clear();
 	state.ready = false;
 
 	// Clear all pending damage flash timers to prevent leaks
@@ -466,13 +470,16 @@ function createEntityMesh(
 	const container = state.assetPool.get(modelUrl);
 
 	if (!container) {
-		logError(
-			new GameError(
-				`No model loaded for unit type "${unitType}" (url: ${modelUrl})`,
-				"EntityRenderer",
-				{ entityId },
-			),
-		);
+		if (!state.failedModelUrls.has(modelUrl)) {
+			state.failedModelUrls.add(modelUrl);
+			logError(
+				new GameError(
+					`No model loaded for unit type "${unitType}" (url: ${modelUrl})`,
+					"EntityRenderer",
+					{ entityId },
+				),
+			);
+		}
 		return undefined;
 	}
 
@@ -598,7 +605,7 @@ function syncSalvageNodes(
 	for (const entity of world.query(ScavengeSite, Position)) {
 		const site = entity.get(ScavengeSite)!;
 		const pos = entity.get(Position)!;
-		const eid = entity as unknown as number; // Koota entities ARE numbers
+		const eid = entity.id();
 
 		// Skip depleted sites
 		if (site.remaining <= 0) continue;
@@ -616,16 +623,14 @@ function syncSalvageNodes(
 		// Update position (salvage nodes don't move, but just in case)
 		entry.root.position.set(pos.x, pos.y, pos.z);
 
-		// Pulsing emissive animation
+		// Pulsing emissive animation — mutate in place to avoid GC churn
 		const pulse =
 			SALVAGE_PULSE_MIN +
 			(SALVAGE_PULSE_MAX - SALVAGE_PULSE_MIN) *
 				(0.5 + 0.5 * Math.sin(time * SALVAGE_PULSE_SPEED + entry.pulsePhase));
-		entry.material.emissiveColor = new Color3(
-			entry.baseColor.r * pulse,
-			entry.baseColor.g * pulse,
-			entry.baseColor.b * pulse,
-		);
+		entry.material.emissiveColor.r = entry.baseColor.r * pulse;
+		entry.material.emissiveColor.g = entry.baseColor.g * pulse;
+		entry.material.emissiveColor.b = entry.baseColor.b * pulse;
 	}
 
 	// Dispose meshes for entities that no longer exist or are depleted

@@ -271,15 +271,19 @@ function handleClick(
 			const worldZ = pickResult.pickedPoint.z;
 
 			// Issue move command to all selected units
+			let movedAny = false;
 			for (const entity of selected) {
 				if (entity.has(Unit)) {
 					issueMoveTo(entity, worldX, worldZ);
+					movedAny = true;
 				}
 			}
 
-			// Show destination marker and play move SFX
-			showMoveMarker(scene, worldX, worldZ);
-			playSfx("unit_move");
+			// Show destination marker and play move SFX only if a unit moved
+			if (movedAny) {
+				showMoveMarker(scene, worldX, worldZ);
+				playSfx("unit_move");
+			}
 			return;
 		}
 	}

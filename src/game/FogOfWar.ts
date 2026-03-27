@@ -104,11 +104,12 @@ function getBestFogState(
 	worldX: number,
 	worldZ: number,
 ): FogState {
+	const idx = worldToFogIndex(worldX, worldZ);
+	if (idx < 0) return 0;
+
 	let best: FogState = 0;
 
 	for (const frag of fragments) {
-		const idx = worldToFogIndex(worldX, worldZ);
-		if (idx < 0) continue;
 		const state = frag.fog[idx] as FogState;
 		if (state > best) {
 			best = state;

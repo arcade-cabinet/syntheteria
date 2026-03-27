@@ -313,6 +313,12 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		// ── Game loop: movement (per-frame) + simulation tick (fixed interval) ──
 		const SIM_INTERVAL = 1.0; // seconds of game time between ticks
 		const gameLoopCallback = () => {
+			// Update visual fog-of-war every frame (even when paused)
+			// so fog refreshes immediately after camera pan or selection changes.
+			if (chunkStateRef.current) {
+				updateFogVisibility(chunkStateRef.current);
+			}
+
 			const speed = getGameSpeed();
 			if (speed <= 0) return; // paused
 
@@ -326,11 +332,6 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			while (simAccumulatorRef.current >= SIM_INTERVAL) {
 				simAccumulatorRef.current -= SIM_INTERVAL;
 				simulationTick();
-			}
-
-			// Update visual fog-of-war after simulation (reads fog grid, sets mesh visibility)
-			if (chunkStateRef.current) {
-				updateFogVisibility(chunkStateRef.current);
 			}
 
 			// Update gameplay lightning (creates/removes bolts)

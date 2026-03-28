@@ -326,32 +326,25 @@ export function syncEntities(state: EntityRendererState, scene: Scene): void {
 
 		// Pulsing emissive — sine wave creates breathing glow effect
 		// Selected units get a brighter emissive boost for clear feedback
-		// (replaces old per-entity SpotLight which caused solid-circle WebGPU bug)
 		const pulse = 0.5 + 0.5 * Math.sin(time * 2.0 + entry.bobPhase);
-		const selectionBoost = unit.selected ? 2.0 : 1.0;
+		const sel = unit.selected ? 2.0 : 1.0;
 		const isCultLeader = isCultist && unit.displayName === "Cult Leader";
 		for (const mesh of entry.meshes) {
 			if (mesh.material && mesh.material instanceof StandardMaterial) {
+				const em = (mesh.material as StandardMaterial).emissiveColor;
 				if (isCultLeader) {
-					// Cult leader: bright red-white pulse at 2x emissive intensity
-					const leaderBoost = 2.0;
-					(mesh.material as StandardMaterial).emissiveColor = new Color3(
-						(0.6 + pulse * 0.4) * selectionBoost * leaderBoost,
-						(0.15 + pulse * 0.25) * selectionBoost * leaderBoost,
-						(0.1 + pulse * 0.2) * selectionBoost * leaderBoost,
-					);
+					em.r = (0.6 + pulse * 0.4) * sel * 2.0;
+					em.g = (0.15 + pulse * 0.25) * sel * 2.0;
+					em.b = (0.1 + pulse * 0.2) * sel * 2.0;
 				} else if (isCultist) {
-					(mesh.material as StandardMaterial).emissiveColor = new Color3(
-						(0.3 + pulse * 0.25) * selectionBoost,
-						(0.02 + pulse * 0.05) * selectionBoost,
-						0.02 * selectionBoost,
-					);
+					em.r = (0.3 + pulse * 0.25) * sel;
+					em.g = (0.02 + pulse * 0.05) * sel;
+					em.b = 0.02 * sel;
 				} else {
-					(mesh.material as StandardMaterial).emissiveColor = new Color3(
-						(0.02 + pulse * 0.03) * selectionBoost,
-						(0.1 + pulse * 0.1) * selectionBoost,
-						(0.15 + pulse * 0.12) * selectionBoost,
-					);
+					// Player units: strong cyan pulse — clearly distinguishable
+					em.r = (0.03 + pulse * 0.05) * sel;
+					em.g = (0.15 + pulse * 0.15) * sel;
+					em.b = (0.25 + pulse * 0.2) * sel;
 				}
 			}
 		}

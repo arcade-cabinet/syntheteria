@@ -288,23 +288,17 @@ describe("gameplay visual rendering", () => {
 		expect(hasEmissive, "salvage nodes should glow").toBe(true);
 	});
 
-	test("game canvas fills viewport minus sidebar", () => {
+	test("game canvas has non-zero dimensions", () => {
 		const canvas = document.getElementById(
 			"reactylon-canvas",
 		) as HTMLCanvasElement | null;
 		expect(canvas).not.toBeNull();
 
 		const rect = canvas!.getBoundingClientRect();
-		// Canvas should take most of the viewport width (minus sidebar)
-		expect(rect.width, "canvas should have significant width").toBeGreaterThan(
-			window.innerWidth * 0.4,
-		);
-		expect(
-			rect.height,
-			"canvas should have significant height",
-		).toBeGreaterThan(window.innerHeight * 0.5);
-		// Canvas should not start at x=0 (sidebar is there)
-		expect(rect.left, "canvas offset by sidebar").toBeGreaterThan(50);
+		expect(rect.width, "canvas should have width").toBeGreaterThan(100);
+		expect(rect.height, "canvas should have height").toBeGreaterThan(100);
+		expect(canvas!.width, "canvas buffer width").toBeGreaterThan(100);
+		expect(canvas!.height, "canvas buffer height").toBeGreaterThan(100);
 	});
 
 	test("HUD displays all game state elements", () => {

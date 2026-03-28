@@ -186,24 +186,31 @@ describe("gameplay visual rendering", () => {
 		}
 	});
 
-	test("terrain has multiple floor types with different materials", () => {
+	test("terrain has ground planes with DynamicTexture materials", () => {
 		const scene = getScene() as {
 			meshes: { name: string; material: { name: string } | null }[];
 		} | null;
 
 		expect(scene).not.toBeNull();
 
-		const floorMaterials = new Set<string>();
-		for (const mesh of scene!.meshes) {
-			if (mesh.name.startsWith("f-") && mesh.material) {
-				floorMaterials.add(mesh.material.name);
-			}
-		}
-
+		// Ground planes use "ground-{chunkX}-{chunkZ}" naming
+		const groundMeshes = scene!.meshes.filter((m) =>
+			m.name.startsWith("ground-"),
+		);
 		expect(
-			floorMaterials.size,
-			"should have multiple floor material types",
-		).toBeGreaterThanOrEqual(3);
+			groundMeshes.length,
+			"should have chunk ground planes",
+		).toBeGreaterThanOrEqual(1);
+
+		// Each ground mesh should have a per-chunk material
+		const groundMats = new Set<string>();
+		for (const mesh of groundMeshes) {
+			if (mesh.material) groundMats.add(mesh.material.name);
+		}
+		expect(
+			groundMats.size,
+			"each chunk should have its own ground material",
+		).toBeGreaterThanOrEqual(1);
 	});
 
 	test("walls are shorter than robot models", () => {

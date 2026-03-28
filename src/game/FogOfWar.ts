@@ -5,13 +5,12 @@
  * (computed each frame from player unit positions) to produce three visual
  * states:
  *
- *   Unexplored → mesh hidden entirely (setEnabled(false))
+ *   Unexplored → dark silhouette (visibility = 0.12) — terrain shape visible
  *   Shroud     → explored but NOT in current vision (visibility = 0.35)
  *   Visible    → in active vision range of a player unit (visibility = 1.0)
  *
- * Uses mesh.visibility (a per-mesh float 0–1) which works independently
- * of frozen PBR materials. Unexplored tiles are disabled entirely via
- * mesh.setEnabled(false) to skip rendering.
+ * Combined with scene.fogMode=FOGMODE_EXP2 for atmospheric depth falloff.
+ * All terrain meshes stay enabled — full labyrinth always visible as a map.
  */
 
 import {

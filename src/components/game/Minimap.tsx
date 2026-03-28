@@ -24,14 +24,16 @@ import { world } from "../../ecs/world";
 import { getChunkState } from "../../game/chunkRegistry";
 import { getScavengePoints } from "../../systems/resources";
 
-/** City bounds: 48 tiles * 2m = 96 world units */
-const CITY_EXTENT = 96;
-const MAP_SIZE = 150;
+/** View extent: covers the loaded chunk area (7 chunks × 64 = 448 world units).
+ * Centered on origin — range is -224 to +224. */
+const VIEW_EXTENT = 448;
+const MAP_SIZE = 200; // bigger minimap for better readability
 const MAP_PAD = 4;
 
-/** Convert city world coords to minimap pixel coords */
+/** Convert world coords to minimap pixel coords (centered on origin). */
 function cityToMinimap(worldCoord: number): number {
-	return MAP_PAD + (worldCoord / CITY_EXTENT) * (MAP_SIZE - MAP_PAD * 2);
+	const normalized = (worldCoord + VIEW_EXTENT / 2) / VIEW_EXTENT;
+	return MAP_PAD + normalized * (MAP_SIZE - MAP_PAD * 2);
 }
 
 /** Get merged fog state at a world position across all fragments (max wins) */
@@ -67,8 +69,12 @@ export function Minimap() {
 		const fogStep = 3;
 		for (let px = 0; px < MAP_SIZE; px += fogStep) {
 			for (let py = 0; py < MAP_SIZE; py += fogStep) {
-				const wx = ((px - MAP_PAD) / (MAP_SIZE - MAP_PAD * 2)) * CITY_EXTENT;
-				const wz = ((py - MAP_PAD) / (MAP_SIZE - MAP_PAD * 2)) * CITY_EXTENT;
+				const wx =
+					((px - MAP_PAD) / (MAP_SIZE - MAP_PAD * 2)) * VIEW_EXTENT -
+					VIEW_EXTENT / 2;
+				const wz =
+					((py - MAP_PAD) / (MAP_SIZE - MAP_PAD * 2)) * VIEW_EXTENT -
+					VIEW_EXTENT / 2;
 				const fog = getMergedFogAt(wx, wz);
 				if (fog >= 2) {
 					ctx.fillStyle = "rgba(0,40,30,0.6)";

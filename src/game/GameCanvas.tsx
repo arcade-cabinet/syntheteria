@@ -176,16 +176,17 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		const cam = scene.activeCamera as ArcRotateCamera;
 		if (!cam) return;
 
-		// Final gameplay values
+		// Final gameplay values — classic RTS: full chunk visible in viewport.
+		// Chunk = 32 tiles × 2m = 64 world units. Radius ~55 shows the full chunk.
 		const FINAL_ALPHA = Tools.ToRadians(-90);
-		const FINAL_BETA = Tools.ToRadians(30); // 2.5D RTS perspective with depth
-		const FINAL_RADIUS = 25; // closer to the action — robots clearly visible
+		const FINAL_BETA = Tools.ToRadians(35); // steeper angle for better top-down RTS view
+		const FINAL_RADIUS = 55; // shows full 64×64 chunk in viewport
 
-		// Start zoomed out and more tilted for a dramatic intro
+		// Start zoomed out for dramatic intro
 		cam.target = new Vector3(startWX, 0, startWZ);
 		cam.alpha = FINAL_ALPHA;
-		cam.beta = Tools.ToRadians(45); // start tilted for dramatic reveal
-		cam.radius = 120; // start zoomed out
+		cam.beta = Tools.ToRadians(50); // start tilted for dramatic reveal
+		cam.radius = 100; // start slightly zoomed out
 
 		// Temporarily widen limits so animation can run freely
 		cam.lowerBetaLimit = 0;
@@ -205,7 +206,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			Animation.ANIMATIONLOOPMODE_CONSTANT,
 		);
 		radiusAnim.setKeys([
-			{ frame: 0, value: 120 },
+			{ frame: 0, value: 100 },
 			{ frame: INTRO_FRAMES, value: FINAL_RADIUS },
 		]);
 
@@ -217,7 +218,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			Animation.ANIMATIONLOOPMODE_CONSTANT,
 		);
 		betaAnim.setKeys([
-			{ frame: 0, value: Tools.ToRadians(45) },
+			{ frame: 0, value: Tools.ToRadians(50) },
 			{ frame: INTRO_FRAMES, value: FINAL_BETA },
 		]);
 
@@ -227,10 +228,10 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			cam.alpha = FINAL_ALPHA;
 			cam.lowerAlphaLimit = FINAL_ALPHA;
 			cam.upperAlphaLimit = FINAL_ALPHA;
-			cam.lowerBetaLimit = Tools.ToRadians(20);
-			cam.upperBetaLimit = Tools.ToRadians(35);
-			cam.lowerRadiusLimit = 12;
-			cam.upperRadiusLimit = 60;
+			cam.lowerBetaLimit = Tools.ToRadians(25);
+			cam.upperBetaLimit = Tools.ToRadians(50);
+			cam.lowerRadiusLimit = 20; // can zoom in for detail
+			cam.upperRadiusLimit = 90; // can zoom out to see multiple chunks
 		});
 
 		// Pan settings
@@ -267,9 +268,9 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			new Vector3(startWX, 18, startWZ),
 			scene,
 		);
-		cameraLight.intensity = 5;
+		cameraLight.intensity = 4;
 		cameraLight.diffuse = new Color3(0.55, 0.7, 0.9);
-		cameraLight.range = 80;
+		cameraLight.range = 120; // cover full chunk view
 
 		// Follow camera target
 		const cameraLightCallback = () => {

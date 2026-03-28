@@ -210,7 +210,7 @@ function getWallMaterial(isAlloy: boolean, scene: Scene): PBRMaterial {
 
 function wallHeight(tile: TileData): number {
 	const h = ((tile.x * 7 + tile.z * 13) % 17) / 17;
-	return 1.0 + h * 1.5; // 1.0-2.5 units — shorter than robots for visibility
+	return 1.0 + h * 1.5; // 1.0-2.5 units — visible 3D buildings
 }
 
 /**

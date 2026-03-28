@@ -88,11 +88,11 @@ function onSceneReady(scene: BScene) {
 		canvas.style.background = "#03070b";
 	}
 
-	// No scene-level fog — fog of war is handled per-mesh by FogOfWar.ts
-	// which uses mesh.visibility and mesh.setEnabled() based on exploration state.
-	// Scene fog (FOGMODE_EXP2) applies uniform distance-based fog from the camera
-	// which obscures explored areas and ignores the exploration grid entirely.
-	scene.fogMode = 0; // FOGMODE_NONE
+	// Exponential fog — creates atmospheric depth falloff from camera.
+	// Combined with per-mesh visibility from FogOfWar.ts for exploration-based dimming.
+	scene.fogMode = 2; // FOGMODE_EXP2
+	scene.fogColor = new Color3(VOID_R, VOID_G, VOID_B);
+	scene.fogDensity = 0.008; // gradual falloff — full chunk visible, edges fade to void
 
 	// Explicit void color #03070b — matches the labyrinth void between chunks
 	scene.clearColor = new Color4(VOID_R, VOID_G, VOID_B, 1);

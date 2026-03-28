@@ -26,7 +26,10 @@ import type { ChunkManagerState } from "./ChunkManager";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-/** Visibility value for shroud tiles (explored but not in current vision). */
+/** Visibility for unexplored tiles — dark but terrain shape visible (like StarCraft fog). */
+const UNEXPLORED_VISIBILITY = 0.12;
+
+/** Visibility for explored-but-not-in-vision tiles (shroud). */
 const SHROUD_VISIBILITY = 0.35;
 
 /** Vision radius in world units — must match exploration.ts VISION_RADIUS. */
@@ -145,24 +148,22 @@ export function updateFogVisibility(chunkState: ChunkManagerState): void {
 			const wz = mesh.position.z;
 
 			if (!hasFragments) {
-				mesh.setEnabled(false);
+				mesh.setEnabled(true);
+				mesh.visibility = UNEXPLORED_VISIBILITY;
 				continue;
 			}
 
 			// Check permanent fog grid — has this tile ever been explored?
 			const fogState = getBestFogState(playerFragments, wx, wz);
 
-			if (fogState === 0) {
-				// Unexplored — completely hidden
-				mesh.setEnabled(false);
-				continue;
-			}
-
-			// Tile has been explored (fogState >= 1).
-			// Now check transient vision — is a player unit currently seeing it?
+			// NEVER hide terrain — always show the full labyrinth map.
+			// Unexplored = very dark, shroud = dim, vision = full brightness.
 			mesh.setEnabled(true);
 
-			if (isInPlayerVision(wx, wz)) {
+			if (fogState === 0) {
+				// Unexplored — dark silhouette, terrain shape visible
+				mesh.visibility = UNEXPLORED_VISIBILITY;
+			} else if (isInPlayerVision(wx, wz)) {
 				// Currently in vision — full brightness
 				mesh.visibility = 1.0;
 			} else {

@@ -1,21 +1,18 @@
 /**
  * Populates a BabylonJS Scene with meshes from chunk tile data.
  *
- * This is the board package's rendering layer — it knows about BabylonJS
- * directly so the POC (or game) doesn't need to manually create meshes.
+ * Architecture:
+ *   - ONE ground plane per chunk with a DynamicTexture for seamless biome colors
+ *   - Wall boxes only for impassable tiles (3D buildings rising from the ground)
+ *   - No individual floor tile meshes — ground texture handles floor variation
  *
- * Creates:
- *   - Floor thin-boxes for passable tiles (PBR materials from FLOOR_MATERIALS)
- *   - Wall boxes for structural_mass tiles (height varies for visual interest)
- *   - Ocean ground plane beneath chunks
- *
- * Zone-aware rendering (Tier 3/5): Floor colors vary by zone profile,
- * and POI rooms (cult shrines, observatories, labs, mines) get distinct
- * emissive materials for visual distinction.
+ * This creates a seamless terrain look (like classic RTS games) instead of
+ * a grid of individual tile boxes with visible gaps.
  */
 
 import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial";
 import type { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
@@ -25,8 +22,8 @@ import type { Scene } from "@babylonjs/core/scene";
 import { FLOOR_MATERIALS } from "../config/floorMaterials";
 import type { Chunk } from "./chunks";
 import { CHUNK_SIZE } from "./chunks";
-import { ELEVATION_STEP_M, TILE_SIZE_M } from "./coords";
-import type { FloorType, TileData } from "./types";
+import { TILE_SIZE_M } from "./coords";
+import type { TileData } from "./types";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -36,137 +33,32 @@ export interface ChunkMeshes {
 	meshes: Mesh[];
 }
 
-// ─── Constants ──────────────────────────────────────────────────────────────
+// ─── Floor color palette ────────────────────────────────────────────────────
 
-const FLOOR_HEIGHT = 0.15;
-/** Slight inset from tile edge creates visible grooves between tiles. */
-const TILE_INSET = 0.06;
-
-const FLOOR_COLORS: Record<string, Color3> = {
-	transit_deck: new Color3(0.22, 0.28, 0.36), // blue-grey steel corridors
-	durasteel_span: new Color3(0.32, 0.38, 0.48), // lighter steel platforms
-	collapsed_zone: new Color3(0.22, 0.16, 0.1), // dark rust-brown rubble
-	dust_district: new Color3(0.35, 0.28, 0.15), // warm dusty amber — distinct
-	bio_district: new Color3(0.08, 0.28, 0.12), // visible green — overgrown
-	aerostructure: new Color3(0.18, 0.32, 0.5), // clear blue-steel
-	abyssal_platform: new Color3(0.03, 0.08, 0.18), // deep dark blue void
+/** CSS-style hex colors for the DynamicTexture canvas. */
+const FLOOR_CSS: Record<string, string> = {
+	transit_deck: "#384860", // blue-grey steel
+	durasteel_span: "#52607a", // lighter steel
+	collapsed_zone: "#382818", // rust-brown rubble
+	dust_district: "#594828", // warm dusty amber
+	bio_district: "#1a4820", // green overgrown
+	aerostructure: "#385280", // blue-steel
+	abyssal_platform: "#0a1830", // deep dark blue
+	structural_mass: "#141820", // dark wall (painted on ground under walls)
+	void_pit: "#030710", // black void
 };
 
-/** Per-floor-type emissive multipliers — stronger for more characterful types. */
-const FLOOR_EMISSIVE_MULT: Record<string, [number, number, number]> = {
-	transit_deck: [0.08, 0.1, 0.18],
-	durasteel_span: [0.1, 0.12, 0.2],
-	collapsed_zone: [0.12, 0.06, 0.03],
-	dust_district: [0.15, 0.1, 0.04],
-	bio_district: [0.03, 0.15, 0.06],
-	aerostructure: [0.06, 0.12, 0.22],
-	abyssal_platform: [0.02, 0.05, 0.14],
+/** Zone tint CSS adjustments */
+const ZONE_CSS_TINT: Record<string, [number, number, number]> = {
+	city: [0, 0, 0],
+	coast: [0, 10, 20],
+	campus: [5, 10, 0],
+	enemy: [15, 0, 0],
 };
 
-/** Zone-specific tint applied to floor colors for geographic variety. */
-const ZONE_TINTS: Record<string, Color3> = {
-	city: new Color3(0, 0, 0), // no tint — neutral industrial
-	coast: new Color3(0.04, 0.08, 0.12), // blue tint — coastal
-	campus: new Color3(0.04, 0.08, 0.02), // green tint — organic
-	enemy: new Color3(0.08, 0.02, 0.02), // red tint — hostile territory
-};
-
-// ─── Variant selection ──────────────────────────────────────────────────────
-// Uses tile position hash to pick one of 3 visual variants per floor type.
-// Creates subtle visual variation (roughness, color tint) across the terrain.
-
-const VARIANT_COUNT = 3;
-
-/** Deterministic hash from tile coords → variant index (0..VARIANT_COUNT-1). */
-function tileVariant(tileX: number, tileZ: number): number {
-	// Simple hash: multiply by primes, XOR, modulo. Deterministic per position.
-	const h = ((tileX * 73856093) ^ (tileZ * 19349663)) >>> 0;
-	return h % VARIANT_COUNT;
-}
-
-// Per-variant roughness and color tint offsets for visual variety
-const VARIANT_ROUGHNESS = [0.82, 0.87, 0.9] as const;
-const VARIANT_TINT = [0.0, -0.015, 0.015] as const;
-
-// ─── Material cache ─────────────────────────────────────────────────────────
+// ─── Wall materials ─────────────────────────────────────────────────────────
 
 const materialCache = new Map<string, PBRMaterial | StandardMaterial>();
-
-function getFloorMaterial(
-	floorType: FloorType,
-	variant: number,
-	scene: Scene,
-	zone?: string,
-): PBRMaterial {
-	const zoneKey = zone ?? "city";
-	const key = `floor-${floorType}-v${variant}-${zoneKey}`;
-	let mat = materialCache.get(key) as PBRMaterial | undefined;
-	if (mat) return mat;
-
-	const def = FLOOR_MATERIALS[floorType];
-	if (!def) {
-		console.error(
-			`[scene] Unknown floorType: "${floorType}" — using fallback material`,
-		);
-		mat = new PBRMaterial(key, scene);
-		mat.roughness = 0.85;
-		mat.albedoColor = new Color3(0.3, 0.3, 0.3);
-		mat.freeze();
-		materialCache.set(key, mat);
-		return mat;
-	}
-	const baseColor = FLOOR_COLORS[floorType] ?? new Color3(0.3, 0.3, 0.3);
-	const tint = VARIANT_TINT[variant] ?? 0;
-	const zoneTint = ZONE_TINTS[zoneKey] ?? new Color3(0, 0, 0);
-
-	mat = new PBRMaterial(key, scene);
-	mat.roughness = VARIANT_ROUGHNESS[variant] ?? 0.85;
-	mat.metallic = def.metalness ? 0.6 : 0.1;
-	const finalColor = new Color3(
-		Math.max(0, Math.min(1, baseColor.r + tint + zoneTint.r)),
-		Math.max(0, Math.min(1, baseColor.g + tint + zoneTint.g)),
-		Math.max(0, Math.min(1, baseColor.b + tint + zoneTint.b)),
-	);
-	mat.albedoColor = finalColor;
-	// Per-type emissive glow — different floor types glow different colors
-	const emMult = FLOOR_EMISSIVE_MULT[floorType] ?? [0.08, 0.1, 0.15];
-	mat.emissiveColor = new Color3(emMult[0], emMult[1], emMult[2]);
-
-	// Albedo texture with tiling
-	const albedoTex = new Texture(`/assets/textures/pbr/${def.color}`, scene);
-	albedoTex.uScale = def.tiling;
-	albedoTex.vScale = def.tiling;
-	mat.albedoTexture = albedoTex;
-
-	// Normal map for surface detail (grooves, panel lines, cracks)
-	const normalTex = new Texture(`/assets/textures/pbr/${def.normal}`, scene);
-	normalTex.uScale = def.tiling;
-	normalTex.vScale = def.tiling;
-	mat.bumpTexture = normalTex;
-	mat.invertNormalMapX = true;
-	mat.invertNormalMapY = true;
-
-	// Roughness map for micro-surface variation
-	const roughTex = new Texture(`/assets/textures/pbr/${def.roughness}`, scene);
-	roughTex.uScale = def.tiling;
-	roughTex.vScale = def.tiling;
-	mat.metallicTexture = roughTex;
-	mat.useRoughnessFromMetallicTextureGreen = true;
-	mat.useMetallnessFromMetallicTextureBlue = false;
-
-	// AO map if available
-	if (def.ao) {
-		const aoTex = new Texture(`/assets/textures/pbr/${def.ao}`, scene);
-		aoTex.uScale = def.tiling;
-		aoTex.vScale = def.tiling;
-		mat.ambientTexture = aoTex;
-	}
-
-	mat.freeze(); // won't change — optimize
-
-	materialCache.set(key, mat);
-	return mat;
-}
 
 function getWallMaterial(isAlloy: boolean, scene: Scene): PBRMaterial {
 	const key = isAlloy ? "wall-alloy" : "wall-durasteel";
@@ -177,9 +69,8 @@ function getWallMaterial(isAlloy: boolean, scene: Scene): PBRMaterial {
 	mat.roughness = isAlloy ? 0.2 : 0.5;
 	mat.metallic = isAlloy ? 0.8 : 0.6;
 	mat.albedoColor = isAlloy
-		? new Color3(0.02, 0.18, 0.22) // dark cyan-tinted alloy
-		: new Color3(0.08, 0.1, 0.14); // very dark steel — walls read as shadows
-	// Alloy walls glow faintly — internal circuitry visible through cracks
+		? new Color3(0.02, 0.18, 0.22)
+		: new Color3(0.08, 0.1, 0.14);
 	mat.emissiveColor = isAlloy
 		? new Color3(0.0, 0.12, 0.14)
 		: new Color3(0.02, 0.03, 0.05);
@@ -191,7 +82,6 @@ function getWallMaterial(isAlloy: boolean, scene: Scene): PBRMaterial {
 	);
 	mat.albedoTexture = wallAlbedo;
 
-	// Normal map gives walls surface detail — rivets, panel seams
 	const wallNormal = new Texture(
 		`/assets/textures/pbr/${wallDef.normal}`,
 		scene,
@@ -201,68 +91,144 @@ function getWallMaterial(isAlloy: boolean, scene: Scene): PBRMaterial {
 	mat.invertNormalMapY = true;
 
 	mat.freeze();
-
 	materialCache.set(key, mat);
 	return mat;
 }
 
-// ─── Mesh creation ──────────────────────────────────────────────────────────
+// ─── DynamicTexture ground plane ────────────────────────────────────────────
+
+/** Pixels per tile in the chunk ground texture. Higher = sharper biome edges. */
+const PX_PER_TILE = 4;
+const TEX_SIZE = CHUNK_SIZE * PX_PER_TILE; // 32 * 4 = 128px
+
+/**
+ * Paint chunk biome colors onto a DynamicTexture canvas.
+ * Each tile gets a solid color block based on its floorType + zone tint.
+ * This creates seamless terrain without per-tile mesh gaps.
+ */
+function paintChunkTexture(chunk: Chunk, tex: DynamicTexture): void {
+	const ctx = tex.getContext();
+	(ctx as unknown as CanvasRenderingContext2D).imageSmoothingEnabled = false;
+
+	for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+		for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+			const tile = chunk.tiles[lz]![lx]!;
+			const baseColor = FLOOR_CSS[tile.floorType] ?? FLOOR_CSS.transit_deck;
+
+			// Parse hex color
+			const r = Number.parseInt(baseColor.slice(1, 3), 16);
+			const g = Number.parseInt(baseColor.slice(3, 5), 16);
+			const b = Number.parseInt(baseColor.slice(5, 7), 16);
+
+			// Apply zone tint
+			const zoneTint = ZONE_CSS_TINT[tile.zone ?? "city"] ?? [0, 0, 0];
+
+			// Add slight per-tile variation from position hash
+			const hash = ((lx * 73856093) ^ (lz * 19349663)) >>> 0;
+			const variation = (hash % 21) - 10; // -10 to +10
+
+			const fr = Math.max(0, Math.min(255, r + zoneTint[0] + variation));
+			const fg = Math.max(0, Math.min(255, g + zoneTint[1] + variation));
+			const fb = Math.max(0, Math.min(255, b + zoneTint[2] + variation));
+
+			ctx.fillStyle = `rgb(${fr},${fg},${fb})`;
+			ctx.fillRect(
+				lx * PX_PER_TILE,
+				lz * PX_PER_TILE,
+				PX_PER_TILE,
+				PX_PER_TILE,
+			);
+		}
+	}
+
+	tex.update();
+}
+
+// ─── Wall height ────────────────────────────────────────────────────────────
 
 function wallHeight(tile: TileData): number {
 	const h = ((tile.x * 7 + tile.z * 13) % 17) / 17;
-	return 1.0 + h * 1.5; // 1.0-2.5 units — visible 3D buildings
+	return 1.0 + h * 1.5;
 }
 
+// ─── Mesh creation ──────────────────────────────────────────────────────────
+
 /**
- * Create BabylonJS meshes for all tiles in a chunk.
+ * Create BabylonJS meshes for a chunk.
  *
- * Returns a ChunkMeshes object containing all created meshes.
- * Call disposeChunkMeshes() to remove them from the scene.
+ * Creates ONE ground plane with a DynamicTexture for seamless biome rendering,
+ * plus individual wall boxes for impassable tiles.
  */
 export function populateChunkScene(chunk: Chunk, scene: Scene): ChunkMeshes {
 	const meshes: Mesh[] = [];
 
+	// World-space origin of this chunk
+	const chunkWX = chunk.chunkX * CHUNK_SIZE * TILE_SIZE_M;
+	const chunkWZ = chunk.chunkZ * CHUNK_SIZE * TILE_SIZE_M;
+	const chunkWorldSize = CHUNK_SIZE * TILE_SIZE_M; // 64 units
+
+	// 1. Ground plane — single mesh with DynamicTexture for biome colors
+	const groundName = `ground-${chunk.chunkX}-${chunk.chunkZ}`;
+	const ground = MeshBuilder.CreateGround(
+		groundName,
+		{ width: chunkWorldSize, height: chunkWorldSize, subdivisions: 1 },
+		scene,
+	);
+	// Position at chunk center
+	ground.position = new Vector3(
+		chunkWX + chunkWorldSize / 2 - TILE_SIZE_M / 2,
+		0,
+		chunkWZ + chunkWorldSize / 2 - TILE_SIZE_M / 2,
+	);
+	ground.receiveShadows = true;
+	ground.isPickable = true; // clickable for move-to-ground
+
+	// Create and paint the biome texture
+	const tex = new DynamicTexture(
+		`tex-${chunk.chunkX}-${chunk.chunkZ}`,
+		TEX_SIZE,
+		scene,
+		false, // no mipmaps for pixel-art look
+	);
+	tex.wrapU = Texture.CLAMP_ADDRESSMODE;
+	tex.wrapV = Texture.CLAMP_ADDRESSMODE;
+	paintChunkTexture(chunk, tex);
+
+	const groundMat = new PBRMaterial(
+		`gmat-${chunk.chunkX}-${chunk.chunkZ}`,
+		scene,
+	);
+	groundMat.albedoTexture = tex;
+	groundMat.roughness = 0.85;
+	groundMat.metallic = 0.1;
+	// Subtle emissive to make the ground readable in darkness
+	groundMat.emissiveColor = new Color3(0.04, 0.06, 0.1);
+	groundMat.freeze();
+	ground.material = groundMat;
+	meshes.push(ground);
+
+	// 2. Wall boxes — only for impassable tiles
 	for (let lz = 0; lz < CHUNK_SIZE; lz++) {
-		for (let lx = 0; lx < chunk.tiles[0]!.length; lx++) {
+		for (let lx = 0; lx < CHUNK_SIZE; lx++) {
 			const tile = chunk.tiles[lz]![lx]!;
-			if (tile.floorType === "void_pit") continue;
+			if (tile.passable || tile.floorType === "void_pit") continue;
+			if (tile.floorType === "abyssal_platform") continue;
 
 			const wx = tile.x * TILE_SIZE_M;
 			const wz = tile.z * TILE_SIZE_M;
+			const h = wallHeight(tile);
+			const isAlloy = (tile.x * 3 + tile.z * 7) % 13 === 0;
 
-			if (tile.passable || tile.floorType === "abyssal_platform") {
-				const elev = tile.elevation * ELEVATION_STEP_M;
-				const tileW = TILE_SIZE_M - TILE_INSET;
-				const mesh = MeshBuilder.CreateBox(
-					`f-${tile.x}-${tile.z}`,
-					{ width: tileW, height: FLOOR_HEIGHT, depth: tileW },
-					scene,
-				);
-				mesh.position = new Vector3(wx, elev, wz);
-				mesh.receiveShadows = true;
-				mesh.isPickable = false;
-				// Zone-aware floor material for geographic variety
-				mesh.material = getFloorMaterial(
-					tile.floorType,
-					tileVariant(tile.x, tile.z),
-					scene,
-					tile.zone,
-				);
-				meshes.push(mesh);
-			} else {
-				const h = wallHeight(tile);
-				const isAlloy = (tile.x * 3 + tile.z * 7) % 13 === 0;
-				const mesh = MeshBuilder.CreateBox(
-					`w-${tile.x}-${tile.z}`,
-					{ width: TILE_SIZE_M, height: h, depth: TILE_SIZE_M },
-					scene,
-				);
-				mesh.position = new Vector3(wx, h / 2, wz);
-				mesh.receiveShadows = true;
-				mesh.isPickable = false;
-				mesh.material = getWallMaterial(isAlloy, scene);
-				meshes.push(mesh);
-			}
+			const wall = MeshBuilder.CreateBox(
+				`w-${tile.x}-${tile.z}`,
+				{ width: TILE_SIZE_M, height: h, depth: TILE_SIZE_M },
+				scene,
+			);
+			wall.position = new Vector3(wx, h / 2, wz);
+			wall.receiveShadows = true;
+			wall.isPickable = false;
+			wall.material = getWallMaterial(isAlloy, scene);
+			meshes.push(wall);
 		}
 	}
 
@@ -274,6 +240,10 @@ export function populateChunkScene(chunk: Chunk, scene: Scene): ChunkMeshes {
  */
 export function disposeChunkMeshes(cm: ChunkMeshes): void {
 	for (const mesh of cm.meshes) {
+		// Dispose material if it's a per-chunk ground material
+		if (mesh.material?.name.startsWith("gmat-")) {
+			mesh.material.dispose(true); // also dispose textures
+		}
 		mesh.dispose();
 	}
 	cm.meshes.length = 0;

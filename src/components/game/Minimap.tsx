@@ -105,12 +105,14 @@ export function Minimap() {
 					const mx = cityToMinimap(wx);
 					const my = cityToMinimap(wz);
 
-					// Wall meshes are named "w-{x}-{z}", floor meshes "f-{x}-{z}"
-					if (mesh.name.startsWith("w-")) {
+					if (mesh.name.startsWith("ground-")) {
+						// Chunk ground planes — draw as a subtle rectangle
+						const chunkPx = (64 / VIEW_EXTENT) * (MAP_SIZE - MAP_PAD * 2);
+						ctx.fillStyle = "#141820";
+						ctx.fillRect(mx - chunkPx / 2, my - chunkPx / 2, chunkPx, chunkPx);
+					} else if (mesh.name.startsWith("w-")) {
+						// Wall meshes — darker dots
 						ctx.fillStyle = "#2a2a2a";
-						ctx.fillRect(mx, my, 1, 1);
-					} else if (mesh.name.startsWith("f-")) {
-						ctx.fillStyle = "#1a1e24";
 						ctx.fillRect(mx, my, 1, 1);
 					}
 				}

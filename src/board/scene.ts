@@ -39,15 +39,28 @@ export interface ChunkMeshes {
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const FLOOR_HEIGHT = 0.15;
+/** Slight inset from tile edge creates visible grooves between tiles. */
+const TILE_INSET = 0.06;
 
 const FLOOR_COLORS: Record<string, Color3> = {
-	transit_deck: new Color3(0.25, 0.30, 0.38), // blue-grey steel corridors
-	durasteel_span: new Color3(0.35, 0.40, 0.48), // lighter steel platforms
-	collapsed_zone: new Color3(0.20, 0.18, 0.16), // dark rust-brown rubble
-	dust_district: new Color3(0.30, 0.25, 0.18), // warm dusty amber
-	bio_district: new Color3(0.12, 0.30, 0.15), // visible green — overgrown
-	aerostructure: new Color3(0.22, 0.35, 0.50), // clear blue-steel
-	abyssal_platform: new Color3(0.05, 0.10, 0.20), // deep dark blue void
+	transit_deck: new Color3(0.22, 0.28, 0.36), // blue-grey steel corridors
+	durasteel_span: new Color3(0.32, 0.38, 0.48), // lighter steel platforms
+	collapsed_zone: new Color3(0.22, 0.16, 0.1), // dark rust-brown rubble
+	dust_district: new Color3(0.35, 0.28, 0.15), // warm dusty amber — distinct
+	bio_district: new Color3(0.08, 0.28, 0.12), // visible green — overgrown
+	aerostructure: new Color3(0.18, 0.32, 0.5), // clear blue-steel
+	abyssal_platform: new Color3(0.03, 0.08, 0.18), // deep dark blue void
+};
+
+/** Per-floor-type emissive multipliers — stronger for more characterful types. */
+const FLOOR_EMISSIVE_MULT: Record<string, [number, number, number]> = {
+	transit_deck: [0.08, 0.1, 0.18],
+	durasteel_span: [0.1, 0.12, 0.2],
+	collapsed_zone: [0.12, 0.06, 0.03],
+	dust_district: [0.15, 0.1, 0.04],
+	bio_district: [0.03, 0.15, 0.06],
+	aerostructure: [0.06, 0.12, 0.22],
+	abyssal_platform: [0.02, 0.05, 0.14],
 };
 
 /** Zone-specific tint applied to floor colors for geographic variety. */
@@ -115,13 +128,40 @@ function getFloorMaterial(
 		Math.max(0, Math.min(1, baseColor.b + tint + zoneTint.b)),
 	);
 	mat.albedoColor = finalColor;
-	// Subtle emissive glow — gives the dark industrial sci-fi atmosphere
-	mat.emissiveColor = new Color3(
-		finalColor.r * 0.08,
-		finalColor.g * 0.10,
-		finalColor.b * 0.15,
-	);
-	mat.albedoTexture = new Texture(`/assets/textures/pbr/${def.color}`, scene);
+	// Per-type emissive glow — different floor types glow different colors
+	const emMult = FLOOR_EMISSIVE_MULT[floorType] ?? [0.08, 0.1, 0.15];
+	mat.emissiveColor = new Color3(emMult[0], emMult[1], emMult[2]);
+
+	// Albedo texture with tiling
+	const albedoTex = new Texture(`/assets/textures/pbr/${def.color}`, scene);
+	albedoTex.uScale = def.tiling;
+	albedoTex.vScale = def.tiling;
+	mat.albedoTexture = albedoTex;
+
+	// Normal map for surface detail (grooves, panel lines, cracks)
+	const normalTex = new Texture(`/assets/textures/pbr/${def.normal}`, scene);
+	normalTex.uScale = def.tiling;
+	normalTex.vScale = def.tiling;
+	mat.bumpTexture = normalTex;
+	mat.invertNormalMapX = true;
+	mat.invertNormalMapY = true;
+
+	// Roughness map for micro-surface variation
+	const roughTex = new Texture(`/assets/textures/pbr/${def.roughness}`, scene);
+	roughTex.uScale = def.tiling;
+	roughTex.vScale = def.tiling;
+	mat.metallicTexture = roughTex;
+	mat.useRoughnessFromMetallicTextureGreen = true;
+	mat.useMetallnessFromMetallicTextureBlue = false;
+
+	// AO map if available
+	if (def.ao) {
+		const aoTex = new Texture(`/assets/textures/pbr/${def.ao}`, scene);
+		aoTex.uScale = def.tiling;
+		aoTex.vScale = def.tiling;
+		mat.ambientTexture = aoTex;
+	}
+
 	mat.freeze(); // won't change — optimize
 
 	materialCache.set(key, mat);
@@ -138,15 +178,28 @@ function getWallMaterial(isAlloy: boolean, scene: Scene): PBRMaterial {
 	mat.metallic = isAlloy ? 0.8 : 0.6;
 	mat.albedoColor = isAlloy
 		? new Color3(0.02, 0.18, 0.22) // dark cyan-tinted alloy
-		: new Color3(0.08, 0.10, 0.14); // very dark steel — walls read as shadows
+		: new Color3(0.08, 0.1, 0.14); // very dark steel — walls read as shadows
 	// Alloy walls glow faintly — internal circuitry visible through cracks
 	mat.emissiveColor = isAlloy
 		? new Color3(0.0, 0.12, 0.14)
 		: new Color3(0.02, 0.03, 0.05);
-	mat.albedoTexture = new Texture(
-		`/assets/textures/pbr/${FLOOR_MATERIALS.structural_mass.color}`,
+
+	const wallDef = FLOOR_MATERIALS.structural_mass;
+	const wallAlbedo = new Texture(
+		`/assets/textures/pbr/${wallDef.color}`,
 		scene,
 	);
+	mat.albedoTexture = wallAlbedo;
+
+	// Normal map gives walls surface detail — rivets, panel seams
+	const wallNormal = new Texture(
+		`/assets/textures/pbr/${wallDef.normal}`,
+		scene,
+	);
+	mat.bumpTexture = wallNormal;
+	mat.invertNormalMapX = true;
+	mat.invertNormalMapY = true;
+
 	mat.freeze();
 
 	materialCache.set(key, mat);
@@ -179,9 +232,10 @@ export function populateChunkScene(chunk: Chunk, scene: Scene): ChunkMeshes {
 
 			if (tile.passable || tile.floorType === "abyssal_platform") {
 				const elev = tile.elevation * ELEVATION_STEP_M;
+				const tileW = TILE_SIZE_M - TILE_INSET;
 				const mesh = MeshBuilder.CreateBox(
 					`f-${tile.x}-${tile.z}`,
-					{ width: TILE_SIZE_M, height: FLOOR_HEIGHT, depth: TILE_SIZE_M },
+					{ width: tileW, height: FLOOR_HEIGHT, depth: tileW },
 					scene,
 				);
 				mesh.position = new Vector3(wx, elev, wz);

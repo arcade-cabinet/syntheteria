@@ -22,6 +22,7 @@ import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { Tools } from "@babylonjs/core/Misc/tools";
 // Side-effect imports — Vite tree-shakes these without explicit import
 import "@babylonjs/core/Helpers/sceneHelpers";
+import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { PointLight } from "@babylonjs/core/Lights/pointLight";
@@ -257,8 +258,8 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			scene,
 		);
 		ambient.intensity = 1.2;
-		ambient.groundColor = new Color3(0.06, 0.10, 0.16);
-		ambient.diffuse = new Color3(0.25, 0.30, 0.40);
+		ambient.groundColor = new Color3(0.06, 0.1, 0.16);
+		ambient.diffuse = new Color3(0.25, 0.3, 0.4);
 
 		// 3. Point light near camera — soft omnidirectional glow, no projected cone
 		const cameraLight = new PointLight(
@@ -267,7 +268,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			scene,
 		);
 		cameraLight.intensity = 5;
-		cameraLight.diffuse = new Color3(0.55, 0.70, 0.90);
+		cameraLight.diffuse = new Color3(0.55, 0.7, 0.9);
 		cameraLight.range = 80;
 
 		// Follow camera target
@@ -280,22 +281,30 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		};
 		scene.registerBeforeRender(cameraLightCallback);
 
+		// Glow layer — bloom effect on emissive surfaces (salvage nodes, alloy walls, selection rings)
+		const glow = new GlowLayer("glow", scene, {
+			mainTextureFixedSize: 512,
+			blurKernelSize: 32,
+		});
+		glow.intensity = 0.6;
+
 		// Hub marker — cyan pyramid at player start
 		const hubMesh = MeshBuilder.CreateCylinder(
 			"hub-nexus",
 			{
 				diameterTop: 0,
-				diameterBottom: 3,
-				height: 3,
+				diameterBottom: 5,
+				height: 6,
 				tessellation: 4,
 			},
 			scene,
 		);
-		hubMesh.position = new Vector3(startWX, 1.5, startWZ);
+		hubMesh.position = new Vector3(startWX, 3, startWZ);
 		const hubMat = new StandardMaterial("hub-mat", scene);
-		hubMat.diffuseColor = new Color3(0, 1, 1);
-		hubMat.emissiveColor = new Color3(0, 0.4, 0.4);
+		hubMat.diffuseColor = new Color3(0, 0.8, 1);
+		hubMat.emissiveColor = new Color3(0, 0.5, 0.6);
 		hubMat.specularColor = Color3.Black();
+		hubMat.alpha = 0.7;
 		hubMesh.material = hubMat;
 
 		// Initialize chunks around the start position
@@ -355,7 +364,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		let sceneDisposed = false;
 
 		// Expose scene for diagnostics (dev only)
-		(window as Record<string, unknown>).__babylonScene = scene;
+		(window as unknown as Record<string, unknown>).__babylonScene = scene;
 
 		initEntityRenderer(scene)
 			.then((entityState) => {
@@ -365,7 +374,8 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 					return;
 				}
 				entityStateRef.current = entityState;
-				(window as Record<string, unknown>).__entityState = entityState;
+				(window as unknown as Record<string, unknown>).__entityState =
+					entityState;
 
 				// Sync entity meshes every frame
 				entityRenderCallback = () => {

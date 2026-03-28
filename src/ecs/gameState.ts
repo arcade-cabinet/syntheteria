@@ -9,7 +9,11 @@ import {
 	isAutoPlayEnabled,
 } from "../ai/governor/PlaytestGovernor";
 import { logError } from "../errors";
-import { basePowerTick, baseProductionTick } from "../systems/baseManagement";
+import {
+	basePowerTick,
+	baseProductionTick,
+	spawnCompletedProduction,
+} from "../systems/baseManagement";
 import {
 	type CombatEvent,
 	combatSystem,
@@ -58,6 +62,15 @@ import {
 	type ResourcePool,
 	resourceSystem,
 } from "../systems/resources";
+import {
+	hasPendingStoryTrigger,
+	storyTriggerSystem,
+} from "../systems/storyTriggers";
+import {
+	type GameOutcome,
+	getGameOutcome,
+	victoryDefeatSystem,
+} from "../systems/victoryDefeat";
 import {
 	getAllFragments,
 	type MapFragment,
@@ -109,6 +122,10 @@ export interface GameSnapshot {
 	compute: ComputeSnapshot;
 	/** Hacking events from this tick */
 	hackEvents: HackEvent[];
+	/** Whether a story trigger is pending display (US-5.1) */
+	hasStoryTrigger: boolean;
+	/** Victory/defeat state */
+	gameOutcome: GameOutcome;
 }
 
 let tick = 0;
@@ -169,6 +186,8 @@ function buildSnapshot(): GameSnapshot {
 		humanTemperatureTier: getHumanTemperatureTier(),
 		compute: getComputeSnapshot(),
 		hackEvents: getLastHackEvents(),
+		hasStoryTrigger: hasPendingStoryTrigger(),
+		gameOutcome: getGameOutcome(),
 	};
 }
 
@@ -194,9 +213,18 @@ export function isPaused(): boolean {
 
 /**
  * Run one simulation tick. Called at fixed intervals adjusted by game speed.
+ *
+ * Systems NOT in this loop (by design):
+ * - movementSystem: per-frame interpolation in GameCanvas for smooth animation
+ * - upgrade: UI-triggered only (ActionPanel click), not time-based
+ * - pathfinding/navmesh: utility libraries called on-demand by other systems
  */
 export function simulationTick() {
 	if (paused) return;
+
+	// Don't run simulation if game is over
+	const currentOutcome = getGameOutcome();
+	if (currentOutcome !== "playing") return;
 
 	tick++;
 
@@ -218,9 +246,20 @@ export function simulationTick() {
 	runSystem("hacking", hackingSystem);
 	runSystem("combat", combatSystem);
 	runSystem("basePower", () => basePowerTick(world));
-	runSystem("baseProduction", () => baseProductionTick(world, 1.0));
+	runSystem("baseProduction", () => {
+		const completed = baseProductionTick(world, 1.0);
+		if (completed.length > 0) {
+			spawnCompletedProduction(world, completed);
+		}
+	});
 	runSystem("humanTemperature", humanTemperatureSystem);
 	runSystem("displayOffsets", updateDisplayOffsets);
+
+	// Story triggers (US-5.1) — checks if units entered trigger rooms
+	runSystem("storyTriggers", storyTriggerSystem);
+
+	// Victory/defeat check — runs after combat so death events are processed
+	runSystem("victoryDefeat", victoryDefeatSystem);
 
 	// Automated player AI (playtest governor)
 	if (isAutoPlayEnabled()) {

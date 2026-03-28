@@ -5,7 +5,7 @@
  * never hardcode paths.
  */
 
-const BASE = import.meta.env?.BASE_URL ?? "/";
+const BASE = import.meta.env.BASE_URL;
 const ROBOT_BASE = `${BASE}assets/models/robots/`;
 
 // ─── Robot model paths ──────────────────────────────────────────────────────

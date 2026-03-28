@@ -4,44 +4,44 @@ A 2.5D top-down RTS about an AI awakening in a dead ecumenopolis. You repair bro
 
 ## Tech Stack
 
-- **Engine:** BabylonJS 8.x (WebGPU) + Reactylon 3.x (React declarative binding)
-- **ECS:** Koota 0.6.x (traits, queries, systems)
-- **AI:** Yuka 0.7.x (GOAP, NavGraph, Vehicle)
-- **Build:** Webpack 5 (requires babel-plugin-reactylon)
-- **Platform:** Web-first (mobile via Capacitor)
-- **Persistence:** sql.js (ASM build)
-- **Testing:** Vitest (unit) + Playwright (E2E)
+- **Engine:** BabylonJS 8.x (WebGPU) + Reactylon 3.x
+- **ECS:** Koota 0.6.x
+- **AI:** Yuka 0.7.x (GOAP, NavGraph)
+- **Build:** Vite 8 + babel-plugin-reactylon
+- **UI:** React 19 + shadcn/ui + Tailwind 3
+- **Persistence:** @capacitor-community/sqlite + sql.js
+- **Audio:** Tone.js
+- **Testing:** Vitest (unit + browser, zero mocks)
+- **Mobile:** Capacitor
 
 ## Running
 
 ```bash
 pnpm install
-pnpm dev          # Dev server — localhost:8080
+pnpm dev          # Vite dev server — localhost:8080
 pnpm build        # Production build
 pnpm tsc          # Type check
 pnpm test         # Unit tests
+pnpm test:browser # Browser component tests (headed Chrome)
 pnpm lint         # Biome lint
 ```
 
 ## Controls
 
-**Desktop:**
-- `WASD` / Arrow keys — Pan camera
-- Scroll wheel — Zoom in/out
-- Left-click — Select unit / click ground to move
-- Right-click — Move selected unit
-- `Escape` — Cancel building placement
+- **Left-click unit** — Select
+- **Left-click ground** — Move selected unit
+- **Left-click enemy** — Attack
+- **Drag** — Box selection
+- **Scroll** — Zoom
+- **Right-drag** — Pan camera
 
-**Mobile:**
-- Single tap — Select unit / tap ground to move
-- Two-finger drag — Pan camera
-- Pinch — Zoom in/out
+All actions are mouse-first. Mobile: tap, two-finger pan, pinch zoom.
 
 ## Architecture
 
-The game uses chunk-based infinite world generation with 32x32 tile chunks, BabylonJS imperative mesh creation (not per-tile React JSX), and Yuka NavGraph pathfinding. Game data lives in TypeScript const objects under `src/config/`.
+Chunk-based infinite world (32×32 tiles), BabylonJS imperative mesh creation, WGSL custom shaders (WebGPU native), Yuka NavGraph pathfinding. Game data in TypeScript const objects under `src/config/`.
 
-For full architecture details, see [CLAUDE.md](./CLAUDE.md) and [AGENTS.md](./AGENTS.md).
+See [CLAUDE.md](./CLAUDE.md) and [AGENTS.md](./AGENTS.md) for details.
 
 ## License
 

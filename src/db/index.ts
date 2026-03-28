@@ -6,6 +6,11 @@
  */
 
 export type { SqliteAdapter } from "./adapter";
+// --- Capacitor Adapter ---
+export {
+	createCapacitorAdapter,
+	initCapacitorSqlite,
+} from "./capacitorAdapter";
 // --- Repository ---
 export { GameRepo } from "./gameRepo";
 // --- Migrations ---
@@ -20,7 +25,6 @@ export {
 	loadGame,
 	saveGame,
 } from "./persistence";
-
 // --- Schema ---
 export {
 	ALL_CREATE_STATEMENTS,
@@ -33,7 +37,6 @@ export {
 	SQL_CREATE_SCAVENGE_POINTS,
 	SQL_CREATE_UNITS,
 } from "./schema";
-
 // --- Serialization ---
 export {
 	applyBuildings,
@@ -56,8 +59,3 @@ export type {
 } from "./types";
 // --- Web Adapter ---
 export { createWebAdapter, exportDatabase } from "./webAdapter";
-// --- Capacitor Adapter ---
-export {
-	createCapacitorAdapter,
-	initCapacitorSqlite,
-} from "./capacitorAdapter";

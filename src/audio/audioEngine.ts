@@ -117,21 +117,23 @@ export function getAmbientVolumeLevel(): number {
 
 /**
  * Dispose all audio nodes. Call on game exit.
+ * Async to ensure sub-modules release their references before gain nodes are disposed.
  */
-export function disposeAudio() {
-	// Dispose sfx pools first (they reference sfxGain)
-	import("./sfx")
-		.then((m) => m.disposeSfxPools())
-		.catch((e) => console.error("[audioEngine] sfx dispose failed:", e));
-	// Stop music (references musicGain)
-	import("./music")
-		.then((m) => m.stopMusic())
-		.catch((e) => console.error("[audioEngine] music stop failed:", e));
-	// Stop ambience (references ambientGain)
-	import("./ambience")
-		.then((m) => m.stopAmbience())
-		.catch((e) => console.error("[audioEngine] ambience stop failed:", e));
+export async function disposeAudio() {
+	// Dispose sfx/music/ambience first (they hold references to gain nodes)
+	await Promise.allSettled([
+		import("./sfx")
+			.then((m) => m.disposeSfxPools())
+			.catch((e) => console.error("[audioEngine] sfx dispose failed:", e)),
+		import("./music")
+			.then((m) => m.stopMusic())
+			.catch((e) => console.error("[audioEngine] music stop failed:", e)),
+		import("./ambience")
+			.then((m) => m.stopAmbience())
+			.catch((e) => console.error("[audioEngine] ambience stop failed:", e)),
+	]);
 
+	// Now safe to dispose gain nodes — sub-modules have released them
 	masterGain?.dispose();
 	sfxGain?.dispose();
 	musicGain?.dispose();
@@ -146,8 +148,8 @@ export function disposeAudio() {
 /**
  * Reset audio engine state — for testing.
  */
-export function _resetAudioEngine() {
-	disposeAudio();
+export async function _resetAudioEngine() {
+	await disposeAudio();
 	masterVolume = 0.8;
 	sfxVolume = 0.7;
 	musicVolume = 0.5;

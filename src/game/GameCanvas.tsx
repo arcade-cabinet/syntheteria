@@ -1,23 +1,39 @@
 /**
  * GameCanvas — BabylonJS game scene via Reactylon.
  *
- * Renders the chunk-based labyrinth world with PBR materials, fog,
- * RTS camera (top-down, pan+zoom), and declarative lights.
+ * Renders the chunk-based labyrinth world with PBR materials,
+ * exploration-driven fog of war (FogOfWar.ts), RTS camera
+ * (top-down, pan+zoom), and declarative lights.
+ *
+ * Fog of war is handled per-mesh by FogOfWar.ts — scene.fogMode is
+ * disabled to avoid uniform distance-based fog that fights with the
+ * exploration state. Unexplored tiles are hidden (setEnabled(false)),
+ * shroud tiles get visibility=0.35, and visible tiles get full brightness.
  *
  * Chunk lifecycle is managed imperatively via ChunkManager.
  */
 
 import type { ArcRotateCamera, Scene as BScene } from "@babylonjs/core";
+import { Animation } from "@babylonjs/core/Animations/animation";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { Tools } from "@babylonjs/core/Misc/tools";
-import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
+// Side-effect imports — Vite tree-shakes these without explicit import
+import "@babylonjs/core/Helpers/sceneHelpers";
+import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
+import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
+import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { useEffect, useRef } from "react";
 import { Scene, useScene } from "reactylon";
 import { Engine } from "reactylon/web";
+import { getEpochVisual } from "../config/epochVisualDefs";
 import { getGameSpeed, simulationTick } from "../ecs/gameState";
+import { Position, Unit } from "../ecs/traits";
+import { world } from "../ecs/world";
+import { GameError, logError } from "../errors";
 import { movementSystem } from "../systems/movement";
 import {
 	type ChunkManagerState,
@@ -25,25 +41,36 @@ import {
 	initChunks,
 	updateChunks,
 } from "./ChunkManager";
+import { registerChunkState, unregisterChunkState } from "./chunkRegistry";
 import {
 	disposeEntityRenderer,
 	type EntityRendererState,
 	initEntityRenderer,
 	syncEntities,
 } from "./EntityRenderer";
+import { updateFogVisibility } from "./FogOfWar";
+import {
+	disposeLightning,
+	initLightning,
+	type LightningState,
+	updateLightning,
+} from "./GameplayLightning";
 import { initInput } from "./InputHandler";
 
-// ─── Fog color — dark ecumenopolis void (#03070b) ────────────────────────────
+// ─── Void color — the dark background of the ecumenopolis ────────────────────
+// Exact #03070b in linear 0-1 space. Used for clearColor, ground plane, and CSS.
 
-const FOG_R = 0.012;
-const FOG_G = 0.027;
-const FOG_B = 0.043;
+const VOID_R = 0x03 / 255; // 0.01176
+const VOID_G = 0x07 / 255; // 0.02745
+const VOID_B = 0x0b / 255; // 0.04314
+
+// ─── Epoch-driven atmosphere — Epoch 1 defaults ──────────────────────────────
+
+const epoch1 = getEpochVisual(1);
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
 export interface GameCanvasProps {
-	/** Havok physics WASM instance. */
-	havok: unknown;
 	/** Player start position in world coordinates (already scaled by TILE_SIZE_M). */
 	startPos: { x: number; z: number };
 	/** World generation seed. */
@@ -55,11 +82,34 @@ export interface GameCanvasProps {
 function onSceneReady(scene: BScene) {
 	scene.createDefaultCameraOrLight(true, undefined, true);
 
-	// Exponential fog matching the void ground color
+	// Canvas CSS background matches void color — handles WebGPU alpha transparency
+	const canvas = scene.getEngine().getRenderingCanvas();
+	if (canvas) {
+		canvas.style.background = "#03070b";
+	}
+
+	// Exponential fog — creates atmospheric depth falloff from camera.
+	// Combined with per-mesh visibility from FogOfWar.ts for exploration-based dimming.
 	scene.fogMode = 2; // FOGMODE_EXP2
-	scene.fogDensity = 0.015;
-	scene.fogColor.set(FOG_R, FOG_G, FOG_B);
-	scene.clearColor.set(FOG_R, FOG_G, FOG_B, 1);
+	scene.fogColor = new Color3(VOID_R, VOID_G, VOID_B);
+	scene.fogDensity = 0.008; // gradual falloff — full chunk visible, edges fade to void
+
+	// Explicit void color #03070b — matches the labyrinth void between chunks
+	scene.clearColor = new Color4(VOID_R, VOID_G, VOID_B, 1);
+	scene.ambientColor = new Color3(...epoch1.ambientColor);
+
+	// Environment texture for PBR reflections — just the IBL probe, no skybox.
+	import("@babylonjs/core/Materials/Textures/cubeTexture").then(
+		({ CubeTexture }) => {
+			scene.environmentTexture = CubeTexture.CreateFromPrefilteredData(
+				"https://assets.babylonjs.com/environments/environmentSpecular.env",
+				scene,
+			);
+			// Re-force void clearColor after env texture loads (it can override)
+			scene.clearColor = new Color4(VOID_R, VOID_G, VOID_B, 1);
+			scene.autoClear = true;
+		},
+	);
 }
 
 // ─── Inner scene content (needs useScene) ────────────────────────────────────
@@ -69,10 +119,35 @@ interface SceneContentProps {
 	seed: string;
 }
 
+/** Smoothly pan the camera target to (x, z) over ~20 frames. */
+function panCameraTo(scene: BScene, x: number, z: number): void {
+	const cam = scene.activeCamera as ArcRotateCamera;
+	if (!cam) return;
+
+	const FPS = 30;
+	const PAN_FRAMES = 20;
+
+	const panAnim = new Animation(
+		"panTarget",
+		"target",
+		FPS,
+		Animation.ANIMATIONTYPE_VECTOR3,
+		Animation.ANIMATIONLOOPMODE_CONSTANT,
+	);
+	panAnim.setKeys([
+		{ frame: 0, value: cam.target.clone() },
+		{ frame: PAN_FRAMES, value: new Vector3(x, 0, z) },
+	]);
+
+	cam.animations = [panAnim];
+	scene.beginAnimation(cam, 0, PAN_FRAMES, false);
+}
+
 function SceneContent({ startPos, seed }: SceneContentProps) {
 	const scene = useScene();
 	const chunkStateRef = useRef<ChunkManagerState | null>(null);
 	const entityStateRef = useRef<EntityRendererState | null>(null);
+	const lightningStateRef = useRef<LightningState | null>(null);
 	const simAccumulatorRef = useRef(0);
 
 	// startPos is already in world coordinates (tile * TILE_SIZE_M)
@@ -81,6 +156,7 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 
 	useEffect(() => {
 		// Ground plane — catches viewport gaps so we never see black void.
+		// Uses exact void color #03070b so it blends seamlessly with clearColor.
 		const ground = MeshBuilder.CreateGround(
 			"void-ground",
 			{ width: 2000, height: 2000 },
@@ -88,9 +164,10 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		);
 		ground.position = new Vector3(startWX, -0.5, startWZ);
 		const groundMat = new StandardMaterial("void-ground-mat", scene);
-		groundMat.diffuseColor = new Color3(FOG_R, FOG_G, FOG_B);
-		groundMat.emissiveColor = new Color3(FOG_R, FOG_G, FOG_B);
+		groundMat.diffuseColor = new Color3(VOID_R, VOID_G, VOID_B);
+		groundMat.emissiveColor = new Color3(VOID_R, VOID_G, VOID_B);
 		groundMat.specularColor = Color3.Black();
+		groundMat.disableLighting = true;
 		groundMat.freeze();
 		ground.material = groundMat;
 		ground.isPickable = false;
@@ -99,20 +176,63 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		const cam = scene.activeCamera as ArcRotateCamera;
 		if (!cam) return;
 
+		// Final gameplay values — classic RTS: full chunk visible in viewport.
+		// Chunk = 32 tiles × 2m = 64 world units. Radius ~55 shows the full chunk.
+		const FINAL_ALPHA = Tools.ToRadians(-90);
+		const FINAL_BETA = Tools.ToRadians(35); // steeper angle for better top-down RTS view
+		const FINAL_RADIUS = 55; // shows full 64×64 chunk in viewport
+
+		// Start zoomed out for dramatic intro
 		cam.target = new Vector3(startWX, 0, startWZ);
-		cam.alpha = Tools.ToRadians(-90);
-		cam.beta = Tools.ToRadians(1); // near-vertical top-down
-		cam.radius = 60;
+		cam.alpha = FINAL_ALPHA;
+		cam.beta = Tools.ToRadians(50); // start tilted for dramatic reveal
+		cam.radius = 100; // start slightly zoomed out
 
-		// Lock rotation — pan and zoom only
-		cam.lowerAlphaLimit = cam.alpha;
-		cam.upperAlphaLimit = cam.alpha;
-		cam.lowerBetaLimit = Tools.ToRadians(0.1);
-		cam.upperBetaLimit = Tools.ToRadians(1);
+		// Temporarily widen limits so animation can run freely
+		cam.lowerBetaLimit = 0;
+		cam.upperBetaLimit = Math.PI;
+		cam.lowerRadiusLimit = 10;
+		cam.upperRadiusLimit = 200;
 
-		// Zoom limits
-		cam.lowerRadiusLimit = 20;
-		cam.upperRadiusLimit = 100;
+		// Smooth intro animation (~1.5 seconds at 30fps = 45 frames)
+		const FPS = 30;
+		const INTRO_FRAMES = 45;
+
+		const radiusAnim = new Animation(
+			"introRadius",
+			"radius",
+			FPS,
+			Animation.ANIMATIONTYPE_FLOAT,
+			Animation.ANIMATIONLOOPMODE_CONSTANT,
+		);
+		radiusAnim.setKeys([
+			{ frame: 0, value: 100 },
+			{ frame: INTRO_FRAMES, value: FINAL_RADIUS },
+		]);
+
+		const betaAnim = new Animation(
+			"introBeta",
+			"beta",
+			FPS,
+			Animation.ANIMATIONTYPE_FLOAT,
+			Animation.ANIMATIONLOOPMODE_CONSTANT,
+		);
+		betaAnim.setKeys([
+			{ frame: 0, value: Tools.ToRadians(50) },
+			{ frame: INTRO_FRAMES, value: FINAL_BETA },
+		]);
+
+		cam.animations = [radiusAnim, betaAnim];
+		scene.beginAnimation(cam, 0, INTRO_FRAMES, false, 1.0, () => {
+			// Animation complete — lock camera to gameplay constraints
+			cam.alpha = FINAL_ALPHA;
+			cam.lowerAlphaLimit = FINAL_ALPHA;
+			cam.upperAlphaLimit = FINAL_ALPHA;
+			cam.lowerBetaLimit = Tools.ToRadians(25);
+			cam.upperBetaLimit = Tools.ToRadians(50);
+			cam.lowerRadiusLimit = 20; // can zoom in for detail
+			cam.upperRadiusLimit = 90; // can zoom out to see multiple chunks
+		});
 
 		// Pan settings
 		cam.panningSensibility = 30;
@@ -126,17 +246,93 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 		cam.inertia = 0;
 		cam.panningInertia = 0;
 
+		// ── Three-layer lighting system ──────────────────────────────────
+		// 1. Flood light (directional) — broad soft fill for environment readability
+		const sun = new DirectionalLight("sun", new Vector3(-0.3, -1, 0.3), scene);
+		sun.intensity = epoch1.sunIntensity;
+		sun.diffuse = new Color3(...epoch1.sunColor);
+
+		// 2. Ambient fill — hemispheric provides base visibility everywhere
+		const ambient = new HemisphericLight(
+			"ambient",
+			new Vector3(0, 1, 0),
+			scene,
+		);
+		ambient.intensity = 1.2;
+		ambient.groundColor = new Color3(0.06, 0.1, 0.16);
+		ambient.diffuse = new Color3(0.25, 0.3, 0.4);
+
+		// 3. Point light near camera — soft omnidirectional glow, no projected cone
+		const cameraLight = new PointLight(
+			"camera-light",
+			new Vector3(startWX, 18, startWZ),
+			scene,
+		);
+		cameraLight.intensity = 4;
+		cameraLight.diffuse = new Color3(0.55, 0.7, 0.9);
+		cameraLight.range = 120; // cover full chunk view
+
+		// Follow camera target
+		const cameraLightCallback = () => {
+			const cam = scene.activeCamera as ArcRotateCamera;
+			if (cam) {
+				cameraLight.position.x = cam.target.x;
+				cameraLight.position.z = cam.target.z;
+			}
+		};
+		scene.registerBeforeRender(cameraLightCallback);
+
+		// Glow layer — bloom effect on emissive surfaces (salvage nodes, alloy walls, selection rings)
+		const glow = new GlowLayer("glow", scene, {
+			mainTextureFixedSize: 512,
+			blurKernelSize: 32,
+		});
+		glow.intensity = 0.6;
+
+		// Hub marker — cyan pyramid at player start
+		const hubMesh = MeshBuilder.CreateCylinder(
+			"hub-nexus",
+			{
+				diameterTop: 0,
+				diameterBottom: 5,
+				height: 6,
+				tessellation: 4,
+			},
+			scene,
+		);
+		hubMesh.position = new Vector3(startWX, 3, startWZ);
+		const hubMat = new StandardMaterial("hub-mat", scene);
+		hubMat.diffuseColor = new Color3(0, 0.8, 1);
+		hubMat.emissiveColor = new Color3(0, 0.5, 0.6);
+		hubMat.specularColor = Color3.Black();
+		hubMat.alpha = 0.7;
+		hubMesh.material = hubMat;
+
 		// Initialize chunks around the start position
 		const chunkState = initChunks(scene, startWX, startWZ, seed);
 		chunkStateRef.current = chunkState;
+		registerChunkState(chunkState);
+
+		// Initialize gameplay lightning (bolts + GlowLayer)
+		const lightningState = initLightning(scene, () => {
+			const c = scene.activeCamera as ArcRotateCamera | null;
+			return c ? { x: c.target.x, z: c.target.z } : null;
+		});
+		lightningStateRef.current = lightningState;
 
 		// ── Game loop: movement (per-frame) + simulation tick (fixed interval) ──
 		const SIM_INTERVAL = 1.0; // seconds of game time between ticks
 		const gameLoopCallback = () => {
+			// Update visual fog-of-war every frame (even when paused)
+			// so fog refreshes immediately after camera pan or selection changes.
+			if (chunkStateRef.current) {
+				updateFogVisibility(chunkStateRef.current);
+			}
+
 			const speed = getGameSpeed();
 			if (speed <= 0) return; // paused
 
-			const delta = scene.getEngine().getDeltaTime() / 1000; // ms → seconds
+			const delta = scene.getEngine().getDeltaTime() / 1000; // ms -> seconds
 
 			// Smooth per-frame unit movement
 			movementSystem(delta, speed);
@@ -146,6 +342,11 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 			while (simAccumulatorRef.current >= SIM_INTERVAL) {
 				simAccumulatorRef.current -= SIM_INTERVAL;
 				simulationTick();
+			}
+
+			// Update gameplay lightning (creates/removes bolts)
+			if (lightningStateRef.current) {
+				updateLightning(lightningStateRef.current, 1); // epoch 1 for now
 			}
 		};
 		scene.registerBeforeRender(gameLoopCallback);
@@ -161,10 +362,21 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 
 		// Entity renderer — load GLBs and sync ECS entities to meshes each frame
 		let entityRenderCallback: (() => void) | null = null;
+		let sceneDisposed = false;
+
+		// Expose scene for diagnostics (dev only)
+		(window as unknown as Record<string, unknown>).__babylonScene = scene;
 
 		initEntityRenderer(scene)
 			.then((entityState) => {
+				// Guard: scene may have been disposed while GLBs were loading
+				if (sceneDisposed) {
+					disposeEntityRenderer(entityState);
+					return;
+				}
 				entityStateRef.current = entityState;
+				(window as unknown as Record<string, unknown>).__entityState =
+					entityState;
 
 				// Sync entity meshes every frame
 				entityRenderCallback = () => {
@@ -175,14 +387,56 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 				scene.registerBeforeRender(entityRenderCallback);
 			})
 			.catch((err) => {
-				console.warn("[GameCanvas] Entity renderer init failed:", err);
+				logError(
+					new GameError("Entity renderer initialization failed", "GameCanvas", {
+						cause: err,
+					}),
+				);
 			});
+
+		// Camera tracking — when a unit is selected, pan to it
+		let lastTrackedEntityId: string | null = null;
+		const cameraTrackCallback = () => {
+			for (const entity of world.query(Unit, Position)) {
+				const unit = entity.get(Unit)!;
+				if (!unit.selected) continue;
+				const pos = entity.get(Position)!;
+				// Only pan once per new selection (avoid continuous re-panning)
+				const entityKey = `${pos.x.toFixed(1)}_${pos.z.toFixed(1)}`;
+				if (lastTrackedEntityId !== entityKey) {
+					lastTrackedEntityId = entityKey;
+					panCameraTo(scene, pos.x, pos.z);
+				}
+				return;
+			}
+			// Nothing selected — reset tracker
+			lastTrackedEntityId = null;
+		};
+		scene.registerBeforeRender(cameraTrackCallback);
 
 		// Input handler — click-to-select, click-to-move, box selection
 		const disposeInput = initInput(scene, () => entityStateRef.current);
 
+		// Handle window/canvas resize
+		const engine = scene.getEngine();
+		const handleResize = () => {
+			engine.resize();
+		};
+		window.addEventListener("resize", handleResize);
+		let resizeObserver: ResizeObserver | null = null;
+		const resizeCanvas = engine.getRenderingCanvas();
+		if (resizeCanvas?.parentElement) {
+			resizeObserver = new ResizeObserver(handleResize);
+			resizeObserver.observe(resizeCanvas.parentElement);
+		}
+
 		return () => {
+			sceneDisposed = true;
+			window.removeEventListener("resize", handleResize);
+			resizeObserver?.disconnect();
 			disposeInput();
+			scene.unregisterBeforeRender(cameraLightCallback);
+			scene.unregisterBeforeRender(cameraTrackCallback);
 			scene.unregisterBeforeRender(gameLoopCallback);
 			cam.onViewMatrixChangedObservable.remove(observer);
 			if (entityRenderCallback) {
@@ -192,71 +446,33 @@ function SceneContent({ startPos, seed }: SceneContentProps) {
 				disposeEntityRenderer(entityStateRef.current);
 				entityStateRef.current = null;
 			}
+			if (lightningStateRef.current) {
+				disposeLightning(lightningStateRef.current);
+				lightningStateRef.current = null;
+			}
 			if (chunkStateRef.current) {
 				disposeAllChunks(chunkStateRef.current);
 				chunkStateRef.current = null;
+				unregisterChunkState();
 			}
 		};
 	}, [scene, startWX, startWZ, seed]);
 
-	return (
-		<>
-			{/* Sun — cool directional light from upper-left */}
-			<directionalLight
-				name="sun"
-				direction={new Vector3(-0.3, -1, 0.3)}
-				intensity={Math.PI * 0.8}
-				diffuse={new Color3(0.67, 0.8, 1.0)}
-			/>
-
-			{/* Ambient fill — dark ground bounce */}
-			<hemisphericLight
-				name="ambient"
-				direction={new Vector3(0, 1, 0)}
-				intensity={0.5}
-				groundColor={new Color3(0.02, 0.06, 0.08)}
-				diffuse={new Color3(0.12, 0.15, 0.2)}
-			/>
-
-			{/* Accent light at player start — cyan glow */}
-			<pointLight
-				name="accent"
-				position={new Vector3(startWX, 8, startWZ)}
-				intensity={2}
-				diffuse={new Color3(0, 1, 1)}
-			/>
-
-			{/* Hub marker — cyan pyramid at player start */}
-			<cylinder
-				name="hub-nexus"
-				options={{
-					diameterTop: 0,
-					diameterBottom: 3,
-					height: 3,
-					tessellation: 4,
-				}}
-				position={new Vector3(startWX, 1.5, startWZ)}
-			>
-				<standardMaterial
-					name="hub-mat"
-					diffuseColor={new Color3(0, 1, 1)}
-					emissiveColor={new Color3(0, 0.4, 0.4)}
-					specularColor={Color3.Black()}
-				/>
-			</cylinder>
-		</>
-	);
+	// Lights and hub marker are created imperatively (not Reactylon JSX)
+	// because Vite's tree-shaking + babel-plugin-reactylon doesn't always
+	// register BabylonJS classes in Reactylon's inventory correctly.
+	return null;
 }
 
 // ─── Main component ──────────────────────────────────────────────────────────
 
-export function GameCanvas({ havok, startPos, seed }: GameCanvasProps) {
+export function GameCanvas({ startPos, seed }: GameCanvasProps) {
 	return (
-		<Engine>
-			<Scene
-				onSceneReady={onSceneReady}
-				physicsOptions={{ plugin: new HavokPlugin(true, havok) }}
-			>
+		<Engine
+			forceWebGL
+			engineOptions={{ premultipliedAlpha: false, alpha: false }}
+		>
+			<Scene onSceneReady={onSceneReady}>
 				<SceneContent startPos={startPos} seed={seed} />
 			</Scene>
 		</Engine>

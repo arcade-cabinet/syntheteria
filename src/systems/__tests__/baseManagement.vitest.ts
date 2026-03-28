@@ -3,6 +3,12 @@
  *
  * Covers base founding validation, production ticks,
  * power calculation, and storage operations.
+ *
+ * Zone assignment uses infinite-world mode (distance+direction from spawn):
+ * - City: near origin (within ~32 tiles)
+ * - Enemy: north (negative z, well beyond transition zone ~96 tiles)
+ * - Coast: east/south
+ * - Campus: southwest
  */
 
 import type { Entity } from "koota";
@@ -98,43 +104,44 @@ describe("JSON helpers", () => {
 
 describe("validateBaseLocation", () => {
 	it("rejects player base in enemy territory (northern zone)", () => {
-		// z=10 is well within enemy zone (nz < 0.25 -> z < 64 in WORLD_EXTENT=256)
-		const error = validateBaseLocation(world, 128, 10, "player");
+		// In infinite-world mode: x=0, z=-200 is far north = enemy territory
+		// (negative z = north in atan2 with negated z)
+		const error = validateBaseLocation(world, 0, -200, "player");
 		expect(error).toBe("Cannot found a base in enemy territory");
 	});
 
 	it("allows player base in city zone", () => {
-		// z=128, x=128 -> normalized (0.5, 0.5), city zone
-		const error = validateBaseLocation(world, 128, 128, "player");
+		// x=0, z=0 -> origin, well within city radius
+		const error = validateBaseLocation(world, 0, 0, "player");
 		expect(error).toBeNull();
 	});
 
 	it("allows cult base in enemy territory", () => {
-		const error = validateBaseLocation(world, 128, 10, "cultist");
+		const error = validateBaseLocation(world, 0, -200, "cultist");
 		expect(error).toBeNull();
 	});
 
 	it("rejects base too close to another base", () => {
-		// Place one base
-		testFoundBase(128, 128, "player", "First Base");
+		// Place one base at origin (city zone)
+		testFoundBase(0, 0, "player", "First Base");
 
 		// Try to place another within MIN_BASE_SPACING (8)
-		const error = validateBaseLocation(world, 130, 130, "player");
+		const error = validateBaseLocation(world, 2, 2, "player");
 		expect(error).toContain("Too close to existing base");
 	});
 
 	it("allows base at sufficient distance", () => {
-		testFoundBase(128, 128, "player", "First Base");
+		testFoundBase(0, 0, "player", "First Base");
 
 		// Place another at 20 tiles away -- well beyond MIN_BASE_SPACING
-		const error = validateBaseLocation(world, 148, 128, "player");
+		const error = validateBaseLocation(world, 20, 0, "player");
 		expect(error).toBeNull();
 	});
 });
 
 describe("foundBase", () => {
 	it("spawns a base entity with correct traits", () => {
-		const entity = testFoundBase(128, 128, "player", "Alpha Base");
+		const entity = testFoundBase(10, 10, "player", "Alpha Base");
 
 		expect(entity.has(Base)).toBe(true);
 		expect(entity.has(Position)).toBe(true);
@@ -143,23 +150,23 @@ describe("foundBase", () => {
 
 		const base = entity.get(Base)!;
 		expect(base.name).toBe("Alpha Base");
-		expect(base.tileX).toBe(128);
-		expect(base.tileZ).toBe(128);
+		expect(base.tileX).toBe(10);
+		expect(base.tileZ).toBe(10);
 		expect(base.factionId).toBe("player");
 		expect(base.power).toBe(0);
 	});
 
 	it("sets Position from tile coordinates using TILE_SIZE_M", () => {
-		const entity = testFoundBase(128, 128, "player", "Test");
+		const entity = testFoundBase(10, 10, "player", "Test");
 		const pos = entity.get(Position)!;
 		// TILE_SIZE_M = 2.0
-		expect(pos.x).toBe(256); // 128 * 2
-		expect(pos.z).toBe(256); // 128 * 2
+		expect(pos.x).toBe(20); // 10 * 2
+		expect(pos.z).toBe(20); // 10 * 2
 	});
 
 	it("generates unique EntityId for each base", () => {
-		const b1 = testFoundBase(100, 128, "player", "Base 1");
-		const b2 = testFoundBase(200, 128, "player", "Base 2");
+		const b1 = testFoundBase(0, 0, "player", "Base 1");
+		const b2 = testFoundBase(100, 0, "player", "Base 2");
 
 		const id1 = b1.get(EntityId)!.value;
 		const id2 = b2.get(EntityId)!.value;
@@ -170,12 +177,12 @@ describe("foundBase", () => {
 
 	it("throws on invalid location", () => {
 		expect(() => {
-			foundBase(world, 128, 10, "player", "Bad Base");
+			foundBase(world, 0, -200, "player", "Bad Base");
 		}).toThrow("Cannot found a base in enemy territory");
 	});
 
 	it("allows cult base in enemy territory", () => {
-		const entity = testFoundBase(100, 10, "cultist", "Cult Fort");
+		const entity = testFoundBase(0, -200, "cultist", "Cult Fort");
 		expect(entity.get(Faction)!.value).toBe("cultist");
 		expect(entity.get(Base)!.factionId).toBe("cultist");
 	});
@@ -183,7 +190,7 @@ describe("foundBase", () => {
 
 describe("baseProductionTick", () => {
 	it("advances production progress", () => {
-		const entity = testFoundBase(128, 128, "player", "Prod Base");
+		const entity = testFoundBase(0, 0, "player", "Prod Base");
 		enqueueProduction(entity, "maintenance_bot", { scrapMetal: 10 });
 
 		// Run 1 second of production (rate = 0.1 per sec)
@@ -195,7 +202,7 @@ describe("baseProductionTick", () => {
 	});
 
 	it("completes production when progress reaches 1.0", () => {
-		const entity = testFoundBase(128, 128, "player", "Prod Base");
+		const entity = testFoundBase(0, 0, "player", "Prod Base");
 		enqueueProduction(entity, "utility_drone", { circuitry: 5 });
 
 		// Run 10 seconds (0.1 * 10 = 1.0 -> complete)
@@ -211,7 +218,7 @@ describe("baseProductionTick", () => {
 	});
 
 	it("only advances the first item in the queue", () => {
-		const entity = testFoundBase(128, 128, "player", "Prod Base");
+		const entity = testFoundBase(0, 0, "player", "Prod Base");
 		enqueueProduction(entity, "drone_a", { scrapMetal: 5 });
 		enqueueProduction(entity, "drone_b", { scrapMetal: 5 });
 
@@ -224,7 +231,7 @@ describe("baseProductionTick", () => {
 	});
 
 	it("does nothing for bases with empty queues", () => {
-		testFoundBase(128, 128, "player", "Empty Base");
+		testFoundBase(0, 0, "player", "Empty Base");
 		const completed = baseProductionTick(world, 5.0);
 		expect(completed.length).toBe(0);
 	});
@@ -232,7 +239,7 @@ describe("baseProductionTick", () => {
 
 describe("basePowerTick", () => {
 	it("calculates power from lightning rod infrastructure", () => {
-		const entity = testFoundBase(128, 128, "player", "Power Base");
+		const entity = testFoundBase(0, 0, "player", "Power Base");
 
 		// Add infrastructure
 		const infra = [{ type: "lightning_rod", count: 3 }];
@@ -247,13 +254,13 @@ describe("basePowerTick", () => {
 	});
 
 	it("sets power to 0 with no infrastructure", () => {
-		const entity = testFoundBase(128, 128, "player", "No Power");
+		const entity = testFoundBase(0, 0, "player", "No Power");
 		basePowerTick(world);
 		expect(entity.get(Base)!.power).toBe(0);
 	});
 
 	it("handles multiple infrastructure types", () => {
-		const entity = testFoundBase(128, 128, "player", "Multi Base");
+		const entity = testFoundBase(0, 0, "player", "Multi Base");
 		const infra = [
 			{ type: "lightning_rod", count: 2 },
 			{ type: "solar_panel", count: 4 }, // Unknown type, contributes 0
@@ -269,13 +276,13 @@ describe("basePowerTick", () => {
 
 describe("storage operations", () => {
 	it("getBaseStorage returns empty object for new base", () => {
-		const entity = testFoundBase(128, 128, "player", "Store Base");
+		const entity = testFoundBase(0, 0, "player", "Store Base");
 		const storage = getBaseStorage(entity);
 		expect(storage).toEqual({});
 	});
 
 	it("addToBaseStorage adds materials", () => {
-		const entity = testFoundBase(128, 128, "player", "Store Base");
+		const entity = testFoundBase(0, 0, "player", "Store Base");
 		addToBaseStorage(entity, "scrapMetal", 10);
 		addToBaseStorage(entity, "circuitry", 5);
 
@@ -285,7 +292,7 @@ describe("storage operations", () => {
 	});
 
 	it("addToBaseStorage accumulates", () => {
-		const entity = testFoundBase(128, 128, "player", "Store Base");
+		const entity = testFoundBase(0, 0, "player", "Store Base");
 		addToBaseStorage(entity, "scrapMetal", 10);
 		addToBaseStorage(entity, "scrapMetal", 7);
 
@@ -293,7 +300,7 @@ describe("storage operations", () => {
 	});
 
 	it("removeFromBaseStorage removes materials and returns true", () => {
-		const entity = testFoundBase(128, 128, "player", "Store Base");
+		const entity = testFoundBase(0, 0, "player", "Store Base");
 		addToBaseStorage(entity, "durasteel", 20);
 
 		const result = removeFromBaseStorage(entity, "durasteel", 8);
@@ -302,7 +309,7 @@ describe("storage operations", () => {
 	});
 
 	it("removeFromBaseStorage returns false when insufficient", () => {
-		const entity = testFoundBase(128, 128, "player", "Store Base");
+		const entity = testFoundBase(0, 0, "player", "Store Base");
 		addToBaseStorage(entity, "powerCells", 3);
 
 		const result = removeFromBaseStorage(entity, "powerCells", 10);
@@ -312,7 +319,7 @@ describe("storage operations", () => {
 	});
 
 	it("removeFromBaseStorage cleans up zero entries", () => {
-		const entity = testFoundBase(128, 128, "player", "Store Base");
+		const entity = testFoundBase(0, 0, "player", "Store Base");
 		addToBaseStorage(entity, "scrapMetal", 5);
 		removeFromBaseStorage(entity, "scrapMetal", 5);
 
@@ -321,7 +328,7 @@ describe("storage operations", () => {
 	});
 
 	it("removeFromBaseStorage returns false for missing material", () => {
-		const entity = testFoundBase(128, 128, "player", "Store Base");
+		const entity = testFoundBase(0, 0, "player", "Store Base");
 		const result = removeFromBaseStorage(entity, "nonexistent", 1);
 		expect(result).toBe(false);
 	});
@@ -329,7 +336,7 @@ describe("storage operations", () => {
 
 describe("enqueueProduction", () => {
 	it("adds items to the production queue", () => {
-		const entity = testFoundBase(128, 128, "player", "Queue Base");
+		const entity = testFoundBase(0, 0, "player", "Queue Base");
 		enqueueProduction(entity, "maintenance_bot", {
 			scrapMetal: 10,
 			circuitry: 3,
@@ -343,7 +350,7 @@ describe("enqueueProduction", () => {
 	});
 
 	it("appends to existing queue", () => {
-		const entity = testFoundBase(128, 128, "player", "Queue Base");
+		const entity = testFoundBase(0, 0, "player", "Queue Base");
 		enqueueProduction(entity, "drone_a", { scrapMetal: 5 });
 		enqueueProduction(entity, "drone_b", { circuitry: 8 });
 

@@ -30,6 +30,7 @@ import {
 } from "../ecs/types";
 import { world } from "../ecs/world";
 import { addResource } from "./resources";
+import { recordCultLeaderKill } from "./victoryDefeat";
 
 const MELEE_RANGE = 2.5;
 const ATTACK_CHANCE = 0.4; // chance per tick when in range
@@ -139,8 +140,15 @@ function isDestroyed(entity: Entity): boolean {
 
 /**
  * Destroy a unit -- remove from world, drop salvage.
+ * If the destroyed entity is the cult leader, triggers victory.
  */
 function destroyUnit(entity: Entity) {
+	// Check for cult leader before destroying
+	const entityId = entity.has(EntityId) ? entity.get(EntityId)!.value : "";
+	if (entityId === "cult_leader") {
+		recordCultLeaderKill();
+	}
+
 	// Drop some resources as salvage
 	const comps = parseComponents(entity.get(UnitComponents)?.componentsJson);
 	addResource("scrapMetal", Math.floor(comps.length * 1.5));

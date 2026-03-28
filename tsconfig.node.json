@@ -23,7 +23,7 @@
 		"noUncheckedSideEffectImports": true
 	},
 	"include": [
-		"webpack.config.ts",
+		"vite.config.ts",
 		"vitest.config.ts",
 		"vitest.browser.config.ts",
 		"playwright.config.ts"

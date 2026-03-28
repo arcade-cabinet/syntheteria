@@ -19,7 +19,8 @@ import {
 } from "@babylonjs/core/Events/pointerEvents";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Entity } from "koota";
-
+import { playSfx } from "../audio";
+import { selectBase } from "../components/base/BasePanel";
 import { EntityId, Faction, Position, Unit } from "../ecs/traits";
 import { world } from "../ecs/world";
 import {
@@ -29,6 +30,7 @@ import {
 	issueMoveTo,
 	selectEntity,
 } from "../input/selection";
+import { getBaseEntityFromMesh } from "./BaseMarker";
 import { type EntityRendererState, getEntityAtPoint } from "./EntityRenderer";
 import { showMoveMarker } from "./MoveMarker";
 
@@ -107,6 +109,46 @@ export function initInput(
 		}
 	}
 
+	// ── Cursor style helper ──
+	function updateCursor(screenX: number, screenY: number) {
+		const canvas = scene.getEngine().getRenderingCanvas();
+		if (!canvas) return;
+
+		// During drag, always show crosshair
+		if (isPointerDown) {
+			canvas.style.cursor = "crosshair";
+			return;
+		}
+
+		const entityState = getEntityState();
+		if (entityState) {
+			const hitEntityId = getEntityAtPoint(
+				entityState,
+				scene,
+				screenX,
+				screenY,
+			);
+			if (hitEntityId) {
+				const entity = findEntityByIdString(hitEntityId);
+				if (entity && isEnemy(entity)) {
+					canvas.style.cursor = "crosshair";
+					return;
+				}
+				canvas.style.cursor = "pointer";
+				return;
+			}
+		}
+
+		// Check if we have selected units — terrain becomes a move target
+		const selected = getSelectedEntities();
+		if (selected.length > 0) {
+			canvas.style.cursor = "cell";
+			return;
+		}
+
+		canvas.style.cursor = "default";
+	}
+
 	const observer = scene.onPointerObservable.add((info: PointerInfo) => {
 		// Only handle left mouse button (button 0)
 		if (
@@ -126,15 +168,20 @@ export function initInput(
 			}
 
 			case PointerEventTypes.POINTERMOVE: {
-				if (!isPointerDown) return;
 				const moveX = info.event.offsetX;
 				const moveY = info.event.offsetY;
-				const dx = moveX - pointerDownX;
-				const dy = moveY - pointerDownY;
-				const dist = Math.sqrt(dx * dx + dy * dy);
-				if (dist > DRAG_THRESHOLD) {
-					showSelectionBox(pointerDownX, pointerDownY, moveX, moveY);
+
+				if (isPointerDown) {
+					const dx = moveX - pointerDownX;
+					const dy = moveY - pointerDownY;
+					const dist = Math.sqrt(dx * dx + dy * dy);
+					if (dist > DRAG_THRESHOLD) {
+						showSelectionBox(pointerDownX, pointerDownY, moveX, moveY);
+					}
 				}
+
+				// Update cursor based on what's under the mouse
+				updateCursor(moveX, moveY);
 				break;
 			}
 
@@ -165,6 +212,8 @@ export function initInput(
 	return () => {
 		scene.onPointerObservable.remove(observer);
 		hideSelectionBox();
+		const canvas = scene.getEngine().getRenderingCanvas();
+		if (canvas) canvas.style.cursor = "default";
 	};
 }
 
@@ -191,7 +240,23 @@ function handleClick(
 				} else {
 					// Clicked on a friendly entity — select it
 					selectEntity(entity);
+					playSfx("unit_select");
 				}
+				return;
+			}
+		}
+	}
+
+	// Check if we clicked on a base marker
+	{
+		const pickResult = scene.pick(screenX, screenY);
+		if (pickResult?.hit && pickResult.pickedMesh && entityState) {
+			const baseEntityId = getBaseEntityFromMesh(
+				entityState.baseMarkers,
+				pickResult.pickedMesh.metadata,
+			);
+			if (baseEntityId) {
+				selectBase(baseEntityId);
 				return;
 			}
 		}
@@ -206,14 +271,19 @@ function handleClick(
 			const worldZ = pickResult.pickedPoint.z;
 
 			// Issue move command to all selected units
+			let movedAny = false;
 			for (const entity of selected) {
 				if (entity.has(Unit)) {
 					issueMoveTo(entity, worldX, worldZ);
+					movedAny = true;
 				}
 			}
 
-			// Show destination marker
-			showMoveMarker(scene, worldX, worldZ);
+			// Show destination marker and play move SFX only if a unit moved
+			if (movedAny) {
+				showMoveMarker(scene, worldX, worldZ);
+				playSfx("unit_move");
+			}
 			return;
 		}
 	}

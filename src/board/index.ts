@@ -14,8 +14,8 @@ export {
 	tileNeighbors,
 } from "./adjacency";
 // --- Chunks ---
-export type { Chunk, ChunkKey } from "./chunks";
-export { CHUNK_SIZE, chunkKey, generateChunk } from "./chunks";
+export type { Chunk, ChunkEntitySpawn, ChunkKey } from "./chunks";
+export { CHUNK_SIZE, chunkKey, dangerLevel, generateChunk } from "./chunks";
 // --- Coordinates ---
 export {
 	babylonToYuka,
@@ -53,7 +53,13 @@ export {
 	mergeChunkIntoWorld,
 } from "./navigation";
 // --- Noise ---
-export { createNoise2D, seededRng, simplexNoise2D } from "./noise";
+export {
+	createDualRng,
+	createNoise2D,
+	fnv1a,
+	seededRng,
+	simplexNoise2D,
+} from "./noise";
 // --- Scene (BabylonJS) ---
 export type { ChunkMeshes } from "./scene";
 export { disposeChunkMeshes, populateChunkScene } from "./scene";

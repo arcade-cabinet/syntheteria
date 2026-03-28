@@ -56,6 +56,15 @@ export interface ErrorLogEntry {
 const MAX_LOG_ENTRIES = 20;
 const errorLog: ErrorLogEntry[] = [];
 const errorListeners = new Set<() => void>();
+let fatalError: Error | null = null;
+const fatalErrorListeners = new Set<() => void>();
+
+function normalizeError(error: unknown): Error {
+	if (error instanceof Error) {
+		return error;
+	}
+	return new Error(String(error));
+}
 
 export function logError(error: unknown): void {
 	const entry: ErrorLogEntry = {
@@ -89,6 +98,14 @@ export function logError(error: unknown): void {
 	}
 }
 
+export function reportFatalError(error: unknown): void {
+	logError(error);
+	fatalError = normalizeError(error);
+	for (const listener of fatalErrorListeners) {
+		listener();
+	}
+}
+
 export function getErrorLog(): readonly ErrorLogEntry[] {
 	return errorLog;
 }
@@ -101,6 +118,22 @@ export function subscribeErrors(listener: () => void): () => void {
 export function clearErrorLog(): void {
 	errorLog.length = 0;
 	for (const listener of errorListeners) {
+		listener();
+	}
+}
+
+export function getFatalError(): Error | null {
+	return fatalError;
+}
+
+export function subscribeFatalError(listener: () => void): () => void {
+	fatalErrorListeners.add(listener);
+	return () => fatalErrorListeners.delete(listener);
+}
+
+export function clearFatalError(): void {
+	fatalError = null;
+	for (const listener of fatalErrorListeners) {
 		listener();
 	}
 }
